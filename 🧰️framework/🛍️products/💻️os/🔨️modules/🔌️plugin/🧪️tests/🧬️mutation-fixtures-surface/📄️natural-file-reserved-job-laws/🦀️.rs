@@ -356,6 +356,35 @@ async fn natural_file_monolithic_decoder_refuses_and_retires_on_original_caller(
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
 
+/// 🧹️ Cancellation at the completed decode checkpoint retires the staged snapshot before publication.
+#[semio_framework_async_macros::async_test]
+async fn natural_file_cancel_after_decode_retires_the_unpublished_snapshot() {
+    let mut caller = crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut cx = caller.context();
+    let policy = crate::app_testing::artifact_app_laws::fixture_mounted_policy();
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), policy, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().unwrap(), 21_i32.to_be_bytes().to_vec(), 2, &mut cx);
+    let mut decoded = false;
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if let crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress: 4, state } = surface_natural_file_step(&mut job, &mut cx) {
+            assert_eq!(state[0], 2);
+            decoded = true;
+            break;
+        }
+    }
+    assert!(decoded);
+    cx.original_cancel_token().cancel_now();
+    assert!(matches!(surface_natural_file_step(&mut job, &mut cx), crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled));
+    assert!(completion.take_emit().unwrap().is_none());
+    drop((snapshot, history));
+    close_surface_natural_file_job(&mut job, &mut cx);
+    crate::app_testing::mutation_fixture::job_close::retire_completion(completion, &mut cx, SURFACE_JOB_POLICY);
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut cx).unwrap();
+    let fuel = cx.fuel_remaining();
+    drop(cx);
+    caller.retire(fuel).unwrap();
+}
+
 /// 🧭️ A format-owned decoder consumes a source larger than one scheduler grant over
 /// monotonic checkpoints, publishes the independently computed value once, then retires its sole
 /// source owner under the ordinary reserved-job close contract.
@@ -379,11 +408,13 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     assert_eq!(oracle, last_word);
 
     let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), data, work,cx);
+    let mut completed_stages = Vec::new();
     let mut checkpoints = 0;
     let mut last_progress = 0;
     loop {
         match surface_natural_file_step(&mut job,cx) {
-            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, state } => {
+                if applied_progress == (word_count * 4) as u64 { completed_stages.push(state[0]); }
                 assert!(applied_progress >= last_progress, "controlled decoder checkpoints are monotonic");
                 last_progress = applied_progress;
                 checkpoints += 1;
@@ -400,6 +431,7 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
             other => panic!("unexpected controlled natural-file outcome: {other:?}"),
         }
     }
+    assert_eq!(serde_json::json!(completed_stages), row["completedDecodeStages"]);
     assert!(checkpoints >= expected_minimum_turns, "fixture must cross many scheduler turns");
     let (emit, _) = completion.take_emit().expect("controlled completion cell").expect("controlled completion value");
     let emit = emit.expect("controlled import emit");

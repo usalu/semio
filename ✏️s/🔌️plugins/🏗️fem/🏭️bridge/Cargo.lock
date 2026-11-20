@@ -6988,6 +6988,7 @@ version = "0.1.0"
 dependencies = [
  "semio-os-pack",
  "semio-framework-replication",
+ "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-persistent",
  "semio-s-fem-algebra",

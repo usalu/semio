@@ -1,0 +1,15 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"array",
+  "items":{
+    "type":"object",
+    "additionalProperties":false,
+    "required":["fault","granted","reclaimed","reason"],
+    "properties":{
+      "fault":{"enum":["none","pressure","not-due","retiring","lost-while-waiting","substitute","mapping","timeout","cancel","platform","lease-failed"]},
+      "granted":{"type":"boolean"},
+      "reclaimed":{"type":"boolean"},
+      "reason":{"enum":[null,"backing-unavailable","not-due","opportunity-ended","lease-timeout","reclaim-failed","platform","lease-failed"]}
+    }
+  }
+}

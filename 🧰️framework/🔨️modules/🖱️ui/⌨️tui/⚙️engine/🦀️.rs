@@ -1,6 +1,6 @@
 use semio_ui_tui_terminal::ansi::{emit_runs, AnsiPatch};
 use semio_ui_tui_core::cell::{diff, Cell, CellBuffer, DiffRun};
-use semio_ui_tui_frame::chrome::{window_tab_rect, ChromeState, WindowHit, WindowStackTabState, WindowState};
+use semio_ui_tui_frame::chrome::{project_window_layout, window_tab_rect, ChromeState, WindowHit, WindowState};
 use semio_ui_tui_widgets::dialog::DialogState;
 use semio_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_ui_tui_core::geometry::{Pos, Rect, Size};
@@ -37,8 +37,8 @@ enum Press {
     Tab { chrome: NodeId, source: String, start: Pos, pos: Pos, moved: bool },
 }
 
-/// 🔲️ An ephemeral proposal; the layout changes only after a valid release.
-struct DockPreview { target: String, placement: DockPlacement, tab_index: Option<usize>, rect: Rect, window_rect: Rect, window: WindowState }
+/// 🔲️ An ephemeral proposal; the layout changes only after a valid release. `windows` are the canvas windows as the release would mount them.
+struct DockPreview { target: String, placement: DockPlacement, tab_index: Option<usize>, rect: Rect, canvas: NodeId, windows: Vec<(NodeId, Rect, WindowState)> }
 
 struct Click {
     button: MouseButton,

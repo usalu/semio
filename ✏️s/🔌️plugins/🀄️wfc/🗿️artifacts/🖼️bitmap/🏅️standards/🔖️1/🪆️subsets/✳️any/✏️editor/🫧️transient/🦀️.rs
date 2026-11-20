@@ -7,8 +7,8 @@
 /// bare `wfcbitmaptransient` made `print_dsl`'s own `expect` PANIC the guest the first time the solve
 /// was published on the transient lane, trapping every later dispatch in the shell
 /// (found live on the bitmap playground, 2026-09-18).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", default)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
+#[value(rename_all = "camelCase", default, by_value_projection)]
 #[artifact(id = "wfc.bitmaptransient")]
 #[artifact(extension = "wfcbitmaptransient")]
 #[dsl(layout = "lines")]
@@ -81,6 +81,7 @@ pub struct BitmapTransientDiff {
 }
 
 protocol::retained_row_patch!(pub retained_fields for BitmapTransientDiff => BitmapTransient { output_pixels: Option<String>, contradiction: bool, output_width: u32, output_height: u32, source_revision: String });
+protocol::retained_empty_option_patch!(BitmapTransientDiff { output_pixels, contradiction, output_width, output_height, source_revision });
 protocol::retained_patch_diff!(BitmapTransientDiff => BitmapTransient);
 
 impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
@@ -143,10 +144,3 @@ impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
-
-impl semio_framework_value_snapshot_projection::SnapshotProjection for BitmapTransient {
-    type Output = Self;
-    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
-    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
-}

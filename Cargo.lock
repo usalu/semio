@@ -8401,6 +8401,7 @@ dependencies = [
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -8847,6 +8848,7 @@ dependencies = [
  "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-allocator",
@@ -16847,9 +16849,13 @@ dependencies = [
  "semio-plugin-instance-construction",
  "semio-plugin-instance-initialization",
  "semio-plugin-interaction",
+ "semio-plugin-job",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
+ "semio-plugin-plugin-program",
  "semio-plugin-reactor-app",
+ "semio-plugin-reactor-lifecycle",
+ "semio-plugin-runtime-instances",
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-ui-locale",
@@ -17258,6 +17264,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-testing-allocator",
  "semio-os-kernel",
  "semio-plugin-abi",
  "semio-plugin-actor-host",
@@ -18305,6 +18312,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-testing-allocator",
  "semio-os-kernel",
  "semio-plugin-abi",
  "semio-plugin-actor-host",
@@ -19713,6 +19721,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-storage",
  "semio-framework-value-original-aliases",
  "semio-framework-value-shared-issuance",
  "semio-framework-value-testing-effect-bank",
@@ -19872,10 +19881,32 @@ dependencies = [
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
  "semio-plugin-ownership",
+ "semio-plugin-window-config-contract",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-registry",
  "semio-plugin-window-config-replace",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-window-config-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retirement-queue",
+ "semio-os-kernel",
+ "semio-os-store-codec-registry",
+ "semio-os-store-operation-wire",
+ "semio-os-store-text-io",
+ "semio-plugin-ownership",
+ "semio-plugin-window-config-mutation",
  "serde_json",
 ]
 
@@ -20027,6 +20058,13 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-testing-allocator",
  "semio-ui-retained-tree",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-renderer-projected-linework"
+version = "0.1.0"
+dependencies = [
  "serde_json",
 ]
 
@@ -21066,6 +21104,7 @@ dependencies = [
  "semio-framework-value",
  "semio-os-infinite",
  "semio-plugin",
+ "semio-renderer-projected-linework",
  "semio-renderer-wgpu-asset-authority",
  "semio-renderer-wgpu-contracts",
  "semio-renderer-wgpu-host-base",
@@ -25164,6 +25203,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-action",
  "semio-ui-arena",
+ "semio-ui-border-presentation",
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-retained-tree",

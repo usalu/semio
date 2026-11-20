@@ -10,6 +10,8 @@ extern crate semio_framework_schema as schema;
 //#region 🪢️TaxonomyMounts
 #[path = "🎬️demo/🦀️.rs"]
 pub mod demo;
+#[path = "🔗️linked-asset/🦀️.rs"]
+pub mod linked_asset;
 #[cfg(test)]
 #[path = "🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod demo_tests;

@@ -89,8 +89,8 @@ export type ModelDocument = {
   readonly poses: readonly Pose[];
   readonly animations: readonly Animation[];
 };
-/** 🎚️ Tessellation quality: maximum chord deviation in metres and the segment bounds of one full circle. */
-export type Quality = { readonly chordM: number; readonly minSegments: number; readonly maxSegments: number };
+/** 🎚️ Tessellation quality: maximum chord deviation in metres and the segment bounds of one full circle; `round` is the floor of the circles that are large enough to be seen as round: a full circle whose radius exceeds `round.radiusM` never has fewer than `round.segments` segments (still at most `maxSegments`). */
+export type Quality = { readonly chordM: number; readonly minSegments: number; readonly maxSegments: number; readonly round?: { readonly radiusM: number; readonly segments: number } };
 /** 🩺️ One validation or pose finding; `path` is a JSON pointer into the document. */
 export type Issue = { readonly severity: "error" | "warning"; readonly code: string; readonly path: string; readonly message: Text };
 

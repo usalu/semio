@@ -1,0 +1,88 @@
+{
+  "cases": [
+    {
+      "wire": "miss",
+      "reason": null,
+      "reported": "miss",
+      "outcome": "miss",
+      "requests": 1
+    },
+    {
+      "wire": "transport",
+      "reason": "transport",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 1
+    },
+    {
+      "wire": "denied",
+      "reason": "denied",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 1
+    },
+    {
+      "wire": "breaker",
+      "reason": "unavailable",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 0
+    },
+    {
+      "wire": "bad-note",
+      "reason": "record",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 1
+    },
+    {
+      "wire": "wrong-digest",
+      "reason": "record",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 1
+    },
+    {
+      "wire": "missing-blob",
+      "reason": "blob-missing",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 2
+    },
+    {
+      "wire": "bad-blob",
+      "reason": "blob-integrity",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 2
+    },
+    {
+      "wire": "brotli",
+      "reason": "payload",
+      "reported": "fault",
+      "outcome": "fault",
+      "requests": 2
+    },
+    {
+      "wire": "record-json",
+      "reason": "payload",
+      "reported": "fault",
+      "outcome": "stale",
+      "requests": 2
+    },
+    {
+      "wire": "no-record",
+      "reason": "record",
+      "reported": "fault",
+      "outcome": "stale",
+      "requests": 2
+    },
+    {
+      "wire": "cancel",
+      "reason": "cancelled",
+      "reported": "cancelled",
+      "outcome": "miss",
+      "requests": 1
+    }
+  ]
+}

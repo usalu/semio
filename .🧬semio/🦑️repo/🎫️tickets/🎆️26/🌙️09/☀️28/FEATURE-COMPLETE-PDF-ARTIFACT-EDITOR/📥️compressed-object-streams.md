@@ -1,0 +1,7 @@
+# Resumable compressed objects
+
+The object-stream header cursor reads unsigned integer pairs before First under caller work grants. It emits one member number and offset at a time, validates increasing offsets against the decoded source, and keeps no member table. The member cursor uses the native COS decoder within the selected member's span. Its tail scan admits only whitespace and comments. Partial typed values retire under the COS release grants.
+
+The ordinary cross-reference resolver drains both cursors. It validates each selected member number against the cross-reference entry, decodes the containing stream through the shared controlled decoding path, and caches decoded bytes and header pairs once per object stream. It retains the existing fallback for filter formats the controlled decoder cannot handle.
+
+MuPDF opened the genuine Flate fixture without repair, matched the compressed metadata dictionary and typed array, and independently matched the stream header and each member's exact bytes. The production-source Rust harness passed every compressed-object test, including one-work grants, bounded cancellation and retirement, genuine resolver lookup, and a mismatched index rejection. The final aggregate production-source harness passed all 42 tests, including both xref index tests. The xref-stream test source closure measures 10 inputs and 1,116 active lines. Graph projection measures 29 inputs and 3,853 active lines.

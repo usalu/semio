@@ -25,15 +25,15 @@ fn the_armed_tile_falls_back_to_the_document() {
 /// ↩️ Every config mutation restores the exact prior value.
 #[test]
 fn config_mutations_are_invertible() {
-    use protocol::MutationKind;
+    use protocol::ColdMutationKind;
     let base = Wfc2dConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, active_tile_id: "room".into() };
     let camera = ChangeCamera { x: 9.0, y: 9.0, zoom: 9.0 };
-    let next = <ChangeCamera as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::diff(&camera, &base).diff().clone();
-    assert_eq!(next.camera_x, 9.0);
-    assert_eq!(next.active_tile_id, "room", "a camera change never disarms the tile");
-    let inverse = <ChangeCamera as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&camera, &base).expect("valid retained mutation inverse fixture");
+    let next = <ChangeCamera as ColdMutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::diff(&camera, &base).diff().clone();
+    assert_eq!(next.camera_x, Some(9.0));
+    assert_eq!(next.active_tile_id, None, "a camera change never disarms the tile");
+    let inverse = <ChangeCamera as ColdMutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&camera, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc2dConfigMutation::ChangeCamera(ChangeCamera { x: 1.0, y: 2.0, zoom: 3.0 })]);
     let tile = ChangeActiveTile { tile_id: "corridor".into() };
-    let inverse = <ChangeActiveTile as MutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&tile, &base).expect("valid retained mutation inverse fixture");
+    let inverse = <ChangeActiveTile as ColdMutationKind<Wfc2dConfig, Wfc2dConfigMutation>>::inverse(&tile, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: "room".into() })]);
 }

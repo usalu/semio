@@ -1,6 +1,6 @@
 /** 🟣️ The shared declarations of the 📡️ surface survey suite tests. */
 import { vi } from "vitest";
-import { type SurveyHost } from "@semio-tech/pets-react";
+import { PET_KEEPOUTS, type SurveyHost, type SurveyOptions } from "@semio-tech/pets-react";
 import vectors from "../../🧫️fixtures/📡️surface-survey/🔣️.json";
 
 export interface Box {
@@ -112,5 +112,17 @@ export function hostWith(observers: Pick<SurveyHost, "ResizeObserver" | "Mutatio
     addEventListener: ((...args: Parameters<Window["addEventListener"]>) => window.addEventListener(...args)) as Window["addEventListener"],
     removeEventListener: ((...args: Parameters<Window["removeEventListener"]>) => window.removeEventListener(...args)) as Window["removeEventListener"],
     ...observers,
+  };
+}
+
+/** 🎚️ The options of the survey a scene asks for, the stage being `frame`. */
+export function optionsOf(scene: Scene, frame: Element | undefined): SurveyOptions {
+  return {
+    ...(scene.options?.surfaces === undefined ? {} : { surfaces: scene.options.surfaces }),
+    ...(scene.options?.keepoutsBesidesDefaults === undefined ? {} : { keepouts: `${PET_KEEPOUTS}, ${scene.options.keepoutsBesidesDefaults}` }),
+    ...(scene.options?.walls === undefined ? {} : { walls: scene.options.walls }),
+    ...(scene.options?.props === undefined ? {} : { props: scene.options.props }),
+    ...(scene.pointer === undefined ? {} : { pointer: scene.pointer }),
+    frame,
   };
 }

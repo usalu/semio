@@ -2,7 +2,7 @@ import fundingSchema from "./🧬️schema/💰️funding.json" with {type:"json
 import {types} from "node:util";
 import referencesSchema from "./🧬️schema/🔗️references.json" with {type:"json"};
 import {posix,win32} from "node:path";
-import {readJavascriptDependencySourceOwnerReadyV1,type JavascriptDependencySourceOwnerReadyV1} from "../../🟦️.ts";
+import {observeJavascriptDependencySourceOwnerReferencesV1,readJavascriptDependencySourceOwnerReadyV1,type JavascriptDependencySourceOwnerReadyV1} from "../../🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -16,12 +16,29 @@ export interface JavascriptDependencyRetainedGenerationDataV1{
 
 /** 📜️ Anchors a retained closed receipt without admitting its recipe or removed Source owner for installation, execution or retirement. */
 export function readJavascriptDependencyRetainedGenerationDataV1(workspace:string,root:string,value:unknown):JavascriptDependencyRetainedGenerationDataV1{
- if(arguments.length!==3||typeof workspace!=="string"||typeof root!=="string"||workspace.length>256||root.length>256||workspace.includes("\0")||root.includes("\0"))throw Error("Bounded retained generation anchors required");
+ if(arguments.length!==3)throw Error("Bounded retained generation anchors required");
+ const path=retainedDependencyGenerationPathV1(workspace,root),receipt=readJavascriptDependencySourceOwnerReadyV1(value),row=receipt.value;
+ return retainedDependencyGenerationDataV1(workspace,root,path,{...row,members:row.members.length,receiptSha256:receipt.sha256});
+}
+
+/** 🧵️ Anchors a closed reference projection without qualifying the historical receipt or its payload. */
+export function observeJavascriptDependencyRetainedGenerationReferencesV1(workspace:string,root:string,value:unknown):JavascriptDependencyRetainedGenerationDataV1{
+ if(arguments.length!==3)throw Error("Bounded retained generation reference anchors required");
+ const path=retainedDependencyGenerationPathV1(workspace,root);
+ return retainedDependencyGenerationDataV1(workspace,root,path,observeJavascriptDependencySourceOwnerReferencesV1(value));
+}
+
+function retainedDependencyGenerationPathV1(workspace:string,root:string){
+ if(typeof workspace!=="string"||typeof root!=="string"||workspace.length>256||root.length>256||workspace.includes("\0")||root.includes("\0"))throw Error("Bounded retained generation anchors required");
  const path=win32.isAbsolute(workspace)&&!posix.isAbsolute(workspace)?win32:posix;
  if(!path.isAbsolute(workspace)||!path.isAbsolute(root)||path.normalize(workspace)!==workspace||path.normalize(root)!==root)throw Error("Canonical retained generation anchors required");
- const receipt=readJavascriptDependencySourceOwnerReadyV1(value),row=receipt.value,prefix=row.generation.slice(0,installSchema.$defs.ProducerStageProtocol.const.generationPrefixUnits),binding=row.bindings[0]!;
+ return path;
+}
+
+function retainedDependencyGenerationDataV1(workspace:string,root:string,path:ReturnType<typeof retainedDependencyGenerationPathV1>,row:Omit<ReturnType<typeof observeJavascriptDependencySourceOwnerReferencesV1>,"authority">):JavascriptDependencyRetainedGenerationDataV1{
+ const prefix=row.generation.slice(0,installSchema.$defs.ProducerStageProtocol.const.generationPrefixUnits),binding=row.bindings[0]!;
  if(binding.sourceDirectory!==path.join(workspace,...(row.scope==="."?[]:row.scope.split("/")),"node_modules")||binding.targetDirectory!==path.join(root,installSchema.$defs.ProducerStageProtocol.const.rootRole,prefix,"node_modules"))throw Error("Exact retained generation workspace and store required");
- const data=Object.freeze({version:1 as const,purpose:"retained-dependency-generation-data"as const,authority:false as const,currentReady:false as const,generation:row.generation,prefix,scope:row.scope,recipeSha256:row.recipeSha256,receiptSha256:receipt.sha256,members:row.members.length,sourceBindings:row.bindings,ownerReferences:row.ownerReferences});
+ const data=Object.freeze({version:1 as const,purpose:"retained-dependency-generation-data"as const,authority:false as const,currentReady:false as const,generation:row.generation,prefix,scope:row.scope,recipeSha256:row.recipeSha256,receiptSha256:row.receiptSha256,members:row.members,sourceBindings:row.bindings,ownerReferences:row.ownerReferences});
  if(validateJsonSchemaSubset(schema as never,data).length)throw Error("Closed retained generation DATA required");return data;
 }
 

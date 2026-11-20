@@ -140,7 +140,7 @@ fn deformation_solves_balanced_and_sags_under_gravity() {
         .solids
         .iter()
         .map(|solid| {
-            let rho = doc.materials.iter().find(|material| material.id == solid.material_id).expect("material").rho;
+            let rho = doc.materials.iter().find(|material| material.id.as_str() == solid.material_id).expect("material").rho;
             let mesh = meshes.iter().find(|mesh| mesh.solid_id == solid.id).expect("mesh");
             let volume: f64 = mesh
                 .tets

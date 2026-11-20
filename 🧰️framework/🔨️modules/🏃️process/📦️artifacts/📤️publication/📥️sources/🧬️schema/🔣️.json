@@ -33,10 +33,10 @@
       "const": 16384
     },
     "maximumBytes": {
-      "const": 536870912
+      "const": 8589934592
     },
     "maximumPublicationBytes": {
-      "const": 2147483648
+      "const": 8589934592
     },
     "chunkBytes": {
       "const": 65536

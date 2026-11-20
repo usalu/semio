@@ -1,5 +1,6 @@
 /** 📚️ The example offer, ownership and switching tests. */
-import { SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import settlementFixture from "./settlement.json";
 import exampleOfferFixture from "../../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";
@@ -7,6 +8,17 @@ import { expect, it } from "vitest";
 
 /** 🔀 Registers the example offer, neutral ownership vector, switch admission and remembered example tests. */
 export function registerExampleOffersAndSwitchingTests(): void {
+  it("publishes only a settled example for the focused program and remembers it for redo", () => {
+    const previous = { exampleId: "house", inputSeq: 3 };
+    for (const row of settlementFixture) {
+      const next = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: row.requested } }, row, previous, "demo", row.focused);
+      expect(next ?? null, row.name).toEqual(row.expected);
+      if (next) {
+        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: false }], next.memory.exampleId, "demo")).toBe("demo");
+        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: true }], next.memory.exampleId, "demo")).toBe(next.memory.exampleId);
+      }
+    }
+  });
   it("offers examples only to an app that declares setActiveExample on some window kind", () => {
     expect(
       appSwitchesExamples("s.cad.cad@1/*#editor", [

@@ -26,7 +26,6 @@ pub(super) struct PresentationImportJob {
     pub(super) source: Vec<u8>,
     delivered: bool,
     active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    last_close_work: u64,
 }
 
 impl Default for PresentationImportJob {
@@ -42,7 +41,6 @@ impl Default for PresentationImportJob {
             source: Vec::new(),
             delivered: false,
             active: None,
-            last_close_work: 0,
         }
     }
 
@@ -120,18 +118,25 @@ impl PresentationImportJob {
         if self.source.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Vec<u8>>(),release_bytes:self.source.capacity(),depth:1,..Default::default()})}
         Ok(Default::default())
     }
-    fn close_value(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
-        self.last_close_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        let d=self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let turn=if !self.publication.terminal_is_empty(){self.publication.close_step(grant)}
-        else if self.delivered{self.delivered=false;self.last_close_work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
-        else if self.active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
-        else if self.pending_completion_rejection.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection,&mut self.active,grant)}
-        else if self.mutations.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations,&mut self.active,grant)}
-        else if self.source.capacity()!=0{drop(std::mem::take(&mut self.source));self.last_close_work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
-        else{return Ok(RetainedCloneStep::Complete(Default::default()))};
-        self.last_close_work=turn.work;turn.result.map(|step|if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+    fn close_effect(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{OriginalRetirementFailure,RetainedWorkOutcome,RetainedWorkPoll};
+        let complete=|result:Result<RetainedCloneStep,OriginalRetirementFailure>,work:u128|RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
+        let grant=effect.grant();
+        if self.terminal_is_empty(){return complete(Ok(RetainedCloneStep::Complete(Default::default())),0)}
+        let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return complete(Err(error.into()),0)};
+        if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return complete(Ok(RetainedCloneStep::Progress(Default::default())),0)}
+        let lift=|turn:RetainedWorkOutcome|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work});
+        let poll=if !self.publication.terminal_is_empty(){lift(self.publication.close_step(effect))}
+        else if self.delivered{self.delivered=false;return complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),1)}
+        else if self.active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant.maximum_copy_bytes,effect)}
+        else if self.pending_completion_rejection.is_some(){lift(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection,&mut self.active,effect))}
+        else if self.mutations.is_some(){lift(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations,&mut self.active,effect))}
+        else if self.source.capacity()!=0{drop(std::mem::take(&mut self.source));return complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),1)}
+        else{return complete(Ok(RetainedCloneStep::Complete(Default::default())),0)};
+        match poll{
+            RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},
+            RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())}),work:turn.work}),
+        }
     }
 }
 
@@ -144,8 +149,10 @@ impl PresentationImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, request:&ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let turn = self.publication.close_step(cx.retained_grant());
-            cx.consume_fuel(turn.work);
+            let grant = cx.retained_grant();
+            let publication = &mut self.publication;
+            let Some((turn, performed)) = cx.with_original_effect(grant, |_, effect| publication.close_step(effect))? else { return Ok(None) };
+            cx.consume_work(performed);
             let step = turn.result?;
             cx.consume_retained(step.progress())?;
             if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -194,7 +201,9 @@ impl ArtifactReservedWork<EditorApp<AnimatePresentationPlayApp>> for Presentatio
 
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{PresentationImportJob::close_demands(self,body)}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        self.begin_close();semio_framework_job::close_original_granted_step(cx,|grant|{let result=self.close_value(grant).map(|step|if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}});semio_framework_value::RetainedWorkOutcome{result,work:self.last_close_work}})
+        self.begin_close();
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_effect(effect))
     }
 
     fn terminal_is_empty(&self) -> bool {

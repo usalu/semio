@@ -86,7 +86,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
    await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});
    await save({...header({key,current,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env});
   },
-  async resume({key,current,identity,implementation,found,signal}){
+  async resume({key,current,identity,implementation,found,signal,claim}){
    const saved=await load(key),generation=(current?.pointer.generation??-1)+1;
    if(!saved)return undefined;
    if(saved.parent!==(current?.pointer.manifest??null)||saved.generation!==generation||saved.identity!==identity||saved.state==="sealed"&&saved.implementation!==implementation){await clear(key);return undefined;}
@@ -94,7 +94,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
     const bytes=await fs.read(manifestPath(saved.manifest));
     let manifest;try{manifest=bytes&&sha256(bytes)===saved.manifest?readGenerationManifestV1(bytes):undefined;}catch{manifest=undefined;}
     if(!manifest||!await filesHold(manifest)){await clear(key);return undefined;}
-    const outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest:saved.manifest,expectedGeneration:generation-1,signal}));
+    const outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest:saved.manifest,expectedGeneration:generation-1,signal,claim}));
     if(!outcome.published){await clear(key);return undefined;}
     await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:[...(saved.derived??[])]}).catch(()=>undefined));
     await clear(key);say?.("resumed",{generation,owners:Object.keys(manifest.owners).length});await stepped?.("sealing");

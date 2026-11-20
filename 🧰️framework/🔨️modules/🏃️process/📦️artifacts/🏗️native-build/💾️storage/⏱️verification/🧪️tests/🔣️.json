@@ -1,0 +1,11 @@
+{
+  "pending": {
+    "mounted-image":{"imageInventory":{"started":1,"active":1,"milliseconds":9}},
+    "directory-partition":{"allocatedUsage":{"started":1,"active":1,"milliseconds":6}}
+  },
+  "settled": {
+    "mounted-image":{"imageInventory":{"started":1,"active":0,"milliseconds":9}},
+    "directory-partition":{"allocatedUsage":{"started":1,"active":0,"milliseconds":6}}
+  },
+  "gate":{"physicalGateVerify":1,"physicalGateJoin":1,"physicalGateCached":1}
+}

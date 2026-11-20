@@ -1,9 +1,9 @@
 /** 🧪️ Packaging: 2 tests covering mesh packaging schema fixes actual owners, direct codec imports and independent manifest parity; all live mesh locks contain exact handcrafted production edges and workspace development owners. */
 import{test,expect}from"bun:test";
-import{TOML}from"bun";
+import{Glob,TOML}from"bun";
 import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
-import{resolve,dirname,relative}from"node:path";
+import{resolve,dirname}from"node:path";
 import{parse}from"smol-toml";
 import Ajv from"ajv";
 import schema from"./🔣️.json";
@@ -25,12 +25,50 @@ test("mesh packaging schema fixes actual owners, direct codec imports and indepe
  }
  expect(read(resolve(domain,"🌀️rigid/🦀️.rs"))).not.toContain("same crate, different file");
 });
-test("all live mesh locks contain exact handcrafted production edges and workspace development owners",()=>{
+function lockedMeshOwners(manifest:string,readManifest:(path:string)=>Record<string,unknown>):Set<string>{
+ const workspaceManifest=readManifest(manifest),directory=dirname(manifest);
+ const workspace=workspaceManifest.workspace===undefined?{}:table(workspaceManifest.workspace);
+ const members=new Set(workspace.members===undefined?[]:strings(workspace.members).flatMap(member=>
+  member.includes("*")?[...new Glob(member+"/Cargo.toml").scanSync(directory)].map(path=>resolve(directory,path)):[resolve(directory,member,"Cargo.toml")]));
+ if(workspaceManifest.package!==undefined)members.add(manifest);
+ const owners=new Set<string>(),visited=new Set<string>();
+ const visit=(path:string)=>{
+  if(visited.has(path))return;visited.add(path);
+  const manifest=readManifest(path),pkg=table(manifest.package),directory=dirname(path);
+  if(typeof pkg.name!=="string")throw Error("Cargo package name required");
+  owners.add(pkg.name);
+  const workspacePath=typeof pkg.workspace==="string"?resolve(directory,pkg.workspace,"Cargo.toml"):path;
+  const owner=readManifest(workspacePath).workspace,shared=owner===undefined?{}:table(owner).dependencies;
+  const dependencies=shared===undefined?{}:table(shared);
+  const scopes=[manifest,...Object.values(manifest.target===undefined?{}:table(manifest.target)).map(table)];
+  const kinds=members.has(path)?["dependencies","build-dependencies","dev-dependencies"]:["dependencies","build-dependencies"];
+  for(const scope of scopes)for(const kind of kinds)for(const [name,value] of Object.entries(scope[kind]===undefined?{}:table(scope[kind]))){
+   if(typeof value==="string")continue;
+   const edge=table(value),definition=edge.workspace===true?dependencies[name]:edge;
+   if(definition===undefined)throw Error("Missing workspace dependency "+name+" in "+workspacePath);
+   if(typeof definition==="string")continue;
+   const {path:dependency}=table(definition);
+   if(typeof dependency==="string")visit(resolve(edge.workspace===true?dirname(workspacePath):directory,dependency,"Cargo.toml"));
+  }
+ };
+ for(const member of members)visit(member);
+ return owners;
+}
+
+test("every workspace locks its reachable mesh owners and exact dependency edges",()=>{
  const db=new Database(":memory:");db.exec("create table edges(owner text,dependency text);create table expected(owner text,dependency text)");
- try{for(const path of corpus.locks){const lock=parsed(resolve(root,path));if(!Array.isArray(lock.package))throw Error("Lock packages required");const packages=lock.package.map(table),framework=path==="🧰️framework/Cargo.lock",selected=corpus.packages.filter(owner=>framework||owner.name!=="semio-framework-3d-mesh-tests");
+ const manifests=new Map<string,Record<string,unknown>>();
+ const manifest=(path:string)=>{const cached=manifests.get(path);if(cached)return cached;const value=table(TOML.parse(read(path)));manifests.set(path,value);return value;};
+ try{for(const path of corpus.locks){
+ const lock=parsed(resolve(root,path));if(!Array.isArray(lock.package))throw Error("Lock packages required");
+ const packages=lock.package.map(table),framework=path==="🧰️framework/Cargo.lock";
+ const reachable=lockedMeshOwners(resolve(root,dirname(path),"Cargo.toml"),manifest);
+ const selected=corpus.packages.filter(owner=>reachable.has(owner.name)),names=new Set(corpus.packages.map(owner=>owner.name));
+ expect(packages.filter(owner=>typeof owner.name==="string"&&names.has(owner.name)).map(owner=>owner.name).sort()).toEqual(selected.map(owner=>owner.name).sort());
+
  db.exec("delete from edges;delete from expected");for(const owner of selected){const entries=packages.filter(pkg=>pkg.name===owner.name);expect(entries).toHaveLength(1);const entry=entries[0];if(!entry)throw Error("Actual locked owner required");expect(entry.version).toBe("0.1.0");expect(entry.source).toBeUndefined();expect(entry.checksum).toBeUndefined();const dependencies=entry.dependencies===undefined?[]:strings(entry.dependencies),expected=[...owner.production,...framework?owner.development:[]].sort();expect([...dependencies].sort()).toEqual(expected);for(const dependency of dependencies){expect(packages.some(pkg=>dependency===pkg.name||dependency===pkg.name+" "+pkg.version)).toBe(true);db.query("insert into edges values (?,?)").run(owner.name,dependency);}for(const dependency of expected)db.query("insert into expected values (?,?)").run(owner.name,dependency);}
  expect(db.query("select * from edges except select * from expected").all()).toEqual([]);expect(db.query("select * from expected except select * from edges").all()).toEqual([]);
- const production=corpus.packages.flatMap(owner=>owner.production.map(dependency=>({owner:owner.name,dependency})));const names=new Set(corpus.packages.map(owner=>owner.name)),visit=(name:string,active=new Set<string>()):boolean=>{if(active.has(name))return true;const next=new Set(active).add(name);return production.filter(edge=>edge.owner===name&&names.has(edge.dependency)).some(edge=>visit(edge.dependency,next));};expect(corpus.packages.some(owner=>visit(owner.name))).toBe(false);
+ const production=corpus.packages.flatMap(owner=>owner.production.map(dependency=>({owner:owner.name,dependency})));const visit=(name:string,active=new Set<string>()):boolean=>{if(active.has(name))return true;const next=new Set(active).add(name);return production.filter(edge=>edge.owner===name&&names.has(edge.dependency)).some(edge=>visit(edge.dependency,next));};expect(corpus.packages.some(owner=>visit(owner.name))).toBe(false);
  db.exec("delete from edges");for(const edge of production)db.query("insert into edges values (?,?)").run(edge.owner,edge.dependency);expect(db.query("with recursive reach(a,b) as (select owner,dependency from edges union select reach.a,edges.dependency from reach join edges on reach.b=edges.owner) select a from reach where a=b").all()).toEqual([]);
  }}finally{db.close();}
-});
+}, 30_000);

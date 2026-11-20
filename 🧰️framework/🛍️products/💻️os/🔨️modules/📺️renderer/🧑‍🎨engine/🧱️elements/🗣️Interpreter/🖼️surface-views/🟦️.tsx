@@ -13,6 +13,7 @@ import { surfaceLaneTexts } from "../🚚️surface-scene-lanes/🟦️.ts";
 import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";
 import { dispatchTrigger } from "../⚡️action-dispatch/🟦️.tsx";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
 /** 🚚️ A surface whose scene declares out-of-doc payload lanes (`world-3d`, `canvas-2d`, `board-2d`). Its `doc.bytes` carry only
@@ -114,7 +115,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
       tabIndex={record.disabled ? -1 : 0}
       aria-disabled={record.disabled || undefined}
       aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
-      className="focus-visible:ring-primary relative h-full min-h-0 w-full min-w-0 outline-none focus-visible:ring-2"
+      {...sharedBorderlessBoxProps} className="relative h-full min-h-0 w-full min-w-0 outline-none"
       onKeyDown={
         activateBinding && !record.disabled
           ? (event) => {

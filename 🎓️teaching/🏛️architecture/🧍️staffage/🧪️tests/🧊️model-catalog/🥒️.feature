@@ -12,6 +12,7 @@ Feature: Every asset of the catalog has a valid 3D model set
     Given the catalog
     When the asset folders are listed
     Then every asset is found once
+    And every asset has body, thermal and structural models at 1:50, 1:100, 1:200 and 1:500
 
   Scenario: Each asset offers and validates its models
     Given an asset and its batch export

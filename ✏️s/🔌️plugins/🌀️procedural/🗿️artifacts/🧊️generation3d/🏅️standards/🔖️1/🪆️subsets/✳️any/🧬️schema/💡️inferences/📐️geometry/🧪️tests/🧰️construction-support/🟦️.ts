@@ -240,8 +240,9 @@ const curveBody = (kind: string, inputs: Inputs): Body => {
 const faceOf = (loop: Vector3[]): Body => ({ kind: "face", loop });
 
 const wireLoop = (wire: Body, port: string): Vector3[] => {
-  if (wire.kind !== "wire") return refuse("shape-kind", port);
-  if (!wire.closed) refuse("wire-open", port);
+  if (wire.kind !== "wire" && wire.kind !== "curve") return refuse("shape-kind", port);
+  const closed = wire.kind === "wire" ? wire.closed : same(wire.points[0]!, wire.points[wire.points.length - 1]!);
+  if (!closed) refuse("wire-open", port);
   return wire.points.slice(0, -1);
 };
 

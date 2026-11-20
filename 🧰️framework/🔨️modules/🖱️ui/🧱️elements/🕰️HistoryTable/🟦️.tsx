@@ -11,6 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 // #endregion 🔌️Adapters
 
 // #region 🗄️HistoryTable
@@ -211,6 +212,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, classNa
                   ref={index === 0 ? rowProbeRef : undefined}
                   className={cn(HISTORY_ROW_SHELL_CLASS, "grid items-center", onSelectCheckpoint && "cursor-pointer")}
                   style={{ gridColumn: "1 / 3", gridRow: index + 1, gridTemplateColumns: `auto ${graphColumnWidth}px` }}
+                  {...(onSelectCheckpoint ? sharedBorderlessBoxProps : undefined)}
                   role={onSelectCheckpoint ? "button" : undefined}
                   aria-label={onSelectCheckpoint ? historyCheckpointAccessibleName(column) : undefined}
                   tabIndex={onSelectCheckpoint ? 0 : undefined}

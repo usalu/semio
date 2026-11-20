@@ -42,7 +42,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-DIRECT-LEAF-OVERHAUL/📓️taxonomy.md; ../🧬️schema/📸️snapshot/🔣️.json; each mutation's own 🧬️.schema.json",
         "fixtureCoverage": {
-          "vectors": 15,
+          "vectors": 16,
           "capabilitiesCovered": [
             "process3d-1-mutate"
           ]
@@ -222,6 +222,17 @@
               "directoryName": "🧊️reissues"
             }
           ]
+        },
+        {
+          "mutationId": "resize-stock",
+          "sourceMutationDirectoryName": "📏resize-stock",
+          "mutationDirectoryName": "📏resize-stock",
+          "scenarios": [
+            {
+              "id": "keeps-stock-width",
+              "directoryName": "🟰️keeps-width"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -239,7 +250,8 @@
         "replace-machine-capabilities",
         "move-stock",
         "change-stock-label",
-        "replace-stock-solid"
+        "replace-stock-solid",
+        "resize-stock"
       ]
     }
   ],
@@ -553,6 +565,27 @@
             "operation": "replace-stock-solid",
             "bridgeVersion": 1,
             "variant": "ReplaceStockSolid"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "process3d-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "resize-stock",
+          "capability": "process3d-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "resize-stock",
+            "bridgeVersion": 1,
+            "variant": "ResizeStock"
           },
           "oracleRequirements": [
             {

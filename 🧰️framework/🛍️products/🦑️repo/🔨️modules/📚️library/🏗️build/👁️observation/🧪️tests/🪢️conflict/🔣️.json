@@ -1,0 +1,27 @@
+{
+  "uniqueRows": 2048,
+  "changes": [
+    {
+      "index": 0,
+      "fact": true
+    },
+    {
+      "index": 1550,
+      "fact": false
+    },
+    {
+      "index": 1490,
+      "fact": false
+    }
+  ],
+  "firstConflict": 1550,
+  "rowsRead": 2050,
+  "cases": [
+    {
+      "report": false
+    },
+    {
+      "report": true
+    }
+  ]
+}

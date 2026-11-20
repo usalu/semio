@@ -151,16 +151,8 @@ impl InkInteractionJob {
                 })
             }
             Some(_) => Err(semio_ui_action::BoundedActionFault::Structure),
-            None => {
-                let hovered = scene.ink_canvas.as_ref().and_then(|ink| ink.hovered_id.as_deref());
-                if hovered == self.hit_id.as_deref() {
-                    Ok(())
-                } else if self.hit_id.is_some() && self.hit_interaction_id.is_none() {
-                    Ok(())
-                } else {
-                    write_ink_interaction_hover(input, scene, self.hit_interaction_id.as_deref())
-                }
-            }
+            None if self.hit_id.is_some() && self.hit_interaction_id.is_none() => Ok(()),
+            None => write_ink_interaction_hover(input, scene, self.hit_id.as_deref().zip(self.hit_interaction_id.as_deref())),
         }
     }
 

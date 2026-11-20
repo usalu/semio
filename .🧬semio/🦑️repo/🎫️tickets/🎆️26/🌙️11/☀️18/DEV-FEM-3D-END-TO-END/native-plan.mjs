@@ -6,11 +6,15 @@ import {execFileSync} from "node:child_process";
 const [root, out] = process.argv.slice(2);
 const workspace = resolve(import.meta.dirname, "../../../../../../..");
 const selected = join(workspace, ".cache/b/g/m/selected");
-const file = readdirSync(selected).find(name => /^[a-f0-9]{64}\.json$/.test(name));
-const graph = JSON.parse(readFileSync(join(selected, file), "utf8"));
-const projects = graph.projects, edges = graph.dependencies ?? {};
+const [rootProject, rootTarget] = [root.slice(0, root.lastIndexOf(":")), root.slice(root.lastIndexOf(":") + 1)];
+const graph = readdirSync(selected).filter(name => /^[a-f0-9]{64}\.json$/.test(name)).map(name => JSON.parse(readFileSync(join(selected, name), "utf8"))).find(value => value.projects?.[rootProject]?.targets?.[rootTarget]);
+const projects = graph?.projects ?? {}, edges = graph?.dependencies ?? {};
 const authored = new Map(execFileSync("git", ["-c", "core.quotepath=false", "ls-files", "*📋️project.json"], {cwd: workspace, encoding: "utf8", maxBuffer: 1 << 28}).split("\n").filter(Boolean).flatMap(path => {try {const value = JSON.parse(readFileSync(join(workspace, path), "utf8")); return value.name ? [[value.name, {...value, root: dirname(path)}]] : [];} catch {return [];}}));
 for (const [name, value] of authored) if (!projects[name]) projects[name] = {...value, authoredOnly: true};
+if (!graph) {
+  const target = authored.get(rootProject)?.targets?.[rootTarget];
+  if (!target || !Array.isArray(target.dependsOn) || target.dependsOn.length) throw Error(`no sealed selected graph holds ${root}`);
+}
 const projectDeps = name => (edges[name] ?? []).map(edge => typeof edge === "string" ? edge : edge.target).filter(name => projects[name]);
 const expand = (project, entry) => {
   const spec = typeof entry === "string" ? entry : entry.projects ? null : (entry.dependencies ? `^${entry.target}` : entry.target);
@@ -27,7 +31,8 @@ const visit = id => {
   if (!target) {state.set(id, "done"); order.push({id, missing: true}); return;}
   for (const entry of target.dependsOn ?? []) for (const next of expand(project, entry)) visit(next);
   state.set(id, "done");
-  const command = target.execution?.command ?? target.options?.command ?? null;
+  const current = authored.get(project)?.targets?.[name]?.options?.command;
+  const command = current ?? target.execution?.command ?? target.options?.command ?? null;
   const cwd = target.options?.cwd ? target.options.cwd.replace("{projectRoot}", projects[project].root) : projects[project].root;
   order.push({id, authoredOnly: !!projects[project].authoredOnly, cwd, command, env: target.execution?.env ?? target.options?.env ?? {}, executor: target.executor ?? null, continuous: !!target.continuous});
 };

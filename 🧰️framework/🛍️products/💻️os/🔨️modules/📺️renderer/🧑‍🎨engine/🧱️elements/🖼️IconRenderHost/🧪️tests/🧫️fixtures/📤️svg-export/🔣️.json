@@ -23,6 +23,28 @@
     "roughness": 0.04,
     "stroke": "#000000"
   },
+  "previewRaster": {
+    "byteBudget": 1048576,
+    "fill": "#44cc88",
+    "opacity": 0.5,
+    "rgba": [68, 204, 136, 128],
+    "cases": [
+      { "sourceSize": [4000, 4000], "expectedSize": [512, 512] },
+      { "sourceSize": [4000, 1000], "expectedSize": [1024, 256] },
+      { "sourceSize": [4000, 2000], "expectedSize": [724, 362] },
+      { "sourceSize": [2000, 4000], "expectedSize": [362, 724] }
+    ]
+  },
+  "drawingCases": [
+    {"name": "outlined", "drawing": {"background": false, "fill": false, "visibleLines": true, "visibleColor": "#a52", "visibleWidth": 2}, "groups": ["visible-lines"], "stroke": "rgb(170,85,34)", "moveCount": 3, "roundedCount": 0},
+    {"name": "rounded", "drawing": {"background": false, "fill": false, "lineEasing": 3, "mergeLines": true}, "groups": ["visible-lines"], "stroke": "rgb(0,0,0)", "moveCount": 1, "roundedCount": 3},
+    {"name": "round only", "drawing": {"background": false, "fill": false, "lineEasing": 3}, "groups": ["visible-lines"], "stroke": "rgb(0,0,0)", "moveCount": 3, "roundedCount": 6},
+    {"name": "flat fill", "drawing": {"background": false, "visibleLines": false, "fillColor": "#44cc88", "fillOpacity": 0.5}, "groups": ["fills"], "fill": "rgb(68,204,136)", "center": [68,204,136,128]},
+    {"name": "fill only", "drawing": {"visibleLines": false}, "groups": ["background", "fills"]},
+    {"name": "background only", "drawing": {"fill": false, "visibleLines": false}, "groups": ["background"]},
+    {"name": "translucent background", "background": "#10203080", "drawing": {"fill": false, "visibleLines": false}, "groups": ["background"], "center": [16,32,48,128], "backgroundOpacity": "0.501961"},
+    {"name": "empty", "drawing": {"background": false, "fill": false, "visibleLines": false}, "groups": []}
+  ],
   "expected": {
     "fill": "rgb(38,44,48)",
     "stroke": "rgb(0,0,0)",

@@ -1,0 +1,232 @@
+{
+  "cases": [
+    {
+      "name": "concave L",
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "area": 6,
+      "perimeter": 14,
+      "triangles": 4
+    },
+    {
+      "name": "clockwise with a collinear corner",
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "area": 12,
+      "perimeter": 14,
+      "triangles": 3
+    },
+    {
+      "name": "tilted triangle",
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "area": 6,
+      "perimeter": 12,
+      "triangles": 1
+    }
+  ],
+  "invalid": [
+    {
+      "name": "self-crossing with nonzero winding",
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "adjacent backtracking",
+      "ring": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ]
+    }
+  ],
+  "unitBox": {
+    "triangles": 12,
+    "faces": 6,
+    "edges": 12,
+    "vertices": 8,
+    "area": 6
+  },
+  "holes": {
+    "outer": [
+      [
+        0,
+        0
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        0,
+        6
+      ]
+    ],
+    "rings": [
+      [
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      [
+        [
+          5,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          4
+        ]
+      ]
+    ],
+    "area": 42,
+    "triangles": 13,
+    "edges": 11
+  },
+  "vertex": {
+    "point": [
+      1,
+      -2,
+      3
+    ],
+    "length": 3.7416573867739413
+  },
+  "circularHole": {
+    "outer": [
+      [
+        0,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        0,
+        3
+      ]
+    ],
+    "center": [
+      2,
+      1.5
+    ],
+    "radius": 0.5,
+    "area": 11.21460183660255,
+    "tolerance": 0.025,
+    "edges": 5
+  }
+}

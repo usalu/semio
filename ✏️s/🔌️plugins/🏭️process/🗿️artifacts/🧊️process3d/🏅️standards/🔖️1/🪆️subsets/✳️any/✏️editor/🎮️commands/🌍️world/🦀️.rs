@@ -120,7 +120,7 @@ pub fn process3d_world_commit(verb: &str, authoring_seed: &str, request: WorldTo
 /// (plain when the view carries no admission — a render or test view), the viewer's cursor moved past the step on the
 /// config lane, and `effects`. A gesture its tool refuses is the dispatch's fault.
 fn world_emit(verb: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, step: ProcessStep, effects: Vec<Effect>) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-    let placed = insert_step_emit(doc.snapshot, cfg.snapshot, step);
+    let placed = insert_step_emit(doc.snapshot, cfg.snapshot, step)?;
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
     let committed = process3d_world_commit(verb, seed, WorldToolRequest { mutations: placed.artifact_mutations })
         .map_err(|refusal| Fault::new(semio_plugin::FaultOrigin::Framework, semio_plugin::FaultCode::new(refusal.code()), format!("gesture tool {verb:?} refused its dispatch")))?;

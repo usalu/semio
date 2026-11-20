@@ -441,6 +441,23 @@
         "command": "repo ./📜️script.ts test owner-context"
       }
     },
+    "test-component-failure-diagnosis": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test component-failure-diagnosis"
+      }
+    },
     "test-capture": {
       "executor": "repo:script",
       "cache": true,

@@ -11,7 +11,7 @@ import { useCelebratingWorldInstanceIds } from "../../🎨️mesh-render/🎊️
 import { buildEdgeOverlayGeometry, buildFaceOverlayGeometry, buildVertexOverlayGeometry, faceExtentFromMesh, isCurveOnlyWorldMesh, type VertexPickData, type WorldMeshAppearance } from "../../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
 import { WORLD_VERTEX_DOT_PX } from "../../🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
 import { GlbInstanceMesh, GlbSubElementLayer } from "../../🧩️glb-surface/🟦️.tsx";
-import { worldInstanceMeshRaycast } from "../../🔗️instance-selection/🟦️.ts";
+import { world3dLinePick, worldInstanceMeshRaycast } from "../../🔗️instance-selection/🟦️.ts";
 import { type WorldPaintOrigin } from "../../🧮️gumball-math/🟦️.ts";
 import { useWorldInstanceChrome } from "../🪟️instance-chrome-store/🟦️.ts";
 
@@ -162,7 +162,8 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
 
   const hasShadedMesh = Boolean(meshData && geometry && meshData.indices.length > 0);
   const isCurveOnly = Boolean(meshData && isCurveOnlyWorldMesh(meshData));
-  const isPointOnly = Boolean(meshData && !hasShadedMesh && !edgeGeometry && vertexPick);
+  const isPointOnly = Boolean(meshData && geometry && !hasShadedMesh && !edgeGeometry && meshData.positions.length > 0);
+  const pointGeometry = targets.vertex && vertexPick ? vertexPick.geometry : isPointOnly ? geometry : undefined;
   const curveLineWidth = styleKind === "neutral" ? 2 : 4;
 
   return (
@@ -262,50 +263,38 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                   return;
                 }
                 if (!instancePickEnabled) return;
-                if (!targets.edge && !isCurveOnly) return;
+                const hit = world3dLinePick(meshData?.edgeIds, event.index, targets.edge === true, isCurveOnly && meshReachable);
+                if (!hit) return;
                 event.stopPropagation();
-                if (isCurveOnly && targets.mesh) {
-                  onInstancePointerDown(instance.id, index, event);
-                  return;
-                }
-                if (meshData.edgeIds?.length) {
-                  const edgeIndex = Math.floor((event.index ?? 0) / 2);
-                  const edgeId = meshData.edgeIds[edgeIndex];
-                  if (edgeId != null) {
-                    onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event), objectId: instance.id });
-                    return;
-                  }
-                }
-                if (targets.mesh) {
+                if (hit.mode === "edge") {
+                  onWorldPick({ granularity: "edge", id: hit.id, merge: mergeMode(event), objectId: instance.id });
+                } else {
                   onInstancePointerDown(instance.id, index, event);
                 }
               }}
               onPointerMove={(event) => {
                 if (!instancePickEnabled) return;
-                if (!targets.edge && !isCurveOnly) return;
+                const hit = world3dLinePick(meshData?.edgeIds, event.index, targets.edge === true, isCurveOnly && meshReachable);
+                if (!hit) return;
                 event.stopPropagation();
-                if (isCurveOnly) {
+                if (hit.mode === "edge") {
+                  onComponentHover({ objectId: instance.id, mode: "edge", id: hit.id });
+                } else {
                   onInstancePointerMove(instance.id);
-                  return;
                 }
-                if (!meshData?.edgeIds?.length) return;
-                const edgeIndex = Math.floor((event.index ?? 0) / 2);
-                const edgeId = meshData.edgeIds[edgeIndex];
-                if (edgeId == null) return;
-                onComponentHover({ objectId: instance.id, mode: "edge", id: edgeId });
               }}
               onPointerOut={() => {
                 if (isCurveOnly) onInstancePointerMove(null);
-                onComponentHover(null);
+                if (targets.edge) onComponentHover(null);
               }}
             >
               <lineBasicMaterial color={style.lineColor} linewidth={isCurveOnly ? curveLineWidth : 1} depthTest={false} />
             </lineSegments>
           ) : null}
-          {(targets.vertex || isPointOnly) && vertexPick ? (
+          {pointGeometry ? (
             <points
               onAfterRender={reportDraw}
-              geometry={vertexPick.geometry}
+              geometry={pointGeometry}
               onClick={(event) => {
                 if (lockedClickClears) {
                   event.stopPropagation();
@@ -314,26 +303,22 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                 }
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
-                if (!targets.vertex) {
-                  if (targets.mesh) onInstancePointerDown(instance.id, index, event);
-                  return;
+                const vertexId = targets.vertex && event.index !== undefined ? vertexPick?.vertexIds[event.index] : undefined;
+                if (vertexId !== undefined) {
+                  onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event), objectId: instance.id });
+                } else if (meshReachable) {
+                  onInstancePointerDown(instance.id, index, event);
                 }
-                const idx = event.index ?? 0;
-                const vertexId = vertexPick.vertexIds[idx];
-                if (vertexId == null) return;
-                onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event), objectId: instance.id });
               }}
               onPointerMove={(event) => {
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
-                if (!targets.vertex) {
-                  if (meshReachable) onInstancePointerMove(instance.id);
-                  return;
+                const vertexId = targets.vertex && event.index !== undefined ? vertexPick?.vertexIds[event.index] : undefined;
+                if (vertexId !== undefined) {
+                  onComponentHover({ objectId: instance.id, mode: "vertex", id: vertexId });
+                } else if (meshReachable) {
+                  onInstancePointerMove(instance.id);
                 }
-                const idx = event.index ?? 0;
-                const vertexId = vertexPick.vertexIds[idx];
-                if (vertexId == null) return;
-                onComponentHover({ objectId: instance.id, mode: "vertex", id: vertexId });
               }}
               onPointerOut={() => { onInstancePointerMove(null); onComponentHover(null); }}
             >

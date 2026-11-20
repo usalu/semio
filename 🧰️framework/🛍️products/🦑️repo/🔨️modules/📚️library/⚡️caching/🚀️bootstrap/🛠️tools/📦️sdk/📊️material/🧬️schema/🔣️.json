@@ -63,6 +63,7 @@
         "continuationEntries": 128,
         "maximumMaterialPath": 256,
         "maximumIdentityInputs": 64,
+        "maximumIdentityInputFileBytes": 262144,
         "maximumIdentityBytes": 16777216
       }
     },

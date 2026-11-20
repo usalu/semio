@@ -12,7 +12,7 @@ use semio_s_artifact_process_process3d_inferences::processed_mesh;
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_pack_json as json;
 use semio_plugin::app::WindowKit;
-use semio_plugin::mesh_from_kind;
+use semio_plugin::PluginAssemblyError;
 use semio_plugin::world3d_camera_json;
 use semio_plugin::world3d_selection_json;
 use semio_plugin::BuiltNode;
@@ -27,7 +27,6 @@ use semio_plugin::WindowOptions;
 //#region 🔖️Constants
 pub const PROCESS3D_VIEW_WINDOW_MAIN: &str = "process-workpiece-view";
 pub const PROCESS3D_VIEW_BODY_MAIN: &str = "process.view.main";
-const PROCESS3D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -62,13 +61,12 @@ fn default_camera_json() -> String {
     world3d_camera_json([3.0, -3.0, 2.0], [0.0, 0.0, 0.0], 45.0)
 }
 
-/// 🖼️ Same fallback-box placeholder the editor's own `evaluated_preview_payload` already falls back
-/// to while composed-child object resolution is unimplemented (pre-existing
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-4 gap, not introduced here) — real parity
-/// with the editor's *current* behavior, not a regression.
-fn view_preview_payload(snapshot: &Process3dSnapshot) -> (String, String) {
+/// 🖼️ Projects the final solid or the empty result of a complete subtraction.
+fn view_preview_payload(snapshot: &Process3dSnapshot) -> UiAssemblyResult<(String, String)> {
     let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(snapshot);
-    let mesh = processed_mesh(&scene, None).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
+    let Some(mesh) = processed_mesh(&scene, None).map_err(|error| PluginAssemblyError::new("process3d.preview.failed", error.to_string()))? else {
+        return Ok(("[]".into(), "[]".into()));
+    };
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([
@@ -81,12 +79,12 @@ fn view_preview_payload(snapshot: &Process3dSnapshot) -> (String, String) {
         ("selected".to_string(), json::Value::Bool(false)),
         ("hovered".to_string(), json::Value::Bool(false)),
     ])]);
-    (json::to_string(&meshes), json::to_string(&instances))
+    Ok((json::to_string(&meshes), json::to_string(&instances)))
 }
 
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
 pub fn render(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = view_preview_payload(snapshot);
+    let (meshes_json, instances_json) = view_preview_payload(snapshot)?;
     MeshWindowKit::render(&MeshView { camera_json: default_camera_json(), meshes_json, instances_json, selection_json: world3d_selection_json("rectangle", &[], None) })
 }
 //#endregion 🔖️Render

@@ -1,4 +1,5 @@
 /** 📚️ The course application shell, without the package's task and view reexports. */
+import { usePreload } from "../💤️idle-preload/🟦️.ts";
 import { AccessGate, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { bindIntrinsicScrollport } from "../🪟️chrome/📏️scrollport/🟦️.ts";
 import { Component, StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
@@ -18,8 +19,7 @@ import {
   navbarFillItem,
   useElementsSurfaceChrome,
   useMediaQuery,
-  type NavbarItem,
-} from "@semio-tech/ui-react/chrome";
+  type NavbarItem, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import { COURSE_LOCALES, applyLocale, courseLocaleLoaded, loadCourseLocales, localized, preferredLocale, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "../💾️persistence/🟦️.ts";
 import { ProctorClient, proctorTransport, type ProctorConnect, type RetryTiming } from "../🛂️proctor/🟦️.ts";
@@ -42,7 +42,7 @@ import { PresenceFooter, PresenceOverlay, PresenceProvider, useDocumentVisible, 
 import { CoursePresence, presencePlace, presenceDrafts, sheetItemLabels } from "../👥️presence/🧭️rooms/🟦️.ts";
 import { presenceSelf, presenceView } from "../👥️presence/👁️view/🟦️.ts";
 import { type PresenceConnect } from "../👥️presence/🔌️socket/🟦️.ts";
-import { FollowProvider, followedPreferences, followedCourseState, observerSession, publicPresenceRun, useFollow, usePresenceCapture, usePresenceViewport } from "../👀️follow/🟦️.tsx";
+import { FollowProvider, followedPreferences, followedCourseState, observerSession, publicPresenceRun, useFollow, usePresenceCapture, CameraRelay, usePresenceViewport } from "../👀️follow/🟦️.tsx";
 import { PetsSwitch, CoursePets, CoursePetsProvider, effectivePetMode, switchedPets, type CoursePetsSource } from "../🐾️pets/🟦️.tsx";
 import { loadBounded, useBoundedLoad } from "./📥️bounded-load/🟦️.ts";
 import { LoadFallback } from "./🛟️load-fallback/🟦️.tsx";
@@ -228,6 +228,9 @@ function loadCourseScreen(screen: keyof CourseScreens): Promise<CourseScreens> {
   }
 }
 
+/** 📦️ What the home screen wishes to have loaded while it rests: the screens a quiz leads to, so that starting one does not compile them. A load that fails is of no concern here; opening the screen tries again. */
+const PRELOADED_SCREENS: readonly (() => void)[] = (["RunScreen", "ResultsScreen"] as const).map((screen) => () => void loadCourseScreen(screen).catch(() => undefined));
+
 /** 📥️ Loads the current screen with cancellation and retry during brief connection shortages; a chunk that stays missing
  * (a redeploy replaced it) is given up on, and `failed` says so. */
 function useCourseScreens(screen: keyof CourseScreens, timing: RetryTiming | undefined): { readonly screens: CourseScreens; readonly failed: boolean } {
@@ -251,6 +254,7 @@ function Screen(props: {
   const step = state.step;
   const at = useReleaseClock(state.course);
   const { screens, failed: screenFailed } = useCourseScreens(courseScreen(step.screen), props.timing);
+  usePreload(step.screen === "home" && screens.HomeScreen !== undefined, PRELOADED_SCREENS);
   const [introductionPage, setIntroductionPage] = useState<string | undefined>(undefined);
   const waiting = (
     <Page>
@@ -349,7 +353,6 @@ function Client(props: ClientProps): ReactElement {
   const { options, session, presence, state, connection, locale, preferences, onPreferences, unavailable, onRetryLocale, onDismissLocale, onObservedPreferences, onObservedScene } = props;
   const text = useMemo(() => courseText(locale), [locale]);
   const [task, setTask] = useState<string | undefined>(undefined);
-  const [camera, setCamera] = useState<PresencePresentation["camera"]>();
   const ownScope = stepKey(state.step);
   const [swipe, setSwipe] = useState<{ readonly scope: string; readonly page: string }>();
   const [layout, setLayout] = useState<{ readonly scope: string; readonly value: PresencePresentation["layout"] }>();
@@ -367,7 +370,8 @@ function Client(props: ClientProps): ReactElement {
   const shared = useSyncExternalStore(presence.subscribe, presence.getSnapshot, presence.getSnapshot);
   const follow = useFollow(shared);
   const remote = follow.peer;
-  const captureCamera = usePresenceCapture(setCamera, stepKey(state.step), remote === undefined);
+  const relay = useMemo(() => new CameraRelay(presence), [presence]);
+  const captureCamera = usePresenceCapture(relay.publish, stepKey(state.step), remote === undefined);
   const observed = useMemo(() => remote === undefined ? undefined : followedCourseState(state, remote), [state, remote]);
   const observedRef = useRef(observed);
   observedRef.current = observed;
@@ -391,8 +395,8 @@ function Client(props: ClientProps): ReactElement {
   const quizzes = useMemo(() => state.course?.quizzes.map((quiz) => quiz.id) ?? [], [state.course]);
   const leaderboard = shownLeaderboard(state);
   const overall = overallLeaderboard(state);
-  const presentation = useMemo<PresencePresentation>(() => ({ locale, home: state.step.screen === "home" ? state.step.page : undefined, camera, swipe: state.step.screen === "home" && swipe?.scope === ownScope ? swipe.page : undefined, layout: state.step.screen === "home" && layout?.scope === ownScope ? layout.value : undefined, reveal, revealedBy, pressed, viewport, taskPage: state.step.screen === "run" ? taskPage : undefined, submission: state.step.screen === "run" ? submission : undefined, sort, run: publicPresenceRun(onScreen), profile: state.learnerView === undefined ? undefined : presenceProfile(state.learnerView), asked: state.asked, board: state.board, leaderboard: leaderboard?.board, leaderboardAt: leaderboard?.at, overall: overall?.board, overallAt: overall?.at, crowd: onScreen === undefined ? undefined : state.crowds[onScreen.quiz], awards: onScreen === undefined ? undefined : runAwards(state, onScreen.run), preferences: { theme: preferences.theme, textSize: preferences.textSize, device: preferences.device, showCursors: preferences.showCursors, others: preferences.others, animateIcons: preferences.animateIcons, iconsChosen: preferences.iconsChosen, pets: preferences.pets, petsLiveliness: preferences.petsLiveliness, petsChosen: preferences.petsChosen, petsPlay: preferences.petsPlay, petsMischief: preferences.petsMischief, challenges: preferences.challenges } }), [state, locale, camera, ownScope, swipe, layout, reveal, revealedBy, pressed, viewport, taskPage, submission, sort, onScreen, preferences, leaderboard, overall]);
-  useEffect(() => presence.update({ course: state.course?.id, quizzes, self, at, home: remote === undefined ? state.step.screen === "home" : observed?.step.screen === "home", homeRoute: remote === undefined ? presentation.home : remote.view?.home, drafts: remote === undefined ? drafts : undefined, active: visible, view: remote === undefined ? presentation : undefined }), [presence, state.course?.id, quizzes, self, at?.place.screen, at?.place.quiz, at?.place.task, at?.room, state.step.screen, observed?.step.screen, remote === undefined, remote?.view?.home, drafts, visible, presentation]);
+  const presentation = useMemo<PresencePresentation>(() => ({ locale, home: state.step.screen === "home" ? state.step.page : undefined, camera: undefined, swipe: state.step.screen === "home" && swipe?.scope === ownScope ? swipe.page : undefined, layout: state.step.screen === "home" && layout?.scope === ownScope ? layout.value : undefined, reveal, revealedBy, pressed, viewport, taskPage: state.step.screen === "run" ? taskPage : undefined, submission: state.step.screen === "run" ? submission : undefined, sort, run: publicPresenceRun(onScreen), profile: state.learnerView === undefined ? undefined : presenceProfile(state.learnerView), asked: state.asked, board: state.board, leaderboard: leaderboard?.board, leaderboardAt: leaderboard?.at, overall: overall?.board, overallAt: overall?.at, crowd: onScreen === undefined ? undefined : state.crowds[onScreen.quiz], awards: onScreen === undefined ? undefined : runAwards(state, onScreen.run), preferences: { theme: preferences.theme, textSize: preferences.textSize, device: preferences.device, showCursors: preferences.showCursors, others: preferences.others, animateIcons: preferences.animateIcons, iconsChosen: preferences.iconsChosen, pets: preferences.pets, petsLiveliness: preferences.petsLiveliness, petsChosen: preferences.petsChosen, petsPlay: preferences.petsPlay, petsMischief: preferences.petsMischief, challenges: preferences.challenges } }), [state, locale, ownScope, swipe, layout, reveal, revealedBy, pressed, viewport, taskPage, submission, sort, onScreen, preferences, leaderboard, overall]);
+  useEffect(() => relay.adopt({ course: state.course?.id, quizzes, self, at, home: remote === undefined ? state.step.screen === "home" : observed?.step.screen === "home", homeRoute: remote === undefined ? presentation.home : remote.view?.home, drafts: remote === undefined ? drafts : undefined, active: visible, view: remote === undefined ? presentation : undefined }), [relay, state.course?.id, quizzes, self, at?.place.screen, at?.place.quiz, at?.place.task, at?.room, state.step.screen, observed?.step.screen, remote === undefined, remote?.view?.home, drafts, visible, presentation]);
   usePresencePointer(presence, remote === undefined);
   useAddress(session, state);
   const view = useMemo(() => presenceView(shared, text), [shared, text]);
@@ -444,7 +448,7 @@ function Client(props: ClientProps): ReactElement {
       }} onWheelCapture={(event) => { if (remote !== undefined) { event.stopPropagation(); follow.stop("interaction"); } }} data-pets={pets}>
         <a
           href="#course-main"
-          className="course-skip-link sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
+          {...sharedBorderlessBoxProps} className="course-skip-link sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
           onClick={(event) => {
             event.preventDefault();
             main.current?.focus();

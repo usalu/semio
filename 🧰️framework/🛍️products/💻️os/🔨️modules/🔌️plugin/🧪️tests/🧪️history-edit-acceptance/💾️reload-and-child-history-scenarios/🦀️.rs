@@ -20,18 +20,8 @@ where
     let loaded = async {
         assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         artifact_app_laws::admit_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive, cx).map_err(|failure| AcceptanceError::from(failure).context("the archive is refused".into()))?;
-        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            let status = semio_plugin_testing_laws::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
-            match status.state {
-                protocol::DocumentArchiveLoadState::Ready => break,
-                protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault => return Err((format!("the archive load ends {:?}: {}", status.state, String::from_utf8_lossy(&status.fault))).into()),
-                _ if cx.should_yield() => return Err((format!("the archive load never settles ({}/{})", status.completed, status.total)).into()),
-                _ => {
-                    PluginApp::maintenance_step(&mut reloaded,cx,acceptance_policy().maintenance)?;
-                }
-            }
-        }
-        PluginApp::acknowledge_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION).map_err(|fault| AcceptanceError::from(fault).context("the archive load is not acknowledged".into()))?;
+        semio_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity, cx).await)
+            .map_err(|fault| AcceptanceError::from(fault).context("the archive load did not settle".into()))?;
         reloaded.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the reloaded history does not backfill".into()))
     }
     .await;
@@ -116,7 +106,7 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=acceptance_context(&mut original_caller);let cx=&mut original_context;let result=async{
     let mut documents = vec![("initial".to_string(), None)];
     documents.extend(examples.iter().map(|example| (format!("example {}", example.id()), Some(example.id().to_string()))));
     let mut reloaded_documents = 0;
@@ -305,7 +295,7 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=acceptance_context(&mut original_caller);let cx=&mut original_context;let result=async{
     match Box::pin(acceptance_child_scenario::<A, M>(manifest, seed,cx)).await {
         Ok(summary) => format!("{plugin}: child lane {summary}"),
         Err(reason) => panic!("{plugin}: the child-lane history edit breaks the generic mechanism: {reason}"),

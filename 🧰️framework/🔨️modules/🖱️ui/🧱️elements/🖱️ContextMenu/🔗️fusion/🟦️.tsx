@@ -1,5 +1,6 @@
 import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 import { type ContextMenuItem, contextMenuItemClassName, contextMenuShortcutClassName, renderContextMenuLeading } from "../🎨️item-render/🟦️.tsx";
 import { contextMenuItemAtPath, contextMenuOrdinals, contextMenuPathKey, contextMenuPathsEqual, contextMenuReasonId, renderContextMenuOrdinalBadge, renderContextMenuReason } from "../🧭️navigation/🟦️.tsx";
 
@@ -143,6 +144,7 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
       onPointerLeave={clearHoverTimer}
     >
       <button
+        {...sharedBorderlessBoxProps}
         id={item.id}
         ref={(node) => registerRow(pathKey, node)}
         aria-disabled={item.disabled || undefined}
@@ -210,6 +212,7 @@ export function renderFixedContextMenuItems(items: readonly ContextMenuItem[], p
     const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
     return (
       <button
+        {...sharedBorderlessBoxProps}
         key={item.id}
         id={item.id}
         ref={(node) => registerRow(contextMenuPathKey(rowPath), node)}

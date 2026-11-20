@@ -207,8 +207,25 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.closing && !self.outcomes.terminal_is_empty() { return self.outcomes.close_step(cx); }
+        let grant = cx.retained_grant();
+        if self.closing {
+            if let Some(emit) = self.pending_completion_rejection.as_mut().and_then(|rejected| rejected.emit.as_mut().ok()) {
+                if let Some(demand) = emit.child_close_demands(grant.maximum_copy_bytes)? {
+                    use semio_framework_job::InteractiveJobCloseStep;
+                    use semio_plugin::PluginLifecycleStep;
+                    let step = semio_plugin::app::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+                        let step = emit.close_child_original(effect)?.unwrap_or(PluginLifecycleStep::Progress(Default::default()));
+                        Ok((step, false))
+                    })?;
+                    return Ok(match step {
+                        PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => InteractiveJobCloseStep::Pending { progress },
+                        PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
+                    });
+                }
+            }
+        }
         semio_framework_job::close_original_granted_step(cx,|grant|{
-            if self.closing && !self.outcomes.terminal_is_empty() { return self.outcomes.close_job_step(grant); }
             let mut work=0;
             let result=(||{
             let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
@@ -216,16 +233,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             if !self.closing {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
-            if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-                if let Ok(emit) = rejected.emit.as_mut() {
-                    let turn=emit.close_child_original(grant);work=turn.work;
-                    match turn.result {
-                        Ok(Some(semio_plugin::PluginLifecycleStep::Progress(progress) | semio_plugin::PluginLifecycleStep::Complete(progress))) => return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress }),
-                        Ok(Some(semio_plugin::PluginLifecycleStep::Blocked { .. } | semio_plugin::PluginLifecycleStep::AwaitingInput { .. })) => return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked),
-                        Ok(None) => {}
-                        Err(_) => return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "interactive job close refused")),
-                    }
-                }
+            if self.pending_completion_rejection.is_some() {
                 if maximum_items == 0 {
                     return Ok(pending(0,0));
                 }
@@ -329,7 +337,7 @@ pub(super) fn drawing_gesture_tool_job(request: &mut Option<semio_plugin::Artifa
     }
     let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<DrawingGestureOperationJob>() + std::mem::size_of::<DrawingGestureOperationPayload>(), release_bytes: 0, depth: 1 };
     semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
-        let mut request = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?;
+        let mut request = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?.into_inputs();
         let view_state = request.context.view_state.clone().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture commands require one concrete Canvas window instance"))?;
         let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
         let window_transient = canvas_window::transient::from_snapshot(request.context.window_transient.as_ref());

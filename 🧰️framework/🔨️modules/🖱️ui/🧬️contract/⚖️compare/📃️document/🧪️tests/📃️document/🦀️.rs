@@ -58,6 +58,7 @@ fn start(lease: UiDocumentLease, component: crate::Component) -> UiDocumentCompo
 
 #[test]
 fn retained_document_component_compare_reads_exact_lease_without_copy_and_preserves_wire_order() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _gate = crate::arena_test_gate();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
@@ -140,6 +141,7 @@ fn retained_document_component_compare_rejects_exact_owners_before_admission_or_
 
 #[test]
 fn retained_document_component_compare_cancel_and_contention_keep_live_document_and_incoming_root() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _gate = crate::arena_test_gate();
     let fixture = fixture();
     let text = fixture["text"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
@@ -188,6 +190,7 @@ fn retained_document_component_compare_cancel_and_contention_keep_live_document_
 }
 #[test]
 fn retained_document_component_compare_final_reads_transfer_exact_root_to_one_retirement_owner() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _gate = crate::arena_test_gate();
     let fixture = fixture();
     let value = serde_json::json!({"type":"extension","extension":"final","props":{"é":["éé"]}});

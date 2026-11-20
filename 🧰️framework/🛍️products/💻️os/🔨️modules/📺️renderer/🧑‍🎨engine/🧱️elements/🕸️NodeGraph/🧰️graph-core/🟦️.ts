@@ -173,9 +173,9 @@ export function nodeGraphSelectionActionArgs(domain: NodeGraphInteractionDomain 
   return { domainId: domain.id, targets: JSON.stringify(targets), merge: "replace", method: "pick" };
 }
 
-export function nodeGraphHoverActionArgs(domain: NodeGraphInteractionDomain | undefined, nodeId: string | null | undefined, portId?: string | null) {
+export function nodeGraphHoverActionArgs(domain: NodeGraphInteractionDomain | undefined, nodeId: string | null | undefined, portId?: string | null, edgeId?: string | null) {
   if (!domain) return undefined;
-  const targets = nodeId
+  const targets = edgeId ? [{ granularity: "edge", id: `${domain.edgeTargetPrefix}${edgeId}` }] : nodeId
     ? [portId ? { granularity: "handle", id: `${domain.handleTargetPrefix}${nodeId}@${portId}` } : { granularity: "node", id: `${domain.nodeTargetPrefix}${nodeId}` }]
     : [];
   return { domainId: domain.id, channel: "pointer", targets: JSON.stringify(targets) };
@@ -191,8 +191,9 @@ export function publishNodeGraphHover(
   domain: NodeGraphInteractionDomain | undefined,
   nodeId: string | null | undefined,
   portId?: string | null,
+  edgeId?: string | null,
 ): void {
-  const args = nodeGraphHoverActionArgs(domain, nodeId, portId);
+  const args = nodeGraphHoverActionArgs(domain, nodeId, portId, edgeId);
   if (args) dispatch(nodeGraphActions.hover, args);
 }
 //#endregion Viewport

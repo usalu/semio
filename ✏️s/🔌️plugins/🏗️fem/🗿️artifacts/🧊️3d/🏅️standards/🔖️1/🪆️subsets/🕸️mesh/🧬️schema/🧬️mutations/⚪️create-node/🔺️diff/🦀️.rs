@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `CreateNode`.
 use super::CreateNode;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodeInsertion;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::node_breach;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodeInsertion;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::node_breach;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 

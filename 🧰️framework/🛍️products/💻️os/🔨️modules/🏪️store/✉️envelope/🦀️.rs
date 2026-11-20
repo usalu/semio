@@ -258,6 +258,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     pub fn try_into_fresh_snapshot(self) -> Result<P, Self> {
         if self.schema.len() > 256
             || self.id.len() > 256
+            || self.vcs.genesis.pack().contiguous().is_none()
             || !self.vcs.edits.is_empty()
             || !self.vcs.changes.is_empty()
             || !self.vcs.checkpoints.is_empty()

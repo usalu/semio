@@ -286,8 +286,19 @@ fn process3d_child_bytes<S>(child: &store::os_store::artifact_child::ArtifactChi
 fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, semio_framework_value::ValueError> {
     match solid {
         WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => Ok(0),
+        WorkingSolid::ImportedMesh { mesh_url } if mesh_url.starts_with("data:") => {
+            if mesh_url.len() > semio_s_artifact_process_process3d_io::PROCESS3D_MODEL_DATA_URL_BYTES {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Imported mesh exceeds the document geometry budget"));
+            }
+            Ok(mesh_url.len())
+        }
         WorkingSolid::ImportedMesh { mesh_url } => process3d_text_bytes(mesh_url),
-        WorkingSolid::ImportedSolid { solid_handle } => process3d_text_bytes(solid_handle),
+        WorkingSolid::ImportedSolid { brep_pack } => {
+            if brep_pack.len() > semio_s_artifact_process_process3d_model::snapshot::PROCESS3D_IMPORTED_BREP_PACK_BYTES {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Imported stock exceeds the exact B-Rep pack budget"));
+            }
+            Ok(brep_pack.len())
+        }
         WorkingSolid::Reference { reference_id } => process3d_text_bytes(reference_id),
     }
 }
@@ -413,6 +424,7 @@ pub(crate) fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) ->
         Process3dMutation::MoveStock(_) => (1, 0),
         Process3dMutation::ChangeStockLabel(payload) => (1, process3d_text_bytes(&payload.new_label)?),
         Process3dMutation::ReplaceStockSolid(payload) => (1, process3d_child_bytes(&payload.new_solid)?),
+        Process3dMutation::ResizeStock(payload) => (1, process3d_text_bytes(&payload.field)?),
     };
     let retained_bytes = retained_bytes.saturating_add(size_of::<Process3dMutation>());
     if items > PROCESS3D_DOCUMENT_MAXIMUM_ITEMS {

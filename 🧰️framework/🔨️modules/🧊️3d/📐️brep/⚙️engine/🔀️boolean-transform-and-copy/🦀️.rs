@@ -5,18 +5,18 @@ use super::*;
 // #region 🔖️SyncApi
 impl Brep {
     pub fn fuse_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        let sa = self.solid_id(a)?;
-        let sb = self.solid_id(b)?;
+        let sa = self.native.solid_id(a)?;
+        let sb = self.native.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Unite, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        let solid = boolean_solid(&mut self.native.body, sa, sb, BooleanOp::Unite, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
+        Ok(self.native.register_solid(solid))
     }
     pub fn cut_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        let sa = self.solid_id(a)?;
-        let sb = self.solid_id(b)?;
+        let sa = self.native.solid_id(a)?;
+        let sb = self.native.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        let solid = boolean_solid(&mut self.native.body, sa, sb, BooleanOp::Cut, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
+        Ok(self.native.register_solid(solid))
     }
 
     /// 🔀️ The one-shot set operation, over the SAME road [`Brep::boolean_job_sync`] takes — so a
@@ -24,7 +24,7 @@ impl Brep {
     pub fn boolean_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<GeometryHandle, BrepError> {
         match self.boolean_job_sync(a, b, op)? {
             BrepBooleanAdmission::Answered(handle) => Ok(handle),
-            BrepBooleanAdmission::Job(mut job)=>{let solid=job.job.run_to_completion(&mut self.body,&mut job.rec).map_err(|error|map_err(&error))?;Ok(self.register_solid(solid))},
+            BrepBooleanAdmission::Job(mut job)=>{let solid=job.job.run_to_completion(&mut self.native.body,&mut job.rec).map_err(|error|map_err(&error))?;Ok(self.native.register_solid(solid))},
         }
     }
 
@@ -35,11 +35,11 @@ impl Brep {
     /// [`Brep::step_boolean_job_sync`] so no single call outruns an interactive step ceiling
     /// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
     pub fn boolean_job_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<BrepBooleanAdmission, BrepError> {
-        let sa = self.solid_id(a)?;
-        let sb = self.solid_id(b)?;
+        let sa = self.native.solid_id(a)?;
+        let sb = self.native.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        match boolean_job(&mut self.body, sa, sb, op, 1e-6, &mut rec).map_err(|error| map_err(&error))? {
-            BooleanAdmission::Answered(solid) => Ok(BrepBooleanAdmission::Answered(self.register_solid(solid))),
+        match boolean_job(&mut self.native.body, sa, sb, op, 1e-6, &mut rec).map_err(|error| map_err(&error))? {
+            BooleanAdmission::Answered(solid) => Ok(BrepBooleanAdmission::Answered(self.native.register_solid(solid))),
             BooleanAdmission::Job(job) => Ok(BrepBooleanAdmission::Job(BrepBooleanJob { job, rec })),
         }
     }
@@ -49,53 +49,53 @@ impl Brep {
     /// same contract [`Brep::tessellation_body`] states for tessellation.
     pub fn step_boolean_job_sync(&mut self,job:&mut BrepBooleanJob,cx:&mut semio_framework_job::StepContext<'_>)->Result<BrepBooleanStep,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(BrepBooleanStep::Working(job.job.progress()))}
-        let step=if job.job.is_funded_validation(){job.job.step(&mut self.body,&mut job.rec,cx)?}else{
+        let step=if job.job.is_funded_validation(){job.job.step(&mut self.native.body,&mut job.rec,cx)?}else{
             let budget=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).max(1);
             let before=job.job.progress().units_done;
-            let outcome=job.job.step_budgeted(&mut self.body,&mut job.rec,budget);
+            let outcome=job.job.step_budgeted(&mut self.native.body,&mut job.rec,budget);
             cx.consume_fuel(u64::try_from(job.job.progress().units_done.saturating_sub(before)).unwrap_or(u64::MAX).max(1));
             match outcome{Ok(step)=>step,Err(error)=>return Ok(BrepBooleanStep::Failed(map_err(&error)))}
         };
         Ok(match step{
             BooleanStep::Working(progress)=>BrepBooleanStep::Working(progress),
             BooleanStep::Cancelled(progress)=>BrepBooleanStep::Cancelled(progress),
-            BooleanStep::Done(solid)=>BrepBooleanStep::Ready(self.register_solid(solid)),
+            BooleanStep::Done(solid)=>BrepBooleanStep::Ready(self.native.register_solid(solid)),
         })
     }
     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        let sa = self.solid_id(a)?;
-        let sb = self.solid_id(b)?;
+        let sa = self.native.solid_id(a)?;
+        let sb = self.native.solid_id(b)?;
         let mut rec = OpRecorder::new();
-        let solid = boolean_solid(&mut self.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
-        Ok(self.register_solid(solid))
+        let solid = boolean_solid(&mut self.native.body, sa, sb, BooleanOp::Intersect, 1e-6, &mut rec).map_err(|error| map_err(&error))?;
+        Ok(self.native.register_solid(solid))
     }
     /// 🔁 Dispatches an exact affine transform to whichever geometry kind `shape` resolves to: a
     /// solid (topology deep copy, [`transform_solid`]), a face ([`transform_face`]), a wire
     /// ([`transform_wire`]), or a bare curve/surface ([`Curve3`]/[`Surface::transformed`] directly
-    /// — cheap, since neither lives in `self.body`). Vertex/Edge/🐚️Shell/Compound handles are out of
+    /// — cheap, since neither lives in `self.native.body`). Vertex/Edge/🐚️Shell/Compound handles are out of
     /// this ticket's scope (audit §6.2 only covers solids/faces/wires/curves/surfaces).
     fn transform_shape_sync(&mut self, shape: &GeometryHandle, map: &Affine3) -> Result<GeometryHandle, BrepError> {
         let mut rec = OpRecorder::new();
-        if let Ok(id) = self.solid_id(shape) {
-            let out = transform_solid(&mut self.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
-            return Ok(self.register_solid(out));
+        if let Ok(id) = self.native.solid_id(shape) {
+            let out = transform_solid(&mut self.native.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
+            return Ok(self.native.register_solid(out));
         }
-        if let Ok(id) = self.face_id(shape) {
-            let out = transform_face(&mut self.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
-            return Ok(self.register_face(out));
+        if let Ok(id) = self.native.face_id(shape) {
+            let out = transform_face(&mut self.native.body, id, map, &mut rec).map_err(|error| map_err(&error))?;
+            return Ok(self.native.register_face(out));
         }
-        if let Ok(wire) = self.wire_ref(shape) {
+        if let Ok(wire) = self.native.wire_ref(shape) {
             let wire = wire.clone();
-            let out = transform_wire(&mut self.body, &wire, map, &mut rec);
-            return Ok(self.register_wire(out));
+            let out = transform_wire(&mut self.native.body, &wire, map, &mut rec);
+            return Ok(self.native.register_wire(out));
         }
-        if let Ok(curve) = self.curve_ref(shape) {
+        if let Ok(curve) = self.native.curve_ref(shape) {
             let out = curve.transformed(map);
-            return Ok(self.register_curve(out));
+            return Ok(self.native.register_curve(out));
         }
-        if let Ok(surface) = self.surface_ref(shape) {
+        if let Ok(surface) = self.native.surface_ref(shape) {
             let out = surface.transformed(map);
-            return Ok(self.register_surface(out));
+            return Ok(self.native.register_surface(out));
         }
         Err(BrepError::InvalidInput(format!("{} is not a solid/face/wire/curve/surface", shape.as_str())))
     }
@@ -136,20 +136,20 @@ impl Brep {
     /// 🔁 A solid copies via [`copy_solid`] (its dedicated identity-transform entry point); every
     /// other supported kind copies via [`Self::transform_shape_sync`] under [`Affine3::IDENTITY`].
     pub fn copy_shape_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
-        if let Ok(id) = self.solid_id(shape) {
+        if let Ok(id) = self.native.solid_id(shape) {
             let mut rec = OpRecorder::new();
-            let out = copy_solid(&mut self.body, id, &mut rec).map_err(|error| map_err(&error))?;
-            return Ok(self.register_solid(out));
+            let out = copy_solid(&mut self.native.body, id, &mut rec).map_err(|error| map_err(&error))?;
+            return Ok(self.native.register_solid(out));
         }
         self.transform_shape_sync(shape, &Affine3::IDENTITY)
     }
     /// 🔒️ Resolves unique selected edges only within the chosen solid's topology.
     pub(super) fn scoped_solid_edges(&self, solid: SolidId, edges: &[GeometryHandle]) -> Result<Vec<EdgeId>, BrepError> {
         if edges.is_empty() { return Err(BrepError::InvalidInput("Select at least one edge".into())); }
-        let scope = all_edges(&self.body, solid);
+        let scope = all_edges(&self.native.body, solid);
         let mut selected = std::collections::BTreeSet::new();
         for handle in edges {
-            let edge = self.edge_id(handle)?;
+            let edge = self.native.edge_id(handle)?;
             if scope.binary_search(&edge).is_err() { return Err(BrepError::InvalidInput("Edge is not part of the selected solid".into())); }
             selected.insert(edge);
         }

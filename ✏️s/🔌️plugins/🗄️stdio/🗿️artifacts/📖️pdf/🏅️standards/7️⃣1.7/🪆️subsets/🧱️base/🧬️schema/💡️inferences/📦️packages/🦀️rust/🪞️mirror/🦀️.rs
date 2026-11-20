@@ -10,8 +10,7 @@ pub mod standards {
             pub mod base {
                 #[path = "."]
                 pub mod modules {
-                    #[path = "../../../../../🔨️modules/🔤️lexer/🦀️.rs"]
-                    pub mod lexer;
+                    pub use semio_s_artifact_stdio_pdf_lexer as lexer;
                     #[path = "../../../../../🔨️modules/🗜️filters/🦀️.rs"]
                     pub mod filters;
                     #[path = "../../../../../🔨️modules/🔐️encryption/🦀️.rs"]

@@ -1,5 +1,6 @@
 import {execFile} from "node:child_process";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {systemWindowsMemoryPortV1,type WindowsMemoryPortV1} from "../🪟️native-memory/🟦️.ts";
 
 const RULES=schema.definitions.Unmanaged.const;
 
@@ -28,8 +29,9 @@ export function censusUnmanagedHostV1(rows:readonly HostProcessRowV1[],grantRoot
  return Object.freeze([...totals].map(([name,total])=>Object.freeze({name,processes:total.processes,megabytes:Math.ceil(total.kilobytes/1024)})).sort((left,right)=>right.megabytes-left.megabytes||(left.name<right.name?-1:1)));
 }
 
-/** 🖥️ Reads the process table of this machine with the command of the schema for its platform. */
-export function readHostProcessRowsV1(platform:NodeJS.Platform=process.platform):Promise<readonly HostProcessRowV1[]>{
- const row=platform==="win32"?RULES.table.win32:RULES.table.unix;
+/** 🖥️ Reads the process table of this machine: the native process walk on Windows (a blind walk is an empty table), the command of the schema elsewhere. */
+export function readHostProcessRowsV1(platform:NodeJS.Platform=process.platform,windows?:WindowsMemoryPortV1):Promise<readonly HostProcessRowV1[]>{
+ if(platform==="win32"){const table=(windows??systemWindowsMemoryPortV1()).processes();return Promise.resolve(table.known?table.rows.map(row=>({pid:row.pid,ppid:row.parent,kilobytes:Math.floor((row.workingSetBytes??0)/1024),name:row.name})):[]);}
+ const row=RULES.table.unix;
  return new Promise(done=>execFile(row.command,[...row.arguments],{maxBuffer:64*1048576,windowsHide:true},(error,stdout)=>done(error?[]:parseHostProcessRowsV1(stdout))));
 }

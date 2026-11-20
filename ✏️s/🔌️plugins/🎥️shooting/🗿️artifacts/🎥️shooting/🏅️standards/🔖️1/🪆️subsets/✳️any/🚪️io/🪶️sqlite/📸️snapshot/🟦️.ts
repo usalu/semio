@@ -2,7 +2,8 @@
 import sql from "./🗄️.sql" with {type:"text"};
 import type {ShootingSnapshot,ShootingAsset,ShootingCamera,ShootingSceneLighting,ShootingSun,ShootingAmbient,ShootingShadow,ShootingMaterial} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
-import {parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
+import {parseShootingDrawing} from "../../../🧬️schema/🟦️.ts";
+import {binary64,binary64Value,parseBinary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";
 /** 📐️ Exact owned three-component binary64 geometry. */
@@ -21,6 +22,34 @@ export const SHOOTING_SQLITE_SCHEMA:string=sql;
 const SCENE:readonly Ieee754Column[]=[{index:4,width:64},{index:5,width:64},{index:6,width:64},{index:8,width:64},{index:11,width:64},{index:12,width:64},{index:14,width:64},{index:15,width:64},{index:17,width:64}];
 const ASSET:readonly Ieee754Column[]=[{index:7,width:64},{index:8,width:64},{index:9,width:64},{index:10,width:64},{index:11,width:64},{index:12,width:64},{index:13,width:64},{index:14,width:64},{index:15,width:64},{index:16,width:64}];
 const CAMERA:readonly Ieee754Column[]=[{index:5,width:64},{index:6,width:64},{index:7,width:64},{index:8,width:64},{index:9,width:64},{index:10,width:64},{index:11,width:64},{index:12,width:64},{index:13,width:64},{index:14,width:64},{index:15,width:64}];
+const DRAWING:readonly Ieee754Column[]=[{index:14,width:64},{index:19,width:64},{index:20,width:64},{index:21,width:64}];
+function drawingCells(value: unknown): (string | bigint | Binary64 | null)[] {
+  if (value === undefined) return Array(12).fill(null);
+  const d = parseShootingDrawing(value);
+  return [
+    boolean(d.background), boolean(d.fill), optionalText(d.fillColor), binary64(d.fillOpacity),
+    boolean(d.visibleLines), boolean(d.hiddenLines), d.visibleColor, d.hiddenColor,
+    binary64(d.visibleWidth), binary64(d.hiddenWidth), binary64(d.lineEasing), boolean(d.mergeLines),
+  ];
+}
+function restoreDrawing(row: SqliteRow): ShootingSnapshot["shots"][number]["drawing"] {
+  if (row.values.slice(11, 23).every(value => value === null) && row.values.slice(24).every(value => value === null)) return undefined;
+  const number = (index: number) => binary64Value(readBinary64(row, index, DRAWING));
+  return parseShootingDrawing({
+    background: readBoolean(row, 11),
+    fill: readBoolean(row, 12),
+    ...(row.values[13] === null ? {} : { fillColor: artifactSqliteText(row, 13) }),
+    fillOpacity: number(14),
+    visibleLines: readBoolean(row, 15),
+    hiddenLines: readBoolean(row, 16),
+    visibleColor: artifactSqliteText(row, 17),
+    hiddenColor: artifactSqliteText(row, 18),
+    visibleWidth: number(19),
+    hiddenWidth: number(20),
+    lineEasing: number(21),
+    mergeLines: readBoolean(row, 22),
+  });
+}
 function record(value:unknown,required:readonly string[],optional:readonly string[]=[]):Record<string,unknown>{if(value===null||typeof value!=="object"||Array.isArray(value)||Object.keys(value).some(key=>!required.includes(key)&&!optional.includes(key))||required.some(key=>!Object.hasOwn(value,key)))throw Error("Shooting requires exact complete native fields");return value as Record<string,unknown>}
 function text(value:unknown):string{if(typeof value!=="string")throw Error("Shooting requires native TEXT");return value}
 function optionalText(value:unknown):string|null{return value===undefined?null:text(value)}
@@ -48,7 +77,7 @@ export async function shootingSnapshotToSqliteDatabase(snapshot:ShootingSqliteSn
  await insertGeometry(out,"shooting_scene",[1n,1n,text(scene.background),boolean(sun.enabled),word(sun.azimuth),word(sun.elevation),word(sun.intensity),text(sun.color),word(ambient.intensity),text(ambient.color),boolean(shadow.enabled),word(shadow.opacity),word(shadow.softness),text(material.color),word(material.metalness),word(material.roughness),text(material.emissive),word(material.emissiveIntensity),text(material.stroke)],SCENE,options,1n);
  for(let ordinal=0;ordinal<root.assets.length;ordinal++){const a=record(root.assets[ordinal],["id","name","url","format","origin"],["orientation","scale"]);await insertGeometry(out,"shooting_asset",[1n,1n,BigInt(ordinal),text(a.id),text(a.name),text(a.url),text(a.format),...v3(a.origin),...optionalVector(a.orientation,4),...optionalVector(a.scale,3)],ASSET,options)}
  for(let ordinal=0;ordinal<root.savedCameras.length;ordinal++){const e=record(root.savedCameras[ordinal],["id","label","camera"]),c=record(e.camera,["position","target","zoom","fov"],["up","projection"]);await insertGeometry(out,"shooting_saved_camera",[1n,1n,BigInt(ordinal),text(e.id),text(e.label),...v3(c.position),...v3(c.target),word(c.zoom),word(c.fov),...optionalVector(c.up,3),optionalText(c.projection)],CAMERA,options)}
- for(let ordinal=0;ordinal<root.shots.length;ordinal++){const shot=record(root.shots[ordinal],["id","label","width","height","format","shape"],["background","cameraId"]);await out.insert("shooting_shot",[1n,BigInt(ordinal),text(shot.id),text(shot.label),page(shot.width),page(shot.height),text(shot.format),text(shot.shape),optionalText(shot.background),optionalText(shot.cameraId)])}
+ for(let ordinal=0;ordinal<root.shots.length;ordinal++){const shot=record(root.shots[ordinal],["id","label","width","height","format","shape"],["background","cameraId","drawing","autoFit"]);await insertGeometry(out,"shooting_shot",[1n,1n,BigInt(ordinal),text(shot.id),text(shot.label),page(shot.width),page(shot.height),text(shot.format),text(shot.shape),optionalText(shot.background),optionalText(shot.cameraId),...drawingCells(shot.drawing),shot.autoFit===undefined?null:boolean(shot.autoFit)],DRAWING,options)}
  if(root.emblem!==undefined){const c=child(root.emblem),t=c.target;await out.insert("shooting_emblem",[1n,c.childId,t.artifactId,t.dialect.artifactKind,t.dialect.standard,t.dialect.subset])}return out.finish();
 }
 /** 📥️ Restores only the exact persisted authority after typed shape, ownership and ordinal validation. */
@@ -59,7 +88,7 @@ export async function shootingSnapshotFromSqliteDatabase(database:SqliteDatabase
  const groups=[await artifactSqliteOrderedRowsControlled(tables[2]!,2,options),await artifactSqliteOrderedRowsControlled(tables[3]!,2,options),await artifactSqliteOrderedRowsControlled(tables[4]!,2,options)];const total=groups.reduce((sum,rows)=>sum+rows.length,0)+2+tables[5]!.length;let completed=2;
  for(const row of groups[0]!){if(completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,total);identity(row,37);const a:ShootingSqliteAsset={id:artifactSqliteText(row,3),name:artifactSqliteText(row,4),url:artifactSqliteText(row,5),format:artifactSqliteText(row,6),origin:read3(row,7,ASSET)},orientation=readOptional4(row,10,ASSET),scale=readOptional3(row,14,ASSET);if(orientation!==undefined)a.orientation=orientation;if(scale!==undefined)a.scale=scale;assets.push(a);completed++}
  for(const row of groups[1]!){if(completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,total);identity(row,39);const c:ShootingSqliteCamera={position:read3(row,5,CAMERA),target:read3(row,8,CAMERA),zoom:readBinary64(row,11,CAMERA),fov:readBinary64(row,12,CAMERA)},up=readOptional3(row,13,CAMERA);if(up!==undefined)c.up=up;if(row.values[16]!==null)c.projection=artifactSqliteText(row,16);savedCameras.push({id:artifactSqliteText(row,3),label:artifactSqliteText(row,4),camera:c});completed++}
- for(const row of groups[2]!){if(completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,total);identity(row,11);const shot:ShootingSnapshot["shots"][number]={id:artifactSqliteText(row,3),label:artifactSqliteText(row,4),width:readPage(row,5),height:readPage(row,6),format:artifactSqliteText(row,7),shape:artifactSqliteText(row,8)};if(row.values[9]!==null)shot.background=artifactSqliteText(row,9);if(row.values[10]!==null)shot.cameraId=artifactSqliteText(row,10);shots.push(shot);completed++}
+ for(const row of groups[2]!){if(completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,total);identity(row,32);const shot:ShootingSnapshot["shots"][number]={id:artifactSqliteText(row,3),label:artifactSqliteText(row,4),width:readPage(row,5),height:readPage(row,6),format:artifactSqliteText(row,7),shape:artifactSqliteText(row,8)};if(row.values[9]!==null)shot.background=artifactSqliteText(row,9);if(row.values[10]!==null)shot.cameraId=artifactSqliteText(row,10);const drawing=restoreDrawing(row);if(drawing!==undefined)shot.drawing=drawing;if(row.values[23]!==null)shot.autoFit=readBoolean(row,23);shots.push(shot);completed++}
  const result:ShootingSqliteSnapshot={schema:artifactSqliteText(document,1),assets,savedCameras,scene,shots,activeShotId:artifactSqliteText(document,2),activeAssetId:artifactSqliteText(document,3)};const emblem=tables[5]![0];if(emblem!==undefined){identity(emblem,7);result.emblem={childId:artifactSqliteText(emblem,2),target:{artifactId:artifactSqliteText(emblem,3),dialect:{artifactKind:artifactSqliteText(emblem,4),standard:artifactSqliteText(emblem,5),subset:artifactSqliteText(emblem,6)}}};completed++}await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,total,false);return result;
 }
 

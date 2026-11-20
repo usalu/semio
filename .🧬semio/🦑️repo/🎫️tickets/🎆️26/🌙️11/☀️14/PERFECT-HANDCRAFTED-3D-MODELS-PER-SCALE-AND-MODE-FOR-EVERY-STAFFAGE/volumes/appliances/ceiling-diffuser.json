@@ -1,1 +1,4022 @@
-{"volumes":{"50":{"status":"authored","denominator":50,"body":[{"id":"collar","kind":"extrude","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"profile":[[0.1225,0.0],[0.12145,0.01599],[0.11833,0.03171],[0.11318,0.04688],[0.10609,0.06125],[0.09719,0.07457],[0.08662,0.08662],[0.07457,0.09719],[0.06125,0.10609],[0.04688,0.11318],[0.03171,0.11833],[0.01599,0.12145],[0.0,0.1225],[-0.01599,0.12145],[-0.03171,0.11833],[-0.04688,0.11318],[-0.06125,0.10609],[-0.07457,0.09719],[-0.08662,0.08662],[-0.09719,0.07457],[-0.10609,0.06125],[-0.11318,0.04688],[-0.11833,0.03171],[-0.12145,0.01599],[-0.1225,0.0],[-0.12145,-0.01599],[-0.11833,-0.03171],[-0.11318,-0.04688],[-0.10609,-0.06125],[-0.09719,-0.07457],[-0.08662,-0.08662],[-0.07457,-0.09719],[-0.06125,-0.10609],[-0.04688,-0.11318],[-0.03171,-0.11833],[-0.01599,-0.12145],[0.0,-0.1225],[0.01599,-0.12145],[0.03171,-0.11833],[0.04688,-0.11318],[0.06125,-0.10609],[0.07457,-0.09719],[0.08662,-0.08662],[0.09719,-0.07457],[0.10609,-0.06125],[0.11318,-0.04688],[0.11833,-0.03171],[0.12145,-0.01599]],"plane":"zx","from":0.0,"to":0.05,"holes":[[[0.112,0.0],[0.11104,0.01462],[0.10818,0.02899],[0.10347,0.04286],[0.09699,0.056],[0.08886,0.06818],[0.0792,0.0792],[0.06818,0.08886],[0.056,0.09699],[0.04286,0.10347],[0.02899,0.10818],[0.01462,0.11104],[0.0,0.112],[-0.01462,0.11104],[-0.02899,0.10818],[-0.04286,0.10347],[-0.056,0.09699],[-0.06818,0.08886],[-0.0792,0.0792],[-0.08886,0.06818],[-0.09699,0.056],[-0.10347,0.04286],[-0.10818,0.02899],[-0.11104,0.01462],[-0.112,0.0],[-0.11104,-0.01462],[-0.10818,-0.02899],[-0.10347,-0.04286],[-0.09699,-0.056],[-0.08886,-0.06818],[-0.0792,-0.0792],[-0.06818,-0.08886],[-0.056,-0.09699],[-0.04286,-0.10347],[-0.02899,-0.10818],[-0.01462,-0.11104],[0.0,-0.112],[0.01462,-0.11104],[0.02899,-0.10818],[0.04286,-0.10347],[0.056,-0.09699],[0.06818,-0.08886],[0.0792,-0.0792],[0.08886,-0.06818],[0.09699,-0.056],[0.10347,-0.04286],[0.10818,-0.02899],[0.11104,-0.01462]]]},{"id":"collar-bead","kind":"revolve","bone":"body","material":"galvanised-steel","role":"detail","tone":0.3,"profile":[[0.0235,0.1175],[0.0235,0.125],[0.031,0.125],[0.031,0.1175]],"axis":[0,1,0],"origin":[0,0,0]},{"id":"flange","kind":"box","bone":"body","material":"powder-coated-steel","role":"body","tone":0.88,"size":[0.595,0.012,0.595],"cornerRadius":0.003,"transform":{"translation":[0.0,-0.006,0.0]}},{"id":"cone-1","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"sections":[{"at":[0,-0.012,0],"rx":0.265,"ry":0.265,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.032,0],"rx":0.245,"ry":0.245,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true},{"id":"cone-2","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.7,"sections":[{"at":[0,-0.032,0],"rx":0.2,"ry":0.2,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.052,0],"rx":0.18,"ry":0.18,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true},{"id":"cone-3","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.6,"sections":[{"at":[0,-0.052,0],"rx":0.135,"ry":0.135,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.07,0],"rx":0.115,"ry":0.115,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true},{"id":"screw-right","kind":"ellipsoid","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.45,"radii":[0.006,0.004,0.006],"transform":{"translation":[-0.27,0,-0.27]},"repeat":{"count":2,"translation":[0.54,0,0]}},{"id":"screw-left","kind":"ellipsoid","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.45,"radii":[0.006,0.004,0.006],"transform":{"translation":[-0.27,0,0.27]},"repeat":{"count":2,"translation":[0.54,0,0]}}],"thermal":[{"id":"th-flange","of":"flange","region":"plate","layer":"sheet"},{"id":"th-cone-1","of":"cone-1","region":"plate","layer":"sheet"},{"id":"th-cone-2","of":"cone-2","region":"plate","layer":"sheet"},{"id":"th-cone-3","of":"cone-3","region":"plate","layer":"sheet"},{"id":"th-screw-right","of":"screw-right","region":"plate","layer":"sheet"},{"id":"th-screw-left","of":"screw-left","region":"plate","layer":"sheet"},{"id":"th-collar","kind":"loft","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"layer":"tube","sections":[{"at":[0,0,0],"rx":0.1258,"ry":0.1258,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,0.05,0],"rx":0.1258,"ry":0.1258,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":false,"capEnd":false,"region":"collar"},{"id":"jet-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.04,0.02]],"axis":[1,0,0],"origin":[-0.302,-0.022,0],"tags":["jet-left"]},{"id":"jet-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.04,0.02]],"axis":[1,0,0],"origin":[0.262,-0.022,0],"tags":["jet-right"]}],"structure":[{"id":"member-body","of":"flange","member":"body","part":"member"},{"id":"mass-body","kind":"ellipsoid","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.15,"member":"body","part":"mass","radii":[0.09,0.02,0.09],"transform":{"translation":[0,-0.01,0]}},{"id":"support-ceiling-hanger-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.008],[0.016,0.008]],"axis":[0,1,0],"origin":[-0.28,-0.012,0],"tags":["ceiling-hanger-left"],"anchor":"ceiling-hanger-left"},{"id":"support-ceiling-hanger-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.008],[0.016,0.008]],"axis":[0,0,1],"origin":[0.28,0.002,-0.008],"tags":["ceiling-hanger-right"],"anchor":"ceiling-hanger-right"}],"decisions":[{"en":"Own model for 1:50, built from the plan (0.595 m square flange, 0.25 m round collar with a bore of 0.112 m) and the elevation: a hollow collar tube with a rolled bead, a 12 mm flange plate, three stacked square sheet cones (lofts with squareness 12) and four domed screw heads. The bore stays closed in the body because the drawing paints the opening as a filled disc.","de":"Eigenes Modell für 1:50 nach Grundriss (quadratischer Flansch 0,595 m, runder Kragen 0,25 m mit 0,112 m Bohrung) und Ansicht: ein hohler Kragen mit Wulst, eine 12 mm Flanschplatte, drei gestapelte quadratische Blechkegel (Lofts mit Eckigkeit 12) und vier gewölbte Schraubenköpfe. Die Bohrung bleibt im Körper geschlossen, weil die Zeichnung die Öffnung als gefüllte Scheibe malt."},{"en":"Thermal: the plate region is the exposed surface of the flange, the three cones and the screw heads (references to the body solids, buried faces do not count), the collar region the outer face of the collar as an open tube skin; the two supply jets are 0.04 m nozzles at the outlet slots. Single-layer sheets of 0.8 mm and 0.7 mm are surfaces, so no nested shells are needed.","de":"Thermik: die Region Platte ist die freie Fläche von Flansch, den drei Kegeln und den Schraubenköpfen (Verweise auf die Körper, verdeckte Flächen zählen nicht), die Region Kragen die Aussenfläche des Kragens als offene Rohrhaut; die zwei Zuluftstrahlen sind Düsen von 0,04 m an den Auslassschlitzen. Einlagige Bleche von 0,8 mm und 0,7 mm sind Flächen, verschachtelte Schalen entfallen."},{"en":"Structure: the flange plate carries the 3.2 kg through the two hangers (pin left as a vertical stud through the plate, roller right as a transverse roller at the plate top); a compact mass ellipsoid sits at the centre of mass. One member solid is right here: the diffuser is a single rigid part (one rig bone) that hangs from its two ceiling hangers, so the flange plate is the whole load path and the cones and collar are cladding.","de":"Tragwerk: die Flanschplatte trägt die 3,2 kg über die zwei Halter (links ein Festlager als senkrechter Bolzen durch die Platte, rechts ein Rollenlager als Querrolle auf der Plattenoberseite); ein kompakter Massenellipsoid liegt im Schwerpunkt. Ein Stabkörper ist hier richtig: der Auslass ist ein einziges starres Teil (eine Rig-Bone), das an seinen zwei Deckenhaltern hängt; die Flanschplatte ist der ganze Lastpfad, Kegel und Stutzen sind Verkleidung."}]},"100":{"status":"authored","denominator":100,"body":[{"id":"collar","kind":"extrude","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"profile":[[0.125,0.0],[0.12393,0.01632],[0.12074,0.03235],[0.11548,0.04784],[0.10825,0.0625],[0.09917,0.0761],[0.08839,0.08839],[0.0761,0.09917],[0.0625,0.10825],[0.04784,0.11548],[0.03235,0.12074],[0.01632,0.12393],[0.0,0.125],[-0.01632,0.12393],[-0.03235,0.12074],[-0.04784,0.11548],[-0.0625,0.10825],[-0.0761,0.09917],[-0.08839,0.08839],[-0.09917,0.0761],[-0.10825,0.0625],[-0.11548,0.04784],[-0.12074,0.03235],[-0.12393,0.01632],[-0.125,0.0],[-0.12393,-0.01632],[-0.12074,-0.03235],[-0.11548,-0.04784],[-0.10825,-0.0625],[-0.09917,-0.0761],[-0.08839,-0.08839],[-0.0761,-0.09917],[-0.0625,-0.10825],[-0.04784,-0.11548],[-0.03235,-0.12074],[-0.01632,-0.12393],[0.0,-0.125],[0.01632,-0.12393],[0.03235,-0.12074],[0.04784,-0.11548],[0.0625,-0.10825],[0.0761,-0.09917],[0.08839,-0.08839],[0.09917,-0.0761],[0.10825,-0.0625],[0.11548,-0.04784],[0.12074,-0.03235],[0.12393,-0.01632]],"plane":"zx","from":0.0,"to":0.05,"holes":[[[0.1,0.0],[0.09914,0.01305],[0.09659,0.02588],[0.09239,0.03827],[0.0866,0.05],[0.07934,0.06088],[0.07071,0.07071],[0.06088,0.07934],[0.05,0.0866],[0.03827,0.09239],[0.02588,0.09659],[0.01305,0.09914],[0.0,0.1],[-0.01305,0.09914],[-0.02588,0.09659],[-0.03827,0.09239],[-0.05,0.0866],[-0.06088,0.07934],[-0.07071,0.07071],[-0.07934,0.06088],[-0.0866,0.05],[-0.09239,0.03827],[-0.09659,0.02588],[-0.09914,0.01305],[-0.1,0.0],[-0.09914,-0.01305],[-0.09659,-0.02588],[-0.09239,-0.03827],[-0.0866,-0.05],[-0.07934,-0.06088],[-0.07071,-0.07071],[-0.06088,-0.07934],[-0.05,-0.0866],[-0.03827,-0.09239],[-0.02588,-0.09659],[-0.01305,-0.09914],[0.0,-0.1],[0.01305,-0.09914],[0.02588,-0.09659],[0.03827,-0.09239],[0.05,-0.0866],[0.06088,-0.07934],[0.07071,-0.07071],[0.07934,-0.06088],[0.0866,-0.05],[0.09239,-0.03827],[0.09659,-0.02588],[0.09914,-0.01305]]]},{"id":"flange","kind":"box","bone":"body","material":"powder-coated-steel","role":"body","tone":0.88,"size":[0.595,0.02,0.595],"transform":{"translation":[0.0,-0.01,0.0]}},{"id":"cone-1","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"sections":[{"at":[0,-0.02,0],"rx":0.255,"ry":0.255,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.045,0],"rx":0.225,"ry":0.225,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true},{"id":"cone-2","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.7,"sections":[{"at":[0,-0.045,0],"rx":0.18,"ry":0.18,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.07,0],"rx":0.12,"ry":0.12,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true}],"thermal":[{"id":"th-flange","of":"flange","region":"plate","layer":"sheet"},{"id":"th-cone-1","of":"cone-1","region":"plate","layer":"sheet"},{"id":"th-cone-2","of":"cone-2","region":"plate","layer":"sheet"},{"id":"th-collar","kind":"loft","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"layer":"tube","sections":[{"at":[0,0,0],"rx":0.1258,"ry":0.1258,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,0.05,0],"rx":0.1258,"ry":0.1258,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":false,"capEnd":false,"region":"collar"},{"id":"jet-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.04,0.02]],"axis":[1,0,0],"origin":[-0.302,-0.03,0],"tags":["jet-left"]},{"id":"jet-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.04,0.02]],"axis":[1,0,0],"origin":[0.262,-0.03,0],"tags":["jet-right"]}],"structure":[{"id":"member-body","of":"flange","member":"body","part":"member"},{"id":"mass-body","kind":"ellipsoid","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.15,"member":"body","part":"mass","radii":[0.1,0.03,0.1],"transform":{"translation":[0,-0.015,0]}},{"id":"support-ceiling-hanger-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.008],[0.016,0.008]],"axis":[0,1,0],"origin":[-0.28,-0.02,0],"tags":["ceiling-hanger-left"],"anchor":"ceiling-hanger-left"},{"id":"support-ceiling-hanger-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.008],[0.016,0.008]],"axis":[0,0,1],"origin":[0.28,0.002,-0.008],"tags":["ceiling-hanger-right"],"anchor":"ceiling-hanger-right"}],"decisions":[{"en":"Own model for 1:100 against the 1:100 drawings: the flange is 20 mm thick, only two cones remain (0.255 to 0.225 and 0.18 to 0.12 half widths) and the collar bore is 0.1 m. Bead, screw heads and the third cone step are merged away because they fall below 15 mm.","de":"Eigenes Modell für 1:100 nach den 1:100-Zeichnungen: der Flansch ist 20 mm dick, es bleiben zwei Kegel (Halbbreiten 0,255 auf 0,225 und 0,18 auf 0,12) und die Kragenbohrung misst 0,1 m. Wulst, Schraubenköpfe und die dritte Kegelstufe sind weggefallen, weil sie unter 15 mm liegen."},{"en":"Thermal and structure are rebuilt on these solids: references to flange, both cones and the collar, two jets; flange plate as member, one mass ellipsoid, pin and roller supports sized at the 15 mm feature. One member solid is right here: the diffuser is a single rigid part (one rig bone) that hangs from its two ceiling hangers, so the flange plate is the whole load path and the cones and collar are cladding.","de":"Thermik und Tragwerk sind auf diesen Körpern neu aufgebaut: Verweise auf Flansch, beide Kegel und Kragen, zwei Strahlen; Flanschplatte als Stab, ein Massenellipsoid, Bolzen- und Rollenlager in der Grösse des 15-mm-Merkmals. Ein Stabkörper ist hier richtig: der Auslass ist ein einziges starres Teil (eine Rig-Bone), das an seinen zwei Deckenhaltern hängt; die Flanschplatte ist der ganze Lastpfad, Kegel und Stutzen sind Verkleidung."}]},"200":{"status":"authored","denominator":200,"body":[{"id":"collar","kind":"extrude","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"profile":[[0.127,0.0],[0.12591,0.01658],[0.12267,0.03287],[0.11733,0.0486],[0.10999,0.0635],[0.10076,0.07731],[0.0898,0.0898],[0.07731,0.10076],[0.0635,0.10999],[0.0486,0.11733],[0.03287,0.12267],[0.01658,0.12591],[0.0,0.127],[-0.01658,0.12591],[-0.03287,0.12267],[-0.0486,0.11733],[-0.0635,0.10999],[-0.07731,0.10076],[-0.0898,0.0898],[-0.10076,0.07731],[-0.10999,0.0635],[-0.11733,0.0486],[-0.12267,0.03287],[-0.12591,0.01658],[-0.127,0.0],[-0.12591,-0.01658],[-0.12267,-0.03287],[-0.11733,-0.0486],[-0.10999,-0.0635],[-0.10076,-0.07731],[-0.0898,-0.0898],[-0.07731,-0.10076],[-0.0635,-0.10999],[-0.0486,-0.11733],[-0.03287,-0.12267],[-0.01658,-0.12591],[0.0,-0.127],[0.01658,-0.12591],[0.03287,-0.12267],[0.0486,-0.11733],[0.0635,-0.10999],[0.07731,-0.10076],[0.0898,-0.0898],[0.10076,-0.07731],[0.10999,-0.0635],[0.11733,-0.0486],[0.12267,-0.03287],[0.12591,-0.01658]],"plane":"zx","from":0.0,"to":0.05,"holes":[[[0.097,0.0],[0.09617,0.01266],[0.09369,0.02511],[0.08962,0.03712],[0.084,0.0485],[0.07696,0.05905],[0.06859,0.06859],[0.05905,0.07696],[0.0485,0.084],[0.03712,0.08962],[0.02511,0.09369],[0.01266,0.09617],[0.0,0.097],[-0.01266,0.09617],[-0.02511,0.09369],[-0.03712,0.08962],[-0.0485,0.084],[-0.05905,0.07696],[-0.06859,0.06859],[-0.07696,0.05905],[-0.084,0.0485],[-0.08962,0.03712],[-0.09369,0.02511],[-0.09617,0.01266],[-0.097,0.0],[-0.09617,-0.01266],[-0.09369,-0.02511],[-0.08962,-0.03712],[-0.084,-0.0485],[-0.07696,-0.05905],[-0.06859,-0.06859],[-0.05905,-0.07696],[-0.0485,-0.084],[-0.03712,-0.08962],[-0.02511,-0.09369],[-0.01266,-0.09617],[0.0,-0.097],[0.01266,-0.09617],[0.02511,-0.09369],[0.03712,-0.08962],[0.0485,-0.084],[0.05905,-0.07696],[0.06859,-0.06859],[0.07696,-0.05905],[0.084,-0.0485],[0.08962,-0.03712],[0.09369,-0.02511],[0.09617,-0.01266]]]},{"id":"flange","kind":"box","bone":"body","material":"powder-coated-steel","role":"body","tone":0.88,"size":[0.595,0.03,0.595],"transform":{"translation":[0.0,-0.015,0.0]}},{"id":"cone","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.7,"sections":[{"at":[0,-0.03,0],"rx":0.245,"ry":0.245,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.07,0],"rx":0.12,"ry":0.12,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":true,"capEnd":true}],"thermal":[{"id":"th-flange","of":"flange","region":"plate","layer":"sheet"},{"id":"th-cone","kind":"loft","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"layer":"sheet","sections":[{"at":[0,-0.03,0],"rx":0.245,"ry":0.245,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,-0.07,0],"rx":0.12,"ry":0.12,"exponent":12,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":false,"capEnd":false,"region":"plate"},{"id":"th-collar","kind":"loft","bone":"body","material":"galvanised-steel","role":"body","tone":0.5,"layer":"tube","sections":[{"at":[0,0,0],"rx":0.127,"ry":0.127,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]},{"at":[0,0.05,0],"rx":0.127,"ry":0.127,"exponent":2,"rotation":[0.5,0.5,0.5,-0.5]}],"capStart":false,"capEnd":false,"region":"collar"},{"id":"jet-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.038,0.02]],"axis":[1,0,0],"origin":[-0.3,-0.03,0],"tags":["jet-left"]},{"id":"jet-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"body","tone":0.8,"region":"plate","layer":"sheet","profile":[[0,0.02],[0.038,0.02]],"axis":[1,0,0],"origin":[0.262,-0.03,0],"tags":["jet-right"]}],"structure":[{"id":"member-body","of":"flange","member":"body","part":"member"},{"id":"mass-body","kind":"box","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.15,"member":"body","part":"mass","size":[0.2,0.08,0.2],"transform":{"translation":[0.0,-0.02,0.0]}},{"id":"support-ceiling-hanger-left","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.015],[0.03,0.015]],"axis":[0,1,0],"origin":[-0.28,-0.03,0],"tags":["ceiling-hanger-left"],"anchor":"ceiling-hanger-left"},{"id":"support-ceiling-hanger-right","kind":"revolve","bone":"body","material":"powder-coated-steel","role":"detail","tone":0.25,"member":"body","part":"support","profile":[[0,0.015],[0.03,0.015]],"axis":[0,0,1],"origin":[0.28,0.00375,-0.015],"tags":["ceiling-hanger-right"],"anchor":"ceiling-hanger-right"}],"decisions":[{"en":"Own model for 1:200: one 30 mm flange slab (flange plus the first cone step merged) and one merged cone from half width 0.245 to 0.12 over 40 mm and a 0.254 m collar tube with a 30 mm wall. Recognisably the same diffuser with the same 0.595 x 0.07 x 0.595 m envelope; a minimal model of three solids.","de":"Eigenes Modell für 1:200: eine Flanschplatte von 30 mm (Flansch plus erste Kegelstufe), ein zusammengefasster Kegel von der Halbbreite 0,245 auf 0,12 über 40 mm und ein Kragenrohr von 0,254 m mit 30 mm Wandstärke. Erkennbar derselbe Auslass in derselben Hülle 0,595 x 0,07 x 0,595 m; ein minimales Modell aus drei Körpern."},{"en":"Thermal: the flange by reference, the sloped sides of the merged cone as an open skin and the collar with two jets; structure: flange plate, mass ellipsoid and the two hanger supports enlarged to the 30 mm feature. One member solid is right here: the diffuser is a single rigid part (one rig bone) that hangs from its two ceiling hangers, so the flange plate is the whole load path and the cones and collar are cladding.","de":"Thermik: der Flansch als Verweis, die Schrägflächen des zusammengefassten Kegels als offene Haut und der Kragen mit zwei Strahlen; Tragwerk: Flanschplatte, Massenellipsoid und die beiden Halterlager auf das 30-mm-Merkmal vergrössert. Ein Stabkörper ist hier richtig: der Auslass ist ein einziges starres Teil (eine Rig-Bone), das an seinen zwei Deckenhaltern hängt; die Flanschplatte ist der ganze Lastpfad, Kegel und Stutzen sind Verkleidung."}]},"500":{"status":"unavailable","denominator":500}}}
+{
+  "volumes": {
+    "50": {
+      "status": "authored",
+      "denominator": 50,
+      "body": [
+        {
+          "id": "collar",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [
+            [
+              -0.004,
+              0.1245
+            ],
+            [
+              0.021,
+              0.1245
+            ],
+            [
+              0.023,
+              0.1272
+            ],
+            [
+              0.029,
+              0.1272
+            ],
+            [
+              0.031,
+              0.1245
+            ],
+            [
+              0.05,
+              0.1245
+            ],
+            [
+              0.05,
+              0.1238
+            ],
+            [
+              0.031,
+              0.1238
+            ],
+            [
+              0.029,
+              0.1265
+            ],
+            [
+              0.023,
+              0.1265
+            ],
+            [
+              0.021,
+              0.1238
+            ],
+            [
+              -0.004,
+              0.1238
+            ],
+            [
+              -0.004,
+              0.1245
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "flange",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "profile": [
+            [
+              0.2975,
+              0.2915
+            ],
+            [
+              0.297043,
+              0.293796
+            ],
+            [
+              0.295743,
+              0.295743
+            ],
+            [
+              0.293796,
+              0.297043
+            ],
+            [
+              0.2915,
+              0.2975
+            ],
+            [
+              -0.2915,
+              0.2975
+            ],
+            [
+              -0.293796,
+              0.297043
+            ],
+            [
+              -0.295743,
+              0.295743
+            ],
+            [
+              -0.297043,
+              0.293796
+            ],
+            [
+              -0.2975,
+              0.2915
+            ],
+            [
+              -0.2975,
+              -0.2915
+            ],
+            [
+              -0.297043,
+              -0.293796
+            ],
+            [
+              -0.295743,
+              -0.295743
+            ],
+            [
+              -0.293796,
+              -0.297043
+            ],
+            [
+              -0.2915,
+              -0.2975
+            ],
+            [
+              0.2915,
+              -0.2975
+            ],
+            [
+              0.293796,
+              -0.297043
+            ],
+            [
+              0.295743,
+              -0.295743
+            ],
+            [
+              0.297043,
+              -0.293796
+            ],
+            [
+              0.2975,
+              -0.2915
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.262,
+                0.26
+              ],
+              [
+                0.261848,
+                0.260765
+              ],
+              [
+                0.261414,
+                0.261414
+              ],
+              [
+                0.260765,
+                0.261848
+              ],
+              [
+                0.26,
+                0.262
+              ],
+              [
+                -0.26,
+                0.262
+              ],
+              [
+                -0.260765,
+                0.261848
+              ],
+              [
+                -0.261414,
+                0.261414
+              ],
+              [
+                -0.261848,
+                0.260765
+              ],
+              [
+                -0.262,
+                0.26
+              ],
+              [
+                -0.262,
+                -0.26
+              ],
+              [
+                -0.261848,
+                -0.260765
+              ],
+              [
+                -0.261414,
+                -0.261414
+              ],
+              [
+                -0.260765,
+                -0.261848
+              ],
+              [
+                -0.26,
+                -0.262
+              ],
+              [
+                0.26,
+                -0.262
+              ],
+              [
+                0.260765,
+                -0.261848
+              ],
+              [
+                0.261414,
+                -0.261414
+              ],
+              [
+                0.261848,
+                -0.260765
+              ],
+              [
+                0.262,
+                -0.26
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.012,
+          "to": 0.0,
+          "sectionFaces": [
+            "+v"
+          ]
+        },
+        {
+          "id": "backplate",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.84,
+          "profile": [
+            [
+              0.2625,
+              0.26
+            ],
+            [
+              0.26231,
+              0.260957
+            ],
+            [
+              0.261768,
+              0.261768
+            ],
+            [
+              0.260957,
+              0.26231
+            ],
+            [
+              0.26,
+              0.2625
+            ],
+            [
+              -0.26,
+              0.2625
+            ],
+            [
+              -0.260957,
+              0.26231
+            ],
+            [
+              -0.261768,
+              0.261768
+            ],
+            [
+              -0.26231,
+              0.260957
+            ],
+            [
+              -0.2625,
+              0.26
+            ],
+            [
+              -0.2625,
+              -0.26
+            ],
+            [
+              -0.26231,
+              -0.260957
+            ],
+            [
+              -0.261768,
+              -0.261768
+            ],
+            [
+              -0.260957,
+              -0.26231
+            ],
+            [
+              -0.26,
+              -0.2625
+            ],
+            [
+              0.26,
+              -0.2625
+            ],
+            [
+              0.260957,
+              -0.26231
+            ],
+            [
+              0.261768,
+              -0.261768
+            ],
+            [
+              0.26231,
+              -0.260957
+            ],
+            [
+              0.2625,
+              -0.26
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.123435,
+                0.016251
+              ],
+              [
+                0.120258,
+                0.032223
+              ],
+              [
+                0.115023,
+                0.047644
+              ],
+              [
+                0.10782,
+                0.06225
+              ],
+              [
+                0.098772,
+                0.075791
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.075791,
+                0.098772
+              ],
+              [
+                0.06225,
+                0.10782
+              ],
+              [
+                0.047644,
+                0.115023
+              ],
+              [
+                0.032223,
+                0.120258
+              ],
+              [
+                0.016251,
+                0.123435
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.016251,
+                0.123435
+              ],
+              [
+                -0.032223,
+                0.120258
+              ],
+              [
+                -0.047644,
+                0.115023
+              ],
+              [
+                -0.06225,
+                0.10782
+              ],
+              [
+                -0.075791,
+                0.098772
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.098772,
+                0.075791
+              ],
+              [
+                -0.10782,
+                0.06225
+              ],
+              [
+                -0.115023,
+                0.047644
+              ],
+              [
+                -0.120258,
+                0.032223
+              ],
+              [
+                -0.123435,
+                0.016251
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.123435,
+                -0.016251
+              ],
+              [
+                -0.120258,
+                -0.032223
+              ],
+              [
+                -0.115023,
+                -0.047644
+              ],
+              [
+                -0.10782,
+                -0.06225
+              ],
+              [
+                -0.098772,
+                -0.075791
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.075791,
+                -0.098772
+              ],
+              [
+                -0.06225,
+                -0.10782
+              ],
+              [
+                -0.047644,
+                -0.115023
+              ],
+              [
+                -0.032223,
+                -0.120258
+              ],
+              [
+                -0.016251,
+                -0.123435
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.016251,
+                -0.123435
+              ],
+              [
+                0.032223,
+                -0.120258
+              ],
+              [
+                0.047644,
+                -0.115023
+              ],
+              [
+                0.06225,
+                -0.10782
+              ],
+              [
+                0.075791,
+                -0.098772
+              ],
+              [
+                0.088035,
+                -0.088035
+              ],
+              [
+                0.098772,
+                -0.075791
+              ],
+              [
+                0.10782,
+                -0.06225
+              ],
+              [
+                0.115023,
+                -0.047644
+              ],
+              [
+                0.120258,
+                -0.032223
+              ],
+              [
+                0.123435,
+                -0.016251
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.0075
+        },
+        {
+          "id": "cone-1-rim",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.8,
+          "profile": [
+            [
+              0.265,
+              0.253
+            ],
+            [
+              0.264087,
+              0.257592
+            ],
+            [
+              0.261485,
+              0.261485
+            ],
+            [
+              0.257592,
+              0.264087
+            ],
+            [
+              0.253,
+              0.265
+            ],
+            [
+              -0.253,
+              0.265
+            ],
+            [
+              -0.257592,
+              0.264087
+            ],
+            [
+              -0.261485,
+              0.261485
+            ],
+            [
+              -0.264087,
+              0.257592
+            ],
+            [
+              -0.265,
+              0.253
+            ],
+            [
+              -0.265,
+              -0.253
+            ],
+            [
+              -0.264087,
+              -0.257592
+            ],
+            [
+              -0.261485,
+              -0.261485
+            ],
+            [
+              -0.257592,
+              -0.264087
+            ],
+            [
+              -0.253,
+              -0.265
+            ],
+            [
+              0.253,
+              -0.265
+            ],
+            [
+              0.257592,
+              -0.264087
+            ],
+            [
+              0.261485,
+              -0.261485
+            ],
+            [
+              0.264087,
+              -0.257592
+            ],
+            [
+              0.265,
+              -0.253
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.263869,
+                0.253
+              ],
+              [
+                0.263041,
+                0.257159
+              ],
+              [
+                0.260685,
+                0.260685
+              ],
+              [
+                0.257159,
+                0.263041
+              ],
+              [
+                0.253,
+                0.263869
+              ],
+              [
+                -0.253,
+                0.263869
+              ],
+              [
+                -0.257159,
+                0.263041
+              ],
+              [
+                -0.260685,
+                0.260685
+              ],
+              [
+                -0.263041,
+                0.257159
+              ],
+              [
+                -0.263869,
+                0.253
+              ],
+              [
+                -0.263869,
+                -0.253
+              ],
+              [
+                -0.263041,
+                -0.257159
+              ],
+              [
+                -0.260685,
+                -0.260685
+              ],
+              [
+                -0.257159,
+                -0.263041
+              ],
+              [
+                -0.253,
+                -0.263869
+              ],
+              [
+                0.253,
+                -0.263869
+              ],
+              [
+                0.257159,
+                -0.263041
+              ],
+              [
+                0.260685,
+                -0.260685
+              ],
+              [
+                0.263041,
+                -0.257159
+              ],
+              [
+                0.263869,
+                -0.253
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.032,
+          "to": -0.022,
+          "taperTo": [
+            1,
+            0.962264
+          ]
+        },
+        {
+          "id": "cone-1-cone",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.8,
+          "profile": [
+            [
+              0.255,
+              0.243453
+            ],
+            [
+              0.254121,
+              0.247872
+            ],
+            [
+              0.251618,
+              0.251618
+            ],
+            [
+              0.247872,
+              0.254121
+            ],
+            [
+              0.243453,
+              0.255
+            ],
+            [
+              -0.243453,
+              0.255
+            ],
+            [
+              -0.247872,
+              0.254121
+            ],
+            [
+              -0.251618,
+              0.251618
+            ],
+            [
+              -0.254121,
+              0.247872
+            ],
+            [
+              -0.255,
+              0.243453
+            ],
+            [
+              -0.255,
+              -0.243453
+            ],
+            [
+              -0.254121,
+              -0.247872
+            ],
+            [
+              -0.251618,
+              -0.251618
+            ],
+            [
+              -0.247872,
+              -0.254121
+            ],
+            [
+              -0.243453,
+              -0.255
+            ],
+            [
+              0.243453,
+              -0.255
+            ],
+            [
+              0.247872,
+              -0.254121
+            ],
+            [
+              0.251618,
+              -0.251618
+            ],
+            [
+              0.254121,
+              -0.247872
+            ],
+            [
+              0.255,
+              -0.243453
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.240112,
+                0.238612
+              ],
+              [
+                0.239998,
+                0.239186
+              ],
+              [
+                0.239673,
+                0.239673
+              ],
+              [
+                0.239186,
+                0.239998
+              ],
+              [
+                0.238612,
+                0.240112
+              ],
+              [
+                -0.238612,
+                0.240112
+              ],
+              [
+                -0.239186,
+                0.239998
+              ],
+              [
+                -0.239673,
+                0.239673
+              ],
+              [
+                -0.239998,
+                0.239186
+              ],
+              [
+                -0.240112,
+                0.238612
+              ],
+              [
+                -0.240112,
+                -0.238612
+              ],
+              [
+                -0.239998,
+                -0.239186
+              ],
+              [
+                -0.239673,
+                -0.239673
+              ],
+              [
+                -0.239186,
+                -0.239998
+              ],
+              [
+                -0.238612,
+                -0.240112
+              ],
+              [
+                0.238612,
+                -0.240112
+              ],
+              [
+                0.239186,
+                -0.239998
+              ],
+              [
+                0.239673,
+                -0.239673
+              ],
+              [
+                0.239998,
+                -0.239186
+              ],
+              [
+                0.240112,
+                -0.238612
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.022,
+          "to": -0.007,
+          "taperTo": [
+            1,
+            0.294118
+          ]
+        },
+        {
+          "id": "cone-2-rim",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.72,
+          "profile": [
+            [
+              0.2,
+              0.188
+            ],
+            [
+              0.199087,
+              0.192592
+            ],
+            [
+              0.196485,
+              0.196485
+            ],
+            [
+              0.192592,
+              0.199087
+            ],
+            [
+              0.188,
+              0.2
+            ],
+            [
+              -0.188,
+              0.2
+            ],
+            [
+              -0.192592,
+              0.199087
+            ],
+            [
+              -0.196485,
+              0.196485
+            ],
+            [
+              -0.199087,
+              0.192592
+            ],
+            [
+              -0.2,
+              0.188
+            ],
+            [
+              -0.2,
+              -0.188
+            ],
+            [
+              -0.199087,
+              -0.192592
+            ],
+            [
+              -0.196485,
+              -0.196485
+            ],
+            [
+              -0.192592,
+              -0.199087
+            ],
+            [
+              -0.188,
+              -0.2
+            ],
+            [
+              0.188,
+              -0.2
+            ],
+            [
+              0.192592,
+              -0.199087
+            ],
+            [
+              0.196485,
+              -0.196485
+            ],
+            [
+              0.199087,
+              -0.192592
+            ],
+            [
+              0.2,
+              -0.188
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.198869,
+                0.188
+              ],
+              [
+                0.198041,
+                0.192159
+              ],
+              [
+                0.195685,
+                0.195685
+              ],
+              [
+                0.192159,
+                0.198041
+              ],
+              [
+                0.188,
+                0.198869
+              ],
+              [
+                -0.188,
+                0.198869
+              ],
+              [
+                -0.192159,
+                0.198041
+              ],
+              [
+                -0.195685,
+                0.195685
+              ],
+              [
+                -0.198041,
+                0.192159
+              ],
+              [
+                -0.198869,
+                0.188
+              ],
+              [
+                -0.198869,
+                -0.188
+              ],
+              [
+                -0.198041,
+                -0.192159
+              ],
+              [
+                -0.195685,
+                -0.195685
+              ],
+              [
+                -0.192159,
+                -0.198041
+              ],
+              [
+                -0.188,
+                -0.198869
+              ],
+              [
+                0.188,
+                -0.198869
+              ],
+              [
+                0.192159,
+                -0.198041
+              ],
+              [
+                0.195685,
+                -0.195685
+              ],
+              [
+                0.198041,
+                -0.192159
+              ],
+              [
+                0.198869,
+                -0.188
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.05,
+          "to": -0.04,
+          "taperTo": [
+            1,
+            0.95
+          ]
+        },
+        {
+          "id": "cone-2-cone",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.72,
+          "profile": [
+            [
+              0.19,
+              0.1786
+            ],
+            [
+              0.189132,
+              0.182963
+            ],
+            [
+              0.186661,
+              0.186661
+            ],
+            [
+              0.182963,
+              0.189132
+            ],
+            [
+              0.1786,
+              0.19
+            ],
+            [
+              -0.1786,
+              0.19
+            ],
+            [
+              -0.182963,
+              0.189132
+            ],
+            [
+              -0.186661,
+              0.186661
+            ],
+            [
+              -0.189132,
+              0.182963
+            ],
+            [
+              -0.19,
+              0.1786
+            ],
+            [
+              -0.19,
+              -0.1786
+            ],
+            [
+              -0.189132,
+              -0.182963
+            ],
+            [
+              -0.186661,
+              -0.186661
+            ],
+            [
+              -0.182963,
+              -0.189132
+            ],
+            [
+              -0.1786,
+              -0.19
+            ],
+            [
+              0.1786,
+              -0.19
+            ],
+            [
+              0.182963,
+              -0.189132
+            ],
+            [
+              0.186661,
+              -0.186661
+            ],
+            [
+              0.189132,
+              -0.182963
+            ],
+            [
+              0.19,
+              -0.1786
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.169164,
+                0.167664
+              ],
+              [
+                0.16905,
+                0.168239
+              ],
+              [
+                0.168725,
+                0.168725
+              ],
+              [
+                0.168239,
+                0.16905
+              ],
+              [
+                0.167664,
+                0.169164
+              ],
+              [
+                -0.167664,
+                0.169164
+              ],
+              [
+                -0.168239,
+                0.16905
+              ],
+              [
+                -0.168725,
+                0.168725
+              ],
+              [
+                -0.16905,
+                0.168239
+              ],
+              [
+                -0.169164,
+                0.167664
+              ],
+              [
+                -0.169164,
+                -0.167664
+              ],
+              [
+                -0.16905,
+                -0.168239
+              ],
+              [
+                -0.168725,
+                -0.168725
+              ],
+              [
+                -0.168239,
+                -0.16905
+              ],
+              [
+                -0.167664,
+                -0.169164
+              ],
+              [
+                0.167664,
+                -0.169164
+              ],
+              [
+                0.168239,
+                -0.16905
+              ],
+              [
+                0.168725,
+                -0.168725
+              ],
+              [
+                0.16905,
+                -0.168239
+              ],
+              [
+                0.169164,
+                -0.167664
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.04,
+          "to": -0.0324,
+          "taperTo": [
+            1,
+            0.315789
+          ]
+        },
+        {
+          "id": "cone-3",
+          "kind": "loft",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.66,
+          "sections": [
+            {
+              "at": [
+                0,
+                -0.07,
+                0
+              ],
+              "rx": 0.135,
+              "ry": 0.135,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.058,
+                0
+              ],
+              "rx": 0.123,
+              "ry": 0.123,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.04,
+                0
+              ],
+              "rx": 0.006,
+              "ry": 0.006,
+              "exponent": 4,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "spacer-1",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.6,
+          "size": [
+            0.008,
+            0.012665,
+            0.008
+          ],
+          "transform": {
+            "translation": [
+              0.13,
+              -0.005933,
+              0.13
+            ]
+          },
+          "repeat": {
+            "count": 4,
+            "rotationAxis": [
+              0,
+              1,
+              0
+            ],
+            "rotationRad": 1.570796,
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "spacer-2",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.6,
+          "size": [
+            0.008,
+            0.025926,
+            0.008
+          ],
+          "transform": {
+            "translation": [
+              0.085,
+              -0.021494,
+              0.085
+            ]
+          },
+          "repeat": {
+            "count": 4,
+            "rotationAxis": [
+              0,
+              1,
+              0
+            ],
+            "rotationRad": 1.570796,
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "spacer-3",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.6,
+          "size": [
+            0.008,
+            0.01702,
+            0.008
+          ],
+          "transform": {
+            "translation": [
+              0.068,
+              -0.041989,
+              0.068
+            ]
+          },
+          "repeat": {
+            "count": 4,
+            "rotationAxis": [
+              0,
+              1,
+              0
+            ],
+            "rotationRad": 1.570796,
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "screws",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.82,
+          "radii": [
+            0.006,
+            0.002,
+            0.006
+          ],
+          "transform": {
+            "translation": [
+              0.28,
+              -0.0115,
+              0.28
+            ]
+          },
+          "texture": true,
+          "repeat": {
+            "count": 4,
+            "rotationAxis": [
+              0,
+              1,
+              0
+            ],
+            "rotationRad": 1.570796,
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-flange",
+          "of": "flange",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-backplate",
+          "of": "backplate",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-1-rim",
+          "of": "cone-1-rim",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-1-cone",
+          "of": "cone-1-cone",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-2-rim",
+          "of": "cone-2-rim",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-2-cone",
+          "of": "cone-2-cone",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-3",
+          "of": "cone-3",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-spacer-1",
+          "of": "spacer-1",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-spacer-2",
+          "of": "spacer-2",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-spacer-3",
+          "of": "spacer-3",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-screws",
+          "of": "screws",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-collar",
+          "of": "collar",
+          "region": "collar",
+          "layer": "tube"
+        },
+        {
+          "id": "jet-left",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.0075,
+            0.009,
+            0.46
+          ],
+          "transform": {
+            "translation": [
+              -0.2585,
+              -0.017,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-left"
+          ]
+        },
+        {
+          "id": "jet-right",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.0075,
+            0.009,
+            0.46
+          ],
+          "transform": {
+            "translation": [
+              0.2585,
+              -0.017,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-right"
+          ]
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-flange",
+          "of": "flange",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-backplate",
+          "of": "backplate",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-spacer-1",
+          "of": "spacer-1",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-cone-1-cone",
+          "of": "cone-1-cone",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-spacer-2",
+          "of": "spacer-2",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-cone-2-cone",
+          "of": "cone-2-cone",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-spacer-3",
+          "of": "spacer-3",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "joint-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "radii": [
+            0.012,
+            0.0045,
+            0.012
+          ],
+          "member": "body",
+          "part": "joint"
+        },
+        {
+          "id": "mass-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.15,
+          "radii": [
+            0.03,
+            0.004,
+            0.03
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.02,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "mass"
+        },
+        {
+          "id": "support-ceiling-hanger-left",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              -0.012,
+              0
+            ],
+            [
+              -0.012,
+              0.004
+            ],
+            [
+              0.03,
+              0.004
+            ],
+            [
+              0.03,
+              0
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            -0.28,
+            0,
+            0
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-left",
+          "tags": [
+            "ceiling-hanger-left"
+          ]
+        },
+        {
+          "id": "support-ceiling-hanger-right",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              0,
+              0.004
+            ],
+            [
+              0.016,
+              0.004
+            ]
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "origin": [
+            0.28,
+            0.004,
+            -0.008
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-right",
+          "tags": [
+            "ceiling-hanger-right"
+          ]
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Own model for 1:50 of a real surface-mounted four-way multi-cone diffuser (Titus TMS class, see the report): a 35.5 mm border frame (0.595 to 0.524 m, 12 mm deep) screwed to the ceiling with four flat lens-head screws (surface texture), the 0.8 mm back plate that closes the plenum, set into the 0.525 m ceiling cutout and modelled at the 7.5 mm smallest feature, the DN 250 galvanised spigot of 0.7 mm with its swaged bead for the clamp band, and three nested square cones below. Each annular cone is a 0.8 mm pressed sheet: a 10 mm rim at 45 degrees that flares down and out to its lip (0.265 and 0.2 m half width) and a shallow cone rising inwards to openings of 0.15 and 0.12 m; the centre cone is a closed dish 0.27 m square that rises to a point under the spigot. Four corner spacers carry each cone from the one above. The slots of 10, 8 and 8 mm between border and cones stay open, so the stepped face reads with its dark slot under every step.",
+          "de": "Eigenes Modell für 1:50 eines echten aufgesetzten Vierwege-Mehrkegelauslasses (Klasse Titus TMS, siehe Bericht): ein 35,5 mm breiter Randrahmen (0,595 auf 0,524 m, 12 mm tief), mit vier flachen Linsenkopfschrauben an der Decke verschraubt (Oberflächentextur), die 0,8-mm-Rückplatte, die den Plenumraum schließt, im Deckenausschnitt von 0,525 m sitzt und mit dem kleinsten Merkmal von 7,5 mm modelliert ist, der verzinkte DN-250-Stutzen von 0,7 mm mit eingedrückter Sicke für das Spannband, und darunter drei ineinanderliegende quadratische Kegel. Jeder Ringkegel ist ein gepresstes Blech von 0,8 mm: ein 10-mm-Rand unter 45 Grad, der sich nach unten und außen zur Lippe aufweitet (Halbbreite 0,265 und 0,2 m), und ein flacher Kegel, der nach innen bis zu Öffnungen von 0,15 und 0,12 m ansteigt; der Mittelkegel ist eine geschlossene Schale von 0,27 m im Quadrat, die unter dem Stutzen zu einer Spitze ansteigt. Vier Eckabstandshalter tragen jeden Kegel vom darüberliegenden. Die Schlitze von 10, 8 und 8 mm zwischen Rahmen und Kegeln bleiben offen, so liest sich die Stufenfront mit ihrem dunklen Schlitz unter jeder Stufe."
+        },
+        {
+          "en": "Thermal: the plate region is the honest sheet metal of border, back plate, cones, spacers and screw heads (references to the body solids); the plenum is open to the room through the slots, so both faces of every sheet count (C29, C31), the top of the border frame lies against the ceiling and is marked as a mounting face. The collar region is the spigot tube itself. The two jets are outlet patches in the mouth of the outer slot under the border, left and right, where the air leaves along the ceiling (D2). The single layers of 0.8 mm and 0.7 mm are the sheets themselves.",
+          "de": "Thermik: die Region Platte ist das ehrliche Blech von Rahmen, Rückplatte, Kegeln, Abstandshaltern und Schraubenköpfen (Verweise auf die Körper); der Plenumraum ist über die Schlitze zum Raum offen, deshalb zählen beide Seiten jedes Blechs (C29, C31), die Oberseite des Randrahmens liegt an der Decke und ist als Montagefläche markiert. Die Region Kragen ist das Stutzenrohr selbst. Die zwei Strahlen sind Austrittsflächen in der Mündung des äußeren Schlitzes unter dem Rahmen, links und rechts, wo die Luft an der Decke entlang austritt (D2). Die einzelnen Schichten von 0,8 mm und 0,7 mm sind die Bleche selbst."
+        },
+        {
+          "en": "Structure: the real load path. The two ceiling hangers (pin left as an 8 mm hanger stud through the border into the ceiling, roller right as an 8 mm roller on the frame against the ceiling) carry the border frame, the frame carries the back plate, and the cone pack hangs from the back plate through three tiers of corner spacers and the shallow cones of cone 1 and cone 2; the rims, the centre dish, the spigot and the screws are carried, not carrying. A fixed joint at the rig joint (centre of the spigot at the ceiling plane) and one compact mass at the centre of mass 20 mm below the ceiling.",
+          "de": "Tragwerk: der wirkliche Lastweg. Die zwei Deckenhalter (links ein Festlager als 8-mm-Gewindestift durch den Rahmen in die Decke, rechts ein Rollenlager als 8-mm-Rolle auf dem Rahmen an der Decke) tragen den Randrahmen, der Rahmen trägt die Rückplatte, und das Kegelpaket hängt über drei Lagen Eckabstandshalter und die flachen Kegel von Kegel 1 und Kegel 2 an der Rückplatte; Ränder, Mittelschale, Stutzen und Schrauben werden getragen und tragen nicht. Ein festes Gelenk am Riggelenk (Mitte des Stutzens in der Deckenebene) und eine kompakte Masse im Schwerpunkt 20 mm unter der Decke."
+        }
+      ]
+    },
+    "100": {
+      "status": "authored",
+      "denominator": 100,
+      "body": [
+        {
+          "id": "collar",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [
+            [
+              -0.002,
+              0.1245
+            ],
+            [
+              0.05,
+              0.1245
+            ],
+            [
+              0.05,
+              0.1238
+            ],
+            [
+              -0.002,
+              0.1238
+            ],
+            [
+              -0.002,
+              0.1245
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "flange",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "profile": [
+            [
+              0.2975,
+              0.2915
+            ],
+            [
+              0.297043,
+              0.293796
+            ],
+            [
+              0.295743,
+              0.295743
+            ],
+            [
+              0.293796,
+              0.297043
+            ],
+            [
+              0.2915,
+              0.2975
+            ],
+            [
+              -0.2915,
+              0.2975
+            ],
+            [
+              -0.293796,
+              0.297043
+            ],
+            [
+              -0.295743,
+              0.295743
+            ],
+            [
+              -0.297043,
+              0.293796
+            ],
+            [
+              -0.2975,
+              0.2915
+            ],
+            [
+              -0.2975,
+              -0.2915
+            ],
+            [
+              -0.297043,
+              -0.293796
+            ],
+            [
+              -0.295743,
+              -0.295743
+            ],
+            [
+              -0.293796,
+              -0.297043
+            ],
+            [
+              -0.2915,
+              -0.2975
+            ],
+            [
+              0.2915,
+              -0.2975
+            ],
+            [
+              0.293796,
+              -0.297043
+            ],
+            [
+              0.295743,
+              -0.295743
+            ],
+            [
+              0.297043,
+              -0.293796
+            ],
+            [
+              0.2975,
+              -0.2915
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.123435,
+                0.016251
+              ],
+              [
+                0.120258,
+                0.032223
+              ],
+              [
+                0.115023,
+                0.047644
+              ],
+              [
+                0.10782,
+                0.06225
+              ],
+              [
+                0.098772,
+                0.075791
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.075791,
+                0.098772
+              ],
+              [
+                0.06225,
+                0.10782
+              ],
+              [
+                0.047644,
+                0.115023
+              ],
+              [
+                0.032223,
+                0.120258
+              ],
+              [
+                0.016251,
+                0.123435
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.016251,
+                0.123435
+              ],
+              [
+                -0.032223,
+                0.120258
+              ],
+              [
+                -0.047644,
+                0.115023
+              ],
+              [
+                -0.06225,
+                0.10782
+              ],
+              [
+                -0.075791,
+                0.098772
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.098772,
+                0.075791
+              ],
+              [
+                -0.10782,
+                0.06225
+              ],
+              [
+                -0.115023,
+                0.047644
+              ],
+              [
+                -0.120258,
+                0.032223
+              ],
+              [
+                -0.123435,
+                0.016251
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.123435,
+                -0.016251
+              ],
+              [
+                -0.120258,
+                -0.032223
+              ],
+              [
+                -0.115023,
+                -0.047644
+              ],
+              [
+                -0.10782,
+                -0.06225
+              ],
+              [
+                -0.098772,
+                -0.075791
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.075791,
+                -0.098772
+              ],
+              [
+                -0.06225,
+                -0.10782
+              ],
+              [
+                -0.047644,
+                -0.115023
+              ],
+              [
+                -0.032223,
+                -0.120258
+              ],
+              [
+                -0.016251,
+                -0.123435
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.016251,
+                -0.123435
+              ],
+              [
+                0.032223,
+                -0.120258
+              ],
+              [
+                0.047644,
+                -0.115023
+              ],
+              [
+                0.06225,
+                -0.10782
+              ],
+              [
+                0.075791,
+                -0.098772
+              ],
+              [
+                0.088035,
+                -0.088035
+              ],
+              [
+                0.098772,
+                -0.075791
+              ],
+              [
+                0.10782,
+                -0.06225
+              ],
+              [
+                0.115023,
+                -0.047644
+              ],
+              [
+                0.120258,
+                -0.032223
+              ],
+              [
+                0.123435,
+                -0.016251
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.0,
+          "sectionFaces": [
+            "+v"
+          ]
+        },
+        {
+          "id": "cone-1",
+          "kind": "loft",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.78,
+          "sections": [
+            {
+              "at": [
+                0,
+                -0.045,
+                0
+              ],
+              "rx": 0.262,
+              "ry": 0.262,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.03,
+                0
+              ],
+              "rx": 0.247,
+              "ry": 0.247,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.015,
+                0
+              ],
+              "rx": 0.19,
+              "ry": 0.19,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "cone-2",
+          "kind": "loft",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.68,
+          "sections": [
+            {
+              "at": [
+                0,
+                -0.07,
+                0
+              ],
+              "rx": 0.17,
+              "ry": 0.17,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.06,
+                0
+              ],
+              "rx": 0.16,
+              "ry": 0.16,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.045,
+                0
+              ],
+              "rx": 0.11,
+              "ry": 0.11,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-flange",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "sectionFaces": [
+            "+v"
+          ],
+          "region": "plate",
+          "layer": "sheet",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.012,
+          "to": 0.0,
+          "profile": [
+            [
+              -0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              0.2975
+            ],
+            [
+              -0.2975,
+              0.2975
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.262,
+                -0.262
+              ],
+              [
+                0.262,
+                -0.262
+              ],
+              [
+                0.262,
+                0.262
+              ],
+              [
+                -0.262,
+                0.262
+              ]
+            ]
+          ]
+        },
+        {
+          "id": "th-cone-1",
+          "of": "cone-1",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone-2",
+          "of": "cone-2",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-collar",
+          "of": "collar",
+          "region": "collar",
+          "layer": "tube"
+        },
+        {
+          "id": "jet-left",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.015,
+            0.015,
+            0.4
+          ],
+          "transform": {
+            "translation": [
+              -0.235,
+              -0.0225,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-left"
+          ]
+        },
+        {
+          "id": "jet-right",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.015,
+            0.015,
+            0.4
+          ],
+          "transform": {
+            "translation": [
+              0.235,
+              -0.0225,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-right"
+          ]
+        },
+        {
+          "id": "th-plenum-back",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "kind": "extrude",
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.0008,
+          "profile": [
+            [
+              -0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              0.287
+            ],
+            [
+              -0.287,
+              0.287
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.115023,
+                0.047644
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.047644,
+                0.115023
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.047644,
+                0.115023
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.115023,
+                0.047644
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.115023,
+                -0.047644
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.047644,
+                -0.115023
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.047644,
+                -0.115023
+              ],
+              [
+                0.088035,
+                -0.088035
+              ],
+              [
+                0.115023,
+                -0.047644
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-discharge-baffle",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.011,
+          "to": -0.010199999999999999,
+          "profile": [
+            [
+              -0.231,
+              -0.235
+            ],
+            [
+              0.231,
+              -0.235
+            ],
+            [
+              0.235,
+              -0.231
+            ],
+            [
+              0.235,
+              0.231
+            ],
+            [
+              0.231,
+              0.235
+            ],
+            [
+              -0.231,
+              0.235
+            ],
+            [
+              -0.235,
+              0.231
+            ],
+            [
+              -0.235,
+              -0.231
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                0.135
+              ],
+              [
+                -0.135,
+                0.135
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-flange",
+          "of": "flange",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "member-spacers",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.6,
+          "size": [
+            0.015,
+            0.045,
+            0.015
+          ],
+          "transform": {
+            "translation": [
+              0.15,
+              -0.0375,
+              0.15
+            ]
+          },
+          "repeat": {
+            "count": 4,
+            "rotationAxis": [
+              0,
+              1,
+              0
+            ],
+            "rotationRad": 1.570796,
+            "origin": [
+              0,
+              0,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "joint-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "radii": [
+            0.0075,
+            0.0075,
+            0.0075
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.0075,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "joint"
+        },
+        {
+          "id": "mass-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.15,
+          "radii": [
+            0.04,
+            0.0075,
+            0.04
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.02,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "mass"
+        },
+        {
+          "id": "support-ceiling-hanger-left",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              -0.015,
+              0
+            ],
+            [
+              -0.015,
+              0.0075
+            ],
+            [
+              0.03,
+              0.0075
+            ],
+            [
+              0.03,
+              0
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            -0.28,
+            0,
+            0
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-left",
+          "tags": [
+            "ceiling-hanger-left"
+          ]
+        },
+        {
+          "id": "support-ceiling-hanger-right",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              0,
+              0.0075
+            ],
+            [
+              0.03,
+              0.0075
+            ]
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "origin": [
+            0.28,
+            0.0075,
+            -0.015
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-right",
+          "tags": [
+            "ceiling-hanger-right"
+          ]
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Own model for 1:100 against the 1:100 drawings: border frame and back plate merge into one 15 mm flange plate (12 mm frame drawn at the 15 mm feature) with the spigot hole; the three cones become two solid stepped cones, each with its 45 degree rim flaring down and out to the lip (0.262 and 0.17 m half width) and a 15 mm slot notch above it where the sheet rises inwards, so the stepped face with its two dark slots still reads. The spigot keeps its 0.7 mm wall (C30); bead, screws, spacers and the third slot fall under 15 mm.",
+          "de": "Eigenes Modell für 1:100 nach den 1:100-Zeichnungen: Randrahmen und Rückplatte werden zu einer Flanschplatte von 15 mm (der 12-mm-Rahmen auf das 15-mm-Merkmal gezeichnet) mit dem Stutzenloch; aus drei Kegeln werden zwei volle Kegelstufen, jede mit ihrem 45-Grad-Rand, der sich nach unten und außen zur Lippe aufweitet (Halbbreite 0,262 und 0,17 m), und darüber einer 15-mm-Schlitzkerbe, wo das Blech nach innen ansteigt, so dass die Stufenfront mit ihren zwei dunklen Schlitzen lesbar bleibt. Der Stutzen behält seine Wand von 0,7 mm (C30); Sicke, Schrauben, Abstandshalter und der dritte Schlitz fallen unter 15 mm."
+        },
+        {
+          "en": "Thermal: references to flange, both cones and the spigot; the cone pack is closed at this scale, so only its outer faces count. The jets are outlet patches in the outer slot notch, left and right.",
+          "de": "Thermik: Verweise auf Flansch, beide Kegel und den Stutzen; das Kegelpaket ist in diesem Maßstab geschlossen, deshalb zählen nur seine Außenflächen. Die Strahlen sind Austrittsflächen in der äußeren Schlitzkerbe, links und rechts."
+        },
+        {
+          "en": "Structure: the flange plate carries the load to the two hangers (pin stud and roller at the 15 mm feature); the three tiers of corner spacers merge into four 15 mm corner posts that carry the cone pack; a fixed joint at the rig joint and one mass at the centre of mass.",
+          "de": "Tragwerk: die Flanschplatte trägt die Last zu den zwei Haltern (Gewindestift und Rolle auf dem 15-mm-Merkmal); die drei Lagen Eckabstandshalter werden zu vier Eckstützen von 15 mm, die das Kegelpaket tragen; ein festes Gelenk am Riggelenk und eine Masse im Schwerpunkt."
+        }
+      ]
+    },
+    "200": {
+      "status": "authored",
+      "denominator": 200,
+      "body": [
+        {
+          "id": "collar",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [
+            [
+              -0.002,
+              0
+            ],
+            [
+              -0.002,
+              0.1245
+            ],
+            [
+              0.05,
+              0.1245
+            ],
+            [
+              0.05,
+              0
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "flange",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "profile": [
+            [
+              0.2975,
+              0.2915
+            ],
+            [
+              0.297043,
+              0.293796
+            ],
+            [
+              0.295743,
+              0.295743
+            ],
+            [
+              0.293796,
+              0.297043
+            ],
+            [
+              0.2915,
+              0.2975
+            ],
+            [
+              -0.2915,
+              0.2975
+            ],
+            [
+              -0.293796,
+              0.297043
+            ],
+            [
+              -0.295743,
+              0.295743
+            ],
+            [
+              -0.297043,
+              0.293796
+            ],
+            [
+              -0.2975,
+              0.2915
+            ],
+            [
+              -0.2975,
+              -0.2915
+            ],
+            [
+              -0.297043,
+              -0.293796
+            ],
+            [
+              -0.295743,
+              -0.295743
+            ],
+            [
+              -0.293796,
+              -0.297043
+            ],
+            [
+              -0.2915,
+              -0.2975
+            ],
+            [
+              0.2915,
+              -0.2975
+            ],
+            [
+              0.293796,
+              -0.297043
+            ],
+            [
+              0.295743,
+              -0.295743
+            ],
+            [
+              0.297043,
+              -0.293796
+            ],
+            [
+              0.2975,
+              -0.2915
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.123435,
+                0.016251
+              ],
+              [
+                0.120258,
+                0.032223
+              ],
+              [
+                0.115023,
+                0.047644
+              ],
+              [
+                0.10782,
+                0.06225
+              ],
+              [
+                0.098772,
+                0.075791
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.075791,
+                0.098772
+              ],
+              [
+                0.06225,
+                0.10782
+              ],
+              [
+                0.047644,
+                0.115023
+              ],
+              [
+                0.032223,
+                0.120258
+              ],
+              [
+                0.016251,
+                0.123435
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.016251,
+                0.123435
+              ],
+              [
+                -0.032223,
+                0.120258
+              ],
+              [
+                -0.047644,
+                0.115023
+              ],
+              [
+                -0.06225,
+                0.10782
+              ],
+              [
+                -0.075791,
+                0.098772
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.098772,
+                0.075791
+              ],
+              [
+                -0.10782,
+                0.06225
+              ],
+              [
+                -0.115023,
+                0.047644
+              ],
+              [
+                -0.120258,
+                0.032223
+              ],
+              [
+                -0.123435,
+                0.016251
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.123435,
+                -0.016251
+              ],
+              [
+                -0.120258,
+                -0.032223
+              ],
+              [
+                -0.115023,
+                -0.047644
+              ],
+              [
+                -0.10782,
+                -0.06225
+              ],
+              [
+                -0.098772,
+                -0.075791
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.075791,
+                -0.098772
+              ],
+              [
+                -0.06225,
+                -0.10782
+              ],
+              [
+                -0.047644,
+                -0.115023
+              ],
+              [
+                -0.032223,
+                -0.120258
+              ],
+              [
+                -0.016251,
+                -0.123435
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.016251,
+                -0.123435
+              ],
+              [
+                0.032223,
+                -0.120258
+              ],
+              [
+                0.047644,
+                -0.115023
+              ],
+              [
+                0.06225,
+                -0.10782
+              ],
+              [
+                0.075791,
+                -0.098772
+              ],
+              [
+                0.088035,
+                -0.088035
+              ],
+              [
+                0.098772,
+                -0.075791
+              ],
+              [
+                0.10782,
+                -0.06225
+              ],
+              [
+                0.115023,
+                -0.047644
+              ],
+              [
+                0.120258,
+                -0.032223
+              ],
+              [
+                0.123435,
+                -0.016251
+              ]
+            ]
+          ],
+          "plane": "zx",
+          "from": -0.03,
+          "to": 0.0,
+          "sectionFaces": [
+            "+v"
+          ]
+        },
+        {
+          "id": "cone",
+          "kind": "loft",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.72,
+          "sections": [
+            {
+              "at": [
+                0,
+                -0.07,
+                0
+              ],
+              "rx": 0.135,
+              "ry": 0.135,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            },
+            {
+              "at": [
+                0,
+                -0.03,
+                0
+              ],
+              "rx": 0.262,
+              "ry": 0.262,
+              "exponent": 12,
+              "rotation": [
+                0.5,
+                0.5,
+                0.5,
+                -0.5
+              ]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-flange",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "sectionFaces": [
+            "+v"
+          ],
+          "region": "plate",
+          "layer": "sheet",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.012,
+          "to": 0.0,
+          "profile": [
+            [
+              -0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              0.2975
+            ],
+            [
+              -0.2975,
+              0.2975
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.262,
+                -0.262
+              ],
+              [
+                0.262,
+                -0.262
+              ],
+              [
+                0.262,
+                0.262
+              ],
+              [
+                -0.262,
+                0.262
+              ]
+            ]
+          ]
+        },
+        {
+          "id": "th-cone",
+          "of": "cone",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-collar",
+          "of": "collar",
+          "region": "collar",
+          "layer": "tube"
+        },
+        {
+          "id": "jet-left",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.03,
+            0.03,
+            0.4
+          ],
+          "transform": {
+            "translation": [
+              -0.25,
+              -0.045,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-left"
+          ]
+        },
+        {
+          "id": "jet-right",
+          "kind": "box",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [
+            0.03,
+            0.03,
+            0.4
+          ],
+          "transform": {
+            "translation": [
+              0.25,
+              -0.045,
+              0
+            ]
+          },
+          "region": "plate",
+          "tags": [
+            "jet-right"
+          ]
+        },
+        {
+          "id": "th-plenum-back",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "kind": "extrude",
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.0008,
+          "profile": [
+            [
+              -0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              0.287
+            ],
+            [
+              -0.287,
+              0.287
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.088035,
+                -0.088035
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-discharge-baffle",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "body",
+          "tone": 0.88,
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.011,
+          "to": -0.010199999999999999,
+          "profile": [
+            [
+              -0.235,
+              -0.235
+            ],
+            [
+              0.235,
+              -0.235
+            ],
+            [
+              0.235,
+              0.235
+            ],
+            [
+              -0.235,
+              0.235
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                0.135
+              ],
+              [
+                -0.135,
+                0.135
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-flange",
+          "of": "flange",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "joint-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "radii": [
+            0.015,
+            0.015,
+            0.015
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.015,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "joint"
+        },
+        {
+          "id": "mass-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.15,
+          "radii": [
+            0.06,
+            0.015,
+            0.06
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.02,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "mass"
+        },
+        {
+          "id": "support-ceiling-hanger-left",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              -0.03,
+              0
+            ],
+            [
+              -0.03,
+              0.015
+            ],
+            [
+              0.03,
+              0.015
+            ],
+            [
+              0.03,
+              0
+            ]
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "origin": [
+            -0.28,
+            0,
+            0
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-left",
+          "tags": [
+            "ceiling-hanger-left"
+          ]
+        },
+        {
+          "id": "support-ceiling-hanger-right",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.25,
+          "profile": [
+            [
+              0,
+              0.015
+            ],
+            [
+              0.06,
+              0.015
+            ]
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "origin": [
+            0.28,
+            0.015,
+            -0.03
+          ],
+          "member": "body",
+          "part": "support",
+          "anchor": "ceiling-hanger-right",
+          "tags": [
+            "ceiling-hanger-right"
+          ]
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Own model for 1:200: a 30 mm flange plate (border, back plate and slots at the 30 mm feature), one cone mass that generalises the three steps to their envelope from 0.262 m half width under the flange to the 0.27 m square centre cone 70 mm below the ceiling, and the spigot as a full cylinder, as the plan draws it. A minimal model of three solids that keeps the 0.595 x 0.12 m outline and the stepped taper.",
+          "de": "Eigenes Modell für 1:200: eine Flanschplatte von 30 mm (Rahmen, Rückplatte und Schlitze auf dem 30-mm-Merkmal), eine Kegelmasse, die die drei Stufen zu ihrer Hülle verallgemeinert, von 0,262 m Halbbreite unter dem Flansch bis zum 0,27 m breiten Mittelkegel 70 mm unter der Decke, und der Stutzen als voller Zylinder, wie ihn der Grundriss zeichnet. Ein minimales Modell aus drei Körpern, das den Umriss von 0,595 x 0,12 m und die gestufte Verjüngung behält."
+        },
+        {
+          "en": "Thermal: references to flange, cone and spigot; the jets are 30 mm outlet patches where the cone leaves the flange underside. Structure: the flange plate carries the whole load to the pin and the roller (30 mm); spacers are merged into the carried cone mass, so one joint at the rig joint and one mass at the centre of mass remain.",
+          "de": "Thermik: Verweise auf Flansch, Kegel und Stutzen; die Strahlen sind 30-mm-Austrittsflächen, wo der Kegel die Flanschunterseite verlässt. Tragwerk: die Flanschplatte trägt die ganze Last zum Festlager und zur Rolle (30 mm); die Abstandshalter gehen in der getragenen Kegelmasse auf, so bleiben ein Gelenk am Riggelenk und eine Masse im Schwerpunkt."
+        }
+      ]
+    },
+    "500": {
+      "status": "authored",
+      "denominator": 500,
+      "body": [
+        {
+          "id": "collar",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "tone": 0.5,
+          "role": "body",
+          "kind": "revolve",
+          "origin": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "profile": [
+            [
+              0.0,
+              0.123
+            ],
+            [
+              0.05,
+              0.123
+            ],
+            [
+              0.05,
+              0.1245
+            ],
+            [
+              0.0,
+              0.1245
+            ],
+            [
+              0.0,
+              0.123
+            ]
+          ]
+        },
+        {
+          "id": "flange",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.88,
+          "role": "body",
+          "sectionFaces": [
+            "+v"
+          ],
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.009,
+          "to": 0.0,
+          "profile": [
+            [
+              -0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              -0.2975
+            ],
+            [
+              0.2975,
+              0.2975
+            ],
+            [
+              -0.2975,
+              0.2975
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.245,
+                -0.245
+              ],
+              [
+                0.245,
+                -0.245
+              ],
+              [
+                0.245,
+                0.245
+              ],
+              [
+                -0.245,
+                0.245
+              ]
+            ]
+          ]
+        },
+        {
+          "id": "cone",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.72,
+          "role": "body",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.07,
+          "to": -0.013,
+          "profile": [
+            [
+              -0.252,
+              -0.252
+            ],
+            [
+              0.252,
+              -0.252
+            ],
+            [
+              0.252,
+              0.252
+            ],
+            [
+              -0.252,
+              0.252
+            ]
+          ],
+          "taperTo": [
+            0.54,
+            1
+          ]
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-flange",
+          "of": "flange",
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-cone",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.72,
+          "role": "body",
+          "region": "plate",
+          "layer": "sheet",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.07,
+          "to": -0.013,
+          "profile": [
+            [
+              -0.252,
+              -0.252
+            ],
+            [
+              0.252,
+              -0.252
+            ],
+            [
+              0.252,
+              0.252
+            ],
+            [
+              -0.252,
+              0.252
+            ]
+          ],
+          "taperTo": [
+            0.54,
+            1
+          ]
+        },
+        {
+          "id": "th-collar",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "tone": 0.5,
+          "role": "body",
+          "region": "collar",
+          "layer": "tube",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.05,
+          "profile": [
+            [
+              0.1245,
+              0.0
+            ],
+            [
+              0.100723,
+              0.07317900000000001
+            ],
+            [
+              0.038473,
+              0.118407
+            ],
+            [
+              -0.038473,
+              0.118407
+            ],
+            [
+              -0.100723,
+              0.07317900000000001
+            ],
+            [
+              -0.1245,
+              0.0
+            ],
+            [
+              -0.100723,
+              -0.07317900000000001
+            ],
+            [
+              -0.038473,
+              -0.118407
+            ],
+            [
+              0.038473,
+              -0.118407
+            ],
+            [
+              0.100723,
+              -0.07317900000000001
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.123,
+                0.0
+              ],
+              [
+                0.099509,
+                0.072298
+              ],
+              [
+                0.038009,
+                0.11698
+              ],
+              [
+                -0.038009,
+                0.11698
+              ],
+              [
+                -0.099509,
+                0.072298
+              ],
+              [
+                -0.123,
+                0.0
+              ],
+              [
+                -0.099509,
+                -0.072298
+              ],
+              [
+                -0.038009,
+                -0.11698
+              ],
+              [
+                0.038009,
+                -0.11698
+              ],
+              [
+                0.099509,
+                -0.072298
+              ]
+            ]
+          ]
+        },
+        {
+          "id": "jet-left",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.3,
+          "role": "detail",
+          "tags": [
+            "jet-left"
+          ],
+          "region": "plate",
+          "kind": "box",
+          "size": [
+            0.005,
+            0.004,
+            0.405
+          ],
+          "cornerRadius": 0,
+          "transform": {
+            "translation": [
+              -0.254,
+              -0.012,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "jet-right",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.3,
+          "role": "detail",
+          "tags": [
+            "jet-right"
+          ],
+          "region": "plate",
+          "kind": "box",
+          "size": [
+            0.005,
+            0.004,
+            0.405
+          ],
+          "cornerRadius": 0,
+          "transform": {
+            "translation": [
+              0.254,
+              -0.012,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "th-plenum-back",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.88,
+          "role": "body",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.0008,
+          "profile": [
+            [
+              -0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              -0.287
+            ],
+            [
+              0.287,
+              0.287
+            ],
+            [
+              -0.287,
+              0.287
+            ]
+          ],
+          "holes": [
+            [
+              [
+                0.1245,
+                0.0
+              ],
+              [
+                0.088035,
+                0.088035
+              ],
+              [
+                0.0,
+                0.1245
+              ],
+              [
+                -0.088035,
+                0.088035
+              ],
+              [
+                -0.1245,
+                0.0
+              ],
+              [
+                -0.088035,
+                -0.088035
+              ],
+              [
+                -0.0,
+                -0.1245
+              ],
+              [
+                0.088035,
+                -0.088035
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        },
+        {
+          "id": "th-discharge-baffle",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "tone": 0.88,
+          "role": "body",
+          "kind": "extrude",
+          "plane": "zx",
+          "from": -0.011,
+          "to": -0.010199999999999999,
+          "profile": [
+            [
+              -0.235,
+              -0.235
+            ],
+            [
+              0.235,
+              -0.235
+            ],
+            [
+              0.235,
+              0.235
+            ],
+            [
+              -0.235,
+              0.235
+            ]
+          ],
+          "holes": [
+            [
+              [
+                -0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                -0.135
+              ],
+              [
+                0.135,
+                0.135
+              ],
+              [
+                -0.135,
+                0.135
+              ]
+            ]
+          ],
+          "region": "plate",
+          "layer": "sheet"
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-flange",
+          "of": "flange",
+          "member": "body",
+          "part": "member"
+        },
+        {
+          "id": "joint-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "radii": [
+            0.015,
+            0.015,
+            0.015
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.015,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "joint"
+        },
+        {
+          "id": "mass-body",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "powder-coated-steel",
+          "role": "detail",
+          "tone": 0.15,
+          "radii": [
+            0.06,
+            0.015,
+            0.06
+          ],
+          "transform": {
+            "translation": [
+              0,
+              -0.02,
+              0
+            ]
+          },
+          "member": "body",
+          "part": "mass"
+        },
+        {
+          "id": "support-ceiling-hanger-left",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "tone": 0.25,
+          "role": "detail",
+          "tags": [
+            "ceiling-hanger-left"
+          ],
+          "member": "body",
+          "anchor": "ceiling-hanger-left",
+          "part": "support",
+          "kind": "revolve",
+          "origin": [
+            -0.28,
+            0.0,
+            0.0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "profile": [
+            [
+              -0.005,
+              0.0
+            ],
+            [
+              -0.005,
+              0.004
+            ],
+            [
+              0.009,
+              0.004
+            ],
+            [
+              0.009,
+              0.0
+            ]
+          ]
+        },
+        {
+          "id": "support-ceiling-hanger-right",
+          "bone": "body",
+          "material": "galvanised-steel",
+          "tone": 0.25,
+          "role": "detail",
+          "tags": [
+            "ceiling-hanger-right"
+          ],
+          "member": "body",
+          "anchor": "ceiling-hanger-right",
+          "part": "support",
+          "kind": "revolve",
+          "origin": [
+            0.28,
+            0.0,
+            0.0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "profile": [
+            [
+              -0.005,
+              0.0
+            ],
+            [
+              -0.005,
+              0.004
+            ],
+            [
+              0.009,
+              0.004
+            ],
+            [
+              0.009,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The square face and dished, tapered central plate leave a perimeter discharge slot. The circular neck stays hollow.",
+          "de": "Quadratische Front und konischer Mittelteller lassen einen umlaufenden Auslass frei. Der runde Hals bleibt offen."
+        }
+      ]
+    }
+  }
+}

@@ -77,3 +77,21 @@ test("the inference runs the heavy owners alone after the light ones: sorted las
  expect(source.indexOf("await awaitGrowingV1(workers);if(!stopped&&cursor<jobs.length){memoryPorts.collect();await loop(Infinity);}")).toBeGreaterThan(source.indexOf("const workers=Array.from({length:limit},()=>loop(lightEnd))"));
  expect(source).toContain("cursor<Math.min(end,jobs.length)");
 });
+
+test("a stopped inference wave withdraws its running owners and preserves caller authority",async()=>{
+ const {yieldInferenceV1}=await import("../../../🧭️script-inputs/🟨️.mjs");
+ const {readFileSync}=await import("node:fs");
+ const {Database}=await import("bun:sqlite");
+ const fixture=JSON.parse(readFileSync(new URL("./wave-stop.json",import.meta.url),"utf8"));
+ const database=new Database(":memory:");
+ try{
+  for(const {value} of database.query("SELECT value FROM json_each(?)").all(JSON.stringify(fixture.refusals)) as {value:string}[]){
+   const caller=new AbortController(),owner=new AbortController(),reason=new Error(value);
+   owner.abort(reason);
+   const signal=AbortSignal.any([caller.signal,owner.signal]);
+   const rejected=await yieldInferenceV1({ownerSignal:signal},"build:projects",0).then(()=>undefined,error=>error);
+   expect(rejected).toBe(reason);expect(caller.signal.aborted).toBe(fixture.callerAborted);
+  }
+  expect(source).toMatch(/failStalled\s*=\s*error\s*=>\s*\{[^}]*farmStop\.abort\(error\)/u);
+ }finally{database.close();}
+});

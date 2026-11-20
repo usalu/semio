@@ -214,8 +214,3 @@
   background: var(--course-peer);
   vertical-align: middle;
 }
-
-/* 🔗️ The heading link of an overview card: keyboard focus recolours the chip's own lines (chip-focus.ts), never a ring inside them. */
-.course-card-link:focus-visible {
-  outline: none;
-}

@@ -335,6 +335,11 @@
     "de": "Zeilen"
   },
   {
+    "id": "rings",
+    "en": "Rings",
+    "de": "Ringe"
+  },
+  {
     "id": "segments",
     "en": "Segments",
     "de": "Segmente"

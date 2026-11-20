@@ -11,7 +11,7 @@ use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = BitmapSnapshot, diff = BitmapDiff, schema = "wfcbitmap", reference = BitmapSnapshot, reference_diff = BitmapDiff)]
 pub enum BitmapMutation {
@@ -29,6 +29,8 @@ pub enum BitmapMutation {
     PinSolution(crate::standards::v1::subsets::any::schema::mutations::pin_solution::PinSolution),
     RestorePins(crate::standards::v1::subsets::any::schema::mutations::restore_pins::RestorePins),
 }
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`BitmapMutation`] variant, in declaration order — the exact

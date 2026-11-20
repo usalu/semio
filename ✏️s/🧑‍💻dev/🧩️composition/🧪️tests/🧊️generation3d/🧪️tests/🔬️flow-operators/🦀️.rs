@@ -176,22 +176,14 @@ pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_sessio
     SESSION.get_or_init(semio_s_spatial_kernel_semio_session::Session::new)
 }
 
-/// 🚚️ Delivers every painted handle through the concrete Session's bounded broker envelopes.
+/// 🚚️ Delivers painted handles through the registered geometry extension and original receiver.
 pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_os_flow::FlowEvalSession) {
-    use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
-    use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
+    use semio_s_artifact_procedural_3d_preview_eval::{pending_preview_tessellate_handles, preview_tolerance};
     let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
-    for handle in pending_preview_tessellate_handles(&eval, graph, session) {
-        let hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
-        for _ in 0..4096 {
-            if !session.note_pending_tessellate(hash, handle.clone()) { break; }
-            let chunk = session.next_tessellate_chunk(hash) as usize;
-            let envelope = geometry_session().tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
-            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_os_flow::PreviewTessellateOutcome::Working) { break; }
-        }
-        assert!(session.preview_mesh_pack(&handle).is_some() || session.preview_diagnostics(&handle).is_some(), "painted handle {handle} must reach a terminal answer through its owning Session");
+    for handle in pending_preview_tessellate_handles(&eval, graph, session, tolerance) {
+        crate::brep_extension::with_geometry_context(|owner| crate::preview_reply::deliver(
+            owner, session, ("composition-preview", "preview"), &handle, tolerance, |_| {},
+        )).expect("painted handle must reach its original owning Session");
     }
 }

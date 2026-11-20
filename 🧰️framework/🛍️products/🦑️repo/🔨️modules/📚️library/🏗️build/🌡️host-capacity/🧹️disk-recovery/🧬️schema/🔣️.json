@@ -18,7 +18,7 @@
         "version": 1,
         "waves": {"maximumAgeMilliseconds": 86400000, "keepNewest": 8},
         "footprintLogs": {"maximumAgeMilliseconds": 259200000, "keepNewest": 256},
-        "readVerdicts": {"maximumAgeMilliseconds": 7200000},
+        "readVerdicts": {"maximumAgeMilliseconds": 7200000, "directoryPattern": "^([1-9][0-9]{0,9})-[a-z0-9]+-[1-9][0-9]*$"},
         "temporaryDirectories": {"minimumAgeMilliseconds": 3600000, "maximumAgeMilliseconds": 604800000, "prefix": "semio-"},
         "replicaLost": {"maximumAgeMilliseconds": 2592000000, "keepNewest": 16}
       }
@@ -98,8 +98,16 @@
             "de": "Partition {partition} hat {free} frei, weniger als die {target}, die die wartende Stufe braucht: zuerst ableitbare Caches, dann die am längsten ungenutzten Cache-Objekte, dann die vom Replikat überschriebenen Dateien und der Replikat-Speicher, zuletzt der Image-Überhang."
           },
           "image.reclaimed": {
-            "en": "Image {id}: {slack} of slack returned in place by an unmap cycle, nothing recreated; {freed} returned to the volume.",
-            "de": "Image {id}: {slack} Überhang durch einen Unmap-Zyklus an Ort und Stelle zurückgegeben, nichts neu erzeugt; {freed} an das Volume zurückgegeben."
+            "en": "Image {id}: {slack} estimated slack before in-place reclaim; {freed} more volume space measured.",
+            "de": "Image {id}: {slack} geschätzter Überhang vor der Freigabe; {freed} mehr freier Platz auf dem Volume gemessen."
+          },
+          "image.reclaim-unchanged": {
+            "en": "Image {id}: the in-place reclaim cycle finished without reducing the backing file allocation.",
+            "de": "Image {id}: Die Freigabe wurde abgeschlossen, ohne die Belegung der Image-Datei zu verringern."
+          },
+          "image.reclaim-unconfirmed": {
+            "en": "Image {id}: the in-place reclaim cycle supplied no settled allocation result.",
+            "de": "Image {id}: Die Freigabe lieferte kein stabiles Ergebnis zur Belegung."
           },
           "image.reclaim-skipped": {
             "en": "Image {id} could not be reclaimed in place ({slack} of slack): it is held, retiring or not bloated enough.",
@@ -114,8 +122,12 @@
             "de": "Image {id}: im Leerlauf abgeräumt, {slack} Überhang; {freed} an das Volume zurückgegeben."
           },
           "image.held": {
-            "en": "Image {id} skipped ({slack} of slack): a command holds it mapped, a later try returns it.",
-            "de": "Image {id} übersprungen ({slack} Überhang): ein Befehl hält es eingehängt, ein späterer Versuch gibt es zurück."
+            "en": "Image {id} skipped ({slack} of slack): a command holds it mapped.",
+            "de": "Image {id} übersprungen ({slack} Überhang): ein Befehl hält es eingehängt."
+          },
+          "image.not-eligible": {
+            "en": "Image {id}: current volume pressure and mounted slack do not admit retirement.",
+            "de": "Image {id}: Der aktuelle Platzmangel und Überhang erlauben kein Abräumen."
           },
           "image.journal": {
             "en": "Image {id} skipped ({slack} of slack): its journal does not admit whole retirement.",
@@ -146,8 +158,8 @@
             "de": "Replikat-Speicher übersprungen: {reason}."
           },
           "low-space-consumers": {
-            "en": "Partition {partition} has only {free} free ({usedPercent}% used): this command needs {must} ({need} for itself and {cushion} cushion), and everything that can be freed automatically is freed. Largest consumers: {consumers}. Free space with the command listed for a consumer, then run the command again.",
-            "de": "Partition {partition} hat nur noch {free} frei ({usedPercent} % belegt): dieser Befehl braucht {must} ({need} für sich und {cushion} Puffer), und alles, was sich automatisch freigeben lässt, ist freigegeben. Größte Verbraucher: {consumers}. Schaffe Platz mit dem zu einem Verbraucher genannten Befehl und führe den Befehl erneut aus."
+            "en": "Partition {partition} has only {free} free ({usedPercent}% used): this command needs {must} ({need} for itself and {cushion} cushion), after automatic collection. Largest consumers: {consumers}. Free space with the command listed for a consumer, then run the command again.",
+            "de": "Partition {partition} hat nur noch {free} frei ({usedPercent} % belegt): dieser Befehl braucht {must} ({need} für sich und {cushion} Puffer), auch nach der automatischen Bereinigung. Größte Verbraucher: {consumers}. Schaffe Platz mit dem zu einem Verbraucher genannten Befehl und führe den Befehl erneut aus."
           }
         }
       }

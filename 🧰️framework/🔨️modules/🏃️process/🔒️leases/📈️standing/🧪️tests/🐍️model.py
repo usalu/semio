@@ -68,6 +68,7 @@ def accept(case):
     if case["nowMs"]-request["atMs"]>policy["yield"]["requestMaximumAgeMilliseconds"]:return {"accept":False,"refusal":"expired"}
     if not case["holdsExclusive"]:return {"accept":False,"refusal":"not-held"}
     if request["reason"]=="stale":
+        if case.get("pinned"):return {"accept":False,"refusal":"pinned"}
         ids=sorted(i for i in case["bound"] if i in case["moved"] and i in holder["implementation"]["components"] and i in request["requesterComponents"] and holder["implementation"]["components"][i]!=request["requesterComponents"][i])
         return {"accept":True,"ids":ids} if ids and holder["implementation"]["loadedAtMs"]<=request["requesterStartedAtMs"] else {"accept":False,"refusal":"not-stale"}
     silent=max(0,case["nowMs"]-max(holder["progressAtMs"],case["holdSinceMs"]))

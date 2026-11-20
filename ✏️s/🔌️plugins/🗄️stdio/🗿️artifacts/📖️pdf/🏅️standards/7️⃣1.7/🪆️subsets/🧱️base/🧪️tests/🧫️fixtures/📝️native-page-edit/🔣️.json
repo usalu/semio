@@ -1,0 +1,89 @@
+{
+  "mediaBox": {
+    "initial": { "kind": "set-page-media-box", "params": { "index": 0, "mediaBox": [-30, 20, 170, 320] } },
+    "resize": { "page": 0, "width": 260, "height": 410 },
+    "expected": { "kind": "set-page-media-box", "params": { "index": 0, "mediaBox": [-30, 20, 230, 430] } }
+  },
+  "blankDraft": {
+    "text": "First draft\nSecond line",
+    "expectedLines": ["First draft", "Second line"],
+    "expectedOperators": ["BT", "Tf", "rg", "Tm", "TL", "Tj", "T*", "Tj", "ET"]
+  },
+  "pageBoundaries": {
+    "initialSize": [
+      200,
+      300
+    ],
+    "edits": [
+      {
+        "key": "MediaBox",
+        "object": "box.media",
+        "coordinates": "-20 10 180 310",
+        "value": [
+          -20,
+          10,
+          180,
+          310
+        ]
+      },
+      {
+        "key": "CropBox",
+        "object": "box.crop",
+        "coordinates": "-10 20 170 280",
+        "value": [
+          -10,
+          20,
+          170,
+          280
+        ]
+      },
+      {
+        "key": "BleedBox",
+        "object": "box.bleed",
+        "coordinates": "0 30 160 270",
+        "value": [
+          0,
+          30,
+          160,
+          270
+        ]
+      },
+      {
+        "key": "TrimBox",
+        "object": "box.trim",
+        "coordinates": "15 45 145 255",
+        "value": [
+          15,
+          45,
+          145,
+          255
+        ]
+      },
+      {
+        "key": "ArtBox",
+        "object": "box.art",
+        "coordinates": "25 55 135 245",
+        "value": [
+          25,
+          55,
+          135,
+          245
+        ]
+      }
+    ],
+    "userUnit": 2.5,
+    "viewSize": [
+      450,
+      650
+    ],
+    "clear": {
+      "key": "CropBox",
+      "object": "box.crop",
+      "coordinates": ""
+    },
+    "clearedViewSize": [
+      500,
+      750
+    ]
+  }
+}

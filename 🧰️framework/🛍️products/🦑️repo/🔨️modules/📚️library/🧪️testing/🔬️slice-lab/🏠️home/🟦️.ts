@@ -1,7 +1,10 @@
 import {spawnSync} from "node:child_process";
-import {chmodSync,copyFileSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
-import {hostname,tmpdir} from "node:os";
+import {chmodSync,copyFileSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,renameSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
+import {hostname} from "node:os";
 import {delimiter,dirname,join,sep} from "node:path";
+import {pinnedRustToolchainV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/📌️pinned/🟦️.ts";
+import {rustupHostTripleV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🖥️host/🟦️.ts";
+import {linuxHostLibcV1} from "../../../🎛️commands/🔧️setup/🐧️libc/🟦️.ts";
 import type {ReadyStageV1} from "../../../🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -40,8 +43,19 @@ export function sliceLabSeedToolsV1(tools:readonly string[]|"all",stages:"worksp
 /** 🌱️ One read-only seed of a lab home: a tree or a file of the live account that the machine gets as a copy-on-write clone. */
 export type SliceLabSeedV1=Readonly<{id:string;source:string;target:string;kind:string}>;
 /** 🌱️ The seeds a machine needs for its tools: every seed without a tool is always there (launcher, repo binary, runtimes), every other only when one of its tools is prepared. */
-export function sliceLabHomeSeedsV1(tools:readonly string[]|"all",live:string,home:string):readonly SliceLabSeedV1[]{
- return H.seeds.filter(seed=>seed.tools.length===0||tools==="all"||seed.tools.some(id=>tools.includes(id))).map(seed=>({id:seed.id,source:join(live,...seed.path.split("/")),target:join(home,...seed.path.split("/")),kind:seed.kind}));
+export function sliceLabHomeSeedsV1(tools:readonly string[]|"all",live:string,home:string,checkout:string):readonly SliceLabSeedV1[]{
+ const selected=H.seeds.filter(seed=>seed.tools.length===0||tools==="all"||seed.tools.some(id=>tools.includes(id)));
+ let toolchain="";
+ if(selected.some(seed=>seed.path.includes("{toolchain}"))){
+  const {channel}=pinnedRustToolchainV1(checkout,{});
+  if(!/^[a-z0-9][a-z0-9._-]*$/iu.test(channel))throw Error(words("invalidRustPin",{channel}));
+  const triple=rustupHostTripleV1(process.platform,process.arch,process.platform==="linux"?linuxHostLibcV1():"gnu");
+  toolchain=channel+"-"+triple;
+ }
+ return selected.map(seed=>{
+  const parts=seed.path.replace("{toolchain}",toolchain).split("/");
+  return {id:seed.id,source:join(live,...parts),target:join(home,...parts),kind:seed.kind};
+ });
 }
 
 /** 🌿️ The environment of a machine over a base environment: the lab home is the account, every tool home of the live account is dropped, no PATH entry lies below the live account, every network client is pointed at a refusing proxy (loopback stays reachable), and the download log is named. */
@@ -243,25 +257,29 @@ export function sliceLabStageEnvironmentV1(stage:string,base:Readonly<Record<str
 }
 
 /** 🏗️ The launcher of a lab machine built from the sources of the tree it reads (what the `native` stage does on a worker: it builds the launcher from the checkout, so a change of the Go sources reaches the machine): the member `📦️packages/🐹️go` files are copied into a private module, built offline (`GOWORK=off GOTOOLCHAIN=local GOPROXY=off CGO_ENABLED=0`) with the Go of the lab home, signed ad hoc on macOS, and written over the launcher binary of the home by removing it first (an in-place overwrite of a running binary is killed by macOS). Never touches the live account. `ok` false with a reason when no Go or no sources are there. */
-export function sliceLabLauncherBuildV1(root:string,home:string,go?:string):Readonly<{ok:boolean;seconds:number;reason:string}>{
- const started=performance.now(),done=(ok:boolean,reason:string)=>({ok,seconds:round((performance.now()-started)/1000),reason});
+export function sliceLabLauncherBuildV1(root:string,home:string,go?:string):Readonly<{ok:true;seconds:number;reason:"built"}>{
+ const started=performance.now();
  const module=join(root,"🧰️framework","🛍️products","🦑️repo","🔨️modules","🚀️launcher","📦️packages","🐹️go"),compiler=go??join(home,".local","go","bin","go"),target=join(home,".local","share","semio","launcher","bin","repo");
- if(!existsSync(compiler))return done(false,"no-go");
- if(!existsSync(join(module,"🐹️.go")))return done(false,"no-sources");
- const work=mkdtempSync(join(tmpdir(),"slw-lb-"));
+ if(!existsSync(compiler))throw Error(`Missing launcher compiler / Launcher-Compiler fehlt: ${compiler}`);
+ if(!existsSync(join(module,"🐹️.go")))throw Error(`Missing launcher source / Launcher-Quelltext fehlt: ${module}`);
+ mkdirSync(home,{recursive:true});
+ const work=mkdtempSync(join(home,"lb-")),temporary=join(work,"tmp");
  try{
-  mkdirSync(join(work,"cmd"));writeFileSync(join(work,"go.mod"),"module github.com/usalu/semio/repo/launcher\n\ngo 1.25\n");
+  mkdirSync(temporary);mkdirSync(join(work,"cmd"));writeFileSync(join(work,"go.mod"),"module github.com/usalu/semio/repo/launcher\n\ngo 1.25\n");
   let index=0;
   for(const source of[join(module,"🐹️.go"),...readdirSync(module).sort().map(name=>join(module,name,"🐹️.go"))]){
    if(!existsSync(source))continue;
    if(source.includes("📦️main")){copyFileSync(source,join(work,"cmd","main.go"));continue;}
    index++;copyFileSync(source,join(work,`s${index}.go`));
   }
-  const build=spawnSync(compiler,["build","-trimpath","-ldflags","-s -w","-o",join(work,"repo"),"./cmd"],{cwd:work,encoding:"utf8",env:{PATH:"/usr/bin:/bin",HOME:home,GOWORK:"off",GOTOOLCHAIN:"local",GOPROXY:"off",CGO_ENABLED:"0",GOCACHE:join(work,"gocache"),GOPATH:join(work,"gopath")}});
-  if(build.status!==0)return done(false,`build-failed: ${String(build.stderr).trim().split("\n")[0]}`);
-  if(process.platform==="darwin")spawnSync("codesign",["-s","-","--identifier","tech.semio.repo","--force",join(work,"repo")]);
-  mkdirSync(dirname(target),{recursive:true});rmSync(target,{force:true});copyFileSync(join(work,"repo"),target);chmodSync(target,0o755);
-  return done(true,"built");
+  const build=spawnSync(compiler,["build","-trimpath","-ldflags","-s -w","-o",join(work,"repo"),"./cmd"],{cwd:work,encoding:"utf8",env:{PATH:"/usr/bin:/bin",HOME:home,GOWORK:"off",GOTOOLCHAIN:"local",GOPROXY:"off",CGO_ENABLED:"0",TMPDIR:temporary,TEMP:temporary,TMP:temporary,GOCACHE:join(work,"gocache"),GOPATH:join(work,"gopath")}});
+  if(build.status!==0)throw Error(`Launcher build failed / Launcher-Bau fehlgeschlagen: ${build.error?.message??String(build.stderr).trim().slice(0,512)}`);
+  if(process.platform==="darwin"){
+   const signing=spawnSync("codesign",["-s","-","--identifier","tech.semio.repo","--force",join(work,"repo")],{encoding:"utf8"});
+   if(signing.status!==0)throw Error(`Launcher signing failed / Launcher-Signierung fehlgeschlagen: ${signing.error?.message??String(signing.stderr).trim().slice(0,512)}`);
+  }
+  mkdirSync(dirname(target),{recursive:true});chmodSync(join(work,"repo"),0o755);renameSync(join(work,"repo"),target);
+  return {ok:true,seconds:round((performance.now()-started)/1000),reason:"built"};
  }finally{rmSync(work,{recursive:true,force:true});}
 }
 

@@ -24,10 +24,12 @@ impl semio_framework_value_native_receiving_frame::NativeReceivingEffectHost for
 semio_framework_value_native_receiving_frame::native_receiving_control_driver!();
 impl NativeDecodeControl<'_>{
  /// 🪛 Runs one closure inside one original Work action on this control's own recipient; `None` means the quote was not admitted and nothing ran or was charged. The control handed to the closure carries the live work action: children may charge, checkpoint and read bytes but must never prepare_work.
- pub fn with_effect<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,run:impl FnOnce(&mut Self,&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{
+ pub fn with_effect<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,run:impl FnOnce(&mut Self,&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{Ok(self.with_effect_reported(grant,maximum_work,run)?.map(|(output,_)|output))}
+ /// 🧾️ [`Self::with_effect`] that also returns the whole work its original receipt recorded, the reply-handoff unit included.
+ pub fn with_effect_reported<R>(&mut self,grant:RetainedCloneGrant,maximum_work:u64,run:impl FnOnce(&mut Self,&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
   let(widened,widened_work)=semio_framework_value_control_contract::invocation_extent(grant,maximum_work)?;
   let Some(mut open)=semio_framework_value_control_contract::OriginalEffectRun::begin(&mut self.work,widened,widened_work)?else{return Ok(None)};
   let output={let mut effect=open.effect()?;semio_framework_value_control_contract::invoke_original(&mut effect,Some((grant,maximum_work)),|effect|run(self,effect))};
-  open.finish(&mut self.work,&mut 0)?;Ok(Some(output?))
+  let mut spent=0u128;open.finish(&mut self.work,&mut spent)?;Ok(Some((output?,spent)))
  }
 }

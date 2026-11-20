@@ -10,6 +10,7 @@ use crate::editor::wfc2d::modes::edit::tools::fill::*;
 use crate::examples::hex_ring;
 use crate::inferences::solve_with_clock;
 use semio_framework_job::Generation;
+use semio_framework_job::InteractiveJob as _;
 use semio_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
@@ -140,9 +141,7 @@ fn aborting_mid_run_cancels_and_never_writes_set_solve() {
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
-    job.begin_close();
-    let outcome = drive_once(&mut job, &mut driver, 1);
-    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
+    driver.cancel(&mut job, 1);
     assert!(!port.has_effects(), "abort must not dispatch commit-fill");
     assert!(job.take_set_solve().is_none(), "abort must not retain SetSolve");
     driver.close(&mut job);

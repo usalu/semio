@@ -153,18 +153,25 @@ pub mod protocol_record {
 
     /// 📇️ Every `(kind, tag)` record, in file order.
     pub fn records(protocol: &str) -> impl Iterator<Item = (&str, u64)> {
-        let bytes = protocol.as_bytes();
         let mut line = 0;
         std::iter::from_fn(move || {
-            while line < bytes.len() {
-                let current = line;
-                line = line_end(bytes, line) + 1;
-                if let Some((start, end, tag)) = record_at(bytes, current) {
-                    return Some((&protocol[start..end], tag));
+            while let Some(record) = next_record_line(protocol, &mut line) {
+                if record.is_some() {
+                    return record;
                 }
             }
             None
         })
+    }
+
+    pub(crate) fn next_record_line<'a>(protocol: &'a str, line: &mut usize) -> Option<Option<(&'a str, u64)>> {
+        if *line >= protocol.len() {
+            return None;
+        }
+        let bytes = protocol.as_bytes();
+        let current = *line;
+        *line = line_end(bytes, current) + 1;
+        Some(record_at(bytes, current).map(|(start, end, tag)| (&protocol[start..end], tag)))
     }
 
     /// 🔁️ The kind whose record declares `tag`.
@@ -377,6 +384,10 @@ use semio_framework_value::ToValue;
         out
     }
 
+    pub(super) fn key_payload(kind: &str, payload: DslValue) -> DslValue {
+        DslValue::Object(vec![(cased(kind, true), payload)])
+    }
+
     /// 🏷️ Encodes `op` under its kind's record tag.
     pub fn encode_op<T: ToValue>(protocol: &str, tagging: VariantTag, op: &T) -> Result<Vec<u8>, ProtocolError> {
         let semio_framework_value::DslValue::Object(mut entries) = op.to_value() else { return Err(malformed("op value", 0, "a mutation aggregate's value must be an object".into())) };
@@ -420,7 +431,7 @@ use semio_framework_value::ToValue;
                 entries.insert(0, (key.to_string(), semio_framework_value::DslValue::String(cased(kind, false))));
                 semio_framework_value::DslValue::Object(entries)
             }
-            VariantTag::Key => semio_framework_value::DslValue::Object(vec![(cased(kind, true), payload)]),
+            VariantTag::Key => key_payload(kind, payload),
         };
         T::from_value(value).map_err(|error| malformed("op value", offset as u64, error.to_string()))
     }

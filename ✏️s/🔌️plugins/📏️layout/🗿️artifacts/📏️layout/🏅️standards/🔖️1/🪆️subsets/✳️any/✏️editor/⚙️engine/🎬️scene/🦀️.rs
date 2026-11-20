@@ -36,7 +36,7 @@ use text_fonts::install_native_text_fonts;
 
 #[path = "⚙️layout-engine-and-views/🦀️.rs"]
 pub mod layout_engine_and_views;
-use layout_engine_and_views::{LayoutEngine, build_display_list_for_page, default_paragraph, frame_layer_visible, layout_story_in_frame, outside_interactive_view};
+use layout_engine_and_views::{LayoutEngine, build_display_list_for_page, default_paragraph, layout_story_in_frame, outside_interactive_view};
 
 #[path = "🖌️drawing-strokes-and-paths/🦀️.rs"]
 mod drawing_strokes_and_paths;

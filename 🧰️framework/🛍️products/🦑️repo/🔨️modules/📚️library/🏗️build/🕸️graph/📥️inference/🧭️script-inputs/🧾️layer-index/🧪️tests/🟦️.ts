@@ -5,6 +5,10 @@ import{join}from"node:path";
 import{createLayerIndexV1}from"../🟨️.mjs";
 import{INFERENCE_LIMITS_V1}from"../../../🧬️schema/🟨️.mjs";
 
+import generations from "./dictionary-generation.json";
+import { Database } from "bun:sqlite";
+import { closureLayerListV1 } from "../../🟨️.mjs";
+
 const root=()=>mkdtempSync(join(realpathSync(tmpdir()),"layer-index-"));
 const rows=(count:number,from:number)=>Array.from({length:count},(_all,at)=>({kind:"lstat",path:"/tree/"+(from+at),fact:at%3===0?"file":"directory"}));
 const digest=(letter:string)=>letter.repeat(64);
@@ -101,4 +105,27 @@ test("a row that was damaged in the dictionary is refused, its neighbours are st
   expect(reader.rowSync(read[8]!)).toEqual(layer[8]);
   expect(reader.stats().refused).toBe(1);
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("row offsets belong to the dictionary generation in which they were issued",()=>{
+ const directory=root(),oracle=new Database(":memory:");
+ try{
+  oracle.run("CREATE TABLE rows (generation INTEGER, ordinal INTEGER, path TEXT)");
+  const reader=createLayerIndexV1({directory}),actual:string[]=[];
+  const log={id(row:{path:string}){return actual.push(row.path)-1;},builder(){let ids:number[]=[];return {addIds(batch:Uint32Array){ids=Array.from(batch);},finish(){return ids;}};}};
+  const store={layerListingSync:(key:string)=>reader.listingSync(key)};
+  let original:ReturnType<typeof reader.listingSync>|undefined;
+  for(const [generation,start] of [generations.first,generations.second].entries()){
+   if(generation)rmSync(join(directory,"x","rows.dict"));
+   const layer=rows(generations.count,start),key=digest("ab"[generation]!);
+   createLayerIndexV1({directory}).indexSync(key,layer);
+   layer.forEach((row,at)=>oracle.run("INSERT INTO rows VALUES (?,?,?)",[generation,at,row.path]));
+   const ids=closureLayerListV1(log,{key,digest:key,store});
+   const expected=oracle.query("SELECT path FROM rows WHERE generation=? ORDER BY ordinal").all(generation) as {path:string}[];
+   expect(Array.from(ids,(id:number)=>actual[id])).toEqual(expected.map(row=>row.path));
+   if(!generation)original=reader.listingSync(key);
+  }
+  expect(original).toBeDefined();
+  expect(original!.rowSync(original!.ids[0]!)).toBeUndefined();
+ }finally{oracle.close();rmSync(directory,{recursive:true,force:true});}
 });

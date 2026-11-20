@@ -14,6 +14,9 @@ use crate::standards::v1::subsets::any::io::text::mutations::{operation_from_dsl
 use crate::schema::mutations::Grid3dMutation;
 use protocol::OpBinary;
 
+dsl::original_tagged_operation_receiving!(Grid3dOperationDsl, COMPONENT_PROTOCOL_SEMIO);
+dsl::original_mirrored_operation_receiving!(Grid3dMutation, Grid3dOperationDsl, operation_from_dsl);
+
 //#region 🔖️HandcraftedOpCodecs
 impl OpBinary for Grid3dOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

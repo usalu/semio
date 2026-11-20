@@ -20,6 +20,7 @@ consumes = ["process.machines"]
 
 [[package.metadata.semio.playground]]
 variant = "process3d"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🏭️process/🧬️schema/🔣️.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.process.process3d@1/*#editor"
 aliases = ["process 3d"]

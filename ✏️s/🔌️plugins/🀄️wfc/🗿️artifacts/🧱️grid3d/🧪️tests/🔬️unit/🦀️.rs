@@ -143,7 +143,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
         let inverse = inverse_grid3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
         vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case}: the vector must apply to the base ({error})"));
         assert_ne!(snapshot, base, "{kind}/{case}: an `applied` vector must change the document");
-        for step in &inverse {
+        for step in inverse.iter().rev() {
             vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).unwrap_or_else(|error| panic!("{kind}/{case}: the inverse must apply ({error})"));
         }
         assert_eq!(snapshot, base, "{kind}/{case}: the inverse did not restore the base");

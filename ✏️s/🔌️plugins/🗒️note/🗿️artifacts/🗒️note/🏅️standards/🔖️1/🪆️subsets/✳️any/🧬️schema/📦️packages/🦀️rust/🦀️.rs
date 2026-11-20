@@ -18,28 +18,11 @@ pub mod standards {
             #[path = "."]
             pub mod any {
                 #[path = "."]
-                pub mod io {
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
-                    }
-                    #[path = "."]
-                    pub mod text {
-                        #[path = "../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
-                    }
-                    #[path = "."]
-                    pub mod sqlite {
-                        #[path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
-                        pub mod snapshot;
-                    }
-                }
-                #[path = "."]
                 pub mod schema {
                     #[path = "../../🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    pub use semio_s_artifact_note_note_schema_descriptor::note_artifact_schema_descriptor;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]
@@ -57,6 +40,24 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                         }
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod binary {
+                        #[path = "../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
+                    pub mod text {
+                        #[path = "../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
+                    pub mod sqlite {
+                        #[path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
                     }
                 }
             }

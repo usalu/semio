@@ -50,7 +50,7 @@ export function registerReplaysLanguageAgnosticHierarchyTests(): void {
     const columns = vector.grid === "tablet" ? 2 : 3;
     const rows = Math.ceil(PAGES.length / columns);
     if (vector.mode === "swipe") {
-      const offset = /translate3d\(([^%]+)%, ([^%]+)%, 0\)/u.exec(root.querySelector<HTMLElement>(":scope > [data-layered-strip]")!.style.transform)!;
+      const offset = /translate(?:3d)?\(([^%]+)%, ([^%]+)%/u.exec(root.querySelector<HTMLElement>(":scope > [data-layered-strip]")!.style.transform)!;
       expect(-Number(offset[1]) * columns / 100).toBeCloseTo(vector.column);
       expect(-Number(offset[2]) * rows / 100).toBeCloseTo(vector.row);
       const overlay = root.querySelector<HTMLElement>(":scope > [data-layered-overlay]")!;

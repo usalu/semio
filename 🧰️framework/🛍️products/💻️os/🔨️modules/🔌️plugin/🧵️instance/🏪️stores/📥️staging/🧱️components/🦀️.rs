@@ -144,7 +144,7 @@ pub struct PeerRoster<A: ArtifactApp> {
     pub peer_roster_processed_generation: u64,
     pub peer_roster_outcome_generation: u64,
     pub peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS],
-    pub peer_roster_scope: semio_framework_job::CancelToken,
+    pub peer_roster_scope: Option<semio_framework_job::CancelToken>,
     pub peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication<A>>,
     pub peer_roster_outcomes: ArtifactFixedRegistry<PresenceRosterOutcome>,
     pub peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>,
@@ -166,6 +166,11 @@ pub struct PeerRoster<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> PeerRoster<A> {
+    /// 🎟️ Borrows the live roster's actual cancellation scope until final retirement.
+    pub fn peer_roster_scope(&self)->&semio_framework_job::CancelToken{
+        self.peer_roster_scope.as_ref().expect("closed peer roster cannot admit work")
+    }
+
     /// 👁️ Retired read custody borrows the immutable empty value without allocating a replacement root.
     pub fn peer_presence_root(&self)->&PeerPresenceRoot{self.peer_presence.as_deref().unwrap_or(&PeerPresenceRoot::EMPTY)}
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
@@ -187,7 +192,7 @@ impl<A: ArtifactApp> PeerRoster<A> {
             peer_roster_processed_generation: 0,
             peer_roster_outcome_generation: 0,
             peer_roster_reservations: std::array::from_fn(|_| None),
-            peer_roster_scope: scope,
+            peer_roster_scope: Some(scope),
             peer_roster_publications: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
             peer_roster_outcomes: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
             peer_presence_retirements: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},
@@ -237,6 +242,25 @@ impl ActionIngress {
     }
 }
 
+/// 🧭️ The interactive surface that owns the current local hover.
+pub enum HoverSurface {
+    Window(String),
+    Panel,
+}
+
+impl HoverSurface {
+    pub fn from_window(window: Option<&str>) -> Self {
+        window.map_or(Self::Panel, |id| Self::Window(id.to_owned()))
+    }
+
+    pub fn matches_window(&self, window: Option<&str>) -> bool {
+        match self {
+            Self::Window(id) => window == Some(id.as_str()),
+            Self::Panel => window.is_none(),
+        }
+    }
+}
+
 /// 🎷️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
 pub struct LocalInteraction<A: ArtifactApp> {
     pub local_interaction_query: Option<semio_plugin_interaction::live::LocalInteractionLiveQuery<A::Snapshot, A::Config>>,
@@ -252,6 +276,8 @@ pub struct LocalInteraction<A: ArtifactApp> {
     /// never undoable, mirrored into the ephemeral-shared `PresenceInteraction` broadcast
     /// (`interaction_state`) exactly like `presence_store`'s own local half.
     pub interaction_hover: InteractionHoverState,
+    /// 🪟️ The interactive surface owning each ephemeral domain hover.
+    pub interaction_hover_owners: BTreeMap<String, HoverSurface>,
     /// 🕹️ Wave B9: the just-computed selection `dispatch_interaction_action` published on leftover,
     /// retained for the guest's own render. `protocol::validate_state` prunes every id an empty
     /// topology does not contain, so the store snapshot a first pick reads can be empty while this
@@ -292,6 +318,7 @@ impl<A: ArtifactApp> LocalInteraction<A> {
             config_snapshot_read_returns: SnapshotReadReturnPump::new(),
             interaction_snapshot_read_returns: SnapshotReadReturnPump::new(),
             interaction_hover: InteractionHoverState::new(),
+            interaction_hover_owners: BTreeMap::new(),
             interaction_leftover_selection: None,
             interaction_leftover_ids: Vec::new(),
             interaction_ui_topology: HashMap::new(),

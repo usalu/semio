@@ -380,6 +380,68 @@
         }
       ],
       "violations": []
+    },
+    {
+      "id": "configuration-publication-inside-cpu-units",
+      "note": "A job's configuration view was opened inside the driver's counted cpu units: its first publication queued behind the concurrent jobs of the same process, each handing the lease over one poll apart, so the cores stayed held past the grace period and the wait was refused while the whole machine queued behind them.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive"
+        },
+        {
+          "op": "acquire",
+          "resource": "cargo:configuration-publication",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": [
+        {
+          "kind": "out-of-order",
+          "held": "semio.compiler.host-capacity/v1",
+          "requested": "cargo:configuration-publication"
+        },
+        {
+          "kind": "hold-and-wait",
+          "held": "semio.compiler.cpu/v1/0",
+          "requested": "cargo:configuration-publication"
+        }
+      ]
+    },
+    {
+      "id": "configuration-publication-before-cpu-units",
+      "note": "The same driver after the hoist: every distinct configuration view is published before the cores are taken, so a view opened inside the units is adopted without the publication lease and no task requests it while it holds cores.",
+      "steps": [
+        {
+          "op": "acquire",
+          "resource": "cargo:configuration-publication",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        },
+        {
+          "op": "release",
+          "resource": "cargo:configuration-publication"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.host-capacity/v1",
+          "mode": "shared"
+        },
+        {
+          "op": "acquire",
+          "resource": "semio.compiler.cpu/v1/0",
+          "mode": "exclusive",
+          "waitedMilliseconds": 20000
+        }
+      ],
+      "violations": []
     }
   ]
 }

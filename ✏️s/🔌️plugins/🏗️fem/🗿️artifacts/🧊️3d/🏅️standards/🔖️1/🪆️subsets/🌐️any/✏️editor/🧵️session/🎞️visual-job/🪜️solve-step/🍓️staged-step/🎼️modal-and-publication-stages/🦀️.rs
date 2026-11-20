@@ -77,7 +77,7 @@ impl Fem3dNumericalChild {
         if self.node_cursor == self.analysis_node_ids.len() {
             self.stage = Fem3dNumericalStage::PublishProgress;
         } else {
-            if let Some(equation) = self.equations[self.node_cursor][self.scalar_axis] {
+            if let Some(equation) = self.equation(self.node_cursor, self.scalar_axis) {
                 let (component, eigenvalue) = self.subspace.as_ref().and_then(|subspace| subspace.visual_mode_scalar(self.request.mode.unwrap_or(0), equation)).ok_or_else(|| b"fem3d.numerical-mode-scalar".to_vec())?;
                 self.scalar.mode_shape[self.scalar_axis] = component;
                 self.scalar.eigen_estimate = eigenvalue;

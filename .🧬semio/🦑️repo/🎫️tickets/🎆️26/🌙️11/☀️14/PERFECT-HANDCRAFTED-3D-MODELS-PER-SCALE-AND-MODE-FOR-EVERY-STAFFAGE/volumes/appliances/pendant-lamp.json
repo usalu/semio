@@ -13,41 +13,81 @@
      "tone": 0.7,
      "profile": [
       [
-       -0.024,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
        0.05
       ],
       [
-       -0.016,
+       0.016,
        0.05
       ],
       [
-       -0.01134,
-       0.04936
+       0.01906,
+       0.04939
       ],
       [
-       -0.00741,
-       0.04756
+       0.02166,
+       0.04766
       ],
       [
-       -0.00425,
-       0.04475
+       0.02339,
+       0.04506
       ],
       [
-       -0.00193,
-       0.04111
+       0.024,
+       0.042
       ],
       [
-       -0.00049,
-       0.03681
-      ],
-      [
-       0,
-       0.032
+       0.024,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "rose-grip",
+     "kind": "revolve",
+     "bone": "rose",
+     "material": "rose-polymer",
+     "role": "detail",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.02,
+       0.0
+      ],
+      [
+       0.02,
+       0.007
+      ],
+      [
+       0.031,
+       0.007
+      ],
+      [
+       0.034,
+       0.0055
+      ],
+      [
+       0.034,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
       0
      ],
      "origin": [
@@ -65,17 +105,25 @@
      "tone": 0.15,
      "profile": [
       [
-       -0.521,
-       0.00375
+       0.004,
+       0.0
       ],
       [
-       0,
-       0.00375
+       0.004,
+       0.0033
+      ],
+      [
+       0.6025,
+       0.0033
+      ],
+      [
+       0.6025,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -94,25 +142,105 @@
      "tone": 0.45,
      "profile": [
       [
-       0,
-       0.01
+       -0.0005,
+       0.0
       ],
       [
-       -0.006,
-       0.0105
+       -0.0005,
+       0.0055
       ],
       [
-       -0.0075,
+       0.0015,
+       0.0065
+      ],
+      [
+       0.0025,
+       0.0095
+      ],
+      [
+       0.0045,
+       0.0128
+      ],
+      [
+       0.0075,
+       0.015
+      ],
+      [
+       0.0105,
        0.0155
       ],
       [
-       -0.03,
+       0.029,
        0.0155
+      ],
+      [
+       0.0302,
+       0.0145
+      ],
+      [
+       0.0302,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "socket",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0306,
+       0.0
+      ],
+      [
+       0.0306,
+       0.016
+      ],
+      [
+       0.0318,
+       0.0185
+      ],
+      [
+       0.0346,
+       0.02
+      ],
+      [
+       0.0941,
+       0.02
+      ],
+      [
+       0.0956,
+       0.0185
+      ],
+      [
+       0.0956,
+       0.0142
+      ],
+      [
+       0.074,
+       0.0142
+      ],
+      [
+       0.074,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
       0
      ],
      "origin": [
@@ -130,125 +258,413 @@
      "tone": 0.4,
      "profile": [
       [
-       0,
+       0.0,
+       0.0055
+      ],
+      [
+       0.0,
        0.017
       ],
       [
-       -0.00065,
-       0.02787
+       6e-05,
+       0.02023
       ],
       [
-       -0.0027,
-       0.03891
+       0.00023,
+       0.02349
       ],
       [
-       -0.0063,
-       0.04998
+       0.00052,
+       0.02676
       ],
       [
-       -0.01159,
-       0.06096
+       0.00094,
+       0.03005
       ],
       [
-       -0.01874,
-       0.07172
+       0.00149,
+       0.03335
       ],
       [
-       -0.02788,
-       0.08213
+       0.00216,
+       0.03667
       ],
       [
-       -0.03916,
-       0.09205
+       0.00298,
+       0.03998
       ],
       [
-       -0.05274,
-       0.10137
+       0.00393,
+       0.0433
       ],
       [
-       -0.06877,
-       0.10995
+       0.00503,
+       0.04662
       ],
       [
-       -0.08738,
-       0.11767
+       0.00628,
+       0.04993
       ],
       [
-       -0.10875,
-       0.1244
+       0.00767,
+       0.05323
       ],
       [
-       -0.133,
-       0.13
+       0.00923,
+       0.05653
       ],
       [
-       -0.133,
-       0.133
+       0.01094,
+       0.0598
       ],
       [
-       -0.1385,
-       0.133
+       0.01282,
+       0.06306
       ],
       [
-       -0.1385,
-       0.1305
+       0.01487,
+       0.0663
       ],
       [
-       -0.13356,
-       0.12756
+       0.01709,
+       0.06951
       ],
       [
-       -0.1094,
-       0.12198
+       0.01949,
+       0.07269
       ],
       [
-       -0.08823,
-       0.11532
+       0.02207,
+       0.07584
       ],
       [
-       -0.06983,
-       0.10769
+       0.02483,
+       0.07895
       ],
       [
-       -0.05403,
-       0.09923
+       0.02778,
+       0.08203
       ],
       [
-       -0.04069,
-       0.09007
+       0.03092,
+       0.08506
       ],
       [
-       -0.02964,
-       0.08035
+       0.03426,
+       0.08804
       ],
       [
-       -0.02072,
-       0.07019
+       0.0378,
+       0.09098
       ],
       [
-       -0.01376,
-       0.05972
+       0.04154,
+       0.09386
       ],
       [
-       -0.00862,
-       0.04905
+       0.04549,
+       0.09668
       ],
       [
-       -0.00512,
-       0.03829
+       0.04965,
+       0.09945
       ],
       [
-       -0.00313,
-       0.02757
+       0.05403,
+       0.10215
       ],
       [
-       -0.0025,
-       0.01685
+       0.05864,
+       0.10478
+      ],
+      [
+       0.06346,
+       0.10734
+      ],
+      [
+       0.06851,
+       0.10983
+      ],
+      [
+       0.0738,
+       0.11225
+      ],
+      [
+       0.07932,
+       0.11458
+      ],
+      [
+       0.08509,
+       0.11682
+      ],
+      [
+       0.09109,
+       0.11898
+      ],
+      [
+       0.09735,
+       0.12105
+      ],
+      [
+       0.10386,
+       0.12303
+      ],
+      [
+       0.11063,
+       0.1249
+      ],
+      [
+       0.11765,
+       0.12667
+      ],
+      [
+       0.12494,
+       0.12834
+      ],
+      [
+       0.1325,
+       0.1299
+      ],
+      [
+       0.13259,
+       0.13074
+      ],
+      [
+       0.13291,
+       0.13151
+      ],
+      [
+       0.13343,
+       0.13217
+      ],
+      [
+       0.13411,
+       0.13266
+      ],
+      [
+       0.1349,
+       0.13294
+      ],
+      [
+       0.13573,
+       0.13299
+      ],
+      [
+       0.13655,
+       0.13281
+      ],
+      [
+       0.13729,
+       0.13241
+      ],
+      [
+       0.13788,
+       0.13182
+      ],
+      [
+       0.13829,
+       0.13109
+      ],
+      [
+       0.13849,
+       0.13028
+      ],
+      [
+       0.13845,
+       0.12944
+      ],
+      [
+       0.13818,
+       0.12865
+      ],
+      [
+       0.1377,
+       0.12796
+      ],
+      [
+       0.13705,
+       0.12743
+      ],
+      [
+       0.13628,
+       0.1271
+      ],
+      [
+       0.12806,
+       0.12839
+      ],
+      [
+       0.12078,
+       0.12679
+      ],
+      [
+       0.11376,
+       0.12509
+      ],
+      [
+       0.107,
+       0.12329
+      ],
+      [
+       0.10049,
+       0.1214
+      ],
+      [
+       0.09422,
+       0.11941
+      ],
+      [
+       0.0882,
+       0.11733
+      ],
+      [
+       0.08242,
+       0.11516
+      ],
+      [
+       0.07688,
+       0.11292
+      ],
+      [
+       0.07156,
+       0.11059
+      ],
+      [
+       0.06648,
+       0.10818
+      ],
+      [
+       0.06161,
+       0.10571
+      ],
+      [
+       0.05697,
+       0.10316
+      ],
+      [
+       0.05255,
+       0.10055
+      ],
+      [
+       0.04833,
+       0.09787
+      ],
+      [
+       0.04433,
+       0.09514
+      ],
+      [
+       0.04053,
+       0.09235
+      ],
+      [
+       0.03693,
+       0.08951
+      ],
+      [
+       0.03353,
+       0.08661
+      ],
+      [
+       0.03032,
+       0.08367
+      ],
+      [
+       0.0273,
+       0.08069
+      ],
+      [
+       0.02447,
+       0.07767
+      ],
+      [
+       0.02181,
+       0.07461
+      ],
+      [
+       0.01934,
+       0.07152
+      ],
+      [
+       0.01703,
+       0.06839
+      ],
+      [
+       0.0149,
+       0.06525
+      ],
+      [
+       0.01293,
+       0.06207
+      ],
+      [
+       0.01113,
+       0.05888
+      ],
+      [
+       0.00948,
+       0.05567
+      ],
+      [
+       0.00798,
+       0.05245
+      ],
+      [
+       0.00664,
+       0.04922
+      ],
+      [
+       0.00544,
+       0.04597
+      ],
+      [
+       0.00438,
+       0.04273
+      ],
+      [
+       0.00347,
+       0.03948
+      ],
+      [
+       0.00268,
+       0.03624
+      ],
+      [
+       0.00203,
+       0.033
+      ],
+      [
+       0.00151,
+       0.02977
+      ],
+      [
+       0.0011,
+       0.02655
+      ],
+      [
+       0.00082,
+       0.02335
+      ],
+      [
+       0.00065,
+       0.02016
+      ],
+      [
+       0.0006,
+       0.017
+      ],
+      [
+       0.0006,
+       0.0055
+      ],
+      [
+       0.0,
+       0.0055
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -266,17 +682,37 @@
      "tone": 0.5,
      "profile": [
       [
-       0.078,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0045
+      ],
+      [
+       0.0015,
+       0.0047
+      ],
+      [
+       0.0032,
+       0.0105
+      ],
+      [
+       0.0045,
        0.0135
       ],
       [
-       0.105,
+       0.027,
        0.0135
+      ],
+      [
+       0.027,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -294,85 +730,93 @@
      "tone": 0.9,
      "profile": [
       [
-       0,
-       0
+       0.0245,
+       0.0
       ],
       [
-       0.00064,
-       0.00531
+       0.0245,
+       0.0128
       ],
       [
-       0.00247,
-       0.01059
+       0.027,
+       0.0138
       ],
       [
-       0.00538,
-       0.01564
-      ],
-      [
-       0.00925,
-       0.02025
-      ],
-      [
-       0.01396,
-       0.0242
-      ],
-      [
-       0.01941,
-       0.02728
-      ],
-      [
-       0.02546,
-       0.02929
-      ],
-      [
-       0.032,
-       0.03
-      ],
-      [
-       0.03853,
-       0.02946
-      ],
-      [
-       0.04426,
-       0.02802
-      ],
-      [
-       0.04938,
-       0.02594
-      ],
-      [
-       0.05407,
-       0.02348
-      ],
-      [
-       0.05855,
-       0.02091
-      ],
-      [
-       0.063,
-       0.0185
-      ],
-      [
-       0.06717,
-       0.01678
-      ],
-      [
-       0.07087,
-       0.0154
-      ],
-      [
-       0.07439,
+       0.03061,
        0.01439
       ],
       [
-       0.078,
-       0.0138
+       0.03413,
+       0.0154
+      ],
+      [
+       0.03783,
+       0.01678
+      ],
+      [
+       0.042,
+       0.0185
+      ],
+      [
+       0.04645,
+       0.02091
+      ],
+      [
+       0.05093,
+       0.02348
+      ],
+      [
+       0.05562,
+       0.02594
+      ],
+      [
+       0.06074,
+       0.02802
+      ],
+      [
+       0.06647,
+       0.02946
+      ],
+      [
+       0.073,
+       0.03
+      ],
+      [
+       0.07954,
+       0.02929
+      ],
+      [
+       0.08559,
+       0.02728
+      ],
+      [
+       0.09104,
+       0.0242
+      ],
+      [
+       0.09575,
+       0.02025
+      ],
+      [
+       0.09962,
+       0.01564
+      ],
+      [
+       0.10253,
+       0.01059
+      ],
+      [
+       0.10436,
+       0.00531
+      ],
+      [
+       0.105,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -385,43 +829,13 @@
    "thermal": [
     {
      "id": "th-rose",
-     "bone": "rose",
-     "material": "rose-polymer",
-     "role": "body",
-     "tone": 0.7,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        -0.012,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.024,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0239,
-        0
-       ],
-       "rx": 0.0005,
-       "ry": 0.0005,
-       "exponent": 2
-      }
-     ],
+     "of": "rose",
+     "region": "rose",
+     "layer": "rose-shell"
+    },
+    {
+     "id": "th-rose-grip",
+     "of": "rose-grip",
      "region": "rose",
      "layer": "rose-shell"
     },
@@ -429,90 +843,23 @@
      "id": "th-cord",
      "of": "cord",
      "region": "cord",
-     "layer": "sheath",
-     "slender": true
+     "layer": "sheath"
     },
     {
      "id": "th-collar",
-     "bone": "holder",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.45,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0,
-        0
-       ],
-       "rx": 0.01,
-       "ry": 0.01,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.006,
-        0
-       ],
-       "rx": 0.0105,
-       "ry": 0.0105,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0075,
-        0
-       ],
-       "rx": 0.0155,
-       "ry": 0.0155,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.03,
-        0
-       ],
-       "rx": 0.0155,
-       "ry": 0.0155,
-       "exponent": 2
-      }
-     ],
+     "of": "collar",
+     "region": "lampholder",
+     "layer": "brass-shell"
+    },
+    {
+     "id": "th-socket",
+     "of": "socket",
      "region": "lampholder",
      "layer": "brass-shell"
     },
     {
      "id": "th-bulb-cap",
-     "bone": "bulb",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.105,
-        0
-       ],
-       "rx": 0.0135,
-       "ry": 0.0135,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        0.078,
-        0
-       ],
-       "rx": 0.0135,
-       "ry": 0.0135,
-       "exponent": 2
-      }
-     ],
+     "of": "bulb-cap",
      "region": "lampholder",
      "layer": "brass-shell"
     },
@@ -524,274 +871,109 @@
     },
     {
      "id": "th-shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "body",
-     "tone": 0.4,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.0,
-        0
-       ],
-       "rx": 0.017,
-       "ry": 0.017,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00047,
-        0
-       ],
-       "rx": 0.02631,
-       "ry": 0.02631,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00196,
-        0
-       ],
-       "rx": 0.03575,
-       "ry": 0.03575,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00456,
-        0
-       ],
-       "rx": 0.04524,
-       "ry": 0.04524,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00835,
-        0
-       ],
-       "rx": 0.05471,
-       "ry": 0.05471,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.01344,
-        0
-       ],
-       "rx": 0.06406,
-       "ry": 0.06406,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.01992,
-        0
-       ],
-       "rx": 0.07323,
-       "ry": 0.07323,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.02788,
-        0
-       ],
-       "rx": 0.08213,
-       "ry": 0.08213,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.03741,
-        0
-       ],
-       "rx": 0.09067,
-       "ry": 0.09067,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.04862,
-        0
-       ],
-       "rx": 0.09878,
-       "ry": 0.09878,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.06159,
-        0
-       ],
-       "rx": 0.10637,
-       "ry": 0.10637,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.07642,
-        0
-       ],
-       "rx": 0.11337,
-       "ry": 0.11337,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0932,
-        0
-       ],
-       "rx": 0.1197,
-       "ry": 0.1197,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.11203,
-        0
-       ],
-       "rx": 0.12527,
-       "ry": 0.12527,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.133,
-        0
-       ],
-       "rx": 0.13,
-       "ry": 0.13,
-       "exponent": 2
-      }
-     ],
+     "of": "shade",
      "region": "shade",
      "layer": "shade-steel"
     },
     {
      "id": "th-shade-plume",
+     "kind": "revolve",
      "bone": "shade",
      "material": "enamel-white",
      "role": "detail",
      "tone": 0.4,
-     "kind": "extrude",
      "profile": [
       [
-       0.017,
-       0.0
+       -0.0015,
+       0.0155
       ],
       [
-       0.01642,
-       0.0044
-      ],
-      [
-       0.01472,
-       0.0085
-      ],
-      [
-       0.01202,
-       0.01202
-      ],
-      [
-       0.0085,
-       0.01472
-      ],
-      [
-       0.0044,
-       0.01642
-      ],
-      [
-       0.0,
+       -0.0015,
        0.017
       ],
       [
-       -0.0044,
-       0.01642
+       -0.00141,
+       0.02113
       ],
       [
-       -0.0085,
-       0.01472
+       -0.00113,
+       0.02529
       ],
       [
-       -0.01202,
-       0.01202
+       -0.00066,
+       0.02948
       ],
       [
-       -0.01472,
-       0.0085
+       2e-05,
+       0.03369
       ],
       [
-       -0.01642,
-       0.0044
+       0.00091,
+       0.03791
       ],
       [
-       -0.017,
-       0.0
+       0.00202,
+       0.04215
       ],
       [
-       -0.01642,
-       -0.0044
+       0.00336,
+       0.04638
       ],
       [
-       -0.01472,
-       -0.0085
+       0.00493,
+       0.05061
       ],
       [
-       -0.01202,
-       -0.01202
+       0.00679,
+       0.04986
       ],
       [
-       -0.0085,
-       -0.01472
+       0.00525,
+       0.04573
       ],
       [
-       -0.0044,
-       -0.01642
+       0.00394,
+       0.04159
       ],
       [
-       -0.0,
-       -0.017
+       0.00286,
+       0.03745
       ],
       [
-       0.0044,
-       -0.01642
+       0.00199,
+       0.03332
       ],
       [
-       0.0085,
-       -0.01472
+       0.00133,
+       0.0292
       ],
       [
-       0.01202,
-       -0.01202
+       0.00086,
+       0.02511
       ],
       [
-       0.01472,
-       -0.0085
+       0.00059,
+       0.02104
       ],
       [
-       0.01642,
-       -0.0044
+       0.0005,
+       0.017
+      ],
+      [
+       0.0005,
+       0.0155
       ]
      ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.0075,
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
      "region": "shade",
      "tags": [
       "shade-plume"
@@ -800,116 +982,246 @@
    ],
    "structure": [
     {
+     "id": "support-ceiling-hook",
+     "kind": "capsule",
+     "bone": "rose",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.004,
+      0.0,
+      -0.006
+     ],
+     "p1": [
+      0.004,
+      0.0,
+      0.006
+     ],
+     "r0": 0.004,
+     "r1": 0.004,
+     "member": "rose",
+     "part": "support",
+     "anchor": "ceiling-hook"
+    },
+    {
+     "id": "member-rose-hanger",
+     "kind": "capsule",
+     "bone": "rose",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.006,
+      0.0,
+      0.0
+     ],
+     "p1": [
+      0.022,
+      0.0,
+      0.0
+     ],
+     "r0": 0.004,
+     "r1": 0.004,
+     "member": "rose",
+     "part": "member"
+    },
+    {
+     "id": "joint-cord",
+     "kind": "revolve",
+     "bone": "cord",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.006,
+       0.0
+      ],
+      [
+       -0.006,
+       0.0045
+      ],
+      [
+       0.004,
+       0.0045
+      ],
+      [
+       0.004,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "cord",
+     "part": "joint"
+    },
+    {
      "id": "member-cord",
+     "kind": "revolve",
      "bone": "cord",
      "material": "textile-cord",
      "role": "body",
      "tone": 0.15,
-     "kind": "extrude",
      "profile": [
       [
        0.0,
-       0.00375
-      ],
-      [
-       0.00097,
-       0.00362
-      ],
-      [
-       0.00187,
-       0.00325
-      ],
-      [
-       0.00265,
-       0.00265
-      ],
-      [
-       0.00325,
-       0.00188
-      ],
-      [
-       0.00362,
-       0.00097
-      ],
-      [
-       0.00375,
        0.0
       ],
       [
-       0.00362,
-       -0.00097
-      ],
-      [
-       0.00325,
-       -0.00187
-      ],
-      [
-       0.00265,
-       -0.00265
-      ],
-      [
-       0.00187,
-       -0.00325
-      ],
-      [
-       0.00097,
-       -0.00362
-      ],
-      [
        0.0,
-       -0.00375
+       0.0033
       ],
       [
-       -0.00097,
-       -0.00362
+       0.6,
+       0.0033
       ],
       [
-       -0.00187,
-       -0.00325
-      ],
-      [
-       -0.00265,
-       -0.00265
-      ],
-      [
-       -0.00325,
-       -0.00188
-      ],
-      [
-       -0.00362,
-       -0.00097
-      ],
-      [
-       -0.00375,
-       -0.0
-      ],
-      [
-       -0.00362,
-       0.00097
-      ],
-      [
-       -0.00325,
-       0.00188
-      ],
-      [
-       -0.00265,
-       0.00265
-      ],
-      [
-       -0.00188,
-       0.00325
-      ],
-      [
-       -0.00097,
-       0.00362
+       0.6,
+       0.0
       ]
      ],
-     "plane": "zx",
-     "from": -0.521,
-     "to": 0,
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "slender": true,
      "member": "cord",
-     "part": "member",
-     "slender": true
+     "part": "member"
+    },
+    {
+     "id": "joint-holder",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.0005,
+       0.0
+      ],
+      [
+       -0.0005,
+       0.0045
+      ],
+      [
+       0.0075,
+       0.0045
+      ],
+      [
+       0.0075,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "holder",
+     "part": "joint"
+    },
+    {
+     "id": "member-nipple",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0075,
+       0.0
+      ],
+      [
+       0.0075,
+       0.005
+      ],
+      [
+       0.036,
+       0.005
+      ],
+      [
+       0.036,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "holder",
+     "part": "member"
+    },
+    {
+     "id": "member-socket",
+     "of": "socket",
+     "member": "holder",
+     "part": "member"
+    },
+    {
+     "id": "joint-shade",
+     "kind": "revolve",
+     "bone": "shade",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.004,
+       0.0
+      ],
+      [
+       -0.004,
+       0.009
+      ],
+      [
+       0.004,
+       0.009
+      ],
+      [
+       0.004,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "shade",
+     "part": "joint"
     },
     {
      "id": "member-shade",
@@ -918,220 +1230,42 @@
      "part": "member"
     },
     {
-     "id": "member-bulb-stem",
+     "id": "joint-bulb",
+     "kind": "revolve",
      "bone": "bulb",
      "material": "brass-lacquered",
      "role": "body",
-     "tone": 0.45,
-     "kind": "extrude",
+     "tone": 0.5,
      "profile": [
       [
-       0.0,
-       0.008
-      ],
-      [
-       0.00207,
-       0.00773
-      ],
-      [
        0.004,
-       0.00693
-      ],
-      [
-       0.00566,
-       0.00566
-      ],
-      [
-       0.00693,
-       0.004
-      ],
-      [
-       0.00773,
-       0.00207
-      ],
-      [
-       0.008,
        0.0
       ],
       [
-       0.00773,
-       -0.00207
-      ],
-      [
-       0.00693,
-       -0.004
-      ],
-      [
-       0.00566,
-       -0.00566
-      ],
-      [
        0.004,
-       -0.00693
+       0.0145
       ],
       [
-       0.00207,
-       -0.00773
+       0.024,
+       0.0145
       ],
       [
-       0.0,
-       -0.008
-      ],
-      [
-       -0.00207,
-       -0.00773
-      ],
-      [
-       -0.004,
-       -0.00693
-      ],
-      [
-       -0.00566,
-       -0.00566
-      ],
-      [
-       -0.00693,
-       -0.004
-      ],
-      [
-       -0.00773,
-       -0.00207
-      ],
-      [
-       -0.008,
-       -0.0
-      ],
-      [
-       -0.00773,
-       0.00207
-      ],
-      [
-       -0.00693,
-       0.004
-      ],
-      [
-       -0.00566,
-       0.00566
-      ],
-      [
-       -0.004,
-       0.00693
-      ],
-      [
-       -0.00207,
-       0.00773
+       0.024,
+       0.0
       ]
      ],
-     "plane": "zx",
-     "from": 0.105,
-     "to": 0.225,
-     "member": "bulb",
-     "part": "member"
-    },
-    {
-     "id": "joint-cord",
-     "bone": "cord",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.005,
-      0.005,
-      0.005
+     "axis": [
+      1,
+      0,
+      0
      ],
-     "member": "cord",
-     "part": "joint"
-    },
-    {
-     "id": "joint-holder",
-     "bone": "holder",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.0075,
-      0.0075,
-      0.0075
-     ],
-     "member": "holder",
-     "part": "joint"
-    },
-    {
-     "id": "joint-shade",
-     "bone": "shade",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.0075,
-      0.0075,
-      0.0075
-     ],
-     "member": "shade",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bulb",
-     "bone": "bulb",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.0075,
-      0.0075,
-      0.0075
+     "origin": [
+      0,
+      0,
+      0
      ],
      "member": "bulb",
      "part": "joint"
-    },
-    {
-     "id": "support-ceiling-hook",
-     "bone": "rose",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.3,
-     "kind": "capsule",
-     "p0": [
-      0,
-      0,
-      -0.015
-     ],
-     "p1": [
-      0,
-      0,
-      0.015
-     ],
-     "r0": 0.005,
-     "r1": 0.005,
-     "member": "rose",
-     "part": "support",
-     "anchor": "ceiling-hook"
-    },
-    {
-     "id": "mass-shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "detail",
-     "tone": 0.4,
-     "kind": "ellipsoid",
-     "radii": [
-      0.045,
-      0.03,
-      0.045
-     ],
-     "transform": {
-      "translation": [
-       0,
-       -0.06,
-       0
-      ]
-     },
-     "member": "shade",
-     "part": "mass"
     },
     {
      "id": "member-bulb-cap",
@@ -1141,21 +1275,21 @@
     },
     {
      "id": "mass-rose",
+     "kind": "ellipsoid",
      "bone": "rose",
      "material": "rose-polymer",
      "role": "detail",
      "tone": 0.7,
-     "kind": "ellipsoid",
      "radii": [
-      0.03,
-      0.01,
-      0.03
+      0.008,
+      0.022,
+      0.022
      ],
      "transform": {
       "translation": [
-       0,
-       -0.012,
-       0
+       0.012,
+       0.0,
+       0.0
       ]
      },
      "member": "rose",
@@ -1163,21 +1297,21 @@
     },
     {
      "id": "mass-cord",
+     "kind": "ellipsoid",
      "bone": "cord",
      "material": "textile-cord",
      "role": "detail",
      "tone": 0.15,
-     "kind": "ellipsoid",
      "radii": [
-      0.0045,
-      0.03,
-      0.0045
+      0.015,
+      0.0034,
+      0.0034
      ],
      "transform": {
       "translation": [
-       0,
-       -0.26,
-       0
+       0.3,
+       0.0,
+       0.0
       ]
      },
      "member": "cord",
@@ -1185,43 +1319,65 @@
     },
     {
      "id": "mass-holder",
+     "kind": "ellipsoid",
      "bone": "holder",
      "material": "brass-lacquered",
      "role": "detail",
      "tone": 0.45,
-     "kind": "ellipsoid",
      "radii": [
-      0.01,
-      0.01,
-      0.01
+      0.008,
+      0.008,
+      0.008
      ],
      "transform": {
       "translation": [
-       0,
-       -0.015,
-       0
+       0.049,
+       0.0,
+       0.0
       ]
      },
      "member": "holder",
      "part": "mass"
     },
     {
+     "id": "mass-shade",
+     "kind": "ellipsoid",
+     "bone": "shade",
+     "material": "enamel-white",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.009,
+      0.009,
+      0.009
+     ],
+     "transform": {
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "shade",
+     "part": "mass"
+    },
+    {
      "id": "mass-bulb",
+     "kind": "ellipsoid",
      "bone": "bulb",
      "material": "bulb-glass",
      "role": "detail",
      "tone": 0.9,
-     "kind": "ellipsoid",
      "radii": [
-      0.015,
-      0.02,
-      0.015
+      0.009,
+      0.009,
+      0.009
      ],
      "transform": {
       "translation": [
-       0,
-       0.05,
-       0
+       0.053,
+       0.0,
+       0.0
       ]
      },
      "member": "bulb",
@@ -1230,8 +1386,12 @@
    ],
    "decisions": [
     {
-     "en": "Rose, cord, collar, shade, cap and glass bulb are single revolves about the vertical axis: the pendant is axially symmetric, so a round model is exact in all three views. The shade is a 2.5 mm enamelled sheet shell with a rolled rim, the cord is widened from 6.6 to the 7.5 mm smallest feature of 1:50, the bulb is the A60 envelope with a rounded shoulder and a neck into the E27 cap. Thermal: rose, cord and bulb glass reuse the body surface; collar and cap are open one-sided skins so the lampholder area is the 0.0042 m2 of the region (corrected from 0.005) and not both faces; the shade is a one-sided dome skin of 0.11 m2; the plume is a flat disc on the shade apex as wide as the shade because the 0.3 m far-field plume would leave the body box. Structure: the cord is the tension member, the shade dome and the socket stem down to the cap carry the bulb; joints sit at the four fixed rig joints, a pin at the ceiling hook, mass solids at the centres of mass.",
-     "de": "Rosette, Kabel, Hülse, Schirm, Sockel und Glaskolben sind einzelne Rotationskörper um die senkrechte Achse: die Pendelleuchte ist achsensymmetrisch, ein runder Körper stimmt daher in allen drei Ansichten. Der Schirm ist eine 2,5 mm dicke emaillierte Blechschale mit Wulstrand, das Kabel ist von 6,6 auf die kleinste Strukturgröße von 7,5 mm des Maßstabs 1:50 verbreitert, der Kolben ist die A60-Hülle mit gerundeter Schulter und Hals in den E27-Sockel. Thermik: Rosette, Kabel und Glaskolben nutzen die Körperfläche; Hülse und Sockel sind offene einseitige Häute, damit die Fassungsfläche die 0,0042 m2 der Region (korrigiert von 0,005) beträgt und nicht beide Seiten; der Schirm ist eine einseitige Kuppelhaut von 0,11 m2; die Fahne ist eine flache Scheibe auf dem Scheitel, so breit wie der Schirm, weil die 0,3 m breite Fernfahne den Körperkasten verlassen würde. Tragwerk: Das Kabel ist der Zugstab, die Schirmkuppel und der Fassungsschaft bis zum Sockel tragen die Lampe; Gelenke an den vier festen Rig-Gelenken, ein Festlager am Deckenhaken und Massekörper in den Schwerpunkten."
+     "en": "Every part is turned about the vertical axis of the hanging rig, from its real section: the rose with a rounded lower edge and a 14 mm cord grip, the 6.6 mm textile cord at true size (slender), the brass cord-grip collar with its domed top, the 0.6 mm enamelled steel dome from the nipple hole into a 6 mm rolled rim bead, the brass E27 lampholder (40 by 65 mm) clamped under the dome apex, and the A60 bulb: E27 cap with its contact and insulator shoulder, glass envelope with the A60 neck entering the cap. The bulb is screwed into the lampholder, so the bulb hangs from the lampholder and its tip shows 7.5 mm below the rim.",
+     "de": "Jedes Teil ist um die senkrechte Achse des hängenden Rigs gedreht, aus seinem wahren Querschnitt: die Rosette mit gerundeter Unterkante und 14-mm-Zugentlastung, das 6,6-mm-Textilkabel in wahrer Größe (schlank), die Messing-Zugentlastungshülse mit gewölbter Kappe, die emaillierte Stahlkuppel von 0,6 mm vom Nippelloch bis in einen gerollten Randwulst von 6 mm, die Messing-E27-Fassung (40 mal 65 mm) unter dem Kuppelscheitel eingespannt, und die A60-Lampe: E27-Sockel mit Kontakt und Isolierschulter, Glaskolben mit dem A60-Hals, der in den Sockel greift. Die Lampe ist in die Fassung geschraubt, hängt also an der Fassung, und ihre Kuppe zeigt sich 7,5 mm unter dem Rand."
+    },
+    {
+     "en": "Thermal: every region reuses the body surfaces it is: rose with grip, cord, collar with lampholder and cap (lampholder), glass, and the dome sheet whose inner and outer faces both exchange heat; the shade plume leaves from a 7.5 mm outlet ring on the crown around the collar. Structure: the ceiling hook is a pin under the ceiling, a hanger carries the load through the rose to the cord grip, the cord is the tension member, the cord grip of the collar, the M10 nipple and the lampholder carry the shade (clamped by the lock nut at the apex) and the bulb (by the E27 thread); masses sit at the centres of mass of rose, cord, holder, shade and bulb.",
+     "de": "Thermik: jede Region nutzt die Körperflächen, die sie ist: Rosette mit Zugentlastung, Kabel, Hülse mit Fassung und Sockel (Fassung), Glas, und das Kuppelblech, dessen Innen- und Außenseite beide Wärme tauschen; die Schirmfahne verlässt einen 7,5-mm-Auslassring auf dem Scheitel um die Hülse. Tragwerk: der Deckenhaken ist ein Bolzen unter der Decke, ein Gehänge trägt die Last durch die Rosette zur Zugentlastung, das Kabel ist der Zugstab, Zugentlastung der Hülse, M10-Nippel und Fassung tragen den Schirm (am Scheitel von der Kontermutter eingespannt) und die Lampe (über das E27-Gewinde); Massen sitzen in den Schwerpunkten von Rosette, Kabel, Fassung, Schirm und Lampe."
     }
    ]
   },
@@ -1241,32 +1401,40 @@
    "body": [
     {
      "id": "rose",
+     "kind": "revolve",
      "bone": "rose",
      "material": "rose-polymer",
      "role": "body",
      "tone": 0.7,
-     "kind": "revolve",
      "profile": [
       [
-       -0.024,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
        0.05
       ],
       [
-       -0.0087,
-       0.0495
+       0.015,
+       0.05
       ],
       [
-       -0.003,
-       0.042
+       0.0215,
+       0.047
       ],
       [
-       0,
-       0.032
+       0.024,
+       0.04
+      ],
+      [
+       0.024,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -1277,1247 +1445,245 @@
     },
     {
      "id": "cord",
+     "kind": "revolve",
      "bone": "cord",
      "material": "textile-cord",
      "role": "body",
      "tone": 0.15,
-     "kind": "extrude",
      "profile": [
-      [
-       0.0,
-       0.004
-      ],
-      [
-       0.00104,
-       0.00386
-      ],
-      [
-       0.002,
-       0.00346
-      ],
-      [
-       0.00283,
-       0.00283
-      ],
-      [
-       0.00346,
-       0.002
-      ],
-      [
-       0.00386,
-       0.00104
-      ],
       [
        0.004,
        0.0
       ],
       [
-       0.00386,
-       -0.00104
+       0.004,
+       0.0033
       ],
       [
-       0.00346,
-       -0.002
+       0.602,
+       0.0033
       ],
       [
-       0.00283,
-       -0.00283
-      ],
-      [
-       0.002,
-       -0.00346
-      ],
-      [
-       0.00104,
-       -0.00386
-      ],
-      [
-       0.0,
-       -0.004
-      ],
-      [
-       -0.00104,
-       -0.00386
-      ],
-      [
-       -0.002,
-       -0.00346
-      ],
-      [
-       -0.00283,
-       -0.00283
-      ],
-      [
-       -0.00346,
-       -0.002
-      ],
-      [
-       -0.00386,
-       -0.00104
-      ],
-      [
-       -0.004,
-       -0.0
-      ],
-      [
-       -0.00386,
-       0.00104
-      ],
-      [
-       -0.00346,
-       0.002
-      ],
-      [
-       -0.00283,
-       0.00283
-      ],
-      [
-       -0.002,
-       0.00346
-      ],
-      [
-       -0.00104,
-       0.00386
+       0.602,
+       0.0
       ]
      ],
-     "plane": "zx",
-     "from": -0.521,
-     "to": 0,
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
      "slender": true
     },
     {
      "id": "collar",
+     "kind": "revolve",
      "bone": "holder",
      "material": "brass-lacquered",
      "role": "body",
      "tone": 0.45,
-     "kind": "revolve",
      "profile": [
       [
-       0,
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
        0.0105
       ],
       [
-       -0.0075,
+       0.007,
        0.0155
       ],
       [
-       -0.03,
+       0.0302,
        0.0155
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ]
-    },
-    {
-     "id": "shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "body",
-     "tone": 0.4,
-     "kind": "revolve",
-     "profile": [
-      [
-       0.0,
-       0.017
       ],
       [
-       -0.00094,
-       0.03007
-      ],
-      [
-       -0.00394,
-       0.04334
-      ],
-      [
-       -0.00926,
-       0.05659
-      ],
-      [
-       -0.01715,
-       0.06959
-      ],
-      [
-       -0.02788,
-       0.08213
-      ],
-      [
-       -0.04169,
-       0.09397
-      ],
-      [
-       -0.05885,
-       0.1049
-      ],
-      [
-       -0.07962,
-       0.1147
-      ],
-      [
-       -0.10425,
-       0.12314
-      ],
-      [
-       -0.133,
-       0.13
-      ],
-      [
-       -0.133,
-       0.1265
-      ],
-      [
-       -0.10425,
-       0.11964
-      ],
-      [
-       -0.07962,
-       0.1112
-      ],
-      [
-       -0.05885,
-       0.1014
-      ],
-      [
-       -0.04169,
-       0.09047
-      ],
-      [
-       -0.02788,
-       0.07863
-      ],
-      [
-       -0.01715,
-       0.06609
-      ],
-      [
-       -0.00926,
-       0.05309
-      ],
-      [
-       -0.00394,
-       0.03984
-      ],
-      [
-       -0.00094,
-       0.02657
-      ],
-      [
-       0.0,
-       0.0135
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ]
-    },
-    {
-     "id": "bulb-cap",
-     "bone": "bulb",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "revolve",
-     "profile": [
-      [
-       0.078,
-       0.0135
-      ],
-      [
-       0.105,
-       0.0135
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ]
-    },
-    {
-     "id": "bulb-glass",
-     "bone": "bulb",
-     "material": "bulb-glass",
-     "role": "body",
-     "tone": 0.9,
-     "kind": "revolve",
-     "profile": [
-      [
-       0,
-       0
-      ],
-      [
-       0.0025,
-       0.0106
-      ],
-      [
-       0.0093,
-       0.0203
-      ],
-      [
-       0.0194,
-       0.0273
-      ],
-      [
-       0.032,
-       0.03
-      ],
-      [
-       0.0494,
-       0.0259
-      ],
-      [
-       0.07,
-       0.0158
-      ],
-      [
-       0.078,
-       0.0138
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0,
-      0,
-      0
-     ]
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-rose",
-     "bone": "rose",
-     "material": "rose-polymer",
-     "role": "body",
-     "tone": 0.7,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        -0.007,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.024,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0239,
-        0
-       ],
-       "rx": 0.0005,
-       "ry": 0.0005,
-       "exponent": 2
-      }
-     ],
-     "region": "rose"
-    },
-    {
-     "id": "th-cord",
-     "of": "cord",
-     "region": "cord",
-     "slender": true
-    },
-    {
-     "id": "th-collar",
-     "of": "collar",
-     "region": "lampholder"
-    },
-    {
-     "id": "th-bulb-cap",
-     "of": "bulb-cap",
-     "region": "lampholder"
-    },
-    {
-     "id": "th-bulb-glass",
-     "of": "bulb-glass",
-     "region": "bulb-glass"
-    },
-    {
-     "id": "th-shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "body",
-     "tone": 0.4,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.0,
-        0
-       ],
-       "rx": 0.017,
-       "ry": 0.017,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00149,
-        0
-       ],
-       "rx": 0.03338,
-       "ry": 0.03338,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0063,
-        0
-       ],
-       "rx": 0.04998,
-       "ry": 0.04998,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.01492,
-        0
-       ],
-       "rx": 0.06638,
-       "ry": 0.06638,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.02788,
-        0
-       ],
-       "rx": 0.08213,
-       "ry": 0.08213,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.04565,
-        0
-       ],
-       "rx": 0.09679,
-       "ry": 0.09679,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.06877,
-        0
-       ],
-       "rx": 0.10995,
-       "ry": 0.10995,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.09771,
-        0
-       ],
-       "rx": 0.12117,
-       "ry": 0.12117,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.133,
-        0
-       ],
-       "rx": 0.13,
-       "ry": 0.13,
-       "exponent": 2
-      }
-     ],
-     "region": "shade"
-    },
-    {
-     "id": "th-shade-plume",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "detail",
-     "tone": 0.4,
-     "kind": "extrude",
-     "profile": [
-      [
-       0.017,
+       0.0302,
        0.0
-      ],
-      [
-       0.01642,
-       0.0044
-      ],
-      [
-       0.01472,
-       0.0085
-      ],
-      [
-       0.01202,
-       0.01202
-      ],
-      [
-       0.0085,
-       0.01472
-      ],
-      [
-       0.0044,
-       0.01642
-      ],
-      [
-       0.0,
-       0.017
-      ],
-      [
-       -0.0044,
-       0.01642
-      ],
-      [
-       -0.0085,
-       0.01472
-      ],
-      [
-       -0.01202,
-       0.01202
-      ],
-      [
-       -0.01472,
-       0.0085
-      ],
-      [
-       -0.01642,
-       0.0044
-      ],
-      [
-       -0.017,
-       0.0
-      ],
-      [
-       -0.01642,
-       -0.0044
-      ],
-      [
-       -0.01472,
-       -0.0085
-      ],
-      [
-       -0.01202,
-       -0.01202
-      ],
-      [
-       -0.0085,
-       -0.01472
-      ],
-      [
-       -0.0044,
-       -0.01642
-      ],
-      [
-       -0.0,
-       -0.017
-      ],
-      [
-       0.0044,
-       -0.01642
-      ],
-      [
-       0.0085,
-       -0.01472
-      ],
-      [
-       0.01202,
-       -0.01202
-      ],
-      [
-       0.01472,
-       -0.0085
-      ],
-      [
-       0.01642,
-       -0.0044
       ]
      ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.015,
-     "region": "shade",
-     "tags": [
-      "shade-plume"
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
      ]
-    }
-   ],
-   "structure": [
-    {
-     "id": "member-cord",
-     "bone": "cord",
-     "material": "textile-cord",
-     "role": "body",
-     "tone": 0.15,
-     "kind": "extrude",
-     "profile": [
-      [
-       0.0,
-       0.004
-      ],
-      [
-       0.00104,
-       0.00386
-      ],
-      [
-       0.002,
-       0.00346
-      ],
-      [
-       0.00283,
-       0.00283
-      ],
-      [
-       0.00346,
-       0.002
-      ],
-      [
-       0.00386,
-       0.00104
-      ],
-      [
-       0.004,
-       0.0
-      ],
-      [
-       0.00386,
-       -0.00104
-      ],
-      [
-       0.00346,
-       -0.002
-      ],
-      [
-       0.00283,
-       -0.00283
-      ],
-      [
-       0.002,
-       -0.00346
-      ],
-      [
-       0.00104,
-       -0.00386
-      ],
-      [
-       0.0,
-       -0.004
-      ],
-      [
-       -0.00104,
-       -0.00386
-      ],
-      [
-       -0.002,
-       -0.00346
-      ],
-      [
-       -0.00283,
-       -0.00283
-      ],
-      [
-       -0.00346,
-       -0.002
-      ],
-      [
-       -0.00386,
-       -0.00104
-      ],
-      [
-       -0.004,
-       -0.0
-      ],
-      [
-       -0.00386,
-       0.00104
-      ],
-      [
-       -0.00346,
-       0.002
-      ],
-      [
-       -0.00283,
-       0.00283
-      ],
-      [
-       -0.002,
-       0.00346
-      ],
-      [
-       -0.00104,
-       0.00386
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.521,
-     "to": 0,
-     "member": "cord",
-     "part": "member",
-     "slender": true
     },
     {
-     "id": "member-shade",
-     "of": "shade",
-     "member": "shade",
-     "part": "member"
-    },
-    {
-     "id": "member-bulb-stem",
-     "bone": "bulb",
+     "id": "socket",
+     "kind": "revolve",
+     "bone": "holder",
      "material": "brass-lacquered",
      "role": "body",
      "tone": 0.45,
-     "kind": "extrude",
      "profile": [
       [
-       0.0,
-       0.0105
-      ],
-      [
-       0.00272,
-       0.01014
-      ],
-      [
-       0.00525,
-       0.00909
-      ],
-      [
-       0.00742,
-       0.00742
-      ],
-      [
-       0.00909,
-       0.00525
-      ],
-      [
-       0.01014,
-       0.00272
-      ],
-      [
-       0.0105,
+       0.0306,
        0.0
       ],
       [
-       0.01014,
-       -0.00272
+       0.0306,
+       0.02
       ],
       [
-       0.00909,
-       -0.00525
+       0.0956,
+       0.02
       ],
       [
-       0.00742,
-       -0.00742
+       0.0956,
+       0.0142
       ],
       [
-       0.00525,
-       -0.00909
+       0.074,
+       0.0142
       ],
       [
-       0.00272,
-       -0.01014
-      ],
-      [
-       0.0,
-       -0.0105
-      ],
-      [
-       -0.00272,
-       -0.01014
-      ],
-      [
-       -0.00525,
-       -0.00909
-      ],
-      [
-       -0.00742,
-       -0.00742
-      ],
-      [
-       -0.00909,
-       -0.00525
-      ],
-      [
-       -0.01014,
-       -0.00272
-      ],
-      [
-       -0.0105,
-       -0.0
-      ],
-      [
-       -0.01014,
-       0.00272
-      ],
-      [
-       -0.00909,
-       0.00525
-      ],
-      [
-       -0.00742,
-       0.00742
-      ],
-      [
-       -0.00525,
-       0.00909
-      ],
-      [
-       -0.00272,
-       0.01014
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.105,
-     "to": 0.225,
-     "member": "bulb",
-     "part": "member"
-    },
-    {
-     "id": "joint-shade",
-     "bone": "shade",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.0105,
-      0.0105,
-      0.0105
-     ],
-     "member": "shade",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bulb",
-     "bone": "bulb",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.5,
-     "kind": "ellipsoid",
-     "radii": [
-      0.0105,
-      0.0105,
-      0.0105
-     ],
-     "member": "bulb",
-     "part": "joint"
-    },
-    {
-     "id": "support-ceiling-hook",
-     "bone": "rose",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.3,
-     "kind": "capsule",
-     "p0": [
-      0,
-      0,
-      -0.0225
-     ],
-     "p1": [
-      0,
-      0,
-      0.0225
-     ],
-     "r0": 0.0075,
-     "r1": 0.0075,
-     "member": "rose",
-     "part": "support",
-     "anchor": "ceiling-hook"
-    },
-    {
-     "id": "mass-shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "detail",
-     "tone": 0.4,
-     "kind": "ellipsoid",
-     "radii": [
-      0.05,
-      0.03,
-      0.05
-     ],
-     "transform": {
-      "translation": [
-       0,
-       -0.06,
-       0
-      ]
-     },
-     "member": "shade",
-     "part": "mass"
-    },
-    {
-     "id": "mass-cord",
-     "bone": "cord",
-     "material": "textile-cord",
-     "role": "detail",
-     "tone": 0.15,
-     "kind": "ellipsoid",
-     "radii": [
-      0.009,
-      0.03,
-      0.009
-     ],
-     "transform": {
-      "translation": [
-       0,
-       -0.26,
-       0
-      ]
-     },
-     "member": "cord",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "1:100 redraws the pendant against its own shapes: the rose is a four-point revolve, the cord is a slender part of 8 mm (drawn 9 mm, exempt from the 15 mm feature; the thermal cord is the body cord, so 8 mm keeps its surface inside 30 % of 0.0108 m2), collar and cap stay separate brass parts, the shade is a 6 mm shell on a 10-segment dome and the bulb a seven-point glass profile. The rose, cord-holder and cord joints are merged into the members; the thermal surfaces are re-cut from coarser skins and the plume disc is 15 mm thick. Structure keeps the cord as tension member, the dome and the socket stem, joints at shade and bulb, a 15 mm pin and the masses of shade and cord.",
-     "de": "1:100 zeichnet die Pendelleuchte gegen ihre eigenen Formen neu: die Rosette ist ein Rotationskörper aus vier Punkten, das Kabel ist ein schlankes Teil von 8 mm (gezeichnet 9 mm, von der Strukturgröße 15 mm ausgenommen; das Thermikkabel ist das Körperkabel, 8 mm hält seine Fläche innerhalb 30 % von 0,0108 m2), Hülse und Sockel bleiben getrennte Messingteile, der Schirm ist eine 6-mm-Schale auf einer Kuppel mit 10 Segmenten und der Kolben ein Glasprofil aus sieben Punkten. Die Gelenke an Rosette, Kabel und Hülse sind in die Stäbe aufgegangen; die Thermikflächen sind aus gröberen Häuten neu geschnitten und die Fahnenscheibe ist 15 mm dick. Das Tragwerk behält das Kabel als Zugstab, die Kuppel und den Fassungsschaft, Gelenke an Schirm und Kolben, ein 15-mm-Festlager und die Massen von Schirm und Kabel."
-    }
-   ]
-  },
-  "200": {
-   "status": "authored",
-   "denominator": 200,
-   "body": [
-    {
-     "id": "rose",
-     "bone": "rose",
-     "material": "rose-polymer",
-     "role": "body",
-     "tone": 0.7,
-     "kind": "extrude",
-     "profile": [
-      [
-       0.0,
-       0.05
-      ],
-      [
-       0.01294,
-       0.0483
-      ],
-      [
-       0.025,
-       0.0433
-      ],
-      [
-       0.03536,
-       0.03536
-      ],
-      [
-       0.0433,
-       0.025
-      ],
-      [
-       0.0483,
-       0.01294
-      ],
-      [
-       0.05,
+       0.074,
        0.0
-      ],
-      [
-       0.0483,
-       -0.01294
-      ],
-      [
-       0.0433,
-       -0.025
-      ],
-      [
-       0.03536,
-       -0.03536
-      ],
-      [
-       0.025,
-       -0.0433
-      ],
-      [
-       0.01294,
-       -0.0483
-      ],
-      [
-       0.0,
-       -0.05
-      ],
-      [
-       -0.01294,
-       -0.0483
-      ],
-      [
-       -0.025,
-       -0.0433
-      ],
-      [
-       -0.03536,
-       -0.03536
-      ],
-      [
-       -0.0433,
-       -0.025
-      ],
-      [
-       -0.0483,
-       -0.01294
-      ],
-      [
-       -0.05,
-       -0.0
-      ],
-      [
-       -0.0483,
-       0.01294
-      ],
-      [
-       -0.0433,
-       0.025
-      ],
-      [
-       -0.03536,
-       0.03536
-      ],
-      [
-       -0.025,
-       0.0433
-      ],
-      [
-       -0.01294,
-       0.0483
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.03,
-     "to": 0
-    },
-    {
-     "id": "cord",
-     "bone": "cord",
-     "material": "textile-cord",
-     "role": "body",
-     "tone": 0.15,
-     "kind": "extrude",
-     "profile": [
-      [
-       0.0,
-       0.0043
-      ],
-      [
-       0.00111,
-       0.00415
-      ],
-      [
-       0.00215,
-       0.00372
-      ],
-      [
-       0.00304,
-       0.00304
-      ],
-      [
-       0.00372,
-       0.00215
-      ],
-      [
-       0.00415,
-       0.00111
-      ],
-      [
-       0.0043,
-       0.0
-      ],
-      [
-       0.00415,
-       -0.00111
-      ],
-      [
-       0.00372,
-       -0.00215
-      ],
-      [
-       0.00304,
-       -0.00304
-      ],
-      [
-       0.00215,
-       -0.00372
-      ],
-      [
-       0.00111,
-       -0.00415
-      ],
-      [
-       0.0,
-       -0.0043
-      ],
-      [
-       -0.00111,
-       -0.00415
-      ],
-      [
-       -0.00215,
-       -0.00372
-      ],
-      [
-       -0.00304,
-       -0.00304
-      ],
-      [
-       -0.00372,
-       -0.00215
-      ],
-      [
-       -0.00415,
-       -0.00111
-      ],
-      [
-       -0.0043,
-       -0.0
-      ],
-      [
-       -0.00415,
-       0.00111
-      ],
-      [
-       -0.00372,
-       0.00215
-      ],
-      [
-       -0.00304,
-       0.00304
-      ],
-      [
-       -0.00215,
-       0.00372
-      ],
-      [
-       -0.00111,
-       0.00415
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.521,
-     "to": 0,
-     "slender": true
-    },
-    {
-     "id": "shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "body",
-     "tone": 0.4,
-     "kind": "revolve",
-     "profile": [
-      [
-       0.03,
-       0.025
-      ],
-      [
-       0.0,
-       0.025
-      ],
-      [
-       -0.00272,
-       0.04356
-      ],
-      [
-       -0.0118,
-       0.06344
-      ],
-      [
-       -0.02856,
-       0.0835
-      ],
-      [
-       -0.05437,
-       0.10256
-      ],
-      [
-       -0.09057,
-       0.11944
-      ],
-      [
-       -0.1385,
-       0.133
-      ],
-      [
-       -0.1385,
-       0.1295
-      ],
-      [
-       -0.09057,
-       0.11594
-      ],
-      [
-       -0.05437,
-       0.09906
-      ],
-      [
-       -0.02856,
-       0.08
-      ],
-      [
-       -0.0118,
-       0.05994
-      ],
-      [
-       -0.00272,
-       0.04006
-      ],
-      [
-       0.0,
-       0.0215
-      ],
-      [
-       0.03,
-       0.0215
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "shade",
+     "kind": "revolve",
+     "bone": "shade",
+     "material": "enamel-white",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.0055
+      ],
+      [
+       0.0,
+       0.017
+      ],
+      [
+       0.00089,
+       0.02968
+      ],
+      [
+       0.0037,
+       0.04255
+      ],
+      [
+       0.00868,
+       0.05541
+      ],
+      [
+       0.01606,
+       0.06805
+      ],
+      [
+       0.02608,
+       0.08028
+      ],
+      [
+       0.03896,
+       0.0919
+      ],
+      [
+       0.05495,
+       0.10269
+      ],
+      [
+       0.07429,
+       0.11246
+      ],
+      [
+       0.0972,
+       0.121
+      ],
+      [
+       0.12393,
+       0.12812
+      ],
+      [
+       0.1385,
+       0.133
+      ],
+      [
+       0.1385,
+       0.1315
+      ],
+      [
+       0.12406,
+       0.12753
+      ],
+      [
+       0.09738,
+       0.12043
+      ],
+      [
+       0.07453,
+       0.11191
+      ],
+      [
+       0.05526,
+       0.10217
+      ],
+      [
+       0.03933,
+       0.09142
+      ],
+      [
+       0.02651,
+       0.07987
+      ],
+      [
+       0.01655,
+       0.06771
+      ],
+      [
+       0.00922,
+       0.05515
+      ],
+      [
+       0.00428,
+       0.04237
+      ],
+      [
+       0.00148,
+       0.02959
+      ],
+      [
+       0.0006,
+       0.017
+      ],
+      [
+       0.0006,
+       0.0055
+      ],
+      [
+       0.0,
+       0.0055
+      ]
+     ],
+     "axis": [
+      1,
+      0,
       0
      ],
      "origin": [
@@ -2528,44 +1694,72 @@
     },
     {
      "id": "bulb",
+     "kind": "revolve",
      "bone": "bulb",
      "material": "bulb-glass",
      "role": "body",
      "tone": 0.9,
-     "kind": "revolve",
      "profile": [
       [
-       0,
-       0
+       0.0,
+       0.0
       ],
       [
-       0.0054,
-       0.0156
+       0.0,
+       0.009
       ],
       [
-       0.0194,
-       0.0273
+       0.004,
+       0.0135
       ],
       [
-       0.032,
+       0.027,
+       0.0135
+      ],
+      [
+       0.027,
+       0.0138
+      ],
+      [
+       0.03413,
+       0.0154
+      ],
+      [
+       0.042,
+       0.0185
+      ],
+      [
+       0.05093,
+       0.02348
+      ],
+      [
+       0.06074,
+       0.02802
+      ],
+      [
+       0.073,
        0.03
       ],
       [
-       0.0494,
-       0.0259
+       0.08559,
+       0.02728
       ],
       [
-       0.07,
-       0.0158
+       0.09575,
+       0.02025
       ],
       [
-       0.08,
-       0.016
+       0.10253,
+       0.01059
+      ],
+      [
+       0.105,
+       0.0
       ]
      ],
      "axis": [
-      0,
       1,
+      0,
       0
      ],
      "origin": [
@@ -2578,50 +1772,23 @@
    "thermal": [
     {
      "id": "th-rose",
-     "bone": "rose",
-     "material": "rose-polymer",
-     "role": "body",
-     "tone": 0.7,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.0,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0306,
-        0
-       ],
-       "rx": 0.05,
-       "ry": 0.05,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0305,
-        0
-       ],
-       "rx": 0.0005,
-       "ry": 0.0005,
-       "exponent": 2
-      }
-     ],
+     "of": "rose",
      "region": "rose"
     },
     {
      "id": "th-cord",
      "of": "cord",
-     "region": "cord",
-     "slender": true
+     "region": "cord"
+    },
+    {
+     "id": "th-collar",
+     "of": "collar",
+     "region": "lampholder"
+    },
+    {
+     "id": "th-socket",
+     "of": "socket",
+     "region": "lampholder"
     },
     {
      "id": "th-bulb",
@@ -2630,234 +1797,108 @@
     },
     {
      "id": "th-shade",
-     "bone": "shade",
-     "material": "enamel-white",
-     "role": "body",
-     "tone": 0.4,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.03,
-        0
-       ],
-       "rx": 0.025,
-       "ry": 0.025,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        0.0,
-        0
-       ],
-       "rx": 0.025,
-       "ry": 0.025,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.00272,
-        0
-       ],
-       "rx": 0.04356,
-       "ry": 0.04356,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.0118,
-        0
-       ],
-       "rx": 0.06344,
-       "ry": 0.06344,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.02856,
-        0
-       ],
-       "rx": 0.0835,
-       "ry": 0.0835,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.05437,
-        0
-       ],
-       "rx": 0.10256,
-       "ry": 0.10256,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.09057,
-        0
-       ],
-       "rx": 0.11944,
-       "ry": 0.11944,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        -0.1385,
-        0
-       ],
-       "rx": 0.133,
-       "ry": 0.133,
-       "exponent": 2
-      }
-     ],
+     "of": "shade",
      "region": "shade"
     },
     {
-     "id": "th-collar",
-     "bone": "shade",
-     "material": "brass-lacquered",
-     "role": "body",
-     "tone": 0.45,
-     "kind": "loft",
-     "sections": [
-      {
-       "at": [
-        0,
-        0.03,
-        0
-       ],
-       "rx": 0.0255,
-       "ry": 0.0255,
-       "exponent": 2
-      },
-      {
-       "at": [
-        0,
-        0.0,
-        0
-       ],
-       "rx": 0.0255,
-       "ry": 0.0255,
-       "exponent": 2
-      }
-     ],
-     "region": "lampholder"
-    },
-    {
      "id": "th-shade-plume",
+     "kind": "revolve",
      "bone": "shade",
      "material": "enamel-white",
      "role": "detail",
      "tone": 0.4,
-     "kind": "extrude",
      "profile": [
       [
-       0.0155,
-       0.0
-      ],
-      [
-       0.01497,
-       0.00401
-      ],
-      [
-       0.01342,
-       0.00775
-      ],
-      [
-       0.01096,
-       0.01096
-      ],
-      [
-       0.00775,
-       0.01342
-      ],
-      [
-       0.00401,
-       0.01497
-      ],
-      [
-       0.0,
+       -0.0015,
        0.0155
       ],
       [
-       -0.00401,
-       0.01497
+       -0.0015,
+       0.017
       ],
       [
-       -0.00775,
-       0.01342
+       -0.0013,
+       0.02315
       ],
       [
-       -0.01096,
-       0.01096
+       -0.00067,
+       0.02937
       ],
       [
-       -0.01342,
-       0.00775
+       0.0004,
+       0.03563
       ],
       [
-       -0.01497,
-       0.00401
-      ],
-      [
-       -0.0155,
-       0.0
-      ],
-      [
-       -0.01497,
-       -0.00401
-      ],
-      [
-       -0.01342,
-       -0.00775
-      ],
-      [
-       -0.01096,
-       -0.01096
-      ],
-      [
-       -0.00775,
-       -0.01342
-      ],
-      [
-       -0.00401,
-       -0.01497
-      ],
-      [
-       -0.0,
-       -0.0155
+       0.00196,
+       0.04193
       ],
       [
        0.00401,
-       -0.01497
+       0.04822
       ],
       [
-       0.00775,
-       -0.01342
+       0.0066,
+       0.0545
       ],
       [
-       0.01096,
-       -0.01096
+       0.00974,
+       0.06072
       ],
       [
-       0.01342,
-       -0.00775
+       0.01346,
+       0.06688
       ],
       [
-       0.01497,
-       -0.00401
+       0.01513,
+       0.06578
+      ],
+      [
+       0.01149,
+       0.05975
+      ],
+      [
+       0.00842,
+       0.05366
+      ],
+      [
+       0.00589,
+       0.04753
+      ],
+      [
+       0.00388,
+       0.04138
+      ],
+      [
+       0.00236,
+       0.03523
+      ],
+      [
+       0.00131,
+       0.0291
+      ],
+      [
+       0.0007,
+       0.02302
+      ],
+      [
+       0.0005,
+       0.017
+      ],
+      [
+       0.0005,
+       0.0155
       ]
      ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.03,
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
      "region": "shade",
      "tags": [
       "shade-plume"
@@ -2866,116 +1907,150 @@
    ],
    "structure": [
     {
+     "id": "support-ceiling-hook",
+     "kind": "capsule",
+     "bone": "rose",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0075,
+      0.0,
+      -0.003
+     ],
+     "p1": [
+      0.0075,
+      0.0,
+      0.003
+     ],
+     "r0": 0.0075,
+     "r1": 0.0075,
+     "member": "rose",
+     "part": "support",
+     "anchor": "ceiling-hook"
+    },
+    {
      "id": "member-cord",
+     "kind": "revolve",
      "bone": "cord",
      "material": "textile-cord",
      "role": "body",
      "tone": 0.15,
-     "kind": "extrude",
      "profile": [
       [
        0.0,
-       0.0043
-      ],
-      [
-       0.00111,
-       0.00415
-      ],
-      [
-       0.00215,
-       0.00372
-      ],
-      [
-       0.00304,
-       0.00304
-      ],
-      [
-       0.00372,
-       0.00215
-      ],
-      [
-       0.00415,
-       0.00111
-      ],
-      [
-       0.0043,
        0.0
       ],
       [
-       0.00415,
-       -0.00111
+       0.0,
+       0.0033
       ],
       [
-       0.00372,
-       -0.00215
+       0.6,
+       0.0033
       ],
       [
-       0.00304,
-       -0.00304
-      ],
+       0.6,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "slender": true,
+     "member": "cord",
+     "part": "member"
+    },
+    {
+     "id": "member-holder",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
       [
-       0.00215,
-       -0.00372
-      ],
-      [
-       0.00111,
-       -0.00415
+       0.0,
+       0.0
       ],
       [
        0.0,
-       -0.0043
+       0.0075
       ],
       [
-       -0.00111,
-       -0.00415
+       0.0306,
+       0.0075
       ],
       [
-       -0.00215,
-       -0.00372
+       0.0306,
+       0.02
       ],
       [
-       -0.00304,
-       -0.00304
+       0.0956,
+       0.02
       ],
       [
-       -0.00372,
-       -0.00215
-      ],
-      [
-       -0.00415,
-       -0.00111
-      ],
-      [
-       -0.0043,
-       -0.0
-      ],
-      [
-       -0.00415,
-       0.00111
-      ],
-      [
-       -0.00372,
-       0.00215
-      ],
-      [
-       -0.00304,
-       0.00304
-      ],
-      [
-       -0.00215,
-       0.00372
-      ],
-      [
-       -0.00111,
-       0.00415
+       0.0956,
+       0.0
       ]
      ],
-     "plane": "zx",
-     "from": -0.521,
-     "to": 0,
-     "member": "cord",
-     "part": "member",
-     "slender": true
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "holder",
+     "part": "member"
+    },
+    {
+     "id": "joint-shade",
+     "kind": "revolve",
+     "bone": "shade",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.0075,
+       0.0
+      ],
+      [
+       -0.0075,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "shade",
+     "part": "joint"
     },
     {
      "id": "member-shade",
@@ -2984,156 +2059,756 @@
      "part": "member"
     },
     {
-     "id": "member-bulb-stem",
+     "id": "member-bulb",
+     "kind": "revolve",
      "bone": "bulb",
      "material": "brass-lacquered",
      "role": "body",
      "tone": 0.45,
-     "kind": "extrude",
      "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0135
+      ],
+      [
+       0.027,
+       0.0135
+      ],
+      [
+       0.027,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "bulb",
+     "part": "member"
+    },
+    {
+     "id": "mass-holder",
+     "kind": "ellipsoid",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.0075,
+      0.0075,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0.049,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "holder",
+     "part": "mass"
+    },
+    {
+     "id": "mass-shade",
+     "kind": "ellipsoid",
+     "bone": "shade",
+     "material": "enamel-white",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0075,
+      0.0075,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "shade",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bulb",
+     "kind": "ellipsoid",
+     "bone": "bulb",
+     "material": "bulb-glass",
+     "role": "detail",
+     "tone": 0.9,
+     "radii": [
+      0.0075,
+      0.0075,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0.053,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "bulb",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "1:100 is turned anew for a 15 mm feature: the rose loses its cord grip and its round edge becomes a chamfer, the collar loses its domed top, the dome is a ten-step curve of the same 0.6 mm sheet with the bead reduced to a short flare to the drawn 0.266 m, the lampholder is a plain 40 mm cylinder, and cap and glass are one turned bulb; the cord stays at its true 6.6 mm as a slender part.",
+     "de": "1:100 ist für eine Strukturgröße von 15 mm neu gedreht: die Rosette verliert ihre Zugentlastung und ihre Rundung wird eine Fase, die Hülse verliert ihre gewölbte Kappe, die Kuppel ist eine Kurve aus zehn Schritten desselben 0,6-mm-Blechs mit dem Wulst als kurzem Ausstellen auf die gezeichneten 0,266 m, die Fassung ist ein schlichter 40-mm-Zylinder, und Sockel und Glas sind eine gedrehte Lampe; das Kabel bleibt als schlankes Teil bei seinen wahren 6,6 mm."
+    },
+    {
+     "en": "Thermal reuses the body: collar and lampholder are the lampholder region, the bulb is the glass region (its 2.4 mm of visible cap are merged into it), the plume outlet ring is 15 mm. Structure keeps the load path with merged parts: the pin, the cord, the nipple and lampholder as one turned member, the lock-nut joint at the apex, the dome and the cap as members, and the masses of holder, shade and bulb.",
+     "de": "Die Thermik nutzt den Körper: Hülse und Fassung sind die Fassungsregion, die Lampe ist die Glasregion (ihre 2,4 mm sichtbarer Sockel gehen darin auf), der Fahnenauslassring ist 15 mm stark. Das Tragwerk behält den Lastweg mit zusammengefassten Teilen: Bolzen, Kabel, Nippel und Fassung als ein Drehteil, das Kontermuttergelenk am Scheitel, Kuppel und Sockel als Stäbe und die Massen von Fassung, Schirm und Lampe."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "rose",
+     "kind": "revolve",
+     "bone": "rose",
+     "material": "rose-polymer",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05
+      ],
+      [
+       0.03,
+       0.05
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "cord",
+     "kind": "revolve",
+     "bone": "cord",
+     "material": "textile-cord",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.004,
+       0.0
+      ],
+      [
+       0.004,
+       0.0033
+      ],
+      [
+       0.602,
+       0.0033
+      ],
+      [
+       0.602,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "slender": true
+    },
+    {
+     "id": "shade",
+     "kind": "revolve",
+     "bone": "shade",
+     "material": "enamel-white",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       -0.03,
+       0.0155
+      ],
       [
        0.0,
        0.0155
       ],
       [
-       0.00401,
-       0.01497
+       0.0,
+       0.017
       ],
       [
-       0.00775,
-       0.01342
+       0.00253,
+       0.03825
       ],
       [
-       0.01096,
-       0.01096
+       0.01086,
+       0.05965
       ],
       [
-       0.01342,
-       0.00775
+       0.02608,
+       0.08028
       ],
       [
-       0.01497,
-       0.00401
+       0.04926,
+       0.0992
       ],
       [
-       0.0155,
+       0.08152,
+       0.11545
+      ],
+      [
+       0.12393,
+       0.12812
+      ],
+      [
+       0.1385,
+       0.133
+      ],
+      [
+       0.1385,
+       0.13
+      ],
+      [
+       0.12457,
+       0.12519
+      ],
+      [
+       0.08262,
+       0.11266
+      ],
+      [
+       0.05089,
+       0.09667
+      ],
+      [
+       0.02825,
+       0.07821
+      ],
+      [
+       0.01349,
+       0.05821
+      ],
+      [
+       0.00545,
+       0.03754
+      ],
+      [
+       0.003,
+       0.017
+      ],
+      [
+       0.003,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "bulb",
+     "kind": "revolve",
+     "bone": "bulb",
+     "material": "bulb-glass",
+     "role": "body",
+     "tone": 0.85,
+     "profile": [
+      [
+       -0.038,
        0.0
       ],
       [
-       0.01497,
-       -0.00401
+       -0.038,
+       0.02
       ],
       [
-       0.01342,
-       -0.00775
+       0.0246,
+       0.02
       ],
       [
-       0.01096,
-       -0.01096
+       0.0246,
+       0.0135
       ],
       [
-       0.00775,
-       -0.01342
+       0.027,
+       0.0138
       ],
       [
-       0.00401,
-       -0.01497
+       0.042,
+       0.0185
       ],
       [
-       0.0,
-       -0.0155
+       0.06074,
+       0.02802
       ],
       [
-       -0.00401,
-       -0.01497
+       0.073,
+       0.03
       ],
       [
-       -0.00775,
-       -0.01342
+       0.09104,
+       0.0242
       ],
       [
-       -0.01096,
-       -0.01096
+       0.10253,
+       0.01059
       ],
       [
-       -0.01342,
-       -0.00775
-      ],
-      [
-       -0.01497,
-       -0.00401
-      ],
-      [
-       -0.0155,
-       -0.0
-      ],
-      [
-       -0.01497,
-       0.00401
-      ],
-      [
-       -0.01342,
-       0.00775
-      ],
-      [
-       -0.01096,
-       0.01096
-      ],
-      [
-       -0.00775,
-       0.01342
-      ],
-      [
-       -0.00401,
-       0.01497
+       0.105,
+       0.0
       ]
      ],
-     "plane": "zx",
-     "from": 0.08,
-     "to": 0.225,
-     "member": "bulb",
-     "part": "member"
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-rose",
+     "of": "rose",
+     "region": "rose"
     },
     {
+     "id": "th-cord",
+     "of": "cord",
+     "region": "cord"
+    },
+    {
+     "id": "th-shade",
+     "of": "shade",
+     "region": "shade"
+    },
+    {
+     "id": "th-lampholder",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       -0.0005,
+       0.0
+      ],
+      [
+       -0.0005,
+       0.0165
+      ],
+      [
+       0.03,
+       0.0165
+      ],
+      [
+       0.03,
+       0.0155
+      ],
+      [
+       0.033,
+       0.0155
+      ],
+      [
+       0.033,
+       0.02
+      ],
+      [
+       0.0956,
+       0.02
+      ],
+      [
+       0.0956,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "region": "lampholder"
+    },
+    {
+     "id": "th-bulb",
+     "kind": "revolve",
+     "bone": "bulb",
+     "material": "bulb-glass",
+     "role": "body",
+     "tone": 0.85,
+     "profile": [
+      [
+       0.0246,
+       0.0
+      ],
+      [
+       0.0246,
+       0.0135
+      ],
+      [
+       0.027,
+       0.0138
+      ],
+      [
+       0.042,
+       0.0185
+      ],
+      [
+       0.06074,
+       0.02802
+      ],
+      [
+       0.073,
+       0.03
+      ],
+      [
+       0.09104,
+       0.0242
+      ],
+      [
+       0.10253,
+       0.01059
+      ],
+      [
+       0.105,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "region": "bulb-glass"
+    },
+    {
+     "id": "th-shade-plume",
+     "kind": "revolve",
+     "bone": "shade",
+     "material": "enamel-white",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.0015,
+       0.0155
+      ],
+      [
+       -0.0015,
+       0.017
+      ],
+      [
+       -0.00106,
+       0.02609
+      ],
+      [
+       0.00034,
+       0.03531
+      ],
+      [
+       0.00276,
+       0.04458
+      ],
+      [
+       0.0063,
+       0.05384
+      ],
+      [
+       0.01104,
+       0.063
+      ],
+      [
+       0.01706,
+       0.072
+      ],
+      [
+       0.02444,
+       0.08074
+      ],
+      [
+       0.03326,
+       0.08916
+      ],
+      [
+       0.03457,
+       0.08765
+      ],
+      [
+       0.0259,
+       0.07937
+      ],
+      [
+       0.01866,
+       0.07079
+      ],
+      [
+       0.01276,
+       0.06199
+      ],
+      [
+       0.00813,
+       0.05302
+      ],
+      [
+       0.00467,
+       0.04397
+      ],
+      [
+       0.0023,
+       0.0349
+      ],
+      [
+       0.00094,
+       0.02589
+      ],
+      [
+       0.0005,
+       0.017
+      ],
+      [
+       0.0005,
+       0.0155
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "region": "shade",
+     "tags": [
+      "shade-plume"
+     ]
+    }
+   ],
+   "structure": [
+    {
      "id": "support-ceiling-hook",
+     "kind": "capsule",
      "bone": "rose",
      "material": "brass-lacquered",
      "role": "body",
      "tone": 0.3,
-     "kind": "capsule",
      "p0": [
-      0,
-      0,
-      -0.045
+      0.015,
+      0.0,
+      -0.005
      ],
      "p1": [
-      0,
-      0,
-      0.045
+      0.015,
+      0.0,
+      0.005
      ],
-     "r0": 0.0155,
-     "r1": 0.0155,
+     "r0": 0.015,
+     "r1": 0.015,
      "member": "rose",
      "part": "support",
      "anchor": "ceiling-hook"
     },
     {
+     "id": "member-cord",
+     "kind": "revolve",
+     "bone": "cord",
+     "material": "textile-cord",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0033
+      ],
+      [
+       0.6,
+       0.0033
+      ],
+      [
+       0.6,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "slender": true,
+     "member": "cord",
+     "part": "member"
+    },
+    {
+     "id": "member-holder",
+     "kind": "revolve",
+     "bone": "holder",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.071,
+       0.0155
+      ],
+      [
+       0.071,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "holder",
+     "part": "member"
+    },
+    {
+     "id": "member-shade",
+     "of": "shade",
+     "member": "shade",
+     "part": "member"
+    },
+    {
+     "id": "member-bulb",
+     "kind": "revolve",
+     "bone": "bulb",
+     "material": "brass-lacquered",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.03,
+       0.0155
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "bulb",
+     "part": "member"
+    },
+    {
      "id": "mass-shade",
+     "kind": "ellipsoid",
      "bone": "shade",
      "material": "enamel-white",
      "role": "detail",
      "tone": 0.4,
-     "kind": "ellipsoid",
      "radii": [
-      0.055,
-      0.035,
-      0.055
+      0.015,
+      0.015,
+      0.015
      ],
      "transform": {
       "translation": [
-       0,
-       -0.06,
-       0
+       0.068,
+       0.0,
+       0.0
       ]
      },
      "member": "shade",
@@ -3142,14 +2817,629 @@
    ],
    "decisions": [
     {
-     "en": "1:200 merges the pendant into four masses, as its own shapes do: a 30 mm thick disc rose, a slender cord of 8.6 mm (drawn 14 mm, exempt from the 30 mm feature; kept thin so that the cord surface stays inside 30 % of 0.0108 m2), one 3.5 mm shell dome that takes the collar as a closed neck, and one bulb of six glass points with the cap inside the dome. Thermal: rose, cord and bulb reuse body solids; shade is a six-point skin; the lampholder is two 31 and 29 mm skins at the collar and the cap; the plume disc is 30 mm thick. Structure: cord (8.6 mm) and socket stem (31 mm) as members, the dome as the shade member, a 31 mm pin and one mass; joints are merged into the members.",
-     "de": "1:200 fasst die Pendelleuchte wie ihre eigenen Formen zu vier Massen zusammen: eine 30 mm hohe Scheibe als Rosette, ein schlankes Kabel von 8,6 mm (gezeichnet 14 mm, von der Strukturgröße 30 mm ausgenommen; dünn gehalten, damit die Kabelfläche innerhalb 30 % von 0,0108 m2 bleibt), eine 3,5-mm-Kuppelschale, die die Hülse als geschlossenen Hals aufnimmt und ein Kolben aus sechs Glaspunkten, dessen Sockel in der Kuppel liegt. Thermik: Rosette, Kabel und Kolben nutzen Körper; der Schirm ist eine Haut aus sechs Punkten; die Fassung besteht aus zwei Häuten von 31 und 29 mm an Hülse und Sockel; die Fahnenscheibe ist 30 mm dick. Tragwerk: Kabel (8,6 mm) und Fassungsschaft (31 mm) als Stäbe, die Kuppel als Schirmstab, ein 31-mm-Festlager und eine Masse; Gelenke sind in die Stäbe aufgegangen."
+     "en": "1:200 is four masses, as its drawing: a 30 mm rose disc, the cord at its true 6.6 mm (slender), the shade as one turned bell with the collar as its 31 mm neck and a 3 mm wall, and one bulb body that unites lampholder, cap and a six-point glass pear, so the bulb still hangs from the apex inside the bell.",
+     "de": "1:200 sind wie seine Zeichnung vier Massen: eine 30-mm-Rosettenscheibe, das Kabel mit seinen wahren 6,6 mm (schlank), der Schirm als eine gedrehte Glocke mit der Hülse als 31-mm-Hals und 3 mm Wand, und ein Lampenkörper, der Fassung, Sockel und eine Glasbirne aus sechs Punkten vereint, sodass die Lampe weiter am Scheitel in der Glocke hängt."
+    },
+    {
+     "en": "Thermal: rose, cord, shade and bulb reuse the body; the lampholder region is its own turned solid of collar and lampholder inside the neck and the bell; the plume outlet ring is 30 mm. Structure: a 30 mm pin in the rose, the cord, a 31 mm holder rod down to the lampholder mouth, the bell as the shade member, a 31 mm cap rod and the mass of the shade.",
+     "de": "Thermik: Rosette, Kabel, Schirm und Lampe nutzen den Körper; die Fassungsregion ist ein eigener Drehkörper aus Hülse und Fassung in Hals und Glocke; der Fahnenauslassring ist 30 mm stark. Tragwerk: ein 30-mm-Bolzen in der Rosette, das Kabel, ein 31-mm-Fassungsstab bis zur Fassungsmündung, die Glocke als Schirmstab, ein 31-mm-Sockelstab und die Masse des Schirms."
     }
    ]
   },
   "500": {
-   "status": "unavailable",
-   "denominator": 500
+    "status": "authored",
+    "denominator": 500,
+    "body": [
+      {
+        "id": "rose",
+        "kind": "revolve",
+        "bone": "rose",
+        "material": "rose-polymer",
+        "role": "body",
+        "tone": 0.7,
+        "profile": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.05
+          ],
+          [
+            0.03,
+            0.05
+          ],
+          [
+            0.03,
+            0.0
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "cord",
+        "kind": "revolve",
+        "bone": "cord",
+        "material": "textile-cord",
+        "role": "body",
+        "tone": 0.15,
+        "profile": [
+          [
+            0.004,
+            0.0
+          ],
+          [
+            0.004,
+            0.0033
+          ],
+          [
+            0.602,
+            0.0033
+          ],
+          [
+            0.602,
+            0.0
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "slender": true
+      },
+      {
+        "id": "shade",
+        "bone": "shade",
+        "material": "enamel-white",
+        "tone": 0.4,
+        "role": "body",
+        "kind": "revolve",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "profile": [
+          [
+            -0.03,
+            0.0
+          ],
+          [
+            -0.03,
+            0.022
+          ],
+          [
+            0.007,
+            0.041
+          ],
+          [
+            0.139,
+            0.133
+          ],
+          [
+            0.139,
+            0.131
+          ],
+          [
+            0.008,
+            0.039
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      {
+        "id": "bulb",
+        "bone": "bulb",
+        "material": "bulb-glass",
+        "tone": 0.85,
+        "role": "body",
+        "kind": "revolve",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "profile": [
+          [
+            -0.037,
+            0.0
+          ],
+          [
+            -0.037,
+            0.011
+          ],
+          [
+            0.025,
+            0.015
+          ],
+          [
+            0.047,
+            0.03
+          ],
+          [
+            0.072,
+            0.029
+          ],
+          [
+            0.102,
+            0.01
+          ],
+          [
+            0.105,
+            0.0
+          ]
+        ]
+      }
+    ],
+    "thermal": [
+      {
+        "id": "th-rose",
+        "of": "rose",
+        "region": "rose"
+      },
+      {
+        "id": "th-cord",
+        "of": "cord",
+        "region": "cord"
+      },
+      {
+        "id": "th-shade",
+        "bone": "shade",
+        "material": "enamel-white",
+        "tone": 0.4,
+        "role": "body",
+        "region": "shade",
+        "kind": "revolve",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "profile": [
+          [
+            -0.03,
+            0.0
+          ],
+          [
+            -0.03,
+            0.019
+          ],
+          [
+            0.004,
+            0.041
+          ],
+          [
+            0.045,
+            0.092
+          ],
+          [
+            0.139,
+            0.133
+          ],
+          [
+            0.139,
+            0.131
+          ],
+          [
+            0.046,
+            0.09
+          ],
+          [
+            0.007,
+            0.039
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      {
+        "id": "th-lampholder",
+        "kind": "revolve",
+        "bone": "holder",
+        "material": "brass-lacquered",
+        "role": "body",
+        "tone": 0.45,
+        "profile": [
+          [
+            -0.0005,
+            0.0
+          ],
+          [
+            -0.0005,
+            0.0165
+          ],
+          [
+            0.03,
+            0.0165
+          ],
+          [
+            0.03,
+            0.0155
+          ],
+          [
+            0.033,
+            0.0155
+          ],
+          [
+            0.033,
+            0.02
+          ],
+          [
+            0.0956,
+            0.02
+          ],
+          [
+            0.0956,
+            0.0
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "region": "lampholder"
+      },
+      {
+        "id": "th-bulb",
+        "bone": "bulb",
+        "material": "bulb-glass",
+        "tone": 0.85,
+        "role": "body",
+        "region": "bulb-glass",
+        "kind": "revolve",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "profile": [
+          [
+            0.024,
+            0.0
+          ],
+          [
+            0.029,
+            0.017
+          ],
+          [
+            0.051,
+            0.029
+          ],
+          [
+            0.074,
+            0.028
+          ],
+          [
+            0.105,
+            0.0
+          ]
+        ]
+      },
+      {
+        "id": "th-shade-plume",
+        "kind": "revolve",
+        "bone": "shade",
+        "material": "enamel-white",
+        "role": "detail",
+        "tone": 0.4,
+        "profile": [
+          [
+            -0.0015,
+            0.0155
+          ],
+          [
+            -0.0015,
+            0.017
+          ],
+          [
+            -0.00106,
+            0.02609
+          ],
+          [
+            0.00034,
+            0.03531
+          ],
+          [
+            0.00276,
+            0.04458
+          ],
+          [
+            0.0063,
+            0.05384
+          ],
+          [
+            0.01104,
+            0.063
+          ],
+          [
+            0.01706,
+            0.072
+          ],
+          [
+            0.02444,
+            0.08074
+          ],
+          [
+            0.03326,
+            0.08916
+          ],
+          [
+            0.03457,
+            0.08765
+          ],
+          [
+            0.0259,
+            0.07937
+          ],
+          [
+            0.01866,
+            0.07079
+          ],
+          [
+            0.01276,
+            0.06199
+          ],
+          [
+            0.00813,
+            0.05302
+          ],
+          [
+            0.00467,
+            0.04397
+          ],
+          [
+            0.0023,
+            0.0349
+          ],
+          [
+            0.00094,
+            0.02589
+          ],
+          [
+            0.0005,
+            0.017
+          ],
+          [
+            0.0005,
+            0.0155
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "region": "shade",
+        "tags": [
+          "shade-plume"
+        ]
+      }
+    ],
+    "structure": [
+      {
+        "id": "support-ceiling-hook",
+        "kind": "capsule",
+        "bone": "rose",
+        "material": "brass-lacquered",
+        "role": "body",
+        "tone": 0.3,
+        "p0": [
+          0.015,
+          0.0,
+          -0.005
+        ],
+        "p1": [
+          0.015,
+          0.0,
+          0.005
+        ],
+        "r0": 0.015,
+        "r1": 0.015,
+        "member": "rose",
+        "part": "support",
+        "anchor": "ceiling-hook"
+      },
+      {
+        "id": "member-cord",
+        "bone": "cord",
+        "material": "textile-cord",
+        "tone": 0.15,
+        "role": "body",
+        "member": "cord",
+        "part": "member",
+        "kind": "revolve",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "profile": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0028
+          ],
+          [
+            0.602,
+            0.0028
+          ],
+          [
+            0.602,
+            0.0
+          ]
+        ]
+      },
+      {
+        "id": "member-holder",
+        "kind": "revolve",
+        "bone": "holder",
+        "material": "brass-lacquered",
+        "role": "body",
+        "tone": 0.45,
+        "profile": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0155
+          ],
+          [
+            0.071,
+            0.0155
+          ],
+          [
+            0.071,
+            0.0
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "member": "holder",
+        "part": "member"
+      },
+      {
+        "id": "member-shade",
+        "of": "shade",
+        "member": "shade",
+        "part": "member"
+      },
+      {
+        "id": "member-bulb",
+        "kind": "revolve",
+        "bone": "bulb",
+        "material": "brass-lacquered",
+        "role": "body",
+        "tone": 0.45,
+        "profile": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0155
+          ],
+          [
+            0.03,
+            0.0155
+          ],
+          [
+            0.03,
+            0.0
+          ]
+        ],
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "member": "bulb",
+        "part": "member"
+      },
+      {
+        "id": "mass-shade",
+        "kind": "ellipsoid",
+        "bone": "shade",
+        "material": "enamel-white",
+        "role": "detail",
+        "tone": 0.4,
+        "radii": [
+          0.015,
+          0.015,
+          0.015
+        ],
+        "transform": {
+          "translation": [
+            0.068,
+            0.0,
+            0.0
+          ]
+        },
+        "member": "shade",
+        "part": "mass"
+      }
+    ],
+    "decisions": [
+      {
+        "en": "The spun shade retains its hollow throat. Cord, holder and bulb remain axial through the swing.",
+        "de": "Der Blechschirm behält seine hohle Kehle. Kabel, Fassung und Kolben liegen beim Pendeln auf einer Achse."
+      }
+    ]
   }
  }
 }

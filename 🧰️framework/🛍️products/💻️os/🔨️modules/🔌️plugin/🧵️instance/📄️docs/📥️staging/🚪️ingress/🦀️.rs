@@ -1,8 +1,9 @@
 //! 🪙️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-docs` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
+pub use semio_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle,ArtifactEnvelopeDecodeOperationPoll};
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_demand_grant};
-use semio_plugin_document_media::{envelope_decode_replacement, ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, ArtifactStoreReplacementAdmissionTarget, ArtifactStoreReplacementRefusal, PendingDocumentArchiveMember};
+use semio_plugin_document_media::{envelope_decode_replacement, ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ArtifactStoreReplacementAdmissionTarget, ArtifactStoreReplacementRefusal, PendingDocumentArchiveMember};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, document_load_fault};
@@ -108,6 +109,69 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         };
         self.store_replacement_jobs.insert_admitted(operation.0, ActiveArtifactStoreReplacement::new(operation,generation,child_composition.child_content_generation,job,(cx.operation(),cx.generation())));
         Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
+    }
+
+    /// 🤲️ Admits a native genesis without copying the original Pack or relinquishing it on refusal.
+    pub fn begin_original_genesis_replacement(
+        &mut self,
+        stores: &InstanceStores<A>,
+        child_composition: &ChildComposition<M>,
+        original: &mut Option<store::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<A::Snapshot>>,
+        mounted_operation: semio_framework_job::OperationId,
+        expected: (u64,[u8;32]),
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<ArtifactEnvelopeDecodeOperationHandle>,semio_framework_job::OriginalTurnFailure> {
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if original.is_none() { return Ok(None); }
+        let generation = stores.artifact_generation_now();
+        if (generation.0,stores.store.content_revision_now()) != expected {
+            return Err(plugin_sdk_fault("typed genesis replacement lost its original document frontier").into());
+        }
+        let Some(slot) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.envelope_ingress.slot_is_vacant(*slot) && self.envelope_decode_jobs.slot_is_vacant(*slot) && self.store_replacement_jobs.slot_is_vacant(*slot)) else {
+            return Err(plugin_sdk_fault("typed genesis replacement receiver is saturated").into());
+        };
+        let live = stores.store.envelope();
+        let dialect = A::DIALECT;
+        let owner = live.owner.as_ref().map(|owner| [&owner.slot,&owner.child_id,&owner.parent.artifact_id,
+            &owner.parent.dialect.artifact_kind,&owner.parent.dialect.standard,&owner.parent.dialect.subset]);
+        let metadata = [live.id.len(),A::DOCUMENT_SCHEMA.len(),dialect.artifact_kind.len(),dialect.standard.0.len(),dialect.subset.0.len()]
+            .into_iter().chain(owner.into_iter().flatten().map(String::len))
+            .try_fold(0usize,usize::checked_add).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"genesis identity allocation extent overflow"))?;
+        let initializer=A::original_genesis_initializer_demand();
+        let cancellation=semio_framework_job::CancelToken::root_admission_demands();
+        let capacity_bytes=[metadata,initializer.capacity_bytes,cancellation.capacity_bytes]
+            .into_iter().try_fold(0usize,usize::checked_add)
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"genesis replacement capacity overflow"))?;
+        let copy_bytes=[metadata,initializer.copy_bytes,cancellation.copy_bytes,std::mem::size_of_val(original),
+            std::mem::size_of::<ArtifactEnvelope<A::Snapshot,A::Mutation>>(),ActiveArtifactStoreReplacement::<A::Snapshot,A::Mutation,M>::mounted_genesis_shell_copy_bytes(),
+            std::mem::size_of::<Option<ArtifactEnvelopeDecodeOperationHandle>>()]
+            .into_iter().try_fold(0usize,usize::checked_add)
+            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"genesis replacement copy extent overflow"))?;
+        let demand=RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()};
+        if cx.is_cancelled() || cx.should_yield() || !cx.admit_work_step(demand)? { return Ok(None); }
+        cx.consume_retained(RetainedCloneProgress { copied_items:1,copied_bytes:copy_bytes,retained_capacity_bytes:capacity_bytes,..Default::default() })?;
+        cx.consume_fuel(1);
+        let operation = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64,slot as u64);
+        let envelope = store::os_store::document_materialize::empty_document_envelope_from_genesis_owners(A::DOCUMENT_SCHEMA.to_owned(),live.id.clone(),original.take().unwrap(),None);
+        let mut owners = envelope.into_owners();
+        owners.owner = live.owner.clone();
+        owners.dialect = Some(dialect.into());
+        let job = A::build_original_genesis_initializer(ArtifactEnvelope::from_owners(owners),operation,generation,stores.store.local_actor_id().clone());
+        let active=ActiveArtifactStoreReplacement::new_mounted_genesis(operation,generation,child_composition.child_content_generation,job,(cx.operation(),cx.generation()),(mounted_operation,expected.1));
+        self.store_replacement_jobs.insert_admitted(operation.0,active);
+        Ok(Some(ArtifactEnvelopeDecodeOperationHandle{operation,generation}))
+    }
+
+    /// 🧭️ Checks whether the typed-publication lane still owes a replacement turn.
+    pub fn has_pending_mounted_genesis_replacements(&self) -> bool {
+        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|index|self.store_replacement_jobs.entry(index).is_some_and(|(_,active)|{
+            active.mounted_genesis.is_some()&&active.state!=ActiveArtifactStoreReplacementState::Complete
+        }))
+    }
+
+    /// 🧾️ Borrows the exact frontier minted by the replacement's atomic commit.
+    pub fn artifact_store_replacement_frontier(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Option<(u64,[u8;32])> {
+        self.store_replacement_jobs.get(handle.operation.0).filter(|active|active.operation==handle.operation && active.generation==handle.generation)?.committed_frontier
     }
 
     /// 🔎️ Rejects stale, closed, full, or over-byte page ingress before the producer copies its raw owner.

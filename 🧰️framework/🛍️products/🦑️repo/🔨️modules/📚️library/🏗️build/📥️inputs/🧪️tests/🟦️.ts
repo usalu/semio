@@ -33,10 +33,11 @@ test("selected source discovery compiles each reached glob once per operation",a
   const directories=new Map<string,Map<string,boolean>>();
   for(const file of row.files){const parts=file.split("/");for(let index=0;index<parts.length;index++){const parent=join(workspaceRoot,...parts.slice(0,index)),entries=directories.get(parent)??new Map();entries.set(parts[index]!,index<parts.length-1);directories.set(parent,entries);}}
   for(let attempt=0;attempt<2;attempt++){
-   const original=globalThis.RegExp,compiled:string[]=[];let result:unknown;
+   const original=globalThis.RegExp,compiled:string[]=[],directoriesRead:string[]=[];let result:unknown;
    globalThis.RegExp=new Proxy(original,{construct(target,args,newTarget){compiled.push(String(args[0]));return Reflect.construct(target,args,newTarget);}});
-   try{result=await runInNewContext(program,{patterns:row.patterns,workspaceRoot,context:{},loadedProjectInputs:inputModule,isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1,POLICY:{generatedDirectories:[]},EXAMPLE_COLLECTIONS:[],WORKSPACE_OWNERSHIP:{collections:{moduleMember:"modules"}},buildPath:(path:string)=>path.replaceAll("\\","/"),join,dirname,yieldInferenceV1:async()=>{},addFile:()=>{},existsSync:(path:string)=>directories.has(path)||row.files.includes(relative(workspaceRoot,path).replaceAll("\\","/")),lstatSync:(path:string)=>({isDirectory:()=>directories.has(path)}),readdirSync:(path:string)=>[...(directories.get(path)??new Map())].map(([name,directory])=>({name,isSymbolicLink:()=>false,isDirectory:()=>directory,isFile:()=>!directory}))});}finally{globalThis.RegExp=original;}
+   try{result=await runInNewContext(program,{patterns:row.patterns,workspaceRoot,context:{},loadedProjectInputs:inputModule,isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1,POLICY:{generatedDirectories:[]},EXAMPLE_COLLECTIONS:[],WORKSPACE_OWNERSHIP:{collections:{moduleMember:"modules"}},buildPath:(path:string)=>path.replaceAll("\\","/"),join,dirname,yieldInferenceV1:async()=>{},addFile:()=>{},existsSync:(path:string)=>directories.has(path)||row.files.includes(relative(workspaceRoot,path).replaceAll("\\","/")),lstatSync:(path:string)=>({isDirectory:()=>directories.has(path)}),readdirSync:(path:string)=>{directoriesRead.push(relative(workspaceRoot,path).replaceAll("\\","/")||".");return [...(directories.get(path)??new Map())].map(([name,directory])=>({name,isSymbolicLink:()=>false,isDirectory:()=>directory,isFile:()=>!directory}));}});}finally{globalThis.RegExp=original;}
    expect(result,row.id).toEqual(row.expected);
+   if("directoriesRead" in row)expect(directoriesRead.sort(),row.id).toEqual(row.directoriesRead);
    expect(compiled.length,row.id+":"+attempt).toBe(row.compilations);
   }
  }

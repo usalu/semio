@@ -190,3 +190,15 @@ fn a_union_payload_regains_the_constants_of_the_variant_it_names() {
     assert!(matches!(inputs[0].control(), ActionArgControl::Segmented { ref options } if options.len() == 2));
     assert_eq!(inputs.iter().skip(1).map(|input| input.group.as_deref()).collect::<Vec<_>>(), [Some("apply"), Some("restore")]);
 }
+
+/// 🪣️ Every framework-held input schema document resolves by its own `$id` without any registration, so a plugin whose input
+/// `$ref`s the artifact link closure (reference, link, blob, child) resolves it at describe time.
+#[test]
+fn framework_input_documents_resolve_by_id_without_registration() {
+    for raw in FRAMEWORK_INPUT_SCHEMA_DOCUMENTS {
+        let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a framework document is JSON"));
+        let id = document.get("$id").and_then(DslValue::as_str).expect("a framework document has an $id");
+        assert_eq!(registered_input_schema_document(id), Some(document.clone()), "{id}");
+    }
+    assert!(registered_input_schema_document("https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json").is_some());
+}

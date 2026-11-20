@@ -82,6 +82,55 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         let(root,previous)=self.insert_at(self.root,key,value);self.root=Some(root);Ok((previous,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
+    fn has_vacant_pair_backing(&self) -> bool {
+        let unused = self.nodes.capacity() - self.nodes.len();
+        unused >= 2 || self.free_head.is_some_and(|first| unused == 1 || self.nodes[first].left.is_some())
+    }
+
+    /// 📐️ Quotes one backing step or both vacant insertions before either new row is visible.
+    pub fn vacant_pair_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        let depth = self.height(self.root) + 3;
+        if self.has_vacant_pair_backing() {
+            return Ok(semio_framework_value::RetirementDemand { depth, ..Default::default() });
+        }
+        let value_error = |error: semio_framework_value_persistent::list::PagedListError| index_page_refusal(error.kind, error.reason);
+        Ok(semio_framework_value::RetirementDemand {
+            capacity_bytes: self.nodes.next_capacity_allocation_bytes(usize::MAX).map_err(value_error)?.unwrap_or_default(),
+            copy_bytes: self.nodes.next_capacity_copy_byte_demand(usize::MAX).map_err(value_error)?,
+            depth: depth.max(self.nodes.next_capacity_depth_demand(usize::MAX).map_err(value_error)?),
+            ..Default::default()
+        })
+    }
+
+    /// 🧰️ Advances only the next funded page toward a pair of available rows.
+    pub fn reserve_vacant_pair(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, ValueError> {
+        use semio_framework_value_persistent::list::{PagedListReservationFailure, PagedListReservationOutcome};
+        if self.has_vacant_pair_backing() { return Ok(None); }
+        let result = self.nodes.reserve_capacity_one_funded(usize::MAX, effect).result;
+        match result {
+            Ok(PagedListReservationOutcome::Denied) => Ok(Some(Default::default())),
+            Ok(PagedListReservationOutcome::Ready(progress)) => Ok(Some(progress)),
+            Err(PagedListReservationFailure::Work(error)) => Err(error),
+            Err(PagedListReservationFailure::Allocation { error, copied_bytes }) => Err(index_page_refusal(error.kind, error.reason)
+                .with_retained_progress(RetainedCloneProgress { copied_items: usize::from(error.allocated_bytes != 0), copied_bytes, retained_capacity_bytes: error.allocated_bytes, ..Default::default() })),
+        }
+    }
+
+    /// 🪴️ Commits one atomic pair of preadmitted rows without allocation or payload copies.
+    pub fn insert_vacant_pair_reserved(&mut self, rows: [(K, V); 2], grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, [(K, V); 2])> {
+        if rows[0].0 == rows[1].0 || rows.iter().any(|(key, _)| self.contains_key(key)) {
+            return Err((ValueError::invariant("original pair requires two distinct vacant index keys"), rows));
+        }
+        if !self.has_vacant_pair_backing() || grant.maximum_depth < self.height(self.root) + 3 || grant.maximum_items == 0 {
+            return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "original pair insertion exceeds the admitted rows"), rows));
+        }
+        for (key, value) in rows {
+            let (root, _) = self.insert_at(self.root, key, value);
+            self.root = Some(root);
+        }
+        Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+    }
+
     fn insert_at(&mut self,root:Option<usize>,key:K,value:V)->(usize,Option<V>) { let Some(root)=root else {self.mark_mutation();let node=FoldIndexNode{entry:Some((key,value)),retired_entry:None,left:None,right:None,height:1,count:1};let index=if let Some(index)=self.free_head{self.free_head=self.nodes[index].left;self.nodes[index]=node;index}else{let index=self.nodes.len();self.nodes.push(node);index};return(index,None)};let order=key.cmp(&self.nodes[root].entry.as_ref().unwrap().0);let previous=match order {Ordering::Less=>{let(child,previous)=self.insert_at(self.nodes[root].left,key,value);self.nodes[root].left=Some(child);previous},Ordering::Greater=>{let(child,previous)=self.insert_at(self.nodes[root].right,key,value);self.nodes[root].right=Some(child);previous},Ordering::Equal=>{self.mark_mutation();self.displaced_keys.push(key);return(root,Some(std::mem::replace(&mut self.nodes[root].entry.as_mut().unwrap().1,value)));}};(self.balance(root),previous) }
     pub fn insert(&mut self,key:K,value:V)->Option<V> { let(root,previous)=self.insert_at(self.root,key,value);self.root=Some(root);previous }
     pub fn get_or_insert(&mut self,key:K,value:V)->&mut V { if let Some(index)=self.locate(&key){self.displaced_keys.push(key);return &mut self.nodes[index].entry.as_mut().unwrap().1;}let index=self.free_head.unwrap_or(self.nodes.len());let(root,_)=self.insert_at(self.root,key,value);self.root=Some(root);&mut self.nodes[index].entry.as_mut().unwrap().1 }
@@ -138,6 +187,25 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 🪵️ Transfers the original greatest-key row while retaining its native arena slot.
     pub fn pop_last(&mut self)->Option<(K,V)> {let(root,index)=self.detach_last(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
     /// 🔎️ Borrows the existing rank path without copying preceding keys or manufacturing a source loan.
+    /// 🔢️ Quotes the comparisons and original page reads of one ordered member.
+    pub fn next_rank_depth_demand(&self, mut rank: usize) -> Result<usize, ValueError> {
+        let (mut root, mut comparisons, mut depth) = (self.root, 0usize, 1usize);
+        while let Some(index) = root {
+            comparisons += 1;
+            let page = self.next_slot_depth_demand(index)?;
+            let node = &self.nodes[index];
+            let left = self.count(node.left);
+            let child_page = node.left.map(|child| self.next_slot_depth_demand(child)).transpose()?.unwrap_or(0);
+            depth = depth.max(comparisons.saturating_add(page.max(child_page)).saturating_add(1));
+            match rank.cmp(&left) {
+                Ordering::Less => root = node.left,
+                Ordering::Equal => break,
+                Ordering::Greater => { rank -= left + 1; root = node.right; }
+            }
+        }
+        Ok(depth)
+    }
+
     pub fn ranked(&self,mut rank:usize)->Option<(&K,&V)> {let mut root=self.root;while let Some(index)=root{let left=self.count(self.nodes[index].left);if rank<left{root=self.nodes[index].left;}else if rank==left{let(key,value)=self.nodes[index].entry.as_ref().unwrap();return Some((key,value));}else{rank-=left+1;root=self.nodes[index].right;}}None}
     /// 🔎️ Borrows the next strictly greater key without allocating a range cursor.
     pub fn first_entry_after<Q:Ord+?Sized>(&self,key:&Q)->Option<(&K,&V)> where K:Borrow<Q> {let mut root=self.root;let mut candidate=None;while let Some(index)=root{let(entry,_)=self.nodes[index].entry.as_ref().unwrap();if entry.borrow()>key{candidate=Some(index);root=self.nodes[index].left;}else{root=self.nodes[index].right;}}candidate.map(|index|{let(key,value)=self.nodes[index].entry.as_ref().unwrap();(key,value)})}

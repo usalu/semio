@@ -249,7 +249,8 @@
           "none",
           "swap-lineage",
           "swap-unrelated",
-          "retarget-endpoint"
+          "retarget-endpoint",
+          "replace-same-target"
         ]
       },
       "at": {
@@ -293,6 +294,7 @@
       "publish": false,
       "full": false
     },
+    {"id":"same-target-new-inode","mutation":"replace-same-target","at":3,"publish":false,"full":false},
     {
       "id": "unrelated-ancestor-swapped",
       "mutation": "swap-unrelated",

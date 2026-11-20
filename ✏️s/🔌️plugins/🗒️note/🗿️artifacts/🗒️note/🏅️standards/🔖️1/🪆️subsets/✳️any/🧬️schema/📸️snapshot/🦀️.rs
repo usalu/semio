@@ -1,9 +1,9 @@
 //! 🧬️ Note snapshot schema — artifact-lane fields only.
 
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use crate::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted note document snapshot (persistent fields of the artifact).
@@ -48,8 +48,8 @@ pub struct NoteSnapshot {
     #[value(skip_serializing_if = "Option::is_none")]
     pub eraser_radius: Option<f64>,
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub assets: BTreeMap<String, NoteImageAsset>,
+    #[value(default, skip_serializing_if = "RetainedOrderedMap::is_empty")]
+    pub assets: RetainedOrderedMap<String, NoteImageAsset>,
     /// 🔗️ Forward reference slot — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→R:any`):
     /// a note may point at any other artifact (not a specific composed type), matching layout's
     /// `referenced_model` precedent. Schema/codec-complete, deliberately left inert beyond that (no
@@ -81,7 +81,7 @@ impl Default for NoteSnapshot {
             snap_grid_spacing: Some(8.0),
             pencil_width: Some(3.0),
             eraser_radius: Some(12.0),
-            assets: BTreeMap::new(),
+            assets: Default::default(),
             linked_artifact: None,
         }
     }

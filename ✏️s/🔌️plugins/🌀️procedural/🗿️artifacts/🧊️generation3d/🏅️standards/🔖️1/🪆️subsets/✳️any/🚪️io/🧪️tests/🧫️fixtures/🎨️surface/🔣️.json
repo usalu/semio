@@ -1417,6 +1417,11 @@
           "id": "output",
           "type": "outputExport",
           "format": "gltf"
+        },
+        {
+          "id": "bundle",
+          "type": "outputExport",
+          "format": "gltf"
         }
       ],
       "synapses": [
@@ -1425,6 +1430,34 @@
           "from": "hidden",
           "fromPort": "meshOut",
           "to": "output",
+          "toPort": ""
+        },
+        {
+          "id": "bundle-named",
+          "from": "hidden",
+          "fromPort": "meshOut",
+          "to": "bundle",
+          "toPort": ""
+        },
+        {
+          "id": "bundle-shown",
+          "from": "shown",
+          "fromPort": "meshOut",
+          "to": "bundle",
+          "toPort": ""
+        },
+        {
+          "id": "bundle-hidden",
+          "from": "hidden",
+          "fromPort": "",
+          "to": "bundle",
+          "toPort": ""
+        },
+        {
+          "id": "bundle-duplicate",
+          "from": "hidden",
+          "fromPort": "other",
+          "to": "bundle",
           "toPort": ""
         }
       ]
@@ -1440,6 +1473,9 @@
             "hidden",
             "meshOut"
           ]
+        ],
+        "handles": [
+          "face-main"
         ]
       },
       {
@@ -1451,13 +1487,57 @@
             "shown",
             null
           ]
+        ],
+        "handles": [
+          "solid-other"
+        ]
+      },
+      {
+        "request": {
+          "format": "gltf",
+          "widgetId": "bundle"
+        },
+        "channels": [
+          [
+            "hidden",
+            null
+          ],
+          [
+            "shown",
+            "meshOut"
+          ]
+        ],
+        "handles": [
+          "face-main",
+          "wire-boundary",
+          "solid-other"
         ]
       }
     ],
     "refusals": [
       "missing",
       "shown"
-    ]
+    ],
+    "retained": [
+      [
+        "shown",
+        null
+      ],
+      [
+        "hidden",
+        null
+      ]
+    ],
+    "outputs": {
+      "hidden": {
+        "meshOut": "face-main",
+        "other": "wire-boundary",
+        "area": 18
+      },
+      "shown": {
+        "meshOut": "solid-other"
+      }
+    }
   },
   "mergeSurface": {
     "cases": [

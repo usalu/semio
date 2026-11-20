@@ -207,7 +207,7 @@ describe("ToggleGroup", () => {
   });
 
   it("keeps chrome group cells stretchable without clipping overflow", () => {
-    expect(chromeControlItemBaseClass).toContain("h-full");
+    expect(chromeControlItemBaseClass.split(/\s+/)).toContain("self-stretch");
     expect(chromeControlItemBaseClass).toContain("overflow-visible");
     expect(chromeControlGroupShellClass).toContain("items-stretch");
   });

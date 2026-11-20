@@ -330,6 +330,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(world3dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
       expect(canvas2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
     });
+
+    it("restores every diagram layer from a payload larger than the surface doc", () => {
+      const { layerJson, count, reference } = canvas2dContract.largeLayers;
+      const payload = `[${Array<string>(count).fill(layerJson).join(",")}]`;
+      expect(utf8ByteLength(payload)).toBe(reference.bytes);
+      const lane = canvas2dContract.lanes.find((entry) => entry.lane === reference.lane)!;
+      const spine = { cameraX: 0, cameraY: 0, zoom: 1, layersJson: "[]", lanes: [reference] };
+      surfaceSceneLaneCache.clear();
+      const { store, record } = surfaceWithLanes({ [lane.bodyKey]: payload }, "canvas-2d", canvas2dContract.schema);
+      const collected = canvas2dSurfaceLaneTexts(record, store.getState(), spine.lanes);
+      const scene = canvas2dSceneFromLanes(spine, collected);
+      expect(scene.layersJson).toBe(payload);
+      expect(JSON.parse(scene.layersJson)).toEqual(Array(count).fill(JSON.parse(layerJson)));
+    });
   });
 
   describe("board-2d paged scene carrier", () => {

@@ -30,3 +30,9 @@ semio-ui-contract-budget = { path = "../../../../../📏️budget/📦️package
 semio-ui-contract-text = { path = "../../../../../🔤️text/📦️packages/🦀️rust" }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-native-owned.workspace = true

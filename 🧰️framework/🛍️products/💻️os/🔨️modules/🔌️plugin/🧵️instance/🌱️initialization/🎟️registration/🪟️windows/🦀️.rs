@@ -19,6 +19,7 @@ fn release_frame<S>(source:&mut Option<Box<S>>,cx:&mut StepContext<'_>,d:Retirem
 pub trait OriginalWindowAdmission:Send+'static{
  type Registry:Send+'static;
  fn registry_identity(registry:&Self::Registry)->u64;
+ /// 🧾️ Returns true only after the placed head and its admission receipt have settled.
  fn admit(registry:&mut Self::Registry,cx:&mut StepContext<'_>,birth:&mut OriginalStoreBirth,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure> where Self:Sized;
  fn advance(&mut self,registry:&mut Self::Registry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn close_step(&mut self,registry:&mut Self::Registry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
@@ -53,9 +54,9 @@ pub trait OriginalWindowSet:Send+'static{
  fn terminal_is_empty(&self)->bool;
  fn boxed_release_demands()->RetirementDemand where Self:Sized;
 }
-/// 📚️ The head registers before its tail, while donated registries remain exclusively with the parent.
+/// 📚️ The head donates its owner and closes its registration before the tail begins.
 pub struct OriginalWindowSequence<H:OriginalWindowAdmission,T:OriginalWindowSet<Registry=H::Registry>>{
- binding:OriginalSourceBinding,registry:(usize,u64),head:ManuallyDrop<Option<Box<H>>>,tail:ManuallyDrop<Option<Box<T>>>,birth:OriginalStoreBirth,unit:Option<()>,phase:u8,closing:bool,
+ binding:OriginalSourceBinding,registry:(usize,u64),head:ManuallyDrop<Option<Box<H>>>,tail:ManuallyDrop<Option<Box<T>>>,birth:OriginalStoreBirth,unit:Option<()>,phase:u8,head_admitted:bool,closing:bool,
 }
 impl<H:OriginalWindowAdmission,T:OriginalWindowSet<Registry=H::Registry>> OriginalWindowSequence<H,T>{
  fn validate(&self,registry:Option<&H::Registry>,cx:&StepContext<'_>)->Result<(),ValueError>{if !self.binding.matches(cx)||registry.is_some_and(|registry|self.registry!=(registry as*const _ as usize,H::registry_identity(registry))){return Err(invalid("original Window sequence changed its caller or registry"))}Ok(())}
@@ -67,13 +68,20 @@ impl<H:OriginalWindowAdmission,T:OriginalWindowSet<Registry=H::Registry>> Origin
   if output.is_some(){return Err(invalid("original Window sequence recipient is occupied").into())}
   let identity=H::registry_identity(registry);if identity==0{return Err(invalid("original Window registry identity is absent").into())}
   let d=frame_birth::<Self>();let binding=OriginalSourceBinding::borrow(cx);let registry=(registry as*mut _ as usize,identity);
-  birth.built(cx,output,construction(d),||Ok((Box::new(Self{binding,registry,head:ManuallyDrop::new(None),tail:ManuallyDrop::new(None),birth:OriginalStoreBirth::default(),unit:None,phase:0,closing:false}),receipt(d))))?;Ok(output.is_some())
+  birth.built(cx,output,construction(d),||Ok((Box::new(Self{binding,registry,head:ManuallyDrop::new(None),tail:ManuallyDrop::new(None),birth:OriginalStoreBirth::default(),unit:None,phase:0,head_admitted:false,closing:false}),receipt(d))))?;Ok(output.is_some())
  }
  fn advance(&mut self,registry:&mut Self::Registry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(Some(registry),cx)?;if self.closing{return Err(invalid("original Window sequence is closing").into())}if cx.is_cancelled()||cx.should_yield(){return Ok(false)}
   match self.phase{
-   0=>if let Some(head)=self.head.as_mut(){if head.terminal_is_empty(){self.set_phase(1,cx)?;}else{head.advance(registry,cx)?;}}else{H::admit(registry,cx,&mut self.birth,&mut self.head)?;},
-   1=>if let Some(tail)=self.tail.as_mut(){if tail.ready(){self.set_phase(2,cx)?;}else{tail.advance(registry,cx)?;}}else{T::admit(registry,cx,&mut self.birth,&mut self.tail)?;},
+   0=>{
+    if !self.head_admitted {self.head_admitted=H::admit(registry,cx,&mut self.birth,&mut self.head)?;return Ok(false)}
+    let head=self.head.as_mut().ok_or_else(||invalid("original Window admission completed without its head"))?;
+    if head.terminal_is_empty()||head.advance(registry,cx)?{self.set_phase(1,cx)?;}
+   },
+   1=>{
+    if let Some(head)=self.head.as_mut().filter(|head|!head.terminal_is_empty()){head.close_step(registry,cx)?;return Ok(false)}
+    if let Some(tail)=self.tail.as_mut(){if tail.ready(){self.set_phase(2,cx)?;}else{tail.advance(registry,cx)?;}}else{T::admit(registry,cx,&mut self.birth,&mut self.tail)?;}
+   },
    2=>{},_=>return Err(invalid("original Window sequence phase is invalid").into()),
   }Ok(self.ready())
  }
@@ -82,9 +90,14 @@ impl<H:OriginalWindowAdmission,T:OriginalWindowSet<Registry=H::Registry>> Origin
   self.validate(registry.as_deref(),cx)?;
   cx.with_original_retirement(|cx|{
    if !self.closing{let d=RetirementDemand{copy_bytes:1,depth:1,..Default::default()};retired(cx,d,|_|{self.closing=true;Ok(RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
+   if self.head.is_some()&&!self.head_admitted{
+    self.head_admitted=H::admit(registry.as_deref_mut().ok_or_else(||invalid("original Window head lost its admission registry"))?,cx,&mut self.birth,&mut self.head)?;
+    return Ok(false)
+   }
    if let Some(head)=self.head.as_mut(){if head.terminal_is_empty(){release_frame(&mut self.head,cx,H::boxed_release_demands())?;}else{head.close_step(registry.as_deref_mut().ok_or_else(||invalid("original Window head lost its undonated registry"))?,cx)?;}return Ok(false)}
    if let Some(tail)=self.tail.as_mut(){if tail.terminal_is_empty(){release_frame(&mut self.tail,cx,T::boxed_release_demands())?;}else{tail.close_step(registry.as_deref_mut(),cx)?;}return Ok(false)}
    if !self.birth.terminal_is_empty(){self.birth.close_step(cx)?;return Ok(false)}
+   if self.unit.is_some(){let d=RetirementDemand{copy_bytes:size_of::<Option<()>>(),depth:1,..Default::default()};retired(cx,d,|_|{self.unit=None;Ok(RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
    Ok(self.terminal_is_empty())
   })
  }

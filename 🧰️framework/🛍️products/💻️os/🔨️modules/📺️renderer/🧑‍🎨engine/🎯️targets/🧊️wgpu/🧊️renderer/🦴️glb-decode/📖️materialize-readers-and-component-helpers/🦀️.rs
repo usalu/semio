@@ -192,48 +192,67 @@ impl GlbMaterializeCursor {
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
         if self.texture_png.pending(){self.texture_png.close(cx)?;return Ok(false)}
-        Ok(self.close_remaining_step())
+        self.close_remaining_step(cx)
     }
 
-    fn close_remaining_step(&mut self) -> bool {
+    fn close_remaining_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
-        if self.texture_submission.take().is_some(){self.texture_worker=None;return false}
-        if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return false};let Some(image)=output.take()else{return false};self.decoded_texture=image.map(|image|DecodedReferenceImage{width:image.width,height:image.height,pixels:image.pixels,source_digest:self.texture_digest});drop(output);self.texture_worker=None;return false}
-        if let Some(image)=self.decoded_texture.as_mut(){if !image.pixels.is_empty(){image.pixels.truncate(image.pixels.len().saturating_sub(4096));return false}self.decoded_texture=None;return false}
-        if !self.texture_bytes.is_empty(){self.texture_bytes.truncate(self.texture_bytes.len().saturating_sub(4096));return false}
-        if let Some(appearance)=self.appearance.as_mut(){if !appearance.close_step(){return false}self.appearance=None;return false}
-        if self.textures.pop().is_some(){return false}
-        if let Some(token) = self.write {
-            match mesh3d_abort(token) {
-                Ok(()) | Err(Mesh3dFault::Closing) => {}
-                Err(Mesh3dFault::Stale) => {
-                    self.write = None;
-                    return self.lease.is_none() && self.appearance.is_none() && self.textures.is_empty();
-                }
-                Err(_) => return false,
+        if self.texture_submission.take().is_some(){self.texture_worker=None;return Ok(false)}
+        if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return Ok(false)};let Some(image)=output.take()else{return Ok(false)};self.decoded_texture=image.map(|image|DecodedReferenceImage{width:image.width,height:image.height,pixels:image.pixels,source_digest:self.texture_digest});drop(output);self.texture_worker=None;return Ok(false)}
+        if let Some(image)=self.decoded_texture.as_mut(){if !image.pixels.is_empty(){image.pixels.truncate(image.pixels.len().saturating_sub(4096));return Ok(false)}self.decoded_texture=None;return Ok(false)}
+        if !self.texture_bytes.is_empty(){self.texture_bytes.truncate(self.texture_bytes.len().saturating_sub(4096));return Ok(false)}
+        if let Some(appearance)=self.appearance.as_mut(){if !appearance.close_step(){return Ok(false)}self.appearance=None;return Ok(false)}
+        if self.textures.pop().is_some(){return Ok(false)}
+        let invalid=|fault|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,glb_mesh_fault(fault));
+        if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
+        if let Some(token)=self.write{
+            match mesh3d_abort(token){
+                Ok(())|Err(Mesh3dFault::Closing)=>{}
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>{self.write=None;return Ok(false)}
+                Err(fault)=>return Err(invalid(fault).into()),
             }
-            match mesh3d_abort_step(token) {
-                Ok(true) | Err(Mesh3dFault::Stale) => self.write = None,
-                Ok(false) | Err(_) => return false,
+            let grant=cx.retained_grant();
+            let demand=match ui_scene::math::mesh3d_abort_demands(token,grant.maximum_copy_bytes){
+                Ok(demand)=>demand,
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>{self.write=None;return Ok(false)}
+                Err(fault)=>return Err(invalid(fault).into()),
+            };
+            if !cx.admit_work_step(demand)?{return Ok(false)}
+            match mesh3d_abort_step(token,grant){
+                Ok(step)=>{if step.complete{self.write=None}if step.progress!=Default::default(){cx.consume_fuel(1)}cx.consume_retained(step.progress)?;}
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>self.write=None,
+                Err(fault)=>return Err(invalid(fault).into()),
             }
-            return self.lease.is_none() && self.appearance.is_none() && self.textures.is_empty();
+            return Ok(false);
         }
-        if let Some(lease) = self.lease {
-            match mesh3d_begin_close(lease) {
-                Ok(()) | Err(Mesh3dFault::Closing) => {}
-                Err(Mesh3dFault::Stale) => {
-                    self.lease = None;
-                    return true;
-                }
-                Err(_) => return false,
+        if let Some(lease)=self.lease{
+            match mesh3d_begin_close(lease){
+                Ok(())|Err(Mesh3dFault::Closing)=>{}
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>{self.lease=None;return Ok(true)}
+                Err(fault)=>return Err(invalid(fault).into()),
             }
-            match mesh3d_close_step(lease) {
-                Ok(true) | Err(Mesh3dFault::Stale) => self.lease = None,
-                Ok(false) | Err(_) => return false,
+            let grant=cx.retained_grant();
+            let demand=match ui_scene::math::mesh3d_close_demands(lease,grant.maximum_copy_bytes){
+                Ok(demand)=>demand,
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>{self.lease=None;return Ok(true)}
+                Err(fault)=>return Err(invalid(fault).into()),
+            };
+            if !cx.admit_work_step(demand)?{return Ok(false)}
+            match mesh3d_close_step(lease,grant){
+                Ok(step)=>{if step.complete{self.lease=None}if step.progress!=Default::default(){cx.consume_fuel(1)}cx.consume_retained(step.progress)?;}
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(Mesh3dFault::Stale)=>self.lease=None,
+                Err(fault)=>return Err(invalid(fault).into()),
             }
         }
-        true
+        Ok(self.lease.is_none())
     }
+
 }
 
 pub(super) fn glb_texture_wrap(value: u16) -> Result<ui_scene::math::SceneTextureWrap3d, &'static str> {
@@ -268,6 +287,7 @@ pub(super) fn glb_min_filter(value: Option<u16>) -> Result<ui_scene::math::Scene
 
 pub(super) fn glb_mesh_fault(fault: Mesh3dFault) -> &'static str {
     match fault {
+        Mesh3dFault::Busy => "GLB paged mesh authority is temporarily contended",
         Mesh3dFault::Closing => "GLB paged mesh authority was closing",
         Mesh3dFault::ItemCapacity => "GLB paged mesh authority exhausted fixed owner slots",
         Mesh3dFault::PageCapacity => "GLB paged mesh authority exhausted aggregate page credits",

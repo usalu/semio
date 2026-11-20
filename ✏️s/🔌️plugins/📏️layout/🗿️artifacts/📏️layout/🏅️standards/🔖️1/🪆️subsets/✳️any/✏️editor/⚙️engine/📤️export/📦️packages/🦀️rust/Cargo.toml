@@ -16,9 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-framework-job/testkit", "semio-framework-job-worker/testkit"]
+testkit = ["semio-framework-job/testkit", "semio-framework-job-worker/testkit", "semio-s-artifact-layout-layout-engine-export-primitives/testkit"]
 
 [dependencies]
+semio-s-artifact-layout-layout-engine-export-primitives = { workspace = true }
 semio-framework-io-ports = { workspace = true }
 semio-s-artifact-layout-layout-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
@@ -51,6 +52,8 @@ semio-framework-2d-text-font-run = { path = "../../../../../../../../../../../..
 semio-framework-2d-text-font-shape-unicode = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-s-artifact-layout-layout-engine-export-primitives = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing-editor = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-framework-io-ports = { workspace = true, features = ["testkit"] }

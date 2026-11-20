@@ -1,0 +1,79 @@
+{
+  "positions": [
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    2,
+    0,
+    2,
+    2,
+    0,
+    0,
+    4,
+    0,
+    2,
+    4,
+    0
+  ],
+  "edgeIds": [
+    0,
+    1,
+    0
+  ],
+  "labels": [
+    "10",
+    "18446744073709551615"
+  ],
+  "cases": [
+    {
+      "y": 0,
+      "edges": true,
+      "whole": false,
+      "hit": {
+        "mode": "edge",
+        "id": 0
+      },
+      "label": "10"
+    },
+    {
+      "y": 2,
+      "edges": true,
+      "whole": false,
+      "hit": {
+        "mode": "edge",
+        "id": 1
+      },
+      "label": "18446744073709551615"
+    },
+    {
+      "y": 4,
+      "edges": true,
+      "whole": true,
+      "hit": {
+        "mode": "edge",
+        "id": 0
+      },
+      "label": "10"
+    },
+    {
+      "y": 2,
+      "edges": false,
+      "whole": true,
+      "hit": {
+        "mode": "object"
+      },
+      "label": null
+    },
+    {
+      "y": 0,
+      "edges": false,
+      "whole": false,
+      "hit": null,
+      "label": null
+    }
+  ]
+}

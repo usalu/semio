@@ -16,8 +16,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-dictionary = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

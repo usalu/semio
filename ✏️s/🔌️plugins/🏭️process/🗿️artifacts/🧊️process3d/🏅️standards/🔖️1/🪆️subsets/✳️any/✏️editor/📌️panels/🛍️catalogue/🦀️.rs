@@ -4,8 +4,8 @@ use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
 use semio_s_artifact_process_process3d_kit::installed_catalogs;
 use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
-use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_reason, ValidationContext};
-use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkingSolid, snapshot::WorkshopMachine};
+use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_context_for_stock, validation_reason, ValidationContext};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_plugin::tree_item_desc;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
@@ -50,48 +50,31 @@ fn capability_entries<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine
 
 /// 🔧 One capability row: an `addStep` binding when the current stock satisfies the capability's
 /// rules, otherwise a non-clickable row carrying the failure as its reason.
-fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: &ValidationContext) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    let failures = validate_capability(capability, ctx);
+fn capability_row(machine: &WorkshopMachine, capability: &Capability, ctx: Option<&ValidationContext>, labels: &Process3dLabels) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
     let label = format!("{} — {}", machine.label, capability.label);
-    if failures.is_empty() {
-        let args = semio_s_artifact_process_process3d_kit::ui_value_map([("capabilityId", semio_s_artifact_process_process3d_kit::ui_value_text(&capability.id)?), ("machineId", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
-        return iconed_tree_item_with_action(id, &label, &capability.icon_id, process3d_action("addStep", Some(args)));
-    }
-    let mut item = tree_item_desc(id, semio_s_artifact_process_process3d_kit::ui_label(&label)?, Some(validation_reason(&failures)))?;
+    let reason = if let Some(ctx) = ctx {
+        let failures = validate_capability(capability, ctx);
+        if failures.is_empty() {
+            let args = semio_s_artifact_process_process3d_kit::ui_value_map([("capabilityId", semio_s_artifact_process_process3d_kit::ui_value_text(&capability.id)?), ("machineId", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
+            return iconed_tree_item_with_action(id, &label, &capability.icon_id, process3d_action("addStep", Some(args)));
+        }
+        validation_reason(&failures)
+    } else if labels.is_de() {
+        "Geschlossenen Körper mit gültigen Abmessungen laden.".to_string()
+    } else {
+        "Load a closed solid with valid dimensions.".to_string()
+    };
+    let mut item = tree_item_desc(id, semio_s_artifact_process_process3d_kit::ui_label(&label)?, Some(reason))?;
     if let semio_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(semio_plugin::UiText::try_from_str(&capability.icon_id).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed capability icon admission failed"))?);
     }
     Ok(item)
 }
 
-/// 📐️ Real per-variant stock dimensions for capability-rule validation, derived from
-/// `snapshot.stock_payload.solid` — the snapshot's own inline, authoritative record since ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid` stays a composed-child HANDLE
-/// with no resolvable content). `Box`/`Cylinder`/`Sphere` are analytic: a cylinder's/sphere's
-/// width/depth are their diameter; a `Reference` reads its shipped, kernel-pinned extent
-/// (`stock_extent`). `ImportedMesh`/`ImportedSolid` carry no persisted analytic bounding box, so
-/// every dimension stays unconstrained (`f64::MAX`) exactly as the whole stock used to be before this
-/// fix — never a guessed extent that could falsely fail a rule.
-fn stock_validation_context(solid: &WorkingSolid) -> ValidationContext {
-    match solid {
-        WorkingSolid::Box { width, depth, height } => ValidationContext { stock_width: *width, stock_depth: *depth, stock_height: *height },
-        WorkingSolid::Cylinder { radius, height } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: *height },
-        WorkingSolid::Sphere { radius } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: radius * 2.0 },
-        WorkingSolid::Reference { .. } => {
-            let [width, depth, height] = semio_s_artifact_process_process3d_inferences::stock_extent(solid);
-            ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
-        }
-        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX },
-    }
-}
-
-/// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
-/// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
-/// reason) any capability the current stock doesn't satisfy — real dimensions via
-/// `stock_validation_context`.
+/// 🏭️ Groups capability rows by catalog and shows why unavailable operations cannot be added.
 pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    let ctx = stock_validation_context(&snapshot.stock_payload.solid);
+    let ctx = validation_context_for_stock(&snapshot.stock_payload);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
     let mut workshop_machines: Vec<&WorkshopMachine> = Vec::new();
     let mut catalog_sections: Vec<(&str, Vec<&WorkshopMachine>)> = Vec::new();
@@ -108,14 +91,14 @@ pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &P
     if !workshop_machines.is_empty() {
         let entries = capability_entries(workshop_machines.iter().copied());
         builder = builder.window_section(windows, PROCESS_3D_PLAY_CATALOGUE_WORKSHOP, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.workshop.as_str())?), true, &entries, |(machine, capability)| {
-            capability_row(machine, capability, &ctx)
+            capability_row(machine, capability, ctx.as_ref(), labels)
         })?;
     }
     for (catalog_id, machines) in catalog_sections.iter() {
         let section_id = format!("process3d-play-catalogue.{catalog_id}");
         let section_label = semio_s_artifact_process_process3d_kit::ui_label(catalog_label(contributions_json, catalog_id))?;
         let entries = capability_entries(machines.iter().copied());
-        builder = builder.window_section(windows, &section_id, Some(section_label), false, &entries, |(machine, capability)| capability_row(machine, capability, &ctx))?;
+        builder = builder.window_section(windows, &section_id, Some(section_label), false, &entries, |(machine, capability)| capability_row(machine, capability, ctx.as_ref(), labels))?;
     }
     let stock_kinds: [(&str, &str, &str, Option<&str>); 4] = [
         ("process3d-catalogue.stock-box", labels.stock_kind_box.as_str(), "box", Some("box")),

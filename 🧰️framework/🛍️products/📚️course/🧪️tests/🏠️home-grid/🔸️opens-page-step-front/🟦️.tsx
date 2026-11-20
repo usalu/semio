@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { HOME_GRID_TRACKS, HomeScreen, LEADERBOARD_POLL_MS, LeaderboardPage, homeCells, homeTrackTemplate, courseText, type CourseSession, type CourseState } from "@semio-tech/course-react";
 import { Home, PAGES, PREFERENCES, QUIZZES, STATE, boardOf, cardHost, fixture, held, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
-import { cards, moveMouseOver, weights } from "../🟣️harness/🟦️.tsx";
+import { cards, moveMouseOver, translation, weights } from "../🟣️harness/🟦️.tsx";
 
 /** 🔹 Registers the opens page step front tests of the 🏠️ home overview suite. */
 export function registerOpensPageStepFrontTests(): void {
@@ -100,7 +100,7 @@ export function registerOpensPageStepFrontTests(): void {
     const root = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview]')!;
     expect([root.dataset.mode, root.dataset.pan]).toEqual(["strip", "pointer"]);
     const strip = root.querySelector<HTMLElement>("[data-layered-strip]")!;
-    expect([strip.style.width, strip.style.height, strip.style.transform]).toEqual(["300%", "200%", "translate3d(0%, 0%, 0)"]);
+    expect([strip.style.width, strip.style.height, translation(strip)]).toEqual(["300%", "200%", "translate(0%, 0%)"]);
     expect(root.querySelector<HTMLElement>(":scope > [data-layered-veil]")!.dataset.veil).toBe("whole");
     const cells = homeCells(PAGES, "desktop");
     for (const page of PAGES) {
@@ -125,9 +125,9 @@ export function registerOpensPageStepFrontTests(): void {
     const veil = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-veil]')!;
     const resting = cards().map((card) => card.outerHTML);
     moveMouseOver(1, 1);
-    expect(strip.style.transform).toBe("translate3d(-33.3333%, -50%, 0)");
+    expect(translation(strip)).toBe("translate(-33.3333%, -50%)");
     moveMouseOver(0.5, 0);
-    expect(strip.style.transform).toBe("translate3d(-33.3333%, 0%, 0)");
+    expect(translation(strip)).toBe("translate(-33.3333%, 0%)");
     expect(veil.dataset.veil).toBe("whole");
     expect(cards().map((card) => card.outerHTML)).toEqual(resting);
     const card = screen.getByRole("region", { name: "Leaderboard" });
@@ -135,17 +135,17 @@ export function registerOpensPageStepFrontTests(): void {
     fireEvent.pointerOver(zoom, { pointerType: "mouse" });
     expect(veil.dataset.veil).toBe("whole");
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
-    expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");
+    expect(translation(strip)).toBe("translate(-66.6667%, 0%)");
     expect([veil.dataset.veil, veil.style.visibility], "hovering only centers the page").toEqual(["whole", "visible"]);
     fireEvent.pointerDown(zoom, { pointerType: "mouse", button: 0 });
     expect([veil.dataset.veil, veil.style.visibility], "pressing clears it").toEqual(["clear", "hidden"]);
     moveMouseOver(1, 1);
-    expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");
+    expect(translation(strip)).toBe("translate(-66.6667%, 0%)");
     fireEvent.pointerOut(card, { pointerType: "mouse", relatedTarget: document.body });
     expect([veil.dataset.veil, veil.style.visibility]).toEqual(["whole", "visible"]);
-    expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");
+    expect(translation(strip)).toBe("translate(-66.6667%, 0%)");
     moveMouseOver(1, 1);
-    expect(strip.style.transform).toBe("translate3d(-33.3333%, -50%, 0)");
+    expect(translation(strip)).toBe("translate(-33.3333%, -50%)");
     for (const page of PAGES) expect(pane(page).hasAttribute("inert"), page).toBe(true);
     expect(session.startRun).not.toHaveBeenCalled();
     expect(session.resumeRun).not.toHaveBeenCalled();

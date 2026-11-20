@@ -1,0 +1,5 @@
+# Outliner phase-loan audit
+
+V1-15's outliner replay reports a two-item, 270-byte original lifecycle receipt against a one-item phase loan. A native debugger breakpoint at `phase_loan_refusal` showed the caller as `original_lifecycle_step` inside `maintenance_ladder_unit_step`. The shared last-stage marker reads zero, and a second breakpoint trace verified that the failing outer ladder closure enters `MountedTypedCommandFullOperation::drive_worker_step` and its inner lifecycle, but does not enter `drive_original_producer`.
+
+Ladder stage zero passes its worker the `StepContext` without narrowing it to the ladder's one-item actual grant. The worker derives its loan from `cx.retained_grant()`, so the inner lifecycle's ceiling can permit an aggregate larger than the enclosing ladder phase. The returned receipt is then compared to the outer one-item ceiling. The fix must preserve the actual caller's loan through the worker and verify reserved-return accounting; this audit does not itself change the source. The debugger commands are retained in `outliner-producer.gdb`.

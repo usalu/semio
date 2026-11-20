@@ -55,7 +55,8 @@ fn command_page_invalid<PA: PluginApp>(runtime: &PluginRuntime<PA>, cursor: &Com
 pub(super) async fn drive_command_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, command_page: &mut Option<(CommandPageCursor, FixedCommandPage)>, close_instances: Vec<u32>, effects: &mut Vec<Effect>, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<CommandIngressStatus, semio_framework_job::OriginalTurnFailure> {
     close_instance_command_origin(runtime,cx)?;
     let mut turn=std::pin::pin!(CommandIngressTurn{status:CommandIngressStatus::Idle,loan:CommandIngressLoan::empty(COMMAND_INGRESS_LIVE_SLOT),close_instances});
-    if !turn.resume(runtime,command_page.is_some(),cx)?{let status=command_page.as_ref().map_or(CommandIngressStatus::Idle,|(cursor,_)|CommandIngressStatus::Backpressure(cursor.clone()));return Ok(command_ingress_while_owned(status,COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().and_then(|entry|entry.state.as_ref()).map(command_ingress_owner_cursor))))}
+    let resumed=turn.resume(runtime,command_page.is_some(),cx)?;
+    if !resumed{let status=command_page.as_ref().map_or(CommandIngressStatus::Idle,|(cursor,_)|CommandIngressStatus::Backpressure(cursor.clone()));return Ok(command_ingress_while_owned(status,COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().and_then(|entry|entry.state.as_ref()).map(command_ingress_owner_cursor))))}
     turn.cancel_for_close(cx)?;
     turn.readmit_reserved(runtime).await;
     turn.exchange_presence(runtime, effects, identity, cx).await?;
@@ -75,14 +76,25 @@ fn close_instance_command_origin<PA:PluginApp>(runtime:&PluginRuntime<PA>,cx:&mu
  for index in 0..lifetimes.slots.values.len(){let Some(slot)=lifetimes.slots.get_mut(index)else{continue};if !matches!(slot.cell.phase,Phase::Closing|Phase::Retired)||slot.command_origin.terminal_is_empty(){continue}slot.close_command_origin(&ReactorClosePeers,cx)?;break}Ok(())
 }
 
+/// 🪜️ Repeats one paid retirement step within the turn's own slice while each step makes physical progress, so a retained owner with many frames retires in a few turns instead of one step per turn; stops on completion, on the slice ending or on a step that spent nothing.
+fn step_until_slice(cx:&mut semio_framework_job::StepContext<'_>,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    loop{
+        let before=cx.retained_progress();
+        if step(cx)?{return Ok(true)}
+        if cx.should_yield()||cx.retained_progress()==before{return Ok(false)}
+    }
+}
+
 impl CommandIngressTurn {
     /// 🔁️ Takes the retained owner of the live slot and marks its instance for cancellation when its lifetime is no longer the exact retained one.
     fn resume<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,allow_empty:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         step_retiring_command_ingress(cx)?;
-        let ready=COMMAND_INGRESS.with(|slots|slots.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].settle_step(cx))?;if !ready{return Ok(false)}
+        let ready=COMMAND_INGRESS.with(|slots|slots.borrow_mut()[COMMAND_INGRESS_LIVE_SLOT].settle_step(cx))?;
+        if !ready{return Ok(false)}
         if !allow_empty&&COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().is_none()){return Ok(false)}
         if let Some(key)=COMMAND_INGRESS.with(|slots|slots.borrow()[COMMAND_INGRESS_LIVE_SLOT].peek().map(|entry|entry.key)){runtime.guest_lifetimes.try_borrow().map_err(|_|reactor_close_fault("command Source lifetime is busy"))?.get(key.instance()).ok_or_else(||reactor_close_fault("retained command Source lifetime is missing"))?.command_origin.validate(cx)?;}
-        if !self.loan.lend(cx)?{return Ok(false)}
+        let lent=self.loan.lend(cx)?;
+        if !lent{return Ok(false)}
         if let Some(key)=self.loan.key(){if native_close_key(runtime,key.instance()).ok()!=Some(key){self.close_instances.push(key.instance());}}
         Ok(true)
     }
@@ -144,13 +156,14 @@ impl CommandIngressTurn {
     async fn exchange_generic<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,effects:&mut Vec<Effect>,identity:&mut EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         let Some(CommandIngressOwner::Generic{cursor,command,exchange,exchange_close,output,..})=self.loan.state_mut()else{return Ok(())};let cursor=cursor.clone();
         self.status=match advance_command_cursor(cursor.clone()){Ok(terminal)=>CommandIngressStatus::CommandPending(terminal),Err(cursor)=>CommandIngressStatus::Fault{cursor,fault:b"plugin.command-page-index-exhausted".to_vec()}};
-        if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}))){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}let Some((seq,failed))=command.take()else{unreachable!()};match failed.retire_failed_step_on_original(cx){semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*command=Some((seq,owner));return Err(failure)},semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(failed)=>*command=Some((seq,failed)),semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>{}}return Ok(())}
+        if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}))){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}let Some((seq,failed))=command.take()else{unreachable!()};match failed.retire_failed_step_on_original(cx){semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*command=Some((seq,owner));let fault=semio_framework::Fault::new(semio_framework::FaultOrigin::App,semio_framework::FaultCode::new("plugin.command-failed"),failure.primary.message().to_string());let bytes=semio_framework_diagnostic::encode_fault_bytes(&fault);if !retiring_command_ingress_is_free(){return Ok(())}let key=self.loan.key().expect("a retained owner holds its exact lifetime");if park_retiring_command_ingress(key,self.loan.state_slot().expect("the refused owner retains its Source home"),cx)?{self.status=terminal_command_ingress(cursor.clone(),Some(bytes))}return Ok(())},semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(failed)=>*command=Some((seq,failed)),semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>{let fault=semio_framework::Fault::new(semio_framework::FaultOrigin::App,semio_framework::FaultCode::new("plugin.command-failed"),failure.primary.message().to_string());self.status=terminal_command_ingress(cursor.clone(),Some(semio_framework_diagnostic::encode_fault_bytes(&fault)));self.loan.put_state(None);return Ok(())},semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>{}}return Ok(())}
         if output.is_none(){let state=exchange.as_mut().expect("retained Source exchange state precedes command execution");match plugin_exchange_turn(runtime,cursor.instance,command,state,identity,cx).await{
-            Ok(produced)=>{if state.applied{*output=Some(produced)}else{return route_exchange_output(cursor.instance,produced,effects,cx)}},
-            Err(failure)=>{if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(failure),(cx.operation(),cx.generation()),None);return Ok(())}return Err(failure)}
+            Ok(produced)=>{if state.applied{let mut produced=produced;if let Err(refusal)=collect_original_publication_receipts(&mut produced,cx){return Err(retain_refused_publication(cursor.instance,produced,refusal,cx))}*output=Some(produced)}else{return route_exchange_output(cursor.instance,produced,effects,cx)}},
+            Err(failure)=>{
+                if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(failure),(cx.operation(),cx.generation()),None);return Ok(())}return Err(failure)}
         }}
-        if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}
-        if let Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(owner)))=command.as_mut(){if !cx.with_original_retirement(|cx|owner.close_original_step(cx))?{return Ok(())}}
+        if !step_until_slice(cx,|cx|close_exchange_owner(exchange,exchange_close,cx))?{return Ok(())}
+        if let Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(owner)))=command.as_mut(){if !step_until_slice(cx,|cx|cx.with_original_retirement(|cx|owner.close_original_step(cx)))?{return Ok(())}}
         if command.is_some(){let bytes=std::mem::size_of_val(command);let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}command.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);}
         let mut produced=output.take().expect("actual semantic output survives controlled input retirement");self.status=terminal_command_ingress(cursor.clone(),produced.command_terminal_fault.take());self.loan.put_state(None);route_exchange_output(cursor.instance,produced,effects,cx)
     }

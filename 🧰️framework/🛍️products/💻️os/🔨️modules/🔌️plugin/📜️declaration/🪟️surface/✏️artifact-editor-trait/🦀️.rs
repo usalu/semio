@@ -4,8 +4,8 @@ use super::*;
 use semio_framework_2d_compute::EngineHandles;
 
 pub trait ArtifactEditor: Default + Send + 'static {
-    /// 📬️ Borrows this editor's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{semio_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
+    /// 📏️ Quotes the complete physical demand for retirement admission of the original completion.
+    fn completion_retirement_demand(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_decl_app::completion_retirement::derived_completion_retirement_demand(value)}
     /// 🎟️ Retains the editor completion on every unsupported or unfunded cleanup admission.
     fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,effect)}
     /// 📐️ Declares the physical authority frame needed to retain this editor's original mutation batch.
@@ -478,8 +478,40 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn build_natural_file_decode_owner(bytes: Vec<u8>, _contract: semio_framework::ToolExecutionContract) -> Result<NaturalFileDecodeOwner<Self::Snapshot>, MediaError> {
         Ok(NaturalFileDecodeOwner::Synchronous(bytes))
     }
-    /// 🎟️ Admits a controlled natural decoder while the caller retains denied source and candidate slots.
-    fn admit_natural_file_decode_owner(_bytes:&mut Option<Vec<u8>>,_contract:semio_framework::ToolExecutionContract,_receiving:&mut Option<NaturalFileDecodeOwner<Self::Snapshot>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file format has no original controlled decoder").into())}
+    /// 📂️ Enables the single-turn natural-file codec for inputs within the scheduler's work limit.
+    const SINGLE_TURN_NATURAL_DECODE: bool = false;
+
+    /// 🎟️ Moves the original byte buffer into the decoder once the scheduler funds its owner.
+    fn admit_natural_file_decode_owner(
+        bytes: &mut Option<Vec<u8>>,
+        contract: semio_framework::ToolExecutionContract,
+        receiving: &mut Option<NaturalFileDecodeOwner<Self::Snapshot>>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_value::{ValueError, ValueRefusalKind};
+        if !Self::SINGLE_TURN_NATURAL_DECODE {
+            return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "natural-file format has no original controlled decoder").into());
+        }
+        if receiving.is_some() {
+            if bytes.is_some() {
+                return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "natural-file source and decoder both occupied").into());
+            }
+            return Ok(true);
+        }
+        let source = bytes.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "missing original natural-file bytes"))?;
+        if source.len().max(1) > contract.max_work_units_per_step as usize {
+            return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "natural-file codec requires a controlled decoder for this input size").into());
+        }
+        let copied = std::mem::size_of::<NaturalFileDecodeOwner<Self::Snapshot>>();
+        let grant = cx.retained_grant();
+        if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copied {
+            return Ok(false);
+        }
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: copied, ..Default::default() })?;
+        *receiving = bytes.take().map(NaturalFileDecodeOwner::Synchronous);
+        cx.consume_fuel(1);
+        Ok(true)
+    }
     /// 🧷️ Declares an exact original text-wire binding for one non-document media input.
     fn accepts_original_structured_media(_port:&str,_schema:&str,_media_type:&MediaType)->bool{false}
     async fn media_ports() -> Vec<MediaPortSpec> {

@@ -11,6 +11,7 @@
     { "$ref": "#/definitions/TextCatalogue" }
   ],
   "definitions": {
+    "LookupFault": { "description": "Fixed evidence for failed owner look attempts. No paths, identifiers, message or URL text.", "enum": ["unavailable", "transport", "denied", "record", "blob-missing", "blob-integrity", "payload", "unknown"] },
     "Policy": {
       "const": {
         "version": 1,
@@ -30,6 +31,7 @@
         "leaseTakeOverMilliseconds": 60000,
         "claimRoundsMaximum": 64,
         "documentMaximumBytes": 268435456,
+        "blobMaximumBytes": 33554432,
         "entryMaximumBytes": 536870912,
         "entryMaximumDocuments": 32768,
         "lookupTimeoutMilliseconds": 4000,
@@ -95,6 +97,21 @@
               "name": { "type": "string", "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$))[A-Za-z0-9._@+-][A-Za-z0-9._@/+-]{0,239}$" },
               "hash": { "$ref": "#/definitions/Hex" },
               "size": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "leaves": {
+          "description": "The content addressed pieces the documents refer to by name (build input closure and cargo lock inventories): they are stored in the cache's blob store under their own digest before the entry is, so a reader fetches exactly these and verifies each by hash without reading the documents.",
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["namespace", "hash", "size"],
+            "properties": {
+              "namespace": { "enum": ["build-input-closures", "build-lock-closures"] },
+              "hash": { "$ref": "#/definitions/Hex" },
+              "size": { "type": "integer", "minimum": 1 }
             }
           }
         }

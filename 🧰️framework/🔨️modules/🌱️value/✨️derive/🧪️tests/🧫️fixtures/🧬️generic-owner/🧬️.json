@@ -7,7 +7,8 @@
     "left",
     "right",
     "implementationBounds",
-    "coldDeclarationUnconstrained"
+    "coldDeclarationUnconstrained",
+    "wideRetirement"
   ],
   "properties": {
     "version": {
@@ -45,6 +46,18 @@
     },
     "coldDeclarationUnconstrained": {
       "const": true
+    },
+    "wideRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields", "maximumDepth", "firstRelease", "lastRelease", "totalReleased"],
+      "properties": {
+        "fields": { "const": 66 },
+        "maximumDepth": { "const": 64 },
+        "firstRelease": { "type": "integer", "minimum": 1 },
+        "lastRelease": { "type": "integer", "minimum": 1 },
+        "totalReleased": { "type": "integer", "minimum": 1 }
+      }
     }
   }
 }

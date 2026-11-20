@@ -21,7 +21,7 @@ const simulatedHost=(script:Script={})=>{
   moveFile:(from,to)=>{enter("move:"+basename(from)+">"+basename(to));moves++;if(script.failMoves?.includes(moves))return{ok:false,error:script.error??32};renameSync(from,to);leave();return{ok:true,error:0};},
   flushDirectory:path=>{enter("flush:"+basename(path));leave();return script.flushError?{ok:false,error:script.flushError}:{ok:true,error:0};},
   setCaseSensitive:()=>({opened:true,error:0,status:0}),
-  availableBytes:()=>({ok:true,error:0,bytes:0}),
+  availableBytes:()=>({ok:true,error:0,bytes:0,totalBytes:undefined}),
   openExclusive:()=>({ok:true,error:0})
  };
  return{host,log};

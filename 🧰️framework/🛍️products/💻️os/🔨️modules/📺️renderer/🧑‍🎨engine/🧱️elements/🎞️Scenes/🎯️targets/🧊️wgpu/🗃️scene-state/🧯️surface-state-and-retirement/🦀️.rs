@@ -44,6 +44,7 @@ pub struct SceneSurfaceState {
     pub map_hover_owner: Option<crate::element_contracts::ScenePointerTarget>,
     pub touch_gesture: GestureRecognizer,
     pub ink_camera: Option<(f64, f64, f64)>,
+    pub ink_last_hover: Option<Option<String>>,
     pub ink_overrides: BTreeMap<String, Value>,
     /// 🌊️ A move, resize, stroke or erase has streamed into the plugin's open ink transaction since the press — what a
     /// pointer cancel must abort.
@@ -473,6 +474,13 @@ impl SceneSurfaceRetirement {
                 return false;
             }
             state.ink_edit = None;
+            return false;
+        }
+        if let Some(Some(value)) = state.ink_last_hover.as_mut() {
+            if retire_scene_text(value) {
+                return false;
+            }
+            state.ink_last_hover = None;
             return false;
         }
         for text in [&mut state.last_click_target, &mut state.hovered_control_id, &mut state.vfs_selection_anchor, &mut state.map_last_hover_json, &mut state.camera_dispatch_controller_id] {

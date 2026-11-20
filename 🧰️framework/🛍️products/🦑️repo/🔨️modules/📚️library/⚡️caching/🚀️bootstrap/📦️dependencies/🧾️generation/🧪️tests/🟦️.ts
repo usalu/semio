@@ -1,4 +1,6 @@
 import {test,expect} from "bun:test";
+import {createHash} from "node:crypto";
+import {evidenceSinkV1} from "../🟦️.ts";
 import {javascriptInstallSchemaV1 as materializedInstallSchema} from "../../💾️storage/🧱️schemas/🟦️.ts";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
@@ -333,7 +335,8 @@ test("generation receipt: stamp and anchor equal the provider walk's own formula
  expect(JSON.stringify(generationStampV1(f).split(":"))).toBe(JSON.stringify(keys.map(key=>String(f[key as keyof typeof f]))));
  expect(JSON.stringify(generationAnchorV1(f).split(":"))).toBe(JSON.stringify(install.$defs.SourceOwnerExecutionProtocol.const.ancestorFields.map((key:string)=>String(f[key as keyof typeof f]))));
  const walk=readFileSync(new URL("../../../../../🗂️workspaces/🟦️bun/🟨️.cjs",import.meta.url),"utf8");
- expect(walk.match(/projectListing\(/gu)!.length).toBe(6);
+ expect(walk.match(/projectListing\(/gu)!.length).toBe(3);
+ expect(walk.match(/projectPacked\(/gu)!.length).toBe(3);
  expect(walk.match(/entry\.name === "package\.json"/gu)!.length).toBe(2);
 });
 
@@ -448,4 +451,14 @@ test("generation receipt: the stamp of a symbolic link equals the provider walk'
   const file=join(directory,"file");writeFileSync(file,"x");const f=lstatSync(file,{bigint:true});
   expect(generationStampV1(f).split(":")[6]).toBe(String(f.ctimeNs));
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("generation evidence sink: bytes, digest, name and counts equal the independent encoding of the same rows at every chunk boundary, and the capacity refusal holds",()=>{
+ for(const count of[0,1,2,4095,4096,4097,8192,9001]){
+  const rows=Array.from({length:count},(_,index)=>index%3===0?["s","a/\u{1F9E9}/"+index,"file","1",String(index),33188]:["d","b/"+index,"1",String(index),16877,"1700000000000000000","1700000000000000000",1,"0".repeat(32),"f".repeat(32),index%2]),sink=evidenceSinkV1(protocol.frontierSuffix);
+  for(const row of rows)sink.push(row);
+  const done=sink.finish(),reference=Buffer.from(rows.map(row=>JSON.stringify(row)+"\n").join("")),sha=createHash("sha256").update(reference).digest("hex");
+  expect(Buffer.compare(done.file.bytes,reference),String(count)).toBe(0);expect(done.evidence).toEqual({name:sha+protocol.frontierSuffix,sha256:sha,bytes:reference.length,rows:count});expect(done.file.name).toBe(sha+protocol.frontierSuffix);
+ }
+ const full=evidenceSinkV1(protocol.executionSuffix);for(let index=0;index<protocol.maximumRows;index++)full.push(["o"]);expect(()=>full.push(["o"])).toThrow("Generation evidence capacity exceeded");
 });

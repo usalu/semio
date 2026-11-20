@@ -1307,5 +1307,6 @@
       "replacement": "projection",
       "accepted": false
     }
-  ]
+  ],
+  "coldRetirementDepth": 2048
 }

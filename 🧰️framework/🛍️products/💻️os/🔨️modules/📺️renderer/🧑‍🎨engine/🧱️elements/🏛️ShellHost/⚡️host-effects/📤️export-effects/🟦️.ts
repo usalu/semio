@@ -55,7 +55,7 @@ export async function applyIconRenderExportEffect({ effect, baseSession, uiLocal
   await runIconExportBatch(effect.iconRenderExport.items, {
     owner:baseSession.pluginId,
     locale:()=>uiLocaleRef.current,
-    render:request=>renderIconRequest(request as Parameters<typeof renderIconRequest>[0]),
+    render:(request,signal)=>renderIconRequest(request as Parameters<typeof renderIconRequest>[0],signal),
     deliver:(filename,result)=>downloadDataUrl(filename,result.dataUrl),
     yieldToHost:()=>new Promise(resolve=>setTimeout(resolve,0)),
     announce:(text,outcome)=>showTransientNoticeRef.current(text,outcome==="failed"?"warning":"info",`icon-render-export.${outcome??"started"}`),

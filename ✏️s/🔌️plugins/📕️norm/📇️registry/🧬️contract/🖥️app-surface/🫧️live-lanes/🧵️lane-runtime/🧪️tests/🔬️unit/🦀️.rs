@@ -175,7 +175,13 @@ fn viewport_actions_fold_into_the_view_lane_and_round_trip() {
     assert!(opened.menu && !fold(vec![act(VIEW_ACTION_MENU, None, Some(1.0)), act(VIEW_ACTION_MENU, None, Some(0.0))]).view.menu, "the Edit menu opens and closes by number");
     assert!(menu_closes(true, None) && menu_closes(true, Some(&LaneEvent::ViewCheck(Some(1)))) && menu_closes(true, Some(&LaneEvent::DragCleared)), "any other command (copy, delete, focus a check, a nudge) ends an open menu");
     assert!(!menu_closes(true, Some(&LaneEvent::ViewMenu(true))) && !menu_closes(true, Some(&LaneEvent::ViewMenu(false))) && !menu_closes(false, None), "the menu's own open and close are left alone, and a closed menu has nothing to end");
-    let transient = fold(vec![act(VIEW_ACTION_TRACK, Some("fire"), None)]);
+    let page = act(VIEW_ACTION_SCENE_PAGE, None, Some(4.0));
+    assert_eq!(fold(vec![page.clone()]).view.scene_page, 4);
+    assert_eq!(fold(vec![page.clone(), LaneEvent::ViewItem(Some(2))]).view.scene_page, 0);
+    for invalid in [-1.0, 1.5, f64::INFINITY, f64::from(u32::MAX) + 1.0] {
+        assert!(view_event(VIEW_ACTION_SCENE_PAGE, None, Some(invalid)).is_none());
+    }
+    let transient = fold(vec![act(VIEW_ACTION_TRACK, Some("fire"), None), page]);
     assert_eq!(NormTransient::from_value(transient.to_value()).expect("decode"), transient);
     assert!(NormTransient::default().apply(act(VIEW_ACTION_TOGGLE, None, None)).is_clear());
 }

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { repoToolCacheEnv } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateMedia, compareEditedGeometry, validateCanvasCapture } from "./media-oracles.mjs";
 import { assertSurfaceHealthy } from "./browser-health.mjs";
@@ -12,10 +12,17 @@ import { waitForProjection } from "./browser-projection.mjs";
 
 const ticket = dirname(fileURLToPath(import.meta.url));
 const contract = JSON.parse(readFileSync(join(ticket, "browser-journey.json"), "utf8"));
-const outputChildren = ["report.json", "console.txt", "failure.png", "boot-canvas.png", "baseline.svg", "baseline.png", "edited.svg", "edited.png", "edited.pdf", "edited.semio-archive", "downloads", join("downloads", "a".repeat(36)), ...contract.steps.map((step, index) => String(index + 1).padStart(2, "0") + "-" + step.step + ".png")];
-const { outDir } = planBrowserOutputPaths(ticket, process.env.SEMIO_PROBE_OUT ?? "layout-current", outputChildren);
+const extended = process.argv.includes("--physical-interactions");
+const steps = extended ? [...contract.steps, ...contract.physicalInteractions.steps] : contract.steps;
+const outputChildren = ["report.json", "console.txt", "failure.png", "boot-canvas.png", "baseline.svg", "baseline.png", "edited.svg", "edited.png", "edited.pdf", "edited.semio-archive", "linked-before.svg", "linked-after.svg", "downloads", join("downloads", "a".repeat(36)), ...steps.map((step, index) => String(index + 1).padStart(2, "0") + "-" + step.step + ".png")];
+const requestedTicketIndex = process.argv.indexOf("--output-ticket");
+const requestedTicket = requestedTicketIndex < 0 ? ticket : process.argv[requestedTicketIndex + 1];
+assert.ok(requestedTicket, "--output-ticket requires an existing ticket folder");
+const outputTicket = resolve(requestedTicket);
+JSON.parse(readFileSync(join(outputTicket, "🎫️ticket.json"), "utf8"));
+const { outDir } = planBrowserOutputPaths(outputTicket, process.env.SEMIO_PROBE_OUT ?? "layout-current", outputChildren);
 mkdirSync(outDir, { recursive: true });
-const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6179/?plugin=layout&example=%F0%9F%8E%AC%EF%B8%8Fdemo";
+const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6179/?plugin=layout&example=demo";
 const report = { url, contractVersion: contract.version, steps: [], complete: false };
 const lines = [];
 const start = Date.now();
@@ -45,11 +52,12 @@ const write = () => {
 try {
   process.env.PLAYWRIGHT_BROWSERS_PATH = repoToolCacheEnv(join(ticket, "../../../../../../..")).PLAYWRIGHT_BROWSERS_PATH;
   const { chromium } = await import("playwright");
-  report.browser = { executable: chromium.executablePath(), browsers: process.env.PLAYWRIGHT_BROWSERS_PATH };
-  browser = await chromium.launch({ downloadsPath: join(outDir, "downloads"), headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
+  report.browser = { channel: "chromium", executable: chromium.executablePath(), browsers: process.env.PLAYWRIGHT_BROWSERS_PATH };
+  browser = await chromium.launch({ downloadsPath: join(outDir, "downloads"), channel: "chromium", headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
   if (cancellation) throw Error("Browser journey cancelled: " + cancellation.reason);
   const context = await browser.newContext({ viewport: { width: 1900, height: 1200 }, acceptDownloads: true, locale: "en-US" });
   page = await context.newPage();
+  if (extended) await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
   page.on("console", message => lines.push({ t: Date.now() - start, type: message.type(), text: message.text() }));
   page.on("pageerror", error => lines.push({ t: Date.now() - start, type: "pageerror", text: String(error) }));
   page.setDefaultTimeout(15000);
@@ -61,7 +69,7 @@ try {
   const snapshot = () => page.evaluate(() => {
     const nodes = [...document.querySelectorAll('[data-semio-wgpu-accessibility] [data-node-key]')].filter(node => node.getAttribute("aria-hidden") !== "true");
     const rows = nodes.filter(node => node.dataset.window === "framework.panel.artifact" && node.getAttribute("role") === "treeitem");
-    const tabs = nodes.filter(node => node.getAttribute("role") === "tab" && /^dock\.tab\.[^.]*\.[^.]+$/.test(node.dataset.nodeKey));
+    const tabs = nodes.filter(node => node.getAttribute("role") === "tab" && /^dock\.tab\.[^.]*\..+$/.test(node.dataset.nodeKey));
     const active = tabs.filter(node => node.getAttribute("aria-selected") === "true" && /blueprint/i.test(node.dataset.nodeKey));
     const canvas = document.getElementById("semio-wgpu-canvas");
     const statuses = nodes.filter(node => node.getAttribute("role") === "status" || node.getAttribute("role") === "alert");
@@ -372,7 +380,96 @@ try {
   await openArtifact();
   await record("reopen-archive", { restored: true, newOwner: true, owner, marker: contract.marker, excludesOriginalOnlyPage: true, excludesOriginalOnlyMarker: true, frameIds: restored.frameIds, pageIds: restored.pageIds }, fromImport);
 
-  for (const expected of contract.steps) {
+  if (extended) {
+    const { verifyFrameHover, verifyGumball, locateHorizontalGumball, dragStoredLayoutLink } = await import("./browser-physical-interactions.mjs");
+    const utilityKey = "framework.utility.toggle.transform";
+    const setTransform = async desired => {
+      const control = await one(key(utilityKey), "Transform utility");
+      if (await control.getAttribute("aria-pressed") !== String(desired)) await activate(control, "Transform utility");
+      const settled = await page.waitForFunction(({ utilityKey, desired }) => {
+        const node = document.querySelector('[data-semio-wgpu-accessibility] [data-node-key="' + utilityKey + '"]');
+        return node?.getAttribute("aria-pressed") === String(desired);
+      }, { utilityKey, desired });
+      await settled.dispose();
+    };
+    const locateHorizontal = () => locateHorizontalGumball(page, owner, setTransform);
+    const frame = artifact().and(page.locator('[role="treeitem"]' + attr("data-node-key", createdId)));
+    const selectFrame = async () => {
+      await activate(frame, "the restored rect frame");
+      await poll("selected gumball frame", state => state.selected.includes(createdId));
+    };
+    await selectFrame();
+    const fromHover = lines.length;
+    const readHoverSelection = async () => {
+      const state = await snapshot();
+      assert.equal(state.artifactPanels, 1, "Artifact selection remains observable");
+      return state.selected;
+    };
+    const hovered = await verifyFrameHover({ page, owner, frameId: createdId, locateHorizontal, setTransform, readSelection: readHoverSelection, spec: contract.physicalInteractions.hover });
+    await record("physical-frame-hover", hovered, fromHover);
+    const fromGumball = lines.length;
+    await selectFrame();
+    await closeArtifact();
+    const geometryFields = ["x", "y", "width", "height", "rotation"];
+    const fieldControl = field => key("layout-play-inspector.patchFrame." + field + ".input");
+    const inspectorAnchor = key("layout-play-inspector.summary");
+    const geometry = async () => {
+      if (await inspectorAnchor.count() === 0) await togglePanel("framework.panel.inspection");
+      const values = await Promise.all(geometryFields.map(field => one(fieldControl(field), "frame " + field).then(control => control.inputValue())));
+      assert.ok(values.every(value => value.trim() && Number.isFinite(Number(value))));
+      return Object.fromEntries(geometryFields.map((field, index) => [field, Number(values[index])]));
+    };
+    const closeGeometry = async () => {
+      if (await inspectorAnchor.count() === 0) return;
+      await togglePanel("framework.panel.inspection");
+      await inspectorAnchor.waitFor({ state: "detached" });
+    };
+    const gumball = await verifyGumball({ page, frameId: createdId, locateHorizontal, openGeometry: geometry, closeGeometry, spec: contract.physicalInteractions.gumball });
+    await record("physical-gumball", gumball, fromGumball);
+    const fromExtra = lines.length;
+    const { verifyResizeRotateCancel } = await import("./browser-transform-extras.mjs");
+    const transformExtras = await verifyResizeRotateCancel({ page, frameId: createdId, locateHorizontal, openGeometry: geometry, closeGeometry, spec: contract.physicalInteractions.transformExtras });
+    await record("physical-resize-rotate-cancel", transformExtras, fromExtra);
+    const linked = contract.physicalInteractions.linkedAsset;
+    const next = new URL(url);
+    next.searchParams.set("example", linked.exampleId);
+    const fromPlacement = lines.length;
+    await page.goto(next.href, { waitUntil: "domcontentloaded" });
+    const nextBoot = await poll("linked asset example boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.hosts.some(host => host.canvases.some(canvas => canvas.width > 100)), 180000);
+    owner = nextBoot.ownerWindowId;
+    await openArtifact();
+    const beforePlacement = await poll("linked example's original page and frame", state => state.pageIds.includes(linked.pageRowKey) && state.frameIds.includes(linked.originalFrameId));
+    assert.deepEqual(beforePlacement.frameIds, [linked.originalFrameId]);
+    await activate(artifact().and(page.locator('[role="treeitem"]' + attr("data-node-key", linked.pageRowKey))), "linked asset page");
+    const openCatalogue = async () => {
+      const linkedSection = key("layout-catalogue.links");
+      const catalogue = nodes().and(page.locator('[data-window="framework.panel.catalogue"]'));
+      if (await catalogue.count() === 0) await togglePanel("framework.panel.catalogue");
+      await catalogue.first().waitFor({ state: "attached" });
+      if (await key(linked.rowKey).count() === 0 && await linkedSection.count() === 1 && await linkedSection.getAttribute("aria-expanded") === "false") {
+        await activate(linkedSection, "Linked Assets disclosure");
+      }
+      await one(key(linked.rowKey).and(page.getByRole("treeitem", { name: linked.rowLabel, exact: true })), "persisted linked-asset catalogue row");
+    };
+    const { JSDOM } = await import("jsdom");
+    const rasterRefs = bytes => [...new JSDOM(bytes.toString("utf8"), { contentType: "image/svg+xml" }).window.document.querySelectorAll("image")].map(node => node.getAttribute("href"));
+    const originalImage = rasterRefs((await download(owner, "exportSvg", "linked-before.svg")).bytes);
+    assert.equal(originalImage.length, 1, "linked example initially paints one raster");
+    assert.ok(originalImage[0].startsWith("data:image/png;base64,"));
+    await openCatalogue();
+    const dropped = await dragStoredLayoutLink(page, owner, linked.rowKey);
+    assert.equal(dropped.source.sourceLinkId, linked.linkId);
+    await openArtifact();
+    const afterPlacement = await poll("exact linked frame added", state => state.frameIds.length === beforePlacement.frameIds.length + 1);
+    const created = added(beforePlacement.frameIds, afterPlacement.frameIds);
+    assert.deepEqual(created.removed, [], "placement removes no existing frame");
+    assert.equal(created.introduced.length, 1);
+    const placed = rasterRefs((await download(owner, "exportSvg", "linked-after.svg")).bytes);
+    assert.deepEqual(placed, [originalImage[0], originalImage[0]], "placed frame paints the actual persisted source PNG again");
+    await record("physical-linked-placement", { valid: true, frameId: created.introduced[0], ...dropped }, fromPlacement);
+  }
+
+  for (const expected of steps) {
     const actual = report.steps.find(step => step.step === expected.step);
     assert.ok(actual, "required journey step " + expected.step);
     for (const [key, value] of Object.entries(expected.values)) assert.equal(actual.detail[key], value, expected.step + "." + key);

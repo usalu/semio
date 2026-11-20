@@ -94,20 +94,35 @@ impl Kernel {
     /// act on for `Trapped`/`Quarantined` outcomes.
     pub async fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
         self.receive_original_call(actor,retained_turn::OriginalActorGuestReturn{input:result.retained_receipt.input,spent:result.retained_receipt.spent,work_units_spent:result.retained_receipt.work_units_spent,claimed_remaining:Some(result.retained_receipt.remaining),claimed_remaining_fuel:Some(result.retained_receipt.remaining_fuel)},matches!(result.status,TurnStatus::MoreWork))?;
+        let trap = match &result.status {
+            TurnStatus::Faulted { detail } => Some(String::from_utf8_lossy(detail).into_owned()),
+            _ => None,
+        };
+        self.record_turn_outcome(actor, Some(&result.usage), trap, now_ms).await
+    }
+
+    /// 🧯️ Records a transport trap while its unreturned scheduler grant remains in custody.
+    pub async fn record_transport_fault(&mut self, actor: ActorId, detail: String, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+        let entry = self.scheduler.actors.get(&actor).ok_or(KernelError::UnknownActor)?;
+        if entry.issued.is_none() {
+            return Err(KernelError::TurnNotIssued);
+        }
+        self.record_turn_outcome(actor, None, Some(detail), now_ms).await
+    }
+
+    async fn record_turn_outcome(&mut self, actor: ActorId, usage: Option<&Usage>, trap: Option<String>, now_ms: u64) -> Result<FailureEscalation, KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
         if meta.reservation.is_some() {
             return Err(KernelError::InvalidTransition);
         }
-        meta.metrics.record_turn(&result.usage).await;
-        let escalation = match &result.status {
-            TurnStatus::Faulted { detail } => {
-                let detail_string = String::from_utf8_lossy(detail).into_owned();
-                meta.failure.on_signal(&FailureSignal::Trap { detail: detail_string }, Lane::Interactive, now_ms).await
-            }
-            _ => {
-                meta.failure.on_clean_turn(now_ms).await;
-                FailureEscalation::None
-            }
+        if let Some(usage) = usage {
+            meta.metrics.record_turn(usage).await;
+        }
+        let escalation = if let Some(detail) = trap {
+            meta.failure.on_signal(&FailureSignal::Trap { detail }, Lane::Interactive, now_ms).await
+        } else {
+            meta.failure.on_clean_turn(now_ms).await;
+            FailureEscalation::None
         };
         meta.status = match &meta.failure.stage {
             FailureStage::Trapped { restarts } => {

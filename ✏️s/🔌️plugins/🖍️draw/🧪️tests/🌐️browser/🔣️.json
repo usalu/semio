@@ -11,6 +11,7 @@
     "label": "Demo"
   },
   "utility": "shapeRect",
+  "utilityPressStates": [true, false, true],
   "gesture": {
     "from": [
       0.35,

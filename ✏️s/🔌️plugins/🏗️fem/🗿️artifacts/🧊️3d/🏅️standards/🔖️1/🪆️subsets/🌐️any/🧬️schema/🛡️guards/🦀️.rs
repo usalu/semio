@@ -2,17 +2,17 @@
 //! 🛡️ The payload validations, foreign-key resolutions and referential-integrity lookups every fem3d mutation kind
 //! shares — written once, below every kind that runs them.
 
-use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use crate::standards::v1::subsets::any::schema::structure::element_id;
-use crate::standards::v1::subsets::any::schema::structure::load_id;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_fem_material::volumetric::FemMaterialValue;
 /// 🚫️ The `mutation.target-referenced` refusal — an `Error`, the same level and empty-diff shape

@@ -86,7 +86,7 @@ const UV_WELD: f64 = 1e-12;
 /// quadrature is not performance-critical enough to warrant the recursive bisection tessellation's
 /// `sample_curve_adaptive` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_sample_count(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
+pub fn coedge_sample_count(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
     if let (true, Some(semio_framework_3d_brep_curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
         let turn = dir.x.abs() * (co.prange.1 - co.prange.0).abs();
         return (turn / std::f64::consts::FRAC_PI_4).ceil().max(1.0) as usize + 1;
@@ -123,7 +123,7 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) ->
     if theta <= 1e-9 {
         return ((arc_range / 1e-9).ceil() as usize).clamp(1, 200_000);
     }
-    ((arc_range / theta).ceil() as usize).max(1)
+    ((arc_range / theta).ceil() as usize).clamp(1, 200_000)
 }
 
 /// 📏 One coedge, sampled at `s ∈ [0,1]` in UV — pcurve when present (edge's own order, see
@@ -161,7 +161,7 @@ pub fn loop_uv_signed_area(body: &Body, loop_id: semio_framework_3d_brep_represe
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_uv_sample(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
+pub fn coedge_uv_sample(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
     if let Some(pcurve_id) = co.pcurve {
         let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
         let (p0, p1) = co.prange;
@@ -176,16 +176,14 @@ fn coedge_uv_sample(body: &Body, co: &semio_framework_3d_brep_representation::to
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn unwrap_u(prev: f64, u: f64) -> f64 {
-    let mut w = u;
-    let pi = std::f64::consts::PI;
-    while w - prev > pi {
-        w -= std::f64::consts::TAU;
-    }
-    while w - prev < -pi {
-        w += std::f64::consts::TAU;
-    }
-    w
+pub fn unwrap_u(prev: f64, u: f64) -> f64 {
+    use std::f64::consts::{PI, TAU};
+    let delta = u - prev;
+    if delta.abs() <= PI { return u; }
+    let mut offset = if delta.is_finite() { delta % TAU } else { (u % TAU - prev % TAU) % TAU };
+    if offset > PI { offset -= TAU; }
+    if offset < -PI { offset += TAU; }
+    prev + offset
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

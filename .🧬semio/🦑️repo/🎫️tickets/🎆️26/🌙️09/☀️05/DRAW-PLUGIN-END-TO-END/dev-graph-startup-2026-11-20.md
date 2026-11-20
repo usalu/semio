@@ -1,0 +1,7 @@
+# Draw dev host graph startup repair
+
+The resident graph worker failed before launching either the prototype descriptor emitter or Draw's dev host. The exchange controller's streaming restore imported two APIs that its portable transform module did not export. The fresh imports failed at worker startup, then waiting commands returned the worker pool's closed error. The original emitter command also separately encountered a missing prototype product in its previously completed task plan.
+
+The portable module now exposes the existing manifest transform and provides the single-document transform and content-derived name used by streaming restore. The whole-generation route uses the same per-document operation. The three test files exercised remote staged restore, old and new heads, local warm reads, root portability, and the genuine remote cache test server. Two fleet laws initially depended on the test host's RAM threshold. Their fixture now declares a serving machine, the role those specific laws exercise. The separate rank suite continues to exercise ranking. All 19 tests passed on this 16 GiB macOS machine.
+
+The terminated dev serve 68649 is replaced by 9364. The terminated prototype emitter 99155 is replaced by 21517. The failed full native test and guest graph clients were restarted as 92319 and 46509. These are the original registered targets with the normal graph and capacity governance.

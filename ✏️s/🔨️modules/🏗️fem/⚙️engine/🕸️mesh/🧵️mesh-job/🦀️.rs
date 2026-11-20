@@ -136,10 +136,10 @@ pub struct MeshJob {
     pub(super) domain: MeshDomainOwner,
     pub(super) options: MeshOpts,
     pub(super) preparation: Option<MeshInputPreparation>,
-    pub(super) prepared_input: Option<(Vec<[f64; 2]>, Vec<Edge>)>,
+    pub(super) prepared_input: Option<(MeshRows<[f64; 2]>, MeshRows<Edge>)>,
     pub(super) triangulation: Option<OwnedTriangulation>,
-    pub(super) constraints: Vec<Edge>,
-    pub(super) indexed_constraint_edges: Vec<IndexedConstraintEdge>,
+    pub(super) constraints: MeshRows<Edge>,
+    pub(super) indexed_constraint_edges: MeshRows<IndexedConstraintEdge>,
     pub(super) edge_index_cursor: usize,
     pub(super) edge_index_local_cursor: usize,
     pub(super) edge_index_lookup_cursor: usize,
@@ -164,8 +164,8 @@ pub struct MeshJob {
     pub(super) input_count: usize,
     pub(super) input_count_hole: usize,
     pub(super) preview_tier: MeshQualityTier,
-    pub(super) mesh: TriMesh2,
-    pub(super) point_index: Vec<((u64, u64), u32)>,
+    pub(super) mesh: MeshRows2,
+    pub(super) point_index: MeshRows<((u64, u64), u32)>,
     pub(super) refinement_steps: usize,
     pub(super) validation_hole_cursor: usize,
     pub(super) publication_writer: NumericalPayloadSlot,
@@ -223,6 +223,7 @@ impl MeshJob {
     }
 
     fn from_domain(domain: MeshDomainOwner, options: MeshOpts, operation: Operation) -> Self {
+        let mounted = matches!(domain, MeshDomainOwner::Mounted(_));
         Self {
             operation,
             domain,
@@ -230,8 +231,8 @@ impl MeshJob {
             preparation: None,
             prepared_input: None,
             triangulation: None,
-            constraints: Vec::new(),
-            indexed_constraint_edges: Vec::new(),
+            constraints: MeshRows::new(mounted),
+            indexed_constraint_edges: MeshRows::new(mounted),
             edge_index_cursor: 0,
             edge_index_local_cursor: 0,
             edge_index_lookup_cursor: 0,
@@ -256,8 +257,8 @@ impl MeshJob {
             input_count: 0,
             input_count_hole: 0,
             preview_tier: MeshQualityTier::Coarse,
-            mesh: TriMesh2 { points: Vec::new(), tris: Vec::new() },
-            point_index: Vec::new(),
+            mesh: MeshRows2::new(mounted),
+            point_index: MeshRows::new(mounted),
             refinement_steps: 0,
             validation_hole_cursor: 0,
             publication_writer: None,
@@ -353,17 +354,17 @@ impl MeshJob {
                 }
                 2 => {
                     if let Some(preparation) = self.preparation.as_mut() {
-                        match close_vec_owner_step(&mut preparation.points, maximum_bytes) {
+                        match preparation.points.close_step(maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
                         }
-                        match close_vec_owner_step(&mut preparation.constraints, maximum_bytes) {
+                        match preparation.constraints.close_step(maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
                         }
-                        match close_vec_owner_step(&mut preparation.point_indices, maximum_bytes) {
+                        match preparation.point_indices.close_step(maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
@@ -377,12 +378,12 @@ impl MeshJob {
                 }
                 3 => {
                     if let Some((points, edges)) = self.prepared_input.as_mut() {
-                        match close_vec_owner_step(points, maximum_bytes) {
+                        match points.close_step(maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
                         }
-                        match close_vec_owner_step(edges, maximum_bytes) {
+                        match edges.close_step(maximum_bytes) {
                             Ok(Some(step)) => return (false, step.0, step.1),
                             Err(()) => return (false, 0, 0),
                             Ok(None) => {}
@@ -396,49 +397,39 @@ impl MeshJob {
                 }
                 4 => {
                     if let Some(triangulation) = self.triangulation.as_mut() {
-                        if let Some(insertion) = triangulation.insertion.as_mut() {
-                            match close_vec_owner_step(&mut insertion.bad, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            match close_vec_owner_step(&mut insertion.boundary, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            match close_vec_owner_step(&mut insertion.retained, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            triangulation.insertion = None;
-                            (1, 0)
-                        } else {
-                            match close_vec_owner_step(&mut triangulation.points, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            match close_vec_owner_step(&mut triangulation.triangles, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            match close_vec_owner_step(&mut triangulation.insertion_order, maximum_bytes) {
-                                Ok(Some(step)) => return (false, step.0, step.1),
-                                Err(()) => return (false, 0, 0),
-                                Ok(None) => {}
-                            }
-                            self.triangulation = None;
-                            (1, 0)
+                        match triangulation.insertion.bad.close_step(maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
                         }
+                        match triangulation.insertion.boundary.close_step(maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match triangulation.points.close_step(maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match triangulation.triangles.close_step(maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match triangulation.insertion_order.close_step(maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        self.triangulation = None;
+                        (1, 0)
                     } else {
                         self.close_lane += 1;
                         continue;
                     }
                 }
-                5 => match close_vec_owner_step(&mut self.constraints, maximum_bytes) {
+                5 => match self.constraints.close_step(maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -446,7 +437,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                6 => match close_vec_owner_step(&mut self.mesh.points, maximum_bytes) {
+                6 => match self.mesh.points.close_step(maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -454,7 +445,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                7 => match close_vec_owner_step(&mut self.mesh.tris, maximum_bytes) {
+                7 => match self.mesh.tris.close_step(maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -462,7 +453,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                8 => match close_vec_owner_step(&mut self.point_index, maximum_bytes) {
+                8 => match self.point_index.close_step(maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -470,7 +461,7 @@ impl MeshJob {
                         continue;
                     }
                 },
-                9 => match close_vec_owner_step(&mut self.indexed_constraint_edges, maximum_bytes) {
+                9 => match self.indexed_constraint_edges.close_step(maximum_bytes) {
                     Ok(Some(step)) => step,
                     Err(()) => return (false, 0, 0),
                     Ok(None) => {
@@ -486,13 +477,16 @@ impl MeshJob {
 
     /// 🗺️ The latest complete replaceable overlay; authoritative callers commit only the final outcome.
     pub fn preview(&self) -> MeshJobPreview {
-        MeshJobPreview { sequence: self.operation.preview_sequence, tier: self.preview_tier, refinement_steps: self.refinement_steps, mesh: self.mesh.clone() }
+        MeshJobPreview { sequence: self.operation.preview_sequence, tier: self.preview_tier, refinement_steps: self.refinement_steps, mesh: TriMesh2 { points: self.mesh.points.snapshot(), tris: self.mesh.tris.snapshot() } }
     }
 
     /// 🧵️ Moves the completed mesh into its retained model-construction child. A false
     /// terminal leaves the exact owner in this job.
     pub fn take_completed_mesh(&mut self) -> Option<TriMesh2> {
-        (self.stage == MeshJobStage::Published).then(|| std::mem::replace(&mut self.mesh, TriMesh2 { points: Vec::new(), tris: Vec::new() }))
+        (self.stage == MeshJobStage::Published && !self.mesh.points.is_mounted()).then(|| {
+            let mesh = std::mem::take(&mut self.mesh);
+            TriMesh2 { points: mesh.points.into_vec(), tris: mesh.tris.into_vec() }
+        })
     }
 
     pub(super) fn begin_classification(&mut self, tier: MeshQualityTier) {
@@ -718,7 +712,7 @@ impl MeshJob {
         if self.publication_kind != Some(kind) {
             return Err(());
         }
-        if self.publication_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+        if self.publication_cursor.stage != MeshPayloadStage::Done && self.publication_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
             let stream = match kind {
                 MeshPublicationKind::Preview => JobPayloadStream::Preview,
                 MeshPublicationKind::Checkpoint => JobPayloadStream::CheckpointState,

@@ -28,7 +28,7 @@ use crate::schema::mutations::BitmapMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::{color_from_dsl, color_to_dsl, BitmapColorDsl};
 
 //#region 🔖️OpTextMirror
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub enum BitmapOperationDsl {
     ChangeSeed {
         seed: u64,

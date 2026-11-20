@@ -6,6 +6,8 @@ use semio_framework_value::RetainedWorkOutcome;
 pub struct OriginalWorkerJobAdmission<J>{prepared:OriginalWorkerPageReservation,storage:Vec<NativeWorkerAuthorityState<J>>,authority:Option<OriginalWorkerJobAuthority<J>>,binding:Option<OriginalSourceBinding>,closing:bool}
 impl<J> OriginalWorkerJobAdmission<J>{
  pub const fn new()->Self{Self{prepared:OriginalWorkerPageReservation::new(),storage:Vec::new(),authority:None,binding:None,closing:false}}
+ /// 📏️ The one native authority allocation the admission reserves in a single caller turn.
+ pub const fn authority_capacity_bytes()->usize{size_of::<NativeWorkerAuthorityState<J>>()}
  pub fn ready(&self)->bool{!self.closing&&self.authority.as_ref().is_some_and(|owner|owner.original.job.present&&owner.original.params.is_some())}
  pub fn job(&self)->Option<&J>{self.authority.as_ref().and_then(|owner|owner.original.job.original())}
  pub fn terminal_is_empty(&self)->bool{self.authority.is_none()&&self.storage.capacity()==0&&self.prepared.terminal_is_empty()&&self.binding.is_none()&&!self.closing}

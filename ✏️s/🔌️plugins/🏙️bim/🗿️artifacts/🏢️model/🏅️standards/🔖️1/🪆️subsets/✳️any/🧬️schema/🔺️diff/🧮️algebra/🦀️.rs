@@ -6,6 +6,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
 use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::BTreeMap;
 
 /// ➕️ Later slot wins: writes `later` over `slot` when it names a value.
@@ -100,13 +101,18 @@ impl Patch<PropertySet> for PropertySetPatch {
             for (name, value) in properties {
                 match value {
                     Some(value) => {
-                        next.entry(set.clone()).or_default().insert(name.clone(), value.clone());
+                        if !next.contains_key(set) {
+                            next.cold_insert(set.clone(), Default::default());
+                        }
+                        if let Some(group) = next.get_mut(set) {
+                            group.cold_insert(name.clone(), value.clone());
+                        }
                     }
                     None => {
                         if let Some(group) = next.get_mut(set) {
-                            group.remove(name);
+                            group.cold_remove(name);
                             if group.is_empty() {
-                                next.remove(set);
+                                next.cold_remove(set);
                             }
                         }
                     }
@@ -159,10 +165,10 @@ impl Patch<ClassificationSet> for ClassificationSetPatch {
         for (system, code) in &self.assigned {
             match code {
                 Some(code) => {
-                    next.insert(system.clone(), code.clone());
+                    next.cold_insert(system.clone(), code.clone());
                 }
                 None => {
-                    next.remove(system);
+                    next.cold_remove(system);
                 }
             }
         }
@@ -224,7 +230,7 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
     }
 
     /// ✔️ Validates every entry against `base` and returns the next collection; refuses with the offending id as target.
-    pub fn write_into(&self, base: &BTreeMap<String, T>) -> Result<BTreeMap<String, T>, MutationApplyError> {
+    pub fn write_into(&self, base: &RetainedOrderedMap<String, T>) -> Result<RetainedOrderedMap<String, T>, MutationApplyError> {
         for (id, entry) in &self.0 {
             match (entry, base.contains_key(id)) {
                 (Entry::Created(_), true) => return Err(MutationApplyError::new("mutation.apply.duplicate-id", "created id already exists").at([id.as_str()])),
@@ -270,7 +276,7 @@ impl<T: Clone + PartialEq, P: Patch<T>> KeyedDelta<T, P> {
 
     /// 🔁️ The negative delta against `base`: created → deleted, deleted → created with the base record, replaced → replaced with
     /// the base record, patched → the patch restoring exactly the patched fields.
-    pub fn inverse(&self, base: &BTreeMap<String, T>) -> Self {
+    pub fn inverse(&self, base: &RetainedOrderedMap<String, T>) -> Self {
         Self(
             self.0
                 .iter()

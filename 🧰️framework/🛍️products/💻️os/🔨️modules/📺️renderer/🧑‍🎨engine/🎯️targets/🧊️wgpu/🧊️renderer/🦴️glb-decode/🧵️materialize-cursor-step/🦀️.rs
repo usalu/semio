@@ -10,6 +10,7 @@ pub enum GlbMaterializePhase {
     TextureBytes,
     TextureDecode,
     Outlines,
+    AdmitMesh,
     Allocate,
     Positions,
     Normals,
@@ -62,7 +63,7 @@ impl GlbMaterializeCursor {
     pub fn original_png_source(&self)->Option<&[u8]>{self.texture_png.source()}
     pub fn close_original_png(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.texture_png.close(cx)}
     pub fn original_png_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.texture_png.close_demands(body)}
-    pub fn new(schema: GlbSchemaOutput) -> Self {
+    pub(super) fn new(schema: GlbSchemaOutput) -> Self {
         let plan = GlbInstancePlanCursor::new(&schema);
         Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None,texture_hash:Default::default(),texture_digest:[0;2],texture_png:Default::default(),texture_submission:None,texture_worker:None,texture_cancelled:Arc::new(AtomicBool::new(false)), texture: 0, uv_role:0, texture_role: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
     }
@@ -77,7 +78,55 @@ impl GlbMaterializeCursor {
             if self.decoded_texture.is_some(){self.texture_png.close(cx)?;return Ok(false)}
             if self.texture_png.advance(cx)?{self.texture_png.take_image(&mut self.decoded_texture,self.texture_digest,cx)?;}return Ok(false)
         }
+        if matches!(self.phase,GlbMaterializePhase::AdmitMesh|GlbMaterializePhase::Allocate){
+            return self.advance_mesh(owner,cx);
+        }
         self.step_value(owner,pages).map_err(|message|invalid(message).into())
+    }
+
+    fn advance_mesh(&mut self,owner:&RendererAssetFetchOwner,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+        use ui_scene::math::{mesh3d_allocate_capacity_byte_demand,mesh3d_begin_capacity_byte_demand};
+        let invalid=|message|ValueError::literal(ValueRefusalKind::InvalidValue,message);
+        let mut grant=cx.retained_grant();
+        let admitting=matches!(self.phase,GlbMaterializePhase::AdmitMesh);
+        let capacity=if admitting{
+            mesh3d_begin_capacity_byte_demand()
+        }else{
+            let token=self.write_token().map_err(invalid)?;
+            match mesh3d_allocate_capacity_byte_demand(token){
+                Ok(capacity)=>capacity,
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(fault)=>return Err(invalid(glb_mesh_fault(fault)).into()),
+            }
+        };
+        if !cx.admit_work_step(RetirementDemand{capacity_bytes:capacity,depth:1,..Default::default()})?{return Ok(false)}
+        grant.maximum_capacity_bytes=capacity;
+        if admitting{
+            let outline=self.outline.as_ref().ok_or_else(||invalid("GLB materializer lost its outline owner"))?;
+            let edges = u32::try_from(outline.segments.len()).map_err(|_|invalid("GLB outline output count overflowed"))?;
+            let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: if self.plan.has_face_ids() { self.plan.index_count / 3 } else { 0 }, vertex_ids: if self.plan.has_vertex_ids() { self.plan.vertex_count } else { 0 }, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } ,surface_uvs:if self.plan.has_uvs {[self.plan.vertex_count;4]}else{[0;4]},tangents:if self.plan.has_tangents {self.plan.vertex_count}else{0},};
+            match mesh3d_begin(owner.generation(),owner.revision(),schema,grant){
+                Ok((token,receipt))=>{
+                    self.write=Some(token);
+                    self.phase=GlbMaterializePhase::Allocate;
+                    cx.consume_retained(receipt)?;
+                }
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(fault)=>return Err(invalid(glb_mesh_fault(fault)).into()),
+            }
+        }else{
+            let token=self.write_token().map_err(invalid)?;
+            match mesh3d_allocate_step(token,grant){
+                Ok(step)=>{
+                    if step.complete{self.advance_phase(GlbMaterializePhase::Positions)}
+                    cx.consume_retained(step.progress)?;
+                }
+                Err(Mesh3dFault::Busy)=>return Ok(false),
+                Err(fault)=>return Err(invalid(glb_mesh_fault(fault)).into()),
+            }
+        }
+        Ok(false)
     }
 
     fn png_source_ready(&self)->Result<bool,&'static str>{
@@ -219,10 +268,7 @@ impl GlbMaterializeCursor {
                 if self.instance == self.plan.instance_len {
                     let outline = self.outline.as_mut().ok_or("GLB materializer lost its outline owner")?;
                     if outline.flush_step()? {
-                        let edges = u32::try_from(outline.segments.len()).map_err(|_| "GLB outline output count overflowed")?;
-                        let schema = Mesh3dSchema { vertices: self.plan.vertex_count, indices: self.plan.index_count, face_ids: if self.plan.has_face_ids() { self.plan.index_count / 3 } else { 0 }, vertex_ids: if self.plan.has_vertex_ids() { self.plan.vertex_count } else { 0 }, edges, edge_ids: 0, uvs: if self.plan.has_uvs { self.plan.vertex_count } else { 0 }, colors: if self.plan.has_colors { self.plan.vertex_count } else { 0 } ,surface_uvs:if self.plan.has_uvs {[self.plan.vertex_count;4]}else{[0;4]},tangents:if self.plan.has_tangents {self.plan.vertex_count}else{0},};
-                        self.write = Some(mesh3d_begin(owner.generation(), owner.revision(), schema).map_err(glb_mesh_fault)?);
-                        self.phase = GlbMaterializePhase::Allocate;
+                        self.phase = GlbMaterializePhase::AdmitMesh;
                     }
                     return Ok(false);
                 }
@@ -243,12 +289,7 @@ impl GlbMaterializeCursor {
                 self.item += 1;
                 Ok(false)
             }
-            GlbMaterializePhase::Allocate => {
-                if mesh3d_allocate_step(self.write_token()?).map_err(glb_mesh_fault)? {
-                    self.advance_phase(GlbMaterializePhase::Positions);
-                }
-                Ok(false)
-            }
+            GlbMaterializePhase::AdmitMesh|GlbMaterializePhase::Allocate => unreachable!("mesh allocation requires the original retained grant"),
             GlbMaterializePhase::Positions => {
                 if self.instance == self.plan.instance_len {
                     self.advance_phase(GlbMaterializePhase::Normals);
@@ -484,11 +525,14 @@ impl GlbMaterializeCursor {
                 let token = self.write.take().ok_or("GLB materializer lost its mesh write claim")?;
                 match mesh3d_seal(token) {
                     Ok(lease) => {
-                        let appearance = self.build_appearance(owner)?;
                         self.lease = Some(lease);
-                        self.appearance = Some(appearance);
+                        self.appearance = Some(self.build_appearance(owner)?);
                         self.phase = GlbMaterializePhase::Ready;
                         Ok(true)
+                    }
+                    Err(Mesh3dFault::Busy) => {
+                        self.write = Some(token);
+                        Ok(false)
                     }
                     Err(fault) => {
                         self.write = Some(token);

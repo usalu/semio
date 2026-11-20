@@ -173,6 +173,7 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiValue> for UiValueNativeRece
   self.recover_close_step(body,effect,reply)
  }
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.text.terminal_is_empty()&&self.list.terminal_is_empty()&&self.map.terminal_is_empty()&&self.text_out.is_none()&&self.list_out.is_none()&&self.map_out.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
+ fn native_terminal_release(&self)->Option<semio_framework_value::retained_clone::RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{semio_framework_value::retained_clone::RetainedCursorRelease::native(|receiver:&Self|receiver.terminal_is_empty())})}
 }
 impl<I:NativeValueSource+?Sized> Drop for UiValueNativeReceiver<I>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native recursive UI receiving retains every original descendant until funded closure")}}
 macro_rules! empty_default{($t:ty,$value:expr)=>{

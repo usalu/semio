@@ -55,6 +55,7 @@ VECTORS = {
     "move-stock": ("📍move-stock", "🎈️lifts", "moveStock", False),
     "change-stock-label": ("🔤change-stock-label", "🔤️relabels", "changeStockLabel", False),
     "replace-stock-solid": ("🧊replace-stock-solid", "🧊️reissues", "replaceStockSolid", False),
+    "resize-stock": ("📏resize-stock", "🟰️keeps-width", "resizeStock", False),
 }
 
 
@@ -215,6 +216,12 @@ def apply_replace_stock_solid(document, payload):
     return after
 
 
+def apply_resize_stock(document, payload):
+    """📏️ A repeated dimension edit keeps the original stock and child handle."""
+    assert document["stockPayload"]["solid"][payload["field"]] == payload["size"]
+    return copy.deepcopy(document)
+
+
 DOC_APPLIERS = {
     "create-machine": apply_create_machine,
     "delete-machine": apply_delete_machine,
@@ -224,6 +231,7 @@ DOC_APPLIERS = {
     "move-stock": apply_move_stock,
     "change-stock-label": apply_change_stock_label,
     "replace-stock-solid": apply_replace_stock_solid,
+    "resize-stock": apply_resize_stock,
 }
 
 
@@ -246,6 +254,9 @@ def inverse_doc_mutation(kind, before_document, payload):
         return "moveStock", {"newPose": copy.deepcopy(before_document["stockPose"])}
     if kind == "change-stock-label":
         return "changeStockLabel", {"newLabel": before_document["stockLabel"]}
+    if kind == "resize-stock":
+        field = payload["field"]
+        return "resizeStock", {"field": field, "size": before_document["stockPayload"]["solid"][field]}
     if kind == "replace-stock-solid":
         return "replaceStockSolid", {"newSolid": copy.deepcopy(before_document["stockSolid"])}
     raise AssertionError(f"no inverse rule for document kind {kind!r}")
@@ -272,7 +283,8 @@ def _mutate_for(kind):
         after = DOC_APPLIERS[kind](before, payload)
         expected_after = _read_json(ctx, root, fixture, "📸️snapshot/➡️after")
         assert after == expected_after, f"mutate-{kind}: document != committed after-snapshot"
-        outcome = {"status": "applied", "messages": []}
+        outcome = ({"status": "no-op", "messages": [{"level": "warning", "code": "mutation.no-op"}]}
+                   if kind == "resize-stock" else {"status": "applied", "messages": []})
         assert outcome == expected_outcome, f"mutate-{kind}: {outcome} != committed outcome {expected_outcome}"
         payload_bytes = json.dumps(after, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return Outcome(projection=after, raw=payload_bytes)

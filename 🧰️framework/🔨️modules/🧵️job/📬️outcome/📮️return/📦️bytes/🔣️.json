@@ -1,6 +1,8 @@
 {
   "version": 1,
   "capacityBytes": 16385,
+  "appendPageBytes": 4096,
+  "committedLengths": [4096, 8192, 12288, 16384, 16385],
   "sourceLoans": 2,
   "consumerReleaseBytes": 0,
   "supplierReleaseBytes": 16385,

@@ -3,6 +3,8 @@ pub use semio_s_artifact_layout_layout_mutations_decisions::target;
 
 pub use semio_s_artifact_layout_layout_mutations_decisions::simple;
 
+pub(crate) use semio_s_artifact_layout_layout_mutations_fields::original_field;
+
 #[path="🔺️output/🦀️.rs"]pub mod output;
 
 #[path="↩️inverse/🦀️.rs"]pub mod inverse;
@@ -23,10 +25,4 @@ pub use semio_s_artifact_layout_layout_mutations_decisions::parent_creation;
 
 #[path="📖️story/🦀️.rs"]pub mod story;
 
-#[cfg(test)]#[path="🎚️simple/🧪️tests/🦀️.rs"]mod simple_tests;
-#[cfg(test)]#[path="🔎️target/🧪️tests/🦀️.rs"]mod target_tests;
-#[cfg(test)]#[path="📄️document/⚖️equality/🧪️tests/🦀️.rs"]mod document_equality_tests;
-#[cfg(test)]#[path="📎️overrides/🧪️tests/🦀️.rs"]mod override_decision_tests;
-#[cfg(test)]#[path="🖼️frame/👥️batch/🗺️plan/🧪️tests/🦀️.rs"]mod batch_plan_tests;
-#[cfg(test)]#[path="🖼️frame/👥️batch/⚠️message/🧪️tests/🦀️.rs"]mod batch_message_tests;
-#[cfg(test)]#[path="🗄️parent/🌱️creation/🧪️tests/🦀️.rs"]mod parent_creation_tests;
+pub use semio_s_artifact_layout_layout_mutations_fields::parent_content;

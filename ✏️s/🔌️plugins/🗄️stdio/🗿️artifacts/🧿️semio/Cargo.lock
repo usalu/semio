@@ -2594,6 +2594,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-source-hold",
 ]
 
 [[package]]
@@ -2666,6 +2667,7 @@ dependencies = [
  "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-offset",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
@@ -2716,6 +2718,26 @@ dependencies = [
  "semio-framework-3d-brep-tolerance",
  "semio-framework-3d-brep-vector",
  "semio-framework-mesh-component-references",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-native-registry"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-construction",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-hash",
  "semio-framework-mesh-engine",
  "semio-framework-value",
 ]
@@ -2781,6 +2803,17 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-spline-construction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5241,6 +5274,13 @@ dependencies = [
 [[package]]
 name = "semio-framework-value-sort"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-value-source-hold"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-os-channel"
@@ -15287,6 +15327,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-schema-2",
@@ -15330,6 +15371,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-lexer"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]

@@ -1,0 +1,7 @@
+# Whole-head identity audit
+
+The active graph custody receipt names PID 24035 and holder identity `2ce1a7d9842698d08ae03d161f1d8fcdcd16e7fec4e49f68049d1cf96ffc9056`. Its captured invocation names `e178c4daf6a2f3a9ae8a1e7b39174bfac8662ec56c9b6bcfee4cff6885b0946e`. These have different purposes: custody freezes the host implementation identity at its first queue; the captured invocation identifies its immutable implementation snapshot. Neither receipt exposes the generation implementation digest.
+
+The loader computes the generation implementation from the loaded declared inferrer stamps and data-file hashes. The published head carries that manifest digest. A reader compares it with its own loaded generation implementation, registry identity, platform, scope and completeness before the current-policy fetch. Concurrent code edits alone do not prove that this digest differs; edits to included data or declared stamps can. A Darwin arm64 producer and Windows or Linux reader use different platform head keys.
+
+No new head had been sealed at inspection. Available receipts do not establish whether a prospective same-platform reader will match the eventual head or restore it without recomputation. Check the eventual complete uploaded head and its current reader verification before drawing that conclusion; do not substitute the custody or invocation digest for the generation digest. No graph was started or interrupted.

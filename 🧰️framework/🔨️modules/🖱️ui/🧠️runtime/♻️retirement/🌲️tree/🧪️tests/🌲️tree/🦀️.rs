@@ -37,6 +37,7 @@ fn chain(pages: usize) -> crate::TreeNode {
 }
 #[test]
 fn runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = testkit::registry_guard();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️contract/♻️retirement/🌳️typed/🧩️components.json")).unwrap();

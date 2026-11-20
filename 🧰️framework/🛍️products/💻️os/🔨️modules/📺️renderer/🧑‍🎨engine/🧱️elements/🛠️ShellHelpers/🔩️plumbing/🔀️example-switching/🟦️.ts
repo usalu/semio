@@ -35,25 +35,35 @@ export function frameworkOwnsExampleSwitch(role: string | undefined, action: str
 }
 
 /** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
- * `onAction` funnel — pure so the dispatched id is testable without a session/component. The picker's own
- * `SET_ACTIVE_EXAMPLE_ID` reducer write only moves the LABEL; this descriptor is the only thing that
- * reaches the program, and an empty selection means "the app's default document", never "no argument"
+ * `onAction` funnel. The settled outcome drives the picker label, and an empty selection asks
+ * the program to load its default document
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
 export function buildActiveExampleAction(controllerId: string, exampleId: string): ActionDescriptor {
   return { controllerId, action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: exampleId || "" } };
 }
 
-/** 🎨️ The example id the navbar must remember after one dispatch, given what it remembers now. Any
- * `setActiveExample` carrying a non-empty `exampleId` teaches it — not only `NavbarExampleSelect`'s own
- * `onValueChange`, because {@link navbarExampleIdFromHistoryUpserts} spends this memory on REDO, and a
- * `Set Active Example` row can be redone that this shell dispatched from the palette, a context menu, a
- * replayed shell command or the boot load. An empty `exampleId` means "the app's default document",
- * which needs no memory at all (the popped-row branch already answers with `bootExampleId`), so it
- * leaves the memory standing rather than erasing it. */
+/** 🎨️ Keeps the explicit example from an applied action so a redone history row can recover its label.
+ * Loading the default document preserves the previous explicit example. */
 export function rememberedExampleIdFromDispatchV1(action: { readonly action: string; readonly args?: unknown }, remembered: string): string {
   if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID) return remembered;
   const requested = typeof action.args === "object" && action.args !== null ? (action.args as { exampleId?: unknown }).exampleId : undefined;
   return typeof requested === "string" && requested ? requested : remembered;
+}
+
+export type CommittedExampleV1 = Readonly<{ exampleId: string; inputSeq: number }>;
+
+/** 🧾️ Applies an example only after its input settles, keeping the last successful explicit example for redo. */
+export function exampleSelectionAfterInputV1(
+  action: { readonly action: string; readonly args?: unknown },
+  outcome: { readonly kind: string; readonly inputSeq: number },
+  previous: CommittedExampleV1 | undefined,
+  bootExampleId: string,
+  focused: boolean,
+): { readonly memory: CommittedExampleV1; readonly visibleExampleId?: string } | undefined {
+  if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID || outcome.kind !== "applied" || (previous && previous.inputSeq >= outcome.inputSeq)) return;
+  const requested = rememberedExampleIdFromDispatchV1(action, "");
+  const memory = { exampleId: requested || previous?.exampleId || "", inputSeq: outcome.inputSeq };
+  return focused ? { memory, visibleExampleId: requested || bootExampleId } : { memory };
 }
 
 /** 🎨️ Navbar example id implied by a history upsert batch. Chrome-only rows leave the label alone

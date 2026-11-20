@@ -444,6 +444,7 @@ impl HomeTransientRootRetirement {
 }
 
 impl store::ErasedSnapshotRetirement for HomeTransientRootRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retained_bytes.min(HOME_TRANSIENT_RELEASE_SLICE_BYTES)) }

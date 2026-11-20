@@ -1,0 +1,13 @@
+# Fleet parser identity during graph verification
+
+The ordinary whole read on November 20 reported at least 54 rows with an unregistered provider diagnostic and no matching role. Its Rust examples used the fleet representation `build:rust-references:v1:⟦analysis-owner⟧`. The observation checker recognized a role only when the identifier ended in a concrete 64-digit parser-owner hash. A producer can localize paths before its receiving process has registered all parsers. Its record then retains the portable owner until the child judges it.
+
+The checker now recognizes the declared portable role on a recorded fact. It still requires a concretely registered parser with the matching role and revision. An explicitly registered concrete ID remains authoritative, and changed source goes through parser replay. Unrecognized markers and revision mismatches fail. Nested replay comparisons use the same role projection.
+
+A private test captured real parser observations. The fleet spelling failed on the original check and passed with the corrected matcher. The adjacent parser, stale-reason, portable representation and two-platform suites passed 30 tests and 264 assertions, with SQLite and Python oracles. A separate read-only probe examined 379 action-cache entries. It verified the SHA-256 of 12 compressed physical records before decoding them. All 12 contained a Rust analysis whose revision matched the current local Rust parser, and that analysis held on its actual local file. The sample stops after 12 passing distinct records and does not estimate a fleet-wide success rate. Whole-project and cross-host verdicts remain separate.
+
+[Read-only physical probe](🧰️scripts/verify-portable-rust-facts.ts)
+
+The exact stale row for the physical procedural viewer owner was also recovered from its local observation block. The expanded block matched its recorded SHA-256, bdff2958fa70fa90b7e099f8dcba25beb44f39d709906519a51f8ee41ad06e9c. A fresh judge accepted the original Rust row against source digest cb8e5829fad3c257be3879a4d82e22669d28c73c5be2dcda69650b2b1ae230ee and rejected the same row when its parser revision changed.
+
+If the receiving process lists two distinct concrete owners for one portable parser role, conversion now keeps the role portable until the checker can compare the recorded revision. Previous conversion picked whichever ID appeared first. A single distinct ID still localizes directly, including a list that repeats the same ID. The three adjacent suites passed 27 cases and 256 assertions across both candidate orders, with the Python representation oracle and the SQLite verdict oracle.

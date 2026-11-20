@@ -46,6 +46,7 @@ impl protocol::OpBinary for LayoutViewCommand {
 pub struct LayoutViewer;
 
 impl ArtifactViewer for LayoutViewer {
+    type Members = semio_s_artifact_layout_layout_host::LayoutDrawingMembers;
     type Snapshot = LayoutSnapshot;
     type Mutation = LayoutMutation;
     type Config = NoConfig;
@@ -58,6 +59,16 @@ impl ArtifactViewer for LayoutViewer {
 
     const DIALECT: Dialect = LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
+
+
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(semio_s_artifact_layout_layout_host::layout_envelope_decode_owner_bundle())
+    }
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_s_artifact_layout_layout_host::ChildRestoreProjection<'_>, Fault> {
+        semio_s_artifact_layout_layout_host::restore_drawing_children(snapshot)
+            .map_err(|error| Fault::from(format!("layout child projection failed: {error}")))
+    }
 
     fn reference_birth()->Option<fn()->Result<LayoutSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document())

@@ -111,7 +111,7 @@ export const WARM_TEXTS_V1 = Object.freeze({ en: "warmed {done} of {total} owner
 export const warmLineV1 = (language, fields) => WARM_TEXTS_V1[language === "de" ? "de" : "en"].replace(/\{(\w+)\}/gu, (_, name) => String(fields[name] ?? 0)) + (fields.why ? " [" + fields.why + "]" : "");
 
 /**
- * 🚀️ Runs the lanes: `lanes` are arrays of owner names, every lane is worked through one owner after the other and the lanes run side by side; `inspect(name)` gives `{ key, stamp }` of the owner (looked up when its turn comes, so nothing is held per owner), an owner with a durable row in `index` is skipped, `warm(name)` settles one owner in a child and answers `{ peakMegabytes }` or undefined when no child could. `tell(fields)` is called at most every `progressMilliseconds` and once at the end with the summed counters. Cancelling `signal` ends the lanes after their running owner.
+ * 🚀️ Runs the lanes: `lanes` are arrays of owner names, every lane is worked through one owner after the other and the lanes run side by side; `inspect(name)` gives `{ key, stamp }` of the owner (looked up when its turn comes, so nothing is held per owner), an owner with a durable row in `index` is skipped, `warm(name)` settles one owner in a child and answers `{ peakMegabytes }` or undefined when no child could. `tell(fields)` is called at most every `progressMilliseconds` and once at the end with the summed counters. Cancelling `signal` ends the lanes without counting an interrupted owner as done.
  * @see ./🧬️schema/🔣️.json
  */
 export async function runWarmLanesV1({ lanes, inspect, warm, index, signal, why, tell = () => {}, progressMilliseconds = WARM_POLICY_V1.progressMilliseconds, now = () => performance.now() }) {
@@ -127,6 +127,7 @@ export async function runWarmLanesV1({ lanes, inspect, warm, index, signal, why,
       if (index !== undefined && stamp !== undefined && index.has(name, key, stamp)) { counters.durable++; counters.done++; say(false); continue; }
       let reply;
       try { reply = await warm(name); } catch { reply = undefined; }
+      if (reply === undefined && signal?.aborted) return;
       if (reply === undefined) counters.failed++; else { counters.settled++; counters.peak = Math.max(counters.peak, reply.peakMegabytes ?? 0); }
       counters.done++;
       say(false);
@@ -180,12 +181,12 @@ export async function warmThroughV1({ pick, run, hopeless, wait, now = () => per
  * @see ./🧬️schema/🔣️.json
  */
 export async function warmWaveV1({ farm, names, describe, directory, cores, limitMegabytes = Infinity, tell, signal, environment = process.env, waitMilliseconds = 90_000 }) {
-  if (environment.SEMIO_GRAPH_WARM === "off" || farm === undefined || typeof farm.warm !== "function" || names.length < WARM_POLICY_V1.minimumOwners) return undefined;
+  if (signal?.aborted || environment.SEMIO_GRAPH_WARM === "off" || farm === undefined || typeof farm.warm !== "function" || names.length < WARM_POLICY_V1.minimumOwners) return undefined;
   farm.engage?.();
-  if (!(await farm.whenReady(waitMilliseconds))) return undefined;
+  if (!(await farm.whenReady(waitMilliseconds, signal)) || signal?.aborted) return undefined;
   const width = planWarmWidthV1({ cores, farmLoops: farm.width(), limitMegabytes, childMegabytes: farm.workerMegabytes?.() ?? WARM_POLICY_V1.childMegabytes, owners: names.length });
   if (width < 1) return undefined;
   sweepWarmPartsV1(directory);
   const index = readWarmIndexV1(directory), lanes = planWarmLanesV1(names.map(name => { const row = describe(name); return { name, key: row.key, cost: row.cost }; }), width);
-  return runWarmLanesV1({ lanes, inspect: name => { const row = describe(name); return { key: row.key, stamp: row.stamp }; }, warm: name => farm.warm(describe(name).job), index, signal, tell, why: () => Object.entries(farm.warmReasons?.() ?? {}).map(([reason, count]) => reason + " " + count).join(", ") });
+  return runWarmLanesV1({ lanes, inspect: name => { const row = describe(name); return { key: row.key, stamp: row.stamp }; }, warm: name => farm.warm(describe(name).job, signal), index, signal, tell, why: () => Object.entries(farm.warmReasons?.() ?? {}).map(([reason, count]) => reason + " " + count).join(", ") });
 }

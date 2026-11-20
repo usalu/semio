@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 
 use protocol::{Mutation, OpBinary};
 use store::ErasedSnapshotRetirement as _;
-use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep};
 use semio_s_artifact_draw_drawing_host_arena::DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_host_arena::DrawingNativeLayers;
@@ -33,7 +33,6 @@ use semio_s_artifact_draw_drawing_host_arena::DrawingDecodedFieldRetirement;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerLocator;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerCloneAuthority;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_s_artifact_draw_drawing_host_arena::initial_snapshot_clone_grant;
 
 #[path = "🧱️container-rebuild/🦀️.rs"]
 mod container_rebuild;

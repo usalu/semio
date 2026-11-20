@@ -64,9 +64,9 @@ fn every_space_with_conditions_gets_its_thermal_requirements_and_the_record() {
 #[test]
 fn a_space_with_only_a_heating_set_point_has_no_maximum_and_no_air_conditioning() {
     let mut model = energy();
-    model.space_conditions.clear();
+    model.space_conditions.cold_clear();
     let id = model.spaces.keys().next().expect("a space").clone();
-    model.space_conditions.insert(id.clone(), SpaceConditions { heating_setpoint: Some(20.0), ..SpaceConditions::empty() });
+    model.space_conditions.cold_insert(id.clone(), SpaceConditions { heating_setpoint: Some(20.0), ..SpaceConditions::empty() });
     let text = report(Schema::Ifc2x3, &model);
     let own = &text[text.find(&format!("{}:{{\"{SPACE_SET}\"", quote(&id))).expect("the set")..];
     let own = &own[..own.find("}}").expect("its end")];
@@ -78,10 +78,10 @@ fn a_space_with_only_a_heating_set_point_has_no_maximum_and_no_air_conditioning(
 #[test]
 fn the_outdoor_air_flow_is_written_as_air_changes_of_the_conditioned_or_the_natural_kind() {
     let mut model = energy();
-    model.space_conditions.clear();
+    model.space_conditions.cold_clear();
     let ids: Vec<String> = model.spaces.keys().take(2).cloned().collect();
-    model.space_conditions.insert(ids[0].clone(), SpaceConditions { heating_setpoint: Some(20.0), ventilation_rate: Some(1.0), ..SpaceConditions::empty() });
-    model.space_conditions.insert(ids[1].clone(), SpaceConditions { ventilation_rate: Some(1.0), ..SpaceConditions::empty() });
+    model.space_conditions.cold_insert(ids[0].clone(), SpaceConditions { heating_setpoint: Some(20.0), ventilation_rate: Some(1.0), ..SpaceConditions::empty() });
+    model.space_conditions.cold_insert(ids[1].clone(), SpaceConditions { ventilation_rate: Some(1.0), ..SpaceConditions::empty() });
     let text = report(Schema::Ifc4, &model);
     assert!(text.contains("\"MechanicalVentilationRate\":[\"IFCCOUNTMEASURE\""), "{text}");
     assert!(text.contains("\"NaturalVentilationRate\":[\"IFCCOUNTMEASURE\"") && text.contains("\"NaturalVentilation\":[\"IFCBOOLEAN\",true]"), "{text}");
@@ -131,7 +131,7 @@ fn walls_and_slabs_take_the_area_weighted_value_of_their_surfaces() {
 #[test]
 fn a_model_without_conditions_derives_nothing_for_walls_and_spaces_but_keeps_the_types() {
     let mut model = energy();
-    model.space_conditions.clear();
+    model.space_conditions.cold_clear();
     let text = report(Schema::Ifc2x3, &model);
     assert!(!text.contains(SPACE_SET) && !text.contains("\"Conditions\""));
     assert!(!text.contains("Pset_WallCommon.ThermalTransmittance"), "no envelope, no wall U-value");

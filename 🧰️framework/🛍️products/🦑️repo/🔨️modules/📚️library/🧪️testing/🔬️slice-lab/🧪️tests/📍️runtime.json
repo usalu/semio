@@ -1,0 +1,62 @@
+[
+  {
+    "work": "/sl-o/a",
+    "route": "regular",
+    "osAccepts": {
+      "darwin": [
+        true,
+        true
+      ],
+      "linux": [
+        true,
+        true
+      ]
+    },
+    "compactBytes": null
+  },
+  {
+    "work": "/sl-o/測測測測測測測測測測測測測測測測az",
+    "route": "compact",
+    "osAccepts": {
+      "darwin": [
+        false,
+        true
+      ],
+      "linux": [
+        true,
+        true
+      ]
+    },
+    "compactBytes": 96
+  },
+  {
+    "work": "/sl-o/測測測測測測測測測測測測測測測測az",
+    "route": "refused",
+    "osAccepts": {
+      "darwin": [
+        false,
+        true
+      ],
+      "linux": [
+        true,
+        true
+      ]
+    },
+    "compactBytes": 97
+  },
+  {
+    "work": "/sl-o/測測測測測測測測測測測測測測測測測測測測測測測測測測測",
+    "route": "refused",
+    "osAccepts": {
+      "darwin": [
+        false,
+        false
+      ],
+      "linux": [
+        false,
+        false
+      ]
+    },
+    "compactBytes": null
+  }
+]

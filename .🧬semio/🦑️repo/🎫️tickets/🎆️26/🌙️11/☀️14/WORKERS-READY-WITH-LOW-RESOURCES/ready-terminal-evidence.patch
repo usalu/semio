@@ -1,0 +1,246 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
+@@ -43,7 +43,12 @@
+ export type ReadyRefusalV1=Readonly<{code:ReadyCodeV1;en:string;de:string}>;
+ export type ReadyStateNameV1="ready"|"running"|"waiting"|"backoff"|"observing"|"server";
+ export type ReadyStatusV1={version:1;origin:string;host:string;platform:ReadyPlatformV1;pid:number;state:ReadyStateNameV1;digest:string;ready:boolean;stage:string|null;stageIndex:number;stageCount:number;attempts:number;exit:number|null;refusal:ReadyRefusalV1|null;reason:ReadyReasonV1|null;containment?:ReadyContainmentV1|null;peakMegabytes:number|null;tail:string[];nextAttemptMs:number|null;readyMs:number|null;startedMs:number;updatedMs:number};
+-export type ReadyTimingV1=Readonly<{stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;growthMegabytes?:number|null;attempts:number|null;digest:string|null;endEvidence?:ReadyEndEvidenceV1;signal?:string|null}>;
++type ReadyOwnedActivityV1=Readonly<{resource:string;counter:number}>;
++type ReadyDeadlineStopV1="hard-cap"|"soft-cap-idle";
++type ReadyStepOverdueEvidenceV1=Readonly<{seconds:number;bound:number;limit:number;quietMs:number}>;
++type ReadyStopEvidenceV1=Readonly<{deadline?:ReadyDeadlineStopV1;stepOverdue?:ReadyStepOverdueEvidenceV1}>;
++type ReadyTimingWatchdogV1=ReadyStopEvidenceV1&Readonly<{lastActivity?:ReadyOwnedActivityV1}>;
++export type ReadyTimingV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;growthMegabytes?:number|null;attempts:number|null;digest:string|null;endEvidence?:ReadyEndEvidenceV1;signal?:string|null}>;
+ export type ReadyFailureV1=Readonly<{digest:string;stage:string;attempts:number;exit:number|null;signal?:string|null;code:ReadyCodeV1;nextAttemptMs:number;atMs:number;tail:readonly string[]}>;
+ export type ReadyLocalStateV1={version:1;stages:Record<string,{digest:string;doneMs:number}>;appliedCompletions?:Readonly<Record<string,string>>;failure:ReadyFailureV1|null;attempts:number;peakMegabytes:number|null;readyMs:number|null;adopted:boolean};
+ 
+@@ -316,7 +321,7 @@
+ }
+ 
+ type ReadyEndEvidenceV1="exit-receipt"|"observed";
+-export type ReadyRunResultV1=Readonly<{stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
++export type ReadyRunResultV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
+ type ReadyLogMirrorV1=(stage:string,lines:readonly string[],owner?:string)=>void;
+ export type ReadyPortsV1=Readonly<{
+  server:boolean;stages?:readonly ReadyStageV1[];now():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;jitter:number;cores:number;
+@@ -430,7 +435,7 @@
+       lastContainment=result.containment===undefined?null:readyContainmentStatusV1({stage:result.stage,...result.containment});
+       const {endedMs,endEvidence,digest}=result.physicalEnd??{endedMs:ports.now(),endEvidence:"observed" as const,digest:null};
+       ports.timing?.({stage:result.stage,startedMs:result.startedMs,endedMs,seconds:Math.max(0,Math.round((endedMs-result.startedMs)/1000)),
+-       exit:result.exit,signal:result.signal??null,outcome:readyTerminalOutcomeV1(result),endEvidence,peakMegabytes:result.peakMegabytes,growthMegabytes:null,attempts:null,digest});
++       exit:result.exit,signal:result.signal??null,outcome:readyTerminalOutcomeV1(result),endEvidence,peakMegabytes:result.peakMegabytes,growthMegabytes:null,attempts:null,digest,...timingWatchdogV1(result.watchdog)});
+       continue;
+      }
+      if(!result.detached&&!signal.aborted)lastContainment=result.containment===undefined?null:readyContainmentStatusV1({stage:row.name,...result.containment});
+@@ -442,7 +447,7 @@
+       ports.timing?.({stage:row.name,startedMs:result.startedMs,endedMs,seconds:Math.max(0,Math.round((endedMs-result.startedMs)/1000)),
+        exit:result.exit,outcome,peakMegabytes:result.peakMegabytes,growthMegabytes:freeBefore===null?null:((free:number|null)=>free===null?null:Math.max(0,freeBefore-free))(ports.freeMegabytes?.()??null),
+        attempts:state.attempts+(outcome==="ok"?0:1),digest:physical===undefined?stages[decision.stageIndex]!.digest.slice(0,12):physical.digest,
+-       ...physical===undefined?{}:{endEvidence:physical.endEvidence,signal:result.signal??null}});
++       ...physical===undefined?{}:{endEvidence:physical.endEvidence,signal:result.signal??null},...timingWatchdogV1(result.watchdog)});
+      }
+     if(result.detached||signal.aborted){const latest=ports.state.read();ports.state.write({...latest,peakMegabytes:Math.max(latest.peakMegabytes??0,peak??0)||latest.peakMegabytes});break;}
+     if(!stalledOut)stalls.delete(row.name);
+@@ -541,6 +546,8 @@
+  catch(error){try{rmSync(temporary,{force:true});}catch{}throw error;}
+ }
+ 
++const timingWatchdogV1=(watchdog:ReadyTimingWatchdogV1|undefined)=>watchdog===undefined?{}:{watchdog};
++const readyTimingWatchdogV1=(lastActivity:ReadyOwnedActivityV1|undefined,evidence:ReadyStopEvidenceV1)=>timingWatchdogV1(lastActivity===undefined&&evidence.deadline===undefined&&evidence.stepOverdue===undefined?undefined:{...lastActivity===undefined?{}:{lastActivity},...evidence});
+ const readyTerminalOutcomeV1=(result:ReadyRunResultV1,ok=readyCleanExitV1(result)):ReadyTimingV1["outcome"]=>ok?"ok":result.timedOut?"stage-timeout":result.stalled&&!result.cancelled?"stalled":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":"stage-failed";
+ const readyCleanExitV1=(result:ReadyRunResultV1):boolean=>result.exit===0&&result.signal==null&&!result.detached&&!result.timedOut&&!result.spawnFailed&&!result.cancelled&&!result.stalled;
+ 
+@@ -550,10 +557,10 @@
+ type ReadyWatchdogV1=Readonly<{
+  version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
+  seen:readonly string[];step:ReadyStepWatchCheckpointV1;holderSince:number|null;holderEvidence:string|null;
+- semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;
++ semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;lastActivity?:ReadyOwnedActivityV1;
+ }>;
+ type ReadyStageStopV1=Extract<ReadyKillReasonV1,"stall"|"overdue"|"restart"|"timeout"|"cancel">;
+-export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string;supervisor?:number;watchdog?:ReadyWatchdogV1;launch?:ReadyStageLaunchV1;stop?:ReadyStageStopV1}>;
++export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string;supervisor?:number;watchdog?:ReadyWatchdogV1;launch?:ReadyStageLaunchV1;stop?:ReadyStageStopV1}>&ReadyStopEvidenceV1;
+ 
+ function readInflightV1(file:string):ReadyInflightV1|undefined{
+  try{
+@@ -568,6 +575,12 @@
+ 
+ const readyPhysicalLaunchV1=(flight:ReadyInflightV1):ReadyStageLaunchV1|undefined=>flight.launch!==undefined&&!validateJsonSchemaSubset(schema.definitions.StageLaunch,flight.launch,schema).length?flight.launch:undefined;
+ const readyRecordedStageStopV1=(flight:ReadyInflightV1):ReadyStageStopV1|undefined=>flight.stop!==undefined&&schema.definitions.StageStop.enum.includes(flight.stop)&&readyPhysicalLaunchV1(flight)!==undefined?flight.stop:undefined;
++const readyValidStepEvidenceV1=(step:ReadyStepOverdueEvidenceV1|undefined):step is ReadyStepOverdueEvidenceV1=>step!==undefined&&!validateJsonSchemaSubset(schema.definitions.StepOverdueEvidence,step,schema).length&&step.seconds>=step.limit&&step.limit>=step.bound;
++const readyRecordedStopEvidenceV1=(flight:ReadyInflightV1,stop:ReadyStageStopV1|undefined):ReadyStopEvidenceV1=>{
++ if(stop==="timeout"&&flight.deadline!==undefined&&schema.definitions.DeadlineStop.enum.includes(flight.deadline))return{deadline:flight.deadline};
++ if(stop==="overdue"&&readyValidStepEvidenceV1(flight.stepOverdue))return{stepOverdue:flight.stepOverdue};
++ return{};
++};
+ const readyStoppedForStallV1=(stop:ReadyStageStopV1|undefined):boolean=>stop==="stall"||stop==="overdue"||stop==="restart";
+ 
+ function readyPhysicalEndV1(flight:ReadyInflightV1,observedMs:number,exitMs?:number):NonNullable<ReadyRunResultV1["physicalEnd"]>{
+@@ -611,7 +624,26 @@
+ }
+ 
+ 
+-/** 🗂️ Recovers structured tool refusals from a failed stage using bounded buffers and complete lines. */
++const readyActivityResourceV1=new RegExp(schema.definitions.OwnedActivity.properties.resource.pattern,"u");
++const readyActivityCounterV1=/^([A-Za-z-]+(?::[A-Za-z-]+)*):([1-9][0-9]{0,15})(?:\/[1-9][0-9]{0,3}:canonical:[0-9]{1,4}:changed:[0-9]{1,4})?$/u;
++
++/** \u{1f4cd}\uFE0F Retains the latest productive counter from the bounded batch of complete stage log lines. */
++function readyOwnedActivityV1(lines:readonly string[],last:ReadyOwnedActivityV1|undefined):ReadyOwnedActivityV1|undefined{
++ for(const line of lines){
++  if(line.length>P.refusalLineCharacters||!line.startsWith("[script] {"))continue;
++  let row:{stage?:string;activity?:{resource?:string;mode?:string;elapsedMs?:number}}|null;
++  try{row=JSON.parse(line.slice(9));}catch{continue;}
++  if(row?.stage!=="running"||typeof row.activity?.resource!=="string"||(row.activity.mode!=="shared"&&row.activity.mode!=="exclusive")||
++   typeof row.activity.elapsedMs!=="number"||!Number.isFinite(row.activity.elapsedMs)||row.activity.elapsedMs<0)continue;
++  const matched=readyActivityCounterV1.exec(row.activity.resource);
++  if(matched===null||!readyActivityResourceV1.test(matched[1]!))continue;
++  const resource=matched[1]!,counter=Number(matched[2]);
++  if(Number.isSafeInteger(counter)&&(last?.resource!==resource||counter>last.counter))last={resource,counter};
++ }
++ return last;
++}
++
++/** \u{1f5c2}\uFE0F Recovers structured tool refusals from a failed stage using bounded buffers and complete lines. */
+ function toolFailureEvidenceV1(stage:string,log:string):string[]{
+  if(stage!=="tools")return[];
+  const lines=new Map<string,string>(),buffer=Buffer.alloc(P.failureEvidenceChunkBytes),decoder=new StringDecoder("utf8");
+@@ -743,19 +775,20 @@
+  if(record!==undefined&&!alive(record.pid)&&!existsSync(record.exitFile)){
+   const physicalEnd=readyPhysicalEndV1(record,Date.now());
+   input.mirror?.(record.stage,logTailV1(record.log,P.mirrorLines,P.mirrorLineCharacters),ownerOf(record.stage,record.startedMs));
+-  let stop:ReadyStageStopV1|undefined;
++  let stop:ReadyStageStopV1|undefined,evidenceAtStop:ReadyStopEvidenceV1={};
+   if(sameReadyFlightV1(readInflightV1(inflightFile),record)){
+    await sweepRosters();
+    const held=readInflightV1(inflightFile);
+    if(held!==undefined&&sameReadyFlightV1(held,record)){
+     stop=readyRecordedStageStopV1(held);
++    evidenceAtStop=readyRecordedStopEvidenceV1(held,stop);
+     rmSync(inflightFile,{force:true});
+    }
+   }
+   const failure=failed("the process of the stage vanished without an exit status / der Prozess der Stufe verschwand ohne Exit-Status",false);
+   const observed=restoredWatchdogV1(record,Date.now(),input.tree??readyScaledTreePolicyV1(speed));
+   const evidence=toolFailureEvidenceV1(record.stage,record.log);
+-  return {...failure,timedOut:stop==="timeout",cancelled:stop==="cancel",stalled:readyStoppedForStallV1(stop),startedMs:record.startedMs,physicalEnd,peakMegabytes:observed?.peakMegabytes||null,tail:[...failureLinesV1(record.log,P.tailLines-failure.tail.length,P.tailCharacters,evidence),...failure.tail],failure:[...failureLinesV1(record.log,P.mirrorLines-failure.tail.length,P.mirrorLineCharacters,evidence),...failure.tail],containment:{reaped:earlier.reaped,survivors:earlier.survivors}};
++  return {...failure,...readyTimingWatchdogV1(observed?.lastActivity,evidenceAtStop),timedOut:stop==="timeout",cancelled:stop==="cancel",stalled:readyStoppedForStallV1(stop),startedMs:record.startedMs,physicalEnd,peakMegabytes:observed?.peakMegabytes||null,tail:[...failureLinesV1(record.log,P.tailLines-failure.tail.length,P.tailCharacters,evidence),...failure.tail],failure:[...failureLinesV1(record.log,P.mirrorLines-failure.tail.length,P.mirrorLineCharacters,evidence),...failure.tail],containment:{reaped:earlier.reaped,survivors:earlier.survivors}};
+  }
+  if(record===undefined){await sweepRosters();const swept=await reapRegistry(null,"registry");earlier.reaped.push(...swept.reaped);earlier.survivors.push(...swept.survivors);record=readInflightV1(inflightFile);if(record!==undefined)watch.stage=record.stage;}
+  const wait=async(inflight:ReadyInflightV1,fresh=false):Promise<ReadyRunResultV1>=>new Promise<ReadyRunResultV1>((finish,fail)=>{
+@@ -766,6 +799,7 @@
+    const owner=ownerOf(inflight.stage,inflight.startedMs),mirror=()=>input.mirror?.(inflight.stage,logTailV1(inflight.log,P.mirrorLines,P.mirrorLineCharacters),owner);
+    if(!fresh)prepareOwnedSliceReportV1(input.root,owner);
+   const stop=readyRecordedStageStopV1(inflight);
++  let evidenceAtStop=readyRecordedStopEvidenceV1(inflight,stop);
+   let timedOut=stop==="timeout",cancelled=stop==="cancel",stalled=readyStoppedForStallV1(stop),tick=0,last="",killed=stop!==undefined,known:readonly ReadyKnownV1[]=readyReadTreeV1(directory,inflight.stage)?.processes??[],sampling=false,codeFile:string|undefined,codeStale=false,codeCheckedAt=0,finishing=false,reaping=false,reapedAt=0,nextSample=0,sampledAt=Date.now(),watching=true;
+   const treePolicy=input.tree??readyScaledTreePolicyV1(speed),observedAt=Date.now(),prior=restoredWatchdogV1(inflight,observedAt,treePolicy);
+   const semanticsAtStart=prior?.semantics??readySemanticsV1(input.root,treePolicy,sha),tracker=readyStallTrackerV1(treePolicy,prior?.seen),stepWatch=readyStepWatchV1(treePolicy,prior?.step),holder=readyHolderWaitTrackerV1(treePolicy,prior?.holderSince);
+@@ -774,9 +808,10 @@
+   let awaitingProbe=observedAt<armedAt;
+   let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,stallAt=prior?.stallAt??inflight.startedMs,
+    phase=prior?.phase??null,phaseAt=prior?.phaseAt??inflight.startedMs,phaseOffset=prior?.offset??0,holderEvidence=prior?.holderEvidence??null,
+-   cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
++   lastActivity=prior?.lastActivity,cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
+   if(prior===undefined&&!fresh){
+    const recent=analysisTailV1(inflight.log),key=readyProgressKeyV1(recent.slice(-P.tailLines)),fed=logSinceV1(inflight.log,0);
++   lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);
+    phase=readyStagePhaseV1(fed.lines,phase,treePolicy);phaseOffset=fed.offset;progressKey=key===null?null:sha(key);
+    const seen=tracker.observe(recent);
+    if(seen)try{progressAt=stallAt=Math.max(inflight.startedMs,Math.min(observedAt,Math.floor(statSync(inflight.log).mtimeMs)));}catch{}
+@@ -788,7 +823,7 @@
+    try{
+     const held=readInflightV1(inflightFile);
+     if(held===undefined||!sameReadyFlightV1(held,inflight))return;
+-    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore}};
++    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity}};
+     const text=JSON.stringify({...held,watchdog});
+     if(Buffer.byteLength(text)>P.watchdogRecordBytes)return;
+     const temporary=inflightFile+"."+process.pid+".tmp";
+@@ -812,12 +847,13 @@
+    readyWriteTreeV1(directory,inflight.stage,rootOf(),result.survivors,Date.now());
+    for(const row of result.survivors)say(readyContainmentLineV1("survivor",{pid:row.pid,name:row.name??"?",passes:result.passes}));
+   })();
+-  const kill=(reason:ReadyStageStopV1):void=>{
+-   if(killed||!watching)return;
++  const kill=(reason:ReadyStageStopV1,evidence:ReadyStopEvidenceV1={}):boolean=>{
++   if(killed||!watching)return false;
++   checkpoint(true);
+    const held=readInflightV1(inflightFile);
+-   if(held===undefined||!sameReadyFlightV1(held,inflight))return;
+-   if(held.launch!==undefined)try{writeReadyLocalRecordV1(inflightFile,{...held,stop:reason});}catch(error){failWatch(error);return;}
+-   killed=true;killReason=reason;void settle().catch(failWatch);
++   if(held===undefined||!sameReadyFlightV1(held,inflight))return false;
++   if(held.launch!==undefined)try{writeReadyLocalRecordV1(inflightFile,{...held,stop:reason,...evidence});}catch(error){failWatch(error);return false;}
++   killed=true;killReason=reason;evidenceAtStop=evidence;void settle().catch(failWatch);return true;
+   };
+   const readRecord=():ReadyReadRecordV1|undefined=>{try{const value=JSON.parse(readFileSync(machinePathV1(input.root,...treePolicy.readRecord),"utf8")) as Partial<ReadyReadRecordV1>;return Number.isSafeInteger(value.runner)&&Number.isFinite(value.startedMs)&&(value.reason==="request"||value.reason==="refresh")?{reason:value.reason,runner:value.runner!,read:value.read??null,startedMs:value.startedMs!,status:value.status??null,endedMs:value.endedMs??null}:undefined;}catch{return undefined;}};
+   const inspect=async(named:ReadyHolderWaitV1,waiting:number):Promise<void>=>{
+@@ -847,7 +883,8 @@
+   const failWatch=(error:unknown):void=>{watching=false;clearInterval(timer);input.signal.removeEventListener("abort",detach);fail(error);};
+   const complete=(result:ReadyRunResultV1,containTree:boolean,endedMs?:number):void=>{
+    finishing=true;
+-   result={...result,physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
++   if(!killed&&owns())lastActivity=readyOwnedActivityV1(logSinceV1(inflight.log,phaseOffset).lines,lastActivity);
++   result={...result,...readyTimingWatchdogV1(lastActivity,evidenceAtStop),physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
+    const publish=()=>{
+     try{
+      if(owns()){
+@@ -884,7 +921,10 @@
+    aliveAt=Date.now();
+     if(tick%mirrorEvery===0)mirror();
+    const probeEnded=awaitingProbe&&Date.now()>=armedAt;if(probeEnded)awaitingProbe=false;
+-   if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if(tracker.observe(recent))moved();const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){overdueStep={...watched.step,limit:readyStepOverdueSecondsV1(watched.step.bound,treePolicy),quiet:Math.round(watched.quietMs/1000)};stalled=true;kill("overdue");}if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
++   if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if(tracker.observe(recent))moved();const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed)lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){
++     const {seconds,bound}=watched.step,limit=readyStepOverdueSecondsV1(bound,treePolicy),stepOverdue={seconds,bound,limit,quietMs:watched.quietMs};
++     if(kill("overdue",readyValidStepEvidenceV1(stepOverdue)?{stepOverdue}:{})){overdueStep={...watched.step,limit,quiet:Math.round(watched.quietMs/1000)};stalled=true;}
++    }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
+    if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1(undefined,undefined,undefined,undefined,windows?input.signal:undefined).then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed||!watching||finishing||!owns())return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
+      if(windows&&!existsSync(cancelFile)){
+       const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
+@@ -902,7 +942,7 @@
+    if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
+    checkpoint(peakChanged);
+    if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt,treePolicy)){stalled=true;kill("stall");}
+-   {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});if(verdict==="timeout"||verdict==="stalled"&&Date.now()>=armedAt){timedOut=true;kill("timeout");}}}
++   {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});if(verdict==="timeout"||verdict==="stalled"&&Date.now()>=armedAt){timedOut=true;kill("timeout",{deadline:verdict==="timeout"?"hard-cap":"soft-cap-idle"});}}}
+    if(watching&&existsSync(cancelFile)&&owns()){cancelled=true;kill("cancel");if(killed)rmSync(cancelFile,{force:true});}
+   },P.pollMilliseconds);
+   input.signal.addEventListener("abort",detach,{once:true});
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json
+@@ -81,7 +81,7 @@
+         }
+       }
+     },
+-    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"enum": ["stall", "overdue", "restart", "timeout", "cancel"]}}},
++    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"$ref": "#/definitions/StageStop"}, "deadline": {"$ref": "#/definitions/DeadlineStop"}, "stepOverdue": {"$ref": "#/definitions/StepOverdueEvidence"}}},
+     "StageStop": {"enum": ["timeout", "cancel", "stall", "overdue", "restart"]},
+     "StageLaunch": {
+       "type": "object", "additionalProperties": false,
+@@ -131,9 +131,14 @@
+         "holderEvidence": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
+         "semantics": {"type": "object", "maxProperties": 32, "additionalProperties": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]}},
+         "cpu": {"type": "array", "maxItems": 512, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/definitions/WatchdogInteger"}}},
+-        "windows": {"$ref": "#/definitions/WindowsWatchdogSample"}
+-      }
+-    },
++        "windows": {"$ref": "#/definitions/WindowsWatchdogSample"},
++        "lastActivity": {"$ref": "#/definitions/OwnedActivity"}
++      }
++    },
++    "OwnedActivity": {"description":"The latest recognized owned activity and its producer's work counter.","type":"object","additionalProperties":false,"required":["resource","counter"],"properties":{"resource":{"type":"string","pattern":"^(?:native-artifact-input-(?:stage|read|verification)|nx:source-(?:index|verification)|javascript-(?:selected-payload|preserving-source)|dependencies:(?:workspace-edges|Source-aliases|selected-postorder|sync-bindings|store-ownership:frontier))$"},"counter":{"type":"integer","minimum":1,"maximum":9007199254740991}}},
++    "DeadlineStop": {"enum":["hard-cap","soft-cap-idle"]},
++    "StepOverdueEvidence": {"description":"The owned overdue decision: step elapsed, declared bound and computed limit in seconds, and time since other progress in milliseconds.","type":"object","additionalProperties":false,"required":["seconds","bound","limit","quietMs"],"properties":{"seconds":{"$ref":"#/definitions/WatchdogInteger"},"bound":{"$ref":"#/definitions/WatchdogInteger"},"limit":{"$ref":"#/definitions/WatchdogInteger"},"quietMs":{"$ref":"#/definitions/WatchdogInteger"}}},
++    "TimingWatchdog": {"type":"object","additionalProperties":false,"minProperties":1,"properties":{"lastActivity":{"$ref":"#/definitions/OwnedActivity"},"deadline":{"$ref":"#/definitions/DeadlineStop"},"stepOverdue":{"$ref":"#/definitions/StepOverdueEvidence"}}},
+     "WindowsWatchdogSample": {
+       "type": "object",
+       "additionalProperties": false,
+@@ -247,7 +252,7 @@
+       "properties": {
+         "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
+         "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
+-          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}}}}
++          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}, "watchdog": {"$ref": "#/definitions/TimingWatchdog"}}}}
+       }
+     },
+     "Containment": {

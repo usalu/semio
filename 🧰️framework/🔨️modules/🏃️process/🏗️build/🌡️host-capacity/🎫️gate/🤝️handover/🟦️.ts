@@ -32,13 +32,13 @@ export async function claimHostGrantHandoverV1(ledger:HostLedgerPrimitivesV1,opt
 }
 
 /** 🅿️ Keeps the grant of a body that failed in a way a restart cures: the row stays in the ledger, still heartbeating and still counted, so nobody is admitted into the gap; the restart wrapper offers it to the process that replaces this one ({@link claimHostGrantHandoverV1}) and settles it afterwards, and a grant nobody offers within the declared bound is given back. The restart custody registry of the churn module is the one place the wrapper looks. */
-export async function parkHostGrantV1(ledger:HostLedgerPrimitivesV1,input:Readonly<{options:HostCapacityOptionsV1;path:string;state:HostGrantV1;plan:HostPlanV1;pid:number;now:()=>number;language:"en"|"de"}>):Promise<void>{
- const {protocol,readJson,writeJson,remove}=ledger,churn=await import("../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts"),{lentSinceMs:_,...base}=input.state,policy=input.options.policy,write=input.options.write??(line=>process.stderr.write(line+"\n"));
+export async function parkHostGrantV1(ledger:HostLedgerPrimitivesV1,input:Readonly<{options:HostCapacityOptionsV1;path:string;state:HostGrantV1;plan:HostPlanV1;pid:number;now:()=>number;cleanup:()=>void;language:"en"|"de"}>):Promise<void>{
+ const {protocol,readJson,writeJson}=ledger,churn=await import("../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts"),{lentSinceMs:_,...base}=input.state,policy=input.options.policy,write=input.options.write??(line=>process.stderr.write(line+"\n"));
  writeJson(input.path,base);
  let live=true,unregister=()=>{};
  const touch=setInterval(()=>{try{utimesSync(input.path,new Date(),new Date());}catch{}},policy.wait.heartbeatMilliseconds),release=():void=>{
   if(!live)return;live=false;clearInterval(touch);clearTimeout(expiry);process.removeListener("exit",release);unregister();
-  const row=readJson(input.path) as {pid?:unknown}|undefined;if(row===undefined||row.pid===input.pid)remove(input.path);
+  const row=readJson(input.path) as {pid?:unknown}|undefined;if(row===undefined||row.pid===input.pid)input.cleanup();
  },expiry=setTimeout(release,protocol.parkMaximumMilliseconds);
  touch.unref();expiry.unref();process.once("exit",release);
  unregister=churn.registerRestartCustodyV1({name:"host-capacity",settle:release,offer:async()=>{

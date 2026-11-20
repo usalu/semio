@@ -37,7 +37,8 @@
           "capacity",
           "root",
           "detached",
-          "custody"
+          "custody",
+          "geometry"
         ]
       },
       "accept": {

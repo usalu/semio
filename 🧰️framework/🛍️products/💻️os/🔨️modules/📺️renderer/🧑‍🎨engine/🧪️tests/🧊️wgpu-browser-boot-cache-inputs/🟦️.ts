@@ -24,12 +24,16 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   assert.equal(generator.cache, true); assert.deepEqual(generator.outputs, [fixture.generator.output]);
   assert.deepEqual(generator.dependsOn.toSorted(), fixture.generator.prerequisites.toSorted());
   for (const target of fixture.generator.consumers) assert.ok(project.targets[target].dependsOn.includes(fixture.generator.target), target);
-  for (const target of ["wasm", "wasm-release"]) assert.ok(!project.targets[target].dependsOn.includes(fixture.generator.target), "Rust compilation must not regenerate the separate browser entry");
-  const sourceInputs = (await cacheInternals.declaredSourceInputs(project, workspace)).browserBootSources;
+  const wasmTarget = project.targets.wasm;
+  assert.deepEqual(Object.keys(wasmTarget.configurations).sort(), ["prototype", "release"]);
+  for (const target of [wasmTarget, ...Object.values(wasmTarget.configurations)] as { dependsOn?: string[] }[]) {
+    assert.ok(!target.dependsOn?.includes(fixture.generator.target), "Rust compilation must leave browser entry generation to its own producer");
+  }
+  const sourceInputs = project.namedInputs.browserBootSources;
   const sourceFiles = sourceInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));
   assert.ok(!sourceFiles.some((path: string) => path.includes(".vscode") || path.includes("⚡️caching/📦️artifacts/🦀️rust/") || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")));
-  assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: ["ajv", "typescript"] }]);
+  assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: fixture.generator.externalDependencies }]);
   const resolverPath = resolve(entry, "../../🧭️boot-descriptor/🟦️.ts"), resolver = await import(resolverPath);
   const output = mkdtempSync(join(generated, "wgpu-boot-inputs-"));
   const input = (row: any) => ({ defaultVariant: fixture.defaultVariant, search: row.search, hash: row.hash, overrides: row.overrides, meta: (name: string) => row.meta?.[name] ?? "" });
@@ -46,30 +50,22 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
     else { const [field, child] = row.axis.split("."); args.overrides = { [field]: child ? { [child]: value } : value }; }
     assert.throws(() => resolver.resolveWgpuBootDescriptor(args), (error: any) => error.message.includes(row.message));
   }
-  const session = resolve(entry, "../../../../../../🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"), filter = /\.ts$/, bundles: Record<"bun"|"esbuild", string[]> = { bun: [], esbuild: [] };
-  const controlContents = "export const PLAYGROUND_SESSION = { variant: 'predicate-control' };";
-  let bunControlReads = 0, esbuildControlReads = 0;
-  const bunControl = await Bun.build({ entrypoints: [session], target: "browser", format: "esm", plugins: [{ name: "session-predicate-control", setup(build) { build.onLoad({ filter }, (args) => { if (resolve(args.path) !== session) return; bunControlReads++; return { contents: controlContents, loader: "ts" }; }); } }] });
-  assert.equal(bunControl.success, true, bunControl.logs.map(String).join("\n"));
-  assert.equal(bunControlReads, 1, "Bun's anonymous-leaf predicate must intercept the canonical session control");
-  await require("esbuild").build({ entryPoints: [session], absWorkingDir: workspace, bundle: true, write: false, platform: "browser", format: "esm", logLevel: "silent", plugins: [{ name: "session-predicate-control", setup(build: any) { build.onLoad({ filter }, (args: any) => { if (resolve(args.path) !== session) return; esbuildControlReads++; return { contents: controlContents, loader: "ts" }; }); } }] });
-  assert.equal(esbuildControlReads, 1, "esbuild's anonymous-leaf predicate must intercept the canonical session control");
-  for (const variant of fixture.ambientVariants) {
-    const contents = `export const PLAYGROUND_SESSION = { variant: ${JSON.stringify(variant)} };`;
-    let bunReads = 0, esbuildReads = 0;
-    const bun = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, plugins: [{ name: "session-input-oracle", setup(build) { build.onLoad({ filter }, (args) => { if (resolve(args.path) !== session) return; bunReads++; return { contents, loader: "ts" }; }); } }] });
-    assert.equal(bun.success, true, bun.logs.map(String).join("\n")); assert.equal(bunReads, 0, "Bun must not read the canonical default session for a WGPU boot");
-    assert.equal(bun.outputs.length, 1);const emitted=bun.outputs[0];assert(emitted,"Actual Bun output required");bundles.bun.push(await emitted.text());
-    const esbuild = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "browser", format: "esm", define: { "import.meta.vitest": "undefined" }, metafile: true, logLevel: "silent", plugins: [{ name: "session-input-oracle", setup(build: any) { build.onLoad({ filter }, (args: any) => { if (resolve(args.path) !== session) return; esbuildReads++; return { contents, loader: "ts" }; }); } }] });
-    assert.equal(esbuildReads, 0, "esbuild must not read the canonical default session for a WGPU boot");
-    for (const input of Object.keys(esbuild.metafile.inputs)) if (!input.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")) assert.ok(sourceFiles.includes(input), `Untracked browser input ${input}`);
-    assert.ok(Object.keys(esbuild.metafile.inputs).some(path => path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")), "The deterministic catalog must own the fallback");
-    assert.equal(esbuild.outputFiles.length, 1); bundles.esbuild.push(esbuild.outputFiles[0].text);
+  const define = { "import.meta.vitest": "undefined" };
+  const bunBoot = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", define });
+  assert.equal(bunBoot.success, true, bunBoot.logs.map(String).join("\n"));
+  assert.equal(bunBoot.outputs.length, 1);
+  const esbuildBoot = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "browser", format: "esm", define, metafile: true, logLevel: "silent" });
+  assert.equal(esbuildBoot.outputFiles.length, 1);
+  for (const path of Object.keys(esbuildBoot.metafile.inputs)) {
+    assert.ok(!fixture.bootCatalog.excludedInputs.some((excluded: string) => path.endsWith(excluded)), path);
+    assert.ok(sourceFiles.includes(path), "Untracked browser input " + path);
   }
-  for (const [compiler, builds] of Object.entries(bundles)) {
-    const first=builds[0];assert(first!==undefined,"Actual first compiler bundle required");assert.equal(first,builds[1],compiler);
-    const syntax = spawnSync("node", ["--input-type=module", "--check"], { input:first, encoding: "utf8", timeout: 10000 }); assert.equal(syntax.status, 0, syntax.stderr);
-    writeFileSync(join(output, `${compiler}.log`), `Independent session overlays emitted identical parseable bundles: ${Buffer.byteLength(first)} bytes\n`);
+  const bundles = { bun: await bunBoot.outputs[0]!.text(), esbuild: esbuildBoot.outputFiles[0].text };
+  for (const [compiler, text] of Object.entries(bundles)) {
+    for (const element of fixture.bootCatalog.elements) assert.ok(text.includes(element), compiler + " must read the supplied catalogue element");
+    const syntax = spawnSync("node", ["--input-type=module", "--check"], { input: text, encoding: "utf8", timeout: 10000 });
+    assert.equal(syntax.status, 0, syntax.stderr);
+    writeFileSync(join(output, compiler + ".log"), "Catalogue-injected browser bundle parsed: " + Buffer.byteLength(text) + " bytes\n");
   }
   const api = await import(resolve(packageRoot, "../../⚙️browser-build/🟦️.ts"));
   const fixtureWorkspace = join(output, "workspace"), owner = project.sourceRoot;

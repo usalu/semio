@@ -145,11 +145,29 @@
       "read",
       "pending",
       "funding-observe",
+      "reconcile",
+      "funding-observe",
       "parent",
       "prepare",
       "retire",
       "reconcile",
       "reader"
+    ]
+  },
+  {
+    "id": "current-envelope-still-short-after-reconciliation",
+    "receipt": "current",
+    "pending": "absent",
+    "funding": "old",
+    "reconcile": "still-old",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "reconcile",
+      "funding-observe"
     ]
   },
   {

@@ -13,7 +13,7 @@ fn count<T>(left:usize,body:usize,maximum:u64)->usize{let width=size_of::<T>();l
 
 /// 🪪️ Carries the exact issued registry storage and its original Work binding together.
 pub struct IssuedReadRegistry<T:RetireOwned+Sync>{pub(super) storage:ManuallyDrop<Option<SharedOriginalStorage<ReadOwnershipRegistry<T>>>>,pub(super) work:Option<OriginalWorkBindingIdentity>}
-impl<T:RetireOwned+Sync> IssuedReadRegistry<T>{pub(super) fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("issued read registry changed original Work"))}Ok(())}}
+impl<T:RetireOwned+Sync> IssuedReadRegistry<T>{pub(super) fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("issued read registry changed original Work"))}Ok(())}}
 impl<T:RetireOwned+Sync> Drop for IssuedReadRegistry<T>{fn drop(&mut self){if std::thread::panicking(){return}assert!(self.storage.is_none()&&self.work.is_none(),"issued read registry retains its original storage");unsafe{ManuallyDrop::drop(&mut self.storage)}}}
 
 /// 🧳️ Retains both exact native allocations and the unpublished typed registry through cancellation.
@@ -22,7 +22,7 @@ impl<T:RetireOwned+Sync> Default for ReadRegistryBirth<T>{fn default()->Self{Sel
 impl<T:RetireOwned+Sync> ReadRegistryBirth<T>{
  /// 🌱️ Creates a pure empty seed without allocating or calling a producer.
  pub fn new()->Self{Self{slots:ManuallyDrop::new(Slots::new()),free:ManuallyDrop::new(Free::new()),slot_output:ManuallyDrop::new(None),free_output:ManuallyDrop::new(None),registry:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),work:None,closing:false}}
- fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("read registry birth changed its original Work"))}Ok(())}
+ fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("read registry birth changed its original Work"))}Ok(())}
  /// 🔢️ Borrows the exact initialized slot and FIFO prefixes.
  pub fn initialized(&self)->(usize,usize){(self.slots.initialized(),self.free.initialized())}
  /// 📏️ Quotes the actual fixed slot allocation before its first Source action.

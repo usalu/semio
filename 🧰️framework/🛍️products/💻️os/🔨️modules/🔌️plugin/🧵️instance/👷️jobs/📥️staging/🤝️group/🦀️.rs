@@ -24,7 +24,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     #[cfg(any(test,feature="artifact-app-testing"))]
     pub fn test_original_admission_emit_observation(&self)->Option<(usize,usize,usize)>{
         let input=self.original_emission_admission.as_ref()?.capture.as_ref()?.borrow()?;
-        Some((input.emit.artifact_mutations.len(),input.emit.owned_child_emits.len(),input.emit.owned_child_emits.as_ptr() as usize))
+        Some((input.emit.artifact_mutation_count(),input.emit.owned_child_emits.len(),input.emit.owned_child_emits.as_ptr() as usize))
     }
 
     /// 🧪️ Borrows original completed-output ownership and refusal observations without widening production visibility.
@@ -32,7 +32,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn test_original_owned_emit_observation(&self,operation:u64)->Option<(usize,usize,usize,bool,bool)>{
         let mounted=self.tool_operations.get(operation)?;
         let ArtifactToolCompletionValue::Emit(Ok(emit),_)=mounted.publication.as_ref()? else{return None;};
-        Some((emit.artifact_mutations.len(),emit.owned_child_emits.len(),emit.owned_child_emits.as_ptr() as usize,mounted.terminal_fault.is_some(),mounted.cancellation_lease.as_ref()?.token.is_cancelled_now()))
+        Some((emit.artifact_mutation_count(),emit.owned_child_emits.len(),emit.owned_child_emits.as_ptr() as usize,mounted.terminal_fault.is_some(),mounted.cancellation_lease.as_ref()?.token.is_cancelled_now()))
     }
 
     pub fn next_closing_private_child_group<M: ReferenceSpaceMember + MemberFactory + 'static>(&self, child_composition: &ChildComposition<M>)->Option<u64>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|child_composition.private_child_groups.entry(index).and_then(|(operation,owner)|(owner.closing&&self.tool_operations.get(*operation).is_none_or(|mounted|!mounted.owned_child_result_pending)).then_some(*operation)))}

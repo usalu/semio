@@ -58,6 +58,9 @@ pub(crate) fn gumball_param_number(snapshot: &FlowHostSnapshot, id: &str, key: &
     widget.as_ref().and_then(|widget| widget.get("params")).and_then(|params| params.get(key)).and_then(|literal| literal.get("value")).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(default)
 }
 
+#[path = "../🧰️preview-reply/🦀️.rs"]
+pub(crate) mod preview_reply;
+
 #[path = "🧪️tests/🔬️serial/🦀️.rs"]
 pub(crate) mod test_serial;
 

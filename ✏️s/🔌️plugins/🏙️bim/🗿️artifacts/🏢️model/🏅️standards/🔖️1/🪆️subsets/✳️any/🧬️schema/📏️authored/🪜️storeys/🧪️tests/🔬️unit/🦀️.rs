@@ -9,9 +9,9 @@ fn storey(level: i32, height: f64) -> Storey {
 fn tower() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
     for (id, level, height) in [("below", -1, 2.5), ("ground", 0, 3.0), ("first", 1, 2.8), ("second", 2, 2.7), ("deep", -2, 2.0)] {
-        snapshot.storeys.insert(id.into(), storey(level, height));
+        snapshot.storeys.cold_insert(id.into(), storey(level, height));
     }
-    snapshot.storeys.insert("other".into(), Storey { building: "c".into(), ..storey(0, 9.0) });
+    snapshot.storeys.cold_insert("other".into(), Storey { building: "c".into(), ..storey(0, 9.0) });
     snapshot
 }
 

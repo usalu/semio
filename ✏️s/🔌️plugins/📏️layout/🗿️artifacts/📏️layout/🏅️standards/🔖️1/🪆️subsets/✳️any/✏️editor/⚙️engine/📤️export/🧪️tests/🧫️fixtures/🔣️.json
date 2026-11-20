@@ -8,15 +8,15 @@
     "adopter": {
       "implementation": "ArtifactEditor for LayoutPlayApp",
       "method": "build_media_export_job",
-      "parameters": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>",
+      "parameters": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>",
       "result": "Result<bool,semio_framework_job::OriginalTurnFailure>",
-      "body": "use semio_s_artifact_layout_layout_engine_export::LAYOUT_MEDIA_EXPORT_TOOL_ID;\n        if request.as_ref().is_some_and(|input|input.port!=\"layout:out\"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,\"layout producer requires its exact registered output port\").into())}\n        LayoutMediaExportJob::admit_original(request,body,cx)"
+      "body": "use semio_s_artifact_layout_layout_engine_export::LAYOUT_MEDIA_EXPORT_TOOL_ID;\n        if request.as_ref().is_some_and(|input|input.port!=\"layout:out\"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,\"layout producer requires its exact registered output port\").into())}\n        LayoutMediaExportJob::admit_original(request,body,construction,cx)"
     },
     "producer": {
       "definition": {
         "implementation": "LayoutMediaExportJob",
         "method": "admit_original",
-        "parameters": "request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>",
+        "parameters": "request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut StepContext<'_>",
         "result": "Result<bool,semio_framework_job::OriginalTurnFailure>"
       },
       "phases": [
@@ -34,7 +34,11 @@
         },
         {
           "id": "paid-body-birth",
-          "source": "if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(false)}"
+          "source": "construction.built(cx,body,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:bytes,release_bytes:0,depth:1},||"
+        },
+        {
+          "id": "settle-construction",
+          "source": "if construction.settling(){construction.settle(cx)?;return Ok(false)}"
         },
         {
           "id": "actual-body",
@@ -89,32 +93,32 @@
     {
       "id": "immutable-body",
       "source": "editor",
-      "from": "body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>",
-      "to": "body:&Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>"
+      "from": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>",
+      "to": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>"
     },
     {
       "id": "comment-delegate",
       "source": "editor",
-      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
-      "to": "Ok(false) /* LayoutMediaExportJob::admit_original(request,body,cx) */"
+      "from": "LayoutMediaExportJob::admit_original(request,body,construction,cx)",
+      "to": "Ok(false) /* LayoutMediaExportJob::admit_original(request,body,construction,cx) */"
     },
     {
       "id": "literal-delegate",
       "source": "editor",
-      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
-      "to": "{let _=\"LayoutMediaExportJob::admit_original(request,body,cx)\";Ok(false)}"
+      "from": "LayoutMediaExportJob::admit_original(request,body,construction,cx)",
+      "to": "{let _=\"LayoutMediaExportJob::admit_original(request,body,construction,cx)\";Ok(false)}"
     },
     {
       "id": "foreign-delegate",
       "source": "editor",
-      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
-      "to": "ForeignMediaExportJob::admit_original(request,body,cx)"
+      "from": "LayoutMediaExportJob::admit_original(request,body,construction,cx)",
+      "to": "ForeignMediaExportJob::admit_original(request,body,construction,cx)"
     },
     {
       "id": "wrong-context",
       "source": "editor",
-      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
-      "to": "LayoutMediaExportJob::admit_original(request,body,foreign_cx)"
+      "from": "LayoutMediaExportJob::admit_original(request,body,construction,cx)",
+      "to": "LayoutMediaExportJob::admit_original(request,body,construction,foreign_cx)"
     },
     {
       "id": "wrong-port",
@@ -157,6 +161,24 @@
       "source": "export",
       "from": "let input=request.take().ok_or_else(||ValueError::invariant(\"request absent\"))?;",
       "to": "let input=request.take().unwrap();"
+    },
+    {
+      "id": "foreign-construction",
+      "source": "editor",
+      "from": "LayoutMediaExportJob::admit_original(request,body,construction,cx)",
+      "to": "LayoutMediaExportJob::admit_original(request,body,foreign_construction,cx)"
+    },
+    {
+      "id": "unpaid-body-capacity",
+      "source": "export",
+      "from": "OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:bytes,release_bytes:0,depth:1}",
+      "to": "OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1}"
+    },
+    {
+      "id": "unsettled-construction",
+      "source": "export",
+      "from": "if construction.settling(){construction.settle(cx)?;return Ok(false)}",
+      "to": "if construction.settling(){return Ok(false)}"
     }
   ]
 }

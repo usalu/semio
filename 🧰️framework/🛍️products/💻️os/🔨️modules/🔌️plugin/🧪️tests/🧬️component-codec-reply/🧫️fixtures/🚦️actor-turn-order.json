@@ -1,0 +1,7 @@
+{
+  "whileFirstActorIsSuspended": ["first", "other-actor"],
+  "afterFirstActorResumes": ["first", "other-actor", "download", "second"],
+  "afterInputArrivesDuringPoll": ["turn", "after-turn"],
+  "disposeWhileSuspended": ["finishing", "close"],
+  "queuedRefusal": "actor-lifecycle.activation-mismatch"
+}

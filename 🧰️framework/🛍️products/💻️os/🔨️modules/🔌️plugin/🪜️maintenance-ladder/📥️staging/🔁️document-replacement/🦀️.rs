@@ -55,8 +55,7 @@ pub fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegist
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
     let Some((index,generation))=registries.next_id_from(*cursor)else{
         if demand.release_bytes==0{return Ok(PluginLifecycleStep::Complete(Default::default()));}
-        pay(effect)?;registries.slots=Box::default();registries.allocation_admitted=false;
-        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));
+        pay(effect)?;return Ok(PluginLifecycleStep::Progress(registries.close_empty_backing_step(grant)?.progress()));
     };
     let retired=registries.get_mut(generation).expect("selected original window transient generation remains owned");
     if retired.terminal_is_empty(){

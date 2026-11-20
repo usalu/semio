@@ -73,10 +73,15 @@ export function probeNativeDirectoryCaseSensitivityV1(directory:string):boolean{
  const base=join(directory,".case-"+randomBytes(4).toString("hex"));mkdirSync(base,{mode:0o700});
  try{writeFileSync(join(base,protocol.probe[0]!),"");try{writeFileSync(join(base,protocol.probe[1]!),"",{flag:"wx"});}catch(error){if((error as NodeJS.ErrnoException).code==="EEXIST")return false;throw error;}return readdirSync(base).length===2;}finally{rmSync(base,{recursive:true,force:true});}
 }
-/** 📂️ Proves that a fresh volume directory beneath the host can hold case-sensitive content once the platform prepared it. */
+function prepareCaseVolume(directory:string,port:NativeDirectoryPlatformPortV1,probe:(directory:string)=>boolean):boolean{
+ if(port.kind==="journaled"&&probe(directory))return true;
+ port.prepareVolume(directory);
+ return probe(directory);
+}
+/** 📂️ Proves that a fresh volume can hold case-sensitive content through inheritance or native preparation. */
 export function probeNativeDirectoryCaseCapabilityV1(directory:string,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):boolean{
  const scratch=join(directory,".capability-"+randomBytes(4).toString("hex"));mkdirSync(scratch,{mode:0o700});
- try{port.prepareVolume(scratch);return probeNativeDirectoryCaseSensitivityV1(scratch);}finally{rmSync(scratch,{recursive:true,force:true});}
+ try{return prepareCaseVolume(scratch,port,probeNativeDirectoryCaseSensitivityV1);}finally{rmSync(scratch,{recursive:true,force:true});}
 }
 /** 🧫️ Proves on a scratch pair beneath the directory that the host filesystem swaps directory names. */
 export function probeNativeDirectoryExchangeV1(directory:string,port:NativeDirectoryPlatformPortV1=nativeDirectorySystemPortV1()):void{
@@ -155,7 +160,7 @@ export function allocateNativeDirectoryV1(input:Readonly<{directory:string;files
  const layout=nativeDirectoryLayoutV1(input.directory),underlying=observeNativeDirectoryIdentityV1(layout.root);let caseFold:"insensitive"|undefined;
  if(readdirSync(layout.root).length)throw Error("Empty original placeholder directory required");
  mkdirSync(layout.volume,{mode:underlying.mode&0o7777});
- try{port.prepareVolume(layout.volume);if(!probe(layout.volume))throw Error(port.kind==="journaled"?protocol.refusals.caseUnverified:protocol.refusals.caseInsensitive);}catch(error){if(port.kind==="journaled"&&(protocol.foldSafeRefusals as readonly string[]).some(key=>(protocol.refusals as Readonly<Record<string,string>>)[key]===(error as Error)?.message))caseFold="insensitive";else{rmSync(layout.volume,{recursive:true,force:true});throw error;}}
+ try{if(!prepareCaseVolume(layout.volume,port,probe))throw Error(port.kind==="journaled"?protocol.refusals.caseUnverified:protocol.refusals.caseInsensitive);}catch(error){if(port.kind==="journaled"&&(protocol.foldSafeRefusals as readonly string[]).some(key=>(protocol.refusals as Readonly<Record<string,string>>)[key]===(error as Error)?.message))caseFold="insensitive";else{rmSync(layout.volume,{recursive:true,force:true});throw error;}}
  const bytes=nativeDirectoryAnchorBytesV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,underlying,...(caseFold?{caseFold}:{})}),descriptor=openSync(layout.anchor,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW??0),0o600);let failed=false,failure:unknown;
  try{if(writeSync(descriptor,bytes)!==bytes.length)throw Error("Complete anchor write required");fsyncSync(descriptor);}catch(error){failed=true;failure=error;}
  try{closeSync(descriptor);}catch(error){if(!failed)throw error;}if(failed)throw failure;

@@ -84,6 +84,11 @@ struct Recording<S> {
     seen: HashSet<u32>,
 }
 impl<S: ObjectSource> ObjectSource for Recording<S> {
+    fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
+        self.seen.insert(reference.num);
+        self.inner.inspect(reference, read);
+    }
+
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
         self.seen.insert(reference.num);
         self.inner.get(reference)
@@ -92,8 +97,12 @@ impl<S: ObjectSource> ObjectSource for Recording<S> {
 /// 🕸️ A lifting source over a graph being grafted.
 pub struct GraphView<'a>(pub &'a BTreeMap<u32, PdfIndirectObject>);
 impl ObjectSource for GraphView<'_> {
+    fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
+        read(self.0.get(&reference.num).filter(|object| object.id == reference).map(|object| &object.value));
+    }
+
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
-        self.0.get(&reference.num).map(|object| object.value.clone())
+        self.0.get(&reference.num).filter(|object| object.id == reference).map(|object| object.value.clone())
     }
 }
 /// 🔭 What a retained graph spells: the typed lanes lifted from it and how they map back onto its

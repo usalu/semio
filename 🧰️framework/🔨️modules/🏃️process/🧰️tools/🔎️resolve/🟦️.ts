@@ -76,7 +76,11 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
       const digest = toolDigestForHostV1(pin, host.platform, host.architecture, entry.pin.digests?.hostExtras ?? {});
       const segments = locator.segments.map(segment => segment.replace(/\{sha256(?::(\d+))?\}/gu, (_, length?: string) => digest === undefined ? "" : length ? digest.sha256.slice(0, Number(length)) : digest.sha256).replace("{version}", pin.version ?? "").replace("{host}", `${host.platform}-${host.architecture}`));
       tried.push(join(partition, ...segments, locator.executable));
-      if (digest !== undefined) { const hit = withSuffix(join(partition, ...segments, locator.executable), host); if (hit !== undefined) return found(hit, "provisioned"); }
+      const needsDigest = locator.segments.some(segment => segment.includes("{sha256"));
+      if (digest !== undefined || !needsDigest) {
+        const hit = withSuffix(join(partition, ...segments, locator.executable), host);
+        if (hit !== undefined) return found(hit, "provisioned");
+      }
     } else if (locator.kind === "package-script") {
       const via = through(locator.via);
       for (const root of packageRoots(registry, host)) {

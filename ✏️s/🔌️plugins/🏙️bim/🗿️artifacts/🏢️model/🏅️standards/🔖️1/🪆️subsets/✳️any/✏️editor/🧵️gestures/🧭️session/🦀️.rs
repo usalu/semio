@@ -132,7 +132,7 @@ impl<'a> ToolContext<'a> {
     }
 
     /// 📚️ The type a placement uses: the selected library entry of the family when there is one, else the first of the family.
-    pub fn library_type<T>(&self, family: &BTreeMap<String, T>) -> Option<String> {
+    pub fn library_type<T>(&self, family: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, T>) -> Option<String> {
         self.library.iter().find(|id| family.contains_key(*id)).or_else(|| family.keys().next()).cloned()
     }
 

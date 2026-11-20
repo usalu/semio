@@ -7,13 +7,13 @@ import { type UiI18nInstance, type UiI18nCallOptions, type UiI18nTree } from "@s
 import { ThreeEvent } from "@react-three/fiber";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { waitingBorderClass, waitingBorderActiveClass, loadingBorderClass, loadingBorderActiveClass, waitingBorderStateClass, loadingBorderStateClass, chromeStatusBorderClass, loadingBorderElementClass, waitingBorderElementClass } from "@semio-tech/ui/modules/status-border-presentation";
-import { interactiveControlTransitionClass, interactiveOnClass, interactiveTabActiveClass, groupHoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, hoverExcludingHandleBgFillClass, interactiveHoverClass, interactiveHoverFillClass, interactiveActiveFillClass, interactiveActiveBorderClass } from "@semio-tech/ui/modules/interaction-presentation";
-import { applyUiFormControlBrowserDefaults, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "@semio-tech/ui/modules/form-control-presentation";
+import { interactiveControlTransitionClass, interactiveOnClass, interactiveTabActiveClass, groupHoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, hoverExcludingHandleBgFillClass, interactiveHoverClass, interactiveHoverFillClass, interactiveActiveFillClass } from "@semio-tech/ui/modules/interaction-presentation";
+import { applyUiFormControlBrowserDefaults, formControlResetClass, uiFormControlBrowserDefaultProps } from "@semio-tech/ui/modules/form-control-presentation";
 import { borderNormalBottomClass, borderNormalClass, borderElementClass } from "@semio-tech/ui/modules/border-presentation";
 import { veilClass, glassClass, surfaceClass } from "@semio-tech/ui/modules/surface-presentation";
 import { menuListItemClassName } from "@semio-tech/ui/modules/menu-item-presentation";
 import { shellFloorPaints, shellFloorFillClass } from "@semio-tech/ui/modules/shell-floor-presentation";
-import { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass } from "@semio-tech/ui/modules/chrome-control-presentation";
+import { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass } from "@semio-tech/ui/modules/chrome-control-presentation";
 import { setThemedIconCatalog, type ThemedIconCatalog, resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "@semio-tech/ui/elements/Icons";
 import { createDOMEventBinding, ContextMenu, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, ContextMenuTriggerButton, TextSelectionContextMenuHost, type ContextMenuProps, type ContextMenuControllerProps } from "@semio-tech/ui/elements/ContextMenu";
 import { getElementById, queryElement, type ContextMenuItem } from "@semio-tech/ui/elements/ContextMenu/item-render";
@@ -81,14 +81,13 @@ export {
   interactiveHoverClass,
   interactiveHoverFillClass,
   interactiveActiveFillClass,
-  interactiveActiveBorderClass,
 };
-export { applyUiFormControlBrowserDefaults, formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
+export { applyUiFormControlBrowserDefaults, formControlResetClass, uiFormControlBrowserDefaultProps };
 export { borderNormalBottomClass, borderNormalClass, borderElementClass };
 export { veilClass, glassClass, surfaceClass };
 export { menuListItemClassName };
 export { shellFloorPaints, shellFloorFillClass };
-export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
+export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass };
 
 export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 export { canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/ui/modules/canvas-pick-targets";

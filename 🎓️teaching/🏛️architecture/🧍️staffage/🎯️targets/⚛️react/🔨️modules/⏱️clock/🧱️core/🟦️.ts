@@ -10,7 +10,7 @@
 export type ClockScheduler = { readonly request: (tick: (nowMs: number) => void) => number; readonly cancel: (handle: number) => void };
 
 /** 🎛️ How a clock is created. */
-export type ClockOptions = { readonly fps?: number; readonly durationS?: number | null; readonly loop?: boolean; readonly rate?: number; readonly playing?: boolean; readonly scheduler?: ClockScheduler; readonly reducedMotion?: boolean };
+export type ClockOptions = { readonly fps?: number; readonly durationS?: number | null; readonly loop?: boolean; readonly rate?: number; readonly playing?: boolean; readonly scheduler?: ClockScheduler; readonly reducedMotion?: boolean; readonly drawBudgetMs?: number };
 
 /** 📸️ An immutable snapshot of a clock. Playback publishes a new object when the frame or the playing flag changes; `seek`, `step` and the transport controls publish at once. */
 export type ClockState = { readonly timeS: number; readonly frame: number; readonly playing: boolean; readonly rate: number; readonly loop: boolean; readonly fps: number; readonly durationS: number | null };
@@ -25,6 +25,8 @@ function prefersReducedMotion(): boolean {
 
 /** ⏱️ A play/pause, rate, loop, seek and step time source with subscribers. */
 export class StaffageClock {
+  /** ⏳️ Main-thread time available for voluntary preview drawing per display frame. */
+  readonly drawBudgetMs: number;
   #state: ClockState;
   readonly #listeners = new Set<() => void>();
   readonly #scheduler: ClockScheduler;
@@ -33,6 +35,7 @@ export class StaffageClock {
 
   constructor(options: ClockOptions = {}) {
     const fps = options.fps ?? 30;
+    this.drawBudgetMs = Math.max(0, options.drawBudgetMs ?? 0);
     this.#scheduler = options.scheduler ?? browserScheduler;
     const reduced = options.reducedMotion ?? prefersReducedMotion();
     this.#state = { timeS: 0, frame: 0, playing: false, rate: options.rate ?? 1, loop: options.loop ?? true, fps, durationS: options.durationS ?? null };

@@ -26,7 +26,7 @@ semio-framework-value-derive = { workspace = true }
 semio-plugin = { workspace = true, optional = true }
 
 [features]
-testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-plugin"]
+testing = ["semio-framework-job/testkit", "dep:semio-framework", "dep:semio-plugin", "semio-plugin/artifact-app-testing"]
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

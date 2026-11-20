@@ -34,7 +34,7 @@ test("Note source and fixture have one exact hostile census", async () => {
   expect(fixture.globals).toEqual([]);
   expect(fixture.scanThenMonolithRoutes).toEqual([]);
   expect(Object.values(fixture.laws).every(Boolean)).toBe(true);
-  const retainedIdsSource = retainedSource.slice(retainedSource.indexOf("pub const NOTE_RETAINED_TOOL_IDS"), retainedSource.indexOf("pub const NOTE_AUDITED_PUBLICATION_CONTRACTS"));
+  const retainedIdsSource = retainedSource.slice(retainedSource.indexOf("pub const NOTE_RETAINED_TOOL_IDS"), retainedSource.indexOf("pub const NOTE_RETAINED_PUBLICATION_CONTRACTS"));
   const registered = [...retainedIdsSource.matchAll(/^\s*"([^"]+)",$/gm)].map((match) => match[1]!);
   const retainedContractsSource = retainedSource.slice(retainedSource.indexOf("pub const NOTE_RETAINED_PUBLICATION_CONTRACTS"), retainedSource.indexOf("fn note_contract"));
   const publication = [...retainedContractsSource.matchAll(/tool_id: "([^"]+)"/g)].map((match) => match[1]!);
@@ -56,7 +56,7 @@ test("hostile source rejects global ids, copied digests, and scan-then-monolith 
   expect(retainedSource).not.toMatch(/fn\s+note_store_edit_digest/);
   expect(retainedSource).not.toContain("ArtifactStoreOneItemPrepared {");
   expect(retainedSource).not.toContain("fn prepare_note_artifact");
-  expect(retainedSource).toContain("store::mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>");
+  expect(retainedSource).toContain("store::cold_mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>");
   expect(retainedSource).toContain("if self.cursor + 1 < self.units.len()");
   expect(schemaSource).not.toContain("static NEXT");
   expect(schemaSource).not.toContain("AtomicU64");

@@ -1,3 +1,4 @@
+import { paintIconDrawing, prepareIconSvgMeshes } from "./🖋️drawing/🟦️.ts";
 import {applyIconRenderTransform} from "./🧊️transform/🟦️.ts";
 import { Canvas as ThreeCanvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
@@ -7,6 +8,7 @@ import type { IconRenderPort, IconRenderRequest, IconRenderCamera, IconRenderRes
 import { ephemeralMap } from "@semio-tech/framework-transient";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import * as React from "react";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
@@ -65,7 +67,16 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 }
 
 const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
-const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.ICON_RENDER_GLB_CACHE");
+const GLB_RETRY_DELAYS_MS = [200, 800] as const;
+
+type IconGlbLoad = {
+  controller: AbortController;
+  group: Promise<THREE.Group>;
+  consumers: number;
+  settled: boolean;
+};
+
+const ICON_RENDER_GLB_CACHE = ephemeralMap<string, IconGlbLoad>("framework.modules.ui.packages.typescript.targets.react.index.tsx.ICON_RENDER_GLB_CACHE");
 const ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY = "semio.iconRender.meshOutline";
 const ICON_RENDER_EDGE_GEOMETRY_CACHE = new WeakMap<THREE.BufferGeometry, THREE.EdgesGeometry>();
 
@@ -80,6 +91,15 @@ export function resolveIconRenderStroke(stroke?: string): string | null {
   return normalized === "transparent" || normalized === "none" ? null : stroke;
 }
 
+function iconRenderEdgeGeometry(geometry: THREE.BufferGeometry): THREE.EdgesGeometry {
+  let edges = ICON_RENDER_EDGE_GEOMETRY_CACHE.get(geometry);
+  if (!edges) {
+    edges = new THREE.EdgesGeometry(geometry);
+    ICON_RENDER_EDGE_GEOMETRY_CACHE.set(geometry, edges);
+  }
+  return edges;
+}
+
 function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): void {
   const targets: THREE.Mesh[] = [];
   root.traverse((object) => {
@@ -88,12 +108,7 @@ function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): vo
     targets.push(object);
   });
   for (const object of targets) {
-    let edges = ICON_RENDER_EDGE_GEOMETRY_CACHE.get(object.geometry);
-    if (!edges) {
-      edges = new THREE.EdgesGeometry(object.geometry);
-      ICON_RENDER_EDGE_GEOMETRY_CACHE.set(object.geometry, edges);
-    }
-    const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: new THREE.Color(borderColor) }));
+    const outline = new THREE.LineSegments(iconRenderEdgeGeometry(object.geometry), new THREE.LineBasicMaterial({ color: new THREE.Color(borderColor) }));
     outline.userData[ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY] = true;
     outline.scale.setScalar(1.001);
     object.add(outline);
@@ -107,30 +122,133 @@ export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg
   return [Math.cos(el) * Math.cos(az) * distance, Math.cos(el) * Math.sin(az) * distance, Math.sin(el) * distance];
 }
 
-async function loadGlbGroup(url: string): Promise<THREE.Group> {
-  const cached = ICON_RENDER_GLB_CACHE.get(url);
-  if (cached) return cached.then((group) => group.clone(true));
-  const pending = new Promise<THREE.Group>((resolve, reject) => {
-    const loader = new GLTFLoader();
-    loader.load(
-      url,
-      (gltf) => {
-        const root = new THREE.Group();
-        const frame = new THREE.Group();
-        frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
-        frame.add(gltf.scene);
-        root.add(frame);
-        resolve(root);
-      },
-      undefined,
-      reject,
-    );
-  });
-  ICON_RENDER_GLB_CACHE.set(url, pending);
-  return pending.then((group) => group.clone(true));
+class GlbTransportFailure extends Error {
+  constructor(message: string, readonly retryable: boolean) {
+    super(message);
+  }
 }
 
-function applyIconMaterial(group: THREE.Object3D, material?: IconRenderRequest["material"]): void {
+async function readGlbResponse(url: URL, signal: AbortSignal): Promise<ArrayBuffer> {
+  try {
+    const response = await fetch(url, { signal });
+    if (!response.ok) {
+      void response.body?.cancel().catch(() => {});
+      const retryable = [408, 429, 500, 502, 503, 504].includes(response.status);
+      throw new GlbTransportFailure(`GLB request returned HTTP ${response.status}`, retryable);
+    }
+    const bytes = await response.arrayBuffer();
+    const length = response.headers.get("content-length");
+    const encoding = response.headers.get("content-encoding");
+    if (length !== null && (encoding === "identity" || response.type === "basic" && encoding === null) && bytes.byteLength < Number(length)) {
+      throw new GlbTransportFailure("GLB response ended before its declared length", true);
+    }
+    return bytes;
+  } catch (error) {
+    signal.throwIfAborted();
+    if (error instanceof TypeError) throw new GlbTransportFailure(error.message, true);
+    throw error;
+  }
+}
+
+function waitForGlbRetry(delayMs: number, signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      clearTimeout(timer);
+      reject(signal.reason);
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", abort);
+      resolve();
+    }, delayMs);
+    signal.addEventListener("abort", abort, { once: true });
+  });
+}
+
+async function fetchGlbBytes(url: URL, signal: AbortSignal): Promise<ArrayBuffer> {
+  const http = url.protocol === "https:" || url.protocol === "http:";
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await readGlbResponse(url, signal);
+    } catch (error) {
+      const delay = GLB_RETRY_DELAYS_MS[attempt];
+      if (!http || delay === undefined || !(error instanceof GlbTransportFailure) || !error.retryable) throw error;
+      await waitForGlbRetry(delay, signal);
+    }
+  }
+}
+
+async function fetchGlbGroup(url: string, signal: AbortSignal): Promise<THREE.Group> {
+  signal.throwIfAborted();
+  const loader = new GLTFLoader();
+  const resourcePath = THREE.LoaderUtils.extractUrlBase(url);
+  const source = new URL(loader.manager.resolveURL(url), document.baseURI);
+  loader.manager.itemStart(url);
+  try {
+    const bytes = await fetchGlbBytes(source, signal);
+    signal.throwIfAborted();
+    const gltf = await loader.parseAsync(bytes, resourcePath);
+    signal.throwIfAborted();
+    const root = new THREE.Group();
+    const frame = new THREE.Group();
+    frame.rotation.x = GLB_MESH_FRAME_ROTATION_X;
+    frame.add(gltf.scene);
+    root.add(frame);
+    return root;
+  } catch (error) {
+    if (!signal.aborted) loader.manager.itemError(url);
+    throw error;
+  } finally {
+    loader.manager.itemEnd(url);
+  }
+}
+
+function loadGlbGroup(url: string): IconGlbLoad {
+  const cached = ICON_RENDER_GLB_CACHE.get(url);
+  if (cached) return cached;
+  const controller = new AbortController();
+  const load: IconGlbLoad = { controller, group: Promise.resolve().then(() => fetchGlbGroup(url, controller.signal)), consumers: 0, settled: false };
+  ICON_RENDER_GLB_CACHE.set(url, load);
+  void load.group.then(
+    () => { load.settled = true; },
+    () => {
+      load.settled = true;
+      if (ICON_RENDER_GLB_CACHE.get(url) === load) ICON_RENDER_GLB_CACHE.delete(url);
+    },
+  );
+  return load;
+}
+
+function waitForGlbGroup(url: string, signal?: AbortSignal): Promise<THREE.Group> {
+  signal?.throwIfAborted();
+  const load = loadGlbGroup(url);
+  load.consumers++;
+  return new Promise((resolve, reject) => {
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      signal?.removeEventListener("abort", abort);
+      if (--load.consumers !== 0 || load.settled) return;
+      if (ICON_RENDER_GLB_CACHE.get(url) === load) ICON_RENDER_GLB_CACHE.delete(url);
+      load.controller.abort();
+    };
+    const abort = () => {
+      release();
+      reject(signal?.reason);
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    void load.group.then(group => {
+      release();
+      resolve(group);
+    }, error => {
+      release();
+      reject(error);
+    });
+  });
+}
+
+function applyIconMaterial(group: THREE.Object3D, material: IconRenderRequest["material"], raster: boolean): void {
   if (material) {
     group.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
@@ -149,18 +267,18 @@ function applyIconMaterial(group: THREE.Object3D, material?: IconRenderRequest["
     });
   }
   const stroke = resolveIconRenderStroke(material?.stroke);
-  if (stroke) {
+  if (raster && stroke) {
     applyIconMeshEdgeBorders(group, stroke);
   }
 }
 
 function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.Scene {
   const scene = new THREE.Scene();
-  if (!isTransparentIconBackground(request.background)) {
+  if (request.format === "png" && !isTransparentIconBackground(request.background)) {
     scene.background = new THREE.Color(request.background);
   }
-  scene.add(model.clone(true));
-  applyIconMaterial(scene, request.material);
+  scene.add(model);
+  applyIconMaterial(scene, request.material, request.format === "png");
   const ambient = new THREE.AmbientLight(request.lights.ambientColor, request.lights.ambientIntensity);
   const sunPos = sunPositionFromAzimuthElevation(request.lights.sunAzimuth, request.lights.sunElevation);
   const sun = new THREE.DirectionalLight(request.lights.sunColor, request.lights.sunIntensity);
@@ -188,10 +306,10 @@ export function iconRenderOrthoZoomForRadius(radius: number, width: number, heig
 
 /** 👁️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
 export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
-  const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
-  const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
+  const vertical = (fovDeg * Math.PI) / 360;
+  const horizontal = Math.atan(Math.tan(vertical) * aspect);
   const half = Math.min(vertical, horizontal);
-  return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), 0.5);
+  return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), radius + 0.1);
 }
 
 /** 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
@@ -203,12 +321,12 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) return camera;
   const padding = request.fit.padding ?? 1.25;
   const direction = new THREE.Vector3(camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]);
-  if (direction.lengthSq() < 1e-12) direction.set(1, -1, 0.85);
   const length = direction.length();
+  if (length <= 1e-6) direction.set(1, -1, 0.85);
   direction.normalize();
   const target: [number, number, number] = [sphere.center.x, sphere.center.y, sphere.center.z];
   if (iconRenderCameraIsOrthographic(camera)) {
-    const distance = length > 1e-6 ? length : Math.max(sphere.radius * 4, 2);
+    const distance = Math.max(length, sphere.radius + 0.1);
     return {
       ...camera,
       position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance],
@@ -216,49 +334,52 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
       zoom: iconRenderOrthoZoomForRadius(sphere.radius, request.width, request.height, padding),
     };
   }
-  const distance = iconRenderPerspectiveDistanceForRadius(sphere.radius, camera.fov ?? 50, request.width / request.height, padding);
+  const halfFov = ((camera.fov ?? 50) * Math.PI) / 360;
+  const effectiveFov = (360 / Math.PI) * Math.atan(Math.tan(halfFov) / camera.zoom);
+  const distance = iconRenderPerspectiveDistanceForRadius(sphere.radius, effectiveFov, request.width / request.height, padding);
   return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
 /** 🔨️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
 export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
-  const up = pose.up ?? [0, 0, 1];
-  if (iconRenderCameraIsOrthographic(pose)) {
-    const camera = new THREE.OrthographicCamera(request.width / -2, request.width / 2, request.height / 2, request.height / -2, 0.1, 10_000);
-    camera.up.set(up[0], up[1], up[2]);
-    camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
-    camera.lookAt(pose.target[0], pose.target[1], pose.target[2]);
-    camera.zoom = pose.zoom;
-    camera.updateProjectionMatrix();
-    return camera;
+  const camera = iconRenderCameraIsOrthographic(pose)
+    ? new THREE.OrthographicCamera(request.width / -2, request.width / 2, request.height / 2, request.height / -2, 0.1, 10_000)
+    : new THREE.PerspectiveCamera(pose.fov ?? 50, request.width / request.height, 0.1, 10_000);
+  camera.up.fromArray(pose.up ?? [0, 0, 1]);
+  if (camera.up.lengthSq() === 0) camera.up.set(0, 1, 0);
+  else camera.up.normalize();
+  camera.position.set(...pose.position);
+  const right = new THREE.Vector3(...pose.target).sub(camera.position).normalize().cross(camera.up);
+  if (right.lengthSq() <= 1e-8) {
+    if (Math.abs(camera.up.z) > 0.5) camera.up.set(0, 1, 0);
+    else camera.up.set(0, 0, 1);
   }
-  const camera = new THREE.PerspectiveCamera(pose.fov ?? 50, request.width / request.height, 0.1, 10_000);
-  camera.up.set(up[0], up[1], up[2]);
-  camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
-  camera.lookAt(pose.target[0], pose.target[1], pose.target[2]);
+  camera.lookAt(...pose.target);
   camera.zoom = pose.zoom;
   camera.updateProjectionMatrix();
   return camera;
 }
-
 /** 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
 export function finalizeIconSvgMarkup(svgMarkup: string, options: { readonly background?: string }): string {
   if (!isTransparentIconBackground(options.background)) return svgMarkup;
   return svgMarkup.replace(/\sstyle="background-color:[^"]*"/gi, "");
 }
 
-async function renderIconSvg(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, background?: string): Promise<IconRenderResult> {
-  const renderer = new SVGRenderer();
-  if (isTransparentIconBackground(background)) {
+async function renderIconSvg(scene: THREE.Scene, camera: THREE.Camera, request: IconRenderRequest, signal?: AbortSignal): Promise<IconRenderResult> {
+  const geometry = await prepareIconSvgMeshes(scene, signal);
+  try {
+    const renderer = new SVGRenderer();
     renderer.autoClear = false;
+    renderer.setSize(request.width, request.height);
+    if (request.drawing?.fill !== false && request.drawing?.fillOpacity !== 0) renderer.render(scene, camera);
+    const svgElement = renderer.domElement;
+    await paintIconDrawing(svgElement, scene, camera, request, iconRenderEdgeGeometry, resolveIconRenderStroke(request.material?.stroke), signal);
+    const svgMarkup = new XMLSerializer().serializeToString(svgElement);
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+    return { dataUrl, svgMarkup };
+  } finally {
+    for (const mesh of geometry) mesh.dispose();
   }
-  renderer.setSize(width, height);
-  renderer.render(scene, camera);
-  const svgElement = renderer.domElement;
-  let svgMarkup = new XMLSerializer().serializeToString(svgElement);
-  svgMarkup = finalizeIconSvgMarkup(svgMarkup, { background });
-  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
-  return { dataUrl, svgMarkup };
 }
 
 async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, shadowEnabled: boolean): Promise<IconRenderResult> {
@@ -343,12 +464,15 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
 
 /** 🖌️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
 export let iconRenderPort: IconRenderPort = {
-  async render(request: IconRenderRequest): Promise<IconRenderResult> {
-    const model = await loadGlbGroup(request.assetUrl);
+  async render(request: IconRenderRequest, signal?: AbortSignal): Promise<IconRenderResult> {
+    const loaded = await waitForGlbGroup(request.assetUrl, signal);
+    signal?.throwIfAborted();
+    const model = cloneSkeleton(loaded) as THREE.Group;
     applyIconRenderTransform(model,request.transform);
     const scene = buildIconScene(request, model);
     const camera = buildIconCamera(request, iconRenderCameraPose(request, model));
-    const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height, request.background) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    const result = request.format === "svg" ? await renderIconSvg(scene, camera, request, signal) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    signal?.throwIfAborted();
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };

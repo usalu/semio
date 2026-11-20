@@ -10,7 +10,7 @@ impl<T,const N:usize> NativeArrayBacking<T,N>{
  /// 🌱️ Creates only an empty native seed without allocation or callback.
  pub const fn new()->Self{Self{pointer:None,initialized:0,work:None}}
  fn layout()->Result<Layout,ValueError>{Layout::array::<T>(N).map_err(|_|invalid("array backing layout overflow"))}
- fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("array backing changed original Work"))}Ok(())}
+ fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_source(effect)){return Err(invalid("array backing changed original Work"))}Ok(())}
  fn preflight(effect:&RetainedAllocationEffect<'_>,d:RetirementDemand)->Result<bool,ValueError>{Ok(effect.remaining_work_units()?>=1&&retained_clone_grant_admits(effect.grant(),d))}
  fn performed(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"array backing exceeded original Work"))}}
  /// 📏️ Quotes the actual allocation and only its resident native headers.

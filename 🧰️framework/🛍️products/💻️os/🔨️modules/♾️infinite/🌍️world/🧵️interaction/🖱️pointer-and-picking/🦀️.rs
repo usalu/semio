@@ -328,7 +328,7 @@ pub fn pick_hover_action(session_state: &mut WorldSessionState, camera_state: &m
         }
         return Some(ActionDescriptor { controller_id: session_state.controller_id.clone(), action: "worldSurfaceLeave".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": session_state.surface_id, "pane": session_state.surface_id })) });
     }
-    if session_state.active_utility == "brush" || (session_state.active_utility == "select" && selection_state.granularity == "vertex") {
+    if world3d_vortex_pointer_mode(&session_state.active_utility, &selection_state.granularity, !scene_state.vortices.is_empty()) {
         let hit = pick_vortex_at(session_state, camera_state, scene_state, x, y, inner);
         if selection_state.hovered_vortex_id == hit {
             return None;
@@ -436,9 +436,9 @@ pub fn marquee_select_action(session_state: &mut WorldSessionState, camera_state
     let (polygon, rectangle, crossing) = marquee_local_polygon(selection_state, inner);
     let (meshes, draws) = scene_geometry(scene_state);
     let ids = if component_mode_active(selection_state) {
-        screen_select_components(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, selection_state.granularity.as_str(), selection_state.active_object_id.as_deref(), crossing)
+        world_test_mesh_query(||screen_select_components(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, selection_state.granularity.as_str(), selection_state.active_object_id.as_deref(), crossing)).expect("finite caller mesh query admission")
     } else {
-        screen_select_instances(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)
+        world_test_mesh_query(||screen_select_instances(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)).expect("finite caller mesh query admission")
     };
     selection_state.marquee_points.clear();
     selection_state.marquee_preview_ids.clear();
@@ -722,9 +722,9 @@ pub fn update_marquee_preview(camera_state: &mut WorldCameraState, selection_sta
     let (polygon, rectangle, crossing) = marquee_local_polygon(selection_state, inner);
     let (meshes, draws) = scene_geometry(scene_state);
     selection_state.marquee_preview_ids = if component_mode_active(selection_state) {
-        screen_select_components(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, selection_state.granularity.as_str(), selection_state.active_object_id.as_deref(), crossing)
+        world_test_mesh_query(||screen_select_components(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, selection_state.granularity.as_str(), selection_state.active_object_id.as_deref(), crossing)).expect("finite caller mesh query admission")
     } else {
-        screen_select_instances(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)
+        world_test_mesh_query(||screen_select_instances(&meshes, &draws, view_proj, camera_state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)).expect("finite caller mesh query admission")
     };
 }
 

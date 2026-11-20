@@ -186,11 +186,11 @@ fn every_authored_input_of_a_family_recomputes_it_and_equals_a_fresh_inference()
         Box::new(|model| model.family_solids.get_mut("s-hea").expect("solid").material = "\"m-brick\"".into()),
         Box::new(|model| model.families.get_mut("fam-rhs").expect("family").name = "Renamed".into()),
         Box::new(|model| {
-            model.materials.remove("m-oak");
+            model.materials.cold_remove("m-oak");
         }),
         Box::new(|model| {
-            model.family_parameters.remove("fam-table.width");
-            model.family_solids.remove("s-top");
+            model.family_parameters.cold_remove("fam-table.width");
+            model.family_solids.cold_remove("s-top");
         }),
     ];
     for (index, edit) in edits.iter().enumerate() {
@@ -206,9 +206,9 @@ fn deleting_the_family_a_type_names_empties_the_solids_and_raises_a_dangling_ref
     let mut snapshot = frame();
     let mut session = ModelInferenceSession::new();
     settle(&mut session, &snapshot);
-    snapshot.families.remove("fam-hea");
-    snapshot.family_parameters.retain(|_, row| row.family != "fam-hea");
-    snapshot.family_solids.retain(|_, row| row.family != "fam-hea");
+    snapshot.families.cold_remove("fam-hea");
+    snapshot.family_parameters.cold_retain(|_, row| row.family != "fam-hea");
+    snapshot.family_solids.cold_retain(|_, row| row.family != "fam-hea");
     let after = session.refresh(&snapshot).clone();
     assert!(!after.families.contains_key("fam-hea"));
     assert!(after.element_solids.get("col-hea").is_none_or(|solid| solid.is_empty()), "no outline, no solid");

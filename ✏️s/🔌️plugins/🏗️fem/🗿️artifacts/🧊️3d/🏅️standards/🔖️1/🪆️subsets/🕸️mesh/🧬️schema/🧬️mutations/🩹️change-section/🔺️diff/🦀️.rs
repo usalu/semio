@@ -1,10 +1,10 @@
 //! 🔺️ Validates supplied section fields on the current replay base.
 use super::ChangeSection;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSectionsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSectionsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::section_breach;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSectionsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSectionsModification;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::section_breach;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 pub fn diff(payload: &ChangeSection, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {

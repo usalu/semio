@@ -216,6 +216,21 @@ impl ArtifactPreparedOperationCursor {
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,written_bytes:step.written_bytes,copied_bytes:step.progress.copied_bytes,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,complete:step.complete})
     }
 
+    /// 📐️ Quotes only the depth needed by the next retained codec step.
+    pub fn next_depth_demand(&self, source: ArtifactPreparedOperationSource<'_>) -> Result<usize, ValueError> {
+        match (self.codec.as_ref(), source) {
+            (Some(ArtifactCodecFrontier::Pack(cursor)), ArtifactPreparedOperationSource::Pack { .. })
+                if self.pack_started && self.header_offset == self.pack_header_length => cursor.next_advance_depth_demand(),
+            (Some(ArtifactCodecFrontier::Json(_)), ArtifactPreparedOperationSource::CanonicalJson { .. } | ArtifactPreparedOperationSource::HexJson { .. }) => {
+                Ok(self.canonical_json_work_demands()?.depth)
+            }
+            (Some(ArtifactCodecFrontier::Text(cursor)), ArtifactPreparedOperationSource::Text { body, .. }) => {
+                cursor.next_depth_demand(body).map(|depth| depth + 1)
+            }
+            _ => Ok(1),
+        }
+    }
+
     /// 🪙️ The same retained phase exposes whole symbol backing before physical allocation/release.
     pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_capacity_byte_demand()}else{Ok(0)} }
     pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_close_byte_demand()}else{Ok(0)} }

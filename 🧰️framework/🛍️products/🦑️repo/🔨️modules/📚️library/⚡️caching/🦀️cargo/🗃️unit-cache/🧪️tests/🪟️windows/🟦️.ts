@@ -14,7 +14,7 @@ import responseFixture from "./🧫️fixtures/response-file.json" with {type:"j
 import responseSchema from "./🧫️fixtures/response-file.schema.json" with {type:"json"};
 import {expandRustcArgumentsV1} from "../../🔏️key/🟦️.ts";
 import {ensureUnitCacheShimV1,unitCacheEnvironmentV1,unitCacheShimPathV1,UNIT_CACHE_NATIVE_BUILD_V1,type UnitCacheNativeBuildV1} from "../../🚪️launch/🟦️.ts";
-import {removeClaimFileV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
+import {openClaimFileV1,removeClaimFileV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {churnProtocolV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 test.skipIf(process.platform!=="win32")("nested compiler launch preserves a near-limit Cargo command through a response file", () => {
@@ -166,4 +166,18 @@ test("native wrapper publication preserves another producer staged executable", 
   expect(readdirSync(join(root,"bin")).map(name=>readFileSync(join(root,"bin",name),"utf8").slice(4)).sort()).toEqual(oracle);
   expect(readdirSync(join(root,"bin")).filter(name=>name.includes(".tmp"))).toEqual([]);
  } finally { database.close();rmSync(join(root,".."),{recursive:true,force:true}); }
+});
+
+test("a claim file that another process is deleting is retried on the churn pauses, then counts as held, and only unrelated failures throw", () => {
+ const refusal=(code:string)=>Object.assign(Error(code),{code});
+ for(const code of ["EPERM","EACCES","EBUSY"]){
+  const pauses:number[]=[];let calls=0;
+  expect(openClaimFileV1("s/2.lock",{platform:"win32",sleepSync:ms=>{pauses.push(ms);},open:()=>{calls++;if(calls<3)throw refusal(code);return 7;}})).toBe(7);
+  expect(pauses.length).toBe(2);
+ }
+ const pauses:number[]=[];
+ expect(openClaimFileV1("s/2.lock",{platform:"win32",sleepSync:ms=>{pauses.push(ms);},open:()=>{throw refusal("EPERM");}})).toBeUndefined();
+ expect(pauses).toEqual([...churnProtocolV1().profiles.read.backoffMs]);
+ expect(openClaimFileV1("s/2.lock",{platform:"win32",open:()=>{throw refusal("EEXIST");}})).toBeUndefined();
+ expect(()=>openClaimFileV1("s/2.lock",{platform:"win32",open:()=>{throw refusal("ENOSPC");}})).toThrow("ENOSPC");
 });

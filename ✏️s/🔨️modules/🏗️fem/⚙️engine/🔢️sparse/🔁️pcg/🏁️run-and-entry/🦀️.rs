@@ -49,11 +49,14 @@ impl PcgJob {
         if let Some(demand) = self.publication.as_ref().and_then(|publication| numerical_writer_demand(&publication.writer)) {
             return demand.map(Some);
         }
-        Ok(None)
+        if self.close_lane == 0 {
+            if let Some(demand) = matrix_close_frontier(&self.state.a)? { return Ok(Some(demand)); }
+        }
+        self.state.vector_close_frontier(self.close_lane)
     }
 
     fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
-        Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(self.close_lane >= 8)))
+        Ok(self.close_frontier()?.unwrap_or_else(|| RetirementDemand { depth: usize::from(self.close_lane < 8), ..Default::default() }))
     }
 
     fn close_turn(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<InteractiveJobCloseStep, ValueError> {
@@ -138,7 +141,7 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
         state.advance_one();
     }
     let stats = PcgStats { iterations: state.iteration, residual_norm: state.residual_norm, converged: state.converged };
-    *x0 = state.x;
+    for (target, scalar) in x0.0.iter_mut().zip(state.x.iter()) { *target = *scalar; }
     stats
 }
 

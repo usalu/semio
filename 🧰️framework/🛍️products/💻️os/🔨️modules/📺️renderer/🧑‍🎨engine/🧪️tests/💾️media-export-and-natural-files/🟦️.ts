@@ -4,6 +4,7 @@ import {
   DOWNLOAD_MEDIA_EXPORT_REVOKE_MS,
   downloadMediaExport,
   readBlobBytesBoundedV1,
+  readSelectedFilesBoundedV1,
   requestFileSelectionV1,
   requestFileOpen,
   mediaExportEncodingText
@@ -231,6 +232,29 @@ describe("framework renderer hosts", () => {
       createElement.mockRestore();
       click.mockRestore();
       remove.mockRestore();
+    }
+  });
+
+  it("checks every file size before reading and emits the exact admitted bytes", async () => {
+    const bound = fileOpenLifecycleFixture.bound;
+    const read = vi.spyOn(Blob.prototype, "slice");
+    const control = { signal: new AbortController().signal, progress: vi.fn() };
+    const within = new File([Uint8Array.from(bound.octets)], bound.name, { type: "application/x-fixture" });
+    const above = new File([new Uint8Array(bound.maximumBytes + 1)], bound.oversized);
+    try {
+      await expect(readSelectedFilesBoundedV1([within, above], "dataUrl", bound.maximumBytes, control)).rejects.toMatchObject({
+        fileName: bound.oversized, size: bound.maximumBytes + 1, maximumBytes: bound.maximumBytes,
+      });
+      expect(read).not.toHaveBeenCalled();
+      const accepted = await readSelectedFilesBoundedV1([within], "dataUrl", bound.maximumBytes, control);
+      expect(accepted).toEqual([{ name: bound.name, contents: `data:application/octet-stream;base64,${Buffer.from(bound.octets).toString("base64")}` }]);
+      expect(control.progress).toHaveBeenLastCalledWith(bound.octets.length, bound.octets.length);
+      const abort = new AbortController();
+      abort.abort();
+      await expect(readSelectedFilesBoundedV1([within], "dataUrl", bound.maximumBytes, { ...control, signal: abort.signal })).rejects.toMatchObject({ name: "AbortError" });
+      expect(read).toHaveBeenCalledTimes(1);
+    } finally {
+      read.mockRestore();
     }
   });
 });

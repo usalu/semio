@@ -28,7 +28,7 @@ test("after the first declined adoption no project reaches a worker and the pool
   const farm=openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:farmGrantEnvironmentV1(root,"farm_declined_1"),processed:()=>24,cores:10,write:line=>lines.push(line),
    spawnProcess:(()=>{const worker=new Worker();workers.push(worker);return worker;}) as never,
    request:(()=>({granted:Promise.resolve(undefined),release:()=>{released.push("host");}})) as never,
-   adopt:((_root:string,_staging:string,names:readonly string[])=>{adoptions.push(names.join(","));return {published:0,present:0,declined:true};}) as never})!;
+   adopt:((_root:string,_staging:string,names:readonly string[])=>{adoptions.push(names.join(","));return {published:0,present:0,declined:true,reason:"ledger-contention"};}) as never})!;
   const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
   for(let index=0;index<GRAPH_FARM_POLICY_V1.minimumProjects;index++)await farm.prepare(job("miss"+index));
   await new Promise<number>(done=>farm.onReady(done));
@@ -38,6 +38,7 @@ test("after the first declined adoption no project reaches a worker and the pool
   expect(adoptions).toEqual(["inference/np/000000000000000000000000.json"]);
   expect(lines.some(line=>line.includes("declined the leaves of project first"))).toBe(true);
   expect(lines.some(line=>line.includes("no more worker processes"))).toBe(true);
+  expect(lines.filter(line=>line.includes("reason=ledger-contention")).length).toBeGreaterThanOrEqual(2);
   for(let wait=0;wait<100&&workers.some(worker=>worker.exitCode===null);wait++)await Bun.sleep(10);
   expect(workers.every(worker=>worker.exitCode!==null)).toBe(true);
   await farm.close();

@@ -10,8 +10,8 @@ use super::*;
 /// 🧭️ The one shared presence overlay every `UiNode` variant gets for free, drawn centrally by
 /// `paint_node` after that variant's own paint: `previewed`/`disabled` fills underneath nothing extra
 /// (disabled reads as a scrim so it composes over whatever the variant already drew), a `status` ring
-/// (loading spin / waiting dash / finished solid — mutually exclusive, `idle` draws nothing), an
-/// outset accent ring for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
+/// (loading spin / waiting dash / finished solid — mutually exclusive, `idle` draws nothing), a
+/// closed on-seam accent silhouette for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
 /// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
 /// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
 pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence, selected: bool) {
@@ -26,8 +26,7 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
         UiStatus::Idle => {}
     }
     if selected {
-        let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
-        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Active);
+        push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Active);
     } else if presence.state == UiState::Previewed {
         push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Focus);
     }
@@ -127,6 +126,11 @@ pub fn focus_ring_visible(flags: NodeFlags) -> bool {
     flags.contains(NodeFlags::FOCUSED) && flags.contains(NodeFlags::FOCUS_VISIBLE)
 }
 
+/// 🏆️ Whether this node owns the hover: only the innermost enabled interactive node of the hover chain paints hover, never an ancestor of it.
+pub fn hover_owner(flags: NodeFlags) -> bool {
+    flags.contains(NodeFlags::HOVER_OWNER)
+}
+
 /// 🖌️ Paints a progress bar from theme tokens only: `muted` track, `accent` fill at the theme's own
 /// corner radius — React's `ProgressView` is `bg-muted` + `bg-accent` (`🗣️Interpreter/🟦️.tsx:
 /// 2114-2116`), and its `rounded-full` resolves to `--radius-full`, which this design system pins to
@@ -180,7 +184,7 @@ pub fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, th
     if !activatable {
         return;
     }
-    let hovered = flags.contains(NodeFlags::HOVERED);
+    let hovered = hover_owner(flags);
     let bg = if hovered { theme.button_hover } else { theme.panel };
     push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else { theme.border_normal }, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else { semio_ui_draw_contract::SharedBorderState::Normal });
 }
@@ -208,7 +212,7 @@ pub fn paint_checkbox(node: &semio_ui_declaration::ui::UiToggleNode, bounds: Rec
     let side = SIZE_TINY.min(bounds.h).min(bounds.w);
     let rect = Rect::new(if inline.is_rtl() { bounds.x + bounds.w - side } else { bounds.x }, bounds.y + (bounds.h - side) * 0.5, side, side);
     let border = if focus_ring_visible(flags) { theme.accent } else { theme.border_normal };
-    push_control_border(draw, rect, theme, border, if node.presence.selected { theme.text } else { theme.input_bg }, if node.presence.selected { semio_ui_draw_contract::SharedBorderState::Active } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
+    push_control_border(draw, rect, theme, border, if node.presence.selected { theme.text } else { theme.input_bg }, if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else if node.presence.selected { semio_ui_draw_contract::SharedBorderState::Active } else { semio_ui_draw_contract::SharedBorderState::Normal });
     if node.presence.selected {
         let color = theme.panel;
         draw.push_line(rect.x + side * 0.2, rect.y + side * 0.5, rect.x + side * 0.43, rect.y + side * 0.73, color, theme.stroke_hairline * 1.5);

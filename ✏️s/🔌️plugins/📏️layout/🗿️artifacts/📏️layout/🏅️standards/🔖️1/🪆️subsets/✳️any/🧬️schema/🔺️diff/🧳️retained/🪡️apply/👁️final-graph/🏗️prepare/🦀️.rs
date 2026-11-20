@@ -25,11 +25,50 @@ impl FinalGraphPreparation{
  pub fn sources_ready(&self)->bool{self.phase>0&&!self.closing}
  fn verify(&self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>)->Result<(),ValueError>{if self.stamps.is_some_and(|(p,a)|p!=post.reference_identity()||a!=d.reference_identity()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Layout final graph original live-post or authored source changed"))}Ok(())}
  pub fn sources_demand(&self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{self.verify(d,post)?;if self.closing{return Err(fault())}if self.phase>0{return Ok(fixed())}nested(self.reader()?.bindings.demand(post,d,body.saturating_sub(META))?)}
- pub fn bind_sources(&mut self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,body:usize,g:RetainedCloneGrant)->Result<PlanAdvance,ValueError>{let demand=self.sources_demand(d,post,body)?;if !retained_clone_grant_admits(g,demand){return Ok(PlanAdvance{progress:Default::default(),done:false,error:None})}if self.phase>0{return Ok(PlanAdvance{progress:paid(),done:true,error:None})}if self.stamps.is_none(){self.stamps=Some((post.reference_identity(),d.reference_identity()))}let p=self.reader.as_mut().ok_or_else(fault)?.bindings.advance(post,d,body.saturating_sub(META),child(g)).map_err(refused)?.progress();if self.reader()?.bindings.ready(){self.phase=1}Ok(PlanAdvance{progress:receipt(p),done:self.phase>0,error:None})}
+ pub fn sources_work_demand(&self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,body:usize)->Result<u64,ValueError>{
+  self.sources_demand(d,post,body)?;
+  if self.phase>0{return Ok(0)}
+  self.reader()?.bindings.work_demand(post,d,body.saturating_sub(META))?.checked_add(1).ok_or_else(fault)
+ }
+ pub fn bind_sources(&mut self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,body:usize,effect:&mut RetainedAllocationEffect<'_>,recover:bool,work:&mut u128)->Result<PlanAdvance,RetirementPollExit>{
+  if recover{return Err(fault().into())}
+  let g=effect.grant();
+  let demand=self.sources_demand(d,post,body)?;
+  if self.phase>0{return Ok(PlanAdvance{progress:Default::default(),done:true,error:None})}
+  if !retained_clone_grant_admits(g,demand)||effect.remaining_work_units()?<self.sources_work_demand(d,post,body)?{return Ok(PlanAdvance{progress:Default::default(),done:false,error:None})}
+  let before=effect.performed_work();
+  if !effect.performed(1)?{return Err(fault().into())}
+  if self.stamps.is_none(){self.stamps=Some((post.reference_identity(),d.reference_identity()))}
+  let step=self.reader.as_mut().ok_or_else(fault)?.bindings.advance(post,d,body.saturating_sub(META),&mut effect.nested(child(g)));
+  *work+=effect.performed_work().saturating_sub(before);
+  let p=step.map_err(refused)?.progress();
+  if self.reader()?.bindings.ready(){self.phase=1}
+  Ok(PlanAdvance{progress:receipt(p),done:self.phase>0,error:None})
+ }
  fn root_capacity(&self,post:&LayoutSnapshot,d:&LayoutDiff,roots:&RootCollections)->Result<usize,ValueError>{let sizes=[size_of::<ParagraphRead<'static>>(),size_of::<CharacterRead<'static>>(),size_of::<ParentRow>(),size_of::<SpreadRow>(),size_of::<PageRow>(),size_of::<StoryRow>(),size_of::<&str>()];let mut total=0usize;for(kind,size)in sizes.into_iter().enumerate(){total=total.checked_add(count(post,d,roots,kind).checked_mul(size).ok_or_else(fault)?).ok_or_else(fault)?;}Ok(total)}
  fn root_bytes(reader:&GraphReader)->usize{reader.paragraphs.capacity()*size_of::<ParagraphRead<'static>>()+reader.characters.capacity()*size_of::<CharacterRead<'static>>()+reader.parents.capacity()*size_of::<ParentRow>()+reader.spreads.capacity()*size_of::<SpreadRow>()+reader.pages.capacity()*size_of::<PageRow>()+reader.stories.capacity()*size_of::<StoryRow>()+reader.links.capacity()*size_of::<&str>()}
  pub fn demand(&self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,roots:&RootCollections,nested_work:&NestedWork,body:usize)->Result<RetirementDemand,ValueError>{self.verify(d,post)?;if self.closing{return Err(fault())}Ok(match self.phase{0=>return self.sources_demand(d,post,body),1=>RetirementDemand{capacity_bytes:self.root_capacity(post.get(),d.get(),roots)?,..fixed()},2|3|4|13=>fixed(),5=>return nested(ScratchHashMap::<Key,usize>::reservation_demands(self.frames)?),6=>RetirementDemand{copy_bytes:ScratchHashMap::<Key,usize>::slot_bytes()+META,depth:1,..Default::default()},7=>{if self.page==self.reader()?.pages.len()||self.sub!=0{fixed()}else{let page=&self.reader()?.pages[self.page];let group=nested_work.final_page(self.page);let frames=group.map_or(page.base.frames.len(),|v|v.frame_count(page.base));let layers=group.map_or(page.base.layers.len(),|v|v.layer_count(page.base));let guides=group.map_or(page.base.guides.len(),|v|v.final_guide_count(page.base));let overrides=group.map_or(page.base.overrides.len(),|v|v.final_override_count(page.base));RetirementDemand{capacity_bytes:frames.checked_mul(size_of::<FrameRow>()).and_then(|n|layers.checked_mul(size_of::<LayerRow>()).and_then(|v|n.checked_add(v))).and_then(|n|guides.checked_mul(size_of::<&LayoutRect>()).and_then(|v|n.checked_add(v))).and_then(|n|overrides.checked_mul(size_of::<&semio_s_artifact_layout_layout_model::PageOverride>()).and_then(|v|n.checked_add(v))).ok_or_else(fault)?,..fixed()}}},8=>if self.page==self.reader()?.stories.len()||self.sub!=0{fixed()}else{let story=&self.reader()?.stories[self.page];RetirementDemand{capacity_bytes:nested_work.final_story(self.page).map_or(story.base.style_runs.len(),|v|v.final_run_count()).checked_mul(size_of::<&TextStyleRun>()).ok_or_else(fault)?,..fixed()}},9=>RetirementDemand{copy_bytes:ScratchHashMap::<Key,usize>::slot_bytes()+META,release_bytes:if self.map.initialized_slots()==0{self.map.backing_bytes()}else{0},depth:1,..Default::default()},10=>return nested(OwnedLayoutGraphValidation::reader_birth_demand::<GraphReader>()),11=>return nested(self.validation.demand(body.saturating_sub(META))?),12=>return nested(self.validation.close_demand(body.saturating_sub(META))?),_=>return Err(fault())})}
- pub fn advance(&mut self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,roots:&RootCollections,nested_work:&NestedWork,body:usize,g:RetainedCloneGrant)->Result<PlanAdvance,ValueError>{let demand=self.demand(d,post,roots,nested_work,body)?;let mut out=PlanAdvance{progress:Default::default(),done:false,error:self.error};if !retained_clone_grant_admits(g,demand){return Ok(out)}if self.phase==0{let mut step=self.bind_sources(d,post,body,g)?;step.done=false;return Ok(step)}out.progress=paid();let post:&'static LayoutSnapshot=unsafe{loan(post.get())};let d:&'static LayoutDiff=unsafe{loan(d.get())};match self.phase{
+ pub fn work_demand(&self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,roots:&RootCollections,nested_work:&NestedWork,body:usize)->Result<u64,ValueError>{
+  self.demand(d,post,roots,nested_work,body)?;
+  let inner=body.saturating_sub(META);
+  match self.phase{
+   0=>self.sources_work_demand(d,post,body),
+   10=>Ok(2),
+   11=>self.validation.work_demand(inner)?.checked_add(1).ok_or_else(fault),
+   12=>self.validation.close_work_demand(inner)?.checked_add(1).ok_or_else(fault),
+   _=>Ok(1),
+  }
+ }
+ pub fn advance(&mut self,d:RetainedCloneRef<'_,LayoutDiff>,post:RetainedCloneRef<'_,LayoutSnapshot>,roots:&RootCollections,nested_work:&NestedWork,body:usize,effect:&mut RetainedAllocationEffect<'_>,recover:bool,work:&mut u128)->Result<PlanAdvance,RetirementPollExit>{
+  if recover{return Err(fault().into())}
+  let g=effect.grant();let demand=self.demand(d,post,roots,nested_work,body)?;
+  let mut out=PlanAdvance{progress:Default::default(),done:false,error:self.error};
+  if !retained_clone_grant_admits(g,demand)||effect.remaining_work_units()?<self.work_demand(d,post,roots,nested_work,body)?{return Ok(out)}
+  if self.phase==0{let mut step=self.bind_sources(d,post,body,effect,false,work)?;step.done=false;return Ok(step)}
+  let before=effect.performed_work();
+  let result=(||->Result<PlanAdvance,ValueError>{
+  if !effect.performed(1)?{return Err(fault())}
+  out.progress=paid();let post:&'static LayoutSnapshot=unsafe{loan(post.get())};let d:&'static LayoutDiff=unsafe{loan(d.get())};match self.phase{
  1=>{let r=self.reader.as_mut().ok_or_else(fault)?;let reserved=r.paragraphs.try_reserve_exact(count(post,d,roots,0)).and_then(|_|r.characters.try_reserve_exact(count(post,d,roots,1))).and_then(|_|r.parents.try_reserve_exact(count(post,d,roots,2))).and_then(|_|r.spreads.try_reserve_exact(count(post,d,roots,3))).and_then(|_|r.pages.try_reserve_exact(count(post,d,roots,4))).and_then(|_|r.stories.try_reserve_exact(count(post,d,roots,5))).and_then(|_|r.links.try_reserve_exact(count(post,d,roots,6)));out.progress.retained_capacity_bytes=Self::root_bytes(r);if reserved.is_err()||out.progress.retained_capacity_bytes>g.maximum_capacity_bytes{return Err(fault().with_retained_progress(out.progress))}r.schema=Some(d.schema.as_deref().unwrap_or(&post.schema));r.grid.baseline_grid=d.grid.as_ref().and_then(|v|v.baseline_grid).unwrap_or(post.grid.baseline_grid);r.grid.baseline_offset=d.grid.as_ref().and_then(|v|v.baseline_offset).unwrap_or(post.grid.baseline_offset);r.background=d.background_drawing.as_ref().map(|v|v.as_ref()).unwrap_or(post.background_drawing.as_ref());self.kind=0;self.index=0;self.phase=2},
  2=>{if self.kind==7{self.phase=3;self.kind=0;self.index=0}else if self.index==count(post,d,roots,self.kind){self.kind+=1;self.index=0}else{let r=self.reader.as_mut().ok_or_else(fault)?;match self.kind{0=>{let v=paragraph_base(post,d,roots,self.index);r.paragraphs.push(ParagraphRead{id:&v.id,name:&v.name,font_family:&v.font_family,font_size:v.font_size,font_weight:v.font_weight,leading:v.leading,tracking:v.tracking,alignment:&v.alignment})},1=>{let v=character_base(post,d,roots,self.index);r.characters.push(CharacterRead{id:&v.id,font_size:v.font_size,font_weight:v.font_weight,tracking:v.tracking,color:v.color})},2=>{let v=parent_base(post,d,roots,self.index);r.parents.push(ParentRow{base:v,read:ParentRead{id:&v.id,name:&v.name,width:v.width,height:v.height}})},3=>{let v=spread_base(post,d,roots,self.index);r.spreads.push(SpreadRow{read:SpreadRead{id:&v.id,name:&v.name},pages:&v.page_ids})},4=>{let v=page_base(post,d,roots,self.index);r.pages.push(PageRow{base:v,read:PageRead{id:&v.id,spread_id:&v.spread_id,parent_page_id:v.parent_page_id.as_deref(),width:v.width,height:v.height,margins:[v.margins.top,v.margins.right,v.margins.bottom,v.margins.left],columns:v.columns.count,gutter:v.columns.gutter},drawing:v.background_drawing.as_ref(),cached_layers:&v.layer_ids,frames:Vec::new(),layers:Vec::new(),guides:Vec::new(),overrides:Vec::new()})},5=>{let v=story_base(post,d,roots,self.index);r.stories.push(StoryRow{base:v,read:StoryRead{id:&v.id,content:&v.content},runs:Vec::new()})},6=>r.links.push(&link_base(post,d,roots,self.index).id),_=>return Err(fault())}self.index+=1}},
  3=>{if self.kind==6{self.phase=4;self.page=0;self.frames=0}else if self.index==modifications(d,self.kind){self.kind+=1;self.index=0}else{let i=self.index;let r=self.reader.as_mut().ok_or_else(fault)?;match self.kind{
@@ -45,10 +84,10 @@ impl FinalGraphPreparation{
  7=>self.build_page(d,nested_work,g,&mut out)?,
  8=>{if self.page==self.reader()?.stories.len(){self.phase=9}else{let r=self.reader.as_mut().ok_or_else(fault)?;let row=&mut r.stories[self.page];let group=nested_work.final_story(self.page);let n=group.map_or(row.base.style_runs.len(),|v|v.final_run_count());if self.sub==0{let reserved=row.runs.try_reserve_exact(n);out.progress.retained_capacity_bytes=row.runs.capacity()*size_of::<&TextStyleRun>();if reserved.is_err()||out.progress.retained_capacity_bytes>g.maximum_capacity_bytes{return Err(fault().with_retained_progress(out.progress))}self.sub=1;self.index=0}else if self.index==n{self.page+=1;self.sub=0;self.index=0}else{let run=match group{Some(group)=>group.final_run(row.base,d.stories.as_ref().ok_or_else(fault)?,self.index),None=>&row.base.style_runs[self.index]};row.runs.push(run);self.index+=1}}},
  9=>{out.progress.copied_bytes=demand.copy_bytes;if self.map.pop_last_slot().is_none(){out.progress.released_bytes=self.map.release_empty_backing()?;self.phase=10}},
- 10=>{let reader=self.reader.take().ok_or_else(fault)?;match self.validation.start(reader,child(g)){Ok(p)=>out.progress=receipt(p),Err((e,reader))=>{*self.reader=Some(reader);return Err(refused(e))}}self.phase=11},
- 11=>{let turn=self.validation.advance(body.saturating_sub(META),child(g)).map_err(refused)?;out.progress=receipt(turn.progress);if turn.done{self.error=turn.error;self.validation.begin_close();self.phase=12}},
- 12=>{out.progress=receipt(self.validation.close_step(child(g)).map_err(refused)?.progress());if self.validation.terminal_is_empty(){self.phase=13}},
- 13=>{self.stamps=None;out.done=true;out.error=self.error},_=>return Err(fault())}Ok(out)}
+ 10=>{let reader=self.reader.take().ok_or_else(fault)?;match self.validation.start(reader,&mut effect.nested(child(g))){Ok(p)=>out.progress=receipt(p),Err((e,reader))=>{*self.reader=Some(reader);return Err(refused(e))}}self.phase=11},
+ 11=>{let turn=self.validation.advance(body.saturating_sub(META),&mut effect.nested(child(g))).map_err(refused)?;out.progress=receipt(turn.progress);if turn.done{self.error=turn.error;self.validation.begin_close();self.phase=12}},
+ 12=>{out.progress=receipt(self.validation.close_step(body.saturating_sub(META),&mut effect.nested(child(g))).map_err(refused)?.progress());if self.validation.terminal_is_empty(){self.phase=13}},
+ 13=>{self.stamps=None;out.done=true;out.error=self.error},_=>return Err(fault())}Ok(out)})();*work+=effect.performed_work().saturating_sub(before);Ok(result?)}
  fn build_page(&mut self,d:&'static LayoutDiff,nested_work:&NestedWork,g:RetainedCloneGrant,out:&mut PlanAdvance)->Result<(),ValueError>{if self.page==self.reader()?.pages.len(){self.phase=8;self.page=0;self.sub=0;self.index=0;return Ok(())}let page=self.page;let group=nested_work.final_page(page);let row=&mut self.reader.as_mut().ok_or_else(fault)?.pages[page];let delta=d.pages.as_ref();let frames=group.map_or(row.base.frames.len(),|v|v.frame_count(row.base));let layers=group.map_or(row.base.layers.len(),|v|v.layer_count(row.base));match self.sub{
  0=>{let guides=group.map_or(row.base.guides.len(),|v|v.final_guide_count(row.base));let overrides=group.map_or(row.base.overrides.len(),|v|v.final_override_count(row.base));let reserved=row.frames.try_reserve_exact(frames).and_then(|_|row.layers.try_reserve_exact(layers)).and_then(|_|row.guides.try_reserve_exact(guides)).and_then(|_|row.overrides.try_reserve_exact(overrides));out.progress.retained_capacity_bytes=row.frames.capacity()*size_of::<FrameRow>()+row.layers.capacity()*size_of::<LayerRow>()+row.guides.capacity()*size_of::<&LayoutRect>()+row.overrides.capacity()*size_of::<&semio_s_artifact_layout_layout_model::PageOverride>();if reserved.is_err()||out.progress.retained_capacity_bytes>g.maximum_capacity_bytes{return Err(fault().with_retained_progress(out.progress))}if let Some(group)=group{row.cached_layers=unsafe{loan(group.final_cached_layer_ids(row.base).map_err(|e|e.with_retained_progress(out.progress))?)}}self.sub=1;self.index=0},
  1=>{if self.index==frames{self.sub=3;self.index=0}else{let frame=match group{Some(group)=>group.frame(row.base,delta.ok_or_else(fault)?,self.index),None=>&row.base.frames[self.index]};row.frames.push(FrameRow::original(frame));if let Some(group)=group{if !group.final_frame_modifications().is_empty(){self.key=numeric_key(page,group.final_frame_origin(self.index));self.target=self.index;self.probe=start(self.key,self.map.initialized_slots());self.sub=2;}else{self.index+=1}}else{self.index+=1}}},
@@ -61,7 +100,41 @@ impl FinalGraphPreparation{
  9=>{self.page+=1;self.index=0;self.sub=0},_=>return Err(fault())}Ok(())}
  pub fn begin_close(&mut self){self.closing=true;self.validation.begin_close();if let Some(reader)=self.reader.as_mut(){reader.begin_close()}}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.validation.terminal_is_empty(){return nested(self.validation.close_demand(body.saturating_sub(META))?)}if self.map.initialized_slots()>0||self.map.backing_bytes()>0{return Ok(RetirementDemand{copy_bytes:ScratchHashMap::<Key,usize>::slot_bytes()+META,release_bytes:if self.map.initialized_slots()==0{self.map.backing_bytes()}else{0},depth:1,..Default::default()})}if let Some(reader)=self.reader.as_ref(){if !reader.terminal_is_empty(){return nested(reader.close_demand(body.saturating_sub(META))?)}}Ok(fixed())}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(fault())}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.validation.terminal_is_empty(){return self.validation.close_step(child(g)).map(|v|RetainedCloneStep::Progress(receipt(v.progress()))).map_err(refused)}let mut p=paid();if self.map.initialized_slots()>0||self.map.backing_bytes()>0{p.copied_bytes=d.copy_bytes;if self.map.pop_last_slot().is_none(){p.released_bytes=self.map.release_empty_backing()?}return Ok(RetainedCloneStep::Progress(p))}if let Some(reader)=self.reader.as_mut(){if !reader.terminal_is_empty(){return reader.close_step(child(g)).map(|v|RetainedCloneStep::Progress(receipt(v.progress()))).map_err(refused)}}self.reader.take();self.stamps=None;Ok(RetainedCloneStep::Complete(p))}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if self.terminal_is_empty(){return Ok(0)}
+  let inner=body.saturating_sub(META);
+  if !self.validation.terminal_is_empty(){return self.validation.close_work_demand(inner)?.checked_add(1).ok_or_else(fault)}
+  if self.map.initialized_slots()==0&&self.map.backing_bytes()==0{
+   if let Some(reader)=self.reader.as_ref().filter(|reader|!reader.terminal_is_empty()){
+    return reader.close_work_demand(inner)?.checked_add(1).ok_or_else(fault)
+   }
+  }
+  Ok(1)
+ }
+ pub fn close_step(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,recover:bool,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{
+  if !self.closing||recover||original.is_some(){return Err(fault().into())}
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let g=effect.grant();let d=self.close_demand(body)?;
+  if !retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.close_work_demand(body)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let before=effect.performed_work();
+  let result=(||->Result<RetainedCloneStep,ValueError>{
+   if !effect.performed(1)?{return Err(fault())}
+   let inner=body.saturating_sub(META);
+   if !self.validation.terminal_is_empty(){return self.validation.close_step(inner,&mut effect.nested(child(g))).map(|v|RetainedCloneStep::Progress(receipt(v.progress()))).map_err(refused)}
+   let mut p=paid();
+   if self.map.initialized_slots()>0||self.map.backing_bytes()>0{
+    p.copied_bytes=d.copy_bytes;
+    if self.map.pop_last_slot().is_none(){p.released_bytes=self.map.release_empty_backing()?}
+    return Ok(RetainedCloneStep::Progress(p))
+   }
+   if let Some(reader)=self.reader.as_mut().filter(|reader|!reader.terminal_is_empty()){
+    return reader.close_step(inner,&mut effect.nested(child(g))).map(|v|RetainedCloneStep::Progress(receipt(v.progress()))).map_err(refused)
+   }
+   self.reader.take();self.stamps=None;Ok(RetainedCloneStep::Complete(p))
+  })();
+  *work+=effect.performed_work().saturating_sub(before);
+  Ok(result?)
+ }
  pub fn terminal_is_empty(&self)->bool{self.validation.terminal_is_empty()&&self.map.initialized_slots()==0&&self.map.backing_bytes()==0&&self.reader.is_none()&&self.stamps.is_none()}
 }
 impl Drop for FinalGraphPreparation{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Final graph validation and original source custody require funded close")}}

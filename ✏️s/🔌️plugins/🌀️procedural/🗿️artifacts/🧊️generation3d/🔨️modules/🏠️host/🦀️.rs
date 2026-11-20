@@ -175,14 +175,20 @@ pub enum Generation3dReplayDisplaced {
 /// 🧊️ Retires one displaced replay owner at a cold boundary by paying every currency its own close quote names.
 #[cfg(any(test, feature = "testkit"))]
 fn generation3d_retire_displaced_cold(value: Generation3dReplayDisplaced) {
-    use semio_framework_value::retained_clone::RetainedCloneGrant;
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Generation3dReplayDisplaced>(), maximum_release_bytes: 0, maximum_depth: 2 };
-    let Ok((mut owner, _)) = semio_framework_value::retirement::admit_owned_retirement(value, birth).result else { panic!("cold displaced replay owner refused its own birth") };
+    use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
+    use semio_framework_value::{RetainedCloneGrant, retirement::controlled::ControlledRetirement};
+
+    let grant = RetainedCloneGrant { maximum_items: 1 << 28, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 256 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), grant, || Some(1), 1_000_000_000, 64_000_000);
+    let mut owner = ControlledRetirement::new(value).map_err(|(error, _)| error).expect("cold displaced retirement refused");
     while !owner.terminal_is_empty() {
-        let copy = owner.next_copy_byte_demand().expect("cold displaced copy demand").max(GENERATION3D_OWNER_BYTES);
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("cold displaced capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("cold displaced release demand"), maximum_depth: owner.next_depth_demand().expect("cold displaced depth demand").max(1) };
-        owner.close_step(grant).result.expect("cold displaced replay close");
+        caller.turn(grant, |cx| cx.with_original_retirement(|cx| {
+            let body = cx.retained_grant().maximum_copy_bytes;
+            semio_framework_job::close_original_effect_step(cx, owner.selected_demand(body)?, |effect| owner.step(body, effect))?;
+            Ok(())
+        })).expect("cold displaced replay close");
     }
+    caller.retire(grant);
 }
 
 /// 🪜️ Pays one Flow frontier turn under the caller's original effect.

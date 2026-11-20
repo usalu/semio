@@ -38,3 +38,10 @@ test("closure input frames preserve exact bytes within existing own-data authori
  const source=readFileSync(new URL("../../📡️session/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8");expect(source).toContain("frames:closureReadInputFramesV1(result.bootstrap,I,S).length");expect(source).toContain("frames:bootstrapFrames.length");expect(source).toContain("state.frames+=1+requestFrames.length");expect(source).not.toContain("text:captured.bootstrap");expect(source).not.toContain("text:packet");expect(source.indexOf("const ready=await readOwnedCommandChannelLineV1(channel)")).toBeLessThan(source.indexOf("const packet=(await request(rows))"));
  }finally{db.close();}
 },60000);
+
+test("the closure worker channel runs under a finite renewable control, because an owned interactive command refuses the unbounded maintenance control",()=>{
+ const source=readFileSync(new URL("../../📡️session/🟦️.ts",import.meta.url),"utf8");
+ expect(source).toContain("finite=createRenewableIssuedResourceControlV1(control,progressDeadlinePolicyV1(\"native-child\",batches.length,process.env),batches.length)");
+ expect(source).toContain("[...captured.argv],cwd,{control:finite,output:");
+ expect(source).not.toMatch(/\[\.\.\.captured\.argv\],cwd,\{control,/u);
+});

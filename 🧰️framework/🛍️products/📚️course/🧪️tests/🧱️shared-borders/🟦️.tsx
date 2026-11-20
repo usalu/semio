@@ -3,18 +3,20 @@
  * group of cells; a row list is a group (flush) or a frame (framed) of cells that carry no outline of their own; a
  * segmented choice is a frame whose buttons are cells, or a flush row; a row button and a problem note of a flush card
  * have no border utility. The stylesheet draws no border on a row of a shared list and no dashed guess; cells laid side
- * by side only set the design system's `--shared-border-flow`, which `lightningcss` (the CSS engine Tailwind runs on)
- * reads as the third-party oracle.
+ * by side declare no divider at all: the compositor resolves every divider and every hover, focus and selection stroke
+ * of a cell as a closed silhouette, and `lightningcss` (the CSS engine Tailwind runs on) is the third-party oracle that
+ * the stylesheet declares no state line and no cell divider.
  *
  * @see ../../🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx
  * @see ../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css — the shared-border rules
  */
 
 import { cleanup, render, screen, within } from "@testing-library/react";
+import { overviewCardChipClass } from "@semio-tech/ui-react/chrome";
 import { transform } from "lightningcss";
 import { afterEach, describe, expect, it } from "vitest";
 import type { SheetClassificationTask } from "@semio-tech/course";
-import { BodyButton, CELL, CardSection, ClassificationTaskView, CourseCard, ProblemNote, RowList, Segments, courseText } from "@semio-tech/course-react";
+import { BodyButton, CELL, CardLink, CardSection, ClassificationTaskView, CourseCard, ProblemNote, RowList, Segments, courseText } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import { LoadFallback } from "../../🎯️targets/⚛️react/🔨️modules/📚️app/🛟️load-fallback/🟦️.tsx";
 import { readFileSync } from "node:fs";
@@ -127,6 +129,38 @@ describe("🧱️ shared borders", () => {
   });
 });
 
+describe("🔲️ controls outside a row are boxes of the compositor", () => {
+  it("makes a plain body button a framed box, a card link and a tile a borderless box, and a notice's details a borderless box", () => {
+    render(
+      <>
+        <BodyButton onClick={() => undefined}>Plain</BodyButton>
+        <BodyButton tile onClick={() => undefined}>Tile</BodyButton>
+        <CardLink href="#x">Link</CardLink>
+        <ProblemNote problem={{ message: "Broken", detail: "why" }} text={text} />
+      </>,
+    );
+    const plain = screen.getByRole("button", { name: "Plain" });
+    expect(plain.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(plain.hasAttribute("data-shared-border-edges")).toBe(false);
+    for (const borderless of [screen.getByRole("button", { name: "Tile" }), screen.getByRole("link", { name: "Link" }), document.querySelector("summary")!]) {
+      expect(borderless.hasAttribute("data-shared-border-frame")).toBe(true);
+      expect(borderless.getAttribute("data-shared-border-edges")).toBe("");
+    }
+  });
+
+  it("gives no control a focus ring, outline, underline or border of its own in a class", () => {
+    render(
+      <>
+        <BodyButton onClick={() => undefined}>Plain</BodyButton>
+        <CardLink href="#x">Link</CardLink>
+        <Segments label="choice" options={[{ value: "a", label: "A" }]} value="a" onChange={() => undefined} />
+      </>,
+    );
+    const owned = new Set(overviewCardChipClass.split(/\s+/u));
+    for (const control of document.querySelectorAll("button, a")) expect(control.className.split(/\s+/u).filter((token) => !owned.has(token)).join(" ")).not.toMatch(/(?:^|\s)focus(?:-visible|-within)?:(?:ring|outline|border|underline)/u);
+  });
+});
+
 const label = (en: string, de: string) => ({ en, de });
 const PLACES: SheetClassificationTask = {
   kind: "classification",
@@ -151,9 +185,11 @@ describe("🗂️ the classification as shared cells", () => {
     expect(cells(root).map((cell) => cell.className.includes("course-pool") || cell.className.includes("course-categories"))).toEqual([true, true]);
     for (const row of document.querySelectorAll(".course-chip")) {
       expect(row.hasAttribute("data-shared-border-cell")).toBe(true);
+      expect(row.hasAttribute("data-shared-border-group")).toBe(true);
       expect(row.className).not.toMatch(BORDERISH);
       const select = row.querySelector("select")!;
       expect(select.className).toMatch(/\bcourse-cell\b/u);
+      expect(select.hasAttribute("data-shared-border-cell")).toBe(true);
       expect(select.className).not.toMatch(BORDER);
     }
     expect(document.querySelector(".course-pool")?.className).not.toMatch(/dashed/u);
@@ -200,8 +236,16 @@ describe("🎨️ the stylesheet and the shared borders", () => {
     },
   });
 
-  it("gives a trailing control of a row only the divider to its left", () => {
-    expect(/\.course-cell \{[^}]*align-self: stretch;[^}]*border: 0;[^}]*border-radius: 0;[^}]*border-inline-start: var\(--stroke-hairline\) solid/u.test(stylesheet)).toBe(true);
+  it("gives a trailing control of a row no border of its own: its dividers and its state strokes are the compositor's", () => {
+    expect(/\.course-cell \{[^}]*align-self: stretch;[^}]*border: 0;[^}]*border-radius: 0;[^}]*\}/u.test(stylesheet)).toBe(true);
+    expect(stylesheet).not.toMatch(/\.course-cell \{[^}]*border-inline/u);
+  });
+
+  it("declares no state line: no focus ring, outline or border colour of a hover, a focus or a selection outside the compositor", () => {
+    expect(stylesheet).not.toMatch(/\.course-cell:focus/u);
+    expect(stylesheet).not.toMatch(/:focus-visible[^{]*\{[^}]*(?:outline|border-color|box-shadow)/u);
+    expect(stylesheet).not.toMatch(/\.course-skip-link:focus/u);
+    expect(stylesheet).not.toMatch(/:hover[^{]*\{[^}]*border-color/u);
   });
 
   it("draws no border on a row of the matching slots or the steps", () => {
@@ -211,9 +255,9 @@ describe("🎨️ the stylesheet and the shared borders", () => {
     }
   });
 
-  it("moves the dividers of side-by-side cells from rows to columns through the design system's flow variable, never a hand-rolled divider", () => {
-    for (const owner of [".course-steps", ".course-classify", ".course-result\\[data-crowd\\]"]) expect(stylesheet).toMatch(new RegExp(`${owner} > \\* \\{\\s*--shared-border-flow: 1;`, "u"));
-    expect(stylesheet).toMatch(/\.course-match > \.course-cards-cell \{\s*--shared-border-flow: 1;/u);
+  it("sets no flow variable for side-by-side cells and draws no hand-rolled divider on a cell", () => {
+    expect(stylesheet).not.toContain("--shared-border-flow");
+    for (const control of [".course-chip ?", ".course-slot ?", ".course-sort-up", ".course-sort-down"]) expect([...(declared.get(control) ?? [])].filter((property) => property.startsWith("border")), control).toEqual([]);
     expect(stylesheet).not.toMatch(/\[data-shared-border-cell\][^{]*\{[^}]*border-inline-(?:end|start): var\(--stroke-hairline\)/u);
     expect(stylesheet).not.toMatch(/\.course-guess[^{]*\{[^}]*dashed/u);
     expect(stylesheet).toMatch(/\.course-guess-entry > input\.course-input:read-only \{\s*background: transparent;/u);

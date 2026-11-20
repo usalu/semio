@@ -316,7 +316,7 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(infinite_world::world::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
     let token = fetch.owner().token();
-    runtime.retain_native_asset_handoff(fetch, None, true, false);
+    runtime.retain_native_asset_handoff(fetch, None, true, None);
     let interaction = runtime.try_lock().unwrap().interaction.take().unwrap();
     let busy_seal = runtime.pump_native_asset_handoff_step(false);
     let retained_before_seal = {
@@ -362,7 +362,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
     fetch.owner_mut().push_page(infinite_world::world::WorldAssetResponsePage::try_from_owned(vec![41; 7]).unwrap()).unwrap();
-    runtime.retain_native_asset_handoff(fetch, None, true, false);
+    runtime.retain_native_asset_handoff(fetch, None, true, None);
     let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
@@ -400,7 +400,7 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
         semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::World { surface_token, owner, .. } => (*surface_token, owner.url().to_string()),
         semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("the fixture request is World-owned"),
     };
-    runtime.retain_native_asset_handoff(fetch, None, false, true);
+    runtime.retain_native_asset_handoff(fetch, None, false, Some(false));
     let interaction = runtime.try_lock().unwrap().interaction.take().unwrap();
     let busy = runtime.pump_native_asset_handoff_step(false);
     runtime.try_lock().unwrap().interaction = Some(interaction);

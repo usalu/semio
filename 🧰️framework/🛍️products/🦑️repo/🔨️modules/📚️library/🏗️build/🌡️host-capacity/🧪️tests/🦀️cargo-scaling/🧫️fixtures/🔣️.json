@@ -5,5 +5,16 @@
  "runs": [
   {"name": "cargo-ignores-the-planning-floor-of-graph-runs-and-runs-with-the-jobs-that-fit", "args": ["cargo", "--parallelism=8", "--", "check", "-p", "x"], "jobsAtLeast": 1, "jobsBelow": 8},
   {"name": "cargo-with-one-job-asked-runs-with-one-job", "args": ["cargo", "--parallelism=1", "--", "check", "-p", "x"], "jobsAtLeast": 1, "jobsBelow": 2}
+ ],
+ "fleetRuns": [
+  {"name": "keeps local compilation planned when parallelism is omitted", "parallelismArgs": [], "localParallelism": "planned"},
+  {"name": "keeps an explicit local compilation limit", "parallelismArgs": ["--parallelism", "1"], "localParallelism": 1}
+ ],
+ "queuedFleetRuns": [
+  {"name": "hands a queued Cargo command to the fleet once the unit would wait", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0, 1], "offloadMode": "auto", "ambientOffloadMode": "never"},
+  {"name": "allows the explicit always mode to use the existing fleet handoff", "hostAvailableMegabytes": 2400, "outcome": "fleet", "probeQueueLengths": [0, 1], "offloadMode": "always", "ambientOffloadMode": "never"},
+  {"name": "retains cancellation when fleet eligibility changes during a live probe", "hostAvailableMegabytes": 2400, "outcome": "cancelled", "probeQueueLengths": [0, 1]},
+  {"name": "keeps an admitted local grant even when the fleet becomes eligible", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [0]},
+  {"name": "keeps the explicit never mode local without probing fleet eligibility", "hostAvailableMegabytes": 2400, "outcome": "local", "probeQueueLengths": [], "offloadMode": "never", "ambientOffloadMode": "auto"}
  ]
 }

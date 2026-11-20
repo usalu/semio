@@ -17,6 +17,13 @@ fn the_manifest_declares_both_window_kinds_and_the_three_utilities() {
     assert!(definition.window_kinds.iter().any(|window| window.id == preview::WINDOW_KIND_ID));
     let utilities: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
     assert_eq!(utilities, vec![grid::UTILITY_SELECT, grid::UTILITY_PIN, grid::UTILITY_MASK]);
+    fn assert_disposer_birth<O: semio_plugin::WindowConfigOwner>() {
+        let demand = O::store_disposer_birth().expect("the mounted owner declares its disposer birth");
+        let disposer = O::build_store_disposer();
+        assert_eq!(demand.capacity_bytes, std::mem::size_of_val(disposer.as_ref()));
+    }
+    assert_disposer_birth::<crate::editor::grid3d::window::Grid3dGridWindowConfigOwner>();
+    assert_disposer_birth::<crate::editor::grid3d::window::Grid3dPreviewWindowConfigOwner>();
 }
 
 #[test]
@@ -103,6 +110,12 @@ fn every_declared_action_bridges_to_the_command_it_names() {
         "undo",
         "redo",
         "commitCheckpoint",
+        "cancelTypedOperation",
+        "hostEvent",
+        "exportArtifactDocument",
+        "importArtifactDocument",
+        "exportMediaFile",
+        "exportSnapshotFile",
         "createAlternative",
         "switchAlternative",
         "checkoutCheckpoint",
@@ -240,7 +253,7 @@ fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
     assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "no admission: the leaf publishes plainly");
 }
 
-semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid3d::Grid3dEditor, || semio_plugin::App { definition: crate::editor::grid3d::create_grid3d_editor(), examples: Vec::new() }, "../../..");
 
 
 #[test]

@@ -91,7 +91,7 @@ export function createContributionsAndBackbone({ pluginId, consumedTopicsFor, em
   const documentBackbone = async (instanceId: number, operation: "bind" | "retire", bindingGeneration: bigint, uri: string): Promise<InvocationResponse> => {
     const command = { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, operation, instanceId, bindingGeneration, uri };
     const control = encodeDocumentBackboneControlV1(command);
-    const settled = await settleDocumentBackboneTurn(instanceId, [{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(control) } }]);
+    const settled = await settleDocumentBackboneTurn(instanceId, [{ kind: "message", payload: { source: { tag: "shell", val: instanceId }, payload: Array.from(control) } }]);
     const { receipts, unsolicited } = splitDocumentBackboneControlTurnV1(settled.frames);
     if (receipts.length !== 1) throw new Error(`actor-document-control.receipt-count:${receipts.length}`);
     requireDocumentBackboneReceiptV1(receipts[0]!, command);

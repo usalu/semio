@@ -1,0 +1,7 @@
+# Original placed solid transforms
+
+Translate, Rotate, Rotate About and Mirror now republish exact constructor-certified spheres, cylinders, cones, and tori in their world frames. Spheres and cones carry the frame through analytic edges, surfaces, preview, classification and measurement. Reflections rebuild a right-handed frame from the mapped seam and axis. Boxes also accept axis-preserving rotations and mirrors. Other affine maps are admitted only when the image remains in the same supported analytic family. The concentric sphere Boolean shortcut now compares world centers before applying its radius rule.
+
+The original Flow fixture checks all five solid families through chained world-space transforms. It checks the native preview certificate and one seam or pole, exact bounds, volume, center of mass, and preview component references. Manifold passed five independent geometry cases and 40 assertions. An isolated Rust executable compiled the actual vector, matrix and primitive placement routines and checked all five placements and two unsupported affine images. Nine touched Rust files parsed.
+
+Repository source admission measured the native registry at 3,873 active lines, construction at 3,543, the Flow extension at 2,852 and the original jobs library at 2,215. Those crates are below the measured line and byte limits. The full native Flow fixture remains queued under repository Cargo admission.

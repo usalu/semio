@@ -33,3 +33,4 @@ semio-framework-io-sqlite-snapshot = { path = "../../../🪶️sqlite-snapshot/�
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

@@ -1,0 +1,32 @@
+[
+ {
+  "rows": 80,
+  "peak": 80,
+  "quietMs": 0
+ },
+ {
+  "rows": 150,
+  "peak": 150,
+  "quietMs": 0
+ },
+ {
+  "rows": 150,
+  "peak": 150,
+  "quietMs": 1000
+ },
+ {
+  "rows": 0,
+  "peak": 150,
+  "quietMs": 2000
+ },
+ {
+  "rows": 50,
+  "peak": 150,
+  "quietMs": 3000
+ },
+ {
+  "rows": 200,
+  "peak": 200,
+  "quietMs": 0
+ }
+]

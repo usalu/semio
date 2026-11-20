@@ -194,7 +194,31 @@ impl<'s,'c,'p> Reader<'s,'c,'p>{
     fn bytes_shape(&mut self)->Result<FieldValue,TextError>{{let token=self.expect(TokenKind::Text)?;self.octets(token).map(FieldValue::Bytes64)}}
     fn enum_shape(&mut self,variants:&[(String,u32)])->Result<FieldValue,TextError>{{let token=self.expect(TokenKind::Ident)?;variants.iter().find(|(tag,_)|tag==token.text).map(|(_,value)|FieldValue::Enum(*value)).ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"invalid native enum tag"))}}
     fn count_shape(&mut self)->Result<FieldValue,TextError>{{let token=self.expect(TokenKind::Ident)?;token.text.strip_prefix('x').filter(|digits|digits.len()<=20).and_then(|digits|digits.parse().ok()).map(FieldValue::UInt).ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"invalid native count"))}}
-    fn quantity_shape(&mut self,declared:&semio_framework_dsl::UnitSpec)->Result<FieldValue,TextError>{{let (value,number)=self.number()?;let suffix=self.peek(0)?;let value=if suffix.kind==TokenKind::Ident&&suffix.start==number.end{self.take()?;let actual=semio_framework_dsl::unit_by_symbol(suffix.text).ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"unknown native unit"))?;if actual.dimension!=declared.dimension{return Err(self.error(ValueRefusalKind::InvalidValue,"incompatible native unit"));}if value.is_nan(){value}else{semio_framework_dsl::convert(value,actual,declared).ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"incompatible native unit"))?}}else{value};Ok(FieldValue::Float(value))}}
+    fn quantity_shape(&mut self, declared: &semio_framework_dsl::UnitSpec) -> Result<FieldValue, TextError> {
+        let (value, number) = self.number()?;
+        let suffix = self.peek(0)?;
+        if suffix.kind != TokenKind::Ident || suffix.start != number.end {
+            return Ok(FieldValue::Float(value));
+        }
+        self.take()?;
+        let mut symbol = suffix.text;
+        let star = self.peek(0)?;
+        if star.kind == TokenKind::Star && star.start == suffix.end {
+            let factor = self.peek(1)?;
+            if factor.kind == TokenKind::Ident && factor.start == star.end {
+                self.take()?;
+                self.take()?;
+                symbol = &self.source[suffix.start..factor.end];
+            }
+        }
+        let actual = semio_framework_dsl::unit_by_symbol(symbol).ok_or_else(|| self.error(ValueRefusalKind::InvalidValue, "unknown native unit"))?;
+        let converted = if value.is_nan() && actual.dimension == declared.dimension {
+            value
+        } else {
+            semio_framework_dsl::convert(value, actual, declared).ok_or_else(|| self.error(ValueRefusalKind::InvalidValue, "incompatible native unit"))?
+        };
+        Ok(FieldValue::Float(converted))
+    }
     fn dimension_shape(&mut self,dims:u8)->Result<FieldValue,TextError>{{let token=self.peek(0)?;let mut values=Vec::new();if token.kind==TokenKind::Ident&&token.text.contains('x'){self.take()?;for part in token.text.split('x'){if part.len()>2048{return Err(self.error(ValueRefusalKind::WorkLimit,"native dimension number is too long"));}let value=parse_f64(part).map_err(|_|self.error(ValueRefusalKind::InvalidValue,"invalid native dimension number"))?;self.push(&mut values,FieldValue::Float(value))?;}}else{let (first,token)=self.number()?;self.push(&mut values,FieldValue::Float(first))?;if dims>1{let suffix=self.expect(TokenKind::Ident)?;if suffix.start!=token.end||!suffix.text.starts_with('x'){return Err(self.error(ValueRefusalKind::InvalidValue,"invalid native dimensions"));}for part in suffix.text[1..].split('x'){if part.len()>2048{return Err(self.error(ValueRefusalKind::WorkLimit,"native dimension number is too long"));}let value=parse_f64(part).map_err(|_|self.error(ValueRefusalKind::InvalidValue,"invalid native dimension number"))?;self.push(&mut values,FieldValue::Float(value))?;}}}if values.len()!=dims as usize{return Err(self.error(ValueRefusalKind::InvalidValue,"native dimension arity mismatch"));}Ok(FieldValue::Tuple(values))}}
     fn range_shape(&mut self)->Result<FieldValue,TextError>{{self.expect(TokenKind::LParen)?;let mut values=Vec::new();let token=self.peek(0)?;let (low,high)=if token.kind==TokenKind::Ident&&token.text.contains(".."){self.take()?;let(low,high)=token.text.split_once("..").unwrap();if low.len()>2048||high.len()>2048{return Err(self.error(ValueRefusalKind::WorkLimit,"native range number is too long"));}(parse_f64(low).map_err(|_|self.error(ValueRefusalKind::InvalidValue,"invalid native range number"))?,parse_f64(high).map_err(|_|self.error(ValueRefusalKind::InvalidValue,"invalid native range number"))?)}else{let low=self.number()?.0;self.expect(TokenKind::DotDot)?;let high=self.number()?.0;(low,high)};self.push(&mut values,FieldValue::Float(low))?;self.push(&mut values,FieldValue::Float(high))?;if self.kind()?==TokenKind::Comma{self.take()?;let (step,_)=self.number()?;self.push(&mut values,FieldValue::Float(step))?;}self.expect(TokenKind::RParen)?;Ok(FieldValue::Tuple(values))}}
     fn tuple_shape(&mut self,inner:&Shape,length:Option<usize>,depth:usize)->Result<FieldValue,TextError>{{let mut values=Vec::new();loop{let value=self.shape(inner,depth+1)?;self.push(&mut values,value)?;if self.kind()?!=TokenKind::Comma{break;}self.take()?;}if length.is_some_and(|length|length!=values.len()){return Err(self.error(ValueRefusalKind::InvalidValue,"native tuple arity mismatch"));}Ok(FieldValue::Tuple(values))}}

@@ -1,8 +1,8 @@
 /** 🧪️ Reference-only page members roundtrip through real SQLite and reject ambiguous ownership. */
-import { deepStrictEqual, strictEqual, rejects } from "node:assert";
+import { deepStrictEqual, strictEqual, rejects, throws } from "node:assert";
 import fixtures from "./🔣️.json";
 import graph from "../../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json";
-import { layoutArtifactFromNativeJson, layoutArtifactNativeJson } from "../../../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
+import { child, layoutArtifactFromNativeJson, layoutArtifactNativeJson } from "../../../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 import { layoutSnapshotToSqliteDatabase, layoutSnapshotFromSqliteDatabase } from "../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import { validateDocument } from "../../../../../../🧬️schema/✅️validation/🟦️.ts";
 import type { LayoutDrawingMember } from "../../../../../../🧬️schema/🟦️.ts";
@@ -20,13 +20,15 @@ export async function testPageDrawingSqlite(oracle: PageSqliteOracle): Promise<{
     doc.spreads.find(spread => spread.id === page.spreadId)!.pageIds.push(page.id);
     for (const entry of fixture.members) {
       const value: LayoutDrawingMember = { handle: { childId: entry.childId, target: { artifactId: entry.artifactId, dialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } } } };
+      deepStrictEqual(child(value, true), value);
+      throws(() => child({ ...value, content: {} }, false));
       if (entry.owner === "document") doc.backgroundDrawing = value;
       else doc.pages[entry.page!]!.backgroundDrawing = value;
     }
     const saved = structuredClone(doc), database = await layoutSnapshotToSqliteDatabase(doc);
     const members = database.tables.find(table => table.name === "layout_drawing_member")!.rows;
     deepStrictEqual(members.map(row => row.rowid), fixture.members.map(entry => BigInt(entry.id)));
-    strictEqual(database.tables.some(table => table.name.startsWith("semio_drawing_")), false);
+    strictEqual(database.tables.every(table => table.name.startsWith("layout_")), true);
     const restored = await layoutSnapshotFromSqliteDatabase(oracle.roundTrip(database));
     strictEqual(validateDocument(restored), null);
     deepStrictEqual(layoutArtifactNativeJson(restored), layoutArtifactNativeJson(doc), fixture.name);

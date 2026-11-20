@@ -12,8 +12,11 @@ use crate::schema::snapshot::Grid3dSnapshot;
 use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
+
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Grid3dSnapshot, diff = Grid3dDiff, schema = "wfcgrid3d", reference = Grid3dSnapshot, reference_diff = Grid3dDiff)]
 pub enum Grid3dMutation {

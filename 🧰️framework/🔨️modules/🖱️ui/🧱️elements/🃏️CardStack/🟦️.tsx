@@ -8,9 +8,11 @@ export { resolveCardBands, type CardBand, type CardBandCard, type CardBandSpan }
 const CARD = "[data-overview-card]";
 const OWNER = "[data-card-stack], [data-card-grid]";
 const WINDOW = "[data-overview-card-stack]";
-const CAP = ":scope > [data-slot='window-chrome-cap']";
-const FOOTER = ":scope > [data-slot='window-chrome-footer']";
-const CHIPS = ":scope > [data-window-silhouette-chip]";
+const CAP = "[data-slot='window-chrome-cap']";
+const FOOTER = "[data-slot='window-chrome-footer']";
+const CHIP = "[data-window-silhouette-chip]";
+const CHIPS = `:scope > ${CHIP}`;
+const STRUCTURE = `${CARD}, ${WINDOW}, ${CAP}, ${FOOTER}, ${CHIP}`;
 const LIFT = "--card-stack-lift";
 const CAP_BAND = "--card-stack-cap";
 const FOOTER_BAND = "--card-stack-footer";
@@ -19,7 +21,8 @@ const SETTLE_PASSES = 4;
 
 const spans = (row: Element | null): readonly CardBandSpan[] => [...(row?.querySelectorAll(CHIPS) ?? [])].map(chip => { const rect = chip.getBoundingClientRect(); return { left: rect.left, right: rect.right }; }).filter(span => span.right > span.left);
 const height = (row: Element | null): number => row?.getBoundingClientRect().height ?? 0;
-const lift = (target: HTMLElement, by: number): void => { by = Math.round(by * 1000) / 1000; target.style.setProperty(LIFT, `${by}px`); if (by > 0) target.style.setProperty("margin-block-start", `${-by}px`); else target.style.removeProperty("margin-block-start"); };
+const put = (element: HTMLElement | null, name: string, value: string | null): void => { if (!element || element.style.getPropertyValue(name) === (value ?? "")) return; if (value === null) element.style.removeProperty(name); else element.style.setProperty(name, value); };
+const lift = (target: HTMLElement, by: number): void => { by = Math.round(by * 1000) / 1000; put(target, LIFT, `${by}px`); put(target, "margin-block-start", by > 0 ? `${-by}px` : null); };
 const overlap = (a: DOMRect, b: DOMRect): number => Math.min(a.right, b.right) - Math.max(a.left, b.left);
 
 /** 📐️ Interlocks the cards of a stack or grid `container`: each card whose top lies on the bottom of another card (the one
@@ -37,22 +40,45 @@ export function useCardInterlock(container: HTMLElement | null): void {
     const view = container.ownerDocument.defaultView;
     let frame = 0;
     const observed = new Set<Element>();
+    let settled = "";
+    let cards: HTMLElement[] | null = null;
     const targetOf = (card: HTMLElement): HTMLElement => card.closest<HTMLElement>("[data-card-grid-cell]") ?? card;
     const measure = () => {
       frame = 0;
-      const cards = [...container.querySelectorAll<HTMLElement>(CARD)].filter(card => card.closest(OWNER) === container && card.parentElement?.closest(CARD) == null);
-      const next = new Set<Element>([container, ...cards]);
+      const owned = cards ??= [...container.querySelectorAll<HTMLElement>(CARD)].filter(card => card.closest(OWNER) === container && card.parentElement?.closest(CARD) == null);
+      const next = new Set<Element>([container, ...owned]);
       const pixel = 1 / (view?.devicePixelRatio || 1);
-      for (const card of cards) { lift(targetOf(card), 0); card.style.setProperty(CAP_BAND, "0px"); card.style.setProperty(FOOTER_BAND, "0px"); card.style.removeProperty("min-block-size"); card.querySelector<HTMLElement>(WINDOW)?.style.removeProperty("min-block-size"); }
-      const snap = (elements: readonly (HTMLElement | null)[]) => { const naturals = elements.map(element => element?.getBoundingClientRect().height ?? 0); elements.forEach((element, index) => { const snapped = snapCardHeight(naturals[index]!, pixel); if (element && snapped - naturals[index]! > 1e-3) element.style.setProperty("min-block-size", `${snapped}px`); }); };
-      snap(cards.map(card => card.querySelector<HTMLElement>(WINDOW)));
-      snap(cards);
-      const rows = cards.map(card => { const window = card.querySelector(WINDOW); return { cap: window?.querySelector(CAP) ?? null, footer: window?.querySelector(FOOTER) ?? null }; });
-      const measured: CardBandCard[] = rows.map(row => ({ cap: height(row.cap), footer: height(row.footer), capChips: spans(row.cap), footerChips: spans(row.footer) }));
+      const rows = owned.map(card => { const window = card.querySelector(WINDOW); return { cap: window?.querySelector(`:scope > ${CAP}`) ?? null, footer: window?.querySelector(`:scope > ${FOOTER}`) ?? null }; });
       for (const row of rows) for (const element of [row.cap, row.footer]) for (const chip of element?.querySelectorAll(CHIPS) ?? []) next.add(chip);
-      const rects = cards.map(card => card.getBoundingClientRect());
+      const signature = () => {
+        const root = container.getBoundingClientRect();
+        const parts: number[] = [root.width, root.height];
+        for (const card of owned) {
+          const rect = card.getBoundingClientRect();
+          parts.push(rect.left - root.left, rect.top - root.top, rect.width, rect.height);
+        }
+        for (const row of rows) for (const element of [row.cap, row.footer]) {
+          parts.push(height(element));
+          for (const chip of element?.querySelectorAll(CHIPS) ?? []) {
+            const rect = chip.getBoundingClientRect();
+            parts.push(rect.left - root.left, rect.width, rect.height);
+          }
+        }
+        return `${pixel}:${parts.map(part => Math.round(part * 1000)).join()}`;
+      };
+      const sync = () => {
+        for (const element of observed) if (!next.has(element)) { resize?.unobserve(element); observed.delete(element); }
+        for (const element of next) if (!observed.has(element)) { resize?.observe(element); observed.add(element); }
+      };
+      if (settled !== "" && signature() === settled) return sync();
+      for (const card of owned) { lift(targetOf(card), 0); put(card, CAP_BAND, "0px"); put(card, FOOTER_BAND, "0px"); put(card, "min-block-size", null); put(card.querySelector<HTMLElement>(WINDOW), "min-block-size", null); }
+      const snap = (elements: readonly (HTMLElement | null)[]) => { const naturals = elements.map(element => element?.getBoundingClientRect().height ?? 0); elements.forEach((element, index) => { const snapped = snapCardHeight(naturals[index]!, pixel); if (element && snapped - naturals[index]! > 1e-3) put(element, "min-block-size", `${snapped}px`); }); };
+      snap(owned.map(card => card.querySelector<HTMLElement>(WINDOW)));
+      snap(owned);
+      const measured: CardBandCard[] = rows.map(row => ({ cap: height(row.cap), footer: height(row.footer), capChips: spans(row.cap), footerChips: spans(row.footer) }));
+      const rects = owned.map(card => card.getBoundingClientRect());
       const seams: { index: number; above: number; target: number; by: number; from: readonly [number, number] }[] = [];
-      cards.forEach((card, index) => {
+      owned.forEach((card, index) => {
         let above = -1, best = 0;
         rects.forEach((rect, other) => { const shared = overlap(rects[index]!, rect); if (other !== index && Math.abs(rect.bottom - rects[index]!.top) <= REACH && shared > best) { above = other; best = shared; } });
         if (above < 0) return;
@@ -60,11 +86,11 @@ export function useCardInterlock(container: HTMLElement | null): void {
         const by = band.lift - (rects[above]!.bottom - rects[index]!.top);
         seams.push({ index, above, target: band.lift, by, from: [0, by] });
         lift(targetOf(card), by);
-        card.style.setProperty(CAP_BAND, `${band.cap}px`);
-        cards[above]!.style.setProperty(FOOTER_BAND, `${band.footer}px`);
+        put(card, CAP_BAND, `${band.cap}px`);
+        put(owned[above]!, FOOTER_BAND, `${band.footer}px`);
       });
       for (let pass = 0; pass < SETTLE_PASSES && seams.length; pass++) {
-        const placed = cards.map(card => card.getBoundingClientRect());
+        const placed = owned.map(card => card.getBoundingClientRect());
         let moved = false;
         for (const seam of seams) {
           const error = seam.target - (placed[seam.above]!.bottom - placed[seam.index]!.top);
@@ -73,22 +99,40 @@ export function useCardInterlock(container: HTMLElement | null): void {
           const by = slope < 0 ? seam.by - error / slope : seam.by + error;
           seam.from = [seam.by, error];
           seam.by = by;
-          lift(targetOf(cards[seam.index]!), by);
+          lift(targetOf(owned[seam.index]!), by);
           moved = true;
         }
         if (!moved) break;
       }
-      for (const element of observed) if (!next.has(element)) { resize?.unobserve(element); observed.delete(element); }
-      for (const element of next) if (!observed.has(element)) { resize?.observe(element); observed.add(element); }
+      settled = signature();
+      sync();
     };
     const schedule = () => {
       if (frame) return;
       if (view?.requestAnimationFrame) frame = view.requestAnimationFrame(measure);
       else measure();
     };
-    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
-    const relevant = (node: Node) => node instanceof Element && (node.matches(CARD) || node.querySelector(CARD) !== null || node.closest(CARD) !== null);
-    const mutations = typeof MutationObserver === "undefined" ? null : new MutationObserver(records => { if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(relevant) || relevant(record.target))) schedule(); });
+    const sizes = new WeakMap<Element, string>();
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(entries => {
+      let moved = false;
+      for (const { target, contentRect } of entries) {
+        const size = `${Math.round(contentRect.width * 1000)}x${Math.round(contentRect.height * 1000)}`;
+        if (sizes.get(target) !== size) { moved = sizes.has(target) || moved; sizes.set(target, size); }
+      }
+      if (moved) schedule();
+    });
+    const relevant = (node: Node) => node.nodeType === 1 && (node as Element).namespaceURI === "http://www.w3.org/1999/xhtml" && ((node as Element).matches(STRUCTURE) || (node as Element).querySelector(STRUCTURE) !== null);
+    const mutations = typeof MutationObserver === "undefined" ? null : new MutationObserver(records => {
+      for (const record of records) {
+        const target = record.target as Element;
+        if (target.nodeType !== 1 || target.namespaceURI !== "http://www.w3.org/1999/xhtml" || target.closest(OWNER) !== container) continue;
+        if (![...record.addedNodes, ...record.removedNodes].some(relevant)) continue;
+        cards = null;
+        settled = "";
+        schedule();
+        break;
+      }
+    });
     measure();
     mutations?.observe(container, { childList: true, subtree: true });
     view?.addEventListener("resize", schedule);

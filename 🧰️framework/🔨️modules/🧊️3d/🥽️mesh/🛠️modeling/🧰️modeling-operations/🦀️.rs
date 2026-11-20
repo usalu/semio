@@ -31,6 +31,16 @@ pub trait MeshModelingOps: Sized {
     fn knife_cut_job(&self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob>;
     fn knife_cut_job_owned(self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob>;
     fn indexed_triangle_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<MeshModelingJob>;
+    fn parametric_primitive_job(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<MeshModelingJob>;
+    /// 🍩 Builds a torus one grid element per step.
+    fn torus_primitive_job(major: f32, minor: f32, segments: u32, rings: u32) -> MeshResult<MeshModelingJob> {
+        Self::parametric_primitive_job(semio_framework_mesh_engine::ParametricMeshGrid::torus(major, minor, segments, rings).map_err(MeshKernelError::InvalidInput)?)
+    }
+    /// 🌐 Builds a latitude-longitude sphere one grid element per step.
+    fn uv_sphere_primitive_job(radius: f32, segments: u32, rings: u32) -> MeshResult<MeshModelingJob> {
+        Self::parametric_primitive_job(semio_framework_mesh_engine::ParametricMeshGrid::uv_sphere(radius, segments, rings).map_err(MeshKernelError::InvalidInput)?)
+    }
+    /// 📦 Reconstructs an admitted polygon source.
     fn polygon_source_job(source:semio_framework_mesh_engine::PolygonMeshSource)->MeshResult<MeshModelingJob>;
     fn box_primitive_job(width:f32,height:f32,depth:f32)->MeshResult<MeshModelingJob>;
     fn plane_primitive_job(width:f32,depth:f32)->MeshResult<MeshModelingJob>;
@@ -186,6 +196,10 @@ impl MeshModelingOps for HalfedgeMesh {
     fn indexed_triangle_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<MeshModelingJob> {let(work,progress)=Import::indexed(positions,indices,normals)?;Ok(MeshModelingJob {work:Work::Import(Box::new(work)),progress,cancelled:false,retired:false})}
     /// 📦 Retains reconstruction of an admitted typed polygon source without cloning its channels.
     fn polygon_source_job(source:semio_framework_mesh_engine::PolygonMeshSource)->MeshResult<MeshModelingJob> {let(work,progress)=Import::polygon(source)?;Ok(MeshModelingJob {work:Work::Import(Box::new(work)),progress,cancelled:false,retired:false})}
+    fn parametric_primitive_job(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<MeshModelingJob> {
+        let (work, progress) = Import::parametric(grid)?;
+        Ok(MeshModelingJob { work: Work::Import(Box::new(work)), progress, cancelled: false, retired: false })
+    }
     /// 🧊 Retains each box vertex, face and reconstruction unit.
     fn box_primitive_job(width:f32,height:f32,depth:f32)->MeshResult<MeshModelingJob> {Self::primitive_job(MeshPrimitiveKind::Box,[width,height,depth],0)}
     /// 🔳 Retains plane vertices and boundary reconstruction.

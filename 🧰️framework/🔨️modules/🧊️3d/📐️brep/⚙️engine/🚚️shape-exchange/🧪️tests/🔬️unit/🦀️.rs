@@ -17,10 +17,10 @@ fn shape_value_import_refuses_dangling_references_without_mutation() {
     let mut stale_labels = shape.clone();
     stale_labels.body.labels = LabelSource::from_next(0);
     let mut target = Brep::new();
-    let before = (target.body.clone(), target.live.len());
+    let before = (target.native.body.clone(), target.native.live.len());
     for (name, broken) in [("root", missing_root), ("curve", missing_curve), ("labels", stale_labels)] {
         assert!(matches!(target.import_shape(&broken), Err(BrepError::InvalidInput(_))), "{name}");
         assert!(matches!(broken.tessellate_job(0.1), Err(BrepError::InvalidInput(_))), "{name}");
     }
-    assert_eq!((target.body.clone(), target.live.len()), before);
+    assert_eq!((target.native.body.clone(), target.native.live.len()), before);
 }

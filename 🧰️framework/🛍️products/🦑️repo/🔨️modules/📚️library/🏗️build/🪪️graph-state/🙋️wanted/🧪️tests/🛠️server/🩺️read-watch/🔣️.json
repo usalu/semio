@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "name": "live inference rows advance at the same completed-project count",
+      "steps": [
+        {
+          "label": "earlier legitimate sample with oldest age 8900",
+          "at": 0,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2428:4791:7:8900:%40semio-tech%2Fframework-plugin|language%3Acargo|8900|1371,semio-s-plugin-flow-text-component|language%3Acargo|175|0,semio-s-plugin-flow-primitive-component|language%3Acargo|175|0:waiting|12141|12376|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "initial phase done count",
+          "at": 1000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:525:%40semio-tech%2Fmit-bestand-bericht|project|525|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|320|43,%40semio-tech%2Fmit-bestand-demonstrator|project|250|0:waiting|11169|11113|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "new writer rows",
+          "at": 1490000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:1680:%40semio-tech%2Fmit-bestand-bericht|project|1680|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|1410|0:waiting|12220|12552|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "age, total, parallelism and headroom",
+          "at": 1495000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4999:9:1680:%40semio-tech%2Fmit-bestand-bericht|project|90000|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|90000|0:waiting|999999|400|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 5000,
+          "verdict": "go"
+        },
+        {
+          "label": "same observed rows",
+          "at": 2990000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:1680:%40semio-tech%2Fmit-bestand-bericht|project|1680|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|1410|0:waiting|12220|12552|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 1500000,
+          "verdict": "stalled"
+        }
+      ]
+    },
+    {
+      "name": "owner rows retain a high-water when entries rotate, replay and change kind",
+      "steps": [
+        {
+          "label": "initial writer snapshot",
+          "at": 0,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:1680:%40semio-tech%2Fmit-bestand-bericht|project|1680|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|1410|0:waiting|12220|12552|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "rotated running owner",
+          "at": 300000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:1680:%40semio-tech%2Fmit-bestand-bericht|project|1680|0,%40semio-tech%2Fnew-owner|language%3Acargo|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|1410|0:waiting|12220|12552|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 300000,
+          "verdict": "go"
+        },
+        {
+          "label": "retry with lower rows",
+          "at": 600000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:525:%40semio-tech%2Fmit-bestand-bericht|project|525|0,%40semio-tech%2Fwriter-writer-rs|project|320|43,%40semio-tech%2Fmit-bestand-demonstrator|project|250|0:waiting|11169|11113|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 600000,
+          "verdict": "go"
+        },
+        {
+          "label": "same writer rows",
+          "at": 1500000,
+          "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4305:4791:3:1680:%40semio-tech%2Fmit-bestand-bericht|project|1680|0,%40semio-tech%2Fwriter-writer-rs|language%3Arust|1475|50,%40semio-tech%2Fmit-bestand-demonstrator|project|1410|0:waiting|12220|12552|language%3Acargo\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+          "silent": 1500000,
+          "verdict": "stalled"
+        }
+      ]
+    },
+    {
+      "name": "completed owner ledger moves while waiting and accounting chatter do not",
+      "steps": [
+        {
+          "label": "verified completed ledger",
+          "at": 0,
+          "line": "[owners] owners 4251 of 4791 done: 59 present, 1796 fetched from the fleet, 2396 inferred here (27 running), 540 wanted from the fleet, 2 stale in the fleet",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "one completed fetch",
+          "at": 1400000,
+          "line": "[owners] owners 4252 of 4791 done: 59 present, 1797 fetched from the fleet, 2396 inferred here (27 running), 539 wanted from the fleet, 2 stale in the fleet",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "real completed ledger updates in German",
+          "at": 1420000,
+          "line": "[owners] Projekte 4253 von 4791 fertig: 59 vorhanden, 1798 aus der Flotte geholt, 2396 hier abgeleitet (27 laufen), 539 von der Flotte erwartet, 2 in der Flotte veraltet",
+          "silent": 0,
+          "verdict": "go"
+        },
+        {
+          "label": "repeated totals with changed wait and queue figures",
+          "at": 1450000,
+          "line": "[owners] owners 4252 of 4791 done: 59 present, 1797 fetched from the fleet, 2396 inferred here (60 running), 1000 wanted from the fleet, 2 stale in the fleet",
+          "silent": 30000,
+          "verdict": "go"
+        },
+        {
+          "label": "generic waiting line",
+          "at": 1460000,
+          "line": "graph: paused after generation 900: 2 command(s) wait for memory on this machine (200 s)",
+          "silent": 40000,
+          "verdict": "go"
+        },
+        {
+          "label": "mismatched completed total",
+          "at": 2920000,
+          "line": "[owners] owners 4791 of 4791 done: 59 present, 1797 fetched from the fleet, 2396 inferred here (27 running), 539 wanted from the fleet, 2 stale in the fleet",
+          "silent": 1500000,
+          "verdict": "stalled"
+        }
+      ]
+    }
+  ]
+}

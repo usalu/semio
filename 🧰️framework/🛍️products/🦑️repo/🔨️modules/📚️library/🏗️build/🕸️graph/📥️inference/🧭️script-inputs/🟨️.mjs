@@ -1,10 +1,11 @@
 import {readTypeScriptPackageProducerV1,typeScriptPackagePublicDirectoryV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { assertNotReadParentV1, readParentV1 } from "../../../👁️observation/🚧️read-parent/🟨️.mjs";
-import { mkdirSync as vMkdirV1, readFileSync as vReadV1, writeFileSync as vWriteV1, renameSync as vRenameV1, rmSync as vRmV1, readdirSync as vListV1, statSync as vStatV1 } from "node:fs";
+import { closeSync as vCloseV1, fstatSync as vFstatV1, lstatSync as vLstatV1, mkdirSync as vMkdirV1, openSync as vOpenV1, readFileSync as vReadV1, writeFileSync as vWriteV1, renameSync as vRenameV1, rmSync as vRmV1 } from "node:fs";
 import { tmpdir as vTmpV1 } from "node:os";
+import { setTimeout as claimDelayV1 } from "node:timers/promises";
 import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
-import { sharedBytesV1 } from "../../../🧠️memory/📋️slice-report/🟨️.mjs";
+import { createWeakCollectionTrackerV1, sharedBytesV1 } from "../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import { creditOwnerSharedV1, throwIfOwnerExceededV1 } from "../../../🧠️memory/🎯️owner-scope/🟨️.mjs";
 import { FOOTPRINT_POLICY_V1, footprintPulseV1, releaseIfGrownV1, footprintGateV1, decideFootprintV1, noteSlowV1 } from "../../../🧠️memory/🦶️footprint/🟨️.mjs";
 import { createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
@@ -459,15 +460,16 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
 
 /** 🧭️ The edges of one module: the designated ports it defines, its command imports (through the router selectors of the walk, the workspace packages, the runtime and the TypeScript resolution), its runtime references and its literal URLs, resolved to the files they name. */
 async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors, compiler, host, checkpoint }, path) {
-  const sink = new Set(), output = cache.generatedOutput ? (specifier) => { const got = observeDetachedSyncV1(() => cache.generatedOutput(specifier)); for (const part of [got.rows, ...got.layers]) if (part.length) sink.add(part); return got.value; } : undefined;
+  let importer;
+  const sink = new Set(), output = cache.generatedOutput ? (specifier, authored = specifier) => { importer ??= buildPath(relative(workspaceRoot, path)); const got = observeDetachedSyncV1(() => cache.generatedOutput(specifier, { importer, specifier: authored })); for (const part of [got.rows, ...got.layers]) if (part.length) sink.add(part); return got.value; } : undefined;
       requirePhysicalSourceV1(path);
       const ports = observedSourceAnalysisV1(PROVIDER_PORTS, path), imports = ports.length ? designatedPortsV1(cache, ports).map(port => ({ port })) : [], words = selectors.get(path), kept = words?.length ? routerKeptFromSourceV1(compiler, path, words) : undefined;
-      const generated=specifier=>{const produced=output?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);for(const file of produced.sources??[])imports.push({path:resolve(workspaceRoot,file),source:true});return true;};
+      const generated=(specifier,authored)=>{const produced=output?.(specifier,authored);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);for(const file of produced.sources??[])imports.push({path:resolve(workspaceRoot,file),source:true});return true;};
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
-        if(generated(resource.specifier))continue;
+        if(generated(resource.specifier,entry))continue;
         let resolved;try{resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,output);}catch(error){if(error?.unresolved!==true)throw error;}
         try { resolved ??= observedRequireResolve(path, resource.specifier); }
         catch (error) {
@@ -481,7 +483,7 @@ async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors,
       const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
       for (const [specifiers, mode] of [[references.runtime.imports, compiler.ModuleKind.ESNext], [references.runtime.requires, compiler.ModuleKind.CommonJS]]) for (const specifier of specifiers) {
         await checkpoint();
-        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;let member;try{member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,output);}catch(error){if(error?.unresolved!==true)throw error;}
+        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier,specifier))continue;let member;try{member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,output);}catch(error){if(error?.unresolved!==true)throw error;}
         if (member&&!generated(member)) imports.push({path:member,source:resource.source});
       }
       for (const literal of references.urls) {
@@ -1213,19 +1215,22 @@ function* closureLayerBatchesV1(view) {
 }
 /** 🪪️ The list of a stored layer in `log` from the row ids the store listed for it: the log id of each distinct dictionary row is learned once per log (the row is read from the dictionary and written to the log), a layer whose rows are all known costs a lookup per row and no parse; undefined while the layer has no list or a row of it cannot be read, so the caller parses the layer. */
 function indexedLayerListV1(log, lists, view) {
-  const store = view.store; if (view.digest === undefined || typeof store?.layerIdsSync !== "function" || typeof log.id !== "function") return undefined;
-  const ids = store.layerIdsSync(view.digest); if (ids === undefined) return undefined;
-  const known = lists.dictionary, mapped = new Uint32Array(ids.length);
+  const store = view.store; if (view.digest === undefined || typeof store?.layerListingSync !== "function" || typeof log.id !== "function") return undefined;
+  const listing = store.layerListingSync(view.digest); if (listing === undefined) return undefined;
+  const {ids,dictionary} = listing;
+  let known = lists.dictionary.get(dictionary);
+  if (!known) lists.dictionary.set(dictionary, known = new Map());
+  const mapped = new Uint32Array(ids.length);
   for (let at = 0; at < ids.length; at++) {
     const dictionaryId = ids[at]; let id = known.get(dictionaryId);
-    if (id === undefined) { const row = store.layerRowSync(dictionaryId); if (row === undefined) return undefined; id = log.id(row); known.set(dictionaryId, id); }
+    if (id === undefined) { const row = listing.rowSync(dictionaryId); if (row === undefined) return undefined; id = log.id(row); known.set(dictionaryId, id); }
     mapped[at] = id;
   }
   const builder = log.builder(); builder.addIds(mapped); return builder.finish();
 }
 /** 🗂️ The rows of one layer view as a list in `log`, written once per layer and log; the rows of a layer exist in memory one batch at a time. */
 export function closureLayerListV1(log, view) {
-  let lists = layerListsV1.get(log); if (!lists) layerListsV1.set(log, lists = { digests: new Map(), arrays: new WeakMap(), dictionary: new Map() });
+  let lists = layerListsV1.get(log); if (!lists) layerListsV1.set(log, lists = { digests: new Map(), arrays: new WeakMap(), dictionary: new WeakMap() });
   const table = typeof view.key === "string" ? lists.digests : lists.arrays;
   let list = table.get(view.key);
   if (list === undefined) { list = indexedLayerListV1(log, lists, view); if (list === undefined) { const builder = log.builder(); for (const batch of closureLayerBatchesV1(view)) builder.add(batch); list = builder.finish(); } table.set(view.key, list); }
@@ -1387,7 +1392,7 @@ export async function withClosurePassV1(compute, { verdicts } = {}) {
 /** 🫧️ One cooperative step of a long loop: every `yieldMilliseconds` it gives the event loop one turn, reports through the inference checkpoint (`phase`) and stops at cancellation. */
 function cooperativeStepV1(scripts, phase) {
   let since = -Infinity, index = 0;
-  const context = scripts?.context ?? {}, signal = context.invocation?.control.signal ?? context.phaseControl?.signal;
+  const context = scripts?.context ?? {}, signal = context.ownerSignal ?? context.invocation?.control.signal ?? context.phaseControl?.signal;
   return async () => {
     if (performance.now() - since < OBSERVATION_LIMITS_V1.yieldMilliseconds) return;
     since = performance.now();
@@ -1398,9 +1403,9 @@ function cooperativeStepV1(scripts, phase) {
 }
 
 /** ⚖️ The verdict on one stored layer of an entry: read from the store batch by batch (no layer is cached parsed), checked row by row, remembered per validation round and digest so every entry that names the layer reads it once; a lost layer does not hold. */
-const verdictMapsV1 = new Set(), trackVerdictsV1 = round => { const map = new Map(); layerVerdictsV1.set(round, map); verdictMapsV1.add(new WeakRef(map)); return map; };
+const verdictMapsV1 = createWeakCollectionTrackerV1(), trackVerdictsV1 = round => { const map = new Map(); layerVerdictsV1.set(round, map); verdictMapsV1.track(map); return map; };
 /** 🧮️ The layer verdict maps of the live validation rounds, for the slice memory report. */
-export function closureCollectionsV1() { let entries = 0, alive = 0, largest; for (const ref of verdictMapsV1) { const map = ref.deref(); if (map === undefined) { verdictMapsV1.delete(ref); continue; } alive++; entries += map.size; if (largest === undefined || map.size > largest.size) largest = map; } const spread = (cache, map) => { const keys = cache.keys(), step = Math.max(1, Math.floor(keys.length / 16)); return { entries: keys.length, sample: () => keys.filter((_key, at) => at % step === 0).slice(0, 16).map(key => map(cache.peek(key))) }; };
+export function closureCollectionsV1() { let entries = 0, alive = 0, largest; for (const map of verdictMapsV1) { alive++; entries += map.size; if (largest === undefined || map.size > largest.size) largest = map; } const spread = (cache, map) => { const keys = cache.keys(), step = Math.max(1, Math.floor(keys.length / 16)); return { entries: keys.length, sample: () => keys.filter((_key, at) => at % step === 0).slice(0, 16).map(key => map(cache.peek(key))) }; };
   const part = key => ({ name: "closure:entries." + key, ...spread(closureEntriesV1, entry => key === "answers" ? [...entry.answers ?? []] : entry[key]) }), once = (name, cache, pick) => { const seen = new Set(); let bytes = 0, entries = 0; for (const key of cache.keys()) { const value = cache.peek(key); if (value === undefined) continue; entries++; bytes += 8 + sharedBytesV1(pick(value), seen); } return { name, entries, bytes }; }, real = [part("value"), part("rows"), once("closure:entries.digests", closureEntriesV1, entry => entry.digests), once("closure:entries.sidecar", closureEntriesV1, entry => entry.sidecar), part("answers"), part("recipe"), part("layers"), { name: "closure:walkFacts (real)", ...spread(walkFactsByDigestV1, fact => fact) }, once("closure:walkMembers (real)", walkMembersByDigestV1, list => list), { name: "closure:recipes (real)", ...spread(knownClosureRecipesV1, recipe => recipe) }];
   return [...real, ...alive === 0 ? [] : [{ name: "closure:layerVerdicts (" + alive + " rounds)", entries, bytes: entries * 96 }]]; }
 /** 🗂️ The verdicts of one read, shared by every process of it: the first process that verifies a stored closure layer or entry writes a small verdict file named by its digest into a directory of the validation round it ran in, every other look of that round (the parent, farm children, pool children) reads the file instead of probing the rows again; a round is one snapshot of the tree, so a new round has a new directory and sees an edit at once. Without a round there is no directory and nothing is shared. A child joins the round of its parent with \`withClosurePassV1(compute, { verdicts })\`.
@@ -1413,56 +1418,94 @@ export function closureVerdictScopeV1() {
   let dir = verdictDirsV1.get(round);
   if (dir === undefined) {
     const parent = join(vTmpV1(), "semio-read-verdicts-" + (process.getuid?.() ?? 0));
-    try { vMkdirV1(parent, { recursive: true }); for (const name of vListV1(parent)) { try { if (Date.now() - vStatV1(join(parent, name)).mtimeMs > 7200000) vRmV1(join(parent, name), { recursive: true, force: true }); } catch {} } } catch {}
     dir = join(parent, process.pid + "-" + Date.now().toString(36) + "-" + ++verdictSerialV1); verdictDirsV1.set(round, dir); verdictOwnedV1.add(dir);
   }
   return dir;
 }
 process.once("exit", () => { for (const dir of verdictOwnedV1) { try { vRmV1(dir, { recursive: true, force: true }); } catch {} } });
 const verdictFileV1 = (kind, digest) => { if (typeof digest !== "string") return undefined; const dir = closureVerdictScopeV1(); return dir === undefined ? undefined : join(dir, kind + "-" + digest); };
-const readVerdictV1 = file => {
-  if (file === undefined) return undefined;
+function observeVerdictV1(file) {
+  if (file === undefined) return "unavailable";
   const seen = verdictSeenV1.get(file); if (seen !== undefined) return seen;
-  try { const text = vReadV1(file, "utf8"), holds = text === "1" ? true : text === "0" ? false : undefined; if (holds !== undefined) { if (verdictSeenV1.size > 100000) verdictSeenV1.clear(); verdictSeenV1.set(file, holds); } return holds; } catch { return undefined; }
-};
+  try {
+    const facts = vLstatV1(file);
+    if (!facts.isFile() || facts.size > 1) return "unavailable";
+    const text = vReadV1(file, "utf8"), holds = text === "1" ? true : text === "0" ? false : undefined;
+    if (holds === undefined) return text === "" ? "pending" : "unavailable";
+    if (verdictSeenV1.size > 100000) verdictSeenV1.clear();
+    verdictSeenV1.set(file, holds);
+    return holds;
+  } catch (error) { return error?.code === "ENOENT" ? "missing" : "unavailable"; }
+}
+const readVerdictV1 = file => { const observed = observeVerdictV1(file); return typeof observed === "boolean" ? observed : undefined; };
 const verdictDirsMadeV1 = new Set();
 const verdictDirMadeV1 = dir => { if (verdictDirsMadeV1.has(dir)) return; vMkdirV1(dir, { recursive: true }); verdictDirsMadeV1.add(dir); };
 const writeVerdictV1 = (file, holds) => {
   if (file === undefined) return;
   try { verdictDirMadeV1(dirname(file)); vWriteV1(file, holds ? "1" : "0"); verdictCountsV1.written++; verdictSeenV1.set(file, holds); } catch {}
 };
-async function sharedVerdictV1(file, compute) {
-  if (file === undefined) return compute();
-  const known = readVerdictV1(file); if (known !== undefined) { verdictCountsV1.read++; return known; }
-  let mine = false; try { verdictDirMadeV1(dirname(file)); vWriteV1(file, "", { flag: "wx" }); mine = true; } catch {}
-  if (!mine) for (let at = 0; at < 1200; at++) { await new Promise(done => setTimeout(done, 25)); const later = readVerdictV1(file); if (later !== undefined) { verdictCountsV1.read++; verdictCountsV1.waited++; return later; } }
-  try { const holds = await compute(); writeVerdictV1(file, holds); return holds; } catch (error) { if (mine) { try { vRmV1(file, { force: true }); } catch {} } throw error; }
+async function sharedVerdictV1(file, compute, signal) {
+  const checked = async () => { signal?.throwIfAborted(); const holds = await compute(); signal?.throwIfAborted(); return holds; };
+  if (file === undefined) return checked();
+  for (let at = 0; at <= 1200; at++) {
+    signal?.throwIfAborted();
+    const known = observeVerdictV1(file);
+    if (typeof known === "boolean") { verdictCountsV1.read++; if (at) verdictCountsV1.waited++; return known; }
+    if (known === "unavailable" || at === 1200) break;
+    if (at === 0 || known === "missing") {
+      try { verdictDirMadeV1(dirname(file)); } catch { break; }
+      let descriptor;
+      try { descriptor = vOpenV1(file, "wx", 0o600); } catch (error) { if (error?.code !== "EEXIST") break; }
+      if (descriptor !== undefined) {
+        try {
+          const original = vFstatV1(descriptor, { bigint: true });
+          const ownsPending = () => { try { const current = vLstatV1(file, { bigint: true }); return current.isFile() && current.size === 0n && current.dev === original.dev && current.ino === original.ino; } catch { return false; } };
+          try {
+            const holds = await checked();
+            if (ownsPending()) try { vWriteV1(descriptor, holds ? "1" : "0"); verdictCountsV1.written++; verdictSeenV1.set(file, holds); } catch {}
+            return holds;
+          } catch (error) { if (ownsPending()) try { vRmV1(file); } catch {} throw error; }
+        } finally { vCloseV1(descriptor); }
+      }
+    }
+    try { await claimDelayV1(25, undefined, { signal }); }
+    catch (error) { signal?.throwIfAborted(); throw error; }
+  }
+  return checked();
 }
 /** 📊️ How the verdict files went in this process: read from another look, written, and waited for while another process verified. */
 export function closureVerdictCountsV1() { return { ...verdictCountsV1 }; }
 const layerVerdictsV1 = new WeakMap(), layerFlightsV1 = new WeakMap(), layerCountsV1 = { hits: 0, joined: 0, checked: 0, indexed: 0, milliseconds: 0 };
-const rowVerdictsV1 = new WeakMap(), trackRowVerdictsV1 = round => { const map = new Map(); rowVerdictsV1.set(round, map); verdictMapsV1.add(new WeakRef(map)); return map; };
+const rowVerdictsV1 = new WeakMap();
+function dictionaryVerdictsV1(round, dictionary) {
+  if (!round) return new Map();
+  let dictionaries = rowVerdictsV1.get(round);
+  if (!dictionaries) rowVerdictsV1.set(round, dictionaries = new WeakMap());
+  let verdicts = dictionaries.get(dictionary);
+  if (!verdicts) { dictionaries.set(dictionary, verdicts = new Map()); verdictMapsV1.track(verdicts); }
+  return verdicts;
+}
 /** 🪪️ The verdict on one stored layer from the row ids a process listed for it earlier (`layerIdsSync` of the store): the layer is not read, decompressed or parsed, each distinct row of the dictionary is probed against the tree once per round and the layer holds while all its rows do; undefined while the layer has no list, so the caller reads it. A fact that changed since the list was made stales the layers that name its row, exactly. */
 async function indexedLayerHoldsAsyncV1(entry, digest, round, step) {
-  const store = entry.store; if (typeof store?.layerIdsSync !== "function") return undefined;
-  const ids = store.layerIdsSync(digest); if (ids === undefined) return undefined;
-  const known = round ? rowVerdictsV1.get(round) ?? trackRowVerdictsV1(round) : new Map();
+  const store = entry.store; if (typeof store?.layerListingSync !== "function") return undefined;
+  const listing = store.layerListingSync(digest); if (listing === undefined) return undefined;
+  const {ids,dictionary} = listing, known = dictionaryVerdictsV1(round, dictionary);
   let probed = 0;
   for (let at = 0; at < ids.length; at++) {
     const id = ids[at]; let holds = known.get(id);
-    if (holds === undefined) { const row = store.layerRowSync(id); if (row === undefined) return undefined; holds = observationRowFreshV1(row); known.set(id, holds); if ((++probed & 63) === 0) await step(); }
+    if (holds === undefined) { const row = listing.rowSync(id); if (row === undefined) return undefined; holds = observationRowFreshV1(row); known.set(id, holds); if ((++probed & 63) === 0) await step(); }
     if (!holds) return false;
   }
   return true;
 }
 /** 🪪️ The synchronous form of {@link indexedLayerHoldsAsyncV1}. */
 function indexedLayerHoldsV1(entry, digest, round) {
-  const store = entry.store; if (typeof store?.layerIdsSync !== "function") return undefined;
-  const ids = store.layerIdsSync(digest); if (ids === undefined) return undefined;
-  const known = round ? rowVerdictsV1.get(round) ?? trackRowVerdictsV1(round) : new Map();
+  const store = entry.store; if (typeof store?.layerListingSync !== "function") return undefined;
+  const listing = store.layerListingSync(digest); if (listing === undefined) return undefined;
+  const {ids,dictionary} = listing, known = dictionaryVerdictsV1(round, dictionary);
   for (let at = 0; at < ids.length; at++) {
     const id = ids[at]; let holds = known.get(id);
-    if (holds === undefined) { const row = store.layerRowSync(id); if (row === undefined) return undefined; holds = observationRowFreshV1(row); known.set(id, holds); }
+    if (holds === undefined) { const row = listing.rowSync(id); if (row === undefined) return undefined; holds = observationRowFreshV1(row); known.set(id, holds); }
     if (!holds) return false;
   }
   return true;
@@ -1470,23 +1513,23 @@ function indexedLayerHoldsV1(entry, digest, round) {
 
 /** 📊️ How the verdicts on the stored layers went in this process: asked again and answered from the round (`hits`), joined to the check another look had started (`joined`), checked against the tree (`checked`, with their `milliseconds`). */
 export function layerVerdictCountsV1() { return { ...layerCountsV1, milliseconds: Math.round(layerCountsV1.milliseconds) }; }
-async function storedLayerHoldsAsyncV1(entry, digest, step) {
+async function storedLayerHoldsAsyncV1(entry, digest, step, signal) {
+  signal?.throwIfAborted();
   const round = closurePassV1 ?? observationRoundV1(), verdicts = round ? layerVerdictsV1.get(round) ?? trackVerdictsV1(round) : undefined, known = verdicts?.get(digest);
   if (known !== undefined) { layerCountsV1.hits++; return known; }
   const flights = round ? layerFlightsV1.get(round) ?? layerFlightsV1.set(round, new Map()).get(round) : undefined, running = flights?.get(digest);
-  if (running !== undefined) { layerCountsV1.joined++; return running; }
+  if (running !== undefined) { layerCountsV1.joined++; const result = await running; signal?.throwIfAborted(); return result; }
   const check = sharedVerdictV1(verdictFileV1("l", digest), async () => {
     const started = performance.now();
     const listed = await indexedLayerHoldsAsyncV1(entry, digest, round, step);
-    if (listed !== undefined) { layerCountsV1.indexed++; layerCountsV1.milliseconds += performance.now() - started; verdicts?.set(digest, listed); return listed; }
+    if (listed !== undefined) { layerCountsV1.indexed++; layerCountsV1.milliseconds += performance.now() - started; return listed; }
     let holds = true;
     try { for (const batch of entry.store.layerBatchesSync(digest, ROW_LOG_POLICY_V1.batchRows)) if (!await observationLayerHoldsAsyncV1(batch, step)) { holds = false; break; } } catch (error) { if (error?.code !== "CLOSURE_LAYER_LOST") throw error; holds = false; }
     layerCountsV1.checked++; layerCountsV1.milliseconds += performance.now() - started;
-    verdicts?.set(digest, holds);
     return holds;
-  });
+  }, signal);
   flights?.set(digest, check);
-  try { const result = await check; verdicts?.set(digest, result); return result; } finally { flights?.delete(digest); }
+  try { const result = await check; signal?.throwIfAborted(); verdicts?.set(digest, result); return result; } finally { flights?.delete(digest); }
 }
 function storedLayerHoldsV1(entry, digest) {
   const file = verdictFileV1("l", digest), filed = readVerdictV1(file);
@@ -1508,6 +1551,8 @@ function storedLayerComputeV1(entry, digest) {
 
 /** 🫧️ The verdict of {@link closureEntryHoldsV1}, checked row by row with cooperative steps and remembered for the round, so a stored entry of tens of thousands of rows never blocks the event loop. */
 async function closureEntryHoldsAsyncV1(entry, scripts) {
+  const signal = scripts?.context?.ownerSignal ?? scripts?.context?.invocation?.control.signal ?? scripts?.context?.phaseControl?.signal;
+  signal?.throwIfAborted();
   const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
   const entryFile = verdictFileV1("e", entry.digest), filed = readVerdictV1(entryFile);
@@ -1516,7 +1561,8 @@ async function closureEntryHoldsAsyncV1(entry, scripts) {
   const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
   let holds = (entry.layers !== undefined || entry.digests !== undefined) && await observationRowsHoldAsyncV1(entry.rows, step);
   if (holds && entry.layers) for (const layer of entry.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
-  if (holds && !entry.layers) for (const digest of entry.digests) if (!await storedLayerHoldsAsyncV1(entry, digest, step)) { holds = false; break; }
+  if (holds && !entry.layers) for (const digest of entry.digests) if (!await storedLayerHoldsAsyncV1(entry, digest, step, signal)) { holds = false; break; }
+  signal?.throwIfAborted();
   writeVerdictV1(entryFile, holds);
   if (round) entry.checked = { round, holds };
   return holds;
@@ -1557,7 +1603,7 @@ const closureTakeV1 = new AsyncLocalStorage();
 
 /** 🪤️ Runs a look at a stored owner record (the take pass) so that no closure entry is derived inside it: an entry that is not stored or no longer holds ends the look with `BUILD_TAKE_MISS` (the owner is then inferred by the governed owner loop, with its own memory limit, one hand-off to the fleet and the plan guard), instead of the ungoverned walk of hundreds of recipes in the parent that grew the slice worker of a 16 GB machine by gigabytes in seconds.
  * @see ./🧪️tests/🪤️take-no-derive */
-export function runClosureTakeV1(body) { return closureTakeV1.run(true, body); }
+export function runClosureTakeV1(body, signal) { return closureTakeV1.run({ signal }, body); }
 
 /** 📖️ The stored entry of one recipe for a take: loaded and checked like a derivation's first step, never derived. */
 async function takenClosureEntryV1(workspaceRoot, id) {
@@ -1586,13 +1632,15 @@ export function closureFleetLaneV1(workspaceRoot) {
   return lane;
 }
 /** 🧶️ Takes the entries of `recipes` that this workspace's store lacks from the fleet in one batch, before any of them is derived; answers how many were taken. */
-export async function prefetchClosureEntriesV1(workspaceRoot, recipes) {
+export async function prefetchClosureEntriesV1(workspaceRoot, recipes, signal = closureTakeV1.getStore()?.signal) {
+  signal?.throwIfAborted();
   const store = closureStoreOfV1(workspaceRoot), lane = store ? await closureFleetLaneV1(workspaceRoot) : undefined;
   if (!lane) return 0;
   const missing = [];
-  for (const recipe of recipes) { const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe); if (closureEntriesV1.peek(id) === undefined && await store.stamp(id) === undefined) missing.push(recipe); }
+  for (const recipe of recipes) { signal?.throwIfAborted(); const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe); if (closureEntriesV1.peek(id) === undefined && await store.stamp(id) === undefined) missing.push(recipe); }
   if (missing.length === 0) return 0;
-  const taken = await lane.prefetch(missing, closureTravelV1).catch(() => 0);
+  const taken = await lane.prefetch(missing, closureTravelV1, signal).catch(() => 0);
+  signal?.throwIfAborted();
   closureCountsV1.fetched += taken;
   return taken;
 }
@@ -1600,16 +1648,20 @@ export async function prefetchClosureEntriesV1(workspaceRoot, recipes) {
 export async function claimDerivationV1(id, store, scripts) {
   const directory = closureVerdictScopeV1();
   if (directory === undefined || !store) return undefined;
+  const signal = scripts?.context?.ownerSignal ?? scripts?.context?.phaseControl?.signal ?? scripts?.context?.invocation?.control?.signal;
   const file = join(directory, "claim-" + createHash("sha256").update(id).digest("hex").slice(0, 32));
   for (let tick = 0; tick < 1200; tick++) {
+    signal?.throwIfAborted();
     let mine = false;
     try { verdictDirMadeV1(directory); vWriteV1(file, String(process.pid), { flag: "wx" }); mine = true; } catch {}
     if (mine) return { release: () => { try { vRmV1(file, { force: true }); } catch {} } };
     let holder; try { holder = Number(vReadV1(file, "utf8")); } catch {}
     if (Number.isInteger(holder) && holder > 0 && holder !== process.pid) { let alive = true; try { process.kill(holder, 0); } catch (error) { alive = error?.code === "EPERM"; } if (!alive) { try { vRmV1(file, { force: true }); } catch {} continue; } }
     const stored = await store.load(id), entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null };
+    signal?.throwIfAborted();
     if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) return { entry };
-    await new Promise(done => setTimeout(done, 100));
+    try { await claimDelayV1(100, undefined, { signal }); }
+    catch (error) { signal?.throwIfAborted(); throw error; }
   }
   return undefined;
 }
@@ -1618,21 +1670,25 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
   if (known && await closureEntryHoldsAsyncV1(known, closureScriptsV1.get(workspaceRoot))) return known;
   const failed = closureFailuresV1.get(id);
   if (failed) { if (await closureEntryHoldsAsyncV1(failed, closureScriptsV1.get(workspaceRoot))) throw failed.error; closureFailuresV1.delete(id); }
-  if (closureTakeV1.getStore() === true && !closureInflightV1.has(id)) return takenClosureEntryV1(workspaceRoot, id);
+  if (closureTakeV1.getStore() !== undefined && !closureInflightV1.has(id)) return takenClosureEntryV1(workspaceRoot, id);
   let flight = closureInflightV1.get(id);
   if (!flight) {
     const scripts = closureScriptsV1.get(workspaceRoot);
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
+    const signal = scripts.context?.ownerSignal ?? scripts.context?.phaseControl?.signal ?? scripts.context?.invocation?.control?.signal;
+    signal?.throwIfAborted();
     const store = closureStoreOfV1(workspaceRoot), derive = () => { assertNotReadParentV1("derive", recipe?.fn ?? ""); return walkClosureRecipeV1(workspaceRoot, recipe, scripts); }, deriveAndKeep = () => derive().then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
-    flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++;
+    flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { signal?.throwIfAborted(); const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { signal?.throwIfAborted(); closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++;
       const claim = await claimDerivationV1(id, store, scripts);
-      if (claim?.entry) { closureCountsV1.loaded++; closureEntriesV1.set(id, claim.entry); return claim.entry; }
       try {
+      signal?.throwIfAborted();
+      if (claim?.entry) { closureCountsV1.loaded++; closureEntriesV1.set(id, claim.entry); return claim.entry; }
       const lane = store ? await closureFleetLaneV1(workspaceRoot) : undefined;
+      signal?.throwIfAborted();
       if (!lane) return await deriveAndKeep();
-      const taken = await lane.take(recipe, closureTravelV1).catch(() => undefined);
-      if (taken?.outcome === "taken") { const again = await store.load(id), next = again && { ...again, layers: undefined, store, answers: new Map(), checked: null }; if (next && await closureEntryHoldsAsyncV1(next, scripts)) { closureCountsV1.fetched++; closureEntriesV1.set(id, next); return next; } }
-      let derived; try { derived = await deriveAndKeep(); } catch (error) { await taken?.hold?.release().catch(() => undefined); throw error; }
+      const taken = await lane.take(recipe, closureTravelV1, signal).catch(() => { signal?.throwIfAborted(); return undefined; });
+      if (taken?.outcome === "taken") { const again = await store.load(id), next = again && { ...again, layers: undefined, store, answers: new Map(), checked: null }; if (next && await closureEntryHoldsAsyncV1(next, scripts)) { signal?.throwIfAborted(); closureCountsV1.fetched++; closureEntriesV1.set(id, next); return next; } }
+      let derived; try { signal?.throwIfAborted(); derived = await deriveAndKeep(); } catch (error) { await taken?.hold?.release().catch(() => undefined); throw error; }
       if (derived.digests) await Promise.race([lane.offer(recipe, closureTravelV1, taken?.hold).catch(() => undefined), new Promise(done => { setTimeout(done, 15000).unref?.(); })]); else await taken?.hold?.release().catch(() => undefined);
       return derived;
       } finally { claim?.release?.(); } }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
@@ -1785,32 +1841,38 @@ registerClosureProviderV1({
     const answer = closureAnswerV1(workspaceRoot, entry, query);
     return answer === undefined ? "!stale" : JSON.stringify(answer);
   },
-  async verify(rows, value) {
+  async verify(rows, value, failed) {
+    const signal = closureTakeV1.getStore()?.signal;
+    signal?.throwIfAborted();
     prepareSourceAnalysesV1();
     for (const [key, recipe] of Object.entries(value?.closureRecipes ?? {})) knownClosureRecipesV1.set(key, recipe);
     for (const [digest, inputs] of Object.entries(value?.closureInputs ?? {})) knownClosureInputsV1.set(digest, inputs);
     const groups = new Map();
-    for (const { path, fact } of rows) {
+    for (const row of rows) {
       let workspaceRoot, key, query;
-      try { [workspaceRoot, key, query] = JSON.parse(path); } catch { return false; }
+      try { [workspaceRoot, key, query] = JSON.parse(row.path); } catch { failed?.(row, "closure-query"); return false; }
       const id = workspaceRoot + "\0" + key, group = groups.get(id) ?? { workspaceRoot, key, queries: [] };
-      group.queries.push([query, fact]);
+      group.queries.push([query, row]);
       groups.set(id, group);
     }
     for (const { workspaceRoot, key, queries } of groups.values()) {
+      signal?.throwIfAborted();
       const recipe = knownClosureRecipesV1.get(key);
-      if (!recipe) return false;
+      if (!recipe) { failed?.(undefined, "closure-recipe-unavailable"); return false; }
       try {
         let entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry);
-        for (const [query, fact] of queries) {
+        for (const [query, row] of queries) {
+          signal?.throwIfAborted();
           const answer = await answeredAgainstFreshProvidersV1(() => closureAnswerV1(workspaceRoot, entry, query, providers), async () => { entry = await ensureClosureEntryV1(workspaceRoot, recipe); providers = await ensureProviderEntriesV1(workspaceRoot, entry); });
-          if (answer === undefined || JSON.stringify(answer) !== fact) return false;
+          if (answer === undefined || JSON.stringify(answer) !== row.fact) { failed?.(row, answer === undefined ? "closure-unavailable" : "closure-value"); return false; }
         }
-      } catch { return false; }
+      } catch { failed?.(undefined, "closure-probe"); return false; }
     }
     return true;
   },
   async settle(paths, value) {
+    const signal = closureTakeV1.getStore()?.signal;
+    signal?.throwIfAborted();
     prepareSourceAnalysesV1();
     for (const [key, recipe] of Object.entries(value?.closureRecipes ?? {})) knownClosureRecipesV1.set(key, recipe);
     for (const [digest, inputs] of Object.entries(value?.closureInputs ?? {})) knownClosureInputsV1.set(digest, inputs);
@@ -1818,8 +1880,8 @@ registerClosureProviderV1({
     for (const path of paths) { try { const [workspaceRoot, key] = JSON.parse(path), recipe = knownClosureRecipesV1.get(key); if (recipe) wanted.set(workspaceRoot + "\0" + key, [workspaceRoot, recipe, key]); } catch {} }
     const byRoot = new Map();
     for (const [workspaceRoot, recipe] of wanted.values()) { byRoot.set(workspaceRoot, [...byRoot.get(workspaceRoot) ?? [], recipe]); }
-    for (const [workspaceRoot, recipes] of byRoot) { try { await prefetchClosureEntriesV1(workspaceRoot, recipes); } catch {} }
-    for (const [workspaceRoot, recipe, key] of wanted.values()) { try { await ensureProviderEntriesV1(workspaceRoot, await ensureClosureEntryV1(workspaceRoot, recipe)); } catch { closureEntriesV1.delete(workspaceRoot + "\0" + key); } }
+    for (const [workspaceRoot, recipes] of byRoot) { signal?.throwIfAborted(); try { await prefetchClosureEntriesV1(workspaceRoot, recipes, signal); } catch { signal?.throwIfAborted(); } }
+    for (const [workspaceRoot, recipe, key] of wanted.values()) { signal?.throwIfAborted(); try { await ensureProviderEntriesV1(workspaceRoot, await ensureClosureEntryV1(workspaceRoot, recipe)); } catch { signal?.throwIfAborted(); closureEntriesV1.delete(workspaceRoot + "\0" + key); } }
   },
 });
 
@@ -1959,7 +2021,8 @@ function closureTargetOfV1({ inputsDigest, ...rest }) {
 
 /** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control, and is the point where the inference of an owner that grew past what the machine can give one project stops (`throwIfOwnerExceededV1`, set by the memory governor); durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */
 export async function yieldInferenceV1(context,phase,index,force=false){
- footprintPulseV1();releaseIfGrownV1(closureTakeV1.getStore() === true ? { every: 16, threshold: FOOTPRINT_POLICY_V1.takeReleaseGrowthBytes } : { every: 16 });
+ context.ownerSignal?.throwIfAborted();
+ footprintPulseV1();releaseIfGrownV1(closureTakeV1.getStore() !== undefined ? { every: 16, threshold: FOOTPRINT_POLICY_V1.takeReleaseGrowthBytes } : { every: 16 });
  throwIfOwnerExceededV1();
  if(!context.invocation)return;
  const last=yieldInferenceV1.last??=new WeakMap(),now=performance.now();

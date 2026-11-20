@@ -1,0 +1,7 @@
+{
+  "stockSizeMetres": [0.5, 0.5, 0.2],
+  "capabilities": [
+    { "id": "shallowCrosscut", "label": "Shallow Crosscut", "maxDepthMetres": 0.1, "available": false },
+    { "id": "deepCrosscut", "label": "Deep Crosscut", "maxDepthMetres": 0.5, "available": true }
+  ]
+}

@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `UpdateAnalysisSettings`.
 use super::UpdateAnalysisSettings;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dAnalysisPatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::analysis_breach;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dAnalysisPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::analysis_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 

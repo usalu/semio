@@ -16,6 +16,6 @@ export const menuListItemClassName = cn(
   interactiveHoverClass,
   "focus:bg-hover-interactive-fill focus:text-emphasized",
   "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
-  "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
+  "data-[selected=true]:bg-active-base data-[selected=true]:text-emphasized",
 );
 // #endregion 📋️MenuItemPresentation

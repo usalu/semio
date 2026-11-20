@@ -1,0 +1,15 @@
+{
+  "nativeUnit": "N*m",
+  "accepted": [
+    { "text": "2.5kN*m", "value": 2500, "canonical": "2500N*m" },
+    { "text": "-125N*m", "value": -125, "canonical": "-125N*m" },
+    { "text": "4", "value": 4, "canonical": "4N*m" }
+  ],
+  "refused": [
+    "2.5kN *m",
+    "2.5kN* m",
+    "2.5kN*m2",
+    "2.5kN",
+    "2.5N*m extra"
+  ]
+}

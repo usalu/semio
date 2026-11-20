@@ -1,4 +1,12 @@
 //! 🔄️ Mounted typed command full operations and their job.
+/// 🎟️ Lends the mounted caller’s work budget to an identity encoder across asynchronous publication steps.
+pub struct MountedIdentityWork<'w>(pub &'w mut semio_framework_job::NativeEncoderWork);
+impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for MountedIdentityWork<'_> {
+    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
+        self.0.lend(control, |control| operation(control))
+    }
+}
+
 pub use semio_plugin_result_page::{result_page_wire,pending_result_page};
 #[path="📃️mounted/🦀️.rs"]
 mod mounted_page;
@@ -444,7 +452,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         self.validate_original_producer_source(cx)?;
         let grant = cx.retained_grant();
         let demand = self.result_page_retirement_demands(grant.maximum_copy_bytes)?;
-        semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_source_effect_step(cx, grant, demand, |_, effect| {
             let progress = self.result_page_retirement_step(effect)?;
             let complete = !self.result_page_retirement_pending();
             Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))
@@ -523,7 +531,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if self.original_producer_pending(){return self.original_producer_retirement_demands(body);}
         if let Some(rejected) = self.session_rejected.as_ref() {
-            if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
+            if rejected.terminal_is_empty() { return Ok(if self.session.is_some() { item } else { RetirementDemand { copy_bytes: size_of_val(rejected), ..item } }); }
             return rejected.retirement_demands(body);
         }
         if let Some(session) = self.session.as_ref() {
@@ -626,7 +634,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if self.stage != MountedTypedCommandFullOperationStage::Retiring { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation is not admitted for retirement" }); }
-        if self.result_page_retirement_pending(){let Some((result,performed))=cx.with_original_effect(grant,|_,effect|self.result_page_retirement_step(effect))?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return result.map(PluginLifecycleStep::Progress).map_err(Into::into);}
+        if self.result_page_retirement_pending(){let Some((result,performed))=cx.with_original_source_effect(grant,|_,effect|self.result_page_retirement_step(effect))?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return result.map(PluginLifecycleStep::Progress).map_err(Into::into);}
         if !self.page_publication.terminal_is_empty(){let Some((poll,_))=cx.with_original_effect(grant,|_,effect|self.page_publication.close_step(effect))?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};let turn=semio_plugin_ownership::bounded_ownership::plugin_poll_outcome(poll);cx.consume_work(turn.work);return turn.result.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if self.result_page.is_some() { return Ok(PluginLifecycleStep::Blocked { reason: "typed operation retains an unacknowledged result page" }); }
         if self.terminal_is_empty() { return Ok(PluginLifecycleStep::Complete(empty)); }

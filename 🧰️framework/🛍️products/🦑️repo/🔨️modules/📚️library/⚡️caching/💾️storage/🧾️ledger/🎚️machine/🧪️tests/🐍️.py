@@ -79,6 +79,13 @@ def plan(spec, case):
     for s, u, demand in rows:
         h = s["headroomBasisPoints"]
         quota = quotas[s["id"]]
+        env = u["envelopeBytes"]
+        if env is not None:
+            reserve = spec["admission"]
+            room = env
+            if s.get("admitsCommands"):
+                room -= max(reserve["floorMinimumBytes"], env * reserve["floorBasisPoints"] // 10000) + env * reserve["maximumShareBasisPoints"] // 10000
+            quota = max(s["floorBytes"], min(quota, room))
         limit = quota * (10000 - h) // 10000
         used = u["usedBytes"]
         excess = max(0, used - limit)

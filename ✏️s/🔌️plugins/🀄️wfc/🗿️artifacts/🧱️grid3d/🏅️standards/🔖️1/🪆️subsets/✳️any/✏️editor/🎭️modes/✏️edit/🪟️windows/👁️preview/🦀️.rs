@@ -28,9 +28,16 @@ pub const SURFACE_ID: &str = "wfc.grid3d.preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 👁️ Stitched into the editor manifest by `crate::editor::grid3d::create_grid3d_editor`. Read-only:
-/// it declares no action and no utility, because the solve is an inference and this window only
-/// shows it.
+/// 🏁️ The hidden `commit-fill` action that lands a finished fill run in the transient preview lane.
+fn commit_fill_action() -> semio_plugin::ActionDefinition {
+    let mut action = semio_plugin::ActionDefinition { in_palette: false, ..semio_plugin::ActionDefinition::bounded_catalog("commit-fill", LocalizedLabel::native("Commit Fill", "Füllen übernehmen"), semio_plugin::ActionKind::Mutation) };
+    action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+    action
+}
+
+/// 👁️ Stitched into the editor manifest by `crate::editor::grid3d::create_grid3d_editor`. Its only
+/// action is the hidden `commit-fill` that receives a finished fill run; it declares no utility,
+/// because the solve is an inference and this window only shows it.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
@@ -40,7 +47,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: semio_plugin::SurfaceKind::World3d,
         icon_id: "preview".into(),
         options: WindowOptions::default(),
-        actions: vec![semio_plugin::ActionDefinition{in_palette:false,..semio_plugin::ActionDefinition::bounded_catalog("commit-fill",LocalizedLabel::native("Commit Fill","Füllen übernehmen"),semio_plugin::ActionKind::Mutation)}],
+        actions: vec![commit_fill_action()],
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,

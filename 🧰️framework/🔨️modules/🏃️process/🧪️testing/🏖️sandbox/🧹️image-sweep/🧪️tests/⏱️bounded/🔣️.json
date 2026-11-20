@@ -1,0 +1,6 @@
+[
+  {"mode":"exit","outcome":"completed"},
+  {"mode":"hung-inventory","outcome":"deadline"},
+  {"mode":"caller-stop","outcome":"cancelled"},
+  {"mode":"already-stopped","outcome":"cancelled"}
+]

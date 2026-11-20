@@ -64,7 +64,7 @@ async fn a_door_a_void_and_a_missing_type() {
     let create = created(&step);
     assert_eq!((create.opening.host.as_str(), create.opening.kind.clone()), ("w-north", OpeningKind::Void { width: VOID_WIDTH, height: VOID_HEIGHT }));
     let mut snapshot = room();
-    snapshot.window_types.clear();
+    snapshot.window_types.cold_clear();
     assert_eq!(Rig::plan("window", snapshot).down(3.0, 0.0).refused, Some(TYPE_MISSING));
 }
 

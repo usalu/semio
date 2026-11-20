@@ -43,7 +43,7 @@ async function startGraphReadV1(input:GraphReadInputV1,directory:string,policy:W
  mkdirSync(directory,{recursive:true});
  const files=filesOf(directory),runner=join(import.meta.dir,"..","🏃️runner","🟦️.ts");
  rmSync(files.record,{force:true});rmSync(files.stop,{force:true});rotateGraphReadLogV1(directory,policy.readLogsKept);writeFileSync(files.watch,"");
- const environment={...input.environment,SEMIO_GRAPH_FLEET_READ:"off",SEMIO_GRAPH_BACKGROUND:"1",SEMIO_LEASE_PRIORITY:input.reason==="request"?"interactive":"background",SEMIO_GRAPH_WAVE_ROWS:"1",...input.steerDirectory===undefined?{}:{SEMIO_GRAPH_STEER_DIRECTORY:input.steerDirectory}},env=Object.fromEntries(Object.entries(environment).filter((entry):entry is[string,string]=>entry[1]!==undefined));
+ const environment={...input.environment,SEMIO_BUILD_GRAPH_POLICY:"fresh",SEMIO_GRAPH_FLEET_READ:"off",SEMIO_GRAPH_BACKGROUND:"1",SEMIO_LEASE_PRIORITY:input.reason==="request"?"interactive":"background",SEMIO_GRAPH_WAVE_ROWS:"1",...input.steerDirectory===undefined?{}:{SEMIO_GRAPH_STEER_DIRECTORY:input.steerDirectory}},env=Object.fromEntries(Object.entries(environment).filter((entry):entry is[string,string]=>entry[1]!==undefined));
  const child=spawn(process.execPath,[runner,files.record,files.log,files.watch,String(policy.readOrphanMilliseconds),String(policy.readBeatMilliseconds),input.cwd,input.reason,input.command,"show","projects"],{cwd:input.cwd,detached:true,stdio:"ignore",windowsHide:true,env});
  let failed:string|undefined;child.on("error",error=>{failed=error.message;});child.on("exit",code=>{if(code!==0&&code!==null)failed=`runner exit ${code}`;});child.unref();
  for(let waited=0;waited<30_000;waited+=25){

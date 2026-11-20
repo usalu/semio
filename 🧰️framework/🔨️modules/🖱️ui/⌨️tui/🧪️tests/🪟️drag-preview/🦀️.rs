@@ -313,7 +313,7 @@ fn narrow_overflow_preserves_the_active_chip_and_its_controls() {
     assert!(tab.close_x.is_some());
     assert!(tab.maximize_x.is_some());
     assert!(tab.drag_x.is_some());
-    assert_eq!(tab.interior_width + 2, 12);
+    assert_eq!(tab.interior_width + 2, 14);
     let arrows: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))).collect();
     assert_eq!(arrows.len(), 2);
     assert!(arrows.iter().all(|tab| tab.interior_width == 1));

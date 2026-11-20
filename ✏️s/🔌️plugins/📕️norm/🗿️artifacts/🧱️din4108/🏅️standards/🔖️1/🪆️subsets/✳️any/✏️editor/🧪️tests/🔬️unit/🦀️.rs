@@ -73,6 +73,32 @@ fn editor_module_links() {
     let _ = create_din4108_app();
 }
 
+#[semio_framework_async_macros::async_test]
+async fn restores_a_whole_document_through_the_archive_decoder() {
+    use semio_os_kernel::os_store::serialization::ArtifactPackFiles;
+    use semio_plugin::{artifact_app_laws, PluginApp};
+
+    let mut app = context::app_with_registry().await;
+    let initial_generation = app.0.stores.store.generation_now();
+    let (pack, spr) = match std::env::var_os("SEMIO_DIN4108_ARCHIVE_CAPTURE") {
+        Some(path) => {
+            let path = std::path::PathBuf::from(path);
+            (std::fs::read(path.with_extension("pack")).expect("captured Pack"),
+             std::fs::read(path.with_extension("spr")).expect("captured SPR"))
+        }
+        None => {
+            let archive = app.0.document_archive().await.expect("initial document archive");
+            (archive.parent_pack, archive.parent_spr)
+        }
+    };
+    let files = ArtifactPackFiles { pack, spr, ops: String::new() };
+    artifact_app_laws::load_document(&mut app.0, &files, &mut artifact_app_laws::fixture_identity(), app.1.cx())
+        .await.unwrap_or_else(|failure| panic!("{}", failure.primary.message()));
+    assert!(app.0.stores.store.generation_now() > initial_generation);
+    assert!(app.0.ingest.document_archive_loads.get(artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION).is_none());
+    context::close(&mut app);
+}
+
 #[test]
 fn the_manifest_declares_the_four_visual_windows_and_no_json_window() {
     let definition = create_din4108_app();

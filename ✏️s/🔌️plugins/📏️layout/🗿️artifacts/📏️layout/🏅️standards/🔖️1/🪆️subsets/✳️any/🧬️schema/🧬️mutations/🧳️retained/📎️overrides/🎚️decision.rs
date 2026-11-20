@@ -1,7 +1,7 @@
 //! 📎 Original Page override admission bounds every identity read and scalar comparison.
 use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use semio_s_artifact_layout_layout_model::{Frame,Page,ParentPage,PageOverride,snapshot::LayoutSnapshot};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,equal_f64,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,equal_f64,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use crate::{simple::SimpleAdvance,target::{LayoutTargetLookup,LayoutTargetSource}};
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Page overrides source custody is invalid")}
 fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:2048,depth:1,..Default::default()}}
@@ -18,8 +18,14 @@ pub struct OverrideDecision{m:Option<RetainedCloneBinding>,b:Option<RetainedClon
 impl Default for OverrideDecision{fn default()->Self{Self{m:None,b:None,cursor:Default::default(),at:[0,0],phase:0,index:0,other:0,offset:0,equal:true,error:None,closing:false}}}
 impl OverrideDecision{
  pub fn demand<M:LayoutMutationSource>(&self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,_body:usize)->Result<RetirementDemand,ValueError>{m.check_binding(&self.m)?;b.check_binding(&self.b)?;input(m.get())?;if self.closing{return Err(fault())}Ok(match self.phase{0=>nested(m.binding_demand(&self.m)?.unwrap_or_default()),1=>nested(b.binding_demand(&self.b)?.unwrap_or_default()),2|4|7=>nested(self.cursor.demand()),_=>fixed()})}
- pub fn advance<M:LayoutMutationSource>(&mut self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,g:RetainedCloneGrant)->Result<SimpleAdvance,ValueError>{let d=self.demand(m,b,256)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==30,unchanged:self.equal&&self.error.is_none(),error:self.error};if !retained_clone_grant_admits(g,d){return Ok(out)}let mut paid=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let p=input(m.get())?;let base=b.get();match self.phase{
- 0=>{paid=receipt(m.bind(&mut self.m,child(g)).result.map_err(refused)?.unwrap_or_default());self.phase=1},1=>{paid=receipt(b.bind(&mut self.b,child(g)).result.map_err(refused)?.unwrap_or_default());self.phase=2},
+ pub fn work_demand<M:LayoutMutationSource>(&self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>)->Result<u64,ValueError>{
+  self.demand(m,b,256)?;
+  if self.phase==30{return Ok(0)}
+  let child=match self.phase{0=>m.binding_work_demand(&self.m)?,1=>b.binding_work_demand(&self.b)?,_=>0};
+  child.checked_add(1).ok_or_else(fault)
+ }
+ pub fn advance<M:LayoutMutationSource>(&mut self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,effect:&mut RetainedAllocationEffect<'_>)->Result<SimpleAdvance,ValueError>{let g=effect.grant();let d=self.demand(m,b,256)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==30,unchanged:self.equal&&self.error.is_none(),error:self.error};if !retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.work_demand(m,b)?{return Ok(out)}if !effect.performed(1)?{return Err(fault())}let mut paid=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let p=input(m.get())?;let base=b.get();match self.phase{
+ 0=>{paid=receipt(m.bind(&mut self.m,&mut effect.nested(child(g))).result.map_err(refused)?.unwrap_or_default());if self.m.is_some(){self.phase=1}},1=>{paid=receipt(b.bind(&mut self.b,&mut effect.nested(child(g))).result.map_err(refused)?.unwrap_or_default());if self.b.is_some(){self.phase=2}},
  2=>{let step=self.cursor.advance(&Rows::Pages(&base.pages),0,&p.id,child(g)).map_err(refused)?;paid=receipt(step.progress());if let Some(found)=self.cursor.result(){self.cursor=Default::default();if let Some(page)=found{self.at[0]=page;self.phase=3}else{self.refuse("mutation.target-missing")}}},
  3=>{let page=&base.pages[self.at[0]];self.equal=page.overrides.len()==p.overrides.len();if p.overrides.len()>64{self.refuse("mutation.invariant")}else if page.parent_page_id.is_none(){if p.overrides.is_empty(){self.phase=30}else{self.refuse("mutation.invariant")}}else{self.phase=4}},
  4=>{let step=self.cursor.advance(&Rows::Parents(&base.parent_pages),1,base.pages[self.at[0]].parent_page_id.as_deref().unwrap(),child(g)).map_err(refused)?;paid=receipt(step.progress());if let Some(found)=self.cursor.result(){self.cursor=Default::default();if let Some(parent)=found{self.at[1]=parent;self.phase=5}else{self.refuse("mutation.invariant")}}},
@@ -30,7 +36,25 @@ impl OverrideDecision{
  fn refuse(&mut self,code:&'static str){self.error=Some(code);self.phase=30}
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close()}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.cursor.terminal_is_empty(){return Ok(nested(self.cursor.close_demand()))}Ok(nested(RetainedCloneBinding::close_demand(if self.b.is_some(){&self.b}else{&self.m},body.min(256))?))}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(fault())}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(receipt(self.cursor.close_step(child(g)).progress())))}let step=RetainedCloneBinding::close_one(if self.b.is_some(){&mut self.b}else{&mut self.m},child(g)).result.map_err(refused)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(receipt(step.progress()))}else{RetainedCloneStep::Progress(receipt(step.progress()))})}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  self.close_demand(body)?;
+  if self.terminal_is_empty(){return Ok(0)}
+  if !self.cursor.terminal_is_empty(){return Ok(1)}
+  let binding=if self.b.is_some(){&self.b}else{&self.m};
+  RetainedCloneBinding::close_work_demand(binding,body.min(256))?.checked_add(1).ok_or_else(fault)
+ }
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  if !self.closing{return Err(fault())}
+  let d=self.close_demand(body)?;let g=effect.grant();
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  if !retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.close_work_demand(body)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if !effect.performed(1)?{return Err(fault())}
+  if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(receipt(self.cursor.close_step(child(g)).progress())))}
+  let binding=if self.b.is_some(){&mut self.b}else{&mut self.m};
+  let RetainedWorkPoll::Complete(turn)=RetainedCloneBinding::close_one(binding,body.min(256),&mut effect.nested(child(g))) else{return Err(fault())};
+  let progress=receipt(turn.result.map_err(|e|refused(e.into_value_error()))?.progress());
+  Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+ }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.m.is_none()&&self.b.is_none()}
 }
 impl Drop for OverrideDecision{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Page overrides requires funded original closure")}}

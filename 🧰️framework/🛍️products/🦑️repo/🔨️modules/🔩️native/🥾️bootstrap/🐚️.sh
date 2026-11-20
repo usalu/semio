@@ -111,11 +111,11 @@ resolve_repo_root() {
 REPO_ROOT="$(resolve_repo_root)"
 BOOTSTRAP_COMMAND="${1:-setup}"
 case "$BOOTSTRAP_COMMAND" in
-setup|rust|node)
+setup|rust|node|rust-toolchain)
   shift || true
   ;;
 *)
-  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup|rust|node" >&2
+  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup|rust|node|rust-toolchain" >&2
   exit 1
   ;;
 esac
@@ -406,18 +406,20 @@ install_linux_packages() {
 
 ensure_user_cc() {
   export PATH="$LOCAL_BIN:$PATH"
-  local pin_row="" pin_version="" pin_zig=""
-  if pin_row="$(host_pin zig)"; then
-    pin_version="$(pin_field "$pin_row" version)"
-    pin_zig="${XDG_DATA_HOME:-$HOME/.local/share}/semio/zig/v$pin_version/zig"
-    if [ -x "$pin_zig" ]; then
+  local row="" version root archive download zig name mode driver_path="" quote="'" escaped="'\\''"
+  if row="$(host_pin zig)"; then
+    version="$(pin_field "$row" version)"
+    root="${XDG_DATA_HOME:-$HOME/.local/share}/semio/zig/v$version"
+    zig="$root/zig"
+    driver_path=${zig//$quote/$escaped}
+    driver_path="'$driver_path'"
+    if [ -x "$zig" ]; then
       mkdir -p "$LOCAL_BIN"
-      ln -sfn "$pin_zig" "$LOCAL_BIN/zig"
+      ln -sfn "$zig" "$LOCAL_BIN/zig"
     fi
   fi
   if command -v cc >/dev/null 2>&1 && command -v c++ >/dev/null 2>&1; then
-    local cc_path cxx_path first="" line="" driver_path
-    driver_path="$(printf '%q' "$pin_zig")"
+    local cc_path cxx_path first="" line=""
     cc_path=$(command -v cc)
     cxx_path=$(command -v c++)
     case "$cc_path:$cxx_path" in
@@ -438,11 +440,7 @@ ensure_user_cc() {
     *) return 0 ;;
     esac
   fi
-  local row version root archive download zig name mode
-  row="$(host_pin zig)" || return 1
-  version="$(pin_field "$row" version)"
-  root="${XDG_DATA_HOME:-$HOME/.local/share}/semio/zig/v$version"
-  zig="$root/zig"
+  [ -n "$row" ] || return 1
   if [ ! -x "$zig" ]; then
     log "Installing Zig $version as the user-local C and C++ compiler…"
     download="$(mktemp -d)"
@@ -472,7 +470,7 @@ Linux:x86_64|Linux:amd64) target=x86_64-linux-gnu ;;
 Linux:aarch64|Linux:arm64) target=aarch64-linux-gnu ;;
 Darwin:x86_64|Darwin:amd64) target=x86_64-macos ;;
 Darwin:aarch64|Darwin:arm64) target=aarch64-macos ;;
-*) exec $(printf '%q' "$zig") $mode "\$@" ;;
+*) exec $driver_path $mode "\$@" ;;
 esac
 semio_zig_target() {
   case "\$1" in
@@ -504,8 +502,8 @@ while [ "\$remaining" -gt 0 ]; do
   *) set -- "\$@" "\$argument" ;;
   esac
 done
-if [ -n "\$target" ]; then exec $(printf '%q' "$zig") $mode -target "\$target" "\$@"; fi
-exec $(printf '%q' "$zig") $mode "\$@"
+if [ -n "\$target" ]; then exec $driver_path $mode -target "\$target" "\$@"; fi
+exec $driver_path $mode "\$@"
 EOF
     chmod 755 "$LOCAL_BIN/$name"
   done
@@ -767,7 +765,33 @@ ensure_rust_profile() {
 
 ensure_rust_toolchain() {
   export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
+  case "$CARGO_HOME" in /*) ;; *) CARGO_HOME="$REPO_ROOT/$CARGO_HOME" ;; esac
+  case "$RUSTUP_HOME" in /*) ;; *) RUSTUP_HOME="$REPO_ROOT/$RUSTUP_HOME" ;; esac
   export PATH="$CARGO_HOME/bin:$PATH"
+  local policy lock wait_seconds
+  policy="$(grep -F '"RustupInstallation":' "$PINS_FILE")" || return 1
+  lock="$RUSTUP_HOME/$(pin_field "$policy" lockFile)"
+  wait_seconds="$(pin_field "$policy" lockWaitSeconds)"
+  case "$wait_seconds" in ""|*[!0-9]*) return 1 ;; esac
+  mkdir -p "$RUSTUP_HOME" || return 1
+  if [ ! -e "$lock" ] && [ ! -L "$lock" ] && [ "$lock" != "$RUSTUP_HOME/" ]; then
+    (umask 022; set -o noclobber; : > "$lock") 2>/dev/null || [ -f "$lock" ] || return 1
+  fi
+  if [ ! -f "$lock" ] || [ -L "$lock" ]; then
+    log "A regular Rustup installation lock is required: $lock"
+    return 1
+  fi
+  (
+    case "$(uname -s)" in
+      Darwin) /usr/bin/lockf -t "$wait_seconds" 9 || exit 1 ;;
+      Linux) command -p flock -x -w "$wait_seconds" 9 || exit 1 ;;
+      *) exit 1 ;;
+    esac
+    install_pinned_rust_toolchain
+  ) 9< "$lock"
+}
+
+install_pinned_rust_toolchain() {
   if ! command -v rustup >/dev/null 2>&1; then
     local row download
     row="$(host_pin rustup)" || return 1
@@ -780,20 +804,9 @@ ensure_rust_toolchain() {
     rm -rf "$download"
   fi
   log "Installing the rust-toolchain.toml toolchain…"
-  local previous_rustup_toolchain=""
-  if [ -n "${RUSTUP_TOOLCHAIN+x}" ]; then
-    previous_rustup_toolchain="$RUSTUP_TOOLCHAIN"
-  fi
   unset RUSTUP_TOOLCHAIN
-  if ! (cd "$REPO_ROOT" && rustup toolchain install --no-self-update); then
-    if [ -n "$previous_rustup_toolchain" ]; then
-      export RUSTUP_TOOLCHAIN="$previous_rustup_toolchain"
-    fi
-    return 1
-  fi
-  if [ -n "$previous_rustup_toolchain" ]; then
-    export RUSTUP_TOOLCHAIN="$previous_rustup_toolchain"
-  fi
+  cd "$REPO_ROOT" || return 1
+  rustup toolchain install --no-self-update
 }
 
 unpack_tar_xz() {
@@ -1331,6 +1344,10 @@ if [ "$BOOTSTRAP_COMMAND" = node ]; then
   ensure_node || exit 1
   log "Pinned Node.js is ready."
   exit 0
+fi
+if [ "$BOOTSTRAP_COMMAND" = rust-toolchain ]; then
+  ensure_rust_toolchain
+  exit $?
 fi
 if [ "$BOOTSTRAP_COMMAND" = rust ]; then
   ensure_rust_profile || exit 1

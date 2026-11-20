@@ -447,8 +447,8 @@ export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: Tas
     {
       id: "actions",
       header: labels.columns.actions,
-      className: "!px-0",
-      headerClassName: "px-single",
+      className: "!px-0 sticky right-0 z-panel bg-background",
+      headerClassName: "px-single sticky right-0 z-panel bg-background",
       accessor: (row) => (
         <div className="flex h-full items-stretch">
           <Button type="button" variant="outline" icon="pause" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)} />
@@ -467,7 +467,7 @@ export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: Tas
   }
   return (
     <div data-semio-task-manager="" role="region" aria-label={actorsTitle} tabIndex={0} className="min-h-0 min-w-0 overflow-x-auto">
-      <Table columns={columns} data={[...rows]} getRowId={(row) => row.actorId} />
+      <Table columns={columns} data={[...rows]} getRowId={(row) => row.actorId} className="overflow-x-auto" />
     </div>
   );
 }

@@ -28,10 +28,11 @@ pub(super) fn component_lengths(table:&ComponentReferenceTable)->Result<[usize;3
 }
 
 /// 🏦️ One controlled retirement turn runs under an explicit finite authoring stock because the mesh authority is closed outside any job turn.
+/// The owner steps on the caller's exact grant reborrowed inside the invocation, never on the extent widened for the reply handoff, as the control contract's `invoke_original` narrows it.
 pub(crate) fn authored_step<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,Mesh3dFault>{
     const MESH3D_CLOSE_WORK:u64=16;
     let mut wallet=semio_framework_value::AuthoringWallet::new(grant,u128::from(MESH3D_CLOSE_WORK));
-    match wallet.run_settled(grant,MESH3D_CLOSE_WORK,|effect|owner.step(grant.maximum_copy_bytes,effect)){
+    match wallet.run_settled(grant,MESH3D_CLOSE_WORK,|effect|match effect.reborrow(grant,MESH3D_CLOSE_WORK){Ok(mut exact)=>owner.step(grant.maximum_copy_bytes,&mut exact),Err(error)=>semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0})}){
         Ok(Some((turn,_)))=>turn.result.map(|step|step.progress()).map_err(|_|Mesh3dFault::Closing),
         Ok(None)|Err(_)=>Err(Mesh3dFault::Closing),
     }

@@ -1,0 +1,21 @@
+{
+  "handle": "brep:preview-detail",
+  "tolerance": 0.15,
+  "replacementTolerance": 0.05,
+  "staleHash": 7,
+  "liveHash": 8,
+  "remainingPending": [
+    8
+  ],
+  "cacheTolerance": 0.02,
+  "caller": {
+    "operation": 708,
+    "generation": 2
+  },
+  "fault": {
+    "tolerance": 0.15,
+    "nextTolerance": 0.02,
+    "window": "failed-preview",
+    "diagnostics": 1
+  }
+}

@@ -4,6 +4,7 @@ import { receive } from "./📨️receive/🟦️.ts";
 import { requestFault } from "./🧯️close-and-fault/🟦️.ts";
 import { declareBootSubphase, monitoredSuspension } from "./⏱️steps-and-reporting/🟦️.ts";
 import { requestHostIo } from "./📦️assets-and-host-io/🟦️.ts";
+import { rasterizeIconSvgPreview } from "./🖼️icon-svg-preview/🟦️.ts";
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { loadPluginModule } from "../🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts";
 import { pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
@@ -31,6 +32,7 @@ scope.onunhandledrejection = (event) => {
 (globalThis as { semioDeclareBootSubphase?: typeof declareBootSubphase }).semioDeclareBootSubphase = declareBootSubphase;
 
 (globalThis as { semioWgpuHostIo?: typeof requestHostIo }).semioWgpuHostIo = requestHostIo;
+(globalThis as { semioWgpuRasterizeIconSvg?: typeof rasterizeIconSvgPreview }).semioWgpuRasterizeIconSvg = rasterizeIconSvgPreview;
 
 /** 🧩️ The door the browser wgpu shell's `install_plugin` calls (`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * `install_js_plugin`). It mounts through the SAME `loadPluginModule`/`pluginHandleForBridge` pair

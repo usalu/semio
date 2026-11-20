@@ -84,7 +84,9 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
                 let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant::default(),|e|cursor.advance(wire(),&mut output,e)).unwrap());
                 assert_eq!(denied, ArtifactPreparedOperationProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant::one_payload_turn(maximum, 64),|e|cursor.advance(wire(),&mut output,e)).unwrap());
+                let depth = cursor.next_depth_demand(wire()).unwrap();
+                assert!((1..=64).contains(&depth));
+                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(RetainedCloneGrant::one_payload_turn(maximum, depth),|e|cursor.advance(wire(),&mut output,e)).unwrap());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(progress.processed_items, 1);
                 assert!(progress.written_bytes <= maximum.min(64));
@@ -147,7 +149,10 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
                     assert_eq!(progress, ArtifactPreparedOperationProgress::default());
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 }
-                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(original_json_policy(&fixture),|e|cursor.advance(wire_source(),&mut output[..maximum.min(64)],e)).unwrap());
+                let depth = cursor.next_depth_demand(wire_source()).unwrap();
+                assert!((1..=64).contains(&depth));
+                let grant = RetainedCloneGrant { maximum_depth: depth, ..original_json_policy(&fixture) };
+                let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| effect_fixture::fx(grant,|e|cursor.advance(wire_source(),&mut output[..maximum.min(64)],e)).unwrap());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0), "row={row_index} hex={hex} maximum={maximum} progress={progress:?}");
                 assert!(progress.processed_items <= 1);
                 assert!(progress.written_bytes <= maximum.min(64));

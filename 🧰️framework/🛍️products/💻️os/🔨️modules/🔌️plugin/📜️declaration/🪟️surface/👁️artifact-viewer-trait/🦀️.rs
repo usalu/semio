@@ -9,8 +9,8 @@ use semio_framework_2d_compute::EngineHandles;
 /// edits an `ArtifactEditor` made) but `handle` returns `ViewEmit`, which cannot structurally
 /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
 pub trait ArtifactViewer: Default + Send + 'static {
-    /// 📬️ Borrows this viewer's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{semio_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
+    /// 📏️ Quotes the complete physical demand for retirement admission of the original completion.
+    fn completion_retirement_demand(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_decl_app::completion_retirement::derived_completion_retirement_demand(value)}
     /// 🎟️ Retains the viewer completion on every unsupported or unfunded cleanup admission.
     fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,effect)}
     /// 🧮️ Declares the physical authority frame for this viewer's decoded editor-authored mutation batch.

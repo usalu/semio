@@ -11,6 +11,8 @@ import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import{READY_STAGES_V1 as STAGES,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyEndingV1,readyRefusalV1,runReadyStageV1,runReadyV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyStatusV1}from"../../🟦️.ts";
 
 /** 🪜️ A step that declares its bound and runs far past it with nothing else moving is stuck, not waiting: the supervisor ends the stage with the typed reason `step-overdue` and starts it again on current code. Every line of the producer (the slice worker's steps in the resident texts) is read by the consumer (the supervisor), a vanished stage process says how it vanished, and a slow process table no longer turns the stage wrapper into "another process". */
+import inventoryHeartbeat from "./🔣️.json" with {type:"json"};
+
 const scratch:string[]=[],alive:number[]=[];afterAll(()=>{for(const pid of alive)try{process.kill(pid,"SIGKILL");}catch{}for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`overdue-${label}-`));scratch.push(path);return path;};
 const posix=process.platform==="win32"?test.skip:test;
@@ -197,4 +199,69 @@ test("the real process table agrees with the clock of the runtime about this pro
  const before=Date.now(),table=await readyReadTableV1(),row=table.find(entry=>entry.pid===process.pid);
  expect(row).toBeDefined();
  expect(Math.abs(row!.startMs-(before-process.uptime()*1000))).toBeLessThanOrEqual(3000);
+});
+
+test("a lower count in a new inventory observation still advances the explicit step",()=>{
+ const watch=readyStepWatchV1(FAST),{line,nextCount}=inventoryHeartbeat;
+ expect(watch.observe([line],0).step).toMatchObject(inventoryHeartbeat.step);
+ const clocks=line.replace("(2303 s)","(2310 s)").replace("2093 of 600","2100 of 600");
+ expect(watch.observe([clocks],6000).overdue).toBe(true);
+ const next=line.replaceAll("333961",String(nextCount));
+ expect(watch.observe([next],6500).overdue).toBe(false);
+ expect(watch.observe([next],12499).overdue).toBe(false);
+ expect(watch.observe([next],12500).overdue).toBe(true);
+});
+
+posix("the supervisor drops byte-truncated inventory heartbeats and reads the complete bound",async()=>{
+ const root=temp("inventory"),replay=inventoryHeartbeat.stationary;
+ const line=inventoryHeartbeat.line.replaceAll("333961",String(replay.observations)).replace(" (elapsed seconds",` (${replay.owners} completed owner checks) (elapsed seconds`).replace(" (verstrichene Sekunden",` (${replay.owners} abgeschlossene Projektprüfungen) (verstrichene Sekunden`);
+ const burst=Array.from({length:replay.initialLines},(_,index)=>line.replace("2093 of",`${2093+index} of`)).join("\n");
+ expect(Buffer.byteLength(burst)).toBeGreaterThan(schema.definitions.Policy.const.tailBytes);
+ const script=`#!/bin/sh
+printf '%s\\n' '${burst}'
+i=${replay.initialLines}
+while [ $i -lt ${replay.initialLines+48} ]; do i=$((i+1)); printf '%s\\n' '${line}' | sed "s/ 2093 of / $((2093+i)) of /"; sleep 0.3; done
+exit 0
+`;
+ const displayed:string[]=[];
+ const result=await runReadyStageV1({home:fakeHome(script),root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:text=>displayed.push(text),tree:FAST});
+ expect(result.stepOverdue?.text).toContain(`${replay.observations} distinct source observations`);
+ expect(result.stepOverdue?.text).toContain(`${replay.owners} completed owner checks`);
+ expect(result.stepOverdue?.bound).toBe(600);
+ expect(result.stepOverdue?.quiet).toBeGreaterThanOrEqual(6);
+ expect(result.timedOut).toBe(false);
+ expect(displayed.some(text=>text.includes(`${replay.observations} distinct source observations`))).toBe(true);
+ expect(displayed.filter(text=>text.startsWith("Reading the project graph slice")).every(text=>text.length<=300)).toBe(true);
+},60000);
+
+test("verified memo rows advance the bilingual step only at an increased high-water mark",async()=>{
+ for(const language of ["en","de"] as const){
+  let rows=0;const watch=readyStepWatchV1(FAST),started=performance.now();
+  await sliceReadStepV1("inventory",async()=>{
+   for(const sample of inventoryHeartbeat.verifiedMemo){
+    rows=sample.rows;
+    const step=describeSliceReadStepV1(started+1800000+sample.milliseconds)!;
+    const line=fill(messages[language]["host-slice-detail"]!,{seconds:2000+Math.floor(sample.milliseconds/1000),phase:step.phase,done:step.done,total:step.total});
+    expect(watch.observe([line],sample.milliseconds).overdue).toBe(sample.overdue);
+   }
+  },{},()=>({version:1,active:{phase:"scoped-discovery",completedOwners:0,verifiedMemoRows:rows},completed:[]}));
+ }
+});
+
+test("completed owner checks advance an inventory step with a stationary source high-water in both languages",()=>{
+ const phase=inventoryHeartbeat.line.replace("Reading the project graph slice (2303 s): ","").replace(" 2093 of 600.","");
+ const first=inventoryHeartbeat.ownerCounts[0]!,next=inventoryHeartbeat.ownerCounts[1]!;
+ for(const language of ["en","de"] as const){
+  const watch=readyStepWatchV1(FAST);
+  const line=(count:number,clock:number)=>fill(messages[language]["host-slice-detail"]!,{seconds:2303+clock,done:2093+clock,total:600,
+   phase:phase.replace(" (elapsed seconds",` (${count} completed owner checks) (elapsed seconds`).replace(" (verstrichene Sekunden",` (${count} abgeschlossene Projektprüfungen) (verstrichene Sekunden`)});
+  expect(watch.observe([line(first,0)],0).overdue).toBe(false);
+  expect(watch.observe([line(first,6)],6000).overdue).toBe(true);
+  const changed=watch.observe([line(next,7)],7000);
+  expect(changed.step?.text).toContain(`${next} completed owner checks`);
+  expect(changed.step?.text).toContain("333961 distinct source observations");
+  expect(changed.overdue).toBe(false);
+  expect(watch.observe([line(next,12)],12999).overdue).toBe(false);
+  expect(watch.observe([line(next,13)],13000).overdue).toBe(true);
+ }
 });

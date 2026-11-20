@@ -201,6 +201,68 @@ async fn extrude_and_area() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn closed_curve_boundaries_compose_in_the_flow_registry() {
+    let _serial = test_serial().await;
+    reset_test_kernel().await;
+    let mut registry = Registry::new();
+    register(&mut registry, geometry_session());
+    let registry = neural_engine::ColdOwner::new(registry);
+    fn case(fixture: &str, name: &str) -> serde_json::Value {
+        let fixture: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap().clone()
+    }
+    async fn xyz(value: &serde_json::Value) -> Dictionary {
+        point(value[0].as_f64().unwrap(), value[1].as_f64().unwrap(), value[2].as_f64().unwrap()).await
+    }
+    let fixture = case(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json"), "extrude a circular curve into a cylinder");
+    let spec = &fixture["inputs"]["wire"]["inputs"];
+    let curve = channel_payload(&registry.dispatch_cold("brep.curve.circle", Dictionary::new()
+        .insert("center", Value::Dictionary(xyz(&spec["center"]).await))
+        .insert("normal", Value::Dictionary(xyz(&spec["normal"]).await))
+        .insert("radius", Value::Dictionary(number_dictionary(spec["radius"].as_f64().unwrap())))).unwrap(), "curve").await;
+    let v = fixture["inputs"]["vector"].as_array().unwrap();
+    let solid = channel_payload(&registry.dispatch_cold("brep.solid.extrude", Dictionary::new()
+        .insert("wire", Value::Dictionary(curve.into_inner()))
+        .insert("vector", Value::Dictionary(vector(v[0].as_f64().unwrap(), v[1].as_f64().unwrap(), v[2].as_f64().unwrap()).await))).unwrap(), "solid").await;
+    let solid_handle = solid.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap();
+    let solid_mesh = geometry_session().tessellate_geometry(solid_handle, 0.01).expect("preview tessellation");
+    assert!(!solid_mesh.positions.is_empty());
+    let volume = channel_payload(&registry.dispatch_cold("brep.measure.volume", Dictionary::new()
+        .insert("geometry", Value::Dictionary(solid.into_inner()))).unwrap(), "volume").await;
+    assert!((number_value(&volume) - fixture["outputs"]["shape"]["volume"].as_f64().unwrap()).abs() <= fixture["tolerance"].as_f64().unwrap());
+
+    let fixture = case(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏳️brep-surface/🔣️.json"), "fill an elliptical curve in the YZ plane");
+    let spec = &fixture["inputs"]["wire"]["inputs"];
+    let curve = channel_payload(&registry.dispatch_cold("brep.curve.ellipse", Dictionary::new()
+        .insert("center", Value::Dictionary(xyz(&spec["center"]).await))
+        .insert("normal", Value::Dictionary(xyz(&spec["normal"]).await))
+        .insert("semiMajor", Value::Dictionary(number_dictionary(spec["semiMajor"].as_f64().unwrap())))
+        .insert("semiMinor", Value::Dictionary(number_dictionary(spec["semiMinor"].as_f64().unwrap())))).unwrap(), "curve").await;
+    let face = channel_payload(&registry.dispatch_cold("brep.util.faceFromWire", Dictionary::new()
+        .insert("wire", Value::Dictionary(curve.into_inner()))).unwrap(), "face").await;
+    let face_handle = face.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap();
+    let face_mesh = geometry_session().tessellate_geometry(face_handle, 0.01).expect("preview tessellation");
+    assert!(!face_mesh.positions.is_empty());
+    let area = channel_payload(&registry.dispatch_cold("brep.measure.area", Dictionary::new()
+        .insert("geometry", Value::Dictionary(face.into_inner()))).unwrap(), "area").await;
+    assert!((number_value(&area) - fixture["outputs"]["shape"]["area"].as_f64().unwrap()).abs() <= fixture["tolerance"].as_f64().unwrap());
+
+    let fixture = case(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏗️brep-solid/🔣️.json"), "refuse an open arc as an extrusion profile");
+    let spec = &fixture["inputs"]["wire"]["inputs"];
+    let curve = channel_payload(&registry.dispatch_cold("brep.curve.arc", Dictionary::new()
+        .insert("center", Value::Dictionary(xyz(&spec["center"]).await))
+        .insert("normal", Value::Dictionary(xyz(&spec["normal"]).await))
+        .insert("radius", Value::Dictionary(number_dictionary(spec["radius"].as_f64().unwrap())))
+        .insert("startAngle", Value::Dictionary(number_dictionary(spec["startAngle"].as_f64().unwrap())))
+        .insert("endAngle", Value::Dictionary(number_dictionary(spec["endAngle"].as_f64().unwrap())))).unwrap(), "curve").await;
+    let v = fixture["inputs"]["vector"].as_array().unwrap();
+    let result = registry.dispatch_cold("brep.solid.extrude", Dictionary::new()
+        .insert("wire", Value::Dictionary(curve.into_inner()))
+        .insert("vector", Value::Dictionary(vector(v[0].as_f64().unwrap(), v[1].as_f64().unwrap(), v[2].as_f64().unwrap()).await)));
+    assert!(matches!(result, Err(error) if error.to_string().contains("profile boundary must be closed")));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn extrude_curve_wire_uses_vector_magnitude() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
@@ -582,6 +644,15 @@ async fn operation_quality_tags_match_the_kernel_contract() {
         let info = reg.operator_info(id).unwrap_or_else(|| panic!("node {id:?} is registered in NODE_KERNEL_METHOD but not in the live Registry"));
         let expected = format!("[quality:{:?}]", operation_quality(method));
         assert!(info.summary.contains(expected.as_str()), "node {id:?}'s summary {:?} does not carry {expected:?} for its wrapped method {method:?}", info.summary);
+    }
+}
+
+/// ♾️ The STEP methods answer from the STEP codec's own table and return; the extension's `operation_quality` once
+/// called itself for them, which the release build compiled into an endless loop that exhausted every describe budget.
+#[test]
+fn step_operation_quality_answers_from_the_step_codec_table() {
+    for method in semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS {
+        assert_eq!(format!("{:?}", operation_quality(method)), format!("{:?}", semio_s_artifact_stdio_step::geometry::operation_quality(method)), "{method}");
     }
 }
 

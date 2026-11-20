@@ -1,0 +1,11 @@
+import ts from "typescript";
+import {readdirSync,readFileSync} from "node:fs";
+import {join,relative} from "node:path";
+const src=readFileSync(process.argv[2],"utf8"),tree=ts.createSourceFile("c.ts",src,ts.ScriptTarget.Latest,true);
+const decl=(n:string)=>tree.statements.find(s=>ts.isFunctionDeclaration(s)&&s.name?.text===n)!;
+const {role,spill}=Function(ts.transpileModule(decl("role").getText(tree)+"\n"+decl("spill").getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return{role,spill}")();
+const root=process.argv[3],ign=new Set(["optional.sqlite","optional.sqlite-wal","optional.sqlite-shm","optional-gate.sqlite","optional-gate.sqlite-wal","optional-gate.sqlite-shm","storage-events.jsonl",".metadata_never_index"]);
+const groups=new Map<string,string[]>();
+const walk=(d:string)=>{for(const e of readdirSync(d,{withFileTypes:true})){const p=join(d,e.name),rel=relative(root,p);if(e.isDirectory()){if(rel===".fseventsd")continue;walk(p);continue;}if(!rel.includes("/")&&ign.has(rel))continue;if(spill(rel))continue;try{role(rel);}catch{const k=rel.replace(/[a-f0-9]{16,}/g,"H").replace(/[0-9]+/g,"N");(groups.get(k)??groups.set(k,[]).get(k)!).push(rel);}}};
+walk(root);
+for(const [k,v] of groups)console.log(v.length,k,"e.g.",v[0]);

@@ -55,7 +55,29 @@ export interface ShootingShot {
   shape: string;
   background?: string;
   cameraId?: string;
+  drawing?: ShootingDrawing;
+  autoFit?: boolean;
 }
+
+export interface ShootingDrawing {
+  background: boolean;
+  fill: boolean;
+  fillColor?: string;
+  fillOpacity: number;
+  visibleLines: boolean;
+  hiddenLines: boolean;
+  visibleColor: string;
+  hiddenColor: string;
+  visibleWidth: number;
+  hiddenWidth: number;
+  lineEasing: number;
+  mergeLines: boolean;
+}
+
+export type ShootingDrawingPatch = Partial<Omit<ShootingDrawing, "fillColor">> & {
+  fillColor?: { value: string | null };
+  restoreAbsent?: boolean;
+};
 
 export interface ShootingSun {
   enabled: boolean;
@@ -205,7 +227,7 @@ export function parseShootingAsset(value: unknown, at = "$"): ShootingAsset {
 }
 
 export function parseShootingShot(value: unknown, at = "$"): ShootingShot {
-  const row = shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(value, at), at, ["id", "label", "width", "height", "format", "shape", "background", "cameraId"]);
+  const row = shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(value, at), at, ["id", "label", "width", "height", "format", "shape", "background", "cameraId", "drawing", "autoFit"]);
   return {
     id: shootingShootingArtifactGuardString(row["id"], `${at}.id`),
     label: shootingShootingArtifactGuardString(row["label"], `${at}.label`),
@@ -215,6 +237,69 @@ export function parseShootingShot(value: unknown, at = "$"): ShootingShot {
     shape: shootingShootingArtifactGuardString(row["shape"], `${at}.shape`),
     background: row["background"] === undefined ? undefined : shootingShootingArtifactGuardString(row["background"], `${at}.background`),
     cameraId: row["cameraId"] === undefined ? undefined : shootingShootingArtifactGuardString(row["cameraId"], `${at}.cameraId`),
+    ...(row.drawing === undefined ? {} : { drawing: parseShootingDrawing(row.drawing, `${at}.drawing`) }),
+    ...(row.autoFit === undefined ? {} : { autoFit: shootingShootingArtifactGuardBoolean(row.autoFit, `${at}.autoFit`) }),
+  };
+}
+
+/** ✒️ Parses the persisted drawing controls and their numeric domains. */
+export function parseShootingDrawing(value: unknown, at = "$"): ShootingDrawing {
+  const row = shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(value, at), at, [
+    "background", "fill", "fillColor", "fillOpacity", "visibleLines", "hiddenLines",
+    "visibleColor", "hiddenColor", "visibleWidth", "hiddenWidth", "lineEasing", "mergeLines",
+  ]);
+  const flag = (key: string) => shootingShootingArtifactGuardBoolean(row[key], `${at}.${key}`);
+  const color = (key: string) => shootingShootingArtifactGuardString(row[key], `${at}.${key}`, { pattern: "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" });
+  const number = (key: string, maximum: number) => shootingShootingArtifactGuardNumber(row[key], `${at}.${key}`, { minimum: 0, maximum });
+  const width = (key: string) => {
+    const result = number(key, 64);
+    return result > 0 ? result : shootingShootingArtifactGuardReject(`${at}.${key}`, "width must be positive");
+  };
+  return {
+    background: flag("background"),
+    fill: flag("fill"),
+    ...(row.fillColor === undefined ? {} : { fillColor: color("fillColor") }),
+    fillOpacity: number("fillOpacity", 1),
+    visibleLines: flag("visibleLines"),
+    hiddenLines: flag("hiddenLines"),
+    visibleColor: color("visibleColor"),
+    hiddenColor: color("hiddenColor"),
+    visibleWidth: width("visibleWidth"),
+    hiddenWidth: width("hiddenWidth"),
+    lineEasing: number("lineEasing", 10),
+    mergeLines: flag("mergeLines"),
+  };
+}
+
+/** 🖌️ Parses sparse drawing edits, including an explicitly cleared fill color. */
+export function parseShootingDrawingPatch(value: unknown, at = "$"): ShootingDrawingPatch {
+  const row = shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(value, at), at, [
+    "background", "fill", "fillColor", "fillOpacity", "visibleLines", "hiddenLines", "visibleColor",
+    "hiddenColor", "visibleWidth", "hiddenWidth", "lineEasing", "mergeLines", "restoreAbsent",
+  ]);
+  const flag = (key: string) => row[key] === undefined ? undefined : shootingShootingArtifactGuardBoolean(row[key], `${at}.${key}`);
+  const color = (value: unknown, where: string) => shootingShootingArtifactGuardString(value, where, { pattern: "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$" });
+  const optionalColor = (key: string) => row[key] === undefined ? undefined : color(row[key], `${at}.${key}`);
+  const number = (key: string, maximum: number) => row[key] === undefined ? undefined : shootingShootingArtifactGuardNumber(row[key], `${at}.${key}`, { minimum: 0, maximum });
+  const width = (key: string) => {
+    const result = number(key, 64);
+    return result === 0 ? shootingShootingArtifactGuardReject(`${at}.${key}`, "width must be positive") : result;
+  };
+  const fill = row.fillColor === undefined ? undefined : shootingShootingArtifactGuardClosed(shootingShootingArtifactGuardObject(row.fillColor, `${at}.fillColor`), `${at}.fillColor`, ["value"]);
+  return {
+    background: flag("background"),
+    fill: flag("fill"),
+    fillColor: fill === undefined ? undefined : { value: fill.value === null ? null : color(fill.value, `${at}.fillColor.value`) },
+    fillOpacity: number("fillOpacity", 1),
+    visibleLines: flag("visibleLines"),
+    hiddenLines: flag("hiddenLines"),
+    visibleColor: optionalColor("visibleColor"),
+    hiddenColor: optionalColor("hiddenColor"),
+    visibleWidth: width("visibleWidth"),
+    hiddenWidth: width("hiddenWidth"),
+    lineEasing: number("lineEasing", 10),
+    mergeLines: flag("mergeLines"),
+    restoreAbsent: flag("restoreAbsent"),
   };
 }
 

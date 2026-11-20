@@ -58,7 +58,7 @@ mod tests{
  fn finish(mut caller:OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){for _ in 0..semio_framework_job::ORIGINAL_DECODER_TEARDOWN_STEPS{let(quote,_)=semio_framework_job::original_decoder_teardown_quote(decoder).expect("bounded teardown quote");caller.turn(quote,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty(),"decoder teardown exceeded its quoted steps");let source=funded(caller.retirement_demands().expect("Source closure quote"));caller.retire(source);}
  fn caller(operation:u64)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(operation),Generation(1),STOCK,default_now_us,u64::MAX,1<<30)}
  fn produce(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>,action:&str,args:&mut Option<DslValue>){for _ in 0..64{if producer.ready(){return}let d=producer.demands(action,args,&None,body());quoted(caller,decoder,d,|cx|producer.advance(action,args,&mut None,cx));}panic!("producer did not become ready")}
- fn close_producer(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>){while !producer.terminal_is_empty(){let fuel=caller.fuel_remaining();closing(caller,decoder,(producer.close_demands(body()),producer.close_items()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));assert!(caller.fuel_remaining()<fuel,"a paid close step must spend its quoted Work")}}
+ fn close_producer(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>){while !producer.terminal_is_empty(){let spent=closing(caller,decoder,(producer.close_demands(body()),producer.close_items()),|cx|{let start=cx.fuel_remaining();cx.with_original_retirement(|cx|producer.close_step(cx))?;Ok(start-cx.fuel_remaining())});assert!(spent>0,"a paid close step must spend its quoted Work")}}
  fn wire_bytes(wire:&RetainedToolWireInput)->Vec<u8>{(0..wire.page_count()).flat_map(|index|wire.page(index).unwrap().to_vec()).collect()}
  #[test]
  fn born_command_is_written_as_the_exact_wire_pages_and_handed_over_together(){
@@ -93,6 +93,31 @@ mod tests{
   assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
  }
  #[test]
+ fn producer_failed_mid_production_reports_its_fault_and_closes_to_terminal(){
+  for turns in 1..5{
+   let mut caller=caller(910);let mut decoder=caller.admitted_decoder();
+   let mut producer=born(&mut caller,&mut decoder,None,Some(bridge));let mut args=Some(DslValue::String("41".into()));
+   for _ in 0..turns{if producer.ready(){break}quoted(&mut caller,&mut decoder,producer.demands("setWidget",&args,&None,body()),|cx|producer.advance("setWidget",&mut args,&mut None,cx));}
+   let mut staged=Some(Fault::new(FaultOrigin::App,FaultCode::new("app.args.late"),"fault after birth"));
+   let failure=caller.turn_with_decoder(grant(),&mut decoder,|cx|producer.advance("setWidget",&mut args,&mut staged,cx)).unwrap_err();
+   assert!(format!("{failure:?}").contains("app.args.late"),"turns {turns}");
+   close_producer(&mut caller,&mut decoder,&mut producer);
+   assert!(producer.terminal_is_empty(),"turns {turns}");
+   let closed=caller.turn_with_decoder(grant(),&mut decoder,|cx|producer.advance("setWidget",&mut args,&mut None,cx)).unwrap_err();
+   assert!(format!("{closed:?}").contains("closed before its wire"),"turns {turns}");
+   drop(producer);finish(caller,&mut decoder);
+  }
+ }
+ #[test]
+ fn producer_closed_under_a_smaller_body_than_its_birth_still_retires(){
+  let mut caller=caller(911);let mut decoder=caller.admitted_decoder();
+  let mut producer=born(&mut caller,&mut decoder,Some(Command{kind:"k".repeat(10_000),count:7}),None);
+  for _ in 0..3{quoted(&mut caller,&mut decoder,producer.demands("",&None,&None,body()),|cx|producer.advance("",&mut None,&mut None,cx));}
+  let small=body()/4;
+  for _ in 0..4096{if producer.terminal_is_empty(){break}let d=producer.close_demands(small);let fuel=caller.fuel_remaining();closing(&mut caller,&mut decoder,(d,producer.close_items()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));assert!(caller.fuel_remaining()<=fuel)}
+  assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
+ }
+ #[test]
  fn producer_cancelled_at_every_phase_returns_every_owner_through_paid_closure(){
   let kind="k".repeat(10_000);
   for cut in 0..8{
@@ -102,6 +127,52 @@ mod tests{
    close_producer(&mut caller,&mut decoder,&mut producer);
    assert!(producer.terminal_is_empty(),"cut {cut}");drop(producer);finish(caller,&mut decoder);
   }
+ }
+ #[test]
+ fn unfunded_turn_at_any_step_never_advances_a_producer_past_its_unsettled_phase(){
+  let oracle=serde_json::to_vec(&serde_json::json!({"kind":"setWidget","count":41})).unwrap();
+  let starved=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
+  for starved_call in 0..16{
+   let mut caller=caller(920);let mut decoder=caller.admitted_decoder();
+   let mut producer=born(&mut caller,&mut decoder,None,Some(bridge));let mut args=Some(DslValue::String("41".into()));
+   let (mut command,mut wire)=(None,None);
+   for call in 0..64{
+    let grant=if call==starved_call{starved}else{funded(if producer.ready(){producer.take_demands()}else{producer.demands("setWidget",&args,&None,body())}.expect("owner step quote"))};
+    if command.is_some(){break}
+    if !producer.ready(){caller.turn_with_decoder(grant,&mut decoder,|cx|producer.advance("setWidget",&mut args,&mut None,cx)).unwrap_or_else(|failure|panic!("starved call {starved_call} call {call}: {failure:?}"));continue}
+    if command.is_none(){caller.turn_with_decoder(grant,&mut decoder,|cx|producer.take_into(&mut command,&mut wire,cx)).unwrap();continue}
+    break
+   }
+   assert!(command.is_some()&&wire.is_some(),"starved call {starved_call}");
+   assert_eq!(wire_bytes(wire.as_ref().unwrap()),oracle,"starved call {starved_call}");assert!(wire.as_ref().unwrap().original_is_sealed());
+   close_producer(&mut caller,&mut decoder,&mut producer);
+   retire(&mut caller,&mut decoder,command);retire(&mut caller,&mut decoder,wire);drop(producer);finish(caller,&mut decoder);
+  }
+ }
+ /// 🛢️ Sets the fixture caller's fuel to exactly `fuel` for its next turn.
+ fn fuelled(caller:&mut OriginalJobFixtureCaller,fuel:u64){let held=caller.fuel_remaining();if held>fuel{drop(caller.lend_context());caller.settle_lent_fuel(fuel)}else{caller.fund_fuel(fuel-held)}}
+ #[test]
+ fn producer_stepped_page_that_stays_pending_still_seals_before_ready_under_every_fuel_cut(){
+  let kind="k".repeat(3*TOOL_WIRE_PAGE_BYTES-64);let oracle=serde_json::to_vec(&serde_json::json!({"kind":kind,"count":7})).unwrap();let pages=oracle.len().div_ceil(TOOL_WIRE_PAGE_BYTES);
+  let mut ran=0;
+  'sweep:for fuel in 1..=96u64{
+   let mut caller=caller(930);let mut decoder=caller.admitted_decoder();
+   let mut producer=born(&mut caller,&mut decoder,Some(Command{kind:kind.clone(),count:7}),None);
+   let mut starved=false;
+   for call in 0..512{
+    if producer.ready(){break}
+    fuelled(&mut caller,if starved{1<<20}else{fuel});let before=caller.fuel_remaining();
+    let turn=caller.turn_with_decoder(funded(producer.demands("",&None,&None,body()).expect("owner step quote")),&mut decoder,|cx|producer.advance("",&mut None,&mut None,cx));
+    if let Err(failure)=turn{assert!(call==0&&format!("{failure:?}").contains("largest grant any turn can have"),"fuel {fuel} call {call}: {failure:?}");fuelled(&mut caller,1<<20);close_producer(&mut caller,&mut decoder,&mut producer);drop(producer);finish(caller,&mut decoder);continue 'sweep}
+    starved=caller.fuel_remaining()==before;
+   }
+   assert!(producer.ready(),"fuel {fuel}");ran+=1;
+   let(mut command,mut wire)=(None,None);fuelled(&mut caller,1<<20);quoted(&mut caller,&mut decoder,producer.take_demands(),|cx|producer.take_into(&mut command,&mut wire,cx));
+   assert!(wire.as_ref().unwrap().original_is_sealed(),"fuel {fuel}");assert_eq!(wire.as_ref().unwrap().page_count(),pages,"fuel {fuel}");assert_eq!(wire_bytes(wire.as_ref().unwrap()),oracle,"fuel {fuel}");
+   fuelled(&mut caller,1<<20);close_producer(&mut caller,&mut decoder,&mut producer);assert!(producer.terminal_is_empty(),"fuel {fuel}");
+   retire(&mut caller,&mut decoder,command);retire(&mut caller,&mut decoder,wire);drop(producer);finish(caller,&mut decoder);
+  }
+  assert!(ran>1,"no fuel variant fits the producer quote");
  }
  #[test]
  fn owned_producer_limit_admits_large_wire_and_keeps_ordinary_limit(){

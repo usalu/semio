@@ -27,14 +27,14 @@ pub(super) fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId
                 Ok(Some(solid_from_outer_faces(body, faces, Vec::new(), rec)?))
             }
             BooleanOp::Cut => Ok(Some(copy_solid(body, a, rec)?)),
-            BooleanOp::Intersect => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty (operands disjoint)".into()))),
+            BooleanOp::Intersect => Err(KernelError::Boolean(BooleanError::EmptyResult)),
         };
     }
     if aabb_contains(bb_b, bb_a, tol) && solid_wholly_inside(body, a, b, tol)? {
         return match op {
             BooleanOp::Unite => Ok(Some(copy_solid(body, b, rec)?)),
             BooleanOp::Intersect => Ok(Some(copy_solid(body, a, rec)?)),
-            BooleanOp::Cut => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cut is empty (tool contains target)".into()))),
+            BooleanOp::Cut => Err(KernelError::Boolean(BooleanError::EmptyResult)),
         };
     }
     if aabb_contains(bb_a, bb_b, tol) && solid_wholly_inside(body, b, a, tol)? {
@@ -115,11 +115,11 @@ pub(super) fn box_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b
         }
         BooleanOp::Intersect => {
             let Some(inter) = aabb_intersection(bb_a, bb_b) else {
-                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty".into())));
+                return Err(KernelError::Boolean(BooleanError::EmptyResult));
             };
             let (w, d, h) = aabb_dims(&inter);
             if w <= tol || d <= tol || h <= tol {
-                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty within tolerance".into())));
+                return Err(KernelError::Boolean(BooleanError::EmptyResult));
             }
             inter
         }

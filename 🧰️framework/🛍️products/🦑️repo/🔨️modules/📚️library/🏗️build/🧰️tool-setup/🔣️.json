@@ -80,17 +80,23 @@
       },
       "locate": [
         {
+          "kind": "bootstrap-node"
+        },
+        {
           "kind": "path",
           "names": [
             "node"
           ],
           "directories": [
             "~/.local/node/bin"
+          ],
+          "windowsProgramDirectories": [
+            "nodejs"
           ]
         }
       ],
       "setup": {
-        "kind": "bootstrap"
+        "kind": "bootstrap-node"
       }
     },
     {
@@ -793,6 +799,18 @@
       "mismatch": {
         "en": "{tool} was provisioned but reports {found}, not the pin {pin}.",
         "de": "{tool} wurde eingerichtet, meldet aber {found} statt des Pins {pin}."
+      },
+      "mismatchReason": {
+        "en": " Its verification said: {message}",
+        "de": " Seine Prüfung meldete: {message}"
+      },
+      "starting": {
+        "en": "Setting up {count} pinned tool(s).",
+        "de": "Richte {count} gepinnte(s) Werkzeug(e) ein."
+      },
+      "verifying": {
+        "en": "Verifying {tool} against its pin.",
+        "de": "Prüfe {tool} gegen seinen Pin."
       },
       "usage": {
         "en": "{command} takes {choices}.",

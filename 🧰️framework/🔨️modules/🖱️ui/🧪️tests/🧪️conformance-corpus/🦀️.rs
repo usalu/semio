@@ -128,6 +128,27 @@ fn every_accept_case_of_the_corpus_mounts_every_record() {
     }
 }
 
+/// 🧯️ A law that panics while its window is mid-layout still pays its windows' close and returns the serialized arena,
+/// so the next law opens a fresh scope instead of inheriting "UI arena already has an actual lifetime owner".
+#[test]
+fn a_law_panicking_mid_layout_returns_its_arena_scope_to_the_next_law() {
+    let snapshot = read(&corpus_dir().join("🧩️component/🧲️slider-with-snaps/📸️snapshot.json"));
+    let failed = std::panic::catch_unwind(|| {
+        let (mut ui, _) = mount("conformance.panicking", &snapshot);
+        ui.set_viewport("conformance.panicking", 480.0, 360.0);
+        let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+        let mut atlas = FontAtlas::builtin();
+        ui.request_layout("conformance.panicking");
+        for _ in 0..24 {
+            let _ = ui.step_layouts(&pool, &mut atlas);
+        }
+        panic!("a law fails while its relayout is in flight");
+    });
+    assert!(failed.is_err(), "the failing law panicked");
+    let (_ui, instances) = mount("conformance.after-panic", &snapshot);
+    assert!(instances > 0, "the next law mounts and paints in a fresh scope");
+}
+
 /// 🧲️ A slider's detents reach the retained node and paint exactly one tick each.
 #[test]
 fn slider_with_snaps_paints_one_tick_per_detent() {

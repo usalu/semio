@@ -1,10 +1,12 @@
 //! 🔄️ Replace Config in the WFC 3D config facet — the whole-record swap a host restore performs.
 
-use super::{ChangeActiveTile, ChangeCamera, Wfc3dConfig, Wfc3dConfigDiff};
+use super::{Wfc3dConfig, Wfc3dConfigDiff};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
 #[dsl(keyword = "replace-config")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ReplaceConfig {
@@ -14,7 +16,7 @@ pub struct ReplaceConfig {
 
 impl<Op> protocol::MutationKind<Wfc3dConfig, Op> for ReplaceConfig
 where
-    Op: protocol::Mutation<Wfc3dConfig, Diff = Wfc3dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc3d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc3d::config::mutations::change_camera::ChangeCamera>,
+    Op: protocol::Mutation<Wfc3dConfig, Diff = Wfc3dConfigDiff> + From<ReplaceConfig>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
 
@@ -28,7 +30,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Wfc3dConfig, Op> for ReplaceConfig
 where
-    Op: protocol::ColdMutation<Wfc3dConfig, ReferenceDiff = Wfc3dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc3d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc3d::config::mutations::change_camera::ChangeCamera>,
+    Op: protocol::ColdMutation<Wfc3dConfig, ReferenceDiff = Wfc3dConfigDiff> + From<ReplaceConfig>,
 {
     fn diff(&self, base: &Wfc3dConfig) -> protocol::MutationOutcome<Wfc3dConfigDiff> {
         let config = &self.config;
@@ -40,12 +42,6 @@ where
         })
     }
     fn inverse(&self, base: &Wfc3dConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![
-            Op::from(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
-            Op::from(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
-        ]
-    
-    })())
-}
+        Ok(vec![Op::from(ReplaceConfig { config: base.clone() })])
+    }
 }

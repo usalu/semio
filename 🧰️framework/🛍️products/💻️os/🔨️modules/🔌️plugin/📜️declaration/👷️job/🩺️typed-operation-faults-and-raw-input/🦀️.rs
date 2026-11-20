@@ -73,6 +73,8 @@ semio_framework_value::artifact_retire_leaf!(ArtifactBoundedToolFault);
 pub enum ArtifactToolCompletionValue<A: ArtifactApp> {
     Emit(ArtifactMutationOutcome<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation, ArtifactCompletionFault>, EphemeralEmit<A>),
     Download(Result<ArtifactDownloadOutput, ArtifactCompletionFault>, EphemeralEmit<A>),
+    #[doc(hidden)]
+    Genesis(Option<semio_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<A::Snapshot>>, Option<(u64,u64)>),
 }
 
 pub use semio_framework_actor::typed_operation_page::TypedOperationResultLane;

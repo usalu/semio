@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:leaves:v1",
+  "title": "Leaf pieces of a project record",
+  "description": "The value of a project record names content addressed pieces (build input closure and cargo lock inventories, `SEMIO_SOURCE_CLOSURE_<sha256>` and `SEMIO_CARGO_LOCK_<sha256>`) that exist as files of the producing machine only. They travel as blobs of the cache under their own digest, uploaded before the entry that lists them in its note, and a taker fetches the ones it lacks before it judges the record. The pieces hold no machine path (the files they list are relative to the repository root), so two machines with other roots produce byte-identical pieces for equal inputs.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimumWidth", "maximumWidth", "maximumLeafBytes", "namespaces", "token"],
+      "properties": {
+        "minimumWidth": { "type": "integer", "minimum": 1 },
+        "maximumWidth": { "type": "integer", "minimum": 1 },
+        "maximumLeafBytes": { "type": "integer", "minimum": 1 },
+        "namespaces": { "type": "object" },
+        "token": { "type": "string" }
+      },
+      "const": {
+        "minimumWidth": 2,
+        "maximumWidth": 8,
+        "maximumLeafBytes": 16777216,
+        "namespaces": { "SOURCE_CLOSURE": "build-input-closures", "CARGO_LOCK": "build-lock-closures" },
+        "token": "SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})"
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": { "incomplete": "graph: record of {name} not used: {count} leaf pieces are not in the fleet cache ({leaves}); it is inferred here and published again", "fetched": "graph: {count} leaf pieces fetched from the fleet cache for {name}" },
+        "de": { "incomplete": "Graph: Eintrag von {name} nicht verwendet: {count} Blattstücke fehlen im Flottenspeicher ({leaves}); er wird hier berechnet und neu veröffentlicht", "fetched": "Graph: {count} Blattstücke für {name} aus dem Flottenspeicher geholt" }
+      }
+    }
+  }
+}

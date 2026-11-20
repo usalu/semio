@@ -25,7 +25,7 @@ impl DrawingClipboardAssets{
  pub fn append_candidate_step(&mut self,candidate:&mut Option<(String,DrawingImageAsset)>,ordinal:&mut usize,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
   control.checkpoint()?;let (key,_)=candidate.as_ref().ok_or_else(invalid)?;if key.is_empty()||key.len()>MAX_ID_BYTES||self.len()==MAX_NODES||*ordinal>self.len(){return Err(invalid());}
   if let Some((existing,_))=self.entry_at(*ordinal){if existing==key{return Err(invalid());}*ordinal+=1;return Ok(false);}
-  while !self.entries.has_reserved_slot(){let bytes=self.entries.next_allocation_bytes()?;control.charge(bytes)?;self.entries.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
+  while !self.entries.has_reserved_slot(){let bytes=self.entries.next_allocation_bytes()?;control.charge(bytes)?;self.entries.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
   self.entries.push_reserved(candidate.take().unwrap()).map_err(|original|{*candidate=Some(original);invalid()})?;*ordinal=0;Ok(true)
  }
  pub fn insert(&mut self,key:String,value:DrawingImageAsset)->Option<DrawingImageAsset>{

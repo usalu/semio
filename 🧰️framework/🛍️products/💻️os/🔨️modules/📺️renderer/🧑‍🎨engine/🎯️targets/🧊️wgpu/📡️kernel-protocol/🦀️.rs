@@ -4,7 +4,7 @@
 
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store_sync;
-use semio_framework::kernel::{Budget as TurnBudget, Effect, Event, JobPlacement, MessageEndpoint, TurnResult};
+use semio_framework::kernel::{Effect, Event, JobPlacement, MessageEndpoint, TurnResult};
 use semio_framework_actor::{ActorId, CapabilityGrant, JobOperation, JobProgressIdentity, JobProgressKind, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobTurn, Lane, PackageId, JOB_PROGRESS_ACTIVE_CAPACITY};
 use semio_framework_job::RetainedCloneGrant;
 use semio_renderer_wgpu_contracts::ProgramFault;
@@ -24,7 +24,7 @@ pub use kernel_core::*;
 
 #[path = "../🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🦀️.rs"]
 mod original_task_ingress;
-pub(crate) use original_task_ingress::{OriginalKernelTaskInput, OriginalKernelTaskProducer};
+pub(crate) use original_task_ingress::{KernelConstruction, OriginalKernelTaskInput, OriginalKernelTaskProducer, kernel_metadata};
 
 #[path = "📥️lifted/📬️kernel-replay-client/🦀️.rs"]
 mod replay_vocabulary;

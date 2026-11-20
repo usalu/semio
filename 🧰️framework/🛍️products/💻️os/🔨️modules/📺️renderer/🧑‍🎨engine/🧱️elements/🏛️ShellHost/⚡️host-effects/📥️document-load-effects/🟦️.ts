@@ -5,7 +5,7 @@ import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 import { programHistoryKeyV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { documentTransferNoticeCodeV1, documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
-import { requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { FileOpenSizeRefusalV1, readSelectedFilesBoundedV1, requestFileOpen, requestFileSelectionV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { programHistoryProjectionsWithLoadV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { importOpenedFilesV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
@@ -56,19 +56,34 @@ export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffec
   readonly applyHostEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>) => Promise<void>;
   readonly effectOwner: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>;
 }) {
-  const { accept, readAs, importAction, multiple, args } = effect.requestFileOpen;
-  const resolvedImport = importAction || "importSnapshot";
-  const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
-  if (opened.length > 0) {
-    const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-    if (pluginEntry) {
-      const task = core.documentTransferRef.current.trackDocumentTransfer(opened.map((file) => file.name).join(", "), baseSession.pluginId);
-      try {
-        const dispatchOne = makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
-        if ((await importOpenedFilesV1(baseSession.app, opened, resolvedImport, Boolean(multiple), dispatchOne, task.signal, task.progress, args as Readonly<Record<string, unknown>> | undefined)) === "cancelled") core.documentTransferRef.current.notifyDocumentTransfer("import-cancelled", opened[0]!.name, "info");
-      } finally {
-        task.finish();
-      }
+  const { accept, readAs, importAction, multiple, args, maxFileBytes } = effect.requestFileOpen;
+  const filter = accept || ".spk,.dsl,.ops,application/octet-stream";
+  const selected = maxFileBytes === undefined ? undefined : await requestFileSelectionV1(filter, multiple);
+  const unbounded = selected === undefined ? await requestFileOpen(filter, readAs, multiple) : [];
+  const picked = selected ?? unbounded;
+  if (picked.length === 0 || !isCurrentEffectOwner(effectOwner)) return;
+  const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+  if (!pluginEntry) return;
+
+  const transfers = core.documentTransferRef.current;
+  const task = transfers.trackDocumentTransfer(picked.map((file) => file.name).join(", "), baseSession.pluginId);
+  const phaseProgress = (start: number) => (completed: number, total: number | null) =>
+    task.progress(start + (total ? Math.round(50 * completed / total) : 0), 100);
+  try {
+    const opened = selected === undefined || maxFileBytes === undefined ? unbounded :
+      await readSelectedFilesBoundedV1(selected, readAs, maxFileBytes, { signal: task.signal, progress: phaseProgress(0) });
+    const dispatchOne = makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null });
+    const status = await importOpenedFilesV1(baseSession.app, opened, importAction || "importSnapshot", Boolean(multiple), dispatchOne, task.signal, selected === undefined ? task.progress : phaseProgress(50), args as Readonly<Record<string, unknown>> | undefined);
+    if (status === "cancelled") transfers.notifyDocumentTransfer("import-cancelled", picked[0]!.name, "info");
+  } catch (error) {
+    if (selected === undefined) throw error;
+    if (error instanceof FileOpenSizeRefusalV1) {
+      transfers.notifyDocumentTransfer("import-size-limit", error.fileName, "error");
+    } else {
+      const cancelled = documentLoadCancelledV1(error, task.signal);
+      transfers.notifyDocumentTransfer(cancelled ? "import-cancelled" : "import-failed", picked[0]!.name, cancelled ? "info" : "error");
     }
+  } finally {
+    task.finish();
   }
 }

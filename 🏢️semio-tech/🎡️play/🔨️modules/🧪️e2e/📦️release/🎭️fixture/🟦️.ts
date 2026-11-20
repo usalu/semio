@@ -1,5 +1,4 @@
 import { test as base, type BrowserContext } from "@playwright/test";
-import { releaseRequestUrl } from "../🟦️.ts";
 
 export { expect } from "@playwright/test";
 export type { BrowserContext, Page } from "@playwright/test";
@@ -7,11 +6,16 @@ export type { BrowserContext, Page } from "@playwright/test";
 /** 🛣️ Installs the production acceptance adapter for exact published CDN origins. */
 export async function installPublishedPlayRoutes(context: BrowserContext, origins: Readonly<Record<string, string>>): Promise<void> {
   if (Object.keys(origins).length > 0) {
+    const { releaseRequestUrl } = await import("../🟦️.ts");
     await context.route(/^https:\/\/(?:map|media|modules)\.assets\.semio-tech\.com\//, async route => {
       const url = releaseRequestUrl(route.request().url(), origins);
       if (url === undefined) throw new Error(`Unmapped published asset: ${route.request().url()}`);
       const response = await route.fetch({ url });
-      await route.fulfill({ response });
+      try {
+        await route.fulfill({ response });
+      } finally {
+        await response.dispose();
+      }
     });
   }
 }

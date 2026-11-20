@@ -4744,6 +4744,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-axial-face-preview"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-boolean"
 version = "0.1.0"
 dependencies = [
@@ -4835,6 +4847,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -4849,6 +4862,7 @@ dependencies = [
  "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-offset",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
@@ -4883,6 +4897,7 @@ dependencies = [
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-tessellation",
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-value",
  "serde_json",
@@ -4929,6 +4944,28 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-native-registry"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-transaction",
+ "semio-framework-3d-brep-spline-construction",
+ "semio-framework-3d-brep-spline-trim",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-hash",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -5016,6 +5053,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-solid-topology"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-solid-transaction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-spline-construction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-spline-trim"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-surface"
 version = "0.1.0"
 dependencies = [
@@ -5025,6 +5109,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -5053,18 +5138,21 @@ dependencies = [
 name = "semio-framework-3d-brep-tessellation"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d-brep-axial-face-preview",
  "semio-framework-3d-brep-boolean",
  "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-engine",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-trim",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
  "semio-framework-3d-brep-validation",
  "semio-framework-3d-brep-vector",
  "semio-framework-3d-testing-support",
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-trace",
  "semio-framework-value",
@@ -6107,6 +6195,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "serde_json",
@@ -9061,6 +9150,7 @@ dependencies = [
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-storage",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
@@ -9680,6 +9770,7 @@ dependencies = [
  "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-allocator",
@@ -12038,7 +12129,13 @@ dependencies = [
 name = "semio-ui-contract-values-laws"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-test-fixtures",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-testing-admission",
+ "semio-framework-value-testing-allocator",
  "semio-ui-contract-budget",
  "semio-ui-contract-text",
  "semio-ui-contract-values",
@@ -12144,6 +12241,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiving-original",
+ "semio-framework-value-native-schema",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-admission",
  "semio-framework-value-testing-allocator",
@@ -12241,6 +12339,7 @@ name = "semio-ui-render-interaction"
 version = "0.1.0"
 dependencies = [
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-render-packet",
  "serde_json",
 ]
@@ -12363,6 +12462,7 @@ dependencies = [
  "semio-framework-job",
  "semio-ui-contract",
  "semio-ui-contract-validation",
+ "semio-ui-contract-values",
  "semio-ui-runtime-presentation",
  "semio-ui-runtime-reconcile-cursor",
  "semio-ui-runtime-reconcile-primitives",
@@ -12376,6 +12476,7 @@ dependencies = [
  "semio-framework-job",
  "semio-ui-contract",
  "semio-ui-contract-validation",
+ "semio-ui-contract-values",
  "semio-ui-runtime-presentation",
  "semio-ui-runtime-reconcile-primitives",
  "serde_json",
@@ -12387,6 +12488,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-runtime-presentation",
  "serde_json",
 ]
@@ -12862,6 +12964,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-testing-allocator",
  "semio-ui-arena",
  "semio-ui-contract",
  "semio-ui-declaration",
@@ -12897,6 +13000,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-testing-allocator",
  "semio-ui-arena",
  "semio-ui-contract",
  "semio-ui-declaration",
@@ -12952,6 +13056,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-action",
  "semio-ui-arena",
+ "semio-ui-border-presentation",
  "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-retained-tree",

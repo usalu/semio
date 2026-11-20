@@ -300,21 +300,20 @@ impl Fem3dResultBorrow<'_> {
     pub fn scalar(&self, index: usize) -> Option<Fem3dSolverScalar> { self.solver.scalar(index) }
     pub fn current_revision(&self) -> bool { self.current_revision }
     pub fn static_values(&self, index: usize) -> Option<[f64; 6]> {
-        let equations = self.child.equations.get(index)?;
+        let equations = self.child.equations(index)?;
         Some(std::array::from_fn(|axis| equations[axis].and_then(|equation| self.child.pcg.as_ref()?.visual_scalar(equation)).map_or(0.0, |scalar| scalar.displacement)))
     }
     pub fn mode_values(&self, index: usize) -> Option<([f64; 6], f64)> {
-        let equations = self.child.equations.get(index)?;
+        let equations = self.child.equations(index)?;
         let mode = self.child.request.mode?;
         let mut eigenvalue = 0.0;
         let values = std::array::from_fn(|axis| equations[axis].and_then(|equation| self.child.subspace.as_ref()?.visual_mode_scalar(mode, equation)).map_or(0.0, |(value, eigen)| { eigenvalue = eigen; value }));
         Some((values, eigenvalue))
     }
     pub fn stress(&self, index: usize) -> Option<f64> {
-        let count = *self.child.stress_counts.get(index)?;
-        (count != 0).then(|| self.child.stress_sums[index] / count as f64)
+        self.child.stress(index)
     }
-    pub fn reaction_values(&self, index: usize) -> Option<[f64; 6]> { self.child.full_reactions.get(index).copied() }
+    pub fn reaction_values(&self, index: usize) -> Option<[f64; 6]> { self.child.reactions(index) }
 }
 
 pub(super) fn select_result_shell(current: Option<u16>, retained: Option<u16>) -> Option<u16> { current.or(retained) }

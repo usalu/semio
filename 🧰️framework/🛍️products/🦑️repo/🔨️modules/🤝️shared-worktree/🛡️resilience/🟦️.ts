@@ -371,26 +371,39 @@ export function createStoreGuardV1(options:StoreGuardOptionsV1):StoreGuardV1{
 export type FailuresOptionsV1=Readonly<{now:()=>number;windowMs?:number;capacity?:number}>;
 
 /** 🔁️ Counts failures per key so that a recurring one never goes silent: the first occurrence is announced, a repeat only once per window (with its total count); `clear` forgets the key when the operation worked again, `summary` lists the failure kinds with their lifetime count and last time. */
-export type FailuresV1={note(key:string,message:string):Readonly<{announce:boolean;count:number}>;clear(key:string):void;has(key:string):boolean;summary(limit?:number):readonly FailureSummaryV1[];size():number;forgetOlderThan(milliseconds:number):number};
+export type FailuresV1={note(key:string,message:string):Readonly<{announce:boolean;count:number}>;clear(key:string):void;has(key:string):boolean;summary(limit?:number):readonly FailureSummaryV1[];diagnostics(limit?:number):readonly FailureSummaryV1[];size():number;forgetOlderThan(milliseconds:number):number};
 
-/** 🏭️ Creates a recurrence tracker. */
+const blockedReasonKindsV1=new Set<string>(schema.definitions.BlockedReasons.const);
+
+/** 🏭️ Creates a recurrence tracker with separate bounded detail for blocked operations. */
 export function createFailuresV1(options:FailuresOptionsV1):FailuresV1{
- const window=options.windowMs??60_000,capacity=options.capacity??256,entries=new Map<string,{count:number;lastMs:number;announcedMs:number}>(),kinds=new Map<string,{count:number;lastMs:number}>();
+ const window=options.windowMs??60_000,capacity=options.capacity??256,entries=new Map<string,{count:number;lastMs:number;announcedMs:number}>(),kinds=new Map<string,{count:number;lastMs:number}>(),blocked=new Map<string,{count:number;lastMs:number}>();
+ const rank=(left:FailureSummaryV1,right:FailureSummaryV1):number=>right.lastMs-left.lastMs||(left.kind<right.kind?-1:1);
+ const rows=(items:ReadonlyMap<string,{count:number;lastMs:number}>):FailureSummaryV1[]=>[...items].map(([kind,value])=>({kind,...value}));
+ const summary=(limit=8):readonly FailureSummaryV1[]=>[...rows(kinds).filter(item=>item.kind!=="loop-blocked"),...blockedFailuresV1()].sort(rank).slice(0,limit);
  const kindOf=(key:string):string=>{const head=key.split(":")[0]!.toLowerCase().replace(/[^a-z0-9-]/gu,"-").replace(/^[^a-z]+/u,"");return (head===""?"failure":head).slice(0,40);};
  return {
-  note(key,_message){
-   const now=options.now(),entry=entries.get(key)??{count:0,lastMs:now,announcedMs:-Infinity},kind=kinds.get(kindOf(key))??{count:0,lastMs:now};
+  note(key,message){
+   const now=options.now(),category=kindOf(key),entry=entries.get(key)??{count:0,lastMs:now,announcedMs:-Infinity},kind=kinds.get(category)??{count:0,lastMs:now};
    entry.count++;entry.lastMs=now;kind.count++;kind.lastMs=now;
+   if(category==="blocked"){
+    const candidate=message.length<=32?message.toLowerCase():"other",reason="blocked-"+(blockedReasonKindsV1.has(candidate)?candidate:"other");
+    blocked.set(reason,{count:(blocked.get(reason)?.count??0)+1,lastMs:now});
+   }
    const announce=entry.count===1||now-entry.announcedMs>=window;
    if(announce)entry.announcedMs=now;
-   entries.delete(key);entries.set(key,entry);kinds.set(kindOf(key),kind);
+   entries.delete(key);entries.set(key,entry);kinds.set(category,kind);
    if(entries.size>capacity)entries.delete(entries.keys().next().value as string);
    return {announce,count:entry.count};
   },
   clear:key=>{entries.delete(key);},
   has:key=>entries.has(key),
   size:()=>entries.size,
-  summary:(limit=8)=>[...[...kinds].map(([kind,value])=>({kind,count:value.count,lastMs:value.lastMs})).filter(item=>item.kind!=="loop-blocked"),...blockedFailuresV1()].sort((left,right)=>right.lastMs-left.lastMs||(left.kind<right.kind?-1:1)).slice(0,limit),
+  summary,
+  diagnostics(limit=8){
+   const totals=summary(limit);
+   return totals.length<limit&&totals.some(row=>row.kind==="blocked")?[...totals,...rows(blocked).sort(rank).slice(0,limit-totals.length)]:totals;
+  },
   forgetOlderThan(milliseconds){
    const limit=options.now()-milliseconds;
    let removed=0;

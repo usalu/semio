@@ -25,7 +25,25 @@ use semio_ui_contract as ui_contract;
 impl PluginExchangeOutput{
     /// 🧾️ Keeps original ownership receipts ahead of the next semantic producer.
     pub fn ownership_receipt_pending(&self)->bool{self.original_receiving.is_some()||self.constructor_receipt.is_some()||self.preparation_receipt.is_some()||self.retirement_receipt.is_some()||self.history_command_receipt.is_some()||self.tool_run_receipt.is_some()}
-    fn collect_original_receipts<PA:PluginApp>(&mut self,app:&mut PA){self.constructor_receipt=app.take_constructor_receipt();self.preparation_receipt=app.take_typed_operation_preparation_receipt().map(|(operation,grant,progress)|(operation.0,grant,progress));self.retirement_receipt=app.take_typed_operation_retirement_receipt().map(|(operation,grant,progress)|(operation.0,grant,progress));self.history_command_receipt=app.take_history_command_receipt();self.tool_run_receipt=app.take_tool_run_receipt();}
+    /// 🧾️ Takes at most one pending receipt family per collection, so each posted publication binds a unique family; the app keeps any other pending family for its own later turn.
+    fn collect_original_receipts<PA:PluginApp>(&mut self,app:&mut PA){
+        self.constructor_receipt=app.take_constructor_receipt();
+        if self.constructor_receipt.is_none(){self.preparation_receipt=app.take_typed_operation_preparation_receipt().map(|(operation,grant,progress)|(operation.0,grant,progress));}
+        if self.constructor_receipt.is_none()&&self.preparation_receipt.is_none(){self.retirement_receipt=app.take_typed_operation_retirement_receipt().map(|(operation,grant,progress)|(operation.0,grant,progress));}
+        if self.constructor_receipt.is_none()&&self.preparation_receipt.is_none()&&self.retirement_receipt.is_none(){self.history_command_receipt=app.take_history_command_receipt();}
+        if self.constructor_receipt.is_none()&&self.preparation_receipt.is_none()&&self.retirement_receipt.is_none()&&self.history_command_receipt.is_none(){self.tool_run_receipt=app.take_tool_run_receipt();}
+    }
+    /// 🧾️ Binds what one publication window posted straight into its recipient to the one family receipt it served; a window with no pending receipt owes no receiving, so control-metadata claims such as the command-scope lease stay direct and uncounted here. See `ops/🧪️tests/🦀️.rs`.
+    pub(crate) fn bind_window_posting(&mut self,before:RetainedCloneProgress,after:RetainedCloneProgress,reserved:RetainedCloneProgress,grant:semio_framework_value::RetainedCloneGrant,recipient:usize)->Result<(),semio_framework_value::ValueError>{
+        if !self.ownership_receipt_pending(){return Ok(())}
+        // Redeemed returns use their own reservation. The physical recipient records
+        // both payments, while the publication family reports only its own loan.
+        let before = before.checked_add(reserved)?;
+        let subtract=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication recipient moved backwards"));
+        let posted=RetainedCloneProgress{copied_items:subtract(after.copied_items,before.copied_items)?,copied_bytes:subtract(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:subtract(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:subtract(after.released_bytes,before.released_bytes)?};
+        if posted!=RetainedCloneProgress::default(){self.original_receiving=Some(OriginalPublicationReceiving{family:self.original_receipt_family(),before,posted,grant,recipient});}
+        Ok(())
+    }
     fn original_receipt_family(&self)->Option<OriginalPublicationFamily>{let mut families=[self.constructor_receipt.is_some().then_some(OriginalPublicationFamily::Constructor),self.preparation_receipt.is_some().then_some(OriginalPublicationFamily::Preparation),self.retirement_receipt.is_some().then_some(OriginalPublicationFamily::Retirement),self.history_command_receipt.is_some().then_some(OriginalPublicationFamily::History),self.tool_run_receipt.is_some().then_some(OriginalPublicationFamily::Tool)].into_iter().flatten();let first=families.next()?;families.next().is_none().then_some(first)}
 }
 /// 🎰️ Highest typed-operation slot occupancy any instance of this guest has reached, and whether that
@@ -58,7 +76,7 @@ fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) 
 #[doc(hidden)]
 pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, pages: &mut semio_plugin_reactor_lifecycle::result_publication::NativeResultPages, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut output=PluginExchangeOutput::default();output.collect_original_receipts(app);if output.ownership_receipt_pending(){return Ok((output,None))}
-    let before=cx.retained_progress();let original=cx.retained_grant();let recipient=cx.original_recipient_identity();
+    let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let original=cx.retained_grant();let recipient=cx.original_recipient_identity();
     ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,cx))?;
     if let Some((grant,progress))=app.take_local_interaction_query_receipt(){
         let remaining=cx.retained_grant();let covered=grant.maximum_items<=remaining.maximum_items&&grant.maximum_copy_bytes<=remaining.maximum_copy_bytes&&grant.maximum_capacity_bytes<=remaining.maximum_capacity_bytes&&grant.maximum_release_bytes<=remaining.maximum_release_bytes&&grant.maximum_depth<=remaining.maximum_depth&&progress.fits(grant);cx.consume_retained(progress)?;
@@ -66,8 +84,12 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
         return Ok((PluginExchangeOutput::default(),None));
     }
     trace_typed_operation_slot_occupancy(app, instance);
-    output.collect_original_receipts(app);let after=cx.retained_progress();let subtract=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication recipient moved backwards"));let posted=RetainedCloneProgress{copied_items:subtract(after.copied_items,before.copied_items)?,copied_bytes:subtract(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:subtract(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:subtract(after.released_bytes,before.released_bytes)?};if posted!=RetainedCloneProgress::default(){output.original_receiving=Some(OriginalPublicationReceiving{family:output.original_receipt_family(),before,posted,grant:original,recipient});}
-    if output.ownership_receipt_pending(){return Ok((output,None));}
+    output.collect_original_receipts(app);
+    if output.ownership_receipt_pending() {
+        let reserved = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
+        output.bind_window_posting(before,cx.retained_progress(),reserved,original,recipient)?;
+        return Ok((output, None));
+    }
     match app.take_reserved_commit_outcome().or_else(|| app.take_task_resume_outcome()) {
         Some(Ok(result)) => {
             output.frames.push(::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation {

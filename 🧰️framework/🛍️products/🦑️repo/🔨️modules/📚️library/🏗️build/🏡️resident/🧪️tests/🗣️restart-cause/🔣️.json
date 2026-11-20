@@ -1,0 +1,5 @@
+[
+  {"exit":1,"stderr":"prelude\nerror: canonical fixture input missing\nBun fixture version\n","cause":"error: canonical fixture input missing"},
+  {"exit":1,"stderr":"","cause":""},
+  {"exit":1,"stderr":"error: unrelated ordinary diagnostic build.graph.wanted-expired\n","cause":"error: unrelated ordinary diagnostic build.graph.wanted-expired"}
+]

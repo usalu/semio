@@ -279,7 +279,7 @@ pub struct GlbSchemaCursor {
     pub(super) pbr_depth: Option<u16>,
     pub(super) base_color_texture_depth: Option<u16>,
     pub(super) material_texture_role: usize,
-    pub output: GlbSchemaOutput,
+    pub(super) output: GlbSchemaOutput,
     terminal: bool,
 }
 
@@ -315,6 +315,11 @@ impl GlbSchemaCursor {
             output: GlbSchemaOutput::new(),
             terminal: false,
         }
+    }
+
+    pub(in super::super) fn into_materializer(self) -> GlbMaterializeCursor {
+        debug_assert!(self.terminal);
+        GlbMaterializeCursor::new(self.output)
     }
 
     pub fn step(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<bool, &'static str> {

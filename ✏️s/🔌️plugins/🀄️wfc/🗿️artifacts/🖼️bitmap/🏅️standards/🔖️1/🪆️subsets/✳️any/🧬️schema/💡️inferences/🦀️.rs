@@ -65,7 +65,7 @@ pub(crate) const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapInferenceCommit {
-    #[value(with = "semio_framework_value::bytes")]
+    #[value(with = "semio_framework_value::bytes", serialize_controlled_with = "semio_framework_value::bytes::to_value_controlled")]
     pub pixels: Vec<u8>,
     pub contradiction: bool,
     pub entropy: Vec<f64>,

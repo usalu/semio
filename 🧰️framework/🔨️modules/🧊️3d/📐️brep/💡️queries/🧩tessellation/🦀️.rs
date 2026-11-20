@@ -34,7 +34,7 @@ use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_surface::surface_ops;
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge};
-use semio_framework_3d_brep_vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{matrix::Frame3, Pnt3, Vec3};
 
 // #region 🔖️Constants
 
@@ -127,6 +127,18 @@ pub fn sample_edge_polyline(body: &Body, edge: EdgeId, deflection: f64) -> Vec<f
 
 #[path = "⏱️tessellation-job/🦀️.rs"]
 mod tessellation_job;
+#[path="📐️planar-preview/🦀️.rs"]
+mod planar_preview;
+#[path="🎯️conic-components/🦀️.rs"]
+mod conic_components;
+#[path="🎯️analytic-component/🦀️.rs"]
+mod analytic_component;
+#[path="🏄️surface-preview/🦀️.rs"]
+mod surface_preview;
+pub use planar_preview::PlanarPreviewRoot;
+#[path = "🧵️wire-preview/🦀️.rs"]
+mod wire_preview;
+pub use wire_preview::WirePreviewSource;
 pub use tessellation_job::{TessellationInput, TessellationJob, TessellationPhase, TessellationProgress, TessellationStep};
 
 #[path = "🧵️edge-sampling/🦀️.rs"]
@@ -146,7 +158,7 @@ use triangulation_and_refinement::{Tri, build_constrained_triangulation, centroi
 // #region 🔖️Tests
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+#[path = "🧪️tests/🔒️internal/🦀️.rs"]
 mod tests;
 
 // #endregion 🔖️Tests

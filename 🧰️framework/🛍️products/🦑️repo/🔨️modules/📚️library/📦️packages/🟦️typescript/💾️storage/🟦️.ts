@@ -1,5 +1,5 @@
 /** 💾️ Public `@semio-tech/repo-lib/storage` entry (bounded repository storage: cache partitions, budget stores, Nx and compiler custody, bootstrap tooling, development state); explicit re-exports of the library paths that own each member, nothing is defined here. */
-export { requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1, withCompilerWorkspaceWriteV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+export { requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1, withCompilerWorkspaceStageWriteV1, withCompilerWorkspaceWriteV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 export { compilerOriginOwnedV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
 export { unitCacheRootV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 export { reclaimUnitStorageV1 } from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";

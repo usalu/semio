@@ -5,7 +5,7 @@ import { request } from "@playwright/test";
 import { releaseAssetPath, releaseRequestUrl, servePublishedPlay } from "../../🔨️modules/🧪️e2e/📦️release/🟦️.ts";
 import { playPageHost } from "../../🔨️modules/📦️site/📄pages/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { paths: { request: string; file: string | null }[]; origins: { request: string; expected: string | null }[]; files: { page: string; path: string; body: string }[]; requests: { page: string; path: string; status: number; mime: string; cors: string | null; cacheControl: string }[] };
+const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { families: string[]; paths: { request: string; file: string | null }[]; origins: { request: string; expected: string | null }[]; files: { page: string; path: string; body: string }[]; requests: { page: string; path: string; status: number; mime: string; cors: string | null; cacheControl: string }[] };
 
 describe("published Play verification", () => {
   for (const row of fixture.paths) test(`serves only the published file for ${row.request}`, () => {
@@ -24,7 +24,7 @@ describe("published Play verification", () => {
   test("serves actual published status, MIME, body, cache and CORS to independent clients", async () => {
     const generated = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : resolve(import.meta.dir, "../../dist/reports");
     const root = join(generated, `release-serving-${process.pid}`);
-    for (const name of ["play", "map", "media", "modules"]) {
+    for (const name of fixture.families) {
       mkdirSync(join(root, name), { recursive: true });
       writeFileSync(join(root, name, "CNAME"), playPageHost(name, "play.semio-tech.com"));
       if (name !== "play") writeFileSync(join(root, name, "_headers"), "/*\n  Access-Control-Allow-Origin: *\n");
@@ -34,10 +34,11 @@ describe("published Play verification", () => {
       mkdirSync(dirname(file), { recursive: true });
       writeFileSync(file, row.body);
     }
-    const service = servePublishedPlay(root,["play","map","media","modules"]), oracle = await request.newContext();
+    const service = servePublishedPlay(root, fixture.families), oracle = await request.newContext();
     try {
       for (const row of fixture.requests) {
-        const url = new URL(row.path, service.origins[`https://${playPageHost(row.page, "play.semio-tech.com")}`]);
+        const origin = row.page === "play" ? service.baseURL : service.origins[`https://${playPageHost(row.page, "play.semio-tech.com")}`];
+        const url = new URL(row.path, origin);
         const native = await fetch(url), reference = await oracle.get(url.href);
         expect(native.status).toBe(row.status);
         expect(native.status).toBe(reference.status());

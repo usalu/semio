@@ -10,13 +10,14 @@ export function testFemPcgPublicationGrantOracle(): void {
   
   
   
-  const admitsOrder = new Ajv2020({ strict: true }).compile({ type: "integer", minimum: 0, maximum: fixture.construction.backingCeilingBytes / fixture.construction.scalarBytes });
+  const admitsOrder = new Ajv2020({ strict: true }).compile({ type: "integer", minimum: 0, maximum: fixture.construction.maximumOrder });
   for (const row of fixture.construction.cases) {
     assert.equal(row.order * fixture.construction.scalarBytes, row.requestedBytes);
     assert.equal(!admitsOrder(row.order), row.rejected);
+    const firstPage = Math.min(row.requestedBytes, fixture.construction.pageBudgetBytes);
     const before = { initialized: 0, allocatedBytes: 0, faulted: false };
-    const after = { initialized: 0, allocatedBytes: row.rejected ? 0 : row.requestedBytes, faulted: row.rejected };
-    const patch: Operation[] = row.rejected ? [{ op: "replace", path: "/faulted", value: true }] : [{ op: "replace", path: "/allocatedBytes", value: row.requestedBytes }];
+    const after = { initialized: 0, allocatedBytes: row.rejected ? 0 : firstPage, faulted: row.rejected };
+    const patch: Operation[] = row.rejected ? [{ op: "replace", path: "/faulted", value: true }] : [{ op: "replace", path: "/allocatedBytes", value: firstPage }];
     assert.deepEqual(applyPatch(before, patch, true, false).newDocument, after);
   }
   for (const row of fixture.cases) {

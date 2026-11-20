@@ -1,6 +1,7 @@
 import type { BackboneWorkerResponse, SpaceArtifactCreationCatalogStatusV1, SpaceArtifactCreationPhaseV1 } from "@semio-tech/framework/backbone";
 import * as React from "../../⚛️react-port/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export const ARTIFACT_CREATION_PROGRESS_CAPACITY = 8;
 
 export type ArtifactCreationProgressOwnerV1 = Readonly<{
@@ -195,11 +196,11 @@ export function ArtifactCreationProgressNotice({
       <p>{status}</p>
       {running && nowMs - state.issuedAtMs >= ARTIFACT_CREATION_WAITING_AFTER_MS ? <p data-semio-artifact-creation-elapsed="">{copy.waiting.replace("{elapsed}", artifactCreationElapsedTextV1(nowMs - state.issuedAtMs, language))}</p> : null}
       {state.phase === "ready" && state.openingDisposition === "failed" ? (
-        <button aria-label={`${copy.opening.retry}: ${state.name}`} onClick={() => onOpen(state.requestId)} type="button">
+        <button {...sharedBorderlessBoxProps} aria-label={`${copy.opening.retry}: ${state.name}`} onClick={() => onOpen(state.requestId)} type="button">
           {copy.opening.retry}
         </button>
       ) : !terminal ? (
-        <button
+        <button {...sharedBorderlessBoxProps}
           aria-label={`${copy.cancel}: ${state.name}`}
           disabled={state.cancelRequested}
           onClick={() => onCancel(state.requestId, state.spaceId)}

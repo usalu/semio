@@ -5,24 +5,33 @@ use super::*;
 // #region 🔖️PlanePairs
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(super) fn plane_plane(fa: &Frame3, fb: &Frame3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
-    let n1 = fa.z;
-    let n2 = fb.z;
+    let Some(curve3) = intersect_plane_plane_curve(fa, fb, tol)? else { return Ok(vec![]); };
+    Ok(vec![finish_intcurve(curve3, &Surface::Plane { frame: *fa }, &Surface::Plane { frame: *fb }, tol)])
+}
+
+/// 📐️ Computes the unique analytic line of two supporting planes without building pcurves.
+pub fn intersect_plane_plane_curve(fa: &Frame3, fb: &Frame3, tol: f64) -> Result<Option<Curve3>, LineIntersectionRefusal> {
+    if !(tol.is_finite() && tol > 0.0) { return Err(LineIntersectionRefusal::InvalidTolerance); }
+    let (n1, n2) = (fa.z, fb.z);
+    if n1.norm() == 0.0 || n2.norm() == 0.0 { return Err(LineIntersectionRefusal::DegenerateDirection); }
     let dir = n1.cross(n2);
     let dir_n = dir.norm();
+    if !dir_n.is_finite() { return Err(LineIntersectionRefusal::NonFinite); }
     if dir_n <= tol {
         let dist = n1.dot(fb.origin - fa.origin).abs();
-        if dist <= tol {
-            return Err(IntersectError::Tangent);
-        }
-        return Ok(vec![]);
+        if !dist.is_finite() { return Err(LineIntersectionRefusal::NonFinite); }
+        if dist <= tol { return Err(LineIntersectionRefusal::Infinite); }
+        return Ok(None);
     }
     let d1 = n1.dot(fa.origin.to_vec());
     let d2 = n2.dot(fb.origin.to_vec());
     let point = (n2.cross(dir) * d1 + dir.cross(n1) * d2) * (1.0 / (dir_n * dir_n));
     let origin = Pnt3::new(point.x, point.y, point.z);
     let unit = dir * (1.0 / dir_n);
-    let curve3 = Curve3::Line { origin, dir: unit };
-    Ok(vec![finish_intcurve(curve3, &Surface::Plane { frame: *fa }, &Surface::Plane { frame: *fb }, tol)])
+    if !origin.to_array().into_iter().chain(unit.to_array()).all(f64::is_finite) {
+        return Err(LineIntersectionRefusal::NonFinite);
+    }
+    Ok(Some(Curve3::Line { origin, dir: unit }))
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -38,14 +47,12 @@ pub(super) fn plane_cylinder(plane: &Frame3, cyl: &Frame3, radius: f64, tol: f64
     if cos_theta <= tol {
         return Ok(plane_cylinder_parallel(plane, cyl, radius, n, axis, tol, (&plane_surf, &cyl_surf)));
     }
-    let n_dot_axis = n.dot(axis);
-    let t = n.dot(plane.origin - cyl.origin) / n_dot_axis;
-    let center = cyl.origin + axis * t;
     if (1.0 - cos_theta) <= tol {
-        let frame = Frame3::from_normal(center, axis).ok_or_else(|| IntersectError::Degenerate("degenerate circle frame on cylinder".into()))?;
-        let curve3 = Curve3::Circle { frame, radius };
+        let curve3 = perpendicular_cylinder_curve(plane, cyl, radius, n, axis)
+            .map_err(|error| IntersectError::Degenerate(error.message().into()))?;
         return Ok(vec![finish_intcurve(curve3, &plane_surf, &cyl_surf, tol)]);
     }
+    let center = cyl.origin + axis * (n.dot(plane.origin - cyl.origin) / n.dot(axis));
     let minor = radius;
     let major = radius / cos_theta;
     let major_dir = (axis - n * axis.dot(n)).normalized().unwrap_or_else(|| n.any_orthogonal());
@@ -151,28 +158,81 @@ fn plane_cone_ellipse(plane: &Frame3, cone: &Frame3, half_angle: f64, axis: Vec3
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(super) fn plane_sphere(plane: &Frame3, sphere: &Frame3, radius: f64, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
-    if !(radius.is_finite() && radius > tol) {
-        return Err(IntersectError::Degenerate("sphere radius must be positive".into()));
-    }
-    let n_n = plane.z.norm();
-    if n_n <= tol {
-        return Err(IntersectError::Degenerate("plane normal degenerate".into()));
-    }
-    let n_u = plane.z * (1.0 / n_n);
-    let dist = n_u.dot(sphere.origin - plane.origin);
-    if dist.abs() > radius + tol {
-        return Ok(vec![]);
-    }
-    let h2 = radius * radius - dist * dist;
-    if h2 <= tol * tol {
-        return Err(IntersectError::Tangent);
-    }
-    let r = h2.sqrt();
-    let center = sphere.origin - n_u * dist;
-    let x = (plane.x - n_u * plane.x.dot(n_u)).normalized().unwrap_or(plane.y);
-    let y = n_u.cross(x);
-    let curve3 = Curve3::Circle { frame: Frame3 { origin: center, x, y, z: n_u }, radius: r };
+    let Some(curve3) = plane_sphere_curve(plane, sphere, radius, tol).map_err(|error| match error {
+        ExactSurfaceRefusal::Tangent => IntersectError::Tangent,
+        ExactSurfaceRefusal::Radius => IntersectError::Degenerate("sphere radius must be positive".into()),
+        _ => IntersectError::Degenerate(error.message().into()),
+    })? else { return Ok(vec![]); };
     Ok(vec![finish_intcurve(curve3, &Surface::Plane { frame: *plane }, &Surface::Sphere { frame: *sphere, radius }, tol)])
+}
+
+/// 🌐️ Failure from a bounded continuous surface intersection.
+pub enum ExactSurfaceRefusal {
+    Linear(LineIntersectionRefusal),
+    Tangent,
+    Radius,
+    PlaneNormal,
+    NonFinite,
+    Unsupported,
+}
+
+impl ExactSurfaceRefusal {
+    pub fn message(&self) -> &'static str {
+        match self {
+            Self::Linear(error) => error.message(),
+            Self::Tangent => "tangent configuration",
+            Self::Radius => "sphere or cylinder radius must be positive",
+            Self::PlaneNormal => "plane normal degenerate",
+            Self::NonFinite => "surface intersection requires finite arithmetic",
+            Self::Unsupported => "retained surface intersection requires two planes, a plane and sphere, or a perpendicular plane and cylinder",
+        }
+    }
+}
+
+/// ✂️ Borrows two analytic supports for an allocation-free single continuous intersection.
+pub fn intersect_original_analytic_surfaces(a: &Surface, b: &Surface, tol: f64) -> Result<Option<Curve3>, ExactSurfaceRefusal> {
+    use ExactSurfaceRefusal::*;
+    if !(tol.is_finite() && tol > 0.) { return Err(Linear(LineIntersectionRefusal::InvalidTolerance)); }
+    match (a,b) {
+        (Surface::Plane { frame: a }, Surface::Plane { frame: b }) => intersect_plane_plane_curve(a, b, tol).map_err(Linear),
+        (Surface::Plane { frame: plane }, Surface::Sphere { frame: sphere, radius })
+        | (Surface::Sphere { frame: sphere, radius }, Surface::Plane { frame: plane }) => plane_sphere_curve(plane, sphere, *radius, tol),
+        (Surface::Plane { frame: plane }, Surface::Cylinder { frame: cylinder, radius })
+        | (Surface::Cylinder { frame: cylinder, radius }, Surface::Plane { frame: plane }) => {
+            if !radius.is_finite() || *radius <= tol { return Err(Radius); }
+            let normal = plane.z.normalized().ok_or(PlaneNormal)?;
+            let axis = cylinder.z.normalized().ok_or(NonFinite)?;
+            if normal.cross(axis).norm() > 16. * f64::EPSILON { return Err(Unsupported); }
+            perpendicular_cylinder_curve(plane, cylinder, *radius, normal, axis).map(Some)
+        }
+        _ => Err(Unsupported),
+    }
+}
+
+fn perpendicular_cylinder_curve(plane: &Frame3, cylinder: &Frame3, radius: f64, normal: Vec3, axis: Vec3) -> Result<Curve3, ExactSurfaceRefusal> {
+    let along = normal.dot(plane.origin - cylinder.origin) / normal.dot(axis);
+    let center = cylinder.origin + axis * along;
+    if !center.to_array().into_iter().all(f64::is_finite) { return Err(ExactSurfaceRefusal::NonFinite); }
+    let frame = Frame3::from_normal(center, axis).ok_or(ExactSurfaceRefusal::NonFinite)?;
+    Ok(Curve3::Circle { frame, radius })
+}
+
+fn plane_sphere_curve(plane: &Frame3, sphere: &Frame3, radius: f64, tol: f64) -> Result<Option<Curve3>, ExactSurfaceRefusal> {
+    use ExactSurfaceRefusal::*;
+    if !(radius.is_finite() && radius > tol) { return Err(Radius); }
+    let n_n = plane.z.norm();
+    if !n_n.is_finite() || n_n <= tol { return Err(PlaneNormal); }
+    let normal = plane.z * n_n.recip();
+    let distance = normal.dot(sphere.origin - plane.origin);
+    if !distance.is_finite() { return Err(NonFinite); }
+    if distance.abs() > radius + tol { return Ok(None); }
+    let squared = radius * radius - distance * distance;
+    if !squared.is_finite() { return Err(NonFinite); }
+    if squared <= tol * tol { return Err(Tangent); }
+    let center = sphere.origin - normal * distance;
+    if !center.to_array().into_iter().all(f64::is_finite) { return Err(NonFinite); }
+    let frame = Frame3::from_x_z(center, plane.x, normal).ok_or(PlaneNormal)?;
+    Ok(Some(Curve3::Circle { frame, radius: squared.sqrt() }))
 }
 
 /// 🏄 Plane/torus: perpendicular-to-axis (up to two circles, via [`plane_level_case`]) and

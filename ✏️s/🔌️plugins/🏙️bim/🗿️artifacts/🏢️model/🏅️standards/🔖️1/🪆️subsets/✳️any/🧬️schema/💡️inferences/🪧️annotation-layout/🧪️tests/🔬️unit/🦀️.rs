@@ -191,9 +191,9 @@ fn an_anchor_without_geometry_is_a_finding_and_leaves_no_number() {
 #[test]
 fn a_missing_element_and_a_missing_style_are_errors() {
     let mut snapshot = room();
-    snapshot.walls.remove("w-west");
-    snapshot.columns.remove("col-1");
-    snapshot.annotation_styles.clear();
+    snapshot.walls.cold_remove("w-west");
+    snapshot.columns.cold_remove("col-1");
+    snapshot.annotation_styles.cold_clear();
     let set = annotations(&snapshot);
     assert!(codes(&set, "dim-column").contains(&DiagnosticCode::AnnotationAnchorMissing));
     assert!(codes(&set, "tag-column").contains(&DiagnosticCode::AnnotationAnchorMissing));

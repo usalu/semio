@@ -1,3 +1,4 @@
+import{freeSpaceSyncV1}from"../../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import{execFileSync}from"node:child_process";
 import{statSync,statfsSync}from"node:fs";
 import{join,resolve,sep}from"node:path";
@@ -18,7 +19,7 @@ export function imageFilledByV1(mount:string,count:number=3):string{
 
 /** 🔎️ The cache image of a worktree that a failed write most likely met: the one whose mount holds a path of the error, else the one with less than 64 MiB or 2 percent free (the fullest first); `undefined` when no image is full, so the failure is about the host volume. */
 export function fullImageOfV1(workspace:string,options:Readonly<{paths?:readonly string[];measure?:(mount:string)=>string;space?:(path:string)=>Readonly<{sizeBytes:number;usedBytes:number;freeBytes:number}>|undefined;mounted?:(directory:string,mount:string)=>boolean}>={}):FullImageV1|undefined{
- const root=resolve(workspace),rows:FullImageV1[]=[],host=(()=>{try{const space=statfsSync(root);return space.bavail*space.bsize;}catch{return undefined;}})();
+ const root=resolve(workspace),rows:FullImageV1[]=[],host=freeSpaceSyncV1(root)?.availableBytes;
  for(const[id,declared]of Object.entries(policy.partitions) as [string,{directory:string}][]){
   const directory=join(root,declared.directory),mount=join(directory,"m");
   try{

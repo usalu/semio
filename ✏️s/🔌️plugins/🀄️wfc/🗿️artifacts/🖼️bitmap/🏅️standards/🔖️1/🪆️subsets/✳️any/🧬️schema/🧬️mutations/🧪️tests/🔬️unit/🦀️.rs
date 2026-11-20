@@ -61,6 +61,14 @@ fn every_variant_carries_a_label_and_a_descriptor_that_agree_with_its_kind() {
 #[test]
 fn every_variant_round_trips_its_single_line_text_op() {
     for mutation in every_variant() {
+        let targets: &dyn store::ArtifactOperationTargets = &mutation;
+        let authored = protocol::Mutation::<BitmapSnapshot>::target(&mutation);
+        assert_eq!(targets.len(), authored.len());
+        for (index, text) in authored.iter().enumerate() {
+            let mut bytes = vec![0; targets.segment_len(index).unwrap()];
+            assert_eq!(targets.read_segment(index, 0, &mut bytes).unwrap(), text.len());
+            assert_eq!(bytes, text.as_bytes());
+        }
         let line = crate::standards::v1::subsets::any::io::text::mutations::print_op(&mutation);
         assert!(!line.is_empty());
         assert_eq!(crate::standards::v1::subsets::any::io::text::mutations::parse_op(&line).expect("op line parses"), mutation, "op line: {line}");
@@ -113,7 +121,7 @@ fn pin_batch_semantics_obey_the_portable_document_cases() {
     for case in fixture["semanticCases"].as_array().unwrap() {
         let mut source = fixture["document"].clone();
         source["pinned"] = case["beforePins"].clone();
-        let before: BitmapSnapshot = semio_framework_pack_json::from_json_str(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let before: BitmapSnapshot = semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(&source.to_string()).unwrap();
         let mutation: BitmapMutation = semio_framework_pack_json::from_json_str(&case["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let outcome = <BitmapMutation as ColdMutation<BitmapSnapshot>>::diff(&mutation, &before);
         if let Some(code) = case["fault"].as_str() {

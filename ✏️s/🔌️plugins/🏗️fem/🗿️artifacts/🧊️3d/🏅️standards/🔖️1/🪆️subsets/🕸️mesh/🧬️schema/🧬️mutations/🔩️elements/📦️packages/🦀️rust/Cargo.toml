@@ -26,9 +26,12 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d-diff = { workspace = true }
+semio-s-artifact-fem-3d-guards = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-fem-3d-mutations = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }

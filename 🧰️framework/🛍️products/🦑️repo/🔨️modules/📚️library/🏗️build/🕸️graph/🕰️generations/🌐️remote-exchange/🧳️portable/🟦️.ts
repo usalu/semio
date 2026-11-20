@@ -65,28 +65,34 @@ const withName=(path:string,name:string):string=>path.slice(0,path.lastIndexOf("
 /** 🧾️ The name of the stored document a path names: the digest between the last slash and the first dot. */
 export const documentNameV1=nameOf;
 
+/** 🏷️ Transforms one stored document and names it by the hash of its rewritten bytes. */
+export function transformNamedGenerationDocumentV1(document:GenerationDocumentV1,root:string,direction:Direction):GenerationDocumentV1{
+ const bytes=transformGenerationDocumentV1(document.path,document.bytes,root,direction);
+ return {path:withName(document.path,sha(bytes)),bytes};
+}
+
 /** 📜️ Rewrites the manifest of a generation for the other side: the root moves, every document is named by `renamed`, and the manifest is named after its own new bytes. `generation` renumbers it. */
-function moveManifest(manifestBytes:Uint8Array,renamed:ReadonlyMap<string,string>,root:string,direction:Direction,generation?:number):GenerationDocumentV1{
+export function transformGenerationManifestV1(manifestBytes:Uint8Array,renamed:ReadonlyMap<string,string>,root:string,direction:Direction,generation?:number):Readonly<{document:GenerationDocumentV1;sourceGeneration:number}>{
  const manifest=JSON.parse(Buffer.from(rewrite(manifestBytes,root,direction)).toString("utf8")) as ReturnType<typeof readGenerationManifestV1>&Record<string,unknown>;
  const map=(name:string|null):string|null=>name===null?null:renamed.get(name)??(()=>{throw Error("Generation document missing: "+name);})();
  const moved={...manifest,...(generation===undefined?{}:{generation}),factIndex:map(manifest.factIndex),frontier:map(manifest.frontier),global:map(manifest.global),owners:Object.fromEntries(Object.entries(manifest.owners).map(([name,row])=>[name,{...row,fragment:map(row.fragment)}]))};
  const bytes=Buffer.from(canonicalJsonV1(moved),"utf8"),path=`${P.manifests}/${sha(bytes)}.json`;
  readGenerationManifestV1(bytes);
- return{path,bytes};
+ return{document:{path,bytes},sourceGeneration:manifest.generation};
 }
 
 /** 🧳️ Rewrites a whole generation between the form of one machine and the neutral form: every document is moved, renamed after the hash of its new bytes, and the manifest is rewritten with the new names and named after its own new bytes. The input holds the manifest and every document it needs (see `generationDocumentPathsV1`). `generation` renumbers the manifest (a restore keeps the numbers of the local store growing). Returns the documents of the new form and the path of its manifest. */
-export function transformGenerationV1(documents:readonly GenerationDocumentV1[],root:string,direction:Direction,generation?:number):Readonly<{documents:readonly GenerationDocumentV1[];manifestPath:string}>{
+export function transformGenerationV1(documents:readonly GenerationDocumentV1[],root:string,direction:Direction,generation?:number):Readonly<{documents:readonly GenerationDocumentV1[];manifestPath:string;sourceGeneration:number}>{
  const manifestDocument=documents.find(document=>document.path.startsWith(P.manifests+"/"));
  if(!manifestDocument)throw Error("Generation manifest required");
  const renamed=new Map<string,string>(),out:GenerationDocumentV1[]=[];
  for(const document of documents){
   if(document===manifestDocument)continue;
-  const bytes=transformGenerationDocumentV1(document.path,document.bytes,root,direction),path=withName(document.path,sha(bytes));
-  renamed.set(nameOf(document.path),nameOf(path));out.push({path,bytes});
+  const moved=transformNamedGenerationDocumentV1(document,root,direction);
+  renamed.set(nameOf(document.path),nameOf(moved.path));out.push(moved);
  }
- const manifest=moveManifest(manifestDocument.bytes,renamed,root,direction,generation);
- return Object.freeze({documents:[...out,manifest],manifestPath:manifest.path});
+ const{document:manifest,sourceGeneration}=transformGenerationManifestV1(manifestDocument.bytes,renamed,root,direction,generation);
+ return Object.freeze({documents:[...out,manifest],manifestPath:manifest.path,sourceGeneration});
 }
 
 /** 🧠️ What an earlier neutralization of one document produced: the name (the hash of the neutral bytes) and the size. */
@@ -115,7 +121,7 @@ export function neutralizeGenerationFromMemoryV1(input:Readonly<{paths:readonly 
   renamed.set(original,name);known.set(original,{name,size:bytes.length});rows.push({path:withName(path,name),hash:name,size:bytes.length,bytes});
  }
  const source=input.bytes.get(manifestPath);if(source===undefined)throw Error("Generation manifest unavailable");
- const manifest=moveManifest(source,renamed,input.root,"neutralize");
+ const{document:manifest}=transformGenerationManifestV1(source,renamed,input.root,"neutralize");
  rows.push({path:manifest.path,hash:sha(manifest.bytes),size:manifest.bytes.length,bytes:manifest.bytes});
  return Object.freeze({rows,manifestPath:manifest.path,known});
 }

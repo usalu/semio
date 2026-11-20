@@ -65,7 +65,15 @@ const snapshot=async(name)=>{
 };
 try{
  await page.goto(process.env.SEMIO_PROBE_URL??"http://127.0.0.1:6019/?plugin=shooting",{waitUntil:"domcontentloaded"});
- await page.waitForFunction(()=>document.documentElement.getAttribute("data-semio-os-ready")==="shooting",{},{timeout:180000});
+ const boot = await page.waitForFunction(() => {
+   const html = document.documentElement;
+   const ready = html.getAttribute("data-semio-os-ready");
+   const fault = html.getAttribute("data-semio-os-error");
+   return ready !== null || fault !== null ? { ready, fault } : null;
+ }, undefined, {timeout: 180_000});
+ const {ready, fault} = await boot.jsonValue();
+ assert.equal(fault, null, `Shooting boot reported ${fault}`);
+ assert.equal(ready, "shooting", "Shooting reaches the ready beacon");
  await page.waitForFunction(()=>[...document.querySelectorAll("[data-surface-id]")].some(host=>host.querySelector("canvas")),{},{timeout:90000});
  const artifact=page.locator('[id="framework.panel.artifact"]').first(),catalogue=page.locator('[id="framework.panel.catalogue"]').first();
  const shotRows=()=>page.getByRole("treeitem").filter({hasText:/Overview (?:Png|Svg)|Shot \d+/});
@@ -130,6 +138,105 @@ try{
  assert.deepEqual(failedNotices(),[],"no visible image-export failure notice");
  assert.ok(notices.some(notice=>notice.code==="icon-render-export.done"),"visible terminal image-export success notice observed");
 
+
+ const inspector = page.locator('[id="framework.panel.inspection"]').first();
+ if (await inspector.getAttribute("aria-pressed") !== "true") await inspector.click();
+ const selectSetting = async (label, option) => {
+   const control = page.getByRole("combobox", {name: label, exact: true});
+   await control.click();
+   await page.getByRole("option", {name: option, exact: true}).click();
+ };
+ const editSetting = async (label, value) => {
+   const control = page.getByLabel(label, {exact: true});
+   await control.fill(value);
+   await control.press("Enter");
+ };
+ await selectSetting("Projection", "Orthographic");
+ await selectSetting("Framing", "Fit model");
+ await selectSetting("Hidden lines", "On");
+ await selectSetting("Merge connected lines", "On");
+ await editSetting("Fill color (empty for material)", "#6040c0");
+ await editSetting("Fill opacity", "0.6");
+ await editSetting("Visible line width (px)", "2.5");
+ await editSetting("Hidden line width (px)", "1.5");
+ await editSetting("Corner radius (px)", "2");
+ const styled = await snapshot("drawing-settings");
+ const shot = styled.shots.find(item => item.id === styled.activeShotId);
+ assert.equal(shot.id, initialSnapshot.activeShotId, "styled shot is the original fixture shot");
+ assert.equal(initialSnapshot.shots.find(item => item.id === shot.id)?.cameraId, undefined, "fixture begins with an uncaptured shot");
+ assert.ok(shot.cameraId, "first projection edit captured a saved camera");
+ assert.deepEqual(styled.shots.filter(item => item.id !== shot.id), initialSnapshot.shots.filter(item => item.id !== shot.id));
+ assert.equal(styled.savedCameras.find(camera => camera.id === shot.cameraId)?.camera.projection, "orthographic");
+ assert.equal(shot.drawing.hiddenLines, true);
+ assert.equal(shot.autoFit, true);
+ assert.equal(shot.drawing.mergeLines, true);
+ assert.equal(shot.drawing.fillColor, "#6040c0");
+ assert.equal(shot.drawing.fillOpacity, 0.6);
+ assert.equal(shot.drawing.visibleWidth, 2.5);
+ assert.equal(shot.drawing.hiddenWidth, 1.5);
+ assert.equal(shot.drawing.lineEasing, 2);
+ const pendingSvg = page.waitForEvent("download", {predicate: item => item.suggestedFilename()===`${shot.id}.svg`});
+ await invoke("Export Active Shot");
+ const drawingFile = join(output, "styled.svg");
+ await (await pendingSvg).saveAs(drawingFile);
+ const exportedSvg = readFileSync(drawingFile, "utf8");
+ const layers = await page.evaluate(source => {
+   const image = new DOMParser().parseFromString(source, "image/svg+xml");
+   return Object.fromEntries([...image.querySelectorAll("g[id]")].map(group => [group.id, group.getAttribute("stroke-width")]));
+ }, exportedSvg);
+ assert.equal(layers["visible-lines"], "2.5");
+ assert.equal(layers["hidden-lines"], "1.5");
+ await page.waitForFunction(source => {
+   const signature = markup => {
+     const image = new DOMParser().parseFromString(markup, "image/svg+xml");
+     return JSON.stringify([...image.querySelectorAll("g[id]")].map(group => ({
+       id: group.id,
+       opacity: group.getAttribute("opacity"),
+       stroke: group.getAttribute("stroke"),
+       width: group.getAttribute("stroke-width"),
+       paths: [...group.querySelectorAll("path")].map(path => [path.getAttribute("d"), path.getAttribute("style")]),
+     })));
+   };
+   const expected = signature(source);
+   if (!expected.includes('"opacity":"0.6"') || !expected.includes('"id":"visible-lines"')) return false;
+   return [...document.querySelectorAll(".semio-icon-render-host img")].some(img => {
+     if (!img.complete || img.naturalWidth === 0 || !img.src.startsWith("data:image/svg+xml")) return false;
+     const separator = img.src.indexOf(",");
+     const data = img.src.slice(separator + 1);
+     const svg = img.src.slice(0, separator).endsWith(";base64") ? atob(data) : decodeURIComponent(data);
+     return signature(svg) === expected;
+   });
+ }, exportedSvg, {timeout: 30000});
+ assert.equal((await sharp(drawingFile).metadata()).width, shot.width);
+
+ await editSetting("Zoom", "1.75");
+ const manual = await snapshot("manual-framing");
+ const manualShot = manual.shots.find(item => item.id === shot.id);
+ assert.equal(manualShot.autoFit, false, "editing zoom uses manual framing for that shot");
+ assert.equal(manual.savedCameras.find(camera => camera.id === manualShot.cameraId)?.camera.zoom, 1.75);
+ assert.deepEqual(manual.shots.filter(item => item.id !== shot.id), initialSnapshot.shots.filter(item => item.id !== shot.id));
+ await selectSetting("Framing", "Fit model");
+
+ await selectSetting("Face fills", "Off");
+ await selectSetting("Visible lines", "Off");
+ await selectSetting("Background layer", "Off");
+ const isolated = await snapshot("hidden-lines-only");
+ const isolatedShot = isolated.shots.find(item => item.id === shot.id);
+ assert.equal(isolatedShot.drawing.fill, false);
+ assert.equal(isolatedShot.drawing.background, false);
+ assert.equal(isolatedShot.drawing.visibleLines, false);
+ assert.equal(isolatedShot.drawing.hiddenLines, true);
+ assert.equal(isolatedShot.autoFit, true, "fit can be restored without changing the saved camera");
+ const pendingHidden = page.waitForEvent("download", {predicate: item => item.suggestedFilename()===`${shot.id}.svg`});
+ await invoke("Export Active Shot");
+ const hiddenFile = join(output, "hidden.svg");
+ await (await pendingHidden).saveAs(hiddenFile);
+ const hiddenSvg = readFileSync(hiddenFile, "utf8");
+ assert.match(hiddenSvg, /id="hidden-lines"/);
+ assert.doesNotMatch(hiddenSvg, /id="(?:visible-lines|fills|background)"/);
+ const hiddenPixels = await sharp(hiddenFile).ensureAlpha().raw().toBuffer();
+ const hiddenAlpha = hiddenPixels.filter((_, index) => index % 4 === 3);
+ assert.ok(hiddenAlpha.some(value => value === 0) && hiddenAlpha.some(value => value > 0));
 
  const viewer=page.locator('[id="playground.navbar.roles.viewer"]').first();
  await viewer.click({force:true});

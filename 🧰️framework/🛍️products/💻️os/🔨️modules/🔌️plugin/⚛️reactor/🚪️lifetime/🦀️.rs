@@ -447,14 +447,14 @@ impl<PA:semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA>{
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
 #[doc(hidden)]
 pub struct NativeLifecycleRegistry<PA: semio_plugin_reactor_app::PluginApp> {
-    pub slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<NativeLifetimeSlot<PA>>,
+    pub slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<Box<NativeLifetimeSlot<PA>>>,
     pub serial: GuestLifecycleSerial,
     pub cursor: usize,
 }
 
 impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub fn new() -> Self {
-        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::new(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
+        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::unallocated(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
     }
     pub fn index(instance: u32) -> usize {
         instance as usize % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS
@@ -467,18 +467,18 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
         if let Some(slot) = self.slots.get(index) {
             return if slot.cell.matches_open(open) { Ok(false) } else { Err("lifecycle slot already owns an allocation") };
         }
-        if !self.slots.allocation_admitted {
+        if !self.slots.admit_backing() {
             return Err("lifecycle backing unavailable");
         }
         let cell = NativeCell::admit(open, self.serial.next()?)?;
-        self.slots.insert_admitted(index, NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 });
+        self.slots.insert_admitted(index, Box::new(NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 }));
         Ok(true)
     }
     pub fn get(&self, instance: u32) -> Option<&NativeLifetimeSlot<PA>> {
-        self.slots.get(Self::index(instance)).filter(|slot| slot.cell.lifetime().instance_id == instance)
+        self.slots.get(Self::index(instance)).map(|slot| &**slot).filter(|slot| slot.cell.lifetime().instance_id == instance)
     }
     pub fn get_mut(&mut self, instance: u32) -> Option<&mut NativeLifetimeSlot<PA>> {
-        self.slots.get_mut(Self::index(instance)).filter(|slot| slot.cell.lifetime().instance_id == instance)
+        self.slots.get_mut(Self::index(instance)).map(|slot| &mut **slot).filter(|slot| slot.cell.lifetime().instance_id == instance)
     }
     pub fn remove_uncreated(&mut self, instance: u32) -> Result<(), &'static str> {
         let slot = self.get(instance).ok_or("opening lifecycle missing")?;

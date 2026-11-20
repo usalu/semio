@@ -13,6 +13,60 @@ test("WASM compiler policy is explicit and agrees with independent schema admiss
  for(const row of [{...fixture.policy,mode:"guess"},{...fixture.policy,mode:"dev"},{...fixture.policy,mode:"ship"},{...fixture.policy,budgetMs:-1},{...fixture.policy,extra:true},{...fixture.policy,artifactDirectory:"relative"}]){expect(validate(row)).toBe(false);expect(()=>readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(row)},fixture.policy.cwd)).toThrow();}
  expect(()=>readWasmBuildPolicyV1({},fixture.policy.cwd)).toThrow();expect(()=>readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(fixture.policy)},"/foreign")).toThrow();
 });
+
+test("the retained WASM consumer retries only transient observation changes against the original identity",async()=>{
+ const {lstat,mkdir,mkdtemp,readFile,rm}=await import("node:fs/promises");
+ const {createHash}=await import("node:crypto");
+ const {ScriptTarget,transpileModule}=await import("typescript");
+ const {FileObservationErrorV1}=await import("../../../../📁️filesystem/🧾️observation/🟦️.ts");
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),memberCode=source.slice(source.indexOf("declare const wasmPackageBrand:")).replace(/^export /gm,"");
+ const code=transpileModule(memberCode,{compilerOptions:{target:ScriptTarget.ES2022}}).outputText;
+ const root=process.env.SEMIO_TEST_ARTIFACT_DIR!;
+ await mkdir(root,{recursive:true});
+ const directory=await mkdtemp(join(root,"wr-"));
+ try{
+  for(const row of fixture.packageRecheck){
+   const path=join(directory,row.name),expectedBytes=Buffer.from(fixture.wasmHex,"hex");
+   writeFileSync(path,expectedBytes);
+   const expectedHash=new Bun.CryptoHasher("sha256").update(expectedBytes).digest("hex");
+   let probing=false,checks=0,observations=0;
+   const stat=async(path:string)=>{
+    const native=await lstat(path,{bigint:true});
+    if(!probing)return native;
+    checks++;
+    if(row.change==="persistent-timestamp"||row.change==="transient-timestamp"&&checks===1)return Object.assign(native,{mtimeNs:native.mtimeNs+1n});
+    if(row.change==="transient-inode"&&checks===1)return Object.assign(native,{ino:native.ino+1n});
+    return native;
+   };
+   const observe=async(path:string)=>{
+    let input=await readFile(path);
+    if(probing){
+     observations++;
+     if(row.change==="persistent-observation"||row.change==="transient-observation"&&observations===1)throw new FileObservationErrorV1("changed",path);
+     if(row.change==="io")throw new FileObservationErrorV1("io",path);
+     if(row.change==="different-digest"){input=Buffer.from(input);input[0]^=1;}
+    }
+    const sha256=createHash("sha256").update(input).digest("hex");
+    if(!probing||row.change!=="different-digest")expect(sha256).toBe(expectedHash);
+    return{path,sha256,byteLength:input.length};
+   };
+   const noOp=()=>undefined,run=(_:unknown,body:()=>Promise<unknown>)=>body();
+   const dependencies={lstat:stat,observePhysicalFileV1:observe,FileObservationErrorV1,withArtifactDescriptorSlotV1:(body:()=>Promise<unknown>)=>body(),requireIssuedResourceControlV1:noOp,requireNativeStorageReservationV1:noOp,requireNativeStoragePathV1:noOp,validateJsonSchemaSubset:()=>[],checkResourceLeaseControl:noOp,withIssuedResourceOperationV1:run,sourceSchema:{properties:{maximumFiles:{const:1},maximumBytes:{const:expectedBytes.length},chunkBytes:{const:1},maximumPendingOperations:{const:1}},definitions:{}}};
+   const {consumeProducedWasmPackageV1:consume,withProducedWasmPackageTaskV1:task}=new Function(...Object.keys(dependencies),code+";return {consumeProducedWasmPackageV1,withProducedWasmPackageTaskV1};")(...Object.values(dependencies));
+   const attempt=consume(new Map([[row.name,path]]),{},{
+    storage:{backing:{root:directory},recheck:noOp},control:{signal:new AbortController().signal},
+    consume:(token:unknown)=>task(token,async(view:{recheck():Promise<void>})=>{probing=true;try{await view.recheck();}finally{probing=false;}}),
+   },noOp);
+   if(row.expected.length){
+    const failure=await attempt.catch((error:Error)=>error);
+    expect(failure).toBeInstanceOf(Error);
+    expect(failure.message).toContain(row.name);
+    for(const field of row.expected)expect(failure.message).toContain(field);
+   }else await attempt;
+   expect({observations,checks},row.change).toEqual({observations:row.observations,checks:row.checks});
+  }
+ }finally{await rm(directory,{recursive:true,force:true});}
+});
 for(const owner of [
  {name:"wasm",source:new URL("../🟦️.ts",import.meta.url),expression:`readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(${JSON.stringify(fixture.policy)})},${JSON.stringify(fixture.policy.cwd)}).packageName`,expected:fixture.policy.packageName},
  {name:"native",source:new URL("../../🏗️native-build/🟦️.ts",import.meta.url),expression:'readCargoArtifactBuildPolicyV1({SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify({version:1,mode:"prototype",cwd:"/owner",buildDirectory:"/compiler",leaseDirectory:"/leases",captureDirectory:"/captures",budgetMs:0})},"/owner").budgetMs',expected:0},
@@ -40,7 +94,38 @@ test("the wasm build acquires configuration view, build lease, writer and artifa
  const view=rank("cargo:configuration-view:7"),build=rank('["cargo-target-recipe-v1","/x/u/l/p1/t/f"]'),writer=rank("repo:compiler-writer:/x/fixed/m"),capture=rank("artifact-capture:/x/browser/prototype/wasm-packages/abc");
  expect([view,build,writer,capture]).toEqual([1,2,7,6]);expect(view<build&&build<writer&&capture<writer).toBe(true);
  const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),at=(needle:string)=>{const index=source.indexOf(needle);expect(index,needle).toBeGreaterThan(0);return index;};
- const inputs=at("await withCargoCompilerInputsV1("),lease=at("leased=await acquireCargoBuildLeaseV1("),writerEntry=at("await actual.withWriter(async()=>{"),consume=at("await consumeProducedWasmPackageV1(produced.files");
- expect(inputs<lease&&lease<writerEntry&&writerEntry<consume).toBe(true);
+ const inputs=at("await withCargoCompilerInputsV1("),lease=at("leased=await acquireCargoBuildLeaseV1("),writerEntry=at("await actual.withWriter("),admission=at("await port.admit("),consume=at("await consumeProducedWasmPackageV1(produced.files");
+ expect(inputs<lease&&lease<writerEntry&&writerEntry<admission&&admission<consume).toBe(true);
  expect(source.slice(writerEntry,consume)).not.toContain("consumeProducedWasmPackageV1(");
+});
+
+test("retained WASM package reports the file and changed identity facts",async()=>{
+ const {lstat,link,mkdir,mkdtemp,rename,rm,utimes,writeFile}=await import("node:fs/promises");
+ const {createSourceFile,isClassDeclaration,isFunctionDeclaration,ScriptTarget,transpileModule}=await import("typescript");
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=createSourceFile("wasm-build.ts",source,ScriptTarget.Latest,true);
+ const owner=tree.statements.filter(statement=>(isClassDeclaration(statement)||isFunctionDeclaration(statement))&&["WasmPackageIdentityErrorV1","readProducedWasmIdentityV1"].includes(statement.name?.text??""));
+ expect(owner).toHaveLength(2);
+ const code=transpileModule(owner.map(statement=>statement.getText(tree)).join("\n"),{compilerOptions:{target:ScriptTarget.ES2022}}).outputText;
+ const observe=new Function("lstat",code+";return readProducedWasmIdentityV1")(lstat) as (name:string,path:string,before?:unknown)=>Promise<unknown>;
+ const root=process.env.SEMIO_TEST_ARTIFACT_DIR!;
+ await mkdir(root,{recursive:true});
+ const directory=await mkdtemp(join(root,"wi-"));
+ try{
+  for(const row of fixture.packageIdentity){
+   const path=join(directory,row.name),replacement=path+".new",knownBytes=Buffer.from(fixture.wasmHex,"hex");
+   await writeFile(path,knownBytes);
+   const before=await observe(row.name,path);
+   if(row.change==="retime")await utimes(path,new Date(0),new Date(0));
+   if(row.change==="replace"){await writeFile(replacement,knownBytes);await rename(replacement,path);}
+   if(row.change==="hardlink")await link(path,replacement);
+   if(row.change==="remove")await rm(path);
+   const native=await lstat(path,{bigint:true}).catch(()=>undefined);
+   if(native)expect(Buffer.from(await Bun.file(path).arrayBuffer())).toEqual(knownBytes);
+   if(!row.expected.length){expect(await observe(row.name,path,before)).toBeDefined();continue;}
+   const failure=await observe(row.name,path,before).catch((error:Error)=>error);
+   expect(failure).toBeInstanceOf(Error);
+   expect((failure as Error).message).toContain(row.name);
+   for(const field of row.expected)expect((failure as Error).message).toContain(field);
+  }
+ }finally{await rm(directory,{recursive:true,force:true});}
 });

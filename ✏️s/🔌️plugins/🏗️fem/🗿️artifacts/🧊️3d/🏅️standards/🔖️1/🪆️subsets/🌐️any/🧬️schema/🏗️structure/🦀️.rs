@@ -81,6 +81,32 @@ pub fn load_id(load: &FemLoad) -> &str {
     }
 }
 
+impl protocol::list_delta::Keyed for FemElement {
+    type Key = String;
+    fn key(&self) -> String {
+        element_id(self).to_string()
+    }
+}
+
+impl protocol::list_delta::Keyed for FemLoad {
+    type Key = String;
+    fn key(&self) -> String {
+        load_id(self).to_string()
+    }
+}
+
+macro_rules! keyed_by_id {
+    ($($row:ty),*) => {$(
+        impl protocol::list_delta::Keyed for $row {
+            type Key = String;
+            fn key(&self) -> String {
+                self.id.clone()
+            }
+        }
+    )*};
+}
+keyed_by_id!(FemSection, FemSolid, FemSupport, FemLoadCase, FemCombination);
+
 /// 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

@@ -1,6 +1,36 @@
 # Architecture Course Redeploy Readiness
 
-State on 2026-11-15, machine g1-m02 (macOS arm64, 16 GB). Worktree: `/Users/ueli/Documents/semio`.
+State on 2026-11-15, machine g1-m02 (macOS arm64, 16 GB). Worktree: `/Users/ueli/Documents/semio`. Latest state: section "Final State (2026-11-19)" below.
+
+## Final State (2026-11-19)
+
+Verdict: ready for the CDN, and frontend and proctor pass end to end under disconnects and about a hundred concurrent learners. The dev-topology presence residual (98/100) is root-caused and fixed in client and proctor (`presence-convergence.md`); the proctor must be redeployed with it. Details: `presence-convergence.md`, `e2e-suite.md`, `reconnect-storm.md`, `mixed-hundred.md`, `hundred-browsers.md`, `perf-pets-and-quiz-start.md`, `intro-input-under-load.md`, `cargo-deadline-refusal.md`.
+
+| Gate (all native, `final-verify.sh` for the unit rows) | Result |
+| --- | --- |
+| Course framework / course-react / course site | 620 / 1153 / 875 pass |
+| Pets core / pets-react / ui-react | 1166 / 253 / 1381 pass |
+| Proctor workspace (`repo cargo … test --workspace`) | 133/133, exit 0 (the false exit 1 from the doubly read process deadline is fixed) |
+| Server gateway companion suite (presence rooms, sessions, budget) | 121/121, with the new law: a burst of states over the rate ends in the newest state |
+| `fresh-proctor.test.mjs` (launchers refuse a proctor or site build older than its sources) | 3/3 |
+| Playwright projects boot, layered-home, phone, layout, pets, presence, shortage, away, faults, reconnect | all pass |
+| `reconnect` storm, seeds 11–13, fresh proctor | 3/3, 33 cycles, 0 stuck pages, worst recovery 13.4 s (bound 40 s), every silent socket closed by the watchdog |
+| `chaos` (100 learners, every quiz, kills, offline, reloads), static release, fresh release proctor with both presence fixes | pass (17.2 min), 1000 runs scored once, presence 100, silent ghosts gone after 65.7 s |
+| `chaos`, dev topology (vite proxy), fresh proctor with both presence fixes | 3 of 3 pass (16.3, 20.0, 20.4 min), presence 100 each; before the server fix 2 of 3 with the stall fix alone, the failing run's audit naming one learner the proctor's roster lacked |
+| Mixed hundred: 25 real browsers + 75 protocol learners | pass, presence 100 |
+| Staged CDN folder rebuilt today with the client stall fix: 116 files, `_headers`, `siteArtifactProblems` none | smoke 30/30 (the phone step now asserts no layout switch is offered at 390 px) |
+
+Fixed on 2026-11-19: presence timers that ran late on a starved page closed live sockets (`stallAwareTimer`, client); the proctor silently dropped the newest presence state over the per-session rate, so a learner could stay joined but missing for good (`Admitted::Held`, applied when the allowance refills, server). Both test-first; see `presence-convergence.md`.
+
+Fixed since 2026-11-18: app-level presence heartbeat (10 s) with a client watchdog (25 s) and bounded `/instance` probe; presence join timeout; follower home crash on leaderboard poll after close; pan layer promotion only while panning plus off-screen culling (course-react strip assertions now read the resting translation through `translation`); the launchers pinned a stale proctor by content hash (the cause of the earlier red `chaos`).
+
+Known limits: 100 real browser tabs need about 24 GB or more (330–470 MB each, mostly compositor; Chromium cannot share renderers between isolated contexts), so on this 16 GB Mac a hundred concurrent learners are 10 real browsers plus 90 protocol learners; the most real browsers connected at once here was 89, with presence exact, before the host ran out of memory speaking the site's own client protocol (and 25 + 75 in the mixed run); the spec runs a hundred real browsers unchanged with `CHAOS_BROWSERS=100 CHAOS_PROTOCOL=0` on a 24 GB+ machine (`hundred-browsers.md`). The first quiz start of a session is one 65–80 ms task.
+
+For other owners (not this ticket):
+- Routing suite on HEAD: 22 `🪢️lifetime` tests plus command, workspace, settlement, expiry/progress, profile and drain tests fail; General `🔨️modules` tests import `🛍️products/🦑️repo` (layering violation); the Go toolchain is missing on this host. Also in `workers/g1-m02/note-from-course-session-routing-failures.md`.
+- `🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts` is stale (`cardStack` and `card` roles missing); regenerate it.
+- Unit cache: cached build-script wrappers outlive the sealed source snapshot they name (`Module not found …/sealed/<digest>/…buildscript`); 16 stale directories removed locally.
+- Docker targets need a Linux x64 runner; the Pages workflow still calls `repo run …:publish`, so the owner uploads the staged folder.
 
 ## Verdict
 

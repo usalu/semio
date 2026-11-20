@@ -330,12 +330,21 @@ fn row_error(code: &'static str) -> PluginAssemblyError {
     ui_error(code)
 }
 
+fn explanation_row(id: String, label: ui::Label, explanation: &str) -> UiAssemblyResult<BuiltNode> {
+    if explanation.len() <= ui::UI_TEXT_MAX_BYTES {
+        return tree_item_desc(id, label, Some(explanation.to_owned()));
+    }
+    ui::tree_item(label).try_id(id).map_err(|_| row_error("ui.node.id"))?
+        .default_open(true).try_child(render_text_chunks(explanation)?).map_err(|_| row_error("ui.node.child"))?
+        .try_build().map_err(|_| row_error("ui.node.build"))
+}
+
 /// 🧾️ Detail rows of one check shared by the window's expanded rows and the inspection panel: explanation, quantities, utilisation, clause and remedy chips.
 pub fn check_detail_rows(id: &str, check: &CheckResult, locale: Locale, spec: &ChecksWindowSpec) -> UiAssemblyResult<Vec<BuiltNode>> {
     let protocol = protocol_locale(locale);
     let mut rows = vec![
         tree_item_desc(format!("{id}.status"), norm_ui_label(chrome("Status", "Status", locale))?, Some(status_glyph_text(check.status, check.utilization, locale)))?,
-        tree_item_desc(format!("{id}.explanation"), norm_ui_label(chrome("Explanation", "Erläuterung", locale))?, Some(check.explanation.resolve(&protocol).to_string()))?,
+        explanation_row(format!("{id}.explanation"), norm_ui_label(chrome("Explanation", "Erläuterung", locale))?, check.explanation.resolve(&protocol).as_ref())?,
         tree_item_desc(format!("{id}.computed"), norm_ui_label(chrome("Computed", "Berechnet", locale))?, Some(quantity_text(&check.computed, locale)))?,
         tree_item_desc(format!("{id}.limit"), norm_ui_label(chrome("Limit", "Grenzwert", locale))?, Some(quantity_text(&check.limit, locale)))?,
         tree_item_desc(format!("{id}.utilization"), norm_ui_label(chrome("Utilization", "Ausnutzung", locale))?, Some(format!("{} {}", utilisation_percent_text(check.utilization, locale), utilisation_bar_text(check.status, check.utilization))))?,

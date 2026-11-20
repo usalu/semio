@@ -1,6 +1,7 @@
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { directorySessionAuthorityTextV1 } from "@semio-tech/framework/directory/session-refresh";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export type SessionAuthorityNoticeStateV1 = "pending" | "unavailable";
 
 /** 🪪️ Presents the exact private-session handshake state without inventing progress counts. */
@@ -16,7 +17,7 @@ export function SessionAuthorityNotice(props: Readonly<{ state: SessionAuthority
       data-semio-session-authority={props.state}
     >
       <span>{pending ? text.pending : text.unavailable}</span>
-      {pending ? <button type="button" className="ml-single underline" onClick={props.onCancel}>{text.cancel}</button> : null}
+      {pending ? <button {...sharedBorderlessBoxProps} type="button" className="ml-single underline" onClick={props.onCancel}>{text.cancel}</button> : null}
     </section>
   );
 }

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Box State Ownership Cases",
+  "type": "array",
+  "items": {
+    "type": "object", "additionalProperties": false,
+    "required": ["name", "boxes", "pointer", "focusVisible", "expected"],
+    "properties": {
+      "name": { "type": "string", "minLength": 1 },
+      "boxes": { "type": "array", "items": { "$ref": "#/$defs/box" } },
+      "pointer": { "type": ["string", "null"] },
+      "focusVisible": { "type": ["string", "null"] },
+      "expected": { "type": "object", "additionalProperties": { "$ref": "#/$defs/state" } }
+    }
+  },
+  "$defs": {
+    "state": { "enum": ["normal", "active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"] },
+    "box": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "parent", "interactive", "disabled", "marks"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "parent": { "type": ["string", "null"] },
+        "interactive": { "type": "boolean" },
+        "disabled": { "type": "boolean" },
+        "marks": { "type": "array", "items": { "enum": ["active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"] } }
+      }
+    }
+  }
+}

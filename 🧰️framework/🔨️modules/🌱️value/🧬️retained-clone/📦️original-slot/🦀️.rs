@@ -41,7 +41,7 @@ impl<T:Send+Sync+'static> RetainedOriginalRead<T>{
  const TEMPLATE:ManuallyDrop<Self>=ManuallyDrop::new(Self::vacant());
  const fn vacant()->Self{Self{staged:ManuallyDrop::new(None),owner:OriginalSourceOwner::vacant(),inner:None,inner_reply:ManuallyDrop::new(None),returning:false,work:None,route:None}}
  pub fn initial_demands()->RetirementDemand{OriginalReadBirth::<T>::allocation_demand()}
- fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(fault("original slot read changed its actual Source or Work"))}Ok(())}
+ fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(fault("original slot read changed its actual Source or Work"))}Ok(())}
  fn authority(&self)->&FactoryOwnedSourceAuthority<T>{self.staged.as_ref().filter(|owner|!owner.terminal_is_empty()).or_else(||self.owner.original_authority()).expect("original read retains its actual authority")}
  fn quoted(&self,mode:OriginalSourceMode,body:usize)->Result<RetirementDemand,ValueError>{let mut d=self.owner.demand(mode,body)?.unwrap_or_default();if d.depth>0{d.copy_bytes=d.copy_bytes.checked_add(size_of_val(&self.route)*2).ok_or_else(||fault("original slot route extent overflow"))?}Ok(d)}
  fn drive_into<'r>(&mut self,mode:OriginalSourceMode,body:usize,loan:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut RetainedAllocationEffect<'_>,reply:ReadReply<'r>,recover:bool)->Result<ReadComplete<'r>,ValueError>{

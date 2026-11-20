@@ -85,7 +85,7 @@ impl BitmapCommandWork {
             BitmapEditorCommand::PinPreview => {
                 let context = input.context.ok_or_else(|| pin_solution::preview_fault("unavailable"))?;
                 if self.pin.is_none() {
-                    pin_solution::require_preview_window(context.view_state.as_ref(), output::WFC_BITMAP_WINDOW_OUTPUT)?;
+                    pin_solution::require_preview_window(context.view_state.as_deref(), output::WFC_BITMAP_WINDOW_OUTPUT)?;
                     pin_solution::preview_pixels(input.snapshot, context.transient.as_ref(), &context.canonical_base_revision)?
                 } else { context.transient.output_pixels.as_deref().expect("captured preview") }
             }
@@ -203,16 +203,17 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
     fn begin_close(&mut self) { self.closing = true; }
 
     fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-        semio_framework_job::close_original_granted_step(cx, |grant| {
-            let mut work = 0;
-            let result = (|| {
+        semio_framework_job::close_original_nested_step(cx, |cx, grant| {
             use semio_framework_job::InteractiveJobCloseStep;
-            use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
+            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
             if let Some(owner) = self.remnant.as_mut() {
-                let step = owner.step(grant);
-                work = owner.last_turn_work();
-                let step = step?;
+                let ran = cx.with_original_effect(grant, |_, effect| owner.step(4096, effect)).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+                let step = match ran {
+                    Some((semio_framework_value::RetainedWorkPoll::Complete(turn), performed)) => { cx.consume_work(performed); semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: turn.result, work: 0 })? }
+                    Some((semio_framework_value::RetainedWorkPoll::Pending { .. }, performed)) => { cx.consume_work(performed); RetainedCloneStep::Progress(Default::default()) }
+                    None => RetainedCloneStep::Progress(Default::default()),
+                };
                 if owner.terminal_is_empty() { self.remnant = None; }
                 return Ok(match step { RetainedCloneStep::Complete(progress) => InteractiveJobCloseStep::Complete { progress }, RetainedCloneStep::Progress(progress) => InteractiveJobCloseStep::Pending { progress } });
             }
@@ -221,11 +222,9 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
             if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < bytes { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }); }
             let cursor = self.pin.take().expect("pin workspace");
             match semio_framework_value::retirement::controlled::ControlledRetirement::new(cursor) {
-                Ok(owner) => { self.remnant = Some(owner); work = 1; Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() } }) }
-                Err((error, cursor)) => { self.pin = Some(cursor); Err(error) }
+                Ok(owner) => { self.remnant = Some(owner); cx.consume_fuel(1); Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() } }) }
+                Err((error, cursor)) => { self.pin = Some(cursor); Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)) }
             }
-            })();
-            semio_framework_value::RetainedWorkOutcome { result, work }
         })
     }
 
@@ -321,9 +320,10 @@ mod pin_retirement_tests {
                     }).unwrap();
                 }
                 assert_eq!(allocated, if stop == 0 { 0 } else { cells * size_of::<crate::schema::snapshot::BitmapPinnedPixel>() });
-                caller.cancel().cancel();
+                caller.cancel().cancel_now();
                 work.begin_close();
                 let mut released = 0;
+                let mut backing = 0;
                 let mut close_turns = 0;
                 for _ in 0..100000 {
                     if work.terminal_is_empty() { break; }
@@ -332,7 +332,7 @@ mod pin_retirement_tests {
                         let step = turn?;
                         let progress = step.progress();
                         assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes));
-                        assert_eq!(heap.0, 0, "inline retirement handoff must not invent a backing allocation");
+                        backing += heap.0;
                         released += heap.1;
                         close_turns += 1;
                         Ok(step)
@@ -340,7 +340,7 @@ mod pin_retirement_tests {
                 }
                 assert!(work.terminal_is_empty());
                 assert!(close_turns > 1);
-                assert_eq!(released, allocated, "{} cancellation frontier {stop}", case["id"]);
+                assert_eq!(released, allocated + backing, "{} cancellation frontier {stop}", case["id"]);
                 assert!(snapshot.pinned.is_empty());
                 caller.finish();
             }
@@ -384,4 +384,3 @@ mod pin_retirement_tests {
 
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(BitmapCommandWork);

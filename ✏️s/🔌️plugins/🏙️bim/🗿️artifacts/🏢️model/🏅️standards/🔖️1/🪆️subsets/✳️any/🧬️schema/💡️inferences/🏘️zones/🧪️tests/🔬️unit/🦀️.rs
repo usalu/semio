@@ -199,7 +199,7 @@ async fn the_totals_are_deterministic_and_empty_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn a_scheme_over_an_empty_model_part_is_zero() {
     let mut snapshot = zoning();
-    snapshot.area_schemes.insert("as-none".into(), AreaScheme { name: "None".into(), measure: AreaMeasure::Gross, usages: vec!["Workshop".into()], zones: Vec::new() });
+    snapshot.area_schemes.cold_insert("as-none".into(), AreaScheme { name: "None".into(), measure: AreaMeasure::Gross, usages: vec!["Workshop".into()], zones: Vec::new() });
     let totals = &infer(&snapshot).scheme_totals["as-none"];
     assert_eq!(totals, &SchemeTotals::default());
 }

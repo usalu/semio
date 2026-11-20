@@ -1,0 +1,5 @@
+{
+  "curve": {"label":"18446744073709551614","radius":2,"deflection":0.04,"domain":"edge"},
+  "plane": {"label":"18446744073709551613","width":2,"triangles":2,"domain":"face"},
+  "reflectedSphere": {"radius":1,"scale":[-1,1,1],"pole":[0,0,1],"normal":[0,0,-1]}
+}

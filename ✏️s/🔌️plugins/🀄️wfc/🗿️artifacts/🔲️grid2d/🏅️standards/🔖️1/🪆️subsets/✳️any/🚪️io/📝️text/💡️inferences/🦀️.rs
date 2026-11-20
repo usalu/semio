@@ -24,7 +24,7 @@ impl Grid2dInferenceJob {
     }
 }
 
-pub(crate) fn decode_inference_value<T:semio_framework_value::FromValue>(text:&str)->Result<T,String> {
+pub fn decode_inference_value<T:semio_framework_value::FromValue>(text:&str)->Result<T,String> {
     semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())
 }
 

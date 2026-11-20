@@ -312,6 +312,9 @@ async function reserveLoopbackPort(): Promise<number> {
   });
 }
 
+/** 🔗️ The Vite `/@fs/` request path of an absolute file: a POSIX path keeps its leading slash, a Windows drive path gains one and uses `/`. */
+const fsUrl = (file: string): string => `/@fs${file.startsWith("/") ? "" : "/"}${file.replaceAll("\\", "/")}`;
+
 const DEV_SERVER_WRITE_STYLES: readonly (readonly [string, (target: string, body: string) => void])[] = [
   ["an in-place write", (target, body) => writeFileSync(target, body)],
   ["an atomic save (rename into place)", (target, body) => {
@@ -320,7 +323,7 @@ const DEV_SERVER_WRITE_STYLES: readonly (readonly [string, (target: string, body
     renameSync(temporary, target);
   }],
   ["sed -i '' (macOS temporary + rename)", (target, body) => {
-    spawnSync("sed", ["-i", "", `1s|.*|${body.trim()}|`, target]);
+    spawnSync("sed", ["-i", ...(process.platform === "darwin" ? [""] : []), `1s|.*|${body.trim()}|`, target]);
   }],
 ];
 
@@ -342,7 +345,7 @@ describe("dev server transform freshness", () => {
     });
     try {
       await server.listen();
-      const request = async () => (await fetch(`http://127.0.0.1:${port}/@fs${target}`, { headers: { accept: "*/*" } })).text();
+      const request = async () => (await fetch(`http://127.0.0.1:${port}${fsUrl(target)}`, { headers: { accept: "*/*" } })).text();
       const cached = await request();
       expect(cached, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
       expect(cached).toContain("export const value = 0");
@@ -375,7 +378,7 @@ describe("dev server transform freshness", () => {
     });
     try {
       await server.listen();
-      const leafRequest = async () => (await fetch(`http://127.0.0.1:${port}/@fs${leaf}`, { headers: { accept: "*/*" } })).text();
+      const leafRequest = async () => (await fetch(`http://127.0.0.1:${port}${fsUrl(leaf)}`, { headers: { accept: "*/*" } })).text();
       const cachedLeaf = await leafRequest();
       expect(cachedLeaf, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
       expect(cachedLeaf).toContain("export const leaf = 0");
@@ -395,7 +398,8 @@ describe("dev server transform freshness", () => {
 
   it.each([
     ["/@fs/Users/x/🧰️framework/🟦️.ts", "/Users/x/🧰️framework/🟦️.ts"],
-    ["/🧰️framework/🟦️.ts?import&t=1", "/root/🧰️framework/🟦️.ts"],
+    ["/🧰️framework/🟦️.ts?import&t=1", join("/root", "🧰️framework", "🟦️.ts")],
+    ["/@fs/C:/Users/x/🧰️framework/🟦️.ts", join("C:/Users/x/🧰️framework/🟦️.ts")],
     ["/@vite/client", null],
     ["/", null],
   ])("resolves the request %s to the file a transform would be read from", (url, expected) => {
@@ -471,7 +475,22 @@ function browserSpecifiers(source: string): readonly string[] {
   return [...found];
 }
 
+const FRAMEWORK_OS_PACKAGE = "@semio-tech/framework-os";
+const frameworkOsExports = (() => {
+  const directory = join(repoRoot, browserContract.alias.find((entry) => entry.find === FRAMEWORK_OS_PACKAGE)!.replacement, "..");
+  const { exports } = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")) as { exports: Readonly<Record<string, string>> };
+  return { directory, exports };
+})();
+
+/** 🧭️ A `@semio-tech/framework-os/<subpath>` specifier resolves through the package's own `exports` map, exactly as Vite resolves it. */
+const exportsTarget = (specifier: string): string | null => {
+  const mapped = specifier.startsWith(`${FRAMEWORK_OS_PACKAGE}/`) ? frameworkOsExports.exports[`.${specifier.slice(FRAMEWORK_OS_PACKAGE.length)}`] : undefined;
+  return mapped === undefined ? null : join(frameworkOsExports.directory, mapped);
+};
+
 const aliasTarget = (specifier: string): string | null => {
+  const exported = exportsTarget(specifier);
+  if (exported !== null) return exported;
   const hit = browserAliases.find((entry) => specifier === entry.find || specifier.startsWith(`${entry.find}/`));
   return hit ? `${join(repoRoot, hit.replacement)}${specifier.slice(hit.find.length)}` : null;
 };
@@ -569,7 +588,7 @@ describe("browser entry module graph", () => {
 
   it("still reaches every module the playground boots through and stays inside the declared bound", () => {
     const { modules, packageEdges, unresolved } = browserGraph();
-    for (const required of browserContract.requireModules) expect(modules).toContain(required);
+    for (const required of browserContract.requireModules) expect(modules, `${required} must be reached by the browser graph`).toContain(required);
     expect(modules.length).toBeLessThanOrEqual(browserContract.maxModules);
   });
 

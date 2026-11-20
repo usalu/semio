@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "iterations": 64,
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 34603008,
+  "optimized": {
+    "envelope": 1,
+    "geometry": 1,
+    "proof": 5
+  }
+}

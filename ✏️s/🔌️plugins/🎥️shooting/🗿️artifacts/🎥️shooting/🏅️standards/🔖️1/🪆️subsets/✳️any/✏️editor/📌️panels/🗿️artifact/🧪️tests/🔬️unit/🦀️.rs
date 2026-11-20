@@ -40,7 +40,7 @@ const MEASURED_VIEWPORT_ROWS: u32 = 4;
 /// 🪟️ A document an order of magnitude past one viewport — the subject of every window law below.
 fn oversized_snapshot(shots: usize, assets: usize) -> ShootingSnapshot {
     ShootingSnapshot {
-        shots: (0..shots).map(|index| ShootingShot { id: format!("shot-{index}"), label: format!("Shot {index}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None }).collect(),
+        shots: (0..shots).map(|index| ShootingShot { id: format!("shot-{index}"), label: format!("Shot {index}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None, drawing: None, auto_fit: None }).collect(),
         assets: (0..assets).map(|index| ShootingAsset { id: format!("asset-{index}"), name: format!("Asset {index}"), url: String::new(), format: "glb".into(), origin: [0.0; 3], orientation: None, scale: None }).collect(),
         ..Default::default()
     }

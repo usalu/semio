@@ -1,3 +1,4 @@
+import { parseShootingDrawingPatch, type ShootingDrawing, type ShootingDrawingPatch } from "../🟦️.ts";
 /** 🧬️ Shooting diff schema — sparse typed delta over the artifact: ordered structural edits plus keyed field patches per list, a scene field patch and assignable scalars. */
 
 import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
@@ -76,6 +77,8 @@ export interface ShootingShotPatch {
   shape?: string;
   background?: ShootingAssigned<string | null>;
   cameraId?: ShootingAssigned<string | null>;
+  drawing?: ShootingDrawingPatch;
+  autoFit?: ShootingAssigned<boolean | null>;
 }
 
 export interface ShootingSavedCameraPatch {
@@ -147,6 +150,8 @@ export interface ShootingShot {
   shape: string;
   background?: string;
   cameraId?: string;
+  drawing?: ShootingDrawing;
+  autoFit?: boolean;
 }
 
 export interface ShootingSun {
@@ -262,7 +267,7 @@ export function parseShootingAssetPatch(value: unknown, at = "$"): ShootingAsset
 }
 
 export function parseShootingShotPatch(value: unknown, at = "$"): ShootingShotPatch {
-  const row = shootingShootingDiffGuardClosed(shootingShootingDiffGuardObject(value, at), at, ["label", "width", "height", "format", "shape", "background", "cameraId"]);
+  const row = shootingShootingDiffGuardClosed(shootingShootingDiffGuardObject(value, at), at, ["label", "width", "height", "format", "shape", "background", "cameraId", "drawing", "autoFit"]);
   return {
     label: row["label"] == null ? undefined : shootingShootingDiffGuardString(row["label"], `${at}.label`),
     width: row["width"] == null ? undefined : shootingShootingDiffGuardInteger(row["width"], `${at}.width`, {"minimum": 0, "maximum": 4294967295}),
@@ -270,6 +275,10 @@ export function parseShootingShotPatch(value: unknown, at = "$"): ShootingShotPa
     format: row["format"] == null ? undefined : shootingShootingDiffGuardString(row["format"], `${at}.format`),
     shape: row["shape"] == null ? undefined : shootingShootingDiffGuardString(row["shape"], `${at}.shape`),
     background: row["background"] == null ? undefined : ((row0) => ({ value: (row0["value"] === null ? null : shootingShootingDiffGuardString(row0["value"], `${at}.background.value`)) }))(shootingShootingDiffGuardClosed(shootingShootingDiffGuardObject(row["background"], `${at}.background`), `${at}.background`, ["value"])),
+    drawing: row.drawing === undefined ? undefined : parseShootingDrawingPatch(row.drawing, `${at}.drawing`),
+    autoFit: row.autoFit == null ? undefined : ((assigned) => ({
+      value: assigned.value === null ? null : shootingShootingDiffGuardBoolean(assigned.value, `${at}.autoFit.value`),
+    }))(shootingShootingDiffGuardClosed(shootingShootingDiffGuardObject(row.autoFit, `${at}.autoFit`), `${at}.autoFit`, ["value"])),
     cameraId: row["cameraId"] == null ? undefined : ((row0) => ({ value: (row0["value"] === null ? null : shootingShootingDiffGuardString(row0["value"], `${at}.cameraId.value`)) }))(shootingShootingDiffGuardClosed(shootingShootingDiffGuardObject(row["cameraId"], `${at}.cameraId`), `${at}.cameraId`, ["value"])),
   };
 }

@@ -137,6 +137,9 @@ impl<A: ArtifactApp> MediaTransfers<A> {
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
     pub fn document_archive_load_demands(&self, active: &ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = item_demand();
+        if closing && active.terminal() && active.inputs_are_empty() {
+            return Ok(active.terminal_removal_demands());
+        }
         if active.terminal_target.is_some() || (closing && !active.terminal()) {
             let replacement_live = active.replacement.is_some_and(|handle| self.store_replacement_jobs.get(handle.operation.0).is_some());
             return Ok(if replacement_live || active.inputs_are_empty() { item } else { nonzero(active.retirement_demands(body)?) });
@@ -193,6 +196,38 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
             return Ok(removed(RetainedCloneProgress::default()));
         }
+        // The rejected hydration keeps the full original cause until its archive owner receives it.
+        if let Some(hydration) = active.hydration.as_mut().filter(|owner| {
+            active.retained.is_none() && (owner.original_failure.is_some() || owner.original_context_failure.is_some())
+        }) {
+            use semio_framework_job::close_original_effect_step;
+            use store::os_store::snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_owned_birth_demands};
+
+            let before = cx.retained_progress();
+            let retired = &mut active.retained;
+            cx.with_original_retirement(|cx| {
+                hydration.receive_original_failures_step(cx, |producer, context, cx| {
+                    let source = if producer.is_some() { producer } else { context };
+                    let demand = artifact_retirement_owned_birth_demands(source)?;
+                    if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                        return Ok(());
+                    }
+                    close_original_effect_step(cx, demand, |effect| {
+                        semio_framework_value::RetainedWorkPoll::Complete(artifact_retirement_admit_owned(source, retired, effect))
+                    })?;
+                    Ok(())
+                })
+            })?;
+            let progress = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
+            return Ok(PluginLifecycleStep::Progress(progress));
+        }
+        // The parent hydration's fold control closes with its actual Source decoder before any grant-only retirement.
+        if let Some(hydration)=active.hydration.as_mut().filter(|hydration|active.retained.is_none() && hydration.requires_original_close()){
+            let before=cx.retained_progress();
+            hydration.close_original_step(cx)?;
+            let after=cx.retained_progress();
+            return Ok(if after==before{idle()}else{PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes})});
+        }
         let fuel=cx.fuel_remaining();
         let Some((poll,_))=cx.with_original_effect(grant,|cx,effect|{let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};active.close_step(effect,&actual)})? else{return Ok(idle())};
         let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};        let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
@@ -212,9 +247,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
 
     /// 🧵️ One granted unit of a whole-document archive load: decode, hydrate, admit every member, seal and await the replacement.
     ///
-    /// Genesis and `try_begin_owned_document_members` happen in ONE step: yielding between them would let the replacement
-    /// lane observe `AwaitingMembers` with no ingress and seal the roster before the archived members were admitted. A
-    /// childless candidate is sealed by the replacement lane itself, so this load then only awaits its outcome.
+    /// The archive owns the candidate's member handoff until it begins and seals the roster.
+    /// The ordinary replacement lane can still drive a cancelled candidate through retirement.
     pub fn advance_document_archive_load(&mut self, stores: &mut InstanceStores<A>, child_composition: &mut ChildComposition<M>, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = item();
@@ -289,13 +323,20 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let owner=active.hydration.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("recursive document parent hydration is not retained"))?;
                 owner.operation=cx.operation();
                 owner.generation=cx.generation();
-                let step=owner.step(cx,RetainedCloneGrant{maximum_items:1,..grant});
+                let phase=owner.phase;
+                let step=owner.step(cx,grant);
                 let spent=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 let item=RetainedCloneProgress{copied_items:spent.copied_items.max(1),..spent};
                 let envelope = match step {
                     store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginLifecycleStep::Progress(item)),
                     store::PersistedDocumentHydrationStep::Rejected(diagnostic) => {
-                        return Err((document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent Pack and SPR hydration was rejected: {diagnostic:?}")).with_retained_progress(spent)).into());
+                        let cause=owner.original_failure.as_ref().or(owner.original_context_failure.as_ref());
+                        let message=match cause{
+                            Some(failure)=>format!("document archive parent Pack and SPR hydration was rejected at {phase:?}: {diagnostic:?}: {}",failure.primary.message()),
+                            None=>format!("document archive parent Pack and SPR hydration was rejected at {phase:?}: {diagnostic:?}"),
+                        };
+                        eprintln!("{message}");
+                        return Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE,message).with_retained_progress(spent).into());
                     }
                     store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Envelope(envelope)) => envelope,
                     store::PersistedDocumentHydrationStep::Ready(store::PersistedDocumentHydrationOutput::Store(_)) => {

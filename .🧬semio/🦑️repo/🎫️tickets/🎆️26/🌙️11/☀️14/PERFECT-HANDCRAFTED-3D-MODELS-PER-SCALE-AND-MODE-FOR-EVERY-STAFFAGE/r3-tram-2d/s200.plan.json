@@ -1,0 +1,378 @@
+[
+ {
+  "kind": "rect",
+  "x": 3.5,
+  "y": -1.2,
+  "w": 1.3,
+  "h": 0.0515,
+  "id": "door-opening-a",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.06,
+  "material": "interior-trim"
+ },
+ {
+  "kind": "rect",
+  "x": -4.0,
+  "y": -1.2,
+  "w": 1.3,
+  "h": 0.0515,
+  "id": "door-opening-b",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.06,
+  "material": "interior-trim"
+ },
+ {
+  "kind": "rect",
+  "x": 3.506,
+  "y": -1.212,
+  "w": 0.638,
+  "h": 0.04,
+  "id": "leaf-a1",
+  "bone": "door-a1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.75,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "rect",
+  "x": 4.156,
+  "y": -1.212,
+  "w": 0.638,
+  "h": 0.04,
+  "id": "leaf-a2",
+  "bone": "door-a2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.75,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "rect",
+  "x": -3.994,
+  "y": -1.212,
+  "w": 0.638,
+  "h": 0.04,
+  "id": "leaf-b1",
+  "bone": "door-b1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.75,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "rect",
+  "x": -3.344,
+  "y": -1.212,
+  "w": 0.638,
+  "h": 0.04,
+  "id": "leaf-b2",
+  "bone": "door-b2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.75,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.45,
+    -1.2
+   ],
+   [
+    8.48,
+    -1.2
+   ],
+   [
+    8.6327,
+    -1.1984
+   ],
+   [
+    8.785,
+    -1.1874
+   ],
+   [
+    8.9345,
+    -1.1573
+   ],
+   [
+    9.0755,
+    -1.0992
+   ],
+   [
+    9.1981,
+    -1.0089
+   ],
+   [
+    9.2941,
+    -0.8906
+   ],
+   [
+    9.362,
+    -0.7541
+   ],
+   [
+    9.406,
+    -0.608
+   ],
+   [
+    9.4317,
+    -0.4575
+   ],
+   [
+    9.4446,
+    -0.3054
+   ],
+   [
+    9.4493,
+    -0.1527
+   ],
+   [
+    9.45,
+    0.0
+   ],
+   [
+    9.4493,
+    0.1527
+   ],
+   [
+    9.4446,
+    0.3054
+   ],
+   [
+    9.4317,
+    0.4575
+   ],
+   [
+    9.406,
+    0.608
+   ],
+   [
+    9.362,
+    0.7541
+   ],
+   [
+    9.2941,
+    0.8906
+   ],
+   [
+    9.1981,
+    1.0089
+   ],
+   [
+    9.0755,
+    1.0992
+   ],
+   [
+    8.9345,
+    1.1573
+   ],
+   [
+    8.785,
+    1.1874
+   ],
+   [
+    8.6327,
+    1.1984
+   ],
+   [
+    8.48,
+    1.2
+   ],
+   [
+    0.45,
+    1.2
+   ]
+  ],
+  "closed": true,
+  "id": "shell-end",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof",
+   "glazing"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -6.0,
+    -1.2
+   ],
+   [
+    -0.45,
+    -1.2
+   ],
+   [
+    -0.45,
+    1.2
+   ],
+   [
+    -6.0,
+    1.2
+   ]
+  ],
+  "closed": true,
+  "id": "shell-mid",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof",
+   "glazing"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "rect",
+  "x": -0.45,
+  "y": -1.0,
+  "w": 0.9,
+  "h": 2.0,
+  "id": "gangway",
+  "bone": "gangway",
+  "role": "body",
+  "z": 2.2,
+  "filled": true,
+  "tone": 0.25,
+  "region": "gangway",
+  "material": "rubber"
+ },
+ {
+  "kind": "rect",
+  "x": -5.2,
+  "y": -0.9,
+  "w": 3.8,
+  "h": 1.8,
+  "r": 0.04,
+  "id": "hvac-box",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.5,
+  "region": "hvac-unit",
+  "material": "paint"
+ },
+ {
+  "kind": "rect",
+  "x": 4.5,
+  "y": -0.85,
+  "w": 2.0,
+  "h": 1.7,
+  "r": 0.02,
+  "id": "resistor-box",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.6,
+  "filled": true,
+  "tone": 0.4,
+  "region": "brake-resistor",
+  "material": "resistor-steel"
+ },
+ {
+  "kind": "capsule",
+  "x0": 0,
+  "y0": 0,
+  "x1": 1.9,
+  "y1": 0,
+  "r0": 0.04,
+  "r1": 0.04,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.042,
+   "z1": 0.042
+  },
+  "id": "pan-lower",
+  "bone": "pan-lower",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "capsule",
+  "x0": 0,
+  "y0": 0,
+  "x1": 1.9,
+  "y1": 0,
+  "r0": 0.02,
+  "r1": 0.02,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.04,
+   "z1": 0.04
+  },
+  "id": "pan-upper",
+  "bone": "pan-upper",
+  "role": "body",
+  "z": 3.1,
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "capsule",
+  "x0": -0.18,
+  "y0": 0.01,
+  "x1": 0.18,
+  "y1": 0.01,
+  "r0": 0.0175,
+  "r1": 0.0175,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.845,
+   "z1": 0.845
+  },
+  "id": "pan-head",
+  "bone": "pan-head",
+  "role": "body",
+  "z": 3.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "pantograph",
+  "material": "carbon"
+ },
+ {
+  "kind": "path",
+  "d": "M 4.359 0.0402 L 2.5973 0.2802 L 2.6027 0.3198 L 4.3644 0.0798 Z M 4.3644 -0.0798 L 2.6027 -0.3198 L 2.5973 -0.2802 L 4.359 -0.0402 Z",
+  "id": "pan-upper-arms",
+  "bone": "pan-upper",
+  "z": 3.15,
+  "role": "detail",
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ }
+]

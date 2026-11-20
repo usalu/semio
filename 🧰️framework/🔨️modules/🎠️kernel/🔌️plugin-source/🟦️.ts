@@ -45,9 +45,12 @@ export class PluginModuleUnavailableError extends Error {
 }
 
 /** 🔎️ Answers whether a locally served module is actually served here: its descriptor must answer. A
- * device that never staged a plugin answers 404 for it, and that is an unavailability, not a fault. */
+ * device that never staged a plugin answers 404 for it, and that is an unavailability, not a fault.
+ * Chromium exposes an empty response stream for HEAD. Reading it lets the probe finish before the
+ * body-bearing descriptor request starts. */
 async function requireServedPluginModule(sourceId: string, pluginId: string, moduleUrl: string, signal: AbortSignal): Promise<void> {
   const response = await fetch(pluginDescriptorUrl(moduleUrl), { method: "HEAD", signal, cache: "no-store" });
+  await response.arrayBuffer();
   if (!response.ok) throw new PluginModuleUnavailableError(sourceId, pluginId, `descriptor answered HTTP ${response.status}`);
 }
 

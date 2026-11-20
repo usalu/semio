@@ -10,7 +10,7 @@ semio_framework_value::artifact_retire_leaf!(DagChannelDirection);
 
 semio_framework_value::artifact_retire_struct!(DagWireTypeRefusal{source,source_types,target,target_types});
 
-semio_framework_value::artifact_retire_struct!(DagHoverFacts{channel,refusal});
+semio_framework_value::artifact_retire_struct!(DagHoverFacts{channel,refusal,edge});
 
 semio_framework_value::artifact_retire_struct!(DagScreenHit{node_id,channel,minimap,minimap_viewport,port_insert,handle,widget});
 
@@ -39,6 +39,7 @@ pub trait DagOutputSource{
     fn selected_channel_count(&self)->usize;
     fn selected_channel(&self,index:usize)->Option<DagChannelView<'_>>;
     fn selected_handle_identity(&self,index:usize)->Option<&str>;
+    fn hovered_edge_view(&self)->Option<&str>{None}
     fn hovered_channel_view(&self)->Option<DagChannelView<'_>>;
     fn wire_refusal_view(&self)->Option<DagRefusalView<'_>>;
 }
@@ -51,6 +52,7 @@ pub trait DagOutputCandidates{
     fn channel_candidate_count(&self)->usize;
     fn channel_candidate(&self,index:usize)->Option<DagChannelView<'_>>;
     fn handle_candidate_identity(&self,index:usize)->Option<&str>;
+    fn hovered_edge_view(&self)->Option<&str>{None}
     fn hovered_channel_view(&self)->Option<DagChannelView<'_>>;
     fn wire_refusal_view(&self)->Option<DagRefusalView<'_>>;
 }
@@ -94,7 +96,13 @@ pub struct DagWireTypeRefusal {pub source:String,pub source_types:Vec<String>,pu
 #[derive(Clone,Debug,Default,PartialEq,Serialize,Deserialize,ToValue,FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub struct DagHoverFacts {pub channel:Option<DagChannelRef>,pub refusal:Option<DagWireTypeRefusal>}
+pub struct DagHoverFacts {
+    pub channel:Option<DagChannelRef>,
+    pub refusal:Option<DagWireTypeRefusal>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    #[value(default,skip_serializing_if="Option::is_none")]
+    pub edge:Option<String>,
+}
 
 /// 🩺️ Classifies overlays and draggable node bodies from one accepted hit.
 #[derive(Clone,Debug,PartialEq,Serialize,Deserialize,ToValue,FromValue)]

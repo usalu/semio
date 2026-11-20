@@ -1,0 +1,51 @@
+[
+  {
+    "id": "exact",
+    "pinned": true,
+    "memory": 16384,
+    "head": "same",
+    "status": "verified",
+    "lookups": 1
+  },
+  {
+    "id": "forged-pin",
+    "pinned": false,
+    "memory": 16384,
+    "head": "same",
+    "status": "refused",
+    "lookups": 0
+  },
+  {
+    "id": "too-large",
+    "pinned": true,
+    "memory": 32768,
+    "head": "same",
+    "status": "refused",
+    "lookups": 0
+  },
+  {
+    "id": "no-seal",
+    "pinned": true,
+    "memory": 16384,
+    "head": "missing",
+    "status": "pending",
+    "lookups": 1
+  },
+  {
+    "id": "moved-head",
+    "pinned": true,
+    "memory": 16384,
+    "head": "different",
+    "status": "refused",
+    "lookups": 1
+  },
+  {
+    "id": "stale-telemetry",
+    "pinned": true,
+    "memory": 16384,
+    "head": "same",
+    "age": 600001,
+    "status": "refused",
+    "lookups": 0
+  }
+]

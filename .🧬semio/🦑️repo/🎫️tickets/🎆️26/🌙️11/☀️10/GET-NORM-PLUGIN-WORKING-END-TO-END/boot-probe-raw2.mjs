@@ -1,0 +1,16 @@
+import { createRequire } from "node:module";
+const require = createRequire(process.cwd() + "/package.json");
+const { chromium } = require("playwright");
+const [url, waitSeconds = "120"] = process.argv.slice(2);
+const t0 = Date.now(), at = () => ((Date.now() - t0) / 1000).toFixed(1);
+const browser = await chromium.launch({ args: ["--js-flags=--max-old-space-size=8192", "--enable-unsafe-swiftshader", "--in-process-gpu", "--disable-background-timer-throttling", "--disable-renderer-backgrounding", "--disable-backgrounding-occluded-windows", "--disable-features=IntensiveWakeUpThrottling"] });
+browser.on("disconnected", () => console.log(`[${at()}] browser disconnected`));
+const page = await browser.newPage();
+let n = 0;
+page.on("console", m => { if (n++ < 400 || /DEBUG\] (archive|exchange.produced: seq [0-9]+ applied true frames 2 effects 1)|panic|crash|semantic/.test(m.text())) console.log(`[${at()}] [${m.type()}] ${m.text().slice(0, 300)}`); });
+page.on("crash", () => console.log(`[${at()}] [crash] renderer crashed`)); page.on("close", () => console.log(`[${at()}] [close]`)); page.on("pageerror", e => console.log(`[${at()}] [pageerror] ${String(e).slice(0, 300)}`));
+await page.goto(url, { waitUntil: "commit", timeout: 120000 });
+const end = Date.now() + Number(waitSeconds) * 1000;
+while (Date.now() < end && !page.isClosed()) await page.waitForTimeout(5000);
+await page.screenshot({ path: process.env.SHOT }).catch(()=>{}); console.log(`[${at()}] text ${(await page.evaluate(() => document.body?.innerText.slice(0,300)).catch(()=>"?"))}`); console.log(`[${at()}] done closed=${page.isClosed()} msgs=${n}`);
+await browser.close().catch(() => {});

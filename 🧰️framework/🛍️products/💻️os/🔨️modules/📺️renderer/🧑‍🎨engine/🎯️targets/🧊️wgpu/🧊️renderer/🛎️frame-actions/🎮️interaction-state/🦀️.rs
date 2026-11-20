@@ -498,6 +498,9 @@ impl AppInteractionState {
             None => self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme),
         }
         .filter(|target| self.shell.input.scene_pointer_target_is_published(target));
+        if target.is_some() {
+            self.shell.input.leave_retained_pointer_window(pointer.id, &mut self.input);
+        }
         if target.is_none() && self.pointer_capture.holder(pointer.id) != Some(PointerHitOwner::Surface) {
             PointerCtx::of(&mut self.shell).handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
@@ -612,6 +615,12 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
             app.handle_pointer_button(*pointer, *x, *y, false, pointer_button_to_i16(*button), modifiers).await;
         }
         DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer),
+        DispatchEvent::PointerLeave { pointer } => {
+            if pointer.kind != ui_render::PointerKind::Touch {
+                app.shell.directory.presence_pointer = None;
+                app.shell.input.leave_retained_pointer_window(pointer.id, &mut app.input);
+            }
+        }
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
             app.handle_pointer_wheel(*x, *y, *delta_x, *delta_y, event_modifiers_to_pointer(*modifiers));
         }

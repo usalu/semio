@@ -1,7 +1,7 @@
 //! 🧳️ Original-bound bitmap application stages bounded fragments before one authorized exchange.
 use super::*;
-use protocol::{RetainedDiff, RetainedDiffApply, RetainedDiffPreflightAdvance, RetainedFieldPreparation};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneClose}};
+use protocol::{retained_native_child as native_child, retained_routed, RetainedDiff, RetainedDiffApply, RetainedDiffPreflightAdvance, RetainedDone as Done, RetainedFieldPreparation, RetainedFlight as Flight, RetainedReply as Reply, retained_conclude as conclude, retained_settle as settle};
+use semio_framework_value::{NativeDecodeControl, OriginalRetirementCloseLoan, OriginalRetirementFailure, OriginalRetirementOutcome, OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand, RetirementPollExit, ValueError, ValueRefusalKind, retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneClose, retained_clone_grant_admits}};
 use std::mem::{size_of, ManuallyDrop};
 
 impl RetainedDiff<BitmapSnapshot> for BitmapDiff { type Apply = BitmapApply; }
@@ -10,6 +10,7 @@ pub struct BitmapApply {
     snapshot: RetainedFieldPreparation<BitmapSnapshot>,
     schema: RetainedFieldPreparation<String>,
     candidate: ManuallyDrop<Option<BitmapSnapshot>>,
+    new_schema: ManuallyDrop<Option<String>>,
     old_schema: ManuallyDrop<Option<String>>,
     pixels: ManuallyDrop<Option<Vec<u8>>>,
     palette: ManuallyDrop<Option<Vec<BitmapColor>>>,
@@ -21,6 +22,7 @@ pub struct BitmapApply {
     recolored: [Option<BitmapColor>; 256],
     inserted_colors: [Option<BitmapColor>; 256],
     retirement: RetainedCloneClose,
+    flight: Flight,
     phase: u8,
     index: usize,
     survivor: usize,
@@ -38,9 +40,15 @@ pub struct BitmapApply {
     closing: bool,
 }
 
+/// 🏁️ The phase at which every field is prepared and the central writes may begin.
+const PREPARED: u8 = 26;
+
 fn invalid() -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, "bitmap retained apply frontier is invalid") }
 fn quote(copy_bytes: usize, capacity_bytes: usize) -> RetirementDemand { RetirementDemand { copy_bytes, capacity_bytes, depth: 1, ..Default::default() } }
 fn receipt(d: RetirementDemand) -> RetainedCloneProgress { RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() } }
+fn tagged(error: OriginalRetirementFailure, paid: bool) -> OriginalRetirementFailure { if !paid { return error; } let progress = BitmapApply::add(error.retained_progress()); error.with_retained_progress(progress) }
+/// 📏️ Quotes a ready field exchange plus the resident slot it publishes into.
+fn exchange<T: RetainedClone>(field: &RetainedFieldPreparation<T>) -> Result<RetirementDemand, ValueError> { let mut d = field.exchange_demand()?; d.copy_bytes = d.copy_bytes.checked_add(size_of::<Option<T>>()).ok_or_else(invalid)?; Ok(d) }
 fn key_coordinates(key: &str) -> Option<(u32,u32)> {
     if key.len()>7 { return None; }
     let (x,y) = key.split_once(':')?;
@@ -64,27 +72,55 @@ impl BitmapApply {
 }
 
 impl RetainedDiffApply<BitmapSnapshot, BitmapDiff> for BitmapApply {
-    fn new() -> Self { Self { snapshot: Default::default(), schema: Default::default(), candidate: ManuallyDrop::new(None), old_schema: ManuallyDrop::new(None), pixels: ManuallyDrop::new(None), palette: ManuallyDrop::new(None), slots: ManuallyDrop::new(None), taken: ManuallyDrop::new(None), positions: ManuallyDrop::new(None), pins: ManuallyDrop::new(None), removed_colors: [false;256], recolored: [None;256], inserted_colors: [None;256], retirement: Default::default(), phase:0,index:0,survivor:0,write:0,width:0,height:0,output:BitmapOutputSpec::default(),palette_len:0,pin_len:0,pixels_dirty:false,palette_dirty:false,pins_dirty:false,valid:true,committed:false,closing:false } }
-    fn preflight_demand(&self, d: RetainedCloneRef<'_,BitmapDiff>, _: RetainedCloneRef<'_,BitmapSnapshot>, post: RetainedCloneRef<'_,BitmapSnapshot>, body: usize) -> Result<RetirementDemand,ValueError> {
-        if self.closing || self.committed { return Err(invalid()); }
+    fn new() -> Self { Self { snapshot: Default::default(), schema: Default::default(), candidate: ManuallyDrop::new(None), new_schema: ManuallyDrop::new(None), old_schema: ManuallyDrop::new(None), pixels: ManuallyDrop::new(None), palette: ManuallyDrop::new(None), slots: ManuallyDrop::new(None), taken: ManuallyDrop::new(None), positions: ManuallyDrop::new(None), pins: ManuallyDrop::new(None), removed_colors: [false;256], recolored: [None;256], inserted_colors: [None;256], retirement: Default::default(), flight: Default::default(), phase:0,index:0,survivor:0,write:0,width:0,height:0,output:BitmapOutputSpec::default(),palette_len:0,pin_len:0,pixels_dirty:false,palette_dirty:false,pins_dirty:false,valid:true,committed:false,closing:false } }
+    fn preflight_demand(&self, d: RetainedCloneRef<'_,BitmapDiff>, _: RetainedCloneRef<'_,BitmapSnapshot>, post: RetainedCloneRef<'_,BitmapSnapshot>, body: usize, maximum_work_units: u64) -> Result<RetirementDemand,ValueError> {
+        if self.closing || self.committed || self.phase>PREPARED { return Err(invalid()); }
+        if maximum_work_units==0 || self.phase==PREPARED { return Ok(Default::default()); }
+        let inner=body.saturating_sub(Self::fixed());
         let mut q=match self.phase {
-            0=>if self.snapshot.value().is_some() { self.snapshot.exchange_demand()? } else { self.snapshot.demand(post,body.saturating_sub(Self::fixed()))? },
-            1 if d.get().schema.is_some()=>if self.schema.value().is_some() { self.schema.exchange_demand()? } else { self.schema.demand(d.project(0,|d|d.schema.as_ref().unwrap()),body.saturating_sub(Self::fixed()))? },
+            0=>if self.snapshot.value().is_some() { exchange(&self.snapshot)? } else { self.snapshot.demand(post,inner,maximum_work_units)? },
+            1 if d.get().schema.is_some()=>if self.schema.value().is_some() { exchange(&self.schema)? } else { self.schema.demand(d.project(0,|d|d.schema.as_ref().unwrap()),inner,maximum_work_units)? },
             3..=8=>quote(0,self.allocation()?),
             25=>quote(2*size_of::<BitmapSnapshot>(),0),
-            26=>if !self.snapshot.terminal_is_empty(){self.snapshot.close_demand(body.saturating_sub(Self::fixed()))?}else if !self.schema.terminal_is_empty(){self.schema.close_demand(body.saturating_sub(Self::fixed()))?}else{quote(0,0)},
             _=>quote(0,0),
         };
         q.copy_bytes=q.copy_bytes.checked_add(Self::fixed()).ok_or_else(invalid)?;
         Ok(q)
     }
-    fn preflight_work_demand(&self,d:RetainedCloneRef<'_,BitmapDiff>,original:RetainedCloneRef<'_,BitmapSnapshot>,post:RetainedCloneRef<'_,BitmapSnapshot>,body:usize)->Result<u64,ValueError>{self.preflight_demand(d,original,post,body)?;let inner=body.saturating_sub(Self::fixed());match self.phase{0 if self.snapshot.value().is_none()=>self.snapshot.advance_work_demand(post,inner),1 if d.get().schema.is_some()&&self.schema.value().is_none()=>self.schema.advance_work_demand(d.project(0,|d|d.schema.as_ref().unwrap()),inner),26 if !self.snapshot.terminal_is_empty()=>self.snapshot.close_work_demand(inner),26 if !self.schema.terminal_is_empty()=>self.schema.close_work_demand(inner),27.. =>Ok(0),_=>Ok(1)}}
-    fn preflight(&mut self, d: RetainedCloneRef<'_,BitmapDiff>, original: RetainedCloneRef<'_,BitmapSnapshot>, post: RetainedCloneRef<'_,BitmapSnapshot>, body:usize, grant:RetainedCloneGrant, _: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> semio_framework_value::RetainedWorkOutcome<RetainedDiffPreflightAdvance,semio_framework_value::OriginalRetirementFailure> {let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
-        macro_rules! turn {($value:expr)=>{{let turn=$value;work=turn.work;turn.result.map_err(|error|{let error:semio_framework_value::OriginalRetirementFailure=error.into();if work==0{error}else{let progress=Self::add(error.retained_progress());error.with_retained_progress(progress)}})?}};}
-        let q=self.preflight_demand(d,original,post,body)?;
-        if !protocol::retained_mutation_demand_fits(q,grant) { return Ok(RetainedDiffPreflightAdvance::Progress(Default::default())); }
-        let mut p=receipt(q);work=1;
+    fn preflight_work_demand(&self,d:RetainedCloneRef<'_,BitmapDiff>,original:RetainedCloneRef<'_,BitmapSnapshot>,post:RetainedCloneRef<'_,BitmapSnapshot>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
+        self.preflight_demand(d,original,post,body,maximum_work_units)?;
+        let inner=body.saturating_sub(Self::fixed());
+        match self.phase{
+            _ if maximum_work_units==0 || self.phase==PREPARED=>Ok(0),
+            0 if self.snapshot.value().is_none()=>self.snapshot.advance_work_demand(post,inner,maximum_work_units),
+            1 if d.get().schema.is_some()&&self.schema.value().is_none()=>self.schema.advance_work_demand(d.project(0,|d|d.schema.as_ref().unwrap()),inner,maximum_work_units),
+            _=>Ok(1),
+        }
+    }
+    fn preflight_reply<'r>(&mut self, d: RetainedCloneRef<'_,BitmapDiff>, original: RetainedCloneRef<'_,BitmapSnapshot>, post: RetainedCloneRef<'_,BitmapSnapshot>, body:usize, maximum_work_units:u64, effect:&mut RetainedAllocationEffect<'_>, _: &mut NativeDecodeControl<'_>, reply: Reply<'r,RetainedDiffPreflightAdvance>, recover: bool) -> Result<Done<'r,RetainedDiffPreflightAdvance>,ValueError> {
+        let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+        let result:Result<RetainedDiffPreflightAdvance,RetirementPollExit>=(||{
         let diff=d.get();
+        let inner=body.saturating_sub(Self::fixed());
+        let route:u8=if recover{self.flight.route().ok_or_else(invalid)?}else{
+            if !self.flight.idle(){return Err(invalid().into());}
+            if self.phase==PREPARED{return Ok(RetainedDiffPreflightAdvance::Ready(Default::default(),self.valid));}
+            let q=self.preflight_demand(d,original,post,body,maximum_work_units)?;
+            if self.preflight_work_demand(d,original,post,body,maximum_work_units)?==0 || !protocol::retained_mutation_demand_fits(q,grant) { return Ok(RetainedDiffPreflightAdvance::Progress(Default::default())); }
+            match self.phase { 0 if self.snapshot.value().is_none()=>1, 1 if diff.schema.is_some()&&self.schema.value().is_none()=>2, _=>0 }
+        };
+        let mut p=RetainedCloneProgress::default();
+        if route!=0 {
+            let before=work;
+            let step=if route==1 {
+                retained_routed!(self.flight,effect,recover,1,body,maximum_work_units,None,work,|r| self.snapshot.advance_into(post,inner,maximum_work_units,&mut effect.nested(Self::child(grant)),r),self.snapshot.recover_advance_into(post,inner,maximum_work_units,&mut effect.nested(Self::child(grant)),r))
+            } else {
+                retained_routed!(self.flight,effect,recover,2,body,maximum_work_units,None,work,|r| self.schema.advance_into(d.project(0,|d|d.schema.as_ref().unwrap()),inner,maximum_work_units,&mut effect.nested(Self::child(grant)),r),self.schema.recover_advance_into(d.project(0,|d|d.schema.as_ref().unwrap()),inner,maximum_work_units,&mut effect.nested(Self::child(grant)),r))
+            };
+            p=Self::add(step.map_err(|error|tagged(error,work!=before))?.progress());
+        } else {
+        let q=self.preflight_demand(d,original,post,body,maximum_work_units)?;
+        p=receipt(q);work=1;
         if !self.dirty_phase() {
             if self.phase==22 && diff.output.is_some() && self.index<self.candidate.as_ref().unwrap().pinned.len() {
                 self.valid=self.position(self.candidate.as_ref().unwrap().pinned[self.index]).is_some();self.index+=1;
@@ -92,8 +128,8 @@ impl RetainedDiffApply<BitmapSnapshot, BitmapDiff> for BitmapApply {
             return Ok(if self.valid {RetainedDiffPreflightAdvance::Progress(p)} else {RetainedDiffPreflightAdvance::Ready(p,false)});
         }
         match self.phase {
-            0=>{ if self.snapshot.value().is_some() { let (v,r)=self.snapshot.take(Self::child(grant))?; *self.candidate=v; p=Self::add(r); if self.candidate.is_some(){self.next();} } else { p=Self::add(turn!(self.snapshot.advance(post,body.saturating_sub(Self::fixed()),Self::child(grant))).progress()); } },
-            1=>{ if diff.schema.is_some() { if self.schema.value().is_some() { let (v,r)=self.schema.take(Self::child(grant))?; p=Self::add(r); if let Some(v)=v { *self.old_schema=Some(std::mem::replace(&mut self.candidate.as_mut().unwrap().schema,v)); self.next(); } } else { p=Self::add(turn!(self.schema.advance(d.project(0,|d|d.schema.as_ref().unwrap()),body.saturating_sub(Self::fixed()),Self::child(grant))).progress()); } } else {self.next();} },
+            0=>{ let slot=RetainedCloneGrant{maximum_copy_bytes:Self::child(grant).maximum_copy_bytes.saturating_sub(size_of::<Option<BitmapSnapshot>>()),..grant}; work=0; let step=native_child(effect,&mut work,|e,r| self.snapshot.take_into(&mut self.candidate,&mut e.nested(slot),r))??; p=Self::add(step.progress()); p.copied_bytes+=size_of::<Option<BitmapSnapshot>>(); if self.candidate.is_some(){self.next();} },
+            1=>{ if diff.schema.is_some() { let slot=RetainedCloneGrant{maximum_copy_bytes:Self::child(grant).maximum_copy_bytes.saturating_sub(size_of::<Option<String>>()),..grant}; work=0; let step=native_child(effect,&mut work,|e,r| self.schema.take_into(&mut self.new_schema,&mut e.nested(slot),r))??; p=Self::add(step.progress()); p.copied_bytes+=size_of::<Option<String>>(); if let Some(v)=self.new_schema.take() { *self.old_schema=Some(std::mem::replace(&mut self.candidate.as_mut().unwrap().schema,v)); self.next(); } } else {self.next();} },
             2=>{
                 let base=self.candidate.as_ref().unwrap();
                 (self.width,self.height)=diff.input.size.map_or((base.input.width,base.input.height),|s|(s.width,s.height));
@@ -136,38 +172,103 @@ impl RetainedDiffApply<BitmapSnapshot, BitmapDiff> for BitmapApply {
             25=>{
                 let candidate=self.candidate.as_mut().unwrap();
                 candidate.seed=diff.seed.unwrap_or(candidate.seed);candidate.output=self.output;candidate.model=diff.model.unwrap_or(candidate.model);candidate.input.width=self.width;candidate.input.height=self.height;
-                if self.pixels_dirty{std::mem::swap(&mut candidate.input.pixels,self.pixels.as_mut().unwrap());}if self.palette_dirty{std::mem::swap(&mut candidate.input.palette,self.palette.as_mut().unwrap());}if self.pins_dirty{std::mem::swap(&mut candidate.pinned,self.pins.as_mut().unwrap());}self.snapshot.begin_close();self.schema.begin_close();self.next();
+                if self.pixels_dirty{std::mem::swap(&mut candidate.input.pixels,self.pixels.as_mut().unwrap());}if self.palette_dirty{std::mem::swap(&mut candidate.input.palette,self.palette.as_mut().unwrap());}if self.pins_dirty{std::mem::swap(&mut candidate.pinned,self.pins.as_mut().unwrap());}self.next();
             },
-            26=>{if !self.snapshot.terminal_is_empty(){p=Self::add(turn!(self.snapshot.close_step(Self::child(grant))).progress());}else if !self.schema.terminal_is_empty(){p=Self::add(turn!(self.schema.close_step(Self::child(grant))).progress());}else{self.next();}},
-            _=>{work=0;return Ok(RetainedDiffPreflightAdvance::Ready(Default::default(),self.valid))},
+            _=>return Err(invalid().into()),
+        }
         }
         if !p.fits(grant){return Err(invalid().with_retained_progress(p).into());}
-        if !self.valid || self.phase==27 { Ok(RetainedDiffPreflightAdvance::Ready(p,self.valid)) } else {Ok(RetainedDiffPreflightAdvance::Progress(p))}
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
+        Ok(if !self.valid || self.phase==PREPARED { RetainedDiffPreflightAdvance::Ready(p,self.valid) } else { RetainedDiffPreflightAdvance::Progress(p) })
+        })();
+        conclude(effect,base,result,work,RetainedDiffPreflightAdvance::progress,reply)
+    }
     fn take_messages(&mut self)->Vec<protocol::MutationMessage>{Vec::new()}
-    fn commit_demand(&self,_:RetainedCloneRef<'_,BitmapDiff>,_:RetainedCloneRef<'_,BitmapSnapshot>,_:&BitmapSnapshot,_:usize)->Result<RetirementDemand,ValueError>{if self.phase!=27 || !self.valid || self.committed || self.closing{return Err(invalid());}Ok(quote(3*size_of::<BitmapSnapshot>()+size_of::<bool>(),0))}
+    fn commit_demand(&self,_:RetainedCloneRef<'_,BitmapDiff>,_:RetainedCloneRef<'_,BitmapSnapshot>,_:&BitmapSnapshot,_:usize)->Result<RetirementDemand,ValueError>{if self.phase!=PREPARED || !self.valid || self.committed || self.closing{return Err(invalid());}Ok(quote(3*size_of::<BitmapSnapshot>()+size_of::<bool>(),0))}
     fn commit_work_demand(&self,d:RetainedCloneRef<'_,BitmapDiff>,original:RetainedCloneRef<'_,BitmapSnapshot>,post:&BitmapSnapshot,body:usize)->Result<u64,ValueError>{self.commit_demand(d,original,post,body)?;Ok(1)}
-    fn commit(&mut self,d:RetainedCloneRef<'_,BitmapDiff>,original:RetainedCloneRef<'_,BitmapSnapshot>,post:&mut BitmapSnapshot,grant:RetainedCloneGrant,_:protocol::ApplyCapability)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{let q=self.commit_demand(d,original,post,0)?;if !protocol::retained_mutation_demand_fits(q,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}let candidate=self.candidate.as_mut().ok_or_else(invalid)?;work=1;std::mem::swap(post,candidate);self.committed=true;Ok(RetainedCloneStep::Complete(receipt(q)))})();semio_framework_value::RetainedWorkOutcome{result,work}}
-    fn begin_close(&mut self){self.closing=true;self.snapshot.begin_close();self.schema.begin_close();}
+    fn commit(&mut self,d:RetainedCloneRef<'_,BitmapDiff>,original:RetainedCloneRef<'_,BitmapSnapshot>,post:&mut BitmapSnapshot,effect:&mut RetainedAllocationEffect<'_>,_:protocol::ApplyCapability)->OriginalRetirementOutcome{
+        let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+        let result:Result<RetainedCloneStep,OriginalRetirementFailure>=(||{let q=self.commit_demand(d,original,post,0)?;if !retained_clone_grant_admits(grant,q){return Ok(RetainedCloneStep::Progress(Default::default()));}let candidate=self.candidate.as_mut().ok_or_else(invalid)?;work=1;std::mem::swap(post,candidate);self.committed=true;Ok(RetainedCloneStep::Complete(receipt(q)))})();
+        settle(effect,base,result,work)
+    }
+    fn begin_close(&mut self){self.closing=true;}
     fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if !self.snapshot.terminal_is_empty(){return self.snapshot.close_demand(body);}if !self.schema.terminal_is_empty(){return self.schema.close_demand(body);}
+        if !self.snapshot.terminal_is_empty(){return if self.snapshot.close_started(){self.snapshot.close_demand(body)}else{Ok(self.snapshot.begin_close_demand())};}
+        if !self.schema.terminal_is_empty(){return if self.schema.close_started(){self.schema.close_demand(body)}else{Ok(self.schema.begin_close_demand())};}
         if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<BitmapSnapshot>(false,&None,body);}
         macro_rules! owner{($field:ident,$t:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$t>(true,&None,body);}};}
-        owner!(candidate,BitmapSnapshot);owner!(old_schema,String);owner!(pixels,Vec<u8>);owner!(palette,Vec<BitmapColor>);owner!(slots,Vec<Option<BitmapPinnedPixel>>);owner!(taken,Vec<bool>);owner!(positions,Vec<Option<usize>>);owner!(pins,Vec<BitmapPinnedPixel>);Ok(Default::default())
+        owner!(candidate,BitmapSnapshot);owner!(new_schema,String);owner!(old_schema,String);owner!(pixels,Vec<u8>);owner!(palette,Vec<BitmapColor>);owner!(slots,Vec<Option<BitmapPinnedPixel>>);owner!(taken,Vec<bool>);owner!(positions,Vec<Option<usize>>);owner!(pins,Vec<BitmapPinnedPixel>);Ok(Default::default())
     }
-    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;if !self.snapshot.terminal_is_empty(){return self.snapshot.close_work_demand(body)}if !self.schema.terminal_is_empty(){return self.schema.close_work_demand(body)}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<BitmapSnapshot>(false,&None,body)}macro_rules! owner{($field:ident,$t:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_work::<$t>(true,&None,body)}};}owner!(candidate,BitmapSnapshot);owner!(old_schema,String);owner!(pixels,Vec<u8>);owner!(palette,Vec<BitmapColor>);owner!(slots,Vec<Option<BitmapPinnedPixel>>);owner!(taken,Vec<bool>);owner!(positions,Vec<Option<usize>>);owner!(pins,Vec<BitmapPinnedPixel>);Ok(0)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
-        if !self.closing{return Err(invalid().into());}let q=self.close_demand(grant.maximum_copy_bytes)?;if !protocol::retained_mutation_demand_fits(q,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.snapshot.terminal_is_empty(){let turn=self.snapshot.close_step(grant);work+=turn.work;return turn.result;}if !self.schema.terminal_is_empty(){let turn=self.schema.close_step(grant);work+=turn.work;return turn.result;}
-        if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work+=turn.work;return turn.result;}
-        macro_rules! close{($field:ident)=>{let turn=self.retirement.begin_granted(&mut self.$field,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}};}
-        close!(candidate);close!(old_schema);close!(pixels);close!(palette);close!(slots);close!(taken);close!(positions);close!(pins);Ok(RetainedCloneStep::Complete(Default::default()))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
-    fn terminal_is_empty(&self)->bool{self.snapshot.terminal_is_empty()&&self.schema.terminal_is_empty()&&self.candidate.is_none()&&self.old_schema.is_none()&&self.pixels.is_none()&&self.palette.is_none()&&self.slots.is_none()&&self.taken.is_none()&&self.positions.is_none()&&self.pins.is_none()&&self.retirement.is_empty()}
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+        self.close_demand(body)?;
+        if !self.snapshot.terminal_is_empty(){return if self.snapshot.close_started(){self.snapshot.close_work_demand(body)}else{Ok(self.snapshot.begin_close_work_demand())};}
+        if !self.schema.terminal_is_empty(){return if self.schema.close_started(){self.schema.close_work_demand(body)}else{Ok(self.schema.begin_close_work_demand())};}
+        if !self.retirement.is_empty(){return self.retirement.next_owner_work::<BitmapSnapshot>(false,&None,body);}
+        macro_rules! owner{($field:ident,$t:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_work::<$t>(true,&None,body);}};}
+        owner!(candidate,BitmapSnapshot);owner!(new_schema,String);owner!(old_schema,String);owner!(pixels,Vec<u8>);owner!(palette,Vec<BitmapColor>);owner!(slots,Vec<Option<BitmapPinnedPixel>>);owner!(taken,Vec<bool>);owner!(positions,Vec<Option<usize>>);owner!(pins,Vec<BitmapPinnedPixel>);Ok(0)
+    }
+    fn requires_original_birth(&self)->bool{
+        if !self.flight.idle(){return false;}
+        if !self.snapshot.terminal_is_empty(){return self.snapshot.close_started()&&self.snapshot.requires_original_birth();}
+        if !self.schema.terminal_is_empty(){return self.schema.close_started()&&self.schema.requires_original_birth();}
+        !self.retirement.is_empty()&&self.retirement.requires_original_birth()
+    }
+    fn requires_original_control(&self)->bool{
+        if let Some(loaned)=self.flight.loaned(){return loaned;}
+        if !self.snapshot.terminal_is_empty(){return self.snapshot.close_started()&&self.snapshot.requires_original_control();}
+        if !self.schema.terminal_is_empty(){return self.schema.close_started()&&self.schema.requires_original_control();}
+        !self.retirement.is_empty()&&self.retirement.requires_original_control()
+    }
+    fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{
+        if !self.snapshot.terminal_is_empty(){return self.snapshot.close_original_birth_step(original,grant);}
+        if !self.schema.terminal_is_empty(){return self.schema.close_original_birth_step(original,grant);}
+        self.retirement.step_original_birth(original,grant)
+    }
+    fn close_reply<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+        let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+        let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+            let route:u8;let loaned:bool;
+            if recover{route=self.flight.route().ok_or_else(invalid)?;loaned=self.flight.loaned().unwrap_or(false);}else{
+                if !self.flight.idle()||!self.closing{return Err(invalid().into());}
+                if !protocol::retained_mutation_demand_fits(self.close_demand(body)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+                if self.requires_original_birth(){return Err(invalid().into());}
+                loaned=self.requires_original_control();
+                if loaned&&original.is_none(){return Err(invalid().into());}
+                if !self.snapshot.terminal_is_empty(){
+                    if !self.snapshot.close_started(){let turn=self.snapshot.begin_close_paid(effect);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?));}
+                    route=1;
+                }else if !self.schema.terminal_is_empty(){
+                    if !self.schema.close_started(){let turn=self.schema.begin_close_paid(effect);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?));}
+                    route=2;
+                }else if !self.retirement.is_empty(){route=3;}else{
+                    macro_rules! close{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,effect);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.map(|step|step.progress()).unwrap_or_default()));}};}
+                    close!(candidate);close!(new_schema);close!(old_schema);close!(pixels);close!(palette);close!(slots);close!(taken);close!(positions);close!(pins);
+                    return Ok(RetainedCloneStep::Complete(Default::default()));
+                }
+            }
+            let loan=if loaned{original.as_deref_mut()}else{None};
+            let missing=||ValueError::invariant("bitmap close lost its original controller");
+            let step=retained_routed!(self.flight,effect,recover,route,body,0,loan,work,
+                |r| match(route,loaned){
+                    (1,false)=>self.snapshot.close_into(body,effect,r),(1,true)=>self.snapshot.close_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    (2,false)=>self.schema.close_into(body,effect,r),(2,true)=>self.schema.close_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    (3,false)=>self.retirement.step_into(body,effect,r),(3,true)=>self.retirement.step_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    _=>Err(invalid()),
+                },
+                match(route,loaned){
+                    (1,false)=>self.snapshot.recover_close_into(body,effect,r),(1,true)=>self.snapshot.recover_close_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    (2,false)=>self.schema.recover_close_into(body,effect,r),(2,true)=>self.schema.recover_close_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    (3,false)=>self.retirement.recover_step_into(body,effect,r),(3,true)=>self.retirement.recover_step_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+                    _=>Err(invalid()),
+                });
+            Ok(RetainedCloneStep::Progress(step?.progress()))
+        })();
+        conclude(effect,base,result,work,|step|step.progress(),reply)
+    }
+    fn terminal_is_empty(&self)->bool{self.snapshot.terminal_is_empty()&&self.schema.terminal_is_empty()&&self.candidate.is_none()&&self.new_schema.is_none()&&self.old_schema.is_none()&&self.pixels.is_none()&&self.palette.is_none()&&self.slots.is_none()&&self.taken.is_none()&&self.positions.is_none()&&self.pins.is_none()&&self.retirement.is_empty()&&self.flight.idle()}
 }
 
 impl Drop for BitmapApply {
-    fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"bitmap retained apply requires paid cancellation closure");if empty{unsafe{ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.old_schema);ManuallyDrop::drop(&mut self.pixels);ManuallyDrop::drop(&mut self.palette);ManuallyDrop::drop(&mut self.slots);ManuallyDrop::drop(&mut self.taken);ManuallyDrop::drop(&mut self.positions);ManuallyDrop::drop(&mut self.pins);}}}
+    fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"bitmap retained apply requires paid cancellation closure");if empty{unsafe{ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.new_schema);ManuallyDrop::drop(&mut self.old_schema);ManuallyDrop::drop(&mut self.pixels);ManuallyDrop::drop(&mut self.palette);ManuallyDrop::drop(&mut self.slots);ManuallyDrop::drop(&mut self.taken);ManuallyDrop::drop(&mut self.positions);ManuallyDrop::drop(&mut self.pins);}}}
 }
 
 #[cfg(test)]

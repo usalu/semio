@@ -130,12 +130,14 @@ export function TimelinePanel(props: {
             <div key={placement.id} className={cn("flex items-center border-t border-current/20", picked && "bg-muted/40")} data-timeline-row={placement.id} data-phase={reading?.phase ?? "unavailable"}>
               <div className="flex shrink-0 items-center gap-single px-single" style={{ width: LABEL_PX }}>
                 <Button variant="quiet" icon={placement.holdS === null ? "pause" : "play"} disabled={clipS <= 0 || reading === null} aria-label={t(placement.holdS === null ? "playground.asset.pauseOne" : "playground.asset.playOne", { title })} title={t(placement.holdS === null ? "playground.asset.pauseOne" : "playground.asset.playOne", { title })} aria-pressed={placement.holdS !== null} onClick={() => reading !== null && onChange(placement.id, { holdS: placement.holdS === null ? reading.cycleS : null }, t(placement.holdS === null ? "playground.asset.said.paused" : "playground.asset.said.playing", { title }))} />
-                <button type="button" aria-pressed={picked} onClick={() => onSelect(placement.id)} className="min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-xs text-foreground">{title}</button>
+                <button type="button" aria-pressed={picked} data-shared-border-frame="" data-shared-border-edges="" onClick={() => onSelect(placement.id)} className="min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-xs text-foreground">{title}</button>
               </div>
               <div className="relative h-8 flex-1" style={{ width: trackPx }}>
                 <div
                   role="slider"
                   tabIndex={0}
+                  data-shared-border-frame=""
+                  data-shared-border-edges=""
                   aria-label={t("playground.timeline.startOf", { title })}
                   aria-valuemin={0}
                   aria-valuemax={Math.max(timelineS, shown.startS)}
@@ -157,6 +159,8 @@ export function TimelinePanel(props: {
                 <div
                   role="slider"
                   tabIndex={0}
+                  data-shared-border-frame=""
+                  data-shared-border-edges=""
                   aria-label={t("playground.timeline.lengthOf", { title })}
                   aria-valuemin={0.1}
                   aria-valuemax={Math.max(timelineS, windowS)}

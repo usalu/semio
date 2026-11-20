@@ -6,7 +6,7 @@ use std::mem::size_of;
 
 type Scope=(semio_framework::action_bus::OriginalToolSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64));
 pub struct OriginalCompletionBirth<A:ArtifactApp>{source:Option<Scope>,input:Option<Cell<A>>,born:ManuallyDrop<Option<Arc<Cell<A>>>>,allocation:semio_framework_value::native_decoding::NativeSharedAdmission<Cell<A>>,construction:OriginalConstructionAdmission,constructed:bool,complete:bool}
-impl<A:ArtifactApp> Default for OriginalCompletionBirth<A>{fn default()->Self{Self{source:None,input:Some(Cell{value:Mutex::new(None),authoring:Mutex::new(None)}),born:ManuallyDrop::new(None),allocation:Default::default(),construction:Default::default(),constructed:false,complete:false}}}
+impl<A:ArtifactApp> Default for OriginalCompletionBirth<A>{fn default()->Self{Self{source:None,input:Some(Cell{genesis_sealed:false.into(),genesis_source:None,value:Mutex::new(None),authoring:Mutex::new(None)}),born:ManuallyDrop::new(None),allocation:Default::default(),construction:Default::default(),constructed:false,complete:false}}}
 impl<A:ArtifactApp> OriginalCompletionBirth<A>{
  pub fn output_ready(&self)->bool{self.allocation.phase()==semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty&&self.born.is_some()}
  pub fn shared_admission(&mut self)->&mut semio_framework_value::native_decoding::NativeSharedAdmission<Cell<A>>{&mut self.allocation}
@@ -18,6 +18,7 @@ impl<A:ArtifactApp> OriginalCompletionBirth<A>{
   cx.original_source_parent()?;let grant=cx.retained_grant();
   if !self.constructed{let bytes=2*size_of::<Option<Scope>>();let binding=semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx);let ready=semio_framework_job::admit_original_construction_settled(cx,&mut self.construction,&mut self.source,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},1,|control,_|{let result=control.retirement_recipient_identity().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"completion birth requires its original decoder recipient")).map(|recipient|((binding,(control.ledger_identity(),recipient)),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));RetainedWorkOutcome{result,work:1}})?;if ready{self.constructed=true;}return Ok(false)}
   if self.born.is_none(){
+   if let Some(input)=self.input.as_mut(){input.genesis_source=Some((cx.operation(),cx.generation()));}
    let mut scope=None;let mut stepped=None;
    if !cx.with_native_receiving(&mut scope,|native,_|{stepped=Some(native.receive_arc(&mut self.input,&mut self.born,&mut self.allocation));Ok(())})?{return Ok(false)}
    let invalid=|message:&'static str|ValueError::literal(ValueRefusalKind::InvariantViolated,message);

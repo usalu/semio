@@ -3,20 +3,40 @@
   "title": "Start wait of the graph service client / Startwarten des Graphdienst-Clients",
   "description": "EN: A client that starts the graph service waits for the endpoint of the implementation it computed when it started. The service names itself by the code it reads when it boots, so under constant edits by other machines it can come up as another implementation and the client would wait for an endpoint nobody listens on until the start ceiling. The client therefore asks again for the implementation of the tree while it waits, and listens on every implementation it has seen. DE: Ein Client, der den Graphdienst startet, wartet auf den Endpunkt der Implementierung, die er beim Start berechnet hat. Der Dienst benennt sich nach dem Code, den er beim Hochfahren liest; bei ständigen Änderungen anderer Maschinen kann er daher als andere Implementierung starten, und der Client würde bis zur Start-Obergrenze auf einen Endpunkt warten, an dem niemand lauscht. Der Client fragt deshalb beim Warten erneut nach der Implementierung des Baums und lauscht auf jeder Implementierung, die er gesehen hat.",
   "definitions": {
+    "StartupCustodyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "starts"],
+      "properties": {
+        "mode": {"enum": ["live-past-age", "live-empty", "late-release", "abandoned", "waiter-cancel", "owner-timeout", "restart"]},
+        "starts": {"type": "integer", "minimum": 1, "maximum": 2}
+      }
+    },
     "Policy": {
       "description": "EN: identifyMilliseconds is how often a waiting client asks again for the implementation of the tree. DE: identifyMilliseconds gibt an, wie oft ein wartender Client erneut nach der Implementierung des Baums fragt.",
       "const": {"identifyMilliseconds": 2000}
     },
+    "Diagnostic": {"const": {"tailBytes": 4096, "tailCharacters": 180, "lostTailCharacters": 600, "maximumCandidates": 4}},
+    "TimeoutCases": {"const": [
+      {"mode": "live-ceiling", "pid": 4242, "implementationCount": 2},
+      {"mode": "log-silence", "pid": null, "implementationCount": 1}
+    ]},
     "Texts": {
       "description": "EN: The progress line when the tree moved and the error when the start ceiling ended the wait, in both languages. DE: Die Fortschrittszeile, wenn sich der Baum bewegt hat, und der Fehler, wenn die Start-Obergrenze das Warten beendet hat, in beiden Sprachen.",
       "const": {
         "en": {
           "moved": "The code on this machine changed while the graph service started; also waiting for the service of the current code ({seen} implementations seen).",
-          "ceiling": "The graph service did not answer within {seconds} s on any of the {seen} implementation(s) seen while waiting; a fresh service is started when the request is asked again."
+          "ceiling": "The graph service did not answer within {seconds} s on any of the {seen} implementation(s) seen while waiting.",
+          "live": "The started process was still alive (PID {pid}).",
+          "silence": "The graph service had no confirmed process and no startup log progress for {seconds} s while checking {seen} implementation(s).",
+          "candidates": "Candidates {candidates}."
         },
         "de": {
           "moved": "Der Code dieses Rechners hat sich beim Start des Graphdienstes geändert; es wird auch auf den Dienst des aktuellen Codes gewartet ({seen} Implementierungen gesehen).",
-          "ceiling": "Der Graphdienst hat innerhalb von {seconds} s auf keiner der {seen} beim Warten gesehenen Implementierung geantwortet; ein frischer Dienst wird gestartet, wenn die Anfrage erneut gestellt wird."
+          "ceiling": "Der Graphdienst hat innerhalb von {seconds} s auf keiner der {seen} beim Warten gesehenen Implementierung geantwortet.",
+          "live": "Der gestartete Prozess lief noch (PID {pid}).",
+          "silence": "Für den Graphdienst war kein laufender Prozess bestätigt. Das Startprotokoll zeigte {seconds} s lang keinen Fortschritt für die {seen} geprüften Implementierung(en).",
+          "candidates": "Kandidaten {candidates}."
         }
       }
     }

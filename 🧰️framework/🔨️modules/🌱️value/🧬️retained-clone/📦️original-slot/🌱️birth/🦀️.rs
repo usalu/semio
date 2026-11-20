@@ -7,7 +7,7 @@ unsafe impl<T:Send> Send for OriginalReadBirth<T>{}
 /// 🧷️ Shared queries inspect frozen metadata and the immutable factory; backing mutation is exclusive.
 unsafe impl<T:Sync> Sync for OriginalReadBirth<T>{}
 impl<T> OriginalReadBirth<T>{
- fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.matches_effect(effect){return Err(fault("original read birth changed its actual Source or Work"))}Ok(())}
+ fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.admits_between_actions(effect,false){return Err(fault("original read birth changed its actual Source or Work"))}Ok(())}
  pub(super) fn matches_factory(&self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->bool{!self.closing&&self.factory.as_ref().is_some_and(|actual|Arc::ptr_eq(actual,factory))}
  pub(super) fn issuer(&self)->Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>{self.factory.as_ref()}
  pub(super) fn terminal_is_empty(&self)->bool{self.factory.is_none()&&self.backing.is_none()}

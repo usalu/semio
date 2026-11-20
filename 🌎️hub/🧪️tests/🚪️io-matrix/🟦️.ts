@@ -34,17 +34,17 @@ import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, 
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
-import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "@semio-tech/framework-manifest";
+import { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, OPEN_ARTIFACT_FILE_ACTION_ID } from "@semio-tech/framework-manifest/definitions-action-ids-and-shell-brand";
 
 //#region 🔖️Pins
 /** 🧾️ A file format a third-party parser must accept; `any` sniffs the format from the downloaded file's name. */
-export type IoFormat = "json" | "csv" | "text" | "svg" | "png" | "pdf" | "obj" | "stl" | "ply" | "gltf" | "glb" | "step" | "zip" | "mp4" | "archive" | "any";
+export type IoFormat = "json" | "csv" | "text" | "svg" | "png" | "pdf" | "obj" | "stl" | "ply" | "gltf" | "glb" | "step" | "zip" | "xlsx" | "mp4" | "archive" | "any";
 
 /** 📤️ One export control: the rail verb, its staged arguments and the format its file must parse as. */
 export type IoExportPin = Readonly<{ id: string; verb: string; args?: Readonly<Record<string, string>>; format: IoFormat }>;
 
 /** 📥️ One import control: the verb that opens the host file picker, or the argument the file text is staged into. */
-export type IoImportPin = Readonly<{ id: string; verb: string; via: "picker" | "argument"; argument?: string; args?: Readonly<Record<string, string>>; from: string }>;
+export type IoImportPin = Readonly<{ id: string; verb: string; via: "picker" | "argument"; argument?: string; args?: Readonly<Record<string, string>>; from: string; editedCell?: string }>;
 
 /** 📌️ One program's export, import and reach pins. */
 export type IoProgramPins = Readonly<{ exports: readonly IoExportPin[]; imports: readonly IoImportPin[]; reach: readonly string[] }>;
@@ -52,7 +52,7 @@ export type IoProgramPins = Readonly<{ exports: readonly IoExportPin[]; imports:
 /** 📌️ `semio.os-dev.io-matrix/v1`. */
 export type IoMatrixPins = Readonly<{ schema: "semio.os-dev.io-matrix/v1"; programs: Readonly<Record<string, IoProgramPins>> }>;
 
-const IO_FORMATS: readonly IoFormat[] = ["json", "csv", "text", "svg", "png", "pdf", "obj", "stl", "ply", "gltf", "glb", "step", "zip", "mp4", "archive", "any"];
+const IO_FORMATS: readonly IoFormat[] = ["json", "csv", "text", "svg", "png", "pdf", "obj", "stl", "ply", "gltf", "glb", "step", "zip", "xlsx", "mp4", "archive", "any"];
 
 /** 📌️ Reads and checks the pins: every import reads a declared export of its own program, every format is known. */
 export function readIoMatrixPins(): IoMatrixPins {
@@ -65,6 +65,7 @@ export function readIoMatrixPins(): IoMatrixPins {
     for (const pin of program.imports) {
       if (!exports.has(pin.from)) throw new Error(`io matrix pins: ${key} import ${pin.id} reads undeclared export ${pin.from}`);
       if (pin.via === "argument" && !pin.argument) throw new Error(`io matrix pins: ${key} import ${pin.id} stages no argument`);
+      if (pin.editedCell !== undefined && (program.exports.find(entry => entry.id === pin.from)?.format !== "xlsx" || !/^[A-Z]+[1-9][0-9]*$/u.test(pin.editedCell))) throw new Error(`io matrix pins: ${key} import ${pin.id} has no valid workbook cell assertion`);
     }
   }
   return pins;
@@ -102,6 +103,7 @@ export function formatOfFileName(name: string): IoFormat {
     [/\.glb$/u, "glb"],
     [/\.(step|stp)$/u, "step"],
     [/\.zip$/u, "zip"],
+    [/\.xlsx$/u, "xlsx"],
     [/\.mp4$/u, "mp4"],
     [/\.semio-archive$/u, "archive"],
   ];
@@ -120,6 +122,27 @@ const utf8 = (bytes: Uint8Array): string | null => {
 };
 
 const arrayBufferOf = (bytes: Uint8Array): ArrayBuffer => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+
+/** 📗️ Reads the browser matrix's saved workbook with independent ZIP and XML readers. */
+export async function readXlsx(page: Page, bytes: Uint8Array, cellAddress?: string) {
+  const { unzipSync } = await import("fflate");
+  const entries = unzipSync(bytes);
+  const xml = (path: string | undefined) => path === undefined || entries[path] === undefined ? "" : utf8(entries[path]) ?? "";
+  const sheetPath = Object.keys(entries).find(path => /^xl\/worksheets\/[^/]+\.xml$/u.test(path));
+  const parsed = await page.evaluate(({ workbook, sheet, strings, cellAddress }) => {
+    const parser = new DOMParser();
+    const book = parser.parseFromString(workbook, "application/xml");
+    const worksheet = parser.parseFromString(sheet, "application/xml");
+    const cell = Array.from(worksheet.getElementsByTagNameNS("*", "c")).find(entry => entry.getAttribute("r") === cellAddress);
+    const value = cell?.getElementsByTagNameNS("*", "v")[0]?.textContent;
+    const stringText = (entry: Element | undefined) => Array.from(entry?.getElementsByTagNameNS("*", "t") ?? []).map(part => part.textContent).join("");
+    const shared = parser.parseFromString(strings, "application/xml").getElementsByTagNameNS("*", "si");
+    const text = cell?.getAttribute("t") === "inlineStr" ? stringText(cell) : cell?.getAttribute("t") === "s" ? stringText(shared[Number(value)]) : value ?? null;
+    const sheetNames = Array.from(book.getElementsByTagNameNS("*", "sheet"), element => element.getAttribute("name"));
+    return { sheets: sheetNames.length, sheetNames, valid: book.documentElement.localName === "workbook" && worksheet.documentElement.localName === "worksheet", text };
+  }, { workbook: xml("xl/workbook.xml"), sheet: xml(sheetPath), strings: xml("xl/sharedStrings.xml"), cellAddress });
+  return { ...parsed, valid: parsed.valid && parsed.sheets > 0 && entries["[Content_Types].xml"] !== undefined && entries["_rels/.rels"] !== undefined };
+}
 
 /** 🎞️ FFmpeg as the MP4 oracle: `ffprobe` must read an H.264 video stream with a size and at least one decoded frame, and
  * `ffmpeg` must decode the whole file without an error.
@@ -221,6 +244,10 @@ export async function judgeFile(page: Page, name: string, bytes: Uint8Array, dec
         const { unzipSync } = (await import("fflate")) as { unzipSync: (data: Uint8Array) => Record<string, Uint8Array> };
         const entries = Object.keys(unzipSync(new Uint8Array(bytes)));
         return { format, oracle: "fflate.unzipSync", ok: entries.length > 0, detail: `${entries.length} entries: ${entries.slice(0, 4).join(", ")}` };
+      }
+      case "xlsx": {
+        const workbook = await readXlsx(page, bytes);
+        return { format, oracle: "fflate + chromium.DOMParser", ok: workbook.valid, detail: `${workbook.sheets} worksheets` };
       }
       case "mp4":
         return { format, oracle: "ffprobe+ffmpeg", ...judgeMp4File(bytes) };
@@ -366,7 +393,7 @@ async function pressVerb(page: Page, recorders: Recorders, verb: string, args: R
   if ((await page.locator(rowSelector).count()) === 0) await unfoldActionsRail(page, 12_000);
   const row = await clickUncovered(page, rowSelector);
   await page.waitForTimeout(700);
-  const staged = ((await page.locator(rowSelector).first().textContent().catch(() => "")) ?? "").trim().endsWith("…");
+  const staged = verb !== OPEN_ARTIFACT_FILE_ACTION_ID && ((await page.locator(rowSelector).first().textContent().catch(() => "")) ?? "").trim().endsWith("…");
   if (staged && (await page.locator(executeSelector).count()) === 0) {
     await clickUncovered(page, rowSelector);
     await page.waitForTimeout(700);
@@ -437,9 +464,17 @@ async function runImport(page: Page, recorders: Recorders, pin: IoImportPin, exp
   if (first === undefined) return { id: pin.id, ok: false, detail: `export ${pin.from} wrote no file to read back` };
   const moved = move.verb === null ? null : move.edit === undefined ? await pressVerb(page, recorders, move.verb, move.args, liveId) : await driveMove(page, recorders, move.verb, move.edit);
   const divergedExport = await runExport(page, recorders, exportPin, liveId, dir, `${pin.id}-moved`);
-  const diverged = divergedExport.files[0] === undefined ? null : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(divergedExport.files[0].path))).verdict !== "identical";
+  const changedFile = divergedExport.files[0];
+  const diverged = changedFile === undefined ? null : changedFile.sha256 !== first.sha256;
+  const editedCell = pin.editedCell === undefined || !divergedExport.ok || changedFile === undefined ? null
+    : (await readXlsx(page, new Uint8Array(readFileSync(changedFile.path)), pin.editedCell)).text;
+  const editAccepted = pin.editedCell === undefined || (diverged === true && move.edit !== undefined && editedCell === move.edit.value);
   const before = witness(await readShell(page));
   const chooserCursor = recorders.chooser.log.length;
+  const noticeCursor = (await recorders.notices()).length;
+  const nativeOpen = pin.verb === OPEN_ARTIFACT_FILE_ACTION_ID;
+  const priorWindows = new Set(nativeOpen ? await windowIds(page) : []);
+  let openNotice: string | undefined;
   let press: Press;
   if (pin.via === "picker") {
     recorders.chooser.pending = first.path;
@@ -447,16 +482,25 @@ async function runImport(page: Page, recorders: Recorders, pin: IoImportPin, exp
     const chooserDeadline = Date.now() + 30_000;
     while (recorders.chooser.pending !== null && Date.now() < chooserDeadline) await page.waitForTimeout(250);
     recorders.chooser.pending = null;
-    await page.waitForTimeout(8_000);
+    if (nativeOpen && recorders.chooser.log.slice(chooserCursor).some(line => line.startsWith("set:"))) {
+      const openDeadline = Date.now() + 180_000;
+      while (openNotice === undefined && Date.now() < openDeadline) {
+        openNotice = (await recorders.notices()).slice(noticeCursor).find(line => /^shell\.(?:documentTransfer\.(?:file-opened|file-open-failed|open-cancelled|transfer-busy)|openFile\.[^|]+)\|/u.test(line));
+        if (openNotice === undefined) await page.waitForTimeout(250);
+      }
+    } else if (!nativeOpen) await page.waitForTimeout(8_000);
   } else {
     press = await pressVerb(page, recorders, pin.verb, { ...(pin.args ?? {}), [pin.argument!]: readFileSync(first.path, "utf8") }, liveId, 8_000);
   }
   const after = witness(await readShell(page));
-  const second = await runExport(page, recorders, exportPin, liveId, dir, `${pin.id}-reimported`);
-  let roundTrip: Readonly<{ verdict: "identical" | "equivalent" | "differs"; detail: string }> = second.files[0] === undefined ? { verdict: "differs", detail: "the export after the import wrote no file" } : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(second.files[0].path)));
-  if (roundTrip.verdict === "differs" && second.files[0] !== undefined) {
+  const opened = !nativeOpen || openNotice?.startsWith("shell.documentTransfer.file-opened|") === true;
+  const openedWindows = nativeOpen && opened ? [...new Set(await windowIds(page))].filter(id => !priorWindows.has(id)) : [];
+  const second = opened ? (await runExport(page, recorders, exportPin, liveId, dir, `${pin.id}-reimported`)).files[0] : undefined;
+  if (openedWindows.length > 0) await closeWindows(page, openedWindows);
+  let roundTrip: Readonly<{ verdict: "identical" | "equivalent" | "differs"; detail: string }> = second === undefined ? { verdict: "differs", detail: openNotice ?? "the export after the import wrote no file" } : compareExports(new Uint8Array(readFileSync(first.path)), new Uint8Array(readFileSync(second.path)));
+  if (roundTrip.verdict === "differs" && second !== undefined) {
     const format = exportPin.format === "any" ? formatOfFileName(first.name) : exportPin.format;
-    const [left, right] = await Promise.all([meshTriangles(format, new Uint8Array(readFileSync(first.path))), meshTriangles(format, new Uint8Array(readFileSync(second.files[0].path)))]);
+    const [left, right] = await Promise.all([meshTriangles(format, new Uint8Array(readFileSync(first.path))), meshTriangles(format, new Uint8Array(readFileSync(second.path)))]);
     if (left !== null && right !== null && left.length > 0 && left.join("\n") === right.join("\n")) roundTrip = { verdict: "equivalent", detail: `same ${left.length} triangles (three.js), other vertex order` };
   }
   const chooser = recorders.chooser.log.slice(chooserCursor);
@@ -466,11 +510,14 @@ async function runImport(page: Page, recorders: Recorders, pin: IoImportPin, exp
     via: pin.via,
     moved: moved === null ? null : { verb: moved.verb, submit: moved.submit, refusals: moved.refusals.slice(0, 3) },
     diverged,
+    editedCell,
+    openNotice,
+    openedWindows,
     press,
     chooser,
     documentChanged: after.edits !== before.edits || after.render !== before.render || after.applied !== before.applied,
     roundTrip,
-    ok: pickerOk && roundTrip.verdict !== "differs" && press.refusals.every((line) => !DEAD.test(line)),
+    ok: pickerOk && opened && editAccepted && roundTrip.verdict !== "differs" && press.refusals.every((line) => !DEAD.test(line)),
   };
 }
 
@@ -676,7 +723,7 @@ export async function runIoMatrix(repoRoot: string, options: IoMatrixOptions): P
   const log = (line: string): void => console.log(`[io-matrix] ${line}`);
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=metal"] });
+  const browser = await chromium.launch({ headless: !options.headed, args: process.platform === "darwin" ? ["--use-angle=metal"] : [] });
   const context = await browser.newContext({ viewport: { width: 1600, height: 1000 }, acceptDownloads: true, locale: options.locale === "de" ? "de-DE" : "en-US" });
   const page = await context.newPage();
   page.setDefaultNavigationTimeout(180_000);

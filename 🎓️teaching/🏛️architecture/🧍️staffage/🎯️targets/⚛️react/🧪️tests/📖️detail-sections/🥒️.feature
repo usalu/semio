@@ -1,4 +1,13 @@
 Feature: The asset detail sections state scale, time, assumptions, provenance and export honestly
+  Scenario: Only the opened asset runs its editor
+    Given the reference walker detail is closed behind the glass
+    Then its drawing preview is present
+    And its viewer controls are absent
+    When the walker detail opens
+    Then stepping the transport advances the timeline
+    When the walker detail closes
+    Then its clock is disposed and its drawing preview returns
+
   Scenario: Size on paper at every preset scale
     Given the reference walker, 1.73 m high
     When the dimensions section is shown

@@ -78,7 +78,7 @@ pub use interactive_state_sync::{
 #[path = "📶️progress-celebrate-and-widget-painters/🦀️.rs"]
 mod progress_celebrate_and_widget_painters;
 pub use progress_celebrate_and_widget_painters::{
-    celebrate_color, celebrate_stroke, celebrate_turns, color_input_swatch, focus_ring_visible,
+    celebrate_color, celebrate_stroke, celebrate_turns, color_input_swatch, focus_ring_visible, hover_owner,
     node_selection_outline, paint_checkbox, paint_loading_border, paint_progress, paint_separator,
     paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay,
     progress_bar_rects, progress_bar_rects_of, PROGRESS_INDETERMINATE_SHARE,

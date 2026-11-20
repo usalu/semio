@@ -14,6 +14,12 @@ export function protectedArtifactInputHashedV1(mode:ProtectedArtifactInputHashMo
  return newest+PROTECTED_ARTIFACT_INPUT_SETTLE_NS_V1>recordedAtNs;
 }
 
+/** 🔍 Reports the first refused directory component under the retained input root. */
+export function immutableInputDirectoryErrorV1(path:string,entry:ArtifactRelativeEntryV1|null):Error{
+ const observed=entry?.kind==="directory"?"different device":entry?.kind??"missing";
+ return Error(`Actual same-device immutable input directory required at ${JSON.stringify(path)} (observed ${observed})`);
+}
+
 /** 🌳️ Calls `visit` once for each requested directory path, descending from each parent instead of from the root for every path; every step re-reads the entry and refuses anything but a same-device directory. */
 export async function visitProtectedArtifactInputDirectoriesV1(root:ArtifactRelativeDirectoryV1,paths:Iterable<string>,visit:(path:string,directory:ArtifactRelativeDirectoryV1)=>Promise<void>):Promise<void>{
  type Node={children:Map<string,Node>;wanted:boolean};
@@ -22,8 +28,8 @@ export async function visitProtectedArtifactInputDirectoriesV1(root:ArtifactRela
  const walk=async(directory:ArtifactRelativeDirectoryV1,node:Node,prefix:string):Promise<void>=>{
   for(const[name,child]of node.children){
    const identity=await directory.entry(name) as ArtifactRelativeEntryV1|null;
-   if(!identity||identity.kind!=="directory"||identity.dev!==device)throw Error("Actual same-device immutable input directory required");
    const path=prefix===""?name:prefix+"/"+name;
+   if(!identity||identity.kind!=="directory"||identity.dev!==device)throw immutableInputDirectoryErrorV1(path,identity);
    await directory.withDirectoryPath([Object.freeze({name,identity})],async opened=>{if(child.wanted)await visit(path,opened);await walk(opened,child,path);});
   }
  };

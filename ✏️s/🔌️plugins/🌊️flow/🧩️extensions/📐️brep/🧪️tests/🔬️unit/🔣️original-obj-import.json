@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "closed scaled tetrahedron with negative indices",
+      "obj": "# tetrahedron\no tetrahedron\nv 0 0 0\nv 2 0 0\nv 0 3 0\nv 0 0 4\nf -4 -2 -3\nf 1 2 4\nf 1 4 3\nf 2 3 4\n",
+      "kind": "solid",
+      "vertices": 4,
+      "edges": 6,
+      "faces": 4,
+      "area": 20.810249675906654,
+      "volume": 4
+    },
+    {
+      "name": "open quad fans into two faces",
+      "obj": "v 0 0 0\r\nv 2 0 0\r\nv 2 3 0\r\nv 0 3 0\r\nf 1 2 3 4",
+      "kind": "shell",
+      "vertices": 4,
+      "edges": 5,
+      "faces": 2,
+      "area": 6,
+      "volume": 0
+    }
+  ],
+  "invalid": [
+    { "name": "out-of-bounds index", "obj": "v 0 0 0\nv 2 0 0\nv 0 3 0\nf 1 2 4" },
+    { "name": "incoherent shared-edge winding", "obj": "v 0 0 0\nv 2 0 0\nv 0 3 0\nv 0 0 4\nf 1 2 3\nf 1 2 4" }
+  ]
+}

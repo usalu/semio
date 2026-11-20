@@ -14,6 +14,10 @@ impl SnapshotReadRegistryAliasRetirement {
  pub fn last_turn_work(&self)->u128{self.last_work}
  pub fn selected_work_demand(&self)->Result<u64,ValueError>{if self.closed(){return Ok(0)}if self.registry.is_some(){return Ok(1)}let registry=self.last_registry.as_ref().expect("original last registry remains in inline custody");if !registry.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"last registry requires its original typed store retirement pump"))}if self.demands()?.release_bytes!=0{registry.owned_backing_work_demand()}else{Ok(1)}}
  pub fn identity(&self)->usize{self.identity}
+ /// 📮️ Reports returned reads only while the alias still holds a registry, because a funded-closed alias has none left to read.
+ pub fn has_returned(&self)->bool{!self.closed()&&SnapshotReadLeaseRegistry::has_returned(self)}
+ /// 🪹️ Reports an empty registry, which a funded-closed alias holds vacuously.
+ pub fn registry_terminal_is_empty(&self)->bool{self.closed()||SnapshotReadLeaseRegistry::terminal_is_empty(self)}
  pub fn ptr_eq(&self,other:&SnapshotReadRegistryHandle)->bool{self.registry.as_ref().is_some_and(|registry|registry.ptr_eq(other))}
  pub fn strong_count(&self)->usize{self.registry.as_ref().map_or(usize::from(self.last_registry.is_some()),SnapshotReadRegistryHandle::strong_count)}
  pub fn alias_handle(&self)->&SnapshotReadRegistryHandle{self.registry.as_ref().expect("live source registry alias is unavailable after header retirement")}

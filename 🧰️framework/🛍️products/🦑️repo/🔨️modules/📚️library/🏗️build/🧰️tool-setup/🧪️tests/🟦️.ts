@@ -2,7 +2,7 @@
 import {describe, expect, setDefaultTimeout, test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {existsSync, readFileSync, readdirSync} from "node:fs";
-import {dirname, join, sep} from "node:path";
+import {dirname, join, sep, win32} from "node:path";
 import Ajv from "ajv";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -11,6 +11,7 @@ import {TOOL_SETUP_V1, locateToolV1, renderToolReportV1, resolvePinV1, resolveSi
 import schema from "../🧬️schema/🔣️.json" with {type: "json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type: "json"};
 import fixtureSchema from "./🧬️schema/🔣️.json" with {type: "json"};
+import windowsNode from "./🧫️fixtures/🪟️node.json" with {type: "json"};
 
 setDefaultTimeout(60000);
 const here = import.meta.dir, root = join(here, "../../../../../../../.."), python = testPythonV1(), signal = AbortSignal.timeout(30000);
@@ -43,6 +44,7 @@ describe("the table", () => {
     const mutations: Record<string, (copy: any) => void> = {
       "unknown pin format": copy => { copy.tools[0].pin.format = "yaml"; },
       "unknown locator": copy => { copy.tools[0].locate[0].kind = "registry"; },
+      "Windows program directory traversal": copy => { copy.tools.find((row:{id:string}) => row.id === "node").locate[0].windowsProgramDirectories = ["../other"]; },
       "unknown provisioner": copy => { copy.tools[0].setup.kind = "brew"; },
       "missing probe": copy => { delete copy.tools[0].probe; },
       "missing german text": copy => { delete copy.messages.texts.ok.de; },
@@ -150,12 +152,47 @@ describe("verification", () => {
     const row = toolRowV1("node");
     expect(locateToolV1(row, "11.1.1", machine({present: ["/home/dev/.local/node/bin/node", "/usr/bin/node"]}))).toBe("/home/dev/.local/node/bin/node");
     expect(locateToolV1(row, "11.1.1", machine({present: ["/usr/bin/node"]}))).toBe("/usr/bin/node");
-    expect(locateToolV1(row, "11.1.1", machine({platform: "win32", environment: {PATH: "/bin"}, present: ["/bin/node.exe"]}))).toBe(join("/bin", "node.exe"));
+    const windowsNode = win32.join("C:\\bin","node.exe");
+    expect(locateToolV1(row, "11.1.1", machine({platform: "win32", environment: {PATH: "C:\\bin"}, present: [windowsNode]}))).toBe(windowsNode);
     expect(locateToolV1(row, "11.1.1", machine())).toBeUndefined();
     const dotnet = toolRowV1("dotnet");
     expect(locateToolV1(dotnet, "5.5.5", machine({environment: {PATH: "/usr/bin", DOTNET_ROOT: "/opt/dotnet"}, present: ["/opt/dotnet/dotnet"]}))).toBe("/opt/dotnet/dotnet");
   });
 
+
+  test("a Windows bootstrap node uses its owned native installation before mixed or stale PATH and always checks the pin", async () => {
+    if (python === null) throw new Error("A Python 3 interpreter is required for the independent implementation");
+    const reference = spawnSync(python,["-I",join(here,"🐍️oracle/🪟️node.py"),join(here,"🧫️fixtures/🪟️node.json")],{encoding:"utf8"});
+    expect(reference.status,reference.stderr).toBe(0);
+    const candidate = toolRowV1("node");
+    const read = () => JSON.stringify({definitions:{Pins:{const:{assets:[{tool:"node",version:windowsNode.pin}]}}}});
+    for (const row of windowsNode.cases) {
+      const environment:Record<string,string|undefined> = {...row.environment};
+      const outputs = Object.fromEntries(Object.entries(row.executables)) as Record<string,string>;
+      const context = machine({platform:"win32",home:windowsNode.home,environment,read,present:Object.keys(outputs),outputs});
+      const {status,location,found} = await verifyToolV1(candidate,context,signal);
+      expect({status,location,found},row.name).toEqual(row.expected);
+    }
+  });
+
+
+  test("Windows toolchain setup repairs a stale system Node with the existing owned bootstrap and verifies again", async () => {
+    const row = windowsNode.cases.find(candidate => candidate.name.startsWith("owned pinned archive"))!;
+    const system = Object.keys(row.executables).find(path => path.includes("Program Files"))!;
+    const managed = row.expected.location!;
+    const issued:string[] = [], present = new Set([system]);
+    const read = () => JSON.stringify({definitions:{Pins:{const:{assets:[{tool:"node",version:windowsNode.pin}]}}}});
+    const context = machine({platform:"win32",home:windowsNode.home,environment:row.environment,read,exists:path=>present.has(path),
+      capture:async path=>path===managed?"v"+windowsNode.pin:"v24.14.1"});
+    const reports=await setupToolsV1([toolRowV1("node")],context,async (candidate,pin)=>{
+      issued.push(candidate.id,pin);
+      present.add(managed);
+    },signal,()=>undefined);
+    expect(issued).toEqual(["node",windowsNode.pin]);
+    expect(reports).toMatchObject([{id:"node",status:"ok",found:windowsNode.pin,location:managed}]);
+    present.delete(managed);
+    await expect(setupToolsV1([toolRowV1("node")],context,async()=>undefined,signal,()=>undefined)).rejects.toThrow(/24\.14\.1/u);
+  });
   test("a managed Python interpreter is found by its series in the interpreter directory of the tools partition", async () => {
     const directory = pythonInterpreterDirectoryV1("/repo/.cache/b/t/m").replaceAll("\\", "/"), python313 = `${directory}/cpython-7.7.2-linux-x86_64-gnu/bin/python3`, other = `${directory}/cpython-7.70.1-linux-x86_64-gnu/bin/python3`;
     const context = machine({present: [other, python313], list: () => ["cpython-7.70.1-linux-x86_64-gnu", "cpython-7.7.2-linux-x86_64-gnu", "cpython-6.6.1-linux-x86_64-gnu"], outputs: {[python313]: "Python 7.7.2\n"}});
@@ -212,10 +249,10 @@ describe("setup", () => {
     const reports = await setupToolsV1(toolRowsV1(["uv", "node"]), context, async row => { provisioned.push(row.id); present.add(uv); }, signal, line => lines.push(line));
     expect(provisioned).toEqual(["uv"]);
     expect(reports.map(report => [report.id, report.status])).toEqual([["uv", "ok"], ["node", "missing"]]);
-    expect(lines).toEqual(["Provisioning uv 8.8.8.", "uv 8.8.8 is ready.", "node 11.1.1 is installed by the bootstrap script, not by this command; run the bootstrap again."]);
+    expect(lines).toEqual(["Verifying uv against its pin.", "Provisioning uv 8.8.8.", "uv 8.8.8 is ready.", "Verifying node against its pin.", "node 11.1.1 is installed by the bootstrap script, not by this command; run the bootstrap again.", '[tools:setup-refusal] {"id":"node","phase":"verify","status":"missing","pin":"11.1.1","found":null,"location":null,"primary":null}']);
     lines.length = 0;
     await setupToolsV1(toolRowsV1(["uv"]), context, async () => { throw new Error("must not run"); }, signal, line => lines.push(line));
-    expect(lines).toEqual(["uv 8.8.8 already matches its pin."]);
+    expect(lines).toEqual(["Verifying uv against its pin.", "uv 8.8.8 already matches its pin."]);
   });
 
   test("fails when a provisioned tool still differs from its pin, in the resolved language", async () => {
@@ -234,7 +271,7 @@ describe("setup", () => {
     const chromium = toolRowsV1(["chromium"]), lines: string[] = [];
     const reports = await setupToolsV1(chromium, machine({files: {}, exists: () => false}), async () => { throw new Error("must not run"); }, signal, line => lines.push(line));
     expect(reports.map(report => [report.id, report.status, report.pin])).toEqual([["chromium", "deferred", "-"]]);
-    expect(lines).toEqual(["chromium reads its pin from the installed playwright, which is not installed yet; install the dependencies, then run `repo tools setup chromium` again."]);
+    expect(lines).toEqual(["Verifying chromium against its pin.", "chromium reads its pin from the installed playwright, which is not installed yet; install the dependencies, then run `repo tools setup chromium` again."]);
     expect(toolSetupMessageV1("postponed", {tool: "chromium", package: "playwright"}, {SEMIO_LANGUAGE: "de"})).toContain("liest seinen Pin aus dem installierten playwright");
     expect(toolPinAwaitsDependenciesV1(chromium[0]!, {root: "/repo", exists: path => path === "/repo/node_modules/playwright"})).toBe(false);
     expect(toolPinAwaitsDependenciesV1(toolRowV1("uv"), {root: "/repo", exists: () => false})).toBe(false);

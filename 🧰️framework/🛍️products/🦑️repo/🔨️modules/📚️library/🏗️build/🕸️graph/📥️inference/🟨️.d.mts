@@ -11,7 +11,7 @@ export function inferReadOnlyBuildProjectSourcesV1(json:unknown,root:string,work
 /** 🔁️ Opens the answer of derived facts (the command walks a project record named) against the live files. */
 export function openGenerationDeriverV1(host:{workspaceRoot:string;registry:unknown}):Promise<(row:{kind:string;path:string;fact:unknown},signal?:AbortSignal)=>Promise<{fact:unknown;rows:readonly {kind:string;path:string;fact:unknown}[]}>>;
 export function discoverBuildOwnerAdmissionFactsV1(owner:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1["owners"][number],targets:readonly string[],registry:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1,context:BuildInferenceContextV1,inputNames?:readonly string[]):Promise<import("../🚪️admission/🟦️.ts").BuildOwnerAdmissionFactsV1&{project:GeneratedProjectV1&{name:string}}>;
-export function readBuildOwnerRegistrySourceV1(workspaceRoot:string):string;
+export function readBuildOwnerRegistrySourceV1(workspaceRoot:string,policy?:"current"):string;
 /** 🔏️ Names the revision of the Source this module has on disk right now. */
 export function currentImplementationRevisionV1():string;
 /** 🔁️ Resolves the implementation of the Source this module has on disk right now, loading its revision graph when the Source changed. */
@@ -31,7 +31,7 @@ export interface GeneratedTargetV1{readonly cache?:boolean;readonly continuous?:
 export interface GeneratedProjectV1{readonly targets:Readonly<Record<string,GeneratedTargetV1>>;readonly root?:string;readonly name?:string;readonly projectType?:string;readonly tags?:readonly string[];readonly sourceRoot?:string;readonly namedInputs?:Readonly<Record<string,readonly unknown[]>>;readonly metadata?:Readonly<Record<string,unknown>>}
 export type GeneratedNodesV1=readonly(readonly[string,Readonly<{projects:Readonly<Record<string,GeneratedProjectV1>>;externalNodes?:Readonly<Record<string,unknown>>;unavailable?:readonly import("../🟦️.ts").BuildUnavailableProjectV1[]}>])[];
 export type ScriptInputContextV1=Readonly<Record<string,unknown>>&({readonly invocation?:undefined;readonly phaseControl?:undefined}|{readonly invocation:ScriptInvocation;readonly phaseControl:ResourceLeaseControl});
-export type BuildInferenceContextV1=ScriptInputContextV1&Readonly<{workspaceRoot:string}>;
+export type BuildInferenceContextV1=ScriptInputContextV1&Readonly<{workspaceRoot:string;onOwnerDiscoveryPhase?:(operation:string)=>void}>;
 /** 🔁️ Names the callable members of one revision of the inference module. */
 export interface BuildInferenceImplementationV1{readonly revision:string;readonly cacheInternals:BuildInferenceInternalsV1;readonly libraryBootstrap:Promise<unknown>;createScriptInputCache(context?:ScriptInputContextV1):ScriptInputCacheV1;resolveCommandWalkV1(workspaceRoot:string,entries:readonly string[],cache:ScriptInputCacheV1):Promise<CommandWalkV1>;createStreamingEdgesV1(options:Readonly<Record<string,unknown>>,context:object):Promise<StreamingEdgesV1>}
 /** 🌊️ The edges of owners that only get their edges again, one owner at a time from the module facts of their published node. */

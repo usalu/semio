@@ -64,12 +64,7 @@ struct ChipPaint {
 }
 
 fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, window_bg: Rgb) -> ChipPaint {
-    let hovered = match (w.hover, tab.kind) {
-        (Some(WindowHit::Tab(i) | WindowHit::Close(i) | WindowHit::Maximize(i)), TabKind::Tab) => i == tab.index,
-        (Some(WindowHit::OverflowPrev(t)), TabKind::OverflowPrev(target)) => t == target,
-        (Some(WindowHit::OverflowNext(t)), TabKind::OverflowNext(target)) => t == target,
-        _ => false,
-    };
+    let hovered = chip_hovered(w, tab);
     if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab {
         return ChipPaint { fg: theme.role(Role::Foreground), bg: window_bg, attrs: attr::BOLD };
     }
@@ -79,14 +74,18 @@ fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, window_bg: 
     ChipPaint { fg: theme.role(Role::MutedForeground), bg: window_bg, attrs: 0 }
 }
 
-fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) -> Role {
-    let hovered = match (w.hover, tab.kind) {
-        (Some(WindowHit::Tab(i) | WindowHit::Close(i) | WindowHit::Maximize(i)), TabKind::Tab) => i == tab.index,
-        (Some(WindowHit::OverflowPrev(i)), TabKind::OverflowPrev(target)) => i == target,
-        (Some(WindowHit::OverflowNext(i)), TabKind::OverflowNext(target)) => i == target,
-        (Some(WindowHit::Maximize(_) | WindowHit::NewTab(_)), TabKind::Controls) => true,
+/// 🏆 Whether the pointer's innermost interactive box is this chip itself; a control glyph inside a chip owns its own hover and never hovers the chip.
+fn chip_hovered(w: &WindowState, tab: &WindowCornerTab) -> bool {
+    match (w.hover, tab.kind) {
+        (Some(WindowHit::Tab(i)), TabKind::Tab) => i == tab.index,
+        (Some(WindowHit::OverflowPrev(t)), TabKind::OverflowPrev(target)) => t == target,
+        (Some(WindowHit::OverflowNext(t)), TabKind::OverflowNext(target)) => t == target,
         _ => false,
-    };
+    }
+}
+
+fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) -> Role {
+    let hovered = chip_hovered(w, tab);
     if emphasized || hovered { Role::BorderEmphasized } else if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab { Role::ActiveBase } else { Role::BorderNormal }
 }
 
@@ -140,33 +139,6 @@ fn paint_chip_text(buf: &mut CellBuffer, w: &WindowState, theme: &Theme, tab: &W
     }
 }
 
-/// 🔮️ Paints only the projected selected tab with the same cap, grip, controls and open seam as its committed window.
-pub fn paint_window_tab_preview(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
-    let layout = window_chip_layout(w, rect);
-    if layout.mode == ChromeMode::Flat { return; }
-    let g = lines(w.focused);
-    let bg = theme.surface(Surface::Window);
-    let frame = Frame { lines: g, border: theme.role(if w.focused { Role::ActiveBase } else { Role::BorderNormal }), bg, left: rect.x, right: rect.x + rect.width - 1, emphasized: false };
-    for group in &layout.groups {
-        for tab in group.tabs.iter().filter(|tab| tab.kind == TabKind::Tab && tab.index == w.active_stack_tab) {
-            let paint = chip_paint(w, theme, tab, bg);
-            let tab_border = chip_border(w, theme, tab, false);
-            if layout.mode == ChromeMode::Compact {
-                let end = tab.x + tab.interior_width + 1;
-                buf.put(tab.x, rect.y, Cell { ch: if tab.x == frame.left { g.tl } else { g.down }, fg: tab_border, bg, attrs: 0, width: 1 });
-                paint_chip_text(buf, w, theme, tab, rect.y, &paint);
-                buf.put(end, rect.y, Cell { ch: if end == frame.right { g.tr } else { g.down }, fg: tab_border, bg, attrs: 0, width: 1 });
-            } else {
-                let bottom = !group.corner.is_top();
-                let seam = if bottom { layout.bottom_body_y.unwrap() } else { layout.top_body_y };
-                let y = if bottom { seam } else { rect.y };
-                paint_corner_tab(buf, y, tab, bottom, &Frame { border: tab_border, ..frame }, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
-                paint_tab_seam(buf, &tab.as_window_tab(), seam, true, bottom, &frame, tab_border, false);
-            }
-        }
-    }
-}
-
 /// 🔖 Paints one 2-row corner tab. The body hairline is drawn afterwards, so a tab stays closed until the active one is opened.
 fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bottom: bool, frame: &Frame<'_>, paint_text: &dyn Fn(&mut CellBuffer, &WindowCornerTab, u16)) {
     let Frame { lines: g, border, bg, .. } = *frame;
@@ -191,26 +163,19 @@ fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bott
     }
 }
 
-/// 🪡 Joins one tab to the body hairline. Inactive tabs keep that edge; only the active tab leaves it open.
+/// 🪡 Joins one tab to the body hairline. A stated tab (active or hovered) closes its whole perimeter on the seam in its own colour.
 fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>, tab_border: Rgb, hovered: bool) {
     let Frame { lines: g, border, bg, left: window_left, right: window_right, .. } = *frame;
     let left = tab.x;
     let right = tab.x + tab.interior_width + 1;
-    let at_left = left == window_left;
-    let at_right = right == window_right;
-    let (left_ch, right_ch) = match (is_bottom, active) {
-        (true, true) => (if at_left { g.v } else { g.tr }, if at_right { g.v } else { g.tl }),
-        (true, false) => (if at_left { g.right } else { g.down }, if at_right { g.left } else { g.down }),
-        (false, true) => (if at_left { g.v } else { g.br }, if at_right { g.v } else { g.bl }),
-        (false, false) => (if at_left { g.right } else { g.up }, if at_right { g.left } else { g.up }),
-    };
-    let junction = if active || hovered { tab_border } else { border };
-    buf.put_border(left, y, Cell { ch: left_ch, fg: junction, bg, attrs: 0, width: 1 });
+    let (at_left, at_right) = (left == window_left, right == window_right);
+    let (left_ch, right_ch) = if is_bottom { (if at_left { g.right } else { g.down }, if at_right { g.left } else { g.down }) } else { (if at_left { g.right } else { g.up }, if at_right { g.left } else { g.up }) };
+    let line = if active || hovered { tab_border } else { border };
+    buf.put_border(left, y, Cell { ch: left_ch, fg: line, bg, attrs: 0, width: 1 });
     if tab.interior_width > 0 {
-        let ch = if active { ' ' } else { g.h };
-        buf.border_hline(Pos { x: left + 1, y }, tab.interior_width, ch, if active { bg } else { border }, bg);
+        buf.border_hline(Pos { x: left + 1, y }, tab.interior_width, g.h, line, bg);
     }
-    buf.put_border(right, y, Cell { ch: right_ch, fg: junction, bg, attrs: 0, width: 1 });
+    buf.put_border(right, y, Cell { ch: right_ch, fg: line, bg, attrs: 0, width: 1 });
 }
 
 /// 🚪 Fills the union of the body and raised chips. Notches stay on the parent surface.
@@ -397,12 +362,7 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
             let outer_y = if top { rect.y } else { bottom_y };
             let text_y = if top { rect.y + 1 } else { bottom_y - 1 };
             let seam_y = if top { top_body_y } else { bottom_body_y };
-            let left_active = left.kind == TabKind::Tab && left.index == w.active_stack_tab;
-            let right_active = right.kind == TabKind::Tab && right.index == w.active_stack_tab;
-            let seam = match (top, left_active, right_active) {
-                (true, true, _) => g.bl, (true, _, true) => g.br, (true, _, _) => g.up,
-                (false, true, _) => g.tl, (false, _, true) => g.tr, (false, _, _) => g.down,
-            };
+            let seam = if top { g.up } else { g.down };
             let body_rank = if emphasized { 2 } else if w.focused { 1 } else { 0 };
             for (y, ch, fg) in [(outer_y, if top { g.down } else { g.up }, color(rank)), (text_y, g.v, color(rank)), (seam_y, seam, color(rank.max(body_rank)))] {
                 buf.put_border(x, y, Cell { ch, fg, bg, attrs: 0, width: 1 });

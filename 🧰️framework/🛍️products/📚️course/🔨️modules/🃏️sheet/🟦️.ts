@@ -126,12 +126,30 @@ function sheetTask(task: Task, random: RandomSource, rules: ChallengeRules, seed
   }
 }
 
-/** 🎴️ The sheet of `quiz` for `seed` at `challenge`: the first task stays first; the rest are shuffled before every task is presented in definition order. */
-export function sheetOf(quiz: Quiz, seed: number, challenge: Challenge): Sheet {
+/** 🗄️ How many sheets {@link sheetOf} keeps per quiz: the runs a device shows at once, with room to spare. */
+export const SHEETS_KEPT = 16;
+
+const DEALT = new WeakMap<Quiz, Map<string, Sheet>>();
+
+/** 🧮️ The sheet of `quiz` for `seed` at `challenge`, dealt anew. */
+function deal(quiz: Quiz, seed: number, challenge: Challenge): Sheet {
   const random = new Mt19937(seed);
   const rules = challengeRules(challenge);
   const shuffledOrder = shuffle(random, quiz.tasks.map((_, index) => index));
   const order = shuffledOrder.length > 1 ? [0, ...shuffledOrder.filter((index) => index !== 0)] : shuffledOrder;
   const tasks = quiz.tasks.map((task) => sheetTask(task, random, rules, seed));
   return { quiz: quiz.id, seed: seed >>> 0, challenge, title: quiz.title, description: quiz.description, tasks: order.map((index) => tasks[index]!) };
+}
+
+/** 🎴️ The sheet of `quiz` for `seed` at `challenge`, dealt once and handed out again for as long as it is among the last {@link SHEETS_KEPT} of its quiz — a screen, a view and a decision that ask for the same run share one sheet, which nobody may change: the first task stays first; the rest are shuffled before every task is presented in definition order. */
+export function sheetOf(quiz: Quiz, seed: number, challenge: Challenge): Sheet {
+  const kept = DEALT.get(quiz) ?? new Map<string, Sheet>();
+  const key = `${seed}:${challenge}`;
+  const known = kept.get(key);
+  if (known !== undefined) return known;
+  const sheet = deal(quiz, seed, challenge);
+  if (kept.size >= SHEETS_KEPT) kept.delete(kept.keys().next().value!);
+  kept.set(key, sheet);
+  DEALT.set(quiz, kept);
+  return sheet;
 }

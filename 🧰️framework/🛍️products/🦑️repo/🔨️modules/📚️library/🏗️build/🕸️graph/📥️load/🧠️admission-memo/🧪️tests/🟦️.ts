@@ -6,6 +6,8 @@ import{fileURLToPath}from"node:url";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import ts from"typescript";
+import{Database}from"bun:sqlite";
+import cases from"./🧫️cases.json";
 import{ownersOfAdmissionMemoV1,packAdmissionMemoV1,readAdmissionMemoV1,writeAdmissionMemoV1,type AdmissionMemoV1}from"../🟦️.ts";
 import{graphAdmissionFormatHashV1,graphAdmissionFormatUrlsV1,graphSelfUrlsV1}from"../../../🔐️authority/🟦️.ts";
 
@@ -93,10 +95,36 @@ test("facts lent by a memo that no longer holds re-derive only the owner whose o
 });
 
 test("the selected inventory checks the registry scope, then asks the memo, derives only on a miss and remembers what it derived, keyed by the admission format",()=>{
- const source=readFileSync(process.env.R140_LOAD_SOURCE??join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),inventory=source.indexOf("const inventory=async()=>");
+ const source=readFileSync(process.env.R140_LOAD_SOURCE??join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),inventory=source.indexOf("const inventory=async(");
  const scope=source.indexOf("buildGraphScopeKeyV1(options.selection,readBuildOwnerRegistryV1(",inventory),read=source.indexOf("readAdmissionMemoV1(memoPath,scope",inventory),derive=source.indexOf("captureObservedSourceInputsV1(",read),write=source.indexOf("writeAdmissionMemoV1(memoPath,",derive);
  expect(inventory).toBeGreaterThan(0);expect(scope).toBeGreaterThan(inventory);expect(read).toBeGreaterThan(scope);expect(derive).toBeGreaterThan(read);expect(write).toBeGreaterThan(derive);
  expect(source).toContain("remembered===undefined&&selected&&scope&&captured!==undefined");
  expect(source).toContain("value.format===loadedGraphAdmissionFormatV1");
  expect(source.slice(inventory,write)).not.toContain("loadedGraphModuleAuthorityV1");
+});
+
+
+test("only a cold owner with integer row positions borrows the corresponding observations",()=>{
+ const db=new Database(":memory:");
+ try{
+  const oracle=db.query(`SELECT json_extract(owner.value,'$.suffix') AS suffix FROM json_each(?) owner
+   WHERE owner.type='object' AND json_type(owner.value,'$.rows')='array'
+   AND json_extract(owner.value,'$.suffix') NOT IN (SELECT value FROM json_each(?))
+   AND NOT EXISTS (SELECT 1 FROM json_each(owner.value,'$.rows') pos WHERE pos.type!='integer' OR pos.value<0 OR pos.value>=?)
+   ORDER BY owner.key`).all(JSON.stringify(cases.owners),JSON.stringify(cases.known),cases.observations.length);
+  expect(oracle).toEqual(cases.expected.map(({suffix})=>({suffix})));
+  let reads=0;
+  const observations=new Proxy(cases.observations,{get(target,key,receiver){if(typeof key==="string"&&/^\d+$/.test(key))reads++;return Reflect.get(target,key,receiver);}});
+  const memo={...record(),owners:cases.owners,observations} as unknown as AdmissionMemoV1;
+  expect(ownersOfAdmissionMemoV1(memo,new Set(cases.known))).toEqual(cases.expected);
+  expect(reads).toBe(3);
+ }finally{db.close();}
+});
+
+test("packing serializes each captured occurrence once when constructing its row index",()=>{
+ let encodings=0;
+ const observations=[{toJSON(){encodings++;return {kind:"exists",path:"a",fact:true};}}];
+ const memo=packAdmissionMemoV1({...record(),observations,owners:[]});
+ expect(memo.observations).toEqual(observations);
+ expect(encodings).toBe(1);
 });

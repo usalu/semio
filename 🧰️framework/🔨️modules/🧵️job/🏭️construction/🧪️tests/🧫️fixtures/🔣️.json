@@ -196,6 +196,16 @@
       "matches": false
     }
   ],
+  "retirementScope": {
+    "copiedBytes": 8,
+    "duplicateBytes": 0,
+    "forwardOpens": true
+  },
+  "reservedRetirementScope": {
+    "copiedBytes": 8,
+    "childBytes": 0,
+    "scopeOpen": false
+  },
   "workLaw": {
     "deniedWork": 0,
     "attemptWork": 1,

@@ -130,6 +130,28 @@ semio_framework_value::artifact_retire_struct!(FaceInfo { entity_id, surface_kin
 semio_framework_value::artifact_retire_struct!(EdgeInfo { entity_id, curve_kind, length });
 semio_framework_value::artifact_retire_struct!(MeshTransfer { position, normal, index, edges, points, vertex_groups, face_groups, edge_groups, face_infos, edge_infos });
 
+/// 🪪️ Immutable native bore dimensions and labels from its original publication.
+#[derive(Clone, Copy)]
+pub struct BorePreviewSource {
+    pub origin: [f64; 3],
+    pub dimensions: [f64; 3],
+    pub center: [f64; 2],
+    pub radius: f64,
+    pub first_label: u64,
+    pub volume: f64,
+}
+
+impl BorePreviewSource {
+    pub const BOTTOM_RING_EDGE: usize = 12;
+    pub const TOP_RING_EDGE: usize = 13;
+    pub const CYLINDER_SEAM_EDGE: usize = 14;
+    pub const BORE_WALL_FACE: usize = 6;
+
+    pub fn vertex_label(self, index: usize) -> u64 { self.first_label + index as u64 }
+    pub fn edge_label(self, index: usize) -> u64 { self.first_label + 10 + index as u64 }
+    pub fn face_label(self, index: usize) -> u64 { self.first_label + 25 + index as u64 }
+}
+
 /// 📍️ Point classification relative to a solid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::semio_framework_value")]

@@ -1,0 +1,7 @@
+{
+  "row": "box@shape",
+  "domain": "graph",
+  "channel": "pointer",
+  "enter": [{"granularity": "handle", "id": "box@shape"}],
+  "leave": []
+}

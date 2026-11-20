@@ -7,10 +7,12 @@ import {compileJsonSchemaSubset,validateJsonSchemaSubset} from "../../../../../.
 /** 🔏️ Actual compiled bytes and their frozen source census belong to one release toolkit. */
 export interface NxAuthorizerReceiptV1 {readonly version:1;readonly mode:"release";readonly sourceSha256:string;readonly entry:"semio-authorizers.mjs";readonly outputs:readonly {readonly path:"semio-authorizers.mjs";readonly sha256:string}[];}
 const receiptPlan=compileJsonSchemaSubset({$ref:"#/$defs/Receipt"},schema),manifestPlan=compileJsonSchemaSubset(schema);
+/** 📏️ Bounds the canonical authorizer digest manifests shared by the generation writer and readers. */
+export const nxAuthorizerDigestManifestPolicyV1=schema.$defs.GenerationDigestManifestPolicy.const;
 const hash=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
-function readStable(directory:string,path:string):Uint8Array{
+function readStable(directory:string,path:string,maximumBytes=8_388_608):Uint8Array{
  let parent=directory;for(;;){const status=lstatSync(parent);if(!status.isDirectory()||status.isSymbolicLink())throw Error("Immutable authorizer requires no-follow directory ancestry");const next=dirname(parent);if(next===parent)break;parent=next;}
- const absolute=join(directory,path);if(absolute.length>256)throw Error("Immutable authorizer path exceeds 256 characters");const before=lstatSync(absolute,{bigint:true});if(!before.isFile()||before.isSymbolicLink()||before.size>8_388_608n)throw Error("Immutable authorizer requires bounded original file");const bytes=readFileSync(absolute),after=lstatSync(absolute,{bigint:true});
+ const absolute=join(directory,path);if(absolute.length>256)throw Error("Immutable authorizer path exceeds 256 characters");const before=lstatSync(absolute,{bigint:true});if(!before.isFile()||before.isSymbolicLink()||before.size>BigInt(maximumBytes))throw Error("Immutable authorizer requires bounded original file");const bytes=readFileSync(absolute),after=lstatSync(absolute,{bigint:true});
  if(before.dev!==after.dev||before.ino!==after.ino||before.size!==after.size||before.mtimeNs!==after.mtimeNs||before.ctimeNs!==after.ctimeNs)throw Error("Immutable authorizer bytes changed during verification");return bytes;
 }
 /** 🔍️ Reports only the first original boolean refusal without observing any additional protected bytes. */
@@ -19,7 +21,7 @@ function reportNxAuthorizerReceiptFailureV1(directory:string,reason:string,issue
 export function nxAuthorizerReceiptHoldsV1(directory:string,value:unknown):value is NxAuthorizerReceiptV1{
  let reason="receipt-schema";
  try{
-  const receiptErrors=receiptPlan.validate(value);if(receiptErrors.length){reportNxAuthorizerReceiptFailureV1(directory,reason,receiptErrors);return false;}const receipt=value as NxAuthorizerReceiptV1;reason="source-read";const source=readStable(directory,".semio-authorizer-source.json");reason="source-json";const manifest=JSON.parse(Buffer.from(source).toString("utf8"));
+  const receiptErrors=receiptPlan.validate(value);if(receiptErrors.length){reportNxAuthorizerReceiptFailureV1(directory,reason,receiptErrors);return false;}const receipt=value as NxAuthorizerReceiptV1;reason="source-read";const source=readStable(directory,".semio-authorizer-source.json",nxAuthorizerDigestManifestPolicyV1.maximumBytes);reason="source-json";const manifest=JSON.parse(Buffer.from(source).toString("utf8"));
   reason="source-digest";if(hash(source)!==receipt.sourceSha256){reportNxAuthorizerReceiptFailureV1(directory,reason);return false;}reason="source-manifest";const manifestErrors=manifestPlan.validate(manifest);if(manifestErrors.length){reportNxAuthorizerReceiptFailureV1(directory,reason,manifestErrors);return false;}reason="manifest-entry";if(!manifest.sources.some((row:{path:string})=>row.path===manifest.entry)){reportNxAuthorizerReceiptFailureV1(directory,reason);return false;}
   reason="manifest-order";const paths=manifest.sources.map((row:{path:string})=>row.path),sorted=[...paths].sort((left,right)=>Buffer.compare(Buffer.from(left),Buffer.from(right)));if(new Set(paths).size!==paths.length||JSON.stringify(paths)!==JSON.stringify(sorted)){reportNxAuthorizerReceiptFailureV1(directory,reason);return false;}
   return receipt.outputs.every(row=>{reason="output-read";const bytes=readStable(directory,row.path);reason="output-digest";if(hash(bytes)===row.sha256)return true;reportNxAuthorizerReceiptFailureV1(directory,reason);return false;});

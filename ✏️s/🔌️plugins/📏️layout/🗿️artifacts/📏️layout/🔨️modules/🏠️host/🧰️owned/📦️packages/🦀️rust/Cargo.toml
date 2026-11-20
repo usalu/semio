@@ -16,12 +16,14 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-dsl-record = { workspace = true }
-semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-s-artifact-draw-drawing-editor-store-preparation = { path = "../../../../../../../../🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
-semio-framework-pack-json = { workspace = true }
-semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 

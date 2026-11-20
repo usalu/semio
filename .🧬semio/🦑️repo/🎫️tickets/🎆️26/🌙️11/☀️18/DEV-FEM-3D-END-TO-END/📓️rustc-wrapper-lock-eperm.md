@@ -1,0 +1,9 @@
+# Rustc wrapper lock slot EPERM
+
+Root cause: `tryCreate` in the unit-cache lock module opened `u/s/<n>.lock` with `openSync(path,"wx")` and rethrew everything but `EEXIST`. Claim files are created and deleted per claim (release removes the file). On Windows a file that another process is deleting or renaming (delete pending) refuses `CreateFile` with access denied, which Node reports as `EPERM` (or `EACCES`/`EBUSY` on a sharing violation). Under concurrent builds a waiter hitting that window threw out of `acquireSlotV1` and failed the rustc invocation.
+
+Fix: `openClaimFileV1` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts`. It reuses `settleBusyFilesystemSyncV1`, the churn table's bounded pauses (10, 40, 160, 640, 2560 ms), for the busy codes; `EEXIST` or still-busy after the pauses returns `undefined` (claim counts as held, so the slot/claim loops keep polling and never throw); other errors still throw. `tryCreate` uses it. Node `openSync` already opens with FILE_SHARE_READ/WRITE/DELETE on Windows, so share mode was not the cause. Persistent never-deleted slots were not adopted: the protocol relies on file existence as the exclusive claim, which needs removal on release.
+
+Test: "a claim file that another process is deleting is retried ..." appended to `unit-cache/🧪️tests/🪟️windows/🟦️.ts`. `bun test ./🟦️.ts` in that folder: 11 pass, 1 skip, 0 fail. No cargo build was needed (wrapper is a bun-bundled shim; TypeScript).
+
+Main unit-cache tests (`unit-cache/🧪️tests/🟦️.ts`): 19 pass, 7 fail. Failures observed: `cargo` not in PATH, jobserver descriptor and broker/launcher tests; none touch the lock open path, likely environmental or concurrent edits; not investigated. Running wrappers must be rebuilt (shim hash) to pick up the fix.

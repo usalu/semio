@@ -1,4 +1,7 @@
 /** 🧊️ Contract: a source fact that a repeated inference leaves exactly as it was (a process that reads a pinned implementation file whose bytes changed on disk) can never be refreshed by this process, so the attempt ends as a stale implementation after the first repair that changed nothing, instead of repairing and restarting for ever. */
+import{decodeAuthorityObservationsV1,distinctObservationRowsV1,encodeAuthorityObservationsV1}from"../../../👁️observation/🔢️row-table/🟨️.mjs";
+import authoritySchema from"../../../🧬️schema/📥️authority.json";
+import sliceReportSchema from "../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
@@ -36,7 +39,7 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
   readBuildOwnerRegistrySourceV1:()=>JSON.stringify(registry),libraryBootstrap:Promise.resolve(),prepareSourceAnalysesV1:()=>{},
   discoverBuildOwnerAdmissionFactsV1:async(owner:{name:string})=>{observed[owner.name]=(observed[owner.name]??0)+1;observation.observedFs.readFileSync(owner.name+"/manifest");observation.observedFs.readFileSync("tooling/shared.ts");return{project:{name:owner.name,targets:{}},files:[],dependencies:[]};},
  };
- const bindings={
+ const bindings={distinctObservationRowsV1,decodeAuthorityObservationsV1,encodeAuthorityObservationsV1,sourceAuthoritySchema:authoritySchema,sliceReportSchema,
   importMetaV1:{url:"file:///owned/graph.ts"},graphSelfUrlsV1:()=>[],physicalSourceOriginV1:(url:string)=>new URL(url),observationV1:observation,
   importModuleV1:async(specifier:string)=>specifier==="../📥️inference/🟨️.mjs"?producer:{},
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
@@ -57,7 +60,7 @@ const world=(owners:number,scenario:{onDiscover?:(call:number,tree:Map<string,nu
   GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,
  };
  if(source.includes("function observeOwnerFactsMemoizedV1"))bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(new Map(),limits.definitions.Limits.const);
- const run=async()=>{const execute=Function(...Object.keys(bindings),extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
+ const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
  return{run,tree,observed,counts,names,lines};
 };
 

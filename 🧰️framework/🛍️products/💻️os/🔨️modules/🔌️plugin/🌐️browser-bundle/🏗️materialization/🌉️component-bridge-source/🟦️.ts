@@ -111,6 +111,12 @@ function uiPatchReceipt(result, activationGeneration) {
   return encodeActorUiPatchReceipt(receipt);
 }
 
+function nativeRefusalError(failure) {
+  const tag = (failure?.payload ?? failure)?.failure?.tag;
+  if (typeof tag === "string") return new Error("original-turn.native-return-refused: " + tag, { cause: failure });
+  return failure instanceof Error ? failure : undefined;
+}
+
 export async function createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   const componentUrl = new URL("./${componentBase}.js", import.meta.url);
@@ -132,16 +138,25 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
   }
   const heldOutput = new Map();
   let sourceTail = Promise.resolve();
-  const exclusive = (run) => { const work = sourceTail.then(run); sourceTail = work.then(() => {}, () => {}); return work; };
+  const exclusive = (run) => {
+    const work = sourceTail.then(() => {
+      const refusal = nativeRefusalError(originalSource.nativeRefusal);
+      if (refusal !== undefined) throw refusal;
+      return run();
+    });
+    sourceTail = work.then(() => {}, () => {});
+    return work;
+  };
   const fundedJob = (budget, run) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run));
   let contextReady = false;
   async function admitWire(value) {
     const turn = originalSource.issue();
     let call;
-    try { call = await reactor.admitActorInput(actorInputWire.encode(value), originalContextBudgetWit(turn)); }
+    const wireBytes = actorInputWire.encode(value);
+    try { call = await reactor.admitActorInput(wireBytes, originalContextBudgetWit(turn)); }
     catch (failure) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); throw failure; }
     receiveOriginal(call, call.workUnitsSpent);
-    if (optionValue(call.refusal) !== undefined || !call.ready || call.disposition === "returned") throw Object.assign(new Error("original-turn.input-refused"), { originalCall: call });
+    if (optionValue(call.refusal) !== undefined || !call.ready || call.disposition === "returned") throw Object.assign(new Error("original-turn.input-refused: refusal=" + JSON.stringify(optionValue(call.refusal) ?? null) + " ready=" + call.ready + " disposition=" + call.disposition + " wireBytes=" + (wireBytes?.length ?? 0) + " grant=" + JSON.stringify(turn.input.grant, (k, v) => typeof v === "bigint" ? v.toString() : v)), { originalCall: call });
   }
   const unreceipted = (wire, call) => exclusive(async () => {
     if (wire !== undefined) await admitWire(wire);
@@ -201,16 +216,19 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       try {
         if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
         if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
-        result = await reactor.poll(originalContextBudgetWit(turn));
+        const slice = originalContextBudgetWit(turn);
+        if (typeof budget.fuel === "number" && budget.fuel > 0 && BigInt(budget.fuel) < slice.fuel) slice.fuel = BigInt(budget.fuel);
+        result = await reactor.poll(slice);
       } catch (failure) {
         try {
-          if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);
+          const receipt = failure?.payload ?? failure;
+          if (receipt && receipt.input && receipt.spent && typeof receipt.workUnitsSpent === "bigint") receiveOriginal(receipt, receipt.workUnitsSpent);
           if (originalSource.nativeRefusal === undefined) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); }
         } finally {
           const raw = hostShim.__returnOriginal(turn);
           if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); }
         }
-        throw failure;
+        throw nativeRefusalError(failure) ?? failure;
       }
       let raw;
       try { receiveOriginal(result.retainedReceipt, result.retainedReceipt.workUnitsSpent); }

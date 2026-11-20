@@ -47,7 +47,7 @@ pub struct LayoutExportJob {
     pub(super) drawing: Option<DrawingCompositionState>,
     pub(super) drawing_source:Option<DrawingSourceAddress>,
     pub(super) drawing_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    pub(super) frame_plan: Option<super::frame_planning::FramePlanState>,
+    pub(super) frame_plan: Option<super::semio_s_artifact_layout_layout_engine_export_primitives::frame_planning::FramePlanState>,
     pub(super) frame_plan_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub(super) text: Option<ExportTextState>,
     pub(super) plan_work_demand:semio_framework_value::RetirementDemand,
@@ -235,26 +235,18 @@ impl LayoutExportJob {
         LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 }
     }
 
-    /// 📮️ The ONE publication close slice BOTH close ladders run first. `begin_close` parks the job on
-    /// `LayoutExportCloseStage::Publication`, which `close_export_step` refuses outright — so whichever
-    /// ladder runs has to drain the retained publication payload and advance the stage itself. Only the
-    /// `InteractiveJob` ladder used to do that; `ArtifactReservedJob::close_step` (the reserved media
-    /// export route, `LayoutMediaExportJobFactory`) went straight to `close_export_step` and got the
-    /// refusal on EVERY call, which the caller sees as `Blocked` with nothing released. A close loop that
-    /// keeps stepping until `terminal_is_empty()` therefore spun forever, minting one `Fault` per turn —
-    /// three of this crate's export laws hung exactly there until the 30-minute test-binary watchdog
-    /// SIGKILLed the whole binary and took every other layout result with it.
-    pub(super) fn close_publication_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> LayoutCloseTurn {
-        if !self.slot.terminal_is_empty() {
-            return match self.slot.close_step(grant) {
-                Ok(step) => LayoutCloseTurn::Granted(step.progress()),
-                Err(_) => LayoutCloseTurn::Blocked { reason: "layout export publication awaits its terminal-empty witness" },
-            };
-        }
-        self.slot.publication = None;
-        self.slot.delivered = false;
-        self.close_stage = LayoutExportCloseStage::JsonValidation;
-        LayoutCloseTurn::Pending { released_items: usize::from(grant.maximum_items > 0), released_bytes: 0 }
+    /// 📮️ Releases the published payload before either export close path enters the next phase.
+    pub(super) fn close_publication_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementPollExit};
+        let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
+            if !self.slot.terminal_is_empty(){return Ok(self.slot.close_step(effect).result?)}
+            if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            self.slot.publication=None;
+            self.slot.delivered=false;
+            self.close_stage=LayoutExportCloseStage::JsonValidation;
+            Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        })();
+        RetirementPollExit::settle(effect,result)
     }
 
     pub(super) fn close_export_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<LayoutCloseTurn, Fault> {

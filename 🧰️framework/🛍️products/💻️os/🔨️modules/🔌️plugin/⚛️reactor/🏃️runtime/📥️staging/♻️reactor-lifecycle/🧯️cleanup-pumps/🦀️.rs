@@ -307,6 +307,20 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
                 *outcome_progress = Some(PluginLifecycleStep::Complete(Default::default()));
                 return CleanupTurn::Complete;
             };
+
+        {
+            let mut pages=match cell.result_pages.try_lock(){
+                Ok(pages)=>pages,
+                Err(std::sync::TryLockError::WouldBlock)=>{*contended=true;return CleanupTurn::Yield;}
+                Err(std::sync::TryLockError::Poisoned(_))=>return CleanupTurn::Fault(b"plugin close result-page authority is poisoned"),
+            };
+            if !pages.terminal_is_empty(){
+                return match cx.with_retained_loan(state.mounted_policy.close,|cx|pages.close_original(cx)){
+                    Ok(step)=>{*outcome_progress=Some(PluginLifecycleStep::Progress(step.progress()));CleanupTurn::Yield},
+                    Err(failure)=>CleanupTurn::OriginalFailure(failure),
+                }
+            }
+        }
         match runtime_drain_maintenance_source(cell,cx) {
             Ok(PluginLifecycleStep::Complete(progress)) if progress==RetainedCloneProgress::default() => {},
             Ok(step) => { *outcome_progress=Some(step); return CleanupTurn::Yield },

@@ -46,7 +46,7 @@ pub fn describe(x: &mut Export<'_>, key: &str, entity: u64, name: &str, rows: Ve
 
 pub fn envelope(wall: &Wall, layout: &WallLayout, elevation: f64) -> TriMesh {
     let mut solo = ModelSnapshot::default();
-    solo.wall_types.insert(wall.wall_type.clone(), WallType { name: String::new(), layers: vec![Layer { material: String::new(), thickness: layout.thickness, function: LayerFunction::Structure }] });
+    solo.wall_types.cold_insert(wall.wall_type.clone(), WallType { name: String::new(), layers: vec![Layer { material: String::new(), thickness: layout.thickness, function: LayerFunction::Structure }] });
     let one = WallLayout { layer_offsets: vec![layout.offset_left, -layout.offset_right], ..layout.clone() };
     mesh_where(&wall_solid(&solo, wall, &one, &[]), elevation, |_, _| true)
 }

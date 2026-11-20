@@ -6,7 +6,7 @@ fn operation()->semio_framework_job::Operation{semio_framework_job::Operation::n
 
 #[test]
 fn pdf_raster_portable_planes_are_bounded_and_lossless() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📕️pdf/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📕️pdf/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let width = case["width"].as_u64().unwrap() as u32; let height = case["height"].as_u64().unwrap() as u32;
         let rgba: Vec<_> = case["rgba"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect();

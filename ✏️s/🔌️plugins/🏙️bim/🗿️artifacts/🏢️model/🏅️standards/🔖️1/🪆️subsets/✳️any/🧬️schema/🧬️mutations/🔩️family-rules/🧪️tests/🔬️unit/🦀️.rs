@@ -7,12 +7,12 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 
 fn base() -> ModelSnapshot {
     let mut base = ModelSnapshot::default();
-    base.families.insert("fam".into(), Family { name: "Family".into(), category: FamilyCategory::Profile });
+    base.families.cold_insert("fam".into(), Family { name: "Family".into(), category: FamilyCategory::Profile });
     base
 }
 
 fn parameter(base: &mut ModelSnapshot, name: &str, value: &str) {
-    base.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id("fam", name), FamilyParameter { family: "fam".into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
+    base.family_parameters.cold_insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id("fam", name), FamilyParameter { family: "fam".into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
 }
 
 fn solid(shape: SolidShape) -> FamilySolid {
@@ -76,8 +76,8 @@ fn a_profile_family_is_used_by_types_curtain_walls_and_railings_that_name_it() {
     assert_eq!(profile_user(&base, "fam"), None);
     let used = Profile::Family { family: "fam".into() };
     let other = Profile::Family { family: "other".into() };
-    base.column_types.insert("ct".into(), ColumnType { name: "C".into(), profile: other.clone(), material: "m".into() });
-    base.beam_types.insert("bt".into(), BeamType { name: "B".into(), profile: Profile::Rectangle { width: 1.0, depth: 1.0 }, material: "m".into() });
+    base.column_types.cold_insert("ct".into(), ColumnType { name: "C".into(), profile: other.clone(), material: "m".into() });
+    base.beam_types.cold_insert("bt".into(), BeamType { name: "B".into(), profile: Profile::Rectangle { width: 1.0, depth: 1.0 }, material: "m".into() });
     assert_eq!(profile_user(&base, "fam"), None, "another family or a plain profile is not a use");
     base.beam_types.get_mut("bt").expect("bt").profile = used.clone();
     assert_eq!(profile_user(&base, "fam"), Some("beam types"));
@@ -95,9 +95,9 @@ fn a_parameter_is_used_by_another_formula_or_a_solid_slot_and_never_by_itself() 
     assert_eq!(parameter_user(&base, "fam", "w"), Some("the formula of parameter \"double\"".to_string()));
     assert_eq!(parameter_user(&base, "fam", "alone"), None);
     assert_eq!(parameter_user(&base, "fam", "double"), None);
-    base.family_parameters.remove("fam.double");
+    base.family_parameters.cold_remove("fam.double");
     assert_eq!(parameter_user(&base, "fam", "w"), None);
-    base.family_solids.insert("body".into(), solid(extrusion("1 m")));
+    base.family_solids.cold_insert("body".into(), solid(extrusion("1 m")));
     assert_eq!(parameter_user(&base, "fam", "w"), Some("the profile.width of solid \"body\"".to_string()));
     assert_eq!(parameter_user(&base, "other", "w"), None, "another family's parameter is not this one");
     parameter(&mut base, "self_ref", "self_ref + 1 m");

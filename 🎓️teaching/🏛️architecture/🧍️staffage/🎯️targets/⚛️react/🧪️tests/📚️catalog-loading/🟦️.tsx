@@ -91,7 +91,8 @@ describe("catalog store", () => {
     const snapshot = store.getSnapshot();
     const counts = snapshot.rows.reduce<Record<string, number>>((tally, row) => ({ ...tally, [row.status]: (tally[row.status] ?? 0) + 1 }), {});
     expect(snapshot.rows).toHaveLength(total);
-    expect(counts).toEqual({ ready: total });
+    const invalid = snapshot.rows.filter(row => row.status !== "ready").map(row => [row.entry.id, row.issues]);
+    expect(counts, JSON.stringify(invalid)).toEqual({ ready: total });
     expect(snapshot.manifestIssues).toEqual([]);
     for (const id of ["cantilever-balcony", "glulam-beam", "steel-column"]) expect(snapshot.rows.find((row) => row.entry.id === id)?.status).toBe("ready");
   }, 120_000);

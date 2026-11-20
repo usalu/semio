@@ -12,7 +12,7 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
 const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8")) as any;
 
-function mountHost(activeUtility = "selectDirect") {
+function mountHost(activeUtility = "selectDirect", interactive = true) {
   const actions: any[] = [];
   const node = {
     type: "componentScene",
@@ -25,7 +25,7 @@ function mountHost(activeUtility = "selectDirect") {
       hoveredId: fixture.scene.hoveredId,
       activeUtility,
       viewMode: "composite",
-      interactive: true,
+      interactive,
       interactionDomain: fixture.scene.interactionDomain,
     },
   };
@@ -55,23 +55,35 @@ describe("InkCanvas canonical interaction domain", () => {
   it("validates the neutral cross-renderer contract and forbids removed app-private selection verbs", () => {
     expect(fixture.identity).toEqual({ requiresInteractionId: true, missingInteractionId: "refuse-target", rawIdFallback: false, incomingPaintIds: "raw" });
     expect(fixture.forbiddenActions).toEqual(["setHover", "setSelection"]);
-    for (const invalid of [
-      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "blocks" } } },
-      { ...fixture, scene: { ...fixture.scene, interactionDomain: { granularityId: "block" } } },
-      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "", granularityId: "block" } } },
-      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "blocks", granularityId: "" } } },
-    ]) {
+    const validateDomain = new Ajv().compile(fixture.interactionDomainSchema);
+    expect(validateDomain(fixture.scene.interactionDomain)).toBe(true);
+    for (const invalid of fixture.invalidInteractionDomains) {
+      expect(validateDomain(invalid)).toBe(false);
     }
   });
 
   it("publishes canonical topology hover and an exact empty hover clear", () => {
     const { actions, root } = mountHost();
-    for (const id of ["pointer-hover", "pointer-leave"]) {
+    for (const id of ["pointer-hover", "pointer-background"]) {
       const testCase = caseById(id);
       fireEvent.pointerMove(root, { clientX: testCase.gesture.x, clientY: testCase.gesture.y, pointerId: 7 });
       expect(actions.at(-1)).toEqual(expectedAction(testCase));
     }
     expect(actions.every((entry) => !fixture.forbiddenActions.includes(entry.action))).toBe(true);
+  });
+
+  it("clears the pointer hover when the pointer leaves directly from a block", () => {
+    const { actions, root } = mountHost();
+    const hover = caseById("pointer-hover");
+    fireEvent.pointerMove(root, { clientX: hover.gesture.x, clientY: hover.gesture.y, pointerId: 7 });
+    fireEvent.pointerLeave(root, { pointerId: 7 });
+    expect(actions).toEqual([expectedAction(hover), expectedAction(caseById("pointer-leave"))]);
+  });
+
+  it("does not publish pointer hover from a read-only scene", () => {
+    const { actions, root } = mountHost("selectDirect", false);
+    fireEvent.pointerLeave(root, { pointerId: 7 });
+    expect(actions).toEqual([]);
   });
 
   it("publishes replace, additive and empty picks through interactionSelect", () => {
@@ -99,8 +111,11 @@ describe("InkCanvas canonical interaction domain", () => {
     const { root } = mountHost();
     const selected = root.querySelector('[data-ink-block-id="text-a"]') as HTMLDivElement;
     const hovered = root.querySelector('[data-ink-block-id="image-b"]') as HTMLDivElement;
-    expect(selected.className).toContain("ring-primary");
-    expect(selected.className).toContain("ring-2");
-    expect(hovered.className).toContain("ring-primary/60");
+    expect(selected.getAttribute("data-shared-border-state")).toBe("active");
+    expect(hovered.getAttribute("data-shared-border-state")).toBe("hover");
+    for (const block of [selected, hovered]) {
+      expect(block.getAttribute("data-shared-border-edges")).toBe("");
+      expect(block.className).not.toMatch(/\bring/u);
+    }
   });
 });

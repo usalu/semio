@@ -245,7 +245,7 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, En1993Snapshot>, cfg: &Con
     match body_key {
         outliner::BODY_OUTLINER => outliner::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, outliner::BODY_OUTLINER)),
         properties::BODY_PROPERTIES => properties::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, properties::BODY_PROPERTIES)),
-        viewport::BODY_VIEWPORT => viewport::render(host.document(), host.report(), selection, frame, view_state.locale),
+        viewport::BODY_VIEWPORT => viewport::render(host.document(), host.report(), selection, frame, view_state),
         diagrams::BODY_DIAGRAMS => diagrams::render(host.document(), host.report(), focus.as_deref().or(worst), &semio_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale),
         checks::BODY_CHECKS => live.render_checks(&semio_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale, CONTROLLER_ID, checks::INTERACTION_DOMAIN),
         document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),

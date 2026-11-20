@@ -71,6 +71,11 @@ fn envelope_field_registry_retains_late_return_and_generation_reuse_until_bounde
 #[test]
 fn envelope_field_registry_capacity_and_contention_return_the_exact_decoder_before_adoption() {
     let registry = ArtifactEnvelopeFieldDecoderRegistry::<(), ()>::new();
+    let (demand, born, released) = semio_framework_trace_memory_testing::observe_backing(|| {
+        ArtifactEnvelopeFieldDecoderRegistry::empty_release_demands(&registry)
+    });
+    assert!(demand.unwrap().is_some());
+    assert_eq!((born, released), (0, 0));
     let mut leases = Vec::with_capacity(ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY);
     for _ in 0..ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY {
         leases.push(registry.try_admit(Box::new(TestEnvelopeFieldDecoder { terminal: true, accepted: 0 })).unwrap_or_else(|_| panic!("fixed decoder capacity admits its exact maximum")));
@@ -92,7 +97,7 @@ fn envelope_field_registry_capacity_and_contention_return_the_exact_decoder_befo
     }
     assert!(registry.terminal_is_empty());
 
-    let state = registry.state.lock().expect("test owns exact registry contention guard");
+    let state = registry.state.try_lock().expect("test owns exact registry contention guard");
     let (fault, rejected) = match registry.try_admit(Box::new(TestEnvelopeFieldDecoder { terminal: true, accepted: 0 })) {
         Ok(_) => panic!("contended decoder admission must fail closed"),
         Err(rejected) => rejected,

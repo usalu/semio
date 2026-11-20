@@ -7,7 +7,7 @@ import type { AgentBridgePresence, AgentBridgeStatus, AgentBridgeVersionMismatch
 
 /** 🔷 Builds discovered, config, shellKind, generatedShellSessionIdRef of useAgentBridge. */
 export function useDiscoveredState({ options }: { readonly options: UseAgentBridgeOptions }) {
-  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch, offerScope: options.offerScope });
+  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, declared: options.discoveryDeclared, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch, offerScope: options.offerScope });
   const config = options.config === undefined ? discovered : options.config;
   const shellKind = options.shellKind ?? "react";
   const generatedShellSessionIdRef = useRef(`shell-${Math.random().toString(36).slice(2)}`);

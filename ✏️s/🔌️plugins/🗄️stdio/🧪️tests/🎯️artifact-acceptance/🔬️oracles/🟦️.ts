@@ -1,7 +1,7 @@
 /** 🔬️ Third-party oracles of the artifact acceptance matrix: a format's bytes are judged by an independent parser (JSON.parse, fast-xml-parser, pngjs, fflate) or by the published magic of the format, never by our own codecs.
  * @see https://www.w3.org/TR/PNG/#5PNG-file-signature
  * @see https://www.rfc-editor.org/rfc/rfc1950 */
-import { XMLValidator } from "fast-xml-parser";
+import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { PNG } from "pngjs";
 import { unzlibSync, unzipSync } from "fflate";
 import { createHash } from "node:crypto";
@@ -31,6 +31,43 @@ const guard = (run: () => OracleVerdict): OracleVerdict => {
 };
 const head = (bytes: Uint8Array, pattern: RegExp): boolean => pattern.test(text(bytes.slice(0, 256)));
 
+function spreadsheetPackage(bytes: Uint8Array): OracleVerdict {
+  if (!localHeader(bytes)) return verdict(false, "Invalid ZIP local header");
+  const members = unzipSync(bytes);
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    removeNSPrefix: true,
+    processEntities: false,
+    isArray: (name) => name === "Relationship" || name === "Override" || name === "Default",
+  });
+  function part(path: string) {
+    const bytes = members[path];
+    if (!bytes) throw new Error(`Missing package part ${path}`);
+    const encoding = startsWith(bytes, [0xff, 0xfe]) || startsWith(bytes, [0x3c, 0x00]) ? "utf-16le"
+      : startsWith(bytes, [0xfe, 0xff]) || startsWith(bytes, [0x00, 0x3c]) ? "utf-16be" : "utf-8";
+    const source = new TextDecoder(encoding, { fatal: true }).decode(bytes);
+    if (XMLValidator.validate(source) !== true) throw new Error(`Invalid XML in ${path}`);
+    return parser.parse(source);
+  }
+  const officeRelationships = new Set([
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+    "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+  ]);
+  const relationships = part("_rels/.rels").Relationships?.Relationship ?? [];
+  const main = relationships.find((rel: Record<string, string>) => officeRelationships.has(rel["@_Type"]!) && rel["@_TargetMode"] !== "External");
+  if (!main) return verdict(false, "Missing officeDocument relationship");
+  const target = new URL(main["@_Target"], "https://package.invalid/");
+  if (target.origin !== "https://package.invalid") return verdict(false, "External workbook path");
+  const path = target.pathname;
+  const types = part("[Content_Types].xml").Types;
+  const override = types?.Override?.find((entry: Record<string, string>) => entry["@_PartName"] === path);
+  const extension = path.split(".").pop()?.toLowerCase();
+  const fallback = types?.Default?.find((entry: Record<string, string>) => entry["@_Extension"]?.toLowerCase() === extension);
+  const workbookType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
+  const declared = (override ?? fallback)?.["@_ContentType"] === workbookType;
+  return verdict(declared && Object.hasOwn(part(path.slice(1)), "workbook"), "SpreadsheetML workbook relationship, content type and XML root");
+}
+
 /** 🧾️ Oracles keyed by the fixture's `oracle` name. */
 export const ORACLES: Readonly<Record<string, (bytes: Uint8Array) => OracleVerdict>> = {
   json: (bytes) => guard(() => (JSON.parse(text(bytes)), verdict(true, "JSON.parse"))),
@@ -42,6 +79,7 @@ export const ORACLES: Readonly<Record<string, (bytes: Uint8Array) => OracleVerdi
   tsv: (bytes) => guard(() => (text(bytes), verdict(true, "UTF-8 decodes"))),
   zip: (bytes) => guard(() => verdict(localHeader(bytes) && Object.keys(unzipSync(bytes)).length >= 0, "PK local header, fflate unzip")),
   ooxml: (bytes) => guard(() => verdict(localHeader(bytes) && "[Content_Types].xml" in unzipSync(bytes), "PK local header, fflate unzip, [Content_Types].xml")),
+  xlsx: (bytes) => guard(() => spreadsheetPackage(bytes)),
   bcf: (bytes) => guard(() => verdict(localHeader(bytes) && Object.keys(unzipSync(bytes)).some((name) => name.endsWith("bcf.version")), "PK local header, fflate unzip, bcf.version")),
   zlib: (bytes) => guard(() => verdict(unzlibSync(bytes).length >= 0, "fflate unzlib")),
   png: (bytes) => guard(() => { const image = PNG.sync.read(Buffer.from(bytes)); return verdict(image.width > 0 && image.height > 0, `pngjs ${image.width}x${image.height}`); }),

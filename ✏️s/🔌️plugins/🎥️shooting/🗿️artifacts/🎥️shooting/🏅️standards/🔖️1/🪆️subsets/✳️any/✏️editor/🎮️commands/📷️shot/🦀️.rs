@@ -8,8 +8,10 @@ use crate::mutations::change_shot_shape::ChangeShotShape;
 use crate::mutations::change_shot_width::ChangeShotWidth;
 use crate::mutations::create_shot::CreateShot;
 use crate::mutations::create_saved_camera::CreateSavedCamera;
+use crate::mutations::patch_shot_camera::PatchShotCamera;
 use crate::mutations::rename_shot::RenameShot;
 use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
+use crate::mutations::set_shot_auto_fit::SetShotAutoFit;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingShot;
 use semio_framework_pack_json::json;
@@ -31,6 +33,15 @@ pub fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option
         "height" => shot_dimension(value).map(|new_height| ShootingMutation::ChangeShotHeight(ChangeShotHeight { id, new_height })),
         "format" => value.as_str().map(|v| ShootingMutation::ChangeShotFormat(ChangeShotFormat { id, new_format: v.into() })),
         "shape" => value.as_str().map(|v| ShootingMutation::ChangeShotShape(ChangeShotShape { id, new_shape: v.into() })),
+        "autoFit" => {
+            let auto_fit = match value.as_str()? {
+                "scene" => None,
+                "fit" => Some(true),
+                "manual" => Some(false),
+                _ => return None,
+            };
+            Some(ShootingMutation::SetShotAutoFit(SetShotAutoFit { id, auto_fit }))
+        }
         _ => None,
     }
 }
@@ -127,17 +138,86 @@ pub mod patch_shots {
         pub value: String,
     }
 
-    pub fn handle(payload: &PatchShots, _doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        if payload.shot_ids.is_empty() {
-            return Ok(Emit::default());
+    fn color(value: &str) -> Option<String> {
+        let digits = value.strip_prefix('#')?;
+        ((digits.len() == 3 || digits.len() == 6) && digits.bytes().all(|b| b.is_ascii_hexdigit())).then(|| value.to_owned())
+    }
+
+    fn patch_drawing(id: &str, field: &str, value: &str) -> Option<ShootingMutation> {
+        let value = value.trim();
+        let mut patch = crate::ShootingDrawingPatch::default();
+        match field {
+            "background" => patch.background = Some(value.parse().ok()?),
+            "fill" => patch.fill = Some(value.parse().ok()?),
+            "fillColor" => patch.fill_color = Some(crate::ShootingAssigned { value: if value.is_empty() { None } else { Some(color(value)?) } }),
+            "fillOpacity" => patch.fill_opacity = Some(value.parse::<f64>().ok().filter(|v| (0.0..=1.0).contains(v))?),
+            "visibleLines" => patch.visible_lines = Some(value.parse().ok()?),
+            "hiddenLines" => patch.hidden_lines = Some(value.parse().ok()?),
+            "mergeLines" => patch.merge_lines = Some(value.parse().ok()?),
+            "visibleColor" => patch.visible_color = Some(color(value)?),
+            "hiddenColor" => patch.hidden_color = Some(color(value)?),
+            "visibleWidth" | "hiddenWidth" => {
+                let width = value.parse::<f64>().ok().filter(|v| *v > 0.0 && *v <= 64.0)?;
+                if field == "visibleWidth" { patch.visible_width = Some(width); } else { patch.hidden_width = Some(width); }
+            }
+            "lineEasing" => patch.line_easing = Some(value.parse::<f64>().ok().filter(|v| (0.0..=10.0).contains(v))?),
+            _ => return None,
         }
+        Some(ShootingMutation::SetShotDrawing(crate::mutations::set_shot_drawing::SetShotDrawing { id: id.to_owned(), patch }))
+    }
+
+    fn patch_camera(camera: &mut crate::ShootingCamera, field: &str, value: &str) -> bool {
+        match field {
+            "projection" if matches!(value, "perspective" | "orthographic") => camera.projection = Some(value.to_owned()),
+            "zoom" | "fov" => {
+                let Some(number) = value.parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0 && (field == "zoom" || *v < 180.0)) else { return false };
+                if field == "zoom" { camera.zoom = number; } else { camera.fov = number; }
+            }
+            "eyeX" | "eyeY" | "eyeZ" | "targetX" | "targetY" | "targetZ" | "upX" | "upY" | "upZ" => {
+                let Some(number) = value.parse::<f64>().ok().filter(|v| v.is_finite()) else { return false };
+                let axis = match field.as_bytes().last() { Some(b'X') => 0, Some(b'Y') => 1, _ => 2 };
+                let coordinates = if field.starts_with("eye") {
+                    &mut camera.position
+                } else if field.starts_with("target") {
+                    &mut camera.target
+                } else {
+                    camera.up.get_or_insert([0.0, 0.0, 1.0])
+                };
+                coordinates[axis] = number;
+            }
+            _ => return false,
+        }
+        PatchShotCamera::valid_camera(camera)
+    }
+
+    pub fn handle(payload: &PatchShots, doc: &ArtifactView<'_, crate::ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+        let field = payload.field.as_str();
         let value = json!(payload.value);
-        let mutations: Vec<ShootingMutation> = payload.shot_ids.iter().cloned().filter_map(|id| shot_mutation_for_field(id, &payload.field, &value)).collect();
-        if mutations.is_empty() {
-            Ok(Emit::default())
-        } else {
-            Ok(Emit::mutations(mutations))
+        let mut result = Emit::default();
+        for id in &payload.shot_ids {
+            let Some(shot) = doc.snapshot.shots.iter().find(|shot| &shot.id == id) else { continue };
+            if let Some(mutation) = shot_mutation_for_field(id.clone(), field, &value).or_else(|| patch_drawing(id, field, &payload.value)) {
+                result.artifact_mutations.push(mutation);
+            } else {
+                let fallback = crate::shooting_resolve_shot_camera(doc.snapshot, shot, &cfg.snapshot.camera);
+                let mut camera = fallback.clone();
+                if !patch_camera(&mut camera, field, &payload.value) { continue; }
+                let manual_framing = field == "zoom"
+                    || (field == "fov" && camera.projection.as_deref() != Some("orthographic"))
+                    || field.starts_with("eye") || field.starts_with("target");
+                result.artifact_mutations.push(ShootingMutation::PatchShotCamera(PatchShotCamera {
+                    shot_id: id.clone(),
+                    field: field.to_owned(),
+                    camera,
+                    fallback,
+                    release: None,
+                }));
+                if manual_framing && shot.auto_fit != Some(false) {
+                    result.artifact_mutations.push(ShootingMutation::SetShotAutoFit(SetShotAutoFit { id: id.clone(), auto_fit: Some(false) }));
+                }
+            }
         }
+        Ok(result)
     }
 }
 //#endregion 🔖️PatchShots
@@ -159,7 +239,7 @@ pub mod add_shot {
         let id = next_shooting_id("shot");
         let camera_id = next_shooting_id("camera");
         let saved_camera = crate::ShootingSavedCamera { id: camera_id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), camera: cfg.snapshot.camera.clone() };
-        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: Some(camera_id) };
+        let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, drawing: None, camera_id: Some(camera_id), auto_fit: None };
         Ok(Emit {
             artifact_mutations: vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) }), ShootingMutation::CreateShot(CreateShot { shot, index: Some(snapshot.shots.len()) }), ShootingMutation::SetActiveShot(SetActiveShotMutation { shot_id: Some(id.clone()) })],
             config_mutations: vec![ShootingConfigMutation::SetShotSelection(crate::editor::shooting::config::SetShotSelection { shot_ids: vec![id] })],

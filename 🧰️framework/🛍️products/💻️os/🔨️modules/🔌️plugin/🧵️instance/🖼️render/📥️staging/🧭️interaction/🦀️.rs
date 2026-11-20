@@ -15,6 +15,7 @@ use semio_framework_value::DslValue;
 use semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_stores::stores_components::HoverSurface;
 use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
@@ -79,6 +80,16 @@ pub(crate) fn leftover_interaction_view_from(state: &protocol::InteractionState,
 }
 
 /// 🎯️ The optional `granularities` argument of `selectAll`: a comma separated list of granularity ids whose nodes are all selected together (every kind of a scope at once); empty or absent selects the nodes of the active granularity only.
+/// 🧭️ A leave only clears the currently published channel and window.
+fn window_hover_can_clear(channel: Option<&str>, owner: Option<&HoverSurface>, requested: &str, source: Option<Option<&str>>) -> bool {
+    channel.is_none_or(|channel| channel == requested)
+        && source.zip(owner).is_none_or(|(source, owner)| owner.matches_window(source))
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+
 fn select_all_granularity_scope(args: Option<&DslValue>) -> Vec<String> {
     args.and_then(|value| value.get("granularities")).and_then(DslValue::as_str).map(|list| list.split(',').map(str::trim).filter(|id| !id.is_empty()).map(str::to_owned).collect()).unwrap_or_default()
 }
@@ -182,6 +193,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         } else {
             validated
         };
+        self.interaction.interaction_hover_owners.retain(|domain, _| validated.hover.contains_key(domain));
         self.interaction.interaction_hover = validated.hover.clone();
         let persisted_before = self.stores.interaction_store.snapshot().unwrap_or_default();
         let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
@@ -337,15 +349,28 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let def = self.tools.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                 let channel = args.and_then(|value| value.get("channel")).and_then(DslValue::as_str).unwrap_or("pointer").to_string();
                 let targets = parse_interaction_targets(args, action).await?;
-                let current = self.interaction.interaction_hover.get(&domain_id).cloned().unwrap_or_default();
-                let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
-                let topology = self.resolve_domain_topology(&def, known_ids).await?;
-                let hover_input = protocol::HoverInput { channel, targets };
-                let next = protocol::next_hover(&def.hover, &topology, &hover_input).await;
-                if next.ids.is_empty() {
-                    self.interaction.interaction_hover.remove(&domain_id);
-                } else {
-                    self.interaction.interaction_hover.insert(domain_id, next);
+                let source = meta.view_state.as_deref().map(|view| view.window_id.as_deref());
+                let current = self.interaction.interaction_hover.get(&domain_id);
+                let owner = self.interaction.interaction_hover_owners.get(&domain_id);
+                if !targets.is_empty() || window_hover_can_clear(current.map(|hover| hover.channel.as_str()), owner, &channel, source) {
+                    let current = current.cloned().unwrap_or_default();
+                    let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
+                    let topology = self.resolve_domain_topology(&def, known_ids).await?;
+                    let next = protocol::next_hover(&def.hover, &topology, &protocol::HoverInput { channel, targets }).await;
+                    let owners = &mut self.interaction.interaction_hover_owners;
+                    if next.ids.is_empty() {
+                        owners.remove(&domain_id);
+                        self.interaction.interaction_hover.remove(&domain_id);
+                    } else {
+                        if let Some(window) = source {
+                            if owners.get(&domain_id).is_none_or(|owner| !owner.matches_window(window)) {
+                                owners.insert(domain_id.clone(), HoverSurface::from_window(window));
+                            }
+                        } else {
+                            owners.remove(&domain_id);
+                        }
+                        self.interaction.interaction_hover.insert(domain_id, next);
+                    }
                 }
             }
             InteractionVerb::ClearSelection => {

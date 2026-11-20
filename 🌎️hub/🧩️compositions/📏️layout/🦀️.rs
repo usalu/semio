@@ -4,14 +4,16 @@ use semio_plugin::__semio_dispatch_PluginApp;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
 use semio_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_plugin::PluginBuilder;
+use semio_plugin::{ArtifactEditor, ArtifactViewer, PluginBuilder};
+use semio_s_artifact_layout_layout_editor::LayoutPlayApp;
+use semio_s_artifact_layout_layout_viewer::LayoutViewer;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the layout editor and viewer surfaces.
     pub enum LayoutApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<semio_s_artifact_layout_layout_editor::LayoutPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_layout_layout_viewer::LayoutViewer>>),
+        Editor(VcsArtifactApp<EditorApp<LayoutPlayApp>, <LayoutPlayApp as ArtifactEditor>::Members>),
+        Viewer(VcsArtifactApp<ViewerApp<LayoutViewer>, <LayoutViewer as ArtifactViewer>::Members>),
     }
 }
 //#endregion 🗃️Apps

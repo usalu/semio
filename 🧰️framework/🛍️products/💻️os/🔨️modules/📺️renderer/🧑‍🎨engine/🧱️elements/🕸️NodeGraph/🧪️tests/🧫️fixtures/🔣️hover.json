@@ -1,0 +1,53 @@
+[
+  {
+    "id": "viewport channel disappears once",
+    "steps": [
+      {"scene": null, "write": null},
+      {"scene": {"nodeId": "mesh", "portId": "meshOut"}, "write": {"hoveredId": "mesh", "portId": "meshOut"}, "read": {"hoveredId": "mesh", "portId": "meshOut"}, "publish": false},
+      {"scene": {"nodeId": "mesh", "portId": "meshOut"}, "write": null},
+      {"scene": null, "write": {}, "read": {}, "publish": false},
+      {"read": {"hoveredId": "mesh", "portId": "meshOut"}, "stale": true, "publish": false},
+      {"scene": null, "write": null}
+    ]
+  },
+  {
+    "id": "local pointer wins before its readback",
+    "steps": [
+      {"scene": {"edgeId": "viewport-wire"}, "write": {"edgeId": "viewport-wire"}},
+      {"local": true, "scene": {"edgeId": "viewport-wire"}, "write": null},
+      {"scene": null, "write": null, "read": {"hoveredId": "local-node"}, "publish": true},
+      {"scene": {"nodeId": "local-node"}, "write": null},
+      {"scene": null, "write": null}
+    ]
+  },
+  {
+    "id": "local pointer can take ownership of the same target",
+    "steps": [
+      {"scene": {"nodeId": "mesh"}, "write": {"hoveredId": "mesh"}},
+      {"local": true, "read": {"hoveredId": "mesh"}, "publish": false},
+      {"scene": null, "write": null},
+      {"scene": {"edgeId": "other-wire"}, "write": {"edgeId": "other-wire"}},
+      {"scene": null, "write": {}, "read": {}, "publish": false}
+    ]
+  },
+  {
+    "id": "explicit empty mark is applied once",
+    "steps": [
+      {"scene": {"nodeId": "mesh"}, "write": {"hoveredId": "mesh"}},
+      {"scene": {}, "write": {}, "read": {}, "publish": false},
+      {"scene": null, "write": null}
+    ]
+  },
+  {
+    "id": "retained graph preserves a local hover before the scene echo",
+    "steps": [
+      {"scene": {"nodeId": "profile"}, "write": {"hoveredId": "profile"}, "live": "profile"},
+      {"local": true, "localNode": "extrude", "scene": {"nodeId": "profile"}, "write": null, "live": "extrude"},
+      {"scene": null, "write": null, "live": "extrude", "read": {"hoveredId": "extrude"}, "publish": true},
+      {"scene": {"nodeId": "extrude"}, "write": null, "live": "extrude"},
+      {"scene": null, "write": null, "live": "extrude"},
+      {"scene": {"nodeId": "profile"}, "write": {"hoveredId": "profile"}, "live": "profile"},
+      {"scene": null, "write": {}, "live": null}
+    ]
+  }
+]

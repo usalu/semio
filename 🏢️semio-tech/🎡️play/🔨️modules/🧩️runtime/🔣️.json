@@ -3,6 +3,9 @@
   "host": "play.semio-tech.com",
   "hostVariant": "s",
   "excludedBrandPrefix": "entwerfen-mit-bestand-",
+  "excludedVariants": [
+    "demonstrator"
+  ],
   "groups": [
     {
       "id": "design",
@@ -397,7 +400,7 @@
         {
           "variant": "en1998",
           "example": "seismic-rc-frame",
-          "exampleLabel": "Seismic RC frame (DE zone 2, compliant)",
+          "exampleLabel": "Seismic RC frame (DE S_aP,R 1.5 m/s², compliant)",
           "label": "Eurocode 8",
           "tagline": "Earthquake resistance",
           "description": "Design structures for earthquake resistance.",
@@ -1383,13 +1386,6 @@
           "icon": "git-branch",
           "example": "demo",
           "exampleLabel": "Demo"
-        },
-        {
-          "variant": "demonstrator",
-          "label": "Demonstrator",
-          "tagline": "Composed playground",
-          "description": "Explore one document composed from several apps working together.",
-          "icon": "play"
         }
       ]
     },

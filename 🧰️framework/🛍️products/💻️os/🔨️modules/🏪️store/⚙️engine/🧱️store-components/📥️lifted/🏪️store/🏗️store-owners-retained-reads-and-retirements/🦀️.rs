@@ -94,7 +94,16 @@ where
         *self.one_item_preparation_factory = owners.one_item_preparation.take();
         *self.replay_preparation_factory = owners.replay_preparation.take();
         *self.one_item_wire_preparation_factory = owners.one_item_wire_preparation.take();
-        store_log.operation_wire.get_or_insert(owners.operation_wire);
+        if let Some(wire) = store_log.operation_wire.as_mut() {
+            wire.original_target = wire.original_target.or(owners.operation_wire.original_target);
+            wire.original_receiving = wire.original_receiving.or(owners.operation_wire.original_receiving);
+            if wire.original_message_admission.is_none() {
+                wire.original_message_admission = owners.operation_wire.original_message_admission;
+                wire.original_message_birth = owners.operation_wire.original_message_birth;
+            }
+        } else {
+            store_log.operation_wire = Some(owners.operation_wire);
+        }
         Ok(())
     }
 

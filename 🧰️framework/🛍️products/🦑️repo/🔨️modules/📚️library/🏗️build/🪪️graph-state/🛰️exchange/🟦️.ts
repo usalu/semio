@@ -2,23 +2,39 @@ import {createHash} from "node:crypto";
 import {brotliCompressSync,brotliDecompressSync,constants} from "node:zlib";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
-import {createGraphFleetClientV1,type GraphFleetClientV1,type GraphFleetSettingsV1,type GraphPutV1} from "./📡️client/🟦️.ts";
+import {createGraphFleetClientV1,type GraphFleetClientV1,type GraphFleetSettingsV1,type GraphLookupFaultV1,type GraphPutV1} from "./📡️client/🟦️.ts";
 import {graphRefusalOfV1,type GraphRefusalV1} from "./🧯️refusal/🟦️.ts";
-export type {GraphFleetClientV1,GraphFleetSettingsV1,GraphPutV1,GraphRefusalV1};
+export type {GraphFleetClientV1,GraphFleetSettingsV1,GraphLookupFaultV1,GraphPutV1,GraphRefusalV1};
 export {graphRefusalOfV1};
 import {slotIdV1} from "../../🪢️slots/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {GRAPH_STATE_POLICY_V1 as policy,graphStateSlotParts,type GraphStateV1} from "../🟦️.ts";
 
 
-const sha256=(bytes:Uint8Array|string):string=>createHash("sha256").update(bytes).digest("hex"),sleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise(done=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
+const sha256=(bytes:Uint8Array|string):string=>createHash("sha256").update(bytes).digest("hex");
+
+function sleep(milliseconds:number,signal?:AbortSignal):Promise<void>{
+ if(signal?.aborted)return Promise.resolve();
+ return new Promise(done=>{
+  const finish=()=>{clearTimeout(timer);signal?.removeEventListener("abort",finish);done();};
+  const timer=setTimeout(finish,milliseconds);
+  signal?.addEventListener("abort",finish,{once:true});
+ });
+}
 
 /** 📄️ One document of an entry, in its neutral form: the bytes with the machine root replaced by the root token. */
 export type GraphDocumentV1=Readonly<{name:string;bytes:Uint8Array}>;
 /** 🌊️ A document of an entry that was not downloaded with it: `read` downloads its blobs (verified against their names by the client) and decompresses them when asked, `keep` leaves the compressed blobs in memory (within a small budget per entry) so that the next `read` of the same document does not download them again. `hash` is the digest of the stored blob of a document that is one blob (the name the local stores know it by), `size` the compressed bytes. */
 export type GraphDeferredV1=Readonly<{hash:string|undefined;size:number;read(options?:Readonly<{keep?:boolean}>):Promise<GraphDocumentV1|undefined>}>;
 /** 🏷️ The inline description of an entry: see the schema definition `Note`. */
-export type GraphEntryNoteV1=Readonly<{version:1;kind:GraphStateV1["frame"]["kind"];digest:string;platform:string;producer:string;createdMs:number;documents:readonly Readonly<{name:string;hash:string;size:number}>[]}>;
+export type GraphEntryNoteV1=Readonly<{version:1;kind:GraphStateV1["frame"]["kind"];digest:string;platform:string;producer:string;createdMs:number;documents:readonly Readonly<{name:string;hash:string;size:number}>[];leaves?:readonly GraphLeafV1[]}>;
+/** 🍃️ A content addressed piece an entry refers to by name, stored in the blob store of the cache under its own digest before the entry is: see the schema definition `Note`. */
+export type GraphLeafV1=Readonly<{namespace:"build-input-closures"|"build-lock-closures";hash:string;size:number}>;
+/** 🍃️ A leaf with the way to read its bytes on the producing machine. */
+export type GraphLeafSourceV1=GraphLeafV1&Readonly<{read():Promise<Uint8Array|undefined>}>;
+const LEAF_FOLDER_V1={"build-input-closures":"i","build-lock-closures":"l"} as const,storedLeaves=new Map<string,Set<string>>();
+/** 🍃️ The path under which the action result of an entry references a leaf, so the retention of the cache keeps the blob as long as the entry. */
+export const graphLeafPathV1=(leaf:GraphLeafV1):string=>`leaf/${LEAF_FOLDER_V1[leaf.namespace]}/${leaf.hash}.json`;
 /** 🔔️ A lifecycle message the caller may print (keys of the text catalogue). */
 export type GraphSayV1=(key:keyof typeof schema.definitions.TextCatalogue.const,fields:Readonly<Record<string,string|number>>)=>void;
 
@@ -32,7 +48,7 @@ export function graphEntrySlotV1(state:GraphStateV1):string{return slotIdV1(poli
 
 /** 🗜️ Compresses a neutral document into the blobs the cache stores (one per 32 MiB of compressed output), named `<name>.br` or `<name>.br.<n>`. */
 export function packGraphDocumentV1(document:GraphDocumentV1):readonly GraphDocumentV1[]{
- const packed=brotliCompressSync(document.bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:5,[constants.BROTLI_PARAM_LGWIN]:22,[constants.BROTLI_PARAM_SIZE_HINT]:document.bytes.length}}),part=32<<20;
+ const packed=brotliCompressSync(document.bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:5,[constants.BROTLI_PARAM_LGWIN]:22,[constants.BROTLI_PARAM_SIZE_HINT]:document.bytes.length}}),part=policy.blobMaximumBytes;
  if(packed.length<=part)return [{name:document.name+".br",bytes:packed}];
  const parts:GraphDocumentV1[]=[];
  for(let from=0,index=0;from<packed.length;from+=part,index++)parts.push({name:`${document.name}.br.${index}`,bytes:packed.subarray(from,Math.min(packed.length,from+part))});
@@ -87,7 +103,7 @@ function noteOf(bytes:Uint8Array):{note:GraphEntryNoteV1;entries:readonly {path:
  try{
   const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),files=(result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[],text=Buffer.from(result.stdout_raw as Uint8Array).toString("utf8"),note=JSON.parse(text) as GraphEntryNoteV1;
   if(validateJsonSchemaSubset({$ref:"#/definitions/Note"},note,schema).length)return undefined;
-  const entries=files.map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
+  const entries=files.filter(file=>!file.path.startsWith("leaf/")).map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
   return {note,entries};
  }catch{return undefined;}
 }
@@ -112,35 +128,55 @@ export function graphDocumentProblemV1(documents:readonly GraphDocumentV1[]):str
 
 const DEFERRED_KEEP_BYTES_V1=32<<20;
 /** ⬇️ Looks the entry of a state up and downloads its documents, except the blobs `held` says the caller has and the documents `defer` names: those are not downloaded and come back in `deferred`, to be read one at a time, so a caller that unpacks many large documents never holds more than it reads. `undefined` is a miss; `"fault"` is an unreachable, denied or damaged entry (the caller computes). Every blob is verified against its name before it counts. */
-export async function fetchGraphEntryV1(client:GraphFleetClientV1,state:GraphStateV1,held?:GraphHeldV1,defer?:(name:string)=>boolean):Promise<{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[];deferred:ReadonlyMap<string,GraphDeferredV1>}|undefined|"fault"> {
- if(!client.usable())return "fault";
- const answer=await client.getResult(graphEntryKeyV1(state));
+export async function fetchGraphEntryV1(client:GraphFleetClientV1,state:GraphStateV1,held?:GraphHeldV1,defer?:(name:string)=>boolean,signal?:AbortSignal,onFault?:(reason:GraphLookupFaultV1)=>void,onResultDigest?:(digest:string)=>void):Promise<{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[];deferred:ReadonlyMap<string,GraphDeferredV1>}|undefined|"fault"> {
+ signal?.throwIfAborted();
+ const fault=(reason:GraphLookupFaultV1)=>{onFault?.(reason);return "fault" as const;};
+ if(!client.usable())return fault("unavailable");
+ const answer=await client.getResult(graphEntryKeyV1(state),signal);
+ signal?.throwIfAborted();
  if(answer==="miss")return undefined;
- if(typeof answer==="string")return "fault";
+ if(typeof answer==="string")return fault(answer==="denied"?"denied":answer==="down"?"transport":"unavailable");
  const described=noteOf(answer);
- if(!described||described.note.digest!==state.digest||described.note.kind!==state.frame.kind||described.entries.length>policy.entryMaximumDocuments)return "fault";
- const blobs:GraphDocumentV1[]=[],lazy=new Map<string,{path:string;hash:string;size:number;index:number}[]>(),eager:{path:string;hash:string;size:number}[]=[];let broken=false;
+ if(!described||described.note.digest!==state.digest||described.note.kind!==state.frame.kind||described.entries.length>policy.entryMaximumDocuments)return fault("record");
+ const blobs:GraphDocumentV1[]=[],lazy=new Map<string,{path:string;hash:string;size:number;index:number}[]>(),eager:{path:string;hash:string;size:number}[]=[];let broken:GraphLookupFaultV1|undefined;
  for(const entry of described.entries){
+  signal?.throwIfAborted();
   const named=defer===undefined?null:/^(.*)\.br(?:\.(\d+))?$/u.exec(entry.path);
   if(named===null||!defer!(named[1]!)){eager.push(entry);continue;}
   if(held!==undefined&&await held({path:entry.path,hash:entry.hash,size:entry.size}))continue;
   const rows=lazy.get(named[1]!)??[];rows.push({...entry,index:Number(named[2]??0)});lazy.set(named[1]!,rows);
  }
- await each(eager,4,async entry=>{if(broken)return;if(held!==undefined&&await held({path:entry.path,hash:entry.hash,size:entry.size}))return;const bytes=await client.getBlob(entry.hash,entry.size);if(bytes===undefined){broken=true;return;}blobs.push({name:entry.path,bytes});});
- if(broken)return "fault";
+ await each(eager,4,async entry=>{
+  if(broken||signal?.aborted)return;
+  try{
+   if(held!==undefined&&await held({path:entry.path,hash:entry.hash,size:entry.size}))return;
+   if(signal?.aborted)return;
+   let reason:GraphLookupFaultV1|undefined;
+   const bytes=await client.getBlob(entry.hash,entry.size,signal,onFault===undefined?undefined:kind=>{reason=kind;});
+   if(bytes===undefined){broken??=reason??"unknown";return;}
+   blobs.push({name:entry.path,bytes});
+  }catch{broken??="unknown";}
+ });
+ signal?.throwIfAborted();
+ if(broken!==undefined)return fault(broken);
  const deferred=new Map<string,GraphDeferredV1>();let keptBytes=0;
  for(const [name,rows] of lazy){
   rows.sort((left,right)=>left.index-right.index);
   const size=rows.reduce((sum,row)=>sum+row.size,0);let kept:Uint8Array[]|undefined;
   deferred.set(name,Object.freeze({hash:rows.length===1?rows[0]!.hash:undefined,size,async read(options){
+   signal?.throwIfAborted();
    let parts=kept;
    if(parts!==undefined){kept=undefined;keptBytes-=size;}
-   else{parts=[];for(const row of rows){const bytes=await client.getBlob(row.hash,row.size);if(bytes===undefined)return undefined;parts.push(bytes);}}
+   else{parts=[];for(const row of rows){const bytes=await client.getBlob(row.hash,row.size,signal);signal?.throwIfAborted();if(bytes===undefined)return undefined;parts.push(bytes);}}
    if(options?.keep===true&&keptBytes+size<=DEFERRED_KEEP_BYTES_V1){kept=parts;keptBytes+=size;}
    try{return unpackGraphDocumentsV1(parts.map((bytes,index)=>({name:rows.length===1?name+".br":`${name}.br.${index}`,bytes})))[0];}catch{return undefined;}
   }}));
  }
- try{return {note:described.note,documents:unpackGraphDocumentsV1(blobs),deferred};}catch{return "fault";}
+ try{
+  const documents=unpackGraphDocumentsV1(blobs);
+  if(onResultDigest!==undefined)onResultDigest(sha256(answer));
+  return {note:described.note,documents,deferred};
+ }catch{return fault("payload");}
 }
 
 /** 🧭️ What {@link decideGraphEntryV1} is given: `busy` says whether the caller has other owners to infer (then an owner held by a live peer is skipped, never waited for), `strong` that the caller is a large machine (it never waits for a smaller one). */
@@ -154,7 +190,7 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
  const {client,state,owner,say}=input,now=input.now??Date.now,started=now(),key=graphEntryKeyV1(state),compute=(reason:string,hold?:GraphHoldV1):GraphDecisionV1=>{firstHeld.delete(key);return{outcome:"compute",hold,reason,waitedMs:now()-started};},label=state.digest.slice(0,12);
  const hit=(found:{note:GraphEntryNoteV1;documents:readonly GraphDocumentV1[];deferred:ReadonlyMap<string,GraphDeferredV1>},via:"cache"|"wait"):GraphDecisionV1=>{firstHeld.delete(key);say?.("hit",{kind:state.frame.kind,digest:label,files:found.documents.length+found.deferred.size,megabytes:Math.round((found.documents.reduce((sum,document)=>sum+document.bytes.length,0)+[...found.deferred.values()].reduce((sum,each)=>sum+each.size,0))/1048576),seconds:Math.round((now()-started)/1000)});return {outcome:"hit",via,documents:found.documents,deferred:found.deferred,note:found.note,waitedMs:now()-started};};
  try{
-  const first=await fetchGraphEntryV1(client,state,input.skip,input.defer);
+  const first=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);
   if(first==="fault"){say?.("skipped",{kind:state.frame.kind,reason:"fault"});return compute("fault");}
   if(first)return hit(first,"cache");
   if(!client.claimsUsable())return compute("no-claims");
@@ -162,8 +198,13 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
   for(let round=0;round<policy.claimRoundsMaximum;round++){
    input.signal?.throwIfAborted();
    const claim=await client.claim(key,owner,policy.claimTtlMilliseconds,input.expectedMilliseconds);
-   if(claim.state==="granted")return compute("granted",holdOf(client,key,owner));
-   if(claim.state==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer);if(again&&again!=="fault")return hit(again,"wait");return compute("stored-unreadable");}
+   if(claim.state==="granted"){
+    const hold=holdOf(client,key,owner);
+    if(input.signal?.aborted){await hold.release().catch(()=>undefined);input.signal.throwIfAborted();}
+    return compute("granted",hold);
+   }
+   input.signal?.throwIfAborted();
+   if(claim.state==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);if(again&&again!=="fault")return hit(again,"wait");return compute("stored-unreadable");}
    if(claim.state!=="held")return compute(claim.state==="full"?"claims-full":"claims-"+claim.fault);
    const at=now(),since=firstHeld.get(key)??at;firstHeld.set(key,since);
    const verdict=graphHeldVerdictV1({untilMilliseconds:claim.untilMilliseconds,now:at,sinceMilliseconds:since,busy:input.busy?.()===true,strong:input.strong===true});
@@ -174,9 +215,9 @@ export async function decideGraphEntryV1(input:GraphDecideInputV1):Promise<Graph
    if(deadline===Infinity){deadline=since+Math.min(policy.claimWaitMaximumMilliseconds,input.waitLimitMilliseconds??policy.claimWaitMaximumMilliseconds,policy.leaseTakeOverMilliseconds);say?.("waited",{kind:state.frame.kind,digest:label,seconds:0});}
    const remaining=deadline-now();
    if(remaining<=0)return compute("holder-slow");
-   const waited=await client.await(key,remaining);
+   const waited=await client.await(key,remaining,input.signal);
    if(waited==="fault")return compute("await-fault");
-   if(waited==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer);if(again&&again!=="fault")return hit(again,"wait");if(again==="fault")return compute("fault");}
+   if(waited==="stored"){const again=await fetchGraphEntryV1(client,state,input.skip,input.defer,input.signal);if(again&&again!=="fault")return hit(again,"wait");if(again==="fault")return compute("fault");}
   }
   return compute("rounds");
  }catch{return compute("error");}finally{waiting.delete(key);}
@@ -216,7 +257,7 @@ export type GraphPublishV1=GraphPutV1;
 const refused=(answer:Parameters<typeof graphRefusalOfV1>[0],detail?:string):GraphPublishV1=>{const found=graphRefusalOfV1(answer,detail);return{stored:false,refusal:detail===undefined?found:{...found,detail}};};
 
 /** ⬆️ Uploads the documents of a computed state and the action result that names them (blobs first, so a reader never sees a result without its blobs), then drops the claim unless `keepHold` says the caller will try again with the same claim. Returns whether the entry is stored or why it is not: the answer of the cache (status and first words), no answer in time, an open breaker, a lost claim, or a limit of the client. A machine without upload rights, an unreachable server or an oversized entry never throws. */
-export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;documents:readonly GraphDocumentV1[];hold?:GraphHoldV1;keepHold?:boolean;head?:boolean;say?:GraphSayV1;producer?:string;now?:()=>number}>):Promise<GraphPublishV1>{
+export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFleetClientV1;state:GraphStateV1;owner:string;documents:readonly GraphDocumentV1[];hold?:GraphHoldV1;keepHold?:boolean;head?:boolean;expectedHead?:string;say?:GraphSayV1;producer?:string;now?:()=>number;leaves?:readonly GraphLeafSourceV1[];leafWidth?:number}>):Promise<GraphPublishV1>{
  const {client,state,hold,say}=input;
  try{
   if(!client.settings.upload)return refused("no-upload");
@@ -229,9 +270,23 @@ export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFle
   let failure:GraphPutV1|undefined;
   await each(blobs,3,async blob=>{if(failure!==undefined)return;if(await client.hasBlob(blob.hash)===true)return;const put=await client.putBlob(blob.hash,blob.bytes);if(!put.stored)failure=put;});
   if(failure!==undefined)return failure;
-  const note:GraphEntryNoteV1={version:1,kind:state.frame.kind,digest:state.digest,platform:state.frame.platform,producer:(input.producer??input.owner).slice(0,160),createdMs:(input.now??Date.now)(),documents:blobs.map(blob=>({name:blob.name,hash:blob.hash,size:blob.bytes.length}))};
-  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:blobs.map(blob=>({path:blob.name,digest:{hash:blob.hash,size_bytes:blob.bytes.length}})),stdout_raw:Buffer.from(JSON.stringify(note))});
-  const stored=input.head===true?await swapHeadV1(client,graphEntryKeyV1(state),result,graphEntrySlotV1(state)):await client.putResult(graphEntryKeyV1(state),result,graphEntrySlotV1(state));
+  const leaves=[...new Map((input.leaves??[]).map(leaf=>[leaf.hash,leaf] as const)).values()].sort((left,right)=>left.hash<right.hash?-1:1),known=storedLeaves.get(client.settings.endpoint+"\0"+client.settings.instance)??storedLeaves.set(client.settings.endpoint+"\0"+client.settings.instance,new Set<string>()).get(client.settings.endpoint+"\0"+client.settings.instance)!;
+  let lost:GraphLeafSourceV1|undefined;
+  await each(leaves,input.leafWidth??4,async leaf=>{
+   if(failure!==undefined||lost!==undefined||input.head!==true&&known.has(leaf.hash))return;
+   if(await client.hasBlob(leaf.hash)===true){known.add(leaf.hash);return;}
+   const bytes=await leaf.read();
+   if(bytes===undefined||bytes.length!==leaf.size||sha256(bytes)!==leaf.hash){lost=leaf;return;}
+   const put=await client.putBlob(leaf.hash,bytes);
+   if(!put.stored){failure=put;return;}
+   known.add(leaf.hash);
+  });
+  if(failure!==undefined)return failure;
+  if(lost!==undefined)return refused("leaf-missing",`${lost.namespace}/${lost.hash}`);
+  const note:GraphEntryNoteV1={version:1,kind:state.frame.kind,digest:state.digest,platform:state.frame.platform,producer:(input.producer??input.owner).slice(0,160),createdMs:(input.now??Date.now)(),documents:blobs.map(blob=>({name:blob.name,hash:blob.hash,size:blob.bytes.length})),...leaves.length===0?{}:{leaves:leaves.map(leaf=>({namespace:leaf.namespace,hash:leaf.hash,size:leaf.size}))}};
+  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...blobs.map(blob=>({path:blob.name,digest:{hash:blob.hash,size_bytes:blob.bytes.length}})),...leaves.map(leaf=>({path:graphLeafPathV1(leaf),digest:{hash:leaf.hash,size_bytes:leaf.size}}))],stdout_raw:Buffer.from(JSON.stringify(note))});
+  const key=graphEntryKeyV1(state),slot=graphEntrySlotV1(state);
+  const stored=input.head===true&&input.expectedHead===undefined?await swapHeadV1(client,key,result,slot):await client.putResult(key,result,slot,input.expectedHead);
   if(stored.stored)say?.("published",{kind:state.frame.kind,digest:state.digest.slice(0,12),files:blobs.length,megabytes:Math.round(blobs.reduce((sum,blob)=>sum+blob.bytes.length,0)/1048576)});
   return stored;
  }catch(error){return refused("network",String((error as Error)?.message??error).slice(0,160));}finally{if(input.keepHold!==true)await hold?.release().catch(()=>undefined);}

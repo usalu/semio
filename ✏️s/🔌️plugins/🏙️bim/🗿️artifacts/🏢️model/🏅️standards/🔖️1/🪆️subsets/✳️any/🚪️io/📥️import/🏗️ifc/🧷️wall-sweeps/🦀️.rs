@@ -36,7 +36,7 @@ pub fn read(i: &mut Import<'_>) {
         let side = if label(&rows, "Side").as_deref() == Some("Right") { WallSide::Right } else { WallSide::Left };
         let material = label(&rows, "Material").filter(|material| i.model.materials.contains_key(material)).unwrap_or_default();
         let sweep = WallSweep { host, side, profile, height: number(&rows, "Height").unwrap_or(0.0), inset: number(&rows, "Inset").unwrap_or(0.0), material, name: if name == id { String::new() } else { name } };
-        i.model.wall_sweeps.insert(id, sweep);
+        i.model.wall_sweeps.cold_insert(id, sweep);
     }
 }
 

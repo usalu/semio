@@ -63,19 +63,20 @@ test("a shared reader never enters the builder; a stale generation does and hold
  }finally{clean(dir);}
 },60000);
 
-test("a current policy serves the newest generation without verification or a builder; without one it builds",async()=>{
+test("a current policy serves the newest generation without verification or a builder; without one it refuses and builds nothing",async()=>{
  const dir=scratch();
  try{
-  await seed(dir,ringFiles(5));const mock=createMockHost(dir),empty=(await loadGenerationGraphV1(mock.host,{policy:"current"})).graph as any;
-  expect(mock.events).toContain("builder:held");expect(shape(empty)).toEqual(pythonGraph(dir));
+  await seed(dir,ringFiles(5));const mock=createMockHost(dir),refused=await loadGenerationGraphV1(mock.host,{policy:"current"}).then(()=>undefined,error=>error as Error&{code?:string});
+  expect(refused?.code).toBe("GENERATION_NONE_SEALED");expect(mock.events).toEqual(["shared"]);
+  expect(shape((await loadGenerationGraphV1(mock.host)).graph)).toEqual(pythonGraph(dir));
   await applyOps(dir,[{op:"write",path:"pkg/p1/src/index.ts",content:"export const stale=1;\n"}]);
   mock.events.length=0;mock.said.length=0;const served=(await loadGenerationGraphV1(mock.host,{policy:"current"})).graph as any;
-  expect(mock.events).toEqual(["shared"]);expect(mock.said.map(row=>row.text)).toEqual(["graph: serving generation 0 without verification (graph policy current)"]);
+  expect(mock.events).toEqual(["shared"]);expect(mock.said.filter(row=>row.key!=="sealedAge").map(row=>row.text)).toEqual(["graph: serving generation 0 without verification (graph policy current)"]);
   expect(served.projects.p1.sources.length).toBe(1);expect(served.projects.p1.sources[0].path).toBe("pkg/p1/src/index.ts");
   expect(shape(served)).not.toEqual(pythonGraph(dir));
   mock.events.length=0;const fresh=(await loadGenerationGraphV1(mock.host)).graph as any;expect(mock.events).toContain("builder:held");expect(shape(fresh)).toEqual(pythonGraph(dir));
   const german=createMockHost(dir,{language:"de"});(await loadGenerationGraphV1(german.host,{policy:"current"})).graph;
-  expect(german.said.map(row=>row.text)).toEqual(["Graph: Generation 1 wird ohne Prüfung geliefert (Graph-Richtlinie current)"]);
+  expect(german.said.filter(row=>row.key!=="sealedAge").map(row=>row.text)).toEqual(["Graph: Generation 1 wird ohne Prüfung geliefert (Graph-Richtlinie current)"]);
  }finally{clean(dir);}
 },60000);
 
@@ -129,7 +130,8 @@ test("progress counters are the shared graph phases and a cancelled load leaves 
  const dir=scratch();
  try{
   await seed(dir,ringFiles(4));const mock=createMockHost(dir);(await loadGenerationGraphV1(mock.host)).graph;
-  expect(mock.published.every(resource=>/^build:graph-phase:(facts|assembly):\d+:\d+$/u.test(resource))).toBe(true);
+  expect(mock.published.every(resource=>/^build:graph-phase:(facts|fragments|assembly):\d+:\d+$/u.test(resource))).toBe(true);
+  expect(mock.published).toContain("build:graph-phase:fragments:4:4");
   expect(mock.published.some(resource=>resource.startsWith("build:graph-phase:assembly:"))).toBe(true);
   await applyOps(dir,[{op:"write",path:"pkg/p1/src/index.ts",content:"export const v=5;\n"}]);
   const controller=new AbortController(),cancelled=createMockHost(dir,{signal:controller.signal});controller.abort(new Error("cancelled"));
@@ -185,7 +187,7 @@ test("a generation names the stamps of the inferrers, never the code: tool sourc
   const data=createMockHost(dir,{...options,stamps:stampTable("n/2","c/2","e/2")});(await loadGenerationGraphV1(data.host)).graph;
   expect(data.log).toEqual([{full:every,edges:[],cold:false}]);
   loader.events.length=0;loader.said.length=0;const stale=(await loadGenerationGraphV1(loader.host,{policy:"current"})).graph as any;
-  expect(loader.events).toEqual(["shared"]);expect(loader.said.map(row=>row.text)).toEqual(["graph: serving generation "+(JSON.parse(readFileSync(join(dir,".gen","current.json"),"utf8")).generation)+" built by another implementation (graph policy current)"]);expect(Object.keys(stale.projects).length).toBe(10);
+  expect(loader.events).toEqual(["shared"]);expect(loader.said.filter(row=>row.key!=="sealedAge").map(row=>row.text)).toEqual(["graph: serving generation "+(JSON.parse(readFileSync(join(dir,".gen","current.json"),"utf8")).generation)+" built by another implementation (graph policy current)"]);expect(Object.keys(stale.projects).length).toBe(10);
   loader.events.length=0;(await loadGenerationGraphV1(loader.host)).graph;expect(loader.events).toEqual(["shared","builder:wait","builder:held","builder:released"]);expect(valid.length).toBe(10);
  }finally{clean(dir);}
 },120000);
@@ -194,11 +196,17 @@ test("a tool source edited every few hundred milliseconds never restarts a 300 p
  const count=300,broken=30,files={...brokenRing(count,broken),"tool/graph.mjs":"0"};
  const quiet=scratch(),busy=scratch(),options={stamps:stampTable(),ownerDelayMs:8};
  try{
-  await seed(quiet,files);const timed=createMockHost(quiet,options),started=Date.now();(await loadGenerationGraphV1(timed.host)).graph;const quietMs=Date.now()-started;
+  await seed(quiet,files);const timed=createMockHost(quiet,options),started=process.cpuUsage();await loadGenerationGraphV1(timed.host);
+  const baseline=process.cpuUsage(started);
   await seed(busy,files);const loaded=createMockHost(busy,options),loadedStamp=implementationDigestV1(await loaded.host.implementationRows());
-  let editing=true,edits=0;const editor=(async()=>{while(editing){await sleep(250);edits++;await writeFile(join(busy,"tool/graph.mjs"),String(edits));}})();
-  const begin=Date.now(),graph=(await loadGenerationGraphV1(loaded.host)).graph as any,busyMs=Date.now()-begin;editing=false;await editor;
-  expect(edits).toBeGreaterThanOrEqual(3);expect(loaded.log.length).toBe(1);expect(loaded.said.at(-2)!.text).toContain("published");expect(loaded.said.at(-1)!.text).toContain("fact index of generation");expect(busyMs).toBeLessThanOrEqual(1.2*quietMs+500);
+  let editing=true,edits=0;
+  const editor=(async()=>{while(editing){await sleep(250);if(!editing)break;await writeFile(join(busy,"tool/graph.mjs"),String(++edits));}})();
+  const begin=process.cpuUsage();
+  const graph=(await loadGenerationGraphV1(loaded.host).finally(async()=>{editing=false;await editor;})).graph as any;
+  const work=process.cpuUsage(begin);
+  expect(edits).toBeGreaterThanOrEqual(3);expect(loaded.log.length).toBe(1);expect(loaded.log).toEqual(timed.log);
+  expect(loaded.said.at(-2)!.text).toContain("published");expect(loaded.said.at(-1)!.text).toContain("fact index of generation");
+  expect(work.user+work.system).toBeLessThanOrEqual(1.2*(baseline.user+baseline.system)+500_000);
   expect(stampOf(busy)).toBe(loadedStamp);expect(Object.keys(graph.projects).length).toBe(count-broken);
   const next=createMockHost(busy,options);(await loadGenerationGraphV1(next.host)).graph;
   expect(next.log).toEqual([]);expect(next.events).toEqual(["shared"]);expect(stampOf(busy)).toBe(implementationDigestV1(await next.host.implementationRows()));

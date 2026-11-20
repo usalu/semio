@@ -129,6 +129,10 @@ impl ArtifactCommandWork<ViewerApp<Grid2dViewer>> for Grid2dViewCommandWork {
         self.tool_id
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
     fn extent(
         &self,
         command: &Grid2dViewCommand,
@@ -368,5 +372,3 @@ pub const WFC_GRID2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID2D_DOCU
 //#endregion 🔖️Dialect
 }
 //#endregion 🧩️ArtifactItems
-
-semio_plugin::retained_command::terminal_frame_bound!(Grid2dViewCommandWork);

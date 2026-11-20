@@ -1,0 +1,22 @@
+[
+  {
+    "case": "publication",
+    "bytes": 16,
+    "gate": false
+  },
+  {
+    "case": "headroom",
+    "bytes": "physical",
+    "gate": false
+  },
+  {
+    "case": "retained",
+    "bytes": 1048577,
+    "gate": false
+  },
+  {
+    "case": "ledger",
+    "bytes": 16,
+    "gate": true
+  }
+]

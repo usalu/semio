@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = ["semio-s-artifact-wfc-grid3d-inferences/testkit"]
 
 [dependencies]
+semio-s-artifact-wfc-grid3d-transient = { path = "../../🫧️transient/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-projection = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }

@@ -13,7 +13,7 @@
         "owner": { "type": "string", "minLength": 1 },
         "from": { "$ref": "#/$defs/point" },
         "to": { "$ref": "#/$defs/point" },
-        "state": { "enum": ["normal", "focus", "active", "waiting", "loading", "introduced", "celebrated", "hover"] }
+        "state": { "enum": ["normal", "active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"] }
       }
     }
   }

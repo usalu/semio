@@ -34,9 +34,14 @@ export async function decodeDagChannelsJson(source:string,control:DagTextDecodeC
 
 /** 🖱️ Admits the complete hover/refusal record with finite syntax and typed-slot authority. */
 export async function decodeDagHoverJson(source:string,control:DagTextDecodeControl):Promise<DagHoverFacts>{
- const rows=object(await read(source,control),["channel","refusal"]);await control.ownership.admitSlots(2,16);const hovered=member(rows,"channel"),refused=member(rows,"refusal");const selected=hovered.kind==="null"?null:await channel(hovered,control.ownership);let refusal:DagWireTypeRefusal|null=null;
+ const value=await read(source,control);
+ const hasEdge=value.kind==="object"&&value.members.some(row=>row.name==="edge");
+ const rows=object(value,hasEdge?["channel","refusal","edge"]:["channel","refusal"]);await control.ownership.admitSlots(rows.length,16);
+ const edgeValue=hasEdge?member(rows,"edge"):undefined;
+ const edge=edgeValue&&edgeValue.kind!=="null"?await text(edgeValue,control.ownership,true):undefined;
+ const hovered=member(rows,"channel"),refused=member(rows,"refusal");const selected=hovered.kind==="null"?null:await channel(hovered,control.ownership);let refusal:DagWireTypeRefusal|null=null;
  if(refused.kind!=="null"){const fields=object(refused,["source","sourceTypes","target","targetTypes"]);await control.ownership.admitSlots(4,16);refusal={source:await text(member(fields,"source"),control.ownership,true),sourceTypes:await identifiers(member(fields,"sourceTypes"),control.ownership),target:await text(member(fields,"target"),control.ownership,true),targetTypes:await identifiers(member(fields,"targetTypes"),control.ownership)};}
- await control.ownership.checkpoint();return {channel:selected,refusal};
+ await control.ownership.checkpoint();return edge===undefined?{channel:selected,refusal}:{channel:selected,refusal,edge};
 }
 
 /** 🚦️ Admits every evaluation variant before replacing accepted host status facts. */

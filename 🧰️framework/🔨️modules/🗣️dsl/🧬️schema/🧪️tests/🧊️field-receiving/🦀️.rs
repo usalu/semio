@@ -101,3 +101,37 @@ fn block_receiving_equals_serde_json_record_at_every_cancel_prefix(){
     }
     assert!(completed>0);
 }
+
+#[derive(Debug, PartialEq, serde::Deserialize, serde::Serialize, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+enum StatementNode {
+    Leaf { name: String },
+    Group {
+        #[dsl(statements, block)]
+        children: Vec<StatementNode>,
+    },
+}
+
+#[test]
+fn nested_statement_blocks_match_serde_and_close_cancelled_receiving() {
+    use semio_framework_dsl_record::DslVariants;
+
+    let law = law();
+    for case in cases(&law, "statements") {
+        let source: StatementNode = serde_json::from_value(case["source"].clone()).unwrap();
+        for cut in cuts(&law) {
+            let wire = FieldValue::Statements(vec![source.to_named_record()]);
+            let mut bank = bank(&law);
+            let complete = receive(
+                <StatementNode as DslOwnedReceivingField>::receiving_cursor(),
+                wire,
+                &mut bank,
+                cut,
+                |node| assert_eq!(serde_json::to_value(node).unwrap(), case["expected"]),
+            );
+            if cut.is_none() {
+                assert!(complete);
+            }
+        }
+    }
+}

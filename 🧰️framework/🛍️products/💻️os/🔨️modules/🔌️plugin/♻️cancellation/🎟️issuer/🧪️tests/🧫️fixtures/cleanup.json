@@ -1,0 +1,6 @@
+[
+  { "phase": "empty", "active": 0, "detached": false, "sourceHoldsRegistry": false, "work": false, "awaitsCustody": false },
+  { "phase": "registered", "active": 1, "detached": false, "sourceHoldsRegistry": true, "work": true, "awaitsCustody": true },
+  { "phase": "released", "active": 0, "detached": false, "sourceHoldsRegistry": false, "work": false, "awaitsCustody": false },
+  { "phase": "retiring", "active": 0, "detached": true, "sourceHoldsRegistry": true, "work": true, "awaitsCustody": false }
+]

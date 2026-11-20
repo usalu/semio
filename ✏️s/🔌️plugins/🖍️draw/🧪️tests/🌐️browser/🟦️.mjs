@@ -124,6 +124,26 @@ try {
   const before = (await state()).layers;
   const picker = page.locator('[id="playground.navbar.fixture"]').first();
   assert((await picker.innerText()).includes(fixture.example.label), "Default Draw example must be selected");
+  const labels = report.locale === "de"
+    ? { artifact: "Artefakt", catalogue: "Katalog", inspection: "Inspektion", addPath: "Pfad hinzufügen", path: "Pfad" }
+    : { artifact: "Artifact", catalogue: "Catalogue", inspection: "Inspection", addPath: "Add Path", path: "Path" };
+  const openPanel = async (id, name) => {
+    const button = page.locator(`button[id="${id}"]`).first();
+    assert((await button.innerText()).includes(name), `Localized panel label required: ${name}`);
+    const panel = page.locator(`[data-slot="panel"][id="framework.panelTab.${id}"]`).first();
+    if (!(await panel.isVisible())) await button.click({ timeout: 15000 });
+    await panel.waitFor({ state: "visible", timeout: 15000 });
+    return panel;
+  };
+  const layersPanel = await openPanel("framework.panel.artifact", labels.artifact);
+  await layersPanel.getByText(labels.addPath, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
+  const layerRow = layersPanel.locator(`[role="treeitem"][id^="drawing-play-layers."]:not([id^="drawing-play-layers.add."]):not([id="drawing-play-layers.empty"])`).first();
+  await layerRow.click({ timeout: 15000 });
+  const inspectionPanel = await openPanel("framework.panel.inspection", labels.inspection);
+  await inspectionPanel.locator(`[id^="drawing-inspector."]`).first().waitFor({ state: "visible", timeout: 15000 });
+  const cataloguePanel = await openPanel("framework.panel.catalogue", labels.catalogue);
+  await cataloguePanel.getByText(labels.path, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
+  await openPanel("framework.panel.artifact", labels.artifact);
   await note("boot");
   await picker.click({ timeout: 15000 });
   await page.getByRole("option", { name: fixture.example.label, exact: true }).waitFor({ state: "visible", timeout: 15000 });
@@ -150,7 +170,12 @@ try {
   const beforeEventBytes = readFileSync(eventPath).byteLength;
   await page.locator('[id^="framework.window."][id$=".utilityBar.unfold"]').first().click({ timeout: 15000 });
   await page.locator('[id^="ui.utilities."][id$=".group.group:Drawing"]').first().click({ timeout: 15000 });
-  await click(fixture.utility);
+  for (const pressed of fixture.utilityPressStates) {
+    await click(fixture.utility);
+    await page.waitForFunction(({ id, pressed }) => {
+      return document.getElementById(id)?.getAttribute("aria-pressed") === String(pressed);
+    }, { id: fixture.utility, pressed }, { timeout: 15000 });
+  }
   const rect = await canvas.boundingBox();
   assert(rect && rect.width > 0 && rect.height > 0, "Nonempty Draw canvas required");
   const [x0, y0] = fixture.gesture.from, [x1, y1] = fixture.gesture.to;

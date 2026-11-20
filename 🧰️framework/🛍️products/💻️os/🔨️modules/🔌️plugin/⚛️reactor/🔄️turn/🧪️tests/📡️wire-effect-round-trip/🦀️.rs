@@ -1,12 +1,10 @@
-use semio_framework::kernel::MessageEndpoint;
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::RequestOutcome;
 use semio_framework_value::ToValue;
+use semio_plugin_reactor_turn::decode_wire_effect;
 use semio_framework::kernel::{Effect, RequestId};
 
 #[test]
 fn request_file_open_survives_wire_effect_round_trip() {
-    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importSnapshot".into(), multiple: false, args: None };
+    let effect = Effect::RequestFileOpen { max_file_bytes: None, req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importSnapshot".into(), multiple: false, args: None };
     let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
     let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
     match decoded {
@@ -104,7 +102,7 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
                 timeline: vec![VideoRenderRun { scene: 0, frames: 1 }],
             },
         },
-        Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false, args: None },
+        Effect::RequestFileOpen { max_file_bytes: None, req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false, args: None },
         Effect::RequestMediaFrames {
             req,
             accept: "video/*".into(),

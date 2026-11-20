@@ -245,3 +245,7 @@ pub(super) fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut V
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../🎟️receipt/🧪️tests/🦀️.rs"]
+mod publication_receipt_tests;

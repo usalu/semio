@@ -3,7 +3,7 @@
  * Analytic rules (availability, bones, feature, presence of thermal and structural solids, the per-solid `volume-*` rules) come from {@link ../🧱️rules/🟦️.ts} and `../🧊️volume/🟦️.ts`; the geometric rules tessellate with the owned kernel and
  * measure with the owned raster ({@link ../🌓️silhouette/🟦️.ts}), the owned column union and the owned ray parity: `volumes-silhouette` (IoU and Hausdorff of the body against the filled 2D shapes of the same scale in every viewpoint),
  * `volumes-bounds`, `volumes-monotonic` (expanded solids and triangles per list), `volumes-cross-scale` (IoU, Hausdorff and union volume against the finer authored scale), the area and box part of `volumes-thermal-coverage`
- * and the containment and ground part of `volumes-structure-coverage`. A thermal solid that is or references an `envelope: true` solid gives its region coverage but stands for a porous lattice, so its hull surface is left out of the exposed-area sums (C22); a solid tagged `emitter` (a plume, a breath) gives coverage but is no surface either, so it is left out of the sums too, and only its centre has to lie in the body box. Every limit is in {@link VOLUME_LIMITS}. Expensive work reports progress and stops on cancellation.
+ * and the containment and ground part of `volumes-structure-coverage`. A thermal solid that is or references an `envelope: true` solid gives its region coverage but stands for a porous lattice, so its hull surface is left out of the exposed-area sums (C22); a solid tagged `emitter` (a plume, a breath) gives coverage but is no surface either, so it is left out of the sums too, and only its centre has to lie in the body box. The outer area of a region counts the faces the air from outside reaches through the thermal solids of the scale or that a solid of another region covers; the faces of a cavity those solids close off do not count (C31, `outsideOf`, the cell of the flood is the measurement `info:floodCellM`). Every limit is in {@link VOLUME_LIMITS}. Expensive work reports progress and stops on cancellation.
  *
  * THE REFERENCES are shapely and numpy (areas, silhouettes, Hausdorff) and trimesh (volumes) in `🧪️tests/🧊️volumes-rules`.
  *
@@ -16,12 +16,12 @@ import { type Issue } from "../🟦️.ts";
 import { volumeIssues } from "../🧊️volume/🟦️.ts";
 import { authoredVolumes, expandedCount, solidsOf } from "./🧱️lists/🟦️.ts";
 import { VOLUME_LIMITS, VOLUME_RULES, analyticRules, availabilityRule, bonesRule, collector, compareSolidLists, copiedRule, featureOf, featureRule, slenderRule, structureCoverageRule, thermalCoverageRule, type RuleResult, type VolumeFinding, type VolumeMeasurement, type VolumeRule } from "./🧱️rules/🟦️.ts";
-import { SEAM_FEATURES, bandVolumes, exposedArea, fixedTriangleCount, outerArea, unionVolume, type ContactPlane } from "./🧮️measures/🟦️.ts";
-import { GATE, Mask, drawnFor, TILE_CELLS, WINDOW_FEATURES, VIEWPOINTS, boundarySpread, distanceField, extentOf, nearWithin, hausdorff, measureAsset, project, quantileOf, referenceOf, worldSolids, type Drawn, type Group, type Point, type Viewpoint, type World } from "./🌓️silhouette/🟦️.ts";
+import { SEAM_FEATURES, bandVolumes, exposedArea, fixedTriangleCount, outerArea, outsideOf, unionVolume, type ContactPlane, type Outside } from "./🧮️measures/🟦️.ts";
+import { GATE, Mask, bodyDimensions, drawnFor, TILE_CELLS, WINDOW_FEATURES, VIEWPOINTS, boundarySpread, distanceField, extentOf, nearWithin, hausdorff, measureAsset, project, quantileOf, referenceOf, worldSolids, type Drawn, type Group, type Point, type Viewpoint, type World } from "./🌓️silhouette/🟦️.ts";
 
 export { VOLUME_LIMITS, VOLUME_RULES, analyticRules, compareSolidLists, featureOf };
-export { bandVolumes, exposedArea, fixedTriangleCount, isClosed, outerArea, unionVolume } from "./🧮️measures/🟦️.ts";
-export type { ContactPlane } from "./🧮️measures/🟦️.ts";
+export { bandVolumes, exposedArea, fixedTriangleCount, isClosed, outerArea, outsideOf, unionVolume } from "./🧮️measures/🟦️.ts";
+export type { ContactPlane, Outside } from "./🧮️measures/🟦️.ts";
 export type { VolumeFinding, VolumeMeasurement, VolumeRule };
 export type { SolidSimilarity } from "./🧱️rules/🟦️.ts";
 export { authoredVolumes, expandedCount, solidsOf } from "./🧱️lists/🟦️.ts";
@@ -152,6 +152,7 @@ function viewsDisagreeRule(asset: Asset, volumes: readonly AuthoredVolume[], sta
   for (const volume of volumes) {
     const d = volume.denominator;
     const feature = featureOf(d, minFeatureMm);
+    if (asset.representations[`${d}`]?.status !== "authored") continue;
     const evaluated = state(d);
     const whole = new Map<string, Box>();
     const perBone = new Map<string, Box>();
@@ -264,7 +265,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
     const stateOf = (denominator: ScaleDenominator): ReturnType<typeof evaluate> => {
       let hit = stateAt.get(denominator);
       if (hit === undefined) {
-        hit = evaluate(asset, { kind: "pose", pose }, { kind: "scale", scale: { denominator } });
+        hit = evaluate(asset, { kind: "pose", pose }, asset.representations[`${denominator}`]?.status === "authored" ? { kind: "scale", scale: { denominator } } : undefined);
         stateAt.set(denominator, hit);
       }
       return hit;
@@ -284,16 +285,17 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
       const feature = featureOf(d, minFeatureMm);
       step(PHASE(`1:${d} silhouette`, `1:${d} Silhouette`));
       if (rules.has("volumes-silhouette") || rules.has("volumes-bounds")) {
-        const m = measureAsset(asset, d, pose, undefined, feature, softIdsOf(asset, volume));
+        const m = asset.representations[`${d}`]?.status === "authored" && rules.has("volumes-silhouette") ? measureAsset(asset, d, pose, undefined, feature, softIdsOf(asset, volume)) : undefined;
+        const bbox = m?.bbox ?? bodyDimensions(worldAt(volume, "body"));
         if (rules.has("volumes-bounds"))
           (["widthM", "heightM", "depthM"] as const).forEach((name, k) => {
             const want = asset.dimensions[name];
-            const got = m.bbox[k]!;
+            const got = bbox[k]!;
             const limit = Math.max(VOLUME_LIMITS.boundsFeatures * feature, VOLUME_LIMITS.boundsFraction * want);
             const measured = bounds.measure({ scale: d, list: "body", name: `bboxDeviationM:${name}`, value: Math.abs(got - want), limit, bound: "max" });
             if (!measured.ok) bounds.fail(`volumes.${d}.body`, `The body of 1:${d} is ${got.toFixed(3)} m along ${name} but dimensions say ${want} m (limit ${mm(measured.limit)}).`, `Der Body von 1:${d} misst ${got.toFixed(3)} m entlang ${name}, dimensions nennen ${want} m (Grenze ${mm(measured.limit)}).`, { scale: d, list: "body", measurements: [measured] });
           });
-        if (rules.has("volumes-silhouette"))
+        if (m !== undefined)
           for (const view of VIEWPOINTS) {
             const v = m.views[view];
             const elevation = view === "elevation";
@@ -320,6 +322,10 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
         const ofOther = new Set(volume.thermal.filter((s) => !exchangeRegions.has((s as { region: Slug }).region) && (s as { of?: string }).of !== undefined).map((s) => (s as { of: string }).of));
         const porous = new Set([...ofExchange].filter((id) => !ofOther.has(id)));
         let outside = 0;
+        const probe = Math.max(1e-4, 0.02 * feature);
+        const seam = SEAM_FEATURES * feature;
+        let flooded: Outside | undefined;
+        const air = (): Outside => (flooded ??= outsideOf(worlds.filter((w) => !porous.has(w.id) && w.envelope !== true && w.emitter !== true), feature, probe, () => operation.signal?.throwIfAborted()));
         const perRegion = d >= 200;
         let [sumArea, sumDeclared] = [0, 0];
         for (const region of asset.thermal.regions) {
@@ -338,10 +344,9 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
           const hidden = region.hidden !== undefined;
           const ownWorlds = new Set(own.map((s) => byId.get(s.id)).filter((w): w is World => w !== undefined));
           const against = hidden ? [] : (["body", "thermal", "structure"] as const).flatMap((list) => worldAt(volume, list)).filter((w) => !porous.has(w.id));
-          const probe = Math.max(1e-4, 0.02 * feature);
-          const seam = SEAM_FEATURES * feature;
-          const area = exposedArea(picked, hidden ? [] : picked, [], () => false, probe, seam);
-          const exposed = exposedArea(picked, against, planes, (other) => ownWorlds.has(other), probe, seam);
+          const reached = hidden ? undefined : (base: readonly [number, number, number], normal: readonly [number, number, number]): boolean => air().counts(base, normal, (solid) => ownWorlds.has(solid));
+          const area = exposedArea(picked, hidden ? [] : picked, [], () => false, probe, seam, reached);
+          const exposed = exposedArea(picked, against, planes, (other) => ownWorlds.has(other), probe, seam, reached);
           const binding = (asset.poses as readonly { readonly id: Slug; readonly thermal: { readonly regions: Readonly<Record<string, { readonly exposedFraction: number; readonly contact?: { readonly fraction: number } }>> } }[]).find((p) => p.id === pose)?.thermal.regions[region.id];
           const target = binding === undefined ? 1 : binding.exposedFraction * (1 - (binding.contact?.fraction ?? 0));
           const info = (name: string, value: number): void => void thermal.measure({ scale: d, list: "thermal", name: `info:${name}:${region.id}`, value, limit: Number.MAX_VALUE, bound: "max" });
@@ -356,6 +361,7 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
           const deviation = thermal.measure({ scale: d, list: "thermal", name: `areaDeviation:${region.id}`, value: Math.abs(area / region.areaM2 - 1), limit: perRegion || small ? Number.MAX_VALUE : (VOLUME_LIMITS.bodyAreaModels as readonly string[]).includes(region.model) ? VOLUME_LIMITS.thermalAreaCoarse : tolerance, bound: "max" });
           if (!deviation.ok) thermal.fail(`volumes.${d}.thermal`, `The outer surface of region "${region.id}" at 1:${d} is ${area.toFixed(3)} m² against areaM2 ${region.areaM2} m² (deviation ${(deviation.value * 100).toFixed(0)} %, limit ${(tolerance * 100).toFixed(0)} %).`, `Die Außenfläche der Region "${region.id}" bei 1:${d} beträgt ${area.toFixed(3)} m² gegen areaM2 ${region.areaM2} m² (Abweichung ${(deviation.value * 100).toFixed(0)} %, Grenze ${(tolerance * 100).toFixed(0)} %).`, { scale: d, list: "thermal", measurements: [deviation], data: { region: region.id } });
         }
+        if (flooded !== undefined) thermal.measure({ scale: d, list: "thermal", name: "info:floodCellM", value: flooded.cellM, limit: Number.MAX_VALUE, bound: "max" });
         if (perRegion && sumDeclared > 0) {
           const total = thermal.measure({ scale: d, list: "thermal", name: "areaDeviationTotal", value: Math.abs(sumArea / sumDeclared - 1), limit: VOLUME_LIMITS.thermalAreaCoarse, bound: "max" });
           if (!total.ok) thermal.fail(`volumes.${d}.thermal`, `The outer surface of all regions at 1:${d} is ${sumArea.toFixed(3)} m² against the sum of areaM2 ${sumDeclared.toFixed(3)} m² (deviation ${(total.value * 100).toFixed(0)} %, limit ${(total.limit * 100).toFixed(0)} %).`, `Die Außenfläche aller Regionen bei 1:${d} beträgt ${sumArea.toFixed(3)} m² gegen die Summe der areaM2 ${sumDeclared.toFixed(3)} m² (Abweichung ${(total.value * 100).toFixed(0)} %, Grenze ${(total.limit * 100).toFixed(0)} %).`, { scale: d, list: "thermal", measurements: [total] });
@@ -438,19 +444,23 @@ function run(asset: Asset, options: VolumeOptions, operation: JobControl): { rea
         const [coarseAll, fineAll] = [worldAt(volume, "body").filter((w) => w.texture !== true), worldAt(finer, "body").filter((w) => w.texture !== true)];
         const [coarseBody, fineBody] = [coarseAll.filter((w) => w.slender !== true), fineAll.filter((w) => w.slender !== true)];
         const hullBones = new Set(coarseBody.filter((w) => w.envelope === true).map((w) => w.bone ?? ""));
+        const compareDrawings = asset.representations[`${d}`]?.status === "authored" && asset.representations[`${finer.denominator}`]?.status === "authored";
+        const physicalProjection = (solids: readonly World[]) => compareDrawings ? solids : solids.map(solid => solid.slender ? { ...solid, slender: false } : solid);
+        const [projectedCoarse, projectedFine] = [physicalProjection(coarseAll), physicalProjection(fineAll)];
         const [stateCoarse, stateFine] = [stateOf(d), stateOf(finer.denominator)];
         const drawnGroups = (state: ReturnType<typeof evaluate>, view: Viewpoint): readonly Group[] =>
           (state.shapes[view] as readonly { readonly shape: { readonly role: string; readonly filled?: boolean }; readonly rings: readonly (readonly { readonly x: number; readonly y: number }[])[]; readonly closed: boolean }[]).filter((item) => item.closed && item.shape.filled !== false && ["body", "detail", "glazing"].includes(item.shape.role)).map((item) => item.rings as Group);
         for (const view of VIEWPOINTS) {
           operation.signal?.throwIfAborted();
-          const pair = compareGroups(drawnGroups(stateCoarse, view), drawnGroups(stateFine, view), feature);
-          const agreement = silhouetteAgreement(coarseAll, fineAll, view, feature, VOLUME_LIMITS.crossToleranceFeatures * feature, { hullBones, limitM: Math.max(VOLUME_LIMITS.crossDistanceFeatures * feature, pair.p95M + VOLUME_LIMITS.crossDistancePlus2DFeatures * feature), drawnFirst: drawnFor(asset, stateCoarse, view, d), drawnSecond: drawnFor(asset, stateFine, view, finer.denominator) });
-          const iou = cross.measure({ scale: d, list: "body", name: `iou:${view}`, value: agreement.iou, limit: Math.min(VOLUME_LIMITS.crossIou, pair.rawIou - VOLUME_LIMITS.crossIouMarginTo2D), bound: "min" });
-          const dist = cross.measure({ scale: d, list: "body", name: `p95M:${view}`, value: agreement.p95M, limit: Math.max(VOLUME_LIMITS.crossDistanceFeatures * feature, pair.p95M + VOLUME_LIMITS.crossDistancePlus2DFeatures * feature), bound: "max" });
+          const pair = compareDrawings ? compareGroups(drawnGroups(stateCoarse, view), drawnGroups(stateFine, view), feature) : undefined;
+          const limitM = Math.max(VOLUME_LIMITS.crossDistanceFeatures * feature, (pair?.p95M ?? 0) + VOLUME_LIMITS.crossDistancePlus2DFeatures * feature);
+          const agreement = silhouetteAgreement(projectedCoarse, projectedFine, view, feature, VOLUME_LIMITS.crossToleranceFeatures * feature, { hullBones, limitM, ...(compareDrawings ? { drawnFirst: drawnFor(asset, stateCoarse, view, d), drawnSecond: drawnFor(asset, stateFine, view, finer.denominator) } : {}) });
+          const iou = cross.measure({ scale: d, list: "body", name: `iou:${view}`, value: agreement.iou, limit: pair ? Math.min(VOLUME_LIMITS.crossIou, pair.rawIou - VOLUME_LIMITS.crossIouMarginTo2D) : VOLUME_LIMITS.crossIou, bound: "min" });
+          const dist = cross.measure({ scale: d, list: "body", name: `p95M:${view}`, value: agreement.p95M, limit: limitM, bound: "max" });
           cross.measure({ scale: d, list: "body", name: `hausdorffM:${view}`, value: agreement.hausdorffM, limit: Number.MAX_VALUE, bound: "max" });
-          cross.measure({ scale: d, list: "body", name: `iou2D:${view}`, value: pair.rawIou, limit: 0, bound: "min" });
-          cross.measure({ scale: d, list: "body", name: `p952DM:${view}`, value: pair.p95M, limit: Number.MAX_VALUE, bound: "max" });
-          if (!iou.ok || !dist.ok) cross.fail(`volumes.${d}.body`, `The body of 1:${d} disagrees with 1:${finer.denominator} in the ${view}: IoU ${iou.value.toFixed(3)} (at least ${iou.limit.toFixed(3)}), boundary distance p95 ${mm(dist.value)} (at most ${mm(dist.limit)}); the 2D drawings of the two scales themselves agree with IoU ${pair.rawIou.toFixed(3)} and p95 ${mm(pair.p95M)}.`, `Der Body von 1:${d} weicht von 1:${finer.denominator} in der ${view} ab: IoU ${iou.value.toFixed(3)} (mindestens ${iou.limit.toFixed(3)}), Randabstand p95 ${mm(dist.value)} (höchstens ${mm(dist.limit)}); die 2D-Zeichnungen der beiden Maßstäbe stimmen selbst mit IoU ${pair.rawIou.toFixed(3)} und p95 ${mm(pair.p95M)} überein.`, { scale: d, list: "body", measurements: [iou, dist].filter((x) => !x.ok) });
+          if (pair) cross.measure({ scale: d, list: "body", name: `iou2D:${view}`, value: pair.rawIou, limit: 0, bound: "min" });
+          if (pair) cross.measure({ scale: d, list: "body", name: `p952DM:${view}`, value: pair.p95M, limit: Number.MAX_VALUE, bound: "max" });
+          if (!iou.ok || !dist.ok) cross.fail(`volumes.${d}.body`, `The body of 1:${d} disagrees with 1:${finer.denominator} in the ${view}: IoU ${iou.value.toFixed(3)} (at least ${iou.limit.toFixed(3)}), boundary distance p95 ${mm(dist.value)} (at most ${mm(dist.limit)}).`, `Der Body von 1:${d} weicht von 1:${finer.denominator} in der ${view} ab: IoU ${iou.value.toFixed(3)} (mindestens ${iou.limit.toFixed(3)}), Randabstand p95 ${mm(dist.value)} (höchstens ${mm(dist.limit)}).`, { scale: d, list: "body", measurements: [iou, dist].filter((x) => !x.ok) });
         }
         const [softCoarse, softFine] = [softIdsOf(asset, volume), softIdsOf(asset, finer)];
         const fineKept = fineBody.filter((w) => !hullBones.has(w.bone ?? ""));

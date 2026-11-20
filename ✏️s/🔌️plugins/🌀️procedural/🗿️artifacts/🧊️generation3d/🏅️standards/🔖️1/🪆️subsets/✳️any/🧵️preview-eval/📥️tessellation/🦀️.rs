@@ -4,28 +4,62 @@ use semio_os_flow::{FlowPreviewCompletedReceiver,FlowPreviewCompletedIntakeSourc
 use semio_framework_job::{OriginalTurnFailure,InteractiveJobCloseStep};
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind};
 /// 🧵️ The actual Editor and Viewer command work own the exact moved reply until cache commit or full close.
-pub struct PreviewTessellateReceive{receiver:Option<FlowPreviewCompletedReceiver>,ledger:Option<FlowPreviewLedgerFold>,folded:bool,closing:bool,scope:PreviewScopeCopy}
+pub struct PreviewTessellateReceive{receiver:Option<FlowPreviewCompletedReceiver>,ledger:Option<FlowPreviewLedgerFold>,folded:bool,discarding:bool,closing:bool,scope:PreviewScopeCopy}
 impl PreviewTessellateReceive{
- pub fn new()->Self{Self{receiver:None,ledger:None,folded:false,closing:false,scope:PreviewScopeCopy::new()}}
+ pub fn new()->Self{Self{receiver:None,ledger:None,folded:false,discarding:false,closing:false,scope:PreviewScopeCopy::new()}}
  pub fn is_folded(&self)->bool{self.folded}
  pub fn configure_scope(&mut self,windows:[Option<&'static str>;2],panels:[Option<&'static str>;2]){self.scope.keys=[windows[0],windows[1],panels[0],panels[1]];}
  pub fn publish_scope(&mut self,cx:&mut StepContext<'_>)->Result<Option<semio_framework::kernel::UiDirtyScope>,OriginalTurnFailure>{self.scope.step(cx)}
  pub fn receive(&mut self,payload:&mut FlowTessellateResolve,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.receiver.is_some(){return Ok(true)}let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-  if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=semio_framework_job::OriginalTurnFailure::from(super::window_addressing::echoed_fault(fault));let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(semio_framework_job::OriginalTurnFailure{receipt_refusal,..original})}
-  if !payload.input_valid{cx.consume_fuel(1);return Err(OriginalTurnFailure::debit_original(ValueError::literal(ValueRefusalKind::InvalidValue,"original reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}
-  self.scope.origin=Some((cx.operation().0,cx.generation().0));let output=std::mem::replace(&mut payload.output,DslValue::Null);match FlowPreviewCompletedReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((failure,source))=>{match source{FlowPreviewCompletedIntakeSource::Value(output)=>payload.output=output,FlowPreviewCompletedIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(failure)}}
+  if !payload.input_valid {
+   let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()};
+   if let Some(fault)=payload.fault.take(){
+    cx.consume_fuel(1);
+    let original=OriginalTurnFailure::from(super::window_addressing::echoed_fault(fault));
+    return Err(OriginalTurnFailure{receipt_refusal:cx.consume_retained(progress).err(),..original})
+   }
+   cx.consume_fuel(1);
+   return Err(OriginalTurnFailure::debit_original(ValueError::literal(ValueRefusalKind::InvalidValue,"original reply routing input is malformed").with_retained_progress(progress),cx))
+  }
+  self.scope.origin=Some((cx.operation().0,cx.generation().0));
+  if payload.fault.is_some(){
+   cx.consume_fuel(1);
+   cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+   return Ok(true)
+  }
+  let output=std::mem::replace(&mut payload.output,DslValue::Null);match FlowPreviewCompletedReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((failure,source))=>{match source{FlowPreviewCompletedIntakeSource::Value(output)=>payload.output=output,FlowPreviewCompletedIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(failure)}}
  }
  pub fn demands(&self,payload:&FlowTessellateResolve,session:&FlowEvalSession,copy:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(receiver)=self.receiver.as_ref().filter(|receiver|!receiver.terminal_is_empty()){return session.next_preview_tessellate_demands(receiver,copy)}
+  if let Some(receiver)=self.receiver.as_ref().filter(|receiver|!receiver.terminal_is_empty()){
+   return if self.discarding||!session.preview_tessellate_is_pending(payload.node_hash){receiver.next_close_demands(copy)}else{session.next_preview_tessellate_demands(receiver,copy)}
+  }
   if let Some(ledger)=self.ledger.as_ref(){return ledger.next_demands(session,&payload.window_id,copy)}
   if !self.folded{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<u64>()+std::mem::size_of::<semio_os_flow::PreviewTessellateProgress>(),depth:1,..Default::default()})}self.scope.demands(copy)
  }
  pub fn step(&mut self,payload:&FlowTessellateResolve,session:&mut FlowEvalSession,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.folded{return Ok(true)}if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original preview receiving is closing").into())}
-  let receiver=self.receiver.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview reply was not donated"))?;
-  if !receiver.terminal_is_empty(){let address=FlowPreviewCompletedAddress{window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,node_hash:payload.node_hash,tolerance:payload.tolerance};session.resolve_preview_tessellate(receiver,&address,cx)?;return Ok(false)}
-  if self.ledger.is_none(){let progress=receiver.received_progress().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview receiving completed without a result"))?;self.ledger=FlowPreviewLedgerFold::new(payload.node_hash,progress,cx)?;return Ok(false)}
+  if self.ledger.is_none() {
+   if self.discarding || !session.preview_tessellate_is_pending(payload.node_hash) {
+    self.discarding=true;
+    if let Some(receiver)=self.receiver.as_mut().filter(|receiver|!receiver.terminal_is_empty()){
+     receiver.close_step(cx)?;return Ok(false)
+    }
+    self.receiver=None;self.folded=true;return Ok(true)
+   }
+   let progress=if payload.fault.is_some() {
+    semio_os_flow::PreviewTessellateProgress{phase:semio_os_flow::PreviewTessellatePhase::Failed,..Default::default()}
+   }else{
+    let receiver=self.receiver.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview reply was not donated"))?;
+    if !receiver.terminal_is_empty(){
+     let address=FlowPreviewCompletedAddress{window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,node_hash:payload.node_hash,tolerance:payload.tolerance};
+     session.resolve_preview_tessellate(receiver,&address,cx)?;return Ok(false)
+    }
+    receiver.received_progress().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview receiving completed without a result"))?
+   };
+   self.ledger=FlowPreviewLedgerFold::new(payload.node_hash,progress,cx)?;
+   return Ok(false)
+  }
   if self.ledger.as_mut().unwrap().step(session,&payload.window_id,cx)?{self.ledger=None;self.receiver=None;self.folded=true;}Ok(self.folded)
  }
  pub fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close()}if let Some(ledger)=self.ledger.as_mut(){ledger.begin_close()}self.scope.begin_close()}

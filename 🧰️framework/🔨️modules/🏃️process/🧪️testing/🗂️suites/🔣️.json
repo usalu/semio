@@ -469,6 +469,32 @@
       ]
     },
     {
+      "id": "component-feature-unification",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🧶️feature-unification/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "component-failure-diagnosis",
+      "budgetMs": 60000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🩺️failure-diagnosis/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "native-queued-cancellation",
       "budgetMs": 300000,
       "typecheck": "none",

@@ -9,7 +9,7 @@ fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     runtime.active_tool_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.into());
     let mut view = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
-    view.active_utility_by_window_id.insert("pane".into(), "select".into());
+    view.active_utility_by_window_id.insert("pane".into(), Some("select".into()));
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
     assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID, "guest world lane must stay fill while the tool is armed");
     runtime.active_tool_id = None;

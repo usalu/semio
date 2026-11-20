@@ -10,7 +10,8 @@ impl<J:InteractiveJob+'static> RefusedWorkerSource<J>{
  /// 🎒️ Retains the exact dispatched producer before the initiating turn admits its worker storage.
  pub fn pending(job:J,operation:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
  pub fn admission_pending(&self)->bool{self.pending&&!self.closing}
- pub fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{Ok(RetirementDemand{depth:1,..Default::default()})}
+ /// 📏️ Quotes the largest single physical allocation one admission turn reserves, so the lending caller funds the capacity its worker birth needs instead of idling on a grant that can never fit.
+ pub fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{Ok(RetirementDemand{capacity_bytes:WorkerJobSessionAdmission::<J,MountedWorkerJobSession<J>>::birth_capacity_bytes(),depth:1,..Default::default()})}
  /// 🚪️ Admits the original parameter alias and session on distinct funded caller events.
   fn prepare_pending_params(&mut self,config:semio_framework_job_worker_authority::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.admission_pending(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker source is already closing or admitted").into())}
@@ -23,9 +24,6 @@ impl<J:InteractiveJob+'static> RefusedWorkerSource<J>{
  }
  fn acknowledge_admission(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}self.pending=false;self.original=None;self.binding=None;semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;Ok(true)}
  pub fn admit_pending(&mut self,config:semio_framework_job_worker_authority::BatchDriveConfig,output:&mut Option<MountedWorkerJobSession<J>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let before=cx.retained_progress();let result=self.admit_pending_inner(config,output,cx);if matches!(result,Ok(false))&&before==cx.retained_progress(){semio_framework_job::debug_probe("admit_pending_false",format!("binding={} job={} params={} pending_cancel={} output={} mounted_phase={} cancelled={} yield={}",self.binding.is_some(),self.job.is_some(),self.params.is_some(),self.pending_cancel.is_some(),output.is_some(),self.mounted.phase(),cx.is_cancelled(),cx.should_yield()));}result
- }
- fn admit_pending_inner(&mut self,config:semio_framework_job_worker_authority::BatchDriveConfig,output:&mut Option<MountedWorkerJobSession<J>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.prepare_pending_params(config,cx)?{return Ok(false)}if output.is_some(){if self.mounted.phase()!="empty"||!self.mounted.terminal_is_empty()||self.job.is_some()||self.params.is_some()||self.pending_cancel.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted receiver output does not belong to this completed admission").into())}return self.acknowledge_admission(cx)}self.mounted.advance(&mut self.job,&mut self.params,output,cx)?;Ok(false)
  }
  pub fn admit_pending_batch(&mut self,config:semio_framework_job_worker_authority::BatchDriveConfig,output:&mut Option<BatchJobSession<J>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

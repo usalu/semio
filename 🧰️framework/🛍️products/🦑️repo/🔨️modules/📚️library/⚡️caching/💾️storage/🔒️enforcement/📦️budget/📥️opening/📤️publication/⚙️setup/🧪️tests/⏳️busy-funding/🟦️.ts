@@ -9,6 +9,7 @@ import{readFileSync}from"node:fs";
 import{renderProgressV1,withProgressSinkV1,type ProgressEventV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts";
 import{renderRepoErrorV1,isRepoErrorV1}from"@semio-tech/process/build/language/error";
 import{nativeImageRootV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{dependencyStoreVerdictV1,withDependencyStoreWaitBoundV1}from"../../💰️funding/🟦️.ts";
 import{DEPENDENCY_STORE_WAIT_V1,dependencyStoreShelteredByAncestorV1,readRepositoryDependencyFundingCurrentV1,dependencyStoreWaitPortsForV1,observeDependencyStoreHoldersV1,processAncestorsV1,retryWhileDependencyStoreBusyV1,type DependencyStoreHolderV1,type DependencyStoreHoldersV1,type DependencyStoreRegistryPortsV1,type DependencyStoreWaitPortsV1}from"../../💰️funding/🟦️.ts";
 const control=(signal=new AbortController().signal)=>({signal,remainingMilliseconds:()=>null,publish(){},yieldContinuation:async()=>{}});
 const busy=Object.freeze({acquired:false as const}),got=<T>(value:T)=>Object.freeze({acquired:true as const,value});
@@ -66,3 +67,41 @@ test("the funding is current only when no journal is pending and the marker name
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 test("the setup consults the shelter before its first exclusive observation and ends there when the funding is current",()=>{const setup=readFileSync(join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),at=setup.indexOf("dependencyStoreShelteredByAncestorV1(observeDependencyStoreHoldersV1("),first=setup.indexOf("let funding=await observeRepositoryDependencyBootstrapFundingV1");expect(at).toBeGreaterThan(0);expect(at).toBeLessThan(first);expect(setup).toContain("sheltering&&currentEnvelope&&!pending&&readRepositoryDependencyFundingCurrentV1(options");expect(setup).toContain('"dependency-store.current-under-ancestor"');});
+
+const holdersOf=(...live:DependencyStoreHolderV1[]):DependencyStoreHoldersV1=>({live,gone:[]});
+test("verdict: only provably current evidence verifies; shared-only holders mean nobody is waited for; an exclusive or absent holder means optional bounded maintenance",()=>{
+ const base={envelope:true,pending:false,funding:true,holders:holdersOf()};
+ expect(dependencyStoreVerdictV1(base)).toBe("verified");
+ expect(dependencyStoreVerdictV1({...base,holders:holdersOf(who(),who({pid:5,ancestor:true}))})).toBe("occupied");
+ expect(dependencyStoreVerdictV1({...base,holders:holdersOf(who(),who({pid:6,mode:"exclusive"}))})).toBe("verified");
+ for(const broken of [{envelope:false},{pending:true},{funding:false}])for(const holders of [holdersOf(),holdersOf(who())])expect(dependencyStoreVerdictV1({...base,...broken,holders})).toBe("unverified");
+});
+test("a wait scope bounds every busy wait inside it to its own limit, a wait outside it keeps the full bound, and the scope is not inherited by siblings",async()=>{
+ const inside=clock(),outside=clock(3600000);
+ const error=await caught(()=>withDependencyStoreWaitBoundV1(5000,()=>retryWhileDependencyStoreBusyV1(control(),async()=>busy,inside.ports)));
+ expect(error.key).toBe("caching.dependency-store.busy-timeout");expect(Number(error.values.seconds)).toBeGreaterThanOrEqual(5);expect(Number(error.values.seconds)).toBeLessThan(10);expect(inside.at()).toBeLessThan(10000);
+ const slow=await withDependencyStoreWaitBoundV1(5000,()=>Promise.resolve(retryWhileDependencyStoreBusyV1(control(),async()=>outside.at()>=4000?got("late"):busy,outside.ports)));expect(slow).toBe("late");
+ let calls=0;expect(await retryWhileDependencyStoreBusyV1(control(),async()=>++calls<=40?busy:got("unbounded"),outside.ports)).toBe("unbounded");expect(outside.at()).toBeGreaterThan(5000);
+});
+test("real processes and a real registry: a developer build that holds the store shared for the whole run is never waited for by a verified store, a missing tool store is untouched",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"r218-verified-")),previous=process.env.SEMIO_LEASE_REGISTRY_DIRECTORY,directory=join(root,"leases"),image=join(root,"image"),resource="native-fixed-image:"+image,developer=spawn("sleep",["60"],{stdio:"ignore"}),began=Date.now();
+ try{
+  process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=join(root,"registry");const folder=leaseRegistryFolderV1(join(root,"registry"),directory);mkdirSync(folder,{recursive:true});
+  const imageRoot=nativeImageRootV1(image);mkdirSync(imageRoot,{recursive:true});writeFileSync(join(imageRoot,"dependencies.json"),JSON.stringify({version:1,allocation:"a".repeat(32),owner:"repository:dependencies-store",bytes:1000}));
+  const options={directory:image,filesystemBytes:1000},funding=()=>readRepositoryDependencyFundingCurrentV1(options,()=>{});
+  const write=(mode:"shared"|"exclusive")=>writeFileSync(join(folder,developer.pid+"-1.json"),JSON.stringify({version:1,pid:developer.pid,startedAtMs:began,updatedAtMs:Date.now(),command:"bun script.ts repo run fem-3d-rs:check",directory,standing:{version:1},holds:[{resource,mode,sinceMs:Date.now()-120000}]}));
+  const verdict=()=>dependencyStoreVerdictV1({envelope:true,pending:false,funding:funding(),holders:observeDependencyStoreHoldersV1(directory,resource)});
+  expect(verdict()).toBe("verified");
+  write("shared");expect(verdict()).toBe("occupied");expect(observeDependencyStoreHoldersV1(directory,resource).live[0]?.command).toContain("fem-3d-rs:check");
+  write("exclusive");expect(verdict()).toBe("verified");
+  write("shared");writeFileSync(join(imageRoot,"dependencies.json"),JSON.stringify({version:1,allocation:"a".repeat(32),owner:"repository:dependencies-store",bytes:2000}));expect(verdict()).toBe("unverified");
+  writeFileSync(join(imageRoot,"dependencies.json"),JSON.stringify({version:1,allocation:"a".repeat(32),owner:"repository:dependencies-store",bytes:1000}));expect(verdict()).toBe("occupied");
+  developer.kill();await new Promise(done=>developer.once("exit",done));expect(verdict()).toBe("verified");expect(existsSync(join(folder,developer.pid+"-1.json"))).toBe(false);
+ }finally{developer.kill();if(previous===undefined)delete process.env.SEMIO_LEASE_REGISTRY_DIRECTORY;else process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=previous;rmSync(root,{recursive:true,force:true});}
+});
+test("the setup ends before its first exclusive observation on an occupied verified store, bounds the maintenance of a verified one and defers on the bound, and leaves an unverified store the full wait",()=>{
+ const setup=readFileSync(join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),verdictAt=setup.indexOf("dependencyStoreVerdictV1({"),occupiedAt=setup.indexOf('verdict==="occupied"'),first=setup.indexOf("let funding=await observeRepositoryDependencyBootstrapFundingV1");
+ expect(verdictAt).toBeGreaterThan(0);expect(verdictAt).toBeLessThan(occupiedAt);expect(occupiedAt).toBeLessThan(first);
+ expect(setup).toContain("sayCachingV1(\"dependency-store.verified-shared\"");expect(setup).toContain('if(verdict==="unverified")return maintain();');expect(setup).toContain("withDependencyStoreWaitBoundV1(DEPENDENCY_STORE_WAIT_V1.verifiedMaintenanceMilliseconds,maintain)");expect(setup).toContain('error.key==="caching.dependency-store.busy-timeout"');expect(setup).toContain('"dependency-store.maintenance-deferred"');
+ expect(DEPENDENCY_STORE_WAIT_V1.verifiedMaintenanceMilliseconds).toBe(20000);
+});

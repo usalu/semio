@@ -168,6 +168,7 @@
       }
     }
   ],
+  "coordinateGroups": ["point", "vector"],
   "controls": [
     {
       "port": "width",
@@ -523,18 +524,6 @@
   ],
   "meshSourceControls": [
     {
-      "key": "procedural-play-inspector.mesh.0.1.field.0.field.input",
-      "path": [
-        "vertices",
-        "1",
-        "0"
-      ],
-      "kind": "number",
-      "value": "1",
-      "en": "Vertices Item 2 Item 1",
-      "de": "Punkte Eintrag 2 Eintrag 1"
-    },
-    {
       "key": "procedural-play-inspector.mesh.1.0.field.2.field.input",
       "path": [
         "faces",
@@ -547,6 +536,53 @@
       "de": "Flächen Eintrag 1 Eintrag 3"
     }
   ],
+  "meshVertexControl": {
+    "key": "procedural-play-inspector.mesh.0.1.field",
+    "role": "group",
+    "en": "Vertices Item 2",
+    "de": "Punkte Eintrag 2",
+    "axes": [
+      {
+        "key": "procedural-play-inspector.mesh.0.1.field.0.field.input",
+        "kind": "number",
+        "value": "1",
+        "edit": "2.5",
+        "en": "Vertices Item 2 X",
+        "de": "Punkte Eintrag 2 X",
+        "path": [
+          "vertices",
+          "1",
+          "0"
+        ]
+      },
+      {
+        "key": "procedural-play-inspector.mesh.0.1.field.1.field.input",
+        "kind": "number",
+        "value": "0",
+        "edit": "-1.25",
+        "en": "Vertices Item 2 Y",
+        "de": "Punkte Eintrag 2 Y",
+        "path": [
+          "vertices",
+          "1",
+          "1"
+        ]
+      },
+      {
+        "key": "procedural-play-inspector.mesh.0.1.field.2.field.input",
+        "kind": "number",
+        "value": "0",
+        "edit": "4",
+        "en": "Vertices Item 2 Z",
+        "de": "Punkte Eintrag 2 Z",
+        "path": [
+          "vertices",
+          "1",
+          "2"
+        ]
+      }
+    ]
+  },
   "meshSourceActions": [
     {
       "key": "procedural-play-inspector.mesh.0.add",
@@ -576,15 +612,17 @@
     ],
     "controlKey": "procedural-play-inspector.value.input",
     "control": {
-      "type": "input",
-      "kind": "number",
-      "commit": "blur",
-      "trigger": "commit",
+      "type": "slider",
+      "min": 0,
+      "max": 10,
+      "step": 0.1,
+      "trigger": "change",
       "action": "patchFlowWidgets",
       "en": "Value",
       "de": "Wert"
     }
   },
+  "textureWindow": {"count": 128, "offset": 125, "rows": 2, "values": ["texture124", "texture125"]},
   "meshAssetsControls": [
     {
       "path": [

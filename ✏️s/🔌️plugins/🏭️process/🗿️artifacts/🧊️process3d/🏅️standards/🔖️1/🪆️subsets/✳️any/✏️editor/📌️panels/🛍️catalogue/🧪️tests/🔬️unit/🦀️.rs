@@ -30,48 +30,44 @@ async fn catalogue_lists_workshop_wood_machines() {
     assert!(rendered.contains("Table Saw"), "expected wood's table saw in the catalogue: {rendered}");
 }
 
-/// 🪚️ Real per-variant dimensions (`stock_validation_context`) must flag a capability whose `Max`
-/// rule a `0.2m`-tall stock violates (`maxCutDepth = 0.1`) and leave one it satisfies
-/// (`maxCutDepth = 0.5`) alone: the violated item renders `validation_reason`'s "needs stock…"
-/// text and no `addStep` action binding; the satisfied one binds `addStep` and carries no reason.
+/// 🪚️ Equivalent analytic and imported solids admit the same capability rows.
 #[semio_framework_async_macros::async_test]
 async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
-    use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
+    use semio_s_artifact_process_process3d_model::snapshot::{brep_snapshot_for_working_solid, pack_imported_brep, CapabilityParameter, CapabilityRule, MeasureRecipe, Stock, StockQuantity, Workshop};
+    let law: serde_json::Value = serde_json::from_str(include_str!("stock-capabilities.json")).unwrap();
+    let [width, depth, height] = std::array::from_fn(|axis| law["stockSizeMetres"][axis].as_f64().unwrap());
+    let box_solid = WorkingSolid::Box { width, depth, height };
+    let imported_solid = pack_imported_brep(&brep_snapshot_for_working_solid(&box_solid)).unwrap();
+    let capabilities = law["capabilities"].as_array().unwrap();
     let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
-    fixture.stock_payload = Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 0.5, depth: 0.5, height: 0.2 }, pose: Default::default() };
     fixture.workshop = Workshop {
         machines: vec![WorkshopMachine {
             id: "saw".into(),
             label: "Saw".into(),
             icon_id: "scissors".into(),
             catalog_id: None,
-            capabilities: vec![
-                Capability {
-                    id: "shallowCrosscut".into(),
-                    label: "Shallow Crosscut".into(),
-                    icon_id: "scissors".into(),
-                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                    parameters: vec![CapabilityParameter { id: "maxCutDepth".into(), label: "Max Cut Depth".into(), value: 0.1 }],
-                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
-                },
-                Capability {
-                    id: "deepCrosscut".into(),
-                    label: "Deep Crosscut".into(),
-                    icon_id: "scissors".into(),
-                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                    parameters: vec![CapabilityParameter { id: "maxCutDepth".into(), label: "Max Cut Depth".into(), value: 0.5 }],
-                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
-                },
-            ],
+            capabilities: capabilities.iter().map(|row| Capability {
+                id: row["id"].as_str().unwrap().into(),
+                label: row["label"].as_str().unwrap().into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                parameters: vec![CapabilityParameter { id: "maxCutDepth".into(), label: "Max Cut Depth".into(), value: row["maxDepthMetres"].as_f64().unwrap() }],
+                rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
+            }).collect(),
         }],
     };
-    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
-    let node = render(&fixture, "[]", labels, &semio_plugin::TreeWindows::unhosted()).expect("catalogue renders");
-    let rendered = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("catalogue projection");
-    assert!(rendered.contains("process3d-catalogue.saw.shallowCrosscut"), "expected the violated capability item: {rendered}");
-    assert!(rendered.contains("process3d-catalogue.saw.deepCrosscut"), "expected the satisfied capability item: {rendered}");
-    assert!(rendered.contains("needs stock height"), "expected the violated rule's reason text: {rendered}");
-    assert!(rendered.contains("addStep"), "expected the satisfied capability to still bind addStep: {rendered}");
+    for solid in [box_solid, imported_solid] {
+        fixture.stock_payload = Stock { id: "stock".into(), label: "Stock".into(), solid, pose: Default::default() };
+        let rendered = project(&fixture, &TreeWindows::unhosted());
+        let projection: serde_json::Value = serde_json::from_str(&rendered).unwrap();
+        let rows = projection["children"][0]["children"].as_array().unwrap();
+        for (expected, row) in capabilities.iter().zip(rows) {
+            assert_eq!(row["key"].as_str().unwrap(), format!("process3d-catalogue.saw.{}", expected["id"].as_str().unwrap()));
+            assert_eq!(row["component"]["target"]["activation"].as_str() == Some("addStep"), expected["available"].as_bool().unwrap(), "{row}");
+        }
+        assert_eq!(rows.len(), capabilities.len());
+        assert!(rendered.contains("needs stock height"));
+    }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,13 @@
+{
+ "origins": [
+  {"id":"g1-m02","digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","ready":true},
+  {"id":"g1-m09","attested":false},
+  {"id":"g1-m10","attested":true},
+  {"id":"g1-m11","digest":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","ready":false},
+  {"id":"g1-m12","digest":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","ready":true},
+  {"id":"g1-server","ready":true},
+  {"id":"g1-misc","ready":true}
+ ],
+ "workers":["g1-m02","g1-m09","g1-m10","g1-m11","g1-m12"],
+ "ready":2
+}

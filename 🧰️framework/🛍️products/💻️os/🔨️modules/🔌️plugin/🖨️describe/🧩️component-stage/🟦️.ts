@@ -123,13 +123,17 @@ export function settleComponentDescriptorV1(repoRoot: string, target: ComponentS
 }
 
 /** 🎛️ Parses `describe <plugin-id…>|--all [--profile release|prototype]` into a selection and a profile. */
-export function componentsDescribeArgumentsV1(segments: readonly string[]): Readonly<{ all: boolean; pluginIds: readonly string[]; profile: ComponentProfileV1 }> {
+export function componentsDescribeArgumentsV1(segments: readonly string[]): Readonly<{ all: boolean; pluginIds: readonly string[]; profile: ComponentProfileV1; facet: "model" | "browser" }> {
   const flag = segments.indexOf("--profile");
   const profile = flag === -1 ? buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)).cargoProfile : componentProfileV1(segments[flag + 1]);
-  const rest = flag === -1 ? segments : [...segments.slice(0, flag), ...segments.slice(flag + 2)];
+  const withoutProfile = flag === -1 ? segments : [...segments.slice(0, flag), ...segments.slice(flag + 2)];
+  const facetFlag = withoutProfile.indexOf("--facet");
+  const facet = facetFlag === -1 ? "model" : withoutProfile[facetFlag + 1];
+  if (facet !== "model" && facet !== "browser") throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser]");
+  const rest = facetFlag === -1 ? withoutProfile : [...withoutProfile.slice(0, facetFlag), ...withoutProfile.slice(facetFlag + 2)];
   const all = rest.length === 1 && rest[0] === "--all";
-  if (!all && (rest.length === 0 || rest.some((value) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value)))) throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype]");
-  return Object.freeze({ all, pluginIds: Object.freeze(all ? [] : [...rest]), profile });
+  if (!all && (rest.length === 0 || rest.some((value) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value)))) throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser]");
+  return Object.freeze({ all, pluginIds: Object.freeze(all ? [] : [...rest]), profile, facet });
 }
 
 /** 🔁️ The rotating profile-independence sample: `count` components chosen by `seed`, deterministic for one catalog. */

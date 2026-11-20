@@ -405,6 +405,39 @@
               "directoryName": "🎯️activates"
             }
           ]
+        },
+        {
+          "mutationId": "set-shot-drawing",
+          "sourceMutationDirectoryName": "✒️set-shot-drawing",
+          "mutationDirectoryName": "✒️set-shot-drawing",
+          "scenarios": [
+            {
+              "id": "assigns-drawing-to-shot-close",
+              "directoryName": "🖌️assigns"
+            }
+          ]
+        },
+        {
+          "mutationId": "patch-shot-camera",
+          "sourceMutationDirectoryName": "🎛️patch-shot-camera",
+          "mutationDirectoryName": "🎛️patch-shot-camera",
+          "scenarios": [
+            {
+              "id": "frames-shot-close-independently",
+              "directoryName": "📐️frames"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-shot-auto-fit",
+          "sourceMutationDirectoryName": "🎯️set-shot-auto-fit",
+          "mutationDirectoryName": "🎯️set-shot-auto-fit",
+          "scenarios": [
+            {
+              "id": "disables-auto-fit-for-shot-close",
+              "directoryName": "📐️sets"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -438,7 +471,10 @@
         "change-scene-sun-intensity",
         "change-scene-ambient-intensity",
         "change-scene-shadow-enabled",
-        "change-scene-material-roughness"
+        "change-scene-material-roughness",
+        "set-shot-drawing",
+        "patch-shot-camera",
+        "set-shot-auto-fit"
       ]
     }
   ],
@@ -1083,6 +1119,69 @@
             "operation": "set-active-shot",
             "bridgeVersion": 1,
             "variant": "SetActiveShot"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-shot-drawing",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-shot-drawing",
+            "bridgeVersion": 1,
+            "variant": "SetShotDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "patch-shot-camera",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "patch-shot-camera",
+            "bridgeVersion": 1,
+            "variant": "PatchShotCamera"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "shooting-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-shot-auto-fit",
+          "capability": "shooting-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-shot-auto-fit",
+            "bridgeVersion": 1,
+            "variant": "SetShotAutoFit"
           },
           "oracleRequirements": [
             {

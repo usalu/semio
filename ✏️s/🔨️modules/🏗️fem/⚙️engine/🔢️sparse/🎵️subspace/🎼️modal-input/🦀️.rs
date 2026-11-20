@@ -173,7 +173,7 @@ impl ModalInputConstruction {
                 }
             }
             ModalInputStage::RetireMountedMass => {
-                if self.mounted_mass.as_mut().is_some_and(|mass| mass.close_step()) {
+                if self.mounted_mass.as_mut().is_some_and(|mass| mass.close_step(semio_s_fem_sparse::SPARSE_PAGE_BYTES).0) {
                     self.mounted_mass = None;
                     self.row = 0;
                     self.stage = ModalInputStage::BuildMass;
@@ -231,8 +231,9 @@ impl ModalInputConstruction {
             return (false, 1, 0);
         }
         if let Some(mass) = self.mounted_mass.as_mut() {
-            if !mass.close_step() {
-                return (false, 1, 0);
+            let (done, items, bytes) = mass.close_step(maximum_bytes);
+            if !done {
+                return (false, items, bytes);
             }
             self.mounted_mass = None;
             return (false, 1, 0);

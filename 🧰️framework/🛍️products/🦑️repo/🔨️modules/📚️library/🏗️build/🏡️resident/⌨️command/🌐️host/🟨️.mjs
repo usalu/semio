@@ -12,8 +12,9 @@ const sleep=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds))
 export async function runHostCommandV1({args,languages,implementation,runForeground,command,environment=process.env,platform=process.platform,cwd=process.cwd(),stdout=process.stdout,stderr=process.stderr,signal,policy,probe=probeConsentV1,launchctl=(program,list)=>{const result=spawnSync(program,list,{encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};}}){
  const say=(key,fields)=>{const text=renderTextV1(key,fields,languages);return text?text[languages[0]]??Object.values(text)[0]:key;};
  const print=text=>stdout.write(text+"\n"),fail=text=>stderr.write(text+"\n"),sub=args[0];
- const status=()=>requestHostStatusV1({implementation,environment,platform});
- switch(sub){
+ const statusLimit=policy?.statusReplyMilliseconds??HOST_POLICY_V1.statusReplyMilliseconds;
+ const status=(timeoutMilliseconds=statusLimit)=>requestHostStatusV1({implementation,environment,platform,signal,timeoutMilliseconds});
+ try{switch(sub){
   case"run":return runForeground();
   case"status":{
    const found=await status();
@@ -33,7 +34,7 @@ export async function runHostCommandV1({args,languages,implementation,runForegro
    try{
     const{socket}=await connectHostV1({implementation,environment,platform,spawnService:spawnHostServiceV1({command,environment,cwd}),signal,languages,...policy?{policy}:{}});
     socket.destroy();
-   }catch(error){fail(say("host-unavailable",{reason:error instanceof HostUnavailableErrorV1?error.reason:String(error?.message??error)}));return 1;}
+   }catch(error){fail(say("host-unavailable",{reason:error instanceof HostUnavailableErrorV1?error.notice(languages[0]??"en"):String(error?.message??error)}));return 1;}
    const found=await status();
    print(say("host-started",{pid:found?.pid??"?",workspaces:found?.workspaces.length??0,megabytes:found?.rssMb??0}));return 0;
   }
@@ -41,10 +42,21 @@ export async function runHostCommandV1({args,languages,implementation,runForegro
    const found=await status(),unload=()=>stopServiceJobsV1({platform,home:environment.HOME,run:launchctl});
    if(!found){unload();print(say("host-down",{}));return 0;}
    process.kill(found.pid,"SIGTERM");
-   for(let at=0;at<200&&await status();at++)await sleep(50);
+   const deadline=performance.now()+10_000;
+   let remaining=deadline-performance.now();
+   while(remaining>0){
+    if(!await status(Math.min(statusLimit,Math.ceil(remaining))))break;
+    remaining=deadline-performance.now();
+    if(remaining>0)await sleep(Math.min(50,remaining));
+    remaining=deadline-performance.now();
+   }
+   if(remaining<=0)throw new HostUnavailableErrorV1("timeout");
    unload();
    print(say("host-stopped",{}));return 0;
   }
   default:fail(say("host-usage",{}));return 1;
+ }}catch(error){
+  if(!(error instanceof HostUnavailableErrorV1)||error.reason!=="timeout")throw error;
+  fail(say("host-status-timeout",{}));return 1;
  }
 }

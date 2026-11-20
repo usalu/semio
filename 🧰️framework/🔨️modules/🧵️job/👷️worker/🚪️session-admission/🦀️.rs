@@ -35,6 +35,8 @@ pub struct WorkerJobSessionAdmission<J:InteractiveJob+'static,S:AdmittedWorkerJo
 }
 impl<J:InteractiveJob+'static,S:AdmittedWorkerJobSession<J>> Default for WorkerJobSessionAdmission<J,S>{fn default()->Self{Self::new()}}
 impl<J:InteractiveJob+'static,S:AdmittedWorkerJobSession<J>> WorkerJobSessionAdmission<J,S>{
+ /// 📏️ The largest single allocation any birth turn of this session admission reserves: the exact capacity a caller turn must lend before the admission can advance.
+ pub fn birth_capacity_bytes()->usize{OriginalWorkerJobAdmission::<J>::authority_capacity_bytes().max(std::mem::size_of::<WorkerJobRetirementNode<J>>()).max(session_return::SessionHandle::<J>::frame_bytes())}
  pub const fn new()->Self{Self{admission:OriginalWorkerJobAdmission::new(),authority:None,born:None,frame:None,node:None,slot:None,scan:0,binding:None,stage:0,closing:false}}
  pub fn terminal_is_empty(&self)->bool{self.authority.is_none()&&self.born.is_none()&&self.frame.is_none()&&self.node.is_none()&&self.slot.is_none()&&self.binding.is_none()&&!self.closing&&self.admission.terminal_is_empty()}
  pub fn phase(&self)->&'static str{if self.closing{return "returning"}match self.stage{0=>"source",1=>"authority",3=>"slot",4=>"frame",5=>"node",6=>"handoff",7=>"admissionClose",8=>"output",_=>"empty"}}

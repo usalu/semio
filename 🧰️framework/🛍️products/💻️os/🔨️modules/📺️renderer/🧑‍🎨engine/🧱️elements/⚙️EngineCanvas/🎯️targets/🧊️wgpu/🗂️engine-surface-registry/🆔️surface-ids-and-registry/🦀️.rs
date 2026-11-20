@@ -20,7 +20,9 @@ pub struct NodeGraphSyncCache {
     pub viewport: Option<semio_os_kernel::Viewport2d>,
     pub viewport_pixels: Option<(u32, u32)>,
     pub operator_ids: Option<Vec<String>>,
-    pub hover: Option<(String, String)>,
+    pub hover: Option<(String, String, String)>,
+    /// 🖱️ Whether removing the scene hover should also clear the live graph mark.
+    pub scene_owns_hover: bool,
     pub scene_pack: Option<Vec<u8>>,
     pub interaction_domain: Option<Arc<semio_ui_declaration::ui::NodeGraphInteractionDomain>>,
 }

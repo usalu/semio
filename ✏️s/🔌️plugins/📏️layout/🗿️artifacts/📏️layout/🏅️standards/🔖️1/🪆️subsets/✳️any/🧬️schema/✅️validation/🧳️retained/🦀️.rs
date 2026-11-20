@@ -1,6 +1,6 @@
 //! 🧳️ Original-funded borrowed validation owns one fixed continuation and one sealed source alias.
 use super::graph::LayoutGraphRead;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
 use std::{future::Future,pin::Pin,task::{Context,Poll,Waker},mem::size_of_val};
 #[path="📋️program.rs"]mod program;
 #[path="📇️index.rs"]mod index;
@@ -24,10 +24,17 @@ impl LayoutValidationCursor{
   if self.closing{return Err(Self::fault("Layout validation is closing"))}let binding=source.binding_demand(&self.binding)?;if !self.bound{return Self::nested(binding.unwrap_or_default())}if self.done{return Ok(Default::default())}if !self.index.done(){return Self::nested(self.index.demand()?)}if !self.started{return Ok(RetirementDemand{copy_bytes:self.program_bytes(source),capacity_bytes:self.program_bytes(source),depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:self.capacity.checked_mul(2).and_then(|n|n.checked_add(1024)).ok_or_else(||Self::fault("Layout validation work extent overflow"))?,depth:1,..Default::default()})
  }
  pub fn next_demand<G:LayoutGraphRead+'static>(&self,source:RetainedCloneRef<'_,G>,body:usize)->Result<RetirementDemand,ValueError>{self.demand(source,body)}
+ pub fn work_demand<G:LayoutGraphRead+'static>(&self,source:RetainedCloneRef<'_,G>,body:usize)->Result<u64,ValueError>{
+  self.demand(source,body)?;
+  if !self.bound{return source.binding_work_demand(&self.binding)?.checked_add(1).ok_or_else(||Self::fault("Layout validation source work overflow"))}
+  Ok(u64::from(!self.done))
+ }
  /// 🪢️ The sealed binding and fixed index backing remain live until the funded continuation drop preceding every index slot, backing and alias retirement.
- pub fn advance<G:LayoutGraphRead+'static>(&mut self,source:RetainedCloneRef<'_,G>,body:usize,g:RetainedCloneGrant)->Result<ValidationAdvance,ValueError>{
-  let mut result=ValidationAdvance{progress:Default::default(),done:self.done,error:self.error};let d=self.demand(source,body)?;if self.done||!retained_clone_grant_admits(g,d){return Ok(result)}
-  if !self.bound{let progress=source.bind(&mut self.binding,Self::child(g)).result.map_err(Self::failure)?.unwrap_or_default();if self.binding.is_some(){self.bound=true;}result.progress=Self::receipt(progress);return Ok(result)}
+ pub fn advance<G:LayoutGraphRead+'static>(&mut self,source:RetainedCloneRef<'_,G>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<ValidationAdvance,ValueError>{
+  let g=effect.grant();
+  let mut result=ValidationAdvance{progress:Default::default(),done:self.done,error:self.error};let d=self.demand(source,body)?;if self.done||!retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.work_demand(source,body)?{return Ok(result)}
+  if !effect.performed(1)?{return Err(Self::fault("Layout validation exceeded its admitted work"))}
+  if !self.bound{let progress=source.bind(&mut self.binding,&mut effect.nested(Self::child(g))).result.map_err(Self::failure)?.unwrap_or_default();if self.binding.is_some(){self.bound=true;}result.progress=Self::receipt(progress);return Ok(result)}
   if !self.index.done(){result.progress=Self::receipt(self.index.advance(source.get(),Self::child(g)).map_err(Self::failure)?);if let Some(error)=self.index.error(){self.done=true;self.error=Some(error);result.done=true;result.error=Some(error);}return Ok(result)}
   result.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   if !self.started{let address=source.get()as*const G;let loan: &'static G=unsafe{&*address};self.capacity=self.program_bytes(source);let index: index::Slots<'static>=unsafe{std::mem::transmute(self.index.slots())};self.program=Some(Box::pin(program::check_document(loan,index)));self.started=true;result.progress.retained_capacity_bytes=self.capacity;return Ok(result)}
@@ -35,7 +42,12 @@ impl LayoutValidationCursor{
  }
  pub fn begin_close(&mut self){self.closing=true}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.program.is_some(){Ok(RetirementDemand{copy_bytes:self.capacity.checked_mul(2).ok_or_else(||Self::fault("Layout validation close extent overflow"))?,release_bytes:self.capacity,depth:1,..Default::default()})}else if !self.index.terminal_is_empty(){Self::nested(self.index.close_demand())}else{Self::nested(RetainedCloneBinding::close_demand(&self.binding,body.saturating_sub(Self::OVERHEAD))?)}}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(Self::fault("Layout validation close has not begun"))}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if self.program.is_some(){self.program=None;let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:self.capacity,..Default::default()};self.capacity=0;self.started=false;return Ok(RetainedCloneStep::Progress(p))}if !self.index.terminal_is_empty(){return self.index.close_step(Self::child(g)).map(|p|RetainedCloneStep::Progress(Self::receipt(p))).map_err(Self::failure)}let step=RetainedCloneBinding::close_one(&mut self.binding,Self::child(g)).result.map_err(Self::failure)?;if self.binding.is_none(){self.bound=false;self.done=false;self.error=None;}let p=Self::receipt(step.progress());Ok(if self.binding.is_none(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if self.terminal_is_empty(){return Ok(0)}
+  if self.program.is_some()||!self.index.terminal_is_empty(){return Ok(1)}
+  RetainedCloneBinding::close_work_demand(&self.binding,body.saturating_sub(Self::OVERHEAD))?.checked_add(1).ok_or_else(||Self::fault("Layout validation source close work overflow"))
+ }
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let g=effect.grant();if !self.closing{return Err(Self::fault("Layout validation close has not begun"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(body)?;if !retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.close_work_demand(body)?{return Ok(RetainedCloneStep::Progress(Default::default()))}if !effect.performed(1)?{return Err(Self::fault("Layout validation close exceeded its admitted work"))}if self.program.is_some(){self.program=None;let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:self.capacity,..Default::default()};self.capacity=0;self.started=false;return Ok(RetainedCloneStep::Progress(p))}if !self.index.terminal_is_empty(){return self.index.close_step(Self::child(g)).map(|p|RetainedCloneStep::Progress(Self::receipt(p))).map_err(Self::failure)}let turn=RetainedCloneBinding::close_one(&mut self.binding,body.saturating_sub(Self::OVERHEAD),&mut effect.nested(Self::child(g)));let RetainedWorkPoll::Complete(turn)=turn else{return Err(Self::fault("Layout validation lost its borrowed source"))};let step=turn.result.map_err(|error|Self::failure(error.into_value_error()))?;if self.binding.is_none(){self.bound=false;self.done=false;self.error=None;}let p=Self::receipt(step.progress());Ok(if self.binding.is_none(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.program.is_none()&&self.capacity==0&&self.index.terminal_is_empty()}
 }
 impl Drop for LayoutValidationCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Layout validation requires funded continuation and original alias closure")}}

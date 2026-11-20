@@ -52,23 +52,29 @@ fn drawing_clipboard_assets_and_cut_inverse_are_atomic() {
     layer_base_mut(&mut source.layers[0]).locked=true;assert!(cut(&source,&["image".into()]).is_err());assert!(copy(&source,&["missing".into()]).is_err());
 }
 fn retire<T:semio_framework_value::retirement::RetireOwned>(value:T){
-    use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
-    let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("Clipboard owner must declare retirement"));
-    for _ in 0..1_000_000 {if owner.terminal_is_empty(){return;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let step=owner.step(grant).unwrap();assert!(step.progress().fits(grant));}
-    panic!("Clipboard retirement did not settle");
+    semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(value);
 }
 #[test]
 fn drawing_clipboard_native_codec_matches_serde_and_resumes_large_text(){
-    use semio_framework_value::{ToValue,NativeEncodeControl};
+    use semio_framework_value::{ToValue,NativeEncodeControl,RetainedCloneGrant};
     let mut text=semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");layer_base_mut(&mut text).id="text".into();
     let DrawingLayerNode::Text(body)=&mut text else{unreachable!()};body.content=("α\n\"\\".repeat(16384)).into();
     let packet=DrawingClipboard{schema:SCHEMA.into(),roots:vec![text],selected:vec!["text".into()],assets:Default::default()};
     let expected=serde_json::to_value(&packet).unwrap();
     let mut encoder=semio_framework_pack_json::JsonWriteCursor::new(encode::ClipboardJsonSource{packet:packet.clone()});let mut receipt=None;let mut turns=0;
-    let output=loop{let mut accepted=|_|true;let mut control=if let Some(receipt)=receipt.take(){NativeEncodeControl::resume(receipt,&mut accepted).unwrap()}else{NativeEncodeControl::new(MAX_BYTES,&mut accepted)};let output=encoder.step(17,&mut control).unwrap();receipt=Some(control.pause().unwrap());turns+=1;if let Some(output)=output{break output;}};
+    let grant=RetainedCloneGrant{maximum_items:17,maximum_copy_bytes:MAX_BYTES,maximum_capacity_bytes:MAX_BYTES,maximum_release_bytes:MAX_BYTES,maximum_depth:128};
+    let output=loop{let mut accepted=|_|true;let mut control=if let Some(receipt)=receipt.take(){NativeEncodeControl::resume(receipt,&mut accepted).unwrap()}else{NativeEncodeControl::new(MAX_BYTES,&mut accepted)};let output=encoder.step(17,&mut control,grant).unwrap();receipt=Some(control.pause().unwrap());turns+=1;if let Some(output)=output{break output;}};
     assert!(turns>100);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),expected);retire(encoder);
     let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);
-    let mut hydration=decode::ClipboardHydration::new(packet.to_value());let mut turns=0;while !hydration.step(&mut control).unwrap(){turns+=1;assert!(turns<100000);}assert!(turns>64);assert_eq!(hydration.packet,packet);retire(hydration);
+    let mut grammar=semio_framework_pack_json::JsonGrammarCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject);
+    let parsed=(0..100000).find_map(|_|semio_s_artifact_draw_drawing_scene::preparation::testkit::effect_turn(grant,|effect|{
+        let value=grammar.step(&output,17,&mut control,effect).unwrap();
+        assert!(grammar.normal_step_progress().fits(grant));
+        assert_eq!(effect.performed_work(),u128::from(grammar.last_turn_work()));
+        value
+    })).expect("encoding parses through the original grammar");
+    retire(grammar);
+    let mut hydration=decode::ClipboardHydration::new(parsed);let mut turns=0;while !hydration.step(&mut control).unwrap(){turns+=1;assert!(turns<100000);}assert!(turns>64);assert_eq!(hydration.packet,packet);retire(hydration);
     let mut cancelled=decode::ClipboardHydration::new(packet.to_value());for _ in 0..32{assert!(!cancelled.step(&mut control).unwrap());}retire(cancelled);
 }
 #[test]

@@ -8,6 +8,8 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import {createRequire} from "node:module";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import corpus from "./🔣️.json";
+import writers from "./rustup-writers.json" with {type:"json"};
+import {Database} from "bun:sqlite";
 import bootstrapSchema from "../../🧬️schema/🔣️.json";
 import { nativeBootstrapCommandV1 } from "../../🟦️.ts";
 import { nativeTemporaryPlanV1, withNativeTemporaryDirectoryV1, type NativeTemporaryPortV1 } from "../../📁️temporary/🟦️.ts";
@@ -20,6 +22,7 @@ const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!output) throw Error("Bootstrap toolchain tests require SEMIO_TEST_ARTIFACT_DIR");
 const generated = resolve(output, `bt-${process.pid}`);
 mkdirSync(generated, { recursive: true });
+const pins = resolve(import.meta.dir,"../../🧬️schema/🔣️.json");
 const body = (name: string, next: string) => bootstrap.slice(bootstrap.indexOf(name + "() {"), bootstrap.indexOf(next + "() {"));
 const linuxHost = (name: string): string => {
   const directory = join(generated, name);
@@ -210,19 +213,111 @@ test("Linux native packages include compiler and ICU development inputs", () => 
   }
 });
 
+test("concurrent native Rust setup processes serialize the same physical Rustup home",async()=>{
+  const windows=process.platform==="win32",shared=join(generated,"rust-writers"),receipt=join(shared,"events"),release=join(shared,"release"),entered=join(shared,"entered"),home=join(shared,"rustup"),alias=join(shared,"alias");
+  mkdirSync(home,{recursive:true});
+  writeFileSync(join(home,bootstrapSchema.definitions.RustupInstallation.const.lockFile),"",{mode:0o444});
+  symlinkSync(home,alias,windows?"junction":"dir");
+  const script=body("pin_field","host_pin")+body("ensure_rust_toolchain","ensure_node")+`
+log() { :; }
+rustup() {
+  printf 'start %s\\n' "$ID" >> "$EVENTS"
+  if [ "$ID" = "${writers.first}" ]; then
+    while [ ! -f "$RELEASE" ]; do sleep .03; done
+  fi
+  printf 'end %s\\n' "$ID" >> "$EVENTS"
+}
+touch "$ENTERED/$ID"
+ensure_rust_toolchain
+`;
+  const ps=readFileSync(resolve(import.meta.dir,"../../🔵️.ps1"),"utf8");
+  const native=ps.slice(ps.indexOf("function Invoke-WithRustupInstallLock"),ps.indexOf("function Get-MsvcInstallation"))+`
+$ErrorActionPreference = "Stop"
+$script:PinsFile = $env:PINS_FILE
+function Ensure-Directory { param($Path) [IO.Directory]::CreateDirectory($Path) | Out-Null }
+function Get-FirstCommandPath { return "rustup.exe" }
+function Get-CommandPathOrThrow { return "rustup.exe" }
+function Invoke-RustupCommandUnderLock {
+  [IO.File]::AppendAllText($env:EVENTS, "start " + $env:ID + [Environment]::NewLine)
+  if ($env:ID -eq "${writers.first}") {
+    while (-not [IO.File]::Exists($env:RELEASE)) { Start-Sleep -Milliseconds 30 }
+  }
+  [IO.File]::AppendAllText($env:EVENTS, "end " + $env:ID + [Environment]::NewLine)
+}
+[IO.File]::WriteAllText((Join-Path $env:ENTERED $env:ID), "")
+Ensure-RustToolchain -repoRoot $env:REPO_ROOT
+`;
+  mkdirSync(entered);
+  const shortPins=join(shared,"short.json");
+  writeFileSync(shortPins,JSON.stringify({definitions:{RustupInstallation:{const:{...bootstrapSchema.definitions.RustupInstallation.const,lockWaitSeconds:String(writers.timeoutSeconds)}}}}));
+  const shell=windows?"powershell.exe":"bash",args=windows?["-NoProfile","-EncodedCommand",Buffer.from(native,"utf16le").toString("base64")]:["-c",script];
+  const start=(id:string,policy=pins)=>spawn(shell,args,{stdio:["ignore","ignore","pipe"],env:{...process.env,ID:id,EVENTS:receipt,RELEASE:release,ENTERED:entered,REPO_ROOT:root,PINS_FILE:policy,CARGO_HOME:join(shared,"cargo"),RUSTUP_HOME:id===writers.first?home:alias}});
+  const until=async(probe:()=>boolean)=>{for(let count=0;count<300;count++){if(probe())return;await Bun.sleep(20);}throw Error("Fixture installer did not advance");};
+  const settled=(child:ReturnType<typeof start>)=>new Promise<number|null>(done=>child.once("exit",done));
+  const first=start(writers.first),firstDone=settled(first);let secondDone:Promise<number|null>|undefined;
+  try{
+    await until(()=>existsSync(receipt));
+    const waiting=performance.now();
+    expect(await settled(start(writers.timed,shortPins))).toBe(1);
+    expect(performance.now()-waiting).toBeGreaterThanOrEqual(writers.timeoutSeconds*1000-100);
+    secondDone=settled(start(writers.second));await until(()=>existsSync(join(entered,writers.second)));
+    await Bun.sleep(150);
+    expect(readFileSync(receipt,"utf8").trim().split(/\r?\n/u)).toEqual(writers.events.slice(0,1));
+  }finally{writeFileSync(release,"");expect(await firstDone).toBe(0);if(secondDone)expect(await secondDone).toBe(0);}
+  const db=new Database(":memory:");
+  try{expect(db.query("select value from json_each(?1) order by key").all(JSON.stringify(readFileSync(receipt,"utf8").trim().split(/\r?\n/u)))).toEqual(writers.events.map(value=>({value})));}finally{db.close();}
+},20000);
+
+test.skipIf(process.platform==="win32")("an installer keeps the native Unix lock if its bootstrap shells exit and a waiter times out",async()=>{
+  const shared=join(generated,"rust-inherited-lock"),home=join(shared,"rustup"),cargo=join(shared,"cargo"),bin=join(cargo,"bin"),localPins=join(shared,"pins.json"),entered=join(shared,"entered"),release=join(shared,"release"),done=join(shared,"done");
+  mkdirSync(bin,{recursive:true});
+  const policy={...bootstrapSchema.definitions.RustupInstallation.const,lockWaitSeconds:String(writers.timeoutSeconds)};
+  writeFileSync(localPins,JSON.stringify({RustupInstallation:{const:policy}}));
+  writeFileSync(join(bin,"rustup"),`#!/usr/bin/env bash
+if [ "$ID" != "${writers.first}" ]; then exit 0; fi
+printf '%s %s\\n' "$$" "$PPID" > "$ENTERED.pending"
+mv "$ENTERED.pending" "$ENTERED"
+while [ ! -f "$RELEASE" ]; do sleep .03; done
+touch "$DONE"
+`,{mode:0o755});
+  const script=body("pin_field","host_pin")+body("ensure_rust_toolchain","ensure_node")+`\nlog() { :; }\nensure_rust_toolchain\n`;
+  const env={...process.env,REPO_ROOT:root,PINS_FILE:localPins,CARGO_HOME:cargo,RUSTUP_HOME:home,ENTERED:entered,RELEASE:release,DONE:done};
+  const start=(id:string)=>spawn("bash",["-c",script],{stdio:["ignore","ignore","ignore"],env:{...env,ID:id}});
+  const until=async(probe:()=>boolean)=>{for(let count=0;count<250;count++){if(probe())return;await Bun.sleep(20);}throw Error("Fixture installer did not advance");};
+  const settled=(child:ReturnType<typeof start>)=>new Promise<number|null>(resolve=>child.once("exit",resolve));
+  const first=start(writers.first),firstDone=settled(first);
+  let installer=0;
+  try{
+    await until(()=>existsSync(entered));
+    const [owned,parent]=readFileSync(entered,"utf8").trim().split(/\s+/u).map(Number);
+    installer=owned!;
+    expect(installer).toBeGreaterThan(1);
+    expect(parent).toBeGreaterThan(1);
+    first.kill("SIGKILL");
+    await firstDone;
+    if(parent!==first.pid&&parent!==process.pid)process.kill(parent!,"SIGKILL");
+    expect(()=>process.kill(installer,0)).not.toThrow();
+    const started=performance.now();
+    expect(await settled(start(writers.second))).toBe(1);
+    expect(performance.now()-started).toBeGreaterThanOrEqual(writers.timeoutSeconds*1000-100);
+  }finally{writeFileSync(release,"");}
+  await until(()=>existsSync(done));
+  if(installer>0)await until(()=>{try{process.kill(installer,0);return false;}catch{return true;}});
+  expect(await settled(start(writers.second))).toBe(0);
+},20000);
+
 test("Rust bootstrap keeps shell profiles untouched", () => {
   const installer = join(generated, "rustup-init"), args = join(generated, "args.txt"), toolchainArgs = join(generated, "toolchain-args.txt");
   writeFileSync(installer, '#!/usr/bin/env bash\nprintf "%s\\n" "$@" > "$SEMIO_TEST_ARGUMENTS"\n');
-  const script = body("ensure_rust_toolchain", "ensure_node") + `
+  const script = body("pin_field","host_pin") + body("ensure_rust_toolchain", "ensure_node") + `
 log() { :; }
 host_pin() { printf "{}"; }
-pin_field() { printf "test"; }
 fetch_pinned() { cp "$SEMIO_TEST_INSTALLER" "$2"; }
 command() { if [ "$1" = "-v" ] && [ "$2" = rustup ]; then return 1; fi; builtin command "$@"; }
 rustup() { printf "%s\\n" "$@" > "$SEMIO_TEST_TOOLCHAIN_ARGUMENTS"; }
 ensure_rust_toolchain
 `;
-  const result = execute(script, { REPO_ROOT: root, CARGO_HOME: join(generated, "cargo"), RUSTUP_HOME: join(generated, "rustup"), TMPDIR: generated, SEMIO_TEST_INSTALLER: installer, SEMIO_TEST_ARGUMENTS: args, SEMIO_TEST_TOOLCHAIN_ARGUMENTS: toolchainArgs });
+  const result = execute(script, { REPO_ROOT: root, PINS_FILE:pins, CARGO_HOME: join(generated, "cargo"), RUSTUP_HOME: join(generated, "rustup"), TMPDIR: generated, SEMIO_TEST_INSTALLER: installer, SEMIO_TEST_ARGUMENTS: args, SEMIO_TEST_TOOLCHAIN_ARGUMENTS: toolchainArgs });
   expect(result.status, result.stderr).toBe(0);
   const actual = readFileSync(args, "utf8").trim().split("\n");
   for (const argument of corpus.rustupRequiredArguments) expect(actual).toContain(argument);
@@ -230,25 +325,75 @@ ensure_rust_toolchain
   expect(bootstrap).toContain("unset RUSTUP_TOOLCHAIN");
 });
 
+test.skipIf(process.platform!=="win32")("the Windows child inherits the native lock across bootstrap process death",async()=>{
+  const directory=join(generated,"rustup-inherited"),home=join(directory,"rustup"),cargo=join(directory,"cargo"),program=join(directory,"fixture.exe"),entered=join(directory,"entered"),release=join(directory,"release"),done=join(directory,"done"),shortPins=join(directory,"short.json");
+  mkdirSync(directory,{recursive:true});
+  const policy={...bootstrapSchema.definitions.RustupInstallation.const,lockWaitSeconds:String(writers.timeoutSeconds)};
+  writeFileSync(shortPins,JSON.stringify({definitions:{RustupInstallation:{const:policy}}}));
+  const source=`using System;using System.Diagnostics;using System.IO;using System.Threading;
+public static class Fixture {
+ public static int Main(string[] args) {
+  if (Environment.GetEnvironmentVariable("ID") != "${writers.first}") return 0;
+  var entered = Environment.GetEnvironmentVariable("ENTERED");
+  File.WriteAllText(entered + ".pending", Process.GetCurrentProcess().Id.ToString());
+  File.Move(entered + ".pending", entered);
+  while (!File.Exists(Environment.GetEnvironmentVariable("RELEASE"))) Thread.Sleep(20);
+  File.WriteAllText(Environment.GetEnvironmentVariable("DONE"), String.Join(" ", args));
+  return 0;
+ }
+}`;
+  const encode=(value:string)=>Buffer.from(value,"utf16le").toString("base64");
+  const compile=spawnSync("powershell.exe",["-NoProfile","-EncodedCommand",encode('$ErrorActionPreference="Stop"; Add-Type -TypeDefinition $env:TEST_SOURCE -OutputAssembly $env:TEST_PROGRAM -OutputType ConsoleApplication')],{encoding:"utf8",env:{...process.env,TEST_SOURCE:source,TEST_PROGRAM:program}});
+  expect(compile.status,compile.stderr).toBe(0);
+  const ps=readFileSync(resolve(import.meta.dir,"../../🔵️.ps1"),"utf8");
+  const native=ps.slice(ps.indexOf("function Invoke-WithRustupInstallLock"),ps.indexOf("function Get-MsvcInstallation"))+`
+$ErrorActionPreference = "Stop"
+$script:PinsFile = $env:PINS_FILE
+function Ensure-Directory { param($Path) [IO.Directory]::CreateDirectory($Path) | Out-Null }
+function Get-FirstCommandPath { return $env:TEST_PROGRAM }
+function Get-CommandPathOrThrow { return $env:TEST_PROGRAM }
+Ensure-RustToolchain -repoRoot $env:REPO_ROOT
+`;
+  const start=(id:string,file=pins)=>spawn("powershell.exe",["-NoProfile","-EncodedCommand",encode(native)],{stdio:"ignore",env:{...process.env,ID:id,REPO_ROOT:root,PINS_FILE:file,TEST_PROGRAM:program,CARGO_HOME:cargo,RUSTUP_HOME:home,ENTERED:entered,RELEASE:release,DONE:done}});
+  const settled=(child:ReturnType<typeof start>)=>new Promise<number|null>(resolve=>child.once("exit",resolve));
+  const until=async(probe:()=>boolean)=>{for(let count=0;count<650;count++){if(probe())return;await Bun.sleep(20);}throw Error("Fixture installer did not advance");};
+  const first=start(writers.first),firstDone=settled(first);
+  let original=0;
+  try{
+    await until(()=>existsSync(entered));
+    original=Number(readFileSync(entered,"utf8"));expect(original).toBeGreaterThan(1);
+    first.kill("SIGKILL");await firstDone;expect(()=>process.kill(original,0)).not.toThrow();
+    const waiting=performance.now();
+    expect(await settled(start(writers.timed,shortPins))).toBe(1);
+    expect(performance.now()-waiting).toBeGreaterThanOrEqual(writers.timeoutSeconds*1000-100);
+  }finally{writeFileSync(release,"");}
+  await until(()=>existsSync(done));
+  expect(readFileSync(done,"utf8").trim().split(/\s+/u)).toEqual(corpus.rustupToolchainArguments);
+  expect(await settled(start(writers.second))).toBe(0);
+},45000);
+
 test("Windows Rust bootstrap keeps profiles and the pinned installer untouched", () => {
   const windows = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"), "utf8");
-  const installer = windows.match(/^\s*& \$installer (.+) \| Out-Host$/mu)?.[1]?.split(/\s+/u);
+  const native = readFileSync(resolve(import.meta.dir,"../../🦀️rustup/🔷️.cs"),"utf8");
+  const installer = native.match(/bootstrap \? "([^"]+)"/u)?.[1]?.split(/\s+/u);
   expect(installer).toBeDefined();
   for (const argument of corpus.rustupRequiredArguments) expect(installer).toContain(argument);
   expect(windows).toContain("Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue");
-  const toolchain = windows.match(/-FilePath \$rustupPath -ArgumentList @\(([^)]+)\) -WorkingDirectory \$repoRoot/u)?.[1];
+  const toolchain = native.match(/bootstrap \? "[^"]+" : "([^"]+)"/u)?.[1];
   expect(toolchain).toBeDefined();
-  const args = JSON.parse("[" + toolchain + "]");
+  const args = toolchain?.split(/\s+/u);
   expect(new Ajv().validate({ type: "array", items: { type: "string" } }, args)).toBe(true);
   expect(args).toEqual(corpus.rustupToolchainArguments);
   expect(windows).toContain("function Get-PinnedGoDirectory");
   expect(windows).toContain(".cache\\b\\t\\m\\native\\go\\");
   expect(windows).toContain('Get-FirstCommandPath @("go.exe")');
   expect(windows).toContain('Get-FirstCommandPath @("uvx.exe")');
-  expect(windows).toContain('Get-FirstCommandPath @("npm.cmd", "npm.exe")');
-  expect(windows).toContain('Join-Path $nodeRoot "npm.cmd"');
-  expect(windows).toContain('Get-FirstCommandPath @("node.exe")');
-  expect(windows).toContain("Split-Path -Parent $nodeFound");
+  expect(windows).toContain(".definitions.WindowsNodeInstallation.const");
+  expect(windows).toContain("Join-Path $Directory $Policy.npm");
+  expect(windows).toContain("Test-PinnedNodeDirectory $candidate $asset.version $policy");
+  expect(windows).toContain("[IO.Directory]::Move($candidate, $destination)");
+  expect(windows).toContain("Test-PinnedNodeDirectory $destination $asset.version $policy");
+  expect(windows).toContain("@($script:VerifiedNodeDirectory, $machinePath, $userPath)");
   expect(windows).toContain("Split-Path -Parent $uvFound");
 
 });
@@ -424,7 +569,7 @@ test("Linux session persistence keeps the Playwright cache inside the checkout",
 });
 
 test("user-local Zig wrappers target host glibc unless a target is already set", () => {
-  const home = join(generated, "zig-home"), bin = join(generated, "zig-bin"), data = join(generated, "zig-data");
+  const home = join(generated, "zig-home"), bin = join(generated, "zig-bin"), data = join(generated, "zig 🎯' data");
   const zig = join(data, "semio", "zig", "v0.14.1", "zig"), recorded = join(generated, "zig-args");
   mkdirSync(join(data, "semio", "zig", "v0.14.1"), {recursive: true});
   writeFileSync(zig, "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$SEMIO_TEST_ZIG_ARGS\"\n", {mode: 0o755});
@@ -452,7 +597,7 @@ ensure_user_cc
 
   expect(readlinkSync(join(bin, "zig"))).toBe(zig);
   writeFileSync(wrapper, readFileSync(wrapper, "utf8") + "\n# kept\n");
-  const kept = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: bin, PATH: `${bin}:/usr/bin:/bin`, SEMIO_TEST_ZIG_ARGS: recorded});
+  const kept = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: bin, PATH: `${bin}:/usr/bin:/bin`, LC_ALL:"C", SEMIO_TEST_ZIG_ARGS: recorded});
   expect(kept.status, kept.stderr).toBe(0);
   expect(readFileSync(wrapper, "utf8")).toContain("# kept");
   expect(readlinkSync(join(bin, "zig"))).toBe(zig);
@@ -525,13 +670,35 @@ ensure_native_toolchain
   expect(existsSync(join(generated, "outer-empty", "cc"))).toBe(false);
 });
 
-test("a fresh checkout syncs the dependency scopes before workspace:setup, because the planner of every later run imports typescript from them", () => {
-  const bootstrap = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
-  const unix = readFileSync(join(bootstrap, "🐚️.sh"), "utf8"), windows = readFileSync(join(bootstrap, "🔵️.ps1"), "utf8");
-  expect(unix.indexOf("  repo run repo-mcp:install || return 1")).toBeLessThan(unix.indexOf("  repo dependencies sync --all || return 1"));
-  expect(unix.indexOf("  repo dependencies sync --all || return 1")).toBeLessThan(unix.indexOf("  repo run workspace:setup || return 1"));
-  expect(windows.indexOf('"run", "repo-mcp:install"')).toBeLessThan(windows.indexOf('"dependencies", "sync", "--all"'));
-  expect(windows.indexOf('"dependencies", "sync", "--all"')).toBeLessThan(windows.indexOf('"run", "workspace:setup"'));
+test("a fresh Unix checkout synchronizes scopes before workspace setup and preserves a sync failure", () => {
+  const start = bootstrap.indexOf("repo_bootstrap() {"), end = bootstrap.indexOf("\n#endregion 🔖️RepoBootstrap",start);
+  expect(start).toBeGreaterThan(0);
+  expect(end).toBeGreaterThan(start);
+  const boot = bootstrap.slice(start,end);
+  const log = join(generated,"bootstrap-order.txt");
+  const harness = boot + `
+log() { :; }
+repo() {
+  printf '%s\\n' "$*" >> "$SEMIO_TEST_REPO_LOG"
+  if [ "$*" = 'dependencies sync --all' ]; then return "$SEMIO_TEST_SYNC_EXIT"; fi
+}
+repo_bootstrap
+`;
+  const commands = ["run repo-mcp:install","--help","dependencies sync --all","run workspace:setup","run @semio-tech/repo-developer-tools:setup-debugger"];
+  for (const exit of [0,37]) {
+    writeFileSync(log,"");
+    const result = execute(harness,{LOCAL_BIN:generated,REPO_ROOT:generated,SEMIO_TEST_REPO_LOG:log,SEMIO_TEST_SYNC_EXIT:String(exit),SKIP_REPO_BOOTSTRAP:"0"});
+    expect(result.status,result.stderr).toBe(exit);
+    expect(readFileSync(log,"utf8").trim().split("\n")).toEqual(exit===0?commands:commands.slice(0,3));
+  }
+});
+
+test("Windows bootstrap synchronizes scopes before workspace setup", () => {
+  const windows = readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"),"utf8");
+  const commands = ['"run", "repo-mcp:install"','"dependencies", "sync", "--all"','"run", "workspace:setup"'].map(command=>windows.indexOf(command));
+  expect(commands[0]).toBeGreaterThanOrEqual(0);
+  expect(commands[1]).toBeGreaterThan(commands[0]!);
+  expect(commands[2]).toBeGreaterThan(commands[1]!);
 });
 
 test("Windows debugger setup continues when install privileges are missing", () => {

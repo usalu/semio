@@ -1,0 +1,401 @@
+//! 🔁️ Mounted PDF natural-file import over the original admitted source and step budgets.
+
+use super::retained_graph::{admit_box, exact_position, ImportedGraphRetirement, PdfByteGraphEvent, PdfByteGraphReceipt, PdfFilePreparationCursor, PreparedPdfFile};
+use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosStatus, PdfCosCursor};
+use crate::standards::v1_7::subsets::base::modules::lift::{ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent, DocumentLiftCursor};
+use crate::standards::v1_7::subsets::base::modules::xref::{XrefIndexStatus, XrefStreamError};
+use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+use semio_framework_value::{ErasedSnapshotRetirement, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_plugin::{MediaError, NaturalFileDecodeCursor, NaturalFileDecodeOwner, NaturalFileDecodeProgress, NaturalFileDecodeStep, PluginLifecycleStep, StepContext, ToolExecutionContract, NATURAL_FILE_PORT};
+use std::mem::{size_of, take};
+use store::os_store::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, settle_close_poll};
+
+const COPY_PER_WORK: usize = 128;
+
+#[derive(Clone, Copy)]
+enum Phase { AllocateFile, PrepareFile, TransferFile, AllocateLift, Lift, TransferLift, ClosePositions, Publish, Done, Closing }
+
+/// 📥️ Selects the mounted decoder before moving its original source.
+pub fn admit_pdf_natural_decode(
+    bytes: &mut Option<Vec<u8>>, contract: ToolExecutionContract,
+    receiving: &mut Option<NaturalFileDecodeOwner<PdfSnapshot>>, context: &mut StepContext<'_>,
+) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    if receiving.is_some() { return Ok(true); }
+    let source = bytes.as_ref().ok_or_else(|| ValueError::invariant("missing original PDF natural file source"))?;
+    let controlled = source.len() > contract.max_work_units_per_step as usize;
+    let capacity = if controlled { size_of::<NaturalPdfDecoder>() } else { 0 };
+    let copy = capacity + size_of::<NaturalFileDecodeOwner<PdfSnapshot>>();
+    let grant = context.retained_grant();
+    if context.should_yield() || context.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0
+        || copy > grant.maximum_copy_bytes || capacity > grant.maximum_capacity_bytes
+    {
+        return Ok(false);
+    }
+    if controlled {
+        let mut decoder = admit_box(NaturalPdfDecoder::new(contract)).ok_or_else(|| {
+            ValueError::literal(ValueRefusalKind::AllocationFailed, "unable to allocate the controlled PDF file decoder")
+        })?;
+        decoder.source = bytes.take().expect("original PDF source is present");
+        *receiving = Some(NaturalFileDecodeOwner::Controlled(decoder));
+    } else {
+        *receiving = Some(NaturalFileDecodeOwner::Synchronous(bytes.take().expect("original PDF source is present")));
+    }
+    context.consume_fuel(1);
+    context.consume_retained(RetainedCloneProgress {
+        copied_items: 1, copied_bytes: copy, retained_capacity_bytes: capacity, ..Default::default()
+    })?;
+    Ok(true)
+}
+
+/// 🏗️ Creates the same native owner for explicit cold tool construction.
+pub fn build_pdf_natural_decode(bytes: Vec<u8>, contract: ToolExecutionContract) -> Result<NaturalFileDecodeOwner<PdfSnapshot>, MediaError> {
+    if bytes.len() <= contract.max_work_units_per_step as usize { return Ok(NaturalFileDecodeOwner::Synchronous(bytes)); }
+    let mut decoder = admit_box(NaturalPdfDecoder::new(contract)).ok_or_else(|| failure("unable to allocate the controlled PDF file decoder"))?;
+    decoder.source = bytes;
+    Ok(NaturalFileDecodeOwner::Controlled(decoder))
+}
+
+struct NaturalPdfDecoder {
+    phase: Phase,
+    source: Vec<u8>,
+    preparing: Option<Box<PdfFilePreparationCursor>>,
+    file: Option<PreparedPdfFile>,
+    lifting: Option<Box<ControlledDocumentLiftCursor>>,
+    snapshot: Option<PdfSnapshot>,
+    partial_page: Option<PdfPage>,
+    snapshot_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
+    trailer_retirement: Option<PdfCosCursor>,
+    graph_retirement: ImportedGraphRetirement,
+    contract: ToolExecutionContract,
+    progress: NaturalFileDecodeProgress,
+    live_bytes: usize,
+    next_release: usize,
+    deferred: Option<ControlledLiftBarrier>,
+    blocked: Option<(PdfByteGraphEvent, usize)>,
+}
+
+impl NaturalPdfDecoder {
+    fn new(contract: ToolExecutionContract) -> Self {
+        Self {
+            phase: Phase::AllocateFile, source: Vec::new(), preparing: None, file: None, lifting: None,
+            snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
+            graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None,
+        }
+    }
+
+    fn next(&mut self, grant: CosGrant) -> Result<PdfByteGraphReceipt, MediaError> {
+        use PdfByteGraphEvent as Event;
+        match self.phase {
+            Phase::AllocateFile => {
+                let bytes = size_of::<PdfFilePreparationCursor>();
+                if bytes > grant.allocation_bytes { return Ok(turn(Event::NeedsAllocation { bytes }, 0)); }
+                let preparing = PdfFilePreparationCursor::new(self.contract.max_decoded_items, self.contract.max_output_bytes);
+                self.preparing = Some(admit_box(preparing).ok_or_else(|| failure("unable to allocate PDF file preparation"))?);
+                self.phase = Phase::PrepareFile;
+                Ok(PdfByteGraphReceipt { allocated_bytes: bytes, ..turn(Event::More, 1) })
+            }
+            Phase::PrepareFile => {
+                let mut step = self.preparing.as_mut().expect("PDF file preparation").advance(&self.source, grant, false);
+                if matches!(step.event, Ok(Event::Complete)) {
+                    self.phase = Phase::TransferFile;
+                    step.event = Ok(Event::More);
+                }
+                Ok(step)
+            }
+            Phase::TransferFile => {
+                let bytes = size_of::<PdfFilePreparationCursor>();
+                if bytes > grant.release_bytes { return Ok(turn(Event::NeedsRelease { bytes }, 0)); }
+                self.file = self.preparing.as_mut().expect("PDF file transfer").take();
+                self.preparing = None;
+                self.progress.consumed_input_bytes = self.source.len();
+                self.phase = Phase::AllocateLift;
+                Ok(PdfByteGraphReceipt { released_bytes: bytes, ..turn(Event::More, 1) })
+            }
+            Phase::AllocateLift => {
+                let bytes = size_of::<ControlledDocumentLiftCursor>();
+                if bytes > grant.allocation_bytes { return Ok(turn(Event::NeedsAllocation { bytes }, 0)); }
+                self.lifting = Some(admit_box(DocumentLiftCursor::controlled()).ok_or_else(|| failure("unable to allocate PDF semantic lift"))?);
+                self.phase = Phase::Lift;
+                Ok(PdfByteGraphReceipt { allocated_bytes: bytes, ..turn(Event::More, 1) })
+            }
+            Phase::Lift => {
+                let file = self.file.as_ref().expect("semantic PDF source");
+                let position = |id| exact_position(&file.graph.positions, id);
+                let mut source = GraphSource::with_positions(&file.graph.objects, &position);
+                let step = self.lifting.as_mut().expect("semantic PDF owner").advance(&file.trailer, file.header.version(), &mut source, grant, false);
+                let event = match step.event {
+                    Ok(ControlledLiftEvent::Complete) => { self.phase = Phase::TransferLift; Ok(Event::More) }
+                    Ok(ControlledLiftEvent::Deferred(reason)) => { self.deferred = Some(reason); Ok(Event::ReferenceRequired) },
+                    other => lift_event(other),
+                };
+                Ok(PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes })
+            }
+            Phase::TransferLift => {
+                let bytes = size_of::<ControlledDocumentLiftCursor>();
+                if bytes > grant.release_bytes { return Ok(turn(Event::NeedsRelease { bytes }, 0)); }
+                let snapshot = self.lifting.as_mut().expect("semantic PDF transfer").take_result()
+                    .ok_or_else(|| failure("completed semantic PDF could not transfer"))?;
+                self.lifting = None;
+                self.snapshot = Some(snapshot);
+                self.file.as_mut().expect("PDF positions retirement").graph.positions.begin_close();
+                self.phase = Phase::ClosePositions;
+                Ok(PdfByteGraphReceipt { released_bytes: bytes, ..turn(Event::More, 1) })
+            }
+            Phase::ClosePositions => {
+                let step = self.file.as_mut().expect("PDF original graph").graph.positions.close_step(grant);
+                let event = step.status.map_err(XrefStreamError::Structure).map(|status| match status {
+                    XrefIndexStatus::Closed => { self.phase = Phase::Publish; Event::More }
+                    XrefIndexStatus::NeedsRelease { bytes } => Event::NeedsRelease { bytes },
+                    _ => Event::More,
+                });
+                Ok(PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes })
+            }
+            Phase::Publish => Ok(turn(Event::Complete, 1)),
+            _ => Err(failure("PDF natural file decoder no longer advanceable")),
+        }
+    }
+
+    fn publish_snapshot(&mut self) -> Result<PdfSnapshot, MediaError> {
+        let output = self.snapshot.as_ref().expect("PDF typed data is owned through publication");
+        if output.schema != STDIO_PDF17_DOCUMENT_SCHEMA || !output.objects.is_empty() || !output.trailer.is_empty() {
+            return Err(failure("unsettled semantic PDF snapshot has incompatible raw lanes"));
+        }
+        let file = self.file.take().expect("PDF original data is owned through publication");
+        let mut snapshot = self.snapshot.take().expect("PDF typed data is owned through publication");
+        snapshot.objects = file.graph.objects;
+        snapshot.trailer = file.trailer;
+        self.phase = Phase::Done;
+        Ok(snapshot)
+    }
+
+    fn copy_body(&self) -> usize {
+        match self.phase {
+            Phase::TransferFile => size_of::<PreparedPdfFile>(),
+            Phase::TransferLift | Phase::Publish => size_of::<PdfSnapshot>(),
+            _ => COPY_PER_WORK,
+        }.max(COPY_PER_WORK)
+    }
+
+    fn reserves_empty_output(&self) -> bool {
+        match self.phase {
+            Phase::PrepareFile => self.preparing.as_ref().is_some_and(|owner| owner.reserving_empty_objects()),
+            Phase::Lift => self.lifting.as_ref().is_some_and(|owner| owner.reserving_empty_slots()),
+            _ => false,
+        }
+    }
+
+    fn record(&mut self, step: &PdfByteGraphReceipt, copy_body: usize, inline_annotation: bool, empty_output: bool, context: &mut StepContext<'_>) -> Result<(), MediaError> {
+        let grant = context.retained_grant();
+        let allocation_copy = if empty_output { 0 } else { step.allocated_bytes };
+        let copied = allocation_copy.saturating_add(step.work.saturating_mul(copy_body));
+        let copied_items = usize::from(step.allocated_bytes != 0
+            || inline_annotation && step.work != 0 && matches!(step.event, Ok(PdfByteGraphEvent::More))
+            || matches!(step.event, Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::Complete)));
+        if copied > grant.maximum_copy_bytes {
+            return Err(failure("PDF decoder exceeded its admitted copy grant"));
+        }
+        context.consume_fuel(step.work as u64);
+        context.consume_retained(RetainedCloneProgress {
+            copied_items, copied_bytes: copied, retained_capacity_bytes: step.allocated_bytes, released_bytes: step.released_bytes, ..Default::default()
+        }).map_err(|error| failure(&error.to_string()))?;
+        self.progress.completed_work_units = self.progress.completed_work_units.saturating_add(step.work as u64);
+        self.live_bytes = self.live_bytes.saturating_add(step.allocated_bytes).checked_sub(step.released_bytes)
+            .ok_or_else(|| failure("PDF decoder released backing it does not own"))?;
+        Ok(())
+    }
+
+    fn close_native(&mut self, grant: CosGrant) -> PdfByteGraphReceipt {
+        use PdfByteGraphEvent as Event;
+        if let Some(owner) = self.preparing.as_mut() {
+            let mut step = owner.close_step(grant);
+            if matches!(step.event, Ok(Event::Closed)) {
+                if step.work == 0 {
+                    let bytes = size_of::<PdfFilePreparationCursor>();
+                    if bytes > grant.release_bytes { return turn(Event::NeedsRelease { bytes }, 0); }
+                    self.preparing = None;
+                    return release_turn(bytes);
+                }
+                step.event = Ok(Event::More);
+            }
+            return step;
+        }
+        if let Some(owner) = self.lifting.as_mut() {
+            let step = owner.close_step(grant);
+            let event = match step.event {
+                Ok(ControlledLiftEvent::Closed) if step.work == 0 => {
+                    let bytes = size_of::<ControlledDocumentLiftCursor>();
+                    if bytes > grant.release_bytes { return turn(Event::NeedsRelease { bytes }, 0); }
+                    let partial = owner.take_partial();
+                    if self.snapshot.is_none() { self.snapshot = partial.snapshot; }
+                    self.partial_page = partial.page;
+                    self.lifting = None;
+                    return release_turn(bytes);
+                }
+                other => lift_event(other),
+            };
+            return PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes };
+        }
+        if let Some(cursor) = self.trailer_retirement.as_mut() {
+            let step = cursor.close_step(grant);
+            if step.status == Ok(CosStatus::Closed) { self.trailer_retirement = None; }
+            let event = step.status.map_err(XrefStreamError::Structure).map(|status| match status {
+                CosStatus::NeedsRelease { bytes } => Event::NeedsRelease { bytes },
+                _ => Event::More,
+            });
+            return PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes };
+        }
+        if let Some(file) = self.file.as_mut() {
+            if file.trailer.capacity() != 0 {
+                self.trailer_retirement = Some(PdfCosCursor::retire_dictionary(take(&mut file.trailer)));
+                return turn(Event::More, 1);
+            }
+            let step = self.graph_retirement.close_step(&mut file.graph, grant);
+            let event = step.event.map(|status| match status {
+                super::retained_graph::GraphImportEvent::Closed => { self.file = None; Event::More }
+                super::retained_graph::GraphImportEvent::NeedsRelease { bytes } => Event::NeedsRelease { bytes },
+                _ => Event::More,
+            });
+            return PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes };
+        }
+        let bytes = self.source.capacity();
+        if bytes == 0 { return turn(Event::Closed, 0); }
+        if bytes > grant.release_bytes { return turn(Event::NeedsRelease { bytes }, 0); }
+        self.source = Vec::new();
+        release_turn(bytes)
+    }
+}
+
+impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
+    fn advance(&mut self, context: &mut StepContext<'_>) -> Result<NaturalFileDecodeStep<PdfSnapshot>, MediaError> {
+        use PdfByteGraphEvent as Event;
+        let start = self.progress.completed_work_units;
+        let max_work = self.contract.max_work_units_per_step;
+        while !context.should_yield() && !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
+            let grant = context.retained_grant();
+            let annotation_body = self.lifting.as_ref().map_or(0, |owner| owner.next_annotation_body_bytes());
+            let copy_body = self.copy_body().max(annotation_body);
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy_body { break; }
+            let empty_output = self.reserves_empty_output();
+            let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body };
+            let grant = CosGrant { work: 1, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
+            let step = self.next(grant)?;
+            self.record(&step, copy_body, annotation_body != 0, empty_output, context)?;
+            if step.work != 0 { self.blocked = None; }
+            match step.event {
+                Ok(Event::Object) => self.progress.decoded_items += 1,
+                Ok(Event::More) => {}
+                Ok(Event::Complete) => {
+                    self.progress.owned_output_bytes = self.live_bytes;
+                    return Ok(NaturalFileDecodeStep::Complete { snapshot: self.publish_snapshot()?, progress: self.progress });
+                }
+                Ok(event @ (Event::NeedsAllocation { bytes } | Event::NeedsRelease { bytes })) => {
+                    if self.progress.completed_work_units == start {
+                        let available = if matches!(event, Event::NeedsAllocation { .. }) { grant.allocation_bytes } else { grant.release_bytes };
+                        if self.blocked.replace((event, available)) == Some((event, available)) {
+                            return Err(failure(&format!("PDF decoder needs a {bytes}-byte backing grant")));
+                        }
+                        return Ok(NaturalFileDecodeStep::Yield);
+                    }
+                    break;
+                }
+                Ok(Event::ReferenceRequired) => {
+                    return Err(match self.deferred {
+                        Some(reason) => failure(&format!("PDF semantic import requires the reference reader for {reason:?}")),
+                        None => failure("PDF requires reference decoding for this file structure"),
+                    });
+                }
+                Ok(Event::NotPdf) => return Err(failure("input does not identify a PDF")),
+                Err(error) => return Err(failure(&xref_message(error))),
+                _ => return Err(failure("unexpected PDF decoder continuation")),
+            }
+        }
+        if self.progress.completed_work_units == start { Ok(NaturalFileDecodeStep::Yield) }
+        else { Ok(NaturalFileDecodeStep::Progress(self.progress)) }
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(owner) = self.preparing.as_mut() { owner.begin_close(); }
+        if let Some(owner) = self.lifting.as_mut() { owner.begin_close(); }
+        self.phase = Phase::Closing;
+    }
+
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
+        if self.snapshot_retirement.is_some() {
+            let body = effect.grant().maximum_copy_bytes;
+            let step = settle_close_poll(artifact_retirement_box_close_step(&mut self.snapshot_retirement, body, effect))?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
+        }
+        if self.snapshot.is_some() { return admit_retirement(&mut self.snapshot, &mut self.snapshot_retirement, effect); }
+        if self.partial_page.is_some() { return admit_retirement(&mut self.partial_page, &mut self.snapshot_retirement, effect); }
+        let grant = effect.grant();
+        if effect.remaining_work_units()? == 0 || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        }
+        let step = self.close_native(CosGrant { work: 1, allocation_bytes: 0, release_bytes: grant.maximum_release_bytes });
+        if step.work != 0 && !effect.performed(step.work as u64)? {
+            return Err(ValueError::invariant("PDF decoder retirement exceeded original work"));
+        }
+        let progress = RetainedCloneProgress { released_bytes: step.released_bytes, ..Default::default() };
+        self.next_release = 0;
+        match step.event {
+            Ok(PdfByteGraphEvent::Closed) => Ok(PluginLifecycleStep::Complete(progress)),
+            Ok(PdfByteGraphEvent::NeedsRelease { bytes }) => {
+                self.next_release = bytes;
+                Ok(PluginLifecycleStep::Progress(progress))
+            }
+            Ok(_) => Ok(PluginLifecycleStep::Progress(progress)),
+            Err(_) => Err(ValueError::invariant("PDF decoder native retirement failed")),
+        }
+    }
+
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(retirement) = self.snapshot_retirement.as_ref() { return artifact_retirement_box_demands(retirement, body); }
+        if self.snapshot.is_some() { return Ok(retirement_birth::<PdfSnapshot>()); }
+        if self.partial_page.is_some() { return Ok(retirement_birth::<PdfPage>()); }
+        let raw_release = if self.preparing.is_none() && self.file.is_none() && self.lifting.is_none() && self.trailer_retirement.is_none() { self.source.capacity() } else { 0 };
+        Ok(RetirementDemand { release_bytes: self.next_release.max(raw_release), depth: 1, ..Default::default() })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self.phase, Phase::Closing) && self.source.capacity() == 0 && self.preparing.is_none() && self.file.is_none()
+            && self.lifting.is_none() && self.snapshot.is_none() && self.partial_page.is_none() && self.snapshot_retirement.is_none()
+            && self.trailer_retirement.is_none()
+    }
+}
+
+fn retirement_birth<T: semio_framework_value::RetireOwned>() -> RetirementDemand {
+    RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), depth: 1, ..Default::default() }
+}
+
+fn admit_retirement<T: semio_framework_value::RetireOwned + Send + 'static>(
+    value: &mut Option<T>, owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>, effect: &mut RetainedAllocationEffect<'_>,
+) -> Result<PluginLifecycleStep, ValueError> {
+    let progress = match semio_framework_value::retirement::admit_owned_retirement(value, effect).result? {
+        Some((retirement, progress)) => { *owner = Some(retirement); progress }
+        None => Default::default(),
+    };
+    Ok(PluginLifecycleStep::Progress(progress))
+}
+
+fn turn(event: PdfByteGraphEvent, work: usize) -> PdfByteGraphReceipt {
+    PdfByteGraphReceipt { event: Ok(event), work, allocated_bytes: 0, released_bytes: 0 }
+}
+
+fn release_turn(bytes: usize) -> PdfByteGraphReceipt {
+    PdfByteGraphReceipt { released_bytes: bytes, ..turn(PdfByteGraphEvent::More, 1) }
+}
+
+fn lift_event(event: Result<ControlledLiftEvent, &'static str>) -> Result<PdfByteGraphEvent, XrefStreamError> {
+    event.map_err(XrefStreamError::Structure).map(|event| match event {
+        ControlledLiftEvent::NeedsAllocation { bytes } => PdfByteGraphEvent::NeedsAllocation { bytes },
+        ControlledLiftEvent::NeedsRelease { bytes } => PdfByteGraphEvent::NeedsRelease { bytes },
+        _ => PdfByteGraphEvent::More,
+    })
+}
+
+fn xref_message(error: XrefStreamError) -> String {
+    match error { XrefStreamError::Structure(reason) => reason.into(), XrefStreamError::Decode(error) => error.into_message() }
+}
+
+fn failure(reason: &str) -> MediaError { MediaError::Payload(NATURAL_FILE_PORT.into(), reason.into()) }

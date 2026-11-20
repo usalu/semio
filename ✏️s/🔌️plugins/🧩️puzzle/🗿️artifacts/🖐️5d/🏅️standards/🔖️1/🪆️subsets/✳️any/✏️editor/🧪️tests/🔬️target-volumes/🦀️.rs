@@ -279,7 +279,7 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         ("setTargetVolumeHidden", "hidden", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "hidden": true, "id": volume.as_str() })),
         ("setTargetVolumeLocked", "locked", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "id": volume.as_str(), "locked": true })),
     ] {
-        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some((semio_framework_pack_json::to_dsl_value(&bare)).clone()), None).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, &mut Some(semio_framework_pack_json::to_dsl_value(&bare)), &mut None).is_err(), "{verb} without its {flag} value must be refused");
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(edits(&first), 1, "{verb} commits exactly one document edit");
         let set = projection_of(&app);
@@ -289,21 +289,36 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
     }
 }
 
-/// 🚚️ The gumball pushes a whole pose in ONE gesture, and a LOCKED volume refuses the push.
+/// 🚚️ Each gumball mode edits its pose component, and a locked volume keeps its pose.
 #[semio_framework_async_macros::async_test]
 async fn relocate_target_volume_writes_the_whole_pose_and_a_locked_volume_refuses() {
     let mut app = app();
     dispatch(&mut app, "addTargetVolume", Some(&semio_framework_pack_json::json!({ "origin": [0.0, 0.0, 0.0] })), None).expect("addTargetVolume");
     let id = first_volume_id(&app);
-    let after = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "after": { "position": [4.0, 5.0, 6.0], "quaternion": [0.0, 0.0, 1.0, 0.0], "scale": [2.0, 3.0, 4.0] } });
-    dispatch(&mut app, "relocateTargetVolume", Some(&after), None).expect("relocate");
+    let mut pose = semio_framework_pack_json::json!({
+        "position": [0.0, 0.0, 0.0], "quaternion": [0.0, 0.0, 0.0, 1.0], "scale": axes(&volumes(&app)[0], "scale")
+    });
+    for (mode, field, value) in [
+        ("translate", "position", semio_framework_pack_json::json!([4.0, 5.0, 6.0])),
+        ("rotate", "quaternion", semio_framework_pack_json::json!([0.0, 0.0, 1.0, 0.0])),
+        ("scale", "scale", semio_framework_pack_json::json!([2.0, 3.0, 4.0])),
+    ] {
+        let before = pose.clone();
+        *pose.get_mut(field).expect("gumball pose field") = value;
+        let gesture = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "mode": mode, "before": before, "after": pose });
+        dispatch(&mut app, "relocateTargetVolume", Some(&gesture), None).expect(mode);
+    }
     let moved = volumes(&app);
     assert_eq!(axes(&moved[0], "origin"), vec![4.0, 5.0, 6.0]);
-    assert_eq!(axes(&moved[0], "orientation"), vec![0.0, 0.0, 1.0, 0.0]);
+    let rotation = axes(&moved[0], "orientation");
+    assert_eq!(rotation.len(), 4);
+    assert!(rotation.iter().zip([0.0, 0.0, 1.0, 0.0]).all(|(axis, expected)| (axis - expected).abs() < 1e-12), "{rotation:?}");
     assert_eq!(axes(&moved[0], "scale"), vec![2.0, 3.0, 4.0]);
     dispatch(&mut app, "setTargetVolumeFlag", Some(&semio_framework_pack_json::json!({ "id": id.as_str(), "flag": "locked", "value": true })), None).expect("lock");
-    let refused = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "after": { "position": [9.0, 9.0, 9.0] } });
-    dispatch(&mut app, "relocateTargetVolume", Some(&refused), None).expect("a locked volume is a refusal, not a fault");
+    let before = pose.clone();
+    *pose.get_mut("position").expect("gumball position") = semio_framework_pack_json::json!([9.0, 9.0, 9.0]);
+    let refused = semio_framework_pack_json::json!({ "volumeId": id.as_str(), "mode": "translate", "before": before, "after": pose });
+    dispatch(&mut app, "relocateTargetVolume", Some(&refused), None).expect("a locked volume returns a refusal");
     assert_eq!(axes(&volumes(&app)[0], "origin"), vec![4.0, 5.0, 6.0], "a locked volume does not move");
 }
 
@@ -345,6 +360,28 @@ fn the_flat_rectangle_is_the_volume_footprint_under_the_shared_board_world_map()
     let to_flat = 1.0 / PUZZLE5D_FLAT_TO_WORLD;
     assert_eq!([x, y], [2.0 * to_flat, 3.0 * to_flat], "the board's Y axis points the other way, exactly as the flat-position inference reads it");
     assert_eq!([width, height], [4.0 * to_flat, 6.0 * to_flat]);
+}
+
+#[test]
+fn world_window_config_preparation_birth_fits_one_mounted_turn() {
+    use semio_plugin::WindowConfigOwner;
+    use semio_os_kernel::os_store::store_schema::HistoryLane;
+
+    let state = window_ownership::Puzzle5dWorldWindowConfig {
+        voxel_dims: [2, 3, 4],
+        ..Default::default()
+    };
+    let mutation = window_ownership::Puzzle5dWorldWindowConfigMutation::Set(
+        window_ownership::Puzzle5dWorldWindowConfigMutationSet {
+            patch: window_ownership::Puzzle5dWorldWindowConfigDiff::of(&state),
+        },
+    );
+    let factory = window_ownership::Puzzle5dWorldWindowConfigOwner::build_one_item_preparation_factory();
+    let grant = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation;
+    let copy = factory.begin_copy_byte_demand(&mutation, HistoryLane::Document).expect("original World WindowConfig birth copy quote");
+    let birth = factory.begin_demand(&mutation, HistoryLane::Document).expect("original World WindowConfig birth capacity quote");
+    assert!(copy <= grant.maximum_copy_bytes, "World WindowConfig preparation requested {copy} copy bytes");
+    assert!(birth.admit(grant).is_ok());
 }
 
 /// 🪣️ The planner the 5d fill run delegates to really receives the constraint: the bridged puzzle 3d

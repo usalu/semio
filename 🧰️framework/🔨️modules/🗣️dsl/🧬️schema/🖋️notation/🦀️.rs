@@ -305,6 +305,21 @@ pub fn print_edge(edge: &EdgeValue) -> String {
 //#endregion 🔖️Edge
 
 //#region 🔖️Quantity
+/// 🔗️ Selects the byte-adjacent tokens of a simple or product unit suffix.
+#[doc(hidden)]
+pub fn quantity_suffix_tokens(tokens: &[semio_framework_dsl::SpannedToken], number_end: u32) -> &[semio_framework_dsl::SpannedToken] {
+    let [first, ..] = tokens else { return &[] };
+    if first.kind != TokenKind::Ident || first.byte_range.0 != number_end {
+        return &[];
+    }
+    match tokens {
+        [_, star, factor, ..]
+            if star.kind == TokenKind::Star && star.byte_range.0 == first.byte_range.1
+                && factor.kind == TokenKind::Ident && factor.byte_range.0 == star.byte_range.1 => &tokens[..3],
+        _ => &tokens[..1],
+    }
+}
+
 /// 📄️ Parses a number glued to a unit suffix — `210GPa`, `0.8kN/m2`, `45%` — converting
 /// into `native`'s scale. `dsl_core`'s number lexer doesn't glue the suffix on itself (`210GPa`
 /// lexes as two adjacent tokens, `Float("210")` then `Ident("GPa")`, exactly like
@@ -322,17 +337,16 @@ pub fn parse_quantity_text(text: &str, native: &'static semio_framework_dsl::Uni
     }
     let raw: f64 = number.text.as_str().parse().map_err(|_| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("not a valid number: {}", number.text.as_str()),number.span))?;
 
-    let suffix = tokens.get(1).filter(|t| t.kind == TokenKind::Ident && t.byte_range.0 == number.byte_range.1);
-    let value = match suffix {
-        Some(suffix_token) => {
-            let symbol = suffix_token.text.as_str();
-            let unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unknown unit `{symbol}`"),suffix_token.span))?;
-            semio_framework_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unit `{symbol}` is not compatible with `{}`", native.symbol),suffix_token.span))?
-        }
-        None => raw,
+    let suffix = quantity_suffix_tokens(&tokens[1..], number.byte_range.1);
+    let value = if let (Some(first), Some(last)) = (suffix.first(), suffix.last()) {
+        let symbol = &text[first.byte_range.0 as usize..last.byte_range.1 as usize];
+        let unit = semio_framework_dsl::unit_by_symbol(symbol).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unknown unit `{symbol}`"),first.span))?;
+        semio_framework_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unit `{symbol}` is not compatible with `{}`", native.symbol),first.span))?
+    } else {
+        raw
     };
 
-    let consumed = if suffix.is_some() { 2 } else { 1 };
+    let consumed = 1 + suffix.len();
     if tokens.len() > consumed {
         return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"unexpected trailing content after quantity",tokens[consumed].span));
     }

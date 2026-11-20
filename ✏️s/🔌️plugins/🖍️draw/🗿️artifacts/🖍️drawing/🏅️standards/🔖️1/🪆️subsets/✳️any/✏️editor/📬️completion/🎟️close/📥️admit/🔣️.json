@@ -6,7 +6,7 @@
     "work",
     "stock",
     "inputRetainedOnDenial",
-    "headerCopyBytes"
+    "headerCopyIncludesSourceAndFrame"
   ],
   "properties": {
     "work": {
@@ -29,8 +29,8 @@
     "inputRetainedOnDenial": {
       "const": true
     },
-    "headerCopyBytes": {
-      "const": 0
+    "headerCopyIncludesSourceAndFrame": {
+      "const": true
     }
   }
 }

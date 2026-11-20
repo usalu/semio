@@ -46,12 +46,12 @@ pub const WFC_3D_RETAINED_TOOL_IDS: &[&str] = &[
 
 const WFC_3D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.wfc3d.tool-command.v1";
 
-pub(super) const WFC_3D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+pub const WFC_3D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
 /// 📬️ Two complete solve records and their sparse diff fit within the admitted tick carrier.
-pub(super) const WFC_3D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+pub const WFC_3D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
-pub(super) const WFC_3D_RETAINED_WORK_ITEMS: usize = 4_096;
+pub const WFC_3D_RETAINED_WORK_ITEMS: usize = 4_096;
 
 /// 📄️ One document-lane publication row.
 const fn artifact_route(tool_id: &'static str) -> semio_plugin::ArtifactToolPublicationContract {
@@ -118,6 +118,10 @@ impl Wfc3dCommandWork {
 }
 
 impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Wfc3dEditor>> for Wfc3dCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -250,4 +254,3 @@ mod completion_source_tests {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Wfc3dCommandWork);

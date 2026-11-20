@@ -1,0 +1,15 @@
+# Stage 16 Release Provenance
+
+The successful procedural native run waQMRAz completed at 19:03 PST, but its unit records show semio-plugin-mounted-owner compiled at 18:21:11 and semio-plugin-instance-app at 18:21:53 on November 19. Both precede the mounted owner funding edit at 18:48 and maintenance ladder edit at 18:57. The instance-app dep-info remains timestamped 18:21:53 and records 6,127 bytes for the maintenance ladder; current file at 18:57 is 6,960 bytes. Thus that fix is definitively absent from this compiled unit. The mounted-owner dep-info was rewritten at 19:19, so its present checksum cannot authenticate the earlier run; compilation time strongly supports that the later fix was absent, but the historical exact source bytes are not retained in the unit record. Do not infer compilation version from the final staging timestamp.
+
+The run provenance leaves include the staged procedural receipt sourceTreeDigest 0e00ce7103f5; the standalone site copy has a different older receipt 423d9c0e37bb. The overlay server maps module routes to staged modules first, so identify the actual served source when reproducing; the site copy alone is not the 19:03 stage.
+
+Current maintenance dispatch maps stage 16 to instance_operation_owner.maintenance_step. MountedOwnerTurnV1.advance_lifecycle adopts the physical retained progress delta, deducts reserved-return progress for current grant accounting, and requires the producer receipt equal the actual physical delta, the current and accumulated progress fit their grants, and nonzero current progress spend fuel. The fresh runtime diagnostic identifies the common invariant message and physical progress but does not distinguish which condition failed. The current ladder accumulates per-unit progress and computes the remaining grant net of reserved returns; it postdates the guest. A bounded requeue addresses admission/yield fairness only; it cannot make an incorrect physical receipt or overspend valid. Rebuild from the fixed sources and verify a source-matched native law and browser boot before claiming sufficiency. If failure remains, instrument the four individual comparisons and nested producer receipt under the same owner; preserve paid progress and fail explicitly on mismatch.
+
+Read-only audit; no builds or tests run.
+
+## Current source validation
+
+The pinned native Rust test `redeemed_returns_keep_their_original_funding_inside_mounted_lifecycle` passes with the current source. An independent SQLite calculation using reserved-return.json also passes all four receipt currencies. The fixture records 8,748 copied bytes in total against a current-turn copy grant of 8,192 bytes. The current turn spends 8,000, leaving 192, because 748 came from reserved funding. Browser confirmation still requires the requeued release module.
+
+The mounted-owner crate’s tests now use a finite Work bank and a real producer invocation for shared text retirement. Pinned Cargo passed all 15 native tests. The Bun/Ajv/SQLite suite consumed the native results and passed all 19 tests, including the reserved-return example. The 32-module build roster has two serial lists with one active module per lane.

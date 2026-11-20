@@ -5,13 +5,13 @@
 //! `create-combination` runs (`mutation.target-missing` on a case this base does not carry), the
 //! finite-factor bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::combination_breach;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dCombinationsModification;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::combination_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
@@ -32,6 +32,6 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshotValue) -> protocol
     if *existing == payload.new_combination {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Combination \"{}\" already has that value.", payload.id));
     }
-    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { modified: vec![Fem3dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { modified: vec![Fem3dCombinationsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dCombinationPatch::replacement(existing, &payload.new_combination) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

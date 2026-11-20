@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/host-capacity/native-memory/v1",
+  "title": "Native Windows memory facts: what the kernel says about the machine and its processes, or why it does not",
+  "definitions": {
+    "Layout": {
+      "description": "The byte layouts of the kernel32 structures on a 64-bit Windows host (MEMORYSTATUSEX, PROCESSENTRY32W, PROCESS_MEMORY_COUNTERS_EX) and the access rights asked of a process.",
+      "const": {
+        "memoryStatus": {"size": 64, "load": 4, "totalPhysical": 8, "availablePhysical": 16, "totalPageFile": 24, "availablePageFile": 32},
+        "processEntry": {"size": 568, "processId": 8, "parentProcessId": 32, "executableName": 44, "executableNameCharacters": 260},
+        "memoryCounters": {"size": 80, "workingSet": 16, "privateUsage": 72},
+        "snapshotProcesses": 2,
+        "queryLimitedInformation": 4096,
+        "invalidHandle": "18446744073709551615"
+      }
+    },
+    "Reason": {"enum": ["platform", "host-call"]},
+    "Texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "Unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["known", "reason", "call", "error", "detail", "text"],
+      "properties": {
+        "known": {"const": false},
+        "reason": {"$ref": "#/definitions/Reason"},
+        "call": {"type": "string"},
+        "error": {"type": "integer", "minimum": 0},
+        "detail": {"type": "string"},
+        "text": {"$ref": "#/definitions/Texts"}
+      }
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["known", "totalBytes", "availableBytes", "commitLimitBytes", "commitAvailableBytes", "loadPercent"],
+      "properties": {
+        "known": {"const": true},
+        "totalBytes": {"type": "integer", "minimum": 0},
+        "availableBytes": {"type": "integer", "minimum": 0},
+        "commitLimitBytes": {"type": "integer", "minimum": 0},
+        "commitAvailableBytes": {"type": "integer", "minimum": 0},
+        "loadPercent": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "parent", "name", "workingSetBytes", "privateBytes"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 0},
+        "parent": {"type": "integer", "minimum": 0},
+        "name": {"type": "string"},
+        "workingSetBytes": {"type": ["integer", "null"], "minimum": 0},
+        "privateBytes": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "Table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["known", "unreadable", "rows"],
+      "properties": {
+        "known": {"const": true},
+        "unreadable": {"type": "integer", "minimum": 0},
+        "rows": {"type": "array", "items": {"$ref": "#/definitions/Row"}}
+      }
+    },
+    "Answer": {"oneOf": [{"$ref": "#/definitions/Facts"}, {"$ref": "#/definitions/Table"}, {"$ref": "#/definitions/Unknown"}]}
+  }
+}

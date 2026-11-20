@@ -32,7 +32,7 @@ pub struct ReactorCloseRegistry {
 
 impl ReactorCloseRegistry {
     pub fn new() -> Self {
-        Self { slots: ReactorFixedSlots::new() }
+        Self { slots: ReactorFixedSlots::unallocated() }
     }
 
     pub fn index(instance: u32) -> usize {
@@ -40,6 +40,9 @@ impl ReactorCloseRegistry {
     }
 
     pub fn insert(&mut self, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+        if !self.slots.admit_backing() {
+            return Err(state);
+        }
         let index = Self::index(state.instance);
         self.slots.insert(index, state)
     }
@@ -51,8 +54,8 @@ impl ReactorCloseRegistry {
 
 pub(super) fn preflight_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
-        let closes = closes.try_borrow().map_err(|_| reactor_close_fault("reactor close preflight busy"))?;
-        if !closes.slots.allocation_admitted {
+        let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close preflight busy"))?;
+        if !closes.slots.admit_backing() {
             return Err(reactor_close_fault("reactor close backing unavailable"));
         }
         if closes.slots.get(ReactorCloseRegistry::index(key.instance())).is_some_and(|retained| retained.key != key) {

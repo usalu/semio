@@ -11,12 +11,13 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::attribute_value;
-use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
-use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letters_of;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::element_matches;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::expanded_element_name;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::namespace_scope;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::positioned_worksheet_children;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::PositionedWorksheetChild;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::WorksheetAxis;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_WORKSHEET;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS_STRICT;
@@ -24,7 +25,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS_STRICT;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::WORKSHEET_CONTENT_TYPE;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::worksheet_to_xml_with_namespace;
-use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildModified, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
+use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildModified, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, resolve_relationship_target, OpcRelationship, OpcTargetMode};
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcOwnerInsertion, OpcOwnerModification, OpcOwnerPatch, OpcOwnerRemoval, OpcOwnerRow, OpcOwnersDelta, OpcRelationshipsDelta};
 
@@ -93,13 +94,6 @@ pub(super) fn modified_parts(edits: Vec<(String, XmlDiff)>) -> XlsxDiff {
     }
     let modified = edits.into_iter().map(|(id, document)| XlsxXmlPartModification { id, patch: XlsxXmlPartDiff { content_type: None, document: Some(document) } }).collect();
     XlsxDiff { opc: None, xml_parts: Some(XlsxXmlPartsDelta { modified, ..Default::default() }) }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn node_at<'a>(root: &'a XmlNode, path: &[usize]) -> Option<&'a XmlNode> {
-    let Some((&index, rest)) = path.split_first() else { return Some(root) };
-    let XmlNode::Element { children, .. } = root else { return None };
-    node_at(children.get(index)?, rest)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -191,14 +185,6 @@ fn cell_value_of(snapshot: &XlsxSnapshot, part_path: &str, node: &XmlNode, scope
     semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::extract_cell_value(children, scope, namespace, cell_type, shared, part_path).map_err(|error| error.to_string())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn cell_column(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<u32>, String> {
-    if !element_matches(node, scope, &SPREADSHEETML_NAMESPACES, "c")? {
-        return Ok(None);
-    }
-    let Some(reference) = attribute_value(node, scope, &[""], "r")? else { return Ok(None) };
-    Ok(column_index(column_letters_of(reference)))
-}
 //#endregion 🔖️CellNodes
 
 //#region 🔖️CellPlans
@@ -239,14 +225,13 @@ fn new_cell(cell_name: String, scope: &[(String, String)], namespace: &str, refe
     Ok(XmlNode::Element { name: cell_name, attrs, children })
 }
 
-/// 🔎️ Admits a verbatim cell element for `reference`: an element whose own `r` names that reference.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn admitted_cell(node: &XmlNode, reference: &str) -> Result<XmlNode, String> {
-    let XmlNode::Element { attrs, .. } = node else { return Err("a verbatim cell must be an element".into()) };
-    if attrs.iter().find(|attr| attr.name == "r").map(|attr| attr.value.as_str()) != Some(reference) {
-        return Err(format!("a verbatim cell for {reference} must carry r=\"{reference}\""));
+/// 🔎️ Checks that a verbatim element remains a SpreadsheetML cell in its parent scope.
+fn cell_reference<'a>(node: &'a XmlNode, scope: &[(String, String)], namespace: &str) -> Result<Option<&'a str>, String> {
+    let scope = namespace_scope(scope, node);
+    if !element_matches(node, &scope, &[namespace], "c")? {
+        return Err("a verbatim cell must be a SpreadsheetML cell element".into());
     }
-    Ok(node.clone())
+    attribute_value(node, &scope, &[""], "r")
 }
 
 /// ✍️ Replaces the addressed cell (by `node` verbatim, or by `value` rebuilt in place); the inverse restores the cell it held, carrying that element verbatim when
@@ -258,8 +243,13 @@ pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::Xls
     let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri)?;
     let next = match node {
         Some(node) => {
-            let reference = attribute_value(resolved.node, &scope, &[""], "r")?.ok_or_else(|| "cell has no reference".to_string())?;
-            admitted_cell(node, reference)?
+            let parent_path = &address.node_path[..address.node_path.len().saturating_sub(1)];
+            let root = part_root(snapshot, &address.part_path)?;
+            let (_, parent_scope) = cell_address::scoped_node_at_path(root, parent_path)?;
+            if cell_reference(node, &parent_scope, &address.namespace_uri)? != attribute_value(resolved.node, &scope, &[""], "r")? {
+                return Err("a verbatim cell replacement must preserve its reference".into());
+            }
+            node.clone()
         }
         None => rebuilt_cell(resolved.node, &scope, &address.namespace_uri, value)?,
     };
@@ -276,112 +266,217 @@ pub(super) fn set_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::Xls
     })
 }
 
-/// ➕️ Inserts one cell (`node` verbatim, or `value` built fresh) into a vacancy, creating its row when the row is missing; the inverse removes the cell by the address it carries afterwards.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+struct WorksheetInsertion<'a> {
+    index: usize,
+    previous: Option<u32>,
+    next: Option<PositionedWorksheetChild<'a>>,
+}
+
+/// 📐️ Finds the span within which a physical insertion has the requested logical coordinate.
+fn worksheet_insertion<'a>(
+    children: &'a [XmlNode],
+    scope: &'a [(String, String)],
+    namespace: &'a str,
+    axis: WorksheetAxis,
+    coordinate: u32,
+    physical: Option<usize>,
+) -> Result<WorksheetInsertion<'a>, String> {
+    let mut previous = None;
+    let mut after_previous = 0;
+    let mut next = None;
+    for child in positioned_worksheet_children(children, scope, namespace, axis) {
+        let child = child?;
+        if child.position >= coordinate {
+            next = Some(child);
+            break;
+        }
+        previous = Some(child.position);
+        after_previous = child.index + 1;
+    }
+    let before_next = next.as_ref().map_or(children.len(), |child| child.index);
+    let index = physical.unwrap_or_else(|| next.as_ref().map_or(after_previous, |child| child.index));
+    if !(after_previous..=before_next).contains(&index) {
+        return Err("XLSX cell placement does not match its worksheet coordinate".into());
+    }
+    if let Some(child) = &next {
+        if child.position == coordinate || (!child.explicit && axis.coordinate(None, Some(coordinate))? != child.position) {
+            return Err("XLSX insertion would overwrite or move a worksheet coordinate".into());
+        }
+    }
+    Ok(WorksheetInsertion { index, previous, next })
+}
+
+/// 🔩️ Adds or removes an explicit reference without touching the cell's children.
+fn change_cell_anchor(node: &mut XmlNode, reference: Option<String>) -> XmlNodeDiff {
+    let XmlNode::Element { attrs, .. } = node else { unreachable!() };
+    let mut diff = XmlAttributesDiff::default();
+    if let Some(reference) = &reference {
+        diff.added.push(XmlAttrAdded { name: "r".into(), value: reference.clone() });
+    } else {
+        diff.removed.push("r".into());
+    }
+    set_attr(attrs, "r", reference);
+    diff.order = attrs.iter().map(|attr| attr.name.clone()).collect();
+    XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(diff), children: None })
+}
+
+/// ➕️ Inserts a worksheet cell, creating its row when necessary and preserving neighboring coordinates.
 pub(super) fn insert_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellVacancyAddress, value: &XlsxCellValue, exact: Option<&XmlNode>) -> Planned {
     let resolved = cell_address::resolve_xlsx_cell_vacancy_address(snapshot, address)?;
     let worksheet = &address.worksheet;
-    let namespace = worksheet.namespace_uri.clone();
+    let namespace = worksheet.namespace_uri.as_str();
     let row_number = address.row;
     let column = address.column;
-    let reference = format!("{}{}", column_letter(column), row_number);
+    let axis = WorksheetAxis::Columns(row_number);
+    let reference = format!("{}{row_number}", column_letter(column));
     let sheet_data_scope = cell_address::addressed_worksheet_scope(snapshot, worksheet)?;
-    let XmlNode::Element { name: sheet_data_name, children: rows, .. } = resolved.node else { return Err("worksheet address resolved a non-element".into()) };
-    let make_cell = |cell_name: String, scope: &[(String, String)]| -> Result<XmlNode, String> {
-        match exact {
-            Some(node) => admitted_cell(node, &reference),
-            None => new_cell(cell_name, scope, &namespace, &reference, value),
+    let XmlNode::Element { name: sheet_data_name, children: rows, .. } = resolved.node else { unreachable!() };
+    let physical = address.placement.as_ref().map(|placement| placement.index);
+    let unanchor = address.placement.as_ref().is_some_and(|placement| placement.unanchor_next);
+    let make_cell = |cell_name: String, scope: &[(String, String)], previous| -> Result<XmlNode, String> {
+        if let Some(node) = exact {
+            if axis.coordinate(cell_reference(node, scope, namespace)?, previous)? != column {
+                return Err(format!("a verbatim cell must resolve to {reference}"));
+            }
+            Ok(node.clone())
+        } else {
+            new_cell(cell_name, scope, namespace, &reference, value)
         }
     };
     let mut matching_row = None;
-    let mut row_insertion = rows.len();
-    let mut last_row = None;
-    for (index, node) in rows.iter().enumerate() {
-        let row_scope = namespace_scope(&sheet_data_scope, node);
-        if !element_matches(node, &row_scope, &[namespace.as_str()], "row")? {
-            continue;
-        }
-        let Some(existing) = attribute_value(node, &row_scope, &[""], "r")?.and_then(|value| value.parse::<u32>().ok()) else { continue };
-        if existing == row_number {
-            matching_row = Some((index, row_scope));
+    for row in positioned_worksheet_children(rows, &sheet_data_scope, namespace, WorksheetAxis::Rows) {
+        let row = row?;
+        if row.position == row_number {
+            matching_row = Some(row);
             break;
         }
-        if existing > row_number {
-            row_insertion = index;
-            break;
-        }
-        last_row = Some(index);
     }
     let mut after = part_root(snapshot, &worksheet.part_path)?.clone();
-    let (diff, cell_path) = if let Some((row_index, row_scope)) = matching_row {
-        let XmlNode::Element { name: row_name, children, .. } = &rows[row_index] else { unreachable!() };
-        let mut insertion = children.len();
-        let mut last_cell = None;
-        for (index, node) in children.iter().enumerate() {
-            let cell_scope = namespace_scope(&row_scope, node);
-            let Some(existing_column) = cell_column(node, &cell_scope)? else { continue };
-            if existing_column > column {
-                insertion = index;
-                break;
+    let mut cell_path = worksheet.node_path.clone();
+    let keep_row = matching_row.is_some();
+    let diff = if let Some(row) = matching_row {
+        let XmlNode::Element { name, children, .. } = row.node else { unreachable!() };
+        let slot = worksheet_insertion(children, &row.scope, namespace, axis, column, physical)?;
+        let cell = make_cell(qualified_like(name, "c"), &row.scope, slot.previous)?;
+        cell_path.push(row.index);
+        let XmlNode::Element { children: after_children, .. } = node_at_mut(&mut after, &cell_path).ok_or_else(|| "XLSX worksheet address is stale".to_string())? else { unreachable!() };
+        let mut modified = Vec::new();
+        if unanchor {
+            let next = slot.next.filter(|next| next.explicit && Some(next.position) == column.checked_add(1)).ok_or_else(|| "XLSX cell placement has no consecutive anchored successor".to_string())?;
+            let XmlNode::Element { attrs, .. } = next.node else { unreachable!() };
+            let anchor = format!("{}{row_number}", column_letter(next.position));
+            if !attrs.last().is_some_and(|attr| attr.name == "r" && attr.value == anchor) {
+                return Err("XLSX cell placement does not match the successor anchor".into());
             }
-            last_cell = Some(index);
+            modified.push(XmlChildModified { index: next.index, diff: change_cell_anchor(&mut after_children[next.index], None) });
         }
-        if insertion == children.len() {
-            insertion = last_cell.map_or(0, |index| index + 1);
-        }
-        let cell = make_cell(qualified_like(row_name, "c"), &row_scope)?;
-        let mut row_path = worksheet.node_path.clone();
-        row_path.push(row_index);
-        let XmlNode::Element { children: after_children, .. } = node_at_mut(&mut after, &row_path).ok_or_else(|| "XLSX worksheet address is stale".to_string())? else { unreachable!() };
-        after_children.insert(insertion, cell.clone());
-        let mut cell_path = row_path.clone();
-        cell_path.push(insertion);
-        (part_diff(&worksheet.part_path, &row_path, children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: insertion, item: cell }])), cell_path)
+        after_children.insert(slot.index, cell.clone());
+        let diff = part_diff(&worksheet.part_path, &cell_path, children_leaf(Vec::new(), modified, vec![XmlChildAdded { index: slot.index, item: cell }]));
+        cell_path.push(slot.index);
+        diff
     } else {
-        if row_insertion == rows.len() {
-            row_insertion = last_row.map_or(0, |index| index + 1);
+        if unanchor {
+            return Err("XLSX cell placement cannot unanchor a cell in a missing row".into());
         }
+        let slot = worksheet_insertion(rows, &sheet_data_scope, namespace, WorksheetAxis::Rows, row_number, physical)?;
         let row_name = qualified_like(sheet_data_name, "row");
-        let cell = make_cell(qualified_like(&row_name, "c"), &sheet_data_scope)?;
+        let cell = make_cell(qualified_like(&row_name, "c"), &sheet_data_scope, None)?;
         let row = XmlNode::Element { name: row_name, attrs: vec![XmlAttr { name: "r".into(), value: row_number.to_string() }], children: vec![cell] };
         let XmlNode::Element { children: after_rows, .. } = node_at_mut(&mut after, &worksheet.node_path).ok_or_else(|| "XLSX worksheet address is stale".to_string())? else { unreachable!() };
-        after_rows.insert(row_insertion, row.clone());
-        let mut cell_path = worksheet.node_path.clone();
-        cell_path.extend([row_insertion, 0]);
-        (part_diff(&worksheet.part_path, &worksheet.node_path, children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: row_insertion, item: row }])), cell_path)
+        after_rows.insert(slot.index, row.clone());
+        cell_path.extend([slot.index, 0]);
+        part_diff(&worksheet.part_path, &worksheet.node_path, children_leaf(Vec::new(), Vec::new(), vec![XmlChildAdded { index: slot.index, item: row }]))
     };
     let created = cell_address::cell_address_in(snapshot, &worksheet.part_path, &after, cell_path)?;
-    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: created })] })
+    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: created, keep_row })] })
 }
 
-/// ➖️ Removes the addressed cell, dropping its row when the cell was the row's only content; the inverse inserts the value the cell held into the vacancy, carrying the
-/// element verbatim when rebuilding it from its typed value would lose something.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress) -> Planned {
+/// ➖️ Removes the addressed cell and materializes a following implicit coordinate when removal would move it.
+pub(super) fn remove_cell_plan(snapshot: &XlsxSnapshot, address: &cell_address::XlsxCellAddress, keep_row: bool) -> Planned {
     let resolved = cell_address::resolve_xlsx_cell_address(snapshot, address)?;
     let scope = cell_address::addressed_cell_scope(snapshot, address)?;
-    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, &address.namespace_uri)?;
+    let namespace = address.namespace_uri.as_str();
+    let old_value = cell_value_of(snapshot, &address.part_path, resolved.node, &scope, namespace)?;
     let (&cell_index, row_path) = address.node_path.split_last().ok_or_else(|| "cannot remove worksheet root".to_string())?;
     let (&row_index, sheet_data_path) = row_path.split_last().ok_or_else(|| "cell has no row".to_string())?;
-    let reference = attribute_value(resolved.node, &scope, &[""], "r")?.ok_or_else(|| "cell has no reference".to_string())?;
-    let column = column_index(column_letters_of(reference)).ok_or_else(|| format!("cell reference {reference:?} has no valid column"))?;
-    let row: u32 = reference.trim_start_matches(|character: char| character.is_ascii_alphabetic()).parse().map_err(|_| format!("cell reference {reference:?} has no valid row"))?;
     let root = part_root(snapshot, &address.part_path)?;
-    let XmlNode::Element { name: row_name, attrs: row_attrs, children: row_children } = node_at(root, row_path).ok_or_else(|| "cell parent path is stale".to_string())? else { return Err("cell parent is not an element".into()) };
-    let drops_row = row_children.len() == 1 && row_attrs.len() == 1 && row_attrs[0].name == "r";
+    let (sheet_data, sheet_data_scope) = cell_address::scoped_node_at_path(root, sheet_data_path)?;
+    let XmlNode::Element { name: sheet_data_name, children: rows, .. } = sheet_data else { return Err("cell has no sheet data parent".into()) };
+    if !element_matches(sheet_data, &sheet_data_scope, &[namespace], "sheetData")? {
+        return Err("cell has no SpreadsheetML sheet data parent".into());
+    }
+    let mut rows = positioned_worksheet_children(rows, &sheet_data_scope, namespace, WorksheetAxis::Rows);
+    let row = worksheet_child_at(&mut rows, row_index)?;
+    let row_number = row.position;
+    let next_row = rows.next().transpose()?;
+    let XmlNode::Element { name: row_name, attrs: row_attrs, children: row_children } = row.node else { unreachable!() };
+    let axis = WorksheetAxis::Columns(row_number);
+    let mut cells = positioned_worksheet_children(row_children, &row.scope, namespace, axis);
+    let cell = worksheet_child_at(&mut cells, cell_index)?;
+    let column = cell.position;
+    let next_cell = cells.next().transpose()?;
+    let reference = format!("{}{row_number}", column_letter(column));
+    let drops_row = !keep_row && row_children.len() == 1
+        && *row_name == qualified_like(sheet_data_name, "row")
+        && row_attrs.as_slice() == [XmlAttr { name: "r".into(), value: row_number.to_string() }]
+        && next_row.is_none_or(|next| next.explicit);
     let mut after = root.clone();
-    let diff = if drops_row {
+    let unanchor_next = next_cell.as_ref().is_some_and(|next| !next.explicit);
+    let (index, diff) = if drops_row {
         let XmlNode::Element { children, .. } = node_at_mut(&mut after, sheet_data_path).ok_or_else(|| "cell parent path is stale".to_string())? else { unreachable!() };
         children.remove(row_index);
-        part_diff(&address.part_path, sheet_data_path, children_leaf(vec![row_index], Vec::new(), Vec::new()))
+        (row_index, part_diff(&address.part_path, sheet_data_path, children_leaf(vec![row_index], Vec::new(), Vec::new())))
     } else {
         let XmlNode::Element { children, .. } = node_at_mut(&mut after, row_path).ok_or_else(|| "cell parent path is stale".to_string())? else { unreachable!() };
+        let mut modified = Vec::new();
+        if let Some(next) = next_cell.filter(|next| !next.explicit) {
+            let anchor = format!("{}{row_number}", column_letter(next.position));
+            modified.push(XmlChildModified { index: next.index, diff: change_cell_anchor(&mut children[next.index], Some(anchor)) });
+        }
         children.remove(cell_index);
-        part_diff(&address.part_path, row_path, children_leaf(vec![cell_index], Vec::new(), Vec::new()))
+        (cell_index, part_diff(&address.part_path, row_path, children_leaf(vec![cell_index], modified, Vec::new())))
     };
     let worksheet = cell_address::worksheet_address_in(snapshot, &address.part_path, &after, sheet_data_path.to_vec())?;
-    let exact = (new_cell(qualified_like(row_name, "c"), &scope, &address.namespace_uri, reference, &old_value)? != *resolved.node).then(|| resolved.node.clone());
-    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::XlsxCellVacancyAddress { worksheet, row, column }, value: old_value, node: exact })] })
+    let exact = (new_cell(qualified_like(row_name, "c"), &scope, namespace, &reference, &old_value)? != *resolved.node).then(|| resolved.node.clone());
+    let address = cell_address::XlsxCellVacancyAddress { worksheet, row: row_number, column, placement: Some(cell_address::XlsxCellPlacement { index, unanchor_next }) };
+    Ok(XlsxPlan { diff, inverse: vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value: old_value, node: exact })] })
+}
+
+/// 🧭️ Resolves the logical coordinates of a cell inserted at an exact worksheet row child.
+pub(super) fn inserted_cell_coordinates(
+    root: &XmlNode, worksheet: &cell_address::XlsxWorksheetAddress, row_index: usize, index: usize, cell: &XmlNode,
+) -> Result<(u32, u32), String> {
+    let (sheet_data, scope) = cell_address::scoped_node_at_path(root, &worksheet.node_path)?;
+    let namespace = worksheet.namespace_uri.as_str();
+    let XmlNode::Element { children, .. } = sheet_data else { unreachable!() };
+    let row = worksheet_child_at(&mut positioned_worksheet_children(children, &scope, namespace, WorksheetAxis::Rows), row_index)?;
+    let XmlNode::Element { children, .. } = row.node else { unreachable!() };
+    let axis = WorksheetAxis::Columns(row.position);
+    let preceding_children = children.get(..index).ok_or_else(|| "XLSX cell insertion index is outside its row".to_string())?;
+    let mut previous = None;
+    for preceding in positioned_worksheet_children(preceding_children, &row.scope, namespace, axis) {
+        previous = Some(preceding?.position);
+    }
+    let column = axis.coordinate(cell_reference(cell, &row.scope, namespace)?, previous)?;
+    worksheet_insertion(children, &row.scope, namespace, axis, column, Some(index))?;
+    Ok((row.position, column))
+}
+
+/// 📍️ Advances a worksheet axis to the given physical child and leaves the successor available.
+fn worksheet_child_at<'a>(
+    children: &mut impl Iterator<Item = Result<PositionedWorksheetChild<'a>, String>>,
+    index: usize,
+) -> Result<PositionedWorksheetChild<'a>, String> {
+    for child in children {
+        let child = child?;
+        if child.index == index {
+            return Ok(child);
+        }
+        if child.index > index {
+            break;
+        }
+    }
+    Err("XLSX cell address does not name a worksheet coordinate".into())
 }
 //#endregion 🔖️CellPlans
 

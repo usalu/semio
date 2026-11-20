@@ -81,6 +81,7 @@ records! {
         pub group: Option<u32>,
         pub menu: bool,
         pub frame: bool,
+        pub scene_page: u32,
     }
 
     /// 🖐️ The open drag of another user, mirrored from the shared presence for painting.
@@ -140,7 +141,7 @@ impl Default for NormTransient {
 
 impl Default for ViewLane {
     fn default() -> Self {
-        Self { active_field: None, track: None, value: None, playing: false, clock: 0.0, speed: 1.0, units: None, item: None, check: None, group: None, menu: false, frame: false }
+        Self { active_field: None, track: None, value: None, playing: false, clock: 0.0, speed: 1.0, units: None, item: None, check: None, group: None, menu: false, frame: false, scene_page: 0 }
     }
 }
 

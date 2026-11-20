@@ -12,13 +12,13 @@ const rowKeyOf=row=>{const kind=String(row.kind),path=String(row.path),fact=row.
 /** 🧿️ The fingerprint of one row key: the first 48 bits address the table, the next 32 bits confirm a hit, so two different rows share an entry only with a chance of 2^-80 per pair. */
 const sha256=typeof hashOnce==="function"?value=>hashOnce("sha256",value,"buffer"):value=>createHash("sha256").update(value).digest(),fingerprint=key=>{const digest=sha256(key);return{key:digest.readUIntBE(0,6),check:digest.readUInt32BE(6),bytes:digest.subarray(0,10)};};
 
-/** 🗝️ An open-addressing table from fingerprints to dictionary ids: 16 bytes a row, grown by doubling. */
+/** 🗝️ An open-addressing table from fingerprints to dictionary ids: 16 bytes per slot, grown by doubling before two-thirds occupancy. */
 function createFingerprintTableV1(){
  let size=1<<16,keys=new Float64Array(size).fill(-1),checks=new Uint32Array(size),ids=new Uint32Array(size),count=0;
  const find=(key,check)=>{for(let at=(key>>>0)&(size-1);;at=(at+1)&(size-1)){if(keys[at]===-1)return undefined;if(keys[at]===key&&checks[at]===check)return ids[at];}};
  const place=(key,check,id)=>{let at=(key>>>0)&(size-1);while(keys[at]!==-1)at=(at+1)&(size-1);keys[at]=key;checks[at]=check;ids[at]=id;};
  const put=(key,check,id)=>{
-  if((count+1)*2>size){const old={keys,checks,ids,size};size*=2;keys=new Float64Array(size).fill(-1);checks=new Uint32Array(size);ids=new Uint32Array(size);for(let at=0;at<old.size;at++)if(old.keys[at]!==-1)place(old.keys[at],old.checks[at],old.ids[at]);}
+  if((count+1)*3>size*2){const old={keys,checks,ids,size};size*=2;keys=new Float64Array(size).fill(-1);checks=new Uint32Array(size);ids=new Uint32Array(size);for(let at=0;at<old.size;at++)if(old.keys[at]!==-1)place(old.keys[at],old.checks[at],old.ids[at]);}
   place(key,check,id);count++;
  };
  return{find,put,size:()=>count};
@@ -28,15 +28,15 @@ function createFingerprintTableV1(){
  * @see ../../🧬️schema/🔣️.json */
 export function createLayerIndexV1({directory,limits=INFERENCE_LIMITS_V1}){
  const root=join(directory,"x"),dictionary=join(root,"rows.dict"),lockPath=join(root,"lock"),idsPath=digest=>join(root,digest+EXTENSION);
- let readDescriptor,readIdentity,readSize=0,blockAt=-1,blockLength=0,writable=true,table,tableIdentity;
+ let readDescriptor,readIdentity,readGeneration,readSize=0,blockAt=-1,blockLength=0,writable=true,table,tableIdentity;
  const counts={indexed:0,read:0,rowReads:0,full:0,refused:0},block=Buffer.allocUnsafe(limits.layerIndexReadBlockBytes);
- const closeRead=()=>{if(readDescriptor!==undefined){try{closeSync(readDescriptor);}catch{}}readDescriptor=undefined;readIdentity=undefined;blockAt=-1;blockLength=0;};
+ const closeRead=()=>{if(readDescriptor!==undefined){try{closeSync(readDescriptor);}catch{}}readDescriptor=undefined;readIdentity=undefined;readGeneration=undefined;blockAt=-1;blockLength=0;};
  const openRead=()=>{
   if(readDescriptor!==undefined)return true;
   try{
    const descriptor=openSync(dictionary,"r"),head=Buffer.allocUnsafe(DICT_HEAD);
    if(readSync(descriptor,head,0,DICT_HEAD,0)!==DICT_HEAD||!head.subarray(0,8).equals(DICT_MAGIC)){closeSync(descriptor);return false;}
-   readDescriptor=descriptor;readIdentity=Buffer.from(head.subarray(8));readSize=fstatSync(descriptor).size;blockAt=-1;blockLength=0;return true;
+   readDescriptor=descriptor;readIdentity=Buffer.from(head.subarray(8));readGeneration=Object.freeze({});readSize=fstatSync(descriptor).size;blockAt=-1;blockLength=0;return true;
   }catch{return false;}
  };
  const bytesAt=(at,length)=>{
@@ -99,6 +99,13 @@ export function createLayerIndexV1({directory,limits=INFERENCE_LIMITS_V1}){
    if(!readIdentity.equals(bytes.subarray(8,16))){closeRead();if(!openRead()||!readIdentity.equals(bytes.subarray(8,16)))return undefined;}
    const out=new Uint32Array(count);for(let at=0;at<count;at++)out[at]=bytes.readUInt32LE(IDS_HEAD+at*4);
    counts.read++;return out;
+  },
+  /** 📑 Reads a listing against one open dictionary. After replacement its outstanding offsets can only fall back to the content-addressed layer. */
+  listingSync(digest){
+   const ids=this.idsSync(digest);
+   if(ids===undefined)return undefined;
+   const dictionary=readGeneration;
+   return {ids,dictionary,rowSync:id=>readGeneration===dictionary?this.rowSync(id):undefined};
   },
   /** 🔍️ The row of one dictionary id, or undefined while the id names no intact record: the row read must have the fingerprint its record carries. */
   rowSync(id){

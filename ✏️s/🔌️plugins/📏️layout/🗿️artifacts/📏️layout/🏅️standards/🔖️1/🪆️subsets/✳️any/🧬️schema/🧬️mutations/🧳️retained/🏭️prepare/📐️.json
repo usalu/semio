@@ -55,13 +55,13 @@
     "RotateFrames",
     "ScaleFrames",
     "SetPageOverrides",
-    "ReplaceDocument"
+    "ReplaceDocument",
+    "EditStory",
+    "CreatePage",
+    "DeletePage"
   ],
   "vocabularyTotal": 58,
   "remainingStructuralKinds": [
-    "EditStory",
-    "CreatePage",
-    "DeletePage",
     "SetParentPageContent"
   ],
   "decision": [
@@ -82,5 +82,5 @@
     "explicit ReplaceDocument alone prepares the genuine entire original LayoutSnapshot field and reissues one retained whole-document inverse"
   ],
   "cleanup": "child completion normalized to parent progress; all partial originals and source aliases funded before terminal",
-  "activation": "Existing LayoutPlayApp interactive publication factory already selects RetainedMutation; separate document codec remains bare"
+  "activation": "The retained preparation covers the kinds listed here. LayoutPlayApp still uses its cold interactive publication factory."
 }

@@ -306,6 +306,7 @@ pub use app::{
     ArtifactApp,
     ArtifactBoundedFirstStepProof,
     ArtifactOriginalCommandProducerFactory,
+    OriginalActionCommandBridge,
     ArtifactBuilder,
     SnapshotBuilder,
     ArtifactCapability,
@@ -374,7 +375,7 @@ pub use app::{
     ArtifactOutputChunks,
     ArtifactOwnedDisposer,
     ArtifactOwnedToolJobFactory,
-    ArtifactOwnedToolJobRequest,
+    ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest,
     ArtifactOriginalToolCommand,
     ArtifactReservedJob,
     ArtifactReservedToolInput,
@@ -488,6 +489,7 @@ pub use app::{
     TwoDSvgExportRequest,
     TwoDSvgExportResult,
     UiAssemblyResult,
+    ui_assembly_error,
     VcsArtifactApp,
     ViewEmit,
     Viewer,
@@ -531,6 +533,7 @@ pub use app::{
     CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
     MAINTENANCE_STAGES,
     NATURAL_FILE_PORT,
+    RUNTIME_COMMAND_WIRE_MAXIMUM,
 };
 pub use app::{
     take_arena_unbuilt_rows, tree_window_indexed_item, tree_window_indexed_section, tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_BODY_NODE_BUDGET,

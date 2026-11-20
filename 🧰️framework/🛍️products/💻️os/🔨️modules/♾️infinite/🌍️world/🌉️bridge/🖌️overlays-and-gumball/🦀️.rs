@@ -390,9 +390,8 @@ pub fn append_component_overlays(selection_state: &WorldSelectionState, gumball_
                 continue;
             };
             let Ok(schema) = mesh.schema() else { continue };
-            if schema.vertex_ids != schema.vertices { continue; }
             let primary_point = schema.indices == 0 && schema.edges == 0;
-            if !primary_point && !selection_state.selection_targets.vertex && selection_state.granularity != "vertex" { continue; }
+            if !primary_point && (schema.vertex_ids != schema.vertices || (!selection_state.selection_targets.vertex && selection_state.granularity != "vertex")) { continue; }
             for instance in &draw.instances {
                 let selected = world_instance_selected_components(selection_state, gumball_state, scene_state,instance,"vertex");
                 let preview: HashSet<String> = selection_state.marquee_preview_ids.iter().filter(|_|selection_state.active_object_id.as_deref()==Some(&instance.id)).cloned().collect();
@@ -400,7 +399,7 @@ pub fn append_component_overlays(selection_state: &WorldSelectionState, gumball_
                 for vertex_index in 0..schema.vertices {
                     let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                     let group = world_mesh_component_id(mesh, Mesh3dField::VertexIds, vertex_index);
-                    if group == u32::MAX { continue; }
+                    if group == u32::MAX && !primary_point { continue; }
                     let id = group.to_string();
                     let center = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
                     let base_color = if primary_point { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(selection_state, instance))).line } else { wire_color };

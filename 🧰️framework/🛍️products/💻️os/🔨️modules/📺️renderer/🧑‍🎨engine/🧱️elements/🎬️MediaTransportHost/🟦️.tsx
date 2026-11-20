@@ -3,6 +3,7 @@ import { MEDIA_TRANSPORT_EXTENSION_ID, formatMediaTime, mediaKeyCommand, mediaTi
 import { collectMediaTransportBytes, type MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { useMediaTransportOwner } from "./🔗️owner-scope/🟦️.tsx";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export { MEDIA_TRANSPORT_EXTENSION_ID };
 
 export type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
@@ -151,7 +152,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
     <div role="status" aria-live="polite" data-media-state="loading" data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single">
       <span>{state.detail || props.labels.loading}</span>
       <progress aria-label={props.labels.progress} />
-      <button type="button" onClick={() => { if (runRef.current) runRef.current.cancelRequested = true; setState({ kind: "cancelled" }); }}>{props.labels.cancel}</button>
+      <button {...sharedBorderlessBoxProps} type="button" onClick={() => { if (runRef.current) runRef.current.cancelRequested = true; setState({ kind: "cancelled" }); }}>{props.labels.cancel}</button>
     </div>
   );
   const knownDuration = durationMs ?? props.durationMs;
@@ -189,7 +190,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
     <div data-media-state="ready" data-media-window={owner?.windowId} data-ui-node-id={nodeId} data-ui-node-key={nodeKey} className="flex min-h-0 flex-col gap-single p-single" style={{ height: props.hostContentHeight }} tabIndex={0} aria-keyshortcuts="Space ArrowLeft ArrowRight Home End" lang={props.locale} onKeyDown={onKeyDown}>
       {props.kind === "audio" ? <audio ref={(element) => { mediaRef.current = element; }} {...mediaProps} /> : <video ref={(element) => { mediaRef.current = element; }} {...mediaProps} className="min-h-0 w-full flex-1" />}
       <div className="flex items-center gap-single">
-        <button type="button" aria-label={playing ? props.labels.pause : props.labels.play} onClick={() => { const media = mediaRef.current; if (!media) return; if (media.paused) void media.play().catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) failPlayback(props.labels.unsupported); }); else media.pause(); }}>{playing ? props.labels.pause : props.labels.play}</button>
+        <button {...sharedBorderlessBoxProps} type="button" aria-label={playing ? props.labels.pause : props.labels.play} onClick={() => { const media = mediaRef.current; if (!media) return; if (media.paused) void media.play().catch((error: unknown) => { if (!(error instanceof DOMException && error.name === "AbortError")) failPlayback(props.labels.unsupported); }); else media.pause(); }}>{playing ? props.labels.pause : props.labels.play}</button>
         <label className="min-w-0 flex-1">{props.labels.seek}<input type="range" min={0} max={maximum} value={Math.min(maximum, positionMs)} aria-label={props.labels.seek} aria-valuetext={mediaTimeValueText(positionMs, props.locale, props.labels)} onChange={(event) => { const next = Number(event.currentTarget.value); setPositionMs(next); if (mediaRef.current) mediaRef.current.currentTime = next / 1000; }} /></label>
         <output aria-label={props.labels.position} aria-valuetext={mediaTimeValueText(positionMs, props.locale, props.labels)}>{formatMediaTime(positionMs, props.locale)}</output>
         <span aria-label={props.labels.duration} aria-valuetext={knownDuration === null ? undefined : mediaTimeValueText(knownDuration, props.locale, props.labels)}>{knownDuration === null ? props.labels.unknownDuration : formatMediaTime(knownDuration, props.locale)}</span>
@@ -198,7 +199,7 @@ export function MediaTransportHost({ value, nodeId, nodeKey }: { readonly value:
         <label>{props.labels.selectionStart}<input type="range" min={0} max={Math.max(0, currentSelection[1] - 1)} value={currentSelection[0]} aria-label={props.labels.selectionStart} aria-valuetext={mediaTimeValueText(currentSelection[0], props.locale, props.labels)} onChange={(event) => setSelection([Number(event.currentTarget.value), currentSelection[1]])} /></label>
         <label>{props.labels.selectionEnd}<input type="range" min={Math.min(maximum, currentSelection[0] + 1)} max={maximum} value={currentSelection[1]} aria-label={props.labels.selectionEnd} aria-valuetext={mediaTimeValueText(currentSelection[1], props.locale, props.labels)} onChange={(event) => setSelection([currentSelection[0], Number(event.currentTarget.value)])} /></label>
       </div> : null}
-      {props.trim && owner?.apply && knownDuration !== null ? <button type="button" aria-label={props.labels.cutSelection} disabled={cutValue === null} onClick={() => { if (cutValue !== null) owner.apply?.(props.trim!.actionId, { revision: props.trim!.revision, value: cutValue }); }}>{props.labels.cutSelection}</button> : null}
+      {props.trim && owner?.apply && knownDuration !== null ? <button {...sharedBorderlessBoxProps} type="button" aria-label={props.labels.cutSelection} disabled={cutValue === null} onClick={() => { if (cutValue !== null) owner.apply?.(props.trim!.actionId, { revision: props.trim!.revision, value: cutValue }); }}>{props.labels.cutSelection}</button> : null}
     </div>
   );
 }

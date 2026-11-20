@@ -1,0 +1,25 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-flow-brep-original-jobs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original grant-budgeted geometry operator jobs of the Flow BRep extension"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "library"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-step-geometry.workspace = true
+semio-s-spatial-kernel-semio-session.workspace = true
+neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
+semio-framework-replication-history-index = { path = "../../../../../../../../🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust" }

@@ -10,7 +10,7 @@ const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtur
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
-    assert_eq!(support::run_fixture(catalogue(), registry::lookup, FIXTURE, COMPUTES), 29);
+    assert_eq!(support::run_fixture(catalogue(), registry::lookup, FIXTURE, COMPUTES), 35);
 }
 
 #[test]
@@ -20,7 +20,7 @@ fn the_table_and_the_fixture_cover_exactly_the_catalogue_kinds_of_brep_solid() {
 
 #[test]
 fn equal_inputs_give_equal_shape_bytes() {
-    assert_eq!(support::assert_deterministic(catalogue(), registry::lookup, FIXTURE, COMPUTES), 17);
+    assert_eq!(support::assert_deterministic(catalogue(), registry::lookup, FIXTURE, COMPUTES), 20);
 }
 
 #[test]

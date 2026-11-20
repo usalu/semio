@@ -11,7 +11,8 @@ pub const MAXIMUM_NODES: usize = 128;
 pub const MAXIMUM_ELEMENTS: usize = 128;
 pub const MAXIMUM_SUPPORTS: usize = 64;
 pub const MAXIMUM_LOADS: usize = 64;
-pub const MAXIMUM_FIELDS: usize = 128;
+pub const MAXIMUM_FIELDS: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS;
+pub(super) const MAXIMUM_ANALYSIS_ELEMENTS: usize = semio_s_fem_analyses_model::MOUNTED_ANALYSIS_ELEMENT_SLOTS;
 /// 🧮️ Preflight census units one snapshot-read opportunity may charge before yielding to the next
 /// refresh — each unit is one constant-cost owner or item, so a demo-sized census admits within the
 /// opportunity that opened it rather than one host refresh per unit.
@@ -24,8 +25,8 @@ pub const FAULT_BYTES: usize = WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 pub const JOB_TAG: u64 = 0xf3d0_0000_0000_0000;
 pub const JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;
 pub const INPUT_BYTES: usize = 63;
-pub(super) const FEM3D_SOLVER_FIELDS_PER_PAGE: usize = 16;
-pub const FEM3D_SOLVER_PAGE_COUNT: usize = MAXIMUM_FIELDS / FEM3D_SOLVER_FIELDS_PER_PAGE;
+pub(super) const FEM3D_SOLVER_FIELDS_PER_PAGE: usize = 32;
+pub const FEM3D_SOLVER_PAGE_COUNT: usize = MAXIMUM_FIELDS.div_ceil(FEM3D_SOLVER_FIELDS_PER_PAGE);
 pub const FEM3D_SOLVER_SCALAR_PAGE_BYTES: usize = size_of::<Fem3dSolverScalar>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
 pub const FEM3D_SOLVER_INITIALIZED_PAGE_BYTES: usize = size_of::<bool>() * FEM3D_SOLVER_FIELDS_PER_PAGE;
 pub const FEM3D_REGION_ORDER_BYTES: usize = size_of::<Option<usize>>() * MAXIMUM_REGIONS;

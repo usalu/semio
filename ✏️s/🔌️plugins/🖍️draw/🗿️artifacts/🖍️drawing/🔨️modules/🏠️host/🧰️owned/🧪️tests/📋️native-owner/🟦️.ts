@@ -74,7 +74,7 @@ test("Drawing initializer holds original owners in typed pending retirement and 
   expect(replay.includes("pub envelope_retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,")).toBe(true);
   expect(retirement.includes("#[derive(semio_framework_value::RetireOwned)]")).toBe(true);
   for(const kind of law.initializerOwners)expect(retirement.includes(`    ${kind}(`)).toBe(true);
-  expect(replay.includes("artifact_retirement_box_close_step(&mut self.active, child)")).toBe(true);
+  expect(replay.includes("artifact_retirement_box_close_step(&mut self.active, effect.grant().maximum_copy_bytes, &mut effect.nested(child))")).toBe(true);
   expect(replay.includes("Box::new(DrawingOwnedRetirement")).toBe(false);
   expect(replay.includes("ArtifactOwnedValueRetirementFactory::retire_owned")).toBe(false);
 });
@@ -139,9 +139,9 @@ test("Drawing duplicate cancellation preserves the caller grant and physical axe
     expect(patched({copy:0,capacity:0,release:0},[{op:"replace",path:"/copy",value:7},{op:"replace",path:"/copy",value:0},{op:"replace",path:"/release",value:7}])).toEqual({copy:0,capacity:0,release:7});
   }finally{database.close();}
   const rewrite=ownerSlice(owner,"impl DrawingDuplicateRewriteAuthority");
-  expect(rewrite.includes("pub fn close_step(&mut self, grant: RetainedCloneGrant)")).toBe(true);
+  expect(rewrite.includes("pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect")).toBe(true);
   expect(rewrite.includes("maximum_bytes.max(demand)")).toBe(false);
-  expect(rewrite.includes("retire_displaced_granted(grant)")).toBe(true);
+  expect(rewrite.includes("self.retire_displaced(effect)")).toBe(true);
 });
 
 test("Drawing duplicate rewrite preserves root names and internal reference ownership",()=>{
@@ -192,7 +192,8 @@ test("Drawing decoded field close admits actual typed retirement births and rele
   const authorities=ownerSlice(owner,"macro_rules! drawing_owned_field_close_capacity","struct DrawingRejectedConflictAuthority");
   expect(authorities.includes("artifact_retirement_owned_birth_demands(&self.value)")).toBe(true);
   expect(authorities.includes("artifact_retirement_box_demands(owner, maximum_copy_bytes)")).toBe(true);
-  expect(authorities.includes("artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)")).toBe(true);
+  expect(authorities.includes("artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect)")).toBe(true);
+  expect(authorities.includes("artifact_retirement_box_close_step(&mut self.retirement, body, effect)")).toBe(true);
   expect(authorities.includes("usize::from(self.retirement.is_some()) * DRAWING_OWNED_FIELD_BYTES")).toBe(false);
 });
 
@@ -472,12 +473,12 @@ test("Drawing closure moves inline owners under copy and frees pages under relea
     expect(database.query("SELECT COUNT(*) AS count FROM owner").get()).toEqual({count:0});
     expect(closed).toEqual({closing:{byte:law.inputByte}});
   }finally{database.close();}
-  const rename=resolve(owner,"../../../🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare");
-  const inverse=readFileSync(join(rename,"↩️inverse/🦀️.rs"),"utf8");
-  expect(inverse.includes("grant.maximum_copy_bytes < size_of::<RenameLayer>()")).toBe(true);
-  expect(inverse.includes("return Ok(payload_progress(size_of::<RenameLayer>()));")).toBe(true);
-  const plan=readFileSync(join(rename,"🔗️owned/🦀️.rs"),"utf8");
-  expect(plan.includes("release_empty_page(grant.maximum_release_bytes)")).toBe(true);
+  const inverse = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/↩️inverse/🦀️.rs"), "utf8");
+  expect(inverse).toContain("if self.row.is_some(){return Ok(fixed(metadata()))}");
+  expect(inverse).toContain("rows.push(row);");
+  expect(inverse).toContain("copied_items:1,copied_bytes:metadata()");
+  expect(inverse).toContain("FactoryVectorRetirement::admit(&mut self.rows,&mut self.mutation_retirement,effect)");
+  expect(inverse).toContain("owner.close_original_step(original,body,effect)");
 });
 
 test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", () => {
@@ -500,7 +501,7 @@ test("Drawing native paged owner preserves semantic snapshot and UTF-8 keys", ()
   expect(layerClone.includes("cursor: T::Cursor")).toBe(true);
   expect(layerClone.includes("DrawingNativeCloneAuthority<DrawingLayerNode>")).toBe(true);
   expect(layerClone.includes("cursor.advance")).toBe(true);
-  expect(layerClone.includes("pub fn close_step(&mut self,grant:RetainedCloneGrant)")).toBe(true);
+  expect(layerClone.includes("pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect")).toBe(true);
   expect(layerClone.includes("Vec::with_capacity")).toBe(false);
   expect(validate(copied)).toBe(true);
   expect(validate({...copied, assets:{[text]:{mime:"image/png",data:7}}})).toBe(false);
@@ -546,14 +547,15 @@ test("Drawing paged borrowed lookup follows first native depth-first identity", 
     visit(nested.layers);
     expect((database.query("SELECT name FROM nodes WHERE id = ? ORDER BY ordinal DESC LIMIT 1").get(long) as {name:string}).name).toBe("Deep UTF8");
     expect(JSON.parse((database.query("SELECT path FROM nodes WHERE id = ? ORDER BY ordinal DESC LIMIT 1").get(long) as {path:string}).path)).toEqual(Array(law.lookup.deep+1).fill(0));
-    const source = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs"), "utf8");
-    expect(source).toContain("pub struct DrawingLayerLookupCursor");
-    expect(source).toContain("close_granted");
-    expect(source).toContain("pub fn path_index");
+    const source = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🫴️original/🦀️.rs"), "utf8");
+    expect(source).toContain("pub struct DrawingOriginalLookup");
+    expect(source).toContain("s.check_binding(&self.snapshot)");
+    expect(source).toContain("t.check_binding(&self.target)");
+    expect(source).toContain("Ok(self.cursor.found)");
     expect(law.lookup.ownedProjection.retainRootUntilClosed).toBe(true);
     expect(law.lookup.ownedProjection.targetReborrowedEachTurn).toBe(true);
-    const retained = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🔗️owned/🦀️.rs"), "utf8");
-    expect(retained.includes("pub struct DrawingOwnedLayerLookupCursor")).toBe(true);
+    expect(source).toContain("close_retained_binding(&mut self.target,body,effect)");
+    expect(source).toContain("close_retained_binding(&mut self.snapshot,body,effect)");
   } finally {database.close();}
 });
 
@@ -594,20 +596,18 @@ test("Drawing borrowed rename preparation preserves first-target inverse and nat
       if (row.repeatTarget) expect(new TextEncoder().encode(target).length).toBeGreaterThan(law.bodyBytes);
     }
     expect(JSON.stringify(input)).toBe(before);
-    const source = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🦀️.rs"), "utf8");
-    expect(source).toContain("pub struct DrawingRenamePreparationCursor");
-    expect(source).toContain("close_granted");
-    const owned = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/↩️inverse/🦀️.rs"), "utf8");
-    expect(owned).toContain("pub struct DrawingRenameInverseCursor");
-    expect(owned).toContain("ControlledRetirement");
-    expect(owned.includes("DrawingOwnedRenamePlan")).toBe(true);
+    const retained = resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained");
+    const decision = readFileSync(join(retained, "🔺️decision/🦀️.rs"), "utf8");
+    const inverse = readFileSync(join(retained, "↩️inverse/🦀️.rs"), "utf8");
+    expect(decision).toContain("DrawingMutation::RenameLayer(_)=>patch.name=Some(v)");
+    expect(inverse).toContain("self.lookup.advance(b,target(m)?");
+    expect(inverse).toContain("self.lookup.address()?");
+    expect(inverse).toContain("DrawingMutation::RenameLayer(_)=>node.project(2,|n|&layer_base(n).name)");
     expect(law.rename.ownedProjection.retainRootUntilClosed).toBe(true);
     expect(law.rename.ownedProjection.payloadReborrowedEachTurn).toBe(true);
     const binding = law.rename.ownedProjection;
     expect((database.query("SELECT ? = ? AS accepted").get(binding.originalLease, binding.originalLease) as {accepted:number}).accepted).toBe(1);
     expect((database.query("SELECT ? = ? AS accepted").get(binding.originalLease, binding.foreignLease) as {accepted:number}).accepted).toBe(Number(!binding.foreignPayloadRefused));
-    const retained = readFileSync(resolve(owner, "../../../🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🔗️owned/🦀️.rs"), "utf8");
-    expect(retained.includes("pub struct DrawingOwnedRenamePreparationCursor")).toBe(true);
-    expect(retained.includes("pub fn path_index")).toBe(true);
+    expect(inverse).toContain("self.lookup.close_step(body,e)");
   } finally {database.close();}
 });

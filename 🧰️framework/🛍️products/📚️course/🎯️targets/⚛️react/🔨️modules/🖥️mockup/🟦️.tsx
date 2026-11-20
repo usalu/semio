@@ -3,6 +3,7 @@ import { useId, type ReactElement } from "react";
 import type { ExcelMockup, GrasshopperMockup, Mockup, MockupEndpoint, SheetItem, Text } from "@semio-tech/course";
 import type { CourseLocale } from "../🌐️i18n/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 /** 🌍️ Preview content always uses the learner's explicit language. */
 const localized = (value: Text, locale: CourseLocale): string => value[locale];
 
@@ -83,7 +84,7 @@ function NodeGraph({ value, locale }: { readonly value: GrasshopperMockup; reado
         </div> : node.widget?.kind === "panel" ? <ol className="course-panel-values" start={0}>{node.widget.lines.map((line, index) => <li key={index}>{localized(line, locale) || " "}</li>)}</ol> : node.widget?.kind === "plugin" ? <div className="course-plugin-label">◆ {localized(node.widget.label, locale)}</div> : null}
       </section>)}
     </div>
-    {value.wires.length === 0 ? null : <details className="course-graph-relations"><summary>{words.connections}</summary><ol>{value.wires.map((wire, index) => <li key={index} data-highlight={target.kind === "wire" && target.index === index || undefined}>{words.from} {name(wire.from, false)} → {words.to} {name(wire.to, true)}<Highlight shown={target.kind === "wire" && target.index === index} locale={locale} /></li>)}</ol></details>}
+    {value.wires.length === 0 ? null : <details className="course-graph-relations"><summary {...sharedBorderlessBoxProps}>{words.connections}</summary><ol>{value.wires.map((wire, index) => <li key={index} data-highlight={target.kind === "wire" && target.index === index || undefined}>{words.from} {name(wire.from, false)} → {words.to} {name(wire.to, true)}<Highlight shown={target.kind === "wire" && target.index === index} locale={locale} /></li>)}</ol></details>}
     {value.tree.length === 0 ? null : <section className="course-tree-panel" data-highlight={target.kind === "tree" || undefined} aria-label={words.tree}>
       <h5>{words.tree}<Highlight shown={target.kind === "tree"} locale={locale} /></h5>
       <ol>{value.tree.map((branch, branchIndex) => <li key={branch.path} data-highlight={target.kind === "branch" && target.index === branchIndex || undefined}>
@@ -99,7 +100,7 @@ export function MockupView({ value, locale }: { readonly value: Mockup; readonly
   const id = useId();
   return <figure className="course-mockup" data-border-probe-art="" data-mockup={value.kind}>
     <figcaption id={id}>{localized(value.caption, locale)}</figcaption>
-    <div className="course-mockup-scroll" role="region" aria-labelledby={id} tabIndex={0}>{value.kind === "excel" ? <Workbook value={value} locale={locale} /> : <NodeGraph value={value} locale={locale} />}</div>
+    <div className="course-mockup-scroll" role="region" aria-labelledby={id} tabIndex={0} {...sharedBorderlessBoxProps}>{value.kind === "excel" ? <Workbook value={value} locale={locale} /> : <NodeGraph value={value} locale={locale} />}</div>
   </figure>;
 }
 

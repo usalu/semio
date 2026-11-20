@@ -10,8 +10,8 @@ import { interactiveControlTransitionClass } from "../🖱️interaction-present
 // #endregion 🔌️Adapters
 
 // #region 🧾️FormControlPresentation
-/** 🎯️ Focus and open presentation for form controls. */
-export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
+/** 🎯️ Native focus affordances removed from form controls; focus, open and invalid lines belong to the border compositor. */
+export const formControlResetClass = cn("outline-none focus-visible:ring-0 shadow-none", interactiveControlTransitionClass);
 
 /** 🚫️ Native browser affordances disabled on editable UI controls. */
 export const uiFormControlBrowserDefaultProps = {

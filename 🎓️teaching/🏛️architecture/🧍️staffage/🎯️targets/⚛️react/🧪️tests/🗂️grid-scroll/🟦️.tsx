@@ -3,11 +3,13 @@
  * @see ../../🔨️modules/🏠️overview/🟦️.tsx — the root grid
  * @see ../../🔨️modules/🗃️browse/🟦️.tsx — a category grid
  */
-import { cleanup, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CATEGORIES, type Manifest, type ManifestEntry } from "@teaching/staffage";
 import { mountArchive } from "@teaching/staffage-react/app";
 import { STORAGE_KEY, memoryStorage } from "../../🔨️modules/💾️persistence/🟦️.ts";
+import { APP_CONFIG } from "../../🔨️modules/⚙️config/🟦️.ts";
+import type { CatalogSource } from "../../🔨️modules/📚️catalog/🟦️.ts";
 import { tracks } from "../../🔨️modules/🥞️levels/🟦️.tsx";
 import { ROOT_PAGES } from "../../🔨️modules/🏠️overview/🟦️.tsx";
 
@@ -44,13 +46,13 @@ function installViewport(width: number, height: number): void {
   } as unknown as typeof ResizeObserver;
 }
 
-function mount(): HTMLElement {
+function mount(catalog: CatalogSource = { manifest: async () => manifest, category: async () => null }): HTMLElement {
   const storage = memoryStorage();
   storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, state: { preferences: { language: "en" } } }));
   const root = document.createElement("div");
   document.body.append(root);
   window.location.hash = "#/";
-  mountArchive(root, { storage, languages: ["en"], catalog: { manifest: async () => manifest, category: async () => null } });
+  mountArchive(root, { storage, languages: ["en"], catalog });
   return root;
 }
 
@@ -69,6 +71,53 @@ describe("the mounted archive", () => {
     window.location.hash = "#/";
     window.matchMedia = originalMatch;
     globalThis.ResizeObserver = originalObserver;
+    vi.unstubAllGlobals();
+  });
+
+  it("lets each featured category finish its first load when another finishes", async () => {
+    installViewport(1280, 400);
+    const archive = {
+      ...manifest,
+      entries: [human("featured-human"), { ...human("featured-animal"), category: "animals" }],
+      collections: [{ id: APP_CONFIG.featuredCollection, title: text("Featured"), description: text("Featured figures"), assets: ["featured-human", "featured-animal"] }],
+    } as unknown as Manifest;
+    let finishHuman!: () => void;
+    let finishAnimal!: () => void;
+    const humanLoad = new Promise<void>(resolve => { finishHuman = resolve; });
+    const animalLoad = new Promise<void>(resolve => { finishAnimal = resolve; });
+    const category = vi.fn<CatalogSource["category"]>(async ({ id }) => {
+      await (id === "humans" ? humanLoad : animalLoad);
+      return null;
+    });
+    mount({ manifest: async () => archive, category });
+    await waitFor(() => expect(category.mock.calls.map(([entry]) => entry.id)).toEqual(["humans", "animals"]));
+    const animalSignal = category.mock.calls[1]![1];
+    try {
+      await act(async () => finishHuman());
+      expect(animalSignal?.aborted).toBe(false);
+      expect(category).toHaveBeenCalledTimes(2);
+    } finally {
+      await act(async () => finishAnimal());
+    }
+  });
+
+  it("mounts intersecting cards behind the glass and every card on opening", async () => {
+    installViewport(1280, 400);
+    vi.stubGlobal("IntersectionObserver", class {
+      constructor(readonly callback: IntersectionObserverCallback) {}
+      observe(target: Element) {
+        const visible = !target.hasAttribute("data-preview-asset") || target.matches(":nth-child(-n+2)");
+        this.callback([{ target, isIntersecting: visible } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+      }
+      unobserve() {}
+      disconnect() {}
+    });
+    const root = mount();
+    const cells = () => [...root.querySelectorAll("[data-preview-asset]")];
+    await waitFor(() => expect(cells().length).toBe(24), { timeout: 5000 });
+    await waitFor(() => expect(cells().filter(cell => cell.querySelector("[data-overview-card]"))).toHaveLength(2));
+    window.location.hash = "#/all";
+    await waitFor(() => expect(cells().filter(cell => cell.querySelector("[data-overview-card]"))).toHaveLength(24));
   });
 
   it.each([[1280, 400], [1280, 640], [900, 400]] as const)("keeps the root and 24 human cards on the strip at %sx%s", async (width, height) => {

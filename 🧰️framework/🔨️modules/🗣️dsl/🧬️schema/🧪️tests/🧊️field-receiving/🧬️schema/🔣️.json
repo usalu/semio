@@ -203,9 +203,74 @@
                 }
               }
             }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "statements"
+              },
+              "source": {
+                "$ref": "#/definitions/statementNode"
+              },
+              "expected": {
+                "$ref": "#/definitions/statementNode"
+              }
+            }
           }
         ]
       }
+    }
+  },
+  "definitions": {
+    "statementNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "leaf"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children"
+          ],
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/statementNode"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

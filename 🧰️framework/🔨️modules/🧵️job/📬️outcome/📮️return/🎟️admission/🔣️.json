@@ -1,15 +1,13 @@
 {
   "version": 1,
   "stages": [
-    "returnOrigin",
     "callerSlot",
     "sourceAlias",
     "callerHandoff"
   ],
   "actualWork": [
     1,
-    1,
-    1,
+    4,
     1
   ],
   "quantumItems": 1,

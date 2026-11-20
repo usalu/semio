@@ -1,6 +1,6 @@
 /** 📥️ Shell plumbing, downloads and file requests: the media-export and data-url downloads, the backbone file and folder path requests, the file open and selection requests and the bounded blob reads. */
 import { mediaExportBytes } from "@semio-tech/framework";
-import { wireMediaExportEncoding } from "@semio-tech/framework/actor/wire-turn";
+import { wireMediaExportEncoding } from "@semio-tech/framework-actor/wire-turn";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../../../📤️SegmentedDownload/🟦️.ts";
 
 //#region ShellHelpers
@@ -225,5 +225,56 @@ export async function readBlobBytesBoundedV1(blob: Blob, control: Readonly<{
     control.progress(end, blob.size);
   }
   return bytes;
+}
+
+/** 🚧️ Refuses a selected file before its bytes can be allocated. */
+export class FileOpenSizeRefusalV1 extends Error {
+  constructor(readonly fileName: string, readonly size: number, readonly maximumBytes: number) {
+    super(`“${fileName}” is ${size} bytes, above the ${maximumBytes}-byte limit.`);
+    this.name = "FileOpenSizeRefusalV1";
+  }
+}
+
+/** 📂️ Admits every selected file's raw byte extent before reading any of them. */
+export async function readSelectedFilesBoundedV1(
+  files: readonly File[],
+  readAs: string | undefined,
+  maximumBytes: number,
+  control: Readonly<{ signal: AbortSignal; progress: (completed: number, total: number) => void }>,
+): Promise<readonly { contents: string; name: string }[]> {
+  if (!Number.isInteger(maximumBytes) || maximumBytes < 0 || maximumBytes > 0xffffffff) throw new Error("file-open.invalid-limit");
+  const limit = Math.min(maximumBytes, NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1);
+  let total = 0;
+  for (const file of files) {
+    if (!Number.isSafeInteger(file.size) || file.size < 0 || file.size > limit) {
+      throw new FileOpenSizeRefusalV1(file.name, file.size, limit);
+    }
+    total += file.size;
+  }
+
+  const opened: { contents: string; name: string }[] = [];
+  let completed = 0;
+  for (const file of files) {
+    const bytes = await readBlobBytesBoundedV1(file, {
+      signal: control.signal,
+      maximumBytes: limit,
+      chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1,
+      progress: (read) => control.progress(completed + read, total),
+    });
+    control.signal.throwIfAborted();
+    const contents = readAs === "dataUrl" ? boundedFileDataUrl(bytes) : new TextDecoder().decode(bytes);
+    opened.push({ contents, name: file.name });
+    completed += bytes.length;
+  }
+  return opened;
+}
+
+function boundedFileDataUrl(bytes: Uint8Array): string {
+  const quantum = 24 * 1024;
+  let data = "data:application/octet-stream;base64,";
+  for (let at = 0; at < bytes.length; at += quantum) {
+    data += btoa(String.fromCharCode(...bytes.subarray(at, at + quantum)));
+  }
+  return data;
 }
 //#endregion ShellHelpers

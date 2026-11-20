@@ -39,6 +39,19 @@
           "project": "repo-cache-reset",
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+          "imageTargets": {
+            "cache-reclaim-rust": "reclaim",
+            "cache-reclaim-wait-rust": "reclaim-wait",
+            "cache-reclaim-tools": "reclaim",
+            "cache-reclaim-graph": "reclaim",
+            "cache-reclaim-dependencies": "reclaim",
+            "cache-reclaim-products": "reclaim",
+            "cache-reclaim-diagnostics": "reclaim",
+            "cache-reclaim-nx": "reclaim",
+            "cache-regrow-graph": "regrow",
+            "cache-regrow-products": "regrow",
+            "cache-regrow-rust": "regrow"
+          },
           "targets": {
             "cache-reset-graph": "graph",
             "cache-reset-nx": "nx",
@@ -374,6 +387,26 @@
             "retire",
             null
           ]
+        }
+      }
+    },
+    "ImageOwnerTarget": {
+      "type": "object",
+      "required": ["executor", "cache", "dependsOn", "outputs", "options"],
+      "properties": {
+        "executor": {"const": "repo:script"},
+        "cache": {"const": false},
+        "dependsOn": {"const": []},
+        "outputs": {"const": []},
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "cwd", "forwardAllArgs"],
+          "properties": {
+            "command": {"type": "string"},
+            "cwd": {"const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"},
+            "forwardAllArgs": {"const": false}
+          }
         }
       }
     },

@@ -1,10 +1,11 @@
 import{appendCargoProfileConfigurationArgumentsV1}from"../../🏗️build/🎚️mode/⚙️cargo/🟦️.ts";
-import {requireIssuedResourceControlV1,withIssuedResourceOperationV1} from "../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import {requireIssuedResourceControlV1,scriptResourceProcessEnvironmentV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1} from "../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {checkResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../📤️publication/📥️sources/🟦️.ts";
-import {observePhysicalFileV1} from "../../../📁️filesystem/🧾️observation/🟦️.ts";
+import {FileObservationErrorV1,observePhysicalFileV1} from "../../../📁️filesystem/🧾️observation/🟦️.ts";
+import {concurrentEditV1} from "../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import sourceSchema from "../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};
 import {lstat} from "node:fs/promises";
 import {availableParallelism} from "node:os";
@@ -16,8 +17,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { join, resolve,relative } from "node:path";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { collectArtifactFiles } from "../🗂️files/🟦️.ts";
-import {captureOwnedCommandV1} from "../../🎛️owned-execution/🟦️.ts";
-import { admitCargoSelectionV1, type CargoSourceBoundaryPolicyV1 } from "../🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {runOwnedCommand} from "../../🎛️owned-execution/🟦️.ts";
+import { admitCargoSelectionV1, type AdmittedCargoSourceRosterV1, type CargoSourceBoundaryPolicyV1 } from "../🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {watchCargoSourceDriftV1} from "../🏗️native-build/📥️source/👁️drift/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"../🏗️native-build/📥️inputs/🟦️.ts";
 
 export type WasmPackWebPkg = {
@@ -39,11 +41,11 @@ export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; workspaceRoo
  * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
 export type WasmPackWebBuildOptions = Readonly<{ storage:NativeStorageReservationV1;consume:(capture:ProducedWasmPackageV1)=>Promise<void>;environment:Readonly<Record<string,string|undefined>>; control: CompilerAdmissionControl;withCargoInputs?:CargoCompilerInputsPortV1; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; cargoConfigurationSelectors: readonly string[]; report?: (line: string) => void }>;
 /** 🔌️ Executes an explicitly selected compiler with bounded cancellation; `admit` refuses the exact Cargo selection before it compiles. */
-export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<void> }>;
+export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<AdmittedCargoSourceRosterV1> }>;
 
 /** 📏️ Admits one wasm-bindgen Cargo selection through the one Source admission owner, keyed by the policy's repository root.
  * @see ../🏗️native-build/📥️source/🎟️admission/🟦️.ts */
-export function admitWasmCargoSourcesV1(args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>): Promise<void> {
+export function admitWasmCargoSourcesV1(args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>): Promise<AdmittedCargoSourceRosterV1> {
   if(!options.storage)throw Error("Original enforcing WASM compiler store required");return admitCargoSelectionV1({ workspaceRoot: options.policy.workspaceRoot, cwd: options.cwd, args, environment: options.environment, sourceBoundary: options.policy.sourceBoundary,storage:options.storage }, options.control);
 }
 const wasmPolicySchema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -83,8 +85,54 @@ export function wasmCompilerSelectionArgumentsV1(value:unknown):Readonly<{cargo:
  if(validateJsonSchemaSubset(wasmPolicySchema.definitions.CompilerSelection,value,wasmPolicySchema).length)throw Error("Closed finite WASM compiler selection required");const row=value as WasmCompilerSelectionV1,flags=[...(row.configuration?["--config",row.configuration]:[]),...(row.noDefaultFeatures?["--no-default-features"]:[]),...row.features.flatMap(value=>["--features",value])],cargo=appendCargoProfileConfigurationArgumentsV1(["build","--locked","--lib","--manifest-path",row.manifest,"--profile",row.mode,"--target","wasm32-unknown-unknown",...(row.threads?["-Z","build-std=std,panic_abort"]:[]),...flags],row.mode,row.selectors),wasmPackCargo=appendCargoProfileConfigurationArgumentsV1(["--locked","--manifest-path",row.manifest,"--target","wasm32-unknown-unknown",...flags],row.mode,row.selectors);return Object.freeze({cargo,wasmPackCargo});
 }
 
+/** 🗣️ Streams compiler diagnostics into the owning process's bounded job log under the original compiler deadline. */
+export const runWasmBuildCommandV1:WasmBuildExecutionPortV1["run"]=async(command,args,options)=>{
+  const control=requestedCompilerAdmissionControlV1(options.control,options.budgetMs);
+  const env=scriptResourceProcessEnvironmentV1(control,options.environment);
+  try{
+    await runOwnedCommand(command,[...args],options.cwd,options.label,0,{env,control,signal:control.signal,deadline:control,stdout:"stderr",output:wasmPolicySchema.definitions.CompilerOutput.const});
+  }catch(error){
+    control.signal.throwIfAborted();
+    throw error;
+  }
+};
+
+/** 👁️ Watches the admitted Rust inputs through one owned compiler command and drains it before propagating proven churn. */
+export function runWasmCargoCommandV1(run:WasmBuildExecutionPortV1["run"],command:string,args:readonly string[],options:Parameters<WasmBuildExecutionPortV1["run"]>[2],sources:AdmittedCargoSourceRosterV1):Promise<void>{
+  if(options.signal!==options.control.signal)throw Error("Original WASM compiler signal required");
+  const drift=new AbortController();
+  return withRequestedIssuedResourceControlV1(options.control,0,async control=>{
+    const stop=watchCargoSourceDriftV1(sources.inputs,sources.startedMs,mismatch=>{
+      if(!control.signal.aborted)drift.abort(concurrentEditV1("input",mismatch.path,"Running WASM Cargo Source differs from admission: "+JSON.stringify(mismatch),"build"));
+    });
+    const stopOnAbort=()=>{void stop();};
+    control.signal.addEventListener("abort",stopOnAbort,{once:true});
+    try{
+      await run(command,args,{...options,control,signal:control.signal});
+      control.signal.throwIfAborted();
+    }catch(error){
+      control.signal.throwIfAborted();
+      throw error;
+    }finally{
+      control.signal.removeEventListener("abort",stopOnAbort);
+      await stop();
+    }
+  },drift.signal);
+}
+
+/** 🧷️ Keeps the admitted Cargo flags when wasm-pack supplies the subcommand, library selector and profile. */
+export function wasmPackBuildArgumentsV1(cargo:readonly string[],mode:BuildMode,outDir:string,wasmBaseName:string):string[]{
+  const forwarded:string[]=[];
+  for(let index=1;index<cargo.length;index++){
+    const argument=cargo[index]!;
+    if(argument==="--profile"){index++;continue;}
+    if(argument!=="--lib")forwarded.push(argument);
+  }
+  return ["build","--mode","no-install",...wasmBuildArguments(mode).pack,"--target","web","--out-dir",outDir,"--out-name",wasmBaseName,"--no-pack",...(mode==="prototype"?["--no-opt"]:[]),"--",...forwarded];
+}
+
 /** 🔨️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
-export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: WasmBuildPolicyV1, port: WasmBuildExecutionPortV1 = { run: async (command, args, options) => { await captureOwnedCommandV1(command,args,options.cwd,{env:options.environment,control:requestedCompilerAdmissionControlV1(options.control,options.budgetMs)}); }, admit: admitWasmCargoSourcesV1 }): Promise<void> {
+export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: WasmBuildPolicyV1, port: WasmBuildExecutionPortV1 = { run: runWasmBuildCommandV1, admit: admitWasmCargoSourcesV1 }): Promise<void> {
   requireIssuedResourceControlV1(opts.control);requireNativeStorageReservationV1(opts.storage,opts.control);if(opts.storage.allocation.kind!=="compiler-workspace"||typeof opts.consume!=="function")throw Error("Actual compiler store and completed WASM consumer required");policy=admitWasmPolicy(policy);opts=Object.freeze({...opts,pkg:Object.freeze({...opts.pkg,files:Object.freeze([...opts.pkg.files])}),cargoConfigurationSelectors:Object.freeze([...opts.cargoConfigurationSelectors]),cargoFeatures:Object.freeze([...(opts.cargoFeatures??[])])});for(const path of[policy.artifactDirectory,policy.buildDirectory])requireNativeStoragePathV1(opts.storage.backing.root,path);if(relative(policy.workspaceRoot,resolve(opts.rsDir)).replaceAll("\\","/")!==policy.sourceOwner)throw Error("Exact declared WASM source owner required");if(opts.pkg.files.length>sourceSchema.properties.maximumFiles.const||opts.pkg.files.some(name=>validateJsonSchemaSubset(sourceSchema.definitions.SourceName,name).length))throw Error("Finite canonical declared package files required");
   const control = policy.budgetMs === 0 ? requestedCompilerAdmissionControlV1(opts.control, 0) : renewableCompilerAdmissionControlV1(opts.control, progressDeadlinePolicyV1("native-child", 0, opts.environment ?? process.env, { maximumMilliseconds: policy.budgetMs }), 0), signal = control.signal;
   if (resolve(policy.cwd) !== resolve(opts.rsDir)) throw Error("WASM policy belongs to a different owner");
@@ -108,13 +156,19 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     const t0 = Date.now();
     await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
     leased=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:selection.cargo,signal:actual.control.signal,control:actual.control});
-    const produced=await actual.withWriter(async()=>{
+    const produced=await actual.withWriter(async control=>{
     let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,bodyFailed=false;
     try{
-    const signal=actual.control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control:actual.control});checkResourceLeaseControl(actual.control);
+    const signal=control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control});checkResourceLeaseControl(control);
     const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
-    const invoke=async(command:string,args:readonly string[])=>{checkResourceLeaseControl(actual.control);await port.run(command,args,{cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(actual.control),label:logPrefix,signal:actual.control.signal,control:actual.control});checkResourceLeaseControl(actual.control);};
-    await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control:actual.control});checkResourceLeaseControl(actual.control);
+    const sources=await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control});
+    const invoke=async(command:string,args:readonly string[],monitor?:AdmittedCargoSourceRosterV1)=>{
+      checkResourceLeaseControl(control);
+      const options={cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(control),label:logPrefix,signal,control};
+      if(monitor)await runWasmCargoCommandV1(port.run,command,args,options,monitor);
+      else await port.run(command,args,options);
+      checkResourceLeaseControl(control);
+    };
     if (threads) {
       const crateName = readFileSync(join(componentDir, "Cargo.toml"), "utf8").match(/^name\s*=\s*"([^"]+)"/m)?.[1];
       if (!crateName) {
@@ -122,13 +176,12 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
       }
       const cargoWasm = join(cargoOutput, `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
       const threadedCargoArgs = actual.arguments;
-      await invoke("cargo", threadedCargoArgs);
+      await invoke("cargo", threadedCargoArgs,sources);
       if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
       await invoke(policy.bindgen.command, [...policy.bindgen.args, cargoWasm, "--out-dir", pkgDir, "--typescript", "--target", "web", "--out-name", wasmBaseName]);
     } else {
-      const forwarded:string[]=[];for(let index=1;index<actual.arguments.length;index++){const argument=actual.arguments[index]!;if(argument==="--profile"){index++;continue;}if(argument!=="--lib")forwarded.push(argument);}
-      const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", pkgDir, "--out-name", wasmBaseName, "--no-pack", ...(policy.mode === "prototype" ? ["--no-opt"] : []), "--", ...forwarded];
-      await invoke(policy.wasmPack.command, [...policy.wasmPack.args, ...buildArgs]);
+      const buildArgs=wasmPackBuildArgumentsV1(actual.arguments,profile,pkgDir,wasmBaseName);
+      await invoke(policy.wasmPack.command,[...policy.wasmPack.args,...buildArgs],sources);
     }
     report?.(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
@@ -174,9 +227,72 @@ const producedPackages=new WeakMap<ProducedWasmPackageV1,PackageScope>();
 export function withProducedWasmPackageTaskV1<T>(token:ProducedWasmPackageV1,body:(view:ProducedWasmPackageViewV1)=>Promise<T>):Promise<T>{const scope=producedPackages.get(token);if(!scope)throw Error("Actual paid WASM package required");const admitted=scope.live&&scope.accepting&&typeof body==="function"&&scope.pending.size<sourceSchema.properties.maximumPendingOperations.const,task=withIssuedResourceOperationV1(scope.view.control,async()=>{await Promise.resolve();if(!admitted)throw Error("Live accepted WASM package task required");await scope.view.recheck();const value=await body(Object.freeze({...scope.view,files:new Map(scope.view.files)}));await scope.view.recheck();return value;});if(admitted){scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.pending.delete(task);scope.failures.push(error);});}return task;}
 /** ✅️ Rechecks the actual retained package without exposing a compiler-state path after retirement. */
 export function verifyProducedWasmPackageV1(token:ProducedWasmPackageV1):Promise<void>{return withProducedWasmPackageTaskV1(token,async view=>{checkResourceLeaseControl(view.control);await view.recheck();});}
+class WasmPackageIdentityErrorV1 extends Error{
+ readonly timestampsOnly:boolean;
+ constructor(name:string,changes:readonly string[],timestampsOnly:boolean){
+  super(`Actual WASM package identity changed: ${JSON.stringify(name)} (${changes.join(", ")||"file type"})`);
+  this.timestampsOnly=timestampsOnly;
+ }
+}
+async function readProducedWasmIdentityV1(name:string,path:string,before?:import("node:fs").BigIntStats):Promise<import("node:fs").BigIntStats>{
+ const stat=await lstat(path,{bigint:true}).catch((error:NodeJS.ErrnoException)=>{
+  if(before&&(error.code==="ENOENT"||error.code==="ENOTDIR"))throw Error(`Actual WASM package identity changed: ${JSON.stringify(name)} (missing)`,{cause:error});
+  throw error;
+ });
+ const fields=["dev","ino","size","mode","mtimeNs","ctimeNs","nlink"] as const;
+ const changes=before?fields.filter(field=>stat[field]!==before[field]):[];
+ const regular=stat.isFile()&&!stat.isSymbolicLink()&&stat.nlink===1n;
+ if(!regular||changes.length){
+  if(!before)throw Error(`Finite single-link actual package file required: ${JSON.stringify(name)}`);
+  throw new WasmPackageIdentityErrorV1(name,changes,regular&&changes.every(field=>field==="mtimeNs"||field==="ctimeNs"));
+ }
+ return stat;
+}
 async function consumeProducedWasmPackageV1(files:ReadonlyMap<string,string>,owner:WasmPackageOwnerV1,options:WasmPackWebBuildOptions,compilerStopped:()=>void):Promise<void>{
- const limits=sourceSchema.properties;requireIssuedResourceControlV1(options.control);requireNativeStorageReservationV1(options.storage,options.control);if(!files.size||files.size>limits.maximumFiles.const)throw Error("Finite completed WASM package required");const stamp=(row:{dev:bigint;ino:bigint;size:bigint;mode:bigint;mtimeNs:bigint;ctimeNs:bigint})=>[row.dev,row.ino,row.size,row.mode,row.mtimeNs,row.ctimeNs],facts=new Map<string,{path:string;sha256:string;byteLength:number;identity:readonly bigint[]}>(),observe=(maximum:number)=>({maxBytes:maximum,maxWork:Math.ceil(maximum/limits.chunkBytes.const)+16,chunkBytes:limits.chunkBytes.const,cancelled:()=>options.control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(options.control)??Number.MAX_SAFE_INTEGER,onProgress:()=>checkResourceLeaseControl(options.control)});let bytes=0;
- for(const[name,path]of files){requireNativeStoragePathV1(options.storage.backing.root,path);const stat=await lstat(path,{bigint:true}),size=Number(stat.size);if(validateJsonSchemaSubset(sourceSchema.definitions.SourceName,name).length||!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1n||!Number.isSafeInteger(size)||size>limits.maximumBytes.const-bytes)throw Error("Finite single-link actual package file required");bytes+=size;const fact=await withArtifactDescriptorSlotV1(()=>observePhysicalFileV1(path,observe(size)));facts.set(name,{...fact,identity:stamp(stat)});}
- const recheck=async()=>{checkResourceLeaseControl(options.control);await options.storage.recheck();for(const fact of facts.values()){requireNativeStoragePathV1(options.storage.backing.root,fact.path);const stat=await lstat(fact.path,{bigint:true});if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1n||stamp(stat).some((value,index)=>value!==fact.identity[index]))throw Error("Actual WASM package identity changed");const actual=await withArtifactDescriptorSlotV1(()=>observePhysicalFileV1(fact.path,observe(fact.byteLength)));if(actual.sha256!==fact.sha256||actual.byteLength!==fact.byteLength)throw Error("Actual WASM package bytes changed");}},token=Object.freeze({})as ProducedWasmPackageV1,scope:PackageScope={live:true,accepting:true,view:Object.freeze({files:new Map(files),owner:Object.freeze({...owner}),control:options.control,recheck}),pending:new Set(),failures:[]};producedPackages.set(token,scope);let failed=false,failure:unknown;
+ const limits=sourceSchema.properties;
+ requireIssuedResourceControlV1(options.control);
+ requireNativeStorageReservationV1(options.storage,options.control);
+ if(!files.size||files.size>limits.maximumFiles.const)throw Error("Finite completed WASM package required");
+ const facts=new Map<string,{path:string;sha256:string;byteLength:number;identity:import("node:fs").BigIntStats}>();
+ const observe=(path:string,maximum:number)=>withArtifactDescriptorSlotV1(()=>observePhysicalFileV1(path,{maxBytes:maximum,maxWork:Math.ceil(maximum/limits.chunkBytes.const)+16,chunkBytes:limits.chunkBytes.const,cancelled:()=>options.control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(options.control)??Number.MAX_SAFE_INTEGER,onProgress:()=>checkResourceLeaseControl(options.control)}));
+ const observeMember=async(name:string,path:string,identity:import("node:fs").BigIntStats,maximum:number)=>{
+  const attempt=async()=>{
+   checkResourceLeaseControl(options.control);
+   await readProducedWasmIdentityV1(name,path,identity);
+   const actual=await observe(path,maximum).catch(async error=>{
+    if(error instanceof FileObservationErrorV1&&error.code==="changed")await readProducedWasmIdentityV1(name,path,identity);
+    throw error;
+   });
+   await readProducedWasmIdentityV1(name,path,identity);
+   return actual;
+  };
+  try{return await attempt();}catch(error){
+   if(!(error instanceof WasmPackageIdentityErrorV1&&error.timestampsOnly)&&!(error instanceof FileObservationErrorV1&&error.code==="changed"))throw error;
+  }
+  try{return await attempt();}catch(error){
+   if(error instanceof FileObservationErrorV1&&error.code==="changed")throw Error(`Actual WASM package changed during file observation: ${JSON.stringify(name)}`,{cause:error});
+   throw error;
+  }
+ };
+ let bytes=0;
+ for(const[name,path]of files){
+  requireNativeStoragePathV1(options.storage.backing.root,path);
+  if(validateJsonSchemaSubset(sourceSchema.definitions.SourceName,name).length)throw Error("Canonical actual package file name required");
+  const identity=await readProducedWasmIdentityV1(name,path),size=Number(identity.size);
+  if(!Number.isSafeInteger(size)||size>limits.maximumBytes.const-bytes)throw Error(`Finite actual package byte extent required: ${JSON.stringify(name)}`);
+  bytes+=size;
+  const fact=await observeMember(name,path,identity,size);
+  facts.set(name,{...fact,identity});
+ }
+ const recheck=async()=>{
+  checkResourceLeaseControl(options.control);
+  await options.storage.recheck();
+  for(const[name,fact]of facts){
+   requireNativeStoragePathV1(options.storage.backing.root,fact.path);
+   const actual=await observeMember(name,fact.path,fact.identity,fact.byteLength);
+   if(actual.sha256!==fact.sha256||actual.byteLength!==fact.byteLength)throw Error(`Actual WASM package bytes changed: ${JSON.stringify(name)}`);
+  }
+ };
+ const token=Object.freeze({})as ProducedWasmPackageV1,scope:PackageScope={live:true,accepting:true,view:Object.freeze({files:new Map(files),owner:Object.freeze({...owner}),control:options.control,recheck}),pending:new Set(),failures:[]};producedPackages.set(token,scope);let failed=false,failure:unknown;
  compilerStopped();try{try{await withIssuedResourceOperationV1(options.control,()=>options.consume(token));}catch(error){failed=true;failure=error;}scope.accepting=false;while(scope.pending.size)await Promise.allSettled([...scope.pending]);if(failed)throw failure;if(scope.failures.length)throw scope.failures[0];await recheck();}finally{scope.accepting=false;scope.live=false;}
 }

@@ -29,7 +29,7 @@ fn layered_ceiling_type(i: &mut Import<'_>, ifc: u64, thickness: f64) -> String 
     }
     let millimetres = (thickness * 1000.0).round() as i64;
     let id = Import::unused(&format!("cet-{millimetres}"), |candidate| i.model.ceiling_types.contains_key(candidate));
-    i.model.ceiling_types.insert(id.clone(), CeilingType { name: format!("Ceiling {millimetres} mm"), layers: vec![Layer { material, thickness, function: LayerFunction::Finish }] });
+    i.model.ceiling_types.cold_insert(id.clone(), CeilingType { name: format!("Ceiling {millimetres} mm"), layers: vec![Layer { material, thickness, function: LayerFunction::Finish }] });
     id
 }
 
@@ -87,7 +87,7 @@ pub fn read(i: &mut Import<'_>) {
         let Some(mut ceiling) = found else { continue };
         let id = Doc::identity(args, "IFCCOVERING").unwrap_or_else(|| format!("ce-{}", instance.id));
         ceiling.name = if name == id { String::new() } else { name };
-        i.model.ceilings.insert(id.clone(), ceiling);
+        i.model.ceilings.cold_insert(id.clone(), ceiling);
         i.ids.insert(instance.id, id);
     }
 }

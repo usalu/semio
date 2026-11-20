@@ -105,7 +105,7 @@ export interface ShardInstanceLifecycleLease {
   bindHostRetirement(participant: OwnedUiInstance): void;
   captureUiPatchAuthority(originalTurn: object, patchIndex: number): OwnedNativeUiPatchAuthority;
   submitUiAcknowledgement(source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }>;
-  submitUiAcknowledgements(entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly result: unknown }>;
+  submitUiAcknowledgements(entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly results: readonly unknown[] }>;
   dispose(): void;
   progress(): { readonly kind: ShardInstancePhase | "blocked"; readonly failure: ShardInstanceFailure | null };
 }

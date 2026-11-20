@@ -6,7 +6,7 @@
     "cameraX",
     "cameraY",
     "zoom",
-    "layersJson",
+    "framing",
     "snapshot",
     "lanes"
   ],
@@ -16,6 +16,12 @@
       "field": "toolRunTrace",
       "bodyKey": "framework.scene.canvas2d.toolRunTrace",
       "optional": true
+    },
+    {
+      "lane": "layers",
+      "field": "layersJson",
+      "bodyKey": "framework.scene.canvas2d.layers",
+      "optional": false
     }
   ],
   "roundTrip": {
@@ -43,5 +49,14 @@
       ]
     },
     "traceDeltaFixture": "deltas[0]"
+  },
+  "largeLayers": {
+    "layerJson": "{\"id\":\"diagram-line\",\"transform\":[1,0,0,1,0,0],\"node\":{\"kind\":\"path\",\"segments\":[{\"kind\":\"move\",\"to\":[0,0]},{\"kind\":\"line\",\"to\":[1,1]}]},\"stroke\":{\"color\":[0,0,0,1],\"width\":1,\"cap\":\"butt\",\"join\":\"round\",\"dash\":[]}}",
+    "count": 500,
+    "reference": {
+      "lane": "layers",
+      "bytes": 107501,
+      "hash": "93ac452a925724c1"
+    }
   }
 }

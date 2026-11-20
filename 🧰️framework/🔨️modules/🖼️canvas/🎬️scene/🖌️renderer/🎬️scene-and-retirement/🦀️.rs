@@ -169,23 +169,25 @@ impl CanvasSceneRetirement{
         Ok(RetirementDemand{copy_bytes:if scene.0.is_empty(){0}else{size_of::<SceneCommand>()},release_bytes:if scene.0.is_empty(){scene.retirement_backing_bytes()}else{0},depth:usize::from(!self.terminal_is_empty(scene)),..Default::default()})
     }
     pub fn close_step(&mut self,scene:&mut Scene,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
-        let grant=effect.grant();let mut delegated=None;
+        let grant=effect.grant();let work_before=effect.performed_work();let mut delegated=None;
         let result=(||->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
         use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneStep as Step,RetainedCloneProgress as Progress};
         let empty=Progress::default();if self.terminal_is_empty(scene){return Ok(Step::Complete(empty))}
         let demand=self.next_demands(scene,grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Progress(empty))}
-        if let Some(active)=self.active.as_mut(){if active.terminal_is_empty(){drop(self.active.take());let bytes=std::mem::take(&mut self.active_bytes);return Ok(Step::Progress(Progress{copied_items:1,released_bytes:bytes,..empty}))}delegated=Some(active.close_step(body,effect));return Ok(Step::Progress(empty))}
+        if let Some(active)=self.active.as_mut().filter(|active|!active.terminal_is_empty()){delegated=Some(active.close_step(body,effect));return Ok(Step::Progress(empty))}
         if let Some(image)=self.image.as_mut(){let poll=image.step(body,effect);if image.terminal_is_empty(){self.image=None}delegated=Some(poll.map(|step|Step::Progress(step.progress())));return Ok(Step::Progress(empty))}
-        if let Some(SceneCommand::Stroke{stroke,..})=scene.0.last_mut(){if stroke.dash_capacity()!=0{let original=std::mem::replace(stroke,Stroke::new(0.0));let (owner,progress)=crate::CanvasStrokeRetirement::admit(original,grant).map_err(|(error,original)|{*stroke=original;error})?;self.active_bytes=size_of::<crate::CanvasStrokeRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}
+        if effect.remaining_work_units()?==0||!effect.performed(1)?{return Ok(Step::Progress(empty))}
+        if self.active.is_some(){drop(self.active.take());let bytes=std::mem::take(&mut self.active_bytes);return Ok(Step::Progress(Progress{copied_items:1,released_bytes:bytes,..empty}))}
+        if let Some(SceneCommand::Stroke{stroke,..})=scene.0.last_mut(){if stroke.dash_capacity()!=0{*effect.actual()=Some(0);let original=std::mem::replace(stroke,Stroke::new(0.0));let (owner,progress)=crate::CanvasStrokeRetirement::admit(original,grant).map_err(|(error,original)|{*stroke=original;error})?;self.active_bytes=progress.retained_capacity_bytes;*effect.actual()=Some(self.active_bytes);self.active=Some(owner);return Ok(Step::Progress(progress))}}
         let shape=match scene.0.last_mut(){Some(SceneCommand::Fill{shape,..}|SceneCommand::Stroke{shape,..})=>Some(shape),Some(SceneCommand::PushLayer{clip,..}|SceneCommand::PushClipLayer{clip,..})=>Some(clip),_=>None};
-        if let Some(RecordedShape::BezPath(path))=shape{if path.retirement_backing_bytes()!=0{let original=std::mem::take(path);let(owner,progress)=crate::CanvasPathRetirement::admit(original,grant).map_err(|(error,original)|{*path=original;error})?;self.active_bytes=size_of::<crate::CanvasPathRetirement>();self.active=Some(owner);return Ok(Step::Progress(progress))}}
+        if let Some(RecordedShape::BezPath(path))=shape{if path.retirement_backing_bytes()!=0{*effect.actual()=Some(0);let original=std::mem::take(path);let(owner,progress)=crate::CanvasPathRetirement::admit(original,grant).map_err(|(error,original)|{*path=original;error})?;self.active_bytes=progress.retained_capacity_bytes;*effect.actual()=Some(self.active_bytes);self.active=Some(owner);return Ok(Step::Progress(progress))}}
         if matches!(scene.0.last(),Some(SceneCommand::DrawImage{..})){let Some(SceneCommand::DrawImage{image,..})=scene.0.pop()else{unreachable!()};self.image=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(image).unwrap_or_else(|_|panic!("first-party raster image retirement admitted")));return Ok(Step::Progress(Progress{copied_items:1,..empty}))}
         if scene.0.is_empty(){let bytes=scene.retirement_backing_bytes();drop(std::mem::take(&mut scene.0));return Ok(Step::Complete(Progress{copied_items:1,released_bytes:bytes,..empty}))}
         scene.0.pop();Ok(Step::Progress(Progress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))
         })();
         if let Some(poll)=delegated{return poll}
-        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{work:u128::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default())),result:result.map_err(Into::into)})
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{work:effect.performed_work()-work_before,result:result.map_err(Into::into)})
     }
 }
 

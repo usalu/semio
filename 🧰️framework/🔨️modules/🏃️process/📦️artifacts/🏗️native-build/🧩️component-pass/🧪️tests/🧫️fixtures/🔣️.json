@@ -1,4 +1,24 @@
 {
+  "provenanceSeal": {
+    "originalSource": "pub const PROVENANCE: i32 = 1;\n",
+    "editedSource": "pub const PROVENANCE: i32 = 2;\n",
+    "cases": [
+      { "mutation": "source", "timing": "after-observation", "publishesReceipt": false },
+      { "mutation": "source", "timing": "after-seal", "publishesReceipt": true },
+      { "mutation": "artifact", "timing": "after-seal", "publishesReceipt": false }
+    ]
+  },
+  "jobRetryDiagnostics": {
+    "jobId": "restarting",
+    "pathIds": ["probe", "Probe", "probe.2", "probe.log.2", "probe@1", "probe_1"],
+    "limits": { "logLimitBytes": 128, "tailLines": 2, "tailLineChars": 32 },
+    "overflow": "é",
+    "attempts": [
+      { "log": "job-restarting.log", "tail": "job-restarting.log.tail", "stdout": "first output", "stderr": "first edit diagnostic" },
+      { "log": "job-restarting.log.2", "tail": "job-restarting.log.2.tail", "stdout": "second output", "stderr": "second edit diagnostic" },
+      { "log": "job-restarting.log.3", "tail": null, "stdout": "final output", "stderr": "final status" }
+    ]
+  },
   "version": 1,
   "plans": {
     "valid": [
@@ -457,7 +477,7 @@
       "--profile",
       "release",
       "--keep-going",
-      "--message-format=json-render-diagnostics"
+      "--message-format=json"
     ]
   },
   "artifacts": [

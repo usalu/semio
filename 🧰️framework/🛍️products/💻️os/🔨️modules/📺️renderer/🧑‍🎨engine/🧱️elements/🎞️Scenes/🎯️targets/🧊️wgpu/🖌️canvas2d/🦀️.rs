@@ -23,10 +23,12 @@ pub use shape_fills_and_render::{
 
 #[path = "🖼️scene-nodes-and-image-upload/🦀️.rs"]
 mod scene_nodes_and_image_upload;
+#[path = "🧮️polygon-clipping/🦀️.rs"]
+mod polygon_clipping;
 use scene_nodes_and_image_upload::{
     canvas_layer_is_scene_node, render_canvas_scene_node, CanvasPaintOrder,
 };
 pub use scene_nodes_and_image_upload::{
-    queue_canvas_image_upload_with, queue_decoded_raster_upload, screen_points,
+    queue_canvas_image_upload_with, queue_decoded_raster_upload, queue_decoded_raster_upload_retaining_source, screen_points,
     CANVAS_2D_EMPTY_LABEL,
 };

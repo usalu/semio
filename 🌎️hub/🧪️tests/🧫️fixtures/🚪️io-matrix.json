@@ -140,6 +140,11 @@
       ],
       "imports": [],
       "reach": []
+    },
+    "stdio-office/xlsx": {
+      "exports": [{ "id": "xlsx", "verb": "saveArtifactFile", "format": "xlsx" }],
+      "imports": [{ "id": "xlsx", "verb": "openArtifactFile", "via": "picker", "from": "xlsx", "editedCell": "A1" }],
+      "reach": []
     }
   }
 }

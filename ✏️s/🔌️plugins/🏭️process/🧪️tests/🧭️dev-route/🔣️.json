@@ -1,0 +1,11 @@
+{
+  "manifest": "🌎️hub/🧩️compositions/🏭️process/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "variant": "process3d",
+  "extensions": ["process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood"],
+  "app": "s.process.process3d@1/*#editor",
+  "ports": {
+    "react": 6022,
+    "wgpu": 6122
+  },
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🏭️process"
+}

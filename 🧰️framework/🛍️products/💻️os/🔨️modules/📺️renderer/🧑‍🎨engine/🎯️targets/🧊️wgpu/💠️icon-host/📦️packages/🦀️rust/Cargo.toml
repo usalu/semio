@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-renderer-projected-linework = { path = "../../../../../🧱️elements/🖼️IconRenderHost/📐️projection/📦️packages/🦀️rust" }
 semio-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }

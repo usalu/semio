@@ -269,3 +269,56 @@ fn hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_cle
     assert!(!tree.node(root).unwrap().flags.contains(NodeFlags::HOVERED));
 }
 //#endregion 🔖️HoverRevealTests
+
+//#region 🔖️HoverOwnerTests
+#[test]
+fn only_the_innermost_interactive_node_owns_the_hover_while_the_chain_stays_hovered() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let group = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+    let first = leaf(&mut tree, Some(group), 1, button_ui("first"), (0.0, 0.0, 100.0, 24.0));
+    let second = leaf(&mut tree, Some(group), 2, button_ui("second"), (100.0, 0.0, 100.0, 24.0));
+    let owner = |tree: &UiTree, id| tree.node(id).unwrap().flags.contains(NodeFlags::HOVER_OWNER);
+    let mut router = EventRouter::new("main");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
+    assert!([root, group, first].iter().all(|&id| tree.node(id).unwrap().flags.contains(NodeFlags::HOVERED)));
+    assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false, false, true, false]);
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 10.0, modifiers: Default::default() });
+    assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false, false, false, true]);
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 60.0, modifiers: Default::default() });
+    assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false, false, false, false], "a pointer over a non-interactive gap hovers no box");
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 500.0, y: 500.0, modifiers: Default::default() });
+    assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false; 4]);
+}
+//#endregion 🔖️HoverOwnerTests
+
+#[test]
+fn retained_row_hover_dispatches_and_clears_the_authored_pointer_target() {
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/tree-hover.json")).unwrap();
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let row = leaf(&mut tree, Some(root), 1, input_ui("row", ""), (0.0, 0.0, 80.0, 20.0));
+    let action = ui_contract::ActionId::try_v1("outliner", "interactionHover").unwrap();
+    let targets = law["enter"].to_string();
+    let args = DslValue::Object(vec![
+        ("targets".into(), DslValue::String(targets)),
+        ("channel".into(), DslValue::String(law["channel"].as_str().unwrap().into())),
+        ("domainId".into(), DslValue::String(law["domain"].as_str().unwrap().into())),
+    ]);
+    tree.node_mut(row).unwrap().intent = Some(semio_ui_action::UiIntentBindings {
+        bindings: vec![(Trigger::HoverPreview, action)], args: vec![(Trigger::HoverPreview, args.clone())], ..Default::default()
+    });
+    let mut router = EventRouter::new("main");
+    let over = UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() };
+    let entered = router.dispatch(&mut tree, root, &over);
+    assert!(matches!(entered.as_slice(), [UiCommand::App { intent, .. }] if intent.args.as_ref() == Some(&args) && intent.input.is_none()));
+    assert!(router.dispatch(&mut tree, root, &over).is_empty());
+    let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0, modifiers: Default::default() });
+    let clear = DslValue::Object(vec![("targets".into(), DslValue::String(law["leave"].to_string()))]);
+    assert!(matches!(left.as_slice(), [UiCommand::App { intent, .. }] if intent.args.as_ref() == Some(&args) && intent.input.as_ref() == Some(&clear)));
+}

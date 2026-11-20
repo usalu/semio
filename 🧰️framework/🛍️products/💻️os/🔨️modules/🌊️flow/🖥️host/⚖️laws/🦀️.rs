@@ -94,5 +94,8 @@ mod invocation_dispatch_work_tests;
 #[path="../../📔️registry/📇️catalogue-work/🧪️laws/🦀️.rs"]
 mod operator_catalogue_work_tests;
 #[cfg(test)]
+#[path="../../📔️registry/📇️catalogue-owner/🧪️laws/🦀️.rs"]
+mod operator_catalogue_owner_tests;
+#[cfg(test)]
 #[path="../📤️publication/📡️invocation/📥️origin-work/🧪️laws/📏️opportunity/🦀️.rs"]
 mod invocation_opportunity_tests;

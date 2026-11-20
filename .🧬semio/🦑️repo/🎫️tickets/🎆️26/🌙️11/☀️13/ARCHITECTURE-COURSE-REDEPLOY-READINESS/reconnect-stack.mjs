@@ -5,16 +5,17 @@ import { createServer } from "node:http";
 import { connect } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { freshProctor } from "./fresh-proctor.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../../../../../../..");
 const site = join(repo, "🎓️teaching/🏛️architecture/📚️course");
-const work = join(here, "🗑️generated/reconnect");
+const work = join(here, process.env.RECONNECT_WORK ?? "🗑️generated/reconnect");
 const data = join(work, "data");
-const PORT = "8797";
-const SITE_PORT = "6066";
-const executable = process.env.PROCTOR_EXECUTABLE;
-if (!executable || !existsSync(executable)) throw new Error("PROCTOR_EXECUTABLE must name the built proctor");
+const PORT = process.env.PROCTOR_PORT ?? "8797";
+const SITE_PORT = process.env.SITE_PORT ?? "6066";
+const executable = process.env.PROCTOR_EXECUTABLE ?? freshProctor("release");
+if (!existsSync(executable)) throw new Error("PROCTOR_EXECUTABLE must name the built proctor");
 rmSync(data, { recursive: true, force: true });
 mkdirSync(data, { recursive: true });
 
@@ -32,7 +33,7 @@ const serial = (task) => (queue = queue.then(task, task));
 
 const up = async () => {
   if (child) return;
-  if (await listening(PORT)) throw new Error("port 8797 is taken by a process this stack does not own");
+  if (await listening(PORT)) throw new Error(`port ${PORT} is taken by a process this stack does not own`);
   const log = openSync(join(work, "proctor.log"), "a");
   const process_ = spawn(executable, ["serve"], { env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("PROCTOR_"))), PROCTOR_PORT: PORT, PROCTOR_DATA: data, PROCTOR_COURSE: join(site, "🔣️.json"), PROCTOR_MODE: "production", PROCTOR_ALLOWED_ORIGINS: `http://127.0.0.1:${SITE_PORT}`, PROCTOR_LIMIT_SIGNUPS_PER_HOUR: "100000" }, stdio: ["ignore", log, log] });
   child = process_;
@@ -51,7 +52,7 @@ const down = async () => {
   process_.kill("SIGKILL");
   await exited;
   for (let tries = 0; tries < 100 && (await listening(PORT)); tries++) await new Promise((r) => setTimeout(r, 20));
-  if (await listening(PORT)) throw new Error("port 8797 still listens after the kill");
+  if (await listening(PORT)) throw new Error(`port ${PORT} still listens after the kill`);
 };
 await up();
 

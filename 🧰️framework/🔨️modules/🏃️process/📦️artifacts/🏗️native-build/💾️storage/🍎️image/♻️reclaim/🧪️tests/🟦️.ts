@@ -1,9 +1,11 @@
 /** ♻️ Tests for image reclaim. */
 import{test,expect}from"bun:test";
 import{spawnSync}from"node:child_process";
-import{lstatSync,mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{Database}from"bun:sqlite";
+import{lstatSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{basename,join}from"node:path";
 import{testScratchRootV1}from"../../../../../../🧪️testing/🏖️sandbox/🟦️.ts";
+import{testPythonV1}from"../../../../../../📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import imageSchema from"../../../🧬️schema/🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
@@ -25,7 +27,13 @@ const scripted=(cycle:typeof fixture.cycles[number],log:string[])=>{
   return values[Math.min(index,values.length-1)]!.replaceAll("<scratch>",scratch());
  };
 };
-const oracle=(...args:string[])=>run("/usr/bin/python3",["-I",join(import.meta.dir,"🐍️.py"),...args]).trim();
+const oracle=(...args:string[])=>{
+ const python=testPythonV1();
+ if(python===undefined)throw Error("Python required by the reclaim oracle");
+ const result=spawnSync(python,["-I",join(import.meta.dir,"🐍️.py"),...args],{encoding:"utf8"});
+ if(result.status!==0)throw result.error??Error(result.stderr);
+ return result.stdout.trim();
+};
 const fake=(log:string[],sizes:number[],options:{attached?:boolean;busy?:boolean}={}):NativeImageReclaimPortV1=>{let attached=options.attached?"/dev/disk1":null,reads=0;return{
  async attachedDevice(){return attached;},
  async detach(device){log.push("detach "+device);if(options.busy&&attached==="/dev/disk1"&&log.filter(row=>row.startsWith("detach")).length===1)throw Error("busy");attached=null;},
@@ -48,15 +56,91 @@ for(const cycle of fixture.cycles)test("cycle corpus: "+cycle.name,async()=>{
  expect(log.map(line=>scratch?line.replaceAll(scratch,"<scratch>"):line)).toEqual(cycle.expected);
 });
 test("a failed mount releases the loop device again and cancellation during the trim still detaches",async()=>{
- const log:string[]=[];
- const failing=createNativeImageLinuxReclaimPortV1({image:"/i/fixed.img",allocated:()=>1,run:async(program,args)=>{log.push(basename(program)+" "+args[0]);if(basename(program)==="mount")throw Error("mount failed");return args[0]==="--find"?"/dev/loop1\n":"";}});
+ const log:string[]=[];let associated=false;
+ const failing=createNativeImageLinuxReclaimPortV1({image:"/i/fixed.img",allocated:()=>1,run:async(program,args)=>{
+  log.push(basename(program)+" "+args[0]);
+  if(basename(program)==="mount")throw Error("mount failed");
+  if(args[0]==="--find")associated=true;
+  if(args[0]==="--detach")associated=false;
+  return associated&&(args[0]==="--find"||args[0]==="--associated")?"/dev/loop1\n":"";
+ }});
  await expect(reclaimNativeImageV1(failing,{check:()=>{},sleep:async()=>{}})).rejects.toThrow("mount failed");
- expect(log).toEqual(["losetup --associated","losetup --find","mount -o","losetup --detach"]);
+ expect(log).toEqual(["losetup --associated","losetup --find","mount -o","losetup --detach","losetup --associated"]);
  const trims:string[]=[];let checks=0;
  const base=createNativeImageLinuxReclaimPortV1({image:"/i/fixed.img",allocated:()=>1,run:async(program,args)=>{trims.push(basename(program)+" "+args[0]);return args[0]==="--find"?"/dev/loop1\n":args[0]==="--source"?"":args[0]==="--associated"&&trims.filter(row=>row==="losetup --find").length?"/dev/loop1\n":"";}});
  await expect(reclaimNativeImageV1(base,{check:()=>{if(++checks>=3)throw Error("cancelled");},sleep:async()=>{}})).rejects.toThrow("cancelled");
  expect(trims.at(-1)).toBe("losetup --detach");expect(trims).not.toContain("fstrim --verbose");
 });
+test("reclaim cleans up a partial attach and retains both failures when detach refuses",async()=>{
+ const db=new Database(":memory:");
+ try{
+  for(const refuses of [false,true]){
+   const expected=db.query("select case when ?1 then 0 else 1 end as disposed").get(Number(refuses)) as {disposed:number};
+   const log:string[]=[];
+   const primary=Error("attach failed after mounting"),cleanup=Error("device still busy");
+   let device:string|null=null;
+   const port:NativeImageReclaimPortV1={
+    async attachedDevice(){return device;},
+    async attach(){device="/dev/owned";log.push("attach");throw primary;},
+    async detach(actual){log.push("detach "+actual);if(refuses)throw cleanup;device=null;},
+    allocatedBytes(){return 1;},
+    dispose(){log.push("dispose");},
+   };
+   const error=await reclaimNativeImageV1(port,{check:()=>{}}).catch(failure=>failure);
+   expect(log.slice(0,2)).toEqual(["attach","detach /dev/owned"]);
+   expect(log.includes("dispose")).toBe(Boolean(expected.disposed));
+   if(refuses){
+    expect(error).toBeInstanceOf(AggregateError);
+    expect(error.errors).toEqual([primary,cleanup]);
+   }else expect(error).toBe(primary);
+  }
+ }finally{db.close();}
+});
+
+test("Darwin reclaim uses the supplied cleanup runner after a partial attach fails",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("reclaim"),"runner-")),image=join(directory,"fixed.dmg");
+ writeFileSync(image,"owned image");
+ const primary=Error("attach reported failure"),calls:string[]=[];
+ let scratch:string|undefined;
+ const plistImage=image.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+ const roster=(attached:boolean)=>`<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>images</key><array>${attached?`<dict><key>image-path</key><string>${plistImage}</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/owned</string></dict></array></dict>`:""}</array></dict></plist>`;
+ const port=createNativeImageDarwinReclaimPortV1({image,cwd:directory,
+  run:async(_program,args)=>{
+   calls.push("work "+args[0]);
+   if(args[0]==="info")return roster(false);
+   scratch=args[args.indexOf("--mountPoint")+1]!;
+   throw primary;
+  },
+  cleanupRun:async(_program,args)=>{
+   calls.push("cleanup "+args.join(" "));
+   return args[0]==="info"?roster(true):"";
+  },
+ });
+ try{
+  expect(await reclaimNativeImageV1(port,{check:()=>{}}).catch(error=>error)).toBe(primary);
+  expect(calls).toEqual(["work info","work image","cleanup info -plist","cleanup detach /dev/owned"]);
+  expect(lstatSync(scratch!,{throwIfNoEntry:false})).toBeUndefined();
+  expect(readFileSync(image,"utf8")).toBe("owned image");
+ }finally{
+  if(scratch)rmSync(scratch,{recursive:true,force:true});
+  rmSync(directory,{recursive:true,force:true});
+ }
+});
+
+test("Darwin scratch disposal preserves files when a reported mount still holds them",async()=>{
+ let scratch:string|undefined;
+ const image="/i/fixed.dmg",port=createNativeImageDarwinReclaimPortV1({image,cwd:"/",run:async(_program,args)=>{
+  scratch=args[args.indexOf("--mountPoint")+1]!;
+  writeFileSync(join(scratch,"payload"),"retained data");
+  return "";
+ }});
+ try{
+  await port.attach();
+  expect(()=>port.dispose()).toThrow();
+  expect(readFileSync(join(scratch!,"payload"),"utf8")).toBe("retained data");
+ }finally{if(scratch)rmSync(scratch,{recursive:true,force:true});}
+});
+
 test("only the three known platforms get a port and windows is named by either spelling",()=>{
  expect(createNativeImageReclaimPortV1("plan9",{image:"/i",cwd:"/",run:async()=>""})).toBeNull();
  expect(createNativeImageReclaimPortV1("win32",{image:"C:\\i.vhdx",cwd:"C:\\",run:async()=>""})).not.toBeNull();

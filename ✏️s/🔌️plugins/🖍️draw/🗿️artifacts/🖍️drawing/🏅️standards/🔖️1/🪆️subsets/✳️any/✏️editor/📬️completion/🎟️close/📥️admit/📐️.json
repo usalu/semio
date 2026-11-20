@@ -13,5 +13,5 @@
     "maximumTurns": 10000
   },
   "inputRetainedOnDenial": true,
-  "headerCopyBytes": 0
+  "headerCopyIncludesSourceAndFrame": true
 }

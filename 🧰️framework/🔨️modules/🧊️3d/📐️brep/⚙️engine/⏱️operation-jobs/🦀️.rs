@@ -18,7 +18,7 @@ use super::*;
 use semio_framework_3d_brep_offset::blend::BlendJob;
 use semio_framework_3d_brep_boolean::{BooleanFoldJob, SectionJob, SplitJob};
 use semio_framework_3d_brep_offset::{DraftJob, OffsetFaceJob, OffsetSolidJob, ShellJob, ThickenJob};
-use semio_framework_3d_brep_construction::primitives::ConvexHullJob;
+use semio_framework_3d_brep_construction::primitives::{make_curve_wire, planar_wire_support, ConvexHullJob};
 use semio_framework_3d_brep_construction::sew::DefeatureJob;
 use semio_framework_3d_brep_construction::staged::{StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_sweep::{ExtrudeJob, ExtrudeWireJob, LoftJob, RevolveJob, SweepJob};
@@ -32,76 +32,6 @@ fn pattern_instances(count: usize) -> Result<usize, BrepError> {
     if count > PATTERN_INSTANCE_LIMIT { return Err(BrepError::InvalidInput(format!("pattern instance count {count} exceeds {PATTERN_INSTANCE_LIMIT}"))); }
     Ok(count)
 }
-
-// #region 🔖️Descriptor
-
-/// 🧭️ One expensive kernel operation, named by its input handles and parameters. The language-agnostic
-/// fixture `🧫️fixtures/⏱️operation-jobs/🔣️.json` names the same operations and parameters.
-#[derive(Clone, Debug, PartialEq)]
-pub enum BrepOperation {
-    Fillet { shape: GeometryHandle, radius: f64 },
-    FilletVariable { shape: GeometryHandle, radius_start: f64, radius_end: f64 },
-    FilletEdges { shape: GeometryHandle, edges: Vec<GeometryHandle>, radius: f64 },
-    Chamfer { shape: GeometryHandle, distance: f64 },
-    ChamferAsymmetric { shape: GeometryHandle, first: f64, second: f64 },
-    ChamferEdges { shape: GeometryHandle, edges: Vec<GeometryHandle>, distance: f64 },
-    Shell { shape: GeometryHandle, thickness: f64, open_faces: Vec<GeometryHandle> },
-    Draft { shape: GeometryHandle, faces: Vec<GeometryHandle>, pull_direction: Vec3, neutral_point: Vec3, angle: f64 },
-    OffsetSolid { shape: GeometryHandle, distance: f64 },
-    OffsetFace { face: GeometryHandle, distance: f64 },
-    ThickenFace { face: GeometryHandle, thickness: f64 },
-    Defeature { shape: GeometryHandle, faces: Vec<GeometryHandle> },
-    Extrude { face: GeometryHandle, direction: Vec3, distance: f64 },
-    ExtrudeWire { wire: GeometryHandle, vector: Vec3 },
-    Revolve { face: GeometryHandle, axis_origin: Vec3, axis_direction: Vec3, angle: f64 },
-    Sweep { profile: GeometryHandle, path: GeometryHandle },
-    Pipe { profile: GeometryHandle, path: GeometryHandle, guide: Option<GeometryHandle> },
-    HelicalSweep { profile: GeometryHandle, axis_origin: Vec3, axis_direction: Vec3, radius: f64, pitch: f64, turns: f64 },
-    Loft { profiles: Vec<GeometryHandle>, smooth: bool },
-    Section { solid: GeometryHandle, plane_origin: Vec3, plane_normal: Vec3 },
-    Split { solid: GeometryHandle, plane_origin: Vec3, plane_normal: Vec3 },
-    CompoundCut { target: GeometryHandle, tools: Vec<GeometryHandle> },
-    LinearPattern { shape: GeometryHandle, direction: Vec3, spacing: f64, count: usize },
-    CircularPattern { shape: GeometryHandle, axis: Vec3, count: usize },
-    GridPattern { shape: GeometryHandle, dir_x: Vec3, dir_y: Vec3, spacing_x: f64, spacing_y: f64, count_x: usize, count_y: usize },
-    ConvexHull { points: Vec<Vec3> },
-}
-
-impl BrepOperation {
-    /// 🏷️ The stable camelCase name every host and fixture calls this operation by.
-    pub fn tag(&self) -> &'static str {
-        match self {
-            Self::Fillet { .. } => "fillet",
-            Self::FilletVariable { .. } => "filletVariable",
-            Self::FilletEdges { .. } => "filletEdges",
-            Self::Chamfer { .. } => "chamfer",
-            Self::ChamferAsymmetric { .. } => "chamferAsymmetric",
-            Self::ChamferEdges { .. } => "chamferEdges",
-            Self::Shell { .. } => "shell",
-            Self::Draft { .. } => "draft",
-            Self::OffsetSolid { .. } => "offsetSolid",
-            Self::OffsetFace { .. } => "offsetFace",
-            Self::ThickenFace { .. } => "thickenFace",
-            Self::Defeature { .. } => "defeature",
-            Self::Extrude { .. } => "extrude",
-            Self::ExtrudeWire { .. } => "extrudeWire",
-            Self::Revolve { .. } => "revolve",
-            Self::Sweep { .. } => "sweep",
-            Self::Pipe { .. } => "pipe",
-            Self::HelicalSweep { .. } => "helicalSweep",
-            Self::Loft { .. } => "loft",
-            Self::Section { .. } => "section",
-            Self::Split { .. } => "split",
-            Self::CompoundCut { .. } => "compoundCut",
-            Self::LinearPattern { .. } => "linearPattern",
-            Self::CircularPattern { .. } => "circularPattern",
-            Self::GridPattern { .. } => "gridPattern",
-            Self::ConvexHull { .. } => "convexHull",
-        }
-    }
-}
-
-// #endregion 🔖️Descriptor
 
 // #region 🔖️Job
 
@@ -197,6 +127,21 @@ struct Extraction {
 }
 
 impl Extraction {
+    fn boundary(&mut self, source: &Entity) -> Result<Wire, BrepError> {
+        match source {
+            Entity::Wire(wire, _) => self.wire(wire),
+            Entity::Curve(curve, _) => kernel(make_curve_wire(&mut self.body, curve.clone(), &mut OpRecorder::new())),
+            Entity::Edge(id) => {
+                let id = Self::translate(&self.map.edges, *id)?;
+                let edge = self.body.edges.get(id).ok_or_else(|| BrepError::MissingHandle(id.to_string()))?;
+                let closed = edge.v0 == edge.v1;
+                let vertices = if closed { vec![edge.v0] } else { vec![edge.v0, edge.v1] };
+                Ok(Wire { members: vec![(id, true)], vertices, closed })
+            }
+            _ => Err(BrepError::InvalidInput("profile boundary requires a wire, curve, or edge".into())),
+        }
+    }
+
     fn translate<K: Copy + Eq + std::hash::Hash + std::fmt::Display>(map: &HashMap<K, K>, id: K) -> Result<K, BrepError> {
         map.get(&id).copied().ok_or_else(|| BrepError::MissingHandle(id.to_string()))
     }
@@ -229,23 +174,36 @@ impl Brep {
     fn extraction(&self, handles: &[&GeometryHandle]) -> Result<Extraction, BrepError> {
         let mut roots = Vec::new();
         for handle in handles {
-            roots.extend(entity_roots(self.entity(handle)?));
+            roots.extend(entity_roots(self.native.entity(handle)?));
         }
-        let base = self.body.labels.next();
-        let (body, map) = self.body.extract(&roots);
+        let base = self.native.body.labels.next();
+        let (body, map) = self.native.body.extract(&roots);
         Ok(Extraction { body, map, base })
+    }
+
+    /// 🖼️ Builds a face without modifying the boundary or publishing a partial result.
+    pub(super) fn boundary_face_sync(&mut self, handle: &GeometryHandle, xy_only: bool) -> Result<GeometryHandle, BrepError> {
+        let mut x = self.extraction(&[handle])?;
+        let wire = x.boundary(self.native.entity(handle)?)?;
+        let (origin, normal) = kernel(planar_wire_support(&x.body, &wire))?;
+        if xy_only && normal.z.abs() < 1.0 - 1e-9 {
+            return Err(BrepError::InvalidInput("profile boundary must lie in a plane parallel to XY".into()));
+        }
+        let face = kernel(make_planar_face_from_wire(&mut x.body, &wire, origin, normal, &mut OpRecorder::new()))?;
+        let map = self.native.body.absorb(&x.body, &[EntityRef::Face(face)], x.base);
+        Ok(self.native.register_face(map.faces[&face]))
     }
 
     /// 🔒️ An empty working body for an operation without input shapes.
     fn empty_extraction(&self) -> Extraction {
-        let base = self.body.labels.next();
-        let (body, map) = self.body.extract(&[]);
+        let base = self.native.body.labels.next();
+        let (body, map) = self.native.body.extract(&[]);
         Extraction { body, map, base }
     }
 
     /// 🎯️ Face ids of `handles`, each resolved through the session.
     fn face_ids(&self, handles: &[GeometryHandle]) -> Result<Vec<FaceId>, BrepError> {
-        handles.iter().map(|handle| self.face_id(handle)).collect()
+        handles.iter().map(|handle| self.native.face_id(handle)).collect()
     }
 }
 
@@ -269,7 +227,7 @@ impl Brep {
     fn plan_operation(&self, operation: &BrepOperation) -> Result<Planned, BrepError> {
         match operation {
             BrepOperation::Fillet { shape, radius } => {
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let x = self.extraction(&[shape])?;
                 let solid = x.solid(solid)?;
                 let edges = all_edges(&x.body, solid);
@@ -277,7 +235,7 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::FilletVariable { shape, radius_start, radius_end } => {
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let x = self.extraction(&[shape])?;
                 let solid = x.solid(solid)?;
                 let edge = *all_edges(&x.body, solid).first().ok_or_else(|| BrepError::InvalidInput("no edges".into()))?;
@@ -286,7 +244,7 @@ impl Brep {
             }
             BrepOperation::FilletEdges { shape, edges, radius } => {
                 require_positive_size("fillet radius", *radius)?;
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let selected = self.scoped_solid_edges(solid, edges)?;
                 let x = self.extraction(&[shape])?;
                 let stage = kernel(BlendJob::fillet(&x.body, x.solid(solid)?, &x.edges(&selected)?, *radius))?;
@@ -296,7 +254,7 @@ impl Brep {
             BrepOperation::ChamferAsymmetric { shape, first, second } => self.plan_chamfer_all(shape, *first, *second),
             BrepOperation::ChamferEdges { shape, edges, distance } => {
                 require_positive_size("chamfer distance", *distance)?;
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let selected = self.scoped_solid_edges(solid, edges)?;
                 let x = self.extraction(&[shape])?;
                 let stage = kernel(BlendJob::chamfer(&x.body, x.solid(solid)?, &x.edges(&selected)?, *distance, *distance))?;
@@ -304,11 +262,11 @@ impl Brep {
             }
             BrepOperation::Shell { shape, thickness, open_faces } => {
                 require_positive_size("shell thickness", *thickness)?;
-                let solid = self.solid_id(shape)?;
-                let scope: std::collections::BTreeSet<_> = self.body.solid_faces(solid).into_iter().collect();
+                let solid = self.native.solid_id(shape)?;
+                let scope: std::collections::BTreeSet<_> = self.native.body.solid_faces(solid).into_iter().collect();
                 let mut open_ids = std::collections::BTreeSet::new();
                 for handle in open_faces {
-                    let face = self.face_id(handle)?;
+                    let face = self.native.face_id(handle)?;
                     if !scope.contains(&face) {
                         return Err(BrepError::InvalidInput("Open face is not part of the selected solid".into()));
                     }
@@ -323,7 +281,7 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Draft { shape, faces, pull_direction, neutral_point, angle } => {
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let selected = self.face_ids(faces)?;
                 let mut handles = vec![shape];
                 handles.extend(faces.iter());
@@ -334,25 +292,25 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::OffsetSolid { shape, distance } => {
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let x = self.extraction(&[shape])?;
                 let stage = kernel(OffsetSolidJob::with_default_corner(&x.body, x.solid(solid)?, *distance))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::OffsetFace { face, distance } => {
-                let id = self.face_id(face)?;
+                let id = self.native.face_id(face)?;
                 let x = self.extraction(&[face])?;
                 let stage = kernel(OffsetFaceJob::new(&x.body, x.face(id)?, *distance))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::ThickenFace { face, thickness } => {
-                let id = self.face_id(face)?;
+                let id = self.native.face_id(face)?;
                 let x = self.extraction(&[face])?;
                 let stage = kernel(ThickenJob::new(&x.body, x.face(id)?, *thickness))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Defeature { shape, faces } => {
-                let solid = self.solid_id(shape)?;
+                let solid = self.native.solid_id(shape)?;
                 let selected = self.face_ids(faces)?;
                 let mut handles = vec![shape];
                 handles.extend(faces.iter());
@@ -361,21 +319,21 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Extrude { face, direction, distance } => {
-                let id = self.face_id(face)?;
+                let id = self.native.face_id(face)?;
                 let x = self.extraction(&[face])?;
                 let stage = kernel(ExtrudeJob::new(&x.body, x.face(id)?, vec3(*direction), *distance))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::ExtrudeWire { wire, vector } => {
-                let source = self.wire_ref(wire)?.clone();
                 let distance = (vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]).sqrt();
                 let direction = if distance > 1e-15 { [vector[0] / distance, vector[1] / distance, vector[2] / distance] } else { [0.0, 0.0, 1.0] };
-                let x = self.extraction(&[wire])?;
-                let stage = kernel(ExtrudeWireJob::new(&x.body, &x.wire(&source)?, vec3(direction), distance))?;
+                let mut x = self.extraction(&[wire])?;
+                let boundary = x.boundary(self.native.entity(wire)?)?;
+                let stage = kernel(ExtrudeWireJob::new(&x.body, &boundary, vec3(direction), distance))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Revolve { face, axis_origin, axis_direction, angle } => {
-                let id = self.face_id(face)?;
+                let id = self.native.face_id(face)?;
                 let x = self.extraction(&[face])?;
                 let stage = kernel(RevolveJob::new(&x.body, x.face(id)?, pnt(*axis_origin), vec3(*axis_direction), *angle))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
@@ -383,7 +341,7 @@ impl Brep {
             BrepOperation::Sweep { profile, path } => self.plan_pipe(profile, path, None),
             BrepOperation::Pipe { profile, path, guide } => self.plan_pipe(profile, path, guide.as_ref()),
             BrepOperation::HelicalSweep { profile, axis_origin, axis_direction, radius, pitch, turns } => {
-                let id = self.face_id(profile)?;
+                let id = self.native.face_id(profile)?;
                 let x = self.extraction(&[profile])?;
                 let stage = kernel(SweepJob::helical(&x.body, x.face(id)?, (pnt(*axis_origin), vec3(*axis_direction)), *radius, *pitch, *turns))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
@@ -395,20 +353,20 @@ impl Brep {
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Section { solid, plane_origin, plane_normal } => {
-                let id = self.solid_id(solid)?;
+                let id = self.native.solid_id(solid)?;
                 let x = self.extraction(&[solid])?;
                 let stage = kernel(SectionJob::new(&x.body, x.solid(id)?, pnt(*plane_origin), vec3(*plane_normal), KERNEL_TOLERANCE))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::Split { solid, plane_origin, plane_normal } => {
-                let id = self.solid_id(solid)?;
+                let id = self.native.solid_id(solid)?;
                 let x = self.extraction(&[solid])?;
                 let stage = kernel(SplitJob::new(&x.body, x.solid(id)?, pnt(*plane_origin), vec3(*plane_normal), KERNEL_TOLERANCE))?;
                 Ok(Planned { extraction: x, stage: Box::new(stage) })
             }
             BrepOperation::CompoundCut { target, tools } => {
-                let target_id = self.solid_id(target)?;
-                let tool_ids = tools.iter().map(|tool| self.solid_id(tool)).collect::<Result<Vec<_>, _>>()?;
+                let target_id = self.native.solid_id(target)?;
+                let tool_ids = tools.iter().map(|tool| self.native.solid_id(tool)).collect::<Result<Vec<_>, _>>()?;
                 let mut handles = vec![target];
                 handles.extend(tools.iter());
                 let x = self.extraction(&handles)?;
@@ -463,7 +421,7 @@ impl Brep {
 
     /// 🎨️ Plans a chamfer of every edge of `shape` with the two face distances.
     fn plan_chamfer_all(&self, shape: &GeometryHandle, first: f64, second: f64) -> Result<Planned, BrepError> {
-        let solid = self.solid_id(shape)?;
+        let solid = self.native.solid_id(shape)?;
         let x = self.extraction(&[shape])?;
         let solid = x.solid(solid)?;
         let edges = all_edges(&x.body, solid);
@@ -473,10 +431,10 @@ impl Brep {
 
     /// ➡️ Plans a sweep of `profile` along `path` with an optional `guide`.
     fn plan_pipe(&self, profile: &GeometryHandle, path: &GeometryHandle, guide: Option<&GeometryHandle>) -> Result<Planned, BrepError> {
-        let face = self.face_id(profile)?;
-        let path_wire = self.wire_ref(path)?.clone();
+        let face = self.native.face_id(profile)?;
+        let path_wire = self.native.wire_ref(path)?.clone();
         let guide_wire = match guide {
-            Some(handle) => Some(self.wire_ref(handle)?.clone()),
+            Some(handle) => Some(self.native.wire_ref(handle)?.clone()),
             None => None,
         };
         let mut handles = vec![profile, path];
@@ -489,7 +447,7 @@ impl Brep {
 
     /// 🔂️ Plans a pattern of `shape` under `transforms`; no transform means the pattern is `shape` itself.
     fn plan_pattern(&self, shape: &GeometryHandle, transforms: Vec<Affine3>) -> Result<Planned, BrepError> {
-        let solid = self.solid_id(shape)?;
+        let solid = self.native.solid_id(shape)?;
         let x = self.extraction(&[shape])?;
         let stage = kernel(BooleanFoldJob::pattern(&x.body, x.solid(solid)?, transforms, KERNEL_TOLERANCE))?;
         Ok(Planned { extraction: x, stage: Box::new(stage) })
@@ -524,12 +482,12 @@ impl Brep {
             StageOutput::Faces(faces) => faces.iter().map(|face| EntityRef::Face(*face)).collect(),
             StageOutput::Solids(solids) => solids.iter().map(|solid| EntityRef::Solid(*solid)).collect(),
         };
-        let map = self.body.absorb(&running.scratch, &roots, running.base);
+        let map = self.native.body.absorb(&running.scratch, &roots, running.base);
         match output {
-            StageOutput::Solid(solid) => vec![self.register_solid(map.solids[&solid])],
-            StageOutput::Face(face) => vec![self.register_face(map.faces[&face])],
-            StageOutput::Faces(faces) => faces.into_iter().map(|face| self.register_face(map.faces[&face])).collect(),
-            StageOutput::Solids(solids) => solids.into_iter().map(|solid| self.register_solid(map.solids[&solid])).collect(),
+            StageOutput::Solid(solid) => vec![self.native.register_solid(map.solids[&solid])],
+            StageOutput::Face(face) => vec![self.native.register_face(map.faces[&face])],
+            StageOutput::Faces(faces) => faces.into_iter().map(|face| self.native.register_face(map.faces[&face])).collect(),
+            StageOutput::Solids(solids) => solids.into_iter().map(|solid| self.native.register_solid(map.solids[&solid])).collect(),
         }
     }
 

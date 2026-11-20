@@ -285,11 +285,11 @@ impl BrepKernel for Brep {
     /// ♻️ Equivalent to disposing every handle not in `live`, then compacting once — see
     /// [`Brep::compact_unreachable`].
     fn retain(&mut self, live: &std::collections::HashSet<String>) {
-        let mut changed=false;for slot in 0..self.live.slot_count() {if let Some(original)=self.live.extract_slot_if(slot,|key,_|live.contains(key)){drop(original);changed=true;}}if changed{self.advance_live_revision();}
-        self.compact_unreachable();
+        let mut changed=false;for slot in 0..self.native.live.slot_count() {if let Some(original)=self.native.live.extract_slot_if(slot,|key,_|live.contains(key)){drop(original);changed=true;}}if changed{self.native.advance_live_revision();}
+        self.native.compact_unreachable();
     }
     fn registry_len(&self) -> usize {
-        self.live.len()
+        self.native.live.len()
     }
     fn solid_shells(&mut self, solid: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
         self.solid_shells_sync(solid)

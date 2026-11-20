@@ -14,6 +14,13 @@
       "dispatch": { "kind": "pointer-cancel", "pointerId": 7, "pointerKind": "touch", "pressure": null, "tilt": null }
     },
     {
+      "id": "pointer-leave-clears-mouse-hover",
+      "why": "A leave is the final replaceable pointer sample until re-entry. It retires hover and preserves gesture capture.",
+      "dom": { "type": "pointerleave", "pointerId": 1, "pointerType": "mouse", "offsetX": 321, "offsetY": 40, "devicePixelRatio": 2, "shift": false, "ctrl": false, "alt": false, "meta": false },
+      "wire": { "kind": "pointer-leave", "pointerId": 1, "pointerKind": "mouse", "x": 321, "y": 40, "shift": false, "ctrl": false, "alt": false, "meta": false },
+      "dispatch": { "kind": "pointer-leave", "pointerId": 1, "pointerKind": "mouse", "pressure": null, "tilt": null }
+    },
+    {
       "id": "pointer-move-over-a-tree-row",
       "why": "The hover that must reach hit_test: page point 160.696,138 is the Generations window's Add Generation row derived from the shell's own dock plan.",
       "dom": {

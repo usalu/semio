@@ -77,7 +77,7 @@ pub use document_records::{Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, 
 
 #[path = "🧱️brep-converters/🦀️.rs"]
 mod brep_converters;
-pub use brep_converters::{brep_child_handle, brep_snapshot_for_working_solid, reference_solid, working_solid_child_handle, working_solid_from_brep_snapshot, ReferenceSolid, REFERENCE_SOLIDS, REFERENCE_SOLID_CONCRETE_FOREST_LEFT};
+pub use brep_converters::{capture_imported_brep, decode_process3d_model_data_url, pack_imported_brep, restore_imported_brep, PROCESS3D_IMPORTED_BREP_PACK_BYTES, PROCESS3D_MODEL_DATA_URL_BYTES, PROCESS3D_MODEL_FILE_BYTES, brep_child_handle, brep_snapshot_for_working_solid, reference_solid, working_solid_child_handle, working_solid_from_brep_snapshot, ReferenceSolid, REFERENCE_SOLIDS, REFERENCE_SOLID_CONCRETE_FOREST_LEFT};
 
 #[path = "🔀️flow-and-scene-converters/🦀️.rs"]
 mod flow_and_scene_converters;

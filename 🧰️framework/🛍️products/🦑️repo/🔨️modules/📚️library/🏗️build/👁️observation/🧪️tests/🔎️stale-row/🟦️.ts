@@ -1,13 +1,14 @@
-/** 🔎️ Law: the verdict "stale" on a stored project record names the first row that does not hold now (kind, path, fact, each cut short), so a read can say why a record of the fleet was refused; a record that holds names nothing; a closure row is judged through the provider, one row at a time.
+/** 🔎️ Law: the stale verdict names the exact refused row when the original verification identifies one.
  * @see ../../🟨️.mjs `verifyStoredProjectRecordV1` `firstFailingRowV1` */
 import{expect,test}from"bun:test";
 import{mkdtempSync,realpathSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 
-const observation=await import("../../🟨️.mjs") as any;
+const observation=await import("../../🟨️.mjs");
 const refused=new Set<string>();
-observation.registerClosureProviderV1({answer:()=>"true",settle:async()=>{},verify:async(rows:{path:string}[])=>rows.every(row=>!refused.has(row.path))});
+const verified:number[]=[];
+observation.registerClosureProviderV1({answer:()=>"true",settle:async()=>{},verify:async(rows,_value,failed)=>{verified.push(rows.length);const row=rows.find(row=>refused.has(row.path));if(row)failed?.(row,"closure-value");return row===undefined;}});
 const root=mkdtempSync(join(realpathSync(tmpdir()),"stale-row-")),file=join(root,"input.txt");
 writeFileSync(file,"one");
 await new Promise(done=>setTimeout(done,2200));
@@ -34,8 +35,10 @@ test("a closure row that the provider refuses is the named row of a stale record
  const path=JSON.stringify([root,"closure-a",["generated"]]);
  const cachePath=await written("closure",[path,JSON.stringify([root,"closure-b",["digest"]])]);
  expect((await observation.verifyStoredProjectRecordV1({cachePath,key:["closure"]})).verdict).toBe("holds");
+ verified.length=0;
  refused.add(path);
  const said=await observation.verifyStoredProjectRecordV1({cachePath,key:["closure"]});
  refused.clear();
  expect(said.verdict).toBe("stale");expect(said.staleRow.kind).toBe("closure");expect(said.staleRow.path).toContain("closure-a");
+ expect(said.staleRow.why).toMatch(/^closure-value; judge /u);expect(verified).toEqual([2]);
 });

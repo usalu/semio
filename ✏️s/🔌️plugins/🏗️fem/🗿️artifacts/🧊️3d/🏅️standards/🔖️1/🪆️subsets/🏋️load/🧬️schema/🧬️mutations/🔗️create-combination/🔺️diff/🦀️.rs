@@ -1,11 +1,11 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::CreateCombination;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationInsertion;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::combination_breach;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dCombinationInsertion;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::combination_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 

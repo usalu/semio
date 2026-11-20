@@ -296,7 +296,7 @@ describe("the shared serve fixture", () => {
     for (const row of fixture.serves.spawns) {
       expect(valid(row.request), JSON.stringify(row.request)).toBe(true);
       expect(devServeCommandV1(row.request as DevServeSpawnRequestV1), JSON.stringify(row.request)).toEqual(row.command);
-      expect(existsSync(join(REPO, row.command.script)), row.command.script).toBe(true);
+      expect(row.command.tool).toBe("repo");
     }
     expect(new Set(fixture.serves.spawns.map((row) => `${row.request.renderer}/${row.request.profile}`)).size).toBe(4);
     for (const request of fixture.serves.invalidRequests) expect(valid(request), JSON.stringify(request)).toBe(false);
@@ -315,7 +315,7 @@ describe("the shared serve fixture", () => {
       () => expect.unreachable("cancelled before it answered"),
       () => {
         expect(requests).toHaveLength(1);
-        expect(devServeCommandV1(requests[0]!).args).toEqual(["serve", "s", "react", "prototype"]);
+        expect(devServeCommandV1(requests[0]!).args).toEqual(["run", "@semio-tech/framework-os-dev:dev-s-react-prototype"]);
         expect(() => devServeCommandV1({ ...requests[0]!, variant: "" })).toThrow(/requires a playground variant/u);
       },
     );

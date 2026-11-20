@@ -6,10 +6,11 @@ use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 use semio_framework_3d_brep_boolean::BooleanOp;
 use semio_s_plugin_flow_brep_mesh::retire_geometry_capture;
-use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
+use semio_framework_3d_brep_engine::BrepKernel;
 
-#[path="📐️tessellate/🦀️.rs"]
-mod tessellation;
+use semio_s_plugin_flow_brep_tessellation as tessellation;
+
+use semio_s_plugin_flow_brep_original_jobs as original_jobs;
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
@@ -122,14 +123,10 @@ pub const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
 ];
 
 macro_rules! geo_operation {
-    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
+    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr $(, $retained:ident)?) => {
         pub(super) struct $name(pub(super) SessionCapture);
         impl Operator for $name {
-            fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-            fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+            geo_operation!(@plan $($retained)?);
             retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 self.0.with_kernel(|$k| {
@@ -140,20 +137,38 @@ macro_rules! geo_operation {
             }
         }
     };
-}
-
-// 🔓️ `num_operation!`/`point_operation!`/`vec_operation!`/`text_operation!` back exclusively `&self` `BrepKernel` trait
-// methods (volume/area/length/center_of_mass/distance/curve_point/curve_tangent/curve_domain/
-// curve_curvature/surface_point/surface_normal/validate) — safe to route through the read lock.
-macro_rules! num_operation {
-    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
-        pub(super) struct $name(pub(super) SessionCapture);
-        impl Operator for $name {
+    (@plan $retained:ident) => { retained_geometry_job!($retained); };
+    (@plan) => {
             fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
             fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
             fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
             fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
             fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+    };
+}
+
+// 🔓️ `num_operation!`/`point_operation!`/`vec_operation!`/`text_operation!` back exclusively `&self` `BrepKernel` trait
+// methods (volume/area/length/center_of_mass/distance/curve_point/curve_tangent/curve_domain/
+// curve_curvature/surface_point/surface_normal/validate) — safe to route through the read lock.
+macro_rules! retained_geometry_job {
+    ($operation:ident) => {
+        fn step_plan(&self, input: Dictionary, grant: semio_framework_value::RetainedCloneGrant) -> Result<(neural_engine::OperatorPlanAdmission, semio_framework_value::RetainedCloneProgress), (EvalError, Dictionary)> {
+            use super::original_jobs::{GeometryOperation, OriginalGeometryJob};
+            OriginalGeometryJob::admit(GeometryOperation::$operation, &self.0, input, grant)
+        }
+
+        fn next_plan_copy_byte_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(std::mem::size_of::<Session>()) }
+        fn next_plan_capacity_byte_demand(&self, _: &Dictionary, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(std::mem::size_of::<super::original_jobs::OriginalGeometryJob>()) }
+        fn next_plan_release_byte_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+        fn next_plan_depth_demand(&self, _: &Dictionary) -> Result<usize, semio_framework_value::ValueError> { Ok(1) }
+    };
+}
+
+macro_rules! num_operation {
+    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr $(, $retained:ident)?) => {
+        pub(super) struct $name(pub(super) SessionCapture);
+        impl Operator for $name {
+            geo_operation!(@plan $($retained)?);
             retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 self.0.with_kernel_read(|$k| {
@@ -167,14 +182,10 @@ macro_rules! num_operation {
 }
 
 macro_rules! point_operation {
-    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
+    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr $(, $retained:ident)?) => {
         pub(super) struct $name(pub(super) SessionCapture);
         impl Operator for $name {
-            fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-            fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+            geo_operation!(@plan $($retained)?);
             retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 self.0.with_kernel_read(|$k| {
@@ -209,14 +220,10 @@ macro_rules! vec_operation {
 }
 
 macro_rules! text_operation {
-    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
+    ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr $(, $retained:ident)?) => {
         pub(super) struct $name(pub(super) SessionCapture);
         impl Operator for $name {
-            fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-            fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-            fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+            geo_operation!(@plan $($retained)?);
             retire_geometry_capture!(0);
             fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
                 self.0.with_kernel_read(|$k| {
@@ -366,5 +373,5 @@ pub mod extension_guest {
 fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
 
 pub fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
-    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { crate::component::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
+    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
 }

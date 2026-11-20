@@ -209,7 +209,7 @@ fn a_probe_infers_a_room_the_document_does_not_have_and_leaves_the_session_alone
     let (snapshot, instance) = (demo(), mounted());
     let mut probe = snapshot.clone();
     let space = Space { storey: "st-ground".into(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: 4.0, y: 3.0 } }, usage: String::new(), phase: Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None };
-    probe.spaces.insert("probe".into(), space);
+    probe.spaces.cold_insert("probe".into(), space);
     let rooms = probe_rooms(Some(&instance), &probe);
     assert_eq!(rooms.get("probe").map(|room| room.status), Some(SpaceStatus::Inferred));
     assert!((30.0..48.0).contains(&rooms["probe"].area), "the room is the enclosure: {}", rooms["probe"].area);

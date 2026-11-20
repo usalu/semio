@@ -202,7 +202,12 @@ fn node_graph_domain_qualifies_every_target_kind_and_absence_suppresses_interact
     assert_eq!(node_graph_domain_targets_json(&domain, "node", &["add".into()]).expect("node targets"), r#"[{"granularity":"node","id":"flow-play-document.widget.add"}]"#);
     assert_eq!(node_graph_domain_targets_json(&domain, "edge", &["wire-1".into()]).expect("edge targets"), r#"[{"granularity":"edge","id":"flow-play-document.synapse.wire-1"}]"#);
     assert_eq!(node_graph_domain_targets_json(&domain, "handle", &["add@result".into()]).expect("handle targets"), r#"[{"granularity":"handle","id":"flow-play-document.handle.add@result"}]"#);
-    let snapshot = GraphInteractionSnapshot { node_ids: vec!["add".into()], hovered_id: Some("add".into()), hovered_handle: None, viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } };
+    let snapshot = GraphInteractionSnapshot { node_ids: vec!["add".into()], hovered_id: Some("add".into()), hovered_handle: None, hovered_edge: None, viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } };
+    let fixture: Value = serde_json::from_str(&NODE_GRAPH_SCENE_FIXTURE).unwrap();
+    let edge_id = fixture["edgeHover"]["id"].as_str().unwrap();
+    let edge = graph_projection_snapshot(Vec::new(), None, None, Some(edge_id.into()), [0.0, 0.0, 1.0]).expect("wire hit");
+    let hovered = graph_interaction_dispatch(PublishedGraphInteraction::default(), edge, Some(&domain)).expect("wire hover");
+    assert!(hovered.publish_hover);
     let dispatch = graph_interaction_dispatch(PublishedGraphInteraction::default(), snapshot, None).expect("domainless dispatch");
     assert!(!dispatch.publish_select && !dispatch.publish_hover);
     assert_eq!(dispatch.item_count(), 1, "the domain-independent viewport remains publishable");
@@ -319,7 +324,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
 fn projection_snapshot_rejects_invalid_node_graph_viewports() {
     let _serialized = engine_surface_law_guard();
     for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
-        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(semio_ui_action::BoundedActionFault::Structure)));
+        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, None, camera), Err(semio_ui_action::BoundedActionFault::Structure)));
     }
 }
 
@@ -370,5 +375,36 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
     assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
     let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();
     assert!(glyphs >= labels, "every published caption reaches the draw list as glyphs, got {glyphs} for {labels} captions");
+    semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
+}
+
+#[test]
+fn graph_viewport_exit_preserves_newer_local_hover() {
+    let _serialized = engine_surface_law_guard();
+    let cases: Value = serde_json::from_str(include_str!("../../../🕸️NodeGraph/🧪️tests/🧫️fixtures/🔣️hover.json")).unwrap();
+    let case = cases.as_array().unwrap().iter().find(|row| row["id"] == "retained graph preserves a local hover before the scene echo").unwrap();
+    let surface_id = "node-graph-viewport-hover-ownership";
+    drop_engine_surface(surface_id);
+    let mut scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
+    let mut input = InputState::default();
+    for (index, step) in case["steps"].as_array().unwrap().iter().enumerate() {
+        if let Some(node) = step["localNode"].as_str() {
+            let (x, y) = node_center_screen(surface_id, node, bounds);
+            node_graph_pointer_move_into(surface_id, &scene.controller_id, bounds, x, y, false, false, false, &mut input).unwrap();
+        }
+        scene.node_graph.as_mut().unwrap().hover = serde_json::from_value(step["scene"].clone()).unwrap();
+        if index == 0 {
+            let _ = paint_scene_into_draw_list(&scene, bounds);
+        } else {
+            assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
+        }
+        let live = ENGINE_SURFACES.with(|cell| {
+            let registry = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = registry.get(surface_id).unwrap().node_graph.as_ref() else { panic!("fixture uses Flow") };
+            semio_os_infinite_board_dag_graph::hovered_node_id(&host.dag.viewport, &host.dag.graph)
+        });
+        assert_eq!(live.as_deref(), step["live"].as_str(), "scene update {index}");
+    }
     semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
 }

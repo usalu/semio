@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `ReplaceElement`.
 use super::ReplaceElement;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_element;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementsModification;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_element;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -24,6 +24,6 @@ pub fn diff(payload: &ReplaceElement, base: &Fem3dSnapshotValue) -> protocol::Mu
     if let Some(refusal) = resolve_element(base, &payload.new_element) {
         return refusal;
     }
-    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { modified: vec![Fem3dElementsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementPatch::replacement(&payload.new_element) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { modified: vec![Fem3dElementsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementPatch::replacement(&payload.new_element) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

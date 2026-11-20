@@ -1,6 +1,6 @@
 //! 🏁️ Replaces the app-local solve result every WFC 2D window paints from.
 
-use crate::editor::wfc2d::transient::mutations::{Wfc2dTransient, Wfc2dTransientDiff};
+use super::{Wfc2dTransient, Wfc2dTransientDiff, Wfc2dTransientMutation};
 use crate::editor::wfc2d::transient::Wfc2dAssignment;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

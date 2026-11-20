@@ -14,7 +14,7 @@ import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️.tsx";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+import { formControlResetClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -119,7 +119,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           id={id}
           className={cn(
             `placeholder:text-muted-foreground text-element flex w-full border bg-transparent text-base ${borderElementClass} disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
-            formControlFocusBorderClass,
+            formControlResetClass,
             "flex-1",
             useSingleRowPropertyEditor ? "h-medium min-h-medium max-h-medium resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
             className,

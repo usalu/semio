@@ -1,6 +1,7 @@
 /** 🚀️ The runtime of the plugin activation Vite plugin: receipt observation, freshness reporting and lazy plugin materialization. The plugin shell loads it at server-configure time so the shell stays config-shaped. */
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation, withHandledScriptInvocationSignalV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { enterScriptProcessServiceV1 } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -19,6 +20,8 @@ import type { BackboneServerRequest, BackboneServerResponse } from "../../🧱�
 
 /** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
 const EXTENSION_INSTALL_META = "📥️install.json";
+
+type ServerInvocation = Parameters<Parameters<typeof receiveScriptProcessInvocation>[1]>[0];
 
 /** 🖥️ The Vite dev-server surface the activation runtime reads. */
 export type ActivationServer = {
@@ -112,6 +115,14 @@ export function activateServer(server: ActivationServer, options: ActivationVite
   server.httpServer?.once("close", dispose);
 
   const jobs = new Map<string, { readonly controller: AbortController; readonly promise: Promise<void>; readonly listeners: Set<(line: string) => void>; owners: number }>();
+  let serverOwner: Promise<ServerInvocation> | undefined;
+  let releaseServerOwner = (): void => {};
+  /** 🪪️ Receives this process's one envelope for the server's whole lifetime as a declared service and lends every lazy build its own derived invocation and control beneath it. */
+  const serverInvocation = (): Promise<ServerInvocation> => serverOwner ??= new Promise<ServerInvocation>((resolveOwner, rejectOwner) => {
+    const leaveService = enterScriptProcessServiceV1();
+    const closed = new Promise<void>((done) => { releaseServerOwner = done; });
+    receiveScriptProcessInvocation(process.env, (original) => { resolveOwner(original); return closed; }).catch(rejectOwner).finally(leaveService);
+  });
   const profile: "prototype" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "prototype";
 
   const publishOne = async (pluginId: string): Promise<void> => {
@@ -142,17 +153,25 @@ export function activateServer(server: ActivationServer, options: ActivationVite
       const promise = (async () => {
         console.log(`[lazy-activate] build ${pluginId} through the build driver`);
         const { buildComponentClosureV1 } = await import("@semio-tech/framework-plugin/build/driver-stages");
-        await receiveScriptProcessInvocation(process.env,async original=>{
-          const {repositoryCargoNetworkV1}=await import("@semio-tech/repo-lib/cargo");
-          const parent=scriptCompilerAdmissionControlV1(original,"vite:lazy-activate:"+pluginId,0,controller.signal);
-          const control={...parent,publish:async(progress:Parameters<typeof parent.publish>[0])=>{await parent.publish(progress);for(const listener of listeners)listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`);}};
-          await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{facet:"browser",invocation:original,control,network:repositoryCargoNetworkV1(original,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
-          checkResourceLeaseControl(control);
-          await publishOne(pluginId);
-          checkResourceLeaseControl(control);
-          const rebuiltAt=readActivationReceipt(options.receiptDirectory).plugins.find((row)=>row.pluginId===pluginId)?.rebuiltAt??Date.now();
-          send({kind:"built",pluginId,rebuiltAt});
-        }).catch((error:unknown)=>{throw controller.signal.aborted?new Error(`cancelled ${pluginId}`):error;});
+        const {repositoryCargoNetworkV1}=await import("@semio-tech/repo-lib/cargo");
+        const original=await serverInvocation();
+        let failure:{readonly error:unknown}|undefined;
+        const result=await withHandledScriptInvocationSignalV1(original,controller.signal,async child=>{
+          try{
+            const control=scriptCompilerAdmissionControlV1(child,"vite:lazy-activate:"+pluginId,0);
+            await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{facet:"browser",invocation:child,control,network:repositoryCargoNetworkV1(child,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
+            checkResourceLeaseControl(control);
+            await publishOne(pluginId);
+            checkResourceLeaseControl(control);
+            const rebuiltAt=readActivationReceipt(options.receiptDirectory).plugins.find((row)=>row.pluginId===pluginId)?.rebuiltAt??Date.now();
+            send({kind:"built",pluginId,rebuiltAt});
+          }catch(error){
+            if(controller.signal.aborted)throw error;
+            failure={error};
+          }
+        });
+        if(failure)throw failure.error;
+        if(result.status==="cancelled"||controller.signal.aborted)throw new Error(`cancelled ${pluginId}`);
       })().finally(() => { jobs.delete(pluginId); });
       job = { controller, promise, listeners, owners: 0 };
       jobs.set(pluginId, job);
@@ -210,12 +229,13 @@ export function activateServer(server: ActivationServer, options: ActivationVite
       }
     })();
   };
-  server.httpServer?.once("listening", prefetch);
+  if (options.prefetchMissingComponents !== false) server.httpServer?.once("listening", prefetch);
   const priorDispose = dispose;
   dispose = (): void => {
     unrouteActivation();
     for (const job of jobs.values()) job.controller.abort(new Error("dev server closing"));
     jobs.clear();
+    releaseServerOwner();
     priorDispose();
   };
   return () => dispose();

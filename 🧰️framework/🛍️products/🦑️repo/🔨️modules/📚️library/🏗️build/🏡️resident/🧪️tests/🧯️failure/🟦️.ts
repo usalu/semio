@@ -3,7 +3,8 @@ import {expect,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {accessDeniedOfV1,deniedPlaceOfV1,failureBlockV1,failureDetailV1,failureMessageV1,failureRefusalV1,mirrorFailureV1,heavyRefusalOfV1,leaseRefusalOfV1,serviceFactsV1,wantedRefusalOfV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
+import {accessDeniedOfV1,deniedPlaceOfV1,failureBlockV1,failureDetailV1,failureMessageV1,failureRefusalV1,mirrorFailureV1,heavyRefusalOfV1,leaseRefusalOfV1,leaseTimeoutRefusalOfV1,serviceFactsV1,wantedRefusalOfV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
+import {ResourceLeaseTimeoutErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {LeaseOrderErrorV1,type LeaseViolationV1} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 
@@ -212,4 +213,16 @@ test("a read refused by the lease order is a typed refusal in both languages tha
   for(const key of ["host-lease-refused","host-lease-refused-unregistered"])expect(text.match(new RegExp('"'+key+'":"[^"]*\\{seconds\\}[^"]*\\{requested\\}',"gu"))).toHaveLength(2);
   expect(text.match(/"host-lease-refused":"[^"]*\{holderPid\}[^"]*\{holderCommand\}[^"]*\{holderSeconds\}/gu)).toHaveLength(2);
   expect(logs.some(line=>line.startsWith("lease-refused "))).toBe(true);
+});
+
+test("a lease wait that ran out, of any lease class, is a typed refusal in both languages that names the resource, the mode, the seconds and the holder, not an unexpected failure",()=>{
+  const error=new ResourceLeaseTimeoutErrorV1({directory:"/nowhere/leases",resource:"native-storage:ab12",mode:"exclusive"},62000);
+  const fields={requested:"native-storage:ab12",mode:"exclusive",seconds:"62",holderPid:"?",holderCommand:"?",holderSeconds:"?"};
+  expect(leaseTimeoutRefusalOfV1(error)).toEqual(fields);expect(leaseTimeoutRefusalOfV1(new Error("outer",{cause:error}))).toEqual(fields);expect(leaseTimeoutRefusalOfV1(new Error("secret"))).toBeUndefined();
+  expect(refuse(error,{root:"/Users/Shared/semio"})).toEqual({code:"unserved",key:"host-lease-timeout-unregistered",fields,retry:"later"});
+  const named={code:"SEMIO_LEASE_TIMEOUT",resource:"native-storage:ab12",mode:"shared",waitedMilliseconds:84000,holder:{pid:12936,command:"bun script.ts component",heldSeconds:610}};
+  expect(leaseTimeoutRefusalOfV1(named)).toMatchObject({holderPid:"12936",holderCommand:"bun script.ts component",holderSeconds:"610"});
+  const text=JSON.stringify(schema);
+  for(const key of ["host-lease-timeout","host-lease-timeout-unregistered"])expect(text.match(new RegExp('"'+key+'":"[^"]*\\{seconds\\}[^"]*\\{requested\\}',"gu"))).toHaveLength(2);
+  expect(text.match(/"host-lease-timeout":"[^"]*\{holderPid\}[^"]*\{holderCommand\}[^"]*\{holderSeconds\}/gu)).toHaveLength(2);
 });

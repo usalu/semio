@@ -1,0 +1,8 @@
+{
+  "host": { "memoryMegabytes": 8192, "cores": 4, "treeShare": 0.4, "limitMegabytes": 2048 },
+  "walks": [
+    { "name": "small", "groups": 10, "leaves": 6, "rows": 14223, "listed": 14211, "packages": 10, "rowsSha": "6b80b5aec2cf721ff14cbbf286b3b8f6b9a8a13217a797fa53b4235f94f0983a", "scopesSha": "4c5db9e8b07cca197eacdf1fbcde630c57308701daa8c8df84333cb648bb4501", "textsSha": "59cd6e943951c446b4493f083881e7169a2f411f7f5232659d3041b09083835f" },
+    { "name": "medium", "groups": 20, "leaves": 12, "rows": 52443, "listed": 52421, "packages": 20, "rowsSha": "9ea696bd1379bddeaf4b2c04107595af6744b1a929d86a85718f6134859bb6da", "scopesSha": "a6e79a90878ea8cbd1daef963eb5b8b51bc367e2c804b99015221dbbc40bc4b0", "textsSha": "49cb41926ffe0016b0bdc80f8fe22e64a36fde2fe2badfef8403f32f753a51f6" }
+  ],
+  "large": { "name": "five hundred thousand paths", "groups": 50, "leaves": 48, "rows": 491103, "listed": 491051, "packages": 50, "rowsSha": "1378242f23814d85792cec604809e70914a6382d78a00a1bca6ca75616a1ea47", "scopesSha": "e8d65d4d083f9dfc36512cedc0d526ae00e9efdfbe561122a59e1ae13d32f964", "textsSha": "ab59ce2cc6ab2ce518ccc3ad55a0c9767c92483a7169ecf1f8b724295d1fab71" }
+}

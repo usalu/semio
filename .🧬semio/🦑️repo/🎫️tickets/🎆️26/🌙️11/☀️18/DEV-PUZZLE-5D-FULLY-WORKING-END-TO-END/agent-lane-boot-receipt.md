@@ -1,0 +1,15 @@
+# Agent lane boot publication receipt
+
+The stable Puzzle5D v1 executable reproduced the native editor agent-lane boot failure in `the_agent_lane_runs_the_puzzle5d_editors_own_tool_command_job` with `RUST_MIN_STACK=67108864`. The operation returned `original lifecycle child receipt differs from its whole producer receipt` during mounted store publication.
+
+A debugger watchpoint on the mounted operation's receipt field identified the `PreparationProgress` branch in the typed operation publisher. The store returned one item and 24 copied bytes. The publisher settled that receipt on the original receiving scope, which also performed its own bookkeeping. The context advanced by seven items and 1,066 copied bytes. Four items and 728 bytes belonged to reserved returns. The remaining three items and 338 bytes included the producer's settled receipt and the receiving scope's own overhead. The pump had attempted to subtract that combined spend from the store receipt alone.
+
+Store preparation and completed store publication settle their semantic receipts on the original receiving scope. Acknowledged page retirement settles through its own source effect. The publication pump collects directly posted spend by measuring the context's movement, with reserved returns accounted for on their existing reservation. It still reconciles unposted producer receipts through exact subtraction.
+
+The targeted TypeScript laws passed five tests, including a SQLite comparison against the debugger's measured currencies, the native receiving path, and the continuation stopping on a pending receipt.
+
+The first rebuilt native executable passed the original failure point. It stopped when `setActiveExample` reached 4,096 publication attempts without advancing. A breakpoint counted 744 calls to the native store receiving path and confirmed that the publication waited while two returned document snapshot roots remained. The root allowance is one. The registered fixture had only offered maintenance after all typed operations became unrunnable, so the still-runnable publication prevented its own prerequisite from running.
+
+The runtime runs `RuntimeLiveCleanupJob` independently of runnable publication. The fixture now follows that ordering by offering the app's actual mounted maintenance phase whenever maintenance owns work, validating the gross physical receipt and terminal witness, and renewing the fixture's original turn before publication. The publication memory bound and runtime maintenance schedule were preserved.
+
+The following rebuilt native run cleared that wait and reached aggregate canonical edit sealing. During its count traversal the store refused a two-item, 5,112-byte receipt under a one-item grant. The native canonical alias helper had counted the source binding and the caller-slot transfer as two items despite both steps moving the same alias. It now preflights the full physical quote before binding and counts one published alias while preserving both transfers' bytes and work. The focused SQLite alias identity and accounting law passed. Native verification of the final boot result is pending the next rebuild.

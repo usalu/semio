@@ -43,7 +43,7 @@ test("discovery finds the incremental directories of the declared bases and noth
  const store=mkdtempSync(join(tmpdir(),"sinc-"));
  try{
   for(const path of ["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","t/p/release/incremental","u/l/d1/prototype/incremental","components/f1/b/prototype/incremental","tmp/x/incremental","cargo/home/registry/incremental"])mkdirSync(join(store,path),{recursive:true});
-  expect(incrementalRootsV1(store).map(path=>path.slice(store.length+1))).toEqual(["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","components/f1/b/prototype/incremental","t/p/release/incremental","u/l/d1/prototype/incremental"]);
+  expect(incrementalRootsV1(store)).toEqual(["b/p/prototype/incremental","b/p/wasm32-unknown-unknown/prototype/incremental","b/r/debug/incremental","components/f1/b/prototype/incremental","t/p/release/incremental","u/l/d1/prototype/incremental"].map(path=>join(store,path)));
  }finally{rmSync(store,{recursive:true,force:true});}
 });
 

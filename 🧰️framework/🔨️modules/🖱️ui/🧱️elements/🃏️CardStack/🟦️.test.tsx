@@ -76,6 +76,60 @@ describe("CardStack", () => {
     expect(a!.style.getPropertyValue("min-block-size")).toBe("101px");
   });
 
+  it("settles: further measure passes of an unchanged stack write no style at all", async () => {
+    const reads = measure({ "window-chrome-cap": 28, "window-chrome-footer": 28 }, { "window-chrome-footer-right": [300, 400], "window-chrome-chip-cap": [0, 100] });
+    const { container } = render(<CardStack>{card("a", { footerRight: <OverviewCardAction primary>Next</OverviewCardAction> })}{card("b")}{card("c")}</CardStack>);
+    const before = [...container.querySelectorAll("[data-overview-card]")].map(element => element.getAttribute("style"));
+    expect(before.some(style => style?.includes("--card-stack-lift"))).toBe(true);
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver(list => records.push(...list));
+    observer.observe(container, { attributes: true, subtree: true });
+    reads.mockClear();
+    for (let pass = 0; pass < 3; pass++) { window.dispatchEvent(new Event("resize")); await new Promise(resolve => setTimeout(resolve, 40)); }
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+    expect(reads).toHaveBeenCalled();
+    expect(records).toEqual([]);
+    expect([...container.querySelectorAll("[data-overview-card]")].map(element => element.getAttribute("style"))).toEqual(before);
+  });
+
+  it("retains the interlock when the entire stack moves", async () => {
+    const reads = measure({ "window-chrome-cap": 28, "window-chrome-footer": 28 }, { "window-chrome-footer-right": [300, 400], "window-chrome-chip-cap": [0, 100] });
+    const measureCard = reads.getMockImplementation()!;
+    let shift = 0;
+    reads.mockImplementation(function (this: HTMLElement) {
+      const box = measureCard.call(this);
+      return { ...box, x: box.x + shift, left: box.left + shift, right: box.right + shift, y: box.y + shift, top: box.top + shift, bottom: box.bottom + shift } as DOMRect;
+    });
+    const { container } = render(<CardStack>{card("a", { footerRight: <OverviewCardAction primary>Next</OverviewCardAction> })}{card("b")}</CardStack>);
+    const stack = container.querySelector("[data-card-stack]")!;
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver(list => records.push(...list));
+    observer.observe(stack, { attributes: true, attributeFilter: ["style"], subtree: true });
+    reads.mockClear();
+    shift = 50;
+    window.dispatchEvent(new Event("resize"));
+    await new Promise(resolve => setTimeout(resolve, 40));
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+    expect(reads).toHaveBeenCalled();
+    expect(records.filter(record => (record.target as Element).matches("[data-overview-card], [data-overview-card-stack]"))).toHaveLength(0);
+  });
+
+  it("rechecks footer structure when a chip changes the seam without growing the row", async () => {
+    measure({ "window-chrome-cap": 28, "window-chrome-footer": 28 }, { "window-chrome-footer-right": [300, 400], "window-chrome-footer-left": [50, 100], "window-chrome-chip-cap": [0, 100] });
+    const { container } = render(<CardStack>{card("a", { footerRight: <OverviewCardAction primary>Next</OverviewCardAction> })}{card("b")}</CardStack>);
+    const footer = container.querySelector("[data-card='a'] [data-slot='window-chrome-footer']")!;
+    const below = container.querySelector("[data-card='b']")!;
+    expect(vars(below)).toEqual(["30px", "28px", "0px"]);
+    const chip = document.createElement("div");
+    chip.setAttribute("data-window-silhouette-chip", "");
+    chip.setAttribute("data-slot", "window-chrome-footer-left");
+    footer.append(chip);
+    await new Promise(resolve => setTimeout(resolve, 40));
+    expect(vars(below)).toEqual(["2px", "0px", "0px"]);
+  });
+
   it("is a gapless, paddingless column", () => {
     const { container } = render(<CardStack maxWidth="56rem">{card("a")}</CardStack>);
     const stack = container.querySelector("[data-card-stack]") as HTMLElement;

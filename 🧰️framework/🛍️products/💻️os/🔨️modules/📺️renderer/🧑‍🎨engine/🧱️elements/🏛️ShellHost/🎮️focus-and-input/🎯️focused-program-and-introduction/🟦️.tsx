@@ -96,6 +96,7 @@ export function useFocusedProgramAndIntroductionState({ core }: { readonly core:
    * is editing. While a spawned editor owns the canvas the session's ledger is still kept — it is
    * just not what is shown — so coming back to it shows its own rows, not the editor's. */
   const focusedHistoryKey = programHistoryKeyV1(focusedProgram);
+  core.focusedExampleProgramRef.current = focusedHistoryKey;
   const focusedHistoryV1 = useCallback(() => programHistoryProjectionV1(historyStore.get(), focusedHistoryKey, EMPTY_SHELL_HISTORY_PROJECTION_V1), [historyStore, focusedHistoryKey]);
   const historyCanUndo = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().canUndo, () => false);
   const historyCheckpointId = useSyncExternalStore(historyStore.subscribe, () => focusedHistoryV1().currentCheckpointId, () => undefined);
@@ -133,6 +134,7 @@ export function useFocusedProgramAndIntroductionState({ core }: { readonly core:
     const live = [programHistoryKeyV1(session), ...spawnedAppsRef.current.map((entry) => programHistoryKeyV1(entry))];
     historyStore.update((projections) => programHistoryProjectionsRetainedV1(projections, live));
     for (const key of [...historyOrderByProgramRef.current.keys()]) if (!live.includes(key)) historyOrderByProgramRef.current.delete(key);
+    for (const key of core.committedExamplesByProgramRef.current.keys()) if (!live.includes(key)) core.committedExamplesByProgramRef.current.delete(key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spawnedRosterKey, session?.pluginId, session?.instanceId]);
   /** 🪟️ The focused program's live window instances, in the ONE shape every consumer reads: a spawned

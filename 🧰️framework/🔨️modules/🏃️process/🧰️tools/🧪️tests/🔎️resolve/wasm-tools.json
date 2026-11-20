@@ -1,0 +1,47 @@
+[
+  {
+    "tool": "wasm-bindgen",
+    "platform": "darwin",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-bindgen"
+  },
+  {
+    "tool": "wasm-bindgen",
+    "platform": "linux",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-bindgen"
+  },
+  {
+    "tool": "wasm-bindgen",
+    "platform": "win32",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-bindgen.exe"
+  },
+  {
+    "tool": "wasm-pack",
+    "platform": "darwin",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-pack"
+  },
+  {
+    "tool": "wasm-pack",
+    "platform": "linux",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-pack"
+  },
+  {
+    "tool": "wasm-pack",
+    "platform": "win32",
+    "path": ".cache/b/r/m/cargo/home/bin/wasm-pack.exe"
+  },
+  {
+    "tool": "wasm-opt",
+    "platform": "darwin",
+    "path": ".cache/b/t/m/binaryen/130/darwin-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bin/wasm-opt"
+  },
+  {
+    "tool": "wasm-opt",
+    "platform": "linux",
+    "path": ".cache/b/t/m/binaryen/130/linux-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bin/wasm-opt"
+  },
+  {
+    "tool": "wasm-opt",
+    "platform": "win32",
+    "path": ".cache/b/t/m/binaryen/130/win32-arm64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bin/wasm-opt.exe"
+  }
+]

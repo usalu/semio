@@ -2,14 +2,25 @@
 use super::*;
 use semio_s_artifact_draw_drawing_scene::raster::RasterSceneContent;
 fn fixture_grant(items:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:16777216,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128}}
-fn fixture_close(job:DrawingImageAdmissionJob){let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("drawing image fixture owner unsupported"));for _ in 0..2000000{if owner.terminal_is_empty(){return;}let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()};assert!(owner.step(grant).unwrap().progress().fits(grant));}panic!("drawing image fixture close stalled")}
-fn fixture_admit(input:ImageDecodeInput<'_>,items:usize)->Result<DrawingImageAsset,ImageDecodeError>{let source=input.data;let mut job=DrawingImageAdmissionJob::new(input)?;let result=(||{while !job.advance(source,fixture_grant(items))?.0.done{}Ok(job.take_result(fixture_grant(1))?.unwrap().0)})();fixture_close(job);result}
+fn fixture_admit(input:ImageDecodeInput<'_>,items:usize)->Result<DrawingImageAsset,ImageDecodeError>{
+ let source=input.data;
+ let mut job=DrawingImageAdmissionJob::new(input)?;
+ let mut wallet=image_fixture_wallet();
+ let result=(||{
+  while !advance_image_fixture(&mut job,source,fixture_grant(items),&mut wallet)?.0.done {}
+  let (asset,receipt)=job.take_result(fixture_grant(1))?.unwrap();
+  wallet.post(receipt).unwrap();
+  Ok(asset)
+ })();
+ close_image_fixture(job,&mut wallet);
+ result
+}
 #[test]
 fn drawing_image_admission_publishes_neutral_samples_under_independent_grants(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut witnesses=0;
  for row in fixture["cases"].as_array().unwrap(){let bytes=row["png"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();let encoded=base64_codec::base64_standard_encode(&bytes);
   for data in [encoded.clone(),format!("data:image/png;base64,{encoded}")]{for items in [1,7,4096]{let asset=fixture_admit(ImageDecodeInput{mime:"image/png",data:&data,max_source_bytes:4096,max_bytes:4096,max_pixels:4096,max_chunks:64},items).unwrap();let expected:DrawingImageAsset=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(asset,expected);witnesses+=1;}
-   let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&data,max_source_bytes:4096,max_bytes:4096,max_pixels:4096,max_chunks:64}).unwrap();assert_eq!(job.advance(&data,Default::default()).unwrap().1,Default::default());job.advance(&data,fixture_grant(1)).unwrap();job.cancel();assert!(matches!(job.advance(&data,fixture_grant(1)),Err(ImageDecodeError::Cancelled)));assert!(job.result().is_err());fixture_close(job);
+   let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&data,max_source_bytes:4096,max_bytes:4096,max_pixels:4096,max_chunks:64}).unwrap();let mut wallet=image_fixture_wallet();assert_eq!(advance_image_fixture(&mut job,&data,Default::default(),&mut wallet).unwrap().1,Default::default());advance_image_fixture(&mut job,&data,fixture_grant(1),&mut wallet).unwrap();job.cancel();assert!(matches!(advance_image_fixture(&mut job,&data,fixture_grant(1),&mut wallet),Err(ImageDecodeError::Cancelled)));assert!(job.result().is_err());close_image_fixture(job,&mut wallet);
   }
  }
 }

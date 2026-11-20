@@ -6,303 +6,281 @@
 
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::modules::encryption::Decryptor;
-use crate::standards::v1_7::subsets::base::modules::filters::decode_stream;
-use crate::standards::v1_7::subsets::base::modules::lexer::{brute_force_scan, dict_i64, find_last_subslice, parse_indirect_at, Lexer};
+use crate::standards::v1_7::subsets::base::modules::filters::decode_stream_admitted;
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_i64, find_last_subslice, frame_indirect_with_length, ObjectScanCursor, ObjectScanStep, NormalObject, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, retain_stream_entry, CosGrant, CosLimits, CosStatus, Lexer};
 use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamFilter};
 use std::collections::{HashMap, HashSet};
 
+#[path = "🌐️file-structure/🦀️.rs"]
+mod file_structure;
+pub use file_structure::{PdfFileStructure, PdfFileStructureCursor, PdfFileStructureEvent, PdfFileStructureReceipt};
+
+
+pub use semio_s_artifact_stdio_pdf_xref_stream::{ObjectStreamCursor, ObjectStreamEvent, ObjectStreamReceipt, ObjectStreamHeaderCursor, ObjectStreamHeaderEvent, ObjectStreamHeaderReceipt, ObjectStreamMemberCursor, XrefEntry, XrefStreamError, XrefStreamEvent, XrefStreamReceipt, XrefStreamRowCursor, XrefStreamSectionCursor};
+pub use semio_s_artifact_stdio_pdf_xref_stream::{RevisionIndex, XrefIndex, XrefIndexLookup, XrefIndexScan, XrefIndexStatus, XrefRow};
+pub use semio_s_artifact_stdio_pdf_xref_stream::{ClassicSectionCursor, ClassicSectionEvent, ClassicSectionReceipt, ClassicXrefCursor, ClassicXrefEvent, ClassicXrefReceipt, FooterCursor, FooterStep};
+
+pub use semio_s_artifact_stdio_pdf_xref_stream::{
+    NormalProjection, NormalProjectionCursor, NormalProjectionEvent, NormalProjectionReceipt,
+    StructuredXrefCursor, StructuredXrefEvent, StructuredXrefReceipt,
+    XrefFileOrderCursor, XrefFileOrderEvent, XrefFileOrderReceipt,
+    GraphMaterializationEvent, GraphMaterializationReceipt, RetainedGraphBuilder,
+    StructuredTrailer, XrefTrailerCursor, XrefIndexReceipt,
+    XrefAssemblyCursor, XrefAssemblyEvent, XrefAssemblyReceipt,
+    XrefOffsetCursor, XrefOffsetStatus, XrefRevisionCursor, XrefRevisionEvent, XrefRevisionReceipt,
+};
 
 /// 🧮 Trailer keys the writer derives from the file it lays out (ISO 32000-1 §7.5.5, §7.5.8.2) —
 /// never document content, so a reader drops them and a writer states them afresh.
 pub const WRITER_TRAILER_KEYS: [&str; 10] = ["Size", "Prev", "XRefStm", "Encrypt", "Type", "W", "Index", "Filter", "DecodeParms", "Length"];
 //#region 🔖️Entries
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum XrefEntry {
-    Normal { offset: usize, gen: u16 },
-    Compressed { stream_num: u32, index: u32 },
-}
-
 /// 🧾 The merged cross-reference state of a file: every live entry plus the first (newest)
 /// trailer dictionary.
 pub struct XrefState {
-    pub entries: HashMap<u32, XrefEntry>,
+    pub entries: XrefIndex,
     pub trailer: Vec<PdfDictEntry>,
     pub brute_forced: bool,
 }
 //#endregion 🔖️Entries
 
 //#region 🔖️Parsing
-/// 📐️ Decodes one row of an xref stream given `/W = [w0,w1,w2]` (field widths in bytes; `w0==0`
-/// defaults field 1/type to `1` per §7.5.8.2).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
-    let mut pos = 0usize;
-    let mut read = |width: usize, default: u64| -> u64 {
-        if width == 0 {
-            return default;
-        }
-        let mut v: u64 = 0;
-        for _ in 0..width {
-            v = (v << 8) | *row.get(pos).unwrap_or(&0) as u64;
-            pos += 1;
-        }
-        v
-    };
-    let f0 = read(w[0], 1);
-    let f1 = read(w[1], 0);
-    let f2 = read(w[2], 0);
-    (f0 as u8, f1, f2)
-}
-
-/// 🌊 Parses a classic `xref` table + its `trailer` dict starting at `offset`. Handles multiple
-/// subsections; lenient about the fixed-width-20-byte convention (splits on whitespace instead).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let mut lex = Lexer::new(data).at(offset);
-    lex.skip_ws();
-    if !lex.consume_keyword(b"xref") {
-        return malformed("expected 'xref' keyword");
-    }
-    let mut entries = HashMap::new();
-    loop {
-        lex.skip_ws();
-        if lex.starts_with(b"trailer") {
-            break;
-        }
-        if !matches!(lex.peek(), Some(b'0'..=b'9')) {
-            break;
-        }
-        let start = match lex.parse_number()? {
-            PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection start"),
-        };
-        lex.skip_ws();
-        let count = match lex.parse_number()? {
-            PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection count"),
-        };
-        for i in 0..count {
-            lex.skip_ws();
-            if lex.starts_with(b"trailer") {
-                break;
-            }
-            let off_tok = lex.read_regular_run();
-            lex.skip_ws();
-            let gen_tok = lex.read_regular_run();
-            lex.skip_ws();
-            let flag_tok = lex.read_regular_run();
-            let off: usize = std::str::from_utf8(off_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let gen: u16 = std::str::from_utf8(gen_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let in_use = flag_tok.first() == Some(&b'n');
-            if in_use {
-                entries.entry(start + i).or_insert(XrefEntry::Normal { offset: off, gen });
-            }
-        }
-    }
-    lex.skip_ws();
-    if !lex.consume_keyword(b"trailer") {
-        return malformed("expected 'trailer' keyword");
-    }
-    lex.skip_ws();
-    let trailer = match lex.parse_object()? {
-        PdfObject::Dict(d) => d,
-        _ => return malformed("trailer is not a dict"),
-    };
-    Ok((entries, trailer))
-}
-
-/// 🌊 Parses an xref STREAM (`/Type /XRef`) at `offset` (§7.5.8).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let (_id, obj) = parse_indirect_at(data, offset)?;
-    let (dict, raw) = match &obj {
-        PdfObject::Stream { dict, data, .. } => (dict.clone(), data.clone()),
-        _ => return malformed("xref stream object is not a stream"),
-    };
-    let (decoded, _) = decode_stream(&dict, &raw)?;
-    let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
-        _ => return malformed("xref stream missing /W"),
-    };
-    let size = dict_i64(&dict, "Size").unwrap_or(0);
-    let index: Vec<i64> = match dict.iter().find(|e| e.key == "Index").map(|e| &e.value) {
-        Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_i64()).collect(),
-        _ => vec![0, size],
-    };
-    let row_bytes = w[0] + w[1] + w[2];
-    if row_bytes == 0 {
-        return malformed("xref stream /W is all zero");
-    }
-    let mut entries = HashMap::new();
-    let mut pos = 0usize;
-    for chunk in index.chunks(2) {
-        if chunk.len() < 2 {
-            break;
-        }
-        let (start, count) = (chunk[0].max(0) as u32, chunk[1].max(0) as u32);
-        for i in 0..count {
-            if pos + row_bytes > decoded.len() {
-                break;
-            }
-            let (ty, f1, f2) = decode_xref_row(&decoded[pos..pos + row_bytes], w);
-            pos += row_bytes;
-            let num = start + i;
-            match ty {
-                1 => {
-                    entries.entry(num).or_insert(XrefEntry::Normal { offset: f1 as usize, gen: f2 as u16 });
-                }
-                2 => {
-                    entries.entry(num).or_insert(XrefEntry::Compressed { stream_num: f1 as u32, index: f2 as u32 });
-                }
-                _ => {}
-            }
-        }
-    }
-    Ok((entries, dict))
-}
-
 /// 🧵 Follows `/Prev` (and hybrid `/XRefStm`) chains from `start_offset`, merging older sections
 /// without overwriting newer entries. Falls back to a brute-force `N G obj` scan if the structured
 /// chain can't even be started, and to the scan for any offset that does not point at its object.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn build_xref(data: &[u8], start_offset: Option<usize>) -> XrefState {
-    let mut entries: HashMap<u32, XrefEntry> = HashMap::new();
-    let mut trailer: Vec<PdfDictEntry> = Vec::new();
-    let mut visited = HashSet::new();
-    let mut cursor = start_offset;
-    let mut any_structured = false;
-    while let Some(off) = cursor {
-        if !visited.insert(off) || off >= data.len() {
-            break;
-        }
-        let parsed = {
-            let mut l = Lexer::new(data).at(off);
-            l.skip_ws();
-            if l.starts_with(b"xref") {
-                parse_classic_xref(data, off)
-            } else {
-                parse_xref_stream(data, off)
+pub fn build_xref(data: &[u8]) -> PResult<XrefState> {
+    collect_xref(data, true).ok_or_else(|| PdfEngineError::Malformed("unable to reconstruct the PDF cross-reference table".into()))
+}
+
+/// 🔍️ Reads an intact xref without entering recovery, for selecting the file’s offset convention.
+pub fn structured_xref(data: &[u8]) -> Option<XrefState> {
+    collect_xref(data, false)
+}
+
+fn collect_xref(data: &[u8], repair: bool) -> Option<XrefState> {
+    let mut cursor = StructuredXrefCursor::new(data.len(), CosLimits::default(), usize::MAX);
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    let result = loop {
+        match cursor.advance(data, grant, false).event {
+            Ok(StructuredXrefEvent::More) => {}
+            Ok(StructuredXrefEvent::RecoveryRequired) => {
+                if cursor.recover_compatible(data).ok() != Some(true) && !cursor.skip_failed() { break None; }
             }
+            Ok(StructuredXrefEvent::Complete { offsets_valid }) => break cursor.take().map(|(index, trailer)| (index, trailer, offsets_valid)),
+            _ => break None,
+        }
+    };
+    cursor.begin_close();
+    loop {
+        match cursor.close_step(grant).event {
+            Ok(StructuredXrefEvent::Closed) => break,
+            Ok(StructuredXrefEvent::More) => {}
+            _ => return None,
+        }
+    }
+    let (entries, primary_trailer, offsets_agree) = result?;
+    let root_resolvable = primary_trailer.get_inheritable("Root")
+        .and_then(PdfObject::as_ref)
+        .is_some_and(|root| entries.get(&root.num).is_some_and(|entry| generation(entry) == root.gen));
+    finish_xref(data, entries, primary_trailer.into_entries(), offsets_agree, root_resolvable, repair)
+}
+
+fn finish_xref(data: &[u8], mut entries: XrefIndex, mut trailer: Vec<PdfDictEntry>, offsets_agree: bool, root_resolvable: bool, repair: bool) -> Option<XrefState> {
+    let brute_forced = !offsets_agree || !root_resolvable;
+    if brute_forced {
+        if !repair { return None; }
+        recover_xref(data, &mut entries, &mut trailer, !root_resolvable)?;
+    }
+    Some(XrefState { entries, trailer, brute_forced })
+}
+
+/// 🗺️ Reads the authored header and assembles the index in the selected source coordinates.
+pub fn read_file_xref(source: &[u8]) -> PResult<(PdfHeader, usize, XrefState)> {
+    let mut cursor = PdfFileStructureCursor::new(usize::MAX);
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    let file = loop {
+        match cursor.advance(source, grant, false).event {
+            Ok(PdfFileStructureEvent::More) => {}
+            Ok(PdfFileStructureEvent::NotPdf) => break Err(PdfEngineError::NotPdf),
+            Ok(PdfFileStructureEvent::RecoveryRequired) if cursor.recover_compatible(source) => {}
+            Ok(PdfFileStructureEvent::Complete) => break cursor.take().ok_or_else(|| PdfEngineError::Malformed("completed PDF structure could not be transferred".into())),
+            Err(XrefStreamError::Structure(reason)) => break malformed(reason),
+            Err(XrefStreamError::Decode(error)) => break Err(PdfEngineError::Malformed(error.into_message())),
+            _ => break malformed("unable to assemble structured PDF input"),
+        }
+    };
+    cursor.begin_close();
+    loop {
+        match cursor.close_step(grant).event {
+            Ok(PdfFileStructureEvent::Closed) => break,
+            Ok(PdfFileStructureEvent::More) => {}
+            _ => return malformed("unable to close PDF source structure"),
+        }
+    }
+
+    let PdfFileStructure { header, origin, index, trailer, intact, root_resolves } = file?;
+    let xref = finish_xref(&source[origin..], index, trailer.into_entries(), intact, root_resolves, true)
+        .ok_or_else(|| PdfEngineError::Malformed("unable to reconstruct the PDF cross-reference table".into()))?;
+    Ok((header, origin, xref))
+}
+
+fn recover_xref(data: &[u8], entries: &mut XrefIndex, trailer: &mut Vec<PdfDictEntry>, needs_root: bool) -> Option<()> {
+    let mut scanner = ObjectScanCursor::new();
+    let mut catalog = None;
+    let mut stream_root = None;
+    let mut streams = Vec::new();
+
+    loop {
+        let (id, offset) = match scanner.advance(data, 4096).1 {
+            ObjectScanStep::Found { id, offset } => (id, offset),
+            ObjectScanStep::More => continue,
+            ObjectScanStep::Complete => break,
         };
-        let Ok((sect_entries, sect_trailer)) = parsed else { break };
-        any_structured = true;
-        if let Some(stm_off) = dict_i64(&sect_trailer, "XRefStm") {
-            if let Ok((stm_entries, _)) = parse_xref_stream(data, stm_off as usize) {
-                for (k, v) in stm_entries {
-                    entries.entry(k).or_insert(v);
+        let Ok(object) = frame_indirect_with_length(data, offset, &mut |_| None) else { continue };
+        let resume = object.stream.filter(|span| span.resume > span.end).map_or(object.value_end, |span| span.resume);
+        scanner.resume_after(data, resume);
+        if entries.is_free(id.num) { continue; }
+        entries.insert_row(XrefRow { number: id.num, entry: Some(XrefEntry::Normal { offset, gen: id.gen }) }, true).ok()?;
+        match object.value.dict_get("Type").and_then(PdfObject::as_name) {
+            Some("Catalog") if needs_root => catalog = Some(id),
+            Some("XRef") if needs_root => {
+                if let Some(root) = object.value.dict_get("Root").and_then(PdfObject::as_ref) {
+                    stream_root = Some(root);
                 }
             }
-        }
-        for (k, v) in sect_entries {
-            entries.entry(k).or_insert(v);
-        }
-        if trailer.is_empty() {
-            trailer = sect_trailer.clone();
-        } else {
-            for entry in sect_trailer.iter() {
-                if !trailer.iter().any(|existing| existing.key == entry.key) && matches!(entry.key.as_str(), "Root" | "Info" | "ID" | "Encrypt") {
-                    trailer.push(entry.clone());
+            Some("ObjStm") => {
+                if let (PdfObject::Dict(dict), Some(span)) = (object.value, object.stream) {
+                    streams.push((id.num, offset, dict, span));
                 }
             }
-        }
-        cursor = dict_i64(&sect_trailer, "Prev").map(|p| p as usize);
-    }
-    let offsets_agree = entries.iter().all(|(num, entry)| match entry {
-        XrefEntry::Normal { offset, .. } => parse_indirect_at(data, *offset).is_ok_and(|(id, _)| id.num == *num),
-        XrefEntry::Compressed { .. } => true,
-    });
-    let root_resolvable = trailer.iter().find(|e| e.key == "Root").and_then(|e| e.value.as_ref()).is_some_and(|root| entries.contains_key(&root.num));
-    let mut brute_forced = false;
-    if !any_structured || entries.is_empty() || !offsets_agree || !root_resolvable {
-        brute_forced = true;
-        let scanned = brute_force_scan(data);
-        for (num, (id, off)) in &scanned {
-            entries.insert(*num, XrefEntry::Normal { offset: *off, gen: id.gen });
-        }
-        let stream_nums: Vec<u32> = scanned.iter().filter(|(_, (_, off))| parse_indirect_at(data, *off).is_ok_and(|(_, object)| object.dict_get("Type").and_then(PdfObject::as_name) == Some("ObjStm"))).map(|(num, _)| *num).collect();
-        for stream_num in stream_nums {
-            if let Ok((_, PdfObject::Stream { dict, data: raw, .. })) = parse_indirect_at(data, scanned[&stream_num].1) {
-                if let Ok((decoded, _)) = decode_stream(&dict, &raw) {
-                    let n = dict_i64(&dict, "N").unwrap_or(0).max(0) as usize;
-                    let mut lex = Lexer::new(&decoded);
-                    for index in 0..n {
-                        lex.skip_ws();
-                        let Ok(PdfObject::Int(num)) = lex.parse_number() else { break };
-                        lex.skip_ws();
-                        let Ok(PdfObject::Int(_)) = lex.parse_number() else { break };
-                        entries.entry(num as u32).or_insert(XrefEntry::Compressed { stream_num, index: index as u32 });
-                    }
-                }
-            }
-        }
-        if !root_resolvable || trailer.is_empty() {
-            let mut found_trailer: Vec<PdfDictEntry> = trailer.iter().filter(|e| e.key != "Root").cloned().collect();
-            for (_, (id, off)) in &scanned {
-                if let Ok((_, obj)) = parse_indirect_at(data, *off) {
-                    if obj.dict_get("Type").and_then(|v| v.as_name()) == Some("Catalog") {
-                        found_trailer.insert(0, PdfDictEntry::new("Root", PdfObject::Ref(*id)));
-                        break;
-                    }
-                    if obj.dict_get("Type").and_then(|v| v.as_name()) == Some("XRef") && !found_trailer.iter().any(|e| e.key == "Root") {
-                        if let Some(root) = obj.dict_get("Root") {
-                            found_trailer.insert(0, PdfDictEntry::new("Root", root.clone()));
-                        }
-                    }
-                }
-            }
-            if !found_trailer.iter().any(|e| e.key == "Root") {
-                if let Some(trailer_pos) = find_last_subslice(data, b"trailer") {
-                    let mut lex = Lexer::new(data).at(trailer_pos + 7);
-                    if let Ok(PdfObject::Dict(d)) = lex.parse_object() {
-                        for entry in d {
-                            if !found_trailer.iter().any(|e| e.key == entry.key) {
-                                found_trailer.push(entry);
-                            }
-                        }
-                    }
-                }
-            }
-            trailer = found_trailer;
+            _ => {}
         }
     }
-    XrefState { entries, trailer, brute_forced }
+
+    for (stream_num, offset, dict, span) in streams.into_iter().rev() {
+        if !matches!(entries.get(&stream_num), Some(XrefEntry::Normal { offset: current, .. }) if *current == offset) { continue; }
+        let Some((body, count, first)) = open_object_stream(&dict, &data[span.start..span.end]) else { continue };
+        let mut cursor = ObjectStreamHeaderCursor::new(count, first);
+        let mut index = 0;
+        loop {
+            match cursor.advance(&body, 4096, false).event {
+                Ok(ObjectStreamHeaderEvent::Member { number, .. }) => {
+                    entries.insert_row(XrefRow { number, entry: Some(XrefEntry::Compressed { stream_num, index }) }, false).ok()?;
+                    index = index.checked_add(1)?;
+                }
+                Ok(ObjectStreamHeaderEvent::More) => {}
+                _ => break,
+            }
+        }
+    }
+
+    if needs_root {
+        trailer.retain(|entry| entry.key != "Root");
+        if let Some(root) = catalog.or(stream_root) {
+            trailer.insert(0, PdfDictEntry::new("Root", PdfObject::Ref(root)));
+        } else if let Some(offset) = find_last_subslice(data, b"trailer") {
+            if let Ok(PdfObject::Dict(entries)) = Lexer::new(data).at(offset + 7).parse_object() {
+                for entry in entries {
+                    if !trailer.iter().any(|existing| existing.key == entry.key) { trailer.push(entry); }
+                }
+            }
+        }
+    }
+    Some(())
 }
 
 /// 🔍 Locates `startxref` and returns the offset it points at, if any.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn startxref_offset(data: &[u8]) -> Option<usize> {
-    let pos = find_last_subslice(data, b"startxref")?;
-    let mut lex = Lexer::new(data).at(pos + b"startxref".len());
-    lex.skip_ws();
-    match lex.parse_number() {
-        Ok(PdfObject::Int(off)) if off >= 0 && (off as usize) < data.len() => Some(off as usize),
-        _ => None,
+    let mut cursor = FooterCursor::new(data.len());
+    loop {
+        if let FooterStep::Complete(offset) = cursor.advance(data, 4096) {
+            return offset;
+        }
     }
 }
 //#endregion 🔖️Parsing
 
 //#region 🔖️Resolver
-/// 🧭 Resolves indirect objects into a table, decoding object streams (`/Type /ObjStm`) and
-/// decrypting strings/streams transparently.
+/// 🗃️ The retained objects and their original generation-aware positions.
+pub struct ResolvedGraph {
+    pub objects: Vec<PdfIndirectObject>,
+    pub positions: XrefIndex,
+}
+
+struct ResolvedObjectStream {
+    bytes: Vec<u8>,
+    count: usize,
+    first: usize,
+    members: Option<Vec<(u32, usize)>>,
+}
+
+impl ResolvedObjectStream {
+    fn member_directory(&mut self) -> Option<&[(u32, usize)]> {
+        if self.members.is_none() {
+            let mut header = ObjectStreamHeaderCursor::new(self.count, self.first);
+            let mut members = Vec::new();
+            loop {
+                match header.advance(&self.bytes, 4096, false).event.ok()? {
+                    ObjectStreamHeaderEvent::More => {}
+                    ObjectStreamHeaderEvent::Member { number, offset } => members.push((number, offset)),
+                    ObjectStreamHeaderEvent::Complete => break,
+                    ObjectStreamHeaderEvent::Cancelled => return None,
+                }
+            }
+            self.members = Some(members);
+        }
+        self.members.as_deref()
+    }
+
+}
+
+fn resolve_ordered_member(cursor: &mut ObjectStreamCursor, bytes: &[u8], number: u32, index: u32, grant: CosGrant) -> Option<PdfObject> {
+    cursor.select(number, index).ok()?;
+    let value = loop {
+        match cursor.advance(bytes, grant, false).event.ok()? {
+            ObjectStreamEvent::More => {}
+            ObjectStreamEvent::Complete { .. } => break cursor.take_value()?,
+            _ => return None,
+        }
+    };
+    loop {
+        match cursor.advance(bytes, grant, false).event.ok()? {
+            ObjectStreamEvent::More => {}
+            ObjectStreamEvent::Idle => return Some(value),
+            _ => return None,
+        }
+    }
+}
+
+fn close_ordered_member(cursor: &mut Option<ObjectStreamCursor>, grant: CosGrant) {
+    let Some(mut cursor) = cursor.take() else { return; };
+    cursor.begin_close();
+    while cursor.close_step(grant).event == Ok(ObjectStreamEvent::More) {}
+}
+
+/// 🧭️ Resolves indirect objects, compressed members, and encrypted stream bodies.
 pub struct Resolver<'a> {
     data: &'a [u8],
-    pub xref: HashMap<u32, XrefEntry>,
+    pub xref: XrefIndex,
     cache: HashMap<u32, PdfObject>,
-    objstm_cache: HashMap<u32, Vec<(u32, usize)>>,
-    objstm_bytes: HashMap<u32, Vec<u8>>,
+    object_streams: HashMap<u32, ResolvedObjectStream>,
+    ordered_stream: Option<(u32, Option<ObjectStreamCursor>)>,
     decryptor: Option<Decryptor>,
     resolving: HashSet<u32>,
 }
 
 impl<'a> Resolver<'a> {
-    pub fn new(data: &'a [u8], xref: HashMap<u32, XrefEntry>) -> Self {
-        Self { data, xref, cache: HashMap::new(), objstm_cache: HashMap::new(), objstm_bytes: HashMap::new(), decryptor: None, resolving: HashSet::new() }
+    pub fn new(data: &'a [u8], xref: XrefIndex) -> Self {
+        Self { data, xref, cache: HashMap::new(), object_streams: HashMap::new(), ordered_stream: None, decryptor: None, resolving: HashSet::new() }
     }
 
     pub fn set_decryptor(&mut self, decryptor: Option<Decryptor>) {
         self.decryptor = decryptor;
         self.cache.clear();
+        self.object_streams.clear();
+        self.ordered_stream = None;
     }
 
     /// 🎯 The object `num` refers to, undecoded (stream data still filtered) but decrypted.
@@ -310,95 +288,262 @@ impl<'a> Resolver<'a> {
         if let Some(v) = self.cache.get(&num) {
             return Some(v.clone());
         }
-        if !self.resolving.insert(num) {
-            return None;
-        }
-        let entry = self.xref.get(&num).copied();
-        let value = match entry {
-            Some(XrefEntry::Normal { offset, gen }) => match parse_indirect_at(self.data, offset) {
-                Ok((id, value)) if id.num == num => {
-                    let gen = if id.gen != gen { id.gen } else { gen };
-                    match (&self.decryptor, &value) {
-                        (Some(decryptor), _) if !is_xref_stream(&value) => Some(decryptor.decrypt_object(value, num, gen)),
-                        _ => Some(value),
-                    }
-                }
-                _ => None,
-            },
-            Some(XrefEntry::Compressed { stream_num, index }) => self.resolve_compressed(stream_num, index),
-            None => None,
-        };
-        self.resolving.remove(&num);
-        let value = value?;
+        let value = self.read_uncached(num)?;
         self.cache.insert(num, value.clone());
         Some(value)
     }
 
-    fn resolve_compressed(&mut self, stream_num: u32, index: u32) -> Option<PdfObject> {
-        if !self.objstm_bytes.contains_key(&stream_num) {
-            let obj = self.resolve(stream_num)?;
-            let PdfObject::Stream { dict, data, .. } = &obj else { return None };
-            let (decoded, _) = decode_stream(dict, data).ok()?;
-            let n = dict_i64(dict, "N").unwrap_or(0).max(0) as usize;
-            let first = dict_i64(dict, "First").unwrap_or(0).max(0) as usize;
-            let mut lex = Lexer::new(&decoded);
-            let mut pairs = Vec::with_capacity(n);
-            for _ in 0..n {
-                lex.skip_ws();
-                let on = match lex.parse_number() {
-                    Ok(PdfObject::Int(i)) => i as u32,
-                    _ => break,
+    /// 🔗️ Resolves only the generation requested by an original indirect reference.
+    pub fn resolve_reference(&mut self, reference: ObjRef) -> Option<PdfObject> {
+        if generation(self.xref.get(&reference.num)?) != reference.gen { return None; }
+        self.resolve(reference.num)
+    }
+
+    fn read_uncached(&mut self, num: u32) -> Option<PdfObject> {
+        self.read_graph_object(num, false).ok().flatten()
+    }
+
+    fn read_graph_object(&mut self, num: u32, project: bool) -> PResult<Option<PdfObject>> {
+        if !self.resolving.insert(num) { return Ok(None); }
+        let result = self.read_entry(num, project);
+        self.resolving.remove(&num);
+        result
+    }
+
+    fn resolve_stream_length(&mut self, reference: ObjRef) -> Option<usize> {
+        let entry = *self.xref.get(&reference.num)?;
+        if generation(&entry) != reference.gen || self.resolving.contains(&reference.num) { return None; }
+        if let Some(value) = self.cache.get(&reference.num) {
+            return value.as_i64().and_then(|length| usize::try_from(length).ok());
+        }
+        match entry {
+            XrefEntry::Normal { offset, .. } => {
+                let mut cursor = PdfIndirectLengthCursor::new(reference, offset);
+                let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+                let length = loop {
+                    match cursor.advance(self.data, grant, false).status {
+                        Ok(CosStatus::More) => {}
+                        Ok(CosStatus::Complete { .. }) => break cursor.length(),
+                        _ => break None,
+                    }
                 };
-                lex.skip_ws();
-                let oo = match lex.parse_number() {
-                    Ok(PdfObject::Int(i)) => i as usize,
-                    _ => break,
-                };
-                pairs.push((on, first + oo));
+                cursor.begin_close();
+                while cursor.close_step(grant).status == Ok(CosStatus::More) {}
+                length
             }
-            self.objstm_cache.insert(stream_num, pairs);
-            self.objstm_bytes.insert(stream_num, decoded);
+            XrefEntry::Compressed { stream_num, index } => {
+                self.resolving.insert(reference.num);
+                let value = self.resolve_compressed(stream_num, index, reference.num, false);
+                self.resolving.remove(&reference.num);
+                value.and_then(|value| value.as_i64()).and_then(|length| usize::try_from(length).ok())
+            }
         }
-        let pairs = self.objstm_cache.get(&stream_num)?;
-        let (_, local_off) = *pairs.get(index as usize)?;
-        let bytes = self.objstm_bytes.get(&stream_num)?;
-        if local_off >= bytes.len() {
-            return None;
+    }
+
+    fn frame_normal(&mut self, id: ObjRef, offset: usize) -> Option<NormalObject> {
+        let object = frame_indirect_with_length(self.data, offset, &mut |reference| self.resolve_stream_length(reference)).ok()?;
+        (object.id == id).then_some(object)
+    }
+
+    fn project_normal(&mut self, id: ObjRef, offset: usize) -> PResult<Option<PdfObject>> {
+        let mut cursor = NormalProjectionCursor::new(id, offset, CosLimits::default(), usize::MAX);
+        let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+        let result = loop {
+            match cursor.advance(self.data, grant, false).event {
+                Ok(NormalProjectionEvent::More) => {}
+                Ok(NormalProjectionEvent::NeedsLength(reference)) => {
+                    let length = self.resolve_stream_length(reference);
+                    if let Err(reason) = cursor.provide_length(reference, length) { break malformed(reason); }
+                }
+                Ok(NormalProjectionEvent::Complete) => break Ok(cursor.take()),
+                Err(XrefStreamError::Structure(reason)) => break malformed(reason),
+                Err(XrefStreamError::Decode(error)) => break Err(PdfEngineError::Malformed(error.into_message())),
+                Ok(_) => break malformed("unexpected retained PDF object state"),
+            }
+        };
+        cursor.begin_close();
+        loop {
+            match cursor.close_step(grant).event {
+                Ok(NormalProjectionEvent::Closed) => break,
+                Ok(NormalProjectionEvent::More) => {}
+                _ => return malformed("unable to close the retained PDF object cursor"),
+            }
         }
-        let mut lex = Lexer::new(bytes).at(local_off);
-        lex.parse_object().ok()
+        match result? {
+            Some(NormalProjection::Value(value)) => Ok(Some(value)),
+            Some(NormalProjection::ReferenceStream { dict, span }) => normalize_framed_stream(dict, &self.data[span.start..span.end]).map(Some),
+            Some(NormalProjection::Omitted | NormalProjection::ObjectStream(_)) => Ok(None),
+            None => malformed("completed PDF object was unavailable"),
+        }
+    }
+
+    fn read_entry(&mut self, num: u32, project: bool) -> PResult<Option<PdfObject>> {
+        let value = match self.xref.get(&num).copied() {
+            Some(XrefEntry::Normal { offset, gen }) => {
+                let id = ObjRef { num, gen };
+                if project && self.decryptor.is_none() { return self.project_normal(id, offset); }
+                let Some(NormalObject { value, stream, .. }) = self.frame_normal(id, offset) else { return Ok(None); };
+                let value = match (value, stream) {
+                    (PdfObject::Dict(dict), Some(span)) => {
+                        let raw = &self.data[span.start..span.end];
+                        let stream_kind = dict.iter().find(|entry| entry.key == "Type").and_then(|entry| entry.value.as_name());
+                        if project && matches!(stream_kind, Some("XRef" | "ObjStm")) { return Ok(None); }
+                        PdfObject::Stream { dict, data: raw.to_vec(), filters: Vec::new() }
+                    }
+                    (value, _) => value,
+                };
+                match (&self.decryptor, &value) {
+                    (Some(decryptor), _) if !is_xref_stream(&value) => Some(decryptor.decrypt_object(value, num, id.gen)),
+                    _ => Some(value),
+                }
+            }
+            Some(XrefEntry::Compressed { stream_num, index }) => self.resolve_compressed(stream_num, index, num, project),
+            None => None,
+        };
+        if project {
+            value.map(normalize_retained_object).transpose()
+        } else {
+            Ok(value)
+        }
+    }
+
+    fn load_object_stream(&mut self, number: u32) -> Option<ResolvedObjectStream> {
+        let (bytes, count, first) = if self.decryptor.is_some() || self.cache.contains_key(&number) {
+            let source = self.cache.remove(&number).or_else(|| self.read_uncached(number))?;
+            if source.dict_get("Type").and_then(PdfObject::as_name) != Some("ObjStm") { return None; }
+            let PdfObject::Stream { dict, data, .. } = source else { return None; };
+            open_object_stream(&dict, &data)?
+        } else {
+            let XrefEntry::Normal { offset, gen } = *self.xref.get(&number)? else { return None; };
+            if !self.resolving.insert(number) { return None; }
+            let frame = self.frame_normal(ObjRef { num: number, gen }, offset);
+            self.resolving.remove(&number);
+            let frame = frame?;
+            if frame.value.dict_get("Type").and_then(PdfObject::as_name) != Some("ObjStm") { return None; }
+            let (PdfObject::Dict(dict), Some(span)) = (frame.value, frame.stream) else { return None; };
+            open_object_stream(&dict, &self.data[span.start..span.end])?
+        };
+
+        Some(ResolvedObjectStream { bytes, count, first, members: None })
+    }
+
+    fn resolve_compressed(&mut self, stream_num: u32, index: u32, number: u32, project: bool) -> Option<PdfObject> {
+        let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+        if !self.object_streams.contains_key(&stream_num) {
+            let stream = self.load_object_stream(stream_num)?;
+            self.object_streams.insert(stream_num, stream);
+        }
+        let stream = self.object_streams.get_mut(&stream_num)?;
+        if project {
+            if self.ordered_stream.as_ref().map(|(number, _)| *number) != Some(stream_num) {
+                if let Some((_, mut prior)) = self.ordered_stream.take() { close_ordered_member(&mut prior, grant); }
+                self.ordered_stream = Some((stream_num, Some(ObjectStreamCursor::new(stream.count, stream.first, CosLimits::default()))));
+            }
+            let (_, sequential) = self.ordered_stream.as_mut().expect("ordered object stream");
+            if let Some(cursor) = sequential.as_mut() {
+                if let Some(value) = resolve_ordered_member(cursor, &stream.bytes, number, index, grant) { return Some(value); }
+                close_ordered_member(sequential, grant);
+            }
+        }
+        let length = stream.bytes.len();
+        let members = stream.member_directory()?;
+        let index = index as usize;
+        let &(embedded, start) = members.get(index)?;
+        if embedded != number { return None; }
+        let end = members.get(index + 1).map_or(length, |&(_, offset)| offset);
+        let bytes = &stream.bytes;
+        let mut member = ObjectStreamMemberCursor::new(start, end, CosLimits::default());
+        let value = loop {
+            match member.advance(bytes, grant, false).status {
+                Ok(CosStatus::More) => {}
+                Ok(CosStatus::Complete { .. }) => break member.take_value(),
+                _ => break None,
+            }
+        };
+        member.begin_close();
+        while matches!(member.close_step(grant).status, Ok(CosStatus::More)) {}
+        value
     }
 
     /// 📚️ Materializes every entry of the xref table into `PdfIndirectObject`s with decoded
     /// stream data (the retained-graph lane), in file order.
-    pub fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
-        let mut nums: Vec<u32> = self.xref.keys().copied().collect();
-        nums.sort_by_key(|num| match self.xref.get(num) {
-            Some(XrefEntry::Normal { offset, .. }) => (*offset, 0),
-            Some(XrefEntry::Compressed { stream_num, index }) => {
-                let offset = match self.xref.get(stream_num) {
-                    Some(XrefEntry::Normal { offset, .. }) => *offset,
-                    _ => usize::MAX,
+    pub fn resolve_all(&mut self, omit: Option<u32>) -> PResult<ResolvedGraph> {
+        let mut order = XrefFileOrderCursor::default();
+        let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+        let mut graph = RetainedGraphBuilder::new(self.xref.len());
+        let result = (|| {
+            settle_graph_builder(&mut graph, grant)?;
+            loop {
+                let num = match order.advance(&self.xref, grant, false).event {
+                    Ok(XrefFileOrderEvent::Object(number)) => number,
+                    Ok(XrefFileOrderEvent::More) => continue,
+                    Ok(XrefFileOrderEvent::Complete) => break,
+                    Err(error) => return malformed(error),
+                    Ok(_) => return malformed("unexpected PDF object scheduler state"),
                 };
-                (offset, index.saturating_add(1) as usize)
-            }
-            None => (usize::MAX, usize::MAX),
-        });
-        let mut out = Vec::with_capacity(nums.len());
-        for num in nums {
-            if let Some(value) = self.resolve(num) {
-                if is_xref_stream(&value) || value.dict_get("Type").and_then(PdfObject::as_name) == Some("ObjStm") {
-                    continue;
+                if omit == Some(num) { continue; }
+                let value = match self.cache.remove(&num) {
+                    Some(value) => Some(normalize_retained_object(value)?),
+                    None => self.read_graph_object(num, true)?,
+                };
+                if let Some(value) = value {
+                    if value.dict_get("Type").and_then(PdfObject::as_name) == Some("ObjStm") {
+                        self.cache.insert(num, value);
+                        continue;
+                    }
+                    if is_xref_stream(&value) {
+                        continue;
+                    }
+                    let gen = self.xref.get(&num).map_or(0, generation);
+                    graph.offer(PdfIndirectObject { id: ObjRef { num, gen }, value })
+                        .map_err(|_| PdfEngineError::Malformed("retained PDF object could not enter its original graph position".into()))?;
+                    settle_graph_builder(&mut graph, grant)?;
                 }
-                let gen = match self.xref.get(&num) {
-                    Some(XrefEntry::Normal { gen, .. }) => *gen,
-                    _ => 0,
-                };
-                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value: normalize_pdf_object(value)? });
+            }
+            let (objects, positions) = graph.finish().expect("settled ordered PDF graph");
+            Ok(ResolvedGraph { objects, positions })
+        })();
+        if let Some((_, mut prior)) = self.ordered_stream.take() { close_ordered_member(&mut prior, grant); }
+        order.begin_close();
+        if order.close_step(grant).event != Ok(XrefFileOrderEvent::Closed) {
+            return malformed("unable to close PDF object ordering");
+        }
+        graph.begin_close();
+        loop {
+            match graph.close_step(grant).event {
+                Ok(GraphMaterializationEvent::Closed) => break,
+                Ok(GraphMaterializationEvent::More) => {}
+                Ok(GraphMaterializationEvent::RetireObject) => { drop(graph.take_retired_object()); }
+                _ => return malformed("unable to close PDF graph materialization"),
             }
         }
-        Ok(out)
+        result
     }
+}
+
+fn settle_graph_builder(graph: &mut RetainedGraphBuilder, grant: CosGrant) -> PResult<()> {
+    loop {
+        match graph.advance(grant, false).event {
+            Ok(GraphMaterializationEvent::Ready) => return Ok(()),
+            Ok(GraphMaterializationEvent::More) => {}
+            Err(reason) => return malformed(reason),
+            _ => return malformed("unexpected PDF graph materialization state"),
+        }
+    }
+}
+
+fn generation(entry: &XrefEntry) -> u16 {
+    match entry {
+        XrefEntry::Normal { gen, .. } => *gen,
+        XrefEntry::Compressed { .. } => 0,
+    }
+}
+
+fn open_object_stream(dict: &[PdfDictEntry], raw: &[u8]) -> Option<(Vec<u8>, usize, usize)> {
+    let count = usize::try_from(dict_i64(dict, "N")?).ok()?;
+    let first = usize::try_from(dict_i64(dict, "First")?).ok()?;
+    let (body, _) = decode_stream_admitted(dict, raw).ok()?;
+    Some((body, count, first))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -413,24 +558,59 @@ pub fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
     match value {
         PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
         PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
-        PdfObject::Stream { dict, data, .. } => {
-            let (decoded, filters) = match decode_stream(&dict, &data) {
-                Ok(decoded) => decoded,
-                Err(PdfEngineError::Unsupported(_)) | Err(PdfEngineError::Malformed(_)) => (data, Vec::new()),
-                Err(error) => return Err(error),
-            };
-            let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP" | "Length") || (entry.key == "F" && !matches!(entry.value, PdfObject::Name(_) | PdfObject::Array(_)))).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?;
-            Ok(PdfObject::Stream { dict, data: decoded, filters })
-        }
+        PdfObject::Stream { dict, data, .. } => normalize_stream(dict, data),
         value => Ok(value),
     }
 }
+fn normalize_retained_object(value: PdfObject) -> PResult<PdfObject> {
+    if is_xref_stream(&value) || value.dict_get("Type").and_then(PdfObject::as_name) == Some("ObjStm") {
+        Ok(value)
+    } else {
+        normalize_pdf_object(value)
+    }
+}
+
+fn normalize_stream(dict: Vec<PdfDictEntry>, raw: Vec<u8>) -> PResult<PdfObject> {
+    let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Owned(raw))?;
+    let dict = dict.into_iter()
+        .filter(|entry| retain_stream_entry(entry, normalized))
+        .map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? }))
+        .collect::<PResult<_>>()?;
+    Ok(PdfObject::Stream { dict, data, filters })
+}
+
+fn normalize_framed_stream(dict: Vec<PdfDictEntry>, raw: &[u8]) -> PResult<PdfObject> {
+    let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Borrowed(raw))?;
+    let mut cursor = PdfStreamDictionaryCursor::new(dict, normalized);
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    loop {
+        match cursor.advance(grant, false).status {
+            Ok(CosStatus::Complete { .. }) => break,
+            Ok(CosStatus::More) => {}
+            _ => return malformed("unable to project the PDF stream dictionary"),
+        }
+    }
+    let dict = cursor.take_dictionary().expect("completed native stream dictionary");
+    Ok(PdfObject::Stream { dict, data, filters })
+}
+
+fn retained_stream_data(dict: &[PdfDictEntry], raw: std::borrow::Cow<'_, [u8]>) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>, bool)> {
+    if !dict.iter().any(|entry| matches!(entry.key.as_str(), "Filter" | "F")) {
+        return Ok((raw.into_owned(), Vec::new(), true));
+    }
+    match decode_stream_admitted(dict, &raw) {
+        Ok((data, filters)) => Ok((data, filters, true)),
+        Err(PdfEngineError::Unsupported(_)) | Err(PdfEngineError::Malformed(_)) => Ok((raw.into_owned(), Vec::new(), false)),
+        Err(error) => Err(error),
+    }
+}
+
 //#endregion 🔖️Resolver
 
 //#region 🔖️Sources
 impl ObjectSource for Resolver<'_> {
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
-        self.resolve(reference.num).map(|value| normalize_pdf_object(value).unwrap_or(PdfObject::Null))
+        self.resolve_reference(reference).map(|value| normalize_pdf_object(value).unwrap_or(PdfObject::Null))
     }
 }
 
@@ -446,3 +626,110 @@ pub trait ObjectSink {
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod retained_graph_tests {
+    use super::*;
+
+    #[test]
+    fn structured_xref_checks_exact_object_generations_under_one_work_unit() {
+        let source = include_bytes!("../../🧪️tests/🧫️fixtures/🔗️incremental-free/📑️table.pdf");
+        let rows = structured_xref(source).unwrap().entries;
+        let mut validation = XrefOffsetCursor::default();
+        loop {
+            let (work, status) = validation.advance(source, &rows, 1, false);
+            assert!(work <= 1);
+            if status == XrefOffsetStatus::Complete { break; }
+            assert_eq!(status, XrefOffsetStatus::More);
+        }
+        let Some(XrefEntry::Normal { offset, gen }) = rows.get(&1).copied() else { panic!("fixture catalog is indirect") };
+        let wrong = ObjRef { num: 1, gen: gen + 1 };
+        let mut rows = XrefIndex::default();
+        rows.insert_row(XrefRow { number: 1, entry: Some(XrefEntry::Normal { offset, gen: wrong.gen }) }, false).unwrap();
+        let mut validation = XrefOffsetCursor::default();
+        loop {
+            let (work, status) = validation.advance(source, &rows, 1, false);
+            assert!(work <= 1);
+            match status {
+                XrefOffsetStatus::More => {}
+                XrefOffsetStatus::Invalid { id, offset: target } => {
+                    assert_eq!((id, target), (wrong, offset));
+                    break;
+                }
+                other => panic!("unexpected validation result {other:?}"),
+            }
+        }
+        assert_eq!(XrefOffsetCursor::default().advance(source, &rows, 1, true), (0, XrefOffsetStatus::Cancelled));
+    }
+
+    #[test]
+    fn repaired_xref_ignores_object_headers_inside_compound_bodies() {
+        let source = include_bytes!("../../🧪️tests/🧫️fixtures/🩹️repair-stream.pdf");
+        let index = build_xref(source).unwrap();
+        assert!(index.brute_forced);
+        assert_eq!(index.entries.len(), 7);
+        assert_eq!(index.trailer[0], PdfDictEntry::new("Root", PdfObject::Ref(ObjRef { num: 1, gen: 0 })));
+        let mut resolver = Resolver::new(source, index.entries);
+        assert!(resolver.resolve_reference(ObjRef { num: 1, gen: 1 }).is_none());
+        let catalog = resolver.resolve_reference(ObjRef { num: 1, gen: 0 }).unwrap();
+        assert_eq!(catalog.dict_get("Pages").and_then(PdfObject::as_ref), Some(ObjRef { num: 2, gen: 0 }));
+        assert_eq!(resolver.resolve(5).unwrap().dict_get("BaseFont").and_then(PdfObject::as_name), Some("Helvetica"));
+    }
+
+    #[test]
+    fn file_structure_retries_header_relative_offsets_after_retiring_absolute_candidates() {
+        let source = include_bytes!("../../🧪️tests/🧫️fixtures/🔗️incremental-free/📑️table.pdf");
+        let prefix = b"transport prefix\r\n";
+        let mut bytes = prefix.to_vec();
+        bytes.extend_from_slice(source);
+        let mut cursor = PdfFileStructureCursor::new(4096);
+        let one = CosGrant { work: 1, allocation_bytes: 128 * 1024, release_bytes: 128 * 1024 };
+        let admitted = (0..20_000).find_map(|_| {
+            let step = cursor.advance(&bytes, one, false);
+            assert!(step.work <= 1);
+            if step.event.unwrap() == PdfFileStructureEvent::Complete { cursor.take() } else { None }
+        }).expect("preambled PDF structure");
+        assert_eq!(admitted.header.offset(), prefix.len());
+        assert_eq!(admitted.origin, prefix.len());
+        assert!(admitted.intact && admitted.root_resolves && admitted.index.is_free(3));
+        let (_, origin, state) = read_file_xref(&bytes).unwrap();
+        assert_eq!(origin, prefix.len());
+        assert!(!state.brute_forced);
+    }
+
+    #[test]
+    fn projected_graph_consumes_compressed_members_without_a_random_access_directory() {
+        let pdf = include_bytes!("../../🧪️tests/🧫️fixtures/📦️object-stream/🧪️compressed.pdf");
+        let index = build_xref(pdf).unwrap();
+        let mut resolver = Resolver::new(pdf, index.entries);
+        let ResolvedGraph { objects, positions } = resolver.resolve_all(None).unwrap();
+        let object = |number| match positions.get(&number).unwrap() {
+            XrefEntry::Normal { offset, gen: 0 } => &objects[*offset].value,
+            _ => panic!("expected exact compressed member position"),
+        };
+        assert_eq!(object(6).dict_get("Title").and_then(PdfObject::as_str_bytes), Some(b"Compressed".as_slice()));
+        assert_eq!(object(7).as_array().unwrap()[3].as_ref(), Some(ObjRef { num: 6, gen: 0 }));
+        assert!(resolver.object_streams.get(&4).unwrap().members.is_none());
+        assert!(resolver.ordered_stream.is_none());
+    }
+
+    #[test]
+    fn projected_graph_retains_decoded_bytes_and_the_typed_filter_pipeline() {
+        let source = include_bytes!("../🗜️filters/🪣️stream-data/🧪️tests/🔬️unit/🧪️streams.pdf");
+        let index = build_xref(source).unwrap();
+        let ResolvedGraph { objects: graph, positions } = Resolver::new(source, index.entries).resolve_all(None).unwrap();
+        for (offset, object) in graph.iter().enumerate() {
+            assert_eq!(positions.get(&object.id.num), Some(&XrefEntry::Normal { offset, gen: object.id.gen }));
+        }
+        let bytes = |number| match &graph.iter().find(|object| object.id.num == number).unwrap().value {
+            PdfObject::Stream { data, filters, dict } => {
+                assert_eq!(filters.len(), 1);
+                assert!(!dict.iter().any(|entry| entry.key == "Filter" || entry.key == "Length"));
+                data.as_slice()
+            }
+            _ => panic!("fixture object is a stream"),
+        };
+        assert_eq!(bytes(4), b"0 0 m 1 1 l S\n".repeat(192));
+        assert_eq!(bytes(5), [10, 30, 50, 20, 40, 60]);
+    }
+}

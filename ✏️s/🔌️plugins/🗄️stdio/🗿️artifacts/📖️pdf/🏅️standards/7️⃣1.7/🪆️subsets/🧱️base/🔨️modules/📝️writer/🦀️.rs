@@ -4,7 +4,7 @@
 //! guest can emit a page per step without holding the document; [`serialize_document`] is the
 //! whole-document convenience over it. Every byte is deterministic for the same input.
 
-use crate::standards::v1_7::subsets::base::modules::encryption::{seal_standard_security, sha256, Decryptor};
+use crate::standards::v1_7::subsets::base::modules::encryption::{seal_standard_security, Decryptor};
 use crate::standards::v1_7::subsets::base::modules::filters::{encode_stream, flate_encode};
 use crate::standards::v1_7::subsets::base::modules::lexer::{object_bytes, write_dict, write_object};
 use crate::standards::v1_7::subsets::base::modules::xref::WRITER_TRAILER_KEYS;
@@ -209,7 +209,7 @@ pub fn materialize_streams(value: &PdfObject) -> PdfObject {
     match value {
         PdfObject::Stream { dict, data, filters } => {
             let (encoded, filter_entries) = encode_stream(data, filters);
-            let mut entries: Vec<PdfDictEntry> = dict.iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "DecodeParms" | "Length")).map(|entry| PdfDictEntry { key: entry.key.clone(), value: materialize_streams(&entry.value) }).collect();
+            let mut entries: Vec<PdfDictEntry> = dict.iter().filter(|entry| entry.key != "Length" && (filters.is_empty() || !matches!(entry.key.as_str(), "Filter" | "DecodeParms"))).map(|entry| PdfDictEntry { key: entry.key.clone(), value: materialize_streams(&entry.value) }).collect();
             entries.extend(filter_entries);
             PdfObject::Stream { dict: entries, data: encoded, filters: Vec::new() }
         }
@@ -225,12 +225,12 @@ pub fn materialize_streams(value: &PdfObject) -> PdfObject {
 /// into the two 16-byte halves the trailer `/ID` carries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn derive_document_id(objects: &[PdfIndirectObject]) -> [Vec<u8>; 2] {
-    let mut input = Vec::new();
+    let mut hash = semio_framework_hash::Sha256::new();
     for object in objects {
-        input.extend_from_slice(&object.id.num.to_be_bytes());
-        input.extend_from_slice(&object_bytes(&object.value));
+        hash.update(&object.id.num.to_be_bytes());
+        hash.update(&object_bytes(&object.value));
     }
-    let digest = sha256(&input);
+    let digest = hash.finalize();
     [digest[..16].to_vec(), digest[16..].to_vec()]
 }
 
@@ -252,6 +252,18 @@ pub fn serialize_document(version: &str, objects: &[PdfIndirectObject], trailer:
 }
 //#endregion 🔖️WholeDocument
 
-//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//#endregion 🧪️Tests
+    #[test]
+    fn encrypted_document_id_hashes_each_canonical_object_in_file_order() {
+        let source = [
+            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Int(17) },
+            PdfIndirectObject { id: ObjRef { num: 8, gen: 0 }, value: PdfObject::Name("Catalog".into()) },
+        ];
+        let digest = derive_document_id(&source);
+        assert_eq!(digest[0], [1, 120, 171, 116, 136, 97, 7, 113, 14, 44, 67, 151, 30, 106, 116, 178]);
+        assert_eq!(digest[1], [246, 54, 93, 94, 200, 122, 207, 187, 144, 35, 29, 160, 4, 70, 219, 253]);
+    }
+}

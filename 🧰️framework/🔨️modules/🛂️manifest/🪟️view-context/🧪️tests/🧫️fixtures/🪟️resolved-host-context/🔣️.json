@@ -19,6 +19,7 @@
       }
     ],
     "activeUtilityByWindowId": {
+      "left": null,
       "right": "measure"
     },
     "toolRunTraceCursorByWindowId": {

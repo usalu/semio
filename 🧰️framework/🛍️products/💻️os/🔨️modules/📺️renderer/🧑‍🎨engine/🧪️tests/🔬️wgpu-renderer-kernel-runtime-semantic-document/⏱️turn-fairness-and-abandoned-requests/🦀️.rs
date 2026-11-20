@@ -36,7 +36,7 @@ fn turn_fairness() -> serde_json::Value {
 fn the_turn_slice_and_its_gap_are_the_fairness_contracts() {
     let fairness = turn_fairness();
     assert_eq!(TURN_BUDGET.fuel, fairness["sliceFuel"].as_u64().expect("slice fuel"));
-    assert_eq!(u64::from(TURN_BUDGET.deadline_ms), fairness["sliceWallMs"].as_u64().expect("slice wall"));
+    assert_eq!(TURN_BUDGET.deadline_us, fairness["sliceWallMs"].as_u64().expect("slice wall") * 1_000);
     assert_eq!(TURN_REQUESTS_BETWEEN_SLICES as u64, fairness["requestsBetweenSlices"].as_u64().expect("requests between slices"));
 }
 

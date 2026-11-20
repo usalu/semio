@@ -56,6 +56,9 @@ pub enum ShootingMutation {
     ChangeSceneAmbientIntensity(crate::standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::ChangeSceneAmbientIntensity),
     ChangeSceneShadowEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::ChangeSceneShadowEnabled),
     ChangeSceneMaterialRoughness(crate::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::ChangeSceneMaterialRoughness),
+    SetShotDrawing(crate::standards::v1::subsets::any::schema::mutations::set_shot_drawing::SetShotDrawing),
+    PatchShotCamera(crate::standards::v1::subsets::any::schema::mutations::patch_shot_camera::PatchShotCamera),
+    SetShotAutoFit(crate::standards::v1::subsets::any::schema::mutations::set_shot_auto_fit::SetShotAutoFit),
 }
 dsl::original_pack_value_operation_receiving!(ShootingMutation);
 
@@ -97,6 +100,9 @@ pub const KINDS: &[&str] = &[
     "change-scene-ambient-intensity",
     "change-scene-shadow-enabled",
     "change-scene-material-roughness",
+    "set-shot-drawing",
+    "patch-shot-camera",
+    "set-shot-auto-fit",
 ];
 //#endregion 🔖️Operations
 

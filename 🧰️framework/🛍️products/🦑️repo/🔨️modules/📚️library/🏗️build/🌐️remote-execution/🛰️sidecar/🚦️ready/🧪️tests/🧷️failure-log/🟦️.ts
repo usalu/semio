@@ -5,6 +5,7 @@ import{join}from"node:path";
 import{spawn}from"node:child_process";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
+import boundary from"./🔣️.json"with{type:"json"};
 import{READY_STAGES_V1 as STAGES,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,runReadyStageV1,runReadyV1,type ReadyLocalStateV1,type ReadyPortsV1}from"../../🟦️.ts";
 
 /** 🧷️ A stage that fails after a supervisor restart leaves its whole story: the stage writes its own log file, a second supervisor adopts the running stage, and the failure text reaches the log mirror and `ready.json` although a flood of machine rows follows it; a stage ended by a signal says which one; the log of the failed try stays on the machine. */
@@ -80,3 +81,23 @@ test("the exit record of the wrapper and the running record follow their schemas
  expect(validateJsonSchemaSubset(schema.definitions.Exit,{exit:1,signal:null,spawnFailed:false,endedMs:1},schema)).toEqual([]);
  expect(validateJsonSchemaSubset(schema.definitions.Exit,{exit:"1",signal:null,spawnFailed:false,endedMs:1},schema).length).toBeGreaterThan(0);
 });
+
+for(const [killed,ending] of [["$$","SIGKILL"],["$PPID","left no exit file"]] as const) posix(`an early tools refusal survives later output and ${killed==="$$"?"a killed command":"a lost wrapper"}`,async()=>{
+ const evidence='[tools:setup-refusal] {"id":"node","phase":"verify","status":"failed","pin":"24","found":null,"location":null,"primary":"known early tool refusal"}';
+ const home=fakeHome(`#!/bin/sh\nprintf '%s\n' '${evidence}'\n${rows(10000,0)}\nkill -9 ${killed}\n`);
+ const result=await runReadyStageV1({home,root:temp("early"),environment:{},stage:stageOf("tools"),signal:new AbortController().signal,jobs:1,onLine:()=>{}});
+ expect(result.exit).toBeNull();
+ expect(result.tail).toContain(evidence);
+ expect(result.failure?.filter(line=>line===evidence)).toEqual([evidence]);
+ expect(result.tail.at(-1)).toContain(ending);
+},60000);
+
+posix("a partial leading heartbeat cannot displace the complete current failure tail",async()=>{
+ const {heartbeat,latest,repeat}=boundary;
+ const home=fakeHome(`#!/bin/sh\ni=0; while [ $i -lt ${repeat} ]; do echo "${heartbeat}"; i=$((i+1)); done\necho "${latest}"\nexit 1\n`);
+ const result=await runReadyStageV1({home,root:temp("heartbeat-boundary"),environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>{}});
+ expect(result.exit).toBe(1);
+ expect(result.tail.at(-1)).toBe(latest);
+ expect(result.failure?.at(-1)).toBe(latest);
+ expect(result.tail.every(line=>line.startsWith("Reading the project graph slice ("))).toBe(true);
+},60000);

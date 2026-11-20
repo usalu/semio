@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "description": "The step rule of a tool hook (a script a tool row runs to verify its pin): a declared step with a name in both languages, a heartbeat line every `heartbeatMilliseconds` that names the tool, the step and the seconds run of the bound, and a derived `boundMilliseconds` after which the hook is stopped with the typed refusal `ToolHookTimeout`. The bound of `verify` is 1800 s, half of the 3600 s the ready stage may run (attempt A of g1-m05 ended at 3649 s by that timeout): the tectonic verification of g1-m05 on 2026-11-18 ran silently for more than 1200 s and then passed (the whole tools attempt took 1880 s while another build script held the machine), so the bound must not cut a wait that ends, and still names a wait that does not end long before the stage timeout does. The heartbeat is a step line of the ready supervisor (`stepLinePatterns` of the process tree policy): `<tool>: <English> / <German> (<script>): <seconds> of <bound> s;`, so every beat is progress for its stall rule and the step is overdue only after its bound plus the silent window, always after this refusal.",
+      "const": {
+        "version": 1,
+        "heartbeatMilliseconds": 30000,
+        "steps": {
+          "verify": { "boundMilliseconds": 1800000, "en": "verifying the pinned tool", "de": "Prüfung des gepinnten Werkzeugs" }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "waiting": { "en": "[tools] {tool}: {step} ({script}): {seconds} of {bound} s; its own output is not shown here, the lease and fleet waits it names appear in the log of the command", "de": "[tools] {tool}: {step} ({script}): {seconds} von {bound} s; seine eigene Ausgabe wird hier nicht gezeigt, die Lease- und Flottenwartezeiten, die es nennt, stehen im Protokoll des Befehls" },
+        "timeout": { "en": "The tool {tool} could not be verified: its hook {script} ({step}) did not finish within {bound} s. It is stopped. Check what holds it (repo leases status, the fleet cache answer, an antivirus scan of the new executable) and run repo tools setup again.", "de": "Das Werkzeug {tool} konnte nicht geprüft werden: sein Hook {script} ({step}) wurde nicht innerhalb von {bound} s fertig und wurde gestoppt. Prüfen, was ihn hält (repo leases status, Antwort des Flottencaches, Virenscan der neuen ausführbaren Datei), und repo tools setup erneut ausführen." }
+      }
+    }
+  }
+}

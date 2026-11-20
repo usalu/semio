@@ -21,6 +21,14 @@
       "protocolSourceSha256": "0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d"
     },
     {
+      "artifactKind": "s.stdio.bmp",
+      "artifactSchema": "stdio.bmp",
+      "packSchemaHash": "2a06f793b2efde7a3cce95eacb152fe562bc4ce3e7ad4ebb7e41c624a5c56f78",
+      "factoryId": "stdio.native.bmp.v1",
+      "extension": "bmp",
+      "protocolSourceSha256": "2a06f793b2efde7a3cce95eacb152fe562bc4ce3e7ad4ebb7e41c624a5c56f78"
+    },
+    {
       "artifactKind": "s.stdio.csv",
       "artifactSchema": "stdio.csv",
       "packSchemaHash": "a5b7db2820045d52235b1443d8f75fd4fb1dc1029408e501d2132ae7e7912623",
@@ -61,6 +69,22 @@
       "protocolSourceSha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d"
     },
     {
+      "artifactKind": "s.stdio.gif",
+      "artifactSchema": "stdio.gif",
+      "packSchemaHash": "8153c839b3d18595c3de0997cb9b3ed9762d28f02d2539cafea2e01695f8e07f",
+      "factoryId": "stdio.native.gif.87a.v1",
+      "extension": "gif",
+      "protocolSourceSha256": "8153c839b3d18595c3de0997cb9b3ed9762d28f02d2539cafea2e01695f8e07f"
+    },
+    {
+      "artifactKind": "s.stdio.gif",
+      "artifactSchema": "stdio.gif.89a",
+      "packSchemaHash": "a599ebc7a40f24e96e2da48d4b6e78713736c32be12694301b3436fde084f75b",
+      "factoryId": "stdio.native.gif.89a.v1",
+      "extension": "gif",
+      "protocolSourceSha256": "a599ebc7a40f24e96e2da48d4b6e78713736c32be12694301b3436fde084f75b"
+    },
+    {
       "artifactKind": "s.stdio.gltf",
       "artifactSchema": "stdio.gltf",
       "packSchemaHash": "f00bfa9ea08ec5235139f7b262adf94c2f53908efbdeae1f98540d23cbf9c01f",
@@ -75,6 +99,14 @@
       "factoryId": "stdio.native.html.v1",
       "extension": "html",
       "protocolSourceSha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d"
+    },
+    {
+      "artifactKind": "s.stdio.idml",
+      "artifactSchema": "stdio.idml",
+      "packSchemaHash": "32afdfb0a01bab498e3b3e63cc557cb8e1b9e5619be657d6bfdbd0993997757e",
+      "factoryId": "stdio.native.idml.v1",
+      "extension": "idml",
+      "protocolSourceSha256": "87cb1a366e6ae92730c77bad5e3e8e1d8fc872cb79a8d689973b5e2c100a1e0c"
     },
     {
       "artifactKind": "s.stdio.jpg",

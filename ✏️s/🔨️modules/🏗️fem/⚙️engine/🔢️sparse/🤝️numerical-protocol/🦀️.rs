@@ -272,10 +272,25 @@ impl NumericalOutcomeDesk {
     }
 
     pub fn retirement_demands(&self) -> Option<Result<RetirementDemand, ValueError>> {
+        if self.pending.is_some() {
+            return Some(Ok(RetirementDemand { depth: 1, copy_bytes: size_of::<Option<NumericalRun>>(), ..Default::default() }));
+        }
         self.lent.as_ref().map(RetainedJobPayload::retirement_demands)
     }
 
     pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
+        if self.pending.is_some() {
+            let demand = RetirementDemand { depth: 1, copy_bytes: size_of::<Option<NumericalRun>>(), ..Default::default() };
+            if !numerical_grant_covers(effect.grant(), demand) {
+                return Some(Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }));
+            }
+            match effect.performed(1) {
+                Ok(true) => self.pending = None,
+                Ok(false) => return Some(Ok(InteractiveJobCloseStep::Pending { progress: Default::default() })),
+                Err(error) => return Some(Err(error)),
+            }
+            return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() } }));
+        }
         let payload = self.lent.as_mut()?;
         if payload.terminal_is_empty() {
             self.lent = None;
@@ -342,9 +357,19 @@ pub fn reserve_cold_page<T, const N: usize>(owner: &mut PagedList<T, N>, target:
 pub fn reserve_funded_page<T, const N: usize>(owner: &mut PagedList<T, N>, target: usize, context: &mut StepContext<'_>) -> Result<RetainedCloneProgress, ()> {
     let grant = context.retained_grant();
     let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_capacity_one_funded(target, effect)).map_err(|_| ())? else { return Ok(Default::default()) };
-    let progress = match turn.result { Ok(PagedListReservationOutcome::Ready(progress)) => progress, Ok(PagedListReservationOutcome::Denied) => return Ok(Default::default()), Err(_) => return Err(()) };
-    receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(progress)), work: performed }).map_err(|_| ())?;
-    Ok(progress)
+    use semio_framework_value_persistent::list::PagedListReservationFailure;
+    let result = match turn.result {
+        Ok(PagedListReservationOutcome::Ready(progress)) => Ok(RetainedCloneStep::Progress(progress)),
+        Ok(PagedListReservationOutcome::Denied) => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
+        Err(PagedListReservationFailure::Work(error)) => Err(error),
+        Err(PagedListReservationFailure::Allocation { error, copied_bytes }) => Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress {
+            copied_items: usize::from(copied_bytes != 0 || error.allocated_bytes != 0),
+            copied_bytes,
+            retained_capacity_bytes: error.allocated_bytes,
+            released_bytes: 0,
+        })),
+    };
+    receive_original_retained_work(context, RetainedWorkOutcome { result, work: performed }).map(|step| step.progress()).map_err(|_| ())
 }
 
 pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {

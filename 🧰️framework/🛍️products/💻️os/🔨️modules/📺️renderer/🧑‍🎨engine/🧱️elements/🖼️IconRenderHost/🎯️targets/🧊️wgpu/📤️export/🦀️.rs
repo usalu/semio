@@ -7,6 +7,9 @@ mod gpu;
 mod scene;
 #[path = "📐️svg/🦀️.rs"]
 mod svg;
+#[cfg(not(target_os = "wasi"))]
+#[path = "🖼️preview/🦀️.rs"]
+pub mod preview;
 pub use gpu::{IconGpuPngExport, IconGpuPngRejected};
 pub use scene::{IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected};
 pub use scene::close_prepared;

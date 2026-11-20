@@ -148,7 +148,7 @@ export function CollectionsPage(props: { readonly view: PaneView }): ReactElemen
       {manifest === null ? <CatalogProblem><Notice kind="loading" title={t("state.loading.title")} /></CatalogProblem> : curated.map((collection) => (
         <Column as="section" key={collection.id} aria-labelledby={`curated-${collection.id}`} data-curated-collection={collection.id} edges={GRID_BELOW}>
           <Cell className="items-baseline justify-between">
-            <h3 id={`curated-${collection.id}`} className="m-0 font-serif text-lg"><a href={formatAddress({ page: "collections", collection: collection.id })} className="text-inherit">{collection.title[language]}</a></h3>
+            <h3 id={`curated-${collection.id}`} className="m-0 font-serif text-lg"><a href={formatAddress({ page: "collections", collection: collection.id })} data-shared-border-frame="" data-shared-border-edges="" className="text-inherit">{collection.title[language]}</a></h3>
             <p className="m-0 max-w-[70ch] text-xs text-muted-foreground">{collection.description[language]}</p>
           </Cell>
           {actions(collection.assets, collection.title)}

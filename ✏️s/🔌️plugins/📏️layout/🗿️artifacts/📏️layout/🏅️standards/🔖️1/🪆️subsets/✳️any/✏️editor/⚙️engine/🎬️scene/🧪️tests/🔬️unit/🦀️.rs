@@ -115,10 +115,10 @@ async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selecti
         stroke: None,
     });
     let page = doc.pages.first().expect("page");
-    let culled = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
+    let culled = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0, None);
     assert!(culled.rects.iter().any(|rect| rect.object_id == "frame-1"));
     assert!(culled.rects.iter().all(|rect| rect.object_id != "far"));
-    let kept = build_interactive_display_list(&doc, page, &page.id, &["far".into()], None, true, 0.0, 0.0, 1.0);
+    let kept = build_interactive_display_list(&doc, page, &page.id, &["far".into()], None, true, 0.0, 0.0, 1.0, None);
     assert!(kept.rects.iter().any(|rect| rect.object_id == "far"));
 }
 
@@ -126,7 +126,7 @@ async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selecti
 async fn interactive_display_omits_the_baseline_lattice() {
     let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let page = doc.pages.first().expect("page");
-    let interactive = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
+    let interactive = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0, None);
     assert!(interactive.guides.iter().all(|guide| guide.kind != "baseline"));
     let mut engine = LayoutEngine::new();
     let accurate = build_display_list_for_page(&mut engine, &doc, page, &page.id, &[], None, true);

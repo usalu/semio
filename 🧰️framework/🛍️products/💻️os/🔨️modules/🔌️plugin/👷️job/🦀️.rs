@@ -662,7 +662,7 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
     pub fn close_owned_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
         if let Some(ticket)=self.retirement.as_ref(){return semio_framework_value::factory_ticket_demands(ticket,copy);}
-        if let Some(original)=self.retirement_payload.as_ref(){return Ok(RetirementDemand{capacity_bytes:A::completion_retirement_birth_bytes(original).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preview completion has no original app retirement issuer"))?,depth:1,..Default::default()});}
+        if let Some(original)=self.retirement_payload.as_ref(){return A::completion_retirement_demand(original);}
         if self.retirement_fault.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<Fault>(),depth:1,..Default::default()});}
         if self.rejection.is_some(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
         if self.emit.is_some()||self.ephemeral.is_some(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
@@ -715,6 +715,7 @@ pub struct AgentLanePreview<A:ArtifactApp>{
 }
 impl<A:ArtifactApp> AgentLanePreview<A>{
     pub fn retirement_demands(&self,body:usize,canonical:Option<&semio_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(request)=self.producer_request.as_ref(){if let Some(demand)=request.construction_retirement_demands(body)?{return Ok(demand)}}
         if self.producer_request.is_some()||self.producer_request_retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.producer_request,&self.producer_request_retirement,body)}
         if !self.producer_construction.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_job::OriginalConstructionAdmission>(),depth:1,..Default::default()})}
         if let Some(owner)=self.producer.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
@@ -729,6 +730,14 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&semio_plugin_operation::ToolCancellationHandle>)->Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Close;
         self.closing=true;if cx.should_yield(){return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()))}
+        if let Some(request)=self.producer_request.as_mut(){
+            if request.construction_retirement_demands(cx.retained_grant().maximum_copy_bytes)?.is_some(){
+                let before=cx.retained_progress();
+                request.retire_construction(cx)?;
+                let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress));
+            }
+        }
         if self.producer_request.is_some()||self.producer_request_retirement.is_some(){let body=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.producer_request,&self.producer_request_retirement,body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.producer_request,&mut self.producer_request_retirement,effect))?;return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}
         if !self.producer_construction.terminal_is_empty(){let step=self.producer_construction.retire_step(cx)?;return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}
         if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}

@@ -162,9 +162,13 @@ fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDesc
 
 /// 📊️ Total (ui_instances incl. overlay, vector_vertices incl. overlay, raster_instances) across
 /// every layer of a `DrawList` — the "structurally equivalent" signal this harness compares,
-/// deliberately coarser than exact geometry per this ticket's tolerance allowance.
+/// deliberately coarser than exact geometry per this ticket's tolerance allowance. The retained
+/// shared-border finalizer tombstones each reserved edge slot as a zero-area transparent instance
+/// before it appends the merged edges, so the immediate list is finalized by the same resolver and only
+/// painted instances are counted.
 fn stats(draw: &DrawList) -> (usize, usize, usize) {
-    let instances = draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum();
+    let painted = |instance: &&semio_ui_draw_contract::UiInstance| instance.rect[2] != 0.0 || instance.rect[3] != 0.0 || instance.color[3] != 0.0;
+    let instances = draw.layers.iter().map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()).filter(painted).count()).sum();
     let vectors = draw.layers.iter().map(|layer| layer.vector_vertices.len() + layer.overlay_vector_vertices.len()).sum();
     let raster = draw.layers.iter().map(|layer| layer.raster_instances.len()).sum();
     (instances, vectors, raster)
@@ -203,6 +207,7 @@ fn immediate_stats(node: &UiNode, bounds: Rect) -> (usize, usize, usize) {
         viewport_height: 0.0,
     };
     render_widget(&widget, bounds, &mut ctx);
+    assert!((0..1_048_576).any(|_| draw.finalize_shared_borders_step().expect("the immediate shared borders finalize")), "the immediate shared borders finalize inside their finite step ceiling");
     stats(&draw)
 }
 

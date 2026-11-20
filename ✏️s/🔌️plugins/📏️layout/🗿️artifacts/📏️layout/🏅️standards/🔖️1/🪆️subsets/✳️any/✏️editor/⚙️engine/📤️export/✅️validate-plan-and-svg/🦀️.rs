@@ -226,13 +226,22 @@ impl LayoutExportJob {
         let snapshot=Arc::clone(&self.request.as_ref().unwrap().snapshot);
         if !self.text.get_or_insert_with(ExportTextState::new).prepare_flow_projection(&snapshot,cx)?{return Ok(());}
         if !self.prepare_frame_plan(&snapshot,cx)?||cx.should_yield(){return Ok(());}
-        let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(cx.retained_grant());
-        let entered=work.enter();let result=(||->Result<(),semio_framework_job::OriginalTurnFailure>{
-            if entered.is_none(){return Ok(());}if !self.pdf_items.reserve_one_in(&mut work)?||!self.pdf_pages.reserve_one_in(&mut work)?{return Ok(());}
+        let grant=cx.retained_grant();let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(grant);
+        let entered=work.enter();
+        let mut plan=|effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|->Result<(),semio_framework_job::OriginalTurnFailure>{
+            if entered.is_none(){return Ok(());}if !self.pdf_items.reserve_one_in(&mut work,effect)?||!self.pdf_pages.reserve_one_in(&mut work,effect)?{return Ok(());}
             if self.pdf_items.len()>=MAX_LAYOUT_EXPORT_DECODED_ITEMS{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout-export-item-limit").into());}
-            if self.text.as_ref().is_some_and(ExportTextState::has_active){if let Some(item)=self.text.as_mut().unwrap().advance_one_in(&snapshot,&mut work)?{self.push_plan_item(item,&mut work).map_err(Fault::from)?;}return Ok(());}
-            self.plan_pdf_one(&mut work,drawing_read).map_err(Fault::from)?;Ok(())
-        })();if entered.is_some(){if !work.blocked(){work.note_source(entered==Some(true));}work.exit();}self.plan_work_demand=work.next_demand();cx.consume_retained(work.receipt())?;result?;Ok(())
+            if self.text.as_ref().is_some_and(ExportTextState::has_active){if let Some(item)=self.text.as_mut().unwrap().advance_one_in(&snapshot,&mut work,effect)?{self.push_plan_item(item,&mut work).map_err(Fault::from)?;}return Ok(());}
+            self.plan_pdf_one(effect,&mut work,drawing_read).map_err(Fault::from)?;Ok(())
+        };
+        let run=|_:&mut StepContext<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|->Result<(),semio_framework_job::OriginalTurnFailure>{
+            let result=plan(effect);
+            semio_s_artifact_layout_layout_engine::scene::metadata_index::record_native_step(effect)?;
+            result
+        };
+        let published=if drawing_read.is_some(){cx.with_original_source_effect(grant,run)}else{cx.with_original_effect(grant,run)}?;
+        let Some((result,performed))=published else{return Ok(())};cx.consume_work(performed);
+        if entered.is_some(){if !work.blocked(){work.note_source(entered==Some(true));}work.exit();}self.plan_work_demand=work.next_demand();cx.consume_retained(work.receipt())?;result?;Ok(())
     }
 
     #[cfg(test)]
@@ -277,7 +286,7 @@ impl LayoutExportJob {
     pub(super) fn emit_output_one(&mut self,context:&mut StepContext<'_>,encoded:bool,emit:impl FnOnce(&mut Self,&mut OutputWork)->Result<(),String>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if context.should_yield()||context.is_cancelled(){return Ok(false);}
         let output=if encoded{&mut self.encoded}else{&mut self.output};
-        if !output.has_room(OUTPUT_BODY_BYTES){let result=output.prepare_one(OUTPUT_BODY_BYTES,context.retained_grant());let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};context.consume_retained(progress)?;result?;return Ok(false);}
+        if !output.has_room(OUTPUT_BODY_BYTES){let grant=context.retained_grant();let Some((result,performed))=context.with_original_effect(grant,|_,effect|output.prepare_one(OUTPUT_BODY_BYTES,effect))?else{return Ok(false)};context.consume_work(performed);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};context.consume_retained(progress)?;result?;return Ok(false);}
         let demand=self.output_work_demand(encoded)?;let grant=context.retained_grant();if grant.maximum_items<32||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(false);}
         let mut work=OutputWork::new(grant);
         let result=emit(self,&mut work);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;Ok(!work.is_preparatory())
@@ -288,8 +297,9 @@ impl LayoutExportJob {
     pub(super) fn encode_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if matches!(self.request.as_ref().unwrap().kind,LayoutExportKind::Svg|LayoutExportKind::Png|LayoutExportKind::Pdf){
             let fidelity=self.fidelity.get_or_insert_with(FidelityState::new);
-            if !fidelity.prepared{if !fidelity.prepare_image_one(&mut self.pdf_items,&self.request.as_ref().unwrap().snapshot,context).map_err(Fault::from)?{return Ok(true);}let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(context.retained_grant());let result=fidelity.prepare_one(&self.pdf_items,self.text.as_ref(),self.drawing.as_ref(),&mut work);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;return Ok(true);}
+            if !fidelity.prepared{if !fidelity.prepare_image_one(&mut self.pdf_items,&self.request.as_ref().unwrap().snapshot,context).map_err(Fault::from)?{return Ok(true);}let grant=context.retained_grant();let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(grant);let Some((result,performed))=context.with_original_effect(grant,|_,effect|{let result=fidelity.prepare_one(&self.pdf_items,self.text.as_ref(),self.drawing.as_ref(),&mut work,effect);semio_s_artifact_layout_layout_engine::scene::metadata_index::record_native_step(effect).map_err(|error|error.to_string())?;result})?else{return Ok(true)};context.consume_work(performed);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;return Ok(true);}
         }
+        if self.request.as_ref().is_some_and(|request|request.kind==LayoutExportKind::Pdf)&&!self.prepare_pdf_offset_in(context)?{return Ok(false)}
         self.emit_output_one(context,false,|job,work|match job.request.as_ref().unwrap().kind{LayoutExportKind::Svg=>job.encode_svg_one(work),LayoutExportKind::Pdf=>job.encode_pdf_one(work),LayoutExportKind::Png=>job.encode_png_one(work),LayoutExportKind::Package=>job.encode_package_one(work),LayoutExportKind::Step|LayoutExportKind::Idml=>job.encode_interchange_one(work)})
     }
 

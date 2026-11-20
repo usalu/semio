@@ -3,6 +3,7 @@ import {setTimeout as pause} from "node:timers/promises";
 import {nativeImageInventoryV1,type NativeImageInventoryPolicyV1} from "../📥️information/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {recordSandboxImagesV1} from "../../../../../🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
+import {observeNativeStorageVerificationAwaitV1,startNativeStorageVerificationPhaseV1} from "../../⏱️verification/🟦️.ts";
 
 const protocol=schema.definitions.ImageProtocol.const;
 
@@ -71,14 +72,29 @@ export function nativeRecheckWindowV1():number{return windows.getStore()??0;}
 
 /** 🚧️ Reuses the last full physical verification inside the declared window while the cheap identity checks still run on every call. */
 export function createNativePhysicalGateV1(now:()=>number=()=>performance.now()):Readonly<{run(window:number,cheap:()=>void,full:()=>Promise<void>):Promise<void>;fulls():number}>{
- let verifiedAt=Number.NEGATIVE_INFINITY,inflight:Readonly<{startedAt:number;work:Promise<void>}>|undefined,fulls=0;
+ let verifiedAt=Number.NEGATIVE_INFINITY,epoch=0,fulls=0;
+ let inflight:Readonly<{startedAt:number;epoch:number;work:Promise<void>}>|undefined;
+ const invalidate=()=>{epoch++;verifiedAt=Number.NEGATIVE_INFINITY;inflight=undefined;};
  return Object.freeze({
   async run(window,cheap,full){
-   cheap();
-   if(window>0&&now()-verifiedAt<=window)return;
-   if(window>0&&inflight&&now()-inflight.startedAt<=window){try{await inflight.work;return;}catch{}}
-   const startedAt=now(),work=(async()=>{fulls++;await full();verifiedAt=startedAt;})(),entry=Object.freeze({startedAt,work}),clear=()=>{if(inflight===entry)inflight=undefined;};
-   inflight=entry;work.then(clear,clear);return work;
+   const check=()=>{const end=startNativeStorageVerificationPhaseV1("volumeIdentity");try{cheap();}catch(error){invalidate();throw error;}finally{end?.();}};
+   check();
+   if(window>0&&now()-verifiedAt<=window){startNativeStorageVerificationPhaseV1("physicalGateCached")?.();return;}
+   if(window>0&&inflight&&now()-inflight.startedAt<=window){
+    const joined=inflight;
+    try{await observeNativeStorageVerificationAwaitV1("physicalGateJoin",()=>joined.work);if(joined.epoch===epoch)return;}catch{}
+    check();
+   }
+   const startedAt=now(),observedEpoch=epoch;
+   const work=(async()=>{
+    fulls++;
+    try{await observeNativeStorageVerificationAwaitV1("physicalGateVerify",full);}catch(error){invalidate();throw error;}
+    if(epoch===observedEpoch)verifiedAt=Math.max(verifiedAt,startedAt);
+   })();
+   const entry=Object.freeze({startedAt,epoch:observedEpoch,work});
+   if(epoch===observedEpoch)inflight=entry;
+   const clear=()=>{if(inflight===entry)inflight=undefined;};
+   work.then(clear,clear);return work;
   },
   fulls:()=>fulls,
  });

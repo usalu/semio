@@ -1,0 +1,140 @@
+{
+ "decisions": {
+  "50": {
+   "silhouette": {
+    "en": "True orthographic views of the 1:50 model of a Jungheinrich EFG 425 (ruling E1): every part is stated once and drawn as its side profile on its bone; front and plan are the same parts with their lateral span, or their true outline where a part is not laterally prismatic (counterweight, cowl, seat, tyres, beacon, mast channels, fork tips).",
+    "de": "Wahre Parallelprojektionen des 1:50-Modells eines Jungheinrich EFG 425 (Regel E1): Jedes Teil ist einmal festgelegt und als Seitenprofil auf seinem Knochen gezeichnet; Vorder- und Draufsicht sind dieselben Teile mit ihrer seitlichen Ausdehnung oder ihrem wahren Umriss, wo ein Teil nicht seitlich prismatisch ist (Gegengewicht, Armaturenhaube, Sitz, Reifen, Rundumleuchte, Mastprofile, Gabelspitzen)."
+   },
+   "retained": {
+    "en": "Everything the 7.5 mm feature shows: battery door with handle, entry step, fenders, floor plate with ribs and pedals, cowl with display, steering column and wheel, seat with armrest and mini levers, guard posts, roof frame and slats, work lamps, beacon, counterweight with apron, coupling, rear lamps and vent grille, tyres with tread, rims, hubs and nuts, tilt cylinders with eyes and ports, C-section mast rails, ties, tilt lugs, lift cylinders and rods, inner head, chains, carriage bars and side plates, load backrest with bars, forks with hooks, every board and block of the Euro pallet, goods with courses and straps.",
+    "de": "Alles, was das Kleinstmaß 7,5 mm zeigt: Batterietür mit Griff, Einstiegsstufe, Kotflügel, Bodenplatte mit Rippen und Pedalen, Armaturenhaube mit Anzeige, Lenksäule und Lenkrad, Sitz mit Armlehne und Minihebeln, Schutzdachpfosten, Dachrahmen und Streben, Arbeitsscheinwerfer, Rundumleuchte, Gegengewicht mit Schürze, Kupplung, Rückleuchten und Lüftungsgitter, Reifen mit Profil, Felgen, Naben und Muttern, Neigezylinder mit Augen und Anschlüssen, C-Profil-Mastschienen, Traversen, Neigelaschen, Hubzylinder und Stangen, Innenmastkopf, Ketten, Gabelträgerleisten und Seitenbleche, Lastschutzgitter mit Stäben, Gabeln mit Haken, jedes Brett und jeder Klotz der Europalette, Ladegut mit Lagen und Umreifung."
+   },
+   "merged": {
+    "en": "Nothing merged.",
+    "de": "Nichts zusammengefasst."
+   },
+   "omitted": {
+    "en": "Parts hidden behind others in a viewpoint are not drawn there (battery, motors, gear and brake housings, steer axle, pallet blocks behind the first row, far-side twins); hoses, cables and the back runs of the lift chains are not modelled.",
+    "de": "In einer Ansicht verdeckte Teile werden dort nicht gezeichnet (Batterie, Fahrmotoren, Getriebe- und Bremsgehäuse, Lenkachse, Palettenklötze hinter der ersten Reihe, Zwillingsteile der Gegenseite); Schläuche, Kabel und die hinteren Trume der Hubketten sind nicht modelliert."
+   },
+   "thinElements": {
+    "en": "Roof slats 10 mm = 0.2 mm, steering-wheel rim 28 mm, chains 16 mm: true size.",
+    "de": "Dachstreben 10 mm = 0,2 mm, Lenkradkranz 28 mm, Ketten 16 mm: wahre Größe."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Three line weights 0.35 / 0.25 / 0.13 mm; tyres black, paint mid-tone, counterweight and guard dark, goods light.",
+    "de": "Drei Strichstärken 0,35 / 0,25 / 0,13 mm; Reifen schwarz, Lack mittlerer Ton, Gegengewicht und Schutzdach dunkel, Ladegut hell."
+   },
+   "overlays": {
+    "en": "Every thermal region is bound to the shapes of its real parts.",
+    "de": "Jede Wärmeregion ist an die Formen ihrer realen Teile gebunden."
+   }
+  },
+  "100": {
+   "silhouette": {
+    "en": "True orthographic views of the 1:100 model (ruling E1): the parts of the 15 mm model drawn as their side profiles, front and plan as their lateral spans or true outlines.",
+    "de": "Wahre Parallelprojektionen des 1:100-Modells (Regel E1): die Teile des 15-mm-Modells als Seitenprofile, Vorder- und Draufsicht als ihre seitliche Ausdehnung oder ihr wahrer Umriss."
+   },
+   "retained": {
+    "en": "Battery-door seam, step, fenders, cowl, steering column and wheel ring, seat with armrest, guard with five slats, beacon, work lamps, counterweight with apron, coupling, rear lamps and vent grille, tyres with wheel discs, tilt cylinders, mast rails, lift cylinders and rods, chains, carriage, backrest with six bars, forks, pallet blocks and boards, goods with straps.",
+    "de": "Batterietürfuge, Stufe, Kotflügel, Armaturenhaube, Lenksäule und Lenkradkranz, Sitz mit Armlehne, Schutzdach mit fünf Streben, Rundumleuchte, Arbeitsscheinwerfer, Gegengewicht mit Schürze, Kupplung, Rückleuchten und Lüftungsgitter, Reifen mit Radschüsseln, Neigezylinder, Mastschienen, Hubzylinder und Stangen, Ketten, Gabelträger, Lastschutzgitter mit sechs Stäben, Gabeln, Palettenklötze und -bretter, Ladegut mit Umreifung."
+   },
+   "merged": {
+    "en": "The pallet deck is one slab; rim, hub cap and nuts are one wheel disc.",
+    "de": "Das Palettendeck ist eine Platte; Felge, Nabenkappe und Muttern sind eine Radschüssel."
+   },
+   "omitted": {
+    "en": "Nuts, pedals, floor ribs, spokes, rollers, goods courses, tyre tread; hidden parts as at 1:50.",
+    "de": "Muttern, Pedale, Bodenrippen, Speichen, Rollen, Ladegutlagen, Reifenprofil; verdeckte Teile wie bei 1:50."
+   },
+   "thinElements": {
+    "en": "Roof slats 15 mm = 0.15 mm, chains 16 mm, backrest bars 25 mm: true size.",
+    "de": "Dachstreben 15 mm = 0,15 mm, Ketten 16 mm, Gitterstäbe 25 mm: wahre Größe."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Line weights 0.25 / 0.18 mm; tones as 1:50.",
+    "de": "Strichstärken 0,25 / 0,18 mm; Töne wie 1:50."
+   },
+   "overlays": {
+    "en": "Every thermal region is bound to the shapes of its real parts.",
+    "de": "Jede Wärmeregion ist an die Formen ihrer realen Teile gebunden."
+   }
+  },
+  "200": {
+   "silhouette": {
+    "en": "True orthographic views of the 1:200 model (ruling E1): frame sides, hood, fenders, cowl, seat, guard, counterweight, wheels, mast, carriage, forks, pallet and goods as their side profiles and lateral spans.",
+    "de": "Wahre Parallelprojektionen des 1:200-Modells (Regel E1): Rahmenseiten, Haube, Kotflügel, Armaturenhaube, Sitz, Schutzdach, Gegengewicht, Räder, Mast, Gabelträger, Gabeln, Palette und Ladegut als Seitenprofile und seitliche Ausdehnung."
+   },
+   "retained": {
+    "en": "Battery-door seam, rim line, guard frame with three slats, beacon, steering wheel, armrest, tilt cylinders, lift cylinders, backrest with three bars, three pallet runners, block line.",
+    "de": "Batterietürfuge, Felgenlinie, Schutzdachrahmen mit drei Streben, Rundumleuchte, Lenkrad, Armlehne, Neigezylinder, Hubzylinder, Lastschutzgitter mit drei Stäben, drei Palettenkufen, Klotzlinie."
+   },
+   "merged": {
+    "en": "Each frame side is one plate; fender sheet and deck one mass; carriage bars one plate; pallet boards and blocks three runners under one deck.",
+    "de": "Jede Rahmenseite ist ein Blech; Kotflügelblech und Abdeckung eine Masse; Gabelträgerleisten eine Platte; Palettenbretter und -klötze drei Kufen unter einem Deck."
+   },
+   "omitted": {
+    "en": "Doors, step, lamps, coupling, grille, chains, sheaves, wheel discs, straps, goods courses; hidden parts as at 1:50.",
+    "de": "Türen, Stufe, Leuchten, Kupplung, Gitter, Ketten, Kettenrollen, Radschüsseln, Umreifung, Ladegutlagen; verdeckte Teile wie bei 1:50."
+   },
+   "thinElements": {
+    "en": "Roof slats and backrest bars 30 mm = 0.15 mm; fork blades 40 mm: true size.",
+    "de": "Dachstreben und Gitterstäbe 30 mm = 0,15 mm; Gabelblätter 40 mm: wahre Größe."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Line weights 0.18 / 0.13 mm; tones as 1:50.",
+    "de": "Strichstärken 0,18 / 0,13 mm; Töne wie 1:50."
+   },
+   "overlays": {
+    "en": "Every thermal region has its own shape.",
+    "de": "Jede Wärmeregion hat ihre eigene Form."
+   }
+  },
+  "500": {
+   "silhouette": {
+    "en": "True orthographic views of the 1:500 model (ruling E1): a few masses with the real proportions of the EFG 425; the mast still tilts and lifts.",
+    "de": "Wahre Parallelprojektionen des 1:500-Modells (Regel E1): wenige Massen mit den realen Proportionen des EFG 425; der Mast neigt und hebt weiterhin."
+   },
+   "retained": {
+    "en": "Body with front wheel arch, fenders, cowl, seat, guard posts and roof, beacon, counterweight with rear wheel arch, tilt cylinders, two rails per mast stage, inner head, carriage, backrest, forks, pallet and goods, four wheels.",
+    "de": "Aufbau mit vorderem Radlauf, Kotflügel, Armaturenhaube, Sitz, Schutzdachpfosten und Dach, Rundumleuchte, Gegengewicht mit hinterem Radlauf, Neigezylinder, zwei Schienen je Maststufe, Innenmastkopf, Gabelträger, Lastschutzgitter, Gabeln, Palette und Ladegut, vier Räder."
+   },
+   "merged": {
+    "en": "Each frame side one plate; the roof grid one slab; the barred backrest a frame with one centre bar; counterweight casting below the loft one piece; pallet one block.",
+    "de": "Jede Rahmenseite ein Blech; das Dachgitter eine Platte; das vergitterte Lastschutzgitter ein Rahmen mit einem Mittelstab; Gegengewichtsguss unter dem Loft ein Stück; Palette ein Block."
+   },
+   "omitted": {
+    "en": "Steering wheel and column, armrest, lamps, coupling, chains, lift cylinders, pallet openings, straps; hidden parts as at 1:50.",
+    "de": "Lenkrad und Säule, Armlehne, Leuchten, Kupplung, Ketten, Hubzylinder, Palettenöffnungen, Umreifung; verdeckte Teile wie bei 1:50."
+   },
+   "thinElements": {
+    "en": "Guard posts, fork blades, tilt rods and rails thickened to 75 mm = 0.15 mm.",
+    "de": "Schutzdachpfosten, Gabelblätter, Kolbenstangen und Schienen auf 75 mm = 0,15 mm verdickt."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Body pen 0.15 mm; body mid-tone, counterweight and guard dark, goods light, tyres black.",
+    "de": "Körperstift 0,15 mm; Aufbau mittlerer Ton, Gegengewicht und Schutzdach dunkel, Ladegut hell, Reifen schwarz."
+   },
+   "overlays": {
+    "en": "Every thermal region has its own shape or its hidden solid.",
+    "de": "Jede Wärmeregion hat ihre eigene Form oder ihren verdeckten Körper."
+   }
+  }
+ }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/set-shot-drawing/schema.json",
+  "title": "SetShotDrawing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "patch"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setShotDrawing"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "patch": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingDrawingPatch"
+    }
+  }
+}

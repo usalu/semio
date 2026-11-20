@@ -29,7 +29,8 @@ export function meshSelectionInputs(ids: readonly string[], payload: MeshSelecti
   }
   if (target.analytic) throw new Error("Analytic components require a B-Rep operation");
   const field = operation === "moveVertices" ? "vertices" : granularity === "edge" ? "edges" : granularity === "vertex" ? "selection" : "faces";
-  const inputs: Record<string, number | string | number[]> = { [field]: JSON.stringify(group.components) };
+  const components = operation === "mergeVertices" ? [target.component, ...group.components.filter(id => id !== target.component)] : group.components;
+  const inputs: Record<string, number | string | number[]> = { [field]: JSON.stringify(components) };
   if (operation === "moveVertices" || operation === "moveProportional") inputs.offset = [payload.dx, payload.dy, payload.dz];
   if (operation === "loopCut") inputs.cuts = payload.cuts;
   if (operation === "extrude") inputs.distance = payload.amount;

@@ -1,7 +1,7 @@
 {
   "oracle": {
     "package": "numpy",
-    "implementation": "Symmetric two-storey axial frame condensed independently from the shipped geometry and consistent gravity loads"
+    "implementation": "Gauss–Legendre frame assembly and constant-strain tetrahedral slab assembly with the shipped demo footprint triangulation"
   },
   "physicalPageBytes": 4096,
   "frame": {
@@ -12,6 +12,7 @@
     "storeyHeight": 2.8,
     "beamLengths": [8, 10],
     "storeyVerticalDisplacements": [-0.000022794516, -0.000033473028],
+    "firstStoreyCornerLateralDisplacement": [-2.958388689859433e-6, -4.967031479155994e-6],
     "rootVerticalReaction": 9777.615228
   },
   "slab": {
@@ -19,6 +20,7 @@
     "height": 0.5,
     "density": 2400,
     "pressure": 800,
-    "verticalReactionSum": 50288
+    "verticalReactionSum": 50288,
+    "cornerVonMisesStress": 59312.62075428927
   }
 }

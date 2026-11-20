@@ -276,7 +276,7 @@ describe("UIIntroduction appearance", () => {
       }
     });
 
-    it("introduction and dialog glass boxes emphasize their silhouette only while the pointer is inside", async () => {
+    it("introduction and dialog glass boxes emphasize their silhouette only through the compositor hover stroke", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
@@ -285,7 +285,8 @@ describe("UIIntroduction appearance", () => {
       expect(css).toContain('[data-slot="dialog-content"]');
       expect(css).toContain("data-window-silhouette-border");
       expect(css).toContain("[data-window-silhouette]");
-      expect(css).toContain(':not([data-active="true"]):hover');
+      expect(css).toContain('[data-shared-border-segment][data-shared-border-state="hover"]');
+      expect(css).not.toMatch(/\[data-window-silhouette\]:hover/);
       expect(css).toContain("stroke: var(--border-emphasized-color)");
       expect(css).toContain("window-silhouette-border-introduced");
       expect(css).toContain("@keyframes introduced-border-pulse");

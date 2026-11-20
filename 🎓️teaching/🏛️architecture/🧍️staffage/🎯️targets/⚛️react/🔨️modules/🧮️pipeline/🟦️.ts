@@ -6,7 +6,12 @@
  * @see ../🧍️figure/🟦️.tsx — the React consumer
  * @see ../📤️downloads/🟦️.ts — the export consumer
  */
-import { VIEWS, defaultDepictionOptions, depict, evaluate, resolveDepiction, solveStructure, solveThermal, writeSvg } from "@teaching/staffage";
+import { VIEWS } from "../../../../🔨️modules/🔗️contracts/🟦️.ts";
+import { defaultDepictionOptions, depict, resolveDepiction } from "../../../../🔨️modules/🎨️depiction/🟦️.ts";
+import { evaluateDrawing } from "../../../../🔨️modules/🧮️evaluation/🟦️.ts";
+import { solveStructure } from "../../../../🔨️modules/🏗️structure/🟦️.ts";
+import { solveThermal } from "../../../../🔨️modules/🌡️thermal/🟦️.ts";
+import { writeSvg } from "../../../../🔨️modules/📤️export/🖼️svg/🟦️.ts";
 import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, Language, PrintProfile, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 
 /** 🖥️ The profile of an on-screen figure: the archive is read on a display, so pen and gap floors of a printer do not hide the drawing. A file exported from the site names this profile and does not claim a printer check. */
@@ -48,6 +53,13 @@ const thermals = new WeakMap<EvaluatedState, Map<string, ThermalField>>();
 const structures = new WeakMap<EvaluatedState, StructuralResult>();
 const scenes = new WeakMap<EvaluatedState, Map<string, DrawingScene>>();
 
+const optionKeys = new WeakMap<object, string>();
+const keyOf = (options: DepictionOptions): string => {
+  let key = optionKeys.get(options);
+  if (key === undefined) optionKeys.set(options, (key = JSON.stringify(options)));
+  return key;
+};
+
 function remember<V>(cache: Map<string, V>, key: string, make: () => V): V {
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
@@ -67,11 +79,11 @@ export function queryAt(query: EvaluationQuery, timeS: number | null): Evaluatio
   return timeS === null || query.kind === "pose" ? query : { ...query, timeS };
 }
 
-/** 🧮️ Evaluates (memoised) an asset at a query. A selector picks the authored drawing; without one the state carries rig and physics only. */
+/** 🧮️ Evaluates (memoised) an asset at a query, projecting front and plan views on demand. A selector picks the authored drawing; without one the state carries rig and physics only. */
 export function evaluateState(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   let cache = states.get(asset);
   if (cache === undefined) states.set(asset, (cache = new Map()));
-  return remember(cache, JSON.stringify([query, selector ?? null]), () => evaluate(asset, query, selector));
+  return remember(cache, JSON.stringify([query, selector ?? null]), () => evaluateDrawing(asset, query, selector));
 }
 
 /** 🖨️ The same instant drawn with the representation the depiction asks for. */
@@ -119,7 +131,7 @@ export function depictionOptions(request: DepictionRequest): DepictionOptions {
 export function sceneOf(state: EvaluatedState, options: DepictionOptions): DrawingScene {
   let cache = scenes.get(state);
   if (cache === undefined) scenes.set(state, (cache = new Map()));
-  return remember(cache, JSON.stringify(options), () => {
+  return remember(cache, keyOf(options), () => {
     const drawn = represented(state, options);
     const thermal = options.view === "thermal" ? thermalOf(drawn, options.environment) : undefined;
     const structure = options.view === "forces" || options.view === "moments" ? structureOf(drawn) : undefined;

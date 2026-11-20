@@ -87,6 +87,20 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
   );
 }
 
+/** 🔭️ What a placement measured of the page beneath it, valid while the layout it was measured for is the same. */
+export interface PlacementSurvey {
+  key: string;
+  readonly values: Map<string, unknown>;
+}
+
+/** 🔭️ The measurement `kind` of the layout `key`, taken once per layout: rendering again for another reason (the box was pressed, a label changed) reads no geometry, because every read of a page an animation keeps dirty forces a layout inside the pointer task. */
+export function reuseSurvey<T>(survey: { current: PlacementSurvey }, key: string, kind: string, measure: () => T): T {
+  if (survey.current.key !== key) survey.current = { key, values: new Map() };
+  const { values } = survey.current;
+  if (!values.has(kind)) values.set(kind, measure());
+  return values.get(kind) as T;
+}
+
 /** 🧲️ How far (px) the info box reaches to dock onto a border line beneath it. */
 const INTRODUCTION_DOCK_REACH_PX = 40;
 
@@ -172,6 +186,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const dragPositionRef = reactHostPort.useRef(dragPosition);
   dragPositionRef.current = dragPosition;
   const dragLayoutRef = reactHostPort.useRef({ placement: { top: 0, left: 0 }, boxSize, viewport });
+  const surveyRef = reactHostPort.useRef<PlacementSurvey>({ key: "", values: new Map() });
   const dragSessionRef = reactHostPort.useRef<{ startTop: number; startLeft: number; pointerX: number; pointerY: number } | null>(null);
 
   reactHostPort.useEffect(() => {
@@ -306,13 +321,15 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   const stepTitle = resolveUiLocalizedText(step.title, terminology, locale);
   const bodyParagraphs = splitIntroductionBodyParagraphs(resolveUiLocalizedText(step.body, terminology, locale));
-  const hostRect = overlayHost?.getBoundingClientRect() ?? null;
+  const surveyKey = [boxRef.current === null, stepIndex, viewport.width, viewport.height, boxSize.width, boxSize.height, introduceRect?.left, introduceRect?.top, introduceRect?.width, introduceRect?.height].join(",");
+  const survey = <T,>(kind: string, make: () => T): T => reuseSurvey(surveyRef, surveyKey, kind, make);
+  const hostRect = survey("host", () => overlayHost?.getBoundingClientRect() ?? null);
   const placementAnchor = introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
   const placed = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
-  const docked = typeof document !== "undefined" ? dockIntroductionInfoBox(placed, boxSize, underlyingBorderLines(hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight), boxRef.current), INTRODUCTION_DOCK_REACH_PX) : { ...placed, ...boxSize };
+  const docked = typeof document !== "undefined" ? dockIntroductionInfoBox(placed, boxSize, survey("underlying", () => underlyingBorderLines(hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight), boxRef.current)), INTRODUCTION_DOCK_REACH_PX) : { ...placed, ...boxSize };
   const clearHost = hostRect ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
   const boxPosition = typeof document !== "undefined" && Math.abs(docked.width - boxSize.width) < 0.5
-    ? clampIntroductionInfoBoxPosition(clearIntroductionInfoBoxNearMisses({ top: docked.top, left: docked.left }, ownBorderLines(boxRef.current), underlyingChipLines(clearHost, boxRef.current), INTRODUCTION_DOCK_REACH_PX, INTRODUCTION_CLEAR_RANGE_PX), boxSize, viewport, 0)
+    ? clampIntroductionInfoBoxPosition(clearIntroductionInfoBoxNearMisses({ top: docked.top, left: docked.left }, survey("own", () => ownBorderLines(boxRef.current)), survey("chips", () => underlyingChipLines(clearHost, boxRef.current)), INTRODUCTION_DOCK_REACH_PX, INTRODUCTION_CLEAR_RANGE_PX), boxSize, viewport, 0)
     : { top: docked.top, left: docked.left };
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;

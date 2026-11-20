@@ -1,0 +1,14 @@
+{
+  "acquired": [
+    "image",
+    "collector",
+    "scan",
+    "release-collector",
+    "release-image"
+  ],
+  "busy": [
+    "image",
+    "collector",
+    "release-image"
+  ]
+}

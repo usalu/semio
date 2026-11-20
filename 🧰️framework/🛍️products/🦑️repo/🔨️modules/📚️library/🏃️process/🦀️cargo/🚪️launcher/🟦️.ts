@@ -1,3 +1,4 @@
+import{freeSpaceSyncV1}from"../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import{withLaneRetentionV1}from"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withRepositoryCompilerRuntimeEntriesV1} from "../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
@@ -21,7 +22,7 @@ import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1} from "..
 import {bindHostCapacityWaitMarkerV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {withNativeRecheckWindowV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts";
-import {copyFileSync,mkdirSync,readdirSync,rmSync,statfsSync} from "node:fs";
+import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,constants} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -96,7 +97,7 @@ export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane
 type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 
 /** 💽️ The free bytes of the image that holds a cache root; `null` when it cannot be measured. */
-function imageFreeBytesV1(root:string):number|null{try{const row=statfsSync(root);return row.bavail*row.bsize;}catch{return null;}}
+function imageFreeBytesV1(root:string):number|null{return freeSpaceSyncV1(root)?.availableBytes??null;}
 /** 👥️ How many other commands the headroom ledger of the image lists (waiting or running). */
 const otherCommandsV1=(cacheRoot:string,id:string):number=>{try{return readHeadroomLedgerV1(cacheRoot).filter(row=>row.id!==id).length;}catch{return 1;}};
 /** 🧮️ What a Cargo command wrote to the image (learned only from a command that completed: one that failed early wrote little and would teach the estimate that a build is nearly free): the larger of its lane's growth and, only while no other command was admitted or waiting at the start and the end (`exclusive`), the fall of the image's free space around it (with concurrent builds, GC or unrelated writers that fall belongs to nobody in particular and would inflate every reservation), and a failed command teaches only a growth that exceeds its reservation (an out-of-space kill needs a bigger one; an early failure must not teach that a build is free), so shared unit-cache objects and component outputs outside the lane are learned too (writes of concurrent commands only make the estimate larger), never negative. */

@@ -63,7 +63,7 @@ pub use loop_areas_and_volume_moments::face_volume_contribution;
 #[path = "🗺️uv-polygons/🦀️.rs"]
 mod uv_polygons;
 use uv_polygons::{loop_uv_polygon, loop_uv_polygon_with, point_in_uv_polygon};
-pub use uv_polygons::{loop_uv_signed_area, surface_uv};
+pub use uv_polygons::{coedge_sample_count, coedge_uv_sample, loop_uv_signed_area, surface_uv, unwrap_u};
 
 #[path = "🧭️face-samples-and-closest-point/🦀️.rs"]
 mod face_samples_and_closest_point;

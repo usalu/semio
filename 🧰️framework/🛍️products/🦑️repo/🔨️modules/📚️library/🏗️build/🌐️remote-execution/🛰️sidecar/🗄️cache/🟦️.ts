@@ -5,7 +5,7 @@ import {fleetCacheEndpointsV1,fleetGroupViewV1,fleetNetworkV1,publishFleetCacheF
 import {createFleetPeerReadThroughV1,directPeerTransportV1,fleetPeerEndpointsV1,relayedPeerTransportV1,servePeerExchangeV1,FLEET_HOP_HEADER_V1,type FleetPeerTransportV1} from "../../../🌐️remote-cache/🧭️peers/🟦️.ts";
 import {readLocalFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {createSealedFetchV1} from "../../../🌐️remote-cache/🔐️sealed/🟦️.ts";
-import {fleetInterfaceAddressV1,fleetSignedFetchV1,loadFleetSignerV1,readFleetMachineV1,readFleetOriginKeyV1,syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {fleetInterfaceAddressV1,fleetPeerAllowedV1,fleetSignedFetchV1,loadFleetSignerV1,readFleetMachineV1,readFleetOriginKeyV1,syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {readRemoteCachePolicyV1} from "../../../🌐️remote-cache/🟦️.ts";
 import {startRemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import {type RemoteExecutionSidecarContextV1,sleep} from "../🧰️shared/🟦️.ts";
@@ -24,6 +24,7 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
   if(found!==undefined){address=found.address;declared=`${found.address.split(".").slice(0,3).join(".")}.0/24`;say(`the declared fleet network does not match; using ${address} and ${declared}`);}
  }
  if(address===undefined||declared===undefined)throw Error("no address of this machine inside the fleet network (SEMIO_FLEET_NETWORK)");
+ const additionalHosts=Object.values(networkInterfaces()).flatMap(rows=>rows??[]).filter(row=>row.family==="IPv4"&&!row.internal&&row.address!==address&&fleetPeerAllowedV1(row.address,[declared])).map(row=>row.address);
  const port=Number(environment.SEMIO_REMOTE_CACHE_FLEET_PORT??view?.ports?.cache);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error("the cache port is a fact of the topology (ports.cache of the group row) or SEMIO_REMOTE_CACHE_FLEET_PORT");
  const peerStores=view?.peerStores??{},inGroup=view?.inGroup??"sealed",transports:FleetPeerTransportV1[]=[];
@@ -35,12 +36,13 @@ export async function runCache(context:RemoteExecutionSidecarContextV1):Promise<
  }
  const pinned=Object.fromEntries(Object.entries(view?.links??{}).filter(([,link])=>link.serverKey!==undefined).map(([peer,link])=>[`${peer}-server`,link.serverKey!]));
  const directory=machinePathV1(context.root,policy.fleetDirectory),{createCasStoreV1,casRootV1}=await import("../../../🗄️cas/🗃️store/🟦️.ts");
- const server=await startRemoteCacheServerV1({hostStore:createCasStoreV1({root:casRootV1(environment)}),directory,host:address,port,maximumBytes:policy.maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(policy.maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,graceMilliseconds:policy.graceSeconds*1000,defaultInstance:all.defaults.instance,tokens:{},validation:policy.actionResults as "complete",maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,mirror:{directory:join(directory,"mirror")},fleet:{storeRoot:machine.storeRoot,group:machine.group,root:context.root,inGroup,...(view?.enforceNetwork===true?{networks:[declared]}:{}),peerStores,pinned},peers:createFleetPeerReadThroughV1({transports}),signal:context.signal});
+ const server=await startRemoteCacheServerV1({hostStore:createCasStoreV1({root:casRootV1(environment)}),directory,host:address,additionalHosts,port,maximumBytes:policy.maximumBytes,maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(policy.maximumBytes/2)),maximumAgeDays:policy.maximumAgeDays,graceMilliseconds:policy.graceSeconds*1000,defaultInstance:all.defaults.instance,tokens:{},validation:policy.actionResults as "complete",maximumActionResultBytes:policy.maximumActionResultBytes,maintenanceSeconds:policy.maintenanceSeconds,mirror:{directory:join(directory,"mirror")},fleet:{storeRoot:machine.storeRoot,group:machine.group,root:context.root,inGroup,...(view?.enforceNetwork===true?{networks:[declared]}:{}),peerStores,pinned},peers:createFleetPeerReadThroughV1({transports}),signal:context.signal});
  const leaving=new AbortController(),exchange=servePeerExchangeV1({ownGroup:machine.group,ownStore:machine.storeRoot,peers:peerStores,pollMilliseconds:1000,signal:AbortSignal.any([context.signal,leaving.signal]),answer:async path=>{const response=await signedRead(server.url+path,{headers:{[FLEET_HOP_HEADER_V1]:"1"}});return response.status===200?{status:200,bytes:new Uint8Array(await response.arrayBuffer())}:(await response.body?.cancel(),{status:response.status});}});
  say(`serving the cache on ${server.url}, index ${directory}`);
  const publish=async():Promise<void>=>{
   try{
-   const published=await publishFleetCacheFactsV1({admin,storeRoot:machine.storeRoot!,directory,group:machine.group,instance:all.defaults.instance,port:server.port,transport:inGroup,endpoints:fleetCacheEndpointsV1(server.port,[`http://${address}:${server.port}`,...(view?.advertise??[]).map(host=>`http://${host}:${server.port}`)],[]).filter(endpoint=>endpoint.startsWith(`http://${address}:`)||(view?.advertise??[]).some(host=>endpoint.startsWith(`http://${host}:`)))});
+   const hosts=[address,...additionalHosts,...(view?.advertise??[])];
+   const published=await publishFleetCacheFactsV1({admin,storeRoot:machine.storeRoot!,directory,group:machine.group,instance:all.defaults.instance,port:server.port,transport:inGroup,endpoints:fleetCacheEndpointsV1(server.port,hosts.map(host=>`http://${host}:${server.port}`),[]).filter(endpoint=>hosts.includes(new URL(endpoint).hostname))});
    if(published.changed)say(`fleet facts published: generation ${published.facts.generation}`);
   }catch(error){say(`publishing the fleet facts failed: ${(error as Error).message}`);}
  };

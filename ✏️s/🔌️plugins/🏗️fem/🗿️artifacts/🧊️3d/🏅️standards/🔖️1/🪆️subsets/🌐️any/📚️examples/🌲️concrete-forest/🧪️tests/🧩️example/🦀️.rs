@@ -21,7 +21,7 @@ fn document() -> Fem3dSnapshot {
 }
 
 fn node(doc: &Fem3dSnapshot, id: &str) -> [f64; 3] {
-    let node = doc.nodes.iter().find(|node| node.id == id).unwrap_or_else(|| panic!("node {id}"));
+    let node = doc.nodes.iter().find(|node| node.id.as_str() == id).unwrap_or_else(|| panic!("node {id}"));
     [node.x, node.y, node.z]
 }
 
@@ -59,7 +59,7 @@ fn applied_vertical_load(doc: &Fem3dSnapshot, case_id: &str) -> f64 {
                 let (material_id, section_id) = match element {
                     FemElement::Frame { material_id, section_id, .. } | FemElement::Bar { material_id, section_id, .. } => (material_id, section_id),
                 };
-                let rho = doc.materials.iter().find(|material| &material.id == material_id).expect("material").rho;
+                let rho = doc.materials.iter().find(|material| material.id.as_str() == material_id.as_str()).expect("material").rho;
                 let area = doc.sections.iter().find(|section| &section.id == section_id).expect("section").area;
                 -rho * area * GRAVITY * length(element)
             })
@@ -135,8 +135,8 @@ fn deformation_solves_balanced_and_stacks() {
     assert!(tz(sls, "uc1t") < tz(sls, "lc1t") && tz(sls, "uc2t") < tz(sls, "lc2t"), "upper heads ride on the lower storey's shortening");
     assert!(row("lc1t")[1] * row("lc2t")[1] < 0.0, "the hexagonal cut is asymmetric: column 1 carries two −y cantilevers, column 2 two +y ones, so the heads lean apart in y");
     assert!(row("uc1t")[1].abs() > row("lc1t")[1].abs(), "the lean accumulates storey over storey");
-    let beam = doc.sections.iter().find(|section| section.id == "beam30x45").expect("beam section");
-    let concrete = doc.materials.iter().find(|material| material.id == "c30").expect("concrete");
+    let beam = doc.sections.iter().find(|section| section.id.as_str() == "beam30x45").expect("beam section");
+    let concrete = doc.materials.iter().find(|material| material.id.as_str() == "c30").expect("concrete");
     let w = 10298.0 + 4952.0 + concrete.rho * beam.area * GRAVITY;
     for (storey, column_of) in [("l", [1, 2, 2, 2, 1, 1, 2]), ("u", [1, 2, 2, 2, 1, 1, 2])] {
         for (tip, column) in column_of.iter().enumerate() {

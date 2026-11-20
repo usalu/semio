@@ -1,0 +1,51 @@
+[
+  {
+    "name": "matching",
+    "status": "local",
+    "builders": 0,
+    "restores": 0,
+    "fences": 0
+  },
+  {
+    "name": "wrong-code",
+    "status": "foreign",
+    "builders": 0,
+    "restores": 0,
+    "fences": 0
+  },
+  {
+    "name": "busy",
+    "status": "busy",
+    "builders": 0,
+    "restores": 0,
+    "fences": 0
+  },
+  {
+    "name": "raced-local",
+    "status": "local",
+    "builders": 1,
+    "restores": 0,
+    "fences": 0
+  },
+  {
+    "name": "missing-custody",
+    "status": "busy",
+    "builders": 1,
+    "restores": 0,
+    "fences": 0
+  },
+  {
+    "name": "stale-head",
+    "status": "incomplete",
+    "builders": 1,
+    "restores": 1,
+    "fences": 0
+  },
+  {
+    "name": "restored",
+    "status": "restored",
+    "builders": 1,
+    "restores": 1,
+    "fences": 2
+  }
+]

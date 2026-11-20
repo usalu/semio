@@ -128,6 +128,7 @@ impl KernelPoolState {
         let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
         let artifact_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
         let compiled=match self.compile_serving_others(&owner,hash,component).await{Ok(compiled)=>compiled,Err(kind)=>return Err(owner.into_failure(kind).into())};
+        let activation_budget=match owner.activation_budget().await{Ok(budget)=>budget,Err(kind)=>return Err(owner.into_failure(kind).into())};
         let package_id=PackageId(plugin_id.to_owned());
         if !artifact_schema.is_empty() {
             let codec = semio_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema.to_owned()).map_err(|error| error.to_string())?;
@@ -147,7 +148,7 @@ impl KernelPoolState {
                 ActivationEvent::Manual,
                 &compiled,
                 &[] as &[BrokerCapabilityGrant],
-                &TURN_BUDGET,
+                &activation_budget,
             )
             .await
             .map_err(|refusal| refusal.reason)?;
@@ -168,7 +169,7 @@ impl KernelPoolState {
         first_turn.push(open);
         self.run_turn(actor, instance_id, first_turn).await?;
         if let Some(modules_root) = wasm_path.parent().and_then(|dir| dir.parent()) {
-            self.activate_extensions_of(&plugin_id, actor, modules_root).await;
+            self.activate_extensions_of(&owner, &plugin_id, actor, modules_root).await;
         }
         Ok(instance_id)
     }
@@ -203,7 +204,7 @@ impl KernelPoolState {
     /// `intersect_capabilities` call still records the correctly-scoped grant kernel-side
     /// (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
     /// ready the moment a broker starts populating `parent_grants` for real.
-    async fn activate_extensions_of(&mut self, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
+    async fn activate_extensions_of(&mut self, owner: &CreateAppRequestOwner, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
         let extensions = extension_index().extensions_of(plugin_id);
         if extensions.is_empty() {
             return;
@@ -238,7 +239,14 @@ impl KernelPoolState {
             };
             let extension_ordinal = self.plugin_ordinal(&extension.extension_id);
             let extension_kind = ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: extension.extension_id.clone() };
-            match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await {
+            let activation_budget = match owner.activation_budget().await {
+                Ok(budget) => budget,
+                Err(kind) => {
+                    crate::log_debug(&format!("kernel: original activation budget refused for extension {}: {kind:?}", extension.extension_id));
+                    continue;
+                }
+            };
+            match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &activation_budget).await {
                 Ok(extension_actor) => {
                     self.replay_routes[replay_route_index] =
                         Some(MountedReplayRouteSeed { actor: extension_actor, plugin: JobReplayRequest::from_spawn(&extension.extension_id, &[]).tool, package: extension_hash.0, window: parent_route.window, artifact: parent_route.artifact });

@@ -149,7 +149,7 @@ function Navigation(): ReactElement {
     {
       key: "brand",
       content: (
-        <a href="#/" aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className={cn("inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold no-underline", route.page === "overview" ? "text-primary" : "text-foreground")}>
+        <a href="#/" data-shared-border-frame="" data-shared-border-edges="" data-shared-border-state={route.page === "overview" ? "active" : undefined} aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className={cn("inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold no-underline", route.page === "overview" ? "text-primary" : "text-foreground")}>
           <span aria-hidden="true" className="font-serif text-lg leading-none">⌂</span>
           <span className="hidden sm:inline">{t("brand.short")}</span>
         </a>
@@ -190,7 +190,7 @@ function Shell(): ReactElement {
   }, [route.page]);
   return (
     <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={language} data-motion={reducedMotion ? "reduced" : "full"} data-playful={preferences.playful ? "on" : "off"}>
-      <a href="#staffage-main" className="sr-only focus:not-sr-only focus:absolute focus:left-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground" onClick={(event) => { event.preventDefault(); main.current?.focus(); }}>
+      <a href="#staffage-main" data-shared-border-frame="" data-shared-border-edges="" className="sr-only focus:not-sr-only focus:absolute focus:left-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground" onClick={(event) => { event.preventDefault(); main.current?.focus(); }}>
         {t("nav.skip")}
       </a>
       <header className="relative z-40 shrink-0">

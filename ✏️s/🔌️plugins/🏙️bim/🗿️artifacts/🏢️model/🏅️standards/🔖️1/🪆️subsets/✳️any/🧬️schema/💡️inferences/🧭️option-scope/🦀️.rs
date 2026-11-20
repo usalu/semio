@@ -2,6 +2,7 @@
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ElementMembership};
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals, totals_of};
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules::{element_ids, host};
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const READS: &[&str] = &["option_groups", "design_options", "worksets", "element_options", "element_worksets", "walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "ramps", "railings", "spaces", "components", "mep_elements", "wall_sweeps"];
@@ -10,18 +11,18 @@ pub const READS: &[&str] = &["option_groups", "design_options", "worksets", "ele
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct OptionScope {
     pub elements: Vec<String>,
-    pub defaults: BTreeMap<String, String>,
-    pub groups: BTreeMap<String, String>,
-    pub effective_options: BTreeMap<String, String>,
-    pub effective_worksets: BTreeMap<String, String>,
+    pub defaults: RetainedOrderedMap<String, String>,
+    pub groups: RetainedOrderedMap<String, String>,
+    pub effective_options: RetainedOrderedMap<String, String>,
+    pub effective_worksets: RetainedOrderedMap<String, String>,
     pub hidden_worksets: Vec<String>,
-    pub hosts: BTreeMap<String, String>,
+    pub hosts: RetainedOrderedMap<String, String>,
     pub visible: Vec<String>,
-    pub options: BTreeMap<String, Vec<String>>,
-    pub worksets: BTreeMap<String, Vec<String>>,
-    pub takeoff: BTreeMap<String, QuantityTotals>,
+    pub options: RetainedOrderedMap<String, Vec<String>>,
+    pub worksets: RetainedOrderedMap<String, Vec<String>>,
+    pub takeoff: RetainedOrderedMap<String, QuantityTotals>,
 }
-fn effective(base: &ModelSnapshot, memberships: &BTreeMap<String, ElementMembership>, id: &str) -> Option<String> {
+fn effective(base: &ModelSnapshot, memberships: &RetainedOrderedMap<String, ElementMembership>, id: &str) -> Option<String> {
     memberships.get(id).or_else(|| host(base, id).and_then(|parent| memberships.get(parent))).map(|record| record.target.clone())
 }
 impl OptionScope {
@@ -48,11 +49,11 @@ impl OptionScope {
 pub fn scope_of<'a>(base: &ModelSnapshot, quantities: impl IntoIterator<Item = (&'a str, &'a ElementQuantity)>) -> OptionScope {
     let ids = element_ids(base);
     let mut result = OptionScope { elements: ids.iter().cloned().collect(), groups: base.design_options.iter().map(|(id, option)| (id.clone(), option.group.clone())).collect(), hidden_worksets: base.worksets.iter().filter(|(_, workset)| !workset.default_visible).map(|(id, _)| id.clone()).collect(), ..Default::default() };
-    for (id, option) in &base.design_options { if option.primary || !result.defaults.contains_key(&option.group) { result.defaults.insert(option.group.clone(), id.clone()); } }
+    for (id, option) in &base.design_options { if option.primary || !result.defaults.contains_key(&option.group) { result.defaults.cold_insert(option.group.clone(), id.clone()); } }
     for id in &ids {
-        if let Some(option) = effective(base, &base.element_options, id) { result.effective_options.insert(id.clone(), option); }
-        if let Some(workset) = effective(base, &base.element_worksets, id) { result.effective_worksets.insert(id.clone(), workset); }
-        if let Some(parent) = host(base, id) { result.hosts.insert(id.clone(), parent.to_owned()); }
+        if let Some(option) = effective(base, &base.element_options, id) { result.effective_options.cold_insert(id.clone(), option); }
+        if let Some(workset) = effective(base, &base.element_worksets, id) { result.effective_worksets.cold_insert(id.clone(), workset); }
+        if let Some(parent) = host(base, id) { result.hosts.cold_insert(id.clone(), parent.to_owned()); }
     }
     let hidden = result.hidden_worksets.iter().cloned().collect();
     result.visible = result.visible_for(&BTreeMap::new(), &hidden);
@@ -60,10 +61,10 @@ pub fn scope_of<'a>(base: &ModelSnapshot, quantities: impl IntoIterator<Item = (
     for (id, option) in &base.design_options {
         let selected = BTreeMap::from([(option.group.clone(), id.clone())]);
         let visible = result.visible_for(&selected, &BTreeSet::new());
-        result.takeoff.insert(id.clone(), totals_of(visible.iter().filter_map(|id| quantities.get(id.as_str()).copied())));
-        result.options.insert(id.clone(), visible);
+        result.takeoff.cold_insert(id.clone(), totals_of(visible.iter().filter_map(|id| quantities.get(id.as_str()).copied())));
+        result.options.cold_insert(id.clone(), visible);
     }
-    for id in base.worksets.keys() { result.worksets.insert(id.clone(), result.effective_worksets.iter().filter(|(_, workset)| *workset == id).map(|(element, _)| element.clone()).collect()); }
+    for id in base.worksets.keys() { result.worksets.cold_insert(id.clone(), result.effective_worksets.iter().filter(|(_, workset)| *workset == id).map(|(element, _)| element.clone()).collect()); }
     result
 }
 /// 🔗️ Authored inputs of the visibility node; quantity changes arrive through graph parents.

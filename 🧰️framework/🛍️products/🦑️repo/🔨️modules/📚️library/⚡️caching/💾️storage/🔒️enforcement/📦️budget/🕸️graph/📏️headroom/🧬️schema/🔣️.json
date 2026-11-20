@@ -21,7 +21,7 @@
       "const": {
         "maximumEntries": 4096,
         "maximumSnapshotBytes": 536870912,
-        "maximumReceiptBytes": 67108864,
+        "maximumReceiptBytes": 536870912,
         "chunkBytes": 65536,
         "receiptHeapMiB": 512,
         "selectedDirectory": "selected",

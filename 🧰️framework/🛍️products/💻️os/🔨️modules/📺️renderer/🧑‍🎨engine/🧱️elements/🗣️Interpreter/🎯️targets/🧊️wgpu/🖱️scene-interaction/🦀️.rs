@@ -201,6 +201,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                 SceneIntentEvent::PointerUp { x, y, button, .. } => semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
                 SceneIntentEvent::PointerMove { x, y, .. } => semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { delta_y, .. } => Ok(semio_renderer_wgpu_engine_text::text_editor::text_editor_wheel_into(scene, delta_y)),
+                SceneIntentEvent::PointerLeave => Ok(false),
             };
             (result.map(|_| SceneIntentProgress::Complete), focus)
         });
@@ -227,7 +228,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                 SceneIntentEvent::PointerUp { x, y, button, modifiers } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
                 SceneIntentEvent::PointerMove { x, y, .. } => semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => semio_renderer_wgpu_engine_board::paint2d::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
-                SceneIntentEvent::Scroll { .. } => Ok(false),
+                SceneIntentEvent::Scroll { .. } | SceneIntentEvent::PointerLeave => Ok(false),
             };
             result.map(|_| SceneIntentProgress::Complete)
         });
@@ -280,6 +281,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                     result
                 }
                 SceneIntentEvent::Scroll { x, y, delta_y, .. } => Ok(semio_renderer_wgpu_scene_render::canvas_wheel_into(scene, rect, x, y, delta_y)),
+                SceneIntentEvent::PointerLeave => Ok(false),
             };
             result.map(|_| SceneIntentProgress::Complete)
         });
@@ -302,6 +304,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                 }
             }
             match intent.event {
+                SceneIntentEvent::PointerLeave => semio_renderer_wgpu_scene_ink::ink_pointer_leave_into(scene, input).map(|_| SceneIntentProgress::Complete),
                 SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => semio_renderer_wgpu_scene_ink::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
                 SceneIntentEvent::Scroll { .. } => Ok(SceneIntentProgress::Complete),
                 event => {
@@ -310,7 +313,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                             SceneIntentEvent::PointerDown { x, y, button, modifiers } => semio_renderer_wgpu_scene_ink::InkInteractionEvent::PointerDown { x, y, button, shift: modifiers.shift },
                             SceneIntentEvent::PointerUp { x, y, .. } => semio_renderer_wgpu_scene_ink::InkInteractionEvent::PointerUp { x, y },
                             SceneIntentEvent::PointerMove { x, y, .. } => semio_renderer_wgpu_scene_ink::InkInteractionEvent::PointerMove { x, y },
-                            SceneIntentEvent::Scroll { .. } => unreachable!(),
+                            SceneIntentEvent::PointerLeave | SceneIntentEvent::Scroll { .. } => unreachable!(),
                         };
                         intent.ink_job = semio_renderer_wgpu_scene_ink::InkInteractionJob::new(operation_generation, intent.surface_generation, intent.pointer_id, scene, event)?;
                         if intent.ink_job.is_none() {
@@ -386,6 +389,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut se
                     semio_renderer_wgpu_scene_render::passive_scene_wheel(scene, rect, x, y, delta_y);
                 }
             }
+            SceneIntentEvent::PointerLeave => {}
         }
         Ok(SceneIntentProgress::Complete)
     })

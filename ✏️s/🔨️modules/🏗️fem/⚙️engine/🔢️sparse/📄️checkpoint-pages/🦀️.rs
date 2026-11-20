@@ -90,82 +90,82 @@ impl NumericalCheckpointIdentity {
 
 
 pub const NUMERICAL_OWNER_PAGE_BYTES: usize = 16 * 1024;
-pub const MOUNTED_SCALAR_SLOTS: usize = 768;
+pub const MOUNTED_SCALAR_SLOTS: usize = 24_576;
 
 /// 📊️ A mounted scalar admission or update exceeds its available slots.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MountedScalarFault {
     Capacity { requested: usize, maximum: usize },
     Index { index: usize, len: usize },
+    Allocation,
 }
 
-/// 🧮 Fixed mounted scalar owner with one admission, write, update, or close action per turn.
+/// 🧮 Mounted scalars retain and retire one funded page at a time.
 pub struct MountedScalarSlots {
-    pub values: [f64; MOUNTED_SCALAR_SLOTS],
-    pub admitted: usize,
-    pub len: usize,
+    values: PagedList<f64, MOUNTED_SCALAR_SLOTS>,
+    admitted: usize,
 }
 
 impl MountedScalarSlots {
     pub fn new() -> Self {
-        Self { values: [0.0; MOUNTED_SCALAR_SLOTS], admitted: 0, len: 0 }
+        Self { values: PagedList::default(), admitted: 0 }
     }
 
-    pub fn admit_one(&mut self, target: usize) -> Result<bool, MountedScalarFault> {
+    pub fn next_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedScalarFault> {
         if target > MOUNTED_SCALAR_SLOTS {
             return Err(MountedScalarFault::Capacity { requested: target, maximum: MOUNTED_SCALAR_SLOTS });
         }
-        if self.admitted < target {
-            self.admitted += 1;
-            return Ok(false);
-        }
-        Ok(true)
+        self.values.next_capacity_allocation_bytes(self.values.whole_page_capacity(target)).map_err(|_| MountedScalarFault::Allocation)
     }
 
-    pub fn push(&mut self, value: f64) -> Result<(), f64> {
-        if self.len == self.admitted {
-            return Err(value);
+    pub fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<(bool, usize), MountedScalarFault> {
+        if let Some(bytes) = self.next_allocation_bytes(target)? {
+            if bytes > maximum_bytes { return Ok((false, 0)); }
+            let capacity = self.values.whole_page_capacity(target);
+            let progress = reserve_cold_page(&mut self.values, capacity).map_err(|_| MountedScalarFault::Allocation)?;
+            return Ok((false, progress.allocated_bytes));
         }
-        self.values[self.len] = value;
-        self.len += 1;
-        Ok(())
+        self.admitted = self.admitted.max(target);
+        Ok((true, 0))
+    }
+
+    /// 🪙️ Reserves one scalar page against the receiving worker turn.
+    pub fn admit_in(&mut self, target: usize, context: &mut StepContext<'_>) -> Result<bool, MountedScalarFault> {
+        if self.next_allocation_bytes(target)?.is_some() {
+            let capacity = self.values.whole_page_capacity(target);
+            reserve_funded_page(&mut self.values, capacity, context).map_err(|_| MountedScalarFault::Allocation)?;
+            return Ok(false);
+        }
+        self.admitted = self.admitted.max(target);
+        Ok(true)
+    }
+    pub fn push(&mut self, value: f64) -> Result<(), f64> {
+        if self.values.len() >= self.admitted { return Err(value); }
+        self.values.push_reserved(value)
     }
 
     pub fn add_at(&mut self, index: usize, value: f64) -> Result<(), MountedScalarFault> {
-        if index >= self.len {
-            return Err(MountedScalarFault::Index { index, len: self.len });
-        }
-        self.values[index] += value;
+        let len = self.values.len();
+        *self.values.get_mut(index).ok_or(MountedScalarFault::Index { index, len })? += value;
         Ok(())
     }
 
-    pub fn get(&self, index: usize) -> Option<f64> {
-        (index < self.len).then(|| self.values[index])
-    }
+    /// 📦️ Transfers the funded scalar backing to its numerical child.
+    pub fn into_paged(self) -> PagedList<f64, MOUNTED_SCALAR_SLOTS> { self.values }
 
-    pub fn len(&self) -> usize {
-        self.len
-    }
+    pub fn get(&self, index: usize) -> Option<f64> { self.values.get(index).copied() }
+    pub fn len(&self) -> usize { self.values.len() }
+    pub fn is_empty(&self) -> bool { self.values.is_empty() }
+    pub fn terminal_is_empty(&self) -> bool { self.values.terminal_is_empty() }
+    pub fn retirement_demand(&self) -> Result<RetirementDemand, ValueError> { paged_owner_retirement_demand(&self.values) }
 
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.admitted == 0
-    }
-
-    pub fn close_step(&mut self) -> bool {
-        if self.len != 0 {
-            self.len -= 1;
-            self.values[self.len] = 0.0;
-            return false;
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        self.admitted = 0;
+        match close_paged_owner_step(&mut self.values, maximum_bytes) {
+            Ok(Some((items, released))) => (false, items, released),
+            Ok(None) => (true, 0, 0),
+            Err(()) => (false, 0, 0),
         }
-        if self.admitted != 0 {
-            self.admitted -= 1;
-            return false;
-        }
-        true
     }
 }
 

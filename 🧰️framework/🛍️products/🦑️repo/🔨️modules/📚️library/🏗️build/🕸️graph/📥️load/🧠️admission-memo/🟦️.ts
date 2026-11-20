@@ -19,15 +19,20 @@ export async function readAdmissionMemoV1(path:string,scope:string,accept:(value
 /** 🗜️ A memo of the observations and of the owners, the rows of each owner stored once as indexes into the observations (an owner row that the capture did not retain is appended). */
 export function packAdmissionMemoV1(input:{format:string;scope:string;admission:BuildOwnerAdmissionV1;observations:readonly unknown[];owners:readonly OwnerFactsEntryV1[]}):AdmissionMemoV1{
  const observations=[...input.observations],index=new Map<string,number>();
- observations.forEach((row,at)=>{if(!index.has(JSON.stringify(row)))index.set(JSON.stringify(row),at);});
+ observations.forEach((row,at)=>{const key=JSON.stringify(row);if(!index.has(key))index.set(key,at);});
  const at=(row:unknown)=>{const key=JSON.stringify(row);let found=index.get(key);if(found===undefined){found=observations.push(row)-1;index.set(key,found);}return found;};
  return {version:2,format:input.format,scope:input.scope,admission:input.admission,observations,owners:input.owners.map(owner=>({suffix:owner.suffix,facts:owner.facts,rows:owner.rows.map(at)}))};
 }
 
-/** 📤️ The remembered facts of the owners of a memo with their rows resolved; an owner whose row index is not in the memo is left out. */
-export function ownersOfAdmissionMemoV1(memo:AdmissionMemoV1):OwnerFactsEntryV1[]{
+/** 📤️ Resolves the rows of owners missing from the current admission cache. Malformed owner entries are skipped. */
+export function ownersOfAdmissionMemoV1(memo:AdmissionMemoV1,known?:ReadonlySet<string>):OwnerFactsEntryV1[]{
  const owners:OwnerFactsEntryV1[]=[];
- for(const owner of memo.owners){const rows=owner.rows.map(at=>memo.observations[at]);if(typeof owner.suffix==="string"&&rows.every(row=>row!==undefined))owners.push({suffix:owner.suffix,facts:owner.facts,rows});}
+ for(const owner of memo.owners){
+  if(typeof owner?.suffix!=="string"||known?.has(owner.suffix)||!Object.hasOwn(owner,"facts")||!Array.isArray(owner.rows))continue;
+  if(!owner.rows.every(at=>Number.isSafeInteger(at)&&at>=0&&at<memo.observations.length))continue;
+  const rows=owner.rows.map(at=>memo.observations[at]);
+  if(rows.every(row=>row!==undefined))owners.push({suffix:owner.suffix,facts:owner.facts,rows});
+ }
  return owners;
 }
 

@@ -149,14 +149,14 @@
             },
             "guides": [],
             "layerIds": [
-              "front",
+              "p-front",
               "back"
             ],
             "layers": [
               {
-                "id": "front",
+                "id": "p-front",
                 "name": "Front",
-                "visible": true,
+                "visible": false,
                 "locked": false,
                 "objectIds": [
                   "a2"
@@ -193,7 +193,7 @@
               {
                 "kind": "rect",
                 "id": "a2",
-                "layerId": "front",
+                "layerId": "p-front",
                 "bounds": {
                   "x": 4,
                   "y": 0,
@@ -233,7 +233,7 @@
                   "h": 10,
                   "rotation": 0
                 },
-                "visible": false,
+                "visible": true,
                 "locked": null
               }
             ]
@@ -241,12 +241,13 @@
         ],
         "printTarget": null
       },
+      "boundedResolution": { "minimumX": 5, "rows": [["p2", 1], ["a3", 2]] },
       "expected": [
         {
           "id": "p2",
           "inherited": false,
           "x": 44,
-          "visible": false,
+          "visible": true,
           "parent": true,
           "frameIndex": 1
         },
@@ -287,6 +288,34 @@
         "x": 6,
         "y": 1,
         "expected": "a3"
+      },
+      "hits": [
+        {
+          "x": 1.5,
+          "y": 1,
+          "expected": "p1"
+        },
+        {
+          "x": 45,
+          "y": 1,
+          "expected": "p2"
+        },
+        {
+          "x": 2.5,
+          "y": 11,
+          "expected": null
+        }
+      ],
+      "view": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1,
+        "expected": [
+          "p2",
+          "p1",
+          "a1",
+          "a3"
+        ]
       }
     },
     {
@@ -803,11 +832,11 @@
                 "id": "unassigned",
                 "layerId": "unknown",
                 "bounds": {
-                  "x": 99,
+                  "x": 2010,
                   "y": 0,
-                  "w": 10,
-                  "h": 10,
-                  "rotation": 0
+                  "w": 20,
+                  "h": 100,
+                  "rotation": 1.5707963267948966
                 },
                 "locked": null,
                 "visible": null,
@@ -877,7 +906,7 @@
         {
           "id": "unassigned",
           "inherited": false,
-          "x": 99,
+          "x": 2010,
           "visible": true,
           "parent": false,
           "frameIndex": 3
@@ -887,6 +916,30 @@
         "x": 6,
         "y": 1,
         "expected": "a3"
+      },
+      "hits": [
+        {
+          "x": 1990,
+          "y": 50,
+          "expected": "unassigned"
+        },
+        {
+          "x": 2015,
+          "y": 10,
+          "expected": null
+        }
+      ],
+      "view": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1,
+        "expected": [
+          "p1",
+          "a2",
+          "a1",
+          "a3",
+          "unassigned"
+        ]
       }
     }
   ]

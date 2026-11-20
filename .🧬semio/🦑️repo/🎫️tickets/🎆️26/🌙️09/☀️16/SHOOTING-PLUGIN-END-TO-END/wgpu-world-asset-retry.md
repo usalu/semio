@@ -1,0 +1,11 @@
+# WGPU World Asset Transport Retry
+
+The native and browser WGPU fetch paths retry world-owned HTTP assets on a reported transport failure, a short declared response, or HTTP 408, 429, 500, 502, 503 or 504. They wait 200 ms and 800 ms before the two possible retries. Both transports retain the original surface and request token, return one partial response page per turn, and continue only while the request owns the current response. Native holds its existing response credits for the retry. The browser releases and re-admits credits so the retry may declare a different valid extent.
+
+Native waits on the existing worker pool timer. Browser backoff uses a cancellable timer under the existing Worker suspension monitor. A cancelled request skips miss publication. The decoder retains its terminal verdict for malformed asset bytes. An exhausted or permanent transport rejection reaches the existing surface miss policy. Terrain rejection reaches its tile miss ledger and retires the tile from the pending set.
+
+The language-neutral response fixture records retry policy and status cases. The focused browser transport and SVG suite passed all 66 tests. The Rust authority regression covers exact request reuse, bounded page retirement, renewed credits, and the fact that a sealed response cannot be reset. The existing native transport tests were updated for the typed rejection metadata.
+
+The pinned Rust compiler parsed all nine edited Rust files without emitting artifacts. The source admission audit measured 4 files and 2,297 active library lines for world scene, 10 files and 3,180 native lines for runtime mailbox, and 10 files and 2,052 browser lines for runtime mailbox. The scoped diff check passed. The full native and WebAssembly Cargo verification continues in the managed builds.
+
+The focused Chromium Worker probe ran the production worker pump against a mailbox double and a local HTTP server. It interrupted a real response after the worker admitted its first page, briefly served 503, then delivered the repository GLB byte-for-byte on attempt three. The probe also observed one attempt for 404 and three for persistent 503. Run it with `repo tools exec bun -- .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/SHOOTING-PLUGIN-END-TO-END/wgpu-world-transport-probe.mjs`.

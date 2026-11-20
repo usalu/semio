@@ -6,7 +6,7 @@ import { copyBrowserArtifacts } from "@semio-tech/framework-plugin/browser-bundl
 import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-rs/index";
 import { playRuntimeAssetSources } from "../../🧩️runtime/📦️assets/🟦️.ts";
-import runtimeSchema from "../../🧩️runtime/🧬️schema/🔣️.json";
+import runtimeSchema from "../../🧩️runtime/🧬️schema/🔣️.json" with { type: "json" };
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "@semio-tech/plugin-registry/deployment";
 import { publishedPageUrl } from "@semio-tech/assets/published-page";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";

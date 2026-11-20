@@ -32,6 +32,7 @@ use std::collections::{HashMap, HashSet};
 /// 🔀️ The shared COS syntax layer, hosted in the 1.7 subtree (see the module doc comment).
 use crate::standards::v1_7::subsets::base::modules::filters::decode_stream;
 use crate::standards::v1_7::subsets::base::modules::lexer::Lexer;
+use crate::standards::v1_7::subsets::base::modules::xref::{XrefEntry, XrefIndex, XrefRow};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject};
 
 //#region 🎹️DerivedComposition
@@ -288,20 +289,24 @@ fn build_index(data: &[u8]) -> Xref {
 /// 🔗️ Lazily parses and memoizes indirect objects by number.
 struct Resolver<'a> {
     data: &'a [u8],
-    offsets: HashMap<u32, usize>,
+    xref: XrefIndex,
     cache: HashMap<u32, Option<PdfObject>>,
 }
 
 impl<'a> Resolver<'a> {
-    fn new(data: &'a [u8], offsets: HashMap<u32, usize>) -> Self {
-        Self { data, offsets, cache: HashMap::new() }
+    fn new(data: &'a [u8], xref: XrefIndex) -> Self {
+        Self { data, xref, cache: HashMap::new() }
     }
 
     fn resolve(&mut self, number: u32) -> Option<PdfObject> {
         if let Some(hit) = self.cache.get(&number) {
             return hit.clone();
         }
-        let parsed = self.offsets.get(&number).copied().and_then(|offset| parse_indirect_at(self.data, offset)).and_then(|(declared, value)| (declared == number).then_some(value));
+        let offset = self.xref.get(&number).and_then(|entry| match *entry {
+            XrefEntry::Normal { offset, .. } => Some(offset),
+            XrefEntry::Compressed { .. } => None,
+        });
+        let parsed = offset.and_then(|offset| parse_indirect_at(self.data, offset)).and_then(|(declared, value)| (declared == number).then_some(value));
         self.cache.insert(number, parsed.clone());
         parsed
     }
@@ -445,7 +450,12 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
         return Err("pdf 1.4: /Encrypt is present — an encrypted document is refused, never guessed at".to_string());
     }
     let root = index.trailer.iter().find(|entry| entry.key == "Root").and_then(|entry| entry.value.as_ref()).ok_or_else(|| "pdf 1.4: the trailer names no /Root catalog".to_string())?;
-    let mut resolver = Resolver::new(data, index.offsets);
+    let mut xref = XrefIndex::default();
+    for (number, offset) in index.offsets {
+        let row = XrefRow { number, entry: Some(XrefEntry::Normal { offset, gen: 0 }) };
+        xref.insert_row(row, false).map_err(str::to_owned)?;
+    }
+    let mut resolver = Resolver::new(data, xref);
     let catalog = resolver.resolve(root.num).ok_or_else(|| format!("pdf 1.4: the /Root catalog (object {}) is not in the cross-reference table", root.num))?;
     if catalog.dict_get("Encrypt").is_some() {
         return Err("pdf 1.4: /Encrypt is present on /Root — an encrypted document is refused, never guessed at".to_string());

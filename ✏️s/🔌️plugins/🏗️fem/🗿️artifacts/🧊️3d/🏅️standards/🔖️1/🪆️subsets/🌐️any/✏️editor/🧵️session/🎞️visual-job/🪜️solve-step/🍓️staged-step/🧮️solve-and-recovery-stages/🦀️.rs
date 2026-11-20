@@ -44,17 +44,14 @@ impl Fem3dNumericalChild {
     }
 
     /// 🔧 Prepares the preconditioned conjugate gradient solve.
-    pub(super) fn step_prepare_pcg(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        match self.pcg_build.as_mut().ok_or_else(|| b"fem3d.numerical-pcg-build".to_vec())?.step_one() {
-            Ok(false) => {}
-            Ok(true) => {
-                self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
-                if self.pcg.is_none() {
-                    return Err((b"fem3d.numerical-pcg-false-terminal".to_vec()).into());
-                }
-                self.stage = Fem3dNumericalStage::Pcg;
+    pub(super) fn step_prepare_pcg(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
+        let build = self.pcg_build.as_mut().ok_or_else(|| b"fem3d.numerical-pcg-build".to_vec())?;
+        if build.step_funded(context)? {
+            self.pcg = build.take_complete();
+            if self.pcg.is_none() {
+                return Err((b"fem3d.numerical-pcg-false-terminal".to_vec()).into());
             }
-            Err(detail) => return Err((detail.to_vec()).into()),
+            self.stage = Fem3dNumericalStage::Pcg;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
@@ -77,7 +74,7 @@ impl Fem3dNumericalChild {
             self.element_cursor = 0;
             self.stage = Fem3dNumericalStage::RecoverStressElement;
         } else {
-            if let Some(equation) = self.equations[self.node_cursor][self.scalar_axis] {
+            if let Some(equation) = self.equation(self.node_cursor, self.scalar_axis) {
                 let value = self.pcg.as_ref().and_then(|pcg| pcg.visual_scalar(equation)).ok_or_else(|| b"fem3d.numerical-node-scalar".to_vec())?;
                 if self.scalar_axis < 3 {
                     self.scalar.displacement[self.scalar_axis] = value.displacement;
@@ -93,7 +90,7 @@ impl Fem3dNumericalChild {
 
     /// ↩ Recovers one support reaction.
     pub(super) fn step_recover_reaction(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        let Some(row) = self.full_equations[self.node_cursor][self.scalar_axis] else {
+        let Some(row) = self.node_values.get(self.node_cursor).and_then(|fields| fields.full_equations[self.scalar_axis]) else {
             self.scalar_axis += 1;
             self.stage = if self.scalar_axis == 6 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
             return Ok(false);
@@ -105,8 +102,9 @@ impl Fem3dNumericalChild {
             }
             self.reaction_entry += 1;
         } else {
-            let reaction = self.reaction_accumulator - self.full_rhs[row];
-            self.full_reactions[self.node_cursor][self.scalar_axis] = reaction;
+            let fields = self.node_values.get_mut(self.node_cursor).ok_or_else(|| b"fem3d.numerical-reaction-node-values".to_vec())?;
+            let reaction = self.reaction_accumulator - fields.applied[self.scalar_axis];
+            fields.reactions[self.scalar_axis] = reaction;
             if self.scalar_axis < 3 { self.scalar.reaction[self.scalar_axis] = reaction; }
             self.scalar_axis += 1;
             self.stage = if self.scalar_axis == 6 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
@@ -142,11 +140,15 @@ impl Fem3dNumericalChild {
             let index = (0..self.analysis_node_ids.len()).find(|index| self.analysis_node_ids.get(*index).is_some_and(|candidate| candidate == id)).ok_or_else(|| b"fem3d.numerical-stress-node".to_vec())?;
             indices[local] = index;
             positions[local] = build.model_node(index).ok_or_else(|| b"fem3d.numerical-stress-position".to_vec())?.pos;
-            for axis in 0..3 { displacements[local * 3 + axis] = self.equations[index][axis].and_then(|equation| self.pcg.as_ref()?.visual_scalar(equation)).map_or(0.0, |value| value.displacement); }
+            for axis in 0..3 { displacements[local * 3 + axis] = self.equation(index, axis).and_then(|equation| self.pcg.as_ref()?.visual_scalar(equation)).map_or(0.0, |value| value.displacement); }
         }
         let stress = tetrahedron.mounted_recover_stress(&positions, &displacements).ok_or_else(|| b"fem3d.numerical-stress-geometry".to_vec())?.von_mises;
         if !stress.is_finite() { return Err((b"fem3d.numerical-stress-value".to_vec()).into()); }
-        for index in indices { self.stress_sums[index] += stress; self.stress_counts[index] += 1; }
+        for index in indices {
+            let fields = self.node_values.get_mut(index).ok_or_else(|| b"fem3d.numerical-stress-node-values".to_vec())?;
+            fields.stress_sum += stress;
+            fields.stress_count += 1;
+        }
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
 
@@ -157,7 +159,7 @@ impl Fem3dNumericalChild {
             self.stage = if self.request.mode.is_some() { Fem3dNumericalStage::BeginModal } else { Fem3dNumericalStage::PublishProgress };
         } else {
             let mut scalar = solver.scalar(self.node_cursor).ok_or_else(|| b"fem3d.numerical-stress-scalar".to_vec())?;
-            scalar.contour = self.stress_sums[self.node_cursor] / self.stress_counts[self.node_cursor].max(1) as f64;
+            scalar.contour = self.stress(self.node_cursor).unwrap_or(0.0);
             solver.publish_scalar(freshness, self.node_cursor, scalar).map_err(|_| b"fem3d.numerical-stress-publication".to_vec())?;
             self.node_cursor += 1;
         }

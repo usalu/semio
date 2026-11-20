@@ -15,7 +15,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{CanonicalDescriptorValue, PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_plugin_guest_contract::TurnFault;
+use semio_plugin_guest_contract::{GuestCallCancellation, TurnFault};
 use semio_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
 /// 🧠️ The owned core-export set of the interpreter the emitter drives; the owned core-export law reads it.
 #[cfg(test)]
@@ -433,8 +433,8 @@ async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec
     let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(wasm_bytes).map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
     eprintln!("[describe] owned phase=execute fuel=0 elapsed_ms={}", started.elapsed().as_millis());
-    let descriptor = runtime
-        .describe_observed(
+    let (descriptor, compiled) = runtime
+        .describe_with_codec_origin_observed(
             &compiled,
             describe_budget(),
             |fuel, elapsed| eprintln!("[describe] owned phase=execute fuel={fuel} elapsed_ms={}", elapsed.as_millis()),
@@ -505,7 +505,7 @@ async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &OwnedCompiledGuest
     let budget = describe_budget();
     let mut faults = Vec::new();
     for (kind, schema) in pairs {
-        match runtime.codec_pack_schema_hash(compiled, schema, budget).await {
+        match observe_codec_hash(runtime, compiled, schema, budget).await {
             Ok(hash) if hash != [0; 32] => return Ok(()),
             Ok(_) => faults.push(format!("{kind}={schema}: no structural record specification")),
             Err(TurnFault::Guest(fault)) if fault.message == UNOWNED_ARTIFACT_CODEC_SCHEMA => faults.push(format!("{kind}={schema}: unowned")),
@@ -513,6 +513,13 @@ async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &OwnedCompiledGuest
         }
     }
     Err(faults)
+}
+
+async fn observe_codec_hash(runtime: &OwnedRuntime, compiled: &OwnedCompiledGuest, schema: &str, budget: semio_framework::kernel::Budget) -> Result<[u8; 32], TurnFault> {
+    eprintln!("[describe] owned phase=codec schema={schema:?} fuel=0 elapsed_ms=0");
+    runtime.codec_pack_schema_hash_observed(compiled, schema, budget, |fuel, elapsed| {
+        eprintln!("[describe] owned phase=codec schema={schema:?} fuel={fuel} elapsed_ms={}", elapsed.as_millis());
+    }, &GuestCallCancellation::default()).await
 }
 
 /// 📦️ The pack bytes of a descriptor: its canonical value through the wire value encoder.
@@ -608,7 +615,7 @@ pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) 
         if kind.is_empty() || schema.is_empty() || kind.len() > 256 || schema.len() > 256 {
             return Err(DescribeError("component codec pair is not a bounded kind and schema".to_string()));
         }
-        let hash = match runtime.codec_pack_schema_hash(&compiled, schema, budget).await {
+        let hash = match observe_codec_hash(&runtime, &compiled, schema, budget).await {
             Ok(hash) => hash,
             Err(TurnFault::Guest(fault)) if fault.message == UNOWNED_ARTIFACT_CODEC_SCHEMA => {
                 rows.unowned.push((kind.clone(), schema.clone()));

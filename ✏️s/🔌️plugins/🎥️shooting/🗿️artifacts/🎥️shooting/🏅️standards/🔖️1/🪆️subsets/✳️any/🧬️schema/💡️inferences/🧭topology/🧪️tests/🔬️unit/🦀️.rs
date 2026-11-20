@@ -9,7 +9,7 @@ fn saved_camera(id: &str) -> ShootingSavedCamera {
 }
 
 fn shot(id: &str, camera_id: Option<&str>) -> ShootingShot {
-    ShootingShot { id: id.into(), label: id.into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: camera_id.map(Into::into) }
+    ShootingShot { id: id.into(), label: id.into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: camera_id.map(Into::into), drawing: None, auto_fit: None }
 }
 
 #[semio_framework_async_macros::async_test]

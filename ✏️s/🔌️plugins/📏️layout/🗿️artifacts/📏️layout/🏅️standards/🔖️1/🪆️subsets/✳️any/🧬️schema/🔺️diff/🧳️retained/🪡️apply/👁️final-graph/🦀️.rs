@@ -3,7 +3,7 @@ use crate::*;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::validation::retained::owned::{OwnedLayoutGraphRead,OwnedLayoutGraphValidation};
 use semio_s_artifact_layout_layout_model::validation::graph::FinalGraphSourceBindings;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{OriginalRetirementCloseLoan,RetainedAllocationEffect,RetirementPollExit,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use super::super::keyed_plan::PlanAdvance;
 const META:usize=1024;
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Layout final borrowed graph preparation is invalid")}
@@ -16,4 +16,3 @@ fn paid()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_byt
 #[path="📖️reader/🦀️.rs"]mod reader;
 #[path="🏗️prepare/🦀️.rs"]mod prepare;
 pub(crate) use prepare::FinalGraphPreparation;
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;

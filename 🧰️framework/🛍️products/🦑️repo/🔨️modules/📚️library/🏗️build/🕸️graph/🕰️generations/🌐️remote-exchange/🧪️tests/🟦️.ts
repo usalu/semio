@@ -161,7 +161,7 @@ test("every origin writes only its own head, so no key ever receives different b
 
 /** 🚢️ The fleet restore path on one real cache server of the test (free port, temporary store, test origins, never a production identity, port or fleet fact): A builds and publishes, B with an empty store restores A's generation and computes nothing, B edits one file and computes exactly its project and publishes its own head, A (behind and diverged) takes B's newest head, restores it and verifies only the difference, and a reader whose tree is ahead of the producer's restores and computes only what it has on top. */
 const heads=async(server:RemoteCacheServerV1,identity:string,origins:readonly string[])=>{const content=httpRemoteExecutionContentV1({endpoint:server.url});return Promise.all(origins.map(async origin=>{const bytes=await content.readActionResult("main",generationExchangeKeyV1(identity,platform,origin));return bytes===undefined?undefined:sha(bytes);}));};
-const fleet=(server:RemoteCacheServerV1,all:readonly string[])=>(workspace:string,self:string)=>{const mock=createMockHost(workspace);(mock.host as any).exchange=remoteGenerationExchangeV1({environment:writer(server),workspace,identity:()=>mock.host.identity(),platform,origins:{self,all}});return mock;};
+const fleet=(server:RemoteCacheServerV1,all:readonly string[])=>(workspace:string,self:string)=>{const mock=createMockHost(workspace);(mock.host as any).exchange=remoteGenerationExchangeV1({environment:writer(server),workspace,identity:()=>mock.host.identity(),platform,origins:{self,all},serving:true});return mock;};
 const computed=(mock:ReturnType<typeof createMockHost>)=>mock.log.flatMap(row=>row.full).sort();
 const age=(workspace:string)=>utimesSync(join(workspace,".gen","current.json"),1,1);
 

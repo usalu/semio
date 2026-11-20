@@ -51,6 +51,7 @@
       "required": [
         "items",
         "copy",
+        "closeCopy",
         "capacity",
         "release",
         "depth"
@@ -61,6 +62,9 @@
         },
         "copy": {
           "const": 4096
+        },
+        "closeCopy": {
+          "const": 32768
         },
         "capacity": {
           "const": 4096

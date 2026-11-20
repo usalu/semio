@@ -26,6 +26,7 @@ semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }

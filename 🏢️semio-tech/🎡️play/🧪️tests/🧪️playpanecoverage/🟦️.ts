@@ -66,7 +66,7 @@ function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { read
 const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "hostPorts", "initialLocale", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
-  const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;
+  const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, PLAY_EXCLUDED_VARIANTS, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;
   const { describe, expect, it } = vitest;
   const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("@semio-tech/s-dev-catalog-ts/generated/plugins");
   const { dialectCoordinate } = await import("../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts");
@@ -74,6 +74,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const appsByOwner = descriptorAppsByOwner(repoRoot, PLUGIN_BUILD_TARGETS);
   const editorAppIds = (owner: string): readonly string[] => (appsByOwner.get(owner)?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string);
   const paneOwner = (pluginId: string): string => dirname(dirname(PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === pluginId)!.cratePath));
+  const excludedPluginIds = new Set<string>(PLAYGROUND_BUILD_TARGETS.filter((row: any) => PLAY_EXCLUDED_VARIANTS.includes(row.variant)).map((row: any) => row.pluginId as string));
+  const excludedDirectories = new Set([...excludedPluginIds].map(id => pluginDirectoryOfCratePath(PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === id)!.cratePath)));
+  const excludedOwners = new Set([...excludedPluginIds].map(paneOwner));
 
   /** 🏠️ The ONE app that hosts other apps rather than being one — resolved the way the shell
    * itself resolves it (`resolveRequiredHostApps`: an editor app whose artifact-kind tail is the host
@@ -100,12 +103,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect([...panes].sort()).toEqual([...playExpectedVariants(PLAYGROUND_BUILD_TARGETS)].sort());
     });
 
-    /** 🧩️ Play shows ALL plugins: a plugin directory with no pane is a coverage regression, never
-     * a configuration choice, so this law carries no exemption list to hide one behind. */
+    /** 🧩️ Play shows ALL plugins: a plugin directory with no pane is a coverage regression; the only
+     * exemption is the catalog's authored `excludedVariants`, whose plugins ship from their own products. */
     it("shows every plugin directory in at least one pane", () => {
       const byPluginId = new Map(PLUGIN_BUILD_TARGETS.map(row => [row.pluginId, row]));
       const shown = new Set(PLAY_RUNTIME_TARGETS.map((row: any) => pluginDirectoryOfCratePath(byPluginId.get(row.pluginId)!.cratePath)));
-      expect(pluginDirectories(repoRoot).filter(directory => !shown.has(directory)).sort()).toEqual([]);
+      expect(pluginDirectories(repoRoot).filter(directory => !shown.has(directory) && !excludedDirectories.has(directory)).sort()).toEqual([]);
     });
 
     it("reaches every editor app a plugin descriptor declares, except the host shell's own", () => {
@@ -115,7 +118,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (row.app) reachable.add(row.app);
         else for (const id of editorAppIds(paneOwner(row.pluginId))) reachable.add(id);
       }
-      const unreachable = [...appsByOwner.values()].flatMap(entry => (entry?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string)).filter(id => !exempt.has(id) && !reachable.has(id));
+      const unreachable = [...appsByOwner.entries()].filter(([owner]) => !excludedOwners.has(owner)).map(([, entry]) => entry).flatMap(entry => (entry?.apps ?? []).filter((app: any) => app.role === "editor").map((app: any) => app.id as string)).filter(id => !exempt.has(id) && !reachable.has(id));
       expect(unreachable).toEqual([]);
     });
 
@@ -172,7 +175,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
      * `contributes` capability lands in no closure at all and fails right here. */
     it("activates every registry component the panes need", () => {
       const union = new Set(playRuntimeComponentIds());
-      expect([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => row.pluginId).filter(id => !union.has(id)).sort()).toEqual([]);
+      expect([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => row.pluginId).filter(id => !union.has(id) && !excludedPluginIds.has(id)).sort()).toEqual([]);
     });
 
     it("keeps stdio's component bounded to the app fleet it can link", () => {

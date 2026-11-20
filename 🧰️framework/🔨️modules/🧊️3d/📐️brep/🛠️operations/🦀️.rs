@@ -6,6 +6,10 @@
 pub mod euler;
 #[path = "🧱️primitives/🦀️.rs"]
 pub mod primitives;
+#[path = "📦️point-hull/🦀️.rs"]
+pub mod point_hull;
+#[path = "🗜️prism-boundary/🦀️.rs"]
+pub mod prism_boundary;
 #[path = "⏱️staged/🦀️.rs"]
 pub mod staged;
 #[path = "🧵️sew/🦀️.rs"]

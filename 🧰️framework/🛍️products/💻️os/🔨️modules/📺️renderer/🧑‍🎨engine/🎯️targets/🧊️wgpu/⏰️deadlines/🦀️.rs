@@ -5,6 +5,7 @@ use ui_render::InvalidationReason;
 pub const RETAINED_CONTROL_CLOCK: ui_render::DeadlineKey = ui_render::DeadlineKey(1);
 
 const UI_ANIMATION_CLOCK: ui_render::DeadlineKey = ui_render::DeadlineKey(2);
+pub const ICON_SVG_RETRY_CLOCK: ui_render::DeadlineKey = ui_render::DeadlineKey(3);
 
 /// 🖼️ Retains only the last accepted packet's animation demand across candidate work and discard.
 #[derive(Default)]

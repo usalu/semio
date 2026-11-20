@@ -1,0 +1,7 @@
+# Host terminal cleanup audit
+
+`handle_action` captures the shared command lease before dispatch and calls `settle_command_lease` after the result. The latter releases the current caller on any terminal result or error. Lease arbitration grants an unowned lease only when the shared source is not pending; the holder and each waiter are keyed by the original caller binding and decoder identity. A terminal result with a still-pending original typed source therefore leaves later callers queued without the original owner. The debugger-confirmed pending field and the source retirement repair are recorded in `action-receipt-handoff.md`.
+
+Normal live cleanup runs mounted-owner maintenance. The reactor calls `runtime_drain_maintenance_source` for cancellation, deadline, or close; that drain uses original retirement and checks the physical receipt and terminal witness. PluginApp source close requires the original command lease holder to select its original typed source and uses the matching source caller. The fixture action driver exits as soon as it receives a terminal result, so the success path must finish the source under that caller before releasing the lease and yielding the result. A generic later caller cannot safely replace this authority.
+
+This is a source audit; it does not establish current test results. Error-path source ownership should also be checked when evaluating a change to the terminal contract.

@@ -1,6 +1,8 @@
 //! 🪞️ Drawing duplicate rewrite: the duplicate reference search and the duplicate rewrite authority.
 
 use super::*;
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkPoll, ValueError};
+use store::os_store::snapshot_read::settle_close_poll;
 
 struct DrawingDuplicateReferenceSearch {
     pub depth: usize,
@@ -68,7 +70,6 @@ pub struct DrawingDuplicateRewriteAuthority {
     pub displaced: Option<DrawingDecodedFieldRetirement<DrawingNativeText>>,
     pub search: Option<DrawingDuplicateReferenceSearch>,
     pub reference: usize,
-    pub turn: usize,
     pub mode: u8,
     pub pending_id: std::mem::ManuallyDrop<Option<String>>,
     pub pending_name: std::mem::ManuallyDrop<Option<String>>,
@@ -78,38 +79,79 @@ pub struct DrawingDuplicateRewriteAuthority {
 impl DrawingDuplicateRewriteAuthority {
     pub fn new(mut pending_id: String, mut pending_name: String) -> Self {
         pending_id.clear();pending_name.clear();
-        Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], owners: None, identity: Default::default(), identity_index:None, assignment_scan:0, identities_observed:0, collision:None, append: Default::default(), append_active: false, append_chunk: 0, append_complete: false, native_id: std::mem::ManuallyDrop::new(Default::default()), displaced: None, search: None, reference: 0, turn: 0, mode: 0, pending_id: std::mem::ManuallyDrop::new(Some(pending_id)), pending_name: std::mem::ManuallyDrop::new(Some(pending_name)), terminal: false }
+        Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], owners: None, identity: Default::default(), identity_index:None, assignment_scan:0, identities_observed:0, collision:None, append: Default::default(), append_active: false, append_chunk: 0, append_complete: false, native_id: std::mem::ManuallyDrop::new(Default::default()), displaced: None, search: None, reference: 0, mode: 0, pending_id: std::mem::ManuallyDrop::new(Some(pending_id)), pending_name: std::mem::ManuallyDrop::new(Some(pending_name)), terminal: false }
     }
 
-    pub fn close_append(&mut self, grant: RetainedCloneGrant) -> Result<bool, &'static str> {
-        if !self.append_active { return Ok(true); }
+    fn run_effect(cx: &mut semio_framework_job::StepContext<'_>, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, &'static str> {
+        let grant = cx.retained_grant();
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| run(effect)).map_err(|_| "drawing-store.duplicate-close-work")? else {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        };
+        let progress = result.as_ref().map_or_else(ValueError::retained_progress, |step| step.progress());
+        let receipt = cx.consume_retained(progress);
+        cx.consume_fuel(u64::try_from(work).map_err(|_| "drawing-store.duplicate-close-work")?);
+        let step = result.map_err(|_| "drawing-store.duplicate-close-fault")?;
+        receipt.map_err(|_| "drawing-store.duplicate-close-grant")?;
+        Ok(step)
+    }
+
+    fn close_append(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        if !self.append_active { return Ok(RetainedCloneStep::Complete(Default::default())); }
         self.append.begin_close();
-        let step = self.append.close_step(grant).result.map_err(|_| "drawing-store.duplicate-append-close")?;
-        if matches!(step, RetainedCloneStep::Complete(_)) && self.append.terminal_is_empty() { self.append = Default::default();self.append_active = false;return Ok(true); }
-        Ok(false)
+        let before = effect.performed_work();
+        let poll = self.append.close_step(effect.grant().maximum_copy_bytes, effect);
+        let unpaid = poll.work().saturating_sub(effect.performed_work() - before);
+        if unpaid != 0 {
+            let unpaid = u64::try_from(unpaid).map_err(|_| ValueError::invariant("Drawing duplicate append close Work overflow"))?;
+            if !effect.performed(unpaid)? { return Err(ValueError::invariant("Drawing duplicate append close exceeded its Work")); }
+        }
+        let step = settle_close_poll(poll)?;
+        if matches!(step, RetainedCloneStep::Complete(_)) && self.append.terminal_is_empty() {
+            self.append = Default::default();
+            self.append_active = false;
+        }
+        Ok(step)
     }
 
-    pub fn append_paged(&mut self, source: &DrawingNativeText, grant: RetainedCloneGrant, label: &'static str) -> Result<bool, &'static str> {
+    fn append_text<const N: usize>(append: &mut semio_framework_value::paged::PagedUtf8AppendCursor, source: &str, output: &mut semio_framework_value::paged::PagedUtf8<N>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep, &'static str> {
+        let grant = cx.retained_grant();
+        let turn = append.advance(source, output, source.len().min(grant.maximum_copy_bytes), grant);
+        let progress = turn.result.as_ref().map_or_else(ValueError::retained_progress, |step| step.progress());
+        let receipt = cx.consume_retained(progress);
+        cx.consume_fuel(u64::try_from(turn.work).map_err(|_| "drawing-store.duplicate-append-work")?);
+        let step = turn.result.map_err(|_| "drawing-store.duplicate-append-fault")?;
+        receipt.map_err(|_| "drawing-store.duplicate-append-grant")?;
+        Ok(step)
+    }
+
+    fn append_paged(&mut self, source: &DrawingNativeText, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.append_complete {
-            if self.close_append(grant)? { self.append_complete = false;self.append_chunk += 1; }
+            if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) {
+                self.append_complete = false;
+                self.append_chunk += 1;
+            }
             return Ok(false);
         }
         let Some(chunk) = source.retained_chunks().get(self.append_chunk) else { self.append_chunk = 0;return Ok(true); };
         self.append_active = true;
-        let step = self.append.advance(chunk.as_str(), &mut self.native_id, chunk.as_str().len(), grant).result.map_err(|_| label)?;
+        let step = Self::append_text(&mut self.append, chunk.as_str(), &mut self.native_id, cx)?;
         if matches!(step, RetainedCloneStep::Complete(_)) { self.append_complete = true; }
         Ok(false)
     }
 
-    pub fn retire_displaced_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    fn retire_displaced(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if let Some(displaced) = self.displaced.as_mut() {
-            let step = displaced.step(grant)?;
+            let step = match displaced.step(effect.grant().maximum_copy_bytes, effect) {
+                RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(displaced.owner.step_progress()),
+                poll => settle_close_poll(poll)?,
+            };
             if matches!(step, RetainedCloneStep::Complete(_)) && displaced.terminal_is_empty() { self.displaced = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.native_id.retained_chunks().allocated_bytes() == 0 && self.native_id.is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DrawingNativeText>(), ..Default::default() };
-        if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !progress.fits(effect.grant()) || effect.remaining_work_units()? == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !effect.performed(1)? { return Err(ValueError::invariant("Drawing duplicate displaced owner transfer exceeded its Work")); }
         let value = std::mem::take(&mut *self.native_id);
         match DrawingDecodedFieldRetirement::try_new(value) {
             Ok(retirement) => self.displaced = Some(retirement),
@@ -120,10 +162,10 @@ impl DrawingDuplicateRewriteAuthority {
 
     pub fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal { return Ok(true); }
+        if cx.should_yield() { return Ok(false); }
         let owners = (root as *const _ as usize, original as *const _ as usize);
         if self.owners.is_some_and(|held| held != owners) { return Err("drawing-store.duplicate-root-changed"); }
         self.owners = Some(owners);
-        let grant = initial_snapshot_clone_grant(self.turn);self.turn = self.turn.wrapping_add(1);
         let source = DrawingDuplicateReferenceSearch::node_at(original, &self.path[..self.depth]).ok_or("drawing-store.duplicate-source-path")?;
         let node = DrawingLayerCloneAuthority::target_at_mut(root, &self.path[..self.depth]).ok_or("drawing-store.duplicate-path")?;
         let phase = self.frames[self.depth].phase;
@@ -157,25 +199,23 @@ impl DrawingDuplicateRewriteAuthority {
                 }
                 1 => {
                     let id = self.identity.identity(&target_identity.target).ok_or("drawing-store.duplicate-identity-missing")?;
-                    let done = self.append_paged(id, grant, "drawing-store.duplicate-identity-append")?;
-                    cx.consume_fuel(1);
+                    let done = self.append_paged(id, cx)?;
                     if done { self.frames[self.depth].phase = 2; }
                 }
-                2 => { if self.close_append(grant)? { self.frames[self.depth].phase = 3; }cx.consume_fuel(1); }
+                2 => { if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 3; } }
                 3 => {
                     std::mem::swap(&mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).id, &mut self.native_id);
                     self.identity.close_step(1);self.identity = Default::default();self.identities_observed+=1;self.frames[self.depth].phase = 4;
                     cx.consume_fuel(size_of::<DrawingNativeText>() as u64);
                 }
-                4 => { if matches!(self.retire_displaced_granted(grant).map_err(|_| "drawing-store.duplicate-text-close")?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; }cx.consume_fuel(1); }
+                4 => { if matches!(Self::run_effect(cx, |effect| self.retire_displaced(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; } }
                 5 if self.depth == 0 => {
                     self.append_active = true;
-                    let step = self.append.advance(" copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, " copy".len(), grant).result.map_err(|_| "drawing-store.duplicate-name-append")?;
-                    cx.consume_fuel(step.progress().copied_items.max(1) as u64);
+                    let step = Self::append_text(&mut self.append, " copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, cx)?;
                     if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 6; }
                 }
                 5 => { self.frames[self.depth].phase = 7;cx.consume_fuel(1); }
-                6 => { if self.close_append(grant)? { self.frames[self.depth].phase = 7; }cx.consume_fuel(1); }
+                6 => { if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 7; } }
                 _ => unreachable!(),
             }
             return Ok(false);
@@ -203,17 +243,16 @@ impl DrawingDuplicateRewriteAuthority {
                         2 => {
                             let reference_identity=identities.get(self.identity_index.ok_or("drawing-store.duplicate-reference-identity-missing")?).ok_or("drawing-store.duplicate-reference-identity-index")?;
                             let id = self.identity.identity(&reference_identity.target).ok_or("drawing-store.duplicate-reference-identity")?;
-                            let done = self.append_paged(id, grant, "drawing-store.duplicate-reference-append")?;
-                            cx.consume_fuel(1);
+                            let done = self.append_paged(id, cx)?;
                             if done { self.frames[self.depth].phase = 3; }
                         }
-                        3 => { if self.close_append(grant)? { self.frames[self.depth].phase = 4; }cx.consume_fuel(1); }
+                        3 => { if matches!(Self::run_effect(cx, |effect| self.close_append(effect))?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 4; } }
                         4 => {
                             let child = node.children.get_mut(self.reference).ok_or("drawing-store.duplicate-reference-destination")?;
                             std::mem::swap(child, &mut self.native_id);self.identity.close_step(1);self.identity = Default::default();self.frames[self.depth].phase = 5;
                             cx.consume_fuel(size_of::<DrawingNativeText>() as u64);
                         }
-                        5 => { if matches!(self.retire_displaced_granted(grant).map_err(|_| "drawing-store.duplicate-text-close")?, RetainedCloneStep::Complete(_)) { self.reference += 1;self.frames[self.depth].phase = 0; }cx.consume_fuel(1); }
+                        5 => { if matches!(Self::run_effect(cx, |effect| self.retire_displaced(effect))?, RetainedCloneStep::Complete(_)) { self.reference += 1;self.frames[self.depth].phase = 0; } }
                         _ => return Err("drawing-store.duplicate-reference-phase"),
                     }
                     return Ok(false);
@@ -234,20 +273,46 @@ impl DrawingDuplicateRewriteAuthority {
         } else { self.depth -= 1;self.reference = 0;cx.consume_fuel(1);Ok(false) }
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+    pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::{ErasedSnapshotRetirement, RetirementDemand};
+        if self.terminal { return Ok(RetirementDemand::default()); }
+        if !self.identity.terminal_is_empty() || self.search.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        if self.append_active { return self.append.next_demand(body); }
+        if let Some(displaced) = &self.displaced { return displaced.owner.next_demand(body); }
+        let copy_bytes = if self.native_id.retained_chunks().allocated_bytes() == 0 && self.native_id.is_empty() { 0 } else { size_of::<DrawingNativeText>() };
+        Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+    }
+
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if !self.identity.terminal_is_empty() { self.identity.close_step(1);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-        if let Some(search) = self.search.as_mut() { search.close();self.search = None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-        if self.append_active {
-            self.append.begin_close();
-            let step = self.append.close_step(grant).result?;
-            if matches!(step, RetainedCloneStep::Complete(_)) && self.append.terminal_is_empty() { self.append = Default::default();self.append_active = false; }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
+        let grant = effect.grant();
+        if effect.remaining_work_units()? == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, self.close_demands(grant.maximum_copy_bytes)?) {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
-        let step = self.retire_displaced_granted(grant)?;
+        if !self.identity.terminal_is_empty() {
+            if !effect.performed(1)? { return Err(ValueError::invariant("Drawing duplicate identity close exceeded its Work")); }
+            self.identity.close_step(1);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        if let Some(search) = self.search.as_mut() {
+            if !effect.performed(1)? { return Err(ValueError::invariant("Drawing duplicate reference close exceeded its Work")); }
+            search.close();
+            self.search = None;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        }
+        if self.append_active {
+            return Ok(RetainedCloneStep::Progress(self.close_append(effect)?.progress()));
+        }
+        let step = self.retire_displaced(effect)?;
         if !matches!(step, RetainedCloneStep::Complete(_)) { return Ok(step); }
-        self.identity_index=None;self.assignment_scan=0;self.identities_observed=0;self.collision=None;self.owners = None;self.terminal = true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        if !effect.performed(1)? { return Err(ValueError::invariant("Drawing duplicate terminal close exceeded its Work")); }
+        self.identity_index = None;
+        self.assignment_scan = 0;
+        self.identities_observed = 0;
+        self.collision = None;
+        self.owners = None;
+        self.terminal = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     pub fn take_owners(&mut self) -> Option<(String, String)> {

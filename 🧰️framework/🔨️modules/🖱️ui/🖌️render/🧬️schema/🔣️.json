@@ -351,6 +351,125 @@
       "items": {
         "type": "number"
       }
+    },
+    "MetalObjectiveCAbiFixture": {
+      "title": "Metal Objective-C Owned Runtime Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "schemaVersion",
+        "contract",
+        "oracle",
+        "layout",
+        "ownership",
+        "boundaries"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/MetalObjectiveCAbiFixture"
+        },
+        "schemaVersion": {
+          "const": 1
+        },
+        "contract": {
+          "const": "owned-objective-c-runtime"
+        },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "package",
+            "version"
+          ],
+          "properties": {
+            "package": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ownedBytes",
+            "ownedAlign",
+            "optionalOwnedBytes"
+          ],
+          "properties": {
+            "ownedBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "ownedAlign": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "optionalOwnedBytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "ownership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cloneRetainDelta",
+            "dropRestores",
+            "nullOwnedAccepted",
+            "autoreleasePoolDrained"
+          ],
+          "properties": {
+            "cloneRetainDelta": {
+              "const": 1
+            },
+            "dropRestores": {
+              "const": true
+            },
+            "nullOwnedAccepted": {
+              "const": false
+            },
+            "autoreleasePoolDrained": {
+              "const": true
+            }
+          }
+        },
+        "boundaries": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "empty",
+            "single",
+            "maximum",
+            "maximumPlusOne",
+            "hostileNull"
+          ],
+          "properties": {
+            "empty": {
+              "const": "accepted"
+            },
+            "single": {
+              "const": "accepted"
+            },
+            "maximum": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumPlusOne": {
+              "const": "rejected"
+            },
+            "hostileNull": {
+              "const": "rejected"
+            }
+          }
+        }
+      }
     }
   }
 }

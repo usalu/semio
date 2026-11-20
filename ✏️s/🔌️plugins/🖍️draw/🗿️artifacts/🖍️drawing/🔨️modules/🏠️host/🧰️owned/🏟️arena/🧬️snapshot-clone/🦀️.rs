@@ -1,6 +1,8 @@
 //! 🧬️ Drawing snapshot clone: the native clone authority, the clone work totals, the layer clone work authority and the initial snapshot clone grant.
 
 use super::*;
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, retained_clone::OriginalEffectReply};
+use store::os_store::snapshot_read::{failure_value_error, settle_close_poll};
 
 /// ♻️ Rebuilt source, removed layer, reverse arena and forward arena.
 pub type DrawingRebuiltLayerOwners = (DrawingNativeLayers, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>);
@@ -25,36 +27,66 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
     }
 
     /// 🧬️ Advances the sealed source under its actual next physical quote and preserves child work before failure.
-    pub fn step(&mut self,source:RetainedCloneRef<'_,T>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,&'static str>{
-        if self.terminal{return Ok(true);}
-        if cx.should_yield(){return Ok(false);}
-        let grant=cx.retained_grant();
-        match self.phase{
-            0=>{
-                let demand=self.cursor.advance_demands(source,grant.maximum_copy_bytes).map_err(|_|"drawing-store.layer-clone-demand")?;
-                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false);}
-                let turn=self.cursor.advance(source,grant.maximum_copy_bytes,grant);cx.consume_fuel(turn.work);
-                let step=turn.result.map_err(|_|"drawing-store.layer-native-clone")?;
-                cx.consume_retained(step.progress()).map_err(|_|"drawing-store.layer-native-clone-grant")?;
-                if matches!(step,RetainedCloneStep::Complete(_)){self.phase=1;}
-            }
-            1=>{
-                let demand=self.cursor.take_demand().map_err(|_|"drawing-store.layer-clone-take-demand")?;
-                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false);}
-                let turn=self.cursor.take(grant);cx.consume_fuel(turn.work);
-                let Some((value,progress))=turn.result.map_err(|_|"drawing-store.layer-clone-take")? else{return Ok(false);};
-                *self.value=Some(value);self.cursor.begin_close();self.phase=2;
-                cx.consume_retained(progress).map_err(|_|"drawing-store.layer-clone-take-grant")?;
-            }
-            2=>{
-                let turn=self.cursor.close_selected(grant.maximum_copy_bytes,grant);cx.consume_fuel(turn.work);
-                let step=turn.result.map_err(|_|"drawing-store.layer-native-clone-close")?;
-                cx.consume_retained(step.progress()).map_err(|_|"drawing-store.layer-native-clone-close-grant")?;
-                if matches!(step,RetainedCloneStep::Complete(_))&&self.cursor.terminal_is_empty(){self.terminal=true;}
-            }
-            _=>return Err("drawing-store.layer-clone-phase")
-        }
+    pub fn step(&mut self, source: RetainedCloneRef<'_, T>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.terminal { return Ok(true); }
+        if cx.should_yield() { return Ok(false); }
+        let grant = cx.retained_grant();
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| self.advance_original(source, effect)).map_err(|_| "drawing-store.layer-clone-work")? else {
+            return Ok(false);
+        };
+        let progress = result.as_ref().map_or_else(ValueError::retained_progress, |step| step.progress());
+        let receipt = cx.consume_retained(progress);
+        cx.consume_fuel(u64::try_from(work).map_err(|_| "drawing-store.layer-clone-work")?);
+        result.map_err(|_| "drawing-store.layer-native-clone")?;
+        receipt.map_err(|_| "drawing-store.layer-native-clone-grant")?;
         Ok(self.terminal)
+    }
+
+    fn advance_original(&mut self, source: RetainedCloneRef<'_, T>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
+        let body = grant.maximum_copy_bytes;
+        let work = effect.remaining_work_units()?;
+        let blocked = RetainedCloneStep::Progress(Default::default());
+        use semio_framework_value::retained_clone::retained_clone_grant_admits as admits;
+        match self.phase {
+            0 => {
+                let quote = self.cursor.advance_selection(source, body, work)?;
+                if !admits(grant, quote.demand()) || quote.work() > work { return Ok(blocked); }
+                let mut slot = None;
+                {
+                    let reply = OriginalEffectReply::borrow(&mut slot)?;
+                    drop(self.cursor.advance_into(source, body, work, effect, reply)?);
+                }
+                let step = slot.transpose().map_err(failure_value_error)?.unwrap_or(blocked);
+                if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 1; }
+                Ok(step)
+            }
+            1 => {
+                if !admits(grant, self.cursor.take_demand()?) || self.cursor.take_work_demand()? > work { return Ok(blocked); }
+                let mut slot = None;
+                {
+                    let reply = OriginalEffectReply::borrow(&mut slot)?;
+                    drop(self.cursor.take(&mut self.value, effect, reply)?);
+                }
+                let step = slot.transpose()?.unwrap_or(blocked);
+                if matches!(step, RetainedCloneStep::Complete(_)) && self.value.is_some() { self.phase = 2; }
+                Ok(step)
+            }
+            2 => {
+                let step = settle_close_poll(self.close_cursor(effect))?;
+                if self.cursor.terminal_is_empty() { self.terminal = true; }
+                Ok(step)
+            }
+            _ => Err(ValueError::invariant("Drawing layer clone phase")),
+        }
+    }
+
+    fn close_cursor(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        if self.cursor.close_started() {
+            return self.cursor.close_selected(effect.grant().maximum_copy_bytes, effect);
+        }
+        let turn = self.cursor.begin_close_paid(effect);
+        RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map(RetainedCloneStep::Progress).map_err(Into::into), work: turn.work })
     }
 
     pub fn take(&mut self) -> Option<T> {
@@ -64,18 +96,20 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
     pub fn terminal_is_empty(&self) -> bool {
         self.cursor.terminal_is_empty() && self.value.is_none() && self.retirement.is_empty()
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-        if !self.cursor.terminal_is_empty(){self.cursor.begin_close();return self.cursor.close_selected(grant.maximum_copy_bytes,grant);}
-        if self.value.is_some(){
-            let turn=self.retirement.begin_granted(&mut self.value,grant);
-            return semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default())))};
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        if !self.cursor.terminal_is_empty() { return self.close_cursor(effect); }
+        if self.value.is_some() && self.retirement.is_empty() {
+            let turn = self.retirement.begin_granted(&mut self.value, effect);
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome { work: turn.work, result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into) });
         }
-        self.retirement.step_granted(grant)
+        self.retirement.step_granted(effect.grant().maximum_copy_bytes, effect)
     }
-    pub fn close_demands(&self,copy:usize)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{
-        let demand=if !self.cursor.terminal_is_empty(){self.cursor.close_demands(copy)?}
-            else{self.retirement.next_owner_demands::<T>(self.value.is_some(),&None,copy)?};
-        Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})
+
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.cursor.terminal_is_empty() {
+            return if self.cursor.close_started() { self.cursor.close_demands(body) } else { self.cursor.begin_close_demand() };
+        }
+        self.retirement.next_owner_demands::<T>(self.value.is_some(), &None, body)
     }
 }
 

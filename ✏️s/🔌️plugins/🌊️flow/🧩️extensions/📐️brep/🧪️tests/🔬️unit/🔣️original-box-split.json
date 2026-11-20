@@ -1,0 +1,196 @@
+{
+  "operator": "brep.intersect.split",
+  "box": {
+    "origin": [
+      1,
+      2,
+      3
+    ],
+    "size": [
+      4,
+      6,
+      8
+    ]
+  },
+  "cases": [
+    {
+      "name": "positive X from translated stock",
+      "origin": [
+        3,
+        12,
+        40
+      ],
+      "normal": [
+        2,
+        0,
+        0
+      ],
+      "positive": {
+        "bounds": [
+          [
+            3,
+            2,
+            3
+          ],
+          [
+            5,
+            8,
+            11
+          ]
+        ],
+        "volume": 96
+      },
+      "negative": {
+        "bounds": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            3,
+            8,
+            11
+          ]
+        ],
+        "volume": 96
+      }
+    },
+    {
+      "name": "negative Y reverses the output roles",
+      "origin": [
+        0,
+        5,
+        1
+      ],
+      "normal": [
+        0,
+        -3,
+        0
+      ],
+      "positive": {
+        "bounds": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            5,
+            5,
+            11
+          ]
+        ],
+        "volume": 96
+      },
+      "negative": {
+        "bounds": [
+          [
+            1,
+            5,
+            3
+          ],
+          [
+            5,
+            8,
+            11
+          ]
+        ],
+        "volume": 96
+      }
+    },
+    {
+      "name": "positive Z with unequal halves",
+      "origin": [
+        0,
+        0,
+        9
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "positive": {
+        "bounds": [
+          [
+            1,
+            2,
+            9
+          ],
+          [
+            5,
+            8,
+            11
+          ]
+        ],
+        "volume": 48
+      },
+      "negative": {
+        "bounds": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            5,
+            8,
+            9
+          ]
+        ],
+        "volume": 144
+      }
+    }
+  ],
+  "refused": [
+    {
+      "origin": [
+        5,
+        0,
+        0
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "origin": [
+        11,
+        0,
+        0
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "origin": [
+        2,
+        3,
+        4
+      ],
+      "normal": [
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "origin": [
+        2,
+        3,
+        4
+      ],
+      "normal": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-engine-export-primitives"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Retained output, frame addressing and format primitives for Layout export"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:semio-framework-job", "semio-framework-job/testkit"]
+
+[dependencies]
+semio-framework-2d-text-font = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, optional = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-s-artifact-layout-layout-engine = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

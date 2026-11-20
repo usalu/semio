@@ -155,18 +155,33 @@ function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
   return !chip || !gap.contains(chip);
 }
 
-/** 🖱️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
-export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
+const SURFACE_CONTROL = 'button, a[href], input, select, textarea, summary, [role="button"], [role="radio"], [role="checkbox"], [role="tab"], [role="menuitem"], [data-window-silhouette-chip]';
+const surfaceBackgroundVerdicts = new WeakMap<object, boolean>();
+
+/** 🖱️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target.
+ * A press on a control is never canvas, and a press is judged once however many listeners ask, so the cutout geometry — which
+ * forces a layout whenever an animation has dirtied it — is read on no control press and at most once on any other. */
+export function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number; readonly nativeEvent?: object }): boolean {
   if (isSurfaceActiveBackgroundTarget(event.target)) return true;
   if (typeof document === "undefined" || typeof event.clientX !== "number" || typeof event.clientY !== "number") return false;
   const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest(SURFACE_CONTROL) != null) return false;
+  const key = event.nativeEvent ?? event;
+  const known = surfaceBackgroundVerdicts.get(key);
+  if (known !== undefined) return known;
+  const verdict = pointerInCutout(target, event.clientX, event.clientY);
+  surfaceBackgroundVerdicts.set(key, verdict);
+  return verdict;
+}
+
+function pointerInCutout(target: Element | null, clientX: number, clientY: number): boolean {
   const stack = target?.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
   const scope: Document | HTMLElement = stack ?? document;
   for (const gap of scope.querySelectorAll<HTMLElement>('[data-window-silhouette-gap]')) {
     if (stack && gap.closest('[data-slot="mode-dock-stack"]') !== stack) continue;
     const rect = gap.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) continue;
-    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return true;
+    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) return true;
   }
   return false;
 }

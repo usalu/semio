@@ -47,7 +47,7 @@ where
             if original_child_root_retirement_demands::<M>(registry,children,None,self.displaced_content_retirement_cursor,child.maximum_copy_bytes,true).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?.is_none() { drop(self.displaced_content_retirements.take()); return Ok(paid()); }
             let cursor = &mut self.displaced_content_retirement_cursor;
             let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,child,|effect|advance_original_child_root_retirement(registry,children,None,current,None,None,cursor,effect,true).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from))?;
-            return parent(step,registry.is_empty() && registry.slots.is_empty());
+            return parent(step,registry.empty_backing_byte_demand()==Some(0));
         }
         if let Some(retirement) = self.candidate_content_retirement.as_mut() {
             if retirement.terminal_is_empty() { drop(self.candidate_content_retirement.take()); return Ok(paid()); }
@@ -111,7 +111,13 @@ where
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let business_cancelled=self.cancelled();
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
+            if rejected.terminal_is_empty(){
+                let before=cx.retained_progress();
+                if semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)? && self.session.is_none(){
+                    self.refuse(if cx.is_cancelled()||business_cancelled{ArtifactStoreReplacementRefusal::Cancelled}else{ArtifactStoreReplacementRefusal::InitializerAdmissionRejected});
+                }
+                return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+            }
             if rejected.admission_pending()&&!cx.is_cancelled()&&!business_cancelled{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
@@ -119,15 +125,11 @@ where
                 return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
             }
 
-            if rejected.terminal_is_empty(){
-                let bytes=size_of_val(rejected);if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-                drop(self.session_rejected.take());self.refuse(if cx.is_cancelled()||business_cancelled{ArtifactStoreReplacementRefusal::Cancelled}else{ArtifactStoreReplacementRefusal::InitializerAdmissionRejected});
-                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
-            }
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
             return original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
         }
         if self.outcome_pending{
+            let before=cx.retained_progress();
             let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("store initializer original outcome acknowledgement lost its session"))?;
             let acknowledged=session.acknowledge_checked_out_outcome(cx)?;
             if acknowledged{
@@ -156,14 +158,17 @@ where
                 }
                 self.resume_pending=true;
             }
-            return Ok(PluginLifecycleStep::Progress(Default::default()));
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
         }
         if self.resume_pending{
-            if grant.maximum_copy_bytes<size_of::<bool>(){return Ok(PluginLifecycleStep::Progress(Default::default()));}
-            let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("store initializer original outcome handback lost its session"))?;
+            let session=self.session.as_ref().ok_or_else(||plugin_sdk_fault("store initializer original outcome handback lost its session"))?;
+            let (next, copy_bytes) = self.initializer_resume_quote(session)?;
+            if grant.maximum_copy_bytes < copy_bytes { return Ok(PluginLifecycleStep::Progress(Default::default())); }
+            let session = self.session.as_mut().expect("initializer outcome retains its checked-out session");
             if self.terminal_target.is_some(){session.begin_close();}else if session.resume().is_err(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original outcome resume remains contended"});}
             self.resume_pending=false;
-            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()}));
+            if self.initializer_step_demand != next { self.initializer_step_demand = next; }
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}));
         }
         if let Some(target)=self.terminal_target{
             let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("store initializer terminal target lost its original session"))?;
@@ -172,11 +177,25 @@ where
                 drop(self.session.take());self.terminal_target=None;self.state=target;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original quote awaits worker handback"}),Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
-            return original_worker_lifecycle(cx,demand,grant,"store initializer original terminal worker remains contended",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
+            use semio_framework_job_worker_authority::WorkerJobCloseStep;
+            let step = session.close_step(cx)?;
+            let progress = step.progress();
+            if !progress.fits(grant) || matches!(step, WorkerJobCloseStep::Complete { .. }) && !session.terminal_is_empty() {
+                return Err(ValueError::invariant("store initializer retirement violated its phase grant or terminal witness").with_retained_progress(progress).into());
+            }
+            return Ok(match step {
+                WorkerJobCloseStep::Pending { .. } | WorkerJobCloseStep::Complete { .. } => PluginLifecycleStep::Progress(progress),
+                WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "store initializer original terminal worker remains contended" },
+            });
         }
+        if !business_cancelled && !cx.is_cancelled() && self.initializer_step_demand != RetirementDemand::default()
+            && !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, self.initializer_step_demand) {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        }
+        let before = cx.retained_progress();
+        let current = self.replacement_identity();
         let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
-        match session.pump_one_for_interactive_turn(cx) {
+        match cx.with_replacement_current(current, |cx| session.pump_one_for_interactive_turn(cx)) {
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) => {
                 let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() else { return Ok(PluginLifecycleStep::Blocked { reason: "store initializer original receipt awaits its sole recipient" }) };
                 if !progress.fits(issued) || !progress.fits(grant) {
@@ -190,9 +209,9 @@ where
                     Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome").into()),
                 };
                 self.outcome_pending = true;
-                Ok(PluginLifecycleStep::Progress(progress))
+                Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
             }
-            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
+            Ok(semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?)),
             Ok(_) => Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer awaits its mounted wake" }),
             Err(failure) => Err(failure.into()),
         }

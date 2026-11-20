@@ -8,7 +8,7 @@ pub struct CapturedProjectionField<R:Sync+'static,T:SnapshotProjection>{witness:
 impl<R:Sync+'static,T:SnapshotProjection> CapturedProjectionField<R,T>{
  /// 🌱️ Constructs only an empty native seed; it allocates and calls out to nothing.
  pub fn new(witness:RetainedNativeFieldProjection<R,T>)->Self{Self{witness,projection:ManuallyDrop::new(Default::default()),field:ManuallyDrop::new(Default::default()),work:None,closing:false,advance_route:None,close_route:None}}
- fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("captured field changed original Source or Work"))}Ok(())}
+ fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("captured field changed original Source or Work"))}Ok(())}
  /// 📏️ Selects the actual Work binding, native field projection or child frontier.
  pub fn demands(&self,source:RetainedCloneRef<'_,R>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.advance_route.is_some()||self.close_route.is_some(){return Err(invalid("captured field is closing or occupied"))}if maximum==0{return Ok(Default::default())}if self.work.is_none(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<OriginalWorkBindingIdentity>>(),depth:1,..Default::default()})}if self.projection.terminal_is_empty(){return self.witness.demand(source,&self.projection)}self.field.demands(self.projection.borrow()?,body,maximum)}
  /// ⛽️ Quotes the same selected original action.

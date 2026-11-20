@@ -16,6 +16,7 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-native-registry.workspace = true
 semio-framework-3d-brep-kernel-contract.workspace = true
 semio-framework-3d-brep-mesh-io.workspace = true
 semio-framework-3d-brep-shape-value.workspace = true

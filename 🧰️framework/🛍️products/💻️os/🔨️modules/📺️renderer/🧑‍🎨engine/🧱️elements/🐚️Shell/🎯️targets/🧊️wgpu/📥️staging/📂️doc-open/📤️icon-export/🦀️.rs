@@ -117,7 +117,7 @@ impl IconExportBatch {
                         Ok(preparation) => { self.preparing = Some(Box::new(preparation)); self.phase = Phase::Prepare; }
                         Err(rejected) => { self.fail(rejected.fault().to_string()); self.scene_rejected = Some(rejected); }
                     },
-                    Err(fault) => self.fail(fault),
+                    Err(fault) => self.fail(fault.to_string()),
                 }
             }
             Phase::Prepare => {
@@ -194,7 +194,7 @@ impl IconExportBatch {
             Ok(format) => format,
             Err(fault) => return self.fail(fault),
         };
-        match IconExportScenePreparation::asset_url(&self.request).and_then(|url| IconExportAssetRequest::new(&url)) {
+        match IconExportScenePreparation::asset_url(&self.request).and_then(|url| IconExportAssetRequest::new(&url).map_err(|fault| fault.to_string())) {
             Ok(asset) => { self.asset = Some(asset); self.phase = Phase::Load; }
             Err(fault) => self.fail(fault),
         }

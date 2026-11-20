@@ -185,7 +185,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             std::ptr::addr_of_mut!((*target).original_emission).write(Default::default());
             std::ptr::addr_of_mut!((*target).original_typed_command).write(Default::default());
             std::ptr::addr_of_mut!((*target).original_host_event_command).write(Default::default());
-            std::ptr::addr_of_mut!((*target).original_command_scope).write(None);
+            std::ptr::addr_of_mut!((*target).original_command_scope).write(Default::default());
             std::ptr::addr_of_mut!((*target).original_host_event_scope).write(None);
             std::ptr::addr_of_mut!((*target).original_typed_tag).write(std::mem::ManuallyDrop::new(None));
             std::ptr::addr_of_mut!((*target).original_typed_tag_close).write(Default::default());

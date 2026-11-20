@@ -20,7 +20,7 @@ mod loft;
 #[path = "🌀️revolve/🦀️.rs"]
 mod revolve;
 
-use {semio_framework_3d_brep_construction::primitives::make_planar_face_from_wire, semio_framework_3d_brep_representation::topology::Wire};
+use {semio_framework_3d_brep_construction::primitives::{make_planar_face_from_wire, planar_wire_support}, semio_framework_3d_brep_representation::topology::Wire};
 use semio_framework_3d_brep_construction::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_construction::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::FaceId;
@@ -50,7 +50,10 @@ impl ExtrudeJob {
     pub fn new(body: &Body, face: FaceId, direction: Vec3, distance: f64) -> Result<Self, KernelError> {
         sweep_machinery::require_positive("extrude distance", distance.abs())?;
         let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
-        sweep_machinery::planar_outward_normal(body, face)?;
+        let normal = sweep_machinery::planar_outward_normal(body, face)?;
+        if dir.dot(normal).abs() <= 1e-9 {
+            return Err(KernelError::InvalidInput("extrude direction lies in the profile plane".into()));
+        }
         let plan = Plan::new(&[("setup", 1), ("laterals", sweep_machinery::PrismBuilder::lateral_count(body, face)), ("close", 1)]);
         Ok(Self { face, offset: dir * distance, prism: None, plan })
     }
@@ -89,22 +92,6 @@ pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f6
     drive_solid(&mut ExtrudeJob::new(body, face, direction, distance)?, body, rec)
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
-    if points.len() < 3 {
-        return None;
-    }
-    let mut n = Vec3::ZERO;
-    for i in 0..points.len() {
-        let p = points[i];
-        let q = points[(i + 1) % points.len()];
-        n.x += (p.y - q.y) * (p.z + q.z);
-        n.y += (p.z - q.z) * (p.x + q.x);
-        n.z += (p.x - q.x) * (p.y + q.y);
-    }
-    n.normalized()
-}
-
 /// ➡️ Resumable [`extrude_wire`]: one unit builds the wire's planar face, then the units of the
 /// [`ExtrudeJob`] over it.
 pub struct ExtrudeWireJob {
@@ -120,15 +107,11 @@ pub struct ExtrudeWireJob {
 impl ExtrudeWireJob {
     /// ➡️ Plans the extrusion of closed `wire` along `direction` by `distance`.
     pub fn new(body: &Body, wire: &Wire, direction: Vec3, distance: f64) -> Result<Self, KernelError> {
-        if !wire.closed {
-            return Err(KernelError::Operation("extrude_wire: open-wire (shell-only) extrusion is not yet supported in this pass".into()));
-        }
-        let pts: Vec<Pnt3> = wire.vertices.iter().map(|&v| body.vertices.get(v).unwrap().position).collect();
-        let normal = newell_normal(&pts).ok_or_else(|| KernelError::InvalidInput("extrude_wire: wire is degenerate".into()))?;
+        let (origin, normal) = planar_wire_support(body, wire)?;
         sweep_machinery::require_positive("extrude distance", distance.abs())?;
         direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
         let plan = Plan::new(&[("face", 1), ("setup", 1), ("laterals", wire.members.len()), ("close", 1)]);
-        Ok(Self { wire: wire.clone(), origin: pts[0], normal, direction, distance, child: None, plan })
+        Ok(Self { wire: wire.clone(), origin, normal, direction, distance, child: None, plan })
     }
 }
 

@@ -70,6 +70,9 @@ pub mod standards {
                     }
                     #[path = "../../../../../🔨️modules/🔗️xref/🦀️.rs"]
                     pub mod xref;
+                    #[cfg(test)]
+                    #[path = "../../../../../🔨️modules/🔗️xref/🧪️tests/🔬️unit/📏️indirect-stream-length/🦀️.rs"]
+                    mod xref_stream_length_tests;
                     #[path = "."]
                     pub mod encryption {
                         pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::encryption::*;

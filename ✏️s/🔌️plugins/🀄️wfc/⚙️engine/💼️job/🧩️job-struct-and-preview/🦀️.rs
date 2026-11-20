@@ -18,6 +18,7 @@ pub struct WfcJob<T> {
     pub(super) preview_units: u64,
     pub(super) last_preview_ms: Option<u64>,
     pub(super) publication: Option<Box<Publication>>,
+    pub(super) publish_intermediate: bool,
     pub(super) closing: bool,
     pub(super) visible: Vec<VisibleCell>,
 }
@@ -65,7 +66,13 @@ impl<T: Topology + Clone> WfcJob<T> {
             backtracks: 0,
             observed: Vec::new(),
         };
-        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, closing: false, visible: Vec::new() }
+        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, publish_intermediate: true, closing: false, visible: Vec::new() }
+    }
+
+    /// 🏁️ Drives the same collapse and terminal commit for a caller that consumes only the verdict.
+    pub fn with_terminal_publications(mut self) -> Self {
+        self.publish_intermediate = false;
+        self
     }
 
     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8], now_us:fn()->Option<u64>, site:HeadlessSite) -> Result<Self, HeadlessFailure<WfcRestore<T>,Self>>

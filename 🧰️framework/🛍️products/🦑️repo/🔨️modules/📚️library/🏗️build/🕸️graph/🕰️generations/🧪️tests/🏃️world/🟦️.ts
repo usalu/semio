@@ -223,7 +223,7 @@ export async function treeDigest(dir:string):Promise<string>{
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
 export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number;prefetch?:(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string})=>Promise<void>;passes?:{walks:number;rows:number};cursor?:boolean}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
- const custody=options.custody??{tail:Promise.resolve()};
+ const custody:{tail:Promise<void>;users?:number}=options.custody??{tail:Promise.resolve()};
  const implementationRows:(GenerationRowV1&{scope?:string})[]=[...(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};}),...Object.entries(options.stamps??{}).map(([path,row])=>({kind:"stamp",path,fact:row.stamp,scope:row.scope}))];
  const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),walked=createMembership(dir,options.passes),discover=createPartDiscover(dir,log,options.ownerDelayMs,options.stamps),counted=createHolds(dir,options.stamps),holds=options.passes?async(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>{options.passes!.rows+=rows.length;return counted(rows,signal);}:counted,observed=new WeakMap<object,string>(),membership=options.cursor?async(previous:Parameters<typeof walked>[0])=>{const stamp=await treeDigest(dir),live=await walked(previous);observed.set(live,stamp);return live;}:walked;
  const host={
@@ -231,9 +231,9 @@ export function createMockHost(dir:string,options:{signal?:AbortSignal;language?
   async identity(){return options.identity??IDENTITY;},
   async implementationRows(){return implementationRows;},
   async withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>){events.push("shared");return body({root:join(dir,".gen")},{published});},
-  async withBuilder<T>(body:(store:unknown,control:unknown)=>Promise<T>){
-   events.push("builder:wait");const previous=custody.tail;let release!:()=>void;custody.tail=new Promise<void>(resolve=>{release=resolve;});await previous;events.push("builder:held");
-   try{await options.gate?.();return await body({root:join(dir,".gen")},{published});}finally{events.push("builder:released");release();}
+  async withBuilder<T>(body:(store:unknown,control:unknown)=>Promise<T>,_request?:unknown,peerWait?:(blocked:boolean)=>void){
+   events.push("builder:wait");const previous=custody.tail;peerWait?.(Boolean(custody.users));custody.users=(custody.users??0)+1;let release!:()=>void;custody.tail=new Promise<void>(resolve=>{release=resolve;});await previous;peerWait?.(false);events.push("builder:held");
+   try{await options.gate?.();return await body({root:join(dir,".gen")},{published});}finally{events.push("builder:released");custody.users = custody.users! - 1;release();}
   },
   storeOptions:(store:{root:string})=>({root:store.root,lease,holds,durableAnswers:false,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
   membership,discoverPart:discover,

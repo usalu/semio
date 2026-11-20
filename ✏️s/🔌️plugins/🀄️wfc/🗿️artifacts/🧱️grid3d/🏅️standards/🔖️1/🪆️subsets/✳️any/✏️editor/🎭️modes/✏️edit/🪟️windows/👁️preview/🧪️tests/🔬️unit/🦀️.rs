@@ -88,7 +88,8 @@ fn an_unsolved_preview_never_creates_an_assignment() {
     assert!(assignments.is_empty());
     assert!(satisfiable);
     let node=render(&document,&Grid3dWindowConfig::default(),&transient,None,Some(&[7;32])).unwrap();
-    assert!(format!("{node:?}").contains("unsolved"));
+    let projection=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("the fixture tree projects");
+    assert!(projection.contains("unsolved"));
 }
 
 #[test]
@@ -117,7 +118,7 @@ fn a_sixteen_cell_cube_keeps_its_completed_fill_payload() {
     let bytes=payload.encode();
     assert_eq!(bytes.len(),fixture["expectedPayloadBytes"].as_u64().unwrap() as usize);
     assert!(bytes.len()>65536);
-    assert!(bytes.len()<semio_framework_tool_run::ToolRunReceivingLimits::REPORTS.tick.maximum_file_bytes);
+    assert!(bytes.len()<semio_framework_tool_run::ToolRunReceivingLimits::REPORTS.tick.maximum_file_bytes as usize);
     let command=Grid3dEditorCommand::CommitFill{payload_json:String::from_utf8(bytes).unwrap()};
     let encoded=protocol::OpBinary::encode_op(&command).unwrap();
     assert!(encoded.len()<fixture["maximumRawBytes"].as_u64().unwrap() as usize);
@@ -127,6 +128,20 @@ fn a_sixteen_cell_cube_keeps_its_completed_fill_payload() {
 }
 
 /// 🪣️ Both the original run identity and decoded live payload bind a progressive preview.
+/// ♻️ Retires the run's cold payload storage so the shared original alias never drops live.
+fn retire_payload(run:&mut semio_plugin::ToolRunView){
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    if let Some(storage)=run.payload.take(){if let SharedOriginalRelease::Original(mut original)=storage.retire(){drop(original.take_value());}}
+}
+
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run:semio_plugin::ToolRunView){
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView{provisional_entities,payload,..}=run;
+    if let SharedOriginalRelease::Original(mut original)=provisional_entities.retire(){drop(original.take_value());}
+    if let Some(storage)=payload{if let SharedOriginalRelease::Original(mut original)=storage.retire(){drop(original.take_value());}}
+}
+
 #[test]
 fn a_live_preview_cannot_cross_run_or_document_revisions() {
     use crate::editor::grid3d::{transient::Grid3dTransient,modes::edit::tools::fill::{Grid3dFillPayload,Grid3dFillCell}};
@@ -134,15 +149,17 @@ fn a_live_preview_cannot_cross_run_or_document_revisions() {
     let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:1,run:1},[7;32]);
     let mut run=semio_plugin::ToolRunView::new("fill",identity,ToolRunState::Running);
     let payload=Grid3dFillPayload{source_revision:vec![7;32],assignments:vec![Grid3dFillCell{x:0,y:0,z:0,tile_id:Some("air".into())}],..Default::default()};
-    run.payload=Some(std::sync::Arc::new(payload.encode()));
+    run.payload=Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(payload.encode()));
     let empty=Grid3dTransient::default();
     assert_eq!(paint_assignments(&empty,Some(&run),Some(&[7;32])).0,vec![row(0,0,0,"air")]);
     assert!(paint_assignments(&empty,Some(&run),Some(&[8;32])).0.is_empty());
     run.identity.base_revision=[8;32];
     assert!(paint_assignments(&empty,Some(&run),Some(&[7;32])).0.is_empty());
     run.identity=identity;
-    run.payload=Some(std::sync::Arc::new(Grid3dFillPayload{source_revision:vec![8;32],..payload}.encode()));
+    retire_payload(&mut run);
+    run.payload=Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(Grid3dFillPayload{source_revision:vec![8;32],..payload}.encode()));
     assert!(paint_assignments(&empty,Some(&run),Some(&[7;32])).0.is_empty());
     run.state=ToolRunState::Aborted;
     assert!(paint_assignments(&empty,Some(&run),Some(&[7;32])).0.is_empty());
+    retire_run(run);
 }

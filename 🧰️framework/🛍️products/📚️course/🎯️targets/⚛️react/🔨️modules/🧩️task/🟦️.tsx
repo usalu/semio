@@ -234,7 +234,7 @@ export function GuessField(props: {
 
   return (
     <div className="course-guess min-w-0">
-      <div ref={entry} className="course-guess-entry">
+      <div ref={entry} data-shared-border-group="" className="course-guess-entry">
         <input
           id={id}
           type="text"
@@ -247,6 +247,7 @@ export function GuessField(props: {
           aria-label={name}
           aria-invalid={rejected}
           aria-describedby={described}
+          data-shared-border-cell=""
           className="course-input course-target min-w-0 text-sm tabular-nums"
           onChange={(event) => {
             if (readOnly) return;
@@ -260,7 +261,7 @@ export function GuessField(props: {
           onKeyDown={press}
         />
         {units.length === 0 ? null : (
-          <select id={unitId} className="course-input course-guess-unit course-target text-sm tabular-nums" aria-label={text("course.task.unitFor", { name })} value={String(exponent)} disabled={readOnly} onChange={(event) => pick(Number(event.target.value))} onBlur={leave}>
+          <select id={unitId} data-shared-border-cell="" className="course-input course-guess-unit course-target text-sm tabular-nums" aria-label={text("course.task.unitFor", { name })} value={String(exponent)} disabled={readOnly} onChange={(event) => pick(Number(event.target.value))} onBlur={leave}>
             {units.map((unit) => (
               <option key={unit.symbol} value={String(unit.exponent)}>
                 {unit.symbol}

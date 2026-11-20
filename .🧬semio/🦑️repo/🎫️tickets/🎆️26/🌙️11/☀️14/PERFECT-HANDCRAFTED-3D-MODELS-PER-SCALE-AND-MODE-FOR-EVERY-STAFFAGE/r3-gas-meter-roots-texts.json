@@ -1,0 +1,136 @@
+{
+  "summary": {
+    "en": "A compact G4 bellows gas meter of 0.19 m by 0.25 m seen from the front: a housing of two deep-drawn sheet-steel shells joined by a folded seam, two pipe stubs with union nuts at 110 mm spacing on top, an index head with an eight-digit counter and a test dial whose pointer turns with the gas flow.",
+    "de": "Ein kompakter Balgengaszähler G4 von 0,19 m mal 0,25 m in der Frontansicht: ein Gehäuse aus zwei tiefgezogenen Stahlblechschalen mit Falznaht, zwei Rohrstutzen mit Überwurfmuttern im Abstand von 110 mm oben, ein Zählwerkskopf mit achtstelligem Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht."
+  },
+  "notes": {
+    "en": "A domestic G4 diaphragm (bellows) meter of the compact class, seen from the front, after the Elster BK-G4 compact data sheet: connection spacing 110 mm, 193 mm wide over the seam, 221 mm high over the bare stubs, 157 mm deep over the index, 1.9 kg, cyclic volume 1.2 litres. The housing is two deep-drawn shells of 1 mm sheet steel, powder coated pale grey, joined by a folded seam that stands 5 mm proud all round; the shells have 18 mm shoulders and a slight draft. The two M30 stubs are brazed into the crown of the upper shell; the union nuts (36 mm across flats) and the tailpieces of the pipework, drawn cut 20 mm above the nuts, bring the overall height to 0.245 m and the mass to 1.95 kg (authored estimate for the unions). The index head, 130 mm by 66 mm and 28 mm proud of the upper shell, carries an eight-digit roller counter (five whole cubic metres and three decimals) and a test dial with a pointer; a data plate is riveted to the lower shell and a flow arrow is embossed in the crown. Inside, the measuring unit with two diaphragm chambers, the valve deck, the gear and the outlet duct to the outlet stub fill the housing; no drawing shows it. The meter hangs on its two unions on a meter bar and does not touch the wall. The origin is on the seam in the middle of the housing front. The pointer is the pointer bone, which lies along the needle and points up at rest; one turn stands for 0.2 cubic metres, so at the rated 6 cubic metres per hour it needs 120 seconds, which the clip shows 60 times faster. Gas flowing through the pipes releases no heat of its own; the operating level only gives the pipe stubs 0.2 W of friction and ambient exchange.",
+    "de": "Ein häuslicher Balgengaszähler G4 der kompakten Klasse in der Frontansicht, nach dem Datenblatt des Elster BK-G4 kompakt: Stutzenabstand 110 mm, 193 mm breit über die Naht, 221 mm hoch über die blanken Stutzen, 157 mm tief über das Zählwerk, 1,9 kg, zyklisches Volumen 1,2 Liter. Das Gehäuse besteht aus zwei tiefgezogenen Schalen aus 1 mm Stahlblech, hellgrau pulverbeschichtet, verbunden durch eine Falznaht, die ringsum 5 mm vorsteht; die Schalen haben 18-mm-Schultern und eine leichte Ziehschräge. Die zwei M30-Stutzen sind in den Scheitel der Oberschale eingelötet; die Überwurfmuttern (Schlüsselweite 36) und die Einlegeteile der Leitung, 20 mm über den Muttern geschnitten gezeichnet, bringen die Gesamthöhe auf 0,245 m und die Masse auf 1,95 kg (Schätzwert für die Verschraubungen). Der Zählwerkskopf, 130 mm mal 66 mm und 28 mm vor der Oberschale, trägt ein achtstelliges Rollenzählwerk (fünf ganze Kubikmeter und drei Dezimalen) und ein Prüfrad mit Zeiger; ein Datenschild ist auf die Unterschale genietet, und ein Durchflusspfeil ist in den Scheitel geprägt. Innen füllt das Messwerk mit zwei Membrankammern, dem Ventildeck, dem Getriebe und dem Auslasskanal zum Auslassstutzen das Gehäuse; keine Zeichnung zeigt es. Der Zähler hängt an seinen zwei Verschraubungen an einem Zählerbügel und berührt die Wand nicht. Der Ursprung liegt auf der Naht in der Mitte der Gehäusefront. Der Zeiger ist der Zeigerknochen, der entlang der Nadel liegt und in Ruhe nach oben zeigt; eine Umdrehung steht für 0,2 Kubikmeter, bei den Nenn-6 Kubikmetern je Stunde braucht er also 120 Sekunden, was der Clip 60-fach schneller zeigt. Das durchströmende Gas setzt keine eigene Wärme frei; die Betriebsstufe gibt den Stutzen nur 0,2 W aus Reibung und Umgebungsaustausch."
+  },
+  "hidden": {
+    "en": "The measuring unit fills the housing behind the index: a frame with a partition and two domed diaphragm pans in the lower shell, the valve deck with two slide covers at the seam, the gear tower with its crank and the drive shaft to the pointer in the upper shell, and the outlet duct up to the outlet stub; no drawing shows it. Its area is the surface of these parts as modelled (0.147 m2); the gas around it is at room temperature and the region is passive.",
+    "de": "Das Messwerk füllt das Gehäuse hinter dem Zählwerk: ein Rahmen mit Trennwand und zwei gewölbten Membranschalen in der Unterschale, das Ventildeck mit zwei Schieberhauben an der Naht, der Getriebeturm mit seiner Kurbel und die Antriebswelle zum Zeiger in der Oberschale und der Auslasskanal hinauf zum Auslassstutzen; keine Zeichnung zeigt es. Seine Fläche ist die Oberfläche dieser Teile wie modelliert (0,147 m2); das Gas darum hat Raumtemperatur, die Region ist passiv."
+  },
+  "thermal-assumption": {
+    "en": "The meter hangs free on its unions about 30 mm in front of the wall, so the whole housing is exposed to the room air and nothing is in contact with the wall. The hidden measuring unit exchanges heat only with the gas in the housing and is passive.",
+    "de": "Der Zähler hängt frei an seinen Verschraubungen etwa 30 mm vor der Wand, das ganze Gehäuse liegt also an der Raumluft und nichts berührt die Wand. Das verborgene Messwerk tauscht Wärme nur mit dem Gas im Gehäuse und ist passiv."
+  },
+  "structure-assumption": {
+    "en": "The 1.95 kg meter hangs on its two unions on a meter bar: the inlet union is the pin and the outlet union the roller, 110 mm apart, each carrying half of the 19.1 N. The stubs pull on the crown of the upper shell, the folded seam passes the load to the lower shell, which carries the measuring unit; the centre of mass lies 20 mm below the seam on the axis plane of the stubs, so the meter hangs plumb and needs no wall bracket.",
+    "de": "Der 1,95 kg schwere Zähler hängt an seinen zwei Verschraubungen an einem Zählerbügel: die Einlassverschraubung ist das Festlager, die Auslassverschraubung das Rollenlager, 110 mm auseinander, jede trägt die Hälfte der 19,1 N. Die Stutzen ziehen am Scheitel der Oberschale, die Falznaht gibt die Last an die Unterschale weiter, die das Messwerk trägt; der Schwerpunkt liegt 20 mm unter der Naht in der Achsebene der Stutzen, der Zähler hängt also lotrecht und braucht keinen Wandhalter."
+  },
+  "decisions-50": {
+    "silhouette": {
+      "en": "A 0.19 m by 0.25 m compact bellows gas meter, 3.9 mm by 4.9 mm on paper: two pressed sheet-steel shells with rounded shoulders meeting at a folded seam that stands proud, two stubs with hexagonal union nuts and cut tailpieces on top, a pale index head with an eight-digit counter above a round test dial with a pointer, and a data plate on the lower shell. Front, 3.1 mm by 4.9 mm: the meter side-on, the index head standing 28 mm out of the upper shell to the left, one stub with its nut on the axis. Plan, 3.9 mm by 3.1 mm: the seam bead as outline with the shell edge inside it, the index head in front, the two hexagonal nuts with tailpieces and dark bores, and the flow arrow between them.",
+      "de": "Ein kompakter Balgengaszähler von 0,19 m mal 0,25 m, auf Papier 3,9 mm mal 4,9 mm: zwei gepresste Stahlblechschalen mit gerundeten Schultern, die sich an einer vorstehenden Falznaht treffen, oben zwei Stutzen mit sechskantigen Überwurfmuttern und geschnittenen Einlegeteilen, ein heller Zählwerkskopf mit achtstelligem Zählwerk über einem runden Prüfrad mit Zeiger und ein Datenschild auf der Unterschale. Vorderansicht, 3,1 mm auf 4,9 mm: der Zähler von der Seite, der Zählwerkskopf steht links 28 mm aus der Oberschale, ein Stutzen mit Mutter in der Achse. Grundriss, 3,9 mm auf 3,1 mm: der Nahtwulst als Umriss mit der Schalenkante darin, der Zählwerkskopf vorn, die zwei Sechskantmuttern mit Einlegeteilen und dunklen Bohrungen und dazwischen der Durchflusspfeil."
+    },
+    "retained": {
+      "en": "Both shells with draft and shoulders, the seam, the 30 mm stubs on their bosses at 110 mm spacing, the union nuts with two edge lines, the tailpieces, the index head with its window frame, eight digits (the last three dimmer for the decimals), the 36 mm test dial with four ticks and its pointer with the pivot, the data plate with two text lines.",
+      "de": "Beide Schalen mit Ziehschräge und Schultern, die Naht, die 30-mm-Stutzen auf ihren Bunden im Abstand von 110 mm, die Überwurfmuttern mit zwei Kantenlinien, die Einlegeteile, der Zählwerkskopf mit Fensterrahmen, acht Ziffern (die letzten drei matter für die Dezimalen), das 36-mm-Prüfrad mit vier Strichen und seinem Zeiger mit Drehpunkt, das Datenschild mit zwei Textzeilen."
+    },
+    "merged": {
+      "en": "Shells, seam and plate belong to one sheet-steel region; the clear cover of the index head is part of the index region.",
+      "de": "Schalen, Naht und Schild gehören zu einer Stahlblech-Region; die klare Haube des Zählwerkskopfes gehört zur Zählwerksregion."
+    },
+    "omitted": {
+      "en": "The meter bar, the pulse transmitter, the seal wires, the thread of the stubs and the printed scale numerals. Digits, dial, pointer and data plate lie on the face and are not seen from the side or from above; the measuring unit inside is never drawn.",
+      "de": "Der Zählerbügel, der Impulsgeber, die Plombierdrähte, das Gewinde der Stutzen und die gedruckten Skalenziffern. Ziffern, Prüfrad, Zeiger und Datenschild liegen auf der Front und sind von der Seite und von oben nicht zu sehen; das Messwerk im Inneren wird nie gezeichnet."
+    },
+    "thinElements": {
+      "en": "The pointer is a tapered blade 5 mm wide at its tail (0.1 mm) under an 8 mm pivot; the ticks are 0.13 mm lines of 4 mm; the digits are 11 mm wide (0.22 mm); the seam is 9 mm high (0.18 mm).",
+      "de": "Der Zeiger ist eine sich verjüngende Klinge, am Ende 5 mm breit (0,1 mm), unter einem 8-mm-Drehpunkt; die Striche sind 0,13-mm-Linien von 4 mm; die Ziffern sind 11 mm breit (0,22 mm); die Naht ist 9 mm hoch (0,18 mm)."
+    },
+    "hatching": {
+      "en": "None.",
+      "de": "Keine."
+    },
+    "styles": {
+      "en": "Lower shell 0.72, upper shell 0.76 (pale grey powder coat), seam 0.5, index head 0.9, counter 0.1 with digits 0.92 and 0.55, dial 0.97, plate 0.88, stubs and tailpieces 0.5, union nuts 0.4; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+      "de": "Unterschale 0,72, Oberschale 0,76 (hellgraue Pulverbeschichtung), Naht 0,5, Zählwerkskopf 0,9, Zählwerk 0,1 mit Ziffern 0,92 und 0,55, Prüfrad 0,97, Schild 0,88, Stutzen und Einlegeteile 0,5, Überwurfmuttern 0,4; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+    },
+    "overlays": {
+      "en": "Shell, index and pipes are the three drawn regions, the measuring unit is hidden; in the thermal view the pipes and the shell sit at room temperature and the pointer turns with the pointer bone. In the force view the two reactions act upwards at the unions.",
+      "de": "Schale, Zählwerkskopf und Rohre sind die drei gezeichneten Regionen, das Messwerk ist verborgen; in der Thermalansicht liegen Rohre und Schale auf Raumtemperatur, und der Zeiger dreht sich mit dem Zeigerknochen. In der Kräfteansicht greifen die zwei Auflagerkräfte nach oben an den Verschraubungen an."
+    }
+  },
+  "decisions-100": {
+    "silhouette": {
+      "en": "A 1.9 mm by 2.5 mm gas meter: a pale grey pressing with rounded shoulders and two stubs with union nuts, a pale index head with a dark counter strip above a round dial with a pointer, and a pale plate. Front, 1.6 mm by 2.5 mm: housing, index head, one stub and one union. Plan, 1.9 mm by 1.6 mm: housing, index strip and two union discs.",
+      "de": "Ein Gaszähler von 1,9 mm mal 2,5 mm: ein hellgraues Pressteil mit gerundeten Schultern und zwei Stutzen mit Überwurfmuttern, ein heller Zählwerkskopf mit dunklem Zählwerksstreifen über einem runden Prüfrad mit Zeiger und ein helles Schild. Vorderansicht, 1,6 mm auf 2,5 mm: Gehäuse, Zählwerkskopf, ein Stutzen und eine Überwurfmutter. Grundriss, 1,9 mm auf 1,6 mm: Gehäuse, Zählwerkstreifen und zwei Mutternscheiben."
+    },
+    "retained": {
+      "en": "Housing, two stubs with unions, index head, counter strip, dial with pointer, data plate.",
+      "de": "Gehäuse, zwei Stutzen mit Überwurfmuttern, Zählwerkskopf, Zählwerksstreifen, Prüfrad mit Zeiger, Datenschild."
+    },
+    "merged": {
+      "en": "Both shells and the seam are one housing at the width of the seam; the tailpieces join the stubs; the hexagonal nuts become round; the digits join the dark strip.",
+      "de": "Beide Schalen und die Naht sind ein Gehäuse in der Breite der Naht; die Einlegeteile gehen in den Stutzen auf; die Sechskantmuttern werden rund; die Ziffern gehen im dunklen Streifen auf."
+    },
+    "omitted": {
+      "en": "Seam, draft, stub bosses, bores, window frame, digits, ticks, pivot, plate text and flow arrow.",
+      "de": "Naht, Ziehschräge, Stutzenbunde, Bohrungen, Fensterrahmen, Ziffern, Striche, Drehpunkt, Schildtext und Durchflusspfeil."
+    },
+    "thinElements": {
+      "en": "The pointer is a tapered blade 5 mm wide (0.05 mm) and prints as a hairline; the stubs are 30 mm (0.3 mm) wide; the counter strip is 18 mm (0.18 mm) high.",
+      "de": "Der Zeiger ist eine sich verjüngende Klinge von 5 mm (0,05 mm) Breite und druckt als Haarlinie; die Stutzen sind 30 mm (0,3 mm) breit; der Zählwerksstreifen ist 18 mm (0,18 mm) hoch."
+    },
+    "hatching": {
+      "en": "None.",
+      "de": "Keine."
+    },
+    "styles": {
+      "en": "Housing 0.74, index 0.9, counter 0.1, dial 0.97, plate 0.88, stubs 0.5, unions 0.4; one body pen of 0.18 mm.",
+      "de": "Gehäuse 0,74, Zählwerkskopf 0,9, Zählwerk 0,1, Prüfrad 0,97, Schild 0,88, Stutzen 0,5, Überwurfmuttern 0,4; ein Körperstift von 0,18 mm."
+    },
+    "overlays": {
+      "en": "Shell, index and pipes stay the three drawn regions, the pointer turns with its bone.",
+      "de": "Schale, Zählwerkskopf und Rohre bleiben die drei gezeichneten Regionen, der Zeiger dreht sich mit seinem Knochen."
+    }
+  },
+  "decisions-200": {
+    "silhouette": {
+      "en": "A 1 mm by 1.2 mm gas meter: a pale grey block with rounded corners and two thick pins, a pale head with a dark counter bar above a round dial with a pointer. Front, 0.8 mm by 1.2 mm: the housing and the index step merged into one outline with one pin on top. Plan, 1 mm by 0.8 mm: one outline of housing and index strip; the two pins are below what the pen can draw and are left out.",
+      "de": "Ein Gaszähler von 1 mm mal 1,2 mm: ein hellgrauer Block mit gerundeten Ecken und zwei dicken Zapfen, ein heller Kopf mit dunklem Zählwerksbalken über einem runden Prüfrad mit Zeiger. Vorderansicht, 0,8 mm auf 1,2 mm: Gehäuse und Zählwerkstufe zu einem Umriss verschmolzen, darauf ein Zapfen. Grundriss, 1 mm auf 0,8 mm: ein Umriss aus Gehäuse und Zählwerkstreifen; die zwei Zapfen liegen unter dem, was der Stift zeichnen kann, und entfallen."
+    },
+    "retained": {
+      "en": "Housing, connection pins, index head, counter bar, dial and pointer.",
+      "de": "Gehäuse, Anschlusszapfen, Zählwerkskopf, Zählwerksbalken, Prüfrad und Zeiger."
+    },
+    "merged": {
+      "en": "Stub, union nut and tailpiece are one pin; the plate and the seam join the housing; in front and plan the index head joins the housing outline.",
+      "de": "Stutzen, Überwurfmutter und Einlegeteil sind ein Zapfen; Schild und Naht gehen im Gehäuse auf; in Vorderansicht und Grundriss geht der Zählwerkskopf im Gehäuseumriss auf."
+    },
+    "omitted": {
+      "en": "Seam, digits, ticks, pivot, plate and bores; in plan the pins.",
+      "de": "Naht, Ziffern, Striche, Drehpunkt, Schild und Bohrungen; im Grundriss die Zapfen."
+    },
+    "thinElements": {
+      "en": "The pins are widened to 40 mm (0.2 mm); the counter bar is 22 mm high (0.11 mm) and the dial 40 mm (0.2 mm); the pointer is a hairline.",
+      "de": "Die Zapfen sind auf 40 mm (0,2 mm) verbreitert; der Zählwerksbalken ist 22 mm hoch (0,11 mm) und das Prüfrad 40 mm (0,2 mm); der Zeiger ist eine Haarlinie."
+    },
+    "hatching": {
+      "en": "None.",
+      "de": "Keine."
+    },
+    "styles": {
+      "en": "Housing 0.74, head 0.9, counter 0.1, dial 0.97, pins 0.45; one body pen of 0.13 mm.",
+      "de": "Gehäuse 0,74, Kopf 0,9, Zählwerk 0,1, Prüfrad 0,97, Zapfen 0,45; ein Körperstift von 0,13 mm."
+    },
+    "overlays": {
+      "en": "Shell, index and pipes stay the three drawn regions.",
+      "de": "Schale, Zählwerkskopf und Rohre bleiben die drei gezeichneten Regionen."
+    }
+  },
+  "reason-500": {
+    "en": "At 1:500 the meter is 0.39 mm by 0.49 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the dial pointer of 5 mm, is 0.01 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+    "de": "Bei 1:500 ist der Zähler 0,39 mm mal 0,49 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und sein kleinstes gezeichnetes Teil, der Zeiger von 5 mm, misst 0,01 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+  },
+  "limiting-500": {
+    "en": "Dial pointer of 5 mm",
+    "de": "Zeiger von 5 mm"
+  },
+  "distinction": {
+    "en": "A compact 0.19 m by 0.25 m G4 bellows gas meter in front view with two pressed sheet-steel shells, two union-nut stubs, an eight-digit counter and a test dial whose pointer turns with the gas flow; it replaces the dial-and-needle meter symbol.",
+    "de": "Ein kompakter Balgengaszähler G4 von 0,19 m mal 0,25 m in der Frontansicht mit zwei gepressten Stahlblechschalen, zwei Rohrstutzen mit Überwurfmuttern, einem achtstelligen Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht; er ersetzt das Zählersymbol aus Zifferblatt und Nadel."
+  }
+}

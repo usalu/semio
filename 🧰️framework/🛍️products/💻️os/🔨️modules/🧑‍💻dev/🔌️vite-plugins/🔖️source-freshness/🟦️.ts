@@ -1,6 +1,7 @@
 /** 🔖️ The source freshness Vite plugins of the dev server: the unwatched segments, the react refresh coherence plugin, the freshness registry and the source watch and transform freshness plugins. */
 import { readdirSync, realpathSync, statSync, watch } from "node:fs";
-import { dirname, isAbsolute, join } from "node:path";
+import { dirname, isAbsolute, join, normalize } from "node:path";
+import { filesystemBusyErrorV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 //#region 🔖️SourceFreshnessVitePlugins
 /** 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
@@ -12,7 +13,7 @@ import { dirname, isAbsolute, join } from "node:path";
  * those files are config dependencies, so reacting to a registry or editor-settings rewrite restarts the
  * server in a loop.
  * @see https://github.com/paulmillr/chokidar/blob/3.6.0/lib/fsevents-handler.js */
-export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
+export const UNWATCHED_REPOSITORY_SEGMENTS: readonly string[] = [".git", ".nx", ".vscode", ".🧬semio", ".cache", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"];
 
 /** 👁️ The repository's top-level source directories — every place a dev server's module graph can
  * legitimately import from, with the unwatchable stores above removed. Read from disk rather than
@@ -132,7 +133,8 @@ export function createSourceFreshnessRegistry() {
     return true;
   };
   return {
-    record(file: string): void {
+    record(id: string): void {
+      const file = normalize(id);
       const stamp = readStamp(file);
       if (stamp === null) return;
       const directory = dirname(file);
@@ -142,9 +144,9 @@ export function createSourceFreshnessRegistry() {
       stamps.set(file, stamp);
     },
     trackedCount: (): number => stamps.size,
-    tracks: (file: string): boolean => stamps.has(file),
-    movedFile: (file: string): boolean => moved(file),
-    movedInDirectory: (directory: string): readonly string[] => [...(siblings.get(directory) ?? [])].filter(moved),
+    tracks: (file: string): boolean => stamps.has(normalize(file)),
+    movedFile: (file: string): boolean => moved(normalize(file)),
+    movedInDirectory: (directory: string): readonly string[] => [...(siblings.get(normalize(directory)) ?? [])].filter(moved),
     movedEverywhere: (): readonly string[] => [...stamps.keys()].filter(moved),
   };
 }
@@ -185,7 +187,9 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
           for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
           return;
         }
-        const entry = statSync(path, { throwIfNoEntry: false });
+        let entry: ReturnType<typeof statSync>;
+        try { entry = statSync(path, { throwIfNoEntry: false }); }
+        catch (error) { if (!filesystemBusyErrorV1(error)) throw error; if (changed()) server.watcher.emit("change", path); return; }
         if (!entry) {
           server.watcher.emit("unlink", path);
           for (const moved of freshness?.movedInDirectory(directory) ?? []) server.watcher.emit("change", moved);
@@ -219,7 +223,10 @@ export function requestedTransformFile(url: string, root: string): string | null
   } catch {
     return null;
   }
-  if (decoded.startsWith("/@fs/")) return decoded.slice("/@fs".length);
+  if (decoded.startsWith("/@fs/")) {
+    const absolute = decoded.slice("/@fs".length);
+    return /^\/[A-Za-z]:[\\/]/u.test(absolute) ? normalize(absolute.slice(1)) : absolute;
+  }
   if (decoded.startsWith("/@") || decoded.startsWith("/\0") || decoded.includes("\0")) return null;
   return join(root, decoded);
 }

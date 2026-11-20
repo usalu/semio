@@ -1,0 +1,7 @@
+{
+  "cases": [
+    { "consumer": "null-device", "grants": 1 },
+    { "consumer": "null-device", "grants": 24 },
+    { "consumer": "closed", "grants": 24 }
+  ]
+}

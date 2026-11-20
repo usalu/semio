@@ -21,7 +21,8 @@
     "snapshot source",
     "mutation source",
     "clone cursor",
-    "edit cursor"
+    "edit cursor",
+    "publication assembly"
   ],
   "grant": {
     "maximumItems": 1,
@@ -39,6 +40,20 @@
     "originalRequestRetained": true,
     "copiedBytes": 0,
     "releasedBytes": 0
+  },
+  "windowPreparation": {
+    "maximumCopyBytes": 32768,
+    "formerBirthCopyBytes": 82856,
+    "events": [
+      {"frame": "clone cursor", "copy": 20168, "birth": 20160, "release": 0},
+      {"frame": "edit cursor", "copy": 6152, "birth": 6144, "release": 0},
+      {"frame": "clone handoff", "copy": 16, "birth": 0, "release": 0},
+      {"frame": "clone cursor", "copy": 8, "birth": 0, "release": 20160},
+      {"frame": "edit cursor", "copy": 8, "birth": 0, "release": 6144},
+      {"frame": "publication assembly", "copy": 10808, "birth": 10800, "release": 0},
+      {"frame": "publication assembly", "copy": 8, "birth": 0, "release": 10800}
+    ],
+    "liveBytes": [20160, 26304, 26304, 6144, 0, 10800, 0]
   },
   "preflight": {
     "afterRefusalCalls": 0,

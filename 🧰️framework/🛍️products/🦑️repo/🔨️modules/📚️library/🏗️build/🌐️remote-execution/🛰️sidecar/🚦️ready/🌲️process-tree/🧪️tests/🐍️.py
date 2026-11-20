@@ -70,7 +70,7 @@ def lease(case):
 def deadline(case):
     e=case["elapsedMs"];soft=case["softMs"]
     if e<=soft:return "run"
-    if e>soft*P["hardCapMultiplier"]:return "timeout"
+    if e>soft*P.get("stageHardCapMultipliers",{}).get(case.get("stage"),P["hardCapMultiplier"]):return "timeout"
     return "extended" if case["sinceProgressMs"]<=P["stallMilliseconds"] else "stalled"
 def progress(case):
     pats=[re.compile(p) for p in P["progressPatterns"]]

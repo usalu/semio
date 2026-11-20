@@ -57,7 +57,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let mut switched = Vec::new();
         for window in &view.window_instances {
-            let utility = if view.window_id.as_deref() == Some(window.id.as_str()) { Some(view.active_utility_id.as_deref()) } else { view.active_utility_by_window_id.get(&window.id).map(|utility| Some(utility.as_str())) };
+            let utility = view.active_utility_by_window_id.get(&window.id).map(Option::as_deref).or_else(|| (view.window_id.as_deref() == Some(window.id.as_str())).then_some(view.active_utility_id.as_deref()));
             let Some(utility) = utility else { continue };
             match self.host_events.host_event_utilities.get_mut(&window.id) {
                 Some(previous) if previous.as_deref() == utility => {}

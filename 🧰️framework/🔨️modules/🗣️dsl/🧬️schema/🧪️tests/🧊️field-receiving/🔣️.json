@@ -120,6 +120,66 @@
         "id": "node-ö",
         "weight": 7
       }
+    },
+    {
+      "id": "empty-statement-block",
+      "kind": "statements",
+      "source": {
+        "kind": "group",
+        "children": []
+      },
+      "expected": {
+        "kind": "group",
+        "children": []
+      }
+    },
+    {
+      "id": "nested-statement-block",
+      "kind": "statements",
+      "source": {
+        "kind": "group",
+        "children": [
+          {
+            "kind": "leaf",
+            "name": "first"
+          },
+          {
+            "kind": "group",
+            "children": [
+              {
+                "kind": "leaf",
+                "name": "zweite"
+              }
+            ]
+          },
+          {
+            "kind": "leaf",
+            "name": "第三"
+          }
+        ]
+      },
+      "expected": {
+        "kind": "group",
+        "children": [
+          {
+            "kind": "leaf",
+            "name": "first"
+          },
+          {
+            "kind": "group",
+            "children": [
+              {
+                "kind": "leaf",
+                "name": "zweite"
+              }
+            ]
+          },
+          {
+            "kind": "leaf",
+            "name": "第三"
+          }
+        ]
+      }
     }
   ]
 }

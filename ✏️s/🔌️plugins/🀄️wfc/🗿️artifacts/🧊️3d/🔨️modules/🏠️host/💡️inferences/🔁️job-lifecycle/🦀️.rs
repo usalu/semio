@@ -165,6 +165,22 @@ impl Wfc3dInferenceJob {
     }
 }
 
+/// 🪙️ Runs one payload close turn inside one actual original effect and charges its performed work to the job turn.
+fn close_effect<E: Into<semio_framework_job::OriginalTurnPrimary>>(
+    cx: &mut semio_framework_job::StepContext<'_>,
+    grant: semio_framework_job::RetainedCloneGrant,
+    run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneStep, E>,
+) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
+    match cx.with_original_effect(grant, |_, effect| run(effect)) {
+        Ok(Some((turn, performed))) => {
+            cx.consume_work(performed);
+            semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: turn.result, work: 0 })
+        }
+        Ok(None) => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+        Err(error) => Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
+    }
+}
+
 impl InteractiveJob for Wfc3dInferenceJob {
     fn step<'a>(&'a mut self, context:&mut semio_framework_job::StepContext<'_>, _claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
@@ -217,7 +233,7 @@ impl InteractiveJob for Wfc3dInferenceJob {
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
+                let step = close_effect(cx, child_grant, |effect| output.close_step(effect))?;
                 return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
@@ -226,7 +242,7 @@ impl InteractiveJob for Wfc3dInferenceJob {
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
+                let step = close_effect(cx, child_grant, |effect| payload.close_step(effect))?;
                 return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {

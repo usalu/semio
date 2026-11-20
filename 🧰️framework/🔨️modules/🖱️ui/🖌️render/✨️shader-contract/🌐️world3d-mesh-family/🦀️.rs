@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️ShaderContract
 //#region 🌐️World3dFamily
-pub(super) const WORLD_GLOBALS_BIND_GROUP: BindGroupSpec = BindGroupSpec { group_index: 0, entries: &[BindGroupEntrySpec { binding: 0, visibility: VERTEX_FRAGMENT_STAGE, kind: BindingKind::UniformBuffer { dynamic_offset: true, min_size: Some(240) } }] };
+pub(super) const WORLD_GLOBALS_BIND_GROUP: BindGroupSpec = BindGroupSpec { group_index: 0, entries: &[BindGroupEntrySpec { binding: 0, visibility: VERTEX_FRAGMENT_STAGE, kind: BindingKind::UniformBuffer { dynamic_offset: true, min_size: Some(256) } }] };
 
 const WORLD_SHADOW_BIND_GROUP: BindGroupSpec =
     BindGroupSpec { group_index: 1, entries: &[BindGroupEntrySpec { binding: 0, visibility: FRAGMENT_STAGE, kind: BindingKind::DepthTexture2D }, BindGroupEntrySpec { binding: 1, visibility: FRAGMENT_STAGE, kind: BindingKind::ComparisonSampler }] };
@@ -23,6 +23,7 @@ sun: vec4<f32>,
 material: vec4<f32>,
 material_emissive: vec4<f32>,
 shadow: vec4<f32>,
+clip_plane: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> globals: Globals;
@@ -42,6 +43,7 @@ struct InstanceInput {
 @location(6) model3: vec4<f32>,
 @location(7) color: vec4<f32>,
 @location(8) flags: vec4<f32>,
+@location(10) emissive_cutoff: vec4<f32>,
 }
 
 struct VertexOutput {
@@ -50,6 +52,7 @@ struct VertexOutput {
 @location(1) normal: vec3<f32>,
 @location(2) flags: vec4<f32>,
 @location(3) world_position: vec3<f32>,
+@location(4) emissive_cutoff: vec4<f32>,
 }
 
 @vertex
@@ -72,8 +75,10 @@ if (!(transformed_length_squared > 0.000000000001 && transformed_length_squared 
 out.normal = normalize(transformed_normal);
 let vertex_weight = f32(u32(instance.flags.x) & 1u);
 out.color = vec4<f32>(instance.color.rgb * mix(vec3<f32>(1.0), vertex.color.rgb, vertex_weight), instance.color.a * mix(1.0, vertex.color.a, vertex_weight));
+if ((u32(instance.flags.x) & 8u) != 0u) {out.color.a = 1.0;}
 out.flags = instance.flags;
 out.world_position = world_pos.xyz;
+out.emissive_cutoff = instance.emissive_cutoff;
 return out;
 }
 
@@ -289,8 +294,18 @@ if (globals.material.w > 0.5) {
 return indirect * base_color * (1.0 - metalness) * WORLD3D_RECIPROCAL_PI + direct;
 }
 
+fn world3d_section_clipped(flags: f32, world_position: vec3<f32>) -> bool {
+return (u32(flags) & 32u) != 0u && dot(world_position, globals.clip_plane.xyz) + globals.clip_plane.w < 0.0;
+}
+
 @fragment
 fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {
+if (world3d_section_clipped(in.flags.x, in.world_position)) {
+    discard;
+}
+if (in.emissive_cutoff.w >= 0.0 && in.color.a < in.emissive_cutoff.w) {
+    discard;
+}
 let n = normalize(in.normal);
 let v = normalize(globals.camera_position.xyz - in.world_position);
 if (globals.shadow.y > 0.5) {
@@ -312,13 +327,26 @@ let metalness = clamp(in.flags.z, 0.0, 1.0);
 let normal_derivative = max(abs(dpdx(in.normal)), abs(dpdy(in.normal)));
 let geometry_roughness = max(max(normal_derivative.x, normal_derivative.y), normal_derivative.z);
 let roughness = min(max(in.flags.w, 0.0525) + geometry_roughness, 1.0);
-let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0);
+let emissive = globals.material_emissive.rgb * globals.material.z + in.color.rgb * max(in.flags.y, 0.0) + in.emissive_cutoff.rgb;
 var shadow_visibility = 1.0;
 if ((u32(in.flags.x) & 2u) != 0u) {
     shadow_visibility = world3d_shadow_visibility(in.world_position, in.clip_position.xy);
 }
 let color = world3d_lighting(n, v, in.color.rgb, metalness, roughness, shadow_visibility) + emissive;
 return vec4<f32>(world3d_attachment_output(color), in.color.a);
+}
+
+@fragment
+fn fs_section_stencil(in: VertexOutput) -> @location(0) vec4<f32> {
+if (world3d_section_clipped(in.flags.x, in.world_position)) {
+    discard;
+}
+return vec4<f32>(0.0);
+}
+
+@fragment
+fn fs_section_cap(in: VertexOutput) -> @location(0) vec4<f32> {
+return vec4<f32>(world3d_attachment_output(in.color.rgb), 1.0);
 }
 "#;
 
@@ -333,7 +361,7 @@ const WORLD3D_MESH_VERTEX_BUFFERS: &[VertexBufferSpec] = &[
         ],
     },
     VertexBufferSpec {
-        stride: 96,
+        stride: 112,
         step_mode: VertexStepMode::Instance,
         attributes: &[
             VertexAttributeSpec { shader_location: 3, format: VertexFormat::Float32x4, offset: 0 },
@@ -342,6 +370,7 @@ const WORLD3D_MESH_VERTEX_BUFFERS: &[VertexBufferSpec] = &[
             VertexAttributeSpec { shader_location: 6, format: VertexFormat::Float32x4, offset: 48 },
             VertexAttributeSpec { shader_location: 7, format: VertexFormat::Float32x4, offset: 64 },
             VertexAttributeSpec { shader_location: 8, format: VertexFormat::Float32x4, offset: 80 },
+            VertexAttributeSpec { shader_location: 10, format: VertexFormat::Float32x4, offset: 96 },
         ],
     },
 ];

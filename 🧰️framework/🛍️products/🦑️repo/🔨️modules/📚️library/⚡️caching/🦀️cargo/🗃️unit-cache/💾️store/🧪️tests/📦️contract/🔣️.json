@@ -2192,6 +2192,89 @@
      }
     }
    ]
+  },
+  {
+   "name": "a build script output that names its OUT_DIR is replayed with the OUT_DIR of the replaying lane, also when the root the caller names is not the lane",
+   "tree": {
+    "pkg/build.rs": "fn main() {}\n",
+    "pkg/src/lib.rs": "fn a() {}\n"
+   },
+   "steps": [
+    {
+     "op": "runPublish",
+     "lane": "A",
+     "callerRoot": "run",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "directives": {
+      "files": [],
+      "variables": []
+     },
+     "env": {},
+     "out": {
+      "libx.a": {
+       "text": "archive\n"
+      },
+      "link.rs": {
+       "text": "const OUT: &str = \"{outDir}\";\n"
+      }
+     },
+     "stdout": "cargo:rustc-link-lib=static=x\ncargo:rustc-link-search=native={outDir}\n",
+     "stderr": "",
+     "expect": {
+      "published": true,
+      "facts": [
+       {
+        "path": ".",
+        "kind": "package"
+       }
+      ],
+      "environment": [],
+      "outputs": [
+       {
+        "path": "libx.a",
+        "template": false,
+        "executable": false
+       },
+       {
+        "path": "link.rs",
+        "template": true,
+        "executable": false
+       }
+      ]
+     }
+    },
+    {
+     "op": "runRestore",
+     "lane": "B",
+     "callerRoot": "run",
+     "key": "4444444444444444444444444444444444444444444444444444444444444444",
+     "env": {},
+     "expect": {
+      "files": {
+       "libx.a": {
+        "text": "archive\n"
+       },
+       "link.rs": {
+        "text": "const OUT: &str = \"{outDir}\";\n"
+       }
+      },
+      "stdout": "cargo:rustc-link-lib=static=x\ncargo:rustc-link-search=native={outDir}\n",
+      "stderr": ""
+     }
+    },
+    {
+     "op": "audit",
+     "expect": {
+      "objects": 3,
+      "entries": 0,
+      "runs": 1,
+      "dangling": [],
+      "leaks": [],
+      "invalid": [],
+      "maxVariants": 1
+     }
+    }
+   ]
   }
  ],
  "tree": [

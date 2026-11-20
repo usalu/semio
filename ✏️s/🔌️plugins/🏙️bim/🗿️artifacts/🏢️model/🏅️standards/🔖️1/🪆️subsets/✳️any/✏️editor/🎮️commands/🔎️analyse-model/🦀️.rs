@@ -47,6 +47,10 @@ impl AnalyseWork {
 }
 
 impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -79,4 +83,3 @@ pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _c
     Ok(Emit::default())
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(AnalyseWork);

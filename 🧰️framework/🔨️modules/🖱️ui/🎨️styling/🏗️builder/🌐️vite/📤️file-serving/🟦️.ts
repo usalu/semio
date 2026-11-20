@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { statSync, createReadStream } from "node:fs";
+import { pipeline } from "node:stream";
 
 export function contentTypeForStaticDirAsset(filePath: string): string | undefined {
   if (filePath.endsWith(".js") || filePath.endsWith(".mjs")) {
@@ -33,7 +34,11 @@ export function contentTypeForStaticDirAsset(filePath: string): string | undefin
  *
  * 🐛️ Without validators every reload of `s` re-downloaded every staged descriptor, the 8 MB guest font pack and every
  * component core module in full (measured: 15.7 MB of descriptors + 8.4 MB of fonts per warm reload, ticket 26/09/23 F2);
- * with them an unchanged file costs one `304`. */
+ * with them an unchanged file costs one `304`.
+ *
+ * 🪟️ The body streams through `pipeline`, so the file handle closes the moment the response ends, errors or the client
+ * drops: a bare `pipe` leaves the source open (paused on backpressure) after an aborted download, and on Windows an open
+ * handle inside a directory blocks its rename — a republication swapping a served module directory failed with `EPERM`. */
 export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerResponse, filePath: string, contentType: string | undefined): void {
   const stats = statSync(filePath, { bigint: true });
   const tag = `W/"${stats.size.toString(16)}-${stats.mtimeNs.toString(16)}"`;
@@ -59,5 +64,5 @@ export function serveFileWithValidatorsV1(req: IncomingMessage, res: ServerRespo
     res.end();
     return;
   }
-  createReadStream(filePath).pipe(res);
+  pipeline(createReadStream(filePath), res, () => undefined);
 }

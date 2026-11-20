@@ -61,3 +61,64 @@ fn uninhabited_enum_owner_derives_a_retirement_cursor(){
  assert!(<Uninhabited as RetireOwned>::controlled_retirement_supported());
 }
 fn owns_retire<T:RetireOwned>(){}
+
+macro_rules! wide_retirement_record {
+    ($($field:ident),+) => {
+        #[derive(semio_framework_value_derive::RetireOwned)]
+        struct WideRetirementRecord { $($field: String),+ }
+
+        impl WideRetirementRecord {
+            fn from_sizes(sizes: &[usize]) -> Self {
+                let mut lengths = sizes.iter().copied();
+                let owner = Self { $($field: "x".repeat(lengths.next().unwrap())),+ };
+                assert_eq!([$(owner.$field.capacity()),+], sizes);
+                owner
+            }
+        }
+    };
+}
+
+wide_retirement_record!(
+    field00, field01, field02, field03, field04, field05, field06, field07, field08, field09,
+    field10, field11, field12, field13, field14, field15, field16, field17, field18, field19,
+    field20, field21, field22, field23, field24, field25, field26, field27, field28, field29,
+    field30, field31, field32, field33, field34, field35, field36, field37, field38, field39,
+    field40, field41, field42, field43, field44, field45, field46, field47, field48, field49,
+    field50, field51, field52, field53, field54, field55, field56, field57, field58, field59,
+    field60, field61, field62, field63, field64, field65
+);
+
+#[test]
+fn wide_record_retires_in_field_order_within_the_original_depth() {
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧬️generic-owner/🔣️.json")).unwrap();
+    let wide = &law["wideRetirement"];
+    let amount = |field: &str| wide[field].as_u64().unwrap() as usize;
+    let expected: Vec<_> = (amount("firstRelease")..=amount("lastRelease")).collect();
+    assert_eq!(expected.len(), amount("fields"));
+    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(WideRetirementRecord::from_sizes(&expected)).map_err(|(error, _)| error).unwrap();
+    let mut released = Vec::with_capacity(expected.len());
+    let mut admitted_bytes = 0;
+    let mut released_bytes = 0;
+    for _ in 0..2000 {
+        if owner.terminal_is_empty() { break; }
+        let demand = owner.selected_demand(4096).unwrap();
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: amount("maximumDepth"),
+        };
+        assert!(demand.depth <= grant.maximum_depth, "wide record retirement demand: {demand:?}");
+        let progress = effect::driven(grant, |effect| owner.step(4096, effect)).0.result.unwrap().progress();
+        assert!(progress.fits(grant));
+        admitted_bytes += progress.retained_capacity_bytes;
+        released_bytes += progress.released_bytes;
+        if progress.released_bytes >= amount("firstRelease") {
+            released.push(progress.released_bytes);
+        }
+    }
+    assert!(owner.terminal_is_empty());
+    assert_eq!(released, expected);
+    assert_eq!(released_bytes - admitted_bytes, amount("totalReleased"));
+}

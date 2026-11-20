@@ -102,6 +102,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         if (10..10 + document_fields).contains(&field) {
             return TimeTravelStoreState::<A::Snapshot, A::Mutation>::initial_field_demands(field - 10, byte, body);
         }
+        let field = if field < 10 { field } else { field - document_fields };
         let copy_bytes = match field {
             0 => 2 * size_of::<TimeTravelSession>(),
             1 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_time_travel::TimeTravelCommandCustody>(), byte, body.max(1))?,
@@ -113,22 +114,22 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             7 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<ControlledRetirement<TimeTravelSession>>(), byte, body.max(1))?,
             8 => 2 * size_of::<bool>(),
             9 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<TimeTravelEditor>(), byte, body.max(1))?,
-            51 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<TimeTravelMemberSubject>(), byte, body.max(1))?,
-            52 => 2 * size_of::<Vec<Box<dyn TimeTravelOwners>>>(),
-            53 => 2 * size_of::<bool>(),
-            54 => 2 * size_of::<bool>(),
-            55 => 2 * size_of::<bool>(),
-            56 => 2 * size_of::<u64>(),
-            57 => 2 * size_of::<u32>(),
-            58 => 2 * size_of::<bool>(),
-            59 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<HistoryPatch>(), byte, body.max(1))?,
-            60 => 2 * size_of::<bool>(),
-            61 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<(String, HistoryReprojectionKind)>(), byte, body.max(1))?,
-            62 => 2 * size_of::<u64>(),
-            63 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<String>(), byte, body.max(1))?,
-            64 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(), byte, body.max(1))?,
-            65 => 2 * size_of::<bool>(),
-            66 => 2 * size_of::<fn() -> Option<u64>>(),
+            10 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<TimeTravelMemberSubject>(), byte, body.max(1))?,
+            11 => 2 * size_of::<Vec<Box<dyn TimeTravelOwners>>>(),
+            12 => 2 * size_of::<bool>(),
+            13 => 2 * size_of::<bool>(),
+            14 => 2 * size_of::<bool>(),
+            15 => 2 * size_of::<u64>(),
+            16 => 2 * size_of::<u32>(),
+            17 => 2 * size_of::<bool>(),
+            18 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<HistoryPatch>(), byte, body.max(1))?,
+            19 => 2 * size_of::<bool>(),
+            20 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<(String, HistoryReprojectionKind)>(), byte, body.max(1))?,
+            21 => 2 * size_of::<u64>(),
+            22 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<String>(), byte, body.max(1))?,
+            23 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(), byte, body.max(1))?,
+            24 => 2 * size_of::<bool>(),
+            25 => 2 * size_of::<fn() -> Option<u64>>(),
             _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         };
         Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
@@ -143,6 +144,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         if (10..10 + document_fields).contains(&field) {
             return unsafe { TimeTravelStoreState::<A::Snapshot, A::Mutation>::initialize_field_at(std::ptr::addr_of_mut!((*target).document), time_travel_mutation_label::<A>, field - 10, byte, count) };
         }
+        let field = if field < 10 { field } else { field - document_fields };
         unsafe { match field {
             0 => { if byte != 0 || count < 2 * size_of::<TimeTravelSession>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).session).write(TimeTravelSession::default()); Ok(true) },
             1 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_time_travel::TimeTravelCommandCustody>(std::ptr::addr_of_mut!((*target).pending_command), byte, count),
@@ -154,22 +156,22 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             7 => semio_framework_value::initialization::initialize_absent_field_at::<ControlledRetirement<TimeTravelSession>>(std::ptr::addr_of_mut!((*target).session_retirement), byte, count),
             8 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).session_retired).write(false); Ok(true) },
             9 => semio_framework_value::initialization::initialize_absent_field_at::<TimeTravelEditor>(std::ptr::addr_of_mut!((*target).editor), byte, count),
-            51 => semio_framework_value::initialization::initialize_absent_field_at::<TimeTravelMemberSubject>(std::ptr::addr_of_mut!((*target).member), byte, count),
-            52 => { if byte != 0 || count < 2 * size_of::<Vec<Box<dyn TimeTravelOwners>>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).retiring).write(Vec::new()); Ok(true) },
-            53 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).closing).write(false); Ok(true) },
-            54 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).ui_dirty).write(false); Ok(true) },
-            55 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).document_dirty).write(false); Ok(true) },
-            56 => { if byte != 0 || count < 2 * size_of::<u64>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).refreshed_ms).write(0); Ok(true) },
-            57 => { if byte != 0 || count < 2 * size_of::<u32>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).refreshed_done).write(0); Ok(true) },
-            58 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).patch_due).write(false); Ok(true) },
-            59 => semio_framework_value::initialization::initialize_absent_field_at::<HistoryPatch>(std::ptr::addr_of_mut!((*target).patch), byte, count),
-            60 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).reprojection_paused).write(false); Ok(true) },
-            61 => semio_framework_value::initialization::initialize_absent_field_at::<(String, HistoryReprojectionKind)>(std::ptr::addr_of_mut!((*target).reprojection_fault), byte, count),
-            62 => { if byte != 0 || count < 2 * size_of::<u64>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).reprojection_refreshed_ms).write(0); Ok(true) },
-            63 => semio_framework_value::initialization::initialize_absent_field_at::<String>(std::ptr::addr_of_mut!((*target).deferred_history_row), byte, count),
-            64 => semio_framework_value::initialization::initialize_absent_field_at::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(std::ptr::addr_of_mut!((*target).authoring), byte, count),
-            65 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).history_unavailable).write(false); Ok(true) },
-            66 => { if byte != 0 || count < 2 * size_of::<fn() -> Option<u64>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).turn_clock).write(semio_framework_job::default_now_us); Ok(true) },
+            10 => semio_framework_value::initialization::initialize_absent_field_at::<TimeTravelMemberSubject>(std::ptr::addr_of_mut!((*target).member), byte, count),
+            11 => { if byte != 0 || count < 2 * size_of::<Vec<Box<dyn TimeTravelOwners>>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).retiring).write(Vec::new()); Ok(true) },
+            12 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).closing).write(false); Ok(true) },
+            13 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).ui_dirty).write(false); Ok(true) },
+            14 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).document_dirty).write(false); Ok(true) },
+            15 => { if byte != 0 || count < 2 * size_of::<u64>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).refreshed_ms).write(0); Ok(true) },
+            16 => { if byte != 0 || count < 2 * size_of::<u32>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).refreshed_done).write(0); Ok(true) },
+            17 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).patch_due).write(false); Ok(true) },
+            18 => semio_framework_value::initialization::initialize_absent_field_at::<HistoryPatch>(std::ptr::addr_of_mut!((*target).patch), byte, count),
+            19 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).reprojection_paused).write(false); Ok(true) },
+            20 => semio_framework_value::initialization::initialize_absent_field_at::<(String, HistoryReprojectionKind)>(std::ptr::addr_of_mut!((*target).reprojection_fault), byte, count),
+            21 => { if byte != 0 || count < 2 * size_of::<u64>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).reprojection_refreshed_ms).write(0); Ok(true) },
+            22 => semio_framework_value::initialization::initialize_absent_field_at::<String>(std::ptr::addr_of_mut!((*target).deferred_history_row), byte, count),
+            23 => semio_framework_value::initialization::initialize_absent_field_at::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(std::ptr::addr_of_mut!((*target).authoring), byte, count),
+            24 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).history_unavailable).write(false); Ok(true) },
+            25 => { if byte != 0 || count < 2 * size_of::<fn() -> Option<u64>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).turn_clock).write(semio_framework_job::default_now_us); Ok(true) },
             _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         } }
     }

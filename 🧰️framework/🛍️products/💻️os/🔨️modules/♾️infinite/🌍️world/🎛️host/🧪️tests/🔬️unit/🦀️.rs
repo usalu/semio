@@ -31,6 +31,7 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::SceneMaterial3d;
 #[cfg(test)] use semio_ui_raster_owner::SceneRasterMeshSeal;
 #[cfg(test)] use ui_scene::math::{screen_select_components, screen_select_instances};
+#[cfg(test)] use semio_os_infinite_world_model::world_test_mesh_query;
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.

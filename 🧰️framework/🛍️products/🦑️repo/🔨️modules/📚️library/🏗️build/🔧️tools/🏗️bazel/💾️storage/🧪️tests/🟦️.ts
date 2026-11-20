@@ -2,7 +2,8 @@ import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import {join,resolve} from "node:path";
+import {join,resolve,win32,posix} from "node:path";
+import * as storagePathPort from "../🟦️.ts";
 import {mkdtempSync,mkdirSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
@@ -23,6 +24,38 @@ test("every Bazel generated writer selects an authored finite partition against 
  try{database.exec("CREATE TABLE roots(partition TEXT PRIMARY KEY,path TEXT)");for(const[key,value]of Object.entries(roots))database.query("INSERT INTO roots VALUES(?1,?2)").run(key,value.replaceAll("\\","/"));for(const row of fixture.paths){const oracle=database.query("SELECT path||'/'||?2 AS path FROM roots WHERE partition=?1").get(row.partition,row.suffix) as {path:string};expect(layout[row.name as keyof typeof layout].toString().replaceAll("\\","/")).toBe(oracle.path);}}
  finally{database.close();}
  expect(()=>bazelCacheLayoutV1({...roots,tools:"relative"})).toThrow("Absolute");expect(()=>bazelCacheLayoutV1({...roots,products:"/"+"x".repeat(256)})).toThrow("256");
+});
+
+
+test("the Bazel catalog owner projects native Windows startup paths without 8.3 aliases",()=>{
+ const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8");
+ const tree=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true);
+ const owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="prepareBazelModulesV1");
+ if(!owner||!ts.isFunctionDeclaration(owner)||!owner.body)throw Error("Actual Bazel catalog owner required");
+ const inputs=owner.body.statements.find(node=>ts.isVariableStatement(node)&&node.getText(tree).includes("offline=environment.CARGO_NET_OFFLINE"));
+ if(!inputs)throw Error("Actual Bazel catalog paths required");
+ const plan=ts.transpileModule(inputs.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ESNext}}).outputText;
+ const db=new Database(":memory:"),validate=new Ajv({strict:true}).compile(componentSchema.definitions.ModuleCatalogCase);
+ try{for(const row of fixture.moduleCatalogPaths){
+  expect(validate(row)).toBe(true);
+  const path=row.platform==="win32"?win32:posix;
+  const bindings={join:path.join,process:{platform:row.platform,arch:"x64"},root:row.root,invocation:{},storage:{paths:{modules:row.root},dependencies:{environment:{}}},issueBuildTaskEnvironmentV1:()=>({}),hash:()=>row.identity,BAZEL_VERSION:"8.4.2",BAZEL_MODULE:"module",bazelModuleCatalogPathsV1:storagePathPort.bazelModuleCatalogPathsV1};
+  const observed=new Function(...Object.keys(bindings),plan+";return {directory,workspace,repository,lockPath,receiptPath,blobs};")(...Object.values(bindings));
+  const expected=db.query("with recursive pieces(i,name) as (select 1,substr(?1,1,8) union all select i+8,substr(?1,i+8,8) from pieces where i+8<=length(?1)) select case when ?2='win32' then group_concat(name,'/') else substr(?1,1,16) end as identity from pieces").get(row.identity,row.platform)as{identity:string};
+  const directory=path.join(row.root,...expected.identity.split("/"));
+  expect(observed).toEqual({directory,workspace:path.join(directory,row.workspace),repository:path.join(directory,row.repository),lockPath:path.join(directory,row.workspace,"MODULE.bazel.lock"),receiptPath:path.join(directory,"ready.json"),blobs:path.join(directory,row.repository,"content_addressable","sha256")});
+  if(row.platform==="win32"){
+   const projected=path.relative(row.root,observed.workspace).split(path.sep);
+   expect(projected.every(component=>/^[a-z0-9]{1,8}$/u.test(component))).toBe(true);
+   expect(projected.slice(0,-1).join("")).toBe(row.identity);
+   const catalog=storagePathPort.bazelModuleCatalogPathsV1;
+   const bytesAfterRoot=path.join(observed.blobs,row.identity,"file").length-row.root.length;
+   const atLimit="C:\\"+"a".repeat(256-bytesAfterRoot-3);
+   expect(path.join(catalog(atLimit,row.identity,"win32").blobs,row.identity,"file").length).toBe(256);
+   expect(()=>catalog(atLimit+"a",row.identity,"win32")).toThrow("256 characters");
+  }
+ }
+ }finally{db.close();}
 });
 
 test("native grants select the authored Cargo target against an independent TOML oracle",()=>{
@@ -128,10 +161,34 @@ test("tools setup bazel opens only the tools and dependencies partitions and nev
  const storageFile=parse("../🟦️.ts"),setup=declaration(storageFile,"withBazelSetupStorageV1"),full=declaration(storageFile,"withBazelStorageV1");
  expect(opened(setup)).toEqual(fixture.setup.opens);expect(opened(full)).toEqual(fixture.setup.full);
  for(const node of [setup,full])expect(opened(node)).toEqual([...node.getText().matchAll(/withRepositoryCacheStoreV1\(root,"(\w+)"/g)].map(match=>match[1]));
- const entry=parse("../../../../⌨️command/⚙️runtime/🟦️.ts"),leases=declaration(entry,"runOwnedBuildInLeasesV1"),branches:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))branches.push(node);ts.forEachChild(node,visit);};visit(leases);
- const tools=branches.find(node=>node.expression.getText()==='command==="tools"')!,guard=branches.find(node=>node.expression.getText().includes("buildOperationRequiresV1"))!;
+ const entry=parse("../../../../⌨️command/⚙️runtime/🟦️.ts"),leases=declaration(entry,"runOwnedBuildInLeasesV1");
+ const admission=parse("../../../../⌨️command/🏃️task/🤝️shared/🟦️.ts"),ensure=declaration(admission,"ensureTaskDependenciesV1");
+ const branches=(owner:ts.Node)=>{const found:ts.IfStatement[]=[],visit=(node:ts.Node)=>{if(ts.isIfStatement(node))found.push(node);ts.forEachChild(node,visit);};visit(owner);return found;};
+ const tools=branches(leases).find(node=>node.expression.getText()==='command==="tools"');
+ const guard=branches(ensure).find(node=>node.expression.getText().includes("buildOperationRequiresV1"));
+ if(!tools||!guard)throw Error("Actual tool dispatch and dependency admission branches required");
+ const handoff=leases.getText().indexOf("await ensureTaskDependenciesV1(root,phaseControl,{capabilities,selected,resolved,original,ancestor,invocation,previous})");
+ expect(handoff).toBeGreaterThanOrEqual(0);expect(handoff).toBeLessThan(leases.getText().indexOf(tools.getText()));
+ const shared=entry.statements.find(node=>ts.isImportDeclaration(node)&&ts.isStringLiteral(node.moduleSpecifier)&&node.moduleSpecifier.text==="../🏃️task/🤝️shared/🟦️.ts");
+ expect(shared?.getText()).toContain("ensureTaskDependenciesV1");
  expect(tools.getText()).toContain("loadBuildBackendV1");expect(tools.getText()).toContain(".setup(");expect(tools.getText()).not.toContain("withBazelStorageV1");expect(tools.getText()).not.toContain("ensureBuildEnvironmentV1");const backendText=parse("../../🔌️backend/🟦️.ts").getText(),backend=backendText.slice(backendText.indexOf("setup("),Math.min(...["async reset(","async prepareStorage(","async cacheProbe("].map(name=>backendText.indexOf(name)).filter(at=>at>backendText.indexOf("setup("))));expect(backend.length).toBeGreaterThan(0);expect(backend).toContain("withBazelSetupStorageV1");expect(backend).not.toContain("withBazelStorageV1");expect(backend).not.toContain("ensureBuildEnvironmentV1");
  const required=new Map(catalogue.operations.map(row=>[row.name,row.requires]));
  for(const name of fixture.setup.installSkipped)expect(required.get(name),name).toBe("none");
  expect(guard.expression.getText()).toBe('buildOperationRequiresV1(command)==="dependencies"');expect(guard.thenStatement.getText()).toContain("ensureBuildEnvironmentV1");
+});
+
+test("the Bazel collector acquires storage before taking its exclusive session lease", async () => {
+ const cases=JSON.parse(readFileSync(new URL("./🧫️fixtures/collector-order.json",import.meta.url),"utf8"));
+ const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8");
+ const tree=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true);
+ const fn=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="collectBazelCacheV1");
+ if(!fn||!ts.isFunctionDeclaration(fn)||!fn.body)throw Error("Bazel cache collection owner required");
+ const js=ts.transpileModule(fn.getText(tree).replace(/^export /,""),{compilerOptions:{target:ts.ScriptTarget.ESNext}}).outputText;
+ for(const [name,expected] of Object.entries(cases)){
+  const events:string[]=[];
+  const scope={machinePathV1:()=>"",bazelLimits:{cacheCollectionThrottleMilliseconds:0},withBazelStorageV1:async(_r:unknown,_i:unknown,_c:unknown,run:Function)=>{events.push("image");try{return await run({paths:{}},{})}finally{events.push("release-image")}},acquireResourceLease:async()=>{events.push("collector");return name==="busy"?undefined:{release(){events.push("release-collector")}}},bazelSessionMessageV1:(key:string)=>key,bazelSlotPortV1:()=>({}),bazelHostServersV1:()=>[],bazelWorkspaceReclaimV1:()=>({}),collectBazelSessionsV1:async()=>{events.push("scan");return {packages:[],outputBases:[],temporaries:[]}}};
+  const collect=new Function(...Object.keys(scope),"let lastCacheCollectionV1;"+js+";return collectBazelCacheV1;")(...Object.values(scope));
+  await collect("",{},{},{dryRun:true,language:"en",signal:new AbortController().signal});
+  expect(events).toEqual(expected);
+ }
 });

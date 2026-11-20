@@ -60,7 +60,6 @@ use semio_plugin::UtilityDefinition;
 use semio_plugin::WindowEngagement;
 use semio_plugin::WindowEngagementInput;
 use semio_plugin::WindowEngagementStatus;
-use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::DRAWING_PLAY_BODY_COMPOSITE;

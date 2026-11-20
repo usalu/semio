@@ -4,8 +4,8 @@ use super::*;
 
 impl Fem3dNumericalChild {
     /// 📦 Reserves the right hand side storage.
-    pub(super) fn step_reserve_rhs(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        if self.rhs.admit_one(self.free_order).map_err(|_| b"fem3d.numerical-rhs-admission".to_vec())? {
+    pub(super) fn step_reserve_rhs(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
+        if self.rhs.admit_in(self.free_order, context).map_err(|_| b"fem3d.numerical-rhs-admission".to_vec())? {
             self.stage = Fem3dNumericalStage::InitializeRhs;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
@@ -255,17 +255,31 @@ impl Fem3dNumericalChild {
 
     /// 🪨 Applies the self weight of one member.
     pub(super) fn step_apply_self_weight_member(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Fem3dNumericalFailure> {
-        if self.load_vertex_cursor == 2 {
+        if self.load_vertex_cursor == 12 {
             self.load_element_cursor += 1;
             self.load_triangle_cursor = 0;
             self.load_node_cursor = 0;
             self.stage = Fem3dNumericalStage::ResolveSelfWeightMemberNode;
         } else {
+            let endpoint = self.load_vertex_cursor / 6;
+            let axis = self.load_vertex_cursor % 6;
+            let framed = matches!(doc.elements.get(self.load_element_cursor), Some(FemElement::Frame { .. }));
+            if axis >= 3 && !framed {
+                self.load_vertex_cursor += 1;
+                return Ok(false);
+            }
             let material = (*doc.materials).get(self.element_materials[self.load_element_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
             let section = doc.sections.get(self.element_sections[self.load_element_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-section".to_vec())?;
             let d = [self.load_positions[1][0] - self.load_positions[0][0], self.load_positions[1][1] - self.load_positions[0][1], self.load_positions[1][2] - self.load_positions[0][2]];
             let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
-            self.apply_rhs_value(self.load_node_indices[self.load_vertex_cursor], Dof::Tz.index(), -material.rho * section.area * length * 9.81 * 0.5)?;
+            let wz = -material.rho * section.area * 9.81;
+            let value = match axis {
+                2 => wz * length * 0.5,
+                3 => d[1] * wz * length / 12.0 * if endpoint == 0 { 1.0 } else { -1.0 },
+                4 => -d[0] * wz * length / 12.0 * if endpoint == 0 { 1.0 } else { -1.0 },
+                _ => 0.0,
+            };
+            self.apply_rhs_value(self.load_node_indices[endpoint], axis, value)?;
             self.load_vertex_cursor += 1;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
@@ -308,7 +322,8 @@ impl Fem3dNumericalChild {
             return Ok(false);
         }
         let triangle = *meshed.tris.get(self.load_triangle_cursor).ok_or_else(|| b"fem3d.numerical-self-weight-solid-triangle".to_vec())?;
-        let indices = Self::tet_indices(meshed.points.len(), triangle, self.point_cursor, self.tet_phase);
+        let ranks = Self::footprint_ranks(meshed.points.len(), |index| meshed.points.get(index).copied(), triangle)?;
+        let indices = Self::tet_indices(meshed.points.len(), triangle, ranks, self.point_cursor, self.tet_phase);
         let node_id = meshed.node_ids.get(indices[self.load_vertex_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-solid-node".to_vec())?;
         let Some(candidate) = self.analysis_node_ids.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-self-weight-solid-node".to_vec()).into()) };
         if candidate == node_id {

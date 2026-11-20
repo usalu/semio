@@ -22,7 +22,7 @@ use semio_plugin::NoConfigMutation;
 use semio_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::sync::Arc;
+use std::collections::HashSet;
 
 pub const UTILITY_ID: &str = "transform";
 
@@ -100,20 +100,22 @@ impl LayoutFrameRecord {
         }
     }
 
-    /// 🔎️ Whether this record moves anything on `base`: an admissible non-identity motion and at least one target that
-    /// is an unlocked frame of its page.
-    pub fn applies_to(&self, base: &LayoutSnapshot) -> bool {
-        self.moves() && self.target_frames(base).any(|(page, frame)| !semio_s_artifact_layout_layout_model::frame_edits_blocked(base, page, frame))
-    }
-
-    /// 🔒️ The tool-level refusal: the motion moves, yet every target that is a frame of the page is locked. A record with
-    /// one movable target is yielded instead, and its leaf reports the locked rest as `mutation.partial`.
-    pub fn refused_as_locked(&self, base: &LayoutSnapshot) -> bool {
-        self.moves() && !self.applies_to(base) && self.target_frames(base).next().is_some()
-    }
-
-    fn target_frames<'a>(&'a self, base: &'a LayoutSnapshot) -> impl Iterator<Item = (&'a semio_s_artifact_layout_layout_model::Page, &'a semio_s_artifact_layout_layout_model::Frame)> + 'a {
-        base.pages.iter().filter(|page| page.id == self.page_id).flat_map(move |page| page.frames.iter().filter(|frame| self.targets.iter().any(|id| id == frame.id())).map(move |frame| (page, frame)))
+    fn eligibility(&self, base: &LayoutSnapshot) -> MotionEligibility {
+        if !self.moves() || self.targets.is_empty() {
+            return MotionEligibility::Inert;
+        }
+        let Some(page) = base.pages.iter().find(|page| page.id == self.page_id) else {
+            return MotionEligibility::Inert;
+        };
+        let targets: HashSet<_> = self.targets.iter().map(String::as_str).collect();
+        let mut eligibility = MotionEligibility::Inert;
+        for frame in page.frames.iter().filter(|frame| targets.contains(frame.id())) {
+            if !semio_s_artifact_layout_layout_model::frame_edits_blocked(base, page, frame) {
+                return MotionEligibility::Movable;
+            }
+            eligibility = MotionEligibility::Locked;
+        }
+        eligibility
     }
 
     /// ➕️ This transform followed by `tick` as ONE net transform: offsets add, angles add, factors multiply — only for the
@@ -134,18 +136,24 @@ impl LayoutFrameRecord {
 
 /// 🧹️ `targets` without repeats, in first-seen order — the one target list every leaf the transform tool yields carries.
 pub fn layout_unique_targets(targets: impl IntoIterator<Item = String>) -> Vec<String> {
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = HashSet::new();
     targets.into_iter().filter(|id| seen.insert(id.clone())).collect()
 }
 //#endregion 🎬️Record
 
 //#region 🛠️TransformTool
-/// 📨️ What one transform-tool event carries: the committed document it yields against and this dispatch's record (the
-/// tail of a commit may be absent) — dispatch inputs, never tool state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MotionEligibility {
+    Inert,
+    Locked,
+    Movable,
+}
+
+/// 📨️ The effective gesture record and its eligibility on the borrowed committed document.
 #[derive(Clone, Debug)]
 pub struct TransformToolRequest {
-    pub base: Arc<LayoutSnapshot>,
-    pub record: Option<LayoutFrameRecord>,
+    record: Option<LayoutFrameRecord>,
+    eligibility: MotionEligibility,
 }
 
 /// 🧰️ The transform tool's context: the one transform a streamed gesture has accumulated so far (`None` at rest).
@@ -158,16 +166,12 @@ fn transform_tool_context(input: TransformToolContext) -> TransformToolContext {
     input
 }
 
-fn request_applies(request: &TransformToolRequest) -> bool {
-    request.record.as_ref().is_some_and(|record| record.applies_to(&request.base))
-}
-
 fn once_applies(_context: &TransformToolContext, event: Option<&transform_tool::Event>) -> bool {
-    matches!(event, Some(transform_tool::Event::Once(request)) if request_applies(request))
+    matches!(event, Some(transform_tool::Event::Once(request)) if request.eligibility == MotionEligibility::Movable)
 }
 
 fn stream_applies(_context: &TransformToolContext, event: Option<&transform_tool::Event>) -> bool {
-    matches!(event, Some(transform_tool::Event::Stream(request)) if request_applies(request))
+    matches!(event, Some(transform_tool::Event::Stream(request)) if request.eligibility == MotionEligibility::Movable)
 }
 
 fn yield_once(_context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
@@ -176,25 +180,20 @@ fn yield_once(_context: &mut TransformToolContext, event: Option<&transform_tool
     sink.push(Command::Effect(ToolYield::Commit));
 }
 
-fn begin_stream(context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
+fn yield_stream(context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
     let Some(transform_tool::Event::Stream(TransformToolRequest { record: Some(record), .. })) = event else { return };
     context.stream = Some(record.clone());
     sink.push(Command::Effect(ToolYield::upsert(LAYOUT_TRANSFORM_TOOL_LEAF_KEY, record.mutation())));
 }
 
-fn continue_stream(context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
-    let Some(transform_tool::Event::Stream(request)) = event else { return };
-    let Some(stream) = context.stream.take() else { return };
-    let stream = request.record.as_ref().and_then(|tick| stream.then(tick)).unwrap_or(stream);
-    sink.push(Command::Effect(ToolYield::upsert(LAYOUT_TRANSFORM_TOOL_LEAF_KEY, stream.mutation())));
-    context.stream = Some(stream);
-}
-
 fn finish_stream(context: &mut TransformToolContext, event: Option<&transform_tool::Event>, sink: &mut Vec<Command<transform_tool::TransformTool>>) {
     let Some(transform_tool::Event::Finish(request)) = event else { return };
-    let Some(stream) = context.stream.take() else { return };
-    let stream = request.record.as_ref().and_then(|tail| stream.then(tail)).unwrap_or(stream);
-    sink.push(Command::Effect(if stream.applies_to(&request.base) { ToolYield::upsert(LAYOUT_TRANSFORM_TOOL_LEAF_KEY, stream.mutation()) } else { ToolYield::retract(LAYOUT_TRANSFORM_TOOL_LEAF_KEY) }));
+    context.stream = None;
+    let effect = match (&request.record, request.eligibility) {
+        (Some(record), MotionEligibility::Movable) => ToolYield::upsert(LAYOUT_TRANSFORM_TOOL_LEAF_KEY, record.mutation()),
+        _ => ToolYield::retract(LAYOUT_TRANSFORM_TOOL_LEAF_KEY),
+    };
+    sink.push(Command::Effect(effect));
     sink.push(Command::Effect(ToolYield::Commit));
 }
 
@@ -209,10 +208,10 @@ machine::statechart! {
         initial: idle;
         state idle {
             on Once if once_applies => idle do yield_once;
-            on Stream if stream_applies => streaming do begin_stream;
+            on Stream if stream_applies => streaming do yield_stream;
         }
         state streaming {
-            on Stream => streaming do continue_stream;
+            on Stream => streaming do yield_stream;
             on Finish => idle do finish_stream;
         }
     }
@@ -381,8 +380,24 @@ pub fn layout_transform_dispatch(verb: &str, phase: LayoutTransformPhase, record
         return quiet(cleared);
     }
     let Some(mut tool) = resumed.or_else(|| LayoutTransformTool::start(verb, authoring_seed, base_revision).ok()) else { return quiet(cleared) };
-    let refused = record.as_ref().is_some_and(|record| record.refused_as_locked(base));
-    let request = TransformToolRequest { base: Arc::new(base.clone()), record };
+    let record = match (tool.runner.snapshot().context.stream.as_ref(), record) {
+        (Some(stream), Some(tick)) => {
+            let Some(net) = stream.then(&tick) else {
+                tool.abort(ToolAbortReason::CaptureLost);
+                return LayoutTransformDispatch { emit: Emit::default(), tool: cleared };
+            };
+            Some(net)
+        }
+        (Some(stream), None) => Some(stream.clone()),
+        (None, record) => record,
+    };
+    let eligibility = if phase == LayoutTransformPhase::Stream && !tool.at_rest() {
+        MotionEligibility::Inert
+    } else {
+        record.as_ref().map_or(MotionEligibility::Inert, |record| record.eligibility(base))
+    };
+    let refused = eligibility == MotionEligibility::Locked;
+    let request = TransformToolRequest { record, eligibility };
     let event = match phase {
         LayoutTransformPhase::Stream => transform_tool::Event::Stream(request),
         LayoutTransformPhase::Commit => transform_tool::Event::Finish(request),
@@ -402,11 +417,17 @@ pub fn layout_transform_dispatch(verb: &str, phase: LayoutTransformPhase, record
     LayoutTransformDispatch { emit, tool }
 }
 
-/// 👁️ The document a window paints while its transform tool holds an open transaction: the provisional entries applied
-/// to `document` — a preview only this window sees, never history.
-pub fn layout_transform_tool_preview(document: &LayoutSnapshot, state: &LayoutTransformToolState) -> LayoutSnapshot {
-    use protocol::{ColdMutation, Mutation};
-    state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: LayoutMutation| protocol::apply_diff_cold(mutation.diff(&preview).diff(), &preview).unwrap_or(preview))
+/// 👁️ Resolves the single staged gesture leaf into changes of the live page's frame bounds.
+pub fn layout_transform_tool_preview(document: &LayoutSnapshot, state: &LayoutTransformToolState) -> Option<semio_s_artifact_layout_layout_model::FrameBoundsPreview> {
+    use semio_s_artifact_layout_layout_model::FrameBoundsPreview;
+    let staged = state.entries.iter().find(|entry| entry.key == LAYOUT_TRANSFORM_TOOL_LEAF_KEY)?;
+    let mutation: LayoutMutation = semio_framework_value::FromValue::from_value(staged.mutation.clone()).ok()?;
+    match mutation {
+        LayoutMutation::DragFrames(payload) => FrameBoundsPreview::for_transform(document, &payload.page_id, &payload.targets, |bounds| payload.moved(bounds)),
+        LayoutMutation::RotateFrames(payload) => FrameBoundsPreview::for_transform(document, &payload.page_id, &payload.targets, |bounds| payload.turned(bounds)),
+        LayoutMutation::ScaleFrames(payload) if payload.sx > 0.0 && payload.sy > 0.0 => FrameBoundsPreview::for_transform(document, &payload.page_id, &payload.targets, |bounds| payload.scaled(bounds)),
+        _ => None,
+    }
 }
 //#endregion 🛠️TransformTool
 

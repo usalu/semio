@@ -1,0 +1,11 @@
+# Cargo lock drift ownership
+
+The retained Cargo child monitor has two relevant scope limits. The native-transpile job calls `buildAdmittedCargoArtifactsV1` without a retained-compilation byte allowance. That job still has normal final artifact and recipe rechecks, and it does not start the retained-only monitor. In retained builds the monitor receives the admitted Rust source closure for each workspace unit. It does not receive the Cargo recipe's separate manifest and lock observations.
+
+`cargoArtifactTargetRecipeV1` captures the recipe inputs before it acquires the target recipe lease. `cargoRecipeInputsV1` observes selected `Cargo.lock` and `Cargo.toml` paths through the package-closure and manifest projections whenever those projections are supported. The digests the resulting recipe holds for these paths are projection digests. Its combined recheck keeps the projection witnesses and the physical fallback observations in the original scope. An unrelated package lock update and a same-content rewrite can leave the recipe unchanged. A raw SHA-256 comparison against a projected digest would incorrectly stop a child.
+
+Graph capture calls `ensureCargoLockCurrentV1` before locked planning. The real compile calls it again inside the compiler writer scope just before spawn. Its return value is limited to `current`, `refreshed` or `absent` and carries no digest or witness. Taking a new raw digest after this call would establish a second baseline that could disagree with the live target lease and the recipe already admitted. The pre-spawn check would need to recheck the original witness rather than replacing it.
+
+A fail-fast extension can reuse the recipe observation if its owner exposes each original path witness with the exact projection-or-physical check it already performs. The check must run after lock preparation, under the original plan and target custody, and distinguish a stable semantic mismatch from an inconclusive observation. The present recipe API exposes the aggregate recheck, which also reads other inputs and is unsuitable as a per-event monitor check. Native-transpile would separately need a deliberate opt-in to such monitoring.
+
+This was a read-only source inspection. No production code, build, Cargo invocation or live release process was changed.

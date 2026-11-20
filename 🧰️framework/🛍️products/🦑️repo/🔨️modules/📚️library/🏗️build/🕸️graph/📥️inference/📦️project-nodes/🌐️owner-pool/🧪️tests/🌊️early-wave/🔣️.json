@@ -28,5 +28,7 @@
   {"published": 1000, "count": 900, "sinceMs": 119999, "expect": false},
   {"published": 1000, "count": 900, "sinceMs": 120000, "expect": true},
   {"published": 1000, "count": 10, "sinceMs": 120000, "expect": true}
- ]
+ ],
+  "publishRefusals": [{ "stage": "manifest", "status": 507 }, { "stage": "pointer-write", "status": 403 }],
+  "firstOfferRetry": { "retryMilliseconds": 30000, "statuses": [507, 413], "elapsed": [29999, 30000] }
 }

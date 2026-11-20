@@ -376,5 +376,181 @@
     }
    ]
   }
+ ],
+ "blocked": [
+  {
+   "name": "same path retries, changing cause, and arbitrary detail",
+   "limit": 8,
+   "events": [
+    [
+     "blocked:one",
+     "EPERM",
+     100
+    ],
+    [
+     "blocked:one",
+     "EPERM",
+     102
+    ],
+    [
+     "blocked:one",
+     "sharing-violation",
+     103
+    ],
+    [
+     "blocked:two",
+     "non-schema reason containing a private path",
+     104
+    ],
+    [
+     "error:round",
+     "EPERM",
+     105
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 105
+    },
+    {
+     "kind": "blocked",
+     "count": 4,
+     "lastMs": 104
+    }
+   ],
+   "results": [
+    {
+     "kind": "error",
+     "count": 1,
+     "lastMs": 105
+    },
+    {
+     "kind": "blocked",
+     "count": 4,
+     "lastMs": 104
+    },
+    {
+     "kind": "blocked-other",
+     "count": 1,
+     "lastMs": 104
+    },
+    {
+     "kind": "blocked-sharing-violation",
+     "count": 1,
+     "lastMs": 103
+    },
+    {
+     "kind": "blocked-eperm",
+     "count": 2,
+     "lastMs": 102
+    }
+   ]
+  },
+  {
+   "name": "reason rows use spare space without evicting the original totals",
+   "limit": 3,
+   "events": [
+    [
+     "blocked:one",
+     "directory-in-the-way",
+     110
+    ],
+    [
+     "blocked:two",
+     "parent-is-a-file",
+     111
+    ],
+    [
+     "round:store",
+     "EPERM",
+     112
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "round",
+     "count": 1,
+     "lastMs": 112
+    },
+    {
+     "kind": "blocked",
+     "count": 2,
+     "lastMs": 111
+    }
+   ],
+   "results": [
+    {
+     "kind": "round",
+     "count": 1,
+     "lastMs": 112
+    },
+    {
+     "kind": "blocked",
+     "count": 2,
+     "lastMs": 111
+    },
+    {
+     "kind": "blocked-parent-is-a-file",
+     "count": 1,
+     "lastMs": 111
+    }
+   ]
+  },
+  {
+   "name": "no room for extra diagnostic rows",
+   "limit": 2,
+   "events": [
+    [
+     "blocked:one",
+     "EACCES",
+     120
+    ],
+    [
+     "round:one",
+     "EPERM",
+     121
+    ]
+   ],
+   "totals": [
+    {
+     "kind": "round",
+     "count": 1,
+     "lastMs": 121
+    },
+    {
+     "kind": "blocked",
+     "count": 1,
+     "lastMs": 120
+    }
+   ],
+   "results": [
+    {
+     "kind": "round",
+     "count": 1,
+     "lastMs": 121
+    },
+    {
+     "kind": "blocked",
+     "count": 1,
+     "lastMs": 120
+    }
+   ]
+  }
+ ],
+ "intakeProgress": [
+  {
+   "bytes": 0,
+   "observations": 0
+  },
+  {
+   "bytes": 1024,
+   "observations": 1
+  },
+  {
+   "bytes": 3145745,
+   "observations": 4
+  }
  ]
 }

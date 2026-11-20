@@ -13,7 +13,7 @@ export function channelIdentityOracle(directory: string): number {
   const bundle = JSON.parse(readFileSync(resolve(root, "🧩️component/🔣️.json"), "utf8"));
   const contributions = [...bundle.contributions.topicContributions, ...bundle.manifest.topicContributions];
   const manifests = contributions.filter((entry: { payload: { manifestJson?: string } }) => entry.payload.manifestJson).map((entry: { payload: { manifestJson: string } }) => JSON.parse(entry.payload.manifestJson));
-  const validate = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🪪️channels/🔣️.json"), "utf8")));
+  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🪪️channels/🔣️.json"), "utf8")));
   let checks = 0;
   for (const manifest of manifests) for (const row of fixture.cases) {
     const operators = manifest.contributes.operators;

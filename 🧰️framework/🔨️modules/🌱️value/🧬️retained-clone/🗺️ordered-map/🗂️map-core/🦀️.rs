@@ -78,6 +78,9 @@ impl<K: Ord, V> RetainedOrderedMap<K, V> {
         let ordinal = self.search(key).ok()?;
         self.get_index(ordinal).map(|(_, value)| value)
     }
+    pub fn get_key_value<Q: Ord + ?Sized>(&self, key: &Q) -> Option<(&K, &V)> where K: std::borrow::Borrow<Q> {
+        self.get_index(self.search(key).ok()?)
+    }
     fn search<Q: Ord + ?Sized>(&self, key: &Q) -> Result<usize,usize> where K: std::borrow::Borrow<Q> {
         let mut lower=0;let mut upper=self.len;
         while lower<upper {let middle=lower+(upper-lower)/2;match self.get_index(middle).expect("dense map ordinal").0.borrow().cmp(key){Ordering::Less=>lower=middle+1,Ordering::Greater=>upper=middle,Ordering::Equal=>return Ok(middle)}}
@@ -119,6 +122,23 @@ impl<K: Ord, V> RetainedOrderedMap<K, V> {
     pub fn cold_retain(&mut self, mut keep: impl FnMut(&K, &mut V) -> bool) {
         let kept: Vec<(K, V)> = std::mem::take(&mut self.pages).into_iter().flatten().filter_map(|(key, mut value)| keep(&key, &mut value).then_some((key, value))).collect();
         *self = Self::from_sorted_entries(kept).expect("retained entries stay strictly ordered");
+    }
+}
+
+/// 🔁️ Iterates a retained ordered map by reference in key order, as `for (key, value) in &map`.
+impl<'a, K, V> IntoIterator for &'a RetainedOrderedMap<K, V> {
+    type Item = (&'a K, &'a V);
+    type IntoIter = std::iter::Map<std::iter::Flatten<std::slice::Iter<'a, Vec<(K, V)>>>, fn(&'a (K, V)) -> (&'a K, &'a V)>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.pages.iter().flatten().map(|(key, value)| (key, value))
+    }
+}
+
+/// 🔑️ Indexes a retained ordered map by key and panics for an absent key, as `map[&key]`.
+impl<K: Ord + std::borrow::Borrow<Q>, Q: Ord + ?Sized, V> std::ops::Index<&Q> for RetainedOrderedMap<K, V> {
+    type Output = V;
+    fn index(&self, key: &Q) -> &V {
+        self.get(key).expect("retained ordered-map key is present")
     }
 }
 

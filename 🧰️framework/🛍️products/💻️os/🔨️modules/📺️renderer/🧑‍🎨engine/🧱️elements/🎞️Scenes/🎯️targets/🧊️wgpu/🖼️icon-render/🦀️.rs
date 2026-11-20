@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[cfg(not(target_os = "wasi"))]
+#[path = "🖼️svg-pane/🦀️.rs"]
+pub mod svg_panes;
+
 //#region IconRender
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -67,6 +71,42 @@ struct IconRenderMaterialFields {
     pub(crate) stroke: Option<String>,
 }
 
+#[derive(Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+struct IconRenderDrawingFields {
+    background: bool,
+    fill: bool,
+    fill_color: Option<String>,
+    fill_opacity: f32,
+    visible_lines: bool,
+    hidden_lines: bool,
+    visible_color: Option<String>,
+    hidden_color: Option<String>,
+    visible_width: f32,
+    hidden_width: f32,
+    line_easing: f32,
+    merge_lines: bool,
+}
+
+impl Default for IconRenderDrawingFields {
+    fn default() -> Self {
+        Self {
+            background: true,
+            fill: true,
+            fill_color: None,
+            fill_opacity: 1.0,
+            visible_lines: true,
+            hidden_lines: false,
+            visible_color: None,
+            hidden_color: None,
+            visible_width: 1.0,
+            hidden_width: 1.0,
+            line_easing: 0.0,
+            merge_lines: false,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum IconRenderFormat {
@@ -96,6 +136,8 @@ struct IconRenderRequestFields {
     pub(crate) background: Option<String>,
     #[serde(default)]
     shadow_enabled: Option<bool>,
+    #[serde(default)]
+    drawing: Option<IconRenderDrawingFields>,
     #[serde(default)]
     material: Option<IconRenderMaterialFields>,
 }
@@ -136,49 +178,78 @@ fn icon_render_default_zoom() -> f64 {
     1.0
 }
 
-fn icon_render_camera_json(request: &IconRenderRequestFields, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> String {
-    let subject_bounds = subject_bounds.map(|bounds| icon_render_subject_bounds(request, bounds));
-    let camera = &request.camera;
-    let parallel = camera.projection == IconRenderProjection::Orthographic;
-    let fov = camera.fov.unwrap_or(50.0).max(1.0);
-    let mut zoom = if camera.zoom.abs() > 1e-6 { camera.zoom } else { 1.0 };
-    let mut position = camera.position;
-    let mut target = camera.target;
-    if let Some((fit, (minimum, maximum))) = request.fit.as_ref().filter(|fit| fit.enabled).zip(subject_bounds) {
-        let radius = (0..3).map(|axis| (f64::from(maximum[axis]) - f64::from(minimum[axis])).powi(2)).sum::<f64>().sqrt() * 0.5;
-        if radius.is_finite() && radius > 0.0 {
-            let padding = fit.padding.unwrap_or(1.25).max(1.0);
-            let mut direction = [0, 1, 2].map(|axis| position[axis] - target[axis]);
-            if direction.iter().map(|value| value * value).sum::<f64>() < 1e-12 {
-                direction = [1.0, -1.0, 0.85];
-            }
-            let length = direction.iter().map(|value| value * value).sum::<f64>().sqrt();
-            let distance = if parallel {
-                zoom = (request.width.min(request.height) * 0.5 / (radius * padding).max(0.5)).max(1e-3);
-                if length > 1e-6 { length } else { (radius * 4.0).max(2.0) }
-            } else {
-                let vertical = (fov.to_radians() * 0.5).clamp(0.02, 1.5);
-                let horizontal = (vertical.tan() * (request.width / request.height).max(0.05)).atan().clamp(0.02, 1.5);
-                (radius.max(1e-4) / vertical.min(horizontal).sin() * padding).max(0.5)
-            };
-            target = [0, 1, 2].map(|axis| (f64::from(minimum[axis]) + f64::from(maximum[axis])) * 0.5);
-            position = [0, 1, 2].map(|axis| target[axis] + direction[axis] / length * distance);
-        }
+struct IconRenderCameraPose {
+    position: [f64; 3],
+    target: [f64; 3],
+    up: [f64; 3],
+    zoom: f64,
+    fov: f64,
+    parallel: bool,
+}
+
+impl IconRenderCameraPose {
+    fn effective_fov(&self) -> f64 {
+        (2.0 * ((self.fov.to_radians() * 0.5).tan() / self.zoom).atan()).to_degrees()
     }
-    let effective_fov = if !parallel && (zoom - 1.0).abs() > 1e-6 {
-        let half = (fov * 0.5).to_radians();
-        (2.0 * (half.tan() / zoom).atan()).to_degrees()
-    } else {
-        fov
-    };
+}
+
+fn icon_render_camera_pose(request: &IconRenderRequestFields, subject_bounds: Option<([f32; 3], [f32; 3])>) -> IconRenderCameraPose {
+    let camera = &request.camera;
     let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
-    let mode = if parallel { json!({ "kind": "orthographic" }) } else { json!({ "kind": "threePoint", "fov": effective_fov }) };
+    let up_length = up.iter().map(|value| value.powi(2)).sum::<f64>().sqrt();
+    let up = if up_length > 0.0 { up.map(|value| value / up_length) } else { [0.0, 1.0, 0.0] };
+    let direction = [0, 1, 2].map(|axis| camera.position[axis] - camera.target[axis]);
+    let length = direction.iter().map(|value| value.powi(2)).sum::<f64>().sqrt();
+    let unit_direction = if length > 0.0 { direction.map(|value| value / length) } else { [0.0; 3] };
+    let right_squared: f64 = (0..3).map(|axis| {
+        let next = (axis + 1) % 3;
+        let last = (axis + 2) % 3;
+        (up[next] * unit_direction[last] - up[last] * unit_direction[next]).powi(2)
+    }).sum();
+    let up = if right_squared > 1e-8 { up } else if up[2].abs() > 0.5 { [0.0, 1.0, 0.0] } else { [0.0, 0.0, 1.0] };
+    let mut pose = IconRenderCameraPose {
+        position: camera.position,
+        target: camera.target,
+        up,
+        zoom: camera.zoom,
+        fov: camera.fov.unwrap_or(50.0),
+        parallel: camera.projection == IconRenderProjection::Orthographic,
+    };
+    let Some((fit, subject_bounds)) = request.fit.as_ref().filter(|fit| fit.enabled).zip(subject_bounds) else { return pose };
+    let (minimum, maximum) = icon_render_subject_bounds(request, subject_bounds);
+    let radius = (0..3).map(|axis| (f64::from(maximum[axis]) - f64::from(minimum[axis])).powi(2)).sum::<f64>().sqrt() * 0.5;
+    if !radius.is_finite() || radius <= 0.0 {
+        return pose;
+    }
+    let padding = fit.padding.unwrap_or(1.25).max(1.0);
+    let direction = if length > 1e-6 {
+        unit_direction
+    } else {
+        [1.0, -1.0, 0.85].map(|value| value / (2.0 + 0.85_f64.powi(2)).sqrt())
+    };
+    let distance = if pose.parallel {
+        pose.zoom = (request.width.min(request.height) * 0.5 / (radius * padding).max(0.5)).max(1e-3);
+        length.max(radius + 0.1)
+    } else {
+        let vertical = pose.effective_fov().to_radians() * 0.5;
+        let horizontal = (vertical.tan() * (request.width / request.height)).atan();
+        (radius.max(1e-4) / vertical.min(horizontal).sin() * padding).max(radius + 0.1)
+    };
+    pose.target = [0, 1, 2].map(|axis| (f64::from(minimum[axis]) + f64::from(maximum[axis])) * 0.5);
+    pose.position = [0, 1, 2].map(|axis| pose.target[axis] + direction[axis] * distance);
+    pose
+}
+
+fn icon_render_camera_json(request: &IconRenderRequestFields, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> String {
+    let pose = icon_render_camera_pose(request, subject_bounds);
+    let effective_fov = if pose.parallel { pose.fov } else { pose.effective_fov() };
+    let mode = if pose.parallel { json!({ "kind": "orthographic" }) } else { json!({ "kind": "threePoint", "fov": effective_fov }) };
     json!({
-        "position": position,
-        "target": target,
-        "up": up,
+        "position": pose.position,
+        "target": pose.target,
+        "up": pose.up,
         "fov": effective_fov,
-        "zoom": if parallel { zoom * preview_scale } else { 1.0 },
+        "zoom": if pose.parallel { pose.zoom * preview_scale } else { 1.0 },
         "projection": { "mode": mode, "orientation": { "type": "free" } },
         "projectionFrame": "preserveCamera",
     })
@@ -276,12 +347,6 @@ fn with_icon_render_mask(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, shap
     ctx.draw.pop_scissor();
 }
 
-/// 🖼️ React's shot is an OFFSCREEN render through `iconRenderPort`, so its host has three visible
-/// states: the error text, the finished `<img>`, and `ui.host.rendering` while the promise is in
-/// flight (`🖼️IconRenderHost/🟦️.tsx:55-61`). This twin draws the GLB straight into the frame, so it
-/// used to have exactly one — a silently EMPTY shot frame for the whole time the mesh was being
-/// fetched, and forever if the fetch never landed. The residency of the one subject mesh is the
-/// same predicate: no lease yet is "rendering", a recorded snapshot fault is the error arm.
 /// 🎬️ Shared preview and export scene construction at the requested camera scale.
 fn icon_render_world_scene(request: &IconRenderRequestFields, asset_url: &str, mesh_id: &str, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> semio_ui_declaration::ui::World3dScene {
     let transform = request.transform.unwrap_or_default();
@@ -344,12 +409,16 @@ fn icon_render_world_component_scene(
     }
 }
 
-/** 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
+/// 🪟️ Paints the export-derived SVG texture or the shaded GLB preview inside the shot frame.
 pub fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
     let Some(icon_render) = &scene.icon_render else {
+        #[cfg(not(target_os = "wasi"))]
+        svg_panes::cancel(&scene.host_id);
         return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
     };
     let Ok(request) = serde_json::from_str::<IconRenderRequestFields>(&icon_render.request_json) else {
+        #[cfg(not(target_os = "wasi"))]
+        svg_panes::cancel(&scene.host_id);
         return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
     };
 
@@ -359,6 +428,33 @@ pub fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut 
     let content_frame = icon_render_content_frame(frame);
 
     let asset_url = crate::mesh_assets::mesh_asset_transport_url(&request.asset_url);
+    #[cfg(not(target_os = "wasi"))]
+    if matches!(request.format, IconRenderFormat::Svg) {
+        use svg_panes::Paint;
+        match svg_panes::observe(&scene.host_id, &icon_render.request_json, &asset_url) {
+            Paint::Ready(key) => {
+                let preview = icon_render_frame(content_frame, request.width, request.height, 0.0);
+                ctx.draw.push_raster_quad(&key, [preview.x, preview.y, preview.w, preview.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+            }
+            pending => {
+                let (status, color) = match pending {
+                    Paint::Failed => (IconRenderStatus::Failed, ctx.theme.error),
+                    _ => (IconRenderStatus::Rendering, ctx.theme.text_muted),
+                };
+                if let Some(message) = icon_render_status_message(status, hosts.chrome_labels.icon_render) {
+                    let progress = match pending {
+                        Paint::Drawing(percent) => Some(format!("{message} {percent}%")),
+                        _ => None,
+                    };
+                    with_icon_render_mask(ctx, content_frame, &shape, |ctx| render_icon_render_status(ctx, content_frame, progress.as_deref().unwrap_or(message), color));
+                }
+            }
+        }
+        paint_icon_render_chrome(ctx, bounds, frame, &request, &shape, icon_render.footer.as_deref());
+        return;
+    }
+    #[cfg(not(target_os = "wasi"))]
+    svg_panes::cancel(&scene.host_id);
     let mesh_id = semio_plugin::world3d_mesh_id_from_url(&asset_url);
     let surface_id = scene.surface_id.clone();
     let controller_id = scene.controller_id.clone();

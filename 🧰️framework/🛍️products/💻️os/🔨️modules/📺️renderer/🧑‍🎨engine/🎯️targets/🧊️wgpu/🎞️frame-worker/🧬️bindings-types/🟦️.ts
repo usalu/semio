@@ -21,7 +21,8 @@ export type BrowserRendererWorkerHandle = OriginalBrowserFrameNative & {
   pushAssetResponsePage(bytes: Uint8Array): void;
   sealAssetResponse(): boolean;
   abortAssetResponse(): boolean;
-  rejectAssetResponse(): boolean;
+  rejectAssetResponse(retryable: boolean): boolean;
+  resetWorldAssetResponseStep(): boolean;
   closeStep(): boolean;
 };
 

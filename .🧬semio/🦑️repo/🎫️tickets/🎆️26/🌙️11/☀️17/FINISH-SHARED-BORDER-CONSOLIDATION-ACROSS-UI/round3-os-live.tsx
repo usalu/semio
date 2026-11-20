@@ -63,21 +63,25 @@ const ctxItems: ContextMenuItem[] = [
 ];
 
 
+const requestedLocale = new URLSearchParams(location.search).get("locale");
+const locale = [requestedLocale, ...navigator.languages].map(tag => tag?.toLowerCase().split("-")[0]).find(tag => tag === "en" || tag === "de");
+if (!locale) throw new Error("Open the OS showcase with ?locale=en or ?locale=de");
+document.documentElement.lang = locale;
 const noop = () => {};
 const themes = builtinUiThemes();
 const drivers = builtinUiDrivers();
 const settingsHost = {
   appId: "s.demo", appLabel: "Demo", controllerId: "demo", pluginId: "s.demo", driverId: DEFAULT_UI_DRIVER.id, driver: DEFAULT_UI_DRIVER, driverDirty: false, drivers,
   setDriverId: noop, setDriverField: noop, saveDriver: noop, deleteDriver: noop, driverSaveLabel: "", setDriverSaveLabel: noop,
-  appearance: "dark", setAppearance: noop, layout: "default", setLayout: noop, mobileActive: false, onResetDock: noop, locale: "en", setLocale: noop,
+  appearance: "dark", setAppearance: noop, layout: "default", setLayout: noop, mobileActive: false, onResetDock: noop, locale, setLocale: noop,
   terminology: "native", setTerminology: noop, terminologies: ["native", "architecture"],
   theme: themes[0], themeId: themes[0]!.id, themeDirty: false, themes, setThemeId: noop, setThemeColor: noop, setThemeSpacing: noop, setThemeFontStack: noop, setThemeStroke: noop, setThemeRadius: noop, setThemeOpacity: noop, setThemeMetric: noop, setThemeAppearancePaint: noop,
   saveTheme: noop, deleteTheme: noop, resetTheme: noop, exportTheme: noop, importTheme: noop, themeSaveLabel: "", setThemeSaveLabel: noop,
   controlKeybindings: new Map([["undo", "mod+z"], ["redo", "mod+shift+z"], ["ui.fullscreen.toggle", "mod+ctrl+f"]]), controlKeybindingLabel: () => null, keybindingCaptureControlId: null, setKeybindingCaptureControlId: noop, setKeybindingOverride: noop, resetKeybindingOverride: noop,
   locks: {}, mergePolicy: "Normal", setMergePolicy: noop,
 } as never;
-const defaultsHost = { rows: [{ kind: "text", label: "Text", current: "none", options: [{ value: "none", label: "None" }, { value: "a", label: "Editor" }] }], apps: [], onChange: noop, locale: "en" } as never;
-const conflictsHost = { conflicts: [{ id: "c1", kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }, { id: "c2", kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }], locale: "en", selectedConflictId: "c1", kindLabel: () => "Quarantined", messageText: () => "A change was refused", onSelect: noop, onResolve: noop, currentDocumentText: "text" } as never;
+const defaultsHost = { rows: [{ kind: "text", label: "Text", current: "none", options: [{ value: "none", label: "None" }, { value: "a", label: "Editor" }] }], apps: [], onChange: noop, locale } as never;
+const conflictsHost = { conflicts: [{ id: "c1", kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }, { id: "c2", kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }], locale, selectedConflictId: "c1", kindLabel: () => "Quarantined", messageText: () => "A change was refused", onSelect: noop, onResolve: noop, currentDocumentText: "text" } as never;
 const displayHost = { windowKinds: [{ id: "w1", label: "Puzzle 3D", iconId: "box", surfaceKind: "world-3d" }, { id: "w2", label: "Table", iconId: "table" }], namedLayouts: [{ id: "l1", label: "Default / Quad", origin: "builtin" }, { id: "l2", label: "Default / Split", origin: "builtin" }], userLayouts: [{ id: "u1", label: "Mine", origin: "user" }], saveCurrentLayout: noop, applyNamedLayout: noop, deleteUserLayout: noop, layoutSaveLabel: "", setLayoutSaveLabel: noop } as never;
 const marketHost = { plugins: [{ pluginId: "s.cad", label: "CAD", version: "1.0", status: "ready", sourceId: "hub", canUninstall: true }, { pluginId: "s.flow", label: "Flow", version: "0.3", status: "available", sourceId: "hub", canUninstall: false }], extensions: [{ extensionId: "e1", label: "Ext", version: "1", extendsHost: "s.cad", enabled: true, status: "ready" }], installPlugin: noop, uninstallPlugin: noop, reloadPlugin: noop, installExtensionFromUrl: noop, installExtensionFromFile: noop, uninstallExtension: noop, setExtensionEnabled: noop } as never;
 
@@ -224,8 +228,8 @@ const parts: Record<string, () => React.ReactElement> = {
   "notice-toast": () => <div style={{ height: 500, position: "relative" }}><TransientNotice notice={{ message: "Saved", kind: "info" }} closeLabel="Close" onClose={noop} /></div>,
   "notice-toast-error": () => <div style={{ height: 500, position: "relative" }}><TransientNotice notice={{ message: "Save failed", kind: "error", code: "x" }} closeLabel="Close" onClose={noop} /></div>,
   "notice-pane": () => <div style={{ height: 500, position: "relative" }}><FloatingPane className="right-0 top-0 w-96 h-72"><div className="p-double">Workspace pane</div></FloatingPane></div>,
-  "dialog-close": () => <DocumentCloseDialog name="Notes" locale="en" failure={null} onKeep={noop} onDiscard={noop} />,
-  "dialog-close-failed": () => <DocumentCloseDialog name="Notes" locale="en" failure={{ code: "disk" }} onKeep={noop} onDiscard={noop} />,
+  "dialog-close": () => <DocumentCloseDialog name="Notes" locale={locale} failure={null} onKeep={noop} onDiscard={noop} />,
+  "dialog-close-failed": () => <DocumentCloseDialog name="Notes" locale={locale} failure={{ code: "disk" }} onKeep={noop} onDiscard={noop} />,
   palette: () => <UISearch items={searchItems} open onOpenChange={noop} placeholder="Search commands" emptyMessage="None" />,
   find: () => <UIFindProvider><FindSeed /><UIFind open onOpenChange={noop} placeholder="Find" emptyMessage="None" /></UIFindProvider>,
   "window-search": () => <div style={{ height: 400, position: "relative" }}><Search sessionActive={false} input={{ value: "ca", placeholder: uiDataLabel("Search"), onChange: noop }} possibles={[{ id: "p1", label: "Capsule", detail: "Box" }, { id: "p2", label: "Cabinet", detail: "Furniture" }]} active /></div>,
@@ -234,7 +238,7 @@ const parts: Record<string, () => React.ReactElement> = {
 };
 
 Object.assign(parts, moreParts, r3Parts);
-const i18n = createShellI18nInstance("en");
+const i18n = createShellI18nInstance(locale);
 const g = window as unknown as { __ocl?: { root: ReturnType<typeof createRoot>; host: HTMLDivElement } };
 export function show(part: string) {
   g.__ocl?.root.unmount(); g.__ocl?.host.remove();

@@ -28,6 +28,12 @@ impl<T> OriginalNativeReceivingOutcome<T>{
  /// 📊️ Returns the original retained physical progress of the first actual refusal.
  pub fn retained_progress(&self)->semio_framework_value_retained_clone::RetainedCloneProgress{self.source_refusal.as_ref().or_else(||self.call.as_ref().err().and_then(|failure|failure.operation.as_ref().or(failure.context.as_ref()).or(failure.receipt_refusal.as_ref()))).map_or(Default::default(),|error|error.retained_progress())}
 
+ /// Returns the callback value or its recorded cause when the caller consumes this scope.
+ pub fn into_result(self)->Result<T,ValueError>{
+  if let Some(refusal)=self.source_refusal{return Err(refusal)}
+  native_call_result(self.call)
+ }
+
  /// 🧮️ Quotes both moves of a typed Source output and its separate refusal slot.
  pub fn typed_placement()->Result<semio_framework_value_retained_clone::RetainedCloneProgress,ValueError>{
   let bytes=std::mem::size_of::<Option<Self>>().checked_mul(2).and_then(|n|n.checked_add(std::mem::size_of::<Option<ValueError>>())).ok_or_else(||ValueError::invariant("typed native Source placement overflow"))?;
@@ -53,6 +59,7 @@ impl<T:semio_framework_value_retained_clone::retirement::RetireOwned> semio_fram
 /// 🚪️ The Source selects one authority purpose before lending its actual decoder.
 pub enum OriginalReceivingOperation<'operation,T=()>{
  Receive(&'operation mut dyn FnMut(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,semio_framework_value_retained_clone::RetainedCloneGrant)->Result<T,ValueError>),
+ ReceiveWithWork(&'operation mut dyn FnMut(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,semio_framework_value_retained_clone::RetainedCloneGrant,u64)->Result<T,ValueError>),
  Recover(&'operation mut dyn FnMut(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>,semio_framework_value_retained_clone::RetainedCloneGrant)->Result<T,ValueError>),
  RecoverValue(&'operation mut dyn FnMut(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>,semio_framework_value_retained_clone::RetainedCloneGrant)->Result<T,ValueError>),
 }

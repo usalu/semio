@@ -68,6 +68,14 @@ impl JpgComponentDecoder {
         Ok(Self{decoder:Some(decoder),samples,component_ids,width,height,plane:0,initialized:0,initialization_units,pixel:0,total,working_bytes:working,completed:false})
     }
 
+    /// 🏷️ Returns the Adobe APP14 color transform byte, when the stream supplies one.
+    pub fn adobe_color_transform(&self) -> Option<u8> {
+        self.decoder.as_ref()?.header.as_ref()?.other_segments.iter().find_map(|segment| {
+            (segment.marker == 0xee && segment.data.starts_with(b"Adobe"))
+                .then(|| segment.data.get(11).copied()).flatten()
+        })
+    }
+
     /// 📏️ Physical input, entropy-plane and output footprint charged at admission.
     pub fn working_bytes(&self)->usize {self.working_bytes}
 

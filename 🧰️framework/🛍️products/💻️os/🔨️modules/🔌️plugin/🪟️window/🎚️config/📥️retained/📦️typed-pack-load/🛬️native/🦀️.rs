@@ -34,37 +34,48 @@ fn retire_native(cx:&mut StepContext<'_>,d:RetirementDemand,advance:impl FnOnce(
 /// 📬️ Settles one finished receiving scope: its accepted physical spend is its receipt.
 fn settled<R>(cx:&mut StepContext<'_>,scope:Option<OriginalNativeReceivingOutcome>,stepped:Option<Result<Option<R>,ValueError>>)->Result<Option<R>,OriginalTurnFailure>{
  let scope=scope.ok_or_else(||invalid("original Window receiving scope vanished"))?;cx.settle_receiving_scope()?;
- if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Window receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
+ scope.into_result()?;
  Ok(stepped.ok_or_else(||invalid("original Window receiving step vanished"))??)
 }
 /// 🪡️ Runs one receiving action whose native work the decoder commits itself.
-fn received<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<R,ValueError>)->Result<Option<R>,OriginalTurnFailure>{
+fn received<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<R,ValueError>)->Result<Option<R>,OriginalTurnFailure>{
  if cx.should_yield(){return Ok(None)}
  let(mut scope,mut stepped,mut committed)=(None,None,0);
- if !cx.with_native_receiving(&mut scope,|native,grant|{let before=native.actual_work();stepped=Some(run(native,grant).map(Some));committed=native.actual_work().saturating_sub(before);Ok(())})?{return Ok(None)}
+ if !cx.with_native_receiving_work(&mut scope,|native,grant,work|{let before=native.actual_work();stepped=Some(run(native,grant,work).map(Some));committed=native.actual_work().saturating_sub(before);Ok(())})?{return Ok(None)}
  cx.consume_fuel(u64::try_from(committed).unwrap_or(u64::MAX));settled(cx,scope,stepped)
 }
 /// 🪙️ Runs one allocating receiving action inside the decoder's own performed-work effect.
 fn effected<R>(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->Result<R,ValueError>)->Result<Option<R>,OriginalTurnFailure>{
- if !fits(cx,d){return Ok(None)}let work=cx.fuel_remaining();
- received(cx,|native,_|Ok(match native.with_allocated_effect(d,work,|native,effect|run(native,effect))?{Some(result)=>Some(result?),None=>None})).map(Option::flatten)
+ if !fits(cx,d){return Ok(None)}
+ received(cx,|native,_,work|{
+  let maximum=work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK);
+  if maximum==0{return Ok(None)}
+  native.with_allocated_effect(d,maximum,run)?.transpose()
+ }).map(Option::flatten)
 }
 /// 🧾️ A construction step quotes its demand, runs against the decoder and posts its complete physical receipt.
-fn native_step<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>)->NativeConstructionStepOutcome<T,OriginalReceivingPrimary>)->Result<(),OriginalTurnFailure>{
+fn native_step<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,u64)->NativeConstructionStepOutcome<T,OriginalReceivingPrimary>)->Result<(),OriginalTurnFailure>{
  let mut scope:Option<OriginalNativeReceivingOutcome>=None;let mut stepped=None;
- if !cx.with_native_receiving(&mut scope,|native,_|{let outcome=run(native);let p=outcome.progress;let work=outcome.work;let result=NativeConstructionStepOutcome{result:outcome.result.map(|result|result.map(|_|RetainedCloneStep::Progress(p))),receipt_refusal:outcome.receipt_refusal,progress:p,work}.into_step_outcome().result;stepped=Some(RetainedWorkOutcome{result,work});Ok(())})?{return Ok(())}
+ if !cx.with_native_receiving_work(&mut scope,|native,_,units|{let outcome=run(native,units);let p=outcome.progress;let work=outcome.work;let result=NativeConstructionStepOutcome{result:outcome.result.map(|result|result.map(|_|RetainedCloneStep::Progress(p))),receipt_refusal:outcome.receipt_refusal,progress:p,work}.into_step_outcome().result;stepped=Some(RetainedWorkOutcome{result,work});Ok(())})?{return Ok(())}
  let scope=scope.ok_or_else(||invalid("original Window receiving scope vanished"))?;
- if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Window receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
+ scope.into_result()?;
  let turn=stepped.ok_or_else(||invalid("original Window receiving step vanished"))?;
  let turn=RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(|failure|match failure.primary{Some(primary)=>OriginalTurnPrimary::Receiving(primary),None=>OriginalTurnPrimary::Value(failure.receipt_refusal.unwrap_or_else(||invalid("original Window receiving step failed without a cause")).with_retained_progress(failure.progress))})};
  receive_original_receiving_work(cx,turn).map(|_|())
 }
 fn receive(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{
- if cx.should_yield()||!fits(cx,d){return Ok(())}
- native_step(cx,|native|native.receive_construction_step_typed::<RetainedCloneProgress,OriginalReceivingPrimary>(d,|native,grant|{let result=run(native,grant);let progress=result.as_ref().map_or_else(|error|error.retained_progress(),|progress|*progress);NativeConstructionStepResult{result:result.map_err(OriginalReceivingPrimary::from),progress,work:1}}))
+ receive_progress(cx,d,|native,grant,_|run(native,grant))
 }
-/// 🧾️ Runs one construction step with a progress-shaped body and posts its complete receipt.
-pub fn receive_progress(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{receive(cx,d,run)}
+/// Runs one window action with the work its actual receiving scope issued. Nested
+/// decoder effects post their performed work alongside the parent construction.
+pub fn receive_progress(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant,u64)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{
+ if cx.should_yield()||!fits(cx,d){return Ok(())}
+ native_step(cx,|native,units|native.receive_construction_step_typed::<RetainedCloneProgress,OriginalReceivingPrimary>(d,|native,grant|{
+  let before=native.actual_work();let result=run(native,grant,units.saturating_sub(1));
+  let progress=result.as_ref().map_or_else(|error|error.retained_progress(),|progress|*progress);
+  NativeConstructionStepResult{result:result.map_err(OriginalReceivingPrimary::from),progress,work:1+native.actual_work().saturating_sub(before)}
+ }))
+}
 fn primary(failure:OriginalReceivingPrimary)->ValueError{failure.primary.or(failure.quote_refusal).or(failure.allocation_refusal).unwrap_or_else(||invalid("original Window receiver refused without a cause"))}
 fn refused(failure:NativeReceivingFailure)->ValueError{let progress=failure.retained_progress();match failure{
  NativeReceivingFailure::Primary(failure)=>primary(failure),
@@ -188,14 +199,14 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
    1=>{let sources=&mut*self.sources;let(pack,spr)=sources.wire.as_ref().unwrap().pair()?;let pair=self.pair.as_mut().unwrap();let fault=&mut sources.failure;let Some(body)=pair_body(cx)else{return Ok(self.pending())};let Some(d)=pair_demand(cx,fault,|native|pair.demands(pack,spr,native,body))?else{return Ok(self.pending())};
     let ran=effected(cx,d,|native,effect|pair.step(pack,spr,native,body,effect).result.map(|_|()).map_err(|error|pair_error(fault,error))).map(|_|());captured(cx,&sources.failure,ran)?;
     if pair.is_ready(){self.digest=pair.pack_digest();self.stage=2;self.completed_bytes=pack.len()as u64+spr.len()as u64;self.phase=WindowConfigPackLoadPhase::HistoryReplay;}}
-   2=>{let sources=&mut*self.sources;let(pack,spr)=sources.wire.as_ref().unwrap().pair()?;let pair=self.pair.as_mut().unwrap();let source=&mut self.history_source;native_step(cx,|native|pair.admit_history_source(pack,spr,source,native))?;if self.history_source.is_some(){self.stage=3;}}
+   2=>{let sources=&mut*self.sources;let(pack,spr)=sources.wire.as_ref().unwrap().pair()?;let pair=self.pair.as_mut().unwrap();let source=&mut self.history_source;native_step(cx,|native,_|pair.admit_history_source(pack,spr,source,native))?;if self.history_source.is_some(){self.stage=3;}}
    3=>{let sources=&mut*self.sources;let(pack,spr)=sources.wire.as_ref().unwrap().pair()?;let pair=self.pair.as_mut().unwrap();let initial=&mut sources.initial;receive(cx,header::<O::State>(),|native,grant|pair.take_genesis_into(pack,spr,initial,&*native,grant))?;if self.sources.initial.is_some(){self.stage=4;}}
    4=>{if self.close_pair(cx)?{self.stage=5;}}
-   5=>{let source=self.history_source.as_ref().unwrap();let history=source.history().unwrap();if history.schema!=O::SCHEMA||Some(history.doc_id.as_str())!=self.sources.expected.as_deref()||history.composition.is_some()||!history.conflicts.is_empty(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::InnerIdentity))}let output=&mut self.fold_job;native_step(cx,|native|source.admit_fold(protocol::HistoryShape::Config,output,native))?;if self.fold_job.is_some(){self.stage=6;}}
-   6=>{let job=self.fold_job.as_mut().unwrap();native_step(cx,|native|job.step_original(native,4096))?;if job.original_rejection_ready(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::Replay))}if job.original_output_ready(){self.stage=7;}}
-   7=>{let job=self.fold_job.as_mut().unwrap();let output=&mut self.sources.fold;native_step(cx,|native|job.take_original_output(output,native))?;if self.sources.fold.is_some(){self.stage=8;}}
+   5=>{let source=self.history_source.as_ref().unwrap();let history=source.history().unwrap();if history.schema!=O::SCHEMA||Some(history.doc_id.as_str())!=self.sources.expected.as_deref()||history.composition.is_some()||!history.conflicts.is_empty(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::InnerIdentity))}let output=&mut self.fold_job;native_step(cx,|native,_|source.admit_fold(protocol::HistoryShape::Config,output,native))?;if self.fold_job.is_some(){self.stage=6;}}
+   6=>{let job=self.fold_job.as_mut().unwrap();native_step(cx,|native,_|job.step_original(native,4096))?;if job.original_rejection_ready(){return Ok(self.reject(WindowConfigPackLoadDiagnostic::Replay))}if job.original_output_ready(){self.stage=7;}}
+   7=>{let job=self.fold_job.as_mut().unwrap();let output=&mut self.sources.fold;native_step(cx,|native,_|job.take_original_output(output,native))?;if self.sources.fold.is_some(){self.stage=8;}}
    8=>{let job=self.fold_job.as_mut().unwrap();if !job.terminal_is_empty(){let d=job.next_original_close_demand(4096)?;close_fold(cx,job,d)?;}else{self.paid(cx,header::<Option<FoldJob>>(),|this|{this.fold_job=None;this.stage=9;Ok(())})?;}}
-   9=>{let source=self.history_source.as_mut().unwrap();let output=&mut self.sources.history;native_step(cx,|native|source.take_history(output,native))?;if self.sources.history.is_some(){self.stage=10;}}
+   9=>{let source=self.history_source.as_mut().unwrap();let output=&mut self.sources.history;native_step(cx,|native,_|source.take_history(output,native))?;if self.sources.history.is_some(){self.stage=10;}}
    10=>{self.paid(cx,header::<Option<WindowConfigHistorySource>>(),|this|{if !this.history_source.as_ref().unwrap().terminal_is_empty(){return Err(invalid("original Window history root still has live fold aliases"))}this.history_source=None;this.stage=11;Ok(())})?;}
    11=>{
     if self.sources.pack.is_none(){let wire=self.sources.wire.as_ref().unwrap();let(pack,_)=wire.pair()?;let pair=matches!(wire,WindowConfigPackSource::Pair(_));let bytes=pack.len();let d=RetirementDemand{capacity_bytes:if pair{0}else{bytes},..header::<Vec<u8>>()};self.paid(cx,d,|this|{this.sources.pack=if pair{this.sources.wire.as_mut().unwrap().take_pair_pack()}else{let mut pack=Vec::new();pack.try_reserve_exact(bytes).map_err(|_|invalid("original framed Window genesis destination refused"))?;Some(pack)};Ok(())})?;return Ok(self.pending())}
@@ -226,7 +237,7 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
  }
  fn receive_operation(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   if let Some(receiver)=self.receiver.as_mut(){
-   if !self.taking_operation&&!receiver.ready()&&self.sources.operation.is_none(){let d=receiver.demands(4096)?;let work=cx.fuel_remaining();if fits(cx,d){received(cx,|native,grant|match receiver.advance(native,4096,work,grant){RetainedWorkPoll::Pending{..}=>Ok(()),RetainedWorkPoll::Complete(turn)=>turn.result.map(|_|()).map_err(refused)})?;}return Ok(())}
+   if !self.taking_operation&&!receiver.ready()&&self.sources.operation.is_none(){let d=receiver.demands(4096)?;if fits(cx,d){received(cx,|native,grant,work|match receiver.advance(native,4096,work,grant){RetainedWorkPoll::Pending{..}=>Ok(()),RetainedWorkPoll::Complete(turn)=>turn.result.map(|_|()).map_err(refused)})?;}return Ok(())}
    if self.sources.operation.is_none(){self.taking_operation=true;let d=receiver.take_owned_demands(4096)?;let output=&mut self.sources.operation;effected(cx,d,|native,effect|Ok(receiver.take_owned_into(output,native,4096,effect).result.map(|_|())?))?;return Ok(())}
    return self.close_receiver(cx)
   }

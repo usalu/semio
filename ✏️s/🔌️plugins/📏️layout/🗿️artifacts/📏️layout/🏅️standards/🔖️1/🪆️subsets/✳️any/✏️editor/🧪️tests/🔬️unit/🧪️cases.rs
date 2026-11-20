@@ -18,6 +18,9 @@ use semio_plugin::PluginApp;
 use semio_plugin::{ArtifactEditor, ArtifactView, DslValue, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 
+#[path = "📦️archive.rs"]
+mod archive;
+
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
 /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.
@@ -122,7 +125,7 @@ pub fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::AddPage(semio_s_artifact_layout_layout_editor_commands::add_page::AddPage {}),
         LayoutCommand::PatchPage(semio_s_artifact_layout_layout_editor_commands::patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() }),
         LayoutCommand::PatchFrame(semio_s_artifact_layout_layout_editor_commands::patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }),
-        LayoutCommand::CanvasDrop(semio_s_artifact_layout_layout_editor_commands::canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() }),
+        LayoutCommand::CanvasDrop(semio_s_artifact_layout_layout_editor_commands::canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new(), source_document_id: None, source_link_id: None }),
         LayoutCommand::ExportPng(semio_s_artifact_layout_layout_editor_commands::export_png::ExportPng { page_id: Some("page-1".into()) }),
         LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
         LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),
@@ -676,6 +679,65 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
     }
 }
 
+#[semio_framework_async_macros::async_test]
+async fn dropping_a_catalogue_link_reuses_the_durable_source_and_proxy() {
+    use semio_s_artifact_layout_layout_model::{Frame, LayoutCamera, io::text::snapshot::snapshot_wire_codec::{parse_dsl, print_dsl}};
+    use serde_json::{Value, json};
+
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/linked-asset.json")).unwrap();
+    let command = |geometry: &Value, drag_data: String| {
+        let mut args = geometry.clone();
+        args["dragData"] = json!(drag_data);
+        LayoutPlayApp::command_from_action("canvasDrop", &mut Some(args.into()), &mut None)
+    };
+    for refused in fixture["refusals"].as_array().unwrap() {
+        assert!(command(&fixture["drop"], refused.to_string()).is_err());
+    }
+    let example = LayoutPlayApp::examples().into_iter().find(|example| example.id() == "linked-asset").unwrap();
+    let example = parse_dsl(&example.document()).unwrap();
+    assert_eq!(example.links[0].proxy_data_url.as_deref(), fixture["source"]["proxyDataUrl"].as_str());
+    assert_eq!(example.links[0].id, fixture["expected"]["drag"]["sourceLinkId"].as_str().unwrap());
+
+    let mut app = Box::new(layout_app_with_registry().await);
+    dispatch(&mut app, command(&fixture["drop"], fixture["source"].to_string()).unwrap()).await;
+    let before = app.snapshot().unwrap();
+    let source = before.links.last().unwrap();
+    assert_eq!(source.artifact_ref, fixture["source"]["artifactRef"].as_str().unwrap());
+    assert_eq!(source.artifact_kind, fixture["expected"]["artifactKind"].as_str().unwrap());
+    assert_eq!(source.proxy_data_url.as_deref(), fixture["source"]["proxyDataUrl"].as_str());
+
+    let catalogue = render(&mut app, LAYOUT_PLAY_BODY_CATALOGUE).await;
+    let raw = json!({ "kind": fixture["expected"]["kind"], "sourceDocumentId": app.stores.store.envelope().id, "sourceLinkId": source.id }).to_string();
+    assert!(catalogue.contains(&format!("layout-catalogue.link.{}", source.id)));
+    assert!(catalogue.contains(&json!(raw).to_string()), "{catalogue}");
+    assert!(!catalogue.contains(source.proxy_data_url.as_deref().unwrap()));
+
+    let camera: LayoutCamera = serde_json::from_value(fixture["camera"].clone()).unwrap();
+    dispatch(&mut app, LayoutCommand::SetCamera(semio_s_artifact_layout_layout_editor_commands::set_camera::SetCamera {
+        surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()),
+        camera,
+    })).await;
+    dispatch(&mut app, command(&fixture["drop"], raw).unwrap()).await;
+    let after = parse_dsl(&print_dsl(&app.snapshot().unwrap())).unwrap();
+    assert_eq!(after.links, before.links);
+    assert_eq!(after.pages[0].frames.len(), before.pages[0].frames.len() + 1);
+    let Frame::Image { link_id, bounds, .. } = after.pages[0].frames.last().unwrap() else { panic!("image frame") };
+    assert_eq!(link_id, &source.id);
+    assert_eq!(json!(bounds), fixture["expected"]["bounds"]);
+    use semio_s_artifact_layout_layout_editor_commands::{
+        LayoutInteractionSnapshot, canvas::canvas_layers,
+        modes::edit::windows::blueprint::{config::LayoutWindowConfig, transient::LayoutWindowTransient},
+    };
+    let layers: Value = serde_json::from_str(&canvas_layers(
+        &after, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true,
+    )).unwrap();
+    let id = format!("{}.image", after.pages[0].frames.last().unwrap().id());
+    let layer = layers.as_array().unwrap().iter().find(|layer| layer["id"].as_str() == Some(id.as_str())).unwrap();
+    assert_eq!(layer["kind"], "image");
+    assert_eq!(layer["dataUrl"].as_str(), source.proxy_data_url.as_deref());
+    app.close_fixture();
+}
+
 //#region 🔤️PackageFonts
 mod package_fonts {
     use semio_s_artifact_layout_layout_editor::LayoutPlayApp;
@@ -767,14 +829,7 @@ async fn original_media_export_handoff_preserves_snapshot_and_closes_completed_o
     }
 }
 
-store::space_members! {
-    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-    history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
-    maximum_history_allocation_bytes:8388608,
-    pub enum MediaDrawingMembers, MediaDrawingMembersOpen {
-        Drawing("s.draw.drawing", "1", "*", "drawing.document") => (semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot, semio_s_artifact_draw_drawing_mutations::DrawingMutation, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer),
-    }
-}
+use semio_s_artifact_layout_layout_host::LayoutDrawingMembers;
 
 #[semio_framework_async_macros::async_test]
 async fn original_media_projection_reads_the_genuinely_registered_drawing_child() {
@@ -786,7 +841,7 @@ async fn original_media_projection_reads_the_genuinely_registered_drawing_child(
     for cancel_after_output in [false,true]{
     let policy=semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
     let mut identity=artifact_app_laws::fixture_identity();
-    let mut app=new_app_with_registry_and_members::<EditorApp<LayoutPlayApp>,MediaDrawingMembers>(manifest,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),policy,&mut identity).await;
+    let mut app=new_app_with_registry_and_members::<EditorApp<LayoutPlayApp>,LayoutDrawingMembers>(manifest,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),policy,&mut identity).await;
     app.bind_instance_id(context::INSTANCE).await;
     let mut caller=OriginalFixtureScope::admit();
     let media_laws:serde_json::Value=serde_json::from_str(include_str!("../../🎥️media-export-job-and-factories/🧪️fixture.json")).unwrap();let child_law=&media_laws["mountedChild"];
@@ -800,7 +855,7 @@ async fn original_media_projection_reads_the_genuinely_registered_drawing_child(
     let mut envelope=store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,DrawingMutation>("drawing.document",&child_id,drawing,None,&store::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);envelope.dialect=Some(dialect.clone());envelope.owner=Some(store::OwnerRef{parent:semio_framework_artifact_reference::ArtifactRef{artifact_id:app.stores.store.envelope().id.clone(),dialect:app.stores.store.envelope().dialect.clone().expect("actual parent dialect")},slot:child_law["slot"].as_str().unwrap().to_string(),child_id:child_id.clone()});
     let mut child=store::ArtifactStore::new::<store::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     store::install_funded_member_store_owners(&mut child,&semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer).expect("actual Drawing owner catalog");
-    assert_eq!(child_id,child_law["childId"].as_str().unwrap());app.register_child(child_law["slot"].as_str().unwrap().to_string(),child_id.clone(),dialect,MediaDrawingMembers::Drawing(Box::new(child)),&mut identity).await.unwrap_or_else(|_|panic!("real parent reference admits its actual child"));
+    assert_eq!(child_id,child_law["childId"].as_str().unwrap());app.register_child(child_law["slot"].as_str().unwrap().to_string(),child_id.clone(),dialect,LayoutDrawingMembers::Drawing(Box::new(child)),&mut identity).await.unwrap_or_else(|_|panic!("real parent reference admits its actual child"));
     let before=app.snapshot().unwrap();let close=fixture_close_grant(policy);
     let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx(),close).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx(),close).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}

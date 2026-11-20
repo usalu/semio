@@ -11,14 +11,16 @@ import { readBuildMode, type BuildMode } from "../🎚️mode/🟦️.ts";
 import { acquireResourceLease, checkResourceLeaseControl, resourceLeasePathV1, requireMaterializedPathV1 } from "../../🔒️leases/🟦️.ts";
 
 /** 🗃️ Owns one compiler's mutable intermediates independently of its staged deliverable. */
-export type CompilerStateOwner = Readonly<{ root: string; owner: string; compiler: string; configuration: string; mode: BuildMode; platform?: string; architecture?: string }>;
+export type CompilerStateOwner = Readonly<{ root: string; owner: string; compiler: string; configuration: string; mode: BuildMode; listenerPort?: number; platform?: string; architecture?: string }>;
 
 /** 🔑️ Partitions state by compiler, configuration, platform, architecture, owner and intent. */
 export function compilerStateDirectory(options: CompilerStateOwner): string {
   const failures = validateJsonSchemaSubset(schema, Object.fromEntries(Object.entries(options).filter(([key, value]) => !["control", "storage", "storageControl", "environment", "capacity", "files"].includes(key) && value !== undefined)));
   if (failures.length) throw Error("Invalid compiler state owner: " + failures.join("; "));
   const mode = readBuildMode(options.mode), platform = options.platform ?? process.platform, architecture = options.architecture ?? process.arch;
-  const identity = createHash("sha256").update(JSON.stringify([options.owner, options.compiler, options.configuration, platform, architecture])).digest("hex").slice(0, 24);
+  const identityParts: (string | number)[] = [options.owner, options.compiler, options.configuration, platform, architecture];
+  if (options.listenerPort !== undefined) identityParts.push(options.listenerPort);
+  const identity = createHash("sha256").update(JSON.stringify(identityParts)).digest("hex").slice(0, 24);
   const directory = join(resolve(options.root), "compiler", `${platform}-${architecture}`, mode, identity);
   return requireMaterializedPathV1(directory);
 }
@@ -40,7 +42,12 @@ export async function withCompilerState<T>(options: CompilerStateOwner & { reado
     if (isAbsolute(file) || child === ".." || child.startsWith("../") || child.startsWith("..\\") || file.includes("\0")) throw Error("Compiler materialized path must remain within its state owner");
     requireNativeStoragePathV1(policy.root,path);
   }
-  const resource=compilerStateResourceV1(directory);resourceLeasePathV1(leaseDirectory,resource);
+  // A listener retains its writer for its entire lifetime. Key that finite set
+  // by TCP port so two independent listeners cannot block on a hash collision.
+  const resource = options.listenerPort === undefined
+    ? compilerStateResourceV1(directory)
+    : "compiler-state:listener:v1:" + options.listenerPort;
+  resourceLeasePathV1(leaseDirectory,resource);
   let lease:Awaited<ReturnType<typeof acquireResourceLease>>|undefined;
   const run=async(environment:Readonly<Record<string,string|undefined>>,control:CompilerAdmissionControl):Promise<T>=>{
     lease=await acquireResourceLease({directory:leaseDirectory,resource,mode:"exclusive",signal:control.signal,control});

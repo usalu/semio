@@ -23,31 +23,6 @@ pub mod identity {
     pub mod tests;
 }
 #[path = "."]
-pub mod paint {
-    #[path = "."]
-    pub mod scene {
-        #[path = "."]
-        pub mod query {
-            #[path = "../../🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🦀️.rs"]
-            pub mod tests;
-        }
-        #[path = "../../🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod tests;
-    }
-    #[path = "../../🎨️paint/🧪️tests/🔬️unit/🦀️.rs"]
-    pub mod tests;
-}
-#[path = "."]
-pub mod picking {
-    #[path = "../../../🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🦀️.rs"]
-    pub mod tests;
-}
-#[path = "."]
-pub mod placement {
-    #[path = "../../📍️placement/🧪️tests/🔬️unit/🦀️.rs"]
-    pub mod tests;
-}
-#[path = "."]
 pub mod preparation {
     #[path = "../../📋️prepare/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;

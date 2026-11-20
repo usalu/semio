@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import factory from "../../../../../../../🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync("/Users/ueli/Documents/semio/🌎️hub/🧪️tests/🧫️fixtures/📊️observability-v1/🔣️.json", "utf8"));
+const fixture = JSON.parse(readFileSync(new URL("../../../../../../../🌎️hub/🧪️tests/🧫️fixtures/📊️observability-v1/🔣️.json", import.meta.url), "utf8"));
 const user = (i: number) => ({ id: `u-${i}`, email: `user${i}@semio.dev`, displayName: `User ${i}`, createdAtMs: 1760000000000 + i });
 const space = (i: number) => ({ id: `sp-${i}`, name: `Space ${i}`, kind: "studio", visibility: i % 2 ? "public" : "private", ownerUserId: "u-1", memberCount: 2, documentCount: 2, activeConnections: 2, createdAtMs: 0, updatedAtMs: 0 });
 const connection = (i: number, s: number) => ({ syncSessionId: `sync-${s}-${i}`, scope: { spaceId: `sp-${s}`, documentId: `doc-${s}-${i % 2}` }, authenticatedUserId: "u-1", email: `user${i}@semio.dev`, role: "author", connectedAtMs: 0, source: "recorded-sync-session" });

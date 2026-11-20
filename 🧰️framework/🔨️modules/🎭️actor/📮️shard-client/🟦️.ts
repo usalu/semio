@@ -198,8 +198,7 @@ export class ShardClient {
     await this.send<void>(slot, { kind: "restore", requestId, actorId, state }, requestId);
   }
 
-  /** 🧬️ Calls the actor's component `codec` interface once. The caller serializes it with the actor's
-   * turns (the worker refuses a codec call while a turn of the actor is in flight). */
+  /** 🧬️ Calls the actor's component `codec` interface in the worker's per-actor crossing order. */
   async codec<Request extends ActorCodecRequest>(actorId: string, request: Request): Promise<ActorCodecAnswer<Request["operation"]>> {
     admitActorCodecRequestV1(request);
     const operation=request.operation;

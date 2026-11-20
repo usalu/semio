@@ -1,0 +1,150 @@
+{
+  "summary": {
+    "en": "A 0.8 m pendant luminaire: a ceiling rose, 0.6 m of textile cord, a brass collar and an enamelled dome shade 0.266 m wide with a brass E27 lampholder inside that carries a 60 W incandescent bulb whose tip just shows below the rim: 95 % (57 W) leave as heat in its surfaces and the visible 3 W warm the room where the walls absorb them, so all 60 W end as heat in the room; the glass and the shade are the warm surfaces.",
+    "de": "Eine 0,8 m lange Pendelleuchte: eine Deckenrosette, 0,6 m Textilkabel, eine Messinghülse und ein emaillierter Kuppelschirm von 0,266 m Breite mit einer Messing-E27-Fassung darin, die eine 60-W-Glühlampe trägt, deren Kuppe gerade unter dem Rand hervorschaut: 95 % (57 W) verlassen die Flächen als Wärme und die sichtbaren 3 W erwärmen den Raum dort, wo die Wände sie absorbieren, sodass alle 60 W als Wärme im Raum enden; Glas und Schirm sind die warmen Flächen."
+  },
+  "notes": {
+    "en": "A classic enamelled dome pendant, built as such lamps are built: a ceiling rose 0.1 m across and 24 mm deep with a cord grip, 0.6 m of textile-sheathed cord, a brass cord-grip collar 31 mm across and 30 mm high on an M10 lamp nipple that clamps the 0.6 mm enamelled steel dome (0.266 m wide, 0.133 m deep, rolled rim bead of 6 mm) between the collar and a brass E27 lampholder of 40 mm diameter and 65 mm length inside the dome (IEC 60238), and an A60 incandescent bulb with an E27 cap (0.060 m diameter, 0.105 m long, IEC 60064 and IEC 60061-1) screwed into the lampholder, so the bulb hangs from the lampholder and not from the shade. In a dome this deep the bulb sits inside: only its tip, 7.5 mm, shows below the rim, which shields the glare. The rig hangs straight down from the ceiling hook: rose, cord, collar with lampholder, and from the lampholder the shade and the bulb. The origin is the lowest point of the bulb; the rose lies 0.8 m above it, so a call site places the origin 0.8 m under the ceiling. Dimensions and mass 0.62 kg are rounded from this product class (authored estimate). Electrical power at level 1 is the rated 60 W, which ends entirely as heat in the room: an incandescent lamp turns about 95 % of its power into infrared radiation and heat and the visible light is absorbed by the room surfaces. The asset releases it in the surfaces of the lamp: 34 W at the glass (about 130 to 160 degrees Celsius), 20.5 W at the shade that the radiation and the rising hot air warm, 2.5 W at the cap, the lampholder and the collar; together 57 W, 95 % of the rating, and the remaining 3 W leave as visible light that the room surfaces absorb; the split is an authored estimate.",
+    "de": "Eine klassische emaillierte Kuppelpendelleuchte, so gebaut wie solche Leuchten gebaut werden: eine Deckenrosette von 0,1 m Durchmesser und 24 mm Tiefe mit Zugentlastung, 0,6 m textilummanteltes Kabel, eine Messing-Zugentlastungshülse von 31 mm Durchmesser und 30 mm Höhe auf einem M10-Lampennippel, der die emaillierte Stahlkuppel von 0,6 mm (0,266 m breit, 0,133 m tief, gerollter Randwulst von 6 mm) zwischen Hülse und einer Messing-E27-Fassung von 40 mm Durchmesser und 65 mm Länge im Schirm einspannt (IEC 60238), und eine A60-Glühlampe mit E27-Sockel (0,060 m Durchmesser, 0,105 m Länge, IEC 60064 und IEC 60061-1), die in die Fassung geschraubt ist, sodass die Lampe an der Fassung hängt und nicht am Schirm. In einer so tiefen Kuppel sitzt die Lampe innen: nur ihre Kuppe schaut 7,5 mm unter dem Rand hervor, was die Blendung abschirmt. Das Rig hängt senkrecht vom Deckenhaken: Rosette, Kabel, Hülse mit Fassung und an der Fassung Schirm und Lampe. Der Ursprung ist der tiefste Punkt der Lampe; die Rosette liegt 0,8 m darüber, sodass ein Aufrufer den Ursprung 0,8 m unter der Decke setzt. Maße und Masse von 0,62 kg sind aus dieser Produktklasse gerundet (Schätzwert). Die elektrische Leistung auf Stufe 1 ist die Nennleistung von 60 W, die vollständig als Wärme im Raum endet: eine Glühlampe wandelt etwa 95 % ihrer Leistung in Infrarotstrahlung und Wärme um, und das sichtbare Licht wird von den Raumflächen absorbiert. Das Asset gibt sie in den Flächen der Leuchte ab: 34 W am Glas (etwa 130 bis 160 Grad Celsius), 20,5 W am Schirm, den Strahlung und aufsteigende Heißluft erwärmen, 2,5 W an Sockel, Fassung und Hülse; zusammen 57 W, 95 % der Nennleistung, und die übrigen 3 W verlassen die Leuchte als sichtbares Licht, das die Raumflächen absorbieren; die Aufteilung ist ein Schätzwert."
+  },
+  "poseOn": {
+    "en": "The 60 W bulb burns: the glass and the shade are hot, the cap and the lampholder are warm, a plume rises over the shade.",
+    "de": "Die 60-W-Glühlampe brennt: Glas und Schirm sind heiß, Sockel und Fassung sind warm, über dem Schirm steigt eine Fahne auf."
+  },
+  "representations": {
+    "50": {
+      "silhouette": {
+        "en": "A hanging sign 0.8 m by 0.27 m, 16 mm by 5.3 mm on paper: a ceiling rose with its cord grip, a thin cord, a brass collar, a deep enamel dome with a rolled rim and the tip of the bulb just below it. Front view: the lamp is turned about its vertical axis, so the front view repeats the side view, drawn from the same turned parts. Top view: the 0.266 m shade disc under the 0.1 m ceiling rose, which hides the cord and the collar.",
+        "de": "Ein hängendes Zeichen von 0,8 m mal 0,27 m, auf Papier 16 mm mal 5,3 mm: eine Deckenrosette mit Zugentlastung, ein dünnes Kabel, eine Messinghülse, eine tiefe Emaillekuppel mit Wulstrand und darunter gerade die Kuppe der Lampe. Vorderansicht: die Leuchte ist um ihre senkrechte Achse drehsymmetrisch, die Vorderansicht wiederholt daher die Seitenansicht, aus denselben Drehteilen gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Deckenrosette von 0,1 m, die Kabel und Hülse verdeckt."
+      },
+      "retained": {
+        "en": "Overall height 0.8 m, shade width 0.266 m and depth 0.133 m, the rolled rim, the cord grip under the rose, the domed cord-grip collar, the bulb (A60, 0.06 m by 0.105 m) with its E27 cap, cap thread and filament in their true place inside the dome, the highlight on the shade.",
+        "de": "Gesamthöhe 0,8 m, Schirmbreite 0,266 m und -tiefe 0,133 m, der Wulstrand, die Zugentlastung unter der Rosette, die gewölbte Zugentlastungshülse, die Lampe (A60, 0,06 m mal 0,105 m) mit E27-Sockel, Sockelgewinde und Wendel an ihrem wahren Ort in der Kuppel, das Glanzlicht am Schirm."
+      },
+      "merged": {
+        "en": "Nothing is merged: every part has its own shape; the bulb, its cap and the lampholder lie behind the shade, which is drawn over them.",
+        "de": "Nichts ist zusammengefasst: jedes Teil hat eine eigene Form; Lampe, Sockel und Fassung liegen hinter dem Schirm, der über ihnen gezeichnet ist."
+      },
+      "omitted": {
+        "en": "The lampholder inside the dome (hidden), the M10 nipple and its lock nut, the pull-switch, the bulb text. The top view omits cord, collar, lampholder and bulb, which hide under the rose and the shade; the rim bead lies 3 mm inside the outline there and is not drawn as a second line.",
+        "de": "Die Fassung in der Kuppel (verdeckt), der M10-Nippel mit Kontermutter, der Zugschalter, die Lampenbeschriftung. Die Draufsicht lässt Kabel, Hülse, Fassung und Lampe weg, die unter Rosette und Schirm verdeckt sind; der Randwulst liegt dort 3 mm innerhalb des Umrisses und wird nicht als zweite Linie gezeichnet."
+      },
+      "thinElements": {
+        "en": "The 6.6 mm cord is a 0.13 mm line and relies on the 0.18 mm pen; the filament is a 0.13 mm detail line with a 1 mm coil; the 6 mm rim bead is a small step at the rim corners.",
+        "de": "Das 6,6 mm dicke Kabel ist eine 0,13 mm breite Linie und stützt sich auf den 0,18-mm-Strich; die Wendel ist ein 0,13-mm-Detailzug mit einer 1-mm-Wicklung; der 6-mm-Randwulst ist eine kleine Stufe an den Randecken."
+      },
+      "hatching": {
+        "en": "None; the highlight on the shade is one detail line.",
+        "de": "Keine; das Glanzlicht am Schirm ist ein Detailzug."
+      },
+      "styles": {
+        "en": "Rose 0.7, cord 0.15, brass 0.45, shade 0.4 with a light highlight, bulb glass 0.9 very light; body pen 0.18 mm, detail 0.13 mm.",
+        "de": "Rosette 0,7, Kabel 0,15, Messing 0,45, Schirm 0,4 mit hellem Glanzlicht, Lampenglas 0,9 sehr hell; Körperstift 0,18 mm, Detail 0,13 mm."
+      },
+      "overlays": {
+        "en": "Bulb glass, shade, cap with collar, cord and rose are separate regions: in the thermal view the shade and the glass tip below it glow, the cord and rose stay cool.",
+        "de": "Lampenglas, Schirm, Kappe mit Hülse, Kabel und Rosette sind getrennte Regionen: in der Thermalansicht glühen der Schirm und die Glaskuppe darunter, Kabel und Rosette bleiben kühl."
+      }
+    },
+    "100": {
+      "silhouette": {
+        "en": "A hanging bell 8 mm by 2.7 mm on paper: a disc, a cord, a collar and a plain deep dome with the bulb tip below its rim. Front view: the rotationally symmetric side view redrawn. Top view: the 0.266 m shade disc under the 0.1 m rose.",
+        "de": "Eine hängende Glocke von 8 mm mal 2,7 mm auf Papier: eine Scheibe, ein Kabel, eine Hülse und eine schlichte tiefe Kuppel mit der Lampenkuppe unter ihrem Rand. Vorderansicht: die drehsymmetrische Seitenansicht neu gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Rosette von 0,1 m."
+      },
+      "retained": {
+        "en": "Height 0.8 m, shade width 0.266 m and depth 0.133 m, the cord drop, the brass collar, the bulb with its cap in their true place inside the dome.",
+        "de": "Höhe 0,8 m, Schirmbreite 0,266 m und -tiefe 0,133 m, die Abhängung, die Messinghülse, die Lampe mit Sockel an ihrem wahren Ort in der Kuppel."
+      },
+      "merged": {
+        "en": "The rolled rim becomes a short flare of the dome; the cord grip joins the rose, the rounded top joins the collar.",
+        "de": "Der Wulstrand wird zu einem kurzen Ausstellen der Kuppel; die Zugentlastung geht in der Rosette auf, die gerundete Kappe in der Hülse."
+      },
+      "omitted": {
+        "en": "Thread lines, filament and its supports, the highlight on the shade, the lampholder inside the dome, the pull-switch. The top view omits cord, collar, lampholder and bulb.",
+        "de": "Gewindelinien, Wendel und Haltedrähte, das Glanzlicht am Schirm, die Fassung in der Kuppel, der Zugschalter. Die Draufsicht lässt Kabel, Hülse, Fassung und Lampe weg."
+      },
+      "thinElements": {
+        "en": "The cord is widened from 6.6 to 9 mm (0.09 mm paper) so that fill and 0.18 mm pen reach the feature width.",
+        "de": "Das Kabel ist von 6,6 auf 9 mm verbreitert (0,09 mm Papier), damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Rose 0.7, cord 0.15, brass 0.45, shade 0.4, glass 0.9; one body pen of 0.18 mm.",
+        "de": "Rosette 0,7, Kabel 0,15, Messing 0,45, Schirm 0,4, Glas 0,9; ein Körperstift von 0,18 mm."
+      },
+      "overlays": {
+        "en": "Each part keeps its region: the glass and shade carry the heat of the lamp.",
+        "de": "Jedes Teil behält seine Region: Glas und Schirm tragen die Wärme der Lampe."
+      }
+    },
+    "200": {
+      "silhouette": {
+        "en": "A hanging sign 4 mm by 1.3 mm on paper: a bar, a cord and a bell shade on a short neck. Front view: the rotationally symmetric side view redrawn. Top view: the 0.266 m shade disc under the 0.1 m rose.",
+        "de": "Ein hängendes Zeichen von 4 mm mal 1,3 mm auf Papier: ein Balken, ein Kabel und ein Glockenschirm auf kurzem Hals. Vorderansicht: die drehsymmetrische Seitenansicht neu gezeichnet. Draufsicht: die Schirmscheibe von 0,266 m unter der Rosette von 0,1 m."
+      },
+      "retained": {
+        "en": "Height 0.8 m, shade width 0.266 m, the cord drop and the bulb tip at the rim.",
+        "de": "Höhe 0,8 m, Schirmbreite 0,266 m, die Abhängung und die Lampenkuppe am Rand."
+      },
+      "merged": {
+        "en": "Collar and shade are one shape, the neck of the bell; lampholder, cap and glass are one bulb shape behind the shade, and the lampholder region joins the shade shape as a merged region.",
+        "de": "Hülse und Schirm sind eine Form, der Hals der Glocke; Fassung, Sockel und Glas sind eine Lampenform hinter dem Schirm, und die Fassungsregion wird der Schirmform zusammengeführt."
+      },
+      "omitted": {
+        "en": "Rolled rim, cord grip, thread, filament, highlight and the pull-switch. The top view omits cord and bulb.",
+        "de": "Wulstrand, Zugentlastung, Gewinde, Wendel, Glanzlicht und Zugschalter. Die Draufsicht lässt Kabel und Lampe weg."
+      },
+      "thinElements": {
+        "en": "The cord is widened from 6.6 to 14 mm (0.07 mm paper) and the rose from 24 to 30 mm so that fill and 0.18 mm pen reach the feature width.",
+        "de": "Das Kabel ist von 6,6 auf 14 mm (0,07 mm Papier) und die Rosette von 24 auf 30 mm verbreitert, damit Füllung und 0,18-mm-Strich die Mindestbreite erreichen."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Rose 0.7, cord 0.15, shade 0.4, glass 0.85; one body pen of 0.18 mm.",
+        "de": "Rosette 0,7, Kabel 0,15, Schirm 0,4, Glas 0,85; ein Körperstift von 0,18 mm."
+      },
+      "overlays": {
+        "en": "The shade shape lists shade and lampholder as merged regions; the bulb is its own region.",
+        "de": "Die Schirmform führt Schirm und Fassung als zusammengeführte Regionen; die Lampe ist eine eigene Region."
+      }
+    }
+  },
+  "volumes": {
+    "50": [
+      {
+        "en": "Every part is turned about the vertical axis of the hanging rig, from its real section: the rose with a rounded lower edge and a 14 mm cord grip, the 6.6 mm textile cord at true size (slender), the brass cord-grip collar with its domed top, the 0.6 mm enamelled steel dome from the nipple hole into a 6 mm rolled rim bead, the brass E27 lampholder (40 by 65 mm) clamped under the dome apex, and the A60 bulb: E27 cap with its contact and insulator shoulder, glass envelope with the A60 neck entering the cap. The bulb is screwed into the lampholder, so the bulb hangs from the lampholder and its tip shows 7.5 mm below the rim.",
+        "de": "Jedes Teil ist um die senkrechte Achse des hängenden Rigs gedreht, aus seinem wahren Querschnitt: die Rosette mit gerundeter Unterkante und 14-mm-Zugentlastung, das 6,6-mm-Textilkabel in wahrer Größe (schlank), die Messing-Zugentlastungshülse mit gewölbter Kappe, die emaillierte Stahlkuppel von 0,6 mm vom Nippelloch bis in einen gerollten Randwulst von 6 mm, die Messing-E27-Fassung (40 mal 65 mm) unter dem Kuppelscheitel eingespannt, und die A60-Lampe: E27-Sockel mit Kontakt und Isolierschulter, Glaskolben mit dem A60-Hals, der in den Sockel greift. Die Lampe ist in die Fassung geschraubt, hängt also an der Fassung, und ihre Kuppe zeigt sich 7,5 mm unter dem Rand."
+      },
+      {
+        "en": "Thermal: every region reuses the body surfaces it is: rose with grip, cord, collar with lampholder and cap (lampholder), glass, and the dome sheet whose inner and outer faces both exchange heat; the shade plume leaves from a 7.5 mm outlet ring on the crown around the collar. Structure: the ceiling hook is a pin under the ceiling, a hanger carries the load through the rose to the cord grip, the cord is the tension member, the cord grip of the collar, the M10 nipple and the lampholder carry the shade (clamped by the lock nut at the apex) and the bulb (by the E27 thread); masses sit at the centres of mass of rose, cord, holder, shade and bulb.",
+        "de": "Thermik: jede Region nutzt die Körperflächen, die sie ist: Rosette mit Zugentlastung, Kabel, Hülse mit Fassung und Sockel (Fassung), Glas, und das Kuppelblech, dessen Innen- und Außenseite beide Wärme tauschen; die Schirmfahne verlässt einen 7,5-mm-Auslassring auf dem Scheitel um die Hülse. Tragwerk: der Deckenhaken ist ein Bolzen unter der Decke, ein Gehänge trägt die Last durch die Rosette zur Zugentlastung, das Kabel ist der Zugstab, Zugentlastung der Hülse, M10-Nippel und Fassung tragen den Schirm (am Scheitel von der Kontermutter eingespannt) und die Lampe (über das E27-Gewinde); Massen sitzen in den Schwerpunkten von Rosette, Kabel, Fassung, Schirm und Lampe."
+      }
+    ],
+    "100": [
+      {
+        "en": "1:100 is turned anew for a 15 mm feature: the rose loses its cord grip and its round edge becomes a chamfer, the collar loses its domed top, the dome is a ten-step curve of the same 0.6 mm sheet with the bead reduced to a short flare to the drawn 0.266 m, the lampholder is a plain 40 mm cylinder, and cap and glass are one turned bulb; the cord stays at its true 6.6 mm as a slender part.",
+        "de": "1:100 ist für eine Strukturgröße von 15 mm neu gedreht: die Rosette verliert ihre Zugentlastung und ihre Rundung wird eine Fase, die Hülse verliert ihre gewölbte Kappe, die Kuppel ist eine Kurve aus zehn Schritten desselben 0,6-mm-Blechs mit dem Wulst als kurzem Ausstellen auf die gezeichneten 0,266 m, die Fassung ist ein schlichter 40-mm-Zylinder, und Sockel und Glas sind eine gedrehte Lampe; das Kabel bleibt als schlankes Teil bei seinen wahren 6,6 mm."
+      },
+      {
+        "en": "Thermal reuses the body: collar and lampholder are the lampholder region, the bulb is the glass region (its 2.4 mm of visible cap are merged into it), the plume outlet ring is 15 mm. Structure keeps the load path with merged parts: the pin, the cord, the nipple and lampholder as one turned member, the lock-nut joint at the apex, the dome and the cap as members, and the masses of holder, shade and bulb.",
+        "de": "Die Thermik nutzt den Körper: Hülse und Fassung sind die Fassungsregion, die Lampe ist die Glasregion (ihre 2,4 mm sichtbarer Sockel gehen darin auf), der Fahnenauslassring ist 15 mm stark. Das Tragwerk behält den Lastweg mit zusammengefassten Teilen: Bolzen, Kabel, Nippel und Fassung als ein Drehteil, das Kontermuttergelenk am Scheitel, Kuppel und Sockel als Stäbe und die Massen von Fassung, Schirm und Lampe."
+      }
+    ],
+    "200": [
+      {
+        "en": "1:200 is four masses, as its drawing: a 30 mm rose disc, the cord at its true 6.6 mm (slender), the shade as one turned bell with the collar as its 31 mm neck and a 3 mm wall, and one bulb body that unites lampholder, cap and a six-point glass pear, so the bulb still hangs from the apex inside the bell.",
+        "de": "1:200 sind wie seine Zeichnung vier Massen: eine 30-mm-Rosettenscheibe, das Kabel mit seinen wahren 6,6 mm (schlank), der Schirm als eine gedrehte Glocke mit der Hülse als 31-mm-Hals und 3 mm Wand, und ein Lampenkörper, der Fassung, Sockel und eine Glasbirne aus sechs Punkten vereint, sodass die Lampe weiter am Scheitel in der Glocke hängt."
+      },
+      {
+        "en": "Thermal: rose, cord, shade and bulb reuse the body; the lampholder region is its own turned solid of collar and lampholder inside the neck and the bell; the plume outlet ring is 30 mm. Structure: a 30 mm pin in the rose, the cord, a 31 mm holder rod down to the lampholder mouth, the bell as the shade member, a 31 mm cap rod and the mass of the shade.",
+        "de": "Thermik: Rosette, Kabel, Schirm und Lampe nutzen den Körper; die Fassungsregion ist ein eigener Drehkörper aus Hülse und Fassung in Hals und Glocke; der Fahnenauslassring ist 30 mm stark. Tragwerk: ein 30-mm-Bolzen in der Rosette, das Kabel, ein 31-mm-Fassungsstab bis zur Fassungsmündung, die Glocke als Schirmstab, ein 31-mm-Sockelstab und die Masse des Schirms."
+      }
+    ]
+  }
+}

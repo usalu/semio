@@ -8,7 +8,7 @@ use crate::mutations::Wfc3dMutation;
 use semio_framework_tool_machine::{NodeDragEmit, NodeDragRecord};
 use crate::editor::wfc3d::modes::edit::tools::drag::*;
 use crate::editor::wfc3d::modes::edit::windows::graph::WFC_GRAPH_WINDOW;
-use crate::editor::wfc3d::{Wfc3dEditor, Wfc3dEditorCommand, WFC_3D_GRAPH_UNIT};
+use crate::editor::wfc3d::{Wfc3dEditor, WFC_3D_GRAPH_UNIT, WFC_3D_NODE_GRAPH_EDIT};
 use crate::mutations::{drag_slots, resize_slot};
 use crate::{Wfc3dSnapshot, WFC3D_DOCUMENT_SCHEMA};
 use semio_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
@@ -47,7 +47,7 @@ fn two_releases_are_two_transactions() {
 #[test]
 fn a_wire_drawn_by_the_same_gesture_rides_the_same_transaction() {
     let edge = crate::schema::snapshot::SlotEdge { id: "edge-room-a-room-b".into(), from_slot_id: "room-a".into(), to_slot_id: "room-b".into(), relation: "adjacent".into() };
-    let wire = crate::mutations::connect_slots(crate::schema::snapshot::canonical_edge_index(&base(), "edge-room-a-room-b"), edge);
+    let wire: crate::Wfc3dMutation = crate::mutations::connect_slots(crate::schema::snapshot::canonical_edge_index(&base(), "edge-room-a-room-b"), edge);
     let (_, leaves) = wfc3d_drag_tool("nodeGraphEdit", "seed", &base(), vec![wire.clone()], &[record("node-drag:1", &["room-a"], 120.0, 0.0)], 120.0).committed().expect("the release commits");
     assert_eq!(leaves.len(), 2);
     assert_eq!(leaves[0], wire, "the wire first, then the drag");
@@ -110,40 +110,45 @@ fn app() -> Wfc3dApp {
 fn graph_meta() -> ActionMeta {
     let window_instances = vec![ViewWindowInstance { id: WFC_GRAPH_WINDOW.into(), window_kind_id: WFC_GRAPH_WINDOW.into() }];
     let view = ViewModel { window_instances, ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.for_window_instance(WFC_GRAPH_WINDOW).expect("the graph window is in the roster");
-    ActionMeta { view_state: Some(view), ..semio_plugin::artifact_app_laws::meta("local") }
+    ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..semio_plugin::artifact_app_laws::meta("local") }
 }
 
-fn settle<E: std::fmt::Debug>(app: &mut Wfc3dApp, result: Result<InvocationResult, E>) -> InvocationResult {
-    let mut result = result.expect("the dispatch is admitted");
-    for _ in 0..1_048_576 {
-        while let Some(page) = app.take_typed_operation_result_page(1) {
-            assert!(page.lane != semio_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-            app.acknowledge_typed_operation_result(page.token).expect("the page is acknowledged");
+fn settle(app: &mut Wfc3dApp, mut result: InvocationResult) -> InvocationResult {
+    let receipt = block_on(semio_plugin::artifact_app_laws::settle_registered_typed_operation(
+        &mut app.app,
+        1,
+        semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT,
+        &mut semio_plugin::artifact_app_laws::fixture_identity(),
+        app.scope.cx(),
+    )).unwrap_or_else(|failure| {
+        let follower = app.app.tools.original_tool_follow.as_ref().map(|owner| owner.progress());
+        panic!("original drag settlement failed: {failure:?}; tool follower {follower:?}; {}", app.typed_operation_diagnostic())
+    });
+    for patch in receipt.history_patches {
+        match result.history_patch.as_mut() {
+            Some(previous) => previous.upserts.extend(patch.upserts),
+            None => result.history_patch = Some(patch),
         }
-        while let Some(completion) = block_on(app.take_typed_operation_completion()).expect("the completion is taken") {
-            if let Some(patch) = completion.history_patch {
-                match result.history_patch.as_mut() {
-                    Some(previous) => previous.upserts.extend(patch.upserts),
-                    None => result.history_patch = Some(patch),
-                }
-            }
-        }
-        while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() {}
-        let _ = app.take_typed_operation_ui_scope();
-        if !app.has_pending_typed_operations() {
-            return result;
-        }
-        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
-        block_on(app.app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
     }
-    panic!("the wfc3d dispatch did not settle");
+    result
 }
 
 fn drag(app: &mut Wfc3dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
+    use semio_framework_value::DslValue;
+
     let row = record(gesture, node_ids, dx * WFC_3D_GRAPH_UNIT, dy * WFC_3D_GRAPH_UNIT).to_row();
-    let command = Wfc3dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
-    let result = block_on(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &graph_meta(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
-    settle(app, result)
+    let args = DslValue::object([("operations".to_owned(), DslValue::Array(vec![row]))]);
+    let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(
+        &mut app.app,
+        WFC_3D_NODE_GRAPH_EDIT,
+        Some(args),
+        &graph_meta(),
+        &mut semio_plugin::artifact_app_laws::fixture_identity(),
+        app.scope.cx(),
+        semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance,
+    ));
+    let invocation = result.unwrap_or_else(|error| panic!("drag {gesture} dispatch was refused: {error:?}"));
+    settle(app, invocation)
 }
 
 fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryEntry> {
@@ -158,8 +163,9 @@ fn close(app: &mut Wfc3dApp) {
 fn one_mounted_drag_is_one_edit_one_row_and_one_transaction() {
     let mut app = app();
     let before = app.snapshot().expect("projection");
-    let rows = edit_rows(&drag(&mut app, "node-drag:1", &["room-a"], 1.0, 0.0));
-    assert_eq!(rows.len(), 1, "one drag, one history row: {rows:?}");
+    let invocation = drag(&mut app, "node-drag:1", &["room-a"], 1.0, 0.0);
+    let rows = edit_rows(&invocation);
+    assert_eq!(rows.len(), 1, "one drag, one history row: {invocation:?}");
     let transaction = rows[0].transaction.as_ref().expect("the row is keyed by its tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.wfc.wfc3d@1/*#editor#nodeGraphEdit", "{transaction:?}");
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("drag-slots")), "the op is the relative leaf: {:?}", rows[0].op_lines);
@@ -201,7 +207,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = drag_slots(vec!["room-a".into()], 3.0, -1.0, 0.5);
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: WFC3D_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+        let drafts = protocol::HistoryInputDrafts::from([(ids[0].clone(), protocol::InputReplacement::Input { schema: WFC3D_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })]);
         let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
         assert_eq!(preview, base(), "the preview base is the state right before the edited drag");
         vcs::apply_mutation(&preview, &edited).map(|(applied_state, _)| { preview = applied_state; }).expect("the draft applies to its base");
@@ -217,16 +223,8 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
         store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-        let mut disposer = semio_plugin::bounded_document_store_disposer::<Wfc3dSnapshot, crate::Wfc3dMutation>();
-        for _ in 0..4_096 {
-            if disposer.terminal_is_empty(&store) {
-                break;
-            }
-            let demand = disposer.retirement_demands(&store, 64 * 1024).expect("the store quotes its next retirement turn");
-            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(64 * 1024), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            disposer.close_step(&mut store, grant).expect("the store retires");
-        }
-        assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
+        store.close_owned_unscheduled().expect("the standalone store retires through its bounded owners");
+        assert!(store.close_owned_terminal_is_empty(), "the standalone store retires to its terminal-empty shell");
     });
 }
 //#endregion ⏪️TimeTravel

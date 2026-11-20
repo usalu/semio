@@ -1,12 +1,13 @@
+import{freeSpaceSyncV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 /** 🌐 The per-host graph service: one process per user holds the fact index once and answers plan and status requests from every agent, worktree and workspace over one local socket or pipe. */
 
 import {createServer,connect} from "node:net";
-import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,statfsSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {createHash,randomBytes} from "node:crypto";
 import {join} from "node:path";
 import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.mjs";
-import {HOST_POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import {HOST_POLICY_V1,renderBothV1,renderTextV1,SUPPORTED_LANGUAGES_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {authorizeCapabilityV1,createRootKeyV1,verifyCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import {workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "../🚦️governor/🟨️.mjs";
@@ -14,7 +15,9 @@ import {failureRefusalV1,serviceRouteV1} from "../🧯️failure/🟨️.mjs";
 import {createIndexPoolV1} from "./🧊️pool/🟨️.mjs";
 import {planRetentionV1} from "./🧹️retention/🟨️.mjs";
 import {boundedCacheStatsV1} from "../../../🧊️bounded/🟨️.mjs";
+import {describeHostReasonV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
 import {createHostReloadV1} from "../../🔄️reload/🟨️.mjs";
+import {READY_SLICE_REPORT_POLICY_V1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 /** 🏃 Whether a build or test run of this machine still holds a live capacity grant (its row is touched by the run's heartbeat): the service hosts the cache endpoint of that run, so a silent run, a long test suite that prints nothing, is not idle time, and the service must outlive it. */
 async function runInFlightV1(){
  try{
@@ -64,10 +67,20 @@ function atomicWrite(path,text,mode=0o600){
 
 /** 💽 Frees spilled slices, oldest first and never the one about to be written, until the directory's device has room for the next slice body; leftover temporary files of failed writes go first. The room comes from the device's own free-space quote, so a small runtime filesystem never fails a write that evicting a stale slice would have admitted. */
 export function makeRoomV1(directory,keep,bytes){
- const entries=readdirSync(directory),free=()=>{const quote=statfsSync(directory);return quote.bavail*quote.bsize;};
+ const entries=readdirSync(directory),free=()=>{const quote=freeSpaceSyncV1(directory);if(quote===undefined)throw Error("Resident slice free space could not be measured");return quote.availableBytes;};
  for(const name of entries)if(name.endsWith(".tmp"))rmSync(join(directory,name),{force:true});
  const spilled=entries.filter(name=>name.endsWith(".json")&&name!==keep).map(name=>({name,at:statSync(join(directory,name)).mtimeMs})).sort((a,b)=>a.at-b.at);
  for(const stale of spilled){if(free()>=bytes)break;rmSync(join(directory,stale.name),{force:true});}
+}
+
+/** 🪪️ Renders the gate's reason in the connection's language without naming unobserved capacity. */
+export function renderSliceReservationV1({requested,wait,granted},seconds,languages=SUPPORTED_LANGUAGES_V1){
+ const fields={seconds,requested};
+ if(granted!==undefined)return renderTextV1("host-slice-reservation-granted",{...fields,granted},languages);
+ if(wait===undefined)return renderTextV1("host-slice-reservation-pending",fields,languages);
+ const {reason,active,queued,spareMegabytes:spare,floorMegabytes:floor,minimumMegabytes:minimum,waitedSeconds:waited}=wait,output={};
+ for(const language of languages)if(SUPPORTED_LANGUAGES_V1.includes(language))Object.assign(output,renderTextV1("host-slice-reservation-wait",{...fields,reason:describeHostReasonV1(language,reason),active,queued,spare,floor,minimum,waited},[language]));
+ return output;
 }
 
 /** 🌐 Creates the service; call `start()`, then wait for `closed`. `access` (`{root,platform,home}`, default the working directory and the running system) names the checkout whose refusal by macOS is the missing file access consent: after answering such a request the service closes itself with the reason `access-denied` instead of staying alive without the consent. `ports.planner` is `{identify?,load,plan,contentDigest?,bind?}` (`contentDigest` and `bind` together let workspaces with equal captured inputs share one job, `bind` answering each client's own pin, manifest and revision) (see `createGraphPlannerPortV1`); `ports.admission` defaults to the fair governor. */
@@ -119,8 +132,8 @@ export function createHostServiceV1(options){
   if(workspace){workspaces.delete(frame.workspace);workspaces.set(frame.workspace,workspace);workspace.lastUsedAt=now();return workspace;}
   if(workspaceIdV1(frame.root)!==frame.workspace)return undefined;
   try{if(!lstatSync(frame.root).isDirectory())return undefined;}catch{return undefined;}
-  while(workspaces.size>=policy.maximumWorkspaces)closeWorkspace(workspaces.keys().next().value);
-  workspace={id:frame.workspace,root:frame.root,lastUsedAt:now(),plans:0,handle:undefined,indexKey:undefined};
+  for(const idle of[...workspaces.values()]){if(workspaces.size<policy.maximumWorkspaces)break;if(idle.loads===0)closeWorkspace(idle.id);}
+  workspace={id:frame.workspace,root:frame.root,lastUsedAt:now(),plans:0,loads:0,handle:undefined,indexKey:undefined};
   workspaces.set(frame.workspace,workspace);
   return workspace;
  };
@@ -138,7 +151,8 @@ export function createHostServiceV1(options){
   if(workspace.handle)return{hit:true};
   const started=performance.now();
   await progress("load",0,1,"host-load",{workspace:workspace.id});
-  const handle=await pool.acquire(key,loadSignal=>ports.planner.load({root:workspace.root,workspace:workspace.id,signal:loadSignal}),signal);
+  workspace.loads++;
+  const handle=await pool.acquire(key,loadSignal=>ports.planner.load({root:workspace.root,workspace:workspace.id,signal:loadSignal}),signal).finally(()=>{workspace.loads--;workspace.lastUsedAt=now();});
   if(workspaces.get(workspace.id)!==workspace){handle.release();throw Object.assign(new Error("closed"),{code:"closed"});}
   if(workspace.handle)handle.release();else{workspace.handle=handle;workspace.indexKey=key;}
   phases.push({phase:"load",ms:Math.round((performance.now()-started)*1000)/1000});
@@ -157,14 +171,18 @@ export function createHostServiceV1(options){
   }
   const controller=new AbortController();connection.requests.set(frame.id,controller);
   const deadline=frame.deadlineMs?setTimeout(()=>controller.abort(Object.assign(new Error("deadline"),{code:"deadline"})),frame.deadlineMs):undefined;
-  const client={connection,frame,controller,stage:"starting",job:undefined},began=now();
-  const alive=setInterval(()=>{if(keepaliveDueV1({stage:client.stage,held:client.job?.clients.has(client),sentAt:connection.sentAt??began,now:now(),intervalMilliseconds:policy.requestKeepaliveMilliseconds}))void send(connection,{t:"progress",id:frame.id,phase:"alive",done:0,total:0,message:text(connection,"host-alive",{seconds:Math.round((now()-began)/1000)})});},Math.max(10,Math.floor(policy.requestKeepaliveMilliseconds/2)));alive.unref?.();
+  const client={connection,frame,controller,stage:"starting",aliveKey:"host-alive",job:undefined},began=now();
+  const alive=setInterval(()=>{if(keepaliveDueV1({stage:client.stage,held:client.job?.clients.has(client),sentAt:connection.sentAt??began,now:now(),intervalMilliseconds:policy.requestKeepaliveMilliseconds}))void send(connection,{t:"progress",id:frame.id,phase:"alive",done:0,total:0,message:text(connection,client.aliveKey,{seconds:Math.round((now()-began)/1000)})});},Math.max(10,Math.floor(policy.requestKeepaliveMilliseconds/2)));alive.unref?.();
   try{
    await send(connection,{t:"accepted",id:frame.id,queue:governor.queued});
    controller.signal.throwIfAborted();
    const workspace=openWorkspace(frame);
    if(!workspace){await refuse(connection,frame.id,"invalid","host-unknown-workspace",{workspace:frame.workspace},"never");return;}
-   const indexKey=await indexKeyOf(workspace,controller.signal),scope=await scopeOf(workspace,frame,controller.signal);
+   client.aliveKey="host-alive-identify";
+   const indexKey=await indexKeyOf(workspace,controller.signal);
+   client.aliveKey="host-alive-scope";
+   const scope=await scopeOf(workspace,frame,controller.signal);
+   client.aliveKey="host-alive";
    let outcome;
    do outcome=await attach(workspace,client,indexKey,scope);while(outcome.error?.code==="unanswered"&&!controller.signal.aborted);
    if(outcome.error)throw outcome.error;
@@ -210,7 +228,7 @@ export function createHostServiceV1(options){
  }
 
  const ownerLine=row=>row.name+" ("+(row.kind??"-")+", "+Math.round(row.seconds)+", "+(row.rows??0)+")";
- const sendProgress=(client,{phase,done,total,key,fields})=>{lastProgressAt=now();const{running,decision,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}})});};
+ const sendProgress=(client,{phase,done,total,key,fields})=>{lastProgressAt=now();const{running,decision,reservation,...rest}=fields,owners=running===undefined?undefined:running.slice(0,3).map(ownerLine).join(", ");return send(client.connection,{t:"progress",id:client.frame.id,phase,done,total,message:reservation===undefined?text(client.connection,owners===undefined?key:decision===undefined?"host-slice-owners":"host-slice-owners-"+decision.key,{...rest,...owners===undefined?{}:{owners},...decision===undefined?{}:{used:decision.used,budget:decision.budget,kind:decision.kind??"",minimum:decision.minimum??0,floor:decision.floor??0,limit:decision.limit??0,cause:decision.cause??""}}):renderSliceReservationV1(reservation,rest.seconds,client.connection.languages)});};
 
  const settleAfterJobV1=async()=>{if(jobs.size>0||governor.inFlight>0)return;try{await ports.settle?.();}catch{}};
  function startJob(key,workspace,frame,indexKey){
@@ -229,7 +247,8 @@ export function createHostServiceV1(options){
   const phases=[];let release;
   try{
    const queued=performance.now();
-   release=await governor.enter(frame.agent+"/"+frame.priority,job.controller.signal,position=>{for(const client of job.clients)void send(client.connection,{t:"progress",id:client.frame.id,phase:"queued",done:0,total:0,message:text(client.connection,"queued",{position})});});
+   release=await governor.enter(frame.agent+"/"+frame.priority,job.controller.signal,position=>{void progress("queued",0,0,"queued",{position});});
+   job.progress.delete("queued");
    phases.push({phase:"queued",ms:Math.round((performance.now()-queued)*1000)/1000});
    job.controller.signal.throwIfAborted();
    const{hit}=await ensureIndex(workspace,job.controller.signal,phases,progress,indexKey);
@@ -241,7 +260,19 @@ export function createHostServiceV1(options){
    if(planHit){memo.delete(memoKey);memo.set(memoKey,plan);if(plan.slice)try{utimesSync(join(spills,plan.slice.hash+".json"),new Date(),new Date());}catch{}}
    else{
     await progress("plan",0,frame.targets.length,frame.targets.includes("*:*")?"host-plan-roster":"host-plan",{targets:frame.targets.length});
-    const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,signal:job.controller.signal,progress:(milliseconds,detail)=>progress("slice",milliseconds,0,detail?"host-slice-detail":"host-slice",{seconds:Math.round(milliseconds/1000),...detail?{phase:detail.phase,done:detail.done,total:detail.total,...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{}})});
+     const subscribers=()=>[...job.clients].filter(client=>client.frame.sliceReport===true&&!client.controller.signal.aborted&&!client.reportPending);
+     const reportProgress=(milliseconds,detail)=>{
+      if(detail?.sliceReport!==undefined){
+       const report=detail.sliceReport;
+       if(typeof report==="string"&&Buffer.byteLength(report)<=READY_SLICE_REPORT_POLICY_V1.fileBytes)return Promise.all(subscribers().map(client=>{
+        client.reportPending=true;
+        return send(client.connection,{t:"slice-report",id:client.frame.id,report}).finally(()=>{client.reportPending=false;});
+       }));
+       return;
+      }
+      return progress("slice",milliseconds,0,detail?"host-slice-detail":"host-slice",{seconds:Math.round(milliseconds/1000),...detail?{phase:detail.phase,done:detail.done,total:detail.total,...detail.reservation===undefined?{}:{reservation:detail.reservation},...detail.running===undefined?{}:{running:detail.running,...detail.decision===undefined?{}:{decision:detail.decision}}}:{}});
+     };
+     const answer=await ports.planner.plan({index:workspace.handle,targets:frame.targets,revision:frame.revision,parent:frame.parent,dirty:frame.dirty,cursor,agent:frame.agent,workspace:workspace.id,root:workspace.root,arguments:frame.arguments,tool:frame.tool,graphPolicy:frame.graphPolicy,signal:job.controller.signal,progress:reportProgress,wantsReport:()=>subscribers().length>0});
     planned.computed++;planned.lastMilliseconds=Math.round(performance.now()-started);planned.milliseconds+=planned.lastMilliseconds;planned.captureFiles=answer.stats?.captureFiles??0;planned.captureProbes=answer.stats?.captureProbes??0;planned.unstaged=answer.stats?.unstaged??0;planned.load=answer.stats?.load;
     plan={revision:answer.revision,tasks:answer.tasks,...answer.slice?{slice:spill(answer.slice).ref}:{},...answer.manifest?{manifest:answer.manifest}:{},...answer.pin?{pin:answer.pin}:{}};
     if(!live&&!answer.pin){memo.set(memoKey,plan);while(memo.size>policy.planMemoEntries)memo.delete(memo.keys().next().value);}
@@ -340,8 +371,8 @@ export function createHostServiceV1(options){
 
  const sweep=()=>{
   const at=now();
-  for(const workspace of[...workspaces.values()])if(at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
-  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...connections].some(connection=>connection.requests.size>0);
+  for(const workspace of[...workspaces.values()])if(workspace.loads===0&&at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
+  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...workspaces.values()].some(workspace=>workspace.loads>0)||[...connections].some(connection=>connection.requests.size>0);
   if(!governed&&rss>policy.maximumResidentBytes){
    for(const id of[...workspaces.keys()])closeWorkspace(id);
    pool.clear();memo.clear();globalThis.Bun?.gc?.(true);

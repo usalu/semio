@@ -1,12 +1,14 @@
 import {existsSync, realpathSync} from "node:fs";
 import {homedir} from "node:os";
-import {delimiter, dirname, join} from "node:path";
+import {dirname, join, posix, win32} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import type {NativeToolV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import {pythonInterpreterDirectoryV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
+import bootstrapPins from "../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json" with {type: "json"};
 import document from "./🔣️.json" with {type: "json"};
+import {toolSetupRefusalLinesV1} from "./🛑️refusal/🟦️.ts";
 
 if (validateJsonSchemaSubset(schema, document, schema).length) throw new Error("Closed pinned tool table required / Geschlossene Tabelle der gepinnten Werkzeuge erforderlich");
 
@@ -20,12 +22,12 @@ export type ToolPinV1 =
 export type ToolLocateV1 =
   | Readonly<{kind: "provisioned"; family: "bun" | "bazel" | "cargo" | "binaryen" | "dotnet"; executable: string}>
   | Readonly<{kind: "provisioned"; family: "native"; tool: NativeToolV1; executable: string}>
-  | Readonly<{kind: "path"; names: readonly string[]; directories: readonly string[]}>
+  | Readonly<{kind: "path"; names: readonly string[]; directories: readonly string[]; windowsProgramDirectories?: readonly string[]}>
   | Readonly<{kind: "python"; interpreter: string}>
-  | Readonly<{kind: "hook"}>;
+  | Readonly<{kind: "hook" | "bootstrap-node"}>;
 /** 🧰️ How a missing or drifted tool is provisioned. */
 export type ToolSetupKindV1 =
-  | Readonly<{kind: "bun" | "bootstrap" | "rust" | "dotnet" | "bazel" | "binaryen"}>
+  | Readonly<{kind: "bun" | "bootstrap" | "bootstrap-node" | "rust" | "dotnet" | "bazel" | "binaryen"}>
   | Readonly<{kind: "native"; tool: NativeToolV1}>
   | Readonly<{kind: "python"; interpreter: string}>
   | Readonly<{kind: "script"; script: string; prepare: readonly string[]; verify?: readonly string[]}>;
@@ -52,7 +54,7 @@ export type ToolContextV1 = Readonly<{
   resolvePackage(name: string, from: string): string;
   capture(command: string, args: readonly string[], cwd: string, signal: AbortSignal): Promise<string>;
   provisioned(locate: Extract<ToolLocateV1, {kind: "provisioned"}>, pin: string): string | undefined;
-  hook(row: ToolRowV1, pin: string, signal: AbortSignal): Promise<Readonly<{found: string | null; location: string | null}>>;
+  hook(row: ToolRowV1, pin: string, signal: AbortSignal): Promise<Readonly<{found: string | null; location: string | null; reason?: string}>>;
 }>;
 
 /** 🗣️ Renders one text of the table in the resolved language; without a resolvable language it renders every language, so no language is ever assumed. */
@@ -114,7 +116,27 @@ export function toolVersionMatchesV1(found: string, pin: string): boolean {
   return found === pin || found.startsWith(pin + ".");
 }
 
-const expand = (entry: string, context: ToolContextV1): string | undefined => entry.startsWith("$") ? context.environment[entry.slice(1)] : entry.startsWith("~") ? join(context.home, entry.slice(1)) : entry;
+const environmentValue = (environment:ToolContextV1["environment"], name:string, insensitive:boolean):string|undefined => environment[insensitive ? Object.keys(environment).find(key => key.toLowerCase() === name.toLowerCase()) ?? name : name];
+const expand = (entry:string, context:ToolContextV1, path:typeof win32):string|undefined =>
+  entry.startsWith("$") ? environmentValue(context.environment,entry.slice(1),context.platform === "win32") : entry.startsWith("~") ? path.join(context.home,entry.slice(1)) : entry;
+
+const absoluteWindowsDirectory = (value:string|undefined):value is string => value !== undefined && /^[A-Za-z]:[/\\]/u.test(value);
+const windowsNode = bootstrapPins.definitions.WindowsNodeInstallation.const;
+
+function windowsBootstrapNodeV1(pin:string,environment:ToolContextV1["environment"]):string|undefined {
+  const root = environmentValue(environment,windowsNode.environment,true);
+  if (absoluteWindowsDirectory(root) && new RegExp(windowsNode.versionPattern,"u").test(pin))
+    return win32.join(root,...windowsNode.directories,windowsNode.versionPrefix+pin,windowsNode.executable);
+}
+
+function windowsProgramDirectoriesV1(environment:ToolContextV1["environment"], names:readonly string[]):string[] {
+  const directories:string[] = [];
+  for (const name of ["ProgramW6432","ProgramFiles"]) {
+    const root = environmentValue(environment,name,true);
+    if (absoluteWindowsDirectory(root)) directories.push(...names.map(directory => win32.join(root,directory)));
+  }
+  return directories;
+}
 
 function pythonInterpreter(context: ToolContextV1, series: string): string | undefined {
   const directory = pythonInterpreterDirectoryV1(context.toolsRoot), windows = context.platform === "win32";
@@ -137,18 +159,23 @@ export function resolveSiblingPackageV1(root: string, name: string, from: string
 
 /** ⏮️ Finds the first copy of a tool the row's locators name: provisioned in the tools partition first, then installed on the machine. */
 export function locateToolV1(row: ToolRowV1, pin: string, context: ToolContextV1): string | undefined {
-  const suffix = context.platform === "win32" ? ".exe" : "";
+  const windows = context.platform === "win32", path = windows ? win32 : posix, suffix = windows ? ".exe" : "";
   for (const locate of row.locate) {
-    if (locate.kind === "provisioned") {
+    if (locate.kind === "bootstrap-node" && windows) {
+      const found = windowsBootstrapNodeV1(pin,context.environment);
+      if (found !== undefined && context.exists(found)) return found;
+    } else if (locate.kind === "provisioned") {
       const found = context.provisioned(locate, pin);
       if (found !== undefined && context.exists(found)) return found;
     } else if (locate.kind === "python") {
       const found = pythonInterpreter(context, pin);
       if (found !== undefined) return found;
     } else if (locate.kind === "path") {
-      const directories = [...locate.directories.map(entry => expand(entry, context)).filter((entry): entry is string => entry !== undefined), ...(context.environment[Object.keys(context.environment).find(name => name.toLowerCase() === "path") ?? "PATH"] ?? "").split(delimiter).filter(Boolean)];
+      const directories = locate.directories.map(entry => expand(entry,context,path)).filter((entry): entry is string => entry !== undefined);
+      if (windows && locate.windowsProgramDirectories !== undefined) directories.push(...windowsProgramDirectoriesV1(context.environment,locate.windowsProgramDirectories));
+      directories.push(...(environmentValue(context.environment,"PATH",true) ?? "").split(path.delimiter).filter(Boolean));
       for (const directory of directories) for (const name of locate.names) {
-        const candidate = join(directory, name.endsWith(suffix) ? name : name + suffix);
+        const candidate = path.join(directory, name.endsWith(suffix) ? name : name + suffix);
         if (context.exists(candidate)) return candidate;
       }
     }
@@ -165,12 +192,13 @@ export async function verifyToolV1(row: ToolRowV1, context: ToolContextV1, signa
   } catch (error) {
     return Object.freeze({id: row.id, pin: "-", found: null, status: "failed", location: null, message: (error as Error).message});
   }
+  let location: string | undefined;
   try {
     if (row.probe.mode === "hook") {
       const result = await context.hook(row, pin, signal);
-      return Object.freeze({id: row.id, pin, found: result.found, location: result.location, status: result.found === null ? "missing" : toolVersionMatchesV1(result.found, pin) ? "ok" : "differs"});
+      return Object.freeze({id: row.id, pin, found: result.found, location: result.location, status: result.found === null ? "missing" : toolVersionMatchesV1(result.found, pin) ? "ok" : "differs", ...result.reason === undefined ? {} : {message: result.reason}});
     }
-    const location = locateToolV1(row, pin, context);
+    location = locateToolV1(row, pin, context);
     if (location === undefined) return Object.freeze({id: row.id, pin, found: null, location: null, status: "missing"});
     const output = await context.capture(location, row.probe.arguments.map(argument => argument.replace("{pin}", pin)), context.root, signal);
     if (row.probe.mode === "listed") {
@@ -181,7 +209,8 @@ export async function verifyToolV1(row: ToolRowV1, context: ToolContextV1, signa
     return Object.freeze({id: row.id, pin, found, location, status: found === null ? "failed" : toolVersionMatchesV1(found, pin) ? "ok" : "differs"});
   } catch (error) {
     signal.throwIfAborted();
-    return Object.freeze({id: row.id, pin, found: null, location: null, status: "failed", message: (error as Error).message});
+    if ((error as Error).name === "ToolHookTimeout") throw error;
+    return Object.freeze({id: row.id, pin, found: null, location: location ?? null, status: "failed", message: (error as Error).message});
   }
 }
 
@@ -195,7 +224,7 @@ export async function verifyToolsV1(rows: readonly ToolRowV1[], context: ToolCon
 /** 🖨️ Renders the verification report as aligned lines in the resolved language, the verdict last. */
 export function renderToolReportV1(reports: readonly ToolReportV1[], environment: Readonly<Record<string, string | undefined>> = process.env): readonly string[] {
   const lines = [toolSetupMessageV1("header", {}, environment)];
-  for (const report of reports) lines.push([report.id.padEnd(14), report.pin.padEnd(21), (report.found ?? "-").padEnd(21), toolSetupMessageV1(report.status, {}, environment).padEnd(9), report.location ?? report.message ?? "-"].join(" "));
+  for (const report of reports) lines.push([report.id.padEnd(14), report.pin.padEnd(21), (report.found ?? "-").padEnd(21), toolSetupMessageV1(report.status, {}, environment).padEnd(9), report.message ?? report.location ?? "-"].join(" "));
   const problems = reports.filter(report => report.status !== "ok").length;
   lines.push(problems === 0 ? toolSetupMessageV1("clean", {count: reports.length}, environment) : toolSetupMessageV1("drift", {count: problems, total: reports.length}, environment));
   return Object.freeze(lines);
@@ -225,6 +254,7 @@ export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolCont
   const reports: ToolReportV1[] = [];
   for (const row of rows) {
     signal.throwIfAborted();
+    log(toolSetupMessageV1("verifying", {tool: row.id}, context.environment));
     const before = await verifyToolV1(row, context, signal);
     if (before.status === "ok") {
       log(toolSetupMessageV1("skipped", {tool: row.id, found: before.found ?? before.pin}, context.environment));
@@ -238,15 +268,16 @@ export async function setupToolsV1(rows: readonly ToolRowV1[], context: ToolCont
       reports.push(Object.freeze({...before, status: "deferred" as const, message}));
       continue;
     }
-    if (row.setup.kind === "bootstrap") {
+    if (row.setup.kind === "bootstrap" || row.setup.kind === "bootstrap-node" && context.platform !== "win32") {
       log(toolSetupMessageV1("manual", {tool: row.id, pin: before.pin}, context.environment));
+      for (const line of toolSetupRefusalLinesV1([before])) log(line);
       reports.push(before);
       continue;
     }
     log(toolSetupMessageV1("step", {tool: row.id, pin: before.pin}, context.environment));
     await provision(row, before.pin, signal);
     const after = await verifyToolV1(row, context, signal);
-    if (after.status !== "ok") throw new Error(toolSetupMessageV1("mismatch", {tool: row.id, found: after.found ?? "-", pin: after.pin}, context.environment));
+    if (after.status !== "ok") throw new Error(toolSetupMessageV1("mismatch", {tool: row.id, found: after.found ?? "-", pin: after.pin}, context.environment) + (after.message === undefined ? "" : toolSetupMessageV1("mismatchReason", {message: after.message}, context.environment)));
     log(toolSetupMessageV1("done", {tool: row.id, found: after.found ?? after.pin}, context.environment));
     reports.push(after);
   }

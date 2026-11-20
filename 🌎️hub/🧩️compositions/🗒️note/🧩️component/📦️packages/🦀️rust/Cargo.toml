@@ -21,6 +21,7 @@ component-kind = "plugin"
 variant = "note"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.note.note@1/*#editor"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🗒️note/🧬️schema/🔣️.json"
 ports = { react = 6080, wgpu = 6180 }
 
 [package.metadata.semio.sources]

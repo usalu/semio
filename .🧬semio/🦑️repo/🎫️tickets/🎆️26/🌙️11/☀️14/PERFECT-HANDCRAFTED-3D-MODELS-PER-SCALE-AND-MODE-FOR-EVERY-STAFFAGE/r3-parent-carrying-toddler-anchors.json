@@ -1,0 +1,12 @@
+{
+  "grip-l": {"bone": "hand-l", "local": [0.07, 0.0, -0.004]},
+  "grip-r": {"bone": "hand-r", "local": [0.06, 0.025, 0.0]},
+  "lumbar": {"bone": "torso", "local": [0.0, 0.0, 0.0]},
+  "mouth": {"bone": "head", "world": [0.065, 1.5515, 0.0]},
+  "nostrils": {"bone": "head", "world": [0.08, 1.581, 0.0]},
+  "crown": {"bone": "head", "world": [-0.036, 1.73, 0.0]},
+  "toddler-mouth": {"bone": "toddler-head", "world": [0.25, 1.537, -0.17]},
+  "toddler-nostrils": {"bone": "toddler-head", "world": [0.262, 1.561, -0.17]},
+  "toddler-crown": {"bone": "toddler-head", "world": [0.163, 1.697, -0.17]},
+  "toddler-seat": {"bone": "toddler-torso", "world": [0.17, 1.152, -0.17], "title": {"en": "Toddler's seat on the parent's forearm", "de": "Sitzfläche des Kleinkinds auf dem Unterarm des Elternteils"}}
+}

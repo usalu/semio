@@ -10,9 +10,9 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 fn model() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
     let definition = PropertyDef { name: "FireRating".into(), kind: PropertyKind::Text, unit: None, description: None, required: true, default_value: None, allowed: Vec::new(), minimum: None, maximum: None };
-    snapshot.property_templates.insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties: vec![definition] });
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: Some("https://www.thenbs.com".into()), entries: vec![ClassificationItem { code: "Pr".into(), title: "Products".into(), parent: None }] });
-    snapshot.classifications.insert("w-1".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "Pr".to_string())]));
+    snapshot.property_templates.cold_insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties: vec![definition] });
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: Some("https://www.thenbs.com".into()), entries: vec![ClassificationItem { code: "Pr".into(), title: "Products".into(), parent: None }] });
+    snapshot.classifications.cold_insert("w-1".into(), [("cs-uni".to_string(), "Pr".to_string())].into());
     snapshot
 }
 

@@ -35,7 +35,7 @@ pub struct Cursor<S:Send+'static>{original:ManuallyDrop<S>,reply:ManuallyDrop<Op
 impl<S:Capsule> Cursor<S>{
  pub(super) fn new(original:S)->Self{let work=original.work();Self{original:ManuallyDrop::new(original),reply:ManuallyDrop::new(None),route:None,work}}
  fn drive<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
-  if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("read Source cursor changed original Work"))}
+  if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("read Source cursor changed original Work"))}
   let invocation=effect.invocation().ok_or_else(||invalid("read Source cursor requires original invocation"))?;
   if invocation.mode()!=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive}||invocation.source_turn()!=effect.work_source_turn(){return Err(invalid("read Source cursor invocation changed"))}
   let binding=match original.as_mut(){Some(loan)=>{let work=loan.original_work().binding_identity()?;if !work.matches_effect(effect){return Err(invalid("read Source cursor original Work changed"))}Some((loan.ledger_identity(),loan.retirement_recipient_identity(),work))},None=>None};
@@ -50,7 +50,7 @@ impl<S:Capsule> RetirementCursor for Cursor<S>{
   if self.route.is_some()||self.reply.is_some(){return Err(invalid("read Source cursor requires original recovery"))}
   let Some(child)=self.original.child()else{return Ok(reply.complete(Ok(RetirementStep::Complete(0))))};
   if !child.terminal_is_empty(){return self.drive(None,body,effect,reply,false)}
-  if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("read Source terminal Work changed"))}
+  if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("read Source terminal Work changed"))}
   let demand=S::clear_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}
   match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read Source terminal clear exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}
   self.original.clear();self.work=None;Ok(reply.complete(Ok(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))))

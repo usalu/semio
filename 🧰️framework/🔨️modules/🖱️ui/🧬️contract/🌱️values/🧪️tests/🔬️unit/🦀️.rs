@@ -59,7 +59,8 @@ fn value_round_trips(value: UiValue) {
 #[test]
 fn fixed_owners_keep_bounded_payloads_off_the_stack() {
     assert!(size_of::<UiFixedBytes>() <= size_of::<usize>() * 3);
-    assert_eq!(size_of::<UiFixedList<UiFixedBytes>>(), size_of::<usize>() * 6);
+    let paged: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌱️value/📋️list/🧪️tests/🧫️fixtures/📏️exact-final-extent.json")).unwrap();
+    assert_eq!(size_of::<UiFixedList<UiFixedBytes>>(), size_of::<usize>() * paged["ownerWords"].as_u64().unwrap() as usize);
     assert_eq!(size_of::<UiFixedList<[u8; 32769], 1>>(), size_of::<UiFixedList<u8, 65536>>());
     assert!(size_of::<UiValueArena>() <= size_of::<usize>() * 24);
 }

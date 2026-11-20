@@ -11,8 +11,8 @@ fn blur_globals_is_thirty_two_bytes() {
 }
 
 #[test]
-fn world3d_globals_is_two_hundred_forty_bytes() {
-    assert_eq!(std::mem::size_of::<World3dGlobals>(), 240);
+fn world3d_globals_is_two_hundred_fifty_six_bytes() {
+    assert_eq!(std::mem::size_of::<World3dGlobals>(), 256);
 }
 
 #[test]
@@ -32,12 +32,13 @@ fn world3d_globals_pack_the_complete_environment() {
     assert_eq!(globals.material, [0.63, 0.27, 2.4, 1.0]);
     assert_eq!(globals.material_emissive, [0.02, 0.01, 0.06, 0.0]);
     assert_eq!(globals.shadow_view_proj, [0.25; 16]);
-    assert_eq!(globals.shadow, [1.0, 0.65, 1.75, 0.0]);
+    assert_eq!(globals.shadow, [1.0, 0.0, 0.0, 0.0]);
+    assert_eq!(globals.clip_plane, [0.0; 4]);
 }
 
 #[test]
-fn world3d_gpu_instance_is_ninety_six_bytes() {
-    assert_eq!(std::mem::size_of::<World3dGpuInstance>(), 96);
+fn world3d_gpu_instance_is_one_hundred_twelve_bytes() {
+    assert_eq!(std::mem::size_of::<World3dGpuInstance>(), 112);
 }
 
 #[test]
@@ -51,4 +52,5 @@ fn from_instance_packs_row_major_model_and_flags() {
     assert_eq!(gpu.model0, [0.0, 1.0, 2.0, 3.0]);
     assert_eq!(gpu.model3, [12.0, 13.0, 14.0, 15.0]);
     assert_eq!(gpu.flags, [1.0, 0.2, 0.63, 0.27]);
+    assert_eq!(gpu.emissive_cutoff, [0.0, 0.0, 0.0, -1.0]);
 }

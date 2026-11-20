@@ -4,7 +4,7 @@ use super::*;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 
 fn drawing_envelope_wire() -> Vec<u8> {
-    use pack::snapshot::ArtifactPack;
+    use semio_os_kernel::os_pack::snapshot::ArtifactPack;
 
     let mut snapshot = default_drawing_document("drawing-retained-load", None);
     let mut group = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
@@ -45,21 +45,26 @@ fn drawing_envelope_wire() -> Vec<u8> {
     .expect("schema-first Drawing fixture envelope");
     let envelope = store::os_store::document_materialize::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut retirement = semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
+    use semio_framework_job::OriginalRetirementPump;
+    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
+    let pump = OriginalRetirementPump::new();
     for _ in 0..100_000 {
-        let copy_bytes = retirement.next_copy_byte_demand().expect("Drawing fixture envelope copy demand");
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
-            maximum_items: 1,
-            maximum_copy_bytes: copy_bytes,
-            maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy_bytes).expect("Drawing fixture envelope capacity demand"),
-            maximum_release_bytes: retirement.next_release_byte_demand().expect("Drawing fixture envelope release demand"),
-            maximum_depth: retirement.next_depth_demand().expect("Drawing fixture envelope depth demand").max(1),
-        };
-        let step = retirement.close_step(grant).expect("Drawing fixture envelope retirement");
-        assert!(step.progress().fits(grant));
-        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-            assert!(retirement.terminal_is_empty());
-            drop(retirement);
+        if retirement.terminal_is_empty() {
             return wire;
+        }
+        let body = retirement.next_copy_byte_demand().unwrap().max(retirement.next_release_byte_demand().unwrap());
+        let demand = retirement.next_demand(body).expect("Drawing fixture envelope retirement demand");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: demand.depth,
+        };
+        let mut turn = pump.turn(1 << 24, u64::MAX, || Some(0), grant).unwrap();
+        let (poll, _) = turn.with_effect(|effect| retirement.close_step(body, effect)).unwrap().unwrap();
+        if let RetainedWorkPoll::Complete(turn) = poll {
+            assert!(turn.result.unwrap().progress().fits(grant));
         }
     }
     panic!("Drawing fixture envelope retirement did not reach terminal")

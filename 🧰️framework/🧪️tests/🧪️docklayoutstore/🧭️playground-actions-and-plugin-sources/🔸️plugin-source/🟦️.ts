@@ -42,16 +42,19 @@ export function registerPluginSourceTests({ describe, it, createDevPluginSource,
     /** 🔎️ Answers the HEAD probe of a locally served module's descriptor: `served` paths answer 200. */
     const servedModules = (served: readonly string[]) => {
       const probes: string[] = [];
+      const responses: Response[] = [];
       vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
         probes.push(`${init?.method ?? "GET"} ${decodeURIComponent(url)}`);
-        return new Response(null, { status: served.includes(decodeURIComponent(url)) ? 200 : 404 });
+        const response = new Response("", { status: served.includes(decodeURIComponent(url)) ? 200 : 404 });
+        responses.push(response);
+        return response;
       });
-      return probes;
+      return { probes, responses };
     };
     const acquisition = () => ({ signal: new AbortController().signal });
 
     it("acquireModule() cache-busts a cold page load even before the build snapshot arrives", async () => {
-      const probes = servedModules(["/🔌️plugin-modules/note/🔣️.json", "/🔌️plugin-modules/s/🔣️.json"]);
+      const { probes, responses } = servedModules(["/🔌️plugin-modules/note/🔣️.json", "/🔌️plugin-modules/s/🔣️.json"]);
       try {
         const source = createDevPluginSource(registry, silentWatch);
         const firstAcquired = await source.acquireModule("note", undefined, acquisition());
@@ -62,6 +65,7 @@ export function registerPluginSourceTests({ describe, it, createDevPluginSource,
         expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
         expect(firstAcquired.rebuiltAt).toBe(Number(first.searchParams.get("v")));
         expect(probes).toEqual(["HEAD /🔌️plugin-modules/note/🔣️.json", "HEAD /🔌️plugin-modules/s/🔣️.json"]);
+        expect(responses.map(response => response.bodyUsed)).toEqual([true, true]);
       } finally {
         vi.unstubAllGlobals();
       }
@@ -78,11 +82,12 @@ export function registerPluginSourceTests({ describe, it, createDevPluginSource,
     });
 
     it("acquireModule() answers unavailable for an unknown pluginId and for a module this device does not serve", async () => {
-      servedModules([]);
+      const { responses } = servedModules([]);
       try {
         const source = createDevPluginSource(registry, silentWatch);
         await expect(source.acquireModule("missing", undefined, acquisition())).rejects.toBeInstanceOf(PluginModuleUnavailableError);
         await expect(source.acquireModule("note", undefined, acquisition())).rejects.toThrow(/HTTP 404/);
+        expect(responses.map(response => response.bodyUsed)).toEqual([true]);
       } finally {
         vi.unstubAllGlobals();
       }

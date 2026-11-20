@@ -68,8 +68,11 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       if(resolved.args[1]!=="setup"||(resolved.args.length>3&&resolved.args[2]!=="toolchains"))throw new Error(`Expected repo tools setup [${buildBackendAlternationV1()}|toolchains [tool...]|all] or repo tools verify [tool...]`);
       const tools=resolved.args[2]??selected.tool;
       if(!["toolchains","all"].includes(tools))requireBuildBackendIdV1(tools);
-      if(tools==="toolchains"||tools==="all"){const{runToolchainsSetupV1,parseToolSetupSelectionV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts"),names=tools==="toolchains"?parseToolSetupSelectionV1(resolved.args):[],{issueBuildTaskEnvironmentV1:issueToolsEnvironmentV1}=await import("../../📥️caller/🟦️.ts"),reports=await runToolchainsSetupV1(root,invocation,phaseControl,names,["bazel"],issueToolsEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true");if(reports.some(report=>report.status!=="ok"&&report.status!=="deferred"))process.exitCode=1;}
-      for(const id of tools==="toolchains"?[]:tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({root,invocation,phase:phaseControl,args:resolved.args,tool:id});
+      let refusals:readonly string[]=[];
+      if(tools==="toolchains"||tools==="all"){const{runToolchainsSetupV1,parseToolSetupSelectionV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts"),names=tools==="toolchains"?parseToolSetupSelectionV1(resolved.args):[],{issueBuildTaskEnvironmentV1:issueToolsEnvironmentV1}=await import("../../📥️caller/🟦️.ts"),reports=await runToolchainsSetupV1(root,invocation,phaseControl,names,["bazel"],issueToolsEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true");const{toolSetupRefusalLinesV1}=await import("../../🧰️tool-setup/🛑️refusal/🟦️.ts");refusals=toolSetupRefusalLinesV1(reports);if(refusals.length>0)process.exitCode=1;}
+      try{
+       for(const id of tools==="toolchains"?[]:tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({root,invocation,phase:phaseControl,args:resolved.args,tool:id});
+      }finally{for(const line of refusals)console.error(line);}
       return;
     }
     if(command==="reset"){
@@ -80,7 +83,9 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     await maintainTaskStoresV1(root,invocation,phaseControl);
     if(["graph","show"].includes(command)){
       await markBuildCapacityPhaseV1("plan");
-      const {loadBuildGraphV1}=await import("../../🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??"fresh",...(command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{}),...(command==="show"&&(resolved.args[1]==="projects"||resolved.args[1]==="targets")?{lean:true}:{})}});
+      const {loadBuildGraphV1}=await import("../../🕸️graph/🟦️.ts"),{buildInvocationGraphSelectionV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),selection=buildInvocationGraphSelectionV1(resolved.args),whole=selection.kind==="all";
+      if(selection.kind==="owners"){const{readBuildOwnerRegistryV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),{selectLiteralBuildProjectsV1}=await import("../../🧭️selection/📥️options/🟦️.ts"),producer=await import("../../🕸️graph/📥️inference/🟨️.mjs");if(!selectLiteralBuildProjectsV1(readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))).owners,selection.projects,selection.exclude).length)throw new Error(`Unknown build project: ${resolved.args[2]}`);}
+      const graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection,reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??(whole?"current":"fresh"),...(whole&&command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{}),...(command==="show"&&(resolved.args[1]==="projects"||resolved.args[1]==="targets")?{lean:true}:{})}});
       const {buildOptionV1}=await import("../../🧭️selection/🟦️.ts");
       let result:unknown=graph;
       const describeWithheld=async()=>{const{describeUnavailableProjectV1}=await import("../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts"),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language;return(row:Parameters<typeof describeUnavailableProjectV1>[0])=>describeUnavailableProjectV1(row,language);};

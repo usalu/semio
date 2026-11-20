@@ -186,27 +186,19 @@ match self.press.take() {
         let placement = if let Some(corner) = corner { DockPlacement::Corner(corner) } else { DockPlacement::at(rect, pos)? };
         let target = window.tab_ids.get(window.active_stack_tab).filter(|id| id.as_str() != source).or_else(|| window.tab_ids.iter().find(|id| id.as_str() != source)).or_else(|| matches!(placement, DockPlacement::Corner(_)).then(|| window.tab_ids.iter().find(|id| id.as_str() == source)).flatten())?.clone();
         let tab_index = corner.map(|corner| state.window_corner_insert_index(rect, pos, corner, source));
-        let (layout, canvas, windows) = self.scene.window_layout_containing(chrome, held_chrome)?;
+        let (layout, canvas, mounted) = self.scene.window_layout_containing(chrome, held_chrome)?;
+        let source_node = mounted.iter().find(|(id, _)| id == source)?.1;
         let mut projected = layout.clone();
         if !semio_ui_tui_frame::layout::dock_window(&mut projected, source, &target, placement, tab_index) { return None; }
-        let window_rect = semio_ui_tui_frame::layout::solve_window_layout(&projected, self.scene.rect(canvas)).into_iter().find(|measure| measure.window_kind_id == source)?.rect;
-        let source_node = windows.iter().find(|(id, _)| id == source)?.1;
-        let NodeContent::Chrome(ChromeState::Window(source_state)) = &self.scene.try_node(source_node)?.content else { return None };
-        let mut window = (**source_state).clone();
-        let stack = semio_ui_tui_frame::layout::stack_hosting(&projected, source)?;
-        window.stack_tabs = stack.children.iter().map(|child| WindowStackTabState {
-            label: child.title.clone().unwrap_or_else(|| child.window_kind_id.clone()),
-            corner: child.corner.unwrap_or_default(),
-            status: windows.iter().find(|(id, _)| id == &child.window_kind_id).and_then(|(_, node)| self.scene.try_node(*node)).and_then(|node| match &node.content { NodeContent::Chrome(ChromeState::Window(state)) => state.status, _ => None }),
-        }).collect();
-        window.tab_ids = stack.children.iter().map(|child| child.window_kind_id.clone()).collect();
-        window.active_stack_tab = window.tab_ids.iter().position(|id| id == source)?;
-        window.zoomed = projected.zoomed.as_deref() == Some(source);
-        window.hover = None;
-        window.hover_drag = None;
-        window.drop_target = None;
-        let rect = window_tab_rect(&window, window_rect, window.active_stack_tab)?;
-        Some(DockPreview { target, placement, tab_index, rect, window_rect, window })
+        let mut windows = project_window_layout(&self.scene, &projected, self.scene.rect(canvas), mounted);
+        for (_, _, window) in &mut windows {
+            window.hover = None;
+            window.hover_drag = None;
+            window.drop_target = None;
+        }
+        let (_, window_rect, window) = windows.iter().find(|(node, _, _)| *node == source_node)?;
+        let rect = window_tab_rect(window, *window_rect, window.active_stack_tab)?;
+        Some(DockPreview { target, placement, tab_index, rect, canvas, windows })
 }
 
     fn hover_target(&self, hit: NodeId) -> Option<NodeId> {

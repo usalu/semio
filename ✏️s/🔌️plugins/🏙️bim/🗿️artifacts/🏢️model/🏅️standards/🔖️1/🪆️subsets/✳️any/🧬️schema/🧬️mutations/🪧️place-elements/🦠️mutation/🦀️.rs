@@ -4,13 +4,13 @@ use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct PlaceElements {
-    pub placements: BTreeMap<String, Placement>,
+    pub placements: RetainedOrderedMap<String, Placement>,
 }
 
 impl<Op> MutationKind<ModelSnapshot, Op> for PlaceElements

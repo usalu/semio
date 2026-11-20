@@ -1,12 +1,13 @@
 //! 🔀️ Routed IO runs and SQLite snapshot controls under original native authorities.
 
 use super::{NATIVE_MAXIMUM_BYTES, original_grant};
+use super::native_owners::{finish_decode, finish_encode, retirement_effect};
 use semio_os_kernel::io::io_mechanism::{IoRunControl, io_run_with_snapshot_control};
 use semio_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
 use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
-use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl};
+use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, RetainedWorkPoll};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 /// 🗄️ Runs `operation` under a SQLite snapshot control whose caller installed the original retirement recipient, then closes it.
@@ -19,7 +20,10 @@ pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn F
         operation(&mut control)
     };
     while !recipient.terminal_is_empty() {
-        recipient.close_step(grant).result.expect("original SQLite recipient closes");
+        let poll = retirement_effect(grant, |effect| recipient.close_step(grant.maximum_copy_bytes, effect));
+        if let RetainedWorkPoll::Complete(turn) = poll {
+            turn.result.expect("original SQLite recipient closes");
+        }
     }
     result
 }
@@ -38,35 +42,8 @@ pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseL
     let mut native = IoRunControl::new(&mut receive_control, &mut emit_control, grant);
     let mut snapshot = SqliteSnapshotControl::new(progress, limits);
     let result = io_run_with_snapshot_control(route, &mut Some(payload), &mut native, &mut snapshot).await;
-    close_original(&mut native);
+    finish_decode(&mut native.snapshot_decode().expect("original decode direction"));
+    finish_encode(&mut native.snapshot_encode().expect("original encode direction"));
     drop(native);
     result
-}
-
-/// 🧹️ Closes both native directions of one routed run through their original grants.
-fn close_original(native: &mut IoRunControl<'_, '_>) {
-    {
-        let mut owner = native.snapshot_decode().expect("original decode direction");
-        while owner.native().has_retirement_owner() {
-            let grant = owner.remaining_grant();
-            let result = owner.native().close_retirement_recipient(grant).result;
-            let progress = match &result {
-                Ok(step) => step.progress(),
-                Err(error) => error.retained_progress(),
-            };
-            owner.record_progress(progress).expect("original decode close is funded");
-            result.expect("original decode recipient closes");
-        }
-    }
-    let mut owner = native.snapshot_encode().expect("original encode direction");
-    while owner.native().has_retirement_owner() {
-        let grant = owner.remaining_grant();
-        let result = owner.native().close_retirement_recipient(grant).result;
-        let progress = match &result {
-            Ok(step) => step.progress(),
-            Err(error) => error.retained_progress(),
-        };
-        owner.record_progress(progress).expect("original encode close is funded");
-        result.expect("original encode recipient closes");
-    }
 }

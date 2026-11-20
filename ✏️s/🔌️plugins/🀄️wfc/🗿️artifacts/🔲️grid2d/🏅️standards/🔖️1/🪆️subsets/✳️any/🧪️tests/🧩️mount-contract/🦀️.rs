@@ -43,7 +43,7 @@ fn every_mutation_kind_owns_a_directory() {
 #[test]
 fn every_mutation_kind_owns_at_least_one_fixture_quintet() {
     for (kind, directory) in KINDS.iter().zip(DIRECTORIES) {
-        let root = subset().join("🧫️fixtures/🧬️mutations").join(directory);
+        let root = subset().join("🧪️tests/🧫️fixtures/🧬️mutations").join(directory);
         assert!(root.is_dir(), "{kind}: no fixture directory");
         let cases: Vec<_> = std::fs::read_dir(&root).expect("fixture directory reads").filter_map(Result::ok).filter(|entry| entry.path().is_dir()).collect();
         assert!(!cases.is_empty(), "{kind}: no fixture case");

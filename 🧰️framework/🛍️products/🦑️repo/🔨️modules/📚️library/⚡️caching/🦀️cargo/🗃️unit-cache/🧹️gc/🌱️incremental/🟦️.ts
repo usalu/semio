@@ -3,6 +3,7 @@ import {basename,dirname,join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {runtimeNativeSystemV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 import {runtimeSupportsV1} from "../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {allocatedCargoBytesV1,removeCargoGcTreeV1,type CargoGcControlV1} from "../📏️tree/🟦️.ts";
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const;
 /** 📐️ The authored policy of the incremental session collector.
@@ -80,22 +81,9 @@ export function incrementalLockPathV1(session:string):string{
  const key=basename(session).split("-").slice(0,3).join("-");return join(dirname(session),key+policy.lockSuffix);
 }
 
-function allocatedShare(path:string):number{
- let bytes=0,entries=0;const stack=[path];
- while(stack.length){
-  const directory=stack.pop()!;let children;try{children=readdirSync(directory,{withFileTypes:true});}catch{continue;}
-  for(const child of children){
-   if(++entries>policy.maximumEntriesPerSession)return bytes;
-   const full=join(directory,child.name);let info;try{info=lstatSync(full);}catch{continue;}
-   if(info.isDirectory())stack.push(full);else if(!info.isSymbolicLink())bytes+=Math.round((info.blocks??Math.ceil(info.size/512))*512/Math.max(1,info.nlink));
-  }
- }
- return bytes;
-}
-
 const turn=()=>new Promise<void>(done=>setImmediate(done));
 /** 🔭️ Measures every session below the roots. A session is held when a running compiler holds its lock; without a lock file or a lock backend a recent session counts as held, so age alone never exposes one in use. */
-export async function measureIncrementalV1(roots:readonly string[],options:Readonly<{nowMs:number;lock?:IncrementalLockPortV1;signal?:AbortSignal;progress?:(done:number,total:number)=>void}>):Promise<IncrementalSessionV1[]>{
+export async function measureIncrementalV1(roots:readonly string[],options:CargoGcControlV1&Readonly<{nowMs:number;lock?:IncrementalLockPortV1}>):Promise<IncrementalSessionV1[]>{
  const lock=options.lock??tryLockSessionV1,rows:IncrementalSessionV1[]=[],crates=roots.flatMap(root=>directoriesOf(root));let done=0;
  for(const crate of crates){
   options.signal?.throwIfAborted();
@@ -107,11 +95,12 @@ export async function measureIncrementalV1(roots:readonly string[],options:Reado
    const lockPath=incrementalLockPathV1(path);try{used=Math.max(used,lstatSync(lockPath).mtimeMs);}catch{}
    const probe=lock(lockPath),recent=options.nowMs-used<=policy.idleMilliseconds;
    if(typeof probe==="object")probe.release();
-   group.push({path,bytes:allocatedShare(path),lastUsedMs:Math.floor(used),held:probe==="held"||(probe==="missing"||probe==="unsupported")&&recent&&name.endsWith(policy.workingSuffix)||probe==="unsupported"&&recent});
+   const bytes=await allocatedCargoBytesV1(path,policy.maximumEntriesPerSession,options);
+   group.push({path,bytes,lastUsedMs:Math.floor(used),held:probe==="held"||(probe==="missing"||probe==="unsupported")&&recent&&name.endsWith(policy.workingSuffix)||probe==="unsupported"&&recent});
   }
   const finalized=group.filter(row=>!row.path.endsWith(policy.workingSuffix)).sort(byAge as never),newest=finalized.length?finalized[finalized.length-1]!.path:undefined;
   for(const row of group)rows.push({...row,newest:row.path===newest});
-  options.progress?.(++done,crates.length);if(done%policy.yieldEvery===0)await turn();
+  await options.progress?.(++done,crates.length,"scan",crate);if(done%policy.yieldEvery===0)await turn();
  }
  return rows;
 }
@@ -128,7 +117,7 @@ const gib=(bytes:number)=>bytes>=1073741824?(bytes/1073741824).toFixed(1)+" GiB"
 export type IncrementalReportV1=Readonly<{language:"en"|"de";write:(line:string)=>void}>;
 
 /** 🧹️ Measures, plans and (unless `dryRun`) removes the sessions: each removal re-takes the compiler's own lock and holds it while the session goes, so a compiler that starts meanwhile finds it taken and uses another session; pressure removals stop as soon as `satisfied()` says the image is back at its low-water mark. Progress and cancellation are served between sessions. */
-export async function collectIncrementalV1(store:string,options:Readonly<{dryRun:boolean;volumeBytes:number;needBytes:()=>number;satisfied?:()=>boolean;nowMs?:number;lock?:IncrementalLockPortV1;signal?:AbortSignal;progress?:(done:number,total:number)=>void;report?:IncrementalReportV1}>):Promise<IncrementalResultV1>{
+export async function collectIncrementalV1(store:string,options:CargoGcControlV1&Readonly<{dryRun:boolean;volumeBytes:number;needBytes:()=>number;satisfied?:()=>boolean;nowMs?:number;lock?:IncrementalLockPortV1;report?:IncrementalReportV1}>):Promise<IncrementalResultV1>{
  const nowMs=options.nowMs??Date.now(),lock=options.lock??tryLockSessionV1,report=options.report,say=(key:keyof typeof messages,variables:Readonly<Record<string,string|number>>={}):void=>{if(report)report.write(incrementalTextV1(key,report.language,variables));};
  say("scan",{root:store});
  const sessions=await measureIncrementalV1(incrementalRootsV1(store),{nowMs,lock,signal:options.signal,progress:options.progress}),plan=planIncrementalV1({volumeBytes:options.volumeBytes,needBytes:options.needBytes(),nowMs,sessions}),removed:IncrementalRemovalV1[]=[],crates=new Set<string>();
@@ -140,9 +129,9 @@ export async function collectIncrementalV1(store:string,options:Readonly<{dryRun
   if(row.reason==="pressure"&&options.satisfied?.())break;
   const taken=lock(incrementalLockPathV1(row.path));
   if(taken==="held"){held++;say("held",{path:row.path});continue;}
-  try{rmSync(row.path,{recursive:true,force:true});rmSync(incrementalLockPathV1(row.path),{force:true});removed.push(row);crates.add(dirname(row.path));say("removed",{path:row.path,bytes:gib(row.bytes),reason:reason(row)});}
+  try{await removeCargoGcTreeV1(row.path,options);rmSync(incrementalLockPathV1(row.path),{force:true});removed.push(row);crates.add(dirname(row.path));say("removed",{path:row.path,bytes:gib(row.bytes),reason:reason(row)});}
   finally{if(typeof taken==="object")taken.release();}
-  options.progress?.(++done,plan.length);if(done%policy.yieldEvery===0)await turn();
+  await options.progress?.(++done,plan.length,"remove",row.path);if(done%policy.yieldEvery===0)await turn();
  }
  for(const crate of crates)try{if(!readdirSync(crate).length)rmdirSync(crate);}catch{}
  const freedBytes=removed.reduce((sum,row)=>sum+row.bytes,0);

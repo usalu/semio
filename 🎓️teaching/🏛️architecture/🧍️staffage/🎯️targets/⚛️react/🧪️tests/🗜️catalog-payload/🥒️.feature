@@ -9,3 +9,4 @@ Feature: Compact catalog payload
     Given a catalog asset file
     When it is served under the staffage asset query
     Then its parsed json equals the asset of the file and carries no indentation
+    And its validation findings equal those computed from the shipped JSON

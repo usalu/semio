@@ -8,6 +8,21 @@ async fn create_xlsx_editor_builds_a_definition_for_the_editor_role() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn new_workbook_provides_a_worksheet_readable_by_calamine() {
+    use calamine::Reader;
+    let snapshot = XlsxEditor::reference_birth().unwrap()().unwrap();
+    let workbook = snapshot.project_workbook().unwrap();
+    let bytes = XlsxEditor::encode_natural_file(&snapshot).unwrap();
+    let reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
+    assert_eq!(workbook.sheets.len(), 1);
+    assert!(workbook.sheets[0].cells.is_empty());
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️sheet-grid/🔣️.json")).unwrap();
+    let expected_name = fixture["newWorkbook"]["sheetName"].as_str().unwrap();
+    assert_eq!(workbook.sheets[0].name, expected_name);
+    assert_eq!(reference.sheet_names(), vec![expected_name.to_string()]);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn editor_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<XlsxEditor as ArtifactEditor>::DIALECT, XLSX_DIALECT);
 }
@@ -44,7 +59,7 @@ async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_bin
     const FIXTURE: &str = include_str!("../🧫️fixtures/📊️stable-cell-edit/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_str(FIXTURE).expect("third-party JSON oracle parses the action fixture");
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("DSL JSON parses the action fixture");
-    let command = XlsxEditor::command_from_action("set-cell", Some((args).clone()), None).expect("stable cell action parses");
+    let command = XlsxEditor::command_from_action("set-cell", &mut Some(args), &mut None).expect("stable cell action parses");
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = &command else { panic!("expected native command") };
     assert_eq!(
         native,
@@ -360,14 +375,53 @@ async fn canonical_xlsx_no_op_save_preserves_all_xml_fields_and_custom_part_path
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
-    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
-    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_cell::SetCell;
+    use semio_plugin::app::{Media, MediaPayload};
+    use semio_plugin::{BuiltNode, Component, Effect, HistoryView, MediaClass, MediaForm, MediaType, TreeWindows, Trigger, UiValue};
+    use semio_ui_locale::Locale;
+
+    fn cell_commit(node: &BuiltNode) -> Option<&semio_plugin::plugin_app_close_prelude::UiMap> {
+        let binding = node.bindings.iter().find(|binding| binding.trigger == Trigger::Commit && binding.action.name.as_str() == "set-cell");
+        if let (Component::Input(_), Some(UiValue::Map(arguments))) = (&node.component, binding.and_then(|binding| binding.args.as_ref())) {
+            return Some(arguments);
+        }
+        node.children.iter().find_map(cell_commit)
+    }
+
     for case in canonical_save_fixture()["cases"].as_array().unwrap() {
-        let mut snapshot = decode_xlsx(&canonical_fixture_zip(case)).unwrap_or_else(|error| panic!("{} import: {error}", case["id"]));
-        let address = xlsx_cell_address(&snapshot, "Data", 1, 0).unwrap_or_else(|error| panic!("{} A1 address: {error}", case["id"]));
-        apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetCell(SetCell { address, value: XlsxCellValue::Number(99.25), node: None }));
+        let codec = XlsxEditor::natural_file_codec().unwrap();
+        let media = Media {
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            payload: MediaPayload::Intrinsic { schema: codec.format_kind.into(), value: semio_framework_value::DslValue::Bytes(canonical_fixture_zip(case)) },
+        };
+        let current = XlsxEditor::reference_birth().unwrap()().unwrap();
+        let imported = XlsxEditor::import_media(semio_plugin::NATURAL_FILE_PORT, &media, &ArtifactView::new(&current, &HistoryView::empty()))
+            .unwrap_or_else(|error| panic!("{} import: {error}", case["id"]));
+        assert!(imported.artifact_mutations.is_empty());
+        let [Effect::LoadDocument { pack, .. }] = imported.effects.as_slice() else { panic!("expected a single document load effect"); };
+        let mut snapshot = <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).unwrap();
+        let grid = main::render(&snapshot, Locale::En, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).unwrap();
+        let mut arguments = semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(grid), |grid| {
+            cell_commit(grid).expect("A1 commit binding").iter().map(|(key, value)| {
+                let value = match value {
+                    UiValue::Text(text) => serde_json::json!(text.as_str()),
+                    UiValue::Number(number) => serde_json::json!(number as u32),
+                    _ => panic!("unexpected argument type"),
+                };
+                (key.as_str().to_string(), value)
+            }).collect::<serde_json::Map<_, _>>()
+        });
+        assert_eq!(arguments["sheetName"], "Data");
+        assert_eq!(arguments["row"], 1);
+        assert_eq!(arguments["column"], 0);
+        arguments.insert("value".into(), serde_json::json!("99.25"));
+        let args = semio_framework_pack_json::from_json_str(&serde_json::Value::Object(arguments).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let command = XlsxEditor::command_from_action("set-cell", &mut Some(args), &mut None).unwrap();
+        let emit = semio_plugin::artifact_app_laws::reduce_editor_command::<XlsxEditor>(&command, &snapshot).unwrap();
+        let [mutation] = emit.artifact_mutations.as_slice() else { panic!("expected sole A1 edit"); };
+        apply_xlsx_mutation(&mut snapshot, mutation);
         let encoded = <XlsxEditor as ArtifactEditor>::encode_natural_file(&snapshot).unwrap_or_else(|error| panic!("{} natural export: {error}", case["id"]));
         assert_independent_canonical_package(&encoded, case, true);
         let independently_reopened = decode_xlsx(&encoded).unwrap_or_else(|error| panic!("{} independent reopen: {error}", case["id"]));
@@ -380,4 +434,4 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
     }
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../..");

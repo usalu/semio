@@ -26,7 +26,7 @@
     "maximumBytes": {
       "type": "integer",
       "minimum": 1,
-      "maximum": 2147483648
+      "maximum": 8589934592
     },
     "maximumFiles": {
       "type": "integer",

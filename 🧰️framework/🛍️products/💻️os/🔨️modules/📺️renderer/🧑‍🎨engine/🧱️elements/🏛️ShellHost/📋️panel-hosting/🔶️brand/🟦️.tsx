@@ -60,7 +60,6 @@ export function useBrandState({ core }: { readonly core: ShellCoreAfterDockAssem
     if (!session || !focusedPluginManifest || !focusedApp || !focusedProgram) return;
     if (exampleOptions.length === 0) return Promise.resolve();
     const exampleId = resolveBootExampleId(activeExampleId,exampleOptions,defaults.exampleId);
-    if (exampleId !== activeExampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID",value: exampleId });
     return dispatchActiveExample(exampleId);
   },[session,focusedPluginManifest,focusedApp,focusedProgram,exampleOptions,activeExampleId,defaults.exampleId,dispatchActiveExample]),useCallback(async () => {
     if (session) await refreshUi(session,{ kind: "full" });

@@ -53,6 +53,22 @@
     "rawIdFallback": false,
     "incomingPaintIds": "raw"
   },
+  "interactionDomainSchema": {
+    "type": "object",
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "granularityId": { "type": "string", "minLength": 1 }
+    },
+    "required": ["id", "granularityId"],
+    "additionalProperties": false
+  },
+  "invalidInteractionDomains": [
+    { "id": "blocks" },
+    { "granularityId": "block" },
+    { "id": "", "granularityId": "block" },
+    { "id": "blocks", "granularityId": "" },
+    { "id": "blocks", "granularityId": "block", "extra": true }
+  ],
   "forbiddenActions": ["setHover", "setSelection"],
   "cases": [
     {
@@ -66,7 +82,7 @@
       }
     },
     {
-      "id": "pointer-leave",
+      "id": "pointer-background",
       "gesture": { "kind": "move", "x": 300, "y": 200 },
       "action": "interactionHover",
       "args": { "domainId": "blocks", "channel": "pointer", "targets": "[]" }
@@ -109,6 +125,12 @@
         "merge": "replace",
         "method": "rectangle"
       }
+    },
+    {
+      "id": "pointer-leave",
+      "gesture": { "kind": "leave" },
+      "action": "interactionHover",
+      "args": { "domainId": "blocks", "channel": "pointer", "targets": "[]" }
     }
   ]
 }

@@ -11,91 +11,115 @@ pub(super) fn ensure_font(snapshot: &PdfSnapshot) -> (String, Option<PdfMutation
     ("F1".into(), Some(PdfMutation::SetFont(SetFont { font, index: None })))
 }
 
-pub(super) fn replace_shown_text(content: &mut [PdfOp], index: usize, text: &str) {
-    let Some(op) = content.get_mut(index) else { return };
-    match op {
+pub(super) fn replace_shown_text(content: &mut Vec<PdfOp>, object: &PageObject, text: &str) -> Result<(), Fault> {
+    let restore = text_cursor_after(content, object)?;
+    match &mut content[object.end] {
         PdfOp::ShowText { text: shown } | PdfOp::NextLineShowText { text: shown } | PdfOp::NextLineShowTextSpaced { text: shown, .. } => *shown = PdfTextString::text(text),
-        PdfOp::ShowTextArray { items } => *items = vec![PdfTextArrayItem::Text { text: text.to_string() }],
-        _ => {}
+        PdfOp::ShowTextArray { items } => *items = vec![PdfTextArrayItem::Text { text: text.to_owned() }],
+        _ => return Err(fault("selected object has no text show operation")),
     }
+    content.splice(object.end + 1..object.end + 1, restore);
+    Ok(())
 }
 
-pub(super) fn translate_object(content: &mut [PdfOp], object: &PageObject, dx: f64, dy: f64) {
-    let delta = user_delta(object.ctm, dx, dy);
-    match object.kind {
-        ObjectKind::Text => {
-            if let Some(index) = object.position_op {
-                shift_position(&mut content[index], delta);
+pub(super) fn text_cursor_after(content: &[PdfOp], object: &PageObject) -> Result<Vec<PdfOp>, Fault> {
+    let mut restore = Vec::new();
+    for op in &content[object.end + 1..] {
+        match op {
+            PdfOp::EndText | PdfOp::BeginText | PdfOp::SetTextMatrix { .. } | PdfOp::NextLine | PdfOp::MoveText { .. } | PdfOp::NextLineShowText { .. } | PdfOp::NextLineShowTextSpaced { .. } => break,
+            PdfOp::ShowText { .. } | PdfOp::ShowTextArray { .. } => {
+                let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
+                let inverse = invert(placement.line).ok_or_else(|| fault("cannot restore a singular text line matrix"))?;
+                let (advance, _) = apply(inverse, placement.next_origin.0, placement.next_origin.1);
+                restore.push(PdfOp::SetTextMatrix { matrix: placement.line });
+                append_advance(&mut restore, advance, object.font_size, placement.horizontal_scale)?;
+                break;
             }
+            _ => {}
         }
-        ObjectKind::Image | ObjectKind::Form => {
-            if let Some(index) = object.transform_op {
-                if let PdfOp::Transform { matrix } = &mut content[index] {
-                    let delta = user_delta(object.parent_ctm, dx, dy);
-                    matrix[4] += delta.0;
-                    matrix[5] += delta.1;
-                }
-            }
-        }
-        ObjectKind::Vector => shift_path(&mut content[object.start..=object.end], object.ctm, dx, dy),
-        ObjectKind::Shading | ObjectKind::Annotation => {}
     }
+    Ok(restore)
 }
 
-pub(super) fn resize_object(content: &mut [PdfOp], object: &PageObject, x: f64, y: f64, width: f64, height: f64) {
+pub(super) fn delete_paint(content: &mut Vec<PdfOp>, object: &PageObject) {
+    let span = object.start..=object.end;
     match object.kind {
         ObjectKind::Vector => {
-            for op in &mut content[object.start..=object.end] {
-                if let PdfOp::Rectangle { x: rx, y: ry, width: rw, height: rh } = op {
-                    *rx = x;
-                    *ry = y;
-                    *rw = width;
-                    *rh = height;
-                }
+            if content[span.clone()].iter().any(|op| matches!(op, PdfOp::Clip | PdfOp::ClipEvenOdd)) {
+                content[object.end] = PdfOp::EndPath;
+                return;
             }
-            shift_path_bounds(&mut content[object.start..=object.end], object, x, y, width, height);
+            content.remove(object.end);
+            content.extract_if(object.start..object.end, |op| matches!(op,
+                PdfOp::MoveTo { .. } | PdfOp::LineTo { .. } | PdfOp::Rectangle { .. } | PdfOp::ClosePath |
+                PdfOp::CurveTo { .. } | PdfOp::CurveToInitial { .. } | PdfOp::CurveToFinal { .. }
+            )).for_each(drop);
         }
-        ObjectKind::Image | ObjectKind::Form => {
-            if let Some(index) = object.transform_op {
-                if let PdfOp::Transform { matrix } = &mut content[index] {
-                    matrix[0] = width;
-                    matrix[3] = height;
-                    matrix[4] = x;
-                    matrix[5] = y;
-                }
-            }
-        }
-        ObjectKind::Text => {
-            if let Some(index) = object.position_op {
-                shift_position(&mut content[index], (x - object.x, y - object.y));
-            }
-            let size = height.max(1.0);
-            let font = content.iter().rev().find_map(|op| match op {
-                PdfOp::SetFont { name, .. } => Some(name.clone()),
-                _ => None,
-            });
-            if let Some(name) = font {
-                let show = object.end;
-                if show <= content.len() {
-                    if let Some(op) = content[..show].iter_mut().rev().find(|op| matches!(op, PdfOp::SetFont { name: current, .. } if current == &name)) {
-                        if let PdfOp::SetFont { size: font_size, .. } = op {
-                            *font_size = size;
-                        }
-                    }
-                }
-            }
-        }
+        ObjectKind::Image | ObjectKind::Form | ObjectKind::Text | ObjectKind::Shading => { content.remove(object.end); }
+        ObjectKind::Annotation => unreachable!("annotations use page mutations"),
+    }
+}
+
+pub(super) fn translate_object(content: &mut Vec<PdfOp>, object: &PageObject, dx: f64, dy: f64) -> Result<(), Fault> {
+    match object.kind {
+        ObjectKind::Text => return translate_text(content, object, dx, dy),
+        ObjectKind::Image | ObjectKind::Form => return transform_xobject(content, object, [1.0, 0.0, 0.0, 1.0, dx, dy]),
+        ObjectKind::Vector => return transform_path(content, object, [1.0, 0.0, 0.0, 1.0, dx, dy]),
         ObjectKind::Shading | ObjectKind::Annotation => {}
     }
+    Ok(())
+}
+
+pub(super) fn resize_object(content: &mut Vec<PdfOp>, object: &PageObject, x: f64, y: f64, width: f64, height: f64) -> Result<(), Fault> {
+    match object.kind {
+        ObjectKind::Vector | ObjectKind::Image | ObjectKind::Form => {
+            let sx = if object.width == 0.0 { 1.0 } else { width / object.width };
+            let sy = if object.height == 0.0 { 1.0 } else { height / object.height };
+            let transform = [sx, 0.0, 0.0, sy, x - object.x * sx, y - object.y * sy];
+            return if object.kind == ObjectKind::Vector {
+                transform_path(content, object, transform)
+            } else {
+                transform_xobject(content, object, transform)
+            };
+        }
+        ObjectKind::Text => return resize_text(content, object, x, y, width, height),
+        ObjectKind::Shading | ObjectKind::Annotation => {}
+    }
+    Ok(())
+}
+
+fn previous_color(content: &[PdfOp], stroking: bool) -> Vec<PdfOp> {
+    use PdfOp::*;
+    let mut nested = 0;
+    let mut components = None;
+    for op in content.iter().rev() {
+        match (stroking, op) {
+            (_, Restore) => nested += 1,
+            (_, Save) if nested > 0 => nested -= 1,
+            _ if nested > 0 => {}
+            (true, SetStrokeColor { .. } | SetStrokeColorN { .. }) |
+            (false, SetFillColor { .. } | SetFillColorN { .. }) if components.is_none() => components = Some(op.clone()),
+            (true, SetStrokeGray { .. } | SetStrokeRgb { .. } | SetStrokeCmyk { .. } | SetStrokeColorSpace { .. }) |
+            (false, SetFillGray { .. } | SetFillRgb { .. } | SetFillCmyk { .. } | SetFillColorSpace { .. }) => {
+                return std::iter::once(op.clone()).chain(components).collect();
+            }
+            _ => {}
+        }
+    }
+    let initial = if stroking { SetStrokeGray { gray: 0.0 } } else { SetFillGray { gray: 0.0 } };
+    std::iter::once(initial).chain(components).collect()
 }
 
 pub(super) fn set_fill(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64) {
-    let found = content[..=object.end].iter_mut().rev().find(|op| matches!(op, PdfOp::SetFillRgb { .. } | PdfOp::SetFillGray { .. }));
-    if let Some(op) = found {
-        *op = PdfOp::SetFillRgb { r: red, g: green, b: blue };
-        return;
+    let at = object.end;
+    let restore = previous_color(&content[..at], false);
+    match content[at] {
+        PdfOp::Stroke => content[at] = PdfOp::FillStroke,
+        PdfOp::CloseStroke => content[at] = PdfOp::CloseFillStroke,
+        _ => {}
     }
-    content.insert(object.start, PdfOp::SetFillRgb { r: red, g: green, b: blue });
+    content.splice(at + 1..at + 1, restore);
+    content.insert(at, PdfOp::SetFillRgb { r: red, g: green, b: blue });
 }
 
 pub(super) fn set_stroke(content: &mut Vec<PdfOp>, object: &PageObject, red: f64, green: f64, blue: f64, width: f64) {
@@ -106,94 +130,150 @@ pub(super) fn set_stroke(content: &mut Vec<PdfOp>, object: &PageObject, red: f64
             _ => {}
         }
     }
-    content.insert(object.start, PdfOp::SetLineWidth { width: if width > 0.0 { width } else { 1.0 } });
-    content.insert(object.start, PdfOp::SetStrokeRgb { r: red, g: green, b: blue });
+    let at = object.end;
+    let mut restore = previous_color(&content[..at], true);
+    restore.push(PdfOp::SetLineWidth { width: object.line_width });
+    content.splice(at + 1..at + 1, restore);
+    content.splice(at..at, [PdfOp::SetStrokeRgb { r: red, g: green, b: blue }, PdfOp::SetLineWidth { width: width.max(0.0) }]);
 }
 
-fn shift_position(op: &mut PdfOp, delta: (f64, f64)) {
+fn translate_text(content: &mut Vec<PdfOp>, object: &PageObject, dx: f64, dy: f64) -> Result<(), Fault> {
+    if dx == 0.0 && dy == 0.0 { return Ok(()); }
+    let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
+    let inverse = invert(object.text_transform).ok_or_else(|| fault("cannot move text drawn with a singular matrix"))?;
+    let horizontal = inverse[0] * dx + inverse[2] * dy;
+    let vertical = inverse[1] * dx + inverse[3] * dy;
+    if horizontal != 0.0 && object.font_size == 0.0 { return Err(fault("cannot shift text with zero font size")); }
+    let adjust = |amount| PdfOp::ShowTextArray { items: vec![PdfTextArrayItem::Adjust { amount }] };
+    let mut replacement = Vec::new();
+    let paint = show_with_explicit_line(content[object.end].clone(), &mut replacement);
+    if vertical != 0.0 { replacement.push(PdfOp::SetTextRise { rise: placement.rise + vertical }); }
+    if horizontal != 0.0 { replacement.push(adjust(-horizontal * 1000.0 / object.font_size)); }
+    replacement.push(paint);
+    if horizontal != 0.0 { replacement.push(adjust(horizontal * 1000.0 / object.font_size)); }
+    if vertical != 0.0 { replacement.push(PdfOp::SetTextRise { rise: placement.rise }); }
+    content.splice(object.end..=object.end, replacement);
+    Ok(())
+}
+
+fn show_with_explicit_line(op: PdfOp, replacement: &mut Vec<PdfOp>) -> PdfOp {
     match op {
-        PdfOp::SetTextMatrix { matrix } => {
-            matrix[4] += delta.0;
-            matrix[5] += delta.1;
+        PdfOp::NextLineShowText { text } => {
+            replacement.push(PdfOp::NextLine);
+            PdfOp::ShowText { text }
         }
-        PdfOp::MoveText { tx, ty } | PdfOp::MoveTextSetLeading { tx, ty } => {
-            *tx += delta.0;
-            *ty += delta.1;
+        PdfOp::NextLineShowTextSpaced { word_spacing, char_spacing, text } => {
+            replacement.extend([PdfOp::SetWordSpacing { spacing: word_spacing }, PdfOp::SetCharSpacing { spacing: char_spacing }, PdfOp::NextLine]);
+            PdfOp::ShowText { text }
+        }
+        op => op,
+    }
+}
+
+pub(super) fn delete_text(content: &mut Vec<PdfOp>, object: &PageObject) -> Result<(), Fault> {
+    let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
+    let inverse = invert(placement.matrix).ok_or_else(|| fault("cannot restore a singular text matrix"))?;
+    let (advance, _) = apply(inverse, placement.next_origin.0, placement.next_origin.1);
+    let mut replacement = Vec::new();
+    show_with_explicit_line(content[object.end].clone(), &mut replacement);
+    append_advance(&mut replacement, advance, object.font_size, placement.horizontal_scale)?;
+    content.splice(object.end..=object.end, replacement);
+    Ok(())
+}
+
+fn append_advance(content: &mut Vec<PdfOp>, advance: f64, size: f64, scale: f64) -> Result<(), Fault> {
+    if advance != 0.0 {
+        if size * scale == 0.0 { return Err(fault("cannot restore an advance with zero text scale")); }
+        let amount = -advance * 100_000.0 / (size * scale);
+        content.push(PdfOp::ShowTextArray { items: vec![PdfTextArrayItem::Adjust { amount }] });
+    }
+    Ok(())
+}
+
+fn resize_text(content: &mut Vec<PdfOp>, object: &PageObject, x: f64, y: f64, width: f64, height: f64) -> Result<(), Fault> {
+    let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
+    if object.width <= 0.0 || object.height <= 0.0 || object.font_size * placement.horizontal_scale == 0.0 {
+        return Err(fault("cannot resize text without an advance and height"));
+    }
+    let sx = width / object.width;
+    let sy = height / object.height;
+    let world = [sx, 0.0, 0.0, sy, x - sx * object.x, y - sy * object.y];
+    let inverse = invert(object.ctm).ok_or_else(|| fault("cannot resize text drawn with a singular matrix"))?;
+    let matrix = multiply(inverse, multiply(world, multiply(object.ctm, placement.matrix)));
+    let line_inverse = invert(placement.line).ok_or_else(|| fault("cannot restore a singular text line matrix"))?;
+    let (advance, _) = apply(line_inverse, placement.next_origin.0, placement.next_origin.1);
+    let mut replacement = Vec::new();
+    let paint = show_with_explicit_line(content[object.end].clone(), &mut replacement);
+    replacement.extend([PdfOp::SetTextMatrix { matrix }, paint, PdfOp::SetTextMatrix { matrix: placement.line }]);
+    append_advance(&mut replacement, advance, object.font_size, placement.horizontal_scale)?;
+    content.splice(object.end..=object.end, replacement);
+    Ok(())
+}
+
+fn transform_xobject(content: &mut Vec<PdfOp>, object: &PageObject, transform: PdfMatrix) -> Result<(), Fault> {
+    let inverse = invert(object.ctm).ok_or_else(|| fault("cannot transform an object drawn with a singular matrix"))?;
+    let matrix = multiply(inverse, multiply(transform, object.ctm));
+    let at = object.end;
+    content.insert(at + 1, PdfOp::Restore);
+    content.splice(at..at, [PdfOp::Save, PdfOp::Transform { matrix }]);
+    Ok(())
+}
+
+fn advance_ctm(stack: &mut Vec<PdfMatrix>, op: &PdfOp) {
+    match op {
+        PdfOp::Save => stack.push(*stack.last().unwrap()),
+        PdfOp::Restore if stack.len() > 1 => { stack.pop(); }
+        PdfOp::Transform { matrix } => {
+            let current = stack.last_mut().unwrap();
+            *current = multiply(*current, *matrix);
         }
         _ => {}
     }
 }
 
-fn shift_path(ops: &mut [PdfOp], ctm: PdfMatrix, dx: f64, dy: f64) {
-    let inverse = invert(ctm).unwrap_or(PDF_IDENTITY_MATRIX);
-    let map = |x: f64, y: f64| {
-        let (px, py) = apply(ctm, x, y);
-        apply(inverse, px + dx, py + dy)
-    };
-    for op in ops {
-        match op {
-            PdfOp::MoveTo { x, y } | PdfOp::LineTo { x, y } => {
-                let (nx, ny) = map(*x, *y);
-                *x = nx;
-                *y = ny;
-            }
-            PdfOp::Rectangle { x, y, .. } => {
-                let (nx, ny) = map(*x, *y);
-                *x = nx;
-                *y = ny;
-            }
-            PdfOp::CurveTo { x1, y1, x2, y2, x3, y3 } => {
-                let (a, b) = map(*x1, *y1);
-                let (c, d) = map(*x2, *y2);
-                let (e, f) = map(*x3, *y3);
-                *x1 = a;
-                *y1 = b;
-                *x2 = c;
-                *y2 = d;
-                *x3 = e;
-                *y3 = f;
-            }
-            PdfOp::CurveToInitial { x2, y2, x3, y3 } => {
-                let (c, d) = map(*x2, *y2);
-                let (e, f) = map(*x3, *y3);
-                *x2 = c;
-                *y2 = d;
-                *x3 = e;
-                *y3 = f;
-            }
-            PdfOp::CurveToFinal { x1, y1, x3, y3 } => {
-                let (a, b) = map(*x1, *y1);
-                let (e, f) = map(*x3, *y3);
-                *x1 = a;
-                *y1 = b;
-                *x3 = e;
-                *y3 = f;
-            }
-            _ => {}
+fn transform_path(content: &mut Vec<PdfOp>, object: &PageObject, transform: PdfMatrix) -> Result<(), Fault> {
+    let mut stack = vec![PDF_IDENTITY_MATRIX];
+    for op in &content[..object.start] {
+        advance_ctm(&mut stack, op);
+    }
+    let mut replacement = Vec::new();
+    for mut op in content[object.start..object.end].iter().cloned() {
+        advance_ctm(&mut stack, &op);
+        if !matches!(op, PdfOp::MoveTo { .. } | PdfOp::LineTo { .. } | PdfOp::CurveTo { .. } |
+            PdfOp::CurveToInitial { .. } | PdfOp::CurveToFinal { .. } | PdfOp::Rectangle { .. }) {
+            replacement.push(op);
+            continue;
         }
-    }
-}
-
-fn shift_path_bounds(ops: &mut [PdfOp], object: &PageObject, x: f64, y: f64, width: f64, height: f64) {
-    if ops.iter().any(|op| matches!(op, PdfOp::Rectangle { .. })) {
-        return;
-    }
-    let inverse = invert(object.ctm).unwrap_or(PDF_IDENTITY_MATRIX);
-    let map = |px: f64, py: f64| {
-        let (ux, uy) = apply(object.ctm, px, py);
-        let nx = if object.width.abs() < 1.0e-6 { x } else { x + (ux - object.x) / object.width * width };
-        let ny = if object.height.abs() < 1.0e-6 { y } else { y + (uy - object.y) / object.height * height };
-        apply(inverse, nx, ny)
-    };
-    for op in ops {
-        match op {
-            PdfOp::MoveTo { x, y } | PdfOp::LineTo { x, y } => {
-                let (nx, ny) = map(*x, *y);
-                *x = nx;
-                *y = ny;
+        let ctm = *stack.last().unwrap();
+        let inverse = invert(ctm).ok_or_else(|| fault("cannot transform a path drawn with a singular matrix"))?;
+        let local = multiply(inverse, multiply(transform, ctm));
+        let point = |x: &mut f64, y: &mut f64| { (*x, *y) = apply(local, *x, *y); };
+        match &mut op {
+            PdfOp::MoveTo { x, y } | PdfOp::LineTo { x, y } => point(x, y),
+            PdfOp::CurveTo { x1, y1, x2, y2, x3, y3 } => { point(x1, y1); point(x2, y2); point(x3, y3); }
+            PdfOp::CurveToInitial { x2, y2, x3, y3 } => { point(x2, y2); point(x3, y3); }
+            PdfOp::CurveToFinal { x1, y1, x3, y3 } => { point(x1, y1); point(x3, y3); }
+            PdfOp::Rectangle { x, y, width, height } => {
+                let (left, bottom) = apply(local, *x, *y);
+                if local[1] == 0.0 && local[2] == 0.0 {
+                    (*x, *y) = (left, bottom);
+                    *width *= local[0];
+                    *height *= local[3];
+                } else {
+                    replacement.push(PdfOp::MoveTo { x: left, y: bottom });
+                    for (px, py) in [(*x + *width, *y), (*x + *width, *y + *height), (*x, *y + *height)] {
+                        let (x, y) = apply(local, px, py);
+                        replacement.push(PdfOp::LineTo { x, y });
+                    }
+                    replacement.push(PdfOp::ClosePath);
+                    continue;
+                }
             }
-            _ => {}
+            _ => unreachable!(),
         }
+        replacement.push(op);
     }
+    content.splice(object.start..object.end, replacement);
+    Ok(())
 }
 //#endregion 🧮️ContentOps

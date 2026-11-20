@@ -73,7 +73,7 @@ impl OriginalEffectRun{
  pub fn finish(mut self,work:&mut OriginalWork<'_>,spent:&mut u128)->Result<(u128,Option<usize>),ValueError>{
   let mut proof=None;let action=self.action;let mut slot=action;
   let performed=OriginalWorkSink::observed_work(self.receipt.as_ref().ok_or_else(||ValueError::invariant("authoring receipt absent"))?);*spent=performed;work.claim_performed_for_action(action,&mut self.receipt)?;
-  if performed==0{work.cancel_for_action(&mut slot)?}else{
+  if !work.performed_seen_for_action(action)?{work.cancel_for_action(&mut slot)?}else{
    let mut partial=None;if !work.settle_partial_for_action_into(action,&mut partial)?{return Err(ValueError::invariant("authoring partial receipt is pending"))}
    let partial=partial.take().ok_or_else(||ValueError::invariant("authoring partial outcome absent"))?;if partial.total()!=performed||partial.source_refusal().is_some(){return Err(ValueError::invariant("authoring partial outcome differs from its performed work"))}
    let committed=work.commit_for_action(performed,action,&mut proof)?;work.finish_for_action(&mut proof,&mut slot)?;if !committed{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"authoring work commit was refused"))}

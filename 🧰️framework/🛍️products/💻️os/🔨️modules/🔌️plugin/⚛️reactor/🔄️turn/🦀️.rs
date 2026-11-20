@@ -38,7 +38,7 @@ thread_local!{
 }
 
 semio_plugin_abi::component_persistent_local! {
-    static COMMAND_INGRESS: RefCell<[instance_lifetime::OriginalActorReturnSlot<RetainedCommandIngress>;2]> = RefCell::new(std::array::from_fn(|_|instance_lifetime::OriginalActorReturnSlot::empty()));
+    static COMMAND_INGRESS: RefCell<[instance_lifetime::OriginalActorReturnSlot<Box<RetainedCommandIngress>>;2]> = RefCell::new(std::array::from_fn(|_|instance_lifetime::OriginalActorReturnSlot::empty()));
 }
 
 thread_local! {

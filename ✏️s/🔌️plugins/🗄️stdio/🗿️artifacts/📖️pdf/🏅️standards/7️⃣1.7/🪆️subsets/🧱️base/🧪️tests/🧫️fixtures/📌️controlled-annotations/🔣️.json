@@ -1,0 +1,91 @@
+{
+  "schema": "semio.stdio.pdf-controlled-annotations.v1",
+  "objects": [
+    [
+      1,
+      0,
+      "<< /Type /Catalog /Pages 2 0 R >>"
+    ],
+    [
+      2,
+      0,
+      "<< /Type /Pages /Count 2 /Kids [3 0 R 7 0 R] /MediaBox [0 0 160 100] >>"
+    ],
+    [
+      3,
+      0,
+      "<< /Type /Page /Parent 2 0 R /Annots 4 0 R >>"
+    ],
+    [
+      4,
+      0,
+      "[5 2 R 6 0 R]"
+    ],
+    [
+      5,
+      2,
+      "<< /Type /Annot /Subtype /Text /P 3 0 R /Rect [10 10 30 30] /Contents (Review note) /NM (review-1) /Name /Comment /Open true /F 4 /T (Reviewer) /Subj (Plan) /C [1 0.5 0] >>"
+    ],
+    [
+      6,
+      0,
+      "<< /Type /Annot /Subtype /Link /Rect [40 10 85 25] /Border [0 0 0] /H /I /A << /Type /Action /S /URI /URI (https://example.com/plan) >> >>"
+    ],
+    [
+      7,
+      0,
+      "<< /Type /Page /Parent 2 0 R /Annots [8 0 R] >>"
+    ],
+    [
+      8,
+      0,
+      "<< /Subtype /Text /Rect [15 45 35 65] /Contents (Second page note) >>"
+    ]
+  ],
+  "expected": {
+    "note": {
+      "rect": [
+        10,
+        10,
+        30,
+        30
+      ],
+      "contents": "Review note",
+      "name": "review-1",
+      "icon": "Comment",
+      "open": true,
+      "title": "Reviewer",
+      "subject": "Plan",
+      "flags": 4,
+      "color": [
+        1,
+        0.5,
+        0
+      ]
+    },
+    "link": {
+      "rect": [
+        40,
+        10,
+        85,
+        25
+      ],
+      "uri": "https://example.com/plan",
+      "highlight": "I",
+      "border": [
+        0,
+        0,
+        0
+      ]
+    },
+    "secondNote": {
+      "rect": [
+        15,
+        45,
+        35,
+        65
+      ],
+      "contents": "Second page note"
+    }
+  }
+}

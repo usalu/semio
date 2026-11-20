@@ -1,0 +1,16 @@
+[
+  {"mode":"held","rows":140,"limit":4,"halt":-1,"verified":[64,128]},
+  {"mode":"stale","rows":140,"limit":4,"halt":68,"verified":[64]},
+  {"mode":"cancelled","rows":140,"limit":4,"halt":68,"verified":[64]},
+  {"mode":"first row stale","rows":140,"limit":72,"halt":0,"verified":[]},
+  {"mode":"cancelled","rows":1,"limit":1,"halt":0,"verified":[],"report":false},
+  {"mode":"cancelled","rows":1,"limit":1,"halt":0,"verified":[],"report":true},
+  {"mode":"cancelled","rows":64,"limit":4,"halt":63,"verified":[],"report":true},
+  {"mode":"cancelled","rows":0,"limit":1,"halt":0,"verified":[],"report":false},
+  {"mode":"cancelled","rows":0,"limit":1,"halt":0,"verified":[],"report":true},
+  {"mode":"invalid","rows":1,"limit":"0","halt":0,"verified":[]},
+  {"mode":"invalid","rows":1,"limit":"-1","halt":0,"verified":[]},
+  {"mode":"invalid","rows":1,"limit":"NaN","halt":0,"verified":[]},
+  {"mode":"invalid","rows":1,"limit":"Infinity","halt":0,"verified":[]},
+  {"mode":"invalid","rows":1,"limit":"1.5","halt":0,"verified":[]}
+]

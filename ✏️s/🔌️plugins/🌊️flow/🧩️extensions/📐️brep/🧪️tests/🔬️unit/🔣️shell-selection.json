@@ -1,0 +1,11 @@
+{
+  "operator": "brep.topology.shells",
+  "source": "solid",
+  "channel": "shells",
+  "schema": "list",
+  "member": { "schema": "geometry", "kind": "shell" },
+  "cases": [
+    { "id": "outer only", "outer": 21, "inners": [], "expected": [21] },
+    { "id": "outer then authored inner shells", "outer": 8, "inners": [19, 4], "expected": [8, 19, 4] }
+  ]
+}

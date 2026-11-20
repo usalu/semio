@@ -173,6 +173,40 @@
         }
       },
       "warns": false
+    },
+    {
+      "id": "bounded-file-open",
+      "why": "The browser admits the original extent before it reads the file.",
+      "effect": {
+        "tag": "request-file-open",
+        "val": {
+          "req": 111,
+          "params": {
+            "accept": ".stp",
+            "readAs": {
+              "tag": "some",
+              "val": "dataUrl"
+            },
+            "importAction": "importModelFile",
+            "multiple": false,
+            "max-file-bytes": {
+              "tag": "some",
+              "val": 24576
+            }
+          }
+        }
+      },
+      "friendly": {
+        "requestFileOpen": {
+          "req": 111,
+          "accept": ".stp",
+          "readAs": "dataUrl",
+          "importAction": "importModelFile",
+          "multiple": false,
+          "maxFileBytes": 24576
+        }
+      },
+      "warns": false
     }
   ],
   "chunkCases": [

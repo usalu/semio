@@ -199,6 +199,50 @@ fn module_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(MODULE_RETAINED_RAW_BYTES, 64, MODULE_RETAINED_WORK_ITEMS as u64, MODULE_RETAINED_OUTPUT_BYTES, 7_500)
 }
 
+fn module_flow_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(MODULE_RETAINED_RAW_BYTES, 64, 64, MODULE_RETAINED_OUTPUT_BYTES, 7_500, 1, 1)
+}
+
+/// 🧾️ Cancellation proofs of the media tools served by `ModuleRetainedCommandJobFactory`.
+struct ModuleRetainedCommandJobFactoryProofs;
+
+impl ModuleRetainedCommandJobFactoryProofs {
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: ModuleApp,
+        owner_file: "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+        controller: "s.playbook.procedural@1/*#editor",
+        artifact_schema: "playbook.module.procedural.payload",
+        factory: "ModuleRetainedCommandJobFactory",
+        factory_type: ModuleRetainedCommandJobFactory,
+        contract: module_retained_contract(),
+        tools: ["exportSolidGeometry", "importSolidGeometry"]
+    }
+
+    fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+}
+
+/// 🧾️ Cancellation proof of the embedded-flow evaluation tool served by `ModuleFlowCommandJobFactory`.
+struct ModuleFlowCommandJobFactoryProofs;
+
+impl ModuleFlowCommandJobFactoryProofs {
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: ModuleApp,
+        owner_file: "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+        controller: "s.playbook.procedural@1/*#editor",
+        artifact_schema: "playbook.module.procedural.payload",
+        factory: "ModuleFlowCommandJobFactory",
+        factory_type: ModuleFlowCommandJobFactory,
+        contract: module_flow_contract(),
+        tools: ["evaluateEmbeddedFlow"]
+    }
+
+    fn proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
+}
+
 fn module_retained_command_id(command: &Command) -> &'static str {
     match command {
         Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
@@ -297,7 +341,7 @@ impl ToolJobFactory for ModuleFlowCommandJobFactory {
     fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { "playbook.module.procedural.flow-command.v1" }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::resumable(MODULE_RETAINED_RAW_BYTES, 64, 64, MODULE_RETAINED_OUTPUT_BYTES, 7_500, 1, 1) }
+    fn execution_contract(&self) -> ToolExecutionContract { module_flow_contract() }
     semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: MODULE_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
@@ -332,15 +376,10 @@ impl ArtifactApp for ModuleApp {
     const APP_ID: &'static str = MODULE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
 
-    semio_plugin::bounded_first_step_tool_proofs! {
-        owner: ModuleApp,
-        owner_file: "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
-        controller: "s.playbook.procedural@1/*#editor",
-        artifact_schema: "playbook.module.procedural.payload",
-        factory: "ModuleRetainedCommandJobFactory",
-        factory_type: ModuleRetainedCommandJobFactory,
-        contract: module_retained_contract(),
-        tools: ["exportSolidGeometry", "importSolidGeometry"]
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = ModuleRetainedCommandJobFactoryProofs::proofs();
+        proofs.extend(ModuleFlowCommandJobFactoryProofs::proofs());
+        proofs
     }
 
     /// 📬️ Without a publication authority on the artifact lane every `Artifact`-lane tool fails

@@ -855,4 +855,3 @@ pub async fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_pl
 }
 //#endregion 🧩️ArtifactItems4
 
-semio_plugin::retained_command::terminal_frame_bound!(HomeCreateStudioWork, HomeCatalogWork);

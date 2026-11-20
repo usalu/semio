@@ -269,7 +269,6 @@
 	.presentation-interaction-slide-reset:hover {
 	background: var(--hover-panel);
 	color: var(--foreground);
-	border-color: var(--border-normal-color);
 }
 
 /* #endregion 🔖️Interaction */

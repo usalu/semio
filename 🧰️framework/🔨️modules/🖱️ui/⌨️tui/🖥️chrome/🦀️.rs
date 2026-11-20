@@ -779,6 +779,79 @@ fn window_constraint() -> crate::layout::Constraint {
     Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() }
 }
 
+/// 🧿 Which tab of a stack a window node shows, how many windows share the canvas and whether it is zoomed.
+struct StackSlot<'a> {
+    own: &'a str,
+    active: &'a str,
+    peers: usize,
+    zoomed: bool,
+}
+
+fn find_window(windows: &[(String, NodeId)], id: &str) -> Option<NodeId> {
+    windows.iter().find(|(k, _)| k == id).map(|(_, n)| *n)
+}
+
+/// 🫂️ How many windows share the canvas of `layout`.
+fn layout_peers(layout: &WindowLayout) -> usize {
+    use crate::layout::{WindowLayoutChild, WindowLayoutRoot};
+    fn count_windows(child: &WindowLayoutChild) -> usize {
+        match child {
+            WindowLayoutChild::Stack(s) => s.children.len(),
+            WindowLayoutChild::Axis(a) => a.children.iter().map(count_windows).sum(),
+        }
+    }
+    match &layout.root {
+        WindowLayoutRoot::Axis(axis) => axis.children.iter().map(count_windows).sum(),
+        WindowLayoutRoot::Stack(stack) => stack.children.len(),
+    }
+}
+
+fn tab_label(child: &crate::layout::WindowLayoutWindowNode) -> String {
+    child.title.clone().unwrap_or_else(|| child.window_kind_id.clone())
+}
+
+/// 🪧️ The tab strip of `stack`, each tab carrying the task status of its mounted window.
+fn stack_tab_states(scene: &Scene, windows: &[(String, NodeId)], stack: &crate::layout::WindowLayoutStackNode) -> Vec<WindowStackTabState> {
+    let status_of = |id: &str| find_window(windows, id).and_then(|node| match &scene.node(node).content {
+        NodeContent::Chrome(ChromeState::Window(state)) => state.status,
+        _ => None,
+    });
+    stack.children.iter().map(|c| WindowStackTabState { label: tab_label(c), corner: c.corner.unwrap_or_default(), status: status_of(&c.window_kind_id) }).collect()
+}
+
+/// 🛂️ Applies the stack slot a mount gives a window: its tabs, ids, active tab, peers, zoom and title.
+fn apply_stack_slot(ws: &mut WindowState, stack: &crate::layout::WindowLayoutStackNode, slot: &StackSlot<'_>, tabs: Vec<WindowStackTabState>) {
+    ws.stack_tabs = tabs;
+    ws.tab_ids = stack.children.iter().map(|c| c.window_kind_id.clone()).collect();
+    ws.active_stack_tab = stack.children.iter().position(|t| t.window_kind_id == slot.active).unwrap_or(0);
+    ws.peers = slot.peers;
+    ws.zoomed = slot.zoomed;
+    if let Some(title) = stack.children.iter().find(|c| c.window_kind_id == slot.own).map(tab_label) {
+        ws.title = title;
+    }
+}
+
+/// 🛰️ The visible windows a mount of `layout` into `area` paints, in paint order, each with the state its mounted node would carry.
+pub fn project_window_layout(scene: &Scene, layout: &WindowLayout, area: Rect, windows: &[(String, NodeId)]) -> Vec<(NodeId, Rect, WindowState)> {
+    let peers = layout_peers(layout);
+    let zoomed = layout.zoomed.as_deref().filter(|id| find_window(windows, id).is_some());
+    solve_window_layout(layout, area).into_iter().filter_map(|measure| {
+        let own = measure.window_kind_id.as_str();
+        let node = find_window(windows, own)?;
+        let NodeContent::Chrome(ChromeState::Window(state)) = &scene.try_node(node)?.content else { return None };
+        let mut state = (**state).clone();
+        let slot = StackSlot { own, active: own, peers, zoomed: zoomed == Some(own) };
+        match crate::layout::stack_hosting(layout, own) {
+            Some(stack) => apply_stack_slot(&mut state, &stack, &slot, stack_tab_states(scene, windows, &stack)),
+            None => {
+                state.zoomed = slot.zoomed;
+                state.peers = peers;
+            }
+        }
+        Some((node, measure.rect, state))
+    }).collect()
+}
+
 /// 🪆 Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
 /// Axes share one splitter cell between adjacent children; a zoomed layout hides every other window.
 pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
@@ -798,51 +871,12 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
     scene.node_mut(mount).set_constraint(Constraint { direction: Direction::Stack, width: Dimension::Weight(1), height: Dimension::Weight(1), ..Default::default() });
     *mount_root = Some(mount);
 
-    fn find_window(windows: &[(String, NodeId)], id: &str) -> Option<NodeId> {
-        windows.iter().find(|(k, _)| k == id).map(|(_, n)| *n)
-    }
-
-    fn count_windows(child: &WindowLayoutChild) -> usize {
-        match child {
-            WindowLayoutChild::Stack(s) => s.children.len(),
-            WindowLayoutChild::Axis(a) => a.children.iter().map(count_windows).sum(),
-        }
-    }
-
-    fn tab_label(child: &crate::layout::WindowLayoutWindowNode) -> String {
-        child.title.clone().unwrap_or_else(|| child.window_kind_id.clone())
-    }
-
-    /// 🧿 Which tab of a stack a window node shows, how many windows share the canvas and whether it is zoomed.
-    struct StackSlot<'a> {
-        own: &'a str,
-        active: &'a str,
-        peers: usize,
-        zoomed: bool,
-    }
-
     fn style_window(scene: &mut Scene, windows: &[(String, NodeId)], win_id: NodeId, stack: &WindowLayoutStackNode, slot: &StackSlot<'_>) {
-        let StackSlot { own, active, peers, zoomed } = *slot;
-        let status_of = |scene: &Scene, id: &str| windows.iter().find(|(known, _)| known == id).and_then(|(_, node)| match &scene.node(*node).content {
-            NodeContent::Chrome(ChromeState::Window(state)) => state.status,
-            _ => None,
-        });
-        let tabs: Vec<WindowStackTabState> = stack.children.iter().map(|c| WindowStackTabState { label: tab_label(c), corner: c.corner.unwrap_or_default(), status: status_of(scene, &c.window_kind_id) }).collect();
-        let ids: Vec<String> = stack.children.iter().map(|c| c.window_kind_id.clone()).collect();
-        let active_idx = stack.children.iter().position(|t| t.window_kind_id == active).unwrap_or(0);
-        let title = stack.children.iter().find(|c| c.window_kind_id == own).map(tab_label);
-        let visible = own == active;
-        scene.node_mut(win_id).set_visible(visible);
+        let tabs = stack_tab_states(scene, windows, stack);
+        scene.node_mut(win_id).set_visible(slot.own == slot.active);
         scene.node_mut(win_id).set_constraint(window_constraint());
         if let Some(ChromeState::Window(ws)) = scene.node_mut(win_id).chrome() {
-            ws.stack_tabs = tabs;
-            ws.tab_ids = ids;
-            ws.active_stack_tab = active_idx;
-            ws.peers = peers;
-            ws.zoomed = zoomed;
-            if let Some(title) = title {
-                ws.title = title;
-            }
+            apply_stack_slot(ws, stack, slot, tabs);
         }
     }
 
@@ -880,10 +914,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
         }
     }
 
-    let peers = match &layout.root {
-        WindowLayoutRoot::Axis(axis) => axis.children.iter().map(count_windows).sum(),
-        WindowLayoutRoot::Stack(stack) => stack.children.len(),
-    };
+    let peers = layout_peers(layout);
 
     if let Some(zid) = layout.zoomed.as_deref() {
         if let Some(zoomed) = find_window(windows, zid) {

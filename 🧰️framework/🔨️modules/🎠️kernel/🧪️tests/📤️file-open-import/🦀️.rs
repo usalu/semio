@@ -196,7 +196,7 @@ fn the_chunk_envelope_never_widens_its_integers_onto_floats() {
 /// not, and `import_action` is the verb a shell re-dispatches once per chunk.
 #[test]
 fn the_effect_envelope_names_the_verb_a_shell_redispatches() {
-    let effect = Effect::RequestFileOpen { req: RequestId(131), accept: ".stl".into(), read_as: Some("dataUrl".into()), import_action: "importDocument".into(), multiple: false, args: None };
+    let effect = Effect::RequestFileOpen { max_file_bytes: None, req: RequestId(131), accept: ".stl".into(), read_as: Some("dataUrl".into()), import_action: "importDocument".into(), multiple: false, args: None };
     let Effect::RequestFileOpen { req, accept, read_as, import_action, multiple, .. } = &effect else { panic!("variant") };
     assert_eq!(req.0, 131);
     assert_eq!(accept, ".stl");
@@ -223,10 +223,11 @@ fn every_fixture_friendly_effect_parses_back_into_the_kernel_effect() {
     assert!(fixture.wire_cases.len() >= 4, "fixture rows: {}", fixture.wire_cases.len());
     for case in fixture.wire_cases {
         let effect: Effect = serde_json::from_value(case.friendly.clone()).unwrap_or_else(|error| panic!("{} must parse: {error}", case.id));
-        let Effect::RequestFileOpen { accept, import_action, .. } = &effect else { panic!("{} must be a RequestFileOpen", case.id) };
+        let Effect::RequestFileOpen { accept, import_action, max_file_bytes, .. } = &effect else { panic!("{} must be a RequestFileOpen", case.id) };
         let expected = case.friendly.get("requestFileOpen").expect("friendly shape");
         assert_eq!(accept, expected.get("accept").and_then(serde_json::Value::as_str).unwrap_or_default(), "{}", case.id);
         assert_eq!(import_action, expected.get("importAction").and_then(serde_json::Value::as_str).unwrap_or_default(), "{}", case.id);
+        assert_eq!(max_file_bytes.map(u64::from), expected["maxFileBytes"].as_u64(), "{}", case.id);
         assert_eq!(serde_json::to_value(&effect).unwrap()["requestFileOpen"]["args"], expected["args"], "{}: retained invocation arguments", case.id);
     }
 }

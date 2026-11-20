@@ -513,6 +513,22 @@ pub(super) fn validate_request(request_json: &str) -> Result<ValidatedIconExport
     if request.shape.as_deref().is_some_and(|shape| !matches!(shape, "rectangle" | "ellipse")) {
         return Err("icon export shape was invalid".into());
     }
+    if let Some(drawing) = &request.drawing {
+        if [drawing.visible_width, drawing.hidden_width].into_iter().any(|width| !(width > 0.0 && width <= 64.0)) {
+            return Err("icon drawing stroke widths must be between zero and 64 pixels".into());
+        }
+        if !(0.0..=10.0).contains(&drawing.line_easing) {
+            return Err("icon drawing line easing must be between zero and 10 pixels".into());
+        }
+        if !(0.0..=1.0).contains(&drawing.fill_opacity) {
+            return Err("icon drawing fill opacity must be between zero and one".into());
+        }
+        if drawing.fill_color.iter().chain(&drawing.visible_color).chain(&drawing.hidden_color).any(|color| {
+            color.strip_prefix('#').is_none_or(|hex| !matches!(hex.len(), 3 | 6) || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()))
+        }) {
+            return Err("icon drawing colors must use three- or six-digit hex notation".into());
+        }
+    }
     let width = exact_dimension(request.width).ok_or("icon export width exceeded the image budget")?;
     let height = exact_dimension(request.height).ok_or("icon export height exceeded the image budget")?;
     if width > 16_384 || height > 16_384 {

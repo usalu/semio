@@ -86,6 +86,8 @@ pub struct NodeGraphFindItem {
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphHover {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node_id: Option<String>,
     /// 🔆️ When set, the graph paints the hovered channel (port) on `node_id`, matching the
     /// `"{nodeId}@{portId}"` pick id (see `nodeGraphPickChannel`).
@@ -354,6 +356,7 @@ impl ToValue for NodeGraphHover {
         let mut entries = Vec::new();
         value_push_option(&mut entries, "nodeId", &self.node_id);
         value_push_option(&mut entries, "portId", &self.port_id);
+        value_push_option(&mut entries, "edgeId", &self.edge_id);
         DslValue::Object(entries)
     }
 }
@@ -361,7 +364,7 @@ impl ToValue for NodeGraphHover {
 impl FromValue for NodeGraphHover {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
-        Ok(Self { node_id: value_decode_option(&entries, "nodeId")?, port_id: value_decode_option(&entries, "portId")? })
+        Ok(Self { node_id: value_decode_option(&entries, "nodeId")?, port_id: value_decode_option(&entries, "portId")?, edge_id: value_decode_option(&entries, "edgeId")? })
     }
 }
 

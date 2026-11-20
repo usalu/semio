@@ -219,7 +219,7 @@ impl EventRouter {
     }
 
     pub fn dispatch_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
-        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. }) && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id) {
+        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerLeave | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. }) && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id) {
             return Vec::new();
         }
         self.prune_dead_registrations(tree);
@@ -246,6 +246,11 @@ impl EventRouter {
                 commands.extend(self.update_hover(tree, None));
                 let _ = self.set_row_reason(tree, None);
             }
+            UiEvent::PointerLeave => {
+                self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
+                commands.extend(self.update_hover(tree, None));
+                let _ = self.set_row_reason(tree, None);
+            }
             UiEvent::PointerMove { x, y, .. } => {
                 if self.stepper_repeat.is_some_and(|repeat| absolute_rect(tree, repeat.node).is_none_or(|bounds| number_stepper_sign_at(bounds, *x, *y, self.flow.inline, self.control_border) != Some(repeat.sign))) {
                     self.stepper_repeat = None;
@@ -262,13 +267,13 @@ impl EventRouter {
                     _ => {}
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
+                self.update_stepper_hover_segment(tree, target, *x, *y);
+                commands.extend(self.update_hover(tree, target));
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
                     }
                 }
-                self.update_stepper_hover_segment(tree, target, *x, *y);
-                commands.extend(self.update_hover(tree, target));
                 self.hover_row_reason(tree, target, *x, *y);
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }

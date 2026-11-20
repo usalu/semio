@@ -13,12 +13,13 @@ fn a_fresh_transient_holds_no_solve() {
 /// 🏁️ `set-solve` replaces the lane wholesale and inverts back to what was there before.
 #[test]
 fn set_solve_replaces_and_inverts() {
-    use protocol::MutationKind;
+    use protocol::ColdMutationKind;
     let base = Wfc2dTransient { source_revision: Vec::new(), assignments: vec![Wfc2dAssignment { slot_id: "room-a".into(), tile_id: "room".into() }], contradiction: false };
     let next = SetSolve { source_revision: Vec::new(), assignments: Vec::new(), contradiction: true };
-    let produced = <SetSolve as MutationKind<Wfc2dTransient, Wfc2dTransientMutation>>::diff(&next, &base).diff().clone();
-    assert!(produced.contradiction && produced.assignments.is_empty());
-    let inverse = <SetSolve as MutationKind<Wfc2dTransient, Wfc2dTransientMutation>>::inverse(&next, &base).expect("valid retained mutation inverse fixture");
+    let produced = <SetSolve as ColdMutationKind<Wfc2dTransient, Wfc2dTransientMutation>>::diff(&next, &base).diff().clone();
+    assert_eq!(produced.contradiction, Some(true));
+    assert_eq!(produced.assignments, Some(Vec::new()));
+    let inverse = <SetSolve as ColdMutationKind<Wfc2dTransient, Wfc2dTransientMutation>>::inverse(&next, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc2dTransientMutation::SetSolve(SetSolve { source_revision: Vec::new(), assignments: base.assignments, contradiction: false })]);
 }
 

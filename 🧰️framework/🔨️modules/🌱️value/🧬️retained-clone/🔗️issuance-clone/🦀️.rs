@@ -1,5 +1,5 @@
 //! 🔗️ Clones genuine original shared issuances through separately funded alias and projection turns.
-use super::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep};
+use super::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep,RetainedCursorRelease};
 use crate::{RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep},shared_issuance::SealedShared};
 use std::mem::{ManuallyDrop,size_of};
 
@@ -29,6 +29,7 @@ fn output_ready(&self)->bool{!self.state.closing&&!self.state.spent&&self.state.
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{crate::retained_clone::retained_clone_cursor_take_demand::<SealedShared<T>,bool>()}
     fn take<'reply>(&mut self,output:&mut Option<SealedShared<T>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{crate::retained_clone::take_retained_clone_cursor_output!(self.output_ready(),self.state.output,output,self.state.spent,true,effect,reply,SealedShared<T>,bool)}
  
+ fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{Some(unsafe{RetainedCursorRelease::native(|cursor:&Self|cursor.terminal_is_empty())})}
  fn terminal_is_empty(&self)->bool{self.state.closing&&self.state.close_route.is_none()&&self.state.output.is_none()&&self.state.source.is_none()&&self.state.close.is_empty()}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.state.close.next_copy_with_binding(&self.state.source)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.state.close.next_owner_capacity_with_binding::<SealedShared<T>>(self.state.output.is_some(),body,&self.state.source)}

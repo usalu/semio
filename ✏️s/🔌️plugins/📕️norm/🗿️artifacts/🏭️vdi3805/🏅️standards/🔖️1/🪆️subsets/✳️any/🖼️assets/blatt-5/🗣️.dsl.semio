@@ -43,19 +43,21 @@ entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
   PMP-50 5 [ "Heizungspumpe DN50" "Heating pump DN50" ] 50
 }
 geometry={
-  geom-valve-50=id=geom-valve-50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
-    clearance=0.01 scale=1
-  }
-  connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
-    in water 0,0.1,0.05 -1,0,0 50mm
+  geom-valve-50={ id=geom-valve-50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
+      clearance=0.01 scale=1
+    }
+    connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
+      in water 0,0.1,0.05 -1,0,0 50mm
+    }
   }
 }
 curves={
-  curve-qh=id=curve-qh x-unit=symbol="%" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m kind=length delta=false si-factor=1
-  points [x:NUM y:NUM] {
-    0 8
-    50 6
-    100 2
+  curve-qh={ id=curve-qh x-unit=symbol="%" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m kind=length delta=false si-factor=1
+    points [x:NUM y:NUM] {
+      0 8
+      50 6
+      100 2
+    }
   }
 }
 limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

@@ -1,27 +1,30 @@
 //! 📨️ Final bitmap ticks admit their actual producer effect only after the bounded wire succeeds.
 use super::*;
-use semio_framework_job::InteractiveJob;
 
 #[test]
 fn final_tick_admission_controls_the_actual_completion_port() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧪️tests/🧫️bitmap-fill-publication/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         for pending in [false, true] {
-            let snapshot = BitmapSnapshot::reference_scene();
+            let mut snapshot = BitmapSnapshot::reference_scene();
+            snapshot.output.width = case["width"].as_u64().unwrap() as u32;
+            snapshot.output.height = case["height"].as_u64().unwrap() as u32;
             let identity = ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 7 }, [7;32]);
             let port = semio_plugin::ToolRunJobPort::default();
             let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
             let mut job = BitmapFillRunJob::new(identity, port.clone(), snapshot, operation);
             let previous = payload_from_assignment(1, 1, &[(0, 1)], false, false);
             job.last_payload = Some(previous.clone());
-            let width = case["width"].as_u64().unwrap() as u32;
-            let height = case["height"].as_u64().unwrap() as u32;
             let contradiction = case["contradiction"].as_bool().unwrap();
-            let payload = payload_from_assignment(width, height, &[(0, 0)], contradiction, true);
             let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
-            if case["cancelled"].as_bool().unwrap() { driver.turn(|cx| { cx.original_cancel_token().cancel(); Ok(()) }).unwrap(); }
+            if case["cancelled"].as_bool().unwrap() { driver.turn(|cx| { cx.original_cancel_token().cancel_now(); Ok(()) }).unwrap(); }
             driver.turn(|cx| {
-                let result = if pending { job.pending_finish = Some((contradiction, payload)); job.run(cx) } else { job.finish_payload(cx, payload, contradiction) };
+                let result = if pending {
+                    job.pending_finish = Some(contradiction);
+                    job.run(cx)
+                } else {
+                    job.finish_child(cx, contradiction)
+                };
                 if case["cancelled"].as_bool().unwrap() { assert!(matches!(result, FillRun::Cancelled)); }
                 else { assert!(matches!(result, FillRun::Staged)); }
                 Ok(())

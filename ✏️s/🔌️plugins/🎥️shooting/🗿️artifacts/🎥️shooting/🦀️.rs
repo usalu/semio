@@ -151,7 +151,7 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 
 // 🌍️ Scene records of the shooting artifact: the cameras, assets, shots, lighting records with their defaults and the camera math. See [`super`].
 
-pub use semio_s_artifact_shooting_shooting_inferences::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, default_camera_position, default_camera_target, default_fov, default_glb_format, one_f64, quat_from_axis_angle, quat_mul, shooting_asset_scale};
+pub use semio_s_artifact_shooting_shooting_inferences::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingDrawing, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, default_camera_position, default_camera_target, default_fov, default_glb_format, one_f64, quat_from_axis_angle, quat_mul, shooting_asset_scale};
 
 pub use semio_s_artifact_shooting_shooting_inferences::{empty_shooting_snapshot, shooting_resolve_shot_camera};
 
@@ -161,7 +161,7 @@ pub use semio_s_artifact_shooting_shooting_inferences::{ShootingEmblemChild, sho
 
 // 🩹️ Sparse patches of the shooting artifact: the identified records, the assigned wrapper and the asset, shot, camera and scene patches. See [`super`].
 
-pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShotPatch};
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingDrawingPatch, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShotPatch};
 
 //#region 🧪️Tests
 #[cfg(test)]

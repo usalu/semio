@@ -219,7 +219,7 @@
         "en": "Walking Commuter",
         "de": "Pendler zu Fuß"
       },
-      "heightM": 1.78,
+      "heightM": 1.8,
       "widthM": 0.4,
       "powerW": 132.2,
       "poses": [
@@ -271,8 +271,8 @@
       "id": "seated-office-worker",
       "category": "humans",
       "title": { "en": "Seated Office Worker", "de": "Büroarbeitende Person im Sitzen" },
-      "heightM": 1.411,
-      "widthM": 1.291,
+      "heightM": 1.413,
+      "widthM": 1.278,
       "powerW": 188.9,
       "poses": ["typing", "reading-screen", "leaning-back"],
       "clips": ["typing", "settle-back"],
@@ -290,8 +290,8 @@
       "id": "sleeping-person",
       "category": "humans",
       "title": { "en": "Sleeping Person", "de": "Schlafende Person" },
-      "heightM": 0.45,
-      "widthM": 1.88,
+      "heightM": 0.364,
+      "widthM": 1.919,
       "powerW": 70.9,
       "poses": ["supine", "side", "curled"],
       "clips": ["breathing", "turn-over"],
@@ -312,8 +312,8 @@
         "en": "Seated Reader",
         "de": "Sitzende lesende Person"
       },
-      "heightM": 1.34,
-      "widthM": 1.02,
+      "heightM": 1.337,
+      "widthM": 0.898,
       "powerW": 98.4,
       "poses": [
         "seated-upright",
@@ -367,9 +367,9 @@
         "en": "Running Child",
         "de": "Rennendes Kind"
       },
-      "heightM": 1.13,
-      "widthM": 0.281,
-      "powerW": 66.1,
+      "heightM": 1.096,
+      "widthM": 0.671,
+      "powerW": 283.3,
       "poses": [
         "standing-ready",
         "mid-stride",
@@ -423,8 +423,8 @@
         "en": "Wheelchair User",
         "de": "Rollstuhlnutzende Person"
       },
-      "heightM": 1.45,
-      "widthM": 1.09,
+      "heightM": 1.44,
+      "widthM": 1.085,
       "powerW": 132.8,
       "poses": [
         "seated-level",
@@ -479,7 +479,7 @@
         "de": "Ältere Person mit Gehstock"
       },
       "heightM": 1.63,
-      "widthM": 0.54,
+      "widthM": 0.5,
       "powerW": 125.6,
       "poses": [
         "stooped-standing",
@@ -532,7 +532,7 @@
         "de": "Radfahrende Person"
       },
       "heightM": 1.79,
-      "widthM": 1.74,
+      "widthM": 1.785,
       "powerW": 414,
       "poses": [
         "riding-upright",
@@ -584,8 +584,8 @@
         "en": "Worker Carrying Box",
         "de": "Arbeitende Person mit Kiste"
       },
-      "heightM": 1.815,
-      "widthM": 0.68,
+      "heightM": 1.82,
+      "widthM": 0.65,
       "powerW": 399.4,
       "poses": [
         "squat-grip",
@@ -691,8 +691,8 @@
         "en": "Jogger",
         "de": "Joggende Person"
       },
-      "heightM": 1.775,
-      "widthM": 1.035,
+      "heightM": 1.764,
+      "widthM": 1.007,
       "powerW": 895,
       "poses": [
         "initial-contact-l",
@@ -747,8 +747,8 @@
         "en": "Person with Umbrella",
         "de": "Person mit Regenschirm"
       },
-      "heightM": 2.09,
-      "widthM": 1.05,
+      "heightM": 2.07,
+      "widthM": 1.03,
       "powerW": 138.3,
       "poses": [
         "umbrella-up-still",
@@ -798,8 +798,8 @@
         "en": "Leaning Person",
         "de": "Angelehnte Person"
       },
-      "heightM": 1.73,
-      "widthM": 0.53,
+      "heightM": 1.74,
+      "widthM": 0.54,
       "powerW": 118.9,
       "poses": [
         "leaning-shoulder-wall",
@@ -851,8 +851,8 @@
         "en": "Tour Guide",
         "de": "Stadtführende Person"
       },
-      "heightM": 2.275,
-      "widthM": 1.254,
+      "heightM": 2.226,
+      "widthM": 1.239,
       "powerW": 169.3,
       "poses": [
         "standing-pointing",
@@ -1341,7 +1341,7 @@
         "de": "Labrador"
       },
       "heightM": 0.72,
-      "widthM": 1.44,
+      "widthM": 1.29,
       "powerW": 56.6,
       "poses": [
         "standing-alert",
@@ -1447,8 +1447,8 @@
         "en": "Horse",
         "de": "Pferd"
       },
-      "heightM": 2.37,
-      "widthM": 2.91,
+      "heightM": 2.34,
+      "widthM": 2.9,
       "powerW": 576.2,
       "poses": [
         "standing-alert",
@@ -1498,8 +1498,8 @@
         "en": "Rock Pigeon",
         "de": "Felsentaube"
       },
-      "heightM": 0.25,
-      "widthM": 0.33,
+      "heightM": 0.224,
+      "widthM": 0.315,
       "powerW": 2.6,
       "poses": [
         "standing-alert",
@@ -1554,8 +1554,8 @@
         "en": "Roe Deer",
         "de": "Reh"
       },
-      "heightM": 1.08,
-      "widthM": 1.46,
+      "heightM": 1.122,
+      "widthM": 1.035,
       "powerW": 56.9,
       "poses": [
         "alert",
@@ -1608,8 +1608,8 @@
         "en": "Dairy Cow",
         "de": "Milchkuh"
       },
-      "heightM": 1.49,
-      "widthM": 2.55,
+      "heightM": 1.47,
+      "widthM": 2.54,
       "powerW": 918.2,
       "poses": [
         "standing-chewing",
@@ -1713,7 +1713,7 @@
         "de": "Café-Stuhl"
       },
       "heightM": 0.88,
-      "widthM": 0.44,
+      "widthM": 0.487,
       "powerW": 0,
       "poses": [
         "upright-empty",
@@ -1763,8 +1763,8 @@
         "en": "Office Swivel Chair",
         "de": "Bürodrehstuhl"
       },
-      "heightM": 1.08,
-      "widthM": 0.6,
+      "heightM": 1.0,
+      "widthM": 0.66,
       "powerW": 0,
       "poses": ["seat-low","swivel-quarter","seat-high","reclined"],
       "clips": [
@@ -1860,7 +1860,7 @@
         "de": "Straßenleuchte"
       },
       "heightM": 6.0,
-      "widthM": 1.2,
+      "widthM": 1.375,
       "powerW": 60,
       "poses": [
         "dusk-off",
@@ -2012,8 +2012,8 @@
         "en": "Playground Swing",
         "de": "Spielplatzschaukel"
       },
-      "heightM": 2.35,
-      "widthM": 2.78,
+      "heightM": 2.5,
+      "widthM": 2.18,
       "powerW": 0,
       "poses": [
         "rest",
@@ -2116,7 +2116,7 @@
         "de": "Salonwagen von 1929"
       },
       "heightM": 1.7,
-      "widthM": 4.38,
+      "widthM": 4.45,
       "powerW": 45000,
       "poses": [
         "parked",
@@ -2166,7 +2166,7 @@
         "en": "City Bus",
         "de": "Stadtbus"
       },
-      "heightM": 3.14,
+      "heightM": 3.3,
       "widthM": 12,
       "powerW": 262000,
       "poses": [
@@ -2219,8 +2219,8 @@
         "en": "Excavator",
         "de": "Bagger"
       },
-      "heightM": 3.43,
-      "widthM": 9.85,
+      "heightM": 3.44,
+      "widthM": 9.64,
       "powerW": 110000,
       "poses": [
         "stowed",
@@ -2325,8 +2325,8 @@
         "en": "Forklift",
         "de": "Gabelstapler"
       },
-      "heightM": 2.26,
-      "widthM": 4.07,
+      "heightM": 2.325,
+      "widthM": 3.646,
       "powerW": 27000,
       "poses": [
         "lowered-forks",
@@ -2377,7 +2377,7 @@
         "de": "Lastenrad"
       },
       "heightM": 1.16,
-      "widthM": 2.69,
+      "widthM": 2.6,
       "powerW": 250,
       "poses": [
         "parked-on-stand",
@@ -2581,7 +2581,7 @@
         "de": "Treppenlauf"
       },
       "heightM": 2.9,
-      "widthM": 3.885,
+      "widthM": 4.51,
       "powerW": 0,
       "poses": [
         "self-weight",
@@ -2685,7 +2685,7 @@
         "en": "Tilt Window",
         "de": "Kippfenster"
       },
-      "heightM": 1.25,
+      "heightM": 1.324,
       "widthM": 0.3,
       "powerW": 0,
       "poses": [
@@ -2992,8 +2992,8 @@
         "en": "Child on Kick Scooter",
         "de": "Kind auf Tretroller"
       },
-      "heightM": 1.274,
-      "widthM": 0.925,
+      "heightM": 1.344,
+      "widthM": 0.705,
       "powerW": 168.7,
       "poses": [
         "gliding",
@@ -3043,8 +3043,8 @@
         "en": "Courier with Hand Truck",
         "de": "Kurier mit Sackkarre"
       },
-      "heightM": 1.82,
-      "widthM": 1.152,
+      "heightM": 1.81,
+      "widthM": 1.579,
       "powerW": 177.4,
       "poses": [
         "waiting",
@@ -3095,7 +3095,7 @@
         "en": "Kneeling Gardener",
         "de": "Kniende Gärtnerin"
       },
-      "heightM": 1.132,
+      "heightM": 1.098,
       "widthM": 1.835,
       "powerW": 348.4,
       "poses": [
@@ -3198,7 +3198,7 @@
         "de": "Person an Unterarmgehstützen"
       },
       "heightM": 1.82,
-      "widthM": 0.556,
+      "widthM": 0.52,
       "powerW": 173.7,
       "poses": [
         "tripod-stand",
@@ -3248,8 +3248,8 @@
         "en": "Person with Rollator",
         "de": "Person mit Rollator"
       },
-      "heightM": 1.61,
-      "widthM": 1.16,
+      "heightM": 1.57,
+      "widthM": 0.975,
       "powerW": 113.7,
       "poses": [
         "stand-at-grips",
@@ -3300,8 +3300,8 @@
         "en": "Person with White Cane",
         "de": "Person mit Blindenlangstock"
       },
-      "heightM": 1.69,
-      "widthM": 1.074,
+      "heightM": 1.71,
+      "widthM": 1.26,
       "powerW": 118.9,
       "poses": [
         "constant-contact-stance",
@@ -3352,8 +3352,8 @@
         "en": "Pregnant Person",
         "de": "Schwangere Person"
       },
-      "heightM": 1.65,
-      "widthM": 0.69,
+      "heightM": 1.7,
+      "widthM": 0.525,
       "powerW": 135.2,
       "poses": [
         "hand-on-back",
@@ -3404,14 +3404,15 @@
         "en": "Runner with Blade Prosthesis",
         "de": "Läufer mit Prothesenfeder"
       },
-      "heightM": 1.81,
-      "widthM": 0.41,
-      "powerW": 154.9,
+      "heightM": 1.773,
+      "widthM": 0.864,
+      "powerW": 1187.7,
       "poses": [
         "standing-ready",
         "hands-on-hips",
         "left-forefoot-strike",
         "blade-midstance",
+        "blade-push-off",
         "flight"
       ],
       "clips": [
@@ -3445,8 +3446,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "A 29-year-old man of 1.80 m with a right transtibial amputation, running at 3.1 m/s on a J-shaped carbon blade attached below a carbon socket, in a singlet and compression shorts and one running shoe. The gait has a flight phase, a shorter blade contact with 11 degrees of spring deflection, and the socket holds heat. Poses: standing, recovering, forefoot strike, blade mid-stance and flight.",
-        "de": "Ein 29-jähriger Mann von 1,80 m mit rechtsseitiger Unterschenkelamputation, der mit 3,1 m/s auf einer J-förmigen Karbonfeder unter einem Karbonschaft läuft, in Top, Kompressionsshorts und einem Laufschuh. Der Gang hat eine Flugphase, einen kürzeren Federkontakt mit 11 Grad Einfederung, und der Schaft staut Wärme. Posen: Stehen, Erholen, Vorfußaufsatz, Feder im Stütz und Flug."
+        "en": "A 29-year-old man of 1.80 m with a right transtibial amputation, running at 3.1 m/s on a C-shaped carbon blade bolted below a carbon socket, in a singlet and compression shorts and one running shoe. The gait has a flight phase, a shorter blade contact with 11 degrees of spring deflection, and the socket holds heat. Poses: standing, recovering, forefoot strike, blade mid-stance, blade push-off and flight.",
+        "de": "Ein 29-jähriger Mann von 1,80 m mit rechtsseitiger Unterschenkelamputation, der mit 3,1 m/s auf einer C-förmigen Karbonfeder, die unter einem Karbonschaft verschraubt ist, läuft, in Top, Kompressionsshorts und einem Laufschuh. Der Gang hat eine Flugphase, einen kürzeren Federkontakt mit 11 Grad Einfederung, und der Schaft staut Wärme. Posen: Stehen, Erholen, Vorfußaufsatz, Feder im Stütz, Federabstoß und Flug."
       },
       "completion": "authored"
     },
@@ -3457,8 +3458,8 @@
         "en": "Seated Guitarist",
         "de": "Sitzender Gitarrist"
       },
-      "heightM": 1.495,
-      "widthM": 1.107,
+      "heightM": 1.519,
+      "widthM": 0.931,
       "powerW": 187.8,
       "poses": [
         "strumming",
@@ -3509,8 +3510,8 @@
         "en": "Skateboarder",
         "de": "Skateboardfahrende Person"
       },
-      "heightM": 1.774,
-      "widthM": 1.1,
+      "heightM": 1.846,
+      "widthM": 0.813,
       "powerW": 268.7,
       "poses": [
         "cruising",
@@ -3562,8 +3563,8 @@
         "en": "Person Cooking",
         "de": "Kochende Person"
       },
-      "heightM": 1.69,
-      "widthM": 1.088,
+      "heightM": 1.71,
+      "widthM": 0.99,
       "powerW": 1675.3,
       "poses": [
         "stirring",
@@ -3613,8 +3614,8 @@
         "en": "Standing Adult",
         "de": "Stehende erwachsene Person"
       },
-      "heightM": 1.69,
-      "widthM": 0.34,
+      "heightM": 1.72,
+      "widthM": 0.32,
       "powerW": 116.9,
       "poses": [
         "relaxed",
@@ -3666,8 +3667,8 @@
         "en": "Standing Phone User",
         "de": "Stehende Smartphone-Nutzerin"
       },
-      "heightM": 1.67,
-      "widthM": 0.64,
+      "heightM": 1.68,
+      "widthM": 0.5,
       "powerW": 121.9,
       "poses": [
         "texting",
@@ -3819,8 +3820,8 @@
         "en": "Herring Gull",
         "de": "Silbermöwe"
       },
-      "heightM": 0.51,
-      "widthM": 0.692,
+      "heightM": 0.351,
+      "widthM": 0.603,
       "powerW": 5.7,
       "poses": [
         "standing",
@@ -3870,8 +3871,8 @@
         "en": "Mallard Drake",
         "de": "Stockerpel"
       },
-      "heightM": 0.46,
-      "widthM": 0.6,
+      "heightM": 0.3,
+      "widthM": 0.437,
       "powerW": 6.3,
       "poses": [
         "standing",
@@ -3923,8 +3924,8 @@
         "en": "Domestic Pig (Finishing Pig)",
         "de": "Hausschwein (Mastschwein)"
       },
-      "heightM": 0.763,
-      "widthM": 1.23,
+      "heightM": 0.684,
+      "widthM": 1.27,
       "powerW": 139.4,
       "poses": [
         "standing-pig",
@@ -3974,8 +3975,8 @@
         "en": "Red Fox",
         "de": "Rotfuchs"
       },
-      "heightM": 0.626,
-      "widthM": 1.173,
+      "heightM": 0.587,
+      "widthM": 1.1,
       "powerW": 18.2,
       "poses": [
         "standing-alert",
@@ -4025,8 +4026,8 @@
         "en": "Red Squirrel",
         "de": "Eichhörnchen"
       },
-      "heightM": 0.275,
-      "widthM": 0.21,
+      "heightM": 0.209,
+      "widthM": 0.151,
       "powerW": 2.1,
       "poses": [
         "sitting-eating",
@@ -4065,8 +4066,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "An adult Eurasian red squirrel (Sciurus vulgaris, 0.30 kg): two-part spine, bushy two-part tail, fore limbs with long fingers and digitigrade hind limbs; sitting upright eating a nut, a bounding run and climbing a vertical trunk (the trunk is not part of the asset: the claws are supports with a bark friction of 1.5); fur thermal model with 38.5 degC core, nose breathing and a back plume.",
-        "de": "Ein erwachsenes Europäisches Eichhörnchen (Sciurus vulgaris, 0,30 kg): zweiteilige Wirbelsäule, buschiger zweiteiliger Schwanz, Vorderglieder mit langen Fingern und Hinterglieder; aufrecht sitzend beim Nussfressen, ein Sprunglauf und Klettern an einem senkrechten Stamm (der Stamm ist nicht Teil des Assets: die Krallen sind Auflager mit Rindenreibung 1,5); Fell-Wärmemodell mit 38,5 Grad Kern, Nasenatmung und Rückenfahne."
+        "en": "An adult Eurasian red squirrel (Sciurus vulgaris, 0.30 kg, head and body 0.21 m, tail 0.19 m with its hair): two-part spine, bushy two-part tail, fore limbs with long fingers and long plantigrade hind feet; sitting upright eating a nut, a bounding run and climbing a vertical trunk (the trunk is not part of the asset: the claws are supports with a bark friction of 1.5); fur thermal model with 38.5 degC core, nose breathing and a back plume.",
+        "de": "Ein erwachsenes Europäisches Eichhörnchen (Sciurus vulgaris, 0,30 kg, Kopf-Rumpf-Länge 0,21 m, Schwanz mit Haar 0,19 m): zweiteilige Wirbelsäule, buschiger zweiteiliger Schwanz, Vorderglieder mit langen Fingern und lange Hinterfüße eines Sohlengängers; aufrecht sitzend beim Nussfressen, ein Sprunglauf und Klettern an einem senkrechten Stamm (der Stamm ist nicht Teil des Assets: die Krallen sind Auflager mit Rindenreibung 1,5); Fell-Wärmemodell mit 38,5 Grad Kern, Nasenatmung und Rückenfahne."
       },
       "completion": "authored"
     },
@@ -4577,7 +4578,7 @@
         "de": "Barhocker mit Fußring"
       },
       "heightM": 0.87,
-      "widthM": 0.42,
+      "widthM": 0.425,
       "powerW": 0,
       "poses": [
         "unoccupied",
@@ -4737,8 +4738,8 @@
         "en": "Folding deck chair with canvas sling",
         "de": "Klapp-Liegestuhl mit Segeltuch"
       },
-      "heightM": 0.93,
-      "widthM": 0.787,
+      "heightM": 0.936,
+      "widthM": 1.016,
       "powerW": 0,
       "poses": [
         "unfolded",
@@ -5008,8 +5009,8 @@
         "en": "Charcoal Kettle Grill",
         "de": "Holzkohle-Kugelgrill"
       },
-      "heightM": 0.97,
-      "widthM": 0.67,
+      "heightM": 1.0,
+      "widthM": 0.64,
       "powerW": 8000,
       "poses": [
         "cold-closed",
@@ -5160,8 +5161,8 @@
       "id": "laptop",
       "category": "appliances",
       "title": { "en": "Laptop Computer", "de": "Laptop" },
-      "heightM": 0.218,
-      "widthM": 0.275,
+      "heightM": 0.221,
+      "widthM": 0.273,
       "powerW": 65,
       "poses": ["open", "open-idle", "closed"],
       "clips": ["open-lid", "work-and-sleep"],
@@ -5664,7 +5665,7 @@
         "en": "Concrete mixer truck, 9 m3",
         "de": "Fahrmischer, 9 m3"
       },
-      "heightM": 3.95,
+      "heightM": 3.65,
       "widthM": 9,
       "powerW": 310000,
       "poses": [
@@ -5769,7 +5770,7 @@
         "de": "Luft-Wasser-Wärmepumpe Außengerät, 12 kW"
       },
       "heightM": 1.45,
-      "widthM": 0.72,
+      "widthM": 0.47,
       "powerW": 2850,
       "poses": [
         "heating",
@@ -5779,7 +5780,7 @@
         "serviced"
       ],
       "clips": [
-        "heating-sweep",
+        "heating-modulation",
         "defrost-sequence"
       ],
       "representations": {
@@ -5811,8 +5812,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "A 12 kW air-source heat pump outdoor unit in side elevation: the louvred coil guard, front fan outlet with an adjustable guide vane and a hinged service lid. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
-        "de": "Ein Luft-Wasser-Wärmepumpen-Außengerät von 12 kW in der Seitenansicht: Lamellenschutz des Wärmetauschers, vorderer Lüfterausblas mit verstellbarer Leitlamelle und angeschlagener Wartungsdeckel. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
+        "en": "A 12 kW air-source monobloc heat pump outdoor unit, 1.10 m wide, 0.45 m deep and 1.45 m high, in side elevation: the louvred guard over the L-shaped coil on the right side and the back, the domed grille of the single front fan beside the closed compressor column, the base pan on two rubber feet and the top cover hinged at the rear for service. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
+        "de": "Ein Luft-Wasser-Monoblock-Wärmepumpen-Außengerät von 12 kW, 1,10 m breit, 0,45 m tief und 1,45 m hoch, in der Seitenansicht: der Lamellenschutz über dem L-förmigen Wärmetauscher an der rechten Seite und der Rückseite, das gewölbte Gitter des einzelnen Frontlüfters neben der geschlossenen Verdichtersäule, die Bodenwanne auf zwei Gummifüßen und die hinten angeschlagene Abdeckhaube für die Wartung. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
       },
       "completion": "authored"
     },
@@ -5823,8 +5824,8 @@
         "en": "Electric scissor lift, 5.8 m platform height",
         "de": "Elektro-Scherenarbeitsbühne, 5,8 m Plattformhöhe"
       },
-      "heightM": 2.2,
-      "widthM": 1.85,
+      "heightM": 2.11,
+      "widthM": 1.83,
       "powerW": 3000,
       "poses": [
         "stowed",
@@ -5876,8 +5877,8 @@
         "en": "Articulated wheel loader, 20 t",
         "de": "Knickgelenkter Radlader, 20 t"
       },
-      "heightM": 3.4,
-      "widthM": 8.9,
+      "heightM": 3.45,
+      "widthM": 8.421,
       "powerW": 150000,
       "poses": [
         "carry",
@@ -5918,8 +5919,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "A 20 t articulated wheel loader with a 3.5 m3 bucket in side elevation: rear frame with hood and counterweight, front frame with cab and arm towers, a lift arm and bucket driven by closed-pin lift and tilt cylinders, tyres with lugs and a vertical exhaust stack. Steering articulation is shown in a plan symbol.",
-        "de": "Ein knickgelenkter Radlader von 20 t mit 3,5-m3-Schaufel in der Seitenansicht: Hinterwagen mit Haube und Gegengewicht, Vorderwagen mit Kabine und Armstützen, Hubarm und Schaufel mit Hub- und Kippzylindern mit geschlossenen Bolzen, Stollenreifen und senkrechtes Auspuffrohr. Die Knicklenkung zeigt ein Grundrisszeichen."
+        "en": "A 20 t articulated wheel loader with a 3.5 m3 bucket: rear frame with engine hood, counterweight, cab, fenders and access ladders, front frame with the loader tower, two plate lift arms, a Z-bar linkage (tilt cylinder, bell crank and tilt link) and two lift cylinders, 23.5R25 tyres with lugs and a vertical exhaust stack. Steering articulation is shown in a plan symbol.",
+        "de": "Ein knickgelenkter Radlader von 20 t mit 3,5-m3-Schaufel: Hinterwagen mit Motorhaube, Gegengewicht, Kabine, Kotflügeln und Aufstiegen, Vorderwagen mit Hubgerüst, zwei Hubarme aus Blech, Z-Kinematik (Kippzylinder, Umlenkhebel und Kippstange) und zwei Hubzylinder, Reifen 23.5R25 mit Stollen und senkrechtes Auspuffrohr. Die Knicklenkung zeigt ein Grundrisszeichen."
       },
       "completion": "authored"
     },
@@ -6019,8 +6020,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "A 1.2 m wide external venetian blind (raffstore) of 17 aluminium Z-lamellae (90 mm wide, 80 mm pitch) in a 150 x 210 mm headrail box with guide rails and bottom rail, shown in vertical section in front of a double-glazed window in an insulated wall; retracted, lowered with slats horizontal, at 45 degrees or closed, with the shading effect on the glazing from the louvre geometry.",
-        "de": "Eine 1,2 m breite Außenjalousie (Raffstore) aus 17 Aluminium-Z-Lamellen (90 mm breit, 80 mm Abstand) in einer 150 x 210 mm großen Kastenblende mit Führungsschienen und Unterschiene, im Vertikalschnitt vor einem doppelt verglasten Fenster in einer gedämmten Wand; hochgezogen, abgelassen mit waagerechten, 45-Grad- oder geschlossenen Lamellen, mit der Verschattungswirkung auf die Verglasung aus der Lamellengeometrie."
+        "en": "A 1.2 m wide facade-mounted external venetian blind (raffstore) of 18 aluminium Z 90 lamellae (0.45 mm sheet, 90 mm wide, 80 mm pitch) hanging on two lift tapes from a 58 x 56 mm steel head rail behind a 150 x 210 mm aluminium cover panel, with two guide rails and a 90 x 20 mm bottom rail, shown in vertical section in front of a fixed double-glazed aluminium window with sill board in an insulated clay-block wall; retracted, lowered with slats horizontal, at 45 degrees or closed, with the shading effect on the glazing from the louvre geometry.",
+        "de": "Eine 1,2 m breite Vorbau-Außenjalousie (Raffstore) aus 18 Aluminium-Z-90-Lamellen (0,45-mm-Blech, 90 mm breit, 80 mm Abstand), die an zwei Aufzugsbändern an einer Stahl-Oberschiene 58 x 56 mm hinter einer 150 x 210 mm großen Aluminiumblende hängen, mit zwei Führungsschienen und einer Unterschiene 90 x 20 mm, im Vertikalschnitt vor einem festverglasten, doppelt verglasten Aluminiumfenster mit Fensterbank in einer gedämmten Ziegelwand; hochgezogen, abgelassen mit waagerechten, 45-Grad- oder geschlossenen Lamellen, mit der Verschattungswirkung auf die Verglasung aus der Lamellengeometrie."
       },
       "completion": "authored"
     },
@@ -6188,7 +6189,7 @@
         "en": "Steel Spiral Stair",
         "de": "Stahl-Wendeltreppe"
       },
-      "heightM": 3.75,
+      "heightM": 3.886,
       "widthM": 1.6,
       "powerW": 0,
       "poses": [
@@ -6329,8 +6330,8 @@
       "id": "vacuum-cleaner",
       "category": "appliances",
       "title": { "en": "Canister Vacuum Cleaner", "de": "Bodenstaubsauger" },
-      "heightM": 0.76,
-      "widthM": 1.5,
+      "heightM": 0.99,
+      "widthM": 1.35,
       "powerW": 700,
       "poses": ["parked", "running", "running-pulled"],
       "clips": ["floor-stroke", "run-and-park"],
@@ -6519,8 +6520,8 @@
       "id": "thermostatic-radiator-valve",
       "category": "appliances",
       "title": { "en": "Thermostatic Radiator Valve with Setting Knob", "de": "Thermostat-Heizkörperventil mit Einstellknopf" },
-      "heightM": 0.145,
-      "widthM": 0.06,
+      "heightM": 0.1065,
+      "widthM": 0.0845,
       "powerW": 0,
       "poses": ["open", "part-open", "closed"],
       "clips": ["close-down", "open-up"],
@@ -6529,8 +6530,8 @@
       "analytics": ["thermal", "structural"],
       "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
-        "en": "A brass angle valve with a 60 mm thermostat head seen along its axis whose knob turns from the star setting to setting 5: the body stays at the hot supply temperature while the head and the knob warm only with the flow.",
-        "de": "Ein Eckventil aus Messing mit 60 mm großem Thermostatkopf in Achsrichtung gesehen, dessen Knopf von der Frostschutzstufe auf Stufe 5 dreht: der Körper bleibt auf heißer Vorlauftemperatur, während sich Kopf und Knopf nur mit dem Durchfluss erwärmen."
+        "en": "A brass corner angle valve with a 53 mm thermostat head seen along its axis whose handwheel turns from the star setting to setting 5: the body stays at the hot supply temperature while the head and the sensor cap warm only with the flow.",
+        "de": "Ein Winkeleckventil aus Messing mit 53 mm dickem Thermostatkopf in Achsrichtung gesehen, dessen Handrad von der Frostschutzstufe auf Stufe 5 dreht: der Körper bleibt auf heißer Vorlauftemperatur, während sich Kopf und Fühlerkappe nur mit dem Durchfluss erwärmen."
       },
       "completion": "authored"
     },
@@ -6733,7 +6734,7 @@
         "de": "Hermetischer Scrollverdichter"
       },
       "heightM": 0.43,
-      "widthM": 0.3,
+      "widthM": 0.345,
       "powerW": 2500,
       "poses": [
         "off",
@@ -6771,8 +6772,8 @@
         "model-zip"
       ],
       "distinction": {
-        "en": "A 0.43 m hermetic scroll compressor with a sight glass on the orbiting scroll, a hot discharge dome and a cold suction stub.",
-        "de": "Ein 0,43 m hoher hermetischer Scrollverdichter mit Schauglas auf die orbitierende Spirale, heißem Druckdom und kaltem Saugstutzen."
+        "en": "A 0.43 m hermetic scroll compressor on four rubber grommets with a sight glass on the orbiting scroll, a hot discharge dome and a cold suction stub.",
+        "de": "Ein 0,43 m hoher hermetischer Scrollverdichter auf vier Gummitüllen mit Schauglas auf die orbitierende Spirale, heißem Druckdom und kaltem Saugstutzen."
       },
       "completion": "authored"
     },
@@ -6783,8 +6784,8 @@
         "en": "Thermostatic Expansion Valve",
         "de": "Thermostatisches Expansionsventil"
       },
-      "heightM": 0.09,
-      "widthM": 0.19,
+      "heightM": 0.121,
+      "widthM": 0.196,
       "powerW": 0,
       "poses": [
         "closed",
@@ -6834,7 +6835,7 @@
         "de": "Lamellenrohr-Register"
       },
       "heightM": 0.52,
-      "widthM": 0.205,
+      "widthM": 0.1,
       "powerW": 0,
       "poses": [
         "cold",
@@ -7085,8 +7086,8 @@
       "id": "gas-meter",
       "category": "appliances",
       "title": { "en": "Bellows Gas Meter with Counter and Test Dial", "de": "Balgengaszähler mit Zählwerk und Prüfrad" },
-      "heightM": 0.27,
-      "widthM": 0.24,
+      "heightM": 0.245,
+      "widthM": 0.193,
       "powerW": 0,
       "poses": ["off", "low-flow", "rated-flow"],
       "clips": ["run", "day-profile"],
@@ -7095,8 +7096,8 @@
       "analytics": ["thermal", "structural"],
       "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
-        "en": "A 0.24 m by 0.27 m G4 bellows gas meter in front view with two union-nut stubs, an eight-digit counter and a test dial whose pointer turns with the gas flow; it replaces the dial-and-needle meter symbol.",
-        "de": "Ein Balgengaszähler G4 von 0,24 m mal 0,27 m in der Frontansicht mit zwei Rohrstutzen mit Überwurfmuttern, einem achtstelligen Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht; er ersetzt das Zählersymbol aus Zifferblatt und Nadel."
+        "en": "A compact 0.19 m by 0.25 m G4 bellows gas meter in front view with two pressed sheet-steel shells, two union-nut stubs, an eight-digit counter and a test dial whose pointer turns with the gas flow; it replaces the dial-and-needle meter symbol.",
+        "de": "Ein kompakter Balgengaszähler G4 von 0,19 m mal 0,25 m in der Frontansicht mit zwei gepressten Stahlblechschalen, zwei Rohrstutzen mit Überwurfmuttern, einem achtstelligen Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht; er ersetzt das Zählersymbol aus Zifferblatt und Nadel."
       },
       "completion": "authored"
     },
@@ -7104,8 +7105,8 @@
       "id": "electricity-meter",
       "category": "appliances",
       "title": { "en": "Electromechanical Electricity Meter with Rotor Disc", "de": "Elektromechanischer Stromzähler mit Läuferscheibe" },
-      "heightM": 0.285,
-      "widthM": 0.17,
+      "heightM": 0.212,
+      "widthM": 0.132,
       "powerW": 2.4,
       "poses": ["idle", "half-load", "full-load"],
       "clips": ["run", "daily-load"],
@@ -7143,7 +7144,7 @@
       "category": "objects",
       "title": { "en": "Stack of Plastic Storage Crates", "de": "Stapel aus Kunststoff-Lagerkisten" },
       "heightM": 1.5,
-      "widthM": 0.62,
+      "widthM": 0.6,
       "powerW": 0,
       "poses": ["high", "half", "low"],
       "clips": ["unload-stack", "load-stack"],
@@ -7180,8 +7181,8 @@
       "id": "circulation-pump",
       "category": "appliances",
       "title": { "en": "Heating Circulation Pump", "de": "Heizungs-Umwälzpumpe" },
-      "heightM": 0.15,
-      "widthM": 0.18,
+      "heightM": 0.126,
+      "widthM": 0.22,
       "powerW": 45,
       "poses": ["off", "low", "high"],
       "clips": ["run-high", "run-low", "start-and-throttle"],
@@ -7199,7 +7200,7 @@
       "id": "gas-boiler",
       "category": "appliances",
       "title": { "en": "Wall-Hung Condensing Gas Boiler", "de": "Wandhängender Gas-Brennwertkessel" },
-      "heightM": 0.72,
+      "heightM": 0.82,
       "widthM": 0.44,
       "powerW": 20003,
       "poses": ["off", "heating", "hot-water"],

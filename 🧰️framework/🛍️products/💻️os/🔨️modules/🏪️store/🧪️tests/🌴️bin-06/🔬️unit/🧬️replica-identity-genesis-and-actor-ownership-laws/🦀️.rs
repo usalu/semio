@@ -99,7 +99,7 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
         let bytes: Vec<u8> = raw.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
         let stored:AdmittedArtifactGenesis<GenesisLawSnapshot> = semio_os_vcs::io::text::genesis::native_genesis_from_value(DslValue::String(raw.into()),&GenesisLawProducer).unwrap();
         assert_eq!(stored.facts().snapshot().n, row["decoded"]["n"].as_i64().unwrap());
-        assert_eq!(stored.pack(), bytes);
+        assert_eq!(stored.pack().to_vec(), bytes);
         assert_eq!(stored.to_value(), DslValue::String(raw.into()));
         assert_eq!(stored.facts().digest(), *semio_framework_hash::hash(&bytes).as_bytes());
         let alias = stored.facts().share_snapshot();

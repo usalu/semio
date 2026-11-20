@@ -61,7 +61,7 @@ fn authored_assignments(document:&Grid3dSnapshot)->BTreeMap<(u32,u32,u32),String
 }
 
 pub fn render(document: &Grid3dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let assignments = authored_assignments(document);
+    let assignments = authored_assignments(document).into_iter().map(|((x, y, z), tile_id)| semio_s_artifact_wfc_grid3d_inferences::schema::inferences::Grid3dAssignment { x, y, z, tile_id }).collect::<Vec<_>>();
     let (position, target) = framed_camera(document);
     let scene = world3d_scene(
         world3d_camera_json(position, target, 45.0),

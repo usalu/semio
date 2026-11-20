@@ -37,7 +37,11 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
         match event {
             Event::InstanceOpen { request, app_id, actor, assets, quotas, .. } => {
                 let instance = request.instance_id;
-                let fresh = runtime.guest_lifetimes.borrow_mut().admit(request).map_err(reactor_close_fault)?;
+                let admitted = runtime.guest_lifetimes.borrow_mut().admit(request);
+                let fresh = match admitted {
+                    Ok(fresh) => fresh,
+                    Err(reason) => return Err(reactor_close_fault(reason).into()),
+                };
                 if fresh {
                     semio_plugin_reactor_core::admit_package_assets(assets);
                     if let Err(error) = INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(instance, app_id.0.clone(), quotas)) {

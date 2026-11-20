@@ -88,7 +88,7 @@ pub fn receive_persistent_fixture<T>(input:semio_framework_value::DslValue,sourc
 /// 🪟️ A fixture donates its actual view body through native Arc admission before sharing metadata.
 pub fn receive_view_fixture(view:semio_framework::ViewModel,source_stock:RetainedCloneGrant)->std::sync::Arc<semio_framework::ViewModel>{
  let mut fixture=OriginalWorkFixture::with_source(OperationId(993),Generation(17),source_stock,||Some(1),u64::MAX,source_stock.maximum_items as u64*16);
- let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source_stock.maximum_copy_bytes.min(32768),maximum_capacity_bytes:source_stock.maximum_capacity_bytes.min(1<<20),maximum_release_bytes:source_stock.maximum_release_bytes.min(1<<20),maximum_depth:source_stock.maximum_depth};
+ let grant=RetainedCloneGrant{maximum_items:source_stock.maximum_items.min(64),maximum_copy_bytes:source_stock.maximum_copy_bytes.min(32768),maximum_capacity_bytes:source_stock.maximum_capacity_bytes.min(1<<20),maximum_release_bytes:source_stock.maximum_release_bytes.min(1<<20),maximum_depth:source_stock.maximum_depth};
   let mut original=Some(view);let mut output=None;let mut frame=semio_framework_value::native_decoding::NativeSharedAdmission::default();
   for _ in 0..source_stock.maximum_items{if output.is_some(){break}fixture.turn(grant,|cx|semio_plugin_decl_emission::ActionMeta::admit_view_root(&mut original,&mut output,&mut frame,cx)).expect("original fixture view admission");}
  assert!(original.is_none(),"finite original fixture source must fund its view root");fixture.finish();output.expect("original fixture view transferred")

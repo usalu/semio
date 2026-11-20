@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "line": "Reading the project graph slice (2303 s): checking the file inventory of the tree (333961 distinct source observations) (elapsed seconds of expected seconds) (beyond the expected 600 s) / Prüfe das Dateiverzeichnis des Baums (333961 verschiedene Quellbeobachtungen) (verstrichene Sekunden von erwarteten Sekunden) (über den erwarteten 600 s) 2093 of 600.",
+  "step": {
+    "seconds": 2093,
+    "bound": 600
+  },
+  "nextCount": 128,
+  "stationary": {"observations": 330401, "owners": 1254, "initialLines": 45},
+  "verifiedMemo": [
+    {"milliseconds":0,"rows":64,"overdue":false},
+    {"milliseconds":6000,"rows":64,"overdue":true},
+    {"milliseconds":6500,"rows":128,"overdue":false},
+    {"milliseconds":12500,"rows":64,"overdue":true},
+    {"milliseconds":13000,"rows":192,"overdue":false}
+  ],
+  "ownerCounts": [
+    177,
+    1185
+  ]
+}

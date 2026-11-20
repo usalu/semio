@@ -450,14 +450,14 @@ describe("tree helpers", () => {
       });
   
       it("treeRowChromeContentFillClasses adds the loading ring in the row's own color", () => {
-        expect(treeRowChromeContentFillClasses(true, false, true)).toContain("border-loading-active");
+        expect(treeRowChromeContentFillClasses(true, false, true)).toContain("border-loading");
         expect(treeRowChromeContentFillClasses(false, false, true)).toContain("border-loading");
         expect(treeRowChromeContentFillClasses(false, false, true)).not.toContain("border-loading-active");
         expect(treeRowChromeContentFillClasses(false, false, false)).not.toContain("border-loading");
       });
   
       it("treeRowChromeContentFillClasses adds the waiting ring in the row's own color", () => {
-        expect(treeRowChromeContentFillClasses(true, false, false, true)).toContain("border-waiting-active");
+        expect(treeRowChromeContentFillClasses(true, false, false, true)).toContain("border-waiting");
         expect(treeRowChromeContentFillClasses(false, false, false, true)).toContain("border-waiting");
         expect(treeRowChromeContentFillClasses(false, false, false, true)).not.toContain("border-waiting-active");
         expect(treeRowChromeContentFillClasses(false, false, false, false)).not.toContain("border-waiting");

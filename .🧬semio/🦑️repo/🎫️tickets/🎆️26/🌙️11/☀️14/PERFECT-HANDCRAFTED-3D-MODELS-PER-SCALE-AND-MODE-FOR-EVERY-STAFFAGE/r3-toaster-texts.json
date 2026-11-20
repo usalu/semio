@@ -1,0 +1,168 @@
+{
+  "provenanceNotes": {
+    "en": "Long-side view of a typical chromed two-slice pop-up toaster with its controls on the long face (no single product; the class is 0.26 to 0.32 m long, 0.16 to 0.19 m deep and 0.18 to 0.21 m high at 800 to 1000 W, for example the De'Longhi Icona CTO2003 with 0.32 m x 0.185 m x 0.205 m, 900 W and 2 kg). Construction as modelled: four rubber feet of 27 mm and 12 mm height under a black polypropylene plinth with the crumb tray in its front, a chromed sheet wrap 0.30 m long and 0.152 m deep with end shoulders of 36 mm x 38 mm and long shoulders of 22 mm radius, a dark steel cap from 0.174 m to 0.188 m with two slots of 136 mm x 30 mm 60 mm apart, a toasting chamber of sheet steel inside, and a carriage on a guide rod that the lever on the long face moves by 40 mm; the lever knob stands 14 mm proud and the cord bush 4 mm at the back, which gives the 0.17 m overall depth. Bread slices 0.104 m x 0.115 m x 0.013 m stand 12 mm above the cap when lowered; mass 1.3 kg including two 35 g slices. Rated input 900 W (class 800 to 1000 W, IEC 60335-2-9). The 900 W end up as 95 W in the housing walls, 25 W in the top cap, 150 W in the crust (browning, drying) and 630 W as hot slot air (0.00507 m3/s at 103 K rise: 630 W; moisture of the toasting bread 0.03 kg/kg); the cap and slot rims of 0.048 m2 carry 520 W/m2, which at a combined convective and radiative coefficient of about 10 W/m2K is a rise of about 50 K (about 70 degrees C), the usual touch temperature of a toaster top; the rest of the wire power rises through the slots; the split is an authored estimate.",
+    "de": "Längsansicht eines typischen verchromten Zweischeiben-Toasters mit der Bedienung auf der Längsseite (kein einzelnes Produkt; die Klasse ist 0,26 bis 0,32 m lang, 0,16 bis 0,19 m tief und 0,18 bis 0,21 m hoch bei 800 bis 1000 W, zum Beispiel der De'Longhi Icona CTO2003 mit 0,32 m x 0,185 m x 0,205 m, 900 W und 2 kg). Aufbau wie modelliert: vier Gummifüße von 27 mm und 12 mm Höhe unter einem schwarzen Polypropylen-Sockel mit der Krümelschublade in dessen Front, ein verchromter Blechmantel von 0,30 m Länge und 0,152 m Tiefe mit Stirnschultern von 36 mm x 38 mm und Längsschultern von 22 mm Radius, eine dunkle Stahlhaube von 0,174 m bis 0,188 m mit zwei Schlitzen von 136 mm x 30 mm im Abstand von 60 mm, innen eine Röstkammer aus Stahlblech und ein Schlitten an einer Führungsstange, den der Hebel auf der Längsseite um 40 mm bewegt; der Hebelknopf steht 14 mm vor und die Kabeltülle 4 mm an der Rückseite, das ergibt die Gesamttiefe von 0,17 m. Brotscheiben von 0,104 m x 0,115 m x 0,013 m ragen abgesenkt 12 mm über die Haube; Masse 1,3 kg einschließlich zweier Scheiben zu je 35 g. Nennaufnahme 900 W (Klasse 800 bis 1000 W, IEC 60335-2-9). Die 900 W teilen sich auf in 95 W in den Gehäusewänden, 25 W in der Haube, 150 W in der Kruste (Bräunung, Trocknung) und 630 W als heiße Schlitzluft (0,00507 m3/s bei 103 K Anstieg: 630 W; Feuchte des Toastguts 0,03 kg/kg); Haube und Schlitzränder von 0,048 m2 tragen 520 W/m2, bei einem kombinierten Konvektions- und Strahlungskoeffizienten von etwa 10 W/m2K ein Anstieg von etwa 50 K (etwa 70 Grad C), die übliche Berührtemperatur einer Toasterdecke; der Rest der Heizdrahtleistung steigt durch die Schlitze auf; die Aufteilung ist ein Schätzwert."
+  },
+  "volumes": {
+    "50": [
+      {
+        "en": "Body: four tapered rubber feet under the black plinth with the crumb-tray front and the cord bush; the chromed wrap is a skin of twelve sections from its hem on the plinth over the 36 mm x 38 mm end shoulders and the 22 mm long shoulders to the seam at 0.174 m; the dark cap is a rim of ten sections and a deck 8 mm deep with two real slots of 136 mm x 30 mm; under the deck the toasting chamber with its two wells over the chromed crumb pan; each slice is a crust ring around its crumb; lever knob with its stem in the black bezel, dial with flared skirt and pointer, cancel button.",
+        "de": "Körper: vier konische Gummifüße unter dem schwarzen Sockel mit Krümelschubladenfront und Kabeltülle; der Chrommantel ist eine Haut aus zwölf Schnitten vom Saum auf dem Sockel über die Stirnschultern von 36 mm x 38 mm und die Längsschultern von 22 mm bis zur Fuge bei 0,174 m; die dunkle Haube ist ein Rand aus zehn Schnitten und ein 8 mm tiefes Deck mit zwei echten Schlitzen von 136 mm x 30 mm; unter dem Deck die Röstkammer mit ihren zwei Schächten über dem verchromten Krümelblech; jede Scheibe ist ein Krustenring um ihre Krume; Hebelknopf mit Steg in der schwarzen Blende, Drehknopf mit ausgestelltem Rand und Zeiger, Abbruchtaste."
+      },
+      {
+        "en": "Thermal: the casing is the closed outer envelope of plinth and wrap up to the cap seam (its top face under the cap is marked, the stand-in for the missing cavity flood) plus tray front and bush; the top plate is the rim skin and the deck with its slot rims, underside marked because it faces the heat source; bread, controls and feet reuse their bodies; the slot air leaves through two outlet patches in the slot mouths around the slices.",
+        "de": "Thermik: das Gehäuse ist die geschlossene Außenhülle von Sockel und Mantel bis zur Haubenfuge (ihre Oberseite unter der Haube ist markiert, der Ersatz für die fehlende Hohlraumflutung) samt Schubladenfront und Tülle; die Deckplatte ist die Randhaut und das Deck mit seinen Schlitzrändern, die Unterseite markiert, weil sie zur Wärmequelle zeigt; Brot, Bedienung und Füße verwenden ihre Körper; die Schlitzluft tritt durch zwei Auslassflächen in den Schlitzmündungen um die Scheiben aus."
+      },
+      {
+        "en": "Structure: the plinth is the base frame on its four feet (the two supports are the foot pairs); on it stands the sheet-steel chamber tube with 1 mm walls; the carriage is two lifter bars under the slices joined by the yoke, which slides with its sleeve on the guide rod in the end compartment; the lever arm reaches from the yoke through the long face, the dial spindle sits in its bush on a bracket of the chamber end; masses of the appliance and of the bread at their centres.",
+        "de": "Tragwerk: der Sockel ist der Grundrahmen auf seinen vier Füßen (die zwei Auflager sind die Fußpaare); darauf steht das Kammerrohr aus Stahlblech mit 1 mm Wand; der Schlitten besteht aus zwei Hubleisten unter den Scheiben und dem Joch, das mit seiner Hülse an der Führungsstange im Endfach gleitet; der Hebelarm reicht vom Joch durch die Längsseite, die Reglerachse sitzt in ihrer Buchse an einem Halter der Kammerstirn; Massen des Geräts und des Brots in ihren Schwerpunkten."
+      }
+    ],
+    "100": [
+      {
+        "en": "Body: plain plinth on four cylindrical feet of 25 mm, the wrap from seven sections and the cap rim from four, the deck 15 mm deep with both slots over a plain chamber tube, the slices 15 mm thick as plain bread outlines, a block lever and a plain dial; crumb tray, bush, bezel, button, pointer and crust are below the scale.",
+        "de": "Körper: schlichter Sockel auf vier zylindrischen Füßen von 25 mm, der Mantel aus sieben Schnitten und der Haubenrand aus vier, das Deck 15 mm tief mit beiden Schlitzen über einem schlichten Kammerrohr, die Scheiben 15 mm dick als schlichte Brotumrisse, ein Blockhebel und ein schlichter Drehknopf; Krümelschublade, Tülle, Blende, Taste, Zeiger und Kruste liegen unter dem Maßstab."
+      },
+      {
+        "en": "Thermal: the closed envelope of plinth and wrap, rim and deck of the cap, both slices, lever, dial and the feet by reference, and one outlet patch per slot mouth.",
+        "de": "Thermik: die geschlossene Hülle von Sockel und Mantel, Rand und Deck der Haube, beide Scheiben, Hebel, Drehknopf und die Füße als Verweise und je eine Auslassfläche pro Schlitzmündung."
+      },
+      {
+        "en": "Structure: plinth frame, chamber tube with 2 mm walls, guide rod, the carriage as one angled plate with its upright at the yoke, a 15 mm lever arm, the dial spindle on its bracket, the foot pairs as supports and the mass of the appliance.",
+        "de": "Tragwerk: Sockelrahmen, Kammerrohr mit 2 mm Wand, Führungsstange, der Schlitten als ein Winkelblech mit Steg am Joch, ein Hebelarm von 15 mm, die Reglerachse an ihrem Halter, die Fußpaare als Auflager und die Masse des Geräts."
+      }
+    ],
+    "200": [
+      {
+        "en": "Body: plinth, feet and wrap merge into one housing skin of six sections from the worktop to the top, closed below; the cap is a 30 mm deck with both slots, and the slices are 30 mm thick so that they fill their slots; the lever is a 30 mm block on the long face, dial and button are below the scale.",
+        "de": "Körper: Sockel, Füße und Mantel gehen in einer Gehäusehaut aus sechs Schnitten von der Arbeitsplatte bis oben auf, unten geschlossen; die Haube ist ein Deck von 30 mm mit beiden Schlitzen, und die Scheiben sind 30 mm dick, sodass sie ihre Schlitze füllen; der Hebel ist ein Block von 30 mm an der Längsseite, Drehknopf und Taste liegen unter dem Maßstab."
+      },
+      {
+        "en": "Thermal: housing, deck, slices and lever block by reference; the dial is a 3 mm skin of its real face on the long side, the feet two 8 mm runners in the housing bottom, and the slot air one outlet patch above the deck.",
+        "de": "Thermik: Gehäuse, Deck, Scheiben und Hebelblock als Verweise; der Drehknopf ist eine 3-mm-Haut seiner wirklichen Fläche an der Längsseite, die Füße zwei 8-mm-Kufen im Gehäuseboden, und die Schlitzluft eine Auslassfläche über dem Deck."
+      },
+      {
+        "en": "Structure: a 30 mm base frame on two 30 mm support runners, the chamber tube with 6 mm walls, the carriage as one angle with its upright, and lever arm and dial spindle as 30 mm bars, the spindle round so that it turns in place; the mass of the appliance at its centre.",
+        "de": "Tragwerk: ein Grundrahmen von 30 mm auf zwei Auflagerkufen von 30 mm, das Kammerrohr mit 6 mm Wand, der Schlitten als ein Winkel mit Steg sowie Hebelarm und Reglerachse als Stäbe von 30 mm, die Achse rund, damit sie sich am Ort dreht; die Masse des Geräts in ihrem Schwerpunkt."
+      }
+    ],
+    "500": [
+      {
+        "en": "Body: a digital model without a printable drawing: the housing is one closed mass of four sections with the shoulders rolling into the top, and both slices are one bread dome that stands in it and still rides the carriage.",
+        "de": "Körper: ein digitales Modell ohne druckbare Zeichnung: das Gehäuse ist eine geschlossene Masse aus vier Schnitten, deren Schultern in die Oberseite auslaufen, und beide Scheiben sind eine Brotkuppe, die darin steht und weiter mit dem Schlitten fährt."
+      },
+      {
+        "en": "Thermal: the housing and the dome by reference, the top plate as a 1 mm skin on the flat top, the controls as one 3 mm skin at the lever, the feet as two 8 mm runners and the slot air as one patch around the dome.",
+        "de": "Thermik: Gehäuse und Kuppe als Verweise, die Deckplatte als 1-mm-Haut auf der flachen Oberseite, die Bedienung als eine 3-mm-Haut am Hebel, die Füße als zwei 8-mm-Kufen und die Schlitzluft als eine Fläche um die Kuppe."
+      },
+      {
+        "en": "Structure: the chamber tube stands directly on the two support runners, the carriage is one plate, the lever arm one upright bar from the carriage to the knob and the dial spindle a stub; the mass of the appliance at its centre.",
+        "de": "Tragwerk: das Kammerrohr steht direkt auf den zwei Auflagerkufen, der Schlitten ist eine Platte, der Hebelarm ein stehender Stab vom Schlitten zum Knopf und die Reglerachse ein Stumpf; die Masse des Geräts in ihrem Schwerpunkt."
+      }
+    ]
+  },
+  "representations": {
+    "50": {
+      "silhouette": {
+        "en": "A chromed two-slice toaster 6 mm long on paper, seen on its long control face: the wrap with its rounded end shoulders stands on a recessed black plinth with two tapered feet, the dark cap closes it above the seam, and the bread rises 12 mm out of the cap. Front view: the 0.152 m deep wrap with its 22 mm shoulders on the plinth, with the lever knob, the dial and the button standing proud on the left and the cord bush on the right. Top view: the pillow-shaped outline with the cap, the bevel edge of its flat top and the two slots with the bread in them, the controls in front of the long face.",
+        "de": "Ein verchromter Zweischeiben-Toaster, auf dem Papier 6 mm lang, von seiner langen Bedienseite gesehen: Der Mantel mit seinen runden Stirnschultern steht auf einem zurückgesetzten schwarzen Sockel mit zwei konischen Füßen, die dunkle Haube schließt ihn über der Fuge, und das Brot ragt 12 mm aus der Haube. Vorderansicht: der 0,152 m tiefe Mantel mit seinen 22-mm-Schultern auf dem Sockel, links stehen Hebelknopf, Drehknopf und Taste vor, rechts die Kabeltülle. Draufsicht: der kissenförmige Umriss mit der Haube, der Kante ihrer flachen Oberseite und den zwei Schlitzen mit dem Brot darin, die Bedienung vor der Längsseite."
+      },
+      "retained": {
+        "en": "Length 0.30 m, height of the cap 0.188 m, feet 0.012 m, the 12 mm of bread above the cap and the overall depth of 0.17 m with knob and bush exactly; plinth, crumb-tray front, cap seam, lever bezel, lever, dial with pointer, cancel button and the chrome highlight.",
+        "de": "Länge 0,30 m, Haubenhöhe 0,188 m, Füße 0,012 m, die 12 mm Brot über der Haube und die Gesamttiefe von 0,17 m mit Knopf und Tülle exakt; Sockel, Krümelschubladenfront, Haubenfuge, Hebelblende, Hebel, Drehknopf mit Zeiger, Abbruchtaste und die Chromlichtkante."
+      },
+      "merged": {
+        "en": "The slot rims are merged into the cap; the crust is one crumb line instead of a ring; both slices have the same outline, so the rear one lies exactly behind the front one.",
+        "de": "Die Schlitzränder gehen in der Haube auf; die Kruste ist eine Krumenlinie statt eines Rings; beide Scheiben haben denselben Umriss, die hintere liegt also genau hinter der vorderen."
+      },
+      "omitted": {
+        "en": "Logo, mains cable (it leaves through the bush at the back), bun-warmer rack, bread guard wires in the slots and screws; the rear feet in the long-side view.",
+        "de": "Logo, Netzkabel (es verlässt das Gerät durch die Tülle hinten), Brötchenaufsatz, Brotführungsdrähte in den Schlitzen und Schrauben; in der Längsansicht die hinteren Füße."
+      },
+      "thinElements": {
+        "en": "The lever bezel is 0.02 m = 0.4 mm wide, drawn as a 0.13 mm outline; the crumb line and the dial pointer are 0.13 mm strokes; the button stands 3.6 mm proud and is drawn at its true size in the front and top view.",
+        "de": "Die Hebelblende ist 0,02 m = 0,4 mm breit und als 0,13-mm-Kontur gezeichnet; Krumenlinie und Reglerzeiger sind 0,13-mm-Striche; die Taste steht 3,6 mm vor und ist in Vorder- und Draufsicht in wahrer Größe gezeichnet."
+      },
+      "hatching": {
+        "en": "None; the crust would need dots finer than 0.4 mm.",
+        "de": "Keine; die Kruste bräuchte Punkte feiner als 0,4 mm."
+      },
+      "styles": {
+        "en": "Chrome wrap 0.82, dark cap 0.55, bread 0.7 to 0.78, plinth, plastic controls and bush 0.2, crumb-tray front 0.7 and feet 0.15; body pen 0.18 mm, detail 0.13 mm, texture 0.1 mm.",
+        "de": "Chrommantel 0,82, dunkle Haube 0,55, Brot 0,7 bis 0,78, Sockel, Kunststoffbedienung und Tülle 0,2, Krümelschubladenfront 0,7 und Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm, Textur 0,1 mm."
+      },
+      "overlays": {
+        "en": "Casing with plinth, top plate, bread, controls and feet are separate regions: the thermal view shows the hot cap and the browning bread above a warm casing.",
+        "de": "Gehäuse mit Sockel, Deckplatte, Brot, Bedienung und Füße sind eigene Regionen: Die Thermalansicht zeigt die heiße Haube und das bräunende Brot über einem warmen Gehäuse."
+      }
+    },
+    "100": {
+      "silhouette": {
+        "en": "A toaster 3 mm long and 2 mm high: the chromed block with its end shoulders on a dark plinth strip and two stub feet, the seam line of the cap, the bread shoulders above it, the lever in its bezel and the round dial. Front view: the rounded wrap on plinth and feet, the two slices thickened to 15 mm and lever and dial as stubs on the left. Top view: the outline with the cap line and the two bread tops, the stubs of lever and dial in front.",
+        "de": "Ein Toaster, 3 mm lang und 2 mm hoch: der verchromte Block mit seinen Stirnschultern auf einem dunklen Sockelstreifen und zwei Stummelfüßen, die Fugenlinie der Haube, darüber die Brotschultern, der Hebel in seiner Blende und der runde Drehknopf. Vorderansicht: der gerundete Mantel auf Sockel und Füßen, die zwei auf 15 mm verdickten Scheiben und links Hebel und Drehknopf als Stummel. Draufsicht: der Umriss mit der Haubenlinie und den zwei Brotoberseiten, davor die Stummel von Hebel und Drehknopf."
+      },
+      "retained": {
+        "en": "Overall size, plinth, the bread shoulders, cap seam, lever and bezel, dial.",
+        "de": "Gesamtgröße, Sockel, Brotschultern, Haubenfuge, Hebel und Blende, Drehknopf."
+      },
+      "merged": {
+        "en": "The rear slice merges behind the front one; the cap is only its seam line; the cancel button and the crumb tray join the casing.",
+        "de": "Die hintere Scheibe geht hinter der vorderen auf; die Haube ist nur ihre Fugenlinie; Abbruchtaste und Krümelschublade gehen im Gehäuse auf."
+      },
+      "omitted": {
+        "en": "Highlight, dial pointer, crumb line, cord bush, guard wires, logo, cable. Front and top view omit the slots and the rear feet.",
+        "de": "Lichtkante, Reglerzeiger, Krumenlinie, Kabeltülle, Führungsdrähte, Logo, Kabel. Vorder- und Draufsicht lassen die Schlitze und die hinteren Füße weg."
+      },
+      "thinElements": {
+        "en": "The rubber feet are 0.013 m = 0.13 mm high and 0.25 mm wide and stay true; the slices are 0.013 m thick in reality and thickened to 0.015 m (0.15 mm) in the front and top view so they print.",
+        "de": "Die Gummifüße sind 0,013 m = 0,13 mm hoch und 0,25 mm breit und bleiben wahr; die Scheiben sind real 0,013 m dick und in Vorder- und Draufsicht auf 0,015 m (0,15 mm) verdickt, damit sie drucken."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Chrome casing 0.82, bread 0.78, plinth and controls 0.2 to 0.25, feet 0.15; body pen 0.18 mm, detail 0.13 mm.",
+        "de": "Chromgehäuse 0,82, Brot 0,78, Sockel und Bedienung 0,2 bis 0,25, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm."
+      },
+      "overlays": {
+        "en": "The seam line carries the top plate, bezel and bread their regions; the casing block and the plinth carry the casing.",
+        "de": "Die Fugenlinie trägt die Deckplatte, Blende und Brot ihre Regionen; Gehäuseblock und Sockel tragen das Gehäuse."
+      }
+    },
+    "200": {
+      "silhouette": {
+        "en": "A toaster 1.5 mm long and 1 mm high: one rounded block from the worktop up with a bread dome rising 0.06 mm out of the top edge. Front view: the 0.152 m deep block with the lever stub on the left and the two slices, thickened to 30 mm, above it. Top view: the outline with the two bread tops and the lever stub in front; the lever is a 0.15 mm square on the long face.",
+        "de": "Ein Toaster, 1,5 mm lang und 1 mm hoch: ein gerundeter Block ab der Arbeitsplatte mit einer Brotkuppe, die 0,06 mm aus der Oberkante ragt. Vorderansicht: der 0,152 m tiefe Block mit dem Hebelstummel links und darüber die zwei auf 30 mm verdickten Scheiben. Draufsicht: der Umriss mit den zwei Brotoberseiten und dem Hebelstummel davor; der Hebel ist ein Quadrat von 0,15 mm auf der Längsseite."
+      },
+      "retained": {
+        "en": "Length 0.30 m, height 0.188 m, the bread shoulders above the top edge and the two slices as two.",
+        "de": "Länge 0,30 m, Höhe 0,188 m, die Brotschultern über der Oberkante und die zwei Scheiben als zwei."
+      },
+      "merged": {
+        "en": "Wrap, plinth, cap, dial and feet merge into one block (its shape lists the four regions); the rear slice lies behind the front one in the long-side view.",
+        "de": "Mantel, Sockel, Haube, Drehknopf und Füße gehen in einem Block auf (seine Form listet die vier Regionen); die hintere Scheibe liegt in der Längsansicht hinter der vorderen."
+      },
+      "omitted": {
+        "en": "Feet, plinth, dial, button, bezel, seam and every line; front and top view carry no slots or feet.",
+        "de": "Füße, Sockel, Drehknopf, Taste, Blende, Fuge und jede Linie; Vorder- und Draufsicht tragen weder Schlitze noch Füße."
+      },
+      "thinElements": {
+        "en": "The 0.012 m feet (0.06 mm) are merged into the block; the slices are thickened from 0.013 m to 0.03 m (0.15 mm) with a 0.15 mm gap between them; the bread above the cap is 0.012 m = 0.06 mm and stays true.",
+        "de": "Die 0,012 m hohen Füße (0,06 mm) gehen im Block auf; die Scheiben sind von 0,013 m auf 0,03 m (0,15 mm) verdickt, mit 0,15 mm Abstand; das Brot über der Haube ist 0,012 m = 0,06 mm hoch und bleibt wahr."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Block 0.82, bread 0.78 and lever 0.2; body pen 0.18 mm.",
+        "de": "Block 0,82, Brot 0,78 und Hebel 0,2; Körperstift 0,18 mm."
+      },
+      "overlays": {
+        "en": "The block lists casing, top plate, controls and feet, so the thermal overlay paints it with their area-weighted value; the slices keep the bread and the lever the controls.",
+        "de": "Der Block listet Gehäuse, Deckplatte, Bedienung und Füße, die Thermalansicht färbt ihn mit deren flächengewichtetem Wert; die Scheiben behalten das Brot und der Hebel die Bedienung."
+      }
+    }
+  }
+}

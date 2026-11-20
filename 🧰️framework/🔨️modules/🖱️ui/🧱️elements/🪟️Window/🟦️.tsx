@@ -26,7 +26,7 @@ import { type EngagementSpec, Engagement } from "../🎮️Engagement/🟦️.ts
 import { type SearchSpec, UI_WINDOW_SEARCH, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, Search, focusActiveSearchInput } from "../🔍️WindowSearch/🟦️.tsx";
 import { windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, windowChromeClearedTopOffset } from "../../🔨️modules/📐️window-measures/🟦️.ts";
 import { useChromePanelSafeArea, chromePanelSafeAreaStyle } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
-import { panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import { windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { type WindowPaneId, type WindowPaneOpen, resolveWindowPaneExpansion, windowPaneExclusiveMaxWidthPx, windowQuickActionsCovered } from "../../🔨️modules/🪟️window-pane-exclusivity/🟦️.ts";
 import { GhostRegionShell } from "../👻️PanelGhost/🟦️.tsx";
@@ -346,7 +346,7 @@ const Window: React.FC<WindowProps> = ({
           fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
           bgClass,
           getLevelZClass("window"),
-          loadingBorderStateClass(loading, active) || waitingBorderStateClass(waiting, active),
+          loadingBorderStateClass(loading) || waitingBorderStateClass(waiting),
           className,
         )}
       >
@@ -374,8 +374,8 @@ const Window: React.FC<WindowProps> = ({
               stackSlot="window-measures-stack"
               bodySlot="window-measures-body"
               bodyClassName={windowMeasuresBodyClass}
-              stackClassName={cn("relative", panelResizeEdgeAccentClass("left", measuresResizeLeftActive))}
-              stackDataAttrs={{ "data-level": "pane", "data-folded": measuresExpanded ? undefined : "true" }}
+              stackClassName="relative"
+              stackDataAttrs={{ "data-level": "pane", "data-folded": measuresExpanded ? undefined : "true", "data-shared-border-state": measuresResizeLeftActive ? "active" : undefined }}
               dimWhenOpen
             >
               {measures}

@@ -81,7 +81,7 @@ pub struct BitmapPixelRegion {
     pub y: u32,
     pub width: u32,
     pub height: u32,
-    #[value(with = "semio_framework_value::bytes")]
+    #[value(with = "semio_framework_value::bytes", serialize_controlled_with = "semio_framework_value::bytes::to_value_controlled")]
     pub pixels: Vec<u8>,
 }
 

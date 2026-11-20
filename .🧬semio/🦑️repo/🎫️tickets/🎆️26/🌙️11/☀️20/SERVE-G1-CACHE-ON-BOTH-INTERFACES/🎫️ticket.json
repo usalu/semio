@@ -1,0 +1,46 @@
+{
+  "title": "Serve G1 Cache on Both Interfaces",
+  "emoji": "📡",
+  "status": "closed",
+  "description": "Make both Ethernet and Wi-Fi usable for g1 NFS and cache",
+  "summary": "Enabled server Wi-Fi. NFS answers on Ethernet and Wi-Fi. Cache listens on both fleet IPs through one authenticated service, and both published endpoints return HTTP 200.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    "6f39aca3-8424-4200-990c-90ac3be9026c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 00:47:03",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Make both Ethernet and Wi-Fi usable for g1 NFS and cache",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-20 00:50:53",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Enabled server Wi-Fi. NFS answers on Ethernet and Wi-Fi. Cache listens on both fleet IPs through one authenticated service, and both published endpoints return HTTP 200.",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🗄️cache/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/SERVE-G1-CACHE-ON-BOTH-INTERFACES/verify.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/SERVE-G1-CACHE-ON-BOTH-INTERFACES/verification.md"
+        }
+      ]
+    }
+  ]
+}

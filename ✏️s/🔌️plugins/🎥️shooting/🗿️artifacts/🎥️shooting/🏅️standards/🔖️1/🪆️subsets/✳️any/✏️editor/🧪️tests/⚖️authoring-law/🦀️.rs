@@ -14,7 +14,7 @@ fn assert_row_is_the_serde_document(row: &[u8], mutation: &ShootingMutation) {
 /// 📄️ Creating a shot publishes one forward row equal to the independent serde_json document, and its inverse removes the shot again.
 #[semio_framework_async_macros::async_test]
 async fn a_shooting_document_edit_authors_applies_undoes_and_redoes_through_its_real_store() {
-    let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None };
+    let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None, drawing: None, auto_fit: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
     let law = author_through_document_store::<EditorApp<ShootingPlayApp>>(mutation.clone()).await;
     assert_eq!(law.applied.shots.last(), Some(&shot));

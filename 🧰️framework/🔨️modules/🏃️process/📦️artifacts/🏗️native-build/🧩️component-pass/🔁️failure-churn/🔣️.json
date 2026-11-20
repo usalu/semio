@@ -1,0 +1,8 @@
+{
+  "maximumAttempts": 2,
+  "maximumChecks": 512,
+  "maximumReadBytes": 262144,
+  "maximumProbeMilliseconds": 10000,
+  "readChunkBytes": 65536,
+  "dependencyErrorCodes": ["E0308", "E0425", "E0432", "E0433", "E0599", "E0609"]
+}

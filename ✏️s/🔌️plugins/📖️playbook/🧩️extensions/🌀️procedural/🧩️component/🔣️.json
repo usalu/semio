@@ -625,9 +625,1244 @@
             "utilities": [],
             "interactions": [],
             "capabilities": []
+          },
+          {
+            "id": "playbook-module-flow-params",
+            "label": {
+              "native": {
+                "en": "Flow Inputs",
+                "de": "Flow-Eingaben"
+              },
+              "reuse": {
+                "en": "Flow Inputs",
+                "de": "Flow-Eingaben"
+              }
+            },
+            "bodyKey": "flowParams",
+            "surfaceKind": "node-graph",
+            "iconId": "workflow",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-module-flow-preview",
+            "label": {
+              "native": {
+                "en": "Flow Outputs",
+                "de": "Flow-Ausgaben"
+              },
+              "reuse": {
+                "en": "Flow Outputs",
+                "de": "Flow-Ausgaben"
+              }
+            },
+            "bodyKey": "flowPreview",
+            "surfaceKind": "node-graph",
+            "iconId": "workflow",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-module-authored-procedural-params",
+            "label": {
+              "native": {
+                "en": "Procedural Inputs",
+                "de": "Prozedurale Eingaben"
+              },
+              "reuse": {
+                "en": "Procedural Inputs",
+                "de": "Prozedurale Eingaben"
+              }
+            },
+            "bodyKey": "proceduralParams",
+            "surfaceKind": "node-graph",
+            "iconId": "sliders-horizontal",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "playbook-module-authored-procedural-preview",
+            "label": {
+              "native": {
+                "en": "Procedural Preview",
+                "de": "Prozedurale Vorschau"
+              },
+              "reuse": {
+                "en": "Procedural Preview",
+                "de": "Prozedurale Vorschau"
+              }
+            },
+            "bodyKey": "proceduralPreview",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
           }
         ],
         "actions": [
+          {
+            "id": "evaluateEmbeddedFlow",
+            "label": {
+              "native": {
+                "en": "Run Flow",
+                "de": "Flow ausführen"
+              },
+              "reuse": {
+                "en": "Run Flow",
+                "de": "Flow ausführen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [
+              {
+                "id": "payloadJsonChunks",
+                "label": {
+                  "native": {
+                    "en": "Question Input",
+                    "de": "Frageeingabe"
+                  },
+                  "reuse": {
+                    "en": "Question Input",
+                    "de": "Frageeingabe"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "bodyKey",
+                "label": {
+                  "native": {
+                    "en": "Preview",
+                    "de": "Vorschau"
+                  },
+                  "reuse": {
+                    "en": "Preview",
+                    "de": "Vorschau"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
           {
             "id": "exportSolidGeometry",
             "label": {
@@ -739,7 +1974,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -866,7 +2101,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3401,6 +4636,46 @@
           "previewBodyKey": "preview",
           "questionKind": "buildingComponent"
         }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "iconId": "workflow",
+          "label": {
+            "native": {
+              "de": "Flow",
+              "en": "Flow"
+            },
+            "reuse": {
+              "de": "Flow",
+              "en": "Flow"
+            }
+          },
+          "paramsBodyKey": "flowParams",
+          "previewBodyKey": "flowPreview",
+          "questionKind": "flow"
+        }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "iconId": "box",
+          "label": {
+            "native": {
+              "de": "Prozedurales 3D",
+              "en": "Procedural 3D"
+            },
+            "reuse": {
+              "de": "Prozedurales 3D",
+              "en": "Procedural 3D"
+            }
+          },
+          "paramsBodyKey": "proceduralParams",
+          "previewBodyKey": "proceduralPreview",
+          "questionKind": "procedural3d"
+        }
       }
     ],
     "commands": [],
@@ -3471,6 +4746,46 @@
           "paramsBodyKey": "params",
           "previewBodyKey": "preview",
           "questionKind": "buildingComponent"
+        }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "iconId": "workflow",
+          "label": {
+            "native": {
+              "de": "Flow",
+              "en": "Flow"
+            },
+            "reuse": {
+              "de": "Flow",
+              "en": "Flow"
+            }
+          },
+          "paramsBodyKey": "flowParams",
+          "previewBodyKey": "flowPreview",
+          "questionKind": "flow"
+        }
+      },
+      {
+        "topic": "forms.questionKind",
+        "payload": {
+          "appId": "s.playbook.procedural@1/*#editor",
+          "iconId": "box",
+          "label": {
+            "native": {
+              "de": "Prozedurales 3D",
+              "en": "Procedural 3D"
+            },
+            "reuse": {
+              "de": "Prozedurales 3D",
+              "en": "Procedural 3D"
+            }
+          },
+          "paramsBodyKey": "proceduralParams",
+          "previewBodyKey": "proceduralPreview",
+          "questionKind": "procedural3d"
         }
       }
     ]

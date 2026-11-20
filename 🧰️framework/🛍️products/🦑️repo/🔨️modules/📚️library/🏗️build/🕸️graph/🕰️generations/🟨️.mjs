@@ -258,14 +258,15 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
- async function publish({manifestDigest,expectedGeneration,reason,verified,signal}){
+ async function publish({manifestDigest,expectedGeneration,reason,verified,signal,claim}){
   const body=async()=>{
    const started=now(),pointer=await readPointer();
    if((pointer?.generation??-1)!==expectedGeneration){stats.casConflicts++;stats.publishHeldMs.push(now()-started);return{published:false,pointer};}
    const next={version:1,generation:expectedGeneration+1,manifest:manifestDigest,parent:pointer?.manifest??null,...(reason?{reason}:{}),...(verified?{verified}:{})};
    await fs.write(pointerPath,Buffer.from(canonicalJsonV1(next)));stats.published++;stats.publishHeldMs.push(now()-started);return{published:true,pointer:next};
   };
-  return lease?lease.exclusive(resources.facts,body,{signal,timeoutMs:P.publishWaitMilliseconds}):body();
+  const fenced=()=>claim?.fence?claim.fence(body,{signal}):body();
+  return lease?lease.exclusive(resources.facts,fenced,{signal,timeoutMs:P.publishWaitMilliseconds}):fenced();
  }
 
  const journal=createBuildJournalV1({fs,root,manifestPath,publish,settler,say,stepped});
@@ -298,11 +299,11 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(found.kind==="clean"){
    writePendingV1(process.env,current?.pointer.generation??-1,[],priority);
    if(usable.membership===live.digest&&!found.refresh?.size)return{current,built:false,published:false,plan:found,computed:0};
-   return{...await refreshMetadata({current,live,signal,held:found.refresh}),built:false,plan:found,computed:0};
+   return{...await refreshMetadata({current,live,signal,held:found.refresh,claim}),built:false,plan:found,computed:0};
   }
   const cold=found.kind==="cold",ordered=cold?[]:orderOwnersV1([...found.dirty].sort(compareCodePointsV1),priority);
   const journalKey=carry.journalKey??=buildJournalKeyV1({parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1)});
-  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,identity,implementation,found,signal}):undefined;carry.tried=true;
+  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,identity,implementation,found,signal,claim}):undefined;carry.tried=true;
   if(resumed?.result)return resumed.result;
   if(resumed?.carry)Object.assign(carry,resumed.carry);
   const owners0=cold?{}:carry.owners??usable.owners,names=resumed?.names??ordered,offset=hint?.wave?.done??carry.done,wave=names.slice(0,hint?.wave?.size??scaledOwnerWaveV1(P.ownerWave,process.env.SEMIO_SLICE_WAVE_BASIS_POINTS)),rest=names.slice(wave.length),waveStartedMs=now(),steps=[];
@@ -385,9 +386,9 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const manifestDigest=await writeManifest(next);aborted(signal);
   await markStep("indexing",steps.at(-1).output,indexStored.digest,()=>journal.sealed({key:journalKey,current,identity,implementation,steps,manifest:manifestDigest,derived:[...carry.derived]}));
   const verified=stamp&&!rest.length?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
-  let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,verified,signal})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
+  let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,verified,signal,claim})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
   mark("publish");
-  if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex:readIndexView,writeManifest,publish,patch:(base,patch)=>patchView(base,patch,signal),pack:value=>packFactIndexBytesV1(value.document.buffer,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
+  if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex:readIndexView,writeManifest,publish:input=>publish({...input,claim}),patch:(base,patch)=>patchView(base,patch,signal),pack:value=>packFactIndexBytesV1(value.document.buffer,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
   
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
   indexCache.set("view:"+done.kept.digest,done.index);
@@ -400,14 +401,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🧷️ Publishes the same owners under a refreshed membership frontier, so the next verification is a stat pass again; losing the swap is harmless. */
- async function refreshMetadata({current,live,signal,held}){
+ async function refreshMetadata({current,live,signal,held,claim}){
   const manifest=current.manifest,frontier=live?await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes):undefined;
   let factIndex=manifest.factIndex,patched;
   if(held?.size){const old=await readIndexView(manifest.factIndex);if(old){patched=await patchView(old,{upserts:derivedUpsertsV1([],held)},signal);indexCache.delete("view:"+manifest.factIndex);factIndex=(await keep(P.indexes,packFactIndexBytesV1(patched.document.buffer,P.maximumIndexBytes).bytes,".facts.br")).digest;}}
   const next={...manifest,generation:manifest.generation+1,parent:current.pointer.manifest,membership:live?live.digest:manifest.membership,frontier:frontier?frontier.digest:manifest.frontier,factIndex,built:{kind:"refresh",base:manifest.generation,dirty:[]}};
   const digest=await writeManifest(next);
-  try{const outcome=await publish({manifestDigest:digest,expectedGeneration:current.pointer.generation,verified:current.pointer.verified,signal});if(outcome.published){if(patched){indexCache.set("view:"+factIndex,patched);await settler.markIndexed({held}).catch(()=>undefined);}return{current:{pointer:outcome.pointer,manifest:next},published:true};}}
-  catch(error){if(signal?.aborted)throw error;}
+  try{const outcome=await publish({manifestDigest:digest,expectedGeneration:current.pointer.generation,verified:current.pointer.verified,signal,claim});if(outcome.published){if(patched){indexCache.set("view:"+factIndex,patched);await settler.markIndexed({held}).catch(()=>undefined);}return{current:{pointer:outcome.pointer,manifest:next},published:true};}}
+  catch(error){if(signal?.aborted||error?.code==="SEMIO_STALE_IMPLEMENTATION")throw error;}
   return{current:await read(signal)??current,published:false};
  }
 
@@ -549,9 +550,9 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** ♻️ Marks the newest generation invalid without deleting anything; the next fresh reader builds. */
- async function invalidate({reason="invalidated",signal}={}){
+ async function invalidate({reason="invalidated",signal,claim}={}){
   const pointer=await readPointer(),digest=null;
-  const outcome=await publish({manifestDigest:digest,expectedGeneration:pointer?.generation??-1,reason,signal});
+  const outcome=await publish({manifestDigest:digest,expectedGeneration:pointer?.generation??-1,reason,signal,claim});
   return outcome.published;
  }
 

@@ -37,6 +37,7 @@ semio-plugin-tool-run-operations = { path = "../../../⏯️tool-run/🎞️tick
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-storage = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
 semio-framework-value-original-aliases = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }

@@ -16,6 +16,7 @@ import { TreeItemRowContextMenu, shouldDispatchTreeRowPointerLeave } from "../�
 import { renderTreeRowIcon, treeFoldChevronIcon, treeItemContentPaddingTopPx, treeItemControlClassName, treeItemLabelSlotClassName, treeItemSecondaryTextClassName, treePresentationLabelStyle, treePropertyHeaderGridClassName, treePropertyHeaderGridStyle, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowShellClassName } from "../🎨️chrome/🟦️.tsx";
 import { treeWindowRowAriaAttributes, treeWindowRowExtentPx } from "../🔭️virtual-window/🟦️.tsx";
 import { TreeBranchContent } from "../🌲️branch/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 /**
  * 🌳️ Single tree item row with icon, label, and interaction handlers.
@@ -206,6 +207,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-tree-row-kind={isExpandable ? "group" : "property"}
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
+        {...sharedBorderlessBoxProps}
         {...windowRowAria}
         aria-selected={isSelected}
         aria-expanded={isExpandable ? open : undefined}
@@ -344,6 +346,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-draggable={draggable ? "true" : undefined}
               {...treeRowDragPayloadAttributes(dragData)}
               role="treeitem"
+              {...sharedBorderlessBoxProps}
               {...windowRowAria}
               aria-selected={isSelected}
               aria-expanded={open}
@@ -485,6 +488,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-draggable={draggable ? "true" : undefined}
         {...treeRowDragPayloadAttributes(dragData)}
         role="treeitem"
+        {...sharedBorderlessBoxProps}
         {...windowRowAria}
         aria-selected={isSelected}
         data-selected={isSelected ? "true" : undefined}

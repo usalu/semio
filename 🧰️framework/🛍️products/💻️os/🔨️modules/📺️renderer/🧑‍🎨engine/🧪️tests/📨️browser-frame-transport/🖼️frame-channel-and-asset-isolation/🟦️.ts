@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { browserAssetFailureDisposition } from "@semio-tech/framework-renderer-wgpu/frame-worker/asset-failure";
+import { browserAssetHttpStatusRetryable, browserAssetNetworkStep, BrowserAssetTransportFailure, retryBrowserAssetResponse, waitForBrowserAssetRetry } from "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
 import { readFrameWorkerSource } from "../📖️frame-worker-source/🟦️.ts";
 
@@ -77,6 +78,39 @@ describe("browser frame worker transport", () => {
     expect(caught).toContain('else ownedStep("asset-abort"');
     expect(caught).toContain('disposition === "fault"');
     expect(caught).not.toContain("!activeRequest?.referenceImage");
+  });
+
+  it("retries only transport failures, up to the fixed budget, and cancels a waiting retry", async () => {
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📄️native-asset-response/🔣️.json"), "utf8"));
+    const { transientStatuses, terminalStatuses, retryDelaysMs } = fixture.failureIsolation.retry;
+    for (const status of transientStatuses) expect(browserAssetHttpStatusRetryable(status)).toBe(true);
+    for (const status of terminalStatuses) expect(browserAssetHttpStatusRetryable(status)).toBe(false);
+
+    const waits: number[] = [];
+    let attempt = 0;
+    const network = () => browserAssetNetworkStep(async () => {
+      if (++attempt === 1) throw new TypeError("connection reset");
+      return "sealed";
+    });
+    await expect(retryBrowserAssetResponse(network, async delay => { waits.push(delay); })).resolves.toBe("sealed");
+    expect(attempt).toBe(2);
+    expect(waits.splice(0)).toEqual(retryDelaysMs.slice(0, 1));
+
+    const rejected = new BrowserAssetTransportFailure("asset-fetch-status: 503", true);
+    await expect(retryBrowserAssetResponse(async () => { throw rejected; }, async delay => { waits.push(delay); })).rejects.toBe(rejected);
+    expect(waits.splice(0)).toEqual(retryDelaysMs);
+
+    const permanent = new BrowserAssetTransportFailure("asset-fetch-status: 404", false);
+    await expect(retryBrowserAssetResponse(async () => { throw permanent; }, async delay => { waits.push(delay); })).rejects.toBe(permanent);
+    expect(waits).toEqual([]);
+
+    const cancel = new AbortController();
+    const interrupted = retryBrowserAssetResponse(async () => { throw rejected; }, delay => {
+      const waiting = waitForBrowserAssetRetry(delay, cancel.signal);
+      cancel.abort();
+      return waiting;
+    });
+    await expect(interrupted).rejects.toMatchObject({ name: "AbortError" });
   });
 
   it("streams decoded references as cancellable row-aligned strips before the exact seal", () => {

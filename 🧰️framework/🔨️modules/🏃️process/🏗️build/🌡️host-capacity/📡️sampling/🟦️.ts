@@ -5,6 +5,7 @@ import {cpus,freemem,loadavg,platform as osPlatform,totalmem} from "node:os";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {formatHostCapacityV1,hostCapacityErrorV1,type HostCapacityPolicyV1,type HostSampleV1} from "../📏️decision/🟦️.ts";
 import {hostProfileV1} from "../🪞️profile/🟦️.ts";
+import {systemWindowsMemoryPortV1,type WindowsMemoryFactsV1,type WindowsMemoryPortV1,type WindowsMemoryUnknownV1} from "../🪟️native-memory/🟦️.ts";
 import {refuseProcessV1} from "../../../📖️texts/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 
@@ -19,7 +20,7 @@ export type HostCommandRunnerV1=(command:string,args:readonly string[],signal?:A
 /** 📄️ Reads one text file, answering null when it does not exist. */
 export type HostTextReaderV1=(path:string)=>Promise<string|null>;
 /** 🔬️ Everything one platform read needs, injectable so every platform parses from fixtures. */
-export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostCommandRunnerV1;read:HostTextReaderV1;signal?:AbortSignal;notify?:(line:string)=>void}>;
+export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostCommandRunnerV1;read:HostTextReaderV1;windows?:WindowsMemoryPortV1;signal?:AbortSignal;notify?:(line:string)=>void}>;
 /** 🗃️ A shared sample record: the sample plus the cumulative swap traffic counter its successor needs for a rate. */
 export type HostSampleRecordV1=Readonly<{host:HostSampleV1;swappedOutMegabytes:number|null;declared?:string}>;
 
@@ -105,12 +106,13 @@ export async function readHostCoresV1(probe:HostProbeV1,logical:number):Promise<
 }
 
 /** 🔭️ Turns raw counters, host facts and the previous record into one sample; the rate of swap-out needs the earlier cumulative counter. */
-export function reduceHostSampleV1(policy:HostCapacityPolicyV1,facts:Readonly<{platform:HostSampleV1["platform"];cores:number;totalMegabytes:number;atMs:number;load:number|null}>,counters:HostCountersV1,previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>):HostSampleV1{
+export function reduceHostSampleV1(policy:HostCapacityPolicyV1,facts:Readonly<{platform:HostSampleV1["platform"];cores:number;totalMegabytes:number;physicalMegabytes?:number;atMs:number;load:number|null}>,counters:HostCountersV1,previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>):HostSampleV1{
  const megabytes=(bytes:number|null)=>bytes===null?null:Math.floor(bytes/MEGABYTE),constrained=megabytes(counters.constrainedBytes),total=constrained===null?facts.totalMegabytes:Math.min(facts.totalMegabytes,constrained),available=Math.min(total,megabytes(counters.availableBytes)??total);
- const share=available*10000/total,fromAvailable=share<policy.pressure.availableCriticalBasisPoints?"critical" as const:share<policy.pressure.availableWarnBasisPoints?"warn" as const:"normal" as const;
+ const physical=facts.physicalMegabytes??facts.totalMegabytes,pressureTotal=constrained===null?physical:Math.min(physical,constrained);
+ const share=(megabytes(counters.availableBytes)??pressureTotal)*10000/pressureTotal,fromAvailable=share<policy.pressure.availableCriticalBasisPoints?"critical" as const:share<policy.pressure.availableWarnBasisPoints?"warn" as const:"normal" as const;
  const fromStall=counters.stallPercent===null?undefined:counters.stallPercent>=policy.pressure.psiCriticalPercent?"critical" as const:counters.stallPercent>=policy.pressure.psiWarnPercent?"warn" as const:"normal" as const;
- const squeeze=counters.compressedBytes==null?0:counters.compressedBytes*10000/(total*MEGABYTE),fromCompressed=squeeze>=policy.pressure.compressedCriticalBasisPoints?"critical" as const:squeeze>=policy.pressure.compressedWarnBasisPoints?"warn" as const:"normal" as const;
- const rank={normal:0,warn:1,critical:2} as const,pressure=([counters.pressureLevel??fromStall??"normal",fromAvailable,fromCompressed,...counters.partial?["warn" as const]:[]] as const).reduce((worst,level)=>rank[level]>rank[worst]?level:worst);
+ const squeeze=counters.compressedBytes==null?0:counters.compressedBytes*10000/(physical*MEGABYTE),fromCompressed=squeeze>=policy.pressure.compressedCriticalBasisPoints?"critical" as const:squeeze>=policy.pressure.compressedWarnBasisPoints?"warn" as const:"normal" as const;
+ const rank={normal:0,warn:1,critical:2} as const,pressure=([counters.pressureLevel??fromStall??"normal",fromAvailable,fromCompressed] as const).reduce((worst,level)=>rank[level]>rank[worst]?level:worst);
  const swappedOut=megabytes(counters.swappedOutBytes),seconds=previous===undefined?0:(facts.atMs-previous.atMs)/1000,rate=previous!==undefined&&seconds>0&&swappedOut!==null&&previous.swappedOutMegabytes!==null?Math.max(0,Math.round((swappedOut-previous.swappedOutMegabytes)/seconds*100)/100):null;
  return Object.freeze({version:1,atMs:facts.atMs,platform:facts.platform,cores:facts.cores,totalMegabytes:total,availableMegabytes:Math.floor(available),pressure,swapUsedMegabytes:megabytes(counters.swapUsedBytes),swapOutMegabytesPerSecond:rate,load:facts.load,openFiles:counters.openFiles,openFilesMaximum:counters.openFilesMaximum,attachedImages:counters.attachedImages,...counters.partial?{counters:"partial" as const}:{}});
 }
@@ -129,15 +131,13 @@ function boundedSignalV1(signal?:AbortSignal):AbortSignal{
  return signal===undefined?bound:AbortSignal.any([signal,bound]);
 }
 
-/** 📚️ The one PowerShell command that reads the Windows memory counters: available bytes (free, zeroed and standby pages, what Task Manager calls available), the cumulative pages written to the page file and the page file in use. */
-export const WINDOWS_COUNTERS_COMMAND="$m=Get-CimInstance Win32_PerfRawData_PerfOS_Memory;$p=Get-CimInstance Win32_PageFileUsage|Measure-Object -Property CurrentUsage -Sum;[pscustomobject]@{availableBytes=[int64]$m.AvailableBytes;pagesOutput=[int64]$m.PagesOutputPersec;pageFileUsedMegabytes=[int64]$p.Sum}|ConvertTo-Json -Compress";
-
-/** 📐️ Parses the JSON of `WINDOWS_COUNTERS_COMMAND`; the page counter is cumulative, so the sampler derives the swap-out rate like on the other platforms, and a missing page file reads as zero swap. A Windows host has no compressor, open file table or attachable image count here, so those stay unknown. */
-export function parseWindowsCountersV1(text:string):HostCountersV1{
- const row=JSON.parse(text) as Record<string,unknown>,whole=(name:string):number|null=>typeof row[name]==="number"&&Number.isFinite(row[name])&&(row[name] as number)>=0?Math.floor(row[name] as number):null;
- const available=whole("availableBytes"),pages=whole("pagesOutput"),used=whole("pageFileUsedMegabytes");
- return Object.freeze({availableBytes:available,compressedBytes:null,constrainedBytes:null,swapUsedBytes:used===null?0:used*MEGABYTE,swappedOutBytes:pages===null?null:pages*LIMITS.defaultPageBytes,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
+/** 📐️ Turns the native Windows machine facts into counters: available is what is free of physical memory and of the commit, whichever is less (a full commit refuses allocations although memory is free); the page file occupancy, the swap traffic, the compressor and the open file table are not asked of Windows, so those stay unknown, and an unknown never raises the pressure of the host. */
+export function windowsCountersV1(facts:Extract<WindowsMemoryFactsV1,{known:true}>):HostCountersV1{
+ return Object.freeze({availableBytes:Math.min(facts.availableBytes,facts.commitAvailableBytes),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
 }
+
+/** 🗣️ The text of an unknown Windows answer in a language. */
+const unknownTextV1=(unknown:WindowsMemoryUnknownV1)=>(language:"en"|"de"):string=>unknown.text[language];
 
 const noticedV1=new WeakMap<object,Set<string>>(),standardErrorV1={};
 /** 📣️ Says once per process and sink, in every language, that this host is blind where the gate cannot learn or measure: nothing fails, so the line is the only signal. Never throws. */
@@ -155,10 +155,11 @@ export async function readHostCountersV1(probe:HostProbeV1):Promise<HostCounters
   return parseDarwinCountersV1(vmStat,swap,level,files??"",images);
  }
  if(probe.platform==="linux"){const[meminfo,vmstat,pressure,fileNr,membership]=await Promise.all(["/proc/meminfo","/proc/vmstat","/proc/pressure/memory","/proc/sys/fs/file-nr","/proc/self/cgroup"].map(path=>probe.read(path)));if(meminfo==null||vmstat==null)throw hostCapacityErrorV1("countersUnavailable");const limit=effectiveCgroupMemoryV1(await Promise.all(cgroupMemoryFilesV1(membership??null).map(async row=>({maximum:await probe.read(row.maximum),current:await probe.read(row.current)}))));return parseLinuxCountersV1(meminfo,vmstat,pressure??null,limit.maximum,limit.current,fileNr??null);}
- let failure="the platform probe is unavailable";
+ let failure:(language:"en"|"de")=>string=()=>"the platform probe is unavailable";
  if(probe.platform==="win32"){
-  try{return parseWindowsCountersV1(await probe.run("powershell.exe",["-NoProfile","-NonInteractive","-Command",WINDOWS_COUNTERS_COMMAND],boundedSignalV1(probe.signal)));}
-  catch(error){failure=String((error as Error)?.message??error).split("\n")[0]!.slice(0,LIMITS.reasonCharacters);}
+  const facts=(probe.windows??systemWindowsMemoryPortV1()).memory();
+  if(facts.known)return windowsCountersV1(facts);
+  failure=unknownTextV1(facts);
  }
  noticeOnceV1("countersPartial."+probe.platform,"countersPartial",{platform:probe.platform,reason:failure},probe.notify);
  return Object.freeze({availableBytes:freemem(),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null,partial:true as const});
@@ -201,7 +202,9 @@ export function simulatedHostTotalV1(environment:Readonly<Record<string,string|u
 
 /** 🖥️ Reads one host sample: counters, core count, total memory and load; a simulated total (see `simulatedHostTotalV1`) shrinks the host. */
 export async function readHostSampleV1(policy:HostCapacityPolicyV1,probe:HostProbeV1,previous?:Readonly<{atMs:number;swappedOutMegabytes:number|null}>,now:()=>number=Date.now,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<HostSampleRecordV1>{
- const counters=await readHostCountersV1(probe),realCores=await readHostCoresV1(probe,cpus().length||1),{totalMegabytes:total,cores}=hostProfileV1(environment,{totalMegabytes:Math.floor(totalmem()/MEGABYTE),cores:realCores,declared:false}),average=probe.platform==="win32"?busyLoadV1():loadavg()[0]!,host=reduceHostSampleV1(policy,{platform:probe.platform,cores,totalMegabytes:total,atMs:now(),load:average===null?null:Math.round(average*100)/100},counters,previous);
+ const counters=await readHostCountersV1(probe),realCores=await readHostCoresV1(probe,cpus().length||1),physicalMegabytes=Math.floor(totalmem()/MEGABYTE);
+ const {totalMegabytes,cores}=hostProfileV1(environment,{totalMegabytes:physicalMegabytes,cores:realCores,declared:false}),average=probe.platform==="win32"?busyLoadV1():loadavg()[0]!;
+ const host=reduceHostSampleV1(policy,{platform:probe.platform,cores,totalMegabytes,physicalMegabytes,atMs:now(),load:average===null?null:Math.round(average*100)/100},counters,previous);
  return Object.freeze({host,swappedOutMegabytes:counters.swappedOutBytes===null?null:Math.floor(counters.swappedOutBytes/MEGABYTE)});
 }
 
@@ -226,9 +229,6 @@ export function currentHostProbeV1(signal?:AbortSignal):HostProbeV1{
 export function wholeHostProbeV1(probe:HostProbeV1):HostProbeV1{
  return Object.freeze({...probe,read:(path:string)=>path==="/proc/self/cgroup"?Promise.resolve(null):probe.read(path)});
 }
-
-/** 📋️ The one PowerShell command that lists every Windows process as `pid ppid working-set-kilobytes` lines, the shape of `ps -A -o pid=,ppid=,rss=`, so one parser and one tree sum serve macOS and Windows. */
-export const WINDOWS_PROCESS_TABLE_COMMAND=OBSERVERS.platforms.win32.resident.arguments[3]!;
 
 /** 🌳️ Parses `ps -A -o pid=,ppid=,rss=` into rows. */
 export function parseProcessTableV1(text:string):readonly Readonly<{pid:number;parent:number;rssKilobytes:number}>[]{
@@ -286,14 +286,15 @@ export function parseSmapsRollupV1(text:string,fields:readonly string[]=OBSERVER
  return total;
 }
 
-/** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `footprint` on macOS (one call for the whole tree, the process table names its members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), one PowerShell table of private working sets on Windows; a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when PowerShell cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
-export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint"):Promise<number|null>{
+/** 👁️ Observes what the process tree under one pid holds, in the footprint by default (`HostMemoryMeasureV1`): `footprint` on macOS (one call for the whole tree, the process table names its members), `/proc/<pid>/smaps_rollup` on Linux (no external tool), the native process walk on Windows (`K32GetProcessMemoryInfo`: the private commit is the footprint, the working set the resident set); a platform whose footprint source cannot be read says so once in every language and reads the resident set instead. null when the process is gone or, on Windows, when the native calls cannot answer at all, which is announced once in every language (the gate then learns nothing from the run and keeps the declared sizes). */
+export async function observeTreeMegabytesV1(pid:number,run:HostCommandRunnerV1=runHostCommandV1,platform:HostSampleV1["platform"]=osPlatform() as HostSampleV1["platform"],proc:Readonly<{read:HostTextReaderV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},notify?:(line:string)=>void,measure:HostMemoryMeasureV1="footprint",windows?:WindowsMemoryPortV1):Promise<number|null>{
  const reason=(error:unknown)=>(language:"en"|"de"):string=>(isRepoErrorV1(error)?renderRepoErrorV1(error,language):String((error as Error)?.message??error)).split("\n")[0]!.slice(0,LIMITS.reasonCharacters),fallback=(why:(language:"en"|"de")=>string):void=>noticeOnceV1("footprintFallback."+platform,"footprintFallback",{platform,reason:why},notify);
  if(platform==="win32"){
-  const table=async(source:Readonly<{command:string;arguments:readonly string[]}>,strict:boolean):Promise<number|null>=>{const rows=parseProcessTableV1(await run(source.command,source.arguments));if(strict&&!rows.length)throw refuseProcessV1("invalid","capacity.empty-process-table");return treeMegabytesV1(rows,pid);};
-  if(measure==="footprint")try{return await table(OBSERVERS.platforms.win32.footprint,true);}catch(error){fallback(reason(error));}
-  try{return await table(OBSERVERS.platforms.win32.resident,false);}
-  catch(error){noticeOnceV1("treeUnobserved.win32","treeUnobserved",{platform,reason:reason(error)},notify);return null;}
+  const table=(windows??systemWindowsMemoryPortV1()).processes();
+  if(!table.known){noticeOnceV1("treeUnobserved.win32","treeUnobserved",{platform,reason:unknownTextV1(table)},notify);return null;}
+  if(measure==="footprint"&&table.rows.length>0&&table.rows.every(row=>row.privateBytes===null))fallback(()=>"K32GetProcessMemoryInfo answered no private usage");
+  const footprint=measure==="footprint"&&table.rows.some(row=>row.privateBytes!==null);
+  return treeMegabytesV1(table.rows.map(row=>({pid:row.pid,parent:row.parent,rssKilobytes:Math.floor(((footprint?row.privateBytes:row.workingSetBytes)??row.workingSetBytes??0)/1024)})),pid);
  }
  if(platform==="linux"){
   const rows=await readLinuxProcessTableV1(proc.read,proc.list);

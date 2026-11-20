@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "size": 0,
+      "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "size": 17,
+      "digest": "d04fd59f3d9a1fd424c47874ae1dab0dde54fa73ba474245bfac79279afe6df7"
+    },
+    {
+      "size": 196625,
+      "digest": "3a1c448c6ee68c5953257e5a0d18e495d611afb4943a6b21cede698a9a5abf8a"
+    }
+  ]
+}

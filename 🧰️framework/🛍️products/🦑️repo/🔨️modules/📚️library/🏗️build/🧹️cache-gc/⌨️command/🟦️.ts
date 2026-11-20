@@ -4,12 +4,13 @@ import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/�
 import budgetPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {join} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
-import {cacheAreaDirectoryV1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
+import {CACHE_RUNTIME_V1,cacheAreaDirectoryV1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,formatCacheBytesV1,formatCacheReportV1,type CacheLanguageV1,type CacheLedgerV1,type CachePartitionBudgetsV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import type {MemberScanControlV1,MemberVerifyReportV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts";
 import {formatMachinePlanV1,machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1,type MachinePolicyV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {dedupeTreeV1} from "../👯️dedupe/🟦️.ts";
 import {collectMachineBoundsV1} from "../../🌡️host-capacity/🧹️disk-recovery/🔌️real/🟦️.ts";
-import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+import {cacheRunnerPortsV1,collectCacheV1,loadCacheSizesV1,machineHostFreeBytesV1,machineUsesV1,removeCacheTreeV1,reportCacheLedgerV1,type CacheRunnerPortsV1} from "../🏃️runner/🟦️.ts";
+import type {CargoGcControlV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📏️tree/🟦️.ts";
 import type {MachinePlanV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
@@ -138,14 +139,32 @@ async function graphReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,
  });
 }
 
-/** 🌱️ Collects (or, in a dry run, only reports) the Cargo incremental sessions and then the stale build units of the mounted rust image: lock-aware (compiler locks and build leases), least recently used first, the pressure rule measured on the image itself. */
-async function cargoIncrementalReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,signal:AbortSignal):Promise<string>{
+/** 🌱️ Collects (or, in a dry run, only reports) what the mounted rust image can give back, least recently used first: the Cargo incremental sessions, then the component runs a newer run supersedes, then the stale build units; lock-aware (compiler locks, build leases, running builds). It frees what the image needs to reach its free-space target and what its machine quota exceeds (`machine`), whichever is more, the pressure rule measured on the image itself. */
+async function cargoIncrementalReclaim(root:string,dryRun:boolean,language:CacheLanguageV1,ports:CacheRunnerPortsV1,machine:MachinePlanV1|null):Promise<string>{
  const{existsSync}=await import("node:fs"),{join}=await import("node:path"),ledger=cacheLedgerV1(),area=ledger.areas.find(row=>row.id==="rust")!,directory=cacheAreaDirectoryV1(root,ledger,area),store=directory===null?null:join(directory,"m");
  if(store===null||!existsSync(store))return cacheTextV1(language,"gc.imageAbsent",{id:"cargo-store"});
- const{collectIncrementalV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🟦️.ts"),{gcNeedBytesV1,measureVolumeV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts"),volume=measureVolumeV1(store,1),need=gcNeedBytesV1(volume.volumeBytes,volume.freeBytes),lines:string[]=[];
- await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measureVolumeV1(store,1).freeBytes-volume.freeBytes>=need,signal,report:{language,write:line=>lines.push(line)}});
- const{collectUnitsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts"),after=dryRun?volume:measureVolumeV1(store,1),remaining=dryRun?need:gcNeedBytesV1(after.volumeBytes,after.freeBytes);
- await collectUnitsV1(store,{dryRun,needBytes:()=>remaining,satisfied:()=>remaining>0&&measureVolumeV1(store,1).freeBytes-after.freeBytes>=remaining,signal,report:{language,write:line=>lines.push(line)}});
+ const{collectIncrementalV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🟦️.ts"),{gcNeedBytesV1,measureVolumeV1,unitBudgetBytesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts"),{collectComponentRunsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧩️runs/🟦️.ts"),{collectUnitsV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🟦️.ts"),volume=measureVolumeV1(store,1),quotaBytes=machine?.stores.find(row=>row.id==="rust")?.evictBytes??0,need=Math.max(gcNeedBytesV1(volume.volumeBytes,volume.freeBytes),quotaBytes),lines:string[]=[],report={language,write:(line:string)=>{lines.push(line);}};
+ const remaining=(planned:number):number=>{if(dryRun)return Math.max(0,need-planned);const now=measureVolumeV1(store,1);return Math.max(gcNeedBytesV1(now.volumeBytes,now.freeBytes),quotaBytes-(now.freeBytes-volume.freeBytes),0);};
+ const control=(collector:string):CargoGcControlV1=>{
+  let sequence=0;
+  const last=new Map<string,number>();
+  const progress=async(stage:string)=>{
+   ports.signal.throwIfAborted();
+   const now=performance.now();
+   if(now-(last.get(stage)??-Infinity)<CACHE_RUNTIME_V1.progressIntervalMs)return;
+   last.set(stage,now);
+   await ports.progress(`cargo:${collector}:${stage}:${++sequence}`);
+  };
+  return {signal:ports.signal,progress:(_done,_total,stage)=>progress(stage),remove:path=>removeCacheTreeV1(path,{...ports,progress},"deleting")};
+ };
+ const sessions=await collectIncrementalV1(store,{dryRun,volumeBytes:volume.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measureVolumeV1(store,1).freeBytes-volume.freeBytes>=need,report,...control("incremental")});
+ const afterSessions=dryRun?volume:measureVolumeV1(store,1),needRuns=remaining(sessions.freedBytes);
+ const runs=await collectComponentRunsV1(store,{dryRun,needBytes:()=>needRuns,satisfied:()=>{
+  const current=measureVolumeV1(store,1);
+  return afterSessions.unmeasured||current.unmeasured?undefined:current.freeBytes-afterSessions.freeBytes>=needRuns;
+ },report,...control("runs")});
+ const afterRuns=dryRun?volume:measureVolumeV1(store,1),needUnits=remaining(sessions.freedBytes+runs.freedBytes);
+ await collectUnitsV1(store,{dryRun,needBytes:()=>needUnits,budgetBytes:unitBudgetBytesV1(repositoryCacheBudgetV1(root).partitions.rust.capacityBytes),satisfied:()=>needUnits>0&&measureVolumeV1(store,1).freeBytes-afterRuns.freeBytes>=needUnits,report,...control("units")});
  const{fillRatesV1,fillReportV1,readFillSamplesV1}=await import("../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🟦️.ts"),current=measureVolumeV1(store,1);
  lines.push(fillReportV1(fillRatesV1(readFillSamplesV1(join(store,"u")),Date.now()),current.freeBytes,language));
  return lines.join("\n");
@@ -181,7 +200,7 @@ async function nxToolingReclaim(root:string,dryRun:boolean,language:CacheLanguag
 /** 🏗️ Binds the command to the running build CLI: its invocation for progress and cancellation, and the lease directory of the leases partition for the area leases. */
 export async function runCacheLedgerV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
  const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),leases=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts"),opening=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),partitions=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts"),headroom=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧹️headroom/🟦️.ts"),directory=opening.repositoryLeaseDirectoryV1(root);
- const ports=cacheRunnerPortsV1({
+ const ports:CacheRunnerPortsV1=cacheRunnerPortsV1({
   signal:invocation.control.signal,
   progress:stage=>routing.advanceScriptInvocation(invocation,"cache:"+stage,"running"),
   exclusive:async resource=>{
@@ -191,7 +210,7 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
   delegate:(owner,id,dryRun,language,context)=>{
    if(owner==="nx-tooling"&&id==="nx-tooling")return nxToolingReclaim(root,dryRun,language,phaseControl,invocation,context?.machine??null,context?.selected??false).catch(error=>{if(invocation.control.signal.aborted)throw error;return "failed: "+String((error as Error).message);});
    if(owner==="graph"&&id==="graph-inference")return routing.withRequestedIssuedResourceControlV1(phaseControl,CACHE_GC_LIMITS_V1.phaseBudgetMilliseconds,control=>graphReclaim(root,dryRun,language,control,leases,opening,partitions,headroom));
-   if(owner==="cargo"&&id==="cargo-store")return cargoIncrementalReclaim(root,dryRun,language,phaseControl.signal).catch(error=>"failed: "+String((error as Error).message));
+   if(owner==="cargo"&&id==="cargo-store")return cargoIncrementalReclaim(root,dryRun,language,{...ports,signal:phaseControl.signal},context?.machine??null).catch(error=>{if(phaseControl.signal.aborted)throw error;return "failed: "+String((error as Error).message);});
    if(owner==="test-evidence"&&id==="test-runs")return testRunsReclaim(root,dryRun,language,phaseControl,invocation).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-execution")return import("../../🌐️remote-execution/👷️worker/🟦️.ts").then(module=>module.collectRemoteExecutionForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));
    if(owner==="remote-cache")return import("../../🌐️remote-cache/⌨️command/🟦️.ts").then(module=>module.collectRemoteCacheForLedgerV1(root,dryRun,phaseControl.signal)).catch(error=>"failed: "+String((error as Error).message));

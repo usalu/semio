@@ -103,10 +103,6 @@ struct StatusEvent {
     #[serde(default)]
     units_total: u32,
     #[serde(default)]
-    faces_done: u32,
-    #[serde(default)]
-    faces_total: u32,
-    #[serde(default)]
     fault_code: String,
     #[serde(default)]
     fault_message: String,
@@ -119,8 +115,6 @@ struct ExpectedStatus {
     cancellable: bool,
     units_done: u32,
     units_total: u32,
-    faces_done: u32,
-    faces_total: u32,
     in_flight: u32,
     ratio: ExpectedRatio,
 }
@@ -175,26 +169,19 @@ fn address(addressable: bool) -> Result<String, semio_os_flow::FlowExtensionAddr
 fn replay(state: &StatusState, session: &mut FlowEvalSession) {
     for event in &state.sequence {
         match event.event.as_str() {
-            "admit" => assert!(session.note_pending_tessellate(node_hash(&event.handle), event.handle.clone()), "{}: {} must be admitted", state.id, event.handle),
+            "admit" => assert!(session.note_pending_tessellate(node_hash(&event.handle), event.handle.clone(), 0.05), "{}: {} must be admitted", state.id, event.handle),
             "step" => {
-                let body = serde_json::json!({ "phase": event.phase, "unitsDone": event.units_done, "unitsTotal": event.units_total, "facesDone": event.faces_done, "facesTotal": event.faces_total });
-                session.resolve_preview_tessellate(node_hash(&event.handle), &body.to_string());
+                let window = (VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
+                let progress = (u64::from(event.units_done), u64::from(event.units_total));
+                crate::preview_reply::receive(session, crate::preview_reply::response(window, &event.handle, 0.05, &event.phase, progress, None))
+                    .expect("original preview status reply");
             }
-            "evaluateFault" => {
-                let resolve = preview_eval::FlowEvalResolve {
-                    window_id: VIEW_PREVIEW_WINDOW_ID.to_string(),
-                    window_kind_id: preview::WINDOW_KIND_ID.to_string(),
-                    node_hash: 1,
-                    output_json: String::new(),
-                    extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.to_string(),
-                    ok: false,
-                    fault_code: event.fault_code.clone(),
-                    fault_message: event.fault_message.clone(),
-                };
-                preview_eval::resolve_eval(&resolve, session);
-            }
+            "evaluateFault" => crate::preview_reply::record_evaluate_fault(session, semio_os_flow::ExtensionEvaluateFault {
+                extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.into(), capability: "evaluate".into(),
+                code: event.fault_code.clone(), message: event.fault_message.clone(),
+            }),
             "cancel" => {
-                session.cancel_preview_evaluation(VIEW_PREVIEW_WINDOW_ID);
+                crate::preview_reply::cancel(session, VIEW_PREVIEW_WINDOW_ID);
                 let payload = preview_eval::FlowEvalRelease { window_id: VIEW_PREVIEW_WINDOW_ID.to_string(), window_kind_id: preview::WINDOW_KIND_ID.to_string() };
                 let invocations = preview_eval::release_invocations_for(&payload, address(state.addressable));
                 assert_eq!(!invocations.is_empty(), state.addressable, "{}: an addressable kernel is told, an unaddressable one is not", state.id);
@@ -259,8 +246,8 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
         assert_eq!(status["cancellable"].as_bool(), Some(state.status.cancellable), "{}: cancellable — {status}", state.id);
         assert_eq!(status["progress"]["unitsDone"].as_u64(), Some(u64::from(state.status.units_done)), "{}: unitsDone", state.id);
         assert_eq!(status["progress"]["unitsTotal"].as_u64(), Some(u64::from(state.status.units_total)), "{}: unitsTotal", state.id);
-        assert_eq!(status["progress"]["facesDone"].as_u64(), Some(u64::from(state.status.faces_done)), "{}: facesDone", state.id);
-        assert_eq!(status["progress"]["facesTotal"].as_u64(), Some(u64::from(state.status.faces_total)), "{}: facesTotal", state.id);
+        assert_eq!(status["progress"]["facesDone"].as_u64(), Some(0), "{}: facesDone", state.id);
+        assert_eq!(status["progress"]["facesTotal"].as_u64(), Some(0), "{}: facesTotal", state.id);
         assert_eq!(status["progress"]["inFlight"].as_u64(), Some(u64::from(state.status.in_flight)), "{}: inFlight", state.id);
         let expected_ratio = state.status.ratio.value(state.status.in_flight);
         let observed_ratio = status["progress"]["ratio"].as_f64().expect("ratio is a number");
@@ -429,19 +416,19 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     let mut host = semio_os_flow::FlowHost::default();
     let mut session = FlowEvalSession::new();
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a census exists to settle");
-    session.arm_window_tick("preview-1");
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 1);
-    session.note_window_tick_outcome("preview-1", true);
+    session.arm_window_tick("preview-1", crate::preview_reply::TURN).expect("window tick admission").0;
+    session.begin_window_tick("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    session.note_window_extensions_in_flight("preview-1", 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    session.note_window_tick_outcome("preview-1", true, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     let working = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a working chain publishes a status");
     let working: serde_json::Value = serde_json::from_str(&working).expect("status json");
     assert_eq!(working["computing"], serde_json::json!(true), "a working chain is computing");
     let working_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
     assert_eq!(working_addressed["cancellable"], serde_json::json!(true), "and its work can be stopped");
 
-    session.settle_window_extension("preview-1");
+    session.settle_window_extension("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     while session.tick(&mut host, None) {}
-    session.note_window_tick_outcome("preview-1", false);
+    session.note_window_tick_outcome("preview-1", false, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     let chain = session.preview_chain_status();
     assert!(chain.settled(), "the chain settled its whole census: {chain:?}");
 

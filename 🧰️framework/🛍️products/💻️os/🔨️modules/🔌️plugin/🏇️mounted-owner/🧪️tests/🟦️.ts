@@ -140,12 +140,12 @@ test("actual native verdicts preserve original mounted actor capture and full ph
  const producer=Buffer.alloc(law.producerCapacity);const db=new Database(":memory:");
  try{const row=db.query("SELECT ? AS external,? AS turn,max(0,?-?) AS remaining,7-1 AS fuel").get(producer.byteLength,producer.byteLength,law.policyCapacity,producer.byteLength)as{external:number;turn:number;remaining:number;fuel:number};expect(row).toEqual({external:law.externalCapacity,turn:law.turnCapacity,remaining:law.remainingCapacity,fuel:law.fuel});}finally{db.close();}
  const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const record=source.slice(source.indexOf("pub fn record("),source.indexOf("pub fn advance_job("));
- expect(record.indexOf("self.progress = progress;")).toBeLessThan(record.indexOf("self.context.consume_retained(receipt)?;"));expect(record.includes("with_retained_progress(receipt)")).toBe(true);expect(source.includes("maximum_capacity_bytes.saturating_sub(self.progress.retained_capacity_bytes)")).toBe(true);
+ expect(record.indexOf("self.progress = progress;")).toBeLessThan(record.indexOf("self.context.consume_retained(receipt)?;"));expect(record.includes("with_retained_progress(receipt)")).toBe(true);expect(source.includes("maximum_capacity_bytes.saturating_sub(self.current_progress.retained_capacity_bytes)")).toBe(true);
 });
 
 test("runtime policy receives the original child failure before propagation",()=>{
  const owner=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url)),app=pluginSubtreeText("🧵️instance","🔌️plugin-app-impl");
- const recorded=owner.indexOf("self.progress = self.progress.checked_add(actual)?;");expect(recorded).toBeGreaterThan(0);expect(recorded).toBeLessThan(owner.indexOf("let step = result?;"));
+ const recorded=owner.indexOf("self.receive_posted(before, reserved_before)?;",owner.indexOf("pub fn advance_lifecycle"));expect(recorded).toBeGreaterThan(0);expect(recorded).toBeLessThan(owner.indexOf("let step = result?;"));
  for(const name of ["maintenance_step","close_step"]){expect(app.includes(`fn mounted_owner_${name}(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)`)).toBe(true);}
  expect((app.match(/turn\.advance_lifecycle\(\|cx,loan\|/g)??[]).length).toBe(2);
 });
@@ -153,8 +153,8 @@ test("runtime policy receives the original child failure before propagation",()=
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));expect(new AjvDraft07({strict:true}).compile(schema)(law)).toBe(true);
- const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn progress("));
- expect(method.includes("let result = job(self.context, grant);")).toBe(true);expect(method.includes("self.progress = self.progress.checked_add(actual)")).toBe(true);expect(method.includes("let receipt = result?")).toBe(true);expect(method.indexOf("self.progress = self.progress.checked_add(actual)")).toBeLessThan(method.indexOf("let receipt = result?"));expect(method.includes("consume_retained(")).toBe(false);
+ const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn advance_lifecycle"));
+ expect(method.includes("let result = job(self.context, grant);")).toBe(true);expect(method.includes("self.receive_posted(before, reserved_before)?;")).toBe(true);expect(method.includes("let receipt = result?")).toBe(true);expect(method.indexOf("self.receive_posted(before, reserved_before)?;")).toBeLessThan(method.indexOf("let receipt = result?"));expect(method.includes("consume_retained(")).toBe(false);
  const db=new Database(":memory:");try{expect(db.query("SELECT 64-0 AS actual,64 AS external,64 AS turn,7-1 AS fuel").get()).toEqual({actual:64,external:64,turn:64,fuel:6});}finally{db.close();}
 });
 
@@ -192,4 +192,24 @@ test("runtime policy forwards one original cumulative reconcile recipient to all
  expect(patches.includes("StepBudget::new(1, u64::MAX)")).toBe(false);
  expect(pluginFamilyText().includes("original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained)")).toBe(true);
  expect(turn.includes("patches.drive_one(cx)?")).toBe(true);
+});
+
+
+test("redeemed returns retain their earlier funding across all physical currencies", () => {
+  const cases = JSON.parse(readFileSync(new URL("🧫️fixtures/reserved-return.json", import.meta.url), "utf8"));
+  const axes = [["maximumItems", "copiedItems"], ["maximumCopyBytes", "copiedBytes"], ["maximumCapacityBytes", "retainedCapacityBytes"], ["maximumReleaseBytes", "releasedBytes"]] as const;
+  const db = new Database(":memory:");
+  try {
+    const remaining = db.query("SELECT ? - (? - ?) AS amount");
+    for (const law of cases) {
+      for (const [limit, axis] of axes) {
+        const total = law.fresh[axis] + law.reserved[axis];
+        expect(remaining.get(law.grant[limit], total, law.reserved[axis])).toEqual({ amount: law.remaining[limit] });
+      }
+      expect(law.fresh.copiedBytes + law.reserved.copiedBytes).toBeGreaterThan(law.grant.maximumCopyBytes);
+      expect(law.remaining.maximumDepth).toBe(law.grant.maximumDepth);
+    }
+  } finally {
+    db.close();
+  }
 });

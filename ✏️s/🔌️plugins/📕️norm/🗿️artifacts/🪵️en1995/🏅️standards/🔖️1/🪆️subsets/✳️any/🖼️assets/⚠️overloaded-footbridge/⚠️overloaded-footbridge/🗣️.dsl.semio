@@ -5,7 +5,7 @@ members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:ENUM servi
 }
 connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:ENUM strength-class:ENUM service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
 }
-uls-equation="6.10"
+uls-equation=eq610
 cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
 }
 placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {

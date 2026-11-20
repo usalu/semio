@@ -15,7 +15,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementR
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, OriginalRetirementFailure, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_value_testing_admission::{bank_run, driven, finite_work, BankWallet, EffectBank, FiniteWork, OriginalConstructionAccept, OriginalConstructionAcceptComplete, OriginalConstructionAuthority, OriginalConstructionGrant, OriginalConstructionGrantComplete, OriginalConstructionRecipient, OriginalSourceTurnIdentity, OriginalWorkAuthority, RetainedWorkPoll};
+use semio_framework_value_testing_admission::{bank_run, driven, finite_work, sourced_work, BankWallet, EffectBank, FiniteWork, OriginalConstructionAccept, OriginalConstructionAcceptComplete, OriginalConstructionAuthority, OriginalConstructionGrant, OriginalConstructionGrantComplete, OriginalConstructionRecipient, OriginalSourceTurnIdentity, OriginalWorkAuthority, RetainedWorkPoll};
 
 /// 📏️ Native allocation ceiling the original test callers grant.
 pub const NATIVE_MAXIMUM_BYTES: usize = 1 << 30;
@@ -72,7 +72,8 @@ macro_rules! lend {
 }
 
 impl Lent {
-    fn new() -> Self { Self { work: finite_work(u64::MAX, None), construction: OriginalConstructionAuthority::new(Physical { submitted: RetainedCloneProgress::default() }) } }
+    fn new() -> Self { Self::sourced(None) }
+    fn sourced(source: Option<OriginalSourceTurnIdentity>) -> Self { Self { work: source.map_or_else(|| finite_work(u64::MAX, None), sourced_work), construction: OriginalConstructionAuthority::new(Physical { submitted: RetainedCloneProgress::default() }) } }
 }
 
 /// 🧾️ Takes the progress a settled close turn paid; a pending turn paid nothing.
@@ -107,15 +108,32 @@ fn close_decode(lent: &mut Lent, native: &mut NativeDecodeControl<'_>) -> Retain
     lend!(lent, native, |native: &mut NativeDecodeControl<'_>| close_decode_installed(native))
 }
 
+/// 🚮️ Closes every retired owner of a caller-built decode control through the original failure-birth and funded close turns.
+pub fn close_retired(native: &mut NativeDecodeControl<'_>) {
+    let mut lent = Lent::new();
+    while native.has_retirement_owner() {
+        close_decode(&mut lent, native);
+    }
+}
+
 /// 🧲️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
 pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
-    let grant = original_grant();
-    let mut callback = |_| true;
+    with_decoding_observed(&mut |_| true, operation)
+}
+
+/// 🧲️ Runs `operation` under an original native decode owner whose caller-owned progress callback is `callback`, the authority that cancels interior native decoding.
+pub fn with_decoding_observed<T>(callback: &mut dyn FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress) -> bool, operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
+    with_decoding_granted(original_grant(), callback, operation)
+}
+
+/// 🧲️ Runs `operation` under an original native decode owner that holds exactly `grant` as its ownership authority.
+pub fn with_decoding_granted<T>(grant: RetainedCloneGrant, callback: &mut dyn FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress) -> bool, operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
+    let source = original_bank();
     let mut recipient = NativeDecodeRetirementRecipient::new();
-    let mut native = NativeDecodeControl::new(NATIVE_MAXIMUM_BYTES, &mut callback);
+    let mut native = NativeDecodeControl::new(NATIVE_MAXIMUM_BYTES, callback);
     native.install_retirement_recipient(&mut recipient).expect("original decode recipient installs");
-    let mut lent = Lent::new();
-    let result = lend!(&mut lent, native, |native: &mut NativeDecodeControl<'_>| operation(&mut NativeSnapshotDecodeOwner::new(native, grant)));
+    let mut lent = Lent::sourced(Some(source.source_witness().identity()));
+    let result = native.with_source_witness(Some(source.source_witness()), |native| lend!(&mut lent, native, |native: &mut NativeDecodeControl<'_>| operation(&mut NativeSnapshotDecodeOwner::new(native, grant))));
     while native.has_retirement_owner() {
         close_decode(&mut lent, &mut native);
     }
@@ -124,10 +142,14 @@ pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_
 
 /// 🛫️ Runs `operation` under an original native encode owner and closes every retired owner afterwards.
 pub fn with_encoding<T>(operation: impl FnOnce(&mut NativeSnapshotEncodeOwner<'_, '_>) -> T) -> T {
+    with_encoding_observed(&mut |_| true, operation)
+}
+
+/// 🛫️ Runs `operation` under an original native encode owner whose caller-owned progress callback is `callback`, the authority that cancels interior native encoding.
+pub fn with_encoding_observed<T>(callback: &mut dyn FnMut(semio_framework_value::native_encoding::NativeEncodeProgress) -> bool, operation: impl FnOnce(&mut NativeSnapshotEncodeOwner<'_, '_>) -> T) -> T {
     let grant = original_grant();
-    let mut callback = |_| true;
     let mut recipient = NativeEncodeRetirementRecipient::new();
-    let mut native = NativeEncodeControl::new(NATIVE_MAXIMUM_BYTES, &mut callback);
+    let mut native = NativeEncodeControl::new(NATIVE_MAXIMUM_BYTES, callback);
     native.install_retirement_recipient(&mut recipient).expect("original encode recipient installs");
     let result = lend!(&mut Lent::new(), native, |native: &mut NativeEncodeControl<'_>| operation(&mut NativeSnapshotEncodeOwner::new(native, grant)));
     let mut bank = original_bank();

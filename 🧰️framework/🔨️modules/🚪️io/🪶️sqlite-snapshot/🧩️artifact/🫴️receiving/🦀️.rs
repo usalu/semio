@@ -4,23 +4,25 @@ use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, R
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{cmp::Ordering,mem::size_of};
 /// 📩️ The original SQLite receiving scope adopts body, close and publication effects once.
-pub struct ReceivingSettlement<'a,'b>{control:std::cell::RefCell<super::super::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,lent:std::cell::Cell<bool>,deferred:std::cell::Cell<Option<(usize,usize,usize)>>,cause:std::cell::RefCell<Option<ValueError>>}
+pub struct ReceivingSettlement<'a,'b>{control:std::cell::RefCell<super::super::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,lent:std::cell::Cell<bool>,deferred:std::cell::RefCell<Vec<(usize,usize,usize)>>,cause:std::cell::RefCell<Option<ValueError>>}
 impl<'a,'b> ReceivingSettlement<'a,'b>{
  /// 🎟️ Borrows the initiating scope and its independently remaining allocation authority.
- pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),lent:std::cell::Cell::new(false),deferred:std::cell::Cell::new(None),cause:std::cell::RefCell::new(None)}}
+ pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),lent:std::cell::Cell::new(false),deferred:std::cell::RefCell::new(Vec::new()),cause:std::cell::RefCell::new(None)}}
  /// 🎛️ Loans the real original scope while keeping its dynamic borrow private.
  pub fn with_control<T>(&self,operation:impl FnOnce(&mut SqliteSnapshotControl<'b>)->T)->T{
   self.lent.set(true);let result=operation(&mut self.control.borrow_mut());self.lent.set(false);
-  if let Some((owned,completed,total))=self.deferred.take(){self.post(owned,completed,total);}
+  let events=std::mem::take(&mut *self.deferred.borrow_mut());for(owned,completed,total)in events{if !self.post(owned,completed,total){break}}
   result
  }
  /// 📮️ Posts one observed native event through the scope and keeps the first refusal as the observer cause.
  fn post(&self,owned:usize,completed:usize,total:usize)->bool{match self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total)){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
  /// 📤️ Adopts body effects before any owned frame status or output leaves receiving custody.
- pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);Ok(())}
+ pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);if let Some(cause)=self.cause.borrow_mut().take(){return Err(cause)}Ok(())}
  /// 👁️ Posts later native close and publication effects through that same scope and callback.
- pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if self.cause.borrow().is_some(){return false}if !self.post_body.get(){return true}if self.lent.get(){self.deferred.set(Some((owned,completed,total)));return true}self.post(owned,completed,total)}
+ pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if self.cause.borrow().is_some(){return false}if self.lent.get(){self.deferred.borrow_mut().push((owned,completed,total));return true}if !self.post_body.get(){return self.observe_body(completed,total)}self.post(owned,completed,total)}
+ /// 🔭️ Forwards a native body stage event (its real completed and total units) to the caller's progress and cancellation without settling allocation effects, which the body adopts once at its end; an event raised while the scope is lent to the body is queued in order and replayed through the real control when the loan ends, and the first refusal fails the body at `finish_body`.
+ fn observe_body(&self,completed:usize,total:usize)->bool{match self.control.try_borrow_mut(){Ok(mut control)=>match control.checkpoint(self.phase,completed,total){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}},Err(_)=>true}}
  /// 🧳️ Preserves the original body, receipt and observer causes at their first failure cut.
  pub fn refused_failure(&self,owned:usize,mut error:semio_framework_io_control::NativeSnapshotFailure)->semio_framework_io_control::NativeSnapshotFailure{
   if let Some(cause)=self.cause.borrow_mut().take(){return error.with_settlement_refusal(cause).expect("original SQL observer ends its first settlement cut")}

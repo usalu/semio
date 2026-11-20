@@ -45,6 +45,12 @@ impl AnalysisModelOwner<'_> {
         }
     }
 
+    fn node_depth(&self, index: usize) -> Result<usize, FemError> {
+        match self {
+            Self::Borrowed(_) | Self::Owned(_) => Ok(1),
+            Self::Mounted(model) => model.nodes.values.next_get_depth_demand(index).map_err(|_| FemError::Singular),
+        }
+    }
     pub(super) fn elements_len(&self) -> usize {
         match self {
             Self::Borrowed(model) => model.elements.len(),
@@ -280,11 +286,22 @@ impl<'model> AssemblyJob<'model> {
                         continue;
                     }
                 },
-                6 => match close_paged_owner_step(&mut self.plan.dof_map.slots, maximum_bytes) {
-                    Ok(Some(step)) => step,
-                    Err(()) => return (false, 0, 0),
-                    Ok(None) => { self.close_lane += 1; continue; }
-                },
+                6 => {
+                    match close_paged_owner_step(&mut self.plan.node_dofs, maximum_bytes) {
+                        Ok(Some((items, bytes))) => return (false, items, bytes),
+                        Err(()) => return (false, 0, 0),
+                        Ok(None) => {}
+                    }
+                    for owner in [&mut self.plan.mounted_node_slots, &mut self.plan.dof_map.slots] {
+                        match close_paged_owner_step(owner, maximum_bytes) {
+                            Ok(Some((items, bytes))) => return (false, items, bytes),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                    }
+                    self.close_lane += 1;
+                    continue;
+                }
                 7 => match self.plan.dof_map.order.last_mut() {
                     Some((id, _)) if id.capacity() != 0 => {
                         let bytes = id.capacity();
@@ -359,7 +376,8 @@ impl<'model> AssemblyJob<'model> {
         }
     }
 
-    pub(super) fn advance_element_build(&mut self) -> Result<bool, FemError> {
+    pub(super) fn advance_element_build(&mut self, maximum_depth: usize) -> Result<bool, FemError> {
+        if maximum_depth == 0 { return Ok(false); }
         if self.state.pending_build.is_none() {
             let element_index = self.state.element_cursor;
             let element = self.model.element(element_index).ok_or(FemError::Singular)?;
@@ -400,12 +418,15 @@ impl<'model> AssemblyJob<'model> {
                     let node_index = build.scalar_cursor / build.dof_count;
                     let dof_index = build.scalar_cursor % build.dof_count;
                     let node_id = element.mounted_node_id(node_index).ok_or(FemError::Singular)?;
-                    let Some((current, current_dof)) = self.plan.dof_map.order.get(build.lookup_cursor) else { return Err(FemError::Singular) };
-                    if current == node_id && *current_dof == element.dofs_per_node()[dof_index] {
-                        build.lookup_match = Some(build.lookup_cursor);
-                        build.stage = PendingElementBuildStage::PublishIndex;
-                    } else {
-                        build.lookup_cursor += 1;
+                    let dof = element.dofs_per_node()[dof_index];
+                    match assembly_dof_probe(&self.plan.dof_map, node_id, dof, build.lookup_cursor, maximum_depth)? {
+                        AssemblyIndexProbe::Found(index) => {
+                            build.lookup_match = Some(index);
+                            build.stage = PendingElementBuildStage::PublishIndex;
+                        }
+                        AssemblyIndexProbe::Collision => build.lookup_cursor += 1,
+                        AssemblyIndexProbe::Pending => {}
+                        AssemblyIndexProbe::Vacant(_) => return Err(FemError::Singular),
                     }
                 } else {
                     build.scalar_cursor = 0;
@@ -414,8 +435,10 @@ impl<'model> AssemblyJob<'model> {
                 }
             }
             PendingElementBuildStage::PublishIndex => {
-                let old = build.lookup_match.take().ok_or(FemError::Singular)?;
+                let old = build.lookup_match.ok_or(FemError::Singular)?;
+                if self.plan.inv_perm.next_get_depth_demand(old).map_err(|_| FemError::Singular)? > maximum_depth { return Ok(false); }
                 build.indices_new.push(self.plan.inv_perm[old]);
+                build.lookup_match = None;
                 build.scalar_cursor += 1;
                 build.lookup_cursor = 0;
                 build.stage = PendingElementBuildStage::Indices;
@@ -429,20 +452,33 @@ impl<'model> AssemblyJob<'model> {
             PendingElementBuildStage::Positions => {
                 if build.scalar_cursor < build.node_count {
                     let node_id = element.mounted_node_id(build.scalar_cursor).ok_or(FemError::Singular)?;
-                    let Some(node) = self.model.node(build.lookup_cursor) else { return Err(FemError::Singular) };
-                    if node.id == node_id {
-                        build.lookup_match = Some(build.lookup_cursor);
-                        build.stage = PendingElementBuildStage::PublishPosition;
+                    let probe = if self.plan.mounted_node_slots.is_empty() {
+                        AssemblyIndexProbe::Found(*self.plan.node_slot.get(node_id).ok_or(FemError::Singular)?)
                     } else {
-                        build.lookup_cursor += 1;
+                        assembly_index_probe(&self.plan.mounted_node_slots, DofMap::hash(node_id, Dof::Tx), build.lookup_cursor, maximum_depth, |row| {
+                            if self.model.node_depth(row)? > maximum_depth { return Ok(None); }
+                            Ok(Some(self.model.node(row).ok_or(FemError::Singular)?.id == node_id))
+                        })?
+                    };
+                    match probe {
+                        AssemblyIndexProbe::Found(index) => {
+                            build.lookup_match = Some(index);
+                            build.stage = PendingElementBuildStage::PublishPosition;
+                        }
+                        AssemblyIndexProbe::Collision => build.lookup_cursor += 1,
+                        AssemblyIndexProbe::Pending => {}
+                        AssemblyIndexProbe::Vacant(_) => return Err(FemError::Singular),
                     }
                 } else {
                     build.stage = PendingElementBuildStage::ReserveStiffnessCredit;
                 }
             }
             PendingElementBuildStage::PublishPosition => {
-                let node = build.lookup_match.take().and_then(|index| self.model.node(index)).ok_or(FemError::Singular)?;
+                let index = build.lookup_match.ok_or(FemError::Singular)?;
+                if self.model.node_depth(index)? > maximum_depth { return Ok(false); }
+                let node = self.model.node(index).ok_or(FemError::Singular)?;
                 build.positions.push(node.pos);
+                build.lookup_match = None;
                 build.scalar_cursor += 1;
                 build.lookup_cursor = 0;
                 build.stage = PendingElementBuildStage::Positions;

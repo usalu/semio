@@ -116,13 +116,13 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 semio_framework::kernel::Effect::IconRenderExport { items } => {
                     self.opening.enqueue_icon_export(items);
                 }
-                semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, .. } => {
+                semio_framework::kernel::Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, max_file_bytes, .. } => {
                     #[cfg(target_arch = "wasm32")]
-                    self.opening.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, args, multiple });
+                    self.opening.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, args, multiple, max_file_bytes });
                     #[cfg(not(target_arch = "wasm32"))]
                     {
                         let controller_id = controller_id.to_string();
-                        self.settle.submit_shell_io_future(async move { ShellIoCompletion::Import(PickedImport { opened: request_file_open(&accept, read_as.as_deref(), multiple).await, controller_id, import_action, args, multiple }) });
+                        self.settle.submit_shell_io_future(async move { ShellIoCompletion::Import(PickedImport { opened: request_file_open(&accept, read_as.as_deref(), multiple, max_file_bytes).await, controller_id, import_action, args, multiple }) });
                     }
                 }
                 other => {

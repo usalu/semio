@@ -53,16 +53,17 @@ export function closureMissingErrorV1({namespace,key,projects=[],cause}){
 /** 🗄️ Whether the leaf is on this machine. */
 export function closureLeafPresentV1(directory,key){return existsSync(join(directory,key+".json"));}
 
-/** 🧲️ Obtains one closure leaf, the only way a leaf that is not on this machine comes back: on this machine already (`present`), else fetched from the fleet cache, verified against its name (the key is the sha256 of its bytes) and bounded, and written by `put` (`refetched`), else `missing`. A fetch that fails, times out or returns other bytes is `missing`, never an error. */
-export async function obtainClosureLeafV1({directory,namespace,key,fetch,put,signal,maximumBytes=CLOSURE_POLICY_V1.maximumLeafBytes}){
+/** 🧲️ Obtains one closure leaf, the only way a leaf that is not on this machine comes back: on this machine already (`present`), else fetched from the fleet cache, verified against its name (the key is the sha256 of its bytes) and bounded, and written by `put` (`refetched`), else `missing`. A fetch that fails, times out or returns other bytes is `missing`. A strict caller may verify held bytes before and after writing. */
+export async function obtainClosureLeafV1({directory,namespace,key,fetch,put,signal,verify,maximumBytes=CLOSURE_POLICY_V1.maximumLeafBytes}){
  if(typeof key!=="string"||!KEY.test(key))throw Error("Closed closure key required");
- if(closureLeafPresentV1(directory(namespace),key))return"present";
+ if(verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key))return"present";
  if(!fetch||!put||signal?.aborted)return"missing";
  try{
   const bytes=await fetch(namespace,key,signal);
   if(!bytes||bytes.length<1||bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==key)return"missing";
   await put(namespace,key,bytes);
-  return closureLeafPresentV1(directory(namespace),key)?"refetched":"missing";
+  const present=verify?await verify(namespace,key):closureLeafPresentV1(directory(namespace),key);
+  return present?"refetched":"missing";
  }catch{return"missing";}
 }
 

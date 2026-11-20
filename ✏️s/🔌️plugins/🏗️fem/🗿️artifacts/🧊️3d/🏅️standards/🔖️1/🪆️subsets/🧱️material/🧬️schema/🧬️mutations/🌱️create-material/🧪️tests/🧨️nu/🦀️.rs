@@ -50,7 +50,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-material/nu-at-a-half-8253d2: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-material/nu-at-a-half-8253d2: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-material/nu-at-a-half-8253d2: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.invariant", "create-material/nu-at-a-half-8253d2: the refusal is reported as mutation.invariant");

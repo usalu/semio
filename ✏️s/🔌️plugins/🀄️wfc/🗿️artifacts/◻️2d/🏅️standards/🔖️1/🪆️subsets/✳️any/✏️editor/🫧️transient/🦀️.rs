@@ -14,8 +14,8 @@ pub struct Wfc2dAssignment {
 
 /// 🫧️ `Wfc2dEditor::Transient` — the inferred assignment in the document's own slot order, plus the
 /// contradiction verdict the preview reads.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", default)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
+#[value(rename_all = "camelCase", default, by_value_projection)]
 #[artifact(extension = "wfc2dtransient")]
 #[artifact(id = "wfc.wfc2d.transient")]
 #[dsl(layout = "lines")]
@@ -92,13 +92,6 @@ pub use mutations::*;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
-
-impl semio_framework_value_snapshot_projection::SnapshotProjection for Wfc2dTransient {
-    type Output = Self;
-    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
-    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
-}
 
 /// 🪪️ Only a complete source identity equal to the current render authority exposes an inferred cache.
 pub fn source_matches(source: &[u8], revision: Option<&[u8;32]>) -> bool { revision.is_some_and(|revision| source.len() == 32 && source == revision) }

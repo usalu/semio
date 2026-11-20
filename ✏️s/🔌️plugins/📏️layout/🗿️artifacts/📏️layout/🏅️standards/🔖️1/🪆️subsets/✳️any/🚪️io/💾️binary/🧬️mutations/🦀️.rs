@@ -1,14 +1,4 @@
-//! ⚖️ Layout artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
-//!
-//! `protocol::OpText`/`protocol::OpBinary for LayoutMutation` are implemented directly in
-//! `../../📝️text/🧬️mutations/🦀️.rs` (`serde_json`-based, no DSL mirror needed now that every variant wraps
-//! a plain local payload struct — see that file's doc comment for why the pre-migration
-//! `LayoutMutationDsl`/`FramePatchDsl`/`ColorPatch` mirrors were retired). This component only adds
-//! the thin artifact-facing `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
-//!
-//! The app's typed `LayoutCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it lives in `✏️editor/🦀️.rs`,
-//! assembled from the `🎮️commands/*` payload modules by `semio_plugin::app_commands!`.
+//! ⚖️ Layout mutation binary codec and original receiving use the authored operation tags.
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -29,27 +19,13 @@ pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError
     LayoutMutation::decode_op(bytes)
 }
 
-//#region 🔖️Store
-
-
-//#endregion 🔖️Store
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-mod native_codec {
-#[cfg(test)] use super::*;
-pub use crate::LayoutMutation;
-const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-impl protocol::OpBinary for LayoutMutation {
+impl OpBinary for LayoutMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Key, self)
+        dsl::tagged_value_binary::encode_op(COMPONENT_PROTOCOL_SEMIO, dsl::tagged_value_binary::VariantTag::Key, self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Key, bytes)
+        dsl::tagged_value_binary::decode_op(COMPONENT_PROTOCOL_SEMIO, dsl::tagged_value_binary::VariantTag::Key, bytes)
     }
 }
-}
+
+dsl::original_pack_value_operation_receiving!(LayoutMutation, tagged_key = COMPONENT_PROTOCOL_SEMIO);

@@ -119,7 +119,10 @@ impl OpBinary for XlsxMutation {
                 enc_cell_value_bin(value, &mut out);
                 write_optional_json(&mut out, node);
             }
-            XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address)),
+            XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row }) => {
+                write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address));
+                out.push(u8::from(*keep_row));
+            }
             XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index, node }) => {
                 write_str_lp(&mut out, value);
                 write_optional_index(&mut out, *index);
@@ -195,7 +198,12 @@ impl OpBinary for XlsxMutation {
             TAG_REMOVE_CELL => {
                 let address = semio_framework_pack_json::from_json_str(&read_str_lp(&mut reader).map_err(|e| malformed("op address", reader.position(), e))?, semio_framework_pack_json::JsonMemberPolicy::Reject)
                     .map_err(|error| malformed("op address", reader.position(), error.to_string()))?;
-                Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }))
+                let keep_row = match reader.read_u8().map_err(|error| malformed("op keep-row", reader.position(), error.to_string()))? {
+                    0 => false,
+                    1 => true,
+                    other => return Err(malformed("op keep-row", reader.position(), format!("invalid flag {other}"))),
+                };
+                Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row }))
             }
             TAG_INSERT_SHARED_STRING => {
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;

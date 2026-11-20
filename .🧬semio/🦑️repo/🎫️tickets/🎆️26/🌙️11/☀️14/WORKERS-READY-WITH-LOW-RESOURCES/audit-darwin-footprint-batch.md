@@ -1,0 +1,7 @@
+# Darwin child footprint batching
+
+The foreground graph read had nine live farm workers. At 05:29 UTC macOS process status named ten newer defunct monitoring children from that same parent. Nine were `footprint` and one was `ps`. The worker identities stayed live and the graph advanced. Process status did not establish the reason for delayed reaping. [CPU liveness sampling](audit-graph-farm-cpu-probes.md)
+
+Previously each Darwin child footprint request started its own monitoring process. The default child sampler now collects pending requests for 20 milliseconds and starts one command for their distinct PIDs. It admits up to 128 pending requests and one active command. Each response is matched to its PID. A cancelled waiter completes independently, and the shared command is cancelled if its last waiter withdraws. Requests arriving after launch enter the next batch. The existing host command deadline continues to bound the physical probe.
+
+A SQLite fixture matched the nine distinct PIDs, one missing process and a duplicate waiter to independently calculated bytes. One command served the batch. A real Darwin command also returned valid bytes for the current process and reported the absent PID without failing the valid sample. Other focused cases covered cancellation, queue capacity, later samples, the parent reader and Windows working-set attribution. Seven tests passed with 86 assertions. Four adjacent farm suites passed 16 tests with 76 assertions. The existing live graph uses its earlier captured implementation.

@@ -10,35 +10,43 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.72,
      "profile": [
       [
        0.0,
        -0.1
       ],
       [
-       1.42,
+       1.405,
        -0.1
       ],
       [
-       1.42,
-       -0.08
+       1.41,
+       -0.085
       ],
       [
-       1.44,
-       -0.08
+       1.425,
+       -0.085
       ],
       [
-       1.44,
+       1.43,
+       -0.1
+      ],
+      [
+       1.49,
        -0.1
       ],
       [
        1.5,
-       -0.1
+       -0.09
       ],
       [
        1.5,
-       0.1
+       0.0675
+      ],
+      [
+       1.49,
+       0.07765
       ],
       [
        0.0,
@@ -59,7 +67,7 @@
      "bone": "slab",
      "material": "break-module",
      "role": "body",
-     "tone": 0.8,
+     "tone": 0.42,
      "size": [
       0.12,
       0.2,
@@ -71,48 +79,33 @@
        0.0,
        0.0
       ]
-     }
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
     },
     {
-     "id": "wall-core-band",
+     "id": "wall-core",
      "kind": "box",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
       0.18,
-      0.2,
+      1.3,
       1.0
      ],
      "transform": {
       "translation": [
        -0.21,
-       0.0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "wall-core-upper",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.18,
-      1.1,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       -0.21,
-       0.65,
+       0.55,
        0.0
       ]
      },
      "sectionFaces": [
+      "-v",
       "+v",
       "-w",
       "+w"
@@ -124,7 +117,7 @@
      "bone": "slab",
      "material": "mineral-wool",
      "role": "body",
-     "tone": 0.9,
+     "tone": 0.92,
      "size": [
       0.1,
       1.1,
@@ -169,6 +162,35 @@
      ]
     },
     {
+     "id": "railing-grout-pad",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       1.295,
+       0.08058
+      ],
+      [
+       1.465,
+       0.07803
+      ],
+      [
+       1.465,
+       0.0925
+      ],
+      [
+       1.295,
+       0.0925
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.085,
+     "to": 0.085
+    },
+    {
      "id": "railing-base-plate",
      "kind": "box",
      "bone": "railing",
@@ -177,27 +199,71 @@
      "tone": 0.3,
      "size": [
       0.012,
-      0.1,
-      0.1
+      0.15,
+      0.15
      ],
      "transform": {
       "translation": [
-       0.006,
+       0.0192,
        0.0,
-       0.44
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "railing-anchor-nut-outer",
+     "kind": "extrude",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.00981,
+       0.0
+      ],
+      [
+       0.00491,
+       0.0085
+      ],
+      [
+       -0.00491,
+       0.0085
+      ],
+      [
+       -0.00981,
+       0.0
+      ],
+      [
+       -0.00491,
+       -0.0085
+      ],
+      [
+       0.00491,
+       -0.0085
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0252,
+     "to": 0.0352,
+     "transform": {
+      "translation": [
+       0,
+       -0.055,
+       0.055
       ]
      },
      "repeat": {
       "count": 2,
       "translation": [
-       0,
-       0,
-       -0.88
+       0.0,
+       0.0,
+       -0.11
       ]
      }
     },
     {
-     "id": "railing-bolts-l-a",
+     "id": "railing-anchor-stud-outer",
      "kind": "revolve",
      "bone": "railing",
      "material": "steel",
@@ -205,35 +271,87 @@
      "tone": 0.2,
      "profile": [
       [
-       0,
-       0.01
+       0.0,
+       0.005
       ],
       [
-       0.012,
-       0.01
+       0.008,
+       0.005
       ]
      ],
      "axis": [
-      1,
-      0,
-      0
+      1.0,
+      0.0,
+      0.0
      ],
      "origin": [
-      0.012,
-      0.035,
-      0.405
+      0.0352,
+      -0.055,
+      0.055
      ],
      "repeat": {
       "count": 2,
       "translation": [
-       0,
-       -0.07,
-       0
+       0.0,
+       0.0,
+       -0.11
       ]
      }
     },
     {
-     "id": "railing-bolts-r-a",
+     "id": "railing-anchor-nut-inner",
+     "kind": "extrude",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.00981,
+       0.0
+      ],
+      [
+       0.00491,
+       0.0085
+      ],
+      [
+       -0.00491,
+       0.0085
+      ],
+      [
+       -0.00981,
+       0.0
+      ],
+      [
+       -0.00491,
+       -0.0085
+      ],
+      [
+       0.00491,
+       -0.0085
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0252,
+     "to": 0.0352,
+     "transform": {
+      "translation": [
+       0,
+       0.055,
+       0.055
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "railing-anchor-stud-inner",
      "kind": "revolve",
      "bone": "railing",
      "material": "steel",
@@ -241,102 +359,30 @@
      "tone": 0.2,
      "profile": [
       [
-       0,
-       0.01
+       0.0,
+       0.005
       ],
       [
-       0.012,
-       0.01
+       0.008,
+       0.005
       ]
      ],
      "axis": [
-      1,
-      0,
-      0
+      1.0,
+      0.0,
+      0.0
      ],
      "origin": [
-      0.012,
-      0.035,
-      -0.405
+      0.0352,
+      0.055,
+      0.055
      ],
      "repeat": {
       "count": 2,
       "translation": [
-       0,
-       -0.07,
-       0
-      ]
-     }
-    },
-    {
-     "id": "railing-bolts-l-b",
-     "kind": "revolve",
-     "bone": "railing",
-     "material": "steel",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       0,
-       0.01
-      ],
-      [
-       0.012,
-       0.01
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0.012,
-      0.035,
-      0.475
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       -0.07,
-       0
-      ]
-     }
-    },
-    {
-     "id": "railing-bolts-r-b",
-     "kind": "revolve",
-     "bone": "railing",
-     "material": "steel",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       0,
-       0.01
-      ],
-      [
-       0.012,
-       0.01
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0.012,
-      0.035,
-      -0.475
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       -0.07,
-       0
+       0.0,
+       0.0,
+       -0.11
       ]
      }
     },
@@ -349,60 +395,221 @@
      "tone": 0.3,
      "profile": [
       [
-       -0.025,
-       -0.025
+       0.025,
+       0.017
       ],
       [
-       0.025,
-       -0.025
+       0.02439,
+       0.02006
       ],
       [
-       0.025,
+       0.02266,
+       0.02266
+      ],
+      [
+       0.02006,
+       0.02439
+      ],
+      [
+       0.017,
        0.025
       ],
       [
-       -0.025,
+       -0.017,
        0.025
-      ]
-     ],
-     "holes": [
+      ],
       [
-       [
-        -0.021,
-        -0.021
-       ],
-       [
-        0.021,
-        -0.021
-       ],
-       [
-        0.021,
-        0.021
-       ],
-       [
-        -0.021,
-        0.021
-       ]
+       -0.02006,
+       0.02439
+      ],
+      [
+       -0.02266,
+       0.02266
+      ],
+      [
+       -0.02439,
+       0.02006
+      ],
+      [
+       -0.025,
+       0.017
+      ],
+      [
+       -0.025,
+       -0.017
+      ],
+      [
+       -0.02439,
+       -0.02006
+      ],
+      [
+       -0.02266,
+       -0.02266
+      ],
+      [
+       -0.02006,
+       -0.02439
+      ],
+      [
+       -0.017,
+       -0.025
+      ],
+      [
+       0.017,
+       -0.025
+      ],
+      [
+       0.02006,
+       -0.02439
+      ],
+      [
+       0.02266,
+       -0.02266
+      ],
+      [
+       0.02439,
+       -0.02006
+      ],
+      [
+       0.025,
+       -0.017
       ]
      ],
      "plane": "yz",
-     "from": 0.012,
-     "to": 1.04,
+     "from": 0.0252,
+     "to": 0.994,
+     "holes": [
+      [
+       [
+        0.021,
+        0.017
+       ],
+       [
+        0.0207,
+        0.01853
+       ],
+       [
+        0.01983,
+        0.01983
+       ],
+       [
+        0.01853,
+        0.0207
+       ],
+       [
+        0.017,
+        0.021
+       ],
+       [
+        -0.017,
+        0.021
+       ],
+       [
+        -0.01853,
+        0.0207
+       ],
+       [
+        -0.01983,
+        0.01983
+       ],
+       [
+        -0.0207,
+        0.01853
+       ],
+       [
+        -0.021,
+        0.017
+       ],
+       [
+        -0.021,
+        -0.017
+       ],
+       [
+        -0.0207,
+        -0.01853
+       ],
+       [
+        -0.01983,
+        -0.01983
+       ],
+       [
+        -0.01853,
+        -0.0207
+       ],
+       [
+        -0.017,
+        -0.021
+       ],
+       [
+        0.017,
+        -0.021
+       ],
+       [
+        0.01853,
+        -0.0207
+       ],
+       [
+        0.01983,
+        -0.01983
+       ],
+       [
+        0.0207,
+        -0.01853
+       ],
+       [
+        0.021,
+        -0.017
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "railing-post-cap",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.008,
+      0.05,
+      0.05
+     ],
      "transform": {
       "translation": [
+       0.998,
        0.0,
-       0.0,
-       -0.44
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       0,
-       0.88
+       0.0
       ]
      }
+    },
+    {
+     "id": "railing-handrail-stub",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.01
+      ],
+      [
+       0.0397,
+       0.01
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      1.002,
+      0.0,
+      0.0
+     ]
     },
     {
      "id": "railing-handrail",
@@ -413,12 +620,24 @@
      "tone": 0.3,
      "profile": [
       [
-       0,
-       0.03
+       0.0,
+       0.02725
       ],
       [
        1.0,
-       0.03
+       0.02725
+      ],
+      [
+       1.0,
+       0.03015
+      ],
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       0.0,
+       0.02725
       ]
      ],
      "axis": [
@@ -427,13 +646,535 @@
       1
      ],
      "origin": [
-      1.07,
+      1.06985,
       0.0,
       -0.5
+     ],
+     "sectionFaces": [
+      "-w",
+      "+w"
      ]
     },
     {
-     "id": "railing-mid-rail",
+     "id": "railing-top-chord-l",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      0.475
+     ],
+     "transform": {
+      "translation": [
+       0.955,
+       0.0,
+       0.2625
+      ]
+     },
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "railing-top-chord-r",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      0.475
+     ],
+     "transform": {
+      "translation": [
+       0.955,
+       0.0,
+       -0.2625
+      ]
+     },
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "railing-bottom-chord-l",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      0.475
+     ],
+     "transform": {
+      "translation": [
+       0.085,
+       0.0,
+       0.2625
+      ]
+     },
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "railing-bottom-chord-r",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      0.475
+     ],
+     "transform": {
+      "translation": [
+       0.085,
+       0.0,
+       -0.2625
+      ]
+     },
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "railing-balusters-l",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.862,
+       0.006
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.089,
+      0.0,
+      0.12589
+     ],
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       0.10689
+      ]
+     }
+    },
+    {
+     "id": "railing-balusters-r",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.862,
+       0.006
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.089,
+      0.0,
+      -0.12589
+     ],
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       -0.10689
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-slab-top",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.75,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.16,
+       0.0176
+      ],
+      [
+       1.34,
+       0.0
+      ],
+      [
+       1.5,
+       0.0675
+      ],
+      [
+       1.49,
+       0.07765
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-top"
+    },
+    {
+     "id": "th-slab-soffit",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       -0.1
+      ],
+      [
+       1.405,
+       -0.1
+      ],
+      [
+       1.41,
+       -0.085
+      ],
+      [
+       1.425,
+       -0.085
+      ],
+      [
+       1.43,
+       -0.1
+      ],
+      [
+       1.49,
+       -0.1
+      ],
+      [
+       1.5,
+       -0.09
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       0.16,
+       -0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-soffit"
+    },
+    {
+     "id": "th-slab-edge",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.68,
+     "profile": [
+      [
+       1.5,
+       0.0675
+      ],
+      [
+       1.34,
+       0.0
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       1.5,
+       -0.09
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-edge"
+    },
+    {
+     "id": "th-wall-concrete",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "size": [
+      0.18,
+      1.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.21,
+       0.65,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-face",
+     "layer": "wall-concrete"
+    },
+    {
+     "id": "th-wall-wool",
+     "kind": "box",
+     "bone": "slab",
+     "material": "mineral-wool",
+     "role": "body",
+     "tone": 0.92,
+     "size": [
+      0.1,
+      1.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.07,
+       0.65,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-face",
+     "layer": "wall-wool"
+    },
+    {
+     "id": "th-wall-render",
+     "kind": "box",
+     "bone": "slab",
+     "material": "render",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.02,
+      1.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       0.65,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-face",
+     "layer": "wall-render"
+    },
+    {
+     "id": "th-break-core",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "size": [
+      0.18,
+      0.2,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.21,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "thermal-break",
+     "layer": "break-concrete"
+    },
+    {
+     "id": "th-break-module",
+     "of": "break-module",
+     "region": "thermal-break",
+     "layer": "break-body",
+     "sectionFaces": [
+      "-u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-post",
+     "kind": "extrude",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.025,
+       0.017
+      ],
+      [
+       0.02439,
+       0.02006
+      ],
+      [
+       0.02266,
+       0.02266
+      ],
+      [
+       0.02006,
+       0.02439
+      ],
+      [
+       0.017,
+       0.025
+      ],
+      [
+       -0.017,
+       0.025
+      ],
+      [
+       -0.02006,
+       0.02439
+      ],
+      [
+       -0.02266,
+       0.02266
+      ],
+      [
+       -0.02439,
+       0.02006
+      ],
+      [
+       -0.025,
+       0.017
+      ],
+      [
+       -0.025,
+       -0.017
+      ],
+      [
+       -0.02439,
+       -0.02006
+      ],
+      [
+       -0.02266,
+       -0.02266
+      ],
+      [
+       -0.02006,
+       -0.02439
+      ],
+      [
+       -0.017,
+       -0.025
+      ],
+      [
+       0.017,
+       -0.025
+      ],
+      [
+       0.02006,
+       -0.02439
+      ],
+      [
+       0.02266,
+       -0.02266
+      ],
+      [
+       0.02439,
+       -0.02006
+      ],
+      [
+       0.025,
+       -0.017
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0252,
+     "to": 0.994,
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-handrail",
      "kind": "revolve",
      "bone": "railing",
      "material": "steel",
@@ -441,124 +1182,28 @@
      "tone": 0.3,
      "profile": [
       [
-       0,
-       0.02
+       0.0,
+       0.03015
       ],
       [
-       0.88,
-       0.02
+       1.0,
+       0.03015
       ]
      ],
      "axis": [
-      0,
-      0,
-      1
+      0.0,
+      0.0,
+      1.0
      ],
      "origin": [
-      0.55,
+      1.06985,
       0.0,
-      -0.44
-     ]
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-slab-top",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.05,
-      1.0
+      -0.5
      ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.075,
-       0.0
-      ]
-     },
-     "region": "slab-top",
      "sectionFaces": [
-      "-v",
-      "-u",
-      "+u",
       "-w",
       "+w"
-     ]
-    },
-    {
-     "id": "th-slab-soffit",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.05,
-      1.0
      ],
-     "transform": {
-      "translation": [
-       0.75,
-       -0.075,
-       0.0
-      ]
-     },
-     "region": "slab-soffit",
-     "sectionFaces": [
-      "+v",
-      "-u",
-      "+u",
-      "-w",
-      "+w"
-     ]
-    },
-    {
-     "id": "th-slab-edge",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.05,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       1.475,
-       0.0,
-       0.0
-      ]
-     },
-     "region": "slab-edge",
-     "sectionFaces": [
-      "-u",
-      "+v",
-      "-v",
-      "-w",
-      "+w"
-     ]
-    },
-    {
-     "id": "th-railing-post",
-     "of": "railing-post",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-railing-handrail",
-     "of": "railing-handrail",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-railing-mid-rail",
-     "of": "railing-mid-rail",
      "region": "railing-steel"
     },
     {
@@ -567,52 +1212,670 @@
      "region": "railing-steel"
     },
     {
-     "id": "th-break-core",
-     "of": "wall-core-band",
-     "region": "thermal-break",
-     "layer": "break-concrete"
+     "id": "th-railing-anchor-nut-outer",
+     "of": "railing-anchor-nut-outer",
+     "region": "railing-steel"
     },
     {
-     "id": "th-break-module",
-     "of": "break-module",
-     "region": "thermal-break",
-     "layer": "break-body"
+     "id": "th-railing-anchor-nut-inner",
+     "of": "railing-anchor-nut-inner",
+     "region": "railing-steel"
     },
     {
-     "id": "th-wall-concrete",
-     "of": "wall-core-upper",
-     "region": "wall-face",
-     "layer": "wall-concrete"
+     "id": "th-railing-anchor-stud-outer",
+     "of": "railing-anchor-stud-outer",
+     "region": "railing-steel"
     },
     {
-     "id": "th-wall-wool",
-     "of": "wall-insulation",
-     "region": "wall-face",
-     "layer": "wall-wool"
+     "id": "th-railing-anchor-stud-inner",
+     "of": "railing-anchor-stud-inner",
+     "region": "railing-steel"
     },
     {
-     "id": "th-wall-render",
-     "of": "wall-render",
-     "region": "wall-face",
-     "layer": "wall-render"
+     "id": "th-railing-post-cap",
+     "of": "railing-post-cap",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-handrail-stub",
+     "of": "railing-handrail-stub",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-balusters-l",
+     "of": "railing-balusters-l",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-balusters-r",
+     "of": "railing-balusters-r",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-top-chord-l",
+     "of": "railing-top-chord-l",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-top-chord-r",
+     "of": "railing-top-chord-r",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "th-railing-bottom-chord-l",
+     "of": "railing-bottom-chord-l",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-bottom-chord-r",
+     "of": "railing-bottom-chord-r",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "-w"
+     ]
     }
    ],
    "structure": [
     {
      "id": "slab-member",
+     "of": "slab",
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-core",
+     "of": "wall-core",
+     "member": "slab",
+     "part": "support",
+     "anchor": "wall-fix"
+    },
+    {
+     "id": "joint-tension-bars",
+     "kind": "loft",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "sections": [
+      {
+       "at": [
+        -0.25,
+        -0.1,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.25,
+        0.009,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.25,
+        0.014,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.24898,
+        0.02176,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.24598,
+        0.029,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.24121,
+        0.03521,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.235,
+        0.03998,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.22776,
+        0.04298,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.22,
+        0.044,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        -0.215,
+        0.044,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.7,
+        0.044,
+        -0.4
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "joint-pressure-bearings",
      "kind": "box",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.5,
      "size": [
-      1.5,
-      0.2,
-      1.0
+      0.14,
+      0.03,
+      0.04
      ],
      "transform": {
       "translation": [
-       0.75,
+       -0.06,
+       -0.065,
+       -0.3
+      ]
+     },
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "joint-shear-bars",
+     "kind": "loft",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "sections": [
+      {
+       "at": [
+        -0.28,
+        0.03,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        -0.15,
+        0.03,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        -0.13,
+        0.027,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        0.0,
+        -0.058,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        0.02,
+        -0.062,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        0.04,
+        -0.066,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        0.45,
+        -0.066,
+        -0.35
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "slab-top-bars",
+     "kind": "loft",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "sections": [
+      {
+       "at": [
+        0.03,
+        0.04555,
+        -0.43
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        1.44,
+        0.0244,
+        -0.43
+       ],
+       "rx": 0.006,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "slab-bottom-bars",
+     "kind": "loft",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "sections": [
+      {
+       "at": [
+        0.03,
+        -0.066,
+        -0.43
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.44,
+        -0.066,
+        -0.43
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "slab-edge-hairpins",
+     "kind": "loft",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "sections": [
+      {
+       "at": [
+        1.11,
+        0.02935,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.431,
+        0.02454,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.436,
+        0.02446,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.44221,
+        0.02364,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.448,
+        0.02124,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45297,
+        0.01743,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45678,
+        0.01246,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45918,
+        0.00667,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.46,
+        0.00046,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.46,
+        -0.037,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.46,
+        -0.042,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45918,
+        -0.04821,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45678,
+        -0.054,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.45297,
+        -0.05897,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.448,
+        -0.06278,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.44221,
+        -0.06518,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.436,
+        -0.066,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.431,
+        -0.066,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      },
+      {
+       "at": [
+        1.11,
+        -0.066,
+        -0.37
+       ],
+       "rx": 0.004,
+       "ry": 0.004
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "slab-top-cross-bars",
+     "kind": "revolve",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.94,
+       0.004
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.15,
+      0.03375,
+      -0.47
+     ],
+     "repeat": {
+      "count": 6,
+      "translation": [
+       0.25,
+       -0.00375,
+       0.0
+      ]
+     },
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "slab-bottom-cross-bars",
+     "kind": "revolve",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.94,
+       0.004
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.1,
+      -0.058,
+      -0.47
+     ],
+     "repeat": {
+      "count": 6,
+      "translation": [
+       0.25,
        0.0,
        0.0
       ]
@@ -621,198 +1884,42 @@
      "part": "member"
     },
     {
-     "id": "rebar-top",
-     "kind": "revolve",
+     "id": "mass-slab",
+     "kind": "ellipsoid",
      "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.006
-      ],
-      [
-       1.7,
-       0.006
-      ]
+     "material": "concrete",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
      ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      -0.25,
-      0.065,
-      -0.4
-     ],
-     "repeat": {
-      "count": 5,
+     "transform": {
       "translation": [
-       0,
-       0,
-       0.2
+       0.73411,
+       -0.00542,
+       0
       ]
      },
      "member": "slab",
-     "part": "member"
-    },
-    {
-     "id": "rebar-bottom",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.006
-      ],
-      [
-       1.0,
-       0.006
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0.0,
-      -0.065,
-      -0.4
-     ],
-     "repeat": {
-      "count": 5,
-      "translation": [
-       0,
-       0,
-       0.2
-      ]
-     },
-     "member": "slab",
-     "part": "member"
-    },
-    {
-     "id": "wall-rebar-inner",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.006
-      ],
-      [
-       1.0,
-       0.006
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      -0.27,
-      0.15,
-      -0.4
-     ],
-     "repeat": {
-      "count": 5,
-      "translation": [
-       0,
-       0,
-       0.2
-      ]
-     },
-     "member": "slab",
-     "part": "member"
-    },
-    {
-     "id": "wall-rebar-outer",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.006
-      ],
-      [
-       1.0,
-       0.006
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      -0.15,
-      0.15,
-      -0.4
-     ],
-     "repeat": {
-      "count": 5,
-      "translation": [
-       0,
-       0,
-       0.2
-      ]
-     },
-     "member": "slab",
-     "part": "member"
-    },
-    {
-     "id": "rebar-top-hook",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.006
-      ],
-      [
-       0.115,
-       0.006
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      -0.25,
-      -0.05,
-      -0.4
-     ],
-     "repeat": {
-      "count": 5,
-      "translation": [
-       0,
-       0,
-       0.2
-      ]
-     },
-     "member": "slab",
-     "part": "member"
+     "part": "mass"
     },
     {
      "id": "railing-post-member",
      "of": "railing-post",
+     "member": "railing",
+     "part": "member"
+    },
+    {
+     "id": "railing-post-cap-member",
+     "of": "railing-post-cap",
+     "member": "railing",
+     "part": "member"
+    },
+    {
+     "id": "railing-handrail-stub-member",
+     "of": "railing-handrail-stub",
      "member": "railing",
      "part": "member"
     },
@@ -823,56 +1930,100 @@
      "part": "member"
     },
     {
-     "id": "joint-load-carrier",
-     "kind": "box",
-     "bone": "load-carrier",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.3,
-     "size": [
-      0.05,
-      0.05,
-      0.05
-     ],
-     "transform": {
-      "translation": [
-       0.0,
-       0.075,
-       0.0
-      ]
-     },
-     "member": "load-carrier",
+     "id": "joint-railing-base-plate",
+     "of": "railing-base-plate",
+     "member": "railing",
      "part": "joint"
     },
     {
-     "id": "support-wall-fix-block",
-     "kind": "box",
-     "bone": "slab",
+     "id": "joint-railing-anchors-outer",
+     "kind": "revolve",
+     "bone": "railing",
      "material": "steel",
      "role": "body",
-     "tone": 0.15,
-     "size": [
-      0.03,
-      0.2,
-      0.9
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.11,
+       0.005
+      ]
      ],
-     "member": "slab",
-     "part": "support",
-     "anchor": "wall-fix"
+     "axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.0432,
+      -0.055,
+      0.055
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.11
+      ]
+     },
+     "member": "railing",
+     "part": "joint"
+    },
+    {
+     "id": "joint-railing-anchors-inner",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.11,
+       0.005
+      ]
+     ],
+     "axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.0432,
+      0.055,
+      0.055
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.11
+      ]
+     },
+     "member": "railing",
+     "part": "joint"
     }
    ],
    "decisions": [
     {
-     "en": "Body: the wall strip and the cantilever as built: 180 mm concrete wall core in two pieces (slab band and wall above), 100 mm mineral wool, 20 mm render, the 120 mm thermal-break module between wall and slab, the 200 mm slab as one extrusion with the 20 mm drip groove, and the railing on its 90-degree bone: two 50 x 50 x 4 mm hollow-section posts, 12 mm base plates with eight 12 mm bolts, the 60 mm handrail tube and the 40 mm mid-rail.",
-     "de": "K\u00f6rper: Wandstreifen und Kragplatte wie gebaut: Betonwandkern 180 mm in zwei Teilen (Plattenband und Wand dar\u00fcber), 100 mm Mineralwolle, 20 mm Putz, das D\u00e4mmelement von 120 mm zwischen Wand und Platte, die Platte von 200 mm als eine Extrusion mit der Tropfnase von 20 mm, und das Gel\u00e4nder auf seinem 90-Grad-Knochen: zwei Hohlprofilpfosten 50 x 50 x 4 mm, Fu\u00dfplatten von 12 mm mit acht Schrauben von 12 mm, der Handlauf von 60 mm und der Mittelholm von 40 mm."
+     "en": "Body: a one-metre strip of a real cantilever balcony. The 200 mm slab is one extrusion with its 1.5 % drainage fall (200 mm at the wall, 177.5 mm at the edge), 10 mm arris chamfers and a 25/15 x 15 mm drip groove 70 mm behind the edge; behind it the 120 mm load-bearing thermal-break module in the insulation plane and the wall as built: 180 mm concrete in one piece, 100 mm mineral wool, 20 mm render. The railing follows the rig, one post per metre at the strip centre, 120 mm inside the edge so that the anchors keep 65 mm edge distance: a grout bed levels the fall, a 150 x 150 x 12 mm base plate with four M10 stud anchors and hexagon nuts, a cold-formed hollow post 50 x 50 x 4 with rounded corners, an 8 mm cap, a 20 mm round bracket and the handrail tube 60.3 x 2.9 with its real wall, cut at the strip ends. The infill between the posts is welded: two flat bars 40 x 10 as chords and eight 12 mm round balusters per metre with 95 mm clear spacing, the lower chord 85 mm above the slab.",
+     "de": "Körper: ein Meterstreifen eines echten Kragbalkons. Die Platte von 200 mm ist eine Extrusion mit 1,5 % Gefälle (200 mm an der Wand, 177,5 mm an der Kante), Fasen von 10 mm und einer Tropfnut 25/15 x 15 mm 70 mm hinter der Kante; dahinter das tragende Dämmelement von 120 mm in der Dämmebene und die Wand wie gebaut: 180 mm Beton in einem Stück, 100 mm Mineralwolle, 20 mm Putz. Das Geländer folgt dem Skelett, ein Pfosten je Meter in Streifenmitte, 120 mm hinter der Kante, damit die Anker 65 mm Randabstand halten: ein Mörtelbett gleicht das Gefälle aus, darauf die Fußplatte 150 x 150 x 12 mm mit vier Bolzenankern M10 und Sechskantmuttern, der kaltgeformte Hohlprofilpfosten 50 x 50 x 4 mit runden Ecken, ein Deckel von 8 mm, ein runder Träger von 20 mm und das Handlaufrohr 60,3 x 2,9 mit echter Wandung, an den Streifenenden geschnitten. Die Füllung zwischen den Pfosten ist geschweißt: zwei Flachstähle 40 x 10 als Gurte und acht Rundstäbe von 12 mm je Meter mit 95 mm lichtem Abstand, der Untergurt 85 mm über der Platte."
     },
     {
-     "en": "Thermal: slab top, soffit and edge as 50 mm concrete skins; the layered wall and the thermal break are referenced from the body solids with their layers (concrete, wool, render; concrete, break module); every railing part is referenced. The 1 m strip stands for a balcony that continues sideways and a wall that continues up and down, so the strip ends and the wall cuts are section faces (hatched in the viewer); the skins of the slab overlap in the arris prisms, and the faces against the core or the neighbouring skin are section faces too, so each skin exposes its own outer face once. The thermal break exposes no face to the air in this model (its outer face lies against the slab at the wall plane, its top is covered by wool and render, its bottom and ends are cuts): the declared 0.2 m2 is an interface area, see area-review.md.",
-     "de": "Thermisch: Plattenoberseite, -unterseite und -stirn als Betonh\u00e4ute von 50 mm; die geschichtete Wand und das D\u00e4mmelement werden mit ihren Schichten aus den K\u00f6rpern referenziert (Beton, Wolle, Putz; Beton, D\u00e4mmelement); jedes Gel\u00e4nderteil wird referenziert. Der 1-m-Streifen steht f\u00fcr einen seitlich weiterlaufenden Balkon und eine nach oben und unten weiterlaufende Wand; Streifenenden und Wandschnitte sind daher Schnittfl\u00e4chen (im Betrachter schraffiert); die Plattenh\u00e4ute \u00fcberlappen in den Kantenprismen, und die Fl\u00e4chen am Kern oder an der Nachbarhaut sind ebenfalls Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Das D\u00e4mmelement zeigt in diesem Modell keine Fl\u00e4che zur Luft (seine Au\u00dfenfl\u00e4che liegt an der Platte in der Wandebene, die Oberseite ist von Wolle und Putz bedeckt, Unterseite und Enden sind Schnitte): die erkl\u00e4rten 0,2 m2 sind eine Anschlussfl\u00e4che, siehe area-review.md."
+     "en": "Thermal: slab top, soffit and edge are the 80 mm storage skins of the thermal model, wedges that meet on mitres inside the concrete, so each exposes exactly its own outer face (the chamfers go with top and soffit, the drip groove with the soffit); the faces inside the concrete and the strip ends are section faces. The wall is three nested plates in their real thicknesses (concrete, wool, render) and counts its rendered outer face; the thermal bridge is the concrete band behind the slab plus the break module, which counts its top, underside and outer face. The railing steel is every steel part; post and handrail are closed bodies here because their bores are sealed air.",
+     "de": "Thermisch: Plattenoberseite, -unterseite und -stirn sind die Speicherhäute von 80 mm des thermischen Modells, Keile, die sich auf Gehrungen im Beton treffen, sodass jede genau ihre eigene Außenfläche zeigt (die Fasen gehören zu Ober- und Unterseite, die Tropfnut zur Unterseite); die Flächen im Beton und die Streifenenden sind Schnittflächen. Die Wand besteht aus drei geschachtelten Platten in echter Dicke (Beton, Wolle, Putz) und zählt ihre verputzte Außenfläche; die Wärmebrücke ist das Betonband hinter der Platte samt Dämmelement, das Oberseite, Unterseite und Außenfläche zählt. Der Geländerstahl ist jedes Stahlteil; Pfosten und Handlauf sind hier geschlossene Körper, weil ihre Hohlräume eingeschlossene Luft sind."
     },
     {
-     "en": "Structure: the 1 m x 200 mm slab strip as the member, its reinforcement as 12 mm bars (top and bottom mat, wall bars with the hook), the SHS posts and the handrail as the railing members, a slider joint at the load carrier, and the fixed support as a steel block across the slab at the wall face.",
-     "de": "Tragwerk: der Plattenstreifen 1 m x 200 mm als Stab, seine Bewehrung als St\u00e4be von 12 mm (obere und untere Lage, Wandst\u00e4be mit Haken), die Hohlprofilpfosten und der Handlauf als Gel\u00e4nderst\u00e4be, ein Gleitgelenk am Lasttr\u00e4ger und das feste Auflager als Stahlblock \u00fcber die Platte an der Wandfl\u00e4che."
+     "en": "Structure: the load path of the reinforced slab. The slab itself is the member; the wall core is the fixed support. Between them only the connection crosses the insulation: five 12 mm tension bars in the top layer, bent down into the wall with a 30 mm bend radius and lapped 700 mm into the slab, four concrete pressure bearings at the bottom and four 8 mm shear bars running diagonally down towards the balcony. Inside the slab lie the five 12 mm top bars along the fall, 8 mm cross bars top and bottom, 8 mm bottom bars and hairpins around the free edge. The railing member is post, cap, bracket and handrail; its joint is the base plate with four anchors reaching 90 mm into the slab. A ball marks the centre of mass of the slab.",
+     "de": "Tragwerk: der Lastpfad der bewehrten Platte. Die Platte selbst ist der Stab, der Wandkern das feste Auflager. Dazwischen quert nur der Anschluss die Dämmung: fünf Zugstäbe von 12 mm in der oberen Lage, mit 30 mm Biegeradius in die Wand abgebogen und 700 mm in die Platte übergreifend, vier Betondrucklager unten und vier Querkraftstäbe von 8 mm, die schräg zum Balkon hin abfallen. In der Platte liegen die fünf oberen Stäbe von 12 mm im Gefälle, Querstäbe von 8 mm oben und unten, untere Stäbe von 8 mm und Steckbügel um die freie Kante. Der Geländerstab ist Pfosten, Deckel, Träger und Handlauf; sein Gelenk ist die Fußplatte mit vier Ankern, die 90 mm in die Platte reichen. Eine Kugel markiert den Massenschwerpunkt der Platte."
     }
    ]
   },
@@ -882,23 +2033,32 @@
    "body": [
     {
      "id": "slab",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
+     "tone": 0.72,
+     "profile": [
+      [
        0.0,
-       0.0
+       -0.1
+      ],
+      [
+       1.5,
+       -0.1
+      ],
+      [
+       1.5,
+       0.0775
+      ],
+      [
+       0.0,
+       0.1
       ]
-     },
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-w",
       "+w"
@@ -910,7 +2070,7 @@
      "bone": "slab",
      "material": "break-module",
      "role": "body",
-     "tone": 0.8,
+     "tone": 0.42,
      "size": [
       0.12,
       0.2,
@@ -922,7 +2082,11 @@
        0.0,
        0.0
       ]
-     }
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
     },
     {
      "id": "wall-core",
@@ -930,7 +2094,7 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
       0.18,
       1.3,
@@ -956,7 +2120,7 @@
      "bone": "slab",
      "material": "mineral-wool",
      "role": "body",
-     "tone": 0.9,
+     "tone": 0.92,
      "size": [
       0.12,
       1.1,
@@ -976,33 +2140,93 @@
      ]
     },
     {
-     "id": "railing-post",
+     "id": "railing-foot",
      "kind": "box",
      "bone": "railing",
      "material": "steel",
      "role": "body",
      "tone": 0.3,
      "size": [
-      1.04,
+      0.0272,
+      0.15,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0116,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "railing-post",
+     "kind": "extrude",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.025,
+       -0.025
+      ],
+      [
+       0.025,
+       -0.025
+      ],
+      [
+       0.025,
+       0.025
+      ],
+      [
+       -0.025,
+       0.025
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0252,
+     "to": 1.02,
+     "holes": [
+      [
+       [
+        -0.021,
+        -0.021
+       ],
+       [
+        0.021,
+        -0.021
+       ],
+       [
+        0.021,
+        0.021
+       ],
+       [
+        -0.021,
+        0.021
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "railing-post-head",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.0217,
       0.05,
       0.05
      ],
      "transform": {
       "translation": [
-       0.52,
+       1.03085,
        0.0,
-       -0.44
+       0.0
       ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       0,
-       0.88
-      ]
-     },
-     "slender": true
+     }
     },
     {
      "id": "railing-handrail",
@@ -1013,12 +2237,24 @@
      "tone": 0.3,
      "profile": [
       [
-       0,
-       0.03
+       0.0,
+       0.02725
       ],
       [
        1.0,
-       0.03
+       0.02725
+      ],
+      [
+       1.0,
+       0.03015
+      ],
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       0.0,
+       0.02725
       ]
      ],
      "axis": [
@@ -1027,174 +2263,247 @@
       1
      ],
      "origin": [
-      1.07,
+      1.06985,
       0.0,
       -0.5
+     ],
+     "sectionFaces": [
+      "-w",
+      "+w"
      ]
     },
     {
-     "id": "railing-mid-rail",
+     "id": "railing-top-chord",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.955,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "railing-bottom-chord",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.01,
+      0.04,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.085,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "railing-balusters-l",
      "kind": "revolve",
      "bone": "railing",
      "material": "steel",
-     "role": "body",
+     "role": "detail",
      "tone": 0.3,
      "profile": [
       [
-       0,
-       0.02
+       0.0,
+       0.006
       ],
       [
-       0.88,
-       0.02
+       0.87,
+       0.006
       ]
      ],
      "axis": [
-      0,
-      0,
-      1
+      1.0,
+      0.0,
+      0.0
      ],
      "origin": [
-      0.55,
+      0.085,
       0.0,
-      -0.44
+      0.12589
      ],
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       0.10689
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "railing-balusters-r",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.87,
+       0.006
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.085,
+      0.0,
+      -0.12589
+     ],
+     "repeat": {
+      "count": 4,
+      "translation": [
+       0.0,
+       0.0,
+       -0.10689
+      ]
+     },
      "slender": true
     }
    ],
    "thermal": [
     {
      "id": "th-slab-top",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.05,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.075,
+     "tone": 0.75,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.16,
+       0.0176
+      ],
+      [
+       1.34,
        0.0
+      ],
+      [
+       1.5,
+       0.0775
       ]
-     },
-     "region": "slab-top",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-v",
-      "-u",
-      "+u",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "slab-top"
     },
     {
      "id": "th-slab-soffit",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.05,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       -0.075,
-       0.0
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       -0.1
+      ],
+      [
+       1.5,
+       -0.1
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       0.16,
+       -0.02
       ]
-     },
-     "region": "slab-soffit",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "+v",
-      "-u",
-      "+u",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "slab-soffit"
     },
     {
      "id": "th-slab-edge",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.05,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       1.475,
-       0.0,
+     "tone": 0.68,
+     "profile": [
+      [
+       1.5,
+       0.0775
+      ],
+      [
+       1.34,
        0.0
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       1.5,
+       -0.1
       ]
-     },
-     "region": "slab-edge",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-u",
       "+v",
       "-v",
       "-w",
       "+w"
-     ]
-    },
-    {
-     "id": "th-railing-post",
-     "of": "railing-post",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-railing-handrail",
-     "of": "railing-handrail",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-railing-mid-rail",
-     "of": "railing-mid-rail",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-break-core",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.18,
-      0.2,
-      1.0
      ],
-     "transform": {
-      "translation": [
-       -0.21,
-       0.0,
-       0.0
-      ]
-     },
-     "region": "thermal-break",
-     "layer": "break-concrete",
-     "sectionFaces": [
-      "-u",
-      "-v",
-      "-w",
-      "+w"
-     ]
-    },
-    {
-     "id": "th-break-module",
-     "of": "break-module",
-     "region": "thermal-break",
-     "layer": "break-body"
+     "region": "slab-edge"
     },
     {
      "id": "th-wall-concrete",
@@ -1202,7 +2511,7 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
       0.18,
       1.1,
@@ -1215,22 +2524,23 @@
        0.0
       ]
      },
-     "region": "wall-face",
-     "layer": "wall-concrete",
      "sectionFaces": [
       "-u",
       "+v",
+      "-v",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "wall-face",
+     "layer": "wall-concrete"
     },
     {
-     "id": "th-wall-wool",
+     "id": "th-wall-wool-render",
      "kind": "box",
      "bone": "slab",
      "material": "mineral-wool",
      "role": "body",
-     "tone": 0.9,
+     "tone": 0.92,
      "size": [
       0.12,
       1.1,
@@ -1243,80 +2553,221 @@
        0.0
       ]
      },
-     "region": "wall-face",
-     "layer": "wall-wool",
      "sectionFaces": [
       "-u",
       "+v",
+      "-v",
       "-w",
       "+w"
-     ]
-    }
-   ],
-   "structure": [
+     ],
+     "region": "wall-face",
+     "layer": "wall-render"
+    },
     {
-     "id": "slab-member",
+     "id": "th-break-core",
      "kind": "box",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
-      1.5,
+      0.18,
       0.2,
       1.0
      ],
      "transform": {
       "translation": [
-       0.75,
+       -0.21,
        0.0,
        0.0
       ]
      },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "thermal-break",
+     "layer": "break-concrete"
+    },
+    {
+     "id": "th-break-module",
+     "of": "break-module",
+     "region": "thermal-break",
+     "layer": "break-body",
+     "sectionFaces": [
+      "-u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-post",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.0165,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.53345,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-handrail",
+     "kind": "revolve",
+     "bone": "railing",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       1.0,
+       0.03015
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      1.06985,
+      0.0,
+      -0.5
+     ],
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ],
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-foot",
+     "of": "railing-foot",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-top-chord",
+     "of": "railing-top-chord",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-bottom-chord",
+     "of": "railing-bottom-chord",
+     "region": "railing-steel",
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-railing-balusters-l",
+     "of": "railing-balusters-l",
+     "region": "railing-steel"
+    },
+    {
+     "id": "th-railing-balusters-r",
+     "of": "railing-balusters-r",
+     "region": "railing-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "slab-member",
+     "of": "slab",
      "member": "slab",
      "part": "member"
     },
     {
-     "id": "rebar-top",
+     "id": "support-wall-core",
+     "of": "wall-core",
+     "member": "slab",
+     "part": "support",
+     "anchor": "wall-fix"
+    },
+    {
+     "id": "joint-tension-bars",
      "kind": "revolve",
      "bone": "slab",
      "material": "steel",
      "role": "body",
-     "tone": 0.25,
+     "tone": 0.2,
      "profile": [
       [
-       0,
-       0.0075
+       0.0,
+       0.006
       ],
       [
-       1.7,
-       0.0075
+       0.95,
+       0.006
       ]
      ],
      "axis": [
-      1,
-      0,
-      0
+      1.0,
+      0.0,
+      0.0
      ],
      "origin": [
       -0.25,
-      0.065,
+      0.044,
       -0.4
      ],
      "repeat": {
-      "count": 3,
+      "count": 5,
       "translation": [
-       0,
-       0,
-       0.4
+       0.0,
+       0.0,
+       0.2
+      ]
+     },
+     "slender": true,
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "joint-pressure-strip",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.14,
+      0.03,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       -0.06,
+       -0.065,
+       0.0
       ]
      },
      "member": "slab",
-     "part": "member",
-     "slender": true
+     "part": "joint"
     },
     {
-     "id": "rebar-bottom",
+     "id": "slab-top-bars",
      "kind": "revolve",
      "bone": "slab",
      "material": "steel",
@@ -1324,116 +2775,45 @@
      "tone": 0.25,
      "profile": [
       [
-       0,
-       0.0075
+       0.0,
+       0.006
       ],
       [
-       1.0,
-       0.0075
+       1.41,
+       0.006
       ]
      ],
      "axis": [
-      1,
-      0,
-      0
+      0.999888,
+      -0.014998,
+      0.0
      ],
      "origin": [
-      0.0,
-      -0.065,
-      -0.4
+      0.03,
+      0.04555,
+      -0.43
      ],
      "repeat": {
-      "count": 3,
+      "count": 5,
       "translation": [
-       0,
-       0,
-       0.4
+       0.0,
+       0.0,
+       0.2
       ]
      },
-     "member": "slab",
-     "part": "member",
-     "slender": true
-    },
-    {
-     "id": "wall-rebar-inner",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.0075
-      ],
-      [
-       1.0,
-       0.0075
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      -0.27,
-      0.15,
-      -0.4
-     ],
-     "repeat": {
-      "count": 3,
-      "translation": [
-       0,
-       0,
-       0.4
-      ]
-     },
+     "slender": true,
      "member": "slab",
      "part": "member"
-    },
-    {
-     "id": "wall-rebar-outer",
-     "kind": "revolve",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.25,
-     "profile": [
-      [
-       0,
-       0.0075
-      ],
-      [
-       1.0,
-       0.0075
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      -0.15,
-      0.15,
-      -0.4
-     ],
-     "repeat": {
-      "count": 3,
-      "translation": [
-       0,
-       0,
-       0.4
-      ]
-     },
-     "member": "slab",
-     "part": "member",
-     "slender": true
     },
     {
      "id": "railing-post-member",
      "of": "railing-post",
+     "member": "railing",
+     "part": "member"
+    },
+    {
+     "id": "railing-post-head-member",
+     "of": "railing-post-head",
      "member": "railing",
      "part": "member"
     },
@@ -1444,52 +2824,24 @@
      "part": "member"
     },
     {
-     "id": "joint-load-carrier",
-     "kind": "box",
-     "bone": "load-carrier",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.3,
-     "size": [
-      0.05,
-      0.05,
-      0.05
-     ],
-     "transform": {
-      "translation": [
-       0.0,
-       0.075,
-       0.0
-      ]
-     },
-     "member": "load-carrier",
+     "id": "joint-railing-foot",
+     "of": "railing-foot",
+     "member": "railing",
      "part": "joint"
-    },
-    {
-     "id": "support-wall-fix-block",
-     "kind": "box",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.15,
-     "size": [
-      0.045,
-      0.2,
-      0.9
-     ],
-     "member": "slab",
-     "part": "support",
-     "anchor": "wall-fix"
     }
    ],
    "decisions": [
     {
-     "en": "Body: wall core and the concrete behind the break are one 1300 mm piece, wool and render are one 120 mm slab (the drawing keeps them as one), the drip groove, base plates and bolts are gone (below the 15 mm feature), the hollow posts are solid 50 mm sections; the mid-rail (40 mm) and handrail stay.",
-     "de": "K\u00f6rper: Wandkern und der Beton hinter dem D\u00e4mmelement sind ein St\u00fcck von 1300 mm, Wolle und Putz eine Platte von 120 mm (die Zeichnung beh\u00e4lt sie als eine), Tropfnase, Fu\u00dfplatten und Schrauben entfallen (unter der Einzelheit 15 mm), die Hohlpfosten sind volle Querschnitte von 50 mm; Mittelholm (40 mm) und Handlauf bleiben."
+     "en": "Body: redrawn for 15 mm. The slab is the plain wedge with its fall (22 mm over the depth); chamfers and drip groove are gone. Wool and render are one 120 mm plate as in the drawing. The railing foot is one 27 mm block for grout bed and base plate, the anchors are gone; the post is a sharp-cornered hollow section with one solid head for cap and bracket, the handrail keeps its tube wall at the cut. Chords and balusters stay at their true 10 and 12 mm as slender parts, the chords running through the post, because the drawing shows them as pen lines.",
+     "de": "Körper: neu gezeichnet für 15 mm. Die Platte ist der einfache Keil mit Gefälle (22 mm über die Tiefe); Fasen und Tropfnut entfallen. Wolle und Putz sind wie in der Zeichnung eine Platte von 120 mm. Der Geländerfuß ist ein Block von 27 mm für Mörtelbett und Fußplatte, die Anker entfallen; der Pfosten ist ein scharfkantiges Hohlprofil mit einem vollen Kopf für Deckel und Träger, der Handlauf behält am Schnitt seine Rohrwand. Gurte und Füllstäbe bleiben als schlanke Teile bei ihren wahren 10 und 12 mm, die Gurte laufen durch den Pfosten, weil die Zeichnung sie als Federlinien zeigt."
     },
     {
-     "en": "Thermal: skins as before but the edge skin is cut back to the 100 mm between top and soffit skins (no overlap); wall layers wool and render merged. Structure: reinforcement as three 15 mm bars per mat (the 15 mm feature), hooks merged into the wall bars. The 1 m strip stands for a balcony that continues sideways and a wall that continues up and down, so the strip ends and the wall cuts are section faces (hatched in the viewer); the skins of the slab overlap in the arris prisms, and the faces against the core or the neighbouring skin are section faces too, so each skin exposes its own outer face once. The room-side faces of the wall core and of the break band are section faces (-u), as in the etics walls: a layered region counts one face, its outer one. The thermal break exposes no face to the air in this model (its outer face lies against the slab at the wall plane, its top is covered by wool and render, its bottom and ends are cuts): the declared 0.2 m2 is an interface area, see area-review.md.",
-     "de": "Thermisch: H\u00e4ute wie zuvor, aber die Stirnhaut ist auf die 100 mm zwischen Ober- und Unterhaut zur\u00fcckgeschnitten (keine \u00dcberlappung); Wandschichten Wolle und Putz zusammengefasst. Tragwerk: Bewehrung als drei St\u00e4be von 15 mm je Lage (Einzelheit 15 mm), die Haken in den Wandst\u00e4ben aufgegangen. Der 1-m-Streifen steht f\u00fcr einen seitlich weiterlaufenden Balkon und eine nach oben und unten weiterlaufende Wand; Streifenenden und Wandschnitte sind daher Schnittfl\u00e4chen (im Betrachter schraffiert); die Plattenh\u00e4ute \u00fcberlappen in den Kantenprismen, und die Fl\u00e4chen am Kern oder an der Nachbarhaut sind ebenfalls Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Die raumseitigen Fl\u00e4chen von Wandkern und D\u00e4mmelementband sind Schnittfl\u00e4chen (-u), wie bei den WDVS-W\u00e4nden: eine geschichtete Region z\u00e4hlt eine Fl\u00e4che, ihre \u00e4u\u00dfere. Das D\u00e4mmelement zeigt in diesem Modell keine Fl\u00e4che zur Luft (seine Au\u00dfenfl\u00e4che liegt an der Platte in der Wandebene, die Oberseite ist von Wolle und Putz bedeckt, Unterseite und Enden sind Schnitte): die erkl\u00e4rten 0,2 m2 sind eine Anschlussfl\u00e4che, siehe area-review.md."
+     "en": "Thermal: the three 80 mm skins without chamfers and groove; the wall as concrete plus one merged wool and render shell that carries the outer face; the thermal bridge as concrete band plus break module; the railing with closed post and handrail bodies and the referenced foot, chords and balusters.",
+     "de": "Thermisch: die drei Häute von 80 mm ohne Fasen und Nut; die Wand als Beton und eine zusammengefasste Schale aus Wolle und Putz, die die Außenfläche trägt; die Wärmebrücke als Betonband und Dämmelement; das Geländer mit geschlossenen Körpern für Pfosten und Handlauf sowie Fuß, Gurten und Füllstäben als Verweise."
+    },
+    {
+     "en": "Structure: slab member and wall core support as before; the connection is reduced to its force couple, five straight 12 mm tension bars through the insulation (hooks and shear bars merged away) and one pressure strip for the four bearings; of the slab reinforcement only the five top bars along the fall remain. Railing: post, head and handrail on the foot block as the joint.",
+     "de": "Tragwerk: Plattenstab und Wandkern als Auflager wie zuvor; der Anschluss ist auf sein Kräftepaar reduziert, fünf gerade Zugstäbe von 12 mm durch die Dämmung (Haken und Querkraftstäbe aufgegangen) und ein Druckstreifen für die vier Lager; von der Plattenbewehrung bleiben nur die fünf oberen Stäbe im Gefälle. Geländer: Pfosten, Kopf und Handlauf auf dem Fußblock als Gelenk."
     }
    ]
   },
@@ -1503,7 +2855,7 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "profile": [
       [
        -0.3,
@@ -1546,7 +2898,7 @@
      "bone": "slab",
      "material": "break-module",
      "role": "body",
-     "tone": 0.8,
+     "tone": 0.42,
      "size": [
       0.12,
       0.2,
@@ -1558,27 +2910,40 @@
        0.0,
        0.0
       ]
-     }
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
     },
     {
      "id": "slab",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
+     "tone": 0.72,
+     "profile": [
+      [
        0.0,
-       0.0
+       -0.1
+      ],
+      [
+       1.5,
+       -0.1
+      ],
+      [
+       1.5,
+       0.0775
+      ],
+      [
+       0.0,
+       0.1
       ]
-     },
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-w",
       "+w"
@@ -1592,26 +2957,17 @@
      "role": "body",
      "tone": 0.3,
      "size": [
-      1.04,
+      1.07185,
       0.05,
       0.05
      ],
      "transform": {
       "translation": [
-       0.52,
+       0.53393,
        0.0,
-       -0.44
+       0.0
       ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       0,
-       0.88
-      ]
-     },
-     "slender": true
+     }
     },
     {
      "id": "railing-handrail",
@@ -1622,107 +2978,193 @@
      "tone": 0.3,
      "profile": [
       [
-       0,
-       0.03
+       0.0,
+       0.03015
       ],
       [
        1.0,
-       0.03
+       0.03015
       ]
      ],
      "axis": [
-      0,
-      0,
-      1
+      0.0,
+      0.0,
+      1.0
      ],
      "origin": [
-      1.07,
+      1.06985,
       0.0,
       -0.5
+     ],
+     "sectionFaces": [
+      "-w",
+      "+w"
      ]
+    },
+    {
+     "id": "railing-infill",
+     "kind": "box",
+     "bone": "railing",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.6,
+     "size": [
+      0.88,
+      0.012,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.52,
+       0.0,
+       0.0
+      ]
+     },
+     "texture": true
     }
    ],
    "thermal": [
     {
      "id": "th-slab-top",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.06,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.07,
+     "tone": 0.75,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.16,
+       0.02
+      ],
+      [
+       1.34,
        0.0
+      ],
+      [
+       1.5,
+       0.0775
       ]
-     },
-     "region": "slab-top",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-v",
-      "-u",
-      "+u",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "slab-top"
     },
     {
      "id": "th-slab-soffit",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.06,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       -0.07,
-       0.0
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       -0.1
+      ],
+      [
+       1.5,
+       -0.1
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       0.16,
+       -0.02
       ]
-     },
-     "region": "slab-soffit",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "+v",
-      "-u",
-      "+u",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "slab-soffit"
     },
     {
      "id": "th-slab-edge",
-     "kind": "box",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.06,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       1.47,
-       0.0,
+     "tone": 0.68,
+     "profile": [
+      [
+       1.5,
+       0.0775
+      ],
+      [
+       1.34,
        0.0
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       1.5,
+       -0.1
       ]
-     },
-     "region": "slab-edge",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-u",
       "+v",
       "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-edge"
+    },
+    {
+     "id": "th-wall",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "size": [
+      0.3,
+      1.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.15,
+       0.65,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+v",
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-face"
+    },
+    {
+     "id": "th-break-module",
+     "of": "break-module",
+     "region": "thermal-break",
+     "sectionFaces": [
+      "-u",
       "-w",
       "+w"
      ]
@@ -1735,56 +3177,8 @@
     {
      "id": "th-railing-handrail",
      "of": "railing-handrail",
-     "region": "railing-steel"
-    },
-    {
-     "id": "th-break-module",
-     "of": "break-module",
-     "region": "thermal-break",
-     "layer": "break-body"
-    },
-    {
-     "id": "th-wall-mass",
-     "kind": "extrude",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.3,
-       -0.1
-      ],
-      [
-       -0.12,
-       -0.1
-      ],
-      [
-       -0.12,
-       0.1
-      ],
-      [
-       0.0,
-       0.1
-      ],
-      [
-       0.0,
-       1.2
-      ],
-      [
-       -0.3,
-       1.2
-      ]
-     ],
-     "plane": "xy",
-     "from": -0.5,
-     "to": 0.5,
-     "region": "wall-face",
-     "layer": "wall-concrete",
+     "region": "railing-steel",
      "sectionFaces": [
-      "-u",
-      "+v",
-      "-v",
       "-w",
       "+w"
      ]
@@ -1793,25 +3187,76 @@
    "structure": [
     {
      "id": "slab-member",
+     "of": "slab",
+     "member": "slab",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-core",
      "kind": "box",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
-      1.5,
-      0.2,
+      0.18,
+      1.3,
       1.0
      ],
      "transform": {
       "translation": [
-       0.75,
-       0.0,
+       -0.21,
+       0.55,
        0.0
       ]
      },
      "member": "slab",
-     "part": "member"
+     "part": "support",
+     "anchor": "wall-fix"
+    },
+    {
+     "id": "joint-tension-layer",
+     "kind": "box",
+     "bone": "slab",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.55,
+      0.03,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.025,
+       0.044,
+       0.0
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "joint-pressure-layer",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.16,
+      0.03,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       -0.06,
+       -0.065,
+       0.0
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
     },
     {
      "id": "railing-post-member",
@@ -1824,32 +3269,20 @@
      "of": "railing-handrail",
      "member": "railing",
      "part": "member"
-    },
-    {
-     "id": "support-wall-fix-block",
-     "kind": "box",
-     "bone": "slab",
-     "material": "steel",
-     "role": "body",
-     "tone": 0.15,
-     "size": [
-      0.06,
-      0.2,
-      0.9
-     ],
-     "member": "slab",
-     "part": "support",
-     "anchor": "wall-fix"
     }
    ],
    "decisions": [
     {
-     "en": "Body: the wall is one extruded L-shaped mass (concrete core, wool and render are indistinguishable at 30 mm), the break module and the slab stay; the railing is two 50 mm posts and the handrail (mid-rail merged into the posts).",
-     "de": "K\u00f6rper: die Wand ist eine extrudierte L-f\u00f6rmige Masse (Betonkern, Wolle und Putz sind bei 30 mm nicht unterscheidbar), D\u00e4mmelement und Platte bleiben; das Gel\u00e4nder sind zwei Pfosten von 50 mm und der Handlauf (Mittelholm in die Pfosten aufgenommen)."
+     "en": "Body: redrawn for 30 mm. The wall is one L-shaped mass (core, wool and render cannot be told apart), the break module stays as the dark joint, the slab keeps its wedge. The railing is one solid 50 mm post up to the solid 60 mm handrail; the baluster panel between the chords is one thin sheet marked as texture, as the drawing shows it as a tone.",
+     "de": "Körper: neu gezeichnet für 30 mm. Die Wand ist eine L-förmige Masse (Kern, Wolle und Putz sind nicht zu unterscheiden), das Dämmelement bleibt als dunkle Fuge, die Platte behält ihren Keil. Das Geländer ist ein voller Pfosten von 50 mm bis zum vollen Handlauf von 60 mm; das Stabfeld zwischen den Gurten ist eine dünne, als Textur markierte Scheibe, wie die Zeichnung es als Tonfläche zeigt."
     },
     {
-     "en": "Thermal: 60 mm skins; the wall region references the merged wall mass. Structure: slab member, railing members, no joints and no separate reinforcement (merged into the member); the fixed block widens to 60 mm. The 1 m strip stands for a balcony that continues sideways and a wall that continues up and down, so the strip ends and the wall cuts are section faces (hatched in the viewer); the skins of the slab overlap in the arris prisms, and the faces against the core or the neighbouring skin are section faces too, so each skin exposes its own outer face once. The thermal break exposes no face to the air in this model (its outer face lies against the slab at the wall plane, its top is covered by wool and render, its bottom and ends are cuts): the declared 0.2 m2 is an interface area, see area-review.md.",
-     "de": "Thermisch: H\u00e4ute von 60 mm; die Wandregion verweist auf die zusammengefasste Wandmasse. Tragwerk: Plattenstab, Gel\u00e4nderst\u00e4be, keine Gelenke und keine eigene Bewehrung (im Stab aufgegangen); der feste Block w\u00e4chst auf 60 mm. Der 1-m-Streifen steht f\u00fcr einen seitlich weiterlaufenden Balkon und eine nach oben und unten weiterlaufende Wand; Streifenenden und Wandschnitte sind daher Schnittfl\u00e4chen (im Betrachter schraffiert); die Plattenh\u00e4ute \u00fcberlappen in den Kantenprismen, und die Fl\u00e4chen am Kern oder an der Nachbarhaut sind ebenfalls Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Das D\u00e4mmelement zeigt in diesem Modell keine Fl\u00e4che zur Luft (seine Au\u00dfenfl\u00e4che liegt an der Platte in der Wandebene, die Oberseite ist von Wolle und Putz bedeckt, Unterseite und Enden sind Schnitte): die erkl\u00e4rten 0,2 m2 sind eine Anschlussfl\u00e4che, siehe area-review.md."
+     "en": "Thermal: three plain skins, one wall block above the slab for the layered wall, the break module, post and handrail; the baluster panel carries no surface here.",
+     "de": "Thermisch: drei einfache Häute, ein Wandblock über der Platte für die geschichtete Wand, das Dämmelement, Pfosten und Handlauf; das Stabfeld trägt hier keine Fläche."
+    },
+    {
+     "en": "Structure: slab member, wall core as the fixed support, and the connection as its two layers across the insulation, a steel tension layer on top and a concrete pressure layer at the bottom, so the path slab, joint, wall reads; post and handrail are the railing member.",
+     "de": "Tragwerk: Plattenstab, Wandkern als festes Auflager und der Anschluss als seine zwei Lagen durch die Dämmung, oben eine stählerne Zuglage und unten eine Betondrucklage, sodass der Weg Platte, Anschluss, Wand lesbar ist; Pfosten und Handlauf sind der Geländerstab."
     }
    ]
   },
@@ -1863,7 +3296,7 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.72,
      "profile": [
       [
        -0.3,
@@ -1906,145 +3339,158 @@
      "role": "body",
      "tone": 0.3,
      "size": [
-      1.1,
+      1.025,
       0.075,
       0.075
      ],
      "transform": {
       "translation": [
-       0.55,
+       0.5125,
        0.0,
-       -0.4625
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       0,
-       0.925
+       0.0
       ]
      }
     },
     {
      "id": "railing-handrail",
-     "kind": "revolve",
+     "kind": "box",
      "bone": "railing",
      "material": "steel",
      "role": "body",
      "tone": 0.3,
-     "profile": [
-      [
-       0,
-       0.0375
-      ],
-      [
-       1.0,
-       0.0375
+     "size": [
+      0.075,
+      0.075,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       1.0625,
+       0.0,
+       0.0
       ]
-     ],
-     "axis": [
-      0,
-      0,
-      1
-     ],
-     "origin": [
-      1.0625,
-      0.0,
-      -0.5
+     },
+     "sectionFaces": [
+      "-w",
+      "+w"
      ]
     }
    ],
    "thermal": [
     {
-     "id": "th-balcony-top",
-     "kind": "box",
+     "id": "th-slab-top",
+     "kind": "extrude",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.075,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       0.0625,
-       0.0
-      ]
-     },
-     "region": "slab-top",
-     "sectionFaces": [
-      "-v",
-      "-u",
-      "-w",
-      "+w"
-     ]
-    },
-    {
-     "id": "th-balcony-soffit",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      1.5,
-      0.075,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.75,
-       -0.0625,
-       0.0
-      ]
-     },
-     "region": "slab-soffit",
-     "sectionFaces": [
-      "+v",
-      "-u",
-      "-w",
-      "+w"
-     ]
-    },
-    {
-     "id": "th-balcony-edge",
-     "kind": "box",
-     "bone": "slab",
-     "material": "concrete",
-     "role": "body",
-     "tone": 0.7,
-     "size": [
-      0.075,
-      0.2,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       1.4625,
+     "tone": 0.75,
+     "profile": [
+      [
        0.0,
-       0.0
+       0.1
+      ],
+      [
+       0.16,
+       0.02
+      ],
+      [
+       1.34,
+       0.02
+      ],
+      [
+       1.5,
+       0.1
       ]
-     },
-     "region": "slab-edge",
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-top"
+    },
+    {
+     "id": "th-slab-soffit",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       -0.1
+      ],
+      [
+       1.5,
+       -0.1
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       0.16,
+       -0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "slab-soffit"
+    },
+    {
+     "id": "th-slab-edge",
+     "kind": "extrude",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.68,
+     "profile": [
+      [
+       1.5,
+       0.1
+      ],
+      [
+       1.34,
+       0.02
+      ],
+      [
+       1.34,
+       -0.02
+      ],
+      [
+       1.5,
+       -0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.5,
+     "to": 0.5,
      "sectionFaces": [
       "-u",
       "+v",
       "-v",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "slab-edge"
     },
     {
-     "id": "th-balcony-break",
+     "id": "th-break",
      "kind": "box",
      "bone": "slab",
      "material": "break-module",
      "role": "body",
-     "tone": 0.8,
+     "tone": 0.42,
      "size": [
       0.12,
       0.2,
@@ -2057,15 +3503,20 @@
        0.0
       ]
      },
+     "sectionFaces": [
+      "-u",
+      "-w",
+      "+w"
+     ],
      "region": "thermal-break"
     },
     {
-     "id": "th-balcony-wall",
+     "id": "th-wall",
      "kind": "box",
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.62,
      "size": [
       0.3,
       1.1,
@@ -2078,14 +3529,14 @@
        0.0
       ]
      },
-     "region": "wall-face",
      "sectionFaces": [
       "-u",
       "+v",
       "-v",
       "-w",
       "+w"
-     ]
+     ],
+     "region": "wall-face"
     },
     {
      "id": "th-railing-post",
@@ -2095,7 +3546,11 @@
     {
      "id": "th-railing-handrail",
      "of": "railing-handrail",
-     "region": "railing-steel"
+     "region": "railing-steel",
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
     }
    ],
    "structure": [
@@ -2105,7 +3560,7 @@
      "bone": "slab",
      "material": "concrete",
      "role": "body",
-     "tone": 0.7,
+     "tone": 0.72,
      "size": [
       1.5,
       0.2,
@@ -2122,36 +3577,69 @@
      "part": "member"
     },
     {
-     "id": "railing-post-member",
-     "of": "railing-post",
-     "member": "railing",
-     "part": "member"
-    },
-    {
-     "id": "support-wall-fix-block",
+     "id": "joint-wall-connection",
      "kind": "box",
      "bone": "slab",
      "material": "steel",
      "role": "body",
-     "tone": 0.15,
+     "tone": 0.2,
      "size": [
-      0.075,
+      0.12,
       0.2,
-      0.9
+      1.0
      ],
+     "transform": {
+      "translation": [
+       -0.06,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "slab",
+     "part": "joint"
+    },
+    {
+     "id": "support-wall-core",
+     "kind": "box",
+     "bone": "slab",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.62,
+     "size": [
+      0.18,
+      1.3,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.21,
+       0.55,
+       0.0
+      ]
+     },
      "member": "slab",
      "part": "support",
      "anchor": "wall-fix"
+    },
+    {
+     "id": "railing-post-member",
+     "of": "railing-post",
+     "member": "railing",
+     "part": "member"
     }
    ],
    "decisions": [
     {
-     "en": "Body: wall and slab are one L-shaped extrusion as the 1:500 drawing; the railing is two 75 mm posts and a 75 mm handrail (the drawing draws it as one line, the load-bearing posts cannot be thinner than the feature).",
-     "de": "K\u00f6rper: Wand und Platte sind eine L-f\u00f6rmige Extrusion wie in der Zeichnung 1:500; das Gel\u00e4nder sind zwei Pfosten von 75 mm und ein Handlauf von 75 mm (die Zeichnung zeichnet es als eine Linie, die tragenden Pfosten k\u00f6nnen nicht d\u00fcnner als die Einzelheit sein)."
+     "en": "Body: redrawn for 75 mm. Wall, joint and slab are one L-shaped poché mass with a level top; the railing is one 75 mm post under one 75 mm rail across the strip, the least a post and a rail can be at this scale.",
+     "de": "Körper: neu gezeichnet für 75 mm. Wand, Anschluss und Platte sind eine L-förmige Poché-Masse mit ebener Oberseite; das Geländer ist ein Pfosten von 75 mm unter einem Holm von 75 mm über den Streifen, das Geringste, was Pfosten und Holm in diesem Maßstab sein können."
     },
     {
-     "en": "Thermal: every region is its own 75 mm piece inside the mass (top, soffit and edge skins, break module, wall), the railing is referenced. Structure: slab member, the railing posts as the one railing member (the handrail rides on them), the support block at 75 mm; reinforcement is merged into the member. The 1 m strip stands for a balcony that continues sideways and a wall that continues up and down, so the strip ends and the wall cuts are section faces (hatched in the viewer); the skins of the slab overlap in the arris prisms, and the faces against the core or the neighbouring skin are section faces too, so each skin exposes its own outer face once.",
-     "de": "Thermisch: jede Region ist ein eigenes St\u00fcck von 75 mm in der Masse (Ober-, Unterhaut und Stirnhaut, D\u00e4mmelement, Wand), das Gel\u00e4nder wird referenziert. Tragwerk: Plattenstab, die Gel\u00e4nderpfosten als der eine Gel\u00e4nderstab (der Handlauf liegt auf ihnen), der Auflagerblock mit 75 mm; die Bewehrung ist im Stab aufgegangen. Der 1-m-Streifen steht f\u00fcr einen seitlich weiterlaufenden Balkon und eine nach oben und unten weiterlaufende Wand; Streifenenden und Wandschnitte sind daher Schnittfl\u00e4chen (im Betrachter schraffiert); die Plattenh\u00e4ute \u00fcberlappen in den Kantenprismen, und die Fl\u00e4chen am Kern oder an der Nachbarhaut sind ebenfalls Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt."
+     "en": "Thermal: every region keeps its own piece inside the mass, top, soffit and edge skins of 80 mm, the break module, the wall block above the slab, and the railing as post and rail.",
+     "de": "Thermisch: jede Region behält ihr eigenes Stück in der Masse, Häute von 80 mm für Oberseite, Unterseite und Stirn, das Dämmelement, den Wandblock über der Platte und das Geländer als Pfosten und Holm."
+    },
+    {
+     "en": "Structure: three blocks in a row carry the load, the slab member, the connection in the insulation plane and the wall core as the fixed support; the post is the railing member. This is the minimal model.",
+     "de": "Tragwerk: drei Blöcke in Reihe tragen die Last, der Plattenstab, der Anschluss in der Dämmebene und der Wandkern als festes Auflager; der Pfosten ist der Geländerstab. Dies ist das minimale Modell."
     }
    ]
   }

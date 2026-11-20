@@ -86,8 +86,8 @@ fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
                         let fg = if hovered || tab.index == active { Role::Foreground } else { Role::MutedForeground };
                         assert_eq!(buf.get(x, text_y).unwrap().bg, bg);
                         assert_eq!(buf.get(x, text_y).unwrap().fg, theme.role(fg));
-                        assert_eq!(buf.get(x, seam_y).unwrap().ch, if tab.index == active { ' ' } else if focused { '━' } else { '─' });
-                        if tab.index != active { assert_eq!(buf.get(x, seam_y).unwrap().fg, body_rgb); }
+                        assert_eq!(buf.get(x, seam_y).unwrap().ch, if focused { '━' } else { '─' });
+                        assert_eq!(buf.get(x, seam_y).unwrap().fg, seam_rgb, "a stated chip closes its perimeter on the seam");
                     }
                 }
                 let tabs: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| tab.kind == TabKind::Tab).collect();
@@ -583,5 +583,36 @@ fn controls_and_status_are_drawn_from_the_glyph_set_and_keep_their_columns() {
     assert!(line.contains('x') && line.contains('^') && line.contains('+') && !line.contains('\u{2715}'), "{line:?}");
     for x in columns {
         assert!(ascii.get(x, 1).unwrap().ch.is_ascii_graphic(), "control column {x} keeps a one-cell glyph in ASCII");
+    }
+}
+
+#[test]
+fn chrome_hovered_chip_closes_its_whole_perimeter_and_a_control_glyph_never_hovers_the_chip() {
+    use semio_ui_tui_frame::chrome::WindowHit;
+    let theme = Theme::new(AppearanceName::Dark);
+    let emphasized = theme.role(Role::BorderEmphasized);
+    for hovered in [1, 2] {
+        let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into(), "third".into()], 0);
+        state.peers = 2;
+        let rect = Rect::new(0, 0, 64, 12);
+        let layout = window_chip_layout(&state, rect);
+        let tabs: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| tab.kind == TabKind::Tab).collect();
+        let tab = tabs[hovered];
+        state.hover = Some(WindowHit::Tab(hovered));
+        let (buf, _) = paint(state.clone(), 64, 12);
+        let right = tab.x + tab.interior_width + 1;
+        for x in tab.x..=right {
+            for y in [0, 2] {
+                assert_eq!(buf.get(x, y).unwrap().fg, emphasized, "chip {hovered} at {x},{y}");
+            }
+        }
+        assert_eq!(buf.get(tab.x, 1).unwrap().fg, emphasized);
+        assert_eq!(buf.get(right, 1).unwrap().fg, emphasized);
+        for other in tabs.iter().filter(|other| other.index != hovered && other.index != 0) {
+            assert!((other.x + 1..other.x + other.interior_width + 1).all(|x| buf.get(x, 2).unwrap().fg != emphasized && buf.get(x, 0).unwrap().fg != emphasized), "chip {} stays normal", other.index);
+        }
+        state.hover = Some(WindowHit::Close(hovered));
+        let (buf, _) = paint(state, 64, 12);
+        assert!((tab.x + 1..right).all(|x| buf.get(x, 0).unwrap().fg != emphasized), "the close glyph owns the hover, not its chip");
     }
 }

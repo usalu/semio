@@ -4,7 +4,12 @@ import { join } from "node:path";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
-if (segments[0] === "note-document-contract") {
+  if (segments[0] === "dev-contribution") {
+    const { testNoteDevContributionV1 } = await import("../🧩️dev-contribution/🟦️.ts");
+    testNoteDevContributionV1(context.repoRoot);
+    return;
+  }
+  if (segments[0] === "note-document-contract") {
     if (segments[1] === "native") {
       const { runCargo } = await import("@semio-tech/repo-lib/cargo");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "--", "--nocapture"], context.repoRoot);

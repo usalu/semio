@@ -20,7 +20,7 @@ import {PlanRefusedErrorV1,requestPlanV1} from "../../🚪️client/🛰️plan/
 
 const FIXTURE=JSON.parse(readFileSync(join(HERE,"🧫️fixtures/🛑️cancel.json"),"utf8")),BOUND=FIXTURE.boundMilliseconds as number;
 const GRAPH=join(HERE,"🧫️fixtures/🛰️host-graph.json"),CLIENT=join(HERE,"🛑️cancel/🛰️client.mjs");
-const base=mkdtempSync(join(process.platform==="win32"?tmpdir():"/tmp","cx-"));
+const base=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??(process.platform==="win32"?tmpdir():"/tmp"),"cx-"));
 afterAll(()=>rmSync(base,{recursive:true,force:true}));
 const alive=(pid:number)=>{try{process.kill(pid,0);}catch(error:any){return error?.code==="EPERM";}try{return !/^\d+ \(.*\) Z/u.test(readFileSync("/proc/"+pid+"/stat","utf8"));}catch{return true;}};
 const digestOf=(name:string)=>createHash("sha256").update(name).digest("hex");
@@ -256,7 +256,7 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
   const pool=createSlicePoolV1({hostMegabytes:0,workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
   const running=pool.run({root:base},{signal:controller.signal,onProgress:(_ms:number,detail:any)=>progress.push(detail)}).then(()=>undefined,error=>error);
   expect(await waitFor(()=>progress.length>=2,5000)).toBe(true);
-  expect(progress[0]).toMatchObject({phase:"reservation",done:0,total:L.expect.memoryMaxMegabytes,decision:{key:"reserving",used:L.expect.memoryMaxMegabytes,budget:1024}});
+  expect(progress[0]).toEqual({phase:"reservation",reservation:{requested:L.expect.memoryMaxMegabytes}});
   controller.abort(new Error("stop waiting"));expect((await running).message).toBe("stop waiting");expect(started).toBe(0);expect(log).toEqual([]);await pool.close();
  });
  test("the host availability reads MemAvailable in kilobytes",()=>{expect(createHostAvailableBytesV1({platform:"linux",read:()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n",total:()=>2**40,environment:{}})()).toBe(2048*1024);});

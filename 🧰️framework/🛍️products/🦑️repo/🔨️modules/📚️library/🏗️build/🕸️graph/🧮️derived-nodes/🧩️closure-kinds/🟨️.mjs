@@ -141,21 +141,25 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
   };
   const summary=dirty!==undefined?dirty.overflow===true?undefined:dirtySummaryV1(dirty):staleFacts===undefined||staleFacts.length===0?undefined:staleSummaryV1(staleFacts,relative,VOLATILE);activeSummary=summary;
   const clock=createStageClockV1(),settleBegan=Date.now();
-  const pass={transient:true,...summary===undefined?{}:{dirty:summary}},partOk=new Map(),idOk=new Map(),idFlight=new Map(),partStats={decided:0,byIds:0,loaded:0,probedRows:0,asked:0},gate=footprintGateV1();
-  relief=gate?.relieve(()=>{delete pass.round;partOk.clear();idOk.clear();sweepRows();});
+  const pass={transient:true,...summary===undefined?{}:{dirty:summary}},partOk=new Map(),dictionaries=new Map(),partStats={decided:0,byIds:0,loaded:0,probedRows:0,asked:0},gate=footprintGateV1();
+  relief=gate?.relieve(()=>{delete pass.round;partOk.clear();for(const state of dictionaries.values())state.idOk.clear();sweepRows();});
   const vouching=summary===undefined||typeof vouchStamp!=="function"?undefined:createVouchV1({book:()=>book,summary,stamp:vouchStamp,concurrency:limits.vouchConcurrency,signal});
   let savedAt=Date.now(),lastSaveMs=0;
   const beats=new Map(),beat=async(phase,done,total,force=false)=>{const now=Date.now();if(!force&&now-(beats.get(phase)??0)<CUTOFF_POLICY_V1.partProgressMilliseconds)return;beats.set(phase,now);await progress?.({phase,done,total:Math.max(done,total)});};
-  const decideIds=async(entries,abort)=>{
+  const decideIds=async(entries,abort,idOk)=>{
    abort?.throwIfAborted();
    partStats.probedRows+=entries.length;
    if(await hold(entries.map(entry=>entry.row),abort)){for(const entry of entries)idOk.set(entry.id,true);return;}
    if(entries.length===1){idOk.set(entries[0].id,false);return;}
-   const middle=entries.length>>1;await decideIds(entries.slice(0,middle),abort);await decideIds(entries.slice(middle),abort);
+   const middle=entries.length>>1;await decideIds(entries.slice(0,middle),abort,idOk);await decideIds(entries.slice(middle),abort,idOk);
   };
-  const claimIds=(entries,abort)=>{const run=decideIds(entries,abort).finally(()=>{for(const entry of entries)idFlight.delete(entry.id);});for(const entry of entries)idFlight.set(entry.id,run);return run;};
+  const claimIds=(entries,abort,{idOk,idFlight})=>{const run=decideIds(entries,abort,idOk).finally(()=>{for(const entry of entries)idFlight.delete(entry.id);});for(const entry of entries)idFlight.set(entry.id,run);return run;};
   const holdByIds=async(id,abort)=>{
-   const ids=index?.idsSync(id);if(ids===undefined)return undefined;
+   const listing=index?.listingSync(id);if(listing===undefined)return undefined;
+   const {ids,dictionary}=listing;
+   let state=dictionaries.get(dictionary);
+   if(!state)dictionaries.set(dictionary,state={idOk:new Map(),idFlight:new Map()});
+   const {idOk,idFlight}=state;
    const unknown=[],queued=new Set();
    for(let at=0;at<ids.length;at++){const rowId=ids[at];if(!idOk.has(rowId)&&!queued.has(rowId)){queued.add(rowId);unknown.push(rowId);}}
    for(let from=0;from<unknown.length;from+=CUTOFF_POLICY_V1.partRowBatchRows){
@@ -164,10 +168,10 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
     for(const rowId of unknown.slice(from,from+CUTOFF_POLICY_V1.partRowBatchRows)){
      if(idOk.has(rowId))continue;
      const flying=idFlight.get(rowId);if(flying!==undefined){joined.add(flying);continue;}
-     const row=index.rowSync(rowId);if(row===undefined)return undefined;
+     const row=listing.rowSync(rowId);if(row===undefined)return undefined;
      entries.push({id:rowId,row});
     }
-    if(entries.length)joined.add(claimIds(entries,abort));
+    if(entries.length)joined.add(claimIds(entries,abort,state));
     await Promise.all(joined);
     if(unknown.slice(from,from+CUTOFF_POLICY_V1.partRowBatchRows).some(rowId=>idOk.get(rowId)===false))return false;
    }
@@ -261,7 +265,7 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
   if(partStats.asked>0)await beat("decisions",partStats.decided,partStats.asked,true);
   forgetParts(true);await clock.time("save",saveManifest);releaseRuntimeMemoryV1();
   noteTraceV1("settle closures="+names.length+" entries="+book.entries.size+" slow="+slow.length+" vouched="+vouched+" kept="+kept.size+" failed="+failed+" summary="+(summary===undefined?"none":"paths:"+summary.paths.size+",dirs:"+summary.directories.size+",subtrees:"+summary.subtrees.size)+" wall="+(Date.now()-settleBegan)+"ms "+clock.text());
-  return{held,kept,changed,answers,failed,vouched,slow:slow.length,farmed:farm?.stats().answered??0,reused:Math.max(0,names.length-failed-fresh.size),parts:{...partStats,rowsDecided:idOk.size}};
+  return{held,kept,changed,answers,failed,vouched,slow:slow.length,farmed:farm?.stats().answered??0,reused:Math.max(0,names.length-failed-fresh.size),parts:{...partStats,rowsDecided:Array.from(dictionaries.values()).reduce((sum,state)=>sum+state.idOk.size,0)}};
  };
  return Object.freeze({graph,store:shared?.store??store,settle:options=>{const next=chain.then(()=>run(options),()=>run(options));chain=next.catch(()=>undefined);return next;},invalidate:(dirty,options)=>graph.invalidate(dirty,options),release:async()=>{farmClosed();if(await graph.release?.()===undefined)return;await saveManifest();manifest=undefined;table.clear();metas.clear();outsideRows.clear();rowPool.clear();},markIndexed:async({held=new Map(),dropped=[]})=>{const book=await manifestOf();for(const[name,rows]of held)if(rows.digest!==undefined&&!dropped.includes(name)){book.marks.set(name,{digest:rows.digest,length:rows.length});manifestDirty=true;}for(const name of dropped)if(book.marks.delete(name))manifestDirty=true;await saveManifest();},stats:()=>graph.stats()});
 }

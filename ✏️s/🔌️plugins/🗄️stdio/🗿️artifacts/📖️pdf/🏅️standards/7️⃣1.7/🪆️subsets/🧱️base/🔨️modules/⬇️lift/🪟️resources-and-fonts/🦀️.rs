@@ -11,49 +11,98 @@ use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleVa
 use crate::standards::v1_7::subsets::base::schema::content_mapping::ResourceMap;
 use crate::standards::v1_7::subsets::base::modules::lift::*;
 
+fn resource_entries<'a>(source: &mut dyn ObjectSource, resources: &'a PdfObject, key: &str) -> std::borrow::Cow<'a, [PdfDictEntry]> {
+    use std::borrow::Cow;
+
+    match resources.dict_get(key) {
+        Some(PdfObject::Ref(reference)) => match source.get(*reference) {
+            Some(PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. }) => Cow::Owned(entries),
+            _ => Cow::Borrowed(&[]),
+        },
+        Some(value) => Cow::Borrowed(value.as_dict().unwrap_or_default()),
+        None => Cow::Borrowed(&[]),
+    }
+}
+
+#[cfg(test)]
+mod resource_entry_tests {
+    use super::*;
+
+    struct Single(Option<PdfObject>);
+
+    impl ObjectSource for Single {
+        fn get(&mut self, _: ObjRef) -> Option<PdfObject> { self.0.take() }
+    }
+
+    fn payload() -> PdfObject {
+        PdfObject::Dict(vec![PdfDictEntry::new("F1", PdfObject::Str(b"font".to_vec()))])
+    }
+
+    #[test]
+    fn direct_resource_entries_keep_their_borrowed_backing() {
+        let resources = PdfObject::Dict(vec![PdfDictEntry::new("Font", payload())]);
+        let expected = resources.dict_get("Font").unwrap().as_dict().unwrap().as_ptr();
+        let mut source = Single(None);
+        let entries = resource_entries(&mut source, &resources, "Font");
+        assert!(matches!(entries, std::borrow::Cow::Borrowed(_)));
+        assert_eq!(entries.as_ptr(), expected);
+    }
+
+    #[test]
+    fn indirect_resource_entries_move_the_owned_dictionary_once() {
+        let mut source = Single(Some(payload()));
+        let expected = source.0.as_ref().unwrap().as_dict().unwrap().as_ptr();
+        let resources = PdfObject::Dict(vec![PdfDictEntry::new("Font", PdfObject::Ref(ObjRef { num: 9, gen: 0 }))]);
+        let entries = resource_entries(&mut source, &resources, "Font");
+        assert!(matches!(entries, std::borrow::Cow::Owned(_)));
+        assert_eq!(entries.as_ptr(), expected);
+        assert!(source.0.is_none());
+    }
+}
+
 //#region 🔖️Resources
 impl Lifter<'_> {
     /// 📚 Lifts every entry of a resource dictionary into the document collections and returns
     /// the name → id map its content streams are rewritten with.
     pub fn lift_resources(&mut self, resources: &PdfObject) -> ResourceMap {
-        let resources = self.source.deref(resources);
+        let resolved = resources.as_ref().and_then(|reference| self.source.get(reference));
+        let resources = resolved.as_ref().unwrap_or(resources);
         let mut map = ResourceMap::default();
-        let sub = |lifter: &mut Self, key: &str| -> Vec<PdfDictEntry> { resources.dict_get(key).map(|v| lifter.source.deref(v)).and_then(|v| v.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default() };
-        for entry in sub(self, "Font") {
+        for entry in resource_entries(self.source, resources, "Font").as_ref() {
             let id = self.lift_font(&entry.key, &entry.value);
-            map.fonts.insert(entry.key, id);
+            map.fonts.insert(entry.key.clone(), id);
         }
-        for entry in sub(self, "XObject") {
+        for entry in resource_entries(self.source, resources, "XObject").as_ref() {
             let id = self.lift_x_object(&entry.key, &entry.value);
             if !id.is_empty() {
-                map.x_objects.insert(entry.key, id);
+                map.x_objects.insert(entry.key.clone(), id);
             }
         }
-        for entry in sub(self, "ExtGState") {
+        for entry in resource_entries(self.source, resources, "ExtGState").as_ref() {
             let id = self.lift_ext_g_state_entry(&entry.key, &entry.value);
-            map.ext_g_states.insert(entry.key, id);
+            map.ext_g_states.insert(entry.key.clone(), id);
         }
-        for entry in sub(self, "ColorSpace") {
+        for entry in resource_entries(self.source, resources, "ColorSpace").as_ref() {
             let (id, fresh) = self.claim_id(Category::ColorSpace, &entry.key, entry.value.as_ref());
             if fresh {
                 let color_space = lift_colour_space(&entry.value, self.source);
                 self.snapshot.color_spaces.push(PdfNamedColorSpace { name: id.clone(), color_space });
             }
-            map.color_spaces.insert(entry.key, id);
+            map.color_spaces.insert(entry.key.clone(), id);
         }
-        for entry in sub(self, "Shading") {
+        for entry in resource_entries(self.source, resources, "Shading").as_ref() {
             let id = self.lift_shading_entry(&entry.key, &entry.value);
             if !id.is_empty() {
-                map.shadings.insert(entry.key, id);
+                map.shadings.insert(entry.key.clone(), id);
             }
         }
-        for entry in sub(self, "Pattern") {
+        for entry in resource_entries(self.source, resources, "Pattern").as_ref() {
             let id = self.lift_pattern(&entry.key, &entry.value);
             if !id.is_empty() {
-                map.patterns.insert(entry.key, id);
+                map.patterns.insert(entry.key.clone(), id);
             }
         }
-        for entry in sub(self, "Properties") {
+        for entry in resource_entries(self.source, resources, "Properties").as_ref() {
             let (id, fresh) = self.claim_id(Category::Properties, &entry.key, entry.value.as_ref());
             if fresh {
                 let resolved = self.source.deref(&entry.value);
@@ -63,7 +112,7 @@ impl Lifter<'_> {
                 }
                 self.snapshot.properties.push(PdfNamedProperties { name: id.clone(), entries });
             }
-            map.properties.insert(entry.key, id);
+            map.properties.insert(entry.key.clone(), id);
         }
         map
     }
@@ -85,7 +134,7 @@ impl Lifter<'_> {
                     self.lift_font("GSFont", &font_ref);
                 }
             }
-            let ids = self.ids.clone();
+            let ids = &self.ids;
             let mut form_lookup = |group: &PdfObject, source: &mut dyn ObjectSource| -> Option<String> { form_id_of(group, source).or_else(|| ids.get(&(Category::XObject, group.as_ref()?)).cloned()) };
             let mut font_lookup = |font: &PdfObject, source: &mut dyn ObjectSource| -> Option<String> { font_id_of(font, source).or_else(|| ids.get(&(Category::Font, font.as_ref()?)).cloned()) };
             let state = lift_ext_g_state(&id, &dict, self.source, &mut form_lookup, &mut font_lookup);

@@ -462,7 +462,7 @@ describe("declarative forms parity", () => {
     expect(markup).toContain("disabled");
   });
 
-  it("renders selectable builder cards with selection ring", () => {
+  it("renders selectable builder cards with the compositor selection state", () => {
     // region's own doc: "presence changes at input frequency and must not touch a document
     const markup = renderContractTree(
       {
@@ -475,7 +475,8 @@ describe("declarative forms parity", () => {
     );
     expect(markup).toContain('data-ui-node-id="0"');
     expect(markup).toContain('role="button"');
-    expect(markup).toContain("ring-primary");
+    expect(markup).toContain('data-shared-border-state="active"');
+    expect(markup).not.toContain("ring-primary");
   });
 
   it("applies separate presence fixtures without replacing the retained document", () => {
@@ -490,8 +491,10 @@ describe("declarative forms parity", () => {
     for (const row of presenceOverlayFixture.cases) {
       const own: UiPresenceOverlayEntry = JSON.parse(JSON.stringify(row.update.own));
       mounted.rerender(createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map([[row.update.nodeKey, own]]) } }, interpretUiNode(store, context)));
-      expect(mounted.container.innerHTML.includes("ring-primary")).toBe(row.expected.selected);
-      expect(mounted.container.innerHTML.includes("outline-primary/50")).toBe(row.expected.hovered);
+      const html = mounted.container.innerHTML;
+      expect(html.includes('data-shared-border-state="hover"')).toBe(row.expected.hovered);
+      expect(html.includes('data-shared-border-state="active"')).toBe(row.expected.selected && !row.expected.hovered);
+      expect(html.includes("ring-primary") || html.includes("outline-primary")).toBe(false);
       expect(own.previewed ?? false).toBe(row.expected.previewed);
       expect(store.getState()).toBe(before);
       expect(store.getRevisionSnapshot()).toBe(before.revision);

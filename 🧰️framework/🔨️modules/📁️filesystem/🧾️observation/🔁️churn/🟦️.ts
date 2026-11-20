@@ -13,11 +13,11 @@ export type ChurnProfileNameV1="read"|"snapshot"|"build";
 /** 📜️ One layer of the schema: its rank, its attempt bound and the pause before each further attempt. */
 export type ChurnProfileV1=Readonly<{rank:number;maximumAttempts:number;backoffMs:readonly number[]}>;
 /** 📖️ The closed protocol exactly as the schema declares it. */
-export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];settleMilliseconds:number;quiet:Readonly<{futureToleranceMilliseconds:number;windowMilliseconds:number;ceilingMilliseconds:number;reasons:readonly ConcurrentEditReasonV1[]}>;profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted",string>>>>}>;
+export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];settleMilliseconds:number;convergence:Readonly<{wallClockMilliseconds:number;maximumAttempts:number;stableFailures:number}>;quiet:Readonly<{futureToleranceMilliseconds:number;windowMilliseconds:number;ceilingMilliseconds:number;reasons:readonly ConcurrentEditReasonV1[]}>;profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted"|"stuck",string>>>>}>;
 /** 📣️ One announced retry: the layer, the attempt about to start, what changed and how long the pause is. */
 export type ChurnRetryEventV1=Readonly<{profile:ChurnProfileNameV1;attempt:number;maximum:number;path:string;reason:ConcurrentEditReasonV1;delayMs:number;text:string}>;
 /** 🎛️ Cancellation, progress and clock authority of one retrying step; `retryable` lets a caller refuse a retry of a failure that came out of work it ran inside (a tracked unit that failed closed its owners, so running again can only fail again). */
-export type ChurnOptionsV1=Readonly<{modifiedAgeMs?:(path:string)=>number|undefined;signal?:AbortSignal;retryable?:(error:unknown)=>boolean;environment?:Readonly<Record<string,string|undefined>>;onRetry?:(event:ChurnRetryEventV1)=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;sleepSync?:(milliseconds:number)=>void}>;
+export type ChurnOptionsV1=Readonly<{modifiedAgeMs?:(path:string)=>number|undefined;signal?:AbortSignal;retryable?:(error:unknown)=>boolean;environment?:Readonly<Record<string,string|undefined>>;converge?:boolean;identityOf?:(path:string)=>string|undefined;now?:()=>number;onRetry?:(event:ChurnRetryEventV1)=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;sleepSync?:(milliseconds:number)=>void}>;
 
 /** 📕️ The closed churn protocol: layers, attempt bounds, pauses and EN/DE texts. */
 export function churnProtocolV1():ChurnProtocolV1{return protocol;}
@@ -28,7 +28,7 @@ export function churnLanguagesV1(environment:Readonly<Record<string,string|undef
 }
 
 /** 💬️ Renders one declared message in one language; every placeholder must be given. */
-export function churnTextV1(language:string,key:"retry"|"exhausted",values:Readonly<Record<string,string|number>>):string{
+export function churnTextV1(language:string,key:"retry"|"exhausted"|"stuck",values:Readonly<Record<string,string|number>>):string{
  const table=protocol.texts[language];if(!table||typeof table[key]!=="string")throw Error("Declared churn text required: "+language+"."+key);
  return table[key].replace(/\{([a-z]+)\}/gu,(_,name:string)=>{if(!Object.hasOwn(values,name))throw Error("Churn text placeholder required: "+name);return String(values[name]);});
 }
@@ -36,7 +36,7 @@ export function churnTextV1(language:string,key:"retry"|"exhausted",values:Reado
 const reasonOf=(language:string,reason:ConcurrentEditReasonV1):string=>protocol.reasons[language]![reason];
 /** 📄️ The declared wording of what a concurrent edit changed, in one language. */
 export function churnReasonTextV1(language:string,reason:ConcurrentEditReasonV1):string{const table=protocol.reasons[language];if(!table||typeof table[reason]!=="string")throw Error("Declared churn reason required: "+language+"."+reason);return table[reason];}
-const lines=(environment:Readonly<Record<string,string|undefined>>,key:"retry"|"exhausted",values:(language:string)=>Readonly<Record<string,string|number>>):string=>churnLanguagesV1(environment).map(language=>churnTextV1(language,key,values(language))).join("\n");
+const lines=(environment:Readonly<Record<string,string|undefined>>,key:"retry"|"exhausted"|"stuck",values:(language:string)=>Readonly<Record<string,string|number>>):string=>churnLanguagesV1(environment).map(language=>churnTextV1(language,key,values(language))).join("\n");
 
 /** 🧨️ A concurrent edit another process made to something this step reads. Raised by a read that sees the world move under it; `rank` is the widest layer that already exhausted its attempts on it (0 while raw), so a wider layer may retry it and a narrower one never multiplies attempts. */
 export class ConcurrentEditErrorV1 extends Error{
@@ -100,29 +100,44 @@ export function quietWaitMillisecondsV1(path:string,spentMilliseconds:number,opt
  const age=(options.modifiedAgeMs??defaultModifiedAge)(path);if(age===undefined||age>=protocol.quiet.windowMilliseconds)return 0;
  return Math.max(0,Math.min(protocol.quiet.windowMilliseconds-age,protocol.quiet.ceilingMilliseconds-spentMilliseconds));
 }
-function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,options:ChurnOptionsV1):Readonly<{retry:ChurnRetryEventV1}>|Readonly<{fail:Error}>|undefined{
- const profile=protocol.profiles[profileName],edit=editOf(error);if(!edit||edit.rank>=profile.rank||options.retryable?.(error)===false)return;
+type ConvergenceStateV1={signature?:string;identity?:string;stable:number};
+const defaultIdentityOf=(path:string):string|undefined=>{try{const row=statSync(path,{bigint:true});return [row.dev,row.ino,row.size,row.mtimeNs,row.ctimeNs].join(":");}catch{return undefined;}};
+/** 🧭️ Whether a converging layer's new snapshot keeps reporting the same edit of a path whose identity did not move between the reports: a fresh snapshot of an untouched file can only differ from a baseline this layer does not own (held by an enclosing scope or an inherited pin), so running again cannot converge. */
+function stuck(state:ConvergenceStateV1,edit:ConcurrentEditFactsV1,options:ChurnOptionsV1):boolean{
+ const identity=(options.identityOf??defaultIdentityOf)(edit.path),signature=edit.reason+"\0"+edit.path;
+ if(identity===undefined){state.signature=undefined;state.identity=undefined;state.stable=0;return false;}
+ state.stable=state.signature===signature&&state.identity===identity?state.stable+1:0;state.signature=signature;state.identity=identity;
+ return state.stable>=protocol.convergence.stableFailures;
+}
+function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,options:ChurnOptionsV1,startedMs:number,state:ConvergenceStateV1):Readonly<{retry:ChurnRetryEventV1}>|Readonly<{fail:Error}>|undefined{
+ const profile=protocol.profiles[profileName],edit=editOf(error),convergent=options.converge===true&&profileName==="build",converging=convergent&&(options.now??Date.now)()-startedMs<protocol.convergence.wallClockMilliseconds&&attempt<protocol.convergence.maximumAttempts;if(!edit||edit.rank>=profile.rank||options.retryable?.(error)===false)return;
  const environment=options.environment??process.env;
- if(attempt>=profile.maximumAttempts){
-  if(edit.holder){exhaustedRanksV1.set(edit.holder,profile.rank);return{fail:error as Error};}
-  const message=lines(environment,"exhausted",language=>({path:edit.path,maximum:profile.maximumAttempts,reason:reasonOf(language,edit.reason)}));
+ if(converging&&stuck(state,edit,options)){
+  const message=lines(environment,"stuck",language=>({path:edit.path,attempt:attempt+1,reason:reasonOf(language,edit.reason)}));
   return{fail:new ConcurrentEditErrorV1(edit.reason,edit.path,undefined,profile.rank,{attempts:attempt,message,cause:error})};
  }
- const delayMs=profile.backoffMs[attempt-1]??0;
- const text=lines(environment,"retry",language=>({path:edit.path,reason:reasonOf(language,edit.reason),attempt:attempt+1,maximum:profile.maximumAttempts,delay:delayMs}));
- return{retry:Object.freeze({profile:profileName,attempt:attempt+1,maximum:profile.maximumAttempts,path:edit.path,reason:edit.reason,delayMs,text})};
+ const limit=convergent?protocol.convergence.maximumAttempts:profile.maximumAttempts;
+ if(!converging&&(convergent||attempt>=profile.maximumAttempts)){
+  if(edit.holder){exhaustedRanksV1.set(edit.holder,profile.rank);return{fail:error as Error};}
+  const message=lines(environment,"exhausted",language=>({path:edit.path,maximum:Math.min(attempt,limit),reason:reasonOf(language,edit.reason)}));
+  return{fail:new ConcurrentEditErrorV1(edit.reason,edit.path,undefined,profile.rank,{attempts:attempt,message,cause:error})};
+ }
+ const delayMs=profile.backoffMs[Math.min(attempt-1,profile.backoffMs.length-1)]??0,maximum=limit;
+ const text=lines(environment,"retry",language=>({path:edit.path,reason:reasonOf(language,edit.reason),attempt:attempt+1,maximum,delay:delayMs}));
+ return{retry:Object.freeze({profile:profileName,attempt:attempt+1,maximum,path:edit.path,reason:edit.reason,delayMs,text})};
 }
 
-/** 🔁️ Runs `body` as one snapshot of its layer: on a concurrent edit the layer pauses as the schema declares, announces the retry in the declared languages and runs `body` again with the next attempt number, until the layer's attempts are used up and the edit fails the step naming its path. Cancellation ends the wait at once. */
+/** 🔁️ Runs `body` as one snapshot of its layer: on a concurrent edit the layer pauses as the schema declares, announces the retry in the declared languages and runs `body` again with the next attempt number, until the layer's attempts are used up and the edit fails the step naming its path. Cancellation ends the wait at once. A `converge` call of the `build` layer is bounded by the schema's `convergence` wall clock and attempt count instead of the layer's attempts: a step whose own work memoizes what did not change keeps going while peers edit, and fails only when either is spent. A converging layer whose new snapshots keep reporting the same edit of a path whose identity no longer moves (`convergence.stableFailures` times) cannot cure it (the baseline it is compared with lives outside the layer), so it fails at once with the `stuck` text and the escaped edit makes the outermost command restart with fresh inputs.
+ * @see ./🧬️schema/🔣️.json */
 export async function retryOnConcurrentEditV1<T>(profile:ChurnProfileNameV1,body:(attempt:number)=>Promise<T>,options:ChurnOptionsV1={}):Promise<T>{
- let quietSpent=0;
+ let quietSpent=0;const startedMs=(options.now??Date.now)(),state:ConvergenceStateV1={stable:0};
  for(let attempt=1;;attempt++){
   options.signal?.throwIfAborted();
   try{return await body(attempt);}
   catch(error){
    const edit=editOf(error),quiet=edit&&protocol.quiet.reasons.includes(edit.reason)&&protocol.profiles[profile].rank>edit.rank&&options.retryable?.(error)!==false?quietWaitMillisecondsV1(edit.path,quietSpent,options):0;
    if(quiet>0){quietSpent+=quiet;await(options.sleep??defaultSleep)(quiet,options.signal);attempt--;continue;}
-   const next=plan(profile,error,attempt,options);if(!next)throw error;
+   const next=plan(profile,error,attempt,options,startedMs,state);if(!next)throw error;
    if("fail"in next)throw next.fail;
    (options.onRetry??defaultReport)(next.retry);
    await(options.sleep??defaultSleep)(next.retry.delayMs,options.signal);
@@ -132,14 +147,14 @@ export async function retryOnConcurrentEditV1<T>(profile:ChurnProfileNameV1,body
 
 /** 🔂️ The synchronous layer of {@link retryOnConcurrentEditV1} for readers that cannot suspend (it pauses the thread). */
 export function retryOnConcurrentEditSyncV1<T>(profile:ChurnProfileNameV1,body:(attempt:number)=>T,options:ChurnOptionsV1={}):T{
- let quietSpent=0;
+ let quietSpent=0;const startedMs=(options.now??Date.now)(),state:ConvergenceStateV1={stable:0};
  for(let attempt=1;;attempt++){
   options.signal?.throwIfAborted();
   try{return body(attempt);}
   catch(error){
    const edit=editOf(error),quiet=edit&&protocol.quiet.reasons.includes(edit.reason)&&protocol.profiles[profile].rank>edit.rank&&options.retryable?.(error)!==false?quietWaitMillisecondsV1(edit.path,quietSpent,options):0;
    if(quiet>0){quietSpent+=quiet;(options.sleepSync??defaultSleepSync)(quiet);attempt--;continue;}
-   const next=plan(profile,error,attempt,options);if(!next)throw error;
+   const next=plan(profile,error,attempt,options,startedMs,state);if(!next)throw error;
    if("fail"in next)throw next.fail;
    (options.onRetry??defaultReport)(next.retry);
    (options.sleepSync??defaultSleepSync)(next.retry.delayMs);
@@ -158,7 +173,7 @@ export function installRestartableFailureHandlerV1(handler:(error:unknown)=>void
 export function handleRestartableFailureV1(error:unknown):void{const handler=(globalThis as unknown as Record<symbol,unknown>)[restartableHandlerKeyV1];if(typeof handler==="function")(handler as (error:unknown)=>void)(error);}
 /** 🏷️ The error code that marks a stale implementation. */
 export const STALE_IMPLEMENTATION_CODE_V1:string=protocol.staleImplementationCode;
-/** ❌️ Every error code that means the implementation this process loaded is outdated: the code {@link staleImplementationV1} raises and the graph layer's `BUILD_AUTHORITY_CHANGED`, which both end in a restart with the current implementation. */
+/** ❌️ Every error code that means the implementation this process loaded is outdated: the code {@link staleImplementationV1} raises and the graph layer's `BUILD_AUTHORITY_CHANGED`, which both end in a restart with the current implementation, and `SEMIO_UNIT_KILLED`, a compile unit the host killed under memory pressure, which a fresh run cures the same way. */
 export const STALE_IMPLEMENTATION_CODES_V1:ReadonlySet<string>=new Set(protocol.staleImplementationCodes);
 
 /** 🤝️ A custody a failing command holds that its replacement may take over instead of queueing for it again (the machine capacity grant): `offer` publishes the custody to the process about to be started and returns the environment that process needs to claim it, `settle` ends this process's hold (idempotent; the custody was claimed, refused or never offered). */

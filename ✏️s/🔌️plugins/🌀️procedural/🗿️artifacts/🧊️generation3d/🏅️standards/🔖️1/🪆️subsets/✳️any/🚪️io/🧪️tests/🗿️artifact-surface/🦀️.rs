@@ -711,12 +711,16 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
     host["layout"] = serde_json::json!({});
     let value = semio_framework_pack_json::parse(&host.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let host = semio_framework_artifact_flow_flow::FlowHostSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
-    for row in fixture["exportScope"]["cases"].as_array().unwrap() {
+    let scope = &fixture["exportScope"];
+    let expected_channels = |rows: &serde_json::Value| rows.as_array().unwrap().iter().map(|channel| {
+        (channel[0].as_str().unwrap().to_string(), channel[1].as_str().map(str::to_string))
+    }).collect::<Vec<_>>();
+    for row in scope["cases"].as_array().unwrap() {
         let actual = mesh_bridge::export_source_channels(&host, row["request"]["widgetId"].as_str()).unwrap();
-        let expected = row["channels"].as_array().unwrap().iter().map(|channel| (channel[0].as_str().unwrap().to_string(), channel[1].as_str().map(str::to_string))).collect::<Vec<_>>();
-        assert_eq!(actual, expected);
+        assert_eq!(actual, expected_channels(&row["channels"]));
     }
-    for id in fixture["exportScope"]["refusals"].as_array().unwrap() { assert!(mesh_bridge::export_source_channels(&host, id.as_str()).is_err()); }
+    assert_eq!(mesh_bridge::retained_geometry_channels(&host), expected_channels(&scope["retained"]));
+    for id in scope["refusals"].as_array().unwrap() { assert!(mesh_bridge::export_source_channels(&host, id.as_str()).is_err()); }
     host.retire_cold();
 }
 

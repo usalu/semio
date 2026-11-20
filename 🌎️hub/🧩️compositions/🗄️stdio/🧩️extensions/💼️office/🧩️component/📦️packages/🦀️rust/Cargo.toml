@@ -80,7 +80,7 @@ ports = { react = 6275, wgpu = 6375 }
 variant = "stdio-idml"
 app = "s.stdio.idml@8.0/*#editor"
 aliases = ["stdio idml"]
-ports = { react = 6277, wgpu = 6377 }
+ports = { react = 6276, wgpu = 6376 }
 # /🧩️ Composition Playgrounds
 
 [package.metadata.semio.sources]

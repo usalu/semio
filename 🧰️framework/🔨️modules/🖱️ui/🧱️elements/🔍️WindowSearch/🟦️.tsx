@@ -416,7 +416,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
         data-shared-border-state={sessionActive ? "active" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base shadow-sm", className)}
+        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base", className)}
       >
         <Popover
           open={showPossiblesList}

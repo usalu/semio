@@ -24,7 +24,7 @@ use mutation_decode::*;
 mod decode_owner_catalog;
 pub use decode_owner_catalog::*;
 
-const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 15;
+const PROCESS3D_MUTATION_VARIANT_COUNT: usize = 16;
 
 /// 🎟️ Funds one synchronous fixture turn from exactly the demand its own owner quoted.
 #[cfg(any(test, feature = "testkit"))]

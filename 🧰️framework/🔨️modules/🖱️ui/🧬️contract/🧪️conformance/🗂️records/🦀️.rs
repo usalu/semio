@@ -28,6 +28,7 @@ fn ui_revision_advances_by_one() {
 
 #[test]
 fn document_lease_publishes_complete_generation_and_closes_incrementally() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let surface = SurfaceId::try_from("surface").expect("bounded fixture");
     let mut builder = UiDocumentBuilder::try_new(41, surface, UiRevision(7), Some(UiNodeId(1)), 3).expect("fixed document slot");
     builder.try_push(crate::leaf_record(1, "root")).expect("one node page");
@@ -39,12 +40,13 @@ fn document_lease_publishes_complete_generation_and_closes_incrementally() {
     assert!(lease.read_node_page(1).expect("live lease").is_none());
     let mut alias = lease.try_alias().expect("credited alias");
     assert!(!lease.close_step(), "alias retains the document owner");
-    while !alias.close_step() {}
+    assert!((0..262_144).any(|_| alias.close_step()), "the close finishes inside its finite opportunity ceiling");
     assert!(matches!(lease.header(), Err(UiDocumentLeaseError::StaleHandle)));
 }
 
 #[test]
 fn document_builder_returns_exact_max_plus_one_node_owner() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let surface = SurfaceId::try_from("full").expect("bounded fixture");
     let mut builder = UiDocumentBuilder::try_new(42, surface, UiRevision(1), Some(UiNodeId(0)), 0).expect("fixed document slot");
     for id in 0..UI_DOCUMENT_NODES as u64 {
@@ -55,11 +57,12 @@ fn document_builder_returns_exact_max_plus_one_node_owner() {
     assert_eq!(error, UiDocumentBuildError::NodeCapacity);
     assert_eq!(returned.id, UiNodeId(UI_DOCUMENT_NODES as u64));
     drop(builder);
-    while !close_ui_document_page_one() {}
+    assert!((0..262_144).any(|_| close_ui_document_page_one()), "the close finishes inside its finite opportunity ceiling");
 }
 
 #[test]
 fn document_builder_close_persists_until_terminal_after_one_step() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let surface = SurfaceId::try_from("builder-close").expect("bounded fixture");
     let mut builder = UiDocumentBuilder::try_new(43, surface, UiRevision(1), Some(UiNodeId(0)), 0).expect("fixed document slot");
     for id in 0..4 {
@@ -67,16 +70,17 @@ fn document_builder_close_persists_until_terminal_after_one_step() {
     }
     assert!(!builder.close_step(), "one close opportunity cannot erase a nonterminal builder");
     assert!(!builder.terminal_is_empty());
-    while !builder.close_step() {}
+    assert!((0..262_144).any(|_| builder.close_step()), "the close finishes inside its finite opportunity ceiling");
     assert!(builder.terminal_is_empty());
 }
 
 #[test]
 fn ordinary_lease_drop_releases_then_global_closer_reaches_terminal() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let surface = SurfaceId::try_from("lease-drop").expect("bounded fixture");
     let mut builder = UiDocumentBuilder::try_new(44, surface, UiRevision(1), Some(UiNodeId(0)), 0).expect("fixed document slot");
     builder.try_push(crate::leaf_record(0, "node")).expect("fixed node owner");
     drop(builder.finish().expect("published lease"));
-    while !close_ui_document_page_one() {}
+    assert!((0..262_144).any(|_| close_ui_document_page_one()), "the close finishes inside its finite opportunity ceiling");
     assert!(close_ui_document_page_one(), "drop law leaves no active retirement owner");
 }

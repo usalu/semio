@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "action": "interactionHover",
+  "trigger": "hoverPreview",
+  "domainId": "graph",
+  "channel": "pointer",
+  "cases": [
+    {
+      "kind": "output",
+      "key": "inspector.selected.output.wire",
+      "widget": "section",
+      "port": "wire",
+      "value": {
+        "$schema": "geometry",
+        "handle": "curve-section"
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "section@wire"
+      }
+    },
+    {
+      "kind": "output",
+      "key": "inspector.selected.output.area",
+      "widget": "section",
+      "port": "area",
+      "value": {
+        "$schema": "number",
+        "value": 12
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "section@area"
+      }
+    },
+    {
+      "kind": "connected",
+      "key": "inspector.selected.input.geometry",
+      "widget": "section",
+      "port": "wire",
+      "target": {
+        "granularity": "handle",
+        "id": "section@wire"
+      }
+    },
+    {
+      "kind": "connected",
+      "key": "inspector.selected.input.bundle",
+      "widget": "section",
+      "port": "",
+      "target": {
+        "granularity": "node",
+        "id": "section"
+      }
+    }
+  ]
+}

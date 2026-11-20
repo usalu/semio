@@ -9,6 +9,7 @@
 import { expect, test, type Locator, type Page } from "../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
 import { PerspectiveCamera, Vector3 } from "three";
 import worldCorpus from "../🧫️fixtures/🌐️world-session/🔣️.json";
+import exampleCounts from "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📚️example-counts/🔣️.json";
 import { storyId, type StoryIndexEntry } from "../📚️storybook-index/🟦️.ts";
 
 function significantConsoleErrors(messages: string[]): string[] {
@@ -58,7 +59,7 @@ async function expectWorldSelection(page: Page, ids: readonly string[]): Promise
 type WorldPoint = [number, number, number];
 
 async function clickCanvasPoint(page: Page, canvas: Locator, x: number, y: number): Promise<void> {
-  await expect.poll(() => canvas.evaluate((element, point) => document.elementFromPoint(point.x, point.y) === element, { x, y })).toBe(true);
+  await expect.poll(() => canvas.evaluate((element, point) => (hit => hit === element || !!hit?.contains(element))(document.elementFromPoint(point.x, point.y)), { x, y })).toBe(true);
   await page.mouse.click(x, y);
 }
 
@@ -156,6 +157,19 @@ test("puzzle5d timeline nakagin: boots fully assembled (revealCount === partCoun
   await expectWorldSelection(page, worldCorpus.emptySelection);
   assertNoErrors();
 });
+for (const fixture of exampleCounts.examples) {
+  test(`puzzle5d timeline ${fixture.id}: real fixture parses via wasm into ${fixture.parts} parts / ${fixture.fasteners} fasteners`, async ({ page }) => {
+    const assertNoErrors = await expectStoryLoads(page, "🧩️puzzle🕐️5d", fixture.story);
+    const debug = page.getByTestId("puzzle5d-timeline-debug");
+    await expect(debug).toBeVisible({ timeout: 60_000 });
+    const state = JSON.parse(await debug.innerText());
+    expect(state.partCount).toBe(fixture.parts);
+    expect(state.revealCount).toBe(fixture.parts);
+    expect(state.connectionParams.fasteners.total).toBe(fixture.fasteners);
+    await expect(page.getByTestId("puzzle5d-timeline-error")).toHaveCount(0);
+    assertNoErrors();
+  });
+}
 //#endregion puzzle/5d Timeline
 
 //#region infinite/WasmCanvas

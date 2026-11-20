@@ -103,9 +103,7 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
   /** 🪿️ The digests among `digests` whose layer file the store no longer has. */
   lostLayersSync(digests){return digests.filter(digest=>!existsSync(layerPath(digest)));},
   /** 🪪️ The dictionary ids of the rows of the stored layer `digest` in layer order (the layer is decided by the verdicts of its distinct rows, never parsed), or undefined while the layer is lost or no process has parsed it yet; a layer parsed by `layerBatchesSync` is listed for every later reader. */
-  layerIdsSync(digest){return existsSync(layerPath(digest))?layerIndex.idsSync(digest):undefined;},
-  /** 🔍️ The row of one dictionary id of {@link layerIdsSync}, or undefined while it cannot be read. */
-  layerRowSync(id){return layerIndex.rowSync(id);},
+  layerListingSync(digest){return existsSync(layerPath(digest))?layerIndex.listingSync(digest):undefined;},
   /** 📊️ How many layers this process listed and read and how many rows it read from the dictionary. */
   layerIndexStats(){return layerIndex.stats();},
   /** 🌊️ The layers named by `digests` one after the other, each read, verified and parsed when it is asked for and held by nobody afterwards, so an entry of thousands of layers travels one layer at a time; throws while a layer is missing or damaged. */

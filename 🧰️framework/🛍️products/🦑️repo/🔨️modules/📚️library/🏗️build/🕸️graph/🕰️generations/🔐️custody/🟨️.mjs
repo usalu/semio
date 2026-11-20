@@ -93,6 +93,10 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
   const current=()=>{const claim=own.get(name);if(!claim)throw fail("Released custody claim","CUSTODY_RELEASED");return claim;};
   let side={phase:"start",done:0,total:0,advancedMs:now()},wrote=side.advancedMs;
   const digestNow=()=>settings.digest();
+  const handoverError=(reason,{done=side.done,total=side.total}={})=>{
+   const fields={seconds:Math.round((idleMillisecondsV1({progress:side},now())??0)/1000),done,total,digest:(own.get(name)?.holder?.digest??"").slice(0,12),current:(reason.current??"").slice(0,12)||"?"},key=reason.reason==="stale-code"?"handoverStale":"handoverStalled";
+   return Object.assign(Error(renderCustodyMessageV1(key,fields,"en")+"\n"+renderCustodyMessageV1(key,fields,"de")),{code:"SEMIO_STALE_IMPLEMENTATION",handover:{reason:reason.reason,done,total}});
+  };
   return Object.freeze({
    token:name,
    get owners(){return current().owners;},
@@ -118,29 +122,36 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
     await write(readCustodyClaimV1({...held,owners:rest}));return true;
    },
    async progress(event){
+    if(!own.has(name))return;
     const at=now(),next=advanceProgressV1(side,event,at),phaseChanged=next.phase!==side.phase,moved=phaseChanged||next.done>side.done;
     side=next;
     if(!moved||!phaseChanged&&at-wrote<P.progressWriteMilliseconds)return;
     wrote=at;await writeSide(name,"progress",side).catch(()=>{});
    },
-   async handover(){
+   async handover({requestedOnly=false}={}){
     const ask=await readSide(name,"ask",readAskV1);
     if(ask)return{reason:ask.reason,ask};
+    if(requestedOnly)return undefined;
     const mine=own.get(name)?.holder?.digest,found=await digestNow();
     if(!mine||!found||mine===found)return undefined;
     const claim=current();
     return(await live()).some(row=>row.token!==name&&row.state==="waiting"&&claimsConflictV1(claim,row))?{reason:"stale-code",current:found}:undefined;
    },
-   handoverError(reason,{done=0,total=0}={}){
-    const fields={seconds:Math.round((idleMillisecondsV1({progress:side},now())??0)/1000),done,total,digest:(own.get(name)?.holder?.digest??"").slice(0,12),current:(reason.current??settings.currentSeen??"").slice(0,12)},key=reason.reason==="stale-code"?"handoverStale":"handoverStalled";
-    return Object.assign(Error(renderCustodyMessageV1(key,fields,"en")+"\n"+renderCustodyMessageV1(key,fields,"de")),{code:"SEMIO_STALE_IMPLEMENTATION",handover:{reason:reason.reason,done,total}});
+   handoverError,
+   async fence(body,{signal}={}){
+    return admitted(signal,async()=>{
+     current();
+     const ask=await readSide(name,"ask",readAskV1);
+     if(isDeposedV1({ask},now()))throw handoverError(ask,{done:side.done,total:side.total});
+     return body();
+    });
    },
    async release(){if(!own.has(name))return;own.delete(name);try{await fs.remove(pathOf(name));await removeSides(name);}finally{lock.release();}},
   });
  }
 
  /** 🚪️ Queues a claim on `owners` (every owner when `structural`) and resolves with its handle once no held or earlier live claim conflicts; `say` tells at once and then every notice interval which claims go first. */
- async function hold({owners=[],structural=false,signal,say=()=>{},language="en",holder,currentDigest}={}){
+ async function hold({owners=[],structural=false,signal,say=()=>{},language="en",holder,currentDigest,peerWait}={}){
   const name=token(),lock=await lease.tryHold(resource.claim(name),{fresh:true});
   if(!lock)throw fail("A fresh custody lease is free","CUSTODY_LEASE_TAKEN");
   rememberDoorV1(directory);
@@ -167,6 +178,7 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
      claim=await write({...claim,state:found.admit?"held":"waiting"});
      return found;
     });
+    peerWait?.(!decision.admit);
     if(decision.admit){await writeSide(name,"progress",{phase:"start",done:0,total:0,advancedMs:now()}).catch(()=>{});return handle(name,lock,{digest:digestNow});}
     await asking(decision.blockers);
     if(now()-noticed>=P.noticeMilliseconds){

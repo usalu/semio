@@ -89,7 +89,12 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], f
     }
     let authored = factories.iter().map(|factory| factory.id).collect::<BTreeSet<_>>();
     if projected_ids != authored {
-        return Err(failure("native codec receipt projection differs from its authored composition roster"));
+        let join = |keys: Vec<&str>| if keys.is_empty() { "none".to_owned() } else { keys.join(", ") };
+        return Err(failure(format!(
+            "native codec receipt projection differs from its authored composition roster: projected without authored factory [{}]; authored factory without projection [{}]",
+            join(projected_ids.difference(&authored).copied().collect()),
+            join(authored.difference(&projected_ids).copied().collect())
+        )));
     }
     for receipt in receipts {
         let projected = provider.receipts.iter().find(|projected| projected.factory_id == receipt.factory_id).ok_or_else(|| failure("native codec projection omits a selected factory"))?;

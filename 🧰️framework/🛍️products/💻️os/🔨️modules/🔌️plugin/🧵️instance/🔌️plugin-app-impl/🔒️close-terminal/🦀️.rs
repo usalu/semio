@@ -3,6 +3,16 @@
 use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    /// 🔓️ True when this decoder's only remaining source claim is the command lease, held with nothing pending or merely awaited.
+    pub(crate) fn command_lease_release_ready(&self,cx:&semio_framework_job::StepContext<'_>)->bool{
+        let routing=self.host_event_routing_ref();let owns=routing.owns_original_command_scope(cx);
+        (owns&&!self.shared_command_source_pending()||!owns&&routing.awaits_original_command_scope(cx))
+            &&!semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::owns_birth(&self.pending.reserved_preparation,&self.pending.reserved_birth,cx)&&!self.owns_original_reserved_mount(cx)&&!self.owns_original_reserved_permit(cx)&&!routing.owns_original_host_event_source(cx)
+    }
+
+    /// 🔓️ A lane returning a result or an error ends its hold on the command lease; a pending lane keeps it.
+    pub(crate) fn settle_command_lease<T>(&mut self,result:&Result<Option<T>,semio_framework_job::OriginalTurnFailure>,cx:&semio_framework_job::StepContext<'_>){if !matches!(result,Ok(None)){self.original_command_scope.release(cx);}}
+
     pub(crate) fn original_typed_tag_pending(&self)->bool{self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty()}
 
     pub(crate) fn original_typed_tag_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
@@ -47,6 +57,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.host_events.action_delivery.terminal_is_empty()
             && !self.original_host_event_command.pending()
             && !self.original_typed_command.pending()
+            && self.original_command_scope.is_idle()
             && self.original_typed_tag.is_none()
             && self.original_typed_tag_close.is_empty()
             && self.tools.original_emission_admission.is_none()
@@ -90,6 +101,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.ingest.envelope_field_decoder_retirements.is_empty()
             && self.ingest.envelope_completed_record_retirements.is_empty()
             && self.ladder_ref().retained_fields_terminal_is_empty()
+            && self.ladder_ref().mounted_final_backings_are_empty()
             && self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))
     }
 
@@ -128,6 +140,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.host_events.action_delivery.terminal_is_empty(),
             !self.original_host_event_command.pending(),
             !self.original_typed_command.pending(),
+            self.original_command_scope.is_idle(),
             self.original_typed_tag.is_none(),
             self.original_typed_tag_close.is_empty(),
             self.tools.original_emission_admission.is_none(),
@@ -171,6 +184,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.ingest.envelope_field_decoder_retirements.is_empty(),
             self.ingest.envelope_completed_record_retirements.is_empty(),
             self.ladder_ref().retained_fields_terminal_is_empty(),
+            self.ladder_ref().mounted_final_backings_are_empty(),
             self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))
         );
         o

@@ -4,11 +4,6 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 enum PlanningAppend {None,Shell,ShellFace(usize),Edge,Face}
 
 fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original validation planning source changed")}
-/// 📃️ Reads one funded page reservation: `None` is a completed denial, failures keep the allocated bytes.
-pub(super) fn funded_page(turn:semio_framework_value::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReservationOutcome<RetainedCloneProgress>,semio_framework_value_persistent::list::PagedListReservationFailure>)->Result<Option<RetainedCloneProgress>,ValueError>{
-    use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure};
-    match turn.result{Ok(PagedListReservationOutcome::Ready(progress))=>Ok(Some(progress)),Ok(PagedListReservationOutcome::Denied)=>Ok(None),Err(PagedListReservationFailure::Work(error))=>Err(error),Err(PagedListReservationFailure::Allocation{error,..})=>Err(allocation().with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}
-}
 fn allocation()->ValueError{ValueError::literal(ValueRefusalKind::AllocationFailed,"original validation planning backing allocation failed")}
 fn vector_demand<T>(values:&Vec<T>,extent:usize)->Result<RetirementDemand,ValueError>{
     if values.capacity()==0{Ok(RetirementDemand{capacity_bytes:extent.checked_mul(std::mem::size_of::<T>()).ok_or_else(refusal)?,depth:1,..Default::default()})}
@@ -22,9 +17,10 @@ fn reserve<T>(values:&mut Vec<T>,extent:usize)->Result<RetainedCloneProgress,Val
 }
 
 impl BodyValidationJob {
-    fn planning_append(&self,body:&Body)->Result<PlanningAppend,ValueError>{
+    fn planning_append(&self,body:&Body,scope:Option<&ReachSet>)->Result<PlanningAppend,ValueError>{
         Ok(match self.planning_stage{
-            0=>{
+            0=>PlanningAppend::None,
+            1=>{
                 if let Some(solid)=self.planning_solid{
                     let Some(solid)=body.solids.get(solid)else{return Ok(PlanningAppend::None);};
                     let Some(shell)=(if self.planning_shell==0{Some(solid.outer)}else{solid.inners.get(self.planning_shell-1).copied()})else{return Ok(PlanningAppend::None);};
@@ -33,42 +29,50 @@ impl BodyValidationJob {
                     }else{PlanningAppend::Shell}
                 }else{PlanningAppend::None}
             },
-            1=>if body.edges.slot_at(self.planning_slot).is_some(){PlanningAppend::Edge}else{PlanningAppend::None},
-            2=>if body.faces.slot_at(self.planning_slot).is_some(){PlanningAppend::Face}else{PlanningAppend::None},
-            3=>PlanningAppend::None,
+            2=>if scoped_slot!(body,scope,edges,self.planning_slot).is_some(){PlanningAppend::Edge}else{PlanningAppend::None},
+            3=>if scoped_slot!(body,scope,faces,self.planning_slot).is_some(){PlanningAppend::Face}else{PlanningAppend::None},
+            4=>PlanningAppend::None,
             _=>return Err(refusal()),
         })
     }
     /// 🎟️ Quotes one original topology planning event independently of subsequent validation work.
-    pub fn planning_demands(&self,body:&Body)->Result<RetirementDemand,ValueError>{
+    pub fn planning_demands(&self,body:&Body)->Result<RetirementDemand,ValueError>{self.planning_demands_for(body,None)}
+
+    pub(super) fn planning_demands_for(&self,body:&Body,scope:Option<&ReachSet>)->Result<RetirementDemand,ValueError>{
         if self.source_body!=body as *const Body as usize||self.phase!=BodyValidationPhase::CollectingTopology{return Err(refusal());}
-        match self.planning_append(body)?{
+        match self.planning_append(body,scope)?{
             PlanningAppend::None=>Ok(RetirementDemand{depth:1,..Default::default()}),
             PlanningAppend::Shell=>{
-                let capacity=self.shells.next_allocation_bytes().map_err(|_|refusal())?;
-                if capacity!=0{Ok(RetirementDemand{copy_bytes:self.shells.next_reserve_copy_byte_demand().map_err(|_|refusal())?,capacity_bytes:capacity,depth:self.shells.next_reserve_depth_demand().map_err(|_|refusal())?,..Default::default()})}
-                else{Ok(RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_3d_brep_representation::arena::SolidId>()+std::mem::size_of::<semio_framework_3d_brep_representation::arena::ShellId>(),depth:self.shells.next_push_depth_demand().map_err(|_|refusal())?.max(1),..Default::default()})}
+                let mut demand=vector_demand(&self.shells,self.planning_shell_extent)?;
+                if demand.copy_bytes!=0{demand.copy_bytes=size_of::<semio_framework_3d_brep_representation::arena::SolidId>()+size_of::<semio_framework_3d_brep_representation::arena::ShellId>();}
+                Ok(demand)
             },
-            PlanningAppend::ShellFace(extent)=>{let mut demand=vector_demand(&self.shells.last().ok_or_else(refusal)?.faces,extent)?;demand.depth=demand.depth.checked_add(self.shells.next_get_depth_demand(self.shells.len()-1).map_err(|_|refusal())?).ok_or_else(refusal)?;Ok(demand)},
-            PlanningAppend::Edge=>vector_demand(&self.edges,body.edges.len()),
-            PlanningAppend::Face=>vector_demand(&self.faces,body.faces.len()),
+            PlanningAppend::ShellFace(extent)=>vector_demand(&self.shells.last().ok_or_else(refusal)?.faces,extent),
+            PlanningAppend::Edge=>vector_demand(&self.edges,scope.map_or_else(||body.edges.len(),|reach|reach.edges.len())),
+            PlanningAppend::Face=>vector_demand(&self.faces,scope.map_or_else(||body.faces.len(),|reach|reach.faces.len())),
         }
     }
     /// ⏱️ Retains empty backing before copying one original entity, with actual physical currencies.
     pub fn step_planning_funded(&mut self,body:&Body,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(RetainedCloneProgress,usize),ValueError>{
+        self.step_planning_for(body,None,units,effect)
+    }
+
+    pub(super) fn step_planning_for(&mut self,body:&Body,scope:Option<&ReachSet>,units:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(RetainedCloneProgress,usize),ValueError>{
         let grant=effect.grant();
-        let demand=self.planning_demands(body)?;
+        let demand=self.planning_demands_for(body,scope)?;
         if units==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0));}
+        let append=self.planning_append(body,scope)?;
+        if !effect.performed(1)? { return Ok((Default::default(),0)); }
         let receipt=if demand.capacity_bytes!=0{
-            match self.planning_append(body)?{
-                PlanningAppend::Shell=>{let Some(progress)=funded_page(self.shells.reserve_one_funded(effect))? else{return Ok((Default::default(),0))};progress},
+            match append{
+                PlanningAppend::Shell=>reserve(&mut self.shells,self.planning_shell_extent)?,
                 PlanningAppend::ShellFace(extent)=>reserve(&mut self.shells.last_mut().ok_or_else(refusal)?.faces,extent)?,
-                PlanningAppend::Edge=>reserve(&mut self.edges,body.edges.len())?,
-                PlanningAppend::Face=>reserve(&mut self.faces,body.faces.len())?,
+                PlanningAppend::Edge=>reserve(&mut self.edges,scope.map_or_else(||body.edges.len(),|reach|reach.edges.len()))?,
+                PlanningAppend::Face=>reserve(&mut self.faces,scope.map_or_else(||body.faces.len(),|reach|reach.faces.len()))?,
                 PlanningAppend::None=>return Err(refusal()),
             }
         }else{
-            self.collect_topology(body);
+            self.collect_selected_topology(body,scope);
             RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}
         };
         self.units_done+=1;self.units_total=self.units_total.max(self.units_done.saturating_add(1));

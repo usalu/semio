@@ -1,0 +1,3389 @@
+{
+ "rig": {
+  "bones": [
+   {
+    "id": "root-plate",
+    "parent": null,
+    "title": {
+     "en": "Root plate and stem base",
+     "de": "Wurzelteller und Stammbasis"
+    },
+    "x": 0,
+    "y": 0,
+    "angleDeg": 90,
+    "lengthM": 0.3,
+    "joint": {
+     "type": "fixed"
+    },
+    "mass": {
+     "kg": 150,
+     "comX": 0.15,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "wood-handbook-2021"
+    },
+    "section": {
+     "areaM2": 0.282743,
+     "secondMomentM4": 0.006362,
+     "extremeFibreM": 0.3,
+     "material": "palm-stem",
+     "title": {
+      "en": "Solid section, d = 60 cm",
+      "de": "Vollquerschnitt, d = 60 cm"
+     }
+    }
+   },
+   {
+    "id": "stem-1",
+    "parent": "root-plate",
+    "title": {
+     "en": "Stem, lower",
+     "de": "Stamm unten"
+    },
+    "x": 0.3,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 3,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -2,
+     "maxDeg": 2
+    },
+    "mass": {
+     "kg": 350,
+     "comX": 1.5,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "wood-handbook-2021"
+    },
+    "section": {
+     "areaM2": 0.19635,
+     "secondMomentM4": 0.003068,
+     "extremeFibreM": 0.25,
+     "material": "palm-stem",
+     "title": {
+      "en": "Solid section, d = 50 cm",
+      "de": "Vollquerschnitt, d = 50 cm"
+     }
+    }
+   },
+   {
+    "id": "stem-2",
+    "parent": "stem-1",
+    "title": {
+     "en": "Stem, middle",
+     "de": "Stamm Mitte"
+    },
+    "x": 3,
+    "y": 0,
+    "angleDeg": 1,
+    "lengthM": 2.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -3,
+     "maxDeg": 3
+    },
+    "mass": {
+     "kg": 314,
+     "comX": 1.35,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "wood-handbook-2021"
+    },
+    "section": {
+     "areaM2": 0.16619,
+     "secondMomentM4": 0.002198,
+     "extremeFibreM": 0.23,
+     "material": "palm-stem",
+     "title": {
+      "en": "Solid section, d = 46 cm",
+      "de": "Vollquerschnitt, d = 46 cm"
+     }
+    }
+   },
+   {
+    "id": "stem-3",
+    "parent": "stem-2",
+    "title": {
+     "en": "Stem, upper",
+     "de": "Stamm oben"
+    },
+    "x": 2.7,
+    "y": 0,
+    "angleDeg": -1,
+    "lengthM": 2.4,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -4,
+     "maxDeg": 4
+    },
+    "mass": {
+     "kg": 280,
+     "comX": 1.2,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "wood-handbook-2021"
+    },
+    "section": {
+     "areaM2": 0.152053,
+     "secondMomentM4": 0.00184,
+     "extremeFibreM": 0.22,
+     "material": "palm-stem",
+     "title": {
+      "en": "Solid section, d = 44 cm",
+      "de": "Vollquerschnitt, d = 44 cm"
+     }
+    }
+   },
+   {
+    "id": "crown",
+    "parent": "stem-3",
+    "title": {
+     "en": "Crown shaft with leaf bases",
+     "de": "Kronenschaft mit Blattbasen"
+    },
+    "x": 2.4,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.6,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -6,
+     "maxDeg": 6
+    },
+    "mass": {
+     "kg": 60,
+     "comX": 0.3,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    },
+    "section": {
+     "areaM2": 0.125664,
+     "secondMomentM4": 0.001257,
+     "extremeFibreM": 0.2,
+     "material": "palm-stem",
+     "title": {
+      "en": "Solid section, d = 40 cm",
+      "de": "Vollquerschnitt, d = 40 cm"
+     }
+    }
+   },
+   {
+    "id": "fr-l1a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 1 left, proximal",
+     "de": "Wedel 1 links, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": 78,
+    "lengthM": 1.9665,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 60
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.9832,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l1b",
+    "parent": "fr-l1a",
+    "title": {
+     "en": "Frond 1 left, distal",
+     "de": "Wedel 1 links, distal"
+    },
+    "x": 1.9665,
+    "y": 0,
+    "angleDeg": 35,
+    "lengthM": 1.7595,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.8798,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l2a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 2 left, proximal",
+     "de": "Wedel 2 links, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": 53,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -20,
+     "maxDeg": 20
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l2b",
+    "parent": "fr-l2a",
+    "title": {
+     "en": "Frond 2 left, distal",
+     "de": "Wedel 2 links, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": 25,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l3a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 3 left, proximal",
+     "de": "Wedel 3 links, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": 28,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -20,
+     "maxDeg": 20
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l3b",
+    "parent": "fr-l3a",
+    "title": {
+     "en": "Frond 3 left, distal",
+     "de": "Wedel 3 links, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": 18,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l4a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 4 left, proximal",
+     "de": "Wedel 4 links, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": 10,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -18,
+     "maxDeg": 18
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-l4b",
+    "parent": "fr-l4a",
+    "title": {
+     "en": "Frond 4 left, distal",
+     "de": "Wedel 4 links, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": 10,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r1a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 1 right, proximal",
+     "de": "Wedel 1 rechts, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": -78,
+    "lengthM": 1.9665,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 60
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.9832,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r1b",
+    "parent": "fr-r1a",
+    "title": {
+     "en": "Frond 1 right, distal",
+     "de": "Wedel 1 rechts, distal"
+    },
+    "x": 1.9665,
+    "y": 0,
+    "angleDeg": -35,
+    "lengthM": 1.7595,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.8798,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r2a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 2 right, proximal",
+     "de": "Wedel 2 rechts, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": -53,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -20,
+     "maxDeg": 20
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r2b",
+    "parent": "fr-r2a",
+    "title": {
+     "en": "Frond 2 right, distal",
+     "de": "Wedel 2 rechts, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": -25,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r3a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 3 right, proximal",
+     "de": "Wedel 3 rechts, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": -28,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -18,
+     "maxDeg": 18
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r3b",
+    "parent": "fr-r3a",
+    "title": {
+     "en": "Frond 3 right, distal",
+     "de": "Wedel 3 rechts, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": -18,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r4a",
+    "parent": "crown",
+    "title": {
+     "en": "Frond 4 right, proximal",
+     "de": "Wedel 4 rechts, proximal"
+    },
+    "x": 0.6,
+    "y": 0,
+    "angleDeg": -10,
+    "lengthM": 1.9,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -18,
+     "maxDeg": 18
+    },
+    "mass": {
+     "kg": 7,
+     "comX": 0.95,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "fr-r4b",
+    "parent": "fr-r4a",
+    "title": {
+     "en": "Frond 4 right, distal",
+     "de": "Wedel 4 rechts, distal"
+    },
+    "x": 1.9,
+    "y": 0,
+    "angleDeg": -10,
+    "lengthM": 1.7,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 5,
+     "comX": 0.85,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "bunch-l",
+    "parent": "crown",
+    "title": {
+     "en": "Date bunch, left",
+     "de": "Dattelrispe links"
+    },
+    "x": 0.3,
+    "y": 0,
+    "angleDeg": 150,
+    "lengthM": 1.2,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -25,
+     "maxDeg": 25
+    },
+    "mass": {
+     "kg": 20,
+     "comX": 0.8,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "bunch-r",
+    "parent": "crown",
+    "title": {
+     "en": "Date bunch, right",
+     "de": "Dattelrispe rechts"
+    },
+    "x": 0.3,
+    "y": 0,
+    "angleDeg": -150,
+    "lengthM": 1.2,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -25,
+     "maxDeg": 25
+    },
+    "mass": {
+     "kg": 20,
+     "comX": 0.8,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   }
+  ],
+  "root": "root-plate",
+  "kind": "botanical"
+ },
+ "poses": [
+  {
+   "id": "calm",
+   "bones": {
+    "fr-l1b": {
+     "angleDeg": -1
+    },
+    "fr-r1b": {
+     "angleDeg": 1
+    },
+    "fr-l4b": {
+     "angleDeg": -0.5
+    },
+    "fr-l1a": {
+     "angleDeg": -38.7529,
+     "abductionDeg": 74.4266,
+     "twistDeg": -49.6992
+    },
+    "fr-l2a": {
+     "angleDeg": -0.2697,
+     "abductionDeg": -6.3815,
+     "twistDeg": 4.8345
+    },
+    "fr-l3a": {
+     "angleDeg": -3.7287,
+     "abductionDeg": 14.4055,
+     "twistDeg": -28.8867
+    },
+    "fr-l4a": {
+     "angleDeg": -4.2249,
+     "abductionDeg": 8.1777,
+     "twistDeg": -54.5868
+    },
+    "fr-r1a": {
+     "angleDeg": 38.7529,
+     "abductionDeg": -74.4266,
+     "twistDeg": -49.6992
+    },
+    "fr-r2a": {
+     "angleDeg": 0.2697,
+     "abductionDeg": 6.3815,
+     "twistDeg": 4.8345
+    },
+    "fr-r3a": {
+     "angleDeg": 5.2667,
+     "abductionDeg": -16.8002,
+     "twistDeg": -34.5992
+    },
+    "fr-r4a": {
+     "angleDeg": 4.2249,
+     "abductionDeg": 8.1777,
+     "twistDeg": 54.5868
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fr-l1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 left, distal",
+      "de": "Winddruck auf Wedel 1 links, distal"
+     },
+     "bone": "fr-l1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 left, distal",
+      "de": "Winddruck auf Wedel 2 links, distal"
+     },
+     "bone": "fr-l2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 left, distal",
+      "de": "Winddruck auf Wedel 3 links, distal"
+     },
+     "bone": "fr-l3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 left, distal",
+      "de": "Winddruck auf Wedel 4 links, distal"
+     },
+     "bone": "fr-l4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 right, distal",
+      "de": "Winddruck auf Wedel 1 rechts, distal"
+     },
+     "bone": "fr-r1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 right, distal",
+      "de": "Winddruck auf Wedel 2 rechts, distal"
+     },
+     "bone": "fr-r2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 right, distal",
+      "de": "Winddruck auf Wedel 3 rechts, distal"
+     },
+     "bone": "fr-r3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 right, distal",
+      "de": "Winddruck auf Wedel 4 rechts, distal"
+     },
+     "bone": "fr-r4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 1,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-stem-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on stem, lower",
+      "de": "Winddruck auf Stamm unten"
+     },
+     "fxN": 0,
+     "fyN": 0,
+     "distributed": {
+      "bone": "stem-1",
+      "fromM": 0,
+      "toM": 3,
+      "wxNPerM": 0.3,
+      "wyNPerM": 0
+     },
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  },
+  {
+   "id": "windy",
+   "bones": {
+    "stem-1": {
+     "angleDeg": -0.8
+    },
+    "stem-2": {
+     "angleDeg": -1.2
+    },
+    "stem-3": {
+     "angleDeg": -2
+    },
+    "crown": {
+     "angleDeg": -1
+    },
+    "fr-l1a": {
+     "angleDeg": -50.751,
+     "abductionDeg": 65.0288,
+     "twistDeg": -65.7116
+    },
+    "fr-l1b": {
+     "angleDeg": -10
+    },
+    "fr-l2a": {
+     "angleDeg": -6.2785,
+     "abductionDeg": -5.3434,
+     "twistDeg": 5.9625
+    },
+    "fr-l2b": {
+     "angleDeg": -10
+    },
+    "fr-l3a": {
+     "angleDeg": -8.4647,
+     "abductionDeg": 8.9129,
+     "twistDeg": -30.8611
+    },
+    "fr-l3b": {
+     "angleDeg": -10
+    },
+    "fr-l4a": {
+     "angleDeg": -5.5736,
+     "abductionDeg": -0.8191,
+     "twistDeg": -54.9959
+    },
+    "fr-l4b": {
+     "angleDeg": -10
+    },
+    "fr-r1a": {
+     "angleDeg": -1.2599,
+     "abductionDeg": -79.9506,
+     "twistDeg": -5.6526
+    },
+    "fr-r1b": {
+     "angleDeg": -10
+    },
+    "fr-r2a": {
+     "angleDeg": -5.7786,
+     "abductionDeg": 7.1858,
+     "twistDeg": 3.5255
+    },
+    "fr-r2b": {
+     "angleDeg": -10
+    },
+    "fr-r3a": {
+     "angleDeg": 0.4573,
+     "abductionDeg": -22.7958,
+     "twistDeg": -31.265
+    },
+    "fr-r3b": {
+     "angleDeg": -10
+    },
+    "fr-r4a": {
+     "angleDeg": 2.583,
+     "abductionDeg": 17.0711,
+     "twistDeg": 53.1292
+    },
+    "fr-r4b": {
+     "angleDeg": -10
+    },
+    "bunch-l": {
+     "angleDeg": 8
+    },
+    "bunch-r": {
+     "angleDeg": 8
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fr-l1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 left, distal",
+      "de": "Winddruck auf Wedel 1 links, distal"
+     },
+     "bone": "fr-l1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 25,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 left, distal",
+      "de": "Winddruck auf Wedel 2 links, distal"
+     },
+     "bone": "fr-l2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 26,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 left, distal",
+      "de": "Winddruck auf Wedel 3 links, distal"
+     },
+     "bone": "fr-l3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 28,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-l4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 left, distal",
+      "de": "Winddruck auf Wedel 4 links, distal"
+     },
+     "bone": "fr-l4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 29,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 right, distal",
+      "de": "Winddruck auf Wedel 1 rechts, distal"
+     },
+     "bone": "fr-r1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 25,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 right, distal",
+      "de": "Winddruck auf Wedel 2 rechts, distal"
+     },
+     "bone": "fr-r2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 26,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 right, distal",
+      "de": "Winddruck auf Wedel 3 rechts, distal"
+     },
+     "bone": "fr-r3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 28,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fr-r4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 right, distal",
+      "de": "Winddruck auf Wedel 4 rechts, distal"
+     },
+     "bone": "fr-r4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 29,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-stem-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on stem, lower",
+      "de": "Winddruck auf Stamm unten"
+     },
+     "fxN": 0,
+     "fyN": 0,
+     "distributed": {
+      "bone": "stem-1",
+      "fromM": 0,
+      "toM": 3,
+      "wxNPerM": 10.6,
+      "wyNPerM": 0
+     },
+     "source": "literature",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  },
+  {
+   "id": "storm",
+   "bones": {
+    "stem-1": {
+     "angleDeg": -1.6
+    },
+    "stem-2": {
+     "angleDeg": -2.4
+    },
+    "stem-3": {
+     "angleDeg": -3.6
+    },
+    "crown": {
+     "angleDeg": -3
+    },
+    "fr-l1a": {
+     "angleDeg": -54.2397,
+     "abductionDeg": 52.2436,
+     "twistDeg": -73.525
+    },
+    "fr-l1b": {
+     "angleDeg": -22
+    },
+    "fr-l2a": {
+     "angleDeg": -14.2338,
+     "abductionDeg": -3.7954,
+     "twistDeg": 7.0475
+    },
+    "fr-l2b": {
+     "angleDeg": -22
+    },
+    "fr-l3a": {
+     "angleDeg": -14.5157,
+     "abductionDeg": 1.801,
+     "twistDeg": -31.9547
+    },
+    "fr-l3b": {
+     "angleDeg": -22
+    },
+    "fr-l4a": {
+     "angleDeg": -7.8974,
+     "abductionDeg": -11.9163,
+     "twistDeg": -54.1115
+    },
+    "fr-l4b": {
+     "angleDeg": -22
+    },
+    "fr-r1a": {
+     "angleDeg": -53.5579,
+     "abductionDeg": -73.9644,
+     "twistDeg": 51.0511
+    },
+    "fr-r1b": {
+     "angleDeg": -22
+    },
+    "fr-r2a": {
+     "angleDeg": -13.882,
+     "abductionDeg": 7.8122,
+     "twistDeg": 1.7286
+    },
+    "fr-r2b": {
+     "angleDeg": -22
+    },
+    "fr-r3a": {
+     "angleDeg": -7.2654,
+     "abductionDeg": -29.2808,
+     "twistDeg": -25.3859
+    },
+    "fr-r3b": {
+     "angleDeg": -22
+    },
+    "fr-r4a": {
+     "angleDeg": -0.9879,
+     "abductionDeg": 27.72,
+     "twistDeg": 49.6136
+    },
+    "fr-r4b": {
+     "angleDeg": -22
+    },
+    "bunch-l": {
+     "angleDeg": 20
+    },
+    "bunch-r": {
+     "angleDeg": 20
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fr-l1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 left, distal",
+      "de": "Winddruck auf Wedel 1 links, distal"
+     },
+     "bone": "fr-l1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 100,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-l2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 left, distal",
+      "de": "Winddruck auf Wedel 2 links, distal"
+     },
+     "bone": "fr-l2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 104,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-l3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 left, distal",
+      "de": "Winddruck auf Wedel 3 links, distal"
+     },
+     "bone": "fr-l3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 110,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-l4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 left, distal",
+      "de": "Winddruck auf Wedel 4 links, distal"
+     },
+     "bone": "fr-l4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 114,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-r1b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 1 right, distal",
+      "de": "Winddruck auf Wedel 1 rechts, distal"
+     },
+     "bone": "fr-r1b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 100,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-r2b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 2 right, distal",
+      "de": "Winddruck auf Wedel 2 rechts, distal"
+     },
+     "bone": "fr-r2b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 104,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-r3b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 3 right, distal",
+      "de": "Winddruck auf Wedel 3 rechts, distal"
+     },
+     "bone": "fr-r3b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 110,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-fr-r4b",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on frond 4 right, distal",
+      "de": "Winddruck auf Wedel 4 rechts, distal"
+     },
+     "bone": "fr-r4b",
+     "x": 0.85,
+     "y": 0,
+     "fxN": 114,
+     "fyN": 0,
+     "source": "literature",
+     "reference": "vogel-1989"
+    },
+    {
+     "id": "wind-stem-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on stem, lower",
+      "de": "Winddruck auf Stamm unten"
+     },
+     "fxN": 0,
+     "fyN": 0,
+     "distributed": {
+      "bone": "stem-1",
+      "fromM": 0,
+      "toM": 3,
+      "wxNPerM": 80,
+      "wyNPerM": 0
+     },
+     "source": "literature",
+     "reference": "vogel-1989"
+    }
+   ]
+  }
+ ],
+ "clips": [
+  {
+   "id": "wind-sway",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.8
+      },
+      "stem-2": {
+       "angleDeg": -1.28
+      },
+      "stem-3": {
+       "angleDeg": -2.26
+      },
+      "crown": {
+       "angleDeg": -1.43
+      },
+      "fr-l1a": {
+       "angleDeg": -51.9242,
+       "abductionDeg": 63.0648,
+       "twistDeg": -67.459
+      },
+      "fr-l1b": {
+       "angleDeg": -14.76
+      },
+      "fr-l2a": {
+       "angleDeg": -7.8151,
+       "abductionDeg": -5.0992,
+       "twistDeg": 6.1724
+      },
+      "fr-l2b": {
+       "angleDeg": -14.91
+      },
+      "fr-l3a": {
+       "angleDeg": -9.8252,
+       "abductionDeg": 7.6453,
+       "twistDeg": -31.1679
+      },
+      "fr-l3b": {
+       "angleDeg": -14.99
+      },
+      "fr-l4a": {
+       "angleDeg": -6.2852,
+       "abductionDeg": -2.9319,
+       "twistDeg": -54.9474
+      },
+      "fr-l4b": {
+       "angleDeg": -14.99
+      },
+      "fr-r1a": {
+       "angleDeg": -13.2786,
+       "abductionDeg": -79.9254,
+       "twistDeg": 6.941
+      },
+      "fr-r1b": {
+       "angleDeg": -14.84
+      },
+      "fr-r2a": {
+       "angleDeg": -7.4137,
+       "abductionDeg": 7.3265,
+       "twistDeg": 3.2217
+      },
+      "fr-r2b": {
+       "angleDeg": -14.96
+      },
+      "fr-r3a": {
+       "angleDeg": -1.1321,
+       "abductionDeg": -24.0862,
+       "twistDeg": -30.3263
+      },
+      "fr-r3b": {
+       "angleDeg": -15
+      },
+      "fr-r4a": {
+       "angleDeg": 1.6827,
+       "abductionDeg": 19.168,
+       "twistDeg": 52.6096
+      },
+      "fr-r4b": {
+       "angleDeg": -14.96
+      },
+      "bunch-l": {
+       "angleDeg": 4.2
+      },
+      "bunch-r": {
+       "angleDeg": 4.76
+      }
+     }
+    },
+    {
+     "t": 0.55,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.59
+      },
+      "stem-2": {
+       "angleDeg": -0.95
+      },
+      "stem-3": {
+       "angleDeg": -1.72
+      },
+      "crown": {
+       "angleDeg": -0.83
+      },
+      "fr-l1a": {
+       "angleDeg": -50.6835,
+       "abductionDeg": 65.9099,
+       "twistDeg": -64.8223
+      },
+      "fr-l1b": {
+       "angleDeg": -12.27
+      },
+      "fr-l2a": {
+       "angleDeg": -6.4692,
+       "abductionDeg": -5.4178,
+       "twistDeg": 5.895
+      },
+      "fr-l2b": {
+       "angleDeg": -12.81
+      },
+      "fr-l3a": {
+       "angleDeg": -8.9661,
+       "abductionDeg": 9.1538,
+       "twistDeg": -30.7969
+      },
+      "fr-l3b": {
+       "angleDeg": -13.31
+      },
+      "fr-l4a": {
+       "angleDeg": -6.3517,
+       "abductionDeg": -0.6307,
+       "twistDeg": -54.9976
+      },
+      "fr-l4b": {
+       "angleDeg": -13.75
+      },
+      "fr-r1a": {
+       "angleDeg": 2.627,
+       "abductionDeg": -79.832,
+       "twistDeg": -10.3751
+      },
+      "fr-r1b": {
+       "angleDeg": -12.55
+      },
+      "fr-r2a": {
+       "angleDeg": -6.085,
+       "abductionDeg": 7.1485,
+       "twistDeg": 3.6008
+      },
+      "fr-r2b": {
+       "angleDeg": -13.06
+      },
+      "fr-r3a": {
+       "angleDeg": -0.1286,
+       "abductionDeg": -22.6138,
+       "twistDeg": -31.3901
+      },
+      "fr-r3b": {
+       "angleDeg": -13.54
+      },
+      "fr-r4a": {
+       "angleDeg": 1.7483,
+       "abductionDeg": 16.9751,
+       "twistDeg": 53.1513
+      },
+      "fr-r4b": {
+       "angleDeg": -13.95
+      },
+      "bunch-l": {
+       "angleDeg": 4.44
+      },
+      "bunch-r": {
+       "angleDeg": 4.05
+      }
+     }
+    },
+    {
+     "t": 1.1,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.5
+      },
+      "stem-2": {
+       "angleDeg": -0.76
+      },
+      "stem-3": {
+       "angleDeg": -1.35
+      },
+      "crown": {
+       "angleDeg": -0.32
+      },
+      "fr-l1a": {
+       "angleDeg": -48.9104,
+       "abductionDeg": 68.2011,
+       "twistDeg": -62.1206
+      },
+      "fr-l1b": {
+       "angleDeg": -8.45
+      },
+      "fr-l2a": {
+       "angleDeg": -5.0102,
+       "abductionDeg": -5.6812,
+       "twistDeg": 5.6417
+      },
+      "fr-l2b": {
+       "angleDeg": -9.06
+      },
+      "fr-l3a": {
+       "angleDeg": -7.7936,
+       "abductionDeg": 10.513,
+       "twistDeg": -30.3985
+      },
+      "fr-l3b": {
+       "angleDeg": -9.69
+      },
+      "fr-l4a": {
+       "angleDeg": -5.9685,
+       "abductionDeg": 1.5727,
+       "twistDeg": -54.9849
+      },
+      "fr-l4b": {
+       "angleDeg": -10.31
+      },
+      "fr-r1a": {
+       "angleDeg": 15.0222,
+       "abductionDeg": -79.0678,
+       "twistDeg": -23.7035
+      },
+      "fr-r1b": {
+       "angleDeg": -8.76
+      },
+      "fr-r2a": {
+       "angleDeg": -4.5805,
+       "abductionDeg": 6.9745,
+       "twistDeg": 3.9284
+      },
+      "fr-r2b": {
+       "angleDeg": -9.37
+      },
+      "fr-r3a": {
+       "angleDeg": 1.1651,
+       "abductionDeg": -21.1995,
+       "twistDeg": -32.3057
+      },
+      "fr-r3b": {
+       "angleDeg": -10
+      },
+      "fr-r4a": {
+       "angleDeg": 2.2566,
+       "abductionDeg": 14.8159,
+       "twistDeg": 53.6083
+      },
+      "fr-r4b": {
+       "angleDeg": -10.63
+      },
+      "bunch-l": {
+       "angleDeg": 6.76
+      },
+      "bunch-r": {
+       "angleDeg": 5.65
+      }
+     }
+    },
+    {
+     "t": 1.6500000000000001,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.59
+      },
+      "stem-2": {
+       "angleDeg": -0.83
+      },
+      "stem-3": {
+       "angleDeg": -1.36
+      },
+      "crown": {
+       "angleDeg": -0.22
+      },
+      "fr-l1a": {
+       "angleDeg": -48.2377,
+       "abductionDeg": 68.6154,
+       "twistDeg": -61.5601
+      },
+      "fr-l1b": {
+       "angleDeg": -5.54
+      },
+      "fr-l2a": {
+       "angleDeg": -4.29,
+       "abductionDeg": -5.7447,
+       "twistDeg": 5.577
+      },
+      "fr-l2b": {
+       "angleDeg": -5.86
+      },
+      "fr-l3a": {
+       "angleDeg": -7.0121,
+       "abductionDeg": 10.9221,
+       "twistDeg": -30.2662
+      },
+      "fr-l3b": {
+       "angleDeg": -6.25
+      },
+      "fr-l4a": {
+       "angleDeg": -5.3472,
+       "abductionDeg": 2.3588,
+       "twistDeg": -54.966
+      },
+      "fr-l4b": {
+       "angleDeg": -6.69
+      },
+      "fr-r1a": {
+       "angleDeg": 17.7402,
+       "abductionDeg": -78.831,
+       "twistDeg": -26.3025
+      },
+      "fr-r1b": {
+       "angleDeg": -5.7
+      },
+      "fr-r2a": {
+       "angleDeg": -3.7769,
+       "abductionDeg": 6.9239,
+       "twistDeg": 4.0172
+      },
+      "fr-r2b": {
+       "angleDeg": -6.05
+      },
+      "fr-r3a": {
+       "angleDeg": 2.0393,
+       "abductionDeg": -20.7219,
+       "twistDeg": -32.5934
+      },
+      "fr-r3b": {
+       "angleDeg": -6.46
+      },
+      "fr-r4a": {
+       "angleDeg": 2.9563,
+       "abductionDeg": 13.9859,
+       "twistDeg": 53.7649
+      },
+      "fr-r4b": {
+       "angleDeg": -6.94
+      },
+      "bunch-l": {
+       "angleDeg": 9.82
+      },
+      "bunch-r": {
+       "angleDeg": 8.63
+      }
+     }
+    },
+    {
+     "t": 2.2,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.8
+      },
+      "stem-2": {
+       "angleDeg": -1.12
+      },
+      "stem-3": {
+       "angleDeg": -1.74
+      },
+      "crown": {
+       "angleDeg": -0.57
+      },
+      "fr-l1a": {
+       "angleDeg": -49.2715,
+       "abductionDeg": 66.9637,
+       "twistDeg": -63.6562
+      },
+      "fr-l1b": {
+       "angleDeg": -5.24
+      },
+      "fr-l2a": {
+       "angleDeg": -4.74,
+       "abductionDeg": -5.579,
+       "twistDeg": 5.7428
+      },
+      "fr-l2b": {
+       "angleDeg": -5.09
+      },
+      "fr-l3a": {
+       "angleDeg": -7.0895,
+       "abductionDeg": 10.1684,
+       "twistDeg": -30.5055
+      },
+      "fr-l3b": {
+       "angleDeg": -5.01
+      },
+      "fr-l4a": {
+       "angleDeg": -4.8636,
+       "abductionDeg": 1.2942,
+       "twistDeg": -54.9898
+      },
+      "fr-l4b": {
+       "angleDeg": -5.01
+      },
+      "fr-r1a": {
+       "angleDeg": 10.2336,
+       "abductionDeg": -79.4963,
+       "twistDeg": -17.721
+      },
+      "fr-r1b": {
+       "angleDeg": -5.16
+      },
+      "fr-r2a": {
+       "angleDeg": -4.145,
+       "abductionDeg": 7.0327,
+       "twistDeg": 3.823
+      },
+      "fr-r2b": {
+       "angleDeg": -5.04
+      },
+      "fr-r3a": {
+       "angleDeg": 2.0019,
+       "abductionDeg": -21.4714,
+       "twistDeg": -32.1372
+      },
+      "fr-r3b": {
+       "angleDeg": -5
+      },
+      "fr-r4a": {
+       "angleDeg": 3.446,
+       "abductionDeg": 14.9608,
+       "twistDeg": 53.5799
+      },
+      "fr-r4b": {
+       "angleDeg": -5.04
+      },
+      "bunch-l": {
+       "angleDeg": 11.8
+      },
+      "bunch-r": {
+       "angleDeg": 11.24
+      }
+     }
+    },
+    {
+     "t": 2.75,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -1.01
+      },
+      "stem-2": {
+       "angleDeg": -1.45
+      },
+      "stem-3": {
+       "angleDeg": -2.28
+      },
+      "crown": {
+       "angleDeg": -1.17
+      },
+      "fr-l1a": {
+       "angleDeg": -50.7559,
+       "abductionDeg": 64.1418,
+       "twistDeg": -66.5379
+      },
+      "fr-l1b": {
+       "angleDeg": -7.73
+      },
+      "fr-l2a": {
+       "angleDeg": -6.0876,
+       "abductionDeg": -5.2682,
+       "twistDeg": 6.029
+      },
+      "fr-l2b": {
+       "angleDeg": -7.19
+      },
+      "fr-l3a": {
+       "angleDeg": -7.9629,
+       "abductionDeg": 8.6716,
+       "twistDeg": -30.9235
+      },
+      "fr-l3b": {
+       "angleDeg": -6.69
+      },
+      "fr-l4a": {
+       "angleDeg": -4.7956,
+       "abductionDeg": -1.0075,
+       "twistDeg": -54.9938
+      },
+      "fr-l4b": {
+       "angleDeg": -6.25
+      },
+      "fr-r1a": {
+       "angleDeg": -5.2262,
+       "abductionDeg": -79.9989,
+       "twistDeg": -0.8506
+      },
+      "fr-r1b": {
+       "angleDeg": -7.45
+      },
+      "fr-r2a": {
+       "angleDeg": -5.4722,
+       "abductionDeg": 7.2223,
+       "twistDeg": 3.4498
+      },
+      "fr-r2b": {
+       "angleDeg": -6.94
+      },
+      "fr-r3a": {
+       "angleDeg": 1.0423,
+       "abductionDeg": -22.9771,
+       "twistDeg": -31.1386
+      },
+      "fr-r3b": {
+       "angleDeg": -6.46
+      },
+      "fr-r4a": {
+       "angleDeg": 3.4176,
+       "abductionDeg": 17.1671,
+       "twistDeg": 53.107
+      },
+      "fr-r4b": {
+       "angleDeg": -6.05
+      },
+      "bunch-l": {
+       "angleDeg": 11.56
+      },
+      "bunch-r": {
+       "angleDeg": 11.95
+      }
+     }
+    },
+    {
+     "t": 3.3000000000000003,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -1.1
+      },
+      "stem-2": {
+       "angleDeg": -1.64
+      },
+      "stem-3": {
+       "angleDeg": -2.65
+      },
+      "crown": {
+       "angleDeg": -1.68
+      },
+      "fr-l1a": {
+       "angleDeg": -51.7509,
+       "abductionDeg": 61.7763,
+       "twistDeg": -68.4578
+      },
+      "fr-l1b": {
+       "angleDeg": -11.55
+      },
+      "fr-l2a": {
+       "angleDeg": -7.543,
+       "abductionDeg": -4.9877,
+       "twistDeg": 6.2628
+      },
+      "fr-l2b": {
+       "angleDeg": -10.94
+      },
+      "fr-l3a": {
+       "angleDeg": -9.1118,
+       "abductionDeg": 7.2929,
+       "twistDeg": -31.2442
+      },
+      "fr-l3b": {
+       "angleDeg": -10.31
+      },
+      "fr-l4a": {
+       "angleDeg": -5.1808,
+       "abductionDeg": -3.2103,
+       "twistDeg": -54.9369
+      },
+      "fr-l4b": {
+       "angleDeg": -9.69
+      },
+      "fr-r1a": {
+       "angleDeg": -18.7175,
+       "abductionDeg": -79.7096,
+       "twistDeg": 13.574
+      },
+      "fr-r1b": {
+       "angleDeg": -11.24
+      },
+      "fr-r2a": {
+       "angleDeg": -6.9795,
+       "abductionDeg": 7.374,
+       "twistDeg": 3.1109
+      },
+      "fr-r2b": {
+       "angleDeg": -10.63
+      },
+      "fr-r3a": {
+       "angleDeg": -0.3152,
+       "abductionDeg": -24.3429,
+       "twistDeg": -30.1281
+      },
+      "fr-r3b": {
+       "angleDeg": -10
+      },
+      "fr-r4a": {
+       "angleDeg": 2.8669,
+       "abductionDeg": 19.311,
+       "twistDeg": 52.5715
+      },
+      "fr-r4b": {
+       "angleDeg": -9.37
+      },
+      "bunch-l": {
+       "angleDeg": 9.24
+      },
+      "bunch-r": {
+       "angleDeg": 10.35
+      }
+     }
+    },
+    {
+     "t": 3.8500000000000005,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -1.01
+      },
+      "stem-2": {
+       "angleDeg": -1.57
+      },
+      "stem-3": {
+       "angleDeg": -2.64
+      },
+      "crown": {
+       "angleDeg": -1.78
+      },
+      "fr-l1a": {
+       "angleDeg": -52.1807,
+       "abductionDeg": 61.3387,
+       "twistDeg": -68.7742
+      },
+      "fr-l1b": {
+       "angleDeg": -14.46
+      },
+      "fr-l2a": {
+       "angleDeg": -8.2615,
+       "abductionDeg": -4.9164,
+       "twistDeg": 6.3188
+      },
+      "fr-l2b": {
+       "angleDeg": -14.14
+      },
+      "fr-l3a": {
+       "angleDeg": -9.8793,
+       "abductionDeg": 6.8723,
+       "twistDeg": -31.3302
+      },
+      "fr-l3b": {
+       "angleDeg": -13.75
+      },
+      "fr-l4a": {
+       "angleDeg": -5.8036,
+       "abductionDeg": -3.9959,
+       "twistDeg": -54.9022
+      },
+      "fr-l4b": {
+       "angleDeg": -13.31
+      },
+      "fr-r1a": {
+       "angleDeg": -21.794,
+       "abductionDeg": -79.5641,
+       "twistDeg": 16.5315
+      },
+      "fr-r1b": {
+       "angleDeg": -14.3
+      },
+      "fr-r2a": {
+       "angleDeg": -7.7846,
+       "abductionDeg": 7.413,
+       "twistDeg": 3.0163
+      },
+      "fr-r2b": {
+       "angleDeg": -13.95
+      },
+      "fr-r3a": {
+       "angleDeg": -1.2331,
+       "abductionDeg": -24.7873,
+       "twistDeg": -29.7756
+      },
+      "fr-r3b": {
+       "angleDeg": -13.54
+      },
+      "fr-r4a": {
+       "angleDeg": 2.1302,
+       "abductionDeg": 20.1277,
+       "twistDeg": 52.3465
+      },
+      "fr-r4b": {
+       "angleDeg": -13.06
+      },
+      "bunch-l": {
+       "angleDeg": 6.18
+      },
+      "bunch-r": {
+       "angleDeg": 7.37
+      }
+     }
+    },
+    {
+     "t": 4.4,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.8
+      },
+      "stem-2": {
+       "angleDeg": -1.28
+      },
+      "stem-3": {
+       "angleDeg": -2.26
+      },
+      "crown": {
+       "angleDeg": -1.43
+      },
+      "fr-l1a": {
+       "angleDeg": -51.9242,
+       "abductionDeg": 63.0648,
+       "twistDeg": -67.459
+      },
+      "fr-l1b": {
+       "angleDeg": -14.76
+      },
+      "fr-l2a": {
+       "angleDeg": -7.8151,
+       "abductionDeg": -5.0992,
+       "twistDeg": 6.1724
+      },
+      "fr-l2b": {
+       "angleDeg": -14.91
+      },
+      "fr-l3a": {
+       "angleDeg": -9.8252,
+       "abductionDeg": 7.6453,
+       "twistDeg": -31.1679
+      },
+      "fr-l3b": {
+       "angleDeg": -14.99
+      },
+      "fr-l4a": {
+       "angleDeg": -6.2852,
+       "abductionDeg": -2.9319,
+       "twistDeg": -54.9474
+      },
+      "fr-l4b": {
+       "angleDeg": -14.99
+      },
+      "fr-r1a": {
+       "angleDeg": -13.2786,
+       "abductionDeg": -79.9254,
+       "twistDeg": 6.941
+      },
+      "fr-r1b": {
+       "angleDeg": -14.84
+      },
+      "fr-r2a": {
+       "angleDeg": -7.4137,
+       "abductionDeg": 7.3265,
+       "twistDeg": 3.2217
+      },
+      "fr-r2b": {
+       "angleDeg": -14.96
+      },
+      "fr-r3a": {
+       "angleDeg": -1.1321,
+       "abductionDeg": -24.0862,
+       "twistDeg": -30.3263
+      },
+      "fr-r3b": {
+       "angleDeg": -15
+      },
+      "fr-r4a": {
+       "angleDeg": 1.6827,
+       "abductionDeg": 19.168,
+       "twistDeg": 52.6096
+      },
+      "fr-r4b": {
+       "angleDeg": -14.96
+      },
+      "bunch-l": {
+       "angleDeg": 4.2
+      },
+      "bunch-r": {
+       "angleDeg": 4.76
+      }
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "target": "emitter:transpiration-fronds",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 1
+      },
+      {
+       "t": 2.2,
+       "v": 0.9
+      },
+      {
+       "t": 4.4,
+       "v": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gust",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.08
+      },
+      "stem-2": {
+       "angleDeg": -0.12
+      },
+      "stem-3": {
+       "angleDeg": -0.18
+      },
+      "crown": {
+       "angleDeg": -0.15
+      },
+      "fr-l1a": {
+       "angleDeg": -41.0199,
+       "abductionDeg": 73.4699,
+       "twistDeg": -52.3873
+      },
+      "fr-l1b": {
+       "angleDeg": -1.1
+      },
+      "fr-l2a": {
+       "angleDeg": -0.9727,
+       "abductionDeg": -6.2764,
+       "twistDeg": 4.9705
+      },
+      "fr-l2b": {
+       "angleDeg": -1.1
+      },
+      "fr-l3a": {
+       "angleDeg": -4.3077,
+       "abductionDeg": 13.8087,
+       "twistDeg": -29.157
+      },
+      "fr-l3b": {
+       "angleDeg": -1.1
+      },
+      "fr-l4a": {
+       "angleDeg": -4.4132,
+       "abductionDeg": 7.1747,
+       "twistDeg": -54.6828
+      },
+      "fr-l4b": {
+       "angleDeg": -1.1
+      },
+      "fr-r1a": {
+       "angleDeg": 36.1373,
+       "abductionDeg": -75.3436,
+       "twistDeg": -46.6623
+      },
+      "fr-r1b": {
+       "angleDeg": -1.1
+      },
+      "fr-r2a": {
+       "angleDeg": -0.4338,
+       "abductionDeg": 6.4837,
+       "twistDeg": 4.6963
+      },
+      "fr-r2b": {
+       "angleDeg": -1.1
+      },
+      "fr-r3a": {
+       "angleDeg": 4.7351,
+       "abductionDeg": -17.4959,
+       "twistDeg": -34.2862
+      },
+      "fr-r3b": {
+       "angleDeg": -1.1
+      },
+      "fr-r4a": {
+       "angleDeg": 4.033,
+       "abductionDeg": 9.1795,
+       "twistDeg": 54.4779
+      },
+      "fr-r4b": {
+       "angleDeg": -1.1
+      },
+      "bunch-l": {
+       "angleDeg": 1
+      },
+      "bunch-r": {
+       "angleDeg": 1
+      }
+     }
+    },
+    {
+     "t": 1.2,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.48
+      },
+      "stem-2": {
+       "angleDeg": -0.72
+      },
+      "stem-3": {
+       "angleDeg": -1.08
+      },
+      "crown": {
+       "angleDeg": -0.9
+      },
+      "fr-l1a": {
+       "angleDeg": -48.5467,
+       "abductionDeg": 68.2806,
+       "twistDeg": -62.015
+      },
+      "fr-l1b": {
+       "angleDeg": -6.6
+      },
+      "fr-l2a": {
+       "angleDeg": -4.4801,
+       "abductionDeg": -5.7086,
+       "twistDeg": 5.6139
+      },
+      "fr-l2b": {
+       "angleDeg": -6.6
+      },
+      "fr-l3a": {
+       "angleDeg": -7.1222,
+       "abductionDeg": 10.7556,
+       "twistDeg": -30.3207
+      },
+      "fr-l3b": {
+       "angleDeg": -6.6
+      },
+      "fr-l4a": {
+       "angleDeg": -5.3165,
+       "abductionDeg": 2.1459,
+       "twistDeg": -54.9718
+      },
+      "fr-l4b": {
+       "angleDeg": -6.6
+      },
+      "fr-r1a": {
+       "angleDeg": 16.1355,
+       "abductionDeg": -78.9942,
+       "twistDeg": -24.5511
+      },
+      "fr-r1b": {
+       "angleDeg": -6.6
+      },
+      "fr-r2a": {
+       "angleDeg": -3.9586,
+       "abductionDeg": 6.949,
+       "twistDeg": 3.9735
+      },
+      "fr-r2b": {
+       "angleDeg": -6.6
+      },
+      "fr-r3a": {
+       "angleDeg": 1.9488,
+       "abductionDeg": -20.8833,
+       "twistDeg": -32.4974
+      },
+      "fr-r3b": {
+       "angleDeg": -6.6
+      },
+      "fr-r4a": {
+       "angleDeg": 3.0022,
+       "abductionDeg": 14.1633,
+       "twistDeg": 53.7323
+      },
+      "fr-r4b": {
+       "angleDeg": -6.6
+      },
+      "bunch-l": {
+       "angleDeg": 6
+      },
+      "bunch-r": {
+       "angleDeg": 6
+      }
+     }
+    },
+    {
+     "t": 2.5,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -1.12
+      },
+      "stem-2": {
+       "angleDeg": -1.68
+      },
+      "stem-3": {
+       "angleDeg": -2.52
+      },
+      "crown": {
+       "angleDeg": -2.1
+      },
+      "fr-l1a": {
+       "angleDeg": -53.3329,
+       "abductionDeg": 59.2597,
+       "twistDeg": -70.1401
+      },
+      "fr-l1b": {
+       "angleDeg": -15.4
+      },
+      "fr-l2a": {
+       "angleDeg": -10.0654,
+       "abductionDeg": -4.6674,
+       "twistDeg": 6.5046
+      },
+      "fr-l2b": {
+       "angleDeg": -15.4
+      },
+      "fr-l3a": {
+       "angleDeg": -11.4078,
+       "abductionDeg": 5.6882,
+       "twistDeg": -31.5434
+      },
+      "fr-l3b": {
+       "angleDeg": -15.4
+      },
+      "fr-l4a": {
+       "angleDeg": -6.736,
+       "abductionDeg": -5.9091,
+       "twistDeg": -54.7854
+      },
+      "fr-l4b": {
+       "angleDeg": -15.4
+      },
+      "fr-r1a": {
+       "angleDeg": -32.3296,
+       "abductionDeg": -78.7319,
+       "twistDeg": 27.2926
+      },
+      "fr-r1b": {
+       "angleDeg": -15.4
+      },
+      "fr-r2a": {
+       "angleDeg": -9.6209,
+       "abductionDeg": 7.5252,
+       "twistDeg": 2.723
+      },
+      "fr-r2b": {
+       "angleDeg": -15.4
+      },
+      "fr-r3a": {
+       "angleDeg": -3.0326,
+       "abductionDeg": -25.9131,
+       "twistDeg": -28.8252
+      },
+      "fr-r3b": {
+       "angleDeg": -15.4
+      },
+      "fr-r4a": {
+       "angleDeg": 0.9823,
+       "abductionDeg": 22.005,
+       "twistDeg": 51.7828
+      },
+      "fr-r4b": {
+       "angleDeg": -15.4
+      },
+      "bunch-l": {
+       "angleDeg": 14
+      },
+      "bunch-r": {
+       "angleDeg": 14
+      }
+     }
+    },
+    {
+     "t": 3.6,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.72
+      },
+      "stem-2": {
+       "angleDeg": -1.08
+      },
+      "stem-3": {
+       "angleDeg": -1.62
+      },
+      "crown": {
+       "angleDeg": -1.35
+      },
+      "fr-l1a": {
+       "angleDeg": -51.0491,
+       "abductionDeg": 64.965,
+       "twistDeg": -65.7732
+      },
+      "fr-l1b": {
+       "angleDeg": -9.9
+      },
+      "fr-l2a": {
+       "angleDeg": -6.5784,
+       "abductionDeg": -5.3361,
+       "twistDeg": 5.969
+      },
+      "fr-l2b": {
+       "angleDeg": -9.9
+      },
+      "fr-l3a": {
+       "angleDeg": -8.7556,
+       "abductionDeg": 8.877,
+       "twistDeg": -30.8705
+      },
+      "fr-l3b": {
+       "angleDeg": -9.9
+      },
+      "fr-l4a": {
+       "angleDeg": -5.8438,
+       "abductionDeg": -0.8765,
+       "twistDeg": -54.9953
+      },
+      "fr-l4b": {
+       "angleDeg": -9.9
+      },
+      "fr-r1a": {
+       "angleDeg": -1.8894,
+       "abductionDeg": -79.9573,
+       "twistDeg": -5.2592
+      },
+      "fr-r1b": {
+       "angleDeg": -9.9
+      },
+      "fr-r2a": {
+       "angleDeg": -6.079,
+       "abductionDeg": 7.1901,
+       "twistDeg": 3.5167
+      },
+      "fr-r2b": {
+       "angleDeg": -9.9
+      },
+      "fr-r3a": {
+       "angleDeg": 0.1624,
+       "abductionDeg": -22.8321,
+       "twistDeg": -31.2398
+      },
+      "fr-r3b": {
+       "angleDeg": -9.9
+      },
+      "fr-r4a": {
+       "angleDeg": 2.309,
+       "abductionDeg": 17.1271,
+       "twistDeg": 53.1163
+      },
+      "fr-r4b": {
+       "angleDeg": -9.9
+      },
+      "bunch-l": {
+       "angleDeg": 9
+      },
+      "bunch-r": {
+       "angleDeg": 9
+      }
+     }
+    },
+    {
+     "t": 5,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.32
+      },
+      "stem-2": {
+       "angleDeg": -0.48
+      },
+      "stem-3": {
+       "angleDeg": -0.72
+      },
+      "crown": {
+       "angleDeg": -0.6
+      },
+      "fr-l1a": {
+       "angleDeg": -46.1611,
+       "abductionDeg": 70.4205,
+       "twistDeg": -58.79
+      },
+      "fr-l1b": {
+       "angleDeg": -4.4
+      },
+      "fr-l2a": {
+       "angleDeg": -3.0787,
+       "abductionDeg": -5.944,
+       "twistDeg": 5.364
+      },
+      "fr-l2b": {
+       "angleDeg": -4.4
+      },
+      "fr-l3a": {
+       "angleDeg": -6.0115,
+       "abductionDeg": 11.9898,
+       "twistDeg": -29.8926
+      },
+      "fr-l3b": {
+       "angleDeg": -4.4
+      },
+      "fr-l4a": {
+       "angleDeg": -4.9611,
+       "abductionDeg": 4.1595,
+       "twistDeg": -54.894
+      },
+      "fr-l4b": {
+       "angleDeg": -4.4
+      },
+      "fr-r1a": {
+       "angleDeg": 25.6943,
+       "abductionDeg": -77.7682,
+       "twistDeg": -34.9541
+      },
+      "fr-r1b": {
+       "angleDeg": -4.4
+      },
+      "fr-r2a": {
+       "angleDeg": -2.5473,
+       "abductionDeg": 6.7722,
+       "twistDeg": 4.2687
+      },
+      "fr-r2b": {
+       "angleDeg": -4.4
+      },
+      "fr-r3a": {
+       "angleDeg": 3.0904,
+       "abductionDeg": -19.5477,
+       "twistDeg": -33.2583
+      },
+      "fr-r3b": {
+       "angleDeg": -4.4
+      },
+      "fr-r4a": {
+       "angleDeg": 3.4306,
+       "abductionDeg": 12.1755,
+       "twistDeg": 54.0715
+      },
+      "fr-r4b": {
+       "angleDeg": -4.4
+      },
+      "bunch-l": {
+       "angleDeg": 4
+      },
+      "bunch-r": {
+       "angleDeg": 4
+      }
+     }
+    },
+    {
+     "t": 8,
+     "pose": "windy",
+     "ease": "smooth",
+     "bones": {
+      "stem-1": {
+       "angleDeg": -0.08
+      },
+      "stem-2": {
+       "angleDeg": -0.12
+      },
+      "stem-3": {
+       "angleDeg": -0.18
+      },
+      "crown": {
+       "angleDeg": -0.15
+      },
+      "fr-l1a": {
+       "angleDeg": -41.0199,
+       "abductionDeg": 73.4699,
+       "twistDeg": -52.3873
+      },
+      "fr-l1b": {
+       "angleDeg": -1.1
+      },
+      "fr-l2a": {
+       "angleDeg": -0.9727,
+       "abductionDeg": -6.2764,
+       "twistDeg": 4.9705
+      },
+      "fr-l2b": {
+       "angleDeg": -1.1
+      },
+      "fr-l3a": {
+       "angleDeg": -4.3077,
+       "abductionDeg": 13.8087,
+       "twistDeg": -29.157
+      },
+      "fr-l3b": {
+       "angleDeg": -1.1
+      },
+      "fr-l4a": {
+       "angleDeg": -4.4132,
+       "abductionDeg": 7.1747,
+       "twistDeg": -54.6828
+      },
+      "fr-l4b": {
+       "angleDeg": -1.1
+      },
+      "fr-r1a": {
+       "angleDeg": 36.1373,
+       "abductionDeg": -75.3436,
+       "twistDeg": -46.6623
+      },
+      "fr-r1b": {
+       "angleDeg": -1.1
+      },
+      "fr-r2a": {
+       "angleDeg": -0.4338,
+       "abductionDeg": 6.4837,
+       "twistDeg": 4.6963
+      },
+      "fr-r2b": {
+       "angleDeg": -1.1
+      },
+      "fr-r3a": {
+       "angleDeg": 4.7351,
+       "abductionDeg": -17.4959,
+       "twistDeg": -34.2862
+      },
+      "fr-r3b": {
+       "angleDeg": -1.1
+      },
+      "fr-r4a": {
+       "angleDeg": 4.033,
+       "abductionDeg": 9.1795,
+       "twistDeg": 54.4779
+      },
+      "fr-r4b": {
+       "angleDeg": -1.1
+      },
+      "bunch-l": {
+       "angleDeg": 1
+      },
+      "bunch-r": {
+       "angleDeg": 1
+      }
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "target": "load:wind-fr-l1b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-l2b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-l3b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-l4b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-r1b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-r2b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-r3b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-fr-r4b",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    },
+    {
+     "target": "load:wind-stem-1",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.05
+      },
+      {
+       "t": 1.2,
+       "v": 0.45
+      },
+      {
+       "t": 2.5,
+       "v": 2.75
+      },
+      {
+       "t": 3.6,
+       "v": 1.4
+      },
+      {
+       "t": 5,
+       "v": 0.5
+      },
+      {
+       "t": 8,
+       "v": 0.05
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "diurnal-transpiration",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "calm",
+     "ease": "smooth",
+     "bones": {
+      "fr-l1a": {
+       "angleDeg": -38.7529,
+       "abductionDeg": 74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-l2a": {
+       "angleDeg": -0.2697,
+       "abductionDeg": -6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-l3a": {
+       "angleDeg": -3.7287,
+       "abductionDeg": 14.4055,
+       "twistDeg": -28.8867
+      },
+      "fr-l4a": {
+       "angleDeg": -4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": -54.5868
+      },
+      "fr-r1a": {
+       "angleDeg": 38.7529,
+       "abductionDeg": -74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-r2a": {
+       "angleDeg": 0.2697,
+       "abductionDeg": 6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-r3a": {
+       "angleDeg": 5.2667,
+       "abductionDeg": -16.8002,
+       "twistDeg": -34.5992
+      },
+      "fr-r4a": {
+       "angleDeg": 4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": 54.5868
+      }
+     }
+    },
+    {
+     "t": 12,
+     "pose": "calm",
+     "ease": "smooth",
+     "bones": {
+      "fr-l1a": {
+       "angleDeg": -38.7529,
+       "abductionDeg": 74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-l2a": {
+       "angleDeg": -0.2697,
+       "abductionDeg": -6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-l3a": {
+       "angleDeg": -3.7287,
+       "abductionDeg": 14.4055,
+       "twistDeg": -28.8867
+      },
+      "fr-l4a": {
+       "angleDeg": -4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": -54.5868
+      },
+      "fr-r1a": {
+       "angleDeg": 38.7529,
+       "abductionDeg": -74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-r2a": {
+       "angleDeg": 0.2697,
+       "abductionDeg": 6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-r3a": {
+       "angleDeg": 5.2667,
+       "abductionDeg": -16.8002,
+       "twistDeg": -34.5992
+      },
+      "fr-r4a": {
+       "angleDeg": 4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": 54.5868
+      }
+     }
+    },
+    {
+     "t": 24,
+     "pose": "calm",
+     "ease": "smooth",
+     "bones": {
+      "fr-l1a": {
+       "angleDeg": -38.7529,
+       "abductionDeg": 74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-l2a": {
+       "angleDeg": -0.2697,
+       "abductionDeg": -6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-l3a": {
+       "angleDeg": -3.7287,
+       "abductionDeg": 14.4055,
+       "twistDeg": -28.8867
+      },
+      "fr-l4a": {
+       "angleDeg": -4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": -54.5868
+      },
+      "fr-r1a": {
+       "angleDeg": 38.7529,
+       "abductionDeg": -74.4266,
+       "twistDeg": -49.6992
+      },
+      "fr-r2a": {
+       "angleDeg": 0.2697,
+       "abductionDeg": 6.3815,
+       "twistDeg": 4.8345
+      },
+      "fr-r3a": {
+       "angleDeg": 5.2667,
+       "abductionDeg": -16.8002,
+       "twistDeg": -34.5992
+      },
+      "fr-r4a": {
+       "angleDeg": 4.2249,
+       "abductionDeg": 8.1777,
+       "twistDeg": 54.5868
+      }
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "target": "emitter:transpiration-fronds",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.03
+      },
+      {
+       "t": 5,
+       "v": 0.05
+      },
+      {
+       "t": 7,
+       "v": 0.3
+      },
+      {
+       "t": 9,
+       "v": 0.6
+      },
+      {
+       "t": 12,
+       "v": 0.8
+      },
+      {
+       "t": 15,
+       "v": 0.7
+      },
+      {
+       "t": 18,
+       "v": 0.35
+      },
+      {
+       "t": 20,
+       "v": 0.08
+      },
+      {
+       "t": 24,
+       "v": 0.03
+      }
+     ]
+    },
+    {
+     "target": "region:stem-bark:sunlitFraction",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0
+      },
+      {
+       "t": 6,
+       "v": 0
+      },
+      {
+       "t": 8,
+       "v": 0.3
+      },
+      {
+       "t": 10,
+       "v": 0.55
+      },
+      {
+       "t": 12,
+       "v": 0.7
+      },
+      {
+       "t": 14,
+       "v": 0.55
+      },
+      {
+       "t": 16,
+       "v": 0.25
+      },
+      {
+       "t": 18,
+       "v": 0
+      },
+      {
+       "t": 24,
+       "v": 0
+      }
+     ]
+    },
+    {
+     "target": "region:fruit:sunlitFraction",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0
+      },
+      {
+       "t": 6,
+       "v": 0
+      },
+      {
+       "t": 8,
+       "v": 0.086
+      },
+      {
+       "t": 10,
+       "v": 0.157
+      },
+      {
+       "t": 12,
+       "v": 0.2
+      },
+      {
+       "t": 14,
+       "v": 0.157
+      },
+      {
+       "t": 16,
+       "v": 0.071
+      },
+      {
+       "t": 18,
+       "v": 0
+      },
+      {
+       "t": 24,
+       "v": 0
+      }
+     ]
+    },
+    {
+     "target": "region:fronds:sunlitFraction",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0
+      },
+      {
+       "t": 6,
+       "v": 0
+      },
+      {
+       "t": 8,
+       "v": 0.321
+      },
+      {
+       "t": 10,
+       "v": 0.589
+      },
+      {
+       "t": 12,
+       "v": 0.75
+      },
+      {
+       "t": 14,
+       "v": 0.589
+      },
+      {
+       "t": 16,
+       "v": 0.268
+      },
+      {
+       "t": 18,
+       "v": 0
+      },
+      {
+       "t": 24,
+       "v": 0
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "anchors": [
+  {
+   "id": "base-support",
+   "bone": "root-plate",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "title": {
+    "en": "Root ball anchorage",
+    "de": "Verankerung des Wurzelballens"
+   },
+   "support": "fixed",
+   "normalDeg": 90,
+   "footprintLengthM": 1.2,
+   "footprintWidthM": 1.2,
+   "frictionCoefficient": 0.6
+  },
+  {
+   "id": "tp-fronds-1",
+   "bone": "fr-l1a",
+   "x": 1.1012,
+   "y": -0.128,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 1",
+    "de": "Transpiration der Wedel, Anker 1"
+   }
+  },
+  {
+   "id": "tp-fronds-2",
+   "bone": "fr-l1b",
+   "x": 0.7121,
+   "y": -0.145,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 2",
+    "de": "Transpiration der Wedel, Anker 2"
+   }
+  },
+  {
+   "id": "tp-fronds-3",
+   "bone": "fr-l2a",
+   "x": 1.17,
+   "y": -0.132,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 3",
+    "de": "Transpiration der Wedel, Anker 3"
+   }
+  },
+  {
+   "id": "tp-fronds-4",
+   "bone": "fr-l2b",
+   "x": 0.761,
+   "y": 0.025,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 4",
+    "de": "Transpiration der Wedel, Anker 4"
+   }
+  },
+  {
+   "id": "tp-fronds-5",
+   "bone": "fr-l3a",
+   "x": 1.248,
+   "y": -0.049,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 5",
+    "de": "Transpiration der Wedel, Anker 5"
+   }
+  },
+  {
+   "id": "tp-fronds-6",
+   "bone": "fr-l3b",
+   "x": 0.794,
+   "y": -0.102,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 6",
+    "de": "Transpiration der Wedel, Anker 6"
+   }
+  },
+  {
+   "id": "tp-fronds-7",
+   "bone": "fr-l4a",
+   "x": 1.245,
+   "y": 0.039,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 7",
+    "de": "Transpiration der Wedel, Anker 7"
+   }
+  },
+  {
+   "id": "tp-fronds-8",
+   "bone": "fr-l4b",
+   "x": 0.898,
+   "y": -0.129,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 8",
+    "de": "Transpiration der Wedel, Anker 8"
+   }
+  },
+  {
+   "id": "tp-fronds-9",
+   "bone": "fr-r1a",
+   "x": 1.095,
+   "y": 0.13,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 9",
+    "de": "Transpiration der Wedel, Anker 9"
+   }
+  },
+  {
+   "id": "tp-fronds-10",
+   "bone": "fr-r1b",
+   "x": 0.7121,
+   "y": 0.145,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 10",
+    "de": "Transpiration der Wedel, Anker 10"
+   }
+  },
+  {
+   "id": "tp-fronds-11",
+   "bone": "fr-r2a",
+   "x": 1.17,
+   "y": 0.133,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 11",
+    "de": "Transpiration der Wedel, Anker 11"
+   }
+  },
+  {
+   "id": "tp-fronds-12",
+   "bone": "fr-r2b",
+   "x": 0.76,
+   "y": -0.025,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the fronds, anchor 12",
+    "de": "Transpiration der Wedel, Anker 12"
+   }
+  }
+ ]
+}

@@ -156,6 +156,7 @@ mod native {
                     let pointer = event::pointer_info_for_mouse(&mut self.pointers, *device_id);
                     Some(DispatchEvent::PointerMove { pointer, x: self.last_pointer_pos.0, y: self.last_pointer_pos.1, modifiers: self.modifiers })
                 }
+                E::CursorLeft { device_id } => Some(DispatchEvent::PointerLeave { pointer: event::pointer_info_for_mouse(&mut self.pointers, *device_id) }),
                 E::MouseInput { device_id, state, button } => {
                     let pointer = event::pointer_info_for_mouse(&mut self.pointers, *device_id);
                     let button = event::pointer_button_from_winit(*button)?;

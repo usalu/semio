@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedOwnedProjection,RetainedOwnedProjectionAdmission};
 use semio_framework_value::{OriginalRetirementControl,OriginalRetirementFailure,ReplyStash,RetainedAllocationEffect,RetirementPollExit as Exit};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativePreparedDecodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::ErasedSnapshotRetirement as _;
 use crate::store_owners::WindowConfigStore;
 use store::os_store::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,snapshot_read::{ArtifactDerivedSnapshot,admit_original_snapshot_alias}};
@@ -60,8 +60,8 @@ impl<O:WindowConfigOwner> WindowSemanticPreview<O>{
   if !self.cancelled{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window preview cleanup requires its actual cancellation phase"))}
   Self::folded(self.step_effect(store,body,None,effect,None,Some(control)))
  }
- pub fn advance(&mut self,store:&WindowConfigStore<O>,body:usize,g:RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>)->Result<RetainedCloneStep,ValueError>{
-  let maximum=receiving.available_work_units()?;let d=self.demand_phase(store,body,Some(maximum))?;if !preview_funds(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ pub fn advance(&mut self,store:&WindowConfigStore<O>,body:usize,g:RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>,work:u64)->Result<RetainedCloneStep,ValueError>{
+  let maximum=work.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK);if maximum==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.demand_phase(store,body,Some(maximum))?;if !preview_funds(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(owner)=self.producer.as_mut().filter(|owner|!owner.terminal_is_empty()&&!owner.is_closing()&&!owner.is_finished()){return store.step_derived_operation(owner,body,g,receiving,&mut||false).map_err(OriginalRetirementFailure::into_value_error);}
   let this=&mut *self;
   match receiving.with_allocated_effect(d,maximum,|native,effect|this.step_effect(store,body,Some(maximum),effect,Some(native),None))?{Some(turn)=>Self::folded(turn),None=>Ok(RetainedCloneStep::Progress(Default::default()))}

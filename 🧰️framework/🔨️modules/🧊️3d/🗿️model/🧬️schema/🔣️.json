@@ -1289,7 +1289,7 @@
       }
     },
     "Quality": {
-      "description": "Tessellation quality: maximum chord deviation in metres and the segment bounds of one full circle; deterministic.",
+      "description": "Tessellation quality: maximum chord deviation in metres and the segment bounds of one full circle; round is the floor of the circles that are large enough to be seen as round: a full circle whose radius exceeds round.radiusM never has fewer than round.segments segments (still at most maxSegments); deterministic.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1309,6 +1309,24 @@
         "maxSegments": {
           "type": "integer",
           "minimum": 3
+        },
+        "round": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "radiusM",
+            "segments"
+          ],
+          "properties": {
+            "radiusM": {
+              "type": "number",
+              "minimum": 0
+            },
+            "segments": {
+              "type": "integer",
+              "minimum": 3
+            }
+          }
         }
       }
     },

@@ -16,6 +16,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pixels = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-2d-compute = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

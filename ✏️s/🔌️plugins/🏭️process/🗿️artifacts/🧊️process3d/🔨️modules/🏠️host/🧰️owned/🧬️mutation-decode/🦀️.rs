@@ -47,7 +47,7 @@ impl Process3dRetainedMutationReader {
     fn structural_step(&mut self, bytes: &[u8]) -> Result<(), protocol::ProtocolError> {
         use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
         use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
-        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
+        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid, resize_stock};
         match self.tag {
             0 => {
                 if self.field == 0 {
@@ -219,6 +219,17 @@ impl Process3dRetainedMutationReader {
                     self.complete(bytes, Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid }))?;
                 }
             }
+            15 => {
+                if self.field == 0 {
+                    let Some(value) = self.string_step(bytes)? else { return Ok(()) };
+                    self.strings[0] = Some(value);
+                    self.field = 1;
+                } else {
+                    let size = process3d_retained_advance(bytes, &mut self.offset, |reader| reader.read_f64_le().map_err(|error| error.to_string()))?;
+                    let field = self.strings[0].take().unwrap_or_default();
+                    self.complete(bytes, Process3dMutation::ResizeStock(resize_stock::ResizeStock { field, size }))?;
+                }
+            }
             _ => return Err(process3d_protocol_error("retained mutation tag is invalid".into())),
         }
         Ok(())
@@ -264,13 +275,13 @@ impl Process3dRetainedMutationReader {
     pub(super) fn take_partial(&mut self) -> Option<Process3dMutation> {
         use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
         use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
-        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
+        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid, resize_stock};
         if self.string.has_partial() {
             let partial = self.string.take_partial();
             match self.tag {
                 1 | 8 | 13 => self.strings[0] = Some(partial),
                 2 | 9 | 10 => self.strings[self.field.min(1)] = Some(partial),
-                3 | 5 | 6 | 11 if self.field == 0 => self.strings[0] = Some(partial),
+                3 | 5 | 6 | 11 | 15 if self.field == 0 => self.strings[0] = Some(partial),
                 4 if self.field == 0 => self.strings[0] = Some(partial),
                 4 if matches!(self.field, 2 | 3) => self.strings[self.field - 1] = Some(partial),
                 _ => drop(partial),
@@ -318,6 +329,7 @@ impl Process3dRetainedMutationReader {
                     |mut cursor| cursor.take_partial(),
                 ),
             })),
+            15 => Some(Process3dMutation::ResizeStock(resize_stock::ResizeStock { field: self.strings[0].take().unwrap_or_default(), size: 0.0 })),
             _ => None,
         };
         for string in &mut self.strings {

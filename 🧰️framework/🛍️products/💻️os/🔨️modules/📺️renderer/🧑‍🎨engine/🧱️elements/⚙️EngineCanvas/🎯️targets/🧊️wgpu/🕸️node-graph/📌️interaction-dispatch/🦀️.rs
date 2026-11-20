@@ -76,9 +76,10 @@ pub fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot
         Some(domain) => node_graph_domain_targets_json(domain, "node", &snapshot.node_ids)?,
         None => "[]".into(),
     };
-    let hover_targets = match (domain, snapshot.hovered_handle.as_ref(), snapshot.hovered_id.as_ref()) {
-        (Some(domain), Some(handle), _) => node_graph_domain_targets_json(domain, "handle", std::slice::from_ref(handle))?,
-        (Some(domain), None, Some(node)) => node_graph_domain_targets_json(domain, "node", std::slice::from_ref(node))?,
+    let hover_targets = match (domain, snapshot.hovered_handle.as_ref(), snapshot.hovered_edge.as_ref(), snapshot.hovered_id.as_ref()) {
+        (Some(domain), Some(handle), _, _) => node_graph_domain_targets_json(domain, "handle", std::slice::from_ref(handle))?,
+        (Some(domain), None, Some(edge), _) => node_graph_domain_targets_json(domain, "edge", std::slice::from_ref(edge))?,
+        (Some(domain), None, None, Some(node)) => node_graph_domain_targets_json(domain, "node", std::slice::from_ref(node))?,
         _ => "[]".into(),
     };
     let viewport_text = format!("{}|{}|{}", snapshot.viewport.x, snapshot.viewport.y, snapshot.viewport.zoom);

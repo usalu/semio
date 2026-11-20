@@ -63,7 +63,7 @@ struct Fold {
 
 fn boolean_fault(error: &BrepError) -> WidgetFault {
     match error {
-        BrepError::Operation(message) if message.contains("is empty") => refusal("boolean-empty", format!("The operation left no solid ({message})."), format!("Die Operation hat keinen Körper übrig gelassen ({message}).")),
+        BrepError::EmptyResult => refusal("boolean-empty", "The operation left no solid.", "Die Operation hat keinen Körper übrig gelassen."),
         _ => kernel_fault(error),
     }
 }

@@ -118,16 +118,37 @@
    "required": ["admitted", "name", "source"],
    "properties": {"name": {"type": "string"}, "source": {"type": "string"}, "admitted": {"type": "boolean"}}
   },
+  "GracefulReloadReceipt": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["pid", "waiting", "reloadToken"],
+   "properties": {
+    "pid": {"type": "integer", "minimum": 1},
+    "waiting": {"const": false},
+    "reloadToken": {"type": "string", "pattern": "^[a-f0-9]{32}$"}
+   }
+  },
+  "GracefulReloadCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "pid", "token"],
+   "properties": {
+    "name": {"type": "string"},
+    "pid": {"enum": ["matching", "different"]},
+    "token": {"enum": ["matching", "different", "absent"]}
+   }
+  },
   "Fixture": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["decisions", "directories", "guards", "hashes", "version"],
+   "required": ["decisions", "directories", "guards", "hashes", "reloads", "version"],
    "properties": {
     "version": {"const": 1},
     "directories": {"type": "array", "items": {"$ref": "#/definitions/DirectoryCase"}},
     "hashes": {"type": "array", "items": {"$ref": "#/definitions/HashCase"}},
     "decisions": {"type": "array", "items": {"$ref": "#/definitions/DecisionCase"}},
-    "guards": {"type": "array", "items": {"$ref": "#/definitions/GuardCase"}}
+    "guards": {"type": "array", "items": {"$ref": "#/definitions/GuardCase"}},
+    "reloads": {"type": "array", "items": {"$ref": "#/definitions/GracefulReloadCase"}}
    }
   }
  }

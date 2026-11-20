@@ -50,7 +50,7 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[cfg(test)] use semio_s_artifact_draw_drawing_model::GradientStop;
 use protocol::{Mutation, OpBinary};
 use store::ErasedSnapshotRetirement as _;
-use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep};
 
 use semio_s_artifact_draw_drawing_host_arena::native_retirement::DrawingRetirementOwner;
 

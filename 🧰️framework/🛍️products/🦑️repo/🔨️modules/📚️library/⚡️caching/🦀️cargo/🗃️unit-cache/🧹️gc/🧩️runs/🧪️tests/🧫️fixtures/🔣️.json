@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "collection": {
+    "needBytes": 1,
+    "candidates": [
+      { "name": "wold", "ageMilliseconds": 108000000, "components": ["norm"] },
+      { "name": "wremaining", "ageMilliseconds": 72000000, "components": ["norm"] },
+      { "name": "wlatest", "ageMilliseconds": 36000000, "components": ["norm"] },
+      { "name": "wbusy", "ageMilliseconds": 0, "components": ["norm"] }
+    ],
+    "measured": ["wold"],
+    "removed": ["wold"]
+  },
+  "vectors": [
+    {
+      "name": "no runs",
+      "input": { "needBytes": 100, "runs": [] },
+      "remove": []
+    },
+    {
+      "name": "older runs of a component go oldest first until the need is met, the newest run of the component stays",
+      "input": {
+        "needBytes": 150,
+        "runs": [
+          { "path": "/c/runs/wc", "bytes": 100, "lastUsedMs": 300, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wa", "bytes": 100, "lastUsedMs": 100, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wb", "bytes": 100, "lastUsedMs": 200, "components": ["wfc"], "held": false }
+        ]
+      },
+      "remove": [
+        { "path": "/c/runs/wa", "bytes": 100 },
+        { "path": "/c/runs/wb", "bytes": 100 }
+      ]
+    },
+    {
+      "name": "nothing goes without a need",
+      "input": {
+        "needBytes": 0,
+        "runs": [
+          { "path": "/c/runs/wa", "bytes": 100, "lastUsedMs": 100, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wb", "bytes": 100, "lastUsedMs": 200, "components": ["wfc"], "held": false }
+        ]
+      },
+      "remove": []
+    },
+    {
+      "name": "a held run stays even when a newer run supersedes it",
+      "input": {
+        "needBytes": 1000,
+        "runs": [
+          { "path": "/c/runs/wa", "bytes": 100, "lastUsedMs": 100, "components": ["wfc"], "held": true },
+          { "path": "/c/runs/wb", "bytes": 100, "lastUsedMs": 200, "components": ["wfc"], "held": false }
+        ]
+      },
+      "remove": []
+    },
+    {
+      "name": "the latest run of each component stays, a run goes only when a newer run materialized every one of its components",
+      "input": {
+        "needBytes": 1000,
+        "runs": [
+          { "path": "/c/runs/wa", "bytes": 10, "lastUsedMs": 100, "components": ["one", "two"], "held": false },
+          { "path": "/c/runs/wb", "bytes": 20, "lastUsedMs": 200, "components": ["one"], "held": false },
+          { "path": "/c/runs/wc", "bytes": 30, "lastUsedMs": 300, "components": ["three"], "held": false }
+        ]
+      },
+      "remove": []
+    },
+    {
+      "name": "runs that materialized nothing go when older than the newest materialized run and stay when newer",
+      "input": {
+        "needBytes": 1000,
+        "runs": [
+          { "path": "/c/runs/wa", "bytes": 10, "lastUsedMs": 100, "components": [], "held": false },
+          { "path": "/c/runs/wb", "bytes": 20, "lastUsedMs": 200, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wc", "bytes": 30, "lastUsedMs": 300, "components": [], "held": false },
+          { "path": "/c/runs/wd", "bytes": 40, "lastUsedMs": 150, "components": [], "held": true }
+        ]
+      },
+      "remove": [
+        { "path": "/c/runs/wa", "bytes": 10 }
+      ]
+    },
+    {
+      "name": "equal times order by path",
+      "input": {
+        "needBytes": 1000,
+        "runs": [
+          { "path": "/c/runs/wb", "bytes": 5, "lastUsedMs": 100, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wa", "bytes": 5, "lastUsedMs": 100, "components": ["wfc"], "held": false },
+          { "path": "/c/runs/wc", "bytes": 5, "lastUsedMs": 100, "components": ["wfc"], "held": false }
+        ]
+      },
+      "remove": [
+        { "path": "/c/runs/wa", "bytes": 5 },
+        { "path": "/c/runs/wb", "bytes": 5 }
+      ]
+    }
+  ]
+}

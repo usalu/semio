@@ -6,6 +6,7 @@ use semio_plugin::kernel::Effect;
 /// 🗂 Opens a file picker that re-dispatches `importSnapshot` with the picked bytes.
 pub fn open_import_snapshot(ctx: &mut Puzzle3dActionCtx<'_>) {
     ctx.effects.push(Effect::RequestFileOpen {
+        max_file_bytes: None,
         req: semio_plugin::RequestId(121),
         accept: "application/json,.json".into(),
         read_as: Some("text".into()),

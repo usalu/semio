@@ -76,6 +76,8 @@ impl std::fmt::Display for IntersectError {
 /// 🚨️ Boolean pipeline failure modes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BooleanError {
+    /// 🕳️ The operands produce no solid.
+    EmptyResult,
     /// 🚨️ Face imprinting could not resolve a consistent UV arrangement.
     ImprintFailed(String),
     /// 🚨️ A cell produced by the arrangement could not be classified with certainty.
@@ -89,6 +91,7 @@ pub enum BooleanError {
 impl std::fmt::Display for BooleanError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            BooleanError::EmptyResult => write!(f, "result is empty"),
             BooleanError::ImprintFailed(msg) => write!(f, "imprint failed: {msg}"),
             BooleanError::ClassificationAmbiguous(msg) => write!(f, "ambiguous classification: {msg}"),
             BooleanError::InvalidResult(msg) => write!(f, "invalid result: {msg}"),

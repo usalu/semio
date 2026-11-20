@@ -87,11 +87,8 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
     uiIntakesByInstance.get(instanceId)?.delete(intake);
   };
   type AdmittedUiPatch = { readonly surfaceId: string; readonly intake: OwnedUiPatchIntake; readonly entry: OwnedUiPatchAcknowledgementEntry; readonly startedMs: number };
-  /** 🧺️ Admits one round's patches, acknowledges the WHOLE round in one crossing, installs each surface
-   * and closes its intake — the shape the patch-batching lane bought, now applied per round instead of
-   * per turn. `submitUiAcknowledgements` admits any non-empty SUBSET of a turn's patches (it is the same
-   * path the one-patch case took before batching), so a round is a legal acknowledgement unit. */
-  const installUiPatchRound = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner:OwnedUiInstance, admitted: readonly AdmittedUiPatch[]): Promise<WireTurnResult> => {
+  /** 🧺️ Installs each admitted surface after its patch acknowledgement and returns every actor crossing in submission order. */
+  const installUiPatchRound = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner:OwnedUiInstance, admitted: readonly AdmittedUiPatch[]): Promise<readonly WireTurnResult[]> => {
     const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-acks", entries: admitted.map(({ entry }) => entry) }, "Interactive");
     if (!acknowledged.submissions || acknowledged.submissions.length !== admitted.length) throw new Error("plugin-ui.acknowledgement-refused");
     const installed: string[] = [];
@@ -114,7 +111,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
       await closeIntake(instanceId, intake);
     }
     announceSurfacePublications(instanceId, installed);
-    return acknowledged.turn;
+    return acknowledged.turns;
   };
   /** 🧯️ Retires patches this round already admitted when a LATER one in the same round failed: their
    * acknowledgement still crosses (a subset is a legal batch) so every cell they hold is released. One
@@ -173,11 +170,13 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
         await retireAdmittedUiPatches(instanceId, lease, owner, admitted);
         throw error;
       }
-      const acknowledgedTurn = await installUiPatchRound(instanceId, lease, owner, admitted);
-      supplemental.push(acknowledgedTurn);
-      const nested = await acceptOwnedUiPatches(instanceId, acknowledgedTurn);
-      supplemental.push(...nested.turns);
-      if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
+      const acknowledgedTurns = await installUiPatchRound(instanceId, lease, owner, admitted);
+      supplemental.push(...acknowledgedTurns);
+      for (const acknowledgedTurn of acknowledgedTurns) {
+        const nested = await acceptOwnedUiPatches(instanceId, acknowledgedTurn);
+        supplemental.push(...nested.turns);
+        if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
+      }
     }
     return { acknowledgements: [], turns: supplemental };
   };

@@ -1,0 +1,11 @@
+{
+  "asset": "components/solid-brick-wall-1960",
+  "scale": 50,
+  "sampleM": [0.4,1,1],
+  "brickLeafM": [0.015,0.38],
+  "courseCount": 12,
+  "brickHeightM": 0.071,
+  "headerWidthM": 0.115,
+  "stretcherLengthM": 0.24,
+  "headJointM": 0.01
+}

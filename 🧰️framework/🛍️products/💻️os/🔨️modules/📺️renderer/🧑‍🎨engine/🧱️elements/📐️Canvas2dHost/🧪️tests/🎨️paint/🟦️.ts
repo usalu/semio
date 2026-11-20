@@ -7,6 +7,9 @@ import Ajv2020 from "ajv";
 import {JSDOM} from "jsdom";
 import { wgpuTextCatalogFixture as catalogFixture, wgpuTextCatalogSchema as catalogSchema } from "@semio-tech/ui/testing/fixtures";
 import fixture from "../🧫️fixtures/🎨️paint/🔣️.json";
+import pdfOrientedFormFixture from "../../../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/🧪️oriented-form-clip.json";
+import pdfPathClipFixture from "../../../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/🧪️path-clips.json";
+import pdfTextFixture from "../../../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/🧪️text-paint.json";
 import { paintDrawingScene, type PathSegment, type StrokeStyle } from "@semio-tech/framework/2d";
 
 function context() {
@@ -90,4 +93,81 @@ it("raster text uses the same explicit lines with baseline coordinates", () => {
   const calls = textFixture.lines.flatMap((line, index) => line ? [[line, textFixture.x, textFixture.baselines[index]]] : []);
   expect(ctx.fillText.mock.calls).toEqual(calls);
   expect(ctx.strokeText.mock.calls).toEqual(calls);
+});
+
+it("paints a PDF text layer through its explicit face and affine baseline", () => {
+  const ctx = {...context(), font: "", fillText: vi.fn()};
+  const expected = pdfTextFixture.expected;
+  const node = {
+    ...expected,
+    text: {...expected.text, fontFamily: expected.text.fontFamily as "Anta"},
+    fill: {color: [0, 0, 0, 1]},
+  };
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, node, new Map());
+  expect(ctx.transform).toHaveBeenCalledWith(...expected.transform);
+  expect(ctx.font).toBe(`${expected.text.size}px "${expected.text.fontFamily}"`);
+  expect(ctx.fillText).toHaveBeenCalledWith(expected.text.content, 0, 0);
+});
+
+it("clips in scene coordinates before a node transform and restores the clip", () => {
+  const calls: unknown[][] = [];
+  class ClipPath {
+    rect(...bounds: number[]) {
+      calls.push(["rect", ...bounds]);
+    }
+  }
+  vi.stubGlobal("Path2D", ClipPath);
+  const ctx = {
+    save: () => calls.push(["save"]),
+    restore: () => calls.push(["restore"]),
+    clip: () => calls.push(["clip"]),
+    transform: (...matrix: number[]) => calls.push(["transform", ...matrix]),
+    fillText: (text: string) => calls.push(["paint", text]),
+  } as unknown as CanvasRenderingContext2D;
+  const layer = {
+    transform: [0, 2, -2, 0, 80, 40],
+    text: { content: "PDF", fontFamily: "Anta" },
+    fill: { color: [0, 0, 0] },
+  } as const;
+  drawSceneNode(ctx, { ...layer, clipRect: [10, 20, 40, 30] }, new Map());
+  drawSceneNode(ctx, layer, new Map());
+  expect(calls).toEqual([
+    ["save"], ["rect", 10, 20, 40, 30], ["clip"], ["transform", 0, 2, -2, 0, 80, 40], ["paint", "PDF"], ["restore"],
+    ["save"], ["transform", 0, 2, -2, 0, 80, 40], ["paint", "PDF"], ["restore"],
+  ]);
+});
+
+it("clips skewed PDF form corners in scene coordinates before the node transform", () => {
+  const calls: unknown[][] = [];
+  class ClipPath {
+    moveTo(...point: number[]) { calls.push(["move", ...point]); }
+    lineTo(...point: number[]) { calls.push(["line", ...point]); }
+    closePath() { calls.push(["close"]); }
+  }
+  vi.stubGlobal("Path2D", ClipPath);
+  const ctx = {
+    save: () => calls.push(["save"]),
+    restore: () => calls.push(["restore"]),
+    clip: () => calls.push(["clip"]),
+    transform: (...matrix: number[]) => calls.push(["transform", ...matrix]),
+    fillText: (text: string) => calls.push(["paint", text]),
+  } as unknown as CanvasRenderingContext2D;
+  const quad = pdfOrientedFormFixture.polygon as [[number, number], [number, number], [number, number], [number, number]];
+  const matrix = pdfOrientedFormFixture.matrix;
+  drawSceneNode(ctx, { transform: matrix, clipPolygons: [quad], text: { content: "PDF", fontFamily: "Anta" }, fill: {color: [0, 0, 0]} }, new Map());
+  expect(calls).toEqual([
+    ["save"], ["move", ...quad[0]], ...quad.slice(1).map(point => ["line", ...point]), ["close"],
+    ["clip"], ["transform", ...matrix], ["paint", "PDF"], ["restore"],
+  ]);
+});
+
+it("clips compound PDF paths in canvas coordinates with the declared fill rule", () => {
+  const ctx = {...context(), clip: vi.fn()};
+  const layer = pdfPathClipFixture.layers[0] as Parameters<typeof drawSceneNode>[1];
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, {...layer, transform: [1, 0, 0, 1, 2, 3]}, new Map());
+  expect(ctx.clip.mock.calls[0][0].svg).toContain("C");
+  expect(ctx.clip.mock.calls[0][1]).toBe("evenodd");
+  expect(ctx.clip.mock.invocationCallOrder[0]).toBeLessThan(ctx.transform.mock.invocationCallOrder[0]);
+  drawSceneNode(ctx as unknown as CanvasRenderingContext2D, pdfPathClipFixture.layers[3] as Parameters<typeof drawSceneNode>[1], new Map());
+  expect(ctx.clip.mock.calls[1][1]).toBe("nonzero");
 });

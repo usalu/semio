@@ -51,7 +51,7 @@ describe("Puzzle3D Settings Component document", () => {
       for (const slot of ["minus", "plus"]) {
         const button = group.querySelector(`[data-slot="stepper-${slot}"]`)!;
         expect(button.classList.contains("w-medium")).toBe(true);
-        expect(button.classList.contains("h-medium")).toBe(true);
+        expect(button.classList.contains("self-stretch")).toBe(true);
         expect(button.classList.contains("shrink-0")).toBe(true);
         expect(button.querySelector("[data-icon]")?.getAttribute("data-icon")).toBe(slot);
         expect(button.querySelector("[data-icon]")?.classList.contains("size-tiny")).toBe(true);

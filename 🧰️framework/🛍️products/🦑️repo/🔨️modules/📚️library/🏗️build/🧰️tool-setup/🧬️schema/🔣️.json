@@ -53,6 +53,72 @@
     }
   },
   "definitions": {
+    "SetupRefusalPolicy": {
+      "const": {
+        "prefix": "[tools:setup-refusal] ",
+        "id": 64,
+        "version": 120,
+        "location": 256,
+        "primary": 600,
+        "line": 2400
+      }
+    },
+    "SetupRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "phase",
+        "status",
+        "pin",
+        "found",
+        "location",
+        "primary"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "phase": {
+          "const": "verify"
+        },
+        "status": {
+          "enum": [
+            "missing",
+            "differs",
+            "failed"
+          ]
+        },
+        "pin": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "found": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "primary": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 600
+        }
+      }
+    },
     "Id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
@@ -279,6 +345,14 @@
                 "type": "string",
                 "minLength": 1
               }
+            },
+            "windowsProgramDirectories": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/RelativePath"
+              }
             }
           }
         },
@@ -306,7 +380,7 @@
           ],
           "properties": {
             "kind": {
-              "const": "hook"
+              "enum": ["hook", "bootstrap-node"]
             }
           }
         }
@@ -367,7 +441,8 @@
                 "binaryen",
                 "dotnet",
                 "rust",
-                "bootstrap"
+                "bootstrap",
+            "bootstrap-node"
               ]
             }
           }
@@ -479,6 +554,9 @@
             "skipped",
             "manual",
             "mismatch",
+            "mismatchReason",
+            "starting",
+            "verifying",
             "usage",
             "unknown",
             "pinfile",
@@ -533,6 +611,15 @@
               "$ref": "#/definitions/Text"
             },
             "mismatch": {
+              "$ref": "#/definitions/Text"
+            },
+            "mismatchReason": {
+              "$ref": "#/definitions/Text"
+            },
+            "starting": {
+              "$ref": "#/definitions/Text"
+            },
+            "verifying": {
               "$ref": "#/definitions/Text"
             },
             "usage": {

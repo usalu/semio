@@ -7,12 +7,13 @@ use semio_s_artifact_draw_drawing_scene::preparation::{DocumentVectorJob, Docume
 use semio_s_artifact_draw_drawing_scene::retirement::ScenePlanCloseJob;
 use semio_s_artifact_draw_drawing_scene_paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
-use semio_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
+use semio_plugin::{AppRenderOperationContext,Fault,PluginLifecycleFailure,PluginLifecycleStep};
+use semio_plugin::app::{original_lifecycle_effect_step,plugin_pay_unit,plugin_settle_poll};
 use semio_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobStep,SqliteSnapshotControl};
 use semio_framework_job::{OriginalDomainFailure,OriginalTurnFailure,StepContext};
 use std::{cell::RefCell,rc::Rc};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 const KIND:&str="semio.draw.mounted-vector";
 const INSTANCES:usize=64;
 const SHELLS:usize=256;
@@ -23,21 +24,44 @@ pub fn limits()->DocumentSceneLimits{Default::default()}
 pub fn algorithms()->DocumentAlgorithmLimits{Default::default()}
 pub fn paint_limits()->PaintedSceneLimits{PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000}}
 struct State{
- identity:SceneIdentity,job_id:u64,producer:Option<DocumentVectorJob<'static>>,cache:Option<ScenePaintJob>,paint_cleanup:Option<ScenePaintRetirement>,cleanup:Option<DocumentVectorRetirement<'static>>,returned:Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotReadReturn>>,
+ identity:SceneIdentity,job_id:u64,producer:Option<DocumentVectorJob<'static>>,cache:Option<ScenePaintJob>,paint_cleanup:Option<ScenePaintRetirement>,cleanup:Option<DocumentVectorRetirement<'static>>,returned:Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,
  visual:Option<PreparedScene>,discard:Option<PreparedSceneCloseJob>,raw_discard:Option<ScenePlanCloseJob>,cancelled:bool,work:u64,
 }
 impl State{
  fn new(identity:SceneIdentity,job_id:u64,read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>)->Self{Self{identity,job_id,producer:Some(DocumentVectorJob::from_snapshot_read(read,limits(),algorithms())),cache:None,paint_cleanup:None,cleanup:None,returned:None,visual:None,discard:None,raw_discard:None,cancelled:false,work:0}}
  fn transfer(&mut self,adopt:bool){if let Some(mut cache)=self.cache.take(){if !adopt{cache.cancel();}let(cleanup,output)=cache.into_retirement();self.paint_cleanup=Some(cleanup);if adopt{self.visual=Some(output.expect("only complete cache output may publish"));}else if let Some(scene)=output{self.discard=Some(PreparedSceneCloseJob::new(scene));}}if let Some(job)=self.producer.take(){let(cleanup,output)=job.into_retirement();self.cleanup=Some(cleanup);if let Some(plan)=output{self.raw_discard=Some(ScenePlanCloseJob::new(plan));}}}
  fn cleanup_pending(&self)->bool{self.paint_cleanup.is_some()||self.discard.is_some()||self.raw_discard.is_some()||self.cleanup.is_some()||self.returned.is_some()}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PluginLifecycleFailure>{
+  let grant=effect.grant();
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let mut progress=RetainedCloneProgress::default();
-  if let Some(child)=&mut self.paint_cleanup{if !child.terminal_is_empty(){return child.close_step(grant);}self.paint_cleanup=None;progress.copied_items=1;}
-  else if let Some(child)=&mut self.discard{if !child.terminal_is_empty(){return child.close_step(grant);}self.discard=None;progress.copied_items=1;}
-  else if let Some(child)=&mut self.raw_discard{if !child.terminal_is_empty(){return child.close_step(grant);}self.raw_discard=None;progress.copied_items=1;}
-  else if let Some(child)=&mut self.cleanup{if let Some(read)=child.take_snapshot_read(){let witness=read.return_to_registry_witness().expect("mounted source returned exactly once");self.returned=Some(ControlledRetirement::new(witness).unwrap_or_else(|(error,_)|panic!("snapshot return owner refused: {error}")));progress.copied_items=1;}else if !child.terminal_is_empty(){return child.close_step(grant);}else{self.cleanup=None;progress.copied_items=1;}}
-  else if let Some(child)=&mut self.returned{if !child.terminal_is_empty(){return child.step(grant);}self.returned=None;progress.copied_items=1;}
+  let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+  if let Some(child)=&mut self.paint_cleanup{
+   if !child.terminal_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
+   plugin_pay_unit(effect)?;
+   self.paint_cleanup=None;
+  }else if let Some(child)=&mut self.discard{
+   if !child.terminal_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
+   plugin_pay_unit(effect)?;
+   self.discard=None;
+  }else if let Some(child)=&mut self.raw_discard{
+   if !child.terminal_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
+   plugin_pay_unit(effect)?;
+   self.raw_discard=None;
+  }else if let Some(child)=&mut self.cleanup{
+   if !child.private_is_empty(){return plugin_settle_poll(child.close_step(body,effect));}
+   plugin_pay_unit(effect)?;
+   if let Some(read)=child.take_snapshot_read(){
+    self.returned=Some(ControlledRetirement::retain(read));
+   }else{
+    self.cleanup=None;
+   }
+  }else if let Some(child)=&mut self.returned{
+   if !child.terminal_is_empty(){return plugin_settle_poll(child.step(body,effect));}
+   plugin_pay_unit(effect)?;
+   self.returned=None;
+  }else{
+   return Ok(RetainedCloneStep::Complete(Default::default()));
+  }
   Ok(if self.cleanup_pending(){RetainedCloneStep::Progress(progress)}else{RetainedCloneStep::Complete(progress)})
  }
  fn demands(&self,body:usize)->Result<[usize;4],ValueError>{
@@ -155,28 +179,31 @@ impl GeometryOwner{
  pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?[1])}
  pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?[2])}
  pub fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?[3])}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let Some(slot)=Self::slot(&registry,self.instance)?else{return Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})};let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;let state=owner.as_mut().unwrap();let step=state.close_step(grant)?;let empty=state.empty();if empty{*owner=None;}drop(owner);if empty{for instance in registry.instances.iter_mut().flatten(){if instance.candidate==Some(slot){instance.candidate=None;}if instance.visual==Some(slot){instance.visual=None;}}registry.retiring[slot]=false;}Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})}
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PluginLifecycleFailure>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let Some(slot)=Self::slot(&registry,self.instance)?else{return Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})};let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;let state=owner.as_mut().unwrap();let step=state.close_step(body,effect)?;let empty=state.empty();if empty{*owner=None;}drop(owner);if empty{for instance in registry.instances.iter_mut().flatten(){if instance.candidate==Some(slot){instance.candidate=None;}if instance.visual==Some(slot){instance.visual=None;}}registry.retiring[slot]=false;}Ok(if Self::terminal(&registry,self.instance){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})}
  /// 🚪️ Normal lifecycle handoff retains private children before caller-funded cleanup.
  pub fn begin_close(&mut self)->Result<(),ValueError>{MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let index=self.instance as usize%INSTANCES;if registry.instances[index].is_some_and(|instance|instance.identity.instance==self.instance){registry.instances[index]=None;}for slot in 0..SHELLS{let mut owner=registry.shells[slot].try_borrow_mut().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing geometry worker is checked out"))?;if let Some(state)=owner.as_mut().filter(|state|state.identity.instance==self.instance){state.begin_close();drop(owner);registry.retiring[slot]=true;}}Ok(())})}
  pub fn terminal_is_empty(&self)->bool{terminal_is_empty(self.instance)}
 }
 fn demand_of(demands:[usize;4])->RetirementDemand{RetirementDemand{copy_bytes:demands[0],capacity_bytes:demands[1],release_bytes:demands[2],depth:demands[3]}}
 fn lifecycle(step:RetainedCloneStep)->PluginLifecycleStep{match step{RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)}}
-fn refused(error:ValueError)->Fault{Fault::from(error.into_message())}
-/// 📏️ Quotes the next retained scene cleanup turn without granting it.
+/// 📏️ Quotes the next retained scene cleanup turn from the source owner.
 pub fn maintenance_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{GeometryOwner::new(instance).demands(body).map(demand_of)}
-/// 🧹️ Pays one cleanup turn of a retained shell whose private job already finished or was superseded.
-pub fn maintenance(instance:u32,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
- if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
- GeometryOwner::new(instance).close_step(grant).map(lifecycle).map_err(refused)
+/// 🧹️ Pays the original cleanup action for a finished or superseded scene job.
+pub fn maintenance(instance:u32,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ let body=grant.maximum_copy_bytes;
+ let demand=maintenance_demands(instance,body)?;
+ let mut owner=GeometryOwner::new(instance);
+ original_lifecycle_effect_step(cx,grant,demand,|_,effect|{
+  let step=owner.close_step(body,effect)?;
+  Ok((lifecycle(step),owner.terminal_is_empty()))
+ })
 }
-/// 📏️ Quotes the next close turn; identical to maintenance because both pay the same retained child.
+/// 📏️ Quotes the next action of the same cleanup owner used by maintenance.
 pub fn close_demands(instance:u32,body:usize)->Result<RetirementDemand,ValueError>{maintenance_demands(instance,body)}
-/// 🚪️ Detaches instance references, then pays one cleanup turn of each exact owned shell.
-pub fn close(instance:u32,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
- let mut owner=GeometryOwner::new(instance);owner.begin_close().map_err(refused)?;
- if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
- owner.close_step(grant).map(lifecycle).map_err(refused)
+/// 🚪️ Detaches the instance and settles each original scene owner through its SDK effect.
+pub fn close(instance:u32,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ GeometryOwner::new(instance).begin_close()?;
+ maintenance(instance,cx,grant)
 }
 /// 🧾️ Completion includes every retained shell and genuine source return witness.
 pub fn terminal_is_empty(instance:u32)->bool{MOUNTED.with(|r|{let r=r.borrow();!r.instances.iter().flatten().any(|i|i.identity.instance==instance)&&r.shells.iter().all(|shell|shell.try_borrow().is_ok_and(|owner|owner.as_ref().is_none_or(|state|state.identity.instance!=instance)))})}

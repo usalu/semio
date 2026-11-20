@@ -62,7 +62,7 @@ impl<A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+Send+'stati
   6=>{std::ptr::addr_of_mut!((*target).ingress).write(ActionIngress::new());},
   7=>{std::ptr::addr_of_mut!((*target).original_typing).write(Default::default());},
   8=>{std::ptr::addr_of_mut!((*target).original_emission).write(Default::default());},
-  9=>{std::ptr::addr_of_mut!((*target).original_typed_command).write(Default::default());std::ptr::addr_of_mut!((*target).original_host_event_command).write(Default::default());std::ptr::addr_of_mut!((*target).original_command_scope).write(None);std::ptr::addr_of_mut!((*target).original_host_event_scope).write(None);},
+  9=>{std::ptr::addr_of_mut!((*target).original_typed_command).write(Default::default());std::ptr::addr_of_mut!((*target).original_host_event_command).write(Default::default());std::ptr::addr_of_mut!((*target).original_command_scope).write(Default::default());std::ptr::addr_of_mut!((*target).original_host_event_scope).write(None);},
   10=>{std::ptr::addr_of_mut!((*target).original_typed_tag).write(ManuallyDrop::new(None));},
   11=>{std::ptr::addr_of_mut!((*target).original_typed_tag_close).write(Default::default());},
   12=>{std::ptr::addr_of_mut!((*target).interaction).write(LocalInteraction::new());},

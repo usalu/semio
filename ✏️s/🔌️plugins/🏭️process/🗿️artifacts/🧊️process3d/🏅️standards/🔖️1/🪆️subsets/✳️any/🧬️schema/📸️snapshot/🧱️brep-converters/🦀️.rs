@@ -1,27 +1,23 @@
 //! 🧱️ B-Rep converters of the process3d snapshot: the analytic B-Rep per working solid, the shipped reference solids and the box, cylinder and sphere topology builders. See [`super`].
 
 use super::document_records::WorkingSolid;
+use semio_framework_3d_brep_engine::{Brep, GeometryHandle, ShapeRoot, ShapeValue};
+use semio_framework_pack::snapshot::ArtifactPack;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::body::{body_from_snapshot, snapshot_from_body};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
 
 //#region 🔖️Document
 //#region 🔖️WorkingScene
 //#region 🔖️BrepConverters
-/// 🌉️ WRITE direction, real (not a stub): analytic B-Rep topology for each `WorkingSolid` variant.
-/// `Box`/`Cylinder`/`Sphere` are exact (no tessellation/approximation — `BrepSurface::Cylinder`/
-/// `Sphere` are themselves analytic surface primitives, and a `BrepLoop` with zero edges is the
-/// correct "untrimmed, spans the whole surface" shape for the sphere's single closed face and the
-/// cylinder's lateral face). `ImportedMesh`/`ImportedSolid` reference content the app's own kernel
-/// session must resolve (mesh URL / kernel-session-local handle) — this plugin-only migration cannot
-/// tessellate/import that here, so it mints an honest EMPTY-topology placeholder rather than
-/// fabricating fake geometry; the doc comment on `SolidSpec`'s old `ImportedMesh`/`ImportedSolid`
-/// variants already flagged this as kernel-session-resolved, never persisted-content-resolved.
+/// 🌉️ Builds analytic and persisted B-Rep topology for a process solid. Display-only meshes carry no B-Rep.
 pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapshot {
     match solid {
         WorkingSolid::Box { width, depth, height } => brep_snapshot_for_box(*width, *depth, *height),
         WorkingSolid::Cylinder { radius, height } => brep_snapshot_for_cylinder(*radius, *height),
         WorkingSolid::Sphere { radius } => brep_snapshot_for_sphere(*radius),
         WorkingSolid::Reference { reference_id } => reference_solid(reference_id).and_then(|reference| reference.brep_snapshot()).unwrap_or_else(empty_brep_snapshot),
-        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => empty_brep_snapshot(),
+        WorkingSolid::ImportedSolid { brep_pack } => imported_brep_snapshot(brep_pack).unwrap_or_else(empty_brep_snapshot),
+        WorkingSolid::ImportedMesh { .. } => empty_brep_snapshot(),
     }
 }
 //#endregion 🔖️BrepConverters
@@ -82,6 +78,60 @@ pub fn reference_solid(reference_id: &str) -> Option<&'static ReferenceSolid> {
 //#region 🔖️Document
 //#region 🔖️WorkingScene
 //#region 🔖️BrepConverters
+/// 📏️ Maximum encoded size of an imported B-Rep in a Process3d snapshot.
+pub const PROCESS3D_IMPORTED_BREP_PACK_BYTES: usize = 65_536;
+
+/// 📐️ Bounds source model files at 24 KiB, including ordinary AP214 box solids.
+pub const PROCESS3D_MODEL_FILE_BYTES: u32 = 24_576;
+pub const PROCESS3D_MODEL_DATA_URL_BYTES: usize = (PROCESS3D_MODEL_FILE_BYTES as usize).div_ceil(3) * 4 + 64;
+
+/// 📎️ Decodes the bounded binary carrier used by the file picker and display-only meshes.
+pub fn decode_process3d_model_data_url(value: &str) -> Option<Vec<u8>> {
+    if value.len() > PROCESS3D_MODEL_DATA_URL_BYTES {
+        return None;
+    }
+    let (header, payload) = value.split_once(',')?;
+    if !header.starts_with("data:") || !header.ends_with(";base64") {
+        return None;
+    }
+    base64_codec::base64_standard_decode(payload).ok()
+}
+
+
+/// 🧲️ Carries the isolated solid's exact topology using the Semio B-Rep body pack.
+pub fn capture_imported_brep(shape: &ShapeValue) -> Option<WorkingSolid> {
+    pack_imported_brep(&snapshot_from_body(&shape.body))
+}
+
+/// 🧳️ Packs canonical Semio B-Rep topology into a Process3d geometry payload.
+pub fn pack_imported_brep(snapshot: &SemioBrepSnapshot) -> Option<WorkingSolid> {
+    let pack = snapshot.encode_pack_with(&Default::default()).ok()?;
+    (pack.len().div_ceil(3).saturating_mul(4) <= PROCESS3D_IMPORTED_BREP_PACK_BYTES)
+        .then(|| WorkingSolid::ImportedSolid { brep_pack: base64_codec::base64_standard_encode(&pack) })
+}
+
+fn imported_brep_snapshot(encoded: &str) -> Option<SemioBrepSnapshot> {
+    if encoded.len() > PROCESS3D_IMPORTED_BREP_PACK_BYTES {
+        return None;
+    }
+    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
+    SemioBrepSnapshot::decode_pack(&bytes).ok()
+}
+
+/// 🔓️ Registers the persisted solid in a fresh kernel for replay or export.
+pub fn restore_imported_brep(kernel: &mut Brep, encoded: &str) -> Option<GeometryHandle> {
+    let body = body_from_snapshot(&imported_brep_snapshot(encoded)?).ok()?;
+    let solid = {
+        let mut solids = body.solids.iter();
+        let (first, _) = solids.next()?;
+        if solids.next().is_some() {
+            return None;
+        }
+        first
+    };
+    kernel.import_shape(&ShapeValue { root: ShapeRoot::Solid(solid), body }).ok()
+}
+
 fn empty_brep_snapshot() -> SemioBrepSnapshot {
     SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
 }

@@ -122,6 +122,7 @@ impl CapturedRootRetirement {
 }
 
 impl ErasedSnapshotRetirement for CapturedRootRetirement {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demands())}
 
     /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the

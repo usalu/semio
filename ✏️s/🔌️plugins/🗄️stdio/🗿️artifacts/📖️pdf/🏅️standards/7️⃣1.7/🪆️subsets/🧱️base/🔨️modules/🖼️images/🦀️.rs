@@ -9,6 +9,10 @@ use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{PdfArtifactRe
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageBody, PdfImageMask, PdfObject, PdfStreamFilter};
 
+#[path = "🎭️sampled-alpha/🦀️.rs"]
+mod sampled_alpha;
+pub use sampled_alpha::PdfImagePreviewSamples;
+
 /// 📋 The image dictionary keys the typed model owns; everything else is `extra`.
 const IMAGE_KEYS: &[&str] = &["Type", "Subtype", "Width", "Height", "ColorSpace", "BitsPerComponent", "ImageMask", "Decode", "Interpolate", "SMask", "SMaskInData", "Mask", "Matte", "Intent", "OC", "StructParent", "Length", "Filter", "DecodeParms"];
 
@@ -88,25 +92,181 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
 }
 
 fn image_components(image:&PdfImage)->u32 {if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)}}
-fn geometry(width:u32,height:u32,components:u32,bits:u32)->PResult<(usize,usize)> {
-    if !matches!(bits,1|2|4|8|16)||components==0{return Err(PdfEngineError::Unsupported("image sample depth or components are invalid".into()));}
-    let count=(width as usize).checked_mul(components as usize).ok_or_else(||PdfEngineError::Unsupported("image row exceeds native address space".into()))?;
-    let row=count.checked_mul(bits as usize).ok_or_else(||PdfEngineError::Unsupported("image row width overflow".into()))?.div_ceil(8);
-    count.checked_mul(height as usize).ok_or_else(||PdfEngineError::Unsupported("image sample count overflow".into()))?;
-    let length=row.checked_mul(height as usize).ok_or_else(||PdfEngineError::Unsupported("image body width overflow".into()))?;Ok((count,length))
+/// 📏️ Returns the sample count per row and packed byte length for an image grid.
+pub fn packed_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> PResult<(usize, usize)> {
+    if !matches!(bits, 1 | 2 | 4 | 8 | 16) || components == 0 {
+        return Err(PdfEngineError::Unsupported("image sample depth or components are invalid".into()));
+    }
+    let count = (width as usize).checked_mul(components as usize)
+        .ok_or_else(|| PdfEngineError::Unsupported("image row sample count overflow".into()))?;
+    let row = count.checked_mul(bits as usize)
+        .ok_or_else(|| PdfEngineError::Unsupported("image row width overflow".into()))?.div_ceil(8);
+    count.checked_mul(height as usize).filter(|count| *count <= isize::MAX as usize / std::mem::size_of::<u32>())
+        .ok_or_else(|| PdfEngineError::Unsupported("image sample storage overflow".into()))?;
+    let length = row.checked_mul(height as usize)
+        .ok_or_else(|| PdfEngineError::Unsupported("image body width overflow".into()))?;
+    Ok((count, length))
 }
+use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
+
+enum SampleStage { Active, Complete, Cancelled, Closing, Closed }
+
+/// 🎚️ Admits packed native rows while preserving partial output for bounded retirement.
+pub struct PdfImageSampleCursor {
+    row_samples: usize,
+    row_bytes: usize,
+    packed_length: usize,
+    sample_count: usize,
+    bits: usize,
+    output: Vec<u32>,
+    stage: SampleStage,
+}
+
+impl PdfImageSampleCursor {
+    pub fn new(width: u32, height: u32, components: u32, bits: u32) -> PResult<Self> {
+        let (row_samples, packed_length) = packed_image_geometry(width, height, components, bits)?;
+        let height = height as usize;
+        let row_bytes = packed_length.checked_div(height).unwrap_or(0);
+        Ok(Self { row_samples, row_bytes, packed_length, sample_count: row_samples * height, bits: bits as usize, output: Vec::new(), stage: SampleStage::Active })
+    }
+
+    pub fn advance(&mut self, data: &[u8], grant: CosGrant, cancelled: bool) -> CosReceipt {
+        if cancelled && matches!(self.stage, SampleStage::Active | SampleStage::Complete) { self.stage = SampleStage::Cancelled; }
+        match self.stage {
+            SampleStage::Complete => return sample_receipt(Ok(CosStatus::Complete { end: self.sample_count }), 0),
+            SampleStage::Cancelled => return sample_receipt(Ok(CosStatus::Cancelled), 0),
+            SampleStage::Closed => return sample_receipt(Ok(CosStatus::Closed), 0),
+            SampleStage::Closing => return sample_receipt(Ok(CosStatus::More), 0),
+            _ if grant.work == 0 => return sample_receipt(Ok(CosStatus::More), 0),
+            _ => {}
+        }
+        if data.len() != self.packed_length {
+            return sample_receipt(Err("image packed body does not match its declared geometry"), 1);
+        }
+        if self.sample_count != 0 && self.output.capacity() == 0 {
+            let bytes = self.sample_count * std::mem::size_of::<u32>();
+            if bytes > grant.allocation_bytes { return sample_receipt(Ok(CosStatus::NeedsAllocation { bytes }), 0); }
+            if self.output.try_reserve_exact(self.sample_count).is_err() {
+                return sample_receipt(Err("unable to allocate image sample backing"), 1);
+            }
+            return CosReceipt { allocated_bytes: self.output.capacity() * std::mem::size_of::<u32>(), ..sample_receipt(Ok(CosStatus::More), 1) };
+        }
+
+        let count = (self.sample_count - self.output.len()).min(grant.work);
+        if count == 0 {
+            self.stage = SampleStage::Complete;
+            return sample_receipt(Ok(CosStatus::Complete { end: 0 }), 1);
+        }
+        let mut x = self.output.len() % self.row_samples;
+        let mut y = self.output.len() / self.row_samples;
+        for _ in 0..count {
+            let bit = x * self.bits;
+            let byte = y * self.row_bytes + bit / 8;
+            let value = match self.bits {
+                16 => u32::from(u16::from_be_bytes([data[byte], data[byte + 1]])),
+                8 => u32::from(data[byte]),
+                bits => {
+                    let shift = 8 - (bit % 8) - bits;
+                    u32::from((data[byte] >> shift) & ((1u8 << bits) - 1))
+                }
+            };
+            self.output.push(value);
+            x += 1;
+            if x == self.row_samples { x = 0; y += 1; }
+        }
+        if self.output.len() == self.sample_count {
+            self.stage = SampleStage::Complete;
+            sample_receipt(Ok(CosStatus::Complete { end: self.sample_count }), count)
+        } else { sample_receipt(Ok(CosStatus::More), count) }
+    }
+
+    pub fn take_samples(&mut self) -> Option<Vec<u32>> {
+        if !matches!(self.stage, SampleStage::Complete) { return None; }
+        self.stage = SampleStage::Closed;
+        Some(std::mem::take(&mut self.output))
+    }
+
+    pub fn begin_close(&mut self) {
+        if !matches!(self.stage, SampleStage::Closed) { self.stage = SampleStage::Closing; }
+    }
+
+    pub fn close_step(&mut self, grant: CosGrant) -> CosReceipt {
+        if matches!(self.stage, SampleStage::Closed) { return sample_receipt(Ok(CosStatus::Closed), 0); }
+        if !matches!(self.stage, SampleStage::Closing) || grant.work == 0 { return sample_receipt(Ok(CosStatus::More), 0); }
+        let bytes = self.output.capacity() * std::mem::size_of::<u32>();
+        if bytes > grant.release_bytes { return sample_receipt(Ok(CosStatus::NeedsRelease { bytes }), 0); }
+        self.output = Vec::new();
+        self.stage = SampleStage::Closed;
+        CosReceipt { released_bytes: bytes, ..sample_receipt(Ok(CosStatus::Closed), 1) }
+    }
+}
+
+fn sample_receipt(status: Result<CosStatus, &'static str>, work: usize) -> CosReceipt {
+    CosReceipt { status, work, allocated_bytes: 0, released_bytes: 0 }
+}
+
 /// 🛬️ Admits packed native rows as explicit logical sample values.
-pub fn unpack_image_samples(width:u32,height:u32,components:u32,bits:u32,data:&[u8])->PResult<Vec<u32>> {
-    let (count,length)=geometry(width,height,components,bits)?;if data.len()!=length{return Err(PdfEngineError::Unsupported("image packed body does not match its declared geometry".into()));}
-    let row=if height==0{0}else{length/height as usize};let mut values=Vec::with_capacity(count*height as usize);
-    for y in 0..height as usize {for x in 0..count {let start=y*row*8+x*bits as usize;let mut value=0;for offset in 0..bits as usize {let bit=start+offset;value=(value<<1)|u32::from((data[bit/8]>>(7-bit%8))&1);}values.push(value);}}Ok(values)
+pub fn unpack_image_samples(width: u32, height: u32, components: u32, bits: u32, data: &[u8]) -> PResult<Vec<u32>> {
+    let mut cursor = PdfImageSampleCursor::new(width, height, components, bits)?;
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    loop {
+        match cursor.advance(data, grant, false).status {
+            Ok(CosStatus::Complete { .. }) => return Ok(cursor.take_samples().expect("complete PDF image sample output")),
+            Ok(CosStatus::More) => {}
+            Err(reason) => return Err(PdfEngineError::Unsupported(reason.into())),
+            _ => return Err(PdfEngineError::Unsupported("unexpected image sample state".into())),
+        }
+    }
 }
+
 /// 🛫️ Packs explicit logical samples only at native image emission.
 pub fn pack_image_samples(width:u32,height:u32,components:u32,bits:u32,values:&[u32])->PResult<Vec<u8>> {
-    let (count,length)=geometry(width,height,components,bits)?;if values.len()!=count*height as usize||values.iter().any(|value|*value>=(1u32<<bits)){return Err(PdfEngineError::Unsupported("image samples do not match declared geometry and depth".into()));}
+    let (count,length)=packed_image_geometry(width,height,components,bits)?;if values.len()!=count*height as usize||values.iter().any(|value|*value>=(1u32<<bits)){return Err(PdfEngineError::Unsupported("image samples do not match declared geometry and depth".into()));}
     let row=if height==0{0}else{length/height as usize};let mut data=vec![0;length];for y in 0..height as usize {for x in 0..count {let start=y*row*8+x*bits as usize;let value=values[y*count+x];for offset in 0..bits as usize {let bit=start+offset;data[bit/8]|=(((value>>(bits as usize-1-offset))&1)as u8)<<(7-bit%8);}}}Ok(data)
 }
 
 //#region 🧪️Tests
+
+#[cfg(test)]
+mod sample_tests {
+    use super::*;
+
+    const ONE: CosGrant = CosGrant { work: 1, allocation_bytes: 64, release_bytes: 64 };
+
+    #[test]
+    fn inline_sample_work_follows_row_padding_and_big_endian_components() {
+        for (width, height, bits, packed, expected) in [
+            (3, 2, 1, &[160, 64][..], &[1, 0, 1, 0, 1, 0][..]),
+            (2, 1, 16, &[0x13, 0x57, 0xff, 0xff][..], &[0x1357, 65535][..]),
+        ] {
+            let mut cursor = PdfImageSampleCursor::new(width, height, 1, bits).unwrap();
+            let denied = CosGrant { allocation_bytes: 0, ..ONE };
+            let quote = expected.len() * std::mem::size_of::<u32>();
+            assert_eq!(cursor.advance(packed, denied, false).status, Ok(CosStatus::NeedsAllocation { bytes: quote }));
+            for _ in 0..100 {
+                let turn = cursor.advance(packed, ONE, false);
+                assert!(turn.work <= 1);
+                if let Ok(CosStatus::Complete { .. }) = turn.status { break; }
+            }
+            assert_eq!(cursor.take_samples().unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn cancelled_inline_samples_hold_the_allocated_rows_for_granted_close() {
+        let mut cursor = PdfImageSampleCursor::new(4, 1, 1, 8).unwrap();
+        let packed = [0, 4, 5, 76];
+        assert_eq!(cursor.advance(&packed, ONE, false).allocated_bytes, 16);
+        cursor.advance(&packed, ONE, false);
+        assert_eq!(cursor.advance(&packed, ONE, true).status, Ok(CosStatus::Cancelled));
+        assert!(cursor.take_samples().is_none());
+        cursor.begin_close();
+        let denied = CosGrant { release_bytes: 0, ..ONE };
+        assert_eq!(cursor.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 16 }));
+        let closed = cursor.close_step(ONE);
+        assert_eq!(closed.status, Ok(CosStatus::Closed));
+        assert_eq!(closed.released_bytes, 16);
+    }
+}
 
 //#endregion 🧪️Tests

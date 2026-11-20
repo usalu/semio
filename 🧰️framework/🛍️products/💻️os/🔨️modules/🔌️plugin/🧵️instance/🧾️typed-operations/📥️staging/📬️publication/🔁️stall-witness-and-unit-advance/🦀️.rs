@@ -40,7 +40,7 @@ pub(crate) fn mounted_typed_interaction_writes_are_next<A: ArtifactApp>(mounted:
     !emit.interaction_writes.is_empty()
         && mounted.pending_artifact_publication.is_none()
         && mounted.owned_child_group.is_none()
-        && emit.artifact_mutations.is_empty()
+        && !emit.has_artifact_mutations()
         && emit.config_mutations.is_empty()
         && emit.draft_mutations.is_empty()
         && emit.child_emits.is_empty()
@@ -54,6 +54,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let before = self.tools.typed_operation_stall_witness();
         let advanced = self.advance_typed_operation_publication_unit(identity,cx).await;
         if let (Some(before), Some(after)) = (before, self.tools.typed_operation_stall_witness()) {
+            if self.tools.tool_operations.get(after.0).is_some_and(|operation|matches!(operation.publication,Some(ArtifactToolCompletionValue::Genesis(_,Some(_))))) {
+                return advanced;
+            }
             if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
                 let verb = self.tools.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
                 semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
@@ -128,9 +131,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let receipt=mounted.identity.take().ok_or_else(||plugin_sdk_fault("mounted revalidation lacks its original authoring receipt"))?;
         let mut progress=mounted.identity_progress;
         let mut observer=|next:semio_framework_value::native_encoding::NativeEncodeProgress|{progress=next;!token.is_cancelled_now()&&!publication.is_cancelled()};
-        let mut owned_identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
+        let mut work=cx.native_encoder_work();
+        let mut owned_identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).with_work_lender(Box::new(semio_plugin_retained_command::typed_operation::MountedIdentityWork(&mut work)));
         let result=self.as_render().revalidate_interaction_on_document_change(meta,&mut owned_identity).await;
-        mounted.identity=Some(owned_identity.pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);drop(observer);mounted.identity_progress=progress;
+        mounted.identity=Some(owned_identity.pause().map_err(|error|plugin_sdk_fault(error.to_string()))?);drop(observer);cx.consume_fuel(work.performed());mounted.identity_progress=progress;
         result?;mounted.interaction_revalidated=true;Ok(())
     }
 

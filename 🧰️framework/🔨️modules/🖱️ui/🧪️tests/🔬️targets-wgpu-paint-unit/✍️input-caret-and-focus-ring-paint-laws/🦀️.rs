@@ -199,6 +199,7 @@ fn painting_a_focused_icon_select_swaps_its_border_to_the_accent_focus_ring() {
 fn painting_a_hovered_number_stepper_preserves_its_center_background() {
     let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
     tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
+    tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVER_OWNER, true);
     tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
     let mut draw = DrawList::default();
 
@@ -207,3 +208,90 @@ fn painting_a_hovered_number_stepper_preserves_its_center_background() {
     assert!(!has_solid_instance_colored(&draw, theme.button_hover), "whole-control hover must not tint the center input");
 }
 //#endregion 🔖️W2WidgetVisuals
+
+//#region 🔖️ClosedStateSilhouetteLaws
+fn resolved_border_instances(draw: &mut DrawList) -> Vec<([f32; 4], [f32; 4])> {
+    while !draw.finalize_shared_borders_step().unwrap() {}
+    draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(&layer.overlay_ui_instances)).filter(|item| item.rect[2] > 0.0 && item.rect[3] > 0.0).map(|item| (item.rect, item.color)).collect()
+}
+
+fn closed_perimeter(rect: [f32; 4], stroke: f32) -> [[f32; 4]; 4] {
+    let [x, y, w, h] = rect;
+    [[x, y, w, stroke], [x, y + h - stroke, w, stroke], [x, y, stroke, h], [x + w - stroke, y, stroke, h]]
+}
+
+#[test]
+fn a_hovered_cell_of_a_shared_group_paints_its_whole_perimeter_in_hover_colour_and_the_group_stays_normal() {
+    let (_, _, theme, _) = setup(&toggle("t"));
+    let stroke = theme.stroke_hairline;
+    let (normal, hover) = (Rgba { r: 0.2, g: 0.3, b: 0.4, a: 1.0 }, Rgba { r: 0.9, g: 0.8, b: 0.7, a: 1.0 });
+    for hovered in 0..3 {
+        let mut draw = DrawList::default();
+        for cell in 0..3 {
+            let (color, state) = if cell == hovered { (hover, semio_ui_draw_contract::SharedBorderState::Hover) } else { (normal, semio_ui_draw_contract::SharedBorderState::Normal) };
+            semio_ui_wgpu_layout::chrome::push_control_border(&mut draw, Rect::new(20.0 * cell as f32, 0.0, 20.0, 20.0), &theme, color, Rgba::TRANSPARENT, state);
+        }
+        let lines = resolved_border_instances(&mut draw);
+        let paint = |color: Rgba| lines.iter().filter(|(_, c)| *c == [color.r, color.g, color.b, color.a]).map(|(rect, _)| *rect).collect::<Vec<_>>();
+        let hover_lines = paint(hover);
+        for edge in closed_perimeter([20.0 * hovered as f32, 0.0, 20.0, 20.0], stroke) {
+            assert!(hover_lines.contains(&edge), "hovered cell {hovered}: {edge:?} in {hover_lines:?}");
+        }
+        assert_eq!(hover_lines.len(), 4, "no second parallel hover line beside the seams");
+        assert!(paint(normal).iter().all(|rect| !hover_lines.contains(rect)));
+    }
+}
+
+#[test]
+fn the_selected_presence_silhouette_stays_on_the_boxes_own_seams() {
+    let (_, _, theme, _) = setup(&toggle("t"));
+    let bounds = Rect::new(20.0, 10.0, 30.0, 20.0);
+    let presence = UiPresence { selected: true, ..Default::default() };
+    let mut draw = DrawList::default();
+    presence_overlay(&mut draw, bounds, &theme, &presence, true);
+    let lines = resolved_border_instances(&mut draw);
+    assert!(!lines.is_empty());
+    for (rect, _) in &lines {
+        assert!(rect[0] >= bounds.x && rect[1] >= bounds.y && rect[0] + rect[2] <= bounds.x + bounds.w && rect[1] + rect[3] <= bounds.y + bounds.h, "{rect:?} leaves {bounds:?}");
+    }
+    let active: Vec<_> = lines.iter().map(|(rect, _)| *rect).collect();
+    for edge in closed_perimeter([bounds.x, bounds.y, bounds.w, bounds.h], theme.stroke_hairline) {
+        assert!(active.contains(&edge), "{edge:?} missing in {active:?}");
+    }
+}
+
+#[test]
+fn an_ancestor_in_the_hover_chain_without_ownership_does_not_paint_hover() {
+    let paint_with = |flags: &[NodeFlags]| {
+        let (mut tree, root, theme, mut atlas) = setup(&toggle("t"));
+        for flag in flags { tree.node_mut(root).unwrap().flags.set(*flag, true); }
+        tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        let mut draw = DrawList::default();
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+        resolved_border_instances(&mut draw)
+    };
+    assert_eq!(paint_with(&[NodeFlags::HOVERED]), paint_with(&[]));
+    assert_ne!(paint_with(&[NodeFlags::HOVERED, NodeFlags::HOVER_OWNER]), paint_with(&[]));
+}
+//#endregion 🔖️ClosedStateSilhouetteLaws
+
+#[test]
+fn a_focused_cell_next_to_a_selected_cell_keeps_its_full_perimeter_in_focus_colour() {
+    let (_, _, theme, _) = setup(&toggle("t"));
+    let stroke = theme.stroke_hairline;
+    let (selected, focus) = (Rgba { r: 0.9, g: 0.1, b: 0.1, a: 1.0 }, Rgba { r: 0.1, g: 0.2, b: 0.9, a: 1.0 });
+    for focus_first in [true, false] {
+        let mut draw = DrawList::default();
+        let cells = [(0.0, if focus_first { (focus, semio_ui_draw_contract::SharedBorderState::Focus) } else { (selected, semio_ui_draw_contract::SharedBorderState::Active) }), (20.0, if focus_first { (selected, semio_ui_draw_contract::SharedBorderState::Active) } else { (focus, semio_ui_draw_contract::SharedBorderState::Focus) })];
+        for (x, (color, state)) in cells {
+            semio_ui_wgpu_layout::chrome::push_control_border(&mut draw, Rect::new(x, 0.0, 20.0, 20.0), &theme, color, Rgba::TRANSPARENT, state);
+        }
+        let lines = resolved_border_instances(&mut draw);
+        let focus_lines: Vec<_> = lines.iter().filter(|(_, c)| *c == [focus.r, focus.g, focus.b, focus.a]).map(|(rect, _)| *rect).collect();
+        let focused_x = if focus_first { 0.0 } else { 20.0 };
+        for edge in closed_perimeter([focused_x, 0.0, 20.0, 20.0], stroke) {
+            assert!(focus_lines.contains(&edge), "focus first {focus_first}: {edge:?} in {focus_lines:?}");
+        }
+        assert_eq!(focus_lines.len(), 4);
+    }
+}

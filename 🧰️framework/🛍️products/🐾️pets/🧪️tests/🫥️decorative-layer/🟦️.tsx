@@ -19,6 +19,7 @@ import { registerStillAndLivingStageTests } from "./🎞️still-and-living-stag
 import { registerEventsCastsAndTimeTests } from "./📡️events-casts-and-time/🟦️.tsx";
 import { registerNarrowHiddenAndForcedColoursTests } from "./🌙️narrow-hidden-and-forced-colours/🟦️.tsx";
 import { registerTeardownAndMountingTests } from "./🧹️teardown-and-mounting/🟦️.tsx";
+import { registerSlicedSurveyTests } from "./⏱️sliced-survey/🟦️.tsx";
 
 const CONSOLE = ["log", "info", "warn", "error", "debug", "trace"] as const;
 let spoken: MockInstance[] = [];
@@ -48,4 +49,5 @@ describe("🫥️ decorative layer", () => {
   registerEventsCastsAndTimeTests();
   registerNarrowHiddenAndForcedColoursTests();
   registerTeardownAndMountingTests();
+  registerSlicedSurveyTests();
 });

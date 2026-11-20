@@ -1,5 +1,6 @@
 /** 🧲️ Contract: a graph read never gives up because the owner registry or the implementation moves while it is read (200 seeded worlds, the real `loadBuildGraphUnpinnedV1` over a model whose registry changes on a logical clock): a pinned read completes on the registry it loaded in at most two attempts, an unpinned read adopts every moved registry and ends with the first candidate that holds, and no count of attempts ends a read.
  * @see ../🌊️seal-under-churn */
+import{withOwnerRegistryCustodyV1}from"../../../🕸️graph/📥️load/🧭️registry-follow/🟦️.ts";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
@@ -25,6 +26,7 @@ const world=async(seed:number,pinned:boolean)=>{
  const readRegistry=()=>{if(pinned){snapshot??=version;return{version:1,owners:[snapshot]};}return{version:1,owners:[version]};};
  const graph={version:1,projects:{},dependencies:[]},invalidated=Object.freeze({kind:"invalidated",reason:"owner-registry"});
  const bindings={
+  withOwnerRegistryCustodyV1,
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
   readBuildGraphSelectionV1:(value:unknown)=>value,readBuildOwnerRegistryV1:(value:unknown)=>value,
   importModuleV1:async()=>({readBuildOwnerRegistrySourceV1:()=>JSON.stringify(readRegistry())}),
@@ -42,7 +44,7 @@ const world=async(seed:number,pinned:boolean)=>{
   advanceScriptInvocation:async()=>{advance(1);},
  };
  const execute=Function(...Object.keys(bindings),code+";return loadBuildGraphUnpinnedV1;")(...Object.values(bindings));
- const result=await execute("/owned",{},{},{selection:{kind:"tasks",tasks:[{project:"one",target:"build"}]}});
+ const result=await execute("/owned",{},{signal:new AbortController().signal},{selection:{kind:"tasks",tasks:[{project:"one",target:"build"}]}});
  return{result,attempts,clears,moves,period,work,version};
 };
 

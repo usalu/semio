@@ -23,7 +23,7 @@ name = "semio_framework_job_context"
 path = "🦀️.rs"
 
 [features]
-testkit = ["semio-framework-async/testkit", "semio-framework-job-receiving/testkit"]
+testkit = ["semio-framework-async/testkit", "semio-framework-job-receiving/testkit", "semio-framework-job-failure/testkit"]
 
 [dependencies]
 semio-framework-value-native-outcome = { path = "../../../../🌱️value/🛬️decode/📬️outcome/📦️packages/🦀️rust" }

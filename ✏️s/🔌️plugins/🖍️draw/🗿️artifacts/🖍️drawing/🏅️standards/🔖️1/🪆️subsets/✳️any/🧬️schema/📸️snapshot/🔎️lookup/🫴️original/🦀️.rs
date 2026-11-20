@@ -1,6 +1,7 @@
 //! 🫴️ Original Drawing paths retain both typed sources through bounded UTF8 targeting.
 use crate::{DrawingLayerNode,layer_id,snapshot::DrawingSnapshot};
-use semio_framework_value::{paged::{PagedUtf8,Utf8Text},ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneBinding,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,close_retained_binding}};
+use semio_framework_value::{paged::{PagedUtf8,Utf8Text},ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneBinding,RetainedCloneRef,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,close_retained_binding}};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll};
 use std::mem::size_of;
 pub const DRAWING_ORIGINAL_MAXIMUM_DEPTH:usize=64;
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
@@ -15,6 +16,29 @@ impl DrawingOriginalLayerAddress{
 #[derive(Clone,Copy,Default)]struct Frame{child:usize,compared:bool}
 struct Cursor{root:usize,depth:usize,path:[usize;64],frames:[Frame;64],left_chunk:usize,left_byte:usize,right_chunk:usize,right_byte:usize,compared:usize,found:Option<DrawingOriginalLayerAddress>,terminal:bool}
 impl Default for Cursor{fn default()->Self{Self{root:0,depth:0,path:[0;64],frames:[Frame::default();64],left_chunk:0,left_byte:0,right_chunk:0,right_byte:0,compared:0,found:None,terminal:false}}}
+/// 🪢️ Settles a native byte buffer or a binding whose source still owns its original lease.
+pub(super) fn close_result(poll:OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError>{
+    match poll {
+        RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("native Drawing close unexpectedly retained a callback")),
+        RetainedWorkPoll::Complete(outcome)=>outcome.result.map_err(|failure|failure.into_value_error()),
+    }
+}
+#[cfg(test)]
+pub(super) fn test_step(
+    grant: semio_framework_value::retained_clone::RetainedCloneGrant,
+    mut step: impl FnMut(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep,ValueError>,
+) -> RetainedCloneStep {
+    use semio_framework_value_clone_source_testing::drive::drive_reply;
+    drive_reply(
+        grant,
+        256,
+        |result| result.as_ref().map_or_else(ValueError::retained_progress, |step|step.progress()),
+        |effect,reply,recover| {
+            assert!(!recover);
+            Ok(reply.complete(step(effect)))
+        },
+    ).result.unwrap()
+}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Drawing original target lookup custody changed")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn octet(t:&impl Utf8Text,chunk:&mut usize,byte:&mut usize)->Result<Option<u8>,ValueError>{let Some(c)=t.text_chunk(*chunk)else{return Ok(None)};if *byte==c.len(){*chunk+=1;*byte=0;return Ok(None)}let b=c.as_bytes().get(*byte).copied().ok_or_else(invalid)?;*byte+=1;Ok(Some(b))}
@@ -24,12 +48,24 @@ impl Default for DrawingOriginalLookup{fn default()->Self{Self{snapshot:None,tar
 impl DrawingOriginalLookup{
  fn metadata()->usize{2*size_of::<Cursor>()+size_of::<bool>()}
  pub fn demand<T:Utf8Text>(&self,s:RetainedCloneRef<'_,DrawingSnapshot>,t:RetainedCloneRef<'_,T>,_body:usize)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid())}if !s.check_binding(&self.snapshot)?{return Ok(fixed(s.binding_copy_bytes()))}if !t.check_binding(&self.target)?{return Ok(fixed(t.binding_copy_bytes()))}Ok(if self.cursor.terminal{Default::default()}else{fixed(Self::metadata()+2)})}
- pub fn advance<T:Utf8Text>(&mut self,s:RetainedCloneRef<'_,DrawingSnapshot>,t:RetainedCloneRef<'_,T>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(s,t,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(p)=s.bind(&mut self.snapshot,g).result?{return Ok(RetainedCloneStep::Progress(p))}if let Some(p)=t.bind(&mut self.target,g).result?{return Ok(RetainedCloneStep::Progress(p))}if self.cursor.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}let mut compared=0;let result=(||->Result<(),ValueError>{let c=&mut self.cursor;let Some(mut n)=s.get().layers.get(c.root)else{c.terminal=true;return Ok(())};for i in &c.path[..c.depth]{let DrawingLayerNode::Group(group)=n else{return Err(invalid())};n=group.children.get(*i).ok_or_else(invalid)?}if !c.frames[c.depth].compared{let key=layer_id(n);let equal=if key.len()!=t.get().text_bytes(){Some(false)}else if c.compared==key.len(){Some(true)}else{let left=octet(key,&mut c.left_chunk,&mut c.left_byte)?;let right=octet(t.get(),&mut c.right_chunk,&mut c.right_byte)?;compared=usize::from(left.is_some())+usize::from(right.is_some());match(left,right){(Some(l),Some(r))=>{compared=2;c.compared+=1;if l==r{None}else{Some(false)}},(None,None)=>None,(None,Some(_))=>{c.right_byte-=1;None},(Some(_),None)=>{c.left_byte-=1;None}}};if let Some(equal)=equal{c.left_chunk=0;c.left_byte=0;c.right_chunk=0;c.right_byte=0;c.compared=0;c.frames[c.depth].compared=true;if equal{let mut indices=[0;64];indices[0]=c.root;indices[1..c.depth+1].copy_from_slice(&c.path[..c.depth]);c.found=Some(DrawingOriginalLayerAddress{length:c.depth+1,indices});c.terminal=true;}}return Ok(())}if let DrawingLayerNode::Group(group)=n{let child=c.frames[c.depth].child;if child<group.children.len(){if c.depth+1>=64{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Drawing original target exceeds declared layer depth"))}c.frames[c.depth].child+=1;c.path[c.depth]=child;c.depth+=1;c.frames[c.depth]=Frame::default();return Ok(())}}if c.depth==0{c.root+=1;c.frames[0]=Frame::default()}else{c.depth-=1}Ok(())})();let p=RetainedCloneProgress{copied_items:1,copied_bytes:Self::metadata()+compared,..Default::default()};result.map_err(|e|e.with_retained_progress(p))?;Ok(if self.cursor.terminal{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ pub fn advance<T:Utf8Text>(&mut self,s:RetainedCloneRef<'_,DrawingSnapshot>,t:RetainedCloneRef<'_,T>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let g=effect.grant();let d=self.demand(s,t,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(p)=s.bind(&mut self.snapshot,effect).result?{return Ok(RetainedCloneStep::Progress(p))}if let Some(p)=t.bind(&mut self.target,effect).result?{return Ok(RetainedCloneStep::Progress(p))}if self.cursor.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}if effect.remaining_work_units()?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing lookup exceeds admitted work"))}let mut compared=0;let result=(||->Result<(),ValueError>{let c=&mut self.cursor;let Some(mut n)=s.get().layers.get(c.root)else{c.terminal=true;return Ok(())};for i in &c.path[..c.depth]{let DrawingLayerNode::Group(group)=n else{return Err(invalid())};n=group.children.get(*i).ok_or_else(invalid)?}if !c.frames[c.depth].compared{let key=layer_id(n);let equal=if key.len()!=t.get().text_bytes(){Some(false)}else if c.compared==key.len(){Some(true)}else{let left=octet(key,&mut c.left_chunk,&mut c.left_byte)?;let right=octet(t.get(),&mut c.right_chunk,&mut c.right_byte)?;compared=usize::from(left.is_some())+usize::from(right.is_some());match(left,right){(Some(l),Some(r))=>{compared=2;c.compared+=1;if l==r{None}else{Some(false)}},(None,None)=>None,(None,Some(_))=>{c.right_byte-=1;None},(Some(_),None)=>{c.left_byte-=1;None}}};if let Some(equal)=equal{c.left_chunk=0;c.left_byte=0;c.right_chunk=0;c.right_byte=0;c.compared=0;c.frames[c.depth].compared=true;if equal{let mut indices=[0;64];indices[0]=c.root;indices[1..c.depth+1].copy_from_slice(&c.path[..c.depth]);c.found=Some(DrawingOriginalLayerAddress{length:c.depth+1,indices});c.terminal=true;}}return Ok(())}if let DrawingLayerNode::Group(group)=n{let child=c.frames[c.depth].child;if child<group.children.len(){if c.depth+1>=64{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Drawing original target exceeds declared layer depth"))}c.frames[c.depth].child+=1;c.path[c.depth]=child;c.depth+=1;c.frames[c.depth]=Frame::default();return Ok(())}}if c.depth==0{c.root+=1;c.frames[0]=Frame::default()}else{c.depth-=1}Ok(())})();let p=RetainedCloneProgress{copied_items:1,copied_bytes:Self::metadata()+compared,..Default::default()};result.map_err(|e|e.with_retained_progress(p))?;Ok(if self.cursor.terminal{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
  pub fn ready(&self)->bool{!self.closing&&self.cursor.terminal}
  pub fn address(&self)->Result<Option<DrawingOriginalLayerAddress>,ValueError>{if !self.ready(){return Err(invalid())}Ok(self.cursor.found)}
+ pub fn advance_work_demand<T:Utf8Text>(&self,s:RetainedCloneRef<'_,DrawingSnapshot>,t:RetainedCloneRef<'_,T>)->Result<u64,ValueError>{
+    if self.closing{return Err(invalid())}
+    if !s.check_binding(&self.snapshot)?{return s.binding_work_demand(&self.snapshot)}
+    if !t.check_binding(&self.target)?{return t.binding_work_demand(&self.target)}
+    Ok(u64::from(!self.cursor.terminal))
+ }
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+    if self.terminal_is_empty(){return Ok(0)}
+    if !self.cleared{return Ok(1)}
+    if self.target.is_some(){return RetainedCloneBinding::close_work_demand(&self.target,body)}
+    RetainedCloneBinding::close_work_demand(&self.snapshot,body)
+ }
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.cleared{return Ok(fixed(Self::metadata()))}if self.target.is_some(){return RetainedCloneBinding::close_demand(&self.target,body)}RetainedCloneBinding::close_demand(&self.snapshot,body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;if !self.cleared{self.cursor=Cursor::default();self.cleared=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}if self.target.is_some(){return close_retained_binding(&mut self.target,g).result.map(|s|RetainedCloneStep::Progress(s.progress()))}close_retained_binding(&mut self.snapshot,g).result}
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let g=effect.grant();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.cleared{if effect.remaining_work_units()?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Drawing lookup closure exceeds admitted work"))}self.closing=true;self.cursor=Cursor::default();self.cleared=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}if self.target.is_some(){return close_result(close_retained_binding(&mut self.target,body,effect)).map(|s|RetainedCloneStep::Progress(s.progress()))}close_result(close_retained_binding(&mut self.snapshot,body,effect))}
  pub fn terminal_is_empty(&self)->bool{self.snapshot.is_none()&&self.target.is_none()}
 }
 impl Drop for DrawingOriginalLookup{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Drawing target lookup retains original snapshot or target");}}

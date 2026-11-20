@@ -47,3 +47,10 @@ test("generation closure proof reads binary indices and streamed frontiers with 
  }finally{db.close();}
  const payload=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="payload")!.getText(tree);expect(payload).toContain("GENERATION_POLICY_V1.maximumIndexBytes");expect(payload).toContain("readGenerationClosureV1");expect(payload).toContain("decodeFactIndexV1");expect(payload).toContain("budget.remaining=chargeReadBytes(budget.remaining,expanded.length)");
 },60000);
+
+test("the link the worker follows from a generation manifest to its fact index is the path the writer stores and the proof classifies",async()=>{
+ const worker=await readFile(new URL("../../👷️closure-read-worker/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8"),writer=await readFile(new URL("../../../../../../../../../🏗️build/🕸️graph/🕰️generations/🟨️.mjs",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL)),"utf8");
+ expect(writer).toContain("indexPath=digest=>at(P.indexes,digest,\".facts.br\")");
+ expect(worker).toContain("join(parent,\"x\",manifest.factIndex+\".facts.br\")");
+ expect(worker).not.toContain("manifest.factIndex+\".json.br\"");
+});

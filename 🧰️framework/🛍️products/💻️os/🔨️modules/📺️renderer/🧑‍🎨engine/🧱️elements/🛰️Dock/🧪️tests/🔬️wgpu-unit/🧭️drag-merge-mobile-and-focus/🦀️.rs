@@ -148,9 +148,7 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
 /// horizontal body padding, and publish centered resize targets clipped to their axis bounds.
 #[test]
 fn themed_axis_geometry_matches_the_shared_react_fixture() {
-    let repo = fixture_path!("../../../../../../../../../../..");
-    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
-    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
+    let fixture = dock_axis_geometry_fixture();
     let token = fixture["oracleSample"]["tokenPixels"].as_f64().expect("token pixels") as f32;
     let width = fixture["viewport"]["width"].as_f64().expect("viewport width") as f32;
     let height = fixture["viewport"]["height"].as_f64().expect("viewport height") as f32;

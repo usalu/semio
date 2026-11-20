@@ -1,5 +1,5 @@
 //! 🎟️ The real original context carries one finite vector ledger and a separate semantic fuel receipt.
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,OperationId,Generation,close_original_retained_step};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,OperationId,Generation,close_original_effect_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentVectorJob,DocumentSceneLimits,DocumentAlgorithmLimits,DocumentSceneContent};
@@ -11,7 +11,7 @@ fn stock(v:&Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:v["items
 fn delta(a:RetainedCloneProgress,b:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:b.copied_items-a.copied_items,copied_bytes:b.copied_bytes-a.copied_bytes,retained_capacity_bytes:b.retained_capacity_bytes-a.retained_capacity_bytes,released_bytes:b.released_bytes-a.released_bytes}}
 fn close_owned<T:RetireOwned>(value:T,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
  let mut owner=ControlledRetirement::retain(value);
- for _ in 0..1_000_000{if owner.terminal_is_empty(){break}let d=owner.next_demand(caller.remaining_grant().maximum_copy_bytes).unwrap();let g=grant(d);let(result,heap)=observe(||caller.turn_with_decoder(g,decoder,|cx|cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|g|owner.step(g)))));result.unwrap();let p=caller.receipt();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
+ for _ in 0..1_000_000{if owner.terminal_is_empty(){break}let body=caller.remaining_grant().maximum_copy_bytes;let d=owner.next_demand(body).unwrap();let g=grant(d);let(result,heap)=observe(||caller.turn_with_decoder(g,decoder,|cx|cx.with_original_retirement(|cx|close_original_effect_step(cx,d,|effect|owner.step(body,effect)))));result.unwrap();let p=caller.receipt();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
  assert!(owner.terminal_is_empty());
 }
 #[test]
@@ -40,8 +40,8 @@ fn original_vector_font_turn_posts_actual_receipt_and_cpu_once_on_success_error_
   }
   assert!(denied.into_iter().all(|v|v));assert!(paid_repeat);assert!(capacity>0&&cpu>0);assert_eq!(completed,case["result"]=="complete");assert_eq!(fault.is_some(),case["result"]=="error");assert_eq!(final_error.is_some(),case["result"]=="error");
   let(mut closing,output)=job.into_retirement();assert_eq!(output.is_some(),completed);if let Some(output)=&output{assert!(output.nodes.iter().any(|n|matches!(&n.content,DocumentSceneContent::Glyphs{segments,..}if !segments.is_empty())));}
-  for _ in 0..1_000_000{if closing.terminal_is_empty(){break}let copy=closing.next_copy_byte_demand().unwrap();let release=closing.next_release_byte_demand().unwrap();let d=RetirementDemand{copy_bytes:copy,capacity_bytes:closing.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),release_bytes:release,depth:closing.next_depth_demand().unwrap()};caller.turn_with_decoder(grant(d),&mut decoder,|cx|cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|g|closing.close_step(g)))).unwrap();}
-  assert!(closing.terminal_is_empty());let((),heap)=observe(||drop(closing));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));close_owned((output,fault,document),&mut caller,&mut decoder);while !decoder.terminal_is_empty(){caller.turn(issued,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}
+  for _ in 0..1_000_000{if closing.terminal_is_empty(){break}let body=caller.remaining_grant().maximum_copy_bytes;let d=closing.next_demand(body).unwrap();caller.turn_with_decoder(grant(d),&mut decoder,|cx|cx.with_original_retirement(|cx|close_original_effect_step(cx,d,|effect|closing.close_step(body,effect)))).unwrap();}
+  assert!(closing.terminal_is_empty());let((),heap)=observe(||drop(closing));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));close_owned((output,fault,document),&mut caller,&mut decoder);while !decoder.terminal_is_empty(){caller.turn(issued,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();}
   caller.retire(issued);
  }
 }

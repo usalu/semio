@@ -34,14 +34,14 @@ fn with_ceilings() -> ModelSnapshot {
     let storey = model.storeys.iter().find(|(_, storey)| storey.level == 0).map(|(id, _)| id.clone()).expect("the ground storey");
     let upper = model.storeys.iter().find(|(_, storey)| storey.level == 1).map(|(id, _)| id.clone()).expect("the first storey");
     let material = model.materials.keys().next().cloned().expect("a material");
-    model.ceiling_types.insert("ct-board".into(), CeilingType { name: "Board on wool".into(), layers: vec![layer(&material, 0.0125), layer(&material, 0.05)] });
-    model.ceiling_types.insert("ct-tile".into(), CeilingType { name: "Tile".into(), layers: vec![layer(&material, 0.02)] });
+    model.ceiling_types.cold_insert("ct-board".into(), CeilingType { name: "Board on wool".into(), layers: vec![layer(&material, 0.0125), layer(&material, 0.05)] });
+    model.ceiling_types.cold_insert("ct-tile".into(), CeilingType { name: "Tile".into(), layers: vec![layer(&material, 0.02)] });
     let outline = vec![vertex(0.0, 0.0), vertex(6.0, 0.0), vertex(6.0, 4.0), vertex(0.0, 4.0)];
     let hole = vec![vertex(2.0, 1.0), vertex(2.0, 2.0), vertex(3.0, 2.0), vertex(3.0, 1.0)];
     let ceiling = |storey: &str, kind: &str, boundary: Vec<Vertex>, holes: Vec<Vec<Vertex>>, offset: f64, slope: Option<Slope>, name: &str| Ceiling { storey: storey.into(), ceiling_type: kind.into(), boundary, holes, offset, slope, name: name.into() };
-    model.ceilings.insert("ce-board".into(), ceiling(&storey, "ct-board", outline.clone(), vec![hole], 0.3, None, "Hall Ceiling"));
-    model.ceilings.insert("ce-tile".into(), ceiling(&storey, "ct-tile", vec![vertex(7.0, 0.0), vertex(9.0, 0.0), vertex(9.0, 3.0), vertex(7.0, 3.0)], Vec::new(), 0.15, None, ""));
-    model.ceilings.insert("ce-raked".into(), ceiling(&upper, "ct-board", outline, Vec::new(), 0.2, Some(Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.05 }), "Raked Ceiling"));
+    model.ceilings.cold_insert("ce-board".into(), ceiling(&storey, "ct-board", outline.clone(), vec![hole], 0.3, None, "Hall Ceiling"));
+    model.ceilings.cold_insert("ce-tile".into(), ceiling(&storey, "ct-tile", vec![vertex(7.0, 0.0), vertex(9.0, 0.0), vertex(9.0, 3.0), vertex(7.0, 3.0)], Vec::new(), 0.15, None, ""));
+    model.ceilings.cold_insert("ce-raked".into(), ceiling(&upper, "ct-board", outline, Vec::new(), 0.2, Some(Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.05 }), "Raked Ceiling"));
     model
 }
 

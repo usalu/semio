@@ -19,7 +19,7 @@ pub fn house() -> ModelSnapshot {
 pub fn scheduled() -> ModelSnapshot {
     let mut snapshot = house();
     for key in semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::PRESETS {
-        snapshot.schedules.insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
+        snapshot.schedules.cold_insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
     }
     snapshot
 }
@@ -37,7 +37,7 @@ pub fn plain(category: ScheduleCategory, columns: &[(ScheduleField, bool)]) -> S
 /// 📋️ The table of `schedule` over `snapshot`, inferred through the model graph.
 pub fn table_of(snapshot: &ModelSnapshot, schedule: Schedule) -> ScheduleTable {
     let mut model = snapshot.clone();
-    model.schedules.insert("sch-test".into(), schedule);
+    model.schedules.cold_insert("sch-test".into(), schedule);
     ModelInference::infer(&model).expect("infers").schedules.remove("sch-test").expect("the table of the schedule")
 }
 

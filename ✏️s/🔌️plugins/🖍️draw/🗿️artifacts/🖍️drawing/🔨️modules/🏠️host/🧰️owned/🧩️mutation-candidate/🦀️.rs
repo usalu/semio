@@ -1,6 +1,8 @@
 //! 🧩️ Drawing mutation candidate: the candidate phase machine state, the overlay patch, the source access, the clone source projections and the candidate authority with its construction, rebuild, retirement and close steps.
 
 use super::*;
+use semio_framework_value::RetainedAllocationEffect;
+use store::os_store::snapshot_read::settle_close_poll;
 
 //#region 🔖️RetainedStoreInitialization
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -395,19 +397,25 @@ impl DrawingMutationCandidateAuthority {
         matches!(mutation, DrawingMutation::DuplicateLayer(_)) && matches!(self.phase, DrawingMutationCandidatePhase::LocateCloneSource | DrawingMutationCandidatePhase::PrepareOwnedValue)
     }
 
-    pub fn pump_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        let grant = cx.retained_grant();
-        let step = if self.retirement.is_some() {
-            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
-        } else if self.retire_pending.is_some() {
-            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant)
-        } else {
-            return Ok(false);
+    fn retire_owner(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+        if self.retirement.is_some() {
+            let poll = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect.grant().maximum_copy_bytes, effect);
+            return settle_close_poll(poll).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
-        .result
-        .map_err(|_| "drawing-store.mutation-retirement")?;
-        cx.consume_retained(step.progress()).map_err(|_| "drawing-store.mutation-retirement-grant")?;
-        cx.consume_fuel(1);
+        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, effect).result
+    }
+
+    pub fn pump_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.retirement.is_none() && self.retire_pending.is_none() { return Ok(false); }
+        let grant = cx.retained_grant();
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| self.retire_owner(effect)).map_err(|_| "drawing-store.mutation-retirement-work")? else {
+            return Ok(true);
+        };
+        let progress = result.as_ref().map_or_else(semio_framework_value::ValueError::retained_progress, |step| step.progress());
+        let receipt = cx.consume_retained(progress);
+        cx.consume_fuel(u64::try_from(work).map_err(|_| "drawing-store.mutation-retirement-work")?);
+        result.map_err(|_| "drawing-store.mutation-retirement")?;
+        receipt.map_err(|_| "drawing-store.mutation-retirement-grant")?;
         Ok(true)
     }
 
@@ -497,44 +505,56 @@ impl DrawingMutationCandidateAuthority {
     pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Drawing mutation candidate close depth overflow"))?; Ok(demand) };
         let unit = semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
-        if self.preflight_mutation.is_some() { return Ok(unit); }
-        if let Some(active) = self.retirement.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
-        if self.retire_pending.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retire_pending)?); }
-        if self.duplicate_rewrite.is_some() || self.rebuild.is_some() { return Ok(Self::coarse_demand()); }
+        if !self.clone_text_work.terminal_is_empty() || self.preflight_mutation.is_some() { return Ok(unit); }
+        if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
+        if self.retire_pending.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retire_pending); }
+        if let Some(rewrite) = self.duplicate_rewrite.as_ref() {
+            let demand = rewrite.close_demands(body)?;
+            return if demand.depth == 0 { Ok(unit) } else { nested(demand) };
+        }
+        if self.rebuild.is_some() { return Ok(Self::coarse_demand()); }
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) && self.source_undo.is_some() { return Ok(unit); }
-        let clone_demand = |grant: RetainedCloneGrant| semio_framework_value::RetirementDemand { copy_bytes: grant.maximum_copy_bytes, capacity_bytes: grant.maximum_capacity_bytes, release_bytes: grant.maximum_release_bytes, depth: grant.maximum_depth };
-        if let Some(layer) = self.layer_clone.as_ref() { return nested(clone_demand(layer.close_demands(body)?)); }
-        if let Some(fill) = self.fill_clone.as_ref() { return nested(clone_demand(fill.close_demands(body)?)); }
-        if let Some(text) = self.text_clone.as_ref() { return nested(clone_demand(text.close_demands(body)?)); }
-        if let Some(asset) = self.asset_clone.as_ref() { return nested(clone_demand(asset.close_demands(body)?)); }
-        if let Some(segments) = self.segments_clone.as_ref() { return nested(clone_demand(segments.close_demands(body)?)); }
-        if let Some(stroke) = self.stroke_clone.as_ref() { return nested(clone_demand(stroke.close_demands(body)?)); }
-        if self.pending_layer.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_layer)?); }
+        if let Some(layer) = self.layer_clone.as_ref() { return nested(layer.close_demands(body)?); }
+        if let Some(fill) = self.fill_clone.as_ref() { return nested(fill.close_demands(body)?); }
+        if let Some(text) = self.text_clone.as_ref() { return nested(text.close_demands(body)?); }
+        if let Some(asset) = self.asset_clone.as_ref() { return nested(asset.close_demands(body)?); }
+        if let Some(segments) = self.segments_clone.as_ref() { return nested(segments.close_demands(body)?); }
+        if let Some(stroke) = self.stroke_clone.as_ref() { return nested(stroke.close_demands(body)?); }
         Ok(unit)
     }
 
-    pub fn close_step(&mut self, mut source: Option<&mut DrawingSnapshot>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, mut source: Option<&mut DrawingSnapshot>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind};
         let false_terminal = |label: &'static str| ValueError::new(ValueRefusalKind::InvariantViolated, label);
         let empty = RetainedCloneProgress::default();
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let grant = effect.grant();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if effect.remaining_work_units()? == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, self.close_demands(grant.maximum_copy_bytes)?) {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        self.clone_text_work.close_step(1);
+        let pay = |effect: &mut RetainedAllocationEffect<'_>| -> Result<(), ValueError> {
+            if !effect.performed(1)? { return Err(ValueError::invariant("Drawing mutation candidate close exceeded its Work")); }
+            Ok(())
+        };
+        if !self.clone_text_work.terminal_is_empty() {
+            pay(effect)?;
+            self.clone_text_work.close_step(1);
+            return Ok(Self::unit_step());
+        }
         if let Some(preflight) = self.preflight_mutation.as_mut() {
+            pay(effect)?;
             let step = preflight.close_step();
             if !preflight.terminal_is_empty() { return Err(false_terminal("Drawing mutation preflight reported false terminal")); }
             drop(self.preflight_mutation.take());
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress()));
-        }
-        if self.retire_pending.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant).result;
+        if self.retirement.is_some() || self.retire_pending.is_some() {
+            return self.retire_owner(effect);
         }
         if let Some(rewrite) = self.duplicate_rewrite.as_mut() {
-            let step = rewrite.close_step(child)?;
-            if matches!(step, RetainedCloneStep::Complete(_)) {
+            if rewrite.close_demands(grant.maximum_copy_bytes)?.depth == 0 {
+                pay(effect)?;
                 let pages = self.overlay_pages.as_mut().ok_or_else(|| false_terminal("Drawing duplicate name arena missing"))?;
                 if pages.len() >= pages.capacity() {
                     return Err(false_terminal("Drawing duplicate name arena return saturated"));
@@ -543,26 +563,28 @@ impl DrawingMutationCandidateAuthority {
                 *self.duplicate_id_owner = Some(id_owner);
                 pages.push(name_owner);
                 drop(self.duplicate_rewrite.take());
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..step.progress() }));
+                return Ok(Self::unit_step());
             }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
+            return rewrite.close_step(&mut effect.nested(child)).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.rebuild.is_some() {
             let Some(source) = source.as_deref_mut() else { return Ok(RetainedCloneStep::Progress(empty)) };
+            pay(effect)?;
             return self.pump_rebuild_close(source);
         }
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
             if let Some(undo) = self.source_undo {
                 let Some(source) = source else { return Ok(RetainedCloneStep::Progress(empty)) };
+                pay(effect)?;
                 self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawingContainerRebuildRole::CloseSourceUndo).map_err(|e| ValueError::new(ValueRefusalKind::InvariantViolated, e))?;
-                return Ok(RetainedCloneStep::Progress(empty));
+                return Ok(Self::unit_step());
             }
         }
         self.clone_work = None;
         macro_rules! close_clone {
             ($slot:expr, $label:literal) => {
                 if let Some(owner) = $slot.as_mut() {
-                    let step = owner.close_step(child).result?;
+                    let step = settle_close_poll(owner.close_step(&mut effect.nested(child)))?;
                     if matches!(step, RetainedCloneStep::Complete(_)) {
                         if !owner.terminal_is_empty() { return Err(false_terminal(concat!($label, " reported false terminal"))); }
                         drop($slot.take());
@@ -577,10 +599,13 @@ impl DrawingMutationCandidateAuthority {
         close_clone!(self.asset_clone, "Asset clone");
         close_clone!(self.segments_clone, "Path clone");
         close_clone!(self.stroke_clone, "Drawing mutation stroke clone");
-        if let Some(value) = self.pending_layer.take() {
+        if self.pending_layer.is_some() {
+            pay(effect)?;
+            let value = self.pending_layer.take().expect("observed pending drawing layer");
             *self.retire_pending = Some(DrawingRetirementOwner::Layer(value));
-            return Ok(RetainedCloneStep::Progress(empty));
+            return Ok(Self::unit_step());
         }
+        pay(effect)?;
         match self.return_arena_owner() {
             Ok(Some(true)) => {}
             Ok(Some(false)) => return Ok(DrawingMutationCandidateAuthority::unit_step()),

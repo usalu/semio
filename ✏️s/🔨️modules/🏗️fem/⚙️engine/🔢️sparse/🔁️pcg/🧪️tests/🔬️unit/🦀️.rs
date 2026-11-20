@@ -6,7 +6,6 @@ use super::*;
 use semio_s_fem_test_support::close_turn;
 use semio_s_fem_test_support::accounted_close;
 use semio_s_fem_test_support::checkpoint_payload;
-use semio_s_fem_test_support::close_job;
 use semio_s_fem_test_support::close_payload;
 use semio_s_fem_test_support::close_writer;
 use semio_s_fem_test_support::grant_of;
@@ -22,8 +21,6 @@ use semio_s_fem_test_support::OriginalNumericalFixture;
 #[test]
 fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
     use semio_s_fem_test_support::OriginalNumericalFixture;
-    use semio_framework_job::{admit_original_construction, OriginalConstructionAdmission, OriginalConstructionDemand, OriginalConstructionStatus};
-    use semio_framework_job_payload::RetainedWorkOutcome;
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/❄️cold/🔣️.json")).unwrap();
     for (index, sample) in corpus["cases"].as_array().unwrap().iter().enumerate() {
         let values = |key: &str| VecD::from_vec(sample[key].as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect());
@@ -43,24 +40,7 @@ fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
         for (i, value) in sample["solution"].as_array().unwrap().iter().enumerate() { assert!((mathematical.get(i) - value.as_f64().unwrap()).abs() < 1e-10); }
         let operation = test_operation(180_000 + index as u64);
         let mut original = OriginalNumericalFixture::new(operation);
-        let mut inputs = Some((a, rhs, values("initial")));
-        let mut candidate = None;
-        let capacity = 5 * n * size_of::<f64>();
-        let demand = OriginalConstructionDemand { items: 1, copy_bytes: size_of::<PcgJob>(), capacity_bytes: capacity, release_bytes: 0, depth: 1 };
-        let mut admission = OriginalConstructionAdmission::default();
-        for _ in 0..32 {
-            let status = original.turn(TEST_GRANT, 1, u64::MAX, |cx| admit_original_construction(cx, &mut candidate, &mut admission, demand, 1, |_, actual| {
-                let (a, b, x) = inputs.take().unwrap();
-                let job = PcgJob::new(operation, a, b, x, tolerance, maximum, 4);
-                *actual = Some(capacity);
-                RetainedWorkOutcome { result: Ok((job, RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<PcgJob>(), retained_capacity_bytes: capacity, ..Default::default() })), work: 1 }
-            })).expect("actual original PCG construction");
-            if status == OriginalConstructionStatus::Ready { break; }
-            assert_eq!(status, OriginalConstructionStatus::Pending);
-        }
-        assert!(candidate.is_some());
-        for _ in 0..10_000 { if admission.terminal_is_empty() { break; } original.turn(TEST_GRANT, 1, u64::MAX, |cx| cx.with_original_retirement(|cx| { admission.close_step(cx)?; Ok(()) })).expect("PCG construction control close"); }
-        let mut job = candidate.unwrap();
+        let mut job = PcgJob::new(operation, a, rhs, values("initial"), tolerance, maximum, 4);
         let mut complete = false;
         for _ in 0..200_000 {
             let end = original.turn(TEST_GRANT, 4, u64::MAX, |cx| semio_s_fem_sparse::numerical_batch_plain(&mut job, cx)).expect("same original PCG turn");
@@ -139,19 +119,18 @@ fn pcg_breaks_on_zero_curvature_direction() {
 #[test]
 fn pcg_job_construction_checks_order_before_backing_allocation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⛽️publication-grant/🔣️.json")).unwrap();
-    let ceiling = fixture["construction"]["backingCeilingBytes"].as_u64().unwrap() as usize;
+    let ceiling = fixture["construction"]["pageBudgetBytes"].as_u64().unwrap() as usize;
     let mut observations = Vec::new();
     for (index, case) in fixture["construction"]["cases"].as_array().unwrap().iter().enumerate() {
         let order = case["order"].as_u64().unwrap() as usize;
-        let mut coo = Coo::new(order);
-        for row in 0..order { coo.add(row, row, 1.0); }
+        let coo = Coo::new(order);
         let mut original = OriginalNumericalFixture::new(test_operation(1_020 + index as u64));
         let mut construction = PcgJobConstruction::new(test_operation(1_020 + index as u64), coo.to_csr());
         let result = construction.step_one();
-        let allocated = construction.b.0.capacity() * size_of::<f64>();
+        let allocated = construction.b.0.allocated_bytes();
         let initialized = construction.b.len();
         let mut closed = false;
-        for _ in 0..20_000 {
+        for _ in 0..60_000 {
             let step = tuple_of(restore_close(&mut original, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES.max(ceiling).max(allocated)), |cx| construction.close_step(cx)).expect("REASON"));
             if step.0 { closed = true; break; }
         }
@@ -166,11 +145,101 @@ fn pcg_job_construction_checks_order_before_backing_allocation() {
             assert_eq!(allocated, 0, "refused order must never allocate its oversized backing");
         } else {
             assert_eq!(result, Ok(false));
-            assert!(allocated >= case["requestedBytes"].as_u64().unwrap() as usize && allocated <= ceiling);
+            assert!(allocated <= ceiling);
+            assert_eq!(allocated != 0, case["order"].as_u64().unwrap() != 0);
         }
     }
 }
 
+/// 📄 Verifies paged admission, readback and release beyond one scalar page.
+#[test]
+fn mounted_scalar_pages_cover_large_loads_and_release_every_allocation() {
+    let case: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️pcg-wire/mounted-scalars.json")).unwrap();
+    let count = case["count"].as_u64().unwrap() as usize;
+    let budget = case["pageBudgetBytes"].as_u64().unwrap() as usize;
+    let mut slots = MountedScalarSlots::new();
+    let mut allocated = 0;
+    while let Some(bytes) = slots.next_allocation_bytes(count).unwrap() {
+        assert!(bytes > 0 && bytes <= budget);
+        assert_eq!(slots.admit_one(count, bytes - 1).unwrap(), (false, 0));
+        allocated += slots.admit_one(count, bytes).unwrap().1;
+    }
+    assert!(slots.admit_one(count, 0).unwrap().0);
+    for index in 0..count { slots.push(index as f64).unwrap(); }
+    assert_eq!((0..count).map(|index| slots.get(index).unwrap()).sum::<f64>(), case["sum"].as_f64().unwrap());
+    let mut released = 0;
+    while !slots.terminal_is_empty() { released += slots.close_step(budget).2; }
+    assert_eq!(released, allocated);
+}
+
+#[test]
+fn house_order_pcg_pays_each_vector_page_and_releases_cancelled_construction() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️paged/🔣️.json")).unwrap();
+    let order = fixture["order"].as_u64().unwrap() as usize;
+    let diagonal = fixture["diagonal"].as_f64().unwrap();
+    let load = fixture["load"].as_f64().unwrap();
+    let budget = fixture["pageBytes"].as_u64().unwrap() as usize;
+    let expected = fixture["displacement"].as_f64().unwrap();
+    let operation = test_operation(1_391);
+    let input = || {
+        let mut matrix = Coo::new(order);
+        let mut rhs = MountedScalarSlots::new();
+        while !rhs.admit_one(order, budget).unwrap().0 {}
+        for row in 0..order {
+            matrix.add(row, row, diagonal);
+            rhs.push(load).unwrap();
+        }
+        PcgJobConstruction::new_with_mounted_rhs(operation, matrix.to_csr(), rhs).ok().unwrap()
+    };
+    let grant = RetainedCloneGrant { maximum_capacity_bytes: budget, ..TEST_GRANT };
+    let mut original = OriginalNumericalFixture::new(operation);
+    let mut construction = input();
+    let starting_bytes = construction.matrix.as_ref().unwrap().allocated_bytes() + construction.b.0.allocated_bytes();
+    let rhs = std::ptr::from_ref(construction.b.0.get(0).unwrap());
+    let mut charged = 0;
+    for _ in 0..(order * 8) {
+        let (done, heap) = original.turn(grant, 1024, u64::MAX, |cx| {
+            let (done, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| construction.step_funded(cx));
+            Ok((done?, heap.requested_bytes))
+        }).unwrap();
+        let paid = original.receipt().retained_capacity_bytes;
+        assert_eq!(heap, paid);
+        assert!(paid <= budget);
+        charged += paid;
+        if done { break; }
+    }
+    let job = construction.take_complete().expect("House-order construction completes");
+    assert!(construction.terminal_is_empty());
+    assert_eq!(job.visual_progress().1, order);
+    assert_eq!(std::ptr::from_ref(job.state.b.0.get(0).unwrap()), rhs);
+    assert_eq!(pcg_physical_bytes(&job), starting_bytes + charged);
+    assert!(charged >= 6 * order * size_of::<f64>());
+    original.finish();
+    let (solution, stats) = drive_pcg_job(job, operation);
+    assert!(stats.converged);
+    assert!(solution.0.iter().all(|value| (*value - expected).abs() <= 1e-12));
+
+    let mut original = OriginalNumericalFixture::new(operation);
+    let mut construction = input();
+    for _ in 0..(order + 16) {
+        assert!(!original.turn(grant, 1024, u64::MAX, |cx| construction.step_funded(cx)).unwrap());
+    }
+    assert!(construction.x.0.allocated_bytes() > budget);
+    original.cancel();
+    let before = construction.x.0.allocated_bytes();
+    assert!(original.turn(grant, 1024, u64::MAX, |cx| construction.step_funded(cx)).is_err());
+    assert_eq!(construction.x.0.allocated_bytes(), before);
+    let mut released = 0;
+    for _ in 0..(order * 6) {
+        let step = tuple_of(restore_close(&mut original, grant_of(1, budget), |cx| construction.close_step(cx)).unwrap());
+        assert!(step.2 <= budget);
+        released += step.2;
+        if step.0 { break; }
+    }
+    assert!(construction.terminal_is_empty());
+    assert_eq!(released, starting_bytes + before);
+    original.finish();
+}
 /// 🧮 Retained vector and mounted RHS construction preserve the independent NumPy norm.
 #[test]
 fn pcg_job_construction_uses_actual_rhs_norm() {
@@ -184,7 +253,7 @@ fn pcg_job_construction_uses_actual_rhs_norm() {
             let operation = test_operation(1_380);
             let mut construction = if mounted {
                 let mut input = MountedScalarSlots::new();
-                while !input.admit_one(rhs.len()).unwrap() {}
+                while !input.admit_one(rhs.len(), 4096).unwrap().0 {}
                 for value in &rhs { input.push(*value).unwrap(); }
                 PcgJobConstruction::new_with_mounted_rhs(operation, matrix.to_csr(), input).unwrap_or_else(|_| panic!("matching mounted RHS rejected"))
             } else {
@@ -199,7 +268,7 @@ fn pcg_job_construction_uses_actual_rhs_norm() {
                     break;
                 }
             }
-            let observed = result.as_ref().map(|job| (job.state.b_norm, job.state.b.0.clone()));
+            let observed = result.as_ref().map(|job| (job.state.b_norm, job.state.b.iter().copied().collect::<Vec<_>>()));
             let solved = result.map(|job| drive_pcg_job(job, operation));
             let mut closed = false;
             let mut original = OriginalNumericalFixture::new(operation);
@@ -238,7 +307,7 @@ fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
             for index in 0..rhs.len() { matrix.add(index, index, 1.0); }
             let mut construction = if mounted {
                 let mut input = MountedScalarSlots::new();
-                while !input.admit_one(rhs.len()).unwrap() {}
+                while !input.admit_one(rhs.len(), 4096).unwrap().0 {}
                 for value in &rhs { input.push(*value).unwrap(); }
                 PcgJobConstruction::new_with_mounted_rhs(test_operation(1_381), matrix.to_csr(), input).unwrap_or_else(|_| panic!("matching mounted RHS rejected before retained validation"))
             } else {
@@ -252,25 +321,24 @@ fn pcg_job_construction_rejects_nonfinite_rhs_without_losing_owners() {
                     Ok(false) => {}
                 }
             }
-            let signature = |owner: &PcgJobConstruction| (owner.stage, owner.cursor, owner.rhs_norm.to_bits(), owner.b.0.as_ptr() as usize, owner.b.0.capacity(), owner.matrix.is_some(), owner.mounted_b.is_some());
+            let signature = |owner: &PcgJobConstruction| (owner.stage, owner.cursor, owner.rhs_norm.to_bits(), owner.b.0.get(0).map(std::ptr::from_ref), owner.b.0.capacity(), owner.matrix.is_some());
             let before = signature(&construction);
             let repeated = [construction.step_one(), construction.step_one()];
             let stable = signature(&construction) == before;
             let zeroes_unallocated = [&construction.x, &construction.diag, &construction.r, &construction.z, &construction.p, &construction.ap].iter().all(|owner| owner.0.capacity() == 0);
-            let rhs_bytes = construction.b.0.capacity() * size_of::<f64>();
+            let rhs_bytes = construction.b.0.allocated_bytes();
             let mut closed = false;
             let mut released = 0;
             let mut original = OriginalNumericalFixture::new(test_operation(1_381));
             for _ in 0..20_000 {
                 let step = tuple_of(restore_close(&mut original, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES), |cx| construction.close_step(cx)).expect("REASON"));
-                assert!(step.2 <= PCG_SCALAR_BACKING_BYTES);
+                assert!(step.2 <= SPARSE_PAGE_BYTES);
                 released += step.2;
                 if step.0 { closed = true; break; }
             }
             original.finish();
-            let empty = construction.matrix.is_none() && construction.mounted_b.is_none() && construction.complete.is_none()
+            let empty = construction.matrix.is_none() && construction.complete.is_none()
                 && [&construction.b, &construction.x, &construction.diag, &construction.r, &construction.z, &construction.p, &construction.ap].iter().all(|owner| owner.0.capacity() == 0);
-            eprintln!("PCG invalid RHS id={}, mounted={mounted}, fault={failure:?}, stable={stable}, rhsBytes={rhs_bytes}, released={released}, closed={closed}, empty={empty}", row["id"]);
             observations.push((row.clone(), failure, repeated, stable, zeroes_unallocated, rhs_bytes, released, closed, empty));
         }
     }
@@ -304,7 +372,7 @@ fn pcg_job_publication_matches_canonical_wire_pages() {
         let mut pages = None;
         let mut turns = 0;
         for turn in 1..10_000 {
-            let lent = match original.step_seen(&mut job, TEST_GRANT, 1, u64::MAX) {
+            let lent = match original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX) {
                 Seen::Checkpoint(lent) | Seen::Preview(lent) | Seen::Complete(lent) => Some(lent),
                 Seen::Fault(_) | Seen::Cancelled => break,
                 Seen::Yield => None,
@@ -317,7 +385,7 @@ fn pcg_job_publication_matches_canonical_wire_pages() {
         }
         let mut delivered_again = false;
         if kind == "complete" {
-            delivered_again = matches!(original.step_seen(&mut job, TEST_GRANT, 1, u64::MAX), Seen::Complete(_));
+            delivered_again = matches!(original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX), Seen::Complete(_));
         }
         original.close(&mut job);
         original.finish();
@@ -361,7 +429,7 @@ fn pcg_job_checkpoint_rejects_foreign_operation_identity() {
         }
         original.finish();
     }
-    close_job(&mut job);
+    close_pcg_job(&mut job);
     assert!(InteractiveJob::terminal_is_empty(&job));
     assert_eq!(rejected, vec![true; 4]);
 }
@@ -380,26 +448,24 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
         job.state.checkpoint_due = kind == "checkpoint";
         job.state.preview_due = kind == "preview";
         if kind == "complete" { job.state.stage = PcgStage::Complete; }
-        let mut sequence = 0;
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let outcome = match seen_of(job.step_plain(&mut context)) {
-            Seen::Yield => "yield",
-            Seen::Preview(_) => "preview",
-            Seen::Checkpoint(_) => "checkpoint",
-            Seen::Complete(_) => "complete",
-            Seen::Fault(_) => "fault",
-            Seen::Cancelled => "cancelled",
-        };
+        let mut original = OriginalNumericalFixture::new(operation);
+        let fuel = case["fuel"].as_u64().unwrap();
+        let deadline = case["deadline"].as_u64().unwrap();
+        let (outcome, fuel_remaining) = original.turn(TEST_GRANT, fuel, deadline, |cx| {
+            let outcome = match seen_of(job.step_plain(cx)) {
+                Seen::Yield => "yield",
+                Seen::Preview(_) => "preview",
+                Seen::Checkpoint(_) => "checkpoint",
+                Seen::Complete(_) => "complete",
+                Seen::Fault(_) => "fault",
+                Seen::Cancelled => "cancelled",
+            };
+            Ok((outcome, cx.fuel_remaining()))
+        }).unwrap();
         let pending = match kind { "checkpoint" => job.state.checkpoint_due, "preview" => job.state.preview_due, _ => job.state.stage == PcgStage::Complete };
-        let mut observed = serde_json::json!({ "pending": pending, "cursor": job.state.entry_cursor, "fuelRemaining": context.fuel_remaining(), "outcome": outcome });
-        let mut closed = false;
-        for _ in 0..1_024 {
-            let (terminal, items, bytes) = tuple_of(close_turn(&mut job, grant_of(1, NUMERICAL_OWNER_PAGE_BYTES)).expect("REASON"));
-            assert!(items <= 1 && bytes <= NUMERICAL_OWNER_PAGE_BYTES);
-            if terminal { closed = true; break; }
-        }
-        assert!(closed, "publication fixture closes its exact matrix and scalar owners");
+        let mut observed = serde_json::json!({ "pending": pending, "cursor": job.state.entry_cursor, "fuelRemaining": fuel_remaining, "outcome": outcome });
+        original.close(&mut job);
+        original.finish();
         observed["terminalEmpty"] = serde_json::json!(InteractiveJob::terminal_is_empty(&job));
         observations.push((observed, case["expected"].clone()));
     }
@@ -420,10 +486,10 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
     for (index, value) in diagonal.iter().copied().enumerate() { matrix.add(index, index, value); }
     let operation = test_operation(995);
     let mut job = PcgJob::new(operation, matrix.to_csr(), VecD::from_vec(residual.clone()), VecD::zeros(3), 1e-12, 20, 1);
-    job.state.diag = VecD::from_vec(diagonal);
-    job.state.r = VecD::from_vec(residual);
+    job.state.diag = PcgVector::from_values(diagonal.into_iter());
+    job.state.r = PcgVector::from_values(residual.into_iter());
     job.state.stage = PcgStage::InitialPrecondition;
-    let pointer = job.state.p.0.as_ptr();
+    let pointer = job.state.p.0.get(0).map(std::ptr::from_ref);
     let capacity = job.state.p.0.capacity();
     let mut sequence = 0;
     let mut observed = Vec::new();
@@ -432,9 +498,9 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         assert!(matches!(seen_of(job.step_plain(&mut context)), Seen::Yield));
         assert_eq!(context.fuel_remaining(), 0);
-        observed.push((job.state.p.0.clone(), job.state.p.0.as_ptr() == pointer && job.state.p.0.capacity() == capacity));
+        observed.push((job.state.p.iter().copied().collect::<Vec<_>>(), job.state.p.0.get(0).map(std::ptr::from_ref) == pointer && job.state.p.0.capacity() == capacity));
     }
-    close_job(&mut job);
+    close_pcg_job(&mut job);
     assert!(InteractiveJob::terminal_is_empty(&job));
     for (index, (direction, retained)) in observed.into_iter().enumerate() {
         assert_eq!(direction, expected[index], "precondition scalar {index}");
@@ -464,7 +530,7 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             let mut original = OriginalNumericalFixture::new(operation);
             let mut yielded = true;
             for _ in 0..cut {
-                yielded &= matches!(original.step_seen(&mut job, TEST_GRANT, 1, u64::MAX), Seen::Yield);
+                yielded &= matches!(original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX), Seen::Yield);
             }
             let snapshot = |job: &PcgJob| (
                 job.state.checkpoint_control(operation), job.state.checkpoint_due, job.state.preview_due, job.terminal_published,
@@ -476,7 +542,7 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
                 yielded &= matches!(original.step_seen(&mut job, TEST_GRANT, fuel, deadline), Seen::Yield) && snapshot(&job) == before;
             }
             original.cancel();
-            let cancelled = matches!(original.step_seen(&mut job, TEST_GRANT, 1, u64::MAX), Seen::Cancelled) && snapshot(&job) == before;
+            let cancelled = matches!(original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX), Seen::Cancelled) && snapshot(&job) == before;
             let zero_items = matches!(original.close_turn(&mut job, grant_of(0, usize::MAX)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && snapshot(&job) == before;
             let has_pages = job.publication.as_ref().is_some_and(|publication| writer_pages(&publication.writer) != 0 || writer_staged(&publication.writer).is_some());
             let subexact = if has_pages || job.desk.lent.is_some() {
@@ -485,8 +551,15 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
                 true
             };
             job.begin_close();
-            let (released, exact, bounded, complete) = accounted_close(&mut job, |job| original.close_turn(job, grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), pcg_physical_bytes);
+            let mut last = None;
+            let grant = grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+            let (released, exact, bounded, complete) = accounted_close(&mut job, |job| {
+                let step = original.turn(grant, 128, u64::MAX, |cx| cx.with_original_retirement(|cx| job.close_step(cx))).expect("paid PCG cancellation close");
+                last = Some(step);
+                step
+            }, pcg_physical_bytes);
             let terminal = InteractiveJob::terminal_is_empty(&job) && pcg_physical_bytes(&job) == 0;
+            assert!(complete && terminal, "publication {kind}/{cut} stays open: {last:?}, {:?}", job.close_frontier());
             original.finish();
             if !(yielded && cancelled && zero_items && subexact && bounded && exact && complete && terminal && released == before.5) {
                 failures.push(format!("{kind}/{cut}: yield={yielded}, cancel={cancelled}, zero={zero_items}, subexact={subexact}, bounded={bounded}, exact={exact}, complete={complete}, terminal={terminal}, physical={}/{released}", before.5));
@@ -512,7 +585,7 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
     let mut fields = 0u16;
     for turn in 1..10_000 {
         if baseline.expected_field < 11 { fields |= 1 << baseline.expected_field; }
-        match step_restore(&mut original, &mut baseline, TEST_GRANT, 1, u64::MAX) {
+        match step_restore(&mut original, &mut baseline, TEST_GRANT, 128, u64::MAX) {
             Ok(Some(mut job)) => { original.close(&mut job); turns = turn; break; }
             Ok(None) => {}
             Err(_) => break,
@@ -529,7 +602,7 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         let mut restore = PcgRestoreCursor::new(operation, original.payload_from_pages(JobPayloadStream::CheckpointState, &pages));
         let mut pending = true;
         for _ in 0..cut {
-            match step_restore(&mut original, &mut restore, TEST_GRANT, 1, u64::MAX) {
+            match step_restore(&mut original, &mut restore, TEST_GRANT, 128, u64::MAX) {
                 Ok(None) => {}
                 Ok(Some(mut job)) => { original.close(&mut job); pending = false; }
                 Err(_) => pending = false,
@@ -545,13 +618,13 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
             pending &= snapshot(&restore) == before;
         }
         original.cancel();
-        let cancelled = match step_restore(&mut original, &mut restore, TEST_GRANT, 1, u64::MAX) {
+        let cancelled = match step_restore(&mut original, &mut restore, TEST_GRANT, 128, u64::MAX) {
             Err(NumericalCheckpointFault::Cancelled) => true,
             Ok(Some(mut job)) => { original.close(&mut job); false }
             _ => false,
         };
         let mut later = OriginalNumericalFixture::new(Operation::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.base_revision, operation.generation, operation.seed));
-        let sticky = step_restore(&mut later, &mut restore, TEST_GRANT, 1, u64::MAX).err() == Some(NumericalCheckpointFault::Cancelled) && snapshot(&restore) == before;
+        let sticky = step_restore(&mut later, &mut restore, TEST_GRANT, 128, u64::MAX).err() == Some(NumericalCheckpointFault::Cancelled) && snapshot(&restore) == before;
         later.finish();
         let zero = matches!(restore_close(&mut original, grant_of(0, usize::MAX), |cx| restore.close_step(cx)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && snapshot(&restore) == before;
         let held = matches!(restore_close(&mut original, grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1), |cx| restore.close_step(cx)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.4;
@@ -566,6 +639,46 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
     assert!(failures.is_empty(), "{failures:?}");
 }
 
+#[test]
+fn pcg_restores_working_vectors_across_scalar_pages() {
+    let order = semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES / size_of::<f64>() + 1;
+    let operation = test_operation(1_392);
+    let mut matrix = Coo::new(order);
+    for row in 0..order { matrix.add(row, row, 2.0); }
+    let loads = VecD::from_vec((0..order).map(|row| row as f64 + 1.0).collect());
+    let guess = VecD::from_vec((0..order).map(|row| row as f64 / -16.0).collect());
+    let mut job = PcgJob::new(operation, matrix.to_csr(), loads, guess, 1e-12, 20, 97);
+    while job.state.stage != PcgStage::IterationUpdate { job.state.advance_one(); }
+    let before = job.state.checkpoint_control(operation);
+    let mut original = OriginalNumericalFixture::new(operation);
+    let payload = pcg_checkpoint_payload(&mut original, &job);
+    let mut continuation_fields = 0;
+    for index in 0..payload.page_count() {
+        let page = parse_numerical_page(payload.page(index).unwrap(), b"FEMPCP1\0").unwrap();
+        if page.item != 0 && (4..=10).contains(&page.field) {
+            continuation_fields |= 1 << (page.field - 4);
+        }
+    }
+    assert_eq!(continuation_fields, 0x7f);
+    let resumed = restore_pcg(&mut original, operation, payload).expect("paged PCG vectors restore");
+    assert_eq!(resumed.state.checkpoint_control(operation), before);
+    for (actual, expected) in [
+        (&resumed.state.b, &job.state.b), (&resumed.state.x, &job.state.x),
+        (&resumed.state.diag, &job.state.diag), (&resumed.state.r, &job.state.r),
+        (&resumed.state.z, &job.state.z), (&resumed.state.p, &job.state.p),
+        (&resumed.state.ap, &job.state.ap),
+    ] {
+        assert!(actual.0.allocated_bytes() > SPARSE_PAGE_BYTES);
+        assert!(actual.iter().map(|value| value.to_bits()).eq(expected.iter().map(|value| value.to_bits())));
+    }
+    original.close(&mut job);
+    original.finish();
+    let (solution, stats) = drive_pcg_job(resumed, operation);
+    assert!(stats.converged);
+    for (row, value) in solution.0.iter().enumerate() {
+        assert!((*value - (row as f64 + 1.0) / 2.0).abs() <= 1e-12);
+    }
+}
 /// 🧱 PCG restores CSR continuation pages and solves the independent dense rank-one fixture.
 #[test]
 fn pcg_job_checkpoint_dense_csr_continuations_restore_exactly() {
@@ -619,8 +732,8 @@ fn pcg_job_checkpoint_empty_restore_closes_all_owners() {
 fn pcg_physical_bytes(job: &PcgJob) -> usize {
     let state = &job.state;
     let vectors = [&state.b.0, &state.x.0, &state.diag.0, &state.r.0, &state.z.0, &state.p.0, &state.ap.0];
-    state.a.physical_backing_bytes().into_iter().sum::<usize>() + vectors.into_iter().map(|owner| owner.capacity() * size_of::<f64>()).sum::<usize>()
-        + job.publication.as_ref().map_or(0, |publication| (writer_pages(&publication.writer) + usize::from(writer_staged(&publication.writer).is_some())) * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
+    state.a.physical_backing_bytes().into_iter().sum::<usize>() + vectors.into_iter().map(|owner| owner.allocated_bytes()).sum::<usize>()
+        + job.publication.as_ref().map_or(0, |publication| (writer_pages(&publication.writer) + usize::from(writer_staged(&publication.writer).is_some())) * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES + publication.writer.as_ref().map_or(0, |_| size_of::<RetainedPayloadBuilder>()))
         + job.desk.lent.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
 }
 
@@ -652,7 +765,7 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         let mut restore = PcgRestoreCursor::new(operation, original.payload_from_pages(JobPayloadStream::CheckpointState, &altered));
         let mut error = None;
         for _ in 0..10_000 {
-            match step_restore(&mut original, &mut restore, TEST_GRANT, 1, u64::MAX) {
+            match step_restore(&mut original, &mut restore, TEST_GRANT, 128, u64::MAX) {
                 Ok(None) => {}
                 Ok(Some(mut job)) => { original.close(&mut job); break; }
                 Err(fault) => { error = Some(fault); break; }
@@ -661,7 +774,7 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
         let before = (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
         let mut later = OriginalNumericalFixture::new(Operation::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.base_revision, operation.generation, operation.seed));
-        let sticky = step_restore(&mut later, &mut restore, TEST_GRANT, 1, u64::MAX).err() == error;
+        let sticky = step_restore(&mut later, &mut restore, TEST_GRANT, 128, u64::MAX).err() == error;
         later.finish();
         let unchanged = before == (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
         let zero_items = matches!(restore_close(&mut original, grant_of(0, usize::MAX), |cx| restore.close_step(cx)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && retained(&restore) == before.3;
@@ -681,7 +794,9 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
 }
 
 fn close_pcg_job(job: &mut PcgJob) {
-    close_job(job);
+    let mut original = OriginalNumericalFixture::new(job.operation);
+    original.close(job);
+    original.finish();
 }
 
 fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
@@ -732,7 +847,7 @@ fn restore_pcg(original: &mut OriginalNumericalFixture, operation: Operation, pa
     let mut fault = NumericalCheckpointFault::Truncated;
     for _ in 0..2_000_000 {
         let handoff_due = restore.payload.is_none();
-        let step = step_restore(original, &mut restore, RetainedCloneGrant { maximum_items: 1, ..TEST_GRANT }, 1, u64::MAX);
+        let step = step_restore(original, &mut restore, RetainedCloneGrant { maximum_items: 1, ..TEST_GRANT }, 128, u64::MAX);
         assert!(original.receipt().copied_items <= 1);
         match step {
             Ok(Some(job)) => { assert!(handoff_due); assert_eq!(original.receipt().copied_items, 1); assert_eq!(original.receipt().released_bytes, 0); assert!(restore.terminal_is_empty()); return Ok(job); }
@@ -750,7 +865,7 @@ fn drive_pcg_job(mut job: PcgJob, operation: Operation) -> (VecD, PcgStats) {
         match original.step_seen(&mut job, TEST_GRANT, u64::MAX, u64::MAX) {
             Seen::Complete(_) => {
                 let (solution, stats) = job.solution();
-                let solution = solution.clone();
+                let solution = VecD::from_vec(solution.iter().copied().collect());
                 original.close(&mut job);
                 original.finish();
                 return (solution, stats);

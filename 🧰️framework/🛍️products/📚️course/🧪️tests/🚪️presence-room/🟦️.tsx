@@ -9,7 +9,7 @@ import throttle from "lodash/throttle";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PRESENCE_HEARTBEAT_MS, PRESENCE_PROTOCOL, PRESENCE_SILENCE_FACTOR } from "@semio-tech/framework-server";
 import { cursorProblem, learnerTag, type CursorState } from "@semio-tech/course";
-import { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_JOIN_MS, PresenceRoom, WATCH_INTERVAL_MS } from "@semio-tech/course-react";
+import { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_JOIN_MS, PRESENCE_STALL_GRACE_MS, PresenceRoom, WATCH_INTERVAL_MS } from "@semio-tech/course-react";
 import vectors from "../🧫️fixtures/📡️presence-client/🔣️.json";
 import { BEN, FakeProctorSockets, ME, MIRA, TIMING, snapshot } from "../🧰️presence-client-kit/🟦️.tsx";
 
@@ -239,6 +239,52 @@ describe("👥️ presence room", () => {
     room.stop();
     await vi.advanceTimersByTimeAsync(silence * 3);
     expect(proctor.sockets).toHaveLength(2);
+  });
+
+  it("takes a watchdog that fires late for a page that was frozen, not for a dead socket: the frames that waited for the page keep it, one still silent once the page runs is closed", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    const silence = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
+    room.start();
+    const socket = proctor.sockets[0]!;
+    socket.welcome("r-1", 0);
+    for (let frozen = 0; frozen < 3; frozen += 1) {
+      vi.setSystemTime(Date.now() + 120_000);
+      await vi.advanceTimersByTimeAsync(silence);
+      expect(socket.closed, "the watchdog of a frozen page ran before the frames that waited").toBe(false);
+      socket.deliver({ type: "heartbeat" });
+    }
+    await vi.advanceTimersByTimeAsync(silence - 1);
+    expect(socket.closed).toBe(false);
+    vi.setSystemTime(Date.now() + 60_000);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(socket.closed).toBe(false);
+    await vi.advanceTimersByTimeAsync(PRESENCE_STALL_GRACE_MS);
+    expect(socket.closed, "silent through the grace of a page that runs again").toBe(true);
+    expect(proctor.sockets).toHaveLength(1);
+    room.stop();
+  });
+
+  it("takes a join timer that fires late for a page that was frozen: the welcome that waited for the page joins, one that never comes ends the join once the page runs", async () => {
+    const proctor = new FakeProctorSockets();
+    const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    room.start();
+    const waited = proctor.sockets[0]!;
+    vi.setSystemTime(Date.now() + 120_000);
+    await vi.advanceTimersByTimeAsync(PRESENCE_JOIN_MS);
+    expect(waited.closed, "the join timer of a frozen page ran before the welcome that waited").toBe(false);
+    waited.welcome("r-1", 0);
+    expect(room.getSnapshot()).toMatchObject({ status: "open", self: "r-1" });
+    room.stop();
+    const late = new FakeProctorSockets();
+    const again = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: late.connect, parse: () => undefined, timing: TIMING, random: () => 0.5 });
+    again.start();
+    vi.setSystemTime(Date.now() + 120_000);
+    await vi.advanceTimersByTimeAsync(PRESENCE_JOIN_MS);
+    expect(late.sockets[0]!.closed).toBe(false);
+    await vi.advanceTimersByTimeAsync(PRESENCE_STALL_GRACE_MS);
+    expect(late.sockets[0]!.closed).toBe(true);
+    again.stop();
   });
 
   it("does not time a socket out while it is joining (the join time rules there) and again after a silent one was replaced, however often", async () => {

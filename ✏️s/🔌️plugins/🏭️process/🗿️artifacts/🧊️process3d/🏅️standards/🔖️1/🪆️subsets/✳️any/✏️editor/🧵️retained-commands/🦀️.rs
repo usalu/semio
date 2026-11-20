@@ -32,16 +32,18 @@ pub(crate) const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "engagementSubmit",
     "worldPointerDown",
     "worldFaceDragEnd",
-    "importModelFile",
     "exportModel",
     "setCursor",
     "stepCursor",
     "stepCursorBack",
     "stepCursorForward",
 ];
+pub(crate) const PROCESS3D_MODEL_IMPORT_TOOL_IDS: &[&str] = &["importModelFile"];
 pub(crate) const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &["engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions"];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 pub(super) const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
+/// 📎️ Allows a picker file name and retained action framing in addition to the data URL.
+const PROCESS3D_MODEL_IMPORT_RAW_BYTES: usize = semio_s_artifact_process_process3d_io::PROCESS3D_MODEL_DATA_URL_BYTES + 1_024;
 pub(crate) const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
 pub(crate) const PROCESS3D_SCAN_BYTES: usize = 256;
 /// 📏️ Everything the retained config holds APART from the contributions pack — engagement text and
@@ -64,22 +66,16 @@ const PROCESS3D_CONFIG_MUTATION_ENVELOPE_BYTES: usize = 64;
 /// named the pack's own bound; the output cap now names the lane's.
 pub(crate) const PROCESS3D_RESUMABLE_OUTPUT_BYTES: usize = PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES + PROCESS3D_CONFIG_MUTATION_ENVELOPE_BYTES;
 
-/// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
-/// retained command whose wire is a host pack, not a gesture — it carries the whole capability
-/// closure the receiver's registry `consumes` row names — so it is priced on
-/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
+/// 📏️ Wire admission uses the command's own envelope for contribution packs and model files.
 pub(super) fn process3d_retained_raw_bytes(tool_id: &str) -> usize {
-    if tool_id == "setContributions" {
-        semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
-    } else {
-        PROCESS3D_RETAINED_RAW_BYTES
+    match tool_id {
+        "setContributions" => semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
+        "importModelFile" => PROCESS3D_MODEL_IMPORT_RAW_BYTES,
+        _ => PROCESS3D_RETAINED_RAW_BYTES,
     }
 }
 
-/// 🧮️ Work units one retained tool id may declare. The resumable pump scans `PROCESS3D_SCAN_BYTES`
-/// per unit, so a tool's unit cap and its wire cap are one bound: a `setContributions` pack of
-/// [`semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] is that many scans, and pricing
-/// it on the gesture cap refused the real pack before it ever reached the config lane.
+/// 🧮️ Counts the retained wire scans at the tool's exact capacity.
 pub(super) fn process3d_retained_work_items(tool_id: &str) -> usize {
     process3d_retained_raw_bytes(tool_id).div_ceil(PROCESS3D_SCAN_BYTES).max(PROCESS3D_RETAINED_WORK_ITEMS)
 }
@@ -93,7 +89,7 @@ pub(super) enum Process3dCommandDisposition {
 }
 
 pub(super) fn process3d_command_disposition(tool_id: &str) -> Option<Process3dCommandDisposition> {
-    if PROCESS3D_BOUNDED_TOOL_IDS.contains(&tool_id) {
+    if PROCESS3D_BOUNDED_TOOL_IDS.contains(&tool_id) || PROCESS3D_MODEL_IMPORT_TOOL_IDS.contains(&tool_id) {
         return Some(Process3dCommandDisposition::Bounded);
     }
     PROCESS3D_RESUMABLE_TOOL_IDS.contains(&tool_id).then_some(Process3dCommandDisposition::Config)
@@ -101,6 +97,11 @@ pub(super) fn process3d_command_disposition(tool_id: &str) -> Option<Process3dCo
 
 pub(crate) fn process3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PROCESS3D_RETAINED_RAW_BYTES, PROCESS3D_RETAINED_WORK_ITEMS, 1, 16_384, 7_500)
+}
+
+/// 📂️ The replacement pack travels through the host effect lane after this command reduces.
+pub(super) fn process3d_model_import_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(PROCESS3D_MODEL_IMPORT_RAW_BYTES, PROCESS3D_RETAINED_WORK_ITEMS, 1, 16_384, 7_500)
 }
 
 /// 🧾️ The ONE execution contract every RESUMABLE process3d tool is admitted under. Its wire ceiling
@@ -283,17 +284,19 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
     }
 }
 
-pub(super) struct Process3dBoundedCommandJobFactory {
+pub(super) type Process3dModelImportJobFactory = Process3dBoundedCommandJobFactory<true>;
+
+pub(super) struct Process3dBoundedCommandJobFactory<const IMPORT: bool = false> {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl Process3dBoundedCommandJobFactory {
+impl<const IMPORT: bool> Process3dBoundedCommandJobFactory<IMPORT> {
     pub(super) fn new(controller_id: &str) -> Self {
-        Self { keys: PROCESS3D_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        Self { keys: Self::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl ToolJobFactory for Process3dBoundedCommandJobFactory {
+impl<const IMPORT: bool> ToolJobFactory for Process3dBoundedCommandJobFactory<IMPORT> {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<Process3dPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<Process3dPlayApp>>;
 
@@ -310,16 +313,16 @@ impl ToolJobFactory for Process3dBoundedCommandJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        process3d_bounded_contract()
+        if IMPORT { process3d_model_import_contract() } else { process3d_bounded_contract() }
     }
 
     semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
 
 }
 
-impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
+impl<const IMPORT: bool> ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory<IMPORT> {
     type Owner = EditorApp<Process3dPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
+    const TOOL_IDS: &'static [&'static str] = if IMPORT { PROCESS3D_MODEL_IMPORT_TOOL_IDS } else { PROCESS3D_BOUNDED_TOOL_IDS };
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
     /// 🛤️ The lane each tool publishes on, read off what its `🎮️commands/*` handler actually emits.
     /// `HostOnly` is a whole-document replacement or a shell round-trip carried as an `Effect`
@@ -330,7 +333,9 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     /// `Process3dArtifactPreparationFactory`; `Config` is the viewer's replay cursor and the engagement line — view
     /// state, never history — so the cursor verbs and `engagementSubmit` publish there only, and every verb that
     /// inserts or removes a step publishes BOTH lanes (the step, and the cursor moved past it).
-    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = if IMPORT {
+        &[semio_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }]
+    } else { &[
         semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -350,13 +355,12 @@ impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
         semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
-    ];
+    ] };
 }
 
 pub(super) struct Process3dResumableCommandJobFactory {

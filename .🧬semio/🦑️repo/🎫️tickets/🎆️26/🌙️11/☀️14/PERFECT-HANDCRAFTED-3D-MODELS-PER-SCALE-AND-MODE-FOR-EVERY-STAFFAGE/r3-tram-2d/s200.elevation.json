@@ -1,0 +1,968 @@
+[
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-f1",
+  "bone": "ws-f1",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "regions": [
+   "wheelsets",
+   "traction-motors"
+  ],
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-f1",
+  "bone": "ws-f1",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-f2",
+  "bone": "ws-f2",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "regions": [
+   "wheelsets",
+   "traction-motors"
+  ],
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-f2",
+  "bone": "ws-f2",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-r1",
+  "bone": "ws-r1",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "regions": [
+   "wheelsets",
+   "traction-motors"
+  ],
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-r1",
+  "bone": "ws-r1",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-r2",
+  "bone": "ws-r2",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "regions": [
+   "wheelsets",
+   "traction-motors"
+  ],
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-r2",
+  "bone": "ws-r2",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.45,
+    0.28
+   ],
+   [
+    0.6205,
+    0.28
+   ],
+   [
+    0.634,
+    0.4021
+   ],
+   [
+    0.6857,
+    0.5135
+   ],
+   [
+    0.7702,
+    0.6027
+   ],
+   [
+    0.8788,
+    0.6601
+   ],
+   [
+    1.0,
+    0.68
+   ],
+   [
+    2.8,
+    0.68
+   ],
+   [
+    2.9212,
+    0.6601
+   ],
+   [
+    3.0298,
+    0.6027
+   ],
+   [
+    3.1143,
+    0.5135
+   ],
+   [
+    3.166,
+    0.4021
+   ],
+   [
+    3.1795,
+    0.28
+   ],
+   [
+    5.9205,
+    0.28
+   ],
+   [
+    5.934,
+    0.4021
+   ],
+   [
+    5.9857,
+    0.5135
+   ],
+   [
+    6.0702,
+    0.6027
+   ],
+   [
+    6.1788,
+    0.6601
+   ],
+   [
+    6.3,
+    0.68
+   ],
+   [
+    8.1,
+    0.68
+   ],
+   [
+    8.2212,
+    0.6601
+   ],
+   [
+    8.3298,
+    0.6027
+   ],
+   [
+    8.4143,
+    0.5135
+   ],
+   [
+    8.466,
+    0.4021
+   ],
+   [
+    8.4795,
+    0.28
+   ],
+   [
+    8.48,
+    0.28
+   ],
+   [
+    9.42,
+    0.28
+   ],
+   [
+    9.42,
+    0.45
+   ],
+   [
+    9.45,
+    0.45
+   ],
+   [
+    9.45,
+    0.66
+   ],
+   [
+    9.42,
+    0.66
+   ],
+   [
+    9.42,
+    1.15
+   ],
+   [
+    8.97,
+    2.65
+   ],
+   [
+    8.8333,
+    3.0
+   ],
+   [
+    8.5633,
+    3.25
+   ],
+   [
+    8.17,
+    3.37
+   ],
+   [
+    7.93,
+    3.395
+   ],
+   [
+    0.45,
+    3.4
+   ]
+  ],
+  "closed": true,
+  "id": "shell-end",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    6.0,
+    0.02
+   ],
+   [
+    0.45,
+    0.02
+   ],
+   [
+    0.45,
+    -3.1
+   ],
+   [
+    6.0,
+    -3.1
+   ]
+  ],
+  "closed": true,
+  "id": "shell-mid",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.45,
+    0.0
+   ],
+   [
+    0.45,
+    0.0
+   ],
+   [
+    0.45,
+    2.95
+   ],
+   [
+    -0.45,
+    2.95
+   ]
+  ],
+  "closed": true,
+  "id": "gangway",
+  "bone": "gangway",
+  "role": "body",
+  "z": 2.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "gangway",
+  "material": "rubber"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.8,
+    1.2
+   ],
+   [
+    3.3,
+    1.2
+   ],
+   [
+    3.3,
+    2.4
+   ],
+   [
+    0.8,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e1",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.0,
+    1.2
+   ],
+   [
+    6.3,
+    1.2
+   ],
+   [
+    6.3,
+    2.4
+   ],
+   [
+    5.0,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e2",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    6.45,
+    1.2
+   ],
+   [
+    7.47,
+    1.2
+   ],
+   [
+    7.47,
+    2.4
+   ],
+   [
+    6.45,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e3",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    7.62,
+    1.2
+   ],
+   [
+    8.355,
+    1.2
+   ],
+   [
+    7.995,
+    2.4
+   ],
+   [
+    7.62,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-cab",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.85,
+    -0.9
+   ],
+   [
+    4.25,
+    -0.9
+   ],
+   [
+    4.25,
+    -2.1
+   ],
+   [
+    5.85,
+    -2.1
+   ]
+  ],
+  "closed": true,
+  "id": "pane-m1",
+  "bone": "body-mid",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    2.55,
+    -0.9
+   ],
+   [
+    0.85,
+    -0.9
+   ],
+   [
+    0.85,
+    -2.1
+   ],
+   [
+    2.55,
+    -2.1
+   ]
+  ],
+  "closed": true,
+  "id": "pane-m2",
+  "bone": "body-mid",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.006,
+    0.0
+   ],
+   [
+    0.644,
+    0.0
+   ],
+   [
+    0.644,
+    2.15
+   ],
+   [
+    0.006,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-a1",
+  "bone": "door-a1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.006,
+    0.0
+   ],
+   [
+    0.644,
+    0.0
+   ],
+   [
+    0.644,
+    2.15
+   ],
+   [
+    0.006,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-a2",
+  "bone": "door-a2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.006,
+    0.0
+   ],
+   [
+    0.644,
+    0.0
+   ],
+   [
+    0.644,
+    2.15
+   ],
+   [
+    0.006,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-b1",
+  "bone": "door-b1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.006,
+    0.0
+   ],
+   [
+    0.644,
+    0.0
+   ],
+   [
+    0.644,
+    2.15
+   ],
+   [
+    0.006,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-b2",
+  "bone": "door-b2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0,
+    0
+   ],
+   [
+    1.9,
+    0
+   ]
+  ],
+  "closed": false,
+  "id": "pan-lower",
+  "bone": "pan-lower",
+  "role": "body",
+  "z": 3,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy",
+  "penMm": 0.18
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0,
+    0
+   ],
+   [
+    1.9,
+    0
+   ]
+  ],
+  "closed": false,
+  "id": "pan-upper",
+  "bone": "pan-upper",
+  "role": "body",
+  "z": 3.1,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy",
+  "penMm": 0.18
+ },
+ {
+  "kind": "capsule",
+  "x0": -0.18,
+  "y0": 0.01,
+  "x1": 0.18,
+  "y1": 0.01,
+  "r0": 0.0175,
+  "r1": 0.0175,
+  "id": "pan-head",
+  "bone": "pan-head",
+  "role": "detail",
+  "z": 3.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "pantograph",
+  "material": "carbon"
+ },
+ {
+  "kind": "path",
+  "d": "M 2.28 3.48 L 3.82 3.48 L 3.82 3.55 L 2.635 3.55 L 2.635 3.59 L 2.565 3.59 L 2.565 3.55 L 2.28 3.55 Z M 2.3 3.39 L 2.4 3.39 L 2.4 3.48 L 2.3 3.48 Z M 3.7 3.39 L 3.8 3.39 L 3.8 3.48 L 3.7 3.48 Z",
+  "id": "pan-base",
+  "bone": "body-end",
+  "role": "body",
+  "z": 3.3,
+  "filled": true,
+  "tone": 0.4,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "rect",
+  "x": 4.5,
+  "y": 3.4,
+  "w": 2.0,
+  "h": 0.24,
+  "r": 0.02,
+  "id": "resistor-box",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.35,
+  "region": "brake-resistor",
+  "material": "resistor-steel"
+ },
+ {
+  "kind": "rect",
+  "x": 1.4,
+  "y": -3.36,
+  "w": 3.8,
+  "h": 0.26,
+  "r": 0.04,
+  "id": "hvac-box",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.7,
+  "region": "hvac-unit",
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.56 -0.18 L -0.44 -0.18 L -0.44 0.19 L -0.56 0.19 Z M 0.44 -0.18 L 0.56 -0.18 L 0.56 0.19 L 0.44 0.19 Z M -0.46 -0.26 L 0.46 -0.26 L 0.46 -0.14 L -0.46 -0.14 Z",
+  "id": "bogie-legs-f",
+  "bone": "bogie-f",
+  "z": 3.2,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.74 0.0 L -0.7455 0.0414 L -0.7614 0.08 L -0.7869 0.1131 L -0.82 0.1386 L -0.8586 0.1545 L -0.9 0.16 L -0.9414 0.1545 L -0.98 0.1386 L -1.0131 0.1131 L -1.0386 0.08 L -1.0545 0.0414 L -1.06 0.0 L -1.0545 -0.0414 L -1.0386 -0.08 L -1.0131 -0.1131 L -0.98 -0.1386 L -0.9414 -0.1545 L -0.9 -0.16 L -0.8586 -0.1545 L -0.82 -0.1386 L -0.7869 -0.1131 L -0.7614 -0.08 L -0.7455 -0.0414 Z M 1.06 0.0 L 1.0545 0.0414 L 1.0386 0.08 L 1.0131 0.1131 L 0.98 0.1386 L 0.9414 0.1545 L 0.9 0.16 L 0.8586 0.1545 L 0.82 0.1386 L 0.7869 0.1131 L 0.7614 0.08 L 0.7455 0.0414 L 0.74 0.0 L 0.7455 -0.0414 L 0.7614 -0.08 L 0.7869 -0.1131 L 0.82 -0.1386 L 0.8586 -0.1545 L 0.9 -0.16 L 0.9414 -0.1545 L 0.98 -0.1386 L 1.0131 -0.1131 L 1.0386 -0.08 L 1.0545 -0.0414 Z",
+  "id": "gearbox-f",
+  "bone": "bogie-f",
+  "z": 4.6,
+  "tone": 0.3,
+  "region": "traction-motors",
+  "material": "motor-steel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.56 -0.18 L -0.44 -0.18 L -0.44 0.19 L -0.56 0.19 Z M 0.44 -0.18 L 0.56 -0.18 L 0.56 0.19 L 0.44 0.19 Z M -0.46 -0.26 L 0.46 -0.26 L 0.46 -0.14 L -0.46 -0.14 Z",
+  "id": "bogie-legs-r",
+  "bone": "bogie-r",
+  "z": 3.2,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.775 0.0 L -0.7793 0.0324 L -0.7917 0.0625 L -0.8116 0.0884 L -0.8375 0.1083 L -0.8676 0.1207 L -0.9 0.125 L -0.9324 0.1207 L -0.9625 0.1083 L -0.9884 0.0884 L -1.0083 0.0625 L -1.0207 0.0324 L -1.025 0.0 L -1.0207 -0.0324 L -1.0083 -0.0625 L -0.9884 -0.0884 L -0.9625 -0.1083 L -0.9324 -0.1207 L -0.9 -0.125 L -0.8676 -0.1207 L -0.8375 -0.1083 L -0.8116 -0.0884 L -0.7917 -0.0625 L -0.7793 -0.0324 Z M 1.025 0.0 L 1.0207 0.0324 L 1.0083 0.0625 L 0.9884 0.0884 L 0.9625 0.1083 L 0.9324 0.1207 L 0.9 0.125 L 0.8676 0.1207 L 0.8375 0.1083 L 0.8116 0.0884 L 0.7917 0.0625 L 0.7793 0.0324 L 0.775 0.0 L 0.7793 -0.0324 L 0.7917 -0.0625 L 0.8116 -0.0884 L 0.8375 -0.1083 L 0.8676 -0.1207 L 0.9 -0.125 L 0.9324 -0.1207 L 0.9625 -0.1083 L 0.9884 -0.0884 L 1.0083 -0.0625 L 1.0207 -0.0324 Z",
+  "id": "axle-box-r",
+  "bone": "bogie-r",
+  "z": 4.6,
+  "tone": 0.3,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "rect",
+  "x": -0.46,
+  "y": -0.14,
+  "w": 0.92,
+  "h": 0.12,
+  "id": "articulation-arm",
+  "bone": "gangway",
+  "z": 2.1,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.6205,
+    0.28
+   ],
+   [
+    0.634,
+    0.4021
+   ],
+   [
+    0.6857,
+    0.5135
+   ],
+   [
+    0.7702,
+    0.6027
+   ],
+   [
+    0.8788,
+    0.6601
+   ],
+   [
+    1.0,
+    0.68
+   ],
+   [
+    2.8,
+    0.68
+   ],
+   [
+    2.9212,
+    0.6601
+   ],
+   [
+    3.0298,
+    0.6027
+   ],
+   [
+    3.1143,
+    0.5135
+   ],
+   [
+    3.166,
+    0.4021
+   ],
+   [
+    3.1795,
+    0.28
+   ]
+  ],
+  "closed": true,
+  "id": "well-r",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.15,
+  "region": "body-panels",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.9205,
+    0.28
+   ],
+   [
+    5.934,
+    0.4021
+   ],
+   [
+    5.9857,
+    0.5135
+   ],
+   [
+    6.0702,
+    0.6027
+   ],
+   [
+    6.1788,
+    0.6601
+   ],
+   [
+    6.3,
+    0.68
+   ],
+   [
+    8.1,
+    0.68
+   ],
+   [
+    8.2212,
+    0.6601
+   ],
+   [
+    8.3298,
+    0.6027
+   ],
+   [
+    8.4143,
+    0.5135
+   ],
+   [
+    8.466,
+    0.4021
+   ],
+   [
+    8.4795,
+    0.28
+   ]
+  ],
+  "closed": true,
+  "id": "well-f",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.15,
+  "region": "body-panels",
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.016 -0.126 L 0.016 -0.126 L 0.016 0.017 L -0.016 0.017 Z",
+  "id": "pan-horns",
+  "bone": "pan-head",
+  "z": 3.25,
+  "role": "detail",
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ }
+]

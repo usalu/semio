@@ -35,6 +35,11 @@
         "release"
       ]
     },
+    "listenerPort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
     "platform": {
       "type": "string",
       "pattern": "^[a-z0-9-]+$"

@@ -109,6 +109,11 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
             out.push(14);
             write_child(&mut out, &value.new_solid);
         }
+        ResizeStock(value) => {
+            out.push(15);
+            write_str_lp(&mut out, &value.field);
+            out.extend_from_slice(&value.size.to_le_bytes());
+        }
     }
     if out.len() > PROCESS3D_OWNER_BYTES {
         return Err(protocol::ProtocolError::LimitExceeded("process3d mutation exceeds fixed binary owner"));
@@ -120,7 +125,7 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
 pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolError> {
     use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
     use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
-    use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
+    use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid, resize_stock};
     if bytes.len() > PROCESS3D_OWNER_BYTES {
         return Err(protocol::ProtocolError::LimitExceeded("process3d mutation exceeds fixed binary owner"));
     }
@@ -175,6 +180,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
         12 => Process3dMutation::MoveStock(move_stock::MoveStock { new_pose: read_pose(&mut reader).map_err(process3d_protocol_error)? }),
         13 => Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label: read_str_lp(&mut reader).map_err(process3d_protocol_error)? }),
         14 => Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: read_child(&mut reader).map_err(process3d_protocol_error)? }),
+        15 => Process3dMutation::ResizeStock(resize_stock::ResizeStock { field: read_str_lp(&mut reader).map_err(process3d_protocol_error)?, size: reader.read_f64_le().map_err(protocol::ProtocolError::from)? }),
         _ => return Err(process3d_protocol_error("unknown process3d mutation tag".into())),
     };
     if reader.remaining() != 0 {
@@ -260,9 +266,9 @@ fn write_solid(out: &mut Vec<u8>, solid: &WorkingSolid) {
             out.push(3);
             write_str_lp(out, mesh_url);
         }
-        WorkingSolid::ImportedSolid { solid_handle } => {
+        WorkingSolid::ImportedSolid { brep_pack } => {
             out.push(4);
-            write_str_lp(out, solid_handle);
+            write_str_lp(out, brep_pack);
         }
         WorkingSolid::Reference { reference_id } => {
             out.push(5);
@@ -277,7 +283,7 @@ fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<WorkingSolid, String
         1 => Ok(WorkingSolid::Cylinder { radius: reader.read_f64_le().map_err(|e| e.to_string())?, height: reader.read_f64_le().map_err(|e| e.to_string())? }),
         2 => Ok(WorkingSolid::Sphere { radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
         3 => Ok(WorkingSolid::ImportedMesh { mesh_url: read_str_lp(reader)? }),
-        4 => Ok(WorkingSolid::ImportedSolid { solid_handle: read_str_lp(reader)? }),
+        4 => Ok(WorkingSolid::ImportedSolid { brep_pack: read_str_lp(reader)? }),
         5 => Ok(WorkingSolid::Reference { reference_id: read_str_lp(reader)? }),
         _ => Err("process3d pack solid tag is invalid".into()),
     }
@@ -744,7 +750,7 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         Process3dMutation::RenameStep(RenameStep { id: "deep-step".into(), new_label: "Deep Step Renamed".into() }),
         Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "deep-step".into(), new_enabled: false }),
         Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "deep-step".into(), new_origin: Some(StepOrigin { machine_id: "machine".into(), capability_id: capability.id.clone() }) }),
-        Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "deep-step".into(), new_measure: ProcessMeasure::Attach { component: WorkingSolid::ImportedSolid { solid_handle: "deep-solid-handle".into() }, pose: pose.clone() } }),
+        Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "deep-step".into(), new_measure: ProcessMeasure::Attach { component: semio_s_artifact_process_process3d_model::snapshot::pack_imported_brep(&semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("small owned B-Rep fixture"), pose: pose.clone() } }),
         Process3dMutation::ReorderSteps(ReorderSteps { id: "deep-step".into(), to_index: 0 }),
         Process3dMutation::CreateMachine(CreateMachine { index: 1, machine }),
         Process3dMutation::DeleteMachine(DeleteMachine { id: "transient-machine".into() }),
@@ -754,6 +760,7 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         Process3dMutation::MoveStock(MoveStock { new_pose: pose }),
         Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
         Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: child }),
+        Process3dMutation::ResizeStock(semio_s_artifact_process_process3d_mut_stock::resize_stock::ResizeStock { field: "width".into(), size: 2.0 }),
     ]
 }
 

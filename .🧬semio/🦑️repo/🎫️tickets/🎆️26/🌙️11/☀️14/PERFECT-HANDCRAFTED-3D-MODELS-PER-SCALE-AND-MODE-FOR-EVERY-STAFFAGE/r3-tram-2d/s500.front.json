@@ -1,0 +1,304 @@
+[
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.69,
+    0.0
+   ],
+   [
+    0.81,
+    0.0
+   ],
+   [
+    0.81,
+    0.6
+   ],
+   [
+    0.69,
+    0.6
+   ]
+  ],
+  "closed": true,
+  "id": "wheel-l",
+  "bone": "ws-f2",
+  "role": "body",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.25,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.69,
+    0.0
+   ],
+   [
+    -0.81,
+    0.0
+   ],
+   [
+    -0.81,
+    0.6
+   ],
+   [
+    -0.69,
+    0.6
+   ]
+  ],
+  "closed": true,
+  "id": "wheel-r",
+  "bone": "ws-f2",
+  "role": "body",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.25,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -1.2,
+    0.28
+   ],
+   [
+    -1.2,
+    1.15
+   ],
+   [
+    -1.2,
+    3.1
+   ],
+   [
+    -1.1876,
+    3.22
+   ],
+   [
+    -1.1586,
+    3.3
+   ],
+   [
+    -1.1069,
+    3.345
+   ],
+   [
+    -1.0345,
+    3.37
+   ],
+   [
+    -0.8793,
+    3.385
+   ],
+   [
+    -0.5172,
+    3.395
+   ],
+   [
+    0.0,
+    3.4
+   ],
+   [
+    0.5172,
+    3.395
+   ],
+   [
+    0.8793,
+    3.385
+   ],
+   [
+    1.0345,
+    3.37
+   ],
+   [
+    1.1069,
+    3.345
+   ],
+   [
+    1.1586,
+    3.3
+   ],
+   [
+    1.1876,
+    3.22
+   ],
+   [
+    1.2,
+    3.1
+   ],
+   [
+    1.2,
+    1.15
+   ],
+   [
+    1.2,
+    0.28
+   ]
+  ],
+  "closed": true,
+  "id": "shell-end",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof",
+   "traction-motors",
+   "brake-discs",
+   "hvac-unit",
+   "brake-resistor"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.9 0.12 L 0.9 0.12 L 0.9 0.26 L -0.9 0.26 Z",
+  "id": "axle-ws-r1",
+  "filled": true,
+  "bone": "body-end",
+  "role": "body",
+  "z": 2,
+  "tone": 0.62,
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -1.196,
+    1.15
+   ],
+   [
+    1.196,
+    1.15
+   ],
+   [
+    1.196,
+    2.65
+   ],
+   [
+    -1.196,
+    2.65
+   ]
+  ],
+  "closed": true,
+  "id": "windscreen",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.85,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "capsule",
+  "x0": 0,
+  "y0": 0,
+  "x1": 1.9,
+  "y1": 0,
+  "r0": 0.035,
+  "r1": 0.035,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.042,
+   "z1": 0.042
+  },
+  "id": "pan-lower",
+  "bone": "pan-lower",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "capsule",
+  "x0": 0,
+  "y0": 0,
+  "x1": 1.9,
+  "y1": 0,
+  "r0": 0.02,
+  "r1": 0.02,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.02,
+   "z1": 0.02
+  },
+  "id": "pan-upper",
+  "bone": "pan-upper",
+  "role": "body",
+  "z": 3.1,
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "capsule",
+  "x0": -0.0075,
+  "y0": 0.02,
+  "x1": 0.0075,
+  "y1": 0.02,
+  "r0": 0.03,
+  "r1": 0.03,
+  "solid": {
+   "kind": "extruded",
+   "sweep": "w",
+   "z0": -0.8,
+   "z1": 0.8
+  },
+  "id": "pan-head",
+  "bone": "pan-head",
+  "role": "body",
+  "z": 3.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "pantograph",
+  "material": "carbon"
+ },
+ {
+  "kind": "rect",
+  "x": -0.9,
+  "y": 3.38,
+  "w": 1.8,
+  "h": 0.28,
+  "r": 0.06,
+  "id": "roof-boxes",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.6,
+  "filled": true,
+  "tone": 0.45,
+  "material": "resistor-steel",
+  "regions": [
+   "hvac-unit",
+   "brake-resistor"
+  ]
+ },
+ {
+  "kind": "rect",
+  "x": -0.47,
+  "y": 3.39,
+  "w": 0.94,
+  "h": 0.16,
+  "r": 0.03,
+  "id": "pan-base",
+  "bone": "body-end",
+  "role": "body",
+  "z": 3.3,
+  "filled": true,
+  "tone": 0.4,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ }
+]

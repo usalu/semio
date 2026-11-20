@@ -6,7 +6,8 @@ import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import budgetPolicy from "../../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
-import {formatMachinePlanV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
+import {formatMachinePlanV1,machineCapacityV1,machinePolicyV1,parseMachineBytesV1,planMachineBudgetV1,readMachinePolicyV1,resolveMachineTotalV1,splitMachineBudgetV1,type MachinePolicyV1,type MachineUseV1} from "../🟦️.ts";
+import admission from "../../../../🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
 
@@ -17,7 +18,7 @@ function corpus(count:number):Array<{totalBytes:number;hostFreeBytes:number|null
  const random=generator(20261026),out=[];
  for(let index=0;index<count;index++){
   const heavy=random()<0.5,uses=declared.stores.map(store=>{
-   const empty=random()<0.1,used=empty?0:Math.floor(random()*(heavy?30:6)*GIB*(store.loose?1:random()<0.5?1:0.1)),image=random()<0.2?null:used+Math.floor(random()*8*GIB);
+   const empty=random()<0.1,used=empty?0:Math.floor(random()*(heavy?30:6)*GIB*(store.loose?1:random()<0.5?1:0.1)),image=random()<0.2?null:used+Math.floor(random()*8*GIB)+(store.admitsCommands?40*GIB:0);
    return {id:store.id,usedBytes:used,envelopeBytes:store.loose?null:image,evictableBytes:random()<0.4?null:Math.floor(used*random())};
   });
   out.push({totalBytes:Math.max(declared.stores.reduce((sum,store)=>sum+store.floorBytes,0),Math.floor((4+random()*90)*GIB)),hostFreeBytes:random()<0.2?null:random()<0.3?Math.floor(random()*declared.hostFreeFloorBytes):Math.floor((15+random()*200)*GIB),uses});
@@ -83,7 +84,7 @@ test("the split is exact: floors, demands, weights, spare and rounding",()=>{
 test("the plan equals an independent exact-rational oracle on 400 seeded machines",()=>{
  const cases=corpus(400),directory=mkdtempSync(join(tmpdir(),"mb-")),file=join(directory,"cases.json");
  try{
-  writeFileSync(file,JSON.stringify({stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
+  writeFileSync(file,JSON.stringify({admission:admission.definitions.Policy.const,stores:declared.stores,hostFreeFloorBytes:declared.hostFreeFloorBytes,alignBytes:declared.alignBytes,toleranceBytes:declared.toleranceBytes,cases}));
   const run=spawnSync("python3",["-I",join(import.meta.dir,"🐍️.py"),file],{encoding:"utf8",maxBuffer:1<<28});
   expect(run.status,run.stderr).toBe(0);
   const expected=JSON.parse(run.stdout) as Array<Record<string,unknown>>;
@@ -96,7 +97,8 @@ test("laws: quotas add up, nothing under its fair share is cut, planning converg
  const floors=declared.stores.reduce((sum,store)=>sum+store.floorBytes,0);
  for(const[index,input]of corpus(300).entries()){
   const plan=planMachineBudgetV1(input),label="case "+index;
-  expect(plan.stores.reduce((sum,row)=>sum+row.quotaBytes,0),label).toBe(plan.effectiveTotalBytes);
+  const bound=plan.stores.some(row=>machineCapacityV1(declared.stores.find(store=>store.id===row.id)!,row.envelopeBytes)<plan.effectiveTotalBytes),added=plan.stores.reduce((sum,row)=>sum+row.quotaBytes,0);
+  if(bound)expect(added,label).toBeLessThanOrEqual(plan.effectiveTotalBytes);else expect(added,label).toBe(plan.effectiveTotalBytes);
   expect(plan.effectiveTotalBytes,label).toBeGreaterThanOrEqual(floors);expect(plan.effectiveTotalBytes,label).toBeLessThanOrEqual(input.totalBytes);
   for(const row of plan.stores){
    const use=input.uses.find(candidate=>candidate.id===row.id)!;
@@ -104,7 +106,7 @@ test("laws: quotas add up, nothing under its fair share is cut, planning converg
    if(row.demandBytes<=row.quotaBytes)expect(row.excessBytes,label+" "+row.id+" is under its share").toBe(0);
    expect(row.quotaBytes,label).toBeGreaterThanOrEqual(declared.stores.find(store=>store.id===row.id)!.floorBytes);
   }
-  if(plan.stores.reduce((sum,row)=>sum+Math.max(row.demandBytes,declared.stores.find(store=>store.id===row.id)!.floorBytes),0)<=plan.effectiveTotalBytes)expect(plan.evictBytes+plan.blockedBytes,label+" fits").toBe(0);
+  if(plan.stores.every(row=>machineCapacityV1(declared.stores.find(store=>store.id===row.id)!,row.envelopeBytes)>=row.demandBytes)&&plan.stores.reduce((sum,row)=>sum+Math.max(row.demandBytes,declared.stores.find(store=>store.id===row.id)!.floorBytes),0)<=plan.effectiveTotalBytes)expect(plan.evictBytes+plan.blockedBytes,label+" fits").toBe(0);
   const after=planMachineBudgetV1({...input,hostFreeBytes:plan.pressureBytes>0?declared.hostFreeFloorBytes:input.hostFreeBytes,uses:input.uses.map(use=>{const row=plan.stores.find(candidate=>candidate.id===use.id)!;return{...use,usedBytes:use.usedBytes-row.evictBytes,evictableBytes:use.evictableBytes===null?null:use.evictableBytes-row.evictBytes};})});
   expect(after.evictBytes,label+" converges once the host is relieved").toBe(0);
   expect(after.blockedBytes,label+" blocked never grows beyond the one byte per store the largest-remainder split may move").toBeLessThanOrEqual(plan.blockedBytes+plan.stores.length);
@@ -138,4 +140,16 @@ test("the machine footprint counts the host allocation of an image, never less t
  expect(plan(base).footprintBytes).toBe(46*GIB);
  expect(plan(base.map(use=>use.id==="rust"?{...use,allocatedBytes:24*GIB}:use)).footprintBytes).toBe(25*GIB);
  expect(plan(base.map(use=>use.id==="rust"?{...use,allocatedBytes:GIB}:use)).footprintBytes).toBe(4*GIB);
+});
+
+test("the quota of an image that admits build commands never exceeds the image minus the kept-free floor and the largest command reservation of the headroom policy",()=>{
+ const reserve=admission.definitions.Policy.const,image=67*GIB,room=image-Math.max(reserve.floorMinimumBytes,Math.floor(image*reserve.floorBasisPoints/10000))-Math.floor(image*reserve.maximumShareBasisPoints/10000);
+ const uses:MachineUseV1[]=declared.stores.map(store=>({id:store.id,usedBytes:store.id==="rust"?Math.floor(50.6*GIB):GIB,envelopeBytes:store.id==="rust"?image:store.loose?null:4*GIB,evictableBytes:null}));
+ for(const totalBytes of[400*GIB,declared.defaultTotalBytes]){
+  const plan=planMachineBudgetV1({totalBytes,hostFreeBytes:null,uses}),rust=plan.stores.find(row=>row.id==="rust")!;
+  expect(rust.quotaBytes).toBe(room);expect(rust.quotaBytes).toBeLessThan(image-reserve.floorMinimumBytes);expect(rust.contentLimitBytes).toBeLessThan(rust.quotaBytes);expect(rust.excessBytes).toBeGreaterThan(0);
+  expect(plan.stores.filter(row=>row.id!=="rust"&&row.envelopeBytes!==null).every(row=>row.quotaBytes<=row.envelopeBytes!)).toBe(true);
+ }
+ expect(machineCapacityV1({},image)).toBe(image);expect(machineCapacityV1({admitsCommands:true},null)).toBe(Infinity);expect(machineCapacityV1({admitsCommands:true},GIB)).toBe(0);
+ expect(declared.stores.filter(store=>store.admitsCommands).map(store=>store.id)).toEqual(["rust"]);
 });

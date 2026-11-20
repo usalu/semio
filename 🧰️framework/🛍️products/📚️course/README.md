@@ -15,7 +15,7 @@ the renderer is one target among possible others. Two cores implement the model 
 | `🧬️schema/🟦️.ts`, `🧬️schema/🦀️.rs` | Hand-written type twins, one type per `$defs` entry under the same name. |
 | `🔨️modules/🎲️randomness/` | FNV-1a run seeds, MT19937, the rejection-sampled uniform index and the Fisher–Yates shuffle. |
 | `🔨️modules/⛰️challenge/` | The rules of the four challenges: what a challenge shows, hints and times, its par points, reach and miss, the seconds of a task, the instant a learner acted, lowered to the clock lead and raised to its floor, and the hints of an answer. |
-| `🔨️modules/🃏️sheet/` | `sheetOf(quiz, seed, challenge)`: the randomized, solution-free sheet of a run at its challenge. |
+| `🔨️modules/🃏️sheet/` | `sheetOf(quiz, seed, challenge)`: the randomized, solution-free sheet of a run at its challenge, dealt once per quiz, seed and challenge (the last `SHEETS_KEPT` per quiz are handed out again; the Rust `sheet_of` deals anew). |
 | `🔨️modules/✅️validation/` | Structural and semantic validation of quizzes, courses, client course views and answers without any schema library; the handle policy (`normalizeHandle` and its owned Unicode tables), id and slug shapes, and the shape check of every command and query. |
 | `🔨️modules/📏️scoring/` | Partial-credit scoring of tasks and runs. |
 | `🔨️modules/🏅️badges/` | Badge rules evaluated after every submission. |

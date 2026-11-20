@@ -28,8 +28,7 @@ import {
   verticalListSortingStrategy,
   type ContextMenuItem,
   type DragEndEvent,
-  type IconName,
-} from "@semio-tech/ui-react";
+  type IconName, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult, useMapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { WindowInstanceIdContext } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -68,7 +67,8 @@ function SelectionLabel({ id, target, selection, controllerId, onAction, childre
   return <button
     type="button"
     aria-pressed={selection.selectedId === id}
-    className="min-w-0 flex-1 rounded text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    {...sharedBorderlessBoxProps}
+    className="min-w-0 flex-1 rounded text-left"
     onClick={(event) => {
       event.stopPropagation();
       dispatchBlockListAction(onAction, controllerId, "interactionSelect", { domainId: selection.domainId, targets: JSON.stringify([target]), merge: "replace", method: "pick" });
@@ -179,7 +179,7 @@ function PaletteEntryRow({ entry, targetStepId, controllerId, onAction }: { read
       className={cn("flex items-center gap-1 border-0 p-single text-xs", enabled && surfaceDrag && "cursor-grab active:cursor-grabbing")}
     >
       {!surfaceDrag && enabled ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
-      <button
+      <button {...sharedBorderlessBoxProps}
         type="button"
         disabled={!enabled}
         className="flex min-w-0 flex-1 items-center gap-1 text-left"

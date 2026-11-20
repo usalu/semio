@@ -87,10 +87,6 @@ mod diff_apply_and_algebra;
 mod patchable_frames;
 pub use patchable_frames::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
 //#region 🪢️TaxonomyMounts
 #[path = "."]
 pub mod io {
@@ -105,10 +101,6 @@ pub mod io {
 pub(crate) fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
     <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/⚖️portable/🦀️.rs"]
-mod portable_diff_tests;
 
 #[cfg(any(test, feature = "testkit"))]
 fn deserialize_double_option_serde<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>

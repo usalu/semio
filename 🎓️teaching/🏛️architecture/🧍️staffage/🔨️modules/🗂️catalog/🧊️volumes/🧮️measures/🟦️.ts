@@ -3,9 +3,11 @@
  * THE REFERENCES are trimesh and scipy (point containment, Euclidean distance transform) in `🧪️tests/🧊️volumes-rules/🐍️.py`.
  *
  * @see ../🟦️.ts — `checkVolumes`, which uses them
+ * @see ../🌊️flood/🟦️.ts — the flood from outside behind `outsideOf` (C31)
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts — the kernel tessellation */
 import type { VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
 import { outwardOrientation } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { floodOutside } from "../🌊️flood/🟦️.ts";
 import { VOLUME_LIMITS } from "../🧱️rules/🟦️.ts";
 import { copyMesh, edt1, extentOf, type World } from "../🌓️silhouette/🟦️.ts";
 
@@ -296,8 +298,8 @@ function subdivision(m: number): readonly (readonly [number, number, number])[] 
 const BURIAL_PROBE_FEATURE = 0.02;
 const BURIAL_MAX_SPLITS = 24;
 
-/** 🧿️ The exposed area in m² of the triangles of `target`: faces that are not buried inside a mesh of `against` (a probe moved `probeM` out of the face, 0.5 mm by default and 0.02 smallest features in the rules, along its normal lies inside it; `ignore` excludes meshes; with `contactM` above the probe a face is also buried when a probe at half that distance or at that distance lies inside, so that two solids that meet within `contactM` of each other, as the facets of two tessellations of one curved surface do, count as touching and the seam between them is no surface), not lying in a contact plane and not within 45 degrees of a declared `sectionFaces` axis of their solid. */
-export function exposedArea(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0): number {
+/** 🧿️ The exposed area in m² of the triangles of `target`: faces that are not buried inside a mesh of `against` (a probe moved `probeM` out of the face, 0.5 mm by default and 0.02 smallest features in the rules, along its normal lies inside it; `ignore` excludes meshes; with `contactM` above the probe a face is also buried when a probe at half that distance or at that distance lies inside, so that two solids that meet within `contactM` of each other, as the facets of two tessellations of one curved surface do, count as touching and the seam between them is no surface), not lying in a contact plane and not within 45 degrees of a declared `sectionFaces` axis of their solid. With `outside` every face is sampled and a sample counts only when `outside` says so for its foot and outward normal (C31, {@link outsideOf}). */
+export function exposedArea(target: readonly World[], against: readonly World[], planes: readonly ContactPlane[] = [], ignore: (solid: World) => boolean = () => false, probeM: number = BURIAL_PROBE_M, contactM = 0, outside?: (base: Vec, normal: Vec) => boolean): number {
   let area = 0;
   const cos = Math.cos((VOLUME_LIMITS.sectionAngleDeg * Math.PI) / 180);
   for (const solid of target) {
@@ -328,7 +330,7 @@ export function exposedArea(target: readonly World[], against: readonly World[],
         const box = boxOf(other);
         return [0, 1, 2].every((k) => box.min[k]! - reachM <= Math.max(q[a + k]!, q[b + k]!, q[c + k]!) && box.max[k]! + reachM >= Math.min(q[a + k]!, q[b + k]!, q[c + k]!));
       });
-      if (around.length === 0) {
+      if (around.length === 0 && outside === undefined) {
         area += twice / 2;
         continue;
       }
@@ -338,12 +340,51 @@ export function exposedArea(target: readonly World[], against: readonly World[],
       const reach = contactM > probeM ? [probeM, contactM / 2, contactM] : [probeM];
       for (const [wa, wb, wc] of weights) {
         const base: Vec = [wa * q[a]! + wb * q[b]! + wc * q[c]!, wa * q[a + 1]! + wb * q[b + 1]! + wc * q[c + 1]!, wa * q[a + 2]! + wb * q[b + 2]! + wc * q[c + 2]!];
-        if (!reach.some((r) => insideAny(around, [base[0] + n[0] * r, base[1] + n[1] * r, base[2] + n[2] * r]))) free++;
+        if (around.length > 0 && reach.some((r) => insideAny(around, [base[0] + n[0] * r, base[1] + n[1] * r, base[2] + n[2] * r]))) continue;
+        if (outside === undefined || outside(base, n)) free++;
       }
       area += (twice / 2) * (free / weights.length);
     }
   }
   return area;
+}
+
+/** 🌊️ The cell of the flood from outside in smallest features (a quarter: a gap of at most that is closed, a gap of half a feature is open), and how far in front of a face, in smallest features, a solid of another region still covers it (half a feature). */
+export const FLOOD_FEATURES = 0.25;
+export const COVER_FEATURES = 0.5;
+
+/** 🌊️ What is outer surface among `walls`, the solids of one scale (C31): `counts` says whether a face sample with the foot `base` and the outward unit normal `normal` is outer for a region whose solids `own` names. It is when the air flooded from outside through the walls reaches the probe `probeM` in front of it (an open tube end, a cup or a duct mouth lets the air in), or when a solid of another region covers it (C29: the probe lies inside that solid, or its surface is the first one within {@link COVER_FEATURES} features in front of the face) and that solid itself has surface the air reaches. A face that only looks into a cavity closed off by the walls, or at a solid enclosed in one, is not outer. `cellM` is the cell the flood used: {@link FLOOD_FEATURES} features unless the budget of the flood raised it. `tick` is called regularly and may throw to cancel. */
+export type Outside = { readonly cellM: number; readonly counts: (base: Vec, normal: Vec, own: (solid: World) => boolean) => boolean };
+export function outsideOf(walls: readonly World[], featureM: number, probeM: number = BURIAL_PROBE_M, tick: () => void = () => {}): Outside {
+  const flood = floodOutside(walls, FLOOD_FEATURES * featureM, tick);
+  const open = new Map<World, boolean>();
+  const isOpen = (solid: World): boolean => {
+    let hit = open.get(solid);
+    if (hit === undefined) {
+      hit = false;
+      const { positions: q, indices } = solid;
+      const outward = orientationOf(solid).normals;
+      for (let t = 0; t < indices.length && !hit; t += 3) {
+        const [a, b, c] = [indices[t]! * 3, indices[t + 1]! * 3, indices[t + 2]! * 3];
+        const n: Vec = [outward[t]!, outward[t + 1]!, outward[t + 2]!];
+        if (n[0] === 0 && n[1] === 0 && n[2] === 0) continue;
+        hit = flood.reaches([(q[a]! + q[b]! + q[c]!) / 3 + n[0] * probeM, (q[a + 1]! + q[b + 1]! + q[c + 1]!) / 3 + n[1] * probeM, (q[a + 2]! + q[b + 2]! + q[c + 2]!) / 3 + n[2] * probeM], n);
+      }
+      open.set(solid, hit);
+    }
+    return hit;
+  };
+  const coverM = COVER_FEATURES * featureM;
+  return {
+    cellM: flood.cellM,
+    counts: (base, n, own) => {
+      const p: Vec = [base[0] + n[0] * probeM, base[1] + n[1] * probeM, base[2] + n[2] * probeM];
+      if (flood.reaches(p, n)) return true;
+      if (insideAny(walls, p, (solid) => own(solid) || !isOpen(solid))) return true;
+      const hit = flood.firstHit(p, [base[0] + n[0] * coverM, base[1] + n[1] * coverM, base[2] + n[2] * coverM]);
+      return hit >= 0 && !own(walls[hit]!) && isOpen(walls[hit]!);
+    },
+  };
 }
 
 /** 🧿️ The outer area in m² of a set of meshes: {@link exposedArea} against each other, without planes. */

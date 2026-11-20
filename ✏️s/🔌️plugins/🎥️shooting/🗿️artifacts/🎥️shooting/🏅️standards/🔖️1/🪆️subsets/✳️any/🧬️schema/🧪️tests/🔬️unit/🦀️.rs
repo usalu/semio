@@ -73,6 +73,16 @@ async fn transparent_scene_svg_omits_filled_shot_background_path() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn scene_svg_handles_invalid_utf8_hex_color_boundaries() {
+    let mut snapshot = default_snapshot();
+    snapshot.scene.background = "#0€ab".into();
+    snapshot.scene.material.stroke = "#0€abcd".into();
+    let (svg, _, _) = shooting_scene_svg(&snapshot).expect("invalid colors use defaults");
+    assert!(svg.contains("<path"));
+    assert!(!svg.contains('€'));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn icon_render_request_forwards_camera_projection() {
     let snapshot = default_snapshot();
     let shot = active_shot(&snapshot).expect("default fixture shot");

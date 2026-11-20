@@ -4,9 +4,12 @@ import{join}from"node:path";
 import Ajv from"ajv";
 import{testPythonV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{heapStats}from"bun:jsc";
-import{createRowTableV1,createStringTableV1,factKeyV1}from"../🟨️.mjs";
+import{Database}from"bun:sqlite";
+import{createRowTableV1,createStringTableV1,distinctObservationRowsV1,factKeyV1,encodeAuthorityObservationsV1,decodeAuthorityObservationsV1}from"../🟨️.mjs";
 import fixture from"./🔣️.json";
 import fixtureSchema from"./🧬️schema/🔣️.json";
+import authorityFixture from"./📥️authority.json";
+import authoritySchema from"../../../🧬️schema/📥️authority.json";
 
 type Row={kind:string;path:string;fact:unknown};
 const python=testPythonV1(),oracle=join(import.meta.dir,"🐍️.py");
@@ -28,6 +31,17 @@ const numbers=(rows:[string,string,unknown][],options:Parameters<typeof createRo
 test("the fixture is closed under its schema",()=>{
  const ajv=new Ajv({strict:false});
  expect(ajv.validate(fixtureSchema,fixture),JSON.stringify(ajv.errors)).toBe(true);
+});
+
+test("the union of independent captures keeps exactly the oracle's distinct rows and their original order",()=>{
+ for(const answer of model()){
+  const captured=answer.rows.map(([kind,path,fact])=>({kind,path,fact}));
+  const split=Math.floor(captured.length/2);
+  const rows=distinctObservationRowsV1(captured.slice(0,split),captured.slice(split),structuredClone(captured));
+  const first=Array.from({length:answer.distinct},(_,index)=>captured[answer.groups.indexOf(index+1)]);
+  expect(rows).toHaveLength(answer.distinct);
+  rows.forEach((row,index)=>expect(row).toBe(first[index]));
+ }
 });
 
 test("the numbers of the table group the rows exactly as the model does, with the real hash and with every row in one bucket",()=>{
@@ -110,4 +124,27 @@ test("a large generated corpus of settled rows stays under its heap bound when n
  expect(stats.rows).toBeGreaterThan(rows*0.5);
  expect(grown,"heap growth "+grown.toFixed(1)+" MB for "+stats.rows+" rows").toBeLessThan(bound);
  expect(stats.bytes/1048576,"estimated store bytes").toBeLessThan(bound);
+});
+
+test("graph authority stores shared semantic observations once and retains root order",()=>{
+ const fixture=authorityFixture,indexed=[...fixture.records,...fixture.roots],digest="d".repeat(64);
+ const validator=new Ajv({strict:true});
+ expect(validator.validate(authoritySchema,{version:fixture.version,graph:digest,membership:digest,module:{implementation:digest,publication:digest},observations:indexed})).toBe(true);
+ const oracle:Row[]=[],result=decodeAuthorityObservationsV1(indexed,authoritySchema.definitions.ObservationKind.enum);
+ for(const record of fixture.records)oracle.push(record.kind==="analysis"?{...record,fact:{...record.fact as object,nestedObservations:(record.fact as {nestedObservations:number[]}).nestedObservations.map(index=>oracle[index]!)}}:record);
+ expect(result).toEqual(fixture.roots.map(index=>oracle[index]));
+ const db=new Database(":memory:");
+ try{
+  const resolved=db.query("select json_extract(?1, '$[' || root.value || '].path') path from json_each(?2) root order by root.key").all(JSON.stringify(fixture.records),JSON.stringify(fixture.roots));
+  expect(result.map(({path})=>({path}))).toEqual(resolved);
+  const nested=db.query("select json_extract(?1, '$[' || edge.value || '].path') path from json_each(json_extract(?1, '$[3].fact.nestedObservations')) edge order by edge.key").all(JSON.stringify(fixture.records));
+  expect((result[0]!.fact as {nestedObservations:Row[]}).nestedObservations.map(({path})=>({path}))).toEqual(nested);
+ }finally{db.close();}
+ expect(result[0]).toBe(result[3]);
+ expect((result[0]!.fact as {nestedObservations:Row[]}).nestedObservations[0]).toBe(result[2]);
+ expect(JSON.parse(encodeAuthorityObservationsV1(result,10240))).toEqual(indexed);
+ const scale=Array(4096).fill(result[0]);
+ expect(encodeAuthorityObservationsV1(scale,16384).length).toBeLessThan(JSON.stringify(scale).length/100);
+ expect(()=>encodeAuthorityObservationsV1(result,128)).toThrow("finite observation limit");
+ for(const bad of fixture.invalid)expect(()=>decodeAuthorityObservationsV1(bad,authoritySchema.definitions.ObservationKind.enum)).toThrow("indexed authority observations");
 });

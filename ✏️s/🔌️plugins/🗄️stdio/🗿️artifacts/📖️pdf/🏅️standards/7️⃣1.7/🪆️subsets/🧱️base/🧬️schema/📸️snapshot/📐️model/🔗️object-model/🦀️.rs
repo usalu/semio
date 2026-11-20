@@ -290,7 +290,8 @@ impl PdfObject {
 }
 
 /// 🗄️ One `N G obj ... endobj` indirect object, keyed by its `id`.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PdfIndirectObject {
     pub id: ObjRef,

@@ -24,3 +24,13 @@ async fn clone_block_reids_group_children() {
         panic!("expected group block");
     }
 }
+
+#[test]
+fn note_snapshot_asset_map_preserves_the_committed_wire_object() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("note document fixture");
+    let document = &fixture["document"];
+    let expected: BTreeMap<String, NoteImageAsset> = serde_json::from_value(document["assets"].clone()).expect("serde asset oracle");
+    let snapshot = <NoteSnapshot as semio_framework_value::FromValue>::from_value(serde_json::from_value(document.clone()).expect("note value")).expect("note snapshot");
+    assert_eq!(snapshot.assets.iter().collect::<BTreeMap<_, _>>(), expected.iter().collect());
+    assert_eq!(serde_json::to_value(&snapshot.assets).expect("retained assets"), serde_json::to_value(&expected).expect("serde assets"));
+}

@@ -50,6 +50,7 @@ semio-s-artifact-wfc-bitmap-snapshot = { path = "../../../../../../📸️snapsh
 semio-s-plugin-wfc-engine = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-wfc-engine-oracle = { path = "../../../../../../../../../../../../../⚙️engine/🧿️oracle/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-inferences = { path = "../../../../../../💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

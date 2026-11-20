@@ -106,6 +106,10 @@ pub fn forms_try_view<'a>(view: &'a semio_plugin::ViewModel, window_id: &str, wi
 }
 
 impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<FormsPlayApp>> for FormsWindowCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(
@@ -382,4 +386,3 @@ pub fn forms_command_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(FormsWindowCommandWork);

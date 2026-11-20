@@ -51,6 +51,7 @@
     "slot": {
       "$ref": "#/$defs/XlsxSheetSlot",
       "x-semio-ui": {
+        "widget": "hidden",
         "role": "value",
         "label": {
           "en": "Verbatim slot",

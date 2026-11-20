@@ -30,6 +30,9 @@ pub use controlled_decoding::{parse_exact_controlled,parse_expr_text_controlled}
 pub use semio_framework_dsl_record_emission::*;
 
 pub use semio_framework_dsl_record_model::*;
+#[path="🧾️json-schema/🦀️.rs"]
+mod json_schema;
+pub use json_schema::{record_spec_json_schema,shape_json_schema};
 #[path = "🧊️field/🦀️.rs"]
 mod native_field;
 

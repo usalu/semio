@@ -20,8 +20,10 @@ semio-s-fem-payload-turns = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 semio-s-fem-sparse = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-testing-caller = { workspace = true }
 semio-s-fem-test-support = { workspace = true }
 serde_json = { workspace = true }

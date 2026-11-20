@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import Ajv from "ajv";
@@ -110,5 +110,29 @@ test("a manifest symlink is reported as not an ordinary file on disk", () => {
     symlinkSync(join(root, "real.json"), join(root, "a/📋️project.json"));
     writeFileSync(join(root, BUILD_OWNER_REGISTRY_FILE), JSON.stringify({ version: 1, owners: [{ name: "@t/a", root: "a", manifest: "a/📋️project.json", packages: [] }], catalogProviders: [] }));
     expect(checkBuildOwnerRegistry(root, undefined, policy).findings.map(subject)).toEqual(["manifest-not-file:@t/a"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("an on-disk peer write wins when it arrives after reconciliation read its baseline", () => {
+  const root = mkdtempSync(join(tmpdir(), "owners-peer-"));
+  const file = join(root, BUILD_OWNER_REGISTRY_FILE);
+  const peer = JSON.stringify({ version: 1, owners: [{ name: "external", root: "external", manifest: "external/Cargo.toml", packages: [] }], catalogProviders: [] });
+  let seen = false;
+  const editingPolicy: OwnerTreePolicy = { ...policy, get generated() {
+    if (!seen) {
+      seen = true;
+      writeFileSync(file, peer);
+    }
+    return policy.generated;
+  }};
+  try {
+    mkdirSync(join(root, "needed"));
+    writeFileSync(join(root, "needed", "Cargo.toml"), '[package]\nname = "needed"\n');
+    writeFileSync(file, JSON.stringify({ version: 1, owners: [], catalogProviders: [] }));
+    expect(() => reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, editingPolicy)).toThrow("Build owner registry changed during reconciliation");
+    expect(seen).toBe(true);
+    expect(readFileSync(file, "utf8")).toBe(peer);
+    expect(readdirSync(root).sort()).toEqual(["needed", BUILD_OWNER_REGISTRY_FILE].sort());
+    expect(reconcileBuildOwnerRegistry(root, { scope: "needed", write: true }, policy).registry.owners.map(owner => owner.name)).toEqual(["external", "needed"]);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

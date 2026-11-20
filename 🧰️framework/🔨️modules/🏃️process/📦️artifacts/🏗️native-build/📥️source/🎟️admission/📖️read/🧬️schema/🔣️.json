@@ -202,6 +202,40 @@
           ]
         }
       }
+    },
+    "Throughput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "depth",
+        "units",
+        "maximumLstatsPerFile",
+        "opens"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "units": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumLstatsPerFile": {
+          "type": "number",
+          "minimum": 1
+        },
+        "opens": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   }
 }

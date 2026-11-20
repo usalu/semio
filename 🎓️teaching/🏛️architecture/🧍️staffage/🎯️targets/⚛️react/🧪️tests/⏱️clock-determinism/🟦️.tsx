@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { StaffageClock, StaffageFigure } from "@teaching/staffage-react";
 import type { ClockScheduler } from "@teaching/staffage-react";
 import { walker } from "../🧰️support/🧰️.ts";
+import { useHeldTime } from "../../🔨️modules/⏱️clock/🟦️.ts";
+import { defaultQuery, figureFrame, inlineSvg } from "../../🔨️modules/🧮️pipeline/🟦️.ts";
 
 function manual(): ClockScheduler & { tick: (nowMs: number) => void } {
   let next: ((nowMs: number) => void) | null = null;
@@ -81,5 +83,46 @@ describe("⏱️ clock", () => {
     expect(Number(times()[0])).toBeCloseTo(10 / 30, 9);
     act(() => clock.step(5));
     expect(Number(times()[1])).toBeCloseTo(15 / 30, 9);
+  });
+
+  it("holds an idle figure on its last instant without re-rendering it, and catches up when it becomes active", () => {
+    const clock = new StaffageClock({ fps: 30, durationS: 10, playing: false, reducedMotion: false });
+    let renders = 0;
+    const Probe = ({ active }: { active: boolean }) => { renders++; return <span data-probe>{useHeldTime(clock, active)}</span>; };
+    const { container, rerender } = render(<Probe active={false} />);
+    const shown = () => Number(container.querySelector("[data-probe]")!.textContent);
+    expect(shown()).toBe(0);
+    const base = renders;
+    act(() => { for (let frame = 1; frame <= 30; frame++) clock.step(1); });
+    expect(renders).toBe(base);
+    expect(shown()).toBe(0);
+    rerender(<Probe active />);
+    expect(shown()).toBeCloseTo(1, 9);
+    act(() => clock.step(3));
+    expect(shown()).toBeCloseTo(1.1, 9);
+  });
+
+  it("does not re-render a figure that shows a pose when the clock runs", () => {
+    const clock = new StaffageClock({ fps: 30, durationS: 10, playing: false, reducedMotion: false });
+    const query = defaultQuery(walker, null);
+    const props = { asset: walker, clock, query, scale: { denominator: 100 }, language: "en" as const, viewpoint: "elevation" as const, live: true, view: "dark-line" as const };
+    const { container } = render(<StaffageFigure {...props} />);
+    const before = container.innerHTML;
+    act(() => clock.step(7));
+    expect(container.innerHTML).toBe(before);
+  });
+
+  it("writes the markup of the frame it shows, byte for byte", () => {
+    const clock = new StaffageClock({ fps: 30, durationS: 1, playing: false, reducedMotion: false });
+    const request = { view: "dark-line" as const, scale: { denominator: 100 }, language: "en" as const, viewpoint: "elevation" as const };
+    const { container } = render(<StaffageFigure asset={walker} clock={clock} live {...request} />);
+    const ink = () => container.querySelector("[data-staffage-figure] > div")!.innerHTML;
+    for (const frame of [0, 4, 9, 4]) {
+      act(() => clock.seek(frame / 30));
+      const scene = figureFrame(walker, { kind: "clip", clip: walker.presentation.defaultClip, timeS: frame / 30 }, request).scene;
+      const parsed = document.createElement("div");
+      parsed.innerHTML = inlineSvg(scene);
+      expect(ink()).toBe(parsed.innerHTML);
+    }
   });
 });

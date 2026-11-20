@@ -86,3 +86,11 @@ fn world_component_contract_admits_shared_domain_methods() {
     for value in fixture["methods"].as_array().unwrap() { assert!(definition.selection.methods.iter().any(|method| selection_method_wire_str(*method) == value.as_str().unwrap()), "{value}"); }
     for value in fixture["merges"].as_array().unwrap() { assert!(definition.selection.merges.iter().any(|merge| merge.wire_label() == value.as_str().unwrap()), "{value}"); }
 }
+
+#[test]
+fn vertex_pointer_lane_respects_the_scene_population() {
+    let cases: Vec<(String, String, bool, bool)> = serde_json::from_str(include_str!("pointer-lanes.json")).unwrap();
+    for (utility, granularity, has_vortices, expected) in cases {
+        assert_eq!(semio_os_infinite_world_interaction::world3d_vortex_pointer_mode(&utility, &granularity, has_vortices), expected);
+    }
+}

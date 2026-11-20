@@ -14,12 +14,13 @@ fn a_fresh_transient_holds_no_solve() {
 
 #[test]
 fn set_solve_replaces_and_inverts() {
-    use protocol::MutationKind;
+    use protocol::ColdMutationKind;
     let base = Wfc3dTransient { source_revision: Vec::new(), assignments: vec![Wfc3dAssignment { slot_id: "room-a".into(), tile_id: "room".into() }], contradiction: false };
     let next = SetSolve { source_revision: Vec::new(), assignments: Vec::new(), contradiction: true };
-    let produced = <SetSolve as MutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::diff(&next, &base).diff().clone();
-    assert!(produced.contradiction && produced.assignments.is_empty());
-    let inverse = <SetSolve as MutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::inverse(&next, &base).expect("valid retained mutation inverse fixture");
+    let produced = <SetSolve as ColdMutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::diff(&next, &base).diff().clone();
+    assert_eq!(produced.contradiction, Some(true));
+    assert_eq!(produced.assignments, Some(Vec::new()));
+    let inverse = <SetSolve as ColdMutationKind<Wfc3dTransient, Wfc3dTransientMutation>>::inverse(&next, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![Wfc3dTransientMutation::SetSolve(SetSolve { source_revision: Vec::new(), assignments: base.assignments, contradiction: false })]);
 }
 

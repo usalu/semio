@@ -49,11 +49,11 @@ fn model() -> ModelSnapshot {
         clash: None,
         viewpoint,
     };
-    model.issues.insert("is-1".into(), issue("Beam through the wall", IssueStatus::InProgress, IssuePriority::High, "structure", &["b-2", "w-1"], Some(viewpoint)));
-    model.issues.insert("is-2".into(), issue("Duct needs a sleeve", IssueStatus::Open, IssuePriority::Normal, "", &["d-1"], None));
-    model.issues.insert("0b2a4b6e-5c1d-4d7e-9a3c-1f2e3d4c5b6a".into(), issue("Already a UUID", IssueStatus::Closed, IssuePriority::Low, "", &[], None));
-    model.issue_comments.insert("ic-1".into(), IssueComment { issue: "is-1".into(), author: "structure".into(), date: "2026-10-09T09:30:00Z".into(), text: "Will check.".into() });
-    model.issue_comments.insert("ic-2".into(), IssueComment { issue: "is-1".into(), author: "UG".into(), date: "2026-10-09".into(), text: "Thanks.".into() });
+    model.issues.cold_insert("is-1".into(), issue("Beam through the wall", IssueStatus::InProgress, IssuePriority::High, "structure", &["b-2", "w-1"], Some(viewpoint)));
+    model.issues.cold_insert("is-2".into(), issue("Duct needs a sleeve", IssueStatus::Open, IssuePriority::Normal, "", &["d-1"], None));
+    model.issues.cold_insert("0b2a4b6e-5c1d-4d7e-9a3c-1f2e3d4c5b6a".into(), issue("Already a UUID", IssueStatus::Closed, IssuePriority::Low, "", &[], None));
+    model.issue_comments.cold_insert("ic-1".into(), IssueComment { issue: "is-1".into(), author: "structure".into(), date: "2026-10-09T09:30:00Z".into(), text: "Will check.".into() });
+    model.issue_comments.cold_insert("ic-2".into(), IssueComment { issue: "is-1".into(), author: "UG".into(), date: "2026-10-09".into(), text: "Thanks.".into() });
     model
 }
 

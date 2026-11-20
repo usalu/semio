@@ -18,6 +18,27 @@ fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,admission:&mut semio_fr
 }
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 fn retired_effect(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_effect_step(cx,demand,|effect|{let result=advance(effect);let work=effect.performed_work();semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(semio_framework_value::OriginalRetirementFailure::from),work})})}
+
+fn advance_registry_birth(
+    birth: &mut semio_framework_value_snapshot_read::snapshot_read_registry_handle::birth::SnapshotReadRegistryBirth,
+    cx: &mut StepContext<'_>,
+) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let demand = birth.demands()?;
+    if !permits(cx.retained_grant(), demand) {
+        return Ok(());
+    }
+    let body = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+    let mut outcome = None;
+    let mut advanced = None;
+    if cx.with_native_receiving_quoted(&mut outcome, (body, 1), |control, actual| {
+        advanced = Some(birth.advance(actual, control));
+        Ok(())
+    })? {
+        native::refuse_scope(outcome)?;
+        native::post_receiving(cx, advanced.ok_or_else(native::invalid_scope)?, |step| step.progress())?;
+    }
+    Ok(())
+}
 use semio_os_spr::{ActorId, Edit, Mutation, MutationId, OpBinary, OpText};
 use semio_os_store_space_schema::ArtifactEnvelope;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, FromValue, ToValue};
@@ -467,7 +488,13 @@ where
     }
 
     fn bind_genesis(&mut self,cx:&mut StepContext<'_>)->Turn{
-        if !self.registry_birth.ready().unwrap_or(false){let grant=cx.retained_grant();let advanced=(||->Result<bool,semio_framework_job::OriginalTurnFailure>{let mut outcome=None;let mut stepped=None;if !cx.with_native_receiving(&mut outcome,|control,_|{stepped=Some(self.registry_birth.advance(grant,control));Ok(())})?{return Ok(false)}native::refuse_scope(outcome)?;native::post_receiving(cx,stepped.ok_or_else(native::invalid_scope)?,|step|step.progress())?;Ok(true)})();if let Err(error)=advanced{self.original_failure=Some(error);self.phase=Phase::RetireFault;}return Turn::Yield}
+        if !self.registry_birth.ready().unwrap_or(false) {
+            if let Err(error) = advance_registry_birth(&mut self.registry_birth, cx) {
+                self.original_failure = Some(error);
+                self.phase = Phase::RetireFault;
+            }
+            return Turn::Yield;
+        }
         let copy=size_of::<ArtifactStoreInitializationRuntime<P>>()+size_of::<ArtifactStoreInitializationOwnerCatalog>()+size_of::<ActorId>()+2*size_of::<Arc<P>>();let grant=cx.retained_grant();let d=RetirementDemand{copy_bytes:copy,depth:1,..Default::default()};if !permits(grant,d){return Turn::Yield}
         let (Some(envelope),Some(owners),Some(_))=(self.envelope.as_ref(),self.owners.as_ref(),self.actor.as_ref())else{self.fail("replay.genesis-owners-missing");return self.tick(cx)};
         let Some(factory)=owners.initial_snapshot_factory()else{self.fail("replay.initial-snapshot-factory-missing");return self.tick(cx)};
@@ -477,7 +504,16 @@ where
 
     fn seed_history(&mut self, cx: &mut StepContext<'_>, edit: usize, lane: u8, index: usize) -> Turn {
         let runtime=self.runtime.as_mut().expect("original causal runtime");let dag=runtime.dag.as_mut().expect("original causal owner");let demand=dag.backing_admission_demands();
-        self.unit_out=self.unit_out.filter(|_|demand.capacity_bytes!=0);if demand.capacity_bytes!=0{let grant=cx.retained_grant();let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.unit_out,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||Ok(((),dag.admit_backing_step(grant))));if let Ok(true)=result{self.unit_out=None;}if let Err(error)=result{self.original_failure=Some(error);self.phase=Phase::RetireFault;}return Turn::Yield}
+        if self.unit_out.is_some() || demand.capacity_bytes != 0 {
+            let grant = cx.retained_grant();
+            let construction = semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth };
+            match built(cx, &mut self.construction, &mut self.construction_failure, &mut self.unit_out, construction, || Ok(((), dag.admit_backing_step(grant)))) {
+                Ok(true) => { self.unit_out.take(); }
+                Ok(false) => {}
+                Err(error) => { self.original_failure = Some(error); self.phase = Phase::RetireFault; }
+            }
+            return Turn::Yield;
+        }
         let envelope = self.envelope.as_ref().expect("replay envelope remains retained while causal history is seeded");
         let Some(entry) = envelope.vcs.edits.get(edit) else {
             self.phase = Phase::FoldSupersessions { transition: 0 };
@@ -521,16 +557,27 @@ where
         match result{Ok(true)=>{if self.commit_out.take()==Some(true){self.commit_ready=true;}Turn::Yield},Ok(false)=>Turn::Yield,Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;Turn::Yield}}
     }
 
+    fn candidate_construction_demand(&self) -> Result<semio_framework_job::OriginalConstructionDemand, ValueError> {
+        let Some(runtime) = self.runtime.as_ref() else { return Err(ValueError::invariant("native candidate runtime is missing")); };
+        let envelope = self.envelope.as_ref().ok_or_else(|| ValueError::invariant("native candidate envelope is missing"))?;
+        let demand = ArtifactStore::<P,M>::initialized_runtime_adoption_demands(envelope, runtime)?;
+        let copy_bytes = demand.copy_bytes.checked_add(size_of::<Box<ArtifactStore<P,M>>>()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native candidate pointer extent overflow"))?;
+        let capacity_bytes = demand.capacity_bytes.checked_add(size_of::<ArtifactStore<P,M>>()).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native candidate allocation extent overflow"))?;
+        Ok(semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes, capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth })
+    }
+
     fn build_candidate(&mut self,cx:&mut StepContext<'_>)->Turn{
         let Some(candidate_generation)=self.generation.0.checked_add(1)else{self.fail("replay.generation-exhausted");return Turn::Yield};
-        let Some(runtime)=self.runtime.as_ref()else{self.fail("replay.candidate-owners-missing");return Turn::Yield};let mut demand=match ArtifactStore::<P,M>::initialized_runtime_adoption_demands(self.envelope.as_ref().expect("original candidate envelope remains resident"),runtime){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};demand.copy_bytes=match demand.copy_bytes.checked_add(size_of::<Box<ArtifactStore<P,M>>>()){Some(bytes)=>bytes,None=>return self.refuse(cx,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native candidate pointer extent overflow"))};demand.capacity_bytes=match demand.capacity_bytes.checked_add(size_of::<ArtifactStore<P,M>>()){Some(bytes)=>bytes,None=>return self.refuse(cx,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native candidate allocation extent overflow"))};
-        let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.candidate,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||{let envelope=self.envelope.take().expect("original candidate envelope");let runtime=self.runtime.take().expect("original candidate runtime");let owners=self.owners.take().expect("original candidate owner catalog");drop(self.factory.take());let candidate=Box::new(ArtifactStore::from_initialized_runtime_with_owners(envelope,runtime,candidate_generation,owners));Ok((candidate,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))});
+        let demand = if self.candidate.is_some() { semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: 0, capacity_bytes: 0, release_bytes: 0, depth: 0 } } else {
+            match self.candidate_construction_demand() { Ok(demand) => demand, Err(error) => return self.refuse(cx, error) }
+        };
+        let result=built(cx,&mut self.construction,&mut self.construction_failure,&mut self.candidate,demand,||{let envelope=self.envelope.take().expect("original candidate envelope");let runtime=self.runtime.take().expect("original candidate runtime");let owners=self.owners.take().expect("original candidate owner catalog");drop(self.factory.take());let candidate=Box::new(ArtifactStore::from_initialized_runtime_with_owners(envelope,runtime,candidate_generation,owners));Ok((candidate,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))});
         match result{Ok(true)=>{self.phase=Phase::Complete;Turn::Complete},Ok(false)=>Turn::Yield,Err(error)=>{self.original_failure=Some(error);self.phase=Phase::RetireFault;Turn::Yield}}
     }
 
     fn retire_native(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
         if self.construction.failure_untaken(){match self.construction.take_failure_into_step(&mut self.construction_failure,cx){Ok(true)=>return Ok(false),Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
-        if !self.construction.terminal_is_empty(){match self.construction.close_step(cx){Ok(_)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}if !self.construction.terminal_is_empty(){return Ok(false)}}
+        if !self.construction.terminal_is_empty(){if let Err(error)=self.construction.close_step(cx){self.original_failure=Some(error);}return Ok(false)}
         if self.supersession_native.active(){match self.supersession_native.close(cx){Ok(true)=>{},Ok(false)=>return Ok(false),Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
 
         if !self.registry_birth.terminal_is_empty(){
@@ -585,6 +632,8 @@ where
     }
 
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.construction.failure_untaken() { return Ok(self.construction.take_failure_demand().physical()); }
+        if !self.construction.terminal_is_empty() { return Ok(self.construction.close_demand()); }
         if self.supersession_native.active(){return self.supersession_native.close_demands(body);}
         if !self.registry_birth.terminal_is_empty(){return self.registry_birth.close_demands();}
         if self.native.active(){let (Some(envelope),Some(runtime))=(self.envelope.as_ref(),self.runtime.as_ref())else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native initialization close lost original runtime"));};return self.native.close_demands(envelope,runtime,body);}
@@ -805,6 +854,19 @@ where
         (self.folded, self.total)
     }
 
+    fn next_step_demands(&self) -> Result<RetirementDemand, ValueError> {
+        if self.phase == Phase::BuildCandidate && self.candidate.is_none() {
+            let demand = self.candidate_construction_demand()?;
+            let (quote, _) = semio_framework_job::original_construction_reserve::<Box<ArtifactStore<P,M>>>(demand, 1)?;
+            return Ok(quote.physical());
+        }
+        if self.phase != Phase::BindGenesis || self.registry_birth.ready()? { return Ok(Default::default()); }
+        let mut demand = self.registry_birth.demands()?;
+        let (_, scope_copy, _) = semio_framework_job::original_receiving_scope_headroom();
+        demand.copy_bytes = demand.copy_bytes.checked_add(scope_copy).ok_or_else(|| ValueError::invariant("registry birth quote exceeds its copy currency"))?;
+        Ok(demand)
+    }
+
     fn request_cancel(&mut self) {
         self.cancel_requested = true;
     }
@@ -835,7 +897,18 @@ where
 
     fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
-        if !self.retire_native(cx)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let before = cx.retained_progress();
+        let native_retired = self.retire_native(cx)?;
+        if let Some(failure) = self.original_failure.take() { return Err(failure); }
+        if !native_retired {
+            let after = cx.retained_progress();
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {
+                copied_items: after.copied_items - before.copied_items,
+                copied_bytes: after.copied_bytes - before.copied_bytes,
+                retained_capacity_bytes: after.retained_capacity_bytes - before.retained_capacity_bytes,
+                released_bytes: after.released_bytes - before.released_bytes,
+            }));
+        }
         if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
         let step=retired_effect(cx,demand,|effect|{

@@ -6,7 +6,7 @@ import {join} from "node:path";
 import {fleetFetchContextV1} from "../../../../../⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🟦️.ts";
 import {syncFleetIdentityV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {readSchedulerReceiptV1,schedulerReceiptFileV1,schedulerReceiptHoldsV1,schedulerIdentityV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🔖️scheduler/🟦️.ts";
-import {SCHEDULER_SHARE_POLICY_V1,shareSchedulerBuildV1} from "../🟦️.ts";
+import {shareSchedulerBuildV1} from "../🟦️.ts";
 
 const scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`sched-share-${label}-`));scratch.push(path);return path;};
@@ -24,19 +24,21 @@ const machine=(store:string)=>{
 const sha=(path:string)=>createHash("sha256").update(readFileSync(path)).digest("hex");
 const run=(m:ReturnType<typeof machine>,counter:{builds:number},toolchain="tc1")=>shareSchedulerBuildV1({workspace:m.root,targetDirectory:m.target,toolchain,environment:{SEMIO_LANGUAGE:"en"},mode:"prototype",manifest:join(crate,"Cargo.toml"),context:m.context,say:()=>{},build:async()=>{
  counter.builds++;mkdirSync(join(m.target,"prototype"),{recursive:true});
- const out=new Map<string,string>();
- for(const name of SCHEDULER_SHARE_POLICY_V1.binaries){const path=join(m.target,"prototype",name+(process.platform==="win32"?".exe":""));writeFileSync(path,`#!/bin/sh\necho ${name} tc1\n`);chmodSync(path,0o755);out.set(name,path);}
- return out;
+ const name="semio-build-scheduler",path=join(m.target,"prototype",name+(process.platform==="win32"?".exe":""));
+ writeFileSync(path,"#!/bin/sh\necho scheduler tc1\n");chmodSync(path,0o755);
+ return new Map([[name,path]]);
 }});
 
 test("a scheduler built on one machine is restored, not built, on a second machine of the same platform and keeps a valid local receipt",async()=>{
  const store=directory("store"),first=machine(store),second=machine(store),counter={builds:0};
  const built=await run(first,counter);expect(counter.builds).toBe(1);
  const restored=await run(second,counter);expect(counter.builds).toBe(1);
- for(const name of SCHEDULER_SHARE_POLICY_V1.binaries){expect(sha(restored.get(name)!)).toBe(sha(built.get(name)!));if(process.platform!=="win32")expect(statSync(restored.get(name)!).mode&0o111).not.toBe(0);}
+ expect([...restored.keys()]).toEqual(["semio-build-scheduler"]);
+ const name="semio-build-scheduler";
+ expect(sha(restored.get(name)!)).toBe(sha(built.get(name)!));if(process.platform!=="win32")expect(statSync(restored.get(name)!).mode&0o111).not.toBe(0);
  const receipt=readSchedulerReceiptV1(join(second.target,schedulerReceiptFileV1()));
  expect(receipt).toBeDefined();
- expect(schedulerReceiptHoldsV1(receipt,schedulerIdentityV1("tc1",{SEMIO_LANGUAGE:"en"}),join(crate,"Cargo.toml"))?.size).toBe(SCHEDULER_SHARE_POLICY_V1.binaries.length);
+ expect(schedulerReceiptHoldsV1(receipt,schedulerIdentityV1("tc1",{SEMIO_LANGUAGE:"en"}),join(crate,"Cargo.toml"))?.size).toBe(1);
 },120000);
 
 test("a different compiler identity or changed source is never served a foreign scheduler",async()=>{

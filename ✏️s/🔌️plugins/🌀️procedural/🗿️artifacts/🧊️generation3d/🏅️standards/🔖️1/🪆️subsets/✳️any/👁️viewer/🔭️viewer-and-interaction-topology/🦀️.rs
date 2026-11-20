@@ -264,6 +264,17 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         }
     }
 
+    /// 🏭️ The declared action producer prices a contributions push at its declared whole-pack ceiling and every other command at the ordinary runtime wire ceiling.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Generation3dViewCommand>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(
+            <Self as semio_plugin::ArtifactViewer>::command_from_action,
+            |command| match command {
+                Generation3dViewCommand::SetContributions(_) => GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES,
+                _ => semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM,
+            },
+        ))
+    }
+
     /// 🏷️ The declared tool id of the command, NOT the trait's generic `"typed-command"` default:
     /// `qualified_tool_proof` looks the bounded first-step proof up by this verb, so leaving the
     /// default in place makes EVERY viewer action fail closed with `interactive-job.missing-factory`.
@@ -333,7 +344,7 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state));
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state), view_state);
         viewed.retire();
         tree
     }
@@ -363,7 +374,7 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         let marks = preview::Generation3dViewMarks::from_interaction(interaction);
         let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels)));
+        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels, view_state)));
         viewed.retire();
         tree.map_err(|original|semio_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?.map(Some).map_err(Into::into)
     }
@@ -387,9 +398,10 @@ fn generation3d_view_render_body(
     run: Option<&semio_plugin::ToolRunView>,
     marks: &preview::Generation3dViewMarks,
     labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
+    view_state: &semio_plugin::ViewModel,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let node = match body_key {
-        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels),
+        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
         _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_plugin::built_to_component_tree(node))

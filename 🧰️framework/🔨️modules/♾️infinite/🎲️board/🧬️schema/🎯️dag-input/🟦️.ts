@@ -18,4 +18,4 @@ export type DagChannelDirection="in"|"out";
 /** 🚫️ Identifies a refused port pair and its declared semantic value types. */
 export interface DagWireTypeRefusal {readonly source:string;readonly sourceTypes:readonly string[];readonly target:string;readonly targetTypes:readonly string[]}
 /** 🖱️ Projects hover and wire refusal facts from the same accepted graph state. */
-export interface DagHoverFacts {readonly channel:DagChannelRef|null;readonly refusal:DagWireTypeRefusal|null}
+export interface DagHoverFacts {readonly edge?:string|null;readonly channel:DagChannelRef|null;readonly refusal:DagWireTypeRefusal|null}

@@ -13,6 +13,14 @@ impl PendingPublicationOutcome{
  fn copy_demand(&self)->usize{if self.report.is_some(){semio_plugin_decl_app::borrowed_report_copy_bytes()}else{0}}
 }
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
+ fn store_refusal_for_capture(&self)->Option<&str>{
+  if self.pending_publication_outcome.pending()||self.terminal_fault.is_some(){return None}
+  match self.pending_artifact_publication.as_ref()?{
+   PendingArtifactStorePublication::WindowTransient(_)=>None,
+   owner=>owner.fault(),
+  }
+ }
+
  pub fn close_fault_pending(&self)->bool{self.retained_close_fault.is_some()||self.retained_close_fault_retirement.is_some()||self.retained_close_fault_refusal.is_some()}
  pub fn close_fault_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.retained_close_fault_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -42,10 +50,11 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    if raw.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:original_reserved_arc_frame_bytes::<std::sync::Mutex<Option<semio_framework::action_bus::RetainedToolWireInput>>>(),depth:1,..Default::default()});}
    return raw.retirement_demands();
   }
-  if let Some(owner)=self.pending_artifact_publication.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:owner.frame_release_bytes(),depth:1,..Default::default()});}return owner.retirement_demands(body);}
+  if self.store_refusal_for_capture().is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<PendingPublicationOutcome>(),depth:1,..Default::default()});}
+  if let Some(owner)=self.pending_artifact_publication.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.pending_publication_outcome.copy_demand(),release_bytes:owner.frame_release_bytes(),depth:1,..Default::default()});}return owner.retirement_demands(body);}
   if let Some(owner)=self.pending_child_publication.as_ref(){if owner.phase!=PendingChildGroupPublicationPhase::Closing||owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}let mut demand=owner.retirement_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original mounted child publication depth overflow"))?;return Ok(demand);}
   if let Some(owner)=self.publication_retirement.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:size_of_val(&**owner),depth:1,..Default::default()});}return Ok(owner.next_demand(body)?);}
-  if let Some(original)=self.publication.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of_val(original),capacity_bytes:A::completion_retirement_birth_bytes(original).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"mounted completion payload has no original app retirement issuer"))?,depth:1,..Default::default()});}
+  if let Some(original)=self.publication.as_ref(){return A::completion_retirement_demand(original);}
   if let Some(owner)=self.completion_retirement.as_ref(){return Ok(owner.next_demand(body)?);}
   if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.output_retirement.as_ref(){return Ok(owner.next_demand(body)?);}
@@ -73,7 +82,28 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    let step=raw.close_step(grant)?;
    return match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>{if !progress.fits(grant){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original raw input exceeded full retirement grant").with_retained_progress(progress).into());}Ok(RetainedCloneStep::Progress(progress))},PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
   }
-  if let Some(owner)=self.pending_artifact_publication.as_mut(){if owner.terminal_is_empty(){let bytes=owner.frame_release_bytes();self.pending_artifact_publication.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}));}owner.begin_close();let step=if owner.requires_original_control(){semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect,control|owner.close_step_controlled(effect,control))?}else{semio_plugin_ownership::bounded_ownership::plugin_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_step(effect)))?};return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(message)=self.store_refusal_for_capture(){
+   if cx.retirement_should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   let report=semio_plugin_decl_app::borrowed_report(FaultOrigin::Plugin,"interactive-job.publication-rejected",semio_framework::Severity::Error,message,false);
+   self.pending_publication_outcome=PendingPublicationOutcome{phase:PendingPublicationOutcomePhase::Captured,disposition:PendingPublicationDisposition::Rejected,report:Some(report)};
+   cx.consume_fuel(1);
+   return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
+  }
+  if let Some(owner)=self.pending_artifact_publication.as_mut(){
+   if owner.terminal_is_empty(){
+    let bytes=owner.frame_release_bytes();
+    self.pending_artifact_publication.take();
+    if let Some(report)=self.pending_publication_outcome.report.take(){
+     self.terminal_fault=Some(report);
+     self.pending_publication_outcome=PendingPublicationOutcome::new();
+     if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}
+    }
+    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:bytes,..Default::default()}));
+   }
+   owner.begin_close();
+   let step=if owner.requires_original_control(){semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect,control|owner.close_step_controlled(effect,control))?}else{semio_plugin_ownership::bounded_ownership::plugin_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_step(effect)))?};
+   return Ok(RetainedCloneStep::Progress(step.progress()));
+  }
   if let Some(owner)=self.pending_child_publication.as_mut(){
    if owner.phase!=PendingChildGroupPublicationPhase::Closing{owner.begin_close();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
    if owner.terminal_is_empty(){drop(self.pending_child_publication.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}

@@ -358,8 +358,12 @@ export class ActivationRegistry {
       return;
     }
     this.touch(actorId);
-    const result = await this.shardClient.turn(actorId, payload.events, budget);
-    this.onTurnResult(actorId, result);
+    let events = payload.events;
+    do {
+      const result = await this.shardClient.turn(actorId, events, budget);
+      this.onTurnResult(actorId, result);
+      events = (result as { readonly unsent?: readonly ShardEventEnvelope[] } | null)?.unsent ?? [];
+    } while (events.length > 0);
   }
   //#endregion 🧵️TurnDispatch
 

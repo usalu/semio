@@ -2,7 +2,20 @@
   "schema": "semio.process3d.retained-route-laws.v1",
   "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "routeCount": 31,
+  "modules": [
+    "🧵️retained-commands/🦀️.rs",
+    "📬️store-preparation/🦀️.rs",
+    "🪟️editor-impl/🦀️.rs"
+  ],
   "migratedCount": 31,
+  "modelImport": {
+    "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️brep-converters/🦀️.rs",
+    "rawFileBytes": 24576,
+    "dataUrlFramingBytes": 64,
+    "dataUrlBytes": 32832,
+    "metadataBytes": 1024,
+    "wireBytes": 33856
+  },
   "limits": {
     "rawBytes": 8192,
     "workItems": 64,
@@ -21,7 +34,12 @@
       ],
       "routes": [
         "engagementAbort",
-        "setCamera"
+        "setCamera",
+        "setCursor",
+        "stepCursor",
+        "stepCursorBack",
+        "stepCursorForward",
+        "engagementSubmit"
       ]
     },
     {
@@ -35,9 +53,14 @@
         "setSnapshot",
         "setActiveExample",
         "setStock",
-        "importModelFile",
         "exportModel"
       ]
+    },
+    {
+      "status": "migrated",
+      "execution": "file-import",
+      "lanes": ["host-only"],
+      "routes": ["importModelFile"]
     },
     {
       "status": "migrated",
@@ -46,22 +69,13 @@
         "artifact"
       ],
       "routes": [
-        "addStep",
         "addWorkshopMachine",
         "removeWorkshopMachine",
         "updateWorkshopMachine",
-        "removeStep",
-        "removeSelectedStep",
         "moveStep",
         "updateStep",
         "setStepEnabled",
-        "patchInspector",
-        "worldPointerDown",
-        "worldFaceDragEnd",
-        "setCursor",
-        "stepCursor",
-        "stepCursorBack",
-        "stepCursorForward"
+        "patchInspector"
       ]
     },
     {
@@ -72,7 +86,11 @@
         "config"
       ],
       "routes": [
-        "engagementSubmit"
+        "addStep",
+        "removeStep",
+        "removeSelectedStep",
+        "worldPointerDown",
+        "worldFaceDragEnd"
       ]
     },
     {

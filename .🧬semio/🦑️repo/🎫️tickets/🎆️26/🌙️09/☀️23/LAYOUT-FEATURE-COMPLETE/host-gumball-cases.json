@@ -1,0 +1,37 @@
+{
+  "width": 280,
+  "height": 140,
+  "background": "#FFFFFF",
+  "crop": [
+    25,
+    20,
+    185,
+    90
+  ],
+  "axis": {
+    "path": "M40 60 H96",
+    "color": "#d13434",
+    "knob": [
+      96,
+      60
+    ],
+    "radius": 10
+  },
+  "decoy": {
+    "path": "M30 119 H240",
+    "color": "#d13434"
+  },
+  "coordinates": {
+    "x": 96,
+    "y": 60,
+    "tolerance": 2
+  },
+  "support": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/browser-physical-interactions.mjs",
+  "hover": {
+    "delta": 24,
+    "minimumChanged": 40,
+    "stroke": "#E0A922",
+    "inside": "M52 45 H112 V74 H52 Z",
+    "outside": "M225 68 H257 V103 H225 Z"
+  }
+}

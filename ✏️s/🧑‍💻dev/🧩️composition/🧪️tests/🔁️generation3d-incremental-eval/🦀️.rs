@@ -16,11 +16,14 @@
 //! @see ../../../../../../../📓️slider-latency-incremental-eval-2026-09-15.md
 //! @see ../../../📚️examples/🧪️tests/🧩️geometry/🦀️.rs — the same install/parse/retire recipe.
 
+#[path = "../🧰️preview-reply/🦀️.rs"]
+pub(crate) mod preview_reply;
+
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
 use semio_os_flow::neural::{ColdRetire as _, Registry};
-use semio_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
+use semio_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement};
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor::preview_payload;
 use semio_s_artifact_procedural_3d_editor::PreviewInteractionMarks;
@@ -272,7 +275,7 @@ fn only_a_changed_handle_is_owed_a_tessellate_round_trip() {
         let (node, channel) = node_channel(reference);
         let (was, now) = (handle_of(&baseline_eval, node, channel).expect("a handle before"), handle_of(&edited_eval, node, channel).expect("a handle after"));
         if was == now {
-            let (old_mesh, new_mesh) = (geometry_session().tessellate_geometry(&was, tolerance).expect("tessellates"), geometry_session().tessellate_geometry(&now, tolerance).expect("tessellates"));
+            let (old_mesh, new_mesh) = (preview_reply::standalone_mesh(geometry_owner(), &was, tolerance).expect("tessellates"), preview_reply::standalone_mesh(geometry_owner(), &now, tolerance).expect("tessellates"));
             assert_eq!(old_mesh.positions, new_mesh.positions, "{reference} kept its content address, so its mesh may not move");
             assert_eq!(old_mesh.indices, new_mesh.indices, "{reference} kept its content address, so its topology may not move");
             continue;
@@ -336,12 +339,8 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
     let converged = session.eval_json().to_string();
     let old_handle = handle_of(&converged, "extrude", "solid").expect("baseline solid handle");
     let tolerance = preview_eval::preview_tolerance("coarse");
-    let mesh = geometry_session().tessellate_geometry(&old_handle, tolerance).expect("baseline tessellates");
-    let pack = semio_os_flow::mesh::encode_base64(&semio_os_flow::mesh::encode_mesh_pack(&mesh).expect("pack"));
-    let node_hash = preview_tessellate_node_hash(&old_handle, tolerance.to_bits());
-    assert!(session.note_pending_tessellate(node_hash, old_handle.clone()));
-    let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
-    assert_eq!(session.resolve_preview_tessellate(node_hash, &envelope), PreviewTessellateOutcome::Ready);
+    preview_reply::deliver(geometry_owner(), &mut session, ("incremental-preview", "preview"), &old_handle, tolerance, |_| {})
+        .expect("baseline preview completes");
 
     host.set_slider_value("height", 4.0);
     converge_session(&mut session, &mut host);
@@ -361,12 +360,8 @@ fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands()
         .matches(r#""role":"solid""#)
         .count();
     assert!(mesh_ids >= 1, "the payload must still carry a solid mesh while the new handle tessellates");
-    let new_pack = geometry_session().tessellate_geometry(&new_handle, tolerance).expect("edited solid tessellates");
-    let pack = semio_os_flow::mesh::encode_base64(&semio_os_flow::mesh::encode_mesh_pack(&new_pack).expect("pack"));
-    let node_hash = preview_tessellate_node_hash(&new_handle, tolerance.to_bits());
-    assert!(session.note_pending_tessellate(node_hash, new_handle.clone()));
-    let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
-    assert_eq!(session.resolve_preview_tessellate(node_hash, &envelope), PreviewTessellateOutcome::Ready);
+    preview_reply::deliver(geometry_owner(), &mut session, ("incremental-preview", "preview"), &new_handle, tolerance, |_| {})
+        .expect("edited solid preview completes");
     assert!(preview_eval::session_preview_mesh(&new_handle, &session).is_some(), "the new handle's pack must be on the session");
     assert!(matches!(
         preview_eval::preview_eval_publication_for(&mut session, &host.host_snapshot, Some(&painted)),
@@ -421,7 +416,13 @@ fn the_chrome_digest_moves_on_a_fault_or_a_chrome_edge_and_never_on_a_reshuffle(
 }
 //#endregion ⚖️ChainScope
 
-pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_session::Session {
+pub(crate) fn geometry_owner() -> &'static semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext {
+    use semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext;
+    static OWNER: OnceLock<GeometryInferenceContext> = OnceLock::new();
+    OWNER.get_or_init(|| GeometryInferenceContext::new(geometry_session().capture()))
+}
+
+fn geometry_session() -> &'static semio_s_spatial_kernel_semio_session::Session {
     static SESSION: std::sync::OnceLock<semio_s_spatial_kernel_semio_session::Session> = std::sync::OnceLock::new();
     SESSION.get_or_init(semio_s_spatial_kernel_semio_session::Session::new)
 }

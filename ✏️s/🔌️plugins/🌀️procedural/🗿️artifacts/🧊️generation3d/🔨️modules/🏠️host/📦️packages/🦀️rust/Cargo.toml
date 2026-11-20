@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-framework-job/testkit"]
 
 [dependencies]
 semio-framework-job-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }

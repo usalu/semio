@@ -1,0 +1,4 @@
+{
+  "before": "1 0 0 rg 0 0 5 5 re f q 0 g Q 10 0 5 5 re f 20 0 5 5 re f",
+  "after": "1 0 0 rg 0 0 5 5 re f q 0 g Q 10 0 5 5 re 0 1 0 rg f 1 0 0 rg 20 0 5 5 re f"
+}

@@ -114,7 +114,7 @@ export function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: bo
 
 /** 🪣️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
 export function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false, isWaiting = false): string {
-  const ringClass = loadingBorderStateClass(isLoading, isSelected) || waitingBorderStateClass(isWaiting, isSelected);
+  const ringClass = loadingBorderStateClass(isLoading) || waitingBorderStateClass(isWaiting);
   if (isSelected) {
     return cn(interactiveActiveFillClass, interactiveControlTransitionClass, ringClass);
   }

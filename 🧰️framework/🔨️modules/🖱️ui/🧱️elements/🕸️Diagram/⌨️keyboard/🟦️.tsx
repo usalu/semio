@@ -1,5 +1,6 @@
 import { useUiTranslation, resolveTranslationLabel } from "../../🏷️Label/🟦️.tsx";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 /** ♿️ The four directions arrow-key navigation walks a node graph in. */
 export type DiagramArrowDirection = "up" | "down" | "left" | "right";
@@ -96,10 +97,10 @@ export function diagramReadingOrderPosition(nodes: readonly DiagramNavigableNode
   return ordered.findIndex((node) => node.id === id) + 1;
 }
 
-/** ⭕️ The visible keyboard-focus ring on the focused node — the sighted twin of what the live region
+/** ⭕️ The visible keyboard-focus silhouette on the focused node, painted by the border compositor — the sighted twin of what the live region
  * speaks. (React Flow reserves a node's DOM `id`, so there is no `aria-activedescendant` target: the
  * {@link DiagramLiveRegion} sentence is the assistive-technology channel.) */
-export const DIAGRAM_KEYBOARD_FOCUS_CLASS = "outline-solid outline-2 outline-offset-2 outline-accent";
+export const DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES = { ...sharedBorderlessBoxProps, "data-shared-border-state": "focus", "data-keyboard-focused": "" } as const;
 
 /** 🔑️ Resolves a translation key with interpolation outside render (keyboard handlers run there). */
 export type DiagramTranslate = (key: "ui.diagram.focusedNode" | "ui.diagram.selectedNode" | "ui.diagram.deselectedNode" | "ui.diagram.selectionCleared", options?: Record<string, unknown>) => string;

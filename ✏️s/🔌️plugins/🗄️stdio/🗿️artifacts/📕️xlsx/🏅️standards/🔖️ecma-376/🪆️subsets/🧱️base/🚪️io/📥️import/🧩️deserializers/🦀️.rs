@@ -8,6 +8,14 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
+/// 📥️ Reads either an internal XLSX snapshot or the original physical workbook.
+pub fn decode_xlsx_source(data: &[u8]) -> Result<XlsxSnapshot, store::PackError> {
+    if data.starts_with(&store::semio_format::BINARY_MAGIC) {
+        return <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(data);
+    }
+    decode_xlsx(data).map_err(|error| store::PackError::from(semio_framework_value::ValueError::from(error)))
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
     let mut opc = opc::decode_opc(data)?;

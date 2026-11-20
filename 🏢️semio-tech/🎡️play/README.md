@@ -1,6 +1,6 @@
 # 🎡️ semio-tech Play
 
-The play site of semio-tech (`@semio-tech/semio-tech-play`): every semio app live in one grid. The authored catalog `🔨️modules/🧩️runtime/🔣️.json` lists 18 groups with 151 panes (counted from the file); each pane boots one app of the framework OS in a React renderer, with a curated example where the app publishes one. The dev server listens on port `6033`; a release build assembles static pages (`build`). A German version of the developer chapter follows the last section.
+The play site of semio-tech (`@semio-tech/semio-tech-play`): every semio app live in one grid. The authored catalog `🔨️modules/🧩️runtime/🔣️.json` lists 18 groups with 150 panes (counted from the file); each pane boots one app of the framework OS in a React renderer, with a curated example where the app publishes one. The dev server listens on port `6033`; a release build assembles static pages (`build`). Variants listed in the catalog's `excludedVariants` (today `demonstrator`, which ships from the mit-bestand demonstrator) are deliberately absent from the grid. A German version of the developer chapter follows the last section.
 
 | Path | What |
 |---|---|
@@ -23,7 +23,7 @@ Every command is a target of the project `@semio-tech/semio-tech-play` and runs 
 | Pinned build tools | `repo tools setup nx` (Bazel: `repo tools setup bazel`, both: `all`; `repo run workspace:setup` includes it) | every target |
 | Dependencies | `repo dependencies sync --all`; after any `package.json` edit run `repo dependencies lock --all` first, and never a plain `bun install` | every target |
 | Host check | `repo preflight` | before the cache partitions are created |
-| Rust and wasm | no unmanaged installation: the toolchain and the wasm targets of `rust-toolchain.toml`, reached through `repo cargo --store=shared` by the lane tasks; a cold run compiles the components of all 39 lanes (not timed) | `prepare-prototype`, `activate-prototype` and everything after them |
+| Rust and wasm | no unmanaged installation: the toolchain and the wasm targets of `rust-toolchain.toml`, reached through `repo cargo --store=shared` by the lane tasks; a cold run compiles the components of all 44 lanes (not timed) | `prepare-prototype`, `activate-prototype` and everything after them |
 | `wasm-opt` | `repo run workspace:deps-wasm-opt`, a prerequisite of the release job graph | `build` |
 | Chromium for Playwright | `repo run workspace:deps-browsers` runs `playwright install chromium` into `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`, which is a download; the revision is the one the installed `playwright-core` names | `prepare-e2e` and `test-release` depend on it |
 | A GPU adapter | the map and wgpu panes need a real adapter: ANGLE Metal on macOS, ANGLE GL elsewhere; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one, and the map pane cannot be graded there | `test-e2e` |
@@ -34,8 +34,8 @@ Play needs neither Docker nor a Linux host.
 
 | Command (`repo run …`) | What it does | Cache | Port |
 |---|---|---|---|
-| `@semio-tech/semio-tech-play:prepare-prototype` | verifies that the 39 `@semio-tech/framework-os-dev:prepare-<lane>-react-prototype` tasks and the wasm tasks staged every runtime component into one plugin-modules root (`Incomplete play runtime component` otherwise) | yes (output-free) | |
-| `@semio-tech/semio-tech-play:activate-prototype` | after `prepare-prototype` and the 39 `…:activate-<lane>-react-prototype` tasks: reads the lane receipts and writes the union receipt `dist/♻️activation/prototype` | yes | |
+| `@semio-tech/semio-tech-play:prepare-prototype` | verifies that the 44 `@semio-tech/framework-os-dev:prepare-<lane>-react-prototype` tasks and the wasm tasks staged every runtime component into one plugin-modules root (`Incomplete play runtime component` otherwise) | yes (output-free) | |
+| `@semio-tech/semio-tech-play:activate-prototype` | after `prepare-prototype` and the 44 `…:activate-<lane>-react-prototype` tasks: reads the lane receipts and writes the union receipt `dist/♻️activation/prototype` | yes | |
 | `@semio-tech/semio-tech-play:dev`, `serve` | the Vite server over the activated prototype; both need `activate-prototype`, `dev` also sets `SEMIO_TECH_PLAY_PORT=6033` | never (continuous) | `6033` (`SEMIO_TECH_PLAY_PORT`) on `127.0.0.1`, or `0.0.0.0` when `DEVCONTAINER=true` |
 | `@semio-tech/semio-tech-play:build` | the release as one driver: 13 jobs declared in the target (describe tool, native transpile, fonts, browser support, canvas assets, five wasm engines, map tiles, the Vite bundle), all finished before any component compiles; after the driver the pages are published through `publishPlayPageCohortV1`; parameter `generation=fresh` | never; declares its store receipt `.🧾️store/build.json` | |
 | `@semio-tech/semio-tech-play:test` | the unit and law tests; the level is an argument (`-- long`, `exhaustive`; the default is `fundamental`) | never | |
@@ -48,7 +48,7 @@ Play needs neither Docker nor a Linux host.
 | `@semio-tech/semio-tech-play:test-release` | Playwright against the published release pages served statically, with fresh browser contexts and no dev server | never | |
 | `@semio-tech/semio-tech-play:test-release-routing`, `release-verify` | the language-neutral release path and origin routing contracts; the release gate over the published pages | never | |
 
-The 39 lane tasks are inferred from the playground registry: `prepare-<variant>-react-<profile>` is driver-owned and never cached (the native build driver decides freshness itself), `activate-<variant>-react-<profile>` is cached (`deterministic`) with the outputs `.cache/b/p/m/browser/<profile>/runtime/react/<variant>`. Only `prepare-prototype` and `activate-prototype` of play are cached; `activate-prototype` hashes the sources of the project and of its workspace dependencies without tests (`activationSources`) together with the outputs of its dependencies. Under Bazel a cached target is an action with its declared inputs and outputs and uses Bazel's action cache; a target whose manifest does not allow replay is executed every time.
+The 44 lane tasks are inferred from the playground registry: `prepare-<variant>-react-<profile>` is driver-owned and never cached (the native build driver decides freshness itself), `activate-<variant>-react-<profile>` is cached (`deterministic`) with the outputs `.cache/b/p/m/browser/<profile>/runtime/react/<variant>`. Only `prepare-prototype` and `activate-prototype` of play are cached; `activate-prototype` hashes the sources of the project and of its workspace dependencies without tests (`activationSources`) together with the outputs of its dependencies. Under Bazel a cached target is an action with its declared inputs and outputs and uses Bazel's action cache; a target whose manifest does not allow replay is executed every time.
 
 ### The chain
 
@@ -90,7 +90,7 @@ Jeder Befehl ist ein Target des Projekts `@semio-tech/semio-tech-play` und läuf
 | Gepinnte Build-Werkzeuge | `repo tools setup nx` (Bazel: `repo tools setup bazel`, beide: `all`; `repo run workspace:setup` enthält es) | jedes Target |
 | Abhängigkeiten | `repo dependencies sync --all`; nach jeder Änderung einer `package.json` zuerst `repo dependencies lock --all`, nie ein einfaches `bun install` | jedes Target |
 | Host-Prüfung | `repo preflight` | vor dem Anlegen der Cache-Partitionen |
-| Rust und Wasm | keine selbst verwaltete Installation: Toolchain und Wasm-Ziele aus `rust-toolchain.toml`, von den Lane-Tasks über `repo cargo --store=shared` erreicht; ein kalter Lauf kompiliert die Komponenten aller 39 Lanes (nicht gemessen) | `prepare-prototype`, `activate-prototype` und alles danach |
+| Rust und Wasm | keine selbst verwaltete Installation: Toolchain und Wasm-Ziele aus `rust-toolchain.toml`, von den Lane-Tasks über `repo cargo --store=shared` erreicht; ein kalter Lauf kompiliert die Komponenten aller 44 Lanes (nicht gemessen) | `prepare-prototype`, `activate-prototype` und alles danach |
 | `wasm-opt` | `repo run workspace:deps-wasm-opt`, Voraussetzung des Release-Jobgraphen | `build` |
 | Chromium für Playwright | `repo run workspace:deps-browsers` führt `playwright install chromium` nach `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` aus, ein Download; die Revision nennt das installierte `playwright-core` | `prepare-e2e` und `test-release` hängen davon ab |
 | Ein GPU-Adapter | Karten- und wgpu-Panes brauchen einen echten Adapter: ANGLE Metal auf macOS, sonst ANGLE GL; `PLAY_E2E_GPU=swiftshader` erzwingt den Software-Stack für Hosts ohne GPU, die Karten-Pane lässt sich dort nicht bewerten | `test-e2e` |
@@ -101,8 +101,8 @@ Play braucht weder Docker noch einen Linux-Host.
 
 | Befehl (`repo run …`) | Was er tut | Cache | Port |
 |---|---|---|---|
-| `@semio-tech/semio-tech-play:prepare-prototype` | prüft, dass die 39 Tasks `@semio-tech/framework-os-dev:prepare-<Lane>-react-prototype` und die Wasm-Tasks jede Laufzeitkomponente in ein Plugin-Module-Verzeichnis gestellt haben | ja (ohne Ausgabedateien) | |
-| `@semio-tech/semio-tech-play:activate-prototype` | nach `prepare-prototype` und den 39 Tasks `…:activate-<Lane>-react-prototype`: liest die Lane-Quittungen und schreibt die Vereinigungsquittung `dist/♻️activation/prototype` | ja | |
+| `@semio-tech/semio-tech-play:prepare-prototype` | prüft, dass die 44 Tasks `@semio-tech/framework-os-dev:prepare-<Lane>-react-prototype` und die Wasm-Tasks jede Laufzeitkomponente in ein Plugin-Module-Verzeichnis gestellt haben | ja (ohne Ausgabedateien) | |
+| `@semio-tech/semio-tech-play:activate-prototype` | nach `prepare-prototype` und den 44 Tasks `…:activate-<Lane>-react-prototype`: liest die Lane-Quittungen und schreibt die Vereinigungsquittung `dist/♻️activation/prototype` | ja | |
 | `@semio-tech/semio-tech-play:dev`, `serve` | der Vite-Server über dem aktivierten Prototyp; beide brauchen `activate-prototype`, `dev` setzt zusätzlich `SEMIO_TECH_PLAY_PORT=6033` | nie (dauerhaft) | `6033` (`SEMIO_TECH_PLAY_PORT`) auf `127.0.0.1`, bei `DEVCONTAINER=true` auf `0.0.0.0` |
 | `@semio-tech/semio-tech-play:build` | das Release als ein Treiber: 13 im Target deklarierte Jobs (Describe-Werkzeug, natives Transpile, Schriften, Browser-Unterstützung, Canvas-Assets, fünf Wasm-Engines, Kartenkacheln, das Vite-Bundle), alle fertig, bevor eine Komponente kompiliert; nach dem Treiber werden die Seiten über `publishPlayPageCohortV1` veröffentlicht; Parameter `generation=fresh` | nie; deklariert seine Store-Quittung `.🧾️store/build.json` | |
 | `@semio-tech/semio-tech-play:test` | die Unit- und Gesetzestests; die Stufe ist ein Argument (`-- long`, `exhaustive`; Standard ist `fundamental`) | nie | |
@@ -115,7 +115,7 @@ Play braucht weder Docker noch einen Linux-Host.
 | `@semio-tech/semio-tech-play:test-release` | Playwright gegen die veröffentlichten Release-Seiten, statisch bedient, mit frischen Browser-Kontexten und ohne Dev-Server | nie | |
 | `@semio-tech/semio-tech-play:test-release-routing`, `release-verify` | die sprachneutralen Verträge für Release-Pfad und Origin-Routing; das Release-Tor über den veröffentlichten Seiten | nie | |
 
-Die 39 Lane-Tasks werden aus der Playground-Registry abgeleitet: `prepare-<Variante>-react-<Profil>` gehört dem Treiber und ist nie gecacht (der native Build-Treiber entscheidet selbst über Frische), `activate-<Variante>-react-<Profil>` ist gecacht (`deterministic`) mit den Ausgaben `.cache/b/p/m/browser/<Profil>/runtime/react/<Variante>`. Bei Play sind nur `prepare-prototype` und `activate-prototype` gecacht; `activate-prototype` hasht die Quellen des Projekts und seiner Workspace-Abhängigkeiten ohne Tests (`activationSources`) zusammen mit den Ausgaben seiner Abhängigkeiten. Unter Bazel ist ein gecachtes Target eine Aktion mit ihren deklarierten Ein- und Ausgaben und nutzt Bazels Aktions-Cache; ein Target, dessen Manifest keine Wiedergabe erlaubt, wird jedes Mal ausgeführt.
+Die 44 Lane-Tasks werden aus der Playground-Registry abgeleitet: `prepare-<Variante>-react-<Profil>` gehört dem Treiber und ist nie gecacht (der native Build-Treiber entscheidet selbst über Frische), `activate-<Variante>-react-<Profil>` ist gecacht (`deterministic`) mit den Ausgaben `.cache/b/p/m/browser/<Profil>/runtime/react/<Variante>`. Bei Play sind nur `prepare-prototype` und `activate-prototype` gecacht; `activate-prototype` hasht die Quellen des Projekts und seiner Workspace-Abhängigkeiten ohne Tests (`activationSources`) zusammen mit den Ausgaben seiner Abhängigkeiten. Unter Bazel ist ein gecachtes Target eine Aktion mit ihren deklarierten Ein- und Ausgaben und nutzt Bazels Aktions-Cache; ein Target, dessen Manifest keine Wiedergabe erlaubt, wird jedes Mal ausgeführt.
 
 ### Die Kette
 

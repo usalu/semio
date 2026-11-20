@@ -609,24 +609,55 @@ fn assert_native_original_wire(edge_only: bool) {
     retire_bridged_surface(&mut state);
 }
 
-/// 🧷️ A pure point paints through the original native primitive owner in ordinary object mode.
+/// 🧷️ Ordinary object hover accepts point geometry with or without topological vertex IDs.
 #[test]
 fn world_native_analytic_point_paints_without_component_targeting() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
-    let fixture:serde_json::Value=serde_json::from_str(read_static("../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
-    let row=fixture["cases"].as_array().unwrap().iter().find(|row|row["kind"]=="point").unwrap();
-    let point=serde_json::from_value::<[f32;3]>(row["points"][0].clone()).unwrap();
-    let mut scene=scene_with_selection("{}");let world=scene.world_3d.as_mut().unwrap();
-    world.meshes_json=serde_json::json!([{"id":"point","data":{"positions":point,"normals":[],"indices":[],"vertexIds":[0],"edgePositions":[],"edgeIds":[]}}]).to_string();
-    world.instances_json=serde_json::json!([{"id":"point@vertex#0","meshId":"point"}]).to_string();
-    world.camera_json=serde_json::json!({"position":[point[0],point[1],point[2]+4.0],"target":point,"up":[0,1,0],"fov":50}).to_string();
-    world.selection_json=serde_json::json!({"granularity":"object","ids":[],"showEdges":false,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
-    let mut state=World3dState::new("surface-point".into(),"controller".into());let bounds=Rect::new(0.0,0.0,400.0,400.0);drive_scene_bridge(&mut state,&scene,bounds);
-    let schema=state.scene.meshes.get("point").unwrap().schema().unwrap();assert_eq!((schema.vertices,schema.vertex_ids,schema.indices,schema.edges),(1,1,0,0));
-    let mut lines=Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&semio_ui_theme::Theme::default(),&state.camera.orbit.to_camera(),bounds,&mut lines);
-    assert!(!lines.is_empty(),"an unselected pure point has a primary native visual");
-    for pair in lines.chunks_exact(2) {for axis in 0..3 {assert!(((pair[0].position[axis]+pair[1].position[axis])*0.5-point[axis]).abs()<1e-5);}}
-    assert!(state.selection.selected_ids.is_empty());assert_eq!(state.selection.granularity,"object");retire_bridged_surface(&mut state);
+    let fixture: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️analytic-wire-picking/point-only.json")).unwrap();
+    let point: [f32; 3] = serde_json::from_value(fixture["mesh"]["positions"].clone()).unwrap();
+    let pointer: [f32; 2] = serde_json::from_value(fixture["pointer"].clone()).unwrap();
+    for variant in fixture["variants"].as_array().unwrap() {
+        let mut scene = scene_with_selection("{}");
+        let world = scene.world_3d.as_mut().unwrap();
+        let mut mesh = fixture["mesh"].clone();
+        mesh["vertexIds"] = variant["vertexIds"].clone();
+        world.meshes_json = serde_json::json!([{"id":"point","data":mesh}]).to_string();
+        world.instances_json = serde_json::json!([{"id":fixture["instance"],"meshId":"point"}]).to_string();
+        world.camera_json = fixture["camera"].to_string();
+        world.selection_json = serde_json::json!({"granularity":"object","ids":[],"showEdges":false,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
+        let mut state = World3dState::new("surface-point".into(), "controller".into());
+        let bounds = Rect::new(0.0,0.0,400.0,400.0);
+        drive_scene_bridge(&mut state, &scene, bounds);
+        let schema = state.scene.meshes.get("point").unwrap().schema().unwrap();
+        assert_eq!((schema.vertices,schema.vertex_ids,schema.indices,schema.edges),(1,u32::from(variant["semantic"].as_bool().unwrap()),0,0));
+        let mut lines = Vec::new();
+        append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), bounds, &mut lines);
+        assert_eq!(lines.len(), 6);
+        for pair in lines.chunks_exact(2) {
+            for axis in 0..3 {
+                assert!(((pair[0].position[axis]+pair[1].position[axis])*0.5-point[axis]).abs()<1e-5);
+            }
+        }
+        let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
+        for turn in 0..128 {
+            match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) {
+                WorldInteractionStep::Complete => break,
+                WorldInteractionStep::Pending => assert!(turn < 127),
+                step => panic!("point hover registry {step:?}"),
+            }
+        }
+        let mut pick = WorldRayPickCursor::new(&state.session, &state.camera, 10, WorldRayPickPurpose::Hover, pointer[0], pointer[1]).unwrap();
+        for turn in 0..128 {
+            match with_world_step_context(1, |context| pick.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) {
+                WorldInteractionStep::Complete => break,
+                WorldInteractionStep::Pending => assert!(turn < 127),
+                step => panic!("point hover {step:?}"),
+            }
+        }
+        assert_eq!(pick.best.map(|hit| hit.point.to_array()), Some(point));
+        assert!(state.selection.selected_ids.is_empty());
+        retire_bridged_surface(&mut state);
+    }
 }
 
 /// 🪡️ A wire is primary geometry even when surface outlines and component targeting are disabled.

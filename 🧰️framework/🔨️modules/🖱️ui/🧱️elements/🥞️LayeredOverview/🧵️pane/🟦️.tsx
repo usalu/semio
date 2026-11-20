@@ -1,4 +1,5 @@
 /** 🧵️ The pane of LayeredOverview: mounting, error boundary, placeholder and the card host. */
+import { useOffscreen } from "../../../🔨️modules/👁️offscreen-culling/🟦️.ts";
 import { type LayeredLifecycle, type LayeredRevealSource, type LayeredZoomHold, layeredZoomOut, layeredZoomOver, panesOverBudget, nextWarmBoot, warmDelay, scheduleIdle, panesToRelease } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import * as React from "react";
 import { type IconName, Icon } from "../../🔣️Icons/🟦️.tsx";
@@ -154,12 +155,16 @@ interface LayeredPaneViewProps {
   readonly onDirty: (id: string) => void;
 }
 
+/** 🔭️ The overview a pane or a card host lies in: the root its off-screen margin counts from. */
+const overviewOf = (element: HTMLElement): Element | null => element.closest("[data-layered-overview]");
+
 /** 🥞️ One pane: its live page, else its poster, else its placeholder (the last two only within the window). Inert and hidden from assistive
  * technology unless opened; opened, it is a labelled, focusable region. Pointer or key input inside marks it dirty. */
 export const LayeredPaneView = /* @__PURE__ */ React.memo(function LayeredPaneView(props: LayeredPaneViewProps): React.ReactElement {
   const { pane, opened, revealed, onContainer, onDirty } = props;
   const dirty = React.useCallback(() => onDirty(pane.id), [onDirty, pane.id]);
-  const ref = React.useCallback((element: HTMLDivElement | null) => onContainer(pane.id, element), [onContainer, pane.id]);
+  const watch = useOffscreen(overviewOf);
+  const ref = React.useCallback((element: HTMLDivElement | null) => { onContainer(pane.id, element); watch(element); }, [onContainer, pane.id, watch]);
   const state = React.useMemo<LayeredPaneState>(() => ({ opened, revealed, dirty }), [opened, revealed, dirty]);
   return (
     <div
@@ -221,7 +226,8 @@ export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHo
   const { pane, onOpen, onElement, onReveal, onConceal, onPress, onRelease, zoomHold } = props;
   const open = React.useCallback(() => onOpen(pane.id), [onOpen, pane.id]);
   const onCell = props.placement?.onCell;
-  const ref = React.useCallback((element: HTMLDivElement | null) => { onElement(pane.id, element); onCell?.(element); }, [onElement, pane.id, onCell]);
+  const watch = useOffscreen(overviewOf);
+  const ref = React.useCallback((element: HTMLDivElement | null) => { onElement(pane.id, element); onCell?.(element); watch(props.placement === null ? null : element); }, [onElement, pane.id, onCell, watch, props.placement === null]);
   return (
     <div
       ref={ref}

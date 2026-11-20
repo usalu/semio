@@ -255,10 +255,10 @@ pub fn drive_self_waking_ready<F: std::future::Future>(fut: F) -> F::Output {
     let waker = Waker::noop();
     let mut cx = Context::from_waker(&waker);
     let mut fut = std::pin::pin!(fut);
-    for _ in 0..1_048_576 {
+    for _ in 0..1_048_576usize {
         match fut.as_mut().poll(&mut cx) {
             Poll::Ready(value) => return value,
-            Poll::Pending => continue,
+            Poll::Pending => {}
         }
     }
     panic!("drive_self_waking_ready: exceeded the self-wake bound");

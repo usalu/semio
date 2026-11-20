@@ -1,0 +1,172 @@
+{
+ "representations": {
+  "50": {
+   "silhouette": {
+    "en": "The running child at toe-off as the true orthographic views of its 1:50 model, 22 mm tall: large head with hair cap, ear and eye, loose T-shirt with short sleeves, shorts with two legs, bare limbs with knee caps, sock cuffs, sneakers with toe caps, hands with fingers and thumb, backpack with pocket and grab handle. Side elevation, front elevation and plan are outlines of the same solids, so stride, lean and arm swing agree in all three views.",
+    "de": "Das rennende Kind beim Abdruck als wahre orthogonale Ansichten seines 1:50-Modells, 22 mm hoch: grosser Kopf mit Haarkappe, Ohr und Auge, lockeres T-Shirt mit kurzen Ärmeln, Shorts mit zwei Beinen, nackte Glieder mit Kniescheiben, Sockenbündchen, Turnschuhe mit Zehenkappen, Hände mit Fingern und Daumen, Rucksack mit Vortasche und Tragegriff. Seitenansicht, Vorderansicht und Grundriss sind Umrisse derselben Körper, sodass Schritt, Neigung und Armschwung in allen drei Ansichten übereinstimmen."
+   },
+   "retained": {
+    "en": "One shape per part with the same id, tone, region and material in every view; the far limbs are a shade darker in the side elevation.",
+    "de": "Eine Form je Teil mit derselben Kennung, demselben Tonwert, derselben Region und demselben Material in jeder Ansicht; die fernen Glieder sind in der Seitenansicht eine Stufe dunkler."
+   },
+   "merged": {
+    "en": "Fingers and thumb are part of the hand outline, sole and upper one shoe outline, the knee cap part of the shank outline, the seat part of the shorts.",
+    "de": "Finger und Daumen gehören zum Handumriss, Sohle und Schaft sind ein Schuhumriss, die Kniescheibe gehört zum Unterschenkelumriss, das Gesäss zu den Shorts."
+   },
+   "omitted": {
+    "en": "The chest print of the earlier drawing (the model has none), single hairs, stitching, fabric weave.",
+    "de": "Der Brustaufdruck der früheren Zeichnung (das Modell hat keinen), einzelne Haare, Nähte, Gewebestruktur."
+   },
+   "thinElements": {
+    "en": "The two backpack straps are 0.13 mm strokes along the slender strap solids; hems, sock tops, brow, mouth, jaw, sole lines and the pack seam are detail strokes, hair strands and laces 0.10 mm texture strokes.",
+    "de": "Die zwei Rucksackgurte sind 0,13-mm-Striche entlang der schlanken Gurtkörper; Säume, Sockenränder, Braue, Mund, Kiefer, Sohlenlinien und die Rucksacknaht sind Detailstriche, Haarsträhnen und Schnürung 0,10-mm-Texturstriche."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Body 0.25 mm, detail 0.13 mm, texture 0.10 mm; skin light, T-shirt mid, shorts, hair and backpack dark, socks and shoes light.",
+    "de": "Körper 0,25 mm, Detail 0,13 mm, Textur 0,10 mm; Haut hell, T-Shirt mittel, Shorts, Haar und Rucksack dunkel, Socken und Schuhe hell."
+   },
+   "overlays": {
+    "en": "One region per shape: face skin, hair, arm skin, leg skin, T-shirt, shorts, socks, shoes, backpack.",
+    "de": "Eine Region je Form: Gesichtshaut, Haar, Armhaut, Beinhaut, T-Shirt, Shorts, Socken, Schuhe, Rucksack."
+   }
+  },
+  "100": {
+   "silhouette": {
+    "en": "The views of the 1:100 model, 11 mm tall: head with hair cap, T-shirt with sleeves, shorts, bare limbs, sock cuffs, shoes with toe caps, mitten hands, backpack with pocket.",
+    "de": "Die Ansichten des 1:100-Modells, 11 mm hoch: Kopf mit Haarkappe, T-Shirt mit Ärmeln, Shorts, nackte Glieder, Sockenbündchen, Schuhe mit Zehenkappen, Fäustlingshände, Rucksack mit Vortasche."
+   },
+   "retained": {
+    "en": "The parts whose tones carry the figure: hair, T-shirt, sleeves, shorts, socks, shoes, backpack; hems, sock tops and straps as strokes.",
+    "de": "Die Teile, deren Tonwerte die Figur tragen: Haar, T-Shirt, Ärmel, Shorts, Socken, Schuhe, Rucksack; Säume, Sockenränder und Gurte als Striche."
+   },
+   "merged": {
+    "en": "Nose, ears and eyes into the head, knee cap into the leg, fingers into a mitten, sole into the shoe.",
+    "de": "Nase, Ohren und Augen in den Kopf, Kniescheibe ins Bein, Finger in einen Fäustling, Sohle in den Schuh."
+   },
+   "omitted": {
+    "en": "Face lines, hair strands, laces, sole lines, collar rib, grab handle.",
+    "de": "Gesichtslinien, Haarsträhnen, Schnürung, Sohlenlinien, Kragenbund, Tragegriff."
+   },
+   "thinElements": {
+    "en": "Straps, hems and sock tops are 0.10 mm detail strokes.",
+    "de": "Gurte, Säume und Sockenränder sind 0,10-mm-Detailstriche."
+   },
+   "hatching": {
+    "en": "None: skin and cotton stay plain tone so that thermal colours stay readable on the small figure.",
+    "de": "Keine: Haut und Baumwolle bleiben im glatten Tonwert, damit die Thermikfarben auf der kleinen Figur lesbar bleiben."
+   },
+   "styles": {
+    "en": "Body pen 0.2 mm, detail 0.1 mm; tones as at 1:50.",
+    "de": "Körperstift 0,2 mm, Detail 0,1 mm; Tonwerte wie in 1:50."
+   },
+   "overlays": {
+    "en": "One region per shape, as at 1:50.",
+    "de": "Eine Region je Form, wie in 1:50."
+   }
+  },
+  "200": {
+   "silhouette": {
+    "en": "The views of the 1:200 model, 5.5 mm tall: head with neck under the hair cap, T-shirt, sleeves, shorts with two legs, thighs, shanks with sock cuffs, shoes with toe caps, arms with mitten hands, backpack.",
+    "de": "Die Ansichten des 1:200-Modells, 5,5 mm hoch: Kopf mit Hals unter der Haarkappe, T-Shirt, Ärmel, Shorts mit zwei Beinen, Oberschenkel, Unterschenkel mit Sockenbündchen, Schuhe mit Zehenkappen, Arme mit Fäustlingshänden, Rucksack."
+   },
+   "retained": {
+    "en": "Elbow and knee flexion, the toe cap as its own shape so the foot bends at toe-off, sleeves and shorts as separate cloth masses.",
+    "de": "Ellbogen- und Kniebeugung, die Zehenkappe als eigene Form, damit der Fuss beim Abdruck abknickt, Ärmel und Shorts als eigene Stoffmassen."
+   },
+   "merged": {
+    "en": "Neck into the head, thumb and fingers into the hand, pocket into the backpack.",
+    "de": "Hals in den Kopf, Daumen und Finger in die Hand, Vortasche in den Rucksack."
+   },
+   "omitted": {
+    "en": "Straps, hems, face, ears.",
+    "de": "Gurte, Säume, Gesicht, Ohren."
+   },
+   "thinElements": {
+    "en": "None: every part is a filled shape at its true size.",
+    "de": "Keine: Jedes Teil ist eine gefüllte Form in wahrer Grösse."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Body pen 0.18 mm; tones as at 1:50.",
+    "de": "Körperstift 0,18 mm; Tonwerte wie in 1:50."
+   },
+   "overlays": {
+    "en": "One region per shape: face skin, hair, arm skin, leg skin, T-shirt, shorts, socks, shoes, backpack.",
+    "de": "Eine Region je Form: Gesichtshaut, Haar, Armhaut, Beinhaut, T-Shirt, Shorts, Socken, Schuhe, Rucksack."
+   }
+  },
+  "500": {
+   "silhouette": {
+    "en": "The views of the 1:500 model, 2.2 mm tall: head, hair, T-shirt, shorts, backpack and per side thigh, shank, sock cuff, shoe with toe cap, upper arm and forearm with hand, in the stride of the toe-off.",
+    "de": "Die Ansichten des 1:500-Modells, 2,2 mm hoch: Kopf, Haar, T-Shirt, Shorts, Rucksack und je Seite Oberschenkel, Unterschenkel, Sockenbündchen, Schuh mit Zehenkappe, Oberarm und Unterarm mit Hand, im Schritt des Abdrucks."
+   },
+   "retained": {
+    "en": "The large child's head, the backpack behind the shoulders, the long stride of both legs and the opposed arms.",
+    "de": "Der grosse Kinderkopf, der Rucksack hinter den Schultern, der lange Schritt beider Beine und die gegenläufigen Arme."
+   },
+   "merged": {
+    "en": "Neck into the head, sleeve into the upper arm, shorts leg into the thigh, hand into the forearm.",
+    "de": "Hals in den Kopf, Ärmel in den Oberarm, Hosenbein in den Oberschenkel, Hand in den Unterarm."
+   },
+   "omitted": {
+    "en": "Straps, pocket, face, ears, fingers.",
+    "de": "Gurte, Vortasche, Gesicht, Ohren, Finger."
+   },
+   "thinElements": {
+    "en": "Arms, shanks and shoes are thinner than 75 mm and drawn as filled shapes at their true size.",
+    "de": "Arme, Unterschenkel und Schuhe sind dünner als 75 mm und als gefüllte Formen in wahrer Grösse gezeichnet."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Body pen 0.13 mm; no detail pen.",
+    "de": "Körperstift 0,13 mm; kein Detailstift."
+   },
+   "overlays": {
+    "en": "One region per shape; the upper arm shows arm skin, the thigh leg skin.",
+    "de": "Eine Region je Form; der Oberarm zeigt Armhaut, der Oberschenkel Beinhaut."
+   }
+  }
+ },
+ "summary": {
+  "en": "A six-year-old in a T-shirt, shorts and a small backpack sprinting with real flight phases in which neither foot touches the ground, and jumping from a crouch; child proportions with about six heads to the body and the hip joints at half the stature.",
+  "de": "Ein Sechsjähriger in T-Shirt, Shorts und kleinem Rucksack sprintet mit echten Flugphasen, in denen kein Fuß den Boden berührt, und springt aus der Hocke; kindliche Proportionen mit etwa sechs Kopfhöhen und den Hüftgelenken auf halber Körperhöhe."
+ },
+ "clips": {
+  "sprint-cycle": {
+   "en": "A child running at about 2.2 m/s with 3.8 steps per second: each foot carries for 0.18 s on the forefoot, then both feet are in the air for 0.08 s before the other foot lands. The hips rise in the flight phases; the arms swing in opposition with the elbows at about 90 degrees.",
+   "de": "Ein laufendes Kind mit etwa 2,2 m/s und 3,8 Schritten pro Sekunde: Jeder Fuß trägt 0,18 s auf dem Vorfuß, danach sind beide Füße 0,08 s in der Luft, bevor der andere Fuß landet. Die Hüfte steigt in den Flugphasen; die Arme schwingen gegenläufig mit etwa 90 Grad Ellbogenwinkel."
+  }
+ },
+ "poses": {
+  "toe-off": {
+   "en": "The left forefoot leaves the ground with the hip extended and the knee still soft, the right knee driving forward.",
+   "de": "Der linke Vorfuß verlässt den Boden bei gestreckter Hüfte und noch weichem Knie, das rechte Knie treibt nach vorn."
+  }
+ },
+ "provenance": {
+  "notes": {
+   "en": " Round 3: the rig follows child anthropometry (stature 1.125 m barefoot, hip joints at 0.50, knees at 0.27, ankles at 0.04, shoulder joints at 0.76 and the seventh cervical vertebra at 0.82 of the stature), the key frames of both clips were solved again for the corrected leg lengths with the same foot paths and flight arcs, and body, thermal model and skeleton are modelled by hand for every scale, the 2D views being the orthographic outlines of those models.",
+   "de": " Runde 3: Das Rig folgt der Kinder-Anthropometrie (Körperhöhe 1,125 m barfuß, Hüftgelenke auf 0,50, Knie auf 0,27, Sprunggelenke auf 0,04, Schultergelenke auf 0,76 und der siebte Halswirbel auf 0,82 der Körperhöhe), die Schlüsselbilder beider Clips wurden für die korrigierten Beinlängen mit denselben Fußbahnen und Flugbögen neu gelöst, und Körper, Thermikmodell und Skelett sind für jeden Maßstab von Hand modelliert; die 2D-Ansichten sind die orthogonalen Umrisse dieser Modelle."
+  },
+  "references": [
+   {
+    "id": "snyder-1977",
+    "citation": "Snyder, R. G., Schneider, L. W., Owings, C. L., Reynolds, H. M., Golomb, D. H. and Schork, M. A. (1977). Anthropometry of infants, children and youths to age 18 for product safety design. Report UM-HSRI-77-17, Highway Safety Research Institute, University of Michigan; body dimensions of children by age, used as guidance for joint heights, breadths and girths."
+   },
+   {
+    "id": "who-2007",
+    "citation": "de Onis, M., Onyango, A. W., Borghi, E., Siyam, A., Nishida, C. and Siekmann, J. (2007). Development of a WHO growth reference for school-aged children and adolescents. Bulletin of the World Health Organization 85(9), 660-667; stature and body mass by age."
+   }
+  ]
+ }
+}

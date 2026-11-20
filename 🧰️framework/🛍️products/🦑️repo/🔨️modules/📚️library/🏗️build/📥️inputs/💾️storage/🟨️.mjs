@@ -28,9 +28,10 @@ function optionalGraphQuotaObservationV1(state){
 export function createBuildGraphOptionalQuotaV1(state,check=()=>{}){
  if(validateJsonSchemaSubset(quotaSchema,state,schema).length||state.usedBytes>state.maximumBytes)throw Error("Closed optional graph cache quota required: "+JSON.stringify(optionalGraphQuotaObservationV1(state)));
  let used=state.usedBytes,available=state.availableBytes,pending=0;
- return Object.freeze({get usedBytes(){return used;},get pendingBytes(){return pending;},reserve(request){
+ return Object.freeze({get usedBytes(){return used;},get pendingBytes(){return pending;},reserve(request,onDecline){
   check();if(!request||Object.keys(request).sort().join()!=="peakBytes,retainedDeltaBytes"||!Number.isSafeInteger(request.peakBytes)||request.peakBytes<0||!Number.isSafeInteger(request.retainedDeltaBytes)||request.retainedDeltaBytes>request.peakBytes||used+request.retainedDeltaBytes<0)throw Error("Exact optional graph publication peak required");
-  if(used+pending+request.peakBytes>state.maximumBytes||available-pending-request.peakBytes<state.minimumAvailableBytes)return undefined;
+  if(used+pending+request.peakBytes>state.maximumBytes){onDecline?.("retained-quota");return undefined;}
+  if(available-pending-request.peakBytes<state.minimumAvailableBytes){onDecline?.("disk-headroom");return undefined;}
   pending+=request.peakBytes;let live=true;return Object.freeze({commit(){check();if(!live)throw Error("Original optional graph reservation released");pending-=request.peakBytes;used+=request.retainedDeltaBytes;available-=request.retainedDeltaBytes;live=false;},release(){if(live){pending-=request.peakBytes;live=false;}}});
  }});
 }
@@ -114,11 +115,11 @@ function requireBuildGraphStagedPathV1(staged,path){
 export function withBuildGraphOptionalPublicationV1(path,plan,write){return withBuildGraphOptionalPublicationsV1([path],plan,write);}
 
 /** 📦️ Admits the optional cache leaves of one batch as one publication: one exact peak, one durable intent and one clean accounting for all of them, so a writer that adopts many leaves pays the ledger once. */
-export function withBuildGraphOptionalPublicationsV1(paths,plan,write){
+export function withBuildGraphOptionalPublicationsV1(paths,plan,write,onDecline){
  if(!Array.isArray(paths)||!paths.length)throw Error("Explicit optional graph cache leaves required");
  const staged=stagings.getStore();if(staged){for(const path of paths)requireBuildGraphStagedPathV1(staged,path);write();for(const path of paths)staged.published?.(resolve(path));return true;}
  const scope=writers.getStore();for(const path of paths)requireRepositoryBuildGraphObservationPathV1(path,"write");if(!scope){write();return true;}
- requireRepositoryBuildGraphWriterV1(scope.workspace);const backing=backings.getStore();backing?.observeOptionalPublication?.("attempted");const decline=()=>{backing?.observeOptionalPublication?.("declined");return false;};const isolated=isolatedGraphWriterScopeV1(scope);for(const path of paths){requireNativeStoragePathV1(scope.store.root,resolve(path));const name=relative(join(scope.store.root,"inference"),resolve(path)).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))throw Error("Explicit optional graph cache leaf required");if(isolated&&!buildGraphWriterOptionalPathAdmittedV1(isolated,name))throw Error("Original isolated graph optional namespace required");}const free=nativeStatfsSyncV1(scope.store.root),minimum=backing?backing.optionalMinimumAvailableBytes:quotaSchema.definitions.DefaultPolicy.const.minimumAvailableBytes;if(free.bavail*free.bsize-plan.peakBytes<minimum)return decline();const reservation=scope.optionalQuota.reserve(plan);if(!reservation)return decline();try{if(!scope.ledger.publish(plan,write))return decline();reservation.commit();for(const path of paths)recordBuildGraphOptionalMemberV1(scope.store.root,resolve(path));return true;}finally{reservation.release();}
+ requireRepositoryBuildGraphWriterV1(scope.workspace);const backing=backings.getStore();backing?.observeOptionalPublication?.("attempted");const decline=reason=>{backing?.observeOptionalPublication?.("declined");onDecline?.(reason);return false;};const isolated=isolatedGraphWriterScopeV1(scope);for(const path of paths){requireNativeStoragePathV1(scope.store.root,resolve(path));const name=relative(join(scope.store.root,"inference"),resolve(path)).split(sep).join("/");if(!isBuildGraphOptionalCachePathV1(name))throw Error("Explicit optional graph cache leaf required");if(isolated&&!buildGraphWriterOptionalPathAdmittedV1(isolated,name))throw Error("Original isolated graph optional namespace required");}const free=nativeStatfsSyncV1(scope.store.root),minimum=backing?backing.optionalMinimumAvailableBytes:quotaSchema.definitions.DefaultPolicy.const.minimumAvailableBytes;if(free.bavail*free.bsize-plan.peakBytes<minimum)return decline("disk-headroom");const reservation=scope.optionalQuota.reserve(plan,decline);if(!reservation)return false;try{if(!scope.ledger.publish(plan,write,decline))return false;reservation.commit();for(const path of paths)recordBuildGraphOptionalMemberV1(scope.store.root,resolve(path));return true;}finally{reservation.release();}
 }
 
 /** 📇️ Seals a freshly published group leaf into its group's member index (name, size, kind, stamp and the hash of its bytes, taken once, now); a leaf the index cannot take stays unindexed for the background collector and never fails the publication. */
@@ -144,7 +145,14 @@ export function repositoryBuildGraphDataDirectoryV1(workspace,namespace){
 export {buildGraphWriterResourceV1,buildGraphPublicationWriterResourceV1} from "./🔒️writer/🟨️.mjs";
 
 /** 📥️ Retains an already-issued Graph reader through its actual private dataset mapping and consumer frame. */
-export function withRepositoryBuildGraphConsumerV1(workspace,control,body){requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentRepositoryBuildGraphConsumerV1();return withRequiredRepositoryCacheStoreConsumerV1(graphDatasetWorkspaceV1(workspace),"graph",control,async(store,actual)=>{requireCurrentRepositoryBuildGraphConsumerV1();return graphReadScopes.run({workspace:graphDatasetWorkspaceV1(workspace),store,control:actual},async()=>{const value=await body(store,actual);requireCurrentRepositoryBuildGraphConsumerV1();return value;});});}
+export function withRepositoryBuildGraphConsumerV1(workspace,control,body,withdraw,observe,native){
+ requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentRepositoryBuildGraphConsumerV1();
+ const root=graphDatasetWorkspaceV1(workspace),run=async(store,actual)=>{
+  requireCurrentRepositoryBuildGraphConsumerV1();
+  return graphReadScopes.run({workspace:root,store,control:actual},async()=>{const value=await body(store,actual);requireCurrentRepositoryBuildGraphConsumerV1();return value;});
+ };
+ return withdraw===undefined&&observe===undefined&&native===undefined?withRequiredRepositoryCacheStoreConsumerV1(root,"graph",control,run):withRequiredRepositoryCacheStoreConsumerV1(root,"graph",control,run,withdraw,observe,native);
+}
 
 /** 🔐️ Admits only actual live Graph writer or accepted reader custody for issued managed observation paths. */
 export function requireRepositoryBuildGraphObservationPathV1(path,mode){

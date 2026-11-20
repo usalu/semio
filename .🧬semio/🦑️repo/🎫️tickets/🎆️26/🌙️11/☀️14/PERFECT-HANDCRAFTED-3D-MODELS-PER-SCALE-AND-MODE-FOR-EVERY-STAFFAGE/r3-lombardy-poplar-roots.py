@@ -1,0 +1,45 @@
+"""🌿 Writes the root fixes of the round-3 Lombardy poplar from the candidate document into the catalog asset file: the members named on the command line (`rig`, `anchors`, `poses`, `clips`, `thermal`, `representations`, `symbols`), each replaced whole, nothing else; the file is re-read right before writing and every other member must stay equal.
+
+Usage: python3 r3-lombardy-poplar-roots.py <candidate 🔣️.json> <catalog 🔣️.json> <member> [<member> ...]
+"""
+import importlib.util
+import json
+import re
+import sys
+
+
+def load_insert():
+    source = open("volumes-insert.py", encoding="utf-8").read().replace("\nmain()\n", "\n")
+    module = {}
+    exec(compile(source, "volumes-insert.py", "exec"), module)
+    return module
+
+
+def main():
+    candidate_path, catalog_path, members = sys.argv[1], sys.argv[2], sys.argv[3:]
+    tool = load_insert()
+    candidate = json.load(open(candidate_path, encoding="utf-8"))["asset"]
+    text = open(catalog_path, encoding="utf-8").read()
+    before = json.loads(text)
+    indent = re.search(r'\n( +)"id"\s*:', text).group(1)
+    depth = len(indent) // 2
+    result = text
+    for member in members:
+        start, end = tool["member_range"](result, indent, member)
+        result = result[:start] + indent + '"%s": ' % member + tool["dump"](candidate[member], depth) + result[end:]
+    after = json.loads(result)
+    for key in before["asset"]:
+        if key in members:
+            if after["asset"][key] != candidate[key]:
+                raise SystemExit("member %s did not round-trip" % key)
+        elif after["asset"][key] != before["asset"][key]:
+            raise SystemExit("member %s changed" % key)
+    if list(after["asset"]) != list(before["asset"]):
+        raise SystemExit("member order changed")
+    if open(catalog_path, encoding="utf-8").read() != text:
+        raise SystemExit("asset changed while writing; retry")
+    open(catalog_path, "w", encoding="utf-8").write(result)
+    print("written:", ", ".join(members))
+
+
+main()

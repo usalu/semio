@@ -2,7 +2,7 @@ import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 /** 🗂️ Names closed graph fact namespaces in the authored fixed partition. */
 export function repositoryBuildGraphDataDirectoryV1(workspace:string,namespace:"build-input-closures"|"build-lock-closures"|"inference"|"admission"):string;
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type {RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import type {RepositoryCacheNativeVerificationObserversV1,RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 /** 🎟️ Runs producers within original fixed-volume custody. */
 export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🎯️ Holds one selected inference namespace within the original graph writer. */
@@ -22,7 +22,9 @@ export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invoca
 /** 🧮️ Models exact optional cache peaks independently of physical custody. */
 export interface BuildGraphOptionalQuotaStateV1{readonly maximumBytes:number;readonly usedBytes:number;readonly availableBytes:number;readonly minimumAvailableBytes:number}
 export interface BuildGraphOptionalPublicationV1{readonly peakBytes:number;readonly retainedDeltaBytes:number}
-export interface BuildGraphOptionalQuotaV1{readonly usedBytes:number;readonly pendingBytes:number;reserve(request:BuildGraphOptionalPublicationV1):Readonly<{commit():void;release():void}>|undefined}
+/** 🚧️ Identifies the original guard that declined an optional graph publication. */
+export type BuildGraphOptionalPublicationRefusalV1="disk-headroom"|"retained-quota"|"ledger-contention";
+export interface BuildGraphOptionalQuotaV1{readonly usedBytes:number;readonly pendingBytes:number;reserve(request:BuildGraphOptionalPublicationV1,onDecline?:(reason:BuildGraphOptionalPublicationRefusalV1)=>void):Readonly<{commit():void;release():void}>|undefined}
 /** 📊️ Observes finite private optional accounting without exposing reservation operations. */
 export interface BuildGraphWriterOptionalQuotaFactsV1{readonly version:1;readonly usedBytes:number;readonly pendingBytes:number}
 export function buildGraphWriterOptionalQuotaFactsV1(workspace:string):BuildGraphWriterOptionalQuotaFactsV1;
@@ -32,7 +34,7 @@ export function isBuildGraphOptionalCachePathV1(path:unknown):boolean;
 /** 📦️ Reserves optional peak bytes under the original serial writer. */
 export function withBuildGraphOptionalPublicationV1(path:string,plan:BuildGraphOptionalPublicationV1,write:()=>void):boolean;
 /** 📦️ Reserves the summed peak of several optional leaves as one publication. */
-export function withBuildGraphOptionalPublicationsV1(paths:readonly string[],plan:BuildGraphOptionalPublicationV1,write:()=>void):boolean;
+export function withBuildGraphOptionalPublicationsV1(paths:readonly string[],plan:BuildGraphOptionalPublicationV1,write:()=>void,onDecline?:(reason:BuildGraphOptionalPublicationRefusalV1)=>void):boolean;
 /** 🛰️ Runs a body whose graph fact directories are private staging directories adopted later by the parent that holds the writer custody. */
 export function withBuildGraphStagingV1<T>(staging:Readonly<{root:string;published?:(path:string)=>void}>,body:()=>Promise<T>|T):Promise<T>|T;
 /** 📌️ Tells the running staged body that a leaf outside the optional publication gate was written. */
@@ -58,6 +60,7 @@ export function buildGraphWriterOptionalPathAdmittedV1(scope:{readonly kind:"sel
 export function buildGraphWriterMaintenanceDueV1(request:{readonly kind:"full"|"selection"|"dataset";readonly usedBytes:number;readonly availableBytes:number}):boolean;
 
 export function withRepositoryBuildGraphConsumerV1<T>(workspace:string,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+export function withRepositoryBuildGraphConsumerV1<T>(workspace:string,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,withdraw:AbortSignal|undefined,observe?:(phase?:"preVerify"|"body"|"postVerify")=>void,native?:RepositoryCacheNativeVerificationObserversV1):Promise<T|undefined>;
 
 
 /** 🧾️ Counts actual optional deletions under an authenticated canonical writer without promising sufficient headroom. */

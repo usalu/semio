@@ -65,6 +65,7 @@ pub mod import_registers_csv_request {
     /// receives it whole as its `payload` (merge strategy `upsert`).
     pub fn handle(_payload: &ImportRegistersCsvRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
+            max_file_bytes: None,
             req: semio_plugin::RequestId(ARCHITECT_IMPORT_CSV_REQUEST_ID),
             accept: ".csv,text/csv".into(),
             read_as: Some("text".into()),
@@ -105,6 +106,7 @@ pub mod import_program_request {
 
     pub fn handle(_payload: &ImportProgramRequest, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
+            max_file_bytes: None,
             req: semio_plugin::RequestId(110),
             accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
             read_as: None,

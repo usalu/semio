@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "admissionResource": "resource-directory-admission:v1",
+  "cases": [
+    {
+      "lock": "directory",
+      "action": "release",
+      "success": true
+    },
+    {
+      "lock": "journal",
+      "action": "held",
+      "success": false
+    },
+    {
+      "lock": "directory",
+      "action": "cancel",
+      "success": false
+    },
+    {
+      "lock": "none",
+      "action": "drift",
+      "success": false
+    }
+  ]
+}

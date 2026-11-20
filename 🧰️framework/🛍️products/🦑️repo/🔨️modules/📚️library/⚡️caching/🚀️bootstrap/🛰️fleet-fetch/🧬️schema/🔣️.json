@@ -3,6 +3,13 @@
   "$id": "schema://repo.bootstrap/FleetFetchV1",
   "title": "Fleet fetch layer: every pinned external artifact is looked up by its sha256 in the fleet before the internet, uploaded after a verified download, and installed dependency trees are published once per lock state",
   "definitions": {
+    "ClaimTexts": {
+      "description": "The line a download says while it waits for the machine that holds the fleet claim of the same blob: the holder, the blob, the seconds waited of the bound (`waitMaximumMilliseconds` of the work claim, 900 s, 36 slices of the long poll) and what happens at the bound (this machine downloads it itself). Said at the first wait and then at most every `everyMilliseconds`.",
+      "const": {
+        "everyMilliseconds": 30000,
+        "wait": { "en": "[fleet] waiting for {holder} to fetch {blob} for everyone: {seconds} s of at most {bound} s, then this machine fetches it itself", "de": "[fleet] warte auf {holder}, der {blob} für alle holt: {seconds} s von höchstens {bound} s, danach holt diese Maschine es selbst" }
+      }
+    },
     "Policy": {
       "const": {
         "version": 1,
@@ -23,6 +30,7 @@
         "uvDirectory": ["v1", "fleet", "uv"],
         "uvManifestPrefix": "uv-",
         "installPackConcurrency": 6,
+        "installIndexMaximumBytes": 67108864,
         "installUnitCacheEntries": 20000,
         "installManifestSuffix": ".json",
         "installKeyPrefix": "inst-",
@@ -115,15 +123,32 @@
         "createdAtMs": { "type": "integer", "minimum": 0 }
       }
     },
+    "InstallRelativePath": {
+      "type": "string", "minLength": 1, "maxLength": 256,
+      "pattern": "^(?!.*(?:^|/)\\.{1,2}(?:/|$))[^/\\\\:*?\"<>|\\u0000-\\u001f]+(?:/[^/\\\\:*?\"<>|\\u0000-\\u001f]+)*$"
+    },
+    "InstallHardlinks": {
+      "type": "array", "maxItems": 131072,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["path", "target", "bytes", "sha256"],
+        "properties": {
+          "path": { "$ref": "#/definitions/InstallRelativePath" },
+          "target": { "$ref": "#/definitions/InstallRelativePath" },
+          "bytes": { "type": "integer", "minimum": 0, "maximum": 34359738368 },
+          "sha256": { "$ref": "#/definitions/Sha256" }
+        }
+      }
+    },
     "InstallIndex": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "directories", "links", "units"],
+      "required": ["version", "directories", "links", "hardlinks", "units"],
       "properties": {
-        "version": { "const": 1 },
-        "directories": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 1024 } },
-        "links": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "target"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 1024 }, "target": { "type": "string", "maxLength": 4096 } } } },
-        "units": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 1024 }, "sha256": { "$ref": "#/definitions/Sha256" }, "bytes": { "type": "integer", "minimum": 1 } } } }
+        "version": { "const": 2 },
+        "directories": { "type": "array", "items": { "$ref": "#/definitions/InstallRelativePath" } },
+        "links": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "target"], "properties": { "path": { "$ref": "#/definitions/InstallRelativePath" }, "target": { "type": "string", "maxLength": 4096 } } } },
+        "hardlinks": { "$ref": "#/definitions/InstallHardlinks" },
+        "units": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["path", "sha256", "bytes", "maximumPathUnits"], "properties": { "path": { "$ref": "#/definitions/InstallRelativePath" }, "sha256": { "$ref": "#/definitions/Sha256" }, "bytes": { "type": "integer", "minimum": 1 }, "maximumPathUnits": { "type": "integer", "minimum": 1, "maximum": 256 } } } }
       }
     },
     "UvIndex": {

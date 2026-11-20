@@ -199,23 +199,28 @@
       "fatal": "none"
     },
     {
-      "name": "before inference",
+      "name": "before scoped discovery",
       "changeAt": 2,
       "fatal": "none"
     },
     {
-      "name": "after inference",
+      "name": "before inference",
       "changeAt": 3,
       "fatal": "none"
     },
     {
+      "name": "after inference",
+      "changeAt": 4,
+      "fatal": "none"
+    },
+    {
       "name": "fatal remains fatal during drift",
-      "changeAt": 3,
+      "changeAt": 4,
       "fatal": "frozen"
     },
     {
       "name": "undefined remains fatal during drift",
-      "changeAt": 3,
+      "changeAt": 4,
       "fatal": "undefined"
     }
   ]

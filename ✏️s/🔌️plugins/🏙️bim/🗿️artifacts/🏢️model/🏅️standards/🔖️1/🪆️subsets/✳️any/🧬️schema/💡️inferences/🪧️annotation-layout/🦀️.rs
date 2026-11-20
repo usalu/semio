@@ -16,6 +16,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{Reason, EPS};
 use semio_framework_value::DslValue;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[path = "📍️anchors/🦀️.rs"]
@@ -129,10 +130,10 @@ pub struct LeaderLayout {
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct StoreyAnnotations {
     pub storey: String,
-    pub dimensions: BTreeMap<String, DimensionLayout>,
-    pub tags: BTreeMap<String, TagLayout>,
-    pub notes: BTreeMap<String, NoteLayout>,
-    pub leaders: BTreeMap<String, LeaderLayout>,
+    pub dimensions: RetainedOrderedMap<String, DimensionLayout>,
+    pub tags: RetainedOrderedMap<String, TagLayout>,
+    pub notes: RetainedOrderedMap<String, NoteLayout>,
+    pub leaders: RetainedOrderedMap<String, LeaderLayout>,
     pub findings: Vec<Diagnostic>,
 }
 
@@ -216,7 +217,7 @@ pub fn annotations_of(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_
                 out.findings.push(finding(DiagnosticCode::DimensionLockViolated, id, storey).with("length", layout.total).with("lock", lock).with("difference", difference));
             }
         }
-        out.dimensions.insert(id.clone(), layout);
+        out.dimensions.cold_insert(id.clone(), layout);
     }
     for (id, row) in snapshot.tags.iter().filter(|(_, row)| row.storey == storey) {
         let layout = texts::tag_layout(snapshot, row);
@@ -226,17 +227,17 @@ pub fn annotations_of(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_
         } else if layout.text.is_empty() {
             out.findings.push(finding(DiagnosticCode::TagEmpty, id, storey));
         }
-        out.tags.insert(id.clone(), layout);
+        out.tags.cold_insert(id.clone(), layout);
     }
     for (id, row) in snapshot.text_notes.iter().filter(|(_, row)| row.storey == storey) {
         styled(id, &row.style, &mut out.findings);
-        out.notes.insert(id.clone(), texts::note_layout(snapshot, row));
+        out.notes.cold_insert(id.clone(), texts::note_layout(snapshot, row));
     }
     for (id, row) in snapshot.leaders.iter().filter(|(_, row)| row.storey == storey) {
         let layout = texts::leader_layout(snapshot, inputs, row);
         styled(id, &row.style, &mut out.findings);
         reasons(storey, id, std::iter::once((layout.reason, row.anchor.element().map(str::to_string))), &mut out.findings);
-        out.leaders.insert(id.clone(), layout);
+        out.leaders.cold_insert(id.clone(), layout);
     }
     out
 }

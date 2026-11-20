@@ -4,6 +4,7 @@ import {appendFileSync,closeSync,openSync} from "node:fs";
 import {statSync} from "node:fs";
 import {mkdir,readFile,stat,writeFile} from "node:fs/promises";
 import {setPriority} from "node:os";
+import {MACHINE_STATE_PROTOCOL_V1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {dirname,join} from "node:path";
 import {CACHE_GC_LIMITS_V1} from "../🧬️schema/🟦️.ts";
 import {fileURLToPath} from "node:url";
@@ -20,7 +21,7 @@ export type GraphCollectorDecisionV1="launch"|"enough"|"throttled"|"failed";
 export const GRAPH_COLLECTOR_INTERVAL_MS_V1=CACHE_GC_LIMITS_V1.graphCollectorIntervalMilliseconds;
 /** ⏲️ The products collector measures trees, so a persistent shortage that only claimed slots can relieve waits longer between two launches. */
 export const PRODUCTS_COLLECTOR_INTERVAL_MS_V1=CACHE_GC_LIMITS_V1.productsCollectorIntervalMilliseconds;
-const environmentKeys=Object.freeze(["PATH","HOME","USERPROFILE","TMPDIR","TEMP","TMP","SystemRoot","ComSpec","LANG","LC_ALL","LC_MESSAGES","SEMIO_LANGUAGE",...(createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript").hostEnvironment as readonly string[])]);
+const environmentKeys=Object.freeze(["PATH","HOME","USERPROFILE","TMPDIR","TEMP","TMP","SystemRoot","ComSpec","LANG","LC_ALL","LC_MESSAGES","SEMIO_LANGUAGE",MACHINE_STATE_PROTOCOL_V1.environment,...(createRequire(import.meta.url)("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript").hostEnvironment as readonly string[])]);
 
 /** 🧮️ Pure rule: enough space needs nothing, anything below the soft threshold (also below the hard floor, where the writer's own exclusive try cannot succeed while readers hold the image) is the background collector's job at most once per interval. */
 export function graphCollectorDecisionV1(input:Readonly<{availableBytes:number;softBytes:number;nowMs:number;lastLaunchMs:number|null;minimumIntervalMs:number}>):GraphCollectorDecisionV1{

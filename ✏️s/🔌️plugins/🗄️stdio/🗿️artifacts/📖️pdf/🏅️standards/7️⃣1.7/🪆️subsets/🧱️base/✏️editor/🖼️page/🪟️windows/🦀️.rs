@@ -181,7 +181,8 @@ pub fn render_inspector(
     publication_revision: semio_plugin::UiPublicationRevision,
     locale: Locale,
 ) -> UiAssemblyResult<semio_ui_contract::BuiltNode> {
-    let object = selected.and_then(|id| objects(snapshot).into_iter().find(|object| object.id == id));
+    let page_index = selected.and_then(|id| id.strip_prefix('p')?.strip_suffix(":paper")?.parse::<usize>().ok()).filter(|page| *page < snapshot.pages.len());
+    let object = selected.filter(|_| page_index.is_none()).and_then(|id| find_object(snapshot, id));
     let mut column = ui::column().try_id("pdf-object").map_err(|_| inspector_error("pdf.object.root-id"))?;
     let Some(object) = object else {
         let prompt = match locale {
@@ -190,13 +191,41 @@ pub fn render_inspector(
         };
         let note = ui::text(ui::Label(UiText::clipped(prompt))).try_id("pdf-object-empty").map_err(|_| inspector_error("pdf.object.empty-id"))?.try_build().map_err(|_| inspector_error("pdf.object.empty"))?;
         column = column.try_child(note).map_err(|_| inspector_error("pdf.object.empty"))?;
-        let heading = match locale {
-            Locale::De => "Seite",
-            Locale::En => "Page",
-        };
-        column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
-        for field in page_fields(snapshot) {
-            column = column.try_child(field_input(0, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+        let page_index = page_index.unwrap_or(0);
+        let heading = format!("{} {}", match locale { Locale::De => "Seite", Locale::En => "Page" }, page_index + 1);
+        column = column.try_child(ui::text(ui::Label(UiText::clipped(&heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+        for field in page_fields(snapshot, page_index) {
+            column = column.try_child(field_input(page_index, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+        }
+        if let Some(page) = snapshot.pages.get(page_index) {
+            let help = match locale {
+                Locale::De => "Seitenrahmen als links unten rechts oben eingeben. Leere optionale Rahmen verwenden den Standardwert.",
+                Locale::En => "Enter box coordinates in left, bottom, right, top order, separated by spaces. Clear an optional box to use its default.",
+            };
+            let note = ui::text(ui::Label(UiText::clipped(help))).try_id("pdf-page-boundary-help").map_err(|_| inspector_error("pdf.object.boundary-help-id"))?.try_build().map_err(|_| inspector_error("pdf.object.boundary-help"))?;
+            column = column.try_child(note).map_err(|_| inspector_error("pdf.object.boundary-help"))?;
+            for field in page_boundary_fields(page) {
+                column = column.try_child(field_input(page_index, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
+            }
+        }
+        let size = snapshot.pages.get(page_index).map_or((612.0, 792.0), |page| (page.width(), page.height()));
+        let label = |en, de| if locale == Locale::De { de } else { en };
+        let mut actions = vec![("insert-page", label("Insert page after", "Seite danach einfügen"), page_index.saturating_add(1).min(snapshot.pages.len()), vec![("width", size.0), ("height", size.1)])];
+        if page_index > 0 {
+            actions.push(("move-page-earlier", label("Move page earlier", "Seite nach vorne"), page_index, vec![("x", (page_index - 1) as f64)]));
+        }
+        if page_index + 1 < snapshot.pages.len() {
+            actions.push(("move-page-later", label("Move page later", "Seite nach hinten"), page_index, vec![("x", (page_index + 1) as f64)]));
+        }
+        if snapshot.pages.len() > 1 {
+            actions.push(("remove-page", label("Remove page", "Seite entfernen"), page_index, Vec::new()));
+        }
+        for (id, label, page, args) in actions {
+            let action = if id.starts_with("move-page-") { "move-page" } else { id };
+            let node = ui::button(ui::Label(UiText::clipped(label))).try_id(format!("pdf-{id}")).map_err(|_| inspector_error("pdf.object.page-action-id"))?
+                .try_on_with(ui::Trigger::Activate, inspector_action(controller_id, action)?, object_args(page, "", "", &args)?)
+                .map_err(|_| inspector_error("pdf.object.page-action-binding"))?.try_build().map_err(|_| inspector_error("pdf.object.page-action"))?;
+            column = column.try_child(node).map_err(|_| inspector_error("pdf.object.page-action"))?;
         }
         return column.try_build().map_err(|_| inspector_error("pdf.object.root"));
     };

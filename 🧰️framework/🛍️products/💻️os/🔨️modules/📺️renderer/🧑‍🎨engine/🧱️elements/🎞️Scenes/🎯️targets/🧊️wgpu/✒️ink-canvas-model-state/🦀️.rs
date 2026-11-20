@@ -31,7 +31,7 @@ use ink_interaction_document_and_block_scanning::INK_SELECTION_ITEM_CAPACITY;
 #[path = "📤️ink-event-pages-and-edit-routing/🦀️.rs"]
 mod ink_event_pages_and_edit_routing;
 pub use ink_event_pages_and_edit_routing::{
-    cancel_ink_edit, ink_edit_active, ink_edit_blur_into, ink_edit_key_into, ink_gesture_abort_into,
+    cancel_ink_edit, ink_edit_active, ink_edit_blur_into, ink_edit_key_into, ink_gesture_abort_into, ink_pointer_leave_into,
     InkEventJsonPages, InkRawPages,
 };
 use ink_event_pages_and_edit_routing::{

@@ -22,5 +22,6 @@ semio-framework-value.workspace = true
 semio-framework-value-derive.workspace = true
 
 [dev-dependencies]
+serde_json.workspace = true
 semio-framework-async-macros.workspace = true
 semio-framework-geometry.workspace = true

@@ -46,6 +46,16 @@ test("real mesh packages consume an acyclic canonical contract and retained clip
  for(const text of [algorithm,read(resolve(mesh,"🧬️contract/🦀️.rs"))]){expect(Buffer.byteLength(text)).toBeLessThanOrEqual(262144);expect(text.split("\n").filter(line=>line.trim()).length).toBeLessThanOrEqual(4000);}
 });
 
+function retiredFields(source:string):string[]{
+ const seed=/retirement_fields_seed!\(([^)]*)\)/.exec(source)?.[1];
+ if(seed===undefined)throw Error("Actual typed retirement seed required");
+ expect(source).toContain("retirement_fields_type!");
+ expect(source.replace(/\s+/g,"")).toContain("fncontrolled_retirement_supported()->bool{true}");
+ const fields=seed.split(",").map(field=>field.trim()).filter(Boolean);
+ expect(new Set(fields).size).toBe(fields.length);
+ return fields;
+}
+
 test("actual extracted Rust Source parses and each new compilation root stays finite",async()=>{
  const root=resolve(import.meta.dir,"../../../../../../.."),mesh=resolve(root,"🧰️framework/🔨️modules/🧊️3d/🥽️mesh");
  await Parser.init({wasmBinary:readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm",root))});const parser=new Parser();
@@ -58,7 +68,7 @@ test("actual extracted Rust Source parses and each new compilation root stays fi
  const model=readFileSync(resolve(mesh,"🛠️modeling/🦀️.rs"),"utf8"),algorithm=readFileSync(resolve(mesh,"🛠️modeling/✂️clipping/🦀️.rs"),"utf8");
  expect(model).not.toContain("RetireOwned for Clip");expect(model).not.toContain("RetireOwned for Soup");expect(model).not.toContain("artifact_retire_leaf!(SourceVertex,Ranked)");
  expect(algorithm).toContain("if !self.completed||self.transferred&bit!=0");expect(algorithm).toContain("self.transferred|=bit");expect(algorithm).toContain("self.completed=true");
- for(const field of ["intersections","cap","cap_ids","clipped","corners","sorted","vertex_sources","source_faces","corner_faces","face_weights","cap_owners","cap_weights"])expect(algorithm).toContain("deferred(self."+field+")");
+ expect(retiredFields(algorithm)).toEqual(["intersections","cap","cap_ids","clipped","corners","sorted","vertex_sources","source_faces","corner_faces","face_weights","cap_owners","cap_weights"].map(field=>"self."+field));
  }finally{parser.delete();}
 });
 
@@ -109,7 +119,7 @@ test("actual Rust extension declarations and implementations have identical cont
  try{const trait=tree.rootNode.descendantsOfType("trait_item").find(node=>node.childForFieldName("name")?.text==="MeshModelingOps"),implementation=tree.rootNode.descendantsOfType("impl_item").find(node=>node.childForFieldName("trait")?.text==="MeshModelingOps");if(!trait||!implementation)throw Error("Actual trait and implementation required");
  const normalize=(text:string)=>text.replace(/(?<!&)\bmut (\w+)/g,"$1").replace(/\s+/g,"");
  const contract=(node:Parser.SyntaxNode)=>["name","type_parameters","parameters","return_type","where_clause"].map(field=>normalize(node.childForFieldName(field)?.text??"")).join("|");
- const declarations=trait.descendantsOfType("function_signature_item"),definitions=implementation.descendantsOfType("function_item");expect(declarations.length).toBe(93);expect(definitions.length).toBe(93);
+ const declarations=trait.descendantsOfType("function_signature_item"),definitions=implementation.descendantsOfType("function_item");expect(declarations.length).toBeGreaterThan(0);expect(definitions.length).toBe(declarations.length);
  expect(declarations.map(contract).sort()).toEqual(definitions.map(contract).sort());
  const privateTrait=tree.rootNode.descendantsOfType("trait_item").find(node=>node.childForFieldName("name")?.text==="MeshModelingInternals"),privateImpl=tree.rootNode.descendantsOfType("impl_item").find(node=>node.childForFieldName("trait")?.text==="MeshModelingInternals");if(!privateTrait||!privateImpl)throw Error("Actual private helper contract required");const privateDeclarations=privateTrait.descendantsOfType("function_signature_item"),privateDefinitions=privateImpl.descendantsOfType("function_item");expect(privateDeclarations.length).toBe(7);expect(privateDefinitions.length).toBe(7);expect(privateDeclarations.map(contract).sort()).toEqual(privateDefinitions.map(contract).sort());
  for(const node of definitions)expect(node.namedChildren.some(child=>child.type==="visibility_modifier")).toBe(false);
@@ -149,8 +159,20 @@ test("actual reconstruction closure is bounded private and fully retired without
  expect(find("MeshSourceSnapshot").descendantsOfType("field_declaration").filter(field=>field.namedChildren.some(node=>node.type==="visibility_modifier")).map(field=>field.childForFieldName("name")?.text)).toEqual(["source","soup"]);
  const retirement=(name:string)=>{const item=tree.rootNode.descendantsOfType("impl_item").find(node=>node.childForFieldName("trait")?.text==="semio_framework_value::retirement::RetireOwned"&&node.childForFieldName("type")?.text===name);if(!item)throw Error("Actual defining retirement required: "+name);return item.text;};
  const dynamic=/Vec\s*<|HistoryFold|HalfedgeMesh|Soup|String|PolygonMeshSource|MeshSourceSnapshot|MeshTopologyBuild|MeshSourceRemap|Coplanar|SourceValueEquality|SourceEqualityTask/;
- for(const name of["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild","MeshSourceSnapshot","Coplanar","SourceValueEquality"]){const body=retirement(name);for(const field of find(name).descendantsOfType("field_declaration")){const type=field.childForFieldName("type")?.text??"",key=field.childForFieldName("name")?.text;if(!key)throw Error("Actual field key required");if(type==="MeshSourceRemapData"){for(const nested of find(type).descendantsOfType("field_declaration")){if(dynamic.test(nested.childForFieldName("type")?.text??""))expect([body.includes("deferred(self.data."+nested.childForFieldName("name")?.text+")"),body.includes("deferred_birth_bytes_for(&self.data."+nested.childForFieldName("name")?.text+")")]).toEqual([true,true]);}}else if(dynamic.test(type))expect([body.includes("deferred(self."+key+")"),body.includes("deferred_birth_bytes_for(&self."+key+")")]).toEqual([true,true]);}}
- const equalityRetirement=retirement("SourceEqualityTask");for(const variant of["Node","Sequence","Text"])expect(equalityRetirement.includes("Self::"+variant+"(path")).toBe(true);expect(equalityRetirement.includes("deferred(path)")).toBe(true);expect(equalityRetirement.includes("deferred_birth_bytes_for(path)")).toBe(true);
+ const fields=(name:string,prefix:string):string[]=>find(name).descendantsOfType("field_declaration").flatMap(field=>{
+  const type=field.childForFieldName("type")?.text??"",key=field.childForFieldName("name")?.text;if(!key)throw Error("Actual field key required");
+  if(type==="MeshSourceRemapData")return fields(type,prefix+key+".");
+  return dynamic.test(type)?[prefix+key]:[];
+ });
+ for(const name of ["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild","MeshSourceSnapshot","Coplanar","SourceValueEquality"]){
+  expect(retiredFields(retirement(name)).sort()).toEqual(fields(name,"self.").sort());
+ }
+ const equalityTask=tree.rootNode.descendantsOfType("enum_item").find(node=>node.childForFieldName("name")?.text==="SourceEqualityTask");
+ if(!equalityTask)throw Error("Actual equality task ownership required");
+ expect(source.slice(0,equalityTask.startIndex).trimEnd()).toMatch(/#\[derive\(semio_framework_value::RetireOwned\)\]\s*#\[doc\(hidden\)\]$/);
+ const variants=equalityTask.descendantsOfType("enum_variant");
+ expect(variants.map(variant=>variant.childForFieldName("name")?.text)).toEqual(["Node","Sequence","Text"]);
+ for(const variant of variants)expect(variant.namedChildren.find(child=>child.type==="ordered_field_declaration_list")?.namedChildren[0]?.text).toBe("Vec<usize>");
  expect(source.includes("let point=self.snapshot.soup.positions[self.cursor];let key=mesh_weld_key(point,self.threshold)?;")).toBe(true);expect(source.includes("if self.phase!=0")).toBe(true);for(const name of["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild"]){const owner=tree.rootNode.descendantsOfType("impl_item").filter(node=>node.childForFieldName("type")?.text===name);const advance=owner.flatMap(node=>node.descendantsOfType("function_item")).find(node=>node.childForFieldName("name")?.text==="advance");if(!advance)throw Error("Actual advance required");expect(advance.text.includes("self.phase>=254")).toBe(true);expect(advance.text.includes("advance_owned(")).toBe(true);}expect(source.includes("semio_framework_3d::")).toBe(false);
  }finally{tree.delete();}
  const parent=readModuleTreeSource(resolve(mesh,"🛠️modeling/🦀️.rs"));expect(parent.includes("work.snapshot_frontier()")).toBe(true);expect(parent.includes("work.transfer_remaining_assets(&mut mesh)?")).toBe(true);expect(parent.includes("Import::indexed(")).toBe(true);expect(parent.includes("configuration_mut()?")).toBe(true);

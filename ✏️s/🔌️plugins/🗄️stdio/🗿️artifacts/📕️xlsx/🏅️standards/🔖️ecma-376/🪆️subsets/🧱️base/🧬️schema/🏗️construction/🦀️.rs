@@ -10,6 +10,46 @@ fn text_children(text: &str) -> Vec<XmlNode> {
     if text.is_empty() { Vec::new() } else { vec![XmlNode::Text { text: text.into() }] }
 }
 
+/// 🖋️ Stamps the workbook, worksheets and related package parts with one SpreadsheetML conformance class.
+pub fn stamp_workbook_namespaces(mut snapshot: XlsxSnapshot, strict: bool) -> XlsxSnapshot {
+    let Some(main_path) = snapshot.workbook_part_path() else { return snapshot };
+    let (main, relationships, conformance) = if strict { (SML_NS_STRICT, R_NS_STRICT, "strict") } else { (SML_NS, R_NS, "transitional") };
+    for part in &mut snapshot.xml_parts {
+        if let Some(root) = &mut part.document.root {
+            retarget_namespace_declarations(root, main, relationships);
+        }
+    }
+    for (_, relationships_for_owner) in snapshot.opc.relationships.groups_mut() {
+        for relationship in relationships_for_owner {
+            if let Some(suffix) = [R_NS, R_NS_STRICT].into_iter().find_map(|base| relationship.rel_type.strip_prefix(base).filter(|suffix| suffix.starts_with('/'))) {
+                relationship.rel_type = format!("{relationships}{suffix}");
+            }
+        }
+    }
+    if let Some(XmlNode::Element { attrs, .. }) = snapshot.xml_part_mut(&main_path).and_then(|part| part.document.root.as_mut()) {
+        if let Some(existing) = attrs.iter_mut().find(|attribute| attribute.name == "conformance") {
+            existing.value = conformance.into();
+        } else {
+            attrs.push(attr("conformance", conformance));
+        }
+    }
+    snapshot
+}
+
+fn retarget_namespace_declarations(node: &mut XmlNode, main: &str, relationships: &str) {
+    let XmlNode::Element { attrs, children, .. } = node else { return };
+    for attribute in attrs.iter_mut().filter(|attribute| attribute.name == "xmlns" || attribute.name.starts_with("xmlns:")) {
+        match attribute.value.as_str() {
+            SML_NS | SML_NS_STRICT => attribute.value = main.into(),
+            R_NS | R_NS_STRICT => attribute.value = relationships.into(),
+            _ => {}
+        }
+    }
+    for child in children {
+        retarget_namespace_declarations(child, main, relationships);
+    }
+}
+
 //#region 🔖️SharedStringsXml
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sst_to_xml(shared: &[String], reference_count: usize) -> XmlDocument {

@@ -58,7 +58,7 @@
       "paintTarget": "pixels",
       "maskValue": 255,
       "fillTolerance": 24,
-      "editingOptions": {"filterKind":"brightness","filterAmount":0,"imageGrid":{"x":0,"y":0,"width":512,"height":512,"bilinear":true}},
+      "editingOptions": {"filterKind":"brightness","filterAmount":0.0,"imageGrid":{"x":0,"y":0,"width":512,"height":512,"bilinear":true}},
       "pixelSelectionJson": "{\"layerId\":\"base\",\"target\":\"pixels\",\"width\":3,\"height\":2,\"spans\":[{\"start\":0,\"length\":2,\"coverage\":255},{\"start\":3,\"length\":1,\"coverage\":128}]}"
     },
     "laneTexts": {
@@ -97,7 +97,7 @@
       "paintTarget": "pixels",
       "maskValue": 255,
       "fillTolerance": 24,
-      "editingOptions": {"filterKind":"brightness","filterAmount":0,"imageGrid":{"x":0,"y":0,"width":512,"height":512,"bilinear":true}}
+      "editingOptions": {"filterKind":"brightness","filterAmount":0.0,"imageGrid":{"x":0,"y":0,"width":512,"height":512,"bilinear":true}}
     }
   }
 }

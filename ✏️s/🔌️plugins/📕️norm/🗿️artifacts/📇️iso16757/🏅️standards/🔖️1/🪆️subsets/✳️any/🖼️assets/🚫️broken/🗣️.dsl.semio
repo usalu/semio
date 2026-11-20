@@ -96,16 +96,17 @@ controlled-lists [id:TEXT values:LIST context-subject-ids:LIST] {
 meta-subjects [id:TEXT kind:ENUM names:REC definition:REC parent-id:TEXT] {
 }
 geometry=objects={
-  geom-valve-50=id=geom-valve-50
-  shape {
-    primitive kind=box parameters={
-      depth=0.1 height=0.2 width=0.15
+  geom-valve-50={ id=geom-valve-50
+    shape {
+      primitive kind=box parameters={
+        depth=0.1 height=0.2 width=0.15
+      }
     }
-  }
-  symbolic {
-  }
-  spaces=[ { id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 } ] surfaces=[ ] ports=[ { id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet } ] parameter-bindings={
-    width=prop-dn
+    symbolic {
+    }
+    spaces=[ { id=installation kind=installation bounds=min=0,0,0 max=0.01,0.01,0.01 } ] surfaces=[ ] ports=[ { id=port-in medium=water position=0,0.1,0.05 direction=1,0,0 port-type=inlet } ] parameter-bindings={
+      width=prop-dn
+    }
   }
 }
 primitive-registry [id:TEXT parameters:LIST] {

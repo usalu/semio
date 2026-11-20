@@ -133,7 +133,6 @@ function ButtonGroupItem({ className, children, id, icon, text, asChild = false,
     className: cn(
       buttonGroupItemVariants({ variant }),
       chromeControlGroupSiblingDividerClass,
-      "min-h-0",
       inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
       inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
       className,

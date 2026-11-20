@@ -1,0 +1,58 @@
+{
+  "cuts": [0, 1, 2, 5, 9],
+  "cases": [
+    {
+      "name": "page order differs from spread order and internal threads may disappear",
+      "delete": "middle",
+      "pages": [
+        { "id": "before", "spread": "other", "frames": [] },
+        { "id": "middle", "spread": "main", "frames": [["a", "b"], ["b", null]] },
+        { "id": "after", "spread": "main", "frames": [["c", null]] }
+      ],
+      "spreads": [["other", ["before"]], ["main", ["middle", "after"]]],
+      "expected": { "page": 1, "spread": 1, "member": 0 }
+    },
+    {
+      "name": "surviving inbound thread refuses even when the owning spread is missing",
+      "delete": "deleted",
+      "pages": [
+        { "id": "keeper", "spread": "present", "frames": [["first", "target"]] },
+        { "id": "deleted", "spread": "absent", "frames": [["target", null]] }
+      ],
+      "spreads": [["present", ["keeper"]]],
+      "expected": { "error": "surviving-thread", "code": "mutation.invariant" }
+    },
+    {
+      "name": "missing page",
+      "delete": "absent",
+      "pages": [{ "id": "keeper", "spread": "present", "frames": [] }],
+      "spreads": [["present", ["keeper"]]],
+      "expected": { "error": "missing-page", "code": "mutation.target-missing" }
+    },
+    {
+      "name": "missing owning spread",
+      "delete": "deleted",
+      "pages": [{ "id": "deleted", "spread": "absent", "frames": [] }],
+      "spreads": [["present", []]],
+      "expected": { "error": "missing-spread", "code": "mutation.target-missing", "page": 0 }
+    },
+    {
+      "name": "missing spread membership has no ordinal",
+      "delete": "deleted",
+      "pages": [{ "id": "deleted", "spread": "present", "frames": [] }],
+      "spreads": [["present", []]],
+      "expected": { "page": 0, "spread": 0, "member": null }
+    },
+    {
+      "name": "multibyte keys with the same first 256 bytes stay distinct",
+      "delete": "deleted",
+      "framePrefix": { "character": "猫", "count": 90 },
+      "pages": [
+        { "id": "deleted", "spread": "present", "frames": [["a", null]] },
+        { "id": "keeper", "spread": "present", "frames": [["first", "b"], ["b", null]] }
+      ],
+      "spreads": [["present", ["keeper", "deleted"]]],
+      "expected": { "page": 0, "spread": 0, "member": 1 }
+    }
+  ]
+}

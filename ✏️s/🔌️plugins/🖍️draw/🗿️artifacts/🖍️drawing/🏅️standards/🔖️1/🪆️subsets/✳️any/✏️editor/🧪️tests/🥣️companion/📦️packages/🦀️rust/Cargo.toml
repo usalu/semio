@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-s-artifact-draw-drawing = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-scene-mounted = { workspace = true }
 base64_codec = { workspace = true }
 png = { workspace = true }
 semio-framework = { workspace = true }

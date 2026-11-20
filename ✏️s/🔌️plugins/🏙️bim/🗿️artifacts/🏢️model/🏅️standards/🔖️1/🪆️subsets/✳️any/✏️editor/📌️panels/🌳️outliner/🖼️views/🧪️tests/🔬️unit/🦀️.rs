@@ -22,7 +22,7 @@ use semio_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, String, Vec<String>) {
     let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    snapshot.views.clear();
+    snapshot.views.cold_clear();
     let building = snapshot.buildings.keys().next().cloned().expect("a building");
     let mut storeys: Vec<(&String, i32)> = snapshot.storeys.iter().filter(|(_, storey)| storey.building == building).map(|(id, storey)| (id, storey.level)).collect();
     storeys.sort_by_key(|row| row.1);
@@ -50,12 +50,12 @@ async fn kinds_group_as_plans_ceiling_plans_sections_elevations_and_cameras() {
 async fn the_groups_of_a_building_follow_the_kind_then_the_level_of_the_storey_then_the_name() {
     let (mut snapshot, building, storeys) = demo();
     assert!(storeys.len() >= 2, "the demo house has two storeys");
-    snapshot.views.insert("v-high-a".into(), plan(&building, "A", ViewKind::Plan, &storeys[1]));
-    snapshot.views.insert("v-low-z".into(), plan(&building, "Z", ViewKind::Plan, &storeys[0]));
-    snapshot.views.insert("v-low-b".into(), plan(&building, "B", ViewKind::Plan, &storeys[0]));
-    snapshot.views.insert("v-ceiling".into(), plan(&building, "Ceiling", ViewKind::CeilingPlan, &storeys[0]));
-    snapshot.views.insert("v-camera".into(), View::standard(&building, "Camera", ViewKind::Perspective));
-    snapshot.views.insert("v-ortho".into(), View::standard(&building, "Axonometric", ViewKind::Orthographic));
+    snapshot.views.cold_insert("v-high-a".into(), plan(&building, "A", ViewKind::Plan, &storeys[1]));
+    snapshot.views.cold_insert("v-low-z".into(), plan(&building, "Z", ViewKind::Plan, &storeys[0]));
+    snapshot.views.cold_insert("v-low-b".into(), plan(&building, "B", ViewKind::Plan, &storeys[0]));
+    snapshot.views.cold_insert("v-ceiling".into(), plan(&building, "Ceiling", ViewKind::CeilingPlan, &storeys[0]));
+    snapshot.views.cold_insert("v-camera".into(), View::standard(&building, "Camera", ViewKind::Perspective));
+    snapshot.views.cold_insert("v-ortho".into(), View::standard(&building, "Axonometric", ViewKind::Orthographic));
     let groups = groups(&snapshot, &building);
     assert_eq!(groups.iter().map(|group| group.0).collect::<Vec<_>>(), vec![0, 1, 4], "groups without a view are left out");
     assert_eq!(groups[0].1, vec!["v-low-b", "v-low-z", "v-high-a"], "ground plans by name, then the first floor");
@@ -71,16 +71,16 @@ async fn only_the_views_of_the_building_count_and_no_view_means_no_row() {
     let labels = semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&windows_view);
     assert!(groups(&snapshot, &building).is_empty());
     assert!(views_row(&windows, &snapshot, labels, &building).is_none());
-    snapshot.views.insert("v-elsewhere".into(), View::standard("another-building", "Elsewhere", ViewKind::Perspective));
+    snapshot.views.cold_insert("v-elsewhere".into(), View::standard("another-building", "Elsewhere", ViewKind::Perspective));
     assert!(groups(&snapshot, &building).is_empty() && views_row(&windows, &snapshot, labels, &building).is_none());
-    snapshot.views.insert("v-here".into(), View::standard(&building, "Here", ViewKind::Perspective));
+    snapshot.views.cold_insert("v-here".into(), View::standard(&building, "Here", ViewKind::Perspective));
     assert!(views_row(&windows, &snapshot, labels, &building).is_some_and(|row| row.is_ok()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_scale_text_reads_the_authored_scale_of_the_view() {
     let (mut snapshot, building, _) = demo();
-    snapshot.views.insert("v".into(), View { scale: 50, ..View::standard(&building, "Scaled", ViewKind::Perspective) });
+    snapshot.views.cold_insert("v".into(), View { scale: 50, ..View::standard(&building, "Scaled", ViewKind::Perspective) });
     assert_eq!(scale_text(&snapshot, "v").as_deref(), Some("1:50"));
     assert_eq!(scale_text(&snapshot, "missing"), None);
 }
@@ -88,7 +88,7 @@ async fn the_scale_text_reads_the_authored_scale_of_the_view() {
 #[semio_framework_async_macros::async_test]
 async fn the_outliner_shows_the_views_in_both_languages() {
     let (mut snapshot, building, storeys) = demo();
-    snapshot.views.insert("v-plan".into(), plan(&building, "Entrance plan", ViewKind::Plan, &storeys[0]));
+    snapshot.views.cold_insert("v-plan".into(), plan(&building, "Entrance plan", ViewKind::Plan, &storeys[0]));
     let english = text(&snapshot, Locale::En);
     assert!(english.contains("Views") && english.contains("Plans") && english.contains("Entrance plan"), "{english}");
     let german = text(&snapshot, Locale::De);

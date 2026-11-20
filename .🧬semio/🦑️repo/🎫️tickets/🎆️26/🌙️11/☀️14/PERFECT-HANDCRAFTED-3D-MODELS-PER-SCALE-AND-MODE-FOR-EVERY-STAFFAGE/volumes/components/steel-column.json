@@ -1,1 +1,4924 @@
-{"volumes":{"50":{"status":"authored","denominator":50,"body":[{"id":"flange-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.085,-0.1],[0.1,-0.1],[0.1,0.1],[0.085,0.1]],"plane":"yz","from":0.02,"to":2.98},{"id":"flange-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.085,-0.1],[-0.085,0.1],[-0.1,0.1]],"plane":"yz","from":0.02,"to":2.98},{"id":"web","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.085,0.0225],[-0.085,-0.0225],[-0.084119,-0.016938],[-0.081562,-0.01192],[-0.07758,-0.007938],[-0.072562,-0.005381],[-0.067,-0.0045],[0.067,-0.0045],[0.072562,-0.005381],[0.07758,-0.007938],[0.081562,-0.01192],[0.084119,-0.016938],[0.085,-0.0225],[0.085,0.0225],[0.084119,0.016938],[0.081562,0.01192],[0.07758,0.007938],[0.072562,0.005381],[0.067,0.0045],[-0.067,0.0045],[-0.072562,0.005381],[-0.07758,0.007938],[-0.081562,0.01192],[-0.084119,0.016938]],"plane":"yz","from":0.02,"to":2.98},{"id":"base-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.135,-0.13],[0.135,-0.13],[0.15,-0.115],[0.15,0.115],[0.135,0.13],[-0.135,0.13],[-0.15,0.115],[-0.15,-0.115]],"holes":[[[-0.117,-0.1],[-0.117609,-0.096939],[-0.119343,-0.094343],[-0.121939,-0.092609],[-0.125,-0.092],[-0.128061,-0.092609],[-0.130657,-0.094343],[-0.132391,-0.096939],[-0.133,-0.1],[-0.132391,-0.103061],[-0.130657,-0.105657],[-0.128061,-0.107391],[-0.125,-0.108],[-0.121939,-0.107391],[-0.119343,-0.105657],[-0.117609,-0.103061]],[[-0.117,0.1],[-0.117609,0.103061],[-0.119343,0.105657],[-0.121939,0.107391],[-0.125,0.108],[-0.128061,0.107391],[-0.130657,0.105657],[-0.132391,0.103061],[-0.133,0.1],[-0.132391,0.096939],[-0.130657,0.094343],[-0.128061,0.092609],[-0.125,0.092],[-0.121939,0.092609],[-0.119343,0.094343],[-0.117609,0.096939]],[[0.133,-0.1],[0.132391,-0.096939],[0.130657,-0.094343],[0.128061,-0.092609],[0.125,-0.092],[0.121939,-0.092609],[0.119343,-0.094343],[0.117609,-0.096939],[0.117,-0.1],[0.117609,-0.103061],[0.119343,-0.105657],[0.121939,-0.107391],[0.125,-0.108],[0.128061,-0.107391],[0.130657,-0.105657],[0.132391,-0.103061]],[[0.133,0.1],[0.132391,0.103061],[0.130657,0.105657],[0.128061,0.107391],[0.125,0.108],[0.121939,0.107391],[0.119343,0.105657],[0.117609,0.103061],[0.117,0.1],[0.117609,0.096939],[0.119343,0.094343],[0.121939,0.092609],[0.125,0.092],[0.128061,0.092609],[0.130657,0.094343],[0.132391,0.096939]]],"plane":"yz","from":0.0,"to":0.02},{"id":"stiffener-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[0.02,0.1],[0.02,0.15],[0.11,0.13],[0.11,0.1]],"plane":"xy","from":-0.008,"to":0.008},{"id":"stiffener-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[0.02,-0.1],[0.02,-0.15],[0.11,-0.13],[0.11,-0.1]],"plane":"xy","from":-0.008,"to":0.008},{"id":"anchor-nut-1","kind":"extrude","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[-0.113,-0.1],[-0.119,-0.089608],[-0.131,-0.089608],[-0.137,-0.1],[-0.131,-0.110392],[-0.119,-0.110392]],"plane":"yz","from":0.02,"to":0.038},{"id":"anchor-rod-1","kind":"revolve","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0,0.005],[0.075,0.005]],"axis":[1,0,0],"origin":[0.0,-0.125,-0.1]},{"id":"anchor-nut-2","kind":"extrude","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[-0.113,0.1],[-0.119,0.110392],[-0.131,0.110392],[-0.137,0.1],[-0.131,0.089608],[-0.119,0.089608]],"plane":"yz","from":0.02,"to":0.038},{"id":"anchor-rod-2","kind":"revolve","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0,0.005],[0.075,0.005]],"axis":[1,0,0],"origin":[0.0,-0.125,0.1]},{"id":"anchor-nut-3","kind":"extrude","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0.137,-0.1],[0.131,-0.089608],[0.119,-0.089608],[0.113,-0.1],[0.119,-0.110392],[0.131,-0.110392]],"plane":"yz","from":0.02,"to":0.038},{"id":"anchor-rod-3","kind":"revolve","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0,0.005],[0.075,0.005]],"axis":[1,0,0],"origin":[0.0,0.125,-0.1]},{"id":"anchor-nut-4","kind":"extrude","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0.137,0.1],[0.131,0.110392],[0.119,0.110392],[0.113,0.1],[0.119,0.089608],[0.131,0.089608]],"plane":"yz","from":0.02,"to":0.038},{"id":"anchor-rod-4","kind":"revolve","bone":"column","material":"steel","role":"detail","tone":0.3,"profile":[[0,0.005],[0.075,0.005]],"axis":[1,0,0],"origin":[0.0,0.125,0.1]},{"id":"cap-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.105,-0.11],[0.105,-0.11],[0.12,-0.095],[0.12,0.095],[0.105,0.11],[-0.105,0.11],[-0.12,0.095],[-0.12,-0.095]],"plane":"yz","from":2.98,"to":3.0}],"thermal":[{"id":"th-flange-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.085,-0.1],[0.1,-0.1],[0.1,0.1],[0.085,0.1]],"plane":"yz","from":0.02,"to":2.98,"sectionFaces":["-v"],"region":"column-flange"},{"id":"th-flange-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.085,-0.1],[-0.085,0.1],[-0.1,0.1]],"plane":"yz","from":0.02,"to":2.98,"sectionFaces":["+v"],"region":"column-flange"},{"id":"th-inner-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.085,-0.1],[0.1,-0.1],[0.1,0.1],[0.085,0.1]],"plane":"yz","from":0.02,"to":2.98,"sectionFaces":["+v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-inner-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.085,-0.1],[-0.085,0.1],[-0.1,0.1]],"plane":"yz","from":0.02,"to":2.98,"sectionFaces":["-v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-web","of":"web","region":"column-web"},{"id":"th-base-plate","of":"base-plate","region":"base-plate"},{"id":"th-stiffener-a","of":"stiffener-a","region":"base-plate"},{"id":"th-stiffener-b","of":"stiffener-b","region":"base-plate"},{"id":"th-anchor-nut-1","of":"anchor-nut-1","region":"base-plate"},{"id":"th-anchor-nut-2","of":"anchor-nut-2","region":"base-plate"},{"id":"th-anchor-nut-3","of":"anchor-nut-3","region":"base-plate"},{"id":"th-anchor-nut-4","of":"anchor-nut-4","region":"base-plate"},{"id":"th-anchor-rod-1","of":"anchor-rod-1","region":"base-plate"},{"id":"th-anchor-rod-2","of":"anchor-rod-2","region":"base-plate"},{"id":"th-anchor-rod-3","of":"anchor-rod-3","region":"base-plate"},{"id":"th-anchor-rod-4","of":"anchor-rod-4","region":"base-plate"},{"id":"th-cap-plate","of":"cap-plate","region":"cap-plate"}],"structure":[{"id":"st-flange-a","of":"flange-a","member":"column","part":"member"},{"id":"st-flange-b","of":"flange-b","member":"column","part":"member"},{"id":"st-web","of":"web","member":"column","part":"member"},{"id":"st-base-plate","of":"base-plate","member":"column","part":"joint"},{"id":"st-stiffener-a","of":"stiffener-a","member":"column","part":"joint"},{"id":"st-stiffener-b","of":"stiffener-b","member":"column","part":"joint"},{"id":"st-cap-plate","of":"cap-plate","member":"column","part":"joint"},{"id":"joint-splice-b","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.3,0.12,0.008],"transform":{"translation":[1.5,0.0,-0.0085]},"member":"column","part":"joint"},{"id":"joint-splice-a","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.3,0.12,0.008],"transform":{"translation":[1.5,0.0,0.0085]},"member":"column","part":"joint"},{"id":"joint-load-carrier","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.02,0.04,0.04],"transform":{"translation":[2.99,0.0,0.0]},"member":"eccentric-carrier","part":"joint"},{"id":"support-footing","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.15,"size":[0.008,0.3,0.26],"transform":{"translation":[0.004,0.0,0.0]},"member":"column","part":"support","anchor":"footing"},{"id":"mass-column","kind":"ellipsoid","bone":"column","material":"steel","role":"detail","tone":0.1,"radii":[0.05,0.05,0.05],"transform":{"translation":[1.45,0.0,0.0]},"member":"column","part":"mass"}],"decisions":[{"en":"The 1:50 model is the HEB 200 column as built: two 15 mm flanges 200 mm wide and a 9 mm web with the 18 mm root fillets as separate extrusions along the 2.96 m shaft, a 20 mm base plate 300 x 260 mm with 15 mm clipped corners and four 16 mm anchor holes, two trapezoidal stiffeners of 16 mm, four hexagonal nuts (24 mm across corners) and 10 mm anchor rods, and a 20 mm head plate 240 x 220 mm with clipped corners. The splice at 1.5 m is not modelled in the body (the 2D draws only its line).","de":"Das 1:50-Modell ist die HEB-200-Stütze wie gebaut: zwei 15-mm-Flansche von 200 mm Breite und ein 9-mm-Steg mit den 18-mm-Ausrundungen als getrennte Strangkörper entlang des 2,96 m langen Schafts, eine 20-mm-Fußplatte 300 x 260 mm mit 15 mm abgeschnittenen Ecken und vier 16-mm-Ankerlöchern, zwei trapezförmige Rippen von 16 mm, vier Sechskantmuttern (24 mm über Ecken) und 10-mm-Ankerstangen sowie eine 20-mm-Kopfplatte 240 x 220 mm mit abgeschnittenen Ecken. Der Stoß bei 1,5 m ist im Körper nicht modelliert (die 2D zeichnet nur seine Linie)."},{"en":"Thermal follows the declared split of the surface: column-flange is the outer face and the two edges of each flange (copies of the flange with the inner face declared a section face), column-web the web, its fillets and the inner flange faces (web by reference, two flange copies that keep only the inner face), base-plate the plate, stiffeners, nuts and rods by reference, cap-plate the head plate.","de":"Die Thermik folgt der angegebenen Flächenaufteilung: Flansch ist die Außenfläche und die beiden Kanten jedes Flanschs (Kopien des Flanschs, deren Innenseite als Schnittfläche erklärt ist), Steg ist der Steg mit Ausrundungen und den inneren Flanschflächen (Steg per Verweis, zwei Flanschkopien, die nur die Innenseite behalten), Fußplatte sind Platte, Rippen, Muttern und Stangen per Verweis, Kopfplatte die Kopfplatte."},{"en":"Structure: the two flanges and the web are the member (the HEB 200 section), plates and stiffeners are the joints at both ends, two 8 mm web splice plates at 1.5 m and a load pad in the head plate for the eccentric carrier; a fixed 8 mm footing pad under the base plate and the column mass as one 100 mm point.","de":"Tragwerk: die beiden Flansche und der Steg sind das Bauteil (der Querschnitt HEB 200), Platten und Rippen sind die Knoten an beiden Enden, zwei 8-mm-Stegstoßlaschen bei 1,5 m und ein Lastblock in der Kopfplatte für den außermittigen Träger; eine feste 8-mm-Fußauflage unter der Fußplatte und die Stützenmasse als ein 100-mm-Punkt."}]},"100":{"status":"authored","denominator":100,"body":[{"id":"flange-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.0848,-0.1],[0.1,-0.1],[0.1,0.1],[0.0848,0.1]],"plane":"yz","from":0.035,"to":2.965},{"id":"flange-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.0848,-0.1],[-0.0848,0.1],[-0.1,0.1]],"plane":"yz","from":0.035,"to":2.965},{"id":"web","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.0858,-0.0076],[0.0858,-0.0076],[0.0858,0.0076],[-0.0858,0.0076]],"plane":"yz","from":0.035,"to":2.965},{"id":"base-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.135,-0.13],[0.135,-0.13],[0.15,-0.115],[0.15,0.115],[0.135,0.13],[-0.135,0.13],[-0.15,0.115],[-0.15,-0.115]],"plane":"yz","from":0.0,"to":0.035},{"id":"stiffener-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[0.035,0.1],[0.035,0.15],[0.2,0.13],[0.2,0.1]],"plane":"xy","from":-0.01,"to":0.01},{"id":"stiffener-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[0.035,-0.1],[0.035,-0.15],[0.2,-0.13],[0.2,-0.1]],"plane":"xy","from":-0.01,"to":0.01},{"id":"cap-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.105,-0.11],[0.105,-0.11],[0.12,-0.095],[0.12,0.095],[0.105,0.11],[-0.105,0.11],[-0.12,0.095],[-0.12,-0.095]],"plane":"yz","from":2.965,"to":3.0}],"thermal":[{"id":"th-flange-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.0848,-0.1],[0.1,-0.1],[0.1,0.1],[0.0848,0.1]],"plane":"yz","from":0.035,"to":2.965,"sectionFaces":["-v"],"region":"column-flange"},{"id":"th-flange-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.0848,-0.1],[-0.0848,0.1],[-0.1,0.1]],"plane":"yz","from":0.035,"to":2.965,"sectionFaces":["+v"],"region":"column-flange"},{"id":"th-inner-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.0848,-0.1],[0.1,-0.1],[0.1,0.1],[0.0848,0.1]],"plane":"yz","from":0.035,"to":2.965,"sectionFaces":["+v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-inner-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.0848,-0.1],[-0.0848,0.1],[-0.1,0.1]],"plane":"yz","from":0.035,"to":2.965,"sectionFaces":["-v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-web","of":"web","region":"column-web"},{"id":"th-base-plate","of":"base-plate","region":"base-plate"},{"id":"th-stiffener-a","of":"stiffener-a","region":"base-plate"},{"id":"th-stiffener-b","of":"stiffener-b","region":"base-plate"},{"id":"th-cap-plate","of":"cap-plate","region":"cap-plate"}],"structure":[{"id":"st-flange-a","of":"flange-a","member":"column","part":"member"},{"id":"st-flange-b","of":"flange-b","member":"column","part":"member"},{"id":"st-web","of":"web","member":"column","part":"member"},{"id":"st-base-plate","of":"base-plate","member":"column","part":"joint"},{"id":"st-stiffener-a","of":"stiffener-a","member":"column","part":"joint"},{"id":"st-stiffener-b","of":"stiffener-b","member":"column","part":"joint"},{"id":"st-cap-plate","of":"cap-plate","member":"column","part":"joint"},{"id":"joint-splice-b","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.3,0.12,0.016],"transform":{"translation":[1.5,0.0,-0.0116]},"member":"column","part":"joint"},{"id":"joint-splice-a","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.3,0.12,0.016],"transform":{"translation":[1.5,0.0,0.0116]},"member":"column","part":"joint"},{"id":"joint-load-carrier","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.3,"size":[0.035,0.04,0.04],"transform":{"translation":[2.9825,0.0,0.0]},"member":"eccentric-carrier","part":"joint"},{"id":"support-footing","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.15,"size":[0.016,0.3,0.26],"transform":{"translation":[0.008,0.0,0.0]},"member":"column","part":"support","anchor":"footing"},{"id":"mass-column","kind":"ellipsoid","bone":"column","material":"steel","role":"detail","tone":0.1,"radii":[0.0775,0.0775,0.0775],"transform":{"translation":[1.45,0.0,0.0]},"member":"column","part":"mass"}],"decisions":[{"en":"At 1:100 the shaft keeps its three parts, the flanges at their real 15.2 mm and the web raised from 9 to 15.2 mm (the feature) without fillets; the base and head plates are the drawn 35 mm blocks with 15 mm clipped corners, the stiffeners 20 mm thick trapezoids up to 0.2 m; anchor holes, nuts and rods are below the feature and omitted.","de":"Bei 1:100 behält der Schaft seine drei Teile, die Flansche mit den wirklichen 15,2 mm und der Steg von 9 auf 15,2 mm (das Merkmal) angehoben ohne Ausrundungen; Fuß- und Kopfplatte sind die gezeichneten 35-mm-Blöcke mit 15 mm abgeschnittenen Ecken, die Rippen 20 mm dicke Trapeze bis 0,2 m; Ankerlöcher, Muttern und Stangen liegen unter dem Merkmal und entfallen."},{"en":"Thermal: flange outer faces and edges as flange copies with the inner face declared a section face, the web and the inner flange faces as in the 1:50 split, plate and stiffeners by reference, head plate by reference.","de":"Thermik: Flanschaußenseiten und -kanten als Flanschkopien, deren Innenseite als Schnittfläche erklärt ist, Steg und innere Flanschflächen wie bei der 1:50-Aufteilung, Platte und Rippen sowie Kopfplatte per Verweis."},{"en":"Structure: the same member parts, the plates and stiffeners as joints, two 16 mm splice plates, a load pad in the head plate, a 16 mm footing pad and the mass as one 155 mm point.","de":"Tragwerk: dieselben Bauteile, die Platten und Rippen als Knoten, zwei 16-mm-Stoßlaschen, ein Lastblock in der Kopfplatte, eine 16-mm-Fußauflage und die Masse als ein 155-mm-Punkt."}]},"200":{"status":"authored","denominator":200,"body":[{"id":"column","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.1,-0.1],[0.1,0.1],[0.07,0.1],[0.07,0.015],[-0.07,0.015],[-0.07,0.1],[-0.1,0.1],[-0.1,-0.1],[-0.07,-0.1],[-0.07,-0.015],[0.07,-0.015],[0.07,-0.1]],"plane":"yz","from":0.05,"to":2.95},{"id":"base-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.135,-0.13],[0.135,-0.13],[0.15,-0.115],[0.15,0.115],[0.135,0.13],[-0.135,0.13],[-0.15,0.115],[-0.15,-0.115]],"plane":"yz","from":0.0,"to":0.05},{"id":"cap-plate","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.4,"profile":[[-0.105,-0.11],[0.105,-0.11],[0.12,-0.095],[0.12,0.095],[0.105,0.11],[-0.105,0.11],[-0.12,0.095],[-0.12,-0.095]],"plane":"yz","from":2.95,"to":3.0}],"thermal":[{"id":"th-flange-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.07,-0.1],[0.1,-0.1],[0.1,0.1],[0.07,0.1]],"plane":"yz","from":0.05,"to":2.95,"sectionFaces":["-v"],"region":"column-flange"},{"id":"th-flange-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.07,-0.1],[-0.07,0.1],[-0.1,0.1]],"plane":"yz","from":0.05,"to":2.95,"sectionFaces":["+v"],"region":"column-flange"},{"id":"th-inner-a","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.07,-0.1],[0.1,-0.1],[0.1,0.1],[0.07,0.1]],"plane":"yz","from":0.05,"to":2.95,"sectionFaces":["+v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-inner-b","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.1,-0.1],[-0.07,-0.1],[-0.07,0.1],[-0.1,0.1]],"plane":"yz","from":0.05,"to":2.95,"sectionFaces":["-v","+w","-w","+u","-u"],"region":"column-web"},{"id":"th-web","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.07,-0.015],[0.07,-0.015],[0.07,0.015],[-0.07,0.015]],"plane":"yz","from":0.05,"to":2.95,"sectionFaces":["+v","-v","+u","-u"],"region":"column-web"},{"id":"th-base-plate","of":"base-plate","region":"base-plate"},{"id":"th-cap-plate","of":"cap-plate","region":"cap-plate"}],"structure":[{"id":"st-column","of":"column","member":"column","part":"member"},{"id":"support-footing","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.15,"size":[0.031,0.3,0.26],"transform":{"translation":[0.0155,0.0,0.0]},"member":"column","part":"support","anchor":"footing"},{"id":"mass-column","kind":"ellipsoid","bone":"column","material":"steel","role":"detail","tone":0.1,"radii":[0.0775,0.0775,0.0775],"transform":{"translation":[1.45,0.0,0.0]},"member":"column","part":"mass"}],"decisions":[{"en":"At 1:200 the shaft is one H extrusion with 30 mm flanges and a 30 mm web (the feature; the real 15 and 9 mm are below it), 0.05 m base and head plates as drawn with 15 mm clipped corners; the stiffeners and the splice are merged away.","de":"Bei 1:200 ist der Schaft ein H-Strangkörper mit 30-mm-Flanschen und 30-mm-Steg (das Merkmal; die wirklichen 15 und 9 mm liegen darunter), Fuß- und Kopfplatte wie gezeichnet 0,05 m mit 15 mm abgeschnittenen Ecken; Rippen und Stoß sind weggefallen."},{"en":"Thermal: flange and web as skins inside the merged shaft (flange copies keep the outer face and the edges, web copy keeps its two faces, two flange copies the inner faces), plates by reference; only the total is compared at this scale.","de":"Thermik: Flansch und Steg als Hautstücke im zusammengefassten Schaft (Flanschkopien behalten Außenseite und Kanten, die Stegkopie ihre zwei Flächen, zwei Flanschkopien die Innenseiten), Platten per Verweis; in diesem Maßstab zählt nur die Summe."},{"en":"Structure: the merged shaft is the member, a 31 mm footing pad and one 155 mm mass point; no joints at this scale. One member solid is right at this scale: the HEB 200 shaft is merged into one column member (its flanges and web are no longer separate drawn shapes), with its footing support and mass point.","de":"Tragwerk: der zusammengefasste Schaft ist das Bauteil, eine 31-mm-Fußauflage und ein 155-mm-Massenpunkt; keine Knoten in diesem Maßstab. Ein Stabkörper ist in diesem Maßstab richtig: der HEB-200-Schaft ist zu einem Stützenstab zusammengefasst (Flansche und Steg sind keine getrennten Zeichnungsformen mehr), mit Fußauflager und Massenpunkt."}]},"500":{"status":"authored","denominator":500,"body":[{"id":"column","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[0.1,-0.1],[0.1,0.1],[0.025,0.1],[0.025,0.0375],[-0.025,0.0375],[-0.025,0.1],[-0.1,0.1],[-0.1,-0.1],[-0.025,-0.1],[-0.025,-0.0375],[0.025,-0.0375],[0.025,-0.1]],"plane":"yz","from":0.075,"to":2.925},{"id":"base-plate","kind":"box","bone":"column","material":"steel","role":"body","tone":0.4,"size":[0.075,0.3,0.26],"transform":{"translation":[0.0375,0.0,0.0]}},{"id":"cap-plate","kind":"box","bone":"column","material":"steel","role":"body","tone":0.4,"size":[0.075,0.24,0.22],"transform":{"translation":[2.9625,0.0,0.0]}}],"thermal":[{"id":"th-column","of":"column","region":"column-flange"},{"id":"th-web","kind":"extrude","bone":"column","material":"steel","role":"body","tone":0.5,"profile":[[-0.0375,-0.0375],[0.0375,-0.0375],[0.0375,0.0375],[-0.0375,0.0375]],"plane":"yz","from":0.075,"to":2.925,"sectionFaces":["+v","-v","+u","-u"],"region":"column-web"},{"id":"th-base-plate","of":"base-plate","region":"base-plate"},{"id":"th-cap-plate","of":"cap-plate","region":"cap-plate"}],"structure":[{"id":"st-column","of":"column","member":"column","part":"member"},{"id":"support-footing","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.15,"size":[0.076,0.3,0.26],"transform":{"translation":[0.038,0.0,0.0]},"member":"column","part":"support","anchor":"footing"},{"id":"mass-column","kind":"box","bone":"column","material":"steel","role":"detail","tone":0.1,"size":[0.155,0.155,0.155],"transform":{"translation":[1.45,0.0,0.0]},"member":"column","part":"mass"}],"decisions":[{"en":"At 1:500 the shaft is still an H extrusion, now with 75 mm flanges and a 75 mm web (the smallest feature, the real 15 and 9 mm are far below it) so that its exposed surface stays near the real section; the plates are plain 75 mm blocks (the drawn step-outs are 20 mm, the clipped corners are below the feature) with the drawn 0.3 / 0.24 m widths.","de":"Bei 1:500 ist der Schaft weiter ein H-Strangkörper, nun mit 75-mm-Flanschen und 75-mm-Steg (das kleinste Merkmal, die wirklichen 15 und 9 mm liegen weit darunter), damit seine freie Fläche nahe am wirklichen Querschnitt bleibt; die Platten sind schlichte 75-mm-Blöcke (die gezeichneten Absätze sind 20 mm, die abgeschnittenen Ecken liegen unter dem Merkmal) mit den gezeichneten Breiten 0,3 / 0,24 m."},{"en":"Thermal: flange and web are merged in the H extrusion, so the column region keeps the whole shaft by reference (flange region) and the web region the 75 mm skin between the flanges (two side faces only), plates by reference; the split between flange and web area is no longer kept, only the total is compared at this scale.","de":"Thermik: Flansch und Steg sind im H-Strangkörper zusammengefasst, daher behält die Flanschregion den ganzen Schaft per Verweis und die Stegregion das 75 mm dicke Hautstück zwischen den Flanschen (nur zwei Seitenflächen), Platten per Verweis; die Aufteilung zwischen Flansch- und Stegfläche bleibt nicht erhalten, in diesem Maßstab zählt nur die Summe."},{"en":"Structure: the shaft is the member, a 76 mm footing pad and the column mass as one 155 mm cube. One member solid is right at this scale: the HEB 200 shaft is merged into one column member (its flanges and web are no longer separate drawn shapes), with its footing support and mass point.","de":"Tragwerk: der Schaft ist das Bauteil, eine 76-mm-Fußauflage und die Stützenmasse als ein 155-mm-Würfel. Ein Stabkörper ist in diesem Maßstab richtig: der HEB-200-Schaft ist zu einem Stützenstab zusammengefasst (Flansche und Steg sind keine getrennten Zeichnungsformen mehr), mit Fußauflager und Massenpunkt."}]}}}
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "shaft",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.085,
+       0.1
+      ],
+      [
+       0.085,
+       0.0225
+      ],
+      [
+       0.084387,
+       0.017841
+      ],
+      [
+       0.082588,
+       0.0135
+      ],
+      [
+       0.079728,
+       0.009772
+      ],
+      [
+       0.076,
+       0.006912
+      ],
+      [
+       0.071659,
+       0.005113
+      ],
+      [
+       0.067,
+       0.0045
+      ],
+      [
+       -0.067,
+       0.0045
+      ],
+      [
+       -0.071659,
+       0.005113
+      ],
+      [
+       -0.076,
+       0.006912
+      ],
+      [
+       -0.079728,
+       0.009772
+      ],
+      [
+       -0.082588,
+       0.0135
+      ],
+      [
+       -0.084387,
+       0.017841
+      ],
+      [
+       -0.085,
+       0.0225
+      ],
+      [
+       -0.085,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ],
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.085,
+       -0.1
+      ],
+      [
+       -0.085,
+       -0.0225
+      ],
+      [
+       -0.084387,
+       -0.017841
+      ],
+      [
+       -0.082588,
+       -0.0135
+      ],
+      [
+       -0.079728,
+       -0.009772
+      ],
+      [
+       -0.076,
+       -0.006912
+      ],
+      [
+       -0.071659,
+       -0.005113
+      ],
+      [
+       -0.067,
+       -0.0045
+      ],
+      [
+       0.067,
+       -0.0045
+      ],
+      [
+       0.071659,
+       -0.005113
+      ],
+      [
+       0.076,
+       -0.006912
+      ],
+      [
+       0.079728,
+       -0.009772
+      ],
+      [
+       0.082588,
+       -0.0135
+      ],
+      [
+       0.084387,
+       -0.017841
+      ],
+      [
+       0.085,
+       -0.0225
+      ],
+      [
+       0.085,
+       -0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.02,
+     "to": 2.98
+    },
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.15,
+       -0.13
+      ],
+      [
+       0.15,
+       -0.13
+      ],
+      [
+       0.15,
+       0.13
+      ],
+      [
+       -0.15,
+       0.13
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.116,
+        -0.1
+       ],
+       [
+        -0.116685,
+        -0.096556
+       ],
+       [
+        -0.118636,
+        -0.093636
+       ],
+       [
+        -0.121556,
+        -0.091685
+       ],
+       [
+        -0.125,
+        -0.091
+       ],
+       [
+        -0.128444,
+        -0.091685
+       ],
+       [
+        -0.131364,
+        -0.093636
+       ],
+       [
+        -0.133315,
+        -0.096556
+       ],
+       [
+        -0.134,
+        -0.1
+       ],
+       [
+        -0.133315,
+        -0.103444
+       ],
+       [
+        -0.131364,
+        -0.106364
+       ],
+       [
+        -0.128444,
+        -0.108315
+       ],
+       [
+        -0.125,
+        -0.109
+       ],
+       [
+        -0.121556,
+        -0.108315
+       ],
+       [
+        -0.118636,
+        -0.106364
+       ],
+       [
+        -0.116685,
+        -0.103444
+       ]
+      ],
+      [
+       [
+        -0.116,
+        0.1
+       ],
+       [
+        -0.116685,
+        0.103444
+       ],
+       [
+        -0.118636,
+        0.106364
+       ],
+       [
+        -0.121556,
+        0.108315
+       ],
+       [
+        -0.125,
+        0.109
+       ],
+       [
+        -0.128444,
+        0.108315
+       ],
+       [
+        -0.131364,
+        0.106364
+       ],
+       [
+        -0.133315,
+        0.103444
+       ],
+       [
+        -0.134,
+        0.1
+       ],
+       [
+        -0.133315,
+        0.096556
+       ],
+       [
+        -0.131364,
+        0.093636
+       ],
+       [
+        -0.128444,
+        0.091685
+       ],
+       [
+        -0.125,
+        0.091
+       ],
+       [
+        -0.121556,
+        0.091685
+       ],
+       [
+        -0.118636,
+        0.093636
+       ],
+       [
+        -0.116685,
+        0.096556
+       ]
+      ],
+      [
+       [
+        0.134,
+        -0.1
+       ],
+       [
+        0.133315,
+        -0.096556
+       ],
+       [
+        0.131364,
+        -0.093636
+       ],
+       [
+        0.128444,
+        -0.091685
+       ],
+       [
+        0.125,
+        -0.091
+       ],
+       [
+        0.121556,
+        -0.091685
+       ],
+       [
+        0.118636,
+        -0.093636
+       ],
+       [
+        0.116685,
+        -0.096556
+       ],
+       [
+        0.116,
+        -0.1
+       ],
+       [
+        0.116685,
+        -0.103444
+       ],
+       [
+        0.118636,
+        -0.106364
+       ],
+       [
+        0.121556,
+        -0.108315
+       ],
+       [
+        0.125,
+        -0.109
+       ],
+       [
+        0.128444,
+        -0.108315
+       ],
+       [
+        0.131364,
+        -0.106364
+       ],
+       [
+        0.133315,
+        -0.103444
+       ]
+      ],
+      [
+       [
+        0.134,
+        0.1
+       ],
+       [
+        0.133315,
+        0.103444
+       ],
+       [
+        0.131364,
+        0.106364
+       ],
+       [
+        0.128444,
+        0.108315
+       ],
+       [
+        0.125,
+        0.109
+       ],
+       [
+        0.121556,
+        0.108315
+       ],
+       [
+        0.118636,
+        0.106364
+       ],
+       [
+        0.116685,
+        0.103444
+       ],
+       [
+        0.116,
+        0.1
+       ],
+       [
+        0.116685,
+        0.096556
+       ],
+       [
+        0.118636,
+        0.093636
+       ],
+       [
+        0.121556,
+        0.091685
+       ],
+       [
+        0.125,
+        0.091
+       ],
+       [
+        0.128444,
+        0.091685
+       ],
+       [
+        0.131364,
+        0.093636
+       ],
+       [
+        0.133315,
+        0.096556
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0,
+     "to": 0.02
+    },
+    {
+     "id": "stiffener-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.02,
+       0.115
+      ],
+      [
+       0.02,
+       0.15
+      ],
+      [
+       0.045,
+       0.15
+      ],
+      [
+       0.11,
+       0.11
+      ],
+      [
+       0.11,
+       0.1
+      ],
+      [
+       0.035,
+       0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.008,
+     "to": 0.008
+    },
+    {
+     "id": "stiffener-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.02,
+       -0.115
+      ],
+      [
+       0.02,
+       -0.15
+      ],
+      [
+       0.045,
+       -0.15
+      ],
+      [
+       0.11,
+       -0.11
+      ],
+      [
+       0.11,
+       -0.1
+      ],
+      [
+       0.035,
+       -0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.008,
+     "to": 0.008
+    },
+    {
+     "id": "base-weld-flange-face",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.2,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       0.1,
+       -0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-tip-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.015,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-inner-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.0775,
+     "transform": {
+      "rotation": [
+       1.0,
+       0,
+       0,
+       0.0
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-root-a-1",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.980785,
+       0,
+       0,
+       0.19509
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.0225
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-root-a-2",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.83147,
+       0,
+       0,
+       0.55557
+      ],
+      "translation": [
+       0,
+       0.079728,
+       0.009772
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-web",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.134,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.067,
+       0.0045
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-root-b-1",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.55557,
+       0,
+       0,
+       0.83147
+      ],
+      "translation": [
+       0,
+       -0.067,
+       0.0045
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-root-b-2",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.19509,
+       0,
+       0,
+       0.980785
+      ],
+      "translation": [
+       0,
+       -0.079728,
+       0.009772
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-inner-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.0775,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.0225
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-tip-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0
+      ],
+      [
+       0.0285,
+       0
+      ],
+      [
+       0.02,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.015,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-corner-a-outer",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0.0085
+      ],
+      [
+       0.0285,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-corner-a-inner",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0.0085
+      ],
+      [
+       0.0285,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-corner-b-inner",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0.0085
+      ],
+      [
+       0.0285,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "base-weld-corner-b-outer",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       0.0085
+      ],
+      [
+       0.0285,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       -0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "anchor-rod-1",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.008
+      ],
+      [
+       0.02,
+       0.008
+      ],
+      [
+       0.02,
+       0.015
+      ],
+      [
+       0.023,
+       0.015
+      ],
+      [
+       0.023,
+       0.008
+      ],
+      [
+       0.073,
+       0.008
+      ],
+      [
+       0.075,
+       0.006
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.125,
+      -0.1
+     ]
+    },
+    {
+     "id": "anchor-nut-1",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.113,
+       -0.093072
+      ],
+      [
+       -0.125,
+       -0.086144
+      ],
+      [
+       -0.137,
+       -0.093072
+      ],
+      [
+       -0.137,
+       -0.106928
+      ],
+      [
+       -0.125,
+       -0.113856
+      ],
+      [
+       -0.113,
+       -0.106928
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.117,
+        -0.1
+       ],
+       [
+        -0.117609,
+        -0.096939
+       ],
+       [
+        -0.119343,
+        -0.094343
+       ],
+       [
+        -0.121939,
+        -0.092609
+       ],
+       [
+        -0.125,
+        -0.092
+       ],
+       [
+        -0.128061,
+        -0.092609
+       ],
+       [
+        -0.130657,
+        -0.094343
+       ],
+       [
+        -0.132391,
+        -0.096939
+       ],
+       [
+        -0.133,
+        -0.1
+       ],
+       [
+        -0.132391,
+        -0.103061
+       ],
+       [
+        -0.130657,
+        -0.105657
+       ],
+       [
+        -0.128061,
+        -0.107391
+       ],
+       [
+        -0.125,
+        -0.108
+       ],
+       [
+        -0.121939,
+        -0.107391
+       ],
+       [
+        -0.119343,
+        -0.105657
+       ],
+       [
+        -0.117609,
+        -0.103061
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.023,
+     "to": 0.038
+    },
+    {
+     "id": "anchor-rod-2",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.008
+      ],
+      [
+       0.02,
+       0.008
+      ],
+      [
+       0.02,
+       0.015
+      ],
+      [
+       0.023,
+       0.015
+      ],
+      [
+       0.023,
+       0.008
+      ],
+      [
+       0.073,
+       0.008
+      ],
+      [
+       0.075,
+       0.006
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.125,
+      0.1
+     ]
+    },
+    {
+     "id": "anchor-nut-2",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.113,
+       0.106928
+      ],
+      [
+       -0.125,
+       0.113856
+      ],
+      [
+       -0.137,
+       0.106928
+      ],
+      [
+       -0.137,
+       0.093072
+      ],
+      [
+       -0.125,
+       0.086144
+      ],
+      [
+       -0.113,
+       0.093072
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.117,
+        0.1
+       ],
+       [
+        -0.117609,
+        0.103061
+       ],
+       [
+        -0.119343,
+        0.105657
+       ],
+       [
+        -0.121939,
+        0.107391
+       ],
+       [
+        -0.125,
+        0.108
+       ],
+       [
+        -0.128061,
+        0.107391
+       ],
+       [
+        -0.130657,
+        0.105657
+       ],
+       [
+        -0.132391,
+        0.103061
+       ],
+       [
+        -0.133,
+        0.1
+       ],
+       [
+        -0.132391,
+        0.096939
+       ],
+       [
+        -0.130657,
+        0.094343
+       ],
+       [
+        -0.128061,
+        0.092609
+       ],
+       [
+        -0.125,
+        0.092
+       ],
+       [
+        -0.121939,
+        0.092609
+       ],
+       [
+        -0.119343,
+        0.094343
+       ],
+       [
+        -0.117609,
+        0.096939
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.023,
+     "to": 0.038
+    },
+    {
+     "id": "anchor-rod-3",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.008
+      ],
+      [
+       0.02,
+       0.008
+      ],
+      [
+       0.02,
+       0.015
+      ],
+      [
+       0.023,
+       0.015
+      ],
+      [
+       0.023,
+       0.008
+      ],
+      [
+       0.073,
+       0.008
+      ],
+      [
+       0.075,
+       0.006
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.125,
+      -0.1
+     ]
+    },
+    {
+     "id": "anchor-nut-3",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.137,
+       -0.093072
+      ],
+      [
+       0.125,
+       -0.086144
+      ],
+      [
+       0.113,
+       -0.093072
+      ],
+      [
+       0.113,
+       -0.106928
+      ],
+      [
+       0.125,
+       -0.113856
+      ],
+      [
+       0.137,
+       -0.106928
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.133,
+        -0.1
+       ],
+       [
+        0.132391,
+        -0.096939
+       ],
+       [
+        0.130657,
+        -0.094343
+       ],
+       [
+        0.128061,
+        -0.092609
+       ],
+       [
+        0.125,
+        -0.092
+       ],
+       [
+        0.121939,
+        -0.092609
+       ],
+       [
+        0.119343,
+        -0.094343
+       ],
+       [
+        0.117609,
+        -0.096939
+       ],
+       [
+        0.117,
+        -0.1
+       ],
+       [
+        0.117609,
+        -0.103061
+       ],
+       [
+        0.119343,
+        -0.105657
+       ],
+       [
+        0.121939,
+        -0.107391
+       ],
+       [
+        0.125,
+        -0.108
+       ],
+       [
+        0.128061,
+        -0.107391
+       ],
+       [
+        0.130657,
+        -0.105657
+       ],
+       [
+        0.132391,
+        -0.103061
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.023,
+     "to": 0.038
+    },
+    {
+     "id": "anchor-rod-4",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       0.008
+      ],
+      [
+       0.02,
+       0.008
+      ],
+      [
+       0.02,
+       0.015
+      ],
+      [
+       0.023,
+       0.015
+      ],
+      [
+       0.023,
+       0.008
+      ],
+      [
+       0.073,
+       0.008
+      ],
+      [
+       0.075,
+       0.006
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.125,
+      0.1
+     ]
+    },
+    {
+     "id": "anchor-nut-4",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.137,
+       0.106928
+      ],
+      [
+       0.125,
+       0.113856
+      ],
+      [
+       0.113,
+       0.106928
+      ],
+      [
+       0.113,
+       0.093072
+      ],
+      [
+       0.125,
+       0.086144
+      ],
+      [
+       0.137,
+       0.093072
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.133,
+        0.1
+       ],
+       [
+        0.132391,
+        0.103061
+       ],
+       [
+        0.130657,
+        0.105657
+       ],
+       [
+        0.128061,
+        0.107391
+       ],
+       [
+        0.125,
+        0.108
+       ],
+       [
+        0.121939,
+        0.107391
+       ],
+       [
+        0.119343,
+        0.105657
+       ],
+       [
+        0.117609,
+        0.103061
+       ],
+       [
+        0.117,
+        0.1
+       ],
+       [
+        0.117609,
+        0.096939
+       ],
+       [
+        0.119343,
+        0.094343
+       ],
+       [
+        0.121939,
+        0.092609
+       ],
+       [
+        0.125,
+        0.092
+       ],
+       [
+        0.128061,
+        0.092609
+       ],
+       [
+        0.130657,
+        0.094343
+       ],
+       [
+        0.132391,
+        0.096939
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.023,
+     "to": 0.038
+    },
+    {
+     "id": "cap-plate",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.12,
+       -0.11
+      ],
+      [
+       0.12,
+       -0.11
+      ],
+      [
+       0.12,
+       0.11
+      ],
+      [
+       -0.12,
+       0.11
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.041,
+        -0.06
+       ],
+       [
+        -0.041685,
+        -0.056556
+       ],
+       [
+        -0.043636,
+        -0.053636
+       ],
+       [
+        -0.046556,
+        -0.051685
+       ],
+       [
+        -0.05,
+        -0.051
+       ],
+       [
+        -0.053444,
+        -0.051685
+       ],
+       [
+        -0.056364,
+        -0.053636
+       ],
+       [
+        -0.058315,
+        -0.056556
+       ],
+       [
+        -0.059,
+        -0.06
+       ],
+       [
+        -0.058315,
+        -0.063444
+       ],
+       [
+        -0.056364,
+        -0.066364
+       ],
+       [
+        -0.053444,
+        -0.068315
+       ],
+       [
+        -0.05,
+        -0.069
+       ],
+       [
+        -0.046556,
+        -0.068315
+       ],
+       [
+        -0.043636,
+        -0.066364
+       ],
+       [
+        -0.041685,
+        -0.063444
+       ]
+      ],
+      [
+       [
+        -0.041,
+        0.06
+       ],
+       [
+        -0.041685,
+        0.063444
+       ],
+       [
+        -0.043636,
+        0.066364
+       ],
+       [
+        -0.046556,
+        0.068315
+       ],
+       [
+        -0.05,
+        0.069
+       ],
+       [
+        -0.053444,
+        0.068315
+       ],
+       [
+        -0.056364,
+        0.066364
+       ],
+       [
+        -0.058315,
+        0.063444
+       ],
+       [
+        -0.059,
+        0.06
+       ],
+       [
+        -0.058315,
+        0.056556
+       ],
+       [
+        -0.056364,
+        0.053636
+       ],
+       [
+        -0.053444,
+        0.051685
+       ],
+       [
+        -0.05,
+        0.051
+       ],
+       [
+        -0.046556,
+        0.051685
+       ],
+       [
+        -0.043636,
+        0.053636
+       ],
+       [
+        -0.041685,
+        0.056556
+       ]
+      ],
+      [
+       [
+        0.059,
+        -0.06
+       ],
+       [
+        0.058315,
+        -0.056556
+       ],
+       [
+        0.056364,
+        -0.053636
+       ],
+       [
+        0.053444,
+        -0.051685
+       ],
+       [
+        0.05,
+        -0.051
+       ],
+       [
+        0.046556,
+        -0.051685
+       ],
+       [
+        0.043636,
+        -0.053636
+       ],
+       [
+        0.041685,
+        -0.056556
+       ],
+       [
+        0.041,
+        -0.06
+       ],
+       [
+        0.041685,
+        -0.063444
+       ],
+       [
+        0.043636,
+        -0.066364
+       ],
+       [
+        0.046556,
+        -0.068315
+       ],
+       [
+        0.05,
+        -0.069
+       ],
+       [
+        0.053444,
+        -0.068315
+       ],
+       [
+        0.056364,
+        -0.066364
+       ],
+       [
+        0.058315,
+        -0.063444
+       ]
+      ],
+      [
+       [
+        0.059,
+        0.06
+       ],
+       [
+        0.058315,
+        0.063444
+       ],
+       [
+        0.056364,
+        0.066364
+       ],
+       [
+        0.053444,
+        0.068315
+       ],
+       [
+        0.05,
+        0.069
+       ],
+       [
+        0.046556,
+        0.068315
+       ],
+       [
+        0.043636,
+        0.066364
+       ],
+       [
+        0.041685,
+        0.063444
+       ],
+       [
+        0.041,
+        0.06
+       ],
+       [
+        0.041685,
+        0.056556
+       ],
+       [
+        0.043636,
+        0.053636
+       ],
+       [
+        0.046556,
+        0.051685
+       ],
+       [
+        0.05,
+        0.051
+       ],
+       [
+        0.053444,
+        0.051685
+       ],
+       [
+        0.056364,
+        0.053636
+       ],
+       [
+        0.058315,
+        0.056556
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 2.98,
+     "to": 3.0
+    },
+    {
+     "id": "cap-weld-flange-face",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.2,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       0.1,
+       -0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-tip-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.015,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-inner-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.0775,
+     "transform": {
+      "rotation": [
+       1.0,
+       0,
+       0,
+       0.0
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-root-a-1",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.980785,
+       0,
+       0,
+       0.19509
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.0225
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-root-a-2",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.83147,
+       0,
+       0,
+       0.55557
+      ],
+      "translation": [
+       0,
+       0.079728,
+       0.009772
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-web",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.134,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.067,
+       0.0045
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-root-b-1",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.55557,
+       0,
+       0,
+       0.83147
+      ],
+      "translation": [
+       0,
+       -0.067,
+       0.0045
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-root-b-2",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.013777,
+     "transform": {
+      "rotation": [
+       0.19509,
+       0,
+       0,
+       0.980785
+      ],
+      "translation": [
+       0,
+       -0.079728,
+       0.009772
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-inner-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.0775,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.0225
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-tip-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.98,
+       0
+      ],
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0,
+     "to": 0.015,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-corner-a-outer",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-corner-a-inner",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-corner-b-inner",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.0,
+       0,
+       0,
+       1.0
+      ],
+      "translation": [
+       0,
+       -0.085,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    },
+    {
+     "id": "cap-weld-corner-b-outer",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       2.9715,
+       0
+      ],
+      [
+       2.98,
+       0.0085
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "sweepRad": 1.570796,
+     "transform": {
+      "rotation": [
+       0.707107,
+       0,
+       0,
+       0.707107
+      ],
+      "translation": [
+       0,
+       -0.1,
+       0.1
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "rotationAxis": [
+       1,
+       0,
+       0
+      ],
+      "rotationRad": 3.141593
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-flange-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.087,
+       -0.1
+      ],
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.087,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.02,
+     "to": 2.98,
+     "sectionFaces": [
+      "-v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-flange-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.087,
+       -0.1
+      ],
+      [
+       -0.087,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.02,
+     "to": 2.98,
+     "sectionFaces": [
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-chamber-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0,
+       -0.0045
+      ],
+      [
+       0.067,
+       -0.0045
+      ],
+      [
+       0.071659,
+       -0.005113
+      ],
+      [
+       0.076,
+       -0.006912
+      ],
+      [
+       0.079728,
+       -0.009772
+      ],
+      [
+       0.082588,
+       -0.0135
+      ],
+      [
+       0.084387,
+       -0.017841
+      ],
+      [
+       0.085,
+       -0.0225
+      ],
+      [
+       0.085,
+       -0.1
+      ],
+      [
+       0.087,
+       -0.1
+      ],
+      [
+       0.087,
+       0.1
+      ],
+      [
+       0.085,
+       0.1
+      ],
+      [
+       0.085,
+       0.0225
+      ],
+      [
+       0.084387,
+       0.017841
+      ],
+      [
+       0.082588,
+       0.0135
+      ],
+      [
+       0.079728,
+       0.009772
+      ],
+      [
+       0.076,
+       0.006912
+      ],
+      [
+       0.071659,
+       0.005113
+      ],
+      [
+       0.067,
+       0.0045
+      ],
+      [
+       0,
+       0.0045
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.02,
+     "to": 2.98,
+     "sectionFaces": [
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-chamber-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0,
+       -0.0045
+      ],
+      [
+       -0.067,
+       -0.0045
+      ],
+      [
+       -0.071659,
+       -0.005113
+      ],
+      [
+       -0.076,
+       -0.006912
+      ],
+      [
+       -0.079728,
+       -0.009772
+      ],
+      [
+       -0.082588,
+       -0.0135
+      ],
+      [
+       -0.084387,
+       -0.017841
+      ],
+      [
+       -0.085,
+       -0.0225
+      ],
+      [
+       -0.085,
+       -0.1
+      ],
+      [
+       -0.087,
+       -0.1
+      ],
+      [
+       -0.087,
+       0.1
+      ],
+      [
+       -0.085,
+       0.1
+      ],
+      [
+       -0.085,
+       0.0225
+      ],
+      [
+       -0.084387,
+       0.017841
+      ],
+      [
+       -0.082588,
+       0.0135
+      ],
+      [
+       -0.079728,
+       0.009772
+      ],
+      [
+       -0.076,
+       0.006912
+      ],
+      [
+       -0.071659,
+       0.005113
+      ],
+      [
+       -0.067,
+       0.0045
+      ],
+      [
+       0,
+       0.0045
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.02,
+     "to": 2.98,
+     "sectionFaces": [
+      "-v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-flange-face",
+     "of": "base-weld-flange-face",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-tip-a",
+     "of": "base-weld-tip-a",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-inner-a",
+     "of": "base-weld-inner-a",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-root-a-1",
+     "of": "base-weld-root-a-1",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-root-a-2",
+     "of": "base-weld-root-a-2",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-web",
+     "of": "base-weld-web",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-root-b-1",
+     "of": "base-weld-root-b-1",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-root-b-2",
+     "of": "base-weld-root-b-2",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-inner-b",
+     "of": "base-weld-inner-b",
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-weld-tip-b",
+     "of": "base-weld-tip-b",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-corner-a-outer",
+     "of": "base-weld-corner-a-outer",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-corner-a-inner",
+     "of": "base-weld-corner-a-inner",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-corner-b-inner",
+     "of": "base-weld-corner-b-inner",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-weld-corner-b-outer",
+     "of": "base-weld-corner-b-outer",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-flange-face",
+     "of": "cap-weld-flange-face",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-tip-a",
+     "of": "cap-weld-tip-a",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-inner-a",
+     "of": "cap-weld-inner-a",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-root-a-1",
+     "of": "cap-weld-root-a-1",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-root-a-2",
+     "of": "cap-weld-root-a-2",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-web",
+     "of": "cap-weld-web",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-root-b-1",
+     "of": "cap-weld-root-b-1",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-root-b-2",
+     "of": "cap-weld-root-b-2",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-inner-b",
+     "of": "cap-weld-inner-b",
+     "region": "column-web"
+    },
+    {
+     "id": "th-cap-weld-tip-b",
+     "of": "cap-weld-tip-b",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-corner-a-outer",
+     "of": "cap-weld-corner-a-outer",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-corner-a-inner",
+     "of": "cap-weld-corner-a-inner",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-corner-b-inner",
+     "of": "cap-weld-corner-b-inner",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-cap-weld-corner-b-outer",
+     "of": "cap-weld-corner-b-outer",
+     "region": "column-flange"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-plate",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-stiffener-a",
+     "of": "stiffener-a",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-stiffener-b",
+     "of": "stiffener-b",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-rod-1",
+     "of": "anchor-rod-1",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-nut-1",
+     "of": "anchor-nut-1",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-rod-2",
+     "of": "anchor-rod-2",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-nut-2",
+     "of": "anchor-nut-2",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-rod-3",
+     "of": "anchor-rod-3",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-nut-3",
+     "of": "anchor-nut-3",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-rod-4",
+     "of": "anchor-rod-4",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-nut-4",
+     "of": "anchor-nut-4",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-cap-plate",
+     "of": "cap-plate",
+     "region": "cap-plate"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-shaft",
+     "of": "shaft",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "support-footing",
+     "of": "base-plate",
+     "member": "column",
+     "part": "support",
+     "anchor": "footing"
+    },
+    {
+     "id": "st-stiffener-a",
+     "of": "stiffener-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-stiffener-b",
+     "of": "stiffener-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-flange-face",
+     "of": "base-weld-flange-face",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-tip-a",
+     "of": "base-weld-tip-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-inner-a",
+     "of": "base-weld-inner-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-root-a-1",
+     "of": "base-weld-root-a-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-root-a-2",
+     "of": "base-weld-root-a-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-web",
+     "of": "base-weld-web",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-root-b-1",
+     "of": "base-weld-root-b-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-root-b-2",
+     "of": "base-weld-root-b-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-inner-b",
+     "of": "base-weld-inner-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-tip-b",
+     "of": "base-weld-tip-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-corner-a-outer",
+     "of": "base-weld-corner-a-outer",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-corner-a-inner",
+     "of": "base-weld-corner-a-inner",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-corner-b-inner",
+     "of": "base-weld-corner-b-inner",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-base-weld-corner-b-outer",
+     "of": "base-weld-corner-b-outer",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-rod-1",
+     "of": "anchor-rod-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-nut-1",
+     "of": "anchor-nut-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-rod-2",
+     "of": "anchor-rod-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-nut-2",
+     "of": "anchor-nut-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-rod-3",
+     "of": "anchor-rod-3",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-nut-3",
+     "of": "anchor-nut-3",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-rod-4",
+     "of": "anchor-rod-4",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-nut-4",
+     "of": "anchor-nut-4",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-plate",
+     "of": "cap-plate",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-flange-face",
+     "of": "cap-weld-flange-face",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-tip-a",
+     "of": "cap-weld-tip-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-inner-a",
+     "of": "cap-weld-inner-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-root-a-1",
+     "of": "cap-weld-root-a-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-root-a-2",
+     "of": "cap-weld-root-a-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-web",
+     "of": "cap-weld-web",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-root-b-1",
+     "of": "cap-weld-root-b-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-root-b-2",
+     "of": "cap-weld-root-b-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-inner-b",
+     "of": "cap-weld-inner-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-tip-b",
+     "of": "cap-weld-tip-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-corner-a-outer",
+     "of": "cap-weld-corner-a-outer",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-corner-a-inner",
+     "of": "cap-weld-corner-a-inner",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-corner-b-inner",
+     "of": "cap-weld-corner-b-inner",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-weld-corner-b-outer",
+     "of": "cap-weld-corner-b-outer",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "joint-load-pad",
+     "kind": "revolve",
+     "bone": "eccentric-carrier",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.02,
+       0
+      ],
+      [
+       -0.02,
+       0.018
+      ],
+      [
+       0.003,
+       0.018
+      ],
+      [
+       0.003,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0,
+      0
+     ],
+     "member": "eccentric-carrier",
+     "part": "joint"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.045,
+      0.045,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "The 1:50 body is the column as built. The shaft is one rolled HEB 200 extrusion (200 x 200 mm, 15 mm flanges, 9 mm web, the 18 mm root fillets as six chords each, 78.1 cm2) of 2.96 m between the plates. The base plate is 300 x 260 x 20 mm, flame-cut square, with four 18 mm holes; two 16 mm gussets stand in the web plane outside the flanges, 50 mm wide and 90 mm high with a 25 mm nose and a 15 mm snipe that clears the flange weld. Each anchor is an M16 rod with chamfered end that carries its 30 x 3 mm washer as a collar (one turned solid, the washer at its real 3 mm) under a hexagon nut of 24 mm across flats. The head plate is 240 x 220 x 20 mm with four 18 mm holes in the chambers for the bolts of the beam above. The shaft is welded to both plates all round with a 6 mm fillet weld (8.5 mm legs), ten runs and four quarter cones round the flange corners per end, each with its twin on the opposite side; the 4 mm gusset welds are below the 7.5 mm feature and left out.",
+     "de": "Der 1:50-Körper ist die Stütze wie gebaut. Der Schaft ist ein gewalzter HEB-200-Strang (200 x 200 mm, 15-mm-Flansche, 9-mm-Steg, die 18-mm-Ausrundungen je als sechs Sehnen, 78,1 cm²) von 2,96 m zwischen den Platten. Die Fußplatte misst 300 x 260 x 20 mm, rechtwinklig gebrannt, mit vier 18-mm-Löchern; zwei 16-mm-Rippen stehen in der Stegebene außen an den Flanschen, 50 mm breit und 90 mm hoch mit 25-mm-Nase und 15-mm-Eckausschnitt, der die Flanschnaht freilässt. Jeder Anker ist eine M16-Stange mit gefastem Ende, die ihre Scheibe 30 x 3 mm als Bund trägt (ein Drehkörper, die Scheibe mit ihren wirklichen 3 mm), unter einer Sechskantmutter mit Schlüsselweite 24 mm. Die Kopfplatte misst 240 x 220 x 20 mm mit vier 18-mm-Löchern in den Kammern für die Schrauben des Trägers darüber. Der Schaft ist an beiden Platten umlaufend mit einer 6-mm-Kehlnaht (8,5 mm Schenkel) angeschweißt, zehn Abschnitte und vier Viertelkegel um die Flanschecken je Ende, jeder mit seinem Gegenstück auf der anderen Seite; die 4-mm-Nähte der Rippen liegen unter dem 7,5-mm-Merkmal und entfallen."
+    },
+    {
+     "en": "Thermal follows the declared split of the surface. column-flange is the two flange plates with their outer face and edges (13 mm solids whose inner face lies against the inner skin) plus the weld runs on the outer faces and tips. column-web is the surface of the two chambers as two halves that meet on the column axis: half the web with its fillets and a 2 mm skin on the inner flange face each, plus the weld runs in the chambers. base-plate is the plate (its underside lies on the footing and is a mounted face), the gussets, washers, nuts and rods by reference; cap-plate is the head plate. The faces where the shaft meets the plates are welded contact faces.",
+     "de": "Die Thermik folgt der angegebenen Aufteilung der Oberfläche. column-flange sind die zwei Flanschplatten mit Außenseite und Kanten (13-mm-Körper, deren Innenseite an der Innenhaut liegt) samt den Nahtabschnitten an Außenseiten und Flanschenden. column-web ist die Oberfläche der zwei Kammern als zwei Hälften, die sich auf der Stützenachse treffen: je der halbe Steg mit seinen Ausrundungen und eine 2-mm-Haut auf der Flanschinnenseite, dazu die Nahtabschnitte in den Kammern. base-plate ist die Platte (ihre Unterseite liegt auf dem Fundament und ist eine Auflagefläche), dazu Rippen, Scheiben, Muttern und Stangen per Verweis; cap-plate ist die Kopfplatte. Die Flächen, an denen der Schaft auf die Platten trifft, sind verschweißte Kontaktflächen."
+    },
+    {
+     "en": "Structure is the load path of a bare steel column, where every part bears and nothing is cladding: the bearing pad of the load in the head plate (it rides on the carrier bone, 0.1 m off the axis in the default pose), the head plate and its weld as joints, the rolled shaft as the member, the base weld, gussets and the four anchors as joints of the fixed base, the base plate as the fixed support on the footing, and the mass point of 184 kg at 1.5 m.",
+     "de": "Das Tragwerk ist der Lastpfad einer blanken Stahlstütze, an der jedes Teil trägt und nichts Verkleidung ist: das Lastlager in der Kopfplatte (es sitzt auf dem Trägerknochen, in der Standardpose 0,1 m außerhalb der Achse), Kopfplatte und ihre Naht als Knoten, der gewalzte Schaft als Stab, Fußnaht, Rippen und die vier Anker als Knoten des eingespannten Fußes, die Fußplatte als festes Auflager auf dem Fundament und der Massenpunkt von 184 kg bei 1,5 m."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "shaft",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.085,
+       0.1
+      ],
+      [
+       0.085,
+       0.0225
+      ],
+      [
+       0.067,
+       0.0045
+      ],
+      [
+       -0.067,
+       0.0045
+      ],
+      [
+       -0.085,
+       0.0225
+      ],
+      [
+       -0.085,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ],
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.085,
+       -0.1
+      ],
+      [
+       -0.085,
+       -0.0225
+      ],
+      [
+       -0.067,
+       -0.0045
+      ],
+      [
+       0.067,
+       -0.0045
+      ],
+      [
+       0.085,
+       -0.0225
+      ],
+      [
+       0.085,
+       -0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.035,
+     "to": 2.965
+    },
+    {
+     "id": "base-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.035,
+      0.3,
+      0.26
+     ],
+     "transform": {
+      "translation": [
+       0.0175,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "stiffener-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.035,
+       0.1
+      ],
+      [
+       0.035,
+       0.15
+      ],
+      [
+       0.055,
+       0.15
+      ],
+      [
+       0.11,
+       0.115
+      ],
+      [
+       0.11,
+       0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.01,
+     "to": 0.01
+    },
+    {
+     "id": "stiffener-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.035,
+       -0.1
+      ],
+      [
+       0.035,
+       -0.15
+      ],
+      [
+       0.055,
+       -0.15
+      ],
+      [
+       0.11,
+       -0.115
+      ],
+      [
+       0.11,
+       -0.1
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.01,
+     "to": 0.01
+    },
+    {
+     "id": "anchor-1",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.035,
+       0
+      ],
+      [
+       0.035,
+       0.012
+      ],
+      [
+       0.075,
+       0.012
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.125,
+      -0.1
+     ]
+    },
+    {
+     "id": "anchor-2",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.035,
+       0
+      ],
+      [
+       0.035,
+       0.012
+      ],
+      [
+       0.075,
+       0.012
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.125,
+      0.1
+     ]
+    },
+    {
+     "id": "anchor-3",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.035,
+       0
+      ],
+      [
+       0.035,
+       0.012
+      ],
+      [
+       0.075,
+       0.012
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.125,
+      -0.1
+     ]
+    },
+    {
+     "id": "anchor-4",
+     "kind": "revolve",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.035,
+       0
+      ],
+      [
+       0.035,
+       0.012
+      ],
+      [
+       0.075,
+       0.012
+      ],
+      [
+       0.075,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.125,
+      0.1
+     ]
+    },
+    {
+     "id": "cap-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.035,
+      0.24,
+      0.22
+     ],
+     "transform": {
+      "translation": [
+       2.9825,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-flange-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.085,
+       -0.1
+      ],
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.085,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.035,
+     "to": 2.965,
+     "sectionFaces": [
+      "-v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-flange-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.085,
+       -0.1
+      ],
+      [
+       -0.085,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.035,
+     "to": 2.965,
+     "sectionFaces": [
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-chamber-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0,
+       -0.0045
+      ],
+      [
+       0.067,
+       -0.0045
+      ],
+      [
+       0.0848,
+       -0.0225
+      ],
+      [
+       0.0848,
+       -0.1
+      ],
+      [
+       0.087,
+       -0.1
+      ],
+      [
+       0.087,
+       0.1
+      ],
+      [
+       0.0848,
+       0.1
+      ],
+      [
+       0.0848,
+       0.0225
+      ],
+      [
+       0.067,
+       0.0045
+      ],
+      [
+       0,
+       0.0045
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.035,
+     "to": 2.965,
+     "sectionFaces": [
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-chamber-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0,
+       -0.0045
+      ],
+      [
+       -0.067,
+       -0.0045
+      ],
+      [
+       -0.0848,
+       -0.0225
+      ],
+      [
+       -0.0848,
+       -0.1
+      ],
+      [
+       -0.087,
+       -0.1
+      ],
+      [
+       -0.087,
+       0.1
+      ],
+      [
+       -0.0848,
+       0.1
+      ],
+      [
+       -0.0848,
+       0.0225
+      ],
+      [
+       -0.067,
+       0.0045
+      ],
+      [
+       0,
+       0.0045
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.035,
+     "to": 2.965,
+     "sectionFaces": [
+      "-v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-plate",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-stiffener-a",
+     "of": "stiffener-a",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-stiffener-b",
+     "of": "stiffener-b",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-1",
+     "of": "anchor-1",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-2",
+     "of": "anchor-2",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-3",
+     "of": "anchor-3",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-anchor-4",
+     "of": "anchor-4",
+     "region": "base-plate"
+    },
+    {
+     "id": "th-cap-plate",
+     "of": "cap-plate",
+     "region": "cap-plate"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-shaft",
+     "of": "shaft",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "support-footing",
+     "of": "base-plate",
+     "member": "column",
+     "part": "support",
+     "anchor": "footing"
+    },
+    {
+     "id": "st-stiffener-a",
+     "of": "stiffener-a",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-stiffener-b",
+     "of": "stiffener-b",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-1",
+     "of": "anchor-1",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-2",
+     "of": "anchor-2",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-3",
+     "of": "anchor-3",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-anchor-4",
+     "of": "anchor-4",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "st-cap-plate",
+     "of": "cap-plate",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "joint-load-pad",
+     "kind": "revolve",
+     "bone": "eccentric-carrier",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.035,
+       0
+      ],
+      [
+       -0.035,
+       0.018
+      ],
+      [
+       0.005,
+       0.018
+      ],
+      [
+       0.005,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0,
+      0
+     ],
+     "member": "eccentric-carrier",
+     "part": "joint"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.06,
+      0.06,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:100 the shaft is one H extrusion with the real 15 mm flanges and 9 mm web; each 18 mm root fillet is one 45 degree chamfer. The plates are the drawn 35 mm blocks (20 mm real, thickened by the drawing so that they print), without holes: an 18 mm hole is 0.18 mm on paper. The gussets are 20 mm trapezoids of the true 50 mm width up to the true height of 0.11 m, without snipe. Each anchor is one 24 mm stud of 40 mm (washer, nut and rod end merged). The welds (8.5 mm) are below the 15 mm feature and left out.",
+     "de": "Bei 1:100 ist der Schaft ein H-Strang mit den wirklichen 15-mm-Flanschen und dem 9-mm-Steg; jede 18-mm-Ausrundung ist eine 45-Grad-Fase. Die Platten sind die gezeichneten 35-mm-Blöcke (wirklich 20 mm, von der Zeichnung verdickt, damit sie drucken), ohne Löcher: ein 18-mm-Loch misst auf dem Papier 0,18 mm. Die Rippen sind 20-mm-Trapeze der wahren Breite von 50 mm bis zur wahren Höhe von 0,11 m, ohne Eckausschnitt. Jeder Anker ist ein 24-mm-Bolzen von 40 mm (Scheibe, Mutter und Stangenende zusammengefasst). Die Nähte (8,5 mm) liegen unter dem 15-mm-Merkmal und entfallen."
+    },
+    {
+     "en": "Thermal: the flange plates with outer face and edges, the chambers as two halves of the web with chamfered roots and a 2 mm skin on the inner flange face each (0.2 mm proud of the flange plate so that the two regions never share a face), the base plate (underside on the footing), gussets and studs by reference, the head plate by reference.",
+     "de": "Thermik: die Flanschplatten mit Außenseite und Kanten, die Kammern als zwei Hälften des Stegs mit gefasten Wurzeln und je einer 2-mm-Haut auf der Flanschinnenseite (0,2 mm vor der Flanschplatte, damit die zwei Regionen nie eine Fläche teilen), Fußplatte (Unterseite auf dem Fundament), Rippen und Bolzen per Verweis, die Kopfplatte per Verweis."
+    },
+    {
+     "en": "Structure: the shaft as the member, the base plate as the fixed support, gussets, studs and head plate as joints, the bearing pad of the load on the carrier bone and the mass point at 1.5 m.",
+     "de": "Tragwerk: der Schaft als Stab, die Fußplatte als festes Auflager, Rippen, Bolzen und Kopfplatte als Knoten, das Lastlager auf dem Trägerknochen und der Massenpunkt bei 1,5 m."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "shaft",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.07,
+       0.1
+      ],
+      [
+       0.07,
+       0.015
+      ],
+      [
+       -0.07,
+       0.015
+      ],
+      [
+       -0.07,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ],
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.07,
+       -0.1
+      ],
+      [
+       -0.07,
+       -0.015
+      ],
+      [
+       0.07,
+       -0.015
+      ],
+      [
+       0.07,
+       -0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.05,
+     "to": 2.95
+    },
+    {
+     "id": "base-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.05,
+      0.3,
+      0.26
+     ],
+     "transform": {
+      "translation": [
+       0.025,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "cap-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.05,
+      0.24,
+      0.22
+     ],
+     "transform": {
+      "translation": [
+       2.975,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-flange-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.07,
+       -0.1
+      ],
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.07,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.05,
+     "to": 2.95,
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-flange-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.07,
+       -0.1
+      ],
+      [
+       -0.07,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.05,
+     "to": 2.95,
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-web",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.07,
+       -0.015
+      ],
+      [
+       0.07,
+       -0.015
+      ],
+      [
+       0.07,
+       0.015
+      ],
+      [
+       -0.07,
+       0.015
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.05,
+     "to": 2.95,
+     "sectionFaces": [
+      "-v",
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-plate",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-cap-plate",
+     "of": "cap-plate",
+     "region": "cap-plate"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-shaft",
+     "of": "shaft",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "support-footing",
+     "of": "base-plate",
+     "member": "column",
+     "part": "support",
+     "anchor": "footing"
+    },
+    {
+     "id": "st-cap-plate",
+     "of": "cap-plate",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "joint-load-pad",
+     "kind": "revolve",
+     "bone": "eccentric-carrier",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.05,
+       0
+      ],
+      [
+       -0.05,
+       0.018
+      ],
+      [
+       0.008,
+       0.018
+      ],
+      [
+       0.008,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0,
+      0
+     ],
+     "member": "eccentric-carrier",
+     "part": "joint"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.07,
+      0.07,
+      0.07
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:200 the shaft is a plain H with 30 mm flanges and a 30 mm web (the feature; the real 15 and 9 mm are below it) and sharp roots, between the drawn 50 mm base and head plates of 300 x 260 and 240 x 220 mm. Gussets (16 mm), anchors and welds are below the feature and left out.",
+     "de": "Bei 1:200 ist der Schaft ein schlichtes H mit 30-mm-Flanschen und 30-mm-Steg (das Merkmal; die wirklichen 15 und 9 mm liegen darunter) und scharfen Wurzeln zwischen den gezeichneten 50-mm-Fuß- und Kopfplatten von 300 x 260 und 240 x 220 mm. Rippen (16 mm), Anker und Nähte liegen unter dem Merkmal und entfallen."
+    },
+    {
+     "en": "Thermal: the merged shaft as its three plates, the two flanges for the flange region and the web between them for the web region, and the two plates by reference (base underside on the footing); only the total is compared at this scale.",
+     "de": "Thermik: der zusammengefasste Schaft als seine drei Platten, die zwei Flansche für die Flanschregion und der Steg dazwischen für die Stegregion, dazu die beiden Platten per Verweis (Unterseite der Fußplatte auf dem Fundament); in diesem Maßstab zählt nur die Summe."
+    },
+    {
+     "en": "Structure: the shaft as the one member (one rig bone with one section), the base plate as the fixed support, the head plate as the joint of the load with the bearing pad on the carrier bone, and the mass point.",
+     "de": "Tragwerk: der Schaft als der eine Stab (ein Rig-Knochen mit einem Querschnitt), die Fußplatte als festes Auflager, die Kopfplatte als Knoten der Last mit dem Lastlager auf dem Trägerknochen und der Massenpunkt."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "shaft",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.025,
+       0.1
+      ],
+      [
+       0.025,
+       0.0375
+      ],
+      [
+       -0.025,
+       0.0375
+      ],
+      [
+       -0.025,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ],
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.025,
+       -0.1
+      ],
+      [
+       -0.025,
+       -0.0375
+      ],
+      [
+       0.025,
+       -0.0375
+      ],
+      [
+       0.025,
+       -0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.075,
+     "to": 2.925
+    },
+    {
+     "id": "base-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.26
+     ],
+     "transform": {
+      "translation": [
+       0.0375,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "cap-plate",
+     "kind": "box",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.24,
+      0.22
+     ],
+     "transform": {
+      "translation": [
+       2.9625,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-flange-a",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.025,
+       -0.1
+      ],
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.025,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.075,
+     "to": 2.925,
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-flange-b",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.025,
+       -0.1
+      ],
+      [
+       -0.025,
+       0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.075,
+     "to": 2.925,
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "region": "column-flange"
+    },
+    {
+     "id": "th-web",
+     "kind": "extrude",
+     "bone": "column",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.0375,
+       -0.0375
+      ],
+      [
+       0.0375,
+       -0.0375
+      ],
+      [
+       0.0375,
+       0.0375
+      ],
+      [
+       -0.0375,
+       0.0375
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.075,
+     "to": 2.925,
+     "sectionFaces": [
+      "-v",
+      "+v",
+      "-u",
+      "+u"
+     ],
+     "region": "column-web"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-plate",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-cap-plate",
+     "of": "cap-plate",
+     "region": "cap-plate"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-shaft",
+     "of": "shaft",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "support-footing",
+     "of": "base-plate",
+     "member": "column",
+     "part": "support",
+     "anchor": "footing"
+    },
+    {
+     "id": "st-cap-plate",
+     "of": "cap-plate",
+     "member": "column",
+     "part": "joint"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:500 the column is 0.4 mm wide on paper. The shaft stays an H so that it reads as a rolled section: flanges and web at the 75 mm feature (15 and 9 mm real) leave two chambers of 50 x 62.5 mm. The plates are 75 mm blocks (20 mm real) of the true 300 x 260 and 240 x 220 mm.",
+     "de": "Bei 1:500 ist die Stütze auf dem Papier 0,4 mm breit. Der Schaft bleibt ein H, damit er sich als Walzprofil liest: Flansche und Steg mit dem 75-mm-Merkmal (wirklich 15 und 9 mm) lassen zwei Kammern von 50 x 62,5 mm. Die Platten sind 75-mm-Blöcke (wirklich 20 mm) der wahren 300 x 260 und 240 x 220 mm."
+    },
+    {
+     "en": "Thermal: the three plates of the stout H (flanges for the flange region, the web for the web region, running 12.5 mm into each flange so that it is 75 mm deep) and the two plates by reference; the thermal list is minimal with one solid per region part, only the total is compared at this scale.",
+     "de": "Thermik: die drei Platten des gedrungenen H (Flansche für die Flanschregion, der Steg für die Stegregion, der je 12,5 mm in die Flansche läuft, damit er 75 mm tief ist) und die beiden Platten per Verweis; die Thermikliste ist minimal mit einem Körper je Regionsteil, in diesem Maßstab zählt nur die Summe."
+    },
+    {
+     "en": "Structure: the shaft as the one member (one rig bone with one section), the base plate as the fixed support, the head plate as the joint of the load and the mass point; the bearing pad is below the feature.",
+     "de": "Tragwerk: der Schaft als der eine Stab (ein Rig-Knochen mit einem Querschnitt), die Fußplatte als festes Auflager, die Kopfplatte als Knoten der Last und der Massenpunkt; das Lastlager liegt unter dem Merkmal."
+    },
+    {
+     "en": "Minimal: body and thermal keep the solids of 1:200 in number, one shaft and two plates and the three plates of the shaft; a steel column has no fewer parts, and each is authored anew at the 75 mm feature.",
+     "de": "Minimal: Körper und Thermik behalten die Körperzahl von 1:200, ein Schaft und zwei Platten sowie die drei Platten des Schafts; eine Stahlstütze hat nicht weniger Teile, und jedes ist für das 75-mm-Merkmal neu verfasst."
+    }
+   ]
+  }
+ }
+}

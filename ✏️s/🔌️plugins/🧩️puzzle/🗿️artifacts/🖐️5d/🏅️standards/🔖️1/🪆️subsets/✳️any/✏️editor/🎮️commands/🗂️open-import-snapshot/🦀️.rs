@@ -11,6 +11,7 @@ pub const PUZZLE5D_OPEN_IMPORT_REQUEST: u64 = 123;
 /// `semio_framework::kernel::IMPORT_CHUNK_BYTES` pages, reassembled by the framework before the action runs.
 pub fn open_import_snapshot(ctx: &mut Puzzle5dActionCtx<'_>) {
     ctx.effects.push(Effect::RequestFileOpen {
+        max_file_bytes: None,
         req: semio_plugin::RequestId(PUZZLE5D_OPEN_IMPORT_REQUEST),
         accept: "application/json,.json".into(),
         read_as: Some("text".into()),

@@ -22,6 +22,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "original-emission"
+path = "../../../../🧪️tests/📤️original-emission/🦀️.rs"
+
 [dependencies]
 
 [dev-dependencies]

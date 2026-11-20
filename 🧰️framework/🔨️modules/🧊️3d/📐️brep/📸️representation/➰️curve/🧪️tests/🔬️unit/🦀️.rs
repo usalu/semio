@@ -192,3 +192,28 @@ mod quick {
         }
     }
 }
+
+#[test]
+fn original_spline_jets_match_independent_rational_and_nonuniform_curves() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/rational-jets.json")).unwrap();
+    for row in fixture.as_array().unwrap() {
+        let points:Vec<[f64;3]>=serde_json::from_value(row["controls"].clone()).unwrap();
+        let knots:Vec<f64>=serde_json::from_value(row["knots"].clone()).unwrap();
+        let weights:Vec<f64>=serde_json::from_value(row["weights"].clone()).unwrap();
+        let degree=row["degree"].as_u64().unwrap() as usize;
+        let curve=Curve3::Nurbs{
+            knots:KnotVector::new(knots,degree,points.len()).unwrap(),
+            controls:points.into_iter().map(|[x,y,z]|Pnt3::new(x,y,z)).collect(),
+            weights,
+        };
+        let expected:Vec<Vec<[f64;3]>>=serde_json::from_value(row["jets"].clone()).unwrap();
+        for (t,expected) in row["at"].as_array().unwrap().iter().zip(expected) {
+            let t=t.as_f64().unwrap();
+            let (p,d,dd)=curve.jet_original(t,expected.len()-1).unwrap();
+            let actual=[[p.x,p.y,p.z],[d.x,d.y,d.z],[dd.x,dd.y,dd.z]];
+            for (a,b) in actual.into_iter().flatten().zip(expected.into_iter().flatten()) {
+                assert!((a-b).abs()<1e-10*(1.0+b.abs()), "u={t} got {a} expected {b}");
+            }
+        }
+    }
+}

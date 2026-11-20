@@ -1,8 +1,8 @@
 semio norm.en1990.dsl v1
 annex=de project-id=road-bridge-failing structure-kind=rail-bridge altitude-m=200 consequence-class=2 reliability-class=rc2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=dsl2 inspection-level=il2 beta-computed=3.8
 permanents [id:TEXT kind:ENUM gk:NUM] {
-  G-sup gsup 200000
-  G-inf ginf 40000
+  G-sup g-sup 200000
+  G-inf g-inf 40000
 }
 variables [id:TEXT category:TEXT qk:NUM group:TEXT] {
   Q-traffic rail_traffic 150000 ""

@@ -99,7 +99,7 @@ async fn a_schedule_leaves_the_graph_with_its_definition() {
     let mut snapshot = scheduled();
     let mut session = ModelInferenceSession::new();
     session.refresh(&snapshot);
-    snapshot.schedules.remove("sch-door");
+    snapshot.schedules.cold_remove("sch-door");
     let after = session.refresh(&snapshot).clone();
     assert!(!after.schedules.contains_key("sch-door") && after.schedules.len() == scheduled_count() - 1);
     assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));

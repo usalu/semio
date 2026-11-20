@@ -1,0 +1,52 @@
+{
+  "modes": [
+    {
+      "value": 0,
+      "label": "0",
+      "fill": true,
+      "stroke": false
+    },
+    {
+      "value": 1,
+      "label": "1",
+      "fill": false,
+      "stroke": true
+    },
+    {
+      "value": 2,
+      "label": "2",
+      "fill": true,
+      "stroke": true
+    },
+    {
+      "value": 3,
+      "label": "3",
+      "fill": false,
+      "stroke": false
+    },
+    {
+      "value": 4,
+      "label": "4",
+      "fill": true,
+      "stroke": false
+    },
+    {
+      "value": 5,
+      "label": "5",
+      "fill": false,
+      "stroke": true
+    },
+    {
+      "value": 6,
+      "label": "6",
+      "fill": true,
+      "stroke": true
+    },
+    {
+      "value": 7,
+      "label": "7",
+      "fill": false,
+      "stroke": false
+    }
+  ]
+}

@@ -44,18 +44,11 @@ impl UiFixture {
     /// 📐️ Drives `window_id`'s real layout queue under this scope's own original caller until the window is clean, answering whether it settled inside the finite opportunity ceiling; a refused layout fails the law with its refusal.
     pub fn settle_layout(&mut self, window_id: &str, pool: &semio_framework_async::WorkerPool, atlas: &mut semio_ui_text::FontAtlas) -> bool {
         let Self { ui, arena } = self;
-        let mut last = String::new();
         for _ in 0..262_144 {
             if ui.layout_is_dirty(window_id) {
                 ui.request_layout(window_id);
             }
-            let step = Self::layout_turn(ui, arena, pool, atlas);
-            let label = format!("{step:?}");
-            if label != last {
-                eprintln!("[DEBUG] settle_layout {window_id}: {label} dirty={} {} {}", ui.layout_is_dirty(window_id), ui.paint_stall_census(window_id), arena.debug_remaining());
-                last = label;
-            }
-            match step {
+            match Self::layout_turn(ui, arena, pool, atlas) {
                 UiLayoutStep::Refused { refusal, .. } => panic!("{window_id}: layout refused: {refusal:?}"),
                 UiLayoutStep::Idle if !ui.layout_is_dirty(window_id) => return true,
                 _ => {}

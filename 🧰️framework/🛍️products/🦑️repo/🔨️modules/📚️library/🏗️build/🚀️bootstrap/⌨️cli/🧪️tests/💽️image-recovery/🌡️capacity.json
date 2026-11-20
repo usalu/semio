@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "args": ["run", "repo-cache-reset:cache-reclaim-rust", "--output=stream"], "darwin": "command" },
+    { "args": ["run", "repo-cache-reset:cache-reclaim-wait-rust", "--output=stream"], "darwin": "command" },
+    { "args": ["run", "repo-cache-reset:cache-reclaim-wait-rust", "--path=/untrusted"], "darwin": "run" },
+    { "args": ["run", "repo-cache-reset:cache-reclaim-wait-graph"], "darwin": "run" },
+    { "args": ["run", "repo-cache-reset:cache-reclaim-graph"], "darwin": "command" },
+    { "args": ["run", "repo-cache-reset:cache-regrow-rust"], "darwin": "run" },
+    { "args": ["run", "repo-cache-reset:cache-reclaim-rust", "--path=/untrusted"], "darwin": "run" },
+    { "args": ["run", "a-project:cache-reclaim-rust"], "darwin": "run" }
+  ]
+}

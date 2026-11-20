@@ -20,6 +20,11 @@
       ]
     ]
   },
+  "labelChange": {
+    "initial": "Overview",
+    "updated": "Übersicht",
+    "expectedOverlays": 1
+  },
   "overlay": {
     "width": "100px",
     "height": "100px",
@@ -76,41 +81,6 @@
       "expected": "hover"
     }
   ],
-  "nativeSeams": [
-    {
-      "name": "active next RTL",
-      "orientation": "horizontal",
-      "dir": "rtl",
-      "first": "",
-      "second": "data-state=\"active\"",
-      "color": "rgb(255, 0, 0)"
-    },
-    {
-      "name": "loading beats active vertical",
-      "orientation": "vertical",
-      "dir": "ltr",
-      "first": "data-state=\"active\"",
-      "second": "class=\"border-loading\"",
-      "color": "rgb(0, 0, 255)"
-    },
-    {
-      "name": "introduced beats loading",
-      "orientation": "horizontal",
-      "dir": "ltr",
-      "first": "class=\"border-loading\"",
-      "second": "data-introduced=\"true\"",
-      "color": "rgb(0, 128, 0)"
-    },
-    {
-      "name": "nested pressed next",
-      "orientation": "horizontal",
-      "dir": "ltr",
-      "first": "",
-      "second": "",
-      "secondContent": "<span aria-pressed=\"true\"></span>",
-      "color": "rgb(255, 0, 0)"
-    }
-  ],
   "cellFrames": {
     "row": {
       "width": 300,
@@ -119,36 +89,22 @@
     "cells": 3,
     "expectedOverlays": 1,
     "rowPaths": [
-      "M 1 1 L 299 1",
-      "M 299 1 L 299 29",
-      "M 1 29 L 299 29",
-      "M 1 1 L 1 29"
+      "M 1 1 L 1 29",
+      "M 1 1 L 100 1",
+      "M 1 29 L 100 29",
+      "M 100 1 L 100 29",
+      "M 100 1 L 200 1",
+      "M 100 29 L 200 29",
+      "M 200 1 L 200 29",
+      "M 200 1 L 299 1",
+      "M 200 29 L 299 29",
+      "M 299 1 L 299 29"
     ],
-    "seams": [
-      {
-        "name": "active next cell frame",
-        "orientation": "horizontal",
-        "dir": "ltr",
-        "first": "",
-        "second": "data-state=\"active\"",
-        "color": "rgb(255, 0, 0)"
-      },
-      {
-        "name": "loading next cell frame vertical",
-        "orientation": "vertical",
-        "dir": "ltr",
-        "first": "",
-        "second": "class=\"border-loading\"",
-        "color": "rgb(0, 0, 255)"
-      },
-      {
-        "name": "previous cell frame active RTL",
-        "orientation": "horizontal",
-        "dir": "rtl",
-        "first": "data-state=\"active\"",
-        "second": "",
-        "color": "rgb(255, 0, 0)"
-      }
+    "hoveredCellPaths": [
+      "M 100 1 L 200 1",
+      "M 100 29 L 200 29",
+      "M 100 1 L 100 29",
+      "M 200 1 L 200 29"
     ]
   },
   "interlock": [

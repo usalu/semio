@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/patch-shot-camera/schema.json",
+  "title": "PatchShotCamera",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shotId",
+    "field",
+    "camera",
+    "fallback"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "patchShotCamera"
+    },
+    "shotId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "field": {
+      "enum": [
+        "projection",
+        "zoom",
+        "fov",
+        "eyeX",
+        "eyeY",
+        "eyeZ",
+        "targetX",
+        "targetY",
+        "targetZ",
+        "upX",
+        "upY",
+        "upZ"
+      ]
+    },
+    "camera": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seed"
+      ],
+      "properties": {
+        "seed": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+        },
+        "cameraId": {
+          "type": "string"
+        }
+      }
+    },
+    "fallback": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+    }
+  }
+}

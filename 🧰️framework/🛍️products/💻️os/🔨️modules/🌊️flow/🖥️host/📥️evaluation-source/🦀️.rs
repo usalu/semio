@@ -188,3 +188,6 @@ pub mod invocation_dispatch;
 
 #[path="🧵️pipeline/🦀️.rs"]
 pub mod pipeline;
+
+#[path = "⏱️tick-budget/🦀️.rs"]
+pub mod tick_budget;

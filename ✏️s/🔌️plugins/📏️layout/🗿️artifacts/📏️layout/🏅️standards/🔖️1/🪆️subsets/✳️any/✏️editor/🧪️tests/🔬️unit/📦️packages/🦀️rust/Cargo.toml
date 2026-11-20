@@ -26,8 +26,10 @@ semio-framework-value = { workspace = true }
 semio-framework-value-dictionary = { workspace = true }
 semio-s-artifact-layout-layout-editor = { workspace = true, features = ["testkit"] }
 semio-s-artifact-layout-layout-editor-commands = { workspace = true }
+semio-s-artifact-layout-layout-examples = { workspace = true }
 semio-s-artifact-layout-layout-editor-panels = { workspace = true }
 semio-s-artifact-layout-layout-engine = { workspace = true }
+semio-s-artifact-layout-layout-host = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true, features = ["testkit"] }
 pack = { workspace = true }
 serde_json = { workspace = true }

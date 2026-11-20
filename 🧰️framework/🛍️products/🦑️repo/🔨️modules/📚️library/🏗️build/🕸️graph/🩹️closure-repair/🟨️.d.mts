@@ -11,7 +11,7 @@ export function closureMissingErrorV1(input: { namespace: string; key: string; p
 /** 🗄️ Whether the leaf is on this machine. */
 export function closureLeafPresentV1(directory: string, key: string): boolean;
 /** 🧲️ Obtains one closure leaf: present, refetched from the fleet cache, or missing. */
-export function obtainClosureLeafV1(input: { directory: (namespace: ClosureNamespaceV1) => string; namespace: ClosureNamespaceV1; key: string; fetch?: (namespace: ClosureNamespaceV1, key: string, signal?: AbortSignal) => Promise<Uint8Array | undefined>; put?: (namespace: ClosureNamespaceV1, key: string, bytes: Uint8Array) => Promise<void>; signal?: AbortSignal; maximumBytes?: number }): Promise<"present" | "refetched" | "missing">;
+export function obtainClosureLeafV1(input: { directory: (namespace: ClosureNamespaceV1) => string; namespace: ClosureNamespaceV1; key: string; fetch?: (namespace: ClosureNamespaceV1, key: string, signal?: AbortSignal) => Promise<Uint8Array | undefined>; put?: (namespace: ClosureNamespaceV1, key: string, bytes: Uint8Array) => Promise<void>; signal?: AbortSignal; verify?: (namespace: ClosureNamespaceV1, key: string) => Promise<boolean>; maximumBytes?: number }): Promise<"present" | "refetched" | "missing">;
 /** 📖️ Reads one closure leaf, obtaining it when absent. */
 export function readClosureLeafV1<T>(input: { namespace: string; key: string; read: () => T; obtain?: ClosureObtainV1; projects?: readonly string[] | (() => readonly string[]) }): Promise<T>;
 /** 🩹️ The closure leaves the named fragments name. */

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "windowMilliseconds": 500,
+  "steps": [
+    {
+      "request": "first",
+      "at": 0,
+      "action": "verify"
+    },
+    {
+      "request": "second",
+      "at": 10,
+      "action": "verify"
+    },
+    {
+      "request": "first",
+      "at": 20,
+      "action": "verify"
+    },
+    {
+      "request": "second",
+      "at": 25,
+      "action": "verify"
+    },
+    {
+      "request": "first",
+      "at": 30,
+      "action": "replace-identity"
+    },
+    {
+      "request": "first",
+      "at": 31,
+      "action": "cancel"
+    },
+    {
+      "request": "second",
+      "at": 32,
+      "action": "verify"
+    },
+    {
+      "request": "second",
+      "at": 511,
+      "action": "change-mapping"
+    }
+  ],
+  "expected": {
+    "baseline": [
+      2,
+      3
+    ],
+    "observations": [
+      "verified",
+      "verified",
+      "verified",
+      "verified",
+      "identity",
+      "cancelled",
+      "verified",
+      "mapping"
+    ],
+    "probes": [
+      1,
+      2
+    ],
+    "cheap": [
+      3,
+      4
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "maximumEntries": 262144,
+  "maximumEntries": 1048576,
   "metadataMaximumBytes": 1610612736,
   "cases": [
     {
@@ -22,14 +22,26 @@
       "accepted": true
     },
     {
+      "id": "observed-graph-image-cardinality",
+      "files": 350695,
+      "directories": 23737,
+      "accepted": true
+    },
+    {
+      "id": "former-complete-entry-bound-plus-one",
+      "files": 262145,
+      "directories": 0,
+      "accepted": true
+    },
+    {
       "id": "complete-entry-bound",
-      "files": 262144,
+      "files": 1048576,
       "directories": 0,
       "accepted": true
     },
     {
       "id": "complete-entry-bound-plus-one",
-      "files": 262145,
+      "files": 1048577,
       "directories": 0,
       "accepted": false
     }

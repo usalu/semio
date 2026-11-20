@@ -29,8 +29,9 @@ import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, hintName, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
-import { CELL, CardSection, GROUP, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardSection, GROUP, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
+import { useGradualCount } from "../🧱️gradual-items/🟦️.ts";
 
 const SLOT_ZONE = "slot:";
 
@@ -46,6 +47,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
   const { task, answer, onAnswer, onDropped, text, locale, hints = [], locked = false } = props;
   const scope = useId();
   const topic = usePetTopic();
+  const shownCount = useGradualCount(task.items.length, task.id);
   const lockedId = locked ? elementId(scope, "locked") : undefined;
   const { announcement, announce } = useAnnouncement(SELECT_ANNOUNCEMENT_DELAY_MS);
   const assignments = answer?.assignments ?? {};
@@ -133,13 +135,13 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
               </RowList>
               </div>
             )}
-            <RowList className="course-rows course-slots text-sm" aria-labelledby={elementId(scope, dimension.id)}>
-              {task.items.map((item) => {
+            <RowList className="course-rows course-slots text-sm" aria-busy={shownCount < task.items.length ? true : undefined} aria-labelledby={elementId(scope, dimension.id)}>
+              {task.items.slice(0, shownCount).map((item) => {
                 const card = current[item.id];
                 const hint = far.get(`${dimension.id}:${item.id}`);
                 const hintId = hint === undefined ? undefined : elementId(scope, dimension.id, item.id, "hint");
                 return (
-                  <li key={item.id} data-icon-host="" {...CELL} className="course-slot" data-course-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
+                  <li key={item.id} data-icon-host="" {...ROW} className="course-slot" data-course-drop={cards === undefined ? undefined : `${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)}>
                     <span className="course-slot-label course-row-label min-w-0 font-semibold">
                       <IconLabel icon={item.icon}>
                         {itemLabel(item.id)}
@@ -166,6 +168,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                     ) : (
                       <>
                         <select
+                          {...CELL}
                           className={SELECT_CLASS}
                           aria-label={text("course.matching.cardFor", { quantity, item: itemLabel(item.id) })}
                           aria-describedby={describedBy(hintId, lockedId)}
@@ -184,7 +187,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                             );
                           })}
                         </select>
-                        <button type="button" className={ICON_BUTTON_CLASS} aria-label={text("course.matching.unassign", { item: itemLabel(item.id) })} aria-describedby={lockedId} aria-disabled={locked || card === undefined} onClick={() => set(dimension, item, undefined)}>
+                        <button type="button" {...CELL} className={ICON_BUTTON_CLASS} aria-label={text("course.matching.unassign", { item: itemLabel(item.id) })} aria-describedby={lockedId} aria-disabled={locked || card === undefined} onClick={() => set(dimension, item, undefined)}>
                           ✕
                         </button>
                       </>

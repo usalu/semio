@@ -1,0 +1,10 @@
+[
+  {"change":"alias-outside","schema":false,"resign":true},
+  {"change":"target-outside","schema":true,"resign":true},
+  {"change":"unsafe-case","schema":false,"resign":true},
+  {"change":"symlink-target","schema":true,"resign":true},
+  {"change":"hash","schema":true,"resign":true},
+  {"change":"chain","schema":true,"resign":true},
+  {"change":"duplicate","schema":true,"resign":true},
+  {"change":"hash","schema":true,"resign":false}
+]

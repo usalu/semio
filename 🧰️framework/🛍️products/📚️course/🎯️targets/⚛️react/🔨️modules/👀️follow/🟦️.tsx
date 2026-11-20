@@ -4,7 +4,7 @@ import { presenceRun, type Place, type PresencePreferences, type PresencePresent
 import { type CourseSession } from "../🧭️session/🟦️.ts";
 import { DEFAULT_BOARD, HOME_PAGES, boardKey, type CourseState, type CourseStep } from "../🧭️session/🧮️state/🟦️.ts";
 import { PRESENCE_FRAME_INTERVAL_MS } from "../👥️presence/🔌️socket/🟦️.ts";
-import { type CoursePresenceSnapshot } from "../👥️presence/🧭️rooms/🟦️.ts";
+import { type CoursePresence, type CoursePresenceInput, type CoursePresenceSnapshot } from "../👥️presence/🧭️rooms/🟦️.ts";
 import type { CoursePreferences } from "../🎛️preferences/🟦️.tsx";
 
 /** ⚡️ The learner starts watching a public tag, or returns to their own screen. */
@@ -69,6 +69,7 @@ export function observerSession(session: CourseSession, read: () => CourseState)
       if (key === "now") return target.now.bind(target);
       if (key === "getSnapshot") return () => ({ ...target.getSnapshot(), state: read() });
       if (key === "subscribe") return () => idle;
+      if (key === "revived") return () => idle;
       if (key === "refreshLeaderboard") return refresh;
       if (typeof Reflect.get(target, key) === "function") return blocked;
       return Reflect.get(target, key);
@@ -153,6 +154,29 @@ function scroller(root: HTMLElement, following: boolean, swipe: string | undefin
   const allowed = following ? overlay ?? undefined : undefined;
   const inside = cell instanceof HTMLElement && visible(cell, allowed) ? furthest(cell, [...cell.querySelectorAll<HTMLElement>("*")].filter((element) => visible(element, allowed))) : furthest(root, [...root.querySelectorAll<HTMLElement>("*")].filter((element) => visible(element)));
   return scrollRange(inside) > 0 ? inside : scrollParent(root) ?? inside;
+}
+
+/** 🎥️ The owner's camera lives outside React state: a pointer move over the overview reaches presence through this relay,
+ * so no component renders for it. It remembers the latest presence input and the camera; each new input carries the
+ * latest camera, and a moved camera republishes the latest input — only while the input has a view (an observer
+ * shares none). */
+export class CameraRelay {
+  private camera: PresencePresentation["camera"];
+  private last: CoursePresenceInput | undefined;
+  constructor(private readonly presence: Pick<CoursePresence, "update">) {}
+  private carried(input: CoursePresenceInput): CoursePresenceInput {
+    return input.view === undefined ? input : { ...input, view: { ...input.view, camera: this.camera } };
+  }
+  adopt(input: CoursePresenceInput): void {
+    this.last = this.carried(input);
+    this.presence.update(this.last);
+  }
+  publish = (camera: PresencePresentation["camera"]): void => {
+    this.camera = camera;
+    if (this.last?.view === undefined) return;
+    this.last = this.carried(this.last);
+    this.presence.update(this.last);
+  };
 }
 
 /** 📸️ Captures the latest presentation at the presence frame budget and cancels queued frames on scope changes. */

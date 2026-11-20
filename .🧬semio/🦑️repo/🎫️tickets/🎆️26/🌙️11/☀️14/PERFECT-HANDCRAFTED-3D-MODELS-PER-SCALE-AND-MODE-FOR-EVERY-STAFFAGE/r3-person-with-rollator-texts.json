@@ -1,0 +1,245 @@
+{
+  "materials": [
+    {
+      "id": "bone",
+      "title": {
+        "en": "Bone",
+        "de": "Knochen"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 1900,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "spectacle-frame",
+      "title": {
+        "en": "Metal spectacle frame",
+        "de": "Brillengestell aus Metall"
+      },
+      "emissivity": 0.3,
+      "solarAbsorptivity": 0.5,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "nylon-grey",
+      "title": {
+        "en": "Grey glass-filled nylon",
+        "de": "Graues glasfaserverstärktes Polyamid"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.7,
+      "source": "authored-estimate"
+    }
+  ],
+  "dimensions": {
+    "heightM": 1.57,
+    "widthM": 0.975,
+    "depthM": 0.6
+  },
+  "thermalRegions": {
+    "bag": {
+      "areaM2": 0.27
+    }
+  },
+  "volumeDecisions": {
+    "50": [
+      {
+        "en": "1:50 body, the woman: a 79-year-old of 1.58 m modelled as garments over the body. The loden coat is a trunk part of horizontal sections with narrow sloping shoulders, the back rounded over the thoracic spine and the front hanging from the bust, a seat part on the pelvis and two skirt halves that hang from the hip to the hem at the knee, overlap at the middle and follow each thigh, so the coat stays closed when she walks, stoops and sits; collar, lapels, front placket, four buttons and two slanted pockets lie on it. Sleeves are round about the arm bones with the sleeve head over the deltoid, a cardigan cuff and the wrist show at the end. Trousers show from the knee down with the calf pushing the cloth back and the hem breaking on laced shoes with upper, toe box, heel, sole and laces. The head has chin, jaw, cheeks, brow, nose, lips, ears and glasses, white hair at the nape and temples, and a soft beret pushed back with its stalk. Each hand is closed on its grip: the palm on top, four three-part fingers over the outer side and round underneath, the thumb along the inner side.",
+        "de": "Körper 1:50, die Frau: eine 79-Jährige von 1,58 m, als Kleidung über dem Körper modelliert. Der Lodenmantel besteht aus einem Rumpfteil aus waagrechten Schnitten mit schmalen, abfallenden Schultern, über der Brustwirbelsäule gerundetem Rücken und von der Brust hängender Vorderseite, einem Gesäßteil am Becken und zwei Schoßhälften, die von der Hüfte bis zum Saum am Knie hängen, sich in der Mitte überlappen und je einem Oberschenkel folgen, sodass der Mantel beim Gehen, Bücken und Sitzen geschlossen bleibt; Kragen, Revers, Knopfleiste, vier Knöpfe und zwei schräge Taschen liegen darauf. Die Ärmel sind rund um die Armknochen mit der Ärmelkugel über dem Deltamuskel, am Ende zeigen sich Strickjackenbündchen und Handgelenk. Die Hose ist vom Knie abwärts sichtbar, die Wade drückt den Stoff nach hinten, der Saum bricht auf Schnürschuhen mit Schaft, Zehenkappe, Absatz, Sohle und Schnürung. Der Kopf hat Kinn, Kiefer, Wangen, Brauen, Nase, Lippen, Ohren und Brille, weißes Haar an Nacken und Schläfen und eine weiche, nach hinten geschobene Baskenmütze mit Zipfel. Jede Hand ist um ihren Griff geschlossen: der Handteller oben, vier dreigliedrige Finger über die Außenseite und unten herum, der Daumen an der Innenseite entlang."
+      },
+      {
+        "en": "1:50 body, the rollator: two lambda side frames of aluminium tube (a 28 mm main tube from the caster head up to the apex, a 25 mm rear leg down to the rear axle, 22 mm lower and seat rails), joined by an upper and a lower cross tube and the seat; 22 mm handle posts slide in the main tubes under a clamp with its knob and bend back into level handles with rubber grips at the wrist crease of the user; loop brake levers under the grips with cables down the rear legs to brake blocks above the rear tyres; 200 mm wheels with tyre, rim, five spokes and hub, the rear pair on stub axles outside the frame, the front pair in swivel forks with head, crown and two blades; a padded seat, a backrest strap round the front as two side runs and a front band, a mesh basket with floor, rim and hooks between the front legs and the cotton shopping bag with two handles in it.",
+        "de": "Körper 1:50, der Rollator: zwei Lambda-Seitenrahmen aus Aluminiumrohr (ein 28-mm-Hauptrohr vom Lenkrollenkopf zum Scheitel, ein 25-mm-Hinterbein zur Hinterachse, 22-mm-Unter- und Sitzholme), verbunden durch ein oberes und ein unteres Querrohr und den Sitz; 22-mm-Griffrohre stecken unter einer Klemme mit Knauf in den Hauptrohren und sind nach hinten zu waagrechten Holmen mit Gummigriffen auf Höhe der Handgelenkfalte der Nutzerin gebogen; Schlaufenbremshebel unter den Griffen mit Zügen entlang der Hinterbeine zu Bremsklötzen über den Hinterreifen; 200-mm-Räder mit Reifen, Felge, fünf Speichen und Nabe, das hintere Paar auf Steckachsen außen am Rahmen, das vordere in Lenkgabeln mit Kopf, Brücke und zwei Scheiden; ein gepolsterter Sitz, ein Rückengurt um die Vorderseite aus zwei Seitenläufen und einem Frontband, ein Netzkorb mit Boden, Rand und Haken zwischen den Vorderbeinen und darin die Einkaufstasche aus Baumwolle mit zwei Henkeln."
+      },
+      {
+        "en": "1:50 thermal: every garment loft is its outer layer by reference and carries its inner layers as nested shells at the declared thicknesses (coat: cardigan, blouse, air; trousers: tights, air; shoes: socks, air; beret: air); details are references in their own layer. The thighs lie under the coat skirt, where the body belongs to the coat region, so only the shanks are trouser surface. The face skin is an own open skin of the front half of the head below the beret and of the throat, since the back of the head is hair and beret; the beret is an open felt shell, its opening lies on the head. Breath leaves through patches under the nose and on the lips, the plume through a patch on the crown of the beret. Frame, rims and hubs, seat, strap and basket, grips, tyres and bag are passive regions by reference.",
+        "de": "Thermik 1:50: Jeder Kleidungs-Loft ist per Verweis seine äußere Schicht und trägt die inneren Schichten als geschachtelte Schalen mit den deklarierten Dicken (Mantel: Strickjacke, Bluse, Luft; Hose: Strumpfhose, Luft; Schuhe: Socken, Luft; Mütze: Luft); Details sind Verweise in ihrer eigenen Schicht. Die Oberschenkel liegen unter dem Mantelschoß, wo der Körper zur Mantelregion gehört, daher sind nur die Unterschenkel Hosenfläche. Die Gesichtshaut ist eine eigene offene Haut der vorderen Kopfhälfte unter der Mütze und der Kehle, weil der Hinterkopf Haar und Mütze ist; die Mütze ist eine offene Filzschale, ihre Öffnung liegt am Kopf. Der Atem tritt durch Flächen unter der Nase und auf den Lippen aus, die Wärmefahne durch eine Fläche auf dem Mützendeckel. Rahmen, Felgen und Naben, Sitz, Gurt und Korb, Griffe, Reifen und Tasche sind passive Regionen per Verweis."
+      },
+      {
+        "en": "1:50 structure: her skeleton in the stooped stance and the load path of the rollator, never the body. A spine with flattened lumbar curve and thoracic kyphosis, nine rib hoops, sternum, clavicles and scapulae, sacrum, iliac wings, pubic and ischial rami, cranium, facial bones and mandible, cervical spine; femur with neck, trochanter, bowed shaft and condyles, patella, tibia with plateau and malleolus, fibula, calcaneus, midfoot and phalanges; humerus, radius and ulna, carpals, metacarpals and the phalanges of every finger wrapped round the grip. The tubes, clamps, cross tubes, seat, axle plates, axles, caster heads, crowns and blades and the wheels are members by reference; joints are balls at the rig joints and at the four wheel hubs, the two rolling supports are pads under the tread of each wheel pair, masses are balls at the centres of mass.",
+        "de": "Tragwerk 1:50: ihr Skelett in der gebeugten Haltung und der Lastpfad des Rollators, nie der Körper. Eine Wirbelsäule mit abgeflachter Lendenkrümmung und Brustkyphose, neun Rippenbögen, Brustbein, Schlüsselbeine und Schulterblätter, Kreuzbein, Darmbeinschaufeln, Scham- und Sitzbeinäste, Hirnschädel, Gesichtsschädel und Unterkiefer, Halswirbelsäule; Oberschenkelknochen mit Hals, Rollhügel, gebogenem Schaft und Kondylen, Kniescheibe, Schienbein mit Plateau und Knöchel, Wadenbein, Fersenbein, Mittelfuß und Zehenglieder; Oberarmknochen, Speiche und Elle, Handwurzel, Mittelhandknochen und die Glieder jedes um den Griff gelegten Fingers. Rohre, Klemmen, Querrohre, Sitz, Achsplatten, Achsen, Lenkköpfe, Gabelbrücken und Gabelscheiden sowie die Räder sind Stäbe per Verweis; Gelenke sind Kugeln an den Rig-Gelenken und an den vier Radnaben, die beiden Rollenlager sind Plättchen unter der Lauffläche jedes Radpaars, Massen sind Kugeln in den Schwerpunkten."
+      }
+    ],
+    "100": [
+      {
+        "en": "1:100 body, stated anew for 15 mm: the coat with nine trunk sections, a four-section seat and four-section skirt halves, no buttons, lapels, placket or pockets; one collar; legs of three and four stations; each shoe as one last with sole and heel merged plus a toe box; sleeves of four and three rings, wrist, palm, the four fingers as one band round the grip and a thumb; head of eight sections with nose and ears as single forms, nape and temple hair, the beret in five sections without stalk, no glasses. The rollator keeps every tube of the side frames, both cross tubes, grips as plain cylinders, caster heads with two thicker blades, stub axles, the seat, the strap, the basket as a shell with a floor and the bag as one prism; a wheel is a tyre ring and one disc for rim, spokes and hub; brake levers, cables, blocks, clamps, hooks and bag handles are left out.",
+        "de": "Körper 1:100, für 15 mm neu gesetzt: der Mantel mit neun Rumpfschnitten, viergliedrigem Gesäßteil und viergliedrigen Schoßhälften, ohne Knöpfe, Revers, Leiste und Taschen; ein Kragen; Beine aus drei und vier Stationen; jeder Schuh als ein Leisten mit Sohle und Absatz sowie eine Zehenkappe; Ärmel aus vier und drei Ringen, Handgelenk, Handteller, die vier Finger als ein Band um den Griff und ein Daumen; Kopf aus acht Schnitten mit Nase und Ohren als Einzelformen, Nacken- und Schläfenhaar, die Mütze in fünf Schnitten ohne Zipfel, keine Brille. Der Rollator behält jedes Rohr der Seitenrahmen, beide Querrohre, Griffe als glatte Zylinder, Lenkköpfe mit zwei dickeren Scheiden, Steckachsen, den Sitz, den Gurt, den Korb als Schale mit Boden und die Tasche als ein Prisma; ein Rad ist ein Reifenring und eine Scheibe für Felge, Speichen und Nabe; Bremshebel, Züge, Klötze, Klemmen, Haken und Henkel entfallen."
+      },
+      {
+        "en": "1:100 thermal: the layers of every garment are merged into its outer solid by reference; the face is an own open skin of the front of the head and the throat, the beret an open shell; breath and plume leave through patches of the size the scale can show.",
+        "de": "Thermik 1:100: Die Schichten jedes Kleidungsstücks sind per Verweis in seinem äußeren Körper zusammengefasst; das Gesicht ist eine eigene offene Haut der Kopfvorderseite und der Kehle, die Mütze eine offene Schale; Atem und Wärmefahne treten durch Flächen in der im Maßstab darstellbaren Größe aus."
+      },
+      {
+        "en": "1:100 structure: a skeleton with merged parts (spine, five rib hoops, sternum, clavicles, scapulae, sacrum, iliac wings, one ischiopubic bar per side, cranium and facial bones, cervical spine, femur with neck and condyles, tibia with widened head, one bar for radius and ulna, a hand plate, two foot lofts), the tubes, seat, forks, axles and wheels of the rollator by reference, ball joints, support pads and fourteen masses.",
+        "de": "Tragwerk 1:100: ein Skelett mit zusammengefassten Teilen (Wirbelsäule, fünf Rippenbögen, Brustbein, Schlüsselbeine, Schulterblätter, Kreuzbein, Darmbeinschaufeln, je ein Sitz-Schambein-Stab, Hirn- und Gesichtsschädel, Halswirbelsäule, Oberschenkelknochen mit Hals und Kondylen, Schienbein mit verbreitertem Kopf, ein Stab für Speiche und Elle, eine Handplatte, zwei Fuß-Lofts), die Rohre, der Sitz, die Gabeln, Achsen und Räder des Rollators per Verweis, Kugelgelenke, Auflagerplättchen und vierzehn Massen."
+      }
+    ],
+    "200": [
+      {
+        "en": "1:200 body, stated anew for 30 mm: the coat in six trunk sections, a three-section seat and three-section skirt halves; one solid per limb segment, a shoe last and a toe piece per foot, each hand as one fist on the grip; the head in six sections with the nose as a bump, nape hair and a four-section beret. Each side frame of the rollator is one run from the caster head over the apex into the handle, a rear leg and a lower rail at their true diameter (drawn that way, C13); one lower cross tube, grips, caster heads, the seat, the strap, the basket shell with floor, the bag as a wedge; wheels are single discs, the rear ones with a hub boss that reaches the leg.",
+        "de": "Körper 1:200, für 30 mm neu gesetzt: der Mantel in sechs Rumpfschnitten, dreigliedrigem Gesäßteil und dreigliedrigen Schoßhälften; ein Körper je Gliedmaßensegment, ein Schuhleisten und ein Zehenstück je Fuß, jede Hand als eine Faust am Griff; der Kopf in sechs Schnitten mit der Nase als Höcker, Nackenhaar und eine viergliedrige Mütze. Jeder Seitenrahmen des Rollators ist ein Zug vom Lenkkopf über den Scheitel in den Griffholm, ein Hinterbein und ein Unterholm im wahren Durchmesser (so gezeichnet, C13); ein unteres Querrohr, Griffe, Lenkköpfe, der Sitz, der Gurt, die Korbschale mit Boden, die Tasche als Keil; Räder sind einzelne Scheiben, die hinteren mit einem Nabenansatz bis ans Bein."
+      },
+      {
+        "en": "1:200 thermal and structure: every region by reference to its body solids, the face as the front skin of the head and the beret as an open shell; the structure is skull, cervical bar, spine, three rib hoops, a shoulder bar, sacrum and a pelvic bar, one bone per limb segment at the 30 mm floor, the runs, seat and wheels of the rollator by reference, joints, support pads and six masses.",
+        "de": "Thermik und Tragwerk 1:200: jede Region per Verweis auf ihre Körper, das Gesicht als vordere Kopfhaut und die Mütze als offene Schale; das Tragwerk ist Schädel, Halsstab, Wirbelsäule, drei Rippenbögen, ein Schulterstab, Kreuzbein und ein Beckenstab, ein Knochen je Gliedmaßensegment an der 30-mm-Grenze, die Züge, der Sitz und die Räder des Rollators per Verweis, Gelenke, Auflagerplättchen und sechs Massen."
+      }
+    ],
+    "500": [
+      {
+        "en": "1:500 body, stated anew for 75 mm: the coat in five trunk sections with a seat and two-section skirt halves, thigh and shank, one shoe per foot, sleeve and forearm, fists, a four-section head, nape hair as thick as it is drawn, a three-section beret. The rollator is two runs per side (front leg with handle, rear leg) thickened to the 40 mm that prints, grips, caster heads, the seat as a slab with its rails, the basket as a block with the shopping as a wedge on it, and four wheel discs widened to 75 mm inside the true overall width; rails, cross tubes and the strap are left out. This is the minimal model that still reads as a stooped woman behind a rollator.",
+        "de": "Körper 1:500, für 75 mm neu gesetzt: der Mantel in fünf Rumpfschnitten mit Gesäßteil und zweigliedrigen Schoßhälften, Ober- und Unterschenkel, ein Schuh je Fuß, Ärmel und Unterarm, Fäuste, ein viergliedriger Kopf, Nackenhaar so dick wie gezeichnet, eine dreigliedrige Mütze. Der Rollator besteht aus zwei Zügen je Seite (Vorderbein mit Griffholm, Hinterbein), auf die druckbaren 40 mm verdickt, Griffen, Lenkköpfen, dem Sitz als Platte samt Holmen, dem Korb als Block mit dem Einkauf als Keil darauf und vier Radscheiben, auf 75 mm verbreitert innerhalb der wahren Gesamtbreite; Holme, Querrohre und der Gurt entfallen. Dies ist das minimale Modell, das noch als gebeugte Frau hinter einem Rollator lesbar ist."
+      },
+      {
+        "en": "1:500 thermal and structure: every region by reference, the face as the front skin of the head, the beret as an open shell; the structure is a stick skeleton at the 75 mm floor (skull, neck, spine, shoulder and pelvic bars, one stick per limb segment), the runs, seat slab and wheels of the rollator by reference, eight joints, two support pads and two masses.",
+        "de": "Thermik und Tragwerk 1:500: jede Region per Verweis, das Gesicht als vordere Kopfhaut, die Mütze als offene Schale; das Tragwerk ist ein Stabskelett an der 75-mm-Grenze (Schädel, Hals, Wirbelsäule, Schulter- und Beckenstab, ein Stab je Gliedmaßensegment), die Züge, die Sitzplatte und die Räder des Rollators per Verweis, acht Gelenke, zwei Auflagerplättchen und zwei Massen."
+      }
+    ]
+  },
+  "representations": {
+    "50": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the orthographic outline of the body solids of this scale in the pose stand-at-grips (ruling E1); side, front and plan are views of one body. Side: stooped woman in a knee-length coat with rounded back, beret pushed back, both fists on the level grips, toes at the rear axle inside a lambda-frame rollator with basket and bag ahead of the front legs. Front: narrow sloping shoulders, coat with placket, buttons, lapels and pockets, glasses, the rollator seen through its frame. Plan: beret over shoulders, arms spread to the grips, seat, strap, basket and bag. Arms are profiles revolved about their bones, hands, wheels, seat, cross tubes, strap front, basket and bag are profiles extruded across, so spread arms and the rollator turned round for sitting are drawn right in every view; trunk, legs and head are flat outlines on their bones, exact in the standing poses and approximate in front and plan when she sits or stoops.",
+          "de": "Jede gefüllte Form ist der orthografische Umriss der Körper dieses Maßstabs in der Pose stand-at-grips (Regel E1); Seite, Front und Grundriss sind Ansichten eines Körpers. Seite: gebeugte Frau im knielangen Mantel mit rundem Rücken, nach hinten geschobener Mütze, beide Fäuste an den waagrechten Griffen, die Fußspitzen an der Hinterachse in einem Lambda-Rahmen-Rollator mit Korb und Tasche vor den Vorderbeinen. Front: schmale, abfallende Schultern, Mantel mit Leiste, Knöpfen, Revers und Taschen, Brille, der Rollator durch seinen Rahmen gesehen. Grundriss: Mütze über den Schultern, zu den Griffen gespreizte Arme, Sitz, Gurt, Korb und Tasche. Arme sind um ihre Knochen rotierte Profile, Hände, Räder, Sitz, Querrohre, Gurtfront, Korb und Tasche quer extrudierte Profile, sodass gespreizte Arme und der zum Sitzen gewendete Rollator in jeder Ansicht stimmen; Rumpf, Beine und Kopf sind flache Umrisse an ihren Knochen, genau in den Standposen und näherungsweise in Front und Grundriss, wenn sie sitzt oder sich bückt."
+        },
+        "retained": {
+          "en": "Glasses, mouth and nose lines, the front edge of the coat, buttons, lapels, pockets, cardigan cuffs, laces merged into the shoe, brake levers and cables, post clamps, caster forks, basket hooks, bag handles, tyre, rim, five spokes and hub with the gaps between the spokes left open.",
+          "de": "Brille, Mund- und Nasenlinie, Vorderkante des Mantels, Knöpfe, Revers, Taschen, Strickbündchen, Schnürung im Schuh aufgegangen, Bremshebel und -züge, Klemmen, Lenkgabeln, Korbhaken, Taschenhenkel, Reifen, Felge, fünf Speichen und Nabe mit offenen Speichenzwischenräumen."
+        },
+        "merged": {
+          "en": "Nose, brow, chin, cheeks and lips are one head outline; fingers, thumb and palm one fist; the clamp and knob belong to the handle post, axle plate, stub axle and brake block to the rear leg, head, crown, blades and axle to one caster; basket, floor and rim are one extruded basket.",
+          "de": "Nase, Brauen, Kinn, Wangen und Lippen sind ein Kopfumriss; Finger, Daumen und Handteller eine Faust; Klemme und Knauf gehören zum Griffrohr, Achsplatte, Steckachse und Bremsklotz zum Hinterbein, Kopf, Brücke, Scheiden und Achse zu einer Lenkrolle; Korb, Boden und Rand sind ein extrudierter Korb."
+        },
+        "omitted": {
+          "en": "Finger separations, coat seams and the back pleat, tyre tread, mesh of the basket as geometry (it is a hatch), welds and bearings.",
+          "de": "Fingerzwischenräume, Mantelnähte und Kellerfalte, Reifenprofil, das Korbnetz als Geometrie (es ist eine Schraffur), Schweißnähte und Lager."
+        },
+        "thinElements": {
+          "en": "Tubes are drawn at their true 22 to 28 mm (0.44 to 0.56 mm on paper); brake cables, bag handles and the glasses are strokes; nothing is thickened.",
+          "de": "Rohre sind in ihren wahren 22 bis 28 mm gezeichnet (0,44 bis 0,56 mm auf Papier); Bremszüge, Taschenhenkel und Brille sind Striche; nichts ist verdickt."
+        },
+        "hatching": {
+          "en": "Side elevation only: loden twill 0.8 mm lines at 45 degrees on the near coat parts, far-side lines on the far sleeve and skirt half, basket mesh 1.2 mm cross hatch.",
+          "de": "Nur Seitenansicht: Loden-Köper 0,8-mm-Linien unter 45 Grad auf den nahen Mantelteilen, Linien der abgewandten Seite auf fernem Ärmel und ferner Schoßhälfte, Korbnetz 1,2-mm-Kreuzschraffur."
+        },
+        "styles": {
+          "en": "Body pen 0.25 mm, detail 0.15 mm, texture 0.10 mm; dark tyres and grips, light rims and bag, mid-tone coat, far-side limbs a tone darker.",
+          "de": "Körperstift 0,25 mm, Detail 0,15 mm, Textur 0,10 mm; dunkle Reifen und Griffe, helle Felgen und Tasche, Mantel im Mittelton, abgewandte Gliedmaßen einen Ton dunkler."
+        },
+        "overlays": {
+          "en": "Every thermal region is drawn as its own shapes: face and neck, hair, beret, hands, coat, trousers, shoes, frame, seat and basket, grips, tyres and bag.",
+          "de": "Jede thermische Region ist mit eigenen Formen gezeichnet: Gesicht und Hals, Haar, Mütze, Hände, Mantel, Hose, Schuhe, Rahmen, Sitz und Korb, Griffe, Reifen und Tasche."
+        }
+      }
+    },
+    "100": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the orthographic outline of the body solids of this scale in the pose stand-at-grips (ruling E1); side, front and plan are views of one body. The same stance and rollator as at 1:50 from the 1:100 body: plain coat with collar, mitten fists on the grips, shoes as single lasts, every tube of the side frames, basket and bag. Arms are profiles revolved about their bones, hands, wheels, seat, cross tubes, strap front, basket and bag are profiles extruded across, so spread arms and the rollator turned round for sitting are drawn right in every view; trunk, legs and head are flat outlines on their bones, exact in the standing poses and approximate in front and plan when she sits or stoops.",
+          "de": "Jede gefüllte Form ist der orthografische Umriss der Körper dieses Maßstabs in der Pose stand-at-grips (Regel E1); Seite, Front und Grundriss sind Ansichten eines Körpers. Dieselbe Haltung und derselbe Rollator wie bei 1:50 aus dem 1:100-Körper: glatter Mantel mit Kragen, Fausthände an den Griffen, Schuhe als einzelne Leisten, jedes Rohr der Seitenrahmen, Korb und Tasche. Arme sind um ihre Knochen rotierte Profile, Hände, Räder, Sitz, Querrohre, Gurtfront, Korb und Tasche quer extrudierte Profile, sodass gespreizte Arme und der zum Sitzen gewendete Rollator in jeder Ansicht stimmen; Rumpf, Beine und Kopf sind flache Umrisse an ihren Knochen, genau in den Standposen und näherungsweise in Front und Grundriss, wenn sie sitzt oder sich bückt."
+        },
+        "retained": {
+          "en": "The front edge of the coat in the front view, nose and ears, collar, wrists, caster forks, stub axles, tyre and wheel disc.",
+          "de": "Die Vorderkante des Mantels in der Frontansicht, Nase und Ohren, Kragen, Handgelenke, Lenkgabeln, Steckachsen, Reifen und Radscheibe."
+        },
+        "merged": {
+          "en": "Rim, spokes and hub are one disc; palm, finger band and thumb one fist; sole and heel belong to the shoe; caster head, blades and axle are one caster.",
+          "de": "Felge, Speichen und Nabe sind eine Scheibe; Handteller, Fingerband und Daumen eine Faust; Sohle und Absatz gehören zum Schuh; Lenkkopf, Scheiden und Achse sind eine Lenkrolle."
+        },
+        "omitted": {
+          "en": "Glasses, buttons, lapels, pockets, laces, beret stalk, brake levers, cables and blocks, clamps, basket hooks and rim, bag handles.",
+          "de": "Brille, Knöpfe, Revers, Taschen, Schnürung, Mützenzipfel, Bremshebel, -züge und -klötze, Klemmen, Korbhaken und -rand, Taschenhenkel."
+        },
+        "thinElements": {
+          "en": "Tubes are drawn at their true 22 to 28 mm (0.22 to 0.28 mm on paper), the strap at 15 mm; nothing else is below the printable feature.",
+          "de": "Rohre sind in ihren wahren 22 bis 28 mm gezeichnet (0,22 bis 0,28 mm auf Papier), der Gurt mit 15 mm; sonst liegt nichts unter der druckbaren Einzelheit."
+        },
+        "hatching": {
+          "en": "Side elevation only: loden twill 0.6 mm lines on the near coat parts, far-side lines on the far sleeve and skirt half, basket mesh 0.8 mm cross hatch.",
+          "de": "Nur Seitenansicht: Loden-Köper 0,6-mm-Linien auf den nahen Mantelteilen, Linien der abgewandten Seite auf fernem Ärmel und ferner Schoßhälfte, Korbnetz 0,8-mm-Kreuzschraffur."
+        },
+        "styles": {
+          "en": "Body pen 0.25 mm, detail 0.13 mm, texture 0.10 mm; tones as at 1:50.",
+          "de": "Körperstift 0,25 mm, Detail 0,13 mm, Textur 0,10 mm; Töne wie bei 1:50."
+        },
+        "overlays": {
+          "en": "Every thermal region is drawn as its own shapes: face and neck, hair, beret, hands, coat, trousers, shoes, frame, seat and basket, grips, tyres and bag.",
+          "de": "Jede thermische Region ist mit eigenen Formen gezeichnet: Gesicht und Hals, Haar, Mütze, Hände, Mantel, Hose, Schuhe, Rahmen, Sitz und Korb, Griffe, Reifen und Tasche."
+        }
+      }
+    },
+    "200": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the orthographic outline of the body solids of this scale in the pose stand-at-grips (ruling E1); side, front and plan are views of one body. Stooped coat figure with beret and nose, one outline per limb segment, fists on the grips; the rollator as one run per side from caster to handle, rear leg, lower rail, seat, strap, basket, bag and four wheel discs. Arms are profiles revolved about their bones, hands, wheels, seat, cross tubes, strap front, basket and bag are profiles extruded across, so spread arms and the rollator turned round for sitting are drawn right in every view; trunk, legs and head are flat outlines on their bones, exact in the standing poses and approximate in front and plan when she sits or stoops.",
+          "de": "Jede gefüllte Form ist der orthografische Umriss der Körper dieses Maßstabs in der Pose stand-at-grips (Regel E1); Seite, Front und Grundriss sind Ansichten eines Körpers. Gebeugte Mantelfigur mit Mütze und Nase, ein Umriss je Gliedmaßensegment, Fäuste an den Griffen; der Rollator als ein Zug je Seite von der Lenkrolle zum Griff, Hinterbein, Unterholm, Sitz, Gurt, Korb, Tasche und vier Radscheiben. Arme sind um ihre Knochen rotierte Profile, Hände, Räder, Sitz, Querrohre, Gurtfront, Korb und Tasche quer extrudierte Profile, sodass gespreizte Arme und der zum Sitzen gewendete Rollator in jeder Ansicht stimmen; Rumpf, Beine und Kopf sind flache Umrisse an ihren Knochen, genau in den Standposen und näherungsweise in Front und Grundriss, wenn sie sitzt oder sich bückt."
+        },
+        "retained": {
+          "en": "Nose, nape hair, toe pieces, grips, caster heads, the lower cross tube and the strap.",
+          "de": "Nase, Nackenhaar, Zehenstücke, Griffe, Lenkköpfe, das untere Querrohr und der Gurt."
+        },
+        "merged": {
+          "en": "Hand and wrist are one fist; front leg, handle post and handle are one run; tyre, rim and hub one disc; collar and coat one outline.",
+          "de": "Hand und Handgelenk sind eine Faust; Vorderbein, Griffrohr und Griffholm ein Zug; Reifen, Felge und Nabe eine Scheibe; Kragen und Mantel ein Umriss."
+        },
+        "omitted": {
+          "en": "Ears, temple hair, glasses, coat details, seat rails, upper cross tube, forks, axles, brakes.",
+          "de": "Ohren, Schläfenhaar, Brille, Manteldetails, Sitzholme, oberes Querrohr, Gabeln, Achsen, Bremsen."
+        },
+        "thinElements": {
+          "en": "Tubes are drawn at their true 22 to 28 mm (0.11 to 0.14 mm on paper plus the 0.13 mm pen), the strap at 18 mm; the 3D model keeps the same sizes.",
+          "de": "Rohre sind in ihren wahren 22 bis 28 mm gezeichnet (0,11 bis 0,14 mm auf Papier zuzüglich des 0,13-mm-Stifts), der Gurt mit 18 mm; das 3D-Modell behält dieselben Maße."
+        },
+        "hatching": {
+          "en": "No hatching at 1:200.",
+          "de": "Keine Schraffur bei 1:200."
+        },
+        "styles": {
+          "en": "Body pen 0.13 mm, detail 0.10 mm; dark tyres and grips, mid-tone coat, light bag.",
+          "de": "Körperstift 0,13 mm, Detail 0,10 mm; dunkle Reifen und Griffe, Mantel im Mittelton, helle Tasche."
+        },
+        "overlays": {
+          "en": "Every thermal region is drawn as its own shapes: face and neck, hair, beret, hands, coat, trousers, shoes, frame, seat and basket, grips, tyres and bag.",
+          "de": "Jede thermische Region ist mit eigenen Formen gezeichnet: Gesicht und Hals, Haar, Mütze, Hände, Mantel, Hose, Schuhe, Rahmen, Sitz und Korb, Griffe, Reifen und Tasche."
+        }
+      }
+    },
+    "500": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the orthographic outline of the body solids of this scale in the pose stand-at-grips (ruling E1); side, front and plan are views of one body. A stooped coat figure with beret, fists on the grips of a rollator of two runs per side, seat slab, basket block with the shopping on it and four wheel discs. Arms are profiles revolved about their bones, hands, wheels, seat, cross tubes, strap front, basket and bag are profiles extruded across, so spread arms and the rollator turned round for sitting are drawn right in every view; trunk, legs and head are flat outlines on their bones, exact in the standing poses and approximate in front and plan when she sits or stoops.",
+          "de": "Jede gefüllte Form ist der orthografische Umriss der Körper dieses Maßstabs in der Pose stand-at-grips (Regel E1); Seite, Front und Grundriss sind Ansichten eines Körpers. Eine gebeugte Mantelfigur mit Mütze, Fäuste an den Griffen eines Rollators aus zwei Zügen je Seite, Sitzplatte, Korbblock mit dem Einkauf darauf und vier Radscheiben. Arme sind um ihre Knochen rotierte Profile, Hände, Räder, Sitz, Querrohre, Gurtfront, Korb und Tasche quer extrudierte Profile, sodass gespreizte Arme und der zum Sitzen gewendete Rollator in jeder Ansicht stimmen; Rumpf, Beine und Kopf sind flache Umrisse an ihren Knochen, genau in den Standposen und näherungsweise in Front und Grundriss, wenn sie sitzt oder sich bückt."
+        },
+        "retained": {
+          "en": "The stooped stance, the beret, the hands on the grips, the lambda of the side frame.",
+          "de": "Die gebeugte Haltung, die Mütze, die Hände an den Griffen, das Lambda des Seitenrahmens."
+        },
+        "merged": {
+          "en": "Shoe and toe are one piece; face, nose and ears one head; seat and its rails one slab; basket and its content two masses; rim and tyre one disc.",
+          "de": "Schuh und Zehen sind ein Stück; Gesicht, Nase und Ohren ein Kopf; Sitz und Holme eine Platte; Korb und Inhalt zwei Massen; Felge und Reifen eine Scheibe."
+        },
+        "omitted": {
+          "en": "Lower rails, cross tubes, backrest strap, forks, axles, brakes, collar, every coat and face detail.",
+          "de": "Unterholme, Querrohre, Rückengurt, Gabeln, Achsen, Bremsen, Kragen, jedes Mantel- und Gesichtsdetail."
+        },
+        "thinElements": {
+          "en": "The runs of the frame are drawn 42 mm wide instead of 25 to 28 mm and the wheel discs 75 mm instead of 36 mm, the least that prints under the default profile; the 3D model of this scale has the same sizes. Grips and caster heads keep their true 36 and 37 mm.",
+          "de": "Die Rahmenzüge sind 42 mm statt 25 bis 28 mm breit gezeichnet und die Radscheiben 75 mm statt 36 mm, das Mindeste, das mit dem Standardprofil druckt; das 3D-Modell dieses Maßstabs hat dieselben Maße. Griffe und Lenkköpfe behalten ihre wahren 36 und 37 mm."
+        },
+        "hatching": {
+          "en": "No hatching at 1:500.",
+          "de": "Keine Schraffur bei 1:500."
+        },
+        "styles": {
+          "en": "Body pen 0.13 mm; tones: dark coat, trousers and tyres, light head and bag.",
+          "de": "Körperstift 0,13 mm; Töne: dunkler Mantel, dunkle Hose und Reifen, heller Kopf und helle Tasche."
+        },
+        "overlays": {
+          "en": "Every thermal region is drawn as its own shapes: face and neck, hair, beret, hands, coat, trousers, shoes, frame, seat and basket, grips, tyres and bag.",
+          "de": "Jede thermische Region ist mit eigenen Formen gezeichnet: Gesicht und Hals, Haar, Mütze, Hände, Mantel, Hose, Schuhe, Rahmen, Sitz und Korb, Griffe, Reifen und Tasche."
+        }
+      }
+    }
+  }
+}

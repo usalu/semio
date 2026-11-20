@@ -119,6 +119,9 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
       | change-scene-ambient-intensity  | {"mutation":"changeSceneAmbientIntensity","newIntensity":0.25}                                                                                                                   | 🔅️change-scene-ambient-intensity  | 🔅️dims         |
       | change-scene-shadow-enabled     | {"mutation":"changeSceneShadowEnabled","newEnabled":false}                                                                                                                       | 🌑️change-scene-shadow-enabled     | 🌑️switches            |
       | change-scene-material-roughness | {"mutation":"changeSceneMaterialRoughness","newRoughness":0.25}                                                                                                                  | 🪨️change-scene-material-roughness | ✨️polishes       |
+      | set-shot-drawing | {"mutation":"setShotDrawing","id":"shot-close","patch":{"fillColor":{"value":"#A5F"},"hiddenLines":true,"visibleWidth":2.5,"mergeLines":true}} | ✒️set-shot-drawing | 🖌️assigns |
+      | patch-shot-camera | {"mutation":"patchShotCamera","shotId":"shot-close","field":"zoom","camera":{"position":[2.0,-2.0,1.5],"target":[0.0,0.0,1.0],"zoom":2.5,"fov":35.0},"fallback":{"position":[2.0,-2.0,1.5],"target":[0.0,0.0,1.0],"zoom":2.0,"fov":35.0}} | 🎛️patch-shot-camera | 📐️frames |
+      | set-shot-auto-fit | {"mutation":"setShotAutoFit","id":"shot-close","autoFit":false} | 🎯️set-shot-auto-fit | 📐️sets |
 
   @id-inverse
   @level-exhaustive
@@ -166,6 +169,9 @@ Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed r
       | change-scene-ambient-intensity  | {"mutation":"changeSceneAmbientIntensity","newIntensity":0.25}                                                                                                                   | 🔅️change-scene-ambient-intensity  | 🔅️dims         |
       | change-scene-shadow-enabled     | {"mutation":"changeSceneShadowEnabled","newEnabled":false}                                                                                                                       | 🌑️change-scene-shadow-enabled     | 🌑️switches            |
       | change-scene-material-roughness | {"mutation":"changeSceneMaterialRoughness","newRoughness":0.25}                                                                                                                  | 🪨️change-scene-material-roughness | ✨️polishes       |
+      | set-shot-drawing | {"mutation":"setShotDrawing","id":"shot-close","patch":{"fillColor":{"value":"#A5F"},"hiddenLines":true,"visibleWidth":2.5,"mergeLines":true}} | ✒️set-shot-drawing | 🖌️assigns |
+      | patch-shot-camera | {"mutation":"patchShotCamera","shotId":"shot-close","field":"zoom","camera":{"position":[2.0,-2.0,1.5],"target":[0.0,0.0,1.0],"zoom":2.5,"fov":35.0},"fallback":{"position":[2.0,-2.0,1.5],"target":[0.0,0.0,1.0],"zoom":2.0,"fov":35.0}} | 🎛️patch-shot-camera | 📐️frames |
+      | set-shot-auto-fit | {"mutation":"setShotAutoFit","id":"shot-close","autoFit":false} | 🎯️set-shot-auto-fit | 📐️sets |
 
   @id-identity-round-trip
   @level-long

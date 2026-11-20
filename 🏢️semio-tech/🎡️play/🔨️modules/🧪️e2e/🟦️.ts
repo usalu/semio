@@ -8,7 +8,7 @@ import { repoPlaywrightBrowsersPath } from "../../../../🧰️framework/🛍️
 import { playE2eInvocationPid, playE2eServiceV1 } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withPublishedPlayPagesV1} from "../📦️site/📄pages/📦️publication/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {servePublishedPlay} from "./📦️release/🟦️.ts";
 import { startToolV1, toolExitV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { runtimeCommandNameV1 } from "../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
@@ -67,8 +67,23 @@ export class TestReleaseScript extends BundleScript {
       try{
         const output=process.env.SEMIO_TICKET_DIR?join(process.env.SEMIO_TICKET_DIR,"🗑️generated/play-release-e2e"):join(root,"dist/reports/release-e2e");
         console.log(`Verifying published Play at ${service.baseURL}`);
-        const result=await withScriptInvocationSignalV1(this.invocation,pages.control.signal,original=>captureOwnedCommandResultV1(process.execPath,[resolve(createRequire(join(root,"package.json")).resolve("playwright/package.json"),"../cli.js"),"test","--config",join(root,"🔨️modules/🧪️e2e/🎚️config/🟦️.ts"),"--output",output],this.repoRoot,{control:pages.control,output:readNativeCallerAuthorityV1(this.invocation.capabilities).transport,env:scriptInvocationEnvironment(original,{...process.env,PLAYWRIGHT_BASE_URL:service.baseURL,PLAY_E2E_RELEASE_ORIGINS:JSON.stringify(service.origins),PLAYWRIGHT_BROWSERS_PATH:repoPlaywrightBrowsersPath(this.repoRoot)})}));
-        if(result.stdout)process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);if(result.status!==0||result.signal!==null)throw new Error("Actual published Play acceptance child failed");
+        const cli = resolve(createRequire(join(root, "package.json")).resolve("playwright/package.json"), "../cli.js");
+        const config = join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts");
+        const environment = {
+          ...process.env,
+          PLAYWRIGHT_BASE_URL: service.baseURL,
+          PLAY_E2E_RELEASE_ORIGINS: JSON.stringify(service.origins),
+          PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(this.repoRoot),
+        };
+        await withScriptInvocationSignalV1(this.invocation, pages.control.signal, original =>
+          runOwnedCommand(process.execPath, [cli, "test", "--config", config, "--output", output], this.repoRoot, "play:release-e2e", 0, {
+            deadline: pages.control,
+            signal: pages.control.signal,
+            output: readNativeCallerAuthorityV1(this.invocation.capabilities).transport,
+            outputStyle: "stream-without-prefixes",
+            env: scriptInvocationEnvironment(original, environment),
+          }),
+        );
       }catch(error){failed=true;throw error;}finally{try{await service.stop();}catch(error){if(!failed)throw error;}}
     });
   }

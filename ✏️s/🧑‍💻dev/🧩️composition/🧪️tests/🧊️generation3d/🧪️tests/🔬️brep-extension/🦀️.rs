@@ -18,6 +18,7 @@ fn bad_request(capability: &str, detail: impl Into<String>) -> Fault {
 }
 
 static GEOMETRY_CONTEXT: std::sync::Mutex<Option<semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext>> = std::sync::Mutex::new(None);
+static BREP_EVALUATION: std::sync::Mutex<Option<semio_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
 static MATH_CONTEXT: std::sync::Mutex<Option<semio_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
 
 /// 🎟️ Borrows the original packaged geometry execution owner across every fixture hop.
@@ -39,15 +40,30 @@ pub(crate) fn retire_execution_owners() {
         assert!(owner.terminal_is_empty(), "geometry fixture owner must retire before release");
         geometry.take();
     }
-    let mut math = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    if let Some(owner) = math.as_mut() {
-        owner.begin_close();
-        for _ in 0..1_000_000 {
-            if matches!(owner.close_step(scope.cx()).expect("math fixture owner closure"), PluginLifecycleStep::Complete(_)) && owner.terminal_is_empty() { break; }
+    for slot in [&BREP_EVALUATION, &MATH_CONTEXT] {
+        let mut resources = slot.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(owner) = resources.as_mut() {
+            owner.begin_close();
+            for _ in 0..1_000_000 {
+                if matches!(owner.close_step(scope.cx()).expect("evaluation fixture owner closure"), PluginLifecycleStep::Complete(_)) && owner.terminal_is_empty() { break; }
+            }
+            assert!(owner.terminal_is_empty(), "evaluation fixture owner must retire before release");
+            resources.take();
         }
-        assert!(owner.terminal_is_empty(), "math fixture owner must retire before release");
-        math.take();
     }
+}
+
+/// 🧹️ Cancels only work in the original geometry evaluator’s own registry.
+pub(crate) fn cancel_brep_evaluations(target: Option<(&str, u64)>) -> (usize, bool) {
+    let resources = BREP_EVALUATION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let Some(registry) = resources.as_ref().and_then(semio_os_flow::ExtensionEvaluationResources::registry) else {
+        return (0, false);
+    };
+    let retired = match target {
+        Some((operator, hash)) => usize::from(semio_os_flow::cancel_evaluation(registry, operator, hash)),
+        None => semio_os_flow::cancel_all_evaluations(registry),
+    };
+    (retired, semio_os_flow::evaluation_retirement_pending(registry))
 }
 
 /// 🔌️ Runs one declared capability exactly the way the packaged guest bundle's handler does.
@@ -60,45 +76,33 @@ pub(crate) fn retire_execution_owners() {
 pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
     use crate::flow_operators::{BREP_EXTENSION_PLUGIN_ID, MATH_EXTENSION_PLUGIN_ID};
     match (pending.extension_id.as_str(), pending.capability.as_str()) {
-        (BREP_EXTENSION_PLUGIN_ID, "evaluate") => {
-            use semio_s_plugin_flow_brep::geometry_inference::{GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA};
-            let service = semio_plugin::artifact_inference_service(GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA).map_err(|error| bad_request("evaluate", error.message))?.ok_or_else(|| bad_request("evaluate", "geometry inference is not registered"))?;
-            let payload: semio_os_flow::EvaluateRequest = semio_framework_pack_json::from_json_str(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluate", error.to_string()))?;
-            let units = if payload.round_units > 0 { payload.round_units } else if payload.budget > 0 { payload.budget } else { semio_os_flow::EVALUATE_STEP_BUDGET as u64 };
-            let cancellation_id = if payload.cancellation_id.is_empty() { "previewEval" } else { &payload.cancellation_id };
-            let budget = semio_plugin::WireArtifactInferenceBudget { allocation_bytes: 64 * 1024 * 1024, work_units: units, recursion_depth: 64 };
-            let request = semio_plugin::ArtifactInferenceExecutionRequest { policy: &[], budgets: &budget, cancellation_id, previous_state: None, requested_cache_mode: semio_plugin::WireArtifactInferenceCacheMode::Incremental, canonical_payload: pending.request_json.as_bytes(), dependencies: &[] };
-            let execution = with_geometry_context(|owner| service.infer_with_context(&request, owner));
-            let execution = execution.map_err(|error| bad_request("evaluate", error.message))?;
-            Ok(execution.canonical_payload)
-        }
-        (MATH_EXTENSION_PLUGIN_ID, "evaluate") => {
-            let mut context = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-            let owner = context.get_or_insert_with(|| {
-                let mut registry = semio_os_flow::neural::Registry::new();
-                semio_s_plugin_flow_math::register(&mut registry);
+        (BREP_EXTENSION_PLUGIN_ID | MATH_EXTENSION_PLUGIN_ID, "evaluate") => {
+            let brep = pending.extension_id == BREP_EXTENSION_PLUGIN_ID;
+            let mut slot = (if brep { &BREP_EVALUATION } else { &MATH_CONTEXT })
+                .lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let owner = slot.get_or_insert_with(|| {
+                let registry = if brep {
+                    semio_s_plugin_flow_brep::module_registry(crate::flow_operators::geometry_session())
+                } else {
+                    let mut registry = semio_os_flow::neural::Registry::new();
+                    semio_s_plugin_flow_math::register(&mut registry);
+                    registry
+                };
                 semio_os_flow::ExtensionEvaluationResources::new(registry)
             });
-            semio_os_flow::evaluate_invoke_json(owner.registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error))
+            crate::preview_reply::invoke_original(
+                |cx| semio_os_flow::evaluate_invoke_json(owner, pending.request_json.as_bytes(), cx), |_| {},
+            ).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| bad_request("evaluate", format!("{failure:?}"))))
         }
-        (BREP_EXTENSION_PLUGIN_ID, "tessellate") => {
-            let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellate", error.to_string()))?;
-            let handle = request.get("handle").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| bad_request("tessellate", "missing field `handle`"))?;
-            let tolerance = request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.05);
-            let budget = request.get("budget").and_then(semio_framework_pack_json::Value::as_f64).map_or(24, |value| (value as usize).max(1));
-            let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(semio_os_flow::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
-            let chunk = request.get("chunk").and_then(semio_framework_pack_json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-            Ok(crate::flow_operators::geometry_session().tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
-        }
+        (BREP_EXTENSION_PLUGIN_ID, "tessellate") => with_geometry_context(|owner|
+            crate::preview_reply::invoke(owner, pending.request_json.as_bytes(), |_| {})
+        ).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| bad_request("tessellate", format!("{failure:?}")))),
         (BREP_EXTENSION_PLUGIN_ID, "evaluateCancel") => {
             let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluateCancel", error.to_string()))?;
-            with_geometry_context(|owner| {
-                let retired = match (request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str), request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_f64)) {
-                    (Some(operator), Some(hash)) => usize::from(semio_os_flow::cancel_evaluation(owner.registry(), operator, hash.max(0.0) as u64)),
-                    _ => semio_os_flow::cancel_all_evaluations(owner.registry()),
-                };
-                Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".into(), semio_framework_pack_json::Value::Bool(true)), ("retired".into(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(), semio_framework_pack_json::Value::Bool(semio_os_flow::evaluation_retirement_pending(owner.registry())))] )).into_bytes())
-            })
+            let target = request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str)
+                .zip(request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_u64));
+            let (retired, pending) = cancel_brep_evaluations(target);
+            Ok(serde_json::to_vec(&serde_json::json!({"ok":true,"retired":retired,"pending":pending})).unwrap())
         }
         (BREP_EXTENSION_PLUGIN_ID, "tessellateCancel") => {
             let request = semio_framework_pack_json::parse(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("tessellateCancel", error.to_string()))?;

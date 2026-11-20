@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `DeleteSolid`.
 use super::DeleteSolid;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidRemoval;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_referrers;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidRemoval;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::solid_referrers;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::target_referenced;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 

@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const WORKER_FILES = ["🟦️.ts", "🧬️bindings-types/🟦️.ts", "🧵️state/🟦️.ts", "⏱️steps-and-reporting/🟦️.ts", "📨️receive/🟦️.ts", "🎞️frame-and-introspection/🟦️.ts", "🧯️close-and-fault/🟦️.ts", "🔌️boot-and-plugins/🟦️.ts", "🖼️page-image-decode/🟦️.ts", "📦️assets-and-host-io/🟦️.ts"] as const;
+const WORKER_FILES = ["🟦️.ts", "🧬️bindings-types/🟦️.ts", "🧵️state/🟦️.ts", "⏱️steps-and-reporting/🟦️.ts", "📨️receive/🟦️.ts", "🎞️frame-and-introspection/🟦️.ts", "🧯️close-and-fault/🟦️.ts", "🔌️boot-and-plugins/🟦️.ts", "🖼️page-image-decode/🟦️.ts", "🖼️icon-svg-preview/🟦️.ts", "📦️assets-and-host-io/🟦️.ts"] as const;
 
 /** 🎞️ Reads the frame Worker modules of one directory in a fixed order. */
 export function readFrameWorkerDirectory(directory: string): string {

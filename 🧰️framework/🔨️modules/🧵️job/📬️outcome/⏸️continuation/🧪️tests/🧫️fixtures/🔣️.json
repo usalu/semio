@@ -14,6 +14,12 @@
     "items": 1,
     "fuel": 1
   },
+  "retainedTotalBinding": {
+    "claimCopyBytes": 262144,
+    "overage": 1,
+    "policyCopyReduction": 64,
+    "redeemedItems": 1
+  },
   "returnClaim": {
     "captureItems": 1,
     "captureFuel": 1,

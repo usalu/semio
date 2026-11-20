@@ -193,11 +193,11 @@ fn modify_scene() -> ModelSnapshot {
     let line = |start: (f64, f64), end: (f64, f64)| Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } };
     let wall = |axis: Axis, name: &str| Wall { axis, name: name.into(), ..snapshot.walls["w-south"].clone() };
     let (long, short) = (wall(line((0.0, 3.0), (10.0, 3.0)), "Long"), wall(line((1.0, 4.0), (5.0, 4.0)), "Short"));
-    snapshot.walls.insert("w-long".into(), long);
-    snapshot.walls.insert("w-short".into(), short);
-    snapshot.beams.insert("b-1".into(), Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 } }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: "Beam".into() });
+    snapshot.walls.cold_insert("w-long".into(), long);
+    snapshot.walls.cold_insert("w-short".into(), short);
+    snapshot.beams.cold_insert("b-1".into(), Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 } }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: "Beam".into() });
     let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
-    snapshot.slabs.insert("sl-1".into(), Slab { storey: "st-ground".into(), slab_type: "sl-200".into(), boundary: vec![corner(0.0, 0.0), corner(8.0, 0.0), corner(8.0, 6.0), corner(0.0, 6.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Floor".into() });
+    snapshot.slabs.cold_insert("sl-1".into(), Slab { storey: "st-ground".into(), slab_type: "sl-200".into(), boundary: vec![corner(0.0, 0.0), corner(8.0, 0.0), corner(8.0, 6.0), corner(0.0, 6.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Floor".into() });
     snapshot
 }
 
@@ -226,10 +226,10 @@ async fn every_modify_gesture_previews_live_in_the_plan_the_3d_window_and_the_tr
     for (index, (utility, selected, acts)) in scripts.into_iter().enumerate() {
         let mut scene = modify_scene();
         if index != 8 {
-            scene.beams.clear();
+            scene.beams.cold_clear();
         }
         if index != 9 {
-            scene.slabs.clear();
+            scene.slabs.cold_clear();
         }
         let mut rig = Rig::plan(utility, scene);
         rig.selected = selected.iter().map(|id| id.to_string()).collect();

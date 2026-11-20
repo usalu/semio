@@ -22,7 +22,7 @@ impl<C:RetireOwned+Send+Sync+'static> ArtifactOriginalCommandWire<C>{
  pub fn original_command(&self)->Option<&C>{self.command.as_ref().map(|command|command.as_ref())}
  pub fn ready(&self)->bool{!self.closing&&self.phase==7}
  pub fn demands(&self)->Result<RetirementDemand,ValueError>{if self.closing{return self.close_demands()}let mut d=match self.phase{
-  0|4 if !self.cursor.complete&&self.offset==self.length=>RetirementDemand{copy_bytes:self.cursor.next_minimum_copy_bytes().max(64),capacity_bytes:self.cursor.next_capacity_byte_demand()?,depth:128,..Default::default()},
+  0|4 if !self.cursor.complete&&self.offset==self.length=>RetirementDemand{copy_bytes:self.cursor.next_minimum_copy_bytes().max(64),capacity_bytes:self.cursor.next_capacity_byte_demand()?,depth:self.cursor.next_depth_demand((self.source)(self.command.as_deref().ok_or_else(invalid)?))?,..Default::default()},
   0|4 if self.offset<self.length=>RetirementDemand{copy_bytes:self.length-self.offset,depth:1,..Default::default()},
   0=>fixed::<u8>(),1|6=>self.cursor.retirement_demands()?,2=>RetainedToolWireInput::original_birth_demands(self.measured,self.maximum)?,3=>fixed::<ArtifactPreparedOperationCursor>(),4 if self.cursor.complete&&self.offset==self.length&&self.page_len==0=>fixed::<u8>(),4|5=>RetirementDemand{copy_bytes:3*size_of::<ToolWirePage>()+self.page_len,depth:1,..Default::default()},7=>return self.take_demands(),_=>return Err(invalid()),};d.copy_bytes=d.copy_bytes.checked_add(META).ok_or_else(invalid)?;d.depth=d.depth.max(1);Ok(d)}
  /// ✍️ Each original turn selects one codec action, at most sixty-four appended bytes or one actual fixed wire page.

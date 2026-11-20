@@ -64,7 +64,7 @@ async fn the_typed_line_of_the_panel_carries_code_title_and_parent() {
 #[semio_framework_async_macros::async_test]
 async fn the_command_becomes_one_set_classification_system_mutation() {
     let mut snapshot = demo();
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass".into(), edition: String::new(), source: None, entries: Vec::new() });
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass".into(), edition: String::new(), source: None, entries: Vec::new() });
     let mut context = ctx(&[]);
     let emit = run(&snapshot, |doc, cfg| handle(&edit("add", "", "Pr | Products | ", ""), doc, cfg, &mut context)).expect("adds an entry from the typed line");
     assert!(matches!(emit.artifact_mutations.as_slice(), [ModelMutation::SetClassificationSystem(_)]));

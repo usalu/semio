@@ -1,0 +1,7 @@
+{
+  "positions": [0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+  "indices": [0, 1, 2, 0, 2, 3],
+  "componentRefs": {"face": ["face-a"], "edge": ["edge-a"], "vertex": ["vertex-a"]},
+  "edges": [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+  "point": {"positions":[2.5,-1.25,4],"vertexIds":[0],"componentRefs":{"vertex":["18446744073709551615"]}}
+}

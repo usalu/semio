@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 5,
+  "maxItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "initialGeneration", "publishesGeneration", "competes", "signal", "round", "adopted", "exit"],
+    "properties": {
+      "id": {"enum": ["wake", "immediate", "cancel", "bad-ticket", "inherited"]},
+      "initialGeneration": {"type": "integer", "minimum": 1},
+      "publishesGeneration": {"type": ["integer", "null"], "minimum": 1},
+      "competes": {"type": "boolean"},
+      "signal": {"enum": [null, "SIGTERM"]},
+      "round": {"enum": [0, 1, null]},
+      "adopted": {"type": ["boolean", "null"]},
+      "exit": {"enum": [0, 130]}
+    }
+  }
+}

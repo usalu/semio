@@ -2,13 +2,15 @@
 use crate::{BitmapMutation as M, diff::*};
 use crate::schema::snapshot::*;
 use crate::standards::v1::subsets::any::schema::mutations as mutations;
-use protocol::{RetainedMutation, RetainedMutationPreparation, RetainedMutationAdvance, RetainedMutationDecision, RetainedMutationCloseContext};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose}};
+use protocol::{RetainedMutation, RetainedMutationPreparation, RetainedMutationDecision, RetainedMutationCloseContext};
+use protocol::{retained_conclude as conclude, retained_polled as polled, RetainedDone as Done, RetainedFlight as Flight, RetainedReply as Reply};
+use protocol::retained_routed;
+use semio_framework_value::{OriginalRetirementCloseLoan,RetainedAllocationEffect,RetainedWorkOutcome,RetirementPollExit,ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneRef,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose}};
 use semio_framework_value_factory::vector::FactoryVectorRetirement;
 use std::mem::{ManuallyDrop,size_of};
 
 fn demand(copy_bytes:usize,capacity_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()}}
-fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{protocol::retained_mutation_demand_fits(d,g)}
+fn fits(d:RetirementDemand,effect:&RetainedAllocationEffect<'_>)->bool{protocol::retained_mutation_demand_fits(d,effect.grant())}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}}
 fn refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Invalid bitmap mutation source or payload")}
 fn cells(p:&BitmapSnapshot)->usize{p.input.width as usize*p.input.height as usize}
@@ -21,7 +23,7 @@ pub struct Preparation{
  diff:ManuallyDrop<Option<BitmapDiff>>,discarded:ManuallyDrop<Option<BitmapDiff>>,inverse:ManuallyDrop<Option<Vec<M>>>,
  bytes:ManuallyDrop<Option<Vec<u8>>>,prior:ManuallyDrop<Option<Vec<u8>>>,mask:ManuallyDrop<Option<Vec<u8>>>,
  saved:ManuallyDrop<Option<Vec<BitmapPinnedPixel>>>,cell_rows:ManuallyDrop<Option<Vec<BitmapPixelCell>>>,
- messages:ManuallyDrop<Option<Vec<protocol::MutationMessage>>>,ledger:Option<protocol::MutationMessageLedgerRetirement>,inverse_close:Option<FactoryVectorRetirement<M>>,retirement:RetainedCloneClose,
+ messages:ManuallyDrop<Option<Vec<protocol::MutationMessage>>>,ledger:Option<protocol::MutationMessageLedgerRetirement>,inverse_close:Option<FactoryVectorRetirement<M>>,retirement:RetainedCloneClose,flight:Flight,
  phase:u8,index:usize,found:Option<usize>,insert_at:usize,same:bool,partial:bool,
  extent:(u32,u32,u32,u32),segment:usize,line:Option<(i64,i64,i64,i64,i64,i64,i64,i64,i64)>,
  inverse_phase:u8,inverse_index:usize,strip:u8,closing:bool,refused:bool,noop:bool,carried_capacity:usize,key_capacity:usize,
@@ -149,32 +151,42 @@ impl Preparation{
  }
 }
 impl RetainedMutationPreparation<BitmapSnapshot,M> for Preparation{
- fn new()->Self{Self{diff:ManuallyDrop::new(None),discarded:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),bytes:ManuallyDrop::new(None),prior:ManuallyDrop::new(None),mask:ManuallyDrop::new(None),saved:ManuallyDrop::new(None),cell_rows:ManuallyDrop::new(None),messages:ManuallyDrop::new(None),ledger:None,inverse_close:None,retirement:Default::default(),phase:0,index:0,found:None,insert_at:0,same:true,partial:false,extent:(0,0,0,0),segment:0,line:None,inverse_phase:0,inverse_index:0,strip:0,closing:false,refused:false,noop:false,carried_capacity:0,key_capacity:0}}
- fn decision_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,_:usize)->Result<RetirementDemand,ValueError>{
+ fn new()->Self{Self{diff:ManuallyDrop::new(None),discarded:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),bytes:ManuallyDrop::new(None),prior:ManuallyDrop::new(None),mask:ManuallyDrop::new(None),saved:ManuallyDrop::new(None),cell_rows:ManuallyDrop::new(None),messages:ManuallyDrop::new(None),ledger:None,inverse_close:None,retirement:Default::default(),flight:Default::default(),phase:0,index:0,found:None,insert_at:0,same:true,partial:false,extent:(0,0,0,0),segment:0,line:None,inverse_phase:0,inverse_index:0,strip:0,closing:false,refused:false,noop:false,carried_capacity:0,key_capacity:0}}
+ fn decision_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,_:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+  if maximum_work_units==0{return Ok(Default::default());}
   Ok(if(1..=10).contains(&self.phase){self.reserve_demand(m.get(),p.get())}else{demand(Self::fixed()+512,1024)})
  }
- fn decide(&mut self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedMutationAdvance,ValueError>{
-  let q=self.decision_demand(m,p,body)?;if !fits(q,g){return Ok(RetainedMutationAdvance::Progress(Default::default()));}
-  let before=self.capacity();let result=(||->Result<(),ValueError>{let(m,p)=(m.get(),p.get());match self.phase{
-   0=>{*self.diff=Some(BitmapDiff::default());*self.messages=Some(Vec::new());self.validate(m,p)?;self.phase=1;},
-   1..=10=>self.reserve(m,p),
-   11=>{let mask=self.mask.as_mut().unwrap();if mask.len()<mask.capacity(){mask.push(0);}else{self.phase=12;}},
-   12=>{self.phase=13;self.index=0;},
-   13=>self.scan_pin(m,p)?,
-   14=>self.scan_pixel(m,p)?,
-   15=>self.scan_assignment(m,p)?,
-   16=>self.stroke(m,p)?,
-   17=>self.stroke_region(m,p),
-   18=>{self.finalize(m,p)?;self.phase=19;},
-   _=>{}
-  }Ok(())})();
-  if result.is_err(){self.refused=true;self.phase=19;assert!(self.messages.as_ref().is_some_and(|rows|!rows.is_empty()),"Every semantic refusal carries its original diagnostic");}
-  let mut r=receipt(q);r.retained_capacity_bytes=self.capacity().saturating_sub(before);
-  if !r.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Bitmap preparation exceeded its admitted quote").with_retained_progress(r));}
-  Ok(if self.phase==19{RetainedMutationAdvance::Ready(r)}else{RetainedMutationAdvance::Progress(r)})
+ fn decision_work_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.decision_demand(m,p,body,maximum_work_units)?;Ok(u64::from(maximum_work_units>0))}
+ fn decide_reply<'r>(&mut self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   if recover{return Err(ValueError::invariant("bitmap decision has no unrecorded callback").into());}
+   if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+   let q=self.decision_demand(m,p,body,maximum_work_units)?;if !fits(q,effect){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   work=1;
+   let before=self.capacity();let result=(||->Result<(),ValueError>{let(m,p)=(m.get(),p.get());match self.phase{
+    0=>{*self.diff=Some(BitmapDiff::default());*self.messages=Some(Vec::new());self.validate(m,p)?;self.phase=1;},
+    1..=10=>self.reserve(m,p),
+    11=>{let mask=self.mask.as_mut().unwrap();if mask.len()<mask.capacity(){mask.push(0);}else{self.phase=12;}},
+    12=>{self.phase=13;self.index=0;},
+    13=>self.scan_pin(m,p)?,
+    14=>self.scan_pixel(m,p)?,
+    15=>self.scan_assignment(m,p)?,
+    16=>self.stroke(m,p)?,
+    17=>self.stroke_region(m,p),
+    18=>{self.finalize(m,p)?;self.phase=19;},
+    _=>{}
+   }Ok(())})();
+   if result.is_err(){self.refused=true;self.phase=19;assert!(self.messages.as_ref().is_some_and(|rows|!rows.is_empty()),"Every semantic refusal carries its original diagnostic");}
+   let mut r=receipt(q);r.retained_capacity_bytes=self.capacity().saturating_sub(before);
+   if !r.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Bitmap preparation exceeded its admitted quote").with_retained_progress(r).into());}
+   Ok(if self.phase==19{RetainedCloneStep::Complete(r)}else{RetainedCloneStep::Progress(r)})
+  })();
+  conclude(effect,base,result,work,|step|step.progress(),reply)
  }
  fn take_decision(&mut self)->RetainedMutationDecision<BitmapDiff>{assert_eq!(self.phase,19);self.phase=20;if self.refused{RetainedMutationDecision::Refused(self.messages.take().unwrap())}else{RetainedMutationDecision::Admitted(self.diff.take().unwrap(),self.messages.take().unwrap())}}
- fn inverse_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,_:RetainedCloneRef<'_,BitmapDiff>,_:usize)->Result<RetirementDemand,ValueError>{
+fn inverse_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,_:RetainedCloneRef<'_,BitmapDiff>,_:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
+  if maximum_work_units==0{return Ok(Default::default());}
   let(m,p)=(m.get(),p.get());let cap=match self.inverse_phase{
    0=>self.inverse_count(m,p)*size_of::<M>(),
    1=>if pins(m).is_some(){p.pinned.len()*size_of::<BitmapPinnedPixel>()}else{0},
@@ -182,8 +194,15 @@ impl RetainedMutationPreparation<BitmapSnapshot,M> for Preparation{
    _=>0
   };Ok(demand(Self::fixed()+512,cap))
  }
- fn inverse(&mut self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,d:RetainedCloneRef<'_,BitmapDiff>,body:usize,g:RetainedCloneGrant)->Result<RetainedMutationAdvance,ValueError>{
-  let q=self.inverse_demand(m,p,d,body)?;if !fits(q,g){return Ok(RetainedMutationAdvance::Progress(Default::default()));}let before=self.capacity();let(m,p)=(m.get(),p.get());match self.inverse_phase{
+ fn inverse_work_demand(&self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,d:RetainedCloneRef<'_,BitmapDiff>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.inverse_demand(m,p,d,body,maximum_work_units)?;Ok(u64::from(maximum_work_units>0))}
+ fn inverse_reply<'r>(&mut self,m:RetainedCloneRef<'_,M>,p:RetainedCloneRef<'_,BitmapSnapshot>,d:RetainedCloneRef<'_,BitmapDiff>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   if recover{return Err(ValueError::invariant("bitmap inverse has no unrecorded callback").into());}
+   if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+   let q=self.inverse_demand(m,p,d,body,maximum_work_units)?;if !fits(q,effect){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   work=1;
+   let before=self.capacity();let(m,p)=(m.get(),p.get());match self.inverse_phase{
    0=>{*self.inverse=Some(Vec::with_capacity(self.inverse_count(m,p)));self.inverse_phase=if self.inverse_count(m,p)==0{9}else{1};},
    1=>{if pins(m).is_some(){*self.saved=Some(Vec::with_capacity(p.pinned.len()));}self.inverse_phase=2;self.inverse_index=0;},
    2=>match m{
@@ -197,10 +216,21 @@ impl RetainedMutationPreparation<BitmapSnapshot,M> for Preparation{
    6=>{let M::ResizeInput(v)=m else{unreachable!()};if self.strip==0{self.strip=1;self.extent=(v.width,0,p.input.width.saturating_sub(v.width),p.input.height);self.inverse_phase=4;}else{self.inverse.as_mut().unwrap().push(mutations::resize_input(p.input.width,p.input.height));self.inverse_phase=9;}},
    _=>{}
   }
-  let mut r=receipt(q);r.retained_capacity_bytes=self.capacity().saturating_sub(before);if !r.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Bitmap inverse exceeded its admitted quote").with_retained_progress(r));}Ok(if self.inverse_phase==9{RetainedMutationAdvance::Ready(r)}else{RetainedMutationAdvance::Progress(r)})
+   let mut r=receipt(q);r.retained_capacity_bytes=self.capacity().saturating_sub(before);if !r.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Bitmap inverse exceeded its admitted quote").with_retained_progress(r).into());}
+   Ok(if self.inverse_phase==9{RetainedCloneStep::Complete(r)}else{RetainedCloneStep::Progress(r)})
+  })();
+  conclude(effect,base,result,work,|step|step.progress(),reply)
  }
  fn take_inverse(&mut self)->Vec<M>{assert_eq!(self.inverse_phase,9);self.inverse_phase=10;self.inverse.take().unwrap()}
  fn begin_close(&mut self){self.closing=true;}
+ fn close_started(&self)->bool{self.closing}
+ fn begin_close_demand(&self)->RetirementDemand{if self.closing{Default::default()}else{demand(size_of::<bool>(),0)}}
+ fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{
+  let d=self.begin_close_demand();if self.closing||effect.maximum_work_units()==0||!fits(d,effect){return RetainedWorkOutcome{result:Ok(Default::default()),work:0};}
+  let work=match effect.performed(1){Ok(true)=>1,Ok(false)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Bitmap preparation close start exceeded its original action")),work:1},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:1}};
+  self.closing=true;RetainedWorkOutcome{result:Ok(receipt(d)),work}
+ }
  fn close_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<BitmapDiff>(false,&None,body);}
   if self.diff.is_some()||self.discarded.is_some(){return self.retirement.next_owner_demands::<BitmapDiff>(true,&None,body);}
@@ -213,21 +243,63 @@ impl RetainedMutationPreparation<BitmapSnapshot,M> for Preparation{
   if self.messages.is_some(){return Ok(demand(size_of::<protocol::MutationMessageLedgerRetirement>(),0));}
   Ok(Default::default())
  }
- fn close_step(&mut self,c:RetainedMutationCloseContext<'_,M>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  assert!(self.closing);let q=self.close_demand(c,g.maximum_copy_bytes)?;if !fits(q,g){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if let Some(s)=self.retirement.begin_granted(&mut self.diff,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(s)=self.retirement.begin_granted(&mut self.discarded,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  for v in [&mut *self.bytes,&mut *self.prior,&mut *self.mask]{if let Some(s)=self.retirement.begin_granted(v,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}}
-  if let Some(s)=self.retirement.begin_granted(&mut self.saved,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(s)=self.retirement.begin_granted(&mut self.cell_rows,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(o)=self.inverse_close.as_mut(){let s=o.close_step(c.mutations,g).result?;if o.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(rows)=self.inverse.take(){return match FactoryVectorRetirement::admit(rows,g){Ok((o,r))=>{self.inverse_close=Some(o);Ok(RetainedCloneStep::Progress(r))},Err((e,rows))=>{*self.inverse=Some(rows);Err(e)}};}
-  if let Some(o)=self.ledger.as_mut(){let s=o.close_step(g)?;if o.terminal_is_empty(){self.ledger=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(rows)=self.messages.take(){self.ledger=Some(protocol::MutationMessageLedgerRetirement::new(String::new(),rows));return Ok(RetainedCloneStep::Progress(receipt(q)));}
-  Ok(RetainedCloneStep::Complete(Default::default()))
+ fn close_work_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>{
+  self.close_demand(c,body)?;
+  if !self.retirement.is_empty(){return self.retirement.next_owner_work::<BitmapDiff>(false,&None,body);}
+  if self.diff.is_some()||self.discarded.is_some(){return self.retirement.next_owner_work::<BitmapDiff>(true,&None,body);}
+  if self.bytes.is_some()||self.prior.is_some()||self.mask.is_some(){return self.retirement.next_owner_work::<Vec<u8>>(true,&None,body);}
+  if self.saved.is_some(){return self.retirement.next_owner_work::<Vec<BitmapPinnedPixel>>(true,&None,body);}
+  if self.cell_rows.is_some(){return self.retirement.next_owner_work::<Vec<BitmapPixelCell>>(true,&None,body);}
+  if let Some(o)=self.inverse_close.as_ref(){return o.close_work_demand(c.mutations,body);}
+  if self.inverse.is_some()||self.ledger.is_some()||self.messages.is_some(){return Ok(1);}
+  Ok(0)
  }
- fn terminal_is_empty(&self)->bool{self.diff.is_none()&&self.discarded.is_none()&&self.inverse.is_none()&&self.bytes.is_none()&&self.prior.is_none()&&self.mask.is_none()&&self.saved.is_none()&&self.cell_rows.is_none()&&self.messages.is_none()&&self.ledger.is_none()&&self.inverse_close.is_none()&&self.retirement.is_empty()}
+ fn requires_original_birth(&self)->bool{self.flight.idle()&&!self.retirement.is_empty()&&self.retirement.requires_original_birth()}
+ fn requires_original_control(&self)->bool{if let Some(loaned)=self.flight.loaned(){return loaned;}!self.retirement.is_empty()&&self.retirement.requires_original_control()}
+ fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementPoll{self.retirement.step_original_birth(original,grant)}
+ fn close_reply<'r>(&mut self,c:RetainedMutationCloseContext<'_,M>,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   assert!(self.closing);
+   let route:u8;
+   if recover{route=self.flight.route().ok_or_else(||ValueError::invariant("bitmap close has no recorded route"))?;}else{
+    if !self.flight.idle(){return Err(ValueError::invariant("bitmap close requires recovery").into());}
+    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+    let q=self.close_demand(c,body)?;if !fits(q,effect){return Ok(RetainedCloneStep::Progress(Default::default()));}
+    if self.requires_original_birth(){return Err(ValueError::invariant("bitmap close Birth must settle before effect").into());}
+    if self.requires_original_control()&&original.is_none(){return Err(ValueError::invariant("bitmap close requires its original controller").into());}
+    if !self.retirement.is_empty(){route=if self.retirement.requires_original_control(){3}else{2};}
+    else if self.inverse_close.is_some(){route=4;}
+    else if self.inverse.is_some()&&self.diff.is_none()&&self.discarded.is_none()&&self.bytes.is_none()&&self.prior.is_none()&&self.mask.is_none()&&self.saved.is_none()&&self.cell_rows.is_none(){route=5;}
+    else{
+     macro_rules! begin{($field:expr)=>{let turn=self.retirement.begin_granted(&mut $field,effect);work+=turn.work;if let Some(s)=turn.result?{return Ok(RetainedCloneStep::Progress(s.progress()));}};}
+     begin!(self.diff);begin!(self.discarded);begin!(self.bytes);begin!(self.prior);begin!(self.mask);begin!(self.saved);begin!(self.cell_rows);
+     if self.inverse.is_some(){route=5;}
+     else if let Some(o)=self.ledger.as_mut(){let turn=o.close_step(effect.grant());work+=u128::from(o.last_turn_work());let s=turn?;if o.terminal_is_empty(){self.ledger=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
+     else if let Some(rows)=self.messages.take(){self.ledger=Some(protocol::MutationMessageLedgerRetirement::new(String::new(),rows));work+=1;return Ok(RetainedCloneStep::Progress(receipt(q)));}
+     else{return Ok(RetainedCloneStep::Complete(Default::default()));}
+    }
+   }
+   let step=match route{
+    4=>{let close=self.inverse_close.as_mut().ok_or_else(||ValueError::invariant("bitmap inverse close is absent"))?;let s=polled(&mut self.flight,effect,recover,4,body,&mut work,|e|close.close_step(c.mutations,body,e))?.map_err(RetirementPollExit::from)?;if close.terminal_is_empty(){self.inverse_close=None;}s}
+    5=>polled(&mut self.flight,effect,recover,5,body,&mut work,|e|FactoryVectorRetirement::admit(&mut *self.inverse,&mut self.inverse_close,e))?.map_err(RetirementPollExit::from)?,
+    _=>{
+     let loan=if route==3{original.as_deref_mut()}else{None};let missing=||ValueError::invariant("bitmap original controller missing");
+     retained_routed!(self.flight,effect,recover,route,body,0,loan,work,|r| match route{
+      2=>self.retirement.step_into(body,effect,r),
+      3=>self.retirement.step_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+      _=>Err(ValueError::invariant("bitmap close route changed"))},
+      match route{
+      2=>self.retirement.recover_step_into(body,effect,r),
+      3=>self.retirement.recover_step_original_into(original.as_deref_mut().ok_or_else(missing)?,body,effect,r),
+      _=>Err(ValueError::invariant("bitmap close route changed"))})?
+    }
+   };
+   Ok(RetainedCloneStep::Progress(step.progress()))
+  })();
+  conclude(effect,base,result,work,|step|step.progress(),reply)
+ }
+ fn terminal_is_empty(&self)->bool{self.diff.is_none()&&self.discarded.is_none()&&self.inverse.is_none()&&self.bytes.is_none()&&self.prior.is_none()&&self.mask.is_none()&&self.saved.is_none()&&self.cell_rows.is_none()&&self.messages.is_none()&&self.ledger.is_none()&&self.inverse_close.is_none()&&self.retirement.is_empty()&&self.flight.idle()}
 }
 impl Preparation{
  fn capacity(&self)->usize{

@@ -40,6 +40,35 @@
         }
       }
     },
+    "placement": {
+      "type": "object",
+      "description": "Exact XML child placement for an inverse that restores a removed cell.",
+      "additionalProperties": false,
+      "required": ["index", "unanchorNext"],
+      "x-semio-ui": {
+        "label": { "en": "XML placement", "de": "XML-Position" },
+        "widget": "hidden"
+      },
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "x-semio-ui": {
+            "label": { "en": "Child index", "de": "Kindindex" },
+            "widget": "hidden"
+          }
+        },
+        "unanchorNext": {
+          "type": "boolean",
+          "description": "Restore the next cell's implicit reference after reinsertion.",
+          "x-semio-ui": {
+            "label": { "en": "Restore implicit reference", "de": "Impliziten Bezug wiederherstellen" },
+            "widget": "hidden"
+          }
+        }
+      }
+    },
     "column": {
       "type": "integer",
       "minimum": 0,

@@ -55,7 +55,7 @@ export interface FlowWasmSession {
   setGhostWidget(descriptorJson: string, worldX: number, worldY: number): FlowTask<unknown>;
   setGhostWidget(args: { readonly descriptorJson: string; readonly worldX: number; readonly worldY: number }): FlowTask<unknown>;
   setHover(widgetId?: string | null): FlowTask<unknown>;
-  setHover(args: { readonly widgetId?: string | null }): FlowTask<unknown>;
+  setHover(args: { readonly widgetId?: string | null; readonly edgeId?: string | null }): FlowTask<unknown>;
   setHoverChannel(widgetId?: string | null, port?: string | null): FlowTask<unknown>;
   setHoverChannel(args: { readonly widgetId?: string | null; readonly port?: string | null }): FlowTask<unknown>;
   setNeuronKindInfosJson(json: string): FlowTask<unknown>;

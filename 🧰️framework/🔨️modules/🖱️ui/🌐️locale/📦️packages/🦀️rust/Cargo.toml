@@ -26,6 +26,7 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-schema = { path = "../../../../🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

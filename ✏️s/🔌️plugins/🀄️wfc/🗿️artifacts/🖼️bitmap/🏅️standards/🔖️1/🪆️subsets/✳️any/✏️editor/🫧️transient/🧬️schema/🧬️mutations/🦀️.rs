@@ -13,6 +13,7 @@ pub enum BitmapTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
 }
+dsl::original_pack_value_operation_receiving!(BitmapTransientMutation);
 
 
 

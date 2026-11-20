@@ -189,8 +189,8 @@ fn a_curved_strip_keeps_arcs_and_the_exact_area() {
 #[test]
 fn the_run_table_is_canonical_json_of_every_ramp() {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.storeys.insert("st-ground".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
-    snapshot.ramps.insert("rp".into(), straight(10.0, 0.5));
+    snapshot.storeys.cold_insert("st-ground".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.ramps.cold_insert("rp".into(), straight(10.0, 0.5));
     let runs = compute_ramp_runs(&snapshot);
     assert_eq!(runs.len(), 1);
     let table: serde_json::Value = serde_json::from_str(&table_json(&runs)).expect("a JSON table");

@@ -1,6 +1,7 @@
 use super::*;
 use semio_os_flow::geometry::{GeometryWorkIdentity,GeometryWorkProgress,GeometryWorkFailure};
 use semio_framework_value::RetirementDemand;
+use semio_framework_3d_brep_engine::PreviewReach;
 
 /// 🧭️ One original source and caller identity remain attached to its paid key and query admission.
 pub(super) struct TessellationAdmission {
@@ -110,10 +111,12 @@ impl Session {
         }else if admission.phase==9{
             if registry.jobs.len()>=TESSELLATION_JOB_CAPACITY{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tessellation job registry is full"));}
             let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;
-            let(job,validation)=kernel.admit_tessellation_job(admission.handle.as_str(),tolerance)?;
+            let primitive_preview=kernel.admit_primitive_preview(admission.handle.as_str(),tolerance)?;
+            let(job,validation)=if primitive_preview.is_some(){(TessellationJob::new(tolerance),false)}else{kernel.admit_tessellation_job(admission.handle.as_str(),tolerance)?};
+            let validation=validation&&primitive_preview.is_none();
             let validation_units=usize::from(validation);
             let original=registry.admission.take().ok_or_else(ownership_busy)?;
-            let row=RetainedTessellation{identity:original.identity,source:original.source,length:original.length,source_units:original.units+1,geometry:Some(original.handle),admission_claim:original.claim,validation_units,validation:validation.then(||semio_framework_3d_brep_validation::BodyValidationJob::new(kernel.tessellation_body())),validated:validation_units==0,job,last_step:registry.clock,retired:false,output:None,previous_mesh:None};
+            let row=RetainedTessellation{identity:original.identity,source:original.source,length:original.length,source_units:original.units+1,geometry:Some(original.handle),admission_claim:original.claim,validation_units,validation_scope:validation.then(||PreviewReach::new(kernel.preview_validation_revision())),validation:validation.then(||semio_framework_3d_brep_validation::BodyValidationJob::for_preview_gate(kernel.tessellation_body())),validated:validation_units==0,job,primitive_preview,last_step:registry.clock,retired:false,output:None,previous_mesh:None};
             match registry.jobs.insert_reserved(original.job_key,row,grant){Ok((previous,receipt))=>{assert!(previous.is_none());retained=receipt;},Err((error,key,row))=>{registry.admission=Some(TessellationAdmission{identity:row.identity,source:row.source,length:row.length,tolerance:key.1,handle:row.geometry.unwrap(),claim:row.admission_claim,job_key:key,copied:0,phase:9,units:original.units,cancelled:original.cancelled});return Err(error);}}
         }
         if let Some(admission)=&mut registry.admission{admission.units+=1;}
@@ -198,21 +201,153 @@ impl Session {
     }
     fn source_tessellation_cancelled(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64)->Result<bool,ValueError>{let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;Ok(registry.source_cancellation.as_ref().is_some_and(|target|target.matches(identity,handle,tolerance)))}
     pub fn tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let authority=self;if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok(Default::default());}if let Some(demand)=authority.admission_demands(identity,handle,tolerance,copy)?{return Ok(demand);}let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;
-        if let Some(validation)=registry.jobs.iter().find(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len()).and_then(|(_,row)|row.validation.as_ref()){return validation.funded_demands(kernel.tessellation_body());}
+        if let Some(row) = registry.jobs.iter().find(|(key,row)| key.0 == handle && key.1 == tolerance.to_bits() && row.identity == identity).map(|(_,row)| row) {
+            if row.retired { return Ok(Default::default()); }
+            if let Some(preview) = &row.primitive_preview { return kernel.primitive_preview_demand(handle, preview); }
+            if row.validated {
+                if let Some(demand) = kernel.analytic_preview_demand(handle, &row.job)? { return Ok(demand); }
+            } else if let Some(validation)=&row.validation {
+                if validation.issue_count()!=0{return Ok(RetirementDemand{depth:validation.first_issue_depth()?,..Default::default()});}
+                if let Some(scope)=&row.validation_scope {
+                    if !scope.done(){return scope.demand(&kernel,handle,copy);}
+                    scope.check(&kernel)?;
+                    let mut demand=validation.funded_demands_for(kernel.tessellation_body(),Some(scope.scope()))?;
+                    demand.depth=demand.depth.max(scope.depth());
+                    return Ok(demand);
+                }
+                return validation.funded_demands(kernel.tessellation_body());
+            }
+        }
         let bytes=authority.cached_mesh_payload_bytes(handle,tolerance);Ok(semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()})}
-    fn tessellate_admitted_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,effect:&mut RetainedAllocationEffect<'_>,spent:&mut usize)->Result<(TessellationStepOutcome,GeometryWorkProgress),ValueError>{
+    fn tessellate_primitive_step(
+        &self, identity: GeometryWorkIdentity, handle: &str, tolerance: f64,
+        effect: &mut RetainedAllocationEffect<'_>, spent: &mut usize,
+    ) -> Result<Option<(semio_os_flow::geometry::GeometryStep, GeometryWorkProgress)>, ValueError> {
+        use semio_os_flow::geometry::GeometryStep;
+        let kernel = self.kernel().try_lock().map_err(|_| ownership_busy())?;
+        let mut owner = self.tessellation_jobs().try_lock().map_err(|_| ownership_busy())?;
+        let registry = owner.original_mut().ok_or_else(ownership_busy)?;
+        let clock = registry.clock;
+        for (key, row) in registry.jobs.slot_entries_mut() {
+            if key.0 != handle || key.1 != tolerance.to_bits() || row.identity != identity { continue; }
+            if row.source != handle.as_ptr() as usize || row.length != handle.len() { return Err(ownership_busy()); }
+            let Some(preview) = &mut row.primitive_preview else { return Ok(None); };
+            if row.retired { return Ok(Some((GeometryStep::Cancelled, Default::default()))); }
+            let (mesh, retained) = kernel.step_primitive_preview(handle, preview, effect)?;
+            *spent = usize::from(retained.copied_items != 0);
+            let work = GeometryWorkProgress { retained, consumed_units: *spent };
+            if *spent != 0 { row.last_step = clock; }
+            let step = match mesh {
+                Some(mesh) => {
+                    row.retired = true;
+                    registry.retire_slot = 0;
+                    GeometryStep::Ready(mesh)
+                }
+                None => {
+                    let (units_done, units_total, phase) = preview.progress();
+                    GeometryStep::Working { units_done: row.source_units + units_done, units_total: row.source_units + units_total, phase }
+                }
+            };
+            return Ok(Some((step, work)));
+        }
+        Ok(None)
+    }
+    fn tessellate_analytic_step(&self, identity: GeometryWorkIdentity, handle: &str, tolerance: f64, effect: &mut RetainedAllocationEffect<'_>, spent: &mut usize)
+        -> Result<Option<(semio_os_flow::geometry::GeometryStep, GeometryWorkProgress)>, ValueError> {
+        use semio_os_flow::geometry::GeometryStep;
+        let grant = effect.grant();
+        let kernel = self.kernel().try_lock().map_err(|_| ownership_busy())?;
+        let mut owner = self.tessellation_jobs().try_lock().map_err(|_| ownership_busy())?;
+        let registry = owner.original_mut().ok_or_else(ownership_busy)?;
+        let clock = registry.clock;
+        for (key, row) in registry.jobs.slot_entries_mut() {
+            if key.0 != handle || key.1 != tolerance.to_bits() || row.identity != identity { continue; }
+            if row.source != handle.as_ptr() as usize || row.length != handle.len() {
+                return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "analytic preview source or caller changed"));
+            }
+            if row.retired { return Ok(Some((GeometryStep::Cancelled, Default::default()))); }
+            if !row.validated { return Ok(None); }
+            let Some(demand) = kernel.analytic_preview_demand(handle, &row.job)? else { return Ok(None); };
+            let admitted = grant.maximum_items != 0
+                && semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand)
+                && effect.performed(1)?;
+            let (preview, retained) = if admitted {
+                *spent = 1;
+                row.last_step = clock;
+                kernel.step_analytic_tessellation(handle, &mut row.job, grant)?
+            } else {
+                (None, Default::default())
+            };
+            let work = GeometryWorkProgress { retained, consumed_units: *spent };
+            let step = match preview {
+                Some(mesh) => {
+                    row.retired = true;
+                    registry.retire_slot = 0;
+                    GeometryStep::Ready(mesh)
+                }
+                None => {
+                    let progress = row.job.progress();
+                    let offset=row.source_units+row.validation_units;
+                    GeometryStep::Working { units_done: offset+progress.units_done, units_total: offset+progress.units_total, phase: progress.phase.tag() }
+                }
+            };
+            return Ok(Some((step, work)));
+        }
+        Ok(None)
+    }
+    fn tessellate_admitted_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,cached_fits:bool,effect:&mut RetainedAllocationEffect<'_>,spent:&mut usize)->Result<(TessellationStepOutcome,GeometryWorkProgress),ValueError>{
         let grant=effect.grant();
         let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original_mut().ok_or_else(ownership_busy)?;
         let slot=(0..registry.jobs.slot_count()).find(|slot|registry.jobs.slot_entry(*slot).is_some_and(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len())).ok_or_else(ownership_busy)?;
         let clock=registry.clock;let(key,row)=registry.jobs.slot_entry_mut(slot).ok_or_else(ownership_busy)?;
         if row.retired{return Ok((TessellationStepOutcome::Cancelled,Default::default()));}
-        if let Some(validation)=row.validation.as_mut(){
-            let demand=validation.funded_demands(kernel.tessellation_body())?;
+        if let Some(validation)=row.validation.as_mut().filter(|_| !row.validated){
+            let scope=row.validation_scope.as_mut();
+            if let Some(scope)=scope.as_ref(){scope.check(&kernel)?;}
+            if let Some(scope)=scope.filter(|scope|!scope.done()){
+                let before=scope.units();
+                let step=scope.step(&kernel,handle,effect);
+                let consumed_units=scope.units()-before;
+                *spent=consumed_units;
+                let retained=step?;
+                if consumed_units!=0{row.last_step=clock;row.validation_units=scope.units();}
+                let units_done=row.source_units.saturating_add(scope.units());
+                return Ok((TessellationStepOutcome::Working{units_done,units_total:units_done.saturating_add(1),faces_done:0,faces_total:0,phase:"validating-scope"},
+                    GeometryWorkProgress{retained,consumed_units}));
+            }
+            let scoped=row.validation_scope.as_ref();
+            let reached=scoped.map(PreviewReach::scope);
+            let scope_units=scoped.map_or(0,|scope|scope.units());
+            if validation.issue_count()!=0{
+                let demand=RetirementDemand{depth:validation.first_issue_depth()?,..Default::default()};
+                if grant.maximum_items==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)||!effect.performed(1)?{
+                    let progress=validation.progress();
+                    let offset=row.source_units.saturating_add(scope_units);
+                    return Ok((TessellationStepOutcome::Working{units_done:offset+progress.units_done,units_total:offset+progress.units_total+1,
+                        faces_done:0,faces_total:0,phase:"validating"},Default::default()));
+                }
+                let message=validation.take_first_issue_message().ok_or_else(||ValueError::invariant("selected preview finding disappeared"))?;
+                row.retired=true;
+                registry.retire_slot=0;
+                *spent=1;
+                return Ok((TessellationStepOutcome::Failed{message},GeometryWorkProgress{
+                    retained:RetainedCloneProgress{copied_items:1,..Default::default()},consumed_units:1}));
+            }
+            let mut demand=validation.funded_demands_for(kernel.tessellation_body(),reached)?;
+            demand.depth=demand.depth.max(scoped.map_or(1,|scope|scope.depth()));
             let admitted=units!=0&&grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth;
             *spent=usize::from(admitted);
-            let(retained,consumed_units)=validation.step_funded(kernel.tessellation_body(),units,effect)?;
-            let progress=validation.progress();if consumed_units!=0{row.last_step=clock;row.validation_units=progress.units_done;}
-            return Ok((TessellationStepOutcome::Working{units_done:row.source_units.saturating_add(progress.units_done),units_total:row.source_units.saturating_add(progress.units_total),faces_done:0,faces_total:0,phase:"validating"},GeometryWorkProgress{retained,consumed_units}));
+            let(retained,consumed_units)=if admitted{validation.step_funded_for(kernel.tessellation_body(),reached,units,effect)?}else{(Default::default(),0)};
+            let progress=validation.progress();if consumed_units!=0{row.last_step=clock;row.validation_units=scope_units+progress.units_done;}
+            if validation.passed() { row.validated=true; }
+            let offset=row.source_units.saturating_add(row.job.progress().units_done).saturating_add(scope_units);
+            return Ok((TessellationStepOutcome::Working{units_done:offset.saturating_add(progress.units_done),units_total:offset.saturating_add(progress.units_total),faces_done:0,faces_total:0,phase:"validating"},GeometryWorkProgress{retained,consumed_units}));
+        }
+        if !cached_fits{
+            let progress=row.job.progress();
+            let offset=row.source_units.saturating_add(row.validation_units);
+            return Ok((TessellationStepOutcome::Working{units_done:offset+progress.units_done,units_total:offset+progress.units_total,
+                faces_done:progress.faces_done,faces_total:progress.faces_total,phase:"awaiting-grant"},Default::default()));
         }
         row.last_step=clock;
         let outcome=self.step_tessellation_row(&kernel,key,row,None,units);if !matches!(outcome,TessellationStepOutcome::Working{..}){registry.retire_slot=0;}Ok((outcome,GeometryWorkProgress::default()))
@@ -243,11 +378,15 @@ impl Session {
         if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok((GeometryStep::Cancelled,Default::default()));}
         if let Some(work)=authority.admission_step(identity,handle,tolerance,units,grant,spent)?{let progress=self.admission_progress(identity,handle,tolerance).map_err(|primary|primary.with_retained_progress(work.retained))?;let (units_done,units_total,phase)=progress.unwrap_or((0,0,if work==GeometryWorkProgress::default(){"awaiting-grant"}else{"admitted-source"}));return Ok((GeometryStep::Working{units_done,units_total,phase},work));}
         if units==0||grant.maximum_items==0||grant.maximum_depth==0 {return Ok(awaiting());}
+        if let Some(step) = self.tessellate_primitive_step(identity, handle, tolerance, effect, spent)? { return Ok(step); }
+        if let Some(step) = self.tessellate_analytic_step(identity, handle, tolerance, effect, spent)? { return Ok(step); }
         let fits=|bytes:usize|bytes<=grant.maximum_copy_bytes&&bytes<=grant.maximum_capacity_bytes;
-        if !fits(authority.cached_mesh_payload_bytes(handle,tolerance)) {return Ok(awaiting());}
+        let cached_fits=fits(authority.cached_mesh_payload_bytes(handle,tolerance));
         let before=authority.tessellation_work_units(identity,handle,tolerance);let mut consumed_units=0;
-        let(outcome,validation_work)=authority.tessellate_admitted_step(identity,handle,tolerance,units,effect,spent)?;
-        if let TessellationStepOutcome::Working{units_done,units_total,phase:"validating",..}=&outcome{return Ok((GeometryStep::Working{units_done:*units_done,units_total:*units_total,phase:"validating"},validation_work));}
+        let(outcome,validation_work)=authority.tessellate_admitted_step(identity,handle,tolerance,units,cached_fits,effect,spent)?;
+        if let TessellationStepOutcome::Working{units_done,units_total,phase,..}=&outcome{
+            if matches!(*phase,"validating"|"validating-scope"){return Ok((GeometryStep::Working{units_done:*units_done,units_total:*units_total,phase:*phase},validation_work));}
+        }
         let step=match outcome {
             TessellationStepOutcome::Working {units_done,units_total,phase,..}=>{consumed_units=units_done.saturating_sub(before);GeometryStep::Working {units_done,units_total,phase}},
             TessellationStepOutcome::Ready {mesh,units_total,..}=>{
@@ -259,6 +398,7 @@ impl Session {
             TessellationStepOutcome::Failed {message}=>GeometryStep::Failed(message),
             TessellationStepOutcome::Invalid {issues}=>GeometryStep::Failed(issues.into_iter().map(|issue|issue.message).collect::<Vec<_>>().join("; ")),
         };
+        if validation_work.consumed_units!=0{return Ok((step,validation_work));}
         Ok((step,GeometryWorkProgress{retained:if consumed_units==0{Default::default()}else{RetainedCloneProgress {copied_items:1,..Default::default()}},consumed_units}))
     }
 }

@@ -164,7 +164,7 @@ fn every_attach_is_an_ifc_rel_connects_elements_from_the_wall_to_its_target() {
 #[test]
 fn an_opening_in_a_wall_on_a_slope_is_placed_at_the_inferred_sill() {
     let mut model = attic();
-    model.openings.insert("o-slope".into(), Opening { host: "w-base".into(), kind: OpeningKind::Window { window_type: "win-1".into() }, offset: 4.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: String::new(), reveal_depth: None, reveal_material: None });
+    model.openings.cold_insert("o-slope".into(), Opening { host: "w-base".into(), kind: OpeningKind::Window { window_type: "win-1".into() }, offset: 4.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: String::new(), reveal_depth: None, reveal_material: None });
     let (expected, base) = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| (inferred.opening_frames["o-slope"].local.origin.z, inferred.wall_layout["w-base"].base_at(4.0) - inferred.storey_levels[&model.walls["w-base"].storey].elevation)).expect("the model infers");
     let document = document(&model);
     let (_, args) = rows(&document, "IFCOPENINGELEMENT").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some("o-slope")).expect("the opening element");

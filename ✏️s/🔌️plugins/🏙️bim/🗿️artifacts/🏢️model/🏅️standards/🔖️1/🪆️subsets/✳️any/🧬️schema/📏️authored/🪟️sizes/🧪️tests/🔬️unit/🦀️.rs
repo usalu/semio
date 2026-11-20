@@ -14,7 +14,7 @@ fn opening(kind: OpeningKind) -> Opening {
 #[test]
 fn an_opening_takes_the_size_of_its_type_and_an_override_wins() {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.window_types.insert("t".into(), window());
+    snapshot.window_types.cold_insert("t".into(), window());
     let mut row = opening(OpeningKind::Window { window_type: "t".into() });
     assert_eq!(resolve_size(&snapshot, &row), Resolved { width: 1.2, height: 1.4, sill: 0.9, type_found: true });
     row.width = Some(2.0);

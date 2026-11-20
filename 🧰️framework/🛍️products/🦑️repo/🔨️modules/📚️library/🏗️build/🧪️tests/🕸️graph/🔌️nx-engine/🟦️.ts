@@ -1,3 +1,4 @@
+import {exitIfStaleImplementationV1} from "../../../🧷️format-stamps/🟨️.mjs";
 /** 🔌️ The Nx projection and private engine references agree with the independent Nx implementation. */
 import assert from "node:assert/strict";
 import {testValueV1} from "../../../../⚡️caching/🧪️tests/📋️values/🟦️.ts";
@@ -115,6 +116,18 @@ test("private engine references keep actual directory-index imports and missing-
  try{await mkdir(dirname(index),{recursive:true});await writeFile(owner,"");await writeFile(index,"module.exports = {};\n");
   expect(nxBuildEngineSourceFileV1(owner,"./dir/")).toBe(createRequire(owner).resolve("./dir/"));
   expect(()=>nxBuildEngineSourceFileV1(owner,"./missing.json")).toThrow("Private Nx engine import missing");
+  const specifier="./pending.ts";
+  expect(()=>createRequire(owner).resolve(specifier)).toThrow();
+  const before=(()=>{try{nxBuildEngineSourceFileV1(owner,specifier);}catch(error){return error;}})();
+  let exit:number|undefined,cause="";
+  exitIfStaleImplementationV1(before,{write:(line:string)=>{cause+=line;},exit:(code:number)=>{exit=code;}});
+  expect(exit).toBe(75);expect(cause).toContain(specifier);
+  await mkdir(join(root,"occupied.ts"));
+  const occupied=(()=>{try{nxBuildEngineSourceFileV1(owner,"./occupied.ts");}catch(error){return error;}})();
+  expect(occupied).toBeInstanceOf(Error);
+  exitIfStaleImplementationV1(occupied,{exit:()=>{throw Error("Occupied import retried");}});
+  await writeFile(join(root,"pending.ts"),"export {};");
+  expect(nxBuildEngineSourceFileV1(owner,specifier)).toBe(createRequire(owner).resolve(specifier));
   expect(()=>nxBuildEngineSourceFileV1(owner,"./missing/")).toThrow("Private Nx engine import missing");
  }finally{await rm(root,{recursive:true,force:true});}
 });

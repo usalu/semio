@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { STAGE_CACHE_POLICY_V1, stageCacheV1, stageKeyCanonicalV1, stageKeyDigestV1, type StageKeyV1 } from "../🟦️.ts";
+import { renameBusyDirectoryV1, STAGE_CACHE_POLICY_V1, stageCacheV1, stageKeyCanonicalV1, stageKeyDigestV1, type StageKeyV1 } from "../🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -72,4 +72,17 @@ test("a failed or cancelled producer stores nothing", async () => {
   await expect(cache.run(key, join(root, "out"), async (directory) => { writeFileSync(join(directory, "x"), "x"); controller.abort(Error("cancelled")); }, controller.signal)).rejects.toThrow("cancelled");
   expect(readdirSync(join(root, "store", key.stage))).toEqual([]);
   expect(existsSync(join(root, "out", "x"))).toBe(false);
+});
+
+test("a busy Windows rename of a staged entry is retried until it lands, and only busy codes are retried", async () => {
+  const failing = (codes: readonly string[]) => { let calls = 0; return { move: async () => { const code = codes[calls++]; if (code) throw Object.assign(Error(code), { code }); }, calls: () => calls }; };
+  const settles = failing(["EPERM", "EBUSY"]);
+  await renameBusyDirectoryV1("a", "b", undefined, "win32", settles.move);
+  expect(settles.calls()).toBe(3);
+  const missing = failing(["ENOENT"]);
+  await expect(renameBusyDirectoryV1("a", "b", undefined, "win32", missing.move)).rejects.toMatchObject({ code: "ENOENT" });
+  expect(missing.calls()).toBe(1);
+  const held = failing(Array(64).fill("EPERM"));
+  await expect(renameBusyDirectoryV1("a", "b", undefined, "win32", held.move)).rejects.toMatchObject({ code: "EPERM" });
+  expect(held.calls()).toBeGreaterThan(1);
 });

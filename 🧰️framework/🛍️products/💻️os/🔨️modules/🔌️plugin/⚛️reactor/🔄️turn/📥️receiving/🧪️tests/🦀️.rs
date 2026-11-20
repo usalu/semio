@@ -1,13 +1,8 @@
 //! 📥️ Actual cancellation retains captured original inputs until their paid source return.
 use semio_framework::kernel::Event;
 use std::mem::ManuallyDrop;
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::RequestOutcome;
 use semio_plugin_reactor_lifecycle::instance_lifetime;
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
-use semio_plugin_reactor_turn as turn;
-use semio_plugin_reactor_turn::original_receiving::ReceivingSource;
+use semio_plugin_reactor_turn::original_receiving::{advance_responses, response_pending, retain_completed, ReceivingSource, RetainedResponse};
 
 #[test]
 fn original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source(){
@@ -16,12 +11,12 @@ fn original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source
   let runtime=semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<semio_plugin_reactor_app::NoPluginApp>::new(semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()).unwrap();
   let mut cx=caller.context();let recipient=cx.original_recipient_identity();
   let mut owner=RetainedResponse{birth:Default::default(),metadata:ManuallyDrop::new(None),instance:Some(971),key:Some(instance_lifetime::NativeCloseKey::fixture(971,1)),witness:ReceivingSource::new(&cx).unwrap(),request:None,input:ManuallyDrop::new(None),fields:ManuallyDrop::new(Some((Some(String::new()),Some(semio_framework_value::DslValue::Null),None))),request_result:ManuallyDrop::new(None),request_closing:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),output:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),finished:false};
-  if admitted{assert!(!owner.witness.admit(&mut cx).unwrap());assert!(owner.witness.loan.is_some());}
-  ::semio_framework_async::poll::resolve_ready(cx.original_cancel_token().cancel());
+  if admitted{assert!(!owner.witness.admit(&mut cx).unwrap());assert!(!owner.witness.source_is_returned());}
+  cx.original_cancel_token().cancel_now();
   let mut identity=semio_plugin_testing_laws::artifact_app_laws::fixture_identity();
   let fields=owner.fields.as_ref().unwrap()as*const _;let before=cx.retained_progress();let fuel=cx.fuel_remaining();let deadline=cx.deadline_us();
   let(zero,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_original_work_loan(0,deadline,|same|{let result=::semio_framework_async::poll::resolve_ready(owner.step(&runtime,&mut identity,same))?;assert!(result.is_none());Ok(())}));
-  zero.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);assert_eq!(owner.fields.as_ref().unwrap()as*const _,fields);assert_eq!(owner.witness.loan.is_some(),admitted);
+  zero.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);assert_eq!(owner.fields.as_ref().unwrap()as*const _,fields);assert_eq!(!owner.witness.source_is_returned(),admitted);
   for turn in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns(){
    if owner.terminal(){break}
    let before=cx.retained_progress();
@@ -30,7 +25,7 @@ fn original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source
    assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));
    assert_eq!(cx.original_recipient_identity(),recipient);assert!(turn+1<semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns());
   }
-  assert!(owner.terminal());assert!(owner.witness.loan.is_none());
+  assert!(owner.terminal());assert!(owner.witness.source_is_returned());
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
  }

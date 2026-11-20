@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [features]
 reserved-producer-testing = ["semio-plugin-original-job-ownership/reserved-producer-testing", "dep:serde_json", "dep:semio-framework-trace"]
-artifact-app-testing = []
+artifact-app-testing = ["semio-plugin-decl-views/artifact-app-testing"]
 
 [dependencies]
 semio-plugin-original-job-ownership = { path = "../../../👷️job/🧱️ownership/📦️packages/🦀️rust" }

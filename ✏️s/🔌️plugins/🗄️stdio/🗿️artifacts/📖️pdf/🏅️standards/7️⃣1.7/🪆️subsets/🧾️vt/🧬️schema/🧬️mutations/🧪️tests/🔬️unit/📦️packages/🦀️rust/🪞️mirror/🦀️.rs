@@ -159,8 +159,7 @@ pub mod standards {
 }
 #[path = "."]
 pub mod editor {
-    #[path = "../../../../../../../../🧱️base/✏️editor/🖼️page/🦀️.rs"]
-    pub mod page;
+    pub use semio_s_artifact_stdio_pdf_page_editor::page;
     #[path = "."]
     pub mod pdf17a {
         #[path = "."]

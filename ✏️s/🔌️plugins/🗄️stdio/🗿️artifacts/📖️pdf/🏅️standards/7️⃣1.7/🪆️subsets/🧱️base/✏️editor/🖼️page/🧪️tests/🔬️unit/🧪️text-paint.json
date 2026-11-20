@@ -1,0 +1,41 @@
+{
+  "page": [
+    240,
+    160
+  ],
+  "ctm": [
+    2,
+    1,
+    0,
+    3,
+    20,
+    30
+  ],
+  "textMatrix": [
+    1,
+    0,
+    0,
+    1,
+    5,
+    10
+  ],
+  "expected": {
+    "transform": [
+      2,
+      -1,
+      0,
+      3,
+      30,
+      86
+    ],
+    "x": 0,
+    "y": -10,
+    "text": {
+      "content": "Hello",
+      "size": 10,
+      "fontFamily": "Anta"
+    }
+  },
+  "baseFont": "Helvetica",
+  "textRise": 3
+}

@@ -152,7 +152,7 @@ async fn sets_stock_and_backwards_restores() {
 async fn sets_stock_to_imported_solid_and_backwards_restores() {
     let mut store = new_store().await;
     let original_solid = store.snapshot().expect("snapshot").stock_solid;
-    let imported_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&WorkingSolid::ImportedSolid { solid_handle: "solid-7".into() }));
+    let imported_handle = brep_child_handle("stock", &brep_snapshot_for_working_solid(&semio_s_artifact_process_process3d_model::snapshot::pack_imported_brep(&semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("exact sphere fixture")));
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: imported_handle.clone() }), Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Imported STEP".into() })],

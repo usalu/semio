@@ -9,7 +9,7 @@ import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️mo
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
-import {publishJavascriptDependencyPreservingSourceDescriptorV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,javascriptDependencyStampV1,requireJavascriptDependencyPreservationSourceUnchangedV1,javascriptDependencyPreservationSourceMismatchV1} from "../../🟦️.ts";
+import {publishJavascriptDependencyPreservingSourceDescriptorV1,requireJavascriptDependencyCanonicalPreservingBindingV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,javascriptDependencyStampV1,requireJavascriptDependencyPreservationSourceUnchangedV1,javascriptDependencyPreservationSourceMismatchV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 
 type Row={sourceDirectory:string;kind:string;stamp:string|null;target:string|null};
@@ -108,7 +108,7 @@ test("dependency publication checks the endpoint lineage and the full comparison
  const validate=new Ajv({strict:true}).compile(corpus.publishSchema),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original dependency fence artifact root required");
  await withBuildTestInvocationV1(async original=>{
   const control=issued.createIssuedResourceControlV1(original,"dependencies:publication-lineage",0),failures:string[]=[];
-  for(const row of corpus.publish){
+  for(const observationOnly of [false,true])for(const row of corpus.publish){
    expect(validate(row),row.id).toBe(true);const root=mkdtempSync(join(artifacts,"pl-")),workspace=join(root,"s"),cache=join(root,"n"),first=join(workspace,"a","node_modules"),second=join(workspace,"a","m","node_modules"),targets=[join(cache,"t1"),join(cache,"t2"),join(cache,"t3")];
    try{
     for(const path of[join(workspace,"a","m"),...targets])mkdirSync(path,{recursive:true});symlinkSync(targets[0]!,first,"dir");symlinkSync(targets[1]!,second,"dir");
@@ -118,12 +118,13 @@ test("dependency publication checks the endpoint lineage and the full comparison
       case"swap-lineage":renameSync(workspace,workspace+".moved");symlinkSync(workspace+".moved",workspace,"dir");break;
       case"swap-unrelated":{const folder=join(workspace,"a","m");renameSync(folder,folder+".moved");mkdirSync(folder);symlinkSync(targets[1]!,second,"dir");break;}
       case"retarget-endpoint":unlinkSync(first);symlinkSync(targets[2]!,first,"dir");break;
+      case"replace-same-target":renameSync(first,first+".prior");symlinkSync(targets[0]!,first,"dir");expect(readlinkSync(first)).toBe(readlinkSync(first+".prior"));expect(lstatSync(first,{bigint:true}).ino).not.toBe(lstatSync(first+".prior",{bigint:true}).ino);break;
       case"none":break;}};
     const checkpoint=()=>{check();if(!fired&&row.mutation!=="none"&&++calls>=row.at){fired=true;mutate();}};
-    let published=true;try{await publishJavascriptDependencyPreservingSourceDescriptorV1({sourceDirectory:first,targetDirectory:targets[0]!},previous,source,facts,checkpoint);}catch{published=false;}
+    let published=true;try{const binding={sourceDirectory:first,targetDirectory:targets[0]!};if(observationOnly)await requireJavascriptDependencyCanonicalPreservingBindingV1(binding,previous,source,checkpoint);else await publishJavascriptDependencyPreservingSourceDescriptorV1(binding,previous,source,facts,checkpoint);}catch{published=false;}
     if(row.mutation!=="none"&&!fired&&row.publish)failures.push(row.id+": mutation never fired");
     if(row.mutation!=="none"&&!fired&&!row.publish)failures.push(row.id+": mutation never fired");
-    if(published!==row.publish)failures.push(row.id+": publication expected "+(row.publish?"accepted":"refused"));
+    if(published!==row.publish)failures.push(row.id+(observationOnly?": observation":": publication")+" expected "+(row.publish?"accepted":"refused"));
     const expected=new Map(source.rows.map(entry=>[entry.sourceDirectory,entry])),parents=new Map(source.parents.map(entry=>[entry.path,entry.identity])),ancestors=new Map(source.ancestors.map(entry=>[entry.path,entry.identity]));
     let full=true;try{requireJavascriptDependencyPreservationSourceUnchangedV1(await readJavascriptDependencyPreservationSourceV1(workspace,context,control,ownership),expected,parents,ancestors);}catch{full=false;}
     if(full!==row.full)failures.push(row.id+": full comparison expected "+(row.full?"accepted":"refused"));

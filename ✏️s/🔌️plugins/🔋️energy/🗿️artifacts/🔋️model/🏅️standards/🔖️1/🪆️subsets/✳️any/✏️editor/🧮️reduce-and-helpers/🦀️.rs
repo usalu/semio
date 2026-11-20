@@ -61,11 +61,9 @@ fn orderings(items: &[usize]) -> Vec<Vec<usize>> {
 /// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
 /// so its spr encode is infallible.
 fn load_document_effect(model: &crate::model::Model) -> Result<semio_plugin::kernel::Effect, Fault> {
-    let refused = |error: semio_framework_value::ValueError| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), error.message.to_string());
-    let snapshot = EnergyModelSnapshot::from_model(model).map_err(refused)?;
-    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
+    let pack = EnergyModelSnapshot::encode_model_pack(model, &Default::default())
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), error.to_string()))?;
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("model", ENERGY_MODEL_DOCUMENT_SCHEMA));
-    snapshot.retire().map_err(refused)?;
     Ok(semio_plugin::kernel::Effect::LoadDocument { pack, spr })
 }
 

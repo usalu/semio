@@ -16,7 +16,7 @@ pub enum BitmapEditorCommand {
     #[dsl(key = "resize-input")]
     ResizeInput { width: u32, height: u32 },
     #[dsl(key = "set-input-pixels")]
-    SetInputPixels { x: u32, y: u32, width: u32, height: u32, #[value(with = "semio_framework_value::bytes")] pixels: Vec<u8> },
+    SetInputPixels { x: u32, y: u32, width: u32, height: u32, #[value(with = "semio_framework_value::bytes", serialize_controlled_with = "semio_framework_value::bytes::to_value_controlled")] pixels: Vec<u8> },
     #[dsl(key = "add-palette-color")]
     AddPaletteColor { index: usize, r: u32, g: u32, b: u32, a: u32 },
     #[dsl(key = "change-palette-color")]

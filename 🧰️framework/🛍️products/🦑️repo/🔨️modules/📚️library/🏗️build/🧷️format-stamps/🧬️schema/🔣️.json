@@ -75,7 +75,8 @@
         "loadFailure": {
           "names": [
             "BuildMessage",
-            "ResolveMessage"
+            "ResolveMessage",
+            "PrivateEngineImportMissingError"
           ],
           "syntaxErrorPrefix": "Export named ",
           "backoffMs": [

@@ -89,17 +89,6 @@ export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
 /** 📲️ Mobile panel tab button padding. */
 export const mobilePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
 
-/** ↔ Accent stroke on the panel resize edge while hovered or dragging. */
-export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active: boolean): string | undefined {
-  if (!active) return undefined;
-  switch (resizeSide) {
-    case "left":
-      return "border-l-accent";
-    case "right":
-      return "border-r-accent";
-  }
-}
-
 /** 🎞️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 

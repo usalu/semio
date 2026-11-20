@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {fetchGraphEntryV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import {fetchGraphEntryV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1,type GraphRefusalV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import type {GraphStateV1} from "../../../../🪪️graph-state/🟦️.ts";
 import type {ProjectClaimV1} from "../../../../🪪️graph-state/📦️project-records/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -26,7 +26,7 @@ const stateOf=(name:string,id:string|undefined):GraphStateV1=>Object.freeze({ver
 export const ownerPoolStateV1=(name:"pointer"|"manifest",id?:string):GraphStateV1=>stateOf(name,name==="pointer"?undefined:id);
 
 /** 🆔️ The id of a wave: the digest of its head parts and the set of its owners, each as its name and the digest of its project JSON, in name order, so two machines (or one reader after another landing that only reorders, re-prices or re-sorts the owners) that publish the same owners publish the same entry and its counters continue; one changed owner changes one row. */
-export const ownerPoolIdV1=(head:Omit<OwnerPoolHeadV1,"id"|"createdMs"|"publisher">,units:readonly OwnerPoolUnitV1[])=>sha(JSON.stringify([head.identity,head.globals,units.map(unit=>[unit.name,sha(JSON.stringify(unit.admission===undefined?unit.json:[unit.json,unit.admission]))]).sort((a,b)=>a[0]!<b[0]!?-1:a[0]!>b[0]!?1:0)]));
+export const ownerPoolIdV1=(head:Omit<OwnerPoolHeadV1,"id"|"createdMs"|"publisher">,units:readonly OwnerPoolUnitV1[])=>sha(JSON.stringify([head.identity,head.revision??null,head.globals,units.map(unit=>[unit.name,sha(JSON.stringify(unit.admission===undefined?unit.json:[unit.json,unit.admission]))]).sort((a,b)=>a[0]!<b[0]!?-1:a[0]!>b[0]!?1:0)]));
 
 const documentOf=(documents:readonly GraphDocumentV1[],name:string)=>documents.find(row=>row.name===name)?.bytes;
 const encode=(value:unknown)=>Buffer.from(JSON.stringify(value));
@@ -50,13 +50,15 @@ export async function readOwnerPoolFailureV1(client:GraphFleetClientV1,recordDig
  }catch{return undefined;}
 }
 
-const readPointerRaw=async(client:GraphFleetClientV1):Promise<OwnerPoolPointerV1|undefined>=>{
- const entry=await fetchGraphEntryV1(client,ownerPoolStateV1("pointer"));
+const readPointerRaw=async(client:GraphFleetClientV1):Promise<Readonly<{pointer?:OwnerPoolPointerV1;expected:string}>>=>{
+ let expected="none";
+ const entry=await fetchGraphEntryV1(client,ownerPoolStateV1("pointer"),undefined,undefined,undefined,undefined,digest=>{expected=digest;});
  if(entry==="fault")throw new Error("the fleet cache did not answer");
- if(entry===undefined)return undefined;
- const bytes=documentOf(entry.documents,P.pointerName);if(bytes===undefined)return undefined;
+ if(entry===undefined)return {expected};
+ const bytes=documentOf(entry.documents,P.pointerName);
+ if(bytes===undefined)return {expected};
  const pointer=JSON.parse(Buffer.from(bytes).toString("utf8")) as OwnerPoolPointerV1;
- return pointer.version===2&&Array.isArray(pointer.waves)?pointer:undefined;
+ return pointer.version===2&&Array.isArray(pointer.waves)?{pointer,expected}:{expected};
 };
 
 /** 🧷️ Whether a pool that holds a wave keeps it when the pointer is read: a wave the pointer lists is kept, every wave is kept while the pointer lists none (the last known wave: the pointer forgets a wave after `manifestMaximumAgeMilliseconds`, a machine whose wave expired or was never republished must keep working what it knows), a wave is dropped only when the pointer lists other waves, or when the revision of its children declined it, and only while no child works on it.
@@ -95,23 +97,37 @@ export function ownerPoolOpenWavesV1(waves:readonly OwnerPoolWaveV1[],now:number
  return waves.filter(wave=>/^[0-9a-f]{64}$/u.test(wave.id)&&now-wave.createdMs<=policy.manifestMaximumAgeMilliseconds).sort((a,b)=>a.createdMs-b.createdMs||(a.id<b.id?-1:1)).reverse().filter(wave=>!seen.has(wave.id)&&seen.add(wave.id)).slice(0,policy.wavesKept).reverse();
 }
 
+/** 🧾️ The stage and closed cache refusal of a wave offer. */
+export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean}>;
+
 /** ⬆️ Publishes the pool of a wave to the fleet cache: the manifest first, then the pointer with this wave added to the waves that are open (a swap against the pointer read just before, so a wave of another machine is kept and nobody replaces anybody), so a puller that sees the pointer finds the manifest and a new wave never makes a puller drop the wave it is working on. `false` when the fleet refuses (nothing is lost: the publisher infers every owner itself). */
-export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClientV1;owner:string;manifest:OwnerPoolManifestV1;now?:()=>number}>):Promise<boolean>{
+export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClientV1;owner:string;manifest:OwnerPoolManifestV1;now?:()=>number;onRefused?:(refusal:OwnerPoolPublishRefusalV1)=>void}>):Promise<boolean>{
  const {client,owner,manifest}=input,{head}=manifest,now=(input.now??Date.now)();
- const stored=await publishGraphEntryV1({client,state:ownerPoolStateV1("manifest",head.id),owner,documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
- if(!stored)return false;
- for(let attempt=0;attempt<4;attempt++){
-  let current:OwnerPoolPointerV1|undefined;try{current=await readPointerRaw(client);}catch{current=undefined;}
-  const waves=ownerPoolOpenWavesV1([...(current?.waves??[]).filter(wave=>wave.id!==head.id),{id:head.id,createdMs:head.createdMs,units:manifest.units.length}],now);
-  if(await publishGraphEntryV1({client,state:ownerPoolStateV1("pointer"),owner,head:true,documents:[{name:P.pointerName,bytes:encode({version:2,waves})}]}))return true;
+ const refused=(stage:OwnerPoolPublishRefusalV1["stage"],why?:GraphRefusalV1)=>{
+  input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true});
+  return false;
+ };
+ const stored=await publishGraphEntryOutcomeV1({client,state:ownerPoolStateV1("manifest",head.id),owner,documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
+ if(!stored.stored){
+  if(stored.refusal?.status!==409||ownerPoolIdV1(head,manifest.units)!==head.id)return refused("manifest",stored.refusal);
+  const present=await readOwnerPoolV1(client,head.id);
+  if(!present||ownerPoolIdV1(present.head,present.units)!==head.id)return refused("manifest-verification",stored.refusal);
  }
- return false;
+ for(let attempt=0;attempt<4;attempt++){
+  let current:Awaited<ReturnType<typeof readPointerRaw>>;
+  try{current=await readPointerRaw(client);}catch{return refused("pointer-read");}
+  const waves=ownerPoolOpenWavesV1([...(current.pointer?.waves??[]).filter(wave=>wave.id!==head.id),{id:head.id,createdMs:head.createdMs,units:manifest.units.length}],now);
+  const result=await publishGraphEntryOutcomeV1({client,state:ownerPoolStateV1("pointer"),owner,head:true,expectedHead:current.expected,documents:[{name:P.pointerName,bytes:encode({version:2,waves})}]});
+  if(result.stored)return true;
+  if(result.refusal?.status!==409||attempt===3)return refused("pointer-write",result.refusal);
+ }
+ return refused("pointer-write");
 }
 
 /** 📍️ The waves that are open, `undefined` when none is published or every pointer entry is older than the policy's maximum age, and `"fault"` when the fleet cache did not answer: a fault says nothing about the waves, so a puller that gets it keeps what it has (a busy cache server answered one request in five with a fault, and a puller that read "no wave" from it dropped its wave and its session each time). */
 export async function readOwnerPoolPointerV1(client:GraphFleetClientV1,now:()=>number=Date.now):Promise<OwnerPoolPointerV1|undefined|"fault">{
  try{
-  const pointer=await readPointerRaw(client);if(pointer===undefined)return undefined;
+  const {pointer}=await readPointerRaw(client);if(pointer===undefined)return undefined;
   const waves=ownerPoolOpenWavesV1(pointer.waves,now());
   return waves.length===0?undefined:{version:2,waves};
  }catch{return "fault";}

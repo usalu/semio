@@ -3,7 +3,7 @@
 use crate::{schema::snapshot::pin_key, schema::snapshot::BitmapOutputSpec, schema::snapshot::BitmapPinnedPixel, schema::snapshot::BitmapSnapshot};
 use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::schema::snapshot::{BitmapColor, BitmapInput};
-use protocol::DiffAlgebra;
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra};
 
 fn scene() -> BitmapSnapshot {
     BitmapSnapshot {
@@ -20,7 +20,7 @@ fn pin(x: u32, y: u32, color: u32) -> BitmapPinnedPixel {
 
 fn absorbed(first: BitmapDiff, second: BitmapDiff) -> BitmapDiff {
     let mut sigma = first;
-    protocol::MutationDiff::<BitmapSnapshot>::absorb(&mut sigma, second);
+    <BitmapDiff as ColdMutationDiff<BitmapSnapshot>>::absorb(&mut sigma, second);
     sigma
 }
 
@@ -53,7 +53,7 @@ fn palette(delta: BitmapPaletteDelta) -> BitmapDiff {
 fn an_empty_diff_is_the_identity() {
     let base = scene();
     assert_eq!(protocol::apply_diff_cold(&BitmapDiff::default(), &base).expect("the empty diff applies"), base);
-    assert!(DiffAlgebra::<BitmapSnapshot>::is_empty(&BitmapDiff::default()));
+    assert!(<BitmapDiff as DiffAlgebra<BitmapSnapshot>>::is_empty(&BitmapDiff::default()));
 }
 
 /// 📐️ The resize runs first: it pads before a region write lands in the grown extent.
@@ -118,10 +118,10 @@ fn resizes_compose_into_one_resize_with_a_zero_fill() {
 fn pin_rows_coalesce_per_key() {
     let base = scene();
     let rows = |delta: BitmapPinnedDelta| BitmapDiff { pinned: delta, ..Default::default() };
-    let sigma = assert_absorb_law(&base, &rows(BitmapPinnedDelta::insertion(0, pin(0, 0, 1))), &rows(BitmapPinnedDelta::removal(&[pin(0, 0, 1), pin(1, 1, 1)], 0)));
-    assert!(DiffAlgebra::<BitmapSnapshot>::is_empty(&sigma));
+    let sigma = assert_absorb_law(&base, &rows(BitmapPinnedDelta::insertion(0, pin(0, 0, 1))), &rows(BitmapPinnedDelta::removal(&[pin(0, 0, 1), pin(1, 1, 1)][..], 0)));
+    assert!(<BitmapDiff as DiffAlgebra<BitmapSnapshot>>::is_empty(&sigma));
     let recolor = BitmapPinnedDelta { modified: vec![BitmapPinnedModification { id: pin_key(1, 1), patch: BitmapPinnedPatch { color: Some(0) } }], ..Default::default() };
-    let sigma = assert_absorb_law(&base, &rows(recolor), &rows(BitmapPinnedDelta::removal(&[pin(1, 1, 0)], 0)));
+    let sigma = assert_absorb_law(&base, &rows(recolor), &rows(BitmapPinnedDelta::removal(&[pin(1, 1, 0)][..], 0)));
     assert_eq!((sigma.pinned.removed, sigma.pinned.modified.len()), (vec![BitmapPinnedRemoval { id: pin_key(1, 1), index: 0 }], 0));
 }
 
@@ -136,7 +136,7 @@ fn inverse_restores_the_base() {
         ..Default::default()
     };
     let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-    let inverse = DiffAlgebra::<BitmapSnapshot>::inverse(&diff, &base);
+    let inverse = <BitmapDiff as ColdDiffAlgebra<BitmapSnapshot>>::inverse(&diff, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
@@ -154,7 +154,7 @@ fn inverse_restores_middle_palette_entries() {
     ] {
         let diff = palette(delta);
         let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-        let inverse = DiffAlgebra::<BitmapSnapshot>::inverse(&diff, &base);
+        let inverse = <BitmapDiff as ColdDiffAlgebra<BitmapSnapshot>>::inverse(&diff, &base);
         assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }

@@ -48,8 +48,15 @@ impl<T> NativeOwnedStorage<T>{
  }
  /// 🪡️ Initializes one native part without exposing a partially valid typed owner.
  pub fn initialize_template(&mut self,template:NativeSeedTemplate<T>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+  self.initialize_template_at(template,effect,false)
+ }
+ /// 🪡️ A resident Source owner may authorize the next template part after the previous effect settled.
+ pub fn initialize_template_between_source_actions(&mut self,template:NativeSeedTemplate<T>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+  self.initialize_template_at(template,effect,true)
+ }
+ fn initialize_template_at(&mut self,template:NativeSeedTemplate<T>,effect:&mut crate::RetainedAllocationEffect<'_>,between_source_actions:bool)->RetainedWorkOutcome{
   let before=effect.performed_boundary();let result=(||{
-   if self.seed.as_ref().is_some_and(|seed|!seed.work.matches_effect(effect)){return Err(invalid("native partial template changed its original Work"))}let demand=self.template_seed_demand(template)?;if !admitted(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if (between_source_actions&&effect.work_source_turn().is_none())||self.seed.as_ref().is_some_and(|seed|if between_source_actions{!seed.work.admits_between_actions(effect,false)}else{!seed.work.matches_effect(effect)}){return Err(invalid("native partial template changed its original Work"))}let demand=self.template_seed_demand(template)?;if !admitted(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(RetainedCloneStep::Progress(Default::default()))}
    let cursor=self.seed.as_ref().map_or(0,|seed|seed.cursor);let target=self.pointer.ok_or_else(||invalid("native template backing disappeared"))?.as_ptr().cast::<MaybeUninit<T>>();let(bytes,next,complete)=template.part(target,cursor)?;let copied=self.seed.as_ref().map_or(0,|seed|seed.copied).checked_add(bytes).ok_or_else(||invalid("native field seed copy extent overflow"))?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native template exceeded its original Work"))}
    let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};if !unsafe{template.write(target,cursor,bytes)}{return Err(invalid("native field seed violated its quoted plan").with_retained_progress(progress))}
    if complete{self.seed=None;self.initialized=true}else{self.seed=Some(SeedState{template,work:crate::OriginalWorkBindingIdentity::from_effect(effect),cursor:next,copied})}Ok(if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})

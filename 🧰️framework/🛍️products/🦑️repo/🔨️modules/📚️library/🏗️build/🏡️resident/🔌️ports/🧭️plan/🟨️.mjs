@@ -46,8 +46,8 @@ export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=e
    const tasks=indexOf(graph);
    return{key:graphDigestV1(graph),value:{tasks},bytes:bytesOf(graph)};
   },
-  async plan({index,targets,revision,parent,dirty,cursor,agent,signal,workspace,root,arguments:invocation,tool,graphPolicy,progress}){
-   const sliceLoad=()=>loadSlice({root,workspace,arguments:invocation,tool,graphPolicy,signal,onProgress:progress}),captured=loadSlice&&invocation&&capture?await capture({root,workspace,agent,parent,dirty,cursor,signal},sliceLoad):undefined,slice=captured?captured.result:loadSlice&&invocation?await sliceLoad():undefined,tasks=slice?indexOf(slice.graph):index.value.tasks,order=[],seen=new Set(),visiting=new Set();
+  async plan({index,targets,revision,parent,dirty,cursor,agent,signal,workspace,root,arguments:invocation,tool,graphPolicy,progress,wantsReport}){
+   const sliceLoad=()=>loadSlice({root,workspace,arguments:invocation,tool,graphPolicy,signal,onProgress:progress,wantsReport}),captured=loadSlice&&invocation&&capture?await capture({root,workspace,agent,parent,dirty,cursor,signal},sliceLoad):undefined,slice=captured?captured.result:loadSlice&&invocation?await sliceLoad():undefined,tasks=slice?indexOf(slice.graph):index.value.tasks,order=[],seen=new Set(),visiting=new Set();
    if(slice&&targets.includes(ALL_TARGETS_V1))targets=rosterTaskIdsV1(slice.graph.admission?.selection,tasks);
    for(const target of targets)if(!tasks.has(target))throw new UnknownTargetErrorV1(target);
    const visit=id=>{

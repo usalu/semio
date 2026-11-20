@@ -28,7 +28,7 @@ where
     let Ok(placed) = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::in_place(base, &payload.ids, &map) else {
         return Vec::new();
     };
-    let places = (!placed.before.is_empty()).then(|| Op::from(PlaceElements { placements: placed.before.clone() }));
+    let places = (!placed.before.is_empty()).then(|| Op::from(PlaceElements { placements: placed.before.into_iter().collect() }));
     let joins = placed.joins.iter().flat_map(|(id, (start, end))| {
         let row = |end_of: WallEnd, join| Op::from(SetWallEndJoin { id: id.clone(), end: end_of, join });
         [row(WallEnd::Start, *start), row(WallEnd::End, *end)]

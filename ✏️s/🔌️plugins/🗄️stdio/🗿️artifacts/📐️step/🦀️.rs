@@ -13,6 +13,7 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
 pub use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+pub use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::projection::step_length_in_metres;
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 
 

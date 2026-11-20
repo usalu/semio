@@ -16,6 +16,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, PropertyValue, TemplateTarget};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values::Violation;
 use semio_framework_value::DslValue;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🗺️ The snapshot collections the effective properties read.
@@ -76,7 +77,7 @@ pub struct Finding {
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct EffectiveProperties {
     #[value(default)]
-    pub values: BTreeMap<String, BTreeMap<String, EffectiveValue>>,
+    pub values: RetainedOrderedMap<String, RetainedOrderedMap<String, EffectiveValue>>,
     #[value(default)]
     pub findings: Vec<Finding>,
 }
@@ -89,12 +90,12 @@ impl EffectiveProperties {
 
     /// 🔢️ How many properties the holder has.
     pub fn len(&self) -> usize {
-        self.values.values().map(BTreeMap::len).sum()
+        self.values.values().map(RetainedOrderedMap::len).sum()
     }
 
     /// 🕳️ Whether the holder has no property.
     pub fn is_empty(&self) -> bool {
-        self.values.values().all(BTreeMap::is_empty)
+        self.values.values().all(RetainedOrderedMap::is_empty)
     }
 }
 //#endregion 🔖️Values
@@ -291,7 +292,7 @@ pub fn effective_of(snapshot: &ModelSnapshot, id: &str, inherited: Option<&Effec
             }
         }
     }
-    EffectiveProperties { values, findings }
+    EffectiveProperties { values: values.into_iter().map(|(set, rows)| (set, rows.into_iter().collect())).collect(), findings }
 }
 
 /// 🔑️ What `effective_of` reads of the snapshot for `id` besides the effective properties of its type: the kind and the type of the holder, its own properties and the templates of its kind (and of the kind it types).

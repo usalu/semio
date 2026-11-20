@@ -40,7 +40,7 @@ fn layered_slab_type(i: &mut Import<'_>, slab_ifc: u64, thickness: f64) -> Strin
         return id.clone();
     }
     let id = Import::unused(&format!("slt-{}", (thickness * 1000.0).round() as i64), |candidate| i.model.slab_types.contains_key(candidate));
-    i.model.slab_types.insert(id.clone(), SlabType { name: format!("Slab {} mm", (thickness * 1000.0).round() as i64), layers });
+    i.model.slab_types.cold_insert(id.clone(), SlabType { name: format!("Slab {} mm", (thickness * 1000.0).round() as i64), layers });
     id
 }
 
@@ -52,7 +52,7 @@ fn slab(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let recorded = label(&authoring_of(&i.doc, ifc), "Slab").and_then(|record| from_json_str::<Slab>(&record, JsonMemberPolicy::Reject).ok());
     if let (Some(slab), Some(storey)) = (recorded, i.storey_of(ifc)) {
         let id = Doc::identity(args, "IFCSLAB").unwrap_or_else(|| format!("sl-{ifc}"));
-        i.model.slabs.insert(id.clone(), Slab { storey, ..slab });
+        i.model.slabs.cold_insert(id.clone(), Slab { storey, ..slab });
         i.ids.insert(ifc, id);
         return;
     }
@@ -78,7 +78,7 @@ fn slab(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let top = to_building.point(body.position.origin)[2] + thickness;
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
     let slab_type = layered_slab_type(i, ifc, thickness);
-    i.model.slabs.insert(id.clone(), Slab { storey, slab_type, boundary: vertices(&outer, &map), holes: holes.iter().map(|hole| vertices(hole, &map)).collect(), offset: top - elevation, slope: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
+    i.model.slabs.cold_insert(id.clone(), Slab { storey, slab_type, boundary: vertices(&outer, &map), holes: holes.iter().map(|hole| vertices(hole, &map)).collect(), offset: top - elevation, slope: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -87,7 +87,7 @@ fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let recorded = label(&authoring_of(&i.doc, ifc), "Column").and_then(|record| from_json_str::<Column>(&record, JsonMemberPolicy::Reject).ok());
     if let (Some(column), Some(storey)) = (recorded, i.storey_of(ifc)) {
         let id = Doc::identity(args, "IFCCOLUMN").unwrap_or_else(|| format!("c-{ifc}"));
-        i.model.columns.insert(id.clone(), Column { storey, ..column });
+        i.model.columns.cold_insert(id.clone(), Column { storey, ..column });
         i.ids.insert(ifc, id);
         return;
     }
@@ -112,14 +112,14 @@ fn column(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             Some((known, _)) => known.clone(),
             None => {
                 let id = Import::unused("ct-imported", |candidate| i.model.column_types.contains_key(candidate));
-                i.model.column_types.insert(id.clone(), ColumnType { name: "Column".into(), profile: profile.clone(), material });
+                i.model.column_types.cold_insert(id.clone(), ColumnType { name: "Column".into(), profile: profile.clone(), material });
                 id
             }
         },
     };
     let base_z = to_building.point(body.position.origin)[2];
     let elevation = i.levels.get(&storey).map_or(0.0, |level| level.elevation);
-    i.model.columns.insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), tilt: None, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
+    i.model.columns.cold_insert(id.clone(), Column { storey, column_type, position: Point2 { x: to_building.origin[0], y: to_building.origin[1] }, rotation: to_building.heading(), tilt: None, base_offset: base_z - elevation, top: TopConstraint::Unconnected { height: body.depth * body.direction[2].abs() }, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -128,7 +128,7 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let recorded = label(&authoring_of(&i.doc, ifc), "Beam").and_then(|record| from_json_str::<Beam>(&record, JsonMemberPolicy::Reject).ok());
     if let (Some(beam), Some(storey)) = (recorded, i.storey_of(ifc)) {
         let id = Doc::identity(args, "IFCBEAM").unwrap_or_else(|| format!("b-{ifc}"));
-        i.model.beams.insert(id.clone(), Beam { storey, ..beam });
+        i.model.beams.cold_insert(id.clone(), Beam { storey, ..beam });
         i.ids.insert(ifc, id);
         return;
     }
@@ -153,7 +153,7 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             Some((known, _)) => known.clone(),
             None => {
                 let id = Import::unused("bt-imported", |candidate| i.model.beam_types.contains_key(candidate));
-                i.model.beam_types.insert(id.clone(), BeamType { name: "Beam".into(), profile: profile.clone(), material });
+                i.model.beam_types.cold_insert(id.clone(), BeamType { name: "Beam".into(), profile: profile.clone(), material });
                 id
             }
         },
@@ -163,7 +163,7 @@ fn beam(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let end = Point2 { x: start.x + direction[0] * body.depth, y: start.y + direction[1] * body.depth };
     let top = to_building.point(body.position.origin)[2] + profile_top(&body.section);
     let storey_top = i.levels.get(&storey).map_or(0.0, |level| level.top_elevation);
-    i.model.beams.insert(id.clone(), Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: top - storey_top, end_top_offset: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
+    i.model.beams.cold_insert(id.clone(), Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: top - storey_top, end_top_offset: None, phase: phase_of(&i.doc, ifc), name: if label_text == id { String::new() } else { label_text } });
     i.ids.insert(ifc, id);
 }
 
@@ -194,7 +194,7 @@ fn space(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             SpaceBoundary::Explicit { outline: vertices(outer, &map) }
         }
     };
-    i.model.spaces.insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary, usage: text(args, 3), phase: phase_of(&i.doc, ifc), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+    i.model.spaces.cold_insert(id.clone(), Space { storey, number: text(args, 2), name: label_text, boundary, usage: text(args, 3), phase: phase_of(&i.doc, ifc), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     i.ids.insert(ifc, id);
 }
 
@@ -222,7 +222,7 @@ fn grid(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
             Point2 { x: world[0], y: world[1] }
         };
         let id = ids.get(index).cloned().unwrap_or_else(|| format!("g-{ifc}-{}", index + 1));
-        i.model.grids.insert(id, GridLine { building: building.clone(), label: text(row, 0), start: map(edge.start), end: map(edge.end) });
+        i.model.grids.cold_insert(id, GridLine { building: building.clone(), label: text(row, 0), start: map(edge.start), end: map(edge.end) });
     }
     i.ids.insert(ifc, format!("{building}:grid"));
 }

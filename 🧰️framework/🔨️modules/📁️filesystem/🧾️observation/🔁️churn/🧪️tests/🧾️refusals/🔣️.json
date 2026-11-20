@@ -8,6 +8,7 @@
   {"id": "moved-stamp-de", "text": "Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel graph.record wechselte von 1 zu 2.", "class": "moved-format-stamp", "disposition": "reexec"},
   {"id": "stale-reader", "text": "error: Stale loaded Source revision reader; restart required\n at current", "class": "stale-loaded-implementation", "disposition": "reexec"},
   {"id": "stale-observation", "text": "Stale loaded observation implementation; restart required", "class": "stale-loaded-implementation", "disposition": "reexec"},
+  {"id": "unit-killed", "text": "UnitKilledErrorV1: 1 compile unit(s) were killed by the host and the pass restarts: [prototype-00] unit semio_hub_wfc@semio_hub_wfc (lib) ended by SIGKILL (exit 137)", "class": "unit-killed", "disposition": "reexec"},
   {"id": "generation-moved", "text": "error: Current shared Source-owner generation changed during consumption", "class": "source-owner-generation", "disposition": "reobserve"},
   {"id": "bun-manifest", "text": "Bun current manifest changed during verification: /w/package.json", "class": "bun-ownership", "disposition": "reobserve"},
   {"id": "topology", "text": "Original Cargo workspace topology changed: /w/Cargo.toml", "class": "cargo-workspace-topology", "disposition": "reobserve"},

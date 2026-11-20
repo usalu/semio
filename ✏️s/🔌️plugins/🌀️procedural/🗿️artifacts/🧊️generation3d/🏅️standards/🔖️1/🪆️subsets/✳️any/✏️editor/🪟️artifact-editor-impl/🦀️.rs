@@ -263,6 +263,17 @@ impl ArtifactEditor for Generation3dPlayApp {
         }
     }
 
+    /// 🏭️ The declared action producer prices a contributions push at its declared whole-pack ceiling and every other command at the ordinary runtime wire ceiling.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Generation3dCommand>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(
+            <Self as ArtifactEditor>::command_from_action,
+            |command| match command {
+                Generation3dCommand::SetContributions(_) => GENERATION3D_CONTRIBUTIONS_RAW_BYTES,
+                _ => semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM,
+            },
+        ))
+    }
+
     fn command_id(command: &Generation3dCommand) -> &'static str {
         command.command_id()
     }

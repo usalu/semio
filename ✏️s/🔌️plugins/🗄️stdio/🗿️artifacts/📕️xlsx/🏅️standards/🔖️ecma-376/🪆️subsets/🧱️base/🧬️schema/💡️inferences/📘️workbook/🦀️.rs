@@ -173,10 +173,7 @@ pub fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)],
     extract_typed_value(children, cell_scope, namespace, t, sst_len, part)
 }
 
-/// 🌳 Flattens `<sheetData>`'s `<row>`-then-`<c>` nesting into `sheet.cells`'s sparse
-/// `(row, col)`-addressed list — `row` from the enclosing `<row r>`, `col` from the cell's own
-/// `<c r>` column-letter prefix (`col` in the cell's own `r` MUST agree with the row-digit suffix
-/// per spec; only the column letters carry information this decoder doesn't already have).
+/// 🌳 Projects sparse cells from explicit and ordinal SpreadsheetML references.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Result<Vec<XlsxCell>, XlsxError> {
     let bad = |detail: String| XlsxError::Xml { part: part.into(), detail };
@@ -193,27 +190,15 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
     }
     let (sheet_data, sheet_data_scope) = sheet_data_match.ok_or_else(|| bad("missing SpreadsheetML <sheetData>".into()))?;
     let mut cells = Vec::new();
-    for row_node in sheet_data {
-        let row_scope = namespace_scope(&sheet_data_scope, row_node);
-        let XmlNode::Element { children: row_children, .. } = row_node else { continue };
-        if !element_matches(row_node, &row_scope, &[namespace.as_str()], "row").map_err(&bad)? {
-            continue;
-        }
-        let row = attribute_value(row_node, &row_scope, &[""], "r").map_err(&bad)?.ok_or_else(|| bad("<row> missing unprefixed r".into()))?.parse::<u32>().map_err(|_| bad("<row> r attribute is not a valid integer".into()))?;
-        for c_node in row_children {
-            let cell_scope = namespace_scope(&row_scope, c_node);
-            let XmlNode::Element { children: c_children, .. } = c_node else { continue };
-            if !element_matches(c_node, &cell_scope, &[namespace.as_str()], "c").map_err(&bad)? {
-                continue;
-            }
-            let reference = attribute_value(c_node, &cell_scope, &[""], "r").map_err(&bad)?.ok_or_else(|| bad("<c> missing unprefixed r".into()))?;
-            let col = column_index(column_letters_of(reference)).ok_or_else(|| bad(format!("<c> r={reference:?} has no valid column-letter prefix")))?;
-            if reference.trim_start_matches(|character: char| character.is_ascii_alphabetic()) != row.to_string() {
-                return Err(bad(format!("<c> r={reference:?} does not belong to row {row}")));
-            }
-            let t = attribute_value(c_node, &cell_scope, &[""], "t").map_err(&bad)?;
-            let value = extract_cell_value(c_children, &cell_scope, &namespace, t, sst_len, part)?;
-            cells.push(XlsxCell { row, col, value });
+    for row in positioned_worksheet_children(sheet_data, &sheet_data_scope, &namespace, WorksheetAxis::Rows) {
+        let row = row.map_err(&bad)?;
+        let XmlNode::Element { children: row_children, .. } = row.node else { unreachable!() };
+        for cell in positioned_worksheet_children(row_children, &row.scope, &namespace, WorksheetAxis::Columns(row.position)) {
+            let cell = cell.map_err(&bad)?;
+            let XmlNode::Element { children, .. } = cell.node else { unreachable!() };
+            let t = attribute_value(cell.node, &cell.scope, &[""], "t").map_err(&bad)?;
+            let value = extract_cell_value(children, &cell.scope, &namespace, t, sst_len, part)?;
+            cells.push(XlsxCell { row: row.position, col: cell.position, value });
         }
     }
     Ok(cells)

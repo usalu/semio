@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "cases": [
+    {"name": "duplicate at the root", "source": "{\"a\":1,\"a\":2}", "duplicates": [{"path": "$.a", "line": 1, "key": "a"}]},
+    {"name": "nested duplicate reports its line", "source": "{\n\"x\":{\n\"b\":1,\n\"b\":2}}", "duplicates": [{"path": "$.x.b", "line": 4, "key": "b"}]},
+    {"name": "same key in sibling objects is fine", "source": "{\"a\":{\"k\":1},\"b\":{\"k\":2}}", "duplicates": []},
+    {"name": "same key in array elements is fine", "source": "[{\"a\":1},{\"a\":2}]", "duplicates": []},
+    {"name": "key text inside string values is not a key", "source": "{\"s\":\"\\\"a\\\":1,\\\"a\\\":2\",\"t\":\"{\\\"a\\\":1,\\\"a\\\":2}\"}", "duplicates": []},
+    {"name": "escaped key equals the plain key", "source": "{\"a\":1,\"\\u0061\":2}", "duplicates": [{"path": "$.a", "line": 1, "key": "a"}]},
+    {"name": "surrogate pair escape equals the literal character", "source": "{\"\\ud83d\\ude00\":1,\"\ud83d\ude00\":2}", "duplicates": [{"path": "$[\"\ud83d\ude00\"]", "line": 1, "key": "\ud83d\ude00"}]},
+    {"name": "duplicate inside an array element", "source": "{\"l\":[{\"a\":1,\"a\":2}]}", "duplicates": [{"path": "$.l[0].a", "line": 1, "key": "a"}]},
+    {"name": "duplicate inside nested arrays", "source": "{\"m\":[[{\"q\":1},{\"q\":1,\"q\":2}]]}", "duplicates": [{"path": "$.m[0][1].q", "line": 1, "key": "q"}]},
+    {"name": "every extra occurrence is reported", "source": "{\"a\":1,\"a\":2,\"a\":3}", "duplicates": [{"path": "$.a", "line": 1, "key": "a"}, {"path": "$.a", "line": 1, "key": "a"}]},
+    {"name": "key that is not an identifier is bracketed", "source": "{\"x y\":{\"k\":1,\"k\":2}}", "duplicates": [{"path": "$[\"x y\"].k", "line": 1, "key": "k"}]},
+    {"name": "nested key does not shadow the outer key", "source": "{\"a\":{\"a\":1},\"a\":2}", "duplicates": [{"path": "$.a", "line": 1, "key": "a"}]},
+    {"name": "equal key and value text is still a duplicate", "source": "{\"a\":\"a\",\n\"a\":\"a\"}", "duplicates": [{"path": "$.a", "line": 2, "key": "a"}]},
+    {"name": "comments hide keys", "source": "{\"a\":1,// \"a\":2\n/* \"a\":3 */\"b\":2}", "oracle": false, "duplicates": []},
+    {"name": "byte order mark is skipped", "source": "\ufeff{\"a\":1,\"a\":2}", "oracle": false, "duplicates": [{"path": "$.a", "line": 1, "key": "a"}]}
+  ]
+}

@@ -5,6 +5,7 @@ use semio_framework::kernel::{AppEvent, Effect, InvocationResult, UiDirtyScope};
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
+pub use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerAliasRetirement;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ArtifactToolRegistration};
@@ -162,7 +163,7 @@ pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self
 /// 🪐️ Tool operations: typed operation outboxes, tool jobs and registrations, cancellations and latest-wins commands.
 pub struct ToolOperations<A: ArtifactApp> {
     pub pending_tool_lease_admission:ManuallyDrop<Option<OriginalToolLeaseAdmission>>,
-    pub original_tool_follow:ManuallyDrop<Option<Box<semio_plugin_tool_machine::OriginalToolMachineFollow<A>>>>,
+    pub original_tool_follow:semio_plugin_tool_machine::OriginalToolMachineFollowSlot<A>,
     pub original_tool_tag_retirement:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalToolTagRetirement>>>,
     pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_plugin_tool_machine::OriginalToolTagCapture>>>,
     pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_plugin_scrub_host::OriginalScrubDispatch<semio_plugin_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
@@ -252,7 +253,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 📏️ Quotes one bounded absent chunk or one atomic live field and its actual backing.
     pub fn initial_field_demands(field:usize,byte:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(match field{
   0=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.pending_tool_lease_admission);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
-  1=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_tool_follow);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  1=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.original_tool_follow),depth:1,..Default::default()},
   2=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_scrub_dispatch);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   3=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_press_settlement);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   4=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_typing_settlement);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
@@ -299,7 +300,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// The target is exclusive caller-funded storage; the retained cursor advances only after successful entry.
     pub unsafe fn initialize_field_at(target:*mut Self,source:&mut Option<OriginalToolOperationsInitialization>,field:usize,byte:usize,count:usize,backing:bool)->Result<bool,semio_framework_value::ValueError>{match field{
   0=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).pending_tool_lease_admission),byte,count)},
-  1=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).original_tool_follow),byte,count)},
+  1=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.original_tool_follow){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).original_tool_follow).write(semio_plugin_tool_machine::OriginalToolMachineFollowSlot::vacant());}Ok(true)},
   2=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).original_scrub_dispatch),byte,count)},
   3=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).original_press_settlement),byte,count)},
   4=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).original_typing_settlement),byte,count)},
@@ -366,7 +367,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     fn new_with_bus(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: ToolActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         Self {
             pending_tool_lease_admission: ManuallyDrop::new(None),
-            original_tool_follow:ManuallyDrop::new(None),original_scrub_dispatch:ManuallyDrop::new(None),original_press_settlement:ManuallyDrop::new(None),original_typing_settlement:ManuallyDrop::new(None),original_tool_tag_capture:ManuallyDrop::new(None),original_tool_tag_retirement:ManuallyDrop::new(None),
+            original_tool_follow:semio_plugin_tool_machine::OriginalToolMachineFollowSlot::vacant(),original_scrub_dispatch:ManuallyDrop::new(None),original_press_settlement:ManuallyDrop::new(None),original_typing_settlement:ManuallyDrop::new(None),original_tool_tag_capture:ManuallyDrop::new(None),original_tool_tag_retirement:ManuallyDrop::new(None),
             typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_ui_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),

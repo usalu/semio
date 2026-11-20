@@ -63,11 +63,14 @@ fn drive_resumable_work(
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
 
-    let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
+    let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_MODEL_IMPORT_TOOL_IDS).chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
     ids.sort_unstable();
     ids.dedup();
     assert_eq!(ids.len(), 31);
-    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 25);
+    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 24);
+    assert_eq!(PROCESS3D_MODEL_IMPORT_TOOL_IDS, &["importModelFile"]);
+    assert_eq!(process3d_retained_raw_bytes("moveStep"), 8_192);
+    assert_eq!(process3d_retained_raw_bytes("importModelFile"), 33_856);
     assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 6);
     assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
     assert_eq!(process3d_command_disposition("nonsense"), None);
@@ -98,6 +101,7 @@ async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
         .collect::<HashMap<_, _>>();
     let lanes = <Process3dBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
+        .chain(<Process3dModelImportJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS)
         .chain(<Process3dResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS)
         .map(|contract| (contract.tool_id, contract.lanes))
         .collect::<HashMap<_, _>>();
@@ -441,17 +445,18 @@ async fn world_context_menu_exposes_process_commands() {
     assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
 }
 
-/// 🕹️ The interaction-view threading law for this app's menu: `removeSelectedStep` is a verb ON the
-/// `"geometry"` selection, so it exists exactly when that framework-owned domain is non-empty. Both
-/// arms go through the same `process3d_context_menu_items` funnel the two trait entry points share.
+/// 🕹️ The context menu offers removal only when the primary selection resolves to a process step.
 #[semio_framework_async_macros::async_test]
 async fn the_context_menu_gates_the_destructive_row_on_the_geometry_selection() {
     let registry = AppActionRegistry::from_definition(&create_process3d_app());
-    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), selected).into_iter().map(|item| item.id).collect() };
+    let doc = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), &doc, selected).into_iter().map(|item| item.id).collect() };
     let empty = ids(&[]);
     assert!(!empty.iter().any(|id| id == "removeSelectedStep"), "an empty geometry selection must not offer the destructive row: {empty:?}");
     assert!(empty.iter().any(|id| id == "addStep"), "the selection-free rows must survive an empty selection: {empty:?}");
-    let selected = ids(&["step-1".to_string()]);
-    assert!(selected.iter().any(|id| id == "removeSelectedStep"), "a non-empty geometry selection must offer the destructive row: {selected:?}");
+    let stock = ids(&[doc.stock_id.clone()]);
+    assert!(!stock.iter().any(|id| id == "removeSelectedStep"));
+    let selected = ids(&[doc.step_payloads[0].id.clone()]);
+    assert!(selected.iter().any(|id| id == "removeSelectedStep"), "a selected process step must offer the destructive row: {selected:?}");
 }
 //#endregion 🔖️CommandSurface

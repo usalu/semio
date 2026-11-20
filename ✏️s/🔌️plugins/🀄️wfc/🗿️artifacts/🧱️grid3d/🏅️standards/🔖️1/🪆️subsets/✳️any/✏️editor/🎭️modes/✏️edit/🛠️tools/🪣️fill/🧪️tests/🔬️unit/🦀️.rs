@@ -8,7 +8,7 @@ use semio_framework_tool_run::{ToolRunIdentity, ToolRunTraceKind};
 use std::sync::Arc;
 use crate::editor::grid3d::modes::edit::tools::fill::*;
 use crate::host::inferences::solve_with_clock;
-use semio_framework_job::Generation;
+use semio_framework_job::{Generation, InteractiveJob};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
 static PARTIAL_VECTOR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🧪️tests/🧫️fixtures/🎞️partial-tick.json"));
@@ -139,9 +139,7 @@ fn aborting_mid_run_cancels_and_never_stores_residency() {
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
-    job.begin_close();
-    let outcome = drive_once(&mut job, &mut driver, 1);
-    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
+    driver.cancel(&mut job, 1);
     assert!(!port.has_effects(), "abort must not publish a completed transient");
     driver.close(&mut job);
 }

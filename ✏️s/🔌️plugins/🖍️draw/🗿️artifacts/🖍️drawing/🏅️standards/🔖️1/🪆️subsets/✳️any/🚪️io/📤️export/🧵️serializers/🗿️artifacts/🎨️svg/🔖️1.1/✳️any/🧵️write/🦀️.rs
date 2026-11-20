@@ -2,7 +2,7 @@
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent};
 use semio_s_artifact_draw_drawing_model::{FillStyle, PathSegment};
 use semio_framework_pixels::{png_encoding::PngEncodeJob,retirement::RasterLease};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
 use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
@@ -13,10 +13,13 @@ pub struct SvgWriteLimits{pub view_box:[f64;4],pub max_output_bytes:usize,pub ma
 #[derive(Clone,Copy,Debug)]
 pub struct SvgWriteProgress{pub phase:&'static str,pub nodes:usize,pub bytes:usize,pub work:u64,pub done:bool}
 #[derive(semio_framework_value::RetireOwned)]
-struct Owners{plan:DocumentScenePlan,pages:Pages,encoder:Option<Encoder>,image_bytes:Vec<u8>,retired_encoders:PagedList<Encoder,{usize::MAX}>,retired_bytes:Pages,rejected_image:Option<RasterLease>,failure:Option<String>}
+#[doc(hidden)]
+pub struct Owners{plan:DocumentScenePlan,pages:Pages,encoder:Option<Encoder>,image_bytes:Vec<u8>,retired_encoders:PagedList<Encoder,{usize::MAX}>,retired_bytes:Pages,rejected_image:Option<RasterLease>,failure:Option<String>}
 pub struct SvgWriteJob{owners:Owners,limits:SvgWriteLimits,pending:Fragment,phase:u8,node:usize,common:usize,depth:usize,groups:[(usize,usize);32],scalar:usize,part:usize,asset:usize,stops:[usize;64],stop_count:usize,constant:Option<[f64;4]>,image_at:usize,bytes:usize,work:u64,cancelled:bool}
 impl RetireOwned for SvgWriteJob{
- fn retirement(self)->Box<dyn RetirementCursor>{self.owners.retirement()}
+ type RetirementCursor = <Owners as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor { self.owners.retirement_seed() }
+    fn retirement_ready(&self) -> bool { self.owners.retirement_ready() }
  fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{true}
 }

@@ -13,6 +13,7 @@ import{emptyOwnerCostTableV1,recordOwnerCostV1}from"../../💰️cost/🟦️.ts
 import type{GraphFleetClientV1}from"../../../🛰️exchange/🟦️.ts";
 import{readPriorityV1,writePendingV1}from"../../../../🕸️graph/🕰️generations/🧭️steering/🟨️.mjs";
 import{createGraphReadWatchV1,graphReadEndTextV1,graphReadStopRowV1,runWantedServerV1,wantedServerPolicyV1,yieldToInteractiveV1,type GraphYieldViewV1,type WantedInferV1}from"../../🛠️server/🟦️.ts";
+import refreshCases from "./refresh.json" with {type:"json"};
 
 /** 🛠️ Contract: a machine with headroom serves the live requests of the others and tells the requester which projects are done; when nobody asks it refreshes the fleet generation after the worktree went quiet (or the generation got old), never without headroom, and a failing read answers nobody and is not retried at once. */
 const scratch:string[]=[];
@@ -28,12 +29,29 @@ async function world(){
 }
 const ok=(generation:number):WantedInferV1=>({ok:true,status:0,seconds:12,generation,detail:""});
 
+test("held local custody defers only automatic refresh and release keeps the original cooldown",async()=>{
+ const attempted:number[]=[],started:number[]=[];
+ let round=0;
+ const times=refreshCases.rounds;
+ await runWantedServerV1({
+  client:{} as GraphFleetClientV1,owner:"g1-server",platform:PLATFORM,language:"en",
+  steerDirectory:temp("refresh"),requesters:async()=>[],headroom:roomy,mayServe:async()=>false,
+  quietMilliseconds:async()=>10**9,signal:new AbortController().signal,say:()=>{},
+  sleep:async()=>{round++;},rounds:times.length,now:()=>times[Math.min(round,times.length-1)]!.at,
+  refreshDeferred:()=>times[round]!.holding,
+  mayRefresh:async()=>{attempted.push(times[round]!.at);return attempted.length===2;},
+  infer:async reason=>{expect(reason).toBe("refresh");started.push(times[round]!.at);return ok(1);},
+ });
+ expect(attempted).toEqual(refreshCases.attempted);
+ expect(started).toEqual(refreshCases.started);
+});
+
 test("a request is served by one graph read and answered; the next round finds the claim done and the answer in place",async()=>{
  const {server,client}=await world();
  try{
   const requester=client("requester"),serving=client("serving"),reads:string[]=[],lines:string[]=[],controller=new AbortController();
   await publishWantedV1({client:requester,requester:"g1-m06",platform:PLATFORM,graphKey:KEY,projects:["b","a","c"]});
-  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>["g1-m06","g1-server"],headroom:roomy,infer:async reason=>{reads.push(reason);return ok(9);},quietMilliseconds:async()=>0,say:line=>lines.push(line),signal:controller.signal,sleep:async()=>{},rounds:1});
+  await runWantedServerV1({client:serving,owner:"g1-server",platform:PLATFORM,steerDirectory:temp("steer"),language:"en",requesters:async()=>["g1-m06","g1-server"],headroom:roomy,infer:async reason=>{reads.push(reason);return ok(9);},quietMilliseconds:async()=>0,say:line=>lines.push(line),signal:controller.signal,sleep:async()=>{},rounds:1,refreshDeferred:()=>{throw Error("Requested reads are independent of refresh custody");}});
   expect(reads).toEqual(["request"]);
   const answer=await readServedV1({client:requester,requester:"g1-m06"});
   expect(answer?.projects).toEqual(["a","b","c"]);expect(answer?.generation).toBe(9);expect(answer?.server).toBe("g1-server");
@@ -98,8 +116,8 @@ test("Law: a read is watched by its progress, not by a budget: waves, in English
  time=1400;expect(watch.verdict(),"900 ms since the wave").toBe("go");
  watch.feed("graph: waiting for the graph build of a peer (3 s in the queue, generation 5 was the newest when this command queued)\n");time=1600;expect(watch.verdict(),"the same generation again is no progress").toBe("stalled");
  watch.feed("Graph: Generation 6 veröffentlicht, 48 Projekte in 90 s erneuert (0 behielten ihre Kanten)\n");expect(watch.verdict()).toBe("go");expect(watch.generation()).toBe(6);
- time=2500;watch.feed("graph: paused after generation 6: 1 command(s) wait for memory on this machine (60 s)\n");time=3400;expect(watch.verdict(),"a pause for others is a sign of life").toBe("go");
- time=4500;expect(watch.verdict()).toBe("stalled");expect(watch.silentMilliseconds()).toBe(2000);
+ time=2500;watch.feed("graph: paused after generation 6: 1 command(s) wait for memory on this machine (60 s)\n");time=3400;expect(watch.verdict(),"a pause does not extend progress").toBe("stalled");
+ time=4500;expect(watch.verdict()).toBe("stalled");expect(watch.silentMilliseconds()).toBe(2900);
  for(let generation=7;time<9500;generation++){time+=900;watch.feed(`graph: generation ${generation} published\n`);expect(watch.verdict()).toBe("go");}
  time=10000;watch.feed("graph: generation 99 published\n");expect(watch.verdict(),"the maximum ends even a read that makes progress").toBe("too-long");
  expect(graphReadEndTextV1("stalled","en")).toContain("nothing advanced for 25 min");expect(graphReadEndTextV1("stalled","de")).toContain("seit 25 min");
@@ -270,13 +288,13 @@ test("Law: the progress record is honest: it advances when a read starts or a wa
  }finally{await server.stop(true);}
 },60000);
 
-const ownersLine=(running:number,done:number,elapsed:number)=>`[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"build:graph-phase:owners:${running}:5101:9:${done}:framework-os-kernel|language%3Acargo|${done}|62,repo|project|${done}|45:waiting|5608|1","mode":"shared","elapsedMs":${elapsed}}}\n`;
+const ownersLine=(running:number,done:number,elapsed:number)=>`[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"build:graph-phase:owners:${done}:5101:${running}:${elapsed}:framework-os-kernel|language%3Acargo|${elapsed}|62,repo|project|${elapsed}|45:waiting|5608|1","mode":"shared","elapsedMs":${elapsed}}}\n`;
 
 test("R57 law: a read that finishes owners but publishes no wave for longer than the stall limit is alive; a read whose counters stand still is stopped",()=>{
  const policy={...wantedServerPolicyV1,inferStallMilliseconds:25*60000,inferMaximumMilliseconds:12*3600000};let time=0;
  const watch=createGraphReadWatchV1(policy,()=>time);
  for(let minute=1;minute<=60;minute++){time=minute*60000;watch.feed(ownersLine(15-(minute%3),minute*60,time));expect(watch.verdict(),"minute "+minute).toBe("go");}
- expect(watch.generation()).toBeNull();expect(watch.counters()["build:graph-phase:owners"]).toEqual([15,5101,9,3600]);
+ expect(watch.generation()).toBeNull();expect(watch.counters()["build:graph-phase:owners"]).toEqual([3600,5101]);
  const frozen=time;
  for(let minute=1;minute<=24;minute++){time=frozen+minute*60000;watch.feed(ownersLine(9,3600,time));expect(watch.verdict(),"a counter that went back or stood still is no progress, minute "+minute).toBe("go");}
  time=frozen+25*60000;watch.feed(ownersLine(15,3600,time));expect(watch.verdict()).toBe("stalled");
@@ -288,7 +306,7 @@ test("R57 law: the line a stop writes names the verdict, the silence and the cou
  const policy={...wantedServerPolicyV1,inferStallMilliseconds:1000};let time=0;const watch=createGraphReadWatchV1(policy,()=>time);
  watch.feed(ownersLine(15,885,1));time=1500;
  const row=graphReadStopRowV1(watch,"stalled",11,12,7);
- expect(row).toEqual({version:1,verdict:"stalled",atMs:7,silentMilliseconds:1500,generation:null,counters:{"build:graph-phase:owners":[15,5101,9,885]},runner:11,read:12});
+ expect(row).toEqual({version:1,verdict:"stalled",atMs:7,silentMilliseconds:1500,generation:null,counters:{"build:graph-phase:owners":[885,5101]},runner:11,read:12});
  const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:false}).compile(schema.definitions.ReadStop)(row)).toBe(true);
 });

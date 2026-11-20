@@ -63,7 +63,7 @@ export function Board2dHost(props: ComponentSceneHostProps) {
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
+      <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none" />
       <ToolRunTrace2dLayer lane={scene.toolRunTrace} camera={toolRunTraceCamera} pathForShape={toolRunTracePathForShape} onCursor={onToolRunTraceCursor} focus={suggestionFocus} />
       <ContextMenuController
         title={contextMenuTitleLabel}

@@ -19,6 +19,29 @@ import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️priva
 const repository=await privateRepositoryWorkspaceV1();
 test("Vite paths retain canonical bounded owner and closed build intent",()=>{const database=new Database(":memory:"),require=createRequire(import.meta.url),oracle=new(require("ajv").default)().compile(schema);try{const layouts=fixture.modes.map(mode=>viteStorageLayoutV1("/fixed/products",mode,fixture.owner));expect(layouts[0]!.output).not.toBe(layouts[1]!.output);for(let i=0;i<fixture.modes.length;i++){expect(oracle({version:1,mode:fixture.modes[i],owner:fixture.owner})).toBe(true);for(const value of Object.values(layouts[i]!))expect((database.query("SELECT instr(?,?)=1 AS valid").get(value,"/fixed/products/"+fixture.root+"/") as {valid:number}).valid).toBe(1);}for(const mode of fixture.invalidModes){expect(oracle({version:1,mode,owner:fixture.owner})).toBe(false);expect(()=>viteStorageLayoutV1("/fixed/products",mode,fixture.owner)).toThrow();}expect(new Set(Array.from({length:1024},(_,i)=>viteWriterResourceV1(String(i)))).size).toBe(fixture.writerShards);}finally{database.close();}});
 test("compiler state history keeps finite writer claim identity",()=>{const resources=Array.from({length:fixture.compilerMetadata.identities},(_,i)=>compilerStateResourceV1("/fixed/products/identity/"+i)),database=new Database(":memory:");try{database.exec("CREATE TABLE resources(name TEXT PRIMARY KEY)");const insert=database.query("INSERT OR IGNORE INTO resources VALUES(?)");for(const resource of resources)insert.run(resource);expect((database.query("SELECT count(*) AS total FROM resources").get() as {total:number}).total).toBe(fixture.compilerMetadata.writerShards);expect(resources.every(value=>/^compiler-state:v1:[0-9]+$/u.test(value))).toBe(true);}finally{database.close();}});
+test("dedicated server writer excludes its port and leaves other ports and compiler shards available", async () => {
+  await withBuildTestInvocationV1(original => withViteStorageV1(
+    repository.root, "prototype", fixture.owner + ":listener", original,
+    createIssuedResourceControlV1(original, "cache:entry", 0),
+    async (store, layout, _temporary, phase) => {
+      const leaseDirectory = readNativeStorageReservationPolicyV1(store.storage, store.control).leaseDirectory;
+      await withCompilerState({
+        root: layout.state, owner: fixture.owner, compiler: "fixture:1", configuration: "server",
+        mode: "prototype", listenerPort: 6041, control: phase, storage: store.storage,
+        storageControl: store.control, capacity: null, files: ["probe"], environment: store.environment,
+      }, async (directory, _environment, control) => {
+        const claim = (resource: string) => acquireResourceLease({
+          directory: leaseDirectory, resource, mode: "exclusive", control, signal: control.signal, timeoutMs: 0,
+        });
+        await expect(claim("compiler-state:listener:v1:6041")).rejects.toThrow("timed out");
+        for (const resource of [compilerStateResourceV1(directory), "compiler-state:listener:v1:6045"]) {
+          const available = await claim(resource);
+          available.release();
+        }
+      });
+    },
+  ));
+}, 30000);
 test("actual compiler state retains its finite writer lease through original callback",async()=>withBuildTestInvocationV1(original=>withViteStorageV1(repository.root,"prototype",fixture.owner+":state",original,createIssuedResourceControlV1(original,"cache:entry",0),async(store,layout,_temporary,actualPhase)=>{const leaseDirectory=readNativeStorageReservationPolicyV1(store.storage,store.control).leaseDirectory;await withCompilerState({root:layout.state,owner:fixture.owner,compiler:"fixture:1",configuration:"original",mode:"prototype",control:actualPhase,storage:store.storage,storageControl:store.control,capacity:null,files:["probe"],environment:store.environment},async(directory,_environment,statePhase)=>{writeFileSync(join(directory,"probe"),fixture.payload);await expect(acquireResourceLease({directory:leaseDirectory,resource:compilerStateResourceV1(directory),mode:"exclusive",control:statePhase,signal:statePhase.signal,timeoutMs:0})).rejects.toThrow("timed out");await store.recheck();});})),30000);
 test("Vite live workspaces share finite storage and retire only their original temporary",async()=>withBuildTestInvocationV1(async original=>{const paths:string[]=[];let entered!:()=>void,release!:()=>void;const ready=new Promise<void>(accept=>entered=accept),held=new Promise<void>(accept=>release=accept);const first=withViteStorageV1(repository.root,"prototype",fixture.owner,original,createIssuedResourceControlV1(original,"cache:entry",0),async(store,layout,temporary)=>{paths.push(temporary);expect(temporary.startsWith(join(store.root,fixture.root)+"/")).toBe(true);writeFileSync(join(temporary,"proof"),fixture.payload);entered();await held;expect(readFileSync(join(temporary,"proof"),"utf8")).toBe(fixture.payload);await store.recheck();});await ready;try{await withViteStorageV1(repository.root,"prototype",fixture.owner,original,createIssuedResourceControlV1(original,"cache:entry",0),async(store,_layout,temporary)=>{paths.push(temporary);expect(paths[0]).not.toBe(temporary);expect(existsSync(paths[0]!)).toBe(true);await store.recheck();});expect(existsSync(paths[1]!)).toBe(false);expect(existsSync(paths[0]!)).toBe(true);}finally{release();await first;}expect(existsSync(paths[0]!)).toBe(false);}),30000);
 
@@ -30,7 +53,27 @@ test("actual Vite intent builds retain finite products and refuse every other Or
 }))),120000);
 registerIsolatedBuildTestV1(import.meta.path,"concurrent cancellable Vite listeners retain finite products until the abort that stops them",{bodyMilliseconds:120000,scope:{kind:"body"}},async checkpoint=>withBuildTestInvocationV1(original=>withRepositoryCacheStoreV1(repository.root,"dependencies",original,createIssuedResourceControlV1(original,"cache:store-entry",0),(_dependencies,dependencyPhase)=>withViteStorageV1(repository.root,"prototype",fixture.owner+":listeners",original,dependencyPhase,async(store,_layout,temporary,runtimePhase)=>{
  const{app,config}=viteApp(temporary),stops=[new AbortController(),new AbortController()],running:Promise<void>[]=[],urls:string[]=[];
- try{await Promise.all(stops.map((stop,i)=>new Promise<void>((accept,reject)=>{const job=serveVite({control:runtimePhase,invocation:original,root:app,config,host:"127.0.0.1",port:0,signal:stop.signal,ready:url=>{urls[i]=url;accept();}});running.push(job);void job.catch(reject);})));expect(urls[0]).not.toBe(urls[1]);for(const url of urls){expect((await fetch(url)).status).toBe(200);expect(await(await fetch(url+"entry.js")).text()).toContain(fixture.payload);}await store.recheck();}finally{stops.forEach(stop=>stop.abort());const settled=await Promise.allSettled(running);for(const row of settled){expect(row.status).toBe("rejected");expect((row as PromiseRejectedResult).reason?.name).toBe("AbortError");}}
+ try{
+  await Promise.all(stops.map((stop,i)=>new Promise<void>((accept,reject)=>{
+   const job=serveVite({control:runtimePhase,invocation:original,root:app,config,host:"127.0.0.1",port:0,signal:stop.signal,ready:url=>{urls[i]=url;accept();}});
+   running.push(job);void job.catch(reject);
+  })));
+  expect(urls[0]).not.toBe(urls[1]);
+  for(const url of urls){
+   const index=await fetch(url);expect(index.status).toBe(200);await index.text();
+   for(const {path,status} of fixture.requests){
+    const response=await fetch(url+path,{headers:{accept:"text/javascript"}});
+    expect(response.status).toBe(status);
+    const body=await response.text();
+    if(response.ok)expect(body).toContain(fixture.payload);
+   }
+  }
+  await store.recheck();
+ }finally{
+  stops.forEach(stop=>stop.abort());
+  const settled=await Promise.allSettled(running);
+  for(const row of settled){expect(row.status).toBe("rejected");expect((row as PromiseRejectedResult).reason?.name).toBe("AbortError");}
+ }
  for(const url of urls)await expect(fetch(url)).rejects.toThrow();checkpoint();
 }))),/The operation was aborted/);
 

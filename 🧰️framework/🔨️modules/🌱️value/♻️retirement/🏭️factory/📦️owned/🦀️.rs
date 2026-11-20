@@ -162,6 +162,8 @@ impl<T:Send+'static> crate::retirement::RetirementCursor for OwnedSourceRetireme
     fn terminal_release_bytes(&self)->Option<usize> { self.0.terminal_is_empty().then_some(size_of::<Self>()) }
 }
 impl<T:Send+'static> OwnedSourceRetirement<T> {
+ pub(crate) fn from_captured(original:Option<T>,factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->Self{Self(FactoryOwnedRetirement::from_captured(original,factory),None,None,None,None,None)}
+ pub(crate) fn receive_original(&mut self,original:T){self.0.receive_original(Some(original))}
  fn close_borrowed<'reply>(&mut self,original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,crate::retirement::RetirementStep,crate::OriginalRetirementFailure>,recover:bool)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,crate::retirement::RetirementStep,crate::OriginalRetirementFailure>,ValueError>{
   if self.0.terminal_is_empty()&&self.1.is_none()&&self.2.is_none(){return Ok(reply.complete(Ok(crate::retirement::RetirementStep::Complete(0))))}
   let key=effect.invocation().ok_or_else(||ValueError::invariant("factory source close requires its original invocation"))?.identity();let grant=effect.grant();let selected=original.is_some();if self.2.is_some_and(|old|old!=key)||self.3.is_some_and(|old|old!=grant)||self.5.is_some_and(|old|old!=selected){return Err(ValueError::invariant("factory source close changed its original invocation"))}if self.2.is_none(){if recover{return Err(ValueError::invariant("factory source close has no original invocation"))}self.3=Some(grant);self.4=Some(effect.maximum_work_units());self.5=Some(selected)}
@@ -173,7 +175,7 @@ impl<T:Send+'static> OwnedSourceRetirement<T> {
 
 impl<T:Send+'static> crate::retirement::RetireOwned for FactoryOwnedSourceAuthority<T> {
     type RetirementCursor=OwnedSourceRetirement<T>;
-    fn retirement_seed(mut self)->Self::RetirementCursor { OwnedSourceRetirement(FactoryOwnedRetirement { original:ManuallyDrop::new(self.original.take()),factory:ManuallyDrop::new(self.factory.take()),unique:ManuallyDrop::new(None),closing_factory:ManuallyDrop::new(None),production:ManuallyDrop::new(None),production_action:None,production_reply:None,native_reply:ManuallyDrop::new(None),native_attempted:None,native_invocation:None,native_grant:None,native_work:None,native_stage:0,native_close:Default::default() },None,None,None,None,None) }
+    fn retirement_seed(mut self)->Self::RetirementCursor { OwnedSourceRetirement::from_captured(self.original.take(),self.factory.take().expect("original owner retains its factory")) }
     fn retirement_birth_bytes(&self)->Option<usize> { Some(size_of::<OwnedSourceRetirement<T>>()) }
     fn controlled_retirement_supported()->bool { true }
 }

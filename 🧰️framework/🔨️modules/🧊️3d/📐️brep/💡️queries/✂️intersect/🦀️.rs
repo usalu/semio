@@ -27,7 +27,36 @@ pub mod surface_surface;
 // #endregion 🔖️Submodules
 
 // #region 🔖️Reexports
-pub use curve_curve::{intersect_curve_curve, CurveCurveHit};
-pub use curve_surface::{intersect_curve_surface, CurveSurfaceHit};
-pub use surface_surface::{intersect_surface_surface, IntCurve, IntCurveKind};
+pub use curve_curve::{intersect_curve_curve, intersect_line_line_unique, CurveCurveHit};
+pub use curve_surface::{intersect_curve_surface, intersect_line_plane_unique, CurveSurfaceHit};
+
+/// ⚖️ Allocation-free refusal from the bounded linear intersection equations.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LineIntersectionRefusal {
+    InvalidTolerance,
+    DegenerateDirection,
+    Infinite,
+    NonFinite,
+}
+
+impl LineIntersectionRefusal {
+    pub const fn message(self) -> &'static str {
+        match self {
+            Self::InvalidTolerance => "tolerance must be positive and finite",
+            Self::DegenerateDirection => "zero-length line direction",
+            Self::Infinite => "infinitely many intersections",
+            Self::NonFinite => "line intersection requires finite arithmetic",
+        }
+    }
+}
+
+impl From<LineIntersectionRefusal> for semio_framework_3d_brep_representation::error::IntersectError {
+    fn from(error: LineIntersectionRefusal) -> Self {
+        match error {
+            LineIntersectionRefusal::Infinite => Self::Tangent,
+            _ => Self::Degenerate(error.message().into()),
+        }
+    }
+}
+pub use surface_surface::{intersect_original_analytic_surfaces, intersect_plane_plane_curve, intersect_surface_surface, ExactSurfaceRefusal, IntCurve, IntCurveKind};
 // #endregion 🔖️Reexports

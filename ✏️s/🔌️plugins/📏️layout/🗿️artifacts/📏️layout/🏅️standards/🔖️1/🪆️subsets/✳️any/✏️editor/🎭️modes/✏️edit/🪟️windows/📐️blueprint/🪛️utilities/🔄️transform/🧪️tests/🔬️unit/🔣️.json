@@ -1,0 +1,25 @@
+{
+  "cases": [
+    { "name": "release without a tail", "open": ["drag", 10], "phase": "commit", "tail": null, "committed": 10 },
+    { "name": "release with a neutral tail", "open": ["drag", 10], "phase": "commit", "tail": ["drag", 0], "committed": 10 },
+    { "name": "release with a final delta", "open": ["drag", 10], "phase": "commit", "tail": ["drag", 3], "committed": 13 },
+    { "name": "motion with no net effect", "open": ["drag", 10], "phase": "commit", "tail": ["drag", -10], "committed": null },
+    { "name": "foreign target finish", "open": ["drag", 10], "phase": "commit", "tail": ["drag", 1], "target": "frame-image-1", "committed": null },
+    { "name": "foreign target tick", "open": ["drag", 10], "phase": "stream", "tail": ["drag", 1], "target": "frame-image-1", "committed": null },
+    { "name": "foreign page finish", "open": ["drag", 10], "phase": "commit", "tail": ["drag", 1], "page": "page-2", "committed": null },
+    { "name": "foreign kind finish", "open": ["drag", 10], "phase": "commit", "tail": ["rotate", 0.5], "committed": null },
+    { "name": "foreign pivot finish", "open": ["rotate", 0.5], "phase": "commit", "tail": ["rotate", 0.25], "pivot": 5, "committed": null },
+    { "name": "scale factors multiply", "open": ["scale", 1.5], "phase": "commit", "tail": ["scale", 2], "committed": 3 },
+    { "name": "target locked at release", "open": ["drag", 10], "phase": "commit", "tail": null, "locked": true, "committed": null },
+    { "name": "target missing at release", "open": ["drag", 10], "phase": "commit", "tail": null, "missing": true, "committed": null },
+    { "name": "revision moved before release", "open": ["drag", 10], "phase": "commit", "tail": null, "revision": "rev-2", "committed": null }
+  ],
+  "previewBase": [10, 15, 20, 12, 0.5],
+  "previews": [
+    {"name": "preview translates only its target", "motion": ["drag", 7, -6], "bounds": [17, 9, 20, 12, 0.5]},
+    {"name": "preview orbits the original centre", "motion": ["rotate", 1.5707963267948966, 0], "bounds": [-31, 14, 20, 12, 2.0707963267948966]},
+    {"name": "preview scales with the committed frame rule", "motion": ["scale", 2, 0.5], "bounds": [20, 7.5, 40, 6, 0.5]},
+    {"name": "preview leaves a locked target on its live bounds", "motion": ["drag", 7, -6], "locked": true, "bounds": null},
+    {"name": "preview refuses the whole non-finite transform", "motion": ["scale", 1e+308, 1], "bounds": null}
+  ]
+}

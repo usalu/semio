@@ -170,6 +170,32 @@ test("the meter over a real tree refuses many small files and one large file tha
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
+
+test("a Windows cache volume trusts inherited case behavior before requesting a setter",()=>{
+ const base=scratch(),db=new Database(":memory:"),validate=oracle.compile(schema.definitions.InheritedCaseCase);
+ try{
+  for(const row of fixture.inheritedCase){
+   expect(validate(row),row.id).toBe(true);
+   const directory=join(base,row.id),calls:string[]=[];
+   mkdirSync(join(directory,protocol.root),{recursive:true});
+   const port:NativeDirectoryPlatformPortV1={kind:"journaled",prepareVolume:()=>{calls.push("set");if(row.deny)throw Error(protocol.refusals.caseAccess);},flush:()=>{},swap:()=>{},pending:()=>false,recover:()=>"clean"};
+   const probe=()=>{calls.push("probe");return calls.includes("set")?row.after:row.inherited;};
+   let result="";
+   try{
+    allocateNativeDirectoryV1({directory,filesystemBytes:33554432,maximumPhysicalBytes:34603008},probe,port);
+    result=readNativeDirectoryAnchorV1(readFileSync(join(directory,protocol.anchor))).caseFold?"fold-safe":"sensitive";
+   }catch(error){if((error as Error).message!==protocol.refusals.caseUnverified)throw error;result="refused";}
+   const oracle=db.query("select case when ?1 then 'sensitive' when ?2 then 'fold-safe' when ?3 then 'sensitive' else 'refused' end as mode").get(Number(row.inherited),Number(row.deny),Number(row.after))as{mode:string};
+   expect(result,row.id).toBe(oracle.mode);
+   expect(calls,row.id).toEqual(row.effects);
+  }
+  if(probeNativeDirectoryCaseSensitivityV1(base)){
+   const port:NativeDirectoryPlatformPortV1={...nativeDirectorySystemPortV1(),kind:"journaled",prepareVolume:()=>{throw Error(protocol.refusals.caseAccess);}};
+   expect(probeNativeDirectoryCaseCapabilityV1(base,port)).toBe(true);
+  }
+ }finally{db.close();rmSync(base,{recursive:true,force:true});}
+});
+
 test("every platform port honours one swap contract: sibling swap, identity proof, flush, no pending state and a case-sensitive volume",()=>{
  const base=scratch();try{
   const ports:[string,NativeDirectoryPlatformPortV1][]=[["system",nativeDirectorySystemPortV1()],["exchange-simulated",createNativeDirectoryExchangePortV1({exchange:(first,second)=>{const hold=first+".held";renameSync(first,hold);renameSync(second,first);renameSync(hold,second);return{status:0,errno:0};}})]];

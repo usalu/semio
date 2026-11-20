@@ -1,0 +1,15 @@
+{
+ "version": 1,
+ "racy": [
+  {"id": "quiet-for-a-minute", "mtimeNs": "1000000000", "ctimeNs": "1000000000", "startedMs": 61000, "remembered": true},
+  {"id": "quiet-exactly-the-window", "mtimeNs": "8000000000", "ctimeNs": "8000000000", "startedMs": 10000, "remembered": true},
+  {"id": "modified-inside-the-window", "mtimeNs": "8000000001", "ctimeNs": "1000000000", "startedMs": 10000, "remembered": false},
+  {"id": "changed-inside-the-window", "mtimeNs": "1000000000", "ctimeNs": "9999000000", "startedMs": 10000, "remembered": false},
+  {"id": "modified-in-the-future", "mtimeNs": "20000000000", "ctimeNs": "20000000000", "startedMs": 10000, "remembered": false}
+ ],
+ "files": [
+  {"name": "empty.bin", "text": ""},
+  {"name": "grüße.txt", "text": "Grüße aus der Cloud"},
+  {"name": "wide.rs", "text": "pub fn key_frame() -> u8 { 7 }\n"}
+ ]
+}

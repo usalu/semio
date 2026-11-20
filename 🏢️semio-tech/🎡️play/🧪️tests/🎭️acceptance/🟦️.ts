@@ -9,7 +9,7 @@
 // content: the curated example's own rendered label in the pane's chrome, and a main window that actually
 // paints — a non-uniform pixel census of the largest canvas, or a non-empty main region for a DOM window.
 // Across the whole run no asset request may be answered by the SPA fallback. The overview button must
-// return to the overview after clearing and restoring its curated document and switching viewer/editor roles.
+// return to the overview after exercising its example catalogue and switching viewer/editor roles.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -18,11 +18,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PNG } from "pngjs";
 import Ajv2020 from "ajv/dist/2020.js";
-import generation3dWorkflow from "./🧫️fixtures/🧊️generation3d/🔣️.json";
-import formsWorkflow from "./🧫️fixtures/📋️forms/🔣️.json";
-import formsWorkflowSchema from "./🧫️fixtures/📋️forms/🧬️schema/🔣️.json";
-import cancellationWorkflow from "./🧫️fixtures/📋️forms/🌐️cancellation.json";
-import cancellationWorkflowSchema from "./🧫️fixtures/📋️forms/🌐️cancellation.schema.json";
+import generation3dWorkflow from "./🧫️fixtures/🧊️generation3d/🔣️.json" with { type: "json" };
+import formsWorkflow from "./🧫️fixtures/📋️forms/🔣️.json" with { type: "json" };
+import formsWorkflowSchema from "./🧫️fixtures/📋️forms/🧬️schema/🔣️.json" with { type: "json" };
+import cancellationWorkflow from "./🧫️fixtures/📋️forms/🌐️cancellation.json" with { type: "json" };
+import cancellationWorkflowSchema from "./🧫️fixtures/📋️forms/🌐️cancellation.schema.json" with { type: "json" };
 
 import { expect, test, type Page } from "../../🔨️modules/🧪️e2e/📦️release/🎭️fixture/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -294,22 +294,52 @@ async function dismissPaneIntroduction(page: Page, pane: PlayPane): Promise<void
   await expect(shell).not.toHaveAttribute("data-introduction-active", "true");
 }
 
-/** 🧪️ Delivers a blank example command and restores the curated document through the actual picker. */
+/** 🧪️ Exercises the actual picker catalogue and restores the curated document after switching. */
 async function exerciseCuratedExample(page: Page, pane: PlayPane): Promise<void> {
   if (pane.exampleLabel === undefined) return;
+  if (pane.example === undefined) throw new Error(`${pane.variant} example label has no authored ID`);
   const picker = page.locator(`[data-layered-pane="${pane.variant}"] [id="playground.navbar.fixture"]`);
   await expect(picker).toBeVisible();
   await expect(picker).toHaveText(pane.exampleLabel);
   await picker.click();
-  const blank = page.getByRole("option").first();
-  const blankLabel = (await blank.innerText()).trim();
-  await blank.click();
-  await expect(picker).toHaveText(blankLabel);
+  const listboxId = await picker.getAttribute("aria-controls");
+  if (!listboxId) throw new Error(`${pane.variant} example picker has no controlled listbox`);
+  const listbox = page.getByRole("listbox").and(page.locator(`[id=${JSON.stringify(listboxId)}]`));
+  const options = listbox.getByRole("option");
+  const byId = (id: string) => options.and(page.locator(`[data-value=${JSON.stringify(id)}]`));
+  const curated = byId(pane.example);
+  const closePicker = async () => {
+    await page.keyboard.press("Escape");
+    await expect(picker).toHaveAttribute("aria-expanded", "false");
+  };
+  await expect(curated).toHaveText(pane.exampleLabel);
+  await expect(curated).toHaveAttribute("aria-selected", "true");
+  const choices = await options.evaluateAll(rows => rows.flatMap(row => {
+    const id = row.getAttribute("data-value");
+    if (!id || row.getAttribute("aria-disabled") === "true") return [];
+    return [{ id, label: (row.textContent ?? "").trim() }];
+  }));
+  if (await options.count() === 1) {
+    await expect(options).toHaveText([pane.exampleLabel]);
+    await closePicker();
+    return;
+  }
+  const alternatives = choices.filter(choice => choice.id !== pane.example);
+  const alternative = alternatives.find(choice => choice.id === "__none__")
+    ?? alternatives.find(choice => choice.label !== pane.exampleLabel) ?? alternatives[0];
+  if (!alternative) throw new Error(`${pane.variant} example picker has no enabled alternative`);
+  const alternativeOption = byId(alternative.id);
+  await alternativeOption.click();
+  await expect(picker).toHaveText(alternative.label);
   await page.waitForTimeout(BOOT_SETTLE_MS);
   await picker.click();
-  await page.getByRole("option", { name: pane.exampleLabel, exact: true }).click();
+  await expect(alternativeOption).toHaveAttribute("aria-selected", "true");
+  await curated.click();
   await expect(picker).toHaveText(pane.exampleLabel);
   await page.waitForTimeout(BOOT_SETTLE_MS);
+  await picker.click();
+  await expect(curated).toHaveAttribute("aria-selected", "true");
+  await closePicker();
   const witness = await paintWitness(page, pane.variant);
   expect(witness.painted, `${pane.variant} restoring its curated example paints nothing — ${witness.detail}`).toBe(true);
 }

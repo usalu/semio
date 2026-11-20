@@ -52,7 +52,7 @@ const publicationCeremony:CrashScenarioV1={
  }
 };
 
-const simulatedHost=():NativeWindowsHostPortV1=>({moveFile:(from,to)=>{renameSync(from,to);return{ok:true,error:0};},flushDirectory:path=>{syncDirectory(path);return{ok:true,error:0};},setCaseSensitive:()=>({opened:true,error:0,status:0}),availableBytes:()=>({ok:true,error:0,bytes:0}),openExclusive:()=>({ok:true,error:0})});
+const simulatedHost=():NativeWindowsHostPortV1=>({moveFile:(from,to)=>{renameSync(from,to);return{ok:true,error:0};},flushDirectory:path=>{syncDirectory(path);return{ok:true,error:0};},setCaseSensitive:()=>({opened:true,error:0,status:0}),availableBytes:()=>({ok:true,error:0,bytes:0,totalBytes:undefined}),openExclusive:()=>({ok:true,error:0})});
 const swapDirectory=(directory:string)=>join(directory,"d");
 const directorySwap:CrashScenarioV1={
  id:"directory-swap-journal",

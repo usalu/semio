@@ -4624,6 +4624,7 @@ dependencies = [
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -5068,6 +5069,7 @@ dependencies = [
  "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-allocator",
@@ -9335,6 +9337,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -9512,6 +9515,7 @@ dependencies = [
  "semio-framework-tool-machine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-storage",
  "semio-framework-value-original-aliases",
  "semio-os-kernel",
  "semio-plugin-decl-app",
@@ -9657,9 +9661,28 @@ dependencies = [
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
  "semio-plugin-ownership",
+ "semio-plugin-window-config-contract",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-registry",
  "semio-plugin-window-config-replace",
+]
+
+[[package]]
+name = "semio-plugin-window-config-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retirement-queue",
+ "semio-os-kernel",
+ "semio-os-store-codec-registry",
+ "semio-os-store-operation-wire",
+ "semio-os-store-text-io",
+ "semio-plugin-ownership",
+ "semio-plugin-window-config-mutation",
 ]
 
 [[package]]
@@ -10608,6 +10631,7 @@ dependencies = [
  "semio-s-artifact-wfc-grid3d-schema",
  "semio-s-artifact-wfc-grid3d-snapshot",
  "semio-s-artifact-wfc-grid3d-tests",
+ "semio-s-artifact-wfc-grid3d-transient",
  "semio-s-plugin-wfc-engine",
  "semio-s-plugin-wfc-engine-oracle",
  "semio-ui-contract",
@@ -10656,6 +10680,7 @@ dependencies = [
  "semio-s-artifact-wfc-grid3d-mut-family",
  "semio-s-artifact-wfc-grid3d-mutations",
  "semio-s-artifact-wfc-grid3d-snapshot",
+ "semio-s-artifact-wfc-grid3d-transient",
  "semio-s-plugin-wfc-engine",
  "semio-s-plugin-wfc-engine-oracle",
  "semio-ui-contract",
@@ -10932,6 +10957,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-wfc-grid3d-transient"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-test-original-snapshot-owners",
+ "semio-framework-tool-machine",
+ "semio-framework-tool-run",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-snapshot-projection",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
+ "semio-plugin",
+ "semio-s-plugin-wfc-engine",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-plugin-wfc-engine"
 version = "0.1.0"
 dependencies = [
@@ -11083,6 +11145,13 @@ name = "semio-ui-arena"
 version = "0.1.0"
 
 [[package]]
+name = "semio-ui-border-presentation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -11204,6 +11273,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
@@ -11235,6 +11305,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-paged-list",
+ "semio-ui-border-presentation",
  "semio-ui-scene-algebra",
  "semio-ui-scene-camera",
  "semio-ui-scene-mesh",
@@ -11687,6 +11758,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-contract",
  "semio-ui-declaration",
+ "semio-ui-draw-contract",
  "semio-ui-locale",
  "semio-ui-theme",
 ]

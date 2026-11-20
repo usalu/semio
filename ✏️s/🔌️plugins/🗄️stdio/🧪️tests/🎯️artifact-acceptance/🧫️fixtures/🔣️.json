@@ -342,17 +342,17 @@
       "kind": "s.stdio.xlsx",
       "plugin": "stdio-office",
       "extension": ".xlsx",
-      "oracle": "ooxml",
+      "oracle": "xlsx",
       "surface": "shipped",
       "edit": {
         "mode": "rendered",
         "path": "main",
         "verb": "set-cell",
-        "control": "input[data-ui-node-key=\"cell-0\"]",
+        "control": "input[aria-label=\"A1\"]",
         "value": "Matrix Cell"
       },
       "export": {
-        "format": "ooxml"
+        "format": "xlsx"
       },
       "invalid": {
         "bytes": "deadbeef",

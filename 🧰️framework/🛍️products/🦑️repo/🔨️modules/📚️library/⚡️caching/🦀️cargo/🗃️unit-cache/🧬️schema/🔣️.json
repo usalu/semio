@@ -151,6 +151,7 @@
         "gc": {
           "laneShare": 0.234375,
           "incrementalShare": 0.1,
+          "unitShare": 0.5,
           "admissionShare": 0.015,
           "admissionRetentionMilliseconds": 604800000,
           "admissionTemporaryMilliseconds": 3600000,
@@ -826,6 +827,9 @@
         "mtimeNs": {
           "type": "string",
           "pattern": "^[0-9]*$"
+        },
+        "racy": {
+          "const": true
         },
         "ctimeNs": {
           "type": "string",

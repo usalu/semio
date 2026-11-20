@@ -1,9 +1,103 @@
 //! 🧩️ Process3d editor unit tests: the real contribution pack admission, the host contribution output cap and the member-less example archive door.
 
 use super::*;
+use super::context::settled_action;
+
+/// 🧩️ The published extension descriptors deliver the same machines the editor installs.
+#[test]
+fn shipped_extension_descriptors_deliver_installable_machines() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path| path.join("✏️s/🔌️plugins/🏭️process/🧩️extensions").is_dir()).expect("workspace root");
+    let mut entries = Vec::new();
+    let mut expected = Vec::new();
+    for (folder, id) in [("🪵️wood", "wood"), ("🔩️metal", "metal"), ("🧱️concrete", "concrete"), ("🤖️robotic", "robotic")] {
+        let path = root.join("✏️s/🔌️plugins/🏭️process/🧩️extensions").join(folder).join("🧩️component/🔣️.json");
+        let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("extension descriptor")).expect("descriptor JSON");
+        let manifest = &descriptor["manifest"];
+        let topics = manifest["topicContributions"].as_array().expect("extension topics");
+        assert_eq!(topics.len(), 1);
+        assert_eq!(topics[0]["topic"], "process.machines");
+        let payload = &topics[0]["payload"];
+        assert_eq!(payload["appId"], PROCESS_3D_PLAY_APP_ID);
+        assert_eq!(payload["moduleId"], id);
+        let machines_json = payload["machinesJson"].as_str().expect("machines JSON");
+        let oracle: serde_json::Value = serde_json::from_str(machines_json).expect("machine JSON oracle");
+        let machines: Vec<WorkshopMachine> = semio_framework_pack_json::from_json_str(machines_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("machine payload");
+        assert_eq!(oracle.as_array().expect("machine array").len(), machines.len());
+        assert!(!machines.is_empty());
+        expected.push((id, machines));
+        entries.push(serde_json::json!({"pluginId": manifest["pluginId"], "topicContribution": topics[0]}));
+    }
+    let pack = serde_json::to_string(&entries).expect("contribution pack");
+    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    assert_eq!(semio_framework::parse_contributions(&distilled).len(), 4);
+    let mut app = context::unseeded_app_with_registry();
+    let args = DslValue::object([("json".into(), DslValue::String(pack))]);
+    settled_action(&mut app, "setContributions", Some(&args));
+    let stock_id = app.snapshot().expect("document").stock_id.clone();
+    for (field, value) in [("width", 0.2), ("depth", 0.2), ("height", 0.05)] {
+        let args = DslValue::object([("target".into(), DslValue::String(stock_id.clone())), ("field".into(), DslValue::String(field.into())), ("value".into(), DslValue::float(value))]);
+        settled_action(&mut app, "patchInspector", Some(&args));
+    }
+    assert_eq!(app.snapshot().expect("document").stock_payload.solid, WorkingSolid::Box { width: 0.2, depth: 0.2, height: 0.05 });
+    for (catalog_id, machines) in expected {
+        let available = machines.iter().find(|machine| !machine.capabilities.is_empty()).expect("machine with a capability").clone();
+        for mut machine in machines {
+            let installed = catalog_machine(&distilled, catalog_id, &machine.id).expect("extension machine is installable");
+            machine.catalog_id = Some(catalog_id.into());
+            assert_eq!(installed, machine, "{catalog_id} payload differs from the installed machine");
+        }
+        if app.snapshot().expect("document").workshop.machines.iter().any(|existing| existing.id == available.id) {
+            let args = DslValue::object([("id".into(), DslValue::String(available.id.clone()))]);
+            assert!(published_a_document_mutation(&settled_action(&mut app, "removeWorkshopMachine", Some(&args)).1));
+        }
+        let args = DslValue::object([("catalogId".into(), DslValue::String(catalog_id.into())), ("machineId".into(), DslValue::String(available.id.clone()))]);
+        assert!(published_a_document_mutation(&settled_action(&mut app, "addWorkshopMachine", Some(&args)).1));
+        let mut expected_machine = available.clone();
+        expected_machine.catalog_id = Some(catalog_id.into());
+        assert_eq!(app.snapshot().expect("document").workshop.machines.iter().find(|machine| machine.id == available.id), Some(&expected_machine));
+        let capability = &available.capabilities[0];
+        let args = DslValue::object([("machineId".into(), DslValue::String(available.id.clone())), ("capabilityId".into(), DslValue::String(capability.id.clone()))]);
+        if catalog_id == "wood" {
+            let height = |value| DslValue::object([("target".into(), DslValue::String(stock_id.clone())), ("field".into(), DslValue::String("height".into())), ("value".into(), DslValue::float(value))]);
+            assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&height(0.2))).1));
+            let before = app.snapshot().expect("document").step_payloads.len();
+            let meta = semio_plugin::artifact_app_laws::meta("local");
+            let admission = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addStep", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
+            let outcome = match admission {
+                Err(fault) => format!("{fault:?}"),
+                Ok(admitted) => match ::semio_framework_async::poll::resolve_ready(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())) {
+                    Err(fault) => format!("{fault:?}"),
+                    Ok(result) => {
+                        let settled = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
+                        format!("{result:?} {settled:?}")
+                    }
+                },
+            };
+            assert!(outcome.contains("process3d.capability.stock-limit"), "expected stock-limit refusal: {outcome}");
+            assert_eq!(app.snapshot().expect("document").step_payloads.len(), before);
+            assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&height(0.05))).1));
+        }
+        assert!(published_a_document_mutation(&settled_action(&mut app, "addStep", Some(&args)).1));
+        assert!(app.snapshot().expect("document").step_payloads.iter().any(|step| step.origin.as_ref().is_some_and(|origin| origin.machine_id == available.id && origin.capability_id == capability.id)));
+    }
+    let before = app.snapshot().expect("document before uninstall");
+    let args = DslValue::object([("json".into(), DslValue::String("[]".into()))]);
+    settled_action(&mut app, "setContributions", Some(&args));
+    assert!(catalog_machine("[]", "wood", "circularSaw").is_none());
+    let rendered = context::render(&mut app, workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP);
+    assert!(!rendered.contains("process3d-play-workshop.catalog.wood"), "the removed provider no longer appears in the mounted catalog");
+    let after = app.snapshot().expect("document after uninstall");
+    assert_eq!(after.workshop, before.workshop);
+    assert_eq!(after.step_payloads, before.step_payloads);
+    let args = DslValue::object([("id".into(), DslValue::String("circularSaw".into()))]);
+    assert!(published_a_document_mutation(&settled_action(&mut app, "removeWorkshopMachine", Some(&args)).1));
+    let args = DslValue::object([("catalogId".into(), DslValue::String("wood".into())), ("machineId".into(), DslValue::String("circularSaw".into()))]);
+    assert!(!published_a_document_mutation(&settled_action(&mut app, "addWorkshopMachine", Some(&args)).1));
+    assert!(!app.snapshot().expect("document").workshop.machines.iter().any(|machine| machine.id == "circularSaw"));
+}
 
 //#region 🧩️RealContributionsPackAdmission
-/// ⚖️ The REAL demonstrator pack crosses this app's registered `setContributions` admission, distils
+/// ⚖️ A demonstrator-shaped pack crosses this app's registered `setContributions` admission, distils
 /// to the four `process.machines` entries addressed to this app, and is retained inside the
 /// contributions lane — every hop the live push actually takes.
 ///
@@ -32,21 +126,37 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
 
     let catalogs = installed_catalogs(&distilled);
     let ids: Vec<&str> = catalogs.iter().map(|catalog| catalog.catalog_id()).collect();
-    let builtin_ids: Vec<String> = builtin_installed_catalogs().iter().map(|catalog| catalog.catalog_id().to_string()).collect();
-    assert_eq!(ids, builtin_ids, "the four shipped packs re-contribute the built-in ids, so the installed build wins and nothing is appended");
+    assert_eq!(ids, ["geometry", "wood", "concrete", "metal", "robotic"]);
 }
 
-/// 🎁️ A contribution pack repeating the ids this build already compiles in leaves the installed
-/// catalogs untouched — the Werkstatt panel renders five sections, not nine.
+/// 🎁️ The four active contributions each provide exactly one catalog section.
 #[test]
-fn a_pack_repeating_the_builtin_ids_installs_exactly_the_builtin_catalogs() {
+fn active_contributions_install_one_section_each() {
     let pack = context::demonstrator_contributions_pack();
-    let before: Vec<(String, String)> = builtin_installed_catalogs().iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
     let after: Vec<(String, String)> = installed_catalogs(&pack).iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
-    assert_eq!(after, before, "a repeated catalog id must not open a second section");
     for id in ["wood", "metal", "concrete", "robotic"] {
         assert_eq!(after.iter().filter(|(catalog_id, _)| catalog_id == id).count(), 1, "{id} must name exactly one section");
     }
+}
+
+/// 🔄️ An installed extension supplies its own machine data for its catalog id.
+#[test]
+fn a_contribution_supplies_its_catalog() {
+    let machine = WorkshopMachine { id: "customWoodMachine".into(), label: "Custom Wood Machine".into(), icon_id: "wrench".into(), catalog_id: None, capabilities: Vec::new() };
+    let entry = semio_framework::ProgramContributionEntry {
+        plugin_id: "custom-wood".into(),
+        topic_contribution: Some(semio_framework::TopicContribution::new("process.machines", DslValue::object([
+            ("appId".into(), DslValue::String(PROCESS_3D_PLAY_APP_ID.into())),
+            ("moduleId".into(), DslValue::String("wood".into())),
+            ("label".into(), DslValue::String("Custom Wood".into())),
+            ("iconId".into(), DslValue::String("wrench".into())),
+            ("machinesJson".into(), DslValue::String(semio_framework_pack_json::to_json_string(&vec![machine]))),
+        ]))),
+    };
+    let pack = semio_framework_pack_json::to_json_string(&vec![entry]);
+    assert!(catalog_machine(&pack, "wood", "customWoodMachine").is_some());
+    assert!(catalog_machine(&pack, "wood", "circularSaw").is_none());
+    assert_eq!(installed_catalogs(&pack).iter().filter(|catalog| catalog.catalog_id() == "wood").count(), 1);
 }
 
 /// ✨️ A genuinely new catalog id still installs — dedupe drops repeats, never the contribution
@@ -72,8 +182,7 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
     let pack = semio_framework_pack_json::to_json_string(&entries);
     let catalogs = installed_catalogs(&pack);
     let ids: Vec<&str> = catalogs.iter().map(|catalog| catalog.catalog_id()).collect();
-    let mut expected: Vec<String> = builtin_installed_catalogs().iter().map(|catalog| catalog.catalog_id().to_string()).collect();
-    expected.push("glass".to_string());
+    let expected = vec!["geometry", "wood", "concrete", "metal", "robotic", "glass"];
     assert_eq!(ids, expected, "a new catalog id appends one section after the built-ins, in host order");
     assert_eq!(catalog_machine(&pack, "glass", "glassCutter").expect("the new catalog's machine").catalog_id.as_deref(), Some("glass"));
 }

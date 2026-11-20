@@ -4,8 +4,8 @@
     "maximumDescriptors": 32,
     "auxiliaryDescriptors": 2,
     "maximumFiles": 16384,
-    "maximumBytes": 536870912,
-    "maximumPublicationBytes": 2147483648,
+    "maximumBytes": 8589934592,
+    "maximumPublicationBytes": 8589934592,
     "chunkBytes": 65536,
     "maximumManifestBytes": 1048576,
     "maximumRetainedIndexBytes": 16777216,
@@ -170,5 +170,6 @@
       },
       "accepted": false
     }
-  ]
+  ],
+  "retainedPublication": {"sourceBase64": "AGFzbQ0AAQBnZW5lcmF0aW9uLXN0YWdl", "sourceHex": "0061736D0D00010067656E65726174696F6E2D7374616765", "owner": "fixture/Cargo.toml", "file": "component.wasm", "leaseStates": [false, false, false, false, true, true]}
 }

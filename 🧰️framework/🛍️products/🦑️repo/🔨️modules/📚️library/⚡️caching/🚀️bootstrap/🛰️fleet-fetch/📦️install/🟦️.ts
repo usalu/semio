@@ -1,6 +1,6 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash,randomBytes} from "node:crypto";
-import {createReadStream,createWriteStream,readdirSync} from "node:fs";
+import {createReadStream,createWriteStream,readdirSync,type BigIntStats} from "node:fs";
 import {lstat,mkdir,readdir,readFile,readlink,rename,rm,stat,symlink,utimes,writeFile} from "node:fs/promises";
 import {hostname} from "node:os";
 import {dirname,isAbsolute,join,posix} from "node:path";
@@ -12,6 +12,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/�
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {FLEET_FETCH_POLICY_V1 as policy,type FleetFetchContextV1} from "../🟦️.ts";
 import {createFleetRegistryV1,readFleetMachineV1,signFleetDocumentV1,verifyFleetDocumentV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {captureFleetInstallHardlinksV1,fleetInstallPathFitsV1,planFleetInstallHardlinkRestoreV1,type FleetInstallHardlinkV1} from "./🔗️hardlinks/🟦️.ts";
 
 /** 🔒️ The tarball integrities a lockfile pins: `name@version integrity` for every entry of the lockfile that has one, sorted, with their count and digest. */
 export function fleetInstallLockV1(text:string):Readonly<{packages:number;sha256:string}>{
@@ -25,7 +26,8 @@ export function fleetInstallLockV1(text:string):Readonly<{packages:number;sha256
  return {packages:lines.length,sha256:createHash("sha256").update(lines.join("\n")).digest("hex")};
 }
 const lockOf=async(directory:string,file:string):Promise<Readonly<{packages:number;sha256:string}>|undefined>=>{try{return fleetInstallLockV1(await readFile(join(directory,file),"utf8"));}catch{return undefined;}};
-const signedText=(manifest:Omit<FleetInstallManifestV1,"publisher">,origin:string):string=>[origin,manifest.key,manifest.index.sha256,manifest.fingerprint,manifest.shape.sha256,manifest.lock.sha256,manifest.projectionSha256,manifest.installed].join("\n");
+const installIndexVersion=schema.definitions.InstallIndex.properties.version.const;
+const signedText=(manifest:Omit<FleetInstallManifestV1,"publisher">,origin:string):string=>JSON.stringify([installIndexVersion,origin,manifest.key,manifest.index.sha256,manifest.fingerprint,manifest.shape.sha256,manifest.lock.sha256,manifest.projectionSha256,manifest.installed,manifest.roots,manifest.storeRoot]);
 
 /** 🧬️ What a restored tree must equal: the counts and digest the installer's own scan reports. */
 export type FleetInstallShapeV1=Readonly<{entries:number;directories:number;files:number;links:number;sha256:string}>;
@@ -68,14 +70,14 @@ export type FleetInstallRequestV1=Readonly<{
 }>;
 
 /** 📚️ What the index blob of a pack lists: the directories to create, the links to recreate and the unit blobs to extract. */
-export type FleetInstallIndexV1=Readonly<{version:1;directories:readonly string[];links:readonly Readonly<{path:string;target:string}>[];units:readonly Readonly<{path:string;sha256:string;bytes:number}>[]}>;
+export type FleetInstallIndexV1=Readonly<{version:typeof installIndexVersion;directories:readonly string[];links:readonly Readonly<{path:string;target:string}>[];hardlinks:readonly FleetInstallHardlinkV1[];units:readonly Readonly<{path:string;sha256:string;bytes:number;maximumPathUnits:number}>[]}>;
 const KEY=/^inst-[a-f0-9]{64}$/u;
 const guard=(value:unknown,message:string):void=>{const errors=validateJsonSchemaSubset({$ref:"#/definitions/InstallManifest"},value,schema);if(errors.length)throw Error(`${message}: ${errors[0]}`);};
 const guardIndex=(value:unknown):void=>{const errors=validateJsonSchemaSubset({$ref:"#/definitions/InstallIndex"},value,schema);if(errors.length)throw Error(`Closed install index required: ${errors[0]}`);};
 
 /** 🔑️ The key of an install state: a digest of the lock projection and everything about the runtime that changes the installed bytes (Bun version, platform, architecture, producer recipe). */
 export function fleetInstallKeyV1(projectionSha256:string,runtime:FleetInstallRuntimeV1):string{
- return policy.installKeyPrefix+createHash("sha256").update(JSON.stringify([projectionSha256,runtime.bun,runtime.platform,runtime.arch,runtime.recipeSha256])).digest("hex");
+ return policy.installKeyPrefix+createHash("sha256").update(JSON.stringify([installIndexVersion,projectionSha256,runtime.bun,runtime.platform,runtime.arch,runtime.recipeSha256])).digest("hex");
 }
 
 const directoryOf=(context:FleetFetchContextV1,space?:string):string|undefined=>context.storeRoot===undefined?undefined:space===undefined?join(context.storeRoot,...policy.installDirectory):join(context.storeRoot,...policy.installDirectory.slice(0,-1),space);
@@ -167,11 +169,12 @@ export async function placeBlobV1(directory:string,temporary:string,blob:PackBlo
 }
 
 /** 🗺️ Splits the roots of a generation into the pieces a pack stores: directories to create, links to recreate and units to archive. A scope folder (`@scope`) is a directory whose children are units; an empty folder is a directory entry, not a unit. Neither directories (their modification times) nor links (theirs) are archived inside a unit, because either would make identical packages differ: extraction creates the directories, the index lists the links and the empty directories. */
-export async function planFleetInstallPackV1(directory:string,roots:readonly string[],check:()=>void):Promise<Readonly<{directories:readonly string[];links:readonly Readonly<{path:string;target:string}>[];units:readonly PackUnitV1[]}>>{
+export async function planFleetInstallPackV1(directory:string,roots:readonly string[],check:()=>void,omitFile?:(path:string,facts:BigIntStats)=>boolean):Promise<Readonly<{directories:readonly string[];links:readonly Readonly<{path:string;target:string}>[];units:readonly PackUnitV1[]}>>{
  const directories:string[]=[],links:{path:string;target:string}[]=[],units:PackUnitV1[]=[];
+ const checkPath=(relative:string)=>{if(omitFile&&!fleetInstallPathFitsV1(directory,relative))throw Error("Install path exceeds its portable budget");};
  const collect=async(absolute:string,relative:string,entries:string[],lines:string[]):Promise<void>=>{
-  check();
-  const facts=await lstat(absolute);
+  check();checkPath(relative);
+  const facts=await lstat(absolute,{bigint:true});
   if(facts.isSymbolicLink()){const target=await readlink(absolute);links.push({path:relative,target});lines.push(`l ${relative} ${target}`);return;}
   if(facts.isDirectory()){
    const names=(await readdir(absolute)).sort();
@@ -179,12 +182,14 @@ export async function planFleetInstallPackV1(directory:string,roots:readonly str
    for(const name of names)await collect(join(absolute,name),`${relative}/${name}`,entries,lines);
    return;
   }
-  entries.push(relative);lines.push(`f ${relative} ${facts.size} ${Math.floor(facts.mtimeMs/1000)} ${facts.mode&0o777}`);
+  if(omitFile?.(relative,facts))return;
+  entries.push(relative);lines.push(`f ${relative} ${facts.size} ${Math.floor(Number(facts.mtimeMs)/1000)} ${facts.mode&0o777n}`);
  };
  const level=async(absolute:string,relative:string,scoped:boolean):Promise<void>=>{
   for(const name of (await readdir(absolute)).sort()){
    check();
-   const child=join(absolute,name),here=`${relative}/${name}`,facts=await lstat(child);
+   const child=join(absolute,name),here=`${relative}/${name}`;
+   checkPath(here);const facts=await lstat(child);
    if(facts.isSymbolicLink()){links.push({path:here,target:await readlink(child)});continue;}
    if(facts.isDirectory()&&scoped&&name.startsWith("@")){directories.push(here);await level(child,here,false);continue;}
    if(facts.isDirectory()&&(await readdir(child)).length===0){directories.push(here);continue;}
@@ -247,7 +252,7 @@ export async function fleetInstallPublishV1(request:FleetInstallRequestV1,replac
  const lock=request.lock??await lockOf(request.directory,request.lockFile);
  if(lock===undefined){request.event?.({stage:"skip",detail:"no lockfile to bind the pack to"});return false;}
  if(!replace&&await fleetInstallManifestV1(context,key,request.space)){request.event?.({stage:"skip",detail:"published"});return true;}
- const roots=[];for(const root of request.roots)if(await lstat(join(request.directory,...root.split("/"))).then(()=>true,()=>false))roots.push(root);
+ const roots=[];for(const root of request.roots){if(!fleetInstallPathFitsV1(request.directory,root))return false;if(await lstat(join(request.directory,...root.split("/"))).then(()=>true,()=>false))roots.push(root);}
  if(roots.length===0)return false;
  const origin=readFleetMachineV1(context.root)?.originId;
  if(origin===undefined||signFleetDocumentV1(context.root,"cache-write","install-pack","probe")?.origin!==origin){request.event?.({stage:"skip",detail:"this machine has no fleet identity to sign the pack"});return false;}
@@ -256,22 +261,30 @@ export async function fleetInstallPublishV1(request:FleetInstallRequestV1,replac
  const scanned=await request.scan(),shape:FleetInstallShapeV1={entries:scanned.entries,directories:scanned.directories,files:scanned.files,links:scanned.links,sha256:scanned.sha256};request.check();const fingerprint=await fleetInstallFingerprintV1(request.directory,roots,request.storeRoot,request.check);
  await mkdir(directory,{recursive:true});
  try{
-  const plan=await planFleetInstallPackV1(request.directory,roots,request.check),cache=await readUnitCache(context.root),packed:{path:string;sha256:string;bytes:number}[]=[];
+  const linking=captureFleetInstallHardlinksV1(request.directory,request.check),plan=await planFleetInstallPackV1(request.directory,roots,request.check,linking.omit);
+  const proof=await linking.prove(),cache=await readUnitCache(context.root),packed:Array<FleetInstallIndexV1["units"][number]>=[];
   let total=0;
   await poolV1(plan.units,policy.installPackConcurrency,async unit=>{
-   const blob=await packFleetUnitV1(request,directory,unit,cache);
-   packed.push({path:unit.path,...blob});total+=blob.bytes;
+   const targets=unit.entries.flatMap(path=>{const target=proof.targets.get(path);return target?[[path,target.sha256]]:[];});
+   const signature=targets.length?createHash("sha256").update(JSON.stringify([unit.signature,targets])).digest("hex"):unit.signature;
+   const blob=await packFleetUnitV1(request,directory,{...unit,signature},cache);
+   const maximumPathUnits=unit.entries.reduce((width,path)=>Math.max(width,path.length),unit.path.length);
+   packed.push({path:unit.path,...blob,maximumPathUnits});total+=blob.bytes;
    if(total>policy.installMaximumBytes)throw Error("Install pack past its bound");
   });
   request.check();
   packed.sort((left,right)=>left.path<right.path?-1:left.path>right.path?1:0);
-  const index={version:1 as const,directories:[...plan.directories].sort(),links:[...plan.links].sort((left,right)=>left.path<right.path?-1:1),units:packed};
+  const index={version:installIndexVersion,directories:[...plan.directories].sort(),links:[...plan.links].sort((left,right)=>left.path<right.path?-1:1),hardlinks:proof.rows,units:packed};
   guardIndex(index);
-  const text=gzipSync(Buffer.from(JSON.stringify(index)),{level:6}),indexBlob={sha256:createHash("sha256").update(text).digest("hex"),bytes:text.byteLength};
+  const encoded=Buffer.from(JSON.stringify(index));
+  if(encoded.byteLength>policy.installIndexMaximumBytes)throw Error("Install index exceeds its bound");
+  const text=gzipSync(encoded,{level:6}),indexBlob={sha256:createHash("sha256").update(text).digest("hex"),bytes:text.byteLength};
+  if(text.byteLength>policy.installIndexMaximumBytes)throw Error("Packed install index exceeds its bound");
   const scratch=blobTemporaryDirectory(directory);await mkdir(scratch,{recursive:true});
   const temporary=join(scratch,`.${randomBytes(8).toString("hex")}.tmp`);await writeFile(temporary,text,{flag:"wx",mode:0o644});await placeBlobV1(directory,temporary,indexBlob);
   await writeUnitCache(context.root,cache);
   const draft={version:1 as const,key,projectionSha256:request.projectionSha256,runtime:request.runtime,installed,shape,storeRoot:request.storeRoot,fingerprint,roots,index:{...indexBlob,units:packed.length,links:plan.links.length,packedBytes:total},lock,createdAtMs:context.now()};
+  await proof.recheck();request.check();
   const signed=signFleetDocumentV1(context.root,"cache-write","install-pack",signedText(draft,origin));
   if(signed===undefined||signed.origin!==origin){request.event?.({stage:"skip",detail:"this machine has no fleet identity to sign the pack"});return false;}
   const manifest:FleetInstallManifestV1={...draft,publisher:{origin:signed.origin,signature:signed.signature}};
@@ -293,9 +306,13 @@ export async function fleetInstallPublishV1(request:FleetInstallRequestV1,replac
 /** 📚️ Reads the index blob a manifest names; `undefined` when it is missing, short, corrupt or not a closed index. */
 export async function fleetInstallIndexV1(directory:string,manifest:FleetInstallManifestV1):Promise<FleetInstallIndexV1|undefined>{
  try{
-  const bytes=await readFile(blobPathOf(directory,manifest.index.sha256));
+  const path=blobPathOf(directory,manifest.index.sha256),facts=await stat(path);
+  if(!facts.isFile()||facts.size<1||facts.size!==manifest.index.bytes||facts.size>policy.installIndexMaximumBytes)return undefined;
+  const chunks:Buffer[]=[];
+  for await(const chunk of createReadStream(path,{end:facts.size-1}))chunks.push(chunk as Buffer);
+  const bytes=Buffer.concat(chunks);
   if(bytes.byteLength!==manifest.index.bytes||createHash("sha256").update(bytes).digest("hex")!==manifest.index.sha256)return undefined;
-  const value=JSON.parse(gunzipSync(bytes).toString("utf8")) as FleetInstallIndexV1;guardIndex(value);return value;
+  const value=JSON.parse(gunzipSync(bytes,{maxOutputLength:policy.installIndexMaximumBytes}).toString("utf8")) as FleetInstallIndexV1;guardIndex(value);return value;
  }catch{return undefined;}
 }
 
@@ -358,7 +375,8 @@ export async function extractFleetPackUnitsV1(directory:string,units:readonly Re
 /** 📥️ Restores the roots of an install state from the group store: verifies the manifest's signature, lockfile binding and index, extracts every unit blob (its SHA-256 is checked while it streams into `tar`, so a corrupt blob is never trusted), recreates links and empty directories, then proves the tree equals the publisher's per-file fingerprint and the installer's own shape. Any disagreement removes what was placed and answers `false`, which costs one real installation and never a wrong tree. */
 export async function fleetInstallRestoreV1(request:FleetInstallRequestV1,manifest?:FleetInstallManifestV1):Promise<boolean>{
  const {context}=request,directory=directoryOf(context,request.space),key=fleetInstallKeyV1(request.projectionSha256,request.runtime),found=manifest??await fleetInstallManifestV1(context,key,request.space);
- if(directory===undefined||!found||found.projectionSha256!==request.projectionSha256||JSON.stringify(found.runtime)!==JSON.stringify(request.runtime))return false;
+ if(directory===undefined||!found||found.key!==key||found.projectionSha256!==request.projectionSha256||JSON.stringify(found.runtime)!==JSON.stringify(request.runtime))return false;
+ if(new Set(found.roots).size!==found.roots.length||found.roots.some(root=>!fleetInstallPathFitsV1(request.directory,root)||!request.roots.includes(root)))return false;
  for(const root of found.roots)if(await lstat(join(request.directory,...root.split("/"))).then(()=>true,()=>false))return false;
  const machine=context.root===undefined?undefined:readFleetMachineV1(context.root),currentLock=request.lock??await lockOf(request.directory,request.lockFile);
  if(machine===undefined||machine.storeRoot===undefined||currentLock===undefined)return false;
@@ -368,12 +386,20 @@ export async function fleetInstallRestoreV1(request:FleetInstallRequestV1,manife
  if(!await verifyFleetDocumentV1(registry,publisher.origin,"cache-write","install-pack",signedText(bare,publisher.origin),publisher.signature)){request.event?.({stage:"skip",detail:"the pack is not signed by a registered fleet origin"});return false;}
  const index=await fleetInstallIndexV1(directory,found);
  if(index===undefined){request.event?.({stage:"skip",detail:"the pack index is missing or corrupt"});return false;}
+ const packedBytes=index.units.reduce((sum,unit)=>sum+unit.bytes,0);
+ if(index.units.length!==found.index.units||index.links.length!==found.index.links||packedBytes!==found.index.packedBytes||packedBytes>policy.installMaximumBytes){
+  request.event?.({stage:"skip",detail:"the archive counts or sizes disagree with the index"});return false;
+ }
+ let restoreHardlinks:ReturnType<typeof planFleetInstallHardlinkRestoreV1>;
+ try{restoreHardlinks=planFleetInstallHardlinkRestoreV1(request.directory,found.roots,index);}
+ catch(error){request.event?.({stage:"skip",detail:error instanceof Error?error.message:String(error)});return false;}
  const placed=found.roots.map(root=>join(request.directory,...root.split("/")));
  const undo=async()=>{for(const path of [...placed].reverse())await request.remove(path).catch(()=>{});};
  try{
   request.event?.({stage:"restore",detail:"extract",bytes:found.index.packedBytes});
   for(const path of index.directories)await mkdir(join(request.directory,...path.split("/")),{recursive:true});
   await extractFleetPackUnitsV1(directory,index.units,request.directory,request.check);
+  await restoreHardlinks(request.check);
   request.check();
   const platform=process.platform,source=fleetInstallLinkTextV1(found.storeRoot,platform).replace(/[\\/]+$/u,""),target=request.storeRoot.replace(/[\\/]+$/u,"");
   for(const link of index.links){

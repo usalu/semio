@@ -255,38 +255,42 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
     let fixture: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/💥️extension-evaluate-fault.json")).expect("the evaluate-fault fixture parses");
     let extension_id = fixture["extensionId"].as_str().expect("extensionId").to_string();
     let address = || Ok::<String, semio_os_flow::FlowExtensionAddressMiss>(extension_id.clone());
+    let record = |session: &mut semio_os_flow::FlowEvalSession, code: &str, message: &str| {
+        use semio_framework_value::{DslValue, ToValue};
+        let mut payload = crate::preview_reply::evaluation_payload(("window:procedural-preview", "procedural-preview"),
+            1, &extension_id, DslValue::Null);
+        payload.ok = false;
+        payload.fault = Some(semio_plugin::Fault::new(semio_plugin::FaultOrigin::Plugin,
+            semio_plugin::FaultCode::new(code), message.to_owned()).to_value());
+        let failure = crate::preview_reply::receive_evaluation(session, payload).expect_err("fault retains the typed refusal");
+        let original = failure.primary_fault().expect("original extension fault");
+        assert_eq!(original.code.0, code);
+        assert_eq!(original.message, message);
+        crate::preview_reply::record_evaluate_fault(session, semio_os_flow::ExtensionEvaluateFault {
+            extension_id: extension_id.clone(), capability: "evaluate".into(), code: code.into(), message: message.into(),
+        });
+    };
     let mut owner = Generation3dInstanceOperationOwner::new();
     let observed = owner
         .with_session_waking(|session| {
             let mut rows = Vec::new();
             for answer in fixture["answers"].as_array().expect("answers") {
-                let resolve = semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve {
-                    window_id: "window:procedural-preview".to_string(),
-                    window_kind_id: "procedural-preview".to_string(),
-                    node_hash: 1,
-                    output_json: String::new(),
-                    extension_id: extension_id.clone(),
-                    ok: answer["ok"].as_bool().expect("ok"),
-                    fault_code: answer["faultCode"].as_str().expect("faultCode").to_string(),
-                    fault_message: answer["faultMessage"].as_str().expect("faultMessage").to_string(),
-                };
-                semio_s_artifact_procedural_3d_preview_eval::resolve_eval(&resolve, session);
+                let code = answer["faultCode"].as_str().expect("faultCode");
+                let message = answer["faultMessage"].as_str().expect("faultMessage");
+                if answer["ok"].as_bool() == Some(false) && !code.is_empty() {
+                    record(session, code, message);
+                } else {
+                    crate::preview_reply::clear_evaluate_fault(session);
+                }
                 let status: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
                 rows.push((answer["name"].as_str().expect("name").to_string(), answer["phase"].as_str().expect("phase").to_string(), answer["publishesFault"].as_bool().expect("publishesFault"), status));
             }
-            let resolve = semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve {
-                window_id: "window:procedural-preview".to_string(),
-                window_kind_id: "procedural-preview".to_string(),
-                node_hash: 1,
-                output_json: String::new(),
-                extension_id: extension_id.clone(),
-                ok: false,
-                fault_code: fixture["faultCode"].as_str().expect("faultCode").to_string(),
-                fault_message: fixture["faultMessage"].as_str().expect("faultMessage").to_string(),
-            };
-            semio_s_artifact_procedural_3d_preview_eval::resolve_eval(&resolve, session);
-            assert!(session.extension_evaluate_fault().is_some(), "the refused answer must be retained before the install clears it");
-            assert!(session.invalidate_for_flow_extension_registry(session.flow_extension_generation() + 1), "a moved registry generation invalidates");
+            record(session, fixture["faultCode"].as_str().expect("faultCode"), fixture["faultMessage"].as_str().expect("faultMessage"));
+            assert!(session.extension_evaluate_fault().is_some(), "the refused answer is retained before the install clears it");
+            let missing = semio_os_flow::FlowExtensionAddressMiss { extension_id: "brep".into(), contributed: Vec::new() };
+            let over_miss: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, Err(missing))).unwrap();
+            assert_eq!(over_miss["fault"]["code"], fixture["code"]);
+            crate::preview_reply::advance_registry_generation(session);
             let cleared: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
             (rows, cleared)
         })

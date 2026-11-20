@@ -4,6 +4,7 @@ import {
   Mt19937,
   challengeRules,
   runSeed,
+  SHEETS_KEPT,
   sheetOf,
   shuffle,
   taskSeconds,
@@ -113,6 +114,18 @@ describe("sheetOf", () => {
     for (const challenge of CHALLENGES) expect(sheetOf(QUIZ, seed, challenge)).toEqual(sheetOf(QUIZ, seed, challenge));
     expect(sheetOf(QUIZ, 1, "medium")).not.toEqual(sheetOf(QUIZ, 2, "medium"));
     expect(sheetOf(QUIZ, 1, "medium")).not.toEqual(sheetOf(QUIZ, 1, "hard"));
+  });
+
+  it("deals a sheet once per quiz, seed and challenge: asking again is no new draw, and only a different ask is", () => {
+    const sheet = sheetOf(QUIZ, 7, "medium");
+    expect(sheetOf(QUIZ, 7, "medium")).toBe(sheet);
+    expect(sheetOf(QUIZ, 8, "medium")).not.toBe(sheet);
+    expect(sheetOf(QUIZ, 7, "hard")).not.toBe(sheet);
+    expect(sheetOf({ ...QUIZ }, 7, "medium")).not.toBe(sheet);
+    expect(sheetOf({ ...QUIZ }, 7, "medium")).toEqual(sheet);
+    for (let seed = 100; seed < 100 + 4 * SHEETS_KEPT; seed++) sheetOf(QUIZ, seed, "easy");
+    expect(sheetOf(QUIZ, 7, "medium")).toEqual(sheet);
+    expect(sheetOf(QUIZ, 100 + 4 * SHEETS_KEPT - 1, "easy")).toBe(sheetOf(QUIZ, 100 + 4 * SHEETS_KEPT - 1, "easy"));
   });
 
   it("copies the quiz head, the seed and the challenge", () => {

@@ -40,6 +40,7 @@ fn close(lease: &mut UiDocumentLease, grant: usize) -> usize {
 
 #[test]
 fn instance_lifetime_ui_document_aliases_preserve_complete_multibyte_readers() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     for grant in [1, 64, 4096] {
         let mut original = lease();
         let mut alias = original.try_alias().unwrap();
@@ -68,6 +69,7 @@ fn instance_lifetime_ui_document_aliases_preserve_complete_multibyte_readers() {
 
 #[test]
 fn instance_lifetime_ui_document_claim_survives_global_close_and_cancellation() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut owner = lease();
     let handle = owner.handle.unwrap();
     assert!(owner.close_step_with_grant(1, 1).unwrap().progressed);
@@ -97,6 +99,7 @@ fn instance_lifetime_ui_document_claim_survives_global_close_and_cancellation() 
 
 #[test]
 fn instance_lifetime_ui_document_contention_preserves_claim_and_zero_progress() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     for started in [false, true] {
         let mut owner = lease();
         if started {
@@ -123,6 +126,7 @@ fn instance_lifetime_ui_document_contention_preserves_claim_and_zero_progress() 
 
 #[test]
 fn instance_lifetime_ui_document_drop_hands_back_without_waiting_for_arena() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../♻️retirement/🌳️typed/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for started in [false, true] {
         let mut owner = lease();

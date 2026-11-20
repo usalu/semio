@@ -47,6 +47,7 @@ pub fn emit(payload: &ImportDocumentRequest, host: &semio_framework_artifact_flo
     };
     let accept = if target.is_some() { ".png,.jpg,.jpeg".into() } else { document_io::import_accept_filter().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_IMPORT_ACCEPT), error.to_string()))? };
     Ok(Emit::effect(Effect::RequestFileOpen {
+        max_file_bytes: None,
         req: semio_plugin::RequestId(GENERATION3D_IMPORT_REQUEST_ID),
         accept,
         read_as: Some("dataUrl".into()),

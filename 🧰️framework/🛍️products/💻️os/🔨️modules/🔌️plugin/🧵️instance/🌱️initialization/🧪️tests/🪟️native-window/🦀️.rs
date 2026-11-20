@@ -12,7 +12,6 @@ use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedClonePro
 use std::{sync::Arc,mem::size_of};
 #[path="../../../../🪟️window/🎚️config/🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🧸️fixture/🦀️.rs"]mod scalar;
 pub(crate) use scalar::{State,Mutation,Owner};
-semio_os_kernel::original_ordinal_operation_receiving!(Mutation);
 impl semio_framework_schema_composition::ArtifactCompositionFields for State{fn visit_child_refs<'a,V:semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self,_:&mut V)->Result<(),V::Error>{Ok(())}}
 impl store::SemanticMutation<State> for Mutation{
  fn kinds()->&'static[store::SemanticDescriptor]{&[store::SemanticDescriptor{verb:"set",entity:"zoom",kind:"set-zoom",record:"Zoom"}]}

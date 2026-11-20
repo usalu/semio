@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-page-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-pixels = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-jpg-inferences = { path = "../../../../../../../../../📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-editor-document = { path = "../../../📄️document/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-fonts = { path = "../../../../🔨️modules/🔤️fonts/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-base-4 = { path = "../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-page-coordinates = { path = "../../🧭️geometry/🧭️coordinates/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

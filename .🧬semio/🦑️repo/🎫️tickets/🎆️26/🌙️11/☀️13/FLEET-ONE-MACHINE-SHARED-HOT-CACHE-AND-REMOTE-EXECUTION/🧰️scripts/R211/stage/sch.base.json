@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.source-names/1",
+  "title": "Source names of a directory fact / Quellnamen einer Verzeichnistatsache",
+  "description": "EN: A directory fact (the fingerprint of a directory listing that an inference record or a closure entry carries) describes only the names that belong to the source tree as the build sees it. Machine-local build output and operating-system noise never enter it, so a record made on one machine holds on every other machine and after a build. DE: Eine Verzeichnistatsache (der Fingerabdruck einer Verzeichnisliste, den ein Inferenz-Eintrag oder ein Abschluss-Eintrag trägt) beschreibt nur die Namen, die für den Build zum Quellbaum gehören. Maschinenlokale Build-Ausgaben und Betriebssystem-Rauschen gelangen nie hinein, sodass ein Eintrag einer Maschine auf jeder anderen Maschine und nach einem Build gilt.",
+  "$defs": {
+    "rules": {
+      "description": "EN: Which names a directory fact leaves out. Directory names come from the cache policy (the one list of generated directories every seal, admission and journal already uses) and leave a fact only where the entry is a directory or a link; a file of that name stays. File names that no list declares (operating-system noise, covered by the root .gitignore) are declared here and leave a fact whatever they are. `readers` names every fact kind that reads a directory, so that a law can prove none is missing. DE: Welche Namen eine Verzeichnistatsache auslässt. Verzeichnisnamen stammen aus der Cache-Richtlinie (die eine Liste erzeugter Verzeichnisse, die jedes Siegel, jede Zulassung und jedes Journal schon nutzt) und verlassen eine Tatsache nur, wo der Eintrag ein Verzeichnis oder ein Link ist; eine Datei dieses Namens bleibt. Dateinamen, die keine Liste deklariert (Betriebssystem-Rauschen, vom Wurzel-.gitignore abgedeckt), sind hier deklariert und verlassen eine Tatsache, was auch immer sie sind. `readers` nennt jede Tatsachenart, die ein Verzeichnis liest, damit ein Gesetz beweisen kann, dass keine fehlt.",
+      "const": {
+        "generatedDirectories": {
+          "field": "generatedDirectories"
+        },
+        "machineLocalDirectoryNames": ["🤖️generated"],
+        "machineLocalFileNames": [".DS_Store", "Thumbs.db", "desktop.ini", ".localized"],
+        "machineLocalFileSuffixes": ["~", ".swp", ".swo"],
+        "readers": [
+          {"module": "👁️observation", "kinds": ["readdir", "readdirNames", "directories"]},
+          {"module": "🧱️project-assembly", "kinds": ["directories"]},
+          {"module": "🧭️script-inputs", "kinds": ["declared-module-globs", "repository-walk"]}
+        ]
+      }
+    }
+  }
+}

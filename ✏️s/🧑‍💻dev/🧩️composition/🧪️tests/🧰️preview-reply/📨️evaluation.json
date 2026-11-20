@@ -1,0 +1,40 @@
+{
+  "rows": [
+    {
+      "id": "validating",
+      "reply": {"done": false, "cancellable": true, "phase": "validate", "unitsDone": 12, "unitsTotal": 40, "output": null},
+      "status": {"phase": "validating", "inFlight": 1, "evalUnitsDone": 12, "evalUnitsTotal": 40, "ratio": 0.3},
+      "owesHop": true
+    },
+    {
+      "id": "operator-owned phase",
+      "reply": {"done": false, "cancellable": true, "phase": "solverIteration", "unitsDone": 1, "unitsTotal": 4, "output": null},
+      "status": {"phase": "computing", "inFlight": 1, "evalUnitsDone": 1, "evalUnitsTotal": 4, "ratio": 0.25},
+      "owesHop": true
+    },
+    {
+      "id": "native cache publication",
+      "reply": {"done": true, "cancellable": false, "phase": "complete", "unitsDone": 40, "unitsTotal": 40, "output": {"solid": "brep:solid-9"}},
+      "status": {"phase": "computing", "inFlight": 0, "evalUnitsDone": 0, "evalUnitsTotal": 0, "ratio": 0.0},
+      "owesHop": true
+    },
+    {
+      "id": "completed operator error",
+      "reply": {"done": true, "cancellable": false, "phase": "complete", "unitsDone": 1, "unitsTotal": 1, "output": {"error": "unknown kind: brep.bool.nope"}},
+      "status": {"phase": "computing", "inFlight": 0, "evalUnitsDone": 0, "evalUnitsTotal": 0, "ratio": 0.0},
+      "owesHop": true
+    },
+    {
+      "id": "cancelled answer",
+      "reply": {"done": true, "cancellable": false, "phase": "cancelled", "unitsDone": 12, "unitsTotal": 40, "output": null},
+      "status": {"phase": "cancelled", "inFlight": 0, "evalUnitsDone": 0, "evalUnitsTotal": 0, "ratio": 1.0},
+      "owesHop": false
+    }
+  ],
+  "refused": [
+    {"solid": "brep:solid-3"},
+    {"done": true, "cancellable": false, "phase": "complete", "unitsDone": 1, "unitsTotal": 1, "outputJson": "{\"solid\":\"brep:solid-3\"}"},
+    {"done": false, "cancellable": true, "phase": "validate", "unitsDone": 1, "unitsTotal": 4, "output": {"solid": "brep:solid-3"}},
+    {"done": true, "cancellable": false, "phase": "complete", "unitsDone": 1, "unitsTotal": 2, "output": {"solid": "brep:solid-3"}}
+  ]
+}

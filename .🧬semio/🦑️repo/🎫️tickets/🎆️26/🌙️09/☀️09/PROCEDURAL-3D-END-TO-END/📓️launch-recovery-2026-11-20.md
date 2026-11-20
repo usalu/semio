@@ -1,0 +1,11 @@
+# Generation 3D launch recovery and WGPU hover
+
+The previously authorized React serve session 9232 returned Unknown process id on polling. PID 726 left the fleet list. The ticket logs and the repository's available command capture did not retain a terminal error for that serve invocation. Ports 6018 through 6026 refused TCP connections. The last attributable output remains graph admission, so the terminal cause is unknown. No replacement serve was launched.
+
+The retained Vertex Cargo invocation still reports door.capacity. On the last check the host had 1,478,447,104 free bytes. The Rust image is held open by the unlinked teaching-proctor executable under PID 21451. That service still accepts connections on its loopback listener. A foreign Bun process also has open directories in the dependencies image. Neither service was interrupted. Generic remote execution remains unconfigured. Fleet Rust compiler work shares units after local launch admission and does not remove the local artifact reservation.
+
+The exact documented non-forced command repo run repo-cache-reset:cache-reclaim-graph exited 0 with outcome skipped, beforeBytes 0, afterBytes 0 and settled false. The normal graph mount remained accessible. The backing allocated 12,883,877,888 bytes against 7,193,759,744 in use, or 179 percent. The existing graph reclaim policy requires 300 percent, independent of its tight-host absolute slack floor.
+
+## Remaining interaction gap
+
+Native WGPU graph sync compares the incoming scene hover against its cached scene hover. Its present-to-absent branch clears the live Dag or Flow host even if a newer local graph pointer move already changed the actual mark. This differs from the React ledger fixed in the same ticket. The native path is sync_node_graph_engine in EngineCanvas's registry-and-node-graph module, currently lines 231–245. The local pointer path in screen-pointer-and-commit already updates the host before returning its graph interaction snapshot, currently lines 89–130. A regression sequence is external viewport hover A, local graph hover B, and receipt of an older scene with absent hover. The WGPU scene cache has no distinction between the mark it adopted and the current local mark. A native correction should cover both Flow and Dag so the latter's full scene synchronization cannot preempt the ownership decision.

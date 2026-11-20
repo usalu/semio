@@ -575,7 +575,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
     for points in cases {
         let crossing = marquee_is_crossing_from_path(&points, false);
         let (meshes, draws) = scene_geometry(&state.scene);
-        let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing);
+        let legacy = world_test_mesh_query(||screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing)).expect("finite caller mesh query admission");
         let retained = world_marquee_cursor_ids(&state, &points);
         assert_eq!(retained, legacy, "points={points:?}");
     }
@@ -588,7 +588,7 @@ fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
     let points = [[0.0, 0.0], [400.0, 400.0]];
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
     let (meshes, draws) = scene_geometry(&state.scene);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), 400.0, 400.0, &points, true, false);
+    let legacy = world_test_mesh_query(||screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), 400.0, 400.0, &points, true, false)).expect("finite caller mesh query admission");
     let retained = world_marquee_cursor_ids(&state, &points);
     assert_eq!(retained, legacy);
     assert_eq!(retained.len(), WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
@@ -603,7 +603,7 @@ fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 0.0], [400.0, 400.0], [0.0, 400.0]];
     let (meshes, draws) = scene_geometry(&state.scene);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
+    let legacy = world_test_mesh_query(||screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true))).expect("finite caller mesh query admission");
     assert_eq!(world_marquee_cursor_ids(&state, &points), legacy);
 
     let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 7, points[0]);
@@ -664,7 +664,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
     for granularity in ["vertex", "edge", "face"] {
         state.selection.granularity = granularity.into();
         let (meshes, draws) = scene_geometry(&state.scene);
-        let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
+        let mut legacy: Vec<u32> = world_test_mesh_query(||screen_select_components(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false)).expect("finite caller mesh query admission").into_iter().map(|id| id.parse().expect("numeric component id")).collect();
         legacy.sort_unstable();
         assert!(!legacy.is_empty(), "the oracle must answer a component census, not an empty one: granularity={granularity}");
         assert_eq!(world_component_marquee_cursor_ids(&state, &points), legacy, "granularity={granularity}");

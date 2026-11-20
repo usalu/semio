@@ -1,0 +1,94 @@
+{
+ "50": [
+  {
+   "en": "Detailed model, every member a bar of its real section: the round-2 mast (four 160 mm chords, 90 mm ties, 80 mm diagonals on four faces, rung ladder as texture) and A-frame tower head are kept; new are the triangular jib (one 140 mm top chord on the axis, two 120 x 140 mm bottom chords at +-0.6 m that carry the trolley, 80 mm Warren diagonals in both inclined faces, 50 mm horizontals and Z bracing in the bottom plane, heel frame pinned to the front tower-head legs, tip frame and sheave), the counter-jib as a flat box lattice pinned to the rear legs with a tail frame, three 16 mm pendant ropes from the apex to the jib nodes at 22.5 m and 40.5 m and to the counter-jib tail, the cross-base (two 7 m box beams on four pads) with four 10.6 t ballast blocks on its arms and the mast-foot section, a circular 2.2 m slewing ring with two slewing gear motors, the cab beside the tower head on a console outboard of the trolley track (33 mm panels, raked windscreen and side window as glass), four vertical counterweight slabs under a suspension beam, the trolley as an open frame (side plates, wheels on the chords, cross beams, two sheaves), the hook block (side plates, sheave, crosshead, forged hook), a round 1 m3 skip with spout, gate, legs and bail, and the hoist rope in two 14 mm falls.",
+   "de": "Detailliertes Modell, jeder Stab mit seinem realen Querschnitt: Der Mast aus Runde 2 (vier 160-mm-Gurte, 90-mm-Riegel, 80-mm-Diagonalen auf vier Seiten, Sprossenleiter als Textur) und die A-Bock-Turmspitze bleiben; neu sind der dreieckige Ausleger (ein 140-mm-Obergurt in der Achse, zwei Untergurte 120 x 140 mm bei +-0,6 m, auf denen die Laufkatze fährt, 80-mm-Strebenzug in beiden schrägen Wänden, 50-mm-Pfosten und Z-Verband in der Untergurtebene, Fußrahmen an den vorderen Turmspitzenbeinen, Spitzenrahmen mit Seilrolle), der Gegenausleger als flaches Kastengitter an den hinteren Beinen mit Endrahmen, drei 16-mm-Abspannseile von der Spitze zu den Auslegerknoten bei 22,5 m und 40,5 m und zum Gegenauslegerende, der Kreuzrahmen (zwei 7-m-Kastenträger auf vier Platten) mit vier Ballastblöcken zu 10,6 t auf seinen Armen und dem Mastfußstück, ein runder Drehkranz von 2,2 m mit zwei Drehwerksmotoren, die Kabine neben der Turmspitze auf einer Konsole außerhalb der Katzfahrbahn (33-mm-Paneele, geneigte Frontscheibe und Seitenfenster als Glas), vier stehende Gegengewichtsplatten unter einem Tragbalken, die Laufkatze als offener Rahmen (Seitenschilde, Räder auf den Gurten, Querträger, zwei Seilrollen), die Hakenflasche (Seitenschilde, Seilrolle, Traverse, geschmiedeter Haken), ein runder 1-m3-Kübel mit Auslauf, Klappe, Füßen und Bügel und das Hubseil in zwei 14-mm-Strängen."
+  },
+  {
+   "en": "Thermal: a reference to every body solid of its region; the cab panels are two shells each (3 mm steel skin outside, 30 mm lining inside) and each window three sheets (4 / 12 / 4 mm, interior first); the slewing drive is the ring and the two motors; the hoist motor stays a box inside the winch house and the vent emitter an outlet ring on its stack. Structure: every lattice bar, the cross-base beams, mast foot, platform and counterweight beam are members, the rope falls are members of their pieces, the bail bars of the skip; joints are the slew bearing, the jib and counter-jib heel pins, the trolley wheel line and the block sheave; masses sit at the ballast, the counterweight, the trolley, the winch and the skip content; the fixed support is a cross-shaped pad under the cross-base.",
+   "de": "Thermik: ein Verweis auf jeden Körper seiner Region; die Kabinenpaneele sind je zwei Schalen (3 mm Stahlhaut außen, 30 mm Verkleidung innen) und jedes Fenster drei Scheiben (4 / 12 / 4 mm, innen zuerst); das Drehwerk sind Drehkranz und die zwei Motoren; der Hubmotor bleibt ein Quader im Windenhaus und der Lüftungsauslass ein Ring auf seinem Stutzen. Tragwerk: jeder Gitterstab, die Kreuzrahmenträger, der Mastfuß, die Drehbühne und der Gegengewichtsbalken sind Stäbe, die Seilstränge Stäbe ihrer Stücke, die Bügelstäbe des Kübels; Gelenke sind das Drehlager, die Fußbolzen von Ausleger und Gegenausleger, die Radlinie der Laufkatze und die Flaschenrolle; Massen liegen beim Ballast, beim Gegengewicht, bei der Laufkatze, der Winde und dem Kübelinhalt; das feste Lager ist eine kreuzförmige Platte unter dem Kreuzrahmen."
+  }
+ ],
+ "100": [
+  {
+   "en": "Authored for 1:100 (15 mm feature): mast, tower head and winch house as in round 2 (chord pairs, diagonals and horizontals at their drawn widths); the triangular jib keeps chords, diagonals, bottom horizontals, heel and tip frames but drops the bottom Z bracing; the counter-jib keeps chords, diagonals, top and bottom horizontals and drops the top Z bracing; the cross-base is two beams standing on the ground (the pads merge into them) with the four ballast blocks; the counterweight is one block with its slab joints drawn as texture; the cab keeps its panels and glass, the trolley its plates, beams, wheels, cheeks and sheaves, the block its plates, sheave and crosshead; the skip loses its rim ring; the rope stays two 14 mm falls.",
+   "de": "Für 1:100 gestaltet (Merkmal 15 mm): Mast, Turmspitze und Windenhaus wie in Runde 2 (Gurtpaare, Diagonalen und Riegel in gezeichneter Breite); der dreieckige Ausleger behält Gurte, Diagonalen, untere Pfosten, Fuß- und Spitzenrahmen, verliert aber den unteren Z-Verband; der Gegenausleger behält Gurte, Diagonalen, obere und untere Pfosten und verliert den oberen Z-Verband; der Kreuzrahmen sind zwei Träger direkt auf dem Boden (die Platten gehen in ihnen auf) mit den vier Ballastblöcken; das Gegengewicht ist ein Block, seine Plattenfugen sind Textur; die Kabine behält Paneele und Glas, die Laufkatze Schilde, Träger, Räder, Wangen und Rollen, die Flasche Schilde, Rolle und Traverse; der Kübel verliert seinen Randring; das Seil bleibt zwei 14-mm-Stränge."
+  },
+  {
+   "en": "Thermal and structure as at 1:50 with one skin per region (the cab and glazing layers are merged into their panels); the same joints, masses and the cross-shaped fixed pad.",
+   "de": "Thermik und Tragwerk wie bei 1:50 mit einer Haut je Region (die Schichten von Kabine und Verglasung gehen in ihren Paneelen auf); dieselben Gelenke, Massen und die kreuzförmige feste Platte."
+  }
+ ],
+ "200": [
+  {
+   "en": "Authored for 1:200 (30 mm feature): mast and tower head as in round 2; the jib is its three chords with the diagonals of both faces and single heel and tip frames (bottom bracing merged away), the counter-jib its chords, side diagonals and top horizontals; the cab is one shell with the windscreen and the side window as panes; the trolley keeps its side plates, cross beams, cheek plates and two sheaves while its wheels merge into the plates; the hook block one rounded body with crosshead and hook; the skip a closed body with gate and bail (legs merged); the counterweight one block, the ballast four blocks on the two beams; the rope keeps its two falls.",
+   "de": "Für 1:200 gestaltet (Merkmal 30 mm): Mast und Turmspitze wie in Runde 2; der Ausleger sind seine drei Gurte mit den Diagonalen beider Wände und je einem Fuß- und Spitzenrahmen (unterer Verband aufgelöst), der Gegenausleger seine Gurte, Seitendiagonalen und oberen Pfosten; die Kabine ist eine Schale mit Frontscheibe und Seitenfenster als Scheiben; die Laufkatze behält Seitenschilde, Querträger, Wangen und die zwei Rollen, ihre Räder gehen in den Schilden auf; die Hakenflasche ein gerundeter Körper mit Traverse und Haken; der Kübel ein geschlossener Körper mit Klappe und Bügel (Füße aufgelöst); das Gegengewicht ein Block, der Ballast vier Blöcke auf den zwei Trägern; das Seil behält seine zwei Stränge."
+  },
+  {
+   "en": "Thermal: one skin per region by reference; region areas are compared as a total at this scale. Structure: the bars and beams as members, heel joints, the slew bearing, trolley and block joints, the same masses and fixed pad.",
+   "de": "Thermik: eine Haut je Region als Verweis; die Regionsflächen werden in diesem Maßstab als Summe verglichen. Tragwerk: Stäbe und Träger als Stäbe, Fußgelenke, Drehlager, Gelenke von Laufkatze und Flasche, dieselben Massen und die feste Platte."
+  }
+ ],
+ "500": [
+  {
+   "en": "Merged masses for 1:500 (75 mm feature): mast, jib and counter-jib are envelope prisms (marked envelope: true; the jib a triangular prism 1.62 m deep and 1.40 m wide (the bottom chords with their trolley track generalised to the counter-jib width), as the real triangular lattice is), the tower head its legs and ties as in round 2; ballast four blocks on the cross, the cab one raked shell with its windscreen, the trolley one frame block, the hook block a rounded body with a straight hook, the skip a closed body with gate and a 75 mm bail, the rope one 14 mm strand on the axis, the pendants 16 mm.",
+   "de": "Zusammengefasste Massen für 1:500 (Merkmal 75 mm): Mast, Ausleger und Gegenausleger sind Hüllprismen (als envelope: true markiert; der Ausleger ein dreieckiges Prisma 1,62 m hoch und 1,40 m breit wie das reale Dreiecksgitter), die Turmspitze ihre Beine und Riegel wie in Runde 2; Ballast vier Blöcke auf dem Kreuz, die Kabine eine geneigte Schale mit Frontscheibe, die Laufkatze ein Rahmenblock, die Hakenflasche ein gerundeter Körper mit geradem Haken, der Kübel ein geschlossener Körper mit Klappe und 75-mm-Bügel, das Seil ein 14-mm-Strang in der Achse, die Abspannungen 16 mm."
+  },
+  {
+   "en": "Thermal: references to the body solids; the envelope prisms give the lattice coverage and are left out of the area sums (C22). Structure: the real chords inside the prisms (four mast chords, three jib chords, four counter-jib chords), the tower head, beams, ropes and bail as members, heel joints as blocks, the same masses and the cross-shaped fixed pad.",
+   "de": "Thermik: Verweise auf die Körper; die Hüllprismen decken das Gitter ab und bleiben aus den Flächensummen (C22). Tragwerk: die realen Gurte in den Prismen (vier Mastgurte, drei Auslegergurte, vier Gegenauslegergurte), Turmspitze, Träger, Seile und Bügel als Stäbe, Fußgelenke als Blöcke, dieselben Massen und die kreuzförmige feste Platte."
+  }
+ ],
+ "2d": {
+  "silhouette": {
+   "en": " Redrawn in round 3 as the orthographic view of the model: the jib as the real triangular lattice (one top chord on the axis, two bottom chords 1.2 m apart that carry the trolley), the foundation as the 7 x 7 m cross-base with four ballast blocks, the cab beside the tower head with its raked windscreen, the counterweight as vertical slabs under a suspension beam, the trolley as an open frame and the hoist rope in two falls 0.4 m apart.",
+   "de": " In Runde 3 als Normalprojektion des Modells neu gezeichnet: der Ausleger als reales Dreiecksgitter (ein Obergurt in der Achse, zwei Untergurte 1,2 m auseinander, die die Laufkatze tragen), das Fundament als Kreuzrahmen 7 x 7 m mit vier Ballastblöcken, die Kabine neben der Turmspitze mit geneigter Frontscheibe, das Gegengewicht als stehende Platten unter einem Tragbalken, die Laufkatze als offener Rahmen und das Hubseil in zwei Strängen 0,4 m auseinander."
+  }
+ },
+ "2d-set": {
+  "50": {
+   "retained": {
+    "en": "Everything including ladder, louvres and the counterweight slab joints.",
+    "de": "Alles einschließlich Leiter, Lamellen und Gegengewichtsfugen."
+   },
+   "thinElements": {
+    "en": "Rope falls 14 mm = 0.28 mm and pendant ropes 16 mm = 0.32 mm, drawn at their true width.",
+    "de": "Seilstränge 14 mm = 0,28 mm und Abspannseile 16 mm = 0,32 mm, in wahrer Breite gezeichnet."
+   }
+  },
+  "100": {
+   "retained": {
+    "en": "All members including the horizontals, the bottom chords, sheaves, trolley wheels and the skip gate.",
+    "de": "Alle Stäbe einschließlich der Querriegel, der Untergurte, Seilscheiben, Laufkatzenräder und Kübelklappe."
+   },
+   "thinElements": {
+    "en": "Members at real width; rope falls (14 mm) and pendant ropes (16 mm) at 0.14 and 0.16 mm.",
+    "de": "Stäbe in realer Breite; Seilstränge (14 mm) und Abspannseile (16 mm) mit 0,14 und 0,16 mm."
+   }
+  },
+  "200": {
+   "merged": {
+    "en": "The horizontal ties of the tower (every 2 m, 0.04 m) are omitted; the bottom bracing of the jib and the skip legs merge away.",
+    "de": "Die Querriegel des Turms (alle 2 m, 0,04 m) entfallen; der untere Verband des Auslegers und die Kübelfüße gehen auf."
+   },
+   "omitted": {
+    "en": "Ladder, trolley wheels, counterweight slab joints, louvres.",
+    "de": "Leiter, Laufkatzenräder, Gegengewichtsfugen, Lamellen."
+   },
+   "thinElements": {
+    "en": "Members at real width; rope falls and pendant ropes at the minimum stroke of 0.13 mm (0.026 m, real 14 and 16 mm).",
+    "de": "Stäbe in realer Breite; Seilstränge und Abspannseile mit dem Mindeststrich von 0,13 mm (0,026 m, real 14 und 16 mm)."
+   }
+  },
+  "500": {
+   "omitted": {
+    "en": "Diagonals, ties, ladder, sheaves, trolley wheels, slab joints, louvres, cab details.",
+    "de": "Diagonalen, Querriegel, Leiter, Seilscheiben, Laufkatzenräder, Plattenfugen, Lamellen, Kabinendetails."
+   },
+   "thinElements": {
+    "en": "Pendant ropes (16 mm) and the hoist rope (14 mm) are lines at the minimum stroke of 0.13 mm (0.065 m), thicker than real, because they carry the structural reading of the crane; the bail is drawn at 75 mm. This exceeds the outline tolerance and is stated here.",
+    "de": "Abspannseile (16 mm) und Hubseil (14 mm) sind Linien mit dem Mindeststrich von 0,13 mm (0,065 m), dicker als real, weil sie die statische Lesart des Krans tragen; der Bügel ist mit 75 mm gezeichnet. Das überschreitet die Konturtoleranz und wird hier ausgewiesen."
+   }
+  }
+ }
+}

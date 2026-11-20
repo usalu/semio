@@ -43,6 +43,18 @@ export function shardTurnCarriesNothingV1(result: ShardTurnCarriers | null | und
   return true;
 }
 
+/** 🚪️ Continue quiet opening crossings until the guest publishes a receipt or host-visible work. */
+export async function continueOpeningTurns<T>(first: T, opening: () => boolean, poll: () => Promise<T>): Promise<T> {
+  let turn = first;
+  for (let crossings = 0; turn !== null && typeof turn === "object"; crossings++) {
+    const raw = turn as ShardTurnCarriers;
+    if (wireTurnStatusTag(raw.status) !== "more-work" || !shardTurnCarriesNothingV1(raw) || !opening()) break;
+    if (crossings >= 1024) throw new Error("actor-lifecycle.open-crossing-limit");
+    turn = await poll();
+  }
+  return turn;
+}
+
 function isIdleIngress(status: unknown): boolean {
   return Boolean(status) && typeof status === "object" && (status as { readonly tag?: unknown }).tag === "idle";
 }

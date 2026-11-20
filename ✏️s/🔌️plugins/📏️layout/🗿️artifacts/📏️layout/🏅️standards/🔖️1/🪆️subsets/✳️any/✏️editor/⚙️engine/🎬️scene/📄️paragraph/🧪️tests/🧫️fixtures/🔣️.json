@@ -1,5 +1,13 @@
 {
   "schemaVersion": 1,
+  "preview": {
+    "storyXRange": [156, 236],
+    "views": [
+      { "zoom": 0.2, "cameraX": 0, "storyVisible": false },
+      { "zoom": 0.35, "cameraX": 0, "storyVisible": true },
+      { "zoom": 1, "cameraX": 100000, "storyVisible": false }
+    ]
+  },
   "geometryCases": [
     "word-wrap-left",
     "center-tracking",

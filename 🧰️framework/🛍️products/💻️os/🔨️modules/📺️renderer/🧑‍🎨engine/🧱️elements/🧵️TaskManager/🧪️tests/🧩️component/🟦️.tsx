@@ -104,6 +104,16 @@ describe("TaskManagerPanel", () => {
     expect(screen.getByText("s.cad")).toBeTruthy();
   });
 
+  it("keeps the actions column in view while the wide table scrolls horizontally in the table's own scroller", () => {
+    render(<TaskManagerPanel rows={[ROW]} onAction={vi.fn()} />);
+    const scroller = document.querySelector<HTMLElement>('[data-slot="scroll-area"]')!;
+    expect(scroller.className).toContain("overflow-x-auto");
+    expect(scroller.className).not.toContain("overflow-x-hidden");
+    const cell = screen.getByRole("button", { name: /Suspend: actor-1/ }).closest("td")!;
+    const header = screen.getByRole("columnheader", { name: "Actions" });
+    for (const element of [cell, header]) expect(element.className).toMatch(/\bsticky\b.*\bright-0\b/u);
+  });
+
   it("dispatches the right action for the right actor when a row's suspend/resume/cancel button is clicked", () => {
     const onAction = vi.fn();
     render(<TaskManagerPanel rows={[ROW]} onAction={onAction} />);

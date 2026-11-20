@@ -188,6 +188,7 @@ pub enum Grid3dWindowConfigMutation {
     SetCamera(Grid3dWindowConfigSetCamera),
     SetShowMasked(Grid3dWindowConfigSetShowMasked),
 }
+semio_os_kernel::original_pack_value_operation_receiving!(Grid3dWindowConfigMutation);
 
 impl semio_plugin::WindowConfigApplyMutation<Grid3dWindowConfig> for Grid3dWindowConfigMutation {
     fn exchange(self, post: &mut Grid3dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
@@ -395,6 +396,9 @@ macro_rules! config_owner {
             fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
                 semio_plugin::bounded_window_config_preparation_factory::<Self>()
+            }
+            fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+                semio_plugin::bounded_window_config_store_disposer_birth::<Self>()
             }
             fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
                 semio_plugin::bounded_window_config_store_disposer::<Self>()

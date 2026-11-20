@@ -254,7 +254,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       data-shared-border-edges="top right bottom left"
       aria-disabled={disabled || undefined}
       data-detail-panel-control="fill"
-      className={cn("relative flex h-medium w-full min-w-0 items-stretch border transition-[border-color] focus-within:border-accent", borderClass)}
+      className={cn("relative flex h-medium w-full min-w-0 items-stretch border", borderClass)}
       style={{ opacity: stepperEmptyOpacity, transition: "opacity 150ms" }}
     >
       <button
@@ -268,7 +268,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className="flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className="flex w-medium shrink-0 self-stretch cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -349,7 +349,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className="flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
+        className="flex w-medium shrink-0 self-stretch cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <AddIcon className="size-tiny" />
       </button>

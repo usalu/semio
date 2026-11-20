@@ -2,6 +2,7 @@ use crate::*;
 
 #[test]
 fn typed_wire_neutral_component_defaults_match_serde() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️retained/📦️wire/🧪️tests/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
     assert_eq!(rows.len(), 28);
@@ -125,6 +126,7 @@ fn every_component_variant_round_trips() {
 
 #[test]
 fn row_target_fixture_dispatches_tree_and_table_rows_identically_and_refuses_disagreeing_rows() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎯️row-target/🔣️.json")).expect("row-target fixture");
     for row in fixture["rows"].as_array().expect("fixture rows") {
         let node = serde_json::json!({
@@ -415,7 +417,7 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
         assert_eq!(side, row["crossed"].as_str(), "{}", row["case"]);
     }
     for row in fixture["documents"].as_array().expect("document rows") {
-        let node = serde_json::json!({ "id": 1, "key": row["case"], "component": row["component"], "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {} });
+        let node = serde_json::json!({ "id": 1, "key": row["case"], "component": row["component"], "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": { "label": row["case"] } });
         let snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "number-controls", "revision": 1, "root": 1, "nodes": [node], "layoutEpoch": 0 })).expect("number-control snapshot");
         let verdict = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default());
         match row["violation"].as_str() {

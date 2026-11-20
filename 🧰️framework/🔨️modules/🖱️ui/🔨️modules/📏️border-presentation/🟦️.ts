@@ -13,8 +13,8 @@ export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
 /** 🌈️ Implicit element border color. */
 export const borderElementClass = "border-element";
-/** 🎚️ Paint precedence, from neutral through effects to pointer hover. */
-export type BorderState = "normal" | "focus" | "active" | "waiting" | "loading" | "introduced" | "celebrated" | "hover";
+/** 🎚️ Paint precedence: persistent states first, then effects, then the transient interaction states focus and hover, so a focused box is never opened by a neighbour's selection. */
+export type BorderState = "normal" | "active" | "invalid" | "waiting" | "loading" | "introduced" | "celebrated" | "focus" | "hover";
 
 /** 📍 Coordinates in the caller's shared, snapped paint space. */
 export interface BorderPoint { readonly x: number; readonly y: number }
@@ -31,8 +31,9 @@ export interface BorderSegment {
 /** 🧩 Disjoint collinear span retaining all incident source identifiers. */
 export interface ResolvedBorderSegment extends BorderSegment { readonly contributors: readonly string[] }
 
-const borderStatePriority: Record<BorderState, number> = {
-  normal: 0, focus: 1, active: 2, waiting: 3, loading: 4, introduced: 5, celebrated: 6, hover: 7,
+/** 🪜 Paint precedence rank of every state, hover highest. */
+export const borderStatePriority: Record<BorderState, number> = {
+  normal: 0, active: 1, invalid: 2, waiting: 3, loading: 4, introduced: 5, celebrated: 6, focus: 7, hover: 8,
 };
 const compareBorderText = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
 
@@ -82,5 +83,63 @@ export function resolveBorderSegments(segments: readonly BorderSegment[]): Resol
     }
   }
   return output;
+}
+/** 📦 One box of the state model: an id in a parent tree, its interactivity, disabled flag and own state markers. */
+export interface StateBox {
+  readonly id: string;
+  readonly parent: string | null;
+  readonly interactive: boolean;
+  readonly disabled: boolean;
+  readonly marks: readonly BorderState[];
+}
+
+/** 🎚️ State of every box: hover goes to the innermost enabled interactive box under the pointer, focus to the innermost interactive box of the focus-visible element, marks only to the marked box; the strongest wins. See `design.md` of the closed-state-silhouette ticket.
+ *
+ * @see ./states.cases.json */
+export function resolveBoxStates(boxes: readonly StateBox[], pointer: string | null, focusVisible: string | null): Record<string, BorderState> {
+  const byId = new Map(boxes.map(box => [box.id, box]));
+  const innermost = (from: string | null, accepts: (box: StateBox) => boolean): string | null => {
+    for (let box = from === null ? undefined : byId.get(from), steps = 0; box && steps <= boxes.length; box = box.parent === null ? undefined : byId.get(box.parent), steps++) if (accepts(box)) return box.id;
+    return null;
+  };
+  const hovered = innermost(pointer, box => box.interactive && !box.disabled), focused = innermost(focusVisible, box => box.interactive);
+  return Object.fromEntries(boxes.map(({ id, marks }) => {
+    const candidates: BorderState[] = ["normal", ...marks];
+    if (id === hovered) candidates.push("hover");
+    if (id === focused) candidates.push("focus");
+    return [id, candidates.reduce((winner, state) => borderStatePriority[state] > borderStatePriority[winner] ? state : winner)];
+  }));
+}
+
+/** 🔲 One box of the silhouette model: a rect, the edges it declares and its resolved state. */
+export interface SilhouetteBox {
+  readonly id: string;
+  readonly parent: string | null;
+  readonly owner: string;
+  readonly rect: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
+  readonly edges: readonly BorderSide[];
+  readonly state: BorderState;
+}
+
+/** 🧭 A side of a box. */
+export type BorderSide = "top" | "right" | "bottom" | "left";
+
+/** 🫧 Sides of `box` that are drawn: a normal box keeps its declared sides except those flush with a side its parent leaves undrawn; a stated box closes all four. */
+export function boxDrawnSides(box: SilhouetteBox, parent: SilhouetteBox | undefined): readonly BorderSide[] {
+  if (box.state !== "normal") return ["top", "right", "bottom", "left"];
+  return box.edges.filter(side => !parent || parent.edges.includes(side) || Math.abs(box.rect[side] - parent.rect[side]) >= 0.5);
+}
+
+/** 🔳 Resolved paint spans of every box silhouette: each drawn side is one `${id}:${side}` edge in the box's owner, resolved by state priority on all collinear overlaps.
+ *
+ * @see ./silhouettes.cases.json */
+export function boxSilhouetteSegments(boxes: readonly SilhouetteBox[]): ResolvedBorderSegment[] {
+  const byId = new Map(boxes.map(box => [box.id, box]));
+  return resolveBorderSegments(boxes.flatMap(box => boxDrawnSides(box, box.parent === null ? undefined : byId.get(box.parent)).map((side): BorderSegment => {
+    const { left, top, right, bottom } = box.rect;
+    const from = side === "right" ? { x: right, y: top } : side === "bottom" ? { x: left, y: bottom } : { x: left, y: top };
+    const to = side === "top" ? { x: right, y: top } : side === "left" ? { x: left, y: bottom } : { x: right, y: bottom };
+    return { id: `${box.id}:${side}`, owner: box.owner, from, to, state: box.state };
+  })));
 }
 // #endregion 📏️BorderPresentation

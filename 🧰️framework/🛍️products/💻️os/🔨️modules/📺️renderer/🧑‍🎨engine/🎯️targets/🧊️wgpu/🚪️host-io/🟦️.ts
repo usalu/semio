@@ -17,6 +17,7 @@
  */
 // #endregion 🧲️Header
 
+import { readSelectedFilesBoundedV1, requestFileSelectionV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
 import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json" with { type: "json" };
 import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/ui-contract/presentation/host-temporal-format";
@@ -27,7 +28,7 @@ const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
  * loudly rather than answered with an empty pick, which is indistinguishable from a cancelled dialog. */
 export type WgpuHostIoRequest =
   | { readonly op: "download-media-export"; readonly filename: string; readonly mimeType: string }
-  | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean }
+  | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean; readonly maxFileBytes?: number }
   | { readonly op: "request-native-file-path"; readonly accept?: string }
   | { readonly op: "request-native-folder-path" }
   | { readonly op: "extension-store-list" }
@@ -548,7 +549,12 @@ export function createWgpuPageHostIo(): WgpuHostIo {
       return "";
     }
     if (request.op === "request-file-open") {
-      const opened = await openFiles(request.accept, request.readAs, Boolean(request.multiple));
+      const opened = request.maxFileBytes == null
+        ? await openFiles(request.accept, request.readAs, Boolean(request.multiple))
+        : await readSelectedFilesBoundedV1(await requestFileSelectionV1(request.accept, request.multiple), request.readAs, request.maxFileBytes, {
+          signal: new AbortController().signal,
+          progress: () => {},
+        });
       return JSON.stringify(opened);
     }
     if (request.op === "request-native-file-path") {

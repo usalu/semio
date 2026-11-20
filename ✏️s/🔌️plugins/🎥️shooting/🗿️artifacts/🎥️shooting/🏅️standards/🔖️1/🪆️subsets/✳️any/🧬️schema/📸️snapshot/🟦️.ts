@@ -55,6 +55,23 @@ export interface ShootingShot {
   shape: string;
   background?: string;
   cameraId?: string;
+  drawing?: ShootingDrawing;
+  autoFit?: boolean;
+}
+
+export interface ShootingDrawing {
+  background: boolean;
+  fill: boolean;
+  fillColor?: string;
+  fillOpacity: number;
+  visibleLines: boolean;
+  hiddenLines: boolean;
+  visibleColor: string;
+  hiddenColor: string;
+  visibleWidth: number;
+  hiddenWidth: number;
+  lineEasing: number;
+  mergeLines: boolean;
 }
 
 export interface ShootingSun {

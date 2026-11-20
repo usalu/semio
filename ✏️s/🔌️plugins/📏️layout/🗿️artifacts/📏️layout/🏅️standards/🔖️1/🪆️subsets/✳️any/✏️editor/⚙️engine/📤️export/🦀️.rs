@@ -35,7 +35,7 @@ use semio_s_artifact_layout_layout_io::interchange::{InterchangeExportSession, I
 use semio_s_artifact_layout_layout_engine_json::dictionary::DictionaryJsonCursor;
 
 #[path="📍️checkpoint/🦀️.rs"]mod checkpoint;
-#[path="📤️output/🦀️.rs"]mod output;
+use semio_s_artifact_layout_layout_engine_export_primitives::output;
 use output::{OutputWork,OUTPUT_BODY_BYTES,OUTPUT_COPY_BYTES};
 
 #[path = "📜️export-contract-and-state/🦀️.rs"]
@@ -47,9 +47,9 @@ use export_contract_and_state::{BASE64_INPUT_BYTES_PER_UNIT, ChunkRope, ExportSt
 #[cfg(any(test, feature = "testkit"))]
 use export_contract_and_state::MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS;
 
-#[path="🗃️plan/🦀️.rs"]
-mod plan_storage;
-use plan_storage::{PlanItems,PlanPages};
+use semio_s_artifact_layout_layout_engine_export_primitives::plan_storage;
+type PlanItems=plan_storage::PlanList<PdfItem>;
+type PlanPages=plan_storage::PlanList<PdfPagePlan>;
 pub use plan_storage::PlanOffsets;
 
 #[path = "🏗️job-admission-and-close/🦀️.rs"]
@@ -75,7 +75,7 @@ use advance_commit_and_codec::decode_checkpoint;
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️testing/🦀️.rs"]
 mod test_oracle;
-#[cfg(test)]use test_oracle::{append_plan_fixture,close_plan_fixture,close_original_fixture};
+#[cfg(test)]use semio_s_artifact_layout_layout_engine_export_primitives::test_oracle::{append_plan_fixture,close_plan_fixture,close_original_fixture,fixture_effect};
 #[cfg(any(test, feature = "testkit"))]
 pub use test_oracle::{encode_export_checkpoint_fixture,decode_export_checkpoint_fixture,append_offset_fixture,append_output_fixture,close_output_fixture,output_append_refused_fixture,LAYOUT_EXPORT_FIXTURE_STOCK, LAYOUT_EXPORT_FIXTURE_TURN, LAYOUT_EXPORT_FIXTURE_TURN_BUDGET, LayoutExportObserved, drive_job_batch, export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch, headless_batch_export, layout_export_fixture_caller, run_layout_export_headless_batch};
 
@@ -97,10 +97,6 @@ use faithful_primitives::{FidelityState, PaintShape};
 #[cfg(test)]
 #[path = "🧪️tests/🎨️fidelity/🦀️.rs"]
 mod fidelity_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/📦️formats/🦀️.rs"]
-mod format_job_tests;
 
 #[path="📄️paragraph-planning/🦀️.rs"]
 mod paragraph_planning;

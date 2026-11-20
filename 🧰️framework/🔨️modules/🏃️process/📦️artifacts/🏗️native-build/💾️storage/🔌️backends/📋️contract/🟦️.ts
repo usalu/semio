@@ -83,3 +83,6 @@ export const invalidateNativeStorageRostersV1=():void=>{for(const value of geome
 export const nativeStorageMappedV1=(directories:readonly string[],control:ResourceLeaseControl):Promise<boolean>=>geometry(nativeStorageBackendOfDirectoryV1(directories[0]!).id).mapped(directories,control);
 /** 🪣️ Reports allocation unit and free units of the backend that owns the root's backing file. */
 export const nativeStorageSpaceV1=(root:string,declared:number):Readonly<{bsize:number;bavail:number}>=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).space(root,declared);
+
+/** 🔄️ Observes free units after prior writes using the partition backend and caller cancellation. */
+export const nativeStorageFreshSpaceV1=(root:string,declared:number,signal:AbortSignal):Promise<Readonly<{bsize:number;bavail:number}>>=>geometry(nativeStorageBackendOfDirectoryV1(dirname(root)).id).freshSpace(root,declared,signal);

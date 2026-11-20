@@ -4,10 +4,16 @@ use std::cmp::Reverse;
 #[path = "ordered.rs"]
 mod ordered;
 use ordered::Ordered;
+#[path = "states.rs"]
+mod states;
+pub use states::*;
+#[path = "silhouettes.rs"]
+mod silhouettes;
+pub use silhouettes::*;
 
 /// 🎚️ Paint precedence shared by native and browser renderers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SharedBorderState { Normal, Focus, Active, Waiting, Loading, Introduced, Celebrated, Hover }
+pub enum SharedBorderState { Normal, Active, Invalid, Waiting, Loading, Introduced, Celebrated, Focus, Hover }
 
 /// 📐 One identified axis-aligned edge in the caller's common paint space.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -343,5 +349,9 @@ pub fn resolve_shared_border_segments(segments: &[SharedBorderSegment]) -> Resul
 mod tests;
 
 #[cfg(test)]
-#[path = "native-seams.test.rs"]
-mod native_seams;
+#[path = "states.test.rs"]
+mod states_tests;
+
+#[cfg(test)]
+#[path = "silhouettes.test.rs"]
+mod silhouettes_tests;

@@ -1,0 +1,5 @@
+import{plugin}from"bun";
+import{existsSync,readFileSync}from"node:fs";
+import{resolve,dirname}from"node:path";
+const map:Record<string,string>=JSON.parse(readFileSync(process.env.R194_MAP!,"utf8")),back=new Map(Object.entries(map).map(([live,staged])=>[staged,live]));
+plugin({name:"r177",setup(b){b.onResolve({filter:/.*/},a=>{if(process.env.R220_DEBUG&&!a.path.startsWith("."))console.error("[DEBUG] resolve",a.path,a.importer,back.has(a.importer));if(!a.path.startsWith(".")&&!a.path.startsWith("/")&&!a.path.startsWith("node:")&&!a.path.startsWith("bun:")&&a.importer){const imp=back.get(a.importer.replace(/^file:\/\//,""));if(imp){{let d=dirname(imp);while(!existsSync(d))d=dirname(d);try{return{path:Bun.resolveSync(a.path,d)};}catch{}}}}if(a.path.startsWith("/")&&map[a.path])return{path:map[a.path]};if(!a.importer||!a.path.startsWith("."))return;const imp=back.get(a.importer.replace(/^file:\/\//,""))??a.importer.replace(/^file:\/\//,""),abs=resolve(dirname(imp),a.path),m=map[abs];if(m)return{path:m};if(back.has(a.importer.replace(/^file:\/\//,""))&&existsSync(abs))return{path:abs};});}});

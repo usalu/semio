@@ -1,7 +1,7 @@
 use super::*;
 
 fn vector_request(kind: LayoutExportKind) -> LayoutExportRequest {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️large-sheet/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🧪️tests/🧫️fixtures/📄️large-sheet/🔣️.json")).unwrap();
     let snapshot: LayoutSnapshot = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     LayoutExportRequest { kind, page_id: Some(snapshot.pages[0].id.clone()), snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "large-sheet".into(), canonical_base_revision_hex: "09".repeat(32) }
 }
@@ -15,7 +15,7 @@ fn vector_job(request: LayoutExportRequest) -> LayoutExportJob {
 
 #[test]
 fn large_vector_sheet_validation_and_planning_advance_in_bounded_units() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️large-sheet/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🧪️tests/🧫️fixtures/📄️large-sheet/🔣️.json")).unwrap();
     for kind in [LayoutExportKind::Svg, LayoutExportKind::Pdf] {
         let mut job = vector_job(vector_request(kind));
         let mut validation_units = 0;

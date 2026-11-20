@@ -1,7 +1,7 @@
 use super::*;
 use semio_s_fem_elements2d::Bar2;
 use semio_s_fem_elements2d::BeamEb2;
-use semio_s_fem_test_support::pages_bytes;
+use semio_s_fem_test_support::{OriginalNumericalFixture, pages_bytes};
 use semio_s_fem_test_support::seen_of;
 use semio_s_fem_test_support::test_operation;
 use semio_s_fem_test_support::Seen;
@@ -44,14 +44,20 @@ fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
         job.state.checkpoint_due = case["before"]["checkpointDue"].as_bool().unwrap();
         job.state.preview_due = case["before"]["previewDue"].as_bool().unwrap();
         if case["before"]["complete"].as_bool().unwrap() { job.state.stage = AssemblyJobStage::Complete; }
-        let mut sequence = 0;
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let outcome = seen_of(job.step_plain(&mut context));
+        let mut original = OriginalNumericalFixture::new(operation);
+        let (outcome, fuel_remaining) = original.turn(TEST_GRANT, case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), |cx| {
+            let outcome = match seen_of(job.step_plain(cx)) { Seen::Yield => "yield", Seen::Complete(_) => "complete", _ => panic!("unexpected assembly control outcome") };
+            Ok((outcome, cx.fuel_remaining()))
+        }).unwrap();
         let observed = serde_json::json!({ "checkpointDue": job.state.checkpoint_due, "previewDue": job.state.preview_due, "pendingBuild": job.state.pending_build.is_some(), "complete": job.state.stage == AssemblyJobStage::Complete });
         assert_eq!(observed, case["after"], "fixture {index} preserves or advances exactly the admitted transition");
-        assert_eq!(context.fuel_remaining(), case["fuelRemaining"].as_u64().unwrap(), "fixture {index} fuel");
-        assert_eq!(match outcome { Seen::Yield => "yield", Seen::Complete(_) => "complete", _ => panic!("unexpected assembly control outcome") }, case["outcome"].as_str().unwrap());
+        assert_eq!(fuel_remaining, case["fuelRemaining"].as_u64().unwrap(), "fixture {index} fuel");
+        assert_eq!(outcome, case["outcome"].as_str().unwrap());
+        if case["deferredOutcome"] == "complete" {
+            assert!(matches!(original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX), Seen::Complete(_)));
+            original.turn(TEST_GRANT, 128, u64::MAX, |cx| { job.retire_outcome(cx); Ok(()) }).unwrap();
+        }
+        original.finish();
         let mut closed = false;
         for _ in 0..20_000 {
             let (terminal, items, bytes) = job.close_retained_step(MOUNTED_OWNER_PAGE_BYTES);
@@ -109,9 +115,9 @@ fn assembly_triplet_pages_inline_matrix_close_reports_only_actual_backing() {
             let count = case["backingCount"].as_u64().unwrap();
             let (mut indptr, mut indices, mut values) = (PagedList::default(), PagedList::default(), PagedList::default());
             if count != 0 {
-                while indptr.capacity() < 1 { indptr.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("row backing"); }
-                while indices.capacity() < 1 { indices.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("index backing"); }
-                while values.capacity() < 1 { values.reserve_capacity_one(1, MOUNTED_OWNER_PAGE_BYTES).expect("value backing"); }
+                while indptr.capacity() < 1 { semio_s_fem_sparse::reserve_cold_page(&mut indptr, 1).expect("row backing"); }
+                while indices.capacity() < 1 { semio_s_fem_sparse::reserve_cold_page(&mut indices, 1).expect("index backing"); }
+                while values.capacity() < 1 { semio_s_fem_sparse::reserve_cold_page(&mut values, 1).expect("value backing"); }
             }
             let next_bytes = if count == 0 { 0 } else { values.next_release_allocation_bytes().expect("next matrix backing") };
             let matrix = Csr::from_paged_parts(0, indptr, indices, values);
@@ -349,6 +355,7 @@ fn assembly_triplet_pages_build_final_csr_without_contiguous_arrays() {
         },
         close_lane: 0,
         desk: NumericalOutcomeDesk::default(),
+        publication: None,
         model_close: AnalysisModelCloseCursor::default(),
     };
     let mut build = AssemblyCsrBuild::new(job).unwrap_or_else(|_| panic!("completed assembly enters CSR build"));
@@ -498,14 +505,12 @@ impl StepLatency {
 }
 
 fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operation, fuel: u64) -> (UnfactoredSystem, Vec<AssemblyPreview>, StepLatency) {
-    let mut sequence = 0;
+    let mut original = OriginalNumericalFixture::new(operation);
     let mut previews = Vec::new();
     let mut latency = StepLatency::default();
     loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let started = std::time::Instant::now();
-        let outcome = seen_of(job.step_plain(&mut context));
+        let outcome = original.step_seen(&mut job, TEST_GRANT, fuel.max(128), u64::MAX);
         latency.admit(started.elapsed());
         match outcome {
             Seen::Preview(pages) => previews.push(decode_value(&pages_bytes(&pages)).expect("assembly preview decodes")),
@@ -514,7 +519,8 @@ fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operatio
             Seen::Cancelled | Seen::Fault(_) => panic!("assembly fixture must complete"),
         }
     }
-    job.retire_outcome();
+    original.turn(TEST_GRANT, 128, u64::MAX, |cx| { job.retire_outcome(cx); Ok(()) }).unwrap();
+    original.finish();
     (job.finish().expect("completed assembly yields matrices"), previews, latency)
 }
 
@@ -538,15 +544,15 @@ fn assembly_job_checkpoint_resume_is_byte_stable() {
     let model = axial_chain(20);
     let operation = test_operation(302);
     let mut job = AssemblyJob::new(&model, operation, 4).expect("assembly prepares");
-    let mut sequence = 0;
+    let mut original = OriginalNumericalFixture::new(operation);
     let checkpoint = loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(job.step_plain(&mut context)) {
+        match original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX) {
             Seen::Checkpoint(pages) => break pages_bytes(&pages),
-            outcome => assert!(!matches!(outcome, Seen::Complete(_)), "assembly must checkpoint before completing"),
+            outcome => assert!(!matches!(outcome, Seen::Complete(_) | Seen::Fault(_) | Seen::Cancelled), "assembly must checkpoint before completing"),
         }
     };
+    original.turn(TEST_GRANT, 128, u64::MAX, |cx| { job.retire_outcome(cx); Ok(()) }).unwrap();
+    original.finish();
     let resumed = AssemblyJob::from_checkpoint(&model, operation, &checkpoint).expect("assembly checkpoint restores");
     assert_eq!(resumed.checkpoint_bytes(), checkpoint);
     let (original, _, _) = finish_assembly_job(job, operation, 9);
@@ -600,19 +606,19 @@ fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws(
                 seen.insert(stage);
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+                assert_eq!(seen_of(job.step_plain(&mut deadline)), Seen::Yield);
                 assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                 drop(deadline);
                 let mut stale =
                     StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+                assert!(matches!(seen_of(job.step_plain(&mut stale)), Seen::Fault(_)));
                 assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
                 let token = semio_framework_job::root_cancel_token();
                 token.cancel_now();
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 drop(stale);
                 let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+                assert_eq!(seen_of(job.step_plain(&mut cancelled)), Seen::Cancelled);
                 assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.lookup_cursor, build.lookup_match, build.indices_new.len(), build.positions.len(), build.stiffness.len())), before);
             }
             let started = std::time::Instant::now();
@@ -682,6 +688,7 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
         while !construction.step_one().expect("owned assembly construction") {}
         let mut job = construction.take_complete().expect("owned assembly job");
         let mut sequence = 0;
+        let mut original = OriginalNumericalFixture::new(operation);
         let mut maximum_micros = 0;
         for _ in 0..100_000 {
             let merge = matches!(job.state.stage, AssemblyJobStage::MergeFull | AssemblyJobStage::MergeFree);
@@ -698,7 +705,7 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
                 );
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut deadline)), Seen::Yield);
+                assert_eq!(seen_of(job.step_plain(&mut deadline)), Seen::Yield);
                 assert_eq!(
                     (
                         job.state.stage,
@@ -713,18 +720,18 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
                 drop(deadline);
                 let mut stale =
                     StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert!(matches!(seen_of(job.step(&mut stale)), Seen::Fault(_)));
+                assert!(matches!(seen_of(job.step_plain(&mut stale)), Seen::Fault(_)));
                 let token = semio_framework_job::root_cancel_token();
                 token.cancel_now();
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 drop(stale);
                 let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut cancelled)), Seen::Cancelled);
+                assert_eq!(seen_of(job.step_plain(&mut cancelled)), Seen::Cancelled);
             }
             let started = std::time::Instant::now();
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            if matches!(seen_of(job.step_plain(&mut context)), Seen::Complete(_)) {
+            if matches!(original.step_seen(&mut job, TEST_GRANT, 128, u64::MAX), Seen::Complete(_)) {
+                original.turn(TEST_GRANT, 128, u64::MAX, |cx| { job.retire_outcome(cx); Ok(()) }).unwrap();
+                original.finish();
                 maximum_micros = maximum_micros.max(started.elapsed().as_micros());
                 let system = job.finish().expect("owned assembly completes");
                 return (system.k_full_coo.to_dense().data, system.k_ff_coo.to_dense().data, maximum_micros);
@@ -752,7 +759,7 @@ fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
     });
     let pointer = Arc::as_ptr(&model);
     let mut construction = AssemblyJobConstruction::new_owned(model, test_operation(88), 1);
-    for _ in 0..1_000_000 {
+    for _ in 0..(order * 32) {
         if construction.stage == AssemblyConstructionStage::ReserveDofs && construction.plan.dof_map.order.capacity() < order * 2 {
             let before = (construction.stage, construction.plan.dof_map.order.capacity(), construction.plan.dof_map.order.allocated_bytes());
             let copy = construction.plan.dof_map.order.next_capacity_copy_byte_demand(order * 2).unwrap();
@@ -780,6 +787,20 @@ fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
         }
     }
     assert!(matches!(&job.model, AnalysisModelOwner::Owned(model) if Arc::as_ptr(model) == pointer));
+    job.state.element_cursor = job.state.total_elements - 1;
+    for _ in 0..96 {
+        if job.state.pending_build.as_ref().is_some_and(|build| build.stage == PendingElementBuildStage::Indices) {
+            let build = job.state.pending_build.as_ref().unwrap();
+            let before = (build.lookup_cursor, build.scalar_cursor, build.lookup_match);
+            assert!(!job.advance_element_build(0).unwrap());
+            let build = job.state.pending_build.as_ref().unwrap();
+            assert_eq!((build.lookup_cursor, build.scalar_cursor, build.lookup_match), before);
+        }
+        if job.advance_element_build(TEST_GRANT.maximum_depth).unwrap() { break; }
+    }
+    let element = job.state.pending.as_ref().expect("last element resolves without scanning the previous nodes or equations");
+    assert_eq!(element.indices_new, (order - 6..order).collect::<Vec<_>>());
+    assert_eq!(element.positions, [[(order / 3 - 2) as f64, 0.0, 0.0], [(order / 3 - 1) as f64, 0.0, 0.0]]);
     let mut preparation_closed = false;
     for _ in 0..100_000 {
         let (terminal, items, bytes) = construction.close_step(MOUNTED_OWNER_PAGE_BYTES);
@@ -787,14 +808,13 @@ fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
         if terminal { preparation_closed = true; break; }
     }
     assert!(preparation_closed && construction.constrained_old.terminal_is_empty());
-    assert_eq!(job.close_retained_step(0), (false, 0, 0));
     let mut closed = false;
-    for _ in 0..1_000_000 {
+    for _ in 0..(order * 32) {
         let (terminal, items, bytes) = job.close_retained_step(1 << 20);
         assert!(items <= 1);
         if terminal { closed = true; break; }
         if job.close_lane <= 10 { assert!(bytes <= MOUNTED_OWNER_PAGE_BYTES); }
     }
     assert!(closed, "paged order releases all original backing");
-    assert!(job.plan.dof_map.order.terminal_is_empty() && job.plan.dof_map.slots.terminal_is_empty() && job.plan.inv_perm.terminal_is_empty() && job.plan.free_new.terminal_is_empty() && job.plan.compact_of_new.terminal_is_empty());
+    assert!(job.plan.mounted_node_slots.terminal_is_empty() && job.plan.node_dofs.terminal_is_empty() && job.plan.dof_map.order.terminal_is_empty() && job.plan.dof_map.slots.terminal_is_empty() && job.plan.inv_perm.terminal_is_empty() && job.plan.free_new.terminal_is_empty() && job.plan.compact_of_new.terminal_is_empty());
 }

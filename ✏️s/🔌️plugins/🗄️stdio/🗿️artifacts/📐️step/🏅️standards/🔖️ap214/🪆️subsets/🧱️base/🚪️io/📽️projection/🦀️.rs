@@ -1,5 +1,5 @@
 //! 📽️ Deterministic XY edge projection through firstparty Part21 entities and placement axes.
-use semio_s_artifact_stdio_contract::part21::{Part21Document,Part21Instance,Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document,Part21Instance,Part21Value,parse_part21};
 pub(super) struct ProjectionGraph<'a>{doc:&'a Part21Document,instances:std::collections::HashMap<u64,&'a Part21Instance>}
 impl<'a> ProjectionGraph<'a>{pub(super) fn new(doc:&'a Part21Document)->Self{Self{doc,instances:doc.instances.iter().map(|instance|(instance.id,instance)).collect()}}pub(super) fn instance(&self,id:u64)->Option<&'a Part21Instance>{self.instances.get(&id).copied()}pub(super) fn by_type<'b>(&'b self,kind:&'b str)->impl Iterator<Item=&'a Part21Instance>+'b{self.doc.instances.iter().filter(move|instance|instance.is_type(kind))}}
 #[derive(Clone,Debug,PartialEq)]
@@ -19,15 +19,38 @@ pub(super) fn placement(doc:&ProjectionGraph<'_>,id:u64)->Option<([f64;3],[f64;3
     let z=norm(normal)?;let axis=reference(args,if two{2}else{3}).and_then(|id|coordinates(doc,id,"DIRECTION")).unwrap_or([1.0,0.0,0.0]);
     let component=dot(axis,z);let x=norm([axis[0]-component*z[0],axis[1]-component*z[1],axis[2]-component*z[2]])?;let y=cross(z,x);Some((center,x,y))
 }
-pub(super) fn length_unit(doc:&ProjectionGraph<'_>)->Result<f64,String>{
-    let mut scale=None;
-    for instance in doc.by_type("LENGTH_UNIT"){
-        let Some(args)=instance.entity("SI_UNIT")else{return Err("step.projection.length-unit".into());};
-        if !matches!(args.get(1),Some(Part21Value::Enum(value))if value=="METRE"){return Err("step.projection.length-unit".into());}
-        let factor=match args.first(){Some(Part21Value::Enum(value))=>match value.as_str(){"MILLI"=>0.001,"CENTI"=>0.01,"DECI"=>0.1,"MICRO"=>0.000001,"KILO"=>1000.0,_=>return Err("step.projection.length-prefix".into())},_=>1.0};
-        if scale.is_some_and(|previous:f64|(previous-factor).abs()>1e-12){return Err("step.projection.mixed-units".into());}scale=Some(factor);
+fn declared_length_in_metres(doc: &Part21Document) -> Result<Option<f64>, String> {
+    let mut scale = None;
+    for instance in doc.instances.iter().filter(|instance| instance.is_type("LENGTH_UNIT")) {
+        let args = instance.entity("SI_UNIT").ok_or("step.projection.length-unit")?;
+        if !matches!(args.get(1), Some(Part21Value::Enum(value)) if value == "METRE") {
+            return Err("step.projection.length-unit".into());
+        }
+        let factor = match args.first() {
+            Some(Part21Value::Unset) => 1.0,
+            Some(Part21Value::Enum(value)) => match value.as_str() {
+                "MICRO" => 0.000001,
+                "MILLI" => 0.001,
+                "CENTI" => 0.01,
+                "DECI" => 0.1,
+                "KILO" => 1000.0,
+                _ => return Err("step.projection.length-prefix".into()),
+            },
+            _ => return Err("step.projection.length-prefix".into()),
+        };
+        if scale.is_some_and(|previous: f64| (previous - factor).abs() > 1e-12) {
+            return Err("step.projection.mixed-units".into());
+        }
+        scale = Some(factor);
     }
-    Ok(scale.unwrap_or(0.0254/72.0)*72.0/0.0254)
+    Ok(scale)
+}
+pub(super) fn length_unit(doc:&ProjectionGraph<'_>)->Result<f64,String>{
+    Ok(declared_length_in_metres(doc.doc)?.unwrap_or(0.0254/72.0)*72.0/0.0254)
+}
+/// 📏️ Metres per coordinate unit declared by a STEP Part 21 document.
+pub fn step_length_in_metres(source: &str) -> Result<Option<f64>, String> {
+    declared_length_in_metres(&parse_part21(source).map_err(|error| error.to_string())?)
 }
 fn edge(doc:&ProjectionGraph<'_>,id:u64)->Result<ProjectedCurve,String>{
     let args=doc.instance(id).and_then(|instance|instance.entity("EDGE_CURVE")).ok_or("step.projection.edge")?;

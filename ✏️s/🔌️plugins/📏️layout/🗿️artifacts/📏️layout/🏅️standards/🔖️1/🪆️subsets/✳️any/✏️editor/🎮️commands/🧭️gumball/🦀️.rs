@@ -67,12 +67,11 @@ pub enum LayoutGumballIntent {
 
 impl LayoutGumballIntent {
     /// 📍️ The motion about `pivot`; a turn or scaling without a pivot (no target frame) moves nothing.
-    fn motion(self, pivot: Option<(f64, f64)>) -> Option<LayoutFrameMotion> {
-        match (self, pivot) {
-            (Self::Drag { dx, dy }, _) => Some(LayoutFrameMotion::Drag { dx, dy }),
-            (Self::Rotate { angle }, Some((pivot_x, pivot_y))) => Some(LayoutFrameMotion::Rotate { pivot_x, pivot_y, angle }),
-            (Self::Scale { sx, sy }, Some((pivot_x, pivot_y))) => Some(LayoutFrameMotion::Scale { pivot_x, pivot_y, sx, sy }),
-            (Self::Rotate { .. } | Self::Scale { .. }, None) => None,
+    fn motion(self, pivot: impl FnOnce() -> Option<(f64, f64)>) -> Option<LayoutFrameMotion> {
+        match self {
+            Self::Drag { dx, dy } => Some(LayoutFrameMotion::Drag { dx, dy }),
+            Self::Rotate { angle } => pivot().map(|(pivot_x, pivot_y)| LayoutFrameMotion::Rotate { pivot_x, pivot_y, angle }),
+            Self::Scale { sx, sy } => pivot().map(|(pivot_x, pivot_y)| LayoutFrameMotion::Scale { pivot_x, pivot_y, sx, sy }),
         }
     }
 }
@@ -116,12 +115,17 @@ pub fn transform(verb: LayoutGumballVerb<'_>, doc: &ArtifactView<'_, LayoutSnaps
     };
     let record = active_page(doc.snapshot, &current(cfg)).and_then(|page| {
         let targets = layout_unique_targets(if verb.ids.is_empty() { selected } else { verb.ids }.iter().cloned());
-        let motion = verb.intent.motion(layout_frame_selection_pivot(page, &targets))?;
+        let motion = verb.intent.motion(|| layout_frame_selection_pivot(page, &targets))?;
         Some(LayoutFrameRecord { page_id: page.id.clone(), targets, motion })
     });
     let operation = doc.operation_optional();
     let seed = operation.map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
     let revision = operation.map(|operation| operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<String>()).unwrap_or_default();
+    let phase = if record.is_none() && open.is_some() && matches!(phase, LayoutTransformPhase::Stream | LayoutTransformPhase::Commit) {
+        LayoutTransformPhase::Abort(semio_framework_tool_machine::ToolAbortReason::CaptureLost)
+    } else {
+        phase
+    };
     layout_transform_dispatch(verb.verb, phase, record, doc.snapshot, open, seed, &revision, notice)
 }
 

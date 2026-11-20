@@ -1,6 +1,7 @@
 //! 🔷️ Owned constrained Bowyer-Watson triangulation, input preparation and the one-shot `triangulate`.
 
 use super::*;
+use std::ops::Index;
 
 // #region 🔖️PlanarDomain
 // #region 🧭️OwnedTriangulation
@@ -19,12 +20,12 @@ impl Edge {
 
 #[derive(Clone, Debug)]
 pub(super) struct OwnedTriangulation {
-    pub(super) points: Vec<[f64; 2]>,
-    pub(super) triangles: Vec<[usize; 3]>,
+    pub(super) points: MeshRows<[f64; 2]>,
+    pub(super) triangles: MeshRows<[usize; 3]>,
     pub(super) input_len: usize,
     pub(super) insert_cursor: usize,
-    pub(super) insertion_order: Vec<usize>,
-    pub(super) insertion: Option<PointInsertion>,
+    pub(super) insertion_order: MeshRows<usize>,
+    pub(super) insertion: PointInsertion,
     pub(super) maximum_triangles: usize,
     pub(super) allocation_fault: bool,
     pub(super) mounted_initialization: MountedTriangulationInitialization,
@@ -79,24 +80,59 @@ pub(super) struct PointInsertion {
     pub(super) point_index: usize,
     phase: PointInsertionPhase,
     pub(super) cursor: usize,
-    pub(super) bad: Vec<usize>,
+    pub(super) bad: MeshRows<usize>,
     containing: Option<usize>,
-    pub(super) boundary: Vec<(Edge, usize)>,
-    pub(super) retained: Vec<[usize; 3]>,
+    pub(super) boundary: MeshRows<(Edge, usize)>,
+    bad_cursor: usize,
+    kept: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PointInsertionPhase {
+    Idle,
     Scan,
     Retain,
+    Trim,
     Fan,
+    Clear,
+}
+
+impl PointInsertion {
+    pub(super) fn new(mounted: bool) -> Self {
+        Self { point_index: 0, phase: PointInsertionPhase::Idle, cursor: 0, bad: MeshRows::new(mounted), containing: None, boundary: MeshRows::new(mounted), bad_cursor: 0, kept: 0 }
+    }
+
+    fn reserve_bad(&mut self, context: &mut Option<&mut StepContext<'_>>) -> Result<bool, ()> {
+        if !self.bad.is_mounted() { return Ok(true); }
+        let context = context.as_deref_mut().ok_or(())?;
+        Ok(self.bad.reserve(self.bad.len() + 1, context)? && self.boundary.reserve(self.boundary.len() + 3, context)?)
+    }
+
+    fn add_bad(&mut self, index: usize, triangle: [usize; 3]) {
+        self.bad.push(index);
+        for edge in [Edge::new(triangle[0], triangle[1]), Edge::new(triangle[1], triangle[2]), Edge::new(triangle[2], triangle[0])] {
+            let (mut left, mut right) = (0, self.boundary.len());
+            while left < right {
+                let middle = left + (right - left) / 2;
+                if self.boundary[middle].0 < edge { left = middle + 1; } else { right = middle; }
+            }
+            if self.boundary.get(left).is_some_and(|entry| entry.0 == edge) {
+                self.boundary[left].1 += 1;
+            } else {
+                self.boundary.push((edge, 1));
+                for index in (left..self.boundary.len() - 1).rev() {
+                    self.boundary.swap(index, index + 1);
+                }
+            }
+        }
+    }
 }
 
 fn orient(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
     (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 }
 
-pub(super) fn ccw_triangle(points: &[[f64; 2]], mut triangle: [usize; 3]) -> Option<[usize; 3]> {
+pub(super) fn ccw_triangle(points: &(impl Index<usize, Output = [f64; 2]> + ?Sized), mut triangle: [usize; 3]) -> Option<[usize; 3]> {
     let signed = orient(points[triangle[0]], points[triangle[1]], points[triangle[2]]);
     if signed.abs() <= f64::EPSILON {
         return None;
@@ -107,7 +143,7 @@ pub(super) fn ccw_triangle(points: &[[f64; 2]], mut triangle: [usize; 3]) -> Opt
     Some(triangle)
 }
 
-fn in_circumcircle(points: &[[f64; 2]], triangle: [usize; 3], point: [f64; 2]) -> bool {
+fn in_circumcircle(points: &MeshRows<[f64; 2]>, triangle: [usize; 3], point: [f64; 2]) -> bool {
     let a = points[triangle[0]];
     let b = points[triangle[1]];
     let c = points[triangle[2]];
@@ -166,12 +202,12 @@ impl OwnedTriangulation {
         });
         points.extend_from_slice(&[[center[0] - 32.0 * span, center[1] - 16.0 * span], [center[0] + 32.0 * span, center[1] - 16.0 * span], [center[0], center[1] + 32.0 * span]]);
         Ok(Self {
-            points,
-            triangles: vec![[input_len, input_len + 1, input_len + 2]],
+            points: points.into(),
+            triangles: vec![[input_len, input_len + 1, input_len + 2]].into(),
             input_len,
             insert_cursor: 0,
-            insertion_order,
-            insertion: None,
+            insertion_order: insertion_order.into(),
+            insertion: PointInsertion::new(false),
             maximum_triangles: usize::MAX,
             allocation_fault: false,
             mounted_initialization: MountedTriangulationInitialization { stage: MountedTriangulationStage::Complete, cursor: 0, sort_outer: 0, sort_inner: 0, bounds: [0.0; 4], center: [0.0; 2], span: 0.0 },
@@ -179,18 +215,16 @@ impl OwnedTriangulation {
         })
     }
 
-    pub(super) fn begin_mounted(points: Vec<[f64; 2]>, maximum_triangles: usize) -> Result<Self, MeshError> {
-        if points.len() < 3 {
-            return Err(MeshError::DegenerateDomain);
-        }
+    pub(super) fn begin_mounted(points: MeshRows<[f64; 2]>, maximum_triangles: usize) -> Self {
         let input_len = points.len();
-        Ok(Self {
+        let mounted = points.is_mounted();
+        Self {
             points,
-            triangles: Vec::new(),
+            triangles: MeshRows::new(mounted),
             input_len,
             insert_cursor: 0,
-            insertion_order: Vec::new(),
-            insertion: None,
+            insertion_order: MeshRows::new(mounted),
+            insertion: PointInsertion::new(mounted),
             maximum_triangles,
             allocation_fault: false,
             mounted_initialization: MountedTriangulationInitialization {
@@ -203,7 +237,7 @@ impl OwnedTriangulation {
                 span: 0.0,
             },
             finish: TriangulationFinishCursor { stage: TriangulationFinishStage::Filter, read: 0, write: 0, sort_outer: 1, sort_inner: 1 },
-        })
+        }
     }
 
     fn insertion_key(&self, index: usize) -> u64 {
@@ -211,7 +245,7 @@ impl OwnedTriangulation {
         point[0].to_bits().wrapping_mul(0x9e37_79b9_7f4a_7c15).rotate_left(17) ^ point[1].to_bits().wrapping_mul(0xbf58_476d_1ce4_e5b9).rotate_left(41)
     }
 
-    pub(super) fn advance_mounted_initialization(&mut self) -> Result<bool, MeshError> {
+    pub(super) fn advance_mounted_initialization(&mut self, context: &mut StepContext<'_>) -> Result<bool, MeshError> {
         match self.mounted_initialization.stage {
             MountedTriangulationStage::BoundsPoint => {
                 if let Some(point) = self.points.get(self.mounted_initialization.cursor).copied() {
@@ -238,9 +272,8 @@ impl OwnedTriangulation {
                 self.mounted_initialization.stage = MountedTriangulationStage::ReserveInsertionOrder;
             }
             MountedTriangulationStage::ReserveInsertionOrder => {
-                self.insertion_order.try_reserve_exact(self.input_len).map_err(|_| MeshError::TriangulationFailed("mounted insertion-order backing rejected".into()))?;
-                if self.insertion_order.capacity().checked_mul(size_of::<usize>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Err(MeshError::TriangulationFailed("mounted insertion-order backing exceeded page".into()));
+                if !self.insertion_order.reserve(self.input_len, context).map_err(|_| MeshError::TriangulationFailed("mounted insertion-order backing rejected".into()))? {
+                    return Ok(false);
                 }
                 self.mounted_initialization.cursor = 0;
                 self.mounted_initialization.stage = MountedTriangulationStage::BuildInsertionOrder;
@@ -272,9 +305,8 @@ impl OwnedTriangulation {
                 }
             }
             MountedTriangulationStage::ReserveSuperPoints => {
-                self.points.try_reserve_exact(3).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-point backing rejected".into()))?;
-                if self.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Err(MeshError::TriangulationFailed("mounted triangulation-point backing exceeded page".into()));
+                if !self.points.reserve(self.input_len + 3, context).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-point backing rejected".into()))? {
+                    return Ok(false);
                 }
                 self.mounted_initialization.cursor = 0;
                 self.mounted_initialization.stage = MountedTriangulationStage::AppendSuperPoint;
@@ -291,9 +323,8 @@ impl OwnedTriangulation {
                 }
             }
             MountedTriangulationStage::ReserveTriangles => {
-                self.triangles.try_reserve_exact(self.maximum_triangles.saturating_mul(4).saturating_add(1)).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-face backing rejected".into()))?;
-                if self.triangles.capacity().checked_mul(size_of::<[usize; 3]>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Err(MeshError::TriangulationFailed("mounted triangulation-face backing exceeded page".into()));
+                if !self.triangles.reserve(1, context).map_err(|_| MeshError::TriangulationFailed("mounted triangulation-face backing rejected".into()))? {
+                    return Ok(false);
                 }
                 self.mounted_initialization.stage = MountedTriangulationStage::SeedTriangle;
             }
@@ -306,57 +337,46 @@ impl OwnedTriangulation {
         Ok(false)
     }
 
-    pub(super) fn insert_next(&mut self) -> bool {
+    pub(super) fn insert_next(&mut self, mut context: Option<&mut StepContext<'_>>) -> bool {
         if self.insert_cursor >= self.input_len {
             return false;
         }
-        if self.insertion.is_none() {
-            let maximum = if self.maximum_triangles == usize::MAX { self.triangles.len().saturating_mul(3).max(1) } else { self.maximum_triangles.saturating_mul(12).saturating_add(3) };
-            let mut bad = Vec::new();
-            let mut boundary = Vec::new();
-            let mut retained = Vec::new();
-            if bad.try_reserve_exact(maximum).is_err() || boundary.try_reserve_exact(maximum).is_err() || retained.try_reserve_exact(maximum).is_err() {
-                self.allocation_fault = true;
-                return true;
-            }
-            self.insertion = Some(PointInsertion { point_index: self.insertion_order[self.insert_cursor], phase: PointInsertionPhase::Scan, cursor: 0, bad, containing: None, boundary, retained });
-            return true;
+        if self.advance_insertion(&mut context).is_err() {
+            self.allocation_fault = true;
         }
-        let insertion = self.insertion.as_mut().expect("point insertion initialized");
+        true
+    }
+
+    fn advance_insertion(&mut self, context: &mut Option<&mut StepContext<'_>>) -> Result<(), ()> {
+        let insertion = &mut self.insertion;
         match insertion.phase {
+            PointInsertionPhase::Idle => {
+                insertion.point_index = self.insertion_order[self.insert_cursor];
+                insertion.cursor = 0;
+                insertion.containing = None;
+                insertion.bad_cursor = 0;
+                insertion.kept = 0;
+                insertion.phase = PointInsertionPhase::Scan;
+            }
             PointInsertionPhase::Scan => {
-                if insertion.cursor < self.triangles.len() {
-                    let triangle_index = insertion.cursor;
-                    let triangle = self.triangles[triangle_index];
+                if let Some(triangle) = self.triangles.get(insertion.cursor).copied() {
                     let point = self.points[insertion.point_index];
                     if in_circumcircle(&self.points, triangle, point) {
-                        insertion.bad.push(triangle_index);
-                        for edge in [Edge::new(triangle[0], triangle[1]), Edge::new(triangle[1], triangle[2]), Edge::new(triangle[2], triangle[0])] {
-                            match insertion.boundary.binary_search_by_key(&edge, |(current, _)| *current) {
-                                Ok(index) => insertion.boundary[index].1 += 1,
-                                Err(index) => insertion.boundary.insert(index, (edge, 1)),
-                            }
-                        }
+                        if !insertion.reserve_bad(context)? { return Ok(()); }
+                        insertion.add_bad(insertion.cursor, triangle);
                     } else if insertion.containing.is_none()
                         && orient(self.points[triangle[0]], self.points[triangle[1]], point) >= 0.0
                         && orient(self.points[triangle[1]], self.points[triangle[2]], point) >= 0.0
                         && orient(self.points[triangle[2]], self.points[triangle[0]], point) >= 0.0
                     {
-                        insertion.containing = Some(triangle_index);
+                        insertion.containing = Some(insertion.cursor);
                     }
                     insertion.cursor += 1;
-                }
-                if insertion.cursor == self.triangles.len() {
+                } else {
                     if insertion.bad.is_empty() {
-                        if let Some(triangle_index) = insertion.containing {
-                            insertion.bad.push(triangle_index);
-                            let triangle = self.triangles[triangle_index];
-                            for edge in [Edge::new(triangle[0], triangle[1]), Edge::new(triangle[1], triangle[2]), Edge::new(triangle[2], triangle[0])] {
-                                match insertion.boundary.binary_search_by_key(&edge, |(current, _)| *current) {
-                                    Ok(index) => insertion.boundary[index].1 += 1,
-                                    Err(index) => insertion.boundary.insert(index, (edge, 1)),
-                                }
-                            }
+                        if let Some(index) = insertion.containing {
+                            if !insertion.reserve_bad(context)? { return Ok(()); }
+                            insertion.add_bad(index, self.triangles[index]);
                         }
                     }
                     insertion.cursor = 0;
@@ -364,33 +384,49 @@ impl OwnedTriangulation {
                 }
             }
             PointInsertionPhase::Retain => {
-                if insertion.cursor < self.triangles.len() {
-                    if !insertion.bad.contains(&insertion.cursor) {
-                        insertion.retained.push(self.triangles[insertion.cursor]);
+                if let Some(triangle) = self.triangles.get(insertion.cursor).copied() {
+                    if insertion.bad.get(insertion.bad_cursor) == Some(&insertion.cursor) {
+                        insertion.bad_cursor += 1;
+                    } else {
+                        self.triangles[insertion.kept] = triangle;
+                        insertion.kept += 1;
                     }
                     insertion.cursor += 1;
+                } else {
+                    insertion.phase = PointInsertionPhase::Trim;
                 }
-                if insertion.cursor == self.triangles.len() {
-                    self.triangles = std::mem::take(&mut insertion.retained);
+            }
+            PointInsertionPhase::Trim => {
+                if self.triangles.len() > insertion.kept {
+                    self.triangles.pop();
+                } else {
+                    insertion.cursor = 0;
                     insertion.phase = PointInsertionPhase::Fan;
                 }
             }
             PointInsertionPhase::Fan => {
-                if !insertion.boundary.is_empty() {
-                    let (Edge(a, b), count) = insertion.boundary.remove(0);
+                if let Some(&(Edge(a, b), count)) = insertion.boundary.get(insertion.cursor) {
                     if count == 1 {
                         if let Some(triangle) = ccw_triangle(&self.points, [a, b, insertion.point_index]) {
+                            let target = self.triangles.len() + 1;
+                            if target > self.maximum_triangles.saturating_mul(4).saturating_add(1) { return Err(()); }
+                            if self.triangles.is_mounted() && !self.triangles.reserve(target, context.as_deref_mut().ok_or(())?)? { return Ok(()); }
                             self.triangles.push(triangle);
                         }
                     }
+                    insertion.cursor += 1;
+                } else {
+                    insertion.phase = PointInsertionPhase::Clear;
                 }
-                if insertion.boundary.is_empty() {
+            }
+            PointInsertionPhase::Clear => {
+                if insertion.bad.pop().is_none() && insertion.boundary.pop().is_none() {
                     self.insert_cursor += 1;
-                    self.insertion = None;
+                    insertion.phase = PointInsertionPhase::Idle;
                 }
             }
         }
-        true
+        Ok(())
     }
 
     pub(super) fn advance_finish_insertion(&mut self) -> bool {
@@ -407,8 +443,11 @@ impl OwnedTriangulation {
                 }
             }
             TriangulationFinishStage::TruncateTriangles => {
-                self.triangles.truncate(self.finish.write);
-                self.finish.stage = TriangulationFinishStage::OrderTriangles;
+                if self.triangles.len() > self.finish.write {
+                    self.triangles.pop();
+                } else {
+                    self.finish.stage = TriangulationFinishStage::OrderTriangles;
+                }
             }
             TriangulationFinishStage::OrderTriangles => {
                 if self.finish.sort_outer >= self.triangles.len() {
@@ -429,8 +468,11 @@ impl OwnedTriangulation {
                 }
             }
             TriangulationFinishStage::TruncatePoints => {
-                self.points.truncate(self.input_len);
-                self.finish.stage = TriangulationFinishStage::Complete;
+                if self.points.len() > self.input_len {
+                    self.points.pop();
+                } else {
+                    self.finish.stage = TriangulationFinishStage::Complete;
+                }
             }
             TriangulationFinishStage::Complete => return true,
         }
@@ -439,14 +481,16 @@ impl OwnedTriangulation {
 
     fn bowyer_watson(points: Vec<[f64; 2]>) -> Result<Self, MeshError> {
         let mut triangulation = Self::begin(points)?;
-        while triangulation.insert_next() {}
+        while triangulation.insert_next(None) {
+            if triangulation.allocation_fault { return Err(MeshError::TriangulationFailed("triangulation backing rejected".into())); }
+        }
         while !triangulation.advance_finish_insertion() {}
         Ok(triangulation)
     }
 
     fn edges(&self) -> Vec<(Edge, [Option<usize>; 2])> {
         let mut edges = Vec::<(Edge, [Option<usize>; 2])>::with_capacity(self.triangles.len().saturating_mul(3));
-        for (triangle_index, triangle) in self.triangles.iter().enumerate() {
+        for (triangle_index, triangle) in self.triangles.as_cold().iter().enumerate() {
             for edge in [Edge::new(triangle[0], triangle[1]), Edge::new(triangle[1], triangle[2]), Edge::new(triangle[2], triangle[0])] {
                 match edges.binary_search_by_key(&edge, |(current, _)| *current) {
                     Ok(index) => edges[index].1[1] = Some(triangle_index),
@@ -597,9 +641,9 @@ fn prepare_owned_input(domain: &PlanarDomain, opts: &MeshOpts) -> Result<(Vec<[f
 pub(super) struct MeshInputPreparation {
     pub(super) maximum_points: usize,
     pub(super) maximum_constraints: usize,
-    pub(super) points: Vec<[f64; 2]>,
-    pub(super) constraints: Vec<Edge>,
-    pub(super) point_indices: Vec<((u64, u64), usize)>,
+    pub(super) points: MeshRows<[f64; 2]>,
+    pub(super) constraints: MeshRows<Edge>,
+    pub(super) point_indices: MeshRows<((u64, u64), usize)>,
     pub(super) polygon: usize,
     pub(super) edge: usize,
     pub(super) segment: usize,
@@ -623,21 +667,13 @@ pub(super) struct MeshInputPreparation {
 }
 
 impl MeshInputPreparation {
-    pub(super) fn reserve_owner<T>(owner: &mut Vec<T>, maximum: usize) -> Result<(), ()> {
-        if maximum.checked_mul(size_of::<T>()).is_none_or(|bytes| bytes > 4_096) {
-            return Err(());
-        }
-        owner.try_reserve_exact(maximum).map_err(|_| ())?;
-        if owner.capacity().checked_mul(size_of::<T>()).is_none_or(|bytes| bytes > 4_096) { Err(()) } else { Ok(()) }
-    }
-
-    pub(super) fn new(maximum_points: usize, maximum_constraints: usize) -> Self {
+    pub(super) fn new(maximum_points: usize, maximum_constraints: usize, mounted: bool) -> Self {
         Self {
             maximum_points,
             maximum_constraints,
-            points: Vec::new(),
-            constraints: Vec::new(),
-            point_indices: Vec::new(),
+            points: MeshRows::new(mounted),
+            constraints: MeshRows::new(mounted),
+            point_indices: MeshRows::new(mounted),
             polygon: 0,
             edge: 0,
             segment: 0,
@@ -661,7 +697,7 @@ impl MeshInputPreparation {
         }
     }
 
-    fn advance_pending_point(&mut self) -> Result<(), &'static str> {
+    fn advance_pending_point(&mut self, context: &mut StepContext<'_>) -> Result<(), &'static str> {
         let point = self.pending_point.expect("pending preparation point retained");
         let key = (point[0].to_bits(), point[1].to_bits());
         if let Some((current, index)) = self.point_indices.get(self.point_lookup_cursor) {
@@ -678,6 +714,8 @@ impl MeshInputPreparation {
             return Err("mesh-fixed-input-capacity");
         }
         let index = self.points.len();
+        if self.points.is_mounted() && !(self.points.reserve(index + 1, context).map_err(|_| "mesh-preparation-points")?
+            && self.point_indices.reserve(index + 1, context).map_err(|_| "mesh-preparation-point-index")?) { return Ok(()); }
         self.points.push(point);
         self.point_indices.push((key, index));
         self.pending_index = Some(index);
@@ -694,11 +732,9 @@ impl MeshInputPreparation {
         }
     }
 
-    fn accept_pending_index(&mut self) -> Result<(), &'static str> {
+    fn accept_pending_index(&mut self, context: &mut StepContext<'_>) -> Result<(), &'static str> {
         let index = self.pending_index.expect("resolved preparation index retained");
-        if self.pending_boundary && self.previous.is_some_and(|previous| previous != index) && self.constraints.len() >= self.maximum_constraints {
-            return Err("mesh-fixed-input-capacity");
-        }
+        if self.pending_boundary && self.previous.is_some_and(|previous| previous != index) && !self.reserve_constraint(context)? { return Ok(()); }
         self.pending_index = None;
         if self.pending_boundary {
             let point = self.points[index];
@@ -727,6 +763,11 @@ impl MeshInputPreparation {
             self.advance_grid_cell();
         }
         Ok(())
+    }
+
+    fn reserve_constraint(&mut self, context: &mut StepContext<'_>) -> Result<bool, &'static str> {
+        if self.constraints.len() >= self.maximum_constraints { return Err("mesh-fixed-input-capacity"); }
+        Ok(!self.constraints.is_mounted() || self.constraints.reserve(self.constraints.len() + 1, context).map_err(|_| "mesh-preparation-constraints")?)
     }
 
     fn advance_grid_classification(&mut self, domain: &MeshDomainOwner) {
@@ -775,13 +816,13 @@ impl MeshInputPreparation {
         }
     }
 
-    pub(super) fn advance(&mut self, domain: &MeshDomainOwner, opts: &MeshOpts) -> Result<bool, &'static str> {
+    pub(super) fn advance(&mut self, domain: &MeshDomainOwner, opts: &MeshOpts, context: &mut StepContext<'_>) -> Result<bool, &'static str> {
         if self.pending_index.is_some() {
-            self.accept_pending_index()?;
+            self.accept_pending_index(context)?;
             return Ok(false);
         }
         if self.pending_point.is_some() {
-            self.advance_pending_point()?;
+            self.advance_pending_point(context)?;
             return Ok(false);
         }
         let polygon_count = 1 + domain.holes_len();
@@ -802,9 +843,7 @@ impl MeshInputPreparation {
             if self.edge == polygon.len() {
                 if let (Some(previous), Some(first)) = (self.previous, self.first) {
                     if previous != first {
-                        if self.constraints.len() >= self.maximum_constraints {
-                            return Err("mesh-fixed-input-capacity");
-                        }
+                        if !self.reserve_constraint(context)? { return Ok(false); }
                         self.constraints.push(Edge::new(previous, first));
                     }
                 }
@@ -837,7 +876,7 @@ pub fn owned_triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMe
     let (input_points, input_constraints) = prepare_owned_input(domain, opts)?;
     let prepared_points = input_points.clone();
     let mut triangulation = OwnedTriangulation::bowyer_watson(input_points)?;
-    let constraints = remap_constraints(&prepared_points, &triangulation.points, input_constraints);
+    let constraints = remap_constraints(&prepared_points, triangulation.points.as_cold(), input_constraints);
     let mut fixed = Vec::new();
     for constraint in constraints {
         triangulation.recover_constraint(constraint, &fixed)?;
@@ -846,7 +885,7 @@ pub fn owned_triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMe
         }
     }
     let mut triangles = Vec::new();
-    for triangle in triangulation.triangles {
+    for triangle in triangulation.triangles.into_vec() {
         let centroid = [
             (triangulation.points[triangle[0]][0] + triangulation.points[triangle[1]][0] + triangulation.points[triangle[2]][0]) / 3.0,
             (triangulation.points[triangle[0]][1] + triangulation.points[triangle[1]][1] + triangulation.points[triangle[2]][1]) / 3.0,
@@ -856,7 +895,7 @@ pub fn owned_triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMe
         }
     }
     triangles.sort_unstable();
-    Ok(TriMesh2 { points: triangulation.points, tris: triangles })
+    Ok(TriMesh2 { points: triangulation.points.into_vec(), tris: triangles })
 }
 
 pub(super) fn remap_constraints(prepared_points: &[[f64; 2]], sorted_points: &[[f64; 2]], input_constraints: Vec<Edge>) -> Vec<Edge> {

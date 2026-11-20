@@ -248,8 +248,14 @@ impl Ui {
     /// rect: the host resolved the point to some other target, stopped feeding the router moves, and
     /// the value froze mid-drag — while a browser keeps the gesture with the element that captured
     /// it until release (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🪟️ Returns the pointer that owns capture in this presented window.
+    pub fn window_pointer_capture(&self, window_id: &str) -> Option<u64> {
+        let window = self.windows.get(window_id).filter(|window| window.presented_ready)?;
+        window.presented_router.capture_pointer_id()
+    }
+
     pub fn window_with_pointer_capture(&self, pointer_id: u64) -> Option<&str> {
-        self.windows.ids().map(AsRef::as_ref).find(|window_id| self.windows.get(window_id).is_some_and(|window| window.presented_ready && window.presented_router.capture_pointer_id() == Some(pointer_id)))
+        self.windows.ids().map(AsRef::as_ref).find(|window_id| self.window_pointer_capture(window_id) == Some(pointer_id))
     }
 
     pub fn any_pointer_capture(&self) -> Option<(&str, u64)> {

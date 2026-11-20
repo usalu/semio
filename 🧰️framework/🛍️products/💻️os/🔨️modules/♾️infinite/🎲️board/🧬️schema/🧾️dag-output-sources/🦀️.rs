@@ -50,6 +50,7 @@ impl<S:DagOutputCandidates+?Sized> DagOutputSource for DagPreparedOutput<'_,S>{
     fn selected_channel_count(&self)->usize{self.prepared.channels.len()}
     fn selected_channel(&self,index:usize)->Option<DagChannelView<'_>>{self.source.channel_candidate(*self.prepared.channels.get(index)?)}
     fn selected_handle_identity(&self,index:usize)->Option<&str>{self.source.handle_candidate_identity(*self.prepared.channels.get(index)?)}
+    fn hovered_edge_view(&self)->Option<&str>{self.source.hovered_edge_view()}
     fn hovered_channel_view(&self)->Option<DagChannelView<'_>>{self.source.hovered_channel_view()}
     fn wire_refusal_view(&self)->Option<DagRefusalView<'_>>{self.source.wire_refusal_view()}
 }
@@ -72,9 +73,9 @@ impl<S:DagOutputSource+?Sized> JsonWriteSource for DagJsonSource<'_,S>{
         DagOutputKind::Edges=>match path{[]=>Ok(JsonWriteNode::Array(self.source.selected_edge_count())),[index]=>self.source.selected_edge_id(*index).map(JsonWriteNode::String).ok_or_else(absent),_=>Err(absent())},
         DagOutputKind::Selection=>match path{[]=>Ok(JsonWriteNode::Object(3)),[0]=>Ok(JsonWriteNode::Array(self.source.selected_node_count())),[1]=>Ok(JsonWriteNode::Array(self.source.selected_edge_count())),[2]=>Ok(JsonWriteNode::Array(self.source.selected_channel_count())),[0,index]=>self.source.selected_node_id(*index).map(JsonWriteNode::String).ok_or_else(absent),[1,index]=>self.source.selected_edge_id(*index).map(JsonWriteNode::String).ok_or_else(absent),[2,index]=>self.source.selected_handle_identity(*index).map(JsonWriteNode::String).ok_or_else(absent),_=>Err(absent())},
         DagOutputKind::Channels=>match path{[]=>Ok(JsonWriteNode::Array(self.source.selected_channel_count())),[index,rest @ ..]=>channel(self.source.selected_channel(*index).ok_or_else(absent)?,rest)},
-        DagOutputKind::Hover=>match path{[]=>Ok(JsonWriteNode::Object(2)),[0,rest @ ..]=>match self.source.hovered_channel_view(){Some(value)=>channel(value,rest),None if rest.is_empty()=>Ok(JsonWriteNode::Null),_=>Err(absent())},[1,rest @ ..]=>match self.source.wire_refusal_view(){Some(value)=>refusal(value,rest),None if rest.is_empty()=>Ok(JsonWriteNode::Null),_=>Err(absent())},_=>Err(absent())},
+        DagOutputKind::Hover=>match path{[]=>Ok(JsonWriteNode::Object(2+usize::from(self.source.hovered_edge_view().is_some()))),[2]=>self.source.hovered_edge_view().map(JsonWriteNode::String).ok_or_else(absent),[0,rest @ ..]=>match self.source.hovered_channel_view(){Some(value)=>channel(value,rest),None if rest.is_empty()=>Ok(JsonWriteNode::Null),_=>Err(absent())},[1,rest @ ..]=>match self.source.wire_refusal_view(){Some(value)=>refusal(value,rest),None if rest.is_empty()=>Ok(JsonWriteNode::Null),_=>Err(absent())},_=>Err(absent())},
     }}
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
-        let keys:&[&str]=match(self.kind,path){(DagOutputKind::Selection,[])=>&["nodes","edges","handles"],(DagOutputKind::Channels,[_])|(DagOutputKind::Hover,[0])=>&["widgetId","port","direction"],(DagOutputKind::Hover,[])=>&["channel","refusal"],(DagOutputKind::Hover,[1])=>&["source","sourceTypes","target","targetTypes"],_=>return Err(absent())};keys.get(index).copied().ok_or_else(absent)
+        let keys:&[&str]=match(self.kind,path){(DagOutputKind::Selection,[])=>&["nodes","edges","handles"],(DagOutputKind::Channels,[_])|(DagOutputKind::Hover,[0])=>&["widgetId","port","direction"],(DagOutputKind::Hover,[])=>&["channel","refusal","edge"],(DagOutputKind::Hover,[1])=>&["source","sourceTypes","target","targetTypes"],_=>return Err(absent())};keys.get(index).copied().ok_or_else(absent)
     }
 }

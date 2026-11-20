@@ -77,6 +77,9 @@ pub enum BooleanOp {
     Intersect,
 }
 
+#[path = "🧱️certified-boundaries/🦀️.rs"]
+pub mod certified_boundaries;
+
 /// 🔀 Combines solids `a` and `b` under `op`: a trivial disjoint/contained check, then a
 /// box-specific exact-analytic shortcut when both operands genuinely are axis boxes, then the
 /// general exact imprint→classify→select→stitch engine — never the mesh path (see

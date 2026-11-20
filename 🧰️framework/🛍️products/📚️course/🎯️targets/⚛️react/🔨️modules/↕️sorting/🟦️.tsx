@@ -32,11 +32,12 @@ import { useId, useState, type FocusEvent, type ReactElement } from "react";
 import type { CompareHint, Hint, SheetSortingTask, Slug, SortingAnswer } from "@semio-tech/course";
 import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized } from "../🌐️i18n/🟦️.ts";
-import { BodyButton, CELL, CardSection, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardSection, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, compareText, describedBy, elementId, exampleGuess, hintName, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
+import { useGradualCount } from "../🧱️gradual-items/🟦️.ts";
 
 const ITEM_ZONE = "item:";
 
@@ -77,6 +78,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
   const { task, answer, onAnswer, onDropped, text, locale, hints = [], locked = false } = props;
   const scope = useId();
   const topic = usePetTopic();
+  const shownCount = useGradualCount(task.items.length, task.id);
   const { announcement, announce } = useAnnouncement();
   const focusAfterRender = useFocusAfterRender();
   const [held, setHeld] = useState<readonly Slug[] | undefined>(undefined);
@@ -155,8 +157,8 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
       <p {...CELL} className="m-0 px-double py-single text-xs text-muted-foreground" aria-hidden="true">
         ▲ {text("course.sorting.smallest")}
       </p>
-      <RowList as="ol" id={listId} tabIndex={-1} className="course-rows outline-none" aria-label={text("course.sorting.list", { quantity })} onBlur={release}>
-        {shownOrder.map((id, index) => {
+      <RowList as="ol" id={listId} tabIndex={-1} aria-busy={shownCount < task.items.length ? true : undefined} className="course-rows outline-none" aria-label={text("course.sorting.list", { quantity })} onBlur={release}>
+        {shownOrder.slice(0, shownCount).map((id, index) => {
           const hint = far.get(id);
           const hintId = hint === undefined ? undefined : elementId(scope, id, "hint");
           const described = describedBy(hintId, lockedId);
@@ -164,7 +166,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
             <li
               data-icon-host=""
               key={id}
-              {...CELL}
+              {...ROW}
               className="course-sort bg-background"
               data-course-item={id}
               data-presence-anchor={PRESENCE_ANCHORS.item(id)}
@@ -205,10 +207,10 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
                   <span className="course-sort-key text-sm font-semibold tabular-nums" aria-hidden="true">
                     {keyText(index)}
                   </span>
-                  <button type="button" id={elementId(scope, id, "up")} className={`course-sort-up ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.up", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === 0} onClick={() => move(index, index - 1, "up")}>
+                  <button type="button" id={elementId(scope, id, "up")} {...CELL} className={`course-sort-up ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.up", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === 0} onClick={() => move(index, index - 1, "up")}>
                     ↑
                   </button>
-                  <button type="button" id={elementId(scope, id, "down")} className={`course-sort-down ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.down", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === order.length - 1} onClick={() => move(index, index + 1, "down")}>
+                  <button type="button" id={elementId(scope, id, "down")} {...CELL} className={`course-sort-down ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.down", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === order.length - 1} onClick={() => move(index, index + 1, "down")}>
                     ↓
                   </button>
                 </>

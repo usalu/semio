@@ -5,7 +5,7 @@ use super::*;
 //#region 📦️PageVisualJob
 impl Fem3dNumericalChild {
     pub fn terminal_is_empty(&self) -> bool {
-        self.close_lane > 21
+        self.close_lane > 22
             && self.model.is_none()
             && self.pending_support.is_none()
             && self.pending_element.is_none()
@@ -25,6 +25,7 @@ impl Fem3dNumericalChild {
             && self.modal_mass.is_none()
             && self.solid_domain.is_none()
             && self.analysis_node_ids.terminal_is_empty()
+            && self.node_values.terminal_is_empty()
             && self.meshed_solids.terminal_is_empty()
             && self.solid_points.terminal_is_empty()
             && self.solid_tris.terminal_is_empty()
@@ -51,10 +52,11 @@ impl Fem3dNumericalChild {
             return Ok(Self::close_rung((false, step.1, step.2)));
         }
         if let Some(rhs) = self.rejected_pcg_rhs.as_mut() {
-            if rhs.close_step() {
+            let step = rhs.close_step(maximum_bytes);
+            if step.0 {
                 self.rejected_pcg_rhs = None;
             }
-            return Ok(Self::close_rung((false, 1, 0)));
+            return Ok(Self::close_rung((false, step.1, step.2)));
         }
         let step = match self.close_lane {
             0 => {
@@ -86,10 +88,12 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return Ok(Self::close_rung((false, 0, 0)));
                 };
-                let step = job.close_retained_step(maximum_bytes);
-                if step.0 {
-                    self.assembly = None;
+                if !InteractiveJob::terminal_is_empty(job) {
+                    let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
+                    return Ok((false, step.progress()));
                 }
+                self.assembly = None;
+                let step = (true, 1, 0);
                 step
             }
             3 => {
@@ -181,16 +185,14 @@ impl Fem3dNumericalChild {
             }
             15 => match self.close_lane_15(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             16 => {
-                if self.solid_tris.pop().is_some() || !self.solid_tris.close_admission_one() {
-                    return Ok(Self::close_rung((false, 1, 0)));
+                let tris = self.solid_tris.close_step(maximum_bytes);
+                if !tris.0 {
+                    return Ok(Self::close_rung(tris));
                 }
-                if self.solid_points.pop().is_some() || !self.solid_points.close_admission_one() {
-                    return Ok(Self::close_rung((false, 1, 0)));
-                }
-                (true, 0, 0)
+                self.solid_points.close_step(maximum_bytes)
             }
-            17 => (self.rhs.close_step(), 1, 0),
-            18 => (self.modal_free_mass.close_step(), 1, 0),
+            17 => self.rhs.close_step(maximum_bytes),
+            18 => self.modal_free_mass.close_step(maximum_bytes),
             19 => match self.close_lane_19(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             20 => match self.close_lane_20(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             21 => {
@@ -204,6 +206,7 @@ impl Fem3dNumericalChild {
                 }
                 step
             }
+            22 => self.node_values.close_step(maximum_bytes),
             _ => return Ok(Self::close_rung((self.terminal_is_empty(), 0, 0))),
         };
         if step.0 {
@@ -284,19 +287,22 @@ impl Fem3dNumericalChild {
                     solid.node_ids.pop();
                     return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
                 }
-                if !solid.node_ids.close_admission_one() {
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                let ids = solid.node_ids.close_step(maximum_bytes);
+                if !ids.0 {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung(ids)));
                 }
-                if solid.tris.pop().is_some() || !solid.tris.close_admission_one() {
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                let tris = solid.tris.close_step(maximum_bytes);
+                if !tris.0 {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung(tris)));
                 }
-                if solid.points.pop().is_some() || !solid.points.close_admission_one() {
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+                let points = solid.points.close_step(maximum_bytes);
+                if !points.0 {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung(points)));
                 }
                 self.meshed_solids.pop();
                 return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             }
-            (self.meshed_solids.close_admission_one(), 1, 0)
+            self.meshed_solids.close_step(maximum_bytes)
         }))
     }
 
@@ -340,13 +346,11 @@ impl Fem3dNumericalChild {
                 self.solid_node_ids.pop();
                 return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             }
-            if !self.solid_node_ids.close_admission_one() {
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
+            let ids = self.solid_node_ids.close_step(maximum_bytes);
+            if !ids.0 {
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung(ids)));
             }
-            if self.solid_node_analysis_indices.pop().is_some() || !self.solid_node_analysis_indices.close_admission_one() {
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
-            }
-            (true, 0, 0)
+            self.solid_node_analysis_indices.close_step(maximum_bytes)
         }))
     }
 
@@ -368,7 +372,7 @@ impl Fem3dNumericalChild {
                 self.analysis_node_ids.pop();
                 return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             }
-            (self.analysis_node_ids.close_admission_one(), 1, 0)
+            self.analysis_node_ids.close_step(maximum_bytes)
         }))
     }
 

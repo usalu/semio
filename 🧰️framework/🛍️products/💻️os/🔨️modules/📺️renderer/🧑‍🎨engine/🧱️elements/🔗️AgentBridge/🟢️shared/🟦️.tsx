@@ -1,6 +1,6 @@
 /** 🟢️ The shared declarations of useAgentBridge. */
 import { readPublishedPageOrigins } from "@semio-tech/framework/assets/published-page";
-import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, fetchAgentBridgeConfig, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferScopeV1, type BridgeOfferFetch } from "../🛰️offer/🟦️.ts";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, agentBridgeOfferDeclaredV1, probeAgentBridgeOffer, nextBridgeDiscoveryIntervalMs, sameAgentBridgeOffer, type AgentBridgeConfig, type AgentBridgeOfferScopeV1, type BridgeOfferFetch } from "../🛰️offer/🟦️.ts";
 import { useEffect, useRef, useState } from "../../⚛️react-port/🟦️.ts";
 import { reduce, type ReduceResult, type ShellCommand, type ShellState } from "@semio-tech/framework/shell";
 import { type ApprovalDecision, type ApprovalWithdrawal, type BridgeFlags, type BridgeInstanceRef, type ShellKind, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
@@ -8,6 +8,8 @@ import { encodeShellAppFrame, shellAppFault, type ShellAppCommandV1, type ShellA
 
 export type UseDiscoveredAgentBridgeConfigOptions = {
   readonly enabled?: boolean;
+  /** 📣️ Whether the build declares a supervisor endpoint; defaults to {@link agentBridgeOfferDeclaredV1}. */
+  readonly declared?: boolean;
   readonly endpoint?: string;
   readonly fetchImpl?: BridgeOfferFetch;
   /** 🎯️ Who this shell is right now, re-read before every poll — its hub origin, open space and the agents its human
@@ -19,7 +21,7 @@ export type UseDiscoveredAgentBridgeConfigOptions = {
  * when `url` or `admissionProof` actually change, so an unchanged offer polled a hundred times never
  * re-runs {@link useAgentBridge}'s socket effect — the redial storm U1 already had to fix once. */
 export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridgeConfigOptions = {}): AgentBridgeConfig | null {
-  const { enabled = true, endpoint = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl, offerScope } = options;
+  const { enabled = true, declared = agentBridgeOfferDeclaredV1(), endpoint = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl, offerScope } = options;
   const [config, setConfig] = useState<AgentBridgeConfig | null>(null);
   const fetchImplRef = useRef(fetchImpl);
   fetchImplRef.current = fetchImpl;
@@ -27,7 +29,7 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
   offerScopeRef.current = offerScope;
 
   useEffect(() => {
-    if (!enabled || Object.keys(readPublishedPageOrigins()).length > 0) {
+    if (!enabled || !declared || Object.keys(readPublishedPageOrigins()).length > 0) {
       setConfig(null);
       return;
     }
@@ -39,9 +41,10 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
     const poll = async (): Promise<void> => {
       const scope = await (offerScopeRef.current?.(abort.signal) ?? Promise.resolve(null)).catch(() => null);
       if (disposed) return;
-      const discovered = await fetchAgentBridgeConfig(endpoint, fetchImplRef.current, abort.signal, scope);
+      const { offer: discovered, absent } = await probeAgentBridgeOffer(endpoint, fetchImplRef.current, abort.signal, scope);
       if (disposed) return;
       setConfig((current) => (sameAgentBridgeOffer(current, discovered) ? current : discovered));
+      if (absent) return;
       interval = nextBridgeDiscoveryIntervalMs(interval, discovered);
       if (!disposed) timer = setTimeout(() => void poll(), interval);
     };
@@ -52,7 +55,7 @@ export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridge
       abort.abort();
       if (timer !== null) clearTimeout(timer);
     };
-  }, [enabled, endpoint]);
+  }, [enabled, declared, endpoint]);
 
   return config;
 }
@@ -212,6 +215,8 @@ export type UseAgentBridgeOptions = {
    * off entirely, which is what every test and every embedder with its own supervisor does. */
   readonly config?: AgentBridgeConfig | null;
   /** 🔎️ Overrides for the discovery seam — the endpoint path and the `fetch` used to ask it. */
+  /** 📣️ See {@link UseDiscoveredAgentBridgeConfigOptions.declared}. */
+  readonly discoveryDeclared?: boolean;
   readonly discoveryEndpoint?: string;
   readonly discoveryFetch?: BridgeOfferFetch;
   /** 🔷️ See {@link UseDiscoveredAgentBridgeConfigOptions.offerScope}. */

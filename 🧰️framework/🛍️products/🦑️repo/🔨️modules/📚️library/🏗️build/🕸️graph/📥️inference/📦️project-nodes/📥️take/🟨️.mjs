@@ -1,11 +1,14 @@
 import { execFile } from "node:child_process";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { localMachineSpeedFactorV1, scaledMillisecondsV1 } from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export const TAKE_POLICY_V1 = Object.freeze({ ...schema.definitions.Policy.const });
 const TEXTS = schema.definitions.Texts.const;
+const LOOKUP_FAULT_KEYS_V1 = Object.keys(schema.definitions.LookupFaultCounts.properties);
+const takeDelayV1 = (milliseconds, signal) => delay(milliseconds, undefined, { signal }).catch(error => { if (!signal?.aborted) throw error; });
 
 /** ⏱️ The pause before look number `round` (0 is the first) at the cache for records that other machines may have stored meanwhile: it starts at `pollFirstMilliseconds` and grows by `pollGrowthPercent` percent per look up to `pollMaximumMilliseconds`, in integer arithmetic, so every language computes the same numbers.
  * @see ./🧪️tests/🐍️.py */
@@ -24,10 +27,13 @@ export function takeConcurrencyV1(cutConcurrency = Infinity, policy = TAKE_POLIC
 /** 🚦 A look admitted like an inference: before it starts, the footprint gate of the process (`gate()`, none installed: no wait) settles from its soft share of the grant and holds from its hard share until the footprint falls, so looks never pile up above the memory a plan may take, and a look that finds no other look in flight (`state.flying`, shared by every lane of the pass) is always admitted, so the pass can never starve behind a host that is short of memory (they had no admission at all: a burst of Rust owner looks moved the tree from 0.6 to 4.7 GB in seconds).
  * @see ./🧪️tests/🟦️.ts */
 export function takeAdmittedV1(attempt, gate, signal, state = { flying: 0 }) {
-  return async name => {
-    if (state.flying > 0) await gate()?.admit(signal);
+  return async (name, parent) => {
+    const active = parent === undefined || parent === signal ? signal : signal === undefined ? parent : AbortSignal.any([signal, parent]);
+    active?.throwIfAborted();
+    if (state.flying > 0) await gate()?.admit(active);
+    active?.throwIfAborted();
     state.flying++;
-    try { return await attempt(name); } finally { state.flying--; }
+    try { return await attempt(name, active); } finally { state.flying--; }
   };
 }
 
@@ -187,7 +193,7 @@ export function createTakeLedgerV1(total) {
     state(name) { return states.get(name); },
     counts,
     line(language) { return fill(TEXTS[language === "de" ? "de" : "en"].progress, counts()); },
-    staleRowLine(language, name, row) { return fill(TEXTS[language === "de" ? "de" : "en"].staleRow, { name, kind: row.kind, path: row.path, fact: row.fact }); },
+    staleRowLine(language, name, row) { return fill(TEXTS[language === "de" ? "de" : "en"].staleRow, { name, kind: row.kind, path: row.path, fact: row.fact, why: row.why === undefined ? "" : (language === "de" ? "; Grund: " : "; reason: ") + row.why }); },
     staleLine(language, name) { return fill(TEXTS[language === "de" ? "de" : "en"].staleOwner, { name, count: counts().stale }); },
     waveLine(language) { const row = counts(); return fill(TEXTS[language === "de" ? "de" : "en"].wave, row); },
   });
@@ -196,18 +202,19 @@ export function createTakeLedgerV1(total) {
 const fill = (text, values) => text.replace(/\{(\w+)\}/gu, (_all, name) => String(values[name] ?? 0));
 
 /** 🔍️ Looks at every name with `concurrency` workers, once, and again (up to `faultRetries` times, after `faultWaitMilliseconds`) those whose look the cache did not answer (`fault`); answers the outcome of every name. `attempt(name)` answers "present", "fetched", "stale", "miss" or "fault"; a fault that remains is a "miss" (the caller infers or waits for it, the fleet decides nothing). Never throws for an attempt that throws: that name is a miss. `signal` stops the pass early (names not looked at are absent from the answer). */
-export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.concurrency, faultRetries = TAKE_POLICY_V1.faultRetries, faultWaitMilliseconds = TAKE_POLICY_V1.faultWaitMilliseconds, sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)), signal, mark = () => {} }) {
+export async function takePassV1({ names, attempt, concurrency = TAKE_POLICY_V1.concurrency, faultRetries = TAKE_POLICY_V1.faultRetries, faultWaitMilliseconds = TAKE_POLICY_V1.faultWaitMilliseconds, sleep = takeDelayV1, signal, mark = () => {} }) {
   const outcomes = new Map();
   let pending = [...names];
   for (let round = 0; round <= faultRetries && pending.length > 0 && signal?.aborted !== true; round++) {
-    if (round > 0) await sleep(faultWaitMilliseconds * 2 ** (round - 1));
+    if (round > 0) await sleep(faultWaitMilliseconds * 2 ** (round - 1), signal);
     const faulted = [];
     let next = 0;
     await Promise.all(Array.from({ length: Math.min(concurrency, pending.length) }, async () => {
       while (next < pending.length && signal?.aborted !== true) {
         const name = pending[next++];
         let outcome;
-        try { outcome = await attempt(name); } catch { outcome = "miss"; }
+        try { outcome = await attempt(name, signal); } catch { if (signal?.aborted) return; outcome = "miss"; }
+        if (signal?.aborted) return;
         if (outcome === "fault" && round < faultRetries) { faulted.push(name); continue; }
         outcomes.set(name, outcome === "fault" ? "miss" : outcome);
         mark(name, outcomes.get(name));
@@ -235,7 +242,7 @@ export function fleetPublishedNamesV1(store, now = Date.now(), policy = TAKE_POL
 }
 
 /** 🔁️ Looks again at the cache for the owners that are still missing, with a growing pause: `queue()` names the owners not started yet (a batch of at most `pollBatch` of them is looked at, rotating, so every owner gets its turn), `attempt(name)` answers like in {@link takePassV1}; a record that appeared is reported to `arrived(name, outcome)` and resets the pause. With `hotOnly` only the owners the fleet lists are looked at, every `pollFirstMilliseconds`, and nothing is rotated through. Stops when `stop()` is true or `signal` aborts; answers how many looks it made and how many records arrived. */
-export async function takePollV1({ queue, attempt, arrived, stop, signal, hot, hotOnly = false, now = Date.now, concurrency, sleep = (milliseconds, abort) => new Promise(resolve => { const timer = setTimeout(resolve, milliseconds); abort?.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true }); }), policy = TAKE_POLICY_V1 }) {
+export async function takePollV1({ queue, attempt, arrived, stop, signal, hot, hotOnly = false, now = Date.now, concurrency, sleep = takeDelayV1, policy = TAKE_POLICY_V1 }) {
   let round = 0, offset = 0, looks = 0, found = 0;
   const missedAt = new Map();
   while (stop() !== true && signal?.aborted !== true) {
@@ -252,13 +259,14 @@ export async function takePollV1({ queue, attempt, arrived, stop, signal, hot, h
     }
     let hit = 0, next = 0;
     await Promise.all(Array.from({ length: Math.min(concurrency ?? takeConcurrencyV1(Infinity, policy), batch.length) }, async () => {
-      while (next < batch.length && stop() !== true) {
+      while (next < batch.length && stop() !== true && signal?.aborted !== true) {
         const name = batch[next++];
         looks++;
         let outcome;
-        try { outcome = await attempt(name); } catch { continue; }
+        try { outcome = await attempt(name, signal); } catch { continue; }
+        if (signal?.aborted) return;
         if (outcome === "present" || outcome === "fetched") { hit++; found++; await arrived(name, outcome); }
-        else missedAt.set(name, now());
+        else missedAt.set(name, outcome === "stale" ? now() + (policy.adoptStaleMilliseconds ?? 0) : now());
       }
     }));
     round = hit > 0 ? 0 : round + 1;
@@ -266,15 +274,73 @@ export async function takePollV1({ queue, attempt, arrived, stop, signal, hot, h
   return Object.freeze({ looks, found });
 }
 
+/** 📊️ What the adopt and poll path of a read did, by outcome, so that a read that adopts few records of a fleet that stored many says where the others went: the owners the fleet listed, the looks (by the lane that asked: the adopt loop, the look before a local inference, the pass), what each look answered (fetched, present, stale by the kind of its first failing row, incomplete, missed, faulted), the listed owners it did not look at because they were inferring here, the waits of looks at the memory gate and the owners inferred here although listed. An owner counts once as listed and once as skipped; every look counts.
+ * @see ./🧪️tests/📊️adopt-counters */
+export function createAdoptCountersV1() {
+  const lookupFaults = Object.fromEntries(LOOKUP_FAULT_KEYS_V1.map(key => [key, 0]));
+  let cancelled = 0;
+  const addFault = key => { lookupFaults[key] = Math.min(Number.MAX_SAFE_INTEGER, lookupFaults[key] + 1); };
+  const listed = new Set(), skipped = new Set(), staleKinds = new Map(), sum = { looks: 0, adoptLooks: 0, inferLooks: 0, passLooks: 0, fetched: 0, present: 0, stale: 0, incomplete: 0, miss: 0, fault: 0, gateWaits: 0, gateMilliseconds: 0, inferredListed: 0 };
+  const lookups = () => Object.freeze({ misses: Math.min(Number.MAX_SAFE_INTEGER, sum.miss), cancelled, faults: Object.freeze({ ...lookupFaults }) });
+  const counts = () => Object.freeze({ listed: listed.size, ...sum, adopted: sum.fetched + sum.present, skippedInferring: skipped.size, gateSeconds: Math.round(sum.gateMilliseconds / 1000), staleKinds: Object.freeze(Object.fromEntries([...staleKinds].sort())) });
+  return Object.freeze({
+    list(names) { for (const name of names) listed.add(name); },
+    look(lane) { sum.looks++; if (lane === "adopt") sum.adoptLooks++; else if (lane === "infer") sum.inferLooks++; else sum.passLooks++; },
+    outcome(outcome, reason) {
+      if (outcome === "cancelled") { cancelled = Math.min(Number.MAX_SAFE_INTEGER, cancelled + 1); return; }
+      if (outcome === "fault") addFault(typeof reason === "string" && Object.hasOwn(lookupFaults, reason) ? reason : "unknown");
+      if (["fetched", "present", "stale", "incomplete", "miss", "fault"].includes(outcome)) sum[outcome]++;
+    },
+    staleRow(kind) { const key = typeof kind === "string" && kind !== "" ? kind : "unnamed"; staleKinds.set(key, (staleKinds.get(key) ?? 0) + 1); },
+    skipInferring(name) { skipped.add(name); },
+    gateWait(milliseconds) { sum.gateWaits++; sum.gateMilliseconds += milliseconds; },
+    inferredListed() { sum.inferredListed++; },
+    counts,
+    lookups,
+    line(language) {
+      const row = counts(), { faults } = lookups();
+      const tally = counts => Object.entries(counts).filter(([, count]) => count > 0).map(([kind, count]) => kind + " " + count).join(", ") || "-";
+      return fill(TEXTS[language === "de" ? "de" : "en"].adopt, { ...row, staleKinds: tally(row.staleKinds), faultKinds: tally(faults), cancelled });
+    },
+  });
+}
+
+/** 🩺️ Counts one unsuccessful look from the exchange evidence while preserving its original fallback. */
+export function recordTakeLookFailureV1(error, counters, cancelled) {
+  if (cancelled) { counters.outcome("cancelled"); return "miss"; }
+  if (error?.code !== "BUILD_TAKE_MISS") { counters.outcome("fault"); return "miss"; }
+  const seen = error.outcome, result = seen === "fetched" ? "stale" : seen === "fault" ? "fault" : "miss";
+  counters.outcome(seen === "incomplete" ? "incomplete" : error.lookupFault !== undefined ? "fault" : result, error.lookupFault);
+  return result;
+}
+
+/** 🔥️ The names the fleet lists as stored, read from the shared store at most once per `hotNamesMilliseconds` (the owner loop asks for every owner it meets, a directory read per ask would cost more than the looks it saves), and counted as listed. */
+export function createHotNamesV1({ read, counters, now = Date.now, policy = TAKE_POLICY_V1 }) {
+  let names = new Set(), at = -Infinity;
+  return () => { const time = now(); if (time - at >= policy.hotNamesMilliseconds) { names = read(); at = time; counters?.list(names); } return names; };
+}
+
+/** 🥇️ The decision before a local inference of one owner: an owner the fleet lists as stored is not inferred here while its look is pending: it is looked at first (the look is the cheap path to its record, and one in flight is shared) and counts as adopted when the look takes or fetches the record; an owner that is not listed, or whose look finds the record stale, missed, incomplete or faulted, is inferred as before. Answers `"fetched"`, `"present"` or `undefined` (infer).
+ * @see ./🧪️tests/🥇️before-infer */
+export async function takeBeforeInferV1({ name, listed, taken, look, counters }) {
+  if (taken.has(name)) return "present";
+  if (listed(name) !== true) return undefined;
+  let outcome;
+  try { outcome = await look(name); } catch { outcome = undefined; }
+  if (outcome === "present" || outcome === "fetched") return outcome;
+  counters?.inferredListed();
+  return undefined;
+}
+
 /** 🎣️ The take pass of a read that adopts before it looks: beside the lanes of `takePassV1` (own looks, slow under load) an adopt loop (`takePollV1` with `hotOnly`, `adoptConcurrency` looks at once, each owner again after `adoptRetryMilliseconds`) looks at every undecided owner that the fleet lists as stored as soon as it is listed, so a record the fleet delivers is taken within one poll of its publication and never waits for the lanes; the loop ends with the lanes or when `stop()` says every owner is decided. Answers what the adopt loop did.
  * @see ./🧪️tests/🎣️fetch-first/🟦️.ts */
-export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
+export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, attempt, adoptAttempt = attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
   const adopting = new AbortController(), abort = signal === undefined ? adopting.signal : AbortSignal.any([signal, adopting.signal]);
-  const adopt = takePollV1({ hot, hotOnly: true, queue, attempt, arrived, stop, signal: abort, now, sleep, concurrency: Math.min(policy.adoptConcurrency, concurrency), policy: { ...policy, hotRetryMilliseconds: policy.adoptRetryMilliseconds } }).catch(() => Object.freeze({ looks: 0, found: 0 }));
+  const adopt = takePollV1({ hot, hotOnly: true, queue, attempt: adoptAttempt, arrived, stop, signal: abort, now, sleep, concurrency: Math.min(policy.adoptConcurrency, concurrency), policy: { ...policy, hotRetryMilliseconds: policy.adoptRetryMilliseconds } }).catch(() => Object.freeze({ looks: 0, found: 0 }));
   try {
     await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency, attempt, signal, mark })));
     await takePassV1({ names: heavy, concurrency: 1, attempt, signal, mark });
-  } finally { adopting.abort(); }
+   } finally { adopting.abort(); await adopt; }
   return adopt;
 }
 
@@ -282,7 +348,7 @@ export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_P
  * 🚀️ Runs the take pass and the inference of the owners beside each other, so that a reader never waits for the fleet or for the warm pass before it infers: `release()` opens the inference when the take pass ends or `releaseMilliseconds` after the start, whichever comes first, and `stopWarm()` stops the warm pass at that moment (its children are the ones the inference needs); `infer()` is called at the release and `end()` tells the pass that nothing is left to take. The pass and the warm pass are awaited at the end; a failing inference wins over a failing pass, a failing pass is rethrown.
  * @see ./🧪️tests/🚀️release/🟦️.ts
  */
-export async function runTakeBesideInferV1({ take, warm, stopWarm, release, infer, end, releaseMilliseconds = TAKE_POLICY_V1.releaseMilliseconds, sleep = (milliseconds, abort) => new Promise(resolve => { const timer = setTimeout(resolve, milliseconds); abort?.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true }); }) }) {
+export async function runTakeBesideInferV1({ take, warm, stopWarm, release, infer, end, releaseMilliseconds = TAKE_POLICY_V1.releaseMilliseconds, sleep = takeDelayV1 }) {
   const waiting = new AbortController();
   let open = false, opening;
   const gate = new Promise(resolve => { opening = resolve; });

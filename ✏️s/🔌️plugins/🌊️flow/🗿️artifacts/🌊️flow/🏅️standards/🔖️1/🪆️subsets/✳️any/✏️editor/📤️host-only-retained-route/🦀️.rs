@@ -236,7 +236,7 @@ pub(super) fn flow_build_host_job(request: &mut Option<semio_plugin::ArtifactOwn
     }
     let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<FlowHostEffectJob>() + std::mem::size_of::<FlowHostEffectPayload>(), release_bytes: 0, depth: 1 };
     semio_framework::action_bus::admit_original_tool_construction_settled(cx, construction, output, demand, |_| {
-        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
+        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?.into_inputs();
         let input = taken.input.take();
         let payload = FlowHostEffectPayload { command: FlowCommand::clone(&taken.command), snapshot: taken.snapshot, config: Arc::new(main::config::from_snapshot(taken.window_config.as_ref())), history: taken.history, children: taken.context.children.clone(), instance_owner: taken.instance_operation_owner, completion: taken.completion };
         let mut job = FlowHostEffectJob::new(taken.operation, payload);

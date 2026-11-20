@@ -1,0 +1,7 @@
+# Retained BRep shell selection
+
+The registered brep.topology.shells operator assembles the existing numeric-keyed geometry list in source order, outer shell followed by authored inner shells. It reads one shell label at a time from the original solid and publishes the same stable alias used by the cold path. Existing live aliases are reused without replacing the topology. Capacity, text writes, dictionary entries, and alias publication are individually funded.
+
+The job builds the complete list before publishing aliases and returns it with the final alias transfer. Cancellation retires the in-progress dictionary and rolls back any current staged claim. An alias already completed during a multi-shell publication remains an ordinary shared view subject to the existing retention policy, while the cancelled job emits no partial list.
+
+The registered native fixture covers one and three original shell labels, exact order, cancellation after the first claim is staged but before any alias becomes live, and repeated publication of the same handles. The native suite remains pending at the build storage gate. The neutral Ajv tests passed two cases and eight assertions. The isolated Rust shell-output owner with fixture adapters passed both publication and both staged cancellation cases. The neighboring vertex and intersection oracles passed in the same Bun run, with 15 tests and 29 assertions total.

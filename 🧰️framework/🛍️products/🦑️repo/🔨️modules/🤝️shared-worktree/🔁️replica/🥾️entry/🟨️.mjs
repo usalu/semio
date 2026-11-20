@@ -6,8 +6,8 @@ import {homedir,tmpdir} from "node:os";
 import {dirname,extname,join,posix,resolve,win32} from "node:path";
 import {fileURLToPath} from "node:url";
 
-/** 🔢️ The version of this boot program (2: ends its daemon and itself when its parent, the shim, dies; 4: ends a daemon whose event loop stays blocked for `KILL_MS` (120 s) in the run phase, after a `loop-blocked-restart` record and a stack sample). A daemon installs a program of a higher version over the installed one and never one of a lower or the same version. */
-export const bootVersionV1=6;
+/** 🔢️ Version of the installed boot program, which moves forward only after its own self-test. */
+export const bootVersionV1=7;
 
 /** 🧭️ Where the module lives below the repository root. */
 export const moduleRelativeV1="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
@@ -17,7 +17,7 @@ const text=error=>error instanceof Error?error.message:String(error);
 const readJson=file=>{try{return JSON.parse(readFileSync(file,"utf8"));}catch{return undefined;}};
 const writeAtomic=(file,body)=>{mkdirSync(dirname(file),{recursive:true});const temporary=`${file}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;try{writeFileSync(temporary,body);renameSync(temporary,file);}catch(error){rmSync(temporary,{force:true});throw error;}};
 const timed=(work,milliseconds)=>new Promise((done,fail)=>{const timer=setTimeout(()=>{fail(Error(`no answer within ${milliseconds} ms`));},milliseconds);work.then(value=>{clearTimeout(timer);done(value);},error=>{clearTimeout(timer);fail(error);});});
-const pause=(milliseconds,signal)=>new Promise(done=>{if(signal.aborted)return done();const timer=setTimeout(done,milliseconds);signal.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
+const pause=(milliseconds,signal)=>new Promise(done=>{if(signal.aborted)return done();const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);done();},timer=setTimeout(finish,milliseconds);signal.addEventListener("abort",finish,{once:true});});
 const restartFile=root=>join(root,".cache","f","boot","loop-blocked-restart.json");
 const installedNames=Object.freeze({".mjs":"boot.mjs",".sh":"boot.sh",".ps1":"boot.ps1"});
 
@@ -130,9 +130,9 @@ async function recordBlock(root,pid,beat,reason){
 function launch(spec,context){
  const {root,moduleRel,environment,limits,signal,state,say}=context;
  return new Promise(done=>{
-  const boot=join(root,".cache","f","boot"),beatFile=join(boot,"beat.json"),readyFile=join(boot,"ready.json"),startedAt=Date.now(),replica=join(root,...moduleRel.split("/"),"🔁️replica");
+  const boot=join(root,".cache","f","boot"),beatFile=join(boot,"beat.json"),readyFile=join(boot,"ready.json"),startedAt=Date.now(),replica=join(root,...moduleRel.split("/"),"🔁️replica"),reloadToken=randomBytes(16).toString("hex");
   let ready=false,waiting=false,stopping=false,finished=false,recording=false,killed="",termTimer;
-  const proc=spawn(process.execPath,[spec.script,"--boot-child",...context.args],{cwd:existsSync(replica)?replica:root,env:{...environment,SEMIO_FLEET_ENTRY:"boot",SEMIO_FLEET_BOOT_ROOT:root,SEMIO_FLEET_BOOT_BASE:spec.base,SEMIO_FLEET_BOOT_SOURCE:spec.source,SEMIO_FLEET_BOOT_REASON:spec.reason,SEMIO_FLEET_BOOT_FORCE:spec.force?"1":"",...spec.watch===undefined?{}:{SEMIO_FLEET_CODE_WATCH:spec.watch}},stdio:"inherit",windowsHide:true});
+  const proc=spawn(process.execPath,[spec.script,"--boot-child",...context.args],{cwd:existsSync(replica)?replica:root,env:{...environment,SEMIO_FLEET_ENTRY:"boot",SEMIO_FLEET_BOOT_ROOT:root,SEMIO_FLEET_BOOT_BASE:spec.base,SEMIO_FLEET_BOOT_SOURCE:spec.source,SEMIO_FLEET_BOOT_REASON:spec.reason,SEMIO_FLEET_BOOT_FORCE:spec.force?"1":"",SEMIO_FLEET_BOOT_RELOAD_TOKEN:reloadToken,...spec.watch===undefined?{}:{SEMIO_FLEET_CODE_WATCH:spec.watch}},stdio:"inherit",windowsHide:true});
   const pid=proc.pid??0,kill=(why,beat,reason)=>{
    killed=killed||why;
    if(beat!==undefined&&reason!==undefined&&beat.phase==="run"){
@@ -166,6 +166,7 @@ function launch(spec,context){
   proc.on("exit",(code,name)=>{
    const status=code??(name===null?1:128+({SIGTERM:15,SIGINT:2,SIGKILL:9,SIGHUP:1}[name]??0)||1),uptime=Date.now()-startedAt;
    if(stopping)return end({kind:"exit",code:killed===""?code??0:status});
+   if(code===0){const receipt=readJson(readyFile);if(receipt?.pid===pid&&receipt.waiting===false&&receipt.reloadToken===reloadToken&&Object.keys(receipt).sort().join(",")==="pid,reloadToken,waiting")return end({kind:"reload"});}
    if(code===0||code===75)return end({kind:"exit",code});
    if(!ready||uptime<limits.earlyMs)return end({kind:"early",code:status,reason:killed===""?`exit ${status}`:killed,uptime});
    if(killed!=="")say(`The daemon was ended (${killed}) / Der Daemon wurde beendet (${killed})`);
@@ -187,13 +188,13 @@ async function cycle(context){
  const run=async(spec)=>{
   state.set({phase:"starting",source:spec.source,digest:spec.digest??null,base:spec.base,reason:spec.reason});
   const outcome=await launch(spec,context);
-  state.attempt({source:spec.source,digest:spec.digest??null,outcome:outcome.kind==="exit"?`exit ${outcome.code}${outcome.killed?` (${outcome.killed})`:""}`:`early: ${outcome.reason}`});
+  state.attempt({source:spec.source,digest:spec.digest??null,outcome:outcome.kind==="exit"?`exit ${outcome.code}${outcome.killed?` (${outcome.killed})`:""}`:outcome.kind==="reload"?"graceful reload":`early: ${outcome.reason}`});
   return outcome;
  };
  const worktreeScript=supervisorOf(root,moduleRel);
  if(worktreeScript!==undefined){
   const first=await run({script:worktreeScript,base:root,source:"worktree",reason:"",force:false});
-  if(first.kind==="exit")return first;
+  if(first.kind!=="early")return first;
   rejected=first.code===71;why=first.reason;
   say(`The worktree code does not start (${first.reason}) / Der Code des Arbeitsverzeichnisses startet nicht (${first.reason})`);
  }else{why="the replica script is missing";say("The worktree has no replica script / Das Arbeitsverzeichnis hat kein Replica-Skript");}
@@ -204,7 +205,7 @@ async function cycle(context){
   if(script===undefined)return undefined;
   say(`Running the sealed code ${directory} until the worktree code starts again / Der versiegelte Code ${directory} läuft, bis der Code des Arbeitsverzeichnisses wieder startet`);
   const outcome=await run({script,base:join(directory,"files"),source,reason,force:false,watch:module,digest});
-  if(outcome.kind==="exit")return outcome;
+  if(outcome.kind!=="early")return outcome;
   refuse(entry,digest,now(),limits);
   return undefined;
  };
@@ -226,13 +227,13 @@ async function cycle(context){
  if(rejected&&worktreeScript!==undefined){
   say("No sealed code starts either, running the worktree code after all / Auch kein versiegelter Code startet, der Code des Arbeitsverzeichnisses läuft trotzdem");
   const last=await run({script:worktreeScript,base:root,source:"worktree",reason:"",force:true});
-  if(last.kind==="exit")return last;
+  if(last.kind!=="early")return last;
  }
  state.set({reason:store===undefined&&!existsSync(join(root,".cache","f","machine.json"))?`${why}; the store is unknown`:why});
  return {kind:"none"};
 }
 
-/** 🥾️ The boot loop: it runs the daemon from the first code that starts, in this order, and never ends by itself. (1) The code of the worktree, as the child process of its supervisor file. (2) The newest sealed snapshot below `<worktree>/.cache/f/code` or `<entry>/code` that is intact (every file hash checked) and not refused. (3) A snapshot of `<store>/v1/bootstrap/code/<digest>/`, ranked by fresh attestations, fetched with a per-file sha256 check into `<entry>/code`. (4) The worktree code once more, forced, when it was refused only as a revert. A start that ends early (not ready or under `earlyMs`) with an error moves on to the next code and refuses a failing snapshot for `refuseMs`; exit 0 and 75 and a late failure end the loop with that code, because the service manager restarts it and the daemon decides itself. With nothing runnable the loop writes `state.json` (phase `exhausted`, reasons, attempts, the next try) and polls again after a doubling backoff. A missing worktree is the phase `waiting`. `context`: `entry`, `worktree`, `moduleRel`, `storeRoot` (function), `environment`, `limits`, `args`, `say`. */
+/** 🥾️ The boot loop: it runs the daemon from the first code that starts, in this order, and never ends by itself. (1) The code of the worktree, as the child process of its supervisor file. (2) The newest sealed snapshot below `<worktree>/.cache/f/code` or `<entry>/code` that is intact (every file hash checked) and not refused. (3) A snapshot of `<store>/v1/bootstrap/code/<digest>/`, ranked by fresh attestations, fetched with a per-file sha256 check into `<entry>/code`. (4) The worktree code once more, forced, when it was refused only as a revert. A start that ends early (not ready or under `earlyMs`) with an error moves on to the next code and refuses a failing snapshot for `refuseMs`; a verified graceful reload starts a new worker under the same boot owner. Unmarked exit 0, exit 75 and actual stop end the owner, while a late crash is restarted with bounded delay. With nothing runnable the loop writes `state.json` (phase `exhausted`, reasons, attempts, the next try) and polls again after a doubling backoff. A missing worktree is the phase `waiting`. `context`: `entry`, `worktree`, `moduleRel`, `storeRoot` (function), `environment`, `limits`, `args`, `say`. */
 export async function runBootV1(context,signal){
  const startedMs=Date.now(),state=stateOf(context.entry,startedMs),full={...context,root:context.worktree,signal,state};
  const beat=setInterval(()=>{state.set({});},10_000);beat.unref?.();
@@ -241,6 +242,13 @@ export async function runBootV1(context,signal){
   for(;;){
    if(signal.aborted)return 143;
    const result=await cycle(full);
+   if(result.kind==="reload"){
+    const delay=context.limits.backoffMs;
+    state.set({phase:"starting",reason:"daemon requested a graceful reload",nextMs:Date.now()+delay});
+    context.say("The daemon requested a graceful reload and will restart inside the running boot stage / Der Daemon hat ein geordnetes Neuladen angefordert und startet innerhalb der laufenden Boot-Stufe neu");
+    await pause(delay,signal);
+    continue;
+   }
    if(result.kind==="exit"){
     if(result.code===0||result.code===75||signal.aborted)return result.code;
     const now=Date.now();

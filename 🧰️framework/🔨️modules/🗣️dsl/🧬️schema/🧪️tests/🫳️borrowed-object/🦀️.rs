@@ -300,7 +300,7 @@ struct BorrowedTextCorpusRecord { name:String }
 fn borrowed_text_corpus_matches_owned_canonical_and_borrowed_measurement(){
  use crate::BorrowedDslRecord;
  use semio_framework_value::NativeEncodeControl;
- let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🫳️borrowed-text/🔣️.json")).unwrap();
  let oracle=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const f=JSON.parse(process.argv[1]);const db=new Database(":memory:");db.run("CREATE TABLE c(n INTEGER, value TEXT, document TEXT)");for(const [n,c] of f.cases.entries())db.run("INSERT INTO c VALUES(?,?,?)",[n,c.value,c.document]);console.log(JSON.stringify(db.query("SELECT n,length(CAST(value AS BLOB)) AS value_bytes,length(CAST(document AS BLOB)) AS document_bytes FROM c ORDER BY n").all()));db.close();"#]).arg(fixture.to_string()).output().unwrap();
  assert!(oracle.status.success(),"{}",String::from_utf8_lossy(&oracle.stderr));let rows:serde_json::Value=serde_json::from_slice(&oracle.stdout).unwrap();
  for (index,case) in fixture["cases"].as_array().unwrap().iter().enumerate(){

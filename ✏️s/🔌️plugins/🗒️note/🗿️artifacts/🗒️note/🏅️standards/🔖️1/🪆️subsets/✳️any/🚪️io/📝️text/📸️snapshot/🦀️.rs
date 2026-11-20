@@ -74,7 +74,6 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl pack::snapshot::ArtifactDsl for NoteSnapshot {
@@ -108,7 +107,6 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::NoteBlockNode;
 use crate::NoteImageAsset;
@@ -141,7 +139,7 @@ pub fn empty_note_snapshot() -> NoteSnapshot {
         snap_grid_spacing: Some(8.0),
         pencil_width: Some(3.0),
         eraser_radius: Some(12.0),
-        assets: BTreeMap::new(),
+        assets: Default::default(),
         linked_artifact: None,
     }
 }

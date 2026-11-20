@@ -73,27 +73,27 @@ fn space(storey: &str, boundary: SpaceBoundary) -> Space {
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m".into(), Material { name: "Brick".into(), category: MaterialCategory::Masonry, color: Rgb { r: 0.7, g: 0.3, b: 0.2 }, density: 1800.0, conductivity: 0.8, specific_heat: 900.0 });
-    snapshot.wall_types.insert("wt".into(), WallType { name: "Brick 200".into(), layers: vec![Layer { material: "m".into(), thickness: 0.2, function: LayerFunction::Structure }] });
-    snapshot.slab_types.insert("st".into(), SlabType { name: "Slab 250".into(), layers: vec![Layer { material: "m".into(), thickness: 0.25, function: LayerFunction::Structure }] });
-    snapshot.sites.insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
-    snapshot.storeys.insert("st-1".into(), Storey { building: "bldg".into(), name: "First".into(), level: 1, height: 3.0, cut_height: None });
+    snapshot.materials.cold_insert("m".into(), Material { name: "Brick".into(), category: MaterialCategory::Masonry, color: Rgb { r: 0.7, g: 0.3, b: 0.2 }, density: 1800.0, conductivity: 0.8, specific_heat: 900.0 });
+    snapshot.wall_types.cold_insert("wt".into(), WallType { name: "Brick 200".into(), layers: vec![Layer { material: "m".into(), thickness: 0.2, function: LayerFunction::Structure }] });
+    snapshot.slab_types.cold_insert("st".into(), SlabType { name: "Slab 250".into(), layers: vec![Layer { material: "m".into(), thickness: 0.25, function: LayerFunction::Structure }] });
+    snapshot.sites.cold_insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.cold_insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.storeys.cold_insert("st-1".into(), Storey { building: "bldg".into(), name: "First".into(), level: 1, height: 3.0, cut_height: None });
     snapshot
 }
 
 fn rectangle(snapshot: &mut ModelSnapshot, width: f64, depth: f64) {
     let corners = [(0.0, 0.0), (width, 0.0), (width, depth), (0.0, depth)];
     for (index, name) in ["south", "east", "north", "west"].into_iter().enumerate() {
-        snapshot.walls.insert(format!("w-{name}"), wall("st-0", line(corners[index], corners[(index + 1) % 4])));
+        snapshot.walls.cold_insert(format!("w-{name}"), wall("st-0", line(corners[index], corners[(index + 1) % 4])));
     }
 }
 
 fn room(width: f64, depth: f64) -> ModelSnapshot {
     let mut snapshot = base();
     rectangle(&mut snapshot, width, depth);
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(width / 2.0, depth / 2.0) }));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(width / 2.0, depth / 2.0) }));
     snapshot
 }
 
@@ -130,19 +130,19 @@ async fn moving_a_wall_changes_the_room_area() {
 #[semio_framework_async_macros::async_test]
 async fn a_gap_in_the_walls_leaves_the_room_open() {
     let mut snapshot = room(4.0, 3.0);
-    snapshot.walls.remove("w-west");
+    snapshot.walls.cold_remove("w-west");
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.status, SpaceStatus::NotEnclosed);
     assert!(found.area == 0.0 && found.outline.is_empty() && found.bounding_walls.is_empty());
-    snapshot.walls.clear();
+    snapshot.walls.cold_clear();
     assert_eq!(rooms(&snapshot)["sp"].status, SpaceStatus::NotEnclosed, "no walls at all is open too");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_seed_inside_a_wall_or_outside_the_building_is_reported() {
     let mut snapshot = room(4.0, 3.0);
-    snapshot.spaces.insert("sp-wall".into(), space("st-0", SpaceBoundary::Bounded { seed: point(2.0, 0.05) }));
-    snapshot.spaces.insert("sp-out".into(), space("st-0", SpaceBoundary::Bounded { seed: point(9.0, 9.0) }));
+    snapshot.spaces.cold_insert("sp-wall".into(), space("st-0", SpaceBoundary::Bounded { seed: point(2.0, 0.05) }));
+    snapshot.spaces.cold_insert("sp-out".into(), space("st-0", SpaceBoundary::Bounded { seed: point(9.0, 9.0) }));
     let found = rooms(&snapshot);
     assert_eq!(found["sp-wall"].status, SpaceStatus::SeedInsideWall);
     assert_eq!(found["sp-out"].status, SpaceStatus::NotEnclosed);
@@ -152,9 +152,9 @@ async fn a_seed_inside_a_wall_or_outside_the_building_is_reported() {
 #[semio_framework_async_macros::async_test]
 async fn an_inner_partition_splits_a_room_in_two() {
     let mut snapshot = room(6.0, 3.0);
-    snapshot.walls.insert("w-partition".into(), wall("st-0", line((3.0, 0.0), (3.0, 3.0))));
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(1.5, 1.5) }));
-    snapshot.spaces.insert("sp-b".into(), space("st-0", SpaceBoundary::Bounded { seed: point(4.5, 1.5) }));
+    snapshot.walls.cold_insert("w-partition".into(), wall("st-0", line((3.0, 0.0), (3.0, 3.0))));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(1.5, 1.5) }));
+    snapshot.spaces.cold_insert("sp-b".into(), space("st-0", SpaceBoundary::Bounded { seed: point(4.5, 1.5) }));
     let found = rooms(&snapshot);
     assert!(near(found["sp"].area, 2.8 * 2.8, 1e-9) && near(found["sp-b"].area, 2.8 * 2.8, 1e-9));
     assert!(found["sp"].bounding_walls.contains(&"w-partition".to_string()) && found["sp-b"].bounding_walls.contains(&"w-partition".to_string()));
@@ -164,8 +164,8 @@ async fn an_inner_partition_splits_a_room_in_two() {
 #[semio_framework_async_macros::async_test]
 async fn an_island_wall_is_a_hole_of_the_room() {
     let mut snapshot = room(6.0, 4.0);
-    snapshot.walls.insert("w-island".into(), wall("st-0", line((2.0, 2.0), (4.0, 2.0))));
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(1.0, 1.0) }));
+    snapshot.walls.cold_insert("w-island".into(), wall("st-0", line((2.0, 2.0), (4.0, 2.0))));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(1.0, 1.0) }));
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.holes.len(), 1);
     assert!(near(found.area, 5.8 * 3.8 - 2.0 * 0.2, 1e-9), "{}", found.area);
@@ -175,9 +175,9 @@ async fn an_island_wall_is_a_hole_of_the_room() {
 #[semio_framework_async_macros::async_test]
 async fn a_curved_wall_closes_a_half_disc_room() {
     let mut snapshot = base();
-    snapshot.walls.insert("w-chord".into(), wall("st-0", line((-2.0, 0.0), (2.0, 0.0))));
-    snapshot.walls.insert("w-arc".into(), wall("st-0", Axis::Arc { start: point(2.0, 0.0), end: point(-2.0, 0.0), bulge: 1.0 }));
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(0.0, 1.0) }));
+    snapshot.walls.cold_insert("w-chord".into(), wall("st-0", line((-2.0, 0.0), (2.0, 0.0))));
+    snapshot.walls.cold_insert("w-arc".into(), wall("st-0", Axis::Arc { start: point(2.0, 0.0), end: point(-2.0, 0.0), bulge: 1.0 }));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(0.0, 1.0) }));
     let found = rooms(&snapshot)["sp"].clone();
     let (radius, distance) = (1.9f64, 0.1f64);
     let expected = radius * radius * (distance / radius).acos() - distance * (radius * radius - distance * distance).sqrt();
@@ -188,9 +188,9 @@ async fn a_curved_wall_closes_a_half_disc_room() {
 #[semio_framework_async_macros::async_test]
 async fn explicit_outlines_are_exact_for_arcs() {
     let mut snapshot = base();
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![Vertex { point: point(-1.0, 0.0), bulge: 1.0 }, Vertex { point: point(1.0, 0.0), bulge: 1.0 }] }));
-    snapshot.spaces.insert("sq".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(0.0, 2.0), corner(2.0, 2.0), corner(2.0, 0.0)] }));
-    snapshot.spaces.insert("sx".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(1.0, 0.0)] }));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![Vertex { point: point(-1.0, 0.0), bulge: 1.0 }, Vertex { point: point(1.0, 0.0), bulge: 1.0 }] }));
+    snapshot.spaces.cold_insert("sq".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(0.0, 2.0), corner(2.0, 2.0), corner(2.0, 0.0)] }));
+    snapshot.spaces.cold_insert("sx".into(), space("st-0", SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(1.0, 0.0)] }));
     let found = rooms(&snapshot);
     assert_eq!(found["sp"].status, SpaceStatus::Explicit);
     assert!(near(found["sp"].area, std::f64::consts::PI, 1e-12) && near(found["sp"].perimeter, 2.0 * std::f64::consts::PI, 1e-12));
@@ -202,9 +202,9 @@ async fn explicit_outlines_are_exact_for_arcs() {
 #[semio_framework_async_macros::async_test]
 async fn columns_reduce_the_net_floor_area_only() {
     let mut snapshot = room(4.0, 3.0);
-    snapshot.column_types.insert("ct".into(), ColumnType { name: "Square".into(), profile: Profile::Rectangle { width: 0.4, depth: 0.4 }, material: "m".into() });
-    snapshot.columns.insert("c-in".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(2.0, 1.5), rotation: 0.3, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.columns.insert("c-out".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(9.0, 9.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Far".into() });
+    snapshot.column_types.cold_insert("ct".into(), ColumnType { name: "Square".into(), profile: Profile::Rectangle { width: 0.4, depth: 0.4 }, material: "m".into() });
+    snapshot.columns.cold_insert("c-in".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(2.0, 1.5), rotation: 0.3, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.columns.cold_insert("c-out".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(9.0, 9.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Far".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert!(near(found.area, 3.8 * 2.8, 1e-9));
     assert!(near(found.net_floor_area, 3.8 * 2.8 - 0.16, 1e-9), "{}", found.net_floor_area);
@@ -214,14 +214,14 @@ async fn columns_reduce_the_net_floor_area_only() {
 async fn the_slab_above_lowers_the_clear_height() {
     let mut snapshot = room(4.0, 3.0);
     let square = vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0), corner(-1.0, 4.0)];
-    snapshot.slabs.insert("sl-thin".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-1".into(), slab_type: "st".into(), boundary: square.clone(), holes: Vec::new(), offset: 0.0, slope: None, name: "Floor".into() });
-    snapshot.slab_types.insert("st-thick".into(), SlabType { name: "Thick".into(), layers: vec![Layer { material: "m".into(), thickness: 0.4, function: LayerFunction::Structure }] });
-    snapshot.slabs.insert("sl-thick".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-1".into(), slab_type: "st-thick".into(), boundary: square, holes: vec![vec![corner(1.5, 1.0), corner(2.5, 1.0), corner(2.5, 2.0), corner(1.5, 2.0)]], offset: 0.1, slope: None, name: "Hole".into() });
-    snapshot.slabs.insert("sl-ground".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), slab_type: "st".into(), boundary: vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0)], holes: Vec::new(), offset: 0.0, slope: None, name: "Own floor".into() });
+    snapshot.slabs.cold_insert("sl-thin".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-1".into(), slab_type: "st".into(), boundary: square.clone(), holes: Vec::new(), offset: 0.0, slope: None, name: "Floor".into() });
+    snapshot.slab_types.cold_insert("st-thick".into(), SlabType { name: "Thick".into(), layers: vec![Layer { material: "m".into(), thickness: 0.4, function: LayerFunction::Structure }] });
+    snapshot.slabs.cold_insert("sl-thick".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-1".into(), slab_type: "st-thick".into(), boundary: square, holes: vec![vec![corner(1.5, 1.0), corner(2.5, 1.0), corner(2.5, 2.0), corner(1.5, 2.0)]], offset: 0.1, slope: None, name: "Hole".into() });
+    snapshot.slabs.cold_insert("sl-ground".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), slab_type: "st".into(), boundary: vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0)], holes: Vec::new(), offset: 0.0, slope: None, name: "Own floor".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.ceiling_slab, "sl-thin", "the seed lies in the hole of the thick slab, so only the thin slab covers it");
     assert!(close(found.clear_height, 3.0 - 0.25) && near(found.volume, found.area * 2.75, 1e-9));
-    snapshot.spaces.insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(0.5, 0.5) }));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", SpaceBoundary::Bounded { seed: point(0.5, 0.5) }));
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.ceiling_slab, "sl-thick");
     assert!(close(found.clear_height, 3.0 + 0.1 - 0.4), "the offset raises the underside: {}", found.clear_height);
@@ -240,9 +240,9 @@ async fn the_clear_height_follows_the_storey_height() {
 #[semio_framework_async_macros::async_test]
 async fn curtain_walls_close_a_room_with_their_mullion_depth() {
     let mut snapshot = room(4.0, 3.0);
-    snapshot.walls.remove("w-north");
-    snapshot.curtain_wall_types.insert("cwt".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.0 }, v_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.0 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass, panel_material: "m".into(), mullion_material: "m".into(), u_value: None, g_value: None, frame_fraction: None });
-    snapshot.curtain_walls.insert("cw".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), curtain_wall_type: "cwt".into(), axis: line((4.0, 3.0), (0.0, 3.0)), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, name: "Curtain".into() });
+    snapshot.walls.cold_remove("w-north");
+    snapshot.curtain_wall_types.cold_insert("cwt".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.0 }, v_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.0 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass, panel_material: "m".into(), mullion_material: "m".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.curtain_walls.cold_insert("cw".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), curtain_wall_type: "cwt".into(), axis: line((4.0, 3.0), (0.0, 3.0)), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, name: "Curtain".into() });
     let found = rooms(&snapshot)["sp"].clone();
     assert_eq!(found.status, SpaceStatus::Inferred);
     assert!(near(found.area, 3.8 * (3.0 - 0.1 - 0.05), 1e-9), "{}", found.area);
@@ -287,7 +287,7 @@ async fn the_dependency_covers_what_the_rooms_read_besides_their_parents() {
     renamed.storeys.get_mut("st-0").expect("storey").name = "Renamed".into();
     assert_eq!(read(&before), read(&renamed), "a density or a storey rename must not invalidate the rooms");
     let mut other = before.clone();
-    other.walls.insert("w-up".into(), wall("st-1", line((0.0, 0.0), (1.0, 0.0))));
+    other.walls.cold_insert("w-up".into(), wall("st-1", line((0.0, 0.0), (1.0, 0.0))));
     assert_eq!(read(&before), read(&other), "walls of another storey are not read");
 }
 
@@ -316,9 +316,9 @@ async fn the_rooms_are_deterministic_and_empty_by_default() {
 }
 
 fn hung(snapshot: &mut ModelSnapshot, offset: f64, thickness: f64) {
-    snapshot.ceiling_types.insert("ct".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![Layer { material: "m".into(), thickness, function: LayerFunction::Finish }] });
+    snapshot.ceiling_types.cold_insert("ct".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![Layer { material: "m".into(), thickness, function: LayerFunction::Finish }] });
     let boundary = vec![corner(-1.0, -1.0), corner(5.0, -1.0), corner(5.0, 4.0), corner(-1.0, 4.0)];
-    snapshot.ceilings.insert("ce".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling { storey: "st-0".into(), ceiling_type: "ct".into(), boundary, holes: Vec::new(), offset, slope: None, name: "Hung".into() });
+    snapshot.ceilings.cold_insert("ce".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling { storey: "st-0".into(), ceiling_type: "ct".into(), boundary, holes: Vec::new(), offset, slope: None, name: "Hung".into() });
 }
 
 #[semio_framework_async_macros::async_test]

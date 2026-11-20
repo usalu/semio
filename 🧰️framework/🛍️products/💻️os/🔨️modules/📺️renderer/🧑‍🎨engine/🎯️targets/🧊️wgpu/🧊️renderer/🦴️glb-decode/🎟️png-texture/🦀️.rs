@@ -1,104 +1,210 @@
-//! 🎟️ Embedded PNG textures retain source, pixels and retirement on their initiating renderer caller.
+//! 🎟️ Embedded PNG textures retain source and pixels on the initiating renderer caller.
 use super::*;
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,receive_original_retained_work,close_original_quoted_retained_step};
-use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,RetirementDemand,retained_clone::RetainedCloneClose};
-use semio_framework_pixels::{RasterImage,png_decoding::{PngDecodeInput,PngDecodeJob,PngDecodeError}};
+use semio_framework_job::{StepContext, OriginalTurnFailure, close_original_effect_step, close_original_retained_effect_step, receive_original_retained_work};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::RetainedCloneClose, retirement::RetireOwned};
+use semio_framework_pixels::{RasterImage, png_decoding::{PngDecodeInput, PngDecodeJob, PngDecodeError}};
+use std::mem::{size_of, size_of_val};
 
 #[derive(Default)]
-pub(super) struct OriginalPngTexture{job:Option<PngDecodeJob>,image:Option<RasterImage>,retirement:RetainedCloneClose,binding:Option<semio_framework_job::OriginalSourceBinding>}
-
-fn refused(error:PngDecodeError)->ValueError{match error{PngDecodeError::Invalid(message)=>ValueError::literal(ValueRefusalKind::InvalidValue,message),PngDecodeError::Incomplete=>ValueError::invariant("PNG decode is incomplete"),PngDecodeError::Cancelled=>ValueError::literal(ValueRefusalKind::Canceled,"PNG decode cancelled")}}
-fn invalid()->ValueError{ValueError::invariant("original renderer PNG owner or output is absent")}
-
-impl OriginalPngTexture{
- pub(super) fn source(&self)->Option<&[u8]>{self.job.as_ref().map(PngDecodeJob::source)}
- pub(super) fn pending(&self)->bool{self.job.is_some()||self.image.is_some()||!self.retirement.is_empty()||self.binding.is_some()}
- fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("PNG texture belongs to another original caller"))}Ok(())}
- pub(super) fn admit(&mut self,source:&mut Vec<u8>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(cx)?;
-  if self.job.is_some(){return if source.is_empty(){Ok(true)}else{Err(ValueError::invariant("original PNG input receiver is occupied").into())}}
-  if self.pending(){return Err(invalid().into())}
-  let original=semio_framework_job::OriginalSourceBinding::borrow(cx);let binding=&mut self.binding;
-  let bytes=2*std::mem::size_of::<Vec<u8>>()+std::mem::size_of::<PngDecodeJob>()+std::mem::size_of::<Option<semio_framework_job::OriginalSourceBinding>>();
-  admit_original_construction(cx,&mut self.job,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{
-   let input=PngDecodeInput{data:std::mem::take(source),max_pixels:16_777_216,max_bytes:16_000_000,max_chunks:65_536};
-   RetainedWorkOutcome{work:1,result:match PngDecodeJob::new(input){
-    Ok(job)=>{*binding=Some(original);Ok((job,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))},
-    Err((error,input))=>{*source=input.data;Err(refused(error).with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<Vec<u8>>()+std::mem::size_of::<PngDecodeError>(),..Default::default()}))}
-   }}
-  })
- }
- pub(super) fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(cx)?;cx.original_source_parent()?.validate_borrowed_context(cx)?;
-  if self.image.is_some(){return Ok(true)}
-  let job=self.job.as_mut().ok_or_else(invalid)?;
-  if job.progress().done{return Ok(true)}
-  if cx.should_yield(){return Ok(false)}
-  let mut grant=cx.retained_grant();grant.maximum_items=grant.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
-  if grant.maximum_items==0||grant.maximum_depth<job.next_depth_demand().map_err(refused)?||grant.maximum_copy_bytes<job.next_copy_byte_demand().map_err(refused)?||grant.maximum_capacity_bytes<job.next_capacity_byte_demand().map_err(refused)?{return Ok(false)}
-  let result=job.advance(grant);let progress=job.last_turn_progress();let work=job.last_turn_work();
-  receive_original_retained_work(cx,RetainedWorkOutcome{work,result:result.map(|(state,_)|if state.done{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}).map_err(|error|refused(error).with_retained_progress(progress))})?;
-  Ok(job.progress().done)
- }
- pub(super) fn take_image(&mut self,output:&mut Option<DecodedReferenceImage>,digest:[u64;2],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(cx)?;
-  if output.is_some(){return Err(ValueError::invariant("original PNG output receiver is occupied").into())}
-  if self.image.is_none(){
-   let job=self.job.as_mut().ok_or_else(invalid)?;if !job.progress().done{return Ok(false)}
-   let original=cx.retained_grant();let bytes=std::mem::size_of::<RasterImage>()+std::mem::size_of::<Option<RasterImage>>();
-   admit_original_construction(cx,&mut self.image,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{
-    let result=(||{let(image,mut progress)=job.take_result(original).map_err(refused)?.ok_or_else(invalid)?;progress.copied_bytes+=std::mem::size_of::<Option<RasterImage>>();Ok((image,progress))})();
-    RetainedWorkOutcome{result,work:1}
-   })?;return Ok(false)
-  }
-  if self.job.is_some()||!self.retirement.is_empty(){self.close_decoder(cx)?;return Ok(false)}
-  let bytes=std::mem::size_of::<Option<RasterImage>>()+std::mem::size_of::<DecodedReferenceImage>()+std::mem::size_of::<Option<semio_framework_job::OriginalSourceBinding>>();
-  let image=&mut self.image;let binding=&mut self.binding;
-  admit_original_construction(cx,output,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{
-   let result=(||{let image=image.take().ok_or_else(invalid)?;*binding=None;Ok((DecodedReferenceImage{width:image.width,height:image.height,source_digest:digest,pixels:image.pixels},RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})();
-   RetainedWorkOutcome{result,work:1}
-  })
- }
- fn close_decoder(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
-  let body=cx.retained_grant().maximum_copy_bytes;let demand=self.retirement.next_owner_demands::<PngDecodeJob>(self.job.is_some(),&None,body)?;let work=self.retirement.next_owner_work::<PngDecodeJob>(self.job.is_some(),&None,body)?;
-  close_original_quoted_retained_step(cx,demand,work,|grant|{
-   if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-   if let Some(job)=self.job.as_mut(){job.cancel();}
-   let turn=self.retirement.begin_granted(&mut self.job,grant);RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}
-  })?;Ok(())
- }
- pub(super) fn close(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(cx)?;
-  cx.with_original_retirement(|cx|{
-   let body=cx.retained_grant().maximum_copy_bytes;let demand=self.close_demands(body)?;let work=self.close_work(body)?;
-   close_original_quoted_retained_step(cx,demand,work,|grant|{
-    if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-    if self.job.is_some(){if let Some(job)=self.job.as_mut(){job.cancel();}let turn=self.retirement.begin_granted(&mut self.job,grant);return RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}}
-    if self.image.is_some(){let turn=self.retirement.begin_granted(&mut self.image,grant);return RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}}
-    let bytes=if self.binding.is_some(){std::mem::size_of::<Option<semio_framework_job::OriginalSourceBinding>>()}else{0};self.binding=None;
-    RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(if bytes==0{Default::default()}else{RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}})),work:u64::from(bytes>0)}
-   })?;Ok(!self.pending())
-  })
- }
- pub(super) fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.job.is_some()||!self.retirement.is_empty(){return self.retirement.next_owner_demands::<PngDecodeJob>(self.job.is_some(),&None,body)}
-  if self.image.is_some(){return self.retirement.next_owner_demands::<RasterImage>(true,&None,body)}
-  Ok(if self.binding.is_some(){RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_job::OriginalSourceBinding>>(),depth:1,..Default::default()}}else{Default::default()})
- }
- fn close_work(&self,body:usize)->Result<u64,ValueError>{
-  if self.job.is_some()||!self.retirement.is_empty(){return self.retirement.next_owner_work::<PngDecodeJob>(self.job.is_some(),&None,body)}
-  if self.image.is_some(){return self.retirement.next_owner_work::<RasterImage>(true,&None,body)}
-  Ok(u64::from(self.binding.is_some()))
- }
+pub(super) struct OriginalPngTexture {
+    job: Option<PngDecodeJob>,
+    image: Option<RasterImage>,
+    retirement: RetainedCloneClose,
+    binding: Option<semio_framework_job::OriginalSourceBinding>,
 }
-impl Drop for OriginalPngTexture{fn drop(&mut self){assert!(std::thread::panicking()||!self.pending(),"original PNG texture requires paid retirement")}}
+
+fn refused(error: PngDecodeError) -> ValueError {
+    let (kind, message) = match error {
+        PngDecodeError::Invalid(message) => (ValueRefusalKind::InvalidValue, message),
+        PngDecodeError::Incomplete => (ValueRefusalKind::InvariantViolated, "PNG decode is incomplete"),
+        PngDecodeError::Cancelled => (ValueRefusalKind::Canceled, "PNG decode cancelled"),
+        PngDecodeError::WorkLimit => (ValueRefusalKind::WorkLimit, "PNG decode exceeded original Work"),
+        PngDecodeError::AllocationFailed => (ValueRefusalKind::AllocationFailed, "PNG decode allocation failed"),
+    };
+    ValueError::literal(kind, message)
+}
+
+fn invalid() -> ValueError {
+    ValueError::invariant("original renderer PNG owner or output is absent")
+}
+
+fn transfer(cx: &mut StepContext<'_>, bytes: usize, move_value: impl FnOnce(RetainedCloneGrant) -> Result<(), ValueError>) -> Result<bool, OriginalTurnFailure> {
+    let demand = RetirementDemand { copy_bytes: bytes, depth: 1, ..Default::default() };
+    let step = close_original_retained_effect_step(cx, demand, |effect| -> Result<_, ValueError> {
+        if effect.remaining_work_units()? == 0 || !effect.performed(1)? {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() };
+        move_value(effect.grant()).map_err(|error| error.with_retained_progress(progress))?;
+        Ok(RetainedCloneStep::Complete(progress))
+    })?;
+    Ok(step.progress().copied_items != 0)
+}
+
+fn retire_resident<T: RetireOwned>(cx: &mut StepContext<'_>, retirement: &mut RetainedCloneClose, value: &mut Option<T>) -> Result<(), OriginalTurnFailure> {
+    let body = cx.retained_grant().maximum_copy_bytes;
+    let demand = retirement.next_owner_demands::<T>(value.is_some(), &None, body)?;
+    if cx.fuel_remaining() < retirement.next_owner_work::<T>(value.is_some(), &None, body)? {
+        return Ok(());
+    }
+    close_original_effect_step(cx, demand, |effect| {
+        if !retirement.is_empty() {
+            return retirement.step_granted(body, effect);
+        }
+        let turn = retirement.begin_granted(value, effect);
+        RetainedWorkPoll::Complete(RetainedWorkOutcome {
+            work: turn.work,
+            result: turn.result.map_err(Into::into).map(|step| step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),
+        })
+    })?;
+    Ok(())
+}
+
+impl OriginalPngTexture {
+    pub(super) fn source(&self) -> Option<&[u8]> {
+        self.job.as_ref().map(PngDecodeJob::source)
+    }
+
+    pub(super) fn pending(&self) -> bool {
+        self.job.is_some() || self.image.is_some() || !self.retirement.is_empty() || self.binding.is_some()
+    }
+
+    fn validate(&self, cx: &StepContext<'_>) -> Result<(), ValueError> {
+        if self.binding.is_some_and(|binding| !binding.matches(cx)) {
+            return Err(ValueError::invariant("PNG texture belongs to another original caller"));
+        }
+        Ok(())
+    }
+
+    pub(super) fn admit(&mut self, source: &mut Vec<u8>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        self.validate(cx)?;
+        if self.job.is_some() {
+            return if source.is_empty() { Ok(true) } else { Err(ValueError::invariant("original PNG input receiver is occupied").into()) };
+        }
+        if self.pending() { return Err(invalid().into()); }
+        if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
+
+        let original = semio_framework_job::OriginalSourceBinding::borrow(cx);
+        let bytes = 2 * size_of::<Vec<u8>>() + size_of::<Option<PngDecodeJob>>() + size_of_val(&self.binding);
+        transfer(cx, bytes, |_| {
+            let input = PngDecodeInput {
+                data: std::mem::take(source),
+                max_pixels: 16_777_216,
+                max_bytes: 16_000_000,
+                max_chunks: 65_536,
+            };
+            match PngDecodeJob::new(input) {
+                Ok(job) => {
+                    self.job = Some(job);
+                    self.binding = Some(original);
+                    Ok(())
+                }
+                Err((error, input)) => {
+                    *source = input.data;
+                    Err(refused(error))
+                }
+            }
+        })
+    }
+
+    pub(super) fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        self.validate(cx)?;
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if self.image.is_some() { return Ok(true); }
+        let job = self.job.as_mut().ok_or_else(invalid)?;
+        if job.progress().done { return Ok(true); }
+        if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
+
+        let mut grant = cx.retained_grant();
+        grant.maximum_items = grant.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
+        if grant.maximum_items == 0
+            || grant.maximum_depth < job.next_depth_demand().map_err(refused)?
+            || grant.maximum_copy_bytes < job.next_copy_byte_demand().map_err(refused)?
+            || grant.maximum_capacity_bytes < job.next_capacity_byte_demand().map_err(refused)? {
+            return Ok(false);
+        }
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| {
+            let result = job.advance(effect);
+            let progress = job.last_turn_progress();
+            result.map(|(state, _)| {
+                if state.done { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }
+            }).map_err(|error| refused(error).with_retained_progress(progress))
+        })? else { return Ok(false); };
+        receive_original_retained_work(cx, RetainedWorkOutcome { work, result })?;
+        Ok(job.progress().done)
+    }
+
+    pub(super) fn take_image(&mut self, output: &mut Option<DecodedReferenceImage>, digest: [u64; 2], cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        self.validate(cx)?;
+        if output.is_some() { return Err(ValueError::invariant("original PNG output receiver is occupied").into()); }
+        if cx.is_cancelled() || cx.should_yield() { return Ok(false); }
+        if self.image.is_none() {
+            let job = self.job.as_mut().ok_or_else(invalid)?;
+            if !job.progress().done { return Ok(false); }
+            let bytes = size_of::<RasterImage>() + size_of::<Option<RasterImage>>();
+            transfer(cx, bytes, |grant| {
+                let (image, _) = job.take_result(grant).map_err(refused)?.ok_or_else(invalid)?;
+                self.image = Some(image);
+                Ok(())
+            })?;
+            return Ok(false);
+        }
+        if self.job.is_some() || !self.retirement.is_empty() {
+            retire_resident(cx, &mut self.retirement, &mut self.job)?;
+            return Ok(false);
+        }
+
+        let bytes = size_of::<Option<RasterImage>>() + size_of::<DecodedReferenceImage>() + size_of_val(&self.binding);
+        transfer(cx, bytes, |_| {
+            let image = self.image.take().ok_or_else(invalid)?;
+            *output = Some(DecodedReferenceImage { width: image.width, height: image.height, source_digest: digest, pixels: image.pixels });
+            self.binding = None;
+            Ok(())
+        })
+    }
+
+    pub(super) fn close(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        self.validate(cx)?;
+        cx.with_original_retirement(|cx| {
+            if self.job.is_some() || !self.retirement.is_empty() {
+                retire_resident(cx, &mut self.retirement, &mut self.job)?;
+            } else if self.image.is_some() {
+                retire_resident(cx, &mut self.retirement, &mut self.image)?;
+            } else if self.binding.is_some() {
+                transfer(cx, size_of_val(&self.binding), |_| {
+                    self.binding = None;
+                    Ok(())
+                })?;
+            }
+            Ok(!self.pending())
+        })
+    }
+
+    pub(super) fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.job.is_some() || !self.retirement.is_empty() {
+            return self.retirement.next_owner_demands::<PngDecodeJob>(self.job.is_some(), &None, body);
+        }
+        if self.image.is_some() {
+            return self.retirement.next_owner_demands::<RasterImage>(true, &None, body);
+        }
+        Ok(if self.binding.is_some() {
+            RetirementDemand { copy_bytes: size_of_val(&self.binding), depth: 1, ..Default::default() }
+        } else {
+            Default::default()
+        })
+    }
+}
+
+impl Drop for OriginalPngTexture {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || !self.pending(), "original PNG texture requires paid retirement");
+    }
+}
 
 #[cfg(test)]
 mod tests{
  use super::*;
  use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
- use semio_framework_job::close_original_retained_step;
- use semio_framework_value::RetainedCloneGrant;
  fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<25,maximum_release_bytes:1<<25,maximum_depth:256}}
  fn physical<T>(cx:&mut StepContext<'_>,step:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
   let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||step(cx));let after=cx.retained_progress();
@@ -109,6 +215,19 @@ mod tests{
  fn original_png_texture_heap_witness_observes_real_allocations(){
   let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::hint::black_box(vec![3u8;173]));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(173,0));
   let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(value));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,173));
+ }
+ #[test]
+ fn original_png_texture_restores_owned_input_on_invalid_signature() {
+    let mut bytes = vec![0; 8];
+    let original = bytes.as_ptr();
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(8715), Generation(2), stock(), || Some(0), 8000, 1024);
+    let mut png = OriginalPngTexture::default();
+    assert!(caller.bare_turn(stock(), |cx| physical(cx, |cx| png.admit(&mut bytes, cx))).is_err());
+    assert_eq!(bytes.as_ptr(), original);
+    assert_eq!(bytes, vec![0; 8]);
+    assert!(!png.pending());
+    assert_eq!(caller.receipt().copied_items, 1);
+    caller.retire(stock());
  }
  #[test]
  fn original_png_texture_denied_handoffs_keep_private_pixels_until_cancelled_close(){
@@ -151,8 +270,19 @@ mod tests{
   let mut output=None;for turn in 0..10000{let complete=caller.turn_with_decoder(stock(),&mut decoder,|cx|png.take_image(&mut output,[7,11],cx)).unwrap();if complete{break}assert!(turn<9999);}assert!(!png.pending());assert_eq!(output.as_ref().unwrap().pixels.as_ptr(),pixel_pointer);
   let image=output.as_ref().unwrap();assert_eq!((image.width,image.height),(law["width"].as_u64().unwrap()as u32,law["height"].as_u64().unwrap()as u32));assert_eq!(image.pixels,law["rgba"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect::<Vec<_>>());
   while png.pending(){caller.turn(stock(),|cx|{png.close(cx)?;Ok(())}).unwrap();}
-  let mut pixels=None;caller.turn_with_decoder(stock(),&mut decoder,|cx|{let bytes=std::mem::size_of::<DecodedReferenceImage>()+std::mem::size_of::<Vec<u8>>();admit_original_construction(cx,&mut pixels,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|RetainedWorkOutcome{result:Ok((output.take().unwrap().pixels,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1})?;Ok(())}).unwrap();
-  let mut retirement=RetainedCloneClose::default();while pixels.is_some()||!retirement.is_empty(){caller.turn(stock(),|cx|{let demand=retirement.next_owner_demands::<Vec<u8>>(pixels.is_some(),&None,cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|{if !retirement.is_empty(){return retirement.step_granted(grant)}let turn=retirement.begin_granted(&mut pixels,grant);RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}})?;Ok(())}).unwrap();}
+  let mut pixels = None;
+  caller.bare_turn(stock(), |cx| {
+    let bytes = size_of::<DecodedReferenceImage>() + size_of::<Option<Vec<u8>>>();
+    assert!(transfer(cx, bytes, |_| {
+        pixels = Some(output.take().unwrap().pixels);
+        Ok(())
+    })?);
+    Ok(())
+  }).unwrap();
+  let mut retirement=RetainedCloneClose::default();
+  while pixels.is_some()||!retirement.is_empty(){
+   caller.bare_turn(stock(),|cx|retire_resident(cx,&mut retirement,&mut pixels)).unwrap();
+  }
   close_decoder(&mut caller,&mut decoder);caller.retire(stock());
  }
 }

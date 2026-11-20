@@ -312,6 +312,7 @@ fn closing_an_overlay_clears_focus_that_was_inside_it() {
 //#region 🔖️DragDropTests
 #[test]
 fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut tree = DispatchTree::new(UiRevision(0));
     let root = leaf(&mut tree, None, "root", DispatchFlags::LAYOUT_CONTAINER, listen(vec![]), (0.0, 0.0, 200.0, 200.0));
     let source = leaf(&mut tree, Some(root), "source", DispatchFlags::DRAG_SOURCE, listen(vec![]), (0.0, 0.0, 20.0, 20.0));

@@ -121,3 +121,43 @@ fn type1_cleartext_encoding_is_read() {
 
 #[test]
 fn four_byte_embedded_encoding_and_lazy_unicode_ranges_preserve_supplementary_text(){let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🗺️cmap/🧪️fixtures/🔣️unicode.json")).unwrap();let cmap=cmap::parse_cmap(fixture["encoding"].as_str().unwrap().as_bytes(),"LayoutUTF32");let unicode=cmap::parse_to_unicode(fixture["toUnicode"].as_str().unwrap().as_bytes());assert_eq!(unicode.mappings.len(),fixture["expected"]["rangeStorage"].as_u64().unwrap()as usize);let font=PdfFont{id:"F0".into(),kind:PdfFontKind::Type0{base_font:"Layout semantic text".into(),cmap:PdfCMap::Embedded{cmap},descendant:PdfCidFont{true_type:true,base_font:"Sans".into(),system_info:Default::default(),descriptor:Default::default(),default_width:500.0,widths:Vec::new(),default_vertical:None,vertical_metrics:Vec::new(),cid_to_gid:None,program:None,extra:Vec::new()}},to_unicode:Some(unicode),extra:Vec::new()};let codec=FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();let codes=fixture["codes"].as_array().unwrap().iter().map(|code|code.as_u64().unwrap()as u32).collect::<Vec<_>>();let bytes=codes.iter().flat_map(|code|code.to_be_bytes()).collect::<Vec<_>>();assert_eq!(codec.decode_text(&bytes).as_deref(),fixture["text"].as_str());assert!(codec.decode(&bytes).iter().all(|glyph|glyph.code_width==4));assert_eq!(codec.encode(fixture["text"].as_str().unwrap()),Some(bytes));let case=&fixture["mixed"];let mut font=font.clone();if let PdfFontKind::Type0{cmap,..}=&mut font.kind{*cmap=PdfCMap::Embedded{cmap:cmap::parse_cmap(case["encoding"].as_str().unwrap().as_bytes(),"Mixed")};}font.to_unicode=Some(cmap::parse_to_unicode(case["toUnicode"].as_str().unwrap().as_bytes()));let codec=FontCodec::new(&font,&crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default()).unwrap();let bytes=case["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();assert_eq!(codec.decode_text(&bytes).as_deref(),case["text"].as_str());assert_eq!(codec.decode(&bytes).iter().map(|glyph|glyph.code_width).collect::<Vec<_>>(),vec![1,2,3,4]);assert_eq!(codec.encode(case["text"].as_str().unwrap()),Some(bytes));}
+
+
+#[test]
+fn equal_numeric_codes_keep_their_physical_widths() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗺️cmap/🧪️fixtures/🔣️unicode.json")).unwrap();
+    let case = &fixture["sameNumericCode"];
+    let encoding = cmap::parse_cmap(case["encoding"].as_str().unwrap().as_bytes(), "RepeatedCode");
+    let font = PdfFont {
+        id: "F0".into(),
+        kind: PdfFontKind::Type0 {
+            base_font: "Sans".into(),
+            cmap: PdfCMap::Embedded { cmap: encoding },
+            descendant: PdfCidFont {
+                true_type: true, base_font: "Sans".into(), system_info: Default::default(),
+                descriptor: Default::default(), default_width: 500.0, widths: Vec::new(),
+                default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None,
+                program: None, extra: Vec::new(),
+            },
+        },
+        to_unicode: Some(cmap::parse_to_unicode(case["toUnicode"].as_str().unwrap().as_bytes())),
+        extra: Vec::new(),
+    };
+    let resources = crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default();
+    let codec = FontCodec::new(&font, &resources).unwrap();
+    let bytes: Vec<u8> = serde_json::from_value(case["bytes"].clone()).unwrap();
+    let codes: Vec<u32> = serde_json::from_value(case["codes"].clone()).unwrap();
+    let widths: Vec<u32> = serde_json::from_value(case["widths"].clone()).unwrap();
+    let spaces: Vec<bool> = serde_json::from_value(case["spaces"].clone()).unwrap();
+
+    assert_eq!(codec.character_codes(&bytes).collect::<Vec<_>>(), codes);
+    let glyphs = codec.decode(&bytes);
+    assert_eq!(glyphs.iter().map(|glyph| glyph.code).collect::<Vec<_>>(), codes);
+    assert_eq!(glyphs.iter().map(|glyph| glyph.code_width).collect::<Vec<_>>(), widths);
+    assert_eq!(glyphs.iter().map(|glyph| glyph.is_space_char).collect::<Vec<_>>(), spaces);
+    assert!(glyphs.iter().all(|glyph| glyph.cid == 1));
+    assert_eq!(codec.decode_text(&bytes).as_deref(), case["text"].as_str());
+    assert!(codec.decode_codes(&codes).iter().all(|glyph| glyph.code_width == 1 && glyph.is_space_char));
+    assert_eq!(codec.decode_text(&[]).as_deref(), Some(""));
+    assert_eq!(codec.decode_text(&[0xFF]), None);
+}

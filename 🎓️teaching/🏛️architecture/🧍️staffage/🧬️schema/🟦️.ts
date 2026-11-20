@@ -369,10 +369,10 @@ export type AuthoredVolume = {
   readonly decisions: readonly Text[];
 };
 
-/** 🚫️ The volume of a scale whose representation is unavailable; the reason lives in `representations[denominator]`. */
+/** 🚫️ A scale without a digital model or a printable drawing. */
 export type UnavailableVolume = { readonly status: "unavailable"; readonly denominator: ScaleDenominator };
 
-/** ⚖️ The volume decision for one preset scale, mirroring the representation of that scale. */
+/** ⚖️ The volume decision for one preset scale, which can carry a digital model below the printable feature size. */
 export type ScaleVolume = AuthoredVolume | UnavailableVolume;
 
 /** 🗃️ The volumes of an asset, one per preset scale, keyed like `representations`. */

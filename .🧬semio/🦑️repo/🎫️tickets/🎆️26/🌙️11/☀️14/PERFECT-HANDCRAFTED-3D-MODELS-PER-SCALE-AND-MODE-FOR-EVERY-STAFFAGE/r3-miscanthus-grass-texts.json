@@ -1,0 +1,212 @@
+{
+  "summary": {
+    "en": "A flowering clump of Chinese silver grass (Miscanthus sinensis) 1.75 m tall and about 2 m across: a dense crown of old stubble, a fountain of narrow arching blades on leafy shoots, and four flowering culms that rise through the clump and end in silky fan-shaped panicles nodding to one side.",
+    "de": "Ein blühender Horst Chinaschilf (Miscanthus sinensis), 1,75 m hoch und etwa 2 m breit: eine dichte Horstbasis mit alten Stoppeln, eine Fontäne schmaler, bogig überhängender Blätter an beblätterten Trieben und vier Blütenhalme, die durch den Horst aufsteigen und in seidigen, fächerförmigen, einseitig nickenden Rispen enden."
+  },
+  "notes": {
+    "en": "Round 3: the clump is modelled as a real grass. Ten rigged shoots stand on the crown at their own places (four flowering culms on an inner ring, six leafy shoots on an outer ring, 32 side and companion shoots around them); every blade bundle bone carries one main shoot whose leaves sit at its nodes, and its rising bone carries the side shoots that fill the clump to both sides. Blades are 11 to 17 mm wide and 0.3 to 0.8 m long, culms 13 mm at the base, each panicle has a 12 cm axis with racemes of 21 to 28 cm (Flora of China 22). The earlier text named Miscanthus x giganteus, which grows 3 to 4 m tall; the dimensions are those of Miscanthus sinensis. The rig is the side view of the three-dimensional shoots: every joint hinges about a lateral axis and carries its lateral place as `z`, so wind and snow turn every bone in the plane of the side elevation and every pose stays closed. The culms stay standing in winter, but shapes cannot be toggled by a pose, so there is no winter-bare geometry; the fourth pose is wet snow bowing the blades.",
+    "de": "Runde 3: Der Horst ist als wirkliches Gras modelliert. Zehn Triebe mit Knochen stehen an eigenen Stellen auf der Horstbasis (vier Blütenhalme auf einem inneren Ring, sechs Blatttriebe auf einem äußeren, 32 Seiten- und Begleittriebe um sie herum); jeder Blattbündelknochen trägt einen Haupttrieb, dessen Blätter an seinen Knoten sitzen, und sein aufsteigender Knochen trägt die Seitentriebe, die den Horst nach beiden Seiten füllen. Die Blätter sind 11 bis 17 mm breit und 0,3 bis 0,8 m lang, die Halme am Fuß 13 mm dick, jede Rispe hat eine 12 cm lange Achse mit Trauben von 21 bis 28 cm (Flora of China 22). Der frühere Text nannte Miscanthus x giganteus, der 3 bis 4 m hoch wird; die Maße sind die von Miscanthus sinensis. Das Skelett ist die Seitenansicht der dreidimensionalen Triebe: Jedes Gelenk dreht um eine Querachse und trägt seine seitliche Lage als `z`, sodass Wind und Schnee jeden Knochen in der Ebene der Seitenansicht drehen und jede Pose geschlossen bleibt. Die Halme bleiben im Winter stehen, aber Formen können durch eine Pose nicht ausgeblendet werden, daher gibt es keine winterkahle Geometrie; die vierte Pose ist Nassschnee, der die Blätter niederdrückt."
+  },
+  "references": [
+    {
+      "id": "flora-of-china-22",
+      "citation": "Chen, S. L. and Renvoize, S. A. (2006). Miscanthus. In: Wu, Z. Y., Raven, P. H. and Hong, D. Y. (eds.), Flora of China 22 (Poaceae), 581-583. Science Press, Beijing, and Missouri Botanical Garden Press, St. Louis. Miscanthus sinensis: culms 0.8-2 m, 3-10 mm in diameter; leaf blades 20-70 cm x 6-20 mm; panicle 15-30 cm, axis 6-16 cm, racemes 10-40, 10-30 cm."
+    },
+    {
+      "id": "hodkinson-renvoize-2001",
+      "citation": "Hodkinson, T. R. and Renvoize, S. (2001). Nomenclature of Miscanthus x giganteus (Poaceae). Kew Bulletin 56(3), 759-760. Miscanthus x giganteus: culms to 4 m, leaf blades to 3 cm wide."
+    }
+  ],
+  "volumes": {
+    "50": [
+      {
+        "en": "Body: the crown is a low mound of rhizome mat and litter with seven pairs of cut culm stubs of last year. Ten shoots stand on it: four flowering culms (13 mm at the base, 5 mm below the panicle) and six leafy shoots; each leafy shoot curves smoothly through its rig joint, each culm is straight between its nodes, and four side shoots per bundle and two companion shoots per culm stand on the rising bone they belong to. The lateral place of every joint is the `z` of its bone, so the sagittal rig is the true side view of the three-dimensional shoots.",
+        "de": "Körper: Die Horstbasis ist ein flacher Hügel aus Rhizomfilz und Streu mit sieben Paaren abgeschnittener Halmstoppeln des Vorjahres. Darauf stehen zehn Triebe: vier Blütenhalme (am Fuß 13 mm, unter der Rispe 5 mm) und sechs Blatttriebe; jeder Blatttrieb läuft glatt gekrümmt durch sein Skelettgelenk, jeder Halm ist zwischen seinen Knoten gerade, und vier Seitentriebe je Bündel und zwei Begleittriebe je Halm stehen auf dem aufsteigenden Knochen, zu dem sie gehören. Die seitliche Lage jedes Gelenks ist das `z` seines Knochens, sodass das sagittale Skelett die wahre Seitenansicht der dreidimensionalen Triebe ist."
+      },
+      {
+        "en": "Every leaf is one whole blade on one bone: a thin lens section 11 to 17 mm wide, widest at a third of its length and tapering to the tip, leaving its node close to the stem, arching over and hanging at the tip. A leaf is fixed where its node lies on the bone axis, so every pose and clip stays closed.",
+        "de": "Jedes Blatt ist eine ganze Spreite an einem Knochen: ein dünner Linsenquerschnitt von 11 bis 17 mm Breite, bei einem Drittel der Länge am breitesten und zur Spitze verjüngt, am Knoten dicht am Halm ansetzend, bogig überhängend und an der Spitze hängend. Ein Blatt ist dort befestigt, wo sein Knoten auf der Knochenachse liegt, daher bleibt jede Pose und jeder Clip geschlossen."
+      },
+      {
+        "en": "Each panicle is a 12 cm axis with twenty-one silky racemes of 21 to 28 cm that leave it at 4 to 30 degrees and nod to the side the culm leans to. Blades, stems and racemes are slender parts of true size.",
+        "de": "Jede Rispe ist eine 12 cm lange Achse mit einundzwanzig seidigen Trauben von 21 bis 28 cm, die unter 4 bis 30 Grad abgehen und zu der Seite nicken, zu der sich der Halm neigt. Blätter, Halme und Trauben sind schlanke Teile in wahrer Größe."
+      },
+      {
+        "en": "Thermal: blades, plumes and culms are the body parts of their region by reference; the blades are an exchange area. Transpiration leaves through twelve thin outlet strips on the upper face of the leading leaf of each blade bundle bone, and the emitter anchors sit 3 mm above them.",
+        "de": "Thermik: Blätter, Rispen und Halme sind die Körperteile ihrer Region als Verweis; die Blätter sind eine Austauschfläche. Die Transpiration tritt durch zwölf dünne Auslassstreifen auf der Oberseite des führenden Blattes jedes Blattbündelknochens aus, die Emitteranker liegen 3 mm darüber."
+      },
+      {
+        "en": "Structure: the rhizome mat as a tapered disc fixed in the ground, a rod of the declared section along every culm segment (12 mm and 8 mm), the shoot axis and the midrib of the leading leaf along every blade bundle, the panicle axis, a joint at every rig joint, the support plate under the crown, the mass of the crown and the four panicle masses.",
+        "de": "Tragwerk: der Rhizomfilz als verjüngte, im Boden eingespannte Scheibe, ein Stab mit dem angegebenen Querschnitt entlang jedes Halmabschnitts (12 mm und 8 mm), die Triebachse und die Mittelrippe des führenden Blattes entlang jedes Blattbündels, die Rispenachse, ein Gelenk an jedem Skelettgelenk, die Auflagerplatte unter der Horstbasis, die Masse der Horstbasis und die vier Rispenmassen."
+      }
+    ],
+    "100": [
+      {
+        "en": "Body, drawn anew for 1:100: the same ten shoots, but each drawn leaf stands for two real ones (16 to 17 mm wide, at least 0.36 m long), each bundle keeps three side shoots and each culm one companion shoot, the crown carries seven stubs of 15 mm, one for each pair of 1:50, and the racemes of each panicle are merged in threes into seven flat silky lobes of 16 mm.",
+        "de": "Körper, für 1:100 neu gezeichnet: dieselben zehn Triebe, aber jedes gezeichnete Blatt steht für zwei wirkliche (16 bis 17 mm breit, mindestens 0,36 m lang), jedes Bündel behält drei Seitentriebe und jeder Halm einen Begleittrieb, die Horstbasis trägt sieben Stoppeln von 15 mm, je eine für jedes Paar von 1:50, und die Trauben jeder Rispe sind zu je dreien zu sieben flachen, seidigen Lappen von 16 mm zusammengefasst."
+      },
+      {
+        "en": "Thermal: every body part by reference in its region and twelve outlet strips on the leading leaves. Structure: the load path of 1:50 with simplified rods of constant section and larger joints.",
+        "de": "Thermik: jedes Körperteil als Verweis in seiner Region und zwölf Auslassstreifen auf den führenden Blättern. Tragwerk: der Lastpfad von 1:50 mit vereinfachten Stäben gleichbleibenden Querschnitts und größeren Gelenken."
+      }
+    ],
+    "200": [
+      {
+        "en": "Body, drawn anew for 1:200: the leaves of a shoot are merged into arching ribbons 24 mm wide, four on every arching bone and three side ribbons on every rising bone; the leafy shoots are sheaves of 20 mm, eight basal ribbons stand on the crown mound, each culm keeps two leaf ribbons and each panicle is a fan of four flat pointed lobes.",
+        "de": "Körper, für 1:200 neu gezeichnet: Die Blätter eines Triebs sind zu bogigen, 24 mm breiten Bändern zusammengefasst, vier an jedem überhängenden Knochen und drei Seitenbänder an jedem aufsteigenden; die Blatttriebe sind Garben von 20 mm, acht Grundbänder stehen auf dem Horsthügel, jeder Halm behält zwei Blattbänder und jede Rispe ist ein Fächer aus vier flachen, spitzen Lappen."
+      },
+      {
+        "en": "Thermal: every body part by reference and twelve outlet strips on the ribbons. Structure: crown disc, culm rods, the sheaf and the leading ribbon axis of every bundle, panicle axes, support and masses; joints are below the smallest feature and omitted.",
+        "de": "Thermik: jedes Körperteil als Verweis und zwölf Auslassstreifen auf den Bändern. Tragwerk: Horstscheibe, Halmstäbe, Garbe und Achse des führenden Bandes jedes Bündels, Rispenachsen, Auflager und Massen; Gelenke liegen unter der kleinsten Einzelheit und entfallen."
+      }
+    ],
+    "500": [
+      {
+        "en": "Body, drawn anew for 1:500: the leaves of every shoot are merged into pointed arching tongues about 13 cm wide and 8 cm thick: a rising and an arching tongue on the two bones of every blade bundle, three side tongues on every rising bone and three upright tongues around every culm. The tongues are envelopes of the finer fans of leaves. Each flowering culm is a line of true thickness with one flat panicle plume of 12 cm, and the crown is a low mound.",
+        "de": "Körper, für 1:500 neu gezeichnet: Die Blätter jedes Triebs sind zu spitzen, bogigen Zungen von etwa 13 cm Breite und 8 cm Dicke zusammengefasst: eine aufsteigende und eine überhängende Zunge an den zwei Knochen jedes Blattbündels, drei Seitenzungen an jedem aufsteigenden Knochen und drei aufrechte Zungen um jeden Halm. Die Zungen sind Hüllen der feineren Blattfächer. Jeder Blütenhalm ist eine Linie wahrer Dicke mit einer flachen Rispenfahne von 12 cm, die Horstbasis ein flacher Hügel."
+      },
+      {
+        "en": "Thermal: every body part by reference, twelve outlet strips on the tongues and the six shoot axes as slender culm surfaces inside the rising tongues. Structure: crown disc, straight culm and bundle rods, panicle axes, support and crown mass; the model is minimal for this scale.",
+        "de": "Thermik: jedes Körperteil als Verweis, zwölf Auslassstreifen auf den Zungen und die sechs Triebachsen als schlanke Halmflächen in den aufsteigenden Zungen. Tragwerk: Horstscheibe, gerade Halm- und Bündelstäbe, Rispenachsen, Auflager und Horstmasse; das Modell ist für diesen Maßstab minimal."
+      }
+    ]
+  },
+  "representations": {
+    "50": {
+      "silhouette": {
+        "en": "At 1:50 (1 m is 20 mm) the clump is drawn leaf by leaf as the true view of its 3D body: a fountain of narrow arching blades on ten shoots, the low crown with its stubble, and four culms with fan-shaped panicles nodding outwards. Side elevation, front elevation and plan are projections of the same body.",
+        "de": "Bei 1:50 (1 m sind 20 mm) ist der Horst Blatt für Blatt als wahre Ansicht seines 3D-Körpers gezeichnet: eine Fontäne schmaler, bogiger Blätter an zehn Trieben, die niedrige Horstbasis mit ihren Stoppeln und vier Halme mit fächerförmigen, nach außen nickenden Rispen. Seitenansicht, Vorderansicht und Grundriss sind Projektionen desselben Körpers."
+      },
+      "retained": {
+        "en": "Retained: every blade, every shoot axis, the four culms in two segments, the panicle axis and all twenty-one racemes of each panicle, the crown mound and seven pairs of stubs.",
+        "de": "Beibehalten: jedes Blatt, jede Triebachse, die vier Halme in zwei Abschnitten, die Rispenachse und alle einundzwanzig Trauben jeder Rispe, der Horsthügel und sieben Stoppelpaare."
+      },
+      "merged": {
+        "en": "Merged: leaf sheaths into the stems they clasp, spikelets and hairs into the raceme strokes.",
+        "de": "Zusammengefasst: Blattscheiden mit den Halmen, die sie umfassen, Ährchen und Haare in den Traubenstrichen."
+      },
+      "omitted": {
+        "en": "Omitted: nodes, ligules, the white midrib line and single spikelets, all below 0.15 mm on paper.",
+        "de": "Weggelassen: Knoten, Blatthäutchen, die weiße Mittelrippe und einzelne Ährchen, alle unter 0,15 mm auf dem Papier."
+      },
+      "thinElements": {
+        "en": "Each blade, stem and raceme is one stroke whose pen is its true width at this scale (blades 0.22 to 0.34 mm, culms 0.26 mm, racemes 0.17 mm); no stroke is thinner than 0.1 mm.",
+        "de": "Jedes Blatt, jeder Halm und jede Traube ist ein Strich, dessen Stift seine wahre Breite in diesem Maßstab ist (Blätter 0,22 bis 0,34 mm, Halme 0,26 mm, Trauben 0,17 mm); kein Strich ist dünner als 0,1 mm."
+      },
+      "hatching": {
+        "en": "No hatching; the overlap of the blade strokes carries the volume.",
+        "de": "Keine Schraffur; die Überlagerung der Blattstriche trägt das Volumen."
+      },
+      "styles": {
+        "en": "Line views: strokes of true width over the filled crown mound. Solid views: the same strokes in the tone of their region, panicles light, stems dark.",
+        "de": "Linienansichten: Striche wahrer Breite über dem gefüllten Horsthügel. Flächenansichten: dieselben Striche im Ton ihrer Region, Rispen hell, Halme dunkel."
+      },
+      "overlays": {
+        "en": "Every stroke is bound to its thermal region (blades, plumes, culms) and to the bone that carries it, so the thermal and structural views colour the same drawing.",
+        "de": "Jeder Strich ist an seine thermische Region (Blätter, Rispen, Halme) und an den tragenden Knochen gebunden, sodass Thermik- und Tragwerksansicht dieselbe Zeichnung einfärben."
+      }
+    },
+    "100": {
+      "silhouette": {
+        "en": "At 1:100 (1 m is 10 mm) the fountain is drawn with about half the blades, each stroke standing for two leaves, on the same ten shoots; the panicles are fans of seven silky lobes. All three views are projections of the 1:100 body.",
+        "de": "Bei 1:100 (1 m sind 10 mm) ist die Fontäne mit etwa der Hälfte der Blätter gezeichnet, jeder Strich steht für zwei Blätter, an denselben zehn Trieben; die Rispen sind Fächer aus sieben seidigen Lappen. Alle drei Ansichten sind Projektionen des Körpers von 1:100."
+      },
+      "retained": {
+        "en": "Retained: the ten shoots, three side shoots per bundle, one companion shoot per culm, the four culms in two segments, seven panicle lobes per culm, the crown mound and seven stubs.",
+        "de": "Beibehalten: die zehn Triebe, drei Seitentriebe je Bündel, ein Begleittrieb je Halm, die vier Halme in zwei Abschnitten, sieben Rispenlappen je Halm, der Horsthügel und sieben Stoppeln."
+      },
+      "merged": {
+        "en": "Merged: neighbouring leaves in pairs into one stroke, old culm stubs in pairs, racemes in threes into panicle lobes, sheaths into the stems.",
+        "de": "Zusammengefasst: benachbarte Blätter paarweise zu einem Strich, alte Halmstoppeln paarweise, Trauben zu je dreien in Rispenlappen, Blattscheiden mit den Halmen."
+      },
+      "omitted": {
+        "en": "Omitted: the fourth side shoot of every bundle, the second companion shoot of every culm, the flag leaves, nodes and spikelets.",
+        "de": "Weggelassen: der vierte Seitentrieb jedes Bündels, der zweite Begleittrieb jedes Halms, die Fahnenblätter, Knoten und Ährchen."
+      },
+      "thinElements": {
+        "en": "Blade strokes 0.16 to 0.17 mm, culms 0.13 mm, shoot axes 0.1 mm; nothing is thinner than 0.1 mm.",
+        "de": "Blattstriche 0,16 bis 0,17 mm, Halme 0,13 mm, Triebachsen 0,1 mm; nichts ist dünner als 0,1 mm."
+      },
+      "hatching": {
+        "en": "No hatching; the overlap of the blade strokes carries the volume.",
+        "de": "Keine Schraffur; die Überlagerung der Blattstriche trägt das Volumen."
+      },
+      "styles": {
+        "en": "Line views: strokes of true width over the filled crown mound. Solid views: the same strokes in the tone of their region.",
+        "de": "Linienansichten: Striche wahrer Breite über dem gefüllten Horsthügel. Flächenansichten: dieselben Striche im Ton ihrer Region."
+      },
+      "overlays": {
+        "en": "Every stroke is bound to its thermal region and to the bone that carries it.",
+        "de": "Jeder Strich ist an seine thermische Region und an den tragenden Knochen gebunden."
+      }
+    },
+    "200": {
+      "silhouette": {
+        "en": "At 1:200 (1 m is 5 mm) the clump is a fountain of arching ribbons, each standing for the leaves of one side of a shoot, over the crown mound, with four culm lines that carry a small panicle fan each. All three views are projections of the 1:200 body.",
+        "de": "Bei 1:200 (1 m sind 5 mm) ist der Horst eine Fontäne bogiger Bänder, von denen jedes für die Blätter einer Seite eines Triebs steht, über dem Horsthügel, mit vier Halmlinien, die je einen kleinen Rispenfächer tragen. Alle drei Ansichten sind Projektionen des Körpers von 1:200."
+      },
+      "retained": {
+        "en": "Retained: six sheaves, four ribbons on every arching bone and three side ribbons on every rising bone, eight basal ribbons, two leaf ribbons per culm, four culms in two segments, four panicle fans of four lobes, the crown mound.",
+        "de": "Beibehalten: sechs Garben, vier Bänder an jedem überhängenden Knochen und drei Seitenbänder an jedem aufsteigenden, acht Grundbänder, zwei Blattbänder je Halm, vier Halme in zwei Abschnitten, vier Rispenfächer aus vier Lappen, der Horsthügel."
+      },
+      "merged": {
+        "en": "Merged: the leaves of a shoot into ribbons, side shoots into their ribbon, racemes into the lobes of the fan, stubble into the mound.",
+        "de": "Zusammengefasst: die Blätter eines Triebs zu Bändern, Seitentriebe in ihr Band, Trauben in die Lappen des Fächers, Stoppeln in den Hügel."
+      },
+      "omitted": {
+        "en": "Omitted: single blades, racemes and stubs; they are below 0.1 mm on paper.",
+        "de": "Weggelassen: einzelne Blätter, Trauben und Stoppeln; sie liegen unter 0,1 mm auf dem Papier."
+      },
+      "thinElements": {
+        "en": "Ribbon strokes 0.12 mm, sheaves and culms 0.1 mm; nothing is thinner than 0.1 mm.",
+        "de": "Bandstriche 0,12 mm, Garben und Halme 0,1 mm; nichts ist dünner als 0,1 mm."
+      },
+      "hatching": {
+        "en": "No hatching.",
+        "de": "Keine Schraffur."
+      },
+      "styles": {
+        "en": "Line views: ribbon strokes over the outlined mound and panicle lobes. Solid views: mound and panicle lobes as tonal masses under the strokes.",
+        "de": "Linienansichten: Bandstriche über dem umrissenen Hügel und den Rispenlappen. Flächenansichten: Hügel und Rispenlappen als getönte Massen unter den Strichen."
+      },
+      "overlays": {
+        "en": "Every shape is bound to its thermal region and to the bone that carries it.",
+        "de": "Jede Form ist an ihre thermische Region und an den tragenden Knochen gebunden."
+      }
+    },
+    "500": {
+      "silhouette": {
+        "en": "At 1:500 (1 m is 2 mm) the clump is a tuft of pointed arching tongues that rise from a narrow base and hang out on all sides, with four panicle plumes on fine culm lines above it; the tongues follow their bones, so the clump still leans in the wind. All three views are projections of the 1:500 body.",
+        "de": "Bei 1:500 (1 m sind 2 mm) ist der Horst ein Schopf spitzer, bogiger Zungen, die aus einer schmalen Basis aufsteigen und ringsum überhängen, mit vier Rispenfahnen auf feinen Halmlinien darüber; die Zungen folgen ihren Knochen, sodass sich der Horst weiterhin im Wind neigt. Alle drei Ansichten sind Projektionen des Körpers von 1:500."
+      },
+      "retained": {
+        "en": "Retained: a rising and an arching tongue per blade bundle, eighteen side tongues, twelve upright tongues, four culm lines, four panicle plumes and the crown mound.",
+        "de": "Beibehalten: eine aufsteigende und eine überhängende Zunge je Blattbündel, achtzehn Seitenzungen, zwölf aufrechte Zungen, vier Halmlinien, vier Rispenfahnen und der Horsthügel."
+      },
+      "merged": {
+        "en": "Merged: all leaves of a shoot into its tongues, stubble into the mound, racemes into the plumes.",
+        "de": "Zusammengefasst: alle Blätter eines Triebs in dessen Zungen, Stoppeln in den Hügel, Trauben in die Fahnen."
+      },
+      "omitted": {
+        "en": "Omitted: single leaves, shoots and racemes; they are far below 0.1 mm on paper.",
+        "de": "Weggelassen: einzelne Blätter, Triebe und Trauben; sie liegen weit unter 0,1 mm auf dem Papier."
+      },
+      "thinElements": {
+        "en": "The culm lines are drawn with the thinnest pen of 0.1 mm; tongues are 80 mm thick, 0.16 mm on paper.",
+        "de": "Die Halmlinien sind mit dem dünnsten Stift von 0,1 mm gezeichnet; die Zungen sind 80 mm dick, 0,16 mm auf dem Papier."
+      },
+      "hatching": {
+        "en": "No hatching.",
+        "de": "Keine Schraffur."
+      },
+      "styles": {
+        "en": "Line views: restrained outlines of tongues, plumes and mound. Solid views: tonal masses ordered by depth.",
+        "de": "Linienansichten: zurückhaltende Umrisse von Zungen, Fahnen und Hügel. Flächenansichten: getönte Massen, nach Tiefe geordnet."
+      },
+      "overlays": {
+        "en": "Every shape is bound to its thermal region and to the bone that carries it.",
+        "de": "Jede Form ist an ihre thermische Region und an den tragenden Knochen gebunden."
+      }
+    }
+  }
+}

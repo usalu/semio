@@ -45,12 +45,12 @@ fn model() -> ModelSnapshot {
     let fire = PropertyDef { allowed: vec![text("EI30"), text("EI60")], ..definition("FireRating", PropertyKind::Text) };
     let thermal = PropertyDef { minimum: Some(0.0), maximum: Some(5.0), default_value: Some(real(0.35)), ..definition("ThermalTransmittance", PropertyKind::Real) };
     let external = PropertyDef { default_value: Some(PropertyValue::Boolean { value: false }), ..definition("IsExternal", PropertyKind::Boolean) };
-    snapshot.property_templates.insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties: vec![fire, thermal, external] });
+    snapshot.property_templates.cold_insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties: vec![fire, thermal, external] });
     let strict = PropertyDef { required: true, ..definition("Mass", PropertyKind::Real) };
-    snapshot.property_templates.insert("pt-strict".into(), PropertyTemplate { name: "Pset_Strict".into(), applies_to: vec![TemplateTarget::Wall], properties: vec![strict] });
-    snapshot.properties.insert("wt-300".into(), set(&[("FireRating", text("EI60"))]));
-    snapshot.properties.insert("w-south".into(), set(&[("ThermalTransmittance", real(9.0)), ("IsExternal", PropertyValue::Boolean { value: true })]));
-    snapshot.properties.insert("w-east".into(), set(&[("FireRating", text("EI90"))]));
+    snapshot.property_templates.cold_insert("pt-strict".into(), PropertyTemplate { name: "Pset_Strict".into(), applies_to: vec![TemplateTarget::Wall], properties: vec![strict] });
+    snapshot.properties.cold_insert("wt-300".into(), set(&[("FireRating", text("EI60"))]));
+    snapshot.properties.cold_insert("w-south".into(), set(&[("ThermalTransmittance", real(9.0)), ("IsExternal", PropertyValue::Boolean { value: true })]));
+    snapshot.properties.cold_insert("w-east".into(), set(&[("FireRating", text("EI90"))]));
     snapshot
 }
 
@@ -104,10 +104,10 @@ fn the_findings_become_diagnostics_in_both_languages_and_a_clean_model_has_none(
 #[test]
 fn classifications_are_checked_against_the_table_of_their_system() {
     let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass".into(), edition: String::new(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
-    snapshot.classifications.insert("w-south".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
-    snapshot.classifications.insert("w-east".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "Zz_99".to_string())]));
-    snapshot.classifications.insert("w-north".into(), std::collections::BTreeMap::from([("cs-none".to_string(), "EF_25_10".to_string())]));
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass".into(), edition: String::new(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
+    snapshot.classifications.cold_insert("w-south".into(), [("cs-uni".to_string(), "EF_25_10".to_string())].into());
+    snapshot.classifications.cold_insert("w-east".into(), [("cs-uni".to_string(), "Zz_99".to_string())].into());
+    snapshot.classifications.cold_insert("w-north".into(), [("cs-none".to_string(), "EF_25_10".to_string())].into());
     let found = infer(&snapshot).diagnostics;
     let by = |code: DiagnosticCode| found.iter().filter(|finding| finding.code == code).map(|finding| (finding.elements[0].clone(), finding.missing[0].clone())).collect::<Vec<_>>();
     assert_eq!(by(DiagnosticCode::ClassificationUnknownCode), [("w-east".to_string(), "Zz_99".to_string())]);
@@ -167,7 +167,7 @@ fn the_holders_are_the_records_with_data_or_under_a_template_types_first() {
 #[test]
 fn a_template_of_the_type_kind_and_of_the_kind_it_types_reports_a_bad_type_value_once() {
     let mut snapshot = model();
-    snapshot.properties.insert("wt-300".into(), set(&[("FireRating", text("EI90"))]));
+    snapshot.properties.cold_insert("wt-300".into(), set(&[("FireRating", text("EI90"))]));
     let inference = infer(&snapshot);
     let issues: Vec<_> = inference.effective_properties["wt-300"].findings.iter().map(|row| (row.set.as_str(), row.property.as_str(), row.issue)).collect();
     assert_eq!(issues, [("Pset_WallCommon", "FireRating", Issue::NotAllowed)]);

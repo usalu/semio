@@ -17,8 +17,8 @@ pub fn with_ceiling(boundary: Vec<Vertex>, slope: Option<Slope>) -> ModelSnapsho
     let storey = model.storeys.iter().find(|(_, storey)| storey.level == 0).map(|(id, _)| id.clone()).expect("the ground storey");
     let material = model.materials.keys().next().cloned().expect("a material");
     let layer = |thickness| Layer { material: material.clone(), thickness, function: LayerFunction::Finish };
-    model.ceiling_types.insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![layer(0.0125), layer(0.0375)] });
-    model.ceilings.insert("c-1".into(), Ceiling { storey, ceiling_type: "ct-board".into(), boundary, holes: Vec::new(), offset: 0.2, slope, name: "Hall ceiling".into() });
+    model.ceiling_types.cold_insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![layer(0.0125), layer(0.0375)] });
+    model.ceilings.cold_insert("c-1".into(), Ceiling { storey, ceiling_type: "ct-board".into(), boundary, holes: Vec::new(), offset: 0.2, slope, name: "Hall ceiling".into() });
     model
 }
 

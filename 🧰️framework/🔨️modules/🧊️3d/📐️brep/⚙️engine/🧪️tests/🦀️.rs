@@ -16,3 +16,7 @@ mod shape_values;
 #[cfg(test)]
 #[path = "🔎️analysis/🦀️.rs"]
 mod analysis;
+
+#[cfg(test)]
+#[path = "🧭️session-laws/🦀️.rs"]
+mod session_laws;

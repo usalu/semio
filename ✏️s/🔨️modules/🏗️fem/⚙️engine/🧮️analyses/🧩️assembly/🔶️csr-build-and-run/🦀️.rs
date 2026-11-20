@@ -70,10 +70,12 @@ impl AssemblyJob<'_> {
         if context.should_yield() {
             return NumericalRun::Yield;
         }
-        context.consume_fuel(1);
         if let Some((kind, publication)) = self.publication.as_mut() {
             let kind = *kind;
-            return match publication.advance(&mut self.desk.lent, context) {
+            let before = context.original_work_units_spent();
+            let result = publication.advance(&mut self.desk.lent, context);
+            if context.original_work_units_spent() == before { context.consume_fuel(1); }
+            return match result {
                 Ok(false) => NumericalRun::Yield,
                 Ok(true) => {
                     self.publication = None;
@@ -90,6 +92,7 @@ impl AssemblyJob<'_> {
                 Err(_) => NumericalRun::Fault,
             };
         }
+        context.consume_fuel(1);
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
@@ -120,7 +123,7 @@ impl AssemblyJob<'_> {
                         if self.state.element_cursor == self.state.total_elements {
                             self.state.stage = AssemblyJobStage::MergeFull;
                         } else {
-                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
+                            let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build(context.retained_grant().maximum_depth).map(|_| ()) } else { self.begin_borrowed_element() };
                             if result.is_err() {
                                 return NumericalRun::Fault;
                             }
@@ -295,7 +298,7 @@ pub fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemErro
     }
     let k_full = full.to_csr();
     let k_factor = ldlt_factor(&free.to_csc_sym_upper()).map_err(|_| FemError::Singular)?;
-    let AssemblyPlan { dof_map, inv_perm, ndof, free_new, compact_of_new, node_slot: _ } = plan;
+    let AssemblyPlan { dof_map, inv_perm, ndof, free_new, compact_of_new, .. } = plan;
     Ok(AssembledSystem { dof_map, inv_perm, ndof, free_new, compact_of_new, k_factor, k_full })
 }
 

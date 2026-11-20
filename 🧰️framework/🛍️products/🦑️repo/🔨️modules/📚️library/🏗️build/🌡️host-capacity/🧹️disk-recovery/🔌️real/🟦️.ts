@@ -1,12 +1,17 @@
 import {spawn} from "node:child_process";
+import {statSync} from "node:fs";
 import {readdir} from "node:fs/promises";
 import {join} from "node:path";
+import {machinePathV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {IMAGE_RECOVERY_VOLUME_ENV_V1,type ImageRecoveryVolumeV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧭️volume/🟦️.ts";
+import resetSchema from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🧬️schema/🔣️.json" with {type:"json"};
 import {fileURLToPath} from "node:url";
 import {freeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
 import {handleTextV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {formatDiskBytesV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/💽️disk/🟦️.ts";
 import {DISK_RECOVERY_POLICY_V1,DISK_RECOVERY_TEXTS_V1,DISK_WRITERS_V1,requireDiskWritersV1,type DiskLanguageV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
-import {sweepLeakedSandboxImagesV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
+import {sweepWorkspaceSandboxImagesV1} from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
 import {ownerPoolStagingIoV1,ownerPoolStagingSweepV1} from "../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧹️staging-sweep/🟦️.ts";
 import {casHostAreasV1} from "../../../🗄️cas/📂️areas/🟦️.ts";
 import {collectImageSlackV1,describeImageSlackV1,measureImagesV1,type ImageOutcomeV1,type ImageReclaimOutcomeV1} from "../🖼️image-slack/🟦️.ts";
@@ -15,10 +20,10 @@ import {collectCasV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
 import {casPartitionPolicyForV1,measureCasPartitionV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {CAS_POLICY_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {casUsageV1} from "../../../🗄️cas/🗃️store/📏️usage/🟦️.ts";
-import {applyBoundV1,boundedBytesV1,DISK_BOUNDS_V1,selectExpiredV1,selectOlderThanV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
+import {applyBoundV1,boundedBytesV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 
 /** 🔌️ Where the real writers live and what they may touch: the workspace, the home of the user, the temporary directory, the user id, the clock, the liveness of a process and the one spawn of the product's own collector; tests replace every one of them. */
-export type RealDiskContextV1=Readonly<{workspace:string;home:string;tmp:string;uid:number;environment:Readonly<Record<string,string|undefined>>;now?:()=>number;alive?:(pid:number)=>boolean;dryRun?:boolean;ledger?:(signal?:AbortSignal)=>Promise<void>;language?:DiskLanguageV1;report?:(line:string)=>void;retire?:(partition:string,signal?:AbortSignal)=>Promise<ImageOutcomeV1>;reclaim?:(partition:string,signal?:AbortSignal)=>Promise<ImageReclaimOutcomeV1>;compact?:(storeRoot:string,originId:string,signal?:AbortSignal)=>Promise<ReplicaCompactionV1>;free?:()=>number|undefined}>;
+export type RealDiskContextV1=Readonly<{workspace:string;home:string;tmp:string;uid:number;environment:Readonly<Record<string,string|undefined>>;now?:()=>number;alive?:(pid:number)=>boolean;dryRun?:boolean;ledger?:(signal?:AbortSignal)=>Promise<void>;language?:DiskLanguageV1;report?:(line:string)=>void;pressure?:Readonly<{path:string;requiredFreeBytes:number}>;retire?:(partition:string,signal?:AbortSignal)=>Promise<ImageOutcomeV1>;reclaim?:(partition:string,signal?:AbortSignal)=>Promise<ImageReclaimOutcomeV1>;compact?:(storeRoot:string,originId:string,signal?:AbortSignal)=>Promise<ReplicaCompactionV1>;free?:()=>number|undefined}>;
 
 const expand=(template:string,context:RealDiskContextV1):string=>template.replaceAll("{store}",readReplicaStoreRoleV1(context.workspace).storeRoot??"").replaceAll("{workspace}",context.workspace).replaceAll("{home}",context.home).replaceAll("{tmp}",context.tmp.replace(/\/+$/u,"")).replaceAll("{uid}",String(context.uid));
 const aliveByDefault=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
@@ -33,24 +38,46 @@ export async function runLedgerCollectorV1(workspace:string,environment:Readonly
 }
 
 /** 🖼️ Retires one idle elastic image through the product's own exclusive non-waiting regrow (`repo run repo-cache-reset:cache-regrow-<partition>`), in a clean environment that marks the child of the recovery; the child prints one JSON line with the outcome (`retired`, `held` while a command holds the image mapped, `journal` when the journal does not admit whole retirement) and is killed with the signal, which leaves the image whole or retired, never half. */
-export async function runImageRegrowV1(workspace:string,partition:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal):Promise<ImageOutcomeV1>{
+export async function runImageRegrowV1(workspace:string,partition:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1):Promise<ImageOutcomeV1>{
  const{graphCollectorEnvironmentV1}=await import("../../../🧹️cache-gc/🚀️launch/🟦️.ts"),script=fileURLToPath(new URL("../../../📜️script.ts",import.meta.url));
  return new Promise<ImageOutcomeV1>(accept=>{
-  let out="";const child=spawn(process.execPath,[script,"repo","run","repo-cache-reset:cache-regrow-"+partition],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1"},stdio:["ignore","pipe","ignore"],windowsHide:true,signal});
+  let out="";const child=spawn(process.execPath,[script,"repo","run","repo-cache-reset:cache-regrow-"+partition],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1",...(recovery?{[IMAGE_RECOVERY_VOLUME_ENV_V1]:JSON.stringify(recovery)}:{})},stdio:["ignore","pipe","ignore"],windowsHide:true,signal});
   child.stdout!.on("data",chunk=>{out=(out+String(chunk)).slice(-4096);});
   child.on("error",error=>accept({kind:"failed",message:error.message}));
-  child.on("exit",code=>{const line=out.split("\n").reverse().find(item=>item.includes('"repository-cache-regrow"'));try{const kind=(JSON.parse(line??"{}") as {outcome?:string}).outcome;accept(kind==="retired"||kind==="held"||kind==="journal"?{kind}:code===0?{kind:"held"}:{kind:"failed",message:"regrow exited with "+code});}catch{accept({kind:"failed",message:"regrow answered no outcome, exit "+code});}});
+  child.on("close",code=>{
+   if(code!==0){accept({kind:"failed",message:"regrow exited with "+code});return;}
+   const line=out.split("\n").reverse().find(item=>item.includes('"repository-cache-regrow"'));
+   try{
+    const receipt=JSON.parse(line??"null") as {version?:number;kind?:string;partition?:string;outcome?:string}|null,kind=receipt?.outcome;
+    if(receipt?.version===1&&receipt.kind==="repository-cache-regrow"&&receipt.partition===partition&&(kind==="retired"||kind==="held"||kind==="journal"||kind==="skipped")){accept({kind});return;}
+   }catch{}
+   accept({kind:"failed",message:"regrow answered no exact outcome"});
+  });
  });
 }
 
+/** 🔎️ Interprets a terminal receipt for the requested image; only a settled, measured cycle can establish that it returned no backing blocks. */
+export function readImageReclaimReceiptV1(value:unknown,partition:string):ImageReclaimOutcomeV1{
+ if(validateJsonSchemaSubset({$defs:resetSchema.$defs,$ref:"#/$defs/ImageReclaimReceipt"},value).length)return{kind:"unconfirmed"};
+ const receipt=value as Readonly<{partition:string;outcome:"skipped"|"reclaimed";settled:boolean;beforeBytes:number;afterBytes:number}>,{beforeBytes,afterBytes}=receipt;
+ if(receipt.partition!==partition)return{kind:"unconfirmed"};
+ if(receipt.outcome==="skipped")return{kind:!receipt.settled&&beforeBytes===0&&afterBytes===0?"skipped":"unconfirmed"};
+ if(!receipt.settled||beforeBytes===0||afterBytes>beforeBytes)return{kind:"unconfirmed"};
+ return{kind:afterBytes<beforeBytes?"reclaimed":"unchanged"};
+}
+
 /** ♻️ Returns the blocks of one idle bloated image in place through the product's own exclusive non-waiting reclaim (`repo run repo-cache-reset:cache-reclaim-<partition>`: detach, attach once through the UNMAP-capable stack, settle, detach), in a clean environment that marks the child of the recovery; the child prints one JSON line (`reclaimed`, or `skipped` while the image is held, retiring or not bloated) and is killed with the signal, which leaves the image detached and whole. */
-export async function runImageReclaimV1(workspace:string,partition:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal):Promise<ImageReclaimOutcomeV1>{
+export async function runImageReclaimV1(workspace:string,partition:string,environment:Readonly<Record<string,string|undefined>>,signal?:AbortSignal,recovery?:ImageRecoveryVolumeV1):Promise<ImageReclaimOutcomeV1>{
  const{graphCollectorEnvironmentV1}=await import("../../../🧹️cache-gc/🚀️launch/🟦️.ts"),script=fileURLToPath(new URL("../../../📜️script.ts",import.meta.url));
  return new Promise<ImageReclaimOutcomeV1>(accept=>{
-  let out="";const child=spawn(process.execPath,[script,"repo","run","repo-cache-reset:cache-reclaim-"+partition],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1"},stdio:["ignore","pipe","ignore"],windowsHide:true,signal});
+  let out="";const child=spawn(process.execPath,[script,"repo","run","repo-cache-reset:cache-reclaim-"+partition],{cwd:workspace,env:{...graphCollectorEnvironmentV1(environment),[DISK_RECOVERY_POLICY_V1.environmentChild]:"1",...(recovery?{[IMAGE_RECOVERY_VOLUME_ENV_V1]:JSON.stringify(recovery)}:{})},stdio:["ignore","pipe","ignore"],windowsHide:true,signal});
   child.stdout!.on("data",chunk=>{out=(out+String(chunk)).slice(-4096);});
   child.on("error",error=>accept({kind:"failed",message:error.message}));
-  child.on("exit",code=>{const line=out.split("\n").reverse().find(item=>item.includes('"repository-cache-reclaim"'));try{const kind=(JSON.parse(line??"{}") as {outcome?:string}).outcome;accept(kind==="reclaimed"||kind==="skipped"?{kind}:{kind:"failed",message:"reclaim answered no outcome, exit "+code});}catch{accept({kind:"failed",message:"reclaim answered no outcome, exit "+code});}});
+  child.on("close",code=>{
+    if(code!==0){accept({kind:"failed",message:"reclaim exited with "+code});return;}
+    const line=out.split("\n").reverse().find(item=>item.includes('"repository-cache-reclaim"'));
+    try{accept(readImageReclaimReceiptV1(JSON.parse(line??"null"),partition));}catch{accept({kind:"unconfirmed"});}
+   });
  });
 }
 
@@ -78,21 +105,28 @@ export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWr
    }
    case "replica-lost":return{...base,collect:async({signal})=>(await applyBoundV1({directory:root,limit,dryRun,signal,select:entries=>selectExpiredV1(entries,now(),bounds.replicaLost)})).freedBytes};
    case "footprint-logs":return{...base,collect:async({signal})=>(await applyBoundV1({directory:root,limit,dryRun,signal,select:entries=>selectRotatedV1(entries,now(),bounds.footprintLogs)})).freedBytes};
-   case "read-verdicts":return{...base,collect:async({signal})=>(await applyBoundV1({directory:root,limit,dryRun,signal,select:entries=>selectOlderThanV1(entries,now(),bounds.readVerdicts.maximumAgeMilliseconds)})).freedBytes};
+   case "read-verdicts":return{...base,collect:async({signal})=>{
+    const candidate=finishedReadVerdictV1(now(),bounds.readVerdicts,alive);
+    return (await applyBoundV1({directory:root,limit,dryRun,signal,candidate,select:entries=>entries.filter(candidate).map(entry=>entry.name)})).freedBytes;
+   }};
    case "leaked-staging":return{...base,measure:async signal=>{let bytes=0;for(const name of await readdir(temporaryRoot).catch(()=>[] as string[]))if(name.startsWith(bounds.temporaryDirectories.prefix))bytes+=(await boundedBytesV1(join(temporaryRoot,name),limit,signal)).bytes;return bytes;},collect:async({signal})=>{
     if(!dryRun)ownerPoolStagingSweepV1({parents:[temporaryRoot],own:"",io:ownerPoolStagingIoV1});
     return (await applyBoundV1({directory:temporaryRoot,limit,dryRun,signal,select:entries=>selectTemporaryV1(entries,now(),bounds.temporaryDirectories,alive)})).freedBytes;
    }};
-   case "leaked-images":return{...base,measure:async()=>0,collect:async()=>{if(process.platform!=="darwin"||dryRun)return 0;sweepLeakedSandboxImagesV1({under:context.workspace});return 0;}};
+   case "leaked-images":return{...base,measure:async()=>0,collect:async({signal})=>{if(process.platform==="darwin"&&!dryRun)await sweepWorkspaceSandboxImagesV1(context.workspace,signal);return 0;}};
    case "cas-lru":return{...base,measure:async()=>(await casUsageV1(root)).bytes,collect:async({signal})=>{
     const partition=measureCasPartitionV1(root);
     return (await collectCasV1({root,policy:casPartitionPolicyForV1(CAS_POLICY_V1,partition),areas:await casHostAreasV1(context.home),partition,signal,dryRun})).freedBytes;
    }};
    case "image-slack":return{...base,measure:async()=>process.platform==="darwin"?describeImageSlackV1(measureImagesV1(context.workspace)).bytes:0,describe:async()=>{const detail=describeImageSlackV1(measureImagesV1(context.workspace));return{root:detail.root,command:detail.command};},collect:async({needBytes,signal})=>{
     if(process.platform!=="darwin"||dryRun)return 0;
-    const free=context.free??(()=>freeSpaceSyncV1(context.workspace)?.availableBytes),retire=context.retire??((partition:string,abort?:AbortSignal)=>runImageRegrowV1(context.workspace,partition,context.environment,abort));
-    const reclaim=context.reclaim??((partition:string,abort?:AbortSignal)=>runImageReclaimV1(context.workspace,partition,context.environment,abort));
-    return (await collectImageSlackV1({rows:measureImagesV1(context.workspace),targetFreeBytes:(free()??0)+needBytes,freeBytes:free,reclaim,retire,language:context.language??"en",report:context.report,signal})).freedBytes;
+    const pressure=context.pressure;
+     let device:number|undefined;
+     if(pressure)try{device=statSync(pressure.path).dev;}catch{return 0;}
+     const recovery=pressure&&device!==undefined?{version:1 as const,device,requiredFreeBytes:pressure.requiredFreeBytes}:undefined;
+     const free=context.free??(()=>freeSpaceSyncV1(machinePathV1(context.workspace,".cache"))?.availableBytes),retire=context.retire??((partition:string,abort?:AbortSignal)=>runImageRegrowV1(context.workspace,partition,context.environment,abort,recovery));
+    const reclaim=context.reclaim??((partition:string,abort?:AbortSignal)=>runImageReclaimV1(context.workspace,partition,context.environment,abort,recovery));
+    return (await collectImageSlackV1({rows:measureImagesV1(context.workspace),targetFreeBytes:recovery?.requiredFreeBytes??(free()??0)+needBytes,pressureDevice:recovery?.device,freeBytes:free,reclaim,retire,language:context.language??"en",report:context.report,signal})).freedBytes;
    }};
    case "replica-store":{const role=readReplicaStoreRoleV1(context.workspace);return{...base,root:role.storeRoot??"",measure:async signal=>{if(role.kind!=="server")return 0;const{storeReportV1,compactionDefaultsV1}=await import("../../../../../🤝️shared-worktree/🗜️compaction/🟦️.ts"),report=await storeReportV1(role.storeRoot!,compactionDefaultsV1,now(),signal,true);return report.reclaimable.bytes+(report.reclaimable.blobs?.bytes??0);},describe:async()=>({root:role.storeRoot??"",command:role.kind==="worker"?"on "+role.groupId+"-server: "+row.command:row.command}),collect:async({signal})=>{
     if(dryRun)return 0;

@@ -111,14 +111,15 @@ export async function rotateFleetIdentityV1(options:Readonly<{root:string;origin
 }
 
 /** 🔑️ The origin public key (SPKI, base64url) that a store registers for an origin: the registration must be well formed and signed by that very key; `undefined` when there is none or it does not verify. This is the key a peer group's server is sealed to when the topology does not pin it. */
-export async function readFleetOriginKeyV1(storeRoots:readonly string[],originId:string):Promise<string|undefined>{
+export async function readFleetOriginKeyV1(storeRoots:readonly string[],originId:string,signal?:AbortSignal):Promise<string|undefined>{
  for(const root of storeRoots){
+  signal?.throwIfAborted();
   try{
-   const value=JSON.parse(await readFile(fleetRegistrationPathV1(root,originId),"utf8")) as unknown;
+   const value=JSON.parse(await readFile(fleetRegistrationPathV1(root,originId),{encoding:"utf8",signal})) as unknown;
    requireFleetIdentityShapeV1("Registration",value,"Closed fleet registration required");
    const registration=value as FleetRegistrationV1;
    if(registration.originId===originId&&valid(publicOf(registration.origin),text(registration),registration.signature))return registration.origin;
-  }catch{}
+  }catch{signal?.throwIfAborted();}
  }
  return undefined;
 }

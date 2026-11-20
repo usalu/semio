@@ -7,7 +7,7 @@ export { VITE_RUNTIME_CHANNELS_ENV_V1, readViteRuntimeChannelsV1, viteRuntimeEnv
 export type { ViteRuntimeChannelV1 } from "../../../⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
 export { default as environmentRuntimeSchema } from "../../../⚡️caching/🌐️vite/📥️environment/🏃️runtime/🧬️schema/🔣️.json" with { type: "json" };
 export { projectViteCommandEnvironmentV1 } from "../../../⚡️caching/🌐️vite/📥️environment/🟦️.ts";
-export { withViteArtifactInputsV1 } from "../../../⚡️caching/🌐️vite/📥️inputs/🟦️.ts";
+export { withViteArtifactInputsV1, withViteCompilerCapacityV1 } from "../../../⚡️caching/🌐️vite/📥️inputs/🟦️.ts";
 export { canonicalWasmBuildVitePlugin } from "../../../⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 export { buildViteArtifact, serveVite } from "../../../⚡️caching/🌐️vite/🟦️.ts";
 export { closeServiceSession, openServiceSession, parseServiceReadinessBudgetV1, publishServiceReady, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../⚡️caching/🌐️vite/🧾️session/🟦️.ts";

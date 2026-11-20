@@ -1,0 +1,7 @@
+# Original certified Box Shell
+
+The retained Shell node accepts positive thickness on a certified box. It reads each selected face from the original live registry under a separate grant, checks the face belongs to the source, and derives the opening from its outward support plane. It then publishes the exact orthogonal boundary of the stock minus its inset cavity. A closed shell has one exterior and one inward-oriented inner shell. Openings extend the cavity to the selected support planes and keep the rim topology connected, including adjacent and opposite selections. Invalid thickness, a collapsed cavity, unrelated opening faces and removal of all six faces refuse explicitly.
+
+The original Flow fixture selects source faces through their preview references, then checks the resulting shell count, Euler characteristic, opposite coedge orientations, cavity winding, volume and complete preview references. It also covers collapse and cancellation without a live result.
+
+The standalone Rust check compiled and ran the actual orthogonal grid constructor against all four cavity and opening cases. It confirmed the shell counts, Euler characteristics, positive exterior, negative inner shell and exact volumes of 60, 50, 43 and 40. Manifold independently reproduced the volumes, Euler characteristics, world bounds and empty cavity interiors in four cases and 16 assertions. Rust syntax parsing passed across nine modules. The full native Flow fixture remains unexecuted because the host has insufficient space for Cargo admission.

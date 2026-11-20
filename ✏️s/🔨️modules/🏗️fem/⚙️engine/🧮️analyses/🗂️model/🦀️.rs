@@ -95,8 +95,8 @@ pub struct AnalysisModel {
     pub supports: Vec<Support>,
 }
 
-pub const MOUNTED_ANALYSIS_NODE_SLOTS: usize = 128;
-pub const MOUNTED_ANALYSIS_ELEMENT_SLOTS: usize = 128;
+pub const MOUNTED_ANALYSIS_NODE_SLOTS: usize = 4096;
+pub const MOUNTED_ANALYSIS_ELEMENT_SLOTS: usize = 16384;
 pub const MOUNTED_ANALYSIS_SUPPORT_SLOTS: usize = 64;
 pub const MOUNTED_ANALYSIS_BACKING_BYTES: usize = MOUNTED_OWNER_PAGE_BYTES;
 
@@ -167,14 +167,15 @@ impl<T, const N: usize> Default for MountedModelItems<T, N> {
 impl<T, const N: usize> MountedModelItems<T, N> {
     fn next_allocation_bytes(&self, target: usize) -> Result<Option<usize>, MountedAnalysisFault> {
         if target > N { return Err(MountedAnalysisFault::Capacity { requested: target, maximum: N }); }
-        self.values.next_capacity_allocation_bytes(target).map_err(|error| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: error.reason })
+        self.values.next_capacity_allocation_bytes(self.values.whole_page_capacity(target)).map_err(|error| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: error.reason })
     }
 
     fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
         if let Some(demand) = self.next_allocation_bytes(target)? {
             if demand > MOUNTED_OWNER_PAGE_BYTES { return Err(MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page demand exceeds the owner page" }); }
             if demand > maximum_bytes { return Ok(MountedAnalysisAdmission::default()); }
-            let progress = semio_s_fem_sparse::reserve_cold_page(&mut self.values, target).map_err(|_| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page reservation was refused" })?;
+            let capacity = self.values.whole_page_capacity(target);
+            let progress = semio_s_fem_sparse::reserve_cold_page(&mut self.values, capacity).map_err(|_| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page reservation was refused" })?;
             if progress.allocated_bytes > maximum_bytes.min(MOUNTED_OWNER_PAGE_BYTES) { return Err(MountedAnalysisFault::Allocation { allocated_bytes: progress.allocated_bytes, reason: "mounted analysis page exceeds its byte grant" }); }
             return Ok(MountedAnalysisAdmission { complete: false, allocated_bytes: progress.allocated_bytes });
         }
@@ -185,6 +186,16 @@ impl<T, const N: usize> MountedModelItems<T, N> {
         Ok(MountedAnalysisAdmission { complete: true, allocated_bytes: 0 })
     }
 
+    fn admit_in(&mut self, target: usize, context: &mut semio_framework_job::StepContext<'_>) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        if let Some(demand) = self.next_allocation_bytes(target)? {
+            if demand > MOUNTED_OWNER_PAGE_BYTES { return Err(MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page demand exceeds the owner page" }); }
+            let capacity = self.values.whole_page_capacity(target);
+            let progress = semio_s_fem_sparse::reserve_funded_page(&mut self.values, capacity, context).map_err(|_| MountedAnalysisFault::Allocation { allocated_bytes: 0, reason: "mounted analysis page reservation was refused" })?;
+            return Ok(MountedAnalysisAdmission { complete: false, allocated_bytes: progress.retained_capacity_bytes });
+        }
+        self.admitted = self.admitted.max(target);
+        Ok(MountedAnalysisAdmission { complete: true, allocated_bytes: 0 })
+    }
     fn push(&mut self, value: T) -> Result<(), T> {
         if self.values.len() >= self.admitted { return Err(value); }
         self.values.push_reserved(value)
@@ -282,15 +293,33 @@ impl MountedAnalysisModel {
         self.supports.next_allocation_bytes(target)
     }
 
+    pub fn admit_node_in(&mut self, target: usize, context: &mut semio_framework_job::StepContext<'_>) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.nodes.admit_in(target, context);
+        self.retain_admission(result)
+    }
+
     pub fn admit_node_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
         self.admission_ready()?;
         let result = self.nodes.admit_one(target, maximum_bytes);
         self.retain_admission(result)
     }
 
+    pub fn admit_element_in(&mut self, target: usize, context: &mut semio_framework_job::StepContext<'_>) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.elements.admit_in(target, context);
+        self.retain_admission(result)
+    }
+
     pub fn admit_element_one(&mut self, target: usize, maximum_bytes: usize) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
         self.admission_ready()?;
         let result = self.elements.admit_one(target, maximum_bytes);
+        self.retain_admission(result)
+    }
+
+    pub fn admit_support_in(&mut self, target: usize, context: &mut semio_framework_job::StepContext<'_>) -> Result<MountedAnalysisAdmission, MountedAnalysisFault> {
+        self.admission_ready()?;
+        let result = self.supports.admit_in(target, context);
         self.retain_admission(result)
     }
 

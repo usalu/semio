@@ -1,0 +1,7 @@
+{
+  "examples": [
+    { "id": "concrete-forest", "story": "Concrete Forest", "parts": 1, "fasteners": 0 },
+    { "id": "nakagin-capsule-tower", "story": "Nakagin Capsule Tower", "parts": 180, "fasteners": 179 },
+    { "id": "capsule-dream", "story": "Capsule Dream", "parts": 2880, "fasteners": 2864 }
+  ]
+}

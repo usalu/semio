@@ -1,0 +1,52 @@
+{
+  "operator": "brep.solid.shell",
+  "origin": [
+    1,
+    2,
+    3
+  ],
+  "size": [
+    6,
+    5,
+    4
+  ],
+  "thickness": 0.5,
+  "cases": [
+    {
+      "name": "closed cavity",
+      "open": [],
+      "volume": 60,
+      "shells": 2,
+      "euler": 4
+    },
+    {
+      "name": "open top",
+      "open": [
+        "+z"
+      ],
+      "volume": 50,
+      "shells": 1,
+      "euler": 2
+    },
+    {
+      "name": "adjacent openings",
+      "open": [
+        "+x",
+        "+z"
+      ],
+      "volume": 43,
+      "shells": 1,
+      "euler": 2
+    },
+    {
+      "name": "through opening",
+      "open": [
+        "-z",
+        "+z"
+      ],
+      "volume": 40,
+      "shells": 1,
+      "euler": 0
+    }
+  ]
+}

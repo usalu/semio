@@ -1,0 +1,118 @@
+{
+  "dimensions": [
+    2,
+    3,
+    4
+  ],
+  "volume": 24,
+  "faceCount": 6,
+  "curved": [
+    {
+      "operator": "brep.prim3d.sphere",
+      "values": {
+        "radius": 2
+      },
+      "volume": 33.510321638291124,
+      "faceCount": 1,
+      "relativeTolerance": 0.000001,
+      "area": 50.26548245743669,
+      "center": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "operator": "brep.prim3d.cylinder",
+      "values": {
+        "radius": 2,
+        "height": 4
+      },
+      "volume": 50.26548245743669,
+      "faceCount": 3,
+      "relativeTolerance": 0.02,
+      "area": 75.39822368615503,
+      "center": [
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "operator": "brep.prim3d.cone",
+      "values": {
+        "radius": 2,
+        "height": 4
+      },
+      "volume": 16.755160819145562,
+      "faceCount": 2,
+      "relativeTolerance": 0.02,
+      "area": 40.665629538522076,
+      "center": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "operator": "brep.prim3d.torus",
+      "values": {
+        "major": 3,
+        "minor": 1
+      },
+      "volume": 59.21762640653615,
+      "faceCount": 1,
+      "relativeTolerance": 0.02,
+      "area": 118.4352528130723,
+      "center": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "planarVolume": {
+    "points": [
+      [
+        10,
+        20,
+        30
+      ],
+      [
+        12,
+        20,
+        30
+      ],
+      [
+        10,
+        23,
+        30
+      ],
+      [
+        10,
+        20,
+        34
+      ]
+    ],
+    "volume": 4,
+    "area": 20.810249675906654
+  },
+  "cylinderAffine": {
+    "offset": [
+      5,
+      -3,
+      2
+    ],
+    "axis": [
+      0,
+      1,
+      0
+    ],
+    "angle": 1.5707963267948966,
+    "center": [
+      4,
+      -3,
+      -5
+    ]
+  }
+}

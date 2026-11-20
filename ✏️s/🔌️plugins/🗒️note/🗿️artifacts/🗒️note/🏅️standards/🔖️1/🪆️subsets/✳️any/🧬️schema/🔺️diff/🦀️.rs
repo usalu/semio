@@ -2,12 +2,12 @@
 //! (add, remove, move, field patch) and keyed asset rows. The central applier is the only caller of
 //! [`MutationDiff::apply`]; every row names exactly the entity and fields it changes.
 
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use crate::schema::{block_id, find_block, find_block_location, flatten_blocks};
 use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot, NoteTableCell, NoteTextChild};
 use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the note artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -572,23 +572,23 @@ fn coalesce_asset_rows(earlier: &NoteAssetRow, later: NoteAssetRow) -> Result<Op
 }
 
 impl NoteAssetsDelta {
-    fn apply_rows(&self, assets: &BTreeMap<String, NoteImageAsset>) -> MutationApplyResult<BTreeMap<String, NoteImageAsset>> {
+    fn apply_rows(&self, assets: &RetainedOrderedMap<String, NoteImageAsset>) -> MutationApplyResult<RetainedOrderedMap<String, NoteImageAsset>> {
         let mut next = assets.clone();
         for (row, entry) in self.rows.iter().enumerate() {
             let at = ["rows".to_string(), row.to_string(), entry.key().to_string()];
             match entry {
                 NoteAssetRow::Insert { key, asset } => {
-                    if next.insert(key.clone(), asset.clone()).is_some() {
+                    if next.cold_insert(key.clone(), asset.clone()).is_some() {
                         return Err(MutationApplyError::new("mutation.apply.duplicate-id", "inserted asset key already exists").at(at));
                     }
                 }
                 NoteAssetRow::Replace { key, asset } => {
-                    if next.insert(key.clone(), asset.clone()).is_none() {
+                    if next.cold_insert(key.clone(), asset.clone()).is_none() {
                         return Err(MutationApplyError::new("mutation.apply.missing-target", "replaced asset does not exist").at(at));
                     }
                 }
                 NoteAssetRow::Remove { key } => {
-                    if next.remove(key).is_none() {
+                    if next.cold_remove(key).is_none() {
                         return Err(MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at(at));
                     }
                 }
@@ -616,7 +616,7 @@ impl NoteAssetsDelta {
     }
 
     /// 🔁️ The negative delta, read key by key from `base`: an insert is undone by a remove, a replace by replacing back the base asset, a remove by re-inserting the base asset; rows kept in key order.
-    pub fn inverse_rows(&self, base: &BTreeMap<String, NoteImageAsset>) -> Self {
+    pub fn inverse_rows(&self, base: &RetainedOrderedMap<String, NoteImageAsset>) -> Self {
         let mut undo: Vec<NoteAssetRow> = self
             .rows
             .iter()

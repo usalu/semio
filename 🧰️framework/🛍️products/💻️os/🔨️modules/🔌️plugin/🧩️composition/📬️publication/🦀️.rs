@@ -403,6 +403,17 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
+    /// 🧾️ Reports the consumed currencies of the selected lane's whole refusal.
+    pub fn preparation_refusal_progress(&self) -> Option<semio_framework_value::RetainedCloneProgress> {
+        match self {
+            Self::Artifact(publication) => publication.preparation_refusal_progress(),
+            Self::Config(publication) => publication.preparation_refusal_progress(),
+            Self::Draft(publication) => publication.preparation_refusal_progress(),
+            Self::WindowConfig(publication) => publication.preparation_refusal_progress(),
+            _ => self.preparation_refusal().map(ValueError::retained_progress),
+        }
+    }
+
     /// ♻️ ONE bounded retirement turn of a publication already in `Closing`, shared verbatim by all
     /// seven store lanes.
     ///

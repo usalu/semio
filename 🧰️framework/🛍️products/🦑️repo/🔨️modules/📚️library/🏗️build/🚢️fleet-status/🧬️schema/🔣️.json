@@ -296,7 +296,7 @@
      "en": "{admitted}/{observed} MB",
      "de": "{admitted}/{observed} MB"
     },
-    "memoryNone": {
+    "memoryPairNone": {
      "en": "-",
      "de": "-"
     },

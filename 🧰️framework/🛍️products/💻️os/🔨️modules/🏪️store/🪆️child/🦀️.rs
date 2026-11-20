@@ -323,6 +323,92 @@ impl<S> semio_framework_dsl_record::BorrowedDslRecord for ArtifactChild<S>{
 
 impl<S> semio_framework_dsl_record::BorrowedDslField for ArtifactChild<S>{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
 
+impl<S: Send + 'static> semio_framework_dsl_record::DslReceivingField for ArtifactChild<S> {
+    fn receive_value(
+        value: &semio_framework_dsl_record::FieldValue,
+        output: &mut Option<Self>,
+        owner: &mut semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_, '_>,
+    ) -> semio_framework_dsl_record::receiving::ReceivingOutcome {
+        use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
+        use semio_framework_dsl_record::{FieldValue, receiving::{
+            NativeSnapshotFailure, owned::{declared_record, invalid}, receiving_turn,
+        }};
+        use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
+
+        type Header = [Option<String>; 5];
+        receiving_turn(|meter| {
+            let FieldValue::Record(record) = value else { return Err(invalid().into()); };
+            declared_record(record, &[(0, true), (1, true)], owner, meter)?;
+            let Some(FieldValue::Record(target)) = record.get(1) else { return Err(invalid().into()); };
+            declared_record(target, &[(0, true), (1, true), (2, true), (3, true)], owner, meter)?;
+            let fields = [record.get(0), target.get(0), target.get(1), target.get(2), target.get(3)];
+            meter.take(owner.receive_nested::<Header, Self, NativeSnapshotFailure>(
+                output,
+                &mut |frame, result, marker, failure, original| receiving_turn(|meter| {
+                    let admit = |bytes| RetainedCloneGrant {
+                        maximum_items: 1, maximum_copy_bytes: bytes, maximum_depth: 1,
+                        ..Default::default()
+                    };
+                    let progress = |bytes| RetainedCloneProgress {
+                        copied_items: 1, copied_bytes: bytes, ..Default::default()
+                    };
+                    let bytes = size_of::<Header>();
+                    meter.take(original.effect(admit(bytes), marker, failure, &mut |performed, physical| {
+                        *frame = Some(Default::default());
+                        *performed = true;
+                        *physical = progress(bytes);
+                        Ok(())
+                    }))?;
+                    marker.reset_completed()?;
+                    for (value, field) in fields.into_iter().zip(frame.as_mut().unwrap()) {
+                        meter.take(<String as semio_framework_dsl_record::DslReceivingField>::receive_value(value.ok_or_else(invalid)?, field, original))?;
+                    }
+                    let bytes = size_of::<Self>();
+                    meter.take(original.effect(admit(bytes), marker, failure, &mut |performed, physical| {
+                        let [child_id, artifact_id, artifact_kind, standard, subset] =
+                            frame.take().unwrap().map(Option::unwrap);
+                        *result = Some(Self::new(child_id, ArtifactRef {
+                            artifact_id, dialect: ArtifactDialect { artifact_kind, standard, subset },
+                        }));
+                        *performed = true;
+                        *physical = progress(bytes);
+                        Ok(())
+                    }))?;
+                    Ok(())
+                }),
+            ))?;
+            Ok(())
+        })
+    }
+}
+
+impl<S: Send + 'static> semio_framework_dsl_record::receiving::owned::scalar_sealed::Sealed for ArtifactChild<S> {}
+
+impl<S: Send + 'static> semio_framework_dsl_record::receiving::owned::OwnedScalar for ArtifactChild<S> {
+    fn creation_bytes() -> usize { 0 }
+
+    fn take_source(source: &mut Option<semio_framework_dsl_record::FieldValue>) -> Result<Self, ValueError> {
+        use semio_framework_artifact_reference::{is_artifact_ref_value, take_artifact_ref};
+        use semio_framework_dsl_record::{FieldValue, receiving::owned::invalid};
+
+        let Some(FieldValue::Record(record)) = source else { return Err(invalid()); };
+        if record.fields.len() != 2 || !matches!(record.get(0), Some(FieldValue::Text(_))) ||
+            !record.get(1).is_some_and(is_artifact_ref_value)
+        {
+            return Err(invalid());
+        }
+        let target = take_artifact_ref(record.fields.get_mut(&1).ok_or_else(invalid)?)?;
+        let Some(FieldValue::Text(id)) = record.fields.get_mut(&0) else { return Err(invalid()); };
+        Ok(Self::new(std::mem::take(id), target))
+    }
+}
+
+impl<S: Send + 'static> semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for ArtifactChild<S> {
+    type Cursor = semio_framework_dsl_record::receiving::owned::ScalarReceiving<Self>;
+
+    fn receiving_cursor() -> Self::Cursor { Self::Cursor::default() }
+}
+
 pub fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,

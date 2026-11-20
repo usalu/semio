@@ -10,6 +10,7 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_delegates_to_the_read_only_worksheet_grid() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
@@ -19,13 +20,15 @@ async fn render_delegates_to_the_read_only_worksheet_grid() {
         ..Default::default()
     });
     let node = render(&document, semio_ui_locale::Locale::En, &semio_plugin::TreeWindows::unhosted()).expect("render");
-    fn table(node: &BuiltNode) -> Option<&BuiltNode> {
-        matches!(node.component, Component::Table(_)).then_some(node).or_else(|| node.children.iter().find_map(table))
-    }
-    let table = table(&node).expect("worksheet grid");
-    let Component::Table(props) = &table.component else { unreachable!() };
-    assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["A", "B"]);
-    let Component::TableRow(row) = &table.children[0].component else { panic!("expected grid row") };
-    assert_eq!(row.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), ["1", ""]);
-    assert!(table.children[0].children.iter().all(|cell| cell.bindings.is_empty()));
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+        fn table(node: &BuiltNode) -> Option<&BuiltNode> {
+            matches!(node.component, Component::Table(_)).then_some(node).or_else(|| node.children.iter().find_map(table))
+        }
+        let table = table(node).expect("worksheet grid");
+        let Component::Table(props) = &table.component else { unreachable!() };
+        assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["A", "B"]);
+        let Component::TableRow(row) = &table.children[0].component else { panic!("expected grid row") };
+        assert_eq!(row.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), ["1", ""]);
+        assert!(table.children[0].children.iter().all(|cell| cell.bindings.is_empty()));
+    });
 }

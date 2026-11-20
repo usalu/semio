@@ -11,8 +11,6 @@ pub(super) fn admit_turn_entry(budget: semio_framework::kernel::Budget, cx: &sem
     let held = cx.retained_grant();
     let inside = held.maximum_items <= input.maximum_items && held.maximum_copy_bytes <= input.maximum_copy_bytes && held.maximum_capacity_bytes <= input.maximum_capacity_bytes && held.maximum_release_bytes <= input.maximum_release_bytes && held.maximum_depth <= input.maximum_depth;
     if budget.retained.operation != cx.operation().0 || budget.retained.generation != cx.generation().0 || !inside {
-        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-        semio_plugin_abi::wasip2::semio::framework::pure::log("error", &format!("[DEBUG] turn entry mismatch: operation {}/{} generation {}/{} input {:?} held {:?}", budget.retained.operation, cx.operation().0, budget.retained.generation, cx.generation().0, input, held));
         return Err(reactor_close_fault("original reactor retained input does not match its borrowed context").into());
     }
     if REFUSED_PUBLICATION.with(|owner|owner.borrow().is_some()){return Err(reactor_close_fault("original refused publication still owns its output and receipts").into());}

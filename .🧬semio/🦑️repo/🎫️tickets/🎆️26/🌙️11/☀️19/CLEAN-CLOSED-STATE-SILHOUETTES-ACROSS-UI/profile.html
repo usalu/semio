@@ -1,0 +1,74 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Staffage overview profile</title>
+<style>*{box-sizing:border-box}body{margin:0}iframe{width:100vw;height:100vh;border:0;display:block}output{position:fixed;bottom:0;right:0;background:white;color:black;max-width:80vw;font:12px monospace}</style>
+<iframe src="/" title="Staffage overview"></iframe><output>Loading overview</output>
+<script>
+const frame = document.querySelector("iframe");
+const output = document.querySelector("output");
+frame.addEventListener("load", async () => {
+  const w = frame.contentWindow, d = frame.contentDocument;
+  const loaded = () => d.querySelectorAll("[data-frieze] [data-placed] svg").length;
+  const boot = performance.now();
+  while (loaded() < 4 && performance.now()-boot < 180000) await new Promise(r => setTimeout(r,500));
+  await new Promise(r => setTimeout(r, 20000));
+  const initialDrawings = loaded();
+  const start = performance.now(), calls = {}, writes = {}, timings = [];
+  let samples = 0, pending = 0, longFrames = 0, last = start;
+  const costs = {}, sources = {}, schedule = w.requestAnimationFrame.bind(w);
+  w.requestAnimationFrame = callback => schedule(time => {
+    const before = performance.now();
+    try { callback(time) } finally {
+      const name = callback.name || String(callback).slice(0,60);
+      costs[name] = (costs[name] || 0) + Math.round(performance.now()-before);
+    }
+  });
+  const setAttribute = w.Element.prototype.setAttribute;
+  w.Element.prototype.setAttribute = function(name,value) {
+    if (name === "data-shared-border-pending" && !this.hasAttribute(name)) {
+      const key = new Error().stack.split("\n").slice(3,7).map(s=>s.trim().split(" (")[0]).join(" ");
+      sources[key]=(sources[key]||0)+1;
+    }
+    return setAttribute.call(this,name,value);
+  };
+  const observer = new PerformanceObserver(list => {
+    for (const f of list.getEntries()) {
+      longFrames++;
+      for (const s of f.scripts) {
+        const key = s.sourceFunctionName || s.invoker || "unknown";
+        calls[key] = (calls[key] || 0) + Math.round(s.duration);
+      }
+    }
+  });
+  observer.observe({type:"long-animation-frame"});
+  const mutations = new w.MutationObserver(records => {
+    for (const r of records) {
+      if (r.target.namespaceURI === "http://www.w3.org/2000/svg") continue;
+      const key = [r.type,r.attributeName,r.target.localName,r.target.id || r.target.classList?.[0]].join(" ");
+      writes[key] = (writes[key] || 0) + 1;
+    }
+  });
+  mutations.observe(d.documentElement,{attributes:true,childList:true,subtree:true});
+  function sample(){
+    const now = performance.now();
+    timings.push(Math.round(now-last)); last=now;
+    samples++; if(d.querySelector("[data-shared-border-pending]")) pending++;
+    if(now-start<15000){ w.requestAnimationFrame(sample);return }
+    mutations.disconnect();observer.disconnect();
+    const top = m=>Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    w.requestAnimationFrame=schedule;
+    w.Element.prototype.setAttribute=setAttribute;
+    timings.sort((a,b)=>a-b);
+    output.textContent=JSON.stringify({width:w.innerWidth,height:w.innerHeight,visible:d.visibilityState,initialDrawings,finalDrawings:loaded(),elapsed:Math.round(now-start),samples,pending,longFrames,medianFrameMs:timings[timings.length>>1],p95FrameMs:timings[Math.floor(timings.length*0.95)],callbacks:top(costs),sources:top(sources),calls:top(calls),writes:top(writes)});
+  }
+  output.textContent="Sampling native animation frames";
+  w.requestAnimationFrame(sample);
+  const done = new MutationObserver(() => {
+    if (output.textContent.startsWith("{")) {
+      done.disconnect();
+      frame.remove();
+    }
+  });
+  done.observe(output, { childList:true });
+});
+</script>

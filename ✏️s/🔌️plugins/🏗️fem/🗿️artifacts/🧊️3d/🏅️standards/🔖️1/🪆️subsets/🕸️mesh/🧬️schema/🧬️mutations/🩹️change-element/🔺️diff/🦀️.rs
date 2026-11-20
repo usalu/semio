@@ -1,9 +1,9 @@
 //! 🔺️ Validates supplied element fields on the current replay base.
 use super::ChangeElement;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_element;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementsModification;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_element;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 pub fn diff(payload: &ChangeElement, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {

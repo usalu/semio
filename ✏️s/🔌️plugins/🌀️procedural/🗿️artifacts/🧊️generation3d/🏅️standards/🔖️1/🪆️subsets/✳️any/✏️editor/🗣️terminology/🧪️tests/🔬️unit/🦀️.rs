@@ -8,8 +8,7 @@ fn labels_resolve_native_english_and_german_from_the_shared_view_state() {
 
 /// 🗣️ The shared roster both halves of the i18n law answer.
 fn terminology_fixture() -> serde_json::Value {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗣️terminology.json");
-    serde_json::from_str(&std::fs::read_to_string(path).expect("the terminology fixture is readable")).expect("the terminology fixture is json")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗣️terminology.json")).expect("the terminology fixture is json")
 }
 
 /// 🗣️ Every user-visible generation3d label carries all four locale/terminology spellings, and each

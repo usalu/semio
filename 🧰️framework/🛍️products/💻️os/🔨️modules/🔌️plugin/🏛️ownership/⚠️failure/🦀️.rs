@@ -57,27 +57,48 @@ pub fn original_lifecycle_unposted(progress:RetainedCloneProgress,before:Retaine
 /// 🧮️ Returns the exact four-axis difference of two receipts from one original context.
 pub fn original_lifecycle_delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{original_lifecycle_unposted(after,Default::default(),before)}
 
-fn debit_unposted(mut failure:PluginLifecycleFailure,before:RetainedCloneProgress,cx:&mut StepContext<'_>)->PluginLifecycleFailure{
- if failure.receipt_refusal.is_none(){failure.receipt_refusal=match original_lifecycle_unposted(failure.retained_progress(),before,cx.retained_progress()){Ok(progress)=>cx.consume_retained(progress).err(),Err(error)=>Some(error)}}failure
+fn phase_loan_refusal(progress:RetainedCloneProgress,grant:RetainedCloneGrant,ceiling:RetainedCloneGrant,loan:RetainedCloneGrant,cx:&StepContext<'_>)->ValueError{
+ ValueError::new(ValueRefusalKind::InvariantViolated,format!("original lifecycle receipt exceeds its exact phase loan: receipt items {} copy {} capacity {} released {}; owner grant {:?}; ceiling {:?}; loan {:?}; remaining {:?}",progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes,grant,ceiling,loan,cx.retained_grant())).with_retained_progress(progress)
+}
+
+fn debit_unposted(mut failure: PluginLifecycleFailure, before: RetainedCloneProgress, reserved_before: RetainedCloneProgress, cx: &mut StepContext<'_>) -> PluginLifecycleFailure {
+    if failure.receipt_refusal.is_none() {
+        let after = original_lifecycle_net_after(cx.retained_progress(), reserved_before, cx.reserved_return_progress());
+        failure.receipt_refusal = match original_lifecycle_unposted(failure.retained_progress(), before, after) {
+            Ok(progress) => cx.consume_retained(progress).err(),
+            Err(error) => Some(error),
+        };
+    }
+    failure
 }
 
 /// ⏱️ One original owner action adopts nested effects and debits only its unposted physical receipt.
 pub fn original_lifecycle_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,advance:impl FnOnce(&mut StepContext<'_>,RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),PluginLifecycleFailure>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
- let grant=original_lifecycle_grant(cx,loan);if cx.retirement_should_yield()||!super::plugin_grant_funds(demand,grant){semio_framework_job::debug_probe("lifecycle_skip",format!("yield={} fuel={} demand={:?} grant={:?} loan={:?}",cx.retirement_should_yield(),cx.fuel_remaining(),demand,grant,loan));return Ok(PluginLifecycleStep::Progress(Default::default()))}let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();let result=advance(cx,grant);if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,cx))?;let progress=step.progress().unwrap_or_default();
- if !progress.fits(grant){return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle receipt exceeds its exact phase loan").with_retained_progress(progress)),before,cx))}
- if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,cx))}
+ let grant=original_lifecycle_grant(cx,loan);if cx.retirement_should_yield()||!super::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let ceiling=RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items.min(loan.maximum_items),..grant};let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();let result=advance(cx,grant);if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,reserved_before,cx))?;let progress=step.progress().unwrap_or_default();
+ if !progress.fits(ceiling){return Err(debit_unposted(PluginLifecycleFailure::from(phase_loan_refusal(progress,grant,ceiling,loan,cx)),before,reserved_before,cx))}
+ if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,reserved_before,cx))}
  let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
 }
 
 /// 🪙️ Like [`original_lifecycle_step`] but the owner runs inside the context's own performed-work effect; the performed work is debited once here, and a refused quote runs nothing and charges nothing.
 pub fn original_lifecycle_effect_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,advance:impl FnOnce(&mut StepContext<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(PluginLifecycleStep,bool),PluginLifecycleFailure>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
- let grant=original_lifecycle_grant(cx,loan);if cx.retirement_should_yield()||!super::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+ original_lifecycle_effect_step_at(cx,loan,demand,false,advance)
+}
+
+/// 🧾️ Drives a resident effect whose retained owner authenticates the caller's original Source.
+pub fn original_lifecycle_source_effect_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,advance:impl FnOnce(&mut StepContext<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(PluginLifecycleStep,bool),PluginLifecycleFailure>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ original_lifecycle_effect_step_at(cx,loan,demand,true,advance)
+}
+
+fn original_lifecycle_effect_step_at(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,demand:RetirementDemand,source:bool,advance:impl FnOnce(&mut StepContext<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(PluginLifecycleStep,bool),PluginLifecycleFailure>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ let grant=original_lifecycle_grant(cx,loan);if cx.retirement_should_yield()||!super::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let ceiling=RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items.min(loan.maximum_items),..grant};
  let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();
- let Some((result,performed))=cx.with_original_effect(grant,advance)?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
+ let turn=if source{cx.with_original_source_effect(grant,advance)}else{cx.with_original_effect(grant,advance)};
+ let Some((result,performed))=turn?else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
  cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
- let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,cx))?;let progress=step.progress().unwrap_or_default();
- if !progress.fits(grant){return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle receipt exceeds its exact phase loan").with_retained_progress(progress)),before,cx))}
- if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,cx))}
+ let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,reserved_before,cx))?;let progress=step.progress().unwrap_or_default();
+ if !progress.fits(ceiling){return Err(debit_unposted(PluginLifecycleFailure::from(phase_loan_refusal(progress,grant,ceiling,loan,cx)),before,reserved_before,cx))}
+ if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,reserved_before,cx))}
  let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
 }
 

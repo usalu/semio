@@ -1,5 +1,5 @@
 {
-  "rounds": 2,
+  "rounds": 3,
   "expectedEntries": 1,
   "sameHandle": true,
   "displacedSourceRetained": true,
@@ -13,7 +13,8 @@
   "sourceEpochs": [
     0,
     1,
-    2
+    2,
+    3
   ],
   "foreignEpochEffects": {
     "copiedItems": 0,
@@ -42,5 +43,48 @@
       "maximumReleaseBytes": 268435456,
       "maximumDepth": 4096
     }
-  }
+  },
+  "toleranceRounds": [
+    0.15,
+    0.02,
+    0.15
+  ],
+  "admission": [
+    {
+      "resident": null,
+      "requested": 0.15,
+      "inFlight": false,
+      "admitted": true
+    },
+    {
+      "resident": 0.15,
+      "requested": 0.15,
+      "inFlight": false,
+      "admitted": false
+    },
+    {
+      "resident": 0.15,
+      "requested": 0.02,
+      "inFlight": false,
+      "admitted": true
+    },
+    {
+      "resident": 0.15,
+      "requested": 0.02,
+      "inFlight": true,
+      "admitted": false
+    },
+    {
+      "resident": 0.15,
+      "requested": 0.05,
+      "inFlight": true,
+      "admitted": false
+    },
+    {
+      "resident": 0.02,
+      "requested": 0.15,
+      "inFlight": false,
+      "admitted": true
+    }
+  ]
 }

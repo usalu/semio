@@ -1098,6 +1098,9 @@
        "holdsExclusive": {
         "type": "boolean"
        },
+       "pinned": {
+        "type": "boolean"
+       },
        "holdSinceMs": {
         "type": "integer",
         "minimum": 0,

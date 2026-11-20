@@ -34,6 +34,7 @@ pub enum LaneEvent {
     ViewGroup(Option<u32>),
     ViewMenu(bool),
     ViewFrame,
+    ViewScenePage(u32),
     ViewStep { step: ViewStep, forward: bool },
 }
 
@@ -58,6 +59,7 @@ pub const VIEW_ACTION_STEP_GOVERNING: &str = "viewportStepGoverning";
 pub const VIEW_ACTION_STEP_COMBINATION: &str = "viewportStepCombination";
 pub const VIEW_ACTION_MENU: &str = "viewportTouchMenu";
 pub const VIEW_ACTION_FRAME: &str = "viewportTouchFrame";
+pub const VIEW_ACTION_SCENE_PAGE: &str = "viewportSetScenePage";
 
 /// 🪟️ Prefix of the `setFields` paths that address the transient view lane instead of the document.
 pub const VIEW_PATH_PREFIX: &str = "view.";
@@ -108,6 +110,7 @@ pub fn view_event(action: &str, text: Option<&str>, number: Option<f64>) -> Opti
         VIEW_ACTION_SPEED => number.filter(|n| n.is_finite() && *n > 0.0).map(LaneEvent::ViewSpeed),
         VIEW_ACTION_MENU => number.filter(|n| n.is_finite()).map(|n| LaneEvent::ViewMenu(n >= 0.5)),
         VIEW_ACTION_FRAME => Some(LaneEvent::ViewFrame),
+        VIEW_ACTION_SCENE_PAGE => number.filter(|n| (0.0..=f64::from(u32::MAX)).contains(n) && n.fract() == 0.0).map(|n| LaneEvent::ViewScenePage(n as u32)),
         _ => None,
     }
 }
@@ -168,7 +171,7 @@ impl NormTransient {
                 self.with_view(view)
             }
             LaneEvent::ViewItem(item) => {
-                let view = ViewLane { item, ..self.view.clone() };
+                let view = ViewLane { item, scene_page: 0, ..self.view.clone() };
                 self.with_view(view)
             }
             LaneEvent::ViewCheck(check) => {
@@ -176,11 +179,15 @@ impl NormTransient {
                 self.with_view(view)
             }
             LaneEvent::ViewGroup(group) => {
-                let view = ViewLane { group, ..self.view.clone() };
+                let view = ViewLane { group, scene_page: 0, ..self.view.clone() };
                 self.with_view(view)
             }
             LaneEvent::ViewMenu(menu) => {
                 let view = ViewLane { menu, ..self.view.clone() };
+                self.with_view(view)
+            }
+            LaneEvent::ViewScenePage(scene_page) => {
+                let view = ViewLane { scene_page, ..self.view.clone() };
                 self.with_view(view)
             }
             LaneEvent::ViewFrame => {

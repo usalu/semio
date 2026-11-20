@@ -74,6 +74,10 @@ impl PaintStrokeWork{
 }
 
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for PaintStrokeWork{
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self)->&'static str{"paintStroke"}
     fn receive_original_command(&mut self,command:&mut RasterCommand,_cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.request.is_none(){let RasterCommand::PaintStroke(payload)=command else{return Err(invalid("original paint route differs").into());};self.request=Some(std::mem::take(payload));}Ok(true)}
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::PaintStroke(_)).then_some(1)}
@@ -124,4 +128,3 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for PaintStrokeWork{
     fn terminal_is_empty(&self)->bool{self.empty()}
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(PaintStrokeWork);

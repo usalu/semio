@@ -1,0 +1,51 @@
+[
+  {
+    "name": "wrapped PNG predictor",
+    "chain": "4761723a252673365b37403a5d4e4021494f6c417e3e>",
+    "framing": "zlib",
+    "predictor": 15,
+    "hex": "789c63e01291636461650300017c004d",
+    "inflated": "000a141e01040506",
+    "decoded": "0a141e04090f"
+  },
+  {
+    "name": "wrapped TIFF predictor",
+    "framing": "zlib",
+    "predictor": 2,
+    "hex": "789ce3e2e2626165030000b8002e",
+    "inflated": "0a0a0a040506",
+    "decoded": "0a141e04090f"
+  },
+  {
+    "name": "raw PDF recovery",
+    "framing": "raw",
+    "predictor": 1,
+    "hex": "730a51d0084bccc94c5108707153282e294a4dccd55408c952700de10200",
+    "inflated": "4254202856616c6964205044462073747265616d2920546a2045540a",
+    "decoded": "4254202856616c6964205044462073747265616d2920546a2045540a"
+  },
+  {
+    "name": "raw stream with trailing bytes",
+    "framing": "rawTrailing",
+    "predictor": 1,
+    "hex": "730a51d0084bccc94c5108707153282e294a4dccd55408c952700de102007461696c",
+    "inflated": "4254202856616c6964205044462073747265616d2920546a2045540a",
+    "decoded": "4254202856616c6964205044462073747265616d2920546a2045540a"
+  },
+  {
+    "name": "damaged zlib checksum",
+    "framing": "damaged",
+    "predictor": 1,
+    "hex": "789c730a51d0084bccc94c5108707153282e294a4dccd55408c952700de102007a47083e",
+    "inflated": "4254202856616c6964205044462073747265616d2920546a2045540a",
+    "decoded": "4254202856616c6964205044462073747265616d2920546a2045540a"
+  },
+  {
+    "name": "leading whitespace",
+    "framing": "leading",
+    "predictor": 1,
+    "hex": "0d0a20789c730a51d0084bccc94c5108707153282e294a4dccd55408c952700de102007a47083f",
+    "inflated": "4254202856616c6964205044462073747265616d2920546a2045540a",
+    "decoded": "4254202856616c6964205044462073747265616d2920546a2045540a"
+  }
+]

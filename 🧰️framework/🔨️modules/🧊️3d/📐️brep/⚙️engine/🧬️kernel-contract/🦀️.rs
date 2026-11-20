@@ -8,7 +8,7 @@ extern crate semio_framework_value_derive as value_derive;
 pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
 
 use semio_framework_3d_brep_representation::contract::*;
-use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::error::{BooleanError, KernelError};
 
 // #region 🔖️ContractTypes
 
@@ -72,6 +72,7 @@ pub struct ClosestPoint {
 /// ⚠️ Kernel operation error.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BrepError {
+    EmptyResult,
     InvalidInput(String),
     MissingHandle(String),
     Operation(String),
@@ -80,6 +81,7 @@ pub enum BrepError {
 impl std::fmt::Display for BrepError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::EmptyResult => write!(formatter, "result is empty"),
             Self::InvalidInput(message) => write!(formatter, "invalid input: {message}"),
             Self::MissingHandle(handle) => write!(formatter, "missing handle: {handle}"),
             Self::Operation(message) => write!(formatter, "operation failed: {message}"),
@@ -260,7 +262,10 @@ pub trait BrepKernel {
 /// 🧭️ Reports a kernel error the way every one-shot operation of the engine always has: as [`BrepError::Operation`] carrying its message.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn map_err(e: &KernelError) -> BrepError {
-    BrepError::Operation(e.to_string())
+    match e {
+        KernelError::Boolean(BooleanError::EmptyResult) => BrepError::EmptyResult,
+        _ => BrepError::Operation(e.to_string()),
+    }
 }
 
 // #endregion 🧮Convert
@@ -268,3 +273,7 @@ pub fn map_err(e: &KernelError) -> BrepError {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path = "🧭️operation/🦀️.rs"]
+mod operation;
+pub use operation::BrepOperation;

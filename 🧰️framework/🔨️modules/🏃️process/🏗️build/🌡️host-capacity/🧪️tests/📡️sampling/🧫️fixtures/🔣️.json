@@ -403,6 +403,62 @@
    }
   }
  ],
+ "profilePressure": [
+  {
+   "name": "declared lab with ambient compressor",
+   "available": 11600,
+   "compressed": 7021,
+   "cgroup": null,
+   "kernel": "normal",
+   "expectedAvailable": 8192,
+   "expectedPressure": "normal"
+  },
+  {
+   "name": "physical compressor is genuinely critical",
+   "available": 11600,
+   "compressed": 18023,
+   "cgroup": null,
+   "kernel": "normal",
+   "expectedAvailable": 8192,
+   "expectedPressure": "critical"
+  },
+  {
+   "name": "low physical availability remains critical",
+   "available": 1700,
+   "compressed": 7021,
+   "cgroup": null,
+   "kernel": "normal",
+   "expectedAvailable": 1700,
+   "expectedPressure": "critical"
+  },
+  {
+   "name": "native critical signal is retained",
+   "available": 11600,
+   "compressed": 7021,
+   "cgroup": null,
+   "kernel": "critical",
+   "expectedAvailable": 8192,
+   "expectedPressure": "critical"
+  },
+  {
+   "name": "effective cgroup has local availability pressure",
+   "available": 600,
+   "compressed": null,
+   "cgroup": 4096,
+   "kernel": null,
+   "expectedAvailable": 600,
+   "expectedPressure": "warn"
+  },
+  {
+   "name": "healthy cgroup headroom uses its own boundary",
+   "available": 900,
+   "compressed": null,
+   "cgroup": 4096,
+   "kernel": null,
+   "expectedAvailable": 900,
+   "expectedPressure": "normal"
+  }
+ ],
  "tree": {
   "table": "    1     0  16032\n  102     1  20320\n  104   102   2048\n  105   104   1024\n  200     1   4096\n  201   200   8192\n",
   "expect": {
@@ -411,39 +467,5 @@
    "200": 12,
    "999": null
   }
- },
- "windows": [
-  {
-   "name": "task-manager-available-pagefile-and-cumulative-page-writes",
-   "json": "{\"availableBytes\":6442450944,\"pagesOutput\":2621440,\"pageFileUsedMegabytes\":1536}",
-   "expect": {
-    "availableBytes": 6442450944,
-    "compressedBytes": null,
-    "constrainedBytes": null,
-    "swapUsedBytes": 1610612736,
-    "swappedOutBytes": 10737418240,
-    "pressureLevel": null,
-    "stallPercent": null,
-    "openFiles": null,
-    "openFilesMaximum": null,
-    "attachedImages": null
-   }
-  },
-  {
-   "name": "no-page-file-reads-as-no-swap",
-   "json": "{\"availableBytes\":1073741824,\"pagesOutput\":null,\"pageFileUsedMegabytes\":null}",
-   "expect": {
-    "availableBytes": 1073741824,
-    "compressedBytes": null,
-    "constrainedBytes": null,
-    "swapUsedBytes": 0,
-    "swappedOutBytes": null,
-    "pressureLevel": null,
-    "stallPercent": null,
-    "openFiles": null,
-    "openFilesMaximum": null,
-    "attachedImages": null
-   }
-  }
- ]
+ }
 }

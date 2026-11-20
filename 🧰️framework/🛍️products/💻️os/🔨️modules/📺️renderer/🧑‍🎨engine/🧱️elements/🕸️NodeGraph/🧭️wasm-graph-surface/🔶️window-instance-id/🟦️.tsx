@@ -6,7 +6,7 @@ import { GestureRecognizer, windowElementId, type ActionDescriptor, type NodeGra
 import { useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
 import { WindowInstanceIdContext } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
 import { createGraphSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
-import { DEFAULT_NODE_GRAPH_VIEWPORT, type FrameworkGraphSession, publishNodeGraphHover, publishNodeGraphSelection, syncOptionalGraphCanvasTheme } from "../../🧰️graph-core/🟦️.ts";
+import { DEFAULT_NODE_GRAPH_VIEWPORT, type FrameworkGraphSession, publishNodeGraphSelection, syncOptionalGraphCanvasTheme } from "../../🧰️graph-core/🟦️.ts";
 import { computeDagMarqueeOverlay, dagIntroductionResolver, paintDagLabelOverlays, parseDagNodeIdArray, parseDagSelectionUnionBoundsScreen, sceneToSyncPack, useGraphSliderLanes } from "../../🖼️dag-overlays/🟦️.tsx";
 
 /** 🔷 Builds windowInstanceId, sessionRef, labelCanvasRef, containerRef of WasmGraphSurface. */
@@ -155,8 +155,6 @@ export function useWindowInstanceIdState({ scene, onAction, controllerId, surfac
     try {
       const nodeIds = JSON.parse(session.selectedNodeIdsJson()) as string[];
       publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, { nodeIds });
-      const hovered = session.hoveredNodeId();
-      publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered);
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {}

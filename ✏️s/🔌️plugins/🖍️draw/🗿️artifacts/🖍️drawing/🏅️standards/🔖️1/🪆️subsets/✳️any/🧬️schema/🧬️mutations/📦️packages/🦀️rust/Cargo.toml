@@ -61,3 +61,4 @@ semio-s-artifact-draw-drawing-structure = { workspace = true, features = ["testk
 semio-s-artifact-draw-drawing-style = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-transform = { workspace = true, features = ["testkit"] }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

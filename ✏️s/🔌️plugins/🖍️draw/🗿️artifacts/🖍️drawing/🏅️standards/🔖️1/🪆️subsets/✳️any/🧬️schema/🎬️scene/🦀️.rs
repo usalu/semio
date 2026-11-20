@@ -2,6 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
+#[cfg(test)]
+use semio_framework_value_testing_allocator as _;
+
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
@@ -25,7 +28,3 @@ pub mod trace;
 #[path = "👁️view/🦀️.rs"]
 pub mod view;
 //#endregion 🪢️TaxonomyMounts
-
-#[cfg(test)]
-#[path = "📷️raster/🧪️tests/🔬️unit/🦀️.rs"]
-mod raster_tests;

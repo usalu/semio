@@ -1,0 +1,6 @@
+[
+  {"id":"retain-ready-and-create-absent","retained":"valid","occupied":false,"created":true},
+  {"id":"retained-root-disappeared","retained":"missing","occupied":false,"created":false},
+  {"id":"retained-payload-changed","retained":"corrupt","occupied":false,"created":false},
+  {"id":"fresh-root-already-exists","retained":"valid","occupied":true,"created":false}
+]

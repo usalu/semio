@@ -14,5 +14,15 @@
     "Child cannot overreport any receipt currency",
     "Cancellation closes child before exact opaque box release",
     "Closed cursor rejects new source work"
+  ],
+  "workGrants": [
+    {
+      "units": 0,
+      "advances": false
+    },
+    {
+      "units": 1,
+      "advances": true
+    }
   ]
 }

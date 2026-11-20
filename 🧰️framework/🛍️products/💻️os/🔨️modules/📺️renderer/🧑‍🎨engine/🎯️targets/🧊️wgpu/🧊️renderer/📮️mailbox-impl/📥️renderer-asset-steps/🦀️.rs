@@ -47,6 +47,26 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
+    pub fn reset_world_asset_response_step(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
+        let RendererAssetFetchOwner::World { surface_token, owner, .. } = fetch else {
+            return RendererAssetSealStep::Refused("shared renderer asset has no world response to reset");
+        };
+        match owner.retire_partial_response_step() {
+            Ok(true) => {}
+            Ok(false) => return RendererAssetSealStep::Busy,
+            Err(_) => return RendererAssetSealStep::Refused("the world response is already sealed or closing"),
+        }
+        let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
+        let Some(interaction) = runtime.interaction_mut() else { return RendererAssetSealStep::Busy };
+        let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else {
+            return RendererAssetSealStep::Refused("the world surface generation retired");
+        };
+        match state.assets.asset_io.release_partial_response(owner) {
+            Ok(()) => RendererAssetSealStep::Granted,
+            Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the partial response handback"),
+        }
+    }
+
     pub fn take_completed_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
         if let Some(owner) = take_next_completed_renderer_asset_step() {
             return Some(RendererAssetFetchOwner::Shared(owner));
@@ -71,7 +91,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             RendererAssetFetchOwner::Shared(owner) => {
                 if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
                     if let Some((detail, _, _)) = rejection {
-                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), detail);
+                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), semio_renderer_wgpu_icon_host::icon_export::asset::IconExportAssetFault::Rejected(detail.into()));
                     }
                 }
                 finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared)

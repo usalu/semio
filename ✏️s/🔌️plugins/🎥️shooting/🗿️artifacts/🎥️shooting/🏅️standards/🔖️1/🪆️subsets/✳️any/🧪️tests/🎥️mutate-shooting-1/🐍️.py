@@ -100,6 +100,9 @@ VECTORS = {
     "change-scene-sun-intensity": ("💡️change-scene-sun-intensity", "💡️dims", "changeSceneSunIntensity"),
     "change-scene-ambient-intensity": ("🔅️change-scene-ambient-intensity", "🔅️dims", "changeSceneAmbientIntensity"),
     "change-scene-shadow-enabled": ("🌑️change-scene-shadow-enabled", "🌑️switches", "changeSceneShadowEnabled"),
+    "set-shot-drawing": ("✒️set-shot-drawing", "🖌️assigns", "setShotDrawing"),
+    "patch-shot-camera": ("🎛️patch-shot-camera", "📐️frames", "patchShotCamera"),
+    "set-shot-auto-fit": ("🎯️set-shot-auto-fit", "📐️sets", "setShotAutoFit"),
     "change-scene-material-roughness": ("🪨️change-scene-material-roughness", "✨️polishes", "changeSceneMaterialRoughness"),
 }
 
@@ -381,6 +384,93 @@ def apply_change_scene_shadow_enabled(doc, p):
     return after
 
 
+_DRAWING_DEFAULTS = {
+    "background": True,
+    "fill": True,
+    "fillOpacity": 1,
+    "visibleLines": True,
+    "hiddenLines": False,
+    "visibleColor": "#000000",
+    "hiddenColor": "#808080",
+    "visibleWidth": 1,
+    "hiddenWidth": 1,
+    "lineEasing": 0,
+    "mergeLines": False,
+}
+
+
+def _locate_shot_camera(base, p):
+    shot = next(shot for shot in base["shots"] if shot["id"] == p["shotId"])
+    linked = next((entry for entry in base["savedCameras"] if entry["id"] == shot.get("cameraId")), None)
+    return shot, linked, f'shot-camera:{shot["id"]}'
+
+
+def apply_patch_shot_camera(base, p):
+    after = copy.deepcopy(base)
+    shot, linked, slot = _locate_shot_camera(after, p)
+    if p.get("release") and (not linked or linked["id"] != slot):
+        return after
+    camera = copy.deepcopy(linked["camera"] if linked else p["fallback"])
+    field, source = p["field"], p["camera"]
+    if field in ("projection", "zoom", "fov"):
+        if field in source:
+            camera[field] = source[field]
+        else:
+            camera.pop(field, None)
+    else:
+        vector, axis = {"eye":"position", "target":"target", "up":"up"}[field[:-1]], "XYZ".index(field[-1])
+        default_up = [0, 0, 1]
+        selected = camera.get(vector, default_up.copy())
+        selected[axis] = source.get(vector, default_up)[axis]
+        if vector == "up" and vector not in source and selected == default_up:
+            camera.pop(vector, None)
+        else:
+            camera[vector] = selected
+    if linked and linked["id"] == slot:
+        release = p.get("release")
+        if release and camera == release["seed"]:
+            after["savedCameras"].remove(linked)
+            if "cameraId" in release:
+                shot["cameraId"] = release["cameraId"]
+            else:
+                shot.pop("cameraId", None)
+        else:
+            linked["camera"] = camera
+    else:
+        after["savedCameras"].append({"id":slot, "label":shot["label"], "camera":camera})
+        shot["cameraId"] = slot
+    return after
+
+
+def apply_set_shot_auto_fit(base, p):
+    after = copy.deepcopy(base)
+    shot = next(shot for shot in after["shots"] if shot["id"] == p["id"])
+    if p["autoFit"] is None:
+        shot.pop("autoFit", None)
+    else:
+        shot["autoFit"] = p["autoFit"]
+    return after
+
+
+def apply_set_shot_drawing(base, p):
+    after = copy.deepcopy(base)
+    shot = next(shot for shot in after["shots"] if shot["id"] == p["id"])
+    drawing = shot.get("drawing", _DRAWING_DEFAULTS).copy()
+    patch = p["patch"]
+    drawing.update((key, value) for key, value in patch.items() if key not in ("fillColor", "restoreAbsent"))
+    if "fillColor" in patch:
+        color = patch["fillColor"]["value"]
+        if color is None:
+            drawing.pop("fillColor", None)
+        else:
+            drawing["fillColor"] = color
+    if patch.get("restoreAbsent") and drawing == _DRAWING_DEFAULTS:
+        shot.pop("drawing", None)
+    else:
+        shot["drawing"] = drawing
+    return after
+
+
 def apply_change_scene_material_roughness(doc, p):
     after = copy.deepcopy(doc)
     after["scene"]["material"]["roughness"] = p["newRoughness"]
@@ -419,6 +509,9 @@ APPLIERS = {
     "change-scene-ambient-intensity": apply_change_scene_ambient_intensity,
     "change-scene-shadow-enabled": apply_change_scene_shadow_enabled,
     "change-scene-material-roughness": apply_change_scene_material_roughness,
+    "set-shot-drawing": apply_set_shot_drawing,
+    "patch-shot-camera": apply_patch_shot_camera,
+    "set-shot-auto-fit": apply_set_shot_auto_fit,
 }
 # endregion 🔖️Vocabulary — forward appliers
 
@@ -506,6 +599,28 @@ def inverse_mutation(kind, base, payload):
         return "changeSceneShadowEnabled", {"newEnabled": base["scene"]["shadow"]["enabled"]}
     if kind == "change-scene-material-roughness":
         return "changeSceneMaterialRoughness", {"newRoughness": base["scene"]["material"]["roughness"]}
+    if kind == "patch-shot-camera":
+        shot, linked, slot = _locate_shot_camera(base, payload)
+        before = linked["camera"] if linked else payload["fallback"]
+        inverse = {"shotId": shot["id"], "field": payload["field"], "camera": before, "fallback": before}
+        if not linked or linked["id"] != slot:
+            inverse["release"] = {"seed": before}
+            if "cameraId" in shot:
+                inverse["release"]["cameraId"] = shot["cameraId"]
+        return "patchShotCamera", inverse
+    if kind == "set-shot-auto-fit":
+        shot = next(shot for shot in base["shots"] if shot["id"] == payload["id"])
+        return "setShotAutoFit", {"id": payload["id"], "autoFit": shot.get("autoFit")}
+    if kind == "set-shot-drawing":
+        shot = next(shot for shot in base["shots"] if shot["id"] == payload["id"])
+        before = shot.get("drawing", _DRAWING_DEFAULTS)
+        inverse = {
+            key: {"value": before.get(key)} if key == "fillColor" else before[key]
+            for key in payload["patch"] if key != "restoreAbsent"
+        }
+        if "drawing" not in shot:
+            inverse["restoreAbsent"] = True
+        return "setShotDrawing", {"id": payload["id"], "patch": inverse}
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 # endregion 🔖️Vocabulary — inverse rule
 

@@ -28,10 +28,21 @@ test("lease phases retain their exact key before every denied or foreign-key tur
 
 test("renewal returns displaced parent aliases to the retained creation witness",()=>{
  const db=new Database(":memory:");for(const row of fixture.renewal){const result=db.query("SELECT COALESCE(? = ? AND ? = ?,0) AS admitted").get(row.creationRoot,row.witness,row.displacedParent,row.witness);expect(result).toEqual({admitted:Number(row.expected)});}db.close();
- const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("parts.close_step(self.issued.as_ref().unwrap(),self.admission.source.as_ref().unwrap().cancellation()?,grant)")).toBe(true);
+ const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");
+ expect(source).toContain("let parent=self.admission.source.as_ref().unwrap().cancellation()?");
+ expect(source).toContain("parts.close_step(self.issued.as_ref().unwrap(),parent,effect)");
 });
 
 test("inline claim custody posts no physical scaffold birth",()=>{
  const db=new Database(":memory:");const row=fixture.retirementInlineTransfer;expect(db.query("SELECT ? AS physicalBirth").get(row.capacityBytes)).toEqual({physicalBirth:row.expectedPhysicalBirth});db.close();
  const source=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("progress.retained_capacity_bytes=demand.capacity_bytes")).toBe(false);
+});
+
+test("live lease custody parks cleanup until the original source returns",()=>{
+ const cases=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/cleanup.json"),"utf8")) as {active:number;detached:boolean;sourceHoldsRegistry:boolean;work:boolean;awaitsCustody:boolean}[];
+ const database=new Database(":memory:");
+ try {
+  for(const row of cases) expect(database.query("SELECT (?1 > 0 OR ?2) AS work, (?1 > 0 AND ?3 AND NOT ?2) AS awaitsCustody")
+   .get(row.active,Number(row.detached),Number(row.sourceHoldsRegistry))).toEqual({work:Number(row.work),awaitsCustody:Number(row.awaitsCustody)});
+ } finally {database.close()}
 });

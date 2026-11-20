@@ -5,7 +5,6 @@
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-extern crate semio_framework_schema as schema;
 
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 pub type LayoutStore = store::ArtifactStore<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot, LayoutMutation>;
@@ -63,3 +62,26 @@ impl Drop for OwnedLayoutStore {
 }
 
 pub type LayoutEnvelope = store::os_store::store_schema::ArtifactEnvelope<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot, LayoutMutation>;
+
+
+pub use semio_framework_composition_admission::ChildRestoreProjection;
+use semio_framework_composition_admission::ChildRestoreProjectionError;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+
+/// 🧭️ Borrows the exact Drawing references of a restored Layout snapshot.
+pub fn restore_drawing_children(snapshot: &LayoutSnapshot) -> Result<ChildRestoreProjection<'_>, ChildRestoreProjectionError> {
+    ChildRestoreProjection::from_snapshot(snapshot)
+}
+
+store::space_members! {
+    native_producer:&::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits:semio_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
+    maximum_history_allocation_bytes:8388608,
+    pub enum LayoutDrawingMembers, LayoutDrawingMembersOpen {
+        Drawing("s.draw.drawing", "1", "*", "drawing.document") => (semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot, semio_s_artifact_draw_drawing_mutations::DrawingMutation, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer, semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer),
+    }
+}
+
+#[path = "✉️envelope.rs"]
+mod envelope;
+pub use envelope::layout_envelope_decode_owner_bundle;

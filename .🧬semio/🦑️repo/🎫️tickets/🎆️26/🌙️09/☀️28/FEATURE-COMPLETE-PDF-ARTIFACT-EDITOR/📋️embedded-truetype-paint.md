@@ -1,0 +1,7 @@
+# Embedded TrueType glyph painting
+
+The PDF canvas now paints an admitted TrueType program from its physical glyph identifiers. It resolves the original PDF encoding, maps the source glyph positioning and text-array adjustments, and emits closed vector contours with cubic equivalents of the font’s quadratic curves. The same scene layer works in the browser and native canvas. TrueType contours handle repeated flags, relative points, implied on-curve points, nested components, component transforms, and ordinary-point attachment. Recursion, total components and points are bounded per glyph. [OpenType glyf specification](https://learn.microsoft.com/en-us/typography/opentype/spec/glyf)
+
+FontTools 4.55.0 independently matched contour counts and control-point bounds for four glyphs from the checked-in font, including curved and composite outlines. The isolated Rust test used the actual font reader and scene segment conversion and checked 32 equivalent quadratic-to-cubic segments. MuPDF independently recovered the exact embedded font bytes, text and four PDF glyph origins from the same fixture. The native page regression imports that PDF and checks the vector scene and transform. The production integration gate is still running.
+
+The current native outlines are unhinted and cover horizontal glyph runs backed by a TrueType glyf table. CFF fonts, unavailable programs, vertical text, and TrueType composite alignments using phantom points still use the existing canvas fallback.

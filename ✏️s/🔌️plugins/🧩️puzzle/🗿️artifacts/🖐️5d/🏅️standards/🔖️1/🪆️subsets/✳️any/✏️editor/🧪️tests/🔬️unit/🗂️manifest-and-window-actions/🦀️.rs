@@ -204,7 +204,7 @@ async fn every_dispatched_action_bridges_to_a_command() {
         "worldPointerDown",
         "canvasPointerDown",
     ] {
-        assert_eq!(Puzzle5dCommand::from_action(action, None, None).action_id(), action, "dispatched action {action} must have a Puzzle5dCommand variant");
+        assert_eq!(Puzzle5dCommand::try_from_action(action, None, None).as_ref().map(Puzzle5dCommand::action_id), Some(action), "dispatched action {action} must have a Puzzle5dCommand variant");
     }
 }
 //#endregion 🔖️Manifest

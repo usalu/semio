@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit"]
+testkit = ["dep:serde", "dep:serde_json", "dep:semio-framework-trace", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit"]
 
 [dependencies]
 semio-framework-job = { workspace = true }
@@ -38,8 +38,11 @@ semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-scene-support = { workspace = true }
 serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+semio-framework-trace = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 png = { workspace = true }
 rustybuzz = { workspace = true }

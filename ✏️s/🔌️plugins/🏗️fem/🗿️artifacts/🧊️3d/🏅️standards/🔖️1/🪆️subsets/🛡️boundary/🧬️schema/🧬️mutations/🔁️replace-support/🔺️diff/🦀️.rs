@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportsModification;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::target_mismatch;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
@@ -21,6 +21,6 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshotValue) -> protocol::Mu
     if !base.nodes.iter().any(|node| node.id == payload.new_support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.new_support.node_id), [payload.new_support.node_id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { modified: vec![Fem3dSupportsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportPatch::replacement(&payload.new_support) }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { modified: vec![Fem3dSupportsModification { id: payload.id.clone(), patch: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportPatch::replacement(&payload.new_support) }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

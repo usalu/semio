@@ -17,7 +17,7 @@ async fn restore_archive(app: &mut impl semio_plugin::PluginApp, operation: u64,
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
-    use semio_s_artifact_draw_drawing_editor::create_drawing_app;
+    use semio_s_artifact_draw_drawing::editor_manifest::create_drawing_app;
     use semio_s_artifact_draw_drawing_editor::DrawingCommand;
     use semio_s_artifact_draw_drawing_editor::DrawingPlayApp;
     use semio_s_artifact_draw_drawing_editor_commands::add_layer::AddLayer;

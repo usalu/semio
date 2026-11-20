@@ -11,6 +11,7 @@
 import { Cursor, Icon, SharedBorderRow, SharedBorderRowCell, Spinner } from "@semio-tech/ui-react";
 import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/assets";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 // 🖼️#region 🛒️Icons
 const meta = {
@@ -63,7 +64,7 @@ export const IconAnimations: Story = {
       <p className="text-sm text-muted-foreground">Hover an icon, or its button, to trigger its closed micro animation once.</p>
       <div className="grid grid-cols-8 gap-2">
         {ICON_NAMES.map((name) => (
-          <button key={name} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={name}>
+          <button key={name} {...sharedBorderlessBoxProps} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={name}>
             <Icon icon={name} size="large" />
             <span className="truncate w-full text-center text-2xs text-muted-foreground">{name}</span>
           </button>
@@ -72,7 +73,7 @@ export const IconAnimations: Story = {
       <p className="text-sm font-medium">Non-catalog icon kinds</p>
       <div className="grid grid-cols-8 gap-2">
         {NON_CATALOG_KIND_TILES.map(({ label, icon }) => (
-          <button key={label} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={label}>
+          <button key={label} {...sharedBorderlessBoxProps} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={label}>
             <Icon icon={icon} size="large" />
             <span className="truncate w-full text-center text-2xs text-muted-foreground">{label}</span>
           </button>

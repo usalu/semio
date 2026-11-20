@@ -3,13 +3,14 @@
 import {expect,test} from "bun:test";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {HOST_POLICY_V1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import settle from "./⏱️settle.json" with {type:"json"};
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
-const harness=(exits:(number|"done")[],options:{lives?:number[];step?:number;restartPolicy?:{backoffMilliseconds:number[];settleMilliseconds:number;progressMilliseconds:number;totalMaximum:number}}={})=>{
+const harness=(exits:(number|"done")[],options:{lives?:number[];step?:number;elapsed?:readonly number[];restartPolicy?:{backoffMilliseconds:number[];settleMilliseconds:number;progressMilliseconds:number;totalMaximum:number}}={})=>{
  const started:number[]=[],released:number[]=[],progress:any[]=[];let index=0,tick=0;
- const pool=createSlicePoolV1({...options.step===undefined?{}:{now:()=>tick},workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,...options.restartPolicy===undefined?{}:{restartPolicy:options.restartPolicy},hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
+ const pool=createSlicePoolV1({...options.step===undefined&&options.elapsed===undefined?{}:{now:()=>tick},workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,...options.restartPolicy===undefined?{}:{restartPolicy:options.restartPolicy},hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
   reserve:async({megabytes}:{megabytes:number})=>{const id=started.length;return{megabytes,attach:()=>undefined,release:()=>{released.push(id);}};},
-  createWorker:()=>{tick+=options.step??0;const outcome=exits[index++]!,listeners:Record<string,(value:unknown)=>void>={};started.push(index);const life=options.lives?.[index-1]??0,end=()=>outcome==="done"?listeners.message?.({type:"done",graph:{}}):listeners.exit?.(outcome);if(life>0)setTimeout(end,life);else queueMicrotask(end);return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
+  createWorker:()=>{tick+=options.step??0;const outcome=exits[index++]!,listeners:Record<string,(value:unknown)=>void>={};started.push(index);const life=options.lives?.[index-1]??0,span=options.elapsed?.[index-1]??0,end=()=>{tick+=span;if(outcome==="done")listeners.message?.({type:"done",graph:{}});else listeners.exit?.(outcome);};if(life>0)setTimeout(end,life);else queueMicrotask(end);return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
  return{pool,started,released,progress};
 };
 
@@ -66,4 +67,15 @@ test("the declared restart policy backs off without shrinking, settles longer th
  const model=(streak:number)=>pauses[Math.min(streak,pauses.length-1)]!;
  let spent=0;for(let streak=0;spent<policy.sliceRestartSettleMilliseconds;streak++)spent+=model(streak);
  expect(spent,"the declared settle time is reached by a bounded number of pauses").toBeGreaterThanOrEqual(policy.sliceRestartSettleMilliseconds);
+});
+
+for(const row of settle.cases)test(`the replica settles on time since transient restart, ${row.name}`,async()=>{
+ const run=harness(row.exits as (number|"done")[],{elapsed:row.elapsed,restartPolicy:{backoffMilliseconds:[1],settleMilliseconds:settle.settleMilliseconds,progressMilliseconds:settle.progressMilliseconds,totalMaximum:100}});
+ const waits:number[]=[];
+ try{
+  const failure=await run.pool.run({root:"/tmp/settle-clock"},{onProgress:(_ms:number,detail:{decision?:{key:string;used:number}})=>{if(detail.decision?.key==="restarted")waits.push(detail.decision.used);}}).then(()=>null,(error:Error & {code?:string})=>error.code);
+  expect(failure).toBe(row.failure);
+  expect(run.started.length).toBe(row.starts);
+  expect(waits).toEqual(row.waitedSeconds);
+ }finally{await run.pool.close();}
 });

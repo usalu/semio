@@ -262,6 +262,7 @@ pub(super) mod native {
                 let pointer = pointer_info_for_mouse(app, *device_id);
                 Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1, modifiers: app.modifiers })
             }
+            WindowEvent::CursorLeft { device_id } => Some(DispatchEvent::PointerLeave { pointer: pointer_info_for_mouse(app, *device_id) }),
             WindowEvent::MouseInput { device_id, state, button } => {
                 let pointer = pointer_info_for_mouse(app, *device_id);
                 let button = pointer_button_from_winit(*button)?;

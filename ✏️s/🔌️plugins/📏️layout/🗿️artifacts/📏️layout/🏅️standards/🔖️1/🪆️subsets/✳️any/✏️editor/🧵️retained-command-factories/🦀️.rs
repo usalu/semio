@@ -19,7 +19,7 @@ pub(super) const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 pub(super) const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
 
 fn layout_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(LAYOUT_RETAINED_RAW_BYTES, 131_072, 1, 33_554_432, 2_000, 64, 1)
+    ToolExecutionContract::resumable(LAYOUT_RETAINED_RAW_BYTES, 131_072, 16, 33_554_432, 2_000, 64, 1)
 }
 
 pub(super) struct LayoutWindowWork {
@@ -275,4 +275,3 @@ impl LayoutExportProofs {
 //#endregion 🧾️ProofCatalogs
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(LayoutWindowWork);

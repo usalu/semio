@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {
+      "kind": "linear",
+      "source": { "kind": "box", "origin": [2, 1, 0], "size": [1, 2, 1.5] },
+      "parameters": { "direction": [2, 0, 0], "spacing": 1.5, "count": 3 },
+      "centers": [[2.5, 2, 0.75], [5.5, 2, 0.75], [8.5, 2, 0.75]]
+    },
+    {
+      "kind": "circular",
+      "source": { "kind": "sphere", "origin": [4, 0, 1], "radius": 0.5 },
+      "parameters": { "axis": [0, 0, 2], "count": 4 },
+      "centers": [[4, 0, 1], [0, 4, 1], [-4, 0, 1], [0, -4, 1]]
+    },
+    {
+      "kind": "grid",
+      "source": { "kind": "box", "origin": [2, 1, 0], "size": [1, 2, 1.5] },
+      "parameters": { "dirX": [2, 0, 0], "dirY": [1, 2, 0], "spacingX": 1.5, "spacingY": 2, "countX": 2, "countY": 3 },
+      "centers": [[2.5, 2, 0.75], [4.5, 6, 0.75], [6.5, 10, 0.75], [5.5, 2, 0.75], [7.5, 6, 0.75], [9.5, 10, 0.75]]
+    }
+  ],
+  "overlap": { "direction": [1, 0, 0], "spacing": 0.5, "count": 3 }
+}

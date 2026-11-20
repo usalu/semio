@@ -160,5 +160,20 @@
       "closed": 1,
       "accepted": false
     }
+  ],
+  "ownedTarget": [
+    {
+      "id": "defaults",
+      "install": false,
+      "requested": {}
+    },
+    {
+      "id": "foreign-overrides",
+      "install": true,
+      "requested": {
+        "CARGO_TARGET_DIR": "foreign-target",
+        "CARGO_BUILD_BUILD_DIR": "foreign-build"
+      }
+    }
   ]
 }

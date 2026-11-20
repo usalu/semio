@@ -7,7 +7,7 @@ CREATE TABLE process3_solid_box (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NU
 CREATE TABLE process3_solid_cylinder (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), radius REAL, height REAL, radius_ieee754_bits INTEGER NOT NULL, radius_numeric_class TEXT NOT NULL, height_ieee754_bits INTEGER NOT NULL, height_numeric_class TEXT NOT NULL);
 CREATE TABLE process3_solid_sphere (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), radius REAL, radius_ieee754_bits INTEGER NOT NULL, radius_numeric_class TEXT NOT NULL);
 CREATE TABLE process3_solid_imported_mesh (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), mesh_url TEXT NOT NULL);
-CREATE TABLE process3_solid_imported_solid (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), solid_handle TEXT NOT NULL);
+CREATE TABLE process3_solid_imported_solid (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), brep_pack TEXT NOT NULL);
 CREATE TABLE process3_solid_reference (id INTEGER PRIMARY KEY, solid_id INTEGER NOT NULL REFERENCES process3_solid(id), reference_id TEXT NOT NULL);
 CREATE TABLE process3_stock_payload_solid (id INTEGER PRIMARY KEY, stock_payload_id INTEGER NOT NULL REFERENCES process3_stock_payload(id), solid_id INTEGER NOT NULL REFERENCES process3_solid(id));
 CREATE TABLE process3_machine (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES process3_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, label TEXT NOT NULL, icon_id TEXT NOT NULL, catalog_id TEXT);

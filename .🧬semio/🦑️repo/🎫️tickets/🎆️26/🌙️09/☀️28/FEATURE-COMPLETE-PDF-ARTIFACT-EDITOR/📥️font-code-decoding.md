@@ -1,0 +1,9 @@
+# Physical Code Widths in PDF Font Decoding
+
+The PDF 1.7 font codec reads the Encoding CMap directly from the supplied byte slice. Each decoded glyph carries the number of source bytes consumed. Word spacing applies to code 32 only when the string uses one byte for it. Integer-only decoding still takes its width from the font's codespace because the caller supplies logical codes. Content import can use `FontCodec::character_codes` to read those integers without constructing glyph records.
+
+Text and width-only lookups use the same iterator and skip glyph construction. Literal Unicode mappings are borrowed during text extraction. Offset mappings still resolve on demand.
+
+The shared fixture includes the existing four-byte supplementary Unicode and one- through four-byte cases, plus a font accepting both `<20>` and `<0020>`. The new witness assigns both encodings CID 1 and Unicode X, so the two physical code widths can be checked independently of the numeric lookup model. The Rust regression checks numeric codes `[32, 32]`, physical widths `[1, 2]`, and word spacing flags `[true, false]`. The CMap tests cover unmatched prefixes and truncated codes.
+
+The TypeScript fixture and the independent PDF.js 5.7.284 reader both passed all three extraction cases. PDF.js read complete PDFs carrying each authored Encoding and ToUnicode stream and returned `XX` for the repeated numeric code. The workspace diff check passed. The capacity-admitted isolated Rust harness passed three tests using the changed production methods and local type fixtures. It checked all four physical widths, truncated and unmatched prefixes, the two widths for code 32, and both borrowed and derived Unicode text. Linking the full font test crate directly against cached native artifacts stopped at E0463 resolving PDF inferences, snapshot, model and tables dependencies. The normal Cargo workspace lane provides package-level verification.

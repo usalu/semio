@@ -360,6 +360,10 @@ impl WiresWindowDragWork {
 }
 
 impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -852,4 +856,3 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🧩️ArtifactItems4
 
-semio_plugin::retained_command::terminal_frame_bound!(WiresWindowDragWork);

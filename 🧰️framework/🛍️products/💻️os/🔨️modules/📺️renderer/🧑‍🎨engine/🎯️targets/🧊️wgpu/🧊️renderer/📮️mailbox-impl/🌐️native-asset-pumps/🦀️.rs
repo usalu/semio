@@ -146,6 +146,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         if closing {
             handoff.fetch.as_mut().expect("native handoff owns its request").begin_close();
             handoff.seal = false;
+            handoff.reject = None;
         }
         if let Some(payload) = handoff.payload.as_mut() {
             let _ = payload.close_step(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 });
@@ -154,13 +155,13 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }
             return Some(true);
         }
-        if handoff.reject {
+        if let Some(retryable) = handoff.reject {
             let fetch = handoff.fetch.as_mut().expect("native handoff owns its rejected request");
-            if !self.reject_renderer_asset(fetch) {
+            if !self.reject_renderer_asset(fetch, retryable) {
                 return Some(false);
             }
             fetch.begin_close();
-            handoff.reject = false;
+            handoff.reject = None;
             return Some(true);
         }
         if handoff.seal {
@@ -196,7 +197,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job_payload::RetainedJobPayload>, seal: bool, reject: bool) {
+    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job_payload::RetainedJobPayload>, seal: bool, reject: Option<bool>) {
         let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(slot.is_none(), "one native asset fetch is admitted at a time");
         *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal, reject });
@@ -277,7 +278,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 if matches!(admission, RendererAssetSealStep::Refused(_)) {
                     fetch.begin_close();
                 }
-                self.retain_native_asset_handoff(fetch, None, false, false);
+                self.retain_native_asset_handoff(fetch, None, false, None);
                 self.0.native_asset_fetching.store(false, Ordering::Release);
                 if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                     waker();
@@ -288,28 +289,28 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         let mailbox = self.clone();
         spawn_app_task(async move {
             let (payload, seal, reject) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
-                Ok(()) => (None, true, false),
+                Ok(()) => (None, true, None),
                 Err(NativeAssetStreamFailure::Cancelled) => {
                     fetch.begin_close();
-                    (None, false, false)
+                    (None, false, None)
                 }
                 Err(NativeAssetStreamFailure::Original(error))=>{
                     log_debug(&format!("native renderer retained I/O refusal: {error}"));
                     match error.kind{
-                        RendererSourceIoFailureKind::NativeFault=>(None,false,true),
-                        RendererSourceIoFailureKind::Cancelled=>{fetch.begin_close();(None,false,false)},
-                        _=>{fetch.begin_close();mailbox.record_frame_fault("native renderer original I/O or response capacity refused");(None,false,false)}
+                        RendererSourceIoFailureKind::NativeFault=>(None,false,Some(false)),
+                        RendererSourceIoFailureKind::Cancelled=>{fetch.begin_close();(None,false,None)},
+                        _=>{fetch.begin_close();mailbox.record_frame_fault("native renderer original I/O or response capacity refused");(None,false,None)}
                     }
                 }
-                Err(NativeAssetStreamFailure::Unavailable(detail)) => {
+                Err(NativeAssetStreamFailure::Unavailable { detail, retryable }) => {
                     log_debug(&format!("native renderer asset unavailable: {detail}"));
-                    (None, false, true)
+                    (None, false, Some(retryable))
                 }
                 Err(NativeAssetStreamFailure::Fault(detail)) => {
                     fetch.begin_close();
                     log_debug(&format!("native renderer asset fetch failed: {detail}"));
                     mailbox.record_frame_fault("native renderer asset fetch failed");
-                    (None, false, false)
+                    (None, false, None)
                 }
             };
             mailbox.retain_native_asset_handoff(fetch, payload, seal, reject);

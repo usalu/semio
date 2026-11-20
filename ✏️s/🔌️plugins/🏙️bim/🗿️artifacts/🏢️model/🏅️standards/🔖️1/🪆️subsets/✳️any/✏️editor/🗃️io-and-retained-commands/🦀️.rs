@@ -58,6 +58,10 @@ impl BimCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -136,4 +140,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory {
 }
 //#endregion 🔖️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(BimCommandWork);

@@ -50,13 +50,13 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       style={swiping && opened === null ? { touchAction: "pinch-zoom" } : undefined}
     >
       {overviewButton}
-      <div ref={stripCallback} data-layered-strip="" data-layered-backdrop={opened === null ? "" : undefined} className="grid will-change-transform" style={stripStyle}>
+      <div ref={stripCallback} data-layered-strip="" data-layered-backdrop={opened === null ? "" : undefined} className="grid" style={stripStyle}>
         {panes.map(paneView)}
       </div>
       {opened === null ? (
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
-          <div ref={overlayCallback} data-layered-overlay="" data-card-grid={swiping ? undefined : ""} role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
+          <div ref={overlayCallback} data-layered-overlay="" data-card-grid={swiping ? undefined : ""} role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
             {panes.map((pane) => cardHost(pane, swiping ? { onCell: cellRefs.get(pane.id), style: cellStyles.get(pane.id) } : null))}
           </div>
           {swiping ? <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} /> : null}

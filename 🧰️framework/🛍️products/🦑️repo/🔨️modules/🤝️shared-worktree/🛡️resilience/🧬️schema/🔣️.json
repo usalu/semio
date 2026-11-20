@@ -527,7 +527,9 @@
     "rotate",
     "store",
     "texts",
-    "version"
+    "version",
+    "blocked",
+    "intakeProgress"
    ],
    "properties": {
     "version": {
@@ -567,6 +569,18 @@
      "type": "array",
      "items": {
       "$ref": "#/definitions/StoreCodeCase"
+     }
+    },
+    "blocked": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/BlockedCase"
+     }
+    },
+    "intakeProgress": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/ApplyProgressCase"
      }
     }
    }
@@ -908,6 +922,95 @@
      "items": {
       "$ref": "#/definitions/SealedFile"
      }
+    }
+   }
+  },
+  "BlockedReasons": {
+   "const": [
+    "sharing-violation",
+    "ebusy",
+    "eperm",
+    "eacces",
+    "symlink-in-the-way",
+    "parent-is-a-file",
+    "directory-in-the-way",
+    "objects-missing",
+    "objects-missing-timeout",
+    "pack-incomplete",
+    "pack-unpublished",
+    "other"
+   ]
+  },
+  "BlockedCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "name",
+    "limit",
+    "events",
+    "totals",
+    "results"
+   ],
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 8
+    },
+    "events": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "items": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "string"
+       },
+       {
+        "type": "integer",
+        "minimum": 0
+       }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+     }
+    },
+    "totals": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Failure"
+     }
+    },
+    "results": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/Failure"
+     }
+    }
+   }
+  },
+  "ApplyProgressCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "bytes",
+    "observations"
+   ],
+   "properties": {
+    "bytes": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4194304
+    },
+    "observations": {
+     "type": "integer",
+     "minimum": 0,
+     "maximum": 4
     }
    }
   }

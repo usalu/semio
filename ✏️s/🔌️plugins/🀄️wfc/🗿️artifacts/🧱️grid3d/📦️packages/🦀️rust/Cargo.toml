@@ -27,6 +27,7 @@ semio-s-artifact-wfc-grid3d-mutations = { path = "../../🏅️standards/🔖️
 semio-s-artifact-wfc-grid3d-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid3d-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌐️scene-internals/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid3d-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-grid3d-transient = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

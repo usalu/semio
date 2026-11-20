@@ -46,48 +46,83 @@ pub struct CanvasDrop {
     pub artifact_ref: String,
     #[value(default)]
     pub proxy_data_url: String,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub source_document_id: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub source_link_id: Option<String>,
 }
 
 fn native_artifact_kind(kind: &str) -> Option<&'static str> {
     crate::native_artifact_kind(kind)
 }
 
-fn place_native(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, artifact_kind: &str, x: f64, y: f64) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
+fn place_image(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, x: f64, y: f64) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
+    use semio_plugin::{FaultCode, FaultOrigin};
     use semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame;
     use semio_s_artifact_layout_layout_mutations_content::create_link::CreateLink;
-    use semio_s_artifact_layout_layout_model::{Frame, ImageLink};
+    use semio_s_artifact_layout_layout_model::{Frame, ImageLink, LayoutBounds};
+
     let config = current(cfg);
-    let Some(page) = doc.snapshot.pages.iter().find(|page| page.id == config.active_page_id) else { return Ok(Emit::default()) };
-    let link_id = format!("link-{}", doc.snapshot.links.len() + 1);
-    let frame_id = format!("frame-{}", page.frames.len() + 1);
-    let layer_id = page.layer_ids.first().cloned().unwrap_or_else(|| "layer-1".into());
-    let linked = !payload.artifact_ref.is_empty() || !payload.proxy_data_url.is_empty();
-    let link = ImageLink {
-        id: link_id.clone(),
-        path: String::new(),
-        hash: String::new(),
-        width: 0,
-        height: 0,
-        dpi: 72,
-        color_profile: None,
-        state: Some(if linked { "ready" } else { "missing" }.into()),
-        proxy_data_url: (!payload.proxy_data_url.is_empty()).then(|| payload.proxy_data_url.clone()),
-        artifact_kind: artifact_kind.into(),
-        artifact_ref: payload.artifact_ref.clone(),
+    let Some(page) = crate::canvas::active_page(doc.snapshot, &config) else { return Ok(Emit::default()) };
+    let operation = doc.operation_optional();
+    let document_id = operation.map(|operation| operation.parent_document_id.as_str()).or_else(|| doc.parent_document_id());
+    let mut artifact_mutations = Vec::new();
+    let link_id = match (&payload.source_document_id, &payload.source_link_id) {
+        (None, None) => {
+            let artifact_kind = native_artifact_kind(&payload.kind).expect("a native placement");
+            let link_id = operation.map_or_else(
+                || (doc.snapshot.links.len() + 1..)
+                    .map(|index| format!("link-{index}"))
+                    .find(|id| !doc.snapshot.links.iter().any(|link| &link.id == id))
+                    .expect("finite link roster"),
+                |operation| format!("link-{}", operation.authoring_seed),
+            );
+            let linked = !payload.artifact_ref.is_empty() || !payload.proxy_data_url.is_empty();
+            artifact_mutations.push(LayoutMutation::CreateLink(CreateLink {
+                index: None,
+                link: ImageLink {
+                    id: link_id.clone(),
+                    path: String::new(),
+                    hash: String::new(),
+                    width: 0,
+                    height: 0,
+                    dpi: 72,
+                    color_profile: None,
+                    state: Some(if linked { "ready" } else { "missing" }.into()),
+                    proxy_data_url: (!payload.proxy_data_url.is_empty()).then(|| payload.proxy_data_url.clone()),
+                    artifact_kind: artifact_kind.into(),
+                    artifact_ref: payload.artifact_ref.clone(),
+                },
+            }));
+            link_id
+        }
+        (Some(source_document_id), Some(link_id))
+            if payload.kind == "image" && document_id == Some(source_document_id.as_str())
+                && payload.artifact_ref.is_empty() && payload.proxy_data_url.is_empty()
+                && doc.snapshot.links.iter().any(|link| &link.id == link_id) => link_id.clone(),
+        _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("layout.catalogue.source-missing"), "The source link is unavailable in this Layout document.")),
     };
+    let frame_id = operation.map_or_else(
+        || (page.frames.len() + 1..)
+            .map(|index| format!("frame-{index}"))
+            .find(|id| !page.frames.iter().any(|frame| frame.id() == id.as_str()))
+            .expect("finite frame roster"),
+        |operation| format!("frame-{}", operation.authoring_seed),
+    );
+    let layer_id = page.layer_ids.first().cloned().unwrap_or_else(|| "layer-1".into());
     let frame = Frame::Image {
         id: frame_id.clone(),
         layer_id: layer_id.clone(),
-        bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x, y, width: 200.0, height: 120.0, rotation: 0.0 },
+        bounds: LayoutBounds { x, y, width: 200.0, height: 120.0, rotation: 0.0 },
         locked: None,
         visible: None,
         link_id,
     };
+    artifact_mutations.push(LayoutMutation::CreateFrame(CreateFrame {
+        page_id: page.id.clone(), frame, index: Some(page.frames.len()), layer_id: Some(layer_id),
+    }));
     Ok(Emit {
-        artifact_mutations: vec![
-            LayoutMutation::CreateLink(CreateLink { link, index: None }),
-            LayoutMutation::CreateFrame(CreateFrame { page_id: page.id.clone(), frame, index: Some(page.frames.len()), layer_id: Some(layer_id) }),
-        ],
+        artifact_mutations,
         effects: vec![crate::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
         ..Default::default()
     })
@@ -101,10 +136,10 @@ pub fn handle(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
         return Ok(Emit::default());
     }
     let (wx, wy) = screen_to_world_for_surface(&current(cfg), payload.x, payload.y, payload.width, payload.height);
-    if payload.kind == "page" {
+    if payload.source_link_id.is_some() || payload.source_document_id.is_some() || native_artifact_kind(&payload.kind).is_some() {
+        place_image(payload, doc, cfg, wx, wy)
+    } else if payload.kind == "page" {
         add_page::handle(&add_page::AddPage {}, doc, cfg)
-    } else if let Some(artifact_kind) = native_artifact_kind(&payload.kind) {
-        place_native(payload, doc, cfg, artifact_kind, wx, wy)
     } else {
         add_frame::handle(&add_frame::AddFrame { kind: payload.kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)
     }

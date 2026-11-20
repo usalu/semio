@@ -51,6 +51,7 @@ export type NodeGraphFindItem = {
 
 /** 🖱️ Hovered node id, if any. */
 export type NodeGraphHover = {
+  readonly edgeId?: string;
   readonly nodeId?: string;
   /** 🔆️ Hovered channel (port) id on `nodeId`, matching the `"{nodeId}@{portId}"` pick id. */
   readonly portId?: string;

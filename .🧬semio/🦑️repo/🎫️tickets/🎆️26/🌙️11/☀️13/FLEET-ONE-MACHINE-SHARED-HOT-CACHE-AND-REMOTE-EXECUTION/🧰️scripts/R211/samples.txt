@@ -1,0 +1,214 @@
+15:47:09Z | phase: {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependenc
+  ledger:  | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [104, 62, 25] m01:11/4 m02:4/2 m03:16/11 m04:0/0 m05:0/0 m07:31/21 m08:23/18 m10:12/6 ver:7/0
+  load (36.5185546875, 19.65576171875, 17.08740234375)
+15:48:59Z | phase: build:projects · Inferring projects: 0 of 4785 projects
+  ledger:  | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [145, 92, 33] m01:16/5 m02:7/2 m03:31/27 m04:0/0 m05:5/1 m07:38/29 m08:23/18 m10:15/9 ver:10/1
+  load (44.8193359375, 27.7275390625, 20.56201171875)
+15:50:49Z | phase: build:projects · Inferring projects: 0 of 4785 projects · 1 running, longest 0 s: shared closures in a child
+  ledger:  | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [184, 126, 35] m01:16/6 m02:7/2 m03:43/36 m04:0/0 m05:6/1 m07:44/33 m08:37/29 m10:15/9 ver:16/10
+  load (27.201171875, 26.73779296875, 21.06005859375)
+15:52:39Z | phase: build:projects · Inferring projects: 0 of 4785 projects · 1 running, longest 0 s: shared closures in a child
+  ledger:  | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [18, 3, 15] m01:0/0 m02:0/0 m03:4/2 m04:0/0 m05:8/1 m07:2/0 m08:0/0 m10:2/0 ver:2/0
+  load (37.90478515625, 30.48193359375, 23.1943359375)
+15:54:01Z | phase: build:projects · Inferring projects: 0 of 4785 projects · 1 running, longest 0 s: shared closures in a child
+  ledger:  | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [29, 10, 18] m01:0/0 m02:0/0 m03:4/2 m04:0/0 m05:11/3 m07:3/2 m08:1/1 m10:4/0 ver:6/2
+  load (26.2880859375, 28.38916015625, 23.0439453125)
+15:55:55Z | phase: {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+  ledger: 0 of 4785 done: 0 present, 0 fetched from the fleet, 0 inferred here (0 running), 0 wanted from the fleet, 0 stale in the fleet | stale-row lines 0 | rate 
+  pools wave 636447d9e223 claimed/published/children [28, 19, 12] m02:0/0 m03:6/2 m04:0/0 m07:3/2 m08:10/10 ver:9/5
+  load (26.57177734375, 27.76171875, 23.4638671875)
+15:57:39Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 29 of 4785 done: 2 present, 21 fetched from the fleet, 6 inferred here (24 running), 0 wanted from the fleet, 23 stale in the fleet | stale-row lines 1 | rate 16.71/min over 1min, left 4756, eta 4.7 h
+  pools wave e86dd3c940a5 claimed/published/children [68, 43, 23] m01:8/2 m03:10/4 m04:0/0 m05:2/0 m07:8/5 m08:12/12 m10:19/14 ver:9/6
+  load (36.05810546875, 30.40869140625, 24.96826171875)
+15:59:25Z | phase: build:projects · Inferring projects: 64 of 4785 projects · 19 running, longest 195 s: @semio-tech/writer-write
+  ledger: 47 of 4785 done: 2 present, 31 fetched from the fleet, 14 inferred here (23 running), 0 wanted from the fleet, 26 stale in the fleet | stale-row lines 3 | rate 13.43/min over 3min, left 4738, eta 5.9 h
+  pools wave e86dd3c940a5 claimed/published/children [114, 75, 26] m01:13/3 m02:0/0 m03:17/9 m04:0/0 m05:5/1 m07:18/10 m08:16/14 m10:34/30 ver:11/8
+  load (34.265625, 32.24755859375, 26.3564453125)
+16:07:46Z | phase: build:projects · Inferring projects: 77 of 4785 projects · 24 running, longest 685 s: @semio-tech/stdio-deflat
+  ledger: 58 of 4785 done: 3 present, 37 fetched from the fleet, 18 inferred here (24 running), 0 wanted from the fleet, 52 stale in the fleet | stale-row lines 4 | rate 2.87/min over 10min, left 4727, eta 27.5 h
+  pools wave e6019ec04354 claimed/published/children [167, 127, 34] m01:30/23 m03:33/25 m04:0/0 m05:0/0 m07:23/17 m08:36/29 m10:35/27 ver:10/6
+  load (34.60205078125, 36.20849609375, 30.89990234375)
+16:09:33Z | phase: build:projects · Inferring projects: 82 of 4785 projects · 24 running, longest 790 s: @semio-tech/stdio-deflat
+  ledger: 63 of 4785 done: 3 present, 41 fetched from the fleet, 19 inferred here (26 running), 0 wanted from the fleet, 57 stale in the fleet | stale-row lines 4 | rate 1.58/min over 10min, left 4722, eta 49.9 h
+  pools wave e6019ec04354 claimed/published/children [217, 173, 35] m01:40/33 m03:50/40 m04:0/0 m05:2/0 m07:27/20 m08:44/36 m10:41/35 ver:13/9
+  load (28.4873046875, 34.93603515625, 31.140625)
+16:11:14Z | phase: build:projects · Inferring projects: 83 of 4785 projects · 24 running, longest 895 s: @semio-tech/stdio-deflat
+  ledger: 64 of 4785 done: 3 present, 42 fetched from the fleet, 19 inferred here (27 running), 0 wanted from the fleet, 58 stale in the fleet | stale-row lines 4 | rate 1.44/min over 11min, left 4721, eta 54.6 h
+  pools wave e6019ec04354 claimed/published/children [269, 214, 40] m01:51/44 m03:63/54 m04:0/0 m05:4/0 m07:32/20 m08:49/39 m10:51/41 ver:19/16
+  load (30.86083984375, 33.48193359375, 30.96044921875)
+16:12:54Z | phase: build:projects · Inferring projects: 99 of 4785 projects · 13 running, longest 970 s: @semio-tech/fixture-gene
+  ledger: 80 of 4785 done: 3 present, 44 fetched from the fleet, 33 inferred here (27 running), 0 wanted from the fleet, 57 stale in the fleet | stale-row lines 4 | rate 2.45/min over 13min, left 4705, eta 32.0 h
+  pools wave e6019ec04354 claimed/published/children [14, 4, 14] m01:6/4 m03:0/0 m04:0/0 m05:6/0 m07:0/0 m08:0/0 m10:0/0 ver:2/0
+  load (34.478515625, 33.4794921875, 31.20458984375)
+16:13:11Z | phase: build:projects · Inferring projects: 99 of 4785 projects · 13 running, longest 990 s: @semio-tech/fixture-gene
+  ledger: 80 of 4785 done: 3 present, 44 fetched from the fleet, 33 inferred here (27 running), 0 wanted from the fleet, 57 stale in the fleet | stale-row lines 4 | rate 2.40/min over 13min, left 4705, eta 32.7 h
+  pools wave e6019ec04354 claimed/published/children [24, 9, 16] m01:7/6 m03:2/0 m04:0/0 m05:6/0 m07:0/0 m08:4/0 m10:0/0 ver:5/3
+  load (31.19580078125, 32.80224609375, 31.00244140625)
+16:14:34Z | phase: {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+  ledger: 83 of 4785 done: 3 present, 45 fetched from the fleet, 35 inferred here (27 running), 0 wanted from the fleet, 58 stale in the fleet | stale-row lines 5 | rate 2.38/min over 15min, left 4702, eta 33.0 h
+  pools wave e6019ec04354 claimed/published/children [59, 26, 26] m01:13/9 m03:9/4 m04:0/0 m05:8/0 m07:3/1 m08:10/4 m10:7/2 ver:9/6
+  load (51.40087890625, 38.88720703125, 33.5009765625)
+16:15:11Z | phase: {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+  ledger: 87 of 4785 done: 3 present, 45 fetched from the fleet, 39 inferred here (27 running), 0 wanted from the fleet, 58 stale in the fleet | stale-row lines 5 | rate 2.54/min over 15min, left 4698, eta 30.9 h
+  pools wave e6019ec04354 claimed/published/children [73, 36, 28] m01:14/11 m02:0/0 m03:11/6 m04:0/0 m05:8/0 m07:6/3 m08:12/6 m10:12/4 ver:10/6
+  load (50.15771484375, 39.87939453125, 34.07470703125)
+16:16:14Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 91 of 4785 done: 3 present, 47 fetched from the fleet, 41 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 3.06/min over 10min, left 4694, eta 25.5 h
+  pools wave 5ecd9c218e85 claimed/published/children [49, 32, 14] m01:20/17 m07:10/5 m10:19/10 ver:0/0
+  load (38.0595703125, 38.78955078125, 34.11962890625)
+16:17:12Z | phase: build:projects · Inferring projects: 116 of 4785 projects · 15 running, longest 1230 s: @semio-tech/fixture-ge
+  ledger: 97 of 4785 done: 3 present, 47 fetched from the fleet, 47 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 3.33/min over 11min, left 4688, eta 23.5 h
+  pools wave 5ecd9c218e85 claimed/published/children [145, 99, 35] m01:22/19 m03:35/28 m04:0/0 m05:10/0 m07:12/7 m08:26/19 m10:26/14 ver:14/12
+  load (29.29150390625, 36.2802734375, 33.4814453125)
+16:19:12Z | phase: build:projects · Inferring projects: 121 of 4785 projects · 13 running, longest 1215 s: @semio-tech/cad-js (pr
+  ledger: 102 of 4785 done: 3 present, 47 fetched from the fleet, 52 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 3.85/min over 11min, left 4683, eta 20.3 h
+  pools wave 5ecd9c218e85 claimed/published/children [175, 139, 32] m01:24/20 m02:0/0 m03:47/39 m04:0/0 m05:2/0 m07:18/14 m08:31/25 m10:33/23 ver:20/18
+  load (37.69677734375, 36.1943359375, 33.73193359375)
+16:21:13Z | phase: build:projects · Inferring projects: 123 of 4785 projects · 16 running, longest 1335 s: @semio-tech/cad-js (pr
+  ledger: 104 of 4785 done: 3 present, 47 fetched from the fleet, 54 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 3.52/min over 11min, left 4681, eta 22.2 h
+  pools wave 5ecd9c218e85 claimed/published/children [223, 179, 39] m01:26/20 m02:2/0 m03:55/47 m05:6/0 m07:31/26 m08:35/31 m10:42/32 ver:26/23
+  load (45.076171875, 40.25, 35.73291015625)
+16:23:13Z | phase: build:projects · Inferring projects: 123 of 4785 projects · 16 running, longest 1455 s: @semio-tech/cad-js (pr
+  ledger: 104 of 4785 done: 3 present, 47 fetched from the fleet, 54 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 2.39/min over 10min, left 4681, eta 32.6 h
+  pools wave 5ecd9c218e85 claimed/published/children [188, 149, 36] m02:2/0 m03:61/54 m05:10/0 m07:42/36 m10:44/33 ver:29/26
+  load (42.73388671875, 39.2734375, 35.82666015625)
+16:25:14Z | phase: build:projects · Inferring projects: 123 of 4785 projects · 16 running, longest 1580 s: @semio-tech/cad-js (pr
+  ledger: 104 of 4785 done: 3 present, 47 fetched from the fleet, 54 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 1.69/min over 10min, left 4681, eta 46.1 h
+  pools wave 5ecd9c218e85 claimed/published/children [218, 174, 33] m02:2/0 m03:74/68 m05:12/0 m07:48/42 m10:49/36 ver:33/28
+  load (30.81787109375, 37.46044921875, 35.66455078125)
+16:27:14Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 15 running, longest 1610 s: @semio-tech/cad-js (pr
+  ledger: 105 of 4785 done: 3 present, 47 fetched from the fleet, 55 inferred here (26 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 0.80/min over 10min, left 4680, eta 97.9 h
+  pools wave 5ecd9c218e85 claimed/published/children [246, 195, 35] m02:3/1 m03:81/71 m05:12/0 m07:54/43 m10:59/48 ver:37/32
+  load (34.1171875, 35.41943359375, 35.0068359375)
+16:29:15Z | phase: build:projects · Inferring projects: 126 of 4785 projects · 14 running, longest 1815 s: @semio-tech/cad-js (pr
+  ledger: 107 of 4785 done: 3 present, 47 fetched from the fleet, 57 inferred here (25 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 0.50/min over 10min, left 4678, eta 156.6 h
+  pools wave a0887f7f56d0 claimed/published/children [0, 0, 0] ver:0/0
+  load (28.6279296875, 32.9775390625, 34.10302734375)
+16:31:15Z | phase: build:projects · Inferring projects: 128 of 4785 projects · 13 running, longest 1940 s: @semio-tech/cad-js (pr
+  ledger: 108 of 4785 done: 3 present, 47 fetched from the fleet, 58 inferred here (27 running), 0 wanted from the fleet, 62 stale in the fleet | stale-row lines 5 | rate 0.40/min over 10min, left 4677, eta 195.6 h
+  pools wave 5ecd9c218e85 claimed/published/children [292, 237, 40] m02:8/2 m03:89/80 m05:14/4 m07:69/55 m10:67/56 ver:45/40
+  load (40.59326171875, 35.42431640625, 34.8837890625)
+16:33:15Z | no read running; log tail: Cancelled (SIGINT); leases released.
+16:35:16Z | no read running; log tail: Cancelled (SIGINT); leases released.
+16:37:16Z | phase: {"owner":"repository:build","command":"build:discover","stage":"complete"}
+  ledger:  | stale-row lines 0 | rate 
+  pools wave fc7a04bcde61 claimed/published/children [107, 66, 29] m01:11/1 m03:33/22 m04:0/0 m07:14/11 m08:29/24 m10:11/8 ver:9/0
+  load (35.841796875, 29.04150390625, 31.59814453125)
+16:39:16Z | phase: build:projects · Inferring projects: 0 of 4785 projects · 1 running, longest 0 s: shared closures in a child
+  ledger:  | stale-row lines 0 | rate 
+  pools wave fc7a04bcde61 claimed/published/children [133, 83, 32] m01:19/3 m03:40/29 m04:0/0 m07:18/14 m08:34/25 m10:13/12 ver:9/0
+  load (33.56298828125, 31.79541015625, 32.44580078125)
+16:41:16Z | phase: build:projects · Inferring projects: 0 of 4785 projects · 1 running, longest 0 s: shared closures in a child
+  ledger:  | stale-row lines 0 | rate 
+  pools wave fc7a04bcde61 claimed/published/children [178, 123, 37] m01:26/8 m03:50/37 m04:0/0 m05:0/0 m07:19/16 m08:40/32 m10:33/28 ver:10/2
+  load (33.16845703125, 31.7724609375, 32.322265625)
+16:43:17Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 0 of 4785 done: 0 present, 0 fetched from the fleet, 0 inferred here (0 running), 0 wanted from the fleet, 0 stale in the fleet | stale-row lines 0 | rate -8.98/min over 12min
+  pools wave fc7a04bcde61 claimed/published/children [222, 159, 41] m01:33/10 m03:59/47 m04:0/0 m05:0/0 m07:26/21 m08:45/36 m10:45/40 ver:14/5
+  load (36.60302734375, 33.21484375, 32.8076171875)
+16:45:17Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 19 of 4785 done: 7 present, 2 fetched from the fleet, 10 inferred here (16 running), 0 wanted from the fleet, 6 stale in the fleet | stale-row lines 6 | rate -6.34/min over 14min
+  pools wave fc7a04bcde61 claimed/published/children [262, 193, 41] m01:40/13 m03:66/58 m04:0/0 m05:2/0 m07:29/23 m08:56/45 m10:50/45 ver:19/9
+  load (33.4296875, 32.30078125, 32.45361328125)
+16:47:17Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 27 of 4785 done: 7 present, 3 fetched from the fleet, 17 inferred here (16 running), 0 wanted from the fleet, 8 stale in the fleet | stale-row lines 8 | rate -5.05/min over 16min
+  pools wave fc7a04bcde61 claimed/published/children [294, 211, 45] m01:48/15 m03:77/66 m04:0/0 m05:6/0 m07:30/24 m08:63/50 m10:51/46 ver:19/10
+  load (52.9873046875, 39.779296875, 35.3720703125)
+16:49:18Z | phase: build:projects · Inferring projects: 38 of 4785 projects · 10 running, longest 345 s: @semio-tech/fixture-gene
+  ledger: 38 of 4785 done: 7 present, 3 fetched from the fleet, 28 inferred here (16 running), 0 wanted from the fleet, 14 stale in the fleet | stale-row lines 18 | rate -3.88/min over 18min
+  pools wave fc7a04bcde61 claimed/published/children [320, 225, 47] m01:53/16 m03:85/71 m04:0/0 m05:8/1 m07:33/25 m08:66/52 m10:54/48 ver:21/12
+  load (41.8798828125, 40.08349609375, 36.12646484375)
+16:51:18Z | phase: build:projects · Inferring projects: 67 of 4785 projects · 13 running, longest 470 s: @semio-tech/fixture-gene
+  ledger: 56 of 4785 done: 23 present, 6 fetched from the fleet, 27 inferred here (18 running), 0 wanted from the fleet, 19 stale in the fleet | stale-row lines 34 | rate -2.59/min over 20min
+  pools wave fc7a04bcde61 claimed/published/children [342, 247, 52] m01:55/16 m02:0/0 m03:88/78 m04:0/0 m05:12/1 m07:40/32 m08:68/53 m10:57/52 ver:22/15
+  load (35.62646484375, 37.87939453125, 35.7333984375)
+16:53:19Z | phase: build:projects · Inferring projects: 70 of 4785 projects · 14 running, longest 355 s: @semio-tech/sourcing-cur
+  ledger: 57 of 4785 done: 23 present, 6 fetched from the fleet, 28 inferred here (18 running), 0 wanted from the fleet, 21 stale in the fleet | stale-row lines 38 | rate 5.68/min over 10min, left 4728, eta 13.9 h
+  pools wave fc7a04bcde61 claimed/published/children [361, 259, 45] m01:60/20 m02:0/0 m03:96/84 m04:0/0 m05:14/1 m07:44/33 m08:68/54 m10:57/52 ver:22/15
+  load (47.06298828125, 40.208984375, 36.84521484375)
+16:55:19Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 58 of 4785 done: 36 present, 6 fetched from the fleet, 16 inferred here (18 running), 0 wanted from the fleet, 22 stale in the fleet | stale-row lines 56 | rate 3.89/min over 10min, left 4727, eta 20.3 h
+  pools wave fc7a04bcde61 claimed/published/children [379, 272, 48] m01:60/20 m02:0/0 m03:102/90 m04:0/0 m05:16/2 m07:48/37 m08:72/55 m10:58/52 ver:23/16
+  load (39.03955078125, 40.3271484375, 37.40234375)
+16:57:19Z | phase: build:projects · Inferring projects: 86 of 4785 projects · 1 running, longest 850 s: warm (warm, 850 s, 9 rows
+  ledger: 60 of 4785 done: 39 present, 6 fetched from the fleet, 15 inferred here (18 running), 0 wanted from the fleet, 22 stale in the fleet | stale-row lines 59 | rate 3.29/min over 10min, left 4725, eta 23.9 h
+  pools wave fc7a04bcde61 claimed/published/children [395, 285, 51] m01:68/23 m02:0/0 m03:103/91 m04:0/0 m05:16/2 m07:50/39 m08:74/58 m10:60/55 ver:24/17
+  load (36.1796875, 38.646484375, 37.0966796875)
+16:59:20Z | phase: build:projects · Inferring projects: 99 of 4785 projects · 1 running, longest 970 s: warm (warm, 970 s, 9 rows
+  ledger: 72 of 4785 done: 46 present, 6 fetched from the fleet, 20 inferred here (20 running), 0 wanted from the fleet, 24 stale in the fleet | stale-row lines 74 | rate 3.39/min over 10min, left 4713, eta 23.2 h
+  pools wave fc7a04bcde61 claimed/published/children [24, 2, 22] m01:2/0 m02:0/0 m03:3/0 m04:0/0 m05:18/2 m07:0/0 m08:0/0 m10:1/0 ver:0/0
+  load (42.95361328125, 41.03466796875, 38.28173828125)
+17:01:21Z | phase: build:projects · Inferring projects: 116 of 4785 projects · 14 running, longest 705 s: @semio-tech/hub-inferen
+  ledger: 87 of 4785 done: 52 present, 7 fetched from the fleet, 28 inferred here (27 running), 0 wanted from the fleet, 27 stale in the fleet | stale-row lines 88 | rate 3.09/min over 10min, left 4698, eta 25.4 h
+  pools wave fc7a04bcde61 claimed/published/children [84, 47, 29] m01:19/16 m02:3/0 m03:16/13 m04:0/0 m05:20/5 m07:2/0 m08:3/1 m10:18/11 ver:3/1
+  load (37.03955078125, 39.400390625, 37.978515625)
+17:03:21Z | phase: build:projects · Inferring projects: 118 of 4785 projects · 14 running, longest 755 s: os-hub-ts (project, 755
+  ledger: 89 of 4785 done: 52 present, 7 fetched from the fleet, 30 inferred here (27 running), 0 wanted from the fleet, 27 stale in the fleet | stale-row lines 93 | rate 3.19/min over 10min, left 4696, eta 24.6 h
+  pools wave fc7a04bcde61 claimed/published/children [144, 108, 33] m01:37/34 m02:4/0 m03:44/37 m04:0/0 m05:4/0 m07:8/3 m08:12/8 m10:27/22 ver:8/4
+  load (29.15771484375, 36.2041015625, 36.93017578125)
+17:05:22Z | phase: {"owner":"repository:build","command":"build:projects","stage":"running"}
+  ledger: 92 of 4785 done: 55 present, 8 fetched from the fleet, 29 inferred here (27 running), 4693 wanted from the fleet, 27 stale in the fleet | stale-row lines 127 | rate 3.38/min over 10min, left 4693, eta 23.1 h
+  pools wave c5d692748bea claimed/published/children [160, 122, 36] m01:39/34 m02:6/1 m03:48/43 m05:6/0 m07:11/5 m08:12/8 m10:30/27 ver:8/4
+  load (32.80908203125, 34.72216796875, 36.21728515625)
+17:07:22Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 14 running, longest 1000 s: os-hub-ts (project, 10
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 173 | rate 3.38/min over 10min, left 4691, eta 23.1 h
+  pools wave c5d692748bea claimed/published/children [198, 160, 45] m01:48/45 m02:0/0 m03:61/55 m04:0/0 m05:8/1 m07:23/17 m08:15/10 m10:33/28 ver:10/4
+  load (36.1669921875, 36.15673828125, 36.6318359375)
+17:09:22Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 17 running, longest 1115 s: os-hub-ts (project, 11
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 177 | rate 2.19/min over 10min, left 4691, eta 35.7 h
+  pools wave c5d692748bea claimed/published/children [17, 2, 19] m01:2/0 m02:0/0 m03:2/0 m04:0/0 m05:10/2 m07:2/0 m08:1/0 m10:0/0 ver:0/0
+  load (27.09130859375, 33.09912109375, 35.376953125)
+17:11:23Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 17 running, longest 1240 s: os-hub-ts (project, 12
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 177 | rate 0.70/min over 10min, left 4691, eta 112.1 h
+  pools wave c5d692748bea claimed/published/children [74, 37, 35] m01:12/8 m02:7/4 m03:19/15 m04:0/0 m05:15/4 m07:9/3 m08:4/1 m10:5/2 ver:3/0
+  load (31.853515625, 32.21337890625, 34.65283203125)
+17:13:23Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1360 s: os-hub-ts (project, 13
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.50/min over 10min, left 4691, eta 156.9 h
+  pools wave c5d692748bea claimed/published/children [120, 76, 42] m01:17/13 m02:9/4 m03:38/34 m04:0/0 m05:17/5 m07:20/11 m08:7/5 m10:8/4 ver:4/0
+  load (25.2919921875, 30.48779296875, 33.71484375)
+17:15:24Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1480 s: os-hub-ts (project, 14
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.20/min over 10min, left 4691, eta 392.1 h
+  pools wave 2232f2b3205b claimed/published/children [145, 106, 40] m01:29/20 m02:15/9 m03:48/43 m04:0/0 m07:25/18 m08:12/7 m10:12/9 ver:4/0
+  load (30.05859375, 30.84130859375, 33.4462890625)
+17:17:24Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1600 s: os-hub-ts (project, 16
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.00/min over 10min
+  pools wave 2232f2b3205b claimed/published/children [217, 162, 56] m01:32/24 m02:32/24 m03:59/53 m04:0/0 m05:19/5 m07:32/25 m08:15/12 m10:24/19 ver:4/0
+  load (33.021484375, 32.71337890625, 33.900390625)
+17:19:24Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1725 s: os-hub-ts (project, 17
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.00/min over 10min
+  pools wave 2232f2b3205b claimed/published/children [248, 190, 58] m01:32/24 m02:36/32 m03:64/56 m04:0/0 m05:21/7 m07:39/29 m08:20/16 m10:28/25 ver:8/1
+  load (20.66455078125, 28.14990234375, 31.9326171875)
+17:21:25Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1845 s: os-hub-ts (project, 18
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.00/min over 10min
+  pools wave 2232f2b3205b claimed/published/children [285, 226, 58] m01:34/25 m02:49/42 m03:65/59 m04:0/0 m05:22/10 m07:44/35 m08:25/18 m10:33/29 ver:13/8
+  load (39.2607421875, 31.4140625, 32.62744140625)
+17:23:25Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 1960 s: os-hub-ts (project, 19
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 179 | rate 0.00/min over 10min
+  pools wave 2232f2b3205b claimed/published/children [323, 249, 63] m01:40/29 m02:56/48 m03:67/60 m04:0/0 m05:22/10 m07:52/37 m08:29/22 m10:43/34 ver:14/9
+  load (33.9140625, 31.673828125, 32.548828125)
+17:25:26Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 2080 s: os-hub-ts (project, 20
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 180 | rate 0.00/min over 10min
+  pools wave 2232f2b3205b claimed/published/children [325, 257, 56] m01:42/31 m02:58/49 m03:67/60 m04:0/0 m07:55/39 m08:36/28 m10:49/39 ver:18/11
+  load (30.14306640625, 32.25341796875, 32.74755859375)
+17:27:26Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 2200 s: os-hub-ts (project, 22
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 180 | rate 0.00/min over 10min
+  pools wave fc7a04bcde61 claimed/published/children [12, 0, 12] m01:0/0 m02:1/0 m03:6/0 m04:0/0 m05:0/0 m07:2/0 m08:0/0 m10:1/0 ver:2/0
+  load (22.96484375, 28.6728515625, 31.24609375)
+17:29:26Z | phase: build:projects · Inferring projects: 124 of 4785 projects · 18 running, longest 2325 s: os-hub-ts (project, 23
+  ledger: 94 of 4785 done: 55 present, 10 fetched from the fleet, 29 inferred here (27 running), 4691 wanted from the fleet, 27 stale in the fleet | stale-row lines 181 | rate 0.00/min over 10min
+  pools wave fc7a04bcde61 claimed/published/children [56, 23, 25] m01:4/3 m02:15/8 m03:11/3 m04:0/0 m05:4/0 m07:5/2 m08:5/2 m10:5/4 ver:7/1
+  load (45.28955078125, 34.43505859375, 33.14306640625)
+17:31:27Z | phase: build:projects · Inferring projects: 125 of 4785 projects · 19 running, longest 2440 s: os-hub-ts (project, 24
+  ledger: 95 of 4785 done: 55 present, 10 fetched from the fleet, 30 inferred here (27 running), 4690 wanted from the fleet, 27 stale in the fleet | stale-row lines 184 | rate 0.10/min over 10min, left 4690, eta 784.3 h
+  pools wave fc7a04bcde61 claimed/published/children [104, 67, 31] m01:11/7 m02:27/19 m03:20/13 m04:0/0 m05:7/0 m07:6/3 m08:9/8 m10:10/9 ver:14/8
+  load (41.57373046875, 36.611328125, 34.1796875)
+17:32:25Z | phase: build:projects · Inferring projects: 125 of 4785 projects · 22 running, longest 2500 s: os-hub-ts (project, 25
+  ledger: 95 of 4785 done: 55 present, 10 fetched from the fleet, 30 inferred here (27 running), 4690 wanted from the fleet, 27 stale in the fleet | stale-row lines 187 | rate 0.10/min over 10min, left 4690, eta 783.7 h
+  pools wave fc7a04bcde61 claimed/published/children [128, 91, 35] m01:17/14 m02:30/20 m03:26/17 m04:0/0 m05:8/0 m07:6/3 m08:12/11 m10:12/12 ver:17/14
+  load (42.91748046875, 38.0078125, 34.87060546875)

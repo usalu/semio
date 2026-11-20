@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "no pressure",
+      "used": [
+        28
+      ],
+      "limit": 36,
+      "eligible": true,
+      "maximum": 2,
+      "operations": [
+        "observe"
+      ]
+    },
+    {
+      "name": "independent capsule releases enough",
+      "used": [
+        41,
+        35
+      ],
+      "limit": 36,
+      "eligible": true,
+      "maximum": 2,
+      "operations": [
+        "observe",
+        "retire",
+        "observe"
+      ]
+    },
+    {
+      "name": "all capsules remain referenced",
+      "used": [
+        41
+      ],
+      "limit": 36,
+      "eligible": false,
+      "maximum": 2,
+      "operations": [
+        "observe",
+        "retire",
+        "refuse"
+      ]
+    },
+    {
+      "name": "bounded cleanup leaves the whole charge over budget",
+      "used": [
+        41,
+        39
+      ],
+      "limit": 36,
+      "eligible": true,
+      "maximum": 1,
+      "operations": [
+        "observe",
+        "retire",
+        "observe",
+        "refuse"
+      ]
+    }
+  ]
+}

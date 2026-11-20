@@ -1,18 +1,23 @@
 /** 🚧️ Contract: a job that a farm child could take never goes to the parent while the farm exists. `immediate` starts the children at the creation of the farm; a pool that stays silent keeps the job in the queue with the reason shown (no hold time ends it); a child that fails the job three times ends it with a refusal that names the owner and the reason, it is not inferred in the parent in its place; `observe` (the verdict and the closure references) waits for a child without a limit and answers undefined only when the farm is gone; `exists` says whether the farm is still there.
  * @see ../../🟨️.mjs */
 import {afterEach,expect,test} from "bun:test";
+import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {EventEmitter} from "node:events";
-import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {closeProjectFarmsV1,openProjectFarmV1} from "../../🟨️.mjs";
 import {GRAPH_FARM_POLICY_V1} from "../../🏊️pool/🟨️.mjs";
+import {settleOwnerRegistryV1,withOwnerRegistryCustodyV1} from "../../../../../📥️load/🧭️registry-follow/🟦️.ts";
+import {withImplementationPinV1} from "../../../../../../📥️inputs/🔏️revision/🟨️.mjs";
 import {inferenceRecordIdentityV1} from "../../../../../../👁️observation/🟨️.mjs";
 import {graphFarmIdentityV1} from "../../🪆️captured/🟨️.mjs";
 
 const roots:string[]=[];
 afterEach(async()=>{await closeProjectFarmsV1();for(const root of roots.splice(0))rmSync(root,{recursive:true,force:true});});
-type Mode="ok"|"fail"|"silent"|"verdict";
+const rootOfNewOwner="owners/"+"a".repeat(180)+"/rust";
+const ownerRegistryFailure="Native dependency has no build project owner: "+rootOfNewOwner+" (required by p:build; candidates=4788)";
+type Mode="ok"|"fail"|"registry"|"silent"|"verdict";
 class Scripted extends EventEmitter{
  connected=true;exitCode:number|null=null;signalCode:string|null=null;
  constructor(readonly mode:Mode,readonly log:string[]){super();if(mode!=="silent")setImmediate(()=>this.emit("message",{type:"ready",pid:1,identity:graphFarmIdentityV1(inferenceRecordIdentityV1())}));}
@@ -20,7 +25,8 @@ class Scripted extends EventEmitter{
   if(message.type==="run"){
    const observing=JSON.parse(readFileSync(message.jobFile!,"utf8")).observe===true;
    this.log.push(observing?"observe":"run");
-   if(this.mode==="fail")setImmediate(()=>this.emit("message",{type:"failure",id:message.id,name:"Error",message:"the child broke on it"}));
+   if(this.mode==="fail")setImmediate(()=>this.emit("message",{type:"failure",id:message.id,name:"Error",code:"BUILD_SOURCE_AUTHORITY",message:"the child broke on it"}));
+   else if(this.mode==="registry")setImmediate(()=>this.emit("message",{type:"failure",id:message.id,name:"Error",code:"BUILD_SOURCE_AUTHORITY",message:ownerRegistryFailure}));
    else setImmediate(()=>this.emit("message",{type:"result",id:message.id,reply:observing?{verdict:"holds",headerDigest:"a".repeat(64),names:[],cpuMilliseconds:1}:{names:["np/x.json"],cpuMilliseconds:1},rssMegabytes:1}));
   }else if(message.type==="shutdown"){this.exitCode=0;setImmediate(()=>this.emit("exit"));}
   return true;
@@ -88,4 +94,63 @@ test("a child that fails an observe job three times refuses it instead of return
  let caught:any;try{await farm.observe({name:"p",observe:true} as never);}catch(error){caught=error;}
  expect(caught?.code).toBe("graph.farm-job-failed");expect(caught.message).toContain("farm children could not infer p");
  await farm.close();
+},20000);
+
+test("a farm reports the full native owner fault at its first reply and the graph follows the new registry",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"registry-farm-")));roots.push(root);
+ const registry=join(root,"📋️build-owners.json"),put=(owners:object[])=>writeFileSync(registry,JSON.stringify({version:1,owners,catalogProviders:[]}));
+ put([]);
+ const log:string[]=[],signal=new AbortController();
+ const farm=open("registry",log,[],[],{signal:signal.signal,onOwnerRegistryFailure:(error:Error)=>signal.abort(error)});
+ let reads=0,closed=false;
+ const command=new AbortController();
+ try{
+  await expect(withImplementationPinV1(()=>settleOwnerRegistryV1(root,()=>withOwnerRegistryCustodyV1<unknown>(command.signal,async contain=>{
+   if(++reads===2){expect(closed).toBe(true);return contain(async()=>"sealed");}
+   try{return await contain(async()=>{
+    put([{name:"new",root:rootOfNewOwner,manifest:rootOfNewOwner+"/Cargo.toml",packages:[]}]);
+    return farm.prepare(job);
+   });}finally{await farm.close();closed=true;}
+  })))).resolves.toBe("sealed");
+  expect(log).toEqual(["run"]);expect(reads).toBe(2);expect(farm.exists()).toBe(false);
+  expect(signal.signal.reason).toMatchObject({code:"BUILD_SOURCE_AUTHORITY",message:ownerRegistryFailure});
+ }finally{await farm.close();}
+},20000);
+
+test("a farm reports a native owner fault before retrying a verification",async()=>{
+ const log:string[]=[],farm=open("registry",log,[]);
+ try{
+  await expect(farm.observe({name:"p",observe:true} as never)).rejects.toMatchObject({code:"BUILD_SOURCE_AUTHORITY",message:ownerRegistryFailure});
+  expect(log).toEqual(["observe"]);
+ }finally{await farm.close();}
+},20000);
+
+test("a peer's unrelated registry change does not cost another whole retry for the named missing owner",async()=>{
+ const root=realpathSync(mkdtempSync(join(tmpdir(),"registry-scope-")));roots.push(root);
+ const needed="needed/rust",other="existing/root",registry=join(root,"📋️build-owners.json");
+ mkdirSync(join(root,needed),{recursive:true});
+ writeFileSync(join(root,needed,"Cargo.toml"),"[package]\nname = \"needed-owner\"\nversion = \"0.1.0\"\n");
+ const save=(owners:object[])=>writeFileSync(registry,JSON.stringify({version:1,owners,catalogProviders:[]}));
+ const otherRow={name:"other-owner",root:other,manifest:other+"/Cargo.toml",packages:[]};
+ save([]);
+ const python=testPythonV1();
+ expect(python).toBeDefined();
+ const oracle=Bun.spawnSync([python!,"-I","-c",`import json,sqlite3,sys
+db=sqlite3.connect(":memory:")
+print(json.dumps([r[0] for r in db.execute("SELECT root FROM (SELECT ? AS root UNION SELECT ?) ORDER BY root", sys.argv[1:])]))`,needed,other]);
+ expect(oracle.exitCode,oracle.stderr.toString()).toBe(0);
+ const wanted=JSON.parse(oracle.stdout.toString());
+ const signal=new AbortController().signal;
+ let attempts=0;
+ await expect(withImplementationPinV1(()=>settleOwnerRegistryV1(root,()=>withOwnerRegistryCustodyV1(signal,async contain=>contain(async()=>{
+  if(++attempts===1){
+   save([otherRow]);
+   throw Object.assign(Error(`Native dependency has no build project owner: ${needed} (required by p:build; candidates=1)`),{code:"BUILD_SOURCE_AUTHORITY"});
+  }
+  const rows=JSON.parse(readFileSync(registry,"utf8")).owners as {root:string}[];
+  expect(rows.map(row=>row.root).sort()).toEqual(wanted);
+  expect(rows.find(row=>row.root===other)).toEqual(otherRow);
+  return "corrected";
+ }))))).resolves.toBe("corrected");
+ expect(attempts).toBe(2);
 },20000);

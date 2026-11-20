@@ -10,4 +10,11 @@ def judge(r):
     inodes=ffree if files is not None and files>0 and ffree is not None and 0<=ffree<=files else None
     return {'bytes':a*b,'total':b*k if (k>0 and k>=a and math.isfinite(b*k)) else None,'inodes':inodes}
 
-print(json.dumps([judge(r) for r in json.loads(sys.stdin.read())]))
+def windows(r):
+    a,t=r['availableBytes'],r.get('totalBytes')
+    if not math.isfinite(a) or a<0:
+        return None
+    total=t if t is not None and math.isfinite(t) and t>0 and t>=a else None
+    return {'bytes':a,'total':total,'ratio':a/total if total else None}
+
+print(json.dumps([windows(r) if 'availableBytes' in r else judge(r) for r in json.loads(sys.stdin.read())]))

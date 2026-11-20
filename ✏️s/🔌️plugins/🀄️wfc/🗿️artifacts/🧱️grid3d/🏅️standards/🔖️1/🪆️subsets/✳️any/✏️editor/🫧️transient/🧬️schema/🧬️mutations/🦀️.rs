@@ -14,6 +14,7 @@ pub enum Grid3dTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
 }
+dsl::original_pack_value_operation_receiving!(Grid3dTransientMutation);
 
 
 
@@ -28,6 +29,7 @@ pub struct Grid3dTransientDiff {
 }
 
 protocol::retained_row_patch!(pub retained_fields for Grid3dTransientDiff => Grid3dTransient { payload_json: String });
+protocol::retained_empty_option_patch!(Grid3dTransientDiff { payload_json });
 protocol::retained_patch_diff!(Grid3dTransientDiff => Grid3dTransient);
 
 impl protocol::DiffAlgebra<Grid3dTransient> for Grid3dTransientDiff {

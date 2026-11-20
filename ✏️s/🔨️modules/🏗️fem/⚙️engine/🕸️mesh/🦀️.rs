@@ -62,6 +62,10 @@ pub use mesh_job::*;
 #[path = "🕹️mesh-job-run/🦀️.rs"]
 mod mesh_job_run;
 
+#[path = "📚️mesh-rows/🦀️.rs"]
+mod mesh_rows;
+use mesh_rows::{MeshRows, MeshRows2};
+
 // #region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

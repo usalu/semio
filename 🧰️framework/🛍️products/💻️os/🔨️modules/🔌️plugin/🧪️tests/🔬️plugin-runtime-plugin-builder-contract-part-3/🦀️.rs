@@ -121,5 +121,3 @@ include!("🧷️composed-checkpoint-commit/🦀️.rs");
 include!("🧹️child-root-maintenance-and-rates/🦀️.rs");
 include!("↪️reserved-undo-ui-stamping-and-selection/🦀️.rs");
     mod mounted_owned_child_laws { include!("../🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🦀️.rs"); }
-
-mod genuine_original_emission_laws { include!("../📤️original-emission/🦀️.rs"); }

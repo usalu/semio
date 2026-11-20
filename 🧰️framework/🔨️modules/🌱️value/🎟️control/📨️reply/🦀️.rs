@@ -35,7 +35,7 @@ impl<'a,T,E> OriginalEffectReply<'a,T,E>{
  /// 🪪️ Retains the caller's original opaque invocation key until actual result deposit.
  /// The key comes from the defining authority; this scope authenticates no Source and grants no work.
  pub fn scope<'scope,K:Copy+Eq+Send>(self,resident:&'scope mut Option<K>,key:K)->Result<OriginalEffectReplyScope<'scope,'a,T,E,K>,ValueError> where T:Send,E:Send{
-  if self.is_recorded(){return Err(occupied())}let recovering=resident.is_some();if resident.is_some_and(|original|original!=key){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"forwarded reply changed its original invocation"))}*resident=Some(key);Ok(OriginalEffectReplyScope{original:self,resident,recovering})
+  if self.is_recorded(){return Err(occupied())}let recovering=resident.is_some();if resident.is_some_and(|original|original!=key){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"forwarded reply changed its original invocation"))}*resident=Some(key);Ok(OriginalEffectReplyScope{original:Some(self),resident,recovering})
  }
 }
 impl<E> OriginalEffectReply<'_,RetainedCloneStep,E>{
@@ -43,16 +43,20 @@ impl<E> OriginalEffectReply<'_,RetainedCloneStep,E>{
  pub fn progress(mut self)->Self{self.normalize=|step|RetainedCloneStep::Progress(step.progress());self}
 }
 /// 🧷️ Forwards into the same original reply and clears its exact key inside completed deposit.
-pub struct OriginalEffectReplyScope<'scope,'reply,T,E,K>{original:OriginalEffectReply<'reply,T,E>,resident:&'scope mut Option<K>,recovering:bool}
+/// A scope dropped without `forwarded` (its producer returned an error before depositing or retaining the reply) frees a key it created itself, so a refused producer never leaves an action that nothing can settle; a recovered key and an unwind keep theirs for the recovery callback.
+pub struct OriginalEffectReplyScope<'scope,'reply,T,E,K>{original:Option<OriginalEffectReply<'reply,T,E>>,resident:&'scope mut Option<K>,recovering:bool}
+impl<T,E,K> Drop for OriginalEffectReplyScope<'_,'_,T,E,K>{
+ fn drop(&mut self){if self.recovering||std::thread::panicking(){return}if self.original.as_ref().is_some_and(|original|!original.is_recorded()){*self.resident=None}}
+}
 impl<T:Send,E:Send,K:Copy+Eq+Send> Forward<T,E> for OriginalEffectReplyScope<'_,'_,T,E,K>{
- fn is_recorded(&self)->bool{self.original.is_recorded()}
- fn write(&mut self,result:Result<T,E>){self.original.write(result);*self.resident=None}
+ fn is_recorded(&self)->bool{self.original.as_ref().is_some_and(OriginalEffectReply::is_recorded)}
+ fn write(&mut self,result:Result<T,E>){self.original.as_mut().expect("scope keeps its reply until forwarded").write(result);*self.resident=None}
 }
 impl<'scope,'reply,T:Send,E:Send,K:Copy+Eq+Send> OriginalEffectReplyScope<'scope,'reply,T,E,K>{
  pub fn recovering(&self)->bool{self.recovering}
- pub fn is_recorded(&self)->bool{self.original.is_recorded()}
- pub fn borrow(&mut self)->Result<OriginalEffectReply<'_,T,E>,ValueError>{if self.original.is_recorded(){return Err(occupied())}Ok(OriginalEffectReply{slot:Slot::Forward(self),normalize:identity})}
- pub fn forwarded(self)->OriginalEffectReplyComplete<'reply,T,E>{self.original.forwarded()}
+ pub fn is_recorded(&self)->bool{Forward::is_recorded(self)}
+ pub fn borrow(&mut self)->Result<OriginalEffectReply<'_,T,E>,ValueError>{if Forward::is_recorded(self){return Err(occupied())}Ok(OriginalEffectReply{slot:Slot::Forward(self),normalize:identity})}
+ pub fn forwarded(mut self)->OriginalEffectReplyComplete<'reply,T,E>{self.original.take().expect("scope keeps its reply until forwarded").forwarded()}
 }
 
 #[cfg(test)]

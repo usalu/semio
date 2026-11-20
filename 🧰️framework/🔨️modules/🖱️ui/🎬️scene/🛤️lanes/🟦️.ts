@@ -68,6 +68,7 @@ export const CANVAS2D_SCENE_LANE_KEY_PREFIX = "framework.scene.canvas2d.";
  * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json`. */
 export const CANVAS2D_SCENE_LANES: readonly SceneLane<Canvas2dScene>[] = [
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.canvas2d.toolRunTrace", optional: true },
+  { lane: "layers", field: "layersJson", bodyKey: "framework.scene.canvas2d.layers", optional: false },
 ];
 
 /** 🧷️ Resolves a retained node key back to the canvas-2d lane it carries. */

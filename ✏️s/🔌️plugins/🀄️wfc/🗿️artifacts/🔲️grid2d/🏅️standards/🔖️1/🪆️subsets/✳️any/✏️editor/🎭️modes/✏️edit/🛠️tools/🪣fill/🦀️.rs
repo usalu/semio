@@ -629,6 +629,13 @@ impl Grid2dFillRunJob {
         self.publish_tick(ToolRunState::Faulted, Some((FillReason::Fault, &[])), Some(FillSettled::Fault(message.as_bytes().to_vec())))
     }
 
+    /// 🧪️ Settles the run with a final payload and reports whether it completed and committed; a test-law hook, not part of the tool surface.
+    #[doc(hidden)]
+    pub fn settle_for_laws(&mut self, contradiction: bool, payload: Option<Grid2dFillPayload>) -> (bool, bool) {
+        let _ = self.finish_success(contradiction, payload);
+        (matches!(self.settled, Some(FillSettled::Complete)), self.committed)
+    }
+
     fn finish_success(&mut self, contradiction: bool, payload: Option<Grid2dFillPayload>) -> FillRun {
         self.last_payload = payload.unwrap_or_else(|| {
             if contradiction {
@@ -862,7 +869,8 @@ impl InteractiveJob for Grid2dFillRunJob {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
             if self.publication.is_some() {
-                return wfc::job::close_publication_step(&mut self.publication, cx);
+                let step = wfc::job::close_publication_step(&mut self.publication, cx)?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(settled) = self.settled.take() {
                 cx.consume_fuel(1);
@@ -879,7 +887,8 @@ impl InteractiveJob for Grid2dFillRunJob {
                     return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
                 }
                 let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-                return cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child, same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
+                let step = cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child, same))?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
         })

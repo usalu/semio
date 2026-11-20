@@ -1,0 +1,9 @@
+# Resident Graph Service Status Deadline
+
+The coordinator's current `repo service host status` endpoint returned down. An older resident plan was visibly active under launcher 51021, plan holder 51197 and slice process 73086. The slice's accumulated CPU time increased from 242:30 to 253:03 between observations. The status query selects an endpoint by repository, machine state and sealed implementation. Its result did not assert the absence of all older endpoints or explain the current lab memory gate.
+
+Source inspection found a separate service recovery defect. The local status client connected to its endpoint and waited indefinitely if the endpoint did not send a status frame or close. Retirement and the host command awaited that probe. A real private socket reproduced four failures through a short fixture deadline. A silent endpoint hung, exact caller cancellation did not settle an accepted connection, and both inspection before retirement and verification after the signal could hang.
+
+The status client now uses a single authored five-second deadline spanning connection and response, and retains the exact caller cancellation reason. The timeout is distinct from an unavailable endpoint. The command prints a localized timeout. Retirement sends its signal after a verified status reply and applies a monotonic bound to its subsequent probes. An unresolved retirement probe propagates the typed timeout to the plan caller before it can start a replacement. The command's stop wait likewise reports a timeout if the target remains unresolved.
+
+The neutral scenarios and independent SQLite oracle exercised actual private sockets, a responsive and an absent endpoint, silent status, caller cancellation, silence before and after a modeled exact retirement signal, and the German command response. The four focused status, restart and startup suites passed 28 tests with 159 assertions. No live service was stopped or restarted as part of this verification.

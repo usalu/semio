@@ -29,6 +29,12 @@ export const PRESENCE_JOIN_MS = 10_000;
 /** 🕳️ How long a welcomed socket may stay without any frame before it counts as dead: {@link PRESENCE_SILENCE_FACTOR} heartbeats of the proctor. A socket whose peer vanished without a close — a dropped network, a frozen proctor — is closed and the room joins again. */
 export const PRESENCE_SILENCE_MS = PRESENCE_HEARTBEAT_MS * PRESENCE_SILENCE_FACTOR;
 
+/** 🥶️ How much later than due a join or silence timer may run before the page counts as frozen meanwhile (a starved or throttled tab): the frames that arrived in the meantime still wait behind the timer, so the socket is not judged yet. */
+export const PRESENCE_STALL_MS = 1_000;
+
+/** 🧊️ How long a socket judged by a timer that ran late is given once the page runs again: one heartbeat of the proctor, enough for the frames that waited and for the next one of a live socket. */
+export const PRESENCE_STALL_GRACE_MS = PRESENCE_HEARTBEAT_MS;
+
 /** ⏳️ The pause before a room joins again after `flaps` short-lived sessions in a row (`random` in [0, 1]): a first loss
  * is a blip and is rejoined within the shortest backoff; from the second flap on the pause is at least that backoff
  * plus a random share of an exponentially growing ceiling, capped at the longest — so a proctor that admits and drops
@@ -113,6 +119,19 @@ function pause(ms: number, signal: AbortSignal): Promise<void> {
       resolve();
     }
   });
+}
+
+/** ⏰️ A timer that runs `expire` `ms` after each {@link arm}, unless it ran more than {@link PRESENCE_STALL_MS} late: then the page was frozen while it was due, and it waits {@link PRESENCE_STALL_GRACE_MS} more (again, as long as it keeps running late).
+ *
+ * @see https://developer.chrome.com/blog/timer-throttling-in-chrome-88
+ */
+function stallAwareTimer(ms: number, expire: () => void): { readonly arm: () => void; readonly clear: () => void } {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const set = (wait: number): void => {
+    const due = Date.now() + wait;
+    timer = setTimeout(() => (Date.now() - due > PRESENCE_STALL_MS ? set(PRESENCE_STALL_GRACE_MS) : expire()), wait);
+  };
+  return { arm: () => (clearTimeout(timer), set(ms)), clear: () => clearTimeout(timer) };
 }
 
 /** 🚪️ One presence room over one socket: joins on {@link start}, keeps the admitted members of the latest `welcome` and
@@ -217,20 +236,18 @@ export class PresenceRoom<S, W = never> {
         reject(new Error("presence socket closed"));
         end();
       };
-      const stalled = setTimeout(() => (socket.close(), closed()), this.options.joinMs ?? PRESENCE_JOIN_MS);
+      const stalled = stallAwareTimer(this.options.joinMs ?? PRESENCE_JOIN_MS, () => (socket.close(), closed()));
+      stalled.arm();
       signal.addEventListener("abort", aborted, { once: true });
-      void ended.then(() => (clearTimeout(stalled), signal.removeEventListener("abort", aborted)));
-      let watchdog: ReturnType<typeof setTimeout> | undefined;
-      const arm = (): void => {
-        clearTimeout(watchdog);
-        watchdog = setTimeout(() => (socket.close(), closed()), this.options.silenceMs ?? PRESENCE_SILENCE_MS);
-      };
-      void ended.then(() => clearTimeout(watchdog));
+      void ended.then(() => (stalled.clear(), signal.removeEventListener("abort", aborted)));
+      const watchdog = stallAwareTimer(this.options.silenceMs ?? PRESENCE_SILENCE_MS, () => (socket.close(), closed()));
+      let welcomed = false;
+      void ended.then(watchdog.clear);
       this.socket = socket;
       socket.onmessage = (event) => {
         const kind = this.receive(socket, event.data);
-        if (kind === "welcome") (clearTimeout(stalled), resolve({ ended }));
-        if (kind === "welcome" || watchdog !== undefined) arm();
+        if (kind === "welcome") (stalled.clear(), (welcomed = true), resolve({ ended }));
+        if (welcomed) watchdog.arm();
       };
       socket.onclose = closed;
       socket.onerror = () => undefined;

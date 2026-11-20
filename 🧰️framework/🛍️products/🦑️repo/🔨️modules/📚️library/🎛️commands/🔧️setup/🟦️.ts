@@ -1,6 +1,8 @@
 /** 🔧️ `setup` command family: native bootstrap, repo-local git settings, devcontainer lifecycle and postinstall.
  * @see 📜️script.ts
  */
+import {linuxHostLibcV1} from "./🐧️libc/🟦️.ts";
+export {linuxHostLibcV1,linuxNativeLibcV1} from "./🐧️libc/🟦️.ts";
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts";
 import { ticketOutput } from "../../⚡️caching/🎫️output/🟦️.ts";
 import { nativeBootstrapCommandV1 } from "../../../🔩️native/🥾️bootstrap/🟦️.ts";
@@ -18,18 +20,7 @@ import { runtimePackageCommandV1 } from "../../../../../../📦️packages/🟦�
 
 const NATIVE_BOOTSTRAP_DIR = "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap";
 
-/** 🐧 Linux is glibc unless `ldd --version` reports musl. A missing glibc version field is not musl. */
-export function linuxNativeLibcV1(lddVersion: string): "gnu" | "musl" {
-  return /musl/i.test(lddVersion) ? "musl" : "gnu";
-}
 
-/** 🐧 The running host is glibc when its runtime reports one, otherwise {@link linuxNativeLibcV1}. */
-export function linuxHostLibcV1(): "gnu" | "musl" {
-  const glibc = (process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } | undefined)?.header?.glibcVersionRuntime;
-  if (glibc) return "gnu";
-  const ldd = spawnSync("ldd", ["--version"], { encoding: "utf8" });
-  return linuxNativeLibcV1(`${ldd.stdout ?? ""}\n${ldd.stderr ?? ""}`);
-}
 
 //#region 🔖️NativeOsScript
 /** 🖥️Runs the native bootstrap under `repo/native/bootstrap`. */

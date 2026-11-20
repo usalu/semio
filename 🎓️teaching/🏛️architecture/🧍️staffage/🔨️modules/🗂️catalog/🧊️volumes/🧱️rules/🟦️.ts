@@ -1,6 +1,6 @@
 /** 🧱️ The analytic rules of the volumes of an asset: those that need no tessellation and run inside `validateAsset` as well as inside `checkVolumes`.
  *
- * `volumes-availability` (authored exactly where the representation is authored), `volumes-bones` (every bone with drawn 2D shapes has a body solid at that scale), `volumes-feature` (no solid dimension below the
+ * `volumes-availability` (authored at every scale with a drawing), `volumes-bones` (every bone with drawn 2D shapes has a body solid at that scale), `volumes-feature` (no solid dimension below the
  * smallest feature of the scale, except thin sheets of a closed list of roles), `volumes-thermal-coverage` (every region, layer shell, emitter has a solid; hidden regions never reuse a body solid) and
  * `volumes-structure-coverage` (every eligible bone of the structural view, every 2D member shape and every support anchor has exactly one support solid) and `volumes-copied` (no authored scale is an identical, subset or uniformly scaled copy of a finer one). The thresholds are in {@link VOLUME_LIMITS}; the design is
  * `PERFECT-HANDCRAFTED-3D-MODELS-PER-SCALE-AND-MODE-FOR-EVERY-STAFFAGE/design.md` (rules 1, 4, 7-9, amendments B1-B4).
@@ -155,16 +155,16 @@ export const smallestDimension = (solid: VolumeSolid): number => sortedExtents(s
 const scaleKeys = (denominators?: readonly ScaleDenominator[]): readonly ScaleDenominator[] => denominators ?? [...SCALE_DENOMINATORS].reverse();
 const bonesOf = (solids: readonly VolumeSolid[]): Set<Slug> => new Set(solids.flatMap((solid) => [solid.bone, ...(solid.weights ?? []).map((w) => w.bone)]));
 
-/** 🪞️ `volumes-availability`: authored exactly where the representation is authored, unavailable exactly where it is unavailable, and the stored `denominator` equals the key. */
+/** 🪞️ `volumes-availability`: authored at every scale with a drawing, and the stored `denominator` equals the key. */
 export function availabilityRule(asset: Asset, scales?: readonly ScaleDenominator[]): RuleResult {
   const c = collector("volumes-availability");
   for (const denominator of scaleKeys(scales)) {
     const rep = asset.representations[`${denominator}`];
     const volume = (asset.volumes as Partial<Record<string, { status: string; denominator: number }>> | undefined)?.[`${denominator}`];
     const path = `volumes.${denominator}`;
-    const status = c.measure({ scale: denominator, name: "statusMatches", value: volume !== undefined && volume.status === rep?.status ? 1 : 0, limit: 1, bound: "min" });
+    const status = c.measure({ scale: denominator, name: "statusMatches", value: volume !== undefined && (volume.status === "authored" || rep?.status === "unavailable") ? 1 : 0, limit: 1, bound: "min" });
     if (volume === undefined) c.fail(path, `The scale 1:${denominator} has no volume; every scale is decided.`, `Der Maßstab 1:${denominator} hat kein Volumen; jeder Maßstab ist entschieden.`, { scale: denominator, measurements: [status] });
-    else if (rep !== undefined && volume.status !== rep.status) c.fail(`${path}.status`, `The volume of 1:${denominator} is ${volume.status} but its representation is ${rep.status}.`, `Das Volumen von 1:${denominator} ist ${volume.status === "authored" ? "erstellt" : "nicht verfügbar"}, seine Darstellung aber ${rep.status === "authored" ? "erstellt" : "nicht verfügbar"}.`, { scale: denominator, measurements: [status] });
+    else if (rep?.status === "authored" && volume.status !== "authored") c.fail(`${path}.status`, `The volume of 1:${denominator} is ${volume.status} but its representation is ${rep.status}.`, `Das Volumen von 1:${denominator} ist ${volume.status === "authored" ? "erstellt" : "nicht verfügbar"}, seine Darstellung aber erstellt.`, { scale: denominator, measurements: [status] });
     else if (volume.denominator !== denominator) c.fail(`${path}.denominator`, `The volume under key ${denominator} states denominator ${volume.denominator}.`, `Das Volumen unter dem Schlüssel ${denominator} nennt den Nenner ${volume.denominator}.`, { scale: denominator });
   }
   return c;
@@ -236,6 +236,7 @@ export function featureRule(asset: Asset, scales?: readonly ScaleDenominator[], 
   const c = collector("volumes-feature");
   for (const volume of authoredVolumes(asset)) {
     if (scales !== undefined && !scales.includes(volume.denominator)) continue;
+    if (asset.representations[`${volume.denominator}`]?.status === "unavailable") continue;
     const feature = featureOf(volume.denominator, minFeatureMm);
     const drawn = thinnestDrawn(asset, volume.denominator);
     for (const list of ["body", "thermal", "structure"] as const) {

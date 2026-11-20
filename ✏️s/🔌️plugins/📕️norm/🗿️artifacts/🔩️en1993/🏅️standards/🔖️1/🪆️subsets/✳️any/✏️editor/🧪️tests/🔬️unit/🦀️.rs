@@ -64,7 +64,12 @@ pub(crate) mod context {
     }
     
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
-        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("render projection")
+        render_with_windows(app, body_key, Vec::new()).await
+    }
+
+    pub async fn render_with_windows(app: &mut NormApp, body_key: &str, tree_windows: Vec<semio_framework::TreeWindowRequest>) -> String {
+        let view = ViewModel { tree_windows, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
+        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await.expect("render projection")
     }
 }
 

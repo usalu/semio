@@ -180,7 +180,29 @@ impl<M, CM> PressLeaf<M, CM> {
 
 /// 🏛️ One resident construction admission per original owner family keeps a partly funded construction alive across turns.
 #[derive(Default)]
-pub struct ToolAdmissions{pub tag:semio_framework_job::OriginalConstructionAdmission,pub tag_retirement:semio_framework_job::OriginalConstructionAdmission,pub tagged:semio_framework_job::OriginalConstructionAdmission,pub follow:semio_framework_job::OriginalConstructionAdmission,pub settlement:semio_framework_job::OriginalConstructionAdmission,pub scrub:semio_framework_job::OriginalConstructionAdmission}
+pub struct ToolAdmissions{pub tag:semio_framework_job::OriginalConstructionAdmission,pub tag_retirement:semio_framework_job::OriginalConstructionAdmission,pub tagged:semio_framework_job::OriginalConstructionAdmission,pub settlement:semio_framework_job::OriginalConstructionAdmission,pub scrub:semio_framework_job::OriginalConstructionAdmission}
+
+macro_rules! tool_admission_fields {
+    ($($name:ident),+ $(,)?) => {
+        const INITIAL_FIELDS: usize = [$(stringify!($name)),+].len();
+        const INITIAL_COPY_BYTES: usize = 2 * std::mem::size_of::<semio_framework_job::OriginalConstructionAdmission>();
+
+        unsafe fn initialize_field_at(target: *mut Self, index: usize, byte: usize, count: usize) -> Result<bool, semio_framework_value::ValueError> {
+            let _: fn(&Self) = |Self { $($name: _,)+ }| {};
+            if byte != 0 || count != Self::INITIAL_COPY_BYTES {
+                return Err(semio_framework_value::ValueError::invariant("tool admission field requires its full copy extent"));
+            }
+            let slots = [$(unsafe { std::ptr::addr_of_mut!((*target).$name) }),+];
+            let slot = slots.get(index).ok_or_else(|| semio_framework_value::ValueError::invariant("tool admission field cursor exceeds its inventory"))?;
+            unsafe { slot.write(Default::default()) };
+            Ok(true)
+        }
+    }
+}
+
+impl ToolAdmissions {
+    tool_admission_fields!(tag, tag_retirement, tagged, settlement, scrub);
+}
 /// 🗂️ The instance's continuous-tool runtime: the per-window press ledger (every lane of a press as [`PressLeaf`]s),
 /// [`GestureLedger`] (each window's ONE gesture slot, the slots admitted dispatches hold until they publish, and whether a
 /// host fact ended a gesture since the last repaint) and [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
@@ -218,7 +240,9 @@ impl<P,M:RetireOwned+Send+'static,C,CM> Default for ToolMachineRuntime<P,M,C,CM>
 
 impl<P:'static,M:RetireOwned+Send+'static,C:'static,CM:'static> ToolMachineRuntime<P,M,C,CM>{
     /// 📋️ The final-address inventory includes enabled test-clock metadata.
-    pub const INITIAL_FIELDS:usize=21+(if cfg!(any(test,feature="artifact-app-testing")){1}else{0});
+    const ADMISSION_FIELD_START: usize = 21;
+    const CLOCK_FIELD: usize = Self::ADMISSION_FIELD_START + ToolAdmissions::INITIAL_FIELDS;
+    pub const INITIAL_FIELDS:usize=Self::CLOCK_FIELD+(if cfg!(any(test,feature="artifact-app-testing")){1}else{0});
     /// 📏️ Quotes one full live field or a bounded piece of a static absent field or array.
     pub fn initial_field_demands(field_index:usize,byte:usize,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{fn field<S,T>(_:fn(&S)->&T)->usize{std::mem::size_of::<T>()}Ok(match field_index{
   0=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.presses),depth:1,..Default::default()},
@@ -242,8 +266,9 @@ impl<P:'static,M:RetireOwned+Send+'static,C:'static,CM:'static> ToolMachineRunti
   18=>{let extent=field::<Self,_>(|owner|&owner.ingress);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   19=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.operations),depth:1,..Default::default()},
   20=>semio_framework_value::RetirementDemand{copy_bytes:2*field::<Self,_>(|owner|&owner.tick),depth:1,..Default::default()},
+  field if (Self::ADMISSION_FIELD_START..Self::CLOCK_FIELD).contains(&field) => semio_framework_value::RetirementDemand { copy_bytes: ToolAdmissions::INITIAL_COPY_BYTES, depth: 1, ..Default::default() },
   #[cfg(any(test,feature="artifact-app-testing"))]
-  21=>{let extent=field::<Self,_>(|owner|&owner.now_ms);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  index if index == Self::CLOCK_FIELD =>{let extent=field::<Self,_>(|owner|&owner.now_ms);if byte>extent{return Err(semio_framework_value::ValueError::invariant("tool machine absent cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   _=>return Err(semio_framework_value::ValueError::invariant("tool machine initial cursor exceeds its inventory")),
  })}
     /// 🖋️ Initializes one admitted field extent at its final address without a large temporary.
@@ -271,8 +296,9 @@ impl<P:'static,M:RetireOwned+Send+'static,C:'static,CM:'static> ToolMachineRunti
   18=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).ingress),byte,count)},
   19=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.operations){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).operations).write(Vec::new());}Ok(true)},
   20=>{if byte!=0||count!=2*field::<Self,_>(|owner|&owner.tick){return Err(semio_framework_value::ValueError::invariant("tool machine live field requires its full copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).tick).write(0);}Ok(true)},
+  field if (Self::ADMISSION_FIELD_START..Self::CLOCK_FIELD).contains(&field) => unsafe { ToolAdmissions::initialize_field_at(std::ptr::addr_of_mut!((*target).admissions), field - Self::ADMISSION_FIELD_START, byte, count) },
   #[cfg(any(test,feature="artifact-app-testing"))]
-  21=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).now_ms),byte,count)},
+  field if field == Self::CLOCK_FIELD =>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).now_ms),byte,count)},
   _=>Err(semio_framework_value::ValueError::invariant("tool machine initial cursor exceeds its inventory")),
  }}
 
@@ -387,7 +413,7 @@ impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + Col
 
 #[path="🔁️follow/🦀️.rs"]
 mod original_follow;
-pub use original_follow::OriginalToolMachineFollow;
+pub use original_follow::{OriginalToolMachineFollow,OriginalToolMachineFollowSlot};
 
 #[path="🧵️settlement/🦀️.rs"]
 mod original_press_settlement;

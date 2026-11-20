@@ -1,0 +1,17 @@
+{
+ "observations": ["first", "second"],
+ "known": ["warm"],
+ "owners": [
+  {"suffix":"cold","facts":{},"rows":[1,0,1]},
+  {"suffix":"warm","facts":{},"rows":[0,1]},
+  {"suffix":"empty","facts":{},"rows":[]},
+  {"suffix":"string","facts":{},"rows":["0"]},
+  {"suffix":"property","facts":{},"rows":["length"]},
+  {"suffix":"negative","facts":{},"rows":[-1]},
+  {"suffix":"fraction","facts":{},"rows":[0.5]},
+  {"suffix":"missing","facts":{},"rows":[2]},
+  {"suffix":"wrong-list","facts":{},"rows":null},
+  null
+ ],
+ "expected":[{"suffix":"cold","facts":{},"rows":["second","first","second"]},{"suffix":"empty","facts":{},"rows":[]}]
+}

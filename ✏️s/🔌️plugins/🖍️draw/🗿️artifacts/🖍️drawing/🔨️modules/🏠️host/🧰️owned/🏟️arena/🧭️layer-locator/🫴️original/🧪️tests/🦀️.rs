@@ -1,15 +1,119 @@
-//! 🧪️ Original-bound targeting has paid metadata, exact paged identities and all-axis denial without backing work.
+//! 🧪️ Original Drawing lookup preserves identity, first-owner order and paid cancellation.
+
 use super::*;
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_value::retained_clone::RetainedCloneSource;
-fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128}}
-fn source<T:semio_framework_value::retirement::RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{RetainedCloneSource::admit_owned(value,(),grant()).unwrap_or_else(|_|panic!("original Drawing target law source" )).0}
+use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind, paged::PagedUtf8, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+use semio_framework_value_clone_source_testing::{FixtureSource, drive::drive_reply};
+use semio_s_artifact_draw_drawing_model::{layer_base, snapshot::{DrawingSnapshot, lookup::original::DRAWING_ORIGINAL_MAXIMUM_DEPTH}};
+use serde_json::{Value, json};
+
+const BODY: usize = 8192;
+const GRANT: RetainedCloneGrant = RetainedCloneGrant {
+    maximum_items: 1,
+    maximum_copy_bytes: BODY,
+    maximum_capacity_bytes: 1 << 24,
+    maximum_release_bytes: 1 << 24,
+    maximum_depth: 128,
+};
+
+fn turn(grant: RetainedCloneGrant, mut operation: impl FnMut(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+    drive_reply::<RetainedCloneStep, ValueError>(grant, 256, |result| result.as_ref().map_or_else(|error| error.retained_progress(), |step| step.progress()), |effect, reply, recovering| {
+        assert!(!recovering);
+        Ok(reply.complete(operation(effect)))
+    }).result
+}
+
 #[test]
-fn drawing_original_lookup_preserves_both_sources_and_refuses_every_zero_axis(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️.json")).unwrap();
- for cut in [0,1,4,10000]{let snapshot:DrawingSnapshot=serde_json::from_value(corpus["base"].clone()).unwrap();let target=semio_s_artifact_draw_drawing_model::layer_id(snapshot.layers.get(0).unwrap()).clone();let mut snapshot=source(snapshot);let mut target=source(target);let mut lookup=DrawingOriginalLookup::default();let g=grant();let mut ready=false;
-  for _ in 0..cut{let d=lookup.demand(snapshot.borrow(),target.borrow(),g.maximum_copy_bytes).unwrap();for axis in 0..5{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes=0,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes=0,3 if d.release_bytes>0=>denied.maximum_release_bytes=0,4 if d.depth>0=>denied.maximum_depth=0,_=>continue}let(step,b,r)=semio_framework_trace_memory_testing::observe_backing(||lookup.advance(snapshot.borrow(),target.borrow(),g.maximum_copy_bytes,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((b,r),(0,0));assert_eq!(lookup.demand(snapshot.borrow(),target.borrow(),g.maximum_copy_bytes).unwrap(),d);}let(step,b,r)=semio_framework_trace_memory_testing::observe_backing(||lookup.advance(snapshot.borrow(),target.borrow(),g.maximum_copy_bytes,g).unwrap());assert_eq!((b,r),(step.progress().retained_capacity_bytes,step.progress().released_bytes));if lookup.ready(){let at=lookup.address().unwrap().unwrap();assert_eq!(at.length,1);assert_eq!(at.index(),0);ready=true;break}}
-  if cut==10000{assert!(ready)}lookup.begin_close();for _ in 0..10000{if lookup.terminal_is_empty(){break}let(step,b,r)=semio_framework_trace_memory_testing::observe_backing(||lookup.close_step(g).unwrap());assert_eq!((b,r),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(lookup.terminal_is_empty());while !snapshot.terminal_is_empty(){snapshot.close_step(g).unwrap();}while !target.terminal_is_empty(){target.close_step(g).unwrap();}
- }
+fn drawing_original_lookup_preserves_both_sources_and_refuses_every_zero_axis() {
+    let law: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
+    let mut template: Value = serde_json::from_str(include_str!("../../../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let mut later = template["layers"][1]["children"][0].clone();
+    later["name"] = "Later Duplicate".into();
+    template["layers"].as_array_mut().unwrap().push(later);
+    let long = format!("{}\0", law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize));
+    let mut deep = template["layers"][0].clone();
+    deep["id"] = long.clone().into();
+    deep["name"] = "Long UTF8".into();
+    for depth in 0..DRAWING_ORIGINAL_MAXIMUM_DEPTH - 1 {
+        let mut group = template["layers"][1].clone();
+        group["id"] = format!("nested-{depth}").into();
+        group["children"] = json!([deep]);
+        deep = group;
+    }
+    let mut cases = law["lookup"]["cases"].as_array().unwrap().clone();
+    let ordinal = template["layers"].as_array().unwrap().len();
+    let path = std::iter::once(ordinal).chain(std::iter::repeat_n(0usize, DRAWING_ORIGINAL_MAXIMUM_DEPTH - 1)).collect::<Vec<_>>();
+    cases.push(json!({ "target": &long, "name": "Long UTF8", "path": path }));
+    cases.push(json!({ "target": "missing-after-deep-tree", "name": null, "path": null }));
+    let mut overflow = template.clone();
+    let mut parent = template["layers"][1].clone();
+    parent["id"] = "outer-overflow".into();
+    parent["children"] = json!([deep.clone()]);
+    overflow["layers"] = json!([parent]);
+    template["layers"].as_array_mut().unwrap().push(deep);
+
+    let source = FixtureSource::from_owner(serde_json::from_value::<DrawingSnapshot>(template).unwrap());
+    let original = serde_json::to_value(source.borrow().get()).unwrap();
+    for case in &cases {
+        let value = case["target"].as_str().unwrap();
+        let target = FixtureSource::from_owner(PagedUtf8::<{usize::MAX}>::try_from_str(value).unwrap());
+        let unrelated = FixtureSource::from_owner(PagedUtf8::<{usize::MAX}>::try_from_str(value).unwrap());
+        let pauses = law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize);
+        for limit in pauses.chain([usize::MAX]) {
+            let mut lookup = DrawingOriginalLookup::default();
+            for step in 0..25_000 {
+                if step == limit { break; }
+                let demand = lookup.demand(source.borrow(), target.borrow(), BODY).unwrap();
+                let mut denied = [GRANT; 5];
+                denied[0].maximum_items = 0;
+                denied[1].maximum_copy_bytes = 0;
+                denied[2].maximum_capacity_bytes = 0;
+                denied[3].maximum_release_bytes = 0;
+                denied[4].maximum_depth = 0;
+                let unavailable = [true, demand.copy_bytes > 0, demand.capacity_bytes > 0, demand.release_bytes > 0, demand.depth > 0];
+                if step < 3 {
+                    for (grant, unavailable) in denied.into_iter().zip(unavailable) {
+                        if !unavailable { continue; }
+                        let stopped = turn(grant, |effect| lookup.advance(source.borrow(), target.borrow(), BODY, effect)).unwrap();
+                        assert_eq!(stopped.progress(), Default::default());
+                        assert_eq!(lookup.demand(source.borrow(), target.borrow(), BODY).unwrap(), demand);
+                    }
+                }
+                turn(GRANT, |effect| lookup.advance(source.borrow(), target.borrow(), BODY, effect)).unwrap();
+                if step == 2 {
+                    assert!(lookup.demand(source.borrow(), unrelated.borrow(), BODY).is_err());
+                }
+                if lookup.ready() { break; }
+            }
+            if limit == usize::MAX {
+                let address = lookup.address().unwrap();
+                assert_eq!(json!(address.map(|address| address.indices[..address.length].to_vec())), case["path"]);
+                let name = address.map(|address| {
+                    let projected = address.project(source.borrow());
+                    assert!(std::ptr::eq(projected.get(), address.node(source.borrow().get()).unwrap()));
+                    layer_base(projected.get()).name.to_string_owner()
+                });
+                assert_eq!(json!(name), case["name"]);
+            }
+            lookup.begin_close();
+            assert_eq!(turn(Default::default(), |effect| lookup.close_step(BODY, effect)).unwrap().progress(), Default::default());
+            for _ in 0..1000 {
+                if lookup.terminal_is_empty() { break; }
+                turn(GRANT, |effect| lookup.close_step(BODY, effect)).unwrap();
+            }
+            assert!(lookup.terminal_is_empty());
+        }
+    }
+    assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(), original);
+
+    let overflow = FixtureSource::from_owner(serde_json::from_value::<DrawingSnapshot>(overflow).unwrap());
+    let target = FixtureSource::from_owner(PagedUtf8::<{usize::MAX}>::try_from_str(&long).unwrap());
+    let mut lookup = DrawingOriginalLookup::default();
+    let refusal = (0..1000).find_map(|_| turn(GRANT, |effect| lookup.advance(overflow.borrow(), target.borrow(), BODY, effect)).err()).unwrap();
+    assert_eq!(refusal.primary().unwrap().kind, ValueRefusalKind::DepthLimit);
+    lookup.begin_close();
+    for _ in 0..1000 {
+        if lookup.terminal_is_empty() { break; }
+        turn(GRANT, |effect| lookup.close_step(BODY, effect)).unwrap();
+    }
+    assert!(lookup.terminal_is_empty());
 }

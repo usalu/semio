@@ -436,6 +436,8 @@ pub struct StrokeGeometry {
     pub cap: LineCap,
     pub join: LineJoin,
     pub dash: Vec<f64>,
+    pub dash_offset: f64,
+    pub miter_limit: f64,
 }
 
 /// 📐️ The canvas default `miterLimit`: a miter longer than this many half widths becomes a bevel.
@@ -479,25 +481,35 @@ fn arc_fan(center: [f64; 2], from: [f64; 2], to: [f64; 2], radius: f64) -> Vec<[
 /// ✂️ The dash pattern canvas `setLineDash` keeps: none when any value is negative or not finite or all are zero; an odd
 /// list repeats once.
 fn dash_pattern(dash: &[f64]) -> Option<Vec<f64>> {
-    if dash.is_empty() || dash.iter().any(|value| !value.is_finite() || *value < 0.0) || dash.iter().sum::<f64>() <= 0.0 {
-        return None;
-    }
-    Some(if dash.len() % 2 == 1 { dash.repeat(2) } else { dash.to_vec() })
+    if dash.is_empty() || dash.iter().any(|value| !value.is_finite() || *value < 0.0) { return None; }
+    let pattern = if dash.len() % 2 == 1 { dash.repeat(2) } else { dash.to_vec() };
+    let total: f64 = pattern.iter().sum();
+    (total.is_finite() && total > 0.0).then_some(pattern)
 }
 
 /// 🪓️ The "on" runs of `contour` under `pattern`, restarting the pattern at the subpath's start.
-fn dash_runs(contour: &Contour, pattern: &[f64]) -> Vec<Contour> {
+fn dash_runs(contour: &Contour, pattern: &[f64], offset: f64) -> Vec<Contour> {
     let mut points = contour.points.clone();
     if contour.closed && points.len() > 1 {
         points.push(points[0]);
     }
     let Some(&first) = points.first() else { return Vec::new() };
-    let (mut runs, mut run, mut index, mut left, mut on) = (Vec::new(), vec![first], 0, pattern[0], true);
+    let mut index = 0;
+    let mut phase = if offset.is_finite() { offset.rem_euclid(pattern.iter().sum()) } else { 0.0 };
+    while phase >= pattern[index] {
+        phase -= pattern[index];
+        index = (index + 1) % pattern.len();
+    }
+    let mut left = pattern[index] - phase;
+    let mut on = index % 2 == 0;
+    let (mut runs, mut run) = (Vec::new(), if on { vec![first] } else { Vec::new() });
     for edge in points.windows(2) {
         let length = (edge[1][0] - edge[0][0]).hypot(edge[1][1] - edge[0][1]);
         let mut travelled = 0.0;
         while length - travelled > left {
-            travelled += left;
+            let advanced = travelled + left;
+            if left > 0.0 && advanced == travelled { return runs; }
+            travelled = advanced;
             let point = add(edge[0], scale(sub(edge[1], edge[0]), travelled / length));
             if on {
                 run.push(point);
@@ -520,7 +532,7 @@ fn dash_runs(contour: &Contour, pattern: &[f64]) -> Vec<Contour> {
     runs
 }
 
-fn join(previous: [f64; 2], point: [f64; 2], next: [f64; 2], half: f64, kind: LineJoin, out: &mut Vec<Vec<[f64; 2]>>) {
+fn join(previous: [f64; 2], point: [f64; 2], next: [f64; 2], half: f64, kind: LineJoin, miter_limit: f64, out: &mut Vec<Vec<[f64; 2]>>) {
     let (incoming, outgoing) = (unit(sub(point, previous)), unit(sub(next, point)));
     let turn = incoming[0] * outgoing[1] - incoming[1] * outgoing[0];
     if turn.abs() < 1e-12 && incoming[0] * outgoing[0] + incoming[1] * outgoing[1] > 0.0 {
@@ -537,7 +549,7 @@ fn join(previous: [f64; 2], point: [f64; 2], next: [f64; 2], half: f64, kind: Li
         LineJoin::Miter | LineJoin::Bevel => {
             let bisector = add(outer_in, outer_out);
             let length = bisector[0] * bisector[0] + bisector[1] * bisector[1];
-            if kind == LineJoin::Miter && length > 0.0 && 2.0 * half / length.sqrt() <= MITER_LIMIT {
+            if kind == LineJoin::Miter && length > 0.0 && 2.0 * half / length.sqrt() <= miter_limit {
                 out.push(vec![point, add(point, outer_in), add(point, scale(bisector, 2.0 * half * half / length)), add(point, outer_out)]);
             } else {
                 out.push(vec![point, add(point, outer_in), add(point, outer_out)]);
@@ -586,7 +598,7 @@ fn stroke_run(contour: &Contour, half: f64, style: &StrokeGeometry, out: &mut Ve
     }
     let joins = if closed { 0..count } else { 1..count - 1 };
     for index in joins {
-        join(path[(index + count - 1) % count], path[index], path[(index + 1) % count], half, style.join, out);
+        join(path[(index + count - 1) % count], path[index], path[(index + 1) % count], half, style.join, style.miter_limit, out);
     }
     if !closed {
         cap(path[1], path[0], half, style.cap, out);
@@ -605,11 +617,24 @@ pub fn stroke_polygons(contours: &[Contour], style: &StrokeGeometry) -> Vec<Vec<
     let pattern = dash_pattern(&style.dash);
     for contour in contours {
         match &pattern {
-            Some(pattern) => dash_runs(contour, pattern).iter().for_each(|run| stroke_run(run, half, style, &mut out)),
+            Some(pattern) => dash_runs(contour, pattern, style.dash_offset).iter().for_each(|run| stroke_run(run, half, style, &mut out)),
             None => stroke_run(contour, half, style, &mut out),
         }
     }
     out
+}
+/// 🎭️ Stroke in authored units, then map the outline into screen space.
+pub fn affine_stroke_polygons(contours: &[Contour], style: &StrokeGeometry, map: &Affine) -> Vec<Vec<[f64; 2]>> {
+    let Some(inverse) = map.inverse() else { return Vec::new() };
+    let local: Vec<_> = contours.iter().map(|contour| Contour {
+        points: contour.points.iter().map(|&point| inverse.apply(point)).collect(),
+        closed: contour.closed,
+    }).collect();
+    let mut polygons = stroke_polygons(&local, style);
+    for polygon in &mut polygons {
+        for point in polygon { *point = map.apply(*point); }
+    }
+    polygons
 }
 //#endregion 🖊️Stroke
 

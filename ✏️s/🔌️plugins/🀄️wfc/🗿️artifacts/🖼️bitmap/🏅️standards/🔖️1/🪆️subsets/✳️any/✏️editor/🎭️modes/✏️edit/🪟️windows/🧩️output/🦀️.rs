@@ -49,7 +49,7 @@ pub fn definition() -> WindowKindDefinition {
         capabilities: Vec::new(),
     };
     definition.actions.extend([
-        ActionDefinition::bounded_catalog("pin-preview", LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation),
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("pin-preview", LocalizedLabel::native("Pin Solution", "Lösung anheften"), ActionKind::Mutation) },
         ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Berechnen"), ActionKind::Mutation),
         ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("commit-fill-solve", LocalizedLabel::native("Commit Fill Solve", "Füllen übernehmen"), ActionKind::Mutation) },
         ActionDefinition {

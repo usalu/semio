@@ -1,4 +1,4 @@
-use super::*;
+use semio_framework_dsl_record::{FieldSpec,RecordLayout,RecordSpec,RecordSpecProducer,Shape,record_spec_json_schema,shape_json_schema};
 macro_rules! ordinary_fixture_spec {
     ($spec:path) => { crate::RecordSpecProducer { ordinary: $spec, decoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"ordinary-only test metadata has no controlled construction")), encoding: |_| Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"ordinary-only test metadata has no controlled construction")) } };
 }

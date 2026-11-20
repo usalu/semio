@@ -167,7 +167,7 @@ async fn spaces_have_an_outline_and_a_tag_with_number_name_and_area() {
 #[semio_framework_async_macros::async_test]
 async fn an_open_room_is_tagged_at_its_seed_without_an_outline() {
     let mut open = house();
-    open.walls.remove("w-west");
+    open.walls.cold_remove("w-west");
     let ground = plan(&open, "st-ground");
     let tag = ground.texts.iter().find(|text| text.element == "sp-hall" && text.kind == PlanKind::SpaceTag).expect("tag");
     assert!(tag.measure.is_none() && close(tag.x, 2.0) && close(tag.y, 2.0));

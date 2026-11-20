@@ -8,6 +8,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 mod snapshot_preparation;
 
 pub struct MeshImportJob {
+    grid: Option<semio_framework_mesh_engine::ParametricMeshGrid>,
     polygon:Option<semio_framework_mesh_engine::PolygonMeshSource>,
     primitive:Option<(u8,[f32;3],u32)>,
     primitive_faces:Vec<Vec<u32>>,
@@ -31,9 +32,29 @@ pub struct MeshImportJob {
 }
 
 impl MeshImportJob {
-    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};} ["mesh-import-vertices","mesh-import-corners","mesh-import-reconstruct","mesh-import-normals","mesh-primitive-vertices","mesh-primitive-faces","mesh-primitive-level","mesh-primitive-midpoints","mesh-primitive-release","mesh-primitive-radius","mesh-source-capture","mesh-source-assets"][self.phase as usize] }
+    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};} ["mesh-import-vertices","mesh-import-corners","mesh-import-reconstruct","mesh-import-normals","mesh-primitive-vertices","mesh-primitive-faces","mesh-primitive-level","mesh-primitive-midpoints","mesh-primitive-release","mesh-primitive-radius","mesh-source-capture","mesh-source-assets","mesh-grid-vertices","mesh-grid-faces","mesh-source-surface"][self.phase as usize] }
     fn advance_owned(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
+            12 => {
+                let grid = self.grid.unwrap();
+                if let Some(vertex) = grid.vertex(self.cursor) {
+                    self.soup.positions.push(vertex);
+                    self.cursor += 1;
+                } else {
+                    self.phase = 13;
+                    self.cursor = 0;
+                }
+            }
+            13 => {
+                let grid = self.grid.unwrap();
+                if let Some(face) = grid.face(self.cursor) {
+                    self.soup.faces.push(face);
+                    self.cursor += 1;
+                } else {
+                    self.build = Some(MeshTopologyBuild::unreferenced(std::mem::take(&mut self.soup)));
+                    self.phase = 2;
+                }
+            }
             0=>{
                 if self.cursor==self.positions.len() {self.phase=1;self.cursor=0;}
                 else {let point=[0,1,2].map(|axis|self.positions[self.cursor+axis]);if point.iter().any(|x|!x.is_finite()) || !self.normals.is_empty() && self.normals[self.cursor..self.cursor+3].iter().any(|x|!x.is_finite()) {return Err(MeshKernelError::InvalidInput("indexed triangulation contains non-finite values".into()));}let key=point.map(|x|if x==0.0 {0}else {x.to_bits()});let id=if let Some(&id)=self.unique.get(&key) {id}else {if self.soup.positions.len()>=100_000 {return Err(MeshKernelError::InvalidInput("indexed triangulation exceeds vertex capacity".into()));}let id=self.soup.positions.len() as u32;self.soup.positions.push(point);self.unique.insert(key,id);id};self.remap.push(id);self.cursor+=3;}
@@ -73,7 +94,32 @@ impl MeshImportJob {
             8=>{if self.midpoints.pop_first().is_none() && self.primitive_faces.pop().is_none() {self.generation+=1;self.phase=6;}},
             9=>{if self.cursor==self.soup.positions.len() {self.build=Some(MeshTopologyBuild::unreferenced(std::mem::take(&mut self.soup)));self.phase=2;}else {let radius=self.primitive.unwrap().1[0];self.soup.positions[self.cursor]=self.soup.positions[self.cursor].map(|value|value*radius);self.cursor+=1;}},
             10=>{let source=self.polygon.as_mut().unwrap();self.soup.positions=std::mem::take(&mut source.vertices);self.soup.faces=std::mem::take(&mut source.faces);self.build=Some(MeshTopologyBuild::unreferenced(std::mem::take(&mut self.soup)));self.phase=2;},
-            11=>{let mut mesh=self.mesh.take().unwrap();let source=self.polygon.as_mut().unwrap();mesh.attributes=std::mem::take(&mut source.attributes);mesh.materials=std::mem::take(&mut source.materials);mesh.textures=std::mem::take(&mut source.textures);return Ok(Some(mesh));},
+            11 => {
+                let mesh = self.mesh.as_mut().unwrap();
+                let source = self.polygon.as_mut().unwrap();
+                mesh.attributes = std::mem::take(&mut source.attributes);
+                mesh.materials = std::mem::take(&mut source.materials);
+                mesh.textures = std::mem::take(&mut source.textures);
+                self.phase = 14;
+            }
+            14 => {
+                use semio_framework_mesh_engine::PolygonSurfaceKind::*;
+                let source = self.polygon.as_ref().unwrap();
+                let Some(sample) = source.surface.get(self.cursor) else { return Ok(self.mesh.take()); };
+                let mesh = self.mesh.as_mut().unwrap();
+                let index = sample.index as usize;
+                match (sample.kind, sample.normal, sample.uv) {
+                    (SmoothFace, None, None) => mesh.faces.get_mut(index).ok_or(MeshKernelError::InvalidHandle)?.smooth = true,
+                    (VertexNormal, Some(normal), None) if normal != [0.0; 3] && normal.iter().all(|value| value.is_finite()) =>
+                        mesh.vertices.get_mut(index).ok_or(MeshKernelError::InvalidHandle)?.normal = Some(normal),
+                    (CornerUv, None, Some(uv)) if uv.iter().all(|value| value.is_finite()) =>
+                        mesh.halfedges.get_mut(index).ok_or(MeshKernelError::InvalidHandle)?.uv = uv,
+                    (SeamEdge, None, None) if index < mesh.halfedge_count() => mesh.mark_uv_seam(&[EdgeId(sample.index)], true),
+                    _ => return Err(MeshKernelError::InvalidInput("invalid native mesh surface sample".into())),
+                }
+                self.cursor += 1;
+            }
+
             _=>unreachable!(),
         }
         Ok(None)
@@ -769,8 +815,16 @@ impl MeshImportJob {
         if !positions.len().is_multiple_of(3)||!indices.len().is_multiple_of(3)||!normals.is_empty()&&normals.len()!=positions.len(){return Err(MeshKernelError::InvalidInput("invalid indexed triangulation buffers".into()));}
         if indices.len()/3>100_000||positions.len().saturating_add(indices.len()).saturating_add(normals.len()).saturating_mul(4)>64_000_000{return Err(MeshKernelError::InvalidInput("indexed triangulation exceeds mesh capacity".into()));}
         let total=positions.len().saturating_add(indices.len().saturating_mul(16)).saturating_add(1);
-        let work=Self {polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:HistoryFoldIndex::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,unique:HistoryFoldIndex::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0};
+        let work=Self {grid:None,polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:HistoryFoldIndex::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,unique:HistoryFoldIndex::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0};
         Ok((work,MeshModelingProgress {units_done:0,units_total:total,phase:"mesh-import-vertices"}))
+    }
+    pub fn parametric(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<(Self, MeshModelingProgress)> {
+        let (mut work, mut progress) = Self::indexed(Vec::new(), Vec::new(), Vec::new())?;
+        work.grid = Some(grid);
+        work.phase = 12;
+        progress.phase = work.phase();
+        progress.units_total = grid.vertex_count() + grid.face_count() * 64 + 1;
+        Ok((work, progress))
     }
     pub fn polygon(source:semio_framework_mesh_engine::PolygonMeshSource)->MeshResult<(Self,MeshModelingProgress)>{let(mut work,mut progress)=Self::indexed(Vec::new(),Vec::new(),Vec::new())?;work.polygon=Some(source);work.phase=10;progress.phase=work.phase();Ok((work,progress))}
     pub fn primitive(kind:MeshPrimitiveKind,dimensions:[f32;3],parameter:u32)->MeshResult<(Self,MeshModelingProgress)>{

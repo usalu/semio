@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-mutations-fields"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Typed field publication and inverse preparation for Layout mutations"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-dictionary = { workspace = true }
+semio-framework-value-factory = { workspace = true }
+semio-os-kernel = { workspace = true }
+semio-s-artifact-layout-layout-diff = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
+semio-s-artifact-layout-layout-mutations-decisions = { workspace = true }

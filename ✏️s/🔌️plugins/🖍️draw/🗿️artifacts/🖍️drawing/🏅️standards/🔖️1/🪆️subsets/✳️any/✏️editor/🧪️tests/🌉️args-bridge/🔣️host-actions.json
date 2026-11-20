@@ -1,0 +1,43 @@
+[
+  {
+    "action": "canvasPointerDown",
+    "args": {
+      "x": 10.5,
+      "y": 20,
+      "width": 800,
+      "height": 600,
+      "shift": false,
+      "ctrl": false,
+      "meta": true,
+      "appInstanceId": 4.0,
+      "operationId": 101.0,
+      "checkpointPendingWork": 12.0,
+      "worldX": -7.25,
+      "worldY": null
+    },
+    "instance": 4,
+    "operation": 101,
+    "pending": 12,
+    "worldX": -7.25,
+    "worldY": null
+  },
+  {
+    "action": "canvasPointerMove",
+    "args": {
+      "x": 3.75,
+      "y": 4.5,
+      "width": 800,
+      "height": 600,
+      "samples": [[1.25, 2], [3.75, 4.5]]
+    },
+    "samples": [[1.25, 2.0], [3.75, 4.5]]
+  },
+  {
+    "action": "exportDocument",
+    "args": { "format": "png", "width": 640.0, "height": null, "transparent": false },
+    "format": "png",
+    "width": 640,
+    "height": null,
+    "transparent": false
+  }
+]

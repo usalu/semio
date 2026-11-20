@@ -1,4 +1,20 @@
 {
+  "moduleCatalogPaths": [
+    {
+      "platform": "win32",
+      "root": "C:\\semio\\.cache\\b\\d\\m\\bazel\\modules",
+      "identity": "b8a76008869a21f4f40ab52e9eb5eaa3003c0d5c0cef0998928bb8c35d7b0f4a",
+      "workspace": "work",
+      "repository": "repo"
+    },
+    {
+      "platform": "linux",
+      "root": "/work/semio/.cache/b/d/m/bazel/modules",
+      "identity": "b8a76008869a21f4f40ab52e9eb5eaa3003c0d5c0cef0998928bb8c35d7b0f4a",
+      "workspace": "workspace",
+      "repository": "repositories"
+    }
+  ],
   "version": 1,
   "roots": {"tools": "/bounded/tools", "dependencies": "/bounded/dependencies", "products": "/bounded/products"},
   "cargoAuthority": [

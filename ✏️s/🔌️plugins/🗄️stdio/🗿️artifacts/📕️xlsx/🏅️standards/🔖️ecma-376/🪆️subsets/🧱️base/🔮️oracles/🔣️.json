@@ -1421,5 +1421,32 @@
       "notes": "The content types hold no default for the extension nothing. Before-only."
     }
   ],
-  "oracleHostPackages": []
+  "oracleHostPackages": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-xlsx-base-model",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "📸️ The native subject checks the workbook's typed snapshot projection."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-xlsx-base-mutations",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "features": ["testkit"],
+      "rationale": "🧬️ The mutation subject applies the artifact's own mutations and inverses."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-contract",
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust",
+      "rationale": "📡️ The mutation subject reads and verifies the application mutation payloads."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-plugin",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+      "rationale": "🔌️ The native-file subject calls the registered artifact analysis facet."
+    }
+  ]
 }

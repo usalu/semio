@@ -15,6 +15,8 @@ use crate::context::unseeded_app_with_registry as app;
 
 #[path = "../🔬️unit/🪧️pane-smoke/🦀️.rs"]
 mod pane_smoke;
+#[path = "🪜️composition/🦀️.rs"]
+mod composition;
 
 /// 📥️ LAW: the host delivers extension contributions as the declared `setContributions` command; the UI dispatch door resolves it through the command registry, so the seeded app boots and a second delivery settles.
 #[semio_framework_async_macros::async_test]

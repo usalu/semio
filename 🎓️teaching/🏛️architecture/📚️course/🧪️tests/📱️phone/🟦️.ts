@@ -107,6 +107,7 @@ test("a hard run on a phone: every guess field lies within the screen, is tall e
   const steps = screen(learner.page, "run").locator("nav button");
   for (let index = 0; index < quiz.tasks.length; index++) {
     await openTask(learner, index);
+    await expect(screen(learner.page, "task").locator('[aria-busy="true"]')).toHaveCount(0);
     const fields = screen(learner.page, "task").locator("[data-course-item] input");
     for (const field of await fields.all()) {
       const box = await boxOf(field);

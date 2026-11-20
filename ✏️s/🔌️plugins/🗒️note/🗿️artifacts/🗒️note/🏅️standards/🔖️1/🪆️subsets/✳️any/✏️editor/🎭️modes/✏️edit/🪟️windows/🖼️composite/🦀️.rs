@@ -1,6 +1,7 @@
 //! 🖼️ Note play app — the composite (editable) canvas window: the full infinite-canvas surface.
 
 use crate::editor::note::modes::edit::windows::composite::options;
+use crate::editor::note::support::{NOTE_INTERACTION_BLOCKS, NOTE_INTERACTION_GRANULARITY};
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::{NoteCamera, NoteSnapshot};
 use semio_plugin::BuiltNode;
@@ -96,16 +97,21 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// merged into the wire payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom
 /// against.
 pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
-    let document_json = crate::note_canvas_document_json(document, camera);
-    semio_plugin::scene_surface(surface_id, semio_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
+    semio_plugin::scene_surface(surface_id, semio_ui_contract::SurfaceKind::InkCanvas, &canvas_scene(document, camera, active_utility, view_mode))
+}
+
+fn canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, view_mode: &str) -> InkCanvasScene {
+    let interactive = view_mode == "composite";
+    let mut scene = InkCanvasScene::base(crate::note_canvas_document_json(document, camera), active_utility.into(), view_mode.into(), interactive);
+    scene.interaction_domain = interactive.then(|| InkCanvasInteractionDomain { id: NOTE_INTERACTION_BLOCKS.into(), granularity_id: NOTE_INTERACTION_GRANULARITY.into() });
+    scene
 }
 
 pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>) -> UiAssemblyResult<BuiltNode> {
-    let mut scene = InkCanvasScene::base(crate::note_canvas_document_json(document, camera), active_utility.into(), "composite".into(), true);
-    scene.interaction_domain = Some(InkCanvasInteractionDomain { id: crate::editor::note::support::NOTE_INTERACTION_BLOCKS.into(), granularity_id: "block".into() });
-    let selection: Vec<String> = interaction.selection(crate::editor::note::support::NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
+    let mut scene = canvas_scene(document, camera, active_utility, "composite");
+    let selection: Vec<String> = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
     scene.selection_json = serde_json::to_string(&selection).expect("note interaction selection is JSON-safe");
-    scene.hovered_id = interaction.hover(crate::editor::note::support::NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
+    scene.hovered_id = interaction.hover(NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
     semio_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_ui_contract::SurfaceKind::InkCanvas, &scene)
 }
 

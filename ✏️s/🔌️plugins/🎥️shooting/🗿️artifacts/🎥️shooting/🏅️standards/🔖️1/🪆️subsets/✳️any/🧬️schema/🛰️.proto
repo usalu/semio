@@ -57,6 +57,8 @@ message ShootingShot {
   string shape = 6;
   optional string background = 7;
   optional string camera_id = 8;
+  optional ShootingDrawing drawing = 9;
+  optional bool auto_fit = 10;
 }
 
 message ShootingSun {
@@ -103,4 +105,20 @@ message ShootingRetainedCommandStepContract {
   int64 max_step_micros = 5;
   optional int64 max_checkpoint_bytes = 6;
   optional int64 max_in_flight_pages = 7;
+}
+
+
+message ShootingDrawing {
+  bool background = 1;
+  bool fill = 2;
+  optional string fill_color = 3;
+  double fill_opacity = 4;
+  bool visible_lines = 5;
+  bool hidden_lines = 6;
+  string visible_color = 7;
+  string hidden_color = 8;
+  double visible_width = 9;
+  double hidden_width = 10;
+  double line_easing = 11;
+  bool merge_lines = 12;
 }

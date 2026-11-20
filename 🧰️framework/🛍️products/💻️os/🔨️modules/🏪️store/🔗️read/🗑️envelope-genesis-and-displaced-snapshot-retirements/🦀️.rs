@@ -75,7 +75,7 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
 pub struct ArtifactGenesisRetirement<P: Send + Sync + 'static> {
     pub snapshot: std::mem::ManuallyDrop<Option<Arc<P>>>,
     pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,
-    pub pack: std::mem::ManuallyDrop<Option<Arc<Vec<u8>>>>,
+    pub pack: std::mem::ManuallyDrop<Option<Arc<semio_os_vcs::io::binary::genesis::ArtifactGenesisPack>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
@@ -88,7 +88,7 @@ impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
         use semio_framework_value::RetirementDemand;
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
         if self.snapshot.is_some() { return Ok(semio_framework_value::factory::ArcRootRetirement::<P>::admission_demand()); }
-        if self.pack.is_some() { return Ok(semio_framework_value_snapshot_read::arc_lease_admission_demand::<Vec<u8>>()); }
+        if self.pack.is_some() { return Ok(semio_framework_value_snapshot_read::arc_lease_admission_demand::<semio_os_vcs::io::binary::genesis::ArtifactGenesisPack>()); }
         Ok(Default::default())
     }
 }
@@ -98,7 +98,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetir
     fn close_step(&mut self,body:usize,effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> {
         use semio_framework_value::retained_clone::RetainedCloneStep;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        let step = if self.active.is_some() { let step = semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, body, effect))?; if self.active.as_ref().is_some_and(|owner| owner.terminal_is_empty()) { self.active = std::mem::ManuallyDrop::new(None); } step }
+        let step = if self.active.is_some() { semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active, body, effect))? }
         else if self.snapshot.is_some() { semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory::ArcRootRetirement::admit_original(&mut self.snapshot, &mut self.factory, &mut self.active, effect))? }
         else { let turn = semio_framework_value_snapshot_read::admit_arc_lease(&mut self.pack, effect); match turn.result { Ok(Some((owner, progress))) => { *self.active = Some(owner); RetainedCloneStep::Progress(progress) } Ok(None) => RetainedCloneStep::Progress(Default::default()), Err(failure) => return Err(semio_framework_value::RetirementPollExit::Failed(failure)) } };
         Ok(RetainedCloneStep::Progress(step.progress()))

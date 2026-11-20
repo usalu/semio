@@ -87,7 +87,7 @@ pub(super) fn register_sweeps(registry: &mut Registry, session: &Session) {
         "Extrude Curve",
         "ExtC",
         "emoji:🧱️",
-        &q("extrude_wire", "Extrude closed wire along vector magnitude"),
+        &q("extrude_wire", "Extrude a closed curve or wire along a vector"),
         vec![geometry_channel("wire", "brep.solid.extrude"), vector_channel("vector", "brep.solid.extrude", [0.0, 0.0, 5.0])],
         out_solid("ExtrudedSolid"),
         &["Solids"],

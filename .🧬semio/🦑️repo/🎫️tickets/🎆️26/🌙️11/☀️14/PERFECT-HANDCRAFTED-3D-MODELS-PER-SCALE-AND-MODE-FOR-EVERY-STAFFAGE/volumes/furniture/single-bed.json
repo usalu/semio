@@ -1,1 +1,8786 @@
-{"volumes":{"50":{"status":"authored","denominator":50,"body":[{"id":"head","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.95,0.9],"cornerRadius":0.02,"transform":{"translation":[0.03,0.475,0]}},{"id":"foot-post","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.55,0.06],"cornerRadius":0.02,"transform":{"translation":[2.09,0.275,0.42]},"repeat":{"count":2,"translation":[0,0,-0.84]}},{"id":"foot-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.08,0.9],"cornerRadius":0.02,"transform":{"translation":[2.09,0.51,0]}},{"id":"foot-cross-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"size":[0.04,0.16,0.8],"transform":{"translation":[2.09,0.22,0]}},{"id":"rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"size":[2.04,0.16,0.04],"transform":{"translation":[1.06,0.22,0.43]},"repeat":{"count":2,"translation":[0,0,-0.86]}},{"id":"center-beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[2,0.103,0.05],"transform":{"translation":[1.06,0.2115,0]}},{"id":"leg-mid","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.16,0.06],"transform":{"translation":[1.06,0.08,0]}},{"id":"slats-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.06,0.022,0.86],"cornerRadius":0.004,"transform":{"translation":[-0.69,-0.011,0]},"repeat":{"count":11,"translation":[0.066,0,0]}},{"id":"slats-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.06,0.022,0.86],"cornerRadius":0.004,"transform":{"translation":[0.03,-0.011,0]},"repeat":{"count":9,"translation":[0.0675,0,0]}},{"id":"slats-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.06,0.022,0.86],"cornerRadius":0.004,"transform":{"translation":[0.03,-0.011,0]},"repeat":{"count":10,"translation":[0.06889,0,0]}},{"id":"mat-head","kind":"box","bone":"mat-head","material":"quilted-cover","role":"body","tone":0.85,"size":[0.745,0.21,0.82],"cornerRadius":0.04,"transform":{"translation":[-0.3525,0.095,0]}},{"id":"mat-mid","kind":"box","bone":"mat-mid","material":"quilted-cover","role":"body","tone":0.85,"size":[0.62,0.21,0.82],"cornerRadius":0.04,"transform":{"translation":[0.31,0.095,0]}},{"id":"mat-foot","kind":"box","bone":"mat-foot","material":"quilted-cover","role":"body","tone":0.85,"size":[0.685,0.21,0.82],"cornerRadius":0.04,"transform":{"translation":[0.3425,0.095,0]}}],"thermal":[{"id":"th-head","of":"head","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-post","of":"foot-post","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-rail","of":"foot-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-cross-rail","of":"foot-cross-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-rail","of":"rail","region":"bed-frame","layer":"pine-member"},{"id":"th-center-beam","of":"center-beam","region":"bed-frame","layer":"pine-member"},{"id":"th-leg-mid","of":"leg-mid","region":"bed-frame","layer":"pine-member"},{"id":"th-slats-head","of":"slats-head","region":"slats","layer":"slat-birch"},{"id":"th-slats-mid","of":"slats-mid","region":"slats","layer":"slat-birch"},{"id":"th-slats-foot","of":"slats-foot","region":"slats","layer":"slat-birch"},{"id":"th-mat-head","of":"mat-head","region":"mattress","layer":"quilt"},{"id":"th-mat-head-core","kind":"box","bone":"mat-head","material":"quilted-cover","role":"body","tone":0.85,"size":[0.725,0.19,0.8],"cornerRadius":0.03,"transform":{"translation":[-0.3525,0.095,0]},"region":"mattress","layer":"foam-core"},{"id":"th-mat-mid","of":"mat-mid","region":"mattress","layer":"quilt"},{"id":"th-mat-mid-core","kind":"box","bone":"mat-mid","material":"quilted-cover","role":"body","tone":0.85,"size":[0.6,0.19,0.8],"cornerRadius":0.03,"transform":{"translation":[0.31,0.095,0]},"region":"mattress","layer":"foam-core"},{"id":"th-mat-foot","of":"mat-foot","region":"mattress","layer":"quilt"},{"id":"th-mat-foot-core","kind":"box","bone":"mat-foot","material":"quilted-cover","role":"body","tone":0.85,"size":[0.665,0.19,0.8],"cornerRadius":0.03,"transform":{"translation":[0.3425,0.095,0]},"region":"mattress","layer":"foam-core"}],"structure":[{"id":"member-center-beam","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[2.0,0.103,0.05],"transform":{"translation":[1.06,0.2115,0.0]},"member":"ground","part":"member"},{"id":"member-head","of":"head","member":"frame","part":"member"},{"id":"member-foot-post","of":"foot-post","member":"frame","part":"member"},{"id":"member-foot-rail","of":"foot-rail","member":"frame","part":"member"},{"id":"member-rail","of":"rail","member":"frame","part":"member"},{"id":"member-leg-mid","of":"leg-mid","member":"frame","part":"member"},{"id":"member-slat-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.076,0.82],"transform":{"translation":[-0.36,-0.0225,0.0]},"member":"slat-head","part":"member"},{"id":"member-slat-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.076,0.82],"transform":{"translation":[0.3,-0.0225,0.0]},"member":"slat-mid","part":"member"},{"id":"member-slat-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.076,0.82],"transform":{"translation":[0.34,-0.0225,0.0]},"member":"slat-foot","part":"member"},{"id":"member-mat-head","kind":"box","bone":"mat-head","material":"cold-foam","role":"body","tone":0.4,"size":[0.705,0.17,0.78],"transform":{"translation":[-0.3525,0.095,0.0]},"member":"mat-head","part":"member"},{"id":"member-mat-mid","kind":"box","bone":"mat-mid","material":"cold-foam","role":"body","tone":0.4,"size":[0.58,0.17,0.78],"transform":{"translation":[0.31,0.095,0.0]},"member":"mat-mid","part":"member"},{"id":"member-mat-foot","kind":"box","bone":"mat-foot","material":"cold-foam","role":"body","tone":0.4,"size":[0.645,0.17,0.78],"transform":{"translation":[0.3425,0.095,0.0]},"member":"mat-foot","part":"member"},{"id":"joint-hinge","kind":"revolve","bone":"slat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.02],[0.6,0.02]],"axis":[0.0,0.0,1.0],"origin":[0.0,0.0,-0.3],"member":"slat-head","part":"joint"},{"id":"joint-mat-head","kind":"revolve","bone":"mat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.012],[0.03,0.012]],"axis":[0.0,1.0,0.0],"origin":[-0.3525,-0.015,0.0],"member":"mat-head","part":"joint"},{"id":"joint-mat-mid","kind":"revolve","bone":"mat-mid","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.012],[0.03,0.012]],"axis":[0.0,1.0,0.0],"origin":[0.31,-0.015,0.0],"member":"mat-mid","part":"joint"},{"id":"joint-mat-foot","kind":"revolve","bone":"mat-foot","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.012],[0.03,0.012]],"axis":[0.0,1.0,0.0],"origin":[0.3425,-0.015,0.0],"member":"mat-foot","part":"joint"},{"id":"support-foot-head","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.5],"transform":{"translation":[0.03,0.004,0.0]},"member":"frame","part":"support","anchor":"foot-head"},{"id":"support-foot-mid","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.06],"transform":{"translation":[1.06,0.004,0.0]},"member":"frame","part":"support","anchor":"foot-mid"},{"id":"support-foot-foot-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.06],"transform":{"translation":[2.09,0.004,0.42]},"member":"frame","part":"support","anchor":"foot-foot-l"},{"id":"support-foot-foot-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.06],"transform":{"translation":[2.09,0.004,-0.42]},"member":"frame","part":"support","anchor":"foot-foot-r"}],"decisions":[{"en":"Detailed model from the seed: rounded headboard and footboard, two foot posts with rail, cross rail, two side rails and the centre beam, one mid leg, three birch slat groups with their gaps and three rounded quilted mattress sections on the slat bones. Slats are drawn and therefore stay in the body.","de":"Detailmodell aus dem Startmodell: gerundetes Kopf- und Fußteil, zwei Fußpfosten mit Riegel, Querriegel, zwei Seitenholme und Mittelbalken, ein mittleres Bein, drei Birkenlattengruppen mit Fugen und drei gerundete gesteppte Matratzenteile auf den Lattenknochen. Die Latten sind gezeichnet und bleiben daher im Körper."},{"en":"Thermal: the mattress has two nested shells (10 mm quilt = body solid, foam core inside it), slats and frame are single layers. Structure: frame members, centre beam on the ground bone, slat groups, foam cores of the mattress sections as members; slat hinge pin and mattress guide pins as joints; four floor pads at the support anchors; all masses are uniform, so no mass solids.","de":"Thermik: die Matratze hat zwei verschachtelte Schalen (10 mm Steppdecke = Körper, darin der Schaumkern), Latten und Rahmen sind einzelne Schichten. Tragwerk: Rahmenteile, Mittelbalken am Bodenknochen, Lattengruppen, Schaumkerne der Matratzenteile als Stäbe; Lattenscharnierstift und Matratzenführungen als Gelenke; vier Bodenplatten an den Auflagern; alle Massen sind gleichmäßig verteilt, daher keine Massenkörper."}]},"100":{"status":"authored","denominator":100,"body":[{"id":"head","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.95,0.9],"cornerRadius":0.02,"transform":{"translation":[0.03,0.475,0.0]}},{"id":"foot-post","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.55,0.06],"cornerRadius":0.015,"transform":{"translation":[2.09,0.275,0.42]},"repeat":{"count":2,"translation":[0.0,0.0,-0.84]}},{"id":"foot-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.08,0.9],"cornerRadius":0.015,"transform":{"translation":[2.09,0.51,0.0]}},{"id":"foot-cross-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.04,0.16,0.8],"transform":{"translation":[2.09,0.22,0.0]}},{"id":"rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"size":[2.04,0.16,0.04],"transform":{"translation":[1.06,0.22,0.43]},"repeat":{"count":2,"translation":[0.0,0.0,-0.86]}},{"id":"leg-mid","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.16,0.06],"transform":{"translation":[1.06,0.08,0.0]}},{"id":"slat-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.022,0.86],"transform":{"translation":[-0.36,-0.011,0.0]}},{"id":"slat-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.022,0.86],"transform":{"translation":[0.3,-0.011,0.0]}},{"id":"slat-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.022,0.86],"transform":{"translation":[0.34,-0.011,0.0]}},{"id":"mat-head","kind":"box","bone":"mat-head","material":"quilted-cover","role":"body","tone":0.85,"size":[0.745,0.21,0.82],"cornerRadius":0.03,"transform":{"translation":[-0.3525,0.095,0.0]}},{"id":"mat-mid","kind":"box","bone":"mat-mid","material":"quilted-cover","role":"body","tone":0.85,"size":[0.62,0.21,0.82],"cornerRadius":0.03,"transform":{"translation":[0.31,0.095,0.0]}},{"id":"mat-foot","kind":"box","bone":"mat-foot","material":"quilted-cover","role":"body","tone":0.85,"size":[0.685,0.21,0.82],"cornerRadius":0.03,"transform":{"translation":[0.3425,0.095,0.0]}}],"thermal":[{"id":"th-head","of":"head","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-post","of":"foot-post","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-rail","of":"foot-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-cross-rail","of":"foot-cross-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-rail","of":"rail","region":"bed-frame","layer":"pine-member"},{"id":"th-leg-mid","of":"leg-mid","region":"bed-frame","layer":"pine-member"},{"id":"th-slat-head","of":"slat-head","region":"slats","layer":"slat-birch"},{"id":"th-slat-mid","of":"slat-mid","region":"slats","layer":"slat-birch"},{"id":"th-slat-foot","of":"slat-foot","region":"slats","layer":"slat-birch"},{"id":"th-mat-head","of":"mat-head","region":"mattress","layer":"quilt"},{"id":"th-mat-mid","of":"mat-mid","region":"mattress","layer":"quilt"},{"id":"th-mat-foot","of":"mat-foot","region":"mattress","layer":"quilt"}],"structure":[{"id":"member-center-beam","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[2.0,0.103,0.05],"transform":{"translation":[1.06,0.2115,0.0]},"member":"ground","part":"member"},{"id":"member-head","of":"head","member":"frame","part":"member"},{"id":"member-foot-post","of":"foot-post","member":"frame","part":"member"},{"id":"member-rail","of":"rail","member":"frame","part":"member"},{"id":"member-leg-mid","of":"leg-mid","member":"frame","part":"member"},{"id":"member-slat-head","of":"slat-head","member":"slat-head","part":"member"},{"id":"member-slat-mid","of":"slat-mid","member":"slat-mid","part":"member"},{"id":"member-slat-foot","of":"slat-foot","member":"slat-foot","part":"member"},{"id":"member-mat-head","kind":"box","bone":"mat-head","material":"cold-foam","role":"body","tone":0.4,"size":[0.705,0.17,0.78],"transform":{"translation":[-0.3525,0.095,0.0]},"member":"mat-head","part":"member"},{"id":"member-mat-mid","kind":"box","bone":"mat-mid","material":"cold-foam","role":"body","tone":0.4,"size":[0.58,0.17,0.78],"transform":{"translation":[0.31,0.095,0.0]},"member":"mat-mid","part":"member"},{"id":"member-mat-foot","kind":"box","bone":"mat-foot","material":"cold-foam","role":"body","tone":0.4,"size":[0.645,0.17,0.78],"transform":{"translation":[0.3425,0.095,0.0]},"member":"mat-foot","part":"member"},{"id":"joint-hinge","kind":"revolve","bone":"slat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.02],[0.6,0.02]],"axis":[0.0,0.0,1.0],"origin":[0.0,0.0,-0.3],"member":"slat-head","part":"joint"},{"id":"joint-mat-head","kind":"revolve","bone":"mat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.0155],[0.03,0.0155]],"axis":[0.0,1.0,0.0],"origin":[-0.3525,-0.015,0.0],"member":"mat-head","part":"joint"},{"id":"joint-mat-mid","kind":"revolve","bone":"mat-mid","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.0155],[0.03,0.0155]],"axis":[0.0,1.0,0.0],"origin":[0.31,-0.015,0.0],"member":"mat-mid","part":"joint"},{"id":"joint-mat-foot","kind":"revolve","bone":"mat-foot","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.0155],[0.03,0.0155]],"axis":[0.0,1.0,0.0],"origin":[0.3425,-0.015,0.0],"member":"mat-foot","part":"joint"},{"id":"support-foot-head","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.5],"transform":{"translation":[0.03,0.008,0.0]},"member":"frame","part":"support","anchor":"foot-head"},{"id":"support-foot-mid","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.06],"transform":{"translation":[1.06,0.008,0.0]},"member":"frame","part":"support","anchor":"foot-mid"},{"id":"support-foot-foot-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.06],"transform":{"translation":[2.09,0.008,0.42]},"member":"frame","part":"support","anchor":"foot-foot-l"},{"id":"support-foot-foot-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.06],"transform":{"translation":[2.09,0.008,-0.42]},"member":"frame","part":"support","anchor":"foot-foot-r"}],"decisions":[{"en":"Modelled anew: slat groups merged into one 22 mm plank each as drawn, mattress corners smaller, slat gaps and rounding left out.","de":"Neu modelliert: Lattengruppen zu je einer 22-mm-Bohle zusammengefasst wie gezeichnet, kleinere Matratzenecken, Lattenfugen und Rundungen entfallen."},{"en":"Thermal: the six frame solids (head, foot post, foot rail, cross rail, side rail, middle leg) reference the bed-frame region, the three slat planks the slats region and the three mattress blocks the mattress region, each by a reference to the body solid it covers. Structure: a centre beam on the ground, a member for the head, the foot post, the side rail and the middle leg, one for each slat plank and each mattress block, a hinge joint at the head slat, one joint per mattress block and four foot supports (one at the head, one in the middle, two at the foot).","de":"Thermik: die sechs Rahmenkörper (Kopfteil, Fußpfosten, Fußrahmen, Querriegel, Seitenholm, Mittelbein) verweisen auf die Region Bettrahmen, die drei Lattenbohlen auf die Region Lattenrost und die drei Matratzenblöcke auf die Region Matratze, jeweils per Verweis auf den Körper, den sie bedecken. Tragwerk: ein Mittelbalken am Boden, je ein Stab für Kopfteil, Fußpfosten, Seitenholm und Mittelbein, je einer für jede Lattenbohle und jeden Matratzenblock, ein Scharniergelenk an der Kopflatte, ein Gelenk je Matratzenblock und vier Fußauflager (eines am Kopf, eines in der Mitte, zwei am Fuß)."}]},"200":{"status":"authored","denominator":200,"body":[{"id":"head","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.95,0.9],"transform":{"translation":[0.03,0.475,0.0]}},{"id":"foot-post","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.55,0.06],"transform":{"translation":[2.09,0.275,0.42]},"repeat":{"count":2,"translation":[0.0,0.0,-0.84]}},{"id":"foot-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.08,0.9],"transform":{"translation":[2.09,0.51,0.0]}},{"id":"foot-cross-rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.04,0.16,0.8],"transform":{"translation":[2.09,0.22,0.0]}},{"id":"rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"size":[2.04,0.16,0.04],"transform":{"translation":[1.06,0.22,0.43]},"repeat":{"count":2,"translation":[0.0,0.0,-0.86]}},{"id":"leg-mid","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.06,0.16,0.06],"transform":{"translation":[1.06,0.08,0.0]}},{"id":"mat-head","kind":"box","bone":"mat-head","material":"quilted-cover","role":"body","tone":0.85,"size":[0.745,0.21,0.82],"transform":{"translation":[-0.3525,0.095,0.0]}},{"id":"mat-mid","kind":"box","bone":"mat-mid","material":"quilted-cover","role":"body","tone":0.85,"size":[0.62,0.21,0.82],"transform":{"translation":[0.31,0.095,0.0]}},{"id":"mat-foot","kind":"box","bone":"mat-foot","material":"quilted-cover","role":"body","tone":0.85,"size":[0.685,0.21,0.82],"transform":{"translation":[0.3425,0.095,0.0]}}],"thermal":[{"id":"th-head","of":"head","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-post","of":"foot-post","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-rail","of":"foot-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-foot-cross-rail","of":"foot-cross-rail","region":"bed-frame","layer":"pine-member"},{"id":"th-rail","of":"rail","region":"bed-frame","layer":"pine-member"},{"id":"th-leg-mid","of":"leg-mid","region":"bed-frame","layer":"pine-member"},{"id":"th-mat-head","of":"mat-head","region":"mattress","layer":"quilt"},{"id":"th-mat-mid","of":"mat-mid","region":"mattress","layer":"quilt"},{"id":"th-mat-foot","of":"mat-foot","region":"mattress","layer":"quilt"},{"id":"th-slats-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.031,0.86],"transform":{"translation":[-0.36,-0.0095,0.0]},"region":"slats","layer":"slat-birch"},{"id":"th-slats-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.031,0.86],"transform":{"translation":[0.3,-0.0095,0.0]},"region":"slats","layer":"slat-birch"},{"id":"th-slats-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.031,0.86],"transform":{"translation":[0.34,-0.0095,0.0]},"region":"slats","layer":"slat-birch"}],"structure":[{"id":"member-center-beam","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[2.0,0.103,0.05],"transform":{"translation":[1.06,0.2115,0.0]},"member":"ground","part":"member"},{"id":"member-head","of":"head","member":"frame","part":"member"},{"id":"member-foot-post","of":"foot-post","member":"frame","part":"member"},{"id":"member-rail","of":"rail","member":"frame","part":"member"},{"id":"member-leg-mid","of":"leg-mid","member":"frame","part":"member"},{"id":"member-slat-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.032,0.82],"transform":{"translation":[-0.36,-0.0145,0.0]},"member":"slat-head","part":"member"},{"id":"member-slat-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.032,0.82],"transform":{"translation":[0.3,-0.0145,0.0]},"member":"slat-mid","part":"member"},{"id":"member-slat-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.032,0.82],"transform":{"translation":[0.34,-0.0145,0.0]},"member":"slat-foot","part":"member"},{"id":"member-mat-head","kind":"box","bone":"mat-head","material":"cold-foam","role":"body","tone":0.4,"size":[0.685,0.15,0.76],"transform":{"translation":[-0.3525,0.095,0.0]},"member":"mat-head","part":"member"},{"id":"member-mat-mid","kind":"box","bone":"mat-mid","material":"cold-foam","role":"body","tone":0.4,"size":[0.56,0.15,0.76],"transform":{"translation":[0.31,0.095,0.0]},"member":"mat-mid","part":"member"},{"id":"member-mat-foot","kind":"box","bone":"mat-foot","material":"cold-foam","role":"body","tone":0.4,"size":[0.625,0.15,0.76],"transform":{"translation":[0.3425,0.095,0.0]},"member":"mat-foot","part":"member"},{"id":"joint-hinge","kind":"revolve","bone":"slat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.0305],[0.6,0.0305]],"axis":[0.0,0.0,1.0],"origin":[0.0,0.0,-0.3],"member":"slat-head","part":"joint"},{"id":"support-foot-head","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.5],"transform":{"translation":[0.03,0.0155,0.0]},"member":"frame","part":"support","anchor":"foot-head"},{"id":"support-foot-mid","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.06],"transform":{"translation":[1.06,0.0155,0.0]},"member":"frame","part":"support","anchor":"foot-mid"},{"id":"support-foot-foot-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.06],"transform":{"translation":[2.09,0.0155,0.42]},"member":"frame","part":"support","anchor":"foot-foot-l"},{"id":"support-foot-foot-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.06],"transform":{"translation":[2.09,0.0155,-0.42]},"member":"frame","part":"support","anchor":"foot-foot-r"}],"decisions":[{"en":"Modelled anew: only frame and mattress bones are drawn, so the slats live in the thermal and structure lists as plates inside the body (hidden region); sharp-edged boxes with 30 mm minimum.","de":"Neu modelliert: nur Rahmen- und Matratzenknochen sind gezeichnet, deshalb liegen die Latten als Platten im Körper nur in Thermik- und Tragwerkliste (verdeckte Region); scharfkantige Quader mit mindestens 30 mm."},{"en":"Thermal and structure follow the 1:200 body; slats as plates inside the body.","de":"Thermik und Tragwerk folgen dem Körper 1:200; Latten als Platten im Körper."}]},"500":{"status":"authored","denominator":500,"body":[{"id":"head","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.1,0.95,0.9],"transform":{"translation":[0.05,0.475,0.0]}},{"id":"foot","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.1,0.55,0.9],"transform":{"translation":[2.07,0.275,0.0]}},{"id":"rail","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"size":[2.0,0.16,0.076],"transform":{"translation":[1.06,0.22,0.4125]},"repeat":{"count":2,"translation":[0.0,0.0,-0.825]}},{"id":"leg-mid","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.1,0.16,0.1],"transform":{"translation":[1.05,0.08,0.0]}},{"id":"mat-head","kind":"box","bone":"mat-head","material":"quilted-cover","role":"body","tone":0.85,"size":[0.745,0.21,0.82],"transform":{"translation":[-0.3525,0.095,0.0]}},{"id":"mat-mid","kind":"box","bone":"mat-mid","material":"quilted-cover","role":"body","tone":0.85,"size":[0.62,0.21,0.82],"transform":{"translation":[0.31,0.095,0.0]}},{"id":"mat-foot","kind":"box","bone":"mat-foot","material":"quilted-cover","role":"body","tone":0.85,"size":[0.685,0.21,0.82],"transform":{"translation":[0.3425,0.095,0.0]}}],"thermal":[{"id":"th-head","of":"head","region":"bed-frame","layer":"pine-member"},{"id":"th-foot","of":"foot","region":"bed-frame","layer":"pine-member"},{"id":"th-rail","of":"rail","region":"bed-frame","layer":"pine-member"},{"id":"th-leg-mid","of":"leg-mid","region":"bed-frame","layer":"pine-member"},{"id":"th-mat-head","of":"mat-head","region":"mattress","layer":"quilt"},{"id":"th-mat-mid","of":"mat-mid","region":"mattress","layer":"quilt"},{"id":"th-mat-foot","of":"mat-foot","region":"mattress","layer":"quilt"},{"id":"th-slats-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.076,0.86],"transform":{"translation":[-0.36,-0.0225,0.0]},"region":"slats","layer":"slat-birch"},{"id":"th-slats-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.076,0.86],"transform":{"translation":[0.3,-0.0225,0.0]},"region":"slats","layer":"slat-birch"},{"id":"th-slats-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.076,0.86],"transform":{"translation":[0.34,-0.0225,0.0]},"region":"slats","layer":"slat-birch"}],"structure":[{"id":"member-center-beam","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[2.0,0.075,0.075],"transform":{"translation":[1.06,0.2115,0.0]},"member":"ground","part":"member"},{"id":"member-head","of":"head","member":"frame","part":"member"},{"id":"member-foot","of":"foot","member":"frame","part":"member"},{"id":"member-rail","of":"rail","member":"frame","part":"member"},{"id":"member-slat-head","kind":"box","bone":"slat-head","material":"birch-slat","role":"body","tone":0.6,"size":[0.72,0.076,0.82],"transform":{"translation":[-0.36,-0.0225,0.0]},"member":"slat-head","part":"member"},{"id":"member-slat-mid","kind":"box","bone":"slat-mid","material":"birch-slat","role":"body","tone":0.6,"size":[0.6,0.076,0.82],"transform":{"translation":[0.3,-0.0225,0.0]},"member":"slat-mid","part":"member"},{"id":"member-slat-foot","kind":"box","bone":"slat-foot","material":"birch-slat","role":"body","tone":0.6,"size":[0.68,0.076,0.82],"transform":{"translation":[0.34,-0.0225,0.0]},"member":"slat-foot","part":"member"},{"id":"member-mat-head","kind":"box","bone":"mat-head","material":"cold-foam","role":"body","tone":0.4,"size":[0.665,0.13,0.74],"transform":{"translation":[-0.3525,0.095,0.0]},"member":"mat-head","part":"member"},{"id":"member-mat-mid","kind":"box","bone":"mat-mid","material":"cold-foam","role":"body","tone":0.4,"size":[0.54,0.13,0.74],"transform":{"translation":[0.31,0.095,0.0]},"member":"mat-mid","part":"member"},{"id":"member-mat-foot","kind":"box","bone":"mat-foot","material":"cold-foam","role":"body","tone":0.4,"size":[0.605,0.13,0.74],"transform":{"translation":[0.3425,0.095,0.0]},"member":"mat-foot","part":"member"},{"id":"joint-hinge","kind":"revolve","bone":"slat-head","material":"pine-timber","role":"detail","tone":0.2,"profile":[[0.0,0.0385],[0.6,0.0385]],"axis":[0.0,0.0,1.0],"origin":[0.0,0.0,-0.3],"member":"slat-head","part":"joint"},{"id":"support-foot-head","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.076,0.076,0.5],"transform":{"translation":[0.03,0.038,0.0]},"member":"frame","part":"support","anchor":"foot-head"},{"id":"support-foot-mid","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.076,0.076,0.076],"transform":{"translation":[1.06,0.038,0.0]},"member":"frame","part":"support","anchor":"foot-mid"},{"id":"support-foot-foot-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.076,0.076,0.076],"transform":{"translation":[2.09,0.038,0.42]},"member":"frame","part":"support","anchor":"foot-foot-l"},{"id":"support-foot-foot-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.076,0.076,0.076],"transform":{"translation":[2.09,0.038,-0.42]},"member":"frame","part":"support","anchor":"foot-foot-r"}],"decisions":[{"en":"Modelled anew: head and foot are 100 mm boards (the foot posts and rail are merged), the two rails 75 mm, one 100 mm mid leg, three mattress blocks.","de":"Neu modelliert: Kopf- und Fußteil sind 100-mm-Bretter (Fußpfosten und Riegel zusammengefasst), die zwei Holme 75 mm, ein 100-mm-Mittelbein, drei Matratzenblöcke."},{"en":"Thermal and structure follow the 1:500 body; 75 mm slat plates; one hinge joint.","de":"Thermik und Tragwerk folgen dem Körper 1:500; Lattenplatten 75 mm; ein Scharniergelenk."}]}}}
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "post-head",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.02933,
+       -0.0275
+      ],
+      [
+       -0.0275,
+       -0.02933
+      ],
+      [
+       -0.025,
+       -0.03
+      ],
+      [
+       0.025,
+       -0.03
+      ],
+      [
+       0.0275,
+       -0.02933
+      ],
+      [
+       0.02933,
+       -0.0275
+      ],
+      [
+       0.03,
+       -0.025
+      ],
+      [
+       0.03,
+       0.025
+      ],
+      [
+       0.02933,
+       0.0275
+      ],
+      [
+       0.0275,
+       0.02933
+      ],
+      [
+       0.025,
+       0.03
+      ],
+      [
+       -0.025,
+       0.03
+      ],
+      [
+       -0.0275,
+       0.02933
+      ],
+      [
+       -0.02933,
+       0.0275
+      ],
+      [
+       -0.03,
+       0.025
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.938,
+     "transform": {
+      "translation": [
+       0.03,
+       0,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "post-head-top",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.02933,
+       -0.0275
+      ],
+      [
+       -0.0275,
+       -0.02933
+      ],
+      [
+       -0.025,
+       -0.03
+      ],
+      [
+       0.025,
+       -0.03
+      ],
+      [
+       0.0275,
+       -0.02933
+      ],
+      [
+       0.02933,
+       -0.0275
+      ],
+      [
+       0.03,
+       -0.025
+      ],
+      [
+       0.03,
+       0.025
+      ],
+      [
+       0.02933,
+       0.0275
+      ],
+      [
+       0.0275,
+       0.02933
+      ],
+      [
+       0.025,
+       0.03
+      ],
+      [
+       -0.025,
+       0.03
+      ],
+      [
+       -0.0275,
+       0.02933
+      ],
+      [
+       -0.02933,
+       0.0275
+      ],
+      [
+       -0.03,
+       0.025
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.938,
+     "to": 0.95,
+     "taperTo": [
+      1,
+      0.6
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "post-foot",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.02933,
+       -0.0275
+      ],
+      [
+       -0.0275,
+       -0.02933
+      ],
+      [
+       -0.025,
+       -0.03
+      ],
+      [
+       0.025,
+       -0.03
+      ],
+      [
+       0.0275,
+       -0.02933
+      ],
+      [
+       0.02933,
+       -0.0275
+      ],
+      [
+       0.03,
+       -0.025
+      ],
+      [
+       0.03,
+       0.025
+      ],
+      [
+       0.02933,
+       0.0275
+      ],
+      [
+       0.0275,
+       0.02933
+      ],
+      [
+       0.025,
+       0.03
+      ],
+      [
+       -0.025,
+       0.03
+      ],
+      [
+       -0.0275,
+       0.02933
+      ],
+      [
+       -0.02933,
+       0.0275
+      ],
+      [
+       -0.03,
+       0.025
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.538,
+     "transform": {
+      "translation": [
+       2.09,
+       0,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "post-foot-top",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.02933,
+       -0.0275
+      ],
+      [
+       -0.0275,
+       -0.02933
+      ],
+      [
+       -0.025,
+       -0.03
+      ],
+      [
+       0.025,
+       -0.03
+      ],
+      [
+       0.0275,
+       -0.02933
+      ],
+      [
+       0.02933,
+       -0.0275
+      ],
+      [
+       0.03,
+       -0.025
+      ],
+      [
+       0.03,
+       0.025
+      ],
+      [
+       0.02933,
+       0.0275
+      ],
+      [
+       0.0275,
+       0.02933
+      ],
+      [
+       0.025,
+       0.03
+      ],
+      [
+       -0.025,
+       0.03
+      ],
+      [
+       -0.0275,
+       0.02933
+      ],
+      [
+       -0.02933,
+       0.0275
+      ],
+      [
+       -0.03,
+       0.025
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.538,
+     "to": 0.55,
+     "taperTo": [
+      1,
+      0.6
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "head-top-rail",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.015,
+       0.85
+      ],
+      [
+       0.045,
+       0.85
+      ],
+      [
+       0.045,
+       0.92
+      ],
+      [
+       0.04366,
+       0.925
+      ],
+      [
+       0.04,
+       0.92866
+      ],
+      [
+       0.035,
+       0.93
+      ],
+      [
+       0.025,
+       0.93
+      ],
+      [
+       0.02,
+       0.92866
+      ],
+      [
+       0.01634,
+       0.925
+      ],
+      [
+       0.015,
+       0.92
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.445,
+     "to": 0.445
+    },
+    {
+     "id": "head-panel",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.445,
+       0.021
+      ],
+      [
+       -0.445,
+       0.039
+      ],
+      [
+       -0.36,
+       0.039
+      ],
+      [
+       -0.356,
+       0.036
+      ],
+      [
+       -0.352,
+       0.039
+      ],
+      [
+       -0.271,
+       0.039
+      ],
+      [
+       -0.267,
+       0.036
+      ],
+      [
+       -0.263,
+       0.039
+      ],
+      [
+       -0.182,
+       0.039
+      ],
+      [
+       -0.178,
+       0.036
+      ],
+      [
+       -0.174,
+       0.039
+      ],
+      [
+       -0.093,
+       0.039
+      ],
+      [
+       -0.089,
+       0.036
+      ],
+      [
+       -0.085,
+       0.039
+      ],
+      [
+       -0.004,
+       0.039
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.004,
+       0.039
+      ],
+      [
+       0.085,
+       0.039
+      ],
+      [
+       0.089,
+       0.036
+      ],
+      [
+       0.093,
+       0.039
+      ],
+      [
+       0.174,
+       0.039
+      ],
+      [
+       0.178,
+       0.036
+      ],
+      [
+       0.182,
+       0.039
+      ],
+      [
+       0.263,
+       0.039
+      ],
+      [
+       0.267,
+       0.036
+      ],
+      [
+       0.271,
+       0.039
+      ],
+      [
+       0.352,
+       0.039
+      ],
+      [
+       0.356,
+       0.036
+      ],
+      [
+       0.36,
+       0.039
+      ],
+      [
+       0.445,
+       0.039
+      ],
+      [
+       0.445,
+       0.021
+      ],
+      [
+       0.36,
+       0.021
+      ],
+      [
+       0.356,
+       0.024
+      ],
+      [
+       0.352,
+       0.021
+      ],
+      [
+       0.271,
+       0.021
+      ],
+      [
+       0.267,
+       0.024
+      ],
+      [
+       0.263,
+       0.021
+      ],
+      [
+       0.182,
+       0.021
+      ],
+      [
+       0.178,
+       0.024
+      ],
+      [
+       0.174,
+       0.021
+      ],
+      [
+       0.093,
+       0.021
+      ],
+      [
+       0.089,
+       0.024
+      ],
+      [
+       0.085,
+       0.021
+      ],
+      [
+       0.004,
+       0.021
+      ],
+      [
+       0.0,
+       0.024
+      ],
+      [
+       -0.004,
+       0.021
+      ],
+      [
+       -0.085,
+       0.021
+      ],
+      [
+       -0.089,
+       0.024
+      ],
+      [
+       -0.093,
+       0.021
+      ],
+      [
+       -0.174,
+       0.021
+      ],
+      [
+       -0.178,
+       0.024
+      ],
+      [
+       -0.182,
+       0.021
+      ],
+      [
+       -0.263,
+       0.021
+      ],
+      [
+       -0.267,
+       0.024
+      ],
+      [
+       -0.271,
+       0.021
+      ],
+      [
+       -0.352,
+       0.021
+      ],
+      [
+       -0.356,
+       0.024
+      ],
+      [
+       -0.36,
+       0.021
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.86
+    },
+    {
+     "id": "head-low-rail",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.015,
+       0.14
+      ],
+      [
+       0.045,
+       0.14
+      ],
+      [
+       0.045,
+       0.3
+      ],
+      [
+       0.015,
+       0.3
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.445,
+     "to": 0.445
+    },
+    {
+     "id": "foot-top-rail",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       2.075,
+       0.45
+      ],
+      [
+       2.105,
+       0.45
+      ],
+      [
+       2.105,
+       0.52
+      ],
+      [
+       2.10366,
+       0.525
+      ],
+      [
+       2.1,
+       0.52866
+      ],
+      [
+       2.095,
+       0.53
+      ],
+      [
+       2.085,
+       0.53
+      ],
+      [
+       2.08,
+       0.52866
+      ],
+      [
+       2.07634,
+       0.525
+      ],
+      [
+       2.075,
+       0.52
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.445,
+     "to": 0.445
+    },
+    {
+     "id": "foot-panel",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.445,
+       2.081
+      ],
+      [
+       -0.445,
+       2.099
+      ],
+      [
+       -0.36,
+       2.099
+      ],
+      [
+       -0.356,
+       2.096
+      ],
+      [
+       -0.352,
+       2.099
+      ],
+      [
+       -0.271,
+       2.099
+      ],
+      [
+       -0.267,
+       2.096
+      ],
+      [
+       -0.263,
+       2.099
+      ],
+      [
+       -0.182,
+       2.099
+      ],
+      [
+       -0.178,
+       2.096
+      ],
+      [
+       -0.174,
+       2.099
+      ],
+      [
+       -0.093,
+       2.099
+      ],
+      [
+       -0.089,
+       2.096
+      ],
+      [
+       -0.085,
+       2.099
+      ],
+      [
+       -0.004,
+       2.099
+      ],
+      [
+       0.0,
+       2.096
+      ],
+      [
+       0.004,
+       2.099
+      ],
+      [
+       0.085,
+       2.099
+      ],
+      [
+       0.089,
+       2.096
+      ],
+      [
+       0.093,
+       2.099
+      ],
+      [
+       0.174,
+       2.099
+      ],
+      [
+       0.178,
+       2.096
+      ],
+      [
+       0.182,
+       2.099
+      ],
+      [
+       0.263,
+       2.099
+      ],
+      [
+       0.267,
+       2.096
+      ],
+      [
+       0.271,
+       2.099
+      ],
+      [
+       0.352,
+       2.099
+      ],
+      [
+       0.356,
+       2.096
+      ],
+      [
+       0.36,
+       2.099
+      ],
+      [
+       0.445,
+       2.099
+      ],
+      [
+       0.445,
+       2.081
+      ],
+      [
+       0.36,
+       2.081
+      ],
+      [
+       0.356,
+       2.084
+      ],
+      [
+       0.352,
+       2.081
+      ],
+      [
+       0.271,
+       2.081
+      ],
+      [
+       0.267,
+       2.084
+      ],
+      [
+       0.263,
+       2.081
+      ],
+      [
+       0.182,
+       2.081
+      ],
+      [
+       0.178,
+       2.084
+      ],
+      [
+       0.174,
+       2.081
+      ],
+      [
+       0.093,
+       2.081
+      ],
+      [
+       0.089,
+       2.084
+      ],
+      [
+       0.085,
+       2.081
+      ],
+      [
+       0.004,
+       2.081
+      ],
+      [
+       0.0,
+       2.084
+      ],
+      [
+       -0.004,
+       2.081
+      ],
+      [
+       -0.085,
+       2.081
+      ],
+      [
+       -0.089,
+       2.084
+      ],
+      [
+       -0.093,
+       2.081
+      ],
+      [
+       -0.174,
+       2.081
+      ],
+      [
+       -0.178,
+       2.084
+      ],
+      [
+       -0.182,
+       2.081
+      ],
+      [
+       -0.263,
+       2.081
+      ],
+      [
+       -0.267,
+       2.084
+      ],
+      [
+       -0.271,
+       2.081
+      ],
+      [
+       -0.352,
+       2.081
+      ],
+      [
+       -0.356,
+       2.084
+      ],
+      [
+       -0.36,
+       2.081
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.46
+    },
+    {
+     "id": "foot-low-rail",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       2.075,
+       0.14
+      ],
+      [
+       2.105,
+       0.14
+      ],
+      [
+       2.105,
+       0.3
+      ],
+      [
+       2.075,
+       0.3
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.445,
+     "to": 0.445
+    },
+    {
+     "id": "side-rail",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.14,
+       0.458
+      ],
+      [
+       0.1404,
+       0.4565
+      ],
+      [
+       0.1415,
+       0.4554
+      ],
+      [
+       0.143,
+       0.455
+      ],
+      [
+       0.292,
+       0.455
+      ],
+      [
+       0.296,
+       0.45607
+      ],
+      [
+       0.29893,
+       0.459
+      ],
+      [
+       0.3,
+       0.463
+      ],
+      [
+       0.3,
+       0.477
+      ],
+      [
+       0.29893,
+       0.481
+      ],
+      [
+       0.296,
+       0.48393
+      ],
+      [
+       0.292,
+       0.485
+      ],
+      [
+       0.143,
+       0.485
+      ],
+      [
+       0.1415,
+       0.4846
+      ],
+      [
+       0.1404,
+       0.4835
+      ],
+      [
+       0.14,
+       0.482
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.06,
+     "to": 2.06,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.94
+      ]
+     }
+    },
+    {
+     "id": "ledger",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      2.0,
+      0.025,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.1925,
+       0.4425
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.885
+      ]
+     }
+    },
+    {
+     "id": "cross-beam",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.04,
+      0.065,
+      0.91
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.1725,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "leg-mid",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.02933,
+       -0.0275
+      ],
+      [
+       -0.0275,
+       -0.02933
+      ],
+      [
+       -0.025,
+       -0.03
+      ],
+      [
+       0.025,
+       -0.03
+      ],
+      [
+       0.0275,
+       -0.02933
+      ],
+      [
+       0.02933,
+       -0.0275
+      ],
+      [
+       0.03,
+       -0.025
+      ],
+      [
+       0.03,
+       0.025
+      ],
+      [
+       0.02933,
+       0.0275
+      ],
+      [
+       0.0275,
+       0.02933
+      ],
+      [
+       0.025,
+       0.03
+      ],
+      [
+       -0.025,
+       0.03
+      ],
+      [
+       -0.0275,
+       0.02933
+      ],
+      [
+       -0.02933,
+       0.0275
+      ],
+      [
+       -0.03,
+       0.025
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.14,
+     "transform": {
+      "translation": [
+       1.06,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "base-rail-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.315,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.0575,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     }
+    },
+    {
+     "id": "base-rail-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     }
+    },
+    {
+     "id": "base-cross-head",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       -0.7025,
+       -0.0025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-cross-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.6625,
+       -0.0025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "lift-rail",
+     "kind": "extrude",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.68,
+       -0.02
+      ],
+      [
+       0.0,
+       -0.02
+      ],
+      [
+       0.00765,
+       -0.01848
+      ],
+      [
+       0.01414,
+       -0.01414
+      ],
+      [
+       0.01848,
+       -0.00765
+      ],
+      [
+       0.02,
+       -0.0
+      ],
+      [
+       0.01848,
+       0.00765
+      ],
+      [
+       0.01414,
+       0.01414
+      ],
+      [
+       0.00765,
+       0.01848
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       -0.68,
+       0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.39,
+     "to": 0.415,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.805
+      ]
+     }
+    },
+    {
+     "id": "lift-cross",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.04,
+      0.78
+     ],
+     "transform": {
+      "translation": [
+       -0.6675,
+       -0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hinge-bolt-l",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.004,
+       0.008
+      ],
+      [
+       0.004,
+       0.004
+      ],
+      [
+       0.066,
+       0.004
+      ],
+      [
+       0.066,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.386
+     ]
+    },
+    {
+     "id": "hinge-bolt-r",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.004,
+       0.008
+      ],
+      [
+       0.004,
+       0.004
+      ],
+      [
+       0.066,
+       0.004
+      ],
+      [
+       0.066,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.386
+     ]
+    },
+    {
+     "id": "slat-head",
+     "kind": "loft",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.63,
+        0.036,
+        -0.4025
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04256,
+        -0.30188
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04725,
+        -0.20125
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.05006,
+        -0.10062
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.05006,
+        0.10062
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04725,
+        0.20125
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04256,
+        0.30188
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.036,
+        0.4025
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-head-l",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       -0.63,
+       0.035,
+       0.4025
+      ]
+     },
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-head-r",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       -0.63,
+       0.035,
+       -0.4025
+      ]
+     },
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-mid",
+     "kind": "loft",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.035,
+        0.036,
+        -0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04256,
+        -0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04725,
+        -0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.05006,
+        -0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.05006,
+        0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04725,
+        0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04256,
+        0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.036,
+        0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-mid-l",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.035,
+       0.035,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-mid-r",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.035,
+       0.035,
+       -0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-foot",
+     "kind": "loft",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.047,
+        0.036,
+        -0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04256,
+        -0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04725,
+        -0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.05006,
+        -0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.05006,
+        0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04725,
+        0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04256,
+        0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.036,
+        0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-foot-l",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.047,
+       0.035,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cap-foot-r",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.047,
+       0.035,
+       -0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mat-head",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        -0.72,
+        0.1,
+        0.0
+       ],
+       "rx": 0.405,
+       "ry": 0.065,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.716,
+        0.1,
+        0.0
+       ],
+       "rx": 0.423,
+       "ry": 0.08,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.708,
+        0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.091,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.695,
+        0.1,
+        0.0
+       ],
+       "rx": 0.446,
+       "ry": 0.097,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.675,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.672,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-mid",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.597,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-foot",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.632,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.635,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.655,
+        0.1,
+        0.0
+       ],
+       "rx": 0.446,
+       "ry": 0.097,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.668,
+        0.1,
+        0.0
+       ],
+       "rx": 0.437,
+       "ry": 0.091,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.676,
+        0.1,
+        0.0
+       ],
+       "rx": 0.423,
+       "ry": 0.08,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.68,
+        0.1,
+        0.0
+       ],
+       "rx": 0.405,
+       "ry": 0.065,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-head-l",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.673,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.6955,
+        0.178,
+        0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.71197,
+        0.178,
+        0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.178,
+        0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.178,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-mid-l",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-foot-l",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.633,
+        0.178,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6555,
+        0.178,
+        0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.67197,
+        0.178,
+        0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.178,
+        0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.178,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-head-r",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.673,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.6955,
+        0.178,
+        -0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.71197,
+        0.178,
+        -0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.178,
+        -0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.178,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-mid-r",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-top-foot-r",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.633,
+        0.178,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6555,
+        0.178,
+        -0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.67197,
+        0.178,
+        -0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.178,
+        -0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.178,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-head-l",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.673,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.6955,
+        0.022,
+        0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.71197,
+        0.022,
+        0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.022,
+        0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.022,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-mid-l",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-foot-l",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.633,
+        0.022,
+        0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6555,
+        0.022,
+        0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.67197,
+        0.022,
+        0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.022,
+        0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.022,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-head-r",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.673,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.6955,
+        0.022,
+        -0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.71197,
+        0.022,
+        -0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.022,
+        -0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        -0.718,
+        0.022,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-mid-r",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "piping-bottom-foot-r",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "detail",
+     "tone": 0.7,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.633,
+        0.022,
+        -0.447
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.6555,
+        0.022,
+        -0.44097
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.67197,
+        0.022,
+        -0.4245
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.022,
+        -0.402
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.678,
+        0.022,
+        0.0
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-mat-head-core",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        -0.71,
+        0.1,
+        0.0
+       ],
+       "rx": 0.395,
+       "ry": 0.055,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.706,
+        0.1,
+        0.0
+       ],
+       "rx": 0.413,
+       "ry": 0.07,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.698,
+        0.1,
+        0.0
+       ],
+       "rx": 0.427,
+       "ry": 0.081,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.685,
+        0.1,
+        0.0
+       ],
+       "rx": 0.436,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.665,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.662,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-mid-core",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.597,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-mat-foot-core",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.75,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.622,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.625,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.09,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.645,
+        0.1,
+        0.0
+       ],
+       "rx": 0.436,
+       "ry": 0.087,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.658,
+        0.1,
+        0.0
+       ],
+       "rx": 0.427,
+       "ry": 0.081,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.666,
+        0.1,
+        0.0
+       ],
+       "rx": 0.413,
+       "ry": 0.07,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.67,
+        0.1,
+        0.0
+       ],
+       "rx": 0.395,
+       "ry": 0.055,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "mattress",
+     "layer": "foam-core"
+    },
+    {
+     "id": "th-post-head",
+     "of": "post-head",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-post-head-top",
+     "of": "post-head-top",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-post-foot",
+     "of": "post-foot",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-post-foot-top",
+     "of": "post-foot-top",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-head-top-rail",
+     "of": "head-top-rail",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-head-panel",
+     "of": "head-panel",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-head-low-rail",
+     "of": "head-low-rail",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-foot-top-rail",
+     "of": "foot-top-rail",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-foot-panel",
+     "of": "foot-panel",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-foot-low-rail",
+     "of": "foot-low-rail",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-side-rail",
+     "of": "side-rail",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-ledger",
+     "of": "ledger",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-cross-beam",
+     "of": "cross-beam",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-leg-mid",
+     "of": "leg-mid",
+     "region": "bed-frame",
+     "layer": "pine-member"
+    },
+    {
+     "id": "th-base-rail-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.315,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.0575,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-base-rail-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-base-cross-head",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       -0.7025,
+       -0.0025,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-base-cross-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.6625,
+       -0.0025,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-lift-rail",
+     "kind": "extrude",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.68,
+       -0.02
+      ],
+      [
+       0.0,
+       -0.02
+      ],
+      [
+       0.00765,
+       -0.01848
+      ],
+      [
+       0.01414,
+       -0.01414
+      ],
+      [
+       0.01848,
+       -0.00765
+      ],
+      [
+       0.02,
+       -0.0
+      ],
+      [
+       0.01848,
+       0.00765
+      ],
+      [
+       0.01414,
+       0.01414
+      ],
+      [
+       0.00765,
+       0.01848
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       -0.68,
+       0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.39,
+     "to": 0.415,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.805
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-lift-cross",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.04,
+      0.78
+     ],
+     "transform": {
+      "translation": [
+       -0.6675,
+       -0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-hinge-bolt-l",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.004,
+       0.008
+      ],
+      [
+       0.004,
+       0.004
+      ],
+      [
+       0.066,
+       0.004
+      ],
+      [
+       0.066,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.386
+     ],
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-hinge-bolt-r",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.004,
+       0.008
+      ],
+      [
+       0.004,
+       0.004
+      ],
+      [
+       0.066,
+       0.004
+      ],
+      [
+       0.066,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.386
+     ],
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-slat-head",
+     "kind": "loft",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.63,
+        0.036,
+        -0.4025
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04256,
+        -0.30188
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04725,
+        -0.20125
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.05006,
+        -0.10062
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.05006,
+        0.10062
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04725,
+        0.20125
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.04256,
+        0.30188
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.63,
+        0.036,
+        0.4025
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-head-l",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       -0.63,
+       0.035,
+       0.4025
+      ]
+     },
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-head-r",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       -0.63,
+       0.035,
+       -0.4025
+      ]
+     },
+     "repeat": {
+      "count": 10,
+      "translation": [
+       0.065,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-slat-mid",
+     "kind": "loft",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.035,
+        0.036,
+        -0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04256,
+        -0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04725,
+        -0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.05006,
+        -0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.05006,
+        0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04725,
+        0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.04256,
+        0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.035,
+        0.036,
+        0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-mid-l",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.035,
+       0.035,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-mid-r",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.035,
+       0.035,
+       -0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-slat-foot",
+     "kind": "loft",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.047,
+        0.036,
+        -0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04256,
+        -0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04725,
+        -0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.05006,
+        -0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.051,
+        0.0
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.05006,
+        0.10813
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04725,
+        0.21625
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.04256,
+        0.32437
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.047,
+        0.036,
+        0.4325
+       ],
+       "rx": 0.019,
+       "ry": 0.004,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-foot-l",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.047,
+       0.035,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-cap-foot-r",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "cap-rubber",
+     "role": "body",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.03,
+      0.025
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.047,
+       0.035,
+       -0.4325
+      ]
+     },
+     "repeat": {
+      "count": 9,
+      "translation": [
+       0.068,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "slats",
+     "layer": "slat-birch"
+    },
+    {
+     "id": "th-mat-head",
+     "of": "mat-head",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-mat-mid",
+     "of": "mat-mid",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-mat-foot",
+     "of": "mat-foot",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-head-l",
+     "of": "piping-top-head-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-mid-l",
+     "of": "piping-top-mid-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-foot-l",
+     "of": "piping-top-foot-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-head-r",
+     "of": "piping-top-head-r",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-mid-r",
+     "of": "piping-top-mid-r",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-top-foot-r",
+     "of": "piping-top-foot-r",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-head-l",
+     "of": "piping-bottom-head-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-mid-l",
+     "of": "piping-bottom-mid-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-foot-l",
+     "of": "piping-bottom-foot-l",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-head-r",
+     "of": "piping-bottom-head-r",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-mid-r",
+     "of": "piping-bottom-mid-r",
+     "region": "mattress",
+     "layer": "quilt"
+    },
+    {
+     "id": "th-piping-bottom-foot-r",
+     "of": "piping-bottom-foot-r",
+     "region": "mattress",
+     "layer": "quilt"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-post-head",
+     "of": "post-head",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-post-foot",
+     "of": "post-foot",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-top-rail",
+     "of": "head-top-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-low-rail",
+     "of": "head-low-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-top-rail",
+     "of": "foot-top-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-low-rail",
+     "of": "foot-low-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-side-rail",
+     "of": "side-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-ledger",
+     "of": "ledger",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-cross-beam",
+     "of": "cross-beam",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-leg-mid",
+     "of": "leg-mid",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-base-rail-mid",
+     "of": "base-rail-mid",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-base-cross-head",
+     "of": "base-cross-head",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-mid",
+     "of": "slat-mid",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-base-rail-foot",
+     "of": "base-rail-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-base-cross-foot",
+     "of": "base-cross-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-foot",
+     "of": "slat-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-lift-rail",
+     "of": "lift-rail",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-lift-cross",
+     "of": "lift-cross",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-head",
+     "of": "slat-head",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-mat-head",
+     "kind": "box",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.68,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-head",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-head",
+     "kind": "ellipsoid",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-head",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-mid",
+     "kind": "box",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.56,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-mid",
+     "kind": "ellipsoid",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-foot",
+     "kind": "box",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.64,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-foot",
+     "kind": "ellipsoid",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "mass"
+    },
+    {
+     "id": "joint-hinge-bolt-l",
+     "of": "hinge-bolt-l",
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-hinge-bolt-r",
+     "of": "hinge-bolt-r",
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-head-l",
+     "of": "cap-head-l",
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-head-r",
+     "of": "cap-head-r",
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-mid-l",
+     "of": "cap-mid-l",
+     "member": "slat-mid",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-mid-r",
+     "of": "cap-mid-r",
+     "member": "slat-mid",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-foot-l",
+     "of": "cap-foot-l",
+     "member": "slat-foot",
+     "part": "joint"
+    },
+    {
+     "id": "joint-cap-foot-r",
+     "of": "cap-foot-r",
+     "member": "slat-foot",
+     "part": "joint"
+    },
+    {
+     "id": "joint-rail-head-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.11,
+       0.004
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.005,
+      0.18,
+      0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-head-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.11,
+       0.004
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.005,
+      0.18,
+      -0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.11,
+       0.004
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.005,
+      0.18,
+      0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.11,
+       0.004
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.005,
+      0.18,
+      -0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-head-top",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.06,
+       0.005
+      ],
+      [
+       0.06,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.03,
+      0.89,
+      0.415
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.89
+      ]
+     }
+    },
+    {
+     "id": "joint-head-low",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.06,
+       0.005
+      ],
+      [
+       0.06,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.03,
+      0.22,
+      0.415
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.89
+      ]
+     }
+    },
+    {
+     "id": "joint-foot-top",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.06,
+       0.005
+      ],
+      [
+       0.06,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.09,
+      0.49,
+      0.415
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.89
+      ]
+     }
+    },
+    {
+     "id": "joint-foot-low",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.06,
+       0.005
+      ],
+      [
+       0.06,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.09,
+      0.22,
+      0.415
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.89
+      ]
+     }
+    },
+    {
+     "id": "support-foot-head",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.008,
+       0.022
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.03,
+      0.0,
+      0.475
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-head"
+    },
+    {
+     "id": "support-foot-mid",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.008,
+       0.022
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      1.06,
+      0.0,
+      0.0
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-mid"
+    },
+    {
+     "id": "support-foot-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.008,
+       0.022
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-l"
+    },
+    {
+     "id": "support-foot-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.008,
+       0.022
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      -0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-r"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored for 7.5 mm: four 60 mm pine posts with eased edges and chamfered tops; head and foot ends as frame and panel (30 mm top and bottom rails, 18 mm panels of V-jointed boards); 30 x 160 mm side rails with eased edges and 25 mm ledgers; a 40 x 65 mm cross beam on a centre leg; the sprung slatted base with two base rails and end bars, the lifting head frame on two steel bolts and 28 cambered 38 x 8 mm slats in rubber caps; one 0.90 x 2.00 x 0.20 m mattress in three parts that ride on the slat sections, with rounded ends and piped seams at the top and bottom edges. Glides, screws, the ratchet stay of the head frame, the centre strap of the slats, zip and handles are omitted (below 7.5 mm or hidden).",
+     "de": "Körper, für 7,5 mm gebaut: vier 60-mm-Kiefernpfosten mit gebrochenen Kanten und gefasten Köpfen; Kopf- und Fußteil als Rahmen mit Füllung (30 mm starke obere und untere Riegel, 18 mm starke Füllungen aus Profilbrettern mit V-Fuge); Seitenholme 30 x 160 mm mit gebrochenen Kanten und 25-mm-Auflageleisten; ein Mittelsteg 40 x 65 mm auf einem Mittelfuß; der Federholzrahmen mit zwei Holmen und Querstegen, dem aufstellbaren Kopfrahmen auf zwei Stahlbolzen und 28 gewölbten Federleisten 38 x 8 mm in Kautschukkappen; eine Matratze 0,90 x 2,00 x 0,20 m in drei Teilen, die auf den Rostabschnitten liegen, mit gerundeten Enden und Kedernähten an Ober- und Unterkante. Gleiter, Schrauben, der Rastbeschlag des Kopfrahmens, der Mittelgurt der Leisten, Reißverschluss und Griffe entfallen (unter 7,5 mm oder verdeckt)."
+    },
+    {
+     "en": "Thermal: the mattress is two nested shells, the 10 mm quilted cover (the body surface) around the cold-foam core; the slatted base with rails, caps and bolts is the hidden region inside the frame; every timber part of the frame is the frame surface. Structure: posts, rails, ledgers, cross beam and leg, the base rails, the lifting frame and every slat are the members; the hinge bolts, the bed bolts of the side rails, the dowels of the end rails and the slat caps are the joints; four glides are the supports; each mattress part is a bearing strip of foam along its bone with its mass at the centre. Panels, cover and piping carry nothing and are absent.",
+     "de": "Thermik: die Matratze besteht aus zwei verschachtelten Schalen, dem 10 mm starken Steppbezug (die Körperoberfläche) um den Kaltschaumkern; der Federholzrahmen mit Holmen, Kappen und Bolzen ist die verdeckte Region im Rahmen; jedes Holzteil des Rahmens ist Rahmenoberfläche. Tragwerk: Pfosten, Holme, Auflageleisten, Mittelsteg und Fuß, die Rostholme, der Kopfrahmen und jede Federleiste sind die Stäbe; die Gelenkbolzen, die Bettschrauben der Seitenholme, die Dübel der Querriegel und die Leistenkappen sind die Gelenke; vier Gleiter sind die Auflager; jedes Matratzenteil ist ein tragender Schaumstreifen entlang seines Knochens mit seiner Masse im Schwerpunkt. Füllungen, Bezug und Keder tragen nichts und fehlen."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "post-head",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.95,
+      0.06
+     ],
+     "cornerRadius": 0.008,
+     "transform": {
+      "translation": [
+       0.03,
+       0.475,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "post-foot",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.55,
+      0.06
+     ],
+     "cornerRadius": 0.008,
+     "transform": {
+      "translation": [
+       2.09,
+       0.275,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "head-top-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.89,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "head-panel",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.018,
+      0.55,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.575,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "head-low-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.22,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-top-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.49,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-panel",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.018,
+      0.15,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.375,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-low-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.22,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-rail-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.14,
+       0.455
+      ],
+      [
+       0.14,
+       0.485
+      ],
+      [
+       0.3,
+       0.485
+      ],
+      [
+       0.3,
+       0.455
+      ],
+      [
+       0.205,
+       0.455
+      ],
+      [
+       0.205,
+       0.43
+      ],
+      [
+       0.18,
+       0.43
+      ],
+      [
+       0.18,
+       0.455
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.06,
+     "to": 2.06
+    },
+    {
+     "id": "side-rail-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.14,
+       -0.455
+      ],
+      [
+       0.14,
+       -0.485
+      ],
+      [
+       0.3,
+       -0.485
+      ],
+      [
+       0.3,
+       -0.455
+      ],
+      [
+       0.205,
+       -0.455
+      ],
+      [
+       0.205,
+       -0.43
+      ],
+      [
+       0.18,
+       -0.43
+      ],
+      [
+       0.18,
+       -0.455
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.06,
+     "to": 2.06
+    },
+    {
+     "id": "cross-beam",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.04,
+      0.065,
+      0.91
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.1725,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "leg-mid",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.14,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.07,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-rail-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.315,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.0575,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     }
+    },
+    {
+     "id": "base-rail-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     }
+    },
+    {
+     "id": "base-cross-head",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       -0.7025,
+       -0.0025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-cross-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.6625,
+       -0.0025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "lift-rail",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.69,
+      0.04,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.335,
+       -0.0,
+       0.4025
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.805
+      ]
+     }
+    },
+    {
+     "id": "lift-cross",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.04,
+      0.78
+     ],
+     "transform": {
+      "translation": [
+       -0.6675,
+       -0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-head",
+     "kind": "loft",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.3375,
+        0.03,
+        -0.415
+       ],
+       "rx": 0.3115,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03712,
+        -0.2075
+       ],
+       "rx": 0.3115,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.3115,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03712,
+        0.2075
+       ],
+       "rx": 0.3115,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03,
+        0.415
+       ],
+       "rx": 0.3115,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-mid",
+     "kind": "loft",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.307,
+        0.03,
+        -0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03712,
+        -0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.291,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03712,
+        0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03,
+        0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-foot",
+     "kind": "loft",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.319,
+        0.03,
+        -0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03712,
+        -0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.291,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03712,
+        0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03,
+        0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-head",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        -0.72,
+        0.1,
+        0.0
+       ],
+       "rx": 0.41,
+       "ry": 0.07,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.705,
+        0.1,
+        0.0
+       ],
+       "rx": 0.438,
+       "ry": 0.092,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.675,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.672,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-mid",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.597,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-foot",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.632,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.635,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.665,
+        0.1,
+        0.0
+       ],
+       "rx": 0.438,
+       "ry": 0.092,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.68,
+        0.1,
+        0.0
+       ],
+       "rx": 0.41,
+       "ry": 0.07,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-post-head",
+     "of": "post-head",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-post-foot",
+     "of": "post-foot",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-head-top-rail",
+     "of": "head-top-rail",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-head-panel",
+     "of": "head-panel",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-head-low-rail",
+     "of": "head-low-rail",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-foot-top-rail",
+     "of": "foot-top-rail",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-foot-panel",
+     "of": "foot-panel",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-foot-low-rail",
+     "of": "foot-low-rail",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-side-rail-l",
+     "of": "side-rail-l",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-side-rail-r",
+     "of": "side-rail-r",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-cross-beam",
+     "of": "cross-beam",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-leg-mid",
+     "of": "leg-mid",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-base-rail-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.315,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.0575,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-base-rail-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.045,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       -0.0025,
+       0.4325
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.865
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-base-cross-head",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       -0.7025,
+       -0.0025,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-base-cross-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.045,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.6625,
+       -0.0025,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-lift-rail",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.69,
+      0.04,
+      0.025
+     ],
+     "transform": {
+      "translation": [
+       -0.335,
+       -0.0,
+       0.4025
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.805
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-lift-cross",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.025,
+      0.04,
+      0.78
+     ],
+     "transform": {
+      "translation": [
+       -0.6675,
+       -0.0,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-slat-head",
+     "kind": "loft",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.3375,
+        0.03,
+        -0.415
+       ],
+       "rx": 0.3115,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03712,
+        -0.2075
+       ],
+       "rx": 0.3115,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.3115,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03712,
+        0.2075
+       ],
+       "rx": 0.3115,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        -0.3375,
+        0.03,
+        0.415
+       ],
+       "rx": 0.3115,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "slats"
+    },
+    {
+     "id": "th-slat-mid",
+     "kind": "loft",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.307,
+        0.03,
+        -0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03712,
+        -0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.291,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03712,
+        0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.307,
+        0.03,
+        0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "slats"
+    },
+    {
+     "id": "th-slat-foot",
+     "kind": "loft",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.319,
+        0.03,
+        -0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03712,
+        -0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.0395,
+        0.0
+       ],
+       "rx": 0.291,
+       "ry": 0.0155,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03712,
+        0.2225
+       ],
+       "rx": 0.291,
+       "ry": 0.01412,
+       "exponent": 8
+      },
+      {
+       "at": [
+        0.319,
+        0.03,
+        0.445
+       ],
+       "rx": 0.291,
+       "ry": 0.01,
+       "exponent": 8
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "region": "slats"
+    },
+    {
+     "id": "th-mat-head",
+     "of": "mat-head",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-mid",
+     "of": "mat-mid",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-foot",
+     "of": "mat-foot",
+     "region": "mattress"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-post-head",
+     "of": "post-head",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-post-foot",
+     "of": "post-foot",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-top-rail",
+     "of": "head-top-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-low-rail",
+     "of": "head-low-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-top-rail",
+     "of": "foot-top-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-low-rail",
+     "of": "foot-low-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-side-rail-l",
+     "of": "side-rail-l",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-side-rail-r",
+     "of": "side-rail-r",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-cross-beam",
+     "of": "cross-beam",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-leg-mid",
+     "of": "leg-mid",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-base-rail-mid",
+     "of": "base-rail-mid",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-base-cross-head",
+     "of": "base-cross-head",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-mid",
+     "of": "slat-mid",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-base-rail-foot",
+     "of": "base-rail-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-base-cross-foot",
+     "of": "base-cross-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-foot",
+     "of": "slat-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-lift-rail",
+     "of": "lift-rail",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-lift-cross",
+     "of": "lift-cross",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-head",
+     "of": "slat-head",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-mat-head",
+     "kind": "box",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.68,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-head",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-head",
+     "kind": "ellipsoid",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-head",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-mid",
+     "kind": "box",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.56,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-mid",
+     "kind": "ellipsoid",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-foot",
+     "kind": "box",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.64,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-foot",
+     "kind": "ellipsoid",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "mass"
+    },
+    {
+     "id": "joint-hinge-l",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.075,
+       0.0075
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.38
+     ],
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-hinge-r",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.075,
+       0.0075
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.38
+     ],
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-rail-head-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.005,
+      0.18,
+      0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-head-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.005,
+      0.18,
+      -0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.005,
+      0.18,
+      0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-rail-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0075
+      ],
+      [
+       0.11,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.005,
+      0.18,
+      -0.47
+     ],
+     "member": "frame",
+     "part": "joint",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "support-foot-head",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.015,
+       0.025
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.03,
+      0.0,
+      0.475
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-head"
+    },
+    {
+     "id": "support-foot-mid",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.015,
+       0.025
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      1.06,
+      0.0,
+      0.0
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-mid"
+    },
+    {
+     "id": "support-foot-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.015,
+       0.025
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-l"
+    },
+    {
+     "id": "support-foot-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.015,
+       0.025
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      -0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-r"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored anew for 15 mm: plain rounded posts without chamfer; rails and panels as plain boards at their true thickness; side rail and ledger merged into one L section; base rails, end bars and lifting frame kept; the slats and caps of each section merged into one cambered deck; the mattress parts with a simpler rounding and without piping. Bolts and V joints are omitted.",
+     "de": "Körper, für 15 mm neu gebaut: glatte gerundete Pfosten ohne Fase; Riegel und Füllungen als glatte Bretter in wahrer Dicke; Seitenholm und Auflageleiste zu einem L-Profil verschmolzen; Rostholme, Querstege und Kopfrahmen bleiben; Leisten und Kappen jedes Abschnitts zu einem gewölbten Deck verschmolzen; die Matratzenteile mit einfacherer Rundung und ohne Keder. Bolzen und V-Fugen entfallen."
+    },
+    {
+     "en": "Thermal: one surface per region, the mattress layers merged (cover and core are told apart only at 1:50). Structure: the frame members, base rails, lifting frame and slat decks; hinge and bed bolts as 15 mm pins; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: eine Oberfläche je Region, die Matratzenschichten verschmolzen (Bezug und Kern werden nur bei 1:50 unterschieden). Tragwerk: die Rahmenstäbe, Rostholme, Kopfrahmen und Leistendecks; Gelenk- und Bettbolzen als 15-mm-Stifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "post-head",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.95,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.475,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "post-foot",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.55,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.275,
+       0.475
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "head-board",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.79,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.535,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-board",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.39,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.335,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      2.0,
+      0.16,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.22,
+       0.47
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.94
+      ]
+     }
+    },
+    {
+     "id": "cross-beam",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.04,
+      0.065,
+      0.91
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.1725,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "leg-mid",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.14,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.07,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-head",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.715,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       -0.3575,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.6,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "slat-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mat-head",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        -0.72,
+        0.1,
+        0.0
+       ],
+       "rx": 0.42,
+       "ry": 0.075,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.708,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.093,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.68,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.677,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        -0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-mid",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.597,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-foot",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.003,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.637,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.64,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.668,
+        0.1,
+        0.0
+       ],
+       "rx": 0.44,
+       "ry": 0.093,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.68,
+        0.1,
+        0.0
+       ],
+       "rx": 0.42,
+       "ry": 0.075,
+       "exponent": 10
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-post-head",
+     "of": "post-head",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-post-foot",
+     "of": "post-foot",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-head-board",
+     "of": "head-board",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-foot-board",
+     "of": "foot-board",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-side-rail",
+     "of": "side-rail",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-cross-beam",
+     "of": "cross-beam",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-leg-mid",
+     "of": "leg-mid",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-slat-head",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.715,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       -0.3575,
+       0.015,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-slat-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.6,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.015,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-slat-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.675,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.3375,
+       0.015,
+       0.0
+      ]
+     },
+     "region": "slats"
+    },
+    {
+     "id": "th-mat-head",
+     "of": "mat-head",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-mid",
+     "of": "mat-mid",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-foot",
+     "of": "mat-foot",
+     "region": "mattress"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-post-head",
+     "of": "post-head",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-post-foot",
+     "of": "post-foot",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-side-rail",
+     "of": "side-rail",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-cross-beam",
+     "of": "cross-beam",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-leg-mid",
+     "of": "leg-mid",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-top-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.89,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-head-low-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.22,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-top-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.08,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.49,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-low-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.22,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-head",
+     "of": "slat-head",
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-mid",
+     "of": "slat-mid",
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-foot",
+     "of": "slat-foot",
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-mat-head",
+     "kind": "box",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.68,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-head",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-head",
+     "kind": "ellipsoid",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-head",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-mid",
+     "kind": "box",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.56,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-mid",
+     "kind": "ellipsoid",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-foot",
+     "kind": "box",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.64,
+      0.03,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-foot",
+     "kind": "ellipsoid",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "mass"
+    },
+    {
+     "id": "joint-hinge-l",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.075,
+       0.015
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.38
+     ],
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-hinge-r",
+     "kind": "revolve",
+     "bone": "slat-mid",
+     "material": "steel-fitting",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.075,
+       0.015
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.38
+     ],
+     "member": "slat-head",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-head",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.03,
+      0.0,
+      0.475
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-head"
+    },
+    {
+     "id": "support-foot-mid",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      1.06,
+      0.0,
+      0.0
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-mid"
+    },
+    {
+     "id": "support-foot-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-l"
+    },
+    {
+     "id": "support-foot-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      -0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-r"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored anew for 30 mm: square posts; head and foot end as one 30 mm board each from the rail to the top rail; side rails; cross beam and leg; every slat section merged with its rails into one slab from the ledger to the slat crowns; mattress parts with one rounding step. Ledgers, panels as separate parts and all fittings are merged or omitted.",
+     "de": "Körper, für 30 mm neu gebaut: kantige Pfosten; Kopf- und Fußteil je ein 30-mm-Brett vom Holm bis zum oberen Riegel; Seitenholme; Mittelsteg und Fuß; jeder Rostabschnitt mit seinen Holmen zu einer Platte von der Auflageleiste bis zum Leistenscheitel verschmolzen; Matratzenteile mit einer Rundungsstufe. Auflageleisten, Füllungen als eigene Teile und alle Beschläge sind verschmolzen oder entfallen."
+    },
+    {
+     "en": "Thermal: one surface per region; the slat slabs are the hidden region. Structure: posts, side rails, the top and bottom rails of both ends as members of their own (the boards are cladding), cross beam, leg and the slat slabs; hinge pins; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: eine Oberfläche je Region; die Rostplatten sind die verdeckte Region. Tragwerk: Pfosten, Seitenholme, die oberen und unteren Riegel beider Enden als eigene Stäbe (die Bretter sind Verkleidung), Mittelsteg, Fuß und die Rostplatten; Gelenkstifte; Gleiter; Tragstreifen und Massen der Matratzenteile."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "head",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.95,
+      1.01
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.475,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.55,
+      1.01
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.275,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      2.0,
+      0.16,
+      0.97
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.22,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "leg-mid",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.14,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.07,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mat-head",
+     "kind": "loft",
+     "bone": "mat-head",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        -0.72,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-mid",
+     "kind": "loft",
+     "bone": "mat-mid",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.6,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "mat-foot",
+     "kind": "loft",
+     "bone": "mat-foot",
+     "material": "quilted-cover",
+     "role": "body",
+     "tone": 0.85,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.68,
+        0.1,
+        0.0
+       ],
+       "rx": 0.45,
+       "ry": 0.1,
+       "exponent": 6
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-foot",
+     "of": "foot",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-tray",
+     "of": "tray",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-leg-mid",
+     "of": "leg-mid",
+     "region": "bed-frame"
+    },
+    {
+     "id": "th-mat-head",
+     "of": "mat-head",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-mid",
+     "of": "mat-mid",
+     "region": "mattress"
+    },
+    {
+     "id": "th-mat-foot",
+     "of": "mat-foot",
+     "region": "mattress"
+    },
+    {
+     "id": "th-slats",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.96,
+      0.075,
+      0.88
+     ],
+     "transform": {
+      "translation": [
+       0.28,
+       0.0125,
+       0.0
+      ]
+     },
+     "region": "slats"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-post-head",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.95,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.475,
+       0.475
+      ]
+     },
+     "member": "frame",
+     "part": "member",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "member-post-foot",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.55,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.275,
+       0.475
+      ]
+     },
+     "member": "frame",
+     "part": "member",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     }
+    },
+    {
+     "id": "member-side-rail",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      2.0,
+      0.16,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       1.06,
+       0.22,
+       0.4475
+      ]
+     },
+     "member": "frame",
+     "part": "member",
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.895
+      ]
+     }
+    },
+    {
+     "id": "member-end-rail-head",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.22,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-end-rail-foot",
+     "kind": "box",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.06,
+      0.16,
+      0.89
+     ],
+     "transform": {
+      "translation": [
+       2.09,
+       0.22,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-leg-mid",
+     "of": "leg-mid",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-head",
+     "kind": "box",
+     "bone": "slat-head",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.7,
+      0.075,
+      0.82
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       0.0125,
+       0.0
+      ]
+     },
+     "member": "slat-head",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-mid",
+     "kind": "box",
+     "bone": "slat-mid",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.6,
+      0.075,
+      0.82
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.0125,
+       0.0
+      ]
+     },
+     "member": "slat-mid",
+     "part": "member"
+    },
+    {
+     "id": "member-slat-foot",
+     "kind": "box",
+     "bone": "slat-foot",
+     "material": "birch-slat",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.66,
+      0.075,
+      0.82
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       0.0125,
+       0.0
+      ]
+     },
+     "member": "slat-foot",
+     "part": "member"
+    },
+    {
+     "id": "member-mat-head",
+     "kind": "box",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.68,
+      0.075,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.0375,
+       0.0
+      ]
+     },
+     "member": "mat-head",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-head",
+     "kind": "ellipsoid",
+     "bone": "mat-head",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.0375,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-head",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-mid",
+     "kind": "box",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.56,
+      0.075,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.0375,
+       0.0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-mid",
+     "kind": "ellipsoid",
+     "bone": "mat-mid",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.0375,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-mid",
+     "part": "mass"
+    },
+    {
+     "id": "member-mat-foot",
+     "kind": "box",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.64,
+      0.075,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.0375,
+       0.0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "member"
+    },
+    {
+     "id": "mass-mat-foot",
+     "kind": "ellipsoid",
+     "bone": "mat-foot",
+     "material": "cold-foam",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.075,
+      0.0375,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.34,
+       0.1,
+       0
+      ]
+     },
+     "member": "mat-foot",
+     "part": "mass"
+    },
+    {
+     "id": "support-foot-head",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.03,
+      0.0,
+      0.475
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.95
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-head"
+    },
+    {
+     "id": "support-foot-mid",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      1.06,
+      0.0,
+      0.0
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-mid"
+    },
+    {
+     "id": "support-foot-foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-l"
+    },
+    {
+     "id": "support-foot-foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      2.09,
+      0.0,
+      -0.475
+     ],
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-foot-r"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored anew for 75 mm: head end and foot end as one panel each at their true heights of 0.95 and 0.55 m, side rails and slatted base merged into one tray on the centre leg, the mattress as three plain blocks with soft long edges on their bones. The model is minimal: nothing smaller can be left out without losing the bed.",
+     "de": "Körper, für 75 mm neu gebaut: Kopf- und Fußteil je eine Platte in wahrer Höhe von 0,95 und 0,55 m, Seitenholme und Lattenrost zu einer Wanne auf dem Mittelfuß verschmolzen, die Matratze als drei glatte Blöcke mit weichen Längskanten auf ihren Knochen. Das Modell ist minimal: kleiner geht es nicht, ohne das Bett zu verlieren."
+    },
+    {
+     "en": "Thermal: panels, tray and leg are the frame surface, the mattress blocks the mattress surface, the slatted base is one hidden plate inside the tray. Structure: four posts, two side rails, the two end rails, the leg and three slat plates as members; glides; bearing strips and masses of the mattress parts.",
+     "de": "Thermik: Platten, Wanne und Fuß sind die Rahmenoberfläche, die Matratzenblöcke die Matratzenoberfläche, der Lattenrost ist eine verdeckte Platte in der Wanne. Tragwerk: vier Pfosten, zwei Seitenholme, die beiden Querriegel, der Fuß und drei Rostplatten als Stäbe; Gleiter; Tragstreifen und Massen der Matratzenteile."
+    }
+   ]
+  }
+ }
+}

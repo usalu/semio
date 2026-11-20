@@ -15,7 +15,7 @@ use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Wfc3dSnapshot, diff = Wfc3dDiff, schema = "wfc3d", reference = Wfc3dSnapshot, reference_diff = Wfc3dDiff)]
 pub enum Wfc3dMutation {
@@ -37,6 +37,8 @@ pub enum Wfc3dMutation {
     DragSlots(crate::standards::v1::subsets::any::schema::mutations::drag_slots::DragSlots),
     SetSlotPositions(crate::standards::v1::subsets::any::schema::mutations::set_slot_positions::SetSlotPositions),
 }
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Wfc3dMutation`] variant, in declaration order — the exact

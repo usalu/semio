@@ -187,6 +187,16 @@ impl ShellInputState {
         let _ = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
     }
 
+    /// 👋️ Retires the retained body's hover when shell layers or a specialized surface own the pointer.
+    pub fn leave_retained_pointer_window(&mut self, pointer_id: ui_render::PointerId, input: &mut InputState<ActionDescriptor>) {
+        let Some(window_id) = self.retained_hover_window.as_deref() else { return };
+        if semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_window_pointer_capture(window_id).is_some_and(|owner| owner != pointer_id) {
+            return;
+        }
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerLeave, input);
+        self.retained_hover_window = None;
+    }
+
     //#endregion 🎯️RetainedPointerRouting
     /// 🎡️ A published scene hit owns its notch after modal and anchored-panel precedence.
     pub fn wheel_reaches_scene_surface(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> bool {

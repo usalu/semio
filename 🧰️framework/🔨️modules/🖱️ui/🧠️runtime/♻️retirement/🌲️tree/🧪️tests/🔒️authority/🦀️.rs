@@ -72,6 +72,7 @@ fn runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmissi
 }
 #[test]
 fn runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let generation = 91_403;
     let mut reservations = HandbackReservations(Vec::new());

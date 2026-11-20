@@ -17,7 +17,7 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 
 fn with_system() -> ModelSnapshot {
     let mut snapshot = demo();
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
     snapshot
 }
 

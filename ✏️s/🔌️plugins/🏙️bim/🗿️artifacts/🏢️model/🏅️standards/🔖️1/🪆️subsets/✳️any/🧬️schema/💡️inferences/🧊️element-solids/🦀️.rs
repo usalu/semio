@@ -269,7 +269,7 @@ pub fn dep_records<'a, T: Anonymous + semio_framework_value::ToValue + 'a>(rows:
 }
 
 /// 🔑️ A dependency value of the types of a library that the given ids name (a missing type is a null, so adding it changes the dependency).
-pub fn dep_types<'a, T: Clone + semio_framework_value::ToValue>(ids: impl IntoIterator<Item = &'a String>, library: &std::collections::BTreeMap<String, T>) -> DslValue {
+pub fn dep_types<'a, T: Clone + semio_framework_value::ToValue>(ids: impl IntoIterator<Item = &'a String>, library: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, T>) -> DslValue {
     let ids: std::collections::BTreeSet<&String> = ids.into_iter().collect();
     DslValue::object(ids.into_iter().map(|id| (id.clone(), dep_value(&library.get(id).cloned()))))
 }

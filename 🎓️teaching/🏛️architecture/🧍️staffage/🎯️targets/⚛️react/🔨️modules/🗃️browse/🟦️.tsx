@@ -6,7 +6,7 @@
  * @see ../🔎️search/🟦️.ts — the pure search, filter and sort
  * @see ../🥞️levels/🟦️.tsx — the nested grid of a category
  */
-import { useId, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useId, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, COMPLETION, formatNumber } from "@teaching/staffage";
 import type { CategoryId, Completion } from "@teaching/staffage";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
@@ -193,9 +193,27 @@ export function BrowsePage(props: { readonly view: PaneView }): ReactElement {
   const { filters, set } = useAddressFilters(route, view.opened);
   const loading = useAssetLoading(catalog, view.opened || view.revealed, "all", JSON.stringify(filters.q));
   const shown = useMemo(() => filterAndSort(rows, filters, language), [rows, filters, language]);
+  const [grid, setGrid] = useState<HTMLElement | null>(null);
+  const [visible, setVisible] = useState<ReadonlySet<string>>(() => new Set());
+  useLayoutEffect(() => {
+    if (view.opened || !grid || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(entries => {
+      setVisible(previous => {
+        const next = new Set(previous);
+        for (const entry of entries) {
+          const id = (entry.target as HTMLElement).dataset.previewAsset!;
+          if (entry.isIntersecting) next.add(id);
+          else next.delete(id);
+        }
+        return next;
+      });
+    }, { root: grid.closest("[data-page]") });
+    for (const cell of grid.children) if ((cell as HTMLElement).dataset.previewAsset) observer.observe(cell);
+    return () => observer.disconnect();
+  }, [view.opened, grid, shown]);
   return (
     <PageFrame page="all" wide eyebrow={t("all.eyebrow")} title={t("all.title")} lede={t("all.lede")}>
-      <FilterToolbar filters={filters} onChange={set} shown={shown.length} total={rows.length} disabled={!view.opened} />
+      {view.opened ? <FilterToolbar filters={filters} onChange={set} shown={shown.length} total={rows.length} /> : null}
       <LoadingNotice loading={loading} />
       {manifestIssues !== null && manifestIssues.length > 0 ? (
         <Notice kind="info" compact title={t("state.manifestIssues.title", { count: manifestIssues.length })}>
@@ -207,10 +225,10 @@ export function BrowsePage(props: { readonly view: PaneView }): ReactElement {
           {t("state.noResults.body")}
         </Notice>
       ) : (
-        <CardGrid as="ul" minColumn="16rem" className="m-0 list-none">
+        <CardGrid ref={setGrid} as="ul" minColumn="16rem" className="m-0 list-none">
           {shown.map((row) => (
-            <CardGridCell as="li" key={row.entry.id} className="h-72">
-              <AssetCard row={row} />
+            <CardGridCell as="li" key={row.entry.id} data-preview-asset={row.entry.id} className="h-72">
+              {view.opened || typeof IntersectionObserver === "undefined" || visible.has(row.entry.id) ? <AssetCard row={row} /> : null}
             </CardGridCell>
           ))}
         </CardGrid>
@@ -233,7 +251,7 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const here: Route = { page: "category", category };
   const inside = view.opened && (route.page === "category" || route.page === "asset") && route.category === category;
   const { filters, set } = useAddressFilters(here, inside, category);
-  const loading = useAssetLoading(catalog, true, [category], category);
+  const loading = useAssetLoading(catalog, inside || view.revealed, [category], category);
   const own = useMemo(() => rows.filter((row) => row.entry.category === category), [rows, category]);
   const opened = inside && route.page === "asset" ? route.asset : null;
   const filtered = useMemo(() => filterAndSort(own, filters, language), [own, filters, language]);
@@ -255,7 +273,7 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
           </h1>
           <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{entry?.description[language]}</p>
         </SharedBorderRowCell>
-        <FilterToolbar filters={filters} onChange={set} fixedCategory={category} shown={filtered.length} total={own.length} compact disabled={!inside} />
+        {inside && opened === null ? <FilterToolbar filters={filters} onChange={set} fixedCategory={category} shown={filtered.length} total={own.length} compact /> : null}
         <LoadingNotice loading={loading} />
       </Column>
       <div ref={attach} className="relative min-h-0 flex-1">

@@ -101,7 +101,7 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
                 <p className="m-0 text-foreground">{resolution.message[language]}</p>
                 {resolution.details === undefined ? null : (
                   <details>
-                    <summary>{viewpointWord("viewpoints.failedDetails", language)}</summary>
+                    <summary data-shared-border-frame="" data-shared-border-edges="">{viewpointWord("viewpoints.failedDetails", language)}</summary>
                     <code className="font-mono">{resolution.details}</code>
                   </details>
                 )}
@@ -111,6 +111,7 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
             <button
               type="button"
               aria-pressed={focused}
+              data-shared-border-frame=""
               onClick={() => onFocus?.(viewpoint)}
               onPointerDown={(event) => event.stopPropagation()}
               className={cn("absolute left-1 top-1 border border-border px-single text-[0.65rem] uppercase tracking-wide", focused ? "bg-active-base text-active-foreground" : "bg-panel text-muted-foreground hover:bg-hover-panel")}

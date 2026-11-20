@@ -27,12 +27,12 @@ fn zones_schemes_memberships_and_finishes_survive_the_round_trip_exactly() {
 #[test]
 fn export_import_export_of_a_zoned_model_is_byte_stable() {
     let mut model = zoned();
-    model.roofs.clear();
-    model.stairs.clear();
-    model.railings.clear();
-    model.curtain_walls.clear();
-    model.slabs.remove("sl-balcony");
-    model.spaces.remove("sp-1");
+    model.roofs.cold_clear();
+    model.stairs.cold_clear();
+    model.railings.cold_clear();
+    model.curtain_walls.cold_clear();
+    model.slabs.cold_remove("sl-balcony");
+    model.spaces.cold_remove("sp-1");
     let bedroom = model.spaces.get_mut("sp-2").expect("the bedroom");
     (bedroom.wall_finish, bedroom.ceiling_finish) = (Some("m-brick".into()), Some("m-conc".into()));
     let first = exported(&model);
@@ -78,8 +78,8 @@ fn an_area_scheme_counting_an_unknown_zone_drops_it_and_a_scheme_stays_a_scheme(
 #[test]
 fn a_model_without_zoning_imports_without_zoning() {
     let mut model = zoned();
-    model.zones.clear();
-    model.area_schemes.clear();
+    model.zones.cold_clear();
+    model.area_schemes.cold_clear();
     for space in model.spaces.values_mut() {
         (space.zone, space.floor_finish, space.wall_finish, space.ceiling_finish) = (None, None, None, None);
     }

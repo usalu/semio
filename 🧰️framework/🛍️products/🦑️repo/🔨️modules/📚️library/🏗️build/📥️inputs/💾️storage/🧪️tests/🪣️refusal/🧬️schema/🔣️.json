@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "required": [
+      "case",
+      "bytes",
+      "gate"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "case": {
+        "enum": [
+          "publication",
+          "headroom",
+          "retained",
+          "ledger"
+        ]
+      },
+      "bytes": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "const": "physical"
+          }
+        ]
+      },
+      "gate": {
+        "type": "boolean"
+      }
+    }
+  }
+}

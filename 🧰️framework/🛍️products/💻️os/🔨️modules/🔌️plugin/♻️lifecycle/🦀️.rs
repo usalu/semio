@@ -484,6 +484,11 @@ where
         self.authority.as_ref().map_or((0, 0), |authority| authority.progress())
     }
 
+    /// 📐️ Reads the next indivisible initializer step from its retained authority.
+    pub fn next_step_demands(&self) -> Result<RetirementDemand, ValueError> {
+        self.authority.as_ref().map_or(Ok(Default::default()), |authority| authority.next_step_demands())
+    }
+
     pub fn accept_terminal_failure(&mut self) -> bool {
         if !self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
             return false;
@@ -539,7 +544,7 @@ where
             if !authority.terminal_is_empty(){
                 let remaining=cx.retained_grant();
                 if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_depth<demand.depth||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:Default::default()})}
-                let child=RetainedCloneGrant{maximum_items:1,maximum_depth:remaining.maximum_depth-1,..remaining};
+                let child=RetainedCloneGrant{maximum_depth:remaining.maximum_depth-1,..remaining};
                 let step=cx.with_retained_loan(child,|same|authority.close_step(same))?;
                 return Ok(Step::Pending{progress:step.progress()})
             }

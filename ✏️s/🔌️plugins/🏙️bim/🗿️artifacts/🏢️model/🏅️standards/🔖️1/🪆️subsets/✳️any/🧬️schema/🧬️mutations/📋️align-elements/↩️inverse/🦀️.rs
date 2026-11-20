@@ -11,7 +11,7 @@ where
     Op: From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
 {
     match changes(payload, base) {
-        Ok(change) if !change.before.is_empty() => vec![Op::from(PlaceElements { placements: change.before })],
+        Ok(change) if !change.before.is_empty() => vec![Op::from(PlaceElements { placements: change.before.into_iter().collect() })],
         _ => Vec::new(),
     }
 }

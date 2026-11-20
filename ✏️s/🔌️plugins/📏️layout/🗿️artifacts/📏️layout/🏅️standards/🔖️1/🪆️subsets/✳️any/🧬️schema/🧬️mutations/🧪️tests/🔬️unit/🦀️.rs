@@ -1,5 +1,6 @@
+use semio_os_kernel as store;
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
-use crate::text::mutations_codec::bridge_decode_pair;
+use crate::text::bridge_decode_pair;
 use super::*;
 use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds, LayoutRect, TextStory};
 use protocol::{ColdMutation, Mutation, ColdMutationDiff, MutationDiff, SemanticMutation};

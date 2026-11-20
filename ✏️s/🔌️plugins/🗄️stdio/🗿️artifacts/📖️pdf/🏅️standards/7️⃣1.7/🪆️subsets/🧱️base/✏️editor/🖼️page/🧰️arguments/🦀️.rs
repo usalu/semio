@@ -3,9 +3,7 @@
 use super::*;
 
 //#region 🧰️Arguments
-pub(super) fn fault(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.page-edit"), message)
-}
+
 
 pub(super) fn text_arg(args: Option<&semio_framework_value::DslValue>, key: &str) -> String {
     committed_argument(args, key).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_text_argument(args, &[key], ""))

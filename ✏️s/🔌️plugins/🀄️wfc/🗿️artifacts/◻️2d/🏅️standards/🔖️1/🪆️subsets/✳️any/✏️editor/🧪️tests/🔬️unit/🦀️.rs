@@ -114,8 +114,7 @@ fn commands_round_trip_through_their_binary_codec() {
 /// `pub(crate)` in the framework crate — and neither is read by this artifact's render.
 /// 🎨 …and the difference is the tile media, not an incidental label: the solved projection carries
 /// one path layer per solved slot, the unsolved one carries none.
-/// 🔎️ `ComponentTree` is `Debug` but not `PartialEq`, so the two renders are compared by their
-/// debug projection — enough to prove the lane is read, and it fails loudly if it ever is not.
+/// 🔎️ The fixture tree projection includes the surface bytes and retained child lanes that the host reads.
 #[semio_framework_async_macros::async_test]
 async fn the_host_render_path_paints_the_solved_assignment() {
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
@@ -139,14 +138,15 @@ async fn the_host_render_path_paints_the_solved_assignment() {
 
     let painted = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).expect("the host render path renders");
     let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
-    assert_ne!(format!("{painted:?}"), format!("{unsolved:?}"), "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
+    let unsolved = project_preview_tree(unsolved);
+    assert_ne!(project_preview_tree(painted), unsolved, "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
 
     let changed = semio_plugin::ArtifactView::with_render_context(&document, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [2;32], ..context }, "wfc2d", None).await;
     let stale = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &changed, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).unwrap();
-    assert_eq!(serde_json::to_value(&stale.root).unwrap(), serde_json::to_value(&unsolved.root).unwrap());
+    assert_eq!(project_preview_tree(stale), unsolved);
     let unbound = semio_plugin::ArtifactView::new(&document, &history);
     let hidden = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &unbound, &cfg, &semio_plugin::TransientView { snapshot: &solved, window: None }).unwrap();
-    assert_eq!(serde_json::to_value(&hidden.root).unwrap(), serde_json::to_value(&unsolved.root).unwrap());
+    assert_eq!(project_preview_tree(hidden), unsolved);
     let solved_layers = preview::preview_layers_json(&document, &solved, None);
     let unsolved_layers = preview::preview_layers_json(&document, &empty, None);
     for slot in &document.slots {
@@ -427,10 +427,11 @@ async fn mounted_live_fill_obeys_the_portable_revision_contract() {
         let payload = crate::editor::wfc2d::modes::edit::tools::fill::Wfc2dFillTickPayload { source_revision: source.clone(), assignments: document.slots.iter().map(|slot| (slot.id.clone(), Some(document.tiles[0].id.clone()))).collect(), contradiction: false, done: false, trace: Vec::new() };
         let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, source.try_into().unwrap_or([9;32]));
         let mut run = semio_plugin::ToolRunView::new("fill", identity, semio_framework_tool_run::ToolRunState::Running);
-        run.payload = Some(crate::editor::wfc2d::modes::edit::tools::fill::encode_fill_payload(&payload).into());
-        let doc = doc.with_tool_run(Some(run));
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(crate::editor::wfc2d::modes::edit::tools::fill::encode_fill_payload(&payload)));
+        let mut doc = doc.with_tool_run(Some(run));
         let actual = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
-        let different = serde_json::to_value(&actual.root).unwrap() != serde_json::to_value(&baseline.root).unwrap();
+        retire_run(doc.take_tool_run().expect("the bound run"));
+        let different = project_preview_tree(actual) != project_preview_tree(baseline);
         assert_eq!(different, case["visible"].as_bool().unwrap(), "{}", case["id"]);
     }
 }
@@ -453,10 +454,30 @@ fn completed_live_preview_uses_authoritative_assignments_and_partial_preview_kee
         assert!(!state.is_terminal());
         let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, revision);
         let mut run = semio_plugin::ToolRunView::new("fill", identity, state);
-        run.payload = Some(fill::encode_fill_payload(&payload).into());
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(fill::encode_fill_payload(&payload)));
         let expected = Wfc2dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc2dAssignment { slot_id: slot, tile_id: tile("expected") }], ..Default::default() };
         let actual = crate::editor::wfc2d::render_body(preview::WFC_2D_PREVIEW_BODY, &document, &config, &Wfc2dTransient::default(), Some(&run), Some(revision)).unwrap();
         let baseline = crate::editor::wfc2d::render_body(preview::WFC_2D_PREVIEW_BODY, &document, &config, &expected, None, Some(revision)).unwrap();
-        assert_eq!(serde_json::to_value(&actual.root).unwrap(), serde_json::to_value(&baseline.root).unwrap(), "{}", case["id"]);
+        retire_run(run);
+        assert_eq!(project_preview_tree(actual), project_preview_tree(baseline), "{}", case["id"]);
+    }
+}
+
+/// 🌳️ Projects and retires the actual preview tree, including its retained children.
+fn project_preview_tree(tree: semio_plugin::ComponentTree) -> String {
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the preview tree projects")
+}
+
+/// ♻️ Retires both shared original storages of a tool run so neither alias ever drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
     }
 }

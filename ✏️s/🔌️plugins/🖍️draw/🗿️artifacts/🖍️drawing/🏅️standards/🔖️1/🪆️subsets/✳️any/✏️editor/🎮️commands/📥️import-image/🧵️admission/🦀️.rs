@@ -5,7 +5,7 @@ use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use semio_s_artifact_draw_drawing_io::image::DrawingImageAdmissionJob;
 use semio_s_artifact_draw_drawing_editor_commands::import_image::publication::DrawingImagePublicationJob;
 use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant},ValueError};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
@@ -55,8 +55,21 @@ impl ArtifactCommandWork<App> for Work {
     let receipt=publication.advance(input.snapshot,payload,input.operation,grant).map_err(|error|Fault::from(error.into_message()))?;cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.set_stage("image-publication");cx.consume_fuel(1);if receipt.copied_items==0{break;}continue;
    }
    if workspace.job.as_ref().unwrap().progress().done{let Some((asset,mut receipt))=workspace.job.as_mut().unwrap().take_result(grant).map_err(|_|Fault::from("Image asset handoff refused"))?else{break;};workspace.publication=Some(DrawingImagePublicationJob::new(asset,input.operation));receipt.copied_bytes+=size_of::<DrawingImagePublicationJob>();cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.consume_fuel(1);continue;}
-   let(progress,receipt)=workspace.job.as_mut().unwrap().advance(payload.payload.as_str(),grant).map_err(|_|Fault::from("Image decoder work refused"))?;
-   cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.set_stage(if progress.samples>0{"image-samples"}else{progress.decoding.map_or("image-decode",|progress|progress.phase)});cx.consume_fuel(1);
+   let mut decoded = None;
+   let invocation = cx.with_original_effect(grant, |_, effect| {
+    let result = workspace.job.as_mut().unwrap().advance(payload.payload.as_str(), effect);
+    decoded = Some((result, effect.performed_work()));
+   });
+   if let Some((result, performed)) = &decoded {
+    cx.consume_fuel(u64::try_from(*performed).unwrap_or(u64::MAX).max(1));
+    if let Ok((_, receipt)) = result {
+     cx.consume_retained(*receipt).map_err(|error|Fault::from(error.into_message()))?;
+    }
+   }
+   invocation.map_err(|error|Fault::from(error.into_message()))?;
+   let Some((result, _)) = decoded else { break; };
+   let (progress,receipt)=result.map_err(|_|Fault::from("Image decoder work refused"))?;
+   cx.set_stage(if progress.samples>0{"image-samples"}else{progress.decoding.map_or("image-decode",|progress|progress.phase)});
    if receipt.copied_items==0{break;}
   }
   Ok(ArtifactCommandWorkStep::Progress{stage:"image-import",preview:b""})
@@ -65,7 +78,18 @@ impl ArtifactCommandWork<App> for Work {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
  fn begin_close(&mut self){self.closing=true;}
- fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{result:(||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}let Some(workspace)=self.workspace.as_mut() else{return Ok(InteractiveJobCloseStep::Complete {progress:Default::default()});};Ok(match workspace.step(grant){Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>return Err(error)})})(),work:0})}
+ fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+        if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+        let Some(workspace) = self.workspace.as_mut() else {
+            return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+        };
+        let body = cx.retained_grant().maximum_copy_bytes;
+        let demand = workspace.next_demand(body)?;
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| workspace.step(body, effect))?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
+    }
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
  fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),|workspace|workspace.next_capacity_byte_demand(copy))}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
@@ -97,4 +121,3 @@ pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>
  semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,false,|_|work)
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Work);

@@ -24,5 +24,7 @@ async fn lists_the_first_entity_of_the_document_with_a_select_row() {
         .expect("the reference document has an entity");
     let rendered = context::render(&mut app, BODY_OUTLINER).await;
     assert!(rendered.contains(&id) && rendered.contains("select"), "outliner lists {id}: {rendered}");
+    let collections = semio_s_artifact_norm_en1991_scene::ENTITY_KINDS.iter().filter(|kind| matches!(tree.get(kind.collection), Some(DslValue::Array(_)))).count();
+    assert!(rendered.contains(&format!("\"total\":{collections}")), "the outliner retains the full collection count: {rendered}");
     context::close(&mut app);
 }

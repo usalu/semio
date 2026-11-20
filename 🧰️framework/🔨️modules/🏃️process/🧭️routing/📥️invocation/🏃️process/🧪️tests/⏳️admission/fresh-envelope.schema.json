@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "sampleMilliseconds",
+    "stallStepsMilliseconds",
+    "intervalMilliseconds",
+    "observeMilliseconds",
+    "expiredByMilliseconds",
+    "maximumMilliseconds",
+    "languages"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sampleMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "intervalMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observeMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expiredByMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "languages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "stallStepsMilliseconds": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  }
+}

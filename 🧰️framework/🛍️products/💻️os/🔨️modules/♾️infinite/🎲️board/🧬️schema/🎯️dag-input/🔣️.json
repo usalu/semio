@@ -200,6 +200,7 @@
         "refusal"
       ],
       "properties": {
+        "edge": { "type": ["string", "null"], "minLength": 1 },
         "channel": {
           "oneOf": [
             {

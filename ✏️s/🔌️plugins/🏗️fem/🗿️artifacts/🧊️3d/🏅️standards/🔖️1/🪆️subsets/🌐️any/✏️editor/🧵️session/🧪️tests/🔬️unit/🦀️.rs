@@ -3,11 +3,35 @@ use semio_framework_job::StepBudget;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::FEM3D_SOLVER_PAGE_COUNT;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::{result_request, Fem3dResultSource};
 
+/// 🗑️ Test owner of a sealed snapshot: the last alias retires through the funded protocol instead of a bare drop.
+struct Doc(Option<Fem3dSnapshot>);
+impl Doc {
+    fn new(snapshot: Fem3dSnapshot) -> Self { Self(Some(snapshot)) }
+}
+impl Default for Doc {
+    fn default() -> Self { Self::new(Fem3dSnapshot::default()) }
+}
+impl Clone for Doc {
+    fn clone(&self) -> Self { Self::new((**self).clone()) }
+}
+impl std::ops::Deref for Doc {
+    type Target = Fem3dSnapshot;
+    fn deref(&self) -> &Fem3dSnapshot { self.0.as_ref().expect("live test snapshot") }
+}
+impl std::ops::DerefMut for Doc {
+    fn deref_mut(&mut self) -> &mut Fem3dSnapshot { self.0.as_mut().expect("live test snapshot") }
+}
+impl Drop for Doc {
+    fn drop(&mut self) { if let Some(snapshot) = self.0.take() { semio_s_fem_receiving::testkit::retire(snapshot); } }
+}
+
 fn with_context<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut StepContext<'_>) -> R) -> R {
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), Generation(1), StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    run(&mut cx)
+    let bank = RetainedCloneGrant { maximum_items: 1 << 12, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 1 << 12 };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(17), Generation(1), bank, || Some(1000), 12345, 64 * 32);
+    let mut output = None;
+    caller.turn(grant, |cx| cx.with_original_retirement(|cx| { output = Some(run(cx)); Ok(()) })).expect("original fixture turn");
+    caller.retire(bank);
+    output.expect("the original fixture turn ran")
 }
 
 fn lifecycle_close(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
@@ -22,6 +46,14 @@ fn close_child(child: &mut Fem3dNumericalChild, grant: RetainedCloneGrant) -> bo
     with_context(grant, |cx| child.close_step(cx, grant)).expect("original close turn").0
 }
 
+
+fn numerical_bank() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1 << 36, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 1 << 12 }
+}
+
+fn close_in(caller: &mut semio_framework_job::OriginalJobFixtureCaller, child: &mut Fem3dNumericalChild, grant: RetainedCloneGrant) -> bool {
+    caller.turn(grant, |cx| cx.with_original_retirement(|cx| child.close_step(cx, grant))).expect("original close turn").0
+}
 
 async fn fixture_windows(ids: &[&str]) -> semio_plugin::WindowConfigOwnerRegistry {
     let mut windows = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("results-fixture".into()));
@@ -53,6 +85,8 @@ fn release_grant(maximum_release_bytes: usize) -> RetainedCloneGrant {
 
 const PAGE_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, maximum_depth: 1 };
 
+const CLOSE_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES, maximum_depth: SESSION_CLOSE_DEPTH, ..PAGE_GRANT };
+
 const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 #[test]
@@ -64,7 +98,7 @@ fn fem3d_results_retained_pages_route_only_matching_completed_sources() {
         let actual = select_result_shell(current, retained);
         assert_eq!(serde_json::to_value(actual).unwrap(), row["expected"], "{}", row["id"]);
     }
-    let mut old = Fem3dSnapshot::default();
+    let mut old = Doc::default();
     old.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: "first".into(), name: "First".into(), loads: vec![], self_weight: false }, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: "second".into(), name: "Second".into(), loads: vec![], self_weight: false }];
     let mut reordered = old.clone();
     reordered.load_cases.reverse();
@@ -78,7 +112,7 @@ fn fem3d_results_retained_pages_route_only_matching_completed_sources() {
     assert!(!same_result_source(&old, old_request, &reordered, Fem3dResultRequest { source: Fem3dResultSource::Combination(0), ..Default::default() }));
     assert!(!same_result_source(&old, Fem3dResultRequest::default(), &reordered, Fem3dResultRequest::default()));
     let modal = Fem3dResultRequest { mode: Some(0), ..Default::default() };
-    assert!(same_result_source(&Fem3dSnapshot::default(), modal, &Fem3dSnapshot::default(), modal));
+    assert!(same_result_source(&Doc::default(), modal, &Doc::default(), modal));
 }
 
 #[test]
@@ -88,7 +122,7 @@ fn fem3d_retained_results_close_uses_original_retirement_and_preserves_foreign_a
     let identity = Identity { app_instance_id, base_revision: RevisionId(11), generation: Generation(19), canonical_base_revision: [23; 32], operation: OperationId(29), job: 29 };
     let original = Current { app_instance_id, shell: 3, identity };
     registry.app_slots.claim(app_instance_id).unwrap();
-    let key = request_key(&Fem3dSnapshot::default(), Fem3dResultRequest::default()).unwrap();
+    let key = request_key(&Doc::default(), Fem3dResultRequest::default()).unwrap();
     let request = registry.requests.admit(app_instance_id, ConsumerKey::Model, key).unwrap().owner;
     let slot = request.index();
     registry.retained_results[slot] = Some(original);
@@ -137,13 +171,13 @@ fn fem3d_exact_app_leases_keep_colliding_jobs_and_close_isolated() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sources() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
-    let mut doc = Fem3dSnapshot::default();
+    let mut doc = Doc::default();
     doc.load_cases = ["a", "b"].into_iter().map(|id| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: id.into(), name: id.into(), loads: vec![], self_weight: false }).collect();
     doc.combinations = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination { id: "a".into(), name: "a".into(), terms: Default::default() }];
     let identity = recovery_identity(8123, 39);
     let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: TEST_GRANT, maintenance: TEST_GRANT, close: TEST_GRANT } };
     let ids: Vec<&str> = corpus["requestWindows"].as_array().unwrap().iter().map(|row| row["window"].as_str().unwrap()).collect();
-    let window_owners = fixture_windows(&ids).await;
+    let mut window_owners = fixture_windows(&ids).await;
     for row in corpus["requestWindows"].as_array().unwrap() {
         let family = row["family"].as_u64().unwrap(); let index = row["index"].as_u64().unwrap() as usize;
         let source = if row["namespace"] == 1 { Fem3dResultSource::Combination(0) } else { Fem3dResultSource::Case(usize::from(row["source"] == "b")) };
@@ -161,14 +195,15 @@ async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sour
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES, maximum_depth: SESSION_CLOSE_DEPTH, ..PAGE_GRANT };
     for _ in 0..512 { if terminal_is_empty(identity.app_instance_id) { break; } lifecycle_close(identity.app_instance_id, grant); }
     assert!(terminal_is_empty(identity.app_instance_id));
+    window_owners.fixture_close();
 }
 
 #[semio_framework_async_macros::async_test]
 async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     let source = "a".repeat(corpus["wideSourceLength"].as_u64().unwrap() as usize); let window = "w".repeat(corpus["wideWindowLength"].as_u64().unwrap() as usize);
-    let mut doc = Fem3dSnapshot::default(); doc.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: source.clone(), name: "Wide".into(), loads: vec![], self_weight: false }];
-    let window_owners = fixture_windows(&[window.as_str()]).await;
+    let mut doc = Doc::default(); doc.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: source.clone(), name: "Wide".into(), loads: vec![], self_weight: false }];
+    let mut window_owners = fixture_windows(&[window.as_str()]).await;
     let identity = recovery_identity(9167, 43); let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES.max(65536), maximum_depth: SESSION_CLOSE_DEPTH };
     let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: RetainedCloneGrant { maximum_items: 0, ..grant }, maintenance: grant, close: grant } };
     let request = Fem3dResultRequest { source: Fem3dResultSource::Case(0), ..Default::default() };
@@ -178,6 +213,7 @@ async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody(
     MOUNTED.with(|registry| { let registry = registry.borrow(); let owner = registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, &window)).unwrap(); assert!(registry.requests.ready(owner)); assert_eq!(registry.requests.request_name(owner), Some(source.as_str())); assert_eq!(resolve_request(&registry, &doc, owner), Some(request)); let index = registry.requests.consumer_index(identity.app_instance_id, fixture_consumer(&window_owners, &window)).unwrap(); assert_eq!(registry.requests.consumer_name(index), Some(window.as_str())); });
     for _ in 0..128 { if terminal_is_empty(identity.app_instance_id) { break; } lifecycle_close(identity.app_instance_id, grant); }
     assert!(terminal_is_empty(identity.app_instance_id)); assert_eq!(doc.load_cases[0].id, source);
+    window_owners.fixture_close();
 }
 
 #[test]
@@ -193,12 +229,13 @@ fn fem3d_original_fault_and_cancel_terminal_receipts_prevent_implicit_resubmit()
         MOUNTED.with(|registry| drain_recovery_state(&mut registry.borrow_mut(), identity, shell));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_capacity_bytes: 65536, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES.max(65536), maximum_depth: SESSION_CLOSE_DEPTH };
         let mut render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.base_revision, generation: identity.generation, canonical_base_revision: identity.canonical_base_revision, mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
-        let doc = Fem3dSnapshot::default();
-        for _ in 0..64 { assert!(!prepare_snapshot_admission(render, &doc, TEST_GRANT).ready); }
+        let doc = Doc::default();
+        let windows = semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("terminal-fixture".into()));
+        for _ in 0..64 { assert!(!prepare_snapshot_read(render, &doc, &windows, None, TEST_GRANT).ready); }
         assert_eq!(result_stage(Some(render), None), Some(if kind == "faulted" { "fem3d.failed" } else { "fem3d.cancelled" }));
         MOUNTED.with(|registry| assert!(registry.borrow().pending.iter().all(Option::is_none)));
         render.canonical_base_revision[31] ^= 1;
-        let mut admitted = false; for _ in 0..128 { if prepare_snapshot_admission(render, &doc, TEST_GRANT).ready { admitted = true; break; } }
+        let mut admitted = false; for _ in 0..512 { if prepare_snapshot_read(render, &doc, &windows, None, TEST_GRANT).ready { admitted = true; break; } }
         assert!(admitted, "a new exact canonical source may reopen after terminal outcome");
         for _ in 0..512 { if terminal_is_empty(identity.app_instance_id) { break; } lifecycle_close(identity.app_instance_id, grant); }
         assert!(terminal_is_empty(identity.app_instance_id));
@@ -213,8 +250,8 @@ fn node_row(id: String) -> semio_s_fem_node::volumetric::FemNodeValue {
     semio_s_fem_node::volumetric::FemNodeValue { id, x: 0.0, y: 0.0, z: 0.0 }
 }
 
-fn snapshot_with_nodes(nodes: Vec<semio_s_fem_node::volumetric::FemNodeValue>) -> Fem3dSnapshot {
-    Fem3dSnapshot::from_reference(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue { nodes, ..Default::default() }).expect("sealed test snapshot")
+fn snapshot_with_nodes(nodes: Vec<semio_s_fem_node::volumetric::FemNodeValue>) -> Doc {
+    Doc::new(Fem3dSnapshot::from_reference(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue { nodes, ..Default::default() }).expect("sealed test snapshot"))
 }
 
 fn credit(doc: &Fem3dSnapshot) -> Fem3dPageCredit {
@@ -241,10 +278,14 @@ fn solver(doc: &Fem3dSnapshot, scalar: Fem3dSolverScalar) -> Fem3dSolverView {
 }
 
 fn build(doc: &Fem3dSnapshot, solver: &Fem3dSolverView) -> Fem3dPageVisualLease {
-    let mut job = Fem3dPageVisualJob::new(freshness(19), credit(doc));
+    build_at(doc, solver, freshness(19))
+}
+
+fn build_at(doc: &Fem3dSnapshot, solver: &Fem3dSolverView, fresh: Fem3dVisualFreshness) -> Fem3dPageVisualLease {
+    let mut job = Fem3dPageVisualJob::new(fresh, credit(doc));
     let mut backing = Fem3dBackingCredit::new();
     let mut turns = 0;
-    while !job.step_one(doc, solver, &mut backing, freshness(19)).expect("one production opportunity") && turns < 4_096 {
+    while !job.step_one(doc, solver, &mut backing, fresh).expect("one production opportunity") && turns < 4_096 {
         turns += 1;
     }
     assert!(turns < 4_096);
@@ -268,7 +309,7 @@ fn close(lease: &mut Fem3dPageVisualLease) -> usize {
 
 #[test]
 fn fem3d_visual_maximum_plus_one_rejects_before_owner_transfer() {
-    let doc = snapshot_with_nodes((0..=MAXIMUM_NODES).map(|_| node_row("n".into())).collect());
+    let doc = snapshot_with_nodes((0..=MAXIMUM_NODES).map(|index| node_row(format!("n{index}"))).collect());
     let producer = doc.nodes.len();
     let credit = Fem3dPageCredit { item_count: 3, byte_count: 7, draw_count: 0, draw_bytes: 3 };
     let mut job = Fem3dPageVisualJob::new(freshness(19), credit);
@@ -314,7 +355,7 @@ fn fem3d_solver_nonzero_generation_corresponds_to_every_published_field_page() {
 
 #[test]
 fn fem3d_visual_stale_cancel_fault_deadline_and_interrupted_device_close_preserve_last_valid() {
-    let doc = Fem3dSnapshot::default();
+    let doc = Doc::default();
     let solver = solver(&doc, Fem3dSolverScalar::default());
     let mut current = build(&doc, &solver);
     let current_snapshot = current.snapshot();
@@ -338,7 +379,7 @@ fn fem3d_visual_stale_cancel_fault_deadline_and_interrupted_device_close_preserv
 
 #[test]
 fn fem3d_visual_replay_accessibility_fixed_page_close_and_each_step_are_bounded() {
-    let doc = Fem3dSnapshot::default();
+    let doc = Doc::default();
     let solver = solver(&doc, Fem3dSolverScalar::default());
     let mut first = build(&doc, &solver);
     let mut second = build(&doc, &solver);
@@ -368,22 +409,32 @@ fn fem3d_visual_replay_accessibility_fixed_page_close_and_each_step_are_bounded(
 }
 
 #[test]
-fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one_slot() {
+fn fem3d_numerical_paged_owner_maximum_plus_one_refuses_unchanged() {
     let started = std::time::Instant::now();
-    let mut ids = FixedSlots::<String, 1>::new();
-    assert_eq!(ids.admit_one(2), Err(()));
-    assert_eq!(ids.admitted, 0);
-    assert_eq!(ids.admit_one(1), Ok(false));
-    assert_eq!(ids.admit_one(1), Ok(true));
+    let mut ids = PagedSlots::<String, 1>::new();
+    assert_eq!(ids.admit_one(2, MOUNTED_ANALYSIS_BACKING_BYTES), Err(()));
+    assert!(ids.terminal_is_empty());
+    let mut allocated = 0;
+    loop {
+        let (complete, bytes) = ids.admit_one(1, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap();
+        allocated += bytes;
+        if complete { break; }
+    }
+    assert!(allocated > 0);
     assert_eq!(ids.push("kept".into()), Ok(()));
     let rejected = "returned".to_owned();
     let rejected_pointer = rejected.as_ptr();
-    let returned = ids.push(rejected).expect_err("full fixed owner returns producer");
+    let returned = ids.push(rejected).expect_err("full paged owner returns producer");
     assert_eq!(returned.as_ptr(), rejected_pointer);
     assert_eq!(ids.len(), 1);
     assert_eq!(ids.pop().as_deref(), Some("kept"));
-    assert!(!ids.close_admission_one());
-    assert!(ids.close_admission_one());
+    let mut released = 0;
+    loop {
+        let (closed, _, bytes) = ids.close_step(MOUNTED_ANALYSIS_BACKING_BYTES);
+        released += bytes;
+        if closed { break; }
+    }
+    assert_eq!(released, allocated);
 
     let mut model = MountedAnalysisModel::new();
     assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1, MOUNTED_ANALYSIS_BACKING_BYTES), Err(semio_s_fem_analyses_model::MountedAnalysisFault::Capacity { requested: MAXIMUM_FIELDS + 1, maximum: semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS }));
@@ -394,11 +445,13 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
     assert_eq!(returned.id.as_ptr(), node_pointer);
 
     let mut domain = MountedPlanarDomain::new();
-    assert_eq!(domain.admit_outer_one(MAXIMUM_FIELDS + 1), Err(semio_s_fem_mesh::MountedDomainFault::PointCapacity { requested: MAXIMUM_FIELDS + 1, maximum: semio_s_fem_mesh::MOUNTED_DOMAIN_POINT_SLOTS }));
+    let maximum = semio_s_fem_mesh::MOUNTED_DOMAIN_POINT_SLOTS;
+    assert_eq!(domain.admit_outer_one(maximum + 1), Err(semio_s_fem_mesh::MountedDomainFault::PointCapacity { requested: maximum + 1, maximum }));
     assert_eq!(domain.push_outer([1.0, 2.0]), Err([1.0, 2.0]));
 
     let mut scalars = MountedScalarSlots::new();
-    assert_eq!(scalars.admit_one(MAXIMUM_FIELDS * 6 + 1), Err(semio_s_fem_sparse::MountedScalarFault::Capacity { requested: MAXIMUM_FIELDS * 6 + 1, maximum: semio_s_fem_sparse::MOUNTED_SCALAR_SLOTS }));
+    let maximum = semio_s_fem_sparse::MOUNTED_SCALAR_SLOTS;
+    assert_eq!(scalars.admit_one(maximum + 1, MOUNTED_ANALYSIS_BACKING_BYTES), Err(semio_s_fem_sparse::MountedScalarFault::Capacity { requested: maximum + 1, maximum }));
     assert_eq!(scalars.len(), 0);
     assert_eq!(scalars.push(17.0), Err(17.0));
     assert!(started.elapsed().as_micros() < 8_000);
@@ -409,7 +462,7 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
 #[test]
 fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️paged-demo/🔣️.json")).expect("independent NumPy demo equilibrium");
-    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("the demo parses");
+    let doc = Doc::new(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("the demo parses"));
     assert!(!doc.solids.is_empty(), "the demo carries a meshed slab");
     let (analysis_nodes, _) = semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
     assert!(analysis_nodes.len() * 6 * size_of::<(String, Dof)>() > 4_096, "the demo's dof order outgrows the mounted owner page — the premise of this law");
@@ -417,14 +470,14 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
     let mut child = Fem3dNumericalChild::new();
     let mut backing = Fem3dBackingCredit::new();
     let mut fields = Fem3dSolverView::new(freshness(3), doc.nodes.len());
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview = 0;
+    let bank = numerical_bank();
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
     let mut terminal = false;
     let mut failure = None;
     for _ in 0..16_000_000 {
-        let mut preview_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview, &mut preview_receipt);
-        match child.step(&doc, &mut fields, &mut backing, freshness(3), operation, &mut context) {
+        let mut outcome = None;
+        caller.turn(TEST_GRANT, |cx| { outcome = Some(child.step(&doc, &mut fields, &mut backing, freshness(3), operation, cx)); Ok(()) }).expect("original numerical turn");
+        match outcome.expect("the original numerical turn ran") {
             Ok(complete) => terminal = complete,
             Err(fault) => failure = Some((child.stage, format!("{fault:?}"))),
         }
@@ -432,9 +485,10 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
             break;
         }
     }
-    let stress: [Option<f64>; MAXIMUM_FIELDS] = std::array::from_fn(|index| (child.stress_counts[index] != 0).then(|| child.stress_sums[index] / child.stress_counts[index] as f64));
+    let mounted_ids: Vec<String> = (0..child.analysis_node_ids.len()).filter_map(|index| child.analysis_node_ids.get(index).cloned()).collect();
+    let stress: Vec<_> = (0..mounted_ids.len()).map(|index| child.stress(index)).collect();
     for _ in 0..200_000 {
-        if close_child(&mut child, release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY))) {
+        if close_in(&mut caller, &mut child, TEST_GRANT) {
             break;
         }
     }
@@ -447,7 +501,7 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
         let actual = fields.scalar(index).expect("published demo scalar");
         let displacement = expected.displacements.iter().find(|row| row.node_id == *node.id.get()).expect("reference displacement");
         for axis in 0..3 {
-            assert!((actual.displacement[axis] - displacement.values[axis]).abs() <= 1e-7 * displacement.values[axis].abs().max(1.0), "demo displacement {}/{axis}", node.id.get());
+            assert!((actual.displacement[axis] - displacement.values[axis]).abs() <= 1e-7 * displacement.values[axis].abs().max(1.0), "demo displacement {}/{axis}: {} != {}", node.id.get(), actual.displacement[axis], displacement.values[axis]);
         }
     }
     for (index, node) in doc.nodes.iter().enumerate() {
@@ -457,6 +511,16 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
             let expected = oracle["frame"]["storeyVerticalDisplacements"][storey].as_f64().unwrap();
             assert!((actual.displacement[2] - expected).abs() <= 1e-8, "independent gravity displacement {}: {} != {expected}", node.id.get(), actual.displacement[2]);
         }
+        if node.id.as_str() == "n00_l1" {
+            for axis in 0..2 {
+                let expected = oracle["frame"]["firstStoreyCornerLateralDisplacement"][axis].as_f64().unwrap();
+                assert!((actual.displacement[axis] - expected).abs() <= 1e-8, "independent lateral displacement {axis}: {} != {expected}", actual.displacement[axis]);
+            }
+        }
+        if node.id.as_str() == "sc0" {
+            let expected = oracle["slab"]["cornerVonMisesStress"].as_f64().unwrap();
+            assert!((actual.contour - expected).abs() <= 1e-5 * expected.abs(), "independent slab corner stress: {} != {expected}", actual.contour);
+        }
         if node.id.ends_with("_g") {
             let expected = oracle["frame"]["rootVerticalReaction"].as_f64().unwrap();
             assert!((actual.reaction[2] - expected).abs() <= 1e-3, "independent frame reaction {}", node.id.get());
@@ -465,11 +529,77 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
     let slab_reaction: f64 = doc.nodes.iter().enumerate().filter(|(_, node)| node.id.starts_with("sc")).map(|(index, _)| fields.scalar(index).unwrap().reaction[2]).sum();
     assert!((slab_reaction - oracle["slab"]["verticalReactionSum"].as_f64().unwrap()).abs() <= 1e-3);
     let expected_stress = semio_s_artifact_fem_3d_engine::fem3d_engine::mesh_preview::fem3d_nodal_von_mises_of(&doc, expected).unwrap();
-    for (index, node) in analysis_nodes.iter().enumerate() {
-        if let Some(expected) = expected_stress.get(&node.id) { assert!((stress[index].unwrap() - expected).abs() < 1e-5 * expected.abs().max(1.0), "demo stress {}", node.id); }
+    for node in analysis_nodes.iter() {
+        if let Some(expected) = expected_stress.get(&node.id) { let mounted = mounted_ids.iter().position(|id| *id == node.id).expect("mounted analysis node"); assert!((stress[mounted].unwrap() - expected).abs() < 1e-5 * expected.abs().max(1.0), "demo stress {}: {:?} != {expected}", node.id, stress[mounted]); }
     }
-    let mut visual = build(&doc, &fields);
+    let mut visual = build_at(&doc, &fields, freshness(3));
     assert_eq!(close(&mut visual), FEM3D_VISUAL_PAGES);
+    caller.retire(bank);
+}
+
+/// 🌲️ Concrete Forest publishes the dead-load case for its 20-node frame.
+#[test]
+fn fem3d_production_numerical_child_solves_concrete_forest() {
+    assert_mounted_example("concreteForest", include_str!("../../../../🖼️assets/🌲️concrete-forest/🗣️.dsl.semio"));
+}
+
+/// 🏠️ The House solver preserves the authored solid resolution while publishing dead load.
+#[test]
+fn fem3d_production_numerical_child_solves_house() {
+    assert_mounted_example("house", include_str!("../../../../🖼️assets/🏠️house/🗣️.dsl.semio"));
+}
+
+fn assert_mounted_example(name: &str, text: &str) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏘️mounted-examples.json")).unwrap();
+    let parsed = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).unwrap();
+    let doc = Doc::new(parsed);
+    let expected = &fixture[name];
+    let operation = semio_framework_job::Operation::new(OperationId(41), RevisionId(7), Generation(3), 5);
+    let mut child = Fem3dNumericalChild::new();
+    let mut backing = Fem3dBackingCredit::new();
+    let mut fields = Fem3dSolverView::new(freshness(3), doc.nodes.len());
+    let bank = numerical_bank();
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
+    let mut outcome = None;
+    let trace = std::env::var_os("SEMIO_FEM_MOUNT_TRACE").is_some();
+    let mut previous_stage = child.stage;
+    for turn in 0..16_000_000 {
+        caller.turn(TEST_GRANT, |context| {
+            match child.step(&doc, &mut fields, &mut backing, freshness(3), operation, context) {
+                Ok(false) => {},
+                Ok(true) => outcome = Some(Ok(())),
+                Err(error) => outcome = Some(Err((child.stage, format!("{error:?}")))),
+            }
+            Ok(())
+        }).unwrap();
+        if trace && (turn % 100_000 == 0 || child.stage != previous_stage) {
+            eprintln!("[DEBUG] {name} turn {turn} stage {:?}", child.stage);
+            previous_stage = child.stage;
+        }
+        if outcome.is_some() { break; }
+    }
+    let converged = fields.ready();
+    let node_count = fields.len;
+    let vertical_reaction: f64 = doc.nodes.iter().enumerate()
+        .filter_map(|(index, _)| fields.scalar(index).map(|row| row.reaction[2]))
+        .sum();
+    for _ in 0..4_000_000 {
+        if close_in(&mut caller, &mut child, TEST_GRANT) { break; }
+    }
+    assert!(child.terminal_is_empty(), "{name} releases its numerical owner after {outcome:?}");
+    assert!(matches!(outcome, Some(Ok(()))), "{name} ended at {:?} with {outcome:?}", child.stage);
+    assert!(converged, "{name} has validated numerical output");
+    assert_eq!(node_count, expected["analysisNodes"].as_u64().unwrap() as usize, "{name} analysis node count");
+    let expected_reaction = expected["verticalReaction"].as_f64().unwrap();
+    assert!((vertical_reaction - expected_reaction).abs() < 1e-6 * expected_reaction,
+            "{name} reaction {vertical_reaction} != {expected_reaction}");
+    loop {
+        let (closed, items, bytes) = fields.close_step(MOUNTED_ANALYSIS_BACKING_BYTES);
+        assert!(backing.release(items, bytes));
+        if closed { break; }
+    }
+    assert!(backing.terminal_is_empty());
+    caller.retire(bank);
 }
 
 #[test]
@@ -523,7 +653,7 @@ fn fem3d_process_permits_precede_solver_order_allocation_and_drop_handoff_closes
     assert!(!scalar_pointer.is_null());
     assert!(!initialized_pointer.is_null());
 
-    let doc = Fem3dSnapshot::default();
+    let doc = Doc::default();
     let solver = Fem3dSolverView::new(freshness(19), 0);
     let mut candidate = Fem3dPageVisualJob::new(freshness(19), credit(&doc));
     assert!(!candidate.step_one(&doc, &solver, &mut backing, freshness(19)).unwrap());
@@ -566,7 +696,7 @@ fn reserve_recovery_state(registry: &mut Registry, identity: Identity) -> (u16, 
     let recovery = registry.recoveries[shell as usize].clone();
     assert!(recovery.reserve(identity));
     registry.app_slots.claim(identity.app_instance_id).unwrap();
-    let request = registry.requests.admit(identity.app_instance_id, ConsumerKey::Model, request_key(&Fem3dSnapshot::default(), Fem3dResultRequest::default()).unwrap()).unwrap().owner;
+    let request = registry.requests.admit(identity.app_instance_id, ConsumerKey::Model, request_key(&Doc::default(), Fem3dResultRequest::default()).unwrap()).unwrap().owner;
     let slot = request.index();
     registry.shell_request[shell as usize] = Some(request);
     registry.current[slot] = Some(Current { app_instance_id: identity.app_instance_id, shell, identity });
@@ -643,7 +773,7 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
             let mut registry = registry.borrow_mut();
             let app = pending.unwrap_or(closing);
             registry.app_slots.claim(app).unwrap();
-            let owner = registry.requests.admit(app, ConsumerKey::Model, request_key(&Fem3dSnapshot::default(), Fem3dResultRequest::default()).unwrap()).unwrap().owner;
+            let owner = registry.requests.admit(app, ConsumerKey::Model, request_key(&Doc::default(), Fem3dResultRequest::default()).unwrap()).unwrap().owner;
             let slot = owner.index();
             assert!(registry.pending[slot].is_none());
             registry.pending[slot] = pending.map(|app_instance_id| PendingSnapshot {
@@ -653,10 +783,10 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
             if pending.is_none() { registry.requests.remove_one_scoped_consumer(app); assert!(registry.requests.release(owner)); let lease = registry.app_slots.lookup(closing).unwrap(); assert!(registry.app_slots.release(closing, lease)); }
             slot
         });
-        let first = lifecycle_close(closing, PAGE_GRANT);
+        let first = lifecycle_close(closing, CLOSE_GRANT);
         if pending == Some(closing) {
             assert_eq!(first, session_pending(1, 0));
-            for _ in 0..16 { if terminal_is_empty(closing) { break; } lifecycle_close(closing, PAGE_GRANT); }
+            for _ in 0..16 { if terminal_is_empty(closing) { break; } lifecycle_close(closing, CLOSE_GRANT); }
         } else {
             assert_eq!(first, PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         }
@@ -665,8 +795,8 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
         assert_eq!(serde_json::json!({ "pendingInstanceId": remaining }), row["expected"], "{}", row["id"]);
         if let Some(remaining) = remaining {
             assert!(!terminal_is_empty(remaining));
-            for _ in 0..16 { if terminal_is_empty(remaining) { break; } lifecycle_close(remaining, PAGE_GRANT); }
-            assert_eq!(lifecycle_close(remaining, PAGE_GRANT), PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
+            for _ in 0..16 { if terminal_is_empty(remaining) { break; } lifecycle_close(remaining, CLOSE_GRANT); }
+            assert_eq!(lifecycle_close(remaining, CLOSE_GRANT), PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         }
     }
 }
@@ -675,7 +805,7 @@ fn fem3d_window_config_mounted_close_preserves_foreign_instance_in_same_slot() {
 fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🧫️fixtures/💳️visual-close-grants/🔣️.json")).expect("neutral close grants");
     for row in corpus["cases"].as_array().expect("cases") {
-        let doc = Fem3dSnapshot::default();
+        let doc = Doc::default();
         let mut candidate = Fem3dPageVisualJob::new(freshness(19), credit(&doc));
         let mut backing = Fem3dBackingCredit::new();
         match row["owner"].as_str().expect("owner") {
@@ -704,7 +834,7 @@ fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
 #[test]
 fn fem3d_mounted_selected_sources_match_pynite_and_case_order_is_irrelevant() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
-    let base: Fem3dSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base = Doc::new(semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     for order in corpus["orders"].as_array().unwrap() {
         let mut doc = base.clone();
         doc.load_cases = order.as_array().unwrap().iter().map(|id| {
@@ -722,28 +852,29 @@ fn fem3d_mounted_selected_sources_match_pynite_and_case_order_is_irrelevant() {
             let operation = semio_framework_job::Operation::new(OperationId(13), RevisionId(11), Generation(19), 23);
             let mut fields = Fem3dSolverView::new(freshness(19), doc.nodes.len());
             let mut backing = Fem3dBackingCredit::new();
-            let cancel = semio_framework_job::root_cancel_token();
-            let mut preview = 0;
-            let mut complete = false;
+            let bank = numerical_bank();
+            let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
+                    let mut complete = false;
             let mut fault = None;
             for _ in 0..500_000 {
-                let mut receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview, &mut receipt);
-                match child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context) { Ok(done) => complete = done, Err(error) => fault = Some(format!("{error:?}")) }
-                assert_ne!(context.stage(), "initial", "the original numerical owner publishes its actual stage through shared job progress");
+                let mut outcome = None; let mut stage = "initial";
+                caller.turn(TEST_GRANT, |cx| { outcome = Some(child.step(&doc, &mut fields, &mut backing, freshness(19), operation, cx)); stage = cx.stage(); Ok(()) }).expect("original numerical turn");
+                match outcome.expect("the original numerical turn ran") { Ok(done) => complete = done, Err(error) => fault = Some(format!("{error:?}")) }
+                assert_ne!(stage, "initial", "the original numerical owner publishes its actual stage through shared job progress");
                 if complete || fault.is_some() { break; }
             }
             let tip = fields.scalar(1).map(|scalar| scalar.displacement[1]);
             let reaction = fields.scalar(0).map(|scalar| scalar.reaction[1]);
-            let moment = child.full_reactions[0][5];
-            let rotation = child.equations[1][5].and_then(|equation| child.pcg.as_ref()?.visual_scalar(equation)).map(|scalar| scalar.displacement);
-            for _ in 0..200_000 { if close_child(&mut child, release_grant(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)) { break; } }
+            let moment = child.reactions(0).expect("mounted support reaction")[5];
+            let rotation = child.equation(1, 5).and_then(|equation| child.pcg.as_ref()?.visual_scalar(equation)).map(|scalar| scalar.displacement);
+            for _ in 0..200_000 { if close_in(&mut caller, &mut child, TEST_GRANT) { break; } }
             assert!(child.terminal_is_empty() && fault.is_none() && complete && fields.ready());
             let factor = row["factor"].as_f64().unwrap();
             assert!((tip.unwrap() - factor * corpus["expected"]["tipTy"].as_f64().unwrap()).abs() < 1e-9);
             assert!((reaction.unwrap() - factor * corpus["expected"]["rootTyReaction"].as_f64().unwrap()).abs() < 1e-5);
             assert!((moment - factor * corpus["expected"]["rootRzReaction"].as_f64().unwrap()).abs() < 1e-5);
             assert!((rotation.unwrap() - factor * corpus["expected"]["tipRz"].as_f64().unwrap()).abs() < 1e-9);
+            caller.retire(bank);
         }
     }
 }
@@ -754,13 +885,13 @@ mod render_revision_tests;
 fn fem3d_source_preflight_rejects_ambiguous_missing_nonfinite_and_excess_sources() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
     assert_eq!(corpus["maximumSources"].as_u64().unwrap() as usize, MAXIMUM_LOADS);
-    let base: Fem3dSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base = Doc::new(semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     for refusal in corpus["refusals"].as_array().unwrap() {
         let mut doc = base.clone();
         doc.combinations.push(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination { id: "tip".into(), name: "Combined".into(), terms: [("tip".into(), 1.0)].into_iter().collect() });
         match refusal.as_str().unwrap() {
-            "duplicate-case" => doc.load_cases.push(doc.load_cases[0].clone()),
-            "duplicate-combination" => doc.combinations.push(doc.combinations[0].clone()),
+            "duplicate-case" => { let first = doc.load_cases[0].clone(); doc.load_cases.push(first) }
+            "duplicate-combination" => { let first = doc.combinations[0].clone(); doc.combinations.push(first) }
             "missing-case" => { doc.combinations[0].terms.insert("missing".into(), 1.0); },
             "nonfinite-factor" => { doc.combinations[0].terms.insert("tip".into(), f64::INFINITY); },
             "case-maximum-plus-one" => doc.load_cases = (0..=MAXIMUM_LOADS).map(|index| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: format!("case{index}"), name: "Case".into(), loads: vec![], self_weight: false }).collect(),

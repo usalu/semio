@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_layout_layout_editor_commands::NATIVE_PLACEMENTS;
 use semio_s_artifact_layout_layout_editor::unit_tests::context::{layout_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
@@ -43,4 +44,57 @@ fn catalogue_declares_the_neutral_kind_witness_and_drop_payload() {
         let kind_mime = format!("{}{}", fixture["kindMimePrefix"].as_str().unwrap(), kind);
         assert_eq!(entries, vec![(fixture["mime"].as_str().unwrap(), case["args"]["dragData"].as_str().unwrap()), (kind_mime.as_str(), "")]);
     }
+}
+
+#[test]
+fn oversized_drag_rows_keep_the_catalogue_and_normal_source_transfer_available() {
+    fn find_row<'a>(node: &'a semio_plugin::BuiltNode, key: &str) -> Option<&'a semio_plugin::BuiltNode> {
+        if node.key.as_str() == key { return Some(node); }
+        node.children.iter().find_map(|child| find_row(child, key))
+    }
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/linked-asset.json")).unwrap();
+    let expected = &fixture["expected"]["drag"];
+    let document_id = expected["sourceDocumentId"].as_str().unwrap();
+    let source = ImageLink {
+        id: expected["sourceLinkId"].as_str().unwrap().into(), path: "chart-preview.png".into(),
+        hash: String::new(), width: 16, height: 16, dpi: 72, color_profile: None, state: None,
+        proxy_data_url: None, artifact_kind: "s.stdio.png".into(),
+        artifact_ref: fixture["source"]["artifactRef"].as_str().unwrap().into(),
+    };
+    let boundary = &fixture["catalogueBoundary"];
+    assert_eq!(UiText::default().capacity(), boundary["maximumTextBytes"].as_u64().unwrap() as usize);
+    let mut links = vec![source.clone()];
+    for link in boundary["links"].as_array().unwrap() {
+        let id = link["character"].as_str().unwrap().repeat(link["count"].as_u64().unwrap() as usize);
+        links.push(ImageLink { id, path: link["path"].as_str().unwrap().into(), ..source.clone() });
+    }
+    let labels = crate::terminology::layout_labels(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let panel = render(&links, Some(document_id), labels, &TreeWindows::unhosted()).unwrap();
+    let valid = find_row(&panel, &format!("layout-catalogue.link.{}", source.id)).unwrap();
+    assert!(!valid.disabled);
+    let semio_plugin::Component::TreeItem(valid) = &valid.component else { panic!("source row") };
+    let raw = valid.drag_data.as_ref().unwrap().iter().find_map(|(key, raw)| (key.as_str() == LAYOUT_CATALOGUE_DRAG_MIME).then_some(raw)).unwrap();
+    assert_eq!(&serde_json::from_str::<serde_json::Value>(raw.as_str()).unwrap(), expected);
+    assert!(find_row(&panel, "layout-catalogue.rect").is_some());
+
+    for (index, fixture) in boundary["links"].as_array().unwrap().iter().enumerate() {
+        let position = index + 1;
+        let link = &links[position];
+        let key = if fixture["rowKeyFits"].as_bool().unwrap() { format!("layout-catalogue.link.{}", link.id) } else { format!("layout-catalogue.long-link.{position}") };
+        let row = find_row(&panel, &key).unwrap();
+        assert!(!row.disabled);
+        assert!(serde_json::to_string(row).unwrap().contains(&link.path));
+        let semio_plugin::Component::TreeItem(props) = &row.component else { panic!("source row") };
+        assert_ne!(props.draggable, Some(true));
+        assert!(props.drag_data.is_none());
+    }
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(panel)).unwrap();
+
+    let panel = render(std::slice::from_ref(&source), None, labels, &TreeWindows::unhosted()).unwrap();
+    let row = find_row(&panel, &format!("layout-catalogue.link.{}", source.id)).unwrap();
+    assert!(!row.disabled);
+    let semio_plugin::Component::TreeItem(props) = &row.component else { panic!("unbound source row") };
+    assert!(props.drag_data.is_none());
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(panel)).unwrap();
 }

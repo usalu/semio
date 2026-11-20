@@ -321,35 +321,9 @@ impl CidCodec {
         self.codespace.iter().all(|range| range.byte_width == 2)
     }
 
-    /// ✂️ Splits a string operand into character codes per the codespace ranges (§9.7.6.2): the
-    /// shortest range prefix that matches wins; an unmatched byte sequence consumes the width of
-    /// the shortest range whose first byte matches, else one byte.
+    /// ✂️ Splits a string operand into character codes and their physical widths (§9.7.6.2).
     pub fn split(&self, bytes: &[u8]) -> Vec<(u32, u32)> {
-        let mut out = Vec::new();
-        let mut cursor = 0usize;
-        while cursor < bytes.len() {
-            let mut taken: Option<(u32, u32)> = None;
-            for width in 1..=4u32 {
-                let end = cursor + width as usize;
-                if end > bytes.len() {
-                    break;
-                }
-                let code = code_of(&bytes[cursor..end]);
-                if self.codespace.iter().any(|range| range.byte_width == width && code >= range.low && code <= range.high) {
-                    taken = Some((code, width));
-                    break;
-                }
-            }
-            let (code, width) = taken.unwrap_or_else(|| {
-                let first = bytes[cursor] as u32;
-                let width = self.codespace.iter().filter(|range| (range.low >> (8 * (range.byte_width - 1))) <= first && first <= (range.high >> (8 * (range.byte_width - 1)))).map(|range| range.byte_width).min().unwrap_or(1);
-                let end = (cursor + width as usize).min(bytes.len());
-                (code_of(&bytes[cursor..end]), (end - cursor) as u32)
-            });
-            out.push((code, width));
-            cursor += width as usize;
-        }
-        out
+        codes(Some(self), bytes).collect()
     }
 
     /// 🔢 The CID a code maps to (0 = notdef when unmapped).
@@ -399,18 +373,61 @@ impl CidCodec {
     }
 }
 
+/// 📜 Reads the shortest matching code, or consumes the shortest matching first-byte width
+/// (limited to the bytes remaining). Without a matching prefix, consumes one byte.
+pub(super) fn codes<'a>(codec: Option<&'a CidCodec>, mut bytes: &'a [u8]) -> impl Iterator<Item = (u32, u32)> + 'a {
+    let ranges = codec.map_or(&[][..], |codec| codec.codespace.as_slice());
+    std::iter::from_fn(move || {
+        let first = u32::from(*bytes.first()?);
+        if ranges.is_empty() {
+            bytes = &bytes[1..];
+            return Some((first, 1));
+        }
+        let mut code = 0;
+        for (index, &byte) in bytes.iter().take(4).enumerate() {
+            code = (code << 8) | u32::from(byte);
+            let width = index as u32 + 1;
+            if ranges.iter().any(|range| range.byte_width == width && (range.low..=range.high).contains(&code)) {
+                bytes = &bytes[width as usize..];
+                return Some((code, width));
+            }
+        }
+        let width = ranges.iter().filter_map(|range| {
+            let width = range.byte_width;
+            if !(1..=4).contains(&width) {
+                return None;
+            }
+            let shift = 8 * (width - 1);
+            ((range.low >> shift)..=(range.high >> shift)).contains(&first).then_some(width as usize)
+        }).min().unwrap_or(1).min(bytes.len());
+        let (head, tail) = bytes.split_at(width);
+        bytes = tail;
+        Some((code_of(head), width as u32))
+    })
+}
+
 /// 🈴 Unicode lookup over a typed `ToUnicode` map.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn to_unicode_lookup(map: &PdfToUnicode, code: u32) -> Option<String> {
+    to_unicode_text(map, code).map(std::borrow::Cow::into_owned)
+}
+
+/// 🗣️ Borrows verbatim Unicode mappings, computing text only for offset range entries.
+pub(super) fn to_unicode_text(map: &PdfToUnicode, code: u32) -> Option<std::borrow::Cow<'_, str>> {
+    use std::borrow::Cow;
     for mapping in &map.mappings {
         match mapping {
-            PdfToUnicodeMapping::Char { code: c, text } if *c == code => return Some(text.clone()),
+            PdfToUnicodeMapping::Char { code: c, text } if *c == code => return Some(Cow::Borrowed(text)),
             PdfToUnicodeMapping::Range { low, high, text } if code >= *low && code <= *high => {
-                let mut chars: Vec<char> = text.chars().collect();
-                if let Some(last) = chars.last_mut() {
-                    *last = (*last as u32).checked_add(code-low).and_then(char::from_u32).unwrap_or('\u{FFFD}');
+                if code == *low {
+                    return Some(Cow::Borrowed(text));
                 }
-                return Some(chars.into_iter().collect());
+                let Some((index, last)) = text.char_indices().next_back() else {
+                    return Some(Cow::Borrowed(text));
+                };
+                let mut result = text[..index].to_owned();
+                let shifted = (last as u32).checked_add(code - low).and_then(char::from_u32).unwrap_or('\u{FFFD}');
+                result.push(shifted);
+                return Some(Cow::Owned(result));
             }
             _ => {}
         }

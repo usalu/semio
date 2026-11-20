@@ -44,7 +44,7 @@ pub fn metrics_of(family: &FamilyValue) -> FamilyMetrics {
         .map(|(id, solid)| (id.clone(), SolidMetrics { visible: solid.visible, material: solid.material.clone(), volume: solid.volume, area: solid.area, triangles: (solid.indices.len() / 3) as u32, min: vec![solid.bounds.min.x, solid.bounds.min.y, solid.bounds.min.z], max: vec![solid.bounds.max.x, solid.bounds.max.y, solid.bounds.max.z] }))
         .collect();
     let outline: Vec<loops::Vertex> = family.outline.iter().map(|vertex| loops::Vertex::new(semio_framework_geometry::Point::new(vertex.point.x, vertex.point.y), vertex.bulge)).collect();
-    FamilyMetrics { category: family.category.map(|category| format!("{category:?}")).unwrap_or_default(), parameters: family.parameters.clone(), issues, solids, outline_area: loops::area(&outline), outline_vertices: family.outline.len() as u32 }
+    FamilyMetrics { category: family.category.map(|category| format!("{category:?}")).unwrap_or_default(), parameters: family.parameters.iter().map(|(name, value)| (name.clone(), value.clone())).collect(), issues, solids, outline_area: loops::area(&outline), outline_vertices: family.outline.len() as u32 }
 }
 
 /// 📏️ The canonical JSON table `family → metrics` the family oracle compares.

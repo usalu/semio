@@ -213,7 +213,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparati
             self.task.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
         if self.mutation.is_some() { let factory = self.mutation_retirement.as_ref().ok_or_else(|| ValueError::invariant("original mutation factory is absent"))?; let (owner, receipt) = semio_framework_value::RetirementPollExit::resume(semio_framework_value::factory_retire_owned(&**factory, &mut self.mutation, &mut effect.nested(child)))?; *self.retirement = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "ephemeral mutation constructor changed its receipt").with_retained_progress(receipt).into()); } return Ok(RetainedCloneStep::Progress(receipt)); }
-        if let Some(prepared) = self.prepared.take() { let mut root = Some(prepared.next_root); let mut factory = self.state_retirement.clone(); let poll = ReturnedSnapshotReadRetirement::admit_original(&mut root, &mut factory, &mut self.retirement, &mut effect.nested(child)); if let Some(next_root) = root { *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root }); } return semio_framework_value::RetirementPollExit::resume(poll); }
+        if let Some(prepared) = self.prepared.take() { let mut root = Some(prepared.next_root); let mut factory = self.state_retirement.clone(); let poll = ReturnedSnapshotReadRetirement::admit_original(&mut root, &mut factory, &mut self.retirement, &mut effect.nested(child)); if let Some(next_root) = root { *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root }); } return semio_framework_value::RetirementPollExit::resume(poll).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(base) = self.base.as_mut() {
             match &mut base.0 {
                 ArtifactEphemeralBaseOwner::Transient(_root) => {
@@ -222,7 +222,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparati
                     let mut root = Some(root); let mut factory = self.state_retirement.clone();
                     let poll = ReturnedSnapshotReadRetirement::admit_original(&mut root, &mut factory, &mut self.retirement, &mut effect.nested(child));
                     if let Some(root) = root { *self.base = Some(ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(root))); }
-                    return semio_framework_value::RetirementPollExit::resume(poll);
+                    return semio_framework_value::RetirementPollExit::resume(poll).map(|step| RetainedCloneStep::Progress(step.progress()));
                 }
                 ArtifactEphemeralBaseOwner::Presence(read) | ArtifactEphemeralBaseOwner::TransientRead(read) => {
                     if read.release_original_alias() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }

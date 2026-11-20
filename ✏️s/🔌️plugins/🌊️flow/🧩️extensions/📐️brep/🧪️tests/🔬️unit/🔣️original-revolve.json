@@ -1,0 +1,62 @@
+{
+  "operator": "brep.sweep.revolve",
+  "profile": {
+    "center": [
+      4,
+      2,
+      4
+    ],
+    "normal": [
+      0,
+      0,
+      1
+    ],
+    "radius": 0.5
+  },
+  "axis": {
+    "origin": [
+      1,
+      -3,
+      4
+    ],
+    "direction": [
+      0,
+      2,
+      0
+    ]
+  },
+  "angle": 6.283185307179586,
+  "expected": {
+    "center": [
+      1,
+      2,
+      4
+    ],
+    "majorRadius": 3,
+    "minorRadius": 0.5,
+    "seam": [
+      4.5,
+      2,
+      4
+    ],
+    "minimum": [
+      -2.5,
+      1.5,
+      0.5
+    ],
+    "maximum": [
+      4.5,
+      2.5,
+      7.5
+    ],
+    "volume": 14.804406601634037
+  },
+  "unsupported": {
+    "angle": 3.141592653589793,
+    "axisOrigin": [
+      3.75,
+      -3,
+      4
+    ]
+  }
+}

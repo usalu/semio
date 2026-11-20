@@ -47,7 +47,7 @@ export interface ShardReturnsRole {
 
 /** 📥️ What siblings need from the UI acknowledgements. */
 export interface ShardUiAcknowledgementsRole {
-  submitInstanceUiAcknowledgements(owner: ShardInstanceOwner, entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly result: unknown }>;
+  submitInstanceUiAcknowledgements(owner: ShardInstanceOwner, entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly results: readonly unknown[] }>;
   submitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }>;
   recordInstanceTurn(owner: ShardInstanceOwner, result: unknown): void;
   captureInstanceUiPatch(owner: ShardInstanceOwner, turn: object, patchIndex: number): OwnedNativeUiPatchAuthority;

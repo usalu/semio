@@ -42,6 +42,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🗺️ The snapshot collections the take-off reads, directly or through the fields it is computed from.
@@ -183,14 +184,14 @@ pub struct Totals {
 /// ➕️ Totals per kind (`wall`, `slab`, …), per type (`wall:wt-300`), per material id, per finish (`wall:m-paint`: the area of one surface finished with one material) and per construction phase (`new`; `phase_kinds` splits each phase by kind, `demolished:wall`).
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct QuantityTotals {
-    pub kinds: BTreeMap<String, Totals>,
-    pub types: BTreeMap<String, Totals>,
-    pub materials: BTreeMap<String, Totals>,
-    pub finishes: BTreeMap<String, Totals>,
-    pub phases: BTreeMap<String, Totals>,
-    pub phase_kinds: BTreeMap<String, Totals>,
-    #[value(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub groups: BTreeMap<String, Totals>,
+    pub kinds: RetainedOrderedMap<String, Totals>,
+    pub types: RetainedOrderedMap<String, Totals>,
+    pub materials: RetainedOrderedMap<String, Totals>,
+    pub finishes: RetainedOrderedMap<String, Totals>,
+    pub phases: RetainedOrderedMap<String, Totals>,
+    pub phase_kinds: RetainedOrderedMap<String, Totals>,
+    #[value(default, skip_serializing_if = "RetainedOrderedMap::is_empty")]
+    pub groups: RetainedOrderedMap<String, Totals>,
 }
 
 /// 🧮️ The whole take-off: elements by id, totals per storey, per building and for the project.
@@ -764,22 +765,32 @@ impl Totals {
     }
 }
 
+fn update_total(totals: &mut RetainedOrderedMap<String, Totals>, key: String, update: impl FnOnce(&mut Totals)) {
+    if let Some(total) = totals.get_mut(&key) {
+        update(total);
+        return;
+    }
+    let mut total = Totals::default();
+    update(&mut total);
+    totals.cold_insert(key, total);
+}
+
 impl QuantityTotals {
     fn add(&mut self, element: &ElementQuantity) {
-        self.kinds.entry(element.kind.key().to_string()).or_default().add_element(element);
+        update_total(&mut self.kinds, element.kind.key().to_string(), |total| total.add_element(element));
         if !element.type_id.is_empty() {
-            self.types.entry(format!("{}:{}", element.kind.key(), element.type_id)).or_default().add_element(element);
+            update_total(&mut self.types, format!("{}:{}", element.kind.key(), element.type_id), |total| total.add_element(element));
         }
         for row in element.layers.iter().filter(|row| !row.material.is_empty()) {
-            self.materials.entry(row.material.clone()).or_default().add_layer(row);
+            update_total(&mut self.materials, row.material.clone(), |total| total.add_layer(row));
         }
         for row in element.finishes.iter().filter(|row| !row.material.is_empty()) {
-            self.finishes.entry(format!("{}:{}", row.surface.key(), row.material)).or_default().add_finish(row);
+            update_total(&mut self.finishes, format!("{}:{}", row.surface.key(), row.material), |total| total.add_finish(row));
         }
-        self.phases.entry(element.phase.key().to_string()).or_default().add_element(element);
-        self.phase_kinds.entry(format!("{}:{}", element.phase.key(), element.kind.key())).or_default().add_element(element);
+        update_total(&mut self.phases, element.phase.key().to_string(), |total| total.add_element(element));
+        update_total(&mut self.phase_kinds, format!("{}:{}", element.phase.key(), element.kind.key()), |total| total.add_element(element));
         for group in &element.groups {
-            self.groups.entry(group.clone()).or_default().add_element(element);
+            update_total(&mut self.groups, group.clone(), |total| total.add_element(element));
         }
     }
 }

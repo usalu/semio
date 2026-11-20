@@ -126,7 +126,7 @@ fn a_cancelled_pick_dispatches_nothing() {
 /// 📤️ The host-effect funnel names the import effect, and the picker it reaches is a real one.
 #[test]
 fn the_host_effect_funnel_owns_request_file_open() {
-    assert!(WGPU_SHELL_SOURCE().contains("Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, .. } => {"), "queue_host_effects must own RequestFileOpen");
+    assert!(WGPU_SHELL_SOURCE().contains("Effect::RequestFileOpen { accept, read_as, import_action, args, multiple, max_file_bytes, .. } => {"), "queue_host_effects must own RequestFileOpen");
     assert!(WGPU_SHELL_SOURCE().contains(r#""op": "request-file-open""#), "the browser half must ask the page for a real picker");
     assert!(!WGPU_SHELL_SOURCE().contains("fn request_file_open(_accept: &str"), "a stubbed picker means Import Document… opens nothing at all");
 }

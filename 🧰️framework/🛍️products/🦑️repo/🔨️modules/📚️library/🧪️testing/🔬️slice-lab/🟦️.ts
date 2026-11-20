@@ -1,15 +1,18 @@
+import{freeSpaceSyncV1}from"../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import{MACHINE_STATE_PROTOCOL_V1,machinePathV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {spawn,spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
-import {closeSync,existsSync,lstatSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,readSync,realpathSync,rmSync,statfsSync,statSync,symlinkSync,writeFileSync} from "node:fs";
+import {closeSync,existsSync,lstatSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,readSync,realpathSync,rmSync,statSync,symlinkSync,writeFileSync} from "node:fs";
 import {homedir,tmpdir} from "node:os";
 import {dirname,join,resolve,sep} from "node:path";
 import {fileURLToPath} from "node:url";
 import {cloneFrozenRootV1,editFrozenFileV1,freezeSliceLabRootV1,frozenRootV1} from "./🧊️frozen/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {hostEndpointsV1} from "../../🏗️build/🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {PLAN_STAGE_POLICY_V1} from "../../🏗️build/🧠️memory/🪜️plan-stage/🟨️.mjs";
 import {READY_PROBES_V1,READY_STAGES_V1,type ReadyStageV1} from "../../🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
 import {SLICE_LAB_HOME_V1 as HOME,sliceLabAllStagesV1,sliceLabHomeEnvironmentV1,sliceLabHomeSeedsV1,sliceLabKindsOfSliceV1,sliceLabLauncherBuildV1,sliceLabLinkHomeV1,sliceLabLiveDiffV1,sliceLabLiveSnapshotV1,sliceLabObservedStagesV1,sliceLabPinnedGoSeedsV1,sliceLabSeedHomeV1,sliceLabSeedToolsV1,sliceLabRegistryRefusalV1,sliceLabShimsV1,sliceLabSkipStagesV1,sliceLabStageTableV1,sliceLabToolsForKindsV1,type SliceLabHomeReportV1} from "./🏠️home/🟦️.ts";
+import {readFootprintsV1} from "../../🏗️build/🌐️remote-execution/🛰️sidecar/🕸️graph/🔬️stall/🌳️tree/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📐️ The authored numbers and texts of the slice lab. @see ./🧬️schema/🔣️.json */
@@ -23,12 +26,15 @@ export function sliceLabDiskPreflightV1(freeBytes:number):Readonly<{ok:boolean;n
 /** 🎛️ What a lab run is asked to do. */
 export type SliceLabOptionsV1=Readonly<{machines:number;memoryMegabytes:16384|8192;cores:number;slice:readonly string[];target?:string;timeoutSeconds:number;workspaceArguments?:readonly string[];execute?:boolean;stages?:"workspace"|"all";skip?:readonly string[];warm?:string;kinds?:readonly string[];frozen?:boolean;frozenDirectory?:string;edit?:string;stagger?:number;preload?:string;out?:string;work?:string;language?:"en"|"de"}>;
 
+const provisionsDependenciesV1=(options:SliceLabOptionsV1):boolean=>options.stages==="all"&&options.skip?.includes("dependencies")!==true;
+const needsPrivateCheckoutV1=(options:SliceLabOptionsV1):boolean=>provisionsDependenciesV1(options)||options.frozen===true||options.frozenDirectory!==undefined;
+
 /** 📖️ Reads the options of a run and refuses anything the schema does not declare. */
 export function readSliceLabOptionsV1(value:unknown):SliceLabOptionsV1{
  const problems=validateJsonSchemaSubset(schema.definitions.Options,value,schema);
  if(problems.length>0)throw Error(`Closed slice lab options required: ${problems[0]}\nGeschlossene Laborparameter erforderlich: ${problems[0]}`);
  const read=value as SliceLabOptionsV1;
- if(read.edit!==undefined&&(read.frozen!==true&&read.frozenDirectory===undefined||read.machines<2||(read.stagger??0)===0))throw Error("An edited file needs a frozen view, two machines and a stagger / Eine bearbeitete Datei braucht eine eingefrorene Sicht, zwei Maschinen und einen Versatz");
+ if(read.edit!==undefined&&(!needsPrivateCheckoutV1(read)||read.machines<2||(read.stagger??0)===0))throw Error("An edited file needs a frozen view, two machines and a stagger / Eine bearbeitete Datei braucht eine eingefrorene Sicht, zwei Maschinen und einen Versatz");
  return read;
 }
 
@@ -52,8 +58,13 @@ export type SliceLabPlanV1=Readonly<{origin:string;index:number;id:string;work:s
 export function sliceLabPlansV1(options:SliceLabOptionsV1,id:string,work:string,root:string,own:boolean=false):readonly SliceLabPlanV1[]{
  return Array.from({length:options.machines},(_,at)=>{
   const index=at+1,home=join(work,`m${index}`);
-  return Object.freeze({origin:`slice-lab-${id}-m${index}`,index,id,work,root:own?join(home,"r"):root,state:join(home,"s"),temporary:join(home,"t"),runtime:`${P.runtimePrefix}${id}${index}`,capacity:join(home,"c"),registry:join(home,"l"),cache:join(home,"x"),home:join(home,HOME.directory),store:join(work,"store"),memoryMegabytes:options.memoryMegabytes,cores:options.cores});
+  return Object.freeze({origin:`slice-lab-${id}-m${index}`,index,id,work,root:own?join(home,"r"):root,state:join(home,"s"),temporary:join(home,"t"),runtime:join(home,P.runtimeDirectory),capacity:join(home,"c"),registry:join(home,"l"),cache:join(home,"x"),home:join(home,HOME.directory),store:join(work,"store"),memoryMegabytes:options.memoryMegabytes,cores:options.cores});
  });
+}
+
+/** 📍️ Validates the production socket spelling before provisioning. The digest changes the tag, whose byte width is fixed. */
+export function sliceLabRuntimeDirectoryV1(plan:SliceLabPlanV1):string{
+ return hostEndpointsV1("",{XDG_RUNTIME_DIR:plan.runtime},process.platform,undefined,plan.root).directory;
 }
 
 /** 🔗️ Gives the checkout of a machine the `.nx` its Nx client looks at: the build moves `<checkout>/.nx` below the declared state (`<state>/nx`, `MACHINE_STATE_PROTOCOL_V1.moved`), but Nx resolves the installation of its tooling at `<checkout>/.nx/installation` (`getNxInstallationPath` in the Nx package) and without it falls back to the `node_modules/nx` of the dependency store, which has no compiled authorizers (wall 99: `Original immutable Native snapshot authority required`). A checkout that already has a `.nx` keeps it. Returns whether a link was made. @see https://nx.dev/docs/reference/nx-json */
@@ -98,6 +109,10 @@ export function sliceLabProcessRowsV1(text:string,id:string):readonly SliceLabPr
  }
  return rows;
 }
+/** 🧮️ What the processes of a machine hold now: the physical footprint where the system measures it (macOS `footprint`, the figure the slice guard judges) and the resident size of `ps` for the rest and for reference; resident size counts file pages of the runtime that the guard never counts, so it is not judged. */
+export function sliceLabFootprintV1(rows:readonly Pick<SliceLabProcessV1,"pid"|"rssMegabytes">[],footprints:ReadonlyMap<number,number>):Readonly<{footprintMegabytes:number;rssMegabytes:number;measured:number}>{
+ return{footprintMegabytes:Math.round(rows.reduce((sum,row)=>sum+(footprints.get(row.pid)??row.rssMegabytes),0)),rssMegabytes:Math.round(rows.reduce((sum,row)=>sum+row.rssMegabytes,0)),measured:rows.filter(row=>footprints.has(row.pid)).length};
+}
 const watcherTable=():string=>spawnSync("ps",["-A","-ww","-o","pid=,command="],{encoding:"utf8",maxBuffer:64*MEGABYTE}).stdout??"";
 const processTable=():string=>{const run=spawnSync("ps",process.platform==="darwin"?["-A","-ww","-E","-o","pid=,ppid=,rss=,pcpu=,nice=,command="]:["-A","-ww","e","-o","pid=,ppid=,rss=,pcpu=,nice=,command="],{encoding:"utf8",maxBuffer:128*MEGABYTE});return run.status===0?run.stdout:"";};
 
@@ -132,21 +147,21 @@ export function sliceLabActivityV1(tail:string):string{
 }
 
 /** 🔖️ One sample of one machine: the stage and phase, the owners the read has, the processes of the machine and the footprint they hold. */
-export type SliceLabSampleV1=Readonly<{atSeconds:number;machine:string;stage:string|null;state:string;phase:string|null;done:number|null;total:number|null;owners:Readonly<Record<string,number>>;processes:number;busy:number;footprintMegabytes:number;cpu:number;loopLagMs:number|null;activity:string}>;
+export type SliceLabSampleV1=Readonly<{atSeconds:number;machine:string;stage:string|null;state:string;phase:string|null;done:number|null;total:number|null;owners:Readonly<Record<string,number>>;processes:number;busy:number;footprintMegabytes:number;rssMegabytes?:number;cpu:number;loopLagMs:number|null;activity:string}>;
 /** 🧱️ Where and how a run stopped. */
 export type SliceLabWallV1=Readonly<{machine:string;stage:string;phase:string|null;code:string;exit:number|null;text:string;process:string;tail:readonly string[]}>;
 /** 🧾️ The result a machine driver files when it ends. */
 export type SliceLabMachineResultV1=Readonly<{warm?:readonly Readonly<{stage:string;id:string;ok:boolean;method:string;seconds:number;megabytes:number}>[];ready:boolean;failure:null|Readonly<{stage:string;code:string;exit:number|null;tail:readonly string[]}>;timings:readonly Readonly<{stage:string;seconds:number;outcome:string}>[]}>;
 /** ⚖️ The verdict of a run. */
-export type SliceLabVerdictV1=Readonly<{outcome:"ready"|"wall"|"timeout";pass:boolean;readyAtSeconds:Readonly<Record<string,number>>;walls:readonly SliceLabWallV1[];phaseSeconds:Readonly<Record<string,number>>;stageSeconds:Readonly<Record<string,number>>;peakFootprintMegabytes:Readonly<Record<string,number>>;limitMegabytes:number;withinLimit:boolean;duplicateOwners:number;liveFiles:readonly string[];lowered:number;leftoverProcesses:number;leftoverImages:number;admitted:number|null;elapsedSeconds:number;load:number;activitySeconds:Readonly<Record<string,number>>;loopLagMaxMs:number|null;lagWithin:boolean;busyShare:number|null;published:readonly string[];churn:Readonly<{count:number;sample:readonly string[]}>;frozen:Readonly<{files:number;megabytes:number;seconds:number;drift:number}>|null;readySeconds:Readonly<Record<string,number>>;ownersSeen:Readonly<Record<string,Readonly<{total:number;present:number;fetched:number;here:number}>>>;detached:number}>;
+export type SliceLabVerdictV1=Readonly<{outcome:"ready"|"wall"|"timeout";pass:boolean;readyAtSeconds:Readonly<Record<string,number>>;walls:readonly SliceLabWallV1[];phaseSeconds:Readonly<Record<string,number>>;stageSeconds:Readonly<Record<string,number>>;peakFootprintMegabytes:Readonly<Record<string,number>>;peakResidentMegabytes:Readonly<Record<string,number>>;limitMegabytes:number;withinLimit:boolean;duplicateOwners:number;liveFiles:readonly string[];lowered:number;leftoverProcesses:number;leftoverImages:number;admitted:number|null;elapsedSeconds:number;load:number;activitySeconds:Readonly<Record<string,number>>;loopLagMaxMs:number|null;lagWithin:boolean;busyShare:number|null;published:readonly string[];churn:Readonly<{count:number;sample:readonly string[]}>;frozen:Readonly<{files:number;megabytes:number;seconds:number;drift:number}>|null;readySeconds:Readonly<Record<string,number>>;ownersSeen:Readonly<Record<string,Readonly<{total:number;present:number;fetched:number;here:number}>>>;detached:number}>;
 
 /** ⚖️ Judges a run: ready on every machine, or the walls with their stage, phase, text, process and last lines; time per phase and per stage, peak footprint against the limit, duplicate work, leftovers. */
 export function sliceLabVerdictV1(input:Readonly<{options:SliceLabOptionsV1;machines:readonly string[];samples:readonly SliceLabSampleV1[];results:Readonly<Record<string,SliceLabMachineResultV1|undefined>>;duplicateOwners:number;liveFiles?:readonly string[];lowered?:number;liveFiles:readonly string[];lowered:number;leftoverProcesses:number;leftoverImages:number;elapsedSeconds:number;load:number;timedOut:boolean;published?:readonly string[];starts?:Readonly<Record<string,number>>;detached?:number;churn?:Readonly<{count:number;sample:readonly string[]}>;frozen?:Readonly<{files:number;megabytes:number;seconds:number;drift:number}>}>):SliceLabVerdictV1{
- const step=P.sampleMilliseconds/1000,phaseSeconds:Record<string,number>={},stageSeconds:Record<string,number>={},activitySeconds:Record<string,number>={},peak:Record<string,number>={},readyAt:Record<string,number>={},walls:SliceLabWallV1[]=[],seen:Record<string,{total:number;present:number;fetched:number;here:number}>={},readySeconds:Record<string,number>={};
+ const step=P.sampleMilliseconds/1000,phaseSeconds:Record<string,number>={},stageSeconds:Record<string,number>={},activitySeconds:Record<string,number>={},peak:Record<string,number>={},resident:Record<string,number>={},readyAt:Record<string,number>={},walls:SliceLabWallV1[]=[],seen:Record<string,{total:number;present:number;fetched:number;here:number}>={},readySeconds:Record<string,number>={};
  for(const sample of input.samples){
   activitySeconds[sample.activity]=Math.round(((activitySeconds[sample.activity]??0)+step/Math.max(1,input.machines.length))*10)/10;
   if(sample.phase!==null)phaseSeconds[sample.phase]=Math.round(((phaseSeconds[sample.phase]??0)+step/Math.max(1,input.machines.length))*10)/10;
-  peak[sample.machine]=Math.max(peak[sample.machine]??0,sample.footprintMegabytes);
+  peak[sample.machine]=Math.max(peak[sample.machine]??0,sample.footprintMegabytes);resident[sample.machine]=Math.max(resident[sample.machine]??0,sample.rssMegabytes??sample.footprintMegabytes);
   if(sample.owners.total!==undefined){const was=seen[sample.machine]??{total:0,present:0,fetched:0,here:0};seen[sample.machine]={total:Math.max(was.total,sample.owners.total??0),present:Math.max(was.present,sample.owners.present??0),fetched:Math.max(was.fetched,sample.owners.fetched??0),here:Math.max(was.here,sample.owners.here??0)};}
  }
  for(const machine of input.machines){
@@ -162,7 +177,7 @@ export function sliceLabVerdictV1(input:Readonly<{options:SliceLabOptionsV1;mach
  const lags=input.samples.map(sample=>sample.loopLagMs).filter((value):value is number=>value!==null),lagMax=lags.length===0?null:Math.max(...lags),lagWithin=lagMax===null||lagMax<P.loopLagLimitMilliseconds,counted=input.samples.filter(sample=>sample.processes>0),busyShare=counted.length===0?null:Math.round(counted.reduce((sum,sample)=>sum+sample.busy/sample.processes,0)/counted.length*100);
  const admitted=Math.max(0,...input.samples.map(sample=>sample.total??0))||null;
  const outcome=allReady?"ready":walls.length>0?"wall":"timeout";
- return Object.freeze({outcome,pass:allReady&&within&&lagWithin&&input.duplicateOwners===0&&(input.liveFiles??[]).length===0&&(input.lowered??0)===0&&input.leftoverProcesses===0&&input.leftoverImages===0&&(input.frozen===undefined||(input.churn?.count??0)===0),readyAtSeconds:readyAt,walls,phaseSeconds,stageSeconds,peakFootprintMegabytes:peak,limitMegabytes:limit,withinLimit:within,duplicateOwners:input.duplicateOwners,liveFiles:input.liveFiles??[],lowered:input.lowered??0,leftoverProcesses:input.leftoverProcesses,leftoverImages:input.leftoverImages,admitted,elapsedSeconds:input.elapsedSeconds,load:input.load,activitySeconds,loopLagMaxMs:lagMax,lagWithin,busyShare,published:input.published??[],readySeconds,ownersSeen:seen,detached:input.detached??0,churn:input.churn??{count:0,sample:[]},frozen:input.frozen??null});
+ return Object.freeze({outcome,pass:allReady&&within&&lagWithin&&input.duplicateOwners===0&&(input.liveFiles??[]).length===0&&(input.lowered??0)===0&&input.leftoverProcesses===0&&input.leftoverImages===0&&(input.frozen===undefined||(input.churn?.count??0)===0),readyAtSeconds:readyAt,walls,phaseSeconds,stageSeconds,peakFootprintMegabytes:peak,peakResidentMegabytes:resident,limitMegabytes:limit,withinLimit:within,duplicateOwners:input.duplicateOwners,liveFiles:input.liveFiles??[],lowered:input.lowered??0,leftoverProcesses:input.leftoverProcesses,leftoverImages:input.leftoverImages,admitted,elapsedSeconds:input.elapsedSeconds,load:input.load,activitySeconds,loopLagMaxMs:lagMax,lagWithin,busyShare,published:input.published??[],readySeconds,ownersSeen:seen,detached:input.detached??0,churn:input.churn??{count:0,sample:[]},frozen:input.frozen??null});
 }
 
 const table=(rows:readonly (readonly string[])[]):string=>rows.map(row=>"| "+row.join(" | ")+" |").join("\n");
@@ -170,7 +185,7 @@ const table=(rows:readonly (readonly string[])[]):string=>rows.map(row=>"| "+row
 export function sliceLabReportV1(language:"en"|"de",options:SliceLabOptionsV1,verdict:SliceLabVerdictV1,samples:readonly SliceLabSampleV1[]):string{
  const t=(key:string,fields:Readonly<Record<string,string|number>>={})=>sliceLabTextV1(language,key,fields),last=verdict.walls[0],stage=last?.stage??samples.at(-1)?.stage??"-",phase=last?.phase??samples.at(-1)?.phase??"-";
  const head=verdict.outcome==="ready"?t("ready"):verdict.outcome==="wall"?t("wall",{stage,phase}):t("timeout",{seconds:verdict.elapsedSeconds,stage,phase});
- const lines=[`# ${head}`,"",`- ${t("slice",{owners:options.slice.length,admitted:verdict.admitted??"?"})}`,`- ${t("skipped",{stages:P.skippedStages.join(", ")})}`,`- ${t("peak",{peak:Math.max(0,...Object.values(verdict.peakFootprintMegabytes)),limit:verdict.limitMegabytes})}`,`- ${t("duplicates",{count:verdict.duplicateOwners})}`,`- ${t("leftovers",{processes:verdict.leftoverProcesses,images:verdict.leftoverImages})}`,`- ${t("load",{load:verdict.load})}`,`- ${t("nice",{count:verdict.lowered})}`,`- ${t("lag",{lag:verdict.loopLagMaxMs??"-",limit:P.loopLagLimitMilliseconds})}`,`- ${t("busy",{share:verdict.busyShare??"-"})}`,`- seconds per activity: ${JSON.stringify(verdict.activitySeconds)}`,`- ${t("published",{count:verdict.published.length})}${verdict.published.length>0?": "+verdict.published.join(", "):""}`,`- ${t("owners",{rows:JSON.stringify(Object.fromEntries(Object.entries(verdict.ownersSeen??{}).map(([machine,row])=>[machine,`${row.present} / ${row.fetched} / ${row.here} of ${row.total}`])))})}`,`- ${t("starts",{rows:JSON.stringify(verdict.readySeconds??{})})}`,`- ${t("detached",{count:verdict.detached??0})}`,`- ${t(verdict.frozen===null||verdict.frozen===undefined?"churn":"frozenChurn",{count:verdict.churn?.count??0,sample:(verdict.churn?.sample.length??0)>0?": "+verdict.churn!.sample.join(", "):""})}`,...verdict.frozen===null||verdict.frozen===undefined?[]:[`- ${t("frozen",verdict.frozen)}`],`- ${t("notExercised")}`,`- ${t("live",{count:verdict.liveFiles.length})}${verdict.liveFiles.length>0?": "+verdict.liveFiles.join(", "):""}`,`- seconds per stage: ${JSON.stringify(verdict.stageSeconds)}`,`- seconds per phase: ${JSON.stringify(verdict.phaseSeconds)}`,""];
+ const lines=[`# ${head}`,"",`- ${t("slice",{owners:options.slice.length,admitted:verdict.admitted??"?"})}`,`- ${t("skipped",{stages:P.skippedStages.join(", ")})}`,`- ${t("peak",{peak:Math.max(0,...Object.values(verdict.peakFootprintMegabytes)),limit:verdict.limitMegabytes})}`,`- ${t("peakResident",{peak:Math.max(0,...Object.values(verdict.peakResidentMegabytes))})}`,`- ${t("duplicates",{count:verdict.duplicateOwners})}`,`- ${t("leftovers",{processes:verdict.leftoverProcesses,images:verdict.leftoverImages})}`,`- ${t("load",{load:verdict.load})}`,`- ${t("nice",{count:verdict.lowered})}`,`- ${t("lag",{lag:verdict.loopLagMaxMs??"-",limit:P.loopLagLimitMilliseconds})}`,`- ${t("busy",{share:verdict.busyShare??"-"})}`,`- seconds per activity: ${JSON.stringify(verdict.activitySeconds)}`,`- ${t("published",{count:verdict.published.length})}${verdict.published.length>0?": "+verdict.published.join(", "):""}`,`- ${t("owners",{rows:JSON.stringify(Object.fromEntries(Object.entries(verdict.ownersSeen??{}).map(([machine,row])=>[machine,`${row.present} / ${row.fetched} / ${row.here} of ${row.total}`])))})}`,`- ${t("starts",{rows:JSON.stringify(verdict.readySeconds??{})})}`,`- ${t("detached",{count:verdict.detached??0})}`,`- ${t(verdict.frozen===null||verdict.frozen===undefined?"churn":"frozenChurn",{count:verdict.churn?.count??0,sample:(verdict.churn?.sample.length??0)>0?": "+verdict.churn!.sample.join(", "):""})}`,...verdict.frozen===null||verdict.frozen===undefined?[]:[`- ${t("frozen",verdict.frozen)}`],`- ${t("notExercised")}`,`- ${t("live",{count:verdict.liveFiles.length})}${verdict.liveFiles.length>0?": "+verdict.liveFiles.join(", "):""}`,`- seconds per stage: ${JSON.stringify(verdict.stageSeconds)}`,`- seconds per phase: ${JSON.stringify(verdict.phaseSeconds)}`,""];
  for(const wall of verdict.walls)lines.push(`## ${wall.machine}: ${wall.stage} / ${wall.phase??"-"} (${wall.code})`,"",`process: ${wall.process}`,"","```",...wall.tail,"```","");
  lines.push(table([["t (s)","machine","stage","state","phase","done","total","owners","procs","busy","footprint MB","cpu %","loop lag ms"],["---","---","---","---","---","---","---","---","---","---","---","---","---"],...samples.map(sample=>[String(sample.atSeconds),sample.machine,sample.stage??"-",sample.state,sample.phase??"-",String(sample.done??"-"),String(sample.total??"-"),JSON.stringify(sample.owners),String(sample.processes),String(sample.busy),String(Math.round(sample.footprintMegabytes)),String(sample.cpu),String(sample.loopLagMs??"-")])]),"");
  return lines.join("\n");
@@ -198,10 +213,47 @@ export async function startSliceLabFleetV1(work:string,plans:readonly SliceLabPl
 
 /** 🌊️ The files below `framework` that were changed after the marker file was written (the start of the run): the churn of the live tree that invalidates a long read. */
 export function treeChurnV1(root:string,marker:string,ignore:readonly string[]=[],whole=false):Readonly<{count:number;sample:readonly string[]}>{
- const run=spawnSync("find",[whole?resolve(root):join(root,"🧰️framework"),"-type","f","-newer",marker,"-not","-path","*/node_modules/*","-not","-path","*/.cache/*",...whole?["-not","-path",resolve(root)+"/.git/*","-not","-path","*/target/*"]:[]],{encoding:"utf8",maxBuffer:64*MEGABYTE,timeout:120000});
- let rows=(run.stdout??"").split("\n").filter(Boolean).filter(row=>!ignore.includes(row.slice(resolve(root).length+1)));
- if(whole&&rows.length>0){const ignored=new Set((spawnSync("git",["-c","core.fsmonitor=false","check-ignore","-z","--stdin"],{cwd:root,input:rows.join("\0"),encoding:"utf8",maxBuffer:64*MEGABYTE}).stdout??"").split("\0").filter(Boolean));rows=rows.filter(row=>!ignored.has(row));}
- return Object.freeze({count:rows.length,sample:rows.slice(0,5).map(row=>row.slice(resolve(root).length+1))});
+ const workspace=resolve(root),since=statSync(marker,{bigint:true}).mtimeNs,deadline=performance.now()+120_000;
+ const directories=[whole?"":"🧰️framework"],excluded=new Set(ignore.map(name=>join(name))),changed:string[]=[];
+ const vanished=(error:unknown)=>["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException)?.code??"");
+ const checkTime=()=>{if(performance.now()>=deadline)throw Error("Slice lab change scan timed out");};
+ let bytes=0,visited=0;
+ while(directories.length){
+  checkTime();
+  const directory=directories.pop()!;
+  let entries;
+  try{
+   const path=join(workspace,directory);
+   if(!lstatSync(path).isDirectory())continue;
+   entries=readdirSync(path,{withFileTypes:true});
+  }
+  catch(error){if(directory&&directory!=="🧰️framework"&&vanished(error))continue;throw error;}
+  for(const entry of entries){
+   if(++visited%256===0)checkTime();
+   const name=join(directory,entry.name);
+   if(entry.isDirectory()){
+    if(entry.name!=="node_modules"&&entry.name!==".cache"&&!(whole&&(entry.name==="target"||name===".git")))directories.push(name);
+   }else if(entry.isFile()&&!excluded.has(name)){
+    try{
+     const current=lstatSync(join(workspace,name),{bigint:true});
+     if(!current.isFile()||current.mtimeNs<=since)continue;
+    }catch(error){if(vanished(error))continue;throw error;}
+    bytes+=Buffer.byteLength(name)+1;
+    if(bytes>64*MEGABYTE)throw Error("Slice lab change list exceeded its size limit");
+    changed.push(name);
+   }
+  }
+ }
+ let rows=changed;
+ if(whole&&changed.length){
+  const names=changed.map(name=>name.split(sep).join("/"));
+  const ignored=spawnSync("git",["-c","core.fsmonitor=false","check-ignore","-z","--stdin"],{cwd:workspace,input:names.join("\0")+"\0",encoding:"utf8",maxBuffer:64*MEGABYTE,timeout:Math.max(1,Math.ceil(deadline-performance.now()))});
+  if(ignored.error)throw ignored.error;
+  if(ignored.status!==0&&ignored.status!==1)throw Error("Slice lab change scan could not read ignore rules: "+ignored.stderr.trim().slice(0,512));
+  const omit=new Set(ignored.stdout.split("\0"));
+  rows=changed.filter((_,index)=>!omit.has(names[index]!));
+ }
+ return Object.freeze({count:rows.length,sample:rows.slice(0,5)});
 }
 
 /** 🧮️ What the fleet cache server of a run answered, counted by origin, kind (`ac`, `cas`, `claim`), method and status: who stored, who fetched, who claimed. */
@@ -231,10 +283,11 @@ export function sliceLabLiveFilesV1(lsof:string,root:string):readonly string[]{
 }
 const openFiles=(pids:readonly number[],root:string):readonly string[]=>pids.length===0?[]:sliceLabLiveFilesV1(spawnSync("lsof",["-n","-P","-Fan","-p",pids.join(",")],{encoding:"utf8",maxBuffer:64*MEGABYTE}).stdout??"",root);
 
-const hostActivity=(plan:SliceLabPlanV1):string=>{
+const hostActivity=(directory:string):string=>{
  try{
-  const user=join(plan.runtime,"semio-repo"),found=readdirSync(user).flatMap(name=>readdirSync(join(user,name)).filter(file=>/^host-.*\.log$/u.test(file)).map(file=>join(user,name,file)))[0];
-  if(found===undefined)return"-";
+  const file=readdirSync(directory).find(name=>/^host-.*\.log$/u.test(name));
+  if(file===undefined)return"-";
+  const found=join(directory,file);
   const size=statSync(found).size,length=Math.min(size,16384),buffer=Buffer.alloc(length),fd=openSync(found,"r");
   try{readSync(fd,buffer,0,length,size-length);}finally{closeSync(fd);}
   return sliceLabActivityV1(buffer.toString("utf8"));
@@ -253,26 +306,49 @@ const selectedPublications=(state:string):readonly string[]=>{
 };
 const readJson=<T>(path:string):T|undefined=>{try{return JSON.parse(readFileSync(path,"utf8")) as T;}catch{return undefined;}};
 
+type SliceLabIoV1=Readonly<{say?(line:string):void;keep?:boolean;hold?:boolean;signal?:AbortSignal;root?:string}>;
+
 /** 🔬️ Runs the lab: one temporary work directory, one driver per machine that runs the real readiness loop and the real ports over the lab's stage plan with its own state root, a sampler every 2 s, the verdict, and the clean-up of everything it started (processes, disk images, directories). */
-export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(line:string):void;keep?:boolean;hold?:boolean;signal?:AbortSignal;root?:string}>={}):Promise<Readonly<{workDirectory:string;samples:readonly SliceLabSampleV1[];verdict:SliceLabVerdictV1;home:SliceLabHomeReportV1}>>{
- const language=options.language??"en";
+export async function runSliceLabV1(options:SliceLabOptionsV1,io:SliceLabIoV1={}):Promise<Readonly<{workDirectory:string;samples:readonly SliceLabSampleV1[];verdict:SliceLabVerdictV1;home:SliceLabHomeReportV1}>>{
  if(process.platform==="win32")throw Error(`${sliceLabTextV1("en","windows")}\n${sliceLabTextV1("de","windows")}`);
- const say=io.say??(()=>{}),started=Date.now(),id=randomBytes(2).toString("hex"),root=io.root??process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),base=options.work===undefined?realpathSync("/tmp"):options.work;
- mkdirSync(base,{recursive:true});
- {const info=statfsSync(base),disk=sliceLabDiskPreflightV1(info.bavail*info.bsize),fields={path:base,free:Math.floor(disk.freeBytes/1073741824),need:Math.ceil(disk.needBytes/1073741824)};if(!disk.ok)throw Error(`${sliceLabTextV1("en","disk",fields)}\n${sliceLabTextV1("de","disk",fields)}`);}
- const work=realpathSync(mkdtempSync(join(base,`${P.prefix}-`)));
- if(work.length>P.maximumWorkDirectoryCharacters||work.startsWith(resolve(root)+sep))throw Error("A work directory outside the checkout with a short path is required / Ein Arbeitsverzeichnis ausserhalb des Checkouts mit kurzem Pfad ist erforderlich");
+ const started=Date.now(),id=randomBytes(2).toString("hex"),live=realpathSync(io.root??process.env.SEMIO_WORKSPACE_ROOT??process.cwd()),requested=options.work??"/tmp";
+ mkdirSync(requested,{recursive:true});
+ const base=realpathSync(requested);
+ {const info=freeSpaceSyncV1(base);if(!info)throw Error(`${sliceLabTextV1("en","diskUnknown",{path:base})}\n${sliceLabTextV1("de","diskUnknown",{path:base})}`);const disk=sliceLabDiskPreflightV1(info.availableBytes),fields={path:base,free:Math.floor(disk.freeBytes/1073741824),need:Math.ceil(disk.needBytes/1073741824)};if(!disk.ok)throw Error(`${sliceLabTextV1("en","disk",fields)}\n${sliceLabTextV1("de","disk",fields)}`);}
+ const work=mkdtempSync(join(base,`${P.prefix}-`)),owned=lstatSync(work);
+ try{
+  if(work.length>P.maximumWorkDirectoryCharacters||work.startsWith(live+sep))throw Error("A work directory outside the checkout with a short path is required / Ein Arbeitsverzeichnis ausserhalb des Checkouts mit kurzem Pfad ist erforderlich");
+  return await runOwnedSliceLabV1(options,io,{started,id,live,work});
+ }finally{
+  if(io.keep!==true){
+   const current=lstatSync(work,{throwIfNoEntry:false});
+   if(current?.isDirectory()&&current.dev===owned.dev&&current.ino===owned.ino)rmSync(work,{recursive:true,force:true});
+  }
+ }
+}
+
+async function runOwnedSliceLabV1(options:SliceLabOptionsV1,io:SliceLabIoV1,{started,id,live,work}:Readonly<{started:number;id:string;live:string;work:string}>){
+ const ambientDependencies=!provisionsDependenciesV1(options);
+ const say=io.say??(()=>{}),own=needsPrivateCheckoutV1(options),plans=sliceLabPlansV1(options,id,work,live,own),runtimeDirectories=plans.map(sliceLabRuntimeDirectoryV1);
  if(options.warm!==undefined&&!existsSync(options.warm))throw Error(`The warm directory ${options.warm} is absent; build it with slice-lab warm --out=<dir> / Das Warm-Verzeichnis ${options.warm} fehlt; mit slice-lab warm --out=<dir> bauen`);
- const live=resolve(root),driftMarker=join(work,"start.marker");writeFileSync(driftMarker,"");
- const frozen=options.frozen===true||options.frozenDirectory!==undefined?(say("freezing the tree / Baum wird eingefroren"),options.frozenDirectory===undefined?freezeSliceLabRootV1(live,join(work,P.frozen.directory)):frozenRootV1(live,options.frozenDirectory)):undefined,view=frozen?.root??live,marker=frozen===undefined?driftMarker:join(work,"frozen.marker");writeFileSync(marker,"");
+ const driftMarker=join(work,"start.marker");writeFileSync(driftMarker,"");
+ const frozen=own?(say("freezing the tree / Baum wird eingefroren"),options.frozenDirectory===undefined?freezeSliceLabRootV1(live,join(work,P.frozen.directory),{ambientDependencies}):frozenRootV1(live,options.frozenDirectory,ambientDependencies)):undefined,view=frozen?.root??live,marker=frozen===undefined?driftMarker:join(work,"frozen.marker");writeFileSync(marker,"");
  if(frozen!==undefined)say(`frozen view ${frozen.files} files, ${frozen.megabytes} MB, ${frozen.seconds} s / eingefrorene Sicht ${frozen.files} Dateien`);
- const plans=sliceLabPlansV1(options,id,work,view,frozen!==undefined),kinds=options.stages==="all"?sliceLabKindsOfSliceV1(options.slice,READY_PROBES_V1.projects,options.kinds):[],tools=sliceLabToolsForKindsV1(kinds),labStages=sliceLabStagesV1(options),stages=options.stages==="all"?sliceLabSkipStagesV1(sliceLabAllStagesV1(READY_STAGES_V1,labStages.at(-1)!,tools),options.skip):labStages,load=Number(spawnSync("sysctl",["-n","vm.loadavg"],{encoding:"utf8"}).stdout?.trim().split(/\s+/u)[1]??0)||0;
- for(const plan of plans)for(const path of[...P.provision.map(name=>join(plan.state,...name.split("/"))),plan.state,plan.temporary,plan.runtime,plan.capacity,plan.registry,plan.cache,plan.store])mkdirSync(path,{recursive:true});
- if(frozen!==undefined)for(const plan of plans){const made=cloneFrozenRootV1(view,live,plan.root);say(`machine checkout ${plan.origin} cloned in ${made.seconds} s / Maschinen-Checkout ${plan.origin} geklont`);}
+ const kinds=options.stages==="all"?sliceLabKindsOfSliceV1(options.slice,READY_PROBES_V1.projects,options.kinds):[],tools=sliceLabToolsForKindsV1(kinds),labStages=sliceLabStagesV1(options),stages=options.stages==="all"?sliceLabSkipStagesV1(sliceLabAllStagesV1(READY_STAGES_V1,labStages.at(-1)!,tools),options.skip):labStages,load=Number(spawnSync("sysctl",["-n","vm.loadavg"],{encoding:"utf8"}).stdout?.trim().split(/\s+/u)[1]??0)||0;
+ for(const plan of plans){
+  mkdirSync(plan.runtime,{recursive:true,mode:0o700});
+  for(const path of[...P.provision.map(name=>join(plan.state,...name.split("/"))),plan.state,plan.temporary,plan.capacity,plan.registry,plan.cache,plan.store])mkdirSync(path,{recursive:true});
+ }
+ if(frozen!==undefined)for(const plan of plans){const made=cloneFrozenRootV1(view,live,plan.root,ambientDependencies);say(`machine checkout ${plan.origin} cloned in ${made.seconds} s / Maschinen-Checkout ${plan.origin} geklont`);}
  for(const plan of plans)sliceLabNxLinkV1(plan);
  const liveHome=process.env.HOME??homedir(),liveBefore=sliceLabLiveSnapshotV1(liveHome,live),seedRows:{machine:string;id:string;ok:boolean;method:string;seconds:number}[]=[];
- for(const plan of plans){mkdirSync(plan.home,{recursive:true});sliceLabRegistryRefusalV1(plan.home);sliceLabShimsV1(plan.home,join(plan.work,`m${plan.index}`,HOME.downloadLog));seedRows.push(...sliceLabSeedHomeV1((seedTools=>[...sliceLabHomeSeedsV1(seedTools,liveHome,plan.home),...seedTools==="all"||seedTools.includes("go")?sliceLabPinnedGoSeedsV1(live,plan.home):[]])(sliceLabSeedToolsV1(tools,options.stages))).concat((()=>{sliceLabLinkHomeV1(sliceLabSeedToolsV1(tools,options.stages),plan.home);return[];})()).map(row=>({machine:plan.origin,...row})));}
- if(options.stages==="all")for(const plan of plans){const built=sliceLabLauncherBuildV1(view,plan.home);say(`launcher ${built.reason} ${built.seconds}s / Launcher ${built.reason}`);seedRows.push({machine:plan.origin,id:"launcher-build",ok:built.ok,method:built.reason,seconds:built.seconds});}
+ for(const plan of plans){mkdirSync(plan.home,{recursive:true});sliceLabRegistryRefusalV1(plan.home);sliceLabShimsV1(plan.home,join(plan.work,`m${plan.index}`,HOME.downloadLog));seedRows.push(...sliceLabSeedHomeV1((seedTools=>[...sliceLabHomeSeedsV1(seedTools,liveHome,plan.home,plan.root),...seedTools==="all"||seedTools.includes("go")?sliceLabPinnedGoSeedsV1(live,plan.home):[]])(sliceLabSeedToolsV1(tools,options.stages))).concat((()=>{sliceLabLinkHomeV1(sliceLabSeedToolsV1(tools,options.stages),plan.home);return[];})()).map(row=>({machine:plan.origin,...row})));}
+ const buildLauncher=(plan:SliceLabPlanV1)=>{
+  const built=sliceLabLauncherBuildV1(plan.root,plan.home);
+  say(`launcher ${built.reason} ${built.seconds}s / Launcher ${built.reason}`);
+  seedRows.push({machine:plan.origin,id:"launcher-build",ok:built.ok,method:built.reason,seconds:built.seconds});
+ };
+ if(options.stages==="all")for(const plan of plans)if(options.edit===undefined||plan.index!==plans.length)buildLauncher(plan);
  say(`home seeded: ${seedRows.map(row=>`${row.id} ${row.method} ${row.seconds}s`).join(", ")} / Home gesät`);
  const samples:SliceLabSampleV1[]=[],drivers=new Map<string,ReturnType<typeof spawn>>(),seconds=()=>Math.round((Date.now()-started)/100)/10;
  let restoreEdit:(()=>void)|undefined,timedOut=false,leftoverProcesses=0,leftoverImages=0,detachedImages=0;const started_=new Map<string,number>();
@@ -297,7 +373,10 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
  };
  try{
   const launch=(plan:SliceLabPlanV1):void=>{
-   if(options.edit!==undefined&&plan.index===plans.length&&restoreEdit===undefined)restoreEdit=editFrozenFileV1(plan.root,options.edit);
+   if(options.edit!==undefined&&plan.index===plans.length&&restoreEdit===undefined){
+    restoreEdit=editFrozenFileV1(plan.root,options.edit);
+    if(options.stages==="all")buildLauncher(plan);
+   }
    const config={origin:plan.origin,root:plan.root,group:P.group,stages,state:plan.state,...options.warm===undefined?{}:{warm:{source:options.warm,tools,prime:HOME.primeTools}},result:join(plan.work,`m${plan.index}`,"result.json"),timeoutSeconds:options.timeoutSeconds};
    const file=join(plan.work,`m${plan.index}`,"config.json"),log=join(plan.work,`m${plan.index}`,"driver.log");
    writeFileSync(file,JSON.stringify(config));
@@ -312,7 +391,7 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
   while(io.signal?.aborted!==true){
    if(Date.now()>deadline){timedOut=true;break;}
    await pause(P.sampleMilliseconds);
-   const rows=sliceLabProcessRowsV1(processTable(),id),at=seconds();
+   const rows=sliceLabProcessRowsV1(processTable(),id),at=seconds();const footprints=await readFootprintsV1(rows.map(row=>row.pid));
    for(const plan of plans)if(!started_.has(plan.origin)&&(stagger<0?results[plans[0]!.origin]!==undefined:at>=stagger))launch(plan);
    for(const row of rows)if(row.nice!==0)niced.add(row.pid);
    if(tick%5===0)for(const plan of plans)for(const name of selectedPublications(plan.state))published.add(name);
@@ -321,7 +400,7 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
     if(!started_.has(plan.origin))continue;
     const dir=join(plan.work,`m${plan.index}`),ready=readJson<{stage:string|null;state:string;ready:boolean;tail:string[]}>(join(plan.state,"f","ready","ready.json"))??readJson<{stage:string|null;state:string;ready:boolean;tail:string[]}>(join(plan.store,"v1","origins",plan.origin,"ready.json")),report=readJson<{phase?:{name:string;done:number;total:number};sources?:{owners?:{ledger?:Record<string,number>};loop?:{lagMilliseconds?:number}}}>(join(plan.state,"f","slice-memory.json")),mine=rows.filter(row=>row.machine===plan.origin);
     const progress=sliceLabPhaseV1(ready?.tail?.at(-1)),phase=progress?.phase??report?.phase?.name??null;
-    samples.push({atSeconds:at,machine:plan.origin,stage:ready?.stage??null,state:ready?.state??"starting",phase,done:progress?.done??report?.phase?.done??null,total:progress?.total??report?.phase?.total??null,owners:report?.sources?.owners?.ledger??{},processes:mine.length,busy:mine.filter(row=>row.cpu>=1).length,footprintMegabytes:Math.round(mine.reduce((sum,row)=>sum+row.rssMegabytes,0)),cpu:Math.round(mine.reduce((sum,row)=>sum+row.cpu,0)*10)/10,loopLagMs:report?.sources?.loop?.lagMilliseconds??null,activity:hostActivity(plan)});
+    samples.push({atSeconds:at,machine:plan.origin,stage:ready?.stage??null,state:ready?.state??"starting",phase,done:progress?.done??report?.phase?.done??null,total:progress?.total??report?.phase?.total??null,owners:report?.sources?.owners?.ledger??{},processes:mine.length,busy:mine.filter(row=>row.cpu>=1).length,...(()=>{const held=sliceLabFootprintV1(mine,footprints);return{footprintMegabytes:held.footprintMegabytes,rssMegabytes:held.rssMegabytes};})(),cpu:Math.round(mine.reduce((sum,row)=>sum+row.cpu,0)*10)/10,loopLagMs:report?.sources?.loop?.lagMilliseconds??null,activity:hostActivity(runtimeDirectories[plan.index-1]!)});
     const result=readJson<SliceLabMachineResultV1>(join(dir,"result.json"));if(result!==undefined)results[plan.origin]=result;
    }
    if(plans.every(plan=>results[plan.origin]!==undefined))break;
@@ -343,13 +422,9 @@ export async function runSliceLabV1(options:SliceLabOptionsV1,io:Readonly<{say?(
   for(const plan of plans){try{writeFileSync(join(options.out,`m${plan.index}-driver.log`),readFileSync(join(plan.work,`m${plan.index}`,"driver.log")));}catch{}}
   for(const plan of plans){
    try{const ready=join(plan.state,"f","ready");for(const name of readdirSync(ready))if(name.endsWith(".log"))writeFileSync(join(options.out,`m${plan.index}-ready-${name}`),readFileSync(join(ready,name)));}catch{}
-   try{const user=join(plan.runtime,"semio-repo");for(const name of readdirSync(user))for(const file of readdirSync(join(user,name)))if(/^host-.*\.log$/u.test(file))writeFileSync(join(options.out,`m${plan.index}-${file}`),readFileSync(join(user,name,file)));}catch{}
+   try{const directory=runtimeDirectories[plan.index-1]!;for(const file of readdirSync(directory))if(/^host-.*\.log$/u.test(file))writeFileSync(join(options.out,`m${plan.index}-${file}`),readFileSync(join(directory,file)));}catch{}
   }
   writeFileSync(join(options.out,"fleet.json"),JSON.stringify(sliceLabFleetSummaryV1(fleet.requests),null,1));
  }
- const guard=resolve(work);
- if(io.keep!==true&&guard.startsWith(join(base,P.prefix))&&!guard.includes(sep+".."+sep)&&existsSync(guard))rmSync(guard,{recursive:true,force:true});
- for(const plan of plans)if(io.keep!==true&&plan.runtime.startsWith(P.runtimePrefix))rmSync(plan.runtime,{recursive:true,force:true});
- void language;
  return Object.freeze({workDirectory:work,samples,verdict,home:homeReport});
 }

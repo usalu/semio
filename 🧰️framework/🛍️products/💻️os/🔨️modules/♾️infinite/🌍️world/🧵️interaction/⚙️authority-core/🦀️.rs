@@ -367,7 +367,7 @@ impl WorldInteractionAuthority {
                         None
                     }
                 } else {
-                    if session_state.active_utility == "brush" || (session_state.active_utility == "select" && selection_state.granularity == "vertex") {
+                    if world3d_vortex_pointer_mode(&session_state.active_utility, &selection_state.granularity, !scene_state.vortices.is_empty()) {
                         WorldObjectPickCursor::new(session_state, camera_state, generation, WorldObjectPickPurpose::VortexHover, intent.x, intent.y).map(|cursor| WorldInteractionActive::ObjectPick { cursor, retirement: None })
                     } else if component_mode_active(selection_state) {
                         WorldComponentPickCursor::new(session_state, camera_state, selection_state, generation, WorldComponentPickPurpose::Hover, intent.x, intent.y).map(|cursor| WorldInteractionActive::ComponentPick { cursor, retirement: None })
@@ -408,7 +408,7 @@ impl WorldInteractionAuthority {
                     Some(WorldInteractionActive::Plan { plan, retirement: None })
                 } else if !intent.down && intent.button == 0 && session_state.active_utility == "surfaceBrush" {
                     WorldRayPickCursor::new(session_state, camera_state, generation, WorldRayPickPurpose::Surface, intent.x, intent.y).map(|cursor| WorldInteractionActive::Pick { cursor, retirement: None })
-                } else if intent.down && intent.button == 0 && (session_state.active_utility == "brush" || (session_state.active_utility == "select" && selection_state.granularity == "vertex")) {
+                } else if intent.down && intent.button == 0 && world3d_vortex_pointer_mode(&session_state.active_utility, &selection_state.granularity, !scene_state.vortices.is_empty()) {
                     WorldObjectPickCursor::new(session_state, camera_state, generation, WorldObjectPickPurpose::VortexSelect, intent.x, intent.y).map(|mut cursor| {
                         cursor.merge = world_merge_code(intent.shift, intent.ctrl, intent.meta);
                         WorldInteractionActive::ObjectPick { cursor, retirement: None }

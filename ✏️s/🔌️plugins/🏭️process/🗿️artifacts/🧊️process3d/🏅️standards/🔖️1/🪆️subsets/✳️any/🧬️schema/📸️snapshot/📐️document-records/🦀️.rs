@@ -90,10 +90,9 @@ pub enum WorkingSolid {
     ImportedMesh {
         mesh_url: String,
     },
-    /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
-    /// session by handle id; ephemeral to that session.
+    /// 🧊️ Canonical Semio B-Rep pack for imported closed geometry.
     ImportedSolid {
-        solid_handle: String,
+        brep_pack: String,
     },
     /// 🏛️ A reference solid this artifact ships as exact STEP B-Rep (`reference_solid`), addressed by
     /// its stable id and rebuilt into real kernel topology at every replay — the durable, cross-session
@@ -102,6 +101,19 @@ pub enum WorkingSolid {
     Reference {
         reference_id: String,
     },
+}
+
+impl WorkingSolid {
+    /// 📐️ Mutable authored dimension of an editable solid primitive.
+    pub fn dimension_mut(&mut self, field: &str) -> Option<&mut f64> {
+        match (self, field) {
+            (Self::Box { width, .. }, "width") => Some(width),
+            (Self::Box { depth, .. }, "depth") => Some(depth),
+            (Self::Box { height, .. } | Self::Cylinder { height, .. }, "height") => Some(height),
+            (Self::Cylinder { radius, .. } | Self::Sphere { radius }, "radius") => Some(radius),
+            _ => None,
+        }
+    }
 }
 
 impl Default for WorkingSolid {

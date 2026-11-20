@@ -23,11 +23,13 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    if !self.mutation_constructing&&(cx.fuel_remaining()<2||grant.maximum_items==0||grant.maximum_depth<2||grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<overhead){return false}
    let demand=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:overhead,capacity_bytes:capacity,release_bytes:0,depth:2};
    let constructing=&mut self.mutation_constructing;
-   let status=semio_framework_job::admit_original_construction(cx,&mut*self.mutation_receiving,&mut self.mutation_admission,demand,1,|scope,actual|{
+   // The original constructor funds the typed cursor birth and its box placement.
+   let status=semio_framework_job::admit_original_construction(cx,&mut*self.mutation_receiving,&mut self.mutation_admission,demand,2,|scope,actual|{
     *constructing=true;
     let granted=scope.retained_grant();
     let Some(child)=mutation_receiving_child(granted,capacity,overhead)else{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"mutation receiving birth lacks its quoted grant")),work:0}};
-    let turn=M::admit_receiving(source,(0,source.len()),child);let work=u128::from(turn.work).saturating_add(1);
+    let turn=M::admit_receiving(source,(0,source.len()),child);
+    let work=u128::from(turn.work).saturating_add(u128::from(matches!(&turn.result, Ok(Some(_)))));
     let result=match turn.result{
      Ok(Some((owner,progress)))=>{*actual=Some(capacity);let extra=RetainedCloneProgress{copied_bytes:overhead,retained_capacity_bytes:capacity,..Default::default()};progress.checked_add(extra).map(|progress|(Box::new(owner),progress))},
      Ok(None)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"mutation receiving birth was denied by its original owner")),
@@ -52,15 +54,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
    Ok(())
   });
   if matches!(result,Ok(true)){if let Some(turn)=taken{if let Err(error)=semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:u128::from(turn.work)}){*self.original_failure=Some(error)}}}
-  match result{
-   Err(failure)=>*self.original_context_failure=Some(failure),
-   Ok(true)=>match scope{
-    Some(scope) if scope.source_refusal.is_some()||scope.call.is_err()=>*self.original_context_failure=Some(ValueError::literal(ValueRefusalKind::InvalidValue,"original mutation receiving scope refused").with_retained_progress(scope.retained_progress()).into()),
-    Some(_)=>{},
-    None=>*self.original_context_failure=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original mutation receiving scope vanished").into()),
-   },
-   Ok(false)=>{},
-  }
+  self.settle_original_receiving_scope(cx,scope,result);
   false
  }
 }

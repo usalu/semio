@@ -13,7 +13,7 @@ export type { CargoDependencyNetworkV1 } from "../../../🏃️process/🦀️ca
 export { cargoDependencyFetchArgumentsV1, repositoryCargoCompilerInputsV1, repositoryCargoConsumptionV1, repositoryCargoNetworkV1, withRepositoryCargoInputReaderV1, withRepositoryCargoInputsV1, withRepositoryCargoPassInputsV1, withRepositoryCargoResolutionV1 } from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 export type { RepositoryCargoInputSelectionV1, RepositoryCargoInputsViewV1 } from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 export { nextestArtifactLocation } from "../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
-export { launchRepositoryCargoV1, readRepositoryCargoGeneratedCapturePolicyV1, readRepositoryCargoLaunchV1 } from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
+export { launchRepositoryCargoV1, readRepositoryCargoGeneratedCapturePolicyV1, readRepositoryCargoLaunchV1, repositoryCargoSourceMemoV1 } from "../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 export { runRepositoryCargoTestExecutableV1 } from "../../../🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts";
 export { renderCargoProfileConfigurationV1 } from "../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 export { bindHostPlatformJobArgumentsV1, readBuildHostPlatformV1, requireHostPlatformBuildArgumentsV1, withHostPlatformOutputsV1 } from "../../../🏗️build/🎯️host-platform/🟦️.ts";

@@ -105,7 +105,7 @@ pub use acceptance_fixtures_cases_and_change_buckets::{
 mod acceptance_policy_pump_and_drive;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_policy_pump_and_drive::{
-    acceptance_close, acceptance_drive, acceptance_head, acceptance_meta, acceptance_policy,
+    acceptance_close, acceptance_context, acceptance_drive, acceptance_head, acceptance_meta, acceptance_policy,
     acceptance_pump, acceptance_seeded, acceptance_verb,
 };
 

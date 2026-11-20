@@ -1,0 +1,5 @@
+[
+  {"phase":"lookup","transportCancelled":true,"releaseCount":0},
+  {"phase":"held-await","transportCancelled":true,"releaseCount":0},
+  {"phase":"late-grant","transportCancelled":false,"releaseCount":1}
+]

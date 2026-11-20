@@ -26,7 +26,14 @@ test("directory funding requires actual current anchor enforcement and attached 
 
 test("checkpoint replay refuses settled undercharge and duplicated retained predecessor",()=>{const db=new Database(":memory:");try{for(const row of corpus.checkpoints){const allocation=candidate();allocation.phase=row.phase==="reserved"?"reserved":"committed";allocation.bytes=row.bytes;allocation.funding.phase=row.phase;const allocations=row.oldPresent?[{...old},allocation]:[allocation];let accepted=true;try{nativeStorageEventV1({version:1,sequence:0,allocations:[]},{type:"checkpoint",state:{version:1,sequence:12,allocations}}as NativeStorageEventV1,100000000000);}catch{accepted=false;}expect(accepted,row.id).toBe(row.accept);const oracle=db.query("select case when ?1='settled' then ?2=?3 and ?4=0 else ?2=?3-?5 and ?4=1 end accepted").get(row.phase,row.bytes,target,Number(row.oldPresent),old.bytes)as{accepted:number};expect(accepted,row.id).toBe(Boolean(oracle.accepted));}}finally{db.close();}});
 
-import{readNativeStorageFundedArtifactUsageV1}from"../../📏️usage/🟦️.ts";
+import{readNativeStorageFundedArtifactUsageV1,readNativeStorageObservedArtifactUsageV1}from"../../📏️usage/🟦️.ts";
+test("Native usage inspection exposes measured excess without admitting it",()=>{
+ for(const row of corpus.usage){
+  const data={version:1,purpose:"current-artifact-funding-usage",allocation:"1".repeat(32),bytes:row.bytes,maximumBytes:row.maximumBytes,authority:false};
+  expect(readNativeStorageObservedArtifactUsageV1(data),row.id).toEqual(data);
+  if(!row.accept)expect(()=>readNativeStorageFundedArtifactUsageV1(data),row.id).toThrow("Actual whole artifact exceeds its retained Native funding");
+ }
+});
 test("fresh producer aggregate usage remains bounded by its actual retained charge",()=>{const db=new Database(":memory:");try{for(const row of corpus.usage){let accepted=true;try{const result=readNativeStorageFundedArtifactUsageV1({version:1,purpose:"current-artifact-funding-usage",allocation:"1".repeat(32),bytes:row.bytes,maximumBytes:row.maximumBytes,authority:false});expect(result.authority).toBe(false);}catch{accepted=false;}expect(accepted,row.id).toBe(row.accept);expect(accepted,row.id).toBe(Boolean((db.query("select ?<=? accepted").get(row.bytes,row.maximumBytes)as{accepted:number}).accepted));}}finally{db.close();}});
 
 import{readNativeFundingMetadataBaselineV1,inspectNativeFundingUnpreparedMetadataV1}from"../../🧾️metadata/📋️model/🟦️.ts";

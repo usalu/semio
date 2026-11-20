@@ -17,7 +17,7 @@ fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{cop
 impl<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize> PagedListCloneEngine<T,C,N>{
  #[cfg(test)] pub(crate) fn placement(&self)->(usize,usize,bool){let s=&*self.state;(s.index,s.values.len(),s.child_value.is_some())}
  fn empty(&self)->bool{let s=&*self.state;s.values.terminal_is_empty()&&s.child.is_none()&&s.child_value.is_none()&&s.source.is_none()&&s.work.is_none()&&s.output.is_none()&&s.close.is_empty()&&s.route.is_none()&&s.answer.is_none()&&s.value_answer.is_none()}
- fn validate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.invocation().is_none()||self.state.work.is_some_and(|binding|!binding.matches_effect(effect)){return Err(invalid())}Ok(())}
+ fn validate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.invocation().is_none()||self.state.work.is_some_and(|binding|!binding.matches_source(effect)){return Err(invalid())}Ok(())}
  fn header_bytes()->Result<usize,ValueError>{[size_of::<Option<Route>>(),size_of::<Option<Result<Step,Failure>>>(),size_of::<Option<Result<Step,ValueError>>>()].into_iter().try_fold(0usize,|sum,n|sum.checked_add(n.checked_mul(2)?)).ok_or_else(invalid)}
  fn add(mut d:RetirementDemand,extra:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(extra).ok_or_else(invalid)?;Ok(d)}
  fn check_source(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if source.check_binding_paid(&self.state.source,effect).result?!=Some(true){return Err(invalid())}Ok(())}

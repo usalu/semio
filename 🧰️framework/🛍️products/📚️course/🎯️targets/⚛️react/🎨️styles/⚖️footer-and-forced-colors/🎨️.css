@@ -6,15 +6,6 @@
   height: calc-size(auto, round(up, size, var(--device-pixel)));
 }
 
-/* ⏭️ The skip link stands outside every shared-border frame: while focused it is a box with one accent line of the design tokens and an underlined label, never the browser ring. */
-.course-skip-link:focus {
-  outline: none;
-  border: var(--stroke-hairline) solid var(--active-base);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.2em;
-}
-
 /* 🐾️ The ground of the pets: a screen whose one card fills the whole room leaves only the sliver between the card and the
    footer, too low for any pet, so while pets are shown the main area keeps a free strip above the footer — a pet stands
    on the footer line, in front of the page background and never in front of a card. Forced colours show no pets. */
@@ -74,20 +65,5 @@
   .course-app [aria-disabled="true"],
   .course-app :disabled {
     color: GrayText;
-    border-color: GrayText;
-  }
-
-  .course-app :focus-visible {
-    outline: 2px solid Highlight;
-    outline-offset: 2px;
-  }
-
-  .course-skip-link:focus {
-    border-color: Highlight;
-  }
-
-  .course-app :is(.course-input, select, .course-cell):focus-visible {
-    outline: none;
-    border-color: Highlight;
   }
 }

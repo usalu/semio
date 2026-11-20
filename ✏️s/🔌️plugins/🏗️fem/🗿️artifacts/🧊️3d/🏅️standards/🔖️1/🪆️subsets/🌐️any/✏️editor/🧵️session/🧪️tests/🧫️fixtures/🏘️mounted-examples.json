@@ -1,0 +1,5 @@
+{
+  "oracle": "NumPy integration of the shipped solid volumes, attic pressure and frame-member loads",
+  "concreteForest": {"analysisNodes": 20, "verticalReaction": 684631.2580208586},
+  "house": {"analysisNodes": 1939, "verticalReaction": 2131298.9}
+}

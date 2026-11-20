@@ -83,6 +83,7 @@ impl<P: CountedPresence> Retirement<P> {
 }
 
 impl<P: CountedPresence> ErasedSnapshotRetirement for Retirement<P> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
     fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let mut work = 0;

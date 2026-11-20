@@ -1,0 +1,5 @@
+{
+  "mutation": "resizeStock",
+  "field": "width",
+  "size": 1.0
+}

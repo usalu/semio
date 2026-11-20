@@ -1,0 +1,6 @@
+[
+  {"name":"field changes then returns to the recorded value","first":["changed","recorded"],"second":["unparsable"]},
+  {"name":"field read fails before later yielding a different value","first":["unreadable","changed"],"second":["unparsable"]},
+  {"name":"first field holds while the second field cannot be parsed","first":["recorded"],"second":["unparsable","changed"]},
+  {"name":"both recorded fields still hold","first":["recorded"],"second":["recorded"]}
+]

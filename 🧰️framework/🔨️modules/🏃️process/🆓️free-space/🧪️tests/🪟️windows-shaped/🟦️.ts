@@ -59,3 +59,22 @@ test("the facts of this machine's real volume equal the independent Python readi
  expect(facts.freeInodes===null).toBe(reading[2]===null);
  if(reading[2]!==null)expect(Math.abs(facts.freeInodes!-reading[2])).toBeLessThan(Math.max(100000,reading[2]*0.01));
 });
+
+test("Windows caller free and total bytes give the lease sweep a coherent ratio",()=>{
+ const directory=scratch();
+ const oracle=python(JSON.stringify(fixture.windows.map(row=>row.row)),[fileURLToPath(new URL("./🐍️.py",import.meta.url))]);
+ expect(oracle).toEqual(fixture.windows.map(row=>row.expected));
+ for(const row of fixture.windows){
+  const read=()=>{const volume=row.row;return {availableBytes:volume.availableBytes,totalBytes:"totalBytes" in volume?volume.totalBytes:undefined};};
+  const space=freeSpaceSyncV1(directory,{platform:"win32",windowsAvailableBytes:read}),total=space?.totalBytes??null;
+  expect(space?{bytes:space.availableBytes,total,ratio:total===null?null:space.availableBytes/total}:null,row.name).toEqual(row.expected);
+ }
+});
+
+test.skipIf(process.platform!=="win32")("the native Windows volume returns a usable caller capacity denominator",()=>{
+ const observed=readFreeSpaceV1(scratch());
+ expect(observed).toMatchObject({known:true,source:"win32-host",freeInodes:null});
+ if(!observed.known)throw Error(observed.detail);
+ expect(observed.totalBytes).toBeGreaterThan(0);
+ expect(observed.totalBytes!).toBeGreaterThanOrEqual(observed.availableBytes);
+});

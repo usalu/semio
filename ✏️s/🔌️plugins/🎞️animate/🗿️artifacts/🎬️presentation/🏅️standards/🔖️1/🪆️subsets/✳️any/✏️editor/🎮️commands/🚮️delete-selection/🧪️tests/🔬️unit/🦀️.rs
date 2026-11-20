@@ -39,7 +39,7 @@ async fn delete_selection_removes_the_live_selected_tile() {
         ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
     ]);
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("interactionSelect settles");
     dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty(), "selected tile must be deleted");
 }
@@ -52,7 +52,7 @@ async fn delete_selection_with_no_selection_is_a_no_op() {
     let mut app = presentation_app_with_registry().await;
     dispatch(&mut app, PresentationCommand::AddTile(add_tile::AddTile { crop: None })).await;
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, CLEAR_SELECTION_ACTION_ID, None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("clearSelection");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("clearSelection settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("clearSelection settles");
     dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
 }

@@ -8,6 +8,8 @@ pub use owned::{DslOwnedReceivingField,DslOwnedReceivingRecord,DslOwnedReceiving
 
 /// 🌱️ Requires caller-owned destination custody and the actual producer work outcome.
 pub trait DslReceivingField:RetireOwned+Sized{
+ const RECEIVES_STATEMENT: bool = false;
+ fn receive_statement(_keyword: &str, _record: &RecordValue, _output: &mut Option<Self>, _owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> ReceivingOutcome { refused() }
  fn receive_value(value:&FieldValue,output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>;
 }
 /// 📑️ Retains every completed field until the complete record can be published.
@@ -107,7 +109,7 @@ pub fn receive_wrapped<I:DslReceivingField,W:RetireOwned>(value:&FieldValue,outp
 struct Sequence<T:RetireOwned>{backing:Option<Vec<T>>,child:Option<T>,effect:semio_framework_io_control::NativeSnapshotEffectProgress,unwind:Option<NativeSnapshotFailure>}
 impl<T:DslReceivingField> DslReceivingField for Vec<T>{
  fn receive_value(value:&FieldValue,output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
-  let length=match value{FieldValue::List(values)|FieldValue::Tuple(values)=>values.len(),FieldValue::Bytes64(values)=>values.len(),_=>return refused()};
+  let length=match value{FieldValue::List(values)|FieldValue::Tuple(values)=>values.len(),FieldValue::Bytes64(values)=>values.len(),FieldValue::Statements(values) if T::RECEIVES_STATEMENT=>values.len(),_=>return refused()};
   owner.receive_nested::<Sequence<T>,Self,NativeSnapshotFailure>(output,&mut |slot,result,_marker,_failure,original|receiving_turn(|meter|{
    let bytes=size_of::<Sequence<T>>();meter.take(original.effect(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()},_marker,_failure,&mut |performed,physical|{*slot=Some(Sequence{backing:None,child:None,effect:Default::default(),unwind:None});*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())}))?;_marker.reset_completed()?;let frame=slot.as_mut().unwrap();
    meter.take(original.receive::<Vec<T>,Vec<T>,NativeSnapshotFailure>(&mut frame.backing,&mut |slot,result,_marker,_failure,native,body|receiving_turn(|meter|{
@@ -116,7 +118,7 @@ impl<T:DslReceivingField> DslReceivingField for Vec<T>{
     meter.measured(native,|native|body.allocate_vec_receiving(native,length,slot.as_mut().unwrap(),1))?;if slot.is_none()||result.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"typed receiving lost its retained output slot").into())}let quote=NativeSnapshotDecodeEffectQuote::decode(body,native,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()})?;meter.take(quote.run(_marker,_failure,&mut |performed,physical|{*result=slot.take();*performed=true;*physical=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(())}))?;Ok(())
    })))?;
    for index in 0..length{
-    meter.take(match value{FieldValue::List(values)|FieldValue::Tuple(values)=>T::receive_value(&values[index],&mut frame.child,original),FieldValue::Bytes64(values)=>T::receive_value(&FieldValue::UInt(u64::from(values.retained_bytes()[index])),&mut frame.child,original),_=>unreachable!()})?;
+    meter.take(match value{FieldValue::List(values)|FieldValue::Tuple(values)=>T::receive_value(&values[index],&mut frame.child,original),FieldValue::Bytes64(values)=>T::receive_value(&FieldValue::UInt(u64::from(values.retained_bytes()[index])),&mut frame.child,original),FieldValue::Statements(values)=>T::receive_statement(&values[index].0,&values[index].1,&mut frame.child,original),_=>unreachable!()})?;
     if frame.child.is_none()||frame.backing.as_ref().is_none_or(|values|values.len()==values.capacity()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"typed sequence lost its admitted destination").into())}
     let Sequence{backing,child,effect,unwind}=&mut *frame;meter.take(original.effect(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()},effect,unwind,&mut |performed,physical|{backing.as_mut().unwrap().push(child.take().unwrap());*performed=true;*physical=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(())}))?;effect.reset_completed()?;
    }

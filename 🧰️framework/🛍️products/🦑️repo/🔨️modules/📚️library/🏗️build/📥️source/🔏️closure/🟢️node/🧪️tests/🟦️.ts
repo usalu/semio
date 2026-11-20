@@ -28,3 +28,11 @@ test("captured Node modules execute immutable Source with live image DATA",async
  for(const row of fixture.arguments){if(row.accepted)expect(()=>buildSourceClosureNodeArgumentsV1({version:1,root,entry:"x.mjs",files:[]},policy.definitions.Policy.const,1536,row.executable)).not.toThrow();else expect(()=>buildSourceClosureNodeArgumentsV1({version:1,root,entry:"x.mjs",files:[]},policy.definitions.Policy.const,1536,row.executable)).toThrow(/command/iu);}
  }catch(error){failed=true;primary=error;}finally{try{db.close();}catch(error){if(!failed){failed=true;primary=error;}}try{await rm(root,{recursive:true,force:true});}catch(error){if(!failed){failed=true;primary=error;}}}if(failed)throw primary;
 }),150000);
+
+test("the captured Node loader admits the data module a captured module made from its own captured bytes, and nothing else outside the capture",()=>{
+ const text=buildSourceClosureNodeLoaderV1,prefix="data:text/javascript;base64,";
+ expect(text).toContain("const parent=modules.get(context.parentURL);if(parent&&specifier.startsWith(\""+prefix+"\"))return{url:specifier,shortCircuit:true};if(parent){");
+ expect(text).toContain("if(url.startsWith(\""+prefix+"\"))return{format:\"module\",source:Buffer.from(url.slice("+prefix.length+"),\"base64\"),shortCircuit:true};const row=modules.get(url);");
+ expect(text).toContain("Only captured Source modules may execute");
+ expect(text).toContain("Only captured Source module bytes may load");
+});

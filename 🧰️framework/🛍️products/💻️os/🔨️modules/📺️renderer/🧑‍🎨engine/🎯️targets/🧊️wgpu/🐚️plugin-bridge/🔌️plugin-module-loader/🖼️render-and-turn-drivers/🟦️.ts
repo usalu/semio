@@ -187,14 +187,26 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           command: events[commandIndex]!,
         });
         let terminal: string | undefined;
-        for (const commandPage of pages) {
-          const submitted = await submitTurn(actorId, drive.takeAcknowledgements(), commandPage);
-          terminal = submitted.commandIngress?.tag;
-          await accept(submitted);
+        for (let pageIndex = 0, offers = 0; pageIndex < pages.length;) {
+          let submitted: WireTurnResult;
+          do {
+            submitted = await submitTurn(actorId, drive.takeAcknowledgements(), pages[pageIndex]!);
+            terminal = submitted.commandIngress?.tag;
+            await accept(submitted);
+          } while ((submitted.unsent ?? []).length > 0);
+          // 🚦️ A refused page is not consumed: offer the same page again instead of skipping it into `plugin.command-page-order`.
+          if (terminal === "backpressure") {
+            if ((offers += 1) > 1_024) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled`);
+            await new Promise<void>((resolve) => setTimeout(resolve, 0));
+            continue;
+          }
+          if (terminal !== "page-accepted") break;
+          pageIndex += 1;
         }
         for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
           if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault`);
-          if (terminal === "backpressure") throw new Error(`plugin ${pluginId}: command ingress backpressure after serialized submission`);
+          // 🚦️ backpressure is the guest asking for another turn (its slice ended or its single ingress owner is still assembling); the owner is retained, so keep draining within the ceiling instead of failing the command.
+          await new Promise<void>((resolve) => setTimeout(resolve, 25));
           const continued = await submitTurn(actorId, drive.takeAcknowledgements());
           await accept(continued);
           terminal = continued.commandIngress?.tag;

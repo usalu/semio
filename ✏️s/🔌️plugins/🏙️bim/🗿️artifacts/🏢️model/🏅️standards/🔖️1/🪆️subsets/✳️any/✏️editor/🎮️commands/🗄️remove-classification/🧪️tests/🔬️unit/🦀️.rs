@@ -14,14 +14,13 @@ use semio_s_artifact_bim_model_move_storey::editor::bim::commands::remove_classi
 use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
-use std::collections::BTreeMap;
 
 fn classified() -> ModelSnapshot {
     let mut snapshot = demo();
     let table = |name: &str, code: &str| ClassificationSystem { name: name.into(), edition: String::new(), source: None, entries: vec![ClassificationItem { code: code.into(), title: String::new(), parent: None }] };
-    snapshot.classification_systems.insert("cs-uni".into(), table("Uniclass", "Ss_25"));
-    snapshot.classification_systems.insert("cs-din".into(), table("DIN 276", "331"));
-    snapshot.classifications.insert("w-south".into(), BTreeMap::from([("cs-uni".to_string(), "Ss_25".to_string()), ("cs-din".to_string(), "331".to_string())]));
+    snapshot.classification_systems.cold_insert("cs-uni".into(), table("Uniclass", "Ss_25"));
+    snapshot.classification_systems.cold_insert("cs-din".into(), table("DIN 276", "331"));
+    snapshot.classifications.cold_insert("w-south".into(), [("cs-uni".to_string(), "Ss_25".to_string()), ("cs-din".to_string(), "331".to_string())].into());
     snapshot
 }
 

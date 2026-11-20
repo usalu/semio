@@ -35,9 +35,18 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
         semio_framework_value::AuthoringWallet::new(grant,u128::from(FIXTURE_EFFECT_WORK)).run(grant,FIXTURE_EFFECT_WORK,operation).expect("fixture wallet admits its finite step stock").map(|authored|authored.output)
     }
 
-    /// 🪙️ A fixture without a job turn funds one page presentation from an explicit finite wallet of exactly its grant.
+    /// 🪙️ Gives each bounded result-page step a genuine Source dispatch between its settled actions.
+    fn run_fixture_result_effect<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> Option<R> {
+        semio_framework_job::OriginalRetirementPump::new()
+            .turn(FIXTURE_EFFECT_WORK, u64::MAX, semio_framework_job::logical_now_us, grant)
+            .and_then(|mut turn| turn.with_effect(operation))
+            .expect("fixture result page has a finite original Source turn")
+            .map(|(output, _)| output)
+    }
+
+    /// 🪙️ Funds one page presentation under the fixture's exact grant.
     pub fn take_fixture_result_turn<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework::Fault>{
-        run_fixture_effect(grant,|effect|app.take_typed_operation_result_page(receiver,effect)).unwrap_or(Ok((None,Default::default())))
+        run_fixture_result_effect(grant,|effect|app.take_typed_operation_result_page(receiver,effect)).unwrap_or(Ok((None,Default::default())))
     }
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
@@ -52,7 +61,7 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
 
     pub fn close_fixture_result_page(page:&mut semio_plugin_job::TypedOperationResultPage,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_plugin_job::TypedOperationResultToken{
 
-        let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run_fixture_effect(grant,|effect|page.close_step(effect)).expect("original fixture close grant must fund its work quote").expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
+        let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run_fixture_result_effect(grant,|effect|page.close_step(effect)).expect("original fixture close grant must fund its work quote").expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
 
     }
 
@@ -118,9 +127,9 @@ pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
     admit_document_archive_load, arm_host_lifetime, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock,
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
-    fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
+    fixture_identity, CallerIdentityWork, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
-    fixture_step_context_for, load_document, load_document_text, plugin_load_document,
+    fixture_step_context_for, load_document, load_document_text, settle_document_archive_load, plugin_load_document,
     plugin_load_document_text, plugin_settle_store_constructor, with_document_view,
     FixtureStepOutcome, KeyedCancellationFixture, LAW_DOCUMENT_LOAD_OPERATION,
 };

@@ -5,7 +5,7 @@ Feature: Continuous window and tab contour strokes
     When the middle tab is active
     Then the body outline retains its active color across every closed seam
     And only the active tab cap and walls use active color
-    And the active tab seam opens into the body
+    And the active tab seam closes into the body in its own color
   Scenario: Pointer ancestry emphasizes the entire exterior
     Given a hovered window with inactive tabs
     Then its body, inactive caps and inactive junctions use emphasized borders

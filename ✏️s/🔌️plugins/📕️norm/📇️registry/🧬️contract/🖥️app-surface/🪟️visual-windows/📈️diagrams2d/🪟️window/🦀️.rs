@@ -64,15 +64,17 @@ fn marker_item(base: &str, index: usize, diagram: &Diagram2d, marker: &Marker, t
 fn table_tree(body_key: &str, diagram: &Diagram2d, windows: &TreeWindows<'_>, controller_id: Option<&'static str>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let table = table_twin(diagram, locale);
     let base = surface_id(body_key, diagram);
-    let markers: Vec<(usize, &Marker, String)> = diagram.markers.iter().zip(&table.marker_rows).enumerate().map(|(index, (marker, cells))| (index, marker, cells.join(" · "))).collect();
-    PanelTreeBuilder::new(format!("{base}.table").as_str())?
-        .section(
-            format!("{base}.markers"),
-            Some(norm_ui_label(table.marker_headers.join(" · "))?),
-            true,
-            ui_node_list(markers.iter().map(|(index, marker, text)| marker_item(&base, *index, diagram, marker, text, controller_id, locale)))?,
-        )?
-        .window_section_or_placeholder(
+    let total = diagram.markers.len().min(table.marker_rows.len());
+    let row = |index: usize| marker_item(&base, index, diagram, &diagram.markers[index], &table.marker_rows[index].join(" · "), controller_id, locale);
+    let marker_key = format!("{base}.markers");
+    let marker_label = Some(norm_ui_label(table.marker_headers.join(" · "))?);
+    let tree = PanelTreeBuilder::new(format!("{base}.table").as_str())?;
+    let tree = if total > semio_ui_contract::UI_FIXED_LIST_ITEMS {
+        tree.window_indexed_section(windows, &marker_key, marker_label, true, total, row)?
+    } else {
+        tree.section(&marker_key, marker_label, true, ui_node_list((0..total).map(row))?)?
+    };
+    tree.window_section_or_placeholder(
             windows,
             &format!("{base}.rows"),
             Some(norm_ui_label(table.headers.join(" · "))?),
@@ -91,6 +93,26 @@ fn diagram_text(base: &str, role: &str, text: &str) -> UiAssemblyResult<BuiltNod
     Ok(node)
 }
 
+fn diagram_nodes(body_key: &str, diagram: &Diagram2d, spec: &DiagramsWindowSpec, windows: &TreeWindows<'_>, locale: Locale, show_title: bool) -> UiAssemblyResult<Vec<BuiltNode>> {
+    let base = surface_id(body_key, diagram);
+    let (canvas, _) = diagram_scene(diagram, &LoweringOptions { width: spec.width, height: spec.height, locale, dark: spec.dark, selected: None, hovered: None, min_target_px: crate::device_profiles::touch_hit_px() });
+    let mut children = Vec::with_capacity(5);
+    if show_title {
+        children.push(diagram_text(&base, "title", &copy_text(&diagram.title, locale))?);
+    }
+    if let Some(basis) = diagram.basis() {
+        children.push(diagram_text(&base, "basis", &copy_text(basis, locale))?);
+    }
+    children.push(scene_surface(&base, semio_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
+    children.push(diagram_text(&base, "description", &accessible_description(diagram, locale))?);
+    children.push(table_tree(body_key, diagram, windows, spec.controller_id, locale)?);
+    Ok(children)
+}
+
+fn diagram_node_count(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(diagram_node_count).sum::<usize>()
+}
+
 /// 📈️ The diagrams window body for `body_key`; an empty set shows a hint instead of an empty canvas. Every diagram is published for the screen reader as an image node described by the table node of its twin.
 pub fn render_diagrams(body_key: &str, diagrams: &[Diagram2d], spec: &DiagramsWindowSpec, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let lang = crate::viewport3d::config::Lang::of(locale);
@@ -98,17 +120,25 @@ pub fn render_diagrams(body_key: &str, diagrams: &[Diagram2d], spec: &DiagramsWi
     if diagrams.is_empty() {
         return render_text(chrome("Select a member, joint or check to see its diagrams.", "Bauteil, Anschluss oder Nachweis wählen, um dessen Diagramme zu sehen.", locale));
     }
-    let mut children = Vec::new();
-    for diagram in diagrams {
-        let base = surface_id(body_key, diagram);
-        let (canvas, _) = diagram_scene(diagram, &LoweringOptions { width: spec.width, height: spec.height, locale, dark: spec.dark, selected: None, hovered: None, min_target_px: crate::device_profiles::touch_hit_px() });
-        children.push(diagram_text(&base, "title", &copy_text(&diagram.title, locale))?);
-        if let Some(basis) = diagram.basis() {
-            children.push(diagram_text(&base, "basis", &copy_text(basis, locale))?);
-        }
-        children.push(scene_surface(&base, semio_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
-        children.push(diagram_text(&base, "description", &accessible_description(diagram, locale))?);
-        children.push(table_tree(body_key, diagram, windows, spec.controller_id, locale)?);
+    if diagrams.len() > 1 {
+        let mut remaining = semio_ui_contract::UI_DOCUMENT_NODES - semio_ui_contract::TREE_WINDOW_FIXED_NODE_HEADROOM;
+        return PanelTreeBuilder::new(format!("{body_key}.gallery").as_str())?
+            .window_indexed_section(windows, &format!("{body_key}.cards"), Some(norm_ui_label(chrome("Diagrams", "Diagramme", locale))?), true, diagrams.len(), |index| {
+                let diagram = &diagrams[index];
+                let base = surface_id(body_key, diagram);
+                let card = ui::column()
+                    .try_id(format!("{base}.card")).map_err(|_| ui_error("ui.node.id"))?
+                    .try_children(diagram_nodes(body_key, diagram, spec, windows, locale, false)?).map_err(|_| ui_error("ui.node.children"))?
+                    .try_build().map_err(|_| ui_error("ui.node.build"))?;
+                let row = ui::tree_item(norm_ui_label(copy_text(&diagram.title, locale))?)
+                    .try_id(format!("{base}.item")).map_err(|_| ui_error("ui.node.id"))?
+                    .try_child(card).map_err(|_| ui_error("ui.node.child"))?
+                    .try_build().map_err(|_| ui_error("ui.node.build"))?;
+                remaining = remaining.checked_sub(diagram_node_count(&row)).ok_or_else(|| ui_error("ui.fixed-capacity"))?;
+                Ok(row)
+            })?
+            .build();
     }
+    let children = diagram_nodes(body_key, &diagrams[0], spec, windows, locale, true)?;
     ui::column().try_children(children).map_err(|_| ui_error("ui.node.children"))?.try_build().map_err(|_| ui_error("ui.node.build"))
 }

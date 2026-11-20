@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "local",
+      "remote",
+      "write"
+    ],
+    "properties": {
+      "local": {
+        "enum": [
+          "valid",
+          "corrupt",
+          "absent"
+        ]
+      },
+      "remote": {
+        "enum": [
+          "valid",
+          "corrupt",
+          "missing",
+          "oversized"
+        ]
+      },
+      "write": {
+        "enum": [
+          "succeed",
+          "refuse",
+          "ignore"
+        ]
+      }
+    }
+  }
+}

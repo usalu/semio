@@ -65,6 +65,53 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
 }
 
 #[test]
+fn renderer_escape_aborts_a_live_transform_before_disarming_its_utility() {
+    let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    semio_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut InputState::default());
+    let fixture: Value = serde_json::from_str(include_str!("../../../../📐️Canvas2dHost/🧪️tests/🧫️fixtures/🧫️gumball-dispatch/🔣️.json")).unwrap();
+    let law = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "a live cancel after a streamed move aborts the open transaction").unwrap();
+    let surface = "canvas-escape-transform";
+    let controller = "controller.canvas-escape-transform";
+    let body = Rect::new(17.0, 31.0, law["viewport"]["width"].as_f64().unwrap() as f32, law["viewport"]["height"].as_f64().unwrap() as f32);
+    let layers = serde_json::json!([{ "role": "meta", "utility": "transform" }, law["layer"]]);
+    let scene = semio_ui_scene_plane::Canvas2dScene::base(0.0, 0.0, 1.0, layers.to_string());
+    let mut shell = host_test_shell();
+    let mut document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-escape", &scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let mut interaction = pointer_interaction(shell, input);
+    interaction.shell.windows.active_window_id = Some(surface.into());
+    interaction.shell.windows.active_utility_by_window.insert(surface.into(), "transform".into());
+    let at = |point: &Value| (body.x + point["x"].as_f64().unwrap() as f32, body.y + point["y"].as_f64().unwrap() as f32);
+    let (start_x, start_y) = at(&law["press"]);
+    let (move_x, move_y) = at(&law["events"][0]);
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), start_x, start_y, true, 0, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(77), move_x, move_y, true, 0, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_key(semio_ui_wgpu_input::KeyAction::Escape, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(mouse_pointer(77), move_x, move_y, false, 0, PointerModifiers::default()));
+    let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut interaction.input);
+    let expected = law["expect"]["dispatches"].as_array().unwrap();
+    assert_eq!(actions.len(), expected.len(), "Escape consumes the gesture before the physical release");
+    for (action, dispatch) in actions.iter().zip(expected) {
+        assert_eq!(action.action, dispatch["action"].as_str().unwrap());
+        let mut actual = canvas_action_args(action);
+        let actual = actual.as_object_mut().unwrap();
+        actual.remove("surfaceId");
+        let expected_args = dispatch["args"].as_object().unwrap();
+        assert_eq!(actual.len(), expected_args.len());
+        for (name, value) in expected_args {
+            if value.is_number() {
+                assert_json_number_eq(&actual[name], value, name);
+            } else {
+                assert_eq!(&actual[name], value, "{name}");
+            }
+        }
+    }
+    assert_eq!(interaction.shell.windows.active_utility_by_window.get(surface).map(String::as_str), Some("transform"));
+    semio_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(77));
+    while !document.close_step() {}
+}
+
+#[test]
 fn renderer_canvas_surface_routes_the_retained_pointer_sequence() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     renderer_canvas_pointer_sequence(false);

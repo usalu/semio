@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync } from 
 import { createServer } from "node:http";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
+import { freshProctor } from "./fresh-proctor.mjs";
 
 const here = import.meta.dirname;
 const repo = resolve(here, "../../../../../../..");
@@ -17,7 +18,7 @@ const [topology = "dev", selection = "all", ...forwarded] = process.argv.slice(2
 const run = resolve(process.env.RUN_DIRECTORY ?? join(here, "🗑️generated/e2e/run"));
 const node = process.execPath;
 const playwright = join(repo, ".cache/b/d/m/j/b87aa6c238609ac86876/node_modules/@playwright/test/cli.js");
-const proctorBinary = process.env.PROCTOR_BINARY ?? join(repo, ".cache/b/r/m/u/l/p001ec5/prototype/build/teaching-proctor/762af25000b726d1/out/proctor");
+const proctorBinary = process.env.PROCTOR_BINARY ?? freshProctor(process.env.PROCTOR_CONFIGURATION ?? "prototype");
 const pdfs = process.env.PDF_DIRECTORY ?? "/private/tmp/claude-501/-Users-ueli-Documents-semio/9d0eceba-b1b8-4814-b9cd-caae5bbd19aa/scratchpad/pdfs/out";
 const SITE_PORT = 6061;
 const PROCTOR_PORT = 8791;
@@ -75,6 +76,7 @@ const startProctor = async (): Promise<void> => {
   proctor = launch(proctorBinary, ["serve"], proctorEnv, join(run, "proctor.log"));
   await awaitUp("proctor", `${proctorOrigin}/instance`, proctor);
 };
+const signalProctor = async (signal: NodeJS.Signals): Promise<void> => void proctor?.kill(signal);
 const stopProctor = async (): Promise<void> => {
   const ending = proctor;
   proctor = undefined;
@@ -82,8 +84,8 @@ const stopProctor = async (): Promise<void> => {
 };
 
 const control = createServer((request, answer) => {
-  const act = request.method !== "POST" ? undefined : request.url === "/proctor/stop" ? stopProctor : request.url === "/proctor/start" ? startProctor : undefined;
-  if (!act) return void answer.writeHead(404).end("POST /proctor/stop or /proctor/start");
+  const act = request.method !== "POST" ? undefined : request.url === "/proctor/stop" ? stopProctor : request.url === "/proctor/start" ? startProctor : request.url === "/proctor/pause" ? () => signalProctor("SIGSTOP") : request.url === "/proctor/resume" ? () => signalProctor("SIGCONT") : undefined;
+  if (!act) return void answer.writeHead(404).end("POST /proctor/stop, /proctor/start, /proctor/pause or /proctor/resume");
   act().then(() => answer.writeHead(204).end(), (error: unknown) => answer.writeHead(500).end(String(error)));
 });
 

@@ -24,6 +24,7 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
@@ -43,46 +44,51 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
         let sheet_name = case["sheetName"].as_str().unwrap();
         let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
         let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).expect("grid render");
-        let mut nodes = Vec::new();
-        descendants(&node, &mut nodes);
-        let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).expect("materialized sheet table");
-        let Component::Table(props) = &table.component else { unreachable!() };
-        assert_eq!(props.window.map(|window| window.total), Some(case["expectedRows"].as_u64().unwrap() as u32), "{} row extent", case["id"]);
-        assert_eq!(props.column_window.map(|window| window.total), Some(case["expectedColumns"].as_u64().unwrap() as u32), "{} column extent", case["id"]);
-        assert_eq!(props.columns[0].0.as_str(), "A");
-        let vacancy = &case["vacancy"];
-        let vacancy_input = nodes
-            .iter()
-            .filter_map(|node| {
-                let Component::Input(props) = &node.component else { return None };
-                let binding = node.bindings.iter().find(|binding| binding.trigger == Trigger::Commit)?;
-                let Some(UiValue::Map(arguments)) = &binding.args else { return None };
-                (argument_number(arguments, "row") == vacancy["row"].as_f64() && argument_number(arguments, "column") == vacancy["column"].as_f64()).then_some((props, binding, arguments))
-            })
-            .next()
-            .expect("fixture vacancy is a rendered editable cell");
-        assert_eq!(vacancy_input.0.value.as_str(), "");
-        assert_eq!(vacancy_input.1.action.scope.as_str(), BASE_CONTROLLER_ID);
-        assert_eq!(vacancy_input.1.action.name.as_str(), "set-cell");
-        let expected_revision = xlsx_worksheet_address(&document, sheet_name).unwrap().revision;
-        assert!(matches!(vacancy_input.2.iter().find_map(|(key, value)| (key.as_str() == "revision").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == expected_revision));
-        if let Some(formula) = case["formulaDraft"].as_str() {
-            assert!(nodes.iter().any(|node| matches!(&node.component, Component::Input(props) if props.value.as_str() == formula)));
-        }
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+            let mut nodes = Vec::new();
+            descendants(node, &mut nodes);
+            let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).expect("materialized sheet table");
+            let Component::Table(props) = &table.component else { unreachable!() };
+            assert_eq!(props.window.map(|window| window.total), Some(case["expectedRows"].as_u64().unwrap() as u32), "{} row extent", case["id"]);
+            assert_eq!(props.column_window.map(|window| window.total), Some(case["expectedColumns"].as_u64().unwrap() as u32), "{} column extent", case["id"]);
+            assert_eq!(props.columns[0].0.as_str(), "A");
+            let vacancy = &case["vacancy"];
+            let vacancy_input = nodes
+                .iter()
+                .filter_map(|node| {
+                    let Component::Input(props) = &node.component else { return None };
+                    let binding = node.bindings.iter().find(|binding| binding.trigger == Trigger::Commit)?;
+                    let Some(UiValue::Map(arguments)) = &binding.args else { return None };
+                    (argument_number(arguments, "row") == vacancy["row"].as_f64() && argument_number(arguments, "column") == vacancy["column"].as_f64()).then_some((props, binding, arguments))
+                })
+                .next()
+                .expect("fixture vacancy is a rendered editable cell");
+            assert_eq!(vacancy_input.0.value.as_str(), "");
+            assert_eq!(vacancy_input.1.action.scope.as_str(), BASE_CONTROLLER_ID);
+            assert_eq!(vacancy_input.1.action.name.as_str(), "set-cell");
+            let expected_revision = xlsx_worksheet_address(&document, sheet_name).unwrap().revision;
+            assert!(matches!(vacancy_input.2.iter().find_map(|(key, value)| (key.as_str() == "revision").then_some(value)), Some(UiValue::Text(value)) if value.as_str() == expected_revision));
+            if let Some(formula) = case["formulaDraft"].as_str() {
+                assert!(nodes.iter().any(|node| matches!(&node.component, Component::Input(props) if props.value.as_str() == formula)));
+            }
+        });
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn german_grid_localizes_axes_without_rewriting_column_coordinates() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
     let node = render(&document, Locale::De, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).unwrap();
-    let mut nodes = Vec::new();
-    descendants(&node, &mut nodes);
-    let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).unwrap();
-    let Component::Table(props) = &table.component else { unreachable!() };
-    assert_eq!(props.row_label.as_ref().map(|label| label.0.as_str()), Some("Zeile"));
-    assert_eq!(props.column_label.as_ref().map(|label| label.0.as_str()), Some("Spalte"));
-    assert_eq!(props.columns[0].0.as_str(), "A");
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+        let mut nodes = Vec::new();
+        descendants(node, &mut nodes);
+        let table = nodes.iter().find(|node| matches!(node.component, Component::Table(_))).unwrap();
+        let Component::Table(props) = &table.component else { unreachable!() };
+        assert_eq!(props.row_label.as_ref().map(|label| label.0.as_str()), Some("Zeile"));
+        assert_eq!(props.column_label.as_ref().map(|label| label.0.as_str()), Some("Spalte"));
+        assert_eq!(props.columns[0].0.as_str(), "A");
+    });
 }

@@ -66,10 +66,8 @@ def owner_local(providers):
     def f(text):
         if not text.endswith(OWNER):return text
         prefix=text[:-len(OWNER)]
-        for pid in providers:
-            m=re.match(P["ownerPattern"],pid)
-            if m and m.group(1)==prefix:return pid
-        return text
+        matches={pid for pid in providers if (match:=re.match(P["ownerPattern"],pid)) and match.group(1)==prefix}
+        return next(iter(matches)) if len(matches)==1 else text
     return f
 
 def convert_row(row,way):

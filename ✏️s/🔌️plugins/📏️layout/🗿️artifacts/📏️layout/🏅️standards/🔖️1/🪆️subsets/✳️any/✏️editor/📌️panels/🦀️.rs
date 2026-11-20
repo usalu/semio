@@ -7,6 +7,12 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
+fn link_presentation_key(panel: &str, id: &str, position: usize) -> semio_plugin::UiAssemblyResult<semio_plugin::UiText> {
+    semio_plugin::UiText::try_format(format_args!("{panel}.link.{id}"))
+        .or_else(|| semio_plugin::UiText::try_format(format_args!("{panel}.long-link.{position}")))
+        .ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout link row key admission failed"))
+}
+
 //#region 🪢️TaxonomyMounts
 #[path = "🛍️catalogue/🦀️.rs"]
 pub mod catalogue;

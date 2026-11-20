@@ -91,7 +91,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactor
     pub original_emission:semio_plugin_job::original_emission::OriginalEmissionSource<A>,
     pub original_typed_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
 pub original_host_event_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
-pub original_command_scope:Option<(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64))>,
+pub original_command_scope:semio_plugin_instance_dispatch::host_event_routing::CommandLease,
 pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64))>,
     pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_plugin_tool_machine::ToolTag>>,
     pub original_typed_tag_close:semio_framework_value::retained_clone::RetainedCloneClose,

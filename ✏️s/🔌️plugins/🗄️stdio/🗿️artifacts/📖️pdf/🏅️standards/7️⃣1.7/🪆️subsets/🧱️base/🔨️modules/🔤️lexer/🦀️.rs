@@ -3,8 +3,68 @@
 //! canonical object writer every emitted byte goes through. Shared by both standards of the
 //! artifact (PDF 1.4 and 1.7 have the same lexical grammar).
 
-use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
+#[path = "🔤️strings/🦀️.rs"]
+mod strings;
+pub use strings::{PdfByteStringCursor, StringReceipt, StringStep};
+
+#[path = "🧱️containers/🦀️.rs"]
+mod containers;
+pub use containers::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor};
+
+#[path = "🖼️inline-image-span/🦀️.rs"]
+mod inline_image_span;
+pub use inline_image_span::{InlineImageBoundary, InlineImageSpanCursor, InlineImageSpanStep};
+
+#[path = "📏️stream-span/🦀️.rs"]
+mod stream_span;
+pub use stream_span::{StreamSpan, StreamSpanCursor, StreamSpanStep};
+
+#[path = "🎫️content-token/🦀️.rs"]
+mod content_token;
+pub use content_token::{ContentToken, ContentTokenCursor, ContentTokenEvent, ContentTokenReceipt};
+
+#[path = "🧹️stream-dictionary/🦀️.rs"]
+mod stream_dictionary;
+pub use stream_dictionary::{retain_stream_entry, PdfStreamDictionaryCursor};
+
+#[path = "🪪️pdf-header/🦀️.rs"]
+mod pdf_header;
+pub use pdf_header::{pdf_header, PdfHeader, PdfHeaderCursor, PdfHeaderStep};
+
+#[path = "📐️indirect-length/🦀️.rs"]
+mod indirect_length;
+pub use indirect_length::PdfIndirectLengthCursor;
+
+#[path = "🪪️indirect-header/🦀️.rs"]
+mod indirect_header;
+pub use indirect_header::{HeaderStep, IndirectHeaderCursor};
+
+#[path = "📦️stream-prefix/🦀️.rs"]
+mod stream_prefix;
+pub use stream_prefix::{StreamPrefixCursor, StreamPrefixStep};
+
+#[path = "📦️object-frame/🦀️.rs"]
+mod object_frame;
+pub use object_frame::{IndirectFrame, IndirectFrameCursor, IndirectFrameReceipt, IndirectFrameStatus};
+
+#[path = "🧭️normal-object/🦀️.rs"]
+mod normal_object;
+pub use normal_object::{NormalObject, NormalObjectReceipt, NormalObjectStatus, PdfNormalObjectCursor};
+
+#[path = "🧭️object-scan/🦀️.rs"]
+mod object_scan;
+pub use object_scan::{ObjectScanCursor, ObjectScanStep};
+
+#[path = "🧭️xref-section/🦀️.rs"]
+mod xref_section;
+pub use xref_section::{XrefSectionKind, XrefSectionProbe};
+
+#[path = "🪢️xref-links/🦀️.rs"]
+mod xref_links;
+pub use xref_links::{XrefLinkCursor, XrefLinks, XrefPrimaryCycle, XrefRevisionSchedule, XrefTarget};
+
+use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
+use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
 use std::collections::HashMap;
 
 
@@ -182,214 +242,67 @@ impl<'a> Lexer<'a> {
             out.push(b);
             self.pos += 1;
         }
-        PdfObject::Name(String::from_utf8(out.clone()).unwrap_or_else(|_| out.iter().map(|&b| b as char).collect()))
+        PdfObject::Name(String::from_utf8(out).unwrap_or_else(|error| error.into_bytes().into_iter().map(char::from).collect()))
     }
 
-    fn parse_literal_string(&mut self) -> PResult<PdfObject> {
-        self.pos += 1;
-        let mut depth = 1i32;
-        let mut out = Vec::new();
-        while let Some(b) = self.peek() {
-            self.pos += 1;
-            match b {
-                b'(' => {
-                    depth += 1;
-                    out.push(b);
-                }
-                b')' => {
-                    depth -= 1;
-                    if depth == 0 {
-                        return Ok(PdfObject::Str(out));
-                    }
-                    out.push(b);
-                }
-                b'\\' => match self.peek() {
-                    Some(b'n') => {
-                        out.push(b'\n');
-                        self.pos += 1;
-                    }
-                    Some(b'r') => {
-                        out.push(b'\r');
-                        self.pos += 1;
-                    }
-                    Some(b't') => {
-                        out.push(b'\t');
-                        self.pos += 1;
-                    }
-                    Some(b'b') => {
-                        out.push(0x08);
-                        self.pos += 1;
-                    }
-                    Some(b'f') => {
-                        out.push(0x0C);
-                        self.pos += 1;
-                    }
-                    Some(b'\r') => {
-                        self.pos += 1;
-                        if self.peek() == Some(b'\n') {
-                            self.pos += 1;
-                        }
-                    }
-                    Some(b'\n') => {
-                        self.pos += 1;
-                    }
-                    Some(d) if (b'0'..=b'7').contains(&d) => {
-                        let mut v: u32 = 0;
-                        let mut n = 0;
-                        while n < 3 {
-                            match self.peek() {
-                                Some(dd) if (b'0'..=b'7').contains(&dd) => {
-                                    v = v * 8 + (dd - b'0') as u32;
-                                    self.pos += 1;
-                                    n += 1;
-                                }
-                                _ => break,
-                            }
-                        }
-                        out.push((v & 0xFF) as u8);
-                    }
-                    Some(other) => {
-                        out.push(other);
-                        self.pos += 1;
-                    }
-                    None => {}
-                },
-                other => out.push(other),
-            }
-        }
-        malformed("unterminated literal string")
-    }
-
-    fn parse_hex_string(&mut self) -> PResult<PdfObject> {
-        self.pos += 1;
-        let mut nibbles = Vec::new();
+    fn parse_byte_string(&mut self) -> PResult<PdfObject> {
+        let mut cursor = PdfByteStringCursor::new(self.pos);
+        let mut bytes = Vec::new();
+        let mut scratch = [0u8; 256];
         loop {
-            match self.peek() {
-                Some(b'>') => {
-                    self.pos += 1;
-                    break;
-                }
-                Some(b) if b.is_ascii_hexdigit() => {
-                    nibbles.push(hex_val(b));
-                    self.pos += 1;
-                }
-                Some(b) if is_ws(b) => {
-                    self.pos += 1;
-                }
-                None => return malformed("unterminated hex string"),
-                Some(_) => {
-                    self.pos += 1;
-                }
+            let receipt = cursor.advance(self.data, &mut scratch, 1024);
+            self.pos = cursor.position();
+            bytes.extend_from_slice(&scratch[..receipt.written]);
+            match receipt.status {
+                Ok(StringStep::Complete) => return Ok(PdfObject::Str(bytes)),
+                Ok(StringStep::More | StringStep::NeedsOutput) => {}
+                Err(reason) => return malformed(reason),
             }
         }
-        if nibbles.len() % 2 == 1 {
-            nibbles.push(0);
-        }
-        Ok(PdfObject::Str(nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()))
     }
 
-    fn parse_array(&mut self) -> PResult<PdfObject> {
-        self.pos += 1;
-        let mut items = Vec::new();
+    fn parse_container(&mut self) -> PResult<PdfObject> {
+        let mut cursor = PdfCosCursor::new(self.pos, CosLimits::default());
+        let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
         loop {
-            self.skip_ws();
-            match self.peek() {
-                Some(b']') => {
-                    self.pos += 1;
-                    break;
+            match cursor.advance(self.data, grant, false).status {
+                Ok(CosStatus::Complete { end }) => {
+                    self.pos = end;
+                    return cursor.take_value().ok_or_else(|| PdfEngineError::Malformed("completed COS container has no value".into()));
                 }
-                None => return malformed("unterminated array"),
-                _ => match self.next_token()? {
-                    Token::Object(value) => items.push(value),
-                    Token::Keyword(_) => {}
-                    Token::End => return malformed("unterminated array"),
-                },
+                Ok(CosStatus::More) => {}
+                Ok(_) => return malformed("unexpected bounded COS parser status"),
+                Err(reason) => {
+                    self.pos = cursor.inspected_position();
+                    cursor.begin_close();
+                    while !cursor.terminal_is_empty() { cursor.close_step(grant); }
+                    return malformed(reason);
+                }
             }
         }
-        Ok(PdfObject::Array(items))
     }
 
-    fn parse_dict_or_stream(&mut self, allow_stream: bool) -> PResult<PdfObject> {
-        self.pos += 2;
-        let mut entries = Vec::new();
-        loop {
-            self.skip_ws();
-            if self.starts_with(b">>") {
-                self.pos += 2;
-                break;
-            }
-            match self.peek() {
-                None => return malformed("unterminated dictionary"),
-                Some(b'/') => {}
-                Some(_) => {
-                    match self.next_token()? {
-                        Token::End => return malformed("unterminated dictionary"),
-                        _ => continue,
-                    }
-                }
-            }
-            let key = match self.parse_name() {
-                PdfObject::Name(n) => n,
-                _ => unreachable!(),
+    fn parse_dict_or_stream(&mut self, resolve_length: &mut dyn FnMut(ObjRef) -> Option<usize>) -> PResult<PdfObject> {
+        let PdfObject::Dict(entries) = self.parse_container()? else { return malformed("expected PDF COS dictionary"); };
+        let mut prefix = StreamPrefixCursor::new(self.pos);
+        let body = loop {
+            if let (_, StreamPrefixStep::Complete(body)) = prefix.advance(self.data, 4096) { break body; }
+        };
+        if let Some(data_start) = body {
+            let declared_len = entries.iter().find(|e| e.key == "Length").and_then(|e| match &e.value {
+                PdfObject::Int(i) => usize::try_from(*i).ok(),
+                PdfObject::Ref(reference) => resolve_length(*reference),
+                _ => None,
+            });
+            let mut span = StreamSpanCursor::new(data_start, declared_len, self.data.len());
+            let span = loop {
+                if let Some(span) = span.advance(self.data, 4096).span { break span; }
             };
-            self.skip_ws();
-            if self.starts_with(b">>") {
-                entries.push(PdfDictEntry { key, value: PdfObject::Null });
-                continue;
-            }
-            let value = match self.next_token()? {
-                Token::Object(value) => value,
-                Token::Keyword(_) | Token::End => PdfObject::Null,
-            };
-            entries.push(PdfDictEntry { key, value });
-        }
-        if allow_stream {
-            let save = self.pos;
-            self.skip_ws();
-            if self.consume_keyword(b"stream") {
-                if self.peek() == Some(b'\r') {
-                    self.pos += 1;
-                }
-                if self.peek() == Some(b'\n') {
-                    self.pos += 1;
-                }
-                let data_start = self.pos;
-                let declared_len = entries.iter().find(|e| e.key == "Length").and_then(|e| match &e.value {
-                    PdfObject::Int(i) if *i >= 0 => Some(*i as usize),
-                    _ => None,
-                });
-                let data_end = match declared_len {
-                    Some(len) if data_start + len <= self.data.len() && Self::endstream_follows(self.data, data_start + len) => data_start + len,
-                    _ => find_subslice(self.data, data_start, b"endstream").map(|end| Self::trim_stream_eol(self.data, data_start, end)).unwrap_or(self.data.len()),
-                };
-                let raw = self.data[data_start..data_end.min(self.data.len())].to_vec();
-                self.pos = data_end;
-                self.skip_ws();
-                let _ = self.consume_keyword(b"endstream");
-                return Ok(PdfObject::Stream { dict: entries, data: raw, filters: Vec::new() });
-            }
-            self.pos = save;
+            let raw = self.data[span.start..span.end].to_vec();
+            self.pos = span.resume;
+            return Ok(PdfObject::Stream { dict: entries, data: raw, filters: Vec::new() });
         }
         Ok(PdfObject::Dict(entries))
-    }
-
-    /// 📏 Whether `endstream` (after optional EOL) follows `at` — validates a declared `/Length`.
-    fn endstream_follows(data: &[u8], at: usize) -> bool {
-        let mut lex = Lexer::new(data).at(at);
-        lex.skip_ws();
-        lex.starts_with(b"endstream")
-    }
-
-    /// 📏 Drops the EOL that precedes `endstream` when the length had to be searched for.
-    fn trim_stream_eol(data: &[u8], start: usize, end: usize) -> usize {
-        let mut end = end;
-        if end > start && data[end - 1] == b'\n' {
-            end -= 1;
-        }
-        if end > start && data[end - 1] == b'\r' {
-            end -= 1;
-        }
-        end
     }
 
     /// 🎯 Parses one value: number, `N G R` reference, name, string, array, dict/stream,
@@ -405,58 +318,54 @@ impl<'a> Lexer<'a> {
 
     /// 🎫 Reads the next token: a value (with `N G R` references folded), a keyword, or the end.
     pub fn next_token(&mut self) -> PResult<Token> {
-        self.skip_ws();
-        match self.peek() {
-            None => Ok(Token::End),
-            Some(b'/') => Ok(Token::Object(self.parse_name())),
-            Some(b'(') => self.parse_literal_string().map(Token::Object),
-            Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(true).map(Token::Object),
-            Some(b'<') => self.parse_hex_string().map(Token::Object),
-            Some(b'[') => self.parse_array().map(Token::Object),
-            Some(b']') | Some(b'>') | Some(b')') | Some(b'{') | Some(b'}') => {
-                self.pos += 1;
-                self.next_token()
-            }
-            Some(b'-') | Some(b'+') | Some(b'.') | Some(b'0'..=b'9') => {
-                let first = match self.parse_number() {
-                    Ok(value) => value,
-                    Err(_) => {
-                        self.pos += 1;
-                        return self.next_token();
-                    }
-                };
-                if let PdfObject::Int(num) = first {
-                    if num >= 0 {
-                        let save = self.pos;
-                        self.skip_ws();
-                        if matches!(self.peek(), Some(b'0'..=b'9')) {
-                            if let Ok(PdfObject::Int(gen)) = self.parse_number() {
-                                if gen >= 0 {
-                                    self.skip_ws();
-                                    if self.consume_keyword(b"R") && self.peek().is_none_or(|b| is_ws(b) || is_delim(b)) {
-                                        return Ok(Token::Object(PdfObject::Ref(ObjRef { num: num as u32, gen: gen as u16 })));
+        loop {
+            self.skip_ws();
+            return match self.peek() {
+                None => Ok(Token::End),
+                Some(b'/') => Ok(Token::Object(self.parse_name())),
+                Some(b'(') => self.parse_byte_string().map(Token::Object),
+                Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(&mut |_| None).map(Token::Object),
+                Some(b'<') => self.parse_byte_string().map(Token::Object),
+                Some(b'[') => self.parse_container().map(Token::Object),
+                Some(b']' | b'>' | b')' | b'{' | b'}') => {
+                    self.pos += 1;
+                    continue;
+                }
+                Some(b'-' | b'+' | b'.' | b'0'..=b'9') => {
+                    let first = match self.parse_number() {
+                        Ok(value) => value,
+                        Err(_) => { self.pos += 1; continue; }
+                    };
+                    if let PdfObject::Int(num) = first {
+                        if let Ok(num) = u32::try_from(num) {
+                            let save = self.pos;
+                            self.skip_ws();
+                            if matches!(self.peek(), Some(b'0'..=b'9')) {
+                                if let Ok(PdfObject::Int(gen)) = self.parse_number() {
+                                    if let Ok(gen) = u16::try_from(gen) {
+                                        self.skip_ws();
+                                        if self.consume_keyword(b"R") && self.peek().is_none_or(|b| is_ws(b) || is_delim(b)) {
+                                            return Ok(Token::Object(PdfObject::Ref(ObjRef { num, gen })));
+                                        }
                                     }
                                 }
                             }
+                            self.pos = save;
                         }
-                        self.pos = save;
                     }
+                    Ok(Token::Object(first))
                 }
-                Ok(Token::Object(first))
-            }
-            Some(_) => {
-                let run = self.read_regular_run();
-                if run.is_empty() {
-                    self.pos += 1;
-                    return self.next_token();
+                Some(_) => {
+                    let run = self.read_regular_run();
+                    if run.is_empty() { self.pos += 1; continue; }
+                    Ok(match run {
+                        b"true" => Token::Object(PdfObject::Bool(true)),
+                        b"false" => Token::Object(PdfObject::Bool(false)),
+                        b"null" => Token::Object(PdfObject::Null),
+                        other => Token::Keyword(String::from_utf8_lossy(other).into_owned()),
+                    })
                 }
-                Ok(match run {
-                    b"true" => Token::Object(PdfObject::Bool(true)),
-                    b"false" => Token::Object(PdfObject::Bool(false)),
-                    b"null" => Token::Object(PdfObject::Null),
-                    other => Token::Keyword(String::from_utf8_lossy(other).into_owned()),
-                })
-            }
+            };
         }
     }
 }
@@ -467,26 +376,57 @@ impl<'a> Lexer<'a> {
 /// actually declared (used by the brute-force scanner, which doesn't trust its own guessed id).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObject)> {
-    let mut lex = Lexer::new(data).at(offset);
-    lex.skip_ws();
-    let num = match lex.parse_number()? {
-        PdfObject::Int(i) if i >= 0 => i as u32,
-        _ => return malformed("bad object number"),
-    };
-    lex.skip_ws();
-    let gen = match lex.parse_number()? {
-        PdfObject::Int(i) if i >= 0 => i as u16,
-        _ => return malformed("bad generation number"),
-    };
-    lex.skip_ws();
-    if !lex.consume_keyword(b"obj") {
-        return malformed("expected 'obj' keyword");
+    parse_indirect_with_length(data, offset, &mut |_| None)
+}
+
+/// 🪪️ Inspect an xref target without decoding or copying its stream body.
+pub fn indirect_header_at(data: &[u8], offset: usize) -> PResult<(ObjRef, Lexer<'_>)> {
+    let mut cursor = IndirectHeaderCursor::new(offset);
+    loop {
+        let (_, step) = cursor.advance(data, 4096).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
+        if let HeaderStep::Complete { id, body_offset } = step {
+            return Ok((id, Lexer::new(data).at(body_offset)));
+        }
     }
-    lex.skip_ws();
-    let value = if lex.starts_with(b"endobj") { PdfObject::Null } else { lex.parse_object()? };
-    lex.skip_ws();
-    let _ = lex.consume_keyword(b"endobj");
-    Ok((ObjRef { num, gen }, value))
+}
+
+/// 📏️ Resolves an outer stream’s indirect byte length against the current cross-reference revision.
+pub fn parse_indirect_with_length(data: &[u8], offset: usize, resolve_length: &mut dyn FnMut(ObjRef) -> Option<usize>) -> PResult<(ObjRef, PdfObject)> {
+    let NormalObject { id, value, stream, .. } = frame_indirect_with_length(data, offset, resolve_length)?;
+    let value = match (value, stream) {
+        (PdfObject::Dict(dict), Some(span)) => PdfObject::Stream {
+            dict, data: data[span.start..span.end].to_vec(), filters: Vec::new(),
+        },
+        (value, _) => value,
+    };
+    Ok((id, value))
+}
+
+/// 🪟️ Frames one indirect object and retains any stream as a span of the original source.
+pub fn frame_indirect_with_length(data: &[u8], offset: usize, resolve_length: &mut dyn FnMut(ObjRef) -> Option<usize>) -> PResult<NormalObject> {
+    let mut cursor = PdfNormalObjectCursor::new(offset, CosLimits::default());
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    let result = loop {
+        match cursor.advance(data, grant, false).status {
+            Ok(NormalObjectStatus::More) => {}
+            Ok(NormalObjectStatus::NeedsLength(reference)) => {
+                if let Err(reason) = cursor.provide_length(reference, resolve_length(reference)) { break malformed(reason); }
+            }
+            Ok(NormalObjectStatus::Complete) => break cursor.take_object().ok_or_else(|| PdfEngineError::Malformed("normal object is absent".into())),
+            Err("unexpected PDF COS keyword") => {
+                break indirect_header_at(data, offset).and_then(|(id, mut lex)| {
+                    lex.skip_ws();
+                    if lex.starts_with(b"endobj") { Ok(NormalObject { id, value: PdfObject::Null, value_end: lex.pos, stream: None }) }
+                    else { malformed("unexpected PDF COS keyword") }
+                });
+            }
+            Err(reason) => break malformed(reason),
+            Ok(_) => break malformed("unexpected normal object parser status"),
+        }
+    };
+    cursor.begin_close();
+    while matches!(cursor.close_step(grant).status, Ok(NormalObjectStatus::More)) {}
+    result
 }
 
 /// 🩹 Brute-force fallback: scans the whole buffer for `N G obj` patterns — used when structured
@@ -494,31 +434,15 @@ pub fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObje
 /// occurrence of a given object number wins (later generation/incremental update).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
-    let mut found: HashMap<u32, (ObjRef, usize)> = HashMap::new();
-    let mut i = 0usize;
-    while i < data.len() {
-        if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]) || is_delim(data[i - 1])) {
-            let start = i;
-            let mut lex = Lexer::new(data).at(start);
-            if let Ok(PdfObject::Int(num)) = lex.parse_number() {
-                if num >= 0 {
-                    lex.skip_ws();
-                    if let Ok(PdfObject::Int(gen)) = lex.parse_number() {
-                        if gen >= 0 {
-                            lex.skip_ws();
-                            if lex.consume_keyword(b"obj") {
-                                found.insert(num as u32, (ObjRef { num: num as u32, gen: gen as u16 }, start));
-                                i = lex.pos;
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
+    let mut found = HashMap::new();
+    let mut cursor = ObjectScanCursor::new();
+    loop {
+        match cursor.advance(data, 4096).1 {
+            ObjectScanStep::Found { id, offset } => { found.insert(id.num, (id, offset)); }
+            ObjectScanStep::More => {}
+            ObjectScanStep::Complete => return found,
         }
-        i += 1;
     }
-    found
 }
 //#endregion 🔖️IndirectObjects
 
@@ -594,8 +518,8 @@ pub fn write_object(out: &mut Vec<u8>, object: &PdfObject) {
         PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
         PdfObject::Real(value) => out.extend_from_slice(number_text(value.to_f64().unwrap_or(0.0)).as_bytes()),
         PdfObject::Str(bytes) => write_string(out, bytes),
-        PdfObject::Text(text) => write_string(out,&crate::standards::v1_7::subsets::base::io::text_string::encode_text_string(text)),
-        PdfObject::Date(date) => write_string(out,crate::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(date).as_bytes()),
+        PdfObject::Text(text) => write_string(out,&semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::text_string::encode_text_string(text)),
+        PdfObject::Date(date) => write_string(out,semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date(date).as_bytes()),
         PdfObject::Name(name) => write_name(out, name),
         PdfObject::Array(items) => {
             out.push(b'[');
@@ -676,5 +600,23 @@ pub fn dict_name<'a>(entries: &'a [PdfDictEntry], key: &str) -> Option<&'a str> 
 //#endregion 🔖️DictHelpers
 
 //#region 🧪️Tests
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn content_lexer_resumes_after_long_unmatched_delimiter_sequences() {
+        let mut input = vec![b']'; 200_000];
+        input.extend_from_slice(b" q 2 70000 R 42 65535 R");
+        let mut lexer = Lexer::new(&input);
+        assert_eq!(lexer.next_token().unwrap(), Token::Keyword("q".into()));
+        assert_eq!(lexer.next_token().unwrap(), Token::Object(PdfObject::Int(2)));
+        assert_eq!(lexer.next_token().unwrap(), Token::Object(PdfObject::Int(70000)));
+        assert_eq!(lexer.next_token().unwrap(), Token::Keyword("R".into()));
+        assert_eq!(lexer.next_token().unwrap(), Token::Object(PdfObject::Ref(ObjRef { num: 42, gen: 65535 })));
+        assert_eq!(lexer.next_token().unwrap(), Token::End);
+    }
+}
 
 //#endregion 🧪️Tests

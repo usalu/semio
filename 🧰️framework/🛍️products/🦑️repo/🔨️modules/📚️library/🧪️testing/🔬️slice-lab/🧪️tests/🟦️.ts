@@ -1,9 +1,13 @@
+import {spawnSync} from "node:child_process";
+import runtimeCases from "./📍️runtime.json" with {type:"json"};
+import churnCase from "./🌊️churn.json" with {type:"json"};
 import {describe,expect,test} from "bun:test";
 import {join} from "node:path";
 import {createRequire} from "node:module";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
-import {SLICE_LAB_POLICY_V1 as P,readSliceLabOptionsV1,sliceLabEnvironmentV1,sliceLabNxLinkV1,sliceLabWatcherPidsV1,sliceLabImagesV1,sliceLabActivityV1,sliceLabDiskPreflightV1,sliceLabLimitMegabytesV1,sliceLabLiveFilesV1,sliceLabDuplicatesV1,sliceLabFleetSummaryV1,treeChurnV1,sliceLabPhaseV1,sliceLabPlansV1,sliceLabProcessRowsV1,sliceLabReportV1,sliceLabStagesV1,sliceLabTextV1,sliceLabVerdictV1,type SliceLabSampleV1} from "../🟦️.ts";
+import {tmpdir,userInfo} from "node:os";
+import {SLICE_LAB_POLICY_V1 as P,sliceLabFootprintV1,readSliceLabOptionsV1,sliceLabEnvironmentV1,sliceLabNxLinkV1,sliceLabWatcherPidsV1,sliceLabImagesV1,sliceLabActivityV1,sliceLabDiskPreflightV1,sliceLabLimitMegabytesV1,sliceLabLiveFilesV1,sliceLabDuplicatesV1,sliceLabFleetSummaryV1,treeChurnV1,sliceLabPhaseV1,sliceLabPlansV1,sliceLabProcessRowsV1,sliceLabReportV1,sliceLabRuntimeDirectoryV1,sliceLabStagesV1,sliceLabTextV1,sliceLabVerdictV1,type SliceLabSampleV1} from "../🟦️.ts";
+import {parseFootprintsV1} from "../../../🏗️build/🌐️remote-execution/🛰️sidecar/🕸️graph/🔬️stall/🌳️tree/🟦️.ts";
 import budget from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {machinePathV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {hostProfileV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
@@ -33,19 +37,53 @@ describe("slice lab",()=>{
   expect(stages[4]!.arguments).toEqual(["run-many","--projects=a,b",`--targets=${P.target}`,"--dry-run","--lang=en"]);
  });
  test("a machine declares its state root, its host and a runtime directory that fits a socket",()=>{
-  const [first,second]=sliceLabPlansV1(options,"ab12","/tmp/work","/checkout"),environment=sliceLabEnvironmentV1(first!,"/tmp/overlay.ts",{FOO:"1",SEMIO_FLEET_GROUP:"live",SEMIO_REMOTE_CACHE_TOKEN:"x",TMPDIR:"/live"});
+  const [first,second]=sliceLabPlansV1(options,"ab12","/tmp/work","/checkout"),environment=sliceLabEnvironmentV1(first!,"/tmp/overlay.ts",{FOO:"1",SEMIO_FLEET_GROUP:"live",SEMIO_REMOTE_CACHE_TOKEN:"x",TMPDIR:"/live",XDG_RUNTIME_DIR:"/live/runtime"});
   expect(environment.SEMIO_MACHINE_STATE_DIRECTORY).toBe(join("/tmp/work","m1","s"));
   expect(environment.SEMIO_FLEET_GROUP).toBe(P.group);
   expect(environment.SEMIO_REMOTE_CACHE_TOKEN).toBeUndefined();
   expect(environment.FOO).toBe("1");
   expect(environment.BUN_OPTIONS).toBe("--preload=/tmp/overlay.ts");
   expect(environment[P.markerEnvironment]).toBe("ab12");
-  expect(Buffer.byteLength(join(first!.runtime,"semio-repo","501","h-123456789abc.sock"))).toBeLessThan(96);
+  expect(environment.XDG_RUNTIME_DIR).toBe(join("/tmp/work","m1","u"));
+  expect(second!.runtime).toBe(join("/tmp/work","m2","u"));
   expect(first!.origin).not.toBe(second!.origin);
   expect(first!.store).toBe(second!.store);
   expect(hostProfileV1(environment,{totalMegabytes:32768,cores:10,declared:false})).toEqual({totalMegabytes:8192,cores:4,declared:true});
   expect(sliceLabLimitMegabytesV1(16384)).toBe(6553);
   expect(sliceLabLimitMegabytesV1(8192)).toBe(3276);
+ });
+ test.skipIf(process.platform==="win32")("the real host path admits multibyte socket names before provisioning",()=>{
+  const owner=String(userInfo().uid),socket="h-000000000000.sock";
+  for(const row of runtimeCases){
+   const compactTail=join("m1",P.runtimeDirectory,"sr"+owner,socket),padding=row.compactBytes===null?0:row.compactBytes-Buffer.byteLength(join(row.work,compactTail));
+   const work=row.work+"x".repeat(padding),[plan]=sliceLabPlansV1({...options,machines:1},"ab12",work,"/checkout",true);
+   expect(work.length).toBeLessThanOrEqual(P.maximumWorkDirectoryCharacters);
+   const [regular,compact]=[join(work,"m1",P.runtimeDirectory,"semio-repo",owner,socket),join(work,"m1",P.runtimeDirectory,"sr"+owner,socket)];
+   const python=spawnSync(Bun.which("python3")??"python",["-I","-c",`import errno, json, os, socket, sys
+def probe(path):
+    with socket.socket(socket.AF_UNIX) as sock:
+        try:
+            sock.bind(os.fsencode(path))
+        except FileNotFoundError:
+            return True
+        except OSError as error:
+            if error.errno in (None, errno.ENAMETOOLONG):
+                return False
+            raise
+        raise AssertionError("fixture parent must not exist")
+print(json.dumps([[len(os.fsencode(path)), probe(path)] for path in sys.argv[1:]]))`,regular!,compact!],{encoding:"utf8"});
+   expect(python.status).toBe(0);
+   const lengths=JSON.parse(python.stdout) as [number,boolean][];
+   expect(lengths.map(([,fits])=>fits)).toEqual(process.platform==="darwin"?row.osAccepts.darwin:row.osAccepts.linux);
+   if(row.compactBytes!==null)expect(lengths[1]![0]).toBe(row.compactBytes);
+   if(row.route==="refused"){
+    expect(lengths[1]![0]).toBeGreaterThan(96);
+    expect(()=>sliceLabRuntimeDirectoryV1(plan!)).toThrow(/no usable socket path.*keinen nutzbaren Socket-Pfad/u);
+   }else{
+    const endpoint=row.route==="regular"?regular!:compact!;
+    expect(sliceLabRuntimeDirectoryV1(plan!)).toBe(endpoint.slice(0,endpoint.lastIndexOf("/")));
+   }
+  }
  });
  test("the process table keeps the rows of the run by the marker in the environment",()=>{
   const text=[` 10 1 2048 0.5 0 /bin/bun a ${P.markerEnvironment}=ab12 ${P.machineEnvironment}=m1 HOME=/x`,` 11 10 4096 120.0 5 /bin/repo ${P.markerEnvironment}=ab12 ${P.machineEnvironment}=m2`,` 12 1 100 0.0 0 /bin/other ${P.markerEnvironment}=zz99`,` 13 1 100 0.0 0 /bin/none FOO=1`].join("\n");
@@ -85,8 +123,22 @@ describe("slice lab",()=>{
   const put=(key:string,status=200,origin="m1")=>({method:"PUT",key,kind:"ac" as const,origin,status,atSeconds:1});
   expect(sliceLabDuplicatesV1([put("a"),put("a",200,"m2"),put("b"),put("b"),put("c",500),put("c",500,"m2")])).toBe(1);
  });
+ test("the machine holds its physical footprint where the system measures it, as the slice guard judges it, and the resident size beside it",()=>{
+  const text=["======","bun [99]: 64-bit    Footprint: 371 MB (16384 bytes per page)","======","zsh [35223]: 64-bit    Footprint: 1680 KB (16384 bytes per page)"].join("\n");
+  const held=sliceLabFootprintV1([{pid:99,rssMegabytes:1039},{pid:35223,rssMegabytes:40},{pid:7,rssMegabytes:300}],parseFootprintsV1(text));
+  expect(held).toEqual({footprintMegabytes:371+2+300,rssMegabytes:1379,measured:2});
+  expect(sliceLabFootprintV1([{pid:7,rssMegabytes:300}],new Map())).toEqual({footprintMegabytes:300,rssMegabytes:300,measured:0});
+ });
+ test("the verdict judges the footprint, names the resident peak beside it, and a footprint over the limit still fails",()=>{
+  const run=(footprintMegabytes:number)=>sliceLabVerdictV1({options:{...options,machines:1,memoryMegabytes:8192},machines:["m1"],samples:[sample({footprintMegabytes,rssMegabytes:3531})],results:{m1:{ready:true,failure:null,timings:[]}},duplicateOwners:0,leftoverProcesses:0,leftoverImages:0,elapsedSeconds:9,load:3,timedOut:false,liveFiles:[],lowered:0});
+  const within=run(2800),over=run(3531);
+  expect(sliceLabLimitMegabytesV1(8192)).toBe(3276);
+  expect(within.withinLimit).toBe(true);expect(within.peakFootprintMegabytes.m1).toBe(2800);expect(within.peakResidentMegabytes.m1).toBe(3531);
+  expect(over.withinLimit).toBe(false);
+  for(const language of ["en","de"] as const)expect(sliceLabReportV1(language,options,within,[sample()])).toContain("3531");
+ });
  test("every text exists in English and German",()=>{
-  for(const key of ["ready","wall","timeout","slice","skipped","leftovers","duplicates","peak","load","live","nice","lag","busy","published","notExercised","windows","usage"]){expect(sliceLabTextV1("en",key)).not.toBe(key);expect(sliceLabTextV1("de",key)).not.toBe(key);}
+  for(const key of ["ready","wall","timeout","slice","skipped","leftovers","duplicates","peak","load","live","nice","lag","busy","published","notExercised","windows","usage","peakResident"]){expect(sliceLabTextV1("en",key)).not.toBe(key);expect(sliceLabTextV1("de",key)).not.toBe(key);}
  });
 
  test("the activity is read from the end of the service log: a tool install, a command of the build script, a missing module",()=>{
@@ -124,16 +176,21 @@ describe("slice lab",()=>{
   expect(sliceLabFleetSummaryV1([request("a","PUT",200),request("a","PUT",200),request("b","GET",200),request("b","GET",404)])).toEqual({"a ac PUT 200":2,"b ac GET 200":1,"b ac GET 404":1});
  });
  test("the churn of the tree counts the files below framework that changed after the marker",()=>{
-  const root=mkdtempSync(join(tmpdir(),"churn-")),marker=join(root,"marker");
+  const scratch=mkdtempSync(join(tmpdir(),"churn-")),root=join(scratch,churnCase.ancestor,"checkout"),marker=join(scratch,"marker");
   try{
-   mkdirSync(join(root,"🧰️framework","a"),{recursive:true});mkdirSync(join(root,"🧰️framework","node_modules"),{recursive:true});
-   writeFileSync(join(root,"🧰️framework","a","old.ts"),"1");writeFileSync(marker,"");
-   const past=new Date(Date.now()-60000),future=new Date(Date.now()+60000);
-   utimesSync(join(root,"🧰️framework","a","old.ts"),past,past);utimesSync(marker,new Date(),new Date());
-   writeFileSync(join(root,"🧰️framework","a","new.ts"),"2");utimesSync(join(root,"🧰️framework","a","new.ts"),future,future);
-   writeFileSync(join(root,"🧰️framework","node_modules","dep.js"),"3");utimesSync(join(root,"🧰️framework","node_modules","dep.js"),future,future);
-   expect(treeChurnV1(root,marker)).toEqual({count:1,sample:[join("🧰️framework","a","new.ts")]});
-  }finally{rmSync(root,{recursive:true,force:true});}
+   const time=Math.floor(Date.now()/1000);
+   writeFileSync(marker,"");utimesSync(marker,time,time);
+   for(const [name,offset] of churnCase.files){
+    const path=join(root,String(name));
+    mkdirSync(join(path,".."),{recursive:true});writeFileSync(path,"content");utimesSync(path,time+Number(offset),time+Number(offset));
+   }
+   const oracle=spawnSync(Bun.which("python3")??"python",["-c",'import json,sys; from pathlib import Path; r=Path(sys.argv[1]); m=Path(sys.argv[2]).stat().st_mtime_ns; print(json.dumps(sorted(p.relative_to(r).as_posix() for p in (r/"🧰️framework").rglob("*") if p.is_file() and not {".cache","node_modules"}.intersection(p.relative_to(r).parts) and p.stat().st_mtime_ns>m)))',root,marker],{encoding:"utf8"});
+   expect(oracle.status).toBe(0);
+   expect(JSON.parse(oracle.stdout)).toEqual(churnCase.changed);
+   expect(treeChurnV1(root,marker)).toEqual({count:1,sample:churnCase.changed.map(name=>join(...name.split("/")))});
+   expect(treeChurnV1(root,marker,churnCase.changed.map(name=>join(...name.split("/")))).count).toBe(0);
+   expect(()=>treeChurnV1(root,join(scratch,"absent"))).toThrow();
+  }finally{rmSync(scratch,{recursive:true,force:true});}
  });
 });
 

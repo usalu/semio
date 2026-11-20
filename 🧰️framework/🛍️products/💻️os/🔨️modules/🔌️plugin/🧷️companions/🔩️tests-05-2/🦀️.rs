@@ -10,6 +10,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as pack;
 
 #[cfg(test)]
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(test)]
 #[path = "../../🪝️mounts/⚛️wp4-reactor/🧪️test-hosts/🔂️reactor-turn/🦀️.rs"]

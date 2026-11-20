@@ -159,19 +159,48 @@ export function agentBridgeOfferScopeFromJsonV1(json: string | null): AgentBridg
   return { hubOrigin, spaceId, agentPrincipalIds: agentPrincipalIds as string[] };
 }
 
-/** 🔎️ Asks the local supervisor for the offer a shell of `scope` may dial. Never throws and never rejects: the typed "not
- * offered", a host without the endpoint, a non-JSON body and a refused offer are all the same ordinary `null`
- * ("no agent is offering a bridge right now"), because the shell must render identically whether or
- * not anybody ever launches an MCP gateway. */
-export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal, scope: AgentBridgeOfferScopeV1 = null): Promise<AgentBridgeConfig | null> {
+/** 🔎️ What one ask of the supervisor found: the offer a shell may dial (or none) and whether the endpoint is
+ * definitively ABSENT — a `404`/`410` means the host serves no supervisor at all (a static CDN deployment), which no
+ * later ask will change, so the shell stops asking instead of polling a failing request. */
+export type AgentBridgeOfferProbeV1 = { readonly offer: AgentBridgeConfig | null; readonly absent: boolean };
+
+/** 🔎️ Asks the local supervisor once. Never throws and never rejects: the typed "not offered", a non-JSON body and a
+ * refused offer are all the same ordinary `offer: null`; only a definitive `404`/`410` answers `absent: true`. */
+export async function probeAgentBridgeOffer(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal, scope: AgentBridgeOfferScopeV1 = null): Promise<AgentBridgeOfferProbeV1> {
   const request = fetchImpl ?? (globalThis.fetch as unknown as BridgeOfferFetch | undefined);
-  if (!request) return null;
+  if (!request) return { offer: null, absent: true };
   try {
     const response = await request(agentBridgeOfferPathV1(endpoint, scope), { cache: "no-store", signal });
-    if (!response.ok) return null;
-    return parseAgentBridgeOffer(await response.json());
+    if (response.status === 404 || response.status === 410) return { offer: null, absent: true };
+    if (!response.ok) return { offer: null, absent: false };
+    return { offer: parseAgentBridgeOffer(await response.json()), absent: false };
   } catch {
-    return null;
+    return { offer: null, absent: false };
+  }
+}
+
+/** 🔎️ Asks the local supervisor for the offer a shell of `scope` may dial: {@link probeAgentBridgeOffer}'s offer, `null`
+ * ("no agent is offering a bridge right now") for every other answer, because the shell must render identically whether
+ * or not anybody ever launches an MCP gateway. */
+export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal, scope: AgentBridgeOfferScopeV1 = null): Promise<AgentBridgeConfig | null> {
+  return (await probeAgentBridgeOffer(endpoint, fetchImpl, signal, scope)).offer;
+}
+
+/** 🏷️ The compile-time define (`VITE_SEMIO_AGENT_BRIDGE_OFFER`, `"1"`) a build sets only where the supervisor
+ * endpoint is served — the dev server (`command === "serve"`). A release static deployment never declares it. */
+export const AGENT_BRIDGE_OFFER_DECLARATION_ENV = "VITE_SEMIO_AGENT_BRIDGE_OFFER";
+
+/** 📣️ Whether this build declares a supervisor endpoint. Guarded for non-Vite embeds where `import.meta.env` is absent:
+ * undeclared means never asked. `env` is injectable for language-neutral tests. */
+export function agentBridgeOfferDeclaredV1(env: Readonly<Record<string, string | undefined>> | undefined = readImportMetaEnv()): boolean {
+  return env?.[AGENT_BRIDGE_OFFER_DECLARATION_ENV] === "1";
+}
+
+function readImportMetaEnv(): Readonly<Record<string, string | undefined>> | undefined {
+  try {
+    return (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env;
+  } catch {
+    return undefined;
   }
 }
 
@@ -201,7 +230,7 @@ export function sameAgentBridgeOffer(left: AgentBridgeConfig | null, right: Agen
 /** 🛰️ Polls the supervisor's offer on the shared schedule and publishes every CHANGE — an offer appearing, changing or
  * going away — the page-realm loop both wgpu page entries run (`🚀️browser-boot` forwards it to its frame Worker,
  * `🎬️renderer-boot` hands it to the page-mounted renderer). `offerScope` is re-read before every poll, exactly like React's
- * hook: the shell's hub, space and its human's agents (a failed read is a shell in no hub space). Returns the stop. */
+ * hook: the shell's hub, space and its human's agents (a failed read is a shell in no hub space). A build that does not declare the endpoint ({@link agentBridgeOfferDeclaredV1}) never asks, and a definitive absence stops the watch. Returns the stop. */
 export function watchAgentBridgeOffer(
   publish: (offer: AgentBridgeConfig | null) => void,
   options: {
@@ -210,8 +239,10 @@ export function watchAgentBridgeOffer(
     readonly setTimer?: (run: () => void, delayMs: number) => unknown;
     readonly clearTimer?: (handle: unknown) => void;
     readonly offerScope?: (signal: AbortSignal) => Promise<AgentBridgeOfferScopeV1>;
+    readonly declared?: boolean;
   } = {},
 ): () => void {
+  if (!(options.declared ?? agentBridgeOfferDeclaredV1())) return () => {};
   const setTimer = options.setTimer ?? ((run: () => void, delayMs: number) => setTimeout(run, delayMs));
   const clearTimer = options.clearTimer ?? ((handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>));
   const abort = new AbortController();
@@ -222,12 +253,13 @@ export function watchAgentBridgeOffer(
   const poll = async (): Promise<void> => {
     const scope = await (options.offerScope?.(abort.signal) ?? Promise.resolve(null)).catch(() => null);
     if (stopped) return;
-    const discovered = await fetchAgentBridgeConfig(options.endpoint ?? AGENT_BRIDGE_OFFER_ENDPOINT, options.fetchImpl, abort.signal, scope);
+    const { offer: discovered, absent } = await probeAgentBridgeOffer(options.endpoint ?? AGENT_BRIDGE_OFFER_ENDPOINT, options.fetchImpl, abort.signal, scope);
     if (stopped) return;
     if (!sameAgentBridgeOffer(current, discovered)) {
       current = discovered;
       publish(discovered);
     }
+    if (absent) return;
     interval = nextBridgeDiscoveryIntervalMs(interval, discovered);
     timer = setTimer(() => void poll(), interval);
   };

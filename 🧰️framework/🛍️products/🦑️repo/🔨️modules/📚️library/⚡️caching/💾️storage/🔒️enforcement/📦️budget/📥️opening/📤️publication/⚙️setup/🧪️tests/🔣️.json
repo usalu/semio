@@ -109,67 +109,22 @@
       "accept": false
     }
   ],
+  "generationParent": [
+    {"id": "empty-funded-root", "kind": "absent", "device": 1, "accept": true},
+    {"id": "existing-generation-parent", "kind": "directory", "device": 1, "accept": true},
+    {"id": "foreign-device", "kind": "directory", "device": 2, "accept": false},
+    {"id": "foreign-file", "kind": "file", "device": 1, "accept": false},
+    {"id": "aliased-parent", "kind": "link", "device": 1, "accept": false}
+  ],
   "resume": [
-    {
-      "id": "all-absent",
-      "roots": [
-        false,
-        false
-      ],
-      "ready": [
-        false,
-        false
-      ],
-      "mode": "fresh"
-    },
-    {
-      "id": "staging-cut",
-      "roots": [
-        true,
-        false
-      ],
-      "ready": [
-        false,
-        false
-      ],
-      "mode": "unready"
-    },
-    {
-      "id": "all-staged-no-ready",
-      "roots": [
-        true,
-        true
-      ],
-      "ready": [
-        false,
-        false
-      ],
-      "mode": "unready"
-    },
-    {
-      "id": "partial-ready-cut",
-      "roots": [
-        true,
-        true
-      ],
-      "ready": [
-        true,
-        false
-      ],
-      "mode": "ready"
-    },
-    {
-      "id": "all-ready-partial-alias-cut",
-      "roots": [
-        true,
-        true
-      ],
-      "ready": [
-        true,
-        true
-      ],
-      "mode": "ready"
-    }
+    {"id":"missing-container","container":false,"roots":[false,false],"ready":[false,false],"retained":[],"repair":false},
+    {"id":"all-absent","container":true,"roots":[false,false],"ready":[false,false],"retained":[],"repair":false},
+    {"id":"staging-cut","container":true,"roots":[true,false],"ready":[false,false],"retained":[],"repair":true},
+    {"id":"all-staged-no-ready","container":true,"roots":[true,true],"ready":[false,false],"retained":[],"repair":true},
+    {"id":"partial-ready-cut","container":true,"roots":[true,true],"ready":[true,false],"retained":[0],"repair":true},
+    {"id":"ready-and-missing","container":true,"roots":[true,false],"ready":[true,false],"retained":[0],"repair":false},
+    {"id":"ready-staged-and-missing","container":true,"roots":[true,true,false],"ready":[true,false,false],"retained":[0],"repair":true},
+    {"id":"all-ready-partial-alias-cut","container":true,"roots":[true,true],"ready":[true,true],"retained":[0,1],"repair":false}
   ],
   "markerPublication": [
     {
@@ -314,6 +269,11 @@
       "change": "partial-record",
       "accept": false
     }
+  ],
+  "retainedPreparationFunding": [
+    {"id": "smaller-retained-reservation-commits-before-prepare", "priorBytes": 8, "replacedBytes": 36},
+    {"id": "full-current-reservation-needs-no-preparation-replacement", "priorBytes": 36, "replacedBytes": 36},
+    {"id": "partial-replacement-is-not-producer-authority", "priorBytes": 8, "replacedBytes": 32}
   ],
   "initializationDispatch": [
     {

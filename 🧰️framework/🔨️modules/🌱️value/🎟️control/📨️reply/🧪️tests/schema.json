@@ -6,6 +6,8 @@
     "error",
     "pendingRetainsKey",
     "completionClearsKey",
+    "refusedStepClearsKey",
+    "recoveredKeyRetained",
     "foreignRejected",
     "nestedKeys",
     "childCompleteBecomes",
@@ -16,6 +18,12 @@
       "const": "original recorded reply"
     },
     "pendingRetainsKey": {
+      "const": true
+    },
+    "refusedStepClearsKey": {
+      "const": true
+    },
+    "recoveredKeyRetained": {
       "const": true
     },
     "completionClearsKey": {

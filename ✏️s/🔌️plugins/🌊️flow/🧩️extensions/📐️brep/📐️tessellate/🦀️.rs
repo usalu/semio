@@ -1,5 +1,5 @@
 //! 📐️ One original tessellation invocation owns request, query and canonical mesh through paid closure.
-use super::{Session,SessionCapture};
+use semio_s_spatial_kernel_semio_session::{Session,SessionCapture};
 use flow_extension_sdk::geometry::{GeometryStep,GeometryWorkFailure,GeometryWorkIdentity};
 use semio_framework_job::{StepContext,OriginalDomainProjection,OriginalDomainFailure,OriginalDomainView as View};
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree as Tree,ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,JsonGrammarCursor,JsonMemberPolicy,Value};
@@ -12,6 +12,7 @@ use std::sync::{Mutex,TryLockError};
 
 type Wire=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
+fn cancelled()->ValueError{ValueError::literal(ValueRefusalKind::Canceled,"tessellation invocation cancelled")}
 fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation projection ordinal is absent")}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn header()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
@@ -63,10 +64,10 @@ impl OriginalDomainFailure for TessellationFailure{
 
 struct TessellationInvokeCursor{
  identity:GeometryWorkIdentity,pointer:usize,length:usize,parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,root:Option<Value>,member:Option<(String,Value)>,request:Option<TessellationRequest>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
- wire:Option<OwnedProjectedPackWireCursor<TessellationCompleted>>,completed:Option<TessellationCompleted>,ready_wire:Option<Wire>,mesh:Option<semio_framework::MeshData>,fault:Option<TessellationFailure>,close_fault:Option<TessellationFailure>,fault_place:Option<semio_framework_job::OriginalDomainReservation<TessellationFailure>>,close_fault_place:Option<semio_framework_job::OriginalDomainReservation<TessellationFailure>>,required:u8,candidate:usize,position:usize,decoded:bool,query_active:bool,query_complete:bool,units:u64,closing:bool,normal_posted:bool,normal_progress:RetainedCloneProgress,
+ wire:Option<OwnedProjectedPackWireCursor<TessellationCompleted>>,completed:Option<TessellationCompleted>,ready_wire:Option<Wire>,mesh:Option<semio_framework::MeshData>,fault:Option<TessellationFailure>,close_fault:Option<TessellationFailure>,fault_place:Option<semio_framework_job::OriginalDomainReservation<TessellationFailure>>,close_fault_place:Option<semio_framework_job::OriginalDomainReservation<TessellationFailure>>,required:u8,candidate:usize,position:usize,decoded:bool,query_active:bool,query_complete:bool,units:u64,closing:bool,cancelled:bool,normal_posted:bool,normal_progress:RetainedCloneProgress,
 }
 impl TessellationInvokeCursor{
- fn new(source:&[u8],identity:GeometryWorkIdentity)->Self{Self{identity,pointer:source.as_ptr()as usize,length:source.len(),parser:None,continuation:None,root:None,member:None,request:None,active:None,wire:None,completed:None,ready_wire:None,mesh:None,fault:None,close_fault:None,fault_place:None,close_fault_place:None,required:0,candidate:0,position:0,decoded:false,query_active:false,query_complete:false,units:0,closing:false,normal_posted:false,normal_progress:Default::default()}}
+ fn new(source:&[u8],identity:GeometryWorkIdentity)->Self{Self{identity,pointer:source.as_ptr()as usize,length:source.len(),parser:None,continuation:None,root:None,member:None,request:None,active:None,wire:None,completed:None,ready_wire:None,mesh:None,fault:None,close_fault:None,fault_place:None,close_fault_place:None,required:0,candidate:0,position:0,decoded:false,query_active:false,query_complete:false,units:0,closing:false,cancelled:false,normal_posted:false,normal_progress:Default::default()}}
  fn matches(&self,source:&[u8],cx:&StepContext<'_>)->bool{self.identity.operation==cx.operation().0&&self.identity.generation==cx.generation().0&&self.pointer==source.as_ptr()as usize&&self.length==source.len()}
  fn begin_close(&mut self){self.closing=true;if let Some(wire)=&mut self.wire{wire.begin_close();}}
  fn terminal_is_empty(&self)->bool{self.parser.is_none()&&self.continuation.is_none()&&self.root.is_none()&&self.member.is_none()&&self.request.is_none()&&self.active.is_none()&&self.wire.is_none()&&self.completed.is_none()&&self.ready_wire.is_none()&&self.mesh.is_none()&&self.fault.is_none()&&self.close_fault.is_none()&&self.fault_place.is_none()&&self.close_fault_place.is_none()&&!self.query_active}
@@ -114,7 +115,7 @@ impl TessellationInvokeCursor{
  fn step(&mut self,session:&Session,source:&[u8],cx:&mut StepContext<'_>)->Result<Option<Wire>,TessellationFailure>{
   self.normal_posted=false;self.normal_progress=Default::default();let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)).min(1),..available};
   if !self.matches(source,cx){return Err(invalid("tessellation retains another original invocation").into())}cx.original_source_parent()?;
-  if !permits(grant,header())||cx.should_yield()||self.close_fault.is_some(){return Ok(None)}if cx.is_cancelled(){self.begin_close();}
+  if !permits(grant,header())||cx.should_yield()||self.close_fault.is_some(){return Ok(None)}if cx.is_cancelled(){self.cancelled=true;self.begin_close();}
   if self.closing{
    cx.set_stage("closing-tessellation");if self.query_active{self.normal_progress=self.cancel_query(session,cx)?;return Ok(None)}
    if self.wire.is_some()||!self.source_empty()||self.completed.is_some()||self.ready_wire.is_some()||self.request.is_some()||self.mesh.is_some(){self.normal_progress=Self::funded(cx,grant,|effect|self.close_step(effect))?.unwrap_or_default();return Ok(None)}
@@ -129,7 +130,7 @@ impl TessellationInvokeCursor{
   if self.decoded&&!self.source_empty(){cx.set_stage("closing-tessellation-request");self.normal_progress=Self::funded(cx,grant,|effect|self.close_source(effect).map_err(Into::into))?.unwrap_or_default();return Ok(None)}
   if self.decoded{
    let original=self.request.as_ref().ok_or_else(invariant)?;self.query_active=true;self.normal_posted=true;let result=session.tessellate_step(self.identity,&original.handle,original.tolerance,cx);
-   match result{Ok((step,work))=>{self.normal_progress=work.retained;self.units=self.units.checked_add(work.consumed_units as u64).ok_or_else(invariant)?;match step{GeometryStep::Working{phase,..}=>{cx.set_stage(phase);},GeometryStep::Ready(mesh)=>{self.mesh=Some(mesh);self.query_complete=true;},GeometryStep::Cancelled=>self.begin_close(),GeometryStep::Failed(original)=>return Err(TessellationFailure::query(original))}},Err(original)=>{self.normal_progress=original.work.retained;return Err(TessellationFailure::geometry(original))}}return Ok(None)
+   match result{Ok((step,work))=>{self.normal_progress=work.retained;self.units=self.units.checked_add(work.consumed_units as u64).ok_or_else(invariant)?;match step{GeometryStep::Working{phase,..}=>{cx.set_stage(phase);},GeometryStep::Ready(mesh)=>{self.mesh=Some(mesh);self.query_complete=true;},GeometryStep::Cancelled=>{self.cancelled=true;self.begin_close();},GeometryStep::Failed(original)=>return Err(TessellationFailure::query(original))}},Err(original)=>{self.normal_progress=original.work.retained;return Err(TessellationFailure::geometry(original))}}return Ok(None)
   }
   cx.set_stage("decoding-tessellation");if self.active.is_some()||self.member.is_some(){self.normal_progress=Self::funded(cx,grant,|effect|if self.active.is_some(){close_ticket(&mut self.active,effect).map(|step|step.progress())}else{admit(&mut self.member,&mut self.active,effect)}.map_err(Into::into))?.unwrap_or_default();return Ok(None)}
   if self.root.is_some(){if self.request.is_none(){self.request=Some(TessellationRequest::default());self.normal_progress=item();return Ok(None)}self.normal_progress=self.decode_field(grant)?;return Ok(None)}
@@ -139,22 +140,30 @@ impl TessellationInvokeCursor{
  }
 }
 
-/// 🧭️ The extension retains one actual initiating source rather than replacing its operation on each progress hop.
+/// 🧭️ Serializes the session's original admission and close frontiers. The reactor keeps
+/// each waiting invocation in its own round-robin request slot until this lane is free.
 pub struct TessellationResources{cursor:Mutex<Option<TessellationInvokeCursor>>}
 impl TessellationResources{
  pub fn new()->Self{Self{cursor:Mutex::new(None)}}
  pub fn invoke(&self,session:&SessionCapture,source:&[u8],cx:&mut StepContext<'_>)->Result<semio_plugin::ExtensionInvokeStep,semio_framework::Fault>{
   let pending=||semio_plugin::ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None};
   let mut owner=match self.cursor.try_lock(){Ok(owner)=>owner,Err(TryLockError::WouldBlock)=>return Ok(pending()),Err(TryLockError::Poisoned(_))=>return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation owner is poisoned").into()),..pending()})};
-  if owner.as_ref().is_some_and(|cursor|!cursor.matches(source,cx)){return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"tessellation invocation retains another original caller").into()),..pending()})}
   if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(pending())}
-  if owner.is_none()&&cx.is_cancelled(){return Ok(pending())}
+  let owns_lane=owner.as_ref().is_some_and(|cursor|cursor.matches(source,cx));
+  if !owns_lane {
+   if cx.is_cancelled(){return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(cancelled().into()),..pending()})}
+   if owner.is_some(){return Ok(pending())}
+  }
   if owner.is_none(){if let Err(original)=cx.original_source_parent(){return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(original.into()),..pending()})}*owner=Some(TessellationInvokeCursor::new(source,GeometryWorkIdentity{operation:cx.operation().0,generation:cx.generation().0}));cx.consume_fuel(1);let receipt=item();let refusal=cx.consume_retained(receipt).err().map(Into::into);return Ok(semio_plugin::ExtensionInvokeStep{retained_progress:receipt,refusal,..pending()})}
   let Some(cursor)=owner.as_mut()else{return Ok(semio_plugin::ExtensionInvokeStep{refusal:Some(invalid("original tessellation owner is absent").into()),..pending()})};let incoming=cx.retained_progress();let before=cx.fuel_remaining();let result=cursor.step(session,source,cx);let receipt=cursor.normal_progress;
   let payload=match result{Ok(payload)=>payload,Err(original)=>{cursor.fail(original);None}};
   if !cursor.normal_posted{let refusal=cx.consume_retained(receipt).err();cx.consume_fuel(receipt.copied_items as u64);if let Some(original)=refusal{if let Some(failure)=&mut cursor.fault{failure.receipt_refusal=Some(original)}else{cursor.fail(original.into())}}}else{assert!(cx.fuel_remaining()<=before);}
   let mut refusal=None;if receipt==RetainedCloneProgress::default(){let selected=if cursor.close_fault.is_some()||cursor.close_fault_place.is_some(){Some((&mut cursor.close_fault,&mut cursor.close_fault_place))}else if cursor.closing&&!cursor.query_active&&cursor.wire.is_none()&&cursor.source_empty()&&cursor.request.is_none()&&cursor.completed.is_none()&&cursor.ready_wire.is_none()&&cursor.mesh.is_none()&&(cursor.fault.is_some()||cursor.fault_place.is_some()){Some((&mut cursor.fault,&mut cursor.fault_place))}else{None};if let Some((source,place))=selected{refusal=match flow_extension_sdk::admit_evaluation_failure(source,place,cx){Ok(original)=>original,Err(original)=>Some(original)};}}let after=cx.retained_progress();let receipt=RetainedCloneProgress{copied_items:after.copied_items-incoming.copied_items,copied_bytes:after.copied_bytes-incoming.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-incoming.retained_capacity_bytes,released_bytes:after.released_bytes-incoming.released_bytes};
-  if payload.is_some(){assert!(cursor.terminal_is_empty());*owner=None;}else if cursor.terminal_is_empty(){*owner=None;}
+  if payload.is_some(){assert!(cursor.terminal_is_empty());}
+  if cursor.terminal_is_empty(){
+   if cursor.cancelled&&refusal.is_none(){refusal=Some(cancelled().into());}
+   *owner=None;
+  }
   Ok(semio_plugin::ExtensionInvokeStep{payload:payload.map(|wire|wire.to_vec_owner()),retained_progress:receipt,refusal})
  }
  pub fn begin_close(&mut self){if let Some(cursor)=self.cursor.get_mut().expect("exclusive tessellation owner").as_mut(){cursor.begin_close();}}
@@ -169,3 +178,7 @@ impl TessellationResources{
  }
 
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

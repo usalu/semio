@@ -1,0 +1,13 @@
+{
+  "documentSchema": "ink.document",
+  "composite": {
+    "viewMode": "composite",
+    "interactive": true,
+    "interactionDomain": { "id": "blocks", "granularityId": "block" }
+  },
+  "navigator": {
+    "viewMode": "navigator",
+    "interactive": false,
+    "interactionDomain": null
+  }
+}

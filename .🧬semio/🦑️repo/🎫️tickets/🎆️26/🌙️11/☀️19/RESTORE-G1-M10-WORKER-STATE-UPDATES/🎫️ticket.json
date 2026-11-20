@@ -1,0 +1,72 @@
+{
+  "title": "Restore g1-m10 Worker State Updates",
+  "emoji": "🔄",
+  "status": "closed",
+  "description": "Diagnose and fix stale g1-m10 fleet state and verify publication on the server.",
+  "summary": "Restored g1-m10 heartbeat and readiness reporting during replication catch-up. The server reports ready with an empty incoming queue. All 170 tests passed across the targeted suite and sidecar rerun. The worker is active via the detached boot entry because the native launchd launcher remains blocked.",
+  "goal": "aioptimizedrepo",
+  "sessions": [
+    "8a8e877e-c636-4ee2-8b27-a9ef6bf57695",
+    "dc7a41fe-9dbd-4ad6-b9b8-a041039c6bcf"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-19 23:44:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Diagnose and fix stale g1-m10 fleet state and verify publication on the server."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 23:52:07",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Restored g1-m10 fleet attestations during slow replication. Both server receipts and a decreasing queue were observed after starting the recovery daemon. All 157 targeted tests passed. The installed launchd launcher still requires follow-up.",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/RESTORE-G1-M10-WORKER-STATE-UPDATES/verification.md"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-19 23:53:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Resume readiness reporting alongside the recovered fleet heartbeat."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 23:56:14",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Restored g1-m10 heartbeat and readiness reporting during replication catch-up. The server reports ready with an empty incoming queue. All 170 tests passed across the targeted suite and sidecar rerun. The worker is active via the detached boot entry because the native launchd launcher remains blocked.",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/RESTORE-G1-M10-WORKER-STATE-UPDATES/verification.md"
+        }
+      ]
+    }
+  ]
+}

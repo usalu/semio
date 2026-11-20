@@ -334,6 +334,8 @@ macro_rules! space_members {
                 let required_copy=Self::open_copy_byte_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
                 let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
                 let grant=cx.retained_grant();
+                let work = u64::try_from(required_copy).unwrap_or(u64::MAX).saturating_add(1);
+                if cx.fuel_remaining() < work { return Ok(false); }
                 if grant.maximum_items==0||grant.maximum_copy_bytes<required_copy||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
                 let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
                 match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){

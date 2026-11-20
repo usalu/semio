@@ -10,11 +10,13 @@
  * @see ../🧮️pipeline/🟦️.ts — the memoised evaluator
  * @see ../🗣️labels/🟦️.ts — the spoken description
  */
-import { Component, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement, ReactNode } from "react";
 import type { SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
+import { useHeldTime } from "../⏱️clock/🟦️.ts";
+import { useSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
 import { describeScene, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
 import { translator } from "../🌐️i18n/🟦️.ts";
 import { defaultQuery, figureFrame, inlineSvg, queryAt } from "../🧮️pipeline/🟦️.ts";
@@ -101,16 +103,6 @@ function useVisible(live: boolean): [React.RefObject<HTMLDivElement | null>, boo
   return [ref, live || visible];
 }
 
-function useFrameTime(clock: StaffageClock | undefined, active: boolean): number | null {
-  const last = useRef<number | null>(null);
-  const snapshot = (): number | null => {
-    if (clock === undefined) return null;
-    if (active || last.current === null) last.current = clock.state.frame / clock.state.fps;
-    return last.current;
-  };
-  return useSyncExternalStore(clock?.subscribe ?? ((): (() => void) => () => undefined), snapshot, snapshot);
-}
-
 const svgId = (id: string): string => id.replace(/[^A-Za-z0-9_.-]/gu, "-");
 
 function match(target: EventTarget | null, ids: ReadonlySet<string>, root: HTMLElement): string | null {
@@ -194,7 +186,7 @@ type DrawnProps = Omit<StaffageFigureProps, "viewpoint" | "preset" | "onPreset" 
 function DrawnFigure(props: DrawnProps): ReactElement {
   const { asset, clock, language, zoom = 1, fit = "paper", live = false, onEvaluated, onInspect, className, title } = props;
   const [ref, visible] = useVisible(live);
-  const timeS = useFrameTime(clock, visible);
+  const timeS = useHeldTime(clock, visible && props.query?.kind !== "pose");
   const request = {
     view: props.view,
     scale: props.scale,
@@ -217,6 +209,8 @@ function DrawnFigure(props: DrawnProps): ReactElement {
   const { scene } = frame;
   const frameKey = props.frame === undefined ? "" : JSON.stringify(props.frame);
   const markup = useMemo(() => inlineSvg(scene, props.frame), [scene, frameKey]);
+  const inkRef = useRef<HTMLDivElement | null>(null);
+  useSvgMarkup(inkRef, markup);
   const widthMm = props.frame === undefined ? scene.widthMm : props.frame.maxX - props.frame.minX;
   const heightMm = props.frame === undefined ? scene.heightMm : props.frame.maxY - props.frame.minY;
   const showValues = props.annotations?.legend !== false || onInspect !== undefined;
@@ -282,7 +276,7 @@ function DrawnFigure(props: DrawnProps): ReactElement {
       onKeyDown={onKey}
       onBlur={() => focused >= 0 && inspect(-1)}
     >
-      <div style={{ position: "absolute", inset: 0 }} dangerouslySetInnerHTML={{ __html: markup }} />
+      <div ref={inkRef} style={{ position: "absolute", inset: 0 }} />
       {symbolic ? <span id={noteId} data-fidelity-note="" style={{ position: "absolute", left: 2, bottom: 2, padding: "0 3px", fontSize: 10, lineHeight: 1.4, background: "rgba(127,127,127,0.25)", color: "inherit" }}>{word("conventionalSymbol", language)}</span> : null}
     </div>
     {showValues ? <StaffageValueTable scene={scene} language={language} id={tableId} /> : null}

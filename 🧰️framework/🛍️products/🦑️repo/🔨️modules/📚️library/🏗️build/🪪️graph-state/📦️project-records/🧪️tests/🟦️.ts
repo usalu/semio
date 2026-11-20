@@ -3,8 +3,12 @@ import{mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync,existsSync}from"n
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createHash}from"node:crypto";
+import Ajv from"ajv";
 import{startRemoteCacheServerV1}from"../../../🌐️remote-cache/🖥️server/🟦️.ts";
-import{createProjectFleetPortV1,projectRecordStateV1,type ProjectRecordInfoV1}from"../🟦️.ts";
+import{createProjectFleetPortV1,projectRecordStateV1,runTakeLookV1,type ProjectRecordInfoV1}from"../🟦️.ts";
+import{graphFleetClientV1}from"../../🛰️exchange/🟦️.ts";
+import{graphFleetSettingsV1}from"../../🧶️nx/🟦️.ts";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{observationRowsHoldV1,withObservedWorldV1}from"../../../👁️observation/🟨️.mjs";
 
 /** 📦️ A project record travels through the fleet cache: stored once under a root-neutral key with one slot per project, taken by a machine at another root, computed once when two machines ask at the same moment, never accepted without the reading machine's own check of every observation. */
@@ -31,6 +35,37 @@ async function world(){
  return{server,environment};
 }
 const infoOf=(root:string,store:{record?:unknown;imported?:unknown[]}):ProjectRecordInfoV1=>{const b=base(root);return{cachePath:join(root,"np","alpha.json"),fleet:b.fleet,keyText:b.keyText,exportRecord:()=>store.record,async import(portable){(store.imported??=[]).push(portable);return true;}};};
+
+test("gate telemetry distinguishes a take blocked on transport from a normal owner blocked on its claim",async()=>{
+ const {server,environment}=await world(),root=temp("gate-times");
+ const client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!);
+ const metadata=Promise.withResolvers<void>(),claimStarted=Promise.withResolvers<void>(),allowMetadata=Promise.withResolvers<void>(),allowClaim=Promise.withResolvers<void>();
+ const validate=new Ajv({strict:false}).compile({...schema,$ref:"#/definitions/GateTimings"});
+ const port=createProjectFleetPortV1({root,environment,client:{
+  ...client,
+  async getResult(...args){metadata.resolve();await allowMetadata.promise;return client.getResult(...args);},
+  async claim(...args){claimStarted.resolve();await allowClaim.promise;return client.claim(...args);},
+ }})!;
+ const taken=runTakeLookV1(()=>port.gate(infoOf(root,{})));
+ let inferred:ReturnType<typeof port.gate>|undefined;
+ try{
+  await metadata.promise;
+  const awaitingMetadata=port.stats().gateTimings;
+  expect(validate(awaitingMetadata)).toBe(true);
+  expect(awaitingMetadata.metadata).toMatchObject({started:1,active:1});
+  expect(awaitingMetadata.claim.started).toBe(0);
+  allowMetadata.resolve();
+  expect((await taken).seeded).toBe(false);
+  expect(port.stats().gateTimings.metadata.active).toBe(0);
+  inferred=port.gate(infoOf(root,{}));await claimStarted.promise;
+  const awaitingClaim=port.stats().gateTimings;
+  expect(awaitingClaim.metadata).toMatchObject({started:2,active:0});
+  expect(awaitingClaim.claim).toMatchObject({started:1,active:1});
+  expect(awaitingClaim.retry.started).toBe(0);
+  allowClaim.resolve();await (await inferred).abandon();
+  expect(port.stats().gateTimings.claim.active).toBe(0);
+ }finally{allowMetadata.resolve();allowClaim.resolve();await Promise.allSettled([taken,inferred]);await server.stop();}
+});
 
 test("a record computed at one root is taken by a machine at another root with that machine's paths, and a record nobody has is computed once under a claim",async()=>{
  const {server,environment}=await world();

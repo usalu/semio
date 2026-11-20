@@ -1,6 +1,6 @@
 /** 🧱️ InkCanvasHost block views: the math renderer port with its KaTeX default and the text, table, image, math and stroke block views. */
 import * as React from "../../⚛️react-port/🟦️.ts";
-import { cn, useLabel } from "@semio-tech/ui-react";
+import { cn, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import type { InkBounds, InkCamera, InkImageAsset, InkItem, InkResizeHandle, InkTextItem, InkTextRun } from "../🧾️ink-model/🟦️.ts";
 import { inkItemBounds, inkPositiveMod, worldToScreen } from "../📐️ink-geometry/🟦️.ts";
 import { inkImageAssetDataUrl } from "../🌳️ink-document-ops/🟦️.ts";
@@ -45,7 +45,7 @@ function inkTextRunStyle(run: InkTextRun): React.CSSProperties {
 function InkTextRunView({ run }: { readonly run: InkTextRun }) {
   if (run.link) {
     return (
-      <a href={run.link} className="text-primary underline" style={inkTextRunStyle(run)} onPointerDown={(event) => event.stopPropagation()}>
+      <a {...sharedBorderlessBoxProps} href={run.link} className="text-primary underline" style={inkTextRunStyle(run)} onPointerDown={(event) => event.stopPropagation()}>
         {run.text}
       </a>
     );
@@ -88,7 +88,9 @@ export function InkItemView({
   const common = {
     "data-ink-block-id": block.id,
     "data-border-probe-art": "",
-    className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", selected && "ring-primary ring-2", hovered && !selected && "ring-primary/60 ring-1", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
+    ...sharedBorderlessBoxProps,
+    "data-shared-border-state": hovered ? "hover" : selected ? "active" : undefined,
+    className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,
       top: bounds.y,

@@ -4,7 +4,7 @@
 //! a tutorial step targets.
 
 use super::engine_surface_registry::{EngineSurface, NodeGraphEngine, ENGINE_SURFACES};
-use flow::dag::dag_world_to_screen;
+use flow::dag::{dag_world_to_screen, slider_overlay_state_json};
 use semio_framework_canvas as canvas;
 use serde_json::Value;
 
@@ -63,17 +63,18 @@ fn tutorial_geometry_from_json(raw: &str, requires_visible: bool) -> Option<Tuto
 }
 
 pub fn tutorial_graph_world_to_screen(engine: &NodeGraphEngine, x: f64, y: f64) -> [f32; 2] {
-    let point = match engine {
-        NodeGraphEngine::Dag(host) => dag_world_to_screen(&host.dag, x, y),
-        NodeGraphEngine::Flow(host) => dag_world_to_screen(&host.dag, x, y),
+    let dag = match engine {
+        NodeGraphEngine::Dag(host) => &host.dag,
+        NodeGraphEngine::Flow(host) => &host.dag,
     };
+    let point = dag_world_to_screen(&dag.viewport, &dag.graph, x, y);
     [point.0 as f32, point.1 as f32]
 }
 
 fn tutorial_graph_geometry(engine: &NodeGraphEngine, domain: &str, entity: &str) -> Option<TutorialSurfaceGeometry> {
     if domain == "slider" {
         let raw = match engine {
-            NodeGraphEngine::Dag(host) => host.dag.slider_overlay_state_json().ok()?,
+            NodeGraphEngine::Dag(host) => slider_overlay_state_json(&host.dag.viewport, &host.dag.graph).ok()?,
             NodeGraphEngine::Flow(host) => host.slider_overlay_state_json().ok()?,
         };
         let value: Value = serde_json::from_str(&raw).ok()?;
@@ -133,7 +134,7 @@ pub fn resolve_tutorial_surface_point(host_id: &str, point: &semio_framework::on
                     return Some((point.0 as f32, point.1 as f32));
                 }
                 if let Some(host) = surface.board_host.as_ref() {
-                    let point = host.world_to_screen(canvas::Point::new(*x, *y));
+                    let point = host.scene.world_to_screen(canvas::Point::new(*x, *y));
                     return Some((point.x as f32, point.y as f32));
                 }
                 if let Some(host) = surface.editor.as_ref() {

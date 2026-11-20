@@ -2,6 +2,7 @@
 import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
 import { expect, it, vi } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
+import { resolveBootExampleId } from "../../../🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️";
 import { initialShellState, buildOsCommands, dispatchOsCommand, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage } from "../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 
 /** 🛂 Registers the introduction replay and start, ephemeral brand, os command omission and locked dispatch tests. */
@@ -43,18 +44,20 @@ export function registerIntroductionAndOsCommandTests(): void {
     expect(shouldStartIntroduction({ ...base, tutorialActive: true })).toBe(false);
     expect(shouldStartIntroduction({ ...base, suppressed: true })).toBe(false);
   });
-it("isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only", () => {
+  it("isEphemeralShellBrand resolves brand defaults on refresh before publishing the selection", () => {
     expect(isEphemeralShellBrand(undefined)).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain" })).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain", ephemeral: true })).toBe(true);
+    const defaults = { exampleId: "concrete-forest" };
     const ephemeralState = initialShellState({
       locale: "en",
       plugins: [],
       locks: { locale: "de", terminology: "reuse", themeId: "semio" },
-      defaults: { exampleId: "concrete-forest" },
+      defaults,
       storage: createMemoryStoragePort(),
     });
-    expect(ephemeralState.layout.activeExampleId).toBe("concrete-forest");
+    expect(ephemeralState.layout.activeExampleId).toBe("");
+    expect(resolveBootExampleId(ephemeralState.layout.activeExampleId, [{ id: "another-example" }, { id: "concrete-forest" }], defaults.exampleId)).toBe("concrete-forest");
     expect(ephemeralState.uiPrefs.uiLocale).toBe("de");
     expect(ephemeralState.uiPrefs.uiTerminology).toBe("reuse");
     expect(ephemeralState.uiPrefs.uiThemeId).toBe("semio");

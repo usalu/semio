@@ -50,10 +50,10 @@ async fn a_new_sweep_is_a_baseboard_on_the_left_face_of_the_chosen_wall_else_the
     let Ok(ModelMutation::CreateWallSweep(fallback)) = create_wall_sweep(&snapshot, "sw-2", "st-ground", "Baseboard") else { panic!("create wall sweep") };
     assert_eq!(Some(fallback.wall_sweep.host), snapshot.walls.keys().next().cloned());
     let mut bare = snapshot.clone();
-    bare.walls.clear();
+    bare.walls.cold_clear();
     assert_eq!(create_wall_sweep(&bare, "sw-3", "", "Baseboard").err(), Some("bim.create.wall-missing"));
     let mut unpainted = snapshot;
-    unpainted.materials.clear();
+    unpainted.materials.cold_clear();
     assert_eq!(create_wall_sweep(&unpainted, "sw-3", "w-south", "Baseboard").err(), Some("bim.create.material-missing"));
 }
 

@@ -77,7 +77,7 @@ pub trait RetireOwned: Send + 'static {
 /// 📏️ Source-slot extraction and defining seed initialization count their complete native inline headers once.
 pub fn retirement_cursor_birth_demand<T:RetireOwned>(original:&T)->Result<crate::RetirementDemand,crate::ValueError>{
  if !original.retirement_ready()||!T::controlled_retirement_supported(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original cursor seed is not ready"))}
- let capacity_bytes=std::mem::size_of::<T::RetirementCursor>();if original.retirement_birth_bytes()!=Some(capacity_bytes){eprintln!("[DEBUG] birth mismatch type={} cursor={} declared={:?} actual={}",std::any::type_name::<T>(),std::any::type_name::<T::RetirementCursor>(),original.retirement_birth_bytes(),capacity_bytes);return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
+ let capacity_bytes=std::mem::size_of::<T::RetirementCursor>();if original.retirement_birth_bytes()!=Some(capacity_bytes){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
  let copy_bytes=std::mem::size_of::<Option<T>>().checked_add(capacity_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"original cursor header transfer overflow"))?;
  Ok(crate::RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
 }
@@ -559,6 +559,7 @@ impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
 #[doc(hidden)]
 pub struct OrderedMap<K: RetireOwned + Ord, V: RetireOwned>(ManuallyDrop<std::collections::BTreeMap<K, V>>,ManuallyDrop<Option<(K,V)>>);
 impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V> {
+    native_retirement_reply!();
     fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(value)=self.1.as_ref(){return retirement_cursor_birth_demand(value)}Ok(crate::RetirementDemand{copy_bytes:if self.0.is_empty(){0}else{size_of::<Self>()},depth:usize::from(!self.0.is_empty()),..Default::default()})}
 

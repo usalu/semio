@@ -1,0 +1,865 @@
+{
+ "description": "C31: the outer area of a region is the surface the air from outside reaches. Every case lists solids in one frame in metres (a `tube` is a regular prism around the z axis from `from` to `to` with `segments` sides, a disc when `innerRadiusM` is 0; a `box` spans `min` to `max`), the region whose outer area is measured against all solids as walls, the hand value `areaM2` (circles, not polygons) and, where C31 changes it, the value without the flood `unfloodedM2`. Tube: CHS 48.3 x 3.2, 0.669 m long; caps: discs of 52 mm, 6 mm thick, 3 mm into the tube. The smallest feature is that of 1:50; the flood cell is a quarter of it. The oracle (`🧪️tests/🧊️volumes-flood/🐍️.py`: trimesh voxelisation, scipy connected components) measures the same triangles.",
+ "featureM": 0.0075,
+ "cellM": 0.001875,
+ "probeM": 0.00015,
+ "seamM": 0.0015,
+ "coverM": 0.00375,
+ "toleranceFraction": 0.015,
+ "toleranceM2": 0.0005,
+ "cases": [
+  {
+   "name": "a tube capped at both ends",
+   "hand": "outer wall between the caps 2 pi R (L - 2c), and per cap its end face pi Rc^2, its edge 2 pi Rc 2c and the ring of its inner face around the tube pi (Rc^2 - R^2); the bore and the cap faces inside it are a closed cavity",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.02415,
+     "innerRadiusM": 0.02095,
+     "segments": 64,
+     "from": 0,
+     "to": 0.669
+    },
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.003,
+     "to": 0.003
+    },
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": 0.666,
+     "to": 0.672
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.107394,
+   "unfloodedM2": 0.197424
+  },
+  {
+   "name": "an open tube",
+   "hand": "outer wall 2 pi R L, bore 2 pi r L and two end rings pi (R^2 - r^2): both ends let the air in",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.02415,
+     "innerRadiusM": 0.02095,
+     "segments": 64,
+     "from": 0,
+     "to": 0.669
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.190482
+  },
+  {
+   "name": "a tube capped at one end",
+   "hand": "a cup: outer wall 2 pi R (L - c), the cap as above, the bore 2 pi r (L - c), the cap face inside it pi r^2 and the open end ring pi (R^2 - r^2)",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.02415,
+     "innerRadiusM": 0.02095,
+     "segments": 64,
+     "from": 0,
+     "to": 0.669
+    },
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.003,
+     "to": 0.003
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.193953
+  },
+  {
+   "name": "a tube closed by caps of another region",
+   "hand": "C29 and C31 together: the outer wall 2 pi R L and the end rings pi (R^2 - r^2) count although the caps cover part of them, so does the bore inside the caps 2 x 2 pi r c; the bore between the caps is a closed cavity",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.02415,
+     "innerRadiusM": 0.02095,
+     "segments": 64,
+     "from": 0,
+     "to": 0.669
+    },
+    {
+     "region": "b",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.003,
+     "to": 0.003
+    },
+    {
+     "region": "b",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": 0.666,
+     "to": 0.672
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.10321,
+   "unfloodedM2": 0.190482
+  },
+  {
+   "name": "the caps that close a tube of another region",
+   "hand": "per cap both faces 2 pi Rc^2 and the edge 2 pi Rc 2c without the disc that looks into the closed bore pi r^2; the ring covered by the tube wall counts (C29)",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "tube",
+     "outerRadiusM": 0.02415,
+     "innerRadiusM": 0.02095,
+     "segments": 64,
+     "from": 0,
+     "to": 0.669
+    },
+    {
+     "region": "b",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.003,
+     "to": 0.003
+    },
+    {
+     "region": "b",
+     "kind": "tube",
+     "outerRadiusM": 0.026,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": 0.666,
+     "to": 0.672
+    }
+   ],
+   "target": "b",
+   "areaM2": 0.007698,
+   "unfloodedM2": 0.010455
+  },
+  {
+   "name": "a casing of six panels",
+   "hand": "0.4 x 0.3 x 0.2 m of 10 mm panels with butt joints (floor and lid over the four sides): the outside 2 (0.4 x 0.3 + 0.4 x 0.2 + 0.3 x 0.2); the inside 0.38 x 0.28 x 0.18 is a closed cavity",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.52,
+   "unfloodedM2": 0.9704
+  },
+  {
+   "name": "a casing with a slot of 20 mm",
+   "hand": "the lid ends 30 mm short of one side, which leaves a slot of 20 mm (wider than half a feature) inside the side panel: outside 0.52 - 0.03 x 0.3 (lid top) - 2 x 0.03 x 0.01 (lid edges) + 0.01 x 0.28 (side panel top) + 2 x 0.03 x 0.01 (front and back panel tops) = 0.5138, inside 0.4504 - 0.02 x 0.28 (lid underside over the slot) = 0.4448",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.17,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.9586
+  },
+  {
+   "name": "a casing with a slit of 1 mm",
+   "hand": "the lid ends 1 mm before the inner face of the side panel: a gap below a quarter feature lets no air in; outside 0.52 - 0.011 x 0.3 (lid top) + 0.01 x 0.28 (side panel top), the lid edges and the panel tops beside it cancel",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.189,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.5195
+  },
+  {
+   "name": "a block on a slab of another region",
+   "hand": "a cube of 0.2 m standing on a slab: its underside is covered by the other region and counts (C29), 6 x 0.04",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.1,
+      -0.1,
+      0
+     ],
+     "max": [
+      0.1,
+      0.1,
+      0.2
+     ]
+    },
+    {
+     "region": "b",
+     "kind": "box",
+     "min": [
+      -0.3,
+      -0.3,
+      -0.05
+     ],
+     "max": [
+      0.3,
+      0.3,
+      0
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.24
+  },
+  {
+   "name": "a block 1 mm above a slab of another region",
+   "hand": "a gap below half a feature is contact: the underside counts as covered, 6 x 0.04",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.1,
+      -0.1,
+      0.001
+     ],
+     "max": [
+      0.1,
+      0.1,
+      0.201
+     ]
+    },
+    {
+     "region": "b",
+     "kind": "box",
+     "min": [
+      -0.3,
+      -0.3,
+      -0.05
+     ],
+     "max": [
+      0.3,
+      0.3,
+      0
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.24
+  },
+  {
+   "name": "a casing around a core of another region",
+   "hand": "a cube of 0.1 m of another region stands on the floor panel inside the closed casing: an enclosed solid covers nothing, the casing stays 0.52",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "b",
+     "kind": "box",
+     "min": [
+      -0.05,
+      -0.05,
+      -0.09
+     ],
+     "max": [
+      0.05,
+      0.05,
+      0.01
+     ]
+    }
+   ],
+   "target": "a",
+   "areaM2": 0.52,
+   "unfloodedM2": 0.9704
+  },
+  {
+   "name": "the core enclosed in a casing",
+   "hand": "no air from outside reaches the enclosed core; only its underside, which stands on the floor panel (a solid of another region that the air reaches outside), counts as covered (C29): 0.1 x 0.1 (a region that is inside is declared `hidden` and then counts its full mesh)",
+   "solids": [
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "a",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "b",
+     "kind": "box",
+     "min": [
+      -0.05,
+      -0.05,
+      -0.09
+     ],
+     "max": [
+      0.05,
+      0.05,
+      0.01
+     ]
+    }
+   ],
+   "target": "b",
+   "areaM2": 0.01,
+   "unfloodedM2": 0.06
+  }
+ ],
+ "sample": {
+  "description": "The left arm of the sample figure at 1:50 as a tube 80 x 3 mm along its bone from 5 to 595 mm, closed by two discs of 10 mm at 0 and 0.6 m: closed it measures the outer area of the same arm as a solid rod; with the far disc removed the bore lets the air in and the area grows by the bore 2 pi 0.037 x 0.585 less the edge strip of the removed disc 2 pi 0.04 x 0.005 (the end ring and the disc face inside the bore replace the disc's end face).",
+  "scale": 50,
+  "region": "arms",
+  "remove": "arm-l-arms",
+  "rod": {
+   "id": "arm-l-rod",
+   "kind": "revolve",
+   "bone": "arm-l",
+   "material": "cotton-clothing",
+   "role": "body",
+   "tone": 0.5,
+   "profile": [
+    [
+     0,
+     0.04
+    ],
+    [
+     0.6,
+     0.04
+    ]
+   ],
+   "axis": [
+    1,
+    0,
+    0
+   ],
+   "origin": [
+    0,
+    0,
+    0.225
+   ],
+   "region": "arms"
+  },
+  "tube": {
+   "id": "arm-l-tube",
+   "kind": "revolve",
+   "bone": "arm-l",
+   "material": "cotton-clothing",
+   "role": "body",
+   "tone": 0.5,
+   "profile": [
+    [
+     0.005,
+     0.037
+    ],
+    [
+     0.005,
+     0.04
+    ],
+    [
+     0.595,
+     0.04
+    ],
+    [
+     0.595,
+     0.037
+    ],
+    [
+     0.005,
+     0.037
+    ]
+   ],
+   "axis": [
+    1,
+    0,
+    0
+   ],
+   "origin": [
+    0,
+    0,
+    0.225
+   ],
+   "region": "arms"
+  },
+  "caps": [
+   {
+    "id": "arm-l-cap-0",
+    "kind": "revolve",
+    "bone": "arm-l",
+    "material": "cotton-clothing",
+    "role": "body",
+    "tone": 0.5,
+    "profile": [
+     [
+      0,
+      0.04
+     ],
+     [
+      0.01,
+      0.04
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0.225
+    ],
+    "region": "arms"
+   },
+   {
+    "id": "arm-l-cap-1",
+    "kind": "revolve",
+    "bone": "arm-l",
+    "material": "cotton-clothing",
+    "role": "body",
+    "tone": 0.5,
+    "profile": [
+     [
+      0.59,
+      0.04
+     ],
+     [
+      0.6,
+      0.04
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0.225
+    ],
+    "region": "arms"
+   }
+  ],
+  "toleranceFraction": 0.02,
+  "openGainM2": 0.134743,
+  "open": "arm-l-cap-1"
+ }
+}

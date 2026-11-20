@@ -8,11 +8,8 @@
 //!
 //! Driven by `⚛️reactor/🧫️fixtures/📥️inbound-request/🔣️.json`, whose TypeScript twin
 //! (`🧑‍🎨engine/🧪️tests/📥️inbound-request/🟦️.ts`) drives the HOST half of the same rows.
-use semio_framework::kernel::{Event, MessageEndpoint};
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::RequestOutcome;
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_framework::kernel::Event;
+use semio_framework_diagnostic::FaultFrom;
 use semio_framework::Effect;
 
 #[derive(serde::Deserialize)]
@@ -51,8 +48,19 @@ fn inbound_request_fixture() -> InboundRequestFixture {
     serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json")).expect("the inbound-request fixture must parse")
 }
 
-fn inbound_request_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget::from_retained(semio_plugin_testing_laws::artifact_app_laws::fixture_retained_turn(), 64, 16, 65_536, 16)
+fn inbound_request_budget(cx: &semio_framework_job::StepContext<'_>) -> semio_framework::kernel::Budget {
+    let retained = semio_framework::kernel::RetainedTurnInput {
+        operation: cx.operation().0,
+        generation: cx.generation().0,
+        epoch: cx.original_source_epoch().unwrap_or(1),
+        work: semio_framework::kernel::OriginalActorTurnWork {
+            clock_binding: cx.original_clock_binding().expect("original fixture clock is bound"),
+            absolute_deadline_us: cx.original_absolute_deadline_us(),
+            fuel: cx.fuel_remaining(),
+        },
+        grant: cx.retained_grant(),
+    };
+    semio_framework::kernel::Budget::from_retained(retained, 64, 16, 65_536, 16)
 }
 
 /// 🧩️ A bundle whose one handler mirrors what every real flow extension installs: a pure
@@ -64,7 +72,7 @@ fn inbound_request_bundle(capability: &str) -> semio_plugin_extension::extension
         let value: serde_json::Value = serde_json::from_str(text).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
         let answer = serde_json::to_vec(&serde_json::json!({ "echo": value })).expect("the echo answer serializes");
         let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: answer.len(), retained_capacity_bytes: answer.capacity(), ..Default::default() };
-        cx.consume_retained(progress)?;
+        cx.consume_retained(progress).map_err(|error| error.to_fault())?;
         Ok(semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep { payload: Some(answer), retained_progress: progress, refusal: None })
     })
 }
@@ -76,7 +84,8 @@ async fn drive_inbound_request(runtime: &semio_plugin_reactor_lifecycle::life_in
         capability: capability.to_string(),
         payload: request.as_bytes().to_vec(),
     };
-    semio_plugin_reactor_turn::poll_kernel(runtime, &mut Some(event), &mut None, None, inbound_request_budget(), identity,cx).await.expect("one inbound-request turn").effects
+    let budget = inbound_request_budget(cx);
+    semio_plugin_reactor_turn::poll_kernel(runtime, &mut Some(event), &mut None, None, budget, identity, cx).await.expect("one inbound-request turn").effects
 }
 
 /// ⚖️ LAW: every fixture row is answered by exactly one `Effect::Respond` carrying the SAME `req`, on

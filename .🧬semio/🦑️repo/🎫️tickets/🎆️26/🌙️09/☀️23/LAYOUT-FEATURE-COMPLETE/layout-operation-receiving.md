@@ -1,0 +1,5 @@
+# Layout operation receiving
+
+Layout encodes its operation format byte, a variable-length tag from the Layout protocol, and one containerless Pack Record Body with a dynamic Value field. Stored selection reads one header byte or one protocol line per funded step. The receiver tracks the original source and exact range, hands the remaining range to the retained Record Body receiver, and moves out its Value. The existing pack-value binding turn accounts for the decoded tree before passing it to the typed mutation decoder. Tagged payloads preserve the binary codec’s integer and float distinctions.
+
+The generic Rust law consumes the independently produced Pack wire fixture with a one-item grant and checks exact range enforcement. The Layout binary law checks tag 59 and round-trips the real page Drawing mutation. The protobufjs oracle reproduced all 36 fixture bytes and confirmed the 58 distinct Layout tags, including the gap before tag 45. The focused Rust run was queued at the host capacity gate during this audit.

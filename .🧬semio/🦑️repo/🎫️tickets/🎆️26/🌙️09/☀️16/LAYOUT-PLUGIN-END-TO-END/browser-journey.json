@@ -239,5 +239,60 @@
     "action": "addFrame",
     "field": "x",
     "kind": "input"
+  },
+  "physicalInteractions": {
+    "gumball": {
+      "dragCssPixels": 38,
+      "epsilon": 0.001
+    },
+    "linkedAsset": {
+      "exampleId": "linked-asset",
+      "pageRowKey": "layout-document.page.page-1",
+      "originalFrameId": "frame-chart",
+      "rowKey": "layout-catalogue.link.chart-preview",
+      "rowLabel": "chart-preview.png",
+      "linkId": "chart-preview"
+    },
+    "steps": [
+      {
+        "step": "physical-frame-hover",
+        "values": {
+          "valid": true
+        }
+      },
+      {
+        "step": "physical-gumball",
+        "values": {
+          "valid": true
+        }
+      },
+      {
+        "step": "physical-resize-rotate-cancel",
+        "values": {
+          "valid": true
+        }
+      },
+      {
+        "step": "physical-linked-placement",
+        "values": {
+          "valid": true
+        }
+      }
+    ],
+    "transformExtras": {
+      "scaleCssPixels": 16,
+      "rotateRadians": 0.65,
+      "cancelCssPixels": 30,
+      "epsilon": 0.002,
+      "timeoutMs": 25000
+    },
+    "hover": {
+      "axisLength": 56,
+      "neutralInset": 8,
+      "cropRadius": 112,
+      "pixelThreshold": 24,
+      "minimumChangedPixels": 32,
+      "maximumRestoredDifference": 4
+    }
   }
 }

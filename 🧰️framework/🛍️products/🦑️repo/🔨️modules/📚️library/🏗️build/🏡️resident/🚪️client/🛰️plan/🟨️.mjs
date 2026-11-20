@@ -2,7 +2,7 @@
 import{explainServiceLossV1,readServiceExitRowsV1}from"../../🧾️exit-log/🟨️.mjs";
 import{consentIdentityV1}from"../../🔐️consent/🟨️.mjs";
 import {connect} from "node:net";
-import {closeSync,existsSync,openSync,readFileSync,rmSync,statSync,writeSync} from "node:fs";
+import {closeSync,fstatSync,openSync,readFileSync,readSync,statSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {join} from "node:path";
 import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.mjs";
@@ -12,9 +12,16 @@ import {hostEndpointsV1,workspaceIdV1} from "../../📨️protocol/📍️endpoi
 import {HOST_POLICY_V1,renderBothV1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import waitSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
+import {ownedSliceReportSinkV1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 
 /** 🚨 The host service could not answer; `reason` is a refusal code or `down`, `timeout`, `protocol`. */
-export class HostUnavailableErrorV1 extends Error{constructor(reason,message){super(message??"Host graph service unavailable ("+reason+")");this.name="HostUnavailableErrorV1";this.reason=reason;}}
+export class HostUnavailableErrorV1 extends Error{
+ constructor(reason,message,startup){super(message??(startup?["en","de"].map(language=>startupNoticeV1(startup,language)).join(" / "):"Host graph service unavailable ("+reason+")"));this.name="HostUnavailableErrorV1";this.reason=reason;if(startup)this.startup=startup;}
+ notice(language){
+  if(this.startup)return this.reason+": "+startupNoticeV1(this.startup,language);
+  return this.reason+(["lost","silent"].includes(this.reason)?this.message.replace(/^[^:]*\):/u,""):"");
+ }
+}
 
 /** 🚨 The service refused the request for a reason that retrying cannot fix. */
 export class PlanRefusedErrorV1 extends Error{constructor(frame){super(frame.message.en);this.name="PlanRefusedErrorV1";this.code=frame.code;this.message_={...frame.message};this.retry=frame.retry;}}
@@ -26,31 +33,48 @@ const sleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
 });
 
 const logSize=path=>{try{return statSync(path).size;}catch{return -1;}};
-const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
 
 function tryConnect(endpoint){
  return new Promise(resolve=>{
   const socket=connect(endpoint);
   socket.once("connect",()=>{socket.removeAllListeners("error");resolve(socket);});
-  socket.once("error",error=>{socket.destroy();resolve(error?.code==="ENOENT"||error?.code==="ECONNREFUSED"?undefined:Promise.reject(error));});
+  socket.once("error",error=>{socket.destroy();resolve(HOST_POLICY_V1.unavailableConnectErrors.includes(error?.code)?undefined:Promise.reject(error));});
  });
 }
 
-/** 🪵 The last lines the service wrote to its log after `from` that are no progress heartbeats, as ` [log: …]`: the real cause of a start that died (`Internal error: …`), empty when it wrote none. */
-function startOutputV1(path,from){
- try{const lines=readFileSync(path,"utf8").slice(from).split("\n").filter(line=>line.trim()!==""&&!line.startsWith("[script] {")&&!line.startsWith("[repo] still working")&&!line.startsWith("[repository:command] still running")&&!line.startsWith("[capacity]"));return lines.length?" [log: "+lines.slice(-3).join(" | ").slice(0,600)+"]":"";}catch{return"";}
+const startupDiagnosticV1=waitSchema.definitions.Diagnostic.const;
+
+/** 🪵 Reads only recent log bytes for one observed startup coordinate. */
+function startOutputV1(path,from,since,lost=false){
+ let file;
+ try{
+  file=openSync(path,"r");const facts=fstatSync(file);
+  if(!facts.isFile()||facts.mtimeMs<since)return "";
+  const first=from<=facts.size?from:0,offset=Math.max(first,facts.size-startupDiagnosticV1.tailBytes),buffer=Buffer.alloc(facts.size-offset);
+  const lines=buffer.subarray(0,readSync(file,buffer,0,buffer.length,offset)).toString("utf8").split("\n");
+  if(offset>first)lines.shift();
+  const text=lines.filter(line=>line.trim()!==""&&!line.startsWith("[script] {")&&!line.startsWith("[repo] still working")&&!line.startsWith("[repository:command] still running")&&!line.startsWith("[capacity]")).slice(-3).join(" | ");
+  return lost?text.slice(0,startupDiagnosticV1.lostTailCharacters):text.slice(-startupDiagnosticV1.tailCharacters);
+ }catch{return "";}finally{if(file!==undefined)try{closeSync(file);}catch{}}
 }
 
-function takeLock(path,staleMilliseconds,now=Date.now()){
- for(let attempt=0;attempt<2;attempt++){
-  try{const descriptor=openSync(path,"wx",0o600);writeSync(descriptor,JSON.stringify({pid:process.pid,at:now}));closeSync(descriptor);return true;}
-  catch(error){
-   if(error?.code!=="EEXIST")throw error;
-   try{const holder=JSON.parse(readFileSync(path,"utf8"));if(now-holder.at>staleMilliseconds||!alive(holder.pid)){rmSync(path,{force:true});continue;}}catch{rmSync(path,{force:true});continue;}
-   return false;
-  }
- }
- return false;
+function startupNoticeV1(startup,language){
+ const fields={seconds:startup.limitMilliseconds/1000,seen:startup.seen,pid:startup.pid??"?",candidates:startup.candidates.map(row=>row.tag).join(", ")},render=key=>waitMessagesV1(key,fields,[language])[language];
+ const logs=startup.candidates.filter(row=>row.log).map(row=>"["+row.tag+" "+row.log+"]");
+ return [render(startup.mode==="live-ceiling"?"ceiling":"silence"),...(startup.mode==="live-ceiling"?[render("live")]:[]),render("candidates"),...logs].join(" ");
+}
+
+/** 🔐 Retains one stable private startup file through the host's process-owned kernel lock. */
+async function tryStartupOwnerV1(path,signal){
+ const{physicalLockBackendV1}=await import("../../../../../../../../🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts");
+ signal?.throwIfAborted();
+ const lease=physicalLockBackendV1();let owned=false;
+ try{
+  try{closeSync(openSync(path,"wx",0o600));}catch(error){if(error?.code!=="EEXIST")throw error;}
+  lease.retain(path);
+  if(!lease.tryLock())return;
+  lease.verify();owned=true;return lease;
+ }finally{if(!owned)lease.close();}
 }
 
 /** 🔐️ The refusal a service left when it ended because macOS keeps it from reading the checkout (its exit row `access-denied` of this implementation, written after `since`): the typed refusal `consent` with both languages, `undefined` when there is none; the rows of the pids in `ignore` (a service this client retired, whose row is written after its replacement started) are another generation's and never refuse the next start. */
@@ -71,13 +95,18 @@ export function lastAccessDenialV1({implementation,environment=process.env,platf
 /** 🔒 The single host-wide owner of the restart after a consent denial: the first client takes the lock `restart-<tag>.lock` and runs `owned()` (retire the denied generation, start the next); every other client waits until the owner is done, up to `startCeilingMilliseconds`, and then runs `joined()`, which attaches to the generation the owner started instead of retiring it. */
 export async function withRestartOwnerV1({implementation,environment=process.env,platform=process.platform,signal,policy=HOST_POLICY_V1},owned,joined){
  const runtime=hostEndpointsV1(implementation,environment,platform),lock=join(runtime.directory,"restart-"+runtime.tag+".lock");
+ signal?.throwIfAborted();
  preparePrivateDirectoryV1(runtime.directory);
- if(takeLock(lock,policy.lockStaleMilliseconds)){try{return await owned();}finally{rmSync(lock,{force:true});}}
+ const lease=await tryStartupOwnerV1(lock,signal);
+ if(lease){try{signal?.throwIfAborted();return await owned();}finally{lease.close();}}
  const began=performance.now();
- while(existsSync(lock)&&performance.now()-began<policy.startCeilingMilliseconds){await sleep(policy.startPollMilliseconds,signal);if(!takeLockProbeV1(lock,policy.lockStaleMilliseconds))break;}
+ for(let remaining=policy.startCeilingMilliseconds;remaining>0;remaining=policy.startCeilingMilliseconds-(performance.now()-began)){
+  await sleep(Math.min(remaining,policy.startPollMilliseconds),signal);
+  const released=await tryStartupOwnerV1(lock,signal);if(released){released.close();break;}
+ }
+ signal?.throwIfAborted();
  return joined();
 }
-const takeLockProbeV1=(path,staleMilliseconds)=>{try{const holder=JSON.parse(readFileSync(path,"utf8"));return Date.now()-holder.at<=staleMilliseconds&&alive(holder.pid);}catch{return false;}};
 
 /** 🌐 A text of the start wait in the requested languages (both when a typed error carries it).
  * @see ./🧬️schema/🔣️.json */
@@ -89,23 +118,34 @@ export function waitMessagesV1(key,fields,languages){
 /** 🚀 Connects to the host service of `implementation`, starting it through `spawnService` when none answers. Resolves `{socket,runtime,started}`. `spawnService` may resolve a handle `{alive():boolean}` for the process it started: while that process lives the client keeps waiting (a cold start behind a loaded host is silent for minutes, up to `startCeilingMilliseconds`), when it died without a socket the start fails at once as `lost` with the reason from the exit log; without a handle, `startTimeoutMilliseconds` of log silence ends the wait. */
 export async function connectHostV1({implementation,identify,environment=process.env,platform=process.platform,spawnService,signal,onProgress=()=>{},languages=["en"],policy:given=HOST_POLICY_V1,ignorePids=[]}){
  const policy={...HOST_POLICY_V1,...given},runtime=hostEndpointsV1(implementation,environment,platform),say=(key,fields)=>{const rendered=renderTextV1(key,fields,languages);return rendered??{en:key};};
- const first=await tryConnect(runtime.endpoint);
- if(first)return{socket:first,runtime,implementation,started:false};
+ const initial={implementation,runtime},attach=async(candidate,started)=>{
+  signal?.throwIfAborted();const socket=await tryConnect(candidate.runtime.endpoint);
+  if(signal?.aborted){socket?.destroy();signal.throwIfAborted();}
+  return socket?{socket,implementation:candidate.implementation,runtime:candidate.runtime,started}:undefined;
+ };
+ const first=await attach(initial,false);
+ if(first)return first;
  if(!spawnService)throw new HostUnavailableErrorV1("down");
  preparePrivateDirectoryV1(runtime.directory);
- const began=performance.now(),startedAt=Date.now()-1000;
- const candidates=[{implementation,runtime}],asked={at:-Infinity};
- let owner=false,announced=-2000,seen=logSize(runtime.log),firstSize=Math.max(0,logSize(runtime.log)),lastProgress=performance.now(),handle,checkedAt=-Infinity,living;
+ const began=performance.now(),logSince=Date.now(),startedAt=logSince-1000;
+ const initialSize=logSize(runtime.log),initialLogOffset=Math.max(0,initialSize),candidates=[{...initial,logOffset:initialLogOffset}],asked={at:-Infinity};
+ let owner,started=false,announced=-2000,seen=initialSize,lastProgress=performance.now(),handle,checkedAt=-Infinity,living;
  const lives=()=>{if(typeof handle?.alive!=="function")return undefined;if(performance.now()-checkedAt>=policy.startLivenessMilliseconds){checkedAt=performance.now();try{living=handle.alive();}catch{living=undefined;}}return living;};
+ const start=async()=>{
+  owner=await tryStartupOwnerV1(runtime.lock,signal);
+  if(!owner)return;
+  const existing=await attach(initial,false);if(existing)return existing;
+  owner.verify();onProgress({phase:"start",done:0,total:1,message:say("host-start",{})});signal?.throwIfAborted();owner.verify();
+  started=true;handle=await spawnService({runtime,implementation,environment});
+ };
  try{
-  owner=takeLock(runtime.lock,policy.lockStaleMilliseconds);
-  if(owner){onProgress({phase:"start",done:0,total:1,message:say("host-start",{})});handle=await spawnService({runtime,implementation,environment});}
+  const existing=await start();if(existing)return existing;
   for(;;){
    signal?.throwIfAborted();
-   for(const candidate of[...candidates].reverse()){const socket=await tryConnect(candidate.runtime.endpoint);if(socket)return{socket,runtime:candidate.runtime,implementation:candidate.implementation,started:owner};}
+   for(const candidate of[...candidates].reverse()){const found=await attach(candidate,started);if(found)return found;}
    if(identify!==undefined&&performance.now()-asked.at>=waitSchema.definitions.Policy.const.identifyMilliseconds){
     asked.at=performance.now();
-    try{const next=identify();if(typeof next==="string"&&!candidates.some(candidate=>candidate.implementation===next)){candidates.push({implementation:next,runtime:hostEndpointsV1(next,environment,platform)});onProgress({phase:"start",done:0,total:0,message:waitMessagesV1("moved",{seen:candidates.length},languages)});}}catch{}
+    try{const next=identify();if(typeof next==="string"&&!candidates.some(candidate=>candidate.implementation===next)){candidates.push({implementation:next,runtime:hostEndpointsV1(next,environment,platform),logOffset:0});onProgress({phase:"start",done:0,total:0,message:waitMessagesV1("moved",{seen:candidates.length},languages)});}}catch{}
    }
    const refused=consentRefusalOfExitV1(runtime,startedAt,ignorePids);
    if(refused)throw refused;
@@ -113,19 +153,23 @@ export async function connectHostV1({implementation,identify,environment=process
    if(written!==seen){seen=written;lastProgress=performance.now();}
    const elapsed=Math.round(performance.now()-began);
    const alive=lives();
-   if(alive===false)throw new HostUnavailableErrorV1("lost","Host graph service unavailable (lost): "+explainServiceLossV1(runtime.directory)+startOutputV1(runtime.log,firstSize));
-   if(alive===true?elapsed>policy.startCeilingMilliseconds:performance.now()-lastProgress>policy.startTimeoutMilliseconds)throw alive===true?new HostUnavailableErrorV1("timeout",Object.values(waitMessagesV1("ceiling",{seconds:Math.round(policy.startCeilingMilliseconds/1000),seen:candidates.length},["en","de"])).join(" / ")):new HostUnavailableErrorV1("timeout");
-   if(!owner&&takeLock(runtime.lock,policy.lockStaleMilliseconds)){owner=true;onProgress({phase:"start",done:0,total:1,message:say("host-start",{})});handle=await spawnService({runtime,implementation,environment});}
+   if(alive===false){const log=startOutputV1(runtime.log,initialLogOffset,logSince,true);throw new HostUnavailableErrorV1("lost","Host graph service unavailable (lost): "+explainServiceLossV1(runtime.directory)+(log?" [log: "+log+"]":""));}
+   if(alive===true?elapsed>policy.startCeilingMilliseconds:performance.now()-lastProgress>policy.startTimeoutMilliseconds){
+    const keepFrom=Math.max(1,candidates.length-startupDiagnosticV1.maximumCandidates+1),observations=[candidates[0],...candidates.slice(keepFrom)].map(candidate=>Object.freeze({tag:candidate.runtime.tag,log:startOutputV1(candidate.runtime.log,candidate.logOffset,logSince)}));
+    const startup=Object.freeze({mode:alive===true?"live-ceiling":"log-silence",elapsedMilliseconds:elapsed,limitMilliseconds:alive===true?policy.startCeilingMilliseconds:policy.startTimeoutMilliseconds,pid:Number.isSafeInteger(handle?.pid)&&handle.pid>0?handle.pid:null,seen:candidates.length,candidates:Object.freeze(observations)});
+    throw new HostUnavailableErrorV1("timeout",undefined,startup);
+   }
+   if(!owner){const existing=await start();if(existing)return existing;}
    if(elapsed-announced>=2000){announced=elapsed;onProgress({phase:"start",done:0,total:0,message:say("host-wait",{elapsed})});}
    await sleep(policy.startPollMilliseconds,signal);
   }
- }finally{if(owner)rmSync(runtime.lock,{force:true});}
+ }finally{owner?.close();}
 }
 
 /** 🔇 The failure of a request whose service sent no frame at all for `seconds`: a service that holds a request keeps it audible (progress, keepalive), so a silent one has lost it. */
 const silentErrorV1=(seconds,progressed)=>Object.assign(new HostUnavailableErrorV1("silent","Host graph service unavailable (silent): "+Object.values(renderBothV1("host-silent",{seconds})).join(" / ")),{progressed});
 
-function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds}){
+function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds}){
  return new Promise((resolve,reject)=>{
   let finished=false,welcome,progressed=false,heardAt=Date.now(),watch;
   const end=(settle,value)=>{if(finished)return;finished=true;clearInterval(watch);signal?.removeEventListener("abort",abort);socket.destroy();settle(value);};
@@ -135,8 +179,10 @@ function exchange({socket,runtime,implementation,frame,agent,workspace,languages
   try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+60000},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch(error){end(reject,Object.assign(new HostUnavailableErrorV1("key"),{missing:error?.code==="ENOENT"}));return;}
   const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,
    onFrame:message=>{
+     if(finished)return;
     heardAt=Date.now();
     if(message.t==="welcome"){welcome=message;if(!message.features?.includes("plan"))end(reject,new HostUnavailableErrorV1("protocol","service does not answer plan requests"));return;}
+     if(message.t==="slice-report"&&message.id===frame.id){sliceReport?.(message.report);return;}
     if(message.t==="progress"){progressed=true;onProgress(message);return;}
     if(message.t==="plan-reply"&&message.id===frame.id){end(resolve,{reply:message,welcome});return;}
     if(message.t==="refused"){
@@ -168,14 +214,14 @@ export function planKeyRetryV1(error,waited){return error?.reason==="key"&&error
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export async function requestPlanV1(options){
  const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
- const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)];
+ const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)],sliceReport=ownedSliceReportSinkV1(canonical,environment);
  let last,reattached=0,keyWaits=0;
  for(let attempt=0;attempt<attempts;attempt++){
   signal?.throwIfAborted();
   const{socket,runtime,implementation:connected}=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
-  const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty}:{}),...(invocation?{arguments:invocation}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{})};
+  const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty}:{}),...(invocation?{arguments:invocation}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
   try{
-   const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
+   const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
    return{reply,welcome,runtime,plan:resolvePlanV1(reply,runtime)};
   }catch(error){
    if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
@@ -205,27 +251,44 @@ export async function holdHostV1({implementation,environment=process.env,platfor
  return async()=>{socket.destroy();};
 }
 
-/** 🛑 Retires the service of `implementation` that denied access: asks it to end (`SIGTERM` to the pid its status names) and waits until it no longer answers, `timeoutMilliseconds` at most; answers `{pid,retired}` (`retired` is also true when no service runs). A client that gets a refusal from a service it cannot trust starts its own with this. With `only` (the pid that refused) a service of another pid is a newer generation that someone else already started and is left alone. */
-export async function retireHostServiceV1({implementation,environment=process.env,platform=process.platform,timeoutMilliseconds=5000,only,status=requestHostStatusV1,kill=process.kill.bind(process),pause=milliseconds=>sleep(milliseconds)}){
- const found=await status({implementation,environment,platform});
+/** 🛑 Retires the exact service named by its first status reply and bounds the post-signal wait. A silent endpoint raises the status timeout without proving retirement. */
+export async function retireHostServiceV1({implementation,environment=process.env,platform=process.platform,signal,timeoutMilliseconds=HOST_POLICY_V1.statusReplyMilliseconds,only,status=requestHostStatusV1,kill=process.kill.bind(process),pause=sleep}){
+ const inspect=milliseconds=>status({implementation,environment,platform,signal,timeoutMilliseconds:Math.min(HOST_POLICY_V1.statusReplyMilliseconds,Math.max(1,Math.ceil(milliseconds)))});
+ const found=await inspect(timeoutMilliseconds);
  if(!found)return{pid:undefined,retired:true};
  if(only!==undefined&&found.pid!==only)return{pid:found.pid,retired:true};
+ signal?.throwIfAborted();
  try{kill(found.pid,"SIGTERM");}catch(error){if(error?.code!=="ESRCH")return{pid:found.pid,retired:false};}
- for(let waited=0;waited<timeoutMilliseconds;waited+=50){
-  if(!await status({implementation,environment,platform}))return{pid:found.pid,retired:true};
-  await pause(50);
+ const deadline=performance.now()+timeoutMilliseconds;
+ for(let remaining=deadline-performance.now();remaining>0;remaining=deadline-performance.now()){
+  const current=await inspect(remaining);
+  if(!current||current.pid!==found.pid)return{pid:found.pid,retired:true};
+  remaining=deadline-performance.now();
+  if(remaining>0)await pause(Math.min(50,remaining),signal);
  }
- return{pid:found.pid,retired:!await status({implementation,environment,platform})};
+ return{pid:found.pid,retired:false};
 }
 
-/** 📊 Asks a running service for its status; resolves undefined when none runs. */
-export async function requestHostStatusV1({implementation,environment=process.env,platform=process.platform}){
- const runtime=hostEndpointsV1(implementation,environment,platform),socket=await tryConnect(runtime.endpoint);
- if(!socket)return undefined;
- return new Promise(resolve=>{
-  const done=value=>{socket.destroy();resolve(value);};
-  const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,onFrame:frame=>{if(frame.t==="service-status")done(frame);},onError:()=>done(undefined)});
-  socket.on("data",chunk=>decoder.push(chunk));socket.on("error",()=>done(undefined));socket.on("close",()=>done(undefined));
-  socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo",pid:process.pid,lane:"status"},languages:["en"],implementation})+encodeFrameV1({t:"host-status",id:1}));
+/** 📊 Asks the exact implementation's local endpoint for status under one cancellable deadline. */
+export async function requestHostStatusV1({implementation,environment=process.env,platform=process.platform,signal,timeoutMilliseconds=HOST_POLICY_V1.statusReplyMilliseconds}){
+ signal?.throwIfAborted();
+ const {endpoint}=hostEndpointsV1(implementation,environment,platform);
+ return new Promise((resolve,reject)=>{
+  const socket=connect(endpoint);
+  let connected=false,finished=false;
+  const finish=(complete,value)=>{
+   if(finished)return;
+   finished=true;clearTimeout(timer);signal?.removeEventListener("abort",abort);socket.destroy();complete(value);
+  };
+  const abort=()=>finish(reject,signal.reason),timer=setTimeout(()=>finish(reject,new HostUnavailableErrorV1("timeout")),timeoutMilliseconds);
+  signal?.addEventListener("abort",abort,{once:true});
+  const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,onFrame:frame=>{if(frame.t==="service-status")finish(resolve,frame);},onError:()=>finish(resolve,undefined)});
+  socket.on("data",chunk=>decoder.push(chunk));socket.on("close",()=>finish(resolve,undefined));
+  socket.on("error",error=>{if(connected||HOST_POLICY_V1.unavailableConnectErrors.includes(error?.code))finish(resolve,undefined);else finish(reject,error);});
+  socket.once("connect",()=>{
+   if(finished)return;
+   connected=true;
+   socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo",pid:process.pid,lane:"status"},languages:["en"],implementation})+encodeFrameV1({t:"host-status",id:1}));
+  });
  });
 }

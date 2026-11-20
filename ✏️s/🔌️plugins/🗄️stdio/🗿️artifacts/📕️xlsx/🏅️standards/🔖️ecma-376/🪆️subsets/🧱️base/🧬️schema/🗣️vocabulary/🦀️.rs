@@ -116,11 +116,11 @@ pub fn column_index(letters: &str) -> Option<u32> {
     if letters.is_empty() || !letters.chars().all(|c| c.is_ascii_alphabetic()) {
         return None;
     }
-    let mut idx: u64 = 0;
+    let mut idx: u32 = 0;
     for c in letters.chars() {
-        idx = idx * 26 + (c.to_ascii_uppercase() as u64 - 'A' as u64 + 1);
+        idx = idx.checked_mul(26)?.checked_add(c.to_ascii_uppercase() as u32 - 'A' as u32 + 1)?;
     }
-    Some((idx - 1) as u32)
+    Some(idx - 1)
 }
 
 /// 🔤️ Splits an A1-style cell reference (`"B2"`) into its column-letter prefix (`"B"`) — only the
@@ -130,4 +130,77 @@ pub fn column_letters_of(reference: &str) -> &str {
     reference.trim_end_matches(|c: char| c.is_ascii_digit())
 }
 //#endregion 🔖️ColumnLetters
+
+pub const XLSX_MAX_ROW: u32 = 1_048_576;
+pub const XLSX_MAX_COLUMN: u32 = 16_383;
+
+/// 🧭️ Specifies which sheetData coordinate is carried forward between siblings.
+#[derive(Clone, Copy)]
+pub enum WorksheetAxis {
+    Rows,
+    Columns(u32),
+}
+
+impl WorksheetAxis {
+    /// 📍️ Interprets an explicit reference or the next position on this axis.
+    pub fn coordinate(self, reference: Option<&str>, previous: Option<u32>) -> Result<u32, String> {
+        let first = u32::from(matches!(self, Self::Rows));
+        let position = match (self, reference) {
+            (Self::Rows, Some(row)) => row.parse::<u32>().map_err(|_| format!("invalid SpreadsheetML row reference {row:?}"))?,
+            (Self::Columns(row), Some(cell)) => {
+                let letters = column_letters_of(cell);
+                let column = column_index(letters).ok_or_else(|| format!("invalid SpreadsheetML cell reference {cell:?}"))?;
+                if cell[letters.len()..].parse::<u32>().ok() != Some(row) {
+                    return Err(format!("SpreadsheetML cell {cell:?} does not belong to row {row}"));
+                }
+                column
+            }
+            (_, None) => match previous {
+                Some(position) => position.checked_add(1).ok_or_else(|| "SpreadsheetML coordinate overflow".to_string())?,
+                None => first,
+            },
+        };
+        let maximum = match self { Self::Rows => XLSX_MAX_ROW, Self::Columns(_) => XLSX_MAX_COLUMN };
+        if !(first..=maximum).contains(&position) {
+            return Err(format!("SpreadsheetML coordinate {position} is outside {first}..={maximum}"));
+        }
+        Ok(position)
+    }
+}
+
+/// 🧩️ Carries the logical coordinate together with the unchanged XML child index and scope.
+pub struct PositionedWorksheetChild<'a> {
+    pub index: usize,
+    pub node: &'a semio_s_artifact_stdio_xml::schema::snapshot::XmlNode,
+    pub scope: Vec<(String, String)>,
+    pub position: u32,
+    pub explicit: bool,
+}
+
+/// 🧮️ Resolves row or cell coordinates in document order. Only matching SpreadsheetML elements advance the axis.
+/// See [Microsoft's optional cell reference semantics](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/2fd4e47f-0965-4c60-95bd-cff980b6c325).
+pub fn positioned_worksheet_children<'a>(
+    children: &'a [semio_s_artifact_stdio_xml::schema::snapshot::XmlNode],
+    parent_scope: &'a [(String, String)],
+    namespace: &'a str,
+    axis: WorksheetAxis,
+) -> impl Iterator<Item = Result<PositionedWorksheetChild<'a>, String>> + 'a {
+    let local = match axis { WorksheetAxis::Rows => "row", WorksheetAxis::Columns(_) => "c" };
+    let mut previous = None;
+    children.iter().enumerate().filter_map(move |(index, node)| {
+        let scope = namespace_scope(parent_scope, node);
+        match element_matches(node, &scope, &[namespace], local) {
+            Ok(false) => return None,
+            Err(error) => return Some(Err(error)),
+            Ok(true) => {}
+        }
+        Some((|| {
+            let reference = attribute_value(node, &scope, &[""], "r")?;
+            let position = axis.coordinate(reference, previous)?;
+            let child = PositionedWorksheetChild { index, node, scope, position, explicit: reference.is_some() };
+            previous = Some(position);
+            Ok(child)
+        })())
+    })
+}
 

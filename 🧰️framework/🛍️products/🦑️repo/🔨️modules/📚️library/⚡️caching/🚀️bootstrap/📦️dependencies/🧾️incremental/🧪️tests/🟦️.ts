@@ -236,32 +236,35 @@ test("incremental tracked manifests carry exactly one name",()=>{
 
 /** 🗂️ Persists and reuses ownership listings across processes: the exported records equal a Python projection, a seeded process trusts the settled listing under its exact stamp, and a changed directory is listed again. */
 test("incremental ownership index: export equals the Python projection and a seeded listing is reused until its directory changes",async()=>{
- const root=scratch(),facade=fileURLToPath(new URL("../../../../../🗂️workspaces/🟦️bun/🟦️.ts",import.meta.url));
+ const caseDirectory=scratch(),root=join(caseDirectory,"root"),{added,removedFromSeed}=fixture.ownership,facade=fileURLToPath(new URL("../../../../../🗂️workspaces/🟦️bun/🟦️.ts",import.meta.url));
  try{
   for(const[path,text]of Object.entries(fixture.ownership.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
   await sleep(fixture.ownership.settleMilliseconds);
-  const script=join(root,"..",".inc-child-"+process.pid+".ts");
+  const script=join(caseDirectory,"ownership-child.ts");
   writeFileSync(script,`import {withCurrentBunWorkspaceOwnershipV1,exportBunWorkspaceOwnershipIndexV1,seedBunWorkspaceOwnershipIndexV1} from ${JSON.stringify(facade)};import {readFileSync} from "node:fs";
 const [mode,root,seedFile]=process.argv.slice(2);
 if(mode!=="cold")seedBunWorkspaceOwnershipIndexV1(root,JSON.parse(readFileSync(seedFile,"utf8")));
 let scopes:unknown;await withCurrentBunWorkspaceOwnershipV1(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>{scopes=custody.scopes;});console.log(JSON.stringify({membership:{packages:(scopes as {packages:string[]}[]).flatMap(scope=>scope.packages)},index:mode==="cold"?exportBunWorkspaceOwnershipIndexV1(root):[]}));`);
   const run=(mode:string,seed="")=>{const child=spawnSync(process.execPath,[script,mode,root,seed],{encoding:"utf8",maxBuffer:1<<28});if(child.status!==0)throw Error(child.stderr);return JSON.parse(child.stdout);};
-  const cold=run("cold");expect(cold.index.length).toBeGreaterThan(0);expect(cold.membership.packages).toContain("pkg/b");
+  const initial=oracle(["workspace-members",root]);
+  expect(initial).toEqual(JSON.parse(fixture.ownership.files["package.json"]).workspaces);
+  const cold=run("cold");expect(cold.index.length).toBeGreaterThan(0);expect(cold.membership.packages).toEqual(initial);
   const independent=oracle(["ownership",root]);
   for(const record of cold.index){const key=record.path===root?".":record.path.slice(root.length+1);expect(independent[key],key).toBeDefined();expect(record.stamp,key).toBe(independent[key].stamp);expect(record.entries.map((entry:{name:string;kind:string})=>[entry.name,entry.kind]),key).toEqual(independent[key].entries);}
   const encoded=core.encodeOwnershipIndexV1(root,cold.index),decoded=core.decodeOwnershipIndexV1(root,encoded.bytes,encoded.evidence);
   expect(decoded.map(record=>[record.path,record.stamp,record.count,record.entries])).toEqual([...cold.index].sort((left:any,right:any)=>Buffer.compare(Buffer.from(left.path.slice(root.length)),Buffer.from(right.path.slice(root.length)))).map((record:any)=>[record.path,record.stamp,record.count,record.entries]));
   expect(oracle(["sha",script],undefined,true).length).toBe(64);
-  const seedFile=join(root,"..",".inc-seed-"+process.pid+".json"),tamperedFile=seedFile+".tampered";writeFileSync(seedFile,JSON.stringify(decoded));
+  const seedFile=join(caseDirectory,"ownership-seed.json"),tamperedFile=join(caseDirectory,"ownership-tampered.json");writeFileSync(seedFile,JSON.stringify(decoded));
   const seeded=run("seeded",seedFile);expect(seeded.membership).toEqual(cold.membership);
-  const tampered=decoded.map(record=>record.path===join(root,"pkg")?{...record,entries:record.entries.filter(entry=>entry.name!=="b")}:record);expect(tampered.some((record,index)=>record!==decoded[index])).toBe(true);
+  const omitted=join(root,removedFromSeed),tampered=decoded.map(record=>record.path===dirname(omitted)?{...record,entries:record.entries.filter(entry=>join(record.path,entry.name)!==omitted)}:record);expect(tampered.some((record,index)=>record!==decoded[index])).toBe(true);
   writeFileSync(tamperedFile,JSON.stringify(tampered));
   expect(()=>run("seeded",tamperedFile)).toThrow("published workspace patterns drift");
-  mkdirSync(join(root,"pkg","c"));writeFileSync(join(root,"pkg","c","package.json"),JSON.stringify({name:"c"}));writeFileSync(join(root,"package.json"),JSON.stringify({...JSON.parse(fixture.ownership.files["package.json"]),workspaces:["pkg/a","pkg/b","pkg/c"]}));
-  const changed=run("seeded",tamperedFile);expect(changed.membership.packages).toContain("pkg/b");expect(changed.membership.packages).toContain("pkg/c");expect(changed.membership.packages.length).toBe(cold.membership.packages.length+1);
-  rmSync(tamperedFile);
-  rmSync(script);rmSync(seedFile);
- }finally{rmSync(root,{recursive:true,force:true});}
+  mkdirSync(join(root,added));writeFileSync(join(root,added,"package.json"),JSON.stringify({name:"c"}));
+  const changedMembers=oracle(["workspace-members",root]);
+  expect(changedMembers).toEqual([...initial,added].sort());
+  writeFileSync(join(root,"package.json"),JSON.stringify({...JSON.parse(fixture.ownership.files["package.json"]),workspaces:changedMembers}));
+  const changed=run("seeded",tamperedFile);expect(changed.membership.packages).toEqual(changedMembers);
+ }finally{rmSync(caseDirectory,{recursive:true,force:true});}
 },120000);
 
 /** 📝️ Writes, verifies, supersedes and retires ledgers and the synchronization receipt through the real bounded relative-create writer. */

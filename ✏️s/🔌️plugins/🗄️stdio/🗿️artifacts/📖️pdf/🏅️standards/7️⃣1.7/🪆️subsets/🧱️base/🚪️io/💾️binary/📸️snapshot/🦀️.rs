@@ -27,11 +27,19 @@ impl pack::snapshot::ArtifactPack for PdfSnapshot {
         }
         let(record,report)=store::pack_rt::decode_document(&inner,&snapshot_text::spec(),options)?;
         if report.schema_drift||!report.unknown_field_ids.is_empty(){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot record schema mismatch")));}
-        snapshot_text::from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
+        snapshot_text::from_record(record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(snapshot_text::spec())}
 }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PdfSnapshot {
+    fn native_pack_source(&self) -> Option<store::os_store::serialization::OriginalSnapshotPackView<'_>> {
+        Some(store::os_store::serialization::OriginalSnapshotPackView {
+            source: self,
+            spec: snapshot_text::borrowed_spec(),
+            envelope: <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
+        })
+    }
+
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {

@@ -10,16 +10,15 @@ export function testMeshPreparationOwners(): void {
   const { applyPatch } = createRequire(import.meta.url)("fast-json-patch");
   for (const widths of corpus.slotWidths) for (const row of corpus.cases) {
     const lengths = [row.maximumPoints, row.maximumPoints, row.maximumTriangles * 3];
-    let live = [false, false, false], fault = false;
+    let live = [false, false, false];
     const reservations: boolean[][] = [];
     for (const [index, length] of lengths.entries()) {
-      if (length * widths[index] > corpus.maximumBackingBytes) fault = true;
-      else live = applyPatch(live, [{ op: "replace", path: "/" + index, value: true }], true, false).newDocument;
+      const firstPageRows = Math.min(length, Math.floor(corpus.maximumBackingBytes / widths[index]));
+      live = applyPatch(live, [{ op: "replace", path: "/" + index, value: firstPageRows > 0 }], true, false).newDocument;
       reservations.push([...live]);
-      if (fault) break;
     }
-    assert.deepEqual({ reservations, fault, preservesIndexOnHandoff: !fault && live[1] }, row.expected, row.id);
-    const retained = applyPatch(live, [0, 2].filter(() => !fault).map((index) => ({ op: "replace", path: "/" + index, value: false })), true, false).newDocument;
+    assert.deepEqual({ reservations, fault: false, preservesIndexOnHandoff: live[1] }, row.expected, row.id);
+    const retained = applyPatch(live, [0, 2].map((index) => ({ op: "replace", path: "/" + index, value: false })), true, false).newDocument;
     assert.equal(retained[1], live[1], row.id + " retains the lookup owner after handoff");
   }
   for (const row of corpus.fillCases) {

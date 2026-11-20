@@ -17,7 +17,7 @@ use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, R
 use semio_framework_value::ValueError;
 use semio_os_spr::{Edit, Mutation};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use semio_os_store_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, retirement_owner_close, retirement_owner_demands};
 use semio_os_store_read::{ArtifactStoreAlternativeRetirementFactory, ArtifactStoreCheckpointRetirementFactory, ArtifactStoreEnvelopeRetirement, ArtifactStoreHistoryLedgerRetirement, ArtifactStoreOperationRowOwners, ArtifactStoreVcsRetirement, artifact_history_ledger_birth, artifact_history_ledger_handoff};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;

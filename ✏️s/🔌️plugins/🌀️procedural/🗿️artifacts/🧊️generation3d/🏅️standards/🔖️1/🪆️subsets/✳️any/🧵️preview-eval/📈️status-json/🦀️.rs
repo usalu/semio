@@ -250,3 +250,56 @@ pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option
     Some(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object)))
 }
 //#endregion 📈️Status
+
+/// 🧾️ Bounded display of a channel value, including structured and empty values.
+fn channel_value_text(value: &semio_framework_pack_json::Value, depth: usize) -> String {
+    use semio_framework_pack_json::Value;
+    const ITEMS: usize = 4;
+    fn quoted(text: &str) -> String {
+        let mut chars = text.chars();
+        let mut sample: String = chars.by_ref().take(80).collect();
+        if chars.next().is_some() { sample.push('…'); }
+        semio_framework_pack_json::to_string(&Value::String(sample))
+    }
+    match value {
+        Value::String(text) => quoted(text),
+        Value::Array(items) => {
+            let mut parts = Vec::new();
+            if depth > 0 {
+                parts.extend(items.iter().take(ITEMS).map(|v| channel_value_text(v, depth - 1)));
+            }
+            if items.len() > parts.len() { parts.push("…".into()); }
+            format!("[{}]", parts.join(", "))
+        }
+        Value::Object(items) => {
+            let mut parts = Vec::new();
+            if depth > 0 {
+                parts.extend(items.iter().take(ITEMS).map(|(key, v)| format!("{}: {}", quoted(key), channel_value_text(v, depth - 1))));
+            }
+            if items.len() > parts.len() { parts.push("…".into()); }
+            format!("{{{}}}", parts.join(", "))
+        }
+        _ => semio_framework_pack_json::to_string(value),
+    }
+}
+
+/// 🔢️ Input and output values keyed by their shared graph port target.
+pub fn preview_value_rows(eval_json: &str) -> Vec<(String, String, String)> {
+    use semio_framework_pack_json::Value;
+    let Ok(eval) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return Vec::new() };
+    let Some(widgets) = eval.as_object() else { return Vec::new() };
+    let mut rows = std::collections::BTreeMap::<String, Vec<String>>::new();
+    for (widget, entry) in widgets.iter() {
+        for side in ["in", "out"] {
+            let Some(channels) = entry.get(side).and_then(Value::as_object) else { continue };
+            for (channel, value) in channels.iter() {
+                rows.entry(format!("{widget}@{channel}")).or_default().push(format!("{} {}", if side == "in" { "←" } else { "→" }, channel_value_text(value, 2)));
+            }
+        }
+    }
+    rows.into_iter().map(|(id, values)| {
+        let target = semio_framework_pack_json::object([("granularity".into(), Value::String("handle".into())), ("id".into(), Value::String(id.clone()))]);
+        let targets = semio_framework_pack_json::to_string(&Value::Array(vec![target]));
+        (id, values.join(" · "), targets)
+    }).collect()
+}

@@ -113,12 +113,15 @@ impl<const N:usize> OriginalJobPageReservation<N>{
   if payload.page_count()==0&&checked.owners().pending.is_none(){return Ok(false)}
   if payload.payload_authority_identity()!=Some(cx.payload_authority_identity()){return Err(refusal("supplied page requires its actual live original payload source").into())}
   if !registry_control_ready(cx){return Ok(false)}
-  let grant=cx.retained_grant();let Some((turn,_))=cx.with_original_effect(grant,|_,effect|payload.transfer_last_original_page(&mut checked.owners().pending,effect))?else{return Ok(false)};
+  let grant=cx.retained_grant();let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|payload.transfer_last_original_page(&mut checked.owners().pending,effect))?else{return Ok(false)};
   if checked.owners().pending.as_ref().is_some_and(RetainedJobPageTransfer::is_ready){
    *output=Some(OriginalSuppliedJobPage{target:self.registry,index:self.index,generation:self.generation,page:checked.owners().pending.take()});self.active=false;checked.restore=ISSUED;
   }
   #[cfg(test)]if output.is_some(){admission_work_tests::narrow_publication(cx);}
-  turn.result?;Ok(output.is_some())
+  let work_matches=performed==turn.work;
+  receive_original_retained_work(cx,turn)?;
+  if !work_matches{return Err(refusal("original page transfer work differs from the performed effect").into())}
+  Ok(output.is_some())
 
  }
 }

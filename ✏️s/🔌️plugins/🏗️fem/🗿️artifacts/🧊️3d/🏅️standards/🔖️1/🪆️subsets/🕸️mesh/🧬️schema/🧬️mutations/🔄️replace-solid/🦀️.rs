@@ -24,7 +24,7 @@ pub struct ReplaceSolid {
 
 impl<Op> MutationKind<Fem3dSnapshot, Op> for ReplaceSolid
 where
-    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid>, {
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "solid", kind: "replace-solid", record: "ReplacedSolid" };
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
@@ -37,10 +37,10 @@ where
 }
 impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ReplaceSolid
 where
-    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid>, {
+    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid>, {
 
 
-    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
 

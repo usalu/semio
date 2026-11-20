@@ -139,7 +139,7 @@ export async function acceptSelectedOwnersV1(input:Readonly<{fetched:SelectedFet
 }
 
 /** 🎫️ A claim this machine holds: renewed on a timer until released. */
-function holdV1(client:GraphFleetClientV1,key:string,owner:string,ttl:number,beat:number,alive:()=>boolean=()=>true){
+export function holdV1(client:GraphFleetClientV1,key:string,owner:string,ttl:number,beat:number,alive:()=>boolean=()=>true){
  let stopped=false,gone=false;
  const timer=setInterval(()=>{if(!alive())return;void client.renew(key,owner,ttl).then(state=>{if(state==="lost"){gone=true;stopped=true;clearInterval(timer);}},()=>undefined);},beat);timer.unref?.();
  return Object.freeze({lost:()=>gone,async release(){if(!stopped){stopped=true;clearInterval(timer);}if(!gone)await Promise.race([client.release(key,owner).catch(()=>undefined),new Promise<void>(done=>setTimeout(done,600))]);}});

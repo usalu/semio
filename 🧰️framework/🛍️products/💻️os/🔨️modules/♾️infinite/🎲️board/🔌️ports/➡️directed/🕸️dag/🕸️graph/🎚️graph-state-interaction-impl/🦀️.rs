@@ -258,8 +258,12 @@ impl DagGraphState {
         Some(DagWireTypeRefusal{source,source_types:types(source_hid),target,target_types:types(target_hid)})
     }
 
+    pub fn hovered_edge_id(&self) -> Option<&str> {
+        self.edge_id_map.get(&self.engine.hover?).map(String::as_str)
+    }
+
     /// 🖱️ Projects channel hover and live wire refusal from one accepted graph state.
-    pub fn hover_facts(&self)->DagHoverFacts{DagHoverFacts{channel:self.hovered_channel(),refusal:self.wire_type_refusal()}}
+    pub fn hover_facts(&self)->DagHoverFacts{DagHoverFacts{edge:self.hovered_edge_id().map(str::to_owned),channel:self.hovered_channel(),refusal:self.wire_type_refusal()}}
 
     /// ✅️ Replaces node selection from snapshot widget ids.
     pub fn set_selection(&mut self, widget_ids: &[String]) {

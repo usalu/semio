@@ -9,6 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️.tsx";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
@@ -37,7 +38,7 @@ const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px dat
 const sliderThumbBaseClassName = cn(
   "block shrink-0 rounded-full bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
-  "focus-visible:bg-active-base focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+  "focus-visible:bg-active-base focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0",
   "data-[dragging=true]:bg-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );
@@ -49,7 +50,7 @@ const sliderDialClassName = cn("relative aspect-square h-medium shrink-0 rounded
 const sliderRefusalClassName = cn("text-destructive block text-xs leading-tight");
 
 /** 🔢️ Slider numeric readout presentation. */
-const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2");
+const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 // #region 📐️Contract
 export type SliderOrientation = "horizontal" | "vertical";
@@ -621,7 +622,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             id={id}
           />
         ) : (
-          <span ref={readoutRef} data-slot="slider-value" className={sliderValueClassName} role="button" tabIndex={disabled || readOnly ? -1 : 0} aria-disabled={disabled || readOnly || undefined} aria-label={props["aria-label"] ?? sliderTitle} aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]} aria-keyshortcuts="Enter F2 Space" onDoubleClick={handleValueClick} onKeyDown={(event) => {
+          <span ref={readoutRef} {...sharedBorderlessBoxProps} data-slot="slider-value" className={sliderValueClassName} role="button" tabIndex={disabled || readOnly ? -1 : 0} aria-disabled={disabled || readOnly || undefined} aria-label={props["aria-label"] ?? sliderTitle} aria-labelledby={showLabel && id ? `${id}-label` : props["aria-labelledby"]} aria-keyshortcuts="Enter F2 Space" onDoubleClick={handleValueClick} onKeyDown={(event) => {
             if (disabled || readOnly || !["Enter", "F2", " "].includes(event.key)) return;
             event.preventDefault();
             event.stopPropagation();

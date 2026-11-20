@@ -68,5 +68,12 @@
     "backend": "mounted-image",
     "fault": "custody",
     "accept": false
+  },
+  {
+    "id": "darwin-refuses-geometry",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "geometry",
+    "accept": false
   }
 ]

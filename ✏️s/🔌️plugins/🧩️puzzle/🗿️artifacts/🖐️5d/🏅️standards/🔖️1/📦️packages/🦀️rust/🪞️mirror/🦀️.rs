@@ -190,9 +190,6 @@ pub mod editor {
         #[cfg(test)]
         #[path = "../../../🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️target-volumes/🦀️.rs"]
         pub mod target_volume_tests;
-        #[cfg(test)]
-        #[path = "../../../🪆️subsets/✳️any/✏️editor/🧪️tests/🧵️retained-wiring/🦀️.rs"]
-        pub mod retained_wiring_tests;
     }
 }
 #[path = "."]

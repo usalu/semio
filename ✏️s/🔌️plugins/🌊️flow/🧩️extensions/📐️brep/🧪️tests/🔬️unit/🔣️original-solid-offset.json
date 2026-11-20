@@ -1,0 +1,51 @@
+{
+  "operator": "brep.solid.offsetSolid",
+  "source": {
+    "origin": [
+      -3,
+      8,
+      1.5
+    ],
+    "size": [
+      2.5,
+      4,
+      6
+    ],
+    "volume": 60
+  },
+  "cases": [
+    {
+      "distance": 0.5,
+      "bounds": [
+        [
+          -3.5,
+          7.5,
+          1
+        ],
+        [
+          0,
+          12.5,
+          8
+        ]
+      ],
+      "volume": 122.5
+    },
+    {
+      "distance": -0.75,
+      "bounds": [
+        [
+          -2.25,
+          8.75,
+          2.25
+        ],
+        [
+          -1.25,
+          11.25,
+          6.75
+        ]
+      ],
+      "volume": 11.25
+    }
+  ],
+  "collapse": -1.25
+}

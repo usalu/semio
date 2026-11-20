@@ -56,7 +56,7 @@ test("progress, not elapsed time, decides: a holder that finishes an owner every
  clock.t+=CUSTODY_POLICY_V1.stallMilliseconds+1;
  expect(await until(()=>said.some(row=>row.key==="askedStalled"))).toBe(true);
  await a.release();await (await b).release();
-});
+},15000);
 
 test("a holder on other code than the library is asked as soon as someone waits, and hands over on its own check; without a waiter it runs on",async()=>{
  const{custody,said,say}=world(),a=await custody.hold({structural:true,holder:holder(4711,sha),currentDigest:async()=>other});

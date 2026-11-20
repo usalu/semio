@@ -157,6 +157,8 @@ impl OriginalReturnEscrowTable{
  pub fn admit(grant:RetainedCloneGrant,fuel:u64)->RetainedWorkOutcome<(Option<Box<Self>>,RetainedCloneProgress)>{let(copy,capacity,work)=Self::birth_demand();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||fuel<work{return RetainedWorkOutcome{result:Ok((None,Default::default())),work:0}}let mut owner=Box::<Self>::new_uninit();unsafe{owner.as_mut_ptr().write(Self::empty());let owner=owner.assume_init();RetainedWorkOutcome{result:Ok((Some(owner),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})),work:u128::from(work)}}}
  pub fn revision(&self)->u64{self.revision}
  pub fn count(&self)->usize{self.states.iter().filter(|state|**state>=2).count()}
+ /// 🔢️ Rows no claim, stage or settled tombstone occupies.
+ pub fn free_rows(&self)->usize{self.states.iter().filter(|state|**state==0).count()}
  pub fn has_capacity(&self)->bool{self.states.iter().any(|state|*state==0)}
  pub fn is_empty(&self)->bool{self.states.iter().all(|state|*state==0)&&self.stage.is_none()&&self.borrowed.is_none()&&self.acknowledged==0&&self.guard_issued==0}
  pub fn row_after(&self,serial:u64)->Option<&OriginalReturnEscrowRow>{self.rows.iter().zip(self.states).filter(|(row,state)|*state>=2&&row.identity.serial>serial).map(|(row,_)|row).min_by_key(|row|row.identity.serial)}
@@ -186,6 +188,10 @@ impl OriginalReturnEscrowTable{
  pub fn mark_local_received(&mut self,identity:OriginalReturnEscrowIdentity)->Result<(),ValueError>{let index=self.rows.iter().zip(self.states).position(|(row,state)|state==3&&row.identity==identity).ok_or_else(invalid)?;self.acknowledged|=1u32<<index;Ok(())}
  /// 🧹️ Only acknowledged settled rows remain; close reclaims them without any live claim.
  pub fn is_reclaim_only(&self)->bool{self.stage.is_none()&&self.borrowed.is_none()&&self.guard_issued==0&&self.states.iter().enumerate().all(|(index,state)|*state==0||self.acknowledged&(1u32<<index)!=0&&*state==3)}
+ /// 🏠️ A host that cannot hand published headers back (the component world) acknowledges the settled rows without a published header itself, so the table never fills with rows nothing will ever acknowledge.
+ pub fn acknowledge_settled(&mut self){for index in 0..ORIGINAL_RETURN_ESCROW_CELLS{if self.states[index]==3&&self.guard_issued&(1u32<<index)==0&&self.stage.is_none_or(|(slot,_)|slot!=index)&&self.borrowed.is_none_or(|(_,mask)|mask&(1u32<<index)==0){self.acknowledged|=1u32<<index}}}
+ /// 🔬️ Temporary: row states, acknowledged and guard bits and the free-row count.
+ pub fn debug_summary(&self)->String{format!("states {:?} acknowledged {:#034b} guard {:#034b} free {} stage {:?} borrowed {:?}",self.states,self.acknowledged,self.guard_issued,self.states.iter().filter(|state|**state==0).count(),self.stage,self.borrowed)}
  pub fn has_reclaimable(&self)->bool{self.states.iter().enumerate().any(|(index,state)|self.acknowledged&(1u32<<index)!=0&&self.guard_issued&(1u32<<index)==0&&*state==3&&self.stage.is_none_or(|(slot,_)|slot!=index)&&self.borrowed.is_none_or(|(_,mask)|mask&(1u32<<index)==0))}
  pub fn reclaim_one(&mut self)->Result<bool,ValueError>{let Some(index)=self.states.iter().enumerate().position(|(index,state)|self.acknowledged&(1u32<<index)!=0&&self.guard_issued&(1u32<<index)==0&&*state==3&&self.stage.is_none_or(|(slot,_)|slot!=index)&&self.borrowed.is_none_or(|(_,mask)|mask&(1u32<<index)==0))else{return Ok(false)};let revision=self.revision.checked_add(1).ok_or_else(invalid)?;self.states[index]=0;self.acknowledged&=!(1u32<<index);self.revision=revision;Ok(true)}
 }

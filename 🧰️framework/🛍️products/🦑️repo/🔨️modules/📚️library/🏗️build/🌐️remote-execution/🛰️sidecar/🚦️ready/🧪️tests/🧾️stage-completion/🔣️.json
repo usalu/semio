@@ -1,0 +1,44 @@
+[
+  {
+    "name": "matching physical success",
+    "exit": 0,
+    "change": "none",
+    "result": "applied"
+  },
+  {
+    "name": "different stage failure",
+    "exit": 7,
+    "change": "none",
+    "result": null
+  },
+  {
+    "name": "new prerequisite completion with unchanged digest",
+    "exit": 0,
+    "change": "prerequisite",
+    "result": "unproven"
+  },
+  {
+    "name": "reordered prerequisites",
+    "exit": 0,
+    "change": "order",
+    "result": "unproven"
+  },
+  {
+    "name": "changed ordered arguments",
+    "exit": 0,
+    "change": "recipe",
+    "result": "unproven"
+  },
+  {
+    "name": "changed full stage input digest",
+    "exit": 0,
+    "change": "digest",
+    "result": "unproven"
+  },
+  {
+    "name": "old flight without a proof",
+    "exit": 0,
+    "change": "legacy",
+    "result": "unproven"
+  }
+]

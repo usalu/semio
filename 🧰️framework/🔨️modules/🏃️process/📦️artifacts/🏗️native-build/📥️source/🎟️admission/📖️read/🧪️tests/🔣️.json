@@ -98,5 +98,12 @@
       "reason": "files",
       "key": "process.source.read-files-exhausted"
     }
-  ]
+  ],
+  "throughput": {
+    "files": 60,
+    "depth": 18,
+    "units": 3,
+    "maximumLstatsPerFile": 4,
+    "opens": 60
+  }
 }

@@ -108,7 +108,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const page = shellMessage(token.receiver, encodePage(token, fixture.terminalTag, "{}"));
       expect(shellFrameBytes(page, token.receiver)).toBeNull();
       expect(shellMessageKind(page, token.receiver)).toBe("typed-operation-page");
-      const ack = typedOperationResult(page).acknowledgement.payload.payload as readonly number[];
+      const acknowledgement = typedOperationResult(page).acknowledgement;
+      expect(acknowledgement.payload.source).toEqual({ tag: "shell", val: token.receiver });
+      const ack = acknowledgement.payload.payload as readonly number[];
       expect(shellFrameBytes(shellMessage(token.receiver, new Uint8Array(ack)), token.receiver)).toBeNull();
       expect(shellMessageKind(shellMessage(token.receiver, new Uint8Array(ack)), token.receiver)).toBe("typed-operation-ack");
       expect(ack.length).toBe(TYPED_OPERATION_ACK_MAGIC.length + fixture.page.tokenBytes);
@@ -132,7 +134,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(stream.messages.some((message) => message.lane === 13)).toBe(true);
       for (const ack of scan.acknowledgements) {
         expect(ack.kind).toBe("message");
-        expect(ack.payload.source).toEqual({ tag: "shell", val: String(stream.token.receiver) });
+        expect(ack.payload.source).toEqual({ tag: "shell", val: stream.token.receiver });
       }
     });
 

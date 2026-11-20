@@ -79,7 +79,7 @@ pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
 }
 pub use mutations_codec::*;
 
-/// 📜️ Describes the artifact mutation dialect.
+/// 📜️ Describes one JSON operation line. The mutation schema owns the discriminator and fields.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");
 /// 🧭️ Identifies the artifact mutation grammar.
 pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutations.grammar.semio");

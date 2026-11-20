@@ -59,6 +59,7 @@ pub fn paint_node_step_with_driver(
     let mut flags = node.flags;
     if presence.state != UiState::Disabled {
         flags.set(NodeFlags::HOVERED, flags.contains(NodeFlags::HOVERED) || presence.hover);
+        flags.set(NodeFlags::HOVER_OWNER, flags.contains(NodeFlags::HOVER_OWNER) || presence.hover);
     }
     if skeleton_replaces_content(&node.spec.0, presence) {
         if cursor.phase == 0 {

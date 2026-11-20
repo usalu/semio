@@ -25,7 +25,7 @@ fn roof_type_for(i: &mut Import<'_>, ifc: u64, thickness: f64) -> String {
         return id.clone();
     }
     let id = Import::unused("rt-imported", |candidate| i.model.roof_types.contains_key(candidate));
-    i.model.roof_types.insert(id.clone(), RoofType { name: format!("Roof {} mm", (thickness * 1000.0).round() as i64), layers });
+    i.model.roof_types.cold_insert(id.clone(), RoofType { name: format!("Roof {} mm", (thickness * 1000.0).round() as i64), layers });
     id
 }
 
@@ -63,7 +63,7 @@ pub fn read(i: &mut Import<'_>) {
             continue;
         };
         let id = Doc::identity(args, "IFCROOF").unwrap_or_else(|| format!("r-{}", instance.id));
-        i.model.roofs.insert(id.clone(), roof);
+        i.model.roofs.cold_insert(id.clone(), roof);
         i.claim_parts(instance.id, &id);
         i.ids.insert(instance.id, id);
     }

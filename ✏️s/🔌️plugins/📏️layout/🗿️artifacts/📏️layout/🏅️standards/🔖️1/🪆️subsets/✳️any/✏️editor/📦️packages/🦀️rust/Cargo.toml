@@ -53,6 +53,7 @@ semio-s-artifact-layout-layout-engine = { workspace = true }
 semio-s-artifact-layout-layout-engine-export = { workspace = true }
 semio-s-artifact-layout-layout-engine-json = { workspace = true }
 semio-s-artifact-layout-layout-examples = { workspace = true }
+semio-s-artifact-layout-layout-host = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-s-artifact-layout-layout-mutations-content = { workspace = true }
@@ -60,6 +61,8 @@ semio-framework-pixels = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-forms-forms = { workspace = true }
 semio-framework-async-macros = { workspace = true }

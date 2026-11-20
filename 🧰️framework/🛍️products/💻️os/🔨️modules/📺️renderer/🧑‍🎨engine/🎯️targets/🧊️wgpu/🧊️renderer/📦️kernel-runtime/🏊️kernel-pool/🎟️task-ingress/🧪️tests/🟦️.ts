@@ -18,5 +18,5 @@ test("original task producer keeps refused input or exact born candidate until a
   }
  }finally{db.close();}
  const owner=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");for(const token of ["OriginalKernelTaskProducer","OriginalCallerSourceLoan","OriginalSourceBinding::borrow(cx)","admit_original_construction","self.input.take()","self.committed=true","self.failed=true","validate_retirement_context(cx)","source.close_step(cx.original_source_parent()?,cx)"])expect(owner).toContain(token);for(const token of ["StepContext::new","OriginalJobFixtureCaller","native_launch_caller","WorkerPool::new","Box::pin","Arc::new"])expect(owner).not.toContain(token);
- const close=owner.slice(owner.indexOf("pub(crate) fn close_step"));expect(close).not.toContain("admit_loan");expect(owner).toContain("ManuallyDrop<Option<P>>");expect(owner).toContain("ManuallyDrop<Option<J>>");expect(owner).toContain("if !self.committed()");
+ const close=owner.slice(owner.indexOf("pub(crate) fn close_step",owner.indexOf("impl<P:")));expect(close).not.toContain("admit_loan");expect(owner).toContain("ManuallyDrop<Option<P>>");expect(owner).toContain("ManuallyDrop<Option<J>>");expect(owner).toContain("if !self.committed()");
 });

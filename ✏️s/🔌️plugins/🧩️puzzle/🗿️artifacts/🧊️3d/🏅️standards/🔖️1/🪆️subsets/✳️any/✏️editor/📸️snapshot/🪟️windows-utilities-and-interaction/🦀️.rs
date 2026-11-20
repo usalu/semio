@@ -45,10 +45,10 @@ fn puzzle3d_utility_map_hit<'a>(view: &'a semio_plugin::ViewModel, wid: &str) ->
             .and_then(|focused| view.active_utility_by_window_id.get(focused))
             .or_else(|| {
                 view.active_utility_by_window_id.iter().find_map(|(key, utility)| {
-                    (key.starts_with(wid) && key.as_str() != wid && !utility.is_empty()).then_some(utility)
+                    (key.starts_with(wid) && key.as_str() != wid && utility.as_ref().is_some_and(|value| !value.is_empty())).then_some(utility)
                 })
             })
-    })
+    }).and_then(Option::as_ref)
 }
 
 pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_plugin::ViewModel>, keyed: Option<&'a str>, fallback: Option<&'a str>, roster: &'a [String]) -> &'a str {

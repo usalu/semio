@@ -115,7 +115,7 @@ async fn a_curtain_wall_depends_on_its_storey_and_the_storey_its_top_targets() {
 }
 
 fn with_override(snapshot: &mut ModelSnapshot, id: &str, curtain: &str, u: u32, v: u32, panel: CurtainPanel) {
-    snapshot.curtain_panel_overrides.insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
+    snapshot.curtain_panel_overrides.cold_insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -154,7 +154,7 @@ async fn overrides_resolve_per_cell_and_the_ones_outside_the_grid_are_reported()
 #[semio_framework_async_macros::async_test]
 async fn a_missing_type_leaves_one_cell_and_no_default_panel() {
     let mut snapshot = model();
-    snapshot.curtain_wall_types.clear();
+    snapshot.curtain_wall_types.cold_clear();
     let ground = &compute_curtain_layout(&snapshot)["cw-ground"];
     assert_eq!((ground.u_panels, ground.v_panels, ground.panel.clone()), (1, 1, None));
 }

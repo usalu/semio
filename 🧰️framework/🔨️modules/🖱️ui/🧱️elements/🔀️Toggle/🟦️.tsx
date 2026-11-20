@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { sharedBorderlessBoxProps, useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
@@ -330,6 +330,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
               const buttonElement = (
                 <button
                   key={item.value}
+                  {...sharedBorderlessBoxProps}
                   onClick={() => handleSelect(item.value)}
                   className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-interactive-fill outline-none focus-visible:bg-hover-interactive-fill")}
                 >

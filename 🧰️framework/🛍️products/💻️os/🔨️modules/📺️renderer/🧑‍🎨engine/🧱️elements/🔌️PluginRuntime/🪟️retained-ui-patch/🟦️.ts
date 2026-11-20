@@ -9,7 +9,7 @@ import { decodePackWire } from "@semio-tech/framework/packs";
 import { type BuiltNode, type Component, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../../📃️UiDocumentStore/🟦️.tsx";
 import type { RetainedUiNodeRecord } from "@semio-tech/ui-contract/retained/wire/typed";
-import { wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireVideoRenderExport } from "@semio-tech/framework/actor/wire-turn";
+import { wireDownloadMediaExport, wireEffectToFriendly as actorWireEffectToFriendly, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireVideoRenderExport } from "@semio-tech/framework/actor/wire-turn";
 import { isRoutedWireSendMessage, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireSendMessageTargetTag } from "@semio-tech/framework/actor/wire-turn";
 import {
   coerceWireBytes,
@@ -139,19 +139,8 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return { clipboardWrite: { fragment: packField("fragment") } };
     case "replay-shell-command":
       return { replayShellCommand: { actionId: str("actionId"), args: packField("args") } };
-    case "request-file-open": {
-      const readAsRaw = optionValue(params["read-as"] ?? params.readAs);
-      const mapped = {
-        requestFileOpen: {
-          req: num("req"),
-          accept: paramStr("accept"),
-          readAs: typeof readAsRaw === "string" ? readAsRaw : undefined,
-          importAction: paramStr("import-action") || paramStr("importAction"),
-          multiple: Boolean(optionValue(params.multiple) ?? params.multiple),
-        },
-      };
-      return mapped;
-    }
+    case "request-file-open":
+      return actorWireEffectToFriendly(effect, (bytes) => decodeWirePack(bytes, "wire.params.args"));
     case "set-active-utility":
       return { setActiveUtility: { windowId: str("windowId"), utilityId: str("utilityId") } };
     case "set-active-tool":

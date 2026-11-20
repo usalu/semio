@@ -446,7 +446,7 @@ export class NxScript extends Script {
     const invocation = resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original loaded Nx tooling receipt required");
     return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},phaseControl,async(_witness,actualPhase)=>{
-    const hold:{release?:()=>Promise<void>;stopFlight?:()=>Promise<void>;settleSlots?:()=>Promise<unknown>}={},unitsBefore=readBuildCountersV1(this.root).unit;
+    const hold:{release?:()=>Promise<void>;stopFlight?:()=>Promise<void>;settleSlots?:()=>Promise<unknown>}={},unitsBefore=readBuildCountersV1(this.root).unit,runStartedMs=Date.now();
     try{
     const check=()=>checkResourceLeaseControl(actualPhase);check();
     const projection=createRequire(import.meta.url)("../../🟨️.mjs"),admission=projectionAdmissionV1(projection),admitProjection=()=>{check();admission.admit();check();};admitProjection();
@@ -626,7 +626,7 @@ export class NxScript extends Script {
       process.removeListener("SIGINT", interrupt);
       process.removeListener("SIGTERM", terminate);
     }
-    }finally{const settled=await hold.settleSlots?.().catch(()=>undefined) as {tasks?:readonly import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts").NxTaskLedgerRowV1[]}|undefined;try{const{nxTaskLedgerLineV1}=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts");for(const row of settled?.tasks??[])process.stderr.write(nxTaskLedgerLineV1(row)+"\n");for(const line of unitLedgerLinesV1(unitLedgerV1(unitsBefore,readBuildCountersV1(this.root).unit)))process.stderr.write(line+"\n");}catch{}await hold.stopFlight?.().catch(()=>undefined);await hold.release?.();}
+    }finally{const settled=await hold.settleSlots?.().catch(()=>undefined) as {tasks?:readonly import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts").NxTaskLedgerRowV1[]}|undefined;try{const{nxTaskLedgerLineV1}=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts");for(const row of settled?.tasks??[])process.stderr.write(nxTaskLedgerLineV1(row)+"\n");for(const line of unitLedgerLinesV1(unitLedgerV1(unitsBefore,readBuildCountersV1(this.root).unit)))process.stderr.write(line+"\n");const{phaseLedgerRunLinesV1}=await import("../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧮️phase-ledger/🟦️.ts");for(const line of phaseLedgerRunLinesV1(this.root,runStartedMs,(Date.now()-runStartedMs)/1000))process.stderr.write(line+"\n");}catch{}await hold.stopFlight?.().catch(()=>undefined);await hold.release?.();}
     });
   }
 }

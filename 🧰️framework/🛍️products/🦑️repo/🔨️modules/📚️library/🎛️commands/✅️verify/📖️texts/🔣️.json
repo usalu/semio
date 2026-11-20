@@ -154,6 +154,14 @@
       "en": "[verify] {breaches} raw process spawn breach(es)",
       "de": "[verify] {breaches} Verstoß/Verstöße gegen rohe Prozessstarts"
     },
+    "gates.json-duplicate-keys": {
+      "en": "[verify] JSON files repeat no object key (a repeated key silently shadows the earlier value)…",
+      "de": "[verify] JSON-Dateien wiederholen keinen Objektschlüssel (ein wiederholter Schlüssel überdeckt den früheren Wert stillschweigend)…"
+    },
+    "gates.json-duplicate-key-breach": {
+      "en": "[verify] {breaches} JSON duplicate key breach(es)",
+      "de": "[verify] {breaches} Verstoß/Verstöße durch doppelte JSON-Schlüssel"
+    },
     "gates.standards-subsets-vocabulary": {
       "en": "[verify] standards/subsets vocabulary…",
       "de": "[verify] Vokabular von Standards und Subsets…"

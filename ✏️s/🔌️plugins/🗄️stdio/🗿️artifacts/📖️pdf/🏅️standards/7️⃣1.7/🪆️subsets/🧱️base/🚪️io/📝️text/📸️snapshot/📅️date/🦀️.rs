@@ -11,7 +11,7 @@ pub fn parse_pdf_date(text: &str) -> Option<PdfDate> {
         let hour = digits(8, 2).unwrap_or(0).min(23);
         let minute = digits(10, 2).unwrap_or(0).min(59);
         let second = digits(12, 2).unwrap_or(0).min(59);
-        let marker = body.bytes().position(|b| !b.is_ascii_digit()).unwrap_or(body.len()).min(14);
+        let marker = body.bytes().take(14).position(|b| !b.is_ascii_digit()).unwrap_or(body.len().min(14));
         let offset_minutes = match body.as_bytes().get(marker) {
             Some(b'Z') => Some(0),
             Some(sign @ (b'+' | b'-')) => {

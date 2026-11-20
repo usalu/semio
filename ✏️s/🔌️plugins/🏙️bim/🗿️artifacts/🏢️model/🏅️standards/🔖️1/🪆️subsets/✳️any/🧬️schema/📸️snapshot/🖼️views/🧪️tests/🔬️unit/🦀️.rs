@@ -10,10 +10,10 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.buildings.insert("b".into(), Building { site: "s".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.buildings.insert("c".into(), Building { site: "s".into(), name: "Annex".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("g".into(), Storey { building: "b".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: Some(1.5) });
-    snapshot.storeys.insert("a".into(), Storey { building: "c".into(), name: "Annex ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.buildings.cold_insert("b".into(), Building { site: "s".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.buildings.cold_insert("c".into(), Building { site: "s".into(), name: "Annex".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("g".into(), Storey { building: "b".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: Some(1.5) });
+    snapshot.storeys.cold_insert("a".into(), Storey { building: "c".into(), name: "Annex ground".into(), level: 0, height: 3.0, cut_height: None });
     snapshot
 }
 
@@ -62,7 +62,7 @@ async fn references_must_exist_and_agree() {
 async fn names_are_filled_and_unique_per_building() {
     assert_eq!(problem(&View::of_storey("b", " ", ViewKind::Plan, "g")), Some((false, "name")));
     let mut snapshot = base();
-    snapshot.views.insert("w".into(), View::of_storey("b", "Ground plan", ViewKind::Plan, "g"));
+    snapshot.views.cold_insert("w".into(), View::of_storey("b", "Ground plan", ViewKind::Plan, "g"));
     let twin = View::through("b", "Ground plan", ViewKind::Section, plane());
     assert_eq!(view_problem(&snapshot, "v", &twin).map(|row| row.field), Some("name"));
     assert_eq!(view_problem(&snapshot, "w", &View::of_storey("b", "Ground plan", ViewKind::Plan, "g")), None, "a view does not clash with itself");

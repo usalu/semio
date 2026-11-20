@@ -12,6 +12,13 @@
     "resolutions"
   ],
   "$defs": {
+    "GenerationDigestManifestPolicy": {
+      "description": "Bounds the serialized authorizer source and compiler digest manifests emitted as Nx SDK generation metadata, independently of the individual file bytes in the source closure.",
+      "const": {
+        "names": [".semio-authorizer-source.json", ".semio-authorizer-compiler.json"],
+        "maximumBytes": 8388608
+      }
+    },
     "Receipt": {
       "type": "object",
       "additionalProperties": false,

@@ -457,10 +457,20 @@ fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIte
     Ok(())
 }
 
-fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
+/// 🧾️ Every contract violation of one artifact definition in one pass, each naming the offending identity.
+fn violations(source: &Source) -> Vec<PluginAssemblyError> {
     let owner = format!("s.stdio.{}", source.artifact);
-    if source.definition_version != 1 || source.id != owner {
-        return Err(failure(format!("{owner} must use definition_version 1")));
+    let mut found = Vec::new();
+    let mut check = |result: Result<(), PluginAssemblyError>| {
+        if let Err(error) = result {
+            found.push(error);
+        }
+    };
+    if source.definition_version != 1 {
+        check(Err(failure(format!("{owner} must use definition_version 1, found {}", source.definition_version))));
+    }
+    if source.id != owner {
+        check(Err(failure(format!("definition id {:?} must be {owner:?}", source.id))));
     }
     if source.standards.is_empty()
         || source.profiles.is_empty()
@@ -470,50 +480,70 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         || source.localized_descriptors.len() != 2
         || source.conformance_suites.is_empty()
     {
-        return Err(failure(format!("{owner} omits a required collection")));
+        check(Err(failure(format!("{owner} omits a required collection"))));
     }
-    id(&source.id)?;
+    check(id(&source.id));
     let standards = source.standards.iter().map(|item| item.id.clone()).collect::<BTreeSet<_>>();
     for item in &source.standards {
-        if item.id != format!("{owner}.standard.{}", item.revision) {
-            return Err(failure(format!("invalid standard {}", item.id)));
-        }
-        if item.status == "unverified" && (item.normative_source.is_some() || item.publication_date.is_some() || item.source_checksum.is_some() || item.redistribution_status != "unknown" || !item.clauses_or_features.is_empty()) {
-            return Err(failure(format!("unverified standard {} carries unverifiable provenance", item.id)));
-        }
-        if item.status == "verified" && (item.normative_source.is_none() || item.publication_date.is_none() || item.source_checksum.is_none() || item.redistribution_status == "unknown" || item.clauses_or_features.is_empty()) {
-            return Err(failure(format!("verified standard {} lacks provenance", item.id)));
-        }
-        if !matches!(item.status.as_str(), "unverified" | "verified") {
-            return Err(failure(format!("invalid standard status {}", item.status)));
-        }
-        id(&item.id)?;
+        check((|| {
+            if item.id != format!("{owner}.standard.{}", item.revision) {
+                return Err(failure(format!("invalid standard {}", item.id)));
+            }
+            if item.status == "unverified" && (item.normative_source.is_some() || item.publication_date.is_some() || item.source_checksum.is_some() || item.redistribution_status != "unknown" || !item.clauses_or_features.is_empty()) {
+                return Err(failure(format!("unverified standard {} carries unverifiable provenance", item.id)));
+            }
+            if item.status == "verified" && (item.normative_source.is_none() || item.publication_date.is_none() || item.source_checksum.is_none() || item.redistribution_status == "unknown" || item.clauses_or_features.is_empty()) {
+                return Err(failure(format!("verified standard {} lacks provenance", item.id)));
+            }
+            if !matches!(item.status.as_str(), "unverified" | "verified") {
+                return Err(failure(format!("standard {} declares invalid status {:?}; expected unverified or verified", item.id, item.status)));
+            }
+            id(&item.id)
+        })());
     }
     for item in &source.profiles {
-        if !standards.contains(&item.standard) || item.id != format!("{}.profile.{}", item.standard, item.profile) || !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
-            return Err(failure(format!("invalid profile {}", item.id)));
-        }
-        id(&item.id)?;
+        check((|| {
+            if !standards.contains(&item.standard) {
+                return Err(failure(format!("profile {} references unknown standard {}", item.id, item.standard)));
+            }
+            if item.id != format!("{}.profile.{}", item.standard, item.profile) {
+                return Err(failure(format!("profile {} must be named {}.profile.{}", item.id, item.standard, item.profile)));
+            }
+            if !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
+                return Err(failure(format!("profile {} declares invalid status {:?}; expected unimplemented, opaque or implemented", item.id, item.status)));
+            }
+            id(&item.id)
+        })());
     }
     for item in &source.source_dialects {
-        if !standards.contains(&item.standard) || item.id != format!("{}.dialect.{}", item.standard, item.dialect) || !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
-            return Err(failure(format!("invalid source dialect {}", item.id)));
-        }
-        id(&item.id)?;
+        check((|| {
+            if !standards.contains(&item.standard) {
+                return Err(failure(format!("source dialect {} references unknown standard {}", item.id, item.standard)));
+            }
+            if item.id != format!("{}.dialect.{}", item.standard, item.dialect) {
+                return Err(failure(format!("source dialect {} must be named {}.dialect.{}", item.id, item.standard, item.dialect)));
+            }
+            if !matches!(item.status.as_str(), "unimplemented" | "opaque" | "implemented") {
+                return Err(failure(format!("source dialect {} declares invalid status {:?}; expected unimplemented, opaque or implemented", item.id, item.status)));
+            }
+            id(&item.id)
+        })());
     }
     for item in &source.representations {
-        if !standards.contains(&item.standard)
-            || item.id != format!("{}.representation.{}", item.standard, item.representation)
-            || item.extensions.is_empty()
-            || item.extensions.iter().any(|extension| !extension.starts_with('.'))
-            || item.status != "declared"
-        {
-            return Err(failure(format!("invalid representation {}", item.id)));
-        }
-        if item.mimes.iter().collect::<BTreeSet<_>>().len() != item.mimes.len() || item.extensions.iter().collect::<BTreeSet<_>>().len() != item.extensions.len() {
-            return Err(failure(format!("duplicate representation claim {}", item.id)));
-        }
-        id(&item.id)?;
+        check((|| {
+            if !standards.contains(&item.standard)
+                || item.id != format!("{}.representation.{}", item.standard, item.representation)
+                || item.extensions.is_empty()
+                || item.extensions.iter().any(|extension| !extension.starts_with('.'))
+                || item.status != "declared"
+            {
+                return Err(failure(format!("invalid representation {}", item.id)));
+            }
+            if item.mimes.iter().collect::<BTreeSet<_>>().len() != item.mimes.len() || item.extensions.iter().collect::<BTreeSet<_>>().len() != item.extensions.len() {
+                return Err(failure(format!("duplicate representation claim {}", item.id)));
+            }
+            id(&item.id)
+        })());
     }
     let mut owners_by_claims: BTreeMap<BTreeSet<(String, String)>, (usize, usize)> = BTreeMap::new();
     for item in &source.representations {
@@ -526,95 +556,108 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         let Some(sniff) = &item.sniff else { continue };
         let owned = needles.entry(representation_claims(item)).or_default();
         if sniff.window == 0 || sniff.window > 65536 || sniff.contains.is_empty() || sniff.contains.iter().any(|needle| needle.is_empty() || !needle.is_ascii() || needle.len() > sniff.window as usize || !owned.insert(needle.as_str())) {
-            return Err(failure(format!("representation {} declares an unbounded, empty, non-ASCII or shared sniff", item.id)));
+            check(Err(failure(format!("representation {} declares an unbounded, empty, non-ASCII or shared sniff", item.id))));
         }
     }
     if owners_by_claims.values().any(|(members, owners)| *owners > 1 || (*members > 1 && *owners != 1)) {
-        return Err(failure(format!("{owner} must declare exactly one owner among representations sharing a claim set")));
+        check(Err(failure(format!("{owner} must declare exactly one owner among representations sharing a claim set"))));
     }
     if standards != source.representations.iter().map(|item| item.standard.clone()).collect::<BTreeSet<_>>() {
-        return Err(failure(format!("{owner} must give every declared standard its own representation")));
+        check(Err(failure(format!("{owner} must give every declared standard its own representation"))));
     }
     let locales = source.localized_descriptors.iter().map(|item| item.locale.as_str()).collect::<BTreeSet<_>>();
     if locales != BTreeSet::from(["de", "en"]) {
-        return Err(failure(format!("{owner} must own English and German descriptors")));
+        check(Err(failure(format!("{owner} must own English and German descriptors"))));
     }
     for item in &source.localized_descriptors {
-        if item.id != format!("{owner}.localization.{}", item.locale) || item.name.is_empty() || item.description.is_empty() {
-            return Err(failure(format!("invalid localization {}", item.id)));
-        }
-        id(&item.id)?;
+        check((|| {
+            if item.id != format!("{owner}.localization.{}", item.locale) || item.name.is_empty() || item.description.is_empty() {
+                return Err(failure(format!("invalid localization {}", item.id)));
+            }
+            id(&item.id)
+        })());
     }
     for item in &source.resources {
-        if item.status != "unimplemented" || item.external_reference_policy.is_empty() {
-            return Err(failure(format!("invalid resource {}", item.id)));
-        }
-        child(&item.id, &owner, "resource")?;
-        id(&item.id)?;
+        check((|| {
+            if item.status != "unimplemented" || item.external_reference_policy.is_empty() {
+                return Err(failure(format!("invalid resource {}", item.id)));
+            }
+            child(&item.id, &owner, "resource")?;
+            id(&item.id)
+        })());
     }
     for item in &source.conformance_suites {
-        if item.status != "unimplemented" {
-            return Err(failure(format!("invalid conformance suite {}", item.id)));
-        }
-        child(&item.id, &owner, "conformance-suite")?;
-        id(&item.id)?;
-        for fixture in &item.fixtures {
-            id(fixture)?;
-        }
+        check((|| {
+            if item.status != "unimplemented" {
+                return Err(failure(format!("invalid conformance suite {}", item.id)));
+            }
+            child(&item.id, &owner, "conformance-suite")?;
+            id(&item.id)?;
+            item.fixtures.iter().try_for_each(|fixture| id(fixture))
+        })());
     }
     for item in &source.codecs {
-        let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
-        versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
-        if !source.source_dialects.iter().any(|dialect| dialect.id == item.from) || !source.source_dialects.iter().any(|dialect| dialect.id == item.to) || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
-            return Err(failure(format!("invalid codec {}", item.id)));
-        }
-        match (&item.native_factory, item.executable_registration) {
-            (None, false) => {}
-            (Some(binding), true) if matches!(item.status.as_str(), "implemented" | "verified") => {
-                native_codec_hash(&binding.pack_schema_hash).map_err(|error| failure(format!("codec {}: {}", item.id, error.message)))?;
-                if binding.factory_id.is_empty() || binding.artifact_kind.is_empty() || binding.artifact_schema.is_empty() || binding.extension.is_empty() || binding.runtime_capability_id.is_empty() {
-                    return Err(failure(format!("codec {} has an incomplete native factory binding", item.id)));
-                }
+        check((|| {
+            let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
+            versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
+            if !source.source_dialects.iter().any(|dialect| dialect.id == item.from) || !source.source_dialects.iter().any(|dialect| dialect.id == item.to) || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
+                return Err(failure(format!("invalid codec {}", item.id)));
             }
-            _ => return Err(failure(format!("codec {} must bind an exact native factory if and only if it is executable and implemented", item.id))),
-        }
+            match (&item.native_factory, item.executable_registration) {
+                (None, false) => {}
+                (Some(binding), true) if matches!(item.status.as_str(), "implemented" | "verified") => {
+                    native_codec_hash(&binding.pack_schema_hash).map_err(|error| failure(format!("codec {}: {}", item.id, error.message)))?;
+                    if binding.factory_id.is_empty() || binding.artifact_kind.is_empty() || binding.artifact_schema.is_empty() || binding.extension.is_empty() || binding.runtime_capability_id.is_empty() {
+                        return Err(failure(format!("codec {} has an incomplete native factory binding", item.id)));
+                    }
+                }
+                _ => return Err(failure(format!("codec {} must bind an exact native factory if and only if it is executable and implemented", item.id))),
+            }
+            Ok(())
+        })());
     }
     for (category, item) in source.mutations.iter().map(|item| ("mutation", item)).chain(source.inferences.iter().map(|item| ("inference", item))) {
-        versioned_leaf(&item.id, &format!("{owner}.{category}."))?;
-        if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
-            return Err(failure(format!("invalid {category} {}", item.id)));
-        }
+        check((|| {
+            versioned_leaf(&item.id, &format!("{owner}.{category}."))?;
+            if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
+                return Err(failure(format!("invalid {category} {}", item.id)));
+            }
+            Ok(())
+        })());
     }
     let mut runtime_ids = BTreeSet::new();
     let mut runtime_claim_sets = BTreeSet::new();
     for item in &source.runtime_capabilities {
-        let standard = if matches!(item.category.as_str(), "codec" | "representation") { Some(runtime_standard(source.standards.iter().map(|standard| standard.id.as_str()), &item.id, &item.category)?) } else { None };
-        let prefix = standard.map_or_else(|| format!("{owner}.{}.", item.category), |standard| format!("{standard}.{}.", item.category));
-        leaf_kind(&item.category)?;
-        if item.category == "representation" {
-            child(&item.id, standard.expect("representation has a declared owning standard"), "representation")?;
-        } else {
-            versioned_leaf(&item.id, &prefix)?;
-        }
-        if item.descriptor.trim().is_empty() || item.claims.is_empty() || !runtime_ids.insert(item.id.clone()) {
-            return Err(failure(format!("invalid runtime capability {}", item.id)));
-        }
-        let claims = runtime_claims(item);
-        if claims.len() != item.claims.len()
-            || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "schema-export" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "composition-route" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
-            || (item.category == "subset-validator" && item.claims.iter().any(|claim| claim.namespace != "validated-dialect"))
-            || !runtime_claim_sets.insert((item.category.clone(), claims.clone()))
-        {
-            return Err(failure(format!("invalid runtime capability claims for {}", item.id)));
-        }
-        if item.category == "representation" && !source.representations.iter().any(|representation| representation_claims(representation) == claims) {
-            return Err(failure(format!("runtime representation {} does not claim a representation leaf", item.id)));
-        }
+        check((|| {
+            let standard = if matches!(item.category.as_str(), "codec" | "representation") { Some(runtime_standard(source.standards.iter().map(|standard| standard.id.as_str()), &item.id, &item.category)?) } else { None };
+            let prefix = standard.map_or_else(|| format!("{owner}.{}.", item.category), |standard| format!("{standard}.{}.", item.category));
+            leaf_kind(&item.category)?;
+            if item.category == "representation" {
+                child(&item.id, standard.expect("representation has a declared owning standard"), "representation")?;
+            } else {
+                versioned_leaf(&item.id, &prefix)?;
+            }
+            if item.descriptor.trim().is_empty() || item.claims.is_empty() || !runtime_ids.insert(item.id.clone()) {
+                return Err(failure(format!("invalid runtime capability {}", item.id)));
+            }
+            let claims = runtime_claims(item);
+            if claims.len() != item.claims.len()
+                || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "schema-export" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "composition-route" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
+                || (item.category == "subset-validator" && item.claims.iter().any(|claim| claim.namespace != "validated-dialect"))
+                || !runtime_claim_sets.insert((item.category.clone(), claims.clone()))
+            {
+                return Err(failure(format!("invalid runtime capability claims for {}", item.id)));
+            }
+            if item.category == "representation" && !source.representations.iter().any(|representation| representation_claims(representation) == claims) {
+                return Err(failure(format!("runtime representation {} does not claim a representation leaf", item.id)));
+            }
+            Ok(())
+        })());
     }
     let ledger = &source.support_ledger;
     let states = [&ledger.read, &ledger.write, &ledger.lossless, &ledger.canonical];
     if !states.into_iter().all(|state| matches!(state.as_str(), "unimplemented" | "opaque" | "implemented")) {
-        return Err(failure(format!("{owner} has an invalid support state")));
+        check(Err(failure(format!("{owner} has an invalid support state"))));
     }
     if states.into_iter().any(|state| state == "implemented")
         && (ledger.normative_source.is_none()
@@ -625,13 +668,13 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
             || ledger.validators.is_empty()
             || ledger.fixtures.is_empty())
     {
-        return Err(failure(format!("{owner} claims implementation without normative, validator, and fixture evidence")));
+        check(Err(failure(format!("{owner} claims implementation without normative, validator, and fixture evidence"))));
     }
-    same("ledger profiles", ledger.profiles.clone(), source.profiles.iter().map(|item| item.id.clone()))?;
-    same("ledger code points", ledger.registered_code_points.clone(), source.source_dialects.iter().flat_map(|item| item.registered_code_points.clone()))?;
-    same("ledger mutations", ledger.mutations.clone(), source.mutations.iter().map(|item| item.id.clone()))?;
-    same("ledger inferences", ledger.inferences.clone(), source.inferences.iter().map(|item| item.id.clone()))?;
-    same("ledger fixtures", ledger.fixtures.clone(), source.conformance_suites.iter().flat_map(|item| item.fixtures.clone()))?;
+    check(same("ledger profiles", ledger.profiles.clone(), source.profiles.iter().map(|item| item.id.clone())));
+    check(same("ledger code points", ledger.registered_code_points.clone(), source.source_dialects.iter().flat_map(|item| item.registered_code_points.clone())));
+    check(same("ledger mutations", ledger.mutations.clone(), source.mutations.iter().map(|item| item.id.clone())));
+    check(same("ledger inferences", ledger.inferences.clone(), source.inferences.iter().map(|item| item.id.clone())));
+    check(same("ledger fixtures", ledger.fixtures.clone(), source.conformance_suites.iter().flat_map(|item| item.fixtures.clone())));
     let local = source
         .profiles
         .iter()
@@ -644,10 +687,20 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         .collect::<BTreeSet<_>>();
     for reference in ledger.validators.iter().chain(&ledger.mutations).chain(&ledger.inferences).chain(&ledger.fixtures) {
         if !local.contains(reference) {
-            return Err(failure(format!("{owner} ledger reference {reference:?} does not resolve locally")));
+            check(Err(failure(format!("{owner} ledger reference {reference:?} does not resolve locally"))));
         }
     }
-    Ok(())
+    found
+}
+
+/// 🧾️ Refuses a definition with every violation at once, naming the artifact and the file it was authored in.
+fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
+    let found = violations(source);
+    if found.is_empty() {
+        return Ok(());
+    }
+    let listed = found.iter().map(|error| error.message.clone()).collect::<Vec<_>>().join("\n  - ");
+    Err(failure(format!("artifact definition {} ({}/📜️artifact-definition.json) has {} violation(s):\n  - {listed}", source.id, source.directory, found.len())))
 }
 
 fn executable_mappings(executables: impl IntoIterator<Item = ArtifactExecutable>) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
@@ -729,11 +782,20 @@ pub fn definition_from_schema(schema: &'static str) -> Result<ArtifactDefinition
 pub fn definition_from_schema_with_executables(schema: &'static str, executables: impl IntoIterator<Item = ArtifactExecutable>) -> Result<ArtifactDefinition, PluginAssemblyError> {
     let source = validated_source(schema)?;
     let mappings = executable_mappings(executables)?;
-    let expected = expected_executable_ids(&source);
-    if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected {
-        return Err(failure(format!("{} executable mappings diverge from schema registrations", source.id)));
+    let divergence = executable_divergence(&source, &mappings);
+    if !divergence.is_empty() {
+        return Err(failure(format!("{} executable mappings diverge from schema registrations: {}", source.id, divergence.join("; "))));
     }
     build(&source, &mappings)
+}
+
+/// 🧮 Names every schema registration without an executable mapping and every executable mapping without a schema registration.
+fn executable_divergence(source: &Source, mappings: &BTreeMap<String, ArtifactExecutableIdentity>) -> Vec<String> {
+    let expected = expected_executable_ids(source);
+    let mapped = mappings.keys().cloned().collect::<BTreeSet<_>>();
+    let missing = expected.difference(&mapped).map(|identity| format!("missing executable mapping for {identity}"));
+    let unregistered = mapped.difference(&expected).map(|identity| format!("executable mapping {identity} has no schema registration"));
+    missing.chain(unregistered).collect()
 }
 
 /// 🧷 Binds an executable artifact root to the definition it owns.
@@ -949,3 +1011,7 @@ mod tests;
 #[cfg(test)]
 #[path = "../🧪️tests/📇️contributions/🦀️.rs"]
 mod contribution_tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🗿️bundled-definitions/🦀️.rs"]
+mod bundled_definitions;

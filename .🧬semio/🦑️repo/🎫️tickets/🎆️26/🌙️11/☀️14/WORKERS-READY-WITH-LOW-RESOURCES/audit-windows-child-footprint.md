@@ -1,0 +1,7 @@
+# Windows child process footprint
+
+The graph farm uses `readProcessFootprintBytesV1` to sample each worker PID. On Windows that function returned the sampler's own RSS for every PID. The old test even expected the sampler RSS for PID 1. The same function supplies the own-process footprint meter, where the existing RSS fast path remains valid on Windows.
+
+The native Windows capacity backend now shares its existing kernel counter decoder between the process table and a one-PID working-set query. The one-PID query opens only the named process using the existing limited rights, reads `K32GetProcessMemoryInfo`, and closes the handle on every exit. There is no process-table walk or shell command. An unavailable foreign measurement stays undefined instead of taking the reader's RSS. macOS and Linux keep their existing physical units and sources. The optional abort signal reaches the existing macOS command port, and all branches discard a result that settles after cancellation.
+
+An independent SQLite fixture reproduced the old RSS attribution and cancellation failures. The corrected cases exercised two unrelated process IDs, different working-set and private values, permission and counter failures, invalid IDs and exact handle release. Focused footprint tests passed 3 cases with 62 assertions, including the host's actual Darwin read and cancellation. The existing Windows native memory suite passed 4 tests and 50 assertions. The Windows kernel calls were modeled in the fixture on the Darwin coordinator. No worker or graph run was started.

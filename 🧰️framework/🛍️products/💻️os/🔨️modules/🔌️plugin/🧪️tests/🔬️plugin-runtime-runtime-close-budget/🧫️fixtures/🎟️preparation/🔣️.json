@@ -25,5 +25,12 @@
   "grantSource": "original-phase-policy-and-context-remaining",
   "receiptSource": "original-store-preparation",
   "checkpointIsNotReceipt": true,
-  "oneOutstandingReceipt": true
+  "oneOutstandingReceipt": true,
+  "receivingTurn": {
+    "storePreparation": [1, 24, 0, 0],
+    "receivingControl": [2, 314, 0, 0],
+    "reservedReturn": [4, 728, 0, 0],
+    "contextPosting": [7, 1066, 0, 0],
+    "preparationReceipt": [3, 338, 0, 0]
+  }
 }

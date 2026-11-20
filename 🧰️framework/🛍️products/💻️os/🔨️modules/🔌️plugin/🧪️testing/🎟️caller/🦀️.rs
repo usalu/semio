@@ -26,7 +26,19 @@ impl OriginalFixtureCaller{
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
  pub fn maximum_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_turns}
  /// 🛬️ Retires the body decoder against the same already-issued caller stock before its three parent roots close.
- pub fn retire_decoder(&mut self,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,fuel:u64)->Result<u64,OriginalTurnFailure>{self.caller.settle_lent_fuel(fuel);let loan=self.policy.retirement_loan;for _ in 0..self.policy.maximum_turns{if decoder.terminal_is_empty(){return Ok(self.caller.fuel_remaining())}self.caller.turn(loan,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())}))?}Err(OriginalTurnFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture decoder exceeds its supplied close turn bound")))}
+ pub fn retire_decoder(&mut self,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,fuel:u64)->Result<u64,OriginalTurnFailure>{
+  self.caller.settle_lent_fuel(fuel);
+  for _ in 0..self.policy.maximum_turns {
+   if decoder.terminal_is_empty(){return Ok(self.caller.fuel_remaining())}
+   let (quote,work)=semio_framework_job::original_decoder_teardown_quote(decoder)?;
+   let funded=self.caller.within_stock(quote);
+   if funded!=quote||self.caller.fuel_remaining()<work {
+    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture stock cannot fund its quoted decoder retirement").into());
+   }
+   self.caller.turn(funded,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())}))?;
+  }
+  Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture decoder exceeds its supplied close turn bound").into())
+ }
  /// 🧹️ Returns the original caller ledger and root with its remaining authored authority after all child payloads close.
  pub fn retire(&mut self,fuel:u64)->Result<RetainedCloneProgress,OriginalTurnFailure>{
   self.caller.settle_lent_fuel(fuel);let mut decoder=std::mem::replace(&mut self.decoder,semio_framework_job::OriginalJobDecodeOwner::empty());let retired=self.retire_decoder(&mut decoder,fuel);self.decoder=decoder;retired?;

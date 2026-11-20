@@ -153,23 +153,28 @@ export type PluginLifecycleWork =
   | { readonly kind: "close" }
   | { readonly kind: "receipt-ack"; readonly receipt: ActorInstanceLifecycleReceipt; readonly retirement?: OwnedUiInstanceRetirement }
   | { readonly kind: "issued-ui-acks"; readonly entries: readonly OwnedUiPatchAcknowledgementEntry[] };
-export type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null };
+export type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly turns: readonly WireTurnResult[]; readonly submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null };
 export type PluginLifecycleTurnPayload = { readonly kind: "lifecycle"; readonly owner: ShardInstanceLifecycleLease; readonly work: PluginLifecycleWork; readonly resolve: (result: PluginLifecycleTurnResult) => void; readonly reject: (error: unknown) => void };
 export type PendingPluginTurn = PluginTurnPayload | PluginLifecycleTurnPayload;
 
 /** 🚪️ Only the captured lifecycle owner can dispatch retirement-authorized work. */
 export async function runPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: PluginLifecycleWork, budget: ShardBudget): Promise<PluginLifecycleTurnResult> {
   let raw: unknown;
-  let submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null = null;
   switch (work.kind) {
     case "open": raw = await owner.open(work.input, budget); break;
     case "poll": raw = await owner.poll(budget); break;
     case "close": raw = await owner.close(budget); break;
     case "receipt-ack": raw = await owner.acknowledge(work.receipt, budget, work.retirement); break;
-    case "issued-ui-acks": { const result = await owner.submitUiAcknowledgements(work.entries, budget); raw = result.result; submissions = result.receipts; break; }
+    case "issued-ui-acks": {
+      const { results, receipts } = await owner.submitUiAcknowledgements(work.entries, budget);
+      if (results.length !== work.entries.length || receipts.length !== results.length || !results.length) throw new Error("plugin-ui.acknowledgement-count");
+      const turns = results.map(result => coerceTurnResult(result));
+      return Object.freeze({ owner, raw: results.at(-1), turn: turns.at(-1)!, turns, submissions: receipts });
+    }
     default: throw new Error("actor-lifecycle.work-kind");
   }
-  return Object.freeze({ owner, raw, turn: coerceTurnResult(raw), submissions });
+  const turn = coerceTurnResult(raw);
+  return Object.freeze({ owner, raw, turn, turns: [turn], submissions: null });
 }
 
 /** 🧮️ Matches `ActivationRegistry`'s own `DEFAULT_TURN_MAILBOX_CAPACITY` — no reason for this file's
@@ -240,7 +245,8 @@ export function getPluginTurnScheduler(): TurnScheduler<PendingPluginTurn, Shard
       try {
         if (payload.kind === "lifecycle") {
           const settled = await runPluginLifecycleTurn(payload.owner, payload.work, budget);
-          noteCrossingCensusV1(payload.work.kind === "issued-ui-acks" ? payload.work.entries.map(() => ({ kind: "patch-ack", payload: null })) : [{ kind: `lifecycle.${payload.work.kind}`, payload: null }], settled.turn);
+          const kind = payload.work.kind === "issued-ui-acks" ? "patch-ack" : `lifecycle.${payload.work.kind}`;
+          for (const turn of settled.turns) noteCrossingCensusV1([{ kind, payload: null }], turn);
           payload.resolve(settled);
           return;
         }
@@ -301,7 +307,7 @@ export function submitPluginTurn(actorId: string, events: readonly ShardEventEnv
     activation?.assertActive();
     const waiter: PluginTurnWaiter = { resolve, reject };
     if (turnKey !== undefined) {
-      const mapKey = `${actorId} ${turnKey}`;
+      const mapKey = `${actorId}\u0000${turnKey}`;
       const pending = pendingCoalescedTurns.get(mapKey);
       if (pending) {
         pending.events = events;

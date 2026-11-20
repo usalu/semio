@@ -28,12 +28,13 @@ mod artifact_fixed_registry_tests {
 
         let registry = ArtifactFixedRegistry::<OversizedOwner>::new();
         assert!(registry.allocation_admitted);
-        assert_eq!(registry.slots.len(), ARTIFACT_LIVE_OUTPUT_SLOTS);
+        assert!(registry.backing_slot_address(ARTIFACT_LIVE_OUTPUT_SLOTS).is_none());
         assert_eq!(registry.occupied, 0);
         assert!(registry.has_capacity());
         assert!(registry.is_empty());
         for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
             assert_eq!(registry.id_at(index), None);
+            assert!(registry.backing_slot_address(index).is_some());
         }
     }
 

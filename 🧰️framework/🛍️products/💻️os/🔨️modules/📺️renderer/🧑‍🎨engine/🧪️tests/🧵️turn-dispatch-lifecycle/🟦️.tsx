@@ -76,28 +76,50 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plain);
         const value = fixture.uiAcknowledgement;
         const receipt = { lifetime, patchSequence: BigInt(value.patchSequence) };
-        const original = { ...plain, uiPatchReceipt: encodeActorUiPatchReceipt(receipt), uiPatches: [{ surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(value.revision), baseRevision: BigInt(value.baseRevision), ops: [] }] };
+        const surfaces = [value.surface, value.secondSurface];
+        const original = { ...plain, uiPatchReceipt: encodeActorUiPatchReceipt(receipt), uiPatches: surfaces.map(surface => ({
+          surface: { instance: fixture.instance, surface }, revision: BigInt(value.revision), baseRevision: BigInt(value.baseRevision), ops: [],
+        })) };
         const polled = await answer(submitPluginLifecycleTurn(owner, { kind: "poll" }, "UserVisible"), original);
         expect(polled.turn.uiPatchReceipt).toBe(original.uiPatchReceipt);
-        const source = owner.captureUiPatchAuthority(original, 0);
-        expect(source.value.operationCount).toBe(value.operationCount);
         const grant = { maxItems: 1, maxBytes: 4096 };
-        const lookup = ui.beginSurfaceLookup(owner.activation, lifetime, value.surface)!;
-        for (let count = 0; lookup.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture lookup did not complete");
-        const facade = lookup.takeResult()!; lookup.beginClose(); while (lookup.closeStep(grant).kind !== "complete") {}
-        const patch = ui.beginPatch(source, facade); patch.finishInput();
-        for (let count = 0; patch.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture publication did not complete");
-        const token = patch.peekAcknowledgement()!;
+        const prepared = surfaces.map((surface, index) => {
+          const source = owner.captureUiPatchAuthority(original, index);
+          expect(source.value.operationCount).toBe(value.operationCount);
+          const lookup = ui.beginSurfaceLookup(owner.activation, lifetime, surface)!;
+          for (let count = 0; lookup.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture lookup did not complete");
+          const facade = lookup.takeResult()!;
+          lookup.beginClose(); while (lookup.closeStep(grant).kind !== "complete") {}
+          const patch = ui.beginPatch(source, facade);
+          patch.finishInput();
+          for (let count = 0; patch.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture publication did not complete");
+          return { source, token: patch.peekAcknowledgement()!, patch };
+        });
+        const entries = prepared.map(({source, token}) => ({source, token}));
         const close = owner.beginClose(); ui.beginClose();
         const post = worker.postMessage; worker.postMessage = () => { throw new Error("fixture post refusal"); };
-        await expect(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries: [{ source, token }] }, "Interactive")).rejects.toThrow("fixture post refusal");
-        expect(patch.peekAcknowledgement()).toBe(token); worker.postMessage = post;
-        const submitted = await answer(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries: [{ source, token }] }, "Interactive"), plain);
-        expect(submitted.owner).toBe(owner); expect(submitted.raw).toBe(plain); expect(sent.at(-1)!.events?.[0]?.kind).toBe("patch-ack");
-        expect(sent.at(-1)!.events).toHaveLength(1);
-        expect(sent.at(-1)!.events?.[0]?.payload).toEqual({ receipt, surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(value.revision) });
-        expect(submitted.submissions).toHaveLength(1);
-        expect(patch.acceptAcknowledgement(submitted.submissions![0]!)).toBe(true); expect(patch.acceptAcknowledgement(submitted.submissions![0]!)).toBe(false);
+        await expect(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries }, "Interactive")).rejects.toThrow("fixture post refusal");
+        const replies = surfaces.map((_, index) => ({...plain, nextWake: index + 1}));
+        let sentAcks = 0;
+        worker.postMessage = message => {
+          post.call(worker, message);
+          const request = sent.at(-1)!;
+          expect(request.events).toHaveLength(1);
+          expect(request.events![0]!.kind).toBe("patch-ack");
+          expect(request.events![0]!.payload).toEqual({ receipt, surface: { instance: fixture.instance, surface: surfaces[sentAcks] }, revision: BigInt(value.revision) });
+          const reply = replies[sentAcks++];
+          queueMicrotask(() => worker.onmessage!({ data: { kind: "result", requestId: request.requestId, ok: true, value: reply } }));
+        };
+        const submitted = await submitPluginLifecycleTurn(owner, {kind:"issued-ui-acks", entries}, "Interactive");
+        worker.postMessage = post;
+        expect(submitted.owner).toBe(owner);
+        expect(submitted.raw).toBe(replies.at(-1));
+        expect(submitted.turns.map(turn => turn.nextWake)).toEqual(replies.map(reply => reply.nextWake));
+        expect(submitted.submissions).toHaveLength(prepared.length);
+        for (const [index, {patch}] of prepared.entries()) {
+          expect(patch.acceptAcknowledgement(submitted.submissions![index]!)).toBe(true);
+          expect(patch.acceptAcknowledgement(submitted.submissions![index]!)).toBe(false);
+        }
         const accepted = { kind: "accepted" as const, lifetime, requestSequence: close.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) };
         const retired = { ...accepted, kind: "retired" as const };
         await answer(submitPluginLifecycleTurn(owner, { kind: "close" }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) });
@@ -276,6 +298,69 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         for (const row of census) expect(row.turns).toBe(row.pages + row.guestContinuations);
       });
 
+      /** 🚦️ LAW: a command page the guest refuses with `backpressure` is offered AGAIN and never skipped.
+       *
+       * 🐛️ The pump submitted each page exactly once whatever the answer, so a refused page left the guest's assembly one page short and the next page arrived with `page_index != pages admitted`: the reactor's `plugin.command-page-order` fault (the 136-page `setContributions` of the procedural hub, boot never ready). Its native twin is `CommandBatchDriver::observe`, which only advances on `page-accepted`. */
+      it("offers a backpressured command page again instead of skipping it", async () => {
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+        const invocation = { address: { pluginId: "page-order", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
+        const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+        const idle = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+        const offers: number[] = [];
+        let counting = false;
+        let refused = false;
+        let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+        const worker: ShardWorkerLike = {
+          onmessage: null, onerror: null, terminate() {},
+          postMessage(raw) {
+            const message = raw as { readonly kind: string; readonly requestId?: string; readonly events?: readonly ShardEventEnvelope[]; readonly commandPage?: { readonly cursor: { readonly pageIndex: number; readonly pageCount: number } } };
+            if (!message.requestId) return;
+            let value: unknown = idle;
+            if (message.kind === "turn") {
+              const first = message.events?.[0];
+              if (first?.kind === "instance-open") {
+                const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+                lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: 1n };
+                value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured", lifetime, requestSequence: payload.requestSequence }) };
+              } else if (first?.kind === "instance-close") {
+                value = { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: (first.payload as { readonly requestSequence: number }).requestSequence, closeGeneration: 1n }) };
+              } else if (first?.kind === "instance-lifecycle-ack") {
+                const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+                value = receipt.kind === "accepted" ? { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration: 1n }) } : idle;
+              } else if (message.commandPage) {
+                const { pageIndex, pageCount } = message.commandPage.cursor;
+                if (counting) offers.push(pageIndex);
+                const refuse = counting && pageIndex === 1 && !refused;
+                if (refuse) refused = true;
+                value = { ...idle, commandIngress: { tag: refuse ? "backpressure" : pageIndex + 1 === pageCount ? "command-complete" : "page-accepted", val: {} } };
+              }
+            }
+            queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
+          },
+        };
+        const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        testState.sharedShardClient = client;
+        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
+        globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "page-order", apps: [] } }), { headers: { "content-type": "application/json" } }));
+        let handle: PluginWasmHandle | null = null;
+        try {
+          handle = await loadPluginModule("page-order", "https://fixture.invalid/plugin.js");
+          const instance = await handle.createApp("fixture");
+          counting = true;
+          await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { locale: "en", terminology: "native", windowInstances: [] } as never);
+          counting = false;
+          expect(offers).toEqual([0, 1, 1]);
+        } finally {
+          try { await handle?.dispose(); } finally {
+            client.disposeAll();
+            testState.sharedActivationRegistry = previous.registry;
+            testState.sharedShardClient = previous.shard;
+            globalThis.fetch = previous.fetch;
+          }
+        }
+      });
+
+
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: equal } = await import("fast-deep-equal");
@@ -397,7 +482,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         length.writeUInt32LE(payload.length);
         let turns = 0;
         await withFakeShardClient(async (_actor, events) => {
-          if (turns > 0) expect(events).toEqual([{ kind: "message", payload: { source: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(expectedAck) } }]);
+          if (turns > 0) expect(events).toEqual([{ kind: "message", payload: { source: { tag: "shell", val: fixture.wire.receiver }, payload: Array.from(expectedAck) } }]);
           const lane = fixture.wire.lanes[turns++];
           const effects = lane === undefined ? [] : [{ tag: "send-message", val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), token, Buffer.from([lane]), length, payload])) } }];
           return { uiPatches: [], effects, nextWake: null, status: { tag: lane === undefined ? "idle" : "more-work" } };

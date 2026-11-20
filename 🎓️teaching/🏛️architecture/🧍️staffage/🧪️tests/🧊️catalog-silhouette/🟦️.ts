@@ -13,9 +13,10 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { tessellateSolid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { SCALE_DENOMINATORS, type Asset } from "../../🧬️schema/🟦️.ts";
+import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { featureOf } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
 import { assetPathsFromFiles, readStreamedAsset } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
-import { GATE, Mask, VIEWPOINTS, cutLoops, measureAsset, memberOf } from "../🧰️support/🌓️silhouette/🟦️.ts";
+import { GATE, Mask, VIEWPOINTS, bodyDimensions, worldSolids, cutLoops, measureAsset, memberOf } from "../🧰️support/🌓️silhouette/🟦️.ts";
 import { python } from "../🧰️support/🐍️.ts";
 import { STAFFAGE_ROOT, fixture, withScratch } from "../🧰️support/🧰️.ts";
 import { exactIou, sharpIou } from "./🔍️oracles/🟦️.ts";
@@ -92,8 +93,10 @@ describe("🧊️ every asset of the catalog is one body in its three views and 
       expect(scales.length, `${asset.id} has no authored volume`).toBeGreaterThan(0);
       for (const scale of scales) {
         const feature = featureOf(scale);
-        const m = measureAsset(asset, scale, undefined, undefined, feature);
-        if (!exempt(asset.id, "bbox")) m.bbox.forEach((b, k) => expect(Math.abs(b - dims[k]!), `${asset.id} 1:${scale} axis ${k}: ${b} m against ${dims[k]} m`).toBeLessThanOrEqual(feature));
+        const m = asset.representations[`${scale}`].status === "authored" ? measureAsset(asset, scale, undefined, undefined, feature) : undefined;
+        const bbox = m?.bbox ?? bodyDimensions(worldSolids(asset, evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }).bones, scale));
+        if (!exempt(asset.id, "bbox")) bbox.forEach((b, k) => expect(Math.abs(b - dims[k]!), `${asset.id} 1:${scale} axis ${k}: ${b} m against ${dims[k]} m`).toBeLessThanOrEqual(feature));
+        if (m === undefined) continue;
         for (const view of VIEWPOINTS) {
           const measured = m.views[view];
           if (!exempt(asset.id, view)) {

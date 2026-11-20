@@ -71,28 +71,31 @@ impl MeshJob {
                     };
                     maximum
                 };
-                self.preparation = Some(MeshInputPreparation::new(self.maximum_points, maximum_constraints));
+                self.preparation = Some(MeshInputPreparation::new(self.maximum_points, maximum_constraints, self.mesh.points.is_mounted()));
                 self.stage = MeshJobStage::ReservePreparation;
                 MeshRun::Yield
             }
             MeshJobStage::ReservePreparation | MeshJobStage::ReservePreparationIndex | MeshJobStage::ReservePreparationConstraints => {
                 let Some(preparation) = self.preparation.as_mut() else { return Self::fail(b"mesh-preparation-absent".to_vec()) };
                 let (admitted, next) = match self.stage {
-                    MeshJobStage::ReservePreparation => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.points, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationIndex),
-                    MeshJobStage::ReservePreparationIndex => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.point_indices, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationConstraints),
-                    _ => (self.maximum_triangles == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.constraints, preparation.maximum_constraints).is_ok(), MeshJobStage::PrepareInput),
+                    MeshJobStage::ReservePreparation => (preparation.points.reserve_initial(self.maximum_points, context), MeshJobStage::ReservePreparationIndex),
+                    MeshJobStage::ReservePreparationIndex => (preparation.point_indices.reserve_initial(self.maximum_points, context), MeshJobStage::ReservePreparationConstraints),
+                    _ => (preparation.constraints.reserve_initial(preparation.maximum_constraints, context), MeshJobStage::PrepareInput),
                 };
-                if !admitted {
-                    self.stage = MeshJobStage::PreparationFailed;
-                    return Self::fail(b"mesh-fixed-preparation-backing".as_slice());
+                match admitted {
+                    Ok(true) => self.stage = next,
+                    Ok(false) => {}
+                    Err(()) => {
+                        self.stage = MeshJobStage::PreparationFailed;
+                        return Self::fail(b"mesh-preparation-backing".as_slice());
+                    }
                 }
-                self.stage = next;
                 MeshRun::Yield
             }
             MeshJobStage::PreparationFailed => Self::fail(b"mesh-fixed-preparation-backing".as_slice()),
             MeshJobStage::PrepareInput => {
                 let Some(preparation) = self.preparation.as_mut() else { return Self::fail(b"mesh-preparation-absent".to_vec()) };
-                let complete = match preparation.advance(&self.domain, &self.options) {
+                let complete = match preparation.advance(&self.domain, &self.options, context) {
                     Ok(complete) => complete,
                     Err(error) => {
                         self.stage = MeshJobStage::PreparationFailed;
@@ -122,33 +125,33 @@ impl MeshJob {
             }
             MeshJobStage::Initialize => {
                 if self.triangulation.is_none() {
+                    if self.prepared_input.as_ref().is_some_and(|(points, _)| points.len() < 3) {
+                        return Self::fail(MeshError::DegenerateDomain.to_string().into_bytes());
+                    }
                     let Some((prepared_points, input_constraints)) = self.prepared_input.take() else { return Self::fail(b"mesh-prepared-input-absent".to_vec()) };
                     if prepared_points.len() > self.maximum_points {
                         self.prepared_input = Some((prepared_points, input_constraints));
                         return Self::fail(b"mesh-fixed-point-capacity".to_vec());
                     }
-                    if self.maximum_points == usize::MAX {
-                        let triangulation = match OwnedTriangulation::begin(prepared_points.clone()) {
+                    if self.maximum_points == usize::MAX && !prepared_points.is_mounted() {
+                        let triangulation = match OwnedTriangulation::begin(prepared_points.as_cold().clone()) {
                             Ok(triangulation) => triangulation,
                             Err(error) => return Self::fail(error.to_string().into_bytes()),
                         };
-                        self.constraints = remap_constraints(&prepared_points, &triangulation.points[..triangulation.input_len], input_constraints);
+                        self.constraints = remap_constraints(prepared_points.as_cold(), &triangulation.points.as_cold()[..triangulation.input_len], input_constraints.into_vec()).into();
                         self.refinement_steps = triangulation.input_len.saturating_sub(self.input_count);
                         self.triangulation = Some(triangulation);
                         self.stage = MeshJobStage::InsertBoundary;
                         return MeshRun::Yield;
                     }
-                    let triangulation = match OwnedTriangulation::begin_mounted(prepared_points, self.maximum_triangles) {
-                        Ok(triangulation) => triangulation,
-                        Err(error) => return Self::fail(error.to_string().into_bytes()),
-                    };
+                    let triangulation = OwnedTriangulation::begin_mounted(prepared_points, self.maximum_triangles);
                     self.constraints = input_constraints;
                     self.refinement_steps = triangulation.input_len.saturating_sub(self.input_count);
                     self.triangulation = Some(triangulation);
                     return MeshRun::Yield;
                 }
                 let Some(shell) = self.triangulation.as_mut() else { return Self::fail(b"mesh-triangulation-absent".to_vec()) };
-                let initialized = match shell.advance_mounted_initialization() {
+                let initialized = match shell.advance_mounted_initialization(context) {
                     Ok(initialized) => initialized,
                     Err(error) => return Self::fail(error.to_string().into_bytes()),
                 };
@@ -161,19 +164,17 @@ impl MeshJob {
                 let Some(edge_capacity) = self.triangulation.as_ref().and_then(|triangulation| triangulation.triangles.len().checked_mul(3)) else {
                     return Self::fail(b"mesh-edge-authority-face-capacity".to_vec());
                 };
-                if self.maximum_triangles != usize::MAX && edge_capacity.checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
-                    || self.indexed_constraint_edges.try_reserve_exact(edge_capacity).is_err()
-                    || self.maximum_triangles != usize::MAX && self.indexed_constraint_edges.capacity().checked_mul(size_of::<IndexedConstraintEdge>()).is_none_or(|bytes| bytes > 16_384)
-                {
-                    return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec());
+                match self.indexed_constraint_edges.reserve(edge_capacity, context) {
+                    Ok(true) => self.stage = MeshJobStage::IndexEdges,
+                    Ok(false) => {}
+                    Err(()) => return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec()),
                 }
-                self.stage = MeshJobStage::IndexEdges;
                 MeshRun::Yield
             }
             MeshJobStage::InsertBoundary => {
                 let Some(triangulation) = self.triangulation.as_mut() else { return Self::fail(b"mesh-triangulation-absent".to_vec()) };
                 if triangulation.insert_cursor < triangulation.input_len {
-                    triangulation.insert_next();
+                    triangulation.insert_next(Some(context));
                 } else if triangulation.advance_finish_insertion() {
                     self.stage = MeshJobStage::ReserveEdgeAuthorities;
                 }
@@ -223,7 +224,7 @@ impl MeshJob {
                     }
                 }
                 if self.constraint_cursor == self.constraints.len() {
-                    if self.maximum_points == usize::MAX {
+                    if self.maximum_points == usize::MAX && !self.mesh.points.is_mounted() {
                         self.begin_classification(if self.refinement_steps == 0 { MeshQualityTier::Coarse } else { MeshQualityTier::Final });
                     } else {
                         self.stage = MeshJobStage::ReservePointIndex;
@@ -232,24 +233,30 @@ impl MeshJob {
                 MeshRun::Yield
             }
             MeshJobStage::ReservePointIndex => {
-                if self.point_index.try_reserve_exact(self.maximum_points).is_err() || self.point_index.capacity().checked_mul(size_of::<((u64, u64), u32)>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Self::fail(b"mesh-fixed-point-index-backing".to_vec());
+                let target = self.triangulation.as_ref().map_or(0, |owner| owner.points.len());
+                match self.point_index.reserve(self.maximum_points.min(target), context) {
+                    Ok(true) => self.stage = MeshJobStage::ReserveMeshPoints,
+                    Ok(false) => {}
+                    Err(()) => return Self::fail(b"mesh-fixed-point-index-backing".to_vec()),
                 }
-                self.stage = MeshJobStage::ReserveMeshPoints;
                 MeshRun::Yield
             }
             MeshJobStage::ReserveMeshPoints => {
-                if self.mesh.points.try_reserve_exact(self.maximum_points).is_err() || self.mesh.points.capacity().checked_mul(size_of::<[f64; 2]>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Self::fail(b"mesh-fixed-point-backing".to_vec());
+                let target = self.triangulation.as_ref().map_or(0, |owner| owner.points.len());
+                match self.mesh.points.reserve(self.maximum_points.min(target), context) {
+                    Ok(true) => self.stage = MeshJobStage::ReserveMeshTriangles,
+                    Ok(false) => {}
+                    Err(()) => return Self::fail(b"mesh-fixed-point-backing".to_vec()),
                 }
-                self.stage = MeshJobStage::ReserveMeshTriangles;
                 MeshRun::Yield
             }
             MeshJobStage::ReserveMeshTriangles => {
-                if self.mesh.tris.try_reserve_exact(self.maximum_triangles).is_err() || self.mesh.tris.capacity().checked_mul(size_of::<[u32; 3]>()).is_none_or(|bytes| bytes > 4_096) {
-                    return Self::fail(b"mesh-fixed-triangle-backing".to_vec());
+                let target = self.triangulation.as_ref().map_or(0, |owner| owner.triangles.len());
+                match self.mesh.tris.reserve(self.maximum_triangles.min(target), context) {
+                    Ok(true) => self.begin_classification(if self.refinement_steps == 0 { MeshQualityTier::Coarse } else { MeshQualityTier::Final }),
+                    Ok(false) => {}
+                    Err(()) => return Self::fail(b"mesh-fixed-triangle-backing".to_vec()),
                 }
-                self.begin_classification(if self.refinement_steps == 0 { MeshQualityTier::Coarse } else { MeshQualityTier::Final });
                 MeshRun::Yield
             }
             MeshJobStage::Classify => {
@@ -356,8 +363,8 @@ impl InteractiveJob for MeshJob {
     fn terminal_is_empty(&self) -> bool {
         self.publication_writer.is_none() && self.finished_payload.is_none() && self.lent.is_none() && self.close_lane > 9
             && self.preparation.is_none() && self.prepared_input.is_none() && self.triangulation.is_none()
-            && self.constraints.capacity() == 0 && self.mesh.points.capacity() == 0 && self.mesh.tris.capacity() == 0
-            && self.point_index.capacity() == 0 && self.indexed_constraint_edges.capacity() == 0
+            && self.constraints.terminal_is_empty() && self.mesh.points.terminal_is_empty() && self.mesh.tris.terminal_is_empty()
+            && self.point_index.terminal_is_empty() && self.indexed_constraint_edges.terminal_is_empty()
             && match &self.domain {
                 MeshDomainOwner::Dynamic(domain) => domain.outer.capacity() == 0 && domain.holes.capacity() == 0,
                 MeshDomainOwner::Mounted(domain) => domain.outer.len == 0 && domain.outer.admitted == 0
@@ -395,7 +402,7 @@ impl NumericalStep for MeshJob {
 }
 // #endregion 🧵️IncrementalMeshJob
 
-fn vector_retirement_demand<T>(owner: &Vec<T>, depth: usize) -> Result<Option<RetirementDemand>, ValueError> {
+pub(super) fn vector_retirement_demand<T>(owner: &Vec<T>, depth: usize) -> Result<Option<RetirementDemand>, ValueError> {
     if !owner.is_empty() {
         return Ok(Some(RetirementDemand { copy_bytes: size_of::<T>(), depth, ..RetirementDemand::default() }));
     }
@@ -439,33 +446,29 @@ impl MeshJob {
                     if let Some(demand) = vector_retirement_demand(&domain.holes, 1)? { return Ok(demand); }
                 },
                 2 => if let Some(owner) = self.preparation.as_ref() {
-                    if let Some(demand) = vector_retirement_demand(&owner.points, 1)? { return Ok(demand); }
-                    if let Some(demand) = vector_retirement_demand(&owner.constraints, 1)? { return Ok(demand); }
-                    if let Some(demand) = vector_retirement_demand(&owner.point_indices, 1)? { return Ok(demand); }
+                    if let Some(demand) = owner.points.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.constraints.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.point_indices.demand(1)? { return Ok(demand); }
                     return Ok(logical_retirement_demand());
                 },
                 3 => if let Some((points, edges)) = self.prepared_input.as_ref() {
-                    if let Some(demand) = vector_retirement_demand(points, 1)? { return Ok(demand); }
-                    if let Some(demand) = vector_retirement_demand(edges, 1)? { return Ok(demand); }
+                    if let Some(demand) = points.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = edges.demand(1)? { return Ok(demand); }
                     return Ok(logical_retirement_demand());
                 },
                 4 => if let Some(owner) = self.triangulation.as_ref() {
-                    if let Some(insertion) = owner.insertion.as_ref() {
-                        if let Some(demand) = vector_retirement_demand(&insertion.bad, 1)? { return Ok(demand); }
-                        if let Some(demand) = vector_retirement_demand(&insertion.boundary, 1)? { return Ok(demand); }
-                        if let Some(demand) = vector_retirement_demand(&insertion.retained, 1)? { return Ok(demand); }
-                        return Ok(logical_retirement_demand());
-                    }
-                    if let Some(demand) = vector_retirement_demand(&owner.points, 1)? { return Ok(demand); }
-                    if let Some(demand) = vector_retirement_demand(&owner.triangles, 1)? { return Ok(demand); }
-                    if let Some(demand) = vector_retirement_demand(&owner.insertion_order, 1)? { return Ok(demand); }
+                    if let Some(demand) = owner.insertion.bad.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.insertion.boundary.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.points.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.triangles.demand(1)? { return Ok(demand); }
+                    if let Some(demand) = owner.insertion_order.demand(1)? { return Ok(demand); }
                     return Ok(logical_retirement_demand());
                 },
-                5 => if let Some(demand) = vector_retirement_demand(&self.constraints, 1)? { return Ok(demand); },
-                6 => if let Some(demand) = vector_retirement_demand(&self.mesh.points, 1)? { return Ok(demand); },
-                7 => if let Some(demand) = vector_retirement_demand(&self.mesh.tris, 1)? { return Ok(demand); },
-                8 => if let Some(demand) = vector_retirement_demand(&self.point_index, 1)? { return Ok(demand); },
-                9 => if let Some(demand) = vector_retirement_demand(&self.indexed_constraint_edges, 1)? { return Ok(demand); },
+                5 => if let Some(demand) = self.constraints.demand(1)? { return Ok(demand); },
+                6 => if let Some(demand) = self.mesh.points.demand(1)? { return Ok(demand); },
+                7 => if let Some(demand) = self.mesh.tris.demand(1)? { return Ok(demand); },
+                8 => if let Some(demand) = self.point_index.demand(1)? { return Ok(demand); },
+                9 => if let Some(demand) = self.indexed_constraint_edges.demand(1)? { return Ok(demand); },
                 _ => {}
             }
         }

@@ -154,7 +154,7 @@ export const DiagramInner: React.FC<DiagramProps> = ({
   autoPanOnNodeDrag,
   selectNodesOnDrag,
 }) => {
-  const { draggingNodeRef, dragOriginRef, dragOffsetRef, dragHandoffGenerationRef, handoff, virtualizedHost, forcePageRef, forceConfig, simulationRef, onNodeDragStartPropRef, onNodeDragPropRef, onNodeDragStopPropRef, onConnectRef, onMoveStartRef, onMoveEndRef, onSelectionChangeRef, finalNodes, finalEdges, setHostNodes, setHostEdges, isControlled, setInternalNodes, setInternalEdges, internalNodes, internalEdges, diagramRoleDescriptionLabel, diagramLabel, renderedNodes, diagramNodesLabel, renderedEdges, diagramEdgesLabel, diagramKeyboardHelpId, keyboardFocusedNodeId, handleDiagramKeyDown, diagramKeyboardHelpLabel, keyboardAnnouncement, accessibleNodes, handleNodesChange, handleEdgesChange, handleInit } = useForceConfigState({ forceConfigProp, handoffStatusRef, controlledNodes, controlledEdges, initialNodes, initialEdges, onNodesChangeReactFlow, onNodeDragStartProp, onNodeDragProp, onNodeDragStopProp, onInitProp, onConnect, onMoveStart, onMoveEnd, onSelectionChange, reactFlowInstanceRef });
+  const { draggingNodeRef, dragOriginRef, dragOffsetRef, dragHandoffGenerationRef, handoff, virtualizedHost, forcePageRef, forceConfig, simulationRef, onNodeDragStartPropRef, onNodeDragPropRef, onNodeDragStopPropRef, onConnectRef, onMoveStartRef, onMoveEndRef, onSelectionChangeRef, finalNodes, finalEdges, setHostNodes, setHostEdges, isControlled, setInternalNodes, setInternalEdges, internalNodes, internalEdges, diagramRoleDescriptionLabel, diagramLabel, renderedNodes, diagramNodesLabel, renderedEdges, diagramEdgesLabel, diagramKeyboardHelpId, keyboardFocusedNodeId, setKeyboardFocusedNodeId, handleDiagramKeyDown, diagramKeyboardHelpLabel, keyboardAnnouncement, accessibleNodes, handleNodesChange, handleEdgesChange, handleInit } = useForceConfigState({ forceConfigProp, handoffStatusRef, controlledNodes, controlledEdges, initialNodes, initialEdges, onNodesChangeReactFlow, onNodeDragStartProp, onNodeDragProp, onNodeDragStopProp, onInitProp, onConnect, onMoveStart, onMoveEnd, onSelectionChange, reactFlowInstanceRef });
   const { stableOnConnect, handleNodeDragStart, handleNodeDrag, handleNodeDragStop, stableOnMoveStart, stableOnMoveEnd, stableOnSelectionChange } = useHandleNodeDragState({ draggingNodeRef, dragOriginRef, dragOffsetRef, dragHandoffGenerationRef, handoff, virtualizedHost, forcePageRef, forceConfig, simulationRef, onNodeDragStartPropRef, onNodeDragPropRef, onNodeDragStopPropRef, onConnectRef, onMoveStartRef, onMoveEndRef, onSelectionChangeRef });
   usePart3({ forceConfig, finalNodes, simulationRef, finalEdges, defaultViewport, forcePageRef, handoff, setHostNodes, setHostEdges, isControlled, onNodesChangeProp, setInternalNodes, focusedItemId, reactFlowInstanceRef, onFocusComplete, initialNodes, setInternalEdges, initialEdges, internalNodes });
   usePart4({ isControlled, onEdgesChangeProp, internalEdges, handoff });
@@ -169,6 +169,13 @@ export const DiagramInner: React.FC<DiagramProps> = ({
       aria-describedby={diagramKeyboardHelpId}
       data-diagram-focused-node={keyboardFocusedNodeId ?? undefined}
       onKeyDown={handleDiagramKeyDown}
+      onFocus={(event) => {
+        const node = (event.target as HTMLElement).closest<HTMLElement>(".react-flow__node[data-id]");
+        if (node && event.target === node && node.matches(":focus-visible")) setKeyboardFocusedNodeId(node.dataset.id ?? null);
+      }}
+      onBlur={(event) => {
+        if ((event.target as HTMLElement).closest(".react-flow__node")) setKeyboardFocusedNodeId(null);
+      }}
     >
       <span id={diagramKeyboardHelpId} className="sr-only">
         {diagramKeyboardHelpLabel}

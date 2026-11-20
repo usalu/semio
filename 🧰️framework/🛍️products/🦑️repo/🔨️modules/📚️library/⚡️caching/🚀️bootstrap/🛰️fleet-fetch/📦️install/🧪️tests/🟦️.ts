@@ -1,13 +1,22 @@
 import {afterAll,expect,test} from "bun:test";
 import {createHash} from "node:crypto";
-import {cpSync,existsSync,utimesSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
+import {cpSync,existsSync,linkSync,utimesSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
-import {join} from "node:path";
+import {dirname,join} from "node:path";
+import {gzipSync} from "node:zlib";
+import ts from "typescript";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import {readNativeStorageFundedArtifactUsageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/📏️usage/🟦️.ts";
+import {measureNativeDirectoryUsageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🟦️.ts";
 import {startRemoteCacheServerV1} from "../../../../../🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
 import {FLEET_FETCH_POLICY_V1,fleetFetchContextV1} from "../../🟦️.ts";
-import {syncFleetIdentityV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
-import {fleetInstallIndexV1,fleetInstallSeedV1,fleetInstallFingerprintV1,fleetInstallLinkTextV1,rewriteFleetInstallLinksV1,pruneFleetInstallsV1,fleetInstallAcquireV1,fleetInstallKeyV1,fleetInstallManifestV1,fleetInstallPublishV1,fleetInstallRestoreV1,fleetInstallScopeV1,fleetInstallHostV1,fleetInstallRuntimeV1,type FleetInstallRuntimeV1,type FleetInstallRequestV1,type FleetInstallShapeV1} from "../🟦️.ts";
+import {signFleetDocumentV1,syncFleetIdentityV1} from "../../../../../🏗️build/🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {blobPathOf,fleetInstallIndexV1,fleetInstallSeedV1,fleetInstallFingerprintV1,fleetInstallLinkTextV1,rewriteFleetInstallLinksV1,pruneFleetInstallsV1,fleetInstallAcquireV1,fleetInstallKeyV1,fleetInstallManifestV1,fleetInstallPublishV1,fleetInstallRestoreV1,fleetInstallScopeV1,fleetInstallHostV1,fleetInstallRuntimeV1,type FleetInstallRuntimeV1,type FleetInstallRequestV1,type FleetInstallShapeV1} from "../🟦️.ts";
+import installSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import hardlinkCorpus from "./🔗️.json" with {type:"json"};
+import {captureFleetInstallHardlinksV1} from "../🔗️hardlinks/🟦️.ts";
 
 const scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`fleet-install-${label}-`));scratch.push(path);return path;};
@@ -275,6 +284,119 @@ test("a restored tree that does not qualify is removed, the scope is installed h
  expect(await scanOf(second.trees[1]!)()).toEqual(await scanOf(clean)());
 });
 
+test("a signed restore over the whole retained Native allocation ends without fallback or deletion under revoked custody",async()=>{
+ const store=directory("store"),source=directory("publisher"),whole=directory("funded"),target=join(whole,"j","new"),retained=join(whole,"j",".pdeadbeef","p");
+ mkdirSync(target,{recursive:true});mkdirSync(retained,{recursive:true});writeFileSync(join(retained,"old"),Buffer.alloc(65536,7));
+ populate(source);
+ const linked=["pkg-0","pkg-1"].map(name=>join("node_modules",name,"shared.data")),physical=Buffer.alloc(65536,3);
+ const equal=join("node_modules","pkg-2","equal.data"),foreign=join(source,"cache.data"),fromForeign=join("node_modules","pkg-3","cache.data");
+ writeFileSync(join(source,linked[0]!),physical);linkSync(join(source,linked[0]!),join(source,linked[1]!));
+ writeFileSync(join(source,equal),physical);writeFileSync(foreign,physical);linkSync(foreign,join(source,fromForeign));settle(source);
+ expect(await fleetInstallPublishV1(scopeRequest(source,store,0,runtime,0))).toBe(true);
+ const request=scopeRequest(target,store,0,runtime,0),maximumBytes=measureNativeDirectoryUsageV1(whole).allocatedBytes;
+ const url=new URL("../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",import.meta.url);
+ const tree=ts.createSourceFile("publication.ts",readFileSync(url,"utf8"),ts.ScriptTarget.Latest,true),name="createRepositoryDependencyFleetQualificationV1";
+ const fn=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!;
+ const make=new Function(ts.transpileModule(fn.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return "+name)();
+ const custody=make(()=>undefined),db=new Database(":memory:");let primary:unknown,error:unknown,installed=0,removed=0,bytes=0;
+ try{
+  try{await fleetInstallScopeV1({...request,check:custody.check,remove:async path=>{custody.check();removed++;await request.remove(path);}},{
+   install:async()=>{installed++;},
+   qualify:()=>custody.qualify(async()=>{
+    bytes=measureNativeDirectoryUsageV1(whole).allocatedBytes;
+    try{readNativeStorageFundedArtifactUsageV1({version:1,purpose:"current-artifact-funding-usage",allocation:"c".repeat(32),bytes,maximumBytes,authority:false});}catch(failure){primary=failure;throw failure;}
+   }),
+  });}catch(failure){error=failure;}
+  expect(db.query("select ?1>?2 exceeds").get(bytes,maximumBytes)).toEqual({exceeds:1});
+  expect(error).toBe(primary);
+  expect(error).toMatchObject({code:"NATIVE_ARTIFACT_FUNDING_EXCEEDED",cause:{bytes,maximumBytes}});
+  expect((error as Error).message).toContain(`${bytes} bytes allocated, ${maximumBytes} bytes reserved`);
+  expect([installed,removed]).toEqual([0,0]);
+  const allocated=(root:string)=>{
+   const [a,b]=linked.map(path=>lstatSync(join(root,path)));
+   return db.query("select 512*(?1+case when ?2 then 0 else ?3 end) as bytes").get(a!.blocks,Number(a!.dev===b!.dev&&a!.ino===b!.ino),b!.blocks)as{bytes:number};
+  };
+  expect(allocated(target).bytes).toBe(allocated(source).bytes);
+  expect(lstatSync(join(target,linked[0]!)).ino).toBe(lstatSync(join(target,linked[1]!)).ino);
+  expect(lstatSync(join(target,equal)).ino).not.toBe(lstatSync(join(target,linked[0]!)).ino);
+  expect(lstatSync(join(target,fromForeign)).nlink).toBe(1);
+  expect(readFileSync(join(target,equal))).toEqual(physical);
+  expect(existsSync(join(target,"node_modules","pkg-59"))).toBe(true);
+  expect(readFileSync(join(retained,"old"))).toEqual(Buffer.alloc(65536,7));
+ }finally{db.close();}
+});
+
+test("publication compares exact hard link identities before signing",async()=>{
+ const scope=directory("identity-owned"),base=join(scope,"node_modules");
+ mkdirSync(base);
+ const relative=["node_modules/first","node_modules/second"],path=relative.map(item=>join(scope,item)),body="identical content";
+ writeFileSync(path[0]!,body);linkSync(path[0]!,path[1]!);
+ const observe=()=>{const capture=captureFleetInstallHardlinksV1(scope,()=>{});expect(capture.omit(relative[0]!,lstatSync(path[0]!,{bigint:true}))).toBe(false);expect(capture.omit(relative[1]!,lstatSync(path[1]!,{bigint:true}))).toBe(true);return capture;};
+ const read=observe(),proved=await read.prove();
+ expect(proved.rows).toHaveLength(1);await proved.recheck();
+ rmSync(path[1]!);writeFileSync(path[1]!,body);
+ await expect(proved.recheck()).rejects.toThrow("Published install hard link identity changed");
+ await expect(read.prove()).rejects.toThrow("Published install hard link identity changed");
+});
+
+test("linked archive paths reach the installed path boundary before any receiving effects",async()=>{
+ const store=directory("store"),base=directory("path-budget"),publisher=join(base,"publisher"),fits=join(base,"boundary0"),tooLong=join(base,"boundary01");
+ for(const scope of [publisher,fits,tooLong])mkdirSync(scope);
+ populate(publisher);
+ const root="node_modules/pkg-1/",first="node_modules/pkg-0/linked";
+ const second=root+"x".repeat(256-join(publisher,root,"_").length+1);
+ expect(join(fits,second)).toHaveLength(256);expect(join(tooLong,second)).toHaveLength(257);
+ writeFileSync(join(publisher,first),"verified");linkSync(join(publisher,first),join(publisher,second));settle(publisher);
+ expect(await fleetInstallPublishV1(request(publisher,store))).toBe(true);
+ expect(await fleetInstallRestoreV1(request(fits,store))).toBe(true);
+ expect(lstatSync(join(fits,first)).ino).toBe(lstatSync(join(fits,second)).ino);
+ const stages:string[]=[],receiving=request(tooLong,store);
+ expect(await fleetInstallRestoreV1({...receiving,event:event=>stages.push(event.stage)})).toBe(false);
+ expect(stages).toEqual(["skip"]);
+ expect(existsSync(join(tooLong,"node_modules"))).toBe(false);
+},30000);
+
+test("authenticated install indexes refuse forged hard link targets and unsafe aliases",async()=>{
+ const store=directory("store"),publisher=directory("publisher"),folder=join(store,"v1","fleet","install");
+ populate(publisher);
+ const first="node_modules/pkg-0/linked",second="node_modules/pkg-1/linked";
+ writeFileSync(join(publisher,first),"authenticated content");linkSync(join(publisher,first),join(publisher,second));settle(publisher);
+ const original=request(publisher,store);
+ expect(await fleetInstallPublishV1(original)).toBe(true);
+ const key=fleetInstallKeyV1(projection,runtime),manifest=(await fleetInstallManifestV1(original.context,key))!;
+ const index=(await fleetInstallIndexV1(folder,manifest))!;
+ const version=installSchema.definitions.InstallIndex.properties.version.const;
+ const admit=new Ajv({strict:false}).compile({$ref:"#/definitions/InstallIndex",definitions:installSchema.definitions});
+ expect(index.hardlinks).toEqual([{path:second,target:first,bytes:21,sha256:createHash("sha256").update("authenticated content").digest("hex")}]);
+ const ordinary=directory("ordinary");expect(await fleetInstallRestoreV1(request(ordinary,store))).toBe(true);
+ expect(lstatSync(join(ordinary,first)).ino).toBe(lstatSync(join(ordinary,second)).ino);
+ for(const row of hardlinkCorpus){
+  const receiving=directory("receiver"),outside=join(receiving,"outside"),physical=request(receiving,store);
+  writeFileSync(outside,"existing content");
+  const hardlinks=structuredClone(index.hardlinks) as {path:string;target:string;bytes:number;sha256:string}[];
+  const forged=hardlinks[0]!;
+  if(row.change==="alias-outside")forged.path="../outside";
+  if(row.change==="target-outside")forged.target="outside";
+  if(row.change==="symlink-target")forged.target="node_modules/.bin/pkg-3";
+  if(row.change==="hash")forged.sha256="0".repeat(64);
+  if(row.change==="chain")hardlinks.push({...forged,path:"node_modules/pkg-2/linked",target:second});
+  if(row.change==="duplicate")hardlinks.push({...forged});
+  if(row.change==="unsafe-case")forged.target="node_modules/../outside";
+  const forgedIndex={...index,hardlinks};
+  expect(admit(forgedIndex),row.change).toBe(row.schema);
+  const bytes=gzipSync(Buffer.from(JSON.stringify(forgedIndex))),digest=createHash("sha256").update(bytes).digest("hex"),file=blobPathOf(folder,digest);
+  mkdirSync(dirname(file),{recursive:true});writeFileSync(file,bytes);
+  const edited={...manifest,index:{...manifest.index,sha256:digest,bytes:bytes.length}};
+  if(row.resign){
+   const origin=manifest.publisher.origin,text=JSON.stringify([version,origin,edited.key,digest,edited.fingerprint,edited.shape.sha256,edited.lock.sha256,edited.projectionSha256,edited.installed,edited.roots,edited.storeRoot]);
+   const signed=signFleetDocumentV1(publisher,"cache-write","install-pack",text)!;edited.publisher={origin:signed.origin,signature:signed.signature};
+  }
+  expect(await fleetInstallRestoreV1(physical,edited),row.change).toBe(false);
+  expect(readFileSync(outside,"utf8"),row.change).toBe("existing content");
+  expect(existsSync(join(receiving,"node_modules")),row.change).toBe(false);
+ }
+},30000);
+
 test("a cancellation during a restore propagates, runs no installation and leaves no placed root behind",async()=>{
  const store=directory("store");await fundMachine(store,runtime);
  const generation=directory("cancelled"),base=scopeRequest(generation,store,0,runtime,0);let calls=0,installs=0;
@@ -290,7 +412,7 @@ test("the key follows the libc of Linux and stays as it was for macOS and Window
  const mac:FleetInstallRuntimeV1={...base,platform:"darwin",arch:"arm64"},win:FleetInstallRuntimeV1={...base,platform:"win32",arch:"x64"};
  expect(fleetInstallRuntimeV1(mac,fleetInstallHostV1("darwin","arm64"))).toEqual(mac);expect(fleetInstallRuntimeV1(win,fleetInstallHostV1("win32","x64"))).toEqual(win);
  const program="import sys,json,hashlib\nfor row in json.loads(sys.argv[1]):\n print('inst-'+hashlib.sha256(json.dumps(row,separators=(',',':'),ensure_ascii=False).encode()).hexdigest())";
- const rows=[glibc,musl,mac,win].map(item=>[projection,item.bun,item.platform,item.arch,item.recipeSha256]);
+ const rows=[glibc,musl,mac,win].map(item=>[installSchema.definitions.InstallIndex.properties.version.const,projection,item.bun,item.platform,item.arch,item.recipeSha256]);
  expect(await python(program,JSON.stringify(rows))).toEqual([glibc,musl,mac,win].map(item=>fleetInstallKeyV1(projection,item)));
 });
 

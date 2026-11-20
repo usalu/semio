@@ -36,4 +36,3 @@ impl OriginalNativeRetirement for UiArenaLifetime{
  fn terminal_is_empty(&self)->bool{self.registration.is_none()&&self.backing.is_none()&&self.opening.is_none()}
 }
 impl Drop for UiArenaLifetime{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"UI arena lifetime requires its actual Source-funded registration and physical closure")}}
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

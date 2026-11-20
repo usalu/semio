@@ -1,14 +1,21 @@
 
 use crate::standards::v1::subsets::any::schema::{Puzzle5dAttribute, Puzzle5dAuthor, Puzzle5dCatalogGripKind, Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGripTemplate, Puzzle5dKindCompatibility, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dRepresentation};
 
+fn decode<T: semio_framework_value::FromValue>(value: serde_json::Value) -> T {
+    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("decodes")
+}
+
+fn encode<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("encodes")
+}
+
 #[test]
 fn fastener_defaults_include_diagram_xy() {
-    let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::json!({
+    let fastener: Puzzle5dFastener = decode(serde_json::json!({
         "id": "f1",
         "source": "p1:g0",
         "target": "p2:g0"
-    }))
-    .unwrap();
+    }));
     assert_eq!(fastener.gap, 0.0);
     assert_eq!(fastener.x, 0.0);
     assert_eq!(fastener.y, 0.0);
@@ -18,38 +25,36 @@ fn fastener_defaults_include_diagram_xy() {
 #[test]
 fn fastener_round_trips_eight_transform_params() {
     let fastener = Puzzle5dFastener { id: "f1".into(), source: "p1:g0".into(), target: "p2:g0".into(), fastener_kind: Some("fk".into()), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 4.0, turn: 5.0, tilt: 6.0, x: 7.0, y: 8.0 };
-    let value = serde_json::to_value(&fastener).unwrap();
+    let value = encode(&fastener);
     assert_eq!(value["x"], 7.0);
     assert_eq!(value["y"], 8.0);
-    let back: Puzzle5dFastener = serde_json::from_value(value).unwrap();
+    let back: Puzzle5dFastener = decode(value);
     assert_eq!(back, fastener);
 }
 
 #[test]
 fn part_anchor_defaults_to_fixed() {
-    let part: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p1" })).unwrap();
+    let part: Puzzle5dPart = decode(serde_json::json!({ "id": "p1" }));
     assert_eq!(part.anchor, Puzzle5dPartAnchor::Fixed);
-    let derived: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p2", "anchor": "derived" })).unwrap();
+    let derived: Puzzle5dPart = decode(serde_json::json!({ "id": "p2", "anchor": "derived" }));
     assert_eq!(derived.anchor, Puzzle5dPartAnchor::Derived);
 }
 
 #[test]
 fn kind_compatibility_unifies_important_and_specificity() {
-    let row: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
+    let row: Puzzle5dKindCompatibility = decode(serde_json::json!({
         "source": "a",
         "target": "b",
         "bidirectional": true,
         "important": true,
         "specificity": "grip"
-    }))
-    .unwrap();
+    }));
     assert!(row.important);
     assert_eq!(row.specificity, Puzzle5dCompatSpecificity::Grip);
-    let sparse: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
+    let sparse: Puzzle5dKindCompatibility = decode(serde_json::json!({
         "source": "a",
         "target": "b"
-    }))
-    .unwrap();
+    }));
     assert!(!sparse.important);
     assert_eq!(sparse.specificity, Puzzle5dCompatSpecificity::General);
 }
@@ -82,18 +87,18 @@ fn catalog_part_kind_carries_representations_and_grip_templates() {
         attributes: vec![Puzzle5dAttribute { id: "a1".into(), key: "material".into(), value: "concrete".into(), definition: None }],
         authors: vec![Puzzle5dAuthor { id: "u1".into(), name: "Ada".into(), email: "ada@semio.tech".into(), role: Some("author".into()), rank: Some(1) }],
     };
-    let value = serde_json::to_value(&kind).unwrap();
+    let value = encode(&kind);
     assert_eq!(value["abstract"], false);
     assert_eq!(value["representations"][0]["url"], "/mesh/hex.glb");
     assert_eq!(value["grips"][0]["point"], serde_json::json!([1.0, 2.0, 3.0]));
-    let back: Puzzle5dCatalogPartKind = serde_json::from_value(value).unwrap();
+    let back: Puzzle5dCatalogPartKind = decode(value);
     assert_eq!(back.grips[0].direction, [0.0, 1.0, 0.0]);
     assert_eq!(back.authors[0].name, "Ada");
 }
 
 #[test]
 fn grip_template_direction_defaults_to_positive_z() {
-    let template: Puzzle5dGripTemplate = serde_json::from_value(serde_json::json!({ "id": "g0" })).unwrap();
+    let template: Puzzle5dGripTemplate = decode(serde_json::json!({ "id": "g0" }));
     assert_eq!(template.direction, [0.0, 0.0, 1.0]);
 }
 
@@ -110,8 +115,8 @@ fn catalog_grip_kind_is_port_like() {
         color: "hsl(206 52% 48%)".into(),
         default_rope_kind: "cable.link".into(),
     };
-    let value = serde_json::to_value(&kind).unwrap();
+    let value = encode(&kind);
     assert_eq!(value["compatibleWith"], serde_json::json!(["b-l", "b-s"]));
-    let back: Puzzle5dCatalogGripKind = serde_json::from_value(value).unwrap();
+    let back: Puzzle5dCatalogGripKind = decode(value);
     assert_eq!(back.order, Some(1));
 }

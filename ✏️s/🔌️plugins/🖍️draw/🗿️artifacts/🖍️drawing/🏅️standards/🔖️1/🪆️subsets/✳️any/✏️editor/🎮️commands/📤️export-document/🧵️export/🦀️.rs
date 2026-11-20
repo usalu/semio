@@ -3,9 +3,9 @@ use crate::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_EXPORT_PUBLICATION_CONTRACTS
 use semio_s_artifact_draw_drawing_editor_commands::export_document;
 use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_plugin::app::{ArtifactDownloadOutput,ArtifactOutputChunks};
-use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
+use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerStep,OwnedSerializerOutput,io_begin_owned_serialization};
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_value::{DslValue,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
+use semio_framework_value::{DslValue, OriginalRetirementFailure, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework::Fault;
@@ -30,11 +30,28 @@ impl ArtifactCommandWork<App> for Work{
  fn extent(&self,command:&DrawingCommand,_snapshot:&DrawingSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize>{(!self.complete&&matches!(command,DrawingCommand::ExportDocument(_))).then_some(1)}
  fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
         if self.read.is_none()&&self.phase=="header"&&self.request.is_none()&&!self.complete&&!self.closing{self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""})}
-        let original: Result<_, Fault> = (|| {if self.complete||self.closing||cx.is_cancelled(){return Err(Fault::from("Drawing export cancelled or terminal"));}let generation=input.operation.generation;let revision=input.operation.canonical_base_revision;if self.phase!="handoff-fault"&&!self.source_authority_matches(generation,revision){return Err(Fault::from("Drawing export source authority changed"));}if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});}let DrawingCommand::ExportDocument(payload)=input.command else{return Err(Fault::from("Drawing export command required"));};
+        let original: Result<_, Fault> = (|| {if self.complete||self.closing||cx.is_cancelled(){return Err(Fault::from("Drawing export cancelled or terminal"));}let generation=input.operation.generation;let revision=input.operation.canonical_base_revision;if self.phase!="handoff-fault"&&!self.source_authority_matches(generation,revision){return Err(Fault::from("Drawing export source authority changed"));}if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Pending{stage:self.phase,preview:b""});}let DrawingCommand::ExportDocument(payload)=input.command else{return Err(Fault::from("Drawing export command required"));};
   if self.phase=="header"{let target=match payload.format.as_str(){"png"=>("s.stdio.png","1.2","image/png"),"svg"=>("s.stdio.svg","1.1","image/svg+xml"),"pdf"=>("s.stdio.pdf","1.4","application/pdf"),_=>return Err(Fault::from("Drawing exports to png, pdf or svg"))};let owners=self.download.original_mut().unwrap();owners.filename=format!("{}.{}",export_document::export_stem(self.read.as_ref().unwrap().get()),payload.format);owners.mime=target.2.into();owners.chunks=Some(ArtifactOutputChunks::new(OUTPUT_LIMIT));let mut options=Vec::with_capacity(3);if let Some(width)=payload.width{options.push(("width".into(),DslValue::uint(u64::from(width))));}if let Some(height)=payload.height{options.push(("height".into(),DslValue::uint(u64::from(height))));}options.push(("transparent".into(),DslValue::Bool(payload.transparent.unwrap_or(true))));self.request=Some(OwnedSerializerRequest{source:self.read.take().unwrap().into_erased(),route:(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT.into(),ArtifactDialect{artifact_kind:target.0.into(),standard:target.1.into(),subset:"*".into()}),generation,revision,options:DslValue::Object(options),children:None});self.phase="admit";cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});}
   if self.phase=="admit"{match io_begin_owned_serialization(self.request.take().unwrap(),self.birth_grant){Ok(admission)=>{self.birth_progress=admission.progress;self.birth_grant=Default::default();self.job=Some(admission.job);self.phase="produce";},Err(refusal)=>{self.request=Some(refusal.request);self.birth_progress=refusal.progress;self.download.original_mut().unwrap().refusal=Some(refusal.error);self.phase="refused";return Err(Fault::from(self.download.original().unwrap().refusal.as_ref().unwrap().message.as_ref()));}}cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});}
   if self.phase=="refused"{return Err(Fault::from(self.download.original().unwrap().refusal.as_ref().unwrap().message.as_ref()));}
-  if self.phase=="produce"{use semio_framework_job::JobOutcomeBorrow;let next=match self.job.as_mut().unwrap().step(cx).map_err(|error|Fault::from(error.into_message()))?{Some(JobOutcomeBorrow::Complete{..})=>"handoff-output",Some(JobOutcomeBorrow::Fault{..})=>"handoff-fault",Some(JobOutcomeBorrow::Cancelled{..})=>return Err(Fault::from("Drawing export cancelled")),Some(_)|None=>return Ok(ArtifactCommandWorkStep::Progress{stage:cx.stage(),preview:b""})};self.phase=next;return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});}
+  if self.phase == "produce" {
+      let before = (cx.fuel_remaining(), cx.retained_progress());
+      match self.job.as_mut().unwrap().advance_serialization(cx) {
+          OwnedSerializerStep::Pending => {
+              let stage = cx.stage();
+              let step = if before == (cx.fuel_remaining(), cx.retained_progress()) {
+                  ArtifactCommandWorkStep::Pending { stage, preview: b"" }
+              } else {
+                  ArtifactCommandWorkStep::Progress { stage, preview: b"" }
+              };
+              return Ok(step);
+          }
+          OwnedSerializerStep::Complete => self.phase = "handoff-output",
+          OwnedSerializerStep::Fault => self.phase = "handoff-fault",
+          OwnedSerializerStep::Cancelled => return Err(Fault::from("Drawing export cancelled")),
+      }
+      return Ok(ArtifactCommandWorkStep::Progress { stage: self.phase, preview: b"" });
+  }
   if self.phase=="handoff-output"{match self.job.as_mut().unwrap().take_output(self.handoff_grant){Ok(Some(handoff))=>{self.handoff_progress=handoff.progress;self.handoff_grant=Default::default();self.download.original_mut().unwrap().raw=Some(handoff.output);self.phase="output";cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:self.phase,preview:b""});},Ok(None)=>return Err(Fault::from("Drawing serializer completed without original output")),Err(error)=>{self.download.original_mut().unwrap().refusal=Some(error);return Err(Fault::from("Drawing original output handoff refused"));}}}
   if self.phase=="handoff-fault"{match self.job.as_mut().unwrap().take_fault(self.handoff_grant){Ok(Some(handoff))=>{self.handoff_progress=handoff.progress;self.handoff_grant=Default::default();cx.consume_fuel(1);return Err(handoff.fault);},Ok(None)=>return Err(Fault::from("Drawing serializer failed without original diagnostic")),Err(error)=>{self.download.original_mut().unwrap().refusal=Some(error);return Err(Fault::from("Drawing original diagnostic handoff refused"));}}}
   let owners=self.download.original_mut().unwrap();while !cx.should_yield(){if cx.is_cancelled(){return Err(Fault::from("Drawing export cancelled before publication"));}cx.set_stage(self.phase);match self.phase{
@@ -46,7 +63,55 @@ impl ArtifactCommandWork<App> for Work{
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
  fn begin_close(&mut self){self.closing=true;if let Some(job)=&mut self.job{job.begin_close();}}
- fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{result:(||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}if self.request.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked);}let request=self.request.take().unwrap();if request.children.is_some(){self.request=Some(request);return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "interactive job close refused"));}let OwnedSerializerRequest{source,route,generation,revision,options,children}=request;match source.try_into_typed::<DrawingSnapshot>(){Ok(read)=>{self.read=Some(read);self.download.original_mut().unwrap().metadata=Some((route,options));return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});},Err(source)=>{self.request=Some(OwnedSerializerRequest{source,route,generation,revision,options,children});return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "interactive job close refused"));}}}if !self.download.terminal_is_empty(){return Ok(match self.download.step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>return Err(error)});}if let Some(job)=&mut self.job{if let Some(release_bytes)=job.terminal_frame_release_bytes(){if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release_bytes{return Ok(InteractiveJobCloseStep::Blocked);}drop(self.job.take());return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:release_bytes,..Default::default()}});}return Ok(job.close_step(grant));}if self.read_close.is_some()||self.read.is_some(){let step=if self.read_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read,&mut self.read_close,grant)};return Ok(match step{Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>return Err(error)});}Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})})(),work:0})}
+ fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+  use semio_framework_job::InteractiveJobCloseStep;
+  if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+  if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+  if self.request.is_none() && self.download.terminal_is_empty() {
+   if let Some(job) = self.job.as_mut() {
+    if job.terminal_frame_release_bytes().is_none() { return job.close_step(cx); }
+   }
+  }
+  let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+  semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+   if self.request.is_some() || self.download.terminal_is_empty() && self.job.is_some() {
+    let before = effect.performed_work();
+    let result = (|| -> Result<RetainedCloneStep, ValueError> {
+     if !effect.performed(1)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
+     if let Some(request) = self.request.take() {
+      let refused = || ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "Drawing export request could not be retired");
+      if request.children.is_some() {
+       self.request = Some(request);
+       return Err(refused());
+      }
+      let OwnedSerializerRequest { source, route, generation, revision, options, children } = request;
+      match source.try_into_typed::<DrawingSnapshot>() {
+       Ok(read) => {
+        self.read = Some(read);
+        self.download.original_mut().unwrap().metadata = Some((route, options));
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+       }
+       Err(source) => {
+        self.request = Some(OwnedSerializerRequest { source, route, generation, revision, options, children });
+        return Err(refused());
+       }
+      }
+     }
+     drop(self.job.take());
+     Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }))
+    })();
+    return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map_err(OriginalRetirementFailure::from_primary), work: effect.performed_work() - before });
+   }
+   if !self.download.terminal_is_empty() {
+    return self.download.step(effect.grant().maximum_copy_bytes, effect);
+   }
+   if self.read_close.is_some() {
+    return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close, effect.grant().maximum_copy_bytes, effect);
+   }
+   let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read, &mut self.read_close, effect);
+   RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map_err(OriginalRetirementFailure::from_primary), work: turn.work })
+  })
+ }
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
@@ -71,4 +136,6 @@ pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>
  semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,4096,4096,false,|_|Work::new(birth_grant(),handoff_grant()))
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Work);
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

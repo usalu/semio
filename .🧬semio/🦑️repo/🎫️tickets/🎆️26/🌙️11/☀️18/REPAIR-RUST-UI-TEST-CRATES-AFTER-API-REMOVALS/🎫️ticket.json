@@ -1,8 +1,9 @@
 {
   "title": "Repair Rust UI Test Crates After API Removals",
   "emoji": "🧪",
-  "status": "open",
+  "status": "closed",
   "description": "Repair the Rust UI test crates under 🧰️framework/🔨️modules/🖱️ui broken by API removals and the arena-registration refactor: non-compiling crates (wgpu-engine-laws, engine-scene-laws, layout-laws, raster, locale, text-splice-native), 9 failing wgpu-laws (panic-safe arena scope), 5 stale contract-conformance fixtures (with TS twin), clipboard ingress admission laws, events/mounted-layout settling, and sweep all remaining UI crates. Follows 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI. Done = every UI Rust crate compiles its tests and passes, with a per-crate before/after table.",
+  "summary": "Every Rust crate under 🖱️ui (108) compiles its tests. 107 pass in the final sweep; the per-crate before/after table is 📊️before-after.md and the root causes are in 📋️report.md. The exception is semio-framework-text-splice-native: it passed 4/4 after its repair, then failed in the final sweep because another session's live [DEBUG] probes in 🌱️value/🛬️decode allocate inside measured turns.\n\nMain root causes:\n- The engine's layout worker birth stalled every relayout at Layout.Mount after handing over its job, and an in-flight birth was never closed. Laws can no longer lay out a Ui under a bare StepContext; UiFixture now provides step_layouts/settle_layout.\n- The UI arena test scope had a 10 s real-time deadline; it is now a finite 600 s ceiling. A new law pins that a panicking law releases its arena.\n- The DROP_TARGET hit test skipped drop-target stacks.\n- GraphicsBackend backend-testing hooks had no defaults, so feature unification broke the backends.\n- Dev-dependencies did not enable the testkit features some tests need; the engine and hosting tests only compiled with explicit --features.\n- semio-ui-contract-values was over its source boundary, so its arena laws moved to its companion laws crate.\n- Missing arena scopes, including a conformance hang from an unscoped, unbounded close loop. Stale laws were re-pinned to current contracts.\n\nAgent sub-reports a1–a9 cover locale/text-splice/value receiving, engine and scene laws, layout/raster, conformance fixtures, clipboard/prepared/host, TUI shared borders, the macOS Mutex allocation in the arena registry, scene crates, and shader/metal/reconciler. With the coordinating session's approval I removed one stray [DEBUG] probe from ControlledCore::step_original.\n\nOpen, outside this ticket: 74 failing job crates tests caused by concurrent work elsewhere, non-UI users of the shared receiver driver not re-run, other sessions' [DEBUG] probes, and repo :generate failing internally.",
   "goal": "🎯runningframework",
   "sessions": [
     "06d76325-44e9-4c6e-aa9a-9cf1d46f3adb"
@@ -17,6 +18,23 @@
       "checkpoint": "",
       "prompt": "Repair the Rust UI test crates under 🧰️framework/🔨️modules/🖱️ui broken by API removals and the arena-registration refactor: non-compiling crates (wgpu-engine-laws, engine-scene-laws, layout-laws, raster, locale, text-splice-native), 9 failing wgpu-laws (panic-safe arena scope), 5 stale contract-conformance fixtures (with TS twin), clipboard ingress admission laws, events/mounted-layout settling, and sweep all remaining UI crates. Follows 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI. Done = every UI Rust crate compiles its tests and passes, with a per-crate before/after table.",
       "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-19 05:29:24",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Every Rust crate under 🖱️ui (108) compiles its tests. 107 pass in the final sweep; the per-crate before/after table is 📊️before-after.md and the root causes are in 📋️report.md. The exception is semio-framework-text-splice-native: it passed 4/4 after its repair, then failed in the final sweep because another session's live [DEBUG] probes in 🌱️value/🛬️decode allocate inside measured turns.\n\nMain root causes:\n- The engine's layout worker birth stalled every relayout at Layout.Mount after handing over its job, and an in-flight birth was never closed. Laws can no longer lay out a Ui under a bare StepContext; UiFixture now provides step_layouts/settle_layout.\n- The UI arena test scope had a 10 s real-time deadline; it is now a finite 600 s ceiling. A new law pins that a panicking law releases its arena.\n- The DROP_TARGET hit test skipped drop-target stacks.\n- GraphicsBackend backend-testing hooks had no defaults, so feature unification broke the backends.\n- Dev-dependencies did not enable the testkit features some tests need; the engine and hosting tests only compiled with explicit --features.\n- semio-ui-contract-values was over its source boundary, so its arena laws moved to its companion laws crate.\n- Missing arena scopes, including a conformance hang from an unscoped, unbounded close loop. Stale laws were re-pinned to current contracts.\n\nAgent sub-reports a1–a9 cover locale/text-splice/value receiving, engine and scene laws, layout/raster, conformance fixtures, clipboard/prepared/host, TUI shared borders, the macOS Mutex allocation in the arena registry, scene crates, and shader/metal/reconciler. With the coordinating session's approval I removed one stray [DEBUG] probe from ControlledCore::step_original.\n\nOpen, outside this ticket: 74 failing job crates tests caused by concurrent work elsewhere, non-UI users of the shared receiver driver not re-run, other sessions' [DEBUG] probes, and repo :generate failing internally.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🛅🧬️contract🗃️🧪️conformance🗃️🗂️records💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🌱️value🗃️♻️retirement🗃️🎮️controlled💻🦀️"
+        }
+      ]
     }
   ]
 }

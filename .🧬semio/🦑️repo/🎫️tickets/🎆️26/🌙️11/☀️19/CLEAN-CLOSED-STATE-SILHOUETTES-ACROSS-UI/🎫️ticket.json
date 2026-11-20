@@ -1,0 +1,72 @@
+{
+  "title": "Clean Closed State Silhouettes Across UI",
+  "emoji": "🫧",
+  "status": "open",
+  "description": "State silhouettes (hover, active, pressed, selected, focus, open, dragging) must be clean and closed at all times for every element and every UI. Build one mechanism grounded in the shared-border system (cells, frames, groups, parents) that draws one closed silhouette for the active element on top of shared seams, coordinated with neighbours and parents; apply it across web, native and language-agnostic cases; verify live in all apps at 1440/768/375. Continues 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI.",
+  "summary": "State silhouettes are now one closed outline everywhere. A box model in the shared-border compositor owns state: hover goes to the innermost interactive box, focus only on :focus-visible, markers stay on their own box, and ancestors never inherit. Stated boxes draw all four sides, cells are painted by their owner, and there is one paint convention. Interaction states outrank persistent ones. The compositor is the only state-line painter (CSS rings, outlines and the browser focus outline are removed). There is a borderless-box API, void-element painting, lazy overlays and auto-attach. A Rust mirror with JSON cases covers wgpu HOVER_OWNER and closed TUI chips. Element and product sweeps were done. Unrelated fixes: 2px cell overflow, CardStack interlock write loop, LayeredOverview and ToggleGroup markers, Dock test compile, staffage clock subscriptions. Live probe: elements went from 483 failing checks to 0/354; OS 0/548; course 0 at 1440/919/768/375 en+de; demonstrator, play, CAD and hub 0. Open: Rust re-run blocked by full disk, staffage overview main-thread saturation (proposed separately), bun and Chromium tests not run. See SUMMARY.md.",
+  "goal": "runningframework",
+  "sessions": [
+    "f14dedae-ac48-456c-8919-96e22e41eda7",
+    "3084e7aa-de87-42e1-a80a-0e3a6600a41c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-19 00:00:00",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "The silhouettes (such as on hover, active, etc) must be clean and closed all the time. Currently it is quite sloppy for all elements. This requires a solid mechanism and understanding of shared borders, active elements, parent elements. Everything end to end for all elements and uis.",
+      "llm": "opus-5-5",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-20 00:56:26",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "State silhouettes are now one closed outline everywhere. A box model in the shared-border compositor owns state: hover goes to the innermost interactive box, focus only on :focus-visible, markers stay on their own box, and ancestors never inherit. Stated boxes draw all four sides, cells are painted by their owner, and there is one paint convention. Interaction states outrank persistent ones. The compositor is the only state-line painter (CSS rings, outlines and the browser focus outline are removed). There is a borderless-box API, void-element painting, lazy overlays and auto-attach. A Rust mirror with JSON cases covers wgpu HOVER_OWNER and closed TUI chips. Element and product sweeps were done. Unrelated fixes: 2px cell overflow, CardStack interlock write loop, LayeredOverview and ToggleGroup markers, Dock test compile, staffage clock subscriptions. Live probe: elements went from 483 failing checks to 0/354; OS 0/548; course 0 at 1440/919/768/375 en+de; demonstrator, play, CAD and hub 0. Open: Rust re-run blocked by full disk, staffage overview main-thread saturation (proposed separately), bun and Chromium tests not run. See SUMMARY.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️🎛️chromecontrolpresentation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️📏️borderpresentation⚙️statescases"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️📏️borderpresentation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️cardstack💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🗂️windowchrome💻sharedborder"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️⏱️clock💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🔨️modules🗃️📏️borderpresentation💻🦀️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🏠️chromeandhome💻🎨️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-20 01:54:49",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Continue native laws and live multilingual responsive sweeps"
+    }
+  ]
+}

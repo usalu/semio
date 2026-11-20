@@ -63,6 +63,10 @@ impl PixelLeafWork{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.owned.is_none()&&self.retirement.is_none()}
 }
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for PixelLeafWork{
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
  fn tool_id(&self)->&'static str{self.route.id()}
  fn receive_original_command(&mut self,command:&mut RasterCommand,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.receive(command,cx)}
  fn extent(&self,command:&RasterCommand,_:&RasterSnapshot,_:&protocol::InteractionState,_:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{(command.command_id()==self.route.id()).then_some(1)}
@@ -79,4 +83,3 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for PixelLeafWork{
 impl Drop for PixelLeafWork{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Raster pixel producer requires original close");}}
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
-semio_plugin::retained_command::terminal_frame_bound!(PixelLeafWork);

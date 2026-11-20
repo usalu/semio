@@ -83,6 +83,7 @@ path = "../../⏱️context/🎟️source/👶️child/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-paged-source"
+required-features = ["testkit"]
 path = "../../📬️outcome/📖️source/🧪️tests/🦀️.rs"
 
 [[test]]

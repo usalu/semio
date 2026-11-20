@@ -1,0 +1,90 @@
+{
+  "schema": "semio.stdio.pdf-mounted-content-edit.v1",
+  "page": {
+    "media": [
+      0,
+      0,
+      200,
+      220
+    ],
+    "crop": {
+      "before": [
+        0,
+        0,
+        200,
+        220
+      ],
+      "after": [
+        3,
+        7,
+        197,
+        213
+      ]
+    },
+    "trim": {
+      "before": [
+        0,
+        0,
+        200,
+        220
+      ],
+      "after": [
+        7,
+        11,
+        193,
+        209
+      ]
+    }
+  },
+  "text": {
+    "before": "Draft text",
+    "after": "Reviewed text",
+    "at": [
+      18,
+      180
+    ],
+    "size": 12
+  },
+  "vector": {
+    "at": [
+      28,
+      100
+    ],
+    "width": 34,
+    "height": 25,
+    "newX": 54,
+    "fill": [
+      0.2,
+      0.3,
+      0.4
+    ]
+  },
+  "image": {
+    "at": [
+      115,
+      55
+    ],
+    "width": 24,
+    "height": 20,
+    "newWidth": 42,
+    "samples": [
+      255,
+      0,
+      0,
+      0,
+      255,
+      0,
+      0,
+      0,
+      255,
+      240,
+      240,
+      240
+    ]
+  },
+  "info": {
+    "before": "Original Content Title",
+    "after": "Edited Content Title",
+    "author": "Original Author"
+  }
+}

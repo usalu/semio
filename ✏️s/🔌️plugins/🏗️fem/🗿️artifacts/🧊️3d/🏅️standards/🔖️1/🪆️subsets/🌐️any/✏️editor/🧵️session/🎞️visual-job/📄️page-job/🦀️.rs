@@ -265,6 +265,9 @@ impl Fem3dPageVisualJob {
             if doc.solids[left].id > doc.solids[right].id {
                 order.swap(self.order_slot - 1, self.order_slot);
                 self.order_slot -= 1;
+                if self.order_slot == 0 {
+                    self.order_input += 1;
+                }
             } else {
                 self.order_slot = 0;
                 self.order_input += 1;
@@ -290,6 +293,9 @@ impl Fem3dPageVisualJob {
             if element_id(&doc.elements[left]) > element_id(&doc.elements[right]) {
                 order.swap(self.order_slot - 1, self.order_slot);
                 self.order_slot -= 1;
+                if self.order_slot == 0 {
+                    self.order_input += 1;
+                }
             } else {
                 self.order_slot = 0;
                 self.order_input += 1;

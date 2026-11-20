@@ -14,6 +14,9 @@ use crate::standards::v1::subsets::any::io::text::mutations::{operation_from_dsl
 use crate::schema::mutations::Wfc3dMutation;
 use protocol::OpBinary;
 
+#[path = "🛬️original/🦀️.rs"]
+mod original;
+
 //#region 🔖️HandcraftedOpCodecs
 impl OpBinary for Wfc3dOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

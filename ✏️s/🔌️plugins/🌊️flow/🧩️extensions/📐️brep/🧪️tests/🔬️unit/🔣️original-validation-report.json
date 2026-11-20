@@ -1,0 +1,35 @@
+{
+  "expected": {
+    "ok": true,
+    "issueCount": 0,
+    "issues": []
+  },
+  "finding": {
+    "entity": "loop-3",
+    "code": "loop-not-closed",
+    "message": "Path \"α\" \\ changes\nnext vertex"
+  },
+  "face": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      0
+    ],
+    [
+      2,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ]
+  ],
+  "area": 2
+}

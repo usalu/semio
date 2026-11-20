@@ -98,7 +98,7 @@ fn vertex_values(part: &Part, instance: usize, field: &ResolvedField) -> Vec<f64
 }
 
 fn mesh_json(id: &str, mesh: &MeshData, colour: impl Fn(usize) -> Rgb) -> Value {
-    let colors: Vec<f64> = (0..mesh.vertex_count()).flat_map(|i| colour(i)).map(r6).collect();
+    let colors: Vec<f64> = (0..mesh.vertex_count()).flat_map(|i| { let [r, g, b] = colour(i); [r, g, b, 1.0] }).map(r6).collect();
     let round = |v: &Vec<f64>| v.iter().map(|x| r6(*x)).collect::<Vec<_>>();
     json!({ "id": id, "data": { "positions": round(&mesh.positions), "normals": round(&mesh.normals), "colors": colors, "indices": mesh.indices.clone() } })
 }

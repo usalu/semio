@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-ui-action = { path = "../../../../../🎬️action/📦️packages/🦀️rust" }
+semio-ui-border-presentation = { path = "../../../../../🔨️modules/📏️border-presentation/📦️packages/🦀️rust" }
 semio-ui-arena = { path = "../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
 semio-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }

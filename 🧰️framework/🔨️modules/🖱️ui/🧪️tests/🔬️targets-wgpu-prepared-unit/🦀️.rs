@@ -396,11 +396,13 @@ fn preparation_rejects_a_stale_generation_before_publication() {
 async fn preparation_observes_cancellation_without_replacing_a_packet() {
     let cancel = root_cancel_token();
     cancel.cancel().await;
+    let _guard = prepared_process_guard();
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0), 8);
     let mut preview = 0;
     let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-    assert!(matches!(outcome, Some(JobOutcomeKind::Cancelled)));
+    assert!(outcome.is_none(), "an already cancelled preparation never enters its producer");
+    assert_eq!(original_retained_receipt, RetainedCloneProgress::default());
     assert!(job.take_packet().is_none());
     drop(job);
     drain_abandoned_preparations();

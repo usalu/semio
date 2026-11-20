@@ -1,3 +1,4 @@
+import type { ShootingDrawingPatch } from "../🟦️.ts";
 /** 🎥️ Shooting direct-mutation discriminated union. */
 import type { ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot } from "../📸️snapshot/🟦️.ts";
 
@@ -178,6 +179,24 @@ export interface ChangeSceneShadowEnabled {
 }
 
 /** 🪨 One of the scene's independently-settable fields — the material roughness. */
+export interface SetShotAutoFit {
+  id: string;
+  autoFit: boolean | null;
+}
+
+export interface PatchShotCamera {
+  shotId: string;
+  field: "projection" | "zoom" | "fov" | "eyeX" | "eyeY" | "eyeZ" | "targetX" | "targetY" | "targetZ" | "upX" | "upY" | "upZ";
+  camera: ShootingCamera;
+  fallback: ShootingCamera;
+  release?: { seed: ShootingCamera; cameraId?: string };
+}
+
+export interface SetShotDrawing {
+  id: string;
+  patch: ShootingDrawingPatch;
+}
+
 export interface ChangeSceneMaterialRoughness {
   newRoughness: number;
 }
@@ -213,4 +232,7 @@ export type ShootingMutation =
   | ({ mutation: "changeSceneSunIntensity" } & ChangeSceneSunIntensity)
   | ({ mutation: "changeSceneAmbientIntensity" } & ChangeSceneAmbientIntensity)
   | ({ mutation: "changeSceneShadowEnabled" } & ChangeSceneShadowEnabled)
-  | ({ mutation: "changeSceneMaterialRoughness" } & ChangeSceneMaterialRoughness);
+  | ({ mutation: "changeSceneMaterialRoughness" } & ChangeSceneMaterialRoughness)
+  | ({ mutation: "setShotDrawing" } & SetShotDrawing)
+  | ({ mutation: "patchShotCamera" } & PatchShotCamera)
+  | ({ mutation: "setShotAutoFit" } & SetShotAutoFit);

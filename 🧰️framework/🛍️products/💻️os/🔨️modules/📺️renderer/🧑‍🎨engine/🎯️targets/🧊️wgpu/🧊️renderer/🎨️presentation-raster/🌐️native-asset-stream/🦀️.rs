@@ -20,9 +20,9 @@ fn native_renderer_asset_path(url: &str) -> Result<RendererIoPath<'_>, String> {
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
     if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
-        return stream_native_renderer_http_asset(mailbox, fetch).await;
+        return retry_native_renderer_http_asset(mailbox, fetch).await;
     }
-    let opened={let path=native_renderer_asset_path(fetch.url()).map_err(NativeAssetStreamFailure::Unavailable)?;let mut open=open_renderer_source_io(path);std::future::poll_fn(|context|{
+    let opened={let path=native_renderer_asset_path(fetch.url()).map_err(|detail| NativeAssetStreamFailure::Unavailable { detail, retryable: false })?;let mut open=open_renderer_source_io(path);std::future::poll_fn(|context|{
         if mailbox.renderer_asset_cancelled(fetch){return std::task::Poll::Ready(Err(None))}
         match std::pin::Pin::new(&mut open).poll(context){std::task::Poll::Ready(answer)=>std::task::Poll::Ready(answer.map_err(Some)),std::task::Poll::Pending=>std::task::Poll::Pending}
     }).await};
@@ -53,6 +53,35 @@ pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMa
 
 
 #[cfg(not(target_arch = "wasm32"))]
+async fn retry_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
+    if !matches!(fetch, RendererAssetFetchOwner::World { .. }) {
+        return stream_native_renderer_http_asset(mailbox, fetch).await;
+    }
+    for delay in [200, 800] {
+        match stream_native_renderer_http_asset(mailbox, fetch).await {
+            Err(NativeAssetStreamFailure::Unavailable { retryable: true, .. }) => {}
+            result => return result,
+        }
+        while !fetch.owner_mut().retire_partial_response_step().map_err(|_| "native asset retry could not retire a partial response")? {
+            semio_framework_async::yield_once().await;
+            if mailbox.renderer_asset_cancelled(fetch) {
+                return Err(NativeAssetStreamFailure::Cancelled);
+            }
+        }
+        let cancel = mailbox.0.native_asset_http_cancel.child_now();
+        let transport = mailbox.retain_native_asset_transport(fetch, cancel.clone(), semio_os_services::HttpBodyCancellationHandle::idle());
+        let pool = renderer_worker_pool();
+        let deadline = pool.now_ms().saturating_add(delay);
+        semio_framework_async::race2(pool.timer().sleep_until(deadline), cancel.cancelled()).await;
+        drop(transport);
+        if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
+            return Err(NativeAssetStreamFailure::Cancelled);
+        }
+    }
+    stream_native_renderer_http_asset(mailbox, fetch).await
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
     let cancel = mailbox.0.native_asset_http_cancel.child_now();
     let context = semio_framework_async::OperationContext {
@@ -72,19 +101,21 @@ async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeM
             transport = Some(mailbox.retain_native_asset_transport(fetch, cancel.clone(), cancellation))
         })
         .await
-        .map_err(|error| if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) { NativeAssetStreamFailure::Cancelled } else { NativeAssetStreamFailure::Unavailable(error.to_string()) });
+        .map_err(|error| if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) { NativeAssetStreamFailure::Cancelled } else { native_http_asset_failure(error) });
     let _transport = transport;
     let (head, mut body) = response?;
     if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
         return Err(NativeAssetStreamFailure::Cancelled);
     }
     if !(200..300).contains(&head.status) {
-        return Err(NativeAssetStreamFailure::Unavailable(format!("native renderer asset HTTP status {}", head.status)));
+        return Err(NativeAssetStreamFailure::Unavailable {
+            detail: format!("native renderer asset HTTP status {}", head.status),
+            retryable: matches!(head.status, 408 | 429 | 500 | 502 | 503 | 504),
+        });
     }
-    if let Some(length) = head.headers.iter().find(|(name, _)| name.eq_ignore_ascii_case("content-length")).and_then(|(_, value)| value.parse::<usize>().ok()) {
-        if length > WORLD_ASSET_RESPONSE_BYTE_CAPACITY {
-            return Err("native renderer asset Content-Length exceeded fixed credits".into());
-        }
+    let declared = head.headers.iter().find(|(name, _)| name.eq_ignore_ascii_case("content-length")).and_then(|(_, value)| value.parse::<usize>().ok());
+    if declared.is_some_and(|length| length > WORLD_ASSET_RESPONSE_BYTE_CAPACITY) {
+        return Err("native renderer asset Content-Length exceeded fixed credits".into());
     }
     loop {
         if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
@@ -94,7 +125,7 @@ async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeM
         if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
             return Err(NativeAssetStreamFailure::Cancelled);
         }
-        let Some(bytes) = page.map_err(|error| NativeAssetStreamFailure::Unavailable(error.to_string()))? else { break };
+        let Some(bytes) = page.map_err(native_http_asset_failure)? else { break };
         if bytes.is_empty() || bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err("native renderer HTTP asset returned an invalid response page".into());
         }
@@ -112,6 +143,15 @@ async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeM
         })
         .await;
     }
+    if declared.is_some_and(|length| length != fetch.received_bytes()) {
+        return Err(NativeAssetStreamFailure::Unavailable { detail: "native renderer asset response did not match its declared length".into(), retryable: true });
+    }
     Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_http_asset_failure(error: semio_os_services::HttpPoolError) -> NativeAssetStreamFailure {
+    let retryable = matches!(error, semio_os_services::HttpPoolError::Transport(_));
+    NativeAssetStreamFailure::Unavailable { detail: error.to_string(), retryable }
 }
 //#endregion 📮️RuntimeMailbox

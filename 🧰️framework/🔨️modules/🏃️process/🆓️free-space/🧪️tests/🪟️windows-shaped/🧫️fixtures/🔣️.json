@@ -1,4 +1,73 @@
 {
+  "windows": [
+    {
+      "name": "quota-visible-free-and-total",
+      "row": {
+        "availableBytes": 120000000000,
+        "totalBytes": 400000000000
+      },
+      "expected": {
+        "bytes": 120000000000,
+        "total": 400000000000,
+        "ratio": 0.3
+      }
+    },
+    {
+      "name": "consumed-account-quota",
+      "row": {
+        "availableBytes": 0,
+        "totalBytes": 400000000000
+      },
+      "expected": {
+        "bytes": 0,
+        "total": 400000000000,
+        "ratio": 0
+      }
+    },
+    {
+      "name": "known-free-without-total",
+      "row": {
+        "availableBytes": 7
+      },
+      "expected": {
+        "bytes": 7,
+        "total": null,
+        "ratio": null
+      }
+    },
+    {
+      "name": "incoherent-denominator",
+      "row": {
+        "availableBytes": 9,
+        "totalBytes": 8
+      },
+      "expected": {
+        "bytes": 9,
+        "total": null,
+        "ratio": null
+      }
+    },
+    {
+      "name": "zero-denominator",
+      "row": {
+        "availableBytes": 0,
+        "totalBytes": 0
+      },
+      "expected": {
+        "bytes": 0,
+        "total": null,
+        "ratio": null
+      }
+    },
+    {
+      "name": "invalid-available-bytes",
+      "row": {
+        "availableBytes": -1,
+        "totalBytes": 5
+      },
+      "expected": null
+    }
+  ],
   "version": 1,
   "rows": [
     {"name": "a coherent volume with an inode table", "row": {"bsize": 4096, "blocks": 1000, "bavail": 250, "files": 5000, "ffree": 4000}, "expected": {"bytes": 1024000, "total": 4096000, "inodes": 4000}},

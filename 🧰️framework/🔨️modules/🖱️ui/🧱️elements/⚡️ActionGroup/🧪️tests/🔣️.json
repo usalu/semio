@@ -7,8 +7,8 @@
   },
   "actionGroup": {
     "shellRequired": ["h-medium", "overflow-visible"],
-    "itemRequired": ["min-h-0", "h-full", "p-single", "aspect-square", "overflow-visible", "[&_svg]:size-tiny", "[&_svg:not([class*='size-'])]:size-tiny"],
-    "itemForbidden": ["min-h-medium", "h-small", "[&_svg:not([class*='size-'])]:size-small", "overflow-hidden"],
+    "itemRequired": ["self-stretch", "p-single", "aspect-square", "overflow-visible", "[&_svg]:size-tiny", "[&_svg:not([class*='size-'])]:size-tiny"],
+    "itemForbidden": ["min-h-medium", "min-h-0", "h-full", "max-h-full", "h-medium", "h-small", "[&_svg:not([class*='size-'])]:size-small", "overflow-hidden"],
     "shellPx": 22.4,
     "shellBorderPx": 1,
     "itemPx": 20.4,

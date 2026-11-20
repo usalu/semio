@@ -87,6 +87,15 @@ semio_ui_locale::app_labels! {
         catalogue_brep_mesh_delete_faces: native_en "Delete Mesh Faces", native_de "Mesh-Flächen löschen", reuse_en "Delete Mesh Faces", reuse_de "Mesh-Flächen löschen";
         catalogue_brep_mesh_export_json: native_en "Mesh to JSON", native_de "Mesh als JSON", reuse_en "Mesh to JSON", reuse_de "Mesh als JSON";
         catalogue_brep_mesh_export_obj: native_en "Mesh to OBJ", native_de "Mesh als OBJ", reuse_en "Mesh to OBJ", reuse_de "Mesh als OBJ";
+        catalogue_brep_mesh_import_obj: native_en "Mesh from OBJ", native_de "Mesh aus OBJ", reuse_en "Mesh from OBJ", reuse_de "Mesh aus OBJ";
+        catalogue_brep_mesh_export_glb: native_en "Mesh to GLB", native_de "Mesh als GLB", reuse_en "Mesh to GLB", reuse_de "Mesh als GLB";
+        catalogue_brep_mesh_export_stl: native_en "Mesh to STL", native_de "Mesh als STL", reuse_en "Mesh to STL", reuse_de "Mesh als STL";
+        catalogue_brep_mesh_import_glb: native_en "Mesh from GLB", native_de "Mesh aus GLB", reuse_en "Mesh from GLB", reuse_de "Mesh aus GLB";
+        catalogue_brep_mesh_import_stl: native_en "Mesh from STL", native_de "Mesh aus STL", reuse_en "Mesh from STL", reuse_de "Mesh aus STL";
+        catalogue_brep_mesh_unwrap_uv: native_en "Unwrap Mesh UVs", native_de "Mesh-UVs abwickeln", reuse_en "Unwrap Mesh UVs", reuse_de "Mesh-UVs abwickeln";
+        catalogue_brep_mesh_mark_seams: native_en "Mark Mesh UV Seams", native_de "Mesh-UV-Nähte markieren", reuse_en "Mark Mesh UV Seams", reuse_de "Mesh-UV-Nähte markieren";
+        catalogue_brep_mesh_recompute_normals: native_en "Recompute Mesh Normals", native_de "Mesh-Normalen neu berechnen", reuse_en "Recompute Mesh Normals", reuse_de "Mesh-Normalen neu berechnen";
+        catalogue_brep_mesh_set_shading: native_en "Set Mesh Shading", native_de "Mesh-Schattierung einstellen", reuse_en "Set Mesh Shading", reuse_de "Mesh-Schattierung einstellen";
         catalogue_brep_mesh_extrude: native_en "Extrude Mesh Faces", native_de "Mesh-Flächen extrudieren", reuse_en "Extrude Mesh Faces", reuse_de "Mesh-Flächen extrudieren";
         catalogue_brep_mesh_fill_holes: native_en "Fill Mesh Holes", native_de "Mesh-Löcher schließen", reuse_en "Fill Mesh Holes", reuse_de "Mesh-Löcher schließen";
         catalogue_brep_mesh_flip: native_en "Flip Mesh Faces", native_de "Mesh-Flächen umdrehen", reuse_en "Flip Mesh Faces", reuse_de "Mesh-Flächen umdrehen";
@@ -101,6 +110,8 @@ semio_ui_locale::app_labels! {
         catalogue_brep_mesh_rotate_components: native_en "Rotate Mesh Components", native_de "Mesh-Komponenten drehen", reuse_en "Rotate Mesh Components", reuse_de "Mesh-Komponenten drehen";
         catalogue_brep_mesh_scale: native_en "Scale Mesh", native_de "Mesh skalieren", reuse_en "Scale Mesh", reuse_de "Mesh skalieren";
         catalogue_brep_mesh_scale_components: native_en "Scale Mesh Components", native_de "Mesh-Komponenten skalieren", reuse_en "Scale Mesh Components", reuse_de "Mesh-Komponenten skalieren";
+        catalogue_brep_mesh_torus: native_en "Mesh Torus", native_de "Mesh-Torus", reuse_en "Mesh Torus", reuse_de "Mesh-Torus";
+        catalogue_brep_mesh_uv_sphere: native_en "Mesh UV Sphere", native_de "UV-Netzkugel", reuse_en "Mesh UV Sphere", reuse_de "UV-Netzkugel";
         catalogue_brep_mesh_sphere: native_en "Mesh Sphere", native_de "Mesh-Kugel", reuse_en "Mesh Sphere", reuse_de "Mesh-Kugel";
         catalogue_brep_mesh_subdivide: native_en "Subdivide Mesh Faces", native_de "Mesh-Flächen unterteilen", reuse_en "Subdivide Mesh Faces", reuse_de "Mesh-Flächen unterteilen";
         catalogue_brep_mesh_to_brep: native_en "Faceted B-Rep from Mesh", native_de "Facettierter BRep aus Mesh", reuse_en "Faceted B-Rep from Mesh", reuse_de "Facettierter BRep aus Mesh";
@@ -239,6 +250,7 @@ semio_ui_locale::app_labels! {
         input_name_radius_end: native_en "End Radius", native_de "Endradius", reuse_en "End Radius", reuse_de "Endradius";
         input_name_radius_start: native_en "Start Radius", native_de "Anfangsradius", reuse_en "Start Radius", reuse_de "Anfangsradius";
         input_name_rows: native_en "Rows", native_de "Zeilen", reuse_en "Rows", reuse_de "Zeilen";
+        input_name_rings: native_en "Rings", native_de "Ringe", reuse_en "Rings", reuse_de "Ringe";
         input_name_segments: native_en "Segments", native_de "Segmente", reuse_en "Segments", reuse_de "Segmente";
         input_name_selection: native_en "Selection", native_de "Auswahl", reuse_en "Selection", reuse_de "Auswahl";
         input_name_semi_major: native_en "Major Semiaxis", native_de "Große Halbachse", reuse_en "Major Semiaxis", reuse_de "Große Halbachse";
@@ -487,6 +499,15 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
         "brep.mesh.deleteFaces" => labels.catalogue_brep_mesh_delete_faces.as_str(),
         "brep.mesh.exportJson" => labels.catalogue_brep_mesh_export_json.as_str(),
         "brep.mesh.exportObj" => labels.catalogue_brep_mesh_export_obj.as_str(),
+        "brep.mesh.importObj" => labels.catalogue_brep_mesh_import_obj.as_str(),
+        "brep.mesh.exportGlb" => labels.catalogue_brep_mesh_export_glb.as_str(),
+        "brep.mesh.exportStl" => labels.catalogue_brep_mesh_export_stl.as_str(),
+        "brep.mesh.importGlb" => labels.catalogue_brep_mesh_import_glb.as_str(),
+        "brep.mesh.importStl" => labels.catalogue_brep_mesh_import_stl.as_str(),
+        "brep.mesh.unwrapUv" => labels.catalogue_brep_mesh_unwrap_uv.as_str(),
+        "brep.mesh.markSeams" => labels.catalogue_brep_mesh_mark_seams.as_str(),
+        "brep.mesh.recomputeNormals" => labels.catalogue_brep_mesh_recompute_normals.as_str(),
+        "brep.mesh.setShading" => labels.catalogue_brep_mesh_set_shading.as_str(),
         "brep.mesh.extrude" => labels.catalogue_brep_mesh_extrude.as_str(),
         "brep.mesh.fillHoles" => labels.catalogue_brep_mesh_fill_holes.as_str(),
         "brep.mesh.flip" => labels.catalogue_brep_mesh_flip.as_str(),
@@ -501,6 +522,8 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
         "brep.mesh.rotateComponents" => labels.catalogue_brep_mesh_rotate_components.as_str(),
         "brep.mesh.scale" => labels.catalogue_brep_mesh_scale.as_str(),
         "brep.mesh.scaleComponents" => labels.catalogue_brep_mesh_scale_components.as_str(),
+        "brep.mesh.torus" => labels.catalogue_brep_mesh_torus.as_str(),
+        "brep.mesh.uvSphere" => labels.catalogue_brep_mesh_uv_sphere.as_str(),
         "brep.mesh.sphere" => labels.catalogue_brep_mesh_sphere.as_str(),
         "brep.mesh.subdivide" => labels.catalogue_brep_mesh_subdivide.as_str(),
         "brep.mesh.toBrep" => labels.catalogue_brep_mesh_to_brep.as_str(),
@@ -658,6 +681,7 @@ pub fn generation3d_input_name<'a>(labels: &'a Generation3dLabels, id: &str, nam
         "radiusEnd" => labels.input_name_radius_end.as_str(),
         "radiusStart" => labels.input_name_radius_start.as_str(),
         "rows" => labels.input_name_rows.as_str(),
+        "rings" => labels.input_name_rings.as_str(),
         "segments" => labels.input_name_segments.as_str(),
         "selection" => labels.input_name_selection.as_str(),
         "semiMajor" => labels.input_name_semi_major.as_str(),

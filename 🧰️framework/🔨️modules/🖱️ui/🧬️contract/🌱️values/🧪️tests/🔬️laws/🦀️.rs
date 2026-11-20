@@ -6,6 +6,10 @@
 
 #[path = "../🔬️unit/🦀️.rs"]
 mod unit;
+#[path = "🏟️arena/🦀️.rs"]
+mod arena_laws;
+#[path = "../../🗺️fixed-map-and-bytes/🛬️receive/🧪️tests/🦀️.rs"]
+mod bounded_receiving_tests;
 #[path = "../../📋️list/🧪️tests/📋️list/🦀️.rs"]
 mod fixed_list_storage_tests;
 #[path = "../../⚖️compare/🧪️tests/🦀️.rs"]

@@ -378,7 +378,7 @@
       }
     },
     "ReadStop": {
-      "description": "EN: why the server stopped a graph read, written to read-stop.json BEFORE the signal is sent: the verdict, the milliseconds without progress, the newest generation and the highest counter of every phase. DE: warum der Server ein Graph-Lesen beendet hat, vor dem Signal in read-stop.json geschrieben: Urteil, Millisekunden ohne Fortschritt, neueste Generation und der höchste Zähler jeder Phase.",
+      "description": "EN: why the server stopped a graph read, written to read-stop.json BEFORE the signal is sent: the verdict, the milliseconds without progress, the newest generation and each phase or owner ledger's highest completed count with its reported total. DE: warum der Server ein Graph-Lesen beendet hat, vor dem Signal in read-stop.json geschrieben: Urteil, Millisekunden ohne Fortschritt, neueste Generation und der höchste Fertigzähler jeder Phase oder Projektbilanz samt gemeldeter Gesamtzahl.",
       "type": "object",
       "additionalProperties": false,
       "required": ["version", "verdict", "atMs", "silentMilliseconds", "generation", "counters", "runner", "read"],
@@ -388,7 +388,7 @@
         "atMs": { "type": "integer", "minimum": 0 },
         "silentMilliseconds": { "type": "integer", "minimum": 0 },
         "generation": { "type": ["integer", "null"] },
-        "counters": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "integer", "minimum": 0 } } },
+        "counters": { "type": "object", "additionalProperties": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0 } } },
         "runner": { "type": "integer" },
         "read": { "type": ["integer", "null"] }
       }
@@ -417,6 +417,21 @@
         "aliveRounds": 60,
         "refreshQuietMilliseconds": 180000,
         "refreshIntervalMilliseconds": 600000,
+        "refreshCustody": {"maximumCandidates": 8, "maximumClaimBytes": 65536, "startToleranceMilliseconds": 2000},
+        "readProgress": {
+          "maximumLineCharacters": 4096,
+          "maximumResourceCharacters": 480,
+          "maximumPhases": 32,
+          "maximumOwners": 16384,
+          "maximumRunningRows": 3,
+          "phasePattern": "^build:graph-phase:(?<phase>[a-z]{1,32}):(?<done>[0-9]+):(?<total>[0-9]+)(?::[0-9]+:[0-9]+:(?<owners>[^:]*)(?::.*)?)?$",
+          "ownerRowPattern": "^(?<name>[A-Za-z0-9.!~*'()%_-]+)\\|[A-Za-z0-9.!~*'()%_-]+\\|[0-9]+\\|(?<rows>[0-9]+)$",
+          "ledgerPatterns": [
+            "^\\[owners\\] owners (?<done>[0-9]+) of (?<total>[0-9]+) done: (?<present>[0-9]+) present, (?<fetched>[0-9]+) fetched from the fleet, (?<here>[0-9]+) inferred here \\([0-9]+ running\\), [0-9]+ wanted from the fleet, [0-9]+ stale in the fleet$",
+            "^\\[owners\\] Projekte (?<done>[0-9]+) von (?<total>[0-9]+) fertig: (?<present>[0-9]+) vorhanden, (?<fetched>[0-9]+) aus der Flotte geholt, (?<here>[0-9]+) hier abgeleitet \\([0-9]+ laufen\\), [0-9]+ von der Flotte erwartet, [0-9]+ in der Flotte veraltet$"
+          ],
+          "generationPatterns": ["^graph: generation ([0-9]+) published(?:,|$)", "^Graph: Generation ([0-9]+) veröffentlicht(?:,|$)"]
+        },
         "inferStallMilliseconds": 1500000,
         "inferMaximumMilliseconds": 43200000,
         "watchMilliseconds": 5000,

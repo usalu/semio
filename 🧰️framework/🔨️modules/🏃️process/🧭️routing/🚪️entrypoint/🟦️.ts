@@ -1,4 +1,5 @@
 import type { ScriptRouter } from "../🟦️.ts";
+import { guardStandardStreamsV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "../📥️invocation/🟦️.ts";
 
 export interface RunScriptMainOptions<Capabilities extends object = object> {
@@ -10,6 +11,7 @@ export interface RunScriptMainOptions<Capabilities extends object = object> {
 
 /** 🚪️ Dispatches owned commands after an optional caller-owned contribution. */
 export async function runScriptMain<Capabilities extends object>(router: ScriptRouter<Capabilities>, options: RunScriptMainOptions<Capabilities>): Promise<void> {
+  guardStandardStreamsV1();
   checkScriptInvocation(options?.invocation);
   let argv = [...(options.argv ?? process.argv.slice(2))];
   if (options.beforeDispatch) {

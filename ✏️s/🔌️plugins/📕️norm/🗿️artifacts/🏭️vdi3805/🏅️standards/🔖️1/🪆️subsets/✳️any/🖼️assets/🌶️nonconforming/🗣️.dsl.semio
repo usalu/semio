@@ -50,18 +50,20 @@ entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
   VLV-50-001 2 [ "Stellventil DN50" "Control valve DN50" ] 47
 }
 geometry={
-  geom-valve-50=id=geom-valve-50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
-    clearance=0.01 scale=1
-  }
-  connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
-    in water 0,0.1,0.05 -1,0,0 50mm
+  geom-valve-50={ id=geom-valve-50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
+      clearance=0.01 scale=1
+    }
+    connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
+      in water 0,0.1,0.05 -1,0,0 50mm
+    }
   }
 }
 curves={
-  curve-kvs=id=curve-kvs x-unit=symbol="%" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m3/h kind=volume delta=false si-factor=0.0002777777777777778
-  points [x:NUM y:NUM] {
-    0 0
-    100 4.5
+  curve-kvs={ id=curve-kvs x-unit=symbol="%" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m3/h kind=volume delta=false si-factor=0.0002777777777777778
+    points [x:NUM y:NUM] {
+      0 0
+      100 4.5
+    }
   }
 }
 limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

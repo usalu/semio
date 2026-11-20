@@ -17,7 +17,7 @@ pub struct InstanceMetadataRegistry {
 
 impl InstanceMetadataRegistry {
     pub fn new() -> Self {
-        Self { slots: ReactorFixedSlots::new() }
+        Self { slots: ReactorFixedSlots::unallocated() }
     }
 
     pub fn index(instance: u32) -> usize {
@@ -29,7 +29,7 @@ impl InstanceMetadataRegistry {
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-app-id-too-large"), "instance app id exceeds its admitted fixed byte bound"));
         }
         let index = Self::index(instance);
-        if !self.slots.allocation_admitted || self.slots.get(index).is_some() {
+        if !self.slots.admit_backing() || self.slots.get(index).is_some() {
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority is saturated or collided"));
         }
         self.slots

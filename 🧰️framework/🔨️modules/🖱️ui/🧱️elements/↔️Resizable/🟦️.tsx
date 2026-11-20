@@ -11,6 +11,7 @@ import * as ResizablePrimitive from "react-resizable-panels";
 import { domSizePx } from "@semio-tech/ui-styling";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 // #endregion 🔌️Adapters
 
 // #region 🪬️Resizable
@@ -261,13 +262,14 @@ function ResizableHandle({
 
   return (
     <ResizablePrimitive.Separator
+      {...sharedBorderlessBoxProps}
       data-slot="resizable-handle"
       data-resize-orientation={orientation}
       className={cn(
         "relative flex shrink-0 items-center justify-center border-0 bg-transparent",
         horizontal ? "h-full min-h-0 w-0 cursor-ew-resize" : "w-full min-w-0 h-0 cursor-ns-resize",
         "data-[separator=hover]:bg-accent/25 data-[separator=active]:bg-accent/25",
-        "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-none",
+        "focus-visible:outline-none",
         "after:hidden",
         className,
       )}

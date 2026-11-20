@@ -3,11 +3,12 @@ import {join,sep} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📐️ The bounds of the writers that had none: waves, footprint logs, read verdicts, temporary directories and the files the replica overwrote (single source: the schema document of the recovery, definition `Bounds`). */
-export type DiskBoundsV1=Readonly<{version:1;waves:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;footprintLogs:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;readVerdicts:Readonly<{maximumAgeMilliseconds:number}>;temporaryDirectories:Readonly<{minimumAgeMilliseconds:number;maximumAgeMilliseconds:number;prefix:string}>;replicaLost:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>}>;
+export type DiskBoundsV1=Readonly<{version:1;waves:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;footprintLogs:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>;readVerdicts:Readonly<{maximumAgeMilliseconds:number;directoryPattern:string}>;temporaryDirectories:Readonly<{minimumAgeMilliseconds:number;maximumAgeMilliseconds:number;prefix:string}>;replicaLost:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>}>;
 export const DISK_BOUNDS_V1:DiskBoundsV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Bounds.const)));
 
 /** 📄️ One entry of a directory a bound judges: its name, the newest write below it and the bytes it holds. */
 export type BoundEntryV1=Readonly<{name:string;newestMs:number;bytes:number}>;
+type BoundDirectoryEntryV1=BoundEntryV1&Readonly<{directory:boolean}>;
 
 /** ⏳️ Selects the entries that are expired: older than the maximum age and not among the newest `keepNewest` (waves, replica files). Pure. */
 export function selectExpiredV1(entries:readonly BoundEntryV1[],now:number,bound:Readonly<{maximumAgeMilliseconds:number;keepNewest:number}>):readonly string[]{
@@ -21,9 +22,14 @@ export function selectRotatedV1(entries:readonly BoundEntryV1[],now:number,bound
  return newest.filter((entry,index)=>index>=bound.keepNewest||now-entry.newestMs>bound.maximumAgeMilliseconds).map(entry=>entry.name);
 }
 
-/** 🕰️ Selects the entries below a given age: the verdict directories of a finished read. Pure. */
-export function selectOlderThanV1(entries:readonly BoundEntryV1[],now:number,maximumAgeMilliseconds:number):readonly string[]{
- return entries.filter(entry=>now-entry.newestMs>maximumAgeMilliseconds).map(entry=>entry.name);
+/** 🧬️ Selects finished verdict directories by the authored reader name, age and live process custody. */
+export function finishedReadVerdictV1(now:number,bound:DiskBoundsV1["readVerdicts"],alive:(pid:number)=>boolean):(entry:BoundDirectoryEntryV1)=>boolean{
+ const pattern=new RegExp(bound.directoryPattern,"u");
+ return entry=>{
+  if(!entry.directory||now-entry.newestMs<=bound.maximumAgeMilliseconds)return false;
+  const pid=pattern.exec(entry.name)?.[1];
+  return pid!==undefined&&!alive(Number(pid));
+ };
 }
 
 /** 🗑️ Selects the temporary directories of the build system to remove: a name that carries the pid of its creator (`semio-<tag>-<pid>-<random>`) goes once that process is gone and the directory is older than the minimum age, every other one once it is older than the maximum age; sockets, files, names without the prefix and names without the random suffix of a made temporary directory (the runtime root `semio-repo`, `semio-footprint`, `semio-scratch`) never go. Pure. */
@@ -52,14 +58,16 @@ export async function boundedBytesV1(path:string,limit:number,signal?:AbortSigna
 }
 
 /** 👀️ Reads the entries of a directory with the newest write below each and its bytes, never following links. */
-export async function boundEntriesV1(directory:string,limit:number,signal?:AbortSignal):Promise<readonly (BoundEntryV1&Readonly<{directory:boolean}>)[]>{
- const names=await readdir(directory).catch(()=>[] as string[]),rows:Array<BoundEntryV1&Readonly<{directory:boolean}>>=[];
+export async function boundEntriesV1(directory:string,limit:number,signal?:AbortSignal,candidate?:(entry:BoundDirectoryEntryV1)=>boolean):Promise<readonly BoundDirectoryEntryV1[]>{
+ const names=await readdir(directory).catch(()=>[] as string[]),rows:BoundDirectoryEntryV1[]=[];
  for(const name of names){
   signal?.throwIfAborted();
   const info=await lstat(join(directory,name)).catch(()=>undefined);
   if(info===undefined)continue;
+  const entry={name,newestMs:info.mtimeMs,bytes:info.blocks*512,directory:info.isDirectory()&&!info.isSymbolicLink()};
+  if(candidate!==undefined&&!candidate(entry))continue;
   const walked=await boundedBytesV1(join(directory,name),limit,signal);
-  rows.push({name,newestMs:Math.max(walked.newestMs,info.mtimeMs),bytes:walked.bytes,directory:info.isDirectory()&&!info.isSymbolicLink()});
+  rows.push({...entry,newestMs:Math.max(walked.newestMs,entry.newestMs),bytes:walked.bytes});
  }
  return rows;
 }
@@ -82,8 +90,8 @@ export async function removeBoundEntriesV1(directory:string,names:readonly strin
 }
 
 /** 🧺️ One bound applied to a real directory: reads its entries, selects by the rule and removes them inside the directory only. */
-export async function applyBoundV1(input:Readonly<{directory:string;limit:number;dryRun:boolean;signal?:AbortSignal;select(entries:readonly (BoundEntryV1&Readonly<{directory:boolean}>)[]):readonly string[]}>):Promise<Readonly<{removed:readonly string[];freedBytes:number}>>{
- const entries=await boundEntriesV1(input.directory,input.limit,input.signal),names=input.select(entries);
+export async function applyBoundV1(input:Readonly<{directory:string;limit:number;dryRun:boolean;signal?:AbortSignal;candidate?:(entry:BoundDirectoryEntryV1)=>boolean;select(entries:readonly BoundDirectoryEntryV1[]):readonly string[]}>):Promise<Readonly<{removed:readonly string[];freedBytes:number}>>{
+ const entries=await boundEntriesV1(input.directory,input.limit,input.signal,input.candidate),names=input.select(entries);
  return{removed:names,freedBytes:await removeBoundEntriesV1(input.directory,names,entries,input.dryRun)};
 }
 

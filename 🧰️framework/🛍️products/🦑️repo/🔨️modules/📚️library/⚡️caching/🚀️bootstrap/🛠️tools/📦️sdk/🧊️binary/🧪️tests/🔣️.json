@@ -37,6 +37,58 @@
       "bytes": 16
     }
   ],
+  "bindingPaths": [
+    {
+      "platform": "win32",
+      "destination": "C:\\store\\sdk\\.stage-Ab12Cd\\node_modules\\@nx\\native\\host.node",
+      "member": "node_modules/@nx/native/host.node",
+      "accepted": true
+    },
+    {
+      "platform": "win32",
+      "destination": "C:\\store\\sdk\\.stage-Ab12Cd\\foreign-node_modules\\@nx\\native\\host.node",
+      "member": "node_modules/@nx/native/host.node",
+      "accepted": false
+    },
+    {
+      "platform": "win32",
+      "destination": "C:\\store\\sdk\\.stage-Ab12Cd\\node_modules\\@nx\\native\\other.node",
+      "member": "node_modules/@nx/native/host.node",
+      "accepted": false
+    },
+    {
+      "platform": "posix",
+      "destination": "/store/sdk/.stage-Ab12Cd/node_modules/@nx/native/host.node",
+      "member": "node_modules/@nx/native/host.node",
+      "accepted": true
+    },
+    {
+      "platform": "posix",
+      "destination": "/store/sdk/.stage-Ab12Cd/foreign-node_modules/@nx/native/host.node",
+      "member": "node_modules/@nx/native/host.node",
+      "accepted": false
+    }
+  ],
+  "receiptPublications": [
+    {
+      "platform": "win32",
+      "root": "C:\\store",
+      "path": "C:\\store\\objects\\sample.json",
+      "mode": 384
+    },
+    {
+      "platform": "darwin",
+      "root": "/store",
+      "path": "/store/objects/sample.json",
+      "mode": 292
+    },
+    {
+      "platform": "linux",
+      "root": "/store",
+      "path": "/store/objects/sample.json",
+      "mode": 292
+    }
+  ],
   "moduleBytes": [
     0,
     97,

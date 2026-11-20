@@ -58,6 +58,29 @@ fn fresh_codec_answer<T: serde::de::DeserializeOwned>(runtime: &OwnedRuntime, co
 }
 
 #[semio_framework_async_macros::async_test]
+async fn descriptor_codec_probe_reuses_private_assembled_actor() {
+    let bytes = std::fs::read(fixture_component()).expect("read plugin component");
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
+    let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
+    let (descriptor, described) = runtime.describe_with_codec_origin_observed(&compiled, codec_budget(), |_, _| {})
+        .await.expect("describe initializes the probe actor");
+    assert_eq!(descriptor, runtime.describe(&compiled, codec_budget()).await.expect("fresh descriptor"));
+    assert_eq!(compiled.codec_origin_bytes(), 0);
+    assert!(described.codec_origin_bytes() >= 65_536);
+
+    let schema = FIXTURE_DOCUMENT_SCHEMA;
+    let input = OwnedCodecInput { artifact_schema: schema, document_id: "", pack: &[], spr: &[], ops: &[] };
+    let (fresh, fresh_fuel): (Vec<u8>, u64) = fresh_codec_answer(&runtime, &compiled, OwnedOperation::PackSchemaHash, &input);
+    let mut fuel = 0;
+    let actual = runtime.codec_pack_schema_hash_observed(&described, schema, codec_budget(), |used, _| fuel = used, &GuestCallCancellation::default())
+        .await.expect("real codec call succeeds");
+    assert_eq!(actual.as_slice(), fresh);
+    assert!(fuel > 0 && fuel < fresh_fuel);
+    assert!(matches!(runtime.codec_pack_schema_hash(&described, "not.a.kind.this.package.owns", codec_budget()).await,
+        Err(TurnFault::Guest(_))));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_instance_answers() {
     let mut original_observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;
     let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();

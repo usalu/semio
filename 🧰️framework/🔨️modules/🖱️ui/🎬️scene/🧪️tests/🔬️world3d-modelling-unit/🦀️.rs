@@ -4,6 +4,8 @@ use serde_json::Value;
 #[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
 mod effect;
 fn turn<T:semio_framework_value::retirement::RetireOwned>(owner:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>,grant:semio_framework_value::RetainedCloneGrant)->(semio_framework_value::RetainedCloneStep,(usize,usize)){let(poll,heap)=effect::with_effect(grant,1<<20,&mut None,|effect|semio_ui_scene_mesh::testkit::observe_retirement_allocations(||owner.step(grant.maximum_copy_bytes,effect)));(effect::settled(poll).result.unwrap(),heap)}
+/// 🪜️ Widens a refused narrow copy grant to the owner's quoted semantic minimum, as the controlled retirement law `original_controlled_narrow_child_keeps_real_semantic_minimum_and_same_grant` drives it.
+fn narrow_turn<T:semio_framework_value::retirement::RetireOwned>(owner:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>,grant:semio_framework_value::RetainedCloneGrant)->(semio_framework_value::RetainedCloneStep,(usize,usize),semio_framework_value::RetainedCloneGrant){let first=turn(owner,grant);if first.0.progress()!=Default::default(){return(first.0,first.1,grant)}assert_eq!(first.1,(0,0));let need=owner.next_demand(grant.maximum_copy_bytes).unwrap().copy_bytes;let wide=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.max(need),..grant};let second=turn(owner,wide);(second.0,second.1,wide)}
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/📏️world3d-modelling/🔣️.json");
 
@@ -27,8 +29,8 @@ fn original_scalar_field_retirement_keeps_every_native_owner_and_physical_receip
             if owner.terminal_is_empty(){break;}
             let (denied,physical)=turn(&mut owner,RetainedCloneGrant::default());
             assert_eq!(denied.progress(),Default::default());assert_eq!(physical,(0,0));
-            let (step,physical)=turn(&mut owner,grant);let progress=step.progress();
-            assert!(progress.fits(grant));assert_eq!(physical,(progress.retained_capacity_bytes,progress.released_bytes));
+            let (step,physical,used)=narrow_turn(&mut owner,grant);let progress=step.progress();
+            assert!(progress.fits(used));assert_eq!(physical,(progress.retained_capacity_bytes,progress.released_bytes));
             births+=physical.0;releases+=physical.1;
         }
         assert!(owner.terminal_is_empty());assert_eq!(births,releases);
@@ -52,7 +54,7 @@ fn original_projection_record_retirement_uses_exact_scalar_owner_receipts() {
         for _ in 0..law["maximumTurns"].as_u64().unwrap() {
             if owner.terminal_is_empty(){break;}
             let (denied,physical)=turn(&mut owner,RetainedCloneGrant::default());assert_eq!(denied.progress(),Default::default());assert_eq!(physical,(0,0));
-            let (step,physical)=turn(&mut owner,grant);let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=physical.0;releases+=physical.1;
+            let (step,physical,used)=narrow_turn(&mut owner,grant);let receipt=step.progress();assert!(receipt.fits(used));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));births+=physical.0;releases+=physical.1;
         }
         assert!(owner.terminal_is_empty());assert_eq!(births,releases);assert_eq!(observe(||drop(owner)).1,(0,0));
     }

@@ -3,27 +3,49 @@
 use super::*;
 
 // #region 🔖️Measure
-num_operation!(Volume, "volume", |k, i| k.volume(&read_geometry(i, "geometry")?));
+pub(super) struct Volume(pub(super) SessionCapture);
 
-num_operation!(Area, "area", |k, i| k.area(&read_geometry(i, "geometry")?));
+impl Operator for Volume {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Volume);
 
-num_operation!(Length, "length", |k, i| k.length(&read_geometry(i, "geometry")?));
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let volume = kernel.volume(&read_geometry(input, "geometry")?).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("volume", number_dictionary(volume)))
+        })
+    }
+}
 
-point_operation!(CenterOfMass, "center", |k, i| k.center_of_mass(&read_geometry(i, "geometry")?));
+num_operation!(Area, "area", |k, i| k.area(&read_geometry(i, "geometry")?), Area);
 
-geo_operation!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geometry")?));
+pub(super) struct Length(pub(super) SessionCapture);
 
-num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+impl Operator for Length {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Length);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let shape = read_geometry(input, "geometry")?;
+            let length = kernel.length(&shape).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("length", number_dictionary(length)))
+        })
+    }
+}
+
+point_operation!(CenterOfMass, "center", |k, i| k.center_of_mass(&read_geometry(i, "geometry")?), CenterOfMass);
+
+geo_operation!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geometry")?), BoundingBox);
+
+num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?), Distance);
 
 pub(super) struct ClosestPoint(pub(super) SessionCapture);
 
 impl Operator for ClosestPoint {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(ClosestPoint);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let result = kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
@@ -35,12 +57,9 @@ impl Operator for ClosestPoint {
 pub(super) struct ClassifyPoint(pub(super) SessionCapture);
 
 impl Operator for ClassifyPoint {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(ClassifyPoint);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let classification = kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
@@ -49,23 +68,33 @@ impl Operator for ClassifyPoint {
     }
 }
 
-text_operation!(Validate, "report", |k, i| k.validate(&read_geometry(i, "geometry")?));
+text_operation!(Validate, "report", |k, i| k.validate(&read_geometry(i, "geometry")?), Validate);
 // #endregion 🔖️Measure
 
 // #region 🔖️Utilities
-geo_operation!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?));
+geo_operation!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?), Vertex);
 
-geo_operation!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "wire")?));
+pub(super) struct FaceFromWire(pub(super) SessionCapture);
+
+impl Operator for FaceFromWire {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(ConicFace);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel(|kernel| {
+            let profile = read_geometry(input, "wire")?;
+            let face = kernel.face_from_wire(&profile).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("face", geometry_dict(kernel, &face)?))
+        })
+    }
+}
 
 pub(super) struct SewFaces(pub(super) SessionCapture);
 
 impl Operator for SewFaces {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Sew);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let faces = read_geometry_list(input, "faces")?;
@@ -103,12 +132,8 @@ impl Operator for ExportStep {
 pub(super) struct ExportStl(pub(super) SessionCapture);
 
 impl Operator for ExportStl {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retained_geometry_job!(ExportStl);
+    retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -122,12 +147,8 @@ impl Operator for ExportStl {
 pub(super) struct ExportObj(pub(super) SessionCapture);
 
 impl Operator for ExportObj {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retained_geometry_job!(ExportObj);
+    retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -141,11 +162,7 @@ impl Operator for ExportObj {
 pub(super) struct ImportStep(pub(super) SessionCapture);
 
 impl Operator for ImportStep {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+    retained_geometry_job!(ImportStep);
             retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
@@ -160,12 +177,8 @@ impl Operator for ImportStep {
 pub(super) struct ImportStl(pub(super) SessionCapture);
 
 impl Operator for ImportStl {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retained_geometry_job!(ImportStl);
+    retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
@@ -179,12 +192,8 @@ impl Operator for ImportStl {
 pub(super) struct ImportObj(pub(super) SessionCapture);
 
 impl Operator for ImportObj {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retained_geometry_job!(ImportObj);
+    retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let data = read_text(input, "data")?;

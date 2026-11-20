@@ -25,11 +25,14 @@ fn every_variant() -> Vec<BitmapMutation> {
 
 #[test]
 fn every_variant_round_trips_the_binary_op() {
-    for mutation in every_variant() {
-        let bytes = encode_op(&mutation).expect("op encodes");
+    let mut mutations = every_variant();
+    mutations.push(set_input_pixels(0, 0, 5, 1, vec![1, 2, 3, 4, 5]));
+    for mutation in &mutations {
+        let bytes = encode_op(mutation).expect("op encodes");
         assert!(!bytes.is_empty());
-        assert_eq!(decode_op(&bytes).expect("op decodes"), mutation);
+        assert_eq!(&decode_op(&bytes).expect("op decodes"), mutation);
     }
+    dsl::original_receiving::check_receiving_round_trip(&mutations).expect("original Bitmap receiving matches the binary codec");
 }
 
 #[test]

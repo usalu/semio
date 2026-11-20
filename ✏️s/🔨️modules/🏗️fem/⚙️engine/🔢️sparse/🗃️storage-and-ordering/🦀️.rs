@@ -395,11 +395,9 @@ impl SymmetricPencilConstruction {
     pub fn new_pair(matrix: Csr, second: Csr) -> Self { let mut owner = Self::new(matrix, VecD::from_vec(Vec::new())); owner.mass = None; owner.second = Some(second); owner }
 
     fn reserve<T>(owner: &mut PagedList<T, SPARSE_INDEX_SPACE>, count: usize, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
+        let count = owner.whole_page_capacity(count);
         if owner.capacity() >= count { return Ok(true); }
-        let grant = context.retained_grant();
-        let Some((turn, performed)) = context.with_original_effect(grant, |_, effect| owner.reserve_capacity_one_funded(count, effect)).map_err(|_| b"pencil-capacity" as &'static [u8])? else { return Ok(false) };
-        let progress = match turn.result { Ok(PagedListReservationOutcome::Ready(progress)) => progress, Ok(PagedListReservationOutcome::Denied) => return Ok(false), Err(_) => return Err(b"pencil-capacity") };
-        receive_original_retained_work(context, RetainedWorkOutcome { result: Ok::<_, ValueError>(RetainedCloneStep::Progress(progress)), work: performed }).map_err(|_| b"pencil-capacity-receipt" as &'static [u8])?;
+        reserve_funded_page(owner, count, context).map_err(|_| b"pencil-capacity-receipt" as &'static [u8])?;
         Ok(false)
     }
     fn admit(context: &mut StepContext<'_>, depth: usize, bytes: usize) -> Result<bool, &'static [u8]> {
@@ -499,8 +497,14 @@ impl SymmetricPencilConstruction {
                     }
                     if !Self::admit(context, 1, size_of::<VecD>())? { return Ok(false); } self.mass = None;
                 } else if let Some(mass) = self.mounted_mass.as_mut() {
-                    if !Self::admit(context, 1, 8)? { return Ok(false); }
-                    if !mass.close_step() { return Ok(false); } self.mounted_mass = None;
+                    let mut demand = mass.retirement_demand().map_err(|_| b"pencil-mass-demand" as &'static [u8])?;
+                    demand.copy_bytes += 2 * size_of::<Self>() + 8;
+                    demand.depth = demand.depth.max(1);
+                    let grant = context.retained_grant();
+                    if !numerical_grant_covers(grant, demand) { return Ok(false); }
+                    let (done, items, released) = mass.close_step(grant.maximum_release_bytes);
+                    context.consume_retained(RetainedCloneProgress { copied_items: items.max(1), copied_bytes: demand.copy_bytes, released_bytes: released, ..Default::default() }).map_err(|_| b"pencil-mass-close" as &'static [u8])?;
+                    if done { self.mounted_mass = None; }
                 } else {
                     if !Self::admit(context, 1, 16)? { return Ok(false); } self.row = 0; self.stage = PencilConstructionStage::BuildMass;
                 }
@@ -541,7 +545,7 @@ impl SymmetricPencilConstruction {
             match close_vec_owner_step(&mut mass.0, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} }
             self.mass = None; return (false, 1, 0);
         }
-        if let Some(mass) = self.mounted_mass.as_mut() { if !mass.close_step() { return (false, 1, 0); } self.mounted_mass = None; return (false, 1, 0); }
+        if let Some(mass) = self.mounted_mass.as_mut() { let step = mass.close_step(maximum_bytes); if !step.0 { return step; } self.mounted_mass = None; return (false, 1, 0); }
         for owner in [&mut self.values, &mut self.mass_values] { match close_paged_owner_step(owner, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} } }
         for owner in [&mut self.colptr, &mut self.rowind, &mut self.mass_indptr, &mut self.mass_indices] { match close_paged_owner_step(owner, maximum_bytes) { Ok(Some((items, bytes))) => return (false, items, bytes), Err(()) => return (false, 0, 0), Ok(None) => {} } }
         (true, 0, 0)

@@ -1,0 +1,53 @@
+{
+  "mesh": {
+    "positions": [
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      2,
+      3,
+      0,
+      0,
+      3,
+      0
+    ],
+    "normals": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1
+    ],
+    "indices": [
+      0,
+      1,
+      2,
+      0,
+      2,
+      3
+    ]
+  },
+  "obj": "o mesh\nv 0e0 0e0 0e0\nv 2e0 0e0 0e0\nv 2e0 3e0 0e0\nv 0e0 3e0 0e0\nvn 0e0 0e0 1e0\nvn 0e0 0e0 1e0\nvn 0e0 0e0 1e0\nvn 0e0 0e0 1e0\nf 1//1 2//2 3//3\nf 1//1 3//3 4//4\n",
+  "stl": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAAQEAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAABAAABAQAAAAAAAAAAAAABAQAAAAAAAAA==",
+  "area": 6,
+  "closedBox": {
+    "size": [
+      2,
+      3,
+      4
+    ],
+    "area": 52,
+    "volume": 24,
+    "triangles": 12
+  }
+}

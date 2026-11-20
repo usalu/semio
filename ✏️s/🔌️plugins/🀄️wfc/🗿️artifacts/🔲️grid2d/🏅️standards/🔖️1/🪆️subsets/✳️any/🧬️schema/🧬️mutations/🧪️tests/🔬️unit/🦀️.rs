@@ -45,6 +45,17 @@ fn the_kind_roster_matches_the_enum_in_declaration_order() {
     for (mutation, kind) in every.iter().zip(KINDS) {
         assert_eq!(<Grid2dMutation as Mutation<Grid2dSnapshot>>::descriptor(mutation).semantic_kind, *kind);
         let _ = <Grid2dMutation as ColdMutation<Grid2dSnapshot>>::diff(mutation, &scene);
+        let target: &dyn store::ArtifactOperationTargets = mutation;
+        let expected = <Grid2dMutation as Mutation<Grid2dSnapshot>>::conflict_target(mutation);
+        assert_eq!(target.len(), expected.len(), "{kind}");
+        for (index, text) in expected.iter().enumerate() {
+            assert_eq!(target.segment_len(index).unwrap(), text.len(), "{kind}");
+            for (offset, byte) in text.bytes().enumerate() {
+                let mut output = [0];
+                assert_eq!(target.read_segment(index, offset, &mut output).unwrap(), 1, "{kind}");
+                assert_eq!(output, [byte], "{kind}");
+            }
+        }
     }
 }
 
@@ -66,12 +77,14 @@ fn a_cell_insert_lands_at_its_row_major_position() {
 
 #[test]
 fn every_mutation_round_trips_through_its_text_and_binary_op_form() {
-    for mutation in [change_seed(42), resize_grid(4, 4), pin_cell(1, 1, "a".into()), delete_rule("r-a-c".into()), unmask_cell(2, 1)] {
-        let line = protocol::OpText::print_op(&mutation);
-        assert_eq!(<Grid2dMutation as protocol::OpText>::parse_op(&line).expect("op text parses"), mutation, "text round trip for {line}");
-        let bytes = protocol::OpBinary::encode_op(&mutation).expect("op binary encodes");
-        assert_eq!(<Grid2dMutation as protocol::OpBinary>::decode_op(&bytes).expect("op binary decodes"), mutation);
+    let mutations: [Grid2dMutation; 6] = [change_seed(42), resize_grid(4, 4), pin_cell(1, 1, "a".into()), delete_rule("r-a-c".into()), unmask_cell(2, 1), create_tile(tile("tile-with-media"))];
+    for mutation in &mutations {
+        let line = protocol::OpText::print_op(mutation);
+        assert_eq!(&<Grid2dMutation as protocol::OpText>::parse_op(&line).expect("op text parses"), mutation, "text round trip for {line}");
+        let bytes = protocol::OpBinary::encode_op(mutation).expect("op binary encodes");
+        assert_eq!(&<Grid2dMutation as protocol::OpBinary>::decode_op(&bytes).expect("op binary decodes"), mutation);
     }
+    semio_os_kernel::os_dsl::original_receiving::check_receiving_round_trip(&mutations).expect("original history receives authored mutation bytes");
 }
 
 #[test]
@@ -82,7 +95,7 @@ fn deleting_a_tile_cascades_every_rule_and_pin_that_named_it() {
     assert!(applied.tiles.iter().all(|tile| tile.id != "c"));
     assert!(applied.rules.is_empty(), "the rule naming the tile must be gone");
     assert!(applied.pinned.is_empty(), "the pin naming the tile must be gone");
-    for step in inverse_grid2d_mutation(&base, &delete_tile("c".into())).expect("valid retained mutation inverse fixture") {
+    for step in inverse_grid2d_mutation(&base, &delete_tile("c".into())).expect("valid retained mutation inverse fixture").into_iter().rev() {
         vcs::apply_mutation(&applied, &step).map(|(applied_state, _)| { applied = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(applied, base, "the cascade's inverse must restore value AND position");
@@ -95,7 +108,7 @@ fn masking_a_pinned_cell_cascades_its_pin_and_the_inverse_restores_it() {
     let mut applied = base.clone();
     vcs::apply_mutation(&applied, &mutation).map(|(applied_state, _)| { applied = applied_state; }).expect("mask applies");
     assert!(applied.pinned.is_empty());
-    for step in inverse_grid2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture") {
+    for step in inverse_grid2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture").into_iter().rev() {
         vcs::apply_mutation(&applied, &step).map(|(applied_state, _)| { applied = applied_state; }).expect("inverse step applies");
     }
     assert_eq!(applied, base);
@@ -136,7 +149,7 @@ mod committed_tree {
     use super::KINDS;
 
     fn fixtures() -> std::path::PathBuf {
-        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../..")).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../..")).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations")
     }
 
     #[test]

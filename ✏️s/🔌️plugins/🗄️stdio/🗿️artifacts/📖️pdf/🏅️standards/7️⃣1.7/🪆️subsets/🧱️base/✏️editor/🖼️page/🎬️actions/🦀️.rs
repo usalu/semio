@@ -103,7 +103,12 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "insert-page" => Ok(vec![PdfMutation::InsertPage(InsertPage { index: page, page: PdfPage::new(width.max(1.0), height.max(1.0)) })]),
         "remove-page" => Ok(vec![PdfMutation::RemovePage(RemovePage { index: page })]),
         "move-page" => Ok(vec![PdfMutation::MovePage(MovePage { from: page, to: x.max(0.0) as usize })]),
-        "set-page-size" => Ok(vec![PdfMutation::SetPageMediaBox(SetPageMediaBox { index: page, media_box: [0.0, 0.0, width.max(1.0), height.max(1.0)] })]),
+        "set-page-size" => {
+            let target = snapshot.pages.get(page).ok_or_else(|| fault(format!("pdf page {page} does not exist")))?;
+            let [left, bottom, ..] = target.media_box;
+            let media_box = [left, bottom, left + width.max(1.0), bottom + height.max(1.0)];
+            Ok(vec![PdfMutation::SetPageMediaBox(SetPageMediaBox { index: page, media_box })])
+        }
         "insert-text" | "insert-rectangle" | "insert-line" | "insert-image" => insert_object(snapshot, action, page, x, y, width, height, red, green, blue, &text),
         "set-image" => replace_image_samples(snapshot, &object, width, height, &text),
         "set-font" => set_font_of_text(snapshot, &object, &text),
@@ -201,7 +206,11 @@ fn pointer_down_effect(snapshot: &PdfSnapshot, payload: &str) -> Result<semio_pl
     let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
     let extend = value.get("extra").and_then(Value::as_str) == Some("shift") || value.get("shift").and_then(Value::as_bool).unwrap_or(false) || json_f64(&value, "shift") >= 0.5;
     let merge = if extend { "invertive" } else { "replace" };
-    Ok(match hit_test(snapshot, json_f64(&value, "x"), json_f64(&value, "y")) {
+    let (x, y) = (json_f64(&value, "x"), json_f64(&value, "y"));
+    let target = hit_test(snapshot, x, y).or_else(|| {
+        page_viewports(snapshot).position(|viewport| viewport.contains(x, y)).map(|page| format!("p{page}:paper"))
+    });
+    Ok(match target {
         Some(id) => select_effect(&id, merge),
         None => semio_plugin::Effect::DispatchAction { req: semio_plugin::RequestId(113), action: semio_plugin::CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 },
     })

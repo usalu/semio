@@ -152,6 +152,67 @@ pub struct ShootingShot {
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "saved-camera")]
     pub camera_id: Option<String>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
+    pub drawing: Option<ShootingDrawing>,
+    /// 🎯️ Optional per-shot override of scene auto-fit.
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub auto_fit: Option<bool>,
+}
+
+/// ✒️ Rendering options stored with a drawing shot.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ShootingDrawing {
+    pub background: bool,
+    pub fill: bool,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fill_color: Option<String>,
+    pub fill_opacity: f64,
+    pub visible_lines: bool,
+    pub hidden_lines: bool,
+    pub visible_color: String,
+    pub hidden_color: String,
+    pub visible_width: f64,
+    pub hidden_width: f64,
+    pub line_easing: f64,
+    pub merge_lines: bool,
+}
+
+impl Default for ShootingDrawing {
+    fn default() -> Self {
+        Self {
+            background: true,
+            fill: true,
+            fill_color: None,
+            fill_opacity: 1.0,
+            visible_lines: true,
+            hidden_lines: false,
+            visible_color: "#000000".into(),
+            hidden_color: "#808080".into(),
+            visible_width: 1.0,
+            hidden_width: 1.0,
+            line_easing: 0.0,
+            merge_lines: false,
+        }
+    }
+}
+
+impl ShootingDrawing {
+    /// 📏️ Checks the persisted color, width, and easing domains.
+    pub fn is_valid(&self) -> bool {
+        [&self.visible_color, &self.hidden_color].into_iter().chain(self.fill_color.iter()).all(|color| {
+            color.strip_prefix('#').is_some_and(|hex| matches!(hex.len(), 3 | 6) && hex.bytes().all(|digit| digit.is_ascii_hexdigit()))
+        }) && [self.visible_width, self.hidden_width].iter().all(|width| *width > 0.0 && *width <= 64.0)
+            && (0.0..=1.0).contains(&self.fill_opacity)
+            && (0.0..=10.0).contains(&self.line_easing)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]

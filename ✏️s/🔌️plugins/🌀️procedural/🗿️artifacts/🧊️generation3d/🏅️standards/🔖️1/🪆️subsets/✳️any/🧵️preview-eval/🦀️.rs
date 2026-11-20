@@ -80,6 +80,24 @@ pub use tool_run::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
+/// 🔌️ Output channels whose values travel along a hovered wire or into a hovered inlet.
+pub fn preview_hover_sources(
+    host: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    hovered: &std::collections::BTreeSet<String>,
+) -> std::collections::BTreeSet<String> {
+    let mut sources = std::collections::BTreeSet::new();
+    if hovered.is_empty() {
+        return sources;
+    }
+    for wire in &host.synapses {
+        if hovered.contains(&wire.id) || hovered.contains(&format!("{}@{}", wire.to, wire.to_port)) {
+            if wire.from_port.is_empty(){sources.insert(wire.from.clone());}
+            else{sources.insert(format!("{}@{}",wire.from,wire.from_port));}
+        }
+    }
+    sources
+}
+
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
@@ -126,10 +144,9 @@ pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_fl
             let key = if item.handle.is_empty() { format!("{source}@{}#{}", item.channel, item.index) } else { item.handle.clone() };
             if !seen.insert(key) { continue; }
             let mesh = match item.inline {
-                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
-                Some(PreviewInlineGeometry::Vector { .. }) => continue,
-                Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(&preview),
-                None => session_preview_mesh(&item.handle, session),
+                Some(PreviewInlineGeometry::Vector { .. } | PreviewInlineGeometry::Plane { .. }) => continue,
+                Some(inline) => inline_preview_mesh(&inline),
+                None => session_preview_mesh(&item.handle, session).cloned(),
             }.ok_or_else(|| io_error(format!("generation3d export geometry '{source}@{}' is unavailable", item.channel)))?;
             meshes.push(mesh);
         }

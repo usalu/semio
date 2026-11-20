@@ -27,6 +27,7 @@ impl LdltJob {
             if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
                 if !numerical_finish_writer(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 let Some(payload) = self.desk.lent.take() else { return Ok(NumericalRun::Fault); };
+                self.checkpoint_cursor = NumericalPageCursor::new();
                 return Ok(self.desk.lend_checkpoint(payload, self.state.column as u64));
             }
 

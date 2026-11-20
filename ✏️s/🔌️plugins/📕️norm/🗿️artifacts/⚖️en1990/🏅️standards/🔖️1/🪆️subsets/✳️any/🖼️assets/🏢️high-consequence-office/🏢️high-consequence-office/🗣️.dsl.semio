@@ -1,8 +1,8 @@
 semio norm.en1990.dsl v1
 annex=en project-id=high-consequence-office structure-kind=building altitude-m=0 consequence-class=3 reliability-class=rc3 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=dsl1 inspection-level=il1 beta-computed=3.9
 permanents [id:TEXT kind:ENUM gk:NUM] {
-  G-sup gsup 250000
-  G-inf ginf 50000
+  G-sup g-sup 250000
+  G-inf g-inf 50000
 }
 variables [id:TEXT category:TEXT qk:NUM group:TEXT] {
   Q-office office 60000 ""

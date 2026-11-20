@@ -1,16 +1,8 @@
 //! 📕️ Pdf, png and package encoding of the layout export job: the pdf objects, page and item operators, the png rows and idat chunks and the zip package entries. See [`super`].
 
 use super::*;
-#[path="📦️zip/🦀️.rs"]pub(super) mod zip;
-#[path = "🖼️raster/🦀️.rs"]
-pub(super) mod raster;
-#[path = "🔤️unicode/🦀️.rs"]
-mod unicode;
-#[path = "📝️text/🦀️.rs"]
-mod semantic_text;
-
-#[path="🧭️projection/🦀️.rs"]
-mod projection;
+pub use semio_s_artifact_layout_layout_engine_export_primitives::{zip,raster};
+use semio_s_artifact_layout_layout_engine_export_primitives::{unicode,semantic_text,projection};
 use semio_s_artifact_layout_layout_engine::scene::paragraph::{LayoutTextCluster,LayoutGlyphStyle};
 struct PdfTextProjection<'a>{cluster:LayoutTextCluster<'a>,style:LayoutGlyphStyle<'a>,record:&'a semio_framework_2d_text_font_run::paragraph::ParagraphGlyph,affine:[f64;6],color:[f32;4],italic:bool}
 fn pdf_text_projection<'a>(item:&PdfItem,text:Option<&'a ExportTextState>,drawing:Option<&'a DrawingCompositionState>,snapshot:&'a LayoutSnapshot)->Result<Option<PdfTextProjection<'a>>,String>{Ok(match item{PdfItem::Outline{source,glyph,color,italic,rotation,center}=>{let text=text.ok_or("layout-export-paragraph-source-missing")?;let(s,c)=f64::from(*rotation).sin_cos();let(cx,cy)=(f64::from(center[0]),f64::from(center[1]));Some(PdfTextProjection{cluster:text.glyph_cluster(snapshot,*source,*glyph)?,style:text.glyph_style(snapshot,*source,*glyph)?,record:text.glyph(*source,*glyph)?,affine:[c,s,-s,c,cx-c*cx+s*cy,cy-s*cx-c*cy],color:*color,italic:*italic})},PdfItem::DrawingOutline{label,glyph,paint,affine}=>{let drawing=drawing.ok_or("layout-export-drawing-source-missing")?;Some(PdfTextProjection{cluster:drawing.glyph_cluster(*label,*glyph)?,style:drawing.glyph_style(snapshot,*label,*glyph)?,record:drawing.glyph(*label,*glyph)?,affine:*affine,color:paint.fill.or(paint.stroke).unwrap_or([0.0;4]),italic:false})},_=>None})}
@@ -19,7 +11,7 @@ fn pdf_same_text_cluster(item:&PdfItem,next:Option<&PdfItem>,text:Option<&Export
 //#region 🧩️Job
 impl LayoutExportJob {
     /// 📕️ Advances one original-source Drawing command, addressed frame or retained paragraph turn.
-    pub(super) fn plan_pdf_one(&mut self,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> Result<(), String> {
+    pub(super) fn plan_pdf_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> Result<(), String> {
         if !work.copy_bytes(std::mem::size_of::<Option<DrawingSourceAddress>>()){return Ok(());}
         let request=self.request.as_ref().unwrap();
         let selected=self.target_page.filter(|_|request.page_id.is_some()||matches!(request.kind,LayoutExportKind::Svg|LayoutExportKind::Png));
@@ -27,7 +19,7 @@ impl LayoutExportJob {
         let Some(page_index)=page_index else{self.stage=ExportStage::BeginEncode;return Ok(());};
         let snapshot=Arc::clone(&request.snapshot);let page=snapshot.pages.get(page_index).ok_or("layout-export-page-missing")?;
         if self.drawing.as_ref().is_some_and(DrawingCompositionState::has_active){
-            let read=drawing_read.ok_or("layout-export-original-drawing-read-required")?;let grant=work.child_grant();let drawing=self.drawing.as_mut().unwrap();let demand=drawing.next_demand(&snapshot,read,grant.maximum_copy_bytes).map_err(|error|error.to_string())?;let result=drawing.advance(&snapshot,read,semio_framework_io_ports::VectorSceneGrant{maximum_source_items:grant.maximum_items,maximum_depth:grant.maximum_depth,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes});let used=drawing.last_receipt();
+            let read=drawing_read.ok_or("layout-export-original-drawing-read-required")?;let grant=work.child_grant();let drawing=self.drawing.as_mut().unwrap();let demand=drawing.next_demand(&snapshot,read,grant.maximum_copy_bytes).map_err(|error|error.to_string())?;let result=drawing.advance(&snapshot,read,&mut effect.nested(grant));let used=drawing.last_receipt();
             let item=result.map(|turn|match turn{DrawingCompositionTurn::Progress|DrawingCompositionTurn::Done=>None,DrawingCompositionTurn::Path{index}=>Some(PdfItem::DrawingPath{index}),DrawingCompositionTurn::Glyph{label,glyph,paint,affine}=>Some(PdfItem::DrawingOutline{label,glyph,paint,affine}),DrawingCompositionTurn::Image{x,y,width,height,affine,proxy}=>{let[a,b,c,d,e,f]=affine;Some(PdfItem::Image{x:0.0,y:0.0,width:1.0,height:1.0,rotation:0.0,affine:Some([a*width,b*width,c*height,d*height,a*x+c*y+e,b*x+d*y+f]),link:None,placeholder:false,mark:String::new(),proxy:Some(proxy),raster:None})}});
             if !drawing.has_active(){self.drawing_source=None;}let debit=work.consume_child(semio_framework_value::RetainedCloneProgress{copied_items:used.source_items,copied_bytes:used.copied_bytes,retained_capacity_bytes:used.retained_capacity_bytes,released_bytes:used.released_bytes});match item{Ok(Some(item))=>self.push_plan_item(item,work)?,Ok(None)=>{},Err(error)=>{debit.map_err(str::to_owned)?;return Err(error);}}debit.map_err(str::to_owned)?;if used.source_items==0{work.require_child(demand).map_err(str::to_owned)?;}return Ok(());
         }
@@ -65,10 +57,18 @@ impl LayoutExportJob {
 
     pub(super) fn pdf_offset_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.pdf_offset_needed(){self.pdf_offsets.next_append_demand()}else{Ok(Default::default())}}
     fn pdf_offset_needed(&self)->bool{matches!(self.pdf_section,PdfSection::Catalog|PdfSection::Pages|PdfSection::FontType0|PdfSection::FontCid|PdfSection::FontDescriptor|PdfSection::FontFileBegin|PdfSection::PageObject|PdfSection::ContentBegin|PdfSection::ContentLength|PdfSection::ImageBegin|PdfSection::ImageAlphaBegin|PdfSection::UnicodeBegin|PdfSection::UnicodeLength|PdfSection::EncodingCmap)}
-    fn prepare_pdf_offset_in(&mut self,work:&mut OutputWork)->Result<bool,String>{if !self.pdf_offset_needed(){return Ok(true);}let mut ledger=semio_framework_2d_text_font::work::RetainedWorkLedger::new(work.remaining());let result=self.pdf_offsets.reserve_one_in(&mut ledger);work.consume(ledger.receipt()).map_err(str::to_owned)?;let ready=result.map_err(|error|error.to_string())?;if !ready{work.mark_preparatory();}Ok(ready)}
+    pub(super) fn prepare_pdf_offset_in(&mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if !self.pdf_offset_needed(){return Ok(true)}
+        let grant=context.retained_grant();
+        let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(grant);
+        let Some((result,performed))=context.with_original_effect(grant,|_,effect|self.pdf_offsets.reserve_one_in(&mut work,effect))?else{return Ok(false)};
+        context.consume_work(performed);
+        context.consume_retained(work.receipt())?;
+        Ok(result?)
+    }
     fn pdf_object_offset(&mut self,id:usize,work:&mut OutputWork)->Result<(),String>{
         if self.pdf_offsets.len()+1!=id{return Err("layout-export-pdf-object-order".into());}let value=u32::try_from(self.output.len).map_err(|_|"layout-export-output-limit")?;
-        let mut ledger=semio_framework_2d_text_font::work::RetainedWorkLedger::new(work.remaining());let result=(||{if !self.pdf_offsets.reserve_one_in(&mut ledger)?{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout-export-offset-reservation"));}self.pdf_offsets.push_in(value,&mut ledger)})();work.consume(ledger.receipt()).map_err(str::to_owned)?;result.map_err(|error|error.to_string())
+        let mut ledger=semio_framework_2d_text_font::work::RetainedWorkLedger::new(work.remaining());let result=self.pdf_offsets.push_reserved_in(value,&mut ledger);work.consume(ledger.receipt()).map_err(str::to_owned)?;result.map_err(|error|error.to_string())
     }
 
     fn pdf_object(&mut self, id: usize, body: &[u8],work:&mut OutputWork) -> Result<(), String> {
@@ -87,7 +87,6 @@ impl LayoutExportJob {
 
 
     pub(super) fn encode_pdf_one(&mut self,work:&mut OutputWork) -> Result<(), String> {
-        if !self.prepare_pdf_offset_in(work)?{return Ok(());}
         const FONT: &[u8] = semio_s_artifact_layout_layout_engine::scene::text_fonts::LAYOUT_SANS;
         let page_count = self.pdf_pages.len();
         match self.pdf_section {

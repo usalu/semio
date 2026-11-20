@@ -3,6 +3,16 @@
 use super::*;
 
 //#region ShellInput
+fn cancel_canvas_capture(input: &mut InputState<ActionDescriptor>) -> bool {
+    if !semio_renderer_wgpu_scene_render::cancel_canvas_interactions(input) {
+        return false;
+    }
+    if let Some((window_id, pointer_id)) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_any_pointer_capture() {
+        semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerCancel, input);
+    }
+    true
+}
+
 impl<'ctx> PointerCtx<'ctx> {
     /// 🪟️ Escape closes exactly the topmost overlay first — matches ui_wgpu's overlay-manager
     /// precedence (`EventRouter::close_topmost_overlay`, report-w1d-events-overlay.md: "Escape
@@ -45,10 +55,7 @@ impl<'ctx> PointerCtx<'ctx> {
             return;
         }
         if action == semio_ui_wgpu_input::KeyAction::Escape {
-            if semio_renderer_wgpu_scene_render::cancel_canvas_interactions(input) {
-                if let Some((window_id, pointer_id)) = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_any_pointer_capture() {
-                    semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_ui_wgpu_events::UiEvent::PointerCancel, input);
-                }
+            if cancel_canvas_capture(input) {
                 return;
             }
             if semio_renderer_wgpu_scene_render::cancel_scene_list_transfer() {
@@ -311,6 +318,11 @@ impl<'ctx> PointerCtx<'ctx> {
         }
         if self.chrome.chrome_build.dialog_open() {
             self.handle_keyboard(action, modifiers, input);
+            self.settle.owe_settle();
+            return Ok(());
+        }
+        if action == semio_ui_wgpu_input::KeyAction::Escape && cancel_canvas_capture(input) {
+            self.as_actions().drain_gesture_bound_work().await;
             self.settle.owe_settle();
             return Ok(());
         }

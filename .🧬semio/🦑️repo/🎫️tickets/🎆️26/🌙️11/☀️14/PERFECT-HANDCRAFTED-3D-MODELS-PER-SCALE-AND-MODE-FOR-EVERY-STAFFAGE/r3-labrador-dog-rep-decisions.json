@@ -1,0 +1,138 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Full articulation at 25.8 × 14.2 mm: a Labrador of 0.57 m at the withers with deep chest, short loin, croup, strong neck, broad skull with stop and square muzzle, lower jaw, hanging ears, otter tail in three tapering pieces; hind leg as thigh, second thigh with the Achilles tendon, point of hock, rear pastern and paw, foreleg as shoulder, upper arm with the elbow, forearm, pastern and paw; every paw with four arched toes. Every filled shape of the side elevation, the front elevation and the plan is the orthographic outline of the solids of its bone in the 1:50 model, so drawing and model are one body; leg shapes follow the tip of their bone in front and plan, so walk and trot stretch correctly.",
+   "de": "Volle Gliederung bei 25,8 × 14,2 mm: ein Labrador mit 0,57 m Widerristhöhe mit tiefer Brust, kurzer Lende, Kruppe, kräftigem Hals, breitem Schädel mit Stop und kantigem Fang, Unterkiefer, Hängeohren und Otterrute in drei sich verjüngenden Teilen; Hinterbein als Oberschenkel, Unterschenkel mit Achillessehne, Fersenhöcker, Hintermittelfuß und Pfote, Vorderbein als Schulter, Oberarm mit Ellbogen, Unterarm, Vordermittelfuß und Pfote; jede Pfote mit vier gewölbten Zehen. Jede gefüllte Form von Seitenansicht, Vorderansicht und Draufsicht ist der orthografische Umriss der Körper ihres Knochens im Modell 1:50, Zeichnung und Modell sind also ein Körper; Beinformen folgen in Vorderansicht und Draufsicht der Spitze ihres Knochens, sodass Schritt und Trab richtig strecken."
+  },
+  "retained": {
+   "en": "Eye, brow, mouth line, nose leather, tongue, the pads of every paw, one toe line per near paw and four fur strokes.",
+   "de": "Auge, Braue, Maullinie, Nasenspiegel, Zunge, die Ballen jeder Pfote, je eine Zehenlinie an den nahen Pfoten und vier Fellstriche."
+  },
+  "merged": {
+   "en": "Neck with trunk coat (same region); hock and rear pastern in one shape, pastern and carpal pad in one shape; in front and plan the pads are part of the paw outline.",
+   "de": "Hals mit Rumpffell (gleiche Region); Fersenhöcker und Hintermittelfuß in einer Form, Vordermittelfuß und Karpalballen in einer Form; in Vorderansicht und Draufsicht gehören die Ballen zum Pfotenumriss."
+  },
+  "omitted": {
+   "en": "Individual hairs, whiskers, nostril slits, dewclaws and the separate shoulder, hip and elbow construction lines: the outlines of shoulder, thigh and upper arm now carry them.",
+   "de": "Einzelne Haare, Tasthaare, Nasenschlitze, Afterkrallen und die eigenen Konstruktionslinien von Schulter, Hüfte und Ellbogen: die Umrisse von Schulter, Oberschenkel und Oberarm tragen sie jetzt."
+  },
+  "thinElements": {
+   "en": "Toes 0.017 m wide = 0.34 mm with the claw as their pointed end; ear leather 0.008 m thick, seen edge-on in the front elevation = 0.16 mm; tail tip 0.012 m = 0.24 mm at true width.",
+   "de": "Zehen 0,017 m breit = 0,34 mm mit der Kralle als spitzem Ende; Ohrlappen 0,008 m dick, in der Vorderansicht von der Kante gesehen = 0,16 mm; Rutenspitze 0,012 m = 0,24 mm in wahrer Breite."
+  },
+  "hatching": {
+   "en": "None; fur is indicated by 0.1 mm texture strokes in the direction of growth.",
+   "de": "Keine; das Fell ist durch 0,1 mm starke Texturstriche in Wuchsrichtung angedeutet."
+  },
+  "styles": {
+   "en": "Body 0.35 mm, detail 0.18 mm, fur texture 0.1 mm; far side tone 0.55, near 0.72, pads and nose dark.",
+   "de": "Körper 0,35 mm, Detail 0,18 mm, Felltextur 0,1 mm; ferne Seite Ton 0,55, nahe 0,72, Ballen und Nase dunkel."
+  },
+  "overlays": {
+   "en": "One region per shape in the side elevation; in front and plan a paw lists its coat and pads; texture and detail strokes carry no region.",
+   "de": "In der Seitenansicht eine Region je Form; in Vorderansicht und Draufsicht nennt eine Pfote ihr Fell und ihre Ballen; Textur- und Detailstriche tragen keine Region."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Articulated outline, 12.9 × 7.1 mm: hindquarters with croup, chest, neck, head, jaw, hanging ears, tail in three pieces, every limb in its anatomical segments (thigh, second thigh, rear pastern with the point of hock, paw; shoulder, upper arm, forearm, pastern, paw); the toes are merged into one paw mass. Every filled shape of the side elevation, the front elevation and the plan is the orthographic outline of the solids of its bone in the 1:100 model, so drawing and model are one body; leg shapes follow the tip of their bone in front and plan, so walk and trot stretch correctly.",
+   "de": "Gegliederter Umriss, 12,9 × 7,1 mm: Hinterhand mit Kruppe, Brust, Hals, Kopf, Unterkiefer, Hängeohren, Rute in drei Teilen, jede Gliedmaße in ihren anatomischen Segmenten (Oberschenkel, Unterschenkel, Hintermittelfuß mit Fersenhöcker, Pfote; Schulter, Oberarm, Unterarm, Vordermittelfuß, Pfote); die Zehen sind zu einer Pfotenmasse verschmolzen. Jede gefüllte Form von Seitenansicht, Vorderansicht und Draufsicht ist der orthografische Umriss der Körper ihres Knochens im Modell 1:100, Zeichnung und Modell sind also ein Körper; Beinformen folgen in Vorderansicht und Draufsicht der Spitze ihres Knochens, sodass Schritt und Trab richtig strecken."
+  },
+  "retained": {
+   "en": "Eye, nose leather, ears and one pad mark per paw as 0.13 mm details.",
+   "de": "Auge, Nasenspiegel, Ohren und je Pfote eine Ballenmarke als 0,13 mm starke Details."
+  },
+  "merged": {
+   "en": "Croup into the hindquarters, neck coat with trunk coat, toes and claws into the paw outline, the tongue into the jaw (its region is listed there).",
+   "de": "Kruppe in die Hinterhand, Halsfell mit Rumpffell, Zehen und Krallen in den Pfotenumriss, die Zunge in den Unterkiefer (ihre Region ist dort genannt)."
+  },
+  "omitted": {
+   "en": "Toes, claws, brow, mouth line, carpal pad, fur strokes and the shoulder and hip construction lines: their size (0.01-0.02 m = 0.1-0.2 mm) is at the profile minimum, and the outlines of shoulder and thigh carry the construction.",
+   "de": "Zehen, Krallen, Braue, Maullinie, Karpalballen, Fellstriche und die Konstruktionslinien von Schulter und Hüfte: ihre Größe (0,01-0,02 m = 0,1-0,2 mm) liegt am Profilminimum, und die Umrisse von Schulter und Oberschenkel tragen die Konstruktion."
+  },
+  "thinElements": {
+   "en": "Pastern 0.045 m = 0.45 mm printed at true width; ear leather thickened to 0.016 m = 0.16 mm; tail tip 0.016 m = 0.16 mm.",
+   "de": "Vordermittelfuß 0,045 m = 0,45 mm in wahrer Breite gedruckt; Ohrlappen auf 0,016 m = 0,16 mm verdickt; Rutenspitze 0,016 m = 0,16 mm."
+  },
+  "hatching": {
+   "en": "None: the short coat is shown by tone, not texture.",
+   "de": "Keine: das kurze Fell wird durch den Ton gezeigt, nicht durch Textur."
+  },
+  "styles": {
+   "en": "Solid grey masses 0.25 mm outline, details 0.13 mm; far-side parts one tone lighter and drawn first.",
+   "de": "Graue Flächen mit 0,25 mm Umriss, Details 0,13 mm; Teile der fernen Seite einen Ton heller und zuerst gezeichnet."
+  },
+  "overlays": {
+   "en": "Segments map one-to-one onto the coat and skin regions; the jaw lists the head coat and the tongue.",
+   "de": "Die Segmente entsprechen eins zu eins den Fell- und Hautregionen; der Unterkiefer nennt Kopffell und Zunge."
+  }
+ },
+ "200": {
+  "silhouette": {
+   "en": "Main masses separated, 6.5 × 3.6 mm with the real proportions: hindquarters, chest, neck, head with its own jaw, two hanging ears, the tail as one tapering mass, each hind leg as thigh, second thigh and a lower piece of rear pastern and paw, each foreleg as shoulder with upper arm, forearm and a lower piece of pastern and paw. Every filled shape of the side elevation, the front elevation and the plan is the orthographic outline of the solids of its bone in the 1:200 model, so drawing and model are one body; leg shapes follow the tip of their bone in front and plan, so walk and trot stretch correctly.",
+   "de": "Hauptmassen getrennt, 6,5 × 3,6 mm in den wahren Proportionen: Hinterhand, Brust, Hals, Kopf mit eigenem Unterkiefer, zwei Hängeohren, die Rute als eine sich verjüngende Masse, jedes Hinterbein als Oberschenkel, Unterschenkel und ein unteres Stück aus Hintermittelfuß und Pfote, jedes Vorderbein als Schulter mit Oberarm, Unterarm und ein unteres Stück aus Vordermittelfuß und Pfote. Jede gefüllte Form von Seitenansicht, Vorderansicht und Draufsicht ist der orthografische Umriss der Körper ihres Knochens im Modell 1:200, Zeichnung und Modell sind also ein Körper; Beinformen folgen in Vorderansicht und Draufsicht der Spitze ihres Knochens, sodass Schritt und Trab richtig strecken."
+  },
+  "retained": {
+   "en": "Neck and head carriage, hanging ears, the jaw as its own mass so panting and sniffing read, the angulation of the hind leg.",
+   "de": "Hals- und Kopfhaltung, Hängeohren, der Unterkiefer als eigene Masse, damit Hecheln und Schnüffeln lesbar bleiben, die Winkelung des Hinterbeins."
+  },
+  "merged": {
+   "en": "Shoulder blade with upper arm, three tail bones into one mass, rear pastern and paw, pastern and paw, croup into the hindquarters, nose leather into the head.",
+   "de": "Schulterblatt mit Oberarm, drei Rutenknochen zu einer Masse, Hintermittelfuß und Pfote, Vordermittelfuß und Pfote, Kruppe in die Hinterhand, Nasenspiegel in den Kopf."
+  },
+  "omitted": {
+   "en": "Eye, toes, claws, pads, brow, mouth line, tongue (listed on the head and jaw masses), fur strokes and construction lines.",
+   "de": "Auge, Zehen, Krallen, Ballen, Braue, Maullinie, Zunge (bei Kopf und Unterkiefer genannt), Fellstriche und Konstruktionslinien."
+  },
+  "thinElements": {
+   "en": "Rear pastern 0.038 m = 0.19 mm and forearm 0.05 m = 0.25 mm at true width; ears thickened to 0.03 m = 0.15 mm; tail tip 0.03 m = 0.15 mm.",
+   "de": "Hintermittelfuß 0,038 m = 0,19 mm und Unterarm 0,05 m = 0,25 mm in wahrer Breite; Ohren auf 0,03 m = 0,15 mm verdickt; Rutenspitze 0,03 m = 0,15 mm."
+  },
+  "hatching": {
+   "en": "None; on a 6.5 mm figure no hatch spacing at or above the profile minimum fits.",
+   "de": "Keine; auf einer 6,5 mm großen Figur passt kein Schraffurabstand am oder über dem Profilminimum."
+  },
+  "styles": {
+   "en": "Mid-grey solids with a 0.18 mm outline; far side lighter.",
+   "de": "Mittelgraue Flächen mit 0,18 mm Umriss; ferne Seite heller."
+  },
+  "overlays": {
+   "en": "Each mass carries its own region; head and jaw carry the head coat, nose and tongue regions together, the lower leg pieces carry limb coat and pads.",
+   "de": "Jede Masse trägt ihre eigene Region; Kopf und Unterkiefer tragen Kopffell, Nase und Zunge gemeinsam, die unteren Beinstücke Beinfell und Ballen."
+  }
+ },
+ "500": {
+  "silhouette": {
+   "en": "One composed silhouette of 2.6 × 1.4 mm: trunk in two overlapping masses (hindquarters on the lumbar bone, chest on the thorax bone), a neck wedge, one head mass with the muzzle, the tail as one tapering piece; each leg as an upper piece, a leg piece and a foot along the limb bones. The body pen is 0.2 mm, so a limb that is foreshortened to a hairline in one view of a pose still prints at the minimum feature. Every filled shape of the side elevation, the front elevation and the plan is the orthographic outline of the solids of its bone in the 1:500 model, so drawing and model are one body; leg shapes follow the tip of their bone in front and plan, so walk and trot stretch correctly.",
+   "de": "Eine zusammengesetzte Silhouette von 2,6 × 1,4 mm: Rumpf in zwei überlappenden Massen (Hinterhand am Lendenknochen, Brust am Brustknochen), ein Halskeil, eine Kopfmasse mit dem Fang, die Rute als ein sich verjüngendes Stück; jedes Bein als oberes Stück, Beinstück und Fuß entlang der Gliedmaßenknochen. Der Körperstift ist 0,2 mm stark, damit eine Gliedmaße, die in einer Ansicht einer Pose zur Haarlinie verkürzt ist, noch im Mindestmaß druckt. Jede gefüllte Form von Seitenansicht, Vorderansicht und Draufsicht ist der orthografische Umriss der Körper ihres Knochens im Modell 1:500, Zeichnung und Modell sind also ein Körper; Beinformen folgen in Vorderansicht und Draufsicht der Spitze ihres Knochens, sodass Schritt und Trab richtig strecken."
+  },
+  "retained": {
+   "en": "Body proportions, the long otter tail, hind-limb angulation and the raised head; near and far legs stay separate bone chains so gait remains legible.",
+   "de": "Körperproportionen, die lange Otterrute, die Winkelung der Hinterhand und der erhobene Kopf; nahe und ferne Beine bleiben getrennte Knochenketten, damit die Gangart lesbar bleibt."
+  },
+  "merged": {
+   "en": "Shoulder blade and upper arm, ears and jaw into the head mass, rear pastern and paw into one foot, pastern and paw into one foot. All regions are listed on the merged masses.",
+   "de": "Schulterblatt und Oberarm, Ohren und Unterkiefer in die Kopfmasse, Hintermittelfuß und Pfote zu einem Fuß, Vordermittelfuß und Pfote zu einem Fuß. Alle Regionen sind bei den verschmolzenen Massen genannt."
+  },
+  "omitted": {
+   "en": "Eye, nose leather, mouth line, tongue, pads, toes, claws, fur strokes and all construction lines: the head is 0.24 m = 0.48 mm long and cannot carry them.",
+   "de": "Auge, Nasenspiegel, Maullinie, Zunge, Ballen, Zehen, Krallen, Fellstriche und alle Konstruktionslinien: der Kopf ist 0,24 m = 0,48 mm lang und kann sie nicht tragen."
+  },
+  "thinElements": {
+   "en": "Lower legs are drawn 0.06 m wide (real 0.04-0.05 m) = 0.12 mm plus the 0.2 mm outline; the tail tapers from 0.06 m to 0.04 m.",
+   "de": "Die Unterbeine sind 0,06 m breit gezeichnet (wirklich 0,04-0,05 m) = 0,12 mm zuzüglich des 0,2 mm starken Umrisses; die Rute verjüngt sich von 0,06 m auf 0,04 m."
+  },
+  "hatching": {
+   "en": "None.",
+   "de": "Keine."
+  },
+  "styles": {
+   "en": "Solid mid-grey masses with a 0.2 mm outline; far legs a lighter tone.",
+   "de": "Mittelgraue Flächen mit 0,2 mm Umriss; ferne Beine in hellerem Ton."
+  },
+  "overlays": {
+   "en": "Thermal overlays colour the merged masses by the area-weighted value of the listed regions; ears, nose and tongue on the head and the pads on the feet cannot be told apart.",
+   "de": "Thermische Überlagerungen färben die verschmolzenen Massen nach dem flächengewichteten Wert der genannten Regionen; Ohren, Nase und Zunge am Kopf und die Ballen an den Füßen lassen sich nicht unterscheiden."
+  }
+ }
+}

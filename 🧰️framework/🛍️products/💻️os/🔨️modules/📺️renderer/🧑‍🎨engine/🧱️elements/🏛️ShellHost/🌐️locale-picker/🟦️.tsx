@@ -1,6 +1,7 @@
 import * as React from "../../⚛️react-port/🟦️.ts";
 import { SHELL_LOCALES, type ShellLocale } from "@semio-tech/framework";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 const LANGUAGE_CHOICES: Readonly<Record<ShellLocale, Readonly<{ name: string; prompt: string }>>> = {
   en: { name: "English", prompt: "Choose your language" },
   de: { name: "Deutsch", prompt: "Sprache wählen" },
@@ -21,7 +22,7 @@ export function ShellLocalePicker(props: Readonly<{ onChoose(locale: ShellLocale
         </h1>
         <div style={{ display: "flex", gap: "0.75rem" }}>
           {SHELL_LOCALES.map((locale) => (
-            <button key={locale} type="button" lang={locale} data-locale={locale} onClick={() => props.onChoose(locale)}>
+            <button {...sharedBorderlessBoxProps} key={locale} type="button" lang={locale} data-locale={locale} onClick={() => props.onChoose(locale)}>
               {LANGUAGE_CHOICES[locale].name}
             </button>
           ))}

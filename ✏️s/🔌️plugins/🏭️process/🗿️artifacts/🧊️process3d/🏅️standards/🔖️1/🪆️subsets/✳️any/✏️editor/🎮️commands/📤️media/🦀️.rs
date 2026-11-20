@@ -56,7 +56,15 @@ pub mod load_model_request {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen {
+            req: semio_plugin::RequestId(111),
+            accept: ".stp,.step,.obj,.stl,.glb".into(),
+            read_as: Some("dataUrl".into()),
+            import_action: "importModelFile".into(),
+            multiple: false,
+            args: None,
+            max_file_bytes: Some(semio_s_artifact_process_process3d_io::PROCESS3D_MODEL_FILE_BYTES),
+        }))
     }
 }
 //#endregion 🔖️LoadModelRequest
@@ -82,8 +90,8 @@ pub mod import_model_file {
         _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
-            Some(snapshot) => Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
-            None => Ok(Emit::default()),
+            Ok(snapshot) => Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
+            Err(error) => Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("process3d.import-model"), error.to_string())),
         }
     }
 }

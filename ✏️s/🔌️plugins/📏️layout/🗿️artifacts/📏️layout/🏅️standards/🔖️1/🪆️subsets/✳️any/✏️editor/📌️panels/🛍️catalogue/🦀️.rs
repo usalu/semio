@@ -11,7 +11,8 @@
 use crate::terminology::catalogue_kind_label;
 use crate::terminology::LayoutLabels;
 use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
-use semio_plugin::tree_item_with_action;
+use semio_plugin::{tree_item_desc, tree_item_with_action};
+use semio_s_artifact_layout_layout_model::ImageLink;
 use semio_ui_locale::Label;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
@@ -29,6 +30,7 @@ use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 pub const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
 pub const LAYOUT_CATALOGUE_ROOT: &str = "layout-catalogue";
 pub const LAYOUT_CATALOGUE_KINDS_SECTION: &str = "layout-catalogue.kinds";
+pub const LAYOUT_CATALOGUE_LINKS_SECTION: &str = "layout-catalogue.links";
 
 
 /// 🛍️ The full creation roster this catalogue windows over — the page item plus every frame kind.
@@ -56,9 +58,17 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let action = if kind == "page" { layout_action("addPage", None)? } else { layout_action("addFrame", Some(ui_value_map([("kind", ui_value_text(kind)?)])?))? };
-    let mut item = tree_item_with_action(format!("layout-catalogue.{kind}"), label.into().as_str(), Some(kind.into()), action)?;
+    let item = tree_item_with_action(format!("layout-catalogue.{kind}"), label.into().as_str(), Some(kind.into()), action)?;
+    let payload = UiText::try_from_string(serde_json::json!({ "kind": kind }).to_string())
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue kind drag payload admission failed"))?;
+    catalogue_item_presentation(item, kind, icon, Some(payload))
+}
+
+fn catalogue_item_presentation(mut item: semio_plugin::BuiltNode, kind: &str, icon: &str, payload: Option<UiText>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let semio_plugin::Component::TreeItem(props) = &mut item.component else { return Ok(item); };
+    props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue icon admission failed"))?);
+    let Some(payload) = payload else { return Ok(item); };
     let mut drag_data = UiFixedMap::default();
-    let payload = UiText::try_from_string(serde_json::json!({ "kind": kind }).to_string()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue drag payload admission failed"))?;
     drag_data
         .try_push(UiText::try_from_str(LAYOUT_CATALOGUE_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue drag mime admission failed"))?, payload)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue drag entry admission failed"))?;
@@ -68,21 +78,36 @@ fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio
             UiText::try_from_str("").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue empty drag value admission failed"))?,
         )
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue kind drag entry admission failed"))?;
-    if let semio_plugin::Component::TreeItem(props) = &mut item.component {
-        props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue icon admission failed"))?);
-        props.draggable = Some(true);
-        props.drag_data = Some(drag_data);
-    }
+    props.draggable = Some(true);
+    props.drag_data = Some(drag_data);
     Ok(item)
 }
 
-pub fn render(labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    PanelTreeBuilder::new(LAYOUT_CATALOGUE_ROOT)?
+fn linked_catalogue_item(link: &ImageLink, document_id: Option<&str>, position: usize) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let label = [&link.path, &link.artifact_ref, &link.id].into_iter().find(|label| !label.is_empty()).map_or("", String::as_str);
+    let label = UiText::clipped(label);
+    let id = crate::link_presentation_key("layout-catalogue", &link.id, position)?;
+    let item = tree_item_desc(id.as_str(), Label::data(label.as_str()), None)?;
+    let payload = document_id
+        .filter(|document_id| !document_id.is_empty() && !link.id.is_empty() && document_id.len() <= id.capacity() && link.id.len() <= id.capacity())
+        .map(|document_id| serde_json::json!({ "kind": "image", "sourceDocumentId": document_id, "sourceLinkId": link.id }).to_string())
+        .and_then(|data| UiText::try_from_string(data).ok());
+    catalogue_item_presentation(item, "image", "image", payload)
+}
+
+pub fn render(links: &[ImageLink], document_id: Option<&str>, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    let mut panel = PanelTreeBuilder::new(LAYOUT_CATALOGUE_ROOT)?
         .window_section(windows, LAYOUT_CATALOGUE_KINDS_SECTION, Some(semio_s_artifact_layout_layout_editor_commands::ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, LAYOUT_CATALOGUE_ROSTER, |(kind, icon)| {
             let label = if *kind == "page" { labels.catalogue_page.into() } else { catalogue_kind_label(kind, labels) };
             catalogue_tree_item(kind, label, icon)
-        })?
-        .build()
+        })?;
+    let linked_assets: Vec<_> = links.iter().enumerate().filter(|(_, link)| !link.artifact_ref.is_empty() || link.proxy_data_url.as_ref().is_some_and(|proxy| !proxy.is_empty())).collect();
+    if !linked_assets.is_empty() {
+        panel = panel.window_section(windows, LAYOUT_CATALOGUE_LINKS_SECTION, Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.catalogue_linked_assets.as_str())?), true, &linked_assets, |(position, link)| {
+            linked_catalogue_item(link, document_id, *position)
+        })?;
+    }
+    panel.build()
 }
 //#endregion 🔖️Render
 

@@ -39,11 +39,23 @@
         {
           "id": "incropera-2018",
           "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "din-49073-1-2010",
+          "citation": "DIN 49073-1:2010 Flush-mounted device boxes of metal or insulating material for accessories up to 16 A, 250 V (60 mm box diameter, device fixing screws 60 mm apart)."
+        },
+        {
+          "id": "danfoss-ret1000-datasheet",
+          "citation": "Danfoss RET1000 electronic room thermostat with dial, data sheet (84 x 84 mm face, 28 to 37 mm deep with dial), https://assets.danfoss.com/documents/79466/AI172186403796en-020201.pdf, accessed 2026-11-20."
+        },
+        {
+          "id": "eberle-rtr-e-6121",
+          "citation": "Eberle Controls RTR-E 6121 room temperature controller with set-point dial, product data (75 x 75 x 25.5 mm, wall or flush-box mounting, 5 to 30 degrees Celsius), https://www.eberle.de/fileadmin/Downloads/PDF/Temperaturregler_2025.pdf, accessed 2026-11-20."
         }
       ],
       "notes": {
-        "en": "A battery-free electronic room thermostat for flush wall mounting at 1.5 m height seen face-on: a rounded square housing of 0.09 m by 0.09 m and 27 mm depth with a 36 mm by 21 mm display window, a 7 mm heating-call lamp and a 42 mm set-point dial turning over 270 degrees for 5 to 30 degrees Celsius. It stands for the circle on the wall next to the radiator in the heating clips. The origin is at floor level on the housing axis; the centre of the housing is 1.5 m above it in the wall plane. The control electronics (power supply, microcontroller, relay) take about 0.14 W at idle and 0.7 W with the relay coil and lamp energised, which also warms the housing by a few kelvin; all values are authored estimates for this product class. The dial angle follows from the set point: 135 degrees at 5 degrees Celsius to -135 degrees at 30 degrees Celsius, so 20 degrees Celsius stands at -27 degrees.",
-        "de": "Ein batterieloser elektronischer Raumthermostat zur Unterputzmontage in 1,5 m Höhe, frontal gesehen: ein gerundetes quadratisches Gehäuse von 0,09 m mal 0,09 m und 27 mm Tiefe mit einem Anzeigefenster von 36 mm mal 21 mm, einer Lampe für die Heizanforderung von 7 mm und einem Sollwert-Drehknopf von 42 mm, der sich über 270 Grad für 5 bis 30 Grad Celsius dreht. Er steht für den Kreis an der Wand neben dem Heizkörper in den Heizungsclips. Der Ursprung liegt am Boden auf der Gehäuseachse; die Gehäusemitte liegt 1,5 m darüber in der Wandebene. Die Regelelektronik (Netzteil, Mikrocontroller, Relais) nimmt im Leerlauf etwa 0,14 W und mit erregter Relaisspule und Lampe 0,7 W auf, was das Gehäuse um einige Kelvin erwärmt; alle Werte sind Schätzwerte für diese Produktklasse. Der Knopfwinkel folgt aus dem Sollwert: 135 Grad bei 5 Grad Celsius bis -135 Grad bei 30 Grad Celsius, also steht 20 Grad Celsius bei -27 Grad."
+        "en": "A battery-free electronic room thermostat screwed onto a flush wall box at 1.5 m height, seen face-on (size class of the Danfoss RET1000 and the Eberle RTR-E 6121): a rounded square housing of 0.09 m by 0.09 m, 15 mm deep, on a base plate held by two screws 60 mm apart (DIN 49073-1), with a 36 mm by 21 mm display window, a 7 mm heating-call lamp and a 42 mm set-point dial that stands 12 mm proud (27 mm overall depth) and turns over 270 degrees for 5 to 30 degrees Celsius. It stands for the circle on the wall next to the radiator in the heating clips. The origin is at floor level on the housing axis; the centre of the housing is 1.5 m above it in the wall plane. The control electronics (power supply, microcontroller, relay) take about 0.14 W at idle and 0.7 W with the relay coil and lamp energised, which also warms the housing by a few kelvin; all values are authored estimates for this product class. The dial angle follows from the set point: 135 degrees at 5 degrees Celsius to -135 degrees at 30 degrees Celsius, so 20 degrees Celsius stands at -27 degrees.",
+        "de": "Ein batterieloser elektronischer Raumthermostat, in 1,5 m Höhe auf eine Unterputzdose geschraubt, frontal gesehen (Größenklasse des Danfoss RET1000 und des Eberle RTR-E 6121): ein gerundetes quadratisches Gehäuse von 0,09 m mal 0,09 m und 15 mm Tiefe auf einer Grundplatte, die zwei Schrauben im Abstand von 60 mm halten (DIN 49073-1), mit einem Anzeigefenster von 36 mm mal 21 mm, einer Lampe für die Heizanforderung von 7 mm und einem Sollwert-Drehknopf von 42 mm, der 12 mm vorsteht (27 mm Gesamttiefe) und sich über 270 Grad für 5 bis 30 Grad Celsius dreht. Er steht für den Kreis an der Wand neben dem Heizkörper in den Heizungsclips. Der Ursprung liegt am Boden auf der Gehäuseachse; die Gehäusemitte liegt 1,5 m darüber in der Wandebene. Die Regelelektronik (Netzteil, Mikrocontroller, Relais) nimmt im Leerlauf etwa 0,14 W und mit erregter Relaisspule und Lampe 0,7 W auf, was das Gehäuse um einige Kelvin erwärmt; alle Werte sind Schätzwerte für diese Produktklasse. Der Knopfwinkel folgt aus dem Sollwert: 135 Grad bei 5 Grad Celsius bis -135 Grad bei 30 Grad Celsius, also steht 20 Grad Celsius bei -27 Grad."
       }
     },
     "dimensions": {
@@ -104,19 +116,19 @@
           "id": "housing",
           "parent": null,
           "x": 0,
-          "y": 0,
-          "angleDeg": 0,
+          "y": -0.03,
+          "angleDeg": 90,
           "title": {
-            "en": "Housing with display and electronics",
-            "de": "Gehäuse mit Anzeige und Elektronik"
+            "en": "Housing on its base plate, from the lower to the upper fixing screw",
+            "de": "Gehäuse auf seiner Grundplatte, von der unteren zur oberen Befestigungsschraube"
           },
-          "lengthM": 0.09,
+          "lengthM": 0.06,
           "joint": {
             "type": "fixed"
           },
           "mass": {
             "kg": 0.11,
-            "comX": 0,
+            "comX": 0.03,
             "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
@@ -125,12 +137,12 @@
         {
           "id": "dial",
           "parent": "housing",
-          "x": 0,
-          "y": -0.014,
+          "x": 0.016,
+          "y": 0,
           "angleDeg": 0,
           "title": {
-            "en": "Set-point dial",
-            "de": "Sollwert-Drehknopf"
+            "en": "Set-point dial, from the spindle axis along the index",
+            "de": "Sollwert-Drehknopf, von der Achse entlang des Zeigers"
           },
           "lengthM": 0.021,
           "joint": {
@@ -152,12 +164,13 @@
       {
         "id": "wall-screw-top",
         "bone": "housing",
-        "x": 0,
-        "y": 0.034,
+        "x": 0.06,
+        "y": 0,
+        "z": 0.0135,
         "kind": "support",
         "title": {
-          "en": "Upper screw in the wall box",
-          "de": "Obere Schraube in der Unterputzdose"
+          "en": "Upper fixing screw in the wall box",
+          "de": "Obere Befestigungsschraube in der Unterputzdose"
         },
         "support": "pin",
         "normalDeg": 0,
@@ -168,11 +181,12 @@
         "id": "wall-screw-bottom",
         "bone": "housing",
         "x": 0,
-        "y": -0.034,
+        "y": 0,
+        "z": 0.0135,
         "kind": "support",
         "title": {
-          "en": "Lower screw in the wall box",
-          "de": "Untere Schraube in der Unterputzdose"
+          "en": "Lower fixing screw in its slot",
+          "de": "Untere Befestigungsschraube im Langloch"
         },
         "support": "roller",
         "normalDeg": 0,
@@ -207,7 +221,7 @@
               "filled": true,
               "tone": 0.9,
               "kind": "rect",
-              "x": -0.045,
+              "x": -0.015,
               "y": -0.045,
               "w": 0.09,
               "h": 0.09,
@@ -223,10 +237,10 @@
               "filled": true,
               "tone": 0.12,
               "kind": "rect",
-              "x": -0.018,
-              "y": 0.016,
-              "w": 0.036,
-              "h": 0.021,
+              "x": 0.046,
+              "y": -0.018,
+              "w": 0.021,
+              "h": 0.036,
               "region": "display",
               "material": "lcd-glass"
             },
@@ -238,8 +252,8 @@
               "filled": true,
               "tone": 0.35,
               "kind": "ellipse",
-              "cx": 0.0315,
-              "cy": 0.0265,
+              "cx": 0.056499999999999995,
+              "cy": -0.0315,
               "rx": 0.0035,
               "ry": 0.0035,
               "region": "led",
@@ -268,10 +282,10 @@
               "filled": true,
               "tone": 0.95,
               "kind": "rect",
-              "x": -0.0055,
-              "y": 0.004,
-              "w": 0.011,
-              "h": 0.0145,
+              "x": 0.004,
+              "y": -0.0055,
+              "w": 0.0145,
+              "h": 0.011,
               "region": "dial",
               "material": "abs-plastic"
             }
@@ -310,7 +324,7 @@
               "y": -0.0015,
               "w": 0.09,
               "h": 0.015,
-              "r": 0.004,
+              "r": 0.002,
               "region": "casing",
               "material": "abs-plastic"
             }
@@ -328,7 +342,7 @@
               "y": -0.045,
               "w": 0.015,
               "h": 0.09,
-              "r": 0.004,
+              "r": 0.002,
               "region": "casing",
               "material": "abs-plastic"
             },
@@ -357,8 +371,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A 90 mm square wall thermostat seen face-on, 1.8 mm on paper: a rounded housing with a dark display window, a small lamp and a round set-point dial with a pointer. Front view: the 0.09 m high wall slab, 0.015 m thick, with the dial standing 0.012 m proud of its right-hand face; the front view of the wall side is on the left. Top view: the same slab 0.09 m wide with the dial 0.042 m wide.",
-            "de": "Ein quadratischer Raumthermostat von 90 mm in der Frontansicht, auf Papier 1,8 mm: ein Gehäuse mit gerundeten Ecken, ein dunkles Anzeigefenster, eine kleine Lampe und ein runder Sollwert-Drehknopf mit Zeiger. Vorderansicht: die 0,09 m hohe Wandplatte von 0,015 m Dicke mit dem Drehknopf, der 0,012 m aus der rechten Fläche ragt; die Wandseite liegt links. Draufsicht: dieselbe Platte, 0,09 m breit, mit dem 0,042 m breiten Drehknopf."
+            "en": "A 90 mm square wall thermostat seen face-on, 1.8 mm on paper: a rounded housing with a dark display window, a small lamp and a round set-point dial with a pointer. Front view: the 0.09 m high housing, 0.015 m deep, with the dial standing 0.012 m proud of its right-hand face; the wall side is on the left. Top view: the same housing 0.09 m wide with the dial 0.042 m wide.",
+            "de": "Ein quadratischer Raumthermostat von 90 mm in der Frontansicht, auf Papier 1,8 mm: ein Gehäuse mit gerundeten Ecken, ein dunkles Anzeigefenster, eine kleine Lampe und ein runder Sollwert-Drehknopf mit Zeiger. Vorderansicht: das 0,09 m hohe Gehäuse von 0,015 m Tiefe mit dem Drehknopf, der 0,012 m aus der rechten Fläche ragt; die Wandseite liegt links. Draufsicht: dasselbe Gehäuse, 0,09 m breit, mit dem 0,042 m breiten Drehknopf."
           },
           "retained": {
             "en": "Housing of 0.09 m, display window of 36 by 21 mm, lamp of 7 mm, dial of 42 mm and the 11 mm pointer that turns with the dial bone.",
@@ -369,8 +383,8 @@
             "de": "Nichts wird zusammengefasst: Gehäuse, Anzeige, Lampe und Drehknopf tragen je eine eigene Region."
           },
           "omitted": {
-            "en": "The scale ticks, the digits on the display, the screws and the wall-plate seam. Front and top view omit the display, the LED and the pointer, which lie on the right-hand face and are seen edge-on there.",
-            "de": "Die Skalenstriche, die Ziffern der Anzeige, die Schrauben und die Fuge zur Wandplatte. Vorder- und Draufsicht lassen Anzeige, Leuchtdiode und Zeiger weg, die auf der rechten Fläche liegen und dort nur von der Kante zu sehen wären."
+            "en": "The scale ticks, the digits on the display, the screws, the ventilation slots, the finger flutes of the knob and the 1.5 mm shadow gap above the base plate. Front and top view omit the display, the LED and the pointer, which lie on the right-hand face and are seen edge-on there; the 2 mm face-edge radius stands for the whole edge profile.",
+            "de": "Die Skalenstriche, die Ziffern der Anzeige, die Schrauben, die Lüftungsschlitze, die Griffmulden des Knopfs und die 1,5 mm breite Schattenfuge über der Grundplatte. Vorder- und Draufsicht lassen Anzeige, Leuchtdiode und Zeiger weg, die auf der rechten Fläche liegen und dort nur von der Kante zu sehen wären; der Kantenradius von 2 mm an der Front steht für das ganze Kantenprofil."
           },
           "thinElements": {
             "en": "The pointer is 11 mm wide (0.22 mm on paper) and filled, so that it stays above the feature width when the dial turns.",
@@ -401,7 +415,7 @@
           "body": 0.18,
           "detail": null,
           "texture": null,
-          "glazing": null,
+          "glazing": 0.13,
           "ground": 0.25
         },
         "hatches": [],
@@ -415,17 +429,31 @@
               "filled": true,
               "tone": 0.9,
               "kind": "rect",
-              "x": -0.045,
+              "x": -0.015,
               "y": -0.045,
               "w": 0.09,
               "h": 0.09,
-              "r": 0.008,
+              "r": 0.004,
               "regions": [
                 "casing",
-                "display",
                 "led"
               ],
               "material": "abs-plastic"
+            },
+            {
+              "id": "display",
+              "bone": "housing",
+              "role": "glazing",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "rect",
+              "x": 0.046,
+              "y": -0.018,
+              "w": 0.021,
+              "h": 0.036,
+              "region": "display",
+              "material": "lcd-glass"
             },
             {
               "id": "dial",
@@ -437,8 +465,8 @@
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.024,
-              "ry": 0.024,
+              "rx": 0.021,
+              "ry": 0.021,
               "region": "dial",
               "material": "abs-plastic"
             }
@@ -454,15 +482,15 @@
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.024,
-              "ry": 0.024,
+              "rx": 0.021,
+              "ry": 0.021,
               "region": "dial",
               "material": "abs-plastic",
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.0265,
-                "z1": -0.0065
+                "z0": -0.0135,
+                "z1": -0.0015
               }
             },
             {
@@ -474,13 +502,11 @@
               "tone": 0.9,
               "kind": "rect",
               "x": -0.045,
-              "y": -0.0065,
+              "y": -0.0015,
               "w": 0.09,
-              "h": 0.02,
-              "r": 0.004,
+              "h": 0.015,
               "regions": [
                 "casing",
-                "display",
                 "led"
               ],
               "material": "abs-plastic"
@@ -495,14 +521,12 @@
               "filled": true,
               "tone": 0.9,
               "kind": "rect",
-              "x": -0.0065,
+              "x": -0.0015,
               "y": -0.045,
-              "w": 0.02,
+              "w": 0.015,
               "h": 0.09,
-              "r": 0.004,
               "regions": [
                 "casing",
-                "display",
                 "led"
               ],
               "material": "abs-plastic"
@@ -517,51 +541,51 @@
               "kind": "ellipse",
               "cx": 0,
               "cy": 0,
-              "rx": 0.024,
-              "ry": 0.024,
+              "rx": 0.021,
+              "ry": 0.021,
               "region": "dial",
               "material": "abs-plastic",
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.0265,
-                "z1": -0.0065
+                "z0": -0.0135,
+                "z1": -0.0015
               }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.9 mm square with a dark round dial. Front view: the wall slab with the dial thickened to 0.022 m so it stays above the feature width. Top view: the slab 0.09 m wide with the 0.048 m dial in front of it.",
-            "de": "Ein Quadrat von 0,9 mm mit einem dunklen runden Drehknopf. Vorderansicht: die Wandplatte mit dem auf 0,022 m verdickten Drehknopf, damit er über der Mindestbreite bleibt. Draufsicht: die 0,09 m breite Platte mit dem 0,048 m breiten Drehknopf davor."
+            "en": "A 0.9 mm square with a dark display plate and a dark round dial, all at their true size. Front view: the housing 0.015 m deep with the dial 0.012 m proud of it. Top view: the housing 0.09 m wide with the 0.042 m dial in front of it.",
+            "de": "Ein Quadrat von 0,9 mm mit einer dunklen Anzeigeplatte und einem dunklen runden Drehknopf, alle in wahrer Größe. Vorderansicht: das Gehäuse von 0,015 m Tiefe mit dem Drehknopf, der 0,012 m vorsteht. Draufsicht: das 0,09 m breite Gehäuse mit dem 0,042 m breiten Drehknopf davor."
           },
           "retained": {
-            "en": "Housing and the round dial that carries the set point.",
-            "de": "Gehäuse und der runde Drehknopf, der den Sollwert trägt."
+            "en": "Housing, the display window of 36 by 21 mm and the round dial that carries the set point.",
+            "de": "Gehäuse, das Anzeigefenster von 36 mal 21 mm und der runde Drehknopf, der den Sollwert trägt."
           },
           "merged": {
-            "en": "Display and lamp join the housing (it carries their regions); the pointer joins the dial.",
-            "de": "Anzeige und Lampe gehen im Gehäuse auf (es trägt ihre Regionen); der Zeiger geht im Drehknopf auf."
+            "en": "The lamp joins the housing (it carries its region); the pointer joins the dial; the 8 mm corner radius is reduced to 4 mm.",
+            "de": "Die Lampe geht im Gehäuse auf (es trägt ihre Region); der Zeiger geht im Drehknopf auf; der Eckradius von 8 mm ist auf 4 mm verkleinert."
           },
           "omitted": {
-            "en": "Display window, lamp and pointer: the turning of the dial is not drawn at this scale. Front and top view show slab and dial only; the slab is 0.020 m thick instead of 0.015 m and the dial stands 0.020 m proud instead of 0.012 m, so that both reach the 0.2 mm feature width and the depth stays within 0.04 m.",
-            "de": "Anzeigefenster, Lampe und Zeiger: das Drehen des Knopfs wird bei diesem Maßstab nicht gezeichnet. Vorder- und Draufsicht zeigen nur Platte und Drehknopf; die Platte ist 0,020 m statt 0,015 m dick und der Knopf steht 0,020 m statt 0,012 m vor, damit beide die Merkmalsbreite von 0,2 mm erreichen und die Tiefe innerhalb von 0,04 m bleibt."
+            "en": "Lamp and pointer: the turning of the dial is not drawn at this scale. Front and top view show housing and dial only, as plain rectangles at the true depths of 0.015 m and 0.012 m, so the overall depth is the 0.027 m of the dimensions.",
+            "de": "Lampe und Zeiger: das Drehen des Knopfs wird bei diesem Maßstab nicht gezeichnet. Vorder- und Draufsicht zeigen nur Gehäuse und Drehknopf als einfache Rechtecke in den wahren Tiefen von 0,015 m und 0,012 m, die Gesamttiefe sind also die 0,027 m der Abmessungen."
           },
           "thinElements": {
-            "en": "The dial is widened to 48 mm (0.48 mm on paper) so that it prints as a filled disc.",
-            "de": "Der Drehknopf ist auf 48 mm (0,48 mm auf Papier) verbreitert, damit er als gefüllte Scheibe druckt."
+            "en": "The dial is 42 mm wide (0.42 mm on paper) and prints as a filled disc; the display window is 0.36 by 0.21 mm on paper. Housing and dial are 0.15 mm and 0.12 mm deep on paper in front and top view; they are kept at the true depth so that the proportions of the object stay right.",
+            "de": "Der Drehknopf ist 42 mm breit (0,42 mm auf Papier) und druckt als gefüllte Scheibe; das Anzeigefenster misst auf Papier 0,36 mal 0,21 mm. Gehäuse und Drehknopf sind in Vorder- und Draufsicht auf Papier 0,15 mm und 0,12 mm tief; sie bleiben in wahrer Tiefe, damit die Proportionen des Objekts stimmen."
           },
           "hatching": {
-            "en": "None.",
-            "de": "Keine."
+            "en": "None; the display is a dark tone.",
+            "de": "Keine; die Anzeige ist ein dunkler Ton."
           },
           "styles": {
-            "en": "Housing 0.9, dial 0.45; one body pen of 0.18 mm.",
-            "de": "Gehäuse 0,9, Drehknopf 0,45; ein Körperstift von 0,18 mm."
+            "en": "Housing 0.9, dial 0.45, display 0.12; body pen 0.18 mm, glazing pen 0.13 mm.",
+            "de": "Gehäuse 0,9, Drehknopf 0,45, Anzeige 0,12; Körperstift 0,18 mm, Verglasungsstift 0,13 mm."
           },
           "overlays": {
-            "en": "The housing carries casing, display and lamp; the dial keeps its region.",
-            "de": "Das Gehäuse trägt Gehäuse, Anzeige und Lampe; der Drehknopf behält seine Region."
+            "en": "The housing carries casing and lamp; display and dial keep their regions.",
+            "de": "Das Gehäuse trägt Gehäuse und Lampe; Anzeige und Drehknopf behalten ihre Regionen."
           }
         }
       },
@@ -570,14 +594,14 @@
         "cause": "below-printable-feature",
         "denominator": 200,
         "reason": {
-          "en": "At 1:200 the 90 mm thermostat is 0.45 x 0.45 mm on paper, under the 3 mm an asset needs to be drawn. The dial (42 mm = 0.21 mm) just reaches the 0.2 mm feature width of the office laser profile, but the index mark (10 mm = 0.05 mm), the pointer (4 mm = 0.02 mm) and the 0.15 mm gap between dial and collar are below it, so the face would print as two touching discs; use the 1:100 or 1:50 drawing at this scale.",
-          "de": "Bei 1:200 ist der 90 mm große Thermostat 0,45 x 0,45 mm auf dem Papier, unter den 3 mm, die ein Objekt zum Zeichnen braucht. Der Drehknopf (42 mm = 0,21 mm) erreicht die Merkmalsbreite von 0,2 mm des Büro-Laser-Profils gerade, aber Index (10 mm = 0,05 mm), Zeiger (4 mm = 0,02 mm) und die Lücke von 0,15 mm zwischen Knopf und Kragen liegen darunter, das Gesicht druckte also als zwei sich berührende Scheiben; bei diesem Maßstab dient die Zeichnung 1:100 oder 1:50."
+          "en": "At 1:200 the 90 mm thermostat is 0.45 x 0.45 mm on paper, under the 3 mm an asset needs to be drawn. The dial (42 mm = 0.21 mm) just reaches the 0.2 mm feature width of the office laser profile, but the lamp (7 mm = 0.035 mm), the pointer (11 mm = 0.055 mm) and the 9 mm between display and dial (0.045 mm) are below it, so the face would print as one dark blot; use the 1:100 or 1:50 drawing at this scale.",
+          "de": "Bei 1:200 ist der 90 mm große Thermostat 0,45 x 0,45 mm auf dem Papier, unter den 3 mm, die ein Objekt zum Zeichnen braucht. Der Drehknopf (42 mm = 0,21 mm) erreicht die Merkmalsbreite von 0,2 mm des Büro-Laser-Profils gerade, aber die Lampe (7 mm = 0,035 mm), der Zeiger (11 mm = 0,055 mm) und die 9 mm zwischen Anzeige und Drehknopf (0,045 mm) liegen darunter, das Gesicht druckte also als ein dunkler Fleck; bei diesem Maßstab dient die Zeichnung 1:100 oder 1:50."
         },
         "limitingFeature": {
-          "en": "Index mark and pointer (10 mm = 0.05 mm, 4 mm = 0.02 mm)",
-          "de": "Indexmarke und Zeiger (10 mm = 0,05 mm, 4 mm = 0,02 mm)"
+          "en": "Heating-call lamp (7 mm = 0.035 mm)",
+          "de": "Lampe für die Heizanforderung (7 mm = 0,035 mm)"
         },
-        "limitingSizeM": 0.004,
+        "limitingSizeM": 0.007,
         "alternatives": [
           {
             "kind": "scale",
@@ -1172,7 +1196,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "abs-plastic",
-          "areaM2": 0.00243,
+          "areaM2": 0.0028,
           "characteristicLengthM": 0.042,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.4,
@@ -1218,8 +1242,8 @@
       ],
       "assumptions": [
         {
-          "en": "The 0.135 kg thermostat hangs on the upper screw (pin) and leans against the wall at the lower screw (roller); the pair carries the weight and the small overturning moment of the 27 mm deep housing.",
-          "de": "Der 0,135 kg schwere Thermostat hängt an der oberen Schraube (Festlager) und lehnt an der unteren Schraube an der Wand (Rollenlager); das Paar trägt das Gewicht und das kleine Kippmoment des 27 mm tiefen Gehäuses."
+          "en": "The 0.135 kg thermostat hangs on its base plate, which two screws 60 mm apart hold on the flush wall box: the upper screw is a pin, the lower one sits in a vertical slot and acts as a roller; the pair carries the weight and the small overturning moment of the 27 mm deep device.",
+          "de": "Der 0,135 kg schwere Thermostat hängt an seiner Grundplatte, die zwei Schrauben im Abstand von 60 mm an der Unterputzdose halten: die obere Schraube ist ein Festlager, die untere sitzt in einem senkrechten Langloch und wirkt als Rollenlager; das Paar trägt das Gewicht und das kleine Kippmoment des 27 mm tiefen Geräts."
         }
       ],
       "clinical": false
@@ -1238,28 +1262,46 @@
             "tone": 0.9,
             "sections": [
               {
-                "at": [0, 0, -0.0015],
-                "rx": 0.042975,
-                "ry": 0.042975,
-                "exponent": 10
+                "at": [0.03, 0, -0.0015],
+                "rx": 0.043,
+                "ry": 0.043,
+                "exponent": 13
               },
               {
-                "at": [0, 0, -0.0005],
-                "rx": 0.04455,
-                "ry": 0.04455,
-                "exponent": 10
+                "at": [0.03, 0, -0.001],
+                "rx": 0.04432,
+                "ry": 0.04432,
+                "exponent": 13
               },
               {
-                "at": [0, 0, 0.0],
+                "at": [0.03, 0, -0.0003],
+                "rx": 0.04483,
+                "ry": 0.04483,
+                "exponent": 13
+              },
+              {
+                "at": [0.03, 0, 0.0005],
                 "rx": 0.045,
                 "ry": 0.045,
-                "exponent": 10
+                "exponent": 13
               },
               {
-                "at": [0, 0, 0.0135],
+                "at": [0.03, 0, 0.0104],
                 "rx": 0.045,
                 "ry": 0.045,
-                "exponent": 10
+                "exponent": 13
+              },
+              {
+                "at": [0.03, 0, 0.0105],
+                "rx": 0.0435,
+                "ry": 0.0435,
+                "exponent": 13
+              },
+              {
+                "at": [0.03, 0, 0.0135],
+                "rx": 0.0435,
+                "ry": 0.0435,
+                "exponent": 13
               }
             ],
             "capStart": true,
@@ -1272,9 +1314,10 @@
             "material": "lcd-glass",
             "role": "glazing",
             "tone": 0.12,
-            "size": [0.036, 0.021, 0.0016],
+            "size": [0.021, 0.036, 0.002],
+            "cornerRadius": 0.0005,
             "transform": {
-              "translation": [0, 0.0265, -0.0023]
+              "translation": [0.056499999999999995, 0, -0.0008]
             }
           },
           {
@@ -1286,139 +1329,422 @@
             "tone": 0.35,
             "radii": [0.0035, 0.0035, 0.002],
             "transform": {
-              "translation": [0.0315, 0.0265, -0.0015]
+              "translation": [0.056499999999999995, -0.0315, -0.0015]
             }
           },
           {
             "id": "dial",
-            "kind": "revolve",
+            "kind": "extrude",
             "bone": "dial",
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.62,
-            "profile": [[-0.0015, 0.0205], [-0.0035, 0.021], [-0.0112, 0.021], [-0.0123, 0.0195], [-0.0125, 0.0165], [-0.0125, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0]
+            "profile": [
+              [0.021, 0.0],
+              [0.020126, 0.00265],
+              [0.020284, 0.005435],
+              [0.018755, 0.007768],
+              [0.018187, 0.0105],
+              [0.016105, 0.012358],
+              [0.014849, 0.014849],
+              [0.012358, 0.016105],
+              [0.0105, 0.018187],
+              [0.007768, 0.018755],
+              [0.005435, 0.020284],
+              [0.00265, 0.020126],
+              [0.0, 0.021],
+              [-0.00265, 0.020126],
+              [-0.005435, 0.020284],
+              [-0.007768, 0.018755],
+              [-0.0105, 0.018187],
+              [-0.012358, 0.016105],
+              [-0.014849, 0.014849],
+              [-0.016105, 0.012358],
+              [-0.018187, 0.0105],
+              [-0.018755, 0.007768],
+              [-0.020284, 0.005435],
+              [-0.020126, 0.00265],
+              [-0.021, 0.0],
+              [-0.020126, -0.00265],
+              [-0.020284, -0.005435],
+              [-0.018755, -0.007768],
+              [-0.018187, -0.0105],
+              [-0.016105, -0.012358],
+              [-0.014849, -0.014849],
+              [-0.012358, -0.016105],
+              [-0.0105, -0.018187],
+              [-0.007768, -0.018755],
+              [-0.005435, -0.020284],
+              [-0.00265, -0.020126],
+              [-0.0, -0.021],
+              [0.00265, -0.020126],
+              [0.005435, -0.020284],
+              [0.007768, -0.018755],
+              [0.0105, -0.018187],
+              [0.012358, -0.016105],
+              [0.014849, -0.014849],
+              [0.016105, -0.012358],
+              [0.018187, -0.0105],
+              [0.018755, -0.007768],
+              [0.020284, -0.005435],
+              [0.020126, -0.00265]
+            ],
+            "plane": "xy",
+            "from": -0.01,
+            "to": -0.0015
+          },
+          {
+            "id": "dial-cap",
+            "kind": "extrude",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [
+              [0.0196, 0.0],
+              [0.019432, 0.002558],
+              [0.018932, 0.005073],
+              [0.018108, 0.007501],
+              [0.016974, 0.0098],
+              [0.01555, 0.011932],
+              [0.013859, 0.013859],
+              [0.011932, 0.01555],
+              [0.0098, 0.016974],
+              [0.007501, 0.018108],
+              [0.005073, 0.018932],
+              [0.002558, 0.019432],
+              [0.0, 0.0196],
+              [-0.002558, 0.019432],
+              [-0.005073, 0.018932],
+              [-0.007501, 0.018108],
+              [-0.0098, 0.016974],
+              [-0.011932, 0.01555],
+              [-0.013859, 0.013859],
+              [-0.01555, 0.011932],
+              [-0.016974, 0.0098],
+              [-0.018108, 0.007501],
+              [-0.018932, 0.005073],
+              [-0.019432, 0.002558],
+              [-0.0196, 0.0],
+              [-0.019432, -0.002558],
+              [-0.018932, -0.005073],
+              [-0.018108, -0.007501],
+              [-0.016974, -0.0098],
+              [-0.01555, -0.011932],
+              [-0.013859, -0.013859],
+              [-0.011932, -0.01555],
+              [-0.0098, -0.016974],
+              [-0.007501, -0.018108],
+              [-0.005073, -0.018932],
+              [-0.002558, -0.019432],
+              [-0.0, -0.0196],
+              [0.002558, -0.019432],
+              [0.005073, -0.018932],
+              [0.007501, -0.018108],
+              [0.0098, -0.016974],
+              [0.011932, -0.01555],
+              [0.013859, -0.013859],
+              [0.01555, -0.011932],
+              [0.016974, -0.0098],
+              [0.018108, -0.007501],
+              [0.018932, -0.005073],
+              [0.019432, -0.002558]
+            ],
+            "plane": "xy",
+            "from": -0.013,
+            "to": -0.0055,
+            "taperTo": [0.96, 1]
           },
           {
             "id": "pointer",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "dial",
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.95,
-            "size": [0.011, 0.0145, 0.0075],
-            "transform": {
-              "translation": [0, 0.01175, -0.00975]
-            }
+            "profile": [[0.004, -0.0055], [0.016, -0.003], [0.0178, -0.0018], [0.0185, 0], [0.0178, 0.0018], [0.016, 0.003], [0.004, 0.0055]],
+            "plane": "xy",
+            "from": -0.0135,
+            "to": -0.006
           }
         ],
         "thermal": [
           {
-            "id": "th-casing",
-            "kind": "loft",
+            "id": "th-casing-front",
+            "kind": "extrude",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.9,
-            "sections": [
-              {
-                "at": [0, 0, -0.0015],
-                "rx": 0.042975,
-                "ry": 0.042975,
-                "exponent": 10
-              },
-              {
-                "at": [0, 0, -0.0005],
-                "rx": 0.04455,
-                "ry": 0.04455,
-                "exponent": 10
-              },
-              {
-                "at": [0, 0, 0.0],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 10
-              },
-              {
-                "at": [0, 0, 0.0135],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 10
-              }
+            "profile": [
+              [0.045, 0.037],
+              [0.044727, 0.039071],
+              [0.043928, 0.041],
+              [0.042657, 0.042657],
+              [0.041, 0.043928],
+              [0.039071, 0.044727],
+              [0.037, 0.045],
+              [-0.037, 0.045],
+              [-0.039071, 0.044727],
+              [-0.041, 0.043928],
+              [-0.042657, 0.042657],
+              [-0.043928, 0.041],
+              [-0.044727, 0.039071],
+              [-0.045, 0.037],
+              [-0.045, -0.037],
+              [-0.044727, -0.039071],
+              [-0.043928, -0.041],
+              [-0.042657, -0.042657],
+              [-0.041, -0.043928],
+              [-0.039071, -0.044727],
+              [-0.037, -0.045],
+              [0.037, -0.045],
+              [0.039071, -0.044727],
+              [0.041, -0.043928],
+              [0.042657, -0.042657],
+              [0.043928, -0.041],
+              [0.044727, -0.039071],
+              [0.045, -0.037]
             ],
-            "capStart": true,
-            "capEnd": false,
-            "region": "casing"
+            "holes": [
+              [[0.01779, -0.01779], [0.03767, -0.01779], [0.03767, 0.01779], [0.01779, 0.01779]]
+            ],
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0005,
+            "taperTo": [0.9556, 1],
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-casing-wall-top",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [0.042657, -0.042657],
+              [0.043928, -0.041],
+              [0.044727, -0.039071],
+              [0.045, -0.037],
+              [0.045, 0.037],
+              [0.044727, 0.039071],
+              [0.043928, 0.041],
+              [0.042657, 0.042657],
+              [0.041243, 0.041243],
+              [0.042196, 0.04],
+              [0.042796, 0.038553],
+              [0.043, 0.037],
+              [0.043, -0.037],
+              [0.042796, -0.038553],
+              [0.042196, -0.04],
+              [0.041243, -0.041243]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0105,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "th-casing-wall-left",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [0.042657, 0.042657],
+              [0.041, 0.043928],
+              [0.039071, 0.044727],
+              [0.037, 0.045],
+              [-0.037, 0.045],
+              [-0.039071, 0.044727],
+              [-0.041, 0.043928],
+              [-0.042657, 0.042657],
+              [-0.041243, 0.041243],
+              [-0.04, 0.042196],
+              [-0.038553, 0.042796],
+              [-0.037, 0.043],
+              [0.037, 0.043],
+              [0.038553, 0.042796],
+              [0.04, 0.042196],
+              [0.041243, 0.041243]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0105,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-casing-wall-bottom",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [-0.042657, 0.042657],
+              [-0.043928, 0.041],
+              [-0.044727, 0.039071],
+              [-0.045, 0.037],
+              [-0.045, -0.037],
+              [-0.044727, -0.039071],
+              [-0.043928, -0.041],
+              [-0.042657, -0.042657],
+              [-0.041243, -0.041243],
+              [-0.042196, -0.04],
+              [-0.042796, -0.038553],
+              [-0.043, -0.037],
+              [-0.043, 0.037],
+              [-0.042796, 0.038553],
+              [-0.042196, 0.04],
+              [-0.041243, 0.041243]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0105,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+u"]
+          },
+          {
+            "id": "th-casing-wall-right",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [-0.042657, -0.042657],
+              [-0.041, -0.043928],
+              [-0.039071, -0.044727],
+              [-0.037, -0.045],
+              [0.037, -0.045],
+              [0.039071, -0.044727],
+              [0.041, -0.043928],
+              [0.042657, -0.042657],
+              [0.041243, -0.041243],
+              [0.04, -0.042196],
+              [0.038553, -0.042796],
+              [0.037, -0.043],
+              [-0.037, -0.043],
+              [-0.038553, -0.042796],
+              [-0.04, -0.042196],
+              [-0.041243, -0.041243]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0105,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-casing-base",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [0.0435, 0.037],
+              [0.043279, 0.038682],
+              [0.042629, 0.04025],
+              [0.041596, 0.041596],
+              [0.04025, 0.042629],
+              [0.038682, 0.043279],
+              [0.037, 0.0435],
+              [-0.037, 0.0435],
+              [-0.038682, 0.043279],
+              [-0.04025, 0.042629],
+              [-0.041596, 0.041596],
+              [-0.042629, 0.04025],
+              [-0.043279, 0.038682],
+              [-0.0435, 0.037],
+              [-0.0435, -0.037],
+              [-0.043279, -0.038682],
+              [-0.042629, -0.04025],
+              [-0.041596, -0.041596],
+              [-0.04025, -0.042629],
+              [-0.038682, -0.043279],
+              [-0.037, -0.0435],
+              [0.037, -0.0435],
+              [0.038682, -0.043279],
+              [0.04025, -0.042629],
+              [0.041596, -0.041596],
+              [0.042629, -0.04025],
+              [0.043279, -0.038682],
+              [0.0435, -0.037]
+            ],
+            "plane": "xy",
+            "from": 0.0105,
+            "to": 0.0135,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+w", "-w"]
           },
           {
             "id": "th-display",
-            "kind": "loft",
+            "kind": "box",
             "bone": "housing",
             "material": "lcd-glass",
             "role": "glazing",
             "tone": 0.12,
-            "sections": [
-              {
-                "at": [0, 0.0265, -0.0031],
-                "rx": 0.01775,
-                "ry": 0.01025,
-                "exponent": 24
-              },
-              {
-                "at": [0, 0.0265, -0.0021],
-                "rx": 0.01775,
-                "ry": 0.01025,
-                "exponent": 24
-              }
-            ],
-            "capStart": true,
-            "capEnd": false,
+            "size": [0.021, 0.036, 0.001],
+            "transform": {
+              "translation": [0.056499999999999995, 0, -0.0013]
+            },
             "region": "display",
-            "layer": "glass"
+            "layer": "glass",
+            "sectionFaces": ["+w", "+u", "-u", "+v", "-v"]
           },
           {
             "id": "th-led",
             "of": "led",
             "region": "led",
-            "layer": "lens"
+            "layer": "lens",
+            "sectionFaces": ["+w"]
           },
           {
             "id": "th-dial",
-            "kind": "loft",
-            "bone": "dial",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.62,
-            "sections": [
-              {
-                "at": [0, 0, 0.0],
-                "rx": 0.0205,
-                "ry": 0.0205
-              },
-              {
-                "at": [0, 0, -0.0035],
-                "rx": 0.021,
-                "ry": 0.021
-              },
-              {
-                "at": [0, 0, -0.0112],
-                "rx": 0.021,
-                "ry": 0.021
-              },
-              {
-                "at": [0, 0, -0.0123],
-                "rx": 0.0195,
-                "ry": 0.0195
-              },
-              {
-                "at": [0, 0, -0.0125],
-                "rx": 0.0165,
-                "ry": 0.0165
-              }
-            ],
-            "capStart": false,
-            "capEnd": true,
+            "of": "dial",
+            "region": "dial",
+            "layer": "knob",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-dial-cap",
+            "of": "dial-cap",
+            "region": "dial",
+            "layer": "knob"
+          },
+          {
+            "id": "th-pointer",
+            "of": "pointer",
             "region": "dial",
             "layer": "knob"
           }
@@ -1426,118 +1752,269 @@
         "structure": [
           {
             "id": "member-housing",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.5,
-            "size": [0.082, 0.082, 0.011],
-            "cornerRadius": 0.003,
+            "profile": [
+              [0.0435, 0.037],
+              [0.043279, 0.038682],
+              [0.042629, 0.04025],
+              [0.041596, 0.041596],
+              [0.04025, 0.042629],
+              [0.038682, 0.043279],
+              [0.037, 0.0435],
+              [-0.037, 0.0435],
+              [-0.038682, 0.043279],
+              [-0.04025, 0.042629],
+              [-0.041596, 0.041596],
+              [-0.042629, 0.04025],
+              [-0.043279, 0.038682],
+              [-0.0435, 0.037],
+              [-0.0435, -0.037],
+              [-0.043279, -0.038682],
+              [-0.042629, -0.04025],
+              [-0.041596, -0.041596],
+              [-0.04025, -0.042629],
+              [-0.038682, -0.043279],
+              [-0.037, -0.0435],
+              [0.037, -0.0435],
+              [0.038682, -0.043279],
+              [0.04025, -0.042629],
+              [0.041596, -0.041596],
+              [0.042629, -0.04025],
+              [0.043279, -0.038682],
+              [0.0435, -0.037]
+            ],
+            "plane": "xy",
+            "from": 0.0064,
+            "to": 0.0135,
             "transform": {
-              "translation": [0, 0, 0.0045]
+              "translation": [0.03, 0, 0]
             },
             "member": "housing",
             "part": "member"
           },
           {
-            "id": "member-dial",
-            "kind": "revolve",
-            "bone": "dial",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.5,
-            "profile": [[-0.0015, 0.006], [0.0105, 0.006], [0.0105, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0],
-            "member": "dial",
-            "part": "member"
-          },
-          {
-            "id": "joint-dial",
-            "kind": "revolve",
-            "bone": "dial",
-            "material": "abs-plastic",
-            "role": "detail",
-            "tone": 0.35,
-            "profile": [[0.0005, 0.0095], [0.0105, 0.0095], [0.0105, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0],
-            "member": "dial",
-            "part": "joint"
-          },
-          {
             "id": "support-wall-screw-top",
-            "kind": "revolve",
+            "kind": "extrude",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0.0, 0.004], [0.0135, 0.004], [0.0135, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0],
-            "transform": {
-              "translation": [0, 0.034, 0]
-            },
+            "profile": [
+              [0.06375, 0.0],
+              [0.063622, 0.000971],
+              [0.063248, 0.001875],
+              [0.062652, 0.002652],
+              [0.061875, 0.003248],
+              [0.060971, 0.003622],
+              [0.06, 0.00375],
+              [0.059029, 0.003622],
+              [0.058125, 0.003248],
+              [0.057348, 0.002652],
+              [0.056752, 0.001875],
+              [0.056378, 0.000971],
+              [0.05625, 0.0],
+              [0.056378, -0.000971],
+              [0.056752, -0.001875],
+              [0.057348, -0.002652],
+              [0.058125, -0.003248],
+              [0.059029, -0.003622],
+              [0.06, -0.00375],
+              [0.060971, -0.003622],
+              [0.061875, -0.003248],
+              [0.062652, -0.002652],
+              [0.063248, -0.001875],
+              [0.063622, -0.000971]
+            ],
+            "plane": "xy",
+            "from": 0.0045,
+            "to": 0.0135,
             "member": "housing",
             "part": "support",
             "anchor": "wall-screw-top"
           },
           {
             "id": "support-wall-screw-bottom",
-            "kind": "capsule",
+            "kind": "extrude",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.25,
-            "p0": [-0.006, -0.034, 0.0095],
-            "p1": [0.006, -0.034, 0.0095],
-            "r0": 0.004,
-            "r1": 0.004,
+            "profile": [
+              [0.003, -0.00375],
+              [0.003971, -0.003622],
+              [0.004875, -0.003248],
+              [0.005652, -0.002652],
+              [0.006248, -0.001875],
+              [0.006622, -0.000971],
+              [0.00675, 0.0],
+              [0.006622, 0.000971],
+              [0.006248, 0.001875],
+              [0.005652, 0.002652],
+              [0.004875, 0.003248],
+              [0.003971, 0.003622],
+              [0.003, 0.00375],
+              [-0.003, 0.00375],
+              [-0.003971, 0.003622],
+              [-0.004875, 0.003248],
+              [-0.005652, 0.002652],
+              [-0.006248, 0.001875],
+              [-0.006622, 0.000971],
+              [-0.00675, 0.0],
+              [-0.006622, -0.000971],
+              [-0.006248, -0.001875],
+              [-0.005652, -0.002652],
+              [-0.004875, -0.003248],
+              [-0.003971, -0.003622],
+              [-0.003, -0.00375]
+            ],
+            "plane": "xy",
+            "from": 0.0045,
+            "to": 0.0135,
             "member": "housing",
             "part": "support",
             "anchor": "wall-screw-bottom"
           },
           {
+            "id": "member-dial",
+            "kind": "extrude",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [0.00375, 0.0],
+              [0.003465, 0.001435],
+              [0.002652, 0.002652],
+              [0.001435, 0.003465],
+              [0.0, 0.00375],
+              [-0.001435, 0.003465],
+              [-0.002652, 0.002652],
+              [-0.003465, 0.001435],
+              [-0.00375, 0.0],
+              [-0.003465, -0.001435],
+              [-0.002652, -0.002652],
+              [-0.001435, -0.003465],
+              [-0.0, -0.00375],
+              [0.001435, -0.003465],
+              [0.002652, -0.002652],
+              [0.003465, -0.001435]
+            ],
+            "plane": "xy",
+            "from": -0.0125,
+            "to": 0.0064,
+            "member": "dial",
+            "part": "member"
+          },
+          {
+            "id": "joint-dial",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "detail",
+            "tone": 0.35,
+            "profile": [
+              [0.022, 0.0],
+              [0.021796, 0.001553],
+              [0.021196, 0.003],
+              [0.020243, 0.004243],
+              [0.019, 0.005196],
+              [0.017553, 0.005796],
+              [0.016, 0.006],
+              [0.014447, 0.005796],
+              [0.013, 0.005196],
+              [0.011757, 0.004243],
+              [0.010804, 0.003],
+              [0.010204, 0.001553],
+              [0.01, 0.0],
+              [0.010204, -0.001553],
+              [0.010804, -0.003],
+              [0.011757, -0.004243],
+              [0.013, -0.005196],
+              [0.014447, -0.005796],
+              [0.016, -0.006],
+              [0.017553, -0.005796],
+              [0.019, -0.005196],
+              [0.020243, -0.004243],
+              [0.021196, -0.003],
+              [0.021796, -0.001553]
+            ],
+            "plane": "xy",
+            "from": -0.0006,
+            "to": 0.0064,
+            "member": "dial",
+            "part": "joint"
+          },
+          {
             "id": "mass-housing",
-            "kind": "ellipsoid",
+            "kind": "box",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.15,
-            "radii": [0.02, 0.02, 0.0045],
+            "size": [0.016, 0.04, 0.007],
+            "cornerRadius": 0.001,
             "transform": {
-              "translation": [0, 0, 0.0045]
+              "translation": [0.03, 0, 0.0029]
             },
             "member": "housing",
             "part": "mass"
           },
           {
             "id": "mass-dial",
-            "kind": "ellipsoid",
+            "kind": "extrude",
             "bone": "dial",
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.15,
-            "radii": [0.011, 0.011, 0.0045],
-            "transform": {
-              "translation": [0, 0, 0.001]
-            },
+            "profile": [
+              [0.0065, 0.0],
+              [0.006279, 0.001682],
+              [0.005629, 0.00325],
+              [0.004596, 0.004596],
+              [0.00325, 0.005629],
+              [0.001682, 0.006279],
+              [0.0, 0.0065],
+              [-0.001682, 0.006279],
+              [-0.00325, 0.005629],
+              [-0.004596, 0.004596],
+              [-0.005629, 0.00325],
+              [-0.006279, 0.001682],
+              [-0.0065, 0.0],
+              [-0.006279, -0.001682],
+              [-0.005629, -0.00325],
+              [-0.004596, -0.004596],
+              [-0.00325, -0.005629],
+              [-0.001682, -0.006279],
+              [-0.0, -0.0065],
+              [0.001682, -0.006279],
+              [0.00325, -0.005629],
+              [0.004596, -0.004596],
+              [0.005629, -0.00325],
+              [0.006279, -0.001682]
+            ],
+            "plane": "xy",
+            "from": -0.01,
+            "to": -0.0025,
             "member": "dial",
             "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "Housing: a lofted 90 mm square slab 15 mm deep with a 1.5 mm front bevel and rounded corners (not a box); the front of the loft stands at w = -0.0015 where the dial and the 1.6 mm glass window sit. Display, lamp (7 mm lens, glazing role) and the 11 mm pointer, which is a 7.5 mm thick inlay sunk into the dial so that it stays a printable solid while only 1 mm shows.",
-            "de": "Gehäuse: eine gelofte quadratische Platte von 90 mm und 15 mm Tiefe mit 1,5 mm Frontfase und gerundeten Ecken (keine Box); die Front des Lofts steht bei w = -0,0015, dort sitzen Drehknopf und das 1,6 mm dicke Glasfenster. Anzeige, Lampe (7-mm-Linse, Rolle Verglasung) und der 11 mm breite Zeiger, der als 7,5 mm dicke Einlage im Drehknopf steckt und damit ein druckbarer Körper bleibt, obwohl nur 1 mm herausragt."
+            "en": "Body: the housing is one loft of rounded-square sections from the face to the wall: a 2 mm edge radius at the face, the 90 mm cover skirt, a 1.5 mm shadow gap and the 87 mm base plate that lies on the wall. The 36 by 21 mm display lens is let into the face and stands 0.3 mm proud, the 7 mm lamp is a low dome. The knob is a 42 mm grip ring with 24 finger flutes, 8.5 mm high, a slightly conical cap that raises the face to 11.5 mm and the index, a tongue 14.5 mm long that narrows from 11 mm at the hub to a rounded 4 mm tip and stands 0.5 mm proud of the cap, into which it is moulded. Round parts are stated as 48-sided outlines so that they stay round at any zoom.",
+            "de": "Körper: Das Gehäuse ist ein Loft aus gerundeten Quadratschnitten von der Front zur Wand: 2 mm Kantenradius an der Front, die 90 mm breite Haube, 1,5 mm Schattenfuge und die 87 mm breite Grundplatte, die an der Wand liegt. Die Anzeigescheibe von 36 mal 21 mm ist in die Front eingelassen und steht 0,3 mm vor, die 7-mm-Lampe ist eine flache Kuppel. Der Knopf besteht aus einem 42 mm breiten Griffring mit 24 Griffmulden von 8,5 mm Höhe, einer leicht konischen Kappe, die die Stirnfläche auf 11,5 mm hebt, und dem Zeiger, einer 14,5 mm langen Zunge, die sich von 11 mm an der Nabe auf eine gerundete Spitze von 4 mm verjüngt und 0,5 mm über die Kappe vorsteht, in die sie eingespritzt ist. Runde Teile sind als 48-eckige Umrisse angegeben, damit sie bei jeder Vergrößerung rund bleiben."
           },
           {
-            "en": "Thermal: the casing is the exposed skin only, a front-capped loft open towards the wall (the back lies on the wall and exchanges no heat, so areaM2 = 0.012 m2 is the front and the four sides); display is a 1 mm glass plate, lamp and dial reuse their body solids. Every layer has one shell, the thickness of each is the layer's own.",
-            "de": "Thermik: das Gehäuse ist nur die freie Haut, ein vorne geschlossener, zur Wand offener Loft (die Rückseite liegt an der Wand und tauscht keine Wärme aus, deshalb sind 0,012 m2 Front plus vier Seiten); die Anzeige ist eine 1 mm dicke Glasplatte, Lampe und Drehknopf verwenden ihre Körper. Jede Region hat eine Schicht, also eine Schale mit deren eigener Dicke."
+            "en": "Thermal: the casing is the real hollow ABS shell with its 2 mm wall (face plate with the window opening, skirt ring, base plate against the wall), so a cut shows the air space of the electronics; the base plate's wall face is a mounting face and counts for no area. The display is the 1 mm lens in its rebate, the lamp reuses its dome, the dial reuses the three knob solids of the body (grip ring, cap and index) as one closed moulding, since hub and spindle fill its inside; the ring's face on the housing is a mounting face. No region is hidden: the electronics heat the casing region, as the thermal data declares.",
+            "de": "Thermik: Das Gehäuse ist die echte hohle ABS-Schale mit 2 mm Wand (Frontplatte mit Fensteröffnung, Haubenring, Grundplatte an der Wand), ein Schnitt zeigt also den Luftraum der Elektronik; die Wandseite der Grundplatte ist Montagefläche und zählt nicht zur Fläche. Die Anzeige ist die 1 mm dicke Scheibe in ihrem Falz, die Lampe verwendet ihre Kuppel, der Drehknopf verwendet die drei Knopfkörper des Körpers (Griffring, Kappe und Zeiger) als ein geschlossenes Formteil, weil Nabe und Achse sein Inneres füllen; die Ringfläche auf dem Gehäuse ist Montagefläche. Keine Region ist verdeckt: Die Elektronik heizt die Gehäuseregion, wie es die Thermikdaten angeben."
           },
           {
-            "en": "Structure: the housing core (82 x 82 x 11 mm), the 12 mm spindle and 19 mm bearing hub of the dial, two wall supports (round pin at the upper screw, 8 mm roller lying along u at the lower screw, B3) and one compact mass per bone at its centre of mass.",
-            "de": "Tragwerk: der Gehäusekern (82 x 82 x 11 mm), die 12-mm-Spindel und die 19-mm-Lagernabe des Drehknopfs, zwei Wandauflager (runder Stift an der oberen Schraube, 8-mm-Rolle entlang u an der unteren, B3) und je eine kompakte Masse pro Knochen im Schwerpunkt."
+            "en": "Structure: the load path is the base plate, which spans between the two fixing screws 60 mm apart (bone housing), the upper screw as a round pin, the lower one in its vertical slot as a roller, both flush with the wall plane. The dial hangs on its 6 mm potentiometer spindle, which turns in the 16 mm potentiometer body behind the face plate (joint). The masses are the circuit board with relay and terminals at the centre of the housing and the knob hub on the spindle. The cover is cladding and is absent.",
+            "de": "Tragwerk: Der Lastpfad ist die Grundplatte, die zwischen den beiden Befestigungsschrauben im Abstand von 60 mm spannt (Knochen housing), die obere Schraube als runder Stift, die untere in ihrem senkrechten Langloch als Rollenlager, beide bündig mit der Wandebene. Der Drehknopf hängt an seiner 6-mm-Potentiometerachse, die im 16 mm großen Potentiometergehäuse hinter der Frontplatte dreht (Gelenk). Die Massen sind die Leiterplatte mit Relais und Klemmen in der Gehäusemitte und die Knopfnabe auf der Achse. Die Haube ist Verkleidung und fehlt."
           }
         ]
       },
@@ -1547,103 +2024,258 @@
         "body": [
           {
             "id": "housing",
-            "kind": "loft",
+            "kind": "extrude",
             "bone": "housing",
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.9,
-            "sections": [
-              {
-                "at": [0, 0, -0.0065],
-                "rx": 0.043649999999999994,
-                "ry": 0.043649999999999994,
-                "exponent": 8
-              },
-              {
-                "at": [0, 0, -0.0055],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 8
-              },
-              {
-                "at": [0, 0, 0.0135],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 8
-              }
+            "profile": [
+              [0.045, 0.041],
+              [0.043828, 0.043828],
+              [0.041, 0.045],
+              [-0.041, 0.045],
+              [-0.043828, 0.043828],
+              [-0.045, 0.041],
+              [-0.045, -0.041],
+              [-0.043828, -0.043828],
+              [-0.041, -0.045],
+              [0.041, -0.045],
+              [0.043828, -0.043828],
+              [0.045, -0.041]
             ],
-            "capStart": true,
-            "capEnd": true
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0135,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            }
           },
           {
-            "id": "dial",
-            "kind": "revolve",
-            "bone": "dial",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[-0.0065, 0.024], [-0.0245, 0.024], [-0.0265, 0.021], [-0.0265, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0]
-          }
-        ],
-        "thermal": [
-          {
-            "id": "th-casing",
-            "kind": "loft",
-            "bone": "housing",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.9,
-            "sections": [
-              {
-                "at": [0, 0, -0.0065],
-                "rx": 0.043649999999999994,
-                "ry": 0.043649999999999994,
-                "exponent": 8
-              },
-              {
-                "at": [0, 0, -0.0055],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 8
-              },
-              {
-                "at": [0, 0, 0.0115],
-                "rx": 0.045,
-                "ry": 0.045,
-                "exponent": 8
-              }
-            ],
-            "capStart": true,
-            "capEnd": false,
-            "region": "casing"
-          },
-          {
-            "id": "th-display",
-            "kind": "loft",
+            "id": "display",
+            "kind": "box",
             "bone": "housing",
             "material": "lcd-glass",
             "role": "glazing",
             "tone": 0.12,
-            "sections": [
-              {
-                "at": [0, 0.0265, -0.0075],
-                "rx": 0.01775,
-                "ry": 0.01025,
-                "exponent": 16
-              },
-              {
-                "at": [0, 0.0265, -0.0065],
-                "rx": 0.01775,
-                "ry": 0.01025,
-                "exponent": 16
-              }
+            "size": [0.021, 0.036, 0.003],
+            "transform": {
+              "translation": [0.056499999999999995, 0, -0.0003]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "extrude",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.021, 0.0],
+              [0.020596, 0.004097],
+              [0.019401, 0.008036],
+              [0.017461, 0.011667],
+              [0.014849, 0.014849],
+              [0.011667, 0.017461],
+              [0.008036, 0.019401],
+              [0.004097, 0.020596],
+              [0.0, 0.021],
+              [-0.004097, 0.020596],
+              [-0.008036, 0.019401],
+              [-0.011667, 0.017461],
+              [-0.014849, 0.014849],
+              [-0.017461, 0.011667],
+              [-0.019401, 0.008036],
+              [-0.020596, 0.004097],
+              [-0.021, 0.0],
+              [-0.020596, -0.004097],
+              [-0.019401, -0.008036],
+              [-0.017461, -0.011667],
+              [-0.014849, -0.014849],
+              [-0.011667, -0.017461],
+              [-0.008036, -0.019401],
+              [-0.004097, -0.020596],
+              [-0.0, -0.021],
+              [0.004097, -0.020596],
+              [0.008036, -0.019401],
+              [0.011667, -0.017461],
+              [0.014849, -0.014849],
+              [0.017461, -0.011667],
+              [0.019401, -0.008036],
+              [0.020596, -0.004097]
             ],
-            "capStart": true,
-            "capEnd": false,
+            "plane": "xy",
+            "from": -0.0135,
+            "to": 0.0015,
+            "taperTo": [0.94, 1]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-casing-front",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [0.045, 0.041],
+              [0.043828, 0.043828],
+              [0.041, 0.045],
+              [-0.041, 0.045],
+              [-0.043828, 0.043828],
+              [-0.045, 0.041],
+              [-0.045, -0.041],
+              [-0.043828, -0.043828],
+              [-0.041, -0.045],
+              [0.041, -0.045],
+              [0.043828, -0.043828],
+              [0.045, -0.041]
+            ],
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0005,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-casing-wall-top",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.043828, -0.043828], [0.045, -0.041], [0.045, 0.041], [0.043828, 0.043828], [0.042414, 0.042414], [0.043, 0.041], [0.043, -0.041], [0.042414, -0.042414]],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0115,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "th-casing-wall-left",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.043828, 0.043828], [0.041, 0.045], [-0.041, 0.045], [-0.043828, 0.043828], [-0.042414, 0.042414], [-0.041, 0.043], [0.041, 0.043], [0.042414, 0.042414]],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0115,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-casing-wall-bottom",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [-0.043828, 0.043828],
+              [-0.045, 0.041],
+              [-0.045, -0.041],
+              [-0.043828, -0.043828],
+              [-0.042414, -0.042414],
+              [-0.043, -0.041],
+              [-0.043, 0.041],
+              [-0.042414, 0.042414]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0115,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+u"]
+          },
+          {
+            "id": "th-casing-wall-right",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [-0.043828, -0.043828],
+              [-0.041, -0.045],
+              [0.041, -0.045],
+              [0.043828, -0.043828],
+              [0.042414, -0.042414],
+              [0.041, -0.043],
+              [-0.041, -0.043],
+              [-0.042414, -0.042414]
+            ],
+            "plane": "xy",
+            "from": 0.0005,
+            "to": 0.0115,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-casing-base",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [
+              [0.045, 0.041],
+              [0.043828, 0.043828],
+              [0.041, 0.045],
+              [-0.041, 0.045],
+              [-0.043828, 0.043828],
+              [-0.045, 0.041],
+              [-0.045, -0.041],
+              [-0.043828, -0.043828],
+              [-0.041, -0.045],
+              [0.041, -0.045],
+              [0.043828, -0.043828],
+              [0.045, -0.041]
+            ],
+            "plane": "xy",
+            "from": 0.0115,
+            "to": 0.0135,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            },
+            "region": "casing",
+            "layer": "shell",
+            "sectionFaces": ["+w", "-w"]
+          },
+          {
+            "id": "th-display",
+            "kind": "box",
+            "bone": "housing",
+            "material": "lcd-glass",
+            "role": "glazing",
+            "tone": 0.12,
+            "size": [0.021, 0.036, 0.001],
+            "transform": {
+              "translation": [0.056499999999999995, 0, -0.0013]
+            },
             "region": "display",
-            "layer": "glass"
+            "layer": "glass",
+            "sectionFaces": ["+w", "+u", "-u", "+v", "-v"]
           },
           {
             "id": "th-led",
@@ -1652,41 +2284,19 @@
             "material": "led-lens",
             "role": "glazing",
             "tone": 0.35,
-            "radii": [0.0035, 0.0035, 0.0025],
+            "radii": [0.0035, 0.0035, 0.002],
             "transform": {
-              "translation": [0.0315, 0.0265, -0.0065]
+              "translation": [0.056499999999999995, -0.0315, -0.0015]
             },
             "region": "led",
-            "layer": "lens"
+            "layer": "lens",
+            "sectionFaces": ["+w"]
           },
           {
             "id": "th-dial",
-            "kind": "loft",
-            "bone": "dial",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.45,
-            "sections": [
-              {
-                "at": [0, 0, -0.0015],
-                "rx": 0.0245,
-                "ry": 0.0245
-              },
-              {
-                "at": [0, 0, -0.0225],
-                "rx": 0.0245,
-                "ry": 0.0245
-              },
-              {
-                "at": [0, 0, -0.0275],
-                "rx": 0.019,
-                "ry": 0.019
-              }
-            ],
-            "capStart": false,
-            "capEnd": true,
+            "of": "dial",
             "region": "dial",
-            "layer": "knob"
+            "sectionFaces": ["+w"]
           }
         ],
         "structure": [
@@ -1697,25 +2307,220 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.5,
-            "size": [0.078, 0.078, 0.016],
-            "cornerRadius": 0.004,
+            "size": [0.075, 0.015, 0.015],
             "transform": {
-              "translation": [0, 0, 0.0035]
+              "translation": [0.03, 0, 0.006]
             },
             "member": "housing",
             "part": "member"
           },
           {
+            "id": "support-wall-screw-top",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [
+              [0.0675, 0.0],
+              [0.066495, 0.00375],
+              [0.06375, 0.006495],
+              [0.06, 0.0075],
+              [0.05625, 0.006495],
+              [0.053505, 0.00375],
+              [0.0525, 0.0],
+              [0.053505, -0.00375],
+              [0.05625, -0.006495],
+              [0.06, -0.0075],
+              [0.06375, -0.006495],
+              [0.066495, -0.00375]
+            ],
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0135,
+            "member": "housing",
+            "part": "support",
+            "anchor": "wall-screw-top"
+          },
+          {
+            "id": "support-wall-screw-bottom",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [
+              [0.0075, 0.0],
+              [0.006495, 0.00375],
+              [0.00375, 0.006495],
+              [0.0, 0.0075],
+              [-0.00375, 0.006495],
+              [-0.006495, 0.00375],
+              [-0.0075, 0.0],
+              [-0.006495, -0.00375],
+              [-0.00375, -0.006495],
+              [-0.0, -0.0075],
+              [0.00375, -0.006495],
+              [0.006495, -0.00375]
+            ],
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0135,
+            "member": "housing",
+            "part": "support",
+            "anchor": "wall-screw-bottom"
+          },
+          {
             "id": "member-dial",
-            "kind": "revolve",
+            "kind": "extrude",
             "bone": "dial",
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.5,
-            "profile": [[-0.0065, 0.0095], [0.0135, 0.0095], [0.0135, 0]],
-            "axis": [0, 0, 1],
-            "origin": [0, 0, 0],
+            "profile": [
+              [0.0075, 0.0],
+              [0.006495, 0.00375],
+              [0.00375, 0.006495],
+              [0.0, 0.0075],
+              [-0.00375, 0.006495],
+              [-0.006495, 0.00375],
+              [-0.0075, 0.0],
+              [-0.006495, -0.00375],
+              [-0.00375, -0.006495],
+              [-0.0, -0.0075],
+              [0.00375, -0.006495],
+              [0.006495, -0.00375]
+            ],
+            "plane": "xy",
+            "from": -0.0135,
+            "to": 0.0015,
             "member": "dial",
+            "part": "member"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: three masses at their true size. The housing is a plain 90 mm prism, 15 mm deep, with the corner radius reduced to 4 mm as in the drawing (an 8 mm corner is below the 15 mm feature); the face-edge radius, the shadow gap and the base plate step are merged into it. The display lens stays as a dark plate because 36 by 21 mm is above the feature; the knob is one slightly conical 42 mm disc, 12 mm proud, with lamp, index, flutes and cap step merged.",
+            "de": "Körper: drei Massen in wahrer Größe. Das Gehäuse ist ein schlichtes Prisma von 90 mm und 15 mm Tiefe mit auf 4 mm verkleinertem Eckradius wie in der Zeichnung (eine 8-mm-Ecke liegt unter dem Mindestmaß von 15 mm); Kantenradius der Front, Schattenfuge und Stufe der Grundplatte gehen darin auf. Die Anzeigescheibe bleibt als dunkle Platte, weil 36 mal 21 mm über dem Mindestmaß liegen; der Knopf ist eine leicht konische Scheibe von 42 mm, 12 mm vorstehend, in der Lampe, Zeiger, Griffmulden und Kappenstufe aufgehen."
+          },
+          {
+            "en": "Thermal: all four regions keep a solid. The casing stays a hollow 2 mm shell (face plate, skirt ring, base plate against the wall) with square-cut sections, so a cut still shows the air space; the display is its 1 mm lens, the lamp its 7 mm dome at the true size (drawn below the feature, it only marks where the lamp sits), and the dial is the solid knob of the body, its layer merged, with the face on the housing as mounting face.",
+            "de": "Thermik: Alle vier Regionen behalten einen Körper. Das Gehäuse bleibt eine hohle 2-mm-Schale (Frontplatte, Haubenring, Grundplatte an der Wand) mit einfachen Schnitten, ein Schnitt zeigt also weiter den Luftraum; die Anzeige ist ihre 1 mm dicke Scheibe, die Lampe ihre 7-mm-Kuppel in wahrer Größe (unter dem Mindestmaß gezeichnet, sie markiert nur den Ort der Lampe), und der Drehknopf ist der massive Knopf des Körpers mit zusammengefasster Schicht und der Fläche am Gehäuse als Montagefläche."
+          },
+          {
+            "en": "Structure: nothing in this 15 mm deep device is thinner than the feature, so the load path is drawn at the feature size: the base plate as a 15 mm bar from screw to screw, both screws as 15 mm round bosses on the screw axis, flush with the wall (pin and slot can no longer be told apart), and the spindle merged with the knob hub into one 15 mm shaft that ends on the bar. Potentiometer, circuit board and the dial's mass are merged into these members.",
+            "de": "Tragwerk: Nichts in diesem 15 mm tiefen Gerät ist dünner als das Mindestmaß, der Lastpfad ist deshalb in Mindestmaßgröße gezeichnet: die Grundplatte als 15-mm-Stab von Schraube zu Schraube, beide Schrauben als runde 15-mm-Dome auf der Schraubenachse, bündig mit der Wand (Stift und Langloch sind nicht mehr zu unterscheiden), und die Achse mit der Knopfnabe zu einer 15-mm-Welle zusammengefasst, die am Stab endet. Potentiometer, Leiterplatte und die Masse des Knopfs gehen in diesen Gliedern auf."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "housing",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.045, 0.039], [0.039, 0.045], [-0.039, 0.045], [-0.045, 0.039], [-0.045, -0.039], [-0.039, -0.045], [0.039, -0.045], [0.045, -0.039]],
+            "plane": "xy",
+            "from": -0.0015,
+            "to": 0.0135,
+            "transform": {
+              "translation": [0.03, 0, 0]
+            }
+          },
+          {
+            "id": "display",
+            "kind": "box",
+            "bone": "housing",
+            "material": "lcd-glass",
+            "role": "glazing",
+            "tone": 0.12,
+            "size": [0.021, 0.036, 0.002],
+            "transform": {
+              "translation": [0.056499999999999995, 0, -0.001]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "extrude",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.021, 0.0],
+              [0.019401, 0.008036],
+              [0.014849, 0.014849],
+              [0.008036, 0.019401],
+              [0.0, 0.021],
+              [-0.008036, 0.019401],
+              [-0.014849, 0.014849],
+              [-0.019401, 0.008036],
+              [-0.021, 0.0],
+              [-0.019401, -0.008036],
+              [-0.014849, -0.014849],
+              [-0.008036, -0.019401],
+              [-0.0, -0.021],
+              [0.008036, -0.019401],
+              [0.014849, -0.014849],
+              [0.019401, -0.008036]
+            ],
+            "plane": "xy",
+            "from": -0.0135,
+            "to": 0.0
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "housing",
+            "region": "casing",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-display",
+            "of": "display",
+            "region": "display",
+            "sectionFaces": ["+w", "+u", "-u", "+v", "-v"]
+          },
+          {
+            "id": "th-led",
+            "kind": "ellipsoid",
+            "bone": "housing",
+            "material": "led-lens",
+            "role": "glazing",
+            "tone": 0.35,
+            "radii": [0.0035, 0.0035, 0.0015],
+            "transform": {
+              "translation": [0.056499999999999995, -0.0315, -0.0015]
+            },
+            "region": "led",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "dial",
+            "sectionFaces": ["+w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-housing",
+            "kind": "box",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.075, 0.02, 0.006],
+            "transform": {
+              "translation": [0.03, 0, 0.0105]
+            },
+            "member": "housing",
             "part": "member"
           },
           {
@@ -1725,9 +2530,9 @@
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
+            "size": [0.014, 0.014, 0.009],
             "transform": {
-              "translation": [0, 0.034, 0.0055]
+              "translation": [0.06, 0, 0.009]
             },
             "member": "housing",
             "part": "support",
@@ -1740,62 +2545,211 @@
             "material": "abs-plastic",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
+            "size": [0.014, 0.014, 0.009],
             "transform": {
-              "translation": [0, -0.034, 0.0055]
+              "translation": [0, 0, 0.009]
             },
             "member": "housing",
             "part": "support",
             "anchor": "wall-screw-bottom"
           },
           {
-            "id": "mass-housing",
-            "kind": "ellipsoid",
-            "bone": "housing",
-            "material": "abs-plastic",
-            "role": "detail",
-            "tone": 0.15,
-            "radii": [0.022, 0.022, 0.008],
-            "transform": {
-              "translation": [0, 0, 0.0035]
-            },
-            "member": "housing",
-            "part": "mass"
-          },
-          {
-            "id": "mass-dial",
-            "kind": "ellipsoid",
+            "id": "member-dial",
+            "kind": "extrude",
             "bone": "dial",
             "material": "abs-plastic",
-            "role": "detail",
-            "tone": 0.15,
-            "radii": [0.012, 0.012, 0.008],
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.005, 0.0], [0.003536, 0.003536], [0.0, 0.005], [-0.003536, 0.003536], [-0.005, 0.0], [-0.003536, -0.003536], [-0.0, -0.005], [0.003536, -0.003536]],
+            "plane": "xy",
+            "from": -0.0125,
+            "to": 0.0075,
             "member": "dial",
-            "part": "mass"
+            "part": "member"
           }
         ],
         "decisions": [
           {
-            "en": "Housing: a lofted slab of 90 mm by 20 mm depth with a 1 mm front bevel; the dial is one revolve with a rounded shoulder, 20 mm proud and 48 mm wide as in the 1:100 drawings. Display, lamp and pointer are no longer separate bodies (15 mm smallest feature): they are carried by the housing and the dial.",
-            "de": "Gehäuse: eine geloftete Platte von 90 mm mit 20 mm Tiefe und 1 mm Frontfase; der Drehknopf ist ein einziger Drehkörper mit gerundeter Schulter, 20 mm hoch und 48 mm breit wie in den 1:100-Zeichnungen. Anzeige, Lampe und Zeiger sind keine eigenen Körper mehr (Mindestmaß 15 mm), das Gehäuse und der Knopf tragen sie."
+            "en": "Digital scale without a drawing (the 0.45 mm object cannot be printed at 1:200). Body: the housing is a 90 mm prism, 15 mm deep, whose 8 mm corner radius is generalised to one 6 mm chamfer per corner; the display stays as a dark plate because it is what tells the face from a blank cover; the knob is a plain 42 mm cylinder, 12 mm proud. Lamp, index, cone of the knob and every edge radius are merged.",
+            "de": "Digitaler Maßstab ohne Zeichnung (das 0,45 mm große Objekt ist bei 1:200 nicht druckbar). Körper: Das Gehäuse ist ein Prisma von 90 mm und 15 mm Tiefe, dessen Eckradius von 8 mm zu je einer Fase von 6 mm verallgemeinert ist; die Anzeige bleibt als dunkle Platte, weil sie die Front von einer Blindabdeckung unterscheidet; der Knopf ist ein schlichter Zylinder von 42 mm, 12 mm vorstehend. Lampe, Zeiger, Konus des Knopfs und alle Kantenradien gehen darin auf."
           },
           {
-            "en": "Thermal: all four regions keep a solid, the casing as front-capped skin open to the wall, the 1 mm glass plate and 7 mm lens as thin glazing parts, the dial as its open-based skin 15 mm deep at the true 42 mm diameter, so the areas stay near areaM2.",
-            "de": "Thermik: alle vier Regionen behalten einen Körper, das Gehäuse als vorne geschlossene Haut mit Öffnung zur Wand, die 1 mm Glasplatte und die 7-mm-Linse als dünne Verglasungsteile, der Drehknopf als offene Haut von 15 mm Tiefe beim echten Durchmesser von 42 mm, damit die Flächen nahe an areaM2 bleiben."
+            "en": "Thermal: the 11 mm air space of the casing is below the 30 mm feature, so the casing is the solid housing of the body with its wall face as mounting face; the display is its plate, the dial its cylinder with the face on the housing as mounting face, and the lamp keeps a flat 7 mm dome only to carry its region.",
+            "de": "Thermik: Der 11 mm tiefe Luftraum des Gehäuses liegt unter dem Mindestmaß von 30 mm, das Gehäuse ist deshalb der massive Gehäusekörper mit der Wandseite als Montagefläche; die Anzeige ist ihre Platte, der Drehknopf sein Zylinder mit der Fläche am Gehäuse als Montagefläche, und die Lampe behält eine flache 7-mm-Kuppel nur, um ihre Region zu tragen."
           },
           {
-            "en": "Structure: housing core and dial spindle as members, the dial hub is merged into the spindle, supports are 15 mm pads at both screws (pin and roller no longer distinguishable at this size) and the two centre-of-mass solids.",
-            "de": "Tragwerk: Gehäusekern und Knopfspindel als Glieder, die Knopfnabe ist in der Spindel zusammengefasst, die Auflager sind 15-mm-Pads an beiden Schrauben (Stift und Rolle sind in dieser Grösse nicht mehr unterscheidbar) sowie die zwei Schwerpunktkörper."
+            "en": "Structure: the base plate is reduced to its load path, a 20 mm strip at the wall from screw to screw; the two screws are square 14 mm blocks at their anchors, the dial hangs on one 10 mm shaft that reaches back to the strip. Joint and masses are merged into these members.",
+            "de": "Tragwerk: Die Grundplatte ist auf ihren Lastpfad verkürzt, einen 20 mm breiten Streifen an der Wand von Schraube zu Schraube; die beiden Schrauben sind quadratische 14-mm-Blöcke an ihren Ankern, der Drehknopf hängt an einer 10-mm-Welle, die bis zum Streifen zurückreicht. Gelenk und Massen gehen in diesen Gliedern auf."
           }
         ]
       },
-      "200": {
-        "status": "unavailable",
-        "denominator": 200
-      },
       "500": {
-        "status": "unavailable",
-        "denominator": 500
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "housing",
+            "kind": "box",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.9,
+            "size": [0.09, 0.09, 0.015],
+            "transform": {
+              "translation": [0.03, 0, 0.006]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "extrude",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.021, 0.0],
+              [0.018187, 0.0105],
+              [0.0105, 0.018187],
+              [0.0, 0.021],
+              [-0.0105, 0.018187],
+              [-0.018187, 0.0105],
+              [-0.021, 0.0],
+              [-0.018187, -0.0105],
+              [-0.0105, -0.018187],
+              [-0.0, -0.021],
+              [0.0105, -0.018187],
+              [0.018187, -0.0105]
+            ],
+            "plane": "xy",
+            "from": -0.0135,
+            "to": 0.0
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "housing",
+            "region": "casing",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-display",
+            "kind": "box",
+            "bone": "housing",
+            "material": "lcd-glass",
+            "role": "glazing",
+            "tone": 0.12,
+            "size": [0.021, 0.036, 0.0005],
+            "transform": {
+              "translation": [0.056499999999999995, 0, -0.00175]
+            },
+            "region": "display",
+            "sectionFaces": ["+w", "+u", "-u", "+v", "-v"]
+          },
+          {
+            "id": "th-led",
+            "kind": "extrude",
+            "bone": "housing",
+            "material": "led-lens",
+            "role": "glazing",
+            "tone": 0.35,
+            "profile": [
+              [0.06, -0.0315],
+              [0.058975, -0.029025],
+              [0.0565, -0.028],
+              [0.054025, -0.029025],
+              [0.053, -0.0315],
+              [0.054025, -0.033975],
+              [0.0565, -0.035],
+              [0.058975, -0.033975]
+            ],
+            "plane": "xy",
+            "from": -0.002,
+            "to": -0.0015,
+            "region": "led",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "dial",
+            "sectionFaces": ["+w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-housing",
+            "kind": "box",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.06, 0.012, 0.012],
+            "transform": {
+              "translation": [0.03, 0, 0.0075]
+            },
+            "member": "housing",
+            "part": "member"
+          },
+          {
+            "id": "support-wall-screw-top",
+            "kind": "box",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "detail",
+            "tone": 0.25,
+            "size": [0.012, 0.018, 0.006],
+            "transform": {
+              "translation": [0.06, 0, 0.0105]
+            },
+            "member": "housing",
+            "part": "support",
+            "anchor": "wall-screw-top"
+          },
+          {
+            "id": "support-wall-screw-bottom",
+            "kind": "box",
+            "bone": "housing",
+            "material": "abs-plastic",
+            "role": "detail",
+            "tone": 0.25,
+            "size": [0.012, 0.018, 0.006],
+            "transform": {
+              "translation": [0, 0, 0.0105]
+            },
+            "member": "housing",
+            "part": "support",
+            "anchor": "wall-screw-bottom"
+          },
+          {
+            "id": "member-dial",
+            "kind": "box",
+            "bone": "dial",
+            "material": "abs-plastic",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.008, 0.008, 0.014],
+            "transform": {
+              "translation": [0, 0, -0.0055]
+            },
+            "member": "dial",
+            "part": "member"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Digital scale without a drawing; the model is minimal. Body: a square 90 mm slab, 15 mm deep, and the round knob as a twelve-sided 42 mm boss, 12 mm proud: square plate plus round knob is what still says thermostat at 0.18 mm. Corners, display, lamp and index are merged into the slab.",
+            "de": "Digitaler Maßstab ohne Zeichnung; das Modell ist minimal. Körper: eine quadratische Platte von 90 mm und 15 mm Tiefe und der runde Knopf als zwölfeckiger Buckel von 42 mm, 12 mm vorstehend: quadratische Platte mit rundem Knopf ist das, was bei 0,18 mm noch Thermostat sagt. Ecken, Anzeige, Lampe und Zeiger gehen in der Platte auf."
+          },
+          {
+            "en": "Thermal: the casing is the slab with its wall face as mounting face and the dial is the boss; display and lamp are flat patches on the face, 0.5 mm proud, that only carry their regions.",
+            "de": "Thermik: Das Gehäuse ist die Platte mit der Wandseite als Montagefläche und der Drehknopf ist der Buckel; Anzeige und Lampe sind flache Flecken auf der Front, 0,5 mm vorstehend, die nur ihre Regionen tragen."
+          },
+          {
+            "en": "Structure: one 12 mm spine from screw to screw inside the slab, the two screws as flat pads between spine and wall, and the dial on a square 8 mm stub that ends on the spine.",
+            "de": "Tragwerk: ein 12 mm starker Steg von Schraube zu Schraube im Inneren der Platte, die beiden Schrauben als flache Auflager zwischen Steg und Wand und der Drehknopf auf einem quadratischen 8-mm-Stummel, der am Steg endet."
+          }
+        ]
       }
     },
     "presentation": {

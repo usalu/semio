@@ -39,6 +39,7 @@ impl SubspaceIterationJob {
             if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
                 if !numerical_finish_writer(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
+                self.checkpoint_cursor = NumericalPageCursor::new();
                 return Ok(self.desk.lend_checkpoint(payload, self.state.iteration as u64));
             }
 
@@ -105,7 +106,7 @@ impl SubspaceIterationJob {
             context.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
             return Ok(NumericalRun::Yield);
         }
-        if self.state.iteration >= self.state.max_iter || self.state.converged {
+        if self.state.converged || (self.state.iteration >= self.state.max_iter && self.state.retiring_work.is_none()) {
             context.set_stage("fem.subspace.terminal-page");
             if self.terminal_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
                 let mut demand = RetainedPayloadBuilder::take_finished_demand();
@@ -122,6 +123,7 @@ impl SubspaceIterationJob {
                 return Ok(NumericalRun::Yield);
             }
             if self.terminal_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+                if self.terminal_writer.is_none() { self.state.publication_stage = 0; self.state.publication_first = 0; self.state.publication_second = 0; self.terminal_page_cursor = 0; }
                 if numerical_open_writer(&mut self.terminal_writer, JobPayloadStream::CommitOutput, context)? { self.state.publication_stage = 0; self.state.publication_first = 0; self.state.publication_second = 0; self.terminal_page_cursor = 0; }
                 return Ok(NumericalRun::Yield);
             }

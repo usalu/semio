@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-3d-brep-spline-trim"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Bounded chord sampling of original rational B-Rep curve trims"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-value.workspace = true

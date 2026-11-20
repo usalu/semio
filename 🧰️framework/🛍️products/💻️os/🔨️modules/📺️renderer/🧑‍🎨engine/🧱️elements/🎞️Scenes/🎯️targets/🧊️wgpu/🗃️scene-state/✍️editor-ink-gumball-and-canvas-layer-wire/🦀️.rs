@@ -296,6 +296,10 @@ pub(crate) struct CanvasStrokeJson {
     #[serde(default)]
     pub dash: Option<Vec<f64>>,
     #[serde(default)]
+    pub dash_offset: Option<f64>,
+    #[serde(default)]
+    pub miter_limit: Option<f64>,
+    #[serde(default)]
     pub cap: Option<String>,
     #[serde(default)]
     pub join: Option<String>,
@@ -320,6 +324,14 @@ pub(crate) struct CanvasTextFieldJson {
     #[serde(default)]
     pub size: Option<f64>,
     pub font_family: TextFace,
+}
+
+/// 🌿 One compound clip in canvas coordinates.
+#[derive(Clone, Debug, Deserialize)]
+pub struct CanvasClipPathJson {
+    pub segments: Vec<crate::canvas2d_paint::ScenePathSegment>,
+    #[serde(default, rename = "fillRule")]
+    pub fill_rule: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -379,6 +391,12 @@ pub struct CanvasLayer {
     pub segments: Option<Vec<crate::canvas2d_paint::ScenePathSegment>>,
     #[serde(default)]
     pub transform: Option<Vec<f64>>,
+    #[serde(default, rename = "clipRect")]
+    pub clip_rect: Option<[f64; 4]>,
+    #[serde(default, rename = "clipPolygons")]
+    pub clip_polygons: Option<Vec<[[f64; 2]; 4]>>,
+    #[serde(default, rename = "clipPaths")]
+    pub clip_paths: Option<Vec<CanvasClipPathJson>>,
     #[serde(default, rename = "fillRule")]
     pub fill_rule: Option<String>,
 }

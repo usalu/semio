@@ -26,7 +26,7 @@ pub const WFC3D_EXAMPLE_TOWER_TEXT: &str = include_str!("../../../📚️example
 //#endregion 🔖️Examples
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct Slot3dDsl {
     pub id: String,
     pub x: f64,
@@ -39,7 +39,7 @@ pub struct Slot3dDsl {
     pub pinned_tile_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct SlotEdgeDsl {
     pub id: String,
     pub from_slot_id: String,
@@ -61,7 +61,7 @@ impl Default for TileDsl {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct GraphRuleDsl {
     pub id: String,
     pub tile_a_id: String,

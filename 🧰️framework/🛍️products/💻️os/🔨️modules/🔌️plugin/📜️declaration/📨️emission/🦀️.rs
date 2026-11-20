@@ -57,6 +57,8 @@ use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[derive(semio_framework_value::RetireOwned)]
 pub struct Emit<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
     pub artifact_mutations: Vec<Mutation>,
+    /// 📦️ Optionally appends independently retained pages to one local document edit.
+    pub artifact_mutation_pages: Option<store::os_store::one_item_publication::ArtifactMutationPages<Mutation>>,
     pub config_mutations: Vec<ConfigMutation>,
     pub window_config_mutations: Vec<WindowConfigMutation>,
     pub draft_mutations: Vec<DraftMutation>,
@@ -133,6 +135,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Default for Emit<Mutation, ConfigM
     fn default() -> Self {
         Self {
             artifact_mutations: Vec::new(),
+            artifact_mutation_pages: None,
             config_mutations: Vec::new(),
             window_config_mutations: Vec::new(),
             draft_mutations: Vec::new(),
@@ -478,6 +481,20 @@ impl ChildEmit {
 }
 
 impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, DraftMutation> {
+    /// 🧮️ Counts the original document mutations in this edit.
+    pub fn artifact_mutation_count(&self) -> usize {
+        self.artifact_mutations.len() + self.artifact_mutation_pages.as_ref().map_or(0, |pages| pages.len())
+    }
+
+    /// 🪄️ Reveals whether this emission changes the document.
+    pub fn has_artifact_mutations(&self) -> bool {
+        self.artifact_mutation_count() != 0
+    }
+
+    /// 🧭️ Observes original document mutations in their publication order.
+    pub fn artifact_mutation_iter(&self) -> impl Iterator<Item = &Mutation> {
+        self.artifact_mutations.iter().chain(self.artifact_mutation_pages.iter().flat_map(|pages| pages.iter()))
+    }
     /// 📥️ Quotes complete backing growth or one original preparation header transfer.
     pub fn child_preparation_admission_demands(&self)->Result<RetirementDemand,ValueError>{
         let cell=size_of::<ChildEmitPreparation>();let length=self.child_preparations.len();let capacity=self.child_preparations.capacity();

@@ -16,12 +16,12 @@ use std::collections::BTreeMap;
 
 fn model(revisions: usize) -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
-    model.views.insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
-    model.sheets.insert("sh-1".into(), Sheet { project: "House".into(), drawn_by: "UG".into(), date: "2026-10-09".into(), ..Sheet::standard("A-101", "Ground floor") });
-    model.viewports.insert("vp-1".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 30.0, y: 40.0 }));
+    model.views.cold_insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
+    model.sheets.cold_insert("sh-1".into(), Sheet { project: "House".into(), drawn_by: "UG".into(), date: "2026-10-09".into(), ..Sheet::standard("A-101", "Ground floor") });
+    model.viewports.cold_insert("vp-1".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 30.0, y: 40.0 }));
     for index in 0..revisions {
         let mark = char::from(b'A' + index as u8).to_string();
-        model.sheet_revisions.insert(format!("r-{index}"), SheetRevision { sheet: "sh-1".into(), number: mark, date: "2026-10-01".into(), description: format!("Change {index}"), author: "UG".into() });
+        model.sheet_revisions.cold_insert(format!("r-{index}"), SheetRevision { sheet: "sh-1".into(), number: mark, date: "2026-10-01".into(), description: format!("Change {index}"), author: "UG".into() });
     }
     model
 }

@@ -79,13 +79,13 @@ const captureFunctions = async (admissions: Map<string, number>[]) => {
   return { ...run, api, policy };
 };
 
-const nativeFixture = async (depth = vectors.aggregate.depth) => {
+const nativeFixture = async (depth = vectors.aggregate.depth, component = (index: number) => "d" + index) => {
   const fs = await import("node:fs/promises"), { join } = await import("node:path"), { createHash } = await import("node:crypto");
   const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifacts) throw Error("Original ticket or process-test artifact root required");
   const root = await fs.mkdtemp(join(artifacts, "ic-")), config = vectors.aggregate, batches: any[] = [];
   for (let scope = 0; scope < config.roots; scope++) {
-    const selected = "j/" + (scope ? "b" : "a").repeat(20), parent = Array.from({ length: depth }, (_, index) => "d" + index).join("/"), files: any[] = [];
+    const selected = "j/" + (scope ? "b" : "a").repeat(20), parent = Array.from({ length: depth }, (_, index) => component(index)).join("/"), files: any[] = [];
     for (let index = 0; index <= config.siblings; index++) {
       const path = parent + "/f" + index + ".json", bytes = Buffer.alloc(index === config.siblings ? 0 : index === 0 ? config.multiChunkBytes : 13, index + 1);
       await fs.mkdir(join(root, selected, parent), { recursive: true }); await fs.writeFile(join(root, selected, path), bytes);
@@ -174,7 +174,7 @@ test("dependency immutable non-fresh replay refuses hash and replacement drift a
 }, 30000);
 
 test("dependency immutable deep handoffs preserve the unchanged descriptor owner bound", async () => {
-  const fixture = await nativeFixture(vectors.cases[0]!.parts.length), admissions: Map<string, number>[] = [], run = await captureFunctions(admissions), baseline = run.api.artifactDescriptorCustodyV1();
+  const fixture = await nativeFixture(vectors.cases[0]!.parts.length, index => index.toString(36)), admissions: Map<string, number>[] = [], run = await captureFunctions(admissions), baseline = run.api.artifactDescriptorCustodyV1();
   let peak = baseline.active;
   try {
     const receipt = await run.capture(fixture.root, fixture.group, { publish: async () => {}, yieldContinuation: async () => {} }, () => { peak = Math.max(peak, run.api.artifactDescriptorCustodyV1().active); });

@@ -10,6 +10,11 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 81, archive, &mut cx).expect("recursive archive admission");
     let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 81, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready);
+    let awaiting_archive_ack = (0..128).any(|_| {
+        matches!(composed_maintenance_turn(app.as_mut(), COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes, &mut cx).expect("live maintenance while archive acknowledgement is outstanding"),
+            semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "retained archive load awaits original host polling or acknowledgement" })
+    });
+    assert!(awaiting_archive_ack, "a retained terminal archive awaits its exact host acknowledgement");
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 81).expect("recursive archive acknowledgement");
     assert_eq!(app.stores.store.envelope().id, "archive-parent");
     assert_eq!(app.stores.store.snapshot().expect("archive parent current snapshot").revision, 7);

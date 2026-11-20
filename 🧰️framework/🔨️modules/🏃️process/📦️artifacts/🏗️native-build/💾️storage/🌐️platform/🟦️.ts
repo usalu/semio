@@ -1,5 +1,7 @@
 import{nativeRecoveredChildRetirementFailureV1}from"./🧾️failure/🟦️.ts";
 import{captureNativeRecomputableRetirementV1,readNativeRecomputableRetirementV1,resumeNativeRecomputableRetirementV1,withNativeRecomputableRetirementCoordinatorV1,requireNativeRecomputableRetirementSettledV1,type NativePlatformRecomputableRetirementV1,type NativeRecomputableRetirementObserverV1,type NativeRetirementPortsV1}from"../🧹️whole/🟦️.ts";
+import{withNativeImageStorageV1}from"../🍎️image/🟦️.ts";
+import{openPersistentNativeExistingImageV1}from"../🧹️cleanup/🎛️command/🟦️.ts";
 import{holdNativeLiveChildV1}from"../🧷️live-children/🟦️.ts";
 export type{NativePlatformRecomputableRetirementV1,NativeRecomputableRetirementProgressV1,NativeRecomputableRetirementObserverV1}from"../🧹️whole/🟦️.ts";
 import{acceptNativeStorageCleanupV1,requireNativeStorageChildCleanupV1,settleSuccessfulNativeStorageChildV1,settleAbsentNativeStorageChildV1,withNativeStorageCleanupV1,readNativeStorageReservationPolicyV1,type NativeStorageCleanupV1}from"../🟦️.ts";
@@ -23,6 +25,32 @@ function nativePlatformBackendV1(directory:string,selection:NativeStorageSelecti
 
 /** 🌐️ Opens the host's actual finite backing while preserving original system capability admission. */
 export async function openNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,selection?:NativeStorageSelectionV1):Promise<NativeImageStorageV1>{options=Object.freeze({...options});requireNativeRecomputableRetirementSettledV1(options.directory,options.control);const backend=nativePlatformBackendV1(options.directory,selection,false);const image=await nativeStorageOperationsV1(backend).open(options);return registerNativePlatformImageV1(image,options,backend);}
+
+/** 🧭️ Opens an existing mounted-image backing for recovery without creating a capsule or queueing behind an image holder. */
+export async function openExistingNativePlatformImageV1(input:NativeFixedPlatformOptionsV1,mode:"mounted"|"maintenance"):Promise<NativeImageStorageV1>{
+ const options=Object.freeze({...input}),backend=nativePlatformBackendV1(options.directory,undefined,false);
+ if(process.platform!=="darwin"||backend!=="mounted-image")throw Error("Existing mounted-image recovery unavailable on this host");
+ requireNativeRecomputableRetirementSettledV1(options.directory,options.control);
+ return registerNativePlatformImageV1(await openPersistentNativeExistingImageV1(options,mode),options,backend);
+}
+
+/** 🗜️ Runs one body inside the host's actual finite backing and its accepted physical cleanup: the mounted image on macOS, the directory partition elsewhere. The body receives the cleanup's body control on every host, so a failure inside it is contained by the cleanup and settles with the backing's close instead of failing the admission of the original that owns it. */
+export function withNativePlatformImageStorageV1<T>(options:NativeFixedPlatformOptionsV1,run:(image:NativeImageStorageV1,control:ResourceLeaseControl)=>Promise<T>,selection?:NativeStorageSelectionV1):Promise<T>{
+ if(process.platform==="darwin")return withNativeImageStorageV1(options,(image,control)=>run(image as NativeImageStorageV1,control));
+ const resource="native-fixed-image:"+options.directory;
+ return withAcceptedPhysicalCleanupV1(options.control,{version:1,kind:"native-image",resource,reserveMilliseconds:10000},async(cleanup,bodyControl)=>{
+  let value:T|undefined,failed=false,primary:unknown;const failures:unknown[]=[];
+  const retain=(error:unknown):void=>{if(!failures.some(row=>Object.is(row,error)))failures.push(error);};
+  let image:NativeImageStorageV1|undefined;
+  try{image=await openNativePlatformStorageV1(Object.freeze({...options,control:bodyControl}),selection);value=await run(image,bodyControl);}catch(error){failed=true;primary=error;}
+  if(failed)retain(primary);
+  if(image)try{await image.close();}catch(error){retain(error);}
+  try{await beginAcceptedPhysicalCleanupV1(cleanup);}catch(error){retain(error);}
+  if(failures.length>1)throw new AggregateError(failures,"Native body, backing close and physical cleanup failed");
+  if(failures.length)throw failures[0];
+  return value as T;
+ });
+}
 
 /** 🧭️ Creates consumer custody while bounded preparation remains an authenticated refinement of that same owner. */
 export function openPreparedNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,preparation:ResourceLeaseControl,selection?:NativeStorageSelectionV1):Promise<NativeImageStorageV1>{requireIssuedResourceControlRefinementV1(options.control,preparation);if(checkResourceLeaseControl(preparation)===null)throw Error("Finite Native preparation control required");return openNativePlatformStorageV1(Object.freeze({...options,preparationControl:preparation}),selection);}
@@ -105,4 +133,4 @@ const retirementPortsV1:NativeRetirementPortsV1=Object.freeze({requireWriter:req
 /** 🎯️ Resumes exact current physical state through the actual Native factory and its real inside journal. */
 export function resumeNativePlatformRecomputableRetirementV1(options:NativeFixedPlatformOptionsV1,observer?:NativeRecomputableRetirementObserverV1):Promise<boolean>{return resumeNativeRecomputableRetirementV1(options,observer,retirementPortsV1);}
 /** 🗃️ Reacquires canonical EX and removes only the privately captured complete recomputable image. */
-export function retireNativePlatformRecomputableStorageV1(token:NativePlatformRecomputableRetirementV1,control:ResourceLeaseControl,observer?:import("../🧹️whole/🟦️.ts").NativeRecomputableRetirementObserverV1):Promise<boolean>{const scope=readNativeRecomputableRetirementV1(token,control,observer),request=Object.freeze({version:1 as const,wait:true,expectedImage:scope.expectation});return withNativeRecomputableRetirementCoordinatorV1(scope.options,()=>nativeStorageOperationsV1(nativePlatformBackendV1(scope.options.directory,undefined,false)).retire(scope.options,request,token));}
+export function retireNativePlatformRecomputableStorageV1(token:NativePlatformRecomputableRetirementV1,control:ResourceLeaseControl,observer?:import("../🧹️whole/🟦️.ts").NativeRecomputableRetirementObserverV1,wait=true):Promise<boolean>{const scope=readNativeRecomputableRetirementV1(token,control,observer),request=Object.freeze({version:1 as const,wait,expectedImage:scope.expectation});return withNativeRecomputableRetirementCoordinatorV1(scope.options,()=>nativeStorageOperationsV1(nativePlatformBackendV1(scope.options.directory,undefined,false)).retire(scope.options,request,token),wait);}

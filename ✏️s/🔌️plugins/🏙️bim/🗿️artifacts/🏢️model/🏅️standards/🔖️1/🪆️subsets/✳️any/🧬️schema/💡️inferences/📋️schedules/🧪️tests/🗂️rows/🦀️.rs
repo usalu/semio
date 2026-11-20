@@ -154,9 +154,9 @@ async fn the_finish_category_lists_the_floor_wall_and_ceiling_of_every_resolved_
 #[semio_framework_async_macros::async_test]
 async fn a_room_that_is_not_enclosed_has_no_finish_rows() {
     let mut snapshot = house();
-    snapshot.walls.clear();
-    snapshot.openings.clear();
-    snapshot.spaces.remove("sp-2");
+    snapshot.walls.cold_clear();
+    snapshot.openings.cold_clear();
+    snapshot.spaces.cold_remove("sp-2");
     let table = table_of(&snapshot, plain(ScheduleCategory::Finish, &[(ScheduleField::Surface, false)]));
     assert_eq!(table.items, 0, "without walls the bounded living room resolves to nothing");
     assert!(table.rows.is_empty());

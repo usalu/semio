@@ -511,7 +511,7 @@ impl FillPreparation {
 
 //#region 🎲️Job
 /// 🚦️ What one bounded fill run decided before any outcome is lent.
-enum FillRun {
+pub enum FillRun {
     Yield,
     Cancelled,
     Staged,
@@ -530,6 +530,8 @@ enum FillPhase {
         tile_ids: Vec<String>,
         child: Option<Box<WfcJob<semio_s_plugin_wfc_engine::topology::GraphTopology>>>,
     },
+    /// 🏁️ The terminal verdict is staged; no further engine step runs.
+    Settled,
     Closed,
 }
 
@@ -577,7 +579,7 @@ impl Wfc3dFillRunJob {
         let seed = match &self.phase {
             FillPhase::Prepare(preparation) => preparation.snapshot.seed,
             FillPhase::Run { snapshot, .. } => snapshot.seed,
-            FillPhase::Closed => 0,
+            FillPhase::Settled | FillPhase::Closed => 0,
         };
         let operation = Operation::new(context.operation(), semio_framework_job::RevisionId(0), context.generation(), seed);
         self.operation = Some(operation);
@@ -651,7 +653,7 @@ impl Wfc3dFillRunJob {
         FillRun::Staged
     }
 
-    fn finish_success(&mut self, mut payload: Wfc3dFillTickPayload) -> FillRun {
+    pub fn finish_success(&mut self, mut payload: Wfc3dFillTickPayload) -> FillRun {
         payload.source_revision = self.identity.base_revision.to_vec();
         let mutations = payload.set_solve_mutations();
         let effect = commit_fill_effect(&payload);

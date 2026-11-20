@@ -159,7 +159,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const text = producers[name]() as string;
       return name === "shardWorkerSource" ? classicShardWorkerSource(text) : text;
     };
-    const messages: any[] = []; const receive = (message: unknown) => messages.push(message);
+    const messages: any[] = [];
+    const effectPosted = Promise.withResolvers<void>();
+    const receive = (message: { kind: string }) => {
+      messages.push(message);
+      if (message.kind === "frame") effectPosted.resolve();
+    };
     const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
     const shimCode = generated("hostShimSource").replace("import.meta.url", JSON.stringify("https://fixture.invalid/host.js?actor=a&activation=1"));
     new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
@@ -171,6 +176,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     if (!dispatch) throw new Error("Missing generated worker dispatcher");
     const send = dispatch as (event: { data: Record<string, unknown> }) => Promise<void>;
     const pending = send({ data: { kind: "turn", requestId: "r1", actorId: "a", activationGeneration: 1n, events: [], budget: {} } });
+    await effectPosted.promise;
     expect(messages.map(message => message.kind)).toEqual(["frame"]);
     const effectRequest = messages[0].frame.envelope.payload.payload; expect(effectRequest.effect).toBe("storage-read");
     await send({ data: { kind: "checkpoint", requestId: "r2", actorId: "b" } });

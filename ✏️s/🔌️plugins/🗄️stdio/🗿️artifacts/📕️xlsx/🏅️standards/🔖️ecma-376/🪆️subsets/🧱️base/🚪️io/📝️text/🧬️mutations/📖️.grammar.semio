@@ -19,7 +19,7 @@ remove-sheet = "remove-sheet" "name" "=" hex
 rename-sheet = "rename-sheet" "name" "=" hex "new-name" "=" hex
 set-cell = "set-cell" "address" "=" hex "value" "=" cell-value ("node" "=" hex)?
 insert-cell = "insert-cell" "address" "=" hex "value" "=" cell-value ("node" "=" hex)?
-remove-cell = "remove-cell" "address" "=" hex
+remove-cell = "remove-cell" "address" "=" hex ("keep-row" "=" "1")?
 insert-shared-string = "insert-shared-string" "value" "=" hex ("index" "=" INT)? ("node" "=" hex)?
 remove-shared-string = "remove-shared-string" "index" "=" INT
 set-shared-string = "set-shared-string" "index" "=" INT "value" "=" hex ("node" "=" hex)?

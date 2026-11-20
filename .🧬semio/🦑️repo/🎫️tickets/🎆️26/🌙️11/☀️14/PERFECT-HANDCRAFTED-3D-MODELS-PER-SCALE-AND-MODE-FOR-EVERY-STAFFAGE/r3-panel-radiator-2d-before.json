@@ -1,0 +1,1748 @@
+{
+ "50": {
+  "elevation": [
+   {
+    "id": "floor",
+    "bone": "radiator",
+    "role": "ground",
+    "z": 0,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      0.185
+     ],
+     [
+      -0.11,
+      -0.1
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "panel-rear",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-rear",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      -0.022
+     ],
+     [
+      0.585,
+      -0.022
+     ],
+     [
+      0.585,
+      0
+     ]
+    ],
+    "closed": true,
+    "penMm": 0.1
+   },
+   {
+    "id": "panel-front-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-lower",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      -0.078
+     ],
+     [
+      0,
+      -0.1
+     ],
+     [
+      0.195,
+      -0.1
+     ],
+     [
+      0.195,
+      -0.078
+     ]
+    ],
+    "closed": true,
+    "penMm": 0.1
+   },
+   {
+    "id": "panel-front-mid",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-mid",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.195,
+      -0.078
+     ],
+     [
+      0.195,
+      -0.1
+     ],
+     [
+      0.39,
+      -0.1
+     ],
+     [
+      0.39,
+      -0.078
+     ]
+    ],
+    "closed": true,
+    "penMm": 0.1
+   },
+   {
+    "id": "panel-front-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-upper",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.39,
+      -0.078
+     ],
+     [
+      0.39,
+      -0.1
+     ],
+     [
+      0.585,
+      -0.1
+     ],
+     [
+      0.585,
+      -0.078
+     ]
+    ],
+    "closed": true,
+    "penMm": 0.1
+   },
+   {
+    "id": "end-cap-far",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-rear",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      -0.022
+     ],
+     [
+      0,
+      -0.078
+     ],
+     [
+      0.585,
+      -0.078
+     ],
+     [
+      0.585,
+      -0.022
+     ]
+    ],
+    "closed": true,
+    "penMm": 0.1
+   },
+   {
+    "id": "convector-rear",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 3,
+    "filled": false,
+    "tone": 0.5,
+    "region": "convector",
+    "kind": "poly",
+    "points": [
+     [
+      0.03,
+      -0.022
+     ],
+     [
+      0.08045,
+      -0.05
+     ],
+     [
+      0.13091,
+      -0.022
+     ],
+     [
+      0.18136,
+      -0.05
+     ],
+     [
+      0.23182,
+      -0.022
+     ],
+     [
+      0.28227,
+      -0.05
+     ],
+     [
+      0.33273,
+      -0.022
+     ],
+     [
+      0.38318,
+      -0.05
+     ],
+     [
+      0.43364,
+      -0.022
+     ],
+     [
+      0.48409,
+      -0.05
+     ],
+     [
+      0.53455,
+      -0.022
+     ],
+     [
+      0.585,
+      -0.05
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "convector-front",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 3,
+    "filled": false,
+    "tone": 0.5,
+    "region": "convector",
+    "kind": "poly",
+    "points": [
+     [
+      0.03,
+      -0.05
+     ],
+     [
+      0.08045,
+      -0.078
+     ],
+     [
+      0.13091,
+      -0.05
+     ],
+     [
+      0.18136,
+      -0.078
+     ],
+     [
+      0.23182,
+      -0.05
+     ],
+     [
+      0.28227,
+      -0.078
+     ],
+     [
+      0.33273,
+      -0.05
+     ],
+     [
+      0.38318,
+      -0.078
+     ],
+     [
+      0.43364,
+      -0.05
+     ],
+     [
+      0.48409,
+      -0.078
+     ],
+     [
+      0.53455,
+      -0.05
+     ],
+     [
+      0.585,
+      -0.078
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bottom-cap",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.5,
+    "region": "panel-rear",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      -0.1
+     ]
+    ],
+    "closed": false,
+    "penMm": 0.1
+   },
+   {
+    "id": "top-grille",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.585,
+      0
+     ],
+     [
+      0.585,
+      -0.1
+     ],
+     [
+      0.6,
+      -0.1
+     ],
+     [
+      0.6,
+      0
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "grille-slot-0",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.5875,
+      -0.015
+     ],
+     [
+      0.5975,
+      -0.015
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-1",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.5875,
+      -0.04
+     ],
+     [
+      0.5975,
+      -0.04
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-2",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.5875,
+      -0.06
+     ],
+     [
+      0.5975,
+      -0.06
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-3",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.5875,
+      -0.085
+     ],
+     [
+      0.5975,
+      -0.085
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bracket-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.47,
+      0.035
+     ],
+     [
+      0.47,
+      0
+     ],
+     [
+      0.482,
+      0
+     ],
+     [
+      0.482,
+      0.035
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "bracket-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.05,
+      0.035
+     ],
+     [
+      0.05,
+      0
+     ],
+     [
+      0.062,
+      0
+     ],
+     [
+      0.062,
+      0.035
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "valve-head",
+    "bone": "valve-head",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "ellipse",
+    "cx": 0,
+    "cy": 0,
+    "rx": 0.03,
+    "ry": 0.03,
+    "penMm": 0.235
+   },
+   {
+    "id": "valve-index",
+    "bone": "valve-head",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.1,
+    "region": "valve",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      0.027
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "supply-pipe",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.3,
+    "region": "valve",
+    "penMm": 0.18,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      -0.055
+     ],
+     [
+      -0.055,
+      -0.055
+     ]
+    ],
+    "closed": false
+   }
+  ],
+  "front": [
+   {
+    "id": "front-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-lower",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "front-mid",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-mid",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.29833,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "front-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-upper",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.48667,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "grille-strip",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.675,
+    "w": 1,
+    "h": 0.035
+   },
+   {
+    "id": "grille-fins",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "convector",
+    "kind": "path",
+    "d": "M -0.475 0.6805 L -0.475 0.7045 M -0.425 0.6805 L -0.425 0.7045 M -0.375 0.6805 L -0.375 0.7045 M -0.325 0.6805 L -0.325 0.7045 M -0.275 0.6805 L -0.275 0.7045 M -0.225 0.6805 L -0.225 0.7045 M -0.175 0.6805 L -0.175 0.7045 M -0.125 0.6805 L -0.125 0.7045 M -0.075 0.6805 L -0.075 0.7045 M -0.025 0.6805 L -0.025 0.7045 M 0.025 0.6805 L 0.025 0.7045 M 0.075 0.6805 L 0.075 0.7045 M 0.125 0.6805 L 0.125 0.7045 M 0.175 0.6805 L 0.175 0.7045 M 0.225 0.6805 L 0.225 0.7045 M 0.275 0.6805 L 0.275 0.7045 M 0.325 0.6805 L 0.325 0.7045 M 0.375 0.6805 L 0.375 0.7045 M 0.425 0.6805 L 0.425 0.7045 M 0.475 0.6805 L 0.475 0.7045"
+   },
+   {
+    "id": "radiator-outline",
+    "bone": "radiator",
+    "role": "body",
+    "z": 6,
+    "filled": true,
+    "tone": 0.5,
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.6
+   },
+   {
+    "id": "end-seam-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      -0.47,
+      0.13
+     ],
+     [
+      -0.47,
+      0.655
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "end-seam-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      0.47,
+      0.13
+     ],
+     [
+      0.47,
+      0.655
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "pipe-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.346,
+    "y": 0,
+    "w": 0.022,
+    "h": 0.06
+   },
+   {
+    "id": "valve-body-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.37,
+    "y": 0.05,
+    "w": 0.07,
+    "h": 0.06
+   },
+   {
+    "id": "valve-head",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.45,
+    "y": 0.058,
+    "w": 0.08,
+    "h": 0.054,
+    "r": 0.012
+   },
+   {
+    "id": "pipe-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.384,
+    "y": 0,
+    "w": 0.022,
+    "h": 0.06
+   },
+   {
+    "id": "valve-body-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.36,
+    "y": 0.05,
+    "w": 0.07,
+    "h": 0.06
+   },
+   {
+    "id": "lockshield-cap",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.43,
+    "y": 0.056,
+    "w": 0.032,
+    "h": 0.042,
+    "r": 0.006
+   },
+   {
+    "id": "valve-index",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 6,
+    "filled": false,
+    "tone": 0.1,
+    "region": "valve",
+    "kind": "poly",
+    "points": [
+     [
+      -0.42,
+      0.049
+     ],
+     [
+      -0.42,
+      0.091
+     ]
+    ],
+    "closed": false
+   }
+  ],
+  "plan": [
+   {
+    "id": "top-grille",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": 0.035,
+    "y": -0.5,
+    "w": 0.1,
+    "h": 1
+   },
+   {
+    "id": "grille-slot-0",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.05,
+      -0.47
+     ],
+     [
+      0.05,
+      0.47
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-1",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.075,
+      -0.47
+     ],
+     [
+      0.075,
+      0.47
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-2",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.095,
+      -0.47
+     ],
+     [
+      0.095,
+      0.47
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "grille-slot-3",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "top-grille",
+    "kind": "poly",
+    "points": [
+     [
+      0.12,
+      -0.47
+     ],
+     [
+      0.12,
+      0.47
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "end-seam-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      0.035,
+      0.485
+     ],
+     [
+      0.135,
+      0.485
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "end-seam-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      0.035,
+      -0.485
+     ],
+     [
+      0.135,
+      -0.485
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bracket-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": 0,
+    "y": 0.38,
+    "w": 0.035,
+    "h": 0.04
+   },
+   {
+    "id": "bracket-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": 0,
+    "y": -0.42,
+    "w": 0.035,
+    "h": 0.04
+   }
+  ]
+ },
+ "100": {
+  "elevation": [
+   {
+    "id": "floor",
+    "bone": "radiator",
+    "role": "ground",
+    "z": 0,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      0.185
+     ],
+     [
+      -0.11,
+      -0.1
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "radiator-body",
+    "bone": "radiator",
+    "role": "body",
+    "z": 3,
+    "filled": true,
+    "tone": 0.65,
+    "regions": [
+     "panel-rear",
+     "panel-front-upper",
+     "panel-front-mid",
+     "panel-front-lower",
+     "convector"
+    ],
+    "material": "painted-steel",
+    "penMm": 0.18,
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      -0.1
+     ],
+     [
+      0.57,
+      -0.1
+     ],
+     [
+      0.57,
+      0
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "panel-split",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": false,
+    "tone": 0.4,
+    "region": "convector",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      -0.05
+     ],
+     [
+      0.57,
+      -0.05
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "top-grille",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0.57,
+      0
+     ],
+     [
+      0.57,
+      -0.1
+     ],
+     [
+      0.6,
+      -0.1
+     ],
+     [
+      0.6,
+      0
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "bracket-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0.476,
+      0.035
+     ],
+     [
+      0.476,
+      0
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bracket-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0.056,
+      0.035
+     ],
+     [
+      0.056,
+      0
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "valve-head",
+    "bone": "valve-head",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "ellipse",
+    "cx": 0,
+    "cy": 0,
+    "rx": 0.03,
+    "ry": 0.03
+   },
+   {
+    "id": "supply-pipe",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.3,
+    "region": "valve",
+    "penMm": 0.13,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      -0.055
+     ],
+     [
+      -0.055,
+      -0.055
+     ]
+    ],
+    "closed": false
+   }
+  ],
+  "front": [
+   {
+    "id": "front-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-lower",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "front-mid",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-mid",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.29833,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "front-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-upper",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.48667,
+    "w": 1,
+    "h": 0.18833
+   },
+   {
+    "id": "grille-strip",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.675,
+    "w": 1,
+    "h": 0.035
+   },
+   {
+    "id": "grille-fins",
+    "bone": "radiator",
+    "role": "texture",
+    "z": 5,
+    "filled": false,
+    "tone": 0.2,
+    "region": "convector",
+    "kind": "path",
+    "d": "M -0.45 0.6805 L -0.45 0.7045 M -0.35 0.6805 L -0.35 0.7045 M -0.25 0.6805 L -0.25 0.7045 M -0.15 0.6805 L -0.15 0.7045 M -0.05 0.6805 L -0.05 0.7045 M 0.05 0.6805 L 0.05 0.7045 M 0.15 0.6805 L 0.15 0.7045 M 0.25 0.6805 L 0.25 0.7045 M 0.35 0.6805 L 0.35 0.7045 M 0.45 0.6805 L 0.45 0.7045"
+   },
+   {
+    "id": "radiator-outline",
+    "bone": "radiator",
+    "role": "body",
+    "z": 6,
+    "filled": true,
+    "tone": 0.5,
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.6
+   },
+   {
+    "id": "pipe-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.35,
+    "y": 0,
+    "w": 0.03,
+    "h": 0.06
+   },
+   {
+    "id": "valve-body-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.37,
+    "y": 0.05,
+    "w": 0.07,
+    "h": 0.06
+   },
+   {
+    "id": "valve-head",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.45,
+    "y": 0.058,
+    "w": 0.08,
+    "h": 0.054,
+    "r": 0.012
+   },
+   {
+    "id": "pipe-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.38,
+    "y": 0,
+    "w": 0.03,
+    "h": 0.06
+   },
+   {
+    "id": "valve-body-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.36,
+    "y": 0.05,
+    "w": 0.07,
+    "h": 0.06
+   },
+   {
+    "id": "lockshield-cap",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.43,
+    "y": 0.056,
+    "w": 0.032,
+    "h": 0.042,
+    "r": 0.006
+   }
+  ],
+  "plan": [
+   {
+    "id": "top-grille",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "region": "top-grille",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": 0.035,
+    "y": -0.5,
+    "w": 0.1,
+    "h": 1
+   },
+   {
+    "id": "bracket-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "penMm": 0.1,
+    "kind": "rect",
+    "x": 0,
+    "y": 0.38,
+    "w": 0.035,
+    "h": 0.04
+   },
+   {
+    "id": "bracket-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.4,
+    "region": "bracket",
+    "penMm": 0.1,
+    "kind": "rect",
+    "x": 0,
+    "y": -0.42,
+    "w": 0.035,
+    "h": 0.04
+   },
+   {
+    "id": "convector-edge",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 5,
+    "filled": false,
+    "tone": 0.4,
+    "region": "convector",
+    "penMm": 0.1,
+    "kind": "poly",
+    "points": [
+     [
+      0.085,
+      -0.47
+     ],
+     [
+      0.085,
+      0.47
+     ]
+    ],
+    "closed": false
+   }
+  ]
+ },
+ "200": {
+  "elevation": [
+   {
+    "id": "floor",
+    "bone": "radiator",
+    "role": "ground",
+    "z": 0,
+    "filled": false,
+    "tone": 0.5,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      0.185
+     ],
+     [
+      -0.11,
+      -0.1
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "radiator-body",
+    "bone": "radiator",
+    "role": "body",
+    "z": 3,
+    "filled": true,
+    "tone": 0.65,
+    "regions": [
+     "panel-rear",
+     "panel-front-upper",
+     "panel-front-mid",
+     "panel-front-lower",
+     "convector",
+     "top-grille",
+     "bracket"
+    ],
+    "material": "painted-steel",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      -0.1
+     ],
+     [
+      0.6,
+      -0.1
+     ],
+     [
+      0.6,
+      0
+     ]
+    ],
+    "closed": true
+   },
+   {
+    "id": "bracket-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0.476,
+      0.035
+     ],
+     [
+      0.476,
+      0
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bracket-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0.056,
+      0.035
+     ],
+     [
+      0.056,
+      0
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "supply-pipe",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.3,
+    "region": "valve",
+    "penMm": 0.1,
+    "kind": "poly",
+    "points": [
+     [
+      -0.11,
+      -0.055
+     ],
+     [
+      -0.055,
+      -0.055
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "valve-head",
+    "bone": "valve-head",
+    "role": "body",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "penMm": 0.1,
+    "kind": "ellipse",
+    "cx": 0,
+    "cy": 0,
+    "rx": 0.03,
+    "ry": 0.03
+   }
+  ],
+  "front": [
+   {
+    "id": "front-lower",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-lower",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.18333
+   },
+   {
+    "id": "front-mid",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-mid",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.29333,
+    "w": 1,
+    "h": 0.18333
+   },
+   {
+    "id": "front-upper",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.7,
+    "region": "panel-front-upper",
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.47667,
+    "w": 1,
+    "h": 0.18333
+   },
+   {
+    "id": "grille-strip",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.35,
+    "regions": [
+     "top-grille",
+     "convector"
+    ],
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.66,
+    "w": 1,
+    "h": 0.05
+   },
+   {
+    "id": "radiator-outline",
+    "bone": "radiator",
+    "role": "body",
+    "z": 6,
+    "filled": true,
+    "tone": 0.5,
+    "kind": "rect",
+    "x": -0.5,
+    "y": 0.11,
+    "w": 1,
+    "h": 0.6
+   },
+   {
+    "id": "valve-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.44,
+    "y": 0.035,
+    "w": 0.13,
+    "h": 0.075
+   },
+   {
+    "id": "valve-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 4,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.38,
+    "y": 0.035,
+    "w": 0.11,
+    "h": 0.075
+   },
+   {
+    "id": "pipe-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": -0.396,
+    "y": 0,
+    "w": 0.022,
+    "h": 0.06
+   },
+   {
+    "id": "pipe-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": true,
+    "tone": 0.3,
+    "region": "valve",
+    "material": "brass",
+    "kind": "rect",
+    "x": 0.404,
+    "y": 0,
+    "w": 0.022,
+    "h": 0.06
+   }
+  ],
+  "plan": [
+   {
+    "id": "radiator-top",
+    "bone": "radiator",
+    "role": "body",
+    "z": 3,
+    "filled": true,
+    "tone": 0.65,
+    "regions": [
+     "top-grille",
+     "convector"
+    ],
+    "material": "painted-steel",
+    "kind": "rect",
+    "x": 0.035,
+    "y": -0.5,
+    "w": 0.1,
+    "h": 1
+   },
+   {
+    "id": "bracket-left",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      0.4
+     ],
+     [
+      0.035,
+      0.4
+     ]
+    ],
+    "closed": false
+   },
+   {
+    "id": "bracket-right",
+    "bone": "radiator",
+    "role": "detail",
+    "z": 3,
+    "filled": false,
+    "tone": 0.4,
+    "region": "bracket",
+    "kind": "poly",
+    "points": [
+     [
+      0,
+      -0.4
+     ],
+     [
+      0.035,
+      -0.4
+     ]
+    ],
+    "closed": false
+   }
+  ]
+ }
+}

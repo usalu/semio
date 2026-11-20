@@ -667,7 +667,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
         let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).unwrap();
         let grant=physical_test_close_grant();
         assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth);
-        if matches!(receiving_fixture.receive(|receiving|store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, receiving,&mut || false)).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
+        if matches!(receiving_fixture.receive(|receiving|store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, receiving,64,&mut || false)).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
     }
     assert!(foreign.finish_derived_report_replay(&mut replay).is_err(), "foreign finishing cannot consume the source owner");
     assert_eq!(owner, replay.as_ref().expect("foreign-refused replay retained") as *const _);

@@ -157,7 +157,8 @@ pub fn puzzle5d_scene_active_utility(view_state: Option<&semio_plugin::ViewModel
     }
     window_id
         .and_then(|window_id| view_state.and_then(|state| state.active_utility_by_window_id.get(window_id)))
-        .or_else(|| view_state.and_then(|state| state.active_utility_id.as_ref()))
+        .map(Option::as_ref)
+        .unwrap_or_else(|| view_state.and_then(|state| state.active_utility_id.as_ref()))
         .filter(|utility| !utility.is_empty())
         .cloned()
         .unwrap_or_else(|| PUZZLE5D_DEFAULT_UTILITY.to_string())

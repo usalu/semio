@@ -223,7 +223,7 @@ export function nodeGraphSurfaceSelectionDomV1(scene: NodeGraphScene | undefined
   return {
     selectedIds: [...(scene?.selection ?? [])],
     highlightedIds: [...(scene?.highlighted ?? [])],
-    hoverTarget: hover?.nodeId ? { nodeId: hover.nodeId, portId: hover.portId ?? null } : null,
+    hoverTarget: hover?.edgeId ? { edgeId: hover.edgeId } : hover?.nodeId ? { nodeId: hover.nodeId, portId: hover.portId ?? null } : null,
     editable: scene?.editable ?? true,
   };
 }

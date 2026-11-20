@@ -81,3 +81,26 @@ test("neutral syntax public API typechecks without any product or foreign runtim
 
 
 import "../📤️generation/🧪️tests/🟦️.ts";
+
+test("identical source shares one token stream and one pairing across the passes while every caller owns its array", async () => {
+  const { rustTokens, rustTokenPairs, rustDelimiterFaultV1, inspectRustCompileReferences } = await api();
+  const text = Array.from({ length: 1500 }, (_, index) => `fn f${index}(a: u8) -> u8 { (a + ${index}) }\n`).join("") + (fixture.cases[0].source as string);
+  const first = rustTokens(text), copy = rustTokens(Array.from(text).join(""));
+  expect(copy.length).toBe(first.length);
+  expect(copy[0]).toBe(first[0]);
+  expect(copy).not.toBe(first);
+  copy.pop();
+  expect(rustTokens(text).length).toBe(first.length);
+  const pairs = rustTokenPairs(first), reference = new Map<number, number>(), open: number[] = [];
+  first.forEach((token: { text: string }, index: number) => { if (["(", "[", "{"].includes(token.text)) open.push(index); else if ([")", "]", "}"].includes(token.text)) { const head = open.pop()!; reference.set(head, index); reference.set(index, head); } });
+  expect(pairs.size).toBe(reference.size);
+  for (const [head, tail] of reference) expect(pairs.get(head)).toBe(tail);
+  expect(rustTokenPairs(rustTokens(text))).toBe(pairs);
+  const edited = rustTokens(text);
+  edited.splice(0, 1);
+  expect(rustTokenPairs(edited)).not.toBe(pairs);
+  expect(rustDelimiterFaultV1(text)).toBeNull();
+  expect(inspectRustCompileReferences(text).length).toBeGreaterThan(0);
+  const cold = performance.now(); rustTokens(text + "\n// cold"); const coldMs = performance.now() - cold, warm = performance.now(); for (let index = 0; index < 5; index++) rustTokens(text); const warmMs = (performance.now() - warm) / 5;
+  expect(warmMs).toBeLessThan(coldMs / 2);
+});

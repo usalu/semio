@@ -75,6 +75,6 @@ pub fn after_rows(base: &PdfSnapshot, rows: PdfDiff) -> PdfSnapshot {
 }
 
 /// 🧪️ `base` after `mutation`, applied through the central applier.
-pub fn applied<M: protocol::Mutation<PdfSnapshot, Diff = PdfDiff>>(base: &PdfSnapshot, mutation: &M) -> PdfSnapshot {
+pub fn applied<M: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff>>(base: &PdfSnapshot, mutation: &M) -> PdfSnapshot {
     protocol::apply_diff_cold(mutation.diff(base).diff(), base).expect("the fixture mutation applies")
 }

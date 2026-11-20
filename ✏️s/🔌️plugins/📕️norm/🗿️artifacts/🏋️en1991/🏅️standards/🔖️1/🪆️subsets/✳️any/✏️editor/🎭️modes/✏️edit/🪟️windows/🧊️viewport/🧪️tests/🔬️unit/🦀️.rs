@@ -14,5 +14,7 @@ async fn renders_a_world_surface_without_json_text() {
     let rendered = context::render(&mut app, BODY_VIEWPORT).await;
     assert!(rendered.contains("world-3d") || rendered.contains("World3d") || rendered.contains("world3d"), "the viewport body must render the world surface: {rendered}");
     assert!(!rendered.contains("\"windFaces\""), "no document JSON in the viewport");
+    let palette_rows = insert_specs().len() + 1;
+    assert!(rendered.contains(&format!("\"total\":{palette_rows}")), "the palette retains every insert tool: {rendered}");
     context::close(&mut app);
 }

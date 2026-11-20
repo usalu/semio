@@ -132,6 +132,8 @@ impl InteractionRetirement {
 }
 
 impl ErasedSnapshotRetirement for InteractionRetirement {
+ fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{match self.close_step(body,effect){semio_framework_value::RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result)),semio_framework_value::RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("synchronous interaction close left its reply pending"))}}
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demands())}
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
 

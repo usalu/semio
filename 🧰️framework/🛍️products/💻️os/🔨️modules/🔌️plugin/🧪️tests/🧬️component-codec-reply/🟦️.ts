@@ -106,10 +106,66 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       }
     });
 
-    it("answers a codec request from the generated worker with a result and a beat, and refuses an overlapping turn or a stale activation", async () => {
+    it("preserves a held native poll refusal across the next browser action", async () => {
+      const { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { pathToFileURL } = await import("node:url");
+      const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
+      const { hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts");
+      const { APP_CHANNEL_VERSION } = await import("@semio-tech/framework-os");
+      const law = JSON.parse(readFileSync(new URL("./🧫️fixtures/🚫️native-refusal.json", import.meta.url), "utf8"));
+      const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!artifactBase) throw Error("SEMIO_TEST_ARTIFACT_DIR is required for generated bridge evidence");
+      mkdirSync(artifactBase, { recursive: true });
+      const directory = mkdtempSync(join(artifactBase, "native-refusal-"));
+      const stock = new KernelOriginalBootstrapStock(originalBootstrapStockFromWire(stockFixture));
+      const original = stock.admit();
+      const held: unknown[] = [];
+      const received: number[] = [];
+      try {
+        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+        writeFileSync(join(directory, "🟨️.js"), hostShimSource());
+        writeFileSync(join(directory, "fixture_component.js"), `
+          const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
+          export const reactor = {
+            channelVersion: async () => ${APP_CHANNEL_VERSION},
+            admitActorContext: async (budget) => ({ ...receipt(budget), ready: true }),
+            admitActorInput: async (_wire, budget) => ({ ...receipt(budget), ready: true, disposition: "admitted" }),
+            poll: async (budget) => { throw Object.assign(Error("[object Object] (see error.payload)"), {
+              payload: { ...receipt(budget), failure: { tag: ${JSON.stringify(law.failure)} } },
+            }); },
+          };
+        `);
+        const bridge = await import(pathToFileURL(join(directory, "🌉️bridge.js")).href);
+        const clock = () => BigInt(Math.floor(performance.now() * 1000));
+        const api = await bridge.createActorApi("native-refusal", 1n, original, clock, {
+          receipt(receipt: Parameters<typeof stock.receive>[1]) {
+            received.push(Number(receipt.input.epoch));
+            stock.receive(original, receipt);
+          },
+          hold(refusal: unknown) {
+            held.push(refusal);
+            stock.hold(original, refusal);
+          },
+        });
+        const poll = () => api.poll([], undefined, undefined, { maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 });
+        await expect(poll()).rejects.toThrow(law.expectedMessage);
+        await expect(poll()).rejects.toThrow(law.expectedMessage);
+        await expect(api.closeOriginal()).rejects.toThrow(law.expectedCloseMessage);
+        expect(received).toEqual(law.expectedReceiptEpochs);
+        expect(held).toHaveLength(law.expectedHeldCount);
+        expect(api.originalSource.nativeRefusal).toBe(held[0]);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("answers codec requests with a beat, schedules guest crossings in order, and closes a suspended actor", async () => {
       const vm = await import("node:vm");
+      const { readFileSync } = await import("node:fs");
       const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
       const { classicShardWorkerSource } = await import("../✂️worker-vm-source/🟦️.ts");
+      const scheduling = JSON.parse(readFileSync(new URL("./🧫️fixtures/🚦️actor-turn-order.json", import.meta.url), "utf8"));
       const posted: Record<string, unknown>[] = [];
       let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
       let row = fixture.cases[0]!;
@@ -147,16 +203,84 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         const result=answered("request-refusal-"+index);expect(result?.ok).toBe(false);expect(result?.error?.replace(/^Error: /,"")).toBe(current.refusal);
       }
       expect(refusedGuestCalls).toBe(0);
-      context.api.codec=(codecRequest:CodecRequest)=>actorCodecAnswer(codecFor(row),codecRequest);
-      row = fixture.cases[0]!;
-      new vm.Script('inFlightTurnActors.add("a");').runInContext(context);
-      await send({ data: { kind: "codec", requestId: "overlap", actorId: "a", activationGeneration: 1n, request: request(row) } });
-      expect(answered("overlap")?.ok, "a codec call never re-enters a component a turn of the same actor is suspended in").toBe(false);
-      expect(answered("overlap")?.error).toContain("already has a turn in flight");
-      new vm.Script('inFlightTurnActors.delete("a");').runInContext(context);
       await send({ data: { kind: "codec", requestId: "stale", actorId: "a", activationGeneration: 2n, request: request(row) } });
       expect(answered("stale")?.ok).toBe(false);
       expect(answered("stale")?.error).toContain("actor-lifecycle.activation-mismatch");
+      const calls: string[] = [];
+      const sendCodec = (id: string, actorId = "a", activationGeneration = 1n) =>
+        send({ data: { kind: "codec", requestId: id, actorId, activationGeneration, request: id } });
+      const firstEntered = Promise.withResolvers<void>();
+      const finishFirst = Promise.withResolvers<void>();
+      context.api.codec = async (id: string) => {
+        calls.push(id);
+        if (id === "first") { firstEntered.resolve(); await finishFirst.promise; }
+      };
+      context.api.takeSegmentedDownloadChunk = async () => { calls.push("download"); };
+      new vm.Script('actors.set("other", { api, activationGeneration: 2n, pendingAssets: [] });').runInContext(context);
+      const first = sendCodec("first");
+      await firstEntered.promise;
+      const download = send({ data: { kind: "takeSegmentedDownloadChunk", requestId: "download", actorId: "a", instanceId: 1, operationId: 1n } });
+      const second = sendCodec("second");
+      try {
+        await sendCodec("other-actor", "other", 2n);
+        expect(calls).toEqual(scheduling.whileFirstActorIsSuspended);
+        expect(answered("download")).toBeUndefined();
+        expect(answered("second")).toBeUndefined();
+      } finally {
+        finishFirst.resolve();
+        await Promise.all([first, download, second]);
+      }
+      expect(calls).toEqual(scheduling.afterFirstActorResumes);
+      for (const id of ["first", "download", "second", "other-actor"]) expect(answered(id)?.ok).toBe(true);
+
+      calls.length = 0;
+      const pollEntered = Promise.withResolvers<void>();
+      const finishPoll = Promise.withResolvers<void>();
+      context.api.poll = async () => {
+        if (calls.includes("turn")) { calls.push("drive"); return { status: { tag: "idle" } }; }
+        calls.push("turn");
+        pollEntered.resolve();
+        await finishPoll.promise;
+        return {
+          status: { tag: "more-work" }, effects: [], uiPatches: [],
+          commandIngress: { tag: "idle" }, coldPairIngress: { tag: "idle" },
+        };
+      };
+      const turn = send({ data: { kind: "turn", requestId: "turn", actorId: "a", activationGeneration: 1n, events: [], budget: {} } });
+      await pollEntered.promise;
+      const afterTurn = sendCodec("after-turn");
+      finishPoll.resolve();
+      await Promise.all([turn, afterTurn]);
+      expect(calls).toEqual(scheduling.afterInputArrivesDuringPoll);
+      expect(answered("turn")?.ok).toBe(true);
+      expect(answered("after-turn")?.ok).toBe(true);
+
+      calls.length = 0;
+      const lastEntered = Promise.withResolvers<void>();
+      const finishLast = Promise.withResolvers<void>();
+      context.api.codec = async (id: string) => {
+        calls.push(id);
+        if (id === "finishing") { lastEntered.resolve(); await finishLast.promise; }
+      };
+      context.api.closeOriginal = async () => {
+        calls.push("close");
+        return { operation: original.operation, generation: original.generation, sourceClosed: true };
+      };
+      const finishing = sendCodec("finishing");
+      await lastEntered.promise;
+      const queued = sendCodec("queued");
+      const dispose = send({ data: { kind: "dispose", actorId: "a", activationGeneration: 1n } });
+      try {
+        expect(posted.some(message => message.kind === "original-source-close")).toBe(false);
+      } finally {
+        finishLast.resolve();
+        await Promise.all([finishing, queued, dispose]);
+      }
+      expect(calls).toEqual(scheduling.disposeWhileSuspended);
+      expect(answered("queued")?.error).toContain(scheduling.queuedRefusal);
+      expect(posted.filter(message => message.kind === "original-source-close")).toEqual([
+        { kind: "original-source-close", actorId: "a", activationGeneration: 1n, operation: original.operation, generation: original.generation, sourceClosed: true },
+      ]);
       } finally {
         originalSource.close();
         expect(() => originalSource.issue()).toThrow("original-turn.source-not-ready");

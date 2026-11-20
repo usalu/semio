@@ -30,7 +30,7 @@ use crate::schema::mutations::Grid3dMutation;
 use crate::schema::snapshot::{Grid3dAxis, Grid3dCell, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 
 //#region 🔖️OpTextMirror
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub enum Grid3dOperationDsl {
     ChangeSeed {
         seed: u64,

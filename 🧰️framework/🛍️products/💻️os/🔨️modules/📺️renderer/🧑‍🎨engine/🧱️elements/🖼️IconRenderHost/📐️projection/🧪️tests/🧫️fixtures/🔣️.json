@@ -1,0 +1,224 @@
+{
+  "linework": [
+    {
+      "name": "closed triangle",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ],
+        [
+          [
+            10,
+            0
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "merge": true,
+      "easing": 0,
+      "path": "M0,0L0,10L10,0L0,0Z"
+    },
+    {
+      "name": "rounded cycle",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ],
+        [
+          [
+            10,
+            0
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "merge": true,
+      "easing": 3,
+      "moves": 1,
+      "curves": 3
+    },
+    {
+      "name": "independent rounded segments",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ],
+        [
+          [
+            10,
+            0
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      ],
+      "merge": false,
+      "easing": 3,
+      "moves": 3,
+      "curves": 6
+    },
+    {
+      "name": "fork and reversed duplicate",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            10,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            20
+          ],
+          [
+            0,
+            10
+          ]
+        ]
+      ],
+      "merge": true,
+      "easing": 3,
+      "path": "M0,0L0,10M0,10L0,20M0,10L10,10"
+    },
+    {
+      "name": "short corner",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            10,
+            2
+          ]
+        ]
+      ],
+      "merge": true,
+      "easing": 3,
+      "path": "M0,0L0,1Q0,2 1,2L10,2"
+    },
+    {
+      "name": "collinear run",
+      "segments": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            10
+          ]
+        ]
+      ],
+      "merge": true,
+      "easing": 3,
+      "path": "M0,0L0,2L0,10"
+    }
+  ]
+}

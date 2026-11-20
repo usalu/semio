@@ -69,11 +69,20 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
 impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
     fn clone_close_demand(cursor: &CloneCursor<M>, body: usize) -> Result<RetirementDemand, ValueError> {
         if cursor.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<CloneCursor<M>>(), depth: 1, ..Default::default() }); }
+        if !cursor.close_started() {
+            // An unstarted close quotes the physical start action; the derived close ladder quotes nothing until it has started.
+            let mut demand = cursor.begin_close_demand()?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config apply clone close depth overflow"))?;
+            return Ok(demand);
+        }
+        // Copy, release and depth quote the cursor's own next close; only the capacity quote scales with the granted body.
+        let own = cursor.close_demands(0)?;
+        let sized = if body == 0 { own } else { cursor.close_demands(body)? };
         Ok(RetirementDemand {
-            copy_bytes: cursor.next_close_copy_byte_demand()?,
-            capacity_bytes: cursor.next_close_capacity_byte_demand(body)?,
-            release_bytes: cursor.next_close_release_byte_demand()?,
-            depth: cursor.next_close_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config apply clone close depth overflow"))?,
+            copy_bytes: own.copy_bytes,
+            capacity_bytes: sized.capacity_bytes,
+            release_bytes: own.release_bytes,
+            depth: own.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "config apply clone close depth overflow"))?,
             ..Default::default()
         })
     }
@@ -83,10 +92,10 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
             None => self.custody.demands(body),
         }
     }
-    fn close_clone(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+    fn close_clone(&mut self, body:usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
         let grant = effect.grant();
         let cursor = self.clone.as_mut().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "config apply lost its mutation clone cursor"))?;
-        let demand = Self::clone_close_demand(cursor, grant.maximum_copy_bytes)?;
+        let demand = Self::clone_close_demand(cursor, body)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config apply clone close exceeds admitted depth")); }
         if grant.maximum_items == 0 || demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(Default::default()); }
         let progress = if !cursor.close_started() {
@@ -97,7 +106,9 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
             RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }
         } else {
             let child = RetainedCloneGrant { maximum_items:1,maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step=match cursor.close_step(grant.maximum_copy_bytes,&mut effect.nested(child)){RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|failure.into_value_error())?};
+            let nested = &mut effect.nested(child);
+            let Some(answer) = self.clone_reply.run(|reply, recover| if recover { cursor.recover_close_into(body, nested, reply) } else { cursor.close_into(body, nested, reply) }.map(drop))? else { return Ok(Default::default()) };
+            let step = answer.map_err(|failure| failure.into_value_error())?;
             admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "config apply mutation clone close")?.progress()
         };
         if cursor.terminal_is_empty() { *self.clone = None; }
@@ -107,7 +118,23 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
 
 impl<S, M> RetainedCloneEditCursor<S, M> for ConfigApplyCursor<S, M>
 where S: RetainedClone, M: ConfigApplyMutation<S> {
-    fn next_work_demand(&self,_base:RetainedCloneRef<'_,S>,post:&S,mutation:RetainedCloneRef<'_,M>,body:usize)->Result<u64,ValueError>{if self.cancelled||self.custody.is_closing(){return Ok(0);}if self.stage==ApplyStage::Validate{mutation.get().validation_work_demand(post,self.validation_cursor,body)}else{Ok(1)}}
+    fn next_work_demand(&self,_base:RetainedCloneRef<'_,S>,post:&S,mutation:RetainedCloneRef<'_,M>,body:usize)->Result<u64,ValueError>{
+        if self.cancelled||self.custody.is_closing(){return Ok(0)}
+        match self.stage{
+            ApplyStage::Validate=>mutation.get().validation_work_demand(post,self.validation_cursor,body),
+            ApplyStage::Clone|ApplyStage::Take|ApplyStage::CloseClone=>{
+                let cursor=self.clone.as_ref().ok_or_else(||ValueError::invariant("config apply mutation clone is absent at work quote"))?;
+                match self.stage{
+                    ApplyStage::Clone=>cursor.advance_work_demand(mutation,body,u64::MAX),
+                    ApplyStage::Take=>cursor.take_work_demand(),
+                    ApplyStage::CloseClone if !cursor.close_started()=>cursor.begin_close_work_demand(),
+                    ApplyStage::CloseClone if !cursor.terminal_is_empty()=>cursor.close_work_demand(body),
+                    _=>Ok(1),
+                }
+            }
+            _=>Ok(1),
+        }
+    }
     fn advance_demands(&self, _base: RetainedCloneRef<'_, S>, post: &S, mutation: RetainedCloneRef<'_, M>, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.cancelled || self.custody.is_closing() { return Ok(Default::default()); }
         Ok(match self.stage {
@@ -158,7 +185,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
                 RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() }
             }
             ApplyStage::CloseClone => {
-                let progress = self.close_clone(effect)?;
+                let progress = self.close_clone(body,effect)?;
                 if self.clone.is_none() { self.stage = ApplyStage::Reserve; }
                 progress
             }
@@ -201,7 +228,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
     fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.clone.is_none() { return self.custody.step(effect); }
-        self.close_clone(effect).map(RetainedCloneStep::Progress)
+        self.close_clone(effect.grant().maximum_copy_bytes,effect).map(RetainedCloneStep::Progress)
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demand(body)?.capacity_bytes) }

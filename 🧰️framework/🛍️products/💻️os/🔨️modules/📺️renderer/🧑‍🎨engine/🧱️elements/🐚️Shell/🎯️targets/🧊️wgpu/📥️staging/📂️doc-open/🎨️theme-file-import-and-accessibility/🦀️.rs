@@ -132,7 +132,7 @@ impl OpeningState {
 
 /// 📤️ Opens the native file picker; one entry per selected file, in selection order.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
+pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool, max_file_bytes: Option<u32>) -> Vec<OpenedFile> {
     use std::fs as system_fs;
     let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
     let paths = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions.clone(), multiple)).await;
@@ -140,12 +140,35 @@ pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bo
         .into_iter()
         .filter_map(|path| {
             let name = path.file_name().map(|name| name.to_string_lossy().to_string()).unwrap_or_default();
+            let bytes = match max_file_bytes {
+                None => system_fs::read(&path).ok()?,
+                Some(limit) => {
+                    use std::io::Read;
+                    let file = system_fs::File::open(&path).ok()?;
+                    let limit = u64::from(limit);
+                    let refuse = || debug_log(&format!("[DEBUG] File \"{name}\" exceeds the {limit}-byte import limit"));
+                    if file.metadata().ok()?.len() > limit {
+                        refuse();
+                        return None;
+                    }
+                    let mut bytes = Vec::new();
+                    file.take(limit + 1).read_to_end(&mut bytes).ok()?;
+                    if bytes.len() as u64 > limit {
+                        refuse();
+                        return None;
+                    }
+                    bytes
+                }
+            };
             if read_as == Some("dataUrl") {
-                let bytes = system_fs::read(&path).ok()?;
-                let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
+                let mime = if max_file_bytes.is_some() {
+                    "application/octet-stream".into()
+                } else {
+                    extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into())
+                };
                 return Some(OpenedFile { name, contents: format!("data:{mime};base64,{}", semio_framework_io_base64::base64_standard_encode(&bytes)) });
             }
-            system_fs::read_to_string(path).ok().map(|contents| OpenedFile { name, contents })
+            String::from_utf8(bytes).ok().map(|contents| OpenedFile { name, contents })
         })
         .collect()
 }
@@ -153,8 +176,8 @@ pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bo
 /// 📤️ Opens the browser file picker through the page-owned door; one entry per selected file, in
 /// selection order, EMPTY on cancel or on a refusal (which is logged, never swallowed).
 #[cfg(target_arch = "wasm32")]
-pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<OpenedFile> {
-    let request = serde_json::json!({ "op": "request-file-open", "accept": accept, "readAs": read_as, "multiple": multiple }).to_string();
+pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool, max_file_bytes: Option<u32>) -> Vec<OpenedFile> {
+    let request = serde_json::json!({ "op": "request-file-open", "accept": accept, "readAs": read_as, "multiple": multiple, "maxFileBytes": max_file_bytes }).to_string();
     let answer = match host_io_call(&request, None).await {
         Ok(answer) => answer,
         Err(error) => {

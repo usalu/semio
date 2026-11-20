@@ -273,7 +273,7 @@ where
         let outcome = match future.await {
             Ok(semio_plugin_decl_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
             Ok(semio_plugin_decl_emission::TaskResolution::Emit(emit)) => {
-                Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
+                Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(emit.artifact_mutation_iter()).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
             }
             Ok(semio_plugin_decl_emission::TaskResolution::Done) => None,
             Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
@@ -290,11 +290,8 @@ where
 /// 🔀️ The exact wire shape `dispatch_emit`'s own `last_emit_wire` uses for one mutation lane —
 /// factored out so `spawn_task`'s `TaskResolution::Emit` erasure and `dispatch_emit` stay
 /// byte-identical without one calling the other across the crate's plugin/reactor split.
-async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
-    let mut encoded = Vec::with_capacity(ops.len());
-    for op in ops.iter() {
-        encoded.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
-    }
+async fn encode_mutation_lane<'a, T: ::protocol::OpBinary + 'a>(ops: impl IntoIterator<Item = &'a T>) -> Vec<u8> {
+    let encoded = ops.into_iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>();
     protocol::encode_ops_vec(&encoded)
 }
 

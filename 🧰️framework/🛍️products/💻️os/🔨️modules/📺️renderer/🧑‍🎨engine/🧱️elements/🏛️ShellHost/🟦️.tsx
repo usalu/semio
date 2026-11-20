@@ -309,7 +309,7 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                       key={stall.id}
                       data-semio-command-stall-id={stall.id}
                       data-command-id={stall.commandId ?? ""}
-                      text={commandStallLineV1(stall, loadedPlugins, panel?.spawnedApps ?? [], uiTerminology, uiLocale, commandStallClockMs)}
+                      text={commandStallLineV1(stall, loadedPlugins, panel?.spawnedApps ?? [], session ?? null, uiTerminology, uiLocale, commandStallClockMs)}
                       action={{ label: commandStallCancelTextV1(uiLocale), onPress: () => commandStallWatch.cancel(stall.id) }}
                       actionProps={{ "data-semio-command-stall-cancel": "" }}
                     />

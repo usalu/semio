@@ -107,6 +107,22 @@ impl BitmapInferenceRequest {
     }
 }
 
+/// 🪙️ Runs one payload close turn inside one actual original effect and charges its performed work to the job turn.
+fn close_effect<E: Into<semio_framework_job::OriginalTurnPrimary>>(
+    cx: &mut semio_framework_job::StepContext<'_>,
+    grant: semio_framework_job::RetainedCloneGrant,
+    run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneStep, E>,
+) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
+    match cx.with_original_effect(grant, |_, effect| run(effect)) {
+        Ok(Some((turn, performed))) => {
+            cx.consume_work(performed);
+            semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: turn.result, work: 0 })
+        }
+        Ok(None) => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+        Err(error) => Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum BitmapInferenceStage {
     Sample,
@@ -155,6 +171,7 @@ pub struct BitmapInferenceJob {
     pub(crate) encode_phase: EncodePhase,
     pub(crate) encode_cursor: usize,
     pub(crate) preview_units: u64,
+    publish_intermediate: bool,
     pub(crate) last_preview_ms: Option<u64>,
     pub(crate) publication: Option<Box<engine::job::Publication>>,
     pub(crate) lent: BitmapInferenceJobLent,
@@ -207,6 +224,7 @@ impl BitmapInferenceJob {
             encode_phase: EncodePhase::Open,
             encode_cursor: 0,
             preview_units: 0,
+            publish_intermediate: true,
             last_preview_ms: None,
             publication: None,
             lent: BitmapInferenceJobLent::Own,
@@ -320,7 +338,8 @@ impl BitmapInferenceJob {
                         self.restore = Some(engine::job::WfcRestore::new(self.operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed, checkpoint)?);
                         self.stage = BitmapInferenceStage::Restore;
                     } else {
-                        self.child = Some(engine::job::WfcJob::new(self.operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed));
+                        let child = engine::job::WfcJob::new(self.operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed);
+                        self.child = Some(if self.publish_intermediate { child } else { child.with_terminal_publications() });
                         self.stage = BitmapInferenceStage::Solve;
                     }
                     self.cursor = 0;
@@ -407,7 +426,7 @@ impl BitmapInferenceJob {
             }
             let step = semio_framework_job::close_original_granted_step(context, |grant| {
                 let released_bytes = self.output_chunk.as_ref().unwrap().capacity();
-                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
                 self.output_chunk = None;
                 let (phase, cursor) = self.output_next.take().expect("next bitmap encoder");
                 self.encode_phase = phase; self.encode_cursor = cursor;
@@ -681,7 +700,7 @@ impl InteractiveJob for BitmapInferenceJob {
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
+                let step = close_effect(cx, child_grant, |effect| output.close_step(effect))?;
                 return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
@@ -690,7 +709,7 @@ impl InteractiveJob for BitmapInferenceJob {
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
+                let step = close_effect(cx, child_grant, |effect| payload.close_step(effect))?;
                 return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {
@@ -796,7 +815,8 @@ pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit
 #[cfg(any(test, feature = "testkit"))]
 pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) -> Result<BitmapInferenceCommit, semio_s_plugin_wfc_engine::job::HeadlessFailure<BitmapInferenceJob, BitmapInferenceCommit>> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
-    let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    let mut job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).map_err(semio_s_plugin_wfc_engine::job::HeadlessFailure::rejected)?;
+    job.publish_intermediate = false;
     engine::job::run_headless_supervised(
         job,
         operation,

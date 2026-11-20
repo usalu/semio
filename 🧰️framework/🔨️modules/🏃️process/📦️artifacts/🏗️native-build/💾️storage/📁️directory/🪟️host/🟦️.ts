@@ -12,7 +12,7 @@ export type NativeWindowsBindingV1=Readonly<{
  flushFileBuffers(handle:bigint):number;
  closeHandle(handle:bigint):number;
  setCaseInformation(handle:bigint,status:Buffer,information:Buffer,bytes:number,informationClass:number):number;
- getDiskFreeSpaceEx(path:Buffer,available:Buffer):number;
+ getDiskFreeSpaceEx(path:Buffer,available:Buffer,total:Buffer):number;
  lastError():number;
  close():void;
 }>;
@@ -23,7 +23,7 @@ export type NativeWindowsHostPortV1=Readonly<{
  moveFile(from:string,to:string):NativeWindowsResultV1;
  flushDirectory(path:string):NativeWindowsResultV1;
  setCaseSensitive(path:string,sensitive?:boolean):Readonly<{opened:boolean;error:number;status:number}>;
- availableBytes(path:string):Readonly<{ok:boolean;error:number;bytes:number}>;
+ availableBytes(path:string):Readonly<{ok:boolean;error:number;bytes:number;totalBytes:number|undefined}>;
  openExclusive(path:string):NativeWindowsResultV1;
 }>;
 
@@ -46,7 +46,11 @@ export function createNativeWindowsHostPortV1(binding:NativeWindowsBindingV1):Na
   moveFile:(from:string,to:string)=>binding.moveFileEx(nativeWindowsUtf16V1(nativeWindowsExtendedPathV1(from)),nativeWindowsUtf16V1(nativeWindowsExtendedPathV1(to)),windows.moveWriteThrough)===1?Object.freeze({ok:true,error:0}):Object.freeze({ok:false,error:binding.lastError()}),
   flushDirectory:(path:string)=>{const handle=open(path,(windows.createFile.genericRead|windows.createFile.genericWrite)>>>0,windows.createFile.backupSemantics|windows.createFile.openReparsePoint);if(handle===undefined)return Object.freeze({ok:false,error:binding.lastError()});const ok=binding.flushFileBuffers(handle)===1;return finish(handle,ok,ok?0:binding.lastError());},
   openExclusive:(path:string)=>{const handle=open(path,windows.createFile.fileReadAttributes,windows.createFile.backupSemantics,0);if(handle===undefined)return Object.freeze({ok:false,error:binding.lastError()});return finish(handle,true,0);},
-  availableBytes:(path:string)=>{const available=Buffer.alloc(8);return binding.getDiskFreeSpaceEx(nativeWindowsUtf16V1(nativeWindowsExtendedPathV1(path)),available)===1?Object.freeze({ok:true,error:0,bytes:Number(available.readBigUInt64LE(0))}):Object.freeze({ok:false,error:binding.lastError(),bytes:0});},
+  availableBytes:(path:string)=>{
+   const available=Buffer.alloc(windows.freeSpace.counterBytes),total=Buffer.alloc(windows.freeSpace.counterBytes);
+   const ok=binding.getDiskFreeSpaceEx(nativeWindowsUtf16V1(nativeWindowsExtendedPathV1(path)),available,total)!==0;
+   return Object.freeze(ok?{ok:true,error:0,bytes:Number(available.readBigUInt64LE(0)),totalBytes:Number(total.readBigUInt64LE(0))}:{ok:false,error:binding.lastError(),bytes:0,totalBytes:undefined});
+  },
   setCaseSensitive:(path:string,sensitive:boolean=true)=>{const handle=open(path,windows.createFile.fileWriteAttributes,windows.createFile.backupSemantics);if(handle===undefined)return Object.freeze({opened:false,error:binding.lastError(),status:0});const information=Buffer.alloc(windows.caseSensitive.informationBytes);information.writeUInt32LE(sensitive?windows.caseSensitive.flag:0,0);const status=binding.setCaseInformation(handle,Buffer.alloc(windows.caseSensitive.statusBlockBytes),information,information.length,windows.caseSensitive.informationClass)>>>0;binding.closeHandle(handle);return Object.freeze({opened:true,error:0,status});}
  });
 }
@@ -54,13 +58,14 @@ export function createNativeWindowsHostPortV1(binding:NativeWindowsBindingV1):Na
 /** 🧲️ Maps one NTSTATUS from the case-sensitivity call to its precise refusal, or returns on success. */
 export function requireNativeWindowsCaseStatusV1(result:Readonly<{opened:boolean;error:number;status:number}>):void{
  const refusals=protocol.refusals,statuses=protocol.windowsStatuses;
- if(!result.opened)throw Error(result.error===protocol.windowsErrors.accessDenied?refusals.caseAccess:"Per-directory case sensitivity could not open the directory (Win32 error "+result.error+")");
+ if(!result.opened){const detail="Win32 error "+result.error;throw Error(result.error===protocol.windowsErrors.accessDenied?refusals.caseAccess:"Per-directory case sensitivity could not open the directory ("+detail+")",{cause:detail});}
  if(result.status===0)return;
- if(result.status===statuses.directoryNotEmpty)throw Error(refusals.caseNotEmpty);
- if(result.status===statuses.notSupported)throw Error(refusals.caseFeature);
- if(result.status===statuses.invalidInfoClass||result.status===statuses.invalidParameter)throw Error(refusals.caseBuild);
- if(result.status===statuses.accessDenied)throw Error(refusals.caseAccess);
- throw Error("Per-directory case sensitivity failed (NTSTATUS 0x"+result.status.toString(16).padStart(8,"0")+")");
+ const cause="NTSTATUS 0x"+result.status.toString(16).padStart(8,"0");
+ if(result.status===statuses.directoryNotEmpty)throw Error(refusals.caseNotEmpty,{cause});
+ if(result.status===statuses.notSupported)throw Error(refusals.caseFeature,{cause});
+ if(result.status===statuses.invalidInfoClass||result.status===statuses.invalidParameter)throw Error(refusals.caseBuild,{cause});
+ if(result.status===statuses.accessDenied)throw Error(refusals.caseAccess,{cause});
+ throw Error("Per-directory case sensitivity failed ("+cause+")");
 }
 
 /** 🔓️ Loads kernel32 and ntdll through bun:ffi; anything but Windows x64 or arm64 under Bun is a precise refusal. */
@@ -74,7 +79,7 @@ export function openNativeWindowsBindingV1():NativeWindowsBindingV1{
   flushFileBuffers:handle=>Number(k.FlushFileBuffers!(handle)),
   closeHandle:handle=>Number(k.CloseHandle!(handle)),
   setCaseInformation:(handle,status,information,bytes,informationClass)=>Number(n.NtSetInformationFile!(handle,status,information,bytes,informationClass)),
-  getDiskFreeSpaceEx:(path,available)=>Number(k.GetDiskFreeSpaceExW!(path,available,null,null)),
+  getDiskFreeSpaceEx:(path,available,total)=>Number(k.GetDiskFreeSpaceExW!(path,available,total,null)),
   lastError:()=>Number(k.GetLastError!()),
   close:()=>{let failure:unknown,failed=false;for(const library of[kernel,nt])try{library.close();}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;}
  });

@@ -21,6 +21,19 @@
     { "id": "string", "body": "ws://127.0.0.1:6300/bridge", "shape": false, "expected": null },
     { "id": "null", "body": null, "shape": false, "expected": null }
   ],
+  "declaration": [
+    { "id": "dev-serve-declares", "env": { "VITE_SEMIO_AGENT_BRIDGE_OFFER": "1" }, "declared": true },
+    { "id": "release-static-build-declares-nothing", "env": { "VITE_SEMIO_AGENT_BRIDGE_OFFER": "" }, "declared": false },
+    { "id": "unrelated-env", "env": { "MODE": "release" }, "declared": false },
+    { "id": "no-env-at-all", "env": null, "declared": false }
+  ],
+  "probe": [
+    { "id": "ok", "status": 200, "absent": false },
+    { "id": "not-found-is-definitive", "status": 404, "absent": true },
+    { "id": "gone-is-definitive", "status": 410, "absent": true },
+    { "id": "server-error-is-transient", "status": 500, "absent": false },
+    { "id": "unavailable-is-transient", "status": 503, "absent": false }
+  ],
   "select": {
     "note": "Scoped offers (ticket 26/09/23, G12 session 14c). `records` are gateway offer files (`<rendezvous>/offers/<pid>.json`, schema version 2, `🌉️mcp/🛰️rendezvous::BridgeOffer` — the Rust law decodes and re-encodes each one exactly). A case's `request` is the path a shell asks the supervisor on; `live` the pids whose gateways still run; `expectedPid` the offer served (null: typed not-offered). A hub offer reaches only the shell open on its hub and space whose own human's delegation list names its agent; a local offer any shell; newest wins; a trailing slash on a hub origin is the same origin. `scopes` derive a shell's scope from the hub's list of its own human's delegations: a revoked or expired delegation names no agent, so its gateway's offer is never served (`live` = every record).",
     "records": [

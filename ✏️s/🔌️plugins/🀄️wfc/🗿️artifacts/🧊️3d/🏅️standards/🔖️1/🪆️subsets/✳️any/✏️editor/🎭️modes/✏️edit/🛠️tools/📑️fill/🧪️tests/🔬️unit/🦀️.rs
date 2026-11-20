@@ -1,3 +1,4 @@
+use semio_framework_job::InteractiveJob;
 use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 
 use crate::editor::wfc3d::modes::edit::windows::preview::WFC_3D_PREVIEW_WINDOW;
@@ -128,6 +129,7 @@ fn aborting_mid_run_cancels_and_never_writes_set_solve() {
     let mut saw_partial = false;
     for _ in 0..500_000 {
         let outcome = drive_once(&mut job, &mut driver, 1);
+        assert!(!matches!(outcome, Stepped::Fault | Stepped::Cancelled | Stepped::Complete), "the run must stay live until a partial is seen: {outcome:?}");
         if let Some(payload) = tick_payload(outcome) {
             if payload.decided_count() > 0 && !payload.done {
                 saw_partial = true;
@@ -140,9 +142,7 @@ fn aborting_mid_run_cancels_and_never_writes_set_solve() {
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
-    job.begin_close();
-    let outcome = drive_once(&mut job, &mut driver, 1);
-    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
+    driver.cancel(&mut job, 1);
     assert!(!port.has_effects(), "abort must not dispatch commit-fill");
     assert!(job.take_set_solve().is_none(), "abort must not retain SetSolve");
     driver.close(&mut job);

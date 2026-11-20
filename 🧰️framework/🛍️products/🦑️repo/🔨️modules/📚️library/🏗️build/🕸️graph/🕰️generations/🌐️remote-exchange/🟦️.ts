@@ -1,6 +1,7 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
-import {readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {constants,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {open} from "node:fs/promises";
 import {totalmem} from "node:os";
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -9,7 +10,7 @@ import {remoteCacheEffectiveUploadV1} from "../../../🌐️remote-cache/🟦️
 import {remoteCacheFetchV1,resolveRemoteCacheV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {httpRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../../../🌐️remote-execution/🗄️content/🟦️.ts";
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
-import {documentNameV1,generationSignatureV1,neutralizeGenerationFromMemoryV1,neutralKeyV1,transformGenerationDocumentV1,transformGenerationV1,type GenerationDocumentV1,type NeutralKnownV1,type NeutralRowV1} from "./🧳️portable/🟦️.ts";
+import {documentNameV1,generationSignatureV1,neutralizeGenerationFromMemoryV1,neutralKeyV1,transformGenerationDocumentV1,transformGenerationManifestV1,transformNamedGenerationDocumentV1,type GenerationDocumentV1,type NeutralKnownV1,type NeutralRowV1} from "./🧳️portable/🟦️.ts";
 import {profilePhaseV1} from "../../../⏱️profile/🟨️.mjs";
 import {repositoryCacheBudgetV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {CLOSURE_POLICY_V1,closureLeafPutterV1,closureOwnersV1,closuresOfFragmentsV1,obtainClosureLeafV1,type ClosureNamespaceV1} from "../../🩹️closure-repair/🟨️.mjs";
@@ -19,24 +20,34 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type GenerationNoteV1=Readonly<{version:1;generation:number;owners:number;identity:string;manifest:string;signature:string;platform:string;publishedMs:number;origin:string;stateMs:number;implementation:string;stale?:number;snapshot?:string;scope?:string}>;
 /** 📍️ The state of the shared files a generation was verified against: a producer hands over the snapshot of its generation, a restoring machine installs it as the cursor of the restored generation. */
 export type GenerationCursorsV1=Readonly<{snapshotFor(generation:number):Promise<{instance:string;bytes:Uint8Array}|undefined>;install(generation:number,snapshot:{instance:string;bytes:Uint8Array}):Promise<void>;distance?(snapshot:{instance:string;bytes:Uint8Array}):Promise<number|undefined>}>;
+/** 🔗️ The producer's original neutral manifest, including when a receiver renumbers the generation. */
+export type GenerationHeadEvidenceV1=Readonly<{manifest:string;origin:string;generation:number;scope:string}>;
+/** 🎯️ Pins complete head evidence to the registry, platform and implementation that qualified it. */
+export type GenerationHeadCandidateV1=GenerationHeadEvidenceV1&Readonly<{identity:string;platform:string;implementation:string}>;
 /** 🧾️ What one exchange did; a refusal or a failure never fails the graph load that asked. */
-export type GenerationExchangeOutcomeV1=Readonly<{status:"restored"|"uploaded"|"local"|"absent"|"foreign"|"empty"|"current"|"remote-better"|"incomplete"|"oversized"|"failed";generation?:number;owners?:number;documents?:number;sent?:number;bytes?:number;ageSeconds?:number;stale?:number;reason?:string;closures?:GenerationClosuresV1}>;
+export type GenerationExchangeOutcomeV1=Readonly<{status:"restored"|"uploaded"|"local"|"absent"|"foreign"|"empty"|"current"|"remote-better"|"incomplete"|"oversized"|"failed";generation?:number;owners?:number;documents?:number;sent?:number;bytes?:number;ageSeconds?:number;stale?:number;reason?:string;closures?:GenerationClosuresV1;head?:GenerationHeadEvidenceV1}>;
 /** 🧲️ What an exchange did with the build input closure leaves a generation names: how many it names, how many were uploaded or fetched, and the leaves it could not obtain with the owners that name them (those owners are stale, the generation is not complete). */
 export type GenerationClosuresV1=Readonly<{named:number;sent:number;fetched:number;missing:readonly Readonly<{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}>[]}>;
 /** 🗄️ Where the closure leaves of this machine live and how they are read and written: the graph store of the workspace by default. */
 export interface ClosurePortV1{
  directory(namespace:ClosureNamespaceV1):string;
  size(namespace:ClosureNamespaceV1,key:string):number|undefined;
- read(namespace:ClosureNamespaceV1,key:string):Promise<Uint8Array|undefined>;
+ /** 📏️ Reads one leaf, bounding allocation to the supplied maximum when present. */
+ read(namespace:ClosureNamespaceV1,key:string,maximumBytes?:number):Promise<Uint8Array|undefined>;
  put(namespace:ClosureNamespaceV1,key:string,bytes:Uint8Array):Promise<void>;
 }
+/** 🪟️ The verdict of one look at the heads of the group: `none` (no head of this registry, platform and scope), `other-code` (built by other code, a reader would find every owner stale), `partial` (its producer knew `stale` owners stale in it, a read is still going on), `complete` (its producer knew no stale owner); `ahead` tells whether a restore would take it and `held` how many owners the sealed generation of this machine has (0 without one). */
+export type GenerationLookV1=Readonly<{state:"none"|"other-code"|"partial"|"complete";ahead:boolean;held:number;owners?:number;stale?:number;origin?:string;ageSeconds?:number;candidate?:GenerationHeadCandidateV1}>;
 /** 🔌️ The two operations the generation load asks of the remote cache of the machine group. */
 export interface GenerationExchangeV1{
  /** ⬆️ Whether this machine may write to the remote cache. */
  readonly upload:boolean;
- restore(options:{root:string;fs:GenerationFilePortV1;signal?:AbortSignal;implementation?:string}):Promise<GenerationExchangeOutcomeV1>;
+ /** 📥️ A pinned restore accepts only the exact complete head and uses the caller’s original generation writer. */
+ restore(options:{root:string;fs:GenerationFilePortV1;signal?:AbortSignal;implementation?:string;requireComplete?:true;expectedHead?:GenerationHeadCandidateV1}):Promise<GenerationExchangeOutcomeV1>;
  /** 🔭️ Whether a restore would take a newer state of a peer (one short request, nothing downloaded). */
  ahead(options:{root:string;fs:GenerationFilePortV1;signal?:AbortSignal;implementation?:string}):Promise<boolean>;
+ /** 👀️ What the cache holds of this registry, platform and scope without downloading a document. A complete-only look prefers the complete compatible heads a strict restore can consider. */
+ look(options:{root:string;fs:GenerationFilePortV1;signal?:AbortSignal;implementation?:string;requireComplete?:true}):Promise<GenerationLookV1>;
  /** ⬆️ Offers the newest sealed generation unless the cache holds a head that is at least as good; `stale` is the number of owners this producer knows stale in it (0 after a complete read, absent when unknown). */
  publish(options:{root:string;fs:GenerationFilePortV1;signal?:AbortSignal;ifAbsent?:boolean;stale?:number}):Promise<GenerationExchangeOutcomeV1>;
  /** 🧲️ One build input closure leaf from the fleet cache, verified against its name; nothing when the cache does not hold it or is unreachable. */
@@ -49,6 +60,13 @@ const restoredReason="restored from the remote cache",policy=schema.definitions.
 
 /** 🗝️ The action key of the head of the generations one machine of the group published, for a registry on one platform: the generation format, the owner registry identity, the platform and the origin that writes it, never a path. The server keeps the first bytes of a key against every other origin (a key must determine its bytes), so each origin owns one head, overwrites only its own, and a reader takes the newest head of all origins. */
 export function generationExchangeKeyV1(identity:string,platform:string,origin:string,scope:string=policy.allScope):string{return sha(Buffer.from(JSON.stringify(scope===policy.allScope?[policy.domain,identity,platform,origin]:[policy.domain,identity,platform,origin,scope])));}
+
+/** 🧷️ Receipt fields of a head whose declared origin agrees with the addressed slot. */
+function generationHeadEvidenceV1(note:GenerationNoteV1,key:string):GenerationHeadEvidenceV1|undefined{
+ const head={manifest:note.manifest,origin:note.origin,generation:note.generation,scope:note.scope??policy.allScope};
+ if(validateJsonSchemaSubset({$ref:"#/definitions/HeadEvidence"},head,schema).length)return undefined;
+ return generationExchangeKeyV1(note.identity,note.platform,head.origin,head.scope)===key?head:undefined;
+}
 
 /** 🔭️ Whether a head describes the scope a reader wants: a head of one slice is never the generation of another slice or of the whole workspace, and the whole workspace is the scope of a head that names none. */
 export const generationScopeMatchesV1=(note:Readonly<{scope?:string}>,scope:string|undefined):boolean=>(note.scope??policy.allScope)===(scope??policy.allScope);
@@ -99,13 +117,14 @@ async function readHead(location:Location):Promise<HeadV1|undefined>{
  return{note:noteOf(result.stdout_raw as Uint8Array|undefined),entries:files.map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)})),from:location.key};
 }
 
-async function remoteNote(location:Location,reader:Readonly<{implementation?:string;nearest?:boolean}>={}):Promise<HeadV1|undefined>{
+async function remoteNote(location:Location,reader:Readonly<{implementation?:string;nearest?:boolean;prefer?:(head:RankedV1)=>boolean}>={}):Promise<HeadV1|undefined>{
  const keys=location.keys??[location.key],settled=await Promise.allSettled(keys.map(key=>readHead({...location,key,keys:undefined})));
  if(settled.every(row=>row.status==="rejected"))throw(settled[0] as PromiseRejectedResult).reason;
  const found=settled.flatMap(row=>row.status==="fulfilled"&&row.value!==undefined?[row.value]:[]),valid=found.filter((head):head is RankedV1=>head.note!==undefined);
  if(valid.length===0)return found[0];
- const now=(location.now??Date.now)(),ranked=rankGenerationHeadsV1(valid,now,{implementation:reader.implementation});
- if(!reader.nearest||ranked.length<2||!location.cursors?.distance)return ranked[0];
+ const preferred=reader.prefer===undefined?valid:valid.filter(reader.prefer),now=(location.now??Date.now)();
+ const ranked=rankGenerationHeadsV1(preferred.length?preferred:valid,now,{implementation:reader.implementation});
+ if(!preferred.length||!reader.nearest||ranked.length<2||!location.cursors?.distance)return ranked[0];
  const candidates=ranked.slice(0,policy.rankCandidates),changed=new Map<RankedV1,number>();
  for(const head of candidates){
   const path=head.note.snapshot===undefined?undefined:`s/${head.note.snapshot}.snapshot.br`,entry=head.entries.find(row=>row.path===path);
@@ -123,6 +142,16 @@ async function remoteNote(location:Location,reader:Readonly<{implementation?:str
 function keepsLocalV1(local:NonNullable<Awaited<ReturnType<typeof localState>>>,note:GenerationNoteV1,from:string,location:Location&Readonly<{marginMilliseconds?:number}>):boolean{
  if(generationSignatureV1(local.manifest)===note.signature&&from===location.key||note.stateMs<=local.modifiedMs+(location.marginMilliseconds??policy.restoreMarginMilliseconds))return true;
  return location.implementation!==undefined&&note.implementation!==location.implementation&&local.manifest.implementation===location.implementation;
+}
+
+function matchingHeadV1(location:Location&Readonly<{identity:string}>,note:GenerationNoteV1):boolean{
+ return note.identity===location.identity&&note.platform===location.platform&&generationScopeMatchesV1(note,location.scope);
+}
+
+function completeAheadHeadV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>,local:Awaited<ReturnType<typeof localState>>,head:RankedV1):boolean{
+ const {note,from}=head;
+ return note.stale===0&&note.implementation===location.implementation&&matchingHeadV1(location,note)
+  &&generationHeadEvidenceV1(note,from)!==undefined&&!(local&&keepsLocalV1(local,note,from,location));
 }
 
 /** 🆔️ The registry identity of the generation a store holds, for a process that has no registry of its own (the agent that uploads the waves of a read it does not run). */
@@ -172,15 +201,52 @@ async function uploadClosuresV1(location:Location,manifest:ReturnType<typeof rea
  return{named:named.size,sent,fetched:0,missing:missing.slice(0,policy.maximumClosureReports)};
 }
 
+/** 🌊️ Reads an unknown-length closure response into bounded storage, cancelling its stream on overflow. */
+async function readRemoteClosureLeafV1({content,instance,signal}:Location,key:string):Promise<Uint8Array|undefined>{
+ signal?.throwIfAborted();
+ const stream=await content.stream(instance,{hash:key,size:0},signal);
+ if(!stream)return undefined;
+ const maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
+ let bytes=Buffer.alloc(0),length=0;
+ for await(const chunk of stream){
+  signal?.throwIfAborted();
+  if(chunk.length>maximum-length)return undefined;
+  const next=length+chunk.length;
+  if(next>bytes.length){
+   const grown=Buffer.allocUnsafe(Math.min(maximum,Math.max(4096,next,bytes.length*2)));
+   grown.set(bytes.subarray(0,length));bytes=grown;
+  }
+  bytes.set(chunk,length);length=next;
+ }
+ return bytes.subarray(0,length);
+}
+
 /** ⬇️ Obtains the closure leaves the fragments of a generation about to be restored name and this machine lacks: each is read from the fleet cache by name (bounded and verified), and the leaves nobody has are reported with the owners that name them, whose records the load removes so they are derived again. */
-async function restoreClosuresV1(location:Location,fetched:readonly GenerationDocumentV1[],owners:Readonly<Record<string,{fragment:string}>>):Promise<GenerationClosuresV1|undefined>{
- const{closures,content,instance,signal}=location;
- if(!closures)return undefined;
- const prefix=P.fragments+"/",suffix=".json.br",byName=new Map(fetched.filter(item=>item.path.startsWith(prefix)).map(item=>[item.path.slice(prefix.length,-suffix.length),item.bytes] as const));
- const named=closureOwnersV1(await closuresOfFragmentsV1({names:[...byName.keys()],read:async name=>byName.get(name),concurrency:policy.concurrency}),owners),absent=[...named].filter(([key,row])=>!(closures.size(row.namespace,key)!==undefined)).slice(0,policy.maximumClosures);
+async function restoreClosuresV1(location:Location,manifest:ReturnType<typeof readGenerationManifestV1>,requireComplete:boolean):Promise<GenerationClosuresV1|undefined>{
+ const{closures,signal,files,root}=location;
+ if(!closures&&!requireComplete)return undefined;
+ const names=[...new Set<string>([manifest.global,...Object.values(manifest.owners).map(owner=>owner.fragment)])];
+ const named=closureOwnersV1(await closuresOfFragmentsV1({names,concurrency:1,read:async(name:string)=>{
+  signal?.throwIfAborted();
+  const bytes=await files.read(join(root,P.fragments,name+".json.br"));
+  if(!bytes)throw Error("Generation fragment unavailable: "+name);
+  return bytes;
+ }}),manifest.owners);
+ if(!closures)return named.size===0?{named:0,sent:0,fetched:0,missing:[]}:undefined;
+ const verify=requireComplete?async(namespace:ClosureNamespaceV1,key:string):Promise<boolean>=>{
+  signal?.throwIfAborted();
+  const size=closures.size(namespace,key),maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
+  if(size===undefined||size<1||size>maximum)return false;
+  const bytes=await closures.read(namespace,key,maximum).catch(()=>undefined);
+  return bytes!==undefined&&bytes.length>0&&bytes.length<=maximum&&sha(bytes)===key;
+ }:undefined;
+ const rows=[...named],absent:typeof rows=[];
+ if(verify)await each(rows,async([key,row])=>{if(!await verify(row.namespace,key))absent.push([key,row]);});
+ else for(const [key,row] of rows)if(closures.size(row.namespace,key)===undefined)absent.push([key,row]);
+ if(requireComplete&&absent.length>policy.maximumClosures)return undefined;
  const missing:{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}[]=[];let got=0;
- await each(absent,async([key,row])=>{
-  const state=await obtainClosureLeafV1({directory:closures.directory,namespace:row.namespace,key,fetch:async()=>content.read(instance,{hash:key,size:0},signal),put:closures.put,signal});
+ await each(absent.slice(0,policy.maximumClosures),async([key,row])=>{
+  const state=await obtainClosureLeafV1({directory:closures.directory,namespace:row.namespace,key,fetch:()=>readRemoteClosureLeafV1(location,key),put:closures.put,signal,verify});
   if(state==="refetched")got++;else if(state==="missing")missing.push({key,namespace:row.namespace,projects:row.projects});
  });
  return{named:named.size,sent:0,fetched:got,missing:missing.sort((a,b)=>a.key<b.key?-1:1).slice(0,policy.maximumClosureReports)};
@@ -230,48 +296,149 @@ export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:
  const note:GenerationNoteV1={version:1,generation:local.generation,owners:Object.keys(local.manifest.owners).length,identity:local.manifest.identity,manifest:manifestName,signature,platform:location.platform,publishedMs:(location.now??Date.now)(),origin:location.origin??"local",stateMs:Math.floor(local.modifiedMs),implementation:local.manifest.implementation,...location.stale===undefined?{}:{stale:Math.min(owners,Math.max(0,Math.floor(location.stale))+naming)},...shipped?{snapshot:shipped.instance}:{},...location.scope===undefined||location.scope===policy.allScope?{}:{scope:location.scope}};
  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:entries.map(row=>({path:row.path,digest:{hash:row.hash,size_bytes:row.size}})),stdout_raw:Buffer.from(JSON.stringify(note))});
  try{await content.writeActionResult(instance,key,result,signal);}catch(error){if((error as {code?:number})?.code===3)rmSync(root+".closures-sent.json",{force:true});throw error;}
- return{status:"uploaded",generation:note.generation,owners:note.owners,documents:rows.length,sent,bytes:bytesSent,closures:leaves};
+ const head=generationHeadEvidenceV1(note,key);
+ return{status:"uploaded",generation:note.generation,owners:note.owners,documents:rows.length,sent,bytes:bytesSent,closures:leaves,...head?{head}:{}};
 }
 
 /** ⬇️ Makes a store serve the generation another machine of the group uploaded: when the store is empty, or when it holds another state (other signature) that is older than the upload by more than `marginMilliseconds`. Every document is verified against its name, moved to the root of this machine and renamed after its new bytes, the manifest is renumbered above the local generation, and the pointer is written last. Rows keep the stamps of the producer: the fact check compares content when a stamp differs, so the load verifies the restored generation by content and recomputes only what differs. */
 /** 🔭️ Whether the remote cache holds a state of this registry and platform that this store would take: the same decision `restoreGenerationV1` makes before it downloads a single document, so a load can go to the restore before it spends a verification pass on a local state that the restore would replace. */
 export async function remoteGenerationAheadV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>):Promise<boolean>{
  const local=await localState(location.root,location.files),remote=await remoteNote(location,{implementation:location.implementation});if(!remote)return false;
- const{note}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform||!generationScopeMatchesV1(note,location.scope))return false;
+ const{note}=remote;if(!note||!matchingHeadV1(location,note))return false;
  return!(local&&keepsLocalV1(local,note,remote.from,location));
 }
 
-export async function restoreGenerationV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number}>):Promise<GenerationExchangeOutcomeV1>{
- const{content,instance,root,files,signal}=location,local=await localState(root,files),remote=await remoteNote(location,{implementation:location.implementation,nearest:true});if(!remote)return{status:"absent"};
- const{note,entries}=remote;if(!note||note.identity!==location.identity||note.platform!==location.platform||!generationScopeMatchesV1(note,location.scope))return{status:"foreign"};
+/** 🔍️ Looks at the heads of the group like {@link remoteGenerationAheadV1} and says what they hold, so a machine without a generation can decide to fetch a complete head, wait for the machine that reads, or read. */
+export async function remoteGenerationLookV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number;requireComplete?:true}>):Promise<GenerationLookV1>{
+ const local=await localState(location.root,location.files),held=local?Object.keys(local.manifest.owners).length:0;
+ if(location.requireComplete&&location.implementation===undefined)return{ahead:false,held,state:"none"};
+ const remote=await remoteNote(location,{implementation:location.implementation,...location.requireComplete?{prefer:head=>completeAheadHeadV1(location,local,head)}:{}}),note=remote?.note;
+ if(!remote||!note||!matchingHeadV1(location,note)||location.requireComplete&&generationHeadEvidenceV1(note,remote.from)===undefined)return{ahead:false,held,state:"none"};
+ const state=location.implementation!==undefined&&note.implementation!==location.implementation?"other-code":note.stale===0?"complete":"partial";
+ const ahead=!(local&&keepsLocalV1(local,note,remote.from,location)),evidence=location.requireComplete&&ahead&&state==="complete"?generationHeadEvidenceV1(note,remote.from):undefined;
+ const candidate=evidence?{...evidence,identity:note.identity,platform:note.platform,implementation:note.implementation}:undefined,facts={owners:note.owners,origin:note.origin,ageSeconds:Math.max(0,Math.round(((location.now??Date.now)()-note.stateMs)/1000)),...note.stale===undefined?{}:{stale:note.stale}};
+ return{ahead,held,state,...facts,...candidate?{candidate}:{}};
+}
+
+type RemoteDocumentV1=HeadV1["entries"][number];
+class RestoreDocumentErrorV1 extends Error{}
+
+/** 📥️ Reads exactly the addressed compressed bytes and cancels the incoming body on a length mismatch. */
+async function readRestoreDocumentV1({content,instance,signal}:Location,entry:RemoteDocumentV1):Promise<GenerationDocumentV1>{
+ signal?.throwIfAborted();
+ const stream=await content.stream(instance,{hash:entry.hash,size:entry.size},signal);
+ if(!stream)throw new RestoreDocumentErrorV1("document missing in the remote cache: "+entry.path);
+ const bytes=Buffer.allocUnsafe(entry.size),hash=createHash("sha256");
+ let offset=0;
+ for await(const chunk of stream){
+  signal?.throwIfAborted();
+  if(chunk.length>entry.size-offset)throw new RestoreDocumentErrorV1("document differs from its declared size: "+entry.path);
+  bytes.set(chunk,offset);offset+=chunk.length;hash.update(chunk);
+ }
+ if(offset!==entry.size||hash.digest("hex")!==entry.hash)throw new RestoreDocumentErrorV1("document differs from its name: "+entry.path);
+ return{path:entry.path,bytes};
+}
+
+/** 📮️ Stages one compressed read group at a time, with one expanded document active. A large document gets its own group. The current pointer is published separately. */
+async function stageRestoreDocumentsV1(location:Location,documents:readonly RemoteDocumentV1[]):Promise<{renamed:Map<string,string>;bytes:number}>{
+ const{files,root,workspace,signal}=location,renamed=new Map<string,string>();
+ let bytes=0,index=0;
+ while(index<documents.length){
+  const group:RemoteDocumentV1[]=[];let size=0;
+  while(index<documents.length&&group.length<policy.concurrency){
+   const next=documents[index]!;
+   if(group.length&&size+next.size>policy.restoreBatchBytes)break;
+   group.push(next);size+=next.size;index++;
+  }
+  const fetched=await Promise.allSettled(group.map(entry=>readRestoreDocumentV1(location,entry)));
+  for(const row of fetched)if(row.status==="rejected")throw row.reason;
+  for(const row of fetched){
+   if(row.status!=="fulfilled")continue;
+   signal?.throwIfAborted();
+   const moved=transformNamedGenerationDocumentV1(row.value,workspace,"expand"),path=join(root,moved.path),name=documentNameV1(moved.path);
+   if(moved.bytes.length>policy.maximumDocumentBytes)throw new RestoreDocumentErrorV1("expanded generation document exceeds its finite limit: "+moved.path);
+   if(await files.write(path,moved.bytes,{ifAbsent:true})===false){
+    const held=await files.read(path);
+    if(!held||sha(held)!==name)throw new RestoreDocumentErrorV1("stored generation document differs from its name: "+moved.path);
+   }
+   renamed.set(documentNameV1(row.value.path),name);bytes+=moved.bytes.length;
+  }
+ }
+ return{renamed,bytes};
+}
+
+export async function restoreGenerationV1(location:Location&Readonly<{identity:string;marginMilliseconds?:number;requireComplete?:true;expectedHead?:GenerationHeadCandidateV1}>):Promise<GenerationExchangeOutcomeV1>{
+ const{content,instance,root,files,signal,expectedHead}=location,requireComplete=location.requireComplete===true||expectedHead!==undefined;
+ if(requireComplete&&location.implementation===undefined)return{status:"incomplete",reason:"complete compatible generation required"};
+ const expectedKey=expectedHead&&generationExchangeKeyV1(location.identity,location.platform,expectedHead.origin,expectedHead.scope);
+ if(expectedHead&&(expectedHead.identity!==location.identity||expectedHead.platform!==location.platform||expectedHead.implementation!==location.implementation||expectedHead.scope!==(location.scope??policy.allScope)||!(location.keys??[location.key]).includes(expectedKey!)))return{status:"foreign",reason:"expected generation head is outside this exchange"};
+ const local=await localState(root,files);
+ const remote=expectedKey?await readHead({...location,key:expectedKey,keys:undefined}):await remoteNote(location,{implementation:location.implementation,nearest:true,...requireComplete?{prefer:head=>completeAheadHeadV1(location,local,head)}:{}});
+ if(!remote)return{status:"absent"};
+ const{note,entries}=remote;
+ if(expectedHead){
+  const evidence=note&&generationHeadEvidenceV1(note,remote.from);
+  if(!note||!evidence||!matchingHeadV1(location,note)||note.stale!==0||note.implementation!==expectedHead.implementation||evidence.origin!==expectedHead.origin||evidence.scope!==expectedHead.scope||evidence.generation!==expectedHead.generation||evidence.manifest!==expectedHead.manifest)return{status:"incomplete",reason:"expected generation head changed"};
+ }
+ if(!note||!matchingHeadV1(location,note)||requireComplete&&generationHeadEvidenceV1(note,remote.from)===undefined)return{status:"foreign"};
  if(local&&keepsLocalV1(local,note,remote.from,location))return{status:"local"};
+ if(requireComplete&&(note.stale!==0||note.implementation!==location.implementation))return{status:"incomplete",reason:"complete compatible generation required"};
  const manifestPath=`${P.manifests}/${note.manifest}.json`,snapshotPath=note.snapshot===undefined?undefined:`s/${note.snapshot}.snapshot.br`,documents=entries.filter(entry=>entry.path!==snapshotPath&&!closureDocument.test(entry.path));
- if(documents.length>policy.maximumDocuments+1||entries.length>policy.maximumDocuments+policy.maximumClosures+1||!documents.some(entry=>entry.path===manifestPath)||documents.some(entry=>!document.test(entry.path)||!entry.path.includes(entry.hash)||!(entry.size>=0)))return{status:"incomplete",reason:"action result"};
- const fetched:GenerationDocumentV1[]=[];
- await each(documents,async entry=>{
-  const data=await content.read(instance,{hash:entry.hash,size:entry.size},signal);if(!data)throw Error("document missing in the remote cache: "+entry.path);
-  if(data.length>policy.maximumDocumentBytes||sha(data)!==entry.hash)throw Error("document differs from its name: "+entry.path);
-  fetched.push({path:entry.path,bytes:data});
- });
- const generation=Math.max(local?.generation??-1,note.generation)+1,moved=transformGenerationV1(fetched,location.workspace,"expand",generation);
- let bytes=0;
- await each(moved.documents,async item=>{await files.write(join(root,item.path),item.bytes,{ifAbsent:true});bytes+=item.bytes.length;});
- const manifestBytes=moved.documents.find(item=>item.path===moved.manifestPath)!.bytes,manifest=readGenerationManifestV1(manifestBytes);
- const closures=await profilePhaseV1("graph.restore.closures",()=>restoreClosuresV1(location,moved.documents,manifest.owners)).catch(()=>undefined),naming=new Set((closures?.missing??[]).flatMap(row=>row.projects)).size;
- await files.write(join(root,P.pointer),Buffer.from(JSON.stringify({version:1,generation:manifest.generation,manifest:moved.manifestPath.slice(P.manifests.length+1,-5),parent:null,reason:restoredReason})));
+ const indexed=new Map(documents.map(entry=>[entry.path,entry])),sourceEntry=indexed.get(manifestPath);
+ if(documents.length>policy.maximumDocuments+1||entries.length>policy.maximumDocuments+policy.maximumClosures+1||!sourceEntry||sourceEntry.size>P.maximumManifestBytes||indexed.size!==documents.length||documents.some(entry=>!document.test(entry.path)||entry.hash!==documentNameV1(entry.path)||!Number.isSafeInteger(entry.size)||entry.size<=0||entry.size>policy.maximumDocumentBytes))return{status:"incomplete",reason:"action result"};
+ const uniqueManifest=documents.filter(entry=>entry.path.startsWith(P.manifests+"/")).length===1;
+ if(requireComplete&&!uniqueManifest)return{status:"incomplete",reason:"one generation manifest required"};
+ const source=await readRestoreDocumentV1(location,sourceEntry);
+ let sourceManifest:ReturnType<typeof readGenerationManifestV1>;
+ try{sourceManifest=readGenerationManifestV1(source.bytes);}catch{return{status:"incomplete",reason:"invalid generation manifest"};}
+ if(requireComplete&&(sourceManifest.generation!==note.generation||sourceManifest.identity!==note.identity||sourceManifest.implementation!==note.implementation||Object.keys(sourceManifest.owners).length!==note.owners))return{status:"incomplete",reason:"generation manifest differs from its head"};
+ const required=generationDocumentPathsV1(note.manifest,sourceManifest).slice(1);
+ if(required.some(path=>!indexed.has(path))||requireComplete&&required.length+1!==documents.length)return{status:"incomplete",reason:"generation documents differ from their manifest"};
+ const {renamed,bytes:stagedBytes}=await profilePhaseV1("graph.restore.documents",()=>stageRestoreDocumentsV1(location,required.map(path=>indexed.get(path)!)));
+ const generation=Math.max(local?.generation??-1,note.generation)+1,{document:moved}=transformGenerationManifestV1(source.bytes,renamed,location.workspace,"expand",generation),manifest=readGenerationManifestV1(moved.bytes);
+ if(moved.bytes.length>P.maximumManifestBytes)return{status:"incomplete",reason:"expanded generation manifest exceeds its finite limit"};
+ const closures=await profilePhaseV1("graph.restore.closures",()=>restoreClosuresV1(location,manifest,requireComplete)).catch(()=>undefined);
+ signal?.throwIfAborted();
+ if(requireComplete&&(!closures||closures.missing.length>0))return{status:"incomplete",reason:"required generation closures unavailable",closures};
+ const naming=new Set((closures?.missing??[]).flatMap(row=>row.projects)).size,bytes=stagedBytes+moved.bytes.length,manifestName=documentNameV1(moved.path);
+ if(await files.write(join(root,moved.path),moved.bytes,{ifAbsent:true})===false){
+  const held=await files.read(join(root,moved.path));
+  if(!held||sha(held)!==manifestName)throw Error("stored generation manifest differs from its name: "+moved.path);
+ }
+ signal?.throwIfAborted();
+ await files.write(join(root,P.pointer),Buffer.from(JSON.stringify({version:1,generation:manifest.generation,manifest:manifestName,parent:null,reason:restoredReason})));
  const snapshotEntry=entries.find(entry=>entry.path===snapshotPath);
- if(snapshotEntry&&snapshotDocument.test(snapshotEntry.path)&&snapshotEntry.path.includes(note.snapshot!)&&snapshotEntry.size<=policy.maximumSnapshotBytes&&location.cursors)try{
+ if(!expectedHead&&snapshotEntry&&snapshotDocument.test(snapshotEntry.path)&&snapshotEntry.path.includes(note.snapshot!)&&snapshotEntry.size<=policy.maximumSnapshotBytes&&location.cursors)try{
   const data=await content.read(instance,{hash:snapshotEntry.hash,size:snapshotEntry.size},signal);
   if(data&&sha(data)===snapshotEntry.hash)await location.cursors.install(manifest.generation,{instance:note.snapshot!,bytes:data});
  }catch{}
- return{status:"restored",generation:manifest.generation,owners:note.owners,documents:moved.documents.length,bytes,ageSeconds:Math.max(0,Math.round(((location.now??Date.now)()-note.stateMs)/1000)),...note.stale===undefined&&naming===0?{}:{stale:Math.min(note.owners,Math.max(note.stale??0,naming))},...closures?{closures}:{}};
+ const head=uniqueManifest&&sourceManifest.generation===note.generation?generationHeadEvidenceV1(note,remote.from):undefined;
+ return{status:"restored",generation:manifest.generation,owners:note.owners,documents:required.length+1,bytes,ageSeconds:Math.max(0,Math.round(((location.now??Date.now)()-note.stateMs)/1000)),...note.stale===undefined&&naming===0?{}:{stale:Math.min(note.owners,Math.max(note.stale??0,naming))},...closures?{closures}:{},...head?{head}:{}};
+}
+
+/** 📏️ Reads a regular local closure within its caller's byte limit even if the directory entry changes after the size check. */
+async function readBoundedClosureLeafV1(path:string,maximumBytes:number):Promise<Uint8Array|undefined>{
+ const file=await open(path,constants.O_RDONLY|(constants.O_NONBLOCK??0));
+ try{
+  const status=await file.stat();
+  if(!status.isFile()||status.size<1||status.size>maximumBytes)return undefined;
+  const bytes=Buffer.allocUnsafe(status.size);
+  let offset=0;
+  while(offset<bytes.length){
+   const{bytesRead}=await file.read(bytes,offset,bytes.length-offset,null);
+   if(bytesRead===0)return undefined;
+   offset+=bytesRead;
+  }
+  const{bytesRead}=await file.read(Buffer.alloc(1),0,1,null);
+  return bytesRead===0?bytes:undefined;
+ }finally{await file.close();}
 }
 
 /** 🗄️ The closure leaves of the graph store of a workspace (`<graph partition>/m/<namespace>`), read with the storage budget of the workspace; `undefined` stays out of the exchange when the store cannot be located. */
 export function workspaceClosurePortV1(workspace:string):ClosurePortV1|undefined{
  try{
   const base=join(repositoryCacheBudgetV1(workspace).partitions.graph.directory,"m"),directory=(namespace:ClosureNamespaceV1)=>join(base,namespace);
-  return{directory,size:(namespace,key)=>{try{const row=statSync(join(directory(namespace),key+".json"));return row.isFile()?row.size:undefined;}catch{return undefined;}},read:async(namespace,key)=>{try{return readFileSync(join(directory(namespace),key+".json"));}catch{return undefined;}},put:closureLeafPutterV1(workspace)};
+  return{directory,size:(namespace,key)=>{try{const row=statSync(join(directory(namespace),key+".json"));return row.isFile()?row.size:undefined;}catch{return undefined;}},read:async(namespace,key,maximumBytes)=>{try{const path=join(directory(namespace),key+".json");return maximumBytes===undefined?readFileSync(path):await readBoundedClosureLeafV1(path,maximumBytes);}catch{return undefined;}},put:closureLeafPutterV1(workspace)};
  }catch{return undefined;}
 }
 
@@ -283,13 +450,14 @@ export function remoteGenerationExchangeV1(input:Readonly<{environment:Readonly<
  const platform=input.platform??`${process.platform}-${process.arch}`.toLowerCase(),token=resolved.token,make=(probe:boolean)=>httpRemoteExecutionContentV1({endpoint:contract.endpoint,token,fetch:signedFetch,timeoutSeconds:probe?policy.probeTimeoutSeconds:contract.timeoutSeconds,retries:probe?policy.probeRetries:contract.retries});
  const origins=input.origins??fleetOriginsV1(input.workspace),serving=input.serving??totalmem()/1048576>=policy.servingTotalMegabytes,scope=input.scope??policy.allScope,heads=(identity:string)=>({key:generationExchangeKeyV1(identity,platform,origins.self,scope),keys:origins.all.map(origin=>generationExchangeKeyV1(identity,platform,origin,scope)),origin:origins.self,scope});
  const closures=input.closures??workspaceClosurePortV1(input.workspace);let down=false;
- const guard=async(run:()=>Promise<GenerationExchangeOutcomeV1>):Promise<GenerationExchangeOutcomeV1>=>{
+ const guard=async(run:()=>Promise<GenerationExchangeOutcomeV1>,signal?:AbortSignal):Promise<GenerationExchangeOutcomeV1>=>{
   if(down)return{status:"failed",reason:"the remote cache was unreachable earlier in this process"};
-  try{return await run();}catch(error){down=true;return{status:"failed",reason:String((error as Error)?.message??error).slice(0,200)};}
+  try{return await run();}catch(error){if(!signal?.aborted&&!(error instanceof RestoreDocumentErrorV1))down=true;return{status:"failed",reason:String((error as Error)?.message??error).slice(0,200)};}
  };
  const exchange:GenerationExchangeV1={
   upload:remoteCacheEffectiveUploadV1(contract),
-  restore:({root,fs,signal,implementation})=>guard(async()=>{const identity=await input.identity();return restoreGenerationV1({content:make(false),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,closures});}),
+  restore:({root,fs,signal,implementation,requireComplete,expectedHead})=>guard(async()=>{const identity=await input.identity();return restoreGenerationV1({content:make(false),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,closures,requireComplete,expectedHead});},signal),
+  look:async({root,fs,signal,implementation,requireComplete})=>{if(down)return{ahead:false,held:0,state:"none"};try{const identity=await input.identity();return await remoteGenerationLookV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,requireComplete});}catch{return{ahead:false,held:0,state:"none"};}},
   ahead:async({root,fs,signal,implementation})=>{if(down)return false;try{const identity=await input.identity();return await remoteGenerationAheadV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors});}catch{return false;}},
  publish:({root,fs,signal,ifAbsent,stale})=>guard(async()=>publishGenerationV1({content:make(ifAbsent===true),instance:contract.instance,...heads(await input.identity()),root,workspace:input.workspace,platform,files:fs,signal,ifAbsent,stale,serving,cursors:input.cursors,closures})),
   leaf:async({namespace,key,signal})=>{

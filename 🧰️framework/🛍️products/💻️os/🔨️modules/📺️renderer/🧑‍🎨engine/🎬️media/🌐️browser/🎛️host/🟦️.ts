@@ -132,6 +132,9 @@ function createHost(slot: PresentedMediaSlot, port: MediaTransportPort, apply?: 
     });
     player.addEventListener("error", failed);
     element.tabIndex = 0;
+    element.setAttribute("data-shared-border-frame", "");
+    element.setAttribute("data-shared-border-edges", "");
+    element.style.outline = "none";
     element.setAttribute("aria-keyshortcuts", "Space ArrowLeft ArrowRight Home End");
     element.addEventListener("keydown", (event) => {
       const target = event.target as HTMLElement;

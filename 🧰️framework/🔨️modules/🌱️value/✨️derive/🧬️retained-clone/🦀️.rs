@@ -112,6 +112,26 @@ fn original_allocation_retirement(input:&DeriveInput,value_crate:&syn::Path,gene
  Ok((declaration,methods))
 }
 
+/// 🌿 Forms an ordered retirement tree with logarithmic depth across sibling fields.
+fn retirement_fields(value: &syn::Path, fields: &[(&syn::Field, &syn::Ident)]) -> (TokenStream, TokenStream) {
+    match fields {
+        [] => (quote!(#value::retirement::RetirementFieldsEnd), quote!(#value::retirement::RetirementFieldsEnd)),
+        [(field, binding)] => {
+            let ty = &field.ty;
+            (quote!(#value::retirement::Deferred<#ty>), quote!(#value::retirement::deferred(#binding)))
+        }
+        _ => {
+            let (left, right) = fields.split_at(fields.len() / 2);
+            let (left_type, left_seed) = retirement_fields(value, left);
+            let (right_type, right_seed) = retirement_fields(value, right);
+            (
+                quote!(#value::retirement::RetirementFieldsPair<#left_type, #right_type>),
+                quote!(#value::retirement::RetirementFieldsPair::new(#left_seed, #right_seed)),
+            )
+        }
+    }
+}
+
 pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
     let name = &input.ident;
     let value_crate = crate::component::declared_value_crate(input)?;
@@ -125,8 +145,11 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
       Data::Enum(data)=>data.variants.iter().map(|variant|{let(pattern,values)=destructure_fields(name,&variant.fields,Some(&variant.ident));(variant.ident.clone(),&variant.fields,pattern,values)}).collect::<Vec<_>>(),
       Data::Union(data)=>return Err(syn::Error::new_spanned(data.union_token,"#[derive(RetireOwned)] does not support unions")),
     };
-    let variants=rows.iter().map(|(variant,fields,_,_)|{let types=fields.iter().map(|field|&field.ty);quote!(#variant(#value_crate::retirement_fields_type!(#(#types),*)))});
-    let arms=rows.iter().map(|(variant,_,pattern,values)|quote!(#pattern=>#cursor_name{inner:#inner_name::#variant(#value_crate::retirement_fields_seed!(#(#values),*))}));
+    let (variants, arms): (Vec<_>, Vec<_>) = rows.iter().map(|(variant, fields, pattern, values)| {
+        let fields: Vec<_> = fields.iter().zip(values).collect();
+        let (ty, seed) = retirement_fields(&value_crate, &fields);
+        (quote!(#variant(#ty)), quote!(#pattern => #cursor_name { inner: #inner_name::#variant(#seed) }))
+    }).unzip();
     let (cursor_declaration,cursor_type,body)={
         let names=rows.iter().map(|(variant,_,_,_)|variant).collect::<Vec<_>>();
         let tail=if names.is_empty(){quote!(_=>unreachable!("uninhabited retirement"))}else{quote!()};
@@ -311,7 +334,7 @@ fn expand_record(input: &DeriveInput, vc: &syn::Path, rows: &[CloneRow], variant
     let advance_routes = rows.iter().enumerate().map(|(g, row)| {
         let (cursor, value, project) = (&row.cursor, &row.value, &row.project);
         quote!(#g=>{
-            if code%4==1{self.route=Some(key);if self.child_reply.is_none(){let child=#rc::OriginalEffectReply::borrow(&mut self.child_reply)?;if recover{#rc::RetainedCloneCursor::recover_take(&mut self.#cursor,&mut self.#value,effect,child)?;}else{#rc::RetainedCloneCursor::take(&mut self.#cursor,&mut self.#value,effect,child)?;}}let Some(result)=self.child_reply.take()else{return Ok(reply.pending())};let mut scope=reply.progress().scope(&mut self.route,key)?;#rc::OriginalEffectReplyScope::borrow(&mut scope)?.complete(result.map_err(Into::into));return Ok(scope.forwarded())}
+            if code%4==1{let held=self.route.is_some();self.route=Some(key);if self.child_reply.is_none(){let taken=(||->::core::result::Result<(),#vc::ValueError>{let child=#rc::OriginalEffectReply::borrow(&mut self.child_reply)?;if recover{#rc::RetainedCloneCursor::recover_take(&mut self.#cursor,&mut self.#value,effect,child)?;}else{#rc::RetainedCloneCursor::take(&mut self.#cursor,&mut self.#value,effect,child)?;}Ok(())})();if let Err(error)=taken{if !held&&!recover{self.route=None}return Err(error)}}let Some(result)=self.child_reply.take()else{return Ok(reply.pending())};let mut scope=reply.progress().scope(&mut self.route,key)?;#rc::OriginalEffectReplyScope::borrow(&mut scope)?.complete(result.map_err(Into::into));return Ok(scope.forwarded())}
             let mut scope=reply.progress().scope(&mut self.route,key)?;let child=#rc::OriginalEffectReplyScope::borrow(&mut scope)?;
             match code%4{
                 0=>{let projected=#project;if recover{#rc::RetainedCloneCursor::recover_advance_into(&mut self.#cursor,projected,body,maximum,effect,child)?;}else{#rc::RetainedCloneCursor::advance_into(&mut self.#cursor,projected,body,maximum,effect,child)?;}},

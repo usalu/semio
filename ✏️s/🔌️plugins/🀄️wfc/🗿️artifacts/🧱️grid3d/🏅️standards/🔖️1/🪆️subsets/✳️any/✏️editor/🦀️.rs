@@ -10,7 +10,7 @@
 use crate::editor::grid3d::modes::edit;
 use crate::editor::grid3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation, Grid3dWindowConfigSetActiveTile, Grid3dWindowConfigSetCamera};
+use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfigMutation, Grid3dWindowConfigSetActiveTile, Grid3dWindowConfigSetCamera};
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
@@ -35,9 +35,7 @@ use semio_plugin::ToolRunJobRequest;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_2d_compute::EngineHandles;
 
-#[path="🫧️transient/🦀️.rs"]
-pub mod transient;
-use transient::{Grid3dTransient,Grid3dTransientMutation,SetSolve};
+use crate::editor::grid3d::transient::{Grid3dTransient,Grid3dTransientMutation,SetSolve};
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface
@@ -126,13 +124,7 @@ impl protocol::OpBinary for Grid3dEditorCommand {
 /// every pick as a plain select (`🗒️note`'s precedent, ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
 pub fn grid3d_active_utility(view: Option<&semio_plugin::ViewModel>) -> &str {
     let Some(view) = view else { return grid::UTILITY_SELECT };
-    view.window_id
-        .as_deref()
-        .and_then(|window| view.active_utility_by_window_id.get(window))
-        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
-        .map(String::as_str)
-        .filter(|utility| !utility.is_empty())
-        .or(view.active_utility_id.as_deref())
+    view.contextual_utility()
         .unwrap_or(grid::UTILITY_SELECT)
 }
 
@@ -441,6 +433,10 @@ struct Grid3dCommandWork {
 }
 
 impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Grid3dEditor>> for Grid3dCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -555,6 +551,22 @@ impl ArtifactEditor for Grid3dEditor {
     type TransientMutation = Grid3dTransientMutation;
     type Command = Grid3dEditorCommand;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(|operation| Some(operation)).with_original_receiving();
+            (owners, progress)
+        }))
+    }
+
     const DIALECT: Dialect = WFC_GRID3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WFC_GRID3D_DOCUMENT_SCHEMA;
 
@@ -604,7 +616,7 @@ impl ArtifactEditor for Grid3dEditor {
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> { Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>()) }
 
-    fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,semio_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,Fault>>{Some(||{
         Ok(crate::examples::blocks::snapshot())
     })}
 
@@ -678,7 +690,7 @@ impl ArtifactEditor for Grid3dEditor {
         if grid3d_retained_extent(&original.command, &original.snapshot).is_none() {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "wfc.grid3d.retained.extent").into());
         }
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, <Self as ArtifactEditor>::command_id, GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, false, |request| Box::new(Grid3dCommandWork { tool_id, completed: false }))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, <Self as ArtifactEditor>::command_id, GRID3D_RETAINED_RAW_BYTES, GRID3D_RETAINED_WORK_ITEMS, false, |request| Grid3dCommandWork { tool_id, completed: false })
     }
 
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -838,4 +850,3 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 #[path="🧪️tests/🔬️render-source/🦀️.rs"]
 mod render_source_laws;
 
-semio_plugin::retained_command::terminal_frame_bound!(Grid3dCommandWork);

@@ -2,6 +2,7 @@ import * as React from "../../../⚛️react-port/🟦️.ts";
 import type { LocalDocument } from "@semio-tech/framework/config/mutations";
 import { localizedLabelTextV1 } from "../../📣️replay-refusal/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 const labels = {
   title: { en: "Files on this device", de: "Dateien auf diesem Gerät" },
   opening: { en: "Opening {name}…", de: "{name} wird geöffnet…" },
@@ -45,7 +46,7 @@ export function LocalFilesV1(props: Readonly<{
   return <section aria-label={text("title")} className="pointer-events-auto rounded-sm border bg-base px-double py-double text-sm">
     <h2 className="font-semibold">{text("title")}</h2>
     <ul>{documents.map(document => <li key={document.documentId}>
-      <button type="button" className="rounded-sm px-single py-single focus-visible:outline"
+      <button type="button" {...sharedBorderlessBoxProps} className="rounded-sm px-single py-single"
         data-semio-local-document-id={document.documentId}
         data-semio-local-persisted={props.persisted.has(document.documentId) ? "true" : "false"}
         aria-current={props.activeDocumentId === document.documentId ? "true" : undefined}
@@ -54,7 +55,7 @@ export function LocalFilesV1(props: Readonly<{
     </li>)}</ul>
     {pending === null ? null : <div>
       <p role="status" aria-live="polite" aria-busy="true">{text("opening").replaceAll("{name}", pending.name)}</p>
-      <button type="button" onClick={() => request.current?.abort()}>{text("cancel")}</button>
+      <button {...sharedBorderlessBoxProps} type="button" onClick={() => request.current?.abort()}>{text("cancel")}</button>
     </div>}
     {failure === null ? null : <p role="alert">{failure}</p>}
   </section>;

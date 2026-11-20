@@ -1,0 +1,7 @@
+{
+  "failure": "semantic",
+  "expectedMessage": "original-turn.native-return-refused: semantic",
+  "expectedReceiptEpochs": [1, 2, 3],
+  "expectedHeldCount": 1,
+  "expectedCloseMessage": "original-turn.original-return-pending"
+}

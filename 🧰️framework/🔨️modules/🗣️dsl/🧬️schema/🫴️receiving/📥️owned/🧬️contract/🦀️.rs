@@ -2,7 +2,7 @@
 use super::*;
 pub use semio_framework_value_native_owned::OriginalReceivingPrimary;
 /// 🧩️ Implementations construct only a pure fixed receiver header after its actual backing was admitted.
-pub trait DslOwnedReceivingField:RetireOwned+Sized{type Cursor:OwnedFieldReceiving<Self>;fn receiving_cursor()->Self::Cursor;}
+pub trait DslOwnedReceivingField:RetireOwned+Sized{type Cursor:OwnedFieldReceiving<Self>;const RECEIVES_STATEMENT:bool=false;fn receiving_cursor()->Self::Cursor;}
 /// 📑️ Generated declarations retain actual typed field ownership until publication or paid cancellation.
 pub trait DslOwnedReceivingRecord:DslOwnedReceivingField{}
 /// 🏷️ Static variant matching selects a pure header without allocating a declaration roster.

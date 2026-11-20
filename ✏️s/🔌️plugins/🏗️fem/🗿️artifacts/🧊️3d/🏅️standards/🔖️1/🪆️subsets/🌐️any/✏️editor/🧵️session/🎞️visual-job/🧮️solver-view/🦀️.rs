@@ -1,6 +1,7 @@
 //! 🧮️ Solver view and numerical vocabulary: scalar fields, the solver view, numerical stages, fixed slots, child ends and the session close budget.
 
 use super::*;
+use semio_framework_value_persistent::list::PagedList;
 
 //#region 📦️PageVisualJob
 pub const FEM3D_VISUAL_PAGES: usize = 21;
@@ -27,6 +28,7 @@ pub struct Fem3dSolverView {
     pub scalars: [Option<Box<[std::mem::MaybeUninit<Fem3dSolverScalar>; FEM3D_SOLVER_FIELDS_PER_PAGE]>>; FEM3D_SOLVER_PAGE_COUNT],
     pub initialized: [Option<Box<[bool; FEM3D_SOLVER_FIELDS_PER_PAGE]>>; FEM3D_SOLVER_PAGE_COUNT],
     initialized_count: usize,
+    admitted_pages: usize,
     pub len: usize,
     pub close_lane: usize,
 }
@@ -43,9 +45,14 @@ impl Fem3dSolverView {
             scalars: std::array::from_fn(|_| None),
             initialized: std::array::from_fn(|_| None),
             initialized_count: 0,
+            admitted_pages: 0,
             len,
             close_lane: 0,
         }
+    }
+
+    pub(super) fn page_count(&self) -> usize {
+        self.len.div_ceil(FEM3D_SOLVER_FIELDS_PER_PAGE)
     }
 
     pub fn scalar(&self, index: usize) -> Option<Fem3dSolverScalar> {
@@ -72,6 +79,7 @@ impl Fem3dSolverView {
             }
             self.scalars[page] = Some(Box::new([std::mem::MaybeUninit::uninit(); FEM3D_SOLVER_FIELDS_PER_PAGE]));
         }
+        self.admitted_pages = self.admitted_pages.max(page + 1);
         true
     }
 
@@ -123,12 +131,12 @@ impl Fem3dSolverView {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if self.close_lane >= FEM3D_SOLVER_PAGE_COUNT * 2 {
+        if self.close_lane >= self.admitted_pages * 2 {
             self.len = 0;
             return (true, 0, 0);
         }
-        let scalar_page = self.close_lane < FEM3D_SOLVER_PAGE_COUNT;
-        let page = self.close_lane % FEM3D_SOLVER_PAGE_COUNT;
+        let scalar_page = self.close_lane < self.admitted_pages;
+        let page = self.close_lane % self.admitted_pages;
         let bytes = if scalar_page { FEM3D_SOLVER_SCALAR_PAGE_BYTES } else { FEM3D_SOLVER_INITIALIZED_PAGE_BYTES };
         if bytes > maximum_bytes {
             return (false, 0, 0);
@@ -155,6 +163,7 @@ pub enum Fem3dNumericalStage {
     ReserveSolverPages,
     ReserveNodes,
     ReserveNodeIds,
+    ReserveNodeValues,
     ReserveElements,
     ReserveSupports,
     ReserveMeshedSolids,
@@ -233,66 +242,84 @@ pub enum Fem3dNumericalStage {
     Complete,
 }
 
-pub struct FixedSlots<T, const N: usize> {
-    pub slots: [Option<T>; N],
-    pub admitted: usize,
-    pub len: usize,
+pub struct PagedSlots<T, const N: usize> {
+    values: PagedList<T, N>,
+    admitted: usize,
 }
 
-impl<T, const N: usize> FixedSlots<T, N> {
+impl<T, const N: usize> PagedSlots<T, N> {
     pub fn new() -> Self {
-        Self { slots: [const { None }; N], admitted: 0, len: 0 }
+        Self { values: PagedList::default(), admitted: 0 }
     }
 
-    pub fn admit_one(&mut self, target: usize) -> Result<bool, ()> {
+    pub fn admit_one(&mut self, target: usize, maximum_bytes: usize) -> Result<(bool, usize), ()> {
         if target > N {
             return Err(());
         }
-        if self.admitted < target {
-            self.admitted += 1;
+        let capacity = self.values.whole_page_capacity(target);
+        if let Some(bytes) = self.values.next_capacity_allocation_bytes(capacity).map_err(|_| ())? {
+            if bytes > maximum_bytes.min(MOUNTED_ANALYSIS_BACKING_BYTES) {
+                return Ok((false, 0));
+            }
+            let progress = semio_s_fem_sparse::reserve_cold_page(&mut self.values, capacity).map_err(|_| ())?;
+            return Ok((false, progress.allocated_bytes));
+        }
+        self.admitted = self.admitted.max(target);
+        Ok((true, 0))
+    }
+
+    pub(super) fn admit_in(&mut self, target: usize, context: &mut StepContext<'_>) -> Result<bool, ()> {
+        if target > N {
+            return Err(());
+        }
+        let capacity = self.values.whole_page_capacity(target);
+        if self.values.next_capacity_allocation_bytes(capacity).map_err(|_| ())?.is_some() {
+            semio_s_fem_sparse::reserve_funded_page(&mut self.values, capacity, context)?;
             return Ok(false);
         }
+        self.admitted = self.admitted.max(target);
         Ok(true)
     }
 
     pub fn push(&mut self, value: T) -> Result<(), T> {
-        if self.len == self.admitted {
+        if self.len() >= self.admitted {
             return Err(value);
         }
-        self.slots[self.len] = Some(value);
-        self.len += 1;
-        Ok(())
+        self.values.push_reserved(value)
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        (index < self.len).then(|| self.slots[index].as_ref()).flatten()
+        self.values.get(index)
     }
 
     pub(super) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        (index < self.len).then(|| self.slots[index].as_mut()).flatten()
+        self.values.get_mut(index)
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        self.values.len()
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        self.len.checked_sub(1).and_then(|index| {
-            self.len = index;
-            self.slots[index].take()
-        })
+        self.values.pop()
     }
 
-    pub fn close_admission_one(&mut self) -> bool {
-        if self.admitted != 0 {
-            self.admitted -= 1;
-            return false;
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if self.pop().is_some() {
+            return (false, 1, 0);
         }
-        true
+        match semio_s_fem_sparse::close_paged_owner_step(&mut self.values, maximum_bytes) {
+            Ok(Some((items, bytes))) => (false, items, bytes),
+            Ok(None) => {
+                self.admitted = 0;
+                (true, 0, 0)
+            }
+            Err(()) => (false, 0, 0),
+        }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.admitted == 0
+        self.values.is_empty() && self.values.capacity() == 0 && self.admitted == 0
     }
 }
 

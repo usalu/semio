@@ -85,3 +85,4 @@ semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-fem-3d-editor-model-window = { workspace = true, features = ["testkit"] }
 semio-framework-replication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d-diff = { workspace = true }

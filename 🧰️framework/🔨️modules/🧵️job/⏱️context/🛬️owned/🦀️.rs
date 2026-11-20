@@ -8,6 +8,23 @@ use semio_framework_value_native_owned::native_decoding::{NativeDecodeProgress,N
 use semio_framework_job_receiving::OriginalJobWorkRecipient;
 use semio_framework_value_call::NativeCallFailure;
 type ScopeLoan=stock::OriginalReturnScopeLoan<Input>;
+/// 📏️ Larger native copies must quote their work so one persistent decoder cannot reserve a large share of an actor's lifetime copy stock.
+const UNQUOTED_RECEIVING_COPY_BYTES: usize = 16 * 1024 * 1024;
+
+fn unquoted_receiving_grant(whole: G) -> G {
+    G {
+        maximum_items: whole.maximum_items.div_ceil(2),
+        maximum_copy_bytes: whole.maximum_copy_bytes.div_ceil(2).min(UNQUOTED_RECEIVING_COPY_BYTES),
+        maximum_capacity_bytes: whole.maximum_capacity_bytes.div_ceil(2),
+        maximum_release_bytes: whole.maximum_release_bytes.div_ceil(2),
+        maximum_depth: whole.maximum_depth,
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+
 /// 🪙️ Quotes what a first receiving scope claim needs beyond its quoted body once the return table exists: its setup and twice its control, as items, copy bytes and fuel.
 pub fn original_receiving_scope_headroom()->(usize,usize,u64){
  let outcome=Outcome::<()>::placement();
@@ -22,6 +39,8 @@ impl OriginalJobDecodeOwner{
  pub fn empty()->Self{Self{source:std::mem::ManuallyDrop::new(None),scope:None,state:State::empty()}}
  pub fn work_issuer_birth_copy_bytes()->usize{State::work_issuer_birth_copy_bytes()}
  pub fn source_loan_admitted(&self)->bool{self.source.is_some()}
+ /// ⏸️ Reports native custody that still requires the initiating Source dispatch.
+ pub fn has_pending_receiving(&self)->bool{self.state.has_pending_receiving()}
  pub(crate) fn admission_complete(&self)->bool{self.source.is_some()&&self.state.work_issuer_admitted()}
  pub fn admit_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,Failure>{if self.state.is_closing(){return Err(ValueError::invariant("decoder closing").into())}if self.source.is_none(){cx.original_source_parent()?.admit_loan(&mut self.source,cx)?;return Ok(false)}self.source.as_ref().unwrap().validate_context(cx)?;if self.state.work_issuer_admitted(){return Ok(true)}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let turn=self.state.admit_work_issuer(cx.retained_grant(),cx.fuel_remaining());let ready=turn.result?;if ready{let progress=P{copied_items:1,copied_bytes:Self::work_issuer_birth_copy_bytes(),..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_work(turn.work);receipt?;}Ok(ready)}
  pub(crate) fn validate_source(&self,cx:&StepContext<'_>,retirement:bool)->Result<(),Failure>{let source=self.source.as_ref().ok_or_else(||ValueError::invariant("decoder Source absent"))?;if retirement{source.validate_retirement_context(cx)}else{source.validate_context(cx)}?;if !self.state.work_issuer_admitted(){return Err(ValueError::invariant("work issuer absent").into())}Ok(())}
@@ -74,8 +93,14 @@ impl StepContext<'_>{
   if self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none()){self.admit_original_return_table()?;return Ok(false)}
   self.observe_native_scope()?;if !retirement&&self.original_decoder.as_deref().unwrap().state.has_pending_receiving(){return Err(ValueError::invariant("pending decoder requires original recovery").into())}
   if (!retirement&&(self.is_cancelled()||self.deadline_exceeded()))||(retirement&&!self.original_retirement&&self.deadline_exceeded()){return Ok(false)}
-  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();let(quantum,quantum_work)=match quote{Some((grant,work))=>(G{maximum_depth:whole.maximum_depth,..grant},work),None=>(G{maximum_items:whole.maximum_items.div_ceil(2),maximum_copy_bytes:whole.maximum_copy_bytes.div_ceil(2),maximum_capacity_bytes:whole.maximum_capacity_bytes.div_ceil(2),maximum_release_bytes:whole.maximum_release_bytes.div_ceil(2),maximum_depth:whole.maximum_depth},self.fuel_remaining.div_ceil(2))};let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
+  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();let(quantum,quantum_work)=match quote{Some((grant,work))=>(G{maximum_depth:whole.maximum_depth,..grant},work),None=>(unquoted_receiving_grant(whole),self.fuel_remaining.div_ceil(2))};let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
+  let reserved_receipt=typed||plan.recovering_pending;
+  if retirement&&plan.ready&&!reserved_receipt{self.receiving.open(self.retained_grant())?}
   let epoch=self.original_source_epoch().unwrap_or(0);let admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let Some((progress,work))=admitted else{if self.reclaim_original_escrow_slot()?{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if !plan.ready{return Ok(false)}
-  let before=self.retained_progress();let result={let Self{original_decoder,return_budget,retained_progress,receiving,deadline_us,now_us,original_retirement,cancel,source_turn,..}=self;let source=source_turn.as_ref().map(|turn|turn.token().witness());let mut ready=||if retirement{*original_retirement||now_us().is_some_and(|now|now<*deadline_us)}else{!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us)};let owner=original_decoder.as_deref_mut().unwrap();owner.state.run_scoped_on_caller(return_budget.as_mut().unwrap().get_mut(),owner.scope.as_ref().unwrap(),out,&plan,before,&mut**retained_progress,receiving.spent_mut(),&mut ready,source,operation)};if out.is_none(){result?;return Ok(false)}let kept=out.as_mut().unwrap().source_refusal.take();let refusal=match result{Err(error)=>Some(error),Ok(())=>self.observe_native_scope().err()};out.as_mut().unwrap().source_refusal=refusal.or(kept);Ok(true)
+  let before=self.retained_progress();let result={let Self{original_decoder,return_budget,retained_progress,receiving,deadline_us,now_us,original_retirement,cancel,source_turn,..}=self;let source=source_turn.as_ref().map(|turn|turn.token().witness());let mut ready=||if retirement{*original_retirement||now_us().is_some_and(|now|now<*deadline_us)}else{!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us)};let owner=original_decoder.as_deref_mut().unwrap();
+   let mut reserved_spent=P::default();
+   let receiving_spent=if reserved_receipt{&mut reserved_spent}else{receiving.spent_mut()};
+   owner.state.run_scoped_on_caller(return_budget.as_mut().unwrap().get_mut(),owner.scope.as_ref().unwrap(),out,&plan,before,&mut**retained_progress,receiving_spent,&mut ready,source,operation)
+  };if out.is_none(){result?;return Ok(false)}let kept=out.as_mut().unwrap().source_refusal.take();let refusal=match result{Err(error)=>Some(error),Ok(())=>self.observe_native_scope().err()};out.as_mut().unwrap().source_refusal=refusal.or(kept);Ok(true)
  }
 }

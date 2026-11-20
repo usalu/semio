@@ -36,7 +36,11 @@ export const bundledCatalog: CatalogSource = {
     if (keys.length === 0) return null;
     const payloads = await Promise.all(keys.map((key) => documents[key]!()));
     signal?.throwIfAborted();
-    const assets = payloads.map((payload) => JSON.parse(payload.json) as Asset);
+    const assets = payloads.map(payload => {
+      const asset = JSON.parse(payload.json) as Asset;
+      assetIssues.set(asset, payload.issues);
+      return asset;
+    });
     return { assets, revisions: Object.fromEntries(assets.map((asset, index) => [asset.id, payloads[index]!.revision as Revision])) };
   },
 };

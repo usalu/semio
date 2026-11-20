@@ -4,8 +4,6 @@
 import { cleanup, render } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { Button, ButtonGroup, Notice, Segmented } from "../../🔨️modules/🪟️chrome/🟦️.tsx";
 

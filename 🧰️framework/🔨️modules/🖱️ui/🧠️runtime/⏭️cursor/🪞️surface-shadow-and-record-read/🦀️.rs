@@ -15,7 +15,7 @@ pub struct SurfaceShadow {
     pub(super) allocator: ui_contract::UiNodeIdAllocator,
     pub(super) document: Option<ui_contract::UiDocumentLease>,
     pub(super) native_resources: Option<UiNativeResources>,
-    pub(super) native_resource_loans: UiNativeResourceLoans,
+    pub(super) native_resource_loans: Option<Box<UiNativeResourceLoans>>,
     pub(super) assembly: ui_contract::UiDocumentAssembly,
     pub(super) ordinals: SurfaceLinearMap<ui_contract::UiNodeId, usize, SURFACE_RECONCILE_FIXED_NODES>,
     pub(super) key_index: SurfaceLinearMap<NodeIdentity, ui_contract::UiNodeId, SURFACE_RECONCILE_FIXED_NODES>,
@@ -35,7 +35,7 @@ impl SurfaceShadow {
             allocator: ui_contract::UiNodeIdAllocator::default(),
             document: None,
             native_resources: None,
-            native_resource_loans: Default::default(),
+            native_resource_loans: None,
             assembly: ui_contract::UiDocumentAssembly::default(),
             ordinals: SurfaceLinearMap::default(),
             key_index: SurfaceLinearMap::default(),
@@ -155,17 +155,31 @@ impl SurfaceShadow {
 
     pub fn native_resources(&self) -> Option<&UiNativeResources> { self.native_resources.as_ref() }
 
-    pub fn native_resource_loans_terminal_is_empty(&self)->bool{self.native_resource_loans.terminal_is_empty()}
+    pub fn native_resource_loans_terminal_is_empty(&self)->bool{self.native_resource_loans.is_none()}
 
 
     pub fn with_native_resource_loans_on_original<R>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,receive:impl FnOnce(&mut UiNativeResourceLoans,&mut semio_framework_job::StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
         let Some(resources)=self.native_resources.as_ref() else{return Ok(None)};
-        if !self.native_resource_loans.capture_complete(){if self.native_resource_loans.capture_step_on_original(resources,cx)?!=Some(true){return Ok(None)}}
-        receive(&mut self.native_resource_loans,cx).map(Some)
+        let Some(loans)=self.native_resource_loans.as_mut() else{
+            let page=semio_framework_job::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size_of::<UiNativeResourceLoans>(),..Default::default()};
+            if !page.fits(cx.retained_grant()){return Ok(None)}
+            cx.consume_retained(page)?;
+            self.native_resource_loans=Some(Box::default());
+            return Ok(None);
+        };
+        if !loans.capture_complete(){if loans.capture_step_on_original(resources,cx)?!=Some(true){return Ok(None)}}
+        receive(loans,cx).map(Some)
     }
 
     pub fn close_native_resources_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
-        if !self.native_resource_loans.terminal_is_empty(){if self.native_resource_loans.close_step_on_original(cx)?!=Some(true){return Ok(None)}return Ok(Some(false));}
+        if let Some(loans)=self.native_resource_loans.as_mut(){
+            if !loans.terminal_is_empty(){if loans.close_step_on_original(cx)?!=Some(true){return Ok(None)}return Ok(Some(false));}
+            let page=semio_framework_job::RetainedCloneProgress{copied_items:1,released_bytes:size_of::<UiNativeResourceLoans>(),..Default::default()};
+            if !page.fits(cx.retained_grant()){return Ok(None)}
+            self.native_resource_loans=None;
+            cx.consume_retained(page)?;
+            return Ok(Some(false));
+        }
         let Some(resources) = self.native_resources.as_mut() else { return Ok(Some(true)); };
         if resources.close_step_on_original(cx)? != Some(true) { return Ok(None); }
         self.native_resources = None;
@@ -176,7 +190,7 @@ impl SurfaceShadow {
     /// reservation the owner holds is released at the same step the monolithic owner released it, through the
     /// explicit `release` parameter, so the shadow never learns the registry that issued it.
     pub fn retire_one<H>(&mut self, handback: &mut Option<H>, release: impl FnOnce(H)) -> bool {
-        if self.native_resources.is_some() || !self.native_resource_loans.terminal_is_empty() { return false; }
+        if self.native_resources.is_some() || self.native_resource_loans.is_some() { return false; }
         if let Some(document) = self.document.as_mut() {
             if document.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("canonical read retirement preserves exact fault authority").complete { self.document = None; }
             return false;
@@ -233,7 +247,7 @@ impl SurfaceShadow {
             allocator: take(&mut self.allocator),
             document: self.document.take(),
             native_resources: self.native_resources.take(),
-            native_resource_loans: take(&mut self.native_resource_loans),
+            native_resource_loans: self.native_resource_loans.take(),
             assembly: take(&mut self.assembly),
             ordinals: self.ordinals.take_all(),
             key_index: self.key_index.take_all(),
@@ -245,7 +259,7 @@ impl SurfaceShadow {
 
     /// 🧾️ `true` when no retained owner is left to retire.
     pub fn terminal_is_empty(&self) -> bool {
-        self.document.is_none() && self.native_resources.is_none() && self.native_resource_loans.terminal_is_empty() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty()
+        self.document.is_none() && self.native_resources.is_none() && self.native_resource_loans.is_none() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty()
     }
 
     /// 🔏️ `true` when the canonical root has been sealed.

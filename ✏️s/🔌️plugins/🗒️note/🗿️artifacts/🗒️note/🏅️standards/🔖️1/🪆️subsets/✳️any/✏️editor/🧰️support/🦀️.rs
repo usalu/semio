@@ -44,13 +44,7 @@ pub fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, ca
 /// `active_utility_id`, so a pane that is not the active window read `None` and ran every pencil drag as a
 /// `selectDirect` pick (ticket 26/09/17/NOTE-PLUGIN-END-TO-END; draw's `drawing_active_utility` precedent).
 pub fn note_active_utility(view: &semio_plugin::ViewModel) -> &str {
-    view.window_id
-        .as_deref()
-        .and_then(|window| view.active_utility_by_window_id.get(window))
-        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
-        .map(String::as_str)
-        .filter(|utility| !utility.is_empty())
-        .or(view.active_utility_id.as_deref())
+    view.contextual_utility()
         .unwrap_or("selectDirect")
 }
 

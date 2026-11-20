@@ -38,17 +38,28 @@ export function listBuildGraphMemberGroupsV1(root:string):readonly string[]{
  return[...(present(join(root,"inference"))?["canonical"]:[]),...(present(join(root,"generations"))?["generations"]:[]),...names.sort()];
 }
 
-function leavesOf(root:string,group:string):Leaf[]{
+function leavesOf(root:string,group:string,uninspectable?:{found:boolean}):Leaf[]{
  const base=directoryOf(group),directory=join(root,...base.split("/")),leaves:Leaf[]=[],pending=[""];
  while(pending.length){
   const at=pending.pop()!;let entries;try{entries=readdirSync(join(directory,at),{withFileTypes:true});}catch(error){if(absent(error))continue;throw error;}
   for(const entry of entries){
    const name=at?at+"/"+entry.name:entry.name;
-   if(entry.isDirectory()){if(group==="canonical"&&!at&&(entry.name==="selections"||entry.name==="contexts"))continue;pending.push(name);continue;}
-   if(!entry.isFile()||name===MEMBER_INDEX_FILE_V1)continue;
-   const imageName=base+"/"+name,kind=memberKindOfV1(imageName);if(!kind||kind==="member-index"||kind==="generation-pointer"||memberGroupOfPathV1(imageName)?.group!==group)continue;
+   const directoryEntry=entry.isDirectory(),fileEntry=entry.isFile();
+   if(directoryEntry&&group==="canonical"&&!at&&(entry.name==="selections"||entry.name==="contexts"))continue;
+   if(name===MEMBER_INDEX_FILE_V1)continue;
+   const imageName=base+"/"+name,kind=fileEntry||uninspectable?memberKindOfV1(imageName):undefined;
+   const known=kind&&kind!=="member-index"&&kind!=="generation-pointer"&&memberGroupOfPathV1(imageName)?.group===group;
+   if(!fileEntry){
+    if(known&&uninspectable){uninspectable.found=true;return leaves;}
+    if(directoryEntry)pending.push(name);
+    continue;
+   }
+   if(!known)continue;
    const path=join(directory,name);let row:BigIntStats;try{row=lstatSync(path,{bigint:true});}catch(error){if(absent(error))continue;throw error;}
-   if(!row.isFile()||row.nlink!==1n||row.size>BigInt(P.maximumFileBytes))continue;
+   if(!row.isFile()||row.nlink!==1n||row.size>BigInt(P.maximumFileBytes)){
+    if(uninspectable){uninspectable.found=true;return leaves;}
+    continue;
+   }
    leaves.push({name,path,kind,bytes:Number(row.size),stamp:memberStampV1(row),proof:stamp7(row)});
   }
  }
@@ -104,10 +115,11 @@ const READ_CHUNK_V1=64;
 
 function packet(root:string,files:readonly Request[]):string{return JSON.stringify({files,imageRoot:root,remainingBytes:P.maximumProofBytes,root:process.cwd()});}
 
-async function rowsFor(root:string,group:string,pending:readonly Leaf[],leaves:readonly Leaf[],ports:MemberIndexPortsV1,control:MemberScanControlV1,counters:{refused:number}):Promise<MemberRowV1[]>{
+async function rowsFor(root:string,group:string,pending:readonly Leaf[],leaves:readonly Leaf[],ports:MemberIndexPortsV1,control:MemberScanControlV1,counters:{refused:number},needAll=false):Promise<MemberRowV1[]>{
  const directory=join(root,...directoryOf(group).split("/")),rows:MemberRowV1[]=[],requests:Request[]=[],byPath=new Map(leaves.map(leaf=>[leaf.path,leaf]));
  const full=(leaf:Leaf,hash:string,expanded:number,graph:string|null,references:readonly string[],links:readonly{p:string;m?:"block"}[])=>{const row=readMemberRowV1(JSON.parse(encodeMemberRowV1(fullMemberRowV1({n:leaf.name,b:leaf.bytes,h:hash,k:leaf.kind as never,s:leaf.stamp,x:expanded,g:graph,r:references,l:links}))));if(row)rows.push(row);else counters.refused++;};
  for(const leaf of pending){
+  if(needAll&&counters.refused)return rows;
   if(leaf.kind==="observation"){try{const bytes=readFileSync(leaf.path);if(bytes.length===leaf.bytes)full(leaf,memberHashV1(bytes),bytes.length,null,[],[]);else counters.refused++;}catch(error){if(!absent(error))throw error;}continue;}
   if(leaf.kind==="index"){try{const bytes=readFileSync(leaf.path);if(bytes.length===leaf.bytes&&bytes.length<=P.maximumIndexBytes)full(leaf,memberHashV1(bytes),bytes.length,null,[],[]);else counters.refused++;}catch(error){if(!absent(error))throw error;}continue;}
   if(leaf.kind==="pack"){
@@ -119,10 +131,10 @@ async function rowsFor(root:string,group:string,pending:readonly Leaf[],leaves:r
  }
  const take=(request:Request,answer:MemberReadAnswerV1)=>{const leaf=byPath.get(request.path)!,value=answer.rows[0]!;full(leaf,value.hash,value.expandedBytes,value.publicationGraph,answer.references,answer.links.map(link=>link.missing==="block"?{p:relative(directory,link.path).split(sep).join("/"),m:"block" as const}:{p:relative(directory,link.path).split(sep).join("/")}));};
  for(let from=0;from<requests.length;from+=READ_CHUNK_V1){
-  if(control.cancelled())break;
+  if(control.cancelled()||needAll&&counters.refused)break;
   const chunk=requests.slice(from,from+READ_CHUNK_V1),done=new Set<string>();
   try{await ports.read(chunk,(request,answer)=>{take(request,answer);done.add(request.path);});}
-  catch{for(const request of chunk){if(done.has(request.path))continue;if(control.cancelled())break;try{await ports.read([request],take);}catch{counters.refused++;}}}
+  catch{for(const request of chunk){if(done.has(request.path))continue;if(control.cancelled()||needAll&&counters.refused)break;try{await ports.read([request],take);}catch{counters.refused++;}}}
  }
  return rows;
 }
@@ -200,7 +212,9 @@ async function referencedClosuresV1(root:string,groups:readonly string[],ports:P
  const referenced=new Set<string>();
  for(const group of groups){
   if(control.cancelled())return undefined;
-  const leaves=leavesOf(root,group),proven=proveGroupV1(parseMemberIndexV1(indexText(root,group),group),leaves.map(leaf=>({name:leaf.name,kind:leaf.kind,bytes:leaf.bytes,stamp:leaf.stamp})));
+  const uninspectable={found:false},leaves=leavesOf(root,group,uninspectable);
+  if(uninspectable.found)return undefined;
+  const proven=proveGroupV1(parseMemberIndexV1(indexText(root,group),group),leaves.map(leaf=>({name:leaf.name,kind:leaf.kind,bytes:leaf.bytes,stamp:leaf.stamp})));
   for(const reference of proven.references)referenced.add(reference);
   const pending=leaves.filter((_,at)=>proven.members[at]!.state!=="full"),unread:Leaf[]=[];
   if(pending.length>maximumPending)return undefined;
@@ -211,7 +225,7 @@ async function referencedClosuresV1(root:string,groups:readonly string[],ports:P
    unread.push(leaf);
   }
   if(unread.length){
-   const dead=new Set<string>(),read:MemberIndexPortsV1["read"]=async(requests,accept)=>{try{await ports.read(requests,accept);}catch(error){if(requests.length===1&&deadLeafV1(error)&&Number(BigInt(unread.find(leaf=>leaf.path===requests[0]!.path)!.stamp.split(":")[2]!)/1000000n)<=settledBefore){dead.add(requests[0]!.path);return;}throw error;}},counters={refused:0},rows=await rowsFor(root,group,unread,leaves,{lease:async()=>undefined,read},control,counters);
+   const dead=new Set<string>(),read:MemberIndexPortsV1["read"]=async(requests,accept)=>{try{await ports.read(requests,accept);}catch(error){if(requests.length===1&&deadLeafV1(error)&&Number(BigInt(unread.find(leaf=>leaf.path===requests[0]!.path)!.stamp.split(":")[2]!)/1000000n)<=settledBefore){dead.add(requests[0]!.path);return;}throw error;}},counters={refused:0},rows=await rowsFor(root,group,unread,leaves,{lease:async()=>undefined,read},control,counters,true);
    if(counters.refused||rows.length+dead.size!==unread.length)return undefined;
    for(const leaf of unread)if(dead.has(leaf.path))known.set(leaf.path+"\0"+leaf.proof,null);
    for(const row of rows){const leaf=unread.find(candidate=>candidate.name===row.n)!;known.set(leaf.path+"\0"+leaf.proof,row.r??[]);for(const reference of row.r??[])referenced.add(reference);}

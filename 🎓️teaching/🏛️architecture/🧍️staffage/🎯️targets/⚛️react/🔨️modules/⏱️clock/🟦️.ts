@@ -3,7 +3,7 @@
  * @see ./🧱️core/🟦️.ts — {@link StaffageClock}
  * @see ../🧍️figure/🟦️.tsx — reads a clock frame by frame
  */
-import { useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { ClockState, StaffageClock } from "./🧱️core/🟦️.ts";
 
 export { StaffageClock } from "./🧱️core/🟦️.ts";
@@ -14,5 +14,19 @@ export function useClock(clock: StaffageClock | null | undefined): ClockState | 
   return useSyncExternalStore(clock?.subscribe ?? noSubscribe, clock?.getSnapshot ?? nullSnapshot, clock?.getSnapshot ?? nullSnapshot);
 }
 
+/** 🧊️ The frame time of a clock in seconds, held while `active` is false: an idle figure (offscreen, or showing a pose that ignores time) neither subscribes nor re-renders, and catches up to the clock the moment it becomes active. A `null` clock yields `null`. */
+export function useHeldTime(clock: StaffageClock | null | undefined, active: boolean): number | null {
+  const last = useRef<number | null>(null);
+  const live = clock != null && active;
+  const subscribe = useCallback((listener: () => void) => (live ? clock.subscribe(listener) : noUnsubscribe), [clock, live]);
+  const snapshot = useCallback((): number | null => {
+    if (clock == null) return null;
+    if (live || last.current === null) last.current = clock.state.frame / clock.state.fps;
+    return last.current;
+  }, [clock, live]);
+  return useSyncExternalStore(subscribe, snapshot, snapshot);
+}
+
+const noUnsubscribe = (): void => undefined;
 const noSubscribe = (): (() => void) => () => undefined;
 const nullSnapshot = (): null => null;

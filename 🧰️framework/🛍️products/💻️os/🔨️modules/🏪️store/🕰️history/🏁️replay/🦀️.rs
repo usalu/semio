@@ -43,9 +43,9 @@ impl OriginalReplayResident{
 }
 fn retired(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 /// 🫴️ Runs one receiving step through a local scope; `None` means the turn could not fund it and nothing ran.
-pub fn receive<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->T)->Result<Option<T>,OriginalTurnFailure>{
+pub fn receive<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,u64)->T)->Result<Option<T>,OriginalTurnFailure>{
  let mut scope=None;let mut stepped=None;
- if !cx.with_native_receiving(&mut scope,|control,_|{stepped=Some(run(control));Ok(())})?{return Ok(None)}
+ if !cx.with_native_receiving_work(&mut scope,|control,_,work|{stepped=Some(run(control,work));Ok(())})?{return Ok(None)}
  let scope=scope.ok_or_else(||invalid("completed replay receiving scope vanished"))?;
  if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"completed replay receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
  stepped.map(Some).ok_or_else(||invalid("completed replay receiving step vanished").into())
@@ -74,7 +74,7 @@ fn advance_metadata<P,M>(cx:&mut StepContext<'_>,store:&mut ArtifactStore<P,M>,o
  if owner.root_wanted(){effected(cx,|effect|owner.advance_root(store,effect))?;return Ok(())}
  if owner.return_wanted(){effected(cx,|effect|owner.return_step(store,effect))?;return Ok(())}
  let grant=cx.retained_grant();let fuel=cx.fuel_remaining();
- if let Some(turn)=receive(cx,|native|owner.advance_in_order(store,result,order,native,grant,fuel))?{settle_receiving(cx,turn)?;}Ok(())
+ if let Some(turn)=receive(cx,|native,_|owner.advance_in_order(store,result,order,native,grant,fuel))?{settle_receiving(cx,turn)?;}Ok(())
 }
 /// 🪙️ Settles an effect-shaped close that reports through a plain result.
 pub fn settled(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>)->semio_framework_value::OriginalRetirementPoll{semio_framework_value::RetirementPollExit::settle(effect,result.map_err(semio_framework_value::RetirementPollExit::from))}

@@ -116,7 +116,22 @@
         "format": "",
         "shape": "",
         "background": "",
-        "cameraId": "unresolved!@/"
+        "cameraId": "unresolved!@/",
+        "drawing": {
+          "background": false,
+          "fill": true,
+          "fillColor": "#A5F",
+          "fillOpacity": 0.5,
+          "visibleLines": true,
+          "hiddenLines": true,
+          "visibleColor": "#123456",
+          "hiddenColor": "#789abc",
+          "visibleWidth": 2.5,
+          "hiddenWidth": 0.75,
+          "lineEasing": 3.5,
+          "mergeLines": true
+        },
+        "autoFit": false
       },
       {
         "id": "",
@@ -124,7 +139,8 @@
         "width": 4294967295,
         "height": 0,
         "format": "PNG",
-        "shape": "rectangle"
+        "shape": "rectangle",
+        "autoFit": true
       }
     ],
     "activeShotId": "unresolved\u0000",
@@ -164,7 +180,9 @@
     "UPDATE shooting_saved_camera SET up_y_bits=NULL WHERE ordinal=0",
     "UPDATE shooting_scene SET ambient_intensity_class='nan'",
     "UPDATE shooting_asset SET name=x'01' WHERE ordinal=0",
-    "INSERT INTO shooting_emblem SELECT id+1,document_id,child_id,artifact_id,artifact_kind,standard,subset FROM shooting_emblem"
+    "INSERT INTO shooting_emblem SELECT id+1,document_id,child_id,artifact_id,artifact_kind,standard,subset FROM shooting_emblem",
+    "UPDATE shooting_shot SET drawing_hidden_width_bits=NULL WHERE ordinal=0",
+    "UPDATE shooting_shot SET auto_fit=2 WHERE ordinal=1"
   ],
   "control": {
     "collectionLength": 2048,

@@ -1,5 +1,16 @@
 {
   "version": 1,
+  "bootstrapCapsulePressure": [
+    {"mode": "owned", "admit": true},
+    {"mode": "published-generation", "admit": false},
+    {"mode": "wrong-intent", "admit": false},
+    {"mode": "replaced-payload", "admit": false},
+    {"mode": "incomplete", "admit": false},
+    {"mode": "ready", "admit": false},
+    {"mode": "late-settlement", "admit": false},
+    {"mode": "partially-removed", "admit": false},
+    {"mode": "payload-removed", "admit": false}
+  ],
   "order": [
     "authenticate-phase",
     "open-funded-store",
@@ -938,6 +949,16 @@
         "accepted": true
       },
       {
+        "effect": "mixed-chunks",
+        "accepted": true,
+        "extents": [
+          {"bytes": 131073, "fill": 171, "sha256": "0bf3880d0a29092b4538afb8fcb688137a9bd549bebd76531bad58631ffd13d6"},
+          {"bytes": 17, "fill": 72, "sha256": "f02eddde5a5f900332cce7166475159386152f15de98bc7c724d1079ea4813d2"},
+          {"bytes": 65536, "fill": 225, "sha256": "c65bacc9bf0dbed646852c74952608140f365f0d0e2a2f8b340054936caed845"},
+          {"bytes": 0, "fill": 13, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+        ]
+      },
+      {
         "effect": "unknown-role",
         "accepted": false
       },
@@ -1014,6 +1035,13 @@
     }
   ],
   "producerCompletions": [
+    {"mode":"preserving-canonical-mixed","accepted":true,"bindings":2},
+    {"mode":"preserving-canonical-source-drift","accepted":false,"bindings":0},
+    {"mode":"preserving-canonical-target-drift","accepted":false,"bindings":0},
+    {"mode":"preserving-canonical-leading-drift","accepted":false,"bindings":0},
+    {"mode":"preserving-canonical-leading-cancel","accepted":false,"bindings":0},
+    {"mode":"canonical-mixed","accepted":true,"bindings":2},
+    {"mode":"borrowed-provider","accepted":true,"bindings":4},
     {
       "mode": "valid",
       "accepted": true,
@@ -2346,7 +2374,7 @@
     },
     {
       "mode": "equal-copy",
-      "accepted": false
+      "accepted": true
     },
     {
       "mode": "peer-same",
@@ -2354,7 +2382,7 @@
     },
     {
       "mode": "peer-copy",
-      "accepted": false
+      "accepted": true
     },
     {
       "mode": "version-mismatch",
@@ -2362,7 +2390,7 @@
     },
     {
       "mode": "optional-absent-unowned-parent",
-      "accepted": false
+      "accepted": true
     },
     {
       "mode": "optional-one-sided",
@@ -2382,7 +2410,7 @@
     },
     {
       "mode": "unsupported-imports",
-      "accepted": false
+      "accepted": true
     },
     {
       "mode": "terminal-provider-drift",
@@ -3156,6 +3184,28 @@
       "changed": 0,
       "retained": 0
     }
+  ],
+  "bootstrapRetirementSourceCases": [
+    {"mode": "retarget", "retired": false},
+    {"mode": "replace-ancestor", "retired": false},
+    {"mode": "replace-native-target", "retired": false},
+    {"mode": "parent-sibling", "retired": true}
+  ],
+  "providerFinalObservationCases": [
+    {"mode":"candidate-sibling","accepted":true},
+    {"mode":"manifest","accepted":false},
+    {"mode":"provider-inode","accepted":false},
+    {"mode":"provider-mode","accepted":false},
+    {"mode":"alias-inode","accepted":false},
+    {"mode":"alias-target","accepted":false},
+    {"mode":"missing-present","accepted":false},
+    {"mode":"present-missing","accepted":false},
+    {"mode":"prefix","accepted":false}
+  ],
+  "selectedSourceReferenceDrift": [
+    {"mode":"sibling","accepted":true},
+    {"mode":"endpoint","accepted":false},
+    {"mode":"parent","accepted":false}
   ],
   "sourceAliasCases": [
     {

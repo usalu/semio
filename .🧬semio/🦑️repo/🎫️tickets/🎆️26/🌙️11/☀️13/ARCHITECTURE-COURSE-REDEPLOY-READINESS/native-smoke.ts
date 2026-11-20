@@ -211,12 +211,17 @@ async function runAll(tag, viewport) {
     await press(visible(p, 'Light').first()); await pause(500);
     return { before, after };
   });
-  await check('Settings: tablet layout + text sizes', async (p, shot) => {
+  await check(viewport.width < 768 ? 'Settings: no layout switch on a phone + text sizes' : 'Settings: tablet layout + text sizes', async (p, shot) => {
     await settings(p);
-    await press(visible(p, 'Tablet').first()); await pause(1000);
-    await p.screenshot({ path: shot('tablet') });
+    if (viewport.width < 768) {
+      const offered = await p.getByRole('button', { name: /^(Tablet|Desktop)$/ }).locator('visible=true').count();
+      if (offered !== 0) throw new Error(`a phone is offered ${offered} layout switches`);
+    } else {
+      await press(visible(p, 'Tablet').first()); await pause(1000);
+      await p.screenshot({ path: shot('tablet') });
+    }
     for (const s of ['Large', 'Larger', 'Largest', 'Normal']) { await press(visible(p, s).first()); await pause(400); }
-    await press(visible(p, 'Desktop').first()); await pause(500);
+    if (viewport.width >= 768) { await press(visible(p, 'Desktop').first()); await pause(500); }
   });
   await check('Assignment PDFs', async (p) => {
     const hrefs = await p.evaluate(() => [...document.querySelectorAll('a[href$=".pdf"]')].map((a) => a.getAttribute('href')));

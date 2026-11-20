@@ -18,6 +18,23 @@ pub const IMPORT_PREVIEW_WIDGET: &str = "imported-preview";
 /// 🏷️ `SemioMesh` id every export carries — the merged preview, not a per-widget mesh.
 pub const EXPORT_MESH_ID: &str = "generation3d-preview";
 
+/// 🎚️ Preserves graph order while a whole-dictionary connection subsumes its named channels.
+fn add_geometry_channel(channels: &mut Vec<(String, Option<String>)>, widget: &str, port: Option<&str>) {
+    if let Some(port) = port {
+        if channels.iter().any(|(source, channel)| source.as_str() == widget && channel.as_deref().is_none_or(|channel| channel == port)) { return; }
+    } else {
+        let mut found = false;
+        channels.retain_mut(|(source, channel)| {
+            if source.as_str() != widget { return true; }
+            if std::mem::replace(&mut found, true) { return false; }
+            *channel = None;
+            true
+        });
+        if found { return; }
+    }
+    channels.push((widget.to_owned(), port.map(str::to_owned)));
+}
+
 /// 🔌️ Resolves the existing graph connections that own an export's geometry.
 pub fn export_source_channels(snapshot: &FlowHostSnapshot, widget_id: Option<&str>) -> Result<Vec<(String, Option<String>)>, semio_framework_diagnostic::TextError> {
     let Some(widget_id) = widget_id else {
@@ -27,8 +44,8 @@ pub fn export_source_channels(snapshot: &FlowHostSnapshot, widget_id: Option<&st
     let mut channels = Vec::new();
     for wire in snapshot.synapses.iter().filter(|wire| wire.to == widget_id) {
         if !snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == wire.from) { return Err(io_error("export output has no connected source")); }
-        let channel = (wire.from.clone(), Some(wire.from_port.clone()));
-        if !channels.contains(&channel) { channels.push(channel); }
+        let port = (!wire.from_port.is_empty()).then_some(wire.from_port.as_str());
+        add_geometry_channel(&mut channels, &wire.from, port);
     }
     if channels.is_empty() { return Err(io_error("export output has no connected source")); }
     Ok(channels)
@@ -40,7 +57,7 @@ pub fn retained_geometry_channels(snapshot: &FlowHostSnapshot) -> Vec<(String, O
     for widget in &snapshot.widgets {
         if let Widget::OutputExport { id, .. } = widget {
             if let Ok(sources) = export_source_channels(snapshot, Some(id)) {
-                for source in sources { if !channels.contains(&source) { channels.push(source); } }
+                for (widget, port) in sources { add_geometry_channel(&mut channels, &widget, port.as_deref()); }
             }
         }
     }

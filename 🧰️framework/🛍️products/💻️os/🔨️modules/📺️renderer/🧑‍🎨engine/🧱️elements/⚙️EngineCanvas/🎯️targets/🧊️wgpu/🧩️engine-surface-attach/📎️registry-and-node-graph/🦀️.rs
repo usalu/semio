@@ -146,7 +146,49 @@ fn node_graph_lod_from_json(engine: &mut NodeGraphEngine, lod_json: &str) {
     }
 }
 
-fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, port_id: Option<&str>) {
+type GraphHover<'a> = (&'a str, &'a str, &'a str);
+
+fn node_graph_current_hover(dag: &flow::dag::DagHost) -> Option<GraphHover<'_>> {
+    if let Some(edge) = dag.graph.hovered_edge_id() { return Some(("", "", edge)); }
+    if let Some(channel) = dag.graph.engine.hover.and_then(|id| dag.graph.channel_view(id)) {
+        return Some((channel.widget_id, channel.port, ""));
+    }
+    hovered_node_id_ref(&dag.viewport, &dag.graph).map(|node| (node, "", ""))
+}
+
+fn copy_node_graph_hover(dag: &flow::dag::DagHost) -> Option<(String, String, String)> {
+    node_graph_current_hover(dag).map(|(node, port, edge)| (node.to_owned(), port.to_owned(), edge.to_owned()))
+}
+
+fn node_graph_hover_view(mark: &(String, String, String)) -> GraphHover<'_> {
+    (&mark.0, &mark.1, &mark.2)
+}
+
+fn node_graph_scene_hover_update<'a>(
+    previous: Option<GraphHover<'_>>,
+    incoming: Option<GraphHover<'a>>,
+    live: Option<GraphHover<'_>>,
+    scene_owns_hover: bool,
+) -> Option<Option<GraphHover<'a>>> {
+    if previous == incoming { return None; }
+    match incoming {
+        Some(mark) if Some(mark) != live => Some(Some(mark).filter(|mark| *mark != ("", "", ""))),
+        None if scene_owns_hover => Some(None),
+        _ => None,
+    }
+}
+
+fn node_graph_apply_hover(engine: &mut NodeGraphEngine, hover: Option<GraphHover<'_>>) {
+    let (node, port, edge) = hover.unwrap_or_default();
+    if !edge.is_empty() {
+        match engine {
+            NodeGraphEngine::Flow(host) => host.dag.graph.set_hover_edge(Some(edge)),
+            NodeGraphEngine::Dag(host) => host.dag.graph.set_hover_edge(Some(edge)),
+        }
+        return;
+    }
+    let node_id = (!node.is_empty()).then_some(node);
+    let port_id = (!port.is_empty()).then_some(port);
     match engine {
         NodeGraphEngine::Flow(host) => match port_id {
             Some(port) => host.set_hover_channel(node_id, Some(port)),
@@ -189,6 +231,7 @@ fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
 pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &semio_ui_declaration::ui::NodeGraphScene) -> bool {
     let mut changed = false;
     let mut snapshot_changed = false;
+    let mut original_hover = None;
     if cache.interaction_domain.as_deref() != graph.interaction_domain.as_ref() {
         cache.interaction_domain = graph.interaction_domain.clone().map(Arc::new);
         changed = true;
@@ -196,12 +239,14 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
     if let NodeGraphEngine::Flow(host) = engine {
         let operator_ids: Vec<String> = graph.operators.iter().map(|record| record.id.clone()).collect();
         if !operator_ids.is_empty() && cache.operator_ids.as_ref() != Some(&operator_ids) {
+            original_hover = Some(copy_node_graph_hover(&host.dag));
             host.set_neuron_kind_infos(&graph.operators);
             cache.operator_ids = Some(operator_ids);
             changed = true;
         }
         if cache.snapshot_json.as_deref() != graph.host_snapshot_json.as_deref() {
             if let Some(snapshot) = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()) {
+                original_hover.get_or_insert_with(|| copy_node_graph_hover(&host.dag));
                 host.resync_host_snapshot_from_scene(snapshot);
             }
             cache.snapshot_json = graph.host_snapshot_json.clone();
@@ -213,6 +258,7 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
         let payload = serde_json::to_vec(graph).unwrap_or_default();
         if cache.scene_pack.as_deref() != Some(payload.as_slice()) {
             if let Ok(json) = std::str::from_utf8(&payload) {
+                original_hover = Some(copy_node_graph_hover(&host.dag));
                 let _ = host.sync_from_scene_json(json);
             }
             cache.scene_pack = Some(payload);
@@ -228,12 +274,29 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
         cache.selection = Some(graph.selection.clone());
         changed = true;
     }
-    let hover = graph.hover.as_ref().map(|hover| (hover.node_id.clone().unwrap_or_default(), hover.port_id.clone().unwrap_or_default()));
-    if cache.hover != hover {
-        let node_id = hover.as_ref().map(|(node, _)| node.as_str()).filter(|node| !node.is_empty());
-        let port_id = hover.as_ref().map(|(_, port)| port.as_str()).filter(|port| !port.is_empty());
-        node_graph_apply_hover(engine, node_id, port_id);
-        cache.hover = hover;
+    let incoming = graph.hover.as_ref().map(|hover| {
+        if let Some(edge) = hover.edge_id.as_deref().filter(|id| !id.is_empty()) {
+            ("", "", edge)
+        } else if let Some(node) = hover.node_id.as_deref().filter(|id| !id.is_empty()) {
+            (node, hover.port_id.as_deref().unwrap_or_default(), "")
+        } else {
+            ("", "", "")
+        }
+    });
+    let previous = cache.hover.as_ref().map(node_graph_hover_view);
+    let current = node_graph_current_hover(match &*engine {
+        NodeGraphEngine::Flow(host) => &host.dag,
+        NodeGraphEngine::Dag(host) => &host.dag,
+    });
+    let preserved = original_hover.as_ref().map(|mark| mark.as_ref().map(node_graph_hover_view));
+    let update = node_graph_scene_hover_update(previous, incoming, preserved.unwrap_or(current), cache.scene_owns_hover);
+    if previous != incoming {
+        cache.scene_owns_hover = update.flatten().is_some()
+            || (update.is_none() && incoming.is_some() && cache.scene_owns_hover);
+        cache.hover = incoming.map(|(node, port, edge)| (node.to_owned(), port.to_owned(), edge.to_owned()));
+    }
+    if let Some(desired) = update.or(preserved).filter(|desired| *desired != current) {
+        node_graph_apply_hover(engine, desired);
         changed = true;
     }
     if cache.preview_off_json.as_deref() != graph.preview_off_json.as_deref() {

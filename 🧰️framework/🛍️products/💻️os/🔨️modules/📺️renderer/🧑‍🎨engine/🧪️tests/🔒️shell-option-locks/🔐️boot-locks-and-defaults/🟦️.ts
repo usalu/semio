@@ -36,13 +36,13 @@ export function registerBootLocksAndDefaultsTests(): void {
     expect(mergeShellLockSources(undefined, { locale: "en" })).toEqual({ locale: "en" });
     expect(mergeShellLockSources(undefined, undefined)).toBeUndefined();
   });
-  it("resolveShellDefaults prefers env defaults over brand defaults and initialShellState seeds without locking", () => {
+  it("resolveShellDefaults prefers env defaults over brand defaults and leaves the initial example pending", () => {
     const brand = { id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", defaults: { exampleId: "concrete-forest" } };
     expect(resolveShellDefaults(brand, { exampleId: "nakagin-capsule-tower" })).toEqual({ exampleId: "nakagin-capsule-tower" });
     expect(resolveShellDefaults(brand, undefined)).toEqual({ exampleId: "concrete-forest" });
     expect(resolveShellDefaults(undefined, undefined)).toEqual({ exampleId: undefined });
     const state = initialShellState({ locale: "en", plugins: [], defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
-    expect(state.layout.activeExampleId).toBe("concrete-forest");
+    expect(state.layout.activeExampleId).toBe("");
     const locked = initialShellState({ locale: "en", plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
     expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
   });

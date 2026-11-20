@@ -1,4 +1,6 @@
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_job::{OriginalJobReturn, OriginalJobReturnOrigin, drive_step};
 
 #[cfg(not(target_arch="wasm32"))]
 #[path="../../🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧪️tests/🦀️.rs"]
@@ -7,17 +9,71 @@ mod original_native_io_invocation_tests;
 #[cfg(not(target_arch="wasm32"))]
 #[test]
 fn native_io_original_page_enters_world_without_copy_and_returns_to_its_live_source(){
-    use semio_framework_job::{InteractiveJob,JobOutcomeBorrow,JobOutcomeKind,JobOutcomeView,OriginalJobPageReturnRegistry,close_original_retained_step};
-    use semio_framework_value::RetirementDemand;
+    use semio_framework_job::{InteractiveJob, JobOutcomeKind, JobOutcomeView, OriginalJobPageReturnRegistry};
     static RETURNS:OriginalJobPageReturnRegistry<1>=OriginalJobPageReturnRegistry::new();
     let path=std::env::temp_dir().join(format!("semio-renderer-page-return-{}",std::process::id()));std::fs::write(&path,b"original World page").unwrap();let mut job=semio_os_services_native_io::NativeIoJob::new(semio_os_services_native_io::NativeIoRequest::ReadPage{path:path.clone(),offset:0,max_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES});let mut caller=OriginalRendererFixture::new();let source=caller.turn(|cx|Ok(cx.original_source_parent()?.source_identity()?)).unwrap();let mut pointer=None;
-    for turn in 0..1024{
-        let outcome=caller.turn(|cx|job.step(cx).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))).unwrap();
-        if let Some(mut descriptor)=outcome{let complete=descriptor.kind()==JobOutcomeKind::Complete;if complete{let JobOutcomeView::Complete{output:Some(bytes),..}=job.borrow_outcome(&descriptor).unwrap()else{panic!("original native output")};pointer=Some(bytes.single_page().unwrap().as_ptr());}caller.turn(|cx|{close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|grant|Ok(descriptor.acknowledge(grant)))?;Ok(())}).unwrap();assert!(descriptor.is_acknowledged());drop(descriptor);if complete{break}}assert!(turn<1023);
+    let mut origin = OriginalJobReturnOrigin::empty();
+    caller.admit_job_origin(&mut origin);
+    for _ in 0..1024 {
+        caller.turn(|cx| {
+            let mut verdict = None;
+            match drive_step(&mut job, cx, origin.receiver()?, "renderer.native-io-page", InteractiveStage::InteractiveStep, &mut verdict)? {
+                OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
+                OriginalJobReturn::Outcome(outcome) => {
+                    let mut outcome = Some(outcome.into_descriptor());
+                    assert!(origin.receive_outcome(cx, &mut outcome)?);
+                    assert!(outcome.is_none());
+                }
+                OriginalJobReturn::Continuation(continuation) => {
+                    assert!(origin.receive_continuation(cx, &mut Some(continuation))?);
+                    panic!("original native page read must return a normal outcome");
+                }
+            }
+            Ok(())
+        }).unwrap();
+        let Some(descriptor) = origin.outcome() else { continue };
+        if descriptor.kind() == JobOutcomeKind::Complete {
+            let JobOutcomeView::Complete { output: Some(bytes), .. } = job.borrow_outcome(descriptor).unwrap() else {
+                panic!("original native output");
+            };
+            pointer = Some(bytes.single_page().unwrap().as_ptr());
+        }
+        for _ in 0..16 {
+            if caller.turn(|cx| origin.acknowledge_outcome(cx)).unwrap() { break; }
+        }
+        assert!(origin.outcome().is_none());
+        if pointer.is_some() { break; }
     }
-    let pointer=pointer.unwrap();let mut reservation=caller.turn(|cx|Ok(RETURNS.reserve(cx)?.unwrap())).unwrap();let(answer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(|cx|job.supply_result_last_page(&mut reservation,cx)));let page=answer.unwrap().unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(page.source_identity(),source);assert_eq!(page.bytes().as_ptr(),pointer);let(world,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||WorldAssetResponsePage::try_from_original(page).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(world.bytes().as_ptr(),pointer);assert_eq!(world.bytes(),b"original World page");
+    caller.close_job_origin(&mut origin);
+    let pointer = pointer.expect("original native page read completed");
+    let mut reservation = caller.turn(|cx| Ok(RETURNS.reserve(cx)?.unwrap())).unwrap();
+    let page = caller.turn(|cx| {
+        let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| job.supply_result_last_page(&mut reservation, cx));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        Ok(answer?.unwrap())
+    }).unwrap();
+    assert_eq!(page.source_identity(), source);
+    assert_eq!(page.bytes().as_ptr(), pointer);
+    let (world, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| WorldAssetResponsePage::try_from_original(page).unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert_eq!(world.bytes().as_ptr(), pointer);
+    assert_eq!(world.bytes(), b"original World page");
     job.begin_close();for turn in 0..64{if job.terminal_is_empty(){break}caller.turn(|cx|job.close_step(cx)).unwrap();assert!(turn<63);}assert!(job.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(RETURNS.retains_source(source));let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(world));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut released=0;
-    for turn in 0..16{if !RETURNS.retains_source(source){break}let before=caller.receipt();let(answer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(|cx|RETURNS.close_returned_step(cx)));let progress=answer.unwrap().progress();let after=caller.receipt();assert_eq!(after.released_bytes-before.released_bytes,progress.released_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));released+=heap.released_bytes;assert!(turn<15);}assert_eq!(released,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);assert!(!RETURNS.retains_source(source));std::fs::remove_file(path).unwrap();
+    for _ in 0..16 {
+        if !RETURNS.retains_source(source) { break; }
+        released += caller.turn(|cx| {
+            let before = cx.retained_progress();
+            let (answer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RETURNS.close_returned_step(cx));
+            let progress = answer?.progress();
+            let after = cx.retained_progress();
+            assert_eq!(after.released_bytes - before.released_bytes, progress.released_bytes);
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            Ok(heap.released_bytes)
+        }).unwrap();
+    }
+    assert_eq!(released, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+    assert!(!RETURNS.retains_source(source));
+    std::fs::remove_file(path).unwrap();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -32,6 +88,22 @@ impl OriginalRendererFixture {
     fn limited<R>(&mut self, grant:semio_framework_job::RetainedCloneGrant, run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<R,semio_framework_job::OriginalTurnFailure>{ self.caller.as_mut().unwrap().turn_with_decoder(grant,&mut self.decoder,run) }
     fn cancel(&self) { self.caller.as_ref().unwrap().cancel().cancel_now(); }
     fn receipt(&self)->semio_framework_job::RetainedCloneProgress { self.caller.as_ref().unwrap().cumulative_receipt() }
+    fn admit_job_origin(&mut self, origin: &mut OriginalJobReturnOrigin) {
+        for _ in 0..64 {
+            if self.turn(|cx| origin.admit(cx)).unwrap() {
+                assert!(origin.body_ready());
+                return;
+            }
+        }
+        panic!("renderer job return origin was not admitted");
+    }
+    fn close_job_origin(&mut self, origin: &mut OriginalJobReturnOrigin) {
+        for _ in 0..64 {
+            if origin.terminal_is_empty() { break; }
+            self.turn(|cx| origin.close_step(cx)).unwrap();
+        }
+        assert!(origin.terminal_is_empty());
+    }
 }
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for OriginalRendererFixture {

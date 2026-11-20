@@ -239,3 +239,22 @@ fn every_windowed_container_carries_a_distinct_node_key() {
     assert_eq!(unique.len(), keys.len(), "two windowed containers share a node key: {keys:?}");
 }
 //#endregion 🪟️WindowLaws
+
+#[test]
+fn scalar_tree_exposes_graph_targets_in_a_scrollable_split() {
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧵️preview-eval/🧪️tests/🧫️fixtures/🔢️value-readout.json")).unwrap();
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&fixture["eval"].to_string());
+    let scene = semio_plugin::built_text_node(semio_ui_locale::Label::data("scene")).unwrap();
+    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &TreeWindows::unhosted(), "procedural3d-view", "test-values", "Values", &rows).unwrap();
+    let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+    let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();
+    let wrappers = projection["children"].as_array().unwrap();
+    assert_eq!(wrappers.len(), 2);
+    let tree = &wrappers[1]["children"][0];
+    assert_eq!(tree["component"]["interactionDomain"], "graph");
+    let row = &tree["children"][0]["children"][0];
+    assert_eq!(row["key"], "node@flag");
+    assert_eq!(row["component"]["granularity"], "handle");
+    assert_eq!(row["bindings"][0]["trigger"], "hoverPreview");
+}

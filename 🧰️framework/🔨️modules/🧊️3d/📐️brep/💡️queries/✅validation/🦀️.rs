@@ -20,12 +20,44 @@ use semio_framework_3d_brep_curve::curve_ops;
 use semio_framework_3d_brep_representation::error::ValidationIssue;
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, ReachSet};
+
+macro_rules! scoped_slot {
+    ($body:expr,$scope:expr,$store:ident,$slot:expr)=>{
+        if let Some(reach)=$scope{
+            reach.$store.0.slot_entry($slot).and_then(|(id,_)|$body.$store.get(*id).map(|row|(*id,row)))
+        }else{$body.$store.slot_at($slot)}
+    };
+}
+
+macro_rules! scoped_count {
+    ($body:expr,$scope:expr,$store:ident)=>{
+        $scope.map_or_else(||$body.$store.slot_count(),|reach|reach.$store.0.slot_count())
+    };
+}
+macro_rules! scoped_index {
+    ($scope:expr,$store:ident,$id:expr)=>{
+        if let Some(reach)=$scope {
+            let index=&reach.$store.0;
+            let needle=$id;
+            let mut start=0;
+            let mut end=index.len();
+            while start<end {
+                let middle=start+(end-start)/2;
+                if index.ranked(middle).is_some_and(|(id,_)|*id<needle){start=middle+1;}else{end=middle;}
+            }
+            index.ranked(start).filter(|(id,_)|**id==needle).map(|_|start)
+        }else{Some($id.raw_index() as usize)}
+    };
+}
+
 use semio_framework_3d_brep_vector::Pnt3;
 
-type ValidationFindings = semio_framework_value_persistent::list::PagedList<ValidationIssue,{usize::MAX}>;
+#[path="🧾️findings/🦀️.rs"]
+mod findings;
+use findings::ValidationFindings;
 trait ValidationIssueSink { fn push_issue(&mut self, issue:ValidationIssue); }
 impl ValidationIssueSink for Vec<ValidationIssue> { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
-impl ValidationIssueSink for ValidationFindings { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
+impl ValidationIssueSink for ValidationFindings { fn push_issue(&mut self,issue:ValidationIssue){self.push_cold(issue);} }
 
 #[cfg(test)]
 std::thread_local! { static LOOP_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
@@ -260,6 +292,16 @@ fn check_self_intersection_probe(body: &Body, issues: &mut impl ValidationIssueS
         for i in 0..faces.len() {
             for j in (i + 1)..faces.len() {
                 let (fa, fb) = (faces[i], faces[j]);
+                if let Some((a,b))=triangular_intersection::triangle(body,fa).zip(triangular_intersection::triangle(body,fb)){
+                    if triangular_intersection::triangles_intersect(a,b){
+                        issues.push_issue(ValidationIssue {
+                            entity:format!("face-{}-face-{}",fa.raw_index(),fb.raw_index()),
+                            code:"face-self-intersection",
+                            message:"planar triangular faces intersect through their interiors".into(),
+                        });
+                    }
+                    continue;
+                }
                 let (Some(aabb_a), Some(aabb_b)) = (&aabbs[i], &aabbs[j]) else { continue };
                 if !aabb_overlaps(aabb_a, aabb_b) || faces_share_edge(body, fa, fb) {
                     continue;
@@ -424,7 +466,7 @@ struct FaceCoedgeCursor {
 }
 enum FaceCoedgeTurn { Pending, Coedge(FaceId, CoedgeId), Complete }
 impl FaceCoedgeCursor {
-    fn step(&mut self, body: &Body, live_coedges: usize) -> FaceCoedgeTurn {
+    fn step(&mut self, body: &Body, live_coedges: usize, scope:Option<&ReachSet>) -> FaceCoedgeTurn {
         if let Some(coedge) = self.next {
             self.next = body.coedges.get(coedge).map(|value| value.next);
             self.visited += 1;
@@ -442,8 +484,8 @@ impl FaceCoedgeCursor {
             self.visited = 0;
             return FaceCoedgeTurn::Pending;
         }
-        if self.face_slot >= body.faces.slot_count() { return FaceCoedgeTurn::Complete; }
-        self.face = body.faces.slot_at(self.face_slot).map(|(id, _)| id);
+        if self.face_slot >= scoped_count!(body,scope,faces) { return FaceCoedgeTurn::Complete; }
+        self.face = scoped_slot!(body,scope,faces,self.face_slot).map(|(id,_)|id);
         self.face_slot += 1;
         self.loop_slot = 0;
         FaceCoedgeTurn::Pending
@@ -463,7 +505,7 @@ pub struct BodyValidationJob {
     source_body:usize,
     phase: BodyValidationPhase,
     issues: ValidationFindings,
-    shells: semio_framework_value_persistent::list::PagedList<ShellVolumeUnit,{usize::MAX}>,
+    shells: Vec<ShellVolumeUnit>,
     shell_cursor: usize,
     shell_face_cursor: usize,
     edges: Vec<EdgeId>,
@@ -476,8 +518,12 @@ pub struct BodyValidationJob {
     planning_slot: usize,
     planning_solid: Option<semio_framework_3d_brep_representation::arena::SolidId>,
     planning_shell: usize,
+    planning_shell_extent: usize,
     planning_face: Option<usize>,
     live_coedges: usize,
+    triangle_pairs:triangular_intersection::TrianglePairs,
+    closure: retained_loop::ShellClosureCursor,
+    winding: retained_loop::WindingCursor,
     loop_slot: usize,
     loop_id: Option<LoopId>,
     ring: Vec<CoedgeId>,
@@ -510,7 +556,7 @@ pub struct BodyValidationJob {
 semio_framework_value::artifact_retire_leaf!(BodyValidationPhase);
 semio_framework_value::artifact_retire_struct!(ShellVolumeUnit {solid,shell,outer,faces,total});
 semio_framework_value::artifact_retire_struct!(FaceCoedgeCursor {face_slot,face,loop_slot,start,next,visited});
-semio_framework_value::artifact_retire_struct!(BodyValidationJob {source_body,phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,loop_findings,loop_finding_cursor,loop_output,loop_text_stage,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_sort_cursor,same_worst,same_samples,same_midpoints});
+semio_framework_value::artifact_retire_struct!(BodyValidationJob {source_body,phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_shell_extent,planning_face,live_coedges,triangle_pairs,closure,winding,loop_slot,loop_id,ring,ring_next,ring_probe,loop_findings,loop_finding_cursor,loop_output,loop_text_stage,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_sort_cursor,same_worst,same_samples,same_midpoints});
 
 #[path="🎟️planning/🦀️.rs"]
 mod retained_planning;
@@ -522,7 +568,7 @@ mod retained_parameter;
 impl BodyValidationJob {
     /// 🧊 Admits an empty original frontier; topology is borrowed only inside funded steps.
     pub fn new(body: &Body) -> Self {
-        Self { source_body:body as *const Body as usize, phase: BodyValidationPhase::CollectingTopology, issues: Default::default(), shells: Default::default(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, loop_findings:[None,None],loop_finding_cursor:0,loop_output:None,loop_text_stage:0,valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_sort_cursor:0,same_worst:None,same_samples: Vec::new(), same_midpoints: Vec::new() }
+        Self { source_body:body as *const Body as usize, phase: BodyValidationPhase::CollectingTopology, issues: Default::default(), shells: Default::default(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_shell_extent: 0, planning_face: None, live_coedges: 0, triangle_pairs:Default::default(), closure: Default::default(), winding: Default::default(), loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, loop_findings:[None,None],loop_finding_cursor:0,loop_output:None,loop_text_stage:0,valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_sort_cursor:0,same_worst:None,same_samples: Vec::new(), same_midpoints: Vec::new() }
     }
 
     /// 📈 Constant-time funded work progress, including cold planning turns.
@@ -562,7 +608,7 @@ impl BodyValidationJob {
     /// 🩺️ Original sixteen-interval sampler and three adaptive refinements, one probe per turn.
     fn probe_same_parameter(&mut self, body: &Body) {
         let Some((face_id, coedge_id)) = self.same_pair else {
-            match self.same_faces.step(body, self.live_coedges) {
+            match self.same_faces.step(body, self.live_coedges,None) {
                 FaceCoedgeTurn::Pending => {},
                 FaceCoedgeTurn::Complete => self.phase = BodyValidationPhase::ShellClosure,
                 FaceCoedgeTurn::Coedge(face, coedge) => {
@@ -635,7 +681,7 @@ impl BodyValidationJob {
             if let Some(vertex) = body.vertices.get(vertex_id) { check_tolerance_pair(format!("vertex-{}", vertex_id.raw_index()), vertex.tol, format!("edge-{}", edge_id.raw_index()), edge.tol, &mut self.issues); }
             return;
         }
-        match self.tolerance_faces.step(body, self.live_coedges) {
+        match self.tolerance_faces.step(body, self.live_coedges,None) {
             FaceCoedgeTurn::Pending => {},
             FaceCoedgeTurn::Complete => self.phase = BodyValidationPhase::MissingPcurves,
             FaceCoedgeTurn::Coedge(face_id, coedge_id) => {
@@ -647,9 +693,19 @@ impl BodyValidationJob {
         }
     }
 
-    fn collect_topology(&mut self, body: &Body) {
+    fn collect_topology(&mut self,body:&Body){self.collect_selected_topology(body,None);}
+
+    fn collect_selected_topology(&mut self,body:&Body,scope:Option<&ReachSet>){
         match self.planning_stage {
             0 => {
+                if self.planning_slot < scoped_count!(body,scope,solids) {
+                    if let Some((_,solid))=scoped_slot!(body,scope,solids,self.planning_slot) {
+                        self.planning_shell_extent=self.planning_shell_extent.saturating_add(1).saturating_add(solid.inners.len());
+                    }
+                    self.planning_slot+=1;
+                } else { self.planning_stage=1;self.planning_slot=0; }
+            }
+            1 => {
                 if let Some(solid_id) = self.planning_solid {
                     let Some(solid) = body.solids.get(solid_id) else { self.planning_solid = None; self.planning_slot += 1; return; };
                     let shell_id = if self.planning_shell == 0 { Some(solid.outer) } else { solid.inners.get(self.planning_shell - 1).copied() };
@@ -663,27 +719,27 @@ impl BodyValidationJob {
                         self.shells.push(ShellVolumeUnit { solid: solid_id, shell: shell_id, outer: self.planning_shell == 0, faces: Vec::new(), total: Some(0.0) });
                         self.planning_face = Some(0);
                     }
-                } else if self.planning_slot < body.solids.slot_count() {
-                    self.planning_solid = body.solids.slot_at(self.planning_slot).map(|(id, _)| id);
+                } else if self.planning_slot < scoped_count!(body,scope,solids) {
+                    self.planning_solid = scoped_slot!(body,scope,solids,self.planning_slot).map(|(id,_)|id);
                     self.planning_shell = 0;
                     if self.planning_solid.is_none() { self.planning_slot += 1; }
-                } else { self.planning_stage = 1; self.planning_slot = 0; }
-            }
-            1 => {
-                if self.planning_slot < body.edges.slot_count() {
-                    if let Some((id, _)) = body.edges.slot_at(self.planning_slot) { self.edges.push(id); }
-                    self.planning_slot += 1;
                 } else { self.planning_stage = 2; self.planning_slot = 0; }
             }
             2 => {
-                if self.planning_slot < body.faces.slot_count() {
-                    if let Some((id, _)) = body.faces.slot_at(self.planning_slot) { self.faces.push(id); }
+                if self.planning_slot < scoped_count!(body,scope,edges) {
+                    if let Some((id,_))=scoped_slot!(body,scope,edges,self.planning_slot) { self.edges.push(id); }
                     self.planning_slot += 1;
                 } else { self.planning_stage = 3; self.planning_slot = 0; }
             }
             3 => {
-                if self.planning_slot < body.coedges.slot_count() {
-                    self.live_coedges += usize::from(body.coedges.slot_at(self.planning_slot).is_some());
+                if self.planning_slot < scoped_count!(body,scope,faces) {
+                    if let Some((id,_))=scoped_slot!(body,scope,faces,self.planning_slot) { self.faces.push(id); }
+                    self.planning_slot += 1;
+                } else { self.planning_stage = 4; self.planning_slot = 0; }
+            }
+            4 => {
+                if self.planning_slot < scoped_count!(body,scope,coedges) {
+                    self.live_coedges += usize::from(scoped_slot!(body,scope,coedges,self.planning_slot).is_some());
                     self.planning_slot += 1;
                 } else { self.phase = BodyValidationPhase::LoopRings; }
             }
@@ -716,11 +772,36 @@ impl BodyValidationJob {
     }
 
     /// ✅ True once every unit has run and [`Self::into_issues`] is final.
+    pub fn for_preview_gate(body: &Body) -> Self {
+        Self::new(body)
+    }
+
     pub fn is_complete(&self) -> bool {
         matches!(self.phase, BodyValidationPhase::Complete)
     }
 
+    /// ✅️ True once every validation phase finished without recording a finding.
+    pub fn passed(&self) -> bool { self.is_complete() && self.issues.is_empty() }
+
     /// 🩺️ Every finding so far. Only final once [`Self::is_complete`] answers true.
+    pub fn issue_count(&self)->usize{self.issues.len()}
+
+    pub fn issue(&self,index:usize)->Option<&ValidationIssue>{self.issues.get(index)}
+
+    pub fn issue_depth(&self,index:usize)->Result<usize,semio_framework_value::ValueError>{
+        self.issues.get(index).map(|_|if index==0{1}else{2}).ok_or_else(||semio_framework_value::ValueError::invariant("selected preview finding depth is unavailable"))
+    }
+
+    /// 🩹️ Quotes the retained first finding before its message moves to the preview caller.
+    pub fn first_issue_depth(&self)->Result<usize,semio_framework_value::ValueError>{
+        self.issue_depth(0)
+    }
+
+    /// 📤️ Transfers the first finding message without copying its retained text.
+    pub fn take_first_issue_message(&mut self)->Option<String>{
+        self.issues.get_mut(0).map(|issue|std::mem::take(&mut issue.message))
+    }
+
     pub fn into_issues(self) -> Vec<ValidationIssue> {
         self.issues.into_iter().collect()
     }
@@ -854,3 +935,10 @@ mod tests;
 #[cfg(test)]
 pub(crate) use semio_framework_3d_testing_support as test_support;
 //#endregion 🧪️TestSupport
+
+#[path="✖️triangular-intersection/🦀️.rs"]
+mod triangular_intersection;
+
+#[path = "🧾️diagnostic-text/🦀️.rs"]
+mod diagnostic_text;
+pub use diagnostic_text::{ValidationReportCursor,ValidationReportScalar};

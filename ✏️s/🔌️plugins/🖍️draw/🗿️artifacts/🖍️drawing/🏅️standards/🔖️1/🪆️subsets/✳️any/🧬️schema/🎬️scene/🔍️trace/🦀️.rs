@@ -4,8 +4,9 @@ use semio_s_artifact_draw_drawing_geometry::from_kernel_segment;
 use semio_s_artifact_draw_drawing_model::PathSegment as DrawingSegment;
 use semio_framework_2d::{PathSegment,trace::{BitmapTraceInput,BitmapTraceJob,BitmapTraceProgress,BitmapTraceRetirement}};
 use semio_framework_2d::retirement::WorkRetirementProgress;
+use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value::{RetirementDemand,work::RetainedWorkLedger};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::ArcLeaseRetirement};
 use semio_framework_pixels::retirement::RasterLease;
 use std::sync::Arc;
 pub type DocumentTraceRetirementProgress=WorkRetirementProgress;
@@ -17,12 +18,12 @@ pub struct DocumentTraceInput{pub plan:DocumentScenePlan,pub limits:DocumentTrac
 pub struct DocumentTraceProgress{pub phase:&'static str,pub assets:usize,pub nodes:usize,pub resolved:usize,pub admitted_images:usize,pub pixels:usize,pub source_bytes:usize,pub segments:usize,pub work:u64,pub trace:Option<BitmapTraceProgress>,pub done:bool}
 fn invalid(message:&'static str)->DocumentSceneError{DocumentSceneError::literal(message)}
 pub fn identity(v:&str)->Result<(),DocumentSceneError>{if v.is_empty()||v.len()>4096{Err(invalid("Invalid document trace identity"))}else{Ok(())}}
-fn kernel_error(error:semio_framework_2d::trace::BitmapTraceError)->DocumentSceneError{use semio_framework_2d::trace::BitmapTraceError;invalid(match error{BitmapTraceError::Invalid(message)=>message,BitmapTraceError::Incomplete=>"Bitmap trace incomplete",BitmapTraceError::Cancelled=>"Bitmap trace cancelled"})}
+fn kernel_error(error:semio_framework_2d::trace::BitmapTraceError)->DocumentSceneError{use semio_framework_2d::trace::BitmapTraceError;match error{BitmapTraceError::Invalid(message)=>invalid(message),BitmapTraceError::Refused(error)=>DocumentSceneError::Refused(error),BitmapTraceError::Incomplete=>invalid("Bitmap trace incomplete"),BitmapTraceError::Cancelled=>invalid("Bitmap trace cancelled")}}
 fn pixel_error(error:semio_framework_pixels::editing::PixelEditError)->DocumentSceneError{use semio_framework_pixels::editing::PixelEditError;invalid(match error{PixelEditError::Invalid(message)=>message,PixelEditError::Incomplete=>"Pixel operation is incomplete",PixelEditError::Cancelled=>"Pixel operation cancelled"})}
 struct TraceMask(Arc<Vec<u8>>);
 impl AsRef<[u8]> for TraceMask{fn as_ref(&self)->&[u8]{self.0.as_slice()}}
-impl RetireOwned for TraceMask{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<Vec<u8>>>())}fn controlled_retirement_supported()->bool{true}}
-fn slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger)->Result<bool,DocumentSceneError>{let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).unwrap_or(usize::MAX).max(16)}else{values.len()+1};if !work.reserve_vec(values,target).map_err(invalid)?{return Ok(false);}work.vec_slot(values).map_err(invalid)}
+impl RetireOwned for TraceMask{type RetirementCursor=ArcLeaseRetirement<Vec<u8>>;fn retirement_seed(self)->Self::RetirementCursor{ArcLeaseRetirement::lease(self.0)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ArcLeaseRetirement<Vec<u8>>>())}fn controlled_retirement_supported()->bool{true}}
+fn slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,DocumentSceneError>{let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).unwrap_or(usize::MAX).max(16)}else{values.len()+1};if !work.reserve_vec(values,target,effect.actual()).map_err(invalid)?{return Ok(false);}work.vec_slot(values).map_err(invalid)}
 fn fault_part(plan:&DocumentScenePlan,node:usize,kind:u8,part:usize)->Option<&str>{
  let n=&plan.nodes[node];match(kind,part){(1,0)=>Some("Missing document trace source: "),(1,1)|(2,1)=>Some(&n.id),(1,2)=>Some(" -> "),(1,3)=>if let DocumentSceneContent::Trace{source,..}=&n.content{Some(source)}else{None},(2,0)=>Some("Invalid document trace parameters: "),_=>None}
 }
@@ -48,7 +49,7 @@ impl DocumentTraceJob{
   let DocumentSceneContent::Trace{threshold,simplify_epsilon,..}=&self.input.plan.nodes[self.at].content else{return Err(invalid("Document trace node lost its trace content"))};let l=self.input.limits;
   self.tracer=Some(BitmapTraceJob::new(BitmapTraceInput{width,height,mask:TraceMask(mask),threshold:*threshold,simplify_epsilon:*simplify_epsilon,max_pixels:l.max_pixels,max_edges:l.max_edges,max_segments:l.max_segments.min(l.max_retained_segments-self.segments).max(1),max_work:l.max_work}));self.phase="tracing";Ok(())
  }
- fn step(&mut self,work:&mut RetainedWorkLedger)->Result<bool,DocumentSceneError>{
+ fn step(&mut self,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,DocumentSceneError>{
   match self.phase{
    "assets"=>{
     let Some(asset)=self.input.plan.assets.get(self.assets)else{self.phase="indexing";return Ok(true);};identity(&asset.id)?;semio_framework_pixels::editing::validate_image(&asset.image).map_err(pixel_error)?;
@@ -65,10 +66,10 @@ impl DocumentTraceJob{
    },
    "diagnostic"=>{
     let total=(0..4).filter_map(|part|fault_part(&self.input.plan,self.nodes,self.error_kind,part)).try_fold(0usize,|sum,part|sum.checked_add(part.len())).ok_or_else(||invalid("Trace diagnostic extent overflow"))?;
-    if !work.reserve_string(&mut self.error_buffer,total).map_err(invalid)?{return Ok(false);}
+    if !work.reserve_string(&mut self.error_buffer,total,effect.actual()).map_err(invalid)?{return Ok(false);}
     if let Some(part)=fault_part(&self.input.plan,self.nodes,self.error_kind,self.error_part){if !work.string_push(&mut self.error_buffer,part).map_err(invalid)?{return Ok(false);}self.error_part+=1;return Ok(true);}
     if !work.arc_ready::<String>().map_err(invalid)?{return Ok(false);}
-    let message=work.arc_new(std::mem::take(&mut self.error_buffer)).map_err(|(error,_)|invalid(error))?;return Err(DocumentSceneError::owned(message));
+    let message=work.arc_new(std::mem::take(&mut self.error_buffer),effect.actual()).map_err(|(error,_)|invalid(error))?;return Err(DocumentSceneError::owned(message));
    },
    "nodes"=>{
     let Some(node)=self.input.plan.nodes.get(self.at)else{self.step_control_work=1;self.output=Some(std::mem::take(&mut self.input.plan));self.phase="complete";return Ok(true);};
@@ -82,31 +83,31 @@ impl DocumentTraceJob{
    "luma"=>{
     let image=self.image.as_ref().ok_or_else(DocumentSceneError::held)?;let count=image.width as usize*image.height as usize;
     if self.pixel==count{
-     if !slot(&mut self.masks,work)?{return Ok(false);}let copy=0;let capacity=semio_framework_value::retirement::arc_custody::arc_bytes::<Vec<u8>>();let remaining=work.child_grant();let demand=RetirementDemand{copy_bytes:copy+size_of::<Vec<u8>>(),capacity_bytes:capacity,depth:1,release_bytes:0};
+     if !slot(&mut self.masks,work,effect)?{return Ok(false);}let copy=0;let capacity=semio_framework_value::retirement::arc_custody::arc_bytes::<Vec<u8>>();let remaining=work.child_grant();let demand=RetirementDemand{copy_bytes:copy+size_of::<Vec<u8>>(),capacity_bytes:capacity,depth:1,release_bytes:0};
      if remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<capacity||remaining.maximum_depth<1{work.require_child(demand).map_err(invalid)?;return Ok(false);}
-     if !work.copy_bytes(copy){return Ok(false);}let(width,height)=(image.width,image.height);let mask=work.arc_new(std::mem::take(&mut self.mask)).map_err(|(error,_)|invalid(error))?;
+     if !work.copy_bytes(copy){return Ok(false);}let(width,height)=(image.width,image.height);let mask=work.arc_new(std::mem::take(&mut self.mask),effect.actual()).map_err(|(error,_)|invalid(error))?;
      work.vec_push(&mut self.masks,(self.source,width,height,TraceMask(Arc::clone(&mask)))).map_err(|(error,_)|invalid(error))?;self.image=None;self.start_trace(width,height,mask)?;return Ok(true);
     }
-    if !slot(&mut self.mask,work)?{return Ok(false);}let p=&image.pixels;let i=self.pixel*4;let value=((299.0*p[i]as f64+587.0*p[i+1]as f64+114.0*p[i+2]as f64)*p[i+3]as f64/255000.0).round()as u8;
+    if !slot(&mut self.mask,work,effect)?{return Ok(false);}let p=&image.pixels;let i=self.pixel*4;let value=((299.0*p[i]as f64+587.0*p[i+1]as f64+114.0*p[i+2]as f64)*p[i+3]as f64/255000.0).round()as u8;
     work.vec_push(&mut self.mask,value).map_err(|(error,_)|invalid(error))?;self.pixel+=1;
    },
    "tracing"=>{
-    let child=self.tracer.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work);self.step_child_work=Some((child.last_turn_work(),child.last_turn_semantic_work()));self.pending=child.next_work_demand();let p=result.map_err(kernel_error)?;self.trace=Some(p);if p.done{self.publish_at=0;self.phase="publishing";}
+    let child=self.tracer.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work,effect);self.step_child_work=Some((child.last_turn_work(),child.last_turn_semantic_work()));self.pending=child.next_work_demand();let p=result.map_err(kernel_error)?;self.trace=Some(p);if p.done{self.publish_at=0;self.phase="publishing";}
    },
    "publishing"=>{
     if self.closing_tracer.is_some(){
-     if !slot(&mut self.retired_tracers,work)?{return Ok(false);}if self.closing_mask.is_some()&&!slot(&mut self.retired_masks,work)?{return Ok(false);}
+     if !slot(&mut self.retired_tracers,work,effect)?{return Ok(false);}if self.closing_mask.is_some()&&!slot(&mut self.retired_masks,work,effect)?{return Ok(false);}
      work.vec_push(&mut self.retired_tracers,self.closing_tracer.take().ok_or_else(DocumentSceneError::held)?).map_err(|(error,_)|invalid(error))?;if let Some(mask)=self.closing_mask.take(){work.vec_push(&mut self.retired_masks,mask).map_err(|(error,_)|invalid(error))?;}self.step_control_work=1;return Ok(true);
     }
     if self.tracer.as_ref().is_none_or(|job|job.result().is_ok_and(|trace|self.publish_at==trace.len())){
      if let Some(tracer)=self.tracer.take(){let(close,mask)=tracer.into_retirement();self.closing_tracer=Some(close);self.closing_mask=mask;self.step_control_work=1;return Ok(true);}
-     if !slot(&mut self.retired_sources,work)?||!work.can_step(){return Ok(false);}
+     if !slot(&mut self.retired_sources,work,effect)?||!work.can_step(){return Ok(false);}
      let content=&mut self.input.plan.nodes[self.at].content;let old=std::mem::replace(content,DocumentSceneContent::Group{children:Vec::new(),isolation:false});let DocumentSceneContent::Trace{source,fill_rule,fill,stroke,..}=old else{unreachable!()};
      work.vec_push(&mut self.retired_sources,source).map_err(|(error,_)|invalid(error))?;*content=DocumentSceneContent::Path{segments:std::mem::take(&mut self.candidate),fill_rule,fill,stroke};self.at+=1;self.resolved+=1;self.phase="nodes";self.step_control_work=1;return Ok(true);
     }
     if self.segments>=self.input.limits.max_retained_segments{return Err(invalid("Document trace retained segment limit exceeded"));}
     let segment=&self.tracer.as_ref().ok_or_else(DocumentSceneError::held)?.result().map_err(kernel_error)?[self.publish_at];if !matches!(segment,PathSegment::Move{..}|PathSegment::Line{..}|PathSegment::Close){return Err(invalid("Unresolved document trace curve"));}
-    if !slot(&mut self.candidate,work)?{return Ok(false);}work.vec_push(&mut self.candidate,from_kernel_segment(segment)).map_err(|(error,_)|invalid(error))?;self.publish_at+=1;self.segments+=1;self.step_control_work=1;
+    if !slot(&mut self.candidate,work,effect)?{return Ok(false);}work.vec_push(&mut self.candidate,from_kernel_segment(segment)).map_err(|(error,_)|invalid(error))?;self.publish_at+=1;self.segments+=1;self.step_control_work=1;
    },
    _=>{}
   }Ok(true)
@@ -117,12 +118,12 @@ impl DocumentTraceJob{
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  fn progress(&self)->DocumentTraceProgress{DocumentTraceProgress{phase:self.phase,assets:self.assets,nodes:self.nodes,resolved:self.resolved,admitted_images:self.admitted_images,pixels:self.pixels,source_bytes:self.source_bytes,segments:self.segments,work:self.work,trace:self.trace,done:self.phase=="complete"}}
- pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger)->Result<DocumentTraceProgress,DocumentSceneError>{
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<DocumentTraceProgress,DocumentSceneError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Invalid document trace work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.progress());};
   let result=(||{for _ in 0..budget{if self.phase=="complete"||!work.can_step(){break;}if self.work>=self.input.limits.max_work&&!self.failure_pending()&&!self.settlement_pending(){let error=invalid("Document trace work limit exceeded");self.failure=Some(error.clone());return Err(error);}
-   let before=work.receipt();let publishing_failure=self.failure_pending();self.step_child_work=None;self.step_control_work=0;let publishing_custody=self.phase=="publishing"||self.phase=="nodes"&&self.at==self.input.plan.nodes.len();let result=self.step(work);let own_semantic=!publishing_custody&&matches!(&result,Ok(true)|Err(_));let(cpu,semantic)=if let Some((cpu,semantic))=self.step_child_work{(cpu,semantic)}else{(self.step_control_work.max((own_semantic||work.receipt()!=before)as u64),own_semantic as u64)};if cpu>0{work.note_source(root);self.last_turn_work+=cpu;}if !publishing_failure{self.work+=semantic;self.last_turn_semantic_work+=semantic;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}
+   let before=work.receipt();let publishing_failure=self.failure_pending();self.step_child_work=None;self.step_control_work=0;let publishing_custody=self.phase=="publishing"||self.phase=="nodes"&&self.at==self.input.plan.nodes.len();let result=self.step(work,effect);let own_semantic=!publishing_custody&&matches!(&result,Ok(true)|Err(_));let(cpu,semantic)=if let Some((cpu,semantic))=self.step_child_work{(cpu,semantic)}else{(self.step_control_work.max((own_semantic||work.receipt()!=before)as u64),own_semantic as u64)};if cpu>0{work.note_source(root);self.last_turn_work+=cpu;}if !publishing_failure{self.work+=semantic;self.last_turn_semantic_work+=semantic;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked()||effect.actual().is_some(){break;}
   }Ok(self.progress())})();work.exit();result
  }
  pub fn result(&self)->Result<&DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}self.output.as_ref().ok_or(DocumentSceneError::Incomplete)}
@@ -135,10 +136,12 @@ impl DocumentTraceJob{
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct DocumentTraceOwners{plan:DocumentScenePlan,masks:Vec<(usize,u32,u32,TraceMask)>,image:Option<RasterLease>,mask:Vec<u8>,tracer:Option<BitmapTraceJob<TraceMask>>,candidate:Vec<DrawingSegment>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,closing_tracer:Option<BitmapTraceRetirement<TraceMask>>,closing_mask:Option<TraceMask>,retired_tracers:Vec<BitmapTraceRetirement<TraceMask>>,retired_sources:Vec<String>,retired_masks:Vec<TraceMask>,error_buffer:String}
+#[doc(hidden)]
+pub struct DocumentTraceOwners{plan:DocumentScenePlan,masks:Vec<(usize,u32,u32,TraceMask)>,image:Option<RasterLease>,mask:Vec<u8>,tracer:Option<BitmapTraceJob<TraceMask>>,candidate:Vec<DrawingSegment>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,closing_tracer:Option<BitmapTraceRetirement<TraceMask>>,closing_mask:Option<TraceMask>,retired_tracers:Vec<BitmapTraceRetirement<TraceMask>>,retired_sources:Vec<String>,retired_masks:Vec<TraceMask>,error_buffer:String}
 impl RetireOwned for DocumentTraceJob{
- fn retirement(self)->Box<dyn RetirementCursor>{DocumentTraceOwners{plan:self.input.plan,masks:self.masks,image:self.image,mask:self.mask,tracer:self.tracer,candidate:self.candidate,output:self.output,failure:self.failure,closing_tracer:self.closing_tracer,closing_mask:self.closing_mask,retired_tracers:self.retired_tracers,retired_sources:self.retired_sources,retired_masks:self.retired_masks,error_buffer:self.error_buffer}.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.input.plan),deferred_birth_bytes_for(&self.masks),deferred_birth_bytes_for(&self.image),deferred_birth_bytes_for(&self.mask),deferred_birth_bytes_for(&self.tracer),deferred_birth_bytes_for(&self.candidate),deferred_birth_bytes_for(&self.output),deferred_birth_bytes_for(&self.failure),deferred_birth_bytes_for(&self.closing_tracer),deferred_birth_bytes_for(&self.closing_mask),deferred_birth_bytes_for(&self.retired_tracers),deferred_birth_bytes_for(&self.retired_sources),deferred_birth_bytes_for(&self.retired_masks),deferred_birth_bytes_for(&self.error_buffer)])}
+ type RetirementCursor=<DocumentTraceOwners as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{DocumentTraceOwners{plan:self.input.plan,masks:self.masks,image:self.image,mask:self.mask,tracer:self.tracer,candidate:self.candidate,output:self.output,failure:self.failure,closing_tracer:self.closing_tracer,closing_mask:self.closing_mask,retired_tracers:self.retired_tracers,retired_sources:self.retired_sources,retired_masks:self.retired_masks,error_buffer:self.error_buffer}.retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{DocumentTraceOwners::controlled_retirement_supported()}
 }
 semio_framework_2d::physical_work_retirement!(DocumentTraceRetirement,DocumentTraceJob);

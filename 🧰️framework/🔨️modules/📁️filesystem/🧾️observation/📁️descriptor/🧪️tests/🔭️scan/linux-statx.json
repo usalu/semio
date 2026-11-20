@@ -1,0 +1,7 @@
+[
+  {"id":"package-manifest","mode":33188,"links":1,"size":128,"scan":true,"publication":true},
+  {"id":"installed-package-directory","mode":16877,"links":3,"size":4096,"scan":true,"publication":false},
+  {"id":"workspace-package-symlink","mode":41471,"links":1,"size":23,"scan":true,"publication":false},
+  {"id":"bun-cache-hardlink","mode":33188,"links":2,"size":16384,"scan":true,"publication":false},
+  {"id":"large-installed-binary","mode":33261,"links":1,"size":16777216,"scan":true,"publication":false}
+]

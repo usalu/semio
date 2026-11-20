@@ -11,9 +11,11 @@ pub use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
-pub use semio_s_artifact_shooting_shooting_inferences::{SHOOTING_DOCUMENT_SCHEMA, ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, active_shot, empty_shooting_snapshot, next_shooting_id};
+pub use semio_s_artifact_shooting_shooting_inferences::{shooting_resolve_shot_camera, SHOOTING_DOCUMENT_SCHEMA, ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, active_shot, empty_shooting_snapshot, next_shooting_id};
 pub use crate::viewer::shooting::artifact_items_2::{SHOOTING_DIALECT};
 
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssigned, ShootingDrawingPatch};

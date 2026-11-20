@@ -166,7 +166,7 @@ fn write(ctx: &ToolContext<'_>, style: Option<(String, semio_s_artifact_bim_mode
         if !ctx.accepts(&make) {
             return Step::refuse(REJECTED);
         }
-        base.annotation_styles.insert(id, annotation_style);
+        base.annotation_styles.cold_insert(id, annotation_style);
         mutations.push(make);
     }
     let (_diff, messages) = created.diff(&base).into_parts();

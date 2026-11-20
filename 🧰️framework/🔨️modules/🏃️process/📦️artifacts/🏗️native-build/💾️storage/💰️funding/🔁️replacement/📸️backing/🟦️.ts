@@ -9,7 +9,7 @@ import{readNativeImageRetirementFileV1}from"../../../📄️retirement-file/🟦
 import{nativeStorageBackendOfDirectoryV1}from"../../../🔌️backends/📋️contract/🟦️.ts";
 import{nativeImageRootV1,nativeImageAttachedV1,nativeImageFilesystemBytesV1,requireNativeImagePublicationSettledV1}from"../../../🌐️platform/📋️contract/🟦️.ts";
 import{nativeImageBackingAllocatedBytesV1}from"../../../🪶️extent/🟦️.ts";
-import{type NativeStoragePolicyV1}from"../../../📜️journal/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../📜️journal/🟦️.ts";
 import{nativeStorageFundingPublishedEnvelopeV1,nativeStorageFundingDirectoryEnvelopeV1}from"../📋️model/🟦️.ts";
 /** 📸️ Captures only the current published enforcement ceiling and actual unchanged physical backing. */
 export function captureNativeStorageFundingBackingV1(policy:NativeStoragePolicyV1,check:()=>void):Readonly<{stamp:string;capacityBytes:number;check():void}>{

@@ -74,8 +74,8 @@
         }
       ],
       "notes": {
-        "en": "Section 160 x 600 mm; tributary width 2.0 m for the floor load.",
-        "de": "Querschnitt 160 x 600 mm; Einzugsbreite 2,0 m für die Deckenlast."
+        "en": "Section 160 x 600 mm, beam length 8.00 m, effective span 7.88 m between the centres of the 120 mm bearings (EN 1995-1-1); tributary width 2.0 m for the floor load.",
+        "de": "Querschnitt 160 x 600 mm, Balkenlänge 8,00 m, Stützweite 7,88 m zwischen den Mitten der 120-mm-Auflager (EN 1995-1-1); Einzugsbreite 2,0 m für die Deckenlast."
       }
     },
     "dimensions": {
@@ -178,8 +178,8 @@
       {
         "id": "bearing-left",
         "bone": "beam",
-        "x": 0,
-        "y": 0,
+        "x": 0.06,
+        "y": -0.32,
         "kind": "support",
         "title": {
           "en": "Left bearing, pin",
@@ -190,8 +190,8 @@
       {
         "id": "bearing-right",
         "bone": "beam",
-        "x": 8,
-        "y": 0,
+        "x": 7.94,
+        "y": -0.32,
         "kind": "support",
         "title": {
           "en": "Right bearing, roller",
@@ -204,7 +204,7 @@
         "id": "load-point",
         "bone": "load-carrier",
         "x": 0,
-        "y": 0,
+        "y": 0.3,
         "kind": "load",
         "title": {
           "en": "Concentrated load",
@@ -231,7 +231,7 @@
         "geometry": {
           "elevation": [
             {
-              "id": "beam-chamfered",
+              "id": "beam",
               "bone": "beam",
               "role": "body",
               "z": 1,
@@ -243,42 +243,11 @@
                 "beam-soffit"
               ],
               "material": "glulam",
-              "kind": "poly",
-              "points": [
-                [
-                  0.006,
-                  -0.3
-                ],
-                [
-                  7.994,
-                  -0.3
-                ],
-                [
-                  8,
-                  -0.294
-                ],
-                [
-                  8,
-                  0.294
-                ],
-                [
-                  7.994,
-                  0.3
-                ],
-                [
-                  0.006,
-                  0.3
-                ],
-                [
-                  0,
-                  0.294
-                ],
-                [
-                  0,
-                  -0.294
-                ]
-              ],
-              "closed": true
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.3,
+              "w": 8.0,
+              "h": 0.6
             },
             {
               "id": "bearing-plate-left",
@@ -605,7 +574,7 @@
               "closed": false
             },
             {
-              "id": "finger-joint-0",
+              "id": "finger-joint-00",
               "bone": "beam",
               "role": "detail",
               "z": 1.6,
@@ -613,199 +582,826 @@
               "tone": 0.3,
               "region": "beam-sides",
               "kind": "poly",
+              "closed": false,
               "points": [
                 [
-                  1.9,
-                  -0.14
-                ],
-                [
-                  1.92,
-                  -0.13
-                ],
-                [
-                  1.9,
-                  -0.12
-                ],
-                [
-                  1.92,
-                  -0.11
-                ],
-                [
-                  1.9,
-                  -0.1
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "finger-joint-1",
-              "bone": "beam",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.3,
-              "region": "beam-sides",
-              "kind": "poly",
-              "points": [
-                [
-                  3.7,
-                  -0.02
-                ],
-                [
-                  3.72,
-                  -0.01
-                ],
-                [
-                  3.7,
-                  0
-                ],
-                [
-                  3.72,
-                  0.01
-                ],
-                [
-                  3.7,
-                  0.02
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "finger-joint-2",
-              "bone": "beam",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.3,
-              "region": "beam-sides",
-              "kind": "poly",
-              "points": [
-                [
-                  5.3,
-                  -0.22
-                ],
-                [
-                  5.32,
-                  -0.21
-                ],
-                [
-                  5.3,
-                  -0.2
-                ],
-                [
-                  5.32,
-                  -0.19
-                ],
-                [
-                  5.3,
-                  -0.18
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "finger-joint-3",
-              "bone": "beam",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.3,
-              "region": "beam-sides",
-              "kind": "poly",
-              "points": [
-                [
-                  6.6,
-                  0.1
-                ],
-                [
-                  6.62,
-                  0.11
-                ],
-                [
-                  6.6,
-                  0.12
-                ],
-                [
-                  6.62,
-                  0.13
-                ],
-                [
-                  6.6,
-                  0.14
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "finger-joint-4",
-              "bone": "beam",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.3,
-              "region": "beam-sides",
-              "kind": "poly",
-              "points": [
-                [
-                  2.8,
-                  0.14
-                ],
-                [
-                  2.82,
-                  0.15
-                ],
-                [
-                  2.8,
-                  0.16
-                ],
-                [
-                  2.82,
-                  0.17
-                ],
-                [
-                  2.8,
-                  0.18
-                ]
-              ],
-              "closed": false
-            },
-            {
-              "id": "finger-joint-5",
-              "bone": "beam",
-              "role": "detail",
-              "z": 1.6,
-              "filled": false,
-              "tone": 0.3,
-              "region": "beam-sides",
-              "kind": "poly",
-              "points": [
-                [
-                  4.4,
+                  1.84,
                   -0.3
                 ],
                 [
-                  4.42,
+                  1.86,
                   -0.29
                 ],
                 [
-                  4.4,
+                  1.84,
                   -0.28
                 ],
                 [
-                  4.42,
+                  1.86,
                   -0.27
                 ],
                 [
-                  4.4,
+                  1.84,
                   -0.26
                 ]
-              ],
-              "closed": false
+              ]
+            },
+            {
+              "id": "finger-joint-01",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  6.29,
+                  -0.3
+                ],
+                [
+                  6.31,
+                  -0.29
+                ],
+                [
+                  6.29,
+                  -0.28
+                ],
+                [
+                  6.31,
+                  -0.27
+                ],
+                [
+                  6.29,
+                  -0.26
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-02",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  3.09,
+                  -0.26
+                ],
+                [
+                  3.11,
+                  -0.25
+                ],
+                [
+                  3.09,
+                  -0.24
+                ],
+                [
+                  3.11,
+                  -0.23
+                ],
+                [
+                  3.09,
+                  -0.22
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-03",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  0.94,
+                  -0.22
+                ],
+                [
+                  0.96,
+                  -0.21
+                ],
+                [
+                  0.94,
+                  -0.2
+                ],
+                [
+                  0.96,
+                  -0.19
+                ],
+                [
+                  0.94,
+                  -0.18
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-04",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  5.34,
+                  -0.22
+                ],
+                [
+                  5.36,
+                  -0.21
+                ],
+                [
+                  5.34,
+                  -0.2
+                ],
+                [
+                  5.36,
+                  -0.19
+                ],
+                [
+                  5.34,
+                  -0.18
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-05",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  4.04,
+                  -0.18
+                ],
+                [
+                  4.06,
+                  -0.17
+                ],
+                [
+                  4.04,
+                  -0.16
+                ],
+                [
+                  4.06,
+                  -0.15
+                ],
+                [
+                  4.04,
+                  -0.14
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-06",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  2.34,
+                  -0.14
+                ],
+                [
+                  2.36,
+                  -0.13
+                ],
+                [
+                  2.34,
+                  -0.12
+                ],
+                [
+                  2.36,
+                  -0.11
+                ],
+                [
+                  2.34,
+                  -0.1
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-07",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  6.74,
+                  -0.14
+                ],
+                [
+                  6.76,
+                  -0.13
+                ],
+                [
+                  6.74,
+                  -0.12
+                ],
+                [
+                  6.76,
+                  -0.11
+                ],
+                [
+                  6.74,
+                  -0.1
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-08",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  5.69,
+                  -0.1
+                ],
+                [
+                  5.71,
+                  -0.09
+                ],
+                [
+                  5.69,
+                  -0.08
+                ],
+                [
+                  5.71,
+                  -0.07
+                ],
+                [
+                  5.69,
+                  -0.06
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-09",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  1.39,
+                  -0.06
+                ],
+                [
+                  1.41,
+                  -0.05
+                ],
+                [
+                  1.39,
+                  -0.04
+                ],
+                [
+                  1.41,
+                  -0.03
+                ],
+                [
+                  1.39,
+                  -0.02
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-10",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  4.89,
+                  -0.06
+                ],
+                [
+                  4.91,
+                  -0.05
+                ],
+                [
+                  4.89,
+                  -0.04
+                ],
+                [
+                  4.91,
+                  -0.03
+                ],
+                [
+                  4.89,
+                  -0.02
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-11",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  3.54,
+                  -0.02
+                ],
+                [
+                  3.56,
+                  -0.01
+                ],
+                [
+                  3.54,
+                  0.0
+                ],
+                [
+                  3.56,
+                  0.01
+                ],
+                [
+                  3.54,
+                  0.02
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-12",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  7.34,
+                  -0.02
+                ],
+                [
+                  7.36,
+                  -0.01
+                ],
+                [
+                  7.34,
+                  0.0
+                ],
+                [
+                  7.36,
+                  0.01
+                ],
+                [
+                  7.34,
+                  0.02
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-13",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  2.69,
+                  0.02
+                ],
+                [
+                  2.71,
+                  0.03
+                ],
+                [
+                  2.69,
+                  0.04
+                ],
+                [
+                  2.71,
+                  0.05
+                ],
+                [
+                  2.69,
+                  0.06
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-14",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  6.09,
+                  0.02
+                ],
+                [
+                  6.11,
+                  0.03
+                ],
+                [
+                  6.09,
+                  0.04
+                ],
+                [
+                  6.11,
+                  0.05
+                ],
+                [
+                  6.09,
+                  0.06
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-15",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  4.59,
+                  0.06
+                ],
+                [
+                  4.61,
+                  0.07
+                ],
+                [
+                  4.59,
+                  0.08
+                ],
+                [
+                  4.61,
+                  0.09
+                ],
+                [
+                  4.59,
+                  0.1
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-16",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  1.14,
+                  0.1
+                ],
+                [
+                  1.16,
+                  0.11
+                ],
+                [
+                  1.14,
+                  0.12
+                ],
+                [
+                  1.16,
+                  0.13
+                ],
+                [
+                  1.14,
+                  0.14
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-17",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  5.44,
+                  0.1
+                ],
+                [
+                  5.46,
+                  0.11
+                ],
+                [
+                  5.44,
+                  0.12
+                ],
+                [
+                  5.46,
+                  0.13
+                ],
+                [
+                  5.44,
+                  0.14
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-18",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  3.84,
+                  0.14
+                ],
+                [
+                  3.86,
+                  0.15
+                ],
+                [
+                  3.84,
+                  0.16
+                ],
+                [
+                  3.86,
+                  0.17
+                ],
+                [
+                  3.84,
+                  0.18
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-19",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  7.04,
+                  0.14
+                ],
+                [
+                  7.06,
+                  0.15
+                ],
+                [
+                  7.04,
+                  0.16
+                ],
+                [
+                  7.06,
+                  0.17
+                ],
+                [
+                  7.04,
+                  0.18
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-20",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  2.04,
+                  0.18
+                ],
+                [
+                  2.06,
+                  0.19
+                ],
+                [
+                  2.04,
+                  0.2
+                ],
+                [
+                  2.06,
+                  0.21
+                ],
+                [
+                  2.04,
+                  0.22
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-21",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  6.54,
+                  0.18
+                ],
+                [
+                  6.56,
+                  0.19
+                ],
+                [
+                  6.54,
+                  0.2
+                ],
+                [
+                  6.56,
+                  0.21
+                ],
+                [
+                  6.54,
+                  0.22
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-22",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  4.34,
+                  0.22
+                ],
+                [
+                  4.36,
+                  0.23
+                ],
+                [
+                  4.34,
+                  0.24
+                ],
+                [
+                  4.36,
+                  0.25
+                ],
+                [
+                  4.34,
+                  0.26
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-23",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  2.59,
+                  0.26
+                ],
+                [
+                  2.61,
+                  0.27
+                ],
+                [
+                  2.59,
+                  0.28
+                ],
+                [
+                  2.61,
+                  0.29
+                ],
+                [
+                  2.59,
+                  0.3
+                ]
+              ]
+            },
+            {
+              "id": "finger-joint-24",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "closed": false,
+              "points": [
+                [
+                  5.89,
+                  0.26
+                ],
+                [
+                  5.91,
+                  0.27
+                ],
+                [
+                  5.89,
+                  0.28
+                ],
+                [
+                  5.91,
+                  0.29
+                ],
+                [
+                  5.89,
+                  0.3
+                ]
+              ]
             }
           ],
           "front": [
             {
-              "id": "beam-chamfered-end",
+              "id": "beam-end",
               "bone": "beam",
               "role": "body",
               "z": 1,
@@ -817,42 +1413,11 @@
                 "beam-soffit"
               ],
               "material": "glulam",
-              "kind": "poly",
-              "points": [
-                [
-                  -0.074,
-                  0.02
-                ],
-                [
-                  0.074,
-                  0.02
-                ],
-                [
-                  0.08,
-                  0.026
-                ],
-                [
-                  0.08,
-                  0.614
-                ],
-                [
-                  0.074,
-                  0.62
-                ],
-                [
-                  -0.074,
-                  0.62
-                ],
-                [
-                  -0.08,
-                  0.614
-                ],
-                [
-                  -0.08,
-                  0.026
-                ]
-              ],
-              "closed": true
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0.02,
+              "w": 0.16,
+              "h": 0.6
             },
             {
               "id": "glue-line-01",
@@ -1166,7 +1731,7 @@
           ],
           "plan": [
             {
-              "id": "beam-chamfered-top",
+              "id": "beam-top",
               "bone": "beam",
               "role": "body",
               "z": 1,
@@ -1176,42 +1741,11 @@
                 "beam-top"
               ],
               "material": "glulam",
-              "kind": "poly",
-              "points": [
-                [
-                  0.006,
-                  -0.08
-                ],
-                [
-                  7.994,
-                  -0.08
-                ],
-                [
-                  8,
-                  -0.074
-                ],
-                [
-                  8,
-                  0.074
-                ],
-                [
-                  7.994,
-                  0.08
-                ],
-                [
-                  0.006,
-                  0.08
-                ],
-                [
-                  0,
-                  0.074
-                ],
-                [
-                  0,
-                  -0.074
-                ]
-              ],
-              "closed": true
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.08,
+              "w": 8.0,
+              "h": 0.16
             },
             {
               "id": "finger-joint-top-0",
@@ -1224,32 +1758,12 @@
               "kind": "poly",
               "points": [
                 [
-                  2.6,
-                  -0.06
+                  2.59,
+                  -0.0755
                 ],
                 [
-                  2.62,
-                  -0.04
-                ],
-                [
-                  2.6,
-                  -0.02
-                ],
-                [
-                  2.62,
-                  0
-                ],
-                [
-                  2.6,
-                  0.02
-                ],
-                [
-                  2.62,
-                  0.04
-                ],
-                [
-                  2.6,
-                  0.06
+                  2.59,
+                  0.0755
                 ]
               ],
               "closed": false
@@ -1265,32 +1779,12 @@
               "kind": "poly",
               "points": [
                 [
-                  5.9,
-                  -0.06
+                  5.89,
+                  -0.0755
                 ],
                 [
-                  5.92,
-                  -0.04
-                ],
-                [
-                  5.9,
-                  -0.02
-                ],
-                [
-                  5.92,
-                  0
-                ],
-                [
-                  5.9,
-                  0.02
-                ],
-                [
-                  5.92,
-                  0.04
-                ],
-                [
-                  5.9,
-                  0.06
+                  5.89,
+                  0.0755
                 ]
               ],
               "closed": false
@@ -1299,24 +1793,24 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Side elevation of the 600 mm deep beam (12 mm tall and 160 mm long on paper) with fifteen lamellae, six staggered finger joints and two steel bearing plates. Front view: the end face of 0.16 x 0.60 m (3.2 x 12 mm) with chamfered edges, fifteen lamellae separated by fourteen glue lines and the 20 mm bearing plate below. Plan view: the top lamella (160 x 3.2 mm) with chamfered corners and two staggered finger joints.",
-            "de": "Seitenansicht des 600 mm hohen Balkens (12 mm hoch und 160 mm lang auf Papier) mit fünfzehn Lamellen, sechs versetzten Keilzinkenstößen und zwei Stahllagerplatten. Vorderansicht: die Stirnfläche 0,16 x 0,60 m (3,2 x 12 mm) mit gefasten Kanten, fünfzehn Lamellen, getrennt durch vierzehn Leimfugen, und die 20-mm-Lagerplatte darunter. Draufsicht: die oberste Lamelle (160 x 3,2 mm) mit gefasten Ecken und zwei versetzten Keilzinkenstößen."
+            "en": "Side elevation of the 600 mm deep beam (12 mm tall and 160 mm long on paper) with its fifteen 40 mm lamellae, the 25 finger joints of the lay-up (one or two per lamella, staggered, none in the middle third of the bottom tension lamella) and the two 120 x 20 mm steel bearing plates under the square-sawn ends. Front view: the end face of 0.16 x 0.60 m (3.2 x 12 mm), fifteen lamellae separated by fourteen glue lines, over the 20 mm bearing plate. Plan view: the top lamella (160 x 3.2 mm) with its two finger joints as straight lines across the width.",
+            "de": "Seitenansicht des 600 mm hohen Balkens (12 mm hoch und 160 mm lang auf Papier) mit seinen fünfzehn Lamellen zu 40 mm, den 25 Keilzinkenstößen des Aufbaus (ein oder zwei je Lamelle, versetzt, keiner im mittleren Drittel der unteren Zuglamelle) und den beiden Stahllagerplatten 120 x 20 mm unter den rechtwinklig gesägten Enden. Vorderansicht: die Stirnfläche 0,16 x 0,60 m (3,2 x 12 mm), fünfzehn Lamellen, getrennt durch vierzehn Leimfugen, über der 20-mm-Lagerplatte. Draufsicht: die oberste Lamelle (160 x 3,2 mm) mit ihren zwei Keilzinkenstößen als gerade Linien quer über die Breite."
           },
           "retained": {
-            "en": "All 14 glue lines at 40 mm spacing (0.8 mm), the two 120 x 20 mm bearing plates (2.4 x 0.4 mm), staggered finger joints. All 14 glue lines at 40 mm in the end face; in plan the 6 mm chamfers at the corners and the finger joints of the top lamella at 2.6 m and 5.9 m.",
-            "de": "Alle 14 Leimfugen im Abstand von 40 mm (0,8 mm), die beiden Lagerplatten 120 x 20 mm (2,4 x 0,4 mm), versetzte Keilzinkenstöße. Alle 14 Leimfugen im Abstand von 40 mm in der Stirnfläche; in der Draufsicht die 6-mm-Fasen an den Ecken und die Keilzinkenstöße der obersten Lamelle bei 2,6 m und 5,9 m."
+            "en": "All 14 glue lines at 40 mm spacing (0.8 mm) in side and end view, the two 120 x 20 mm bearing plates (2.4 x 0.4 mm), every finger joint of the lay-up at its true place; the joints of the top lamella at 2.59 m and 5.89 m appear in side view and plan at the same place.",
+            "de": "Alle 14 Leimfugen im Abstand von 40 mm (0,8 mm) in Seiten- und Stirnansicht, die beiden Lagerplatten 120 x 20 mm (2,4 x 0,4 mm), jeder Keilzinkenstoß des Aufbaus an seiner wahren Stelle; die Stöße der obersten Lamelle bei 2,59 m und 5,89 m erscheinen in Seitenansicht und Draufsicht an derselben Stelle."
           },
           "merged": {
             "en": "Side faces, top and soffit remain one bar shape; the glue lines are bound to the side faces.",
             "de": "Seitenflächen, Oberseite und Unterseite bleiben eine Balkenform; die Leimfugen sind an die Seitenflächen gebunden."
           },
           "omitted": {
-            "en": "Plate bolts (12 mm, 0.24 mm) and the real finger pitch (12 mm). Plate bolts (not visible from the end) and, in plan, the bearing plates and the chamfer lines along the long edges (6 mm, 0.12 mm, inside the outline pen).",
-            "de": "Lagerschrauben (12 mm, 0,24 mm) und die reale Zinkenteilung (12 mm). Lagerschrauben (von der Stirnseite nicht sichtbar) und in der Draufsicht die Lagerplatten sowie die Fasenlinien an den Längskanten (6 mm, 0,12 mm, innerhalb der Konturfeder)."
+            "en": "The real finger pitch (3.8 to 6.2 mm) and the arris chamfers of a few millimetres along the long edges (0.1 mm on paper, inside the 0.35 mm outline pen, below the 7.5 mm smallest feature), so the ends are drawn square in every view. In plan the bearing plates are hidden below the beam.",
+            "de": "Die reale Zinkenteilung (3,8 bis 6,2 mm) und die Fasen von wenigen Millimetern an den Längskanten (0,1 mm auf Papier, innerhalb der 0,35-mm-Konturfeder, unter der kleinsten Einzelheit von 7,5 mm), daher sind die Enden in jeder Ansicht rechtwinklig gezeichnet. In der Draufsicht liegen die Lagerplatten verdeckt unter dem Balken."
           },
           "thinElements": {
-            "en": "Finger joints are two-tooth symbols with a 40 mm pitch (0.8 mm), because the real pitch (0.24 mm) is below the printable minimum.",
-            "de": "Keilzinkenstöße sind Zeichen mit zwei Zinken und 40 mm Teilung (0,8 mm), weil die echte Teilung (0,24 mm) unter dem druckbaren Minimum liegt."
+            "en": "Finger joints are two-finger symbols of 20 mm finger length at 20 mm pitch (0.4 mm), because the real profile is below the printable minimum; the finger profile shows on the narrow faces of the lamellae (the beam sides), so the top face shows a straight joint line.",
+            "de": "Keilzinkenstöße sind Zeichen mit zwei Zinken von 20 mm Länge und 20 mm Teilung (0,4 mm), weil das echte Profil unter dem druckbaren Minimum liegt; das Zinkenprofil zeigt sich an den Schmalseiten der Lamellen (den Balkenseiten), daher zeigt die Oberseite eine gerade Stoßlinie."
           },
           "hatching": {
             "en": "No hatch fill: the glue lines are the grain indication of the longitudinal view.",
@@ -1355,7 +1849,7 @@
             },
             "pattern": "lines",
             "angleDeg": 0,
-            "spacingMm": 0.8,
+            "spacingMm": 0.4,
             "penMm": 0.1
           }
         ],
@@ -1475,28 +1969,28 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A timber bar (80 x 6 mm) with grain hatch on two steel bearing plates 5 mm proud of the soffit. Front view: the end face (1.6 x 6 mm) with the glue-line hatch of the lamellae over a bearing plate of the same width. Plan view: the top lamella (80 x 1.6 mm) with the grain hatch along the beam.",
-            "de": "Ein Holzbalken (80 x 6 mm) mit Faserschraffur auf zwei Stahllagerplatten. Vorderansicht: die Stirnfläche (1,6 x 6 mm) mit der Leimfugenschraffur der Lamellen über einer Lagerplatte gleicher Breite. Draufsicht: die oberste Lamelle (80 x 1,6 mm) mit der Faserschraffur längs des Balkens."
+            "en": "A timber bar (80 x 6 mm) with the lamella hatch on two steel bearing plates under its ends. Front view: the end face (1.6 x 6 mm) with the lamella hatch over a bearing plate of the same width. Plan view: the top lamella (80 x 1.6 mm) with the grain hatch along the beam.",
+            "de": "Ein Holzbalken (80 x 6 mm) mit der Lamellenschraffur auf zwei Stahllagerplatten unter seinen Enden. Vorderansicht: die Stirnfläche (1,6 x 6 mm) mit der Lamellenschraffur über einer Lagerplatte gleicher Breite. Draufsicht: die oberste Lamelle (80 x 1,6 mm) mit der Faserschraffur längs des Balkens."
           },
           "retained": {
-            "en": "Bar, grain direction and both plates (1.2 x 0.25 mm). The grain hatch at 0.8 mm serves as glue lines in the end face and as grain lines on the top; the plate is 0.16 x 0.025 m. Overall height 0.62 m (beam 0.60 m plus 0.02 m plate level) in side and front view, as at 1:50 and 1:500.",
-            "de": "Balken, Faserrichtung und beide Platten (1,2 x 0,25 mm). Die Faserschraffur mit 0,8 mm dient an der Stirnfläche als Leimfugen und an der Oberseite als Faserlinien; die Platte misst 0,16 x 0,025 m. Gesamthöhe 0,62 m (Balken 0,60 m plus 0,02 m Plattenlage) in Seiten- und Vorderansicht, wie bei 1:50 und 1:500."
+            "en": "Bar, lamellae and both plates (1.2 mm long). The hatch at 0.4 mm is the lamella thickness of 40 mm: glue lines in side and end view, grain lines on the top. Overall height 0.62 m (beam 0.60 m plus 0.02 m plate) in side and front view, as at every scale.",
+            "de": "Balken, Lamellen und beide Platten (1,2 mm lang). Die Schraffur mit 0,4 mm ist die Lamellendicke von 40 mm: Leimfugen in Seiten- und Stirnansicht, Faserlinien auf der Oberseite. Gesamthöhe 0,62 m (Balken 0,60 m plus 0,02 m Platte) in Seiten- und Vorderansicht, wie in jedem Maßstab."
           },
           "merged": {
-            "en": "Lamellae (0.4 mm) are expressed by a grain hatch at every second glue line (0.8 mm).",
-            "de": "Lamellen (0,4 mm) sind durch eine Faserschraffur an jeder zweiten Leimfuge (0,8 mm) ausgedrückt."
+            "en": "The fifteen lamellae are expressed by the hatch at the lamella thickness (0.4 mm).",
+            "de": "Die fünfzehn Lamellen sind durch die Schraffur im Lamellenabstand (0,4 mm) ausgedrückt."
           },
           "omitted": {
             "en": "Finger joints and bolts. Finger joints of the top lamella; the bearing plates are hidden below the bar in plan.",
             "de": "Keilzinkenstöße und Schrauben. Keilzinkenstöße der obersten Lamelle; die Lagerplatten liegen in der Draufsicht verdeckt unter dem Balken."
           },
           "thinElements": {
-            "en": "The 20 mm plates are drawn 25 mm thick (0.25 mm, 5 mm below the beam), the smallest filled feature that prints under the office-laser profile (0.2 mm plus margin); length stays 120 mm. The real height of the beam is unchanged.",
-            "de": "Die 20-mm-Platten sind 25 mm dick (0,25 mm, 5 mm unter dem Balken) gezeichnet, die kleinste gefüllte Einzelheit, die im Büro-Laserprofil druckt (0,2 mm plus Reserve); die Länge bleibt 120 mm. Die reale Höhe des Balkens bleibt unverändert."
+            "en": "The 20 mm plates are drawn 25 mm thick (0.25 mm), the smallest filled feature that prints under the office-laser profile (0.2 mm plus margin); the extra 5 mm lies over the beam soffit, so ground line and beam height stay true; length stays 120 mm.",
+            "de": "Die 20-mm-Platten sind 25 mm dick (0,25 mm) gezeichnet, die kleinste gefüllte Einzelheit, die im Büro-Laserprofil druckt (0,2 mm plus Reserve); die zusätzlichen 5 mm liegen über der Balkenunterkante, sodass Bodenlinie und Balkenhöhe wahr bleiben; die Länge bleibt 120 mm."
           },
           "hatching": {
-            "en": "Timber long-section hatch: parallel lines along the grain at 0.8 mm (DIN ISO 128-50, DIN 1356-1).",
-            "de": "Holz im Längsschnitt: parallele Linien in Faserrichtung, 0,8 mm Abstand (DIN ISO 128-50, DIN 1356-1)."
+            "en": "Timber long-section hatch: parallel lines along the grain at the lamella thickness, 0.4 mm (DIN ISO 128-50, DIN 1356-1).",
+            "de": "Holz im Längsschnitt: parallele Linien in Faserrichtung im Lamellenabstand, 0,4 mm (DIN ISO 128-50, DIN 1356-1)."
           },
           "styles": {
             "en": "Outline 0.25 mm, hatch 0.1 mm, plates darker.",
@@ -1549,46 +2043,32 @@
               "bone": "beam",
               "role": "body",
               "z": 2,
-              "filled": false,
+              "filled": true,
               "tone": 0.3,
               "region": "bearing-steel",
               "material": "steel",
               "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  -0.32
-                ],
-                [
-                  0.12,
-                  -0.32
-                ]
-              ],
-              "closed": false
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.32,
+              "w": 0.12,
+              "h": 0.02
             },
             {
               "id": "bearing-right",
               "bone": "beam",
               "role": "body",
               "z": 2,
-              "filled": false,
+              "filled": true,
               "tone": 0.3,
               "region": "bearing-steel",
               "material": "steel",
               "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  7.88,
-                  -0.32
-                ],
-                [
-                  8,
-                  -0.32
-                ]
-              ],
-              "closed": false
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.32,
+              "w": 0.12,
+              "h": 0.02
             }
           ],
           "front": [
@@ -1616,23 +2096,16 @@
               "bone": "beam",
               "role": "body",
               "z": 2,
-              "filled": false,
+              "filled": true,
               "tone": 0.3,
               "region": "bearing-steel",
               "material": "steel",
               "penMm": 0.18,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.062,
-                  0
-                ],
-                [
-                  0.062,
-                  0
-                ]
-              ],
-              "closed": false
+              "kind": "rect",
+              "x": -0.08,
+              "y": 0.0,
+              "w": 0.16,
+              "h": 0.02
             }
           ],
           "plan": [
@@ -1678,12 +2151,12 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A single timber bar (40 x 3 mm) with two bearing lines under its ends. Front view: the 0.16 x 0.60 m end face (0.8 x 3 mm) over a bearing line. Plan view: the top of the bar (40 x 0.8 mm) with a faint axis line.",
-            "de": "Ein einzelner Holzbalken (40 x 3 mm) mit zwei Auflagerlinien unter den Enden. Vorderansicht: die Stirnfläche 0,16 x 0,60 m (0,8 x 3 mm) über einer Auflagerlinie. Draufsicht: die Oberseite des Balkens (40 x 0,8 mm) mit einer feinen Achslinie."
+            "en": "A single timber bar (40 x 3 mm) on two bearing plates under its ends. Front view: the 0.16 x 0.60 m end face (0.8 x 3 mm) over its bearing plate. Plan view: the top of the bar (40 x 0.8 mm) with a faint axis line between the bearings.",
+            "de": "Ein einzelner Holzbalken (40 x 3 mm) auf zwei Lagerplatten unter seinen Enden. Vorderansicht: die Stirnfläche 0,16 x 0,60 m (0,8 x 3 mm) über ihrer Lagerplatte. Draufsicht: die Oberseite des Balkens (40 x 0,8 mm) mit einer feinen Achslinie zwischen den Auflagern."
           },
           "retained": {
-            "en": "Span, depth 0.60 m and the two bearing lengths of 0.12 m. The plate level as a 0.18 mm line under the end face, as in the side view. Overall height 0.62 m (beam 0.60 m plus 0.02 m plate level) in side and front view, as at 1:50 and 1:500.",
-            "de": "Spannweite, Höhe 0,60 m und die beiden Auflagerlängen von 0,12 m. Die Plattenlage als 0,18-mm-Linie unter der Stirnfläche, wie in der Seitenansicht. Gesamthöhe 0,62 m (Balken 0,60 m plus 0,02 m Plattenlage) in Seiten- und Vorderansicht, wie bei 1:50 und 1:500."
+            "en": "Span, depth 0.60 m and the two bearings of 120 x 20 mm at their true place between ground and soffit. Overall height 0.62 m (beam 0.60 m plus 0.02 m plate) in side and front view, as at every scale.",
+            "de": "Spannweite, Höhe 0,60 m und die beiden Auflager 120 x 20 mm an ihrer wahren Stelle zwischen Boden und Balkenunterkante. Gesamthöhe 0,62 m (Balken 0,60 m plus 0,02 m Platte) in Seiten- und Vorderansicht, wie in jedem Maßstab."
           },
           "merged": {
             "en": "Side faces, top and soffit are one bar shape.",
@@ -1694,8 +2167,8 @@
             "de": "Lamellen (0,2 mm Abstand), Keilzinkenstöße und Schrauben. Lamellen der Stirnfläche (0,2 mm Abstand) und in der Draufsicht die Lagerplatten unter dem Balken."
           },
           "thinElements": {
-            "en": "The 20 mm bearing plates are lines of 0.18 mm pen (36 mm), 16 mm taller than real.",
-            "de": "Die 20-mm-Lagerplatten sind Linien mit 0,18 mm Feder (36 mm), 16 mm höher als real."
+            "en": "The 20 mm bearing plates are filled at their true 0.1 mm thickness; the 0.18 mm outline pen closes them into one dark bearing band of about 0.28 mm that sits between ground line and soffit.",
+            "de": "Die 20-mm-Lagerplatten sind in ihrer wahren Dicke von 0,1 mm gefüllt; die 0,18-mm-Konturfeder schließt sie zu einem dunklen Auflagerband von etwa 0,28 mm zwischen Bodenlinie und Balkenunterkante."
           },
           "hatching": {
             "en": "No hatch: lamella spacing is below the printable minimum.",
@@ -1706,8 +2179,8 @@
             "de": "Mittelgrauer Balken, dunkle Auflagerlinien."
           },
           "overlays": {
-            "en": "Overlays colour the bar (merged faces) and the bearing lines separately.",
-            "de": "Überlagerungen färben Balken (zusammengefasste Flächen) und Auflagerlinien getrennt."
+            "en": "Overlays colour the bar (merged faces) and the two bearing plates separately.",
+            "de": "Überlagerungen färben Balken (zusammengefasste Flächen) und die beiden Lagerplatten getrennt."
           }
         }
       },
@@ -2251,13 +2724,692 @@
         "denominator": 50,
         "body": [
           {
+            "id": "lamella-00-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[1.84, -0.3], [1.86, -0.29], [1.84, -0.28], [1.86, -0.27], [1.84, -0.26], [0.0, -0.26], [0.0, -0.3]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-00-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[6.29, -0.3], [6.31, -0.29], [6.29, -0.28], [6.31, -0.27], [6.29, -0.26], [1.84, -0.26], [1.86, -0.27], [1.84, -0.28], [1.86, -0.29], [1.84, -0.3]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-00-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, -0.3], [8.0, -0.26], [6.29, -0.26], [6.31, -0.27], [6.29, -0.28], [6.31, -0.29], [6.29, -0.3]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-01-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[3.09, -0.26], [3.11, -0.25], [3.09, -0.24], [3.11, -0.23], [3.09, -0.22], [0.0, -0.22], [0.0, -0.26]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-01-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[8.0, -0.26], [8.0, -0.22], [3.09, -0.22], [3.11, -0.23], [3.09, -0.24], [3.11, -0.25], [3.09, -0.26]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-02-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[0.94, -0.22], [0.96, -0.21], [0.94, -0.2], [0.96, -0.19], [0.94, -0.18], [0.0, -0.18], [0.0, -0.22]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-02-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[5.34, -0.22], [5.36, -0.21], [5.34, -0.2], [5.36, -0.19], [5.34, -0.18], [0.94, -0.18], [0.96, -0.19], [0.94, -0.2], [0.96, -0.21], [0.94, -0.22]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-02-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, -0.22], [8.0, -0.18], [5.34, -0.18], [5.36, -0.19], [5.34, -0.2], [5.36, -0.21], [5.34, -0.22]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-03-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[4.04, -0.18], [4.06, -0.17], [4.04, -0.16], [4.06, -0.15], [4.04, -0.14], [0.0, -0.14], [0.0, -0.18]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-03-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[8.0, -0.18], [8.0, -0.14], [4.04, -0.14], [4.06, -0.15], [4.04, -0.16], [4.06, -0.17], [4.04, -0.18]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-04-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[2.34, -0.14], [2.36, -0.13], [2.34, -0.12], [2.36, -0.11], [2.34, -0.1], [0.0, -0.1], [0.0, -0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-04-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[6.74, -0.14], [6.76, -0.13], [6.74, -0.12], [6.76, -0.11], [6.74, -0.1], [2.34, -0.1], [2.36, -0.11], [2.34, -0.12], [2.36, -0.13], [2.34, -0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-04-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, -0.14], [8.0, -0.1], [6.74, -0.1], [6.76, -0.11], [6.74, -0.12], [6.76, -0.13], [6.74, -0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-05-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[5.69, -0.1], [5.71, -0.09], [5.69, -0.08], [5.71, -0.07], [5.69, -0.06], [0.0, -0.06], [0.0, -0.1]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-05-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[8.0, -0.1], [8.0, -0.06], [5.69, -0.06], [5.71, -0.07], [5.69, -0.08], [5.71, -0.09], [5.69, -0.1]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-06-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[1.39, -0.06], [1.41, -0.05], [1.39, -0.04], [1.41, -0.03], [1.39, -0.02], [0.0, -0.02], [0.0, -0.06]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-06-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[4.89, -0.06], [4.91, -0.05], [4.89, -0.04], [4.91, -0.03], [4.89, -0.02], [1.39, -0.02], [1.41, -0.03], [1.39, -0.04], [1.41, -0.05], [1.39, -0.06]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-06-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, -0.06], [8.0, -0.02], [4.89, -0.02], [4.91, -0.03], [4.89, -0.04], [4.91, -0.05], [4.89, -0.06]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-07-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[3.54, -0.02], [3.56, -0.01], [3.54, 0.0], [3.56, 0.01], [3.54, 0.02], [0.0, 0.02], [0.0, -0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-07-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[7.34, -0.02], [7.36, -0.01], [7.34, 0.0], [7.36, 0.01], [7.34, 0.02], [3.54, 0.02], [3.56, 0.01], [3.54, 0.0], [3.56, -0.01], [3.54, -0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-07-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[8.0, -0.02], [8.0, 0.02], [7.34, 0.02], [7.36, 0.01], [7.34, 0.0], [7.36, -0.01], [7.34, -0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-08-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[2.69, 0.02], [2.71, 0.03], [2.69, 0.04], [2.71, 0.05], [2.69, 0.06], [0.0, 0.06], [0.0, 0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-08-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[6.09, 0.02], [6.11, 0.03], [6.09, 0.04], [6.11, 0.05], [6.09, 0.06], [2.69, 0.06], [2.71, 0.05], [2.69, 0.04], [2.71, 0.03], [2.69, 0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-08-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, 0.02], [8.0, 0.06], [6.09, 0.06], [6.11, 0.05], [6.09, 0.04], [6.11, 0.03], [6.09, 0.02]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-09-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[4.59, 0.06], [4.61, 0.07], [4.59, 0.08], [4.61, 0.09], [4.59, 0.1], [0.0, 0.1], [0.0, 0.06]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-09-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[8.0, 0.06], [8.0, 0.1], [4.59, 0.1], [4.61, 0.09], [4.59, 0.08], [4.61, 0.07], [4.59, 0.06]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-10-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[1.14, 0.1], [1.16, 0.11], [1.14, 0.12], [1.16, 0.13], [1.14, 0.14], [0.0, 0.14], [0.0, 0.1]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-10-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[5.44, 0.1], [5.46, 0.11], [5.44, 0.12], [5.46, 0.13], [5.44, 0.14], [1.14, 0.14], [1.16, 0.13], [1.14, 0.12], [1.16, 0.11], [1.14, 0.1]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-10-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, 0.1], [8.0, 0.14], [5.44, 0.14], [5.46, 0.13], [5.44, 0.12], [5.46, 0.11], [5.44, 0.1]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-11-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[3.84, 0.14], [3.86, 0.15], [3.84, 0.16], [3.86, 0.17], [3.84, 0.18], [0.0, 0.18], [0.0, 0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-11-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[7.04, 0.14], [7.06, 0.15], [7.04, 0.16], [7.06, 0.17], [7.04, 0.18], [3.84, 0.18], [3.86, 0.17], [3.84, 0.16], [3.86, 0.15], [3.84, 0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-11-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[8.0, 0.14], [8.0, 0.18], [7.04, 0.18], [7.06, 0.17], [7.04, 0.16], [7.06, 0.15], [7.04, 0.14]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-12-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[2.04, 0.18], [2.06, 0.19], [2.04, 0.2], [2.06, 0.21], [2.04, 0.22], [0.0, 0.22], [0.0, 0.18]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-12-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[6.54, 0.18], [6.56, 0.19], [6.54, 0.2], [6.56, 0.21], [6.54, 0.22], [2.04, 0.22], [2.06, 0.21], [2.04, 0.2], [2.06, 0.19], [2.04, 0.18]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-12-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, 0.18], [8.0, 0.22], [6.54, 0.22], [6.56, 0.21], [6.54, 0.2], [6.56, 0.19], [6.54, 0.18]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-13-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.62,
+            "profile": [[4.34, 0.22], [4.36, 0.23], [4.34, 0.24], [4.36, 0.25], [4.34, 0.26], [0.0, 0.26], [0.0, 0.22]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-13-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[8.0, 0.22], [8.0, 0.26], [4.34, 0.26], [4.36, 0.25], [4.34, 0.24], [4.36, 0.23], [4.34, 0.22]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-14-board-a",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.56,
+            "profile": [[2.59, 0.26], [2.61, 0.27], [2.59, 0.28], [2.61, 0.29], [2.59, 0.3], [0.0, 0.3], [0.0, 0.26]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-14-board-b",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.59,
+            "profile": [[5.89, 0.26], [5.91, 0.27], [5.89, 0.28], [5.91, 0.29], [5.89, 0.3], [2.59, 0.3], [2.61, 0.29], [2.59, 0.28], [2.61, 0.27], [2.59, 0.26]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "lamella-14-board-c",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.54,
+            "profile": [[8.0, 0.26], [8.0, 0.3], [5.89, 0.3], [5.91, 0.29], [5.89, 0.28], [5.91, 0.27], [5.89, 0.26]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08
+          },
+          {
+            "id": "bearing-plate-left",
+            "kind": "box",
+            "bone": "beam",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.12, 0.02, 0.16],
+            "transform": {
+              "translation": [0.06, -0.31, 0.0]
+            }
+          },
+          {
+            "id": "bearing-plate-right",
+            "kind": "box",
+            "bone": "beam",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.12, 0.02, 0.16],
+            "transform": {
+              "translation": [7.94, -0.31, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-side-l",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [8.0, 0.6, 0.036],
+            "transform": {
+              "translation": [4.0, 0.0, 0.062]
+            },
+            "region": "beam-sides",
+            "sectionFaces": ["-w", "-v", "+v"]
+          },
+          {
+            "id": "th-side-r",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [8.0, 0.6, 0.036],
+            "transform": {
+              "translation": [4.0, 0.0, -0.062]
+            },
+            "region": "beam-sides",
+            "sectionFaces": ["+w", "-v", "+v"]
+          },
+          {
+            "id": "th-top",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [8.0, 0.036, 0.16],
+            "transform": {
+              "translation": [4.0, 0.282, 0.0]
+            },
+            "region": "beam-top",
+            "sectionFaces": ["-v", "-w", "+w"]
+          },
+          {
+            "id": "th-soffit-bearing-left",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.12, 0.036, 0.16],
+            "transform": {
+              "translation": [0.06, -0.282, 0.0]
+            },
+            "region": "beam-soffit",
+            "sectionFaces": ["+v", "-w", "+w"]
+          },
+          {
+            "id": "th-soffit-span",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [7.76, 0.036, 0.16],
+            "transform": {
+              "translation": [4.0, -0.282, 0.0]
+            },
+            "region": "beam-soffit",
+            "sectionFaces": ["+v", "-w", "+w"]
+          },
+          {
+            "id": "th-soffit-bearing-right",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.12, 0.036, 0.16],
+            "transform": {
+              "translation": [7.94, -0.282, 0.0]
+            },
+            "region": "beam-soffit",
+            "sectionFaces": ["+v", "-w", "+w"]
+          },
+          {
+            "id": "th-bearing-plate-left",
+            "of": "bearing-plate-left",
+            "region": "bearing-steel"
+          },
+          {
+            "id": "th-bearing-plate-right",
+            "of": "bearing-plate-right",
+            "region": "bearing-steel"
+          }
+        ],
+        "structure": [
+          {
+            "id": "beam-member",
+            "kind": "box",
+            "bone": "beam",
+            "material": "glulam",
+            "role": "body",
+            "tone": 0.6,
+            "size": [8.0, 0.6, 0.16],
+            "transform": {
+              "translation": [4.0, 0.0, 0.0]
+            },
+            "member": "beam",
+            "part": "member"
+          },
+          {
+            "id": "support-bearing-left-pin",
+            "kind": "extrude",
+            "bone": "beam",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, -0.32], [0.12, -0.32], [0.12, -0.31], [0.075, -0.31], [0.06, -0.3], [0.045, -0.31], [0.0, -0.31]],
+            "plane": "xy",
+            "from": -0.08,
+            "to": 0.08,
+            "member": "beam",
+            "part": "support",
+            "anchor": "bearing-left"
+          },
+          {
+            "id": "support-bearing-right-roller",
+            "kind": "revolve",
+            "bone": "beam",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.0], [0.0, 0.01], [0.16, 0.01], [0.16, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [7.94, -0.31, -0.08],
+            "member": "beam",
+            "part": "support",
+            "anchor": "bearing-right"
+          },
+          {
+            "id": "joint-load-carrier",
+            "kind": "box",
+            "bone": "load-carrier",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.1, 0.03, 0.16],
+            "transform": {
+              "translation": [0.0, 0.285, 0.0]
+            },
+            "member": "load-carrier",
+            "part": "joint"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the beam as it is made: each of the fifteen 40 mm lamellae is a run of sawn boards (40 solids) joined by the 25 finger joints of the lay-up, one or two per lamella, staggered and kept out of the middle third of the bottom tension lamella; every joint is a two-finger profile of 20 mm finger length at 20 mm pitch across the full 160 mm width, exactly the symbol of the side elevation, so the board seams of the model are the drawn joints. Lamellae alternate in tone and each board is a shade apart, as sawn boards are. Under the square-sawn ends sit the two 120 x 20 x 160 mm steel bearing plates. The arris chamfers of a few millimetres are below the 7.5 mm smallest feature and are not modelled.",
+            "de": "Körper: der Balken, wie er hergestellt wird: jede der fünfzehn Lamellen zu 40 mm ist eine Folge gesägter Bretter (40 Körper), verbunden durch die 25 Keilzinkenstöße des Aufbaus, ein oder zwei je Lamelle, versetzt und aus dem mittleren Drittel der unteren Zuglamelle gehalten; jeder Stoß ist ein Profil mit zwei Zinken von 20 mm Länge und 20 mm Teilung über die volle Breite von 160 mm, genau das Zeichen der Seitenansicht, sodass die Brettfugen des Modells die gezeichneten Stöße sind. Die Lamellen wechseln im Ton, jedes Brett ist um eine Nuance verschieden, wie gesägte Bretter. Unter den rechtwinklig gesägten Enden liegen die beiden Stahllagerplatten 120 x 20 x 160 mm. Die Kantenfasen von wenigen Millimetern liegen unter der kleinsten Einzelheit von 7,5 mm und sind nicht modelliert."
+          },
+          {
+            "en": "Thermal: the timber faces are skins of the effective storage depth of 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0.036 m): both sides over the full height, the top over the full width, and the soffit split into the free span and the two 120 mm bearing contacts where it sits on the steel; the bearing plates are referenced from the body. Side and flat skins share the 36 mm arris prisms; the faces against the core and the overlap are section faces, so each region counts its own outer face.",
+            "de": "Thermisch: die Holzflächen sind Schalen der wirksamen Speichertiefe von 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0,036 m): beide Seiten über die volle Höhe, die Oberseite über die volle Breite und die Unterseite geteilt in das freie Feld und die beiden 120-mm-Auflagerkontakte, wo sie auf dem Stahl liegt; die Lagerplatten sind aus dem Körper referenziert. Seiten- und Flachschalen teilen sich die 36-mm-Kantenprismen; die Flächen zum Kern und die Überlappung sind Schnittflächen, sodass jede Region ihre eigene Außenfläche zählt."
+          },
+          {
+            "en": "Structure: the member is the real 160 x 600 mm GL24h section over the full 8 m (the glued lamellae act as one section); the pin bearing is a 10 mm steel pad with a 10 mm knife edge under the left plate centre, the roller bearing a 20 mm steel roller across the width under the right plate centre, both standing on the ground at their anchors 7.88 m apart; the slider of the moving load is a 100 mm load shoe flush with the top face. The self-weight is distributed uniformly along the member, so no concentrated mass is modelled.",
+            "de": "Tragwerk: das Glied ist der echte Querschnitt GL24h 160 x 600 mm über die vollen 8 m (die verleimten Lamellen wirken als ein Querschnitt); das Festlager ist eine 10-mm-Stahlplatte mit 10-mm-Schneide unter der Mitte der linken Platte, das Rollenlager eine 20-mm-Stahlrolle über die Breite unter der Mitte der rechten Platte, beide stehen am Boden an ihren Ankern im Abstand von 7,88 m; der Schlitten der wandernden Last ist ein 100-mm-Lastschuh bündig mit der Oberseite. Das Eigengewicht ist gleichmäßig über das Glied verteilt, daher ist keine Einzelmasse modelliert."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
             "id": "lamella-00",
             "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.56,
-            "profile": [[-0.3, -0.074], [-0.294, -0.08], [-0.26, -0.08], [-0.26, 0.08], [-0.294, 0.08], [-0.3, 0.074]],
+            "profile": [[-0.3, -0.08], [-0.26, -0.08], [-0.26, 0.08], [-0.3, 0.08]],
             "plane": "yz",
             "from": 0.0,
             "to": 8.0
@@ -2425,7 +3577,7 @@
             "material": "glulam",
             "role": "body",
             "tone": 0.56,
-            "profile": [[0.26, -0.08], [0.294, -0.08], [0.3, -0.074], [0.3, 0.074], [0.294, 0.08], [0.26, 0.08]],
+            "profile": [[0.26, -0.08], [0.3, -0.08], [0.3, 0.08], [0.26, 0.08]],
             "plane": "yz",
             "from": 0.0,
             "to": 8.0
@@ -2465,10 +3617,10 @@
             "tone": 0.6,
             "size": [8.0, 0.6, 0.036],
             "transform": {
-              "translation": [4.0, 0.0, -0.062]
+              "translation": [4.0, 0.0, 0.062]
             },
             "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
+            "sectionFaces": ["-w", "-v", "+v"]
           },
           {
             "id": "th-side-r",
@@ -2479,10 +3631,10 @@
             "tone": 0.6,
             "size": [8.0, 0.6, 0.036],
             "transform": {
-              "translation": [4.0, 0.0, 0.062]
+              "translation": [4.0, 0.0, -0.062]
             },
             "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
+            "sectionFaces": ["+w", "-v", "+v"]
           },
           {
             "id": "th-top",
@@ -2532,7 +3684,6 @@
             "role": "body",
             "tone": 0.6,
             "size": [8.0, 0.6, 0.16],
-            "cornerRadius": 0.006,
             "transform": {
               "translation": [4.0, 0.0, 0.0]
             },
@@ -2546,7 +3697,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0.0, -0.32], [0.12, -0.32], [0.12, -0.312], [0.09, -0.312], [0.06, -0.3], [0.03, -0.312], [0.0, -0.312]],
+            "profile": [[0.0, -0.32], [0.12, -0.32], [0.06, -0.3]],
             "plane": "xy",
             "from": -0.08,
             "to": 0.08,
@@ -2561,190 +3712,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0, 0.008], [0.16, 0.008]],
-            "axis": [0, 0, 1],
-            "origin": [7.94, -0.312, -0.08],
-            "member": "beam",
-            "part": "support",
-            "anchor": "bearing-right"
-          },
-          {
-            "id": "joint-load-carrier",
-            "kind": "box",
-            "bone": "load-carrier",
-            "material": "steel",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.05, 0.05, 0.05],
-            "transform": {
-              "translation": [0.0, 0.275, 0.0]
-            },
-            "member": "load-carrier",
-            "part": "joint"
-          }
-        ],
-        "decisions": [
-          {
-            "en": "Body: the beam as its fifteen 40 mm lamellae (alternating tone so the glue lines read), the outermost two with the 6 mm arris chamfer of the drawing, plus the two 120 x 20 x 160 mm steel bearing plates. Finger joints and glue lines are texture in the drawing and stay off the solid.",
-            "de": "Körper: der Balken als seine fünfzehn Lamellen zu 40 mm (abwechselnder Ton, damit die Leimfugen lesbar sind), die äußeren beiden mit der 6-mm-Kantenfase der Zeichnung, dazu die zwei Stahllagerplatten 120 x 20 x 160 mm. Keilzinkenstöße und Leimfugen sind in der Zeichnung Textur und bleiben ohne Volumen."
-          },
-          {
-            "en": "Thermal: faces are skins of the effective storage depth 36 mm of the passive timber (heat capacity 24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0.036 m): two side skins, top and soffit; the bearing plates are referenced from the body. The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once.",
-            "de": "Thermisch: Flächen sind Häute der wirksamen Speichertiefe 36 mm des passiven Holzes (Wärmekapazität 24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0,036 m): zwei Seitenhäute, Oberseite und Unterseite; die Lagerplatten werden aus dem Körper referenziert. Die vier Häute überlappen in den Kantenprismen: Ober- und Unterhaut laufen über die ganze Breite, die Seitenhäute über die ganze Höhe, und die Flächen am Kern oder an der Nachbarhaut (Innenflächen, Kantenstreifen) sind Schnittflächen, damit jede Haut ihre Außenfläche genau einmal zeigt."
-          },
-          {
-            "en": "Structure: one member solid of the real 160 x 600 mm section (A 0.096 m2, I 0.00288 m4), a slider joint at the prismatic load carrier, and the supports by type: pin = steel pad with a fixed wedge knuckle, roller = steel pad with a free roller across the beam width. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
-            "de": "Tragwerk: ein Stabkörper mit dem echten Querschnitt 160 x 600 mm (A 0,096 m2, I 0,00288 m4), ein Gleitgelenk am verschieblichen Lastträger und die Auflager nach Typ: Festlager = Stahlplatte mit festem Keilgelenk, Rollenlager = Stahlplatte mit freier Rolle über die Balkenbreite. Ein Stabkörper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein Körper; der Lastträger ist ein Gelenk, die Lager sind Auflager."
-          }
-        ]
-      },
-      "100": {
-        "status": "authored",
-        "denominator": 100,
-        "body": [
-          {
-            "id": "beam",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.6, 0.16],
-            "transform": {
-              "translation": [4.0, 0.0, 0.0]
-            }
-          },
-          {
-            "id": "bearing-plate-left",
-            "kind": "box",
-            "bone": "beam",
-            "material": "steel",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.12, 0.025, 0.16],
-            "transform": {
-              "translation": [0.06, -0.3075, 0.0]
-            }
-          },
-          {
-            "id": "bearing-plate-right",
-            "kind": "box",
-            "bone": "beam",
-            "material": "steel",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.12, 0.025, 0.16],
-            "transform": {
-              "translation": [7.94, -0.3075, 0.0]
-            }
-          }
-        ],
-        "thermal": [
-          {
-            "id": "th-side-l",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.6, 0.04],
-            "transform": {
-              "translation": [4.0, 0.0, -0.06]
-            },
-            "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
-          },
-          {
-            "id": "th-side-r",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.6, 0.04],
-            "transform": {
-              "translation": [4.0, 0.0, 0.06]
-            },
-            "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
-          },
-          {
-            "id": "th-top",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.04, 0.16],
-            "transform": {
-              "translation": [4.0, 0.28, 0.0]
-            },
-            "region": "beam-top",
-            "sectionFaces": ["-v", "-w", "+w"]
-          },
-          {
-            "id": "th-soffit",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.04, 0.16],
-            "transform": {
-              "translation": [4.0, -0.28, 0.0]
-            },
-            "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
-          },
-          {
-            "id": "th-bearing-plate-left",
-            "of": "bearing-plate-left",
-            "region": "bearing-steel"
-          },
-          {
-            "id": "th-bearing-plate-right",
-            "of": "bearing-plate-right",
-            "region": "bearing-steel"
-          }
-        ],
-        "structure": [
-          {
-            "id": "beam-member",
-            "kind": "box",
-            "bone": "beam",
-            "material": "glulam",
-            "role": "body",
-            "tone": 0.6,
-            "size": [8.0, 0.6, 0.16],
-            "transform": {
-              "translation": [4.0, 0.0, 0.0]
-            },
-            "member": "beam",
-            "part": "member"
-          },
-          {
-            "id": "support-bearing-left-pin",
-            "kind": "extrude",
-            "bone": "beam",
-            "material": "steel",
-            "role": "body",
-            "tone": 0.4,
-            "profile": [[0.0, -0.32], [0.12, -0.32], [0.12, -0.31], [0.09, -0.31], [0.06, -0.295], [0.03, -0.31], [0.0, -0.31]],
-            "plane": "xy",
-            "from": -0.08,
-            "to": 0.08,
-            "member": "beam",
-            "part": "support",
-            "anchor": "bearing-left"
-          },
-          {
-            "id": "support-bearing-right-roller",
-            "kind": "revolve",
-            "bone": "beam",
-            "material": "steel",
-            "role": "body",
-            "tone": 0.4,
-            "profile": [[0, 0.01], [0.16, 0.01]],
+            "profile": [[0.0, 0.0], [0.0, 0.01], [0.16, 0.01], [0.16, 0.0]],
             "axis": [0, 0, 1],
             "origin": [7.94, -0.31, -0.08],
             "member": "beam",
@@ -2758,9 +3726,9 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.05, 0.05, 0.05],
+            "size": [0.1, 0.03, 0.16],
             "transform": {
-              "translation": [0.0, 0.275, 0.0]
+              "translation": [0.0, 0.285, 0.0]
             },
             "member": "load-carrier",
             "part": "joint"
@@ -2768,16 +3736,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: lamellae, chamfers and finger joints are merged into one 160 x 600 x 8000 mm beam (the drawing shows grain hatch only); the bearing plates keep their 25 mm drawn thickness.",
-            "de": "Körper: Lamellen, Fasen und Keilzinkenstöße sind zu einem Balken 160 x 600 x 8000 mm zusammengefasst (die Zeichnung zeigt nur Faserschraffur); die Lagerplatten behalten ihre gezeichnete Dicke 25 mm."
+            "en": "Body: the fifteen lamellae over the full length, as the lamella hatch of the drawing shows them; the board joints are merged because the 1:100 drawing does not show finger joints. The plates are modelled at their true 20 mm; the drawing thickens them to 25 mm for printing, a difference below the 15 mm smallest feature.",
+            "de": "Körper: die fünfzehn Lamellen über die volle Länge, wie die Lamellenschraffur der Zeichnung sie zeigt; die Brettstöße sind zusammengefasst, weil die Zeichnung 1:100 keine Keilzinken zeigt. Die Platten sind in ihren wahren 20 mm modelliert; die Zeichnung verstärkt sie für den Druck auf 25 mm, ein Unterschied unter der kleinsten Einzelheit von 15 mm."
           },
           {
-            "en": "Thermal: the same four faces as skins, now one solid per face and the 36 mm storage depth rounded to 40 mm (the nearest 10 mm); plates referenced from the body. Structure: member as before, pad and knuckle of each support are 15 mm parts, the load-carrier joint stays a 50 mm slider. The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
-            "de": "Thermisch: dieselben vier Flächen als Häute, jetzt ein Körper je Fläche, die Speichertiefe 36 mm auf 40 mm gerundet (nächste 10 mm); Platten aus dem Körper referenziert. Tragwerk: Stab wie zuvor, Platte und Gelenk jedes Auflagers sind Teile von 15 mm, das Lastträgergelenk bleibt ein Gleiter von 50 mm. Die vier Häute überlappen in den Kantenprismen: Ober- und Unterhaut laufen über die ganze Breite, die Seitenhäute über die ganze Höhe, und die Flächen am Kern oder an der Nachbarhaut (Innenflächen, Kantenstreifen) sind Schnittflächen, damit jede Haut ihre Außenfläche genau einmal zeigt. Ein Stabkörper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein Körper; der Lastträger ist ein Gelenk, die Lager sind Auflager."
+            "en": "Thermal: the four faces as 36 mm storage skins, the soffit now one skin (the bearing contacts of 1:50 merged); the plates are referenced from the body.",
+            "de": "Thermisch: die vier Flächen als 36-mm-Speicherschalen, die Unterseite jetzt eine Schale (die Auflagerkontakte von 1:50 zusammengefasst); die Platten sind aus dem Körper referenziert."
           },
           {
-            "en": "Minimal: the thermal list is one solid per timber face region and one per bearing plate (six); a coarser list would lose a region, so its count equals the 1:50 list while body (17 to 3 solids) and structure triangles drop.",
-            "de": "Minimal: die Thermalliste hat einen Körper je Holzflächenregion und einen je Lagerplatte (sechs); eine gröbere Liste verlöre eine Region, ihre Anzahl gleicht daher der 1:50-Liste, während Körper (17 auf 3 Körper) und Tragwerksdreiecke sinken."
+            "en": "Structure: the true member section; the pin is a plain 120 mm steel wedge of the plate height with its edge under the beam, the roller a 20 mm roller across the width; the load shoe stays as the slider of the moving load.",
+            "de": "Tragwerk: der wahre Gliedquerschnitt; das Festlager ist ein einfacher 120-mm-Stahlkeil in Plattenhöhe mit der Schneide unter dem Balken, das Rollenlager eine 20-mm-Rolle über die Breite; der Lastschuh bleibt als Schlitten der wandernden Last."
           }
         ]
       },
@@ -2804,9 +3772,9 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.12, 0.03, 0.16],
+            "size": [0.12, 0.02, 0.16],
             "transform": {
-              "translation": [0.06, -0.305, 0.0]
+              "translation": [0.06, -0.31, 0.0]
             }
           },
           {
@@ -2816,68 +3784,68 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.12, 0.03, 0.16],
+            "size": [0.12, 0.02, 0.16],
             "transform": {
-              "translation": [7.94, -0.305, 0.0]
+              "translation": [7.94, -0.31, 0.0]
             }
           }
         ],
         "thermal": [
           {
             "id": "th-side-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.045],
-            "transform": {
-              "translation": [4.0, 0.0, -0.0575]
-            },
+            "profile": [[-0.3, 0.08], [0.3, 0.08], [0.0, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
+            "sectionFaces": ["-w"]
           },
           {
             "id": "th-side-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.045],
-            "transform": {
-              "translation": [4.0, 0.0, 0.0575]
-            },
+            "profile": [[0.3, -0.08], [-0.3, -0.08], [0.0, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
+            "sectionFaces": ["+w"]
           },
           {
             "id": "th-top",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.045, 0.16],
-            "transform": {
-              "translation": [4.0, 0.2775, 0.0]
-            },
+            "profile": [[0.3, 0.08], [0.3, -0.08], [0.0, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-top",
-            "sectionFaces": ["-v", "-w", "+w"]
+            "sectionFaces": ["-w", "+w"]
           },
           {
             "id": "th-soffit",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.045, 0.16],
-            "transform": {
-              "translation": [4.0, -0.2775, 0.0]
-            },
+            "profile": [[-0.3, -0.08], [-0.3, 0.08], [0.0, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["-w", "+w"]
           },
           {
             "id": "th-bearing-plate-left",
@@ -2912,7 +3880,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0.0, -0.32], [0.12, -0.32], [0.12, -0.305], [0.09, -0.305], [0.06, -0.2825], [0.03, -0.305], [0.0, -0.305]],
+            "profile": [[0.0, -0.32], [0.12, -0.32], [0.06, -0.29]],
             "plane": "xy",
             "from": -0.08,
             "to": 0.08,
@@ -2927,7 +3895,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0, 0.015], [0.16, 0.015]],
+            "profile": [[0.0, 0.0], [0.0, 0.015], [0.16, 0.015], [0.16, 0.0]],
             "axis": [0, 0, 1],
             "origin": [7.94, -0.305, -0.08],
             "member": "beam",
@@ -2937,16 +3905,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: beam and the two bearing plates, the plates thickened from 20 to 30 mm (the smallest feature at 1:200; the drawing shows them as lines at the soffit); same proportions and bounding box.",
-            "de": "Körper: Balken und die zwei Lagerplatten, die Platten von 20 auf 30 mm verstärkt (kleinste Einzelheit bei 1:200; die Zeichnung zeigt sie als Linien an der Unterseite); gleiche Proportionen und Hüllbox."
+            "en": "Body: one 160 x 600 x 8000 mm beam (lamellae merged, the drawing has no lamination at 1:200) on its two 120 x 20 mm plates, which the drawing fills at their true size as the dark bearing bands between ground and soffit.",
+            "de": "Körper: ein Balken 160 x 600 x 8000 mm (Lamellen zusammengefasst, die Zeichnung 1:200 zeigt keine Lamellen) auf seinen beiden Platten 120 x 20 mm, die die Zeichnung in wahrer Größe als dunkle Auflagerbänder zwischen Boden und Balkenunterkante füllt."
           },
           {
-            "en": "Thermal: faces as skins of 45 mm (1.5 features; the 36 mm storage depth would sit just above the 30 mm feature and make this list a copy of the 1:50 one). Structure: the joint of the load carrier is merged into the member; each support is a single 30 mm part (wedge for the pin, roller for the roller bearing). The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
-            "de": "Thermisch: Flächen als Häute von 45 mm (1,5 Einzelheiten; die Speichertiefe 36 mm läge knapp über der Einzelheit 30 mm und machte diese Liste zur Kopie der 1:50-Liste). Tragwerk: das Lastträgergelenk ist in den Stab aufgenommen; jedes Auflager ist ein einzelnes Teil von 30 mm (Keil für das Festlager, Rolle für das Rollenlager). Die vier Häute überlappen in den Kantenprismen: Ober- und Unterhaut laufen über die ganze Breite, die Seitenhäute über die ganze Höhe, und die Flächen am Kern oder an der Nachbarhaut (Innenflächen, Kantenstreifen) sind Schnittflächen, damit jede Haut ihre Außenfläche genau einmal zeigt. Ein Stabkörper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein Körper; der Lastträger ist ein Gelenk, die Lager sind Auflager."
+            "en": "Thermal: the 36 mm storage skins are close to the 30 mm smallest feature, so the section is shared among its faces instead: each face region owns the triangular prism from its face to the section axis (the inner faces are section faces); the plates are referenced from the body.",
+            "de": "Thermisch: die 36-mm-Speicherschalen liegen nahe an der kleinsten Einzelheit von 30 mm, daher wird stattdessen der Querschnitt auf seine Flächen aufgeteilt: jede Flächenregion besitzt das Dreiecksprisma von ihrer Fläche bis zur Querschnittsachse (die inneren Flächen sind Schnittflächen); die Platten sind aus dem Körper referenziert."
           },
           {
-            "en": "Minimal: against 1:100 the 1:200 drawing changes only the plates (a line at the soffit instead of a 25 mm slab) and the skin thickness (45 instead of 40 mm); a glulam beam is one prism on two bearings, so beam and two plates are the least that carries them and the scale differs from 1:100 by exactly these drawn changes.",
-            "de": "Minimal: gegenüber 1:100 ändert die Zeichnung 1:200 nur die Platten (eine Linie an der Unterseite statt einer 25-mm-Platte) und die Hauthöhe (45 statt 40 mm); ein Brettschichtholzträger ist ein Prisma auf zwei Lagern, daher sind Balken und zwei Platten das Wenigste, das sie trägt, und der Maßstab unterscheidet sich von 1:100 genau um diese gezeichneten Änderungen."
+            "en": "Structure: member, a 30 mm pin wedge and a 30 mm roller (the smallest feature; their top 10 mm reach into the member as the bearing zone); the load shoe is merged into the member, the moving load is shown by its force glyph.",
+            "de": "Tragwerk: Glied, ein 30-mm-Festlagerkeil und eine 30-mm-Rolle (kleinste Einzelheit; ihre oberen 10 mm reichen als Auflagerzone ins Glied); der Lastschuh geht im Glied auf, die wandernde Last zeigt ihr Kraftsymbol."
           }
         ]
       },
@@ -2960,7 +3928,7 @@
             "bone": "beam",
             "material": "glulam",
             "role": "body",
-            "tone": 0.6,
+            "tone": 0.4,
             "size": [8.0, 0.62, 0.16],
             "transform": {
               "translation": [4.0, -0.01, 0.0]
@@ -2970,59 +3938,59 @@
         "thermal": [
           {
             "id": "th-side-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.075],
-            "transform": {
-              "translation": [4.0, 0.0, -0.0425]
-            },
+            "profile": [[-0.32, 0.08], [0.3, 0.08], [-0.01, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
+            "sectionFaces": ["-w"]
           },
           {
             "id": "th-side-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.075],
-            "transform": {
-              "translation": [4.0, 0.0, 0.0425]
-            },
+            "profile": [[0.3, -0.08], [-0.32, -0.08], [-0.01, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
+            "sectionFaces": ["+w"]
           },
           {
             "id": "th-top",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.075, 0.16],
-            "transform": {
-              "translation": [4.0, 0.2625, 0.0]
-            },
+            "profile": [[0.3, 0.08], [0.3, -0.08], [-0.01, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-top",
-            "sectionFaces": ["-v", "-w", "+w"]
+            "sectionFaces": ["-w", "+w"]
           },
           {
             "id": "th-soffit",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.075, 0.16],
-            "transform": {
-              "translation": [4.0, -0.2625, 0.0]
-            },
+            "profile": [[-0.32, -0.08], [-0.32, 0.08], [-0.01, 0.0]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["-w", "+w"]
           },
           {
             "id": "th-bearing-plate-left",
@@ -3033,7 +4001,7 @@
             "tone": 0.3,
             "size": [0.12, 0.075, 0.16],
             "transform": {
-              "translation": [0.06, -0.3225, 0.0]
+              "translation": [0.06, -0.2825, 0.0]
             },
             "region": "bearing-steel"
           },
@@ -3046,7 +4014,7 @@
             "tone": 0.3,
             "size": [0.12, 0.075, 0.16],
             "transform": {
-              "translation": [7.94, -0.3225, 0.0]
+              "translation": [7.94, -0.2825, 0.0]
             },
             "region": "bearing-steel"
           }
@@ -3073,7 +4041,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0.0, -0.32], [0.12, -0.32], [0.12, -0.2825], [0.09, -0.2825], [0.06, -0.245], [0.03, -0.2825], [0.0, -0.2825]],
+            "profile": [[0.0, -0.32], [0.12, -0.32], [0.06, -0.245]],
             "plane": "xy",
             "from": -0.08,
             "to": 0.08,
@@ -3088,7 +4056,7 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0, 0.0375], [0.16, 0.0375]],
+            "profile": [[0.0, 0.0], [0.0, 0.0375], [0.16, 0.0375], [0.16, 0.0]],
             "axis": [0, 0, 1],
             "origin": [7.94, -0.2825, -0.08],
             "member": "beam",
@@ -3098,16 +4066,20 @@
         ],
         "decisions": [
           {
-            "en": "Body: one 8000 x 620 x 160 mm block from soffit of the plates to the top of the beam, as the 1:500 drawing (a single rectangle); lamellae, chamfers and plates are merged into it.",
-            "de": "Körper: ein Block 8000 x 620 x 160 mm von der Plattenunterseite bis zur Balkenoberkante, wie die Zeichnung 1:500 (ein einziges Rechteck); Lamellen, Fasen und Platten sind darin aufgegangen."
+            "en": "Body: one 8000 x 620 x 160 mm block from the ground to the top of the beam, as the 1:500 drawing (a single rectangle); lamellae and plates are merged into it.",
+            "de": "Körper: ein Block 8000 x 620 x 160 mm vom Boden bis zur Balkenoberkante, wie die Zeichnung 1:500 (ein einziges Rechteck); Lamellen und Platten sind darin aufgegangen."
           },
           {
-            "en": "Thermal and structure are authored on their own: the bearing steel is a 75 mm block inside the block, the skins are 75 mm (the smallest feature), the member is the true section, supports are 75 mm wedge and roller blocks under the member ends; no joint (merged). The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
-            "de": "Thermik und Tragwerk sind eigenständig: der Lagerstahl ist ein Block von 75 mm im Block, die Häute sind 75 mm (kleinste Einzelheit), der Stab hat den echten Querschnitt, die Auflager sind Keil- und Rollenblöcke von 75 mm unter den Stabenden; kein Gelenk (zusammengefasst). Die vier Häute überlappen in den Kantenprismen: Ober- und Unterhaut laufen über die ganze Breite, die Seitenhäute über die ganze Höhe, und die Flächen am Kern oder an der Nachbarhaut (Innenflächen, Kantenstreifen) sind Schnittflächen, damit jede Haut ihre Außenfläche genau einmal zeigt. Ein Stabkörper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein Körper; der Lastträger ist ein Gelenk, die Lager sind Auflager."
+            "en": "Thermal: the block's section shared among its four faces as at 1:200 but over the full 620 mm height of the block; the bearing steel is a 75 mm block (the smallest feature) at each end inside the soffit prism.",
+            "de": "Thermisch: der Querschnitt des Blocks ist wie bei 1:200 auf seine vier Flächen aufgeteilt, aber über die volle Blockhöhe von 620 mm; der Lagerstahl ist an jedem Ende ein 75-mm-Block (kleinste Einzelheit) im Prisma der Unterseite."
           },
           {
-            "en": "Minimal: the 1:500 drawing is one rectangle, so the whole beam with its plates is one 620 mm high block; six thermal pieces and three structure solids (member, pin, roller) are all that keeps the four skin regions, the bearing steel and the load path, and no coarser abstraction of a straight prism exists.",
-            "de": "Minimal: die Zeichnung 1:500 ist ein einziges Rechteck, daher ist der ganze Balken mit seinen Platten ein 620 mm hoher Block; sechs Thermikstücke und drei Tragwerkskörper (Stab, Festlager, Rolle) sind alles, was die vier Hautregionen, den Lagerstahl und den Lastpfad hält, und eine gröbere Abstraktion eines geraden Prismas gibt es nicht."
+            "en": "Structure: the true member section, a 75 mm pin wedge and a 75 mm roller under the bearing centres.",
+            "de": "Tragwerk: der wahre Gliedquerschnitt, ein 75-mm-Festlagerkeil und eine 75-mm-Rolle unter den Auflagermitten."
+          },
+          {
+            "en": "Minimal: thermal and structure keep the counts of 1:200 because they are already the least that carries the asset: four face prisms and two plate blocks keep every thermal region, and member, pin and roller are the whole load path of a simply supported beam.",
+            "de": "Minimal: Thermik und Tragwerk behalten die Anzahlen von 1:200, weil sie bereits das Wenigste sind, das das Asset trägt: vier Flächenprismen und zwei Plattenblöcke erhalten jede thermische Region, und Glied, Festlager und Rollenlager sind der ganze Lastpfad eines Einfeldträgers."
           }
         ]
       }

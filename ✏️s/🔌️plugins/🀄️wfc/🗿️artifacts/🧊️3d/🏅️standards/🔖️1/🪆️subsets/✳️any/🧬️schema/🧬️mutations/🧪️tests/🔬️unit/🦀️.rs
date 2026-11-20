@@ -92,7 +92,7 @@ fn the_kinds_constant_matches_the_dispatch_roster_in_declaration_order() {
     assert_eq!(declared, KINDS.to_vec());
 }
 
-/// ↩️ THE point-invertibility law: apply, then apply every step of `inverse()`, and the document is
+/// ↩️ THE point-invertibility law: apply, then apply every step of `inverse()` (listed in undo order, so reversed), and the document is
 /// byte-identical to what it was — for every one of the seventeen kinds, including the two that
 /// cascade.
 #[test]
@@ -100,7 +100,7 @@ fn every_mutation_inverse_restores_its_own_base_exactly() {
     for (mutation_dir, case, base, mutation) in fixture_cases() {
         let (forward, _) = apply_mutation(&base, &mutation).unwrap_or_else(|error| panic!("{mutation_dir}/{case}: forward apply failed: {error}"));
         let mut restored = forward.clone();
-        for back in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
+        for back in mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             restored = apply_mutation(&restored, &back).unwrap_or_else(|error| panic!("{mutation_dir}/{case}: inverse apply failed: {error}")).0;
         }
         assert_eq!(restored, base, "{mutation_dir}/{case}: inverse() must restore the pre-mutation document");
@@ -128,11 +128,21 @@ fn every_collection_stays_sorted_after_a_canonical_insert() {
 #[test]
 fn every_mutation_round_trips_through_text_and_binary_op_encodings() {
     for (mutation_dir, case, _base, mutation) in fixture_cases() {
+        let targets: &dyn store::ArtifactOperationTargets = &mutation;
+        let authored = protocol::Mutation::<Wfc3dSnapshot>::target(&mutation);
+        assert_eq!(targets.len(), authored.len());
+        for (index, text) in authored.iter().enumerate() {
+            let mut bytes = vec![0; targets.segment_len(index).unwrap()];
+            assert_eq!(targets.read_segment(index, 0, &mut bytes).unwrap(), text.len());
+            assert_eq!(bytes, text.as_bytes());
+        }
         let line = <Wfc3dMutation as protocol::OpText>::print_op(&mutation);
         assert!(!line.trim().is_empty(), "{mutation_dir}/{case}: op text must not be empty");
         assert_eq!(<Wfc3dMutation as protocol::OpText>::parse_op(&line).expect("op text parses"), mutation, "{mutation_dir}/{case}: op text round trip");
         let bytes = <Wfc3dMutation as protocol::OpBinary>::encode_op(&mutation).expect("op binary encodes");
         assert_eq!(<Wfc3dMutation as protocol::OpBinary>::decode_op(&bytes).expect("op binary decodes"), mutation, "{mutation_dir}/{case}: op binary round trip");
+        dsl::original_receiving::check_receiving_round_trip(std::slice::from_ref(&mutation))
+            .unwrap_or_else(|error| panic!("{mutation_dir}/{case}: original binary receiving: {error}"));
     }
 }
 

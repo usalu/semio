@@ -20,15 +20,15 @@ fn close(left: f64, right: f64) -> bool {
 
 fn room() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m".into(), Material { name: "Brick".into(), category: MaterialCategory::Masonry, color: Rgb { r: 0.7, g: 0.3, b: 0.2 }, density: 1800.0, conductivity: 0.8, specific_heat: 900.0 });
-    snapshot.wall_types.insert("wt".into(), WallType { name: "Brick 300".into(), layers: vec![Layer { material: "m".into(), thickness: 0.3, function: LayerFunction::Structure }] });
-    snapshot.sites.insert("site".into(), Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("b".into(), Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("g".into(), Storey { building: "b".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.materials.cold_insert("m".into(), Material { name: "Brick".into(), category: MaterialCategory::Masonry, color: Rgb { r: 0.7, g: 0.3, b: 0.2 }, density: 1800.0, conductivity: 0.8, specific_heat: 900.0 });
+    snapshot.wall_types.cold_insert("wt".into(), WallType { name: "Brick 300".into(), layers: vec![Layer { material: "m".into(), thickness: 0.3, function: LayerFunction::Structure }] });
+    snapshot.sites.cold_insert("site".into(), Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.cold_insert("b".into(), Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("g".into(), Storey { building: "b".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     let corners = [(0.0, 0.0), (6.0, 0.0), (6.0, 4.0), (0.0, 4.0)];
     for (index, start) in corners.iter().enumerate() {
         let end = corners[(index + 1) % 4];
-        snapshot.walls.insert(format!("w{index}"), Wall { storey: "g".into(), wall_type: "wt".into(), axis: Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: if index == 3 { Phase::Existing } else { Phase::New }, start_join: None, end_join: None, name: format!("Wall {index}"), base_slab: None });
+        snapshot.walls.cold_insert(format!("w{index}"), Wall { storey: "g".into(), wall_type: "wt".into(), axis: Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: if index == 3 { Phase::Existing } else { Phase::New }, start_join: None, end_join: None, name: format!("Wall {index}"), base_slab: None });
     }
     snapshot
 }
@@ -38,7 +38,7 @@ fn plane(a: (f64, f64), b: (f64, f64)) -> ViewPlane {
 }
 
 fn with(mut snapshot: ModelSnapshot, id: &str, view: View) -> ModelSnapshot {
-    snapshot.views.insert(id.into(), view);
+    snapshot.views.cold_insert(id.into(), view);
     snapshot
 }
 

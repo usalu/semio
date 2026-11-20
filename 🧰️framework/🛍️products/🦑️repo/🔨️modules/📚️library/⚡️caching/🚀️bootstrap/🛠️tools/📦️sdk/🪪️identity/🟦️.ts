@@ -1,4 +1,6 @@
 import {createHash} from "node:crypto";
+/** 🧷️ Exact device and inode evidence retained from a bigint stat. */
+export interface NxSdkPhysicalFileIdentityV1{readonly device:bigint;readonly inode:bigint}
 /** 🧮️ Keys installed dependency and patch bytes independently of installer implementation edits. */
 export function nxToolingInstallIdentityV1(environment: { platform: string; architecture: string; libc: string }, files: ReadonlyMap<string, Uint8Array>): string {
   const hash = createHash("sha256").update("nx-tooling-install-v4\0"), field = (value: Uint8Array | string) => { const bytes = typeof value === "string" ? Buffer.from(value) : value; hash.update(`${bytes.byteLength}:`).update(bytes); };

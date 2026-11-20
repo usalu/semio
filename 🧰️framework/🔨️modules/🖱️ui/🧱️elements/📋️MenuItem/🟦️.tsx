@@ -6,6 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -18,6 +19,6 @@ export type MenuItemProps = React.ComponentPropsWithoutRef<"button">;
 
 /** 📋️ Focusable native button with menu-item semantics and no button-group layout wrapper. */
 export const MenuItem = React.forwardRef<HTMLButtonElement, MenuItemProps>(function MenuItem({ className, disabled, type = "button", role = "menuitem", ...props }, ref) {
-  return <button ref={ref} {...props} data-slot="menu-item" type={type} role={role} disabled={disabled} aria-disabled={disabled || undefined} className={className ? `${menuItemClassName} ${className}` : menuItemClassName} />;
+  return <button ref={ref} {...props} {...sharedBorderlessBoxProps} data-slot="menu-item" type={type} role={role} disabled={disabled} aria-disabled={disabled || undefined} className={className ? `${menuItemClassName} ${className}` : menuItemClassName} />;
 });
 // #endregion 📋️MenuItem

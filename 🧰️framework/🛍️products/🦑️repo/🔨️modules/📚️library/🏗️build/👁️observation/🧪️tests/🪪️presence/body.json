@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "present": false,
+      "expected": {
+        "storeRecheck": 3,
+        "continuation": 1,
+        "fileChecks": 3,
+        "recordRead": 0,
+        "implementationCheck": 1
+      }
+    },
+    {
+      "present": true,
+      "expected": {
+        "storeRecheck": 2,
+        "continuation": 0,
+        "fileChecks": 4,
+        "recordRead": 1,
+        "implementationCheck": 1
+      }
+    }
+  ]
+}

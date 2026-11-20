@@ -88,8 +88,8 @@ async fn selected_stock_id_renders_its_dimensions() {
     select(&mut app, &stock_id);
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
     assert!(rendered.contains("process3d-play-inspector.stock"), "expected the stock section: {rendered}");
-    assert!(rendered.contains(&format!("Width: {width}")), "expected the seeded stock's width {width}: {rendered}");
-    assert!(rendered.contains(&format!("Height: {height}")), "expected the seeded stock's height {height}: {rendered}");
+    assert!(rendered.contains("process3d-play-inspector.stock.solid.width.input"), "expected the seeded stock's width {width}: {rendered}");
+    assert!(rendered.contains("process3d-play-inspector.stock.solid.height.input"), "expected the seeded stock's height {height}: {rendered}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,7 +102,7 @@ async fn selected_step_id_renders_its_label_and_measure_kind() {
     assert!(rendered.contains("process3d-play-inspector.step"), "expected the step section: {rendered}");
     assert!(rendered.contains(&step.label), "expected the step's label {}: {rendered}", step.label);
     assert!(rendered.contains("Kind: Drill"), "expected the measure kind: {rendered}");
-    assert!(rendered.contains("Radius: 0.05"), "expected the drill capability's own radius parameter: {rendered}");
+    assert!(rendered.contains("process3d-play-inspector.step.radius.input"), "expected an editable drill radius: {rendered}");
 }
 
 /// 🪟️ A capability section authors itself CLOSED, so it states its parameter count and materialises
@@ -166,8 +166,8 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
         ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let opened = project(&TreeWindows::for_body(&view, PROCESS_3D_PLAY_BODY_INSPECTION));
-    assert!(opened.contains("Kerf: 0.05"), "opening the section materialises its parameters: {opened}");
-    assert!(opened.contains("Blade Diameter: 0.4"), "…all of them: {opened}");
+    assert!(opened.contains("process3d-play-inspector.capability.cut.kerf.input"), "opening the section materialises its parameters: {opened}");
+    assert!(opened.contains("process3d-play-inspector.capability.cut.bladeDiameter.input"), "…all of them: {opened}");
     assert!(!opened.contains(".more\""), "a windowed inspector has no continuation row: {opened}");
 }
 
@@ -180,3 +180,90 @@ fn find_window_total(node: &serde_json::Value, key: &str) -> Option<u64> {
 }
 
 //#endregion 🔖️SelectionInspector
+
+fn pane_node<'a>(root: &'a serde_json::Value, key: &str) -> &'a serde_json::Value {
+    fn find<'a>(node: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {
+        if node["key"].as_str() == Some(key) {
+            return Some(node);
+        }
+        node["children"].as_array()?.iter().find_map(|child| find(child, key))
+    }
+    find(root, key).unwrap_or_else(|| panic!("missing {key}"))
+}
+
+fn commit_pane_field(app: &mut context::Process3dApp, input: &serde_json::Value, id: &str, field: &str, value: serde_json::Value) {
+    let binding = &input["bindings"][0];
+    assert_eq!(binding["trigger"], "commit");
+    assert_eq!(binding["action"]["scope"], "s.process.process3d@1/*#editor");
+    assert_eq!(binding["args"]["target"], id);
+    assert_eq!(binding["args"]["field"], field);
+    let mut args = binding["args"].clone();
+    args["value"] = value;
+    let args: DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let receipt = context::settled_action(app, binding["action"]["name"].as_str().unwrap(), Some(&args)).1;
+    assert!(context::published_a_document_mutation(&receipt));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn selected_step_inspector_dispatches_its_number_binding() {
+    let mut app = context::app_with_registry();
+    context::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
+    let snapshot = app.snapshot().expect("current process");
+    let index = snapshot.step_payloads.len() - 1;
+    let id = snapshot.step_payloads[index].id.clone();
+    select(&mut app, &id);
+    let inspector = |app: &mut context::Process3dApp| serde_json::from_str::<serde_json::Value>(&context::render(app, PROCESS_3D_PLAY_BODY_INSPECTION)).unwrap();
+    let projection = inspector(&mut app);
+    let key = "process3d-play-inspector.step.radius.input";
+    let input = pane_node(&projection, key);
+    assert_eq!(input["component"]["kind"], "number");
+    assert_eq!(input["accessibility"]["label"], "Radius");
+    commit_pane_field(&mut app, input, &id, "radius", serde_json::json!(0.04));
+    let updated = inspector(&mut app);
+    assert_eq!(pane_node(&updated, key)["component"]["value"], "0.04");
+    let move_earlier = &pane_node(&updated, "process3d-play-inspector.step.move-earlier")["component"]["target"];
+    assert_eq!(move_earlier["scope"], "s.process.process3d@1/*#editor");
+    assert_eq!(move_earlier["activation"], "moveStep");
+    assert_eq!(move_earlier["args"]["index"].as_f64(), Some((index - 1) as f64));
+    let args: DslValue = semio_framework_pack_json::from_json_str(&move_earlier["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let receipt = context::settled_action(&mut app, move_earlier["activation"].as_str().unwrap(), Some(&args)).1;
+    assert!(context::published_a_document_mutation(&receipt));
+    assert_eq!(app.snapshot().expect("reordered process").step_payloads[index - 1].id, id);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn stock_and_workshop_inspector_dispatch_their_own_fields() {
+    let mut app = context::app_with_registry();
+    let snapshot = app.snapshot().expect("current process");
+    let id = snapshot.stock_id.clone();
+    select(&mut app, &id);
+    let stock = |app: &mut context::Process3dApp| serde_json::from_str::<serde_json::Value>(&context::render(app, PROCESS_3D_PLAY_BODY_INSPECTION)).unwrap();
+    let projection = stock(&mut app);
+    let width = "process3d-play-inspector.stock.solid.width.input";
+    let position = "process3d-play-inspector.stock.pose.x.input";
+    let label = "process3d-play-inspector.stock.label.input";
+    commit_pane_field(&mut app, pane_node(&projection, width), &id, "width", serde_json::json!("1.25"));
+    commit_pane_field(&mut app, pane_node(&projection, position), &id, "posX", serde_json::json!(0.5));
+    commit_pane_field(&mut app, pane_node(&projection, label), &id, "label", serde_json::json!("123"));
+    let updated = stock(&mut app);
+    assert_eq!(pane_node(&updated, width)["component"]["value"], "1.25");
+    assert_eq!(pane_node(&updated, position)["component"]["value"], "0.5");
+    assert_eq!(pane_node(&updated, label)["component"]["value"], "123");
+
+    let machine_id = "machine:saw";
+    let section = "process3d-play-inspector.capability.cut";
+    select(&mut app, machine_id);
+    let view = semio_plugin::ViewModel {
+        tree_windows: vec![semio_plugin::TreeWindowRequest { body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(), node_key: section.into(), open: Some(true), offset: 0, rows: 32 }],
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
+    };
+    let workshop = |app: &mut context::Process3dApp| serde_json::from_str::<serde_json::Value>(&context::render_with_view(app, PROCESS_3D_PLAY_BODY_INSPECTION, &view)).unwrap();
+    let projection = workshop(&mut app);
+    let label = "process3d-play-inspector.machine.label.input";
+    let parameter = "process3d-play-inspector.capability.cut.kerf.input";
+    commit_pane_field(&mut app, pane_node(&projection, label), machine_id, "label", serde_json::json!("Workshop saw"));
+    commit_pane_field(&mut app, pane_node(&projection, parameter), machine_id, "cut.kerf", serde_json::json!(0.04));
+    let updated = workshop(&mut app);
+    assert_eq!(pane_node(&updated, label)["component"]["value"], "Workshop saw");
+    assert_eq!(pane_node(&updated, parameter)["component"]["value"], "0.04");
+}

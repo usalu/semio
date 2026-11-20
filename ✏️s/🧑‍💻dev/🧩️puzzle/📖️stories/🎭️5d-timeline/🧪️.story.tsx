@@ -2,8 +2,8 @@ import {mergeStoryWorldSelectionV1,pickStoryWorldSelectionV1} from "../🎯️se
 // #region 🧲️Header
 // 💻️ ✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx
 // Specs: Compose `World3dHost` + `🌳️GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
-// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `framework/ui/js/react/index.tsx`) and lets `🌳️GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-wasm`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
-// Mesh/reference-asset caveats are identical to `../3d/World.stories.tsx`: no `mesh-collection` route for this scope and the referenced GLBs don't exist on disk, so parts render as `World3dHost`'s neutral placeholder box.
+// Summary: `🖐️5d`'s real example documents (`✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/*/🖼️assets/*/🗣️.dsl.semio`) persist no checkpoint history, so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `@semio-tech/ui-react`) and lets `🌳️GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../🎭️3d-world/🧪️.story.tsx` and `../🎭️2d-board/🧪️.story.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dSnapshot`'s `ArtifactDsl` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-wasm`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Mesh/reference-asset caveats are identical to `../🎭️3d-world/🧪️.story.tsx`: no `mesh-collection` route for this scope and the referenced GLBs don't exist on disk, so parts render as `World3dHost`'s neutral placeholder box.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -42,7 +42,6 @@ type StoryPuzzle5dCamera3d = { readonly position: Vec3; readonly target: Vec3; r
 type StoryPuzzle5dFixture = {
   readonly schema: string;
   readonly label?: string;
-  readonly camera3d: StoryPuzzle5dCamera3d;
   readonly parts: readonly StoryPuzzle5dPart[];
   readonly fasteners?: readonly Record<string, unknown>[];
 };
@@ -89,10 +88,26 @@ function storySummarizePuzzle5dConnectionParams(fixture: StoryPuzzle5dFixture) {
     partDiagramSample,
   };
 }
+
+/** 🎥️ The parsed 5D snapshot persists no camera, so frame the revealed parts: target their bounds center, back off proportionally to the extent. */
+function storyFitCamera3d(parts: readonly StoryPuzzle5dPart[]): StoryPuzzle5dCamera3d {
+  if (parts.length === 0) return { position: [10, 10, 10], target: [0, 0, 0], zoom: 1 };
+  const lo: [number, number, number] = [Infinity, Infinity, Infinity];
+  const hi: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+  for (const part of parts) {
+    part["3d"].origin.forEach((value, axis) => {
+      lo[axis] = Math.min(lo[axis]!, value);
+      hi[axis] = Math.max(hi[axis]!, value);
+    });
+  }
+  const target: Vec3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+  const distance = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], 1) * 1.5 + 6;
+  return { position: [target[0] + distance, target[1] + distance, target[2] + distance], target, zoom: 1 };
+}
 //#endregion StoryTypes
 
 //#region WasmFixtureLoader
-/** 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
+/** 🧵️ Lazily loads+inits `@semio-tech/puzzle-wasm`'s wasm module once (mirrors `@semio-tech/framework-renderer-react`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
 type Puzzle5dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle5dParseDslJson: (dslText: string) => string };
 let puzzle5dWasmModulePromise: Promise<Puzzle5dWasmModule> | null = null;
 function loadPuzzle5dWasm(): Promise<Puzzle5dWasmModule> {
@@ -131,7 +146,7 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 
 //#region PluginEmulator
 
-/** 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../3d/World.stories.tsx` implements, resolved against the *currently revealed* parts slice. */
+/** 🧩️ Story-local reducer: `checkoutCheckpoint` (from `🌳️GraphTimelineHost`) scrubs `revealCount`; `worldPick`/`setHover`/`setCamera` (from `World3dHost`) mirror the same subset `../🎭️3d-world/🧪️.story.tsx` implements, resolved against the *currently revealed* parts slice. */
 function storyActionArguments(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : undefined;
 }
@@ -194,7 +209,7 @@ function buildStoryWorld3dNode(fixture: StoryPuzzle5dFixture, runtime: StoryPuzz
     controllerId: "puzzle5d-story",
     componentKind: "world-3d",
     world3d: {
-      cameraJson: JSON.stringify(fixture.camera3d),
+      cameraJson: JSON.stringify(storyFitCamera3d(fixture.parts)),
       meshesJson: JSON.stringify(meshes),
       instancesJson: JSON.stringify(instances),
       selectionJson: JSON.stringify({ ids: runtime.selectedIds, selectionMode: "object" }),
@@ -219,12 +234,17 @@ function buildStoryGraphTimelineNode(fixture: StoryPuzzle5dFixture): UiComponent
 //#region StoryHost
 function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): ReactElement {
   const [state, setState] = useState<StoryPuzzle5dState | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    parsePuzzle5dFixtureDsl(fixtureDsl).then((fixture) => {
-      if (!cancelled) setState({ fixture, runtime: { revealCount: fixture.parts.length, selectedIds: [], hoveredId: null } });
-    });
+    parsePuzzle5dFixtureDsl(fixtureDsl)
+      .then((fixture) => {
+        if (!cancelled) setState({ fixture, runtime: { revealCount: fixture.parts.length, selectedIds: [], hoveredId: null } });
+      })
+      .catch((cause: unknown) => {
+        if (!cancelled) setFailure(cause instanceof Error ? cause.message : String(cause));
+      });
     return () => {
       cancelled = true;
     };
@@ -249,12 +269,13 @@ function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string
     [state],
   );
 
+  if (failure) return <div data-testid="puzzle5d-timeline-error" role="alert">{failure}</div>;
   if (!state || !worldNode || !timelineNode) {
     return <div data-testid="puzzle5d-timeline-loading">Loading fixture…</div>;
   }
 
   return (
-    <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
+    <div style={{ display: "flex", height: "100vh", width: "100%", flexDirection: "column" }}>
       <SharedBorderRow className="min-h-0 flex-auto">
         <div data-shared-border-cell="" style={{ position: "relative", flex: "2 1 auto", minWidth: 0 }}>
           <World3dHost node={worldNode} onAction={onAction} />
@@ -284,14 +305,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🌲️ The real Concrete Forest 5D fixture (`puzzle/5d/example/concrete-forest.puzzle5d`) — 1 part, so a single-checkpoint timeline. */
+/** 🌲️ The real Concrete Forest 5D fixture (`🖐️5d/…/📚️examples/🌲️concrete-forest`) — 1 part, so a single-checkpoint timeline. */
 export const ConcreteForest: Story = {
   args: {
     fixtureDsl: concreteForestFixtureDsl,
   },
 };
 
-/** 🏯️ The real Nakagin Capsule Tower 5D fixture (`puzzle/5d/example/nakagin-capsule-tower.puzzle5d`) — 180 parts; scrub `🌳️GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
+/** 🏯️ The real Nakagin Capsule Tower 5D fixture (`🖐️5d/…/📚️examples/🏗️nakagin-capsule-tower`) — 180 parts; scrub `🌳️GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,

@@ -8,6 +8,18 @@ Feature: Compare, playground and export carry the viewpoint, and a placement has
     And one button shows the same asset in the side elevation, the front elevation and the plan on one clock
     And a wrong viewpoint in the link is reported in words
 
+  Scenario: A closed comparison shows its drawings without the transport
+    Given two ready comparison panes behind the glass
+    Then both drawings are mounted
+    And the transport and editor inputs are absent
+
+  Scenario: A nested category loads when revealed
+    Given a catalog category whose artwork is idle
+    When its closed page mounts behind the glass
+    Then the category's load stays idle
+    When the page is revealed
+    Then the category starts loading and becomes ready
+
   Scenario: The playground offers the viewpoint and the position
     Given the playground page
     Then the viewpoint is one radio group of side elevation, front elevation and plan

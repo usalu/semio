@@ -1,0 +1,7 @@
+# Original circular Revolve
+
+The retained Flow Revolve node now accepts a live planar face bounded by one complete circle and an external axis in the profile plane. A complete positive or negative turn publishes a native ring torus in the source axis frame. The original registry borrows the face and its trim through quoted arena depths. It advances the existing funded solid topology and geometry dictionary publication, with the same cancellation and retirement behavior as other analytic solids. Partial turns and axes touching or crossing the filled disk return explicit refusals.
+
+The torus recipe keeps its axis frame in both analytic seam curves, the surface and its single seam vertex. The existing world-frame Torus node keeps the same shape. Position-aware Volume, Center of Mass and preview consume the resulting certificate.
+
+The native registry fixture drives Circle → Face From Wire → Revolve → Volume and Center of Mass about a translated world Y axis. It checks the torus seam and topology for both turn directions and confirms that rejecting a partial turn or intersecting axis leaves the live registry unchanged. The independent Manifold test revolves the same radial cross-section and passed eight assertions for world bounds, enclosed volume and genus. Rust syntax parsing passed. The native fixture remains unexecuted because the host has insufficient space for the repository's Cargo admission.

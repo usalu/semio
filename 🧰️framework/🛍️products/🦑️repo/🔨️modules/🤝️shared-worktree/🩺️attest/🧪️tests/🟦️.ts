@@ -227,6 +227,44 @@ test("an origin with sync off still attests and is excluded from the agreement",
  }finally{await stop(who);}
 });
 
+test("the server receives fresh attestations while a replication turn is waiting",async()=>{
+ const store=temp("heartbeat-store"),who=runner("a1",store,{gitView:async()=>null});
+ let entered=false;
+ const gate=Promise.withResolvers<void>();
+ try{
+  await seedV1(who.options);
+  who.options={...who.options,storeGate:async()=>{entered=true;await gate.promise;}};
+  start(who);
+  await until(()=>entered);
+  await until(async()=>(await readAttestationV1(store,who.name))!==undefined,3000);
+  const file=attestPathV1(store,who.name),first=JSON.parse(readFileSync(file,"utf8")) as FleetAttestationV1;
+  await until(async()=>((await readAttestationV1(store,who.name))?.wallMs??0)>first.wallMs,3000);
+  const latest=JSON.parse(readFileSync(file,"utf8")) as FleetAttestationV1;
+  expect(validator("Attestation")(latest)).toBe(true);
+  expect(latest).toMatchObject({originId:who.name,manifest:first.manifest,cursors:first.cursors});
+  expect(latest.wallMs).toBeGreaterThan(first.wallMs);
+ }finally{gate.resolve();await stop(who);}
+});
+
+test("the readiness sidecar starts while a later replication turn is waiting",async()=>{
+ const store=temp("sidecar-store"),gate=Promise.withResolvers<void>();
+ let rounds=0;
+ const who=runner("a1",store,{gitView:async()=>null,storeGate:async()=>{if(++rounds>1)await gate.promise;},sidecars:{
+  enabled:true,startAfterSeconds:2,graceSeconds:1,restart:{initialMilliseconds:60,maximumMilliseconds:240,stableMilliseconds:60_000},
+  children:[{name:"readiness",script:"child.ts",arguments:["stay"],roles:["member"],requires:"none",enabled:true}],
+ }});
+ const script=join(import.meta.dir,"../../🔁️replica/🧷️sidecars/🧪️tests/🧬️child.ts");
+ writeFileSync(join(who.options.worktree,"child.ts"),readFileSync(script));
+ try{
+  await seedV1(who.options);
+  start(who);
+  await until(()=>rounds>1);
+  const log=join(who.options.worktree,".cache","f","sidecars","readiness.log");
+  await until(()=>existsSync(log)&&readFileSync(log,"utf8").includes("child stay started"),5000);
+  expect(rounds).toBe(2);
+ }finally{gate.resolve();await stop(who);}
+});
+
 test("nothing is written while the store is unreachable and the attestation is written at most once per heartbeat when nothing changed",async()=>{
  const store=temp("store");
  let reachable=false,clock=1_000_000,asked=0;

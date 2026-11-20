@@ -124,15 +124,7 @@ impl Lifter<'_> {
         if let Some(form) = dict_get(catalog, "AcroForm").map(|f| self.source.deref(f)).and_then(|f| f.as_dict().map(<[PdfDictEntry]>::to_vec)) {
             self.snapshot.acro_form = Some(self.lift_acro_form(&form));
         }
-        self.snapshot.page_layout = dict_name(catalog, "PageLayout").and_then(|layout| match layout {
-            "SinglePage" => Some(PdfPageLayout::SinglePage),
-            "OneColumn" => Some(PdfPageLayout::OneColumn),
-            "TwoColumnLeft" => Some(PdfPageLayout::TwoColumnLeft),
-            "TwoColumnRight" => Some(PdfPageLayout::TwoColumnRight),
-            "TwoPageLeft" => Some(PdfPageLayout::TwoPageLeft),
-            "TwoPageRight" => Some(PdfPageLayout::TwoPageRight),
-            _ => None,
-        });
+        self.snapshot.page_layout = dict_name(catalog, "PageLayout").and_then(page_layout_from_name);
         self.snapshot.page_mode = dict_name(catalog, "PageMode").and_then(page_mode_from_name);
         if let Some(preferences) = dict_get(catalog, "ViewerPreferences").map(|v| self.source.deref(v)).and_then(|v| v.as_dict().map(<[PdfDictEntry]>::to_vec)) {
             let flag = |key: &str| dict_get(&preferences, key).and_then(PdfObject::as_bool).unwrap_or(false);
@@ -280,6 +272,19 @@ impl Lifter<'_> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn page_layout_from_name(name: &str) -> Option<PdfPageLayout> {
+    match name {
+        "SinglePage" => Some(PdfPageLayout::SinglePage),
+        "OneColumn" => Some(PdfPageLayout::OneColumn),
+        "TwoColumnLeft" => Some(PdfPageLayout::TwoColumnLeft),
+        "TwoColumnRight" => Some(PdfPageLayout::TwoColumnRight),
+        "TwoPageLeft" => Some(PdfPageLayout::TwoPageLeft),
+        "TwoPageRight" => Some(PdfPageLayout::TwoPageRight),
+        _ => None,
+        }
+}
+
+/// 📚️ Resolves the native catalog page display mode.
 pub fn page_mode_from_name(name: &str) -> Option<PdfPageMode> {
     match name {
         "UseNone" => Some(PdfPageMode::UseNone),

@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "id": "quiet time through repeated detaches",
+      "mode": "quiet"
+    },
+    {
+      "id": "a malformed checkpoint on the same live process",
+      "mode": "malformed"
+    },
+    {
+      "id": "genuinely new log progress",
+      "mode": "output"
+    },
+    {
+      "id": "processor time consumed while detached",
+      "mode": "cpu"
+    },
+    {
+      "id": "the original semantics baseline",
+      "mode": "semantics"
+    },
+    {
+      "id": "the quiet interval of an overdue step",
+      "mode": "step"
+    },
+    {
+      "id": "a same-process terminal peak after a smaller sample",
+      "mode": "peak",
+      "priorMegabytes": 7539,
+      "nextMegabytes": 56
+    },
+    {
+      "id": "isolation from a foreign peak",
+      "mode": "foreign",
+      "priorMegabytes": 7539,
+      "nextMegabytes": 56
+    },
+    {
+      "id": "original timing when a detached process vanishes before adoption",
+      "mode": "vanished",
+      "priorMegabytes": 1876,
+      "nextMegabytes": 0
+    }
+  ]
+}

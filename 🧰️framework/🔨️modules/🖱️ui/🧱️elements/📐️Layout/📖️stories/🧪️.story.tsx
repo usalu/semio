@@ -12,6 +12,7 @@ import { Canvas, Input, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Lay
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState, type ComponentType } from "react";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 // 🔷️#region 🪨️Layout
 const Home = createIconComponent("home");
@@ -209,7 +210,7 @@ export const Mobile: Story = {
                 { content: <Home size={20} />, key: "home" },
                 { content: <span className="font-bold">Application</span>, key: "title" },
                 navbarFillItem("mobileNavbarFill"),
-                { key: "mobilePanelToggle", content: <button onClick={() => setVisible((current) => !current)}>Panel</button> },
+                { key: "mobilePanelToggle", content: <button {...sharedBorderlessBoxProps} onClick={() => setVisible((current) => !current)}>Panel</button> },
               ]}
               showFullscreenToggle={false}
             />

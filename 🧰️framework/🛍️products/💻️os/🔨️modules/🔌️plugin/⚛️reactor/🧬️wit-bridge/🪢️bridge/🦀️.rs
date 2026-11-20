@@ -529,8 +529,8 @@ fn kernel_effect_to_wit(effect: Effect) -> Result<semio_plugin_abi::wasip2::expo
         Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
         Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
         Effect::VideoRenderExport { filename, program } => wit::Effect::VideoRenderExport(wit_effects::VideoRenderExportEffect { filename, program: pack(&program) }),
-        Effect::RequestFileOpen { req, accept, read_as, import_action, args, multiple } => {
-            wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action, args: args.map(|value| pack(&value)) } })
+        Effect::RequestFileOpen { req, accept, read_as, import_action, args, multiple, max_file_bytes } => {
+            wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action, args: args.map(|value| pack(&value)), max_file_bytes } })
         }
         Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => wit::Effect::RequestMediaFrames(wit_effects::RequestMediaFramesEffect {
             req: req.0,

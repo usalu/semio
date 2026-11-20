@@ -13,7 +13,11 @@ impl<E:OriginalDomainFailure> OriginalWorkFailure<E>{
  pub fn qualify(cx:&impl OriginalFailureContext)->Result<(),Self>{qualify(cx).map_err(|context|Self{primary:None,effects:Default::default(),receipt_refusal:None,context_refusal:Some(context)})}
  /// 📊️ Posts actual effects once and spends actual CPU independently before retaining every refusal.
  pub fn fold(cx:&mut impl OriginalFailureContext,primary:Option<E>,effects:RetainedCloneProgress,cpu:u64)->Result<(),Self>{
-  let receipt_refusal=cx.consume_retained(effects).err();cx.consume_fuel(cpu);let context_refusal=qualify(cx).err();
+  Self::fold_effect(cx,primary,effects,cpu,None)
+ }
+ /// 🛬️ Settles an issued original effect without losing its error or the operation's actual effects.
+ pub fn fold_effect(cx:&mut impl OriginalFailureContext,primary:Option<E>,effects:RetainedCloneProgress,cpu:u64,effect_refusal:Option<ValueError>)->Result<(),Self>{
+  let receipt_refusal=cx.consume_retained(effects).err();cx.consume_fuel(cpu);let context_refusal=effect_refusal.map(OriginalTurnFailure::from).or_else(||qualify(cx).err());
   if primary.is_none()&&receipt_refusal.is_none()&&context_refusal.is_none(){Ok(())}else{Err(Self{primary,effects,receipt_refusal,context_refusal})}
  }
  /// 🧬️ Borrows the original typed producer cause without erasing or cloning it.

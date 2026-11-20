@@ -1,6 +1,7 @@
 //! 🎟️ Field decoder registry and empty array authority: the history entry authority operations, the field decoder trait, ticket, registry, lease and returned decoder and the empty array authority. See [`super`].
 
 use super::*;
+use semio_framework_value::retirement::controlled::RetainedOwnerGate;
 
 impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for ArtifactRepositoryHistoryEntryAuthority<T> {
     fn next_close_copy_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.copy_bytes).map_err(|error| self.diagnostic("artifact-envelope.history-entry-copy-demand", 0).with_native(error)) }
@@ -179,7 +180,7 @@ impl<P, Mutation> Drop for ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation
 
 /// 🗄️ Fixed app-owned registry that keeps nested field decoders out of stack/job destructors.
 pub struct ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
-    pub state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+    pub state: RetainedOwnerGate<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
     pub returned: Box<[std::sync::atomic::AtomicU64]>,
     returned_mask: std::sync::atomic::AtomicU64,
     pub live: std::sync::atomic::AtomicUsize,
@@ -190,7 +191,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
     /// 🧾️ Quotes the exact final shared issuer and fixed empty backing; outstanding aliases keep custody unchanged.
     pub fn empty_release_demands(owner:&Arc<Self>)->Result<Option<semio_framework_value::RetirementDemand>,ValueError>{
         if Arc::strong_count(owner)!=1 || Arc::weak_count(owner)!=0{return Ok(None)}
-        let state=match owner.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original envelope issuer mutex is poisoned"))};
+        let Ok(state) = owner.state.try_lock() else { return Ok(None) };
         if owner.live.load(std::sync::atomic::Ordering::Acquire) != 0 || state.free_len != ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY{return Ok(None)}
         let backing=state.slots.len()*std::mem::size_of::<ArtifactEnvelopeFieldDecoderSlot<P,Mutation>>() + (owner.returned.len()+owner.reclaimed.len())*std::mem::size_of::<std::sync::atomic::AtomicU64>();
         Ok(Some(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()+backing+2*std::mem::size_of::<Option<Arc<Self>>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Self>()+backing,depth:2,..Default::default()}))
@@ -217,7 +218,7 @@ impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
             *value = index as u16;
         }
         Arc::new(Self {
-            state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+            state: RetainedOwnerGate::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
             returned,
             returned_mask: std::sync::atomic::AtomicU64::new(0),
             live: std::sync::atomic::AtomicUsize::new(0),

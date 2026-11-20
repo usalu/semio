@@ -65,5 +65,11 @@
       "prefix": ""
     }
   ],
-  "nativeFactories": []
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.bmp.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
+    }
+  ]
 }

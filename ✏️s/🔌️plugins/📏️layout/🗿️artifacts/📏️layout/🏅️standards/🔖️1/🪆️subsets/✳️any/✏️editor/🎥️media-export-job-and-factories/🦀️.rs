@@ -2,13 +2,16 @@
 
 use super::*;
 use super::export_tool_job::{OriginalExportDrawingRead,OriginalExportDrawingContext,ParentSource};
-use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{
+    RetainedAllocationEffect,RetainedCloneProgress,RetainedCloneStep,retained_clone::RetainedCloneClose,
+    RetirementPollExit,ValueError,retirement::controlled::ControlledRetirement,
+};
 #[derive(semio_framework_value::RetireOwned)]
 struct MediaSources{original:Option<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>,sealing:store::os_store::snapshot_read::SnapshotReadSourceStaging<LayoutSnapshot>,parent:Option<ParentSource>,children:semio_plugin::app::ChildContentView,operation:semio_plugin::AppOperationContext,drawings:[OriginalExportDrawingRead;2]}
 
 
 pub struct LayoutMediaExportJob {
- pub(super) inner:Option<LayoutExportJob>,pub(super) completion:Option<ArtifactMediaExportCompletion>,pub(super) active:Option<Box<dyn store::ErasedSnapshotRetirement>>,
+ pub(super) inner:Option<LayoutExportJob>,pub(super) completion:Option<ArtifactMediaExportCompletion>,active:RetainedCloneClose,
  metadata:std::mem::ManuallyDrop<Option<([Vec<u8>;2],Option<(String,String)>)>>,metadata_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<([Vec<u8>;2],Option<(String,String)>)>>>,
  pending_result:std::mem::ManuallyDrop<Option<Result<ArtifactMediaExportResult,semio_framework::MediaError>>>,result_published:bool,
  sources:Option<ControlledRetirement<MediaSources>>,
@@ -23,7 +26,7 @@ impl LayoutMediaExportJob{
    if !std::ptr::eq(input.snapshot_read.get(),input.snapshot.as_ref())||input.operation_context.parent_document_id!=input.parent_document_id||input.operation_context.canonical_base_revision!=input.canonical_base_revision{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media source custody differs from its original request").into())}
    if !bounded_id(&page.id)||!bounded_id(&input.parent_document_id){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires its exact bounded original authority").into())}let bytes=size_of::<Self>();return construction.built(cx,body,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:bytes,release_bytes:0,depth:1},||{
    let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"layout media original body allocation refused"))?;
-   let owner=Self{inner:None,completion:None,active:None,metadata:std::mem::ManuallyDrop::new(Some((std::array::from_fn(|_|Vec::new()),None))),metadata_retirement:std::mem::ManuallyDrop::new(None),pending_result:std::mem::ManuallyDrop::new(None),result_published:false,sources:None,slot:LayoutPublicationSlot::default(),completed:false};let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))}).map(|_|false)
+   let owner=Self{inner:None,completion:None,active:Default::default(),metadata:std::mem::ManuallyDrop::new(Some((std::array::from_fn(|_|Vec::new()),None))),metadata_retirement:std::mem::ManuallyDrop::new(None),pending_result:std::mem::ManuallyDrop::new(None),result_published:false,sources:None,slot:LayoutPublicationSlot::default(),completed:false};let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))}).map(|_|false)
   }
   if construction.settling(){construction.settle(cx)?;return Ok(false)}
   let owner=(&mut**body.as_mut().ok_or_else(||ValueError::invariant("layout media body absent"))?as &mut dyn std::any::Any).downcast_mut::<Self>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media requires its exact concrete body"))?;
@@ -41,25 +44,42 @@ impl LayoutMediaExportJob{
   let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
   if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{Ok(semio_framework_value::RetirementDemand{copy_bytes:inner.next_close_copy_byte_demand()?,capacity_bytes:inner.next_close_capacity_byte_demand(body)?,release_bytes:inner.next_close_release_byte_demand()?,depth:inner.next_close_depth_demand()?.max(1)})}}
   if let Some(sources)=self.sources.as_ref(){return if sources.terminal_is_empty(){Ok(one)}else{sources.next_demand(body)}}
-  if let Some(active)=self.active.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}
-  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
-  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
+  if !self.active.is_empty()||self.pending_result.is_some(){return self.active.next_owner_demands::<Result<ArtifactMediaExportResult,semio_framework::MediaError>>(self.pending_result.is_some(),&None,body)}
+  if self.completion.is_some(){return self.active.next_owner_demands::<ArtifactMediaExportCompletion>(true,&None,body)}
   if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
   if let Some(owner)=self.metadata_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.selected_demand(body)}}
   Ok(if self.metadata.is_some(){one}else{Default::default()})
  }
- fn close_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
-  let item=semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()};
-  if self.inner.as_ref().is_some_and(InteractiveJob::terminal_is_empty){self.inner.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
-  if let Some(sources)=self.sources.as_mut(){if sources.terminal_is_empty(){self.sources=None;return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}return sources.step(grant)}
-  if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
-  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_result,&mut self.active,grant)}
-  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.active,grant)}
-  if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
-  if let Some(owner)=self.metadata_retirement.as_mut(){if owner.terminal_is_empty(){self.metadata_retirement.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}return owner.step(grant)}
-  if let Some(metadata)=self.metadata.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.metadata=Some(metadata);return Err(error)}}return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
-  Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
+ fn close_turn(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  let demand=self.close_demand(body)?;
+  let item=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+  if self.inner.as_ref().is_some_and(InteractiveJob::terminal_is_empty){
+   if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   self.inner.take();return Ok(RetainedCloneStep::Progress(item))
+  }
+  if let Some(sources)=self.sources.as_mut(){
+   if !sources.terminal_is_empty(){return RetirementPollExit::resume(sources.step(body,effect))}
+   if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   self.sources=None;return Ok(RetainedCloneStep::Progress(item))
+  }
+  if !self.active.is_empty(){return RetirementPollExit::resume(self.active.step_granted(body,effect))}
+  if self.pending_result.is_some(){return Ok(self.active.begin_granted(&mut self.pending_result,effect).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}
+  if self.completion.is_some(){return Ok(self.active.begin_granted(&mut self.completion,effect).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}
+  if !self.slot.terminal_is_empty(){return Ok(self.slot.close_step(effect).result?)}
+  if let Some(owner)=self.metadata_retirement.as_mut(){
+   if !owner.terminal_is_empty(){return RetirementPollExit::resume(owner.step(body,effect))}
+   if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   self.metadata_retirement.take();return Ok(RetainedCloneStep::Progress(item))
+  }
+  if self.metadata.is_some(){
+   if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   let metadata=self.metadata.take().ok_or_else(||ValueError::invariant("Layout media metadata is absent"))?;
+   match ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.metadata=Some(metadata);return Err(error.into())}}
+   return Ok(RetainedCloneStep::Progress(item))
+  }
+  Ok(RetainedCloneStep::Complete(Default::default()))
  }
+
 }
 
 impl InteractiveJob for LayoutMediaExportJob{
@@ -79,7 +99,26 @@ impl InteractiveJob for LayoutMediaExportJob{
   }
   if let Some(address)=inner.required_drawing_source(){
    let sources=self.sources.as_mut().and_then(ControlledRetirement::original_mut).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost original child custody"))?;
-   if sources.parent.is_none(){let birth=ParentSource::borrowed_constructor_demand::<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>();let demand=semio_framework_value::RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()};if cx.should_yield()||cx.retained_grant().maximum_items==0||!cx.retained_work_can_enter(demand){return Ok(None)}if sources.sealing.terminal_is_empty(){let original=sources.original.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost original snapshot read"))?;if let Err((error,original))=sources.sealing.begin(original){sources.original=Some(original);cx.consume_retained(error.retained_progress())?;return Err(error.into())}}match sources.sealing.step(&mut sources.parent,cx.retained_grant()).result{Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(1)},Err(error)=>{cx.consume_retained(error.retained_progress())?;return Err(error.into())}}return Ok(None)}
+   if sources.parent.is_none()||!sources.sealing.terminal_is_empty(){
+    if cx.should_yield()||cx.retained_grant().maximum_items==0{return Ok(None)}
+    if !sources.sealing.is_staged(){
+     let demand=semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<store::os_store::snapshot_read::SnapshotRead<LayoutSnapshot>>(),depth:1,..Default::default()};
+     if !cx.retained_work_can_enter(demand){return Ok(None)}
+     let original=sources.original.take().ok_or_else(||ValueError::invariant("layout media lost original snapshot read"))?;
+     if let Err((error,original))=sources.sealing.begin(original){sources.original=Some(original);return Err(error.into())}
+     cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;
+     cx.consume_fuel(1);
+     return Ok(None)
+    }
+    if !cx.retained_work_can_enter(sources.sealing.next_demand()?){return Ok(None)}
+    let grant=cx.retained_grant();
+    if let Some((turn,work))=cx.with_original_source_effect(grant,|_,effect|sources.sealing.step(&mut sources.parent,effect))?{
+     cx.consume_work(work);
+     let progress=turn.result.as_ref().map_or_else(ValueError::retained_progress,|step|step.progress());
+     cx.consume_retained(progress)?;turn.result?;
+    }
+    return Ok(None)
+   }
    let index=match address{semio_s_artifact_layout_layout_model::DrawingSourceAddress::Document=>0,semio_s_artifact_layout_layout_model::DrawingSourceAddress::Page(0)=>1,_=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media source differs from its captured first page").into())};
    let parent=sources.parent.as_ref().ok_or_else(||ValueError::invariant("layout media parent absent"))?;let read=&mut sources.drawings[index];if !read.advance(parent,address,OriginalExportDrawingContext{snapshot:parent.try_borrow()?.get(),children:&sources.children,operation:semio_plugin::app::child_read::OriginalChildMemberOperation::Command(&sources.operation)},cx)?{return Ok(None)}return read.step_core(parent,address,inner,cx)
   }
@@ -89,13 +128,13 @@ impl InteractiveJob for LayoutMediaExportJob{
  fn begin_close(&mut self){if let Some(inner)=self.inner.as_mut(){inner.begin_close()}}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
   self.begin_close();if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-  let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_turn(grant))?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+  let body=cx.retained_grant().maximum_copy_bytes;let demand=self.close_demand(body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let result=self.close_turn(body,effect);RetirementPollExit::settle(effect,result)})?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
  }
  fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.depth)}
- fn terminal_is_empty(&self)->bool{self.inner.is_none()&&self.sources.is_none()&&self.completion.is_none()&&self.active.is_none()&&self.slot.terminal_is_empty()&&self.metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
+ fn terminal_is_empty(&self)->bool{self.inner.is_none()&&self.sources.is_none()&&self.completion.is_none()&&self.active.is_empty()&&self.slot.terminal_is_empty()&&self.metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
 }
 
 impl ArtifactReservedJob for LayoutMediaExportJob {}

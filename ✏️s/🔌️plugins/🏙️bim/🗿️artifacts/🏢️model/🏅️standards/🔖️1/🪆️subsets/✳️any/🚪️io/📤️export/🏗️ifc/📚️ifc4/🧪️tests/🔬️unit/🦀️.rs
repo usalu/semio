@@ -240,7 +240,7 @@ fn the_library_is_deterministic_and_every_reference_resolves() {
 #[test]
 fn what_cannot_be_written_is_noted_and_the_rest_still_is() {
     let mut model = psets();
-    model.property_templates.insert("pt-empty".into(), PropertyTemplate { name: "Pset_Empty".into(), applies_to: vec![TemplateTarget::Wall], properties: Vec::new() });
+    model.property_templates.cold_insert("pt-empty".into(), PropertyTemplate { name: "Pset_Empty".into(), applies_to: vec![TemplateTarget::Wall], properties: Vec::new() });
     let din = model.classification_systems.get_mut("cs-din-276").expect("DIN 276");
     din.entries.push(ClassificationItem { code: "399".into(), title: "Orphan".into(), parent: Some("missing".into()) });
     din.entries.push(ClassificationItem { code: "300".into(), title: "Twice".into(), parent: None });
@@ -293,7 +293,7 @@ async fn the_serializer_returns_the_file_as_a_binary_payload_with_a_diagnostic_p
     assert!(clean.diagnostics.is_empty());
     assert_eq!(<ModelIntoIfc4 as Serializer<ModelSnapshot>>::INTO.standard.0, "4");
     let mut broken = psets();
-    broken.property_templates.insert("pt-empty".into(), PropertyTemplate { name: "Pset_Empty".into(), applies_to: Vec::new(), properties: Vec::new() });
+    broken.property_templates.cold_insert("pt-empty".into(), PropertyTemplate { name: "Pset_Empty".into(), applies_to: Vec::new(), properties: Vec::new() });
     let outcome = ModelIntoIfc4::serialize(&broken, &ArchiveChildren::empty()).await.expect("it still serializes");
     assert!(outcome.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("pt-empty")));
 }

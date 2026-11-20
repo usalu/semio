@@ -13,8 +13,19 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     pub fn enqueue_dispatch_on_original_caller(&self,events:&mut ui_host::EventQueue,generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let mut queue=self.0.completions.lock().expect("runtime completion mailbox lock");if queue.len()>=RUNTIME_COMPLETION_CAPACITY-1||events.is_empty(){return Ok(false)}let Some(original)=RuntimeDispatchSource::admit(cx)?else{return Ok(false)};
-        let input_generation=events.current_generation();let drained=events.drain_page(ui_host::WorkerContext::new(input_generation));let cursor=RuntimeDispatchCursor::new_for_generation(drained,generation,original);let completion=self.0.completion(None,true,RuntimeApply::DispatchEvents(Some(cursor)));assert!(queue.enqueue(completion),"same locked queue admits the original dispatch owner");drop(queue);self.0.presentation_authority.mark_scene_changed();if let Some(waker)=self.0.waker.lock().expect("runtime completion waker lock").as_ref(){waker()}Ok(true)
+        let mut queue=self.0.completions.lock().expect("runtime completion mailbox lock");
+        if queue.len()>=RUNTIME_COMPLETION_CAPACITY-1||events.is_empty(){return Ok(false)}
+        let mut source=None;
+        let admission=RuntimeDispatchSource::admit(&mut source,cx);
+        let Some(original)=source else{return admission};
+        let drained=if admission.is_ok(){events.drain_page(ui_host::WorkerContext::new(events.current_generation()))}else{Default::default()};
+        let cursor=RuntimeDispatchCursor::new_for_generation(drained,generation,original);
+        let completion=self.0.completion(None,true,RuntimeApply::DispatchEvents(Some(cursor)));
+        assert!(queue.enqueue(completion),"same locked queue admits the original dispatch owner");
+        drop(queue);
+        self.0.presentation_authority.mark_scene_changed();
+        if let Some(waker)=self.0.waker.lock().expect("runtime completion waker lock").as_ref(){waker()}
+        admission
     }
 
     fn has_lossless_capacity(&self) -> bool {

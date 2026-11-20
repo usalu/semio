@@ -150,9 +150,59 @@ export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,r
 
 /** 🧵️ Shares physical traversal while keeping each target's matching and exclusions separate. */
 export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context){
- const matched=new Set(),compileMatched=new Set(),compileByTarget=new Map(),walked=new Map(),matchers=new Map(),matches=(path,pattern)=>{let matcher=matchers.get(pattern);if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}return matcher(path);};let visited=0;
-  const walk=async root=>{if(isOpaqueSourcePathV1(root))return [];if(walked.has(root))return walked.get(root);const pending=[root],found=[];while(pending.length){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const directory=pending.pop();const absolute=join(workspaceRoot,directory);if(!existsSync(absolute)||!lstatSync(absolute).isDirectory())continue;for(const entry of readdirSync(absolute,{withFileTypes:true})){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const path=buildPath(join(directory,entry.name));if(entry.isSymbolicLink()||isOpaqueSourcePathV1(path))continue;if(entry.isDirectory()){if(![...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache", ".r","node_modules","dist","target","🗑️generated"].includes(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);}else if(entry.isFile())found.push(path);}}walked.set(root,found);return found;};
- for(const scan of scans){const patterns=scan.patterns,exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1));for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(!isOpaqueSourcePathV1(path)&&matches(path,pattern)&&!exclusions.some(pattern=>matches(path,pattern))){matched.add(path);if(scan.compile){compileMatched.add(path);const rows=compileByTarget.get(scan.target)??new Set();rows.add(path);compileByTarget.set(scan.target,rows);}}}}}
+ const matched=new Set(),compileMatched=new Set(),compileByTarget=new Map(),walked=new Map(),matchers=new Map();
+ const globRoots=new Map(),recursiveRoots=new Set(),ignored=new Set([...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache",".r","node_modules","dist","target","🗑️generated"]);
+ let visited=0;
+ for(const scan of scans)for(const pattern of scan.patterns){
+  if(pattern.startsWith("!")||globRoots.has(pattern))continue;
+  const index=pattern.search(/[?*[{(!]/u);
+  if(index<0)continue;
+  const prefix=pattern.slice(0,index),root=(prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix))||".",tail=pattern.slice(index);
+  globRoots.set(pattern,root);
+  if(tail.includes("/")||tail.includes("**")||/[\[({]/u.test(tail))recursiveRoots.add(root);
+ }
+ const matches=(path,pattern)=>{
+  let matcher=matchers.get(pattern);
+  if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}
+  return matcher(path);
+ };
+ const walk=async root=>{
+  if(isOpaqueSourcePathV1(root))return [];
+  if(walked.has(root))return walked.get(root);
+  const pending=[root],found=[],recursive=recursiveRoots.has(root);
+  while(pending.length){
+   await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
+   const directory=pending.pop(),absolute=join(workspaceRoot,directory);
+   if(!existsSync(absolute)||!lstatSync(absolute).isDirectory())continue;
+   for(const entry of readdirSync(absolute,{withFileTypes:true})){
+    await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
+    const path=buildPath(join(directory,entry.name));
+    if(entry.isSymbolicLink()||isOpaqueSourcePathV1(path))continue;
+    if(entry.isFile())found.push(path);
+    else if(recursive&&entry.isDirectory()&&!ignored.has(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);
+   }
+  }
+  walked.set(root,found);
+  return found;
+ };
+ for(const scan of scans){
+  const exclusions=scan.patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1));
+  for(const pattern of scan.patterns){
+   if(pattern.startsWith("!"))continue;
+   await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
+   const root=globRoots.get(pattern),candidates=root===undefined?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root);
+   for(const path of candidates){
+    await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
+    if(isOpaqueSourcePathV1(path)||!matches(path,pattern)||exclusions.some(pattern=>matches(path,pattern)))continue;
+    matched.add(path);
+    if(scan.compile){
+     compileMatched.add(path);
+     const rows=compileByTarget.get(scan.target)??new Set();
+     rows.add(path);compileByTarget.set(scan.target,rows);
+    }
+   }
+  }
+ }
  return {matched,compileMatched,compileByTarget};
 }
 
@@ -160,7 +210,7 @@ export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context)
 export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,context,inputNames=[]){
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
- const stage=async phase=>{await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
+ const stage=async phase=>{context.onOwnerDiscoveryPhase?.(phase);await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
  await stage("declaration");
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
@@ -190,7 +240,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  }
  const packageFile=join(workspaceRoot,owner.root,"package.json");if(existsSync(packageFile)){const manifest=JSON.parse(readFileSync(packageFile,"utf8"));addFile(buildPath(relative(workspaceRoot,packageFile)));for(const name of inputRole==="compile"?Object.keys({...manifest.dependencies,...manifest.peerDependencies,...manifest.optionalDependencies}):[]){const owner=byPackage.get(name);if(owner&&owner!==json.name)dependencies.add(owner);}}
  const nativeRoot=json.metadata?.nativeRoot??owner.root,nativeManifest=join(workspaceRoot,nativeRoot,"Cargo.toml"),nativeTargets=Object.entries(selected).filter(([,target])=>target.metadata?.semio?.execution?.kind!=="source"),nativeObservation=()=>buildNativeSourceObservationV1({selectedSource:Object.values(selected).some(target=>target.metadata?.semio?.execution?.kind==="source"),selectedNative:nativeTargets.length>0,requestedInputs:inputNames.length>0,dependencyInputs:caretInputs.size>0,inputRole});let nativeObserved=false;
- const observeNative=()=>{if(nativeObserved)return;nativeObserved=true;if(existsSync(nativeManifest))for(const root of nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures)){addFile(root+"/Cargo.toml");const dependency=byRoot.get(root);if(!dependency)throw Error("Canonical native dependency owner required: "+root);if(dependency!==json.name)dependencies.add(dependency);}};
+ const observeNative=()=>{if(nativeObserved)return;nativeObserved=true;if(existsSync(nativeManifest))for(const root of nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures)){addFile(root+"/Cargo.toml");const dependency=byRoot.get(root);if(!dependency)throw Object.assign(Error("Canonical native dependency owner required: "+root),{code:"BUILD_SOURCE_AUTHORITY"});if(dependency!==json.name)dependencies.add(dependency);}};
  await stage("native-closure");if(nativeObservation()!=="none")observeNative();
  const declaredCompileEntries=new Map(),compileModules=new Map();
  if(targets.length||inputNames.length){
@@ -209,6 +259,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   for(const name of targets){json.targets[name]=normalized.targets[name];const patterns=[];expand(normalized.targets[name].inputs??["default"],patterns,name);scans.push({target:name,patterns,compile:buildInputSourceRoleV1(true,false,[json.targets[name].metadata?.semio?.sourceInputObservation])==="compile"});}
   const requested=[];expand(inputNames,requested);scans.push({patterns:requested,compile:false});
   if(nativeObservation()!=="none")observeNative();
+  context.onOwnerDiscoveryPhase?.("source-inputs");
   const {matched,compileByTarget}=await readBuildSourceInputMatchesV1(scans,workspaceRoot,context);
   for(const path of matched)observedFiles.add(path);
   await stage("source-closure");
@@ -238,7 +289,11 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
 }
 
 /** 📜️ Reads the workspace's canonical owner declaration through original physical Source ancestry. */
-export function readBuildOwnerRegistrySourceV1(workspaceRoot){return pinnedAuthorityReadV1(join(workspaceRoot,"📋️build-owners.json"),()=>readPhysicalSource(join(workspaceRoot,"📋️build-owners.json")).toString("utf8"));}
+/** 🧾️ Reads the pinned registry for inference, or the current physical registry when checking a native owner failure. */
+export function readBuildOwnerRegistrySourceV1(workspaceRoot, policy) {
+  const path=join(workspaceRoot,"📋️build-owners.json"),read=()=>readPhysicalSource(path).toString("utf8");
+  return policy==="current"?read():pinnedAuthorityReadV1(path,read);
+}
 
 /** 📦️ Resolves an ignored generator or exact authored compiled-package publication to its actual producer. */
 const wasmCompileIndicesV1=new WeakMap();

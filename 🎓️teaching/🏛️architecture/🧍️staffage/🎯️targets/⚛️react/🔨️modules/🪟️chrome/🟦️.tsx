@@ -35,7 +35,7 @@ export function Cell(props: React.ComponentProps<typeof SharedBorderRowCell>): R
 
 const CONTROL = "inline-flex min-h-6 items-center justify-center gap-single border border-border bg-panel px-double py-single text-xs font-medium text-foreground transition-colors hover:bg-hover-panel disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
 const PRIMARY = "border-primary bg-primary text-primary-foreground hover:bg-primary/90";
-const PRESSED = "border-active-base bg-active-base text-active-foreground hover:bg-active-hover";
+const PRESSED = "bg-active-base text-active-foreground hover:bg-active-hover";
 
 /** ☑️ A control is pressed when `aria-pressed` is the boolean or the string true. */
 function pressed(value: unknown): boolean {
@@ -43,6 +43,12 @@ function pressed(value: unknown): boolean {
 }
 
 const CELL = "border-0";
+
+/** 🧱️ The compositor box of a control: a cell of its row, a borderless box when quiet, otherwise a framed box. */
+function controlBox(grouped: boolean | undefined, quiet: boolean): Record<string, string> {
+  if (grouped) return { "data-shared-border-cell": "" };
+  return quiet ? { "data-shared-border-frame": "", "data-shared-border-edges": "" } : { "data-shared-border-frame": "" };
+}
 
 /** 🧷️ The children of a row with every `Button` and `ButtonLink` made a cell of it, fragments included. */
 export function asCells(children: ReactNode): ReactNode {
@@ -58,7 +64,7 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement> & { readon
   const { variant = "default", icon, grouped, className, children, type = "button", ...rest } = props;
   const on = pressed(rest["aria-pressed"]);
   return (
-    <button type={type} {...(grouped ? { "data-shared-border-cell": "" } : {})} className={cn(CONTROL, grouped && CELL, variant === "primary" && !on && PRIMARY, variant === "quiet" && !on && "border-transparent bg-transparent", on && PRESSED, className)} {...rest}>
+    <button type={type} {...controlBox(grouped, variant === "quiet" && !on)} className={cn(CONTROL, grouped && CELL, variant === "primary" && !on && PRIMARY, variant === "quiet" && !on && "border-transparent bg-transparent", on && PRESSED, className)} {...rest}>
       {icon === undefined ? null : <Icon icon={icon} size="small" className="shrink-0" />}
       {children}
     </button>
@@ -79,7 +85,7 @@ export function ButtonLink(props: { readonly href: string; readonly icon?: IconN
   const { href, icon, variant = "default", className, grouped, children, ...rest } = props;
   const current = rest["aria-current"] === "page";
   return (
-    <a href={href} {...(grouped ? { "data-shared-border-cell": "" } : {})} className={cn(CONTROL, grouped && CELL, "no-underline", variant === "primary" && PRIMARY, variant === "quiet" && !current && "border-transparent bg-transparent", current && "border-transparent bg-transparent text-primary", className)} {...rest}>
+    <a href={href} {...controlBox(grouped, variant === "quiet" || current)} {...(current ? { "data-shared-border-state": "active" } : {})} className={cn(CONTROL, grouped && CELL, "no-underline", variant === "primary" && PRIMARY, variant === "quiet" && !current && "border-transparent bg-transparent", current && "border-transparent bg-transparent text-primary", className)} {...rest}>
       {icon === undefined ? null : <Icon icon={icon} size="small" className="shrink-0" />}
       {children}
     </a>
@@ -350,7 +356,7 @@ export function ArchiveCard(props: {
       headingLevel={props.headingLevel ?? 2}
       data={{ "data-card": props.card, "data-revealed": props.revealed ? "" : undefined }}
       icon={props.icon}
-      title={props.href === undefined ? props.title : <a href={props.href} className="text-inherit no-underline hover:underline focus-visible:underline">{props.title}</a>}
+      title={props.href === undefined ? props.title : <a href={props.href} data-shared-border-frame="" data-shared-border-edges="" className="text-inherit no-underline outline-none hover:underline">{props.title}</a>}
       footerLeft={props.footerLeft}
       footerRight={props.footerRight}
       className={cn("pointer-events-auto", onOpen !== undefined && "cursor-pointer transition-transform duration-200 motion-reduce:transition-none", props.revealed && "-translate-y-0.5", props.className)}

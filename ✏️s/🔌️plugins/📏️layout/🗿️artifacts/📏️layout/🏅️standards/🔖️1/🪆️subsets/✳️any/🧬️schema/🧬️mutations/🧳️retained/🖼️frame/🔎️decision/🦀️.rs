@@ -3,7 +3,7 @@ use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use crate::simple::SimpleAdvance;
 use crate::target::{LayoutTargetLookup,LayoutTargetSource};
 use semio_s_artifact_layout_layout_model::{snapshot::LayoutSnapshot,Frame,Page,ParentPage,Layer,TextStory,ImageLink};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Layout frame membership source is invalid")}
 fn nested(mut d:RetirementDemand)->RetirementDemand{d.copy_bytes+=256;d.depth+=1;d}
 fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(256),maximum_depth:g.maximum_depth.saturating_sub(1),..g}}
@@ -21,7 +21,13 @@ impl FrameDecision{
  pub fn demand<M:LayoutMutationSource>(&self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,_body:usize)->Result<RetirementDemand,ValueError>{if self.closing||!matches!(m.get().view(),LayoutMutation::CreateFrame(_)|LayoutMutation::DeleteFrame(_)){return Err(fault())}let md=m.binding_demand(&self.m)?;let bd=b.binding_demand(&self.b)?;Ok(if self.m.is_none(){nested(md.unwrap_or_default())}else if self.b.is_none(){nested(bd.unwrap_or_default())}else if self.phase==15{Default::default()}else{RetirementDemand{copy_bytes:1024,depth:1,..Default::default()}})}
  fn go(&mut self,phase:u8){self.cursor=Default::default();self.phase=phase;self.offset=0}
  fn lookup(&mut self,rows:&impl LayoutTargetSource,target:&str,g:RetainedCloneGrant,out:&mut SimpleAdvance)->Result<Option<Option<usize>>,ValueError>{let step=self.cursor.advance(rows,self.phase as usize,target,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(256),..g})?;out.progress=receipt(step.progress());Ok(self.cursor.result())}
- pub fn advance<M:LayoutMutationSource>(&mut self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,g:RetainedCloneGrant)->Result<SimpleAdvance,ValueError>{let d=self.demand(m,b,g.maximum_copy_bytes)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==15,unchanged:false,error:self.error};if self.phase==15||!retained_clone_grant_admits(g,d){return Ok(out)}if self.m.is_none(){out.progress=receipt(m.bind(&mut self.m,child(g)).result.map_err(refused)?.unwrap_or_default());return Ok(out)}if self.b.is_none(){out.progress=receipt(b.bind(&mut self.b,child(g)).result.map_err(refused)?.unwrap_or_default());return Ok(out)}out.progress=RetainedCloneProgress{copied_items:1,copied_bytes:1024,..Default::default()};let(m,b)=(m.get(),b.get());let create=matches!(m.view(),LayoutMutation::CreateFrame(_));match self.phase{
+ pub fn work_demand<M:LayoutMutationSource>(&self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>)->Result<u64,ValueError>{
+  self.demand(m,b,256)?;
+  if self.phase==15{return Ok(0)}
+  let child=if self.m.is_none(){m.binding_work_demand(&self.m)?}else if self.b.is_none(){b.binding_work_demand(&self.b)?}else{0};
+  child.checked_add(1).ok_or_else(fault)
+ }
+ pub fn advance<M:LayoutMutationSource>(&mut self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,effect:&mut RetainedAllocationEffect<'_>)->Result<SimpleAdvance,ValueError>{let g=effect.grant();let d=self.demand(m,b,g.maximum_copy_bytes)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==15,unchanged:false,error:self.error};if self.phase==15||!retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.work_demand(m,b)?{return Ok(out)}if !effect.performed(1)?{return Err(fault())}if self.m.is_none(){out.progress=receipt(m.bind(&mut self.m,&mut effect.nested(child(g))).result.map_err(refused)?.unwrap_or_default());return Ok(out)}if self.b.is_none(){out.progress=receipt(b.bind(&mut self.b,&mut effect.nested(child(g))).result.map_err(refused)?.unwrap_or_default());return Ok(out)}out.progress=RetainedCloneProgress{copied_items:1,copied_bytes:1024,..Default::default()};let(m,b)=(m.get(),b.get());let create=matches!(m.view(),LayoutMutation::CreateFrame(_));match self.phase{
  2=>if let Some(found)=self.lookup(&Rows::Pages(&b.pages),page_id(m),g,&mut out)?{if let Some(page)=found{self.at[0]=page;self.go(3)}else{out.error=Some("mutation.target-missing")}},
  3=>if let Some(found)=self.lookup(&Rows::Frames(&b.pages[self.at[0]].frames),frame_id(m),g,&mut out)?{if create{if found.is_some(){out.error=Some("mutation.duplicate-id")}else{self.go(4)}}else if let Some(frame)=found{self.at[1]=frame;self.page=0;self.go(14)}else{out.error=Some("mutation.target-missing")}},
  4=>{let LayoutMutation::CreateFrame(p)=m.view() else{return Err(fault())};if p.index.is_some_and(|i|i>b.pages[self.at[0]].frames.len()){out.error=Some("mutation.target-missing")}else{self.go(5)}},
@@ -38,6 +44,24 @@ impl FrameDecision{
  _=>return Err(fault())}if out.error.is_some(){self.error=out.error;self.phase=15}out.done=self.phase==15;Ok(out)}
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close()}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.cursor.terminal_is_empty(){return Ok(nested(self.cursor.close_demand()))}if self.m.is_some(){return Ok(nested(RetainedCloneBinding::close_demand(&self.m,body.saturating_sub(256))?))}Ok(nested(RetainedCloneBinding::close_demand(&self.b,body.saturating_sub(256))?))}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(fault())}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(receipt(self.cursor.close_step(child(g)).progress())))}let p=if self.m.is_some(){receipt(RetainedCloneBinding::close_one(&mut self.m,child(g)).result.map_err(refused)?.progress())}else{receipt(RetainedCloneBinding::close_one(&mut self.b,child(g)).result.map_err(refused)?.progress())};Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  self.close_demand(body)?;
+  if self.terminal_is_empty(){return Ok(0)}
+  if !self.cursor.terminal_is_empty(){return Ok(1)}
+  let binding=if self.m.is_some(){&self.m}else{&self.b};
+  RetainedCloneBinding::close_work_demand(binding,body.saturating_sub(256))?.checked_add(1).ok_or_else(fault)
+ }
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  if !self.closing{return Err(fault())}
+  let d=self.close_demand(body)?;let g=effect.grant();
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  if !retained_clone_grant_admits(g,d)||effect.remaining_work_units()?<self.close_work_demand(body)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if !effect.performed(1)?{return Err(fault())}
+  if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(receipt(self.cursor.close_step(child(g)).progress())))}
+  let binding=if self.m.is_some(){&mut self.m}else{&mut self.b};
+  let RetainedWorkPoll::Complete(turn)=RetainedCloneBinding::close_one(binding,body.saturating_sub(256),&mut effect.nested(child(g))) else{return Err(fault())};
+  let progress=receipt(turn.result.map_err(|e|refused(e.into_value_error()))?.progress());
+  Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+ }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.m.is_none()&&self.b.is_none()&&self.cursor.terminal_is_empty()}}
 impl Drop for FrameDecision{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"frame membership decision needs original alias closure")}}

@@ -268,6 +268,7 @@ fn marquee_rect_bounds(polygon: &[[f32; 2]]) -> Option<[f32; 4]> {
 /// 🪢️ Screen-space component (vertex/edge/face) picking within a marquee/lasso polygon; kept as a flat argument
 /// list rather than a params struct because both `infinite/world/rs` call sites pass through the same shape
 /// positionally and this crate must not restructure a signature consumed outside its own scope.
+/// Every mesh read fault (a contended authority answers [`Mesh3dFault::Busy`]) is returned instead of narrowing the selection.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
 pub fn screen_select_components(
     mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>,
@@ -281,7 +282,7 @@ pub fn screen_select_components(
     granularity: &str,
     active_instance_id: Option<&str>,
     crossing: bool,
-) -> Vec<String> {
+) -> Result<Vec<String>, Mesh3dFault> {
     use std::collections::HashSet;
     let mut selected = HashSet::new();
     let local_polygon: Vec<[f32; 2]> = polygon.iter().map(|point| [point[0], point[1]]).collect();
@@ -290,7 +291,7 @@ pub fn screen_select_components(
         let Some(&mesh) = mesh_lookup.get(&draw.mesh_key) else {
             continue;
         };
-        let Ok(schema) = mesh.schema() else { continue };
+        let schema = mesh.schema()?;
         for instance in &draw.instances {
             if active_instance_id.is_some_and(|active| instance.id != active) {
                 continue;
@@ -298,9 +299,9 @@ pub fn screen_select_components(
             match granularity {
                 "vertex" if schema.vertex_ids != 0 => {
                     for vertex_index in 0..schema.vertices {
-                        let group = mesh.u32(Mesh3dField::VertexIds, vertex_index).unwrap_or(vertex_index);
+                        let group = mesh.u32(Mesh3dField::VertexIds, vertex_index)?;
                         if group == u32::MAX { continue; }
-                        let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
+                        let point = mesh.vec3(Mesh3dField::Positions, vertex_index)?;
                         let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
                         let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) else {
                             continue;
@@ -315,7 +316,7 @@ pub fn screen_select_components(
                 }
                 "edge" if schema.edges != 0 => {
                     for edge_index in 0..schema.edges {
-                        let Ok(edge) = mesh.edge(edge_index) else { continue };
+                        let edge = mesh.edge(edge_index)?;
                         let a_world = instance.model.transform_point_m(vec3_new_m(edge[0][0], edge[0][1], edge[0][2]));
                         let b_world = instance.model.transform_point_m(vec3_new_m(edge[1][0], edge[1][1], edge[1][2]));
                         let (Some(a_screen), Some(b_screen)) = (projection_spec_project_point(view_proj, projection_spec, a_world, width, height), projection_spec_project_point(view_proj, projection_spec, b_world, width, height)) else {
@@ -324,17 +325,17 @@ pub fn screen_select_components(
                         if !marquee_segment_selected(a_screen, b_screen, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.u32(Mesh3dField::EdgeIds, edge_index).unwrap_or(edge_index).to_string();
+                        let id = component_id(mesh, Mesh3dField::EdgeIds, schema.edge_ids, edge_index)?.to_string();
                         selected.insert(id);
                     }
                 }
                 "face" => {
                     for tri_index in 0..schema.indices / 3 {
-                        let Some(tri) = mesh_triangle(mesh, tri_index) else { continue };
+                        let tri = mesh_triangle(mesh, tri_index)?;
                         let mut screens = [[0.0_f32; 2]; 3];
                         let mut visible = 0usize;
                         for (slot, index) in tri.iter().enumerate() {
-                            let Some(point) = vertex(mesh, *index) else { continue };
+                            let point = vertex(mesh, *index)?;
                             let world = instance.model.transform_point_m(point);
                             if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                                 screens[slot] = screen;
@@ -347,12 +348,12 @@ pub fn screen_select_components(
                         if !marquee_triangle_selected(&screens, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.u32(Mesh3dField::FaceIds, tri_index).unwrap_or(tri_index).to_string();
+                        let id = component_id(mesh, Mesh3dField::FaceIds, schema.face_ids, tri_index)?.to_string();
                         selected.insert(id);
                     }
                 }
                 _ => {
-                    let Ok((min, max)) = mesh.aabb() else { continue };
+                    let (min, max) = mesh.aabb()?;
                     let Some(projected) = projected_aabb_bounds(view_proj, projection_spec, instance.model, min, max, width, height) else {
                         continue;
                     };
@@ -363,17 +364,21 @@ pub fn screen_select_components(
             }
         }
     }
-    selected.into_iter().collect()
+    Ok(selected.into_iter().collect())
 }
 
-fn vertex(mesh: Mesh3dLease, index: u32) -> Option<Vec3> {
-    let point = mesh.vec3(Mesh3dField::Positions, index).ok()?;
-    Some(vec3_new_m(point[0], point[1], point[2]))
+fn component_id(mesh: Mesh3dLease, field: Mesh3dField, declared: u32, item: u32) -> Result<u32, Mesh3dFault> {
+    if declared == 0 { Ok(item) } else { mesh.u32(field, item) }
 }
 
-fn mesh_triangle(mesh: Mesh3dLease, triangle: u32) -> Option<[u32; 3]> {
-    let base = triangle.checked_mul(3)?;
-    Some([mesh.u32(Mesh3dField::Indices, base).ok()?, mesh.u32(Mesh3dField::Indices, base + 1).ok()?, mesh.u32(Mesh3dField::Indices, base + 2).ok()?])
+fn vertex(mesh: Mesh3dLease, index: u32) -> Result<Vec3, Mesh3dFault> {
+    let point = mesh.vec3(Mesh3dField::Positions, index)?;
+    Ok(vec3_new_m(point[0], point[1], point[2]))
+}
+
+fn mesh_triangle(mesh: Mesh3dLease, triangle: u32) -> Result<[u32; 3], Mesh3dFault> {
+    let base = triangle.checked_mul(3).ok_or(Mesh3dFault::Schema)?;
+    Ok([mesh.u32(Mesh3dField::Indices, base)?, mesh.u32(Mesh3dField::Indices, base + 1)?, mesh.u32(Mesh3dField::Indices, base + 2)?])
 }
 
 pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f32> {
@@ -496,22 +501,22 @@ fn aabb_overlaps_marquee(projected: [f32; 4], polygon: &[[f32; 2]], rectangle: b
 }
 
 /// 🔲️ Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
-/// than a params struct for the same cross-crate-scope reason as `screen_select_components`.
+/// than a params struct for the same cross-crate-scope reason as `screen_select_components`, and returning every mesh read fault the same way.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
-pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, projection_spec: Viewport3dProjectionSpec, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
+pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, projection_spec: Viewport3dProjectionSpec, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Result<Vec<String>, Mesh3dFault> {
     let rect_bounds = marquee_rect_bounds(polygon);
     let mut selected = Vec::new();
     for draw in draws {
         let Some(&mesh) = mesh_lookup.get(&draw.mesh_key) else {
             continue;
         };
-        let Ok(schema) = mesh.schema() else { continue };
+        let schema = mesh.schema()?;
         for instance in &draw.instances {
             if !crossing {
                 let mut all_inside = true;
                 let mut any_visible = false;
                 for vertex_index in 0..schema.vertices {
-                    let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
+                    let point = mesh.vec3(Mesh3dField::Positions, vertex_index)?;
                     let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
                     if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                         any_visible = true;
@@ -526,7 +531,7 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
                 }
                 continue;
             }
-            let Ok((min, max)) = mesh.aabb() else { continue };
+            let (min, max) = mesh.aabb()?;
             let Some(projected) = projected_aabb_bounds(view_proj, projection_spec, instance.model, min, max, width, height) else {
                 continue;
             };
@@ -535,11 +540,11 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
             }
             let mut covered = false;
             for triangle in 0..schema.indices / 3 {
-                let Some(tri) = mesh_triangle(mesh, triangle) else { continue };
+                let tri = mesh_triangle(mesh, triangle)?;
                 let mut screens = [[0.0_f32; 2]; 3];
                 let mut visible = 0usize;
                 for (slot, &index) in tri.iter().enumerate() {
-                    let Some(point) = vertex(mesh, index) else { continue };
+                    let point = vertex(mesh, index)?;
                     let world = instance.model.transform_point_m(point);
                     if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                         screens[slot] = screen;
@@ -559,7 +564,7 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
             }
         }
     }
-    selected
+    Ok(selected)
 }
 //#endregion Picking
 

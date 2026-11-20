@@ -1,0 +1,12 @@
+q
+2 0 0 1 0 0 cm
+[6 2] 1 d
+2 w
+20
+%% STREAM
+10 m 40 10 l
+0 0 1 RG S
+/DeviceRGB cs
+1 0 0 sc
+10 20 20 15 re f
+Q

@@ -202,7 +202,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/🧾️incremental/🧪️tests/📉️decode/🟦️.ts"
       ],
       "platforms": [
         "darwin",

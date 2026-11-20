@@ -1,0 +1,23 @@
+{
+  "page": [
+    240,
+    160
+  ],
+  "font": "Helvetica",
+  "size": 10,
+  "before": "BT /F1 10 Tf 20 100 Td (A) Tj (B) Tj ET",
+  "after": "BT /F1 10 Tf 20 100 Td 5 Ts [-1200] TJ (A) Tj [1200] TJ 0 Ts (B) Tj ET",
+  "offset": [
+    12,
+    5
+  ],
+  "followingX": 26.67,
+  "resize": {
+    "x": 30,
+    "y": 105,
+    "width": 13.34,
+    "height": 15,
+    "reference": "BT /F1 10 Tf 20 100 Td 2 0 0 1.5 30 105 Tm (A) Tj 1 0 0 1 20 100 Tm [-667] TJ (B) Tj ET"
+  },
+  "deleted": "BT /F1 10 Tf 20 100 Td [-667] TJ (B) Tj ET"
+}

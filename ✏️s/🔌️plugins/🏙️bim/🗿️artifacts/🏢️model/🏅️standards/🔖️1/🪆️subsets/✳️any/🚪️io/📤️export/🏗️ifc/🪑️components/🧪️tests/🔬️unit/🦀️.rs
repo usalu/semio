@@ -187,9 +187,9 @@ fn products_are_contained_in_their_storey_and_the_export_is_deterministic() {
 #[test]
 fn a_component_of_a_missing_family_is_noted_and_not_written() {
     let mut model = components();
-    model.families.remove("fam-pillar");
-    model.family_parameters.retain(|_, row| row.family != "fam-pillar");
-    model.family_solids.retain(|_, row| row.family != "fam-pillar");
+    model.families.cold_remove("fam-pillar");
+    model.family_parameters.cold_retain(|_, row| row.family != "fam-pillar");
+    model.family_solids.cold_retain(|_, row| row.family != "fam-pillar");
     let (document, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21(Schema::Ifc2x3, &model).expect("the export");
     assert!(notes.iter().any(|note| note.contains("cmp-pillar")), "{notes:?}");
     assert!(!tags(&document, "IFCBUILDINGELEMENTPROXY").contains(&"cmp-pillar".to_string()));

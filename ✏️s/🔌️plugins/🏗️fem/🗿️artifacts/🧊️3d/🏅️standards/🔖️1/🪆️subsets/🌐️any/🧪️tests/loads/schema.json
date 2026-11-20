@@ -106,14 +106,15 @@
       "const": {
         "variants": [
           "nodal",
-          "member-udl"
+          "member-udl",
+          "area"
         ],
-        "area": "unsupported",
         "unknown": "invalid",
         "selfWeight": "retained",
         "emptyCases": "retained",
         "nodeReference": "required",
-        "memberReference": "required"
+        "memberReference": "required",
+        "solidReference": "required"
       }
     },
     "ownership": {

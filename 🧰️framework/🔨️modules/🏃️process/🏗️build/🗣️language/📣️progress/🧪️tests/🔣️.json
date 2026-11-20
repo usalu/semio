@@ -220,10 +220,10 @@
       "kind": "error",
       "message": "Unbalanced thing",
       "en": [
-        "Internal error: Unbalanced thing"
+        "Internal error: Unbalanced thing (reference 5aa880ba)"
       ],
       "de": [
-        "Interner Fehler: Unbalanced thing"
+        "Interner Fehler: Unbalanced thing (Referenz 5aa880ba)"
       ],
       "exitCode": 1
     },
@@ -232,10 +232,10 @@
       "kind": "string",
       "message": "boom",
       "en": [
-        "Internal error: boom"
+        "Internal error: boom (reference 8e980095)"
       ],
       "de": [
-        "Interner Fehler: boom"
+        "Interner Fehler: boom (Referenz 8e980095)"
       ],
       "exitCode": 1
     }

@@ -113,7 +113,7 @@
   ],
   "census": {
     "files": 52,
-    "literalCalls": 99,
+    "literalCalls": 100,
     "rows": [
       {
         "path": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
@@ -147,7 +147,7 @@
       },
       {
         "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
-        "literalCalls": 14,
+        "literalCalls": 16,
         "forwarded": [
           {
             "callee": "acquireCompilerCapacityLeaseV1",
@@ -227,7 +227,7 @@
       },
       {
         "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
-        "literalCalls": 1,
+        "literalCalls": 2,
         "forwarded": []
       },
       {
@@ -262,7 +262,7 @@
       },
       {
         "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
-        "literalCalls": 1,
+        "literalCalls": 0,
         "forwarded": []
       },
       {
@@ -327,7 +327,7 @@
       },
       {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/🟦️.ts",
-        "literalCalls": 1,
+        "literalCalls": 0,
         "forwarded": []
       },
       {

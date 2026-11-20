@@ -258,7 +258,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-animation-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.animation.inference",
       "claims": [
@@ -269,7 +269,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-audio-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.audio.inference",
       "claims": [
@@ -280,7 +280,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-brep-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.brep.inference",
       "claims": [
@@ -291,7 +291,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-cad-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.cad.inference",
       "claims": [
@@ -302,7 +302,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-document-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.document.inference",
       "claims": [
@@ -313,7 +313,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-drawing-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.drawing.inference",
       "claims": [
@@ -324,7 +324,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-flow-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.flow.inference",
       "claims": [
@@ -335,7 +335,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-graph-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.graph.inference",
       "claims": [
@@ -346,7 +346,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-image-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.image.inference",
       "claims": [
@@ -357,7 +357,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.inference",
       "claims": [
@@ -368,7 +368,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-kit-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.kit.inference",
       "claims": [
@@ -379,7 +379,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-mesh-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.mesh.inference",
       "claims": [
@@ -390,7 +390,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-model-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.model.inference",
       "claims": [
@@ -401,7 +401,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-object-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.object.inference",
       "claims": [
@@ -412,7 +412,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-presentation-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.presentation.inference",
       "claims": [
@@ -423,7 +423,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-table-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.table.inference",
       "claims": [
@@ -434,7 +434,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-text-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.text.inference",
       "claims": [
@@ -445,7 +445,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-value-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.value.inference",
       "claims": [
@@ -456,7 +456,7 @@
       ]
     },
     {
-      "id": "stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
+      "id": "s.stdio.semio.inference.schema-s-stdio-semio-video-inference.v1",
       "category": "inference",
       "descriptor": "runtime-capability:inference:schema:stdio.semio.video.inference",
       "claims": [

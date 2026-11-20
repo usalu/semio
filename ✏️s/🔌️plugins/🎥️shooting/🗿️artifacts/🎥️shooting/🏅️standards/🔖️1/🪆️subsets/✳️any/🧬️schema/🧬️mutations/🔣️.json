@@ -95,6 +95,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/change-scene-material-roughness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/set-shot-drawing/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/patch-shot-camera/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/set-shot-auto-fit/schema.json"
     }
   ]
 }

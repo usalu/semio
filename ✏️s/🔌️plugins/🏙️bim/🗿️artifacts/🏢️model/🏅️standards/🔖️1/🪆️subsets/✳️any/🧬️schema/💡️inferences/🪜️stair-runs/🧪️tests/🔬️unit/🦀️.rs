@@ -31,7 +31,7 @@ fn stair(flight: StairFlight, top: TopConstraint) -> Stair {
 
 fn with(stair: Stair) -> ModelSnapshot {
     let mut snapshot: ModelSnapshot = from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes");
-    snapshot.stairs.insert("s-1".into(), stair);
+    snapshot.stairs.cold_insert("s-1".into(), stair);
     snapshot
 }
 

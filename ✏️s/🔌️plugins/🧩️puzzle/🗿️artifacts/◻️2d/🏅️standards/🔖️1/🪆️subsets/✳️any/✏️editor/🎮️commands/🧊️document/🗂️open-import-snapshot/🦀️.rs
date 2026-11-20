@@ -6,6 +6,6 @@ use semio_plugin::kernel::Effect;
 
 /// 🗂 Opens a file picker that re-dispatches `importSnapshot` with the picked text.
 pub fn open_import_snapshot(ctx: &mut Puzzle2dActionCtx<'_>) {
-    ctx.effects.push(Effect::RequestFileOpen { req: semio_plugin::RequestId(122), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importSnapshot".into(), multiple: false, args: None });
+    ctx.effects.push(Effect::RequestFileOpen { max_file_bytes: None, req: semio_plugin::RequestId(122), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importSnapshot".into(), multiple: false, args: None });
     *ctx.ui_scope = UiDirtyScope::None;
 }

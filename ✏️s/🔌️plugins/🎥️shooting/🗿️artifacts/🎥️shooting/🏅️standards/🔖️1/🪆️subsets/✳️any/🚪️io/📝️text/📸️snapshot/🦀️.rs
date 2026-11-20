@@ -178,12 +178,11 @@ fn shooting_shape_path_segments(shape: &str, width: f64, height: f64) -> Vec<Pat
 /// by the caller's own default-color fallback before this ever runs).
 fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
     let trimmed = hex.trim().trim_start_matches('#');
-    let byte = |s: &str| u8::from_str_radix(s, 16).ok().map(|v| v as f32 / 255.0);
-    match trimmed.len() {
-        6 => Some(SemioRgba { r: byte(&trimmed[0..2])?, g: byte(&trimmed[2..4])?, b: byte(&trimmed[4..6])?, a: 1.0 }),
-        8 => Some(SemioRgba { r: byte(&trimmed[0..2])?, g: byte(&trimmed[2..4])?, b: byte(&trimmed[4..6])?, a: byte(&trimmed[6..8])? }),
-        _ => None,
+    if !matches!(trimmed.len(), 6 | 8) || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
     }
+    let byte = |start| u8::from_str_radix(trimmed.get(start..start + 2)?, 16).ok().map(|value| f32::from(value) / 255.0);
+    Some(SemioRgba { r: byte(0)?, g: byte(2)?, b: byte(4)?, a: if trimmed.len() == 8 { byte(6)? } else { 1.0 } })
 }
 
 
@@ -283,7 +282,7 @@ pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
     shooting_scene_svg(&snapshot)
 }
 
-pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera, fit: bool) -> String {
+pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera, scene_fit: bool) -> String {
     let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
     let camera = crate::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
     let scene = &snapshot.scene;
@@ -305,7 +304,7 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
             "scale": vec3(crate::shooting_asset_scale(asset)),
         },
         "camera": camera_value,
-        "fit": { "enabled": fit, "padding": 1.25 },
+        "fit": { "enabled": shot.auto_fit.unwrap_or(scene_fit), "padding": 1.25 },
         "lights": {
             "ambientIntensity": scene.ambient.intensity,
             "ambientColor": scene.ambient.color.as_str(),
@@ -329,6 +328,26 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
         },
     });
     if let Some(object) = value.as_object_mut() {
+        if shot.format == "svg" {
+            let drawing = shot.drawing.clone().unwrap_or_default();
+            let mut style = json!({
+                "background": drawing.background,
+                "fill": drawing.fill,
+                "fillOpacity": drawing.fill_opacity,
+                "visibleLines": drawing.visible_lines,
+                "hiddenLines": drawing.hidden_lines,
+                "visibleColor": drawing.visible_color.as_str(),
+                "hiddenColor": drawing.hidden_color.as_str(),
+                "visibleWidth": drawing.visible_width,
+                "hiddenWidth": drawing.hidden_width,
+                "lineEasing": drawing.line_easing,
+                "mergeLines": drawing.merge_lines,
+            });
+            if let (Some(fields), Some(color)) = (style.as_object_mut(), drawing.fill_color.as_deref()) {
+                fields.insert("fillColor", json!(color));
+            }
+            object.insert("drawing", style);
+        }
         let background = shot.background.clone().unwrap_or_else(|| scene.background.clone());
         if !is_transparent_shooting_background(&background) {
             object.insert("background", json!(background.as_str()));

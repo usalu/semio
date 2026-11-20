@@ -72,7 +72,7 @@ async fn away_from_every_wall_nothing_happens_and_no_material_is_refused() {
     rig.mv(4.0, 3.0);
     assert!(rig.preview.marks.is_empty());
     let mut snapshot = room();
-    snapshot.materials.clear();
+    snapshot.materials.cold_clear();
     assert_eq!(Rig::plan("sweep", snapshot).down(2.0, 0.05).refused, Some(TYPE_MISSING));
 }
 

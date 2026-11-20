@@ -35,8 +35,8 @@ fn absorbed(earlier: E, later: E) -> Option<E> {
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.storeys.insert("st".into(), storey("Ground", 0, 3.0));
-    snapshot.storeys.insert("up".into(), storey("First", 1, 2.8));
+    snapshot.storeys.cold_insert("st".into(), storey("Ground", 0, 3.0));
+    snapshot.storeys.cold_insert("up".into(), storey("First", 1, 2.8));
     snapshot
 }
 
@@ -111,7 +111,7 @@ async fn inverse_undoes_every_kind_of_entry() {
 #[semio_framework_async_macros::async_test]
 async fn an_optional_field_is_restored_to_none_and_to_some() {
     let mut base = ModelSnapshot::default();
-    base.openings.insert("o".into(), Opening { host: "w".into(), kind: OpeningKind::Void { width: 1.0, height: 2.0 }, offset: 1.0, sill_override: None, width: None, height: Some(2.1), flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "O".into() });
+    base.openings.cold_insert("o".into(), Opening { host: "w".into(), kind: OpeningKind::Void { width: 1.0, height: 2.0 }, offset: 1.0, sill_override: None, width: None, height: Some(2.1), flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "O".into() });
     let diff = ModelDiff::openings("o", Entry::Patched(OpeningPatch { width: Some(Assigned::new(Some(0.9))), height: Some(Assigned::new(None)), ..Default::default() }));
     let after = protocol::apply_diff_cold(&diff, &base).expect("applies");
     assert_eq!((after.openings["o"].width, after.openings["o"].height), (Some(0.9), None));
@@ -122,7 +122,7 @@ async fn an_optional_field_is_restored_to_none_and_to_some() {
 async fn property_patches_set_replace_and_remove_and_invert() {
     let value = |text: &str| PropertyValue::Text { value: text.into() };
     let mut base = ModelSnapshot::default();
-    base.properties.insert("w".into(), PropertySet::from([("Pset".to_string(), [("Fire".to_string(), value("EI60"))].into())]));
+    base.properties.cold_insert("w".into(), PropertySet::from([("Pset".to_string(), [("Fire".to_string(), value("EI60"))].into())]));
     let patch = PropertySetPatch { assigned: [("Pset".to_string(), [("Fire".to_string(), None), ("Acoustic".to_string(), Some(value("45 dB")))].into())].into() };
     let diff = ModelDiff::properties("w", Entry::Patched(patch));
     let after = protocol::apply_diff_cold(&diff, &base).expect("applies");

@@ -1,10 +1,11 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{execFile}from"node:child_process";
-import{mkdirSync,renameSync,writeFileSync}from"node:fs";
+import{mkdirSync}from"node:fs";
 import{basename}from"node:path";
 import{platform as osPlatform}from"node:os";
 import{join}from"node:path";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import{writeSliceReportTextV1}from"./🏷️owner/🟦️.ts";
 
 /** 📋️ The declared numbers of the slice memory report: the schema file is the single source.
  * @see ./🧬️schema/🔣️.json */
@@ -22,6 +23,21 @@ export function describeCollectionV1(name,collection){
  const keys=Object.keys(collection??{});return{name,entries:keys.length,sample:()=>keys.slice(0,P.collectionSample).map(key=>collection[key])};
 }
 const take=(iterator,count)=>{const out=[];for(const item of iterator){out.push(item);if(out.length>=count)break;}return out;};
+
+/** 🪶️ Enumerates live diagnostic collections and releases their tracking entries even between reports. */
+export function createWeakCollectionTrackerV1(){
+ const references=new Set(),dead=new FinalizationRegistry(ref=>references.delete(ref));
+ return {
+  track(value){const ref=new WeakRef(value);references.add(ref);dead.register(value,ref,ref);},
+  *[Symbol.iterator](){
+   for(const ref of references){
+    const value=ref.deref();
+    if(value===undefined){references.delete(ref);dead.unregister(ref);}
+    else yield value;
+   }
+  }
+ };
+}
 
 /** 🔌️ Registers a function that answers the collections of one part as `{name,entries,sample()}` or `{name,entries,bytes}`; returns the function that removes it. */
 export function registerSliceCollectionsV1(name,read){collectionSources.set(name,read);return()=>{if(collectionSources.get(name)===read)collectionSources.delete(name);};}
@@ -55,10 +71,10 @@ export function readSliceReportSourceV1(name){const read=sources.get(name);if(re
 
 const fill=(text,fields)=>text.replace(/\{(\w+)\}/gu,(_,name)=>String(fields[name]??""));
 
-/** 🪜️ Runs `run` as the step `id` of the read (declared in the schema with its bound): while it runs the progress line names it with how long it has run and its bound, and a wait inside it names who it waits for through `detail`; steps nest, the innermost is named. A step that ends or fails is removed.
+/** 🪜️ Runs `run` as the step `id` of the read with its declared bound. The progress line names the innermost active step. The inventory step can supply timing diagnostics and completed owner checks. A step that ends or fails is removed.
  * @see ./🧬️schema/🔣️.json */
-export async function sliceReadStepV1(id,run,detail={}){
- const row={id,startedMs:performance.now(),detail,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
+export async function sliceReadStepV1(id,run,detail={},diagnostics){
+ const row={id,startedMs:performance.now(),detail,diagnostics,boundMilliseconds:detail.boundMilliseconds??STEPS.steps[id]?.boundMilliseconds};
  if(row.boundMilliseconds===undefined)throw Error("Declared slice read step required: "+id);
  steps.push(row);movedAt=performance.now();
  try{return await run();}finally{const at=steps.lastIndexOf(row);if(at>=0)steps.splice(at,1);movedAt=performance.now();}
@@ -68,7 +84,21 @@ export async function sliceReadStepV1(id,run,detail={}){
 export function describeSliceReadStepV1(now=performance.now()){
  const row=steps.at(-1);if(row===undefined)return undefined;
  const seconds=Math.round((now-row.startedMs)/1000),bound=Math.round(row.boundMilliseconds/1000),spec=STEPS.steps[row.id],fields={round:1,...row.detail};
- const text=language=>fill(spec[language],fields)+" ("+STEPS.counter[language]+")"+(seconds>bound?" ("+fill(STEPS.overBound[language],{bound})+")":"");
+ if(row.id==="inventory"){
+  const count=readSliceReportSourceV1("caches")?.interned;
+  if(Number.isSafeInteger(count)&&count>=0)row.observations=Math.max(row.observations??0,count);
+  try{
+   const sample=row.diagnostics?.(),completed=sample?.completed;
+   const discovery=sample?.active?.phase==="scoped-discovery"?sample.active:Array.isArray(completed)&&completed.length<=schema.definitions.InventoryAwait.properties.completed.maxItems?completed.find(value=>value.phase==="scoped-discovery"):undefined,checks=discovery?.completedOwners;
+   if(Number.isSafeInteger(checks)&&checks>(row.completedOwnerChecks??0))row.completedOwnerChecks=checks;
+   const verified=discovery?.verifiedMemoRows;
+   if(Number.isSafeInteger(verified)&&verified>(row.verifiedMemoRows??0))row.verifiedMemoRows=verified;
+  }catch{}
+ }
+ const observations=language=>row.observations===undefined?"":" ("+fill(STEPS.inventoryObservations[language],{rows:row.observations})+")";
+ const ownerChecks=language=>row.completedOwnerChecks===undefined?"":" ("+fill(STEPS.inventoryOwnerChecks[language],{rows:row.completedOwnerChecks})+")";
+ const memoChecks=language=>row.verifiedMemoRows===undefined?"":" ("+fill(STEPS.inventoryMemoChecks[language],{rows:row.verifiedMemoRows})+")";
+ const text=language=>fill(spec[language],fields)+observations(language)+ownerChecks(language)+memoChecks(language)+" ("+STEPS.counter[language]+")"+(seconds>bound?" ("+fill(STEPS.overBound[language],{bound})+")":"");
  return{id:row.id,phase:text("en")+" / "+text("de"),done:seconds,total:bound};
 }
 
@@ -86,7 +116,23 @@ export function sliceReadActiveV1(now=performance.now()){return now-sliceReadMov
  * @see ./🧬️schema/🔣️.json */
 export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=readFinalSliceReportSourceV1,milliseconds=P.progressMilliseconds}){
  let told,finished;
- const timer=setInterval(()=>{const step=describeSliceReadStepV1(),live=read("owners"),ledger=(live??final("owners"))?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);if(step!==undefined&&!(step.id==="owners-round"&&live!==undefined&&done!==told)){if(step.id!=="owners-round")told=undefined;try{emit({phase:step.phase,done:step.done,total:step.total});}catch{}return;}if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||total<=0)return;if(live===undefined){if(finished===ledger)return;finished=ledger;told=undefined;try{emit({phase:"owners done",done,total});}catch{}return;}finished=undefined;if(done===told)return;told=done;try{emit({phase:"taken",done,total});}catch{}},milliseconds);
+ const timer=setInterval(()=>{
+  const step=describeSliceReadStepV1(),live=read("owners"),ledger=(live??final("owners"))?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);
+  const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told);
+  if(step!==undefined&&!(step.id==="owners-round"&&fresh)){
+   if(step.id!=="owners-round")told=undefined;
+   try{emit({phase:step.phase,done:step.done,total:step.total});}catch{}
+   return;
+  }
+  if(!fresh)return;
+  if(live===undefined){
+   finished=ledger;told=undefined;
+   try{emit({phase:"owners done",done,total});}catch{}
+   return;
+  }
+  finished=undefined;told=done;
+  try{emit({phase:"taken",done,total});}catch{}
+ },milliseconds);
  timer.unref?.();
  return()=>clearInterval(timer);
 }
@@ -148,6 +194,7 @@ export async function measureSliceProcessesV1({footprint,table=osPlatform()==="w
 export function buildSliceReportV1({reason,heap,now=Date.now,policy=P}){
  const usage=process.memoryUsage(),stats=heap?.()??undefined,body={};
  for(const[name,read]of sources){try{body[name]=read();}catch(error){body[name]={error:String(error?.message??error).slice(0,200)};}}
+ try{const inventory=steps.findLast(row=>row.id==="inventory")?.diagnostics?.();if(inventory!==undefined)body.inventory=inventory;}catch{}
  const report={version:1,atMs:now(),reason,pid:process.pid,uptimeSeconds:Math.round((performance.now()-startedAt)/100)/10,phase,...stage===undefined?{}:{stage},memory:{rss:megabytes(usage.rss),heapUsed:megabytes(usage.heapUsed),heapTotal:megabytes(usage.heapTotal),external:megabytes(usage.external),arrayBuffers:megabytes(usage.arrayBuffers)},guard:{measure:"heapUsed+external",megabytes:megabytes(usage.heapUsed+usage.external),heapUsed:megabytes(usage.heapUsed),external:megabytes(usage.external)},...measured,...stats===undefined?{}:{heap:{heapMegabytes:megabytes(stats.heapSize),extraMegabytes:megabytes(stats.extraMemorySize),objectCount:stats.objectCount,types:Object.entries(stats.objectTypeCounts??{}).sort((a,b)=>b[1]-a[1]).slice(0,policy.topTypes).map(([type,count])=>({type,count}))}},...stop===undefined?{}:{stop},collections:collectSliceCollectionsV1(policy),sources:body};
  const dropped=[];
  while(JSON.stringify(report).length>policy.fileBytes&&Object.keys(report.sources).length>0){
@@ -157,21 +204,22 @@ export function buildSliceReportV1({reason,heap,now=Date.now,policy=P}){
  return dropped.length>0?{...report,dropped}:report;
 }
 
-/** 💾️ Writes the report atomically to `<root>/.cache/f/slice-memory.json`; never throws (a report must not stop a read). */
+/** 💾️ Writes the generic machine report and returns this process's exact serialized sample. */
 export function writeSliceReportV1(root,options){
  try{
-  const directory=machinePathV1(root,P.directory),file=join(directory,P.name),temporary=file+"."+process.pid+".tmp";
-  mkdirSync(directory,{recursive:true});writeFileSync(temporary,JSON.stringify(buildSliceReportV1(options)));renameSync(temporary,file);
+  const directory=machinePathV1(root,P.directory),text=JSON.stringify(buildSliceReportV1(options));
+  mkdirSync(directory,{recursive:true});writeSliceReportTextV1(join(directory,P.name),text);return text;
  }catch{}
 }
 
 /** ⏱️ Writes the report now and every `intervalMilliseconds` until the returned function is called (which writes the last one); the timer never keeps the process alive. A report never walks the heap (a heap snapshot of a 500 MB heap held 4 GB of resident pages for the rest of the process and made the plan guard see 10 GB): it reads the runtime counters, the process table and, through `footprint` (`{self,tree}`), the physical footprint of the process and of its tree.
  * @see ./🧬️schema/🔣️.json */
 export function startSliceReportV1({root,heap,footprint,table,intervalMilliseconds=P.intervalMilliseconds}){
- let collected=false,reading=false;
+ let collected=false,reading=false,latest;
+ const publish=reason=>{latest=writeSliceReportV1(root,{reason,heap});};
  const refresh=()=>{if(reading)return;reading=true;measureSliceProcessesV1({footprint,...table===undefined?{}:{table}}).then(row=>{measured=row;},()=>undefined).finally(()=>{reading=false;});};
  refresh();
- writeSliceReportV1(root,{reason:"start",heap});
+ publish("start");
  const collect=()=>{
   if(collected||process.memoryUsage().heapUsed/MEGABYTE<P.collectMinimumHeapMegabytes)return;
   collected=true;const started=performance.now();
@@ -179,6 +227,6 @@ export function startSliceReportV1({root,heap,footprint,table,intervalMillisecon
   const usage=process.memoryUsage(),stats=heap?.();
   sources.set("afterCollect",()=>({heapUsed:megabytes(usage.heapUsed),external:megabytes(usage.external),seconds:Math.round((performance.now()-started)/100)/10,...stats===undefined?{}:{types:Object.entries(stats.objectTypeCounts??{}).sort((a,b)=>b[1]-a[1]).slice(0,P.topTypes).map(([type,count])=>({type,count}))}}));
  };
- const timer=setInterval(()=>{refresh();collect();writeSliceReportV1(root,{reason:"interval",heap});},intervalMilliseconds);timer.unref?.();
- return Object.freeze({now:reason=>writeSliceReportV1(root,{reason,heap}),stop:()=>{clearInterval(timer);writeSliceReportV1(root,{reason:"end",heap});}});
+ const timer=setInterval(()=>{refresh();collect();publish("interval");},intervalMilliseconds);timer.unref?.();
+ return Object.freeze({now:publish,read:()=>latest,stop:()=>{clearInterval(timer);publish("end");}});
 }

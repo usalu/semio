@@ -636,7 +636,7 @@ impl Process3dRetainedSolidCursor {
             1 => WorkingSolid::Cylinder { radius: self.values[0], height: self.values[1] },
             2 => WorkingSolid::Sphere { radius: self.values[0] },
             3 => WorkingSolid::ImportedMesh { mesh_url: self.text.take().unwrap_or_default() },
-            4 => WorkingSolid::ImportedSolid { solid_handle: self.text.take().unwrap_or_default() },
+            4 => WorkingSolid::ImportedSolid { brep_pack: self.text.take().unwrap_or_default() },
             5 => WorkingSolid::Reference { reference_id: self.text.take().unwrap_or_default() },
             _ => unreachable!("validated retained solid tag"),
         }

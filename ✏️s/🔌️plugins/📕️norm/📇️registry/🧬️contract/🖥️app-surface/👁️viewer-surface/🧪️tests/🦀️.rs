@@ -147,7 +147,7 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
     let picked = [crate::viewport3d::picking::entity_address(EntityKind::Solid, "B2").unwrap()];
     let frame = NormViewerFrame::new(report, ViewLane { check: Some(0), ..Default::default() }, &picked);
     assert_eq!((frame.selection.check, frame.diagram_focus().as_deref()), (Some(1), Some("B2")));
-    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm-eurocode-structural.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer viewport"));
+    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm-eurocode-structural.en1993@1/*#viewer", &semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("viewer viewport"));
     assert!(contains_selected(&viewport, "B2"), "{viewport}");
     assert!(!viewport.to_string().contains("setFields"));
     let checks = projected("checks", frame.render_checks(&semio_plugin::TreeWindows::unhosted(), "norm.en1993", "s.norm-eurocode-structural.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer checks"));
@@ -167,16 +167,29 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
 }
 
 #[test]
-fn shortcut_help_groups_the_complete_neutral_table_without_exceeding_fixed_lists() {
+fn shortcut_help_pages_the_complete_neutral_table_without_exceeding_fixed_lists() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/shortcut-help/🔣️.json")).expect("shortcut help law");
+    let scopes = law["scopes"].as_array().expect("scopes");
+    let total = scopes.iter().map(|scope| scope["rows"].as_u64().expect("row count") as u32).sum::<u32>();
     for (locale, language) in [(semio_ui_locale::Locale::En, "en"), (semio_ui_locale::Locale::De, "de")] {
-        let help = projected("shortcut help", crate::toolbar::render_shortcut_help(locale, false).expect("complete shortcut help"));
-        let groups = help["children"][0]["children"].as_array().expect("scope groups");
-        assert_eq!(groups.len(), law["scopes"].as_array().expect("scopes").len());
-        for (group, expected) in groups.iter().zip(law["scopes"].as_array().expect("scopes")) {
-            assert!(group["key"].as_str().expect("scope key").ends_with(expected["id"].as_str().expect("id")));
-            assert_eq!(group["component"]["label"], expected[language]);
-            assert_eq!(group["children"].as_array().expect("shortcut rows").len() as u64, expected["rows"].as_u64().expect("row count"));
+        let body = "norm.en1993.view.viewport";
+        let mut host = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
+        let mut counts = vec![0; scopes.len()];
+        for offset in (0..total).step_by(16) {
+            host.tree_windows = vec![semio_plugin::TreeWindowRequest { body_key: body.into(), node_key: "norm-viewport-help.list".into(), open: Some(true), offset, rows: 16.min(total - offset) }];
+            let help = projected("shortcut help", crate::toolbar::render_shortcut_help(&semio_plugin::TreeWindows::for_body(&host, body), locale, false).expect("shortcut page"));
+            let section = &help["children"][0];
+            assert_eq!(section["component"]["window"]["offset"], offset);
+            assert_eq!(section["component"]["window"]["total"], total);
+            let rows = section["children"].as_array().expect("shortcut rows");
+            assert_eq!(rows.len(), 16.min(total - offset) as usize);
+            for row in rows {
+                let description = row["component"]["description"].as_str().expect("shortcut chord and scope");
+                let scope = description.rsplit_once(" · ").expect("shortcut scope").1;
+                let index = scopes.iter().position(|expected| expected[language].as_str() == Some(scope)).expect("known scope");
+                counts[index] += 1;
+            }
         }
+        assert_eq!(counts, scopes.iter().map(|scope| scope["rows"].as_u64().expect("row count")).collect::<Vec<_>>());
     }
 }

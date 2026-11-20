@@ -1,4 +1,7 @@
 import {afterAll,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import pointerRace from "./📍️pointer-race.json" with {type:"json"};
+import {ownerPoolIdV1,ownerPoolStateV1,publishOwnerPoolV1,readOwnerPoolPointerV1,readOwnerPoolV1,type OwnerPoolManifestV1} from "../../../../🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🟦️.ts";
 import {createHash} from "node:crypto";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -55,4 +58,76 @@ test("two machines publishing the answer served to one requester both succeed an
  expect((await world.status()).divergences.count).toBe(0);
  expect(await fetchGraphEntryV1(clientOf(world.b),servedStateV1("g1-m05"))).not.toBe("fault");
  expect(graphEntryKeyV1(servedStateV1("g1-m05"))).toHaveLength(64);
+});
+
+test("a publisher retries its merge when another machine changes the exact pointer it read",async()=>{
+ const world=await fleet(),db=new Database(":memory:"),now=Date.now();
+ try{
+  const clientOf=(root:string)=>graphFleetClientV1({endpoint:world.running.url,instance:"semio",token:undefined,upload:true,stateDirectory:join(root,"state")},{fetch:world.signed(root)});
+  const client=clientOf(world.a),competitor=clientOf(world.b);
+  const pointerKey=graphEntryKeyV1(ownerPoolStateV1("pointer"));
+  const [initial,ours,theirs]=pointerRace.waves.map((wave):OwnerPoolManifestV1=>({
+   head:{version:1,id:sha(wave.publisher),createdMs:now+wave.offset,publisher:wave.publisher,identity:"fixture",globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"t",late:false}},
+   session:new Uint8Array(0),
+   units:Array.from({length:wave.units},(_,index)=>({name:String(index),kind:"fixture",expectedMilliseconds:1000,json:{}})),
+  }));
+  expect(await publishOwnerPoolV1({client,owner:"initial",manifest:initial!})).toBe(true);
+  let intervened=false;
+  const racing={...client,async getResult(key:string,signal?:AbortSignal){
+   const old=await client.getResult(key,signal);
+   if(key===pointerKey&&!intervened){
+    intervened=true;
+    expect(await publishOwnerPoolV1({client:competitor,owner:"theirs",manifest:theirs!})).toBe(true);
+   }
+   return old;
+  }};
+  expect(await publishOwnerPoolV1({client:racing,owner:"ours",manifest:ours!})).toBe(true);
+  expect(intervened).toBe(true);
+  const oracle=db.query(`select json_extract(value,'$.units') units from json_each(?1) order by json_extract(value,'$.offset')`),pointer=await readOwnerPoolPointerV1(client);
+  expect(pointer&&pointer!=="fault"?pointer.waves.map(wave=>wave.units):pointer).toEqual(oracle.all(JSON.stringify(pointerRace.waves)).map(row=>(row as {units:number}).units));
+ }finally{db.close();}
+});
+
+test("concurrent signed head replacements of the same result admit one writer",async()=>{
+ const world=await fleet(),fixture=pointerRace.samePrior,key=sha("simultaneous-head"),store=world.running.store;
+ const put=(root:string,bytes:Uint8Array,expect:string)=>world.signed(root)(`${world.base}/ac/${key}`,{method:"PUT",body:bytes,headers:{"x-semio-expect":expect}});
+ const original=result(fixture.base),prior=sha(original);
+ expect((await put(world.a,original,"none")).status).toBe(200);
+ const write=store.put.bind(store);
+ let release!:()=>void,entered!:()=>void,writes=0;
+ const held=new Promise<void>(done=>{release=done;}),first=new Promise<void>(done=>{entered=done;});
+ store.put=async(...args:Parameters<typeof write>)=>{
+  if(args[1]==="ac"&&args[2]===key&&++writes===1){entered();await held;}
+  return write(...args);
+ };
+ const db=new Database(":memory:");
+ try{
+  const left=put(world.a,result(fixture.writers[0]!),prior);
+  await first;
+  const right=put(world.b,result(fixture.writers[1]!),prior);
+  await Promise.race([right,new Promise(resolve=>setTimeout(resolve,250))]);
+  release();
+  const codes=(await Promise.all([left,right])).map(response=>response.status).sort();
+  const expected=db.query(`select value status from json_each(?1) order by value`).all(JSON.stringify(fixture.statuses));
+  expect(codes).toEqual(expected.map(row=>(row as {status:number}).status));
+ }finally{release();store.put=write;db.close();}
+});
+
+test("same declared wave refreshes through another signed publisher without replacing its verified manifest",async()=>{
+ const world=await fleet(),now=Date.now(),rootA=world.a,rootB=world.b;
+ const clientOf=(root:string)=>graphFleetClientV1({endpoint:world.running.url,instance:"semio",token:undefined,upload:true,stateDirectory:join(root,"state")},{fetch:world.signed(root)});
+ const first=clientOf(rootA),second=clientOf(rootB),units=[{name:"owner",kind:"test",expectedMilliseconds:10,json:{name:"owner"}}];
+ const partial={version:1 as const,revision:"fixture-revision",identity:"current",globals:{projectAuthority:"p",registryDigest:"r",commandRevision:"c",late:false}};
+ const id=ownerPoolIdV1(partial,units),a={...partial,id,createdMs:now-1000,publisher:"a"},b={...a,createdMs:now,publisher:"b"};
+ expect(await publishOwnerPoolV1({client:first,owner:"a",manifest:{head:a,session:Buffer.from("same"),units}})).toBe(true);
+ expect(await publishOwnerPoolV1({client:second,owner:"b",manifest:{head:b,session:Buffer.from("same"),units}})).toBe(true);
+ const pointer=await readOwnerPoolPointerV1(first);
+ expect(pointer&&pointer!=="fault"?pointer.waves:undefined).toEqual([{id,createdMs:now,units:1}]);
+ expect((await readOwnerPoolV1(first,id))?.head.publisher).toBe("a");
+ const newer={...partial,revision:"changed-record-revision"};
+ const newId=ownerPoolIdV1(newer,units);
+ expect(newId).not.toBe(id);
+ expect(await publishOwnerPoolV1({client:second,owner:"b",manifest:{head:{...b,...newer},session:Buffer.from("same"),units}})).toBe(false);
+ expect(await publishOwnerPoolV1({client:second,owner:"b",manifest:{head:{...b,...newer,id:newId},session:Buffer.from("newer"),units}})).toBe(true);
+ expect((await readOwnerPoolV1(first,newId))?.head.revision).toBe(newer.revision);
 });

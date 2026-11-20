@@ -2,12 +2,17 @@
  *
  * Previews follow the surface theme (light ink on the dark surface, dark ink on the light one) and never draw dimension lines or labels: the card around them names the asset.
  *
- * @see ../🧍️figure/🟦️.tsx — the figure
+ * @see ../🧮️pipeline/🟦️.ts — the figure drawing
  * @see ../🧭️context/🟦️.tsx — the ambient clock
  */
-import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
-import type { Asset, EvaluationQuery, View, PlanarViewpoint } from "@teaching/staffage";
-import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
+import { Component, useEffect, useLayoutEffect, useMemo, useRef, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
+import type { Asset, EvaluationQuery, Language, View, PlanarViewpoint } from "@teaching/staffage";
+import { defaultQuery, depictionOptions, queryAt } from "../🧮️pipeline/🟦️.ts";
+import { drawFigure, type Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
+import { retainDrawing } from "../🧮️pipeline/🏁️drawing/queue.ts";
+import { writeSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
+import { driveFigure } from "../⏱️clock/🏁️frames/🟦️.ts";
+import { word } from "../🗣️labels/🟦️.ts";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { Button, Notice, cn } from "../🪟️chrome/🟦️.tsx";
@@ -91,41 +96,74 @@ export function UnavailableNotice(props: { readonly row: Row; readonly compact?:
 
 const QUIET = { dimensions: false, scaleBar: false, legend: false, labels: false, ground: true } as const;
 
-function loopedClock(clock: StaffageClock, durationS: number): StaffageClock {
-  const project = () => {
-    const state = clock.state;
-    const wrapped = ((state.timeS % durationS) + durationS) % durationS;
-    const frame = Math.floor(wrapped * state.fps + 1e-9);
-    return { ...state, timeS: frame / state.fps, frame };
-  };
-  const snapshot = () => project();
-  return new Proxy(clock, {
-    get(target, key) {
-      if (key === "state") return project();
-      if (key === "timeS") return project().timeS;
-      if (key === "getSnapshot") return snapshot;
-      return Reflect.get(target, key, target);
-    },
-  });
-}
+type PreviewDrawingProps = { readonly asset: Asset; readonly clock: StaffageClock; readonly query?: EvaluationQuery; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly scale: number; readonly language: Language };
 
-function usePreviewClock(asset: Asset, clock: StaffageClock): StaffageClock {
-  const clip = asset.clips.find((candidate) => candidate.id === asset.presentation.defaultClip);
-  const durationS = clip !== undefined && clip.loop && clip.durationS > 0 ? clip.durationS : 0;
-  return useMemo(() => (durationS > 0 ? loopedClock(clock, durationS) : clock), [clock, durationS]);
+/** 🖌️ Updates the ink of an inert archive preview. Its card names the asset; the drawing needs no per-frame layout or accessibility attributes. */
+function PreviewDrawing({ asset, clock, query, view, viewpoint, scale, language }: PreviewDrawingProps): ReactElement {
+  const ink = useRef<HTMLDivElement>(null);
+  const [failure, setFailure] = useState<{ error: unknown } | null>(null);
+  const [fidelity, setFidelity] = useState<Drawing["fidelity"]>();
+  const drawing = useMemo(() => {
+    const options = depictionOptions({ view, viewpoint, scale: { denominator: scale }, language, transparent: true, annotations: QUIET });
+    const initial = query ?? defaultQuery(asset, 0);
+    const clip = asset.clips.find(candidate => candidate.id === asset.presentation.defaultClip);
+    const duration = clip?.loop ? clip.durationS : 0;
+    const time = () => {
+      const { frame, fps, timeS } = clock.state;
+      return duration > 0 ? Math.floor((((timeS % duration) + duration) % duration) * fps + 1e-9) / fps : frame / fps;
+    };
+    return { initial, options, time };
+  }, [asset, clock, query, view, viewpoint, scale, language]);
+  useLayoutEffect(() => {
+    const element = ink.current;
+    if (element === null) return;
+    let shown: Drawing["fidelity"] | undefined;
+    const receive = (next: Drawing) => {
+      writeSvgMarkup(element, next.markup);
+      if (shown !== next.fidelity) setFidelity((shown = next.fidelity));
+    };
+    const fail = (error: unknown) => setFailure({ error });
+    const lease = clock.drawBudgetMs > 0 ? retainDrawing(asset, drawing.options, false, receive, fail) : null;
+    let lastTime = Number.NaN;
+    const step = () => {
+      const now = drawing.time();
+      if (now === lastTime) return;
+      lastTime = now;
+      const query = queryAt(drawing.initial, now);
+      try {
+        if (lease) lease.request(query);
+        else receive(drawFigure(asset, drawing.options, query));
+      } catch (error) {
+        fail(error);
+      }
+    };
+    step();
+    const cancelPending = () => {
+      lastTime = Number.NaN;
+      lease?.cancelPending();
+    };
+    const stop = drawing.initial.kind === "pose" ? undefined : driveFigure(clock, { element, animated: () => true, step, cancelPending });
+    return () => { stop?.(); lease?.release(); };
+  }, [asset, clock, drawing]);
+  if (failure !== null) throw failure.error;
+  return (
+    <div data-staffage-figure="" data-fit="contain" data-asset={asset.id} data-view={view} data-viewpoint={viewpoint} data-fidelity={fidelity} className="absolute inset-0 min-h-0 min-w-0 overflow-hidden">
+      <div ref={ink} className="absolute inset-0" />
+      {fidelity === "conventional-symbol" ? <span data-fidelity-note="" style={{ position: "absolute", left: 2, bottom: 2, padding: "0 3px", fontSize: 10, lineHeight: 1.4, background: "rgba(127,127,127,0.25)", color: "inherit" }}>{word("conventionalSymbol", language)}</span> : null}
+    </div>
+  );
 }
 
 function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: PlanarViewpoint; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
   const { asset, viewpoint, solid, scale, query, className, compact, view } = props;
   const { language, ambient } = useArchive();
   const dark = useDarkSurface();
-  const clock = usePreviewClock(asset, ambient);
   const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
   if (!resolution.available) return <Notice kind="unavailable" compact plain className={cn("h-full overflow-hidden", className)} title={viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}>{compact ? null : resolution.message[language]}</Notice>;
   return (
     <div aria-hidden="true" inert className={cn("relative h-full min-h-0 w-full overflow-hidden", className)} data-preview={asset.id}>
       <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact plain title={asset.title[language]}>{compact ? null : message}</Notice>}>
-        <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={view ?? surfaceView(dark, solid)} viewpoint={viewpoint} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
+        <PreviewDrawing asset={asset} {...(query === undefined ? {} : { query })} clock={ambient} view={view ?? surfaceView(dark, solid)} viewpoint={viewpoint} scale={scale} language={language} />
       </FigureBoundary>
     </div>
   );

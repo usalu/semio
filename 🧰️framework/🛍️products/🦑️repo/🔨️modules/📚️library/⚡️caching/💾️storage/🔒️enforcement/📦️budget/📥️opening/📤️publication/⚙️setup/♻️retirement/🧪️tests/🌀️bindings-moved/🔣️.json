@@ -1,0 +1,39 @@
+[
+  {
+    "causes": [],
+    "retry": false
+  },
+  {
+    "causes": [
+      "terminal"
+    ],
+    "retry": false
+  },
+  {
+    "causes": [
+      "moved"
+    ],
+    "retry": true
+  },
+  {
+    "causes": [
+      "moved",
+      "moved"
+    ],
+    "retry": true
+  },
+  {
+    "causes": [
+      "moved",
+      "terminal"
+    ],
+    "retry": false
+  },
+  {
+    "causes": [
+      "terminal",
+      "moved"
+    ],
+    "retry": false
+  }
+]

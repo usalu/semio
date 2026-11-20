@@ -97,7 +97,7 @@ impl InteractiveJob for SupervisedJob {
     fn begin_close(&mut self) {}
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         if !self.terminal_is_empty() && !self.base.close_open.load(Ordering::SeqCst) { return Ok(InteractiveJobCloseStep::Blocked); }
-        if let Some(source) = self.base.source { assert_eq!(cx.original_source_parent()?.source_identity()?, source); }
+        if self.base.source.is_some() { self.base.bind_source(cx)?; }
         if !self.payload.terminal_is_empty() {
             let step = semio_framework_job::close_original_effect_step(cx, self.payload.retirement_demands()?, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.payload.close_step(effect)))?;
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });

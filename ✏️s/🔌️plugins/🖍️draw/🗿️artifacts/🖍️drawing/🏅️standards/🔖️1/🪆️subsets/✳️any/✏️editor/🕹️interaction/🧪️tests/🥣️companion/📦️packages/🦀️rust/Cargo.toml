@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 blake3 = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-hash = { workspace = true }
@@ -33,6 +34,7 @@ semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features 
 semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }

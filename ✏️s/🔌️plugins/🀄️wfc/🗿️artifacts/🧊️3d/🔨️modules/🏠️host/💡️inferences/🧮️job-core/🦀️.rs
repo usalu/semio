@@ -298,7 +298,7 @@ impl Wfc3dInferenceJob {
             }
             semio_framework_job::close_original_granted_step(context, |grant| {
                 let released_bytes = self.output_chunk.as_ref().unwrap().capacity();
-                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
                 self.output_chunk = None;
                 match self.output_next { 0 => self.output_started = true, 1 => self.encoded_entries += 1, _ => self.output_complete = true }
                 semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 }

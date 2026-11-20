@@ -1,0 +1,152 @@
+{
+  "cases": [
+    {
+      "id": "no-ready",
+      "ready": false,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": true,
+      "head": "complete",
+      "starts": 0,
+      "restores": 0
+    },
+    {
+      "id": "memory-pressure",
+      "ready": true,
+      "pressure": "warn",
+      "busy": false,
+      "capacity": true,
+      "head": "complete",
+      "starts": 0,
+      "restores": 0
+    },
+    {
+      "id": "foreground",
+      "ready": true,
+      "pressure": "normal",
+      "busy": true,
+      "capacity": true,
+      "head": "complete",
+      "starts": 0,
+      "restores": 0
+    },
+    {
+      "id": "capacity-refused",
+      "ready": true,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": false,
+      "head": "complete",
+      "starts": 0,
+      "restores": 0
+    },
+    {
+      "id": "matching-local-seal",
+      "ready": true,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": true,
+      "head": "local",
+      "starts": 1,
+      "restores": 0
+    },
+    {
+      "id": "no-complete-head",
+      "ready": true,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": true,
+      "head": "absent",
+      "starts": 1,
+      "restores": 0
+    },
+    {
+      "id": "exact-whole",
+      "ready": true,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": true,
+      "head": "complete",
+      "starts": 1,
+      "restores": 1
+    },
+    {
+      "id": "selected-scope",
+      "ready": true,
+      "pressure": "normal",
+      "busy": false,
+      "capacity": true,
+      "head": "selected",
+      "starts": 1,
+      "restores": 0
+    }
+  ],
+  "readiness": [
+    {
+      "id": "fresh",
+      "change": {},
+      "offset": 0,
+      "admit": 1
+    },
+    {
+      "id": "stale",
+      "change": {},
+      "offset": 600001,
+      "admit": 0
+    },
+    {
+      "id": "future",
+      "change": {},
+      "offset": -1,
+      "admit": 0
+    },
+    {
+      "id": "foreign-origin",
+      "change": {
+        "origin": "g1-other"
+      },
+      "offset": 0,
+      "admit": 0
+    },
+    {
+      "id": "busy",
+      "change": {
+        "ready": false,
+        "state": "running",
+        "stage": "workspace"
+      },
+      "offset": 0,
+      "admit": 0
+    },
+    {
+      "id": "inconsistent",
+      "change": {
+        "stage": "workspace"
+      },
+      "offset": 0,
+      "admit": 0
+    },
+    {
+      "id": "malformed",
+      "change": {
+        "unexpected": true
+      },
+      "offset": 0,
+      "admit": 0
+    }
+  ],
+  "readinessProbe": [
+    {
+      "id": "deadline",
+      "cancel": "deadline",
+      "startsWhileStalled": 1,
+      "startsAfterSettlement": 2
+    },
+    {
+      "id": "active-turn",
+      "cancel": "caller",
+      "startsWhileStalled": 1,
+      "startsAfterSettlement": 2
+    }
+  ]
+}

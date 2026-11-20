@@ -18,13 +18,13 @@ pub struct ChangeCombinationTerm {
     #[value(required)]
     pub factor: Option<f64>,
 }
-impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeCombinationTerm where Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeCombinationTerm> {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeCombinationTerm where Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeCombinationTerm> {
     const SEMANTICS:SemanticDescriptor=SemanticDescriptor{verb:"change",entity:"combination-term",kind:"change-combination-term",record:"ChangedCombinationTerm"};
     fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native(&format!("Change combination term {}",self.id),&format!("Kombination {} ändern",self.id))}
     fn target(&self)->Vec<String>{vec![self.id.clone()]}
 }
-impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeCombinationTerm where Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeCombinationTerm> {
-    fn diff(&self,base:&Fem3dSnapshotValue)->protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff>{super::diff::diff(self,base)}
+impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeCombinationTerm where Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeCombinationTerm> {
+    fn diff(&self,base:&Fem3dSnapshotValue)->protocol::MutationOutcome<semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff>{super::diff::diff(self,base)}
 
     fn inverse(&self,base:&Fem3dSnapshotValue)->Result<Vec<Op>,semio_framework_value::ValueError>{super::inverse::inverse(self,base)}
 }

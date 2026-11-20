@@ -1,6 +1,7 @@
 //! 🔎️ Original Layout decisions and bounded source cursors.
 #[path="👁️source.rs"]pub mod source;
 pub use source::*;
+#[path="../🪡️original-field/🦀️.rs"]pub mod original_field;
 #[path="../🎚️simple/🦀️.rs"]pub mod simple;
 #[path="../🔎️target/🦀️.rs"]pub mod target;
 #[path="../📄️document/🎚️decision.rs"]pub mod document_decision;
@@ -16,3 +17,5 @@ pub use source::*;
 #[path="../🖼️frame/👥️batch/🗺️plan/🦀️.rs"]pub mod batch_plan;
 #[path="../🖼️frame/👥️batch/⚠️message/🦀️.rs"]pub mod batch_message;
 #[path="../🗄️parent/🌱️creation/🦀️.rs"]pub mod parent_creation;
+#[path="../🗑️page-deletion/🦀️.rs"]pub mod page_deletion;
+#[path="../🗄️parent/🧩️content/🗺️plan.rs"]pub mod parent_content;

@@ -64,9 +64,9 @@ use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
+use semio_framework_3d_brep_engine::{Brep, BrepError, BrepKernel, GeometryHandle};
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 /// 🕳️ Tessellation tolerance for kernel replay/export.
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
@@ -125,29 +125,30 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
 //#region 🔖️KernelReplay
 
 
-/// 🧠️ Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
-/// step edits only recompute the suffix that actually changed.
-/// 🧊️ Concrete (not boxed-trait) so `SolidExporter`/`SolidImporter` (STEP/OBJ/STL/GLB import+export)
-/// can borrow `&Brep`/`&mut Brep` directly; `solid_for_spec`/`tool_solid_for_measure` below take
-/// `&mut Brep` directly too (O1 — no `&mut dyn BrepKernel` anywhere in this crate).
-/// 🔓️ `pub` (not private): `🚪️io`'s `export_process3d_model`/`import_process3d_model` need the
-/// exact kernel + replayed handle (not just the tessellated `processed_mesh`/`processed_volume`
-/// projections) to drive the real `SolidExporter`/`SolidImporter` codecs (dispatched through
-/// `🚪️io`'s `ProcessSolidExporter`/`ProcessSolidImporter`, never `Box<dyn>`) — a crate-internal seam,
-/// never re-exported past this crate.
-/// 🌱 `kernel: Brep` is owned directly, never behind `BrepEngineHost`/`Mutex` (ticket
-/// 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave G4): every caller already
-/// constructs a fresh `ProcessKernelReplay::new()` per call (verified — no call site anywhere in this
-/// plugin holds one across calls), so the deleted host's cross-call registry was never load-bearing;
-/// it only ever added a lock nobody contended on.
+/// 🧠️ Owns the kernel and memoizes the solid or empty result at recent enabled prefixes.
+/// Exact export codecs can borrow the kernel and its live handles for the span of an export.
 pub struct ProcessKernelReplay {
     kernel: Brep,
     tables: ProcessKernelMemo,
     stock_signature: u64,
 }
 
+#[derive(Default)]
 struct ProcessKernelMemo {
-    memo: HashMap<u64, GeometryHandle>,
+    memo: HashMap<u64, Option<GeometryHandle>>,
+    order: VecDeque<u64>,
+}
+
+impl ProcessKernelMemo {
+    fn insert(&mut self, signature: u64, handle: Option<GeometryHandle>) {
+        if self.memo.insert(signature, handle).is_none() {
+            self.order.push_back(signature);
+            if self.memo.len() > PROCESS3D_KERNEL_MEMO_CAP {
+                let oldest = self.order.pop_front().expect("new entry has a queue position");
+                self.memo.remove(&oldest);
+            }
+        }
+    }
 }
 
 impl Default for ProcessKernelReplay {
@@ -158,7 +159,7 @@ impl Default for ProcessKernelReplay {
 
 impl ProcessKernelReplay {
     pub fn new() -> Self {
-        Self { kernel: Brep::new(), tables: ProcessKernelMemo { memo: HashMap::new() }, stock_signature: 0 }
+        Self { kernel: Brep::new(), tables: ProcessKernelMemo::default(), stock_signature: 0 }
     }
 
     /// 🔩 Immutable kernel access — `tessellate`/`🟫️volume`/`kind` take `&self`.
@@ -189,28 +190,27 @@ impl ProcessKernelReplay {
 /// "exactly one impl ⇒ delete the trait object, use the concrete type" — and `BrepKernel` is declared
 /// in `🗄️stdio`, a crate outside this packet's path scope, so it could not be `#[dyn_enum]`-closed here
 /// even if a second implementor existed.
-fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option<GeometryHandle> {
+fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Result<GeometryHandle, BrepError> {
     let anchored = match spec {
-        WorkingSolid::Box { width, depth, height } => kernel.box_prim(*width, *depth, *height).ok()?,
-        WorkingSolid::Cylinder { radius, height } => kernel.cylinder_prim(*radius, *height).ok()?,
-        WorkingSolid::Sphere { radius } => kernel.sphere_prim(*radius).ok()?,
-        WorkingSolid::ImportedSolid { solid_handle } => {
-            let handle = GeometryHandle(solid_handle.clone());
-            kernel.kind(&handle).ok()?;
-            handle
-        }
-        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id)?.import(kernel)?,
-        WorkingSolid::ImportedMesh { .. } => return None,
+        WorkingSolid::Box { width, depth, height } => kernel.box_prim(*width, *depth, *height)?,
+        WorkingSolid::Cylinder { radius, height } => kernel.cylinder_prim(*radius, *height)?,
+        WorkingSolid::Sphere { radius } => kernel.sphere_prim(*radius)?,
+        WorkingSolid::ImportedSolid { brep_pack } => semio_s_artifact_process_process3d_model::snapshot::restore_imported_brep(kernel, brep_pack)
+            .ok_or_else(|| BrepError::InvalidInput("imported Process3d solid cannot be restored".into()))?,
+        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id)
+            .and_then(|reference| reference.import(kernel))
+            .ok_or_else(|| BrepError::InvalidInput(format!("process reference {reference_id} cannot be resolved")))?,
+        WorkingSolid::ImportedMesh { .. } => return Err(BrepError::InvalidInput("process replay requires solid geometry".into())),
     };
     let base = match primitive_centre_offset(spec) {
-        Some(offset) => kernel.translate(&anchored, offset).ok()?,
+        Some(offset) => kernel.translate(&anchored, offset)?,
         None => anchored,
     };
-    let rotated = if pose.angle != 0.0 { kernel.rotate(&base, pose.axis, pose.angle).ok()? } else { base };
+    let rotated = if pose.angle != 0.0 { kernel.rotate(&base, pose.axis, pose.angle)? } else { base };
     if pose.position != [0.0, 0.0, 0.0] {
-        kernel.translate(&rotated, pose.position).ok()
+        kernel.translate(&rotated, pose.position)
     } else {
-        Some(rotated)
+        Ok(rotated)
     }
 }
 
@@ -224,7 +224,7 @@ pub fn primitive_centre_offset(spec: &WorkingSolid) -> Option<[f64; 3]> {
     }
 }
 
-fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Option<GeometryHandle> {
+fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Result<GeometryHandle, BrepError> {
     match measure {
         ProcessMeasure::Cut { tool, pose } => solid_for_spec(kernel, tool, pose),
         ProcessMeasure::Drill { radius, depth, pose } => solid_for_spec(kernel, &WorkingSolid::Cylinder { radius: *radius, height: *depth }, pose),
@@ -232,68 +232,98 @@ fn tool_solid_for_measure(kernel: &mut Brep, measure: &ProcessMeasure) -> Option
     }
 }
 
-/// 🧠️ Replays enabled steps up to the cursor, reusing the longest memoized prefix. Reads a real,
-/// literal `ProcessWorkingScene` (never a bare `Process3dSnapshot` — see file doc comment).
-pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<GeometryHandle> {
+/// 🧠️ Replays enabled steps through the cursor, memoizing both solids and empty prefixes.
+pub fn replay_process(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Result<Option<GeometryHandle>, BrepError> {
     let stock_signature = hash_value(&scene.stock);
     if stock_signature != session.stock_signature {
-        session.tables.memo.clear();
+        session.tables = ProcessKernelMemo::default();
         session.stock_signature = stock_signature;
     }
     let limit = resolved_up_to.unwrap_or(scene.steps.len()).min(scene.steps.len());
     let enabled_steps: Vec<&ProcessStep> = scene.steps[..limit].iter().filter(|step| step.enabled).collect();
+    let signatures = prefix_signatures(stock_signature, &enabled_steps);
 
     let mut start = enabled_steps.len();
-    let mut current: Option<GeometryHandle> = loop {
-        let signature = prefix_signature(stock_signature, &enabled_steps[..start]);
-        if let Some(handle) = session.tables.memo.get(&signature) {
-            break Some(handle.clone());
+    let mut handle = loop {
+        let signature = signatures[start];
+        if let Some(cached) = session.tables.memo.get(&signature) {
+            break cached.clone();
         }
         if start == 0 {
-            break None;
+            let stock = Some(solid_for_spec(session.kernel_mut(), &scene.stock.solid, &scene.stock.pose)?);
+            session.tables.insert(signature, stock.clone());
+            break stock;
         }
         start -= 1;
     };
 
-    if current.is_none() {
-        let stock = solid_for_spec(session.kernel_mut(), &scene.stock.solid, &scene.stock.pose)?;
-        session.tables.memo.insert(prefix_signature(stock_signature, &[]), stock.clone());
-        current = Some(stock);
-    }
-
-    let mut handle = current?;
     for (index, step) in enabled_steps.iter().enumerate().skip(start) {
-        let tool = tool_solid_for_measure(session.kernel_mut(), &step.measure)?;
-        let result = match step.measure {
-            ProcessMeasure::Attach { .. } => session.kernel_mut().fuse(&handle, &tool),
-            _ => session.kernel_mut().cut(&handle, &tool),
+        let attaches = matches!(&step.measure, ProcessMeasure::Attach { .. });
+        handle = match (&handle, attaches) {
+            (None, false) => None,
+            (target, _) => {
+                let kernel = session.kernel_mut();
+                let tool = tool_solid_for_measure(kernel, &step.measure)?;
+                match target {
+                    None => Some(tool),
+                    Some(target) if attaches => Some(kernel.fuse(target, &tool)?),
+                    Some(target) => match kernel.cut(target, &tool) {
+                        Ok(solid) => Some(solid),
+                        Err(BrepError::EmptyResult) => None,
+                        Err(error) => return Err(error),
+                    },
+                }
+            }
         };
-        #[cfg(test)]
-        if let Err(error) = &result {  }
-        let next = result.ok()?;
-        handle = next;
-        session.tables.memo.insert(prefix_signature(stock_signature, &enabled_steps[..=index]), handle.clone());
+        session.tables.insert(signatures[index + 1], handle.clone());
     }
-    if session.tables.memo.len() > PROCESS3D_KERNEL_MEMO_CAP {
-        if let Some(key) = session.tables.memo.keys().next().copied() {
-            session.tables.memo.remove(&key);
-        }
-    }
-    Some(handle)
+    Ok(handle)
 }
 
-pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<semio_plugin::MeshData> {
-    let mut session = ProcessKernelReplay::new();
-    let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    let mesh = session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE).ok()?;
+fn mesh_from_handle(kernel: &Brep, handle: &GeometryHandle) -> Result<semio_plugin::MeshData, BrepError> {
+    let mesh = kernel.tessellate(handle, PROCESS3D_TESSELLATION_TOLERANCE)?;
+    if mesh.index.is_empty() {
+        return Err(BrepError::Operation("process solid tessellated without faces".into()));
+    }
     let face_groups: Vec<(u32, u32, u32)> = mesh.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
-    Some(semio_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
+    Ok(semio_plugin::mesh_from_indexed_with_face_groups(&mesh.position, &mesh.normal, &mesh.index, &face_groups))
 }
 
-pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Option<f64> {
+/// 🖼️ Tessellates the solid present at the cursor.
+pub fn processed_mesh(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Result<Option<semio_plugin::MeshData>, BrepError> {
     let mut session = ProcessKernelReplay::new();
-    let handle = replay_process(&mut session, scene, resolved_up_to)?;
-    session.kernel().volume(&handle).ok()
+    replay_process(&mut session, scene, resolved_up_to)?.as_ref().map(|handle| mesh_from_handle(session.kernel(), handle)).transpose()
+}
+
+/// 📐️ Returns the material volume at the cursor, including zero for a valid empty workpiece.
+pub fn processed_volume(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Result<f64, BrepError> {
+    let mut session = ProcessKernelReplay::new();
+    match replay_process(&mut session, scene, resolved_up_to)? {
+        Some(handle) => session.kernel().volume(&handle),
+        None => Ok(0.0),
+    }
+}
+
+/// 📦️ Evaluates editor previews without exposing temporary kernel geometry.
+#[derive(Default)]
+pub struct ProcessPreviewReplay {
+    replay: ProcessKernelReplay,
+}
+
+impl ProcessPreviewReplay {
+    /// 🖼️ Reuses recent prefixes and retires transient operands after projecting mesh and volume.
+    pub fn evaluate(&mut self, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> Result<(Option<semio_plugin::MeshData>, f64), BrepError> {
+        let result = replay_process(&mut self.replay, scene, resolved_up_to).and_then(|handle| {
+            let Some(handle) = handle else { return Ok((None, 0.0)) };
+            let kernel = self.replay.kernel();
+            Ok((Some(mesh_from_handle(kernel, &handle)?), kernel.volume(&handle)?))
+        });
+        let live: HashSet<String> = self.replay.tables.memo.values().flatten().map(|handle| handle.as_str().to_owned()).collect();
+        if self.replay.kernel.registry_len() > live.len() {
+            self.replay.kernel.retain(&live);
+        }
+        result
+    }
 }
 //#endregion 🔖️KernelReplay
 
@@ -403,21 +433,40 @@ pub fn validation_reason(failures: &[ValidationFailure]) -> String {
         .join("; ")
 }
 
-/// 📐️ Imported specs carry no persisted bounding box, so validation falls back to a 1m³ approximation
-/// until the kernel is consulted (matches `cad`'s extent-less fallback for handle-only objects).
-pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
-    match solid {
+/// 📐️ Returns local stock dimensions for capability checks.
+pub fn stock_extent(solid: &WorkingSolid) -> Option<[f64; 3]> {
+    Some(match solid {
         WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
         WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
         WorkingSolid::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
-        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id).map_or([1.0, 1.0, 1.0], |reference| reference.extent),
-        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => [1.0, 1.0, 1.0],
-    }
+        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id)?.extent,
+        WorkingSolid::ImportedSolid { brep_pack } => imported_stock_extent(brep_pack)?,
+        WorkingSolid::ImportedMesh { .. } => return None,
+    })
 }
 
-pub fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
-    let [width, depth, height] = stock_extent(&stock.solid);
-    ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
+fn imported_stock_extent(brep_pack: &str) -> Option<[f64; 3]> {
+    use std::sync::Mutex;
+    static EXTENT: Mutex<Option<(String, Option<[f64; 3]>)>> = Mutex::new(None);
+    if let Some((pack, extent)) = EXTENT.lock().ok().as_deref().and_then(Option::as_ref) {
+        if pack == brep_pack {
+            return *extent;
+        }
+    }
+    let mut kernel = Brep::new();
+    let solid = semio_s_artifact_process_process3d_model::snapshot::restore_imported_brep(&mut kernel, brep_pack)?;
+    let bounds = kernel.bounds_sync(&solid).ok()?;
+    let dimensions = std::array::from_fn(|axis| bounds.max[axis] - bounds.min[axis]);
+    let extent = dimensions.iter().all(|dimension| dimension.is_finite() && *dimension > 0.0).then_some(dimensions);
+    if let Ok(mut cached) = EXTENT.lock() {
+        *cached = Some((brep_pack.into(), extent));
+    }
+    extent
+}
+
+pub fn validation_context_for_stock(stock: &Stock) -> Option<ValidationContext> {
+    let [width, depth, height] = stock_extent(&stock.solid)?;
+    Some(ValidationContext { stock_width: width, stock_depth: depth, stock_height: height })
 }
 
 /// 🪚️ Builds the `ProcessMeasure` a capability's recipe produces, sized from the capability's own
@@ -488,13 +537,19 @@ pub fn hash_value<T: ToValue>(value: &T) -> u64 {
     hasher.finish()
 }
 
-fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
+fn prefix_signatures(stock_signature: u64, steps: &[&ProcessStep]) -> Vec<u64> {
     let mut hasher = DefaultHasher::new();
     stock_signature.hash(&mut hasher);
-    steps.len().hash(&mut hasher);
+    let mut signatures = Vec::with_capacity(steps.len() + 1);
+    signatures.push(hasher.finish());
     for step in steps {
-        let value = semio_framework_value::DecodedValue::new(step.to_value(), <semio_framework_value::DslValue as FromValue>::retire_decoded);
+        let value = semio_framework_value::DecodedValue::new(step.measure.to_value(), <semio_framework_value::DslValue as FromValue>::retire_decoded);
         hash_intrinsic(value.get(), &mut hasher);
+        signatures.push(hasher.finish());
     }
-    hasher.finish()
+    signatures
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/📦️prefix-memo/🦀️.rs"]
+mod prefix_memo_tests;

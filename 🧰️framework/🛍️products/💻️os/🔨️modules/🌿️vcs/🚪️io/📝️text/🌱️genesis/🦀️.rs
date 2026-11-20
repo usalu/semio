@@ -1,11 +1,31 @@
 //! 🌱️ Native stored genesis Pack text framing.
 use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisProducer};
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value::{ByteReadSource, DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeEncodeControl};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-pub fn encode_genesis_hex_controlled(pack:&[u8],control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{
- let capacity=pack.len().checked_mul(2).filter(|n|*n<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Genesis hex capacity overflow"))?;
- control.begin_stage(pack.len())?;control.charge(capacity)?;let mut hex=String::new();hex.try_reserve_exact(capacity).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Genesis hex allocation refused"))?;
- const DIGITS:&[u8;16]=b"0123456789abcdef";for byte in pack{hex.push(DIGITS[(byte>>4)as usize]as char);hex.push(DIGITS[(byte&15)as usize]as char);control.advance(1)?;}control.checkpoint()?;Ok(hex)
+pub fn encode_genesis_hex_controlled(pack: &(impl ByteReadSource + ?Sized), control: &mut NativeEncodeControl<'_>) -> Result<String, ValueError> {
+    let length = pack.byte_len();
+    let capacity = length.checked_mul(2).filter(|n| *n <= isize::MAX as usize)
+        .ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "Genesis hex capacity overflow"))?;
+    control.begin_stage(length)?;
+    control.charge(capacity)?;
+    let mut hex = String::new();
+    hex.try_reserve_exact(capacity).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "Genesis hex allocation refused"))?;
+    const DIGITS: &[u8;16] = b"0123456789abcdef";
+    let mut bytes = [0; 64];
+    for start in (0..length).step_by(bytes.len()) {
+        control.checkpoint()?;
+        let count = (length - start).min(bytes.len());
+        if pack.read_bytes(start, &mut bytes[..count]) != count {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Genesis Pack extent changed while reading"));
+        }
+        for &byte in &bytes[..count] {
+            hex.push(DIGITS[(byte >> 4) as usize] as char);
+            hex.push(DIGITS[(byte & 15) as usize] as char);
+            control.advance(1)?;
+        }
+    }
+    control.checkpoint()?;
+    Ok(hex)
 }
 pub fn decode_genesis_hex_controlled(hex:&str,control:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,ValueError>{
  if hex.is_empty()||hex.len()&1!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Native genesis Pack requires nonempty lowercase hex"));}

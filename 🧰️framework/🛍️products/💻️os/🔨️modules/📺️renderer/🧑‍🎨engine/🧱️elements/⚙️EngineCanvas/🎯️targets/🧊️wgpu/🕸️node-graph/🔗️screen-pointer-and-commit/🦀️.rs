@@ -89,9 +89,9 @@ struct GraphScreenPointerOutcome {
 fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<GraphScreenPointerOutcome>, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
-            return Ok(None);
-        };
+        let Some(entry) = map.get_mut(surface_id) else { return Ok(None) };
+        let Some(engine) = entry.node_graph.as_mut() else { return Ok(None) };
+        entry.sync_cache.scene_owns_hover = false;
         match engine {
             NodeGraphEngine::Flow(host) => match intent.phase {
                 flow::dag::DagPointerPhase::Down => host.pointer_down_screen(intent.x, intent.y, intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
@@ -109,7 +109,7 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
                 flow::dag::DagPointerPhase::Leave => host.pointer_cancel_screen(),
             },
         }
-        let hovered_handle = graph_hovered_handle(engine, intent.x, intent.y);
+        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, intent.x, intent.y);
         let (edits, node_ids, hovered_id, camera) = match engine {
             NodeGraphEngine::Flow(host) => {
                 host.resync_interaction_projection();
@@ -127,7 +127,7 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
             }
         };
         mark_engine_scene_repaint(&mut map, surface_id);
-        Ok(Some(GraphScreenPointerOutcome { edits, snapshot: graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)? }))
+        Ok(Some(GraphScreenPointerOutcome { edits, snapshot: graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera)? }))
     })
 }
 
@@ -227,17 +227,17 @@ pub(super) fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPo
         let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
             return Ok(None);
         };
-        let hovered_handle = graph_hovered_handle(engine, intent.x, intent.y);
+        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, intent.x, intent.y);
         match engine {
             NodeGraphEngine::Flow(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
                 let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
-                Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)?)))
+                Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera)?)))
             }
             NodeGraphEngine::Dag(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
                 let flow::dag::DagPointerSnapshot { node_ids, hovered_id, camera } = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
-                Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, camera)?)))
+                Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera)?)))
             }
         }
     })
@@ -260,15 +260,15 @@ pub(super) fn mark_engine_scene_repaint(registry: &mut EngineSurfaceRegistry, su
 pub(super) fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointerPlan) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
-            return false;
-        };
+        let Some(entry) = map.get_mut(surface_id) else { return false };
+        let Some(engine) = entry.node_graph.as_mut() else { return false };
         let committed = match (engine, plan) {
             (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.commit_pointer(plan),
             (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.commit_pointer(plan),
             _ => false,
         };
         if committed {
+            entry.sync_cache.scene_owns_hover = false;
             mark_engine_scene_repaint(&mut map, surface_id);
         }
         committed
@@ -294,17 +294,18 @@ fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Opt
 }
 
 pub(super) fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
-    let (node_ids, hovered_id, current_camera) = match entry.node_graph.as_ref() {
+    let (dag, current_camera) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
-            let (selected, hovered) = bounded_graph_selection(&host.dag)?;
-            (selected, hovered, [host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
+            (&host.dag, [host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
         }
         Some(NodeGraphEngine::Dag(host)) => {
-            let (selected, hovered) = bounded_graph_selection(&host.dag)?;
-            (selected, hovered, [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom])
+            (&host.dag, [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom])
         }
         None => return Err(semio_ui_action::BoundedActionFault::Structure),
     };
-    graph_projection_snapshot(node_ids, hovered_id, None, camera.unwrap_or(current_camera))
+    let (node_ids, hovered_id) = bounded_graph_selection(dag)?;
+    let hovered_handle = dag.graph.hovered_channel().map(|channel| format!("{}@{}", channel.widget_id, channel.port));
+    let hovered_edge = dag.graph.hovered_edge_id().map(str::to_owned);
+    graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera.unwrap_or(current_camera))
 }
 //#endregion NodeGraph

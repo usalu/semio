@@ -1,13 +1,15 @@
 import {browserExecutableProbeV1} from "../../../🧪️testing/🌐️browser/🟦️.ts";
+import {runToolHookBoundedV1} from "../⏱️hook-bound/🟦️.ts";
 import {linuxHostLibcV1} from "../../../🎛️commands/🔧️setup/🟦️.ts";
 import {createHash} from "node:crypto";
 import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync} from "node:fs";
 import {homedir} from "node:os";
 import {delimiter, dirname, join} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {createIssuedResourceControlV1, scriptResourceProcessEnvironmentV1, type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1, scriptResourceProcessEnvironmentV1, withRequestedIssuedResourceControlV1, type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {nativeStorageWindowsProgramPathV1, pinNativeStorageProgramV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧰️programs/🟦️.ts";
 import {toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import bootstrapPins from "../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json" with {type: "json"};
 import {repoPlaywrightBrowsersPath} from "../../../🏃️process/🌿️environment/🟦️.ts";
@@ -73,15 +75,19 @@ function provisionedLocation(root: string, toolsRoot: string, platform: NodeJS.P
 /** 🔌️ The context of the running machine: real files, real child programs under the caller's control, and the layouts the repository provisions into. */
 export function systemToolContextV1(root: string, control: ResourceLeaseControl, environment: Readonly<Record<string, string | undefined>> = process.env): ToolContextV1 {
   const toolsRoot = repositoryCachePartitionRootV1(root, "tools"), host = toolchainHostV1();
-  const hooks = async (row: ToolRowV1, pin: string, signal: AbortSignal): Promise<Readonly<{found: string | null; location: string | null}>> => {
+  const hooks: ToolContextV1["hook"] = async (row, pin, signal) => {
     if (row.setup.kind === "script" && row.setup.verify !== undefined) {
-      try {
-        await captureOwnedCommandV1(process.execPath, [join(root, ...row.setup.script.split("/")), ...row.setup.verify], root, {control, signal, env: scriptResourceProcessEnvironmentV1(control, environment), output: {maximumBytes: 65536, maximumLines: 256}});
-        return {found: pin, location: row.setup.script};
-      } catch {
-        signal.throwIfAborted();
-        return {found: null, location: null};
-      }
+      const {script, verify} = row.setup;
+      return runToolHookBoundedV1({tool: row.id, step: "verify", script, signal}, bounded =>
+        withRequestedIssuedResourceControlV1(control, 0, async phase => {
+          try {
+            await captureOwnedCommandV1(process.execPath, [join(root, ...script.split("/")), ...verify], root, {control: phase, env: scriptResourceProcessEnvironmentV1(phase, environment), output: {maximumBytes: 65536, maximumLines: 256}});
+            return {found: pin, location: script};
+          } catch (error) {
+            phase.signal.throwIfAborted();
+            return {found: null, location: null, reason: (error instanceof Error ? error.message : String(error)).slice(0, 600)};
+          }
+        }, bounded));
     }
     const browsers = environment.PLAYWRIGHT_BROWSERS_PATH ?? repoPlaywrightBrowsersPath(root), directory = join(browsers, "chromium-" + pin);
     try {
@@ -97,7 +103,7 @@ export function systemToolContextV1(root: string, control: ResourceLeaseControl,
     exists: (path: string) => existsSync(path),
     list: (directory: string) => { try { return readdirSync(directory); } catch { return []; } },
     resolvePackage: (name: string, from: string) => resolveSiblingPackageV1(root, name, from),
-    capture: (command: string, args: readonly string[], cwd: string, signal: AbortSignal) => captureOwnedCommandV1(command, args, cwd, {control, signal, env: withPinnedNativePathV1(environment, host, toolsRoot, ["go", "uv", "cmake", "ninja"]), output: {maximumBytes: 65536, maximumLines: 256}}),
+    capture: (command: string, args: readonly string[], cwd: string, signal: AbortSignal) => captureOwnedCommandV1(command, args, cwd, {control, signal, env: withPinnedNativePathV1(/(?:^|[\\/])rustup(?:\.exe)?$/iu.test(command)?{...environment,RUSTUP_AUTO_INSTALL:"0"}:environment, host, toolsRoot, ["go", "uv", "cmake", "ninja"]), output: {maximumBytes: 65536, maximumLines: 256}}),
     provisioned: (locate, pin) => provisionedLocation(root, toolsRoot, process.platform, process.arch, host, locate, pin),
     hook: (row, pin, signal) => hooks(row, pin, signal),
   });
@@ -148,6 +154,7 @@ export async function installDotnetSdkV1(sdk: string, directory: string, scriptS
 /** 🔧️ Runs `repo tools setup toolchains|all`: provisions every pinned tool of the selection that differs from its pin below the tools partition (or through its owning installer), then verifies it again; returns the final report. */
 export async function runToolchainsSetupV1(root: string, invocation: ScriptInvocation, control: ResourceLeaseControl, names: readonly string[], excluded: readonly string[], offline: boolean): Promise<readonly ToolReportV1[]> {
   const context = systemToolContextV1(root, control), host = toolchainHostV1(), rows = selectToolRowsV1(names, excluded, context.environment), port = systemNativeToolPortV1(root, offline);
+  console.log(toolSetupMessageV1("starting", {count: rows.length}, context.environment));
   const entry = (label: string): ResourceLeaseControl => createIssuedResourceControlV1(invocation, label, 0);
   const inStore = <T>(body: (store: RepositoryToolingStoreV1, actual: ResourceLeaseControl) => Promise<T>): Promise<T> => withRepositoryToolingStoreV1(root, invocation, entry("cache:entry"), async (store, actual) => {
     requireNativeStorageReservationV1(store.storage, store.control);
@@ -159,7 +166,11 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
   const provision: ToolProvisionerV1 = async (row, pin, signal) => {
     const setup = row.setup;
     if (setup.kind === "native") await inStore((store, actual) => provisionNativeToolsV1([setup.tool], store.root, ownedNativeToolPortV1(store.environment, actual), actual.signal));
-    else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual, "published"));
+    else if (setup.kind === "bootstrap-node") {
+      const node = bootstrapPins.definitions.WindowsNodeInstallation.const;
+      const shell = pinNativeStorageProgramV1(nativeStorageWindowsProgramPathV1("powershell",context.environment));
+      await execute(shell,["-NoProfile","-ExecutionPolicy","Bypass","-File",join(root,...node.script.split("/")),node.command],pinned(),signal);
+    } else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual, "published"));
     else if (setup.kind === "binaryen") await inStore(store => prepareBinaryen(root, store));
     else if (setup.kind === "script") await execute(process.execPath, [join(root, ...setup.script.split("/")), ...setup.prepare], pinned(), signal);
     else if (setup.kind === "python") await inStore((store, actual) => provisionInterpretersV1([pin], store.root, ownedNativeToolPortV1(store.environment, actual), actual.signal));
@@ -167,7 +178,12 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
       const installer = dotnetInstallerRowV1(process.platform, process.arch);
       if (installer === undefined) throw new Error(toolSetupMessageV1("installer", {tool: "dotnet", host}, context.environment));
       await installDotnetSdkV1(pin, dotnetSdkDirectoryV1(context.toolsRoot, pin, host, installer.sha256), installer.sha256, installer, host, context.environment, port, signal, (command, args, env) => execute(command, args, env, signal));
-    } else if (setup.kind === "rust") await execute("rustup", ["toolchain", "install"], pinned(), signal);
+    } else if (setup.kind === "rust") {
+      const rustup=bootstrapPins.definitions.RustupInstallation.const,windows=process.platform==="win32";
+      const script=join(root,...(windows?rustup.windows:rustup.unix).split("/"));
+      if(windows){const shell=pinNativeStorageProgramV1(nativeStorageWindowsProgramPathV1("powershell",context.environment));await execute(shell,["-NoProfile","-ExecutionPolicy","Bypass","-File",script,rustup.command],pinned(),signal);}
+      else await execute("bash",[script,rustup.command],pinned(),signal);
+    }
   };
   const reports = await setupToolsV1(rows, context, provision, control.signal, line => console.log(line));
   if (names.length === 0 && reports.every(report => report.status === "ok" || report.status === "deferred")) {

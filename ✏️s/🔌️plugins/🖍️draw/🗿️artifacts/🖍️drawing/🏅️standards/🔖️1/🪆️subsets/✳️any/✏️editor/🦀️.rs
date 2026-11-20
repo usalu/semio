@@ -74,7 +74,7 @@ use semio_plugin::UtilityDefinition;
 use semio_plugin::WindowEngagement;
 use semio_plugin::WindowEngagementInput;
 use semio_plugin::WindowEngagementStatus;
-use pack::snapshot::ArtifactPack;
+use semio_os_kernel::os_pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
 
@@ -93,13 +93,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::DRAWIN
 /// marquee select (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). Resolution order: the
 /// addressed window's entry, the focused window's entry, the flat field, the default.
 pub fn drawing_active_utility(view: &semio_plugin::ViewModel) -> &str {
-    view.window_id
-        .as_deref()
-        .and_then(|window| view.active_utility_by_window_id.get(window))
-        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
-        .map(String::as_str)
-        .filter(|utility| !utility.is_empty())
-        .or(view.active_utility_id.as_deref())
+    view.contextual_utility()
         .unwrap_or(DRAWING_DEFAULT_UTILITY)
 }
 
@@ -162,14 +156,8 @@ semio_plugin::app_commands! {
 
 //#endregion 🔖️Commands
 
-//#region 🌉️ActionBridge
-/// 🌉️ Host action `{action, args}` → typed `DrawingCommand` (ticket 26/09/05/DRAW-PLUGIN-END-TO-END,
-/// after forms' bridge). The React/wgpu shells send camelCase argument keys and JSON numbers; every
-/// `🎮️commands/*` payload derives `FromValue` over its own snake_case field names, so this boundary
-/// folds each key into both spellings, restores integral floats, prints structured `value`/`json`
-/// arguments into the `String` wire fields that carry JSON text, and decodes. Without it the trait
-/// default refuses every app action (`setActiveExample`, `addLayer`, …) as "not framework-reserved".
-//#endregion 🌉️ActionBridge
+#[path = "🌉️args-bridge/🦀️.rs"]
+pub mod args_bridge;
 
 //#region 🧵️GestureOperationJobs
 
@@ -274,7 +262,8 @@ pub fn drawing_vector_media(plan: Option<&semio_s_artifact_draw_drawing_scene::p
 /// 🧵️ Runs the work-granted SVG writer over a completed plan, then drains its physical page owners under exact grants.
 fn svg_from_plan(plan: semio_s_artifact_draw_drawing_scene::preparation::DocumentScenePlan, view_box: [f64; 4]) -> Result<String, String> {
     use semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteLimits};
-    use semio_framework_value::RetainedCloneGrant;
+    use semio_framework_job::OriginalRetirementPump;
+    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
     let mut job = SvgWriteJob::new(plan, SvgWriteLimits { view_box, max_output_bytes: 25_165_824, max_work: 1_000_000_000 });
     let mut previous = None;
     loop {
@@ -293,12 +282,28 @@ fn svg_from_plan(plan: semio_s_artifact_draw_drawing_scene::preparation::Documen
     for page in pages.iter() {
         bytes.extend_from_slice(page);
     }
-    let refused = |_| "SVG retirement refused its physical grant".to_string();
+    let pump = OriginalRetirementPump::new();
+    let refused = || "SVG retirement refused its physical grant".to_string();
     while !retired.terminal_is_empty() {
-        let copy = retired.next_copy_byte_demand().map_err(refused)?;
-        let release = retired.next_release_byte_demand().map_err(refused)?;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retired.next_capacity_byte_demand(if copy > 0 { copy } else { release }).map_err(refused)?, maximum_release_bytes: release, maximum_depth: retired.next_depth_demand().map_err(refused)? };
-        if retired.close_step(grant).map_err(refused)?.progress() == Default::default() {
+        let copy = retired.next_copy_byte_demand().map_err(|_| refused())?;
+        let release = retired.next_release_byte_demand().map_err(|_| refused())?;
+        let body = copy.max(release);
+        let demand = retired.next_demand(body).map_err(|_| refused())?;
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: demand.depth,
+        };
+        let mut turn = pump.turn(1 << 24, u64::MAX, || Some(0), grant).map_err(|_| refused())?;
+        let (poll, _) = turn.with_effect(|effect| retired.close_step(body, effect))
+            .map_err(|_| refused())?.ok_or_else(refused)?;
+        let progressed = match poll {
+            RetainedWorkPoll::Complete(turn) => turn.result.map_err(|_| refused())?.progress() != Default::default(),
+            RetainedWorkPoll::Pending { work } => work > 0,
+        };
+        if !progressed && !retired.terminal_is_empty() {
             return Err("SVG retirement made no progress".into());
         }
     }

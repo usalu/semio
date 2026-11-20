@@ -1,3 +1,4 @@
+use semio_os_kernel as dsl;
 use super::*;
 use protocol::SemanticMutation;
 

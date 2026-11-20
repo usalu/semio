@@ -33,3 +33,25 @@ fn original_first_party_scene_preserves_unfunded_children_and_exact_paid_release
   let(step,heap)=observed(||close_scene(&mut close,&mut scene,body,grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes),"physical receipt turn {turn}");born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn<99999);
  }assert!(close.terminal_is_empty(&scene));assert_eq!(born,released);let(_,heap)=observed(||{drop(close);drop(scene)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
+
+#[test]
+fn scene_close_requires_original_work_before_detaching_a_command(){
+ let grant:RetainedCloneGrant=serde_json::from_value(law()["grant"].clone()).unwrap();
+ let mut scene=Scene::new();scene.pop_layer();
+ let mut close=CanvasSceneRetirement::default();
+ let denied=funding::settled(funding::with_effect(grant,0,&mut None,|effect|close.close_step(&mut scene,grant.maximum_copy_bytes,effect)));
+ assert_eq!(denied.work,0);
+ assert_eq!(denied.result.unwrap().progress(),Default::default());
+ assert_eq!(scene.command_len(),1);
+ for _ in 0..4{
+  if close.terminal_is_empty(&scene){break}
+  let paid=funding::with_effect(grant,funding::WORK,&mut None,|effect|{
+   let turn=funding::settled(close.close_step(&mut scene,grant.maximum_copy_bytes,effect));
+   assert_eq!(turn.work,effect.performed_work());
+   turn
+  });
+  assert_eq!(paid.work,1);
+  assert_eq!(paid.result.unwrap().progress().copied_items,1);
+ }
+ assert!(close.terminal_is_empty(&scene));
+}

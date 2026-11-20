@@ -153,6 +153,11 @@ impl ParallelRuntime {
         self.kernel.complete(actor, result, now_ms).await
     }
 
+    /// 🧯️ Records a shard transport trap without returning a guest receipt.
+    pub async fn record_transport_fault(&mut self, actor: ActorId, detail: String, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+        self.kernel.record_transport_fault(actor, detail, now_ms).await
+    }
+
     /// 🌀️ Drains every `ShardOutcome` CURRENTLY buffered across every shard's `OutcomeSink` — never
     /// blocks. Malformed bytes cannot reach here (an `OutcomeSink` only ever holds successfully
     /// decoded outcomes — decoding happens once, inside `ShardExecutor::run`).

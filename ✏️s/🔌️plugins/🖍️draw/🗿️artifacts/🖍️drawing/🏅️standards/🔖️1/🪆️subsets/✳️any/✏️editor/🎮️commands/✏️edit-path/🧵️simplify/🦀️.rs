@@ -6,7 +6,7 @@ use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
 use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
 use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ValueError};
+use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant}, ValueError};
 use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
@@ -79,13 +79,17 @@ impl ArtifactCommandWork<App> for Work {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) {self.closing=true;}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{result:(||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
-            use semio_framework_job::InteractiveJobCloseStep;
-            if !self.closing {return Ok(InteractiveJobCloseStep::Blocked);}
-            let Some(owner)=self.workspace.as_mut() else {return Ok(InteractiveJobCloseStep::Complete {progress:Default::default()});};
-            Ok(match owner.step(grant) {Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>return Err(error)})
-        })(),work:0})
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep;
+        if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+        if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+        let Some(workspace) = self.workspace.as_mut() else {
+            return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+        };
+        let body = cx.retained_grant().maximum_copy_bytes;
+        let demand = workspace.next_demand(body)?;
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| workspace.step(body, effect))?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_copy_byte_demand()).unwrap_or(Ok(0))}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_capacity_byte_demand(copy)).unwrap_or(Ok(0))}
@@ -117,4 +121,3 @@ pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>
  semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,65536,4096,false,|_|work)
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Work);

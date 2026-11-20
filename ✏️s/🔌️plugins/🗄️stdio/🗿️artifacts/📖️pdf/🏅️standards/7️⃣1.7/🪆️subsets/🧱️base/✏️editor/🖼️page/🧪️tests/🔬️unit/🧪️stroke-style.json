@@ -1,0 +1,711 @@
+{
+  "width": 260,
+  "height": 160,
+  "ops": "q\n1 0 0 RG\n8 w\n[18 16] 8 d\n0 J\n15 140 m 110 140 l S\nq\n[] 0 d\n0 0 1 RG\n10 w\n0 j\n4 M\n130 100 m 148 130 l 166 100 l S\nQ\nq\n[] 0 d\n0 0 1 RG\n10 w\n0 j\n1 M\n190 100 m 208 130 l 226 100 l S\nQ\nq\n[] 0 d\n0 0 1 RG\n10 w\n1 J\n15 80 m 50 80 l S\nQ\nq\n[] 0 d\n0 0 1 RG\n10 w\n2 J\n75 80 m 110 80 l S\nQ\nq\n[] 0 d\n0 0 1 RG\n10 w\n1 j\n130 55 m 148 85 l 166 55 l S\nQ\nq\n[] 0 d\n0 0 1 RG\n10 w\n2 j\n190 55 m 208 85 l 226 55 l S\nQ\nq\n[] 0 d\n2 0 0 0.5 20 48 cm\n0 0 1 RG\n8 w\n[8 10] 4 d\n0 20 m 50 20 l S\nQ\n15 25 m 110 25 l S\nQ\nq\n0 0 1 RG\n8 w\n[70 12] 4 d\n140 21 35 22 re S\nQ\n",
+  "layers": [
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            15,
+            140
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            110,
+            140
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [
+          18,
+          16
+        ],
+        "dashOffset": 8,
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            130,
+            100
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            148,
+            130
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            166,
+            100
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 4
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            190,
+            100
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            208,
+            130
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            226,
+            100
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 1
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            15,
+            80
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            50,
+            80
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "round",
+        "join": "miter",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            75,
+            80
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            110,
+            80
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "square",
+        "join": "miter",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            130,
+            55
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            148,
+            85
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            166,
+            55
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "butt",
+        "join": "round",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            190,
+            55
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            208,
+            85
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            226,
+            55
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [],
+        "dashOffset": 0,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 10,
+        "cap": "butt",
+        "join": "bevel",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            20
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            50,
+            20
+          ]
+        }
+      ],
+      "transform": [
+        2,
+        0,
+        0,
+        -0.5,
+        20,
+        112
+      ],
+      "stroke": {
+        "dash": [
+          8,
+          10
+        ],
+        "dashOffset": 4,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            15,
+            25
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            110,
+            25
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [
+          18,
+          16
+        ],
+        "dashOffset": 8,
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 10
+      }
+    },
+    {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            140,
+            21
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            175,
+            21
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            175,
+            43
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            140,
+            43
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            140,
+            21
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        160
+      ],
+      "stroke": {
+        "dash": [
+          70,
+          12
+        ],
+        "dashOffset": 4,
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "miterLimit": 10
+      },
+      "pdfClosesSubpath": true
+    }
+  ],
+  "probes": [
+    {
+      "at": [
+        17,
+        20
+      ],
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "object": 0
+    },
+    {
+      "at": [
+        27,
+        20
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        40,
+        20
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        44,
+        20
+      ],
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "object": 0
+    },
+    {
+      "at": [
+        148,
+        22
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 1
+    },
+    {
+      "at": [
+        208,
+        22
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        208,
+        28
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 2
+    },
+    {
+      "at": [
+        11,
+        80
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 3
+    },
+    {
+      "at": [
+        10,
+        75
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        71,
+        76
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 4
+    },
+    {
+      "at": [
+        148,
+        71
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 5
+    },
+    {
+      "at": [
+        208,
+        71
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        23,
+        102
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 7
+    },
+    {
+      "at": [
+        31,
+        102
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        49,
+        102
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 7
+    },
+    {
+      "at": [
+        49,
+        105
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        17,
+        135
+      ],
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "object": 8
+    },
+    {
+      "at": [
+        27,
+        135
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        137,
+        142
+      ],
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "object": null
+    },
+    {
+      "at": [
+        137,
+        137
+      ],
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "object": 9
+    }
+  ]
+}

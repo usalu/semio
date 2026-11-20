@@ -6,8 +6,11 @@ use super::*;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
 pub struct RemoveCell {
     pub address: cell_address::XlsxCellAddress,
+    #[value(default, skip_serializing_if = "std::ops::Not::not")]
+    pub keep_row: bool,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
@@ -25,10 +28,10 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
 
 impl protocol::ColdMutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
-        plan_outcome(canonical_edit::remove_cell_plan(base, &self.address))
+        plan_outcome(canonical_edit::remove_cell_plan(base, &self.address, self.keep_row))
     }
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-        Ok(plan_inverse(canonical_edit::remove_cell_plan(base, &self.address)))
+        Ok(plan_inverse(canonical_edit::remove_cell_plan(base, &self.address, self.keep_row)))
     }
 }
 //#endregion 🔖️Payload

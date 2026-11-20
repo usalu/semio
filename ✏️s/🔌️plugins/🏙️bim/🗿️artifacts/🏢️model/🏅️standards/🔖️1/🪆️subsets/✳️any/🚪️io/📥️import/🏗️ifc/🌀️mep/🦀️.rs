@@ -78,7 +78,7 @@ pub fn read(i: &mut Import<'_>) {
                     }
                 }
             };
-            i.model.mep_elements.insert(id.clone(), element);
+            i.model.mep_elements.cold_insert(id.clone(), element);
             i.ids.insert(instance.id, id);
         }
     }

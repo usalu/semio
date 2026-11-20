@@ -9,7 +9,7 @@ impl FlowEvalSession {
     fn owns_session_source(&self)->bool{
         let state=&*self.state;
         state.pending_tick_snapshot.is_some()||state.pending_tick_snapshot_retirement.is_some()||state.pending_tick_snapshot_origin.is_some()||state.invocation_origin_growth.is_some()||state.invocation_origins.capacity()!=0||state.pending_tick_display.is_some()||state.operator_registry.is_some()||state.neural_cache.is_some()||state.previous_snapshot.is_some()||state.previous_channels.is_some()||state.eval_json.is_some()
-            ||state.painted_eval_json.capacity()!=0||state.converged_eval_json.capacity()!=0||state.status_json.capacity()!=0||state.extension_evaluate_fault.is_some()
+            ||state.painted_eval_json.capacity()!=0||state.converged_eval_json.capacity()!=0||state.previous_converged_eval_json.capacity()!=0||state.status_json.capacity()!=0||state.extension_evaluate_fault.is_some()
             ||state.preview_retention.is_some()||!state.window_tick_latches.terminal_is_empty()||!state.live_geometry_handles.terminal_is_empty()||!state.preview_mesh_by_handle.terminal_is_empty()
             ||!state.pending_tessellate_by_hash.terminal_is_empty()||!state.tessellate_handle_by_hash.terminal_is_empty()||!state.tessellate_progress_by_hash.terminal_is_empty()
             ||!state.eval_progress_by_hash.terminal_is_empty()||!state.preview_diagnostics_by_handle.terminal_is_empty()
@@ -34,7 +34,7 @@ impl FlowEvalSession {
         if let Some(value)=state.previous_snapshot.take(){return Some(SessionCollectionOwner::Snapshot(value))}
         if let Some(value)=state.previous_channels.take(){return Some(SessionCollectionOwner::Channels(value))}
         if let Some(value)=state.eval_json.take(){return Some(SessionCollectionOwner::SourceLease(value))}
-        for text in [&mut state.painted_eval_json,&mut state.converged_eval_json,&mut state.status_json]{if text.capacity()!=0{return Some(SessionCollectionOwner::Text(std::mem::take(text)))}}
+        for text in [&mut state.painted_eval_json,&mut state.converged_eval_json,&mut state.previous_converged_eval_json,&mut state.status_json]{if text.capacity()!=0{return Some(SessionCollectionOwner::Text(std::mem::take(text)))}}
         if let Some(value)=state.extension_evaluate_fault.take(){return Some(SessionCollectionOwner::Fault(value))}
         state.neural_cache.take().map(SessionCollectionOwner::Cache)
     }

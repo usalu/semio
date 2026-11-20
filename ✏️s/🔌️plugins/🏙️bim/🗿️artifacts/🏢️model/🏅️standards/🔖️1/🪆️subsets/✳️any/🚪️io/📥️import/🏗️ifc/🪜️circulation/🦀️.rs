@@ -90,7 +90,7 @@ pub fn read(i: &mut Import<'_>) {
             continue;
         };
         let id = Doc::identity(args, "IFCSTAIR").unwrap_or_else(|| format!("st-{}", instance.id));
-        i.model.stairs.insert(id.clone(), stair);
+        i.model.stairs.cold_insert(id.clone(), stair);
         i.claim_parts(instance.id, &id);
         i.ids.insert(instance.id, id);
     }
@@ -107,7 +107,7 @@ pub fn read(i: &mut Import<'_>) {
             continue;
         };
         let id = Doc::identity(args, "IFCRAILING").unwrap_or_else(|| format!("rl-{}", instance.id));
-        i.model.railings.insert(id.clone(), railing);
+        i.model.railings.cold_insert(id.clone(), railing);
         i.claim_parts(instance.id, &id);
         i.ids.insert(instance.id, id);
     }

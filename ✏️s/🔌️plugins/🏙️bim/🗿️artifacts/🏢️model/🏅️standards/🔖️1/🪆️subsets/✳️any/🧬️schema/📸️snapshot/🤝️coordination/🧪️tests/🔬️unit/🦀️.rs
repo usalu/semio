@@ -162,7 +162,7 @@ fn an_issue_needs_a_title_an_author_a_moment_and_references_that_exist() {
     let clash = |set: &str, first: &str, second: &str| Issue { clash: Some(ClashRef { set: set.into(), first: first.into(), second: second.into() }), ..issue() };
     assert!(problem(clash("cs-9", "b-a", "w-south")).missing);
     let mut with_set = model.clone();
-    with_set.clash_sets.insert("cs-1".into(), ClashSet::standard("Set", ElementSelector::all(), ElementSelector::all()));
+    with_set.clash_sets.cold_insert("cs-1".into(), ClashSet::standard("Set", ElementSelector::all(), ElementSelector::all()));
     assert_eq!(issue_problem(&with_set, "i-1", &clash("cs-1", "b-a", "w-south")), None);
     assert!(issue_problem(&with_set, "i-1", &clash("cs-1", "b-a", "w-9")).expect("a problem").missing);
     assert!(!issue_problem(&with_set, "i-1", &clash("cs-1", "b-a", "b-a")).expect("a problem").missing);
@@ -186,7 +186,7 @@ fn a_viewpoint_needs_a_finite_camera_a_proper_box_and_elements_that_exist() {
 #[test]
 fn a_comment_needs_its_issue_an_author_text_and_a_moment() {
     let mut model = model();
-    model.issues.insert("i-1".into(), issue());
+    model.issues.cold_insert("i-1".into(), issue());
     let comment = IssueComment { issue: "i-1".into(), author: "AB".into(), date: "2026-10-09T09:00:00Z".into(), text: "On it.".into() };
     assert_eq!(comment_problem(&model, "c-1", &comment), None);
     assert!(comment_problem(&model, "c-1", &IssueComment { issue: "i-9".into(), ..comment.clone() }).expect("a problem").missing);
@@ -198,11 +198,11 @@ fn a_comment_needs_its_issue_an_author_text_and_a_moment() {
 #[test]
 fn comments_are_listed_in_writing_order() {
     let mut model = model();
-    model.issues.insert("i-1".into(), issue());
+    model.issues.cold_insert("i-1".into(), issue());
     let write = |date: &str| IssueComment { issue: "i-1".into(), author: "AB".into(), date: date.into(), text: "Text".into() };
-    model.issue_comments.insert("c-b".into(), write("2026-10-09T10:00:00Z"));
-    model.issue_comments.insert("c-a".into(), write("2026-10-09T11:00:00Z"));
-    model.issue_comments.insert("c-c".into(), IssueComment { issue: "i-2".into(), ..write("2026-10-08") });
+    model.issue_comments.cold_insert("c-b".into(), write("2026-10-09T10:00:00Z"));
+    model.issue_comments.cold_insert("c-a".into(), write("2026-10-09T11:00:00Z"));
+    model.issue_comments.cold_insert("c-c".into(), IssueComment { issue: "i-2".into(), ..write("2026-10-08") });
     let ids: Vec<&String> = comments_of(&model, "i-1").into_iter().map(|(id, _)| id).collect();
     assert_eq!(ids, ["c-b", "c-a"]);
 }

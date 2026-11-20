@@ -396,3 +396,364 @@ Exposure against the pose (information): walking-commuter trousers measured 0.46
 | parent-with-stroller stroller-frame / tyres | 0.431 / 0.4 (set 0.5 / 0.48) | 0.527 / 0.495 | tube frame with cross tubes and hangers; tyre ring + rim + hub per wheel | 0.53 / 0.5 |
 | person-with-rollator seat-basket / bag / frame | 0.7 / 0.35 / 0.657 | 1.33 / 0.27 / 0.81 (1:50) | hollow basket tub (outside and inside faces), tote overlapped by seat and basket in the drawing, 22 mm tubes | 1.33 (factor 1.9) / 0.27 / 0.81 |
 Body-model regions (hands, shoes, beret, face-skin of the figures; child-skin 0.075 against 0.03 of the toddler) are C18 findings, not proposals.
+
+## r3 animals/goat (2026-11-19, unapplied, C27 for the area reviewers)
+
+| asset / region | declared | measured by the round-3 model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| goat horns | 0.012 | 0.0242 / 0.0240 (+102 % / +100 %) | pair of scimitar horns 0.225 m along the curve, base 31 x 23 mm, linear taper to a point; hand calculation 2 x 0.012 m² | 0.024 (share taken from coat-trunk, total 1.369 unchanged) |
+| goat hooves | 0.012 | 0.0467 / 0.0346 (+289 % / +188 %) | eight claws 56 x 22 x 34 mm (52 cm² each by hand) and eight dewclaws (7 cm² each) | 0.047 (share taken from coat-trunk) |
+
+## r3 vegetation/apple-tree (2026-11-19, bark areas after the round-3 model)
+
+| asset / region | declared | measured by the round-3 model 1:50 / 1:100 | what the model shows | applied / proposal |
+|---|---|---|---|---|
+| apple-tree trunk-bark | 3.58 | 4.77 / 5.13 | root flare 0-0.41 m (0.66 m²), five buttress roots (0.7 m² net), stem 0.33-1.8 m o0.39 (1.75), lower leader 1.56-3.88 m o0.33 to o0.16 (1.72); by hand 4.8 m² | 4.8 applied (factor 1.34, C16) |
+| apple-tree limb-bark | 6.08 | 9.46 / 8.27 | four scaffolds in eight parts (6.45 m²), upper leader (0.52), fourteen fruit branches o0.07 to o0.02 (2.5), eight forks (0.3); by hand 9.7 gross, 9.4 net of collars | 9.1 applied (factor 1.497, the most C16 allows); proposal for the reviewer: 9.4 |
+
+## 2026-11-19 r3 machinery/concrete-mixer-truck (round 3 author)
+
+Applied at the root from the rebuilt 1:50 model, all within factor 1.5: engine-bay 3.2 → 4.8 (measured 4.85: block, sump and radiator), drum-drive 3.2 → 2.6 (2.49), tyres 18 → 27 (29.7; the old value counted 8 tyres, the truck has 12), brakes 4.82 → 6.2 (6.23). Not applicable by C16: the old `chassis` region measures about 99 m2 against 38. Instead of a correction the region was split: `chassis` (frame, tanks, bumper, steps; 38 kept, measured 34.6) and two new regions `running-gear` 40 (measured 42.9) and `superstructure` 24 (measured 24.0). Please review the two new regions and the two values that sit at the factor limit (tyres, engine-bay).
+
+## 2026-11-19 r3 humans/child-on-kick-scooter (round 3 author)
+
+Applied at the root, within factor 1.5: `grips` 0.022 → 0.027 (measured 0.0269: two grips o30 x 98 mm with o38 and o36 end flanges). Not applied (factor 1.91, C16): `deck` declared 0.262, measured 0.137 at 1:50. The declared value was accepted for the old drawing's deck of 0.59 x 0.13 m (an adult-size scooter, wheelbase 0.78 m); the reference deck of a 145 mm children's scooter is 0.33 x 0.12 x 0.028 m (hand calculation: 2 x 0.0396 + rim 0.9 x 0.028 = 0.104, two dropout plates 0.012, spoon fender with brake pad 0.021 = 0.137). Please re-decide `deck` against the real object; `volumes-thermal-coverage` fails on it at 1:50 and 1:100 until then (0.48).
+
+## 2026-11-19 r3 machinery/scissor-lift (round 3 author)
+
+The object changed at the root against the Genie GS-1932 data sheet (four scissor stages instead of five, arms 1.46 m instead of 1.7 m, tyres 0.305 x 0.11 m instead of 0.54 x 0.16 m, platform 1.63 m instead of 1.85 m), so the areas adopted earlier from the old model no longer describe it. Applied at the root within factor 1.5: `chassis` 5.885 → 4.9 (measured 4.93), `battery-box` 0.751 → 0.52 (two doors 0.435 x 0.28 m, both faces and edges, with handles: 0.52), `motor-pump` 0.7 → 0.55 (enclosure of the power-unit bay 0.47 x 0.31 x 0.145 m with its door: hand 0.52 to 0.57, measured 0.522), `deck` 4.77 → 3.95 (measured 3.95), `rails` 6.0 kept (measured 5.62). Applied beyond factor 1.5 because the old values belong to parts that no longer exist, for the reviewer to confirm: `arms` 19.56 → 7.9 (hand: 16 tubes x 1.55 m x 0.28 m perimeter = 6.9, 13 pivot tubes 0.85, cylinder and rod 0.2: about 8.0; measured 7.86; the old model itself measured 10.2 against the declared 19.56) and `tyres` 2.508 → 0.97 (hand: 4 x (2 x pi x 0.1525^2 + pi x 0.305 x 0.11) = 1.01 less the rim seats; measured 0.94). `heatW` of the operating regions is unchanged.
+
+## 2026-11-20 r3 machinery/heat-pump-outdoor-unit (round 3 author)
+
+The unit was rebuilt as the real construction (L coil on the back and right side, one front fan beside a closed compressor column behind a partition, base pan, top cover; the old swinging discharge vane and its region `discharge-vane` were removed: no outdoor unit of the class has one). Applied at the root within factor 1.5: `fan-guard` 0.77 → 1.15 (measured 1.149: bell mouth both faces 0.49, three blades 0.2, hub and motor 0.1, domed grille 0.15, cap; every part in free air), `casing` 6.8 → 4.6 (the most C16 allows; measured by the product 4.39 at 1:50, 4.34 at 1:100). Proposal for the reviewer, by C31: `casing` 3.8 (front panel of the fan chamber both faces 1.45, top panel 0.47 outer plus 0.34 over the fan chamber, partition fan-chamber face 0.52, right front strip and rear post both faces 0.55, motor bracket 0.35, connections and hinges 0.1); the product still counts the faces inside the closed compressor column (0.6), see tool-requests. `compressor-casing` 1.5 kept: by C31 the closed column shows its outer faces only (front 0.39, back 0.39, service side 0.55, grip and edges 0.07 = 1.4); the product measures 2.69 because it does not implement C31 (`volumes-thermal-coverage` fails at 1:50 and 1:100 on this region only).
+
+## 2026-11-20 r3 appliances/mvhr-unit (round 3 author)
+
+Rebuilt as the real construction: 1 mm steel wrapper and back tray with 19 mm EPP lining, removable cover with window, shrouded R3G190-class supply impeller behind the window, hidden counter-flow plate pack, extract-fan scroll and filter cassettes, four DN100 spigots with EPDM seals, hook strip on a wall rail. Applied at the root within factor 1.5: `casing` 1.16 -> 1.37 (outer area of the 1 mm steel shell, 0.6 x 0.6 x 0.285 m with the window opening, the back 15 mm off the wall counted; measured 1.3715 at 1:50). New regions: `core` 18.3 m2 (`areaBasis: exchange`, 88 plates of 0.104 m2 both faces), `extract-fan` 0.078, `filters` 0.12 (hand values = the scroll and the two 35 mm cassettes). Not applied (beyond factor 1.5): `impeller` declared 0.06; the wetted area of the real 190 mm shrouded impeller is about 0.106 m2 (shroud ring both faces 0.036, conical back plate front and back 0.057, seven blades 0.009, rotor cap 0.004; the 1:50 model measures 0.1064). The region was given `areaBasis: exchange` (C19: rotating blade fins, the drawn disc of 0.028 m2 is not its surface), so the comparison no longer applies; proposal for the reviewer: 0.11.
+
+## 2026-11-20 r3 machinery/forklift (round 3 author)
+
+The object changed at the root against the Jungheinrich EFG 425 data sheet (VDI 2198): battery 1,028 x 711 x 784 mm instead of 1.0 x 0.47 x 0.9 m, nested C-section mast rails instead of solid boxes, twin drive motors with their gear and brake housings inside the 10-inch drive wheels instead of four 0.3 m drums, rear overhang 0.30 m instead of 0.75 m. Applied at the root from the rebuilt 1:50 model (measured with `volumes-check.ts machinery/forklift --product`):
+| region | old | new | measured 1:50 / 1:100 | hand calculation |
+|---|---|---|---|---|
+| battery-pack | 3.6 | 4.2 | 4.145 / 4.189 | case 2 x (1.028 x 0.711 + 1.028 x 0.784 + 0.711 x 0.784) = 4.19 (factor 1.17) |
+| chassis-paint | 8 | 12 | 13.46 / 13.36 | outward faces 7.7 (top 1.2, sides 1.7, fenders and decks 1.3, underside 1.1, kick panel and floor plate 0.6, wheel housings 1.0, step and door 0.8) plus the faces of the frame plates, floor pan and hood that face the battery (4.1) and count under C29 because the battery is another region; 12 is factor 1.5, the most C16 allows. Reviewer: with C31 implemented (see `tool-requests.md`, 2026-11-20 heat-pump entry) the battery-facing faces drop out and about 9 to 10 remains. |
+| counterweight | 5.0 | 4.3 | 4.254 / 4.264 | loft 1.15 m wide x 0.62 m long x 0.545 m high: top 0.71, rear 0.6, sides 0.67, underside over the wheels 0.71, front against the frame 0.63, apron, wheel-housing feet and housings 1.0 = 4.3 (factor 1.16) |
+| mast | 5 | 5.9 | 5.70 / 5.45 | outer C rails 2 x 0.58 m perimeter x 2.045 m = 2.37, inner C rails 2 x 0.55 x 2.01 = 2.21, lift cylinders and rods 0.95, ties, head, lugs, sheaves, rollers 0.4 = 5.9 (factor 1.18; the committed 5 assumed rails without lift cylinders) |
+| fork-gear | 4.0 | 3.0 | 2.974 / 2.980 | carriage bars 0.67, side plates and rollers 0.48, two forks 40 x 120 x 1150 with hooks 1.15, load backrest (top, middle, posts, six 20 mm bars) 0.7 = 3.0 (factor 1.33; the 1.8 m2 backrest of the old figure was a solid grid) |
+| brakes | 1.0 | 0.25 | 0.243 / 0.243 | applied beyond factor 1.5 because the old value belongs to parts that do not exist: the EFG 425 brakes only its two drive wheels, and a 10-inch rim (254 mm bead seat) cannot hold the four 0.3 m drums of the old figure; two gear and brake housings 0.21 m in diameter x 0.085 m: 2 x (pi x 0.21 x 0.085 + 2 x pi x 0.105^2) = 0.25. `heatW` (braking) unchanged: the flux density rises accordingly. Please confirm. |
+`drive-motor` 0.9 (measured 0.865), `controller` 0.79 (0.884), `hydraulics` 0.323 (0.347, tilt cylinders and the steering cylinder of the steer axle), `tyres` 3.0 (3.096), `pallet` 2.9 (3.142), `cargo` 5.2 (5.269), `guard` 2.78 (3.123) are kept.
+
+## 2026-11-20 r3 vehicles/tram (round 3 author)
+
+Rebuilt 1:50 model: plug-sliding leaves of 0.646 x 2.15 m, 40 mm sandwich, glazed 0.43 x 1.70 m, leaning with the 40 mm tumblehome; the cabin face of each leaf is a section face by C25 (c), as on the walls.
+| region | old | new | measured 1:50 / 1:100 | hand calculation |
+|---|---|---|---|---|
+| body-panels | 79.82 | 105.7 (applied, factor 1.32) | 105.9 / 111.5 | side walls 2 x 13.6 m x 2.82 m = 76.7 less glazing 23.2, door openings 5.6 and bogie openings 4.0 = 43.9; cab nose and header 7.5; floor underside 13.6 x 2.4 less wells 6.4 = 26.2; bogie wells (podest tops, walls, ends seen from the wells) 13; the three end-wall rings outside the bellows 3.3; cab sill, bumper, pillars, hatch 5 = 99 (the old figure took 2.2 m wall height instead of 2.82 m and no wells). The rear face of the middle module is the cut of the sample and is a section face. |
+| doors | 8.89 | not applied (4.4 proposed, factor 0.49) | 4.36 / 4.33 | four leaves 4 x (0.646 x 2.15 - 0.43 x 1.70) = 2.63 outer face, leaf edges 4 x 5.6 m x 0.04 m = 0.90, glass reveals 4 x 4.26 m x 0.03 m = 0.51, together 4.0 to 4.4; the old 8.89 counts both faces of the leaves or the glass with them (glass belongs to `glazing`). Fails `volumes-thermal-coverage` 1:50 and 1:100 until decided. |
+
+## 2026-11-20 r3 components/spiral-stair (round 3 author)
+
+Rebuilt as the real construction of a 1.6 m kit spiral stair: core CHS 168.3 x 6.3, fifteen tread units stacked on it (hub sleeve CHS 177.8 x 4.0 one riser long, pressed 5 mm pan with 70 mm flange, 30 mm nosing lap after DIN 18065), three 12 mm balusters per tread (89 mm clear; the old one per tread left 292 mm, against the 120 mm of MBO section 38), newel and end post CHS 42.4, handrail 1.0 m above the tread centre (0.91 m over every nosing; the old 0.93 m over the tread centre gave 0.84 m over the nosing).
+| region | old | new | measured 1:50 / 1:100 | hand calculation |
+|---|---|---|---|---|
+| treads | 6.67 | 7.95 (applied, factor 1.19) | 8.03 / 6.30 | per pan: top 0.1455 (sector 0.1241 plus lap strip 0.0213) + open underside 0.1455 + flange both faces 2 x 1.771 m x 0.065 m = 0.230 + flange edge 0.009 = 0.530; x 15 = 7.95 (1:50 plate at the 7.5 mm feature adds the edge) |
+| column-steel | 1.65 | 1.84 (applied, factor 1.12) | 1.82 / 1.82 | hub sleeves pi x 0.1778 x 2.78 = 1.553, cap top and edge 0.031, base plate top annulus 0.101, edge 0.025, underside on the floor 0.124 (counts by C29), nuts and studs 0.008 = 1.84; the core face lies under the sleeves and its bore is sealed (modelled filled, see the C31 tool request) |
+| balustrade-steel | 1.1917 | not applied (2.55 proposed, factor 2.14) | 2.55 / 2.51 | handrail 5.24 m x pi x 0.0424 = 0.698 with domed ends, 43 balusters pi x 0.012 x 0.94 to 1.06 m = 1.53, feet 0.04, newel and end post 0.27 with flanges 0.02 = 2.55. The old 1.19 is 15 balusters plus the rail; the infill a guard in a dwelling needs is three times that. Until decided, the 1:50 (+114 %) and 1:100 (+111 %) lines of `volumes-thermal-coverage` fail on purpose. |
+
+## machinery/oil-pumpjack — round 3 (2026-11-20, `r3-machinery-oil-pumpjack.md`)
+
+The round-3 model replaced the round-2 blocks by the real assemblies (W24 beam, reducer housing of a 228-class unit, cast crank arms with in-phase counterweights, 30 kW TEFC motor of frame 324T across the unit). Applied within the factor 1.5 of C16, from the 1:50 model:
+
+| region | old | new | measured 1:50 / 1:100 | hand calculation |
+|---|---|---|---|---|
+| gearbox | 10.28 | 13.2 (applied, factor 1.28) | 13.19 / 13.19 | housing sides 2 x 2.05 m2 = 4.1, perimeter 5.6 m x 0.84 m = 4.7, base flange and sub-base 2.6, bearing and input caps 0.9, input shaft 0.2, less the sub-base underside on the deck |
+| crank | 9.7 | 6.65 (applied, factor 1/1.46) | 6.63 / 6.63 | two arms 2 x (2 x 0.36 + 3.0 m x 0.16) = 2.4, two counterweight sectors 2 x (2 x 0.66 + 2.6 m x 0.16) = 3.5, hubs and wrist pins 0.7, less faces in contact |
+| motor | 7.0 | 4.7 (applied at the limit of the factor 1.5) | 4.44 / 3.44 | 36-fin frame 0.54 m long: core 0.76 + fins 36 x 2 x 0.045 x 0.54 = 1.75 + tips 0.2; end shield 0.25, fan cowl 0.45, slide base and feet 0.9, terminal box 0.2; the honest value is about 4.5 m2, 4.7 is within 6 % of it |
+
+## 2026-11-20 r3 objects/shopping-trolley (round 3 author)
+
+The trolley was rebuilt as the real Wanzl EL/ELX 101 class construction (o25 chassis tubes bent into the push frame, front cross tube and o20 struts, crate tray, four complete swivel castors o125 x 32 with steel plate, head, crown and pressed fork, o4.5 welded basket mesh, o4 gate grid; see `r3-objects-shopping-trolley.md`). The old values were set from the old model (o14 chassis tubes, no castor housings, small wheels).
+
+| region | declared | applied | measured 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|---|
+| basket-wire | 0.57 | 0.78 (factor 1.37) | 0.782 / 0.789 | 28 pickets x 2 sides, 13 front pickets, 4 hoops, 13 + 5 floor wires (o4.5, about 41 m = 0.58 m2), rim o8 2.8 m (0.07), floor frame and corner wires o6 (0.05), crate tray frame, lips and 13 wires (0.09) = 0.79 | 0.78 (applied) |
+| handle-grip | 0.067 | 0.078 (factor 1.16) | 0.078 / 0.078 | grip o35 x 0.48 (0.053), two caps o37 (0.008), coin lock 0.10 x 0.06 x 0.05 (0.03, less the face on the grip) = 0.08 | 0.078 (applied) |
+| frame-tube | 0.23 | 0.345 (the most C16 allows) | 0.479 / 0.474 | rails, bends and uprights 2 x 1.42 m + front cross 0.39 m + arms and exposed cross tube 0.3 m of o25 (0.27), struts 2 x 0.38 m o20 (0.05), brackets (0.01), four castor housings (plate 0.012, head 0.006, crown 0.007, two fork legs 0.018, axle 0.002: 0.045 each, 0.18) = 0.51 | 0.48 |
+| wheels | 0.063 | 0.0945 (the most C16 allows) | 0.139 / 0.131 | four wheels o125 x 32: 2 x 0.01227 faces + 0.0126 tread = 0.037 each, 0.148, less the hub bosses inside the fork = 0.14 | 0.14 |
+
+`volumes-thermal-coverage` fails at 1:50 and 1:100 on frame-tube and wheels only, until the two values are re-decided; 1:200 and 1:500 totals pass (15 % and 3 %).
+
+### objects/waste-bin (round 3, 2026-11-20, nothing applied)
+
+The round-3 1:50 model (single 3 mm tub wall, inverted rim of bead and seat, notched lid on a pin hinge, 30 micrometre bag collar over seat and bead) measures bin-hdpe 3.82 (declared 3.8), lid-hdpe 0.425 (0.445), liner-film 0.206 (0.19), bin-ribs 0.279 (0.28), all within 15 %. The values rest on the reviewers' convention for this asset: the inner faces of the tub count (the bag covers them) while the dish underside of the lid is marked `sectionFaces`. Under C31 as written (flood from outside, the closed lid seals the tub) the tub's inner faces would not be outer and bin-hdpe would fall to about 2.0 m2, beyond the factor 1.5; the convention and C31 should be reconciled by the reviewers once the flood is live in the validator.
+
+### vegetation/japanese-maple (round 3, 2026-11-20, applied up to the C16 factor)
+
+The round-3 1:50 model replaces the pancake tiers by the real woody framework the rig describes: three stems of the rig sections (d 0.17 / 0.15 / 0.14 m tapering to 0.06 to 0.09 m over 2.4 to 2.7 m), the leader (d 0.09 to 0.02 m, 1.2 m), a flared collar with four surface roots, six main tier limbs (d 0.06 m to 0.02 m, 1.2 to 1.85 m) and twelve secondary limbs (d 0.028 m to 0.012 m, about 2.1 m each) that carry the sprays in every quarter. The previous values were hand estimates for "three stems d 0.12 to 0.07 over 2.3 m" and "six limbs of 1.2 m" (area-decisions.md, rows of 2026-11-15).
+
+| region | old | applied (C16 cap) | model 1:50 outer area | hand calculation of the modelled tree | proposal |
+|---|---|---|---|---|---|
+| stem-bark | 2.3 | 3.45 (x 1.5) | 3.94 | stems pi x d_mean x L: 1.12 + 0.84 + 0.80, leader 0.21, collar 0.45, roots 0.25, less the stem bases buried in the collar = 3.6 to 3.9 | 3.9 |
+| limb-bark | 1.55 | 2.32 (x 1.497) | 2.63 | main limbs pi x 0.04 x 9.1 m = 1.14, secondary limbs 12 x pi x 0.019 x 2.1 m = 1.50 = 2.64 | 2.6 |
+
+Both lie inside the 15 % of the check at 1:50 with the capped values (14.1 % and 13.2 %), so nothing fails; the reviewers may set the proposals, which would make the deviation about 1 %. Twigs under the sprays (1.5 cm) are counted with the leaf exchange area and have no bark solid.
+
+## components/tilt-window (round 3, 2026-11-20)
+
+The round-3 model is a real lining-frame window: 50 mm sill, jamb and head boards 300 mm deep around a 776 x 1200 x 90 mm sash with 12 mm rebate clearance, glass let into rebates behind beads. Two corrections were applied inside the factor 1.5 (EN ISO 10077-1 areas of the real profiles: visible glass 636 x 1050 mm, 65 mm edge band):
+
+| region | old | applied | model 1:50 outer area | hand calculation |
+|---|---|---|---|---|
+| pane-glass | 0.6 | 0.47 | 0.466 | centre (0.636 - 0.13) x (1.05 - 0.13) = 0.466 (the old 0.6 took the 0.9 m frame width as glass) |
+| pane-edge | 0.24 | 0.2 | 0.202 | visible glass 0.668 less the centre 0.466 = 0.202 |
+
+Open question for the reviewers (not applied, beyond the factor 1.5): `frame-sill` 0.62 was decided under R-C as the closed board less its room-side end face. The board rests on the masonry parapet, so its underside is a mounting face in the sense of C25 b (as the jamb backs and the head top are, which the model marks and which keeps `frame-timber` at 2.35 against 2.25). With the underside excluded the honest outer area is 0.31 (top with weathering 0.24, exterior end 0.032, ends against the jambs 0.03, drip groove). The model keeps the underside counted (0.55 against 0.62) until the reviewers rule.
+
+### appliances/gas-hob (round 3, 2026-11-20, flame not applied)
+
+The round-3 1:50 model has a real rapid burner (cap 96 mm, crown with 36 ports on a ring of 0.09 m) with its flame as the ring of inner cones at the ports and 26 lofted tongues of 7.5 mm leaning out and up to 22 mm (24 on the flame body, the front and back ones on the stretching flame tip). Applied at the root inside the factor 1.5 (C16), each the 1:50 outer area: `plate` 0.14 -> 0.175, `knob` 0.0025 -> 0.002 (one burner, one knob: the "two knobs" of the earlier ACCEPT do not exist), `burner` 0.012 -> 0.0137 (cup, crown and cap; the reviewers' hand value was 0.0145), `trivet` 0.043 -> 0.047.
+
+| region | declared | model 1:50 / 1:100 outer area | hand calculation | proposal |
+|---|---|---|---|---|
+| flame | 0.008 | 0.0185 / 0.0132 | 26 tongues of mean section 9 by 6 mm (perimeter about 25 mm) and 21 mm length: 26 x 0.025 x 0.021 = 0.0137, plus the inner-cone ring at the ports (outer band 2 pi x 0.0505 x 0.0075 = 0.0024, top and bottom annuli outside the crown 0.0022) = 0.018. The 0.008 is the one-sided band pi x 0.1 x 0.025 of a cylindrical crown. | 0.0185 |
+
+`volumes-thermal-coverage` fails at 1:50 (+132 %) and 1:100 (+65 %) on `flame` only until the value is re-decided; 1:200 passes (total).
+
+## 2026-11-20 r3 components/panel-radiator — water panel areas (not applied, ratio above 1.5)
+
+Round-3 model (two pressed panels of 2 x 1.25 mm sheet, 22 mm, 30 vertical channels with 4 mm seam grooves on both faces, 40 mm headers; front panel in its three flow bands), measured with `volumes-check.ts components/panel-radiator --product`:
+
+| region | declared | model 1:50 / 1:100 outer area | hand calculation | proposal |
+|---|---|---|---|---|
+| panel-rear | 0.6 | 1.451 / 1.343 | both faces 2 x 0.585 x 1.0 = 1.17, channel profile +6 %, edges 0.07, plus the two side covers 0.13 bound to this region by the 2D = 1.45 | 1.3 to 1.45 (both faces count, C29: the wall face and the face covered by the fins are outer) |
+| panel-front-upper / -mid / -lower | 0.2 each | 0.458 / 0.424 (upper, lower), 0.454 / 0.432 (mid) | per band both faces 2 x 0.195 x 1.0 = 0.39, profile +6 %, edges 0.02 = 0.43 | 0.43 each |
+
+Ratio 2.1 to 2.4, so not applied by the author (C16). The thermal calibration (fin and contact resistance 0.05 m2K/W tuned to 1.2 kW) was made with the one-face areas; a re-decision has to re-check the solved output. The rated output itself is low: catalogue value for a 600 x 1000 type 22 is about 1.7 kW at 75/65/20 (Purmo C22 1709 W, `purmo-c22-600-1000`), see `author-requests.md`. `volumes-thermal-coverage` fails at 1:50, 1:100 and (total) 1:200 on these four regions only. Applied within factor 1.5: valve 0.078 -> 0.052 (head, H-block, unions, caps, two pipes: measured 0.046 / 0.046 / 0.053), bracket 0.018 -> 0.024 (four folded L brackets, wall face marked: 0.0246 / 0.0178 / 0.0244), top-grille 0.22 -> 0.27 (slotted grille with rim and lips: 0.302 / 0.258 / 0.142).
+
+### appliances/pendant-lamp (round 3, 2026-11-20, cord applied, three regions listed unapplied)
+
+The round-3 model builds the lamp as such lamps are built (`r3-appliances-pendant-lamp.md`): the bulb hangs from a brass E27 lampholder (40 x 65 mm, IEC 60238) clamped under the dome apex by an M10 nipple and the cord-grip collar; the cord is 0.6 m (was 0.521 m, the bulb hung 0.12 m below the collar with nothing holding it). Measured outer areas of the 1:50 model (C29, C31: the open dome lets the air in, so its inner face counts):
+
+| region | declared | applied | measured 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|---|
+| cord | 0.0108 | 0.0124 (x 1.15) | 0.0123 / 0.0123 | pi x 0.0066 x 0.6 = 0.0124 | 0.0124 (applied) |
+| shade | 0.11 | not applied (x 2.03) | 0.223 / 0.221 | dome outer face 2 pi r h for r 0.133, h 0.133 about 0.105, inner face 0.104, rolled bead 0.006, apex landing 0.002 = 0.217; the 2026-11-15 ACCEPT of 0.11 counted the outer face only | 0.22 |
+| rose | 0.012 | not applied (x 1.84) | 0.0221 / 0.0214 | ceiling face pi x 0.05^2 = 0.0079 (counts per C29, the pose's contact fraction 0.4 covers it), side and rounded edge 0.0067, bottom face 0.0055, cord grip 0.0007 = 0.021 to 0.022 | 0.022 |
+| lampholder | 0.0042 | not applied (x 2.93) | 0.0123 / 0.0144 | collar side and top 0.0036, lampholder side pi x 0.04 x 0.065 = 0.0082, its top under the dome 0.0013 and mouth 0.0007, visible cap 0.0002, less the faces of collar and lampholder pressed on the dome = 0.012 to 0.014 | 0.013 |
+
+`volumes-thermal-coverage` fails at 1:50 and 1:100 on shade, rose and lampholder and at 1:200 on the total (85 %) until these are re-decided; every other rule passes. heatW (shade 20.5 W, lampholder 2.5 W) is the physical datum and stays: with the honest areas the shade and lampholder fluxes fall by about half.
+
+## 2026-11-20 r3 objects/playground-swing (round 3 author)
+
+Rebuilt as the real single-bay A-frame swing (o60.3 legs on base plates with gussets, o42.4 ties in tee clamps, welded apex brackets on a 1.9 m o101.6 beam, two swing hangers, 2 x 76 DIN 766 8 x 24 links, eye bolts with acorn nuts, 430 x 175 x 35 mm rubber seat; the old seat was a 420 x 520 x 58 mm slab and the beam 1.2 m). Applied at the root within factor 1.5: `frame-galv` 2.966 -> 3.23 (measured 3.231 at 1:50: four legs 1.93, ties 0.39, beam 0.6, brackets, plates, gussets, nuts, clamps, hangers). Applied at the limit, honest value not applicable (beyond 1.5): `chain-steel` 0.13 -> 0.195, the 1:50 model measures 0.339 (152 round-wire links, 2.0 cm2 each, top eyes and seat eye bolts; 1:100 chain rods 0.212); proposal 0.34. `seat-rubber` 0.489 -> 0.326, the real seat measures 0.173 (top and underside 0.075 each, edges 0.042, rounded ends); proposal 0.173 (the committed value before round 1 was 0.12, the 0.489 came from the oversized slab). Both fail `volumes-thermal-coverage` at 1:50 (and seat-rubber at 1:100) until decided.
+
+## 2026-11-20 r3 vehicles/cargo-bike (round 3 author)
+Rebuilt as a two-wheeled long-john of the Bakfiets.nl Cargobike Long class (2.00 m wheelbase, 2.60 x 0.64 m). Outer areas of the honest 1:50 model (`volumes-check.ts --product`) and root corrections within a factor 1.5 (C16):
+
+| region | old | measured 1:50 | new | note |
+|---|---|---|---|---|
+| frame | 1.6 | 1.348 | 1.35 | aluminium tubes, gooseneck beam 50 x 70, column, fork, carrier, stand, rails |
+| box-wood | 5.4 | 3.52 | 3.61 | plywood box 0.76-0.84 x 0.64 x 0.35 m (148 l) with child bench, both faces (open box). The honest value 3.52 is a factor 1.53 below 5.4; 3.61 is the lowest value C16 lets the author set. Please confirm 3.5 m2 (the old 5.4 was the surface of a 1.0 x 0.65 x 0.65 m box). |
+| battery-pack | 0.15 | 0.123 | 0.125 | down-tube battery 0.34 x 0.085 x 0.092 m |
+| tyres | 0.635 | 0.509 | 0.51 | 50-559 and 50-406 tyres, torus sections |
+
+Unchanged and within 15 %: cargo 1.61 (1.80, two lidded Euro containers 600 x 400 x 270), fenders 0.27, touch-parts 0.14, drive-motor 0.095, brakes 0.09.
+
+## 2026-11-20 r3 appliances/ceiling-diffuser (round 3 author, nothing applied, ratio above 1.5)
+
+Round-3 model (`r3-appliances-ceiling-diffuser.md`): a real surface-mounted multi-cone diffuser of 0.8 mm sheet, border frame, back plate and three nested cones with open slots, so the plenum is reachable from the room and both faces of every sheet are outer area (C29, C31); the frame top against the ceiling is marked (C25 b). Measured with `volumes-check.ts appliances/ceiling-diffuser --product`:
+
+| region | declared | model 1:50 / 1:100 / 1:200 | hand calculation | proposal |
+|---|---|---|---|---|
+| plate | 0.45 | 1.697 / 1.114 / 0.816 | back plate both faces 0.454 + edges 0.016; frame bottom 0.080, outer and inner edges 0.054; cone 1 rim 0.063 and cone 0.482, cone 2 rim 0.047 and cone 0.266 (both faces); centre dish 0.149; spacers and screws 0.009 = 1.62, plus sheet edges = 1.70 | 1.7 (the 0.45 counts only the room-facing face; the plenum-facing faces are washed by the 18 degC supply air, which the reviewers may prefer to keep out by a ruling) |
+| collar | 0.04 | 0.090 / 0.082 / 0.137 (1:200 is the drawn solid cylinder with its end discs) | spigot o 249 x 50 mm, both faces 2 x 0.039 = 0.078, bead and rim 0.01 = 0.09 | 0.09 (inner face in the supply air, outer face under the flexible duct for half its height) |
+
+`volumes-thermal-coverage` fails at 1:50, 1:100 (per region) and 1:200 (total) on these two regions only.
+
+## 2026-11-20 r3 objects/storage-crate-stack (round 3 author, nothing applied, ratio above 1.5)
+
+Round-3 model (`r3-objects-storage-crate-stack.md`): five open rotating stack-nest crates 600 x 400 x 300 mm, 3 mm HDPE walls, U-rim, foot ring, hand holes. The thermal list keeps the reviewer's ruling of this asset (area-decisions.md, `sectionFaces` table: envelope solids with the horizontal faces as section faces, 0.6 m2 = 2 x (0.6 + 0.4) x 0.3 m, the outer wall face only); measured with `volumes-check.ts objects/storage-crate-stack --product`: 0.588 / 0.582 / 0.589 / 0.606 m2 per crate at 1:50 / 1:100 / 1:200 / 1:500.
+
+| region | declared | honest outer area of the open moulding (C29, C31: both faces of an open crate are reachable by the room air) | hand calculation | proposal |
+|---|---|---|---|---|
+| crate-1 ... crate-5 (each) | 0.6 | about 1.6 (not modelled as such, see ruling) | wall outside 0.49 and inside 0.48; floor top 0.17 and underside inside the foot ring 0.16; foot ring 0.03; rim skirt both faces, flange top and underside 0.19; channel and ledge faces 0.05 = 1.57 | 1.6 if the reviewers want C29/C31 applied to this asset (then the thermal list becomes the body shells by `{ of }` and the ruling row is withdrawn); else keep 0.6 under the existing ruling. |
+
+## 2026-11-20 round 3: appliances/gas-boiler casing (C16 factor beyond 1.5, partly applied)
+
+Round-3 model (`r3-appliances-gas-boiler.md`): the casing was corrected to the 20 kW class height (0.72 m, Vaillant ecoTEC plus 720 x 440 x 335 mm; before 0.62 m). The region `casing` (hood with chassis, fascia frame and bezel) has a total outer area (C29, back against the wall included) of 1.40 m2.
+
+| region | committed | value set | honest outer area | hand calculation | proposal |
+|---|---|---|---|---|---|
+| casing | 0.9 | 1.35 (the C16 limit, factor 1.5) | 1.40 (measured 1.404 at 1:50) | box 0.44 x 0.72 x 0.33 m: 2 x (0.317 + 0.145 + 0.238) = 1.399, less the four 14 mm rounded edges 0.008, plus fascia edges 0.011 and bezel ring 0.009 = 1.41 | 1.40; the pose contact fraction of the wall (0.15) would follow as 0.317 / 1.40 = 0.23 (pose fractions are the reviewers'). |
+
+## 2026-11-20 r3 objects/street-lamp (round 3 author, lamp-housing not applied, ratio above 1.5)
+
+Round-3 model (`r3-objects-street-lamp.md`): the luminaire is now a real compact side-entry LED street luminaire 0.505 x 0.274 x 0.10 m, 4.5 kg (Philips 910925864077: 505 x 270 mm, 4.5 kg; Thorn Isaro small 550 x 238 x 157 mm; the old head was 0.33 m long), domed die-cast cover over a flat tray, spigot collar, six transverse fins. Measured with `volumes-check.ts objects/street-lamp --product` (C29, C31):
+
+| region | declared | model 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|
+| lamp-housing | 0.23 | 0.372 / 0.324 (1:100 has no fins) | top and bottom of the body 2 x 0.505 x 0.27 x 0.85 = 0.232, flanks about 1.25 m perimeter x 0.08 m = 0.10, six fins both faces 6 x 2 x 0.19 x 0.015 = 0.034, spigot collar 0.01 = 0.38 (minus the 0.049 lens opening, which is lamp-lens) = 0.33-0.37 | 0.37 (ratio 1.62); `heatW` 40 stays, so the flux density falls to 108 W/m2; the layer `heatCapacityJM2K` 8800 would follow as 4.5 kg x 880 J/kgK / 0.37 m2 = 10700 |
+| arm-alu (applied) | 0.22 -> 0.27 | 0.271 / 0.251 | 60 mm tube 0.735 m visible 0.139 plus its length inside the luminaire 0.019, strut 27 mm x 0.70 m 0.059, clamp sleeve outer, inner face on the column and rims 0.062, socket 0.011, ear and lug 0.006 = 0.296 | applied 0.27 (ratio 1.23, within C16) |
+
+`volumes-thermal-coverage` fails at 1:50 and 1:100 on lamp-housing only.
+
+## 2026-11-20 r3 machinery/finned-heat-exchanger (author, applied, for review)
+
+The asset was rebuilt at the root as a real two-row P40 coil (see `r3-machinery-finned-heat-exchanger.md`); the flat copper "header" boxes whose surface the earlier decisions measured no longer exist. Values now in the catalog, hand calculation against `volumes-check.ts --product` at 1:50:
+
+| region | old areaM2 | new areaM2 | measured | hand calculation | old heatW | new heatW |
+|---|---|---|---|---|---|---|
+| fins (exchange) | 2 | 2 (unchanged) | not compared | real fin surface 134 x 2 x 0.0284 = 7.6 m2; the committed 2 m2 with its tuned 340 W was kept (C19) | 340 | 340 |
+| tubes | 0.67 | 0.56 (factor 1.2) | 0.566 | 24 x pi x 0.01588 x 0.443 = 0.530 + 12 hairpins x pi x 0.01588 x 0.0628 = 0.038 | 24 | 168 |
+| headers | 0.36 | 0.1 (factor 3.6, beyond C16) | 0.100 | 2 x pi x 0.028 x 0.476 = 0.084 + caps 0.002 + 2 stubs with sleeve and bore 0.014 | 2 | 17 |
+| casing (new, passive) | - | 0.54 | 0.537 | 2 tube sheets x 2 faces x 0.15 x 0.52 = 0.312 + 2 channels x 2 faces x 0.14 x 0.4 = 0.224 | - | - |
+
+heatW of tubes and headers: with 24 W on 0.56 m2 the solver gave tubes at 25.6 degC beside fins at 44.4 degC in the hot pose (and 25.1 degC with the previous 0.67 m2), which contradicts the pose text (tubes about 52 degC) and the physics (the tubes feed the fins). The flux densities first authored (24 W / 0.08 m2 = 300 W/m2, 2 W / 0.012 m2 = 167 W/m2, the follow-up proposed in `area-decisions.md` lines 95 to 96) were restored on the honest areas: 168 W and 17 W. Solved now: hot tubes 49.9, fins 44.4, headers 42.1 degC; cold tubes 0.2, fins 3.8, headers 5.7 degC. To review: the header area beyond factor 1.5 and the two heatW values.
+
+## 2026-11-20 r3 machinery/wheel-loader (round 3 author; three values applied beyond the factor 1.5, for the reviewers)
+
+Round-3 model (`r3-machinery-wheel-loader.md`): the loader was rebuilt on the Cat 962M data (wheelbase 3.35 m, tread 2.14 m, 23.5R25 tyres, hood 1.44 m wide instead of 2.0 m, a real Z-bar linkage). The committed areas were hand values of the former drawing (counterweight as the whole rear end, front frame as one box beam 3.25 x 0.58 x 1.8 m). Measured with `volumes-check.ts machinery/wheel-loader --product` (C29). The values were written to the asset so that the corrected object and its areas agree; revert any of them if you decide otherwise (`r3-wheel-loader-areas.json`, then `./r3-wheel-loader-run.sh`).
+
+| region | committed | applied | model 1:50 / 1:100 | hand calculation of the real part | ratio |
+|---|---|---|---|---|---|
+| counterweight | 14.8 | 5.3 | 5.31 / 5.31 | cast block 2.44 x 0.52 m in plan with chamfered corners, 0.38 m high: top and bottom 2 x 1.23 = 2.46, girth 5.69 x 0.38 = 2.16; skirt 2.04 m wide below it 0.19 m high: 0.7; = 5.3 | 2.79 |
+| front-frame (retitled chassis: both frames, axles, rims, fenders, decks, ladders) | 25.8 | 65.0 | 64.98 / 62.72 | both faces of open plate work: rear rails 2 x 2 x 1.15 = 4.6, cross-members, bulkheads and hitch plates 4.5, cab riser 4.6, rear deck and fender plates 2 x 2 x 1.85 = 7.4 and inner decks 1.3, fuel tank 2.4, ladders, steps and rails 3.9, tower plates 2 x 2 x 2.55 = 10.2, belly, nose and bulkhead 4.6, pin tubes 1.6, front fenders 2 x 2 x 0.98 = 3.9, two axle housings 3.4, four rims (barrel both faces, disc, flanges) 4 x 2.6 = 10.4, hubs and nuts 1.9, lamps 0.6 = 65 | 2.52 |
+| hydraulics | 2.79 | 4.3 | 4.32 / 4.32 | two lift barrels o190 x 1.30 = 1.55 plus ends 0.11, lift rods o90 exposed 0.13, tilt barrel o220 x 1.62 = 1.12 plus ends 0.08, tilt rod o100 x 1.02 = 0.32, eyes 0.25, two steering cylinders o110 x 0.72 with rods o60 x 0.56 = 0.71 (the steering cylinders were not in the committed value) = 4.3 | 1.54 |
+
+Within the factor 1.5 (applied): engine-bay 21.0 -> 14.1 (hood 1.44 m wide, 2.3 m long, 0.94 to 1.18 m high, closed loft with rounded edges 13.4, grille, louvres and air cleaner 0.7; `heatW` 3000 stays, 213 W/m2), exhaust-stack 0.524 -> 0.61 (o130 x 0.8 m pipe, outer 0.327 and bore 0.279, rim), lift-arm 12.51 -> 8.4 (two 60 mm arm plates of 0.93 m2 profile both faces 3.7, edges 0.9, torque tube 0.8, bosses and lugs 0.5, lever 1.4, link 0.6, brackets 0.5), bucket 33 -> 22.1 (rolled shell 3.1 m developed x 2.91 m both faces 18.0, two side plates both faces 2.9, edge, hinge plates, lug, beam and ribs 1.2). Unchanged: cab 18.98 (model 17.0), cab-glazing 6.0 (model 6.56, outward faces; the inner pane faces of the closed cab are `sectionFaces` on the thermal references because the product `outerArea` has no C31 flood), tyres 35.0 (model 39.5 at 1:50 with lugs, 26.3 without).
+
+### vehicles/electric-kick-scooter (round 3, 2026-11-20)
+
+All within the factor 1.5 and applied from the honest 1:50 model (old -> new): deck-battery 0.41 -> 0.34 (extrusion 0.53 m x 0.39 m perimeter 0.207, nose and tail castings 0.03, two stays 0.035, gooseneck 0.045, head tube and cups 0.016, stand and caliper 0.01; the old value belonged to a 0.79 m deck that ran through both wheels; `heatW` 12 stays), deck-grip 0.195 -> 0.137 (mat 0.484 x 0.132 m, both faces and edge as before; the glued under-face is counted, one face would be 0.073 and is beyond the factor: for the reviewer), hub-motor 0.059 -> 0.067, stem-bars 0.29 -> 0.208 (outer surfaces only: the old value counted the bores of the hollow stem), fenders 0.05 -> 0.073 (the old value had no front mudguard although the region names it), tyres 0.15 -> 0.167, brake-disc 0.009 -> 0.0126 (ring o110/o70 x 3 mm, both faces; the committed value before round 1 was 0.012; `heatW` 890 stays), bms-controller 0.024 unchanged. New passive region `rear-rim` 0.08 (cast rear wheel: rim, spoke web, hub, axle), which no region covered. Exposure information of the check for the pose owners: hub-motor measured 0.57 against 0.5, tyres 0.74 against 0.997 (the motor shell and rim sit in the tyre beads), rear-rim 0.65 against 1, deck-grip 0.53 against 1 (glued face).
+
+## 2026-11-20 r3 machinery/expansion-valve (round 3 author, nothing applied, ratios above 1.5)
+
+Round-3 model (`r3-machinery-expansion-valve.md`): the valve is now the real Danfoss T 2 size (data sheet AI241486443133en-001401: 65 mm from inlet to element top, 89 mm across, element 42 mm, capillary 1.5 m, bulb 14.5 x 50 mm, 0.3 kg); before it was a 64 x 50 x 60 mm block with a 50 mm dome and a 0.15 m capillary. Measured with `volumes-check.ts machinery/expansion-valve --product` (C29, C31):
+
+| region | declared | model 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|
+| body | 0.02 | 0.0055 / 0.0049 | forging 23 x 23 x 38 mm rounded 0.0030, inlet thread 0.0003, outlet boss 0.0005, spindle boss with 17 mm hexagon cap 0.0015 = 0.0053 | 0.0055; `heatW` -2.4 W was sized for 0.02 m2 (120 W/m2): at the same flux density -0.66 W, else the solver cools the body far below the -5 degC the notes state |
+| head | 0.007 | 0.0034 / 0.0036 | element 42 mm: two faces 2 x 0.00139, rim 0.0004, seat and nipple 0.0003 = 0.0035 | 0.0034; `heatW` -0.8 W at the same flux density (114 W/m2) -0.39 W |
+| capillary | 0.0006 | 0.0074 / (C21, not compared) | 1.6 mm x 1.47 m = 0.0074 (seven 58 mm turns 1.28 m, spiral and riser 0.11 m, lead 0.08 m) | 0.0074 (passive, no heat) |
+| suction-line (new region, set by the author) | - | 0.0045 / 0.0032 | 16 mm x 64 mm tube 0.0032, 10 mm band with lock 0.0010, two 3 mm bore marks 0.0003 = 0.0045 | 0.0045 with `heatW` -0.8 W (178 W/m2: about 0 degC suction gas in a 21 degC room at 8.5 W/m2K), to be confirmed |
+
+`inlet` (0.0032 declared, 0.0031 measured), `outlet` (0.0032, 0.0030) and `bulb` (0.0026, 0.0024) agree and are unchanged. Materials of `head`, `bulb` and `capillary` were changed from brass/copper to a new `stainless-steel` (emissivity 0.22; the data sheet names a stainless steel bulb, element and capillary by product knowledge). `volumes-thermal-coverage` fails at 1:50 on body, head and capillary and at 1:100 on body and head only.
+
+## 2026-11-20 r3 humans/seated-reader — `bench` (the object changed at the root; not applied, C16)
+
+Round 3 replaced the 0.5 m bench sample (seat plank, back plank, four legs; `areaM2` 1.108 accepted as "seat + back + 2 legs 1.1 m2") by a real 1.20 m timber park bench (`r3-humans-seated-reader.md`). The declared value still describes the old sample.
+
+| region | declared | model 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|
+| bench | 1.108 | 3.010 / 2.838 | four seat slats 100 x 40 x 1200: 4 x (2 x (0.10 + 0.04) x 1.2 + 2 x 0.004) = 1.376; three back slats 80 x 30 x 1200: 3 x (2 x (0.08 + 0.03) x 1.2 + 2 x 0.0024) = 0.806; two end frames (post 60 x 45 x 0.87, leg 70 x 45 x 0.39, rail 80 x 40 x 0.45, stretcher 60 x 35 x 0.41, less the housed joints and the faces under the slats): 2 x 0.33 = 0.66; long stretcher 60 x 35 x 0.9: 0.17; sum 3.01 | 3.01 (passive, no heat; factor 2.7, beyond 1.5, so not applied by the author) |
+
+Until it is applied `volumes-thermal-coverage` fails on `bench` at 1:50 and 1:100 and on the totals at 1:200 (4.73 against 3.04) and 1:500 (5.18 against 3.04); with 3.01 the totals read 4.73 and 5.18 against 4.94.
+
+## 2026-11-20 r3 humans/person-cooking — spoon
+
+The old chunky spoon (20 mm rod, ellipsoid bowl) was replaced at the root by a real beech cooking spoon (`r3-humans-person-cooking.md`). The declared value still describes the old one.
+
+| region | declared | model 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|
+| spoon | 0.026 | 0.0131 / 0.0134 | handle 0.245 m of 11.5 mm mean diameter: pi x 0.0115 x 0.245 = 0.0089; bowl oval 60 x 43 mm, both faces 2 x (pi / 4 x 0.060 x 0.043) = 0.0041 and its 10 mm edge 0.0016, less the joint 0.0002; sum 0.0134 | 0.013 (passive, no heat; factor 2.0, beyond 1.5, so not applied by the author) |
+
+Until it is applied `volumes-thermal-coverage` fails on `spoon` at 1:50 and 1:100.
+
+## 2026-11-20 r3 humans/skateboarder — face, trousers, shoes, trucks (not applied, C16 / C18 / C27)
+
+Round 3 model (`r3-humans-skateboarder.md`): 1.78 m rider in beanie, hoodie, loose twill trousers and skate shoes on an 8.0 in street board. `volumes-thermal-coverage` at 1:50 / 1:100:
+
+| region | declared | model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| face | 0.0739 | 0.143 / 0.136 | skin from the hoodie collar to the beanie rim: neck 95 mm high (about 0.035), head band chin to rim (about 0.08), ears, nose, lips, the cap in the collar 0.011; the rim face is a section cut | C27: share of head skin outside the beanie nearer 0.13 (beanie 0.0813 is the scalp) |
+| trousers | 0.6589 | 0.943 / 0.941 | loose trousers: thigh girth 0.59, knee 0.41, hem 0.40 m, seat; larger than the leg skin they cover | clothing drape beyond 30 %; C27 or accept |
+| shoes | 0.1294 | 0.213 / 0.156 | pair of low skate shoes, 108 mm wide, with soles; the declared value is the foot skin | as walking-commuter (`areaDeviation:shoes` 0.64) |
+| trucks | 0.105 | 0.0485 / 0.0526 | two real trucks: hanger 0.203 m, baseplate 68 x 56 mm, bushings, kingpin, pivot; the decided value was two boxes 75 x 50 x 180 mm (area-decisions row 172) | 0.049 (factor 2.2, beyond 1.5, not applied) |
+
+## 2026-11-20 r3 appliances/gas-meter: housing area after the dimension root fix (beyond factor 1.5, not applied in full)
+
+The asset was corrected from a 0.24 x 0.27 x 0.17 m box to the compact G4 meter of the Elster BK-G4 data sheet (193 x 221 x 157 mm over the bare stubs; report `r3-appliances-gas-meter.md`). The old `areaM2` values described the oversized box (reviewer row: "box 0.24 x 0.27 x 0.17 all faces = 0.30").
+
+| region | declared before | applied | model 1:50 / 1:100 | hand calculation | proposal |
+|---|---|---|---|---|---|
+| shell | 0.30 | 0.20 (C16 limit) | 0.141 / 0.155 | two pressed shells 183 x 124 mm at the seam, plan perimeter 0.574 m: walls 0.159 m high 0.091; two 18 mm shoulders 0.029; two crowns 142 x 83 mm 0.0225; seam band 9 mm high and 5 mm proud, both faces, less the wall strip it covers 0.006; data plate edges 0.001; less the rounding of the superelliptic plan 0.009; sum 0.141 | 0.14 (passive; factor 2.1 from 0.30, so not applied by the author) |
+| index | 0.05 | 0.034 | 0.032 / 0.027 | head 130 x 66 x 32.5 mm closed: 2 x 0.0084 + perimeter 0.382 x 0.0325 = 0.0292; window recess walls 0.344 x 0.0075 = 0.0026; pointer 0.0003; sum 0.032 | 0.032 (factor 1.56 from 0.05; 0.034 applied) |
+| pipes | 0.02 | 0.014 | 0.014 / 0.0147 | per connection, closed, cut end not counted: boss 0.0010, bare stub 0.0007, hexagon nut sides 0.0021 and faces 0.0010, tailpiece 0.0016, collar ring 0.0002 = 0.0070; two 0.014 | applied (factor 1.43) |
+| measuring-unit (new, hidden) | - | 0.147 | 0.147 / 0.142 | full surface of the modelled parts (C29 c): frame 0.041, two pans 0.049, valve deck 0.031, two covers 0.010, gear and crank 0.006, shaft 0.002, outlet duct 0.008 | applied |
+
+Until the housing value is applied `volumes-thermal-coverage` fails on `shell` at 1:50 (0.141 against 0.20, 30 %; limit 15 %); 1:100 and 1:200 pass. The poses no longer declare a wall contact for the housing (the meter hangs on its unions in front of the wall): `exposedFraction` 1, no `contact`.
+
+## 2026-11-20 r3 appliances/electric-fan-heater (author of round 3)
+
+| region | declared before | applied | measured 1:50 outer | hand calculation | request |
+|---|---|---|---|---|---|
+| casing | 0.33 | 0.22 (the C16 bound, factor 1.5) | 0.197 | U-shell 0.649 girth x 0.166 = 0.108; front frame 0.026; rear frame 0.031; handle 0.022; four bosses 0.004; frame reveals 0.006; sum 0.197. The 0.33 of the second review took the closed box at the full 0.31 m height, counted the top (region `top-cover`) and added 0.05 for a strap handle that no longer exists. | set 0.20 (factor 1.65 from 0.33, so not applied by the author); 1:50 passes at 0.22 with 10 % |
+| intake | 0.05 | 0.037 (factor 1.35) | 0.0371 | panel 0.194 x 0.164 less seven slots 0.0195, slot walls 0.0144, rim 0.0043, less the 2.5 % edge taper; the face towards the housing is interior (R-A) | applied |
+| control | 0.0045 | 0.0058 (factor 1.29) | 0.00578 | dial 0.044 x 0.0075 with back 0.0041, grip bar 0.0006, rocker 0.032 x 0.016 x 0.0085 0.0011 | applied |
+
+`top-cover` (0.055, measured 0.049), `grille` (0.05, measured 0.049) and `feet` (0.0085, measured 0.0084) stand. Inward faces carry `sectionFaces` as the stand-in for the missing C31 flood (same as the heat pump, kettle and MVHR entries in `tool-requests.md`).
+
+## 2026-11-20 r3 humans/standing-phone-user — headphones, jeans, sneakers (not applied, C16 / C18 / C27)
+
+| region | declared | outer 1:50 / 1:100 | what the round-3 model shows | proposal |
+|---|---|---|---|---|
+| headphones (passive surface) | 0.0208 | 0.0764 / 0.0734 (3.7x) | over-ear headphones round the neck at real size: two cups 86 mm across and 46 mm deep with cushion (2 x 0.023 = 0.046 by hand: two faces 2 x 0.0054 plus rim 0.26 x 0.046), a band 0.36 m long, 30 x 12 mm (0.36 x 0.084 = 0.030), two yokes; the 0.0208 of the first review took the band as a one-sided strip of 0.4 x 0.02 and the cups at 52 mm | 0.075 (beyond the factor 1.5 of C16, not applied) |
+| jeans (body model) | 0.5452 | 0.784 / 0.790 (+44 %, +45 %) | slim jeans waist to ankle, the same solids as `humans/standing-adult` (0.784 there against 0.6109 after its C27 redistribution) | the standing adult's shares, same person and garments: hoodie 0.8207, jeans 0.6109, sneakers 0.1424 (sum 1.574 unchanged) |
+| sneakers (body model) | 0.1005 | 0.184 / 0.154 (+83 %, +53 %) | a pair of low-top canvas sneakers 0.281 x 0.100 m with sole, the same solids as the standing adult | as above |
+
+The earlier refusal of the C27 rescale for this asset ("a shoe drawn 1.9 to 2.6x") referred to the round-2 shoes (0.200 to 0.210 m2); the round-3 pair measures 0.184 m2. With the standing adult's shares the two body-model regions would deviate by +28 % and +29 % (limit 30 %, C18). `phone` 0.0240 against 0.022 (+9 %), `hoodie` 0.913 against 0.9283, `face-skin` 0.1167 against 0.1173, `hand-skin` 0.0860 against 0.0838 stand.
+
+## 2026-11-20 r3 humans/person-with-rollator (round 3 author, nothing applied beyond the bag; C18 / C27 for the area reviewers)
+
+| region | declared | outer 1:50 / 1:100 | what the round-3 model shows | proposal |
+|---|---|---|---|---|
+| beret (body model) | 0.0326 | 0.0897 / 0.0887 (2.75x) | a soft wool beret 0.27 m across pushed back on the head, one felt skin: crown disc 0.057 m2 plus the underside ring from the headband out to the edge 0.032 m2; the declared value is smaller than the crown disc alone | 0.09, taken from the coat share (sum of the body-model regions unchanged) |
+| shoes (body model) | 0.1141 | 0.178 / 0.133 (+56 %, +16 %) | a pair of laced leather shoes EU 37 (0.245 x 0.09 m) with upper, toe box, heel block, sole and three lace bars, sock above the collar; by hand per shoe: sole underside 0.017, sole and heel edge 0.012, upper 0.55 m girth x 0.07 = 0.039, vamp and collar 0.012, laces 0.003, sock 0.006 = 0.089 | 0.17 |
+| bag (passive) | 0.33 | 0.266 / 0.253 | tote 0.30 x 0.10 x 0.20 m standing in the basket with rounded top and two handles: 2 x 0.06 + 2 x 0.02 + top and bottom 2 x 0.03 + handles 0.01 = 0.23 to 0.27 | 0.27 applied at the root (factor 1.22, C16) |
+
+`face-skin` 0.083, `hands` 0.092, `coat` 1.307, `trousers` 0.292, `frame` 0.689, `seat-basket` 0.941, `grips` 0.031, `tyres` 0.241 are within their limits at 1:50 and 1:100. Until the beret and shoe shares are redistributed `volumes-thermal-coverage` fails on `beret` (1:50, 1:100) and `shoes` (1:50).
+
+## r3 vehicles/motor-scooter (2026-11-20) — areas set from the round-3 1:50 model, for the area reviewers
+
+| asset | region | authored | reviewer value | r3 value | what the 1:50 model shows |
+| --- | --- | --- | --- | --- | --- |
+| vehicles/motor-scooter | engine | 0.35 | 0.255 | 0.46 applied (1.31 of the authored value, 1.80 of the reviewer value) | crankcase with fan cover 0.15, forward cylinder 0.05, belt case 0.5 m long with raised cover 0.19, air box 0.07, right arm 0.03; the 0.255 was measured on the round-2 block without belt case cover, air box and arm |
+| vehicles/motor-scooter | exhaust-system | 0.35 | 0.156 | 0.26 applied (0.74 of the authored value, 1.67 of the reviewer value) | silencer 110 x 380 mm 0.15, header pipe 28 mm x 0.5 m 0.044, tail pipe 0.006, heat shield both faces 0.05 |
+| vehicles/motor-scooter | body-panels | 2.1 | 2.58 | 3.25 applied (1.26 of the reviewer value) | floor, leg shield with nose, wings and glovebox, rear body with two cowls, mudguard both faces, plate holder, stand |
+| vehicles/motor-scooter | steer-assembly 0.6 -> 0.4, tyres 1.01 -> 0.79, brake-disc 0.185 -> 0.129, headlamp 0.06 -> 0.069 | | | applied, within a factor 1.5 | rims, spokes and hubs left `tyres` and `brake-disc` for the new region `rims` (0.62) |
+
+## 2026-11-20 r3 appliances/thermostatic-radiator-valve — head region at the factor 1.5 limit (C16), for the area reviewers
+
+The asset was rebuilt as a real corner angle valve DN 15 with a thermostat head of 53 x 80 mm (before: an invented head of 60 x 71 mm with a 40 mm knob), so the plastic surface is smaller than authored.
+
+| region | authored | outer 1:50 | applied | what the round-3 model shows | proposal |
+|---|---|---|---|---|---|
+| body (operating, brass) | 0.0095 | 0.0138 | 0.0137 (factor 1.44) | pipe 15 x 52 mm 0.0025, compression nut AF 24 0.0016, socket AF 27 and neck 0.0019, chamber with M30 collar 0.0034, boss, union nut AF 30 and tailpiece 0.0044 | stands |
+| head (operating, ABS) | 0.0187 | 0.0117 | 0.0125 (factor 1.5, the limit) | coupling nut 0.0020, base ring 0.0021, scale band 0.0027, fluted grip 53 x 24.5 mm 0.0045, steps 0.0004 | 0.0117 |
+| knob (operating, ABS) | 0.005 | 0.0042 | 0.0042 (factor 1.19) | sensor cap 48 to 29 mm, 21.5 mm long, with two slot rings and the front face | stands |
+
+The plane where grip and sensor cap meet is one handwheel cut into two regions and is marked `sectionFaces` on both sides. `volumes-thermal-coverage` passes with the applied values (head +6.8 %).
+
+## 2026-11-20 r3 appliances/shower-head
+
+Round 3 rebuilt the set on the cited product class (hansgrohe Croma Select S 110 on a Unica rail of 22 mm, Isiflex hose 1.25 m). Four values are capped at the C16 factor 1.5; the honest outer areas of the 1:50 model are smaller.
+
+| region | before | outer 1:50 | applied | what the round-3 model shows | proposal |
+|---|---|---|---|---|---|
+| rail (passive, chrome) | 0.083 | 0.0808 | 0.083 (unchanged) | tube 22 x 670 mm 0.0463, two brackets with rosette, arm and end socket 0.024, holder sleeve, fork, pivot pins, clamp button and socket clip 0.014, less the joints | stands |
+| valve (passive, chrome) | 0.025 | 0.0161 | 0.0167 (factor 1.5, the limit) | escutcheon 60 mm 0.0074, valve body 34 x 53 mm with domed end 0.0055, outlet and conical hose nut 0.0030, lever boss, hub and lever 0.0025, less the joints. The old value was the surface of a 62 x 82 x 62 mm block | 0.0161 |
+| hose (passive, EPDM) | 0.052 | 0.0489 | 0.051 | 13 mm x 1.25 m = 0.0510 (the model's bight is 1.20 m between the nuts) | stands |
+| handle (passive, ABS) | 0.022 | 0.0138 | 0.0147 (factor 1.5, the limit) | handle 25 to 29 mm x 135 mm 0.0112, conical hose nut 0.0022, ends. The old value assumed a 35 mm handle | 0.0138 |
+| head (passive, ABS) | 0.0454 | 0.0251 | 0.0303 (factor 1.5, the limit) | disc of 110 mm: domed back 0.0099, rounded rim 0.0077, face 0.0075, plus the neck tongue on the back 0.003, less the joints. The old value came from a round-1 loft of 137 mm | 0.0251 |
+
+`volumes-thermal-coverage` at 1:50 passes for rail, valve, hose and handle and FAILS for `head` (17 % against 15 %) until 0.0251 is applied; 1:100 to 1:500 pass. The hose nuts count to the handle and the valve (metal on the fitting), the neck to the head (one shell with the back of the disc).
+
+## 2026-11-20 r3 furniture/picnic-table (construction changed at the root, applied, for review)
+
+| asset | region | old | new (measured 1:50 outer area) | what the model shows |
+|---|---|---|---|---|
+| furniture/picnic-table | a-frame | 1.2 | 2.32 | factor 1.93: the old value belonged to 50 x 45 mm legs without braces; the real frame has 95 x 45 mm legs, cleats and stretchers, two 70 x 45 mm braces and a centre cleat (hand sum 2.42 minus 8 laps = 2.3) |
+| furniture/picnic-table | hinges | 0.22 | 0.39 | factor 1.78: four folded 8 mm gusset brackets with flanges, four bearing plates, bolts and plungers instead of four 80 x 100 mm blocks (hand sum 0.37-0.39) |
+| furniture/picnic-table | bench-seats | 2.7 | 2.26 | factor 0.84: benches 1.50 x 0.30 m of two planks between the frames (were 1.70 x 0.36 m) |
+| furniture/picnic-table | table-top | 2.96 | 3.07 | factor 1.04: five 132 x 40 mm planks with 10 mm gaps |

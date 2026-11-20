@@ -148,6 +148,12 @@
   },
   "$id": "https://semio.tech/framework/process/wasm-build/policy/v1",
   "definitions": {
+    "CompilerOutput": {
+      "const": {
+        "maximumBytes": 134217728,
+        "maximumLines": 2097152
+      }
+    },
     "PackageOwner": {
       "type": "object",
       "additionalProperties": false,

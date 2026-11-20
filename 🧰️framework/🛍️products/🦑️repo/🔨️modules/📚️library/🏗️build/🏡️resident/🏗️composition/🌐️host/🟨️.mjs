@@ -11,6 +11,7 @@ import {HOST_POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {fleetHostReadingV1,graphServiceHeapBytesV1,graphServiceLimitMegabytesV1} from "../../../🧠️memory/🟨️.mjs";
 import {settleGraphMemoryV1} from "../../../🧠️memory/🧽️settle/🟨️.mjs";
+import {READY_SLICE_REPORT_POLICY_V1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 import {placeServiceOutsideJobsV1,prepareServiceGroupV1,releaseOwnServiceGroupV1,runsInServiceGroupV1,serviceLaunchArgumentsV1,sweepEmptyServiceGroupsV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import {appendServiceExitRowV1} from "../../🧾️exit-log/🟨️.mjs";
 import {ACCESS_PROOF_VERSION_V1,accessDirectoryV1,consentIdentityV1,createMountReproofV1,launchdRefusalV1,launcherDigestV1,probeConsentV1,protectedFolderOfV1,sampleAccessInChildV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
@@ -103,6 +104,7 @@ export function spawnHostServiceV1({command,environment=process.env,cwd=process.
  return({runtime})=>{
   mkdirSync(runtime.directory,{recursive:true,mode:0o700});
   const required=environment.SEMIO_SERVICE_ROUTE_REQUIRED==="launchd"&&protectedFolderOfV1(cwd,{platform:launchd.route?.platform??process.platform,...launchd.route?.home?{home:launchd.route.home}:{}})!==undefined,env={...environment,BUN_JSC_forceRAMSize:String(graphServiceHeapBytesV1()),[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds)};
+   delete env[READY_SLICE_REPORT_POLICY_V1.grantEnvironment];
   for(const name of[...CLIENT_BOUND_ENVIRONMENT_V1,"SEMIO_SERVICE_ROUTE_REQUIRED"])delete env[name];
   const refuseDirect=()=>{throw Error(REPLACEMENT_REFUSAL_V1);};
   const linux=process.platform==="linux",name="graph-"+createHash("sha256").update(runtime.directory).digest("hex").slice(0,12),service={name,limitMegabytes:graphServiceLimitMegabytesV1(fleetHostReadingV1().hostMegabytes),softRatioBasisPoints:9000};
@@ -135,6 +137,6 @@ export function spawnHostServiceV1({command,environment=process.env,cwd=process.
   for(let wait=0;group!==undefined&&!placed&&wait<20;wait++){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);placed=runsInServiceGroupV1(child.pid,group);}
   if(group!==undefined&&!placed)placed=placeServiceOutsideJobsV1(child.pid,service);
   appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid:child.pid,...placed&&group?{cgroup:group,limitMegabytes:service.limitMegabytes}:{placed:false}});
-  return{alive:()=>processLivesV1(child.pid)};
+  return{pid:child.pid,alive:()=>processLivesV1(child.pid)};
  };
 }

@@ -40,7 +40,7 @@ fn op_binary_round_trips_and_agrees_with_text() {
 fn material_field_intent_binary_round_trips_and_agrees_with_text() {
     let operation = Fem3dMutation::ChangeMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial {
         id: "steel".into(),
-        patch: schema::diff::Fem3dMaterialPatch { e: Some(190e9), ..Default::default() }
+        patch: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dMaterialPatch { e: Some(190e9), ..Default::default() }
     });
     semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode sparse material field intent");
@@ -67,8 +67,9 @@ async fn fem3d_mutations_apply_through_the_store() {
     ];
     store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").to_reference(), value);
-    semio_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
-    semio_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_owned_document_text_round_trip(&store).await;
+    semio_os_kernel::os_store::test_support::assert_owned_document_pack_round_trip(&store).await;
+    drop(store.detach_backbone().expect("fem3d store releases its backbone"));
     store.close_owned_unscheduled().expect("fem3d document store closes through its exact bounded owners");
 }
 

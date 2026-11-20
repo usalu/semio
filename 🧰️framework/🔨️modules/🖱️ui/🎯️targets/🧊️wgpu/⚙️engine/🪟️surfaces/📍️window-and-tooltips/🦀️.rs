@@ -130,6 +130,15 @@ impl UiWindow {
         let refusal=UiWorkerRetirementRefusal{stage,kind:failure.primary_value().map_or(semio_framework_value::ValueRefusalKind::InvariantViolated,|error|error.kind),progress:failure.retained_progress()};
         self.layout_close_failure=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(failure).unwrap_or_else(|_|unreachable!("original paired failure defines whole controlled closure")));self.layout_retirement_refusal=Some(refusal);refusal
     }
+    /// 🐣️ Pays one close step of a layout worker session birth still in flight; the admission's own effect-funded close cannot reach it because a birth closes on the calling Source context. `None` once the birth holds nothing.
+    pub fn close_layout_birth_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Option<Result<(),UiWorkerRetirementRefusal>>{
+        if self.layout_admission.birth.terminal_is_empty(){return None}
+        Some(self.layout_admission.birth.close_step(cx).map(|_|()).map_err(|failure|self.retain_layout_close_failure("Layout.CloseAdmission",failure)))
+    }
+    /// 🌱️ Starts the next layout admission on a fresh birth: a birth that delivered or closed its session holds nothing but stays at its final stage and can never admit again.
+    pub fn renew_layout_birth(&mut self){
+        if self.layout_admission.birth.terminal_is_empty(){*self.layout_admission.birth=semio_framework_job_worker::WorkerJobSessionAdmission::new();}
+    }
     pub(super) fn new(window_id: &str) -> Self {
         Self {
             closing: None,

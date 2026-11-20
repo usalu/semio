@@ -103,7 +103,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -159,7 +159,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -216,7 +216,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -262,7 +262,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -318,7 +318,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -4863,7 +4863,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4935,7 +4935,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5007,7 +5007,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5062,7 +5062,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5134,7 +5134,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5257,7 +5257,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5365,7 +5365,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5420,7 +5420,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5557,7 +5557,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5646,7 +5646,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5700,7 +5700,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5745,7 +5745,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5790,7 +5790,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5877,7 +5877,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5932,7 +5932,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5988,7 +5988,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6043,7 +6043,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6088,7 +6088,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6133,7 +6133,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6178,7 +6178,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6223,7 +6223,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6268,7 +6268,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6313,7 +6313,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6359,7 +6359,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6405,7 +6405,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6451,7 +6451,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6496,7 +6496,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -6541,7 +6541,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8994,7 +8994,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -9041,7 +9041,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -9140,7 +9140,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -10437,5 +10437,34 @@
         ]
       }
     ]
-  }
+  },
+  "assets": [
+    {
+      "name": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/🔤️NotoColorEmoji-subset.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 152308,
+      "sha256": "ec69d141e4276776e952ecc10a5bd02f9282c96928de1787c25012fb2a18fb02"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 26772,
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 853838,
+      "sha256": "d350329a912b3904c8fc32b4c1ef4c01a6d28508c194f4679013243769307a6a"
+    }
+  ]
 }

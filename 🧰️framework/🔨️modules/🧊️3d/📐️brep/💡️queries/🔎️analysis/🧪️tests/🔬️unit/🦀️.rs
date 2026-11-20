@@ -384,3 +384,33 @@ fn analysis_values_round_trip_through_the_value_codec() {
     let back = ShapeAnalysis::from_value(analysis.to_value()).unwrap();
     assert_eq!(back, analysis);
 }
+
+#[test]
+fn incremental_planar_measure_matches_box_mass_properties() {
+    let mut body = Body::new();
+    let solid = make_box(&mut body, 2.0, 3.0, 4.0, &mut OpRecorder::new()).unwrap();
+    let mass = mass_properties(&body, &ShapeScope::solid(solid), MASS_TOLERANCE).unwrap();
+    for (measure_area, expected) in [(true, mass.area), (false, mass.volumetric.unwrap().volume)] {
+        let mut measure = PlanarMeasure::new(solid, measure_area);
+        let actual = (0..100).find_map(|_| {
+            measure.next_demand(&body).unwrap();
+            measure.step(&body).unwrap()
+        }).expect("a box terminates within 100 turns");
+        assert!((actual - expected).abs() < MASS_TOLERANCE);
+    }
+}
+
+#[test]
+fn analytic_measure_reads_fixed_curve_and_surface_geometry() {
+    let line = Curve3::Line { origin: Pnt3::new(1.0, 2.0, 3.0), dir: Vec3::new(2.0, 0.0, 0.0) };
+    assert_eq!(analytic_curve_sample(&line, 2.0, false).unwrap(), [5.0, 2.0, 3.0]);
+    assert_eq!(analytic_curve_sample(&line, 2.0, true).unwrap(), [2.0, 0.0, 0.0]);
+    assert_eq!(analytic_curve_curvature(&line, 2.0).unwrap(), 0.0);
+    assert_eq!(analytic_curve_length(&line, (2.0, 5.0)).unwrap(), 6.0);
+
+    let circle = Curve3::Circle { frame: Frame3::WORLD, radius: 2.0 };
+    assert_eq!(analytic_curve_span(&circle).unwrap(), std::f64::consts::TAU);
+    let plane = Surface::Plane { frame: Frame3::WORLD };
+    assert_eq!(analytic_surface_sample(&plane, 2.0, 3.0, false).unwrap(), [2.0, 3.0, 0.0]);
+    assert_eq!(analytic_surface_sample(&plane, 2.0, 3.0, true).unwrap(), [0.0, 0.0, 1.0]);
+}

@@ -54,7 +54,7 @@ impl Fem2dSnapshot {
     pub fn __dsl_to_record_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<RecordValue, ValueError> {
         control.scoped_depth(64, |control| {
             control.scoped_stage(|control| {
-                control.begin_stage(9)?;
+                control.begin_stage(self.nodes.len().saturating_mul(3).saturating_add(self.materials.len().saturating_mul(5)))?;
                 let mut r = EncodedRecord::new(9, control)?;
                 let mut nodes = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(self.nodes.len())?, |v: Vec<FieldValue>| {
                     for f in v {

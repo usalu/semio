@@ -143,6 +143,7 @@ fn close_geometry_test_bundle(bundle: &mut ExtensionBundle) {
     panic!("geometry inference owner failed to close");
 }
 
+
 #[test]
 fn extension_guest_close_retires_only_its_existing_session_evaluation_owner() {
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧫️fixtures/🚪️retirement/🔣️.json")).unwrap();let law=&fixture["ownerIsolation"];let mut request=fixture["evaluate"].clone();request["nodeHash"]=law["sharedNodeHash"].clone();request["budget"]=law["roundUnits"].clone();request["roundUnits"]=law["roundUnits"].clone();let request=serde_json::to_string(&request).unwrap();let compact=super::tests::compact_evaluation_request(&request);

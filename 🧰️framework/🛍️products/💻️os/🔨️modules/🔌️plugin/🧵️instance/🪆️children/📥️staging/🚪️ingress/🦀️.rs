@@ -290,7 +290,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         let empty=RetainedCloneProgress::default();let Some(demand)=self.child_member_retirement_quote(grant.maximum_copy_bytes, closing).map_err(|error|plugin_sdk_fault(error.into_message()))?else{return Ok(RetainedCloneStep::Progress(empty))};
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty))}
         let Some((index, generation)) = self.child_member_retirements.next_id_from(self.child_member_retirement_cursor) else {
-            let backing=std::mem::take(&mut self.child_member_retirements.slots);self.child_member_retirements.allocation_admitted=false;drop(backing);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..empty}));
+            let mut progress=self.child_member_retirements.close_empty_backing_step(grant)?.progress();progress.copied_bytes=demand.copy_bytes;return Ok(RetainedCloneStep::Progress(progress));
         };
         let retirement = self.child_member_retirements.get_mut(generation).expect("exact child-member retirement remains admitted");
         if retirement.entry.as_ref().is_some_and(|entry| !entry.member.snapshot_read_leases_terminal_is_empty()) {

@@ -30218,7 +30218,9 @@
       "previewTarget": "@semio-tech/assets:preview-generated",
       "checkTarget": "@semio-tech/assets:check-generated",
       "nativeConsumers": [
-        "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust"
+        "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust",
+        "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧬️schema/📦️packages/🦀️rust",
+        "🧰️framework/🔨️modules/🖼️canvas/🪪️icon-codec/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts",
@@ -31264,7 +31266,8 @@
       "previewTarget": "@semio-tech/ui-rs:preview-generated",
       "checkTarget": "@semio-tech/ui-rs:check",
       "nativeConsumers": [
-        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
+        "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
       ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
@@ -31407,6 +31410,10 @@
               "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts"
             },
+            "@semio-tech/framework-actor/wire-turn/more-work-drive": {
+              "manifestPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🚚️more-work-drive/🟦️.ts"
+            },
             "@semio-tech/framework-canvas-ts/renderer-resident": {
               "manifestPath": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/💾️renderer-resident/🟦️.ts"
@@ -31414,10 +31421,6 @@
             "@semio-tech/framework-canvas-ts/renderer-work": {
               "manifestPath": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🧵️renderer-work/🟦️.ts"
-            },
-            "@semio-tech/framework-diagnostic-ts/controlled": {
-              "manifestPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts"
             },
             "@semio-tech/framework-kernel/descriptor-admission": {
               "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
@@ -31451,10 +31454,6 @@
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts"
             },
-            "@semio-tech/framework-pack-json-ts/members": {
-              "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/🧩️members/🟦️.ts"
-            },
             "@semio-tech/framework-plugin/receipt": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json",
               "entryPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📥️receipt/🟦️.ts"
@@ -31474,10 +31473,6 @@
             "@semio-tech/framework/backbone/binding": {
               "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/📦️packages/🟦️typescript/🛰️backbone/🔗️binding/🟦️.ts"
-            },
-            "@semio-tech/pack-json-decode-ts": {
-              "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/🟦️.ts"
             },
             "@semio-tech/plugin-registry/deployment/routes.json": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json",
@@ -31518,14 +31513,6 @@
             "@semio-tech/ui/elements/Ports/interactive-jobs": {
               "manifestPath": "🧰️framework/🔨️modules/🖱️ui/package.json",
               "entryPath": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts"
-            },
-            "@semio-tech/value-ts/refusal": {
-              "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts"
-            },
-            "@semio-tech/value-ts/refusal/codec": {
-              "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
-              "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts"
             },
             "@semio-tech/value-ts/resident": {
               "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
@@ -31662,6 +31649,7 @@
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/📜️wire/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🩹️ui-patch/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
@@ -31690,6 +31678,7 @@
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts",
@@ -31942,6 +31931,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📦️assets-and-host-io/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📨️receive/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🖼️icon-svg-preview/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🖼️page-image-decode/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts",
@@ -31984,6 +31974,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",
             "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🛣️routes.json",
@@ -32003,8 +31994,6 @@
         "Cargo.toml",
         "nx.json",
         "package.json",
-        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts",
-        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
         "📋️project.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/🎁️packs/🟦️.ts",
@@ -32138,6 +32127,7 @@
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/📜️wire/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📮️shard-client/🩹️ui-patch/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
@@ -32167,6 +32157,7 @@
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts",
@@ -32431,6 +32422,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📦️assets-and-host-io/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/📨️receive/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🖼️icon-svg-preview/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🖼️page-image-decode/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts",
@@ -32498,6 +32490,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📤️SegmentedDownload/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",

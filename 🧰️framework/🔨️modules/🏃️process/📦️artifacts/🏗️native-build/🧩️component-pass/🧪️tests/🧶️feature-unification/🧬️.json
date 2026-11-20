@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "One component pass must resolve one instance of its shared typed dependency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "target",
+    "profile",
+    "packages",
+    "sharedFeatures"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "target": {
+      "const": "wasm32-wasip2"
+    },
+    "profile": {
+      "const": "prototype"
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "feature"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z-]+$"
+          },
+          "feature": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+          }
+        }
+      }
+    },
+    "sharedFeatures": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]+$"
+      }
+    }
+  }
+}

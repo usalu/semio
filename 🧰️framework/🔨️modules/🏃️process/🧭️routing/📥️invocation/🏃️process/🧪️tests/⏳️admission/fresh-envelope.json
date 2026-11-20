@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "owner": "fixture:fresh-envelope",
+  "sampleMilliseconds": 2000,
+  "intervalMilliseconds": 10,
+  "observeMilliseconds": 1500,
+  "expiredByMilliseconds": 318,
+  "maximumMilliseconds": 2000,
+  "languages": {
+    "en": "The resource loan of repo ran out without observable progress",
+    "de": "Die Ressourcenleihe von repo lief ohne beobachtbaren Fortschritt ab"
+  },
+  "stallStepsMilliseconds": [
+    10,
+    25,
+    50,
+    75,
+    100,
+    150,
+    200,
+    300,
+    500,
+    1000
+  ]
+}

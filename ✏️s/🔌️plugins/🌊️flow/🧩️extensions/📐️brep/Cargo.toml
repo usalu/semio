@@ -5,6 +5,8 @@ resolver = "2"
 members = [
     "📦️packages/🦀️rust",
     "🥽️mesh/📦️packages/🦀️rust",
+    "〰️analytic-curves/📦️packages/🦀️rust",
+    "📐️tessellate/📦️packages/🦀️rust",
     "🧩️component/📦️packages/🦀️rust",
     "🧪️tests/🔬️unit/📦️packages/🦀️rust",
 ]

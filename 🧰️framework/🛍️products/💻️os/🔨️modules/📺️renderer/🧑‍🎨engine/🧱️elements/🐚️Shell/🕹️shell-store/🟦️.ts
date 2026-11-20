@@ -107,7 +107,6 @@ export function initialShellState(_props: {
   readonly locale: UiLocale;
 }): ShellState {
   const locks = _props.locks ?? {};
-  const defaults = _props.defaults ?? {};
   const storage = _props.storage;
   const preferences = resolveUiPreferences(readUiPreferences(storage), {
     appearance: "system",
@@ -130,7 +129,7 @@ export function initialShellState(_props: {
       treeOpenStates: {},
       activeWindowId: null,
       shellLayout: null,
-      activeExampleId: locks.exampleId ?? defaults.exampleId ?? "",
+      activeExampleId: locks.exampleId ?? "",
       mobilePanelPath: [],
       mobilePanelVisible: false,
       extraWindowInstances: [],

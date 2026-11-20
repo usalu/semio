@@ -31,16 +31,45 @@ impl ToValue for PdfObject{
 
 }
 impl FromValue for PdfObject{
-    fn from_value(value:V)->Result<Self,E>{
-        let fields=value.into_object()?;let tag=fields.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str()).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object requires a kind"))?;
-        let get=|key:&str|fields.iter().find(|(name,_)|name==key).map(|(_,value)|value.clone()).ok_or_else(||E::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF COS object requires {key}")));
-        if tag=="stream"{if fields.iter().any(|(key,_)|!matches!(key.as_str(),"kind"|"dict"|"data"|"filters")){return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS stream has an undeclared field"));}return Ok(Self::Stream{dict:Vec::<PdfDictEntry>::from_value(get("dict")?)?,data:pack::value::bytes::from_value(get("data")?)?,filters:Vec::<PdfStreamFilter>::from_value(get("filters")?)?});}
-        let payload=||get("value");
-        Ok(match tag{
-            "null"=>Self::Null,"bool"=>Self::Bool(bool::from_value(payload()?)?),"int"=>Self::Int(i64::from_value(payload()?)?),"real"=>Self::Real(PdfDecimal::from_value(V::Object(fields.iter().filter(|(key,_)|key!="kind").cloned().collect()))?),
-            "text"=>Self::Text(String::from_value(payload()?)?),"date"=>Self::Date(PdfDate::from_value(payload()?)?),"str"=>Self::Str(pack::value::bytes::from_value(payload()?)?),"name"=>Self::Name(String::from_value(payload()?)?),"array"=>Self::Array(Vec::<PdfObject>::from_value(payload()?)?),"dict"=>Self::Dict(Vec::<PdfDictEntry>::from_value(payload()?)?),
-            "ref"=>Self::Ref(ObjRef::from_value(V::Object(fields.iter().filter(|(key,_)|key!="kind").cloned().collect()))?),
-            _=>return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown PDF COS object kind")),
+    fn from_value(value: V) -> Result<Self, E> {
+        fn take(fields: &mut [(String, V)], key: &str) -> Option<V> {
+            fields.iter_mut().find(|(name, _)| name == key)
+                .map(|(_, value)| std::mem::replace(value, V::Null))
+        }
+
+        let mut fields = value.into_object()?;
+        let kind = take(&mut fields, "kind");
+        let tag = kind.as_ref().and_then(V::as_str)
+            .ok_or_else(|| E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS object requires a kind"))?;
+        if tag == "stream" && fields.iter().any(|(key, _)| !matches!(key.as_str(), "kind" | "dict" | "data" | "filters")) {
+            return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF COS stream has an undeclared field"));
+        }
+        let mut take_field = |key: &str| {
+            take(&mut fields, key)
+                .ok_or_else(|| E::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF COS object requires {key}")))
+        };
+        Ok(match tag {
+            "null" => Self::Null,
+            "bool" => Self::Bool(bool::from_value(take_field("value")?)?),
+            "int" => Self::Int(i64::from_value(take_field("value")?)?),
+            "text" => Self::Text(String::from_value(take_field("value")?)?),
+            "date" => Self::Date(PdfDate::from_value(take_field("value")?)?),
+            "str" => Self::Str(pack::value::bytes::from_value(take_field("value")?)?),
+            "name" => Self::Name(String::from_value(take_field("value")?)?),
+            "array" => Self::Array(Vec::<Self>::from_value(take_field("value")?)?),
+            "dict" => Self::Dict(Vec::<PdfDictEntry>::from_value(take_field("value")?)?),
+            "real" | "ref" => {
+                fields.retain(|(key, _)| key != "kind");
+                let record = V::Object(fields);
+                if tag == "real" { Self::Real(PdfDecimal::from_value(record)?) }
+                else { Self::Ref(ObjRef::from_value(record)?) }
+            }
+            "stream" => Self::Stream {
+                dict: Vec::<PdfDictEntry>::from_value(take_field("dict")?)?,
+                data: pack::value::bytes::from_value(take_field("data")?)?,
+                filters: Vec::<PdfStreamFilter>::from_value(take_field("filters")?)?,
+            },
+            _ => return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown PDF COS object kind")),
         })
     }
     fn from_value_controlled(value:&V,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,E>{

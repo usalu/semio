@@ -10,9 +10,9 @@ use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::sn
 
 fn base() -> ModelSnapshot {
     let mut value = ModelSnapshot::default();
-    value.sites.insert("site".into(), from_json_str(r#"{"name":"Site","latitude":47.5,"longitude":8.5,"elevation":400,"true_north":0.2,"boundary":[]}"#, JsonMemberPolicy::Reject).expect("site"));
-    value.buildings.insert("building".into(), from_json_str(r#"{"site":"site","name":"Building","origin":{"x":1,"y":2},"rotation":0.3,"elevation":4}"#, JsonMemberPolicy::Reject).expect("building"));
-    value.storeys.insert("storey".into(), from_json_str(r#"{"building":"building","name":"Storey","level":0,"height":3,"cut_height":1.2}"#, JsonMemberPolicy::Reject).expect("storey"));
+    value.sites.cold_insert("site".into(), from_json_str(r#"{"name":"Site","latitude":47.5,"longitude":8.5,"elevation":400,"true_north":0.2,"boundary":[]}"#, JsonMemberPolicy::Reject).expect("site"));
+    value.buildings.cold_insert("building".into(), from_json_str(r#"{"site":"site","name":"Building","origin":{"x":1,"y":2},"rotation":0.3,"elevation":4}"#, JsonMemberPolicy::Reject).expect("building"));
+    value.storeys.cold_insert("storey".into(), from_json_str(r#"{"building":"building","name":"Storey","level":0,"height":3,"cut_height":1.2}"#, JsonMemberPolicy::Reject).expect("storey"));
     value
 }
 

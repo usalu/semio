@@ -28,14 +28,19 @@ impl Fem3dNumericalChild {
             if context.should_yield() {
                 return Ok(false);
             }
-            context.consume_fuel(1);
-            if context.is_cancelled() {
-                return Err((b"fem3d.numerical-cancelled".to_vec()).into());
-            }
         }
+        let fuel = context.fuel_remaining();
+        let result = self.advance_one(doc, solver, backing, freshness, operation, context);
+        if !delegated && context.fuel_remaining() == fuel {
+            context.consume_fuel(1);
+        }
+        result
+    }
+
+    fn advance_one(&mut self, doc: &Fem3dSnapshot, solver: &mut Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness, operation: semio_framework_job::Operation, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
         if self.stage == Fem3dNumericalStage::ReserveSolverPages {
-            if self.solver_page_cursor == FEM3D_SOLVER_PAGE_COUNT {
-                self.stage = Fem3dNumericalStage::ReserveNodes;
+            if self.solver_page_cursor == solver.page_count() {
+                self.stage = Fem3dNumericalStage::MountAssembly;
             } else {
                 if !solver.admit_page(self.solver_page_cursor, self.solver_page_lane, backing) {
                     return Err((b"fem3d.numerical-solver-page-admission".to_vec()).into());
@@ -52,7 +57,7 @@ impl Fem3dNumericalChild {
             let layers = solid.layers.max(1);
             let model = self.model.as_ref().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?;
             let maximum_points = MAXIMUM_FIELDS.saturating_sub(model.nodes_len()) / (layers + 1);
-            let maximum_triangles = MAXIMUM_ELEMENTS.saturating_sub(model.elements_len()) / (layers * 3);
+            let maximum_triangles = MAXIMUM_ANALYSIS_ELEMENTS.saturating_sub(model.elements_len()) / (layers * 3);
             if maximum_points < 3 || maximum_triangles == 0 {
                 return Err((b"fem3d.numerical-solid-admission".to_vec()).into());
             }
@@ -71,7 +76,7 @@ impl Fem3dNumericalChild {
         }
         if self.stage == Fem3dNumericalStage::SolidMeshReservePoints {
             let (points, _) = self.mesh.as_ref().and_then(MeshJob::completed_counts).ok_or_else(|| b"fem3d.numerical-solid-mesh-false-terminal".to_vec())?;
-            if self.solid_points.admit_one(points).map_err(|_| b"fem3d.numerical-solid-mesh-point-admission".to_vec())? {
+            if self.solid_points.admit_in(points, context).map_err(|_| b"fem3d.numerical-solid-mesh-point-admission".to_vec())? {
                 self.point_cursor = 0;
                 self.stage = Fem3dNumericalStage::SolidMeshCopyPoint;
             }
@@ -90,7 +95,7 @@ impl Fem3dNumericalChild {
         }
         if self.stage == Fem3dNumericalStage::SolidMeshReserveTriangles {
             let (_, triangles) = self.mesh.as_ref().and_then(MeshJob::completed_counts).ok_or_else(|| b"fem3d.numerical-solid-mesh-false-terminal".to_vec())?;
-            if self.solid_tris.admit_one(triangles).map_err(|_| b"fem3d.numerical-solid-mesh-triangle-admission".to_vec())? {
+            if self.solid_tris.admit_in(triangles, context).map_err(|_| b"fem3d.numerical-solid-mesh-triangle-admission".to_vec())? {
                 self.point_cursor = 0;
                 self.stage = Fem3dNumericalStage::SolidMeshCopyTriangle;
             }
@@ -109,7 +114,10 @@ impl Fem3dNumericalChild {
         }
         if self.stage == Fem3dNumericalStage::SolidMeshRetire {
             let mesh = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?;
-            InteractiveJob::close_step(mesh, context).map_err(|_| b"fem3d.numerical-solid-mesh-retire-refused".to_vec())?;
+            if !mesh.terminal_is_empty() {
+                InteractiveJob::close_step(mesh, context).map_err(|_| b"fem3d.numerical-solid-mesh-retire-refused".to_vec())?;
+                return Ok(false);
+            }
             semio_framework_job::close_original_retained_step(context, RetirementDemand { depth: 1, ..Default::default() }, |_| {
                 self.mesh = None;
                 self.stage = Fem3dNumericalStage::SolidMaterial;
@@ -121,6 +129,7 @@ impl Fem3dNumericalChild {
             self.stage,
             Fem3dNumericalStage::ReserveNodes
                 | Fem3dNumericalStage::ReserveNodeIds
+                | Fem3dNumericalStage::ReserveNodeValues
                 | Fem3dNumericalStage::ReserveElements
                 | Fem3dNumericalStage::ReserveSupports
                 | Fem3dNumericalStage::ReserveMeshedSolids
@@ -152,7 +161,7 @@ impl Fem3dNumericalChild {
                 | Fem3dNumericalStage::SupportDof
                 | Fem3dNumericalStage::SupportCommit
         ) {
-            self.step_model(doc)?;
+            self.step_model(doc, context)?;
             return Ok(false);
         }
         match self.stage {
@@ -160,10 +169,10 @@ impl Fem3dNumericalChild {
             Fem3dNumericalStage::MountAssembly => return self.step_mount_assembly(operation),
             Fem3dNumericalStage::PrepareAssembly => return self.step_prepare_assembly(context),
             Fem3dNumericalStage::Assembly => return self.step_assembly(context),
-            Fem3dNumericalStage::ReserveModalMass => return self.step_reserve_modal_mass(),
+            Fem3dNumericalStage::ReserveModalMass => return self.step_reserve_modal_mass(context),
             Fem3dNumericalStage::InitializeModalMass => return self.step_initialize_modal_mass(),
             Fem3dNumericalStage::MapEquation => return self.step_map_equation(),
-            Fem3dNumericalStage::ReserveRhs => return self.step_reserve_rhs(),
+            Fem3dNumericalStage::ReserveRhs => return self.step_reserve_rhs(context),
             Fem3dNumericalStage::InitializeRhs => return self.step_initialize_rhs(),
             Fem3dNumericalStage::ResolveSourceCase => return self.step_resolve_source_case(doc),
             Fem3dNumericalStage::ApplyLoad => return self.step_apply_load(doc),
@@ -178,7 +187,7 @@ impl Fem3dNumericalChild {
             Fem3dNumericalStage::ApplySelfWeightSolid => return self.step_apply_self_weight_solid(doc),
             Fem3dNumericalStage::BuildCsr => return self.step_build_csr(context),
             Fem3dNumericalStage::BeginPcg => return self.step_begin_pcg(operation, context),
-            Fem3dNumericalStage::PreparePcg => return self.step_prepare_pcg(),
+            Fem3dNumericalStage::PreparePcg => return self.step_prepare_pcg(context),
             Fem3dNumericalStage::Pcg => return self.step_pcg(context),
             Fem3dNumericalStage::ReadNodeScalar => return self.step_read_node_scalar(),
             Fem3dNumericalStage::RecoverReaction => return self.step_recover_reaction(),

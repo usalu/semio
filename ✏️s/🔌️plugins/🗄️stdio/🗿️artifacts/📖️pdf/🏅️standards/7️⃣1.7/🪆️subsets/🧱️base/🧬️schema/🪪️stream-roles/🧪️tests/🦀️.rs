@@ -40,8 +40,8 @@ fn pdf_stream_roles_native_page_lift_records_semantic_operators() {
     let snapshot = decode_pdf(&encode_pdf(&text_document(&[(200.0, 300.0, "role")])).unwrap()).unwrap();
     let mut source = GraphSource::new(&snapshot.objects);
     let lifter = lift_document_with(&snapshot.trailer, &snapshot.declared_version, &mut source);
-    assert_eq!(page_content(&lifter.admitted_stream_roles, lifter.page_refs[0]), Some(snapshot.pages[0].content.as_slice()));
-    assert!(!lifter.admitted_stream_roles[0].dependencies.is_empty());
+    assert_eq!(page_content(&lifter.snapshot.admitted_stream_roles, lifter.page_refs[0]), Some(snapshot.pages[0].content.as_slice()));
+    assert!(!lifter.snapshot.admitted_stream_roles[0].dependencies.is_empty());
 }
 
 #[test]

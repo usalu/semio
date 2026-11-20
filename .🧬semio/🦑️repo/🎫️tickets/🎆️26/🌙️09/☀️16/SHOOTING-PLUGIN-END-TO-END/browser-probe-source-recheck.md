@@ -1,0 +1,7 @@
+# Browser Probe Source Recheck
+
+The current base-icon fixture is `📚️examples/🎬️demo/🦀️.rs` and its included `🖼️assets/🎬️demo/🗣️.dsl.semio`. It defines active shot `overview-svg`, exactly two 256 × 256 shots named Overview Svg and Overview Png, no saved cameras or camera IDs, and one GLB asset at `/mesh/🧊️base.glb`. Both probes assume the SVG shot is active; WGPU explicitly requests `example=base-icon`, while React relies on normal startup selecting it. The fixture alone does not prove that asset is served or decoded.
+
+Current `🎮️commands/📄️document/🦀️.rs` constructs the Save Download payload from `ToValue` and the owned JSON writer with `encoding: None` and filename `shooting.shooting.ops`, so parsing download bytes as JSON is consistent. The earlier `probe-current-contract.md` records camelCase and control-label source checks. The selected inspector fill label remains in current terminology. Both probes check actual saved settings and exported SVG; React additionally compares SVG layer signatures with the displayed image, while WGPU checks pixel color in the presented canvas. The WGPU mirror interactions remain runtime-dependent, not proven by this static review. No clear contract mismatch warranted changing a probe.
+
+`activation-execution-route.md` documents the declared activation target and its preparation dependency; warmed artifacts alone do not prove fresh physical activation, and serve alone does not depend on activation. No build or browser run was initiated in this recheck.

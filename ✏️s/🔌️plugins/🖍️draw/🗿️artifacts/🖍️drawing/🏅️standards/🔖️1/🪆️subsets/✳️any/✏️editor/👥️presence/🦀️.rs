@@ -1,6 +1,7 @@
 //! 👥️ Drawing presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
+use semio_os_kernel::os_pack as pack;
 use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
@@ -65,21 +66,6 @@ impl protocol::ColdDiffAlgebra<DrawingPresence> for DrawingPresenceDiff {
         Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
     }
 }
-
-/// 🏭️ Original Draw presence aliases use their typed fields and retained physical backing.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct DrawingPresenceRetirementFactory;
-
-impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _: &std::sync::Arc<DrawingPresence>) -> usize {
-        semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<DrawingPresence>()
-    }
-
-    fn retire(&self, source: std::sync::Arc<DrawingPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<DrawingPresence>)> {
-        semio_framework_value::retirement::arc_custody::admit_shared_retirement(source, grant, true)
-    }
-}
-
 
 impl store::ArtifactPresenceSnapshot for DrawingPresence {
     fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {

@@ -8,7 +8,8 @@ import {fileURLToPath} from "node:url";
 import {testPythonV1} from "../../../../📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {emptyHostEstimateStoreV1,readHostEstimateStoreV1,recordHostOutcomeV1,updateHostEstimateStoreV1} from "../../📐️estimates/🟦️.ts";
 import {readHostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
-import {observeTreeMegabytesV1,parseFootprintV1,parseSmapsRollupV1,treeMegabytesV1,treePidsV1,type HostCommandRunnerV1} from "../../📡️sampling/🟦️.ts";
+import type {WindowsMemoryPortV1,WindowsMemoryUnknownV1} from "../../🪟️native-memory/🟦️.ts";
+import {observeTreeMegabytesV1,parseProcessTableV1,parseFootprintV1,parseSmapsRollupV1,treeMegabytesV1,treePidsV1,type HostCommandRunnerV1} from "../../📡️sampling/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import decision from "../🧫️fixtures/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
@@ -22,8 +23,7 @@ test("the observers are data: the footprint is the measure of every platform and
  expect(Object.keys(observers.platforms).sort()).toEqual(["darwin","linux","win32"]);
  expect(observers.platforms.darwin.footprint.command).toBe("footprint");expect(observers.platforms.darwin.footprint.arguments).toEqual(["-f","bytes","--noCategories"]);expect(observers.platforms.darwin.table.command).toBe("ps");
  expect(observers.platforms.linux.footprint).toEqual({file:"smaps_rollup",fields:["Pss","SwapPss"]});expect(observers.platforms.linux.resident.file).toBe("status");
- expect(observers.platforms.win32.footprint.arguments[3]).toContain("WorkingSetPrivate");expect(observers.platforms.win32.resident.arguments[3]).toContain("WorkingSetSize");
- expect(observers.platforms.win32.footprint.arguments.slice(0,3)).toEqual(observers.platforms.win32.resident.arguments.slice(0,3));
+ expect(observers.platforms.win32).toEqual({source:"native",footprint:{call:"K32GetProcessMemoryInfo",field:"PrivateUsage"},resident:{call:"K32GetProcessMemoryInfo",field:"WorkingSetSize"}});
 });
 
 test("the macOS footprint output parses to the kernel's phys_footprint by pid, equal to the frozen values and to the Python oracle",()=>{
@@ -93,16 +93,19 @@ test("on Linux each member is priced by its smaps_rollup, one that cannot be rea
  expect(await observeTreeMegabytesV1(row.root,run,"linux",{read:async(path:string)=>row.files[path as keyof typeof row.files]??null,list:async()=>row.listing},noNotice,"resident")).toBe(12);
 });
 
-test("on Windows the private working set table prices the tree, a table that is empty or fails falls back to the working set once in every language, and a blind host observes nothing",async()=>{
+test("on Windows the private commit of the native process walk prices the tree, a walk without private figures falls back to the working set once in every language, and a blind host observes nothing",async()=>{
+ const rowsOf=(withPrivate:boolean):WindowsMemoryPortV1=>({memory:()=>blind,processes:()=>({known:true,unreadable:0,rows:parseProcessTableV1(fixture.win32.table).map(row=>({pid:row.pid,parent:row.parent,name:"p.exe",workingSetBytes:row.rssKilobytes*1024,privateBytes:withPrivate?row.rssKilobytes*1024:null}))})});
+ const blind:WindowsMemoryUnknownV1={known:false,reason:"host-call",call:"CreateToolhelp32Snapshot",error:5,detail:"",text:{en:"the Windows call CreateToolhelp32Snapshot failed (error 5)",de:"der Windows-Aufruf CreateToolhelp32Snapshot schlug fehl (Fehler 5)"}};
  for(const [index,root] of fixture.win32.roots.entries()){
-  const calls:string[][]=[],run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args]);return fixture.win32.table;};
-  expect(await observeTreeMegabytesV1(root,run,"win32",undefined,noNotice),String(root)).toBe(fixture.expect.win32[index]);
-  expect(calls).toEqual([["powershell.exe",...observers.platforms.win32.footprint.arguments]]);
+  expect(await observeTreeMegabytesV1(root,undefined,"win32",undefined,noNotice,"footprint",rowsOf(true)),String(root)).toBe(fixture.expect.win32[index]);
   if(oracle)expect(oracle.win32[index]).toBe(fixture.expect.win32[index]);
  }
- const lines:string[]=[],calls:string[][]=[],run:HostCommandRunnerV1=async(command,args)=>{calls.push([command,...args]);return args[3]===observers.platforms.win32.footprint.arguments[3]?"":fixture.win32.table;};
- expect(await observeTreeMegabytesV1(100,run,"win32",undefined,line=>{lines.push(line);})).toBe(76);
- expect(calls.map(call=>call[4])).toEqual([observers.platforms.win32.footprint.arguments[3],observers.platforms.win32.resident.arguments[3]]);expect(lines.length).toBe(2);expect(lines[0]).toContain("process table is empty");
+ const lines:string[]=[];
+ expect(await observeTreeMegabytesV1(100,undefined,"win32",undefined,line=>{lines.push(line);},"footprint",rowsOf(false))).toBe(76);
+ expect(lines.length).toBe(2);expect(lines[0]).toContain("K32GetProcessMemoryInfo answered no private usage");
+ const seen:string[]=[];
+ expect(await observeTreeMegabytesV1(100,undefined,"win32",undefined,line=>{seen.push(line);},"footprint",{memory:()=>blind,processes:()=>blind})).toBeNull();
+ expect(seen.length).toBe(2);expect(seen[0]).toContain("cannot be observed on win32");
 });
 
 test("the learned peaks are stamped with the measure: a store of another measure is empty, a written store reads back",async()=>{

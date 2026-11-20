@@ -38,8 +38,10 @@ export function finishResourceLeaseCleanupV1(failed:boolean,failure:unknown,oper
 /** 🛟️ Retains private admission custody until every failed connection close and gate close confirms completion. */
 export class ResourceLeaseAdmissionFinalizerV1<T extends{release():void}>{
  readonly #pending=new Map<T,Set<ResourceLeaseDatabaseV1>>();
- protect(gate:T,database:ResourceLeaseDatabaseV1):void{const pending=this.#pending.get(gate)??new Set<ResourceLeaseDatabaseV1>();pending.add(database);this.#pending.set(gate,pending);}
- release(gate:T|undefined):void{if(!gate)return;const pending=this.#pending.get(gate)??new Set<ResourceLeaseDatabaseV1>();this.#pending.set(gate,pending);let failed=false,failure:unknown;for(const database of pending)try{database.close();pending.delete(database);}catch(error){if(!failed){failed=true;failure=error;}}if(failed)throw failure;gate.release();this.#pending.delete(gate);}
+ #timer:ReturnType<typeof setTimeout>|undefined;
+ #arm(delay:number):void{if(this.#timer!==undefined||!this.#pending.size)return;const timer=setTimeout(()=>{this.#timer=undefined;this.retry();this.#arm(Math.min(delay*2,10000));},delay);this.#timer=timer;(timer as{unref?:()=>void}).unref?.();}
+ protect(gate:T,database:ResourceLeaseDatabaseV1):void{const pending=this.#pending.get(gate)??new Set<ResourceLeaseDatabaseV1>();pending.add(database);this.#pending.set(gate,pending);this.#arm(1000);}
+ release(gate:T|undefined):void{if(!gate)return;const pending=this.#pending.get(gate)??new Set<ResourceLeaseDatabaseV1>();this.#pending.set(gate,pending);let failed=false,failure:unknown;for(const database of pending)try{database.close();pending.delete(database);}catch(error){if(!failed){failed=true;failure=error;}}if(failed){this.#arm(1000);throw failure;}try{gate.release();}catch(error){this.#arm(1000);throw error;}this.#pending.delete(gate);}
  retry():void{for(const gate of this.#pending.keys())try{this.release(gate);}catch{}}
 }
 /** 🗂️ Retains cooperative immediate names through the existing tracked buffered directory port. */

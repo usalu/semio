@@ -26,7 +26,7 @@
   ],
   "rustProfileSteps": {
     "unix": ["compiler", "rust", "links"],
-    "windows": ["compiler", "rustup", "rust"]
+    "windows": ["compiler", "rust"]
   },
   "msvc": [
     { "installed": true, "linker": true, "succeeds": true, "actions": [] },

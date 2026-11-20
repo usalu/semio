@@ -103,7 +103,7 @@ fn class_edits_move_the_authoritative_main_part() {
 
 #[test]
 fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
-    use protocol::{OpText, OpBinary};
+    use protocol::{ColdMutation, OpBinary, OpText};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -136,7 +136,14 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(carrier, fixture["document"]);
     let removal = XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
-    assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(inserted.xml_parts.len() - 1), override_index: None })]);
+    assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart {
+        path,
+        document,
+        index: Some(before.xml_parts.len()),
+        override_index: Some(before.opc.content_types.overrides.len()),
+    })]);
     let removed = protocol::apply_diff_cold(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
+    let restored = protocol::apply_diff_cold(inverse[0].diff(&removed).diff(), &removed).unwrap();
+    assert_eq!(restored, inserted);
 }

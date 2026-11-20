@@ -94,6 +94,17 @@ impl RetainedPackCatalogCursor {
         if !self.observed_chunks.terminal_is_empty() { return retained_page_close_demands(&self.observed_chunks); }
         frame(0)
     }
+    /// 🧮️ Intersects a document's declared catalog ceilings with the retained cursor's physical limits.
+    pub fn from_document_limits(limits: PackLimits, length: usize, maximum_allocation_bytes: usize) -> Result<Self, RetainedPackCatalogFault> {
+        let decoded = usize::try_from(limits.max_total_alloc.min(limits.max_file_len)).unwrap_or(usize::MAX).max(length);
+        let symbols = length.min(limits.max_symbols as usize).min(RETAINED_PACK_MAXIMUM_SYMBOL_SPANS);
+        let scalars = decoded.min(RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS);
+        let chunks = length
+            .min(usize::try_from(limits.max_items).unwrap_or(usize::MAX))
+            .min(RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES.min(RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS));
+        Self::try_new(limits, symbols, decoded, scalars, chunks, maximum_allocation_bytes)
+    }
+
     pub fn try_new(
         limits: PackLimits,
         maximum_symbols: usize,

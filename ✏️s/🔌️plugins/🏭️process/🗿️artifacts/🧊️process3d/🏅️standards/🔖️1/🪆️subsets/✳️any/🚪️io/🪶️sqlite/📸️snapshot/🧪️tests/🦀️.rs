@@ -64,7 +64,7 @@ fn full(word: u64) -> Process3dSnapshot {
         WorkingSolid::Cylinder { radius: f, height: f },
         WorkingSolid::Sphere { radius: f },
         WorkingSolid::ImportedMesh { mesh_url: literal.into() },
-        WorkingSolid::ImportedSolid { solid_handle: literal.into() },
+        WorkingSolid::ImportedSolid { brep_pack: literal.into() },
         WorkingSolid::Reference { reference_id: literal.into() },
     ];
     let mut steps = Vec::new();

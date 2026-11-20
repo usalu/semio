@@ -87,6 +87,73 @@
       "accepted": false
     }
   ],
+  "disposableInventories": [
+    {
+      "entries": [
+        "fixed.dir",
+        "m",
+        "v",
+        "image.json"
+      ],
+      "usage": null,
+      "directory": true,
+      "accepted": true
+    },
+    {
+      "entries": [
+        "fixed.dir",
+        "m",
+        "v",
+        "image.json",
+        "usage"
+      ],
+      "usage": [
+        "usage.json",
+        "usage.json.3.tmp"
+      ],
+      "directory": true,
+      "accepted": true
+    },
+    {
+      "entries": [
+        "fixed.dir",
+        "m",
+        "v",
+        "image.json",
+        "usage"
+      ],
+      "usage": [
+        "foreign.json"
+      ],
+      "directory": true,
+      "accepted": false
+    },
+    {
+      "entries": [
+        "fixed.dmg",
+        "m",
+        "image.json",
+        "usage"
+      ],
+      "usage": [
+        "usage.json"
+      ],
+      "directory": false,
+      "accepted": false
+    },
+    {
+      "entries": [
+        "fixed.dir",
+        "m",
+        "v",
+        "image.json",
+        "foreign"
+      ],
+      "usage": null,
+      "directory": true,
+      "accepted": false
+    }
+  ],
   "receiptDirectorySync": {
     "requiredCall": "syncNativeDirectoryMetadataV1",
     "forbiddenCall": "fsyncSync"

@@ -53,11 +53,17 @@ impl TestJobDriver {
         }
         let mut visitor = Some(visit);
         let mut observed = None;
-        caller.turn(TEST_TURN, |cx| cx.with_original_work_loan(fuel, cx.original_absolute_deadline_us(), |cx| {
-            let mut verdict = None;
-            let returned = if self.origin.admit(cx)? {
-                semio_framework_job::drive_step(job, cx, self.origin.receiver()?, "wfc.original-test-driver", InteractiveStage::InteractiveStep, &mut verdict)?
-            } else { OriginalJobReturn::Preparing };
+        caller.turn(TEST_TURN, |cx| {
+            let mut returned = OriginalJobReturn::Preparing;
+            if self.origin.admit(cx)? {
+                let receiver = self.origin.receiver()?;
+                let output = &mut returned;
+                cx.with_original_work_loan(fuel, cx.original_absolute_deadline_us(), move |cx| {
+                    let mut verdict = None;
+                    *output = semio_framework_job::drive_step(job, cx, receiver, "wfc.original-test-driver", InteractiveStage::InteractiveStep, &mut verdict)?;
+                    Ok(())
+                })?;
+            }
             match returned {
                 OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {
                     observed = Some(visitor.take().expect("one result visitor")(None));
@@ -76,8 +82,24 @@ impl TestJobDriver {
                 }
             }
             Ok(())
-        })).expect("original test step");
+        }).expect("original test step");
         observed.expect("one original result observation")
+    }
+
+    /// 🛑️ Requests cancellation and waits for the job to retire any lent preview and deliver cancellation.
+    pub fn cancel<J: InteractiveJob>(&mut self, job: &mut J, fuel: u64) {
+        job.begin_close();
+        for _ in 0..4096 {
+            let cancelled = self.step(job, fuel, |outcome| match outcome {
+                None | Some(JobOutcomeBorrow::Yield { .. }) => false,
+                Some(JobOutcomeBorrow::Cancelled { .. }) => true,
+                Some(other) => panic!("closing a live job must yield or cancel, got {other:?}"),
+            });
+            if cancelled {
+                return;
+            }
+        }
+        panic!("closing a live job did not deliver cancellation");
     }
 
     /// 📭️ Observes a bounded parent answer, then closes all original custody before returning test bytes.

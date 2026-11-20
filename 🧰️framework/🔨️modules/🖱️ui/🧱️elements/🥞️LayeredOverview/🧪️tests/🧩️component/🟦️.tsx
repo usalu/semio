@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { centeredLastRowCells, followFactor, layeredZoomArm, layeredZoomMove, layeredZoomOut, layeredZoomOver, LAYERED_ZOOM_MUCH_PX, LAYERED_ZOOM_MOVE_PX, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import { OverviewCard, OverviewCardAction } from "../../../🃏️OverviewCard/🟦️.tsx";
 import { LayeredOverview } from "../../🟦️.tsx";
+import { flatten } from "../../🔼️pan-promotion/🟦️.ts";
 import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts";
 import { type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../📋️types/🟦️.ts";
 import chunk from "lodash/chunk";
@@ -70,7 +71,7 @@ const frames = (ms: number) => {
 };
 const numbers = (text: string) => (text.match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
 const offsetOf = (transform: string, columns: number, rows: number) => {
-  const [x = 0, y = 0] = numbers(transform.replace(/^translate3d/u, ""));
+  const [x = 0, y = 0] = numbers(transform.replace(/^translate3d|^translate/u, ""));
   return { x: (-x * columns) / 100, y: (-y * rows) / 100 };
 };
 const sized = (root: HTMLElement) => vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 900, height: 900, right: 900, bottom: 900, x: 0, y: 0, toJSON: () => ({}) });
@@ -198,6 +199,47 @@ describe("LayeredOverview", () => {
     expect(host.hasAttribute("data-revealed")).toBe(false);
   });
 
+  it("watches its pages against its own box with one observer, marks the page the observer calls away, and leaves its strip without a layer once it rests", () => {
+    vi.useFakeTimers();
+    const watched: { readonly root: Element | null; readonly targets: Set<Element>; readonly callback: IntersectionObserverCallback }[] = [];
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        readonly record: (typeof watched)[number];
+        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+          this.record = { root: options?.root instanceof Element ? options.root : null, targets: new Set(), callback };
+          watched.push(this.record);
+        }
+        observe(target: Element): void {
+          this.record.targets.add(target);
+        }
+        unobserve(target: Element): void {
+          this.record.targets.delete(target);
+        }
+        disconnect(): void {
+          this.record.targets.clear();
+        }
+      },
+    );
+    try {
+      const { root, strip } = renderHome({ reducedMotion: "always" });
+      expect(watched).toHaveLength(1);
+      expect(watched[0]!.root).toBe(root);
+      const panes = [...root.querySelectorAll<HTMLElement>("[data-layered-pane]")];
+      expect(panes.length).toBeGreaterThan(1);
+      for (const pane of panes) expect(watched[0]!.targets.has(pane)).toBe(true);
+      act(() => watched[0]!.callback([{ target: panes[1]!, isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver));
+      expect(panes[1]!.hasAttribute("data-offscreen")).toBe(true);
+      expect(panes[0]!.hasAttribute("data-offscreen")).toBe(false);
+      act(() => void vi.advanceTimersByTime(1000));
+      expect(strip().style.willChange).toBe("");
+      expect(strip().style.transform.startsWith("translate3d")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("keeps inactive preview grids painted while ignoring pointer, focus and open commands", () => {
     const opened = vi.fn();
     const revealed = vi.fn();
@@ -207,7 +249,7 @@ describe("LayeredOverview", () => {
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
     fireEvent.focus(cardOf("board").querySelector("a")!);
     fireEvent.click(within(cardOf("board")).getByRole("button", { name: "Open Board" }));
-    expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(0%, 0%, 0)"));
     expect(opened).not.toHaveBeenCalled();
     expect(revealed).not.toHaveBeenCalled();
   });
@@ -220,7 +262,7 @@ describe("LayeredOverview", () => {
     const { root, strip } = renderHome({ interactive: false, openedId: "board", routing: "none", reducedMotion: "always", onOpenedIdChange: opened });
     expect(pane(root, "board").hasAttribute("inert")).toBe(false);
     expect(document.activeElement).toBe(outside);
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     expect(screen.queryByRole("button", { name: "Overview" })).toBeNull();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(opened).not.toHaveBeenCalled();
@@ -232,7 +274,7 @@ describe("LayeredOverview", () => {
     expect(root.dataset.mode).toBe("strip");
     expect(strip().style.width).toBe("300%");
     expect(strip().style.height).toBe("300%");
-    expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(0%, 0%, 0)"));
     const panes = [...root.querySelectorAll<HTMLElement>("[data-layered-pane]")];
     expect(panes.map((element) => element.dataset.layeredPane)).toEqual([...HOME]);
     for (const element of panes) {
@@ -288,7 +330,7 @@ describe("LayeredOverview", () => {
     const revealed = vi.fn();
     const { strip, veil, cardOf } = renderHome({ reducedMotion: "always", renderChrome: chrome, onRevealedIdChange: revealed });
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     expect(veil()!.dataset.veil).toBe("whole");
     expect(veil()!.style.visibility).toBe("visible");
     expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
@@ -303,7 +345,7 @@ describe("LayeredOverview", () => {
     expect(chrome).toHaveBeenLastCalledWith({ revealed: true, opened: false });
     releaseZoom(cardOf("board"));
     expect(veil()!.dataset.veil).toBe("whole");
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     pressZoom(cardOf("board"));
     leaveZoom(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
@@ -396,7 +438,7 @@ describe("LayeredOverview", () => {
     fakeClock();
     const { strip, veil, cardOf } = renderHome({ reducedMotion: "never" });
     hoverZoom(cardOf("cooling"), { pointerType: "mouse" });
-    expect(strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(0%, 0%, 0)"));
     expect(veil()!.dataset.veil).toBe("whole");
     frames(400);
     const middle = offsetOf(strip().style.transform, 3, 3);
@@ -412,7 +454,7 @@ describe("LayeredOverview", () => {
     expect(painted).toHaveLength(wanted.length);
     painted.forEach((value, index) => expect(value).toBeCloseTo(wanted[index]!, 2));
     frames(200);
-    expect(strip().style.transform).toBe("translate3d(-66.6667%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-66.6667%, -33.3333%, 0)"));
     expect(veil()!.dataset.veil).toBe("clear");
   });
 
@@ -442,7 +484,7 @@ describe("LayeredOverview", () => {
     frames(16);
     expect(offsetOf(strip().style.transform, 3, 3).x).toBeCloseTo(2 * followFactor(16), 3);
     frames(3000);
-    expect(strip().style.transform).toBe("translate3d(-66.6667%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-66.6667%, -33.3333%, 0)"));
   });
 
   it("pans as far in the same time whether the browser paints sixty frames a second or ten", () => {
@@ -480,24 +522,24 @@ describe("LayeredOverview", () => {
     expect(moving.root.dataset.pan).toBe("pointer");
     moveMouse(900, 900);
     frames(3000);
-    expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    expect(flatten(moving.strip().style.transform)).toBe(flatten("translate3d(-66.6667%, -66.6667%, 0)"));
     hoverZoom(moving.cardOf("learner"), { pointerType: "mouse" });
-    expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    expect(flatten(moving.strip().style.transform)).toBe(flatten("translate3d(-66.6667%, -66.6667%, 0)"));
     frames(250);
     const middle = offsetOf(moving.strip().style.transform, 3, 3);
     expect(middle.x).toBeGreaterThan(0);
     expect(middle.x).toBeLessThan(2);
     frames(300);
-    expect(moving.strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(flatten(moving.strip().style.transform)).toBe(flatten("translate3d(0%, 0%, 0)"));
     moving.unmount();
     const still = renderHome({ reducedMotion: "auto" });
     sized(still.root);
     expect(still.root.dataset.pan).toBe("none");
     moveMouse(900, 900);
     frames(3000);
-    expect(still.strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(flatten(still.strip().style.transform)).toBe(flatten("translate3d(0%, 0%, 0)"));
     hoverZoom(still.cardOf("prefs"), { pointerType: "mouse" });
-    expect(still.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    expect(flatten(still.strip().style.transform)).toBe(flatten("translate3d(-66.6667%, -66.6667%, 0)"));
   });
 
   it("reveals on keyboard focus and conceals when focus leaves the card", () => {
@@ -604,7 +646,7 @@ describe("LayeredOverview", () => {
     const opened = vi.fn();
     const { root, strip, veil } = renderHome({ onOpenedIdChange: opened }, rendered);
     expect(new Set(rendered)).toEqual(new Set(["badges"]));
-    expect(strip().style.transform).toBe("translate3d(0%, -66.6667%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(0%, -66.6667%, 0)"));
     expect(veil()).toBeNull();
     expect(root.querySelector("[data-layered-overlay]")).toBeNull();
     expect(screen.getByRole("region", { name: "Badges" }).textContent).toBe("Badges page (open)");
@@ -714,7 +756,7 @@ describe("LayeredOverview", () => {
       expect(root.dataset.pan).toBe(pan);
       moveMouse(900, 900, pointerType);
       frames(3000);
-      expect(strip().style.transform).toBe(pan === "pointer" && pointerType === "mouse" ? "translate3d(-66.6667%, -66.6667%, 0)" : "translate3d(0%, 0%, 0)");
+      expect(flatten(strip().style.transform)).toBe(flatten(pan === "pointer" && pointerType === "mouse" ? "translate3d(-66.6667%, -66.6667%, 0)" : "translate3d(0%, 0%, 0)"));
       unmount();
     }
   });
@@ -725,17 +767,17 @@ describe("LayeredOverview", () => {
     sized(root);
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
     frames(600);
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     expect(veil()!.dataset.veil).toBe("whole");
     moveMouse(900, 900);
     frames(600);
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     leaveZoom(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     moveMouse(0, 900);
     frames(3000);
-    expect(strip().style.transform).toBe("translate3d(0%, -66.6667%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(0%, -66.6667%, 0)"));
     expect(veil()!.dataset.veil).toBe("whole");
   });
 
@@ -746,12 +788,12 @@ describe("LayeredOverview", () => {
     sized(root);
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
     frames(600);
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
     camera.mockClear();
     moveMouse(900, 900);
     frames(600);
     expect(camera).toHaveBeenLastCalledWith({ x: 1, y: 1 });
-    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(flatten(strip().style.transform)).toBe(flatten("translate3d(-33.3333%, -33.3333%, 0)"));
   });
 
 });

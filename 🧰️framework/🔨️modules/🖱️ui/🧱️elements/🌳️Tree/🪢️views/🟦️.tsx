@@ -37,11 +37,11 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const spacerRows = treeWindowSpacerRows(childWindow, childItems.length);
   const isWaiting = Boolean(item.waiting);
   const hasDynamicChildren = Boolean(item.getItems);
-  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0 || windowTotal > 0;
+  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.content || item.emptyState) || branchCount > 0 || windowTotal > 0;
   const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
   const hasControl = Boolean(item.control);
   const propertyLayout = hasControl;
-  const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0 || windowTotal > 0;
+  const hasNestedTreeItems = hasExpandableChildren;
   const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
@@ -106,6 +106,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       windowRowExtent={windowRowExtent}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
+      {item.content}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {childItems.map((childItem, index) => (
         <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={(direction === "up" ? index === 0 : index === childItems.length - 1) && spacerRows.trailing === 0} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />

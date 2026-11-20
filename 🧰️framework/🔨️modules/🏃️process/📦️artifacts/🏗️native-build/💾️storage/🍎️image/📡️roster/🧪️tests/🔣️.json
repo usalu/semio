@@ -374,5 +374,10 @@
   "attempts": 8,
   "backoffMilliseconds": 75,
   "windowMilliseconds": 50
- }
+ },
+ "gateRefusals": [
+  {"startBeforeRefusal":false,"failure":"full","expectedFulls":3},
+  {"startBeforeRefusal":true,"failure":"full","expectedFulls":3},
+  {"startBeforeRefusal":false,"failure":"identity","expectedFulls":2}
+ ]
 }

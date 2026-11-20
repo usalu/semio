@@ -1,0 +1,6 @@
+[
+  {"change": "before", "attempts": 2, "consumptions": 1, "settles": true},
+  {"change": "during", "attempts": 1, "consumptions": 1, "settles": false},
+  {"change": "after", "attempts": 1, "consumptions": 1, "settles": false},
+  {"change": "none", "attempts": 1, "consumptions": 1, "settles": true}
+]

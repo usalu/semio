@@ -1,0 +1,64 @@
+{
+  "eval": {
+    "node": {
+      "in": {
+        "source": true
+      },
+      "out": {
+        "number": 2.5,
+        "text": "hello",
+        "flag": false,
+        "list": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "meta": {
+          "unit": "m"
+        },
+        "none": null,
+        "vector": {
+          "x": 1,
+          "y": 2,
+          "z": 3
+        }
+      }
+    }
+  },
+  "rows": [
+    [
+      "node@flag",
+      "→ false"
+    ],
+    [
+      "node@list",
+      "→ [1, 2, 3, 4, …]"
+    ],
+    [
+      "node@meta",
+      "→ {\"unit\": \"m\"}"
+    ],
+    [
+      "node@none",
+      "→ null"
+    ],
+    [
+      "node@number",
+      "→ 2.5"
+    ],
+    [
+      "node@source",
+      "← true"
+    ],
+    [
+      "node@text",
+      "→ \"hello\""
+    ],
+    [
+      "node@vector",
+      "→ {\"x\": 1, \"y\": 2, \"z\": 3}"
+    ]
+  ]
+}

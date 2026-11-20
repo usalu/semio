@@ -177,6 +177,7 @@ pub struct GraphInteractionSnapshot {
     /// emits `granularity: "handle"` with exactly this id — which is what makes hover bidirectional
     /// between the graph and a `World3d` preview keyed by the same channel id.
     pub hovered_handle: Option<String>,
+    pub hovered_edge: Option<String>,
     pub viewport: semio_os_kernel::Viewport2d,
 }
 
@@ -207,14 +208,14 @@ pub(super) fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> sem
     }
 }
 
-pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
+pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, hovered_edge: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
     let viewport = semio_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
     viewport.validate().map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
-    let mut parts = Vec::with_capacity(node_ids.len() + 2);
-    parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default()]);
+    let mut parts = Vec::with_capacity(node_ids.len() + 3);
+    parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default(), hovered_edge.as_deref().unwrap_or_default()]);
     parts.extend(node_ids.iter().map(String::as_str));
     semio_ui_action::checked_action_string_bytes(&parts)?;
-    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, viewport })
+    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, hovered_edge, viewport })
 }
 
 /// 🔌️ The channel the DAG's own hit-test reports under a screen point, in the `"{nodeId}@{portId}"`
@@ -222,13 +223,22 @@ pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<Strin
 /// payload BEFORE the plan is committed, so hover qualification cannot be read back off the commit.
 ///
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphPickChannel`
-pub(super) fn graph_hovered_handle(engine: &NodeGraphEngine, sx: f64, sy: f64) -> Option<String> {
+pub(super) fn graph_hovered_part(engine: &NodeGraphEngine, sx: f64, sy: f64) -> (Option<String>, Option<String>) {
     let targets = match engine {
         NodeGraphEngine::Flow(host) => host.pick_targets_at_screen_json(sx, sy),
         NodeGraphEngine::Dag(host) => host.pick_targets_at_screen_json(sx, sy),
     };
-    let rows = serde_json::from_str::<Vec<Value>>(&targets).ok()?;
-    rows.iter().find(|row| row.get("domain").and_then(Value::as_str) == Some("handle")).and_then(|row| row.get("id").and_then(Value::as_str)).map(str::to_owned)
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&targets) else { return (None, None) };
+    for row in rows {
+        let Some(id) = row.get("id").and_then(Value::as_str) else { continue };
+        match row.get("domain").and_then(Value::as_str) {
+            Some("handle") => return (Some(id.to_owned()), None),
+            Some("edge") => return (None, Some(id.to_owned())),
+            Some("node") => break,
+            _ => continue,
+        }
+    }
+    (None, None)
 }
 
 /// 🔌️ Reads the accepted live graph owner for React Flow's connection-handle cursor semantic.

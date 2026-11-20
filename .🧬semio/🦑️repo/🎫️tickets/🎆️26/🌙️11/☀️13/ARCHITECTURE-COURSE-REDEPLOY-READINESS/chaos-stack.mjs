@@ -1,19 +1,20 @@
-/** 🌪️ Native chaos stack: PDF channel + proctor (killable through a loopback control endpoint) + vite dev site. Usage: node chaos-stack.mjs; prints the env lines for the spec and runs until SIGTERM. */
+/** 🌪️ Native chaos stack (CHAOS_DATA puts the proctor's event store outside the replicated worktree, whose live copying makes every fsync there about 40 times slower): PDF channel + proctor (killable through a loopback control endpoint) + vite dev site. Usage: node chaos-stack.mjs; prints the env lines for the spec and runs until SIGTERM. */
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { freshProctor } from "./fresh-proctor.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../../../../../../..");
 const site = join(repo, "🎓️teaching/🏛️architecture/📚️course");
 const work = join(here, process.env.CHAOS_WORK ?? "🗑️generated/chaos");
-const data = join(work, "data");
+const data = process.env.CHAOS_DATA ?? join(work, "data");
 const PROCTOR_PORT = process.env.PROCTOR_PORT ?? "8793";
 const SITE_PORT = process.env.SITE_PORT ?? "6062";
-const executable = process.env.PROCTOR_EXECUTABLE ?? join(repo, ".cache/b/r/m/u/l/p001ec5/prototype/build/teaching-proctor/762af25000b726d1/out/proctor");
+const executable = process.env.PROCTOR_EXECUTABLE ?? freshProctor(process.env.STATIC === "1" ? "release" : "prototype");
 const pdfs = "/private/tmp/claude-501/-Users-ueli-Documents-semio/9d0eceba-b1b8-4814-b9cd-caae5bbd19aa/scratchpad/pdfs/out";
 rmSync(data, { recursive: true, force: true });
 mkdirSync(data, { recursive: true });
@@ -34,7 +35,8 @@ const startProctor = async () => {
   if (proctor) return;
   const log = openSync(join(work, "proctor.log"), "a");
   proctor = spawn(executable, ["serve"], { env: { ...Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("PROCTOR_"))), PROCTOR_PORT, PROCTOR_DATA: data, PROCTOR_COURSE: join(site, "🔣️.json"), ...(process.env.STATIC === "1" ? { PROCTOR_MODE: "production", PROCTOR_ALLOWED_ORIGINS: `http://127.0.0.1:${SITE_PORT}` } : { PROCTOR_MODE: "development" }), PROCTOR_LIMIT_SIGNUPS_PER_HOUR: "100000" }, stdio: ["ignore", log, log] });
-  proctor.once("exit", () => { proctor = undefined; });
+  const child = proctor;
+  child.once("exit", () => { if (proctor === child) proctor = undefined; });
   for (let i = 0; i < 200; i++) {
     try { if ((await fetch(`http://127.0.0.1:${PROCTOR_PORT}/instance`)).ok) return; } catch {}
     await new Promise((r) => setTimeout(r, 100));
@@ -67,6 +69,7 @@ if (process.env.STATIC === "1") {
     const path = decodeURIComponent(new URL(request.url ?? "/", "http://x").pathname);
     let file = join(root, path);
     if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory()) file = join(root, "index.html");
+    if (!existsSync(file)) { response.statusCode = 503; response.setHeader("retry-after", "5"); return void response.end("the site is still being built"); }
     const bytes = readFileSync(file);
     const extension = file.slice(file.lastIndexOf("."));
     response.setHeader("content-type", types[extension] ?? "application/octet-stream");

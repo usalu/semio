@@ -55,7 +55,7 @@ fn solid_slab_doc() -> Fem3dSnapshotValue {
         elements: vec![],
         materials: vec![FemMaterialValue { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
         sections: vec![],
-        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: crate::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
+        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
         supports: vec![
             FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
             FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
@@ -87,9 +87,12 @@ fn round_trips(value: &Fem3dSnapshotValue) {
 
 
 fn extent_doc() -> Fem3dSnapshotValue {
+    let Fem3dSnapshotValue { materials, sections, .. } = cantilever_doc();
     Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: -2.0, y: 1.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 5.0, y: 1.0, z: -3.0 }, FemNodeValue { id: "n3".into(), x: 5.0, y: 7.5, z: 6.0 }],
-        elements: vec![FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }],
+        elements: vec![FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into() }],
+        materials,
+        sections,
         ..Default::default()
     }
 }

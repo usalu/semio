@@ -16,9 +16,23 @@
  * @see `🐍️flow-surface-followup-probe.mjs` — the live twin, which counts the same hops on :6022
  */
 import { describe, expect, it } from "vitest";
+import { FlowOperationFields } from "../../../../../../🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js";
+import { nodeGraphSurfaceSelectionDomV1 } from "../../🟦️.tsx";
+import graphFixture from "../../../⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json";
+import { nodeGraphHoverActionArgs } from "../../🧰️graph-core/🟦️.ts";
 import { FLOW_SHARED_PAYLOAD_COALESCE_MS, createFlowSharedPayloadCoalescer, createNodeGraphInteractionLedger, nodeGraphHoverMarkKey, nodeGraphSelectionMarkKey, workflowNodesToDiagramNodes, type FlowSharedPayloadCoalescerPorts } from "../../🟦️.tsx";
 
 describe("flow node-graph interaction publication", () => {
+  it("publishes the picked wire in the graph interaction domain", () => {
+    const wire = graphFixture.edgeHover;
+    const scene = { nodes: [], edges: [], hover: { edgeId: wire.id } };
+    expect(nodeGraphSurfaceSelectionDomV1(scene).hoverTarget).toEqual({ edgeId: wire.id });
+    expect(FlowOperationFields.setHover.split(",").map((field: string) => field.split(":")[0])).toEqual(["widgetId", "edgeId"]);
+    const domain = { id: "graph", nodeTargetPrefix: "", handleTargetPrefix: "", edgeTargetPrefix: wire.edgeTargetPrefix };
+    const hover = nodeGraphHoverActionArgs(domain, undefined, undefined, wire.id);
+    expect(JSON.parse(hover!.targets)).toEqual([{ granularity: wire.granularity, id: wire.targetId }]);
+  });
+
   it("publishes a selection that moved and nothing for one that did not", () => {
     const ledger = createNodeGraphInteractionLedger();
     expect(ledger.publishSelection({ nodeIds: ["a"] })).toBe(true);
@@ -41,7 +55,7 @@ describe("flow node-graph interaction publication", () => {
   it("owes nothing for a plain click on empty canvas that changed neither lane", () => {
     const ledger = createNodeGraphInteractionLedger();
     ledger.adoptSelection({ nodeIds: [] });
-    ledger.adoptHover({});
+    ledger.reconcileSceneHover({});
     expect(ledger.publishSelection({ nodeIds: [] })).toBe(false);
     expect(ledger.publishHover({})).toBe(false);
   });
@@ -60,7 +74,10 @@ describe("flow node-graph interaction publication", () => {
     const ledger = createNodeGraphInteractionLedger();
     ledger.adoptSelection({ nodeIds: ["a", "b", "c"] });
     expect(ledger.publishSelection({ nodeIds: ["a", "b", "c"] })).toBe(false);
-    ledger.adoptHover({ hoveredId: "b", portId: "out" });
+    expect(ledger.publishHover({ edgeId: "wire" })).toBe(true);
+    expect(ledger.publishHover({ edgeId: "wire" })).toBe(false);
+    expect(ledger.publishHover({ hoveredId: "wire" })).toBe(true);
+    ledger.reconcileSceneHover({ nodeId: "b", portId: "out" });
     expect(ledger.publishHover({ hoveredId: "b", portId: "out" })).toBe(false);
   });
 

@@ -14,7 +14,8 @@
         "semio-framework-3d-brep-vector",
         "semio-framework-value",
         "semio-framework-mesh-engine",
-        "semio-framework-value-derive"
+        "semio-framework-value-derive",
+        "semio-framework-value-source-hold"
       ],
       "development": []
     },
@@ -57,7 +58,6 @@
         "semio-framework-3d-mesh-contract",
         "semio-framework-pack-json",
         "semio-framework-value",
-        "semio-framework-value-native-owned",
         "semio-framework-mesh-engine",
         "semio-framework-value-derive"
       ],
@@ -66,7 +66,8 @@
         "serde_json",
         "parry3d",
         "semio-framework-3d-testing-support",
-        "semio-framework-test-fixtures"
+        "semio-framework-test-fixtures",
+        "semio-framework-value-native-owned"
       ]
     },
     {

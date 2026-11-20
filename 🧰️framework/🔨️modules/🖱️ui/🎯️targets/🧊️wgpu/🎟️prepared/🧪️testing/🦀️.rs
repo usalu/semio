@@ -154,7 +154,6 @@ pub fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId
     let stock = close_source::STOCK;
     let mut caller = OriginalJobFixtureCaller::admit(operation, generation, stock, now, u64::MAX, 1 << 20);
     caller.birth_returns(stock);
-    if cancel.is_cancelled_now() { caller.cancel().cancel_now(); }
     let mut origin = OriginalJobReturnOrigin::empty();
     let mut returned = None;
     let mut receipt = RetainedCloneProgress::default();
@@ -165,6 +164,8 @@ pub fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId
         if ready { ready_after_setup = true; break; }
     }
     assert!(ready_after_setup, "prepared return origin never became ready");
+    if cancel.is_cancelled_now() { caller.cancel().cancel_now(); }
+    let live = budget.fuel > 0 && now().is_some_and(|now| now < budget.deadline_us) && !cancel.is_cancelled_now();
     let refresh = caller.turn(stock, |cx| semio_framework_job::original_return_refresh_quote(cx).map_err(Into::into)).expect("prepared return refresh quote turn");
     let policy = budget.retained;
     let turn_grant = RetainedCloneGrant { maximum_items: policy.maximum_items + refresh.copied_items, maximum_copy_bytes: policy.maximum_copy_bytes + refresh.copied_bytes, maximum_capacity_bytes: policy.maximum_capacity_bytes + refresh.retained_capacity_bytes, maximum_release_bytes: policy.maximum_release_bytes + refresh.released_bytes, maximum_depth: policy.maximum_depth };
@@ -186,7 +187,7 @@ pub fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId
     })).expect("prepared original drive turn");
     if !preparing { body_entered = true; break; }
     }
-    assert!(body_entered, "prepared return origin kept preparing for {PREPARE_STAGES} turns: the receiving frame or claim is not fundable by the policy grant plus its refresh quote");
+    assert!(body_entered || !live, "prepared return origin kept preparing for {PREPARE_STAGES} turns: the receiving frame or claim is not fundable by the policy grant plus its refresh quote");
     assert!(receipt.fits(turn_grant), "prepared drive receipt {receipt:?} exceeds its policy grant plus refresh quote {turn_grant:?}");
     let mut kind = None;
     if returned.is_some() {

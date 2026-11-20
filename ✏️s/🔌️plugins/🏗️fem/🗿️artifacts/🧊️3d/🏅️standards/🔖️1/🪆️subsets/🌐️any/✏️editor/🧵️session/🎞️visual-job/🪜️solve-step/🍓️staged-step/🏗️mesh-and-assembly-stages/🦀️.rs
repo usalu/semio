@@ -9,7 +9,7 @@ impl Fem3dNumericalChild {
         if !solver.set_len(freshness, self.analysis_node_ids.len()) {
             return Err((b"fem3d.numerical-field-count".to_vec()).into());
         }
-        self.stage = Fem3dNumericalStage::MountAssembly;
+        self.stage = Fem3dNumericalStage::ReserveSolverPages;
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
 
@@ -60,8 +60,8 @@ impl Fem3dNumericalChild {
     }
 
     /// 🏋 Reserves the modal mass storage.
-    pub(super) fn step_reserve_modal_mass(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        if self.modal_free_mass.admit_one(self.free_order).map_err(|_| b"fem3d.numerical-modal-mass-admission".to_vec())? {
+    pub(super) fn step_reserve_modal_mass(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
+        if self.modal_free_mass.admit_in(self.free_order, context).map_err(|_| b"fem3d.numerical-modal-mass-admission".to_vec())? {
             self.stage = Fem3dNumericalStage::InitializeModalMass;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
@@ -89,10 +89,11 @@ impl Fem3dNumericalChild {
         } else {
             let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_cursor];
             if let Some((full, compact)) = self.assembly.as_ref().and_then(|assembly| self.analysis_node_ids.get(self.node_cursor).and_then(|node_id| assembly.visual_equation_indices(node_id, dof))) {
-                self.full_equations[self.node_cursor][self.dof_cursor] = Some(full);
-                self.equations[self.node_cursor][self.dof_cursor] = compact;
+                let fields = self.node_values.get_mut(self.node_cursor).ok_or_else(|| b"fem3d.numerical-equation-node-values".to_vec())?;
+                fields.full_equations[self.dof_cursor] = Some(full);
+                fields.equations[self.dof_cursor] = compact;
                 if let Some(compact) = compact {
-                    self.modal_free_mass.add_at(compact, self.modal_lumped_mass[self.node_cursor * 6 + self.dof_cursor]).map_err(|_| b"fem3d.numerical-modal-mass-index".to_vec())?;
+                    self.modal_free_mass.add_at(compact, fields.lumped_mass[self.dof_cursor]).map_err(|_| b"fem3d.numerical-modal-mass-index".to_vec())?;
                 }
             }
             self.dof_cursor += 1;

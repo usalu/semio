@@ -731,13 +731,13 @@ async fn dispatch_action_effect_round_trips_camel_case() {
 
 #[semio_framework_async_macros::async_test]
 async fn request_file_open_effect_round_trips_multiple() {
-    let effect = Effect::RequestFileOpen { req: RequestId(4), accept: ".png,.jpg".into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true, args: None };
+    let effect = Effect::RequestFileOpen { max_file_bytes: None, req: RequestId(4), accept: ".png,.jpg".into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true, args: None };
     let json = serde_json::to_string(&effect).unwrap();
     assert!(json.contains("\"multiple\":true"), "{json}");
     let round: Effect = serde_json::from_str(&json).unwrap();
     assert_eq!(round, effect);
     let defaulted: Effect = serde_json::from_str(r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#).unwrap();
-    assert_eq!(defaulted, Effect::RequestFileOpen { req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false, args: None });
+    assert_eq!(defaulted, Effect::RequestFileOpen { max_file_bytes: None, req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false, args: None });
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1063,15 +1063,20 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
   return { ...(edge === undefined ? {} : { edge }), spread, p95M: quantileOf(spread.hard, 0.95, cell), p95SoftM: quantileOf(spread.soft, 0.95, cell), softExtentM, counts: { both, either, drawn: a, volume: v, drawnCut }, hausdorffM, iou: either === 0 ? 1 : both / either, recall: a === 0 ? 1 : both / a, precision: v === 0 ? 1 : drawnCut / v, filled, outlines, reference, visible, full, section: section !== undefined, box, cell, openStrokes: strokes.length, shapes: evaluated.length };
 }
 
+/** 📏️ Width, height and depth of the physical body in metres. */
+export function bodyDimensions(worlds: readonly World[]): readonly [number, number, number] {
+  const e = extentOf(worlds.filter((solid) => solid.texture !== true));
+  return [e.max[0]! - e.min[0]!, e.max[1]! - e.min[1]!, e.max[2]! - e.min[2]!];
+}
+
 export type AssetMeasure = { readonly asset: string; readonly pose: string; readonly bbox: readonly [number, number, number]; readonly bboxError: readonly [number, number, number]; readonly views: Record<Viewpoint, Measured>; readonly sections: Partial<Record<Viewpoint, ViewSection>> };
 
 /** 🧪️ The bounding box against `dimensions` and the three views of an asset in a pose at 1:`scale` for the body of `volumes[scale]`; `featureM` refines the raster to half the smallest feature so that the Hausdorff distance resolves it. */
 export function measureAsset(asset: Asset, scale: ScaleDenominator | number = GATE.scale, pose: string = asset.presentation.defaultPose, cells?: number, featureM?: number, softIds: ReadonlySet<string> = new Set()): AssetMeasure {
   const state = evaluate(asset, { kind: "pose", pose }, { kind: "scale", scale: { denominator: scale } });
   const solids = worldSolids(asset, state.bones as never, scale).filter((w) => w.texture !== true).map((w) => (softIds.has(w.id) ? { ...w, soft: true } : w));
-  const e = extentOf(solids);
   const d = [asset.dimensions.widthM, asset.dimensions.heightM, asset.dimensions.depthM];
-  const bbox = [0, 1, 2].map((k) => e.max[k]! - e.min[k]!) as [number, number, number];
+  const bbox = bodyDimensions(solids);
   const rep = asset.representations[String(scale) as unknown as keyof Asset["representations"]] as unknown as { readonly sections?: Partial<Record<Viewpoint, ViewSection>> };
   const views = Object.fromEntries(VIEWPOINTS.map((v) => [v, measureView(asset, state, solids, v, scale, cells, featureM)])) as Record<Viewpoint, Measured>;
   return { asset: asset.id, pose, bbox, bboxError: bbox.map((b, k) => (b - d[k]!) / d[k]!) as [number, number, number], views, sections: rep.sections ?? {} };

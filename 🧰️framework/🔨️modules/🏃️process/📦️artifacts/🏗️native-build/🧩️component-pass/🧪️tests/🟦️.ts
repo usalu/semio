@@ -3,12 +3,16 @@ import {pathToFileURL} from "node:url";
 import {testPythonV1} from "../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { withCompilerCapacityConsumptionV1 } from "../../../../🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
+import { withCompilerWorkspaceLifetimeV1, withCompilerWorkspaceStageWriteV1, withCompilerWriterCustodyV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import { currentLeaseLineageV1, heldLeasesV1, leaseLedgerSnapshotV1 } from "../../../../🔒️leases/🧭️order/🟦️.ts";
 import { availableParallelism } from "node:os";
-import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
+import { registerIsolatedBuildTestV1, withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { decodeCargoProvenanceV1 } from "../../🧾️receipt/🟦️.ts";
 import { formatStampProtocolV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -18,6 +22,9 @@ import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/�
 import { lawSourceBoundaryV1, lawStoragePolicyV1, schedulerBinaries, withLawStorageV1, type LawStorageV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { readTimelineV1 } from "../../📈️telemetry/🟦️.ts";
 import { nativeBuildReusedUnitsV1, nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import { ConcurrentEditErrorV1, churnProtocolV1, concurrentEditV1, installRestartableFailureHandlerV1 } from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import { failedCompilerMessageFilesV1, failedPassConcurrentEditV1 } from "../🔁️failure-churn/🟦️.ts";
+import { nativeBuildJobAttemptLogPathV1, nativeBuildJobLogNamesV1, runNativeBuildJobAttemptsV1 } from "../🔁️job-attempts/🟦️.ts";
 import{admitNativeBuildPlanV1,type NativeBuildJobV1,type NativeBuildPassV1,type NativeBuildPlanV1} from "../📋️contract/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
@@ -38,21 +45,34 @@ function stubCargo(root: string): { readonly command: string; readonly args: rea
   const calls = join(root, "calls.jsonl"), stub = join(root, "📜️script.ts");
   writeFileSync(stub, `import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 const args = process.argv.slice(2), profile = args[args.indexOf("--profile") + 1], manifest = args[args.indexOf("--manifest-path") + 1];
-if (args.includes("--unit-graph")) { if(process.env.STUB_MODE==="unit-hang"){appendFileSync(${JSON.stringify(join(root,"unit-calls.jsonl"))},JSON.stringify({pid:process.pid})+"\\n");await new Promise(()=>setInterval(()=>{},1000));} process.stdout.write(JSON.stringify({ version: 1, units: [], roots: [] })); process.exit(0); }
 const packages = args.flatMap((arg, index) => args[index - 1] === "-p" ? [arg] : []), root = manifest.slice(0, -"/Cargo.toml".length);
+const observing = process.env.STUB_MODE==="observe-linked";
+if (args.includes("--unit-graph")) {
+  if(process.env.STUB_MODE==="unit-hang"){appendFileSync(${JSON.stringify(join(root,"unit-calls.jsonl"))},JSON.stringify({pid:process.pid})+"\\n");await new Promise(()=>setInterval(()=>{},1000));}
+  const units = observing ? packages.map(name=>({pkg_id:"path+"+pathToFileURL(join(root,name)).href+"#"+name+"@0.1.0",target:{name,kind:["cdylib"],crate_types:["cdylib"],src_path:join(root,name,"lib.rs")},platform:"wasm32-wasip2",mode:"build",features:[],dependencies:[]})) : [];
+  process.stdout.write(JSON.stringify({ version: 1, units, roots: units.map((_,index)=>index) })); process.exit(0);
+}
 appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ at: Date.now(), pid: process.pid, profile, manifest, jobserver: process.env.CARGO_MAKEFLAGS ?? null, wrapper: process.env.RUSTC_WRAPPER ?? null, unification: process.env.CARGO_RESOLVER_FEATURE_UNIFICATION ?? null }) + "\\n");
 if (process.env.STUB_MODE === "hang") await new Promise(() => setInterval(() => {}, 1000));
-const linked = process.env.STUB_MODE === "omit-last" ? packages.slice(0, -1) : packages;
+const failing = ["error-last", "error-touch"].includes(process.env.STUB_MODE), linked = process.env.STUB_MODE === "omit-last" || failing ? packages.slice(0, -1) : packages;
 for (const name of linked) {
   await new Promise((accept) => setTimeout(accept, ${fixture.stub.delayMs} / packages.length));
   const directory = join(process.env.CARGO_TARGET_DIR, "wasm32-wasip2", profile), wasm = join(directory, name.replaceAll("-", "_") + ".wasm"), source = join(root, name, "lib.rs");
   mkdirSync(directory, { recursive: true });
   writeFileSync(wasm, Buffer.concat([Buffer.from(${JSON.stringify([...header])}), Buffer.from(name + profile)]));
-  process.stdout.write(JSON.stringify({ reason: "compiler-artifact", package_id: "path+file://" + root + "/" + name + "#" + name + "@0.1.0", manifest_path: join(root, name, "Cargo.toml"), target: { kind: ["cdylib"], crate_types: ["cdylib"], name, src_path: source }, profile: { test: false }, features: [], filenames: [wasm], executable: null, fresh: false }) + "\\n");
+  if(observing) writeFileSync(wasm.replace(/\\.wasm$/u,".d"), wasm+": "+source.replaceAll(" ","\\\\ ")+"\\n");
+  process.stdout.write(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + pathToFileURL(join(root,name)).href + "#" + name + "@0.1.0", manifest_path: join(root, name, "Cargo.toml"), target: { kind: ["cdylib"], crate_types: ["cdylib"], name, src_path: source }, profile: { test: false }, features: [], filenames: [wasm], executable: null, fresh: false }) + "\\n");
+}
+if (failing) {
+  const name = packages.at(-1), source = join(root, name, "lib.rs");
+  process.stdout.write(JSON.stringify({ reason: "compiler-message", package_id: "path+file://" + root + "/" + name + "#" + name + "@0.1.0", manifest_path: join(root, name, "Cargo.toml"), target: { name }, message: { level: "error", message: "cannot find crate", rendered: "error: cannot find crate", spans: [{ file_name: name + "-0.1.0/lib.rs" }] } }) + "\\n");
+  if (process.env.STUB_MODE === "error-touch") { await new Promise((accept) => setTimeout(accept, 50)); writeFileSync(source, "// edited by a peer\\n"); }
 }
 appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ end: Date.now(), profile, manifest }) + "\\n");
-process.exit(linked.length === packages.length ? 0 : 101);
+if (process.env.STUB_MODE === "stderr-exit") process.stderr.write("wrapper: build broker unreachable: All pipe instances are busy.\\n");
+process.exit(linked.length === packages.length && process.env.STUB_MODE !== "stderr-exit" ? 0 : 101);
 `);
   return { command: process.execPath, args: [stub], calls };
 }
@@ -69,16 +89,34 @@ function stubWorkspace(root: string, name: string, packages: readonly string[], 
 
 /** 🚀️ Runs the driver against a stub Cargo inside one original compiler reservation bound to its control (cache, target and build stores live in that
  * reservation); `inspect` reads the run's generation, whether it succeeded or failed, before the reservation retires. */
-async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }> } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
-  const { cancel, ...driver } = overrides;
+async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }>; verifyStageWriters?:boolean } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
+  const { cancel, verifyStageWriters, ...driver } = overrides;
   const settled = await withBuildTestInvocationV1(async (original): Promise<Readonly<{ failed: boolean; failure?: unknown; outcome?: NativeBuildOutcomeV1 }>> => {
-    const control = driver.control ?? scriptCompilerAdmissionControlV1(original, "test:component-pass", cancel?.milliseconds ?? 30000, cancel?.signal);
+    const control = driver.control ?? scriptCompilerAdmissionControlV1(original, "test:component-pass", cancel?.milliseconds ?? 120000, cancel?.signal);
     try {
-      return { failed: false, outcome: await withLawStorageV1(control, lawStoragePolicyV1.stubImageBytes, async (held, control) => {
+      return { failed: false, outcome: await withLawStorageV1(control, mode === "observe-linked" ? lawStoragePolicyV1.realImageBytes : lawStoragePolicyV1.stubImageBytes, async (held, control) => {
         let outcome: NativeBuildOutcomeV1 | undefined;
-        try { outcome = await runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity: (compile) => withCompilerCapacityConsumptionV1({ request: { kind: "exact", parallelism: Math.min(fixture.stub.tokens, availableParallelism()) }, directory: artifacts, control, environment: process.env }, (facts, held) => compile(facts, held, undefined)), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver }); return outcome; }
+        const withCapacity:NonNullable<Parameters<typeof runNativeBuildDriverV1>[0]["withCapacity"]> = compile => {
+          if(verifyStageWriters){
+            const [task,...ancestors]=currentLeaseLineageV1()!;
+            expect(heldLeasesV1(task!,ancestors).some(lease=>lease.resource.startsWith("artifact-capture:"))).toBe(false);
+          }
+          const consume=(writer:typeof control)=>withCompilerCapacityConsumptionV1({ request: { kind:"exact", parallelism:Math.min(fixture.stub.tokens,availableParallelism()) }, directory:artifacts, control:writer, environment:process.env }, (facts,held)=>compile(facts,held,undefined));
+          return verifyStageWriters?withCompilerWriterCustodyV1({root:held.storage.backing.root,maximumPhysicalBytes:held.storage.backing.maximumPhysicalBytes,recheck:held.storage.recheck},artifacts,control,{version:1,wait:true,mode:"shared"},consume):consume(control);
+        };
+        const withStageWriter:NonNullable<Parameters<typeof runNativeBuildDriverV1>[0]["withStageWriter"]> = (phase,write)=>{
+          const [task,...ancestors]=currentLeaseLineageV1()!,observed=heldLeasesV1(task!,ancestors);
+          const capture=observed.find(lease=>lease.directory===artifacts&&lease.mode==="exclusive"&&lease.resource.startsWith("artifact-capture:"));
+          expect(capture).toBeDefined();
+          expect(observed.some(lease=>lease.resource==="artifact:"+capture!.resource.slice("artifact-capture:".length))).toBe(true);
+          expect(observed.some(lease=>lease.resource==="semio.compiler.host-capacity/v1"||lease.resource.startsWith("repo:compiler-writer:"))).toBe(false);
+          expect(leaseLedgerSnapshotV1().holds.some(lease=>lease.resource==="semio.compiler.host-capacity/v1")).toBe(true);
+          return withCompilerWorkspaceStageWriteV1(held.storage,artifacts,phase,write);
+        };
+        const run=()=>runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity, ...(verifyStageWriters?{withStageWriter}:{}), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver });
+        try { outcome = await (verifyStageWriters?withCompilerWorkspaceLifetimeV1(held.storage,control,run):run()); return outcome; }
         finally { await inspect?.({ outcome, held }); }
-      }) };
+      }, original) };
     } catch (failure) { return { failed: true, failure }; }
   });
   if (settled.failed) throw settled.failure;
@@ -122,7 +160,7 @@ test("generations: the environment selects warm or fresh; fresh is a new one-let
 });
 
 test("component batches follow the recorded p95 output footprint, estimate unmeasured units by kind (p95 of the kind, else its upper bound, also on a cold empty history) and keep a fitting pass whole", () => {
-  const vector = fixture.batches as any;
+  const vector = JSON.parse(JSON.stringify(fixture.batches).replaceAll("path+file:///w", "path+" + pathToFileURL(resolve("/w")).href));
   expect(vector.graph.units.map((unit: any) => unitGraphHistoryKeyV1(unit, vector.pass.profile))).toEqual(vector.keys);
   for (const row of vector.kinds) expect(unitFootprintKindV1(row.crate, row.types)).toBe(row.kind);
   for (const row of vector.cases) expect(componentBatchesV1(vector.pass, vector.graph, new Map(Object.entries(vector.histories[row.history])) as any, row.budgetBytes, vector.footprints).map((batch) => ({ id: batch.pass.id, packages: batch.pass.packages.map((item) => item.name), bytes: batch.bytes, measured: batch.measured }))).toEqual(row.expected);
@@ -136,7 +174,7 @@ test("pass arguments and component detection follow the vectors", () => {
 test("the driver streams each component the moment Cargo links it, runs profiles in parallel lanes and workspaces of one profile in sequence, under one jobserver", async () => {
   const root = mkdtempSync(join(artifacts, "s-")), cargo = stubCargo(root);
   const passes = [stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release"), stubWorkspace(root, "ext", ["comp-c"], "release"), stubWorkspace(root, "hub2", ["comp-d"], "prototype")];
-  await runStub(root, { version: 1, passes }, cargo, {}, "ok", ({ outcome: run }) => {
+  await runStub(root, { version: 1, passes }, cargo, {verifyStageWriters:true}, "ok", ({ outcome: run }) => {
   if (!run) return;
   const outcome = run;
   expect([...outcome.staged].sort()).toEqual(["comp-a:release", "comp-b:release", "comp-c:release", "comp-d:prototype"]);
@@ -145,7 +183,7 @@ test("the driver streams each component the moment Cargo links it, runs profiles
   const span = (manifest: string) => ({ start: calls.find((row) => row.at && row.manifest === manifest).at, end: calls.find((row) => row.end && row.manifest === manifest).end });
   expect(span(passes[1]!.manifest).start).toBeGreaterThanOrEqual(span(passes[0]!.manifest).end);
   expect(span(passes[2]!.manifest).start).toBeLessThan(span(passes[0]!.manifest).end);
-  for (const row of calls.filter((call) => call.at)) { expect(row.jobserver).toMatch(/--jobserver-auth=fifo:/u); expect(row.wrapper).toBe(process.execPath); expect(row.unification).toBe(NATIVE_BUILD_DRIVER_POLICY_V1.featureUnification); }
+  for (const row of calls.filter((call) => call.at)) { expect(row.jobserver).toMatch(/--jobserver-auth=(?:fifo:|semio-jobserver-)/u); expect(row.wrapper).toBe(process.execPath); expect(row.unification).toBe(NATIVE_BUILD_DRIVER_POLICY_V1.featureUnification); }
   const units = JSON.parse(readFileSync(join(outcome.generation.report, "units.json"), "utf8"));
   const stageA = units.stages.find((stage: any) => stage.component === "comp-a" && stage.stage === "stage");
   expect(stageA.startMs).toBeLessThan(span(passes[0]!.manifest).end);
@@ -159,7 +197,59 @@ test("the driver streams each component the moment Cargo links it, runs profiles
   });
 }, 120_000);
 
-test("an unlinked component fails the native build without deleting unowned checkout bytes and still writes the report", async () => {
+test("the driver seals compiler provenance while independent stages run", async () => {
+  const expected = fixture.provenanceSeal;
+  for (const scenario of expected.cases) {
+    const root=mkdtempSync(join(artifacts,"z-")), cargo=stubCargo(root), pass=stubWorkspace(root,"app",["seal-a"],"release");
+    const source=join(dirname(pass.packages[0]!.manifest),"lib.rs");
+    writeFileSync(source,expected.originalSource);
+    let signalSeal!:()=>void, sealed=false, edited=false;
+    const seal=new Promise<void>(resolve=>{signalSeal=resolve;});
+    const run=runStub(root,{version:1,passes:[pass]},cargo,{
+      log(line) {
+        if(line==="[native-build] compiler provenance sealed"){sealed=true;signalSeal();}
+      },
+      stages(linked) {
+        return [{name:"independent",after:[],capacity:"io",async run(context){
+          const provenance=await context.provenance();
+          expect(provenance.units).toBe(1);
+          if(scenario.timing==="after-seal") {
+            let timer:ReturnType<typeof setTimeout>|undefined;
+            try{await Promise.race([seal,new Promise<void>(resolve=>{timer=setTimeout(resolve,5000);})]);}
+            finally{if(timer!==undefined)clearTimeout(timer);}
+          }
+          writeFileSync(scenario.mutation==="source"?source:linked.staged,expected.editedSource);
+          edited=true;
+        }}];
+      },
+    },"observe-linked",({outcome,held})=>{
+      const generation=outcome?.generation??nativeBuildGenerationV1(join(held.root,"cache"),{target:join(held.root,"target"),build:join(held.root,"build")},"warm");
+      const receipts=join(generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+      const name=readdirSync(receipts).find(name=>name.startsWith("cargo-unit-provenance-"));
+      expect(Boolean(name)).toBe(scenario.publishesReceipt);
+      if(name){
+        const receipt=decodeCargoProvenanceV1(readFileSync(join(receipts,name),"utf8"));
+        const original=receipt.units[0]!.inputs.find(row=>row.path===source);
+        expect(original?.sha256).toBe(createHash("sha256").update(expected.originalSource).digest("hex"));
+      }
+    });
+    if(scenario.publishesReceipt) expect((await run).staged).toEqual(["seal-a:release"]);
+    else await expect(run).rejects.toThrow(/Current physical bytes changed before transfer/u);
+    expect(edited).toBe(true);
+    expect(sealed).toBe(scenario.timing==="after-seal");
+  }
+},120_000);
+
+registerIsolatedBuildTestV1(import.meta.path, "a failed cargo exit with no failed unit surfaces cargo's own stderr in the error and the report", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
+  const root = mkdtempSync(join(artifacts, "g-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
+  let report = "";
+  await expect(runStub(root, { version: 1, passes: [pass] }, cargo, {}, "stderr-exit", ({ held }) => { const runs = join(held.root, "cache", NATIVE_BUILD_DRIVER_POLICY_V1.warmRoot); for (const run of readdirSync(runs)) { const file = join(runs, run, NATIVE_BUILD_DRIVER_POLICY_V1.stores.report, "report.md"); if (existsSync(file)) report = readFileSync(file, "utf8"); } })).rejects.toThrow(/cargo exit 101[\s\S]*build broker unreachable: All pipe instances are busy\./u);
+  expect(report).toContain("## Cargo diagnostics");
+  expect(report).toContain("build broker unreachable: All pipe instances are busy.");
+  checkpoint();
+}, /cargo exit 101/u);
+
+registerIsolatedBuildTestV1(import.meta.path, "an unlinked component fails the native build without deleting unowned checkout bytes and still writes the report", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "f-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   const stale = join(pass.packages[1]!.manifest,"..","unowned-stale");
   mkdirSync(stale, { recursive: true });
@@ -168,15 +258,54 @@ test("an unlinked component fails the native build without deleting unowned chec
   await expect(runStub(root, { version: 1, passes: [pass] }, cargo, {}, "omit-last", ({ held }) => { const runs = join(held.root, "cache", NATIVE_BUILD_DRIVER_POLICY_V1.warmRoot); reported = readdirSync(runs).some((run) => existsSync(join(runs, run, NATIVE_BUILD_DRIVER_POLICY_V1.stores.report, "report.md"))); })).rejects.toThrow(/Native build failed: comp-b/u);
   expect(readFileSync(join(stale,"comp_b.wasm"))).toEqual(header);
   expect(reported).toBe(true);
-}, 120_000);
+  checkpoint();
+}, /Native build failed: comp-b/u);
 
-test("a batch the free storage cannot cover above the hard reserve is refused before Cargo starts", async () => {
+
+
+registerIsolatedBuildTestV1(import.meta.path, "a failed cargo pass whose failing unit's inputs did not change stays a hard failure", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
+  const root = mkdtempSync(join(artifacts, "e-")), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
+  const failure = await runStub(root, { version: 1, passes: [pass] }, stubCargo(root), {}, "error-last").then(() => undefined, (error: unknown) => error);
+  expect(failure).not.toBeInstanceOf(ConcurrentEditErrorV1);
+  expect(String((failure as Error).message)).toMatch(/Native build failed: comp-b/u);
+  checkpoint();
+}, /Native build failed: comp-b/u);
+
+registerIsolatedBuildTestV1(import.meta.path, "a failed cargo pass whose failing unit's inputs changed after Cargo started is a restartable concurrent edit naming the file", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
+  installRestartableFailureHandlerV1(() => undefined);
+  const root = mkdtempSync(join(artifacts, "e-")), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
+  const failure = await runStub(root, { version: 1, passes: [pass] }, stubCargo(root), {}, "error-touch").then(() => undefined, (error: unknown) => error) as { code?: string; reason?: string; path?: string } | undefined;
+  expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
+  expect(failure).toMatchObject({ code: churnProtocolV1().concurrentEditCode, reason: "bytes", path: join(dirname(pass.manifest), "comp-b", "lib.rs") });
+  checkpoint();
+}, /modified after Cargo started/u);
+
+test("failed pass inputs: a changed custody digest, a vanished file or a file modified after Cargo started is a concurrent edit; untouched inputs and foreign paths are not", async () => {
+  const modified = (table: Record<string, number | undefined>) => (path: string) => table[path], clean = async () => undefined;
+  expect(await failedPassConcurrentEditV1({ startedMs: 100, files: ["/w/a.rs"], recheck: clean, modifiedMs: modified({ "/w/a.rs": 100 }) })).toBeUndefined();
+  expect(await failedPassConcurrentEditV1({ startedMs: 100, files: ["/w/a.rs", "/w/b.rs"], recheck: clean, modifiedMs: modified({ "/w/a.rs": 50, "/w/b.rs": 101 }) })).toMatchObject({ reason: "bytes", path: "/w/b.rs" });
+  expect(await failedPassConcurrentEditV1({ startedMs: 100, files: ["/w/gone.rs"], recheck: clean, modifiedMs: modified({}) })).toMatchObject({ reason: "vanished", path: "/w/gone.rs" });
+  const digest = await failedPassConcurrentEditV1({ startedMs: 100, files: [], recheck: async () => { throw concurrentEditV1("bytes", "/w/dep.rs", "digest differs"); } });
+  expect(digest).toBeInstanceOf(ConcurrentEditErrorV1);
+  expect(digest).toMatchObject({ reason: "bytes", path: "/w/dep.rs" });
+  expect(await failedPassConcurrentEditV1({ startedMs: 100, files: [], recheck: async () => { throw Error("not an edit"); } })).toBeUndefined();
+  const cwd = resolve("/w");
+  const manifest = join(cwd, "plugin", "packages", "rust", "Cargo.toml");
+  expect(failedCompilerMessageFilesV1({ package_id: "registry+https://example.org/index#foreign@1.0.0", manifest_path: "/deps/foreign/Cargo.toml", message: { spans: [{ file_name: "src/lib.rs" }, { file_name: "<proc-macro source code>" }] } }, cwd)).toEqual([]);
+  expect(failedCompilerMessageFilesV1({ package_id: "path+file:///w/plugin/packages/rust#window-config@0.1.0", manifest_path: manifest, message: { spans: [{ file_name: "window-config-0.1.0/../../native/lib.rs" }] } }, cwd)).toEqual([manifest, join(cwd, "plugin", "native", "lib.rs")]);
+  expect(failedCompilerMessageFilesV1({ manifest_path: join(cwd, "c", "Cargo.toml"), message: { spans: [{ file_name: "c/src/lib.rs" }, { file_name: join(cwd, "c", "src", "lib.rs") }, { file_name: resolve("/rustc/library/core.rs") }] } }, cwd)).toEqual([join(cwd, "c", "Cargo.toml"), join(cwd, "c", "src", "lib.rs")]);
+});
+
+registerIsolatedBuildTestV1(import.meta.path, "a batch the free storage cannot cover above the hard reserve is refused before Cargo starts", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "h-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
-  await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { storageReserveBytes: lawStoragePolicyV1.stubImageBytes * 2 })).rejects.toThrow(/Native build storage refused: .*reserve/u);
+  const lines: string[] = [];
+  await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { storageReserveBytes: lawStoragePolicyV1.stubImageBytes * 2, log: line => lines.push(line) })).rejects.toThrow(/Native build storage refused: .*reserve/u);
+  expect(lines.findLast(line => line.includes("failure(s) in "))).toContain("1 failure(s) in ");
   expect(existsSync(cargo.calls)).toBe(false);
-}, 120_000);
+  checkpoint();
+}, /Native build storage refused/u);
 
-test("cancellation stops every Cargo tree, and the stall watchdog stops a pass in which nothing starts or finishes", async () => {
+registerIsolatedBuildTestV1(import.meta.path, "cancellation stops every Cargo tree", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "x-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), controller = new AbortController();
   const cancelled = runStub(root, { version: 1, passes: [pass] }, cargo, { cancel: { signal: controller.signal, milliseconds: 30000 } }, "hang");
   const cancel=setInterval(()=>{if(existsSync(cargo.calls)){clearInterval(cancel);controller.abort(Error("cancelled by law"));}},fixture.stub.cancelAfterMs);
@@ -184,9 +313,14 @@ test("cancellation stops every Cargo tree, and the stall watchdog stops a pass i
   const pid = JSON.parse(readFileSync(cargo.calls, "utf8").trim().split("\n")[0]!).pid;
   await Bun.sleep(200);
   expect(() => process.kill(pid, 0)).toThrow();
+  checkpoint();
+}, /./su);
+
+registerIsolatedBuildTestV1(import.meta.path, "the stall watchdog stops a pass in which nothing starts or finishes", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const stalledRoot = mkdtempSync(join(artifacts, "y-")), stalledCargo = stubCargo(stalledRoot);
   await expect(runStub(stalledRoot, { version: 1, passes: [stubWorkspace(stalledRoot, "hub", ["comp-a"], "release")] }, stalledCargo, { stallMs: fixture.stub.stallMs }, "hang")).rejects.toThrow(/stalled/u);
-}, 120_000);
+  checkpoint();
+}, /stalled/u);
 
 test("a real build over wasm32-wasip2 components: both profiles, admitted units, streamed stages, timeline, report and recorded telemetry", async () => {
   const root = mkdtempSync(join(artifacts, "r-")), workspace = join(root, "w");
@@ -243,7 +377,7 @@ test("jobs start as soon as their completions happen, post-link stages stream pe
   expect(byId.tool.start).toBeLessThan(passStart + 2000);
   for (const name of ["comp-a", "comp-b"]) expect(checked[name]).toBeGreaterThanOrEqual(byId.tool.end);
   expect(byId.pages.start).toBeGreaterThanOrEqual(Math.max(byId.tool.end, ...Object.values(checked)));
-  for (const row of jobs) { expect(row.jobserver).toMatch(/--jobserver-auth=fifo:/u); expect(row.pass).toBe(row.id); }
+  for (const row of jobs) { expect(row.jobserver).toMatch(/--jobserver-auth=(?:fifo:|semio-jobserver-)/u); expect(row.pass).toBe(row.id); }
   expect(units.stages.filter((stage: any) => stage.stage === "check").map((stage: any) => stage.component).sort()).toEqual(["comp-a", "comp-b"]);
   expect(report).toContain("## Stage cache");
 }, 120_000);
@@ -262,7 +396,7 @@ test("reserved nested compiler processes receive held worker slots and release t
   expect(reserved.jobserver).toBeNull();
   expect(reserved.makeflags).toBeNull();
   expect(shared.parallelism).toBe(fixture.stub.tokens);
-  expect(shared.jobserver).toMatch(/--jobserver-auth=fifo:/u);
+  expect(shared.jobserver).toMatch(/--jobserver-auth=(?:fifo:|semio-jobserver-)/u);
   expect(shared.start).toBeGreaterThanOrEqual(reserved.end);
   console.log(`[component-pass] reserved ${reserved.parallelism} workers; shared successor and Cargo completed`);
 }, 120_000);
@@ -289,14 +423,15 @@ test("exclusive compiler jobs and stages hold the whole pool without deadlocking
   console.log(`[component-pass] exclusive jobs=2 stages=2 workers=${fixture.stub.tokens}; shared Cargo completed`);
 }, 120_000);
 
-test("a component Cargo did not link fails every stage and job that waits for it, and a failed job fails the release", async () => {
+registerIsolatedBuildTestV1(import.meta.path, "a component Cargo did not link fails every stage and job that waits for it, and a failed job fails the release", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "k-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   let ran = 0;
   const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [stubJob(root, "pages", ["components:check"], 0), stubJob(root, "broken", [], 0, 3)] };
   await expect(runStub(root, plan, cargo, { stages: () => [{ name: "check", capacity: "single", after: [], run: async () => { ran++; } }] }, "omit-last")).rejects.toThrow(/Native build failed: (?=.*comp-b)(?=.*job:broken)/u);
   expect(ran).toBe(1);
   expect(readFileSync(join(root, "jobs.jsonl"), "utf8")).not.toContain('"pages"');
-}, 120_000);
+  checkpoint();
+}, /Native build failed: comp-b/u);
 
 test("a lane job runs inside its profile's Cargo lane before that lane's passes, and an idle stage widens onto free slots", async () => {
   const root = mkdtempSync(join(artifacts, "l-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
@@ -311,7 +446,7 @@ test("a lane job runs inside its profile's Cargo lane before that lane's passes,
   expect(widths[0]).toBeLessThanOrEqual(3);
 }, 120_000);
 
-test("a finalizer runs once its stages settled, also after one failed, and the failure still fails the release", async () => {
+registerIsolatedBuildTestV1(import.meta.path, "a finalizer runs once its stages settled, also after one failed, and the failure still fails the release", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "z-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
   const finalized: Record<string, { after: number; outcome: string }> = {}, failedAt: Record<string, number> = {};
   const stages = (component: LinkedComponentV1): readonly NativeBuildStageV1[] => [
@@ -323,10 +458,11 @@ test("a finalizer runs once its stages settled, also after one failed, and the f
   expect(Object.keys(finalized).sort()).toEqual(["comp-a", "comp-b"]);
   expect(finalized["comp-b"]!.after).toBeGreaterThanOrEqual(failedAt["comp-b"]!);
   expect(Object.values(finalized).map((row) => row.outcome)).toEqual(["settled", "settled"]);
-}, 120_000);
+  checkpoint();
+}, /Native build failed: comp-b/u);
 
 
-test("a job failing at once rejects the driver, naming it, and terminates the sibling job still running", async () => {
+registerIsolatedBuildTestV1(import.meta.path, "a job failing at once rejects the driver, naming it, and terminates the sibling job still running", { bodyMilliseconds: 60_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "ff-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), pids = join(root, "long.pid");
   const long = stubJob(root, "long", [], 0);
   writeFileSync(long.command[1]!, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(pids)}, String(process.pid));\nawait Bun.sleep(120000);\n`);
@@ -335,7 +471,8 @@ test("a job failing at once rejects the driver, naming it, and terminates the si
   await expect(runStub(root, { version: 1, passes: [pass], jobs: [long, failing] }, cargo)).rejects.toThrow(/job failed.*job:broken/su);
   expect(performance.now() - started).toBeLessThan(30_000);
   if (existsSync(pids)) { const pid = Number(readFileSync(pids, "utf8")); await Bun.sleep(300); expect(() => process.kill(pid, 0)).toThrow(); }
-}, 60_000);
+  checkpoint();
+}, /./su);
 
 test("a job that exits with the shared restart status runs again once with the shared backoff instead of failing the build", async () => {
   const root = mkdtempSync(join(artifacts, "rs-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), marker = join(root, "restarted");
@@ -345,6 +482,63 @@ test("a job that exits with the shared restart status runs again once with the s
   expect(outcome.failed).toEqual([]);
   expect(readFileSync(join(root, "starts.log"), "utf8")).toBe("xx");
 }, 60_000);
+
+test("job attempt and tail files stay distinct on case-insensitive filesystems", () => {
+  const ids = fixture.jobRetryDiagnostics.pathIds, names = nativeBuildJobLogNamesV1(ids), maximum = 1 + formatStampProtocolV1().maximumReexecutions;
+  const paths = [...names.values()].flatMap(name => Array.from({ length: maximum }, (_, index) => {
+    const log = nativeBuildJobAttemptLogPathV1(name, index + 1);
+    return [log, log + ".tail"];
+  })).flat();
+  expect(paths).toHaveLength(ids.length * maximum * 2);
+  expect(new Set(paths.map(path => path.toLowerCase())).size).toBe(paths.length);
+});
+
+test("a restartable job retains its attempt logs and identifies each failure to operators", async () => {
+  const law = fixture.jobRetryDiagnostics, directory = mkdtempSync(join(artifacts, "rs-")), notices: string[] = [];
+  const signal = new AbortController().signal;
+  await runNativeBuildJobAttemptsV1(
+    { id: law.jobId, logPath: join(directory, law.attempts[0]!.log), log: line => notices.push(line), signal, check: () => signal.throwIfAborted(), ...law.limits },
+    async (capture, attempt) => {
+      const row = law.attempts[attempt - 1]!;
+      capture(row.stdout);
+      capture(row.stderr);
+      return attempt < law.attempts.length ? formatStampProtocolV1().exitCode : 0;
+    },
+  );
+  const expected = Object.fromEntries(law.attempts.flatMap(row => [
+    [row.log, [row.stdout, row.stderr]],
+    ...(row.tail ? [[row.tail, [row.stdout, row.stderr]]] : []),
+  ]));
+  const observed = Object.fromEntries(readdirSync(directory).map(file => [file, readFileSync(join(directory, file), "utf8").trim().split("\n")]));
+  const oracle = new Ajv({ strict: true }).compile({ const: expected });
+  expect(oracle(observed), JSON.stringify(observed)).toBe(true);
+  expect(notices).toHaveLength(law.attempts.length - 1);
+  for (const [index, notice] of notices.entries()) {
+    const row = law.attempts[index]!;
+    expect(notice).toContain(`attempt ${index + 1}`);
+    expect(notice).toContain(row.log);
+    expect(notice).toContain(row.stderr);
+  }
+});
+
+test("a restartable job retains the bounded late tail when cancelled before the next attempt", async () => {
+  const law = fixture.jobRetryDiagnostics, directory = mkdtempSync(join(artifacts, "rc-"));
+  const controller = new AbortController(), reason = Error("job cancelled during retry backoff"), limit = law.limits.logLimitBytes;
+  const settled = runNativeBuildJobAttemptsV1(
+    { id: law.jobId, logPath: join(directory, law.attempts[0]!.log), log: () => controller.abort(reason), signal: controller.signal, check: () => controller.signal.throwIfAborted(), ...law.limits },
+    async capture => {
+      capture(law.overflow.repeat(limit));
+      capture(law.attempts[0]!.stderr);
+      return formatStampProtocolV1().exitCode;
+    },
+  );
+  await expect(settled).rejects.toBe(reason);
+  const { log, tail, stderr } = law.attempts[0]!;
+  expect(readdirSync(directory).sort()).toEqual([log, tail].sort());
+  expect(readFileSync(join(directory, log)).length).toBe(limit);
+  const rows = readFileSync(join(directory, tail!), "utf8").trim().split("\n");
+  expect(rows).toEqual([law.overflow.repeat(law.limits.tailLineChars), stderr]);
+});
 
 test("queued exclusive compiler cancellation drains rejected work and permits a successor",async()=>{
  const root=mkdtempSync(join(artifacts,"q-")),cargo=stubCargo(root),pass=stubWorkspace(root,"hub",["comp-a"],"release"),law=fixture.queuedExclusiveCancellation;
@@ -447,6 +641,7 @@ test("unlaned same-profile Cargo jobs reserve tokens before mutable state", asyn
 import { resourceLeasePathV1 } from ${JSON.stringify(resourceModule)};
 import { phaseCompilerAdmissionControlV1 } from ${JSON.stringify(new URL("../../../../🏗️build/🎟️capacity/🟦️.ts", import.meta.url).href)};
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 const signal = AbortSignal.timeout(${vector.deadlineMs - 1000});
 const lease = await acquireCargoBuildLeaseV1({ directory: ${JSON.stringify(artifacts)}, buildDirectory: process.env.CARGO_BUILD_BUILD_DIR, targetDirectory: process.env.CARGO_TARGET_DIR, args: ["--profile", ${JSON.stringify(vector.profile)}], signal, control: phaseCompilerAdmissionControlV1(signal, ${vector.deadlineMs - 1000}, () => undefined, () => new Promise(done => setImmediate(done))) });
 try {

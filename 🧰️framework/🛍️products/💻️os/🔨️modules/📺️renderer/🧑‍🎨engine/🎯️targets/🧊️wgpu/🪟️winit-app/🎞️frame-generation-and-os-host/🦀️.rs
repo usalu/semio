@@ -263,6 +263,11 @@ impl OsHost {
         if !self.presenter.holds_presented_input_publication(){let _=self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS,cx)?;}
         #[cfg(not(target_arch="wasm32"))]{let _=self.runtime.pump_native_asset();let _=self.with_asset_decode_context(|runtime,asset_cx|runtime.asset_decode_step(asset_cx))?;}
         if self.advance_component_surface_close(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}
+        #[cfg(not(target_os = "wasi"))]
+        if !crate::os_host::component_surface_close_pending() && !cx.should_yield() && self.runtime.pump_icon_svg_preview(self.clock.now_seconds()) {
+            cx.consume_fuel(1);
+            self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+        }
         if !self.events.is_empty(){let _=self.runtime.enqueue_dispatch_on_original_caller(&mut self.events,self.frame_generation,cx)?;}Ok(())
     }
 
@@ -300,6 +305,10 @@ impl OsHost {
                 cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
                 self.animation_clock.accept(has_animated_primitives);self.animation_clock.sync(&mut self.scheduler,self.clock.now_seconds());self.runtime.publish_retained_control_deadline(retained_control_deadline);self.runtime.publish_shell_clock_deadline(shell_clock_deadline);self.platform_fullscreen=fullscreen;
                 if let Some(token)=cursor_wake{if self.runtime.acknowledge_world_cursor_wake(&token){self.retain_cursor_wake_directive(token);self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}}
+                #[cfg(not(target_os = "wasi"))]
+                if self.runtime.reconcile_icon_svg_previews(|key| self.presenter.raster_is_resident(key)) {
+                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                }
                 if generation.0!=self.frame_generation{self.scheduler.invalidate(InvalidationReason::INPUT_STATE)}
             },
             Ok(semio_renderer_wgpu_frame_presentation::AppPresentStep::Pending|semio_renderer_wgpu_frame_presentation::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
@@ -317,6 +326,9 @@ impl OsHost {
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let (cursor, ime) = self.snapshot_sink.with_current(|snapshot| (snapshot.cursor, snapshot.ime)).unwrap_or((CursorRequest::Default, None));
         semio_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
+
+        #[cfg(not(target_os = "wasi"))]
+        self.scheduler.replace_deadline(semio_renderer_wgpu_host_plumbing::deadlines::ICON_SVG_RETRY_CLOCK, self.runtime.icon_svg_retry_deadline().map(|due| ui_render::Deadline { due, reason: InvalidationReason::RESOURCE_READY }));
 
         #[cfg(not(target_arch = "wasm32"))]
         if self.hot_swap.is_due(now) {

@@ -1,6 +1,6 @@
 /** 🔬️ The page of one asset: header and actions, the viewer, poses and clips with their timeline, dimensions, the model assumptions inspector, provenance and the export panel.
  *
- * The viewer's state is the address while this page is open (`#/humans/walking-commuter?view=thermal&scale=50&clip=walk-cycle&t=1.2`); in the background it shows the default state and touches no address.
+ * The viewer's state is the address while this page is open (`#/humans/walking-commuter?view=thermal&scale=50&clip=walk-cycle&t=1.2`). Behind the glass it shows the asset's presentation pose.
  * An asset that is not authored or fails validation gets the reason in place of the viewer, never a crash.
  *
  * @see ../🎛️viewer/🟦️.tsx — the viewer
@@ -15,10 +15,10 @@ import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { Button, ButtonLink, Cell, Notice, PageFrame, Tag } from "../🪟️chrome/🟦️.tsx";
 import type { PaneView } from "../🥞️levels/🟦️.tsx";
 import { FavoriteButton, RowFacts } from "../🗃️browse/🟦️.tsx";
-import { UnavailableNotice } from "../🖼️previews/🟦️.tsx";
+import { RowPreview, UnavailableNotice } from "../🖼️previews/🟦️.tsx";
 import { freshId, placeAllEvents } from "../⭐️collections/🧮️actions/🟦️.ts";
 import type { Row } from "../🔎️search/🟦️.ts";
-import { addressProblems, DEFAULT_VIEWER, compareToParams, formatAddress, navigate, useAddress, viewerFromParams, viewerToParams, type ViewerState } from "../🗺️routing/🟦️.ts";
+import { addressProblems, compareToParams, formatAddress, navigate, useAddress, viewerFromParams, viewerToParams, type ViewerState } from "../🗺️routing/🟦️.ts";
 import { PosesAndClips, ClipTimeline } from "./🎞️clips/🟦️.tsx";
 import { DimensionsSection } from "./📐️dimensions/🟦️.tsx";
 import { comparisonOf } from "../⚖️compare/🧮️panes/🟦️.ts";
@@ -37,14 +37,28 @@ function Timeline(props: { readonly asset: Asset; readonly frame: ViewerFrame | 
 }
 
 /** 🔭️ The asset page. */
-export function AssetPage(props: { readonly row: Row; readonly view: PaneView }): ReactElement {
-  const { row, view } = props;
-  const { t, language, store, catalog } = useArchive();
+export function AssetPage({ row, view }: { readonly row: Row; readonly view: PaneView }): ReactElement {
+  const { route, params } = useAddress();
+  return view.opened && route.page === "asset" && route.asset === row.entry.id ? <OpenedAssetPage row={row} params={params} /> : <AssetPreview row={row} />;
+}
+
+function AssetPreview({ row }: { readonly row: Row }): ReactElement {
+  const { language } = useArchive();
+  const pose = row.asset?.presentation.defaultPose;
+  const query = useMemo(() => pose === undefined ? undefined : { kind: "pose", pose } as const, [pose]);
+  return (
+    <PageFrame page={`asset:${row.entry.id}`} title={row.entry.title[language]} lede={row.asset?.summary[language] ?? row.entry.distinction[language]}>
+      <Cell className="items-center"><RowFacts row={row} /></Cell>
+      <Cell className="h-[clamp(12rem,35vh,24rem)]"><RowPreview row={row} viewpoint="elevation" {...(query === undefined ? {} : { query })} compact /></Cell>
+    </PageFrame>
+  );
+}
+
+function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: URLSearchParams }): ReactElement {
+  const { t, language, store } = useArchive();
   const { manifest } = useRows();
   const { playground } = useLocal();
-  const address = useAddress();
-  const active = view.opened && address.route.page === "asset" && address.route.asset === row.entry.id;
-  const viewer = useMemo(() => (active ? viewerFromParams(address.params) : DEFAULT_VIEWER), [active, address.hash]);
+  const viewer = useMemo(() => viewerFromParams(params), [params]);
   const latest = useRef(viewer);
   latest.current = viewer;
   const [frame, setFrame] = useState<ViewerFrame | null>(null);
@@ -52,7 +66,6 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
   const [announce, setAnnounce] = useState("");
   const route = { page: "asset", category: row.entry.category, asset: row.entry.id } as const;
   const change = (patch: Partial<ViewerState>, replace = true): void => {
-    if (!active) return;
     latest.current = { ...latest.current, ...patch };
     navigate(route, viewerToParams(latest.current), replace);
   };
@@ -67,7 +80,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
         : { kind: "clip", clip: viewer.selection?.kind === "clip" ? viewer.selection.clip : asset.presentation.defaultClip, timeS: frame?.clock.timeS ?? viewer.timeS ?? 0 };
   const query: EvaluationQuery = (isDrawn(viewer.viewpoint) ? frame?.scene.metadata.query : undefined) ?? selected ?? { kind: "pose", pose: asset?.presentation.defaultPose ?? "" };
   const share = async (): Promise<void> => {
-    const href = `${window.location.origin}${window.location.pathname}${active ? window.location.hash : formatAddress(route)}`;
+    const href = window.location.href;
     try {
       await navigator.clipboard.writeText(href);
       setCopied("done");
@@ -90,7 +103,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
   return (
     <PageFrame page={`asset:${row.entry.id}`} wide eyebrow={category} title={title} lede={asset?.summary[language] ?? row.entry.distinction[language]} actions={actions}>
       <p role="status" className="sr-only">{announce}</p>
-      {active ? addressProblems(address.params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />) : null}
+      {addressProblems(params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />)}
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
       <Cell className="items-center">
         <RowFacts row={row} />

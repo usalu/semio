@@ -12,9 +12,22 @@ import { zipSync } from "fflate";
 import { detailsControlId, detailsControlSelector } from "../🏃️browser/🎯️details/🟦️.ts";
 
 const matrix = readMatrix();
+type CatalogEntry = { pluginId: string; activationEvents: string[] };
+let catalog: Promise<CatalogEntry[]> | undefined;
+
+async function projectedCatalog(): Promise<CatalogEntry[]> {
+  const [{ renderCatalogFiles }, { specificCatalogPublicationV1 }] = await Promise.all([
+    import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts"),
+    import("../../../../../🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts"),
+  ]);
+  const publication = specificCatalogPublicationV1(path => readFileSync(join(REPO_ROOT, path), "utf8"));
+  const { files } = renderCatalogFiles(REPO_ROOT, undefined, "exclude", publication);
+  return JSON.parse(files["🔌️plugins.json"]!);
+}
+
 const LENIENT = new Set(["binary", "none"]);
 const TEXTUAL = new Set(["text", "csv", "tsv", "html", "xml", "svg", "json", "obj", "step", "ifc", "dxf", "epw", "gltf", "semio"]);
-const FULL_PARSE = new Set(["png", "zip", "ooxml", "bcf", "zlib", "json", "xml", "svg"]);
+const FULL_PARSE = new Set(["png", "zip", "ooxml", "xlsx", "bcf", "zlib", "json", "xml", "svg"]);
 const definitionOf = (directory: string) => JSON.parse(readFileSync(join(ARTIFACTS_ROOT, directory, "📜️artifact-definition.json"), "utf8")) as { id: string; artifact: string; representations: { extensions: string[]; mimes: string[] }[] };
 
 function* manifests(directory: string): Generator<string> {
@@ -38,7 +51,6 @@ for (const path of manifests(join(REPO_ROOT, "🌎️hub/🧩️compositions")))
   }
 }
 const lifecycle = JSON.parse(readFileSync(join(REPO_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json"), "utf8")) as { formats: { appId: string; formatKind: string }[] };
-const catalog = JSON.parse(readFileSync(join(REPO_ROOT, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json"), "utf8")) as { pluginId: string; activationEvents: string[] }[];
 
 describe("matrix", () => {
   test("binds every published native codec index to its own authored protocol", () => {
@@ -161,6 +173,13 @@ describe("matrix", () => {
   test("names an oracle that exists for every row", () => {
     for (const row of matrix.artifacts) expect(Object.keys(ORACLES)).toContain(row.oracle);
   });
+  test("the XLSX oracle distinguishes spreadsheets from Word and PowerPoint packages", () => {
+    const workbook = matrix.artifacts.find(row => row.artifact === "xlsx")!;
+    for (const kind of ["xlsx", "docx", "pptx"]) {
+      const sample = matrix.artifacts.find(row => row.artifact === kind)!;
+      expect(judgeBytes(workbook.oracle, readFileSync(join(REPO_ROOT, sample.sample))).ok).toBe(kind === "xlsx");
+    }
+  });
 });
 
 describe.each(matrix.artifacts.map((row) => [`${row.batch}/${row.artifact}`, row] as const))("%s", (_name, row) => {
@@ -179,7 +198,7 @@ describe.each(matrix.artifacts.map((row) => [`${row.batch}/${row.artifact}`, row
     expect(definition.id).toBe(row.kind);
     expect(definition.representations.flatMap((representation) => representation.extensions)).toContain(row.extension);
   });
-  test("ships an editor and a viewer in its family component and the generated catalog", () => {
+  test("ships an editor and a viewer in its family component and the generated catalog", async () => {
     expect(ownedApps.get(`${row.plugin}:${row.ownerApp}`)).toBe("editor");
     expect(ownedApps.get(`${row.plugin}:${row.ownerApp.replace(/#editor$/u, "#viewer")}`)).toBe("viewer");
     if (!row.ownerApp.startsWith(row.kind + "@")) {
@@ -189,8 +208,9 @@ describe.each(matrix.artifacts.map((row) => [`${row.batch}/${row.artifact}`, row
     const shipped = apps.get(row.kind);
     expect(shipped?.roles.has("editor") && shipped.roles.has("viewer") ? "shipped" : "missing").toBe("shipped");
     expect(shipped?.plugin).toBe(row.plugin);
-    expect(catalog.some((plugin) => plugin.pluginId === row.plugin && plugin.activationEvents.includes(`on-artifact-kind:${row.kind}`))).toBe(true);
-  });
+    const entries = await (catalog ??= projectedCatalog());
+    expect(entries.some((plugin) => plugin.pluginId === row.plugin && plugin.activationEvents.includes(`on-artifact-kind:${row.kind}`))).toBe(true);
+  }, 60_000);
   test("has a natural-file sample accepted by its third-party oracle", () => {
     const candidates = candidateSamples(row);
     expect(candidates.length).toBeGreaterThan(0);

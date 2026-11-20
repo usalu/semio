@@ -6217,6 +6217,116 @@
    },
    "neutral": null,
    "takers": []
+  },
+  {
+   "name": "A portable parser with two receiving revisions retains its role for the judge",
+   "root": "/producer",
+   "producer": {
+    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authority": [],
+    "observations": [
+     {
+      "kind": "analysis",
+      "path": "/producer/source.rs",
+      "fact": {
+       "provider": "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111",
+       "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "image": "{}"
+   },
+   "neutral": {
+    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authority": [],
+    "observations": [
+     {
+      "kind": "analysis",
+      "path": "⟦semio-root⟧/source.rs",
+      "fact": {
+       "provider": "build:rust-references:v1:⟦analysis-owner⟧",
+       "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+     }
+    ],
+    "image": "{}"
+   },
+   "takers": [
+    {
+     "root": "/receiver",
+     "providers": [
+      "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111",
+      "build:rust-references:v1:2222222222222222222222222222222222222222222222222222222222222222"
+     ],
+     "generation": null,
+     "local": {
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authority": [],
+      "observations": [
+       {
+        "kind": "analysis",
+        "path": "/receiver/source.rs",
+        "fact": {
+         "provider": "build:rust-references:v1:⟦analysis-owner⟧",
+         "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+       }
+      ],
+      "image": "{}"
+     },
+     "bundles": []
+    },
+    {
+     "root": "/receiver",
+     "providers": [
+      "build:rust-references:v1:2222222222222222222222222222222222222222222222222222222222222222",
+      "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111"
+     ],
+     "generation": null,
+     "local": {
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authority": [],
+      "observations": [
+       {
+        "kind": "analysis",
+        "path": "/receiver/source.rs",
+        "fact": {
+         "provider": "build:rust-references:v1:⟦analysis-owner⟧",
+         "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+       }
+      ],
+      "image": "{}"
+     },
+     "bundles": []
+    },
+    {
+     "root": "/receiver",
+     "providers": [
+      "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111",
+      "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111"
+     ],
+     "generation": null,
+     "local": {
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "authority": [],
+      "observations": [
+       {
+        "kind": "analysis",
+        "path": "/receiver/source.rs",
+        "fact": {
+         "provider": "build:rust-references:v1:1111111111111111111111111111111111111111111111111111111111111111",
+         "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+       }
+      ],
+      "image": "{}"
+     },
+     "bundles": []
+    }
+   ],
+   "bundles": [],
+   "neutralBundles": []
   }
  ]
 }

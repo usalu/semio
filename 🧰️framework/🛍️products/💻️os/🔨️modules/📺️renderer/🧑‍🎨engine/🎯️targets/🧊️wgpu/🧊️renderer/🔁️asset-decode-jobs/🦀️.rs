@@ -141,7 +141,7 @@ impl RendererAssetProbe {
                         RendererAssetProbeStep::Pending
                     }
                     Ok(true) => {
-                        self.glb_materialize = Some(GlbMaterializeCursor::new(schema.output));
+                        self.glb_materialize = Some(schema.into_materializer());
                         self.phase = RendererAssetProbePhase::Materializing;
                         RendererAssetProbeStep::Pending
                     }
@@ -299,10 +299,8 @@ impl RendererAssetDecodeJob {
         if loan.is_some() { self.result = Some(result); }
         Ok(loan)
     }
-}
 
-impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_turn<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = context.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if context.is_cancelled() {
@@ -327,6 +325,13 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
             RendererAssetProbeStep::Fault(detail) => Some(RendererAssetDecodeResult::Fault(detail)),
         };
         Ok(None)
+    }
+
+}
+
+impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
+    fn step<'a>(&'a mut self, context:&mut semio_framework_job::StepContext<'_>, _return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_turn(context))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

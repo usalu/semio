@@ -55,26 +55,78 @@ pub fn screen_points(points: &[[f64; 2]]) -> Vec<[f32; 2]> {
 /// text lines (`◻️2d` line law, sized with the map) and the `image.src` raster at the node origin. Approximations of this
 /// renderer: group opacity is applied per piece and a stroke is at least one pixel wide.
 pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &CanvasLayer, viewport: &Viewport, inner: Rect, order: &mut CanvasPaintOrder, ctx: &mut FrameworkWidgetContext<'_>) {
-    use crate::canvas2d_paint::{flatten, stroke_polygons, Affine, FillRule, LineCap, LineJoin, StrokeGeometry};
+    use crate::canvas2d_paint::{affine_stroke_polygons, flatten, Affine, FillRule, LineCap, LineJoin, StrokeGeometry};
     let backdrop = ctx.theme.canvas_clear;
     let opacity = layer.opacity.unwrap_or(1.0).clamp(0.0, 1.0);
     let blend = layer.blend_mode.as_deref();
     let camera = Affine::camera(f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom), f64::from(inner.x), f64::from(inner.y), f64::from(inner.w), f64::from(inner.h));
+    let clip_rect = if let Some([x, y, width, height]) = layer.clip_rect {
+        if ![x, y, width, height].into_iter().all(f64::is_finite) || width <= 0.0 || height <= 0.0 {
+            return;
+        }
+        let [left, top] = camera.apply([x, y]);
+        let [right, bottom] = camera.apply([x + width, y + height]);
+        Some(Rect { x: left as f32, y: top as f32, w: (right - left) as f32, h: (bottom - top) as f32 })
+    } else {
+        None
+    };
+    let polygons = layer.clip_polygons.as_deref().unwrap_or_default();
+    let paths = layer.clip_paths.as_deref().unwrap_or_default();
+    let clip_bands = (!polygons.is_empty() || !paths.is_empty()).then(|| {
+        let screen = polygons.iter().map(|polygon| polygon.map(|point| camera.apply(point))).collect::<Vec<_>>();
+        let rect = clip_rect.unwrap_or(inner);
+        let bounds = [
+            f64::from(rect.x.max(inner.x)),
+            f64::from(rect.y.max(inner.y)),
+            f64::from((rect.x + rect.w).min(inner.x + inner.w)),
+            f64::from((rect.y + rect.h).min(inner.y + inner.h)),
+        ];
+        if paths.is_empty() {
+            super::polygon_clipping::polygon_clip_bands(&screen, bounds)
+        } else {
+            let fills: Vec<_> = paths.iter().map(|path| {
+                let contours = flatten(&path.segments, &camera);
+                let rule = if path.fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero };
+                crate::canvas2d_paint::fill_trapezoids(&contours, rule, (bounds[1], bounds[3]))
+            }).collect();
+            super::polygon_clipping::path_clip_bands(&screen, &fills, bounds)
+        }
+    });
+    if clip_bands.as_ref().is_some_and(Vec::is_empty) {
+        return;
+    }
+    let mut clipped = clip_rect.or_else(|| clip_bands.as_ref().map(|_| inner)).map(|rect| CanvasPaintOrder::open(ctx.draw, rect));
+    if let Some(bands) = clip_bands.as_deref() {
+        if !ctx.draw.begin_scanline_clip(bands) {
+            if let Some(clipped) = clipped {
+                clipped.close(ctx.draw);
+                order.vectors = false;
+            }
+            return;
+        }
+    }
+    let layer_order = clipped.as_mut().unwrap_or(&mut *order);
     let map = Affine::node(layer.transform.as_deref()).then(camera);
     let contours = flatten(layer.segments.as_deref().unwrap_or_default(), &map);
     let stroke = layer.stroke.as_ref().filter(|stroke| stroke.width.unwrap_or(1.0).is_finite() && stroke.width.unwrap_or(1.0) > 0.0);
     if let Some(fill) = &layer.fill {
         push_scene_path_fill(ctx.draw, &contours, FillRule::of(layer.fill_rule.as_deref()), (f64::from(inner.y), f64::from(inner.y + inner.h)), fill, &map, opacity, blend, backdrop);
-        order.vector();
+        layer_order.vector();
     }
     if let Some(stroke) = stroke {
-        let scale = map.line_scale();
-        let geometry = StrokeGeometry { width: (stroke.width.unwrap_or(1.0) * scale).max(1.0), cap: LineCap::of(stroke.cap.as_deref()), join: LineJoin::of(stroke.join.as_deref()), dash: stroke.dash.iter().flatten().map(|value| value * scale).collect() };
+        let geometry = StrokeGeometry {
+            width: stroke.width.unwrap_or(1.0),
+            cap: LineCap::of(stroke.cap.as_deref()),
+            join: LineJoin::of(stroke.join.as_deref()),
+            dash: stroke.dash.clone().unwrap_or_default(),
+            dash_offset: stroke.dash_offset.unwrap_or(0.0),
+            miter_limit: stroke.miter_limit.unwrap_or(crate::canvas2d_paint::MITER_LIMIT),
+        };
         let color = canvas_apply_blend_mode(blend, backdrop, scene_rgba(stroke.color.as_deref(), opacity));
-        for polygon in stroke_polygons(&contours, &geometry) {
+        for polygon in affine_stroke_polygons(&contours, &geometry, &map) {
             ctx.draw.push_triangle_fan(&screen_points(&polygon), color);
         }
-        order.vector();
+        layer_order.vector();
     }
     if let Some(content) = layer.text.as_ref().and_then(|text| text.content.as_deref()).filter(|content| !content.is_empty()) {
         let face=layer.text.as_ref().expect("text content retains its explicit font face").font_family;
@@ -87,7 +139,7 @@ pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &Can
             _ => stroke.map(|stroke| scene_rgba(stroke.color.as_deref(), opacity)),
         };
         if let Some(color) = paint.filter(|_| pixels.is_finite() && pixels >= CANVAS_TEXT_MIN_PIXELS && text_scale.is_finite() && text_scale > 0.0) {
-            order.quad(ctx.draw);
+            layer_order.quad(ctx.draw);
             let color = canvas_apply_blend_mode(blend, backdrop, color);
             let [a,b,c,d,e,f]=map.0;
             let matrix=[(a/text_scale) as f32,(b/text_scale) as f32,(c/text_scale) as f32,(d/text_scale) as f32,e as f32,f as f32];
@@ -105,9 +157,16 @@ pub(super) fn render_canvas_scene_node(scene: &UiComponentSceneNode, layer: &Can
             let image = layer.image.as_ref();
             let width = image.and_then(|image| image.width).or((layer.width != 0.0).then_some(layer.width)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
             let height = image.and_then(|image| image.height).or((layer.height != 0.0).then_some(layer.height)).unwrap_or(CANVAS_SCENE_IMAGE_EXTENT);
-            order.quad(ctx.draw);
+            layer_order.quad(ctx.draw);
             ctx.draw.push_raster_quad_affine(&key,[0.0,0.0,width as f32,height as f32],[0.0,0.0,1.0,1.0],opacity,map.0.map(|value|value as f32));
         }
+    }
+    if clip_bands.is_some() {
+        ctx.draw.end_silhouette_clip();
+    }
+    if let Some(clipped) = clipped {
+        clipped.close(ctx.draw);
+        order.vectors = false;
     }
 }
 
@@ -170,12 +229,20 @@ pub const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";
 /// first-party code (`semio-framework-pixels`) and the retained paint keys its `KIND_RASTER` quad by
 /// the image `src` itself, so the key must survive unchanged or the quad finds no texture.
 pub fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, height: u32, mut pixels: Vec<u8>) -> Option<String> {
+    queue_decoded_raster_upload_retaining_source(surface_id, key, width, height, &mut pixels).ok()
+}
+
+/// 🧾️ Leaves decoded pixels with the caller while fixed upload credits are unavailable.
+pub fn queue_decoded_raster_upload_retaining_source(surface_id: &str, key: String, width: u32, height: u32, pixels: &mut Vec<u8>) -> Result<String, RasterUploadRefusal> {
     if scene_host_retiring(surface_id) {
-        return None;
+        return Err(RasterUploadRefusal::Busy);
     }
-    let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
+    let expected = usize::try_from(width).ok()
+        .and_then(|width| width.checked_mul(usize::try_from(height).ok()?))
+        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or(RasterUploadRefusal::Invalid("decoded raster dimensions overflowed"))?;
     if expected == 0 || expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() != expected || key.len() > RASTER_UPLOAD_KEY_BYTE_CAPACITY {
-        return None;
+        return Err(RasterUploadRefusal::Invalid("decoded raster exceeded its upload credits"));
     }
     pixels.shrink_to_fit();
     let ready = PENDING_RASTER_STATE.with(|cell| {
@@ -183,51 +250,49 @@ pub fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, he
         surfaces.get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default).is_some_and(|surface| surface.admits_upload())
     });
     if !ready {
-        return None;
+        return Err(RasterUploadRefusal::Busy);
     }
     let reserved = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
-        let surface = surfaces.get_mut(surface_id)?;
+        let surface = surfaces.get_mut(surface_id).ok_or(RasterUploadRefusal::Busy)?;
         match PreparedRasterReservation::try_reserve(key) {
             Ok(reservation) => {
                 surface.admission = Some(reservation);
-                Some(())
+                Ok(())
             }
             Err(rejected) => {
-                surface.rejected = Some(rejected);
-                None
+                Err(surface.park_refusal(rejected))
             }
         }
     });
     reserved?;
     let claimed = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
-        let surface = surfaces.get_mut(surface_id)?;
-        let reservation = surface.admission.take()?;
+        let surface = surfaces.get_mut(surface_id).ok_or(RasterUploadRefusal::Busy)?;
+        let reservation = surface.admission.take().ok_or(RasterUploadRefusal::Busy)?;
         match reservation.claim(width, height) {
             Ok(reservation) => {
                 surface.admission = Some(reservation);
-                Some(())
+                Ok(())
             }
             Err(rejected) => {
-                surface.rejected = Some(rejected);
-                None
+                Err(surface.park_refusal(rejected))
             }
         }
     });
     claimed?;
-    let admitted = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|surface| surface.admission.take()).map(|reservation| reservation.finalize(pixels, Vec::new(), width, height)));
+    let admitted = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|surface| surface.admission.take()).map(|reservation| reservation.finalize(std::mem::take(pixels), Vec::new(), width, height)));
     let (producer, published_key) = match admitted {
         Some(Ok(admitted)) => admitted,
         Some(Err(rejected)) => {
             PENDING_RASTER_STATE.with(|cell| {
                 if let Some(surface) = cell.borrow_mut().get_mut(surface_id) {
-                    surface.rejected = Some(rejected);
+                    surface.park_refusal(rejected);
                 }
             });
-            return None;
+            return Err(RasterUploadRefusal::Invalid("decoded raster failed its reserved publication"));
         }
-        None => return None,
+        None => return Err(RasterUploadRefusal::Busy),
     };
     let accepted = PENDING_RASTER_STATE.with(|cell| {
         let mut surfaces = cell.borrow_mut();
@@ -241,7 +306,7 @@ pub fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, he
             }
         }
     });
-    accepted.then_some(published_key)
+    accepted.then_some(published_key).ok_or(RasterUploadRefusal::Busy)
 }
 
 /// 🖼️ Reserves first, then measures, decodes and queues ONE encoded image backing under `canvas-image:<surface>:<layer>`. The

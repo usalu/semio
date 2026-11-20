@@ -88,6 +88,8 @@ pub enum Effect {
         args: Option<DslValue>,
         #[value(default)]
         multiple: bool,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        max_file_bytes: Option<u32>,
     },
     RequestMediaFrames {
         req: RequestId,

@@ -65,6 +65,7 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
 pub enum PreviewInlineGeometry {
     Point { x: f64, y: f64, z: f64 },
     Vector { x: f64, y: f64, z: f64 },
+    Plane { origin: [f64; 3], normal: [f64; 3] },
     Mesh { preview: String, data: String },
 }
 
@@ -86,6 +87,12 @@ fn preview_channel_list_entries(map: &semio_framework_pack_json::Object) -> Vec<
     let mut entries: Vec<(usize, &semio_framework_pack_json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
     entries.sort_by_key(|(index, _)| *index);
     entries.into_iter().map(|(_, value)| value).collect()
+}
+
+/// 🧮️ Reads the coordinates of one spatial channel value.
+fn preview_xyz(value: &semio_framework_pack_json::Value) -> Option<[f64; 3]> {
+    let axis = |key| value.get(key).and_then(semio_framework_pack_json::Value::as_f64);
+    Some([axis("x")?, axis("y")?, axis("z")?])
 }
 
 /// 🕳️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
@@ -115,12 +122,23 @@ fn collect_preview_channel_items(channel: &str, value: &semio_framework_pack_jso
                 }
                 return;
             }
-            let coords = ["x", "y", "z"].into_iter().map(|key| map.get(key).and_then(semio_framework_pack_json::Value::as_f64)).collect::<Option<Vec<_>>>();
-            if let Some(coords) = coords {
-                let (x, y, z) = (coords[0], coords[1], coords[2]);
+            if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("plane") {
+                if let (Some(origin), Some(normal)) = (map.get("origin").and_then(preview_xyz), map.get("normal").and_then(preview_xyz)) {
+                    items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(PreviewInlineGeometry::Plane { origin, normal }) });
+                    *index += 1;
+                }
+                return;
+            }
+            if let Some([x, y, z]) = preview_xyz(value) {
                 let inline = if map.get("$schema").and_then(semio_framework_pack_json::Value::as_str) == Some("vector") { PreviewInlineGeometry::Vector { x, y, z } } else { PreviewInlineGeometry::Point { x, y, z } };
                 items.push(PreviewChannelItem { channel: channel.into(), index: *index, handle: String::new(), inline: Some(inline) });
                 *index += 1;
+                return;
+            }
+            let mut fields: Vec<_> = map.iter().filter(|(_, field)| field.as_array().is_some() || field.as_object().is_some()).collect();
+            fields.sort_by(|(left, _), (right, _)| left.cmp(right));
+            for (_, field) in fields {
+                collect_preview_channel_items(channel, field, index, items);
             }
         }
         semio_framework_pack_json::Value::Array(list) => {
@@ -133,16 +151,14 @@ fn collect_preview_channel_items(channel: &str, value: &semio_framework_pack_jso
 }
 
 /// 📺️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"` channel
-/// keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked depth-first
+/// keys (falling back to `"in"` for a sink with no output channels), each walked depth-first
 /// into its geometry-bearing leaves.
 pub fn preview_channel_items_for_widget(eval: &semio_framework_pack_json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
     let Some(widget_eval) = eval.get(widget_id) else {
         return Vec::new();
     };
-    let Some(channels) = widget_eval.get("out").or_else(|| widget_eval.get("in")) else {
-        return Vec::new();
-    };
-    let Some(map) = channels.as_object() else {
+    let channel_map = |key| widget_eval.get(key).and_then(semio_framework_pack_json::Value::as_object);
+    let Some(map) = channel_map("out").filter(|ports| ports.iter().next().is_some()).or_else(|| channel_map("in")) else {
         return Vec::new();
     };
     let mut keys: Vec<&str> = map.iter().map(|(key, _)| key).collect();
@@ -188,6 +204,7 @@ pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData
     match inline {
         Some(PreviewInlineGeometry::Point { .. }) => "point",
         Some(PreviewInlineGeometry::Vector { .. }) => "vector",
+        Some(PreviewInlineGeometry::Plane { .. }) => "wire",
         _ if !data.indices.is_empty() => "solid",
         _ if !data.edge_positions.is_empty() => "wire",
         _ => "point",
@@ -291,11 +308,75 @@ pub fn point_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
     MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
 }
 
-/// ➡️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
-/// built without a kernel round-trip.
+/// 🧭️ Returns orthonormal tangent axes for a unit direction.
+fn marker_tangent_basis(direction: [f64; 3]) -> [[f64; 3]; 2] {
+    let [a, b, c] = direction;
+    let side = if a.abs() > c.abs() { [-b, a, 0.0] } else { [0.0, -c, b] };
+    let norm = side[0].hypot(side[1]).hypot(side[2]);
+    let side = side.map(|v| v / norm);
+    let [i, j, k] = side;
+    let up = [b * k - c * j, c * i - a * k, a * j - b * i];
+    [side, up]
+}
+
+/// ➡️ Draws a shaft and four fins that meet at the spatial vector's tip.
 pub fn vector_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
-    let (x, y, z) = (x as f32, y as f32, z as f32);
-    MeshData { positions: vec![0.0, 0.0, 0.0, x, y, z], edge_positions: vec![0.0, 0.0, 0.0, x, y, z], ..Default::default() }
+    let tip = [x, y, z];
+    if tip.iter().any(|v| !(*v as f32).is_finite()) { return MeshData::default(); }
+    let length = x.hypot(y).hypot(z);
+    if length == 0.0 { return point_marker_mesh(0.0, 0.0, 0.0); }
+    let direction = tip.map(|v| v / length);
+    let [side, up] = marker_tangent_basis(direction);
+    let mut positions = vec![0.0, 0.0, 0.0];
+    positions.extend(tip.map(|v| v as f32));
+    let mut edge_positions = positions.clone();
+    for axis in [side, up] {
+        for sign in [-1.0, 1.0] {
+            let base: [f32; 3] = std::array::from_fn(|i| (0.8 * tip[i] + sign * 0.07 * length * axis[i]) as f32);
+            edge_positions.extend(tip.map(|v| v as f32));
+            edge_positions.extend(base);
+            positions.extend(base);
+        }
+    }
+    MeshData { positions, edge_positions, ..Default::default() }
+}
+
+/// 📐️ Draws a finite outline and normal for a spatial plane channel.
+fn plane_marker_mesh(origin: [f64; 3], normal: [f64; 3]) -> Option<MeshData> {
+    if origin.iter().any(|value| !(*value as f32).is_finite()) || normal.iter().any(|value| !value.is_finite()) {
+        return None;
+    }
+    let component = normal.iter().map(|value| value.abs()).fold(0.0_f64, f64::max);
+    if component == 0.0 { return None; }
+    let scaled = normal.map(|value| value / component);
+    let length = scaled[0].hypot(scaled[1]).hypot(scaled[2]);
+    let direction = scaled.map(|value| value / length);
+    let [side, up] = marker_tangent_basis(direction);
+    let corners: [[f32; 3]; 4] = [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)].map(|(u, v)|
+        std::array::from_fn(|axis| (origin[axis] + u * side[axis] + v * up[axis]) as f32));
+    let [nx, ny, nz] = direction.map(|value| 0.35 * value);
+    let normal = vector_marker_mesh(nx, ny, nz);
+    let mut positions = Vec::with_capacity(12 + normal.positions.len());
+    let mut edge_positions = Vec::with_capacity(24 + normal.edge_positions.len());
+    for (corner, next) in corners.iter().zip(corners.iter().cycle().skip(1)) {
+        positions.extend(corner);
+        edge_positions.extend(corner);
+        edge_positions.extend(next);
+    }
+    let shift = |(i, coordinate): (usize, f32)| (f64::from(coordinate) + origin[i % 3]) as f32;
+    positions.extend(normal.positions.into_iter().enumerate().map(shift));
+    edge_positions.extend(normal.edge_positions.into_iter().enumerate().map(shift));
+    Some(MeshData { positions, edge_positions, ..Default::default() })
+}
+
+/// 🧷️ Produces the viewport representation of a structured spatial value.
+pub fn inline_preview_mesh(inline: &PreviewInlineGeometry) -> Option<MeshData> {
+    match inline {
+        PreviewInlineGeometry::Point { x, y, z } => Some(point_marker_mesh(*x, *y, *z)),
+        PreviewInlineGeometry::Vector { x, y, z } => Some(vector_marker_mesh(*x, *y, *z)),
+        PreviewInlineGeometry::Plane { origin, normal } => plane_marker_mesh(*origin, *normal),
+        PreviewInlineGeometry::Mesh { preview, .. } => decode_preview_mesh_pack(preview),
+    }
 }
 
 /// 👁️ The shading mode decides which mesh channels survive into the payload at all, so
@@ -305,21 +386,35 @@ pub fn apply_show_mode_mesh(mut data: MeshData, show_mode: &str) -> MeshData {
         "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
         _ => "shaded",
     };
-    match show_mode {
-        "wireframe" => {
-            data.positions.clear();
-            data.normals.clear();
-            data.indices.clear();
-            data.face_ids.clear();
-            data
+    if matches!(show_mode, "wireframe" | "shaded+edges") && data.edge_positions.is_empty() {
+        let mut edges = std::collections::BTreeSet::new();
+        for triangle in data.indices.chunks_exact(3) {
+            for (a, b) in [(triangle[0], triangle[1]), (triangle[1], triangle[2]), (triangle[2], triangle[0])] {
+                if !edges.insert((a.min(b), a.max(b))) { continue; }
+                let point = |index: u32| (index as usize).checked_mul(3).and_then(|start| start.checked_add(3).and_then(|end| data.positions.get(start..end)));
+                if let (Some(a), Some(b)) = (point(a), point(b)) {
+                    data.edge_positions.extend_from_slice(a);
+                    data.edge_positions.extend_from_slice(b);
+                }
+            }
         }
-        "points" => {
-            data.indices.clear();
-            data.normals.clear();
-            data.edge_positions.clear();
-            data
-        }
-        _ => data,
+    }
+    if !matches!(show_mode, "wireframe" | "points") { return data; }
+    let points_only = data.edge_positions.is_empty() && data.indices.is_empty();
+    let wireframe = show_mode == "wireframe" && !points_only;
+    if wireframe {
+        data.component_references.retain_domains(|kind| kind == "edge");
+        return MeshData {
+            edge_positions: data.edge_positions, edge_ids: data.edge_ids,
+            edge_uvs: data.edge_uvs, edge_is_seam: data.edge_is_seam,
+            component_references: data.component_references, ..Default::default()
+        };
+    }
+    if data.positions.is_empty() { data.positions = data.edge_positions; }
+    data.component_references.retain_domains(|kind| kind == "vertex");
+    MeshData {
+        positions: data.positions, vertex_ids: data.vertex_ids,
+        component_references: data.component_references, ..Default::default()
     }
 }
 
@@ -330,105 +425,43 @@ pub fn decode_preview_mesh_pack(base64_body: &str) -> Option<MeshData> {
     semio_os_flow::mesh::decode_mesh_pack(&bytes).ok()
 }
 
-/// 🧵️ The mesh the CHAIN produced for this handle: the retained session's resolved `pack` body,
-/// decoded into typed arrays. `None` while the tessellate round trip is still in flight, and `None`
-/// forever once the handle carries diagnostics.
-pub fn session_preview_mesh(handle: &str, session: &FlowEvalSession) -> Option<MeshData> {
-    let data = session.preview_mesh(handle)?;
-    mesh_has_preview_geometry(data).then(|| data.clone())
+/// 🧵️ Borrows the canonical mesh completed by the retained preview chain.
+pub fn session_preview_mesh<'a>(handle: &str, session: &'a FlowEvalSession) -> Option<&'a MeshData> {
+    session.preview_mesh(handle).filter(|mesh| mesh_has_preview_geometry(mesh))
 }
 
-/// 🖼️ Rendering consumes only mesh output completed by the retained preview chain.
-pub fn mesh_data_for_preview_handle(handle: &str, _tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
-    session_preview_mesh(handle, session?)
+/// 🧭️ Resolves resident geometry by its source handle and its evaluated channel.
+pub struct PreviewMeshLookup<'a> {
+    session: &'a FlowEvalSession,
+    converged: [std::cell::OnceCell<Option<semio_framework_pack_json::Value>>; 2],
 }
 
-/// 🔁️ The converged walk's brep handle for the same preview channel leaf — used while a slider edit
-/// has already minted a new handle but its tessellation has not landed.
-/// 🔁 When the painted handle has no pack yet, the one OTHER packed handle this session still
-/// holds — true after convergence superseded the handle and retired the old one from every eval text.
-fn superseded_preview_mesh_handle(session: &FlowEvalSession, painted_handle: &str) -> Option<String> {
-    let mut candidates = session
-        .preview_mesh_handles()
-        .filter(|handle| *handle != painted_handle && session_preview_mesh(handle, session).is_some())
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    match candidates.len() {
-        0 => None,
-        1 => Some(candidates.remove(0)),
-        _ => None,
+impl<'a> PreviewMeshLookup<'a> {
+    pub fn new(session: &'a FlowEvalSession) -> Self {
+        Self { session, converged: Default::default() }
     }
-}
 
-fn converged_preview_handle(session: &FlowEvalSession, _host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, widget_id: &str, channel: &str, index: usize) -> Option<String> {
-    let converged = session.converged_eval_json();
-    if converged.is_empty() {
-        return None;
-    }
-    let eval = semio_framework_pack_json::parse(converged, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
-    preview_channel_items_for_widget(&eval, widget_id)
-        .into_iter()
-        .find(|item| item.channel == channel && item.index == index)
-        .map(|item| item.handle)
-        .filter(|handle| !handle.is_empty())
-}
-
-/// 🕸️ Mesh lookup for one preview channel while a live evaluation is in flight: the new handle's
-/// pack when it exists, otherwise the last converged handle's retained pack — never a second kernel
-/// round trip on geometry the session already tessellated.
-pub fn mesh_data_for_session_preview_channel(
-    handle: &str,
-    widget_id: &str,
-    channel: &str,
-    index: usize,
-    tolerance: f64,
-    session: &FlowEvalSession,
-    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
-) -> Option<MeshData> {
-    if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, Some(session)) {
-        return Some(data);
-    }
-    if session.preview_diagnostics(handle).is_some() {
-        return None;
-    }
-    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, channel, index).filter(|fallback| fallback != handle) {
-        if let Some(data) = session_preview_mesh(&fallback, session) {
-            return Some(data);
+    pub fn resolve<'item>(&self, widget: &str, item: &'item PreviewChannelItem) -> Option<(std::borrow::Cow<'item, str>, &'a MeshData)> {
+        if item.handle.is_empty() { return None; }
+        if let Some(mesh) = session_preview_mesh(&item.handle, self.session) {
+            return Some((std::borrow::Cow::Borrowed(&item.handle), mesh));
         }
-    }
-    superseded_preview_mesh_handle(session, handle).and_then(|fallback| session_preview_mesh(&fallback, session))
-}
-
-/// 📏️ The resident size of one published preview mesh — the element count the fingerprint tracks.
-fn mesh_residency_size(mesh: &MeshData) -> usize {
-    mesh.positions.len() + mesh.indices.len() + mesh.edge_positions.len()
-}
-
-/// 🎁️ Fingerprint of whichever mesh pack a preview channel would paint — the live handle's or the
-/// converged fallback's while tessellation is outstanding.
-pub fn preview_mesh_pack_fingerprint(
-    session: &FlowEvalSession,
-    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
-    widget_id: &str,
-    item: &PreviewChannelItem,
-) -> usize {
-    if item.handle.is_empty() {
-        return 0;
-    }
-    if let Some(mesh) = session.preview_mesh(&item.handle) {
-        return mesh_residency_size(mesh);
-    }
-    if session.preview_diagnostics(&item.handle).is_some() {
-        return 0;
-    }
-    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, &item.channel, item.index).filter(|fallback| *fallback != item.handle) {
-        if let Some(mesh) = session.preview_mesh(&fallback) {
-            return mesh_residency_size(mesh);
+        if self.session.preview_diagnostics(&item.handle).is_some() { return None; }
+        let history = [self.session.converged_eval_json(), self.session.previous_converged_eval_json()];
+        for (slot, text) in self.converged.iter().zip(history) {
+            let Some(eval) = slot.get_or_init(|| {
+                semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
+            }).as_ref() else { continue };
+            let previous = preview_channel_items_for_widget(eval, widget).into_iter()
+                .find(|previous| previous.channel == item.channel && previous.index == item.index);
+            if let Some(previous) = previous {
+                if let Some(mesh) = session_preview_mesh(&previous.handle, self.session) {
+                    return Some((std::borrow::Cow::Owned(previous.handle), mesh));
+                }
+            }
         }
+        None
     }
-    superseded_preview_mesh_handle(session, &item.handle)
-        .and_then(|fallback| session.preview_mesh(&fallback).map(mesh_residency_size))
-        .unwrap_or(0)
 }
 
 /// 🖌️ What the preview would paint from `eval` given the session's current mesh packs — changes when
@@ -436,12 +469,14 @@ pub fn preview_mesh_pack_fingerprint(
 fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &semio_framework_pack_json::Value) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    session.preview_mesh_epoch().hash(&mut hasher);
+    let lookup = PreviewMeshLookup::new(session);
     for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
         for item in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
             if item.handle.is_empty() {
                 continue;
             }
-            preview_mesh_pack_fingerprint(session, host_snapshot, &id, &item).hash(&mut hasher);
+            lookup.resolve(&id, &item).map(|(handle, _)| handle).hash(&mut hasher);
         }
     }
     hasher.finish()
@@ -474,31 +509,16 @@ pub fn preview_eval_publication_for(session: &mut FlowEvalSession, host_snapshot
 
 /// 🧹 Every brep handle whose tessellation pack must stay live across a handle supersession.
 pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> HashSet<String> {
-    let mut live = HashSet::new();
-    let mut channel_missing_pack = false;
+    let lookup = PreviewMeshLookup::new(session);
+    let mut live: HashSet<String> = session.in_flight_preview_handles().map(str::to_owned).collect();
     for widget in &host_snapshot.widgets {
-        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
-        for item in preview_channel_items_for_widget(eval, &id) {
-            if item.handle.is_empty() {
-                continue;
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget);
+        for item in preview_channel_items_for_widget(eval, id) {
+            if item.handle.is_empty() { continue; }
+            if let Some((source, _)) = lookup.resolve(id, &item) {
+                if source != item.handle.as_str() { live.insert(source.into_owned()); }
             }
-            live.insert(item.handle.clone());
-            if session_preview_mesh(&item.handle, session).is_none() && session.preview_diagnostics(&item.handle).is_none() {
-                channel_missing_pack = true;
-                if let Some(fallback) = converged_preview_handle(session, host_snapshot, &id, &item.channel, item.index) {
-                    if fallback != item.handle {
-                        live.insert(fallback);
-                    }
-                }
-                if let Some(fallback) = superseded_preview_mesh_handle(session, &item.handle) {
-                    live.insert(fallback);
-                }
-            }
-        }
-    }
-    if channel_missing_pack {
-        for handle in session.preview_mesh_handles() {
-            live.insert(handle.to_string());
+            live.insert(item.handle);
         }
     }
     live
@@ -507,14 +527,14 @@ pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, h
 /// 🤲️ Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
-pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
+pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, tolerance: f64) -> Vec<String> {
     let mut handles = Vec::new();
     for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
         for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)).filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
-            if session.preview_diagnostics(&handle).is_some() {
-                continue;
-            }
-            if session_preview_mesh(&handle, session).is_none() {
+            if session.preview_diagnostics(&handle).is_none()
+                && session.preview_mesh_for_tolerance(&handle, tolerance).is_none()
+                && !session.preview_tessellate_failed(semio_os_flow::preview_tessellate_node_hash(&handle,tolerance.to_bits()))
+            {
                 handles.push(handle);
             }
         }
@@ -531,6 +551,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     let Ok(geometry_extension_address) = geometry_extension_address() else {
         return Ok(Vec::new());
     };
+    session.note_preview_tessellate_tolerance(tolerance);
     let tolerance_bits = tolerance.to_bits();
     let (live, pending) = {
         let eval_json = session.painted_eval_json();
@@ -539,13 +560,13 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
         }
         let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
         let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
-        (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
+        (live, pending_preview_tessellate_handles(&eval, host_snapshot, session, tolerance))
     };
     retain_preview_meshes(session, live, effect)?;
     let mut invocations = Vec::new();
     for handle in pending {
         let node_hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
-        if session.note_pending_tessellate(node_hash, handle.clone()) {
+        if session.note_pending_tessellate(node_hash, handle.clone(), tolerance) {
             let mut request_object = semio_framework_pack_json::Object::new();
             request_object.insert("handle", semio_framework_pack_json::Value::String(handle));
             request_object.insert("tolerance", semio_framework_pack_json::Value::from(tolerance));

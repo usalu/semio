@@ -1,11 +1,12 @@
 import{readFileSync,renameSync,rmSync,writeFileSync}from"node:fs";
+import{setTimeout as delay}from"node:timers/promises";
 import policyDocument from"./🔣️.json"with{type:"json"};
 import{doorSuffixV1,rememberedDoorV1}from"../🪧️door-board/🟨️.mjs";
 import{churnLanguagesV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const policy=Object.freeze(JSON.parse(JSON.stringify(policyDocument))),names=policy.environment;
 const render=(key,values,environment)=>churnLanguagesV1(environment).map(language=>policy.texts[key][language].replace(/\{([a-z]+)\}/gu,(_,name)=>String(typeof values[name]==="function"?values[name](language):values[name]??""))).join("\n");
 const defaultWrite=text=>{try{process.stderr.write(text+"\n");}catch{}};
-const pause=milliseconds=>new Promise(accept=>setTimeout(accept,milliseconds));
+const pause=(milliseconds,signal)=>delay(milliseconds,undefined,{signal}).catch(error=>{signal?.throwIfAborted();throw error;});
 /** 📜️ The closed numbers, variable names and EN/DE texts of the graph queue yield, exactly as the policy declares them. */
 export function graphQueueYieldPolicyV1(){return policy;}
 /** 🕰️ The time the first start of this command asked for the graph, carried through every start of it so a peer's coverage stamp keeps serving it; `undefined` for a first start. */
@@ -27,10 +28,11 @@ function readTicket(path){
  catch{try{rmSync(path,{force:true});}catch{}return undefined;}
 }
 function readGeneration(pointer){try{const row=JSON.parse(readFileSync(pointer,"utf8"));return Number.isInteger(row.generation)?row.generation:-1;}catch{return -1;}}
-/** ⏳️ The front door's wait after a yielded run, alone and without a child: nothing when no ticket was written; otherwise it polls the pointer until a generation newer than the ticket's was published or `wakeMilliseconds` passed (progress every `progressMilliseconds`, EN/DE), and answers the environment of the next start: the request time of the first start and the next round. */
-export async function waitGraphQueueYieldV1({environment=process.env,now=Date.now,sleep=pause,write=defaultWrite,read=readGeneration,signal}={}){
+/** ⏳️ Consumes a graph yield ticket, settles its wait preparation, then polls for a newer generation or the bounded wake. Carries the initial request time and next round to the replacement. */
+export async function waitGraphQueueYieldV1({environment=process.env,now=Date.now,sleep=pause,write=defaultWrite,read=readGeneration,signal,onAccepted}={}){
  const path=environment[names.ticket];if(typeof path!=="string"||path==="")return undefined;
  const ticket=readTicket(path);if(!ticket)return undefined;
+ if(onAccepted!==undefined)await onAccepted();
  const started=now();let reported=started;
  for(;;){
   signal?.throwIfAborted();

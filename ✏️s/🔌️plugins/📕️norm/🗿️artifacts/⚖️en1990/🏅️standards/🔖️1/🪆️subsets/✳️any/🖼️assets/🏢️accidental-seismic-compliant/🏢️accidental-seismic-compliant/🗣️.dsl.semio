@@ -1,8 +1,8 @@
 semio norm.en1990.dsl v1
 annex=de project-id=accidental-seismic-compliant structure-kind=building altitude-m=120 consequence-class=2 reliability-class=rc2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=dsl2 inspection-level=il2 beta-computed=3.8
 permanents [id:TEXT kind:ENUM gk:NUM] {
-  G-sup gsup 80000
-  G-inf ginf 20000
+  G-sup g-sup 80000
+  G-inf g-inf 20000
 }
 variables [id:TEXT category:TEXT qk:NUM group:TEXT] {
   Q-office office 40000 ""

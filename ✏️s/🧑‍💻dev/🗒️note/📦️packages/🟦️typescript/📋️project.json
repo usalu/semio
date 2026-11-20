@@ -9,6 +9,22 @@
     ]
   },
   "targets": {
+    "verify-dev-contribution": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🗒️note/🧪️tests/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🗒️note/**/*",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify dev-contribution"
+      }
+    },
     "verify-note-document-contract": {
       "executor": "repo:script",
       "cache": true,

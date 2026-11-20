@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 34603008,
+  "owner": "test:existing-native-recomputable",
+  "bytes": 1048576,
+  "witness": "tagged existing physical Native data",
+  "negative": [
+    {
+      "kind": "absent",
+      "failure": "Existing Native image required"
+    },
+    {
+      "kind": "busy",
+      "failure": "Resource lease timed out: native-fixed-image"
+    },
+    {
+      "kind": "substituted",
+      "failure": "Exact canonical persistent Native publication required"
+    }
+  ]
+}

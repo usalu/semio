@@ -24,6 +24,9 @@ export type GcPlanV1=Readonly<{removeLanes:string[];removeIncremental:string[]}>
 const newestFirst=<T extends {lastUsedMs:number}>(key:(row:T)=>string)=>(left:T,right:T)=>right.lastUsedMs-left.lastUsedMs||(key(left)<key(right)?-1:key(left)>key(right)?1:0);
 const oldestFirst=<T extends {lastUsedMs:number}>(key:(row:T)=>string)=>(left:T,right:T)=>left.lastUsedMs-right.lastUsedMs||(key(left)<key(right)?-1:key(left)>key(right)?1:0);
 
+/** 📦️ The most the stale-prone build units may hold together: the unit share of the cache capacity. */
+export const unitBudgetBytesV1=(capacityBytes:number,rules:Pick<typeof policy,"unitShare">=policy):number=>Math.floor(capacityBytes*rules.unitShare);
+
 /** 🌊️ The bytes a collection must free: nothing at or below the high-water mark of the image, everything above the low-water mark once it is crossed. */
 export function gcNeedBytesV1(volumeBytes:number,freeBytes:number,rules:Pick<typeof policy,"highWaterShare"|"lowWaterShare">=policy):number{
  const used=Math.max(0,volumeBytes-freeBytes);
@@ -119,7 +122,7 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
    const middle=measure(root,capacityBytes),remaining=Math.max(gcNeedBytesV1(middle.volumeBytes,middle.freeBytes),demand-(middle.freeBytes-before.freeBytes)),stamp=join(root,policy.unitStamp);let last=0;try{last=statSync(stamp).mtimeMs;}catch{}
    if(remaining>0||nowMs-last>=policy.unitIntervalMilliseconds){
     writeFileSync(stamp,String(nowMs));
-    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
+    const result=await collectUnitsV1(dirname(root),{dryRun:false,needBytes:()=>remaining,budgetBytes:unitBudgetBytesV1(capacityBytes),satisfied:()=>remaining>0&&measure(root,capacityBytes).freeBytes-middle.freeBytes>=remaining,nowMs,signal:options.signal,report:options.report}),after=measure(root,capacityBytes);
     units=result.removed.length;recordFillSampleV1(root,{atMs:nowMs,freeBytes:after.freeBytes,volumeBytes:after.volumeBytes,profiles:result.profiles});
    }
   }
@@ -166,13 +169,13 @@ export async function watchUnitCachePressureV1(root:string,capacityBytes:number,
 }
 
 /** 🛟️ Frees at least `needBytes` of the image before a build's storage reservation would refuse: incremental sessions first, then stale build units, both lock-aware and least recently used first, one collector at a time (a second caller returns 0 and measures again). Returns the bytes the image gained. */
-export async function reclaimUnitStorageV1(store:string,needBytes:number,options:Readonly<{signal?:AbortSignal;report?:IncrementalReportV1}>={}):Promise<number>{
+export async function reclaimUnitStorageV1(store:string,needBytes:number,options:Readonly<{signal?:AbortSignal;report?:IncrementalReportV1;capacityBytes?:number}>={}):Promise<number>{
  const root=join(store,"u"),claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return 0;
  try{
   const before=measureVolumeV1(store,1);
   await collectIncrementalV1(store,{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>needBytes,satisfied:()=>measureVolumeV1(store,1).freeBytes-before.freeBytes>=needBytes,signal:options.signal,report:options.report});
   const middle=measureVolumeV1(store,1).freeBytes-before.freeBytes;
-  if(middle<needBytes)await collectUnitsV1(store,{dryRun:false,needBytes:()=>needBytes-middle,satisfied:()=>measureVolumeV1(store,1).freeBytes-before.freeBytes>=needBytes,signal:options.signal,report:options.report});
+  if(middle<needBytes||options.capacityBytes!==undefined)await collectUnitsV1(store,{dryRun:false,needBytes:()=>Math.max(0,needBytes-middle),budgetBytes:options.capacityBytes===undefined?undefined:unitBudgetBytesV1(options.capacityBytes),satisfied:()=>measureVolumeV1(store,1).freeBytes-before.freeBytes>=needBytes,signal:options.signal,report:options.report});
   return Math.max(0,measureVolumeV1(store,1).freeBytes-before.freeBytes);
  }finally{claim.release();}
 }

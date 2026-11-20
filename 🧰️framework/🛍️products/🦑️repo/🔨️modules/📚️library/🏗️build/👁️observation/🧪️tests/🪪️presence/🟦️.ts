@@ -9,14 +9,18 @@ import{join,resolve}from"node:path";
 import{fileURLToPath}from"node:url";
 import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withRepositoryBuildGraphFixtureV1}from"../../../📥️inputs/💾️storage/🟨️.mjs";
+import{withRepositoryBuildGraphFixtureV1,withRepositoryBuildGraphPublicationFixtureV1}from"../../../📥️inputs/💾️storage/🟨️.mjs";
 import{repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphConsumerV1}from"../../../📥️inputs/💾️storage/🟨️.mjs";
 import{compactSourceInputs,cargoLockInput}from"../../../📥️inputs/🟨️.mjs";
-import{captureInferenceInventoryReferencesV1,inferenceInventoryReferencesHoldV1,inferenceInventoryLeafMissingV1}from"../../📥️reuse/🟨️.mjs";
-import{observeProjectInferenceV1,sourceObservationStatsV1}from"../../🟨️.mjs";
+import{captureInferenceInventoryReferencesV1,inferenceInventoryReferencesHoldV1,inferenceInventoryPresenceStatsV1,inferenceInventoryLeafMissingV1}from"../../📥️reuse/🟨️.mjs";
+import{observationLookupClockV1,observeProjectInferenceV1,sourceObservationStatsV1,useProjectFleetV1}from"../../🟨️.mjs";
 import{withManagedGraphSourceReadBatchV1,readExactSourceInventoryV1}from"../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import schema from"../../📥️reuse/🧬️schema/🔣️.json";
+import nativeTimingSchema from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/⏱️verification/🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🧫️cases.json";
+import bodyCorpus from"./body.json";
+import imports from"./📥️import.json";
+import{SLICE_REPORT_POLICY_V1,registerSliceReportSourceV1,writeSliceReportV1}from"../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import{requireNativePlatformImageWriterV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import receiverCorpus from"../../../📥️inputs/💾️storage/🧪️fixture/🧫️cases.json";
 import fixtureSchema from"../../../📥️inputs/💾️storage/🧪️fixture/🧬️schema/🔣️.json";
@@ -37,6 +41,34 @@ registerBuildTestLawV1("inference reuse revalidates physical inventories inside 
    rmSync(record.path);await fixture.withConsumer(async(_current,actual)=>{const missing=await withManagedGraphSourceReadBatchV1(workspace,actual,batch=>readExactSourceInventoryV1(batch,record.namespace as Parameters<typeof readExactSourceInventoryV1>[1],record.key));expect(missing).toBeNull();});
   }
  }));}finally{db.close();}
+});
+
+registerBuildTestLawV1("fleet owner seed reports actual graph publication", "sdk-runtime", async original=>{
+ const control=createIssuedResourceControlV1(original,"observation:fleet-seed",180000),db=new Database(":memory:");
+ try{
+  for(const row of imports){
+   const verify=row.funded?withRepositoryBuildGraphPublicationFixtureV1:withRepositoryBuildGraphFixtureV1;
+   await verify(workspace,original,control,async fixture=>fixture.withWriter(async()=>{
+    const cachePath=bounded(join(repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),"np",hash(row.id).slice(0,24)+".json")),before=observationLookupClockV1().count;
+    let stored=false,seeded=false,computed=0,requested=0;
+    useProjectFleetV1({offer(){},async gate(offered){
+     const info=offered as {keyText:string;import(record:unknown):Promise<boolean>};
+     requested++;
+     seeded=await info.import({digest:hash(info.keyText),image:JSON.stringify("remote"),authority:[],observations:[]});
+     stored=existsSync(cachePath);
+     return{seeded,publish(){}};
+    }});
+    try{
+     const value=await observeProjectInferenceV1({cachePath,key:row.id,owner:row.id,fleet:row.id},()=>{computed++;return "local";});
+     const actual={stored:Number(stored),seeded:Number(seeded),lookups:observationLookupClockV1().count-before,computed,value};
+     const oracle=db.query("select ?1 stored,?1 seeded,1+?1 lookups,1-?1 computed,case ?1 when 1 then 'remote' else 'local' end value").get(Number(row.funded));
+     expect(requested).toBe(1);
+     expect(actual).toEqual(row.expected);
+     expect(actual).toEqual(oracle);
+    }finally{useProjectFleetV1(undefined);}
+   }));
+  }
+ }finally{db.close();}
 });
 
 /** 📨️ Launches only the literal compiler-captured static child through the same genuine Original. */
@@ -67,4 +99,65 @@ for(const row of receiverCorpus.receiverTransitions.filter(row=>!row.admitted))r
 
 registerBuildTestLawV1("inference reuse preserves issued cancellation and deadlines after warm validation","sdk-runtime",async original=>{
  const phase=createIssuedResourceControlV1(original,"inference:terminal-reuse",180000);for(const kind of["cancel","deadline"]){const{result,value}=await childOutcome(original,phase,"terminal","lock",kind);expect(result.status,result.stderr).toBe(kind==="cancel"?interruptedStatusV1:1);expect(value.warm).toBe(true);expect(value.calls).toBe(1);expect(value.predicateFailed).toBe(true);expect(value.samePredicate).toBe(true);expect(value.failed).toBe(true);expect(value.message).toMatch(/deadline|abort|cancel|SIGINT|interrupt|terminat|expir|budget|timeout/iu);}
+});
+
+/** 📊️ Exposes the measured Store phases in the slice report for a real managed inventory miss. */
+registerBuildTestLawV1("inventory reader phase counters reach slice memory telemetry","sdk-runtime",async original=>{
+ const control=createIssuedResourceControlV1(original,"inference:presence-timing",180000),ajv=new Ajv({strict:true});ajv.addSchema(schema);
+ const validate=ajv.getSchema(schema.$id+"#/definitions/ConsumerTimings")!,validateNative=ajv.compile({...nativeTimingSchema,$ref:"#/definitions/Snapshot"});
+ await withRepositoryBuildGraphFixtureV1(workspace,original,control,async fixture=>fixture.withConsumer(async(_store,actual)=>{
+  const stop=registerSliceReportSourceV1("owners",()=>({presence:inferenceInventoryPresenceStatsV1(workspace,actual)}));
+  try{
+   const start=process.hrtime.bigint();
+   const result=await inferenceInventoryReferencesHoldV1(workspace,{env:"SEMIO_SOURCE_CLOSURE_"+"e".repeat(64)},actual);
+   const elapsed=Math.ceil(Number(process.hrtime.bigint()-start)/1e6),{directory,name}=SLICE_REPORT_POLICY_V1;
+   writeSliceReportV1(workspace,{reason:"interval"});
+   const presence=JSON.parse(readFileSync(join(workspace,directory,name),"utf8")).sources.owners.presence,timings:Record<string,{started:number;active:number;milliseconds:number}>=presence.timings;
+   expect(result).toBe(false);expect(validate(timings)).toBe(true);
+   expect(presence.names).toBe(1);
+   expect(Object.values(timings).every(row=>row.active===0&&row.started===1)).toBe(true);
+   expect(Object.values(timings).reduce((sum,row)=>sum+row.milliseconds,0)).toBeLessThanOrEqual(elapsed);
+   expect(Object.keys(presence.nativeVerification)).toEqual(["preVerify","postVerify"]);
+   const backends=Object.keys(presence.nativeVerification.preVerify);expect(backends).toHaveLength(1);
+   for(const snapshot of Object.values(presence.nativeVerification)as Record<string,Record<string,{started:number;active:number;milliseconds:number}>>[]){
+    expect(validateNative(snapshot)).toBe(true);expect(Object.keys(snapshot)).toEqual(backends);
+    const phases=snapshot[backends[0]!]!;
+    for(const phase of ["storeIdentity","reservationOperation","allocationJournal"])expect(phases[phase]?.started).toBe(1);
+    expect(Object.values(phases).every(row=>row.active===0)).toBe(true);
+    if(backends[0]==="directory-partition")expect(phases.allocatedUsage?.started).toBe(1);
+    else expect((phases.physicalGateVerify?.started??0)+(phases.physicalGateJoin?.started??0)+(phases.physicalGateCached?.started??0)).toBeGreaterThan(0);
+   }
+  }finally{stop();}
+ }));
+});
+
+registerBuildTestLawV1("inventory body operations reach the owned slice receipt","sdk-runtime",async original=>{
+ const control=createIssuedResourceControlV1(original,"inference:presence-body-timing",180000),ajv=new Ajv({strict:true}),db=new Database(":memory:");
+ ajv.addSchema(schema);
+ const validate=ajv.getSchema(schema.$id+"#/definitions/BodyTimings")!;
+ try{await withRepositoryBuildGraphFixtureV1(workspace,original,control,async fixture=>{
+  let present:unknown;
+  await fixture.withWriter(async()=>{present={namedInputs:{default:inventory("source")}};expect(existsSync(leaf(present).path)).toBe(true);});
+  await fixture.withConsumer(async(_store,actual)=>{
+   const sample=(value:unknown)=>inferenceInventoryReferencesHoldV1(workspace,value,actual);
+   const stop=registerSliceReportSourceV1("owners",()=>({presence:inferenceInventoryPresenceStatsV1(workspace,actual)}));
+   let previous:Record<string,number>={};
+   try{for(const row of bodyCorpus.cases){
+    expect(await sample(row.present?present:{env:"SEMIO_SOURCE_CLOSURE_"+"e".repeat(64)})).toBe(row.present);
+    const {directory,name}=SLICE_REPORT_POLICY_V1;
+    writeSliceReportV1(workspace,{reason:"interval"});
+    const presence=JSON.parse(readFileSync(join(workspace,directory,name),"utf8")).sources.owners.presence;
+    const operations:Record<string,{started:number;active:number;milliseconds:number}>=presence.bodyOperations;
+    expect(operations).toBeDefined();
+    expect(validate(operations)).toBe(true);
+    expect(Object.values(operations).every(op=>op.active===0)).toBe(true);
+    expect(Object.values(operations).reduce((sum,op)=>sum+op.milliseconds,0)).toBeLessThanOrEqual(presence.timings.body.milliseconds);
+    const counts=Object.fromEntries(Object.entries(row.expected).map(([key])=>[key,(operations[key]?.started??0)-(previous[key]??0)]));
+    const oracle=db.query("SELECT 2 + ?1 AS storeRecheck, ?1 AS continuation, 3 + (1 - ?1) AS fileChecks, 1 - ?1 AS recordRead, 1 AS implementationCheck").get(Number(!row.present));
+    expect(counts).toEqual(row.expected);
+    expect(counts).toEqual(oracle);
+    previous=Object.fromEntries(Object.entries(operations).map(([key,op])=>[key,op.started]));
+   }}finally{stop();}
+  });
+ });}finally{db.close();}
 });

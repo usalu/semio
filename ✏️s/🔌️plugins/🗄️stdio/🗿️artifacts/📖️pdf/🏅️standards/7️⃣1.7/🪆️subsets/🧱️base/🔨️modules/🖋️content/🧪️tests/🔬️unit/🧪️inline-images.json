@@ -1,0 +1,243 @@
+[
+  {
+    "name": "crlf-and-delimited-ei",
+    "dict": "/W 6 /H 1 /BPC 8 /CS /G",
+    "separator": "\r\n",
+    "raw": [
+      0,
+      32,
+      69,
+      73,
+      32,
+      255
+    ],
+    "tail": "\nEI\n",
+    "samples": [
+      0,
+      32,
+      69,
+      73,
+      32,
+      255
+    ],
+    "rgb": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        32,
+        32,
+        32
+      ],
+      [
+        69,
+        69,
+        69
+      ],
+      [
+        73,
+        73,
+        73
+      ],
+      [
+        32,
+        32,
+        32
+      ],
+      [
+        255,
+        255,
+        255
+      ]
+    ],
+    "grid": [
+      6,
+      1
+    ]
+  },
+  {
+    "name": "leading-whitespace-sample",
+    "dict": "/W 1 /H 1 /BPC 8 /CS /RGB",
+    "separator": " ",
+    "raw": [
+      10,
+      50,
+      90
+    ],
+    "tail": "\nEI\n",
+    "samples": [
+      10,
+      50,
+      90
+    ],
+    "rgb": [
+      [
+        10,
+        50,
+        90
+      ]
+    ],
+    "grid": [
+      1,
+      1
+    ]
+  },
+  {
+    "name": "byte-padded-rows",
+    "dict": "/W 3 /H 2 /BPC 1 /CS /G",
+    "separator": "\n",
+    "raw": [
+      160,
+      64
+    ],
+    "tail": "\nEI\n",
+    "samples": [
+      1,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "rgb": [
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "grid": [
+      3,
+      2
+    ]
+  },
+  {
+    "name": "filtered-ascii-hex",
+    "dict": "/W 1 /H 1 /BPC 8 /CS /RGB /F /AHx",
+    "separator": " ",
+    "raw": [
+      48,
+      65,
+      51,
+      50,
+      53,
+      65,
+      62
+    ],
+    "tail": "\nEI\n",
+    "samples": [
+      10,
+      50,
+      90
+    ],
+    "rgb": [
+      [
+        10,
+        50,
+        90
+      ]
+    ],
+    "grid": [
+      1,
+      1
+    ]
+  },
+  {
+    "name": "filtered-ascii85-marker-in-payload",
+    "dict": "/W 4 /H 1 /BPC 8 /CS /G /F /A85",
+    "separator": " ",
+    "raw": [33, 33, 32, 69, 73, 32, 33, 126, 62],
+    "tail": "\nEI\n",
+    "samples": [0, 4, 5, 76],
+    "rgb": [[0, 0, 0], [4, 4, 4], [5, 5, 5], [76, 76, 76]],
+    "grid": [4, 1]
+  },
+  {
+    "name": "truncated-known-body",
+    "dict": "/W 6 /H 1 /BPC 8 /CS /G",
+    "separator": " ",
+    "raw": [
+      2,
+      100
+    ],
+    "tail": "\nEI\n",
+    "error": "declared byte length"
+  },
+  {
+    "name": "oversized-geometry",
+    "dict": "/W 4294967295 /H 4294967295 /BPC 16 /CS /CMYK",
+    "separator": " ",
+    "raw": [
+      1
+    ],
+    "tail": "\nEI\n",
+    "error": "overflow"
+  },
+  {
+    "name": "dimension-exceeds-u32",
+    "dict": "/W 4294967296 /H 1 /BPC 8 /CS /G",
+    "separator": " ",
+    "raw": [
+      0
+    ],
+    "tail": "\nEI\n",
+    "error": "Width"
+  },
+  {
+    "name": "missing-id-separator",
+    "dict": "/W 1 /H 1 /BPC 8 /CS /G",
+    "separator": "",
+    "raw": [
+      47
+    ],
+    "tail": "\nEI\n",
+    "error": "after ID"
+  },
+  {
+    "name": "missing-ei-separator",
+    "dict": "/W 1 /H 1 /BPC 8 /CS /G",
+    "separator": " ",
+    "raw": [
+      9
+    ],
+    "tail": "EI\n",
+    "error": "before EI"
+  },
+  {
+    "name": "ei-must-be-entire-operator",
+    "dict": "/W 1 /H 1 /BPC 8 /CS /G",
+    "separator": " ",
+    "raw": [
+      9
+    ],
+    "tail": "\nEIx\n",
+    "error": "closing EI"
+  }
+]

@@ -8,7 +8,7 @@ import { cn } from "../../../../🔨️modules/🏷️class-name-composition/�
 import { type DiagramForceConfig, type DiagramForceSimulation, defaultDiagramForceConfig } from "../../📋️force-model/🟦️.ts";
 import { DiagramHandoffQueue, type DiagramHandoffStatus } from "../../🤝️handoff/🟦️.ts";
 import { type DiagramForceViewportPage, type ForceNode, diagramForceHostPage, queryDiagramElement } from "../../🔭️live-force/🟦️.ts";
-import { DIAGRAM_KEYBOARD_FOCUS_CLASS, diagramKeyboardAnnouncement, diagramKeyboardStep, useDiagramTranslate } from "../../⌨️keyboard/🟦️.tsx";
+import { DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES, diagramKeyboardAnnouncement, diagramKeyboardStep, useDiagramTranslate } from "../../⌨️keyboard/🟦️.tsx";
 
 /** 🔷 Builds forceConfig, simulationRef, forcePageRef, draggingNodeRef of DiagramInner. */
 export function useForceConfigState({ forceConfigProp, handoffStatusRef, controlledNodes, controlledEdges, initialNodes, initialEdges, onNodesChangeReactFlow, onNodeDragStartProp, onNodeDragProp, onNodeDragStopProp, onInitProp, onConnect, onMoveStart, onMoveEnd, onSelectionChange, reactFlowInstanceRef }: { readonly forceConfigProp: Partial<DiagramForceConfig> | undefined; readonly handoffStatusRef: React.RefObject<DiagramHandoffStatus | null> | undefined; readonly controlledNodes: Node[] | undefined; readonly controlledEdges: Edge[] | undefined; readonly initialNodes: Node[]; readonly initialEdges: Edge[]; readonly onNodesChangeReactFlow: ((changes: any[]) => void) | undefined; readonly onNodeDragStartProp: OnNodeDrag<Node> | undefined; readonly onNodeDragProp: OnNodeDrag<Node> | undefined; readonly onNodeDragStopProp: OnNodeDrag<Node> | undefined; readonly onInitProp: ((instance: ReactFlowInstance) => void) | undefined; readonly onConnect: ((connection: any) => void) | undefined; readonly onMoveStart: (() => void) | undefined; readonly onMoveEnd: (() => void) | undefined; readonly onSelectionChange: ((selection: OnSelectionChangeParams) => void) | undefined; readonly reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> | undefined }) {
@@ -77,7 +77,7 @@ export function useForceConfigState({ forceConfigProp, handoffStatusRef, control
   const keyboardFocusedNodeIdRef = reactHostPort.useRef(keyboardFocusedNodeId);
   keyboardFocusedNodeIdRef.current = keyboardFocusedNodeId;
   const accessibleNodes = reactHostPort.useMemo(
-    () => (keyboardFocusedNodeId === null ? renderedNodes : renderedNodes.map((node) => (node.id === keyboardFocusedNodeId ? { ...node, className: cn(node.className, DIAGRAM_KEYBOARD_FOCUS_CLASS), domAttributes: { ...node.domAttributes, "data-keyboard-focused": "" } } : node))),
+    () => (keyboardFocusedNodeId === null ? renderedNodes : renderedNodes.map((node) => (node.id === keyboardFocusedNodeId ? { ...node, domAttributes: { ...node.domAttributes, ...DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES } } : node))),
     [keyboardFocusedNodeId, renderedNodes],
   );
 
@@ -172,5 +172,5 @@ export function useForceConfigState({ forceConfigProp, handoffStatusRef, control
     },
     [reactFlowInstanceRef],
   );
-  return { draggingNodeRef, dragOriginRef, dragOffsetRef, dragHandoffGenerationRef, handoff, virtualizedHost, forcePageRef, forceConfig, simulationRef, onNodeDragStartPropRef, onNodeDragPropRef, onNodeDragStopPropRef, onConnectRef, onMoveStartRef, onMoveEndRef, onSelectionChangeRef, finalNodes, finalEdges, setHostNodes, setHostEdges, isControlled, setInternalNodes, setInternalEdges, internalNodes, internalEdges, diagramRoleDescriptionLabel, diagramLabel, renderedNodes, diagramNodesLabel, renderedEdges, diagramEdgesLabel, diagramKeyboardHelpId, keyboardFocusedNodeId, handleDiagramKeyDown, diagramKeyboardHelpLabel, keyboardAnnouncement, accessibleNodes, handleNodesChange, handleEdgesChange, handleInit };
+  return { draggingNodeRef, dragOriginRef, dragOffsetRef, dragHandoffGenerationRef, handoff, virtualizedHost, forcePageRef, forceConfig, simulationRef, onNodeDragStartPropRef, onNodeDragPropRef, onNodeDragStopPropRef, onConnectRef, onMoveStartRef, onMoveEndRef, onSelectionChangeRef, finalNodes, finalEdges, setHostNodes, setHostEdges, isControlled, setInternalNodes, setInternalEdges, internalNodes, internalEdges, diagramRoleDescriptionLabel, diagramLabel, renderedNodes, diagramNodesLabel, renderedEdges, diagramEdgesLabel, diagramKeyboardHelpId, keyboardFocusedNodeId, setKeyboardFocusedNodeId, handleDiagramKeyDown, diagramKeyboardHelpLabel, keyboardAnnouncement, accessibleNodes, handleNodesChange, handleEdgesChange, handleInit };
 }

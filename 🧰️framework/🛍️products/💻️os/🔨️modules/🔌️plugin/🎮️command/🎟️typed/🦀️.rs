@@ -29,7 +29,14 @@ pub struct OriginalTypedCommandSource<A:ArtifactApp>{
 impl<A:ArtifactApp> Default for OriginalTypedCommandSource<A>{fn default()->Self{Self{qualification:ManuallyDrop::new(None),registration:ManuallyDrop::new(None),admitting:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),wire:ManuallyDrop::new(None),action:None,argument:None,catalog:None,qualified_action:None,runtime_input:ManuallyDrop::new(None),runtime_ignored:false,host_event:false,command:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None),caller:ManuallyDrop::new(None),operation:None,original_typing_ready:false,tool_tag_ready:false,tool_tag_dispatch:None,receipt:None,result:ManuallyDrop::new(None),body:None,binding:None,decoder:None,retirement:Default::default(),construction:Default::default()}}}
 fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"typed command requires its complete original source and receiving recipient")}
 impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
- pub fn pending(&self)->bool{self.qualification.is_some()||self.registration.is_some()||self.admitting.is_some()||self.producer.is_some()||self.wire.is_some()||self.body.is_some()||self.runtime_input.is_some()||self.command.is_some()||self.admission.is_some()||self.metadata.is_some()||self.caller.is_some()||self.receipt.is_some()||self.result.is_some()||!self.retirement.is_empty()||!self.construction.terminal_is_empty()}
+ pub fn pending(&self)->bool{self.has_command_custody()||!self.construction.terminal_is_empty()}
+ fn has_command_custody(&self)->bool{
+    self.qualification.is_some()||self.registration.is_some()||self.admitting.is_some()
+        ||self.producer.is_some()||self.wire.is_some()||self.body.is_some()
+        ||self.runtime_input.is_some()||self.command.is_some()||self.admission.is_some()
+        ||self.metadata.is_some()||self.caller.is_some()||self.receipt.is_some()
+        ||self.result.is_some()||!self.retirement.is_empty()
+ }
  pub fn production_pending(&self)->bool{self.action.is_some()||self.argument.is_some()}
  pub fn argument_kind(&self)->Option<u8>{self.argument}
  pub fn select_argument(&mut self,assembled:bool,prepared:bool,cx:&mut StepContext<'_>)->Result<Option<u8>,OriginalTurnFailure>{self.validate(cx)?;if self.argument.is_some(){return Ok(self.argument)}let d=fixed::<Option<u8>>();stepped(cx,self,|s|&mut s.construction,d,|s|{s.argument=Some(if assembled{0}else if prepared{1}else{2});Ok(receipt(d))})?;Ok(None)}
@@ -73,12 +80,48 @@ impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
  /// 📤️ The original pending frame is written once into its preadmitted fixed registry slot.
  pub fn handoff(&mut self,cx:&mut StepContext<'_>,output:&mut Option<PendingLatestWinsCommand<A>>,machines:&mut semio_plugin_scrub_host::ToolMachineRuntime<A::Snapshot,A::Mutation,A::Config,A::ConfigMutation>,tag:&mut Option<semio_plugin_scrub_host::ToolTag>,build:impl FnOnce(&mut Self)->PendingLatestWinsCommand<A>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if !self.input_ready()||self.metadata.is_none()||self.caller.is_none()||output.is_some(){return Err(refused().into())}let d=fixed::<(PendingLatestWinsCommand<A>,PendingLatestWinsCommand<A>)>();semio_plugin_scrub_host::admit_original_tagged(machines,self.operation.ok_or_else(refused)?.operation.0,tag,output,d,cx,||build(self))}
  /// 🧾️ Receipt construction and final source handoff occupy separate original funded turns.
- pub fn advance_receipt(&mut self,cx:&mut StepContext<'_>)->Result<Option<semio_framework::kernel::InvocationResult>,OriginalTurnFailure>{self.validate(cx)?;let stamp=self.receipt.ok_or_else(refused)?;let operation=stamp.operation(cx)?;if self.result.is_none(){semio_plugin_job::original_emission::admit_original_emission_receipt(operation,cx,&mut self.construction,&mut self.result)?;return Ok(None)}if self.qualification.is_some()||self.registration.is_some()||self.admitting.is_some()||self.producer.is_some()||self.wire.is_some()||self.runtime_input.is_some()||self.command.is_some()||self.admission.is_some()||self.metadata.is_some()||self.caller.is_some()||!self.retirement.is_empty(){return Err(refused().into())}let d=fixed::<(semio_framework::kernel::InvocationResult,semio_framework::kernel::InvocationResult,Self)>();let mut output=None;built(cx,&mut self.construction,&mut output,construction(d),||{let result=self.result.take().unwrap();self.body=None;self.binding=None;self.decoder=None;self.operation=None;self.original_typing_ready=false;self.tool_tag_ready=false;self.tool_tag_dispatch=None;self.receipt=None;self.action=None;self.argument=None;self.catalog=None;self.qualified_action=None;Ok((result,receipt(d)))})?;Ok(output)}
+ pub fn advance_receipt(&mut self,cx:&mut StepContext<'_>)->Result<Option<semio_framework::kernel::InvocationResult>,OriginalTurnFailure>{
+  self.validate(cx)?;
+  let stamp=self.receipt.ok_or_else(refused)?;
+  let operation=stamp.operation(cx)?;
+  if self.result.is_none(){
+   semio_plugin_job::original_emission::admit_original_emission_receipt(operation,cx,&mut self.construction,&mut self.result)?;
+   return Ok(None)
+  }
+  if self.qualification.is_some()||self.registration.is_some()||self.admitting.is_some()||self.producer.is_some()
+   ||self.wire.is_some()||self.runtime_input.is_some()||self.command.is_some()||self.admission.is_some()
+   ||self.metadata.is_some()||self.caller.is_some()||!self.retirement.is_empty(){
+   return Err(refused().into())
+  }
+  if !self.construction.terminal_is_empty(){
+   cx.with_original_retirement(|cx|unbuilt(cx,&mut self.construction))?;
+   return Ok(None)
+  }
+  let demand=fixed::<(semio_framework::kernel::InvocationResult,semio_framework::kernel::InvocationResult,Self)>();
+  let mut output=None;
+  crate::command_admission::forwarded(cx,demand,|effect|paid(effect,||{
+   output=self.result.take();
+   self.body=None;
+   self.binding=None;
+   self.decoder=None;
+   self.operation=None;
+   self.original_typing_ready=false;
+   self.tool_tag_ready=false;
+   self.tool_tag_dispatch=None;
+   self.receipt=None;
+   self.action=None;
+   self.argument=None;
+   self.catalog=None;
+   self.qualified_action=None;
+   RetainedCloneStep::Complete(receipt(demand))
+  }))?;
+  Ok(output)
+ }
  /// 🧮️ Quotes the items the next close step posts: the live producer's, else one.
- pub fn close_items(&self)->usize{if self.qualification.is_none()&&self.admitting.is_none(){self.producer.as_ref().filter(|producer|!producer.terminal_is_empty()).map_or(1,|producer|producer.close_items())}else{1}}
- pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{let body=self.body.unwrap_or(0);if let Some(owner)=self.qualification.as_ref(){return if owner.terminal_is_empty(){let mut d=OriginalToolQualification::release_demands();d.copy_bytes=size_of::<Option<Box<OriginalToolQualification>>>();Ok(d)}else{owner.close_demands()}}if let Some(owner)=self.admitting.as_ref(){return if owner.terminal_is_empty(){let mut d=OriginalCommandAdmission::release_demands();d.copy_bytes=size_of::<Option<Box<OriginalCommandAdmission>>>();Ok(d)}else{owner.close_demands()}}if let Some(producer)=self.producer.as_ref(){return if producer.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducer<A::Command>>>>(),release_bytes:std::mem::size_of_val(&**producer),depth:1,..Default::default()})}else{producer.close_demands(body)}}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.result.is_some(){return self.retirement.next_owner_demands::<semio_framework::kernel::InvocationResult>(true,&None,body)}if self.metadata.is_some(){return self.retirement.next_owner_demands::<ActionMeta>(true,&None,body)}if self.runtime_input.is_some(){return self.retirement.next_owner_demands::<Box<A::Command>>(true,&None,body)}if self.command.is_some(){return self.retirement.next_owner_demands::<Box<A::Command>>(true,&None,body)}if self.admission.is_some(){return self.retirement.next_owner_demands::<AdmittedToolCommand>(true,&None,body)}if self.wire.is_some(){return self.retirement.next_owner_demands::<semio_framework::action_bus::RetainedToolWireInput>(true,&None,body)}if self.registration.is_some(){return self.retirement.next_owner_demands::<semio_plugin_job::original_declared_tools::DeclaredToolRegistrationAlias>(true,&None,body)}if let Some(caller)=self.caller.as_ref(){return Ok(caller.retirement_demands())}if self.body.is_some(){return Ok(fixed::<Self>())}Ok(Default::default())}
+ pub fn close_items(&self)->usize{if !self.has_command_custody(){return self.construction.close_items()}if self.qualification.is_none()&&self.admitting.is_none(){self.producer.as_ref().filter(|producer|!producer.terminal_is_empty()).map_or(1,|producer|producer.close_items())}else{1}}
+ pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.has_command_custody(){return Ok(self.construction.close_demand())}let body=self.body.unwrap_or(0);if let Some(owner)=self.qualification.as_ref(){return if owner.terminal_is_empty(){let mut d=OriginalToolQualification::release_demands();d.copy_bytes=size_of::<Option<Box<OriginalToolQualification>>>();Ok(d)}else{owner.close_demands()}}if let Some(owner)=self.admitting.as_ref(){return if owner.terminal_is_empty(){let mut d=OriginalCommandAdmission::release_demands();d.copy_bytes=size_of::<Option<Box<OriginalCommandAdmission>>>();Ok(d)}else{owner.close_demands()}}if let Some(producer)=self.producer.as_ref(){return if producer.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducer<A::Command>>>>(),release_bytes:std::mem::size_of_val(&**producer),depth:1,..Default::default()})}else{producer.close_demands(body)}}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.result.is_some(){return self.retirement.next_owner_demands::<semio_framework::kernel::InvocationResult>(true,&None,body)}if self.metadata.is_some(){return self.retirement.next_owner_demands::<ActionMeta>(true,&None,body)}if self.runtime_input.is_some(){return self.retirement.next_owner_demands::<Box<A::Command>>(true,&None,body)}if self.command.is_some(){return self.retirement.next_owner_demands::<Box<A::Command>>(true,&None,body)}if self.admission.is_some(){return self.retirement.next_owner_demands::<AdmittedToolCommand>(true,&None,body)}if self.wire.is_some(){return self.retirement.next_owner_demands::<semio_framework::action_bus::RetainedToolWireInput>(true,&None,body)}if self.registration.is_some(){return self.retirement.next_owner_demands::<semio_plugin_job::original_declared_tools::DeclaredToolRegistrationAlias>(true,&None,body)}if let Some(caller)=self.caller.as_ref(){return Ok(caller.retirement_demands())}if self.body.is_some(){return Ok(fixed::<Self>())}Ok(Default::default())}
  /// 🪦️ Cancellation keeps the original command and decoder-bound wire until each defining owner returns.
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if !self.pending(){return Ok(true)}if !self.binding.is_some_and(|source|source.matches(cx))||self.decoder!=cx.native_receiving_identity(){return Err(refused().into())}if let Some(caller)=self.caller.as_ref(){caller.validate_retirement_context(cx)?;}if self.qualification.is_some(){self.close_qualification(cx)?;return Ok(false)}if self.admitting.is_some(){self.close_admitting(cx)?;return Ok(false)}if self.producer.is_some(){self.close_producer(cx)?;return Ok(false)}if self.registration.is_none()&&self.wire.is_none()&&self.runtime_input.is_none()&&self.command.is_none()&&self.admission.is_none()&&self.metadata.is_none()&&self.result.is_none()&&self.retirement.is_empty(){if let Some(caller)=self.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(false)}if !unbuilt(cx,&mut self.construction)?{return Ok(false)}}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if !self.has_command_custody(){return unbuilt(cx,&mut self.construction)}if !self.binding.is_some_and(|source|source.matches(cx))||self.decoder!=cx.native_receiving_identity(){return Err(refused().into())}if let Some(caller)=self.caller.as_ref(){caller.validate_retirement_context(cx)?;}if self.qualification.is_some(){self.close_qualification(cx)?;return Ok(false)}if self.admitting.is_some(){self.close_admitting(cx)?;return Ok(false)}if self.producer.is_some(){self.close_producer(cx)?;return Ok(false)}if self.registration.is_none()&&self.wire.is_none()&&self.runtime_input.is_none()&&self.command.is_none()&&self.admission.is_none()&&self.metadata.is_none()&&self.result.is_none()&&self.retirement.is_empty(){if let Some(caller)=self.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(false)}if !unbuilt(cx,&mut self.construction)?{return Ok(false)}}
   let d=self.close_demands()?;let body=self.body.unwrap_or(0);
   retired(cx,d,|effect|{
    if !self.retirement.is_empty(){return plugin_settle_value(self.retirement.step_granted(body,effect))}

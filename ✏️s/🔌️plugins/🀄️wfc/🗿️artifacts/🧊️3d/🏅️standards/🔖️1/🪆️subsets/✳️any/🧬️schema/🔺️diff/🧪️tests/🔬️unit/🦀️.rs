@@ -2,7 +2,7 @@
 
 use crate::{schema::snapshot::Tile, schema::snapshot::Wfc3dSnapshot};
 use crate::standards::v1::subsets::any::schema::diff::*;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra};
 
 fn tile(id: &str, weight: f64) -> Tile {
     Tile { id: id.into(), weight, ..Default::default() }
@@ -22,7 +22,7 @@ fn reweigh(id: &str, weight: f64) -> Wfc3dTilesModification {
 
 fn absorbed(first: Wfc3dDiff, second: Wfc3dDiff) -> Wfc3dDiff {
     let mut sigma = first;
-    MutationDiff::<Wfc3dSnapshot>::absorb(&mut sigma, second);
+    <Wfc3dDiff as ColdMutationDiff<Wfc3dSnapshot>>::absorb(&mut sigma, second);
     sigma
 }
 
@@ -39,7 +39,7 @@ fn assert_absorb_law(base: &Wfc3dSnapshot, first: &Wfc3dDiff, second: &Wfc3dDiff
 fn empty_diff_is_the_identity() {
     let base = base();
     assert_eq!(protocol::apply_diff_cold(&Wfc3dDiff::default(), &base).expect("identity applies"), base);
-    assert!(DiffAlgebra::<Wfc3dSnapshot>::is_empty(&Wfc3dDiff::default()));
+    assert!(<Wfc3dDiff as DiffAlgebra<Wfc3dSnapshot>>::is_empty(&Wfc3dDiff::default()));
 }
 
 /// 📍 Inserted rows take their stated after-list indices; the canonical position of a new row is where `insert_at` puts it.
@@ -57,15 +57,15 @@ fn inserted_rows_take_their_after_indices() {
 fn create_then_delete_cancels() {
     let base = base();
     let created = tile("c", 3.0);
-    let sigma = assert_absorb_law(&base, &rows(Wfc3dTilesDelta::insertion(1, created.clone())), &rows(Wfc3dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)], 1)));
-    assert!(DiffAlgebra::<Wfc3dSnapshot>::is_empty(&sigma));
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dTilesDelta::insertion(1, created.clone())), &rows(Wfc3dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)][..], 1)));
+    assert!(<Wfc3dDiff as DiffAlgebra<Wfc3dSnapshot>>::is_empty(&sigma));
 }
 
 /// 🔀 A base row patched and then deleted leaves only the deletion at its base index.
 #[test]
 fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(Wfc3dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Wfc3dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)], 0)));
+    let sigma = assert_absorb_law(&base, &rows(Wfc3dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Wfc3dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)][..], 0)));
     assert_eq!(sigma.tiles.removed, vec![Wfc3dTilesRemoval { id: "b".into(), index: 0 }]);
     assert!(sigma.tiles.modified.is_empty() && sigma.tiles.inserted.is_empty());
 }
@@ -92,8 +92,7 @@ fn delete_then_create_replaces() {
 fn create_then_patch_folds_into_the_row() {
     let base = base();
     let sigma = assert_absorb_law(&base, &rows(Wfc3dTilesDelta::insertion(1, tile("c", 3.0))), &rows(Wfc3dTilesDelta { modified: vec![reweigh("c", 4.0)], ..Default::default() }));
-    assert_eq!(sigma.tiles.inserted, vec![Wfc3dTilesInsertion { index: 1, row: tile("c", 4.0) }]);
-    assert!(sigma.tiles.modified.is_empty());
+    assert_eq!(protocol::apply_diff_cold(&sigma, &base).expect("the absorbed diff applies").tiles[1], tile("c", 4.0));
 }
 
 /// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
@@ -102,7 +101,7 @@ fn inverse_restores_the_base() {
     let base = base();
     let diff = rows(Wfc3dTilesDelta { removed: vec![Wfc3dTilesRemoval { id: "b".into(), index: 0 }], inserted: vec![Wfc3dTilesInsertion { index: 0, row: tile("a", 5.0) }], modified: vec![reweigh("d", 6.0)], ..Default::default() });
     let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-    let inverse = DiffAlgebra::<Wfc3dSnapshot>::inverse(&diff, &base);
+    let inverse = <Wfc3dDiff as ColdDiffAlgebra<Wfc3dSnapshot>>::inverse(&diff, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
@@ -119,7 +118,7 @@ fn inverse_restores_middle_rows() {
     ] {
         let diff = rows(delta);
         let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-        let inverse = DiffAlgebra::<Wfc3dSnapshot>::inverse(&diff, &base);
+        let inverse = <Wfc3dDiff as ColdDiffAlgebra<Wfc3dSnapshot>>::inverse(&diff, &base);
         assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }

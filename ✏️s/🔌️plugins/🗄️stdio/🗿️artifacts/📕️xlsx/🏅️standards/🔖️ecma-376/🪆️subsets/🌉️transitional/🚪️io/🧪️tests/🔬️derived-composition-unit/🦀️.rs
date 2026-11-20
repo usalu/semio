@@ -1,11 +1,32 @@
 mod tests {
     use super::*;
+    use crate::standards::v_ecma_376::subsets::transitional::io::{decode_xlsx, encode_xlsx};
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx as encode_base_xlsx;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
     use crate::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
     use semio_plugin::{io::AnalyzeSource, ArtifactBuilder as _};
+
+    #[semio_framework_async_macros::async_test]
+    async fn native_document_uses_the_declared_profile() {
+        let snapshot = XlsxTransitionalBuilder::new(XlsxWorkbook::default()).build().unwrap();
+        let bytes = encode_xlsx(&snapshot).unwrap();
+        let decoded = decode_xlsx(&bytes).unwrap();
+        let composed = XlsxTransitionalComposerComposition::compose(&[ComposeSource {
+            dialect: DIALECT_TRANSITIONAL,
+            payload: AnalyzeSource::Binary(&bytes),
+        }]).unwrap();
+        assert_eq!(composed.snapshot, decoded);
+        assert_eq!(XlsxTransitionalBuilder::from_binary(&bytes).unwrap().build().unwrap(), decoded);
+        let diagnostics = XlsxTransitionalValidator::validate(&IoPayload::Binary(bytes)).await;
+        assert!(diagnostics.iter().all(|diagnostic| !matches!(diagnostic.severity, Severity::Error | Severity::Fatal)));
+
+        let other_profile = stamp_strict_namespace(build_minimal_xlsx(XlsxWorkbook::default()));
+        assert!(encode_xlsx(&other_profile).is_err());
+        assert!(decode_xlsx(&encode_base_xlsx(&other_profile).unwrap()).is_err());
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_transitional() {

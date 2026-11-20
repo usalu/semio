@@ -144,7 +144,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 fn phase_view(model: &ModelSnapshot, phase: Option<Phase>) -> ModelSnapshot {
     let mut model = model.clone();
     let building = model.storeys["st-0"].building.clone();
-    model.views.insert("v-phase".into(), View { phase, ..View::of_storey(&building, "Ground plan", ViewKind::Plan, "st-0") });
+    model.views.cold_insert("v-phase".into(), View { phase, ..View::of_storey(&building, "Ground plan", ViewKind::Plan, "st-0") });
     model
 }
 

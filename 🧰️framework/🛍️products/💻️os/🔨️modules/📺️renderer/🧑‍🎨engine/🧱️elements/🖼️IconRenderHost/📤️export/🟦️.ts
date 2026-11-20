@@ -75,7 +75,7 @@ export function iconExportProgressText(completed:number,total:number,locale:stri
 /** 🖼️ Renders a batch in order, yielding between images and withholding a cancelled image's download. */
 export async function runIconExportBatch<Request, Result>(
   items:readonly Readonly<{filename:string;request:Request}>[],
-  host:Readonly<{owner:string;locale:()=>string;render:(request:Request)=>Promise<Result>;deliver:(filename:string,result:Result)=>void;yieldToHost:()=>Promise<void>;announce?:(text:string,outcome?:IconExportOutcome)=>void}>
+  host:Readonly<{owner:string;locale:()=>string;render:(request:Request,signal:AbortSignal)=>Promise<Result>;deliver:(filename:string,result:Result)=>void;yieldToHost:()=>Promise<void>;announce?:(text:string,outcome?:IconExportOutcome)=>void}>
 ):Promise<Readonly<{outcome:IconExportOutcome;completed:number;reason?:string}>> {
   const locale=host.locale(),job=++nextJob;
   iconExportText("started",locale);
@@ -93,11 +93,15 @@ export async function runIconExportBatch<Request, Result>(
     for(const item of items){
       await host.yieldToHost();
       if(cancelled())return finish("cancelled");
+      const controller=new AbortController();
       const result=await new Promise<Result>((resolve,reject)=>{
         const unsubscribe=subscribeIconExportJobs(()=>{
-          if(cancelled()){unsubscribe();reject(new Error("Image export cancelled"));}
+          if(cancelled()){unsubscribe();controller.abort();reject(controller.signal.reason);}
         });
-        Promise.resolve().then(()=>{if(cancelled())throw new Error("Image export cancelled");return host.render(item.request);}).then(value=>{unsubscribe();resolve(value);},error=>{unsubscribe();reject(error);});
+        Promise.resolve().then(()=>{
+          controller.signal.throwIfAborted();
+          return host.render(item.request,controller.signal);
+        }).then(value=>{unsubscribe();resolve(value);},error=>{unsubscribe();reject(error);});
       });
       if(cancelled())return finish("cancelled");
       host.deliver(item.filename,result);

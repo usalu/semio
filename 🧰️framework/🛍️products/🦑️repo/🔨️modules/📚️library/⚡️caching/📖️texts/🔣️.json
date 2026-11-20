@@ -42,6 +42,14 @@
       "en": "The dependency store stayed busy for {seconds} s; the other process did not finish in time",
       "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt; der andere Prozess wurde nicht rechtzeitig fertig"
     },
+    "dependency-store.maintenance-deferred": {
+      "en": "The dependency store stayed busy for {seconds} s; it is verified current without exclusive access, so its optional maintenance is left to the next setup",
+      "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt; er ist ohne exklusiven Zugriff als aktuell belegt, seine optionale Pflege bleibt dem nächsten Setup überlassen"
+    },
+    "dependency-store.verified-shared": {
+      "en": "The dependency store is verified current without exclusive access; {count} other process(es) hold it shared (first: process {pid} ({command}) since {since}); nobody is waited for",
+      "de": "Der Abhängigkeitsspeicher ist ohne exklusiven Zugriff als aktuell belegt; {count} andere Prozess(e) halten ihn geteilt (zuerst: Prozess {pid} ({command}) seit {since}); auf niemanden wird gewartet"
+    },
     "dependency-store.current-under-ancestor": {
       "en": "Process {pid} ({command}) holds the dependency store since {since} and the funding is already current; continuing under that hold without exclusive access",
       "de": "Der Prozess {pid} ({command}) hält den Abhängigkeitsspeicher seit {since} und die Finanzierung ist bereits aktuell; es wird unter dieser Haltung ohne exklusiven Zugriff fortgefahren"
@@ -89,6 +97,18 @@
     "dependency-store.retirement-deferred": {
       "en": "The dependency store stayed busy for {seconds} s while obsolete generations were retired ({retired} retired); the rest is retired by the next setup",
       "de": "Der Abhängigkeitsspeicher blieb {seconds} s belegt, während veraltete Generationen entfernt wurden ({retired} entfernt); der Rest wird vom nächsten Setup entfernt"
+    },
+    "dependency-store.bindings-moved": {
+      "en": "The dependency bindings moved between the retirement plan ({planned}) and the selected retirement ({current}, {scopes} scopes): a tool or the replica changed a package directory that the read had pinned. Nothing was retired for this generation; the setup plans it again",
+      "de": "Die Abhängigkeitsbindungen haben sich zwischen dem Entfernungsplan ({planned}) und der gewählten Entfernung ({current}, {scopes} Bereiche) bewegt: ein Werkzeug oder die Replik hat ein Paketverzeichnis geändert, das die Lesung festgehalten hatte. Für diese Generation wurde nichts entfernt; das Setup plant sie neu"
+    },
+    "dependency-store.bindings-replanned": {
+      "en": "The dependency bindings moved while a generation was selected for retirement ({planned} to {current}); planning again (plan {attempt} of {limit})",
+      "de": "Die Abhängigkeitsbindungen bewegten sich, während eine Generation zur Entfernung gewählt war ({planned} zu {current}); neue Planung (Plan {attempt} von {limit})"
+    },
+    "dependency-store.retirement-moved": {
+      "en": "The dependency bindings moved in {limit} plans in a row ({retired} generations retired); the rest is retired by the next setup",
+      "de": "Die Abhängigkeitsbindungen bewegten sich in {limit} Plänen hintereinander ({retired} Generationen entfernt); der Rest wird vom nächsten Setup entfernt"
     },
     "dependency-store.retirement-plan-incomplete": {
       "en": "The dependency store returned no complete retirement plan ({reason}, {bytes} bytes, first violation: {violation}); nothing was retired. Run the setup again; if this repeats, the dependency store image is damaged and must be reset",

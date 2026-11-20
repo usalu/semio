@@ -7,8 +7,89 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress as P};
 use serde_json::Value;
 fn clock()->Option<u64>{Some(0)}
+
+#[test]
+fn actual_retained_total_binding_preserves_held_and_spendable_stock() {
+    let corpus: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let source = &corpus["source"];
+    let law = &corpus["retainedTotalBinding"];
+    let number = |value: &Value, key: &str| value[key].as_u64().unwrap() as usize;
+    let stock = RetainedCloneGrant {
+        maximum_items: number(source, "items"),
+        maximum_copy_bytes: number(source, "copyBytes"),
+        maximum_capacity_bytes: number(source, "capacityBytes"),
+        maximum_release_bytes: number(source, "releaseBytes"),
+        maximum_depth: number(source, "depth"),
+    };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(7529), Generation(7), stock, clock, source["deadlineUs"].as_u64().unwrap(), source["fuel"].as_u64().unwrap());
+    caller.admit_return_table();
+    let mut claim = None;
+    let claim_bytes = number(law, "claimCopyBytes");
+    caller.refreshed_turn(stock, |cx| {
+        let destination = &mut claim as *mut _ as usize;
+        assert!(testkit::original_return_source::claim_original_sized_return(cx, &mut claim, destination, claim_bytes, 0)?);
+        Ok(())
+    }).unwrap();
+    let physical = caller.remaining_grant();
+    let fuel = {
+        let mut cx = caller.lend_context();
+        let before = testkit::return_budget_snapshot(&cx);
+        let available = cx.retained_grant();
+        assert!(before.held_copy_bytes >= claim_bytes);
+        assert!(available.maximum_copy_bytes < physical.maximum_copy_bytes);
+        let over = number(law, "overage");
+        for excess in [
+            RetainedCloneGrant { maximum_items: physical.maximum_items + over, ..physical },
+            RetainedCloneGrant { maximum_copy_bytes: physical.maximum_copy_bytes + over, ..physical },
+            RetainedCloneGrant { maximum_capacity_bytes: physical.maximum_capacity_bytes + over, ..physical },
+            RetainedCloneGrant { maximum_release_bytes: physical.maximum_release_bytes + over, ..physical },
+            RetainedCloneGrant { maximum_depth: physical.maximum_depth + over, ..physical },
+        ] {
+            assert!(cx.bind_original_retained_total(excess).is_err());
+        }
+        cx.bind_original_retained_total(physical).unwrap();
+        assert_eq!(cx.retained_grant(), available);
+        assert_eq!(testkit::return_budget_snapshot(&cx), before);
+
+        let claim = claim.as_mut().unwrap();
+        let mut witness = Some(claim.issue_success_return(0).unwrap());
+        assert!(receive_original_return_witness(&mut cx, claim, &mut witness).unwrap());
+        assert!(claim.terminal_is_empty());
+        let settled = testkit::return_budget_snapshot(&cx);
+        let reserved = cx.reserved_return_progress();
+        assert_eq!(reserved.copied_items, number(law, "redeemedItems"));
+        assert_eq!(settled.spent, before.spent.checked_add(reserved).unwrap());
+        assert_eq!(settled.held_copy_bytes, 0);
+        assert!(settled.conserved());
+        let released = cx.retained_grant();
+        assert!(released.maximum_copy_bytes > available.maximum_copy_bytes);
+        assert_eq!(released.maximum_copy_bytes, physical.maximum_copy_bytes.min(settled.remaining().unwrap().0.maximum_copy_bytes));
+
+        let narrowed = RetainedCloneGrant { maximum_copy_bytes: released.maximum_copy_bytes - number(law, "policyCopyReduction"), ..released };
+        cx.bind_original_retained_total(narrowed).unwrap();
+        assert!(cx.bind_original_retained_total(physical).is_err());
+        let policy = RetainedCloneGrant { maximum_items: 1, ..narrowed };
+        let turn = crate::StepBudget::new(cx.fuel_remaining(), cx.deadline_us(), policy);
+        cx.narrow_original_work_budget(turn).unwrap();
+        assert!(cx.bind_original_retained_total(narrowed).is_err());
+        assert_eq!(cx.retained_grant(), policy);
+        cx.with_retained_loan(narrowed, |cx| {
+            cx.bind_original_retained_total(cx.retained_grant())?;
+            assert_eq!(cx.retained_grant(), policy);
+            Ok(())
+        }).unwrap();
+        cx.original_source_fuel_remaining()
+    };
+    caller.settle_lent_fuel(fuel);
+    drop(claim);
+    caller.retire(stock);
+}
+
 #[test]
 fn actual_source_holds_leave_real_quantum_one_usable_and_never_reissue_return_credit(){
+ use semio_framework_job_payload::OriginalReturnEscrowAccounting;
+ let capture_bytes = OriginalReturnEscrowAccounting::witness_copy(true, true, 0).unwrap();
+ let receive_bytes = OriginalReturnEscrowAccounting::witness_copy(false, true, 0).unwrap();
  let law:Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let source=&law["source"];let stock=RetainedCloneGrant{maximum_items:source["items"].as_u64().unwrap()as usize,maximum_copy_bytes:source["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:source["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:source["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:source["depth"].as_u64().unwrap()as usize};let q=RetainedCloneGrant{maximum_items:1,..stock};let mut caller=OriginalJobFixtureCaller::admit(OperationId(7519),Generation(7),stock,clock,source["deadlineUs"].as_u64().unwrap(),source["fuel"].as_u64().unwrap());caller.admit_return_table();let mut loan=None;let mut held=None;let mut body=None;let mut pointer=0;
  caller.refreshed_turn(q,|cx|{assert!(cx.original_source_parent()?.admit_loan(&mut loan,cx)?);assert!(loan.is_some());Ok(())}).unwrap();
  caller.refreshed_turn(q,|cx|{assert!(testkit::admit_return_origin(cx)?);Ok(())}).unwrap();
@@ -19,10 +100,18 @@ fn actual_source_holds_leave_real_quantum_one_usable_and_never_reissue_return_cr
  caller.refreshed_turn(q,|cx|{
   let deadline=cx.original_absolute_deadline_us();cx.with_original_work_loan(1,deadline,|same|{assert_eq!(same.retained_grant().maximum_items,1);assert_eq!(same.fuel_remaining(),1);let(turn,h)=observe(||FaultMessageOwner::construct("Original quantum one 源",same.retained_grant()));let work=turn.work;let(owner,p)=turn.result?;assert!(owner.ready());pointer=owner.fault().unwrap().message.as_ptr()as usize;assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(p.retained_capacity_bytes,p.released_bytes));same.consume_retained(p)?;same.consume_work(work);assert_eq!(same.retained_grant().maximum_items,0);assert_eq!(same.fuel_remaining(),0);body=Some(owner);Ok(())})?;
   let raw_fuel=cx.original_source_fuel_remaining();let spendable=cx.fuel_remaining();cx.with_original_work_loan(0,cx.original_absolute_deadline_us(),|cx|{assert_eq!(cx.fuel_remaining(),0);
-  let before=cx.retained_progress();let work=cx.original_work_units_spent();assert!(testkit::return_source_is_borrowed(cx.original_source_parent()?)?);let bank=testkit::return_budget_snapshot(cx);let credit=held.as_mut().unwrap();let(witness,h)=observe(||credit.issue_return(OriginalReturnPhase::Capture,0));let mut witness=Some(witness?);assert_eq!(testkit::return_budget_snapshot(cx),bank);assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(0,0));let operation=cx.operation();*testkit::operation_mut(cx)=OperationId(operation.0+1);let denied_before=cx.retained_progress();let denied_work=cx.original_work_units_spent();let(result,heap)=observe(||receive_original_return_witness(cx,credit,&mut witness));*testkit::operation_mut(cx)=operation;assert!(result.is_err());assert!(witness.is_some());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),denied_before);assert_eq!(cx.original_work_units_spent(),denied_work);let original=cx.retained_progress();testkit::retained_progress_mut(cx).copied_items=usize::MAX;let bank=testkit::return_budget_snapshot(cx);let result=receive_original_return_witness(cx,credit,&mut witness);*testkit::retained_progress_mut(cx)=original;assert!(result.is_err());assert!(witness.is_some());assert_eq!(testkit::return_budget_snapshot(cx),bank);receive_original_return_witness(cx,credit,&mut witness)?;assert_eq!(cx.reserved_return_progress(),P{copied_items:1,..Default::default()});assert_eq!(cx.retained_progress().copied_items,before.copied_items+1);assert_eq!(cx.original_work_units_spent()-work,1);assert_eq!(body.as_ref().unwrap().fault().unwrap().message.as_ptr()as usize,pointer);
-  let(witness,h)=observe(||credit.issue_return(OriginalReturnPhase::Receive,0));let mut witness=Some(witness?);receive_original_return_witness(cx,credit,&mut witness)?;assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(0,0));let s=testkit::return_budget_snapshot(cx);assert!(s.conserved());assert_eq!((s.held_items,s.held_fuel),(0,0));let before=s;assert!(credit.issue_return(OriginalReturnPhase::Receive,0).is_err());assert_eq!(testkit::return_budget_snapshot(cx),before);assert_eq!(cx.reserved_return_progress(),P{copied_items:2,..Default::default()});assert_eq!(cx.reserved_return_work(),2);assert!(credit.terminal_is_empty());assert_eq!(cx.fuel_remaining(),0);Ok(())})?;assert_eq!(cx.original_source_fuel_remaining()+2,raw_fuel);assert_eq!(cx.fuel_remaining(),spendable);Ok(())
+  let before=cx.retained_progress();let work=cx.original_work_units_spent();assert!(testkit::return_source_is_borrowed(cx.original_source_parent()?)?);let bank=testkit::return_budget_snapshot(cx);let credit=held.as_mut().unwrap();let(witness,h)=observe(||credit.issue_return(OriginalReturnPhase::Capture,0));let mut witness=Some(witness?);assert_eq!(testkit::return_budget_snapshot(cx),bank);assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(0,0));let operation=cx.operation();*testkit::operation_mut(cx)=OperationId(operation.0+1);let denied_before=cx.retained_progress();let denied_work=cx.original_work_units_spent();let(result,heap)=observe(||receive_original_return_witness(cx,credit,&mut witness));*testkit::operation_mut(cx)=operation;assert!(result.is_err());assert!(witness.is_some());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),denied_before);assert_eq!(cx.original_work_units_spent(),denied_work);let original=cx.retained_progress();testkit::retained_progress_mut(cx).copied_items=usize::MAX;let bank=testkit::return_budget_snapshot(cx);let result=receive_original_return_witness(cx,credit,&mut witness);*testkit::retained_progress_mut(cx)=original;assert!(result.is_err());assert!(witness.is_some());assert_eq!(testkit::return_budget_snapshot(cx),bank);receive_original_return_witness(cx,credit,&mut witness)?;assert_eq!(cx.reserved_return_progress(),P{copied_items:1,copied_bytes:capture_bytes,..Default::default()});assert_eq!(cx.retained_progress().copied_items,before.copied_items+1);assert_eq!(cx.original_work_units_spent()-work,1);assert_eq!(body.as_ref().unwrap().fault().unwrap().message.as_ptr()as usize,pointer);
+  let(witness,h)=observe(||credit.issue_return(OriginalReturnPhase::Receive,0));let mut witness=Some(witness?);receive_original_return_witness(cx,credit,&mut witness)?;assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(0,0));let s=testkit::return_budget_snapshot(cx);assert!(s.conserved());assert_eq!((s.held_items,s.held_fuel),(0,0));let before=s;assert!(credit.issue_return(OriginalReturnPhase::Receive,0).is_err());assert_eq!(testkit::return_budget_snapshot(cx),before);assert_eq!(cx.reserved_return_progress(),P{copied_items:2,copied_bytes:capture_bytes+receive_bytes,..Default::default()});assert_eq!(cx.reserved_return_work(),2);assert!(credit.terminal_is_empty());assert_eq!(cx.fuel_remaining(),0);Ok(())})?;assert_eq!(cx.original_source_fuel_remaining()+2,raw_fuel);assert_eq!(cx.fuel_remaining(),spendable);Ok(())
  }).unwrap();
- caller.refreshed_turn(q,|cx|{drop(held.take());assert!(claim_original_return(cx,&mut held)?);Ok(())}).unwrap();
+ drop(held.take());
+ caller.refreshed_turn(q, |cx| {
+     cx.acknowledge_return_rows_locally();
+     assert!(!claim_original_return(cx, &mut held)?);
+     assert!(held.is_none());
+     assert_eq!(cx.retained_grant().maximum_items, 0);
+     Ok(())
+ }).unwrap();
+ caller.refreshed_turn(q,|cx|{assert!(claim_original_return(cx,&mut held)?);Ok(())}).unwrap();
  caller.refreshed_turn(q,|cx|{let before=testkit::return_budget_snapshot(cx);let spendable=cx.original_total_fuel_remaining();let raw=cx.original_source_fuel_remaining();let before_receipt=cx.retained_progress();cx.with_original_work_loan(0,cx.original_absolute_deadline_us(),|cx|{let(turn,h)=observe(||held.as_mut().unwrap().issue_success_return(0));let mut witness=Some(turn?);receive_original_return_witness(cx,held.as_mut().unwrap(),&mut witness)?;assert!(!h.overflowed);assert_eq!((h.requested_bytes,h.released_bytes),(0,0));assert_eq!(cx.fuel_remaining(),0);Ok(())})?;let after=testkit::return_budget_snapshot(cx);assert!(after.conserved());assert_eq!((before.held_items,before.held_fuel),(2,2));assert_eq!((after.held_items,after.held_fuel,after.claims),(0,0,0));assert_eq!(after.spent.copied_items,before.spent.copied_items+1);assert_eq!(after.work,before.work+1);assert_eq!(cx.retained_progress().copied_items,before_receipt.copied_items+1);assert_eq!(cx.original_total_fuel_remaining(),spendable);assert_eq!(cx.original_source_fuel_remaining()+1,raw);assert!(held.as_ref().unwrap().terminal_is_empty());Ok(())}).unwrap();
  caller.refreshed_turn(stock,|cx|{crate::original_failure_test_support::close(body.take(),cx,4096);let parent=cx.original_source_parent()?;for _ in 0..4096{if loan.as_ref().unwrap().terminal_is_empty(){break}loan.as_mut().unwrap().close_step(parent,cx)?;}assert!(loan.as_ref().unwrap().terminal_is_empty());Ok(())}).unwrap();drop(held);drop(loan);caller.retire(stock);
 }

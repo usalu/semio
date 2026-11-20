@@ -15,12 +15,9 @@ import { shardWorkerMessageHandlerSource } from "./📨️message-handler/🟦�
  * first `activate` — never at worker-bootstrap time, since one worker now hosts many unrelated
  * plugins' actors over its lifetime.
  *
- * Runs *one turn at a time per actor*: two `turn` requests for the SAME `actorId` overlapping is a
- * caller bug (the scheduler's job to prevent, not this worker's), enforced here defensively by
- * rejecting a second in-flight turn rather than corrupting interleaved guest state. Different actors
- * DO interleave — every request handler is `async`, so a long `await` inside one actor's turn lets
- * another actor's message be picked up and start in the meantime; nothing here blocks the worker's
- * event loop across actors.
+ * Each actor's guest crossings follow request order. Different actors can run while an actor awaits
+ * a result. Effect responses reach the suspended crossing directly; disposal closes through the
+ * same lane after the current crossing returns.
  *
  * Heartbeats: a beat is taken at the START of every request (before running any guest code) and at
  * every STEP BOUNDARY — the instant a `turn`/`stepJob` hands control back. The step beat is what

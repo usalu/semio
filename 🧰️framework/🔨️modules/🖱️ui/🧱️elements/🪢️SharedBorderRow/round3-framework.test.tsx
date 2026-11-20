@@ -15,9 +15,6 @@ describe("round 3 framework shared-border findings", () => {
     for (const side of ["top", "right", "bottom", "left"]) expect(css).toContain(`:where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="${side}"])) { border-${side}-width: 0; }`);
     expect(css).toMatch(/\[data-shared-border-frame\] > :is\(\[data-slot="input"\], \[data-slot="textarea"\]\) \{\s*border-width: 0;/);
   });
-  it("drops the block-end divider of a vertical cell whose bottom edge another owner paints", () => {
-    expect(css).toMatch(/\[data-orientation="vertical"\] > \[data-shared-border-frame\]\[data-shared-border-edges\]:not\(\[data-shared-border-edges~="bottom"\]\) \{\s*border-block-end-width: 0;/);
-  });
   it("drops call-site border hacks", () => {
     expect(read("../🪟️Window/🟦️.tsx")).not.toContain("border-t-0");
     expect(read("../🎮️Engagement/🟦️.tsx")).not.toContain("border-t-0");
@@ -105,10 +102,10 @@ describe("round 3 framework shared-border findings", () => {
     expect(read("../🪟️Window/🟦️.tsx")).toContain("inlineEdgeReservePx={controlsWidthPx}");
     expect(read("../📐️Layout/📖️stories/🧪️.story.tsx")).toContain("useState(false);\n    const [topLeftPath");
   });
-  it("moves a vertical owner's one divider per seam from the block end to the inline end through the registered flow variable, so products hand-roll no divider", () => {
-    expect(css).toMatch(/@property --shared-border-flow \{\s*syntax: "<integer>";\s*inherits: false;\s*initial-value: 0;/);
-    expect(css).toContain("border-inline-end-width: calc(var(--stroke-hairline) * var(--shared-border-flow));");
-    expect(css).toContain("border-block-end: calc(var(--stroke-hairline) * (1 - var(--shared-border-flow))) solid var(--border-normal-color);");
+  it("paints every cell divider in the owner's overlay: the stylesheet carries no cell border, flow variable or divider colour", () => {
+    expect(css).not.toContain("@property --shared-border-flow");
+    expect(css).not.toContain("border-block-end: calc(var(--stroke-hairline)");
+    expect(css).not.toMatch(/border-inline-end: var\(--stroke-hairline\) solid var\(--border-normal-color\);\n\}\n:is\(\.shared-border-cell/);
   });
   it("paints the staged action dialog footer through the row's top edge, not a raw border", () => {
     expect(read("../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx")).toContain('<SharedBorderRow edges={["top"]} className="w-full">');

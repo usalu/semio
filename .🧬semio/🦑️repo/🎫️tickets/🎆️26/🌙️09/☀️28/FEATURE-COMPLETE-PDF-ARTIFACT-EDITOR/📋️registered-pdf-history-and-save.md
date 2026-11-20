@@ -1,0 +1,9 @@
+# Registered PDF history and file verification
+
+The native rotation round trip uses the registered media producer. Open must settle exactly once, publish a full UI update, and avoid a whole-document load effect. The test dispatches the actual rotation action, then obtains bytes through the app’s natural-file output port. Lopdf independently applies the rotation to the input. A second Lopdf read compares ordered pages, text, metadata, and normalized catalog and trailer projections. The test opens the output bytes in a fresh registered app and checks rotation, the untouched first page text and document info.
+
+The draft and rectangle tests each publish an edit through the registered action path and settle the framework-reserved undo and redo jobs. Their assertions compare the entire snapshot to the original and edited snapshots. The draft also checks that a no-op adds no undo step and a stale revision preserves the document. These history checks load controlled fixture packs. The rotation case tests natural-file Open, edit, Save and reopen separately.
+
+The browser smoke clicks the actual save action, waits for the download, checks its header and opens the downloaded file. Its content-edit journey checks trim-box undo and redo while earlier edits remain visible. The native natural-file producer refreshes the published snapshot and runs the in-memory encoder. The native output test therefore covers the PDF bytes without requiring browser download delivery.
+
+The first mounted runtime checkpoints are original media consumption, its full-UI completion receipt, and equality with the cold projection of the large fixture’s complete object graph, trailer, page operators and stream-role assignments. The independent parsers validate fixture and output semantics. Those checks still require a successful registered run.

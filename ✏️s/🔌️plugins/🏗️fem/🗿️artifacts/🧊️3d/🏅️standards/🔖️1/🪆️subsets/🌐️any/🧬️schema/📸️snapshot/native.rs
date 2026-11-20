@@ -126,6 +126,7 @@ fn validate_cold_authoring(value: &Fem3dSnapshotValue) -> Result<(), ValueError>
     let materials: HashSet<&str> = value.materials.iter().map(|v|v.id.as_str()).collect();
     let sections: HashSet<&str> = value.sections.iter().map(|v|v.id.as_str()).collect();
     let elements: HashSet<&str> = value.elements.iter().map(element_id).collect();
+    let solids: HashSet<&str> = value.solids.iter().map(|v|v.id.as_str()).collect();
     
     for element in &value.elements {
         let (start,end,material,section) = match element { FemElement::Bar { start,end,material_id,section_id,.. } | FemElement::Frame { start,end,material_id,section_id,.. } => (start,end,material_id,section_id) };
@@ -136,7 +137,7 @@ fn validate_cold_authoring(value: &Fem3dSnapshotValue) -> Result<(), ValueError>
         let valid = match load {
             FemLoad::Nodal {node_id,value,..} => nodes.contains(node_id.as_str()) && value.is_finite(),
             FemLoad::MemberUdl {element_id,wx, wy, wz,..} => elements.contains(element_id.as_str()) && wx.is_finite() && wy.is_finite() && wz.is_finite(),
-            FemLoad::Area {solid_id,pressure,..} => pressure.is_finite(),
+            FemLoad::Area {solid_id,pressure,..} => solids.contains(solid_id.as_str()) && pressure.is_finite(),
         };
         if !valid { return Err(invalid()); }
     }}
@@ -162,7 +163,7 @@ fn validate_authoring(value:&Fem3dSnapshotValue,owner:&mut store::NativeSnapshot
                 let(reference,finite)=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(match load{
                     FemLoad::Nodal{node_id,value:force,..}=>(Some((super::FemIdentityKind::Node,node_id.as_str())),force.is_finite()),
                     FemLoad::MemberUdl{element_id,wx,wy,wz,..}=>(Some((super::FemIdentityKind::Element,element_id.as_str())),wx.is_finite()&&wy.is_finite()&&wz.is_finite()),
-                    FemLoad::Area{pressure,..}=>(None,pressure.is_finite()),
+                    FemLoad::Area{solid_id,pressure,..}=>(Some((super::FemIdentityKind::Solid,solid_id.as_str())),pressure.is_finite()),
                 }))?;
                 if let Some((kind,id))=reference{{let mut rank=None;meter.take(index.lookup(value,kind,id,&mut rank,original))?;}}
                 semio_s_fem_receiving::inspect(original,progress,unwind,meter,||if finite{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"FEM load components must be finite binary64 values"))})?;

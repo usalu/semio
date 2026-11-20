@@ -514,6 +514,23 @@
             }
           },
           {
+            "id": "unit-killed",
+            "disposition": "reexec",
+            "markers": [],
+            "messages": [
+              {
+                "text": "compile unit(s) were killed by the host and the pass restarts",
+                "sites": [
+                  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🩺️failure-diagnosis/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A compile unit of a native pass ended by SIGKILL, which no compiler sends itself: the host killed it, usually under memory pressure (out-of-memory kill, jetsam) or a capacity-breach kill. A fresh run cures it, so the outermost command starts again (exit 75), bounded, and the failure names the unit, the signal and its peak memory.",
+              "de": "Eine Kompilationseinheit eines nativen Durchlaufs endete durch SIGKILL, das kein Compiler an sich selbst sendet: der Host hat sie beendet, meist unter Speicherdruck (Out-of-Memory-Kill, Jetsam) oder durch ein Kapazitätsgrenzen-Kill. Ein neuer Lauf heilt das, der äußerste Befehl startet daher neu (Exit 75), begrenzt, und der Fehler nennt die Einheit, das Signal und den Spitzenspeicher."
+            }
+          },
+          {
             "id": "moved-format-stamp",
             "disposition": "reexec",
             "markers": [],

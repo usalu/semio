@@ -1,11 +1,13 @@
 {
   "controller": {
-    "sourceItems": 5,
+    "sourceItems": 4,
     "sourceWork": 4,
     "captureItems": 1,
     "captureWork": 1,
     "candidateItems": 1,
-    "candidateWork": 1
+    "candidateWork": 1,
+    "scopeAdmissionItems": 2,
+    "scopeAdmissionWork": 2
   },
   "attempts": [
     {
@@ -13,16 +15,16 @@
       "bodyItems": 0,
       "bodyWork": 1,
       "candidate": false,
-      "items": 6,
-      "work": 6
+      "items": 7,
+      "work": 8
     },
     {
       "name": "born",
       "bodyItems": 1,
       "bodyWork": 1,
       "candidate": true,
-      "items": 8,
-      "work": 7
+      "items": 9,
+      "work": 9
     }
   ],
   "status": [

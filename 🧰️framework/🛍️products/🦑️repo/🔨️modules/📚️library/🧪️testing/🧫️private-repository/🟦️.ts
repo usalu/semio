@@ -4,6 +4,8 @@ import {mkdir,mkdtemp} from "node:fs/promises";
 import {realpathSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {afterAll} from "bun:test";
+import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
+import {withRepositoryCompilerRuntimeEntriesV1} from "../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {detachDiskImagesUnderV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🖼️images/🟦️.ts";
 import {sweepLeakedSandboxImagesV1,writeSandboxOwnerV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🧹️image-sweep/🟦️.ts";
 import {privateRepositoryStartDirectoryV1,testCheckoutRootV1,requirePrivateRepositoryWorkspaceV1,privateRepositoryParentsV1,privateRepositoryDeepestV1,privateRepositoryInvocationV1,withPrivateRepositoryWorkingDirectoryV1,type PrivateRepositoryProfileV1} from "./📥️invocation/🟦️.ts";
@@ -53,3 +55,11 @@ export function privateRepositoryWorkspaceV1(profile:PrivateRepositoryProfileV1=
 /** 👶️ Retires the owned private repository after the last test of the file that created it, so the next test file of the same process creates its own; a child script outside the test runner only adopts its parent's. */
 async function retirePrivateWorkspaceV1():Promise<void>{const held=privateWorkspaceV1;privateWorkspaceV1=undefined;privateProfileV1=undefined;if(held!==undefined){const workspace=await held.catch(()=>undefined);await workspace?.close();}}
 try{afterAll(retirePrivateWorkspaceV1,170000);}catch{testRunnerV1=false;}
+
+/** 🧊️ Admits the captured Native helper while a build test operates its private repository under the original invocation. */
+export function withPrivateRepositoryBuildTestInvocationV1<T>(body:(original:ScriptInvocation)=>Promise<T>):Promise<T>{
+ return withBuildTestInvocationV1(original=>{
+  const phase=createIssuedResourceControlV1(original,"private-repository:test-runtime",0);
+  return withRepositoryCompilerRuntimeEntriesV1(testCheckoutRootV1(),original,phase,()=>body(original));
+ });
+}

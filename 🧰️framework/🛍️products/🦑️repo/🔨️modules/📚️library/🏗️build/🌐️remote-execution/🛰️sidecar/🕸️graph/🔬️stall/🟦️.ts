@@ -1,4 +1,9 @@
 import{listLeaseRegistryDirectoriesV1,leaseRegistryRootV1,readLeaseRegistryEntriesV1,type LeaseRegistryEntryV1}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
+import{readNativeImageRetirementFileV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
+import{lstatSync}from"node:fs";
+import{join,resolve}from"node:path";
+import{CUSTODY_POLICY_V1,readCustodyClaimV1}from"../../../../🕸️graph/🕰️generations/🔐️custody/🟨️.mjs";
+import{isDeposedV1,readAskV1}from"../../../../🕸️graph/🕰️generations/🪧️door-board/🟨️.mjs";
 import{wantedTextV1}from"../../../../🪪️graph-state/🙋️wanted/🟦️.ts";
 import type{ReadTreeSummaryV1}from"./🌳️tree/🟦️.ts";
 import{wantedServerPolicyV1,type WantedServerPolicyV1}from"../../../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts";
@@ -8,6 +13,49 @@ export function readGraphLeaseEntriesV1(environment:Readonly<Record<string,strin
  const root=leaseRegistryRootV1(environment),found:LeaseRegistryEntryV1[]=[];
  try{for(const directory of listLeaseRegistryDirectoriesV1(root))found.push(...readLeaseRegistryEntriesV1(root,directory,nowMs,false));}catch{}
  return found;
+}
+
+/** 🛑️ Defers opportunistic refresh only for a positively observed held structural claim in this local generation namespace. */
+export function graphRefreshCustodyHeldV1(input:Readonly<{generationsRoot:string;leaseDirectory:string;environment:Readonly<Record<string,string|undefined>>;signal:AbortSignal}>,entries=readLeaseRegistryEntriesV1):boolean{
+ const{generationsRoot,leaseDirectory,environment,signal}=input;
+ if(signal.aborted||resolve(generationsRoot)!==generationsRoot)return false;
+ const policy=wantedServerPolicyV1.refreshCustody,prefix="graph-custody:"+generationsRoot+":",now=Date.now();
+ try{
+  const candidates=[];
+  for(const row of entries(leaseRegistryRootV1(environment),leaseDirectory,now,false)){
+   if(row.directory!==leaseDirectory||!Number.isSafeInteger(row.startedAtMs)||row.startedAtMs<1)continue;
+   for(const hold of row.holds){
+    if(hold.mode!=="exclusive"||!hold.resource.startsWith(prefix))continue;
+    const token=hold.resource.slice(prefix.length);
+    if(!/^[a-f0-9]{24}$/u.test(token))continue;
+    if(candidates.length>=policy.maximumCandidates)return false;
+    candidates.push({token,row});
+   }
+  }
+  if(candidates.length===0)return false;
+  const directory=join(generationsRoot,CUSTODY_POLICY_V1.directory);
+  const root=lstatSync(generationsRoot,{bigint:true}),custody=lstatSync(directory,{bigint:true});
+  if(!root.isDirectory()||!custody.isDirectory()||custody.dev!==root.dev)return false;
+  const unchanged=(path:string,before:typeof root)=>{
+   const after=lstatSync(path,{bigint:true});
+   return after.dev===before.dev&&after.ino===before.ino&&after.mode===before.mode;
+  };
+  for(const{token,row}of candidates){
+   if(signal.aborted)return false;
+   try{
+    const base=join(directory,token);
+    const {bytes}=readNativeImageRetirementFileV1(base+".json",policy.maximumClaimBytes);
+    const claim=readCustodyClaimV1(JSON.parse(bytes.toString("utf8"))),holder=claim.holder;
+    if(claim.token!==token||claim.state!=="held"||!claim.structural||holder?.pid!==row.pid||Math.abs(holder.startedMs-row.startedAtMs)>policy.startToleranceMilliseconds)continue;
+    try{
+     const ask=readAskV1(JSON.parse(readNativeImageRetirementFileV1(base+".ask.json",policy.maximumClaimBytes).bytes.toString("utf8")));
+     if(isDeposedV1({ask},now))continue;
+    }catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")continue;}
+    if(!signal.aborted&&unchanged(directory,custody)&&unchanged(generationsRoot,root))return true;
+   }catch{}
+  }
+ }catch{}
+ return false;
 }
 
 /** 🚧️ A command that holds a resource of the read exclusively: the read cannot start behind it. */

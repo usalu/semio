@@ -8,6 +8,9 @@
       "const": {
         "idleMilliseconds": 120000,
         "counter": { "en": "elapsed seconds of expected seconds", "de": "verstrichene Sekunden von erwarteten Sekunden" },
+        "inventoryObservations": { "en": "{rows} distinct source observations", "de": "{rows} verschiedene Quellbeobachtungen" },
+        "inventoryOwnerChecks": { "en": "{rows} completed owner checks", "de": "{rows} abgeschlossene Projektprüfungen" },
+        "inventoryMemoChecks": { "en": "{rows} verified memo rows", "de": "{rows} bestätigte Memozeilen" },
         "overBound": { "en": "beyond the expected {bound} s", "de": "über den erwarteten {bound} s" },
         "steps": {
           "inventory": { "boundMilliseconds": 600000, "en": "checking the file inventory of the tree", "de": "Prüfe das Dateiverzeichnis des Baums" },
@@ -22,6 +25,21 @@
           "heavy-wait": { "boundMilliseconds": 1800000, "en": "waiting for the fleet to infer {names}", "de": "Warte darauf, dass die Flotte {names} ableitet" },
           "orphan-sweep": { "boundMilliseconds": 3600000, "en": "reading the owners nobody ran: {names}", "de": "Lese die Projekte, die niemand ausführte: {names}" }
         }
+      }
+    },
+    "StageOwner": {
+      "type": "string",
+      "pattern": "^ready:[0-9a-f]{12}:[^\\r\\n]+:[0-9]{1,16}$"
+    },
+    "Owned": {
+      "description": "EN: Readiness keeps one machine-local report slot for its current stage attempt. Its contents carry that attempt's lease owner token. DE: Die Bereitschaft hält einen maschinenlokalen Berichtsplatz für ihren laufenden Stufenversuch. Der Inhalt trägt dessen Leihbesitzer-Kennung.",
+      "const": {
+        "directory": [".cache", "f", "ready", "slice"],
+        "slotHexCharacters": 24,
+        "fileBytes": 65536,
+        "grantEnvironment": "SEMIO_READY_SLICE_REPORT_GRANT",
+        "grantName": "report.key",
+        "grantHexCharacters": 32
       }
     },
     "Policy": {
@@ -42,6 +60,43 @@
         "censusTimeoutMilliseconds": 5000
       }
     },
+    "InventoryAwaitPhase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "elapsedMilliseconds"],
+      "properties": {
+        "phase": {"enum": ["registry-check", "memo-read", "memo-seed", "memo-check", "scoped-discovery", "memo-publish", "catalog", "membership-hash"]},
+        "elapsedMilliseconds": {"type": "integer", "minimum": 0},
+        "observations": {"type": "integer", "minimum": 0},
+        "completedOwners": {"type": "integer", "minimum": 0},
+        "verifiedMemoRows": {"type": "integer", "minimum": 0},
+        "files": {"type": "integer", "minimum": 0},
+        "directories": {"type": "integer", "minimum": 0},
+        "reused": {"type": "boolean"},
+        "published": {"type": "boolean"}
+      }
+    },
+    "InventoryAwait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "active", "completed"],
+      "properties": {
+        "version": {"const": 1},
+        "active": {"anyOf": [{"$ref":"#/definitions/InventoryAwaitPhase"},{"type":"null"}]},
+        "activeOwner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["owner", "stage", "elapsedMilliseconds"],
+          "properties": {
+            "owner": {"type":"string", "minLength": 1, "maxLength": 256},
+            "stage": {"enum": ["lookup", "memo-check", "discovery"]},
+            "operation": {"enum": ["declaration", "catalog-targets", "command-sources", "native-closure", "normalization", "native-preparation", "source-inputs", "source-closure", "compile-closure"]},
+            "elapsedMilliseconds": {"type":"integer", "minimum": 0}
+          }
+        },
+        "completed": {"type":"array", "maxItems": 8, "items":{"$ref":"#/definitions/InventoryAwaitPhase"}}
+      }
+    },
     "Report": {
       "type": "object",
       "additionalProperties": false,
@@ -51,6 +106,7 @@
         "atMs": { "type": "integer", "minimum": 0 },
         "reason": { "enum": ["start", "interval", "plan-stop", "end"] },
         "pid": { "type": "integer", "minimum": 1 },
+        "readyOwner": { "$ref": "#/definitions/StageOwner" },
         "uptimeSeconds": { "type": "number", "minimum": 0 },
         "phase": { "type": "object", "additionalProperties": false, "required": ["name", "done", "total"], "properties": { "name": { "type": "string" }, "done": { "type": "number" }, "total": { "type": "number" } } },
         "stage": { "type": "object", "additionalProperties": false, "required": ["stage", "operation", "managedMegabytes", "residentMegabytes"], "properties": { "stage": { "type": "string" }, "operation": { "type": "string" }, "managedMegabytes": { "type": "number" }, "residentMegabytes": { "type": "number" } } },
@@ -58,7 +114,7 @@
         "heap": { "type": "object", "additionalProperties": false, "required": ["heapMegabytes", "extraMegabytes", "objectCount", "types"], "properties": { "heapMegabytes": { "type": "number" }, "extraMegabytes": { "type": "number" }, "objectCount": { "type": "integer" }, "types": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["type", "count"], "properties": { "type": { "type": "string" }, "count": { "type": "integer" } } } } } },
         "stop": { "type": "object", "additionalProperties": false, "required": ["stage", "operation", "usedMegabytes", "budgetMegabytes"], "properties": { "stage": { "type": "string" }, "operation": { "type": "string" }, "usedMegabytes": { "type": "number" }, "budgetMegabytes": { "type": "number" } } },
         "collections": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "entries", "estimatedBytes"], "properties": { "name": { "type": "string" }, "entries": { "type": "integer", "minimum": 0 }, "estimatedBytes": { "type": "integer", "minimum": 0 } } } },
-        "sources": { "type": "object" },
+        "sources": { "type": "object", "properties": {"inventory":{"$ref":"#/definitions/InventoryAwait"}} },
         "dropped": { "type": "array", "items": { "type": "string" } },
         "guard": { "description": "EN: The number the plan guard compares with its limit, with its parts (the managed bytes of the process: heapUsed plus external; children, resident pages and mapped files are not in it). DE: Die Zahl, die die Plan-Wache mit ihrem Limit vergleicht, mit ihren Teilen (die verwalteten Bytes des Prozesses: heapUsed plus external; Kindprozesse, residente Seiten und abgebildete Dateien gehören nicht dazu).", "type": "object", "additionalProperties": false, "required": ["measure", "megabytes", "heapUsed", "external"], "properties": { "measure": { "const": "heapUsed+external" }, "megabytes": { "type": "number" }, "heapUsed": { "type": "number" }, "external": { "type": "number" } } },
         "footprintMegabytes": { "description": "EN: The physical footprint of this process (macOS phys_footprint, Linux smaps_rollup), measured outside the report tick. DE: Der physische Fußabdruck dieses Prozesses (macOS phys_footprint, Linux smaps_rollup), außerhalb des Berichtstakts gemessen.", "type": "number" },

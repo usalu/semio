@@ -970,13 +970,16 @@
  },
  "ownership": {
   "files": {
-   "package.json": "{\"name\": \"root\", \"semio\": {\"workspace\": {\"schemaVersion\": 1, \"members\": [\"pkg/*\"], \"owners\": [\"*/package.json\"]}}, \"workspaces\": [\"pkg/a\", \"pkg/b\"]}",
-   "pkg/a/package.json": "{\"name\": \"a\"}",
-   "pkg/b/package.json": "{\"name\": \"b\"}",
-   "pkg/b/src/index.js": "x",
+   "package.json": "{\"name\": \"root\", \"semio\": {\"workspace\": {\"schemaVersion\": 1, \"members\": [\"packages/*\", \"pkg/*\"], \"owners\": [\"*/package.json\"]}}, \"workspaces\": [\"packages/a\", \"packages/b\"]}",
+   "packages/a/package.json": "{\"name\": \"a\"}",
+   "packages/b/package.json": "{\"name\": \"b\"}",
+   "packages/b/src/index.js": "x",
+   "pkg/output/package.json": "{\"name\": \"ignored-output\"}",
    "node_modules/x/package.json": "{\"name\": \"x\"}",
    "docs/readme.md": "r"
   },
+  "removedFromSeed": "packages/b",
+  "added": "packages/c",
   "settleMilliseconds": 2300
  },
  "bun": {

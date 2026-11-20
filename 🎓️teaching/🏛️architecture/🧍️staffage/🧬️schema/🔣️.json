@@ -6229,7 +6229,7 @@
       ]
     },
     "AuthoredVolume": {
-      "description": "The handcrafted 3D model of an asset at one preset scale, authored individually against that scale's own 2D shapes (never a filtered copy of another scale): the smallest modelled feature is the print profile's smallest printable feature at the denominator, a coarser scale is a new abstraction with merged masses, simplified sections and a generalised outline. `body` carries the tone views, `thermal` the thermal model made spatial and `structure` the structural idealisation made spatial. The silhouette of the body in `presentation.defaultPose` agrees with the filled shapes of the representation of the same scale and the bounding box with `dimensions` (validators `volumes-silhouette`, `volumes-bounds`).",
+      "description": "The handcrafted 3D model of an asset at one preset scale, authored individually against that scale's own 2D shapes (never a filtered copy of another scale): for a printable drawing the smallest modelled feature is the print profile's smallest printable feature at the denominator, a coarser scale is a new abstraction with merged masses, simplified sections and a generalised outline. `body` carries the tone views, `thermal` the thermal model made spatial and `structure` the structural idealisation made spatial. The silhouette of the body in `presentation.defaultPose` agrees with the filled shapes of the representation of the same scale and the bounding box with `dimensions` (validators `volumes-silhouette`, `volumes-bounds`).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6283,7 +6283,7 @@
       }
     },
     "UnavailableVolume": {
-      "description": "The volume of a scale whose representation is unavailable: present exactly when `representations[denominator]` is unavailable; the reason lives in that representation (validator `volumes-availability`).",
+      "description": "A scale without a digital volume. Every authored print drawing requires a volume. A scale below the printable feature size may still have an authored digital model.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -6300,7 +6300,7 @@
       }
     },
     "ScaleVolume": {
-      "description": "The volume decision for one preset scale: authored or unavailable, mirroring the representation of the same scale.",
+      "description": "The volume decision for one preset scale: authored or unavailable. A digital model may be authored at a scale without a printable drawing.",
       "oneOf": [
         {
           "$ref": "#/$defs/AuthoredVolume"
@@ -6449,7 +6449,7 @@
           "$ref": "#/$defs/Rig"
         },
         "volumes": {
-          "description": "The 3D volumes bound to the rig, one individually handcrafted model per preset scale and keyed like `representations`; an authored volume exists exactly where the representation is authored.",
+          "description": "The 3D volumes bound to the rig, one individually handcrafted model per preset scale and keyed like `representations`; every authored drawing requires a volume and digital models may also exist below the printable feature size.",
           "$ref": "#/$defs/Volumes"
         },
         "anchors": {

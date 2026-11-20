@@ -1,0 +1,34 @@
+{
+  "exchanges": [
+    {
+      "scope": "all",
+      "language": "en",
+      "producer": "g1-m01",
+      "consumer": "g1-m02",
+      "fresherPartial": {
+        "origin": "g1-m03",
+        "olderCompleteMilliseconds": 1200000,
+        "stale": 1
+      }
+    },
+    {
+      "scope": "496993156176e9e916374ec937255fc5cc33291e8f9e98e1187120940db0df92",
+      "language": "de",
+      "producer": "g1-m01",
+      "consumer": "g1-m02",
+      "fresherPartial": {
+        "origin": "g1-m03",
+        "olderCompleteMilliseconds": 1200000,
+        "stale": 1
+      }
+    }
+  ],
+  "pinDrift": [
+    "generation",
+    "stale",
+    "implementation",
+    "scope",
+    "origin",
+    "manifest"
+  ]
+}

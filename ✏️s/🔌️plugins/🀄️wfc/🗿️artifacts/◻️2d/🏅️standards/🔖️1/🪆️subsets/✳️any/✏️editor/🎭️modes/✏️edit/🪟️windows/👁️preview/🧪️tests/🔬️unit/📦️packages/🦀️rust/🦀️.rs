@@ -35,6 +35,7 @@ pub mod editor {
     #[path = "."]
     pub mod wfc2d {
         pub use semio_s_artifact_wfc_2d_transient::editor::wfc2d::transient;
+        pub use semio_s_artifact_wfc_2d_v1::editor::wfc2d::{Wfc2dEditorCommand, WFC_2D_RETAINED_OUTPUT_BYTES, WFC_2D_RETAINED_RAW_BYTES};
         #[path = "."]
         pub mod modes {
             #[path = "."]

@@ -1,8 +1,8 @@
 //! 🔄️ Replace Config in the WFC 2D config facet.
 
-use crate::editor::wfc2d::config::mutations::{ChangeActiveTile, ChangeCamera, Wfc2dConfig, Wfc2dConfigDiff};
+use crate::editor::wfc2d::config::mutations::{Wfc2dConfig, Wfc2dConfigDiff};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -16,7 +16,7 @@ pub struct ReplaceConfig {
 
 impl<Op> protocol::MutationKind<Wfc2dConfig, Op> for ReplaceConfig
 where
-    Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc2d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc2d::config::mutations::change_camera::ChangeCamera>,
+    Op: protocol::Mutation<Wfc2dConfig, Diff = Wfc2dConfigDiff> + From<ReplaceConfig>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
 
@@ -30,7 +30,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<Wfc2dConfig, Op> for ReplaceConfig
 where
-    Op: protocol::ColdMutation<Wfc2dConfig, ReferenceDiff = Wfc2dConfigDiff> + From<ReplaceConfig> + From<crate::editor::wfc2d::config::mutations::change_active_tile::ChangeActiveTile> + From<crate::editor::wfc2d::config::mutations::change_camera::ChangeCamera>,
+    Op: protocol::ColdMutation<Wfc2dConfig, ReferenceDiff = Wfc2dConfigDiff> + From<ReplaceConfig>,
 {
     fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
         let config = &self.config;
@@ -42,12 +42,6 @@ where
         })
     }
     fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![
-            Op::from(ChangeActiveTile { tile_id: base.active_tile_id.clone() }),
-            Op::from(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom }),
-        ]
-    
-    })())
-}
+        Ok(vec![Op::from(ReplaceConfig { config: base.clone() })])
+    }
 }

@@ -23,18 +23,18 @@ fn label_high_water(body: &Body, root: PersistentLabel) -> u64 {
 impl Brep {
     /// 📤️ Exports `handle` as a session-free [`ShapeValue`] holding exactly the closure of its roots, every [`PersistentLabel`] preserved and the arena compacted to dense ids in index order.
     pub fn export_shape(&self, handle: &GeometryHandle) -> Result<ShapeValue, BrepError> {
-        let entity = self.entity(handle)?;
-        let label = label_of_entity(&self.body, entity).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))?;
-        let reach = self.body.reachable_from(&entity_roots(entity));
+        let entity = self.native.entity(handle)?;
+        let label = label_of_entity(&self.native.body, entity).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))?;
+        let reach = self.native.body.reachable_from(&entity_roots(entity));
         let mut body = Body::new();
-        let map = body.merge_selected(&self.body, Some(&reach));
+        let map = body.merge_selected(&self.native.body, Some(&reach));
         let lost = || BrepError::MissingHandle(handle.as_str().to_string());
         let root = match entity {
             Entity::Vertex(id) => ShapeRoot::Vertex(*map.vertices.get(id).ok_or_else(lost)?),
             Entity::Edge(id) => ShapeRoot::Edge(*map.edges.get(id).ok_or_else(lost)?),
             Entity::Face(id) => ShapeRoot::Face(*map.faces.get(id).ok_or_else(lost)?),
             Entity::Shell(id) => ShapeRoot::Shell(*map.shells.get(id).ok_or_else(lost)?),
-            Entity::Solid(id) => ShapeRoot::Solid(*map.solids.get(id).ok_or_else(lost)?),
+            Entity::Solid(id, _) => ShapeRoot::Solid(*map.solids.get(id).ok_or_else(lost)?),
             Entity::Wire(wire, label) => ShapeRoot::Wire(ShapeWire {
                 members: wire.members.iter().map(|(edge, forward)| map.edges.get(edge).map(|edge| (*edge, *forward)).ok_or_else(lost)).collect::<Result<_, _>>()?,
                 vertices: wire.vertices.iter().map(|vertex| map.vertices.get(vertex).copied().ok_or_else(lost)).collect::<Result<_, _>>()?,
@@ -57,30 +57,30 @@ impl Brep {
     /// 📥️ [`Brep::import_shape`] that also reports the label shift, so labels held against the value resolve in a non-fresh session.
     pub fn import_shape_mapped(&mut self, shape: &ShapeValue) -> Result<ImportedShape, BrepError> {
         shape.check()?;
-        let offset = self.body.labels.next();
-        let map = self.body.merge(&shape.body);
+        let offset = self.native.body.labels.next();
+        let map = self.native.body.merge(&shape.body);
         let relabel = |label: PersistentLabel| PersistentLabel(label.0 + offset);
         let lost = || BrepError::InvalidInput("shape value root does not resolve".into());
         let handle = match &shape.root {
-            ShapeRoot::Vertex(id) => self.mint(GeometryKind::Vertex, Entity::Vertex(*map.vertices.get(id).ok_or_else(lost)?)),
-            ShapeRoot::Edge(id) => self.mint(GeometryKind::Edge, Entity::Edge(*map.edges.get(id).ok_or_else(lost)?)),
-            ShapeRoot::Face(id) => self.register_face(*map.faces.get(id).ok_or_else(lost)?),
-            ShapeRoot::Shell(id) => self.register_shell(*map.shells.get(id).ok_or_else(lost)?),
-            ShapeRoot::Solid(id) => self.register_solid(*map.solids.get(id).ok_or_else(lost)?),
+            ShapeRoot::Vertex(id) => self.native.mint(GeometryKind::Vertex, Entity::Vertex(*map.vertices.get(id).ok_or_else(lost)?)),
+            ShapeRoot::Edge(id) => self.native.mint(GeometryKind::Edge, Entity::Edge(*map.edges.get(id).ok_or_else(lost)?)),
+            ShapeRoot::Face(id) => self.native.register_face(*map.faces.get(id).ok_or_else(lost)?),
+            ShapeRoot::Shell(id) => self.native.register_shell(*map.shells.get(id).ok_or_else(lost)?),
+            ShapeRoot::Solid(id) => self.native.register_solid(*map.solids.get(id).ok_or_else(lost)?),
             ShapeRoot::Wire(wire) => {
                 let wire_value = Wire {
                     members: wire.members.iter().map(|(edge, forward)| map.edges.get(edge).map(|edge| (*edge, *forward)).ok_or_else(lost)).collect::<Result<_, _>>()?,
                     vertices: wire.vertices.iter().map(|vertex| map.vertices.get(vertex).copied().ok_or_else(lost)).collect::<Result<_, _>>()?,
                     closed: wire.closed,
                 };
-                self.mint(GeometryKind::Wire, Entity::Wire(wire_value, relabel(wire.label)))
+                self.native.mint(GeometryKind::Wire, Entity::Wire(wire_value, relabel(wire.label)))
             }
             ShapeRoot::Compound { solids, label } => {
                 let solids = solids.iter().map(|solid| map.solids.get(solid).copied().ok_or_else(lost)).collect::<Result<_, _>>()?;
-                self.mint(GeometryKind::Compound, Entity::Compound(solids, relabel(*label)))
+                self.native.mint(GeometryKind::Compound, Entity::Compound(solids, relabel(*label)))
             }
-            ShapeRoot::Curve { curve, label } => self.mint(GeometryKind::Curve, Entity::Curve(curve.clone(), relabel(*label))),
-            ShapeRoot::Surface { surface, label } => self.mint(GeometryKind::Surface, Entity::Surface(surface.clone(), relabel(*label))),
+            ShapeRoot::Curve { curve, label } => self.native.mint(GeometryKind::Curve, Entity::Curve(curve.clone(), relabel(*label))),
+            ShapeRoot::Surface { surface, label } => self.native.mint(GeometryKind::Surface, Entity::Surface(surface.clone(), relabel(*label))),
         };
         Ok(ImportedShape { handle, label_offset: offset })
     }

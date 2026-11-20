@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::Process3dMutation;
 use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
 use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
-use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
+use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid, resize_stock};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::StepOrigin, snapshot::WorkshopMachine};
 use protocol::OpText;
 
@@ -88,6 +88,11 @@ pub(crate) enum Process3dMutationDsl {
     ReplaceStockSolid {
         new_solid_json: String,
     },
+    ResizeStock {
+        field: String,
+        #[dsl(unit = "m")]
+        size: f64,
+    },
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -119,6 +124,7 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
         Process3dMutation::ReplaceMachineCapabilities(payload) => Process3dMutationDsl::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: payload.new_capabilities.clone() },
         Process3dMutation::MoveStock(payload) => Process3dMutationDsl::MoveStock { new_pose: payload.new_pose.clone() },
         Process3dMutation::ChangeStockLabel(payload) => Process3dMutationDsl::ChangeStockLabel { new_label: payload.new_label.clone() },
+        Process3dMutation::ResizeStock(payload) => Process3dMutationDsl::ResizeStock { field: payload.field.clone(), size: payload.size },
         Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: semio_framework_pack_json::to_json_string(&payload.new_solid) },
     }
 }
@@ -141,6 +147,7 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::ReplaceMachineCapabilities { id, new_capabilities } => Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::ReplaceMachineCapabilities { id, new_capabilities }),
         Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label }),
+        Process3dMutationDsl::ResizeStock { field, size } => Process3dMutation::ResizeStock(resize_stock::ResizeStock { field, size }),
         Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => {
             Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid { new_solid: semio_framework_pack_json::from_json_str(&new_solid_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("valid ArtifactChild json") })
         }

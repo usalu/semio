@@ -11,6 +11,7 @@
     "maximumSameParameterSamples": 1,
     "sameParameterBaseSamples": 16
   },
+  "shellClosure": {"closedBoundaryEdges": 0, "missingFaceBoundaryEdges": 3, "reversedFaceOrientationEdges": 3, "openShellPasses": true, "openSolidPasses": false},
   "initialCollectedIds": 0,
   "sameParameterProbe": {
     "face": 0,
@@ -116,7 +117,7 @@
     "reserveCopyBytes": 0,
     "metadataCopyBytes": 0,
     "entityCopyBytes": 8,
-    "capacity": "originalEmptyVectorSourceExtentOrOriginalShellPage",
+    "capacity": "originalEmptyVectorSourceExtent",
     "release": "zeroDuringPlanning",
     "receiptAxes": [
       "items",
@@ -225,11 +226,7 @@
     "sampleCopyBytes": 0,
     "sortComparisonsPerEvent": 1,
     "scratchBirth": "beforeOriginalSampleAppend",
-    "unsupportedSources": [
-      "NurbsSurface",
-      "NurbsCurve2",
-      "NurbsCurve3"
-    ],
+    "splineMaximumDegree": 32,
     "terminalDropBytes": 0,
     "stock": {
       "items": 100000,
@@ -246,7 +243,9 @@
       "depth": 128
     },
     "fuel": 100000,
+    "retirementCopyBytes": 4096,
     "clock": 1000,
     "deadline": 1000000
-  }
+  },
+  "scopeSelection": {"selected":"outward","unrelated":"inward","selectedPasses":true,"unrelatedPasses":false,"selectedSignedVolume":0.16666666666666666}
 }

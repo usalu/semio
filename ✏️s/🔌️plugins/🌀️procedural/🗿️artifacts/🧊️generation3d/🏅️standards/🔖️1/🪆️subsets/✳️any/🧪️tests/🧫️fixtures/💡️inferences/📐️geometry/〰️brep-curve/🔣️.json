@@ -1,6 +1,109 @@
 {
   "description": "Language-agnostic laws of the brep.curve widgets. A shape output is checked by its kind and by the measures it states: length, closed, start and end points, bounding box and points the spline passes through. TypeScript recomputes every measure with three's curves (LineCurve3, EllipseCurve, CatmullRomCurve3) and plain polyline sums as independent oracles; Rust measures the kernel's exported value by sampling its curves.",
   "tolerance": 1e-06,
+  "queries": {
+    "line": { "parameter": 0.5, "point": [1.5, 2, 0], "tangent": [3, 4, 0], "curvature": 0 },
+    "circle": { "span": 6.283185307179586, "parameter": 0, "curvature": 0.5 },
+    "ellipse": { "span": 6.283185307179586, "parameter": 0, "curvature": 3 }
+  },
+  "wirePreview": {
+    "rectangle": { "edgeLabels": 4, "vertexLabels": 4, "segments": 4 },
+    "regular hexagon": { "edgeLabels": 6, "vertexLabels": 6, "segments": 6 },
+    "open polyline": { "edgeLabels": 2, "vertexLabels": 3, "segments": 2 },
+    "polyline that returns to its start closes": { "edgeLabels": 3, "vertexLabels": 3, "segments": 3 }
+  },
+  "edgePreview": {
+    "startAngle": 0,
+    "endAngle": 1.5707963267948966,
+    "radius": 2,
+    "deflection": 0.025,
+    "start": [2, 0, 0],
+    "end": [0, 2, 0],
+    "length": 3.141592653589793
+  },
+  "splineEdgePreview": {
+    "degree": 1,
+    "knots": [0, 0, 0.5, 0.5, 1, 1],
+    "controls": [[0, 0, 0], [1, 0, 0], [3, 0, 0], [4, 0, 0]],
+    "weights": [1, 1, 1, 1],
+    "trim": [0.25, 0.75],
+    "deflection": 0.025,
+    "segments": [[[0.5, 0, 0], [1, 0, 0]], [[3, 0, 0], [3.5, 0, 0]]]
+  },
+  "originalHelix": [
+    {
+      "name": "positive turn around Z",
+      "origin": [1, 2, 3], "axis": [0, 0, 1], "radial": [0, 1, 0],
+      "radius": 2, "pitch": 3, "turns": 1, "segments": 32, "length": 12.899883059033371,
+      "samples": [[0, [1, 4, 3]], [8, [-1, 2, 3.75]], [16, [1, 0, 4.5]], [32, [1, 4, 6]]]
+    },
+    {
+      "name": "negative half turn on a tilted axis",
+      "origin": [0, 0, 0], "axis": [0, 3, 4], "radial": [0, 0.8, -0.6],
+      "radius": 1, "pitch": 2, "turns": -0.5, "segments": 16, "length": 3.2921021298778097,
+      "samples": [[0, [0, 0.8, -0.6]], [8, [1, -0.3, -0.4]], [16, [0, -1.4, -0.2]]]
+    },
+    {
+      "name": "negative pitch and zero axis use the stock Z direction",
+      "origin": [0, 0, 0], "axis": [0, 0, 0], "radial": [0, 1, 0],
+      "radius": 1, "pitch": -2, "turns": 0.125, "segments": 8, "length": 0.8239265658775656,
+      "samples": [[0, [0, 1, 0]], [8, [-0.7071067811865476, 0.7071067811865476, -0.25]]]
+    },
+    {
+      "name": "zero pitch gives a planar half turn",
+      "origin": [0, 0, 0], "axis": [0, 0, 1], "radial": [0, 1, 0],
+      "radius": 1, "pitch": 0, "turns": 0.5, "segments": 16, "length": 3.1365484905459393,
+      "samples": [[0, [0, 1, 0]], [8, [-1, 0, 0]], [16, [0, -1, 0]]]
+    }
+  ],
+  "originalApproximation": [
+    {
+      "name": "two pinned controls reduce the fit to a line",
+      "points": [[0, 0, 0], [1, 1, 0], [4, 0, 0]],
+      "degree": 3, "controlPoints": 0,
+      "knots": [0, 0, 1, 1],
+      "controls": [[0, 0, 0], [4, 0, 0]],
+      "samples": [[0.25, [1, 0, 0]], [0.5, [2, 0, 0]]]
+    },
+    {
+      "name": "control request clamps to eight available samples",
+      "points": [[0, 2, 1], [1, 2, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1], [6, 2, 1], [7, 2, 1]],
+      "degree": 7, "controlPoints": 99,
+      "knots": [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+      "controls": [[0, 2, 1], [1, 2, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1], [6, 2, 1], [7, 2, 1]],
+      "samples": [[0.125, [0.875, 2, 1]], [0.5, [3.5, 2, 1]], [0.75, [5.25, 2, 1]]]
+    },
+    {
+      "name": "cubic least squares with fixed endpoints",
+      "points": [[0, 0, 0], [1, 1, 0], [2, 0, 0], [3, 1, 0], [4, 0, 0]],
+      "degree": 3, "controlPoints": 4,
+      "knots": [0, 0, 0, 0, 1, 1, 1, 1],
+      "controls": [[0, 0, 0], [1.3333333333333333, 0.9411764705882353, 0], [2.6666666666666665, 0.9411764705882353, 0], [4, 0, 0]],
+      "samples": [[0, [0, 0, 0]], [0.25, [1, 0.5294117647058824, 0]], [0.5, [2, 0.7058823529411765, 0]], [1, [4, 0, 0]]]
+    },
+    {
+      "name": "degree clamps to the requested control count",
+      "points": [[0, 0, 0], [1, 1, 0], [2, 0, 0], [3, 1, 0], [4, 0, 0]],
+      "degree": 6, "controlPoints": 3,
+      "knots": [0, 0, 0, 1, 1, 1],
+      "controls": [[0, 0, 0], [2, 1.411764705882353, 0], [4, 0, 0]],
+      "samples": [[0.25, [1, 0.5294117647058824, 0]], [0.5, [2, 0.7058823529411765, 0]]]
+    },
+    {
+      "name": "quadratic fit with an interior knot",
+      "points": [[0, 2, 1], [1, 2, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1], [6, 2, 1]],
+      "degree": 2, "controlPoints": 4,
+      "knots": [0, 0, 0, 0.4166666666666667, 1, 1, 1],
+      "controls": [[0, 2, 1], [1.25, 2, 1], [4.25, 2, 1], [6, 2, 1]],
+      "samples": [[0.2, [1.2, 2, 1]], [0.4166666666666667, [2.5, 2, 1]], [0.8, [4.8, 2, 1]]]
+    }
+  ],
+  "interpolationParameters": {
+    "interpolated line through two points": [0, 1],
+    "interpolated quadratic with unequal chords": [0, 0.4007455821508852, 1],
+    "interpolated cubic through four points": [0, 0.3333333333333333, 0.6666666666666666, 1],
+    "interpolated cubic with interior knots": [0, 0.2, 0.4, 0.6, 0.8, 1]
+  },
   "cases": [
     {"name": "line", "kind": "brep.curve.line", "inputs": {"start": [0, 0, 0], "end": [3, 4, 0]}, "outputs": {"shape": {"kind": "curve", "length": 5, "start": [0, 0, 0], "end": [3, 4, 0], "bbox": [[0, 0, 0], [3, 4, 0]]}}},
     {"name": "line with equal ends", "kind": "brep.curve.line", "inputs": {"start": [1, 1, 1], "end": [1, 1, 1]}, "fault": {"code": "generation3d.geometry.degenerate-curve", "port": "end"}},
@@ -23,6 +126,8 @@
     {"name": "rectangle without width", "kind": "brep.curve.rectangle", "inputs": {"width": 0, "height": 3}, "fault": {"code": "generation3d.geometry.degenerate-size", "port": "width"}},
     {"name": "regular hexagon", "kind": "brep.curve.polygon", "inputs": {"radius": 2, "sides": 6}, "outputs": {"shape": {"kind": "wire", "closed": true, "length": 12, "bbox": [[-2, -1.7320508075688772, 0], [2, 1.7320508075688772, 0]]}}},
     {"name": "polygon of two sides", "kind": "brep.curve.polygon", "inputs": {"radius": 2, "sides": 2}, "fault": {"code": "generation3d.geometry.degenerate-size", "port": "sides"}},
+    { "name": "interpolated quadratic with unequal chords", "kind": "brep.curve.interpolate", "inputs": { "points": [[0, 0, 0], [1, 1, 0], [4, 0, 0]], "degree": 2 }, "outputs": { "shape": { "kind": "curve", "start": [0, 0, 0], "end": [4, 0, 0], "through": [[0, 0, 0], [1, 1, 0], [4, 0, 0]] } }, "tolerance": 0.0001 },
+    { "name": "interpolated cubic with interior knots", "kind": "brep.curve.interpolate", "inputs": { "points": [[0, 2, 1], [1, 2, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1]], "degree": 3 }, "outputs": { "shape": { "kind": "curve", "start": [0, 2, 1], "end": [5, 2, 1], "through": [[0, 2, 1], [1, 2, 1], [2, 2, 1], [3, 2, 1], [4, 2, 1], [5, 2, 1]], "length": 5 } }, "tolerance": 0.0001 },
     {"name": "interpolated cubic through four points", "kind": "brep.curve.interpolate", "inputs": {"points": [[0, 0, 0], [1, 1, 0], [2, 0, 0], [3, 1, 0]], "degree": 3}, "outputs": {"shape": {"kind": "curve", "start": [0, 0, 0], "end": [3, 1, 0], "through": [[0, 0, 0], [1, 1, 0], [2, 0, 0], [3, 1, 0]], "length": 4.767890925875383}}, "tolerance": 0.0001},
     {"name": "interpolated line through two points", "kind": "brep.curve.interpolate", "inputs": {"points": [[0, 0, 0], [2, 0, 0]], "degree": 1}, "outputs": {"shape": {"kind": "curve", "length": 2, "start": [0, 0, 0], "end": [2, 0, 0]}}},
     {"name": "interpolation of degree four through four points", "kind": "brep.curve.interpolate", "inputs": {"points": [[0, 0, 0], [1, 1, 0], [2, 0, 0], [3, 1, 0]], "degree": 4}, "fault": {"code": "generation3d.geometry.degree-points", "port": "degree"}},

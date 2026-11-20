@@ -21,7 +21,7 @@ fn node_mut<'a>(packet:&'a mut DrawingClipboard,path:&[usize])->Result<&'a mut D
     Ok(node)
 }
 fn append<T:FromValue>(list:&mut PagedList<T,{usize::MAX}>,source:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
-    while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes()?;control.charge(bytes)?;list.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
+    while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes()?;control.charge(bytes)?;list.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
     let value=T::from_value_controlled(source,control)?;list.push_reserved(value).map_err(|_|invalid())
 }
 fn reserve<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let capacity=(values.capacity().max(1)*2).min(MAX_NODES);if capacity<=values.len(){return Err(invalid());}control.charge(capacity*size_of::<T>())?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing clipboard vector allocation failed"))?;}Ok(())}
@@ -30,14 +30,14 @@ impl ClipboardHydration{
     fn queue(&mut self,path:&[usize],kind:Kind,source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         let mut address=[0;MAX_DEPTH];let length=path.len().min(MAX_DEPTH);address[..length].copy_from_slice(&path[..length]);let original=Task{path:address,depth:path.len(),kind,source,at:0,offset:0};
         if path.len()>MAX_DEPTH||self.tasks.len()==MAX_TASKS{self.rejected_task=Some(original);return Err(invalid());}
-        while !self.tasks.has_reserved_slot(){let bytes=match self.tasks.next_allocation_bytes(){Ok(bytes)=>bytes,Err(error)=>{self.rejected_task=Some(original);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected_task=Some(original);return Err(error);}if let Err(error)=self.tasks.reserve_one(bytes){self.rejected_task=Some(original);return Err(error.refusal().into());}}
+        while !self.tasks.has_reserved_slot(){let bytes=match self.tasks.next_allocation_bytes(){Ok(bytes)=>bytes,Err(error)=>{self.rejected_task=Some(original);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected_task=Some(original);return Err(error);}if let Err(error)=self.tasks.reserve_one_cold(bytes){self.rejected_task=Some(original);return Err(error.refusal().into());}}
         self.tasks.push_reserved(original).map_err(|task|{self.rejected_task=Some(task);invalid()})
     }
     fn strip(&mut self,path:&[usize],entries:&mut[(String,DslValue)],key:&'static str,kind:Kind,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if let Some((_,value))=entries.iter_mut().find(|(name,_)|name==key){let source=std::mem::replace(value,match kind{Kind::Text(_)=>DslValue::String(String::new()),_=>DslValue::Array(Vec::new())});self.queue(path,kind,source,control)?;}Ok(())}
     fn layer(&mut self,path:&[usize],mut source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         if path.len()>MAX_DEPTH||self.nodes==MAX_NODES{self.rejected=Some(source);return Err(invalid());}self.nodes+=1;
         let capacity=self.tasks.len()+16;if capacity>MAX_TASKS{self.rejected=Some(source);return Err(invalid());}
-        while self.tasks.capacity()<capacity{let bytes=match self.tasks.next_capacity_allocation_bytes(capacity){Ok(Some(bytes))=>bytes,Ok(None)=>break,Err(error)=>{self.rejected=Some(source);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected=Some(source);return Err(error);}if let Err(error)=self.tasks.reserve_capacity_one(capacity,bytes){self.rejected=Some(source);return Err(error.refusal().into());}}
+        while self.tasks.capacity()<capacity{let bytes=match self.tasks.next_capacity_allocation_bytes(capacity){Ok(Some(bytes))=>bytes,Ok(None)=>break,Err(error)=>{self.rejected=Some(source);return Err(error.into());}};if let Err(error)=control.charge(bytes){self.rejected=Some(source);return Err(error);}if let Err(error)=self.tasks.reserve_exact_capacity_one_cold(capacity,bytes){self.rejected=Some(source);return Err(error.refusal().into());}}
         let DslValue::Object(entries)=&mut source else{self.queue(path,Kind::Layer,source,control)?;return Err(invalid());};
         if entries.len()>20||entries.iter().any(|(key,_)|key.len()>64){self.queue(path,Kind::Layer,source,control)?;return Err(invalid());}
         let kind=entries.iter().find(|(key,_)|key=="kind").and_then(|(_,value)|value.as_str());
@@ -55,7 +55,7 @@ impl ClipboardHydration{
         let node=DrawingLayerNode::from_value_controlled(&source,control);match node{Ok(node)=>self.pending_node=Some(node),Err(error)=>self.rejected_error=Some(error)}self.queue(path,Kind::Retired,source,control)?;if self.rejected_error.is_some(){return Err(invalid());}
         if path.len()==1{if path[0]!=self.packet.roots.len(){return Err(invalid());}reserve(&mut self.packet.roots,control)?;self.packet.roots.push(self.pending_node.take().ok_or_else(invalid)?);}else{
             let parent=node_mut(&mut self.packet,&path[..path.len()-1])?;let DrawingLayerNode::Group(parent)=parent else{return Err(invalid());};
-            if *path.last().unwrap()!=parent.children.len(){return Err(invalid());}while !parent.children.has_reserved_slot(){let bytes=parent.children.next_allocation_bytes()?;control.charge(bytes)?;parent.children.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}parent.children.push_reserved(self.pending_node.take().ok_or_else(invalid)?).map_err(|node|{self.pending_node=Some(node);invalid()})?;
+            if *path.last().unwrap()!=parent.children.len(){return Err(invalid());}while !parent.children.has_reserved_slot(){let bytes=parent.children.next_allocation_bytes()?;control.charge(bytes)?;parent.children.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}parent.children.push_reserved(self.pending_node.take().ok_or_else(invalid)?).map_err(|node|{self.pending_node=Some(node);invalid()})?;
         }
         Ok(())
     }
@@ -106,7 +106,7 @@ impl ClipboardHydration{
             Kind::References=>{
                 let DslValue::Array(values)=&task.source else{return Err(invalid());};if values.len()>MAX_NODES{return Err(invalid());}if task.at==values.len(){self.at+=1;return Ok(false);}let source=values[task.at].as_str().ok_or_else(invalid)?;if source.is_empty()||source.len()>MAX_ID_BYTES{return Err(invalid());}
                 let node=node_mut(&mut self.packet,&task.path[..task.depth])?;let DrawingLayerNode::Boolean(boolean)=node else{return Err(invalid());};
-                if task.offset==0{while !boolean.children.has_reserved_slot(){let bytes=boolean.children.next_allocation_bytes()?;control.charge(bytes)?;boolean.children.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}boolean.children.push_reserved(Default::default()).map_err(|_|invalid())?;}
+                if task.offset==0{while !boolean.children.has_reserved_slot(){let bytes=boolean.children.next_allocation_bytes()?;control.charge(bytes)?;boolean.children.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}boolean.children.push_reserved(Default::default()).map_err(|_|invalid())?;}
                 let mut end=(task.offset+1024).min(source.len());while !source.is_char_boundary(end){end-=1;}boolean.children.get_mut(task.at).ok_or_else(invalid)?.try_push_str_controlled(&source[task.offset..end],control)?;task.offset=end;if end==source.len(){task.offset=0;task.at+=1;}
             },
             _=>{

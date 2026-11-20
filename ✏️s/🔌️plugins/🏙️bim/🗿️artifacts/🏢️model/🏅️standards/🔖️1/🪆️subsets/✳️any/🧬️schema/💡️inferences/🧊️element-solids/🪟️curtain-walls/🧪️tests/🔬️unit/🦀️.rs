@@ -44,7 +44,7 @@ fn kind(snapshot: &mut ModelSnapshot) -> &mut CurtainWallType {
 }
 
 fn overridden(snapshot: &mut ModelSnapshot, id: &str, u: u32, v: u32, panel: CurtainPanel) {
-    snapshot.curtain_panel_overrides.insert(id.into(), CurtainPanelOverride { curtain: "cw-1".into(), u, v, panel });
+    snapshot.curtain_panel_overrides.cold_insert(id.into(), CurtainPanelOverride { curtain: "cw-1".into(), u, v, panel });
 }
 
 #[test]
@@ -191,7 +191,7 @@ async fn an_override_outside_the_grid_is_ignored_by_the_solid() {
 async fn a_hosted_opening_cuts_the_panels_it_overlaps() {
     let (mut snapshot, _) = case("curtain-grid");
     let plain = compute_element_solids(&snapshot)["cw-1"].volume;
-    snapshot.openings.insert("o-1".into(), Opening { host: "cw-1".into(), kind: OpeningKind::Void { width: 1.0, height: 0.5 }, offset: 2.25, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Hole".into(), reveal_depth: None, reveal_material: None });
+    snapshot.openings.cold_insert("o-1".into(), Opening { host: "cw-1".into(), kind: OpeningKind::Void { width: 1.0, height: 0.5 }, offset: 2.25, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: "Hole".into(), reveal_depth: None, reveal_material: None });
     let cut = compute_element_solids(&snapshot)["cw-1"].volume;
     let removed = ((2.75 - 1.75) * (0.5 - 0.06)) * PANEL_THICKNESS;
     assert!(close(plain - cut, removed), "the void removes exactly its rectangle of the pane: {} against {removed}", plain - cut);

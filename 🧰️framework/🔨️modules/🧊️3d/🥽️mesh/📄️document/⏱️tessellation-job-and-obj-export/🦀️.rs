@@ -224,7 +224,34 @@ impl HalfedgeMesh {
                 }
             }
         }
-        Ok(semio_framework_mesh_engine::PolygonMeshSource { vertices: self.positions(), faces: self.polygons(), attributes, materials: self.materials.clone(), textures: self.textures.clone() })
+        use semio_framework_mesh_engine::PolygonSurfaceKind::*;
+        let mut surface = Vec::new();
+        for (kind, ids, count) in [(VertexNormal, None, self.vertex_count()), (SmoothFace, None, self.face_count()),
+            (CornerUv, Some(corner_ids.as_slice()), self.halfedge_count()), (SeamEdge, Some(edge_ids.as_slice()), self.halfedge_count())] {
+            for index in 0..count {
+                if let Some(sample) = self.polygon_surface_sample(kind, index as u32, ids.map_or(index as u32, |ids| ids[index])) {
+                    surface.push(sample);
+                }
+            }
+        }
+        Ok(semio_framework_mesh_engine::PolygonMeshSource { vertices: self.positions(), faces: self.polygons(), surface, attributes, materials: self.materials.clone(), textures: self.textures.clone() })
+    }
+
+    /// 🧴️ Reads one optional native surface sample through a canonical topology identity.
+    pub fn polygon_surface_sample(&self, kind: semio_framework_mesh_engine::PolygonSurfaceKind, index: u32, source: u32) -> Option<semio_framework_mesh_engine::PolygonSurfaceSample> {
+        use semio_framework_mesh_engine::{PolygonSurfaceKind::*, PolygonSurfaceSample};
+        let (normal, uv) = match kind {
+            SmoothFace if self.faces.get(source as usize)?.smooth => (None, None),
+            VertexNormal => (Some(self.vertices.get(source as usize)?.normal?), None),
+            CornerUv => {
+                let uv = self.halfedges.get(source as usize)?.uv;
+                if uv == [0.0; 2] { return None; }
+                (None, Some(uv))
+            }
+            SeamEdge if self.is_uv_seam(EdgeId(source)) => (None, None),
+            _ => return None,
+        };
+        Some(PolygonSurfaceSample { kind, index, normal, uv })
     }
 
     pub fn tessellate(&self) -> MeshResult<MeshTransfer> {

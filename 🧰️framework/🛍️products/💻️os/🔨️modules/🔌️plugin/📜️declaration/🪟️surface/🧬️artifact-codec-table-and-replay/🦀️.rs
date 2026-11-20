@@ -125,9 +125,12 @@ pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
     }
     fn print_mirror<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8]) -> ArtifactCodecFuture<'a, store::os_store::text_format::ArtifactTextFiles> {
         Box::pin(async move {
-            let descriptor=store::os_store::native_artifact_codec::<A::Snapshot>(A::DOCUMENT_SCHEMA);
-            let reference=descriptor.reference().map_err(store::VcsError::into_fault)?;
-            (reference.print_mirror)(pack,spr).await.map_err(store::VcsError::into_fault)
+            let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| store::VcsError::Deserialize(error.to_string()).into_fault())?;
+            let envelope = parsed.into_envelope();
+            let print = <A::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().and_then(|codec| codec.print_dsl).ok_or_else(|| store::VcsError::ValidationFailed("the snapshot owner declares no reference DSL printer".into()));
+            let mirror = match print { Ok(print) => store::os_store::text_format::print_document_text_with(&envelope, print).await, Err(error) => Err(error) };
+            envelope.retire_unadopted();
+            mirror.map_err(store::VcsError::into_fault)
         })
     }
     fn apply_ops<'a, 'b, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles> {

@@ -31,7 +31,7 @@ import { paintEffects, paintPuffs, retireEffects, stageEffects, stockEffects, st
 import { equip, paintLadders, paintTools, rackLadders, type Equipment } from "../🧰️gear/🟦️.ts";
 import { liftFixtures } from "../🪞️lifting/🟦️.ts";
 import { FRAME_TICKS, createPacer, documentHidden, watchVisibility, type Pace } from "../⏲️pacing/🟦️.ts";
-import { PET_PRESS_CONTROLS, stageBox, survey, watchPointer, watchSurvey } from "../📡️survey/🟦️.ts";
+import { PET_PRESS_CONTROLS, stageBox, surveyJob, watchPointer, watchSurvey, type SurveyJob } from "../📡️survey/🟦️.ts";
 import { watchGrasp, type Grasped } from "../🤏️grasp/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -62,6 +62,9 @@ export const PET_FINE_POINTER = "(pointer: fine)";
 
 const SURVEY_TICKS = 8;
 const PATROL_TICKS = TICKS_PER_SECOND;
+
+/** 🍰️ How many milliseconds of a frame the survey of the page may take: it reads on over the next frames what it did not finish, so no frame of the pets is long because of the page. */
+export const SURVEY_SLICE_MILLISECONDS = 4;
 
 /** 🚫️ How long a company (or a single species) stays out of the cast once it was cast and the page then had no room for all of it: ten minutes of the pets' time, longer than any survey of one viewport but not for good. */
 export const PET_SHUN_SECONDS = 600;
@@ -287,6 +290,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
   let frame: Frame | null = null;
   let waiting: StageEvent[] = [];
   let stale: "now" | "soon" | null = "now";
+  let job: SurveyJob | null = null;
   let surveyed: Surveyed | null = null;
   let ground: Surveyed | null = null;
   let grounds = 0;
@@ -361,13 +365,21 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
   };
 
   const measure = (tick: number): StageEvent[] => {
+    if (job === null || stale === "now") {
+      job = surveyJob(page, { surfaces: direction.surfaces, keepouts: direction.keepouts, walls: direction.walls, props: direction.props, controls: direction.controls, pointer, frame: host }, () => view.performance.now());
+      stale = null;
+    }
+    const seen = job.run(SURVEY_SLICE_MILLISECONDS);
+    if (seen === null) {
+      pacer.wake();
+      return [];
+    }
+    job = null;
     const box = stageBox(page, host);
-    const seen = survey(page, { surfaces: direction.surfaces, keepouts: direction.keepouts, walls: direction.walls, props: direction.props, controls: direction.controls, pointer, frame: host });
     lifting.measured();
     const events: StageEvent[] = [];
     origin = { x: box.x, y: box.y };
     width = seen.width;
-    stale = null;
     surveyedAt = tick;
     const size = scale();
     if (size !== surveyedSize || !sameSurvey(surveyed, seen)) {
@@ -496,7 +508,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
     const rate = frame?.rate ?? 0;
     const since = tick - surveyedAt;
     const holding = (frame?.held ?? null) !== null;
-    if (stale === "now" || (stale === "soon" && (rate === 0 || since >= SURVEY_TICKS)) || (rate === 64 && !holding && since >= SURVEY_TICKS) || (rate > 0 && since >= PATROL_TICKS)) events.push(...measure(tick));
+    if (job !== null || stale === "now" || (stale === "soon" && (rate === 0 || since >= SURVEY_TICKS)) || (rate === 64 && !holding && since >= SURVEY_TICKS) || (rate > 0 && since >= PATROL_TICKS)) events.push(...measure(tick));
     events.push(...waiting);
     waiting = [];
     if (direction.mode !== "still" && direction.quiet !== true) {
@@ -565,6 +577,10 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
 
   const rest = (hidden = false): void => {
     if (hidden || resting()) {
+      if (job !== null) {
+        job = null;
+        stale = "now";
+      }
       grasp.cancel();
       lifting.release();
       pacer.hide();
@@ -709,6 +725,17 @@ export interface PetLayerProps {
   readonly ref?: Ref<PetLayerHandle>;
 }
 
+const CHECKED = new WeakMap<Menagerie, boolean>();
+
+/** 🧪️ Whether `menagerie` has no issues ({@link menagerieIssues}), checked once for as long as the object lives: a layer that mounts again for the same menagerie does not pay for it again. */
+function soundOf(menagerie: Menagerie): boolean {
+  const known = CHECKED.get(menagerie);
+  if (known !== undefined) return known;
+  const sound = menagerieIssues(menagerie).length === 0;
+  CHECKED.set(menagerie, sound);
+  return sound;
+}
+
 /** 🎨️ Whether the system forces its own colours on the page, where a pet's palette would be lost. */
 function forcedColors(): boolean {
   return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(FORCED_COLORS).matches;
@@ -732,7 +759,7 @@ export function PetLayer(props: PetLayerProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const show = useRef<Show | null>(null);
   const forced = useSyncExternalStore(watchForcedColors, forcedColors, () => false);
-  const sound = useMemo(() => menagerieIssues(menagerie).length === 0, [menagerie]);
+  const sound = useMemo(() => soundOf(menagerie), [menagerie]);
   useImperativeHandle(ref, () => ({ play: (species, deed) => show.current?.play(species, deed) }), []);
   useEffect(() => {
     if (forced || !sound || host.current === null) return;

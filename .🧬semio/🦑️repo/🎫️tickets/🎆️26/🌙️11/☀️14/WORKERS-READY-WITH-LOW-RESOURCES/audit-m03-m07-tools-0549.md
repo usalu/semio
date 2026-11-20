@@ -1,0 +1,7 @@
+# m03 and m07 tools at 05:49 UTC
+
+Read-only replicated origin snapshot; no worker action or test was issued.
+
+**m03:** fresh `ready.json` reports adopted, running tools with null refusal. Its current rolling tail moved from `native-artifact-input-read:3875` to `3889`; the last reported command heartbeat was 7,954 seconds. The visible earlier lines include a provider check of 7,756 edges. The advancing input-read counter is useful phase progress, not proof of completion or the total remaining work. No new terminal receipt exists; the previous completed tools attempt ended at 03:36 with `stage-timeout` after 14,407 seconds, followed by successful native setup. No deterministic current source blocker is visible in this tail.
+
+**m07:** the latest ready record is stale (04:42:58 UTC) and still says adopted/running, but the timing receipt written at 04:42:59 records that tools attempt ending after 11,762 seconds with `stage-timeout`, exit 1 and exit receipt. The failed tail shows the last named activity as checking 7,756 declared provider edges, followed by cancellation signals; the typed timeout does not identify a source defect. The ready record therefore must not be treated as current running proof. The last attestation is older, 04:03:57 UTC with 169 incoming and an older code digest; it cannot establish present host or replica state. No subsequent attempt or new deterministic source blocker is visible in these replicated receipts.

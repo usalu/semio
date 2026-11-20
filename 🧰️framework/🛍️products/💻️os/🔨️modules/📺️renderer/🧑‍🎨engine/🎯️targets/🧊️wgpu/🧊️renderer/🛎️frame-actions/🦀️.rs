@@ -17,7 +17,13 @@ pub struct RuntimeDispatchCursor {
 
 pub struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,pub epoch:u64}
 impl RuntimeDispatchSource{
-    pub fn admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;let parent=cx.original_source_parent()?;Ok(parent.admit_loan(cx)?.map(|original|Self{original,epoch}))}
+    pub fn admit(output:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;
+        let mut original=None;
+        let result=cx.original_source_parent()?.admit_loan(&mut original,cx);
+        *output=original.map(|original|Self{original,epoch});
+        result
+    }
     fn original_clock_source(&self)->Result<(u64,fn()->Option<u64>,u64),semio_framework_value::ValueError>{self.original.original_clock_source()}
     fn validate_opportunity(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{let(binding,clock,deadline)=self.original_clock_source()?;if cx.original_clock_binding()!=Some(binding)||!std::ptr::fn_addr_eq(clock,cx.clock_source())||deadline!=cx.original_absolute_deadline_us(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source changed original bound clock or absolute deadline").into())}if !cx.original_source_epoch().is_some_and(|epoch|epoch>=self.epoch){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor incoming epoch precedes its admitted intent").into())}Ok(())}
     fn validate_context(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;self.original.validate_context(cx)}

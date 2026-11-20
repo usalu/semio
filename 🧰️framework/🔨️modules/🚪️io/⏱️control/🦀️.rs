@@ -233,6 +233,8 @@ impl<'owner,'control> NativeSnapshotDecodeOwner<'owner,'control>{
  pub fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{let admitted=self.progress.fits(self.grant)&&progress.fits(self.remaining_grant());self.progress=self.progress.checked_add(progress).map_err(|error|error.with_retained_progress(progress))?;if !admitted{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot decoding receipt exceeds original grant").with_retained_progress(progress))}Ok(())}
  /// 🎟️ Quotes the actual original recipient and remaining local wallet before a decoder effect.
  pub fn admit_constructed(&mut self,demand:RetainedCloneGrant)->Result<NativeSnapshotConstruction,NativeSnapshotFailure>{let wallet=NativeSnapshotBodyWallet{grant:self.grant,progress:self.progress};wallet.admit_constructed(self.native,demand)}
+ /// 🚫️ Settles a quoted construction whose effect never ran, so a refused or canceled body leaves no unsettled original action.
+ pub fn cancel_constructed(&mut self,construction:NativeSnapshotConstruction)->Result<(),NativeSnapshotFailure>{let NativeSnapshotConstruction{mut action,..}=construction;self.native.cancel_constructed_action(&mut action).map_err(NativeSnapshotFailure::receipt)}
  /// 🧾️ Publishes one actual local effect under the same previously quoted recipient grant.
  pub fn record_constructed_progress(&mut self,construction:NativeSnapshotConstruction,progress:RetainedCloneProgress)->Result<(),NativeSnapshotFailure>{
   let NativeSnapshotConstruction{mut action,..}=construction;let local=self.record_progress(progress);let submitted=self.native.settle_constructed_progress(&mut action,progress);

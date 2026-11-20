@@ -28,3 +28,7 @@ Draft only: nothing in the repo was edited, nothing was built. Apply with `pytho
 
 - No compiler ran: encode-arm denial behaviour (`Pending` vs `Complete`) and later errors hidden behind the first ones are unknown.
 - Same stale `step(effect)`/`close_retirement_recipient(effect)` pattern remains in `🛫️encode/🛂️allocation/🧪️tests`, `🛫️encode/🧪️tests/♻️close`, `🛬️decode/🏭️construction/📦️effect/🧪️tests/original-effect.rs`, `🛬️decode/🛂️allocation/🧪️tests`, `♻️retirement/🧪️tests` and `🫴️recipient/🎟️work/🧪️tests`; not patched because their receiver types were not confirmed.
+
+## Flow catalogue ownership
+
+The catalogue ownership law from the handoff is now verified independently. The compiled test initially failed because a reusable callback was declared `Fn` even though it advances a mutable catalogue owner. The fixture now accepts `FnMut` and pays for the fixture caller's terminal retirement. Pinned Cargo compiled the three native dependencies for the actual law. The pinned compiler linked that law against their exact Cargo fingerprints, and the executable passed 1/1. This result covers catalogue derivation and closure under the turn's original Source. The larger Flow host law suite has a separate build history.

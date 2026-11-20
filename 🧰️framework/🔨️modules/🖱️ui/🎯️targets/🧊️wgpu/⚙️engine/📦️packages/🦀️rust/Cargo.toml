@@ -53,3 +53,4 @@ semio-ui-wgpu-paint-reference = { path = "../../../🖌️paint/🔬️reference
 
 [dev-dependencies]
 semio-ui-wgpu-paint-reference = { path = "../../../🖌️paint/🔬️reference/📦️packages/🦀️rust" }
+semio-ui-wgpu-hosting = { path = "../../../🧭️hosting/📦️packages/🦀️rust", features = ["testkit"] }

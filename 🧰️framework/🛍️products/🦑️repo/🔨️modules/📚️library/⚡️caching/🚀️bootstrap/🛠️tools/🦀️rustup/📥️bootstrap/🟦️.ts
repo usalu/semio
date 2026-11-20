@@ -1,4 +1,6 @@
-import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🟦️.ts";
+import {rustupHostTripleV1} from "../🖥️host/🟦️.ts";
+export {rustupHostTripleV1} from "../🖥️host/🟦️.ts";
+import {linuxHostLibcV1} from "../../../../../🎛️commands/🔧️setup/🐧️libc/🟦️.ts";
 import{fleetFetchContextV1,pinnedFetchV1}from"../../../🛰️fleet-fetch/🟦️.ts";
 import{withRepositoryToolingOperationV1}from"../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -18,8 +20,7 @@ import type {RepositoryToolingStoreV1} from "../../../../../📦️packages/🟦
 import {readNativeCallerAuthorityV1} from "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-/** 🌐️ Selects only the officially published native host family. */
-export function rustupHostTripleV1(platform:string,architecture:string,libc:"gnu"|"musl"="gnu"):string{const cpu=architecture==="arm64"?"aarch64":architecture==="x64"?"x86_64":undefined;if(!cpu)throw Error("Supported Rustup native architecture required");if(platform==="darwin")return cpu+"-apple-darwin";if(platform==="win32")return cpu+"-pc-windows-msvc";if(platform==="linux"){if(libc!=="gnu"&&libc!=="musl")throw Error("Supported Rustup native libc required");return cpu+"-unknown-linux-"+libc;}throw Error("Supported Rustup native platform required");}
+
 /** 💾 Publishes a Rustup directory durably. Windows refuses fsync on a directory handle, so that refusal stands on the file flushes the caller already performed. */
 export async function synchronizeRustupDirectoryV1(path:string):Promise<void>{const directory=await open(path,constants.O_RDONLY);try{try{await directory.sync();}catch(error){const code=(error as NodeJS.ErrnoException).code;if(process.platform==="win32"&&(code==="EPERM"||code==="EINVAL"||code==="ENOTSUP"))return;throw error;}}finally{await directory.close();}}
 /** ⬇️ Streams one pinned response under the Original deadline and finite byte grant. */

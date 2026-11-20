@@ -329,6 +329,10 @@
       {
         "name": "widgetId",
         "type": "optional-utf8"
+      },
+      {
+        "name": "edgeId",
+        "type": "optional-utf8"
       }
     ],
     "setHoverChannel": [

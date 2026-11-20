@@ -32,7 +32,12 @@ export function testShootingRouteV1(workspace:string):void{
  const properties=boot.arguments[0].properties;
  assert.ok(properties.some(property=>ts.isShorthandPropertyAssignment(property)&&property.name.text==="variant"));
  const catalogue=properties.find(property=>ts.isPropertyAssignment(property)&&property.name.getText(entry)==="catalogRows");
- assert.ok(catalogue&&ts.isPropertyAssignment(catalogue)&&ts.isCallExpression(catalogue.initializer)&&ts.isIdentifier(catalogue.initializer.expression)&&catalogue.initializer.expression.text==="composeSpecificOsCatalogV1","Specific entry consumes its actual catalog composition");
+ assert.ok(catalogue && ts.isPropertyAssignment(catalogue), "Specific entry supplies catalog rows");
+ const rows = catalogue.initializer;
+ assert.ok(ts.isPropertyAccessExpression(rows) && rows.name.text === "rows", "Boot receives the composition's row array");
+ const composition = rows.expression;
+ assert.ok(ts.isCallExpression(composition) && ts.isIdentifier(composition.expression) &&
+   composition.expression.text === "composeSpecificOsCatalogV1", "Specific entry consumes its actual catalog composition");
  assert.ok(!properties.some(property=>property.name?.getText(entry)==="hostConfig"),"entry leaves host configuration to catalogue-owned selection");
  const config=readFileSync(join(workspace,parsed.viteConfig),"utf8"),configAst=ts.createSourceFile("config.ts",config,ts.ScriptTarget.Latest,true),configCalls:ts.CallExpression[]=[];
  const configVisit=(node:ts.Node):void=>{if(ts.isCallExpression(node))configCalls.push(node);ts.forEachChild(node,configVisit);};configVisit(configAst);

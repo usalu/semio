@@ -130,6 +130,7 @@ pub mod editor {
         #[path = "../../../🦀️.rs"]
         mod component;
         pub use component::*;
+        pub use semio_s_artifact_wfc_grid3d_transient::editor::grid3d::transient;
         #[path = "../../../🪟️window/🦀️.rs"]
         pub mod window;
         #[path = "."]

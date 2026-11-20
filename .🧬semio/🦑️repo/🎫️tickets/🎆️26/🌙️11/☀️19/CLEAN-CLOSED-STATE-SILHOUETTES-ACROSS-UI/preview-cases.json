@@ -1,0 +1,23 @@
+[
+  {
+    "name": "batch switches and releases its own children",
+    "steps": [["batch", "elements"], ["batch", "cad"], ["stopBatch"]],
+    "events": ["start elements", "stop elements", "start cad", "stop cad"]
+  },
+  {
+    "name": "manual and batch share a child until both release it",
+    "steps": [["manual", "elements"], ["batch", "elements"], ["stopBatch"], ["stopManual", "elements"]],
+    "events": ["start elements", "stop elements"]
+  },
+  {
+    "name": "restart replaces only a manual child",
+    "steps": [["manual", "elements"], ["restart", "elements"], ["shutdown"]],
+    "events": ["start elements", "stop elements", "start elements", "stop elements"]
+  },
+  {
+    "name": "shutdown leaves an external preview untouched",
+    "external": ["elements"],
+    "steps": [["batch", "elements"], ["manual", "elements"], ["restart", "elements"], ["shutdown"]],
+    "events": []
+  }
+]

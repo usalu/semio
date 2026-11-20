@@ -31,19 +31,19 @@ fn layer(material: &str, thickness: f64) -> Layer {
 /// 🏠️ Storeys `st-ground` (3 m) and `st-first` (2.8 m), wall type `wt-300`, and a type of every other family; no element yet.
 pub fn model() -> ModelSnapshot {
     let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
-    snapshot.walls.clear();
+    snapshot.walls.cold_clear();
     let color = Rgb { r: 0.5, g: 0.5, b: 0.5 };
     for (id, category) in [("m-glass", MaterialCategory::Glass), ("m-steel", MaterialCategory::Metal), ("m-concrete", MaterialCategory::Concrete)] {
-        snapshot.materials.insert(id.into(), Material { name: id.into(), category, color, density: 2400.0, conductivity: 1.0, specific_heat: 900.0 });
+        snapshot.materials.cold_insert(id.into(), Material { name: id.into(), category, color, density: 2400.0, conductivity: 1.0, specific_heat: 900.0 });
     }
-    snapshot.slab_types.insert("sl-200".into(), SlabType { name: "Slab".into(), layers: vec![layer("m-concrete", 0.2)] });
-    snapshot.roof_types.insert("rf-200".into(), RoofType { name: "Roof".into(), layers: vec![layer("m-concrete", 0.2)] });
-    snapshot.column_types.insert("col-30".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
-    snapshot.beam_types.insert("bm-20".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
-    snapshot.window_types.insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
-    snapshot.curtain_wall_types.clear();
-    snapshot.curtain_wall_types.insert("cw-fa".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
-    snapshot.door_types.insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into(), u_value: None });
+    snapshot.slab_types.cold_insert("sl-200".into(), SlabType { name: "Slab".into(), layers: vec![layer("m-concrete", 0.2)] });
+    snapshot.roof_types.cold_insert("rf-200".into(), RoofType { name: "Roof".into(), layers: vec![layer("m-concrete", 0.2)] });
+    snapshot.column_types.cold_insert("col-30".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
+    snapshot.beam_types.cold_insert("bm-20".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
+    snapshot.window_types.cold_insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.curtain_wall_types.cold_clear();
+    snapshot.curtain_wall_types.cold_insert("cw-fa".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.door_types.cold_insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into(), u_value: None });
     snapshot
 }
 
@@ -68,15 +68,15 @@ const TABLE: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️i
 pub fn furnished() -> ModelSnapshot {
     let mut snapshot = room();
     let table: ModelSnapshot = from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes");
-    snapshot.materials.extend(table.materials);
+    snapshot.materials.cold_extend(table.materials);
     snapshot.families = table.families;
     snapshot.family_parameters = table.family_parameters;
     snapshot.family_solids = table.family_solids;
-    snapshot.families.insert("fam-basin".into(), Family { name: "Basin".into(), category: FamilyCategory::Plumbing });
-    snapshot.family_parameters.insert("fam-basin.width".into(), FamilyParameter { family: "fam-basin".into(), name: "width".into(), kind: ParameterKind::Length, value: "0.5 m".into() });
+    snapshot.families.cold_insert("fam-basin".into(), Family { name: "Basin".into(), category: FamilyCategory::Plumbing });
+    snapshot.family_parameters.cold_insert("fam-basin.width".into(), FamilyParameter { family: "fam-basin".into(), name: "width".into(), kind: ParameterKind::Length, value: "0.5 m".into() });
     let offset = ExprPoint3 { x: "0 m".into(), y: "0 m".into(), z: "0 m".into() };
     let shape = SolidShape::Cuboid { x: "-width / 2".into(), y: "0 m".into(), z: "0 m".into(), width: "width".into(), depth: "0.4 m".into(), height: "0.2 m".into() };
-    snapshot.family_solids.insert("s-basin".into(), FamilySolid { family: "fam-basin".into(), name: "Bowl".into(), shape, material: "\"m-steel\"".into(), visible: "true".into(), offset });
+    snapshot.family_solids.cold_insert("s-basin".into(), FamilySolid { family: "fam-basin".into(), name: "Bowl".into(), shape, material: "\"m-steel\"".into(), visible: "true".into(), offset });
     snapshot
 }
 
@@ -86,8 +86,8 @@ pub fn placed() -> ModelSnapshot {
     let wall = snapshot.walls.keys().next().cloned().expect("the room has walls");
     let storey = snapshot.walls[&wall].storey.clone();
     let component = |family: &str, host: Option<String>, name: &str| Component { storey: storey.clone(), family: family.into(), position: Point2 { x: 1.0, y: 1.0 }, elevation: 0.0, rotation: 0.0, mirrored: false, host, system: None, name: name.into() };
-    snapshot.components.insert("c-table".into(), component("fam-table", None, "Table 1"));
-    snapshot.components.insert("c-basin".into(), component("fam-basin", Some(wall), "Basin 1"));
+    snapshot.components.cold_insert("c-table".into(), component("fam-table", None, "Table 1"));
+    snapshot.components.cold_insert("c-basin".into(), component("fam-basin", Some(wall), "Basin 1"));
     snapshot
 }
 

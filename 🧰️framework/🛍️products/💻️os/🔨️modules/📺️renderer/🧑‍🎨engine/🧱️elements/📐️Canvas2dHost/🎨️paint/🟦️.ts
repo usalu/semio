@@ -1,6 +1,8 @@
 /** 🎨️ Platform canvas painting for typed scene geometry and authored appearance. */
 import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, constantGradientColor, type PathSegment } from "@semio-tech/framework/2d";
 
+type CanvasPoint = readonly [x: number, y: number];
+
 type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
 
 export type CanvasCompositingGroup = {readonly id:string;readonly opacity:number;readonly blendMode:string};
@@ -12,6 +14,9 @@ export type CanvasSceneNode = {
   readonly width?: number;
   readonly height?: number;
   readonly transform?: readonly number[];
+  readonly clipRect?: readonly [x: number, y: number, width: number, height: number];
+  readonly clipPolygons?: readonly (readonly [CanvasPoint, CanvasPoint, CanvasPoint, CanvasPoint])[];
+  readonly clipPaths?: readonly { readonly segments: readonly PathSegment[]; readonly fillRule?: "nonzero" | "evenodd" }[];
   readonly segments?: readonly PathSegment[];
   readonly fill?: {
     readonly kind?: string;
@@ -25,7 +30,7 @@ export type CanvasSceneNode = {
     readonly r?: number;
     readonly stops?: readonly CanvasGradientStop[];
   };
-  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[]; readonly cap?: string; readonly join?: string };
+  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[]; readonly dashOffset?: number; readonly miterLimit?: number; readonly cap?: string; readonly join?: string };
   readonly opacity?: number;
   readonly blendMode?: string;
   readonly fillRule?: string;
@@ -108,9 +113,36 @@ export function isDecodedImage(image: HTMLImageElement | undefined): image is HT
 
 export function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasSceneNode, imageCache: ReadonlyMap<string, HTMLImageElement>): void {
   if (layer.visible === false) return;
+  const clipRect = layer.clipRect;
+  if (clipRect && (!clipRect.every(Number.isFinite) || clipRect[2] <= 0 || clipRect[3] <= 0)) return;
   const opacity = layer.opacity ?? 1;
   ctx.save();
+  if (clipRect) {
+    const clip = new Path2D();
+    clip.rect(...clipRect);
+    ctx.clip(clip);
+  }
   ctx.globalCompositeOperation = blendModeToComposite(layer.blendMode);
+  for (const polygon of layer.clipPolygons ?? []) {
+    if (polygon.length !== 4 || polygon.some(point => point.length !== 2 || !point.every(Number.isFinite))) {
+      ctx.restore();
+      return;
+    }
+    const [first, ...rest] = polygon;
+    const clip = new Path2D();
+    clip.moveTo(...first);
+    for (const point of rest) clip.lineTo(...point);
+    clip.closePath();
+    ctx.clip(clip);
+  }
+  for (const shape of layer.clipPaths ?? []) {
+    const clip = buildScenePath(shape.segments);
+    if (!clip) {
+      ctx.restore();
+      return;
+    }
+    ctx.clip(clip, shape.fillRule === "evenodd" ? "evenodd" : "nonzero");
+  }
   applySceneTransform(ctx, layer.transform);
   const path = buildScenePath(layer.segments);
   const fillPaint = fillStyleToPaint(ctx, layer.fill, opacity);
@@ -123,6 +155,8 @@ export function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasSceneN
     ctx.lineCap = (layer.stroke!.cap as CanvasLineCap) ?? "butt";
     ctx.lineJoin = (layer.stroke!.join as CanvasLineJoin) ?? "miter";
     ctx.setLineDash(layer.stroke!.dash ? [...layer.stroke!.dash] : []);
+    ctx.lineDashOffset = layer.stroke!.dashOffset ?? 0;
+    ctx.miterLimit = layer.stroke!.miterLimit ?? 10;
   }
   if (path) {
     if (fillPaint) ctx.fill(path, layer.fillRule === "nonzero" ? "nonzero" : "evenodd");

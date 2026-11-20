@@ -29,6 +29,7 @@ import {
   requestIsolatedJobUiPoll
 } from "../🛰️runtime-singletons/🟦️.ts";
 import { commandStallWatch, serializeCommandIngressForActor } from "../🧵️turn-dispatch/🟦️.ts";
+import { compactAcknowledgedTurns } from "../🔁️turn-settle/📥️acknowledged/🟦️.ts";
 import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import {
@@ -335,6 +336,8 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
         };
         for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
           state.eventSeq += 1;
+          // ⏱️ The reactor keeps the command while it makes progress (a slow example load + evaluation takes many slices), so the turn-count ceiling is a floor and the continuation is bounded by wall time.
+          const COMMAND_CONTINUATION_WALL_MS = 300_000;
           const pages = createShardCommandIngressPages({
             owner: BigInt(instanceId),
             generation: 1n,
@@ -354,24 +357,42 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
               observedStatuses.add(tag ?? "missing");
               if (tag === "command-complete" || tag === "fault" || tag === "backpressure" || folded === undefined) folded = tag;
             }
+            compactAcknowledgedTurns(results, collected);
             collected = results.length;
             return folded;
           };
-          for (const commandPage of pages) {
-            const pageTurn = await submitTurn(actorId, acknowledgements, { commandPage, activation });
-            await acceptTurn(pageTurn);
+          let terminal: string | undefined;
+          for (let pageIndex = 0; pageIndex < pages.length;) {
+            if (performance.now() - crossingStartedMs >= COMMAND_CONTINUATION_WALL_MS) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled: page ${pageIndex}/${pages.length} stayed refused (action=${inspected.actionId ?? "none"})`);
+            await acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage: pages[pageIndex]!, activation }));
+            terminal = foldIngress();
+            // 🚦️ A refused page is NOT consumed: the guest keeps its assembly at the pages it admitted, so offer the SAME page again (the native driver's `CommandBatchDriver::observe` does the same) instead of moving on and tripping `plugin.command-page-order`.
+            if (terminal === "backpressure") { await yieldPluginUiContinuation(); continue; }
+            if (terminal !== "page-accepted") break;
+            pageIndex += 1;
           }
+          const COMMAND_CONTINUATION_PAUSE_MS = 25;
+          const COMMAND_CONTINUATION_BACKOFF_MAX_MS = 250;
+          const COMMAND_CONTINUATION_BURST_MS = 15_000;
+          let lastObservableMs = performance.now();
           const ceiling = commandIngressContinuationCeilingV1(pages.length);
-          let terminal = foldIngress();
           let lastTurnStatus = wireTurnStatusTag(results.at(-1)?.status);
           let continuations = 0;
-          for (; terminal !== "command-complete" && continuations < ceiling; continuations += 1) {
+          for (; terminal !== "command-complete" && (continuations < ceiling || performance.now() - crossingStartedMs < COMMAND_CONTINUATION_WALL_MS); continuations += 1) {
             if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
-            if (terminal === "backpressure") throw new Error(`plugin ${pluginId}: command ingress backpressure after serialized submission`);
+            // 🚦️ backpressure is the guest asking for another turn (its slice ended or its single ingress owner is still assembling); the owner is retained, so keep draining within the ceiling instead of failing the command.
             if (commandIngressUnownedV1(terminal, lastTurnStatus)) break;
+            // ⏳️ every guest turn pays a fixed ~4 KB / 12 items of lifetime grant (origin refresh), so a retained command that cannot advance must not be re-asked at millisecond cadence.
+            // 🚥️ A turn that reports `more-work` has work ready, and a fixed 25 ms sleep capped a retained command at 40 turns/s (a hidden tab throttles timer chains to one tick a second), so it re-enters on the next macrotask. The guest advances a large command internally in small slices that show nothing in the result, so a command that answers `more-work` without anything observable (no effects, patches, presence, receipt, acknowledgement or ingress change) keeps that cadence for `COMMAND_CONTINUATION_BURST_MS`, then backs off 25 ms doubling up to 250 ms so a command that cannot advance does not spin.
+            const quietMs = performance.now() - lastObservableMs;
+            if (lastTurnStatus === "more-work" && quietMs < COMMAND_CONTINUATION_BURST_MS) await yieldPluginUiContinuation();
+            else await new Promise<void>((resolve) => setTimeout(resolve, lastTurnStatus === "more-work" ? Math.min(COMMAND_CONTINUATION_BACKOFF_MAX_MS, COMMAND_CONTINUATION_PAUSE_MS * 2 ** Math.min(4, Math.floor((quietMs - COMMAND_CONTINUATION_BURST_MS) / 5_000))) : COMMAND_CONTINUATION_PAUSE_MS));
             const continued = await submitTurn(actorId, acknowledgements, { activation });
+            const previousIngress = terminal;
             await acceptTurn(continued);
             terminal = foldIngress();
+            const observable = continued.effects.length > 0 || continued.uiPatches.length > 0 || (continued.presence?.length ?? 0) > 0 || continued.lifecycleReceipt !== undefined || continued.uiPatchReceipt !== undefined || acknowledgements.length > 0 || terminal !== previousIngress || (continued.deferredEvents ?? 0) > 0;
+            if (observable) lastObservableMs = performance.now();
             lastTurnStatus = wireTurnStatusTag(continued.status);
           }
           if (terminal !== "command-complete") {

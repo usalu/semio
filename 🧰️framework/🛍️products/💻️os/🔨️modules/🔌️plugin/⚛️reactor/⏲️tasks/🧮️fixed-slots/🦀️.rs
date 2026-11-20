@@ -22,6 +22,26 @@ impl<T> ReactorFixedSlots<T> {
         Self { values: values.into_boxed_slice(), occupied: [0; REACTOR_FIXED_WORDS], allocation_admitted }
     }
 
+    /// 🈳️ A table with no backing: allocator success at construction is not an admission, so the owner takes the backing with [`Self::admit_backing`] on its first admission that needs a slot.
+    pub fn unallocated() -> Self {
+        Self { values: Vec::new().into_boxed_slice(), occupied: [0; REACTOR_FIXED_WORDS], allocation_admitted: false }
+    }
+
+    /// 🛂️ Takes the one fixed allocation, once; a refused reservation leaves the table exactly as empty as it was.
+    pub fn admit_backing(&mut self) -> bool {
+        if self.allocation_admitted {
+            return true;
+        }
+        let mut values = Vec::new();
+        if values.try_reserve_exact(REACTOR_TASK_SLOTS).is_err() {
+            return false;
+        }
+        values.resize_with(REACTOR_TASK_SLOTS, std::mem::MaybeUninit::uninit);
+        self.values = values.into_boxed_slice();
+        self.allocation_admitted = true;
+        true
+    }
+
     pub fn occupied(&self, index: usize) -> bool {
         self.occupied[index / u64::BITS as usize] & (1u64 << (index % u64::BITS as usize)) != 0
     }

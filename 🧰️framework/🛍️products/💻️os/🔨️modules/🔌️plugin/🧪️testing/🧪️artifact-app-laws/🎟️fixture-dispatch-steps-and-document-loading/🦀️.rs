@@ -77,7 +77,11 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
     }
     close_fixture_action_inputs(original_args,None,cx,close_loan);
-    result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original action fixture dispatch exceeded its authored turn bound").into())
+    result?.ok_or_else(||semio_framework_value::ValueError::new(
+        semio_framework_value::ValueRefusalKind::WorkLimit,
+        format!("original action fixture dispatch exceeded its authored turn bound for {action}: fuel {}, deadline exceeded {}, remaining grant {:?}, {}",
+            cx.fuel_remaining(),cx.deadline_exceeded(),cx.retained_grant(),app.typed_operation_diagnostic()),
+    ).into())
 }
 
 /// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
@@ -295,6 +299,14 @@ impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWork
     }
 }
 
+/// 🎟️ Lends a live original caller's own Work (the `native_encoder_work` snapshot of its step context) to every native hop of an authoring identity, exactly as the production reserved-commit route does; the caller charges `performed()` back with `consume_fuel`.
+pub struct CallerIdentityWork<'w>(pub &'w mut semio_framework_job::NativeEncoderWork);
+impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for CallerIdentityWork<'_> {
+    fn lend(&mut self, control: &mut semio_framework_value::NativeEncodeControl<'_>, operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>) -> Result<(), semio_framework_value::ValueError> {
+        self.0.lend(control, |control| operation(control))
+    }
+}
+
 /// 🪪️ One local native authoring identity for a fixture call: `&mut fixture_identity()` lives for the whole statement, awaits included.
 /// Its no-op observer is a zero-sized closure, so leaking it allocates nothing; every hop commits under the fixture's own Work loan.
 pub fn fixture_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'static> {
@@ -342,6 +354,11 @@ where
 {
     let archive = PluginApp::document_load_archive(app, files)?;
     admit_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive, cx)?;
+    settle_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity, cx).await
+}
+
+/// 🧾️ Drives and acknowledges a fixture's admitted archive load on the original caller.
+pub async fn settle_document_archive_load<P: PluginApp>(app:&mut P, operation:u64, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let mut polls = 0usize;
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
@@ -349,12 +366,12 @@ where
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
-        let status = PluginApp::poll_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
+        let status = PluginApp::poll_document_archive_load(app, operation, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
         }
     };
-    PluginApp::acknowledge_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION)?;
+    PluginApp::acknowledge_document_archive_load(app, operation)?;
     law_load_outcome(status).map_err(Into::into)
 }
 
@@ -427,7 +444,10 @@ fn law_load_running(status: &protocol::DocumentArchiveLoadStatus, polls: &mut us
     }
     *polls += 1;
     if *polls >= LAW_DOCUMENT_LOAD_MAXIMUM_TURNS {
-        return Err(semio_framework::Fault::from("the document archive load never reached a terminal state"));
+        return Err(semio_framework::Fault::from(format!(
+            "the document archive load never reached a terminal state after {polls} turns ({:?}, {} of {} records)",
+            status.state, status.completed, status.total
+        )));
     }
     Ok(true)
 }

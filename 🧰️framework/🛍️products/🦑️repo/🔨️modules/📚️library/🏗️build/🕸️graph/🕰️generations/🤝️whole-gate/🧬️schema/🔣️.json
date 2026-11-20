@@ -1,0 +1,66 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "semio:build:graph:generations:whole-gate:v1",
+ "title": "One whole read for the fleet",
+ "description": "Nine machines that need the graph of the whole workspace read it once: the machine that finds no complete head of the fleet claims the whole read (the claim key names the registry identity and the platform, never a path, a root or a host name), reads, seals and offers its generation; every other machine waits with progress and a bound and then fetches the complete head instead of reading. A head its producer knew incomplete (a wave of the read that still goes on) is not fetched by a machine that waits; a head built by other code is not taken. When the claim holder stops renewing its lease the next machine takes over; every fleet fault, a missing upload right and the end of the bound end in a local read, so a broken cache never fails or hangs a read. A machine that already holds a sealed generation of its own reads the difference alone: the gate applies to a machine without one. A machine with less memory than a whole read wants (below the serving size of the generation exchange) does not claim at once: it gives the machines with more memory the declared delay to claim and read, and claims only when no head and no claim appeared.",
+ "definitions": {
+  "Policy": {
+   "const": {
+    "version": 1,
+    "domain": "semio.whole-read.v1",
+    "claimTtlMilliseconds": 120000,
+    "claimHeartbeatMilliseconds": 15000,
+    "waitSliceMilliseconds": 30000,
+    "waitMaximumMilliseconds": 43200000,
+    "maximumRounds": 4096,
+    "smallMachineDelayMilliseconds": 300000
+   }
+  },
+  "Outcome": {
+   "enum": [
+    "fetch",
+    "waited",
+    "taken-over",
+    "read",
+    "unreachable",
+    "skipped"
+   ]
+  },
+  "TextCatalogue": {
+   "const": {
+    "fetching": {
+     "en": "graph: the fleet holds a complete generation of the whole workspace ({owners} projects, {age} min old): fetching it instead of reading",
+     "de": "Graph: Die Flotte hält eine vollständige Generation des ganzen Arbeitsbereichs ({owners} Projekte, {age} Min. alt): sie wird geladen statt gelesen"
+    },
+    "claimed": {
+     "en": "graph: no machine holds a complete generation of the whole workspace and none is reading it: this machine reads it once and offers it to the fleet",
+     "de": "Graph: Keine Maschine hält eine vollständige Generation des ganzen Arbeitsbereichs und keine liest sie: diese Maschine liest sie einmal und bietet sie der Flotte an"
+    },
+    "waiting": {
+     "en": "graph: {by} is reading the whole workspace, waiting for its generation instead of reading again ({seconds} s of at most {limit} min{progress})",
+     "de": "Graph: {by} liest den ganzen Arbeitsbereich, die Generation wird abgewartet statt nochmals gelesen ({seconds} s von höchstens {limit} Min.{progress})"
+    },
+    "progress": {
+     "en": "; its newest head holds {owners} projects, {stale} still stale",
+     "de": "; sein neuester Stand hält {owners} Projekte, {stale} noch veraltet"
+    },
+    "takenOver": {
+     "en": "graph: the machine that was reading the whole workspace stopped renewing its claim: this machine takes the read over",
+     "de": "Graph: Die Maschine, die den ganzen Arbeitsbereich gelesen hat, erneuert ihren Anspruch nicht mehr: diese Maschine übernimmt das Lesen"
+    },
+    "expired": {
+     "en": "graph: waited {minutes} min for the whole read of {by} without a complete generation: reading here",
+     "de": "Graph: {minutes} Min. auf das Lesen von {by} gewartet ohne vollständige Generation: es wird hier gelesen"
+    },
+    "unreachable": {
+     "en": "graph: the fleet exchange of the whole workspace is not usable ({reason}): reading here",
+     "de": "Graph: Der Flotten-Austausch des ganzen Arbeitsbereichs ist nicht nutzbar ({reason}): es wird hier gelesen"
+    },
+    "yielding": {
+     "en": "graph: this machine has less memory than a whole read wants: machines with more memory get {minutes} min to read it first",
+     "de": "Graph: Diese Maschine hat weniger Speicher als ein ganzes Lesen braucht: Maschinen mit mehr Speicher lesen zuerst, {minutes} Min. lang"
+    }
+   }
+  }
+ }
+}

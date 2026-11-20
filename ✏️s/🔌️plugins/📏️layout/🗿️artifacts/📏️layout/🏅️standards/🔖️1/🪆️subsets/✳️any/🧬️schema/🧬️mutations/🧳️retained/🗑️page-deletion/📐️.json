@@ -1,0 +1,8 @@
+{
+  "feature": "layout.retained.delete-page",
+  "sources": ["original DeletePage payload", "original LayoutSnapshot"],
+  "decision": ["find page", "reject incoming threads from surviving pages", "find owning spread", "find ordered spread member"],
+  "result": ["page ordinal", "spread ordinal", "optional spread member ordinal"],
+  "funding": "one original paid transition or at most 256 UTF-8 bytes from each key per step",
+  "custody": "exact source aliases until bounded close, with no owned candidate graph or copied key list"
+}

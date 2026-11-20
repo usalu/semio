@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudgetMsV1, shardTurnDriveStepsV1, type ShardTurnCarriers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts";
+import { continueOpeningTurns, driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudgetMsV1, shardTurnDriveStepsV1, type ShardTurnCarriers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts";
 
 /** 🧬️ The materialization module is READ, never imported: it reaches the repo library's lease store
  * (`node:sqlite`) and cannot be bundled into a renderer test environment — the same reason its own
@@ -276,10 +276,19 @@ describe("🚚️ the generated shard worker", () => {
   });
 
   it("counts every host message and yields a macrotask so the drive can actually see one", () => {
-    expect(source).toContain("hostInputSeq += 1;");
-    expect(source).toContain("const inputMark = hostInputSeq;");
-    expect(source).toContain("await driveYield();");
+    const handler = source.indexOf('self.addEventListener("message", async (event) => {');
+    const mark = source.indexOf("const inputMark = ++hostInputSeq;", handler);
+    const dispatch = source.indexOf("const msg = event.data ?? {};", handler);
+    const yieldAt = source.indexOf("await driveYield();", mark);
+    const interrupt = source.indexOf('if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }', yieldAt);
+    expect(handler).toBeGreaterThanOrEqual(0);
+    expect(mark).toBeGreaterThan(handler);
+    expect(dispatch).toBeGreaterThan(mark);
+    expect(yieldAt).toBeGreaterThan(dispatch);
+    expect(interrupt).toBeGreaterThan(yieldAt);
     expect(source).toContain("new MessageChannel()");
+    expect(source).toContain("driveYieldWaiters.push(resolve); driveYieldChannel.port2.postMessage(0);");
+    expect(source).toContain("driveYieldWaiters.shift()");
     expect(source).not.toContain("setTimeout(() => resolve");
   });
 
@@ -300,5 +309,33 @@ describe("🚚️ the generated shard worker", () => {
     for (const unridden of ['postBeat("progress")', 'postBeat("module-fetch")', 'postBeat("module-ready")', 'postBeat("actor-ready")']) {
       expect(workerSource).toContain(unridden);
     }
+  });
+});
+
+
+describe("opening across worker crossings", () => {
+  it("delivers the original receipt-bearing crossing after quiet work", async () => {
+    const captured = silent({ lifecycleReceipt: new Uint8Array([1]) });
+    const turns = [silent(), captured];
+    const result = await continueOpeningTurns(silent(), () => true, async () => turns.shift()!);
+    expect(result).toBe(captured);
+    expect(turns).toHaveLength(0);
+  });
+
+  it("bounds silent openings and preserves the poll failure", async () => {
+    const turn = silent();
+    let polls = 0;
+    await expect(continueOpeningTurns(turn, () => true, async () => { polls++; return turn; })).rejects.toThrow("open-crossing-limit");
+    expect(polls).toBe(CONTRACT.hostContinuationCeiling);
+    const failure = new Error("worker lost");
+    await expect(continueOpeningTurns(turn, () => true, async () => { throw failure; })).rejects.toBe(failure);
+  });
+
+  it("preserves visible and terminal crossings and observes cancellation", async () => {
+    const refused = async () => { throw new Error("unexpected poll"); };
+    for (const turn of [silent({ effects: [{}] }), silent({ status: { tag: "faulted" } }), silent({ nextWake: 1 })]) {
+      expect(await continueOpeningTurns(turn, () => true, refused)).toBe(turn);
+    }
+    await expect(continueOpeningTurns(silent(), () => { throw new Error("closed"); }, refused)).rejects.toThrow("closed");
   });
 });

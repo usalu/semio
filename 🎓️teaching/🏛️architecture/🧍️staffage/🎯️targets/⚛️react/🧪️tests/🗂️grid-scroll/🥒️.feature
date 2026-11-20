@@ -19,3 +19,14 @@ Feature: Card grid on a short desktop or tablet
     Given a viewport no wider than 767 pixels
     When the overview or a category is shown
     Then that level is in swipe mode
+
+  Scenario: The all-assets pane behind the glass shows its visible cards
+    Given a catalog with 24 assets and two cells intersecting the inert preview
+    Then the preview reserves 24 cells and mounts two cards
+    When the all-assets page opens
+    Then all 24 cards are accessible
+
+  Scenario: The featured categories load independently
+    Given the featured frieze needs two authored categories
+    When the first category finishes while the second load is pending
+    Then the second category keeps its original load

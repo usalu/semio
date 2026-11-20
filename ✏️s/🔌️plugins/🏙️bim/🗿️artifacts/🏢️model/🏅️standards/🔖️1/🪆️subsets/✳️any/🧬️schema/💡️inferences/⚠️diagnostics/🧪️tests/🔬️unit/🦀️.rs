@@ -124,11 +124,11 @@ async fn walls_that_cross_or_join_do_not_clash_but_overlapping_walls_do() {
     snapshot.walls.get_mut("w-part").expect("wall").axis = line(2.0, 1.0, 2.0, 5.0);
     snapshot.walls.get_mut("w-part").expect("wall").location = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LocationLine::Center;
     let mut crossing = snapshot.clone();
-    crossing.walls.insert("w-cross".into(), crossing.walls["w-part"].clone());
+    crossing.walls.cold_insert("w-cross".into(), crossing.walls["w-part"].clone());
     crossing.walls.get_mut("w-cross").expect("wall").axis = line(1.0, 3.0, 4.0, 3.0);
     assert!(compute_diagnostics(&crossing).iter().all(|row| !row.code.slug().starts_with("clash.wall-wall")), "an X join is a join");
     let mut overlapping = snapshot.clone();
-    overlapping.walls.insert("w-twin".into(), overlapping.walls["w-part"].clone());
+    overlapping.walls.cold_insert("w-twin".into(), overlapping.walls["w-part"].clone());
     overlapping.walls.get_mut("w-twin").expect("wall").axis = line(2.0, 2.0, 2.0, 5.5);
     let found = compute_diagnostics(&overlapping);
     assert!(has(&found, DiagnosticCode::ClashWallWall, &["w-part", "w-twin"]), "{:?}", rows(&found));
@@ -216,7 +216,7 @@ async fn degenerate_loops_profiles_and_paths_are_reported() {
 #[semio_framework_async_macros::async_test]
 async fn a_space_whose_walls_do_not_close_is_not_enclosed_and_a_seed_in_a_wall_is_reported() {
     let mut open = clean();
-    open.walls.remove("w-west");
+    open.walls.cold_remove("w-west");
     let found = compute_diagnostics(&open);
     assert!(has(&found, DiagnosticCode::SpaceNotEnclosed, &["sp-hall"]), "{:?}", rows(&found));
     assert!(!has(&found, DiagnosticCode::SpaceNotEnclosed, &["sp-living"]), "an explicit outline needs no walls");
@@ -234,10 +234,10 @@ async fn dangling_references_orphans_and_duplicate_ids_are_reported() {
     snapshot.walls.get_mut("w-east").expect("wall").top = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Storey { storey: "st-x".into(), offset: 0.0 };
     snapshot.walls.get_mut("w-west").expect("wall").storey = "st-y".into();
     snapshot.wall_types.get_mut("wt-150").expect("type").layers[0].material = "m-x".into();
-    snapshot.properties.insert("ghost".into(), Default::default());
+    snapshot.properties.cold_insert("ghost".into(), Default::default());
     let beam = snapshot.beams["b-1"].clone();
-    snapshot.columns.insert("b-1".into(), snapshot.columns["c-1"].clone());
-    snapshot.beams.insert("b-2".into(), beam);
+    snapshot.columns.cold_insert("b-1".into(), snapshot.columns["c-1"].clone());
+    snapshot.beams.cold_insert("b-2".into(), beam);
     let found = compute_diagnostics(&snapshot);
     use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::*;
     for (code, elements) in [
@@ -260,12 +260,12 @@ async fn viewports_and_revision_rows_whose_sheet_or_view_is_gone_are_reported_in
     use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Sheet, SheetRevision, Viewport};
     let mut snapshot = clean();
     let view = snapshot.views.keys().next().expect("the clean house has a view").clone();
-    snapshot.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Plans"));
-    snapshot.viewports.insert("vp-ok".into(), Viewport::standard("sh-1", &view, Point2 { x: 30.0, y: 30.0 }));
+    snapshot.sheets.cold_insert("sh-1".into(), Sheet::standard("A-101", "Plans"));
+    snapshot.viewports.cold_insert("vp-ok".into(), Viewport::standard("sh-1", &view, Point2 { x: 30.0, y: 30.0 }));
     assert!(!compute_diagnostics(&snapshot).iter().any(|row| matches!(row.code, DiagnosticCode::RefViewportSheet | DiagnosticCode::RefViewportView | DiagnosticCode::RefRevisionSheet)), "a viewport on an existing sheet showing an existing view is clean");
-    snapshot.viewports.insert("vp-no-sheet".into(), Viewport::standard("sh-x", &view, Point2 { x: 30.0, y: 30.0 }));
-    snapshot.viewports.insert("vp-no-view".into(), Viewport::standard("sh-1", "v-x", Point2 { x: 30.0, y: 30.0 }));
-    snapshot.sheet_revisions.insert("rev-no-sheet".into(), SheetRevision { sheet: "sh-y".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
+    snapshot.viewports.cold_insert("vp-no-sheet".into(), Viewport::standard("sh-x", &view, Point2 { x: 30.0, y: 30.0 }));
+    snapshot.viewports.cold_insert("vp-no-view".into(), Viewport::standard("sh-1", "v-x", Point2 { x: 30.0, y: 30.0 }));
+    snapshot.sheet_revisions.cold_insert("rev-no-sheet".into(), SheetRevision { sheet: "sh-y".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
     let found = compute_diagnostics(&snapshot);
     for (code, elements) in [(DiagnosticCode::RefViewportSheet, "vp-no-sheet"), (DiagnosticCode::RefViewportView, "vp-no-view"), (DiagnosticCode::RefRevisionSheet, "rev-no-sheet")] {
         let row = found.iter().find(|row| row.code == code && row.elements == [elements]).unwrap_or_else(|| panic!("{code:?} {elements} in {:?}", rows(&found)));

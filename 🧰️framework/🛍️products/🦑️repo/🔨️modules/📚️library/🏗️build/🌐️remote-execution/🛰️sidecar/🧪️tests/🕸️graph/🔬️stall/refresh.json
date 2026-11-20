@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "claims": [
+    {"mode": "structural", "defer": true},
+    {"mode": "selected", "defer": false},
+    {"mode": "waiting", "defer": false},
+    {"mode": "other-root", "defer": false},
+    {"mode": "other-holder", "defer": false},
+    {"mode": "reused-pid", "defer": false},
+    {"mode": "deposed", "defer": false},
+    {"mode": "other-token", "defer": false},
+    {"mode": "substituted-directory", "defer": false},
+    {"mode": "substituted-file", "defer": false},
+    {"mode": "released", "defer": false}
+  ]
+}

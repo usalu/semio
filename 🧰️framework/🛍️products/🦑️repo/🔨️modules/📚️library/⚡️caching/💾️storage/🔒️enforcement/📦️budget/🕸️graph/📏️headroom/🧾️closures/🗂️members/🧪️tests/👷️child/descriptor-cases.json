@@ -1,0 +1,32 @@
+[
+  {
+    "scope": "leaf",
+    "observation": "replaced",
+    "code": "CLOSURE_DESCRIPTOR_STAMP",
+    "detail": "ino"
+  },
+  {
+    "scope": "authority",
+    "observation": "replaced",
+    "code": "CLOSURE_DESCRIPTOR_STAMP",
+    "detail": "ino"
+  },
+  {
+    "scope": "pack index",
+    "observation": "replaced",
+    "code": "CLOSURE_DESCRIPTOR_STAMP",
+    "detail": "ino"
+  },
+  {
+    "scope": "leaf",
+    "observation": "directory",
+    "code": "CLOSURE_DESCRIPTOR_TYPE",
+    "detail": "regular file"
+  },
+  {
+    "scope": "leaf",
+    "observation": "oversize",
+    "code": "CLOSURE_DESCRIPTOR_SIZE",
+    "detail": "file byte bound"
+  }
+]

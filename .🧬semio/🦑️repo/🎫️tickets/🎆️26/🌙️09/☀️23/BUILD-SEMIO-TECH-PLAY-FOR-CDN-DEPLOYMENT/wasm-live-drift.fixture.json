@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "original": "fn opaque() {}",
+  "edited": "fn opaque() { }",
+  "ordinaryCompilerStatus": 101,
+  "restartStatus": 75,
+  "budgetMilliseconds": 10000,
+  "features": ["fixture-feature"],
+  "selectors": ["profile.release.opt-level=\"s\"", "profile.release.codegen-units=16"],
+  "expectedWrapperFlags": ["build", "--mode", "no-install", "--profile", "release", "--target", "web"]
+}

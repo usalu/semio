@@ -881,6 +881,15 @@ export function sampleOf(asset: Asset, query: EvaluationQuery): Sample {
 
 /** ▶️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the absolute query time (never wrapped, 0 for a pose without time) and `clipTimeS` the wrapped or clamped clip phase (0 for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
 export function evaluate(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
+  return evaluatedState(asset, query, selector, true);
+}
+
+/** 🖼️ Evaluates a drawing while deferring other projections and kinematics until a consumer reads them. */
+export function evaluateDrawing(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
+  return evaluatedState(asset, query, selector, false);
+}
+
+function evaluatedState(asset: Asset, query: EvaluationQuery, selector: RepresentationSelector | undefined, eager: boolean): EvaluatedState {
   const geometry = geometryOf(asset, selector);
   const { sample: pure, timeline } = sampleQuery(asset, query);
   const { sample, respiration } = withRespiration(asset, query, pure);
@@ -894,16 +903,25 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
     const tip = vec3([f.o[0] + f.u[0] * bone.lengthM, f.o[1] + f.u[1] * bone.lengthM, f.o[2] + f.u[2] * bone.lengthM]);
     bones[bone.id] = { id: bone.id, world: matrix, origin: apply(matrix, 0, 0), tip, frame: { o: vec3(f.o), u: vec3(f.u), v: vec3(f.v), w: vec3(f.w) }, angleRad: rotationRad(matrix), offset: effective };
   }
-  const twins = new Map<string, Shape[]>();
-  for (const shape of geometry.elevation) {
-    if (shape.solid !== undefined) continue;
-    twins.set(`${shape.id} ${shape.bone}`, [shape]);
-    if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
-  }
-  const shapes: Record<PlanarViewpoint, EvaluatedShape[]> = {
-    elevation: geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation", geometry.paper, kin)),
-    front: geometry.front.map((shape) => placeShape(asset, shape, world, "front", geometry.paper, kin, twins)),
-    plan: geometry.plan.map((shape) => placeShape(asset, shape, world, "plan", geometry.paper, kin, twins)),
+  let twins: Map<string, Shape[]> | undefined;
+  const projection = (view: "front" | "plan"): EvaluatedShape[] => {
+    if (twins === undefined) {
+      twins = new Map();
+      for (const shape of geometry.elevation) {
+        if (shape.solid !== undefined) continue;
+        twins.set(`${shape.id} ${shape.bone}`, [shape]);
+        if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
+      }
+    }
+    return geometry[view].map(shape => placeShape(asset, shape, world, view, geometry.paper, kin, twins));
+  };
+  const elevation = geometry.elevation.map(shape => placeShape(asset, shape, world, "elevation", geometry.paper, kin));
+  let front = eager ? projection("front") : undefined;
+  let plan = eager ? projection("plan") : undefined;
+  const shapes: EvaluatedState["shapes"] = {
+    elevation,
+    get front() { return front ??= projection("front"); },
+    get plan() { return plan ??= projection("plan"); },
   };
   const anchors: Record<Slug, { anchor: Anchor; at: Point; z: number }> = {};
   for (const anchor of asset.anchors) {
@@ -921,10 +939,13 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
   const extent = extentOf(drawn);
   const base = { bones, anchors };
   const bounds = Number.isFinite(extent.minX) ? extent : rigBounds(base);
+  const timeS = query.timeS ?? 0;
+  const motionOf = () => kinematics(asset, timeline, timeS);
+  let motion = eager ? motionOf() : undefined;
   return {
     asset,
     query,
-    timeS: query.timeS ?? 0,
+    timeS,
     clipTimeS: query.kind === "pose" ? 0 : sample.clipTimeS,
     frame: sample.frame,
     phase: sample.phase,
@@ -939,6 +960,6 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
     cycle: query.kind === "clip" ? cycleOf(query.timeS, clipOf(asset, query.clip).durationS, clipOf(asset, query.clip).loop) : 0,
     representation: geometry.representation,
     bounds,
-    kinematics: kinematics(asset, timeline, query.kind === "pose" ? (query.timeS ?? 0) : query.timeS),
+    get kinematics() { return motion ??= motionOf(); },
   };
 }

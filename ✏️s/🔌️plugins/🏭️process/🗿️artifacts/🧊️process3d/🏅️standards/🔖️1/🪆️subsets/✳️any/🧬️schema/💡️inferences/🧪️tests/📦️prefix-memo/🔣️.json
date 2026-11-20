@@ -1,0 +1,10 @@
+{
+  "emptySteps": 257,
+  "stockSize": [2, 2, 2],
+  "cutSize": [4, 4, 4],
+  "attachmentSize": [1, 2, 3],
+  "memoCapacity": 128,
+  "oldestRetainedPrefix": 131,
+  "stockVolume": 8,
+  "restoredVolume": 6
+}

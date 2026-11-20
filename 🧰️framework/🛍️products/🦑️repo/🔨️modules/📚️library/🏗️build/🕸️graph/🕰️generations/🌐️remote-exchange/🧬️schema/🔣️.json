@@ -14,6 +14,7 @@
         "maximumSnapshotBytes": 134217728,
         "maximumDocuments": 32768,
         "maximumDocumentBytes": 536870912,
+        "restoreBatchBytes": 16777216,
         "concurrency": 8,
         "probeTimeoutSeconds": 5,
         "probeRetries": 1,
@@ -25,6 +26,17 @@
         "servingTotalMegabytes": 24000,
         "rankCandidates": 3,
         "allScope": "all"
+      }
+    },
+    "HeadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "origin", "generation", "scope"],
+      "properties": {
+        "manifest": { "$ref": "#/definitions/Note/properties/manifest" },
+        "origin": { "$ref": "#/definitions/Note/properties/origin" },
+        "generation": { "$ref": "#/definitions/Note/properties/generation" },
+        "scope": { "type": "string", "pattern": "^(all|[a-f0-9]{64})$" }
       }
     },
     "Note": {

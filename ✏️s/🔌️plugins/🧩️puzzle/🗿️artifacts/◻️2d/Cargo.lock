@@ -2691,6 +2691,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-source-hold",
 ]
 
 [[package]]
@@ -4992,6 +4993,13 @@ dependencies = [
 [[package]]
 name = "semio-framework-value-sort"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-value-source-hold"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
 
 [[package]]
 name = "semio-os-channel"
@@ -14537,6 +14545,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-schema-2",
@@ -14580,6 +14589,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-lexer"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]

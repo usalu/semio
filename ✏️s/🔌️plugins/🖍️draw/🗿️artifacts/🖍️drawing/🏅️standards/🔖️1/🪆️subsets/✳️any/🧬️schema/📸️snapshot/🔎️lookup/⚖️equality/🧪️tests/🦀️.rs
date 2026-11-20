@@ -1,5 +1,63 @@
 //! 🧪️ Original native field equality matches independent serde values with denial and every partial cut.
 use super::*;
-use semio_framework_value::{paged::PagedUtf8,retained_clone::RetainedCloneSource};
-fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128}}
-#[test]fn original_text_and_array_equality_matches_serde_without_payload_copy(){let cases=[("雪\0a","雪\0a"),("snow","snow!"),("","")];for(l,r)in cases{for cut in [0,1,4,10000]{let g=grant();let mut l=RetainedCloneSource::admit_owned(PagedUtf8::<{usize::MAX}>::from(l),(),g).unwrap_or_else(|_|panic!("original left")).0;let mut r=RetainedCloneSource::admit_owned(PagedUtf8::<{usize::MAX}>::from(r),(),g).unwrap_or_else(|_|panic!("original right")).0;let expected=serde_json::to_value(l.borrow().get()).unwrap()==serde_json::to_value(r.borrow().get()).unwrap();let mut c=DrawingOriginalEquality::default();for _ in 0..cut{let d=c.demand(l.borrow(),r.borrow()).unwrap();let denied=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g};if d.copy_bytes>0{let(s,b,r)=semio_framework_trace_memory_testing::observe_backing(||c.advance(l.borrow(),r.borrow(),denied).unwrap());assert_eq!(s.progress(),Default::default());assert_eq!((b,r),(0,0));}let(s,b,r)=semio_framework_trace_memory_testing::observe_backing(||c.advance(l.borrow(),r.borrow(),g).unwrap());assert_eq!((b,r),(s.progress().retained_capacity_bytes,s.progress().released_bytes));if let Some(equal)=c.result(){assert_eq!(equal,expected);break}}if cut==10000{assert_eq!(c.result(),Some(expected))}c.begin_close();while !c.terminal_is_empty(){c.close_step(g).unwrap();}while !l.terminal_is_empty(){l.close_step(g).unwrap();}while !r.terminal_is_empty(){r.close_step(g).unwrap();}}}}
+use super::super::original::test_step;
+use semio_framework_value::{paged::PagedUtf8, retained_clone::RetainedCloneGrant};
+use semio_framework_value_clone_source_testing::FixtureSource;
+
+fn grant() -> RetainedCloneGrant {
+    RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: 1 << 20,
+        maximum_capacity_bytes: 1 << 20,
+        maximum_release_bytes: 1 << 20,
+        maximum_depth: 128,
+    }
+}
+
+#[test]
+fn original_text_equality_matches_serde_without_payload_copy() {
+    let cases = [("雪\0a", "雪\0a"), ("snow", "snow!"), ("", "")];
+    for (left, right) in cases {
+        for cut in [0, 1, 4, 10_000] {
+            let grant = grant();
+            let left = FixtureSource::from_owner(PagedUtf8::<{usize::MAX}>::from(left));
+            let right = FixtureSource::from_owner(PagedUtf8::<{usize::MAX}>::from(right));
+            let expected = serde_json::to_value(left.borrow().get()).unwrap()
+                == serde_json::to_value(right.borrow().get()).unwrap();
+            let mut comparison = DrawingOriginalEquality::default();
+            for _ in 0..cut {
+                let demand = comparison.demand(left.borrow(), right.borrow()).unwrap();
+                if demand.copy_bytes > 0 {
+                    let denied = RetainedCloneGrant {
+                        maximum_copy_bytes: demand.copy_bytes - 1,
+                        ..grant
+                    };
+                    let step = test_step(denied, |effect| {
+                        comparison.advance(left.borrow(), right.borrow(), effect)
+                    });
+                    assert_eq!(step.progress(), Default::default());
+                    assert_eq!(comparison.demand(left.borrow(), right.borrow()).unwrap(), demand);
+                }
+                let step = test_step(grant, |effect| {
+                    comparison.advance(left.borrow(), right.borrow(), effect)
+                });
+                assert!(step.progress().fits(grant));
+                if let Some(equal) = comparison.result() {
+                    assert_eq!(equal, expected);
+                    break;
+                }
+            }
+            if cut == 10_000 {
+                assert_eq!(comparison.result(), Some(expected));
+            }
+            comparison.begin_close();
+            for _ in 0..10_000 {
+                if comparison.terminal_is_empty() {
+                    break;
+                }
+                test_step(grant, |effect| comparison.close_step(grant.maximum_copy_bytes, effect));
+            }
+            assert!(comparison.terminal_is_empty());
+        }
+    }
+}

@@ -16,6 +16,7 @@ import {
 import type { PresencePeer } from "@semio-tech/ui-react";
 import { scopedPresencePeersV1 } from "../🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export type ScopedPresenceBrowserCaseV1 = Readonly<{
   id: "a" | "b";
   scope: DocumentScope;
@@ -139,8 +140,8 @@ function ScopedPresenceBrowserShell({ config }: { readonly config: ScopedPresenc
           </section>
         );
       })}
-      <button type="button" id="close-a" onClick={closeA}>Close A</button>
-      <button type="button" id="heartbeat-b" onClick={() => heartbeat(config.cases[1])}>Heartbeat B</button>
+      <button {...sharedBorderlessBoxProps} type="button" id="close-a" onClick={closeA}>Close A</button>
+      <button {...sharedBorderlessBoxProps} type="button" id="heartbeat-b" onClick={() => heartbeat(config.cases[1])}>Heartbeat B</button>
     </main>
   );
 }

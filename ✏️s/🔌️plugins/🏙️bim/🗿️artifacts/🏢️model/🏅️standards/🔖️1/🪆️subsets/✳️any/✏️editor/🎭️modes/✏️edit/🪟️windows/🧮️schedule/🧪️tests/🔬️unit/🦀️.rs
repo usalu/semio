@@ -39,7 +39,7 @@ fn house() -> (ModelSnapshot, ModelInference) {
     let mut snapshot = decode_model_snapshot_json((*HOUSE)).expect("the committed house decodes");
     snapshot.spaces.get_mut("sp-1").expect("the living room").floor_finish = Some("m-wood".into());
     for key in PRESETS {
-        snapshot.schedules.insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
+        snapshot.schedules.cold_insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
     }
     let inference = ModelInference::infer(&snapshot).expect("infers");
     (snapshot, inference)

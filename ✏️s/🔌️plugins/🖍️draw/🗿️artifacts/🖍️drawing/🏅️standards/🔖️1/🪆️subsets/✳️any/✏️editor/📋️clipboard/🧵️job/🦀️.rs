@@ -13,7 +13,11 @@ use semio_s_artifact_draw_drawing_editor_interaction::clipboard::invert;
 use semio_plugin::{ArtifactReservedToolJobRequest,ArtifactReservedToolInput,EditorApp,Emit,Effect,EphemeralEmit};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_job::{InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
-use semio_framework_value::{DslValue, ValueError, RetireOwned, NativeEncodeControl, NativeEncodeContinuation, retained_clone::{RetainedCloneClose,RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}};
+use semio_framework_value::{
+    DslValue, NativeEncodeContinuation, NativeEncodeControl, OriginalRetirementPoll, RetainedAllocationEffect,
+    RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, RetireOwned, ValueError, ValueRefusalKind,
+    retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep},
+};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeContinuation};
 use semio_framework_value::retirement::RetireOwned as RetireAuthority;
 type App=EditorApp<crate::DrawingPlayApp>;
@@ -77,7 +81,7 @@ fn packet_node_mut(packet:&mut DrawingClipboard,address:DrawingLayerAddress)->Op
 fn replace_native(target:&mut NativeText,text:&str,pending:&mut NativeText,rejected:&mut Option<NativeText>,retired:&mut NativeRetired,admitted:&mut usize,cx:&mut StepContext<'_>)->Result<(),semio_framework::Fault>{
     if text.is_empty()||text.len()>MAX_ID_BYTES||!pending.is_empty()||rejected.is_some(){return Err(fault(refused()));}
     let mut accepted=|_|!cx.is_cancelled();let mut control=NativeDecodeControl::new(MAX_NATIVE_BYTES.checked_sub(*admitted).ok_or_else(||fault(refused()))?,&mut accepted);
-    let result=(||{while !retired.has_reserved_slot(){let bytes=retired.next_allocation_bytes().map_err(fault)?;control.charge(bytes).map_err(fault)?;retired.reserve_one(bytes).map_err(|error|fault(error.refusal()))?;}
+    let result=(||{while !retired.has_reserved_slot(){let bytes=retired.next_allocation_bytes().map_err(fault)?;control.charge(bytes).map_err(fault)?;retired.reserve_one_cold(bytes).map_err(|error|fault(error.refusal()))?;}
         let mut at=0;while at<text.len(){let mut end=(at+1024).min(text.len());while !text.is_char_boundary(end){end-=1;}pending.try_push_str_controlled(&text[at..end],&mut control).map_err(fault)?;at=end;}
         let original=std::mem::replace(target,std::mem::take(pending));retired.push_reserved(original).map_err(|original|{*rejected=Some(original);fault(refused())})?;Ok(())
     })();*admitted=(*admitted).checked_add(control.owned_bytes()).ok_or_else(||fault(refused()))?;result
@@ -179,15 +183,54 @@ impl DrawingClipboardJob{
                 if workspace.pending_asset.is_none(){let copier=self.asset_clone.get_or_insert_with(Clone::new);if !copier.step(asset_ref,cx).map_err(fault)?{return Ok(false);}let key=copy_identity(id,&mut workspace.buffer_admitted,cx)?;let asset=copier.take().ok_or_else(||fault(refused()))?;workspace.pending_asset=Some((key,asset));}let mut accepted=|_|!cx.is_cancelled();let mut control=NativeDecodeControl::new(MAX_NATIVE_BYTES.checked_sub(workspace.buffer_admitted).ok_or_else(||fault(refused()))?,&mut accepted);let result=workspace.packet.as_mut().unwrap().assets.append_candidate_step(&mut workspace.pending_asset,&mut self.asset_append,&mut control);workspace.buffer_admitted=workspace.buffer_admitted.checked_add(control.owned_bytes()).ok_or_else(||fault(refused()))?;if !result.map_err(fault)?{return Ok(false);}self.asset_clone=None;self.asset_search=0;self.located_asset=None;self.at+=1;
             },
             4=>{
-                cx.set_stage("clipboard-encode");let grant=cx.retained_grant();let mut accepted=|_|!cx.is_cancelled();let mut control=if let Some(receipt)=self.encoding.take(){NativeEncodeControl::resume(receipt,&mut accepted).map_err(fault)?}else{NativeEncodeControl::new(MAX_BYTES,&mut accepted)};
-                let output=workspace.encoder.as_mut().unwrap().step(32,&mut control,grant).map_err(fault)?;self.encoding=Some(control.pause().map_err(fault)?);
-                if let Some(output)=output{workspace.text=output;self.phase=if request.tool_id=="cut"{20}else{8};self.at=0;}
+                cx.set_stage("clipboard-encode");let grant=cx.retained_grant();let mut accepted=|_|!cx.is_cancelled();
+                let mut control=match self.encoding.take(){
+                    Some(receipt)=>NativeEncodeControl::resume(receipt,&mut accepted).map_err(|(error,original)|{self.encoding=Some(original);fault(error)})?,
+                    None=>NativeEncodeControl::new(MAX_BYTES,&mut accepted),
+                };
+                let output=workspace.encoder.as_mut().unwrap().step(32,&mut control,grant);
+                self.encoding=Some(control.pause().map_err(|(error,_)|fault(error))?);
+                if let Some(output)=output.map_err(fault)?{workspace.text=output;self.phase=if request.tool_id=="cut"{20}else{8};self.at=0;}
             },
             5=>{
-                cx.set_stage("clipboard-parse");let grant=cx.retained_grant();let mut accepted=|_|!cx.is_cancelled();let mut control=if let Some(receipt)=self.decoding.take(){NativeDecodeControl::resume(receipt,&mut accepted).map_err(fault)?}else{NativeDecodeControl::new(MAX_NATIVE_BYTES,&mut accepted)};
-                let value=workspace.parser.as_mut().unwrap().step(&workspace.text,32,&mut control,grant).map_err(fault)?;self.decoding=Some(control.pause().map_err(fault)?);if let Some(value)=value{workspace.hydration=Some(decode::ClipboardHydration::new(value));self.phase=6;}
+                cx.set_stage("clipboard-parse");
+                let mut receipt=None;
+                let invocation=cx.with_original_effect(cx.retained_grant(),|cx,effect|->Result<bool,semio_framework::Fault>{
+                    let mut accepted=|_|!cx.is_cancelled();
+                    let mut control=match self.decoding.take(){
+                        Some(original)=>NativeDecodeControl::resume(original,&mut accepted).map_err(|(error,original)|{self.decoding=Some(original);fault(error)})?,
+                        None=>NativeDecodeControl::new(MAX_NATIVE_BYTES,&mut accepted),
+                    };
+                    let parser=workspace.parser.as_mut().unwrap();
+                    let units=effect.remaining_work_units().map_err(fault)?.min(32) as usize;
+                    let parsed=parser.step(&workspace.text,units,&mut control,effect);
+                    receipt=Some((parser.normal_step_progress(),effect.performed_work()));
+                    let result=parsed.map(|value|{
+                        if let Some(value)=value{workspace.hydration=Some(decode::ClipboardHydration::new(value));true}else{false}
+                    });
+                    self.decoding=Some(control.pause().map_err(|(error,_)|fault(error))?);
+                    result.map_err(fault)
+                });
+                if let Some((physical,work))=receipt{
+                    cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));
+                    cx.consume_retained(physical).map_err(fault)?;
+                }
+                if let Some((done,_))=invocation.map_err(fault)?{if done?{self.phase=6;}}
+                return Ok(false);
             },
-            6=>{cx.set_stage("clipboard-hydrate");let mut accepted=|_|!cx.is_cancelled();let mut control=NativeDecodeControl::resume(self.decoding.take().ok_or_else(||fault(refused()))?,&mut accepted).map_err(fault)?;let done=workspace.hydration.as_mut().unwrap().step(&mut control).map_err(fault)?;self.decoding=Some(control.pause().map_err(fault)?);if done{let packet=&mut workspace.hydration.as_mut().unwrap().packet;workspace.packet=Some(std::mem::replace(packet,DrawingClipboard{schema:String::new(),roots:Vec::new(),selected:Vec::new(),assets:Default::default()}));self.phase=29;}},
+            6=>{
+                cx.set_stage("clipboard-hydrate");
+                let mut accepted=|_|!cx.is_cancelled();
+                let original=self.decoding.take().ok_or_else(||fault(refused()))?;
+                let mut control=NativeDecodeControl::resume(original,&mut accepted).map_err(|(error,original)|{self.decoding=Some(original);fault(error)})?;
+                let done=workspace.hydration.as_mut().unwrap().step(&mut control);
+                self.decoding=Some(control.pause().map_err(|(error,_)|fault(error))?);
+                if done.map_err(fault)?{
+                    let packet=&mut workspace.hydration.as_mut().unwrap().packet;
+                    workspace.packet=Some(std::mem::replace(packet,DrawingClipboard{schema:String::new(),roots:Vec::new(),selected:Vec::new(),assets:Default::default()}));
+                    self.phase=29;
+                }
+            },
             8=>{self.phase=37;self.at=0;}
             37=>{
                 cx.set_stage("clipboard-publication-admission");
@@ -319,13 +362,42 @@ impl DrawingClipboardJob{
         }
         self.complete=true;if failed{self.outcomes.fault("drawing.clipboard-refused")}else{DrawingJobTurn::Complete}
     }
-    fn demands(&self,copy:usize)->Result<RetainedCloneGrant,ValueError>{if !self.outcomes.terminal_is_empty(){let demand=self.outcomes.retirement_demands()?;return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth});}if let Some(owner)=self.layer_clone.as_ref(){return owner.close_demands(copy);}if let Some(owner)=self.asset_clone.as_ref(){return owner.close_demands(copy);}let demand=self.retirement.next_owner_demands::<Workspace>(self.owner.is_some(),&None,copy)?;Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
+    fn traversal_close_bytes(&self) -> usize {
+        usize::from(self.locator.is_some()) * size_of::<Option<DrawingLayerLocator>>()
+            + usize::from(self.footprint.is_some()) * size_of::<Option<DrawingLayerCloneWorkAuthority>>()
+            + usize::from(self.tree.is_some()) * size_of::<Option<TreeCursor>>()
+    }
+    fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.outcomes.terminal_is_empty() {
+            return self.outcomes.retirement_demands();
+        }
+        let copy_bytes = self.traversal_close_bytes();
+        if copy_bytes > 0 {
+            return Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
+        }
+        if let Some(owner) = &self.layer_clone {
+            return owner.close_demands(body);
+        }
+        if let Some(owner) = &self.asset_clone {
+            return owner.close_demands(body);
+        }
+        if !self.retirement.is_empty() {
+            return self.retirement.demands(body);
+        }
+        if self.encoding.is_some() {
+            return self.retirement.next_owner_demands::<NativeEncodeContinuation>(true, &None, body);
+        }
+        if self.decoding.is_some() {
+            return self.retirement.next_owner_demands::<NativeDecodeContinuation>(true, &None, body);
+        }
+        self.retirement.next_owner_demands::<Workspace>(self.owner.is_some(), &None, body)
+    }
 }
 impl DrawingClipboardJob{
     fn turn(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->DrawingJobTurn{
         if self.outcomes.faulted(){return DrawingJobTurn::Fault;}
         if self.closing||cx.is_cancelled(){return DrawingJobTurn::Cancelled;}if self.complete{return DrawingJobTurn::Complete;}
-        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let placement_turn=self.phase==34;let fuel_before=cx.fuel_remaining();let result=self.advance(request,cx);if !placement_turn{cx.consume_fuel(1);}else if cx.fuel_remaining()==fuel_before&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}match result{Ok(true)=>return self.publish(request,Ok(())),Ok(false)=>{},Err(error)=>return self.publish(request,Err(error))}}
+        while !cx.should_yield(){if cx.is_cancelled(){return DrawingJobTurn::Cancelled;}let effect_turn=matches!(self.phase,5|34);let fuel_before=cx.fuel_remaining();let result=self.advance(request,cx);if !effect_turn{cx.consume_fuel(1);}else if cx.fuel_remaining()==fuel_before&&matches!(&result,Ok(false)){return DrawingJobTurn::Yield;}match result{Ok(true)=>return self.publish(request,Ok(())),Ok(false)=>{},Err(error)=>return self.publish(request,Err(error))}}
         DrawingJobTurn::Yield
     }
 }
@@ -352,35 +424,70 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<App> for Drawi
     }
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{self.outcomes.borrow_outcome(descriptor)}
     fn begin_close(&mut self){self.closing=true;}
-    fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
-        let grant=self.demands(body)?;Ok(semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,capacity_bytes:grant.maximum_capacity_bytes,release_bytes:grant.maximum_release_bytes,depth:grant.maximum_depth})
+    fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.demands(body)
     }
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_one(grant))?;
+        let step = if self.closing && !self.outcomes.terminal_is_empty() {
+            self.outcomes.close_step(cx)?
+        } else {
+            let body = cx.retained_grant().maximum_copy_bytes;
+            let demand = self.close_demands(body)?;
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| self.close_one(body, effect))?
+        };
         Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
     fn terminal_is_empty(&self)->bool{self.closing&&self.owner.is_none()&&self.retirement.is_empty()&&self.layer_clone.is_none()&&self.asset_clone.is_none()&&self.encoding.is_none()&&self.decoding.is_none()&&self.locator.is_none()&&self.footprint.is_none()&&self.tree.is_none()&&self.outcomes.terminal_is_empty()}
 }
 impl DrawingClipboardJob{
-    fn close_one(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-        use semio_framework_value::{RetainedWorkOutcome,retained_clone::RetainedCloneProgress};
-        if !self.closing{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-        if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant);}
-        if self.locator.is_some()||self.footprint.is_some()||self.tree.is_some(){
-            let bytes=size_of::<Option<DrawingLayerLocator>>()+size_of::<Option<DrawingLayerCloneWorkAuthority>>()+size_of::<Option<TreeCursor>>();
-            if grant.maximum_items==0||grant.maximum_copy_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-            self.locator=None;self.footprint=None;self.tree=None;
-            return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1};
+    fn close_one(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let completed = |step| RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(step), work: 0 });
+        if !self.closing {
+            return completed(RetainedCloneStep::Progress(Default::default()));
         }
-        if let Some(owner)=self.layer_clone.as_mut(){let turn=owner.close_step(grant);if owner.terminal_is_empty(){self.layer_clone=None;}return turn;}
-        if let Some(owner)=self.asset_clone.as_mut(){let turn=owner.close_step(grant);if owner.terminal_is_empty(){self.asset_clone=None;}return turn;}
-        if self.owner.is_some(){
-            let turn=self.retirement.begin_granted(&mut self.owner,grant);
-            return RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default())))};
+        let copy_bytes = self.traversal_close_bytes();
+        if copy_bytes > 0 {
+            let before = effect.performed_work();
+            let result = effect.performed(1).and_then(|admitted| {
+                if !admitted {
+                    return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "Clipboard traversal retirement exceeded original work"));
+                }
+                self.locator = None;
+                self.footprint = None;
+                self.tree = None;
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }))
+            });
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome {
+                result: result.map_err(Into::into), work: effect.performed_work() - before,
+            });
         }
-        if !self.retirement.is_empty(){return self.retirement.step_granted(grant);}
-        self.encoding=None;self.decoding=None;
-        RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
+        if let Some(owner) = &mut self.layer_clone {
+            let poll = owner.close_step(effect);
+            if owner.terminal_is_empty() {
+                self.layer_clone = None;
+            }
+            return poll;
+        }
+        if let Some(owner) = &mut self.asset_clone {
+            let poll = owner.close_step(effect);
+            if owner.terminal_is_empty() {
+                self.asset_clone = None;
+            }
+            return poll;
+        }
+        if !self.retirement.is_empty() {
+            return self.retirement.step_granted(body, effect);
+        }
+        let turn = if self.encoding.is_some() {
+            self.retirement.begin_granted(&mut self.encoding, effect)
+        } else if self.decoding.is_some() {
+            self.retirement.begin_granted(&mut self.decoding, effect)
+        } else {
+            self.retirement.begin_granted(&mut self.owner, effect)
+        };
+        RetainedWorkPoll::Complete(RetainedWorkOutcome {
+            result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),
+            work: turn.work,
+        })
     }
 }

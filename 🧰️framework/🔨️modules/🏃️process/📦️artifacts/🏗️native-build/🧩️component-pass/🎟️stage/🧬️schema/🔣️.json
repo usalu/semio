@@ -6,7 +6,8 @@
         "single",
         "available",
         "whole-host",
-        "cleanup"
+        "cleanup",
+        "io"
       ]
     },
     "Request": {

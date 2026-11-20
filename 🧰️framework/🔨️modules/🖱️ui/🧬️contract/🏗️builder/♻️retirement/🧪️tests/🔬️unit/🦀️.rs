@@ -30,6 +30,7 @@ fn close(owner: &mut BuiltTreeRetirement, grant: usize) -> usize {
 
 #[test]
 fn built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     let foreign: UiValue = serde_json::from_value(serde_json::json!({"foreign": ["Grüße"]})).unwrap();
@@ -75,6 +76,7 @@ fn built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values() 
 
 #[test]
 fn built_tree_retirement_closes_full_page_chain_beyond_observer_depth() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let pages = fixture["chain"]["pages"].as_u64().unwrap() as usize;
     assert_eq!(pages, UI_BUILT_CHILD_RETIRE_SLOTS);

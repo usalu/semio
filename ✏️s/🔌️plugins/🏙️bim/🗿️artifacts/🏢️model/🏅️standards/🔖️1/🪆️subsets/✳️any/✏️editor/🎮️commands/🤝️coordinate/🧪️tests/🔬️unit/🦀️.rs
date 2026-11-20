@@ -121,7 +121,7 @@ async fn a_viewpoint_is_captured_from_the_world_window_and_restored_into_it() {
     let mut ctx = BimDispatchCtx::default();
     let Ok(emit) = run(&snapshot, |doc, cfg| handle(&raised, doc, cfg, &mut ctx)) else { panic!("raises") };
     let [ModelMutation::CreateIssue(create)] = emit.artifact_mutations.as_slice() else { panic!("one create-issue") };
-    snapshot.issues.insert(create.id.clone(), Issue { viewpoint: None, ..create.issue.clone() });
+    snapshot.issues.cold_insert(create.id.clone(), Issue { viewpoint: None, ..create.issue.clone() });
 
     let mut world = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     world.world.camera = store::Viewport3dOrbit { position: [10.0, -6.0, 8.0], target: [3.0, 3.0, 1.5], zoom: 1.0, up: None };
@@ -147,7 +147,7 @@ async fn a_viewpoint_is_captured_from_the_world_window_and_restored_into_it() {
 #[semio_framework_async_macros::async_test]
 async fn viewpoints_need_a_world_window_and_an_issue_and_for_restoring_a_stored_viewpoint() {
     let mut snapshot = frame();
-    snapshot.issues.insert("i-1".into(), Issue { title: "x".into(), description: String::new(), status: IssueStatus::Open, priority: IssuePriority::Normal, assignee: String::new(), author: "UG".into(), created: "2026-10-09".into(), labels: Vec::new(), elements: Vec::new(), clash: None, viewpoint: None });
+    snapshot.issues.cold_insert("i-1".into(), Issue { title: "x".into(), description: String::new(), status: IssueStatus::Open, priority: IssuePriority::Normal, assignee: String::new(), author: "UG".into(), created: "2026-10-09".into(), labels: Vec::new(), elements: Vec::new(), clash: None, viewpoint: None });
     let mut world = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     let restore = RestoreViewpoint { issue: "i-1".into() };
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&restore, doc, cfg, &mut world))), Some("bim.issue.viewpoint-missing".to_string()));

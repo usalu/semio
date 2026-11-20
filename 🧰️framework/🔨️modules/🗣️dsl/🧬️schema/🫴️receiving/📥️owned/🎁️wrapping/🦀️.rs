@@ -64,7 +64,7 @@ impl<T:DslOwnedReceivingVariants>StatementReceiving<T>{
   if self.phase==3{if let Some(child)=self.child.as_mut(){let poll=child.take_into(&mut self.output.value,&mut effect.nested(child_grant(g)));if self.output.value.is_some(){self.phase=4}return settle(effect,normal(poll))}}
   local(effect,d,||{match self.phase{
    0=>{let Some(FieldValue::Statements(list))=source.as_ref()else{return Err(invalid())};let[(keyword,_)]=list.as_slice()else{return Err(invalid())};self.child=Some(T::receiving_cursor(keyword)?);*self.source.value=source.take();self.phase=1;},
-   1=>{let Some(FieldValue::Statements(list))=self.source.value.as_mut()else{return Err(invariant())};let(_,record)=list.pop().ok_or_else(invariant)?;*self.record.value=Some(FieldValue::Record(record));self.phase=2;},
+   1=>{let Some(FieldValue::Statements(list))=self.source.value.as_mut()else{return Err(invariant())};let [(_, record)] = list.as_mut_slice() else { return Err(invariant()); };*self.record.value=Some(FieldValue::Record(std::mem::take(record)));self.phase=2;},
    2=>self.phase=3,
    _=>return Err(invariant())}Ok(())})
  }

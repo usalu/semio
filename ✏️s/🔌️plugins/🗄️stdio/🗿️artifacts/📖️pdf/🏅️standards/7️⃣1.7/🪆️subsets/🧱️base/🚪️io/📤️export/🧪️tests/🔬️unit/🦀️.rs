@@ -485,7 +485,7 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
         let r=|num|ObjRef {num,gen:0};
         let mut objects=vec![PdfIndirectObject{id:r(1),value:PdfObject::Dict(vec![PdfDictEntry::new("Title",PdfObject::Ref(r(2))),PdfDictEntry::new("CreationDate",PdfObject::Ref(r(3))),PdfDictEntry::new("Opt",PdfObject::Ref(r(4)))] )},PdfIndirectObject{id:r(2),value},PdfIndirectObject{id:r(3),value:PdfObject::Str(case["date"].as_str().unwrap().as_bytes().to_vec())},PdfIndirectObject{id:r(4),value:PdfObject::Array(vec![PdfObject::Str(b"choice".to_vec())])},PdfIndirectObject{id:r(5),value:PdfObject::Str(vec![0,255,1])}];
         let mut trailer=vec![PdfDictEntry::new("Info",PdfObject::Ref(r(1)))];
-        crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer);
+        crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer,|id| (id.gen==0 && (1..=5).contains(&id.num)).then(||id.num as usize-1)).unwrap();
         assert_eq!(objects.len(),5);
         assert_eq!(objects[0].value.dict_get("Title"),Some(&PdfObject::Ref(r(2))));
         assert_eq!(objects[1].value,PdfObject::Text(title.into()));

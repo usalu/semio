@@ -364,3 +364,19 @@ async fn create_step_outcome_obeys_the_policy_matrix() {
 //#endregion 🔖️OutcomeLaws
 
 
+
+#[semio_framework_async_macros::async_test]
+async fn resize_stock_restores_authored_geometry_and_child_on_inverse() {
+    use semio_s_artifact_process_process3d_mut_stock::resize_stock::ResizeStock;
+    use semio_s_artifact_process_process3d_model::snapshot::working_solid_child_handle;
+    let base = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
+    let mutation = Process3dMutation::ResizeStock(ResizeStock { field: "width".into(), size: 2.0 });
+    let after = round_trip(&base, &mutation);
+    assert_eq!(after.stock_payload.solid, WorkingSolid::Box { width: 2.0, depth: 1.0, height: 1.0 });
+    assert_eq!(after.stock_solid, working_solid_child_handle("stock", &after.stock_payload.solid));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+
+    let mut rebound = base;
+    rebound.stock_solid = working_solid_child_handle("rebound", &rebound.stock_payload.solid);
+    assert_eq!(round_trip(&rebound, &mutation).stock_solid, after.stock_solid);
+}

@@ -1,4 +1,26 @@
 {
+  "readerSourceCases": [
+    {
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "fault": "changed",
+      "accepted": false
+    },
+    {
+      "fault": "missing",
+      "accepted": false
+    },
+    {
+      "fault": "duplicate",
+      "accepted": false
+    },
+    {
+      "fault": "extra",
+      "accepted": true
+    }
+  ],
   "cases": [
     {
       "current": true,

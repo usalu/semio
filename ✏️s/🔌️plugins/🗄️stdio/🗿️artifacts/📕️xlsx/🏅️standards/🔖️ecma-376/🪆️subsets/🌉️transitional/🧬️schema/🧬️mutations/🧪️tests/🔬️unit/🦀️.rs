@@ -53,6 +53,13 @@ fn stampable() -> XlsxSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn every_stamp_kind_satisfies_the_inverse_sum_law_and_stamping_round_trips() {
     let base = stampable();
+    assert_eq!(declared_pair_member(&base, MAIN_NAMESPACES).as_deref(), Some(STRICT_MAIN_NS));
+    assert_eq!(declared_relationship_base(&base, RELATIONSHIP_NAMESPACES).as_deref(), Some(STRICT_REL));
+    assert_eq!(base.worksheet_part_paths().len(), 3);
+    for path in base.worksheet_part_paths() {
+        let root = base.xml_part(&path).and_then(|part| part.document.root.as_ref()).unwrap();
+        assert!(declares_namespace(root, STRICT_MAIN_NS), "{path}");
+    }
     for mutation in stamp_conformance_class_mutations(false) {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }

@@ -1,0 +1,822 @@
+{
+ "summary": {
+  "en": "A 60 mm thermostatic radiator valve seen along its axis: an angle valve body with a pipe stub, a thermostat head collar and a setting knob that turns from the star setting to setting 5, with the flow and the head warmth following the knob.",
+  "de": "Ein Thermostat-Heizkörperventil von 60 mm in Achsrichtung gesehen: ein Eckventilkörper mit Rohranschluss, ein Thermostatkopf-Kragen und ein Einstellknopf, der von der Frostschutzstufe auf Stufe 5 dreht, wobei Durchfluss und Kopfwärme dem Knopf folgen."
+ },
+ "dimensions": {
+  "heightM": 0.145,
+  "widthM": 0.06,
+  "depthM": 0.09,
+  "massKg": 0.38
+ },
+ "rig": {
+  "kind": "mechanical",
+  "root": "body",
+  "bones": [
+   {
+    "id": "body",
+    "parent": null,
+    "x": 0,
+    "y": 0,
+    "angleDeg": 0,
+    "title": {
+     "en": "Angle valve body with pipe stub",
+     "de": "Eckventilkörper mit Rohranschluss"
+    },
+    "lengthM": 0.075,
+    "joint": {
+     "type": "fixed"
+    },
+    "mass": {
+     "kg": 0.26,
+     "comX": 0,
+     "comY": -0.02,
+     "distribution": "point",
+     "source": "authored-estimate"
+    }
+   },
+   {
+    "id": "head",
+    "parent": "body",
+    "x": 0,
+    "y": 0.04,
+    "angleDeg": 0,
+    "title": {
+     "en": "Thermostatic head collar with sensor",
+     "de": "Thermostatkopf-Kragen mit Fühler"
+    },
+    "lengthM": 0.03,
+    "joint": {
+     "type": "fixed"
+    },
+    "mass": {
+     "kg": 0.08,
+     "comX": 0,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate"
+    }
+   },
+   {
+    "id": "knob",
+    "parent": "head",
+    "x": 0,
+    "y": 0,
+    "angleDeg": 0,
+    "title": {
+     "en": "Setting knob",
+     "de": "Einstellknopf"
+    },
+    "lengthM": 0.02,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -10,
+     "maxDeg": 300
+    },
+    "mass": {
+     "kg": 0.04,
+     "comX": 0,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate"
+    }
+   }
+  ]
+ },
+ "anchors": [
+  {
+   "id": "pipe-joint-upper",
+   "bone": "body",
+   "x": 0,
+   "y": -0.048,
+   "kind": "support",
+   "title": {
+    "en": "Compression joint on the pipe, upper",
+    "de": "Klemmverschraubung am Rohr, oben"
+   },
+   "support": "pin",
+   "normalDeg": 0,
+   "footprintLengthM": 0.017,
+   "footprintWidthM": 0.017
+  },
+  {
+   "id": "pipe-joint-lower",
+   "bone": "body",
+   "x": 0,
+   "y": -0.07,
+   "kind": "support",
+   "title": {
+    "en": "Compression joint on the pipe, lower",
+    "de": "Klemmverschraubung am Rohr, unten"
+   },
+   "support": "roller",
+   "normalDeg": 0,
+   "footprintLengthM": 0.017,
+   "footprintWidthM": 0.017,
+   "frictionCoefficient": 0.4
+  }
+ ],
+ "provenance": {
+  "author": "Semio staffage content (G1)",
+  "method": "handcrafted",
+  "created": "2026-11-01",
+  "references": [
+   {
+    "id": "din-en-215-2004",
+    "citation": "DIN EN 215:2004 Thermostatic radiator valves - Requirements and test methods (setting scale 0, star, 1 to 5; flow at the proportional band; head and valve body construction)."
+   },
+   {
+    "id": "din-18380-2019",
+    "citation": "DIN 18380:2019 VOB Part C: Heating systems and central water heating systems (hydraulic balancing with presettable radiator valves)."
+   },
+   {
+    "id": "incropera-2018",
+    "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+   }
+  ],
+  "notes": {
+   "en": "A brass angle-pattern thermostatic radiator valve with a liquid-filled ABS head in the 30 mm connection standard, seen along the head axis as in a section across the wall behind the end of a radiator: the pipe comes up from below into the 17 mm stub, the hexagon neck carries the round head of 60 mm collar diameter and the setting knob of 40 mm. The origin is the centre of the pipe axis where it meets the valve body top. The knob turns from the star setting (0 degrees, frost protection) through settings 1 to 5 at 54 degrees each (270 degrees); positive angles turn counter-clockwise, which opens the valve. The body stays at the supply water temperature the whole time because the water stands in it even when the seat is closed (3 W of loss at 21 degrees Celsius room air), while the head and the knob warm only with the flow through the seat (0.8 W and 0.4 W at full flow, 60 percent at setting 3). All sizes, masses and loads are authored estimates for this product class.",
+   "de": "Ein Eckventil aus Messing als Thermostat-Heizkörperventil mit flüssigkeitsgefülltem ABS-Kopf im 30-mm-Anschlussstandard, in Richtung der Kopfachse gesehen wie in einem Schnitt quer zur Wand hinter dem Ende eines Heizkörpers: das Rohr kommt von unten in den 17 mm breiten Anschluss, der Sechskanthals trägt den runden Kopf mit 60 mm Kragendurchmesser und den Einstellknopf von 40 mm. Der Ursprung ist die Mitte der Rohrachse, wo sie auf die Oberkante des Ventilkörpers trifft. Der Knopf dreht von der Frostschutzstufe (0 Grad) über die Stufen 1 bis 5 zu je 54 Grad (270 Grad); positive Winkel drehen gegen den Uhrzeigersinn und öffnen das Ventil. Der Körper bleibt dauernd auf Vorlauftemperatur, weil das Wasser auch bei geschlossenem Sitz in ihm steht (3 W Verlust bei 21 Grad Celsius Raumluft), während Kopf und Knopf sich nur mit dem Durchfluss durch den Sitz erwärmen (0,8 W und 0,4 W bei vollem Durchfluss, 60 Prozent auf Stufe 3). Alle Maße, Massen und Lasten sind Schätzwerte für diese Produktklasse."
+  }
+ },
+ "thermalRegions": [
+  {
+   "id": "body",
+   "title": {
+    "en": "Valve body and pipe stub",
+    "de": "Ventilkörper und Rohranschluss"
+   },
+   "areaM2": 0.0095,
+   "characteristicLengthM": 0.12
+  },
+  {
+   "id": "head",
+   "title": {
+    "en": "Thermostat head collar",
+    "de": "Thermostatkopf-Kragen"
+   },
+   "areaM2": 0.0187,
+   "characteristicLengthM": 0.06
+  },
+  {
+   "id": "knob",
+   "title": {
+    "en": "Setting knob",
+    "de": "Einstellknopf"
+   },
+   "areaM2": 0.005,
+   "characteristicLengthM": 0.04
+  }
+ ],
+ "structure": {
+  "gravityMS2": 9.80665,
+  "dynamics": "quasi-static",
+  "supports": [
+   "pipe-joint-upper",
+   "pipe-joint-lower"
+  ],
+  "assumptions": [
+   {
+    "en": "The 0.38 kg valve hangs on its pipe stub: the upper compression joint (pin) and the lower one (roller) carry the weight and the small overturning moment of the 90 mm deep head.",
+    "de": "Das 0,38 kg schwere Ventil hängt an seinem Rohranschluss: die obere Klemmverschraubung (Festlager) und die untere (Rollenlager) tragen das Gewicht und das kleine Kippmoment des 90 mm tiefen Kopfes."
+   }
+  ],
+  "clinical": false
+ },
+ "geometry": {
+  "50": {
+   "elevation": [
+    {
+     "id": "body",
+     "bone": "body",
+     "role": "body",
+     "z": 3,
+     "filled": true,
+     "tone": 0.6,
+     "kind": "poly",
+     "points": [
+      [
+       -0.0085,
+       -0.075
+      ],
+      [
+       0.0085,
+       -0.075
+      ],
+      [
+       0.0085,
+       -0.052
+      ],
+      [
+       0.012,
+       -0.052
+      ],
+      [
+       0.012,
+       -0.042
+      ],
+      [
+       0.019,
+       -0.042
+      ],
+      [
+       0.019,
+       0
+      ],
+      [
+       0.017,
+       0
+      ],
+      [
+       0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0
+      ],
+      [
+       -0.019,
+       0
+      ],
+      [
+       -0.019,
+       -0.042
+      ],
+      [
+       -0.012,
+       -0.042
+      ],
+      [
+       -0.012,
+       -0.052
+      ],
+      [
+       -0.0085,
+       -0.052
+      ]
+     ],
+     "closed": true,
+     "region": "body",
+     "material": "brass"
+    },
+    {
+     "id": "collar",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.03,
+     "ry": 0.03,
+     "region": "head",
+     "material": "abs-plastic"
+    },
+    {
+     "id": "index",
+     "bone": "head",
+     "role": "detail",
+     "z": 3.15,
+     "filled": true,
+     "tone": 0.12,
+     "kind": "rect",
+     "x": -0.0055,
+     "y": 0.0205,
+     "w": 0.011,
+     "h": 0.0085,
+     "region": "head",
+     "material": "abs-plastic"
+    },
+    {
+     "id": "knob",
+     "bone": "knob",
+     "role": "body",
+     "z": 3.2,
+     "filled": true,
+     "tone": 0.95,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.02,
+     "ry": 0.02,
+     "region": "knob",
+     "material": "abs-plastic"
+    },
+    {
+     "id": "pointer",
+     "bone": "knob",
+     "role": "detail",
+     "z": 3.3,
+     "filled": true,
+     "tone": 0.1,
+     "kind": "rect",
+     "x": -0.0055,
+     "y": 0.0035,
+     "w": 0.011,
+     "h": 0.0045,
+     "region": "knob",
+     "material": "abs-plastic"
+    }
+   ],
+   "plan": [
+    {
+     "id": "head",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.03,
+     "ry": 0.03,
+     "region": "head",
+     "material": "abs-plastic",
+     "solid": {
+      "kind": "extruded",
+      "sweep": "w",
+      "z0": -0.052,
+      "z1": 0.019
+     }
+    },
+    {
+     "id": "knob",
+     "bone": "knob",
+     "role": "body",
+     "z": 3.2,
+     "filled": true,
+     "tone": 0.95,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.02,
+     "ry": 0.02,
+     "region": "knob",
+     "material": "abs-plastic",
+     "solid": {
+      "kind": "extruded",
+      "sweep": "w",
+      "z0": -0.076,
+      "z1": -0.052
+     }
+    },
+    {
+     "id": "collar-groove",
+     "bone": "head",
+     "role": "detail",
+     "z": 3.15,
+     "filled": false,
+     "tone": 0.4,
+     "kind": "poly",
+     "points": [
+      [
+       -0.03,
+       -0.036
+      ],
+      [
+       0.03,
+       -0.036
+      ]
+     ],
+     "closed": false
+    }
+   ],
+   "front": [
+    {
+     "id": "body",
+     "bone": "body",
+     "role": "body",
+     "z": 3,
+     "filled": true,
+     "tone": 0.6,
+     "kind": "poly",
+     "points": [
+      [
+       -0.0085,
+       -0.075
+      ],
+      [
+       0.0085,
+       -0.075
+      ],
+      [
+       0.0085,
+       -0.052
+      ],
+      [
+       0.012,
+       -0.052
+      ],
+      [
+       0.012,
+       -0.042
+      ],
+      [
+       0.019,
+       -0.042
+      ],
+      [
+       0.019,
+       0.0
+      ],
+      [
+       0.017,
+       0.0
+      ],
+      [
+       0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.0
+      ],
+      [
+       -0.019,
+       0.0
+      ],
+      [
+       -0.019,
+       -0.042
+      ],
+      [
+       -0.012,
+       -0.042
+      ],
+      [
+       -0.012,
+       -0.052
+      ],
+      [
+       -0.0085,
+       -0.052
+      ]
+     ],
+     "closed": true,
+     "region": "body",
+     "material": "brass"
+    },
+    {
+     "id": "head",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.03,
+     "ry": 0.03,
+     "region": "head",
+     "material": "abs-plastic",
+     "solid": {
+      "kind": "extruded",
+      "sweep": "w",
+      "z0": -0.052,
+      "z1": 0.019
+     }
+    },
+    {
+     "id": "knob",
+     "bone": "knob",
+     "role": "body",
+     "z": 3.2,
+     "filled": true,
+     "tone": 0.95,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.02,
+     "ry": 0.02,
+     "region": "knob",
+     "material": "abs-plastic",
+     "solid": {
+      "kind": "extruded",
+      "sweep": "w",
+      "z0": -0.076,
+      "z1": -0.052
+     }
+    },
+    {
+     "id": "collar-groove",
+     "bone": "head",
+     "role": "detail",
+     "z": 3.15,
+     "filled": false,
+     "tone": 0.4,
+     "kind": "poly",
+     "points": [
+      [
+       -0.036,
+       0.012
+      ],
+      [
+       -0.036,
+       0.068
+      ]
+     ],
+     "closed": false
+    }
+   ]
+  },
+  "100": {
+   "elevation": [
+    {
+     "id": "body",
+     "bone": "body",
+     "role": "body",
+     "z": 3,
+     "filled": true,
+     "tone": 0.6,
+     "kind": "poly",
+     "points": [
+      [
+       -0.012,
+       -0.075
+      ],
+      [
+       0.012,
+       -0.075
+      ],
+      [
+       0.012,
+       -0.052
+      ],
+      [
+       0.015,
+       -0.052
+      ],
+      [
+       0.015,
+       -0.042
+      ],
+      [
+       0.019,
+       -0.042
+      ],
+      [
+       0.019,
+       0
+      ],
+      [
+       0.017,
+       0
+      ],
+      [
+       0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0
+      ],
+      [
+       -0.019,
+       0
+      ],
+      [
+       -0.019,
+       -0.042
+      ],
+      [
+       -0.015,
+       -0.042
+      ],
+      [
+       -0.015,
+       -0.052
+      ],
+      [
+       -0.012,
+       -0.052
+      ]
+     ],
+     "closed": true,
+     "region": "body",
+     "material": "brass"
+    },
+    {
+     "id": "head",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.03,
+     "ry": 0.03,
+     "regions": [
+      "head",
+      "knob"
+     ],
+     "material": "abs-plastic"
+    }
+   ],
+   "plan": [
+    {
+     "id": "head",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "poly",
+     "points": [
+      [
+       -0.03,
+       0.019
+      ],
+      [
+       0.03,
+       0.019
+      ],
+      [
+       0.03,
+       -0.0715
+      ],
+      [
+       0.0185,
+       -0.0745
+      ],
+      [
+       -0.0185,
+       -0.0745
+      ],
+      [
+       -0.03,
+       -0.0715
+      ]
+     ],
+     "closed": true,
+     "regions": [
+      "head",
+      "knob"
+     ],
+     "material": "abs-plastic"
+    }
+   ],
+   "front": [
+    {
+     "id": "body",
+     "bone": "body",
+     "role": "body",
+     "z": 3,
+     "filled": true,
+     "tone": 0.6,
+     "kind": "poly",
+     "points": [
+      [
+       -0.012,
+       -0.075
+      ],
+      [
+       0.012,
+       -0.075
+      ],
+      [
+       0.012,
+       -0.052
+      ],
+      [
+       0.015,
+       -0.052
+      ],
+      [
+       0.015,
+       -0.042
+      ],
+      [
+       0.019,
+       -0.042
+      ],
+      [
+       0.019,
+       0.0
+      ],
+      [
+       0.017,
+       0.0
+      ],
+      [
+       0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.012
+      ],
+      [
+       -0.017,
+       0.0
+      ],
+      [
+       -0.019,
+       0.0
+      ],
+      [
+       -0.019,
+       -0.042
+      ],
+      [
+       -0.015,
+       -0.042
+      ],
+      [
+       -0.015,
+       -0.052
+      ],
+      [
+       -0.012,
+       -0.052
+      ]
+     ],
+     "closed": true,
+     "region": "body",
+     "material": "brass"
+    },
+    {
+     "id": "head",
+     "bone": "head",
+     "role": "body",
+     "z": 3.1,
+     "filled": true,
+     "tone": 0.8,
+     "kind": "poly",
+     "points": [
+      [
+       0.019,
+       0.01
+      ],
+      [
+       0.019,
+       0.07
+      ],
+      [
+       -0.0715,
+       0.07
+      ],
+      [
+       -0.0745,
+       0.0585
+      ],
+      [
+       -0.0745,
+       0.0215
+      ],
+      [
+       -0.0715,
+       0.01
+      ]
+     ],
+     "closed": true,
+     "regions": [
+      "head",
+      "knob"
+     ],
+     "material": "abs-plastic"
+    }
+   ]
+  }
+ },
+ "volumesCounts": {
+  "50": {
+   "body": 5,
+   "thermal": 3,
+   "structure": 8
+  },
+  "100": {
+   "body": 2,
+   "thermal": 3,
+   "structure": 7
+  },
+  "200": {
+   "body": 2,
+   "thermal": 3,
+   "structure": 7
+  },
+  "500": {
+   "body": 2,
+   "thermal": 3,
+   "structure": 7
+  }
+ }
+}

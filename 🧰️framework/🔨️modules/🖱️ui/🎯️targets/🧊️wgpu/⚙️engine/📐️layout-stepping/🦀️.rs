@@ -38,6 +38,15 @@ impl Ui {
         window.queued = false;
         if let Some(refusal) = window.layout_retirement_refusal {
             if !matches!(refusal.stage, "Layout.Admission" | "Layout.CloseAdmission") { return UiLayoutStep::Refused { window_id, lane, refusal }; }
+            if let Some(closed) = window.close_layout_birth_step(cx) {
+                return match closed {
+                    Ok(()) => {
+                        self.enqueue_layout(window_id.as_ref());
+                        UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 }
+                    }
+                    Err(refusal) => UiLayoutStep::Refused { window_id, lane, refusal },
+                };
+            }
             if !window.layout_admission.terminal_is_empty() {
                 let grant = cx.retained_grant();
                 match close_layout_admission(cx, &mut window.layout_admission, grant, true) {
@@ -196,6 +205,19 @@ impl Ui {
                 _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerPool.UserVisible", nodes: 0, glyphs: 0 },
             };
         }
+        if window.layout_job.is_none() && !window.layout_admission.birth.terminal_is_empty() {
+            if window.layout_closing {
+                if let Some(Err(refusal)) = window.close_layout_birth_step(cx) {
+                    return UiLayoutStep::Refused { window_id, lane, refusal };
+                }
+                window.layout_closing = window.layout_session.is_some() || !window.layout_admission.terminal_is_empty();
+                self.enqueue_layout(window_id.as_ref());
+                return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 };
+            }
+            let step = advance_layout_birth(window, window_id.clone(), lane, cx);
+            self.enqueue_layout(window_id.as_ref());
+            return step;
+        }
         if let Some(job) = window.layout_job.as_mut() {
             let identity = (token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, window.viewport.0, window.viewport.1);
             if job.identity() != identity {
@@ -232,6 +254,7 @@ impl Ui {
             }
             if job.is_admitted() {
                 if window.layout_admission.params.is_none() {
+                    window.renew_layout_birth();
                     let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..Default::default() };
                     if cx.retained_grant().maximum_depth == 0 || !progress.fits(cx.retained_grant()) {
                         self.enqueue_layout(window_id.as_ref());
@@ -248,24 +271,9 @@ impl Ui {
                     self.enqueue_layout(window_id.as_ref());
                     return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AdmissionParameters", nodes: progress.copied_items, glyphs: 0 };
                 }
-                match window.layout_admission.birth.advance(&mut window.layout_job, &mut window.layout_admission.params, &mut window.layout_session, cx) {
-                    Ok(true) => {
-                        window.layout_session_generation = Some(window.layout_generation);
-                        self.enqueue_layout(window_id.as_ref());
-                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: 1, glyphs: 0 };
-                    }
-                    Ok(false) => {
-                        self.enqueue_layout(window_id.as_ref());
-                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: 0, glyphs: 0 };
-                    }
-                    Err(failure) => {
-                        let refusal = window.retain_layout_close_failure("Layout.Admission", failure);
-                        if let Some(original) = window.layout_job.as_mut() { original.begin_close(); }
-                        window.layout_closing = true;
-                        self.enqueue_layout(window_id.as_ref());
-                        return UiLayoutStep::Refused { window_id, lane, refusal };
-                    }
-                }
+                let step = advance_layout_birth(window, window_id.clone(), lane, cx);
+                self.enqueue_layout(window_id.as_ref());
+                return step;
             }
             let outcome = job.admit_one(&window.tree, cx);
             match outcome {
@@ -457,3 +465,23 @@ impl Ui {
 }
 //#endregion 🔖️Ui
 // #endregion engine
+
+/// 🐣️ Advances a window's layout worker session birth by one paid step. From its authority stage on the birth owns the job and its parameters, so it is driven to its session whether or not `layout_job` still holds the job; a refused birth begins closing whatever job the window still holds.
+fn advance_layout_birth(window: &mut UiWindow, window_id: SurfaceId, lane: SurfaceLane, cx: &mut StepContext<'_>) -> UiLayoutStep {
+    match window.layout_admission.birth.advance(&mut window.layout_job, &mut window.layout_admission.params, &mut window.layout_session, cx) {
+        Ok(born) => {
+            if born {
+                window.layout_session_generation = Some(window.layout_generation);
+            }
+            UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: usize::from(born), glyphs: 0 }
+        }
+        Err(failure) => {
+            let refusal = window.retain_layout_close_failure("Layout.Admission", failure);
+            if let Some(original) = window.layout_job.as_mut() {
+                original.begin_close();
+            }
+            window.layout_closing = true;
+            UiLayoutStep::Refused { window_id, lane, refusal }
+        }
+    }
+}

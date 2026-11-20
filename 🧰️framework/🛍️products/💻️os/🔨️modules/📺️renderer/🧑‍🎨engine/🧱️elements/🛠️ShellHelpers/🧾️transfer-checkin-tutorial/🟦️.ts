@@ -142,6 +142,7 @@ export type DocumentTransferNoticeV1 =
   | "import-unreadable"
   | "import-failed"
   | "import-cancelled"
+  | "import-size-limit"
   | "imported"
   | "load-cancelled"
   | "load-failed"
@@ -161,6 +162,7 @@ export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransfe
   "no-document": { en: "Focus a document window first — the Home has no document to export or import into.", de: "Bitte zuerst ein Dokumentfenster wählen — die Startseite hat kein Dokument zum Exportieren oder Importieren." },
   "import-unreadable": { en: "“{file}” is not a document archive.", de: "„{file}“ ist kein Dokumentarchiv." },
   "import-failed": { en: "“{file}” could not be opened as a document.", de: "„{file}“ konnte nicht als Dokument geöffnet werden." },
+  "import-size-limit": { en: "“{file}” exceeds the size limit for this import.", de: "„{file}“ überschreitet die Größenbegrenzung für diesen Import." },
   "import-cancelled": { en: "Import of “{file}” cancelled.", de: "Import von „{file}“ abgebrochen." },
   imported: { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
   "load-cancelled": { en: "Loading “{file}” was cancelled; the previous document is unchanged.", de: "Laden von „{file}“ abgebrochen; das bisherige Dokument ist unverändert." },

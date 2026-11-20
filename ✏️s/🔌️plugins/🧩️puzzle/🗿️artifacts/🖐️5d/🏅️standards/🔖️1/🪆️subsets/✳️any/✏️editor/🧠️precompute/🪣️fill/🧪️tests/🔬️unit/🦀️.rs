@@ -517,7 +517,7 @@ pub(crate) fn host_turn(app: &mut Puzzle5dTestApp) {
 }
 
 pub(crate) fn world_meta() -> ActionMeta {
-    ActionMeta { view_state: Some(window_view(world3d_window::WINDOW_KIND_ID, world3d_window::WINDOW_KIND_ID)), ..meta("local") }
+    ActionMeta { view_state: Some(std::sync::Arc::new(window_view(world3d_window::WINDOW_KIND_ID, world3d_window::WINDOW_KIND_ID))), ..meta("local") }
 }
 
 pub(crate) fn tool_run_action(app: &mut Puzzle5dTestApp, action: &str, args: serde_json::Value) -> serde_json::Value {

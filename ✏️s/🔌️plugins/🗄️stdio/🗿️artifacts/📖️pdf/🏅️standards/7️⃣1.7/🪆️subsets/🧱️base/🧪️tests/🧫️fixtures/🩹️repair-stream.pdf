@@ -1,0 +1,39 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 100] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 39 >>
+stream
+BT /F1 12 Tf 20 50 Td (Recovered) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Length 64 >>
+stream
+prefix
+1 0 obj
+<< /Type /Catalog /Pages 999 0 R >>
+endobj
+suffix
+endstream
+endobj
+7 0 obj
+(prefix
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+suffix)
+endobj
+trailer
+<< /Root 1 0 R /Size 8 >>
+%%EOF

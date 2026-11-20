@@ -449,7 +449,8 @@
   {
    "key": "declined",
    "fields": {
-    "project": "p"
+    "project": "p",
+    "reason": "retained-quota"
    }
   },
   {

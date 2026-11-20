@@ -57,8 +57,8 @@ pub fn insert_specs() -> Vec<InsertSpec> {
 }
 
 /// 🧊️ Projects the document and lowers it to the `world-3d` surface; `selection` is the resolved selection whose scene entities are highlighted, `frame` the live lanes: grips of the selection, the dimension-line entry of the open drag, the insert ghost and the selection of the other users.
-pub fn render(document: &En1997Snapshot, report: &CheckReport, selection: &NormSelection, frame: &LaneFrame, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    render_with(document, report, selection, &ViewportView { lanes: LaneOverlays::of_frame(frame, &interaction_domain_id(crate::VARIANT)), lane: frame.transient.view.clone(), ..ViewportView::default() }, locale)
+pub fn render(document: &En1997Snapshot, report: &CheckReport, selection: &NormSelection, frame: &LaneFrame, host: &semio_plugin::ViewModel) -> UiAssemblyResult<BuiltNode> {
+    render_with(document, report, selection, &ViewportView { lanes: LaneOverlays::of_frame(frame, &interaction_domain_id(crate::VARIANT)), lane: frame.transient.view.clone(), tree_context: Some((host, BODY_VIEWPORT)), ..ViewportView::default() }, host.locale)
 }
 
 /// 🎞️ The same window at an explicit view: the persisted local-only configuration and the ephemeral playback state, with the field picker and playback toolbar above the surface; the grips of the selection are resolved here from the projected scene.

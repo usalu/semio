@@ -3,7 +3,7 @@
 import json,sys
 schema=json.load(open(sys.argv[1],encoding="utf8"));fixture=json.load(open(sys.argv[2],encoding="utf8"))
 policy=schema["definitions"]["Policy"]["const"]
-LOCAL={"claim-lost","no-upload","limit-document","limit-entry","limit-documents"}
+LOCAL={"claim-lost","no-upload","leaf-missing","limit-document","limit-entry","limit-documents"}
 def classify(answer,body):
     body=body[:policy["bodyCharacters"]]
     if isinstance(answer,int):kind="status"

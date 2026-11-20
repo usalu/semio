@@ -90,47 +90,36 @@ pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, parag
 pub const INTERACTIVE_TEXT_ZOOM: f64 = 0.35;
 
 /// 🖼️ Host-canvas display list. Never shapes paragraphs and never loads a font.
-pub fn build_interactive_display_list(doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, camera_x: f64, camera_y: f64, zoom: f64) -> DisplayList {
-    assemble_display_list(None, doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, zoom < INTERACTIVE_TEXT_ZOOM, camera_x, camera_y, zoom, false)
+pub fn build_interactive_display_list(doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, camera_x: f64, camera_y: f64, zoom: f64, preview:Option<&semio_s_artifact_layout_layout_model::FrameBoundsPreview>) -> DisplayList {
+    assemble_display_list(None, doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, zoom < INTERACTIVE_TEXT_ZOOM, camera_x, camera_y, zoom, false, preview)
 }
 
 pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
-    assemble_display_list(Some(engine), doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, false, 0.0, 0.0, 1.0, false)
+    assemble_display_list(Some(engine), doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, false, 0.0, 0.0, 1.0, false, None)
 }
 
 const INTERACTIVE_VIEW_SPAN: f64 = 2000.0;
 
 pub(super) fn outside_interactive_view(bounds: &LayoutBounds, camera_x: f64, camera_y: f64, zoom: f64) -> bool {
     let span = INTERACTIVE_VIEW_SPAN / zoom.max(0.05);
-    let x1 = bounds.x + bounds.width;
-    let y1 = bounds.y + bounds.height;
-    x1 < camera_x - span || bounds.x > camera_x + span || y1 < camera_y - span || bounds.y > camera_y + span
-}
-
-pub(super) fn frame_layer_visible(doc: &LayoutSnapshot, page: &Page, frame: &Frame) -> bool {
-    let layer_id = frame.layer_id();
-    if let Some(layer) = page.layers.iter().find(|layer| layer.id == layer_id) {
-        return layer.visible;
-    }
-    if let Some(parent_id) = &page.parent_page_id {
-        if let Some(parent) = doc.parent_pages.iter().find(|parent| parent.id == *parent_id) {
-            if let Some(layer) = parent.layers.iter().find(|layer| layer.id == layer_id) {
-                return layer.visible;
-            }
-        }
-    }
-    true
+    let half_w = bounds.width * 0.5;
+    let half_h = bounds.height * 0.5;
+    let tx = (bounds.x + half_w - camera_x).abs();
+    let ty = (bounds.y + half_h - camera_y).abs();
+    let (sin, cos) = if bounds.rotation == 0.0 { (0.0, 1.0) } else { bounds.rotation.sin_cos() };
+    tx > span + half_w * cos.abs() + half_h * sin.abs()
+        || ty > span + half_w * sin.abs() + half_h * cos.abs()
 }
 //#endregion ⚙️Scene
 
 /// 🧱️ Shapes exactly one resolved frame for resumable export planning.
 pub fn build_display_list_for_resolved_frame(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, frame: semio_s_artifact_layout_layout_model::ResolvedFrame) -> DisplayList {
-    super::display_list_assembly::assemble_display_list_items(Some(engine), doc, page, "", &[], None, false, false, 0.0, 0.0, 1.0, vec![frame], false, true, false)
+    super::display_list_assembly::assemble_display_list_items(Some(engine), doc, page, "", &Default::default(), None, false, false, vec![frame], false, false)
 }
 
 /// 🌄️ Shapes the background once before the frame-by-frame export plan.
 pub fn build_display_list_for_page_background(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page) -> DisplayList {
-    super::display_list_assembly::assemble_display_list_items(Some(engine), doc, page, "", &[], None, false, false, 0.0, 0.0, 1.0, Vec::new(), true, true, false)
+    super::display_list_assembly::assemble_display_list_items(Some(engine), doc, page, "", &Default::default(), None, false, false, Vec::new(), true, false)
 }
 
 impl LayoutEngine {
@@ -139,13 +128,13 @@ impl LayoutEngine {
 }
 
 /// 🌄️ Export projection retains real paths and text sources without a synchronous font engine.
-pub fn build_unshaped_export_background(doc: &LayoutSnapshot, page: &Page) -> DisplayList { super::display_list_assembly::assemble_display_list_items(None, doc, page, "", &[], None, false, false, 0.0, 0.0, 1.0, Vec::new(), true, true, false) }
+pub fn build_unshaped_export_background(doc: &LayoutSnapshot, page: &Page) -> DisplayList { super::display_list_assembly::assemble_display_list_items(None, doc, page, "", &Default::default(), None, false, false, Vec::new(), true, false) }
 
 /// 🖼️ A resolved non-text frame projects without shaping or viewport culling.
-pub fn build_unshaped_export_frame(doc: &LayoutSnapshot, page: &Page, frame: semio_s_artifact_layout_layout_model::ResolvedFrame) -> DisplayList { super::display_list_assembly::assemble_display_list_items(None, doc, page, "", &[], None, false, false, 0.0, 0.0, 1.0, vec![frame], false, true, false) }
+pub fn build_unshaped_export_frame(doc: &LayoutSnapshot, page: &Page, frame: semio_s_artifact_layout_layout_model::ResolvedFrame) -> DisplayList { super::display_list_assembly::assemble_display_list_items(None, doc, page, "", &Default::default(), None, false, false, vec![frame], false, false) }
 
 /// 🧳️ Both interactive surfaces retain story identities and geometry without copying story strings.
-pub fn build_deferred_display_list(doc:&LayoutSnapshot,page:&Page,active_page_id:&str,selected_ids:&[String],hovered_id:Option<&str>,chrome_blueprint:bool,camera_x:f64,camera_y:f64,zoom:f64)->DisplayList{assemble_display_list(None,doc,page,active_page_id,selected_ids,hovered_id,chrome_blueprint,zoom<INTERACTIVE_TEXT_ZOOM,camera_x,camera_y,zoom,true)}
+pub fn build_deferred_display_list(doc:&LayoutSnapshot,page:&Page,active_page_id:&str,selected_ids:&[String],hovered_id:Option<&str>,chrome_blueprint:bool,camera_x:f64,camera_y:f64,zoom:f64,preview:Option<&semio_s_artifact_layout_layout_model::FrameBoundsPreview>)->DisplayList{assemble_display_list(None,doc,page,active_page_id,selected_ids,hovered_id,chrome_blueprint,zoom<INTERACTIVE_TEXT_ZOOM,camera_x,camera_y,zoom,true,preview)}
 
 #[cfg(feature="testkit")]
 impl LayoutEngine {

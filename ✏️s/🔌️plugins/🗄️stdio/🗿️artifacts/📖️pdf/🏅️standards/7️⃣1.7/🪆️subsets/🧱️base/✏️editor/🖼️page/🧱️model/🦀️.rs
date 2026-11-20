@@ -111,10 +111,7 @@ pub struct PageObject {
     pub kind: ObjectKind,
     pub start: usize,
     pub end: usize,
-    pub position_op: Option<usize>,
-    pub transform_op: Option<usize>,
     pub ctm: PdfMatrix,
-    pub parent_ctm: PdfMatrix,
     pub x: f64,
     pub y: f64,
     pub width: f64,
@@ -122,10 +119,31 @@ pub struct PageObject {
     pub text: String,
     pub font: String,
     pub font_size: f64,
+    pub(super) text_placement: Option<Box<TextPlacement>>,
     pub fill: [f64; 3],
     pub stroke: [f64; 3],
     pub line_width: f64,
+    pub(super) vector_stroke: VectorStroke,
+    pub(super) path: Vec<VectorSegment>,
+    pub(super) clip_quads: std::sync::Arc<Vec<ClipQuad>>,
+    pub(super) clip_paths: std::sync::Arc<Vec<PathClip>>,
+    pub(super) text_transform: PdfMatrix,
+    pub(super) form_graphics: Option<Graphics>,
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub(super) struct TextPlacement {
+    pub matrix: PdfMatrix,
+    pub line: PdfMatrix,
+    pub next_origin: (f64, f64),
+    pub rise: f64,
+    pub render_mode: u32,
+    pub horizontal_scale: f64,
+    pub char_spacing: f64,
+    pub word_spacing: f64,
+}
+
+pub(super) use semio_s_artifact_stdio_pdf_page_coordinates::{ClipQuad, VectorSegment, VectorStroke};
 
 /// ✏️ One end-user edit, already checked against the action's required arguments.
 #[derive(Clone, Debug, PartialEq)]

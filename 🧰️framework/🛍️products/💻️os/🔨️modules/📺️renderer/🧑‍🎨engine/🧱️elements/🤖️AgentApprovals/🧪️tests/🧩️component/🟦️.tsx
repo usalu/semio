@@ -99,6 +99,15 @@ describe("AgentApprovalAffordance", () => {
     });
   }
 
+  it("is a static programmatic focus target, never a shared-border box that hovers or states as a whole", () => {
+    render(affordance(structuredApproval, vi.fn()));
+    const section = document.querySelector<HTMLElement>("[data-semio-agent-approval-id='appr_1']")!;
+    expect(section.tagName).toBe("SECTION");
+    expect(section.getAttribute("tabindex")).toBe("-1");
+    for (const attribute of ["data-shared-border-frame", "data-shared-border-edges", "data-shared-border-interactive", "data-shared-border-cell", "data-shared-border-group"]) expect(section.hasAttribute(attribute), attribute).toBe(false);
+    expect(section.querySelectorAll("[data-shared-border-frame]").length).toBeGreaterThan(0);
+  });
+
   it("falls back to the raw summary text for a plain-text approval", () => {
     render(affordance({ approvalId: "appr_2", summary: "translate the selection", requestedAtMs: 1_700_000_000_000 }, vi.fn()));
     expect(document.querySelector("[data-semio-agent-approval-id='appr_2']")?.textContent).toContain("translate the selection");

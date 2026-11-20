@@ -6,11 +6,31 @@
     "retainedPlanning",
     "retainedLoops",
     "retainedTopology",
-    "retainedSameParameter"
+    "retainedSameParameter",
+    "shellClosure",
+    "scopeSelection"
   ],
   "properties": {
     "version": {
       "const": 1
+    },
+    "scopeSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected", "unrelated", "selectedPasses", "unrelatedPasses", "selectedSignedVolume"],
+      "properties": {
+        "selected": {"const": "outward"},
+        "unrelated": {"const": "inward"},
+        "selectedPasses": {"const": true},
+        "unrelatedPasses": {"const": false},
+        "selectedSignedVolume": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "shellClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closedBoundaryEdges", "missingFaceBoundaryEdges", "reversedFaceOrientationEdges", "openShellPasses", "openSolidPasses"],
+      "properties": {"closedBoundaryEdges": {"type": "integer", "minimum": 0}, "missingFaceBoundaryEdges": {"type": "integer", "minimum": 0}, "reversedFaceOrientationEdges": {"type": "integer", "minimum": 0}, "openShellPasses": {"const": true}, "openSolidPasses": {"const": false}}
     },
     "retainedPlanning": {
       "type": "object",
@@ -72,7 +92,7 @@
           "const": 8
         },
         "capacity": {
-          "const": "originalEmptyVectorSourceExtentOrOriginalShellPage"
+          "const": "originalEmptyVectorSourceExtent"
         },
         "release": {
           "const": "zeroDuringPlanning"
@@ -279,11 +299,12 @@
         "sampleCopyBytes",
         "sortComparisonsPerEvent",
         "scratchBirth",
-        "unsupportedSources",
+        "splineMaximumDegree",
         "terminalDropBytes",
         "stock",
         "policy",
         "fuel",
+        "retirementCopyBytes",
         "clock",
         "deadline"
       ],
@@ -327,13 +348,7 @@
         "scratchBirth": {
           "const": "beforeOriginalSampleAppend"
         },
-        "unsupportedSources": {
-          "const": [
-            "NurbsSurface",
-            "NurbsCurve2",
-            "NurbsCurve3"
-          ]
-        },
+        "splineMaximumDegree": { "const": 32 },
         "terminalDropBytes": {
           "const": 0
         },
@@ -358,6 +373,7 @@
         "fuel": {
           "const": 100000
         },
+        "retirementCopyBytes": { "const": 4096 },
         "clock": {
           "const": 1000
         },

@@ -9,6 +9,7 @@ import { declareWgpuBootSubphase, jsonEffects } from "../../🎛️contributions
 import { submitActorWork } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { retireWgpuOwnedUiInstanceLifecycle, settleInstanceLifecycle, WgpuOwnedUiInstanceRoute } from "../../🍽️ui-intake-and-route/🟦️.ts";
 import { coerceTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { continueOpeningTurns } from "@semio-tech/framework-actor/wire-turn/more-work-drive";
 import { DEFAULT_SHARD_BUDGET } from "@semio-tech/framework-actor/shard-runtime";
 import { settleFailedInstanceOpen } from "@semio-tech/framework-actor/shard-client/heartbeat";
 import { mediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/channel";
@@ -44,13 +45,17 @@ export function buildPluginHandle({ pluginId, manifest, packageId, componentSha2
         const lifecycle = shardClient.captureInstanceLifecycle(actorId, instanceId);
         lifecycleByInstance.set(instanceId, lifecycle);
         const execute = executeFor(actorId);
-        const opened = coerceTurnResult(await execute(() => lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET)));
+        const opened = await execute(() => lifecycle.open({ appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) }, DEFAULT_SHARD_BUDGET));
+        const captureTurn = await continueOpeningTurns(opened, () => {
+          requireOpening();
+          return lifecycle.progress().kind === "opening" && !lifecycle.pendingReceipt;
+        }, () => execute(() => lifecycle.poll(DEFAULT_SHARD_BUDGET)));
         const captured = lifecycle.pendingReceipt;
         if (!captured || captured.kind !== "captured" || !lifecycle.lifetime) throw new Error("wgpu-ui.native-lifetime-required");
         const route = new WgpuOwnedUiInstanceRoute(lifecycle);
         uiRouteByInstance.set(instanceId, route);
         requireOpening();
-        await settleInstanceLifecycle(lifecycle, route, opened, execute, instanceId);
+        await settleInstanceLifecycle(lifecycle, route, coerceTurnResult(captureTurn), execute, instanceId);
         requireOpening();
         const channel = new AppChannelClient(channelHandle, channelRequests, instanceId, appId);
         channel.onOperationCompleted((completion) => stashOperationPublication(instanceId, operationCompletionPublication(completion)));

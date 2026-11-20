@@ -3,8 +3,6 @@ use semio_plugin::{ArtifactEditor, Editor};
 #[allow(unused_imports)]
 use crate::editor::pdf17vt::modes::edit;
 #[allow(unused_imports)]
-use crate::editor::page::page_text_edit_mutation;
-#[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
@@ -36,7 +34,7 @@ async fn editor_declares_the_main_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_set_page_payload_is_rejected() {
-    assert!(<Pdf17VtEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
+    assert!(<Pdf17VtEditor as ArtifactEditor>::command_from_action("set-page", &mut None, &mut None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -47,7 +45,7 @@ async fn explicit_nonzero_page_payload_is_preserved() {
         ("revision".into(), semio_framework_value::DslValue::String("0123456789abcdef".into())),
         ("text".into(), semio_framework_value::DslValue::String("replacement".into())),
     ]);
-    let command = <Pdf17VtEditor as ArtifactEditor>::command_from_action("set-page", Some((args).clone()), None).expect("typed payload");
+    let command = <Pdf17VtEditor as ArtifactEditor>::command_from_action("set-page", &mut Some(args), &mut None).expect("typed payload");
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17VtEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
 }
 

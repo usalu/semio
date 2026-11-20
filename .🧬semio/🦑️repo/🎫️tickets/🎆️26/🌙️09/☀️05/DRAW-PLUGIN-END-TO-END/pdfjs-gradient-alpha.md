@@ -1,0 +1,7 @@
+# PDF.js gradient alpha investigation
+
+The emitted samples 18–20 contain a DeviceRGB axial shading and a DeviceGray axial shading in a transparency Form used as a luminosity soft mask. The form and page transformations are identity and the page vertical flip, respectively. PDF.js parses the sample into a luminosity soft-mask group, activates SMask, and paints the color shading. Poppler agrees with the authored SVG at the sampled point.
+
+The installed pdfjs-dist Node rendering path has a specific limitation: _prepareSMaskCanvas requests filterFactory.addLuminosityFilter to convert the gray mask to alpha, while NodeFilterFactory inherits BaseFilterFactory.addLuminosityFilter, which returns "none". The opaque grayscale mask therefore stays opaque, explaining the observed opaque gradient. The browser DOMFilterFactory implements a luminosity filter. This evidence identifies the local Node rendering discrepancy; it does not establish validity of every emitted PDF.
+
+Managed Chromium browser PDF.js rendered the actual samples with a 512 × 256 viewport. Sample 18 quarter, midpoint, and three-quarter pixels were [239,191,207,255], [191,128,191,255], and [111,64,207,255], respectively; the quarter pixel matches Poppler and authored SVG. Image-alpha sample 24 produced [255,0,0,255] at one quarter and [127,127,255,255] at the midpoint and three quarters. The ticket-only `chromium-pdf-alpha.mjs` probe exited 0, with a 30-second deadline and the repository-managed Chromium cache.

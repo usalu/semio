@@ -60,10 +60,10 @@ fn crowded(count: usize) -> (ModelSnapshot, Vec<String>) {
         let create = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, id, parent, "Sample").expect("creates")).expect("applies");
     }
-    let column = snapshot.columns.remove("c-0").expect("the column");
+    let column = snapshot.columns.cold_remove("c-0").expect("the column");
     let ids: Vec<String> = (0..count).map(|index| format!("c-{index:06}")).collect();
     for id in &ids {
-        snapshot.columns.insert(id.clone(), column.clone());
+        snapshot.columns.cold_insert(id.clone(), column.clone());
     }
     (snapshot, ids)
 }

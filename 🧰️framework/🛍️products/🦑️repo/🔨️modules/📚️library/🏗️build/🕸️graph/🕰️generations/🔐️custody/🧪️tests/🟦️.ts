@@ -44,13 +44,15 @@ test("every admission decision over seeded worlds equals the Python model",()=>{
 
 test("disjoint claims hold at once; an overlapping one waits, tells why in English and German, and holds when the first is released",async()=>{
  const{custody,said,say}=world(),a=await custody.hold({owners:["p1","p2"],say}),b=await custody.hold({owners:["p3"],say});
- const c=custody.hold({owners:["p2","p9"],say});
+ const peerWaits:boolean[]=[];
+ const c=custody.hold({owners:["p2","p9"],say,peerWait:blocked=>peerWaits.push(blocked)});
  expect(await settled(c)).toBe(false);
  expect(said.map(row=>row.key)).toEqual(["blocked"]);expect(said[0]!.text).toContain("shared: p2");
  expect(renderCustodyMessageV1("blocked",{peers:1,seconds:0,sample:"p2"},"de")).toContain("gemeinsam: p2");
  expect((await custody.list()).map(claim=>[claim.owners.join(","),claim.state])).toEqual(expect.arrayContaining([["p1,p2","held"],["p3","held"],["p2,p9","waiting"]]));
  await b.release();expect(await settled(c)).toBe(false);
- await a.release();const held=await c;expect(held.owners).toEqual(["p2","p9"]);
+ expect(peerWaits.length).toBeGreaterThan(0);expect(peerWaits.every(Boolean)).toBe(true);
+ await a.release();const held=await c;expect(held.owners).toEqual(["p2","p9"]);expect(peerWaits.at(-1)).toBe(false);
  expect(await custody.idle({owners:["p9"]})).toBe(false);expect(await custody.idle({owners:["p1"]})).toBe(true);
  await held.release();expect(await custody.list()).toEqual([]);
 });

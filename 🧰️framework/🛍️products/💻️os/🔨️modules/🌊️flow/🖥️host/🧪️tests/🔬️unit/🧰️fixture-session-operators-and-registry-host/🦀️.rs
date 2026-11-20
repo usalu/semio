@@ -42,7 +42,7 @@ fn retained_preview_phase_projection_preserves_original_status_and_cancellation(
         let independent: serde_json::Value = serde_json::from_str(&envelope).unwrap();
         let mut session = FlowEvalSession::new();
     prepare_fixture_window(&mut session);
-        assert!(session.note_pending_tessellate(7, "cold-preview".into()));
+        assert!(session.note_pending_tessellate(7, "cold-preview".into(), 0.05));
         session.tessellate_progress_by_hash.insert(7,PreviewTessellateProgress{phase:PreviewTessellatePhase::from_tag(phase),units_done:independent["unitsDone"].as_u64().unwrap(),units_total:independent["unitsTotal"].as_u64().unwrap(),..Default::default()});
         let status = session.preview_tessellate_status();
         let labels = status.phase.labels();

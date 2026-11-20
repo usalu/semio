@@ -7,6 +7,7 @@ import {test} from "bun:test";
 import { testDemonstratorBrowserCatalog } from "../📇️catalog/🧪️tests/🟦️.ts";
 import * as runtime from "../🟦️.ts";
 import { demonstratorRuntimeAssetSources } from "../📦️assets/🟦️.ts";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 /** 🎪️ Keeps Vite's runtime description independent of build commands and brand implementations. */
 export async function testDemonstratorRuntime(workspace: string): Promise<void> {
   await testDemonstratorBrowserCatalog(workspace);
@@ -130,13 +131,14 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
 
   for (const profile of pipeline.profiles) {
     const sources = demonstratorRuntimeAssetSources(workspace, profile);
-    const components = sources.filter((row: any) => row.owner.endsWith(`:browser:${profile}`)), support = sources.filter((row: any) => !components.includes(row));
+    const components = sources.filter((row: any) => row.owner.endsWith("/Cargo.toml:browser")), support = sources.filter((row: any) => !components.includes(row));
     assert.equal(components.length, fixture.pluginIds.length + fixture.extensionIds.length);
-    assert.deepEqual(support.slice(0, 3).map((row: any) => row.owner), [`browser-support:${profile}:preview2`, `browser-support:${profile}:shard`, "infinite:fonts"]);
+    assert.deepEqual(support.slice(0, 3).map((row: any) => row.owner), ["browser-support:preview2", "browser-support:shard", "infinite:fonts"]);
     assert.ok(support.length > 3 && support.slice(3).every((row: any) => row.owner.startsWith("canvas:")), "Every source after the browser support is a staged canvas asset");
     assert.equal(new Set(sources.map((row: any) => row.root)).size, sources.length);
     assert.equal(sources.filter((row: any) => row.shimDirectory !== undefined).length, fixture.extensionIds.length);
-    for (const row of sources) assert.ok(row.owner === "infinite:fonts" || row.owner.startsWith("canvas:") || row.owner.includes(`:${profile}`), row.owner);
+    assert.ok(sources.every((row: any) => row.owner === "infinite:fonts" || row.owner.startsWith("canvas:") || row.owner.startsWith("browser-support:") || row.owner.endsWith("/Cargo.toml:browser")), "Every source carries its stager's ownership key");
+    assert.ok(sources.filter((row: any) => !row.owner.startsWith("canvas:") && row.owner !== "infinite:fonts").every((row: any) => row.root.startsWith(builtPluginModulesRootIn(workspace, profile))), "Profile is carried by the modules root, not the owner");
     assert.equal(sources.some((row: any) => row.root.includes("/runtime/") || row.root.includes("🏪️store")), false);
   }
   const command = readFileSync(join(directory, "../..", pipeline.command), "utf8");

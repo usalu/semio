@@ -75,42 +75,70 @@ fn compose_shared_borders(scene: &Scene, focus: Option<NodeId>, theme: &Theme, w
     }
 }
 
+/// 🫟️ The read-only inputs of one paint pass; `projected` paints a canvas with the windows a dock release would mount instead of its children.
+#[derive(Clone, Copy)]
+struct PaintPass<'a> {
+    scene: &'a Scene,
+    theme: &'a Theme,
+    focus: Option<NodeId>,
+    hovered_chrome: &'a [NodeId],
+    projected: Option<(NodeId, &'a [(NodeId, Rect, WindowState)])>,
+}
+
+impl PaintPass<'_> {
+    fn chrome(&self, id: NodeId, chrome: &ChromeState, rect: Rect, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
+        let outlined = matches!(chrome, ChromeState::Window(_) | ChromeState::Navbar(_) | ChromeState::Footer(_));
+        if outlined { buf.begin_borders(rect); }
+        chrome.paint_emphasized(self.theme, rect, buf, self.hovered_chrome.contains(&id));
+        if outlined { let (outline, writes) = buf.take_borders(); borders.push((rect, outline, writes)); }
+    }
+
+    fn walk(&self, id: NodeId, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
+        let node = self.scene.node(id);
+        if !node.visible {
+            return;
+        }
+        let rect = node.rect;
+        match &node.content {
+            NodeContent::Chrome(c) => self.chrome(id, c, rect, buf, borders),
+            NodeContent::Widget(w) => w.paint(self.theme, rect, buf, Some(id) == self.focus),
+            NodeContent::Text(s) => {
+                let bg = buf.get(rect.x, rect.y).map_or(self.theme.surface(semio_ui_tui_core::theme::Surface::Base), |c| c.bg);
+                buf.put_str(Pos { x: rect.x, y: rect.y }, s, self.theme.role(Role::Foreground), bg, 0, rect);
+            }
+            NodeContent::Axis(_) => {}
+            NodeContent::Box => {}
+        }
+        if let Some((_, windows)) = self.projected.filter(|(canvas, _)| *canvas == id) {
+            for (window, rect, state) in windows {
+                self.chrome(*window, &ChromeState::Window(Box::new(state.clone())), *rect, buf, borders);
+            }
+            return;
+        }
+        for &child in node.children() {
+            self.walk(child, buf, borders);
+        }
+    }
+}
+
 impl Tui {
     fn paint(&mut self) {
-        fn walk(scene: &Scene, theme: &Theme, focus: Option<NodeId>, hovered_chrome: &[NodeId], id: NodeId, buf: &mut CellBuffer, borders: &mut Vec<BorderCapture>) {
-            let node = scene.node(id);
-            if !node.visible {
-                return;
-            }
-            let rect = node.rect;
-            match &node.content {
-                NodeContent::Chrome(c) => {
-                    let outlined = matches!(c, ChromeState::Window(_) | ChromeState::Navbar(_) | ChromeState::Footer(_));
-                    if outlined { buf.begin_borders(rect); }
-                    c.paint_emphasized(theme, rect, buf, hovered_chrome.contains(&id));
-                    if outlined { let (outline, writes) = buf.take_borders(); borders.push((rect, outline, writes)); }
-                }
-                NodeContent::Widget(w) => w.paint(theme, rect, buf, Some(id) == focus),
-                NodeContent::Text(s) => {
-                    let bg = buf.get(rect.x, rect.y).map_or(theme.surface(semio_ui_tui_core::theme::Surface::Base), |c| c.bg);
-                    buf.put_str(Pos { x: rect.x, y: rect.y }, s, theme.role(Role::Foreground), bg, 0, rect);
-                }
-                NodeContent::Axis(_) => {}
-                NodeContent::Box => {}
-            }
-            for &child in node.children() {
-                walk(scene, theme, focus, hovered_chrome, child, buf, borders);
-            }
-        }
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
         self.back.resize(self.size, blank);
-        let focus = self.focus();
+        let pass = PaintPass { scene: &self.scene, theme: &self.theme, focus: self.focus(), hovered_chrome: &self.hovered_chrome, projected: None };
         let mut borders = Vec::new();
-        walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.root(), &mut self.back, &mut borders);
-        compose_shared_borders(&self.scene, focus, &self.theme, &borders, &mut self.back);
-        walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.overlay_root(), &mut self.back, &mut Vec::new());
-        if let Some(preview) = &self.dock_preview {
-            semio_ui_tui_frame::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
+        pass.walk(self.scene.root(), &mut self.back, &mut borders);
+        let preview = self.dock_preview.as_ref().map(|preview| {
+            let mut committed = self.back.clone();
+            let mut outlines = Vec::new();
+            PaintPass { projected: Some((preview.canvas, preview.windows.as_slice())), ..pass }.walk(self.scene.root(), &mut committed, &mut outlines);
+            compose_shared_borders(&self.scene, pass.focus, &self.theme, &outlines, &mut committed);
+            (preview.rect, committed)
+        });
+        compose_shared_borders(&self.scene, pass.focus, &self.theme, &borders, &mut self.back);
+        pass.walk(self.scene.overlay_root(), &mut self.back, &mut Vec::new());
+        if let Some((rect, committed)) = preview {
+            self.back.copy_rect(&committed, rect);
         }
     }
 

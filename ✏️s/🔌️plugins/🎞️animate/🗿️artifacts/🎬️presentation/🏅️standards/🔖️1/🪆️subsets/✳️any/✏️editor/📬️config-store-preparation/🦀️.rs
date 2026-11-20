@@ -91,10 +91,25 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl AnimatePresentationConfigPreparation {
+    /// 🧪️ A preparation holding only its mutation owner, detached from any Store request, for the cancel and close laws.
+    #[cfg(test)]
+    pub(crate) fn detached(mutation: PresentationConfigMutation) -> Self {
+        Self {
+            owners: store::OneItemOwners::detached(
+                mutation,
+                std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationConfigMutation>::default()),
+                std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<PresentationConfig>::default()),
+            ),
+            serialized_bytes: None,
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            cancelled: false,
+            last_work: 0,
+        }
+    }
+
+    fn advance_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
-        self.last_work = 0;
         if !grant.permits_one() || grant.maximum_copy_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -156,6 +171,25 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Pres
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.last_work = 0;
+        if !grant.permits_one() || grant.maximum_copy_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled || self.owners.is_closing() {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        if self.owners.refused.is_some() || self.owners.failure.is_some() || self.owners.prepared.is_some() {
+            return self.advance_step(grant).map_err(Into::into);
+        }
+        if !receiving.prepare_work(1)? {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        self.last_work = 1;
+        let result = self.advance_step(grant);
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
+    }
 
     fn last_turn_work(&self) -> u64 {
         self.last_work
@@ -172,11 +206,23 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Pres
     fn cancel(&mut self) {
         self.cancelled = true;
     }
+    fn has_pending_receiving_recovery(&self) -> bool {
+        false
+    }
+    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> {
+        None
+    }
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> {
+        None
+    }
+    fn finish_receiving_recovery(&mut self, _control: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> {
+        semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 }
+    }
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
-        self.owners.close_step(grant.retained_grant())
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.owners.close_step(effect)
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }

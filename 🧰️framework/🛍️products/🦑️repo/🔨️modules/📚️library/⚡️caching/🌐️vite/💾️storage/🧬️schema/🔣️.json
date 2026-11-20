@@ -27,7 +27,7 @@
     "Protocol": {
       "const": {
         "root": "vite",
-        "maximumOutputBytes": 1073741824,
+        "maximumOutputBytes": 8589934592,
         "maximumOutputFiles": 65536,
         "writerShards": 16,
         "maximumPendingTransforms": 32

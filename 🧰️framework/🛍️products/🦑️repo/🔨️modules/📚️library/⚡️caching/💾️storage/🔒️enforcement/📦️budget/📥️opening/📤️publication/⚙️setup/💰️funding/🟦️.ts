@@ -1,6 +1,7 @@
 import{readIssuedScriptProcessEnvelopeV1}from"@semio-tech/process/routing";
 import{readNativeCallerAuthorityV1}from"../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{createHash,randomInt}from"node:crypto";
+import{AsyncLocalStorage}from"node:async_hooks";
 import{join}from"node:path";
 import type{ScriptInvocation}from"@semio-tech/process/routing";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
@@ -25,7 +26,15 @@ const owner="repository:dependencies-store";
 type Marker=ReturnType<typeof readRepositoryDependencyAllocationMarkerV1>;
 type Observation=Readonly<{presence:"initial-empty";currentBytes:number;authority:false}>|Readonly<{presence:"present";state:NativeStorageStateV1;marker:Marker|undefined;markerSha256:string|undefined;markerIntent:boolean;currentBytes:number}>;
 /** ⏳️ How a child waits for the dependency store a sibling holds: polls start at `first`, double up to `maximum` with a quarter of jitter so two waiting children do not stay in step, say a line every `progress`, and give up after the queue bound of the store sync. */
-export const DEPENDENCY_STORE_WAIT_V1=Object.freeze({firstMilliseconds:200,maximumMilliseconds:2000,progressMilliseconds:10000,ancestorGraceMilliseconds:15000,holderStartToleranceMilliseconds:5000,heartbeatStaleMilliseconds:300000,limitMilliseconds:dependencyInstallSchema.$defs.SourceOwnerStoreSyncProtocol.const.maximumQueueWaitMilliseconds});
+export const DEPENDENCY_STORE_WAIT_V1=Object.freeze({firstMilliseconds:200,maximumMilliseconds:2000,progressMilliseconds:10000,ancestorGraceMilliseconds:15000,verifiedMaintenanceMilliseconds:20000,holderStartToleranceMilliseconds:5000,heartbeatStaleMilliseconds:300000,limitMilliseconds:dependencyInstallSchema.$defs.SourceOwnerStoreSyncProtocol.const.maximumQueueWaitMilliseconds});
+const dependencyStoreWaitScopeV1=new AsyncLocalStorage<number>();
+/** ⏱️ Runs `body` with every dependency store wait of this async scope bounded to `milliseconds` (the smaller of it and the bound of the wait ports), so an optional step never waits as long as a required one. */
+export function withDependencyStoreWaitBoundV1<T>(milliseconds:number,body:()=>Promise<T>):Promise<T>{return dependencyStoreWaitScopeV1.run(milliseconds,body);}
+/** 🔍️ What the lock-free evidence says about the dependency store: `unverified` (envelope, funding or journal not provably current: the exclusive observation is needed), `occupied` (provably current and every live holder is shared: nothing needs exclusive access and none is possible, so nobody is waited for) or `verified` (provably current and no shared-only holder: maintenance is optional, tried within a bound). */
+export function dependencyStoreVerdictV1(evidence:Readonly<{envelope:boolean;pending:boolean;funding:boolean;holders:DependencyStoreHoldersV1}>):"unverified"|"occupied"|"verified"{
+  if(!evidence.envelope||evidence.pending||!evidence.funding)return"unverified";
+  return evidence.holders.live.length>0&&evidence.holders.live.every(holder=>holder.mode==="shared")?"occupied":"verified";
+}
 /** 🪪️ One process that holds the dependency store lease, as the lease registry published it: who (`pid`, `command`), since when (`sinceMs`), in which mode, and whether it is this process or one of its ancestors, whose release this process can never wait for. */
 export type DependencyStoreHolderV1=Readonly<{pid:number;command:string;sinceMs:number;silentMs?:number;mode:"shared"|"exclusive";ancestor:boolean}>;
 /** 👁️ What one look at the registry found: the holders that are alive, and those whose process is gone and whose entry was removed by that look. */
@@ -93,12 +102,12 @@ export async function retryWhileDependencyStoreBusyV1<T>(control:ResourceLeaseCo
   const started=ports.now();let step=DEPENDENCY_STORE_WAIT_V1.firstMilliseconds,said:number|undefined,ancestorSince:number|undefined;
   for(;;){
     checkResourceLeaseControl(control);const selected=await attempt();if(selected.acquired)return selected.value;
-    const now=ports.now(),waited=now-started,seen=ports.observe?.(),live=seen?.live??[];
+    const now=ports.now(),waited=now-started,seen=ports.observe?.(),live=seen?.live??[],limit=Math.min(ports.limitMilliseconds,dependencyStoreWaitScopeV1.getStore()??Infinity);
     for(const holder of seen?.gone??[])ports.sayGone?.(holder);
     if(live.length>0&&live.every(holder=>holder.ancestor)){ancestorSince??=now;if(now-ancestorSince>=DEPENDENCY_STORE_WAIT_V1.ancestorGraceMilliseconds)throw refuseCachingV1("refused","dependency-store.ancestor-holds",{seconds:Math.round((now-ancestorSince)/1000),...holderValuesV1(live[0]!)});}else ancestorSince=undefined;
-    if(waited>=ports.limitMilliseconds)throw refuseCachingV1("timeout","dependency-store.busy-timeout",{seconds:Math.round(waited/1000)});
-    if(said===undefined||waited-said>=DEPENDENCY_STORE_WAIT_V1.progressMilliseconds){ports.say(Math.round(waited/1000),Math.round(ports.limitMilliseconds/1000),live.find(holder=>!holder.ancestor)??live[0]);said=waited;}
-    await ports.sleep(Math.min(Math.round(step*randomInt(75,126)/100),ports.limitMilliseconds-waited),control.signal);step=Math.min(step*2,DEPENDENCY_STORE_WAIT_V1.maximumMilliseconds);
+    if(waited>=limit)throw refuseCachingV1("timeout","dependency-store.busy-timeout",{seconds:Math.round(waited/1000)});
+    if(said===undefined||waited-said>=DEPENDENCY_STORE_WAIT_V1.progressMilliseconds){ports.say(Math.round(waited/1000),Math.round(limit/1000),live.find(holder=>!holder.ancestor)??live[0]);said=waited;}
+    await ports.sleep(Math.min(Math.round(step*randomInt(75,126)/100),limit-waited),control.signal);step=Math.min(step*2,DEPENDENCY_STORE_WAIT_V1.maximumMilliseconds);
   }
 }
 /** 🛡️ The holder that shelters this process: the store is held, every holder is an ancestor (or this process) and every hold is shared, each verified by the registry entry of a live process, so exclusive access is impossible for the life of this command and none is needed when the funding is current. */

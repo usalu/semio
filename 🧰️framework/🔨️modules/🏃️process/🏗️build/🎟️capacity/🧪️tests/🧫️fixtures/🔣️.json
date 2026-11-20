@@ -70,8 +70,8 @@
     "holderShortfall": 1,
     "waiterParallelism": 2,
     "order": [
-      "wide",
-      "narrow"
+      "narrow",
+      "wide"
     ]
   }
 }

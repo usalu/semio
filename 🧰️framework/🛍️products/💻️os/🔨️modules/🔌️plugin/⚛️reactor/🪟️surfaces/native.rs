@@ -16,16 +16,17 @@ impl OriginalSourceProjection<ViewModel> for ViewLease{
  fn recover_source_projection<'reply,'source>(&'source self,_:&mut RetainedAllocationEffect<'_>,reply:OriginalProjectionReply<'reply,'source,ViewModel>)->Result<OriginalEffectReplyComplete<'reply,NonNull<ViewModel>,ValueError>,ValueError>{Ok(reply.pending())}
 }
 type Displaced=(Option<SurfaceBinding>,Option<ViewModel>,[Option<String>;4]);
+type ViewCursor=RetainedCloneOwner<ViewModel>;
 /// 🧷️ Cancellation retains its original input and partial projections until paid closure.
-pub struct OriginalSurfaceRefresh{binding:OriginalSourceBinding,decoder:(NativeAllocationIdentity,u64),registry:Option<usize>,body:usize,source:ManuallyDrop<Option<RetainedCloneSource<ViewModel,ViewLease>>>,admission:SourceAdmission<ViewModel,ViewLease,()>,cursor:RetainedCloneOwner<ViewModel>,new:ManuallyDrop<Option<ViewModel>>,returned:ManuallyDrop<Option<ViewLease>>,unit:read::Unit,strings:ManuallyDrop<[Option<String>;3]>,displaced:ManuallyDrop<Option<Displaced>>,retirement:RetainedCloneClose,selector:ViewModelWindowSelection,slot:usize,field:usize,utility:usize,offset:usize,phase:u8,focus_valid:bool,closing:bool}
+pub struct OriginalSurfaceRefresh{binding:OriginalSourceBinding,decoder:(NativeAllocationIdentity,u64),registry:Option<usize>,body:usize,source:ManuallyDrop<Option<RetainedCloneSource<ViewModel,ViewLease>>>,admission:SourceAdmission<ViewModel,ViewLease,()>,cursor:Option<Box<ViewCursor>>,new:ManuallyDrop<Option<ViewModel>>,returned:ManuallyDrop<Option<ViewLease>>,unit:read::Unit,strings:ManuallyDrop<[Option<String>;3]>,displaced:ManuallyDrop<Option<Displaced>>,retirement:RetainedCloneClose,selector:ViewModelWindowSelection,slot:usize,field:usize,utility:usize,offset:usize,phase:u8,focus_valid:bool,closing:bool}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"surface refresh changed its original source, registry or lifecycle")}
 fn step(d:RetirementDemand)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes})}
 fn demand<T>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>(),depth:1,..Default::default()}}
 fn paid(cx:&mut StepContext<'_>,d:RetirementDemand)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(step(d).progress())?;cx.consume_fuel(1);Ok(true)}
 impl OriginalSurfaceRefresh{
  pub fn admit(cx:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,slot:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
-  let d=RetirementDemand{capacity_bytes:size_of::<Self>(),..demand::<Self>()};let binding=OriginalSourceBinding::borrow(cx);let body=cx.retained_grant().maximum_copy_bytes;
-  let settled=built_with(cx,admission,slot,construction(d),|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(invalid)?);Ok((Box::new(Self{binding,decoder,registry:None,body,source:ManuallyDrop::new(None),admission:Default::default(),cursor:Default::default(),new:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),unit:Default::default(),strings:ManuallyDrop::new(Default::default()),displaced:ManuallyDrop::new(None),retirement:Default::default(),selector:Default::default(),slot:0,field:0,utility:0,offset:0,phase:0,focus_valid:true,closing:false}),step(d).progress()))})?;
+  let d=RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Option<Box<Self>>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()};let binding=OriginalSourceBinding::borrow(cx);let body=cx.retained_grant().maximum_copy_bytes;
+  let settled=built_with(cx,admission,slot,construction(d),|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(invalid)?);Ok((Box::write(Box::new_uninit(),Self{binding,decoder,registry:None,body,source:ManuallyDrop::new(None),admission:Default::default(),cursor:None,new:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),unit:Default::default(),strings:ManuallyDrop::new(Default::default()),displaced:ManuallyDrop::new(None),retirement:Default::default(),selector:Default::default(),slot:0,field:0,utility:0,offset:0,phase:0,focus_valid:true,closing:false}),step(d).progress()))})?;
   Ok(adopted(settled,admission,slot,|owner|&mut owner.unit.admission))
  }
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.matches(cx)||cx.native_receiving_identity()!=Some(self.decoder){return Err(invalid().into())}Ok(())}
@@ -37,14 +38,21 @@ impl OriginalSurfaceRefresh{
     if view.is_none()&&self.admission.is_none(){if paid(cx,demand::<u8>())?{self.phase=8}return Ok(self.ready())}
     if self.admission.is_none(){if paid(cx,demand::<SourceAdmission<ViewModel,ViewLease,()>>())?{self.admission.set(RetainedCloneSource::<ViewModel,ViewLease>::admission_borrowed(ViewLease(view.take().ok_or_else(invalid)?)))}return Ok(false)}
     self.admission.drive(cx,&mut self.source)?;
-    if self.source.is_some(){self.registry=Some(id);self.phase=1}
+    if self.source.as_ref().is_some_and(|source|!source.publication_pending()){self.registry=Some(id);self.phase=1}
    },
    1=>{if self.slot>registry.slots.len(){if paid(cx,demand::<u8>())?{self.phase=7}}else if self.slot==registry.slots.len(){if paid(cx,demand::<u8>())?{self.phase=2}}else if let Some(binding)=registry.slots[self.slot].as_ref(){let source=self.source.as_ref().unwrap().borrow();let input=source.get();let target=match &binding.role{SurfaceRole::Section=>{if paid(cx,demand::<usize>())?{self.slot+=1}return Ok(false)},SurfaceRole::Window(id)=>Some(id.as_str()),SurfaceRole::Panel=>input.focused_window_id.as_deref()};if let Some(target)=target{let d=self.selector.demands(input,target,0,body)?;let g=cx.retained_grant();if !cx.should_yield()&&retained_clone_grant_admits(g,d){let p=self.selector.advance(input,target,0,body,g)?.progress();cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64)}if self.selector.complete(){let exists=self.selector.selected(input,target,0)?.is_some();if !exists&&matches!(binding.role,SurfaceRole::Window(_)){if paid(cx,demand::<Displaced>())?{*self.displaced=Some((registry.slots[self.slot].take(),None,Default::default()));self.phase=6}}else if paid(cx,demand::<u8>())?{self.focus_valid=exists;self.phase=2}}}else if paid(cx,demand::<u8>())?{self.phase=2}}else if paid(cx,demand::<usize>())?{self.slot+=1}},
-   2=>{let source=self.source.as_ref().ok_or_else(invalid)?.borrow();if self.cursor.output_ready(){take_cursor(cx,&mut self.cursor,&mut *self.new)?;if self.new.is_some(){self.phase=3}}else{advance_cursor(cx,&mut self.cursor,source,body)?}},
-   3=>{if !self.cursor.terminal_is_empty(){close_cursor(cx,&mut self.cursor,body)?}else if paid(cx,demand::<u8>())?{self.phase=4}},
-   4=>{if self.slot==registry.slots.len()||!matches!(registry.slots[self.slot].as_ref().ok_or_else(invalid)?.role,SurfaceRole::Window(_)){if paid(cx,demand::<u8>())?{self.phase=5}}else{let binding=registry.slots[self.slot].as_ref().unwrap();let target=binding.role.window_id().ok_or_else(invalid)?;let source=self.source.as_ref().unwrap().borrow();let input=source.get();let window=self.selector.selected(input,target,0)?.ok_or_else(invalid)?;if self.field==2{if let Some((key,_))=input.active_utility_by_window_id.entry_at_rank(self.utility){let n=if key.len()==target.len(){(key.len()-self.offset).min(64)}else{0};if !paid(cx,RetirementDemand{copy_bytes:2*n+3*size_of::<usize>(),depth:1,..Default::default()})?{return Ok(false)}if key.len()!=target.len()||key.as_bytes()[self.offset..self.offset+n]!=target.as_bytes()[self.offset..self.offset+n]{self.utility+=1;self.offset=0;return Ok(false)}self.offset+=n;if self.offset<key.len(){return Ok(false)}self.offset=0;self.field=3;}else if paid(cx,demand::<usize>())?{self.field=4}return Ok(false)}let text=match self.field{0=>Some(window.id.as_str()),1=>Some(window.window_kind_id.as_str()),3=>input.active_utility_by_window_id.entry_at_rank(self.utility).map(|(_,v)|v.as_str()),_=>None};let index=if self.field==3{2}else{self.field};if let Some(text)=text{if self.strings[index].is_none(){let d=RetirementDemand{capacity_bytes:text.len(),..demand::<Option<String>>()};built(cx,&mut self.unit.admission,&mut self.strings[index],construction(d),||Ok((String::with_capacity(text.len()),step(d).progress())))?;}else{let mut end=(self.offset+64).min(text.len());while !text.is_char_boundary(end){end-=1}let d=RetirementDemand{copy_bytes:end-self.offset+2*size_of::<usize>(),depth:1,..Default::default()};if paid(cx,d)?{self.strings[index].as_mut().unwrap().push_str(&text[self.offset..end]);self.offset=end;if end==text.len(){self.offset=0;self.field+=1}}}}else if paid(cx,demand::<u8>())?{self.phase=5}}},
+   2=>{
+    let d=RetirementDemand{copy_bytes:size_of::<ViewCursor>()+size_of::<Option<Box<ViewCursor>>>()+size_of::<u8>(),capacity_bytes:size_of::<ViewCursor>(),depth:1,..Default::default()};
+    if built(cx,&mut self.unit.admission,&mut self.cursor,construction(d),||Ok((Box::write(Box::new_uninit(),ViewCursor::default()),step(d).progress())))?{self.phase=9}
+   },
+   9=>{
+    let source=self.source.as_ref().ok_or_else(invalid)?.borrow();let cursor=self.cursor.as_mut().ok_or_else(invalid)?;
+    if cursor.output_ready(){take_cursor(cx,cursor,&mut *self.new)?;if self.new.is_some(){self.phase=3}}else{advance_cursor(cx,cursor,source,body)?}
+   },
+   3=>{if self.close_projection_cursor(cx)?&&paid(cx,demand::<u8>())?{self.phase=4}},
+   4=>{if self.slot==registry.slots.len()||!matches!(registry.slots[self.slot].as_ref().ok_or_else(invalid)?.role,SurfaceRole::Window(_)){if paid(cx,demand::<u8>())?{self.phase=5}}else{let binding=registry.slots[self.slot].as_ref().unwrap();let target=binding.role.window_id().ok_or_else(invalid)?;let source=self.source.as_ref().unwrap().borrow();let input=source.get();let window=self.selector.selected(input,target,0)?.ok_or_else(invalid)?;if self.field==2{if let Some((key,_))=input.active_utility_by_window_id.entry_at_rank(self.utility){let n=if key.len()==target.len(){(key.len()-self.offset).min(64)}else{0};if !paid(cx,RetirementDemand{copy_bytes:2*n+3*size_of::<usize>(),depth:1,..Default::default()})?{return Ok(false)}if key.len()!=target.len()||key.as_bytes()[self.offset..self.offset+n]!=target.as_bytes()[self.offset..self.offset+n]{self.utility+=1;self.offset=0;return Ok(false)}self.offset+=n;if self.offset<key.len(){return Ok(false)}self.offset=0;self.field=3;}else if paid(cx,demand::<usize>())?{self.field=4}return Ok(false)}let text=match self.field{0=>Some(window.id.as_str()),1=>Some(window.window_kind_id.as_str()),3=>input.active_utility_by_window_id.entry_at_rank(self.utility).and_then(|(_, value)| value.as_deref()),_=>None};let index=if self.field==3{2}else{self.field};if let Some(text)=text{if self.strings[index].is_none(){let d=RetirementDemand{capacity_bytes:text.len(),..demand::<Option<String>>()};built(cx,&mut self.unit.admission,&mut self.strings[index],construction(d),||Ok((String::with_capacity(text.len()),step(d).progress())))?;}else{let mut end=(self.offset+64).min(text.len());while !text.is_char_boundary(end){end-=1}let d=RetirementDemand{copy_bytes:end-self.offset+2*size_of::<usize>(),depth:1,..Default::default()};if paid(cx,d)?{self.strings[index].as_mut().unwrap().push_str(&text[self.offset..end]);self.offset=end;if end==text.len(){self.offset=0;self.field+=1}}}}else if paid(cx,demand::<u8>())?{self.phase=5}}},
    5=>{if paid(cx,demand::<Displaced>())?{let mut next=self.new.take().ok_or_else(invalid)?;let mut old: [Option<String>;4]=Default::default();if self.slot<registry.slots.len(){old[0]=next.window_id.take();old[1]=next.active_window_kind_id.take();old[2]=next.active_utility_id.take();if !self.focus_valid{old[3]=next.focused_window_id.take()}next.window_id=self.strings[0].take();next.active_window_kind_id=self.strings[1].take();next.active_utility_id=self.strings[2].take();let previous=registry.slots[self.slot].as_mut().ok_or_else(invalid)?.view_state.replace(next);*self.displaced=Some((None,previous,old));}else{*self.displaced=Some((None,registry.view_state.replace(next),old));}self.phase=6}},
-   6=>{if self.close_displaced(cx)?&&paid(cx,demand::<Self>())?{self.cursor=Default::default();self.selector=Default::default();self.field=0;self.utility=0;self.offset=0;self.focus_valid=true;self.slot+=1;self.phase=1}},
+   6=>{let reset=demand::<(ViewModelWindowSelection,usize,usize,usize,usize,u8,bool)>();if self.close_displaced(cx)?&&paid(cx,reset)?{self.selector=Default::default();self.field=0;self.utility=0;self.offset=0;self.focus_valid=true;self.slot+=1;self.phase=1}},
    7=>{
     let source=self.source.as_mut().ok_or_else(invalid)?;
     if source.terminal_is_empty(){if paid(cx,demand::<u8>())?{self.source.take();self.phase=8}}
@@ -54,6 +62,13 @@ impl OriginalSurfaceRefresh{
    _=>return Err(invalid().into())
   }Ok(self.ready())
  }
+ fn close_projection_cursor(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let Some(cursor)=self.cursor.as_mut()else{return Ok(true)};
+  if !cursor.terminal_is_empty(){close_cursor(cx,cursor,self.body)?;return Ok(false)}
+  let d=RetirementDemand{release_bytes:size_of::<ViewCursor>(),..demand::<Option<Box<ViewCursor>>>()};
+  retired(cx,d,|_|{self.cursor.take();Ok(step(d))})?;
+  Ok(self.cursor.is_none())
+ }
  fn close_displaced(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let body=self.body;
   if !self.retirement.is_empty(){let selected=self.retirement.select(body)?;let d=selected.demands();retired_poll(cx,d,|effect|selected.step(effect))?;return Ok(false)}
@@ -62,7 +77,7 @@ impl OriginalSurfaceRefresh{
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;self.closing=true;let body=self.body;
-  if !self.cursor.terminal_is_empty(){close_cursor(cx,&mut self.cursor,body)?;return Ok(false)}
+  if !self.close_projection_cursor(cx)?{return Ok(false)}
   if !self.close_displaced(cx)?{return Ok(false)}
   if !self.admission.terminal_is_empty(){let mut inputs=None;self.admission.close(cx,&mut self.source,&mut inputs)?;if let Some((original,()))=inputs{*self.returned=Some(original)}return Ok(false)}
   macro_rules! close{($field:ident,$ty:ty)=>{if self.$field.is_some(){let d=self.retirement.next_owner_demands::<$ty>(true,&None,body)?;begun(cx,d,|effect|self.retirement.begin_granted(&mut self.$field,effect))?;return Ok(false)}}}
@@ -71,11 +86,12 @@ impl OriginalSurfaceRefresh{
   if !unbuilt(cx,&mut self.unit.admission)?{return Ok(false)}
   Ok(true)
  }
- pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.admission.terminal_is_empty()&&self.unit.terminal_is_empty()&&self.new.is_none()&&self.returned.is_none()&&self.strings.iter().all(Option::is_none)&&self.displaced.is_none()&&self.retirement.is_empty()&&self.cursor.terminal_is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.admission.terminal_is_empty()&&self.unit.terminal_is_empty()&&self.new.is_none()&&self.returned.is_none()&&self.strings.iter().all(Option::is_none)&&self.displaced.is_none()&&self.retirement.is_empty()&&self.cursor.is_none()}
  pub fn release_demand()->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }
 impl Drop for OriginalSurfaceRefresh{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original surface refresh requires paid physical closure")}}
 impl SurfaceContexts{
+ /// 🩺️ One line naming the capture lease and the displaced projections, for stall reports.
  /// 🗑️ Replaced, removed and refused projections retire one at a time; `true` once none is pending.
  pub fn retire_displaced_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.displaced.is_empty()&&self.retiring.is_none()&&self.retirement.is_empty(){return Ok(true)}

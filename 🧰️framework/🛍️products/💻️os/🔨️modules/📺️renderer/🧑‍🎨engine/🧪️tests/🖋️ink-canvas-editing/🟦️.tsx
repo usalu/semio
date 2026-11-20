@@ -38,6 +38,11 @@ describe("InkCanvas text and table-cell editing", () => {
     fireEvent.doubleClick(root, { clientX: law.gestures.table.x, clientY: law.gestures.table.y });
     const tableEditor = root.querySelector("input") as HTMLInputElement;
     expect(tableEditor.value).toBe("b");
+    const cellClipboard = { items: [], getData: () => law.gestures.table.replacement };
+    const paste = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(paste, "clipboardData", { value: cellClipboard });
+    expect(tableEditor.dispatchEvent(paste)).toBe(true);
+    expect(actionEvents(actions)).toHaveLength(1);
     fireEvent.change(tableEditor, { target: { value: law.gestures.table.replacement } });
     fireEvent.keyDown(tableEditor, { key: "Enter" });
     expect(actionEvents(actions)[1]).toEqual({ phase: law.expected.phase, events: [law.expected.tableEvent] });

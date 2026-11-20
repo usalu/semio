@@ -1,7 +1,7 @@
 import {randomBytes} from "node:crypto";
 import {closeSync,linkSync,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
 import {join} from "node:path";
-import {settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {filesystemBusyErrorV1,settleBusyFilesystemSyncV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
@@ -38,9 +38,18 @@ function removeStale(path:string,staleMs:number):void{
  removeClaimFileV1(grave);
 }
 
+/** 🔓️ Creates one claim file exclusively and returns its descriptor, `undefined` when the claim exists or stays busy: a Windows file that another process is deleting or renaming refuses the open with `EPERM`, `EACCES` or `EBUSY` instead of `EEXIST`, which is retried on the churn table's pauses and then counts as held, so the caller waits instead of failing. See https://learn.microsoft.com/windows/win32/fileio/deleting-an-open-file */
+export function openClaimFileV1(path:string,world:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;open?:(path:string)=>number}>={}):number|undefined{
+ const open=world.open??(target=>openSync(target,"wx"));
+ const outcome=settleBusyFilesystemSyncV1(path,()=>open(path),{report:()=>undefined,...world.platform?{platform:world.platform}:{},...world.sleepSync?{sleepSync:world.sleepSync}:{}});
+ if(outcome.settled)return outcome.value;
+ const error=outcome.error as NodeJS.ErrnoException;
+ if(error.code==="EEXIST"||filesystemBusyErrorV1(error,world.platform))return undefined;
+ throw error;
+}
+
 function tryCreate(path:string,heartbeatMs:number):ClaimV1|undefined{
- const token=randomBytes(8).toString("hex");let fd:number;
- try{fd=openSync(path,"wx");}catch(error){if((error as NodeJS.ErrnoException).code==="EEXIST")return undefined;throw error;}
+ const token=randomBytes(8).toString("hex");const fd=openClaimFileV1(path);if(fd===undefined)return undefined;
  try{writeSync(fd,JSON.stringify({pid:process.pid,token,atMs:Date.now()}));}finally{closeSync(fd);}
  const beat=setInterval(()=>{try{const now=new Date();utimesSync(path,now,now);}catch{}},heartbeatMs);beat.unref?.();
  let released=false;

@@ -262,10 +262,37 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         true
     }
 
+    #[cfg(not(target_os = "wasi"))]
+    pub fn pump_icon_svg_preview(&self, now: f64) -> bool {
+        let wake = self.0.waker.lock().expect("runtime completion waker lock").clone();
+        semio_renderer_wgpu_icon_host::svg_panes::advance(now, wake, |host, key, width, height, pixels| {
+            semio_renderer_wgpu_scene_canvas2d::queue_decoded_raster_upload_retaining_source(host, key.into(), width, height, pixels).map(|_| ())
+        })
+    }
+
+    #[cfg(not(target_os = "wasi"))]
+    pub fn icon_svg_retry_deadline(&self) -> Option<f64> {
+        semio_renderer_wgpu_icon_host::svg_panes::retry_deadline()
+    }
+
+    #[cfg(not(target_os = "wasi"))]
+    pub fn reconcile_icon_svg_previews(&self, resident: impl FnMut(&str) -> bool) -> bool {
+        semio_renderer_wgpu_icon_host::svg_panes::reconcile(resident)
+    }
+
+    #[cfg(all(target_arch = "wasm32", not(target_os = "wasi")))]
+    pub fn has_pending_icon_svg_preview(&self) -> bool {
+        semio_renderer_wgpu_icon_host::svg_panes::has_pending()
+    }
+
     /// 🧹️ Keeps one closing component's asset authority reachable until its exact borrowers return.
     pub fn close_component_asset_step(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if !matches!(target.kind, semio_ui_declaration::ui::SurfaceKind::World3d | semio_ui_declaration::ui::SurfaceKind::IconRender) {
             return Ok(true);
+        }
+        #[cfg(not(target_os = "wasi"))]
+        if target.kind == semio_ui_declaration::ui::SurfaceKind::IconRender && !semio_renderer_wgpu_icon_host::svg_panes::close_step(Some(&target.host_id)) {
+            return Ok(false);
         }
         let surface_token = {
             let Ok(mut runtime) = self.try_lock() else { return Ok(false)};
@@ -340,6 +367,10 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         if self.pump_native_asset_handoff_step(true).is_some() {
             return Ok(false);
         }
+        #[cfg(not(target_os = "wasi"))]
+        if !semio_renderer_wgpu_icon_host::svg_panes::close_step(None) {
+            return Ok(false);
+        }
         Ok(close_renderer_asset_step())
     }
 
@@ -362,14 +393,19 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         self.renderer_asset_current(fetch) != Some(false)
     }
 
-    pub fn reject_renderer_asset(&self, fetch: &RendererAssetFetchOwner) -> bool {
+    pub fn reject_renderer_asset(&self, fetch: &RendererAssetFetchOwner, retryable: bool) -> bool {
         match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return false };
                 let Some(interaction) = runtime.interaction_mut() else { return false };
                 let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else { return true };
                 if !world3d_asset_cancellation_requested(&state.assets, owner.token()) {
-                    mark_world3d_asset_miss(&mut state.assets, owner.url());
+                    match owner.kind() {
+                        WorldAssetRequestKind::Terrain { z, x, y } => {
+                            apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &[]);
+                        }
+                        _ => mark_world3d_asset_miss(&mut state.assets, owner.url()),
+                    }
                 }
             }
             RendererAssetFetchOwner::Shared(owner) => {
@@ -378,7 +414,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 drop(authority);
                 if !cancelled {
                     if matches!(owner.kind(), WorldAssetRequestKind::Glb) {
-                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), "asset transport was unavailable");
+                        semio_renderer_wgpu_icon_host::icon_export::asset::reject(owner.token(), semio_renderer_wgpu_icon_host::icon_export::asset::IconExportAssetFault::Transport { retryable });
                     }
                     Self::record_rejected_asset(&("asset transport was unavailable", owner.kind(), owner.url().to_string()));
                 }

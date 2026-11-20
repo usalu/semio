@@ -98,6 +98,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "budgetBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
         "nowMs": {
           "type": "integer",
           "minimum": 0

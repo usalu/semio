@@ -5,16 +5,16 @@
 //! per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the finite
 //! magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ChangeLoad;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasePatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadsModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::load_breach;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadCasePatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesModification;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadsModification;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::load_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_load;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
 

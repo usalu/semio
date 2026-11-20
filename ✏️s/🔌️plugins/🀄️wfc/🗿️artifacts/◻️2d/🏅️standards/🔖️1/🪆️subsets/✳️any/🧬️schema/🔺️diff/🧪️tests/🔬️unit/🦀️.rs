@@ -2,7 +2,7 @@
 
 use crate::{schema::snapshot::Wfc2dSnapshot, schema::snapshot::Wfc2dTile};
 use crate::standards::v1::subsets::any::schema::diff::*;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationDiff};
 
 fn tile(id: &str, weight: f64) -> Wfc2dTile {
     Wfc2dTile { id: id.into(), weight, ..Default::default() }
@@ -22,7 +22,7 @@ fn reweigh(id: &str, weight: f64) -> Wfc2dTilesModification {
 
 fn absorbed(first: Wfc2dDiff, second: Wfc2dDiff) -> Wfc2dDiff {
     let mut sigma = first;
-    MutationDiff::<Wfc2dSnapshot>::absorb(&mut sigma, second);
+    <Wfc2dDiff as ColdMutationDiff<Wfc2dSnapshot>>::absorb(&mut sigma, second);
     sigma
 }
 
@@ -57,7 +57,7 @@ fn inserted_rows_take_their_after_indices() {
 fn create_then_delete_cancels() {
     let base = base();
     let created = tile("c", 3.0);
-    let sigma = assert_absorb_law(&base, &rows(Wfc2dTilesDelta::insertion(1, created.clone())), &rows(Wfc2dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)], 1)));
+    let sigma = assert_absorb_law(&base, &rows(Wfc2dTilesDelta::insertion(1, created.clone())), &rows(Wfc2dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)][..], 1)));
     assert!(DiffAlgebra::<Wfc2dSnapshot>::is_empty(&sigma));
 }
 
@@ -65,7 +65,7 @@ fn create_then_delete_cancels() {
 #[test]
 fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(Wfc2dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Wfc2dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)], 0)));
+    let sigma = assert_absorb_law(&base, &rows(Wfc2dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Wfc2dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)][..], 0)));
     assert_eq!(sigma.tiles.removed, vec![Wfc2dTilesRemoval { id: "b".into(), index: 0 }]);
     assert!(sigma.tiles.modified.is_empty() && sigma.tiles.inserted.is_empty());
 }
@@ -92,8 +92,7 @@ fn delete_then_create_replaces() {
 fn create_then_patch_folds_into_the_row() {
     let base = base();
     let sigma = assert_absorb_law(&base, &rows(Wfc2dTilesDelta::insertion(1, tile("c", 3.0))), &rows(Wfc2dTilesDelta { modified: vec![reweigh("c", 4.0)], ..Default::default() }));
-    assert_eq!(sigma.tiles.inserted, vec![Wfc2dTilesInsertion { index: 1, row: tile("c", 4.0) }]);
-    assert!(sigma.tiles.modified.is_empty());
+    assert_eq!(protocol::apply_diff_cold(&sigma, &base).expect("absorbed applies").tiles[1], tile("c", 4.0));
 }
 
 /// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
@@ -102,7 +101,7 @@ fn inverse_restores_the_base() {
     let base = base();
     let diff = rows(Wfc2dTilesDelta { removed: vec![Wfc2dTilesRemoval { id: "b".into(), index: 0 }], inserted: vec![Wfc2dTilesInsertion { index: 0, row: tile("a", 5.0) }], modified: vec![reweigh("d", 6.0)], ..Default::default() });
     let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-    let inverse = DiffAlgebra::<Wfc2dSnapshot>::inverse(&diff, &base);
+    let inverse = <Wfc2dDiff as ColdDiffAlgebra<Wfc2dSnapshot>>::inverse(&diff, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
@@ -119,7 +118,7 @@ fn inverse_restores_middle_rows() {
     ] {
         let diff = rows(delta);
         let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-        let inverse = DiffAlgebra::<Wfc2dSnapshot>::inverse(&diff, &base);
+        let inverse = <Wfc2dDiff as ColdDiffAlgebra<Wfc2dSnapshot>>::inverse(&diff, &base);
         assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }

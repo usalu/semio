@@ -10,7 +10,7 @@ import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
 
 /** 📏️ Logical-end divider between siblings inside a chrome control group shell. */
 export const chromeControlGroupSiblingDividerClass = "shared-border-cell";
-import { formControlFocusBorderClass } from "../📝️form-control-presentation/🟦️.ts";
+import { formControlResetClass } from "../📝️form-control-presentation/🟦️.ts";
 import { hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, interactiveHoverClass, interactiveOnClass } from "../🖱️interaction-presentation/🟦️.ts";
 import { glassClass } from "../🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -21,15 +21,15 @@ export const chromeControlItemBaseClass = cn(
   "text-element box-border inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent overflow-visible",
   "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
   "[&_[data-icon]]:overflow-visible [&_svg]:pointer-events-none [&_svg]:block [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
-  formControlFocusBorderClass,
-  "whitespace-nowrap min-h-medium h-full max-h-full p-single leading-none",
+  formControlResetClass,
+  "whitespace-nowrap self-stretch p-single leading-none",
 );
 
 /** 🔘️ Interactive chrome control cell. */
 export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
 
 /** 🖱️ Drag-handle-aware chrome tab cell. */
-export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
+export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, "min-h-medium", hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
 
 /** 📑️ Default mode-dock tab label. */
 export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
@@ -50,14 +50,4 @@ export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-mediu
 
 /** 🔛️ Data-state on presentation for chrome controls. */
 export const chromeControlItemOnClass = interactiveOnClass;
-
-/** ✅️ Data-active presentation for chrome tabs. */
-export const chromeControlTabActiveClass = cn(
-  "data-[active=true]:bg-active-base",
-  "data-[active=true]:border-active-base",
-  "data-[active=true]:text-emphasized",
-  "data-[active=true]:hover:bg-active-base/90",
-  "data-[active=true]:hover:border-active-base",
-  "data-[active=true]:hover:text-emphasized",
-);
 // #endregion 🎛️ChromeControlPresentation

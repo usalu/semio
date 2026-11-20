@@ -79,7 +79,12 @@ test("every exposed kernel method and mesh operation has exactly one kind", () =
     claimed.set(kind, operation);
   }
   expect(fixture.kernelCoverage.length).toBe(93);
-  expect(fixture.meshCoverage.length).toBe(42);
+  const packaged = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json", import.meta.url), "utf8"));
+  const operations = fixture.meshCoverage.map(({ operation }) => "brep.mesh." + operation).sort();
+  for (const topic of packaged.manifest.topicContributions) {
+    const operators = JSON.parse(topic.payload.manifestJson).contributes.operators as { id: string }[];
+    expect(operations).toEqual(operators.map(({ id }) => id).filter(id => id.startsWith("brep.mesh.")).sort());
+  }
   expect(fixture.unexposedKernelMethods.length).toBe(7);
 });
 

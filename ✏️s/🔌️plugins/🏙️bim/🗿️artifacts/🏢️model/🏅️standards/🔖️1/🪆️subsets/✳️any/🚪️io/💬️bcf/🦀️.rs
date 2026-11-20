@@ -19,6 +19,7 @@ use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🪪️ The BCF 2.1 dialect the issues are written in.
@@ -391,8 +392,8 @@ pub fn read_document(bytes: &[u8]) -> Result<Document, String> {
 /// 📥️ What a BCF container holds, as authored records keyed by id (the guid of the topic or comment) and what could not be taken over.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ImportedIssues {
-    pub issues: BTreeMap<String, Issue>,
-    pub comments: BTreeMap<String, IssueComment>,
+    pub issues: RetainedOrderedMap<String, Issue>,
+    pub comments: RetainedOrderedMap<String, IssueComment>,
     pub notes: Vec<String>,
 }
 
@@ -472,7 +473,7 @@ pub fn issues_of(document: &Document, resolve: &dyn Fn(&str) -> Option<String>) 
             }
         }
         let valid = |moment: &str| if semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::valid_timestamp(moment) { moment.to_string() } else { "1970-01-01".to_string() };
-        imported.issues.insert(
+        imported.issues.cold_insert(
             topic.guid.clone(),
             Issue {
                 title: if topic.title.trim().is_empty() { "Untitled".into() } else { topic.title.clone() },
@@ -489,7 +490,7 @@ pub fn issues_of(document: &Document, resolve: &dyn Fn(&str) -> Option<String>) 
             },
         );
         for comment in &topic.comments {
-            imported.comments.insert(
+            imported.comments.cold_insert(
                 comment.guid.clone(),
                 IssueComment { issue: topic.guid.clone(), author: if comment.author.trim().is_empty() { "unknown".into() } else { comment.author.clone() }, date: valid(&comment.date), text: if comment.text.trim().is_empty() { "-".into() } else { comment.text.clone() } },
             );

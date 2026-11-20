@@ -106,6 +106,7 @@ semio-s-artifact-stdio-ifc-2x3-base-mutations = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-cobie = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-cv20 = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-sav = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-viewer = { workspace = true }
 semio-s-artifact-stdio-ifc-4 = { workspace = true }
 semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }

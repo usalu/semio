@@ -1,0 +1,64 @@
+{
+  "operator": "brep.surf.thicken",
+  "cases": [
+    {
+      "profile": "rectangle",
+      "constructor": "brep.curve.rectangle",
+      "boundary": "wire",
+      "inputs": {
+        "width": 2,
+        "height": 3
+      },
+      "thickness": -4,
+      "axis": 2,
+      "faces": 6,
+      "bounds": [
+        [
+          0,
+          0,
+          -4
+        ],
+        [
+          2,
+          3,
+          0
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "profile": "circle",
+      "constructor": "brep.curve.circle",
+      "boundary": "curve",
+      "inputs": {
+        "center": [
+          2,
+          3,
+          4
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "radius": 1.5
+      },
+      "thickness": 5,
+      "axis": 0,
+      "faces": 3,
+      "bounds": [
+        [
+          2,
+          1.5,
+          2.5
+        ],
+        [
+          7,
+          4.5,
+          5.5
+        ]
+      ],
+      "volume": 35.34291735288517
+    }
+  ]
+}

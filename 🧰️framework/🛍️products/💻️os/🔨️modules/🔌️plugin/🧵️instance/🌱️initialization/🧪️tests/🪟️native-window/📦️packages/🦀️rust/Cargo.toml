@@ -53,3 +53,7 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 serde_json.workspace = true
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-plugin-instance-app = { path = "../../../../../📦️packages/🦀️rust" }
+semio-plugin-job = { path = "../../../../../../👷️job/📦️packages/🦀️rust" }
+semio-plugin-plugin-program = { path = "../../../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-plugin-reactor-lifecycle = { path = "../../../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust" }
+semio-plugin-runtime-instances = { path = "../../../../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust" }

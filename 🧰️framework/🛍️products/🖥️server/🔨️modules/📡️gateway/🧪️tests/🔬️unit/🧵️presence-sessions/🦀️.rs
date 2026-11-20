@@ -74,6 +74,24 @@ async fn two_sessions_share_coalesced_state_and_see_each_other_leave() {
 }
 
 #[tokio::test]
+async fn a_burst_of_states_over_the_rate_still_ends_in_the_newest_state() {
+    let state = presence_server(PresenceSettings { max_states_per_second: 3, ..quick_presence(Duration::from_secs(30)) }).await;
+    let (client, mut frames, _task) = connect(&state, "room-burst", "home");
+    let PresenceFrame::Welcome { session, .. } = next_frame(&mut frames).await else { panic!("welcome first") };
+    for n in 0..10 {
+        say(&client, &format!(r#"{{"type":"state","state":{{"n":{n}}}}}"#));
+    }
+    let lane = presence_lane(&Scope("room-burst".into()));
+    let newest = || state.presence_rooms.roster(&lane).into_iter().find(|entry| entry.session == session).map(|entry| entry.state);
+    let started = Instant::now();
+    while newest() != Some(serde_json::json!({ "n": 9 })) {
+        assert!(started.elapsed() < Duration::from_secs(5), "the newest state is applied once the allowance refills, not dropped: {:?}", newest());
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert!(started.elapsed() >= Duration::from_millis(500), "a state over the rate waits for the next window: {:?}", started.elapsed());
+}
+
+#[tokio::test]
 async fn an_idle_session_is_closed_and_leaves_the_room() {
     let state = presence_server(quick_presence(Duration::from_millis(150))).await;
     let (_silent, mut frames, task) = connect(&state, "room-idle", "home");
@@ -193,7 +211,7 @@ fn the_watch_interval_is_clamped_between_the_tick_and_the_slowest_interval() {
     assert_eq!(watch_interval(250, &settings), Duration::from_millis(250));
     assert_eq!(watch_interval(u64::MAX, &settings), settings.max_watch_interval);
     let mut budget = StateBudget::new(settings.max_states_per_second);
-    assert_eq!(admit_frame(r#"{"type":"watch","scopes":["a"],"intervalMs":250}"#, &settings, &mut budget, Instant::now()), Ok(Some(PresenceFrame::Watch { scopes: vec![Scope("a".into())], interval_ms: 250 })));
+    assert_eq!(admit_frame(r#"{"type":"watch","scopes":["a"],"intervalMs":250}"#, &settings, &mut budget, Instant::now()), Ok(Admitted::Now(PresenceFrame::Watch { scopes: vec![Scope("a".into())], interval_ms: 250 })));
     assert_eq!(admit_frame(r#"{"type":"watched","scope":"a","entries":[],"left":[]}"#, &settings, &mut budget, Instant::now()), Err(REFUSED_INVALID.to_string()), "watched travels server → client only");
 }
 

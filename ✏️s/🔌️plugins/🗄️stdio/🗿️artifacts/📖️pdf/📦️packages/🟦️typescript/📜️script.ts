@@ -12,6 +12,7 @@ class OwnedVerifyScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
 await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { bundleRuntime: "runtime", suites: [
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/🧪️tests/oracle.test.ts",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🧪️tests/🟦️.ts",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧩️cos/🟦️.ts",

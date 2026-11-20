@@ -81,6 +81,12 @@ export interface ChangeStockLabel {
   newLabel: string;
 }
 
+/** 📏️ Size in metres of an authored stock dimension. */
+export interface ResizeStock {
+  field: "width" | "depth" | "height" | "radius";
+  size: number;
+}
+
 /** 🧊️ `replace-stock-solid` payload — pure handle swap of the composed brep stock-solid child. */
 export interface ReplaceStockSolid {
   newSolid: ArtifactChildHandle;
@@ -101,4 +107,5 @@ export type Process3dMutation =
   | ({ mutation: "replaceMachineCapabilities" } & ReplaceMachineCapabilities)
   | ({ mutation: "moveStock" } & MoveStock)
   | ({ mutation: "changeStockLabel" } & ChangeStockLabel)
-  | ({ mutation: "replaceStockSolid" } & ReplaceStockSolid);
+  | ({ mutation: "replaceStockSolid" } & ReplaceStockSolid)
+  | ({ mutation: "resizeStock" } & ResizeStock);

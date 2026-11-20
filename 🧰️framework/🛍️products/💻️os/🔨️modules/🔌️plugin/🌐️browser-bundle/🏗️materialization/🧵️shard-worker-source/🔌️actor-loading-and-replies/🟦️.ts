@@ -38,7 +38,7 @@ let lastReplyCloneMs = 0;
 // memory diagnosis this ticket had to walk back (26/09/09/PROCEDURAL-3D-END-TO-END).
 function replyError(requestId, error, frames, retryableLifecycle) {
   const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
-  const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
+  const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload, (_key, item) => (typeof item === "bigint" ? item.toString() + "n" : item instanceof Uint8Array ? "<" + item.byteLength + " bytes>" : item)); } catch { const seen = new WeakSet(); try { return JSON.stringify(payload, (_key, item) => { if (typeof item === "bigint") return item.toString() + "n"; if (item instanceof Uint8Array) return "<" + item.byteLength + " bytes>"; if (item instanceof Error) return { name: item.name, message: item.message }; if (item && typeof item === "object") { if (seen.has(item)) return "<cycle>"; seen.add(item); } return item; }); } catch (inner) { return String(payload) + " (unserializable: " + String(inner) + ")"; } } })()}\` : "";
   let stack;
   try { stack = error && error.stack ? String(error.stack) : undefined; } catch { stack = undefined; }
   let type;
@@ -140,7 +140,7 @@ function deliverEffectResult(actorId, activationGeneration, envelope) {
 
 async function closeOriginalActor(actorId, activationGeneration) {
   const actor = actors.get(actorId);
-  if (!actor || actor.activationGeneration !== activationGeneration || inFlightTurnActors.has(actorId)) return;
+  if (!actor || actor.activationGeneration !== activationGeneration) return;
   try {
     const closed = await actor.api.closeOriginal();
     if (closed.sourceClosed) { actors.delete(actorId); grantedBudgets.delete(actorId); }

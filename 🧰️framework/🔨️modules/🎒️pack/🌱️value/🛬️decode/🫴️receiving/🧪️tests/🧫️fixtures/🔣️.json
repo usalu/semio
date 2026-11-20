@@ -21,6 +21,7 @@
   ],
   "documentReceiving": {
     "sourceFormat": "Document",
+    "totalAllocationCeiling": "18446744073709551615",
     "guessBody": false,
     "copySource": false,
     "codecs": [

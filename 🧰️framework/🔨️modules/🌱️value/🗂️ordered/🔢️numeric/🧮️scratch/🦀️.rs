@@ -64,10 +64,14 @@ impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
  pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
  pub fn next_close_copy_byte_demand(&self)->usize{if self.nodes.is_empty(){0}else{size_of::<Node<K,V>>()}}
- /// ❄️ Cold scalar disposal; retained callers separately admit the funded copy demand.
+ /// 📐️ Quotes disposal of one scalar record or its next empty backing page.
+ pub fn next_close_demand(&self)->Result<crate::RetirementDemand,PagedListError>{
+  if self.nodes.is_empty(){self.nodes.next_release_demand()}else{Ok(crate::RetirementDemand{copy_bytes:size_of::<Node<K,V>>(),depth:1,..Default::default()})}
+ }
+ /// ❄️ Disposes of one scalar record or its next empty page through the caller’s effect.
  pub fn close_copy_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<semio_framework_value_persistent::list::PagedListReleaseOutcome,semio_framework_value_persistent::list::PagedListReleaseFailure>{
   use semio_framework_value_persistent::list::{PagedListProgress,PagedListReleaseFailure,PagedListReleaseOutcome};let grant=effect.grant();
-  if grant.maximum_items==0||grant.maximum_copy_bytes<self.next_close_copy_byte_demand()||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(PagedListReleaseOutcome::Denied),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<self.next_close_copy_byte_demand()||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(PagedListReleaseOutcome::Denied),work:0}}
   if self.nodes.is_empty(){return self.nodes.release_empty_page(effect)}
   let before=effect.performed_work();let performed=effect.performed(1);let work=effect.performed_work().saturating_sub(before);
   match performed{Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(PagedListReleaseFailure::Work(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"numeric scratch disposal exceeded its original work"))),work},Err(error)=>return crate::RetainedWorkOutcome{result:Err(PagedListReleaseFailure::Work(error)),work}}

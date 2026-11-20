@@ -1,0 +1,8 @@
+{
+  "outer": [[0, 0], [6, 0], [6, 8], [0, 8]],
+  "maximumEdge": 0.7071067811865476,
+  "minimumAngleDegrees": 20,
+  "maximumPoints": 512,
+  "maximumTriangles": 1024,
+  "expected": { "points": 221, "triangles": 384, "area": 48 }
+}

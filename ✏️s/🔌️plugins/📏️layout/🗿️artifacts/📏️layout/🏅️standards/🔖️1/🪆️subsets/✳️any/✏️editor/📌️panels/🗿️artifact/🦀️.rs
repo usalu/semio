@@ -94,10 +94,6 @@ fn story_row_id(story_id: &str) -> String {
     format!("layout-document.story.{story_id}")
 }
 
-fn link_row_id(link_id: &str) -> String {
-    format!("layout-document.link.{link_id}")
-}
-
 fn style_row_id(style_id: &str) -> String {
     format!("layout-document.style.{style_id}")
 }
@@ -230,7 +226,8 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
         .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[6], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.stories.as_str())?), false, &doc.stories, |story| {
             layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[7], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.links.as_str())?), false, &doc.links, |link| {
+        .window_indexed_section(windows, LAYOUT_DOCUMENT_SECTIONS[7], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.links.as_str())?), false, doc.links.len(), |position| {
+            let link = &doc.links[position];
             let mut referencing_ids: UiFixedList<String> = UiFixedList::default();
             for frame in doc.pages.iter().flat_map(|page| page.frames.iter()) {
                 if let Frame::Image { link_id, .. } = frame {
@@ -241,7 +238,10 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
             }
             let action = if referencing_ids.is_empty() { None } else { Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(referencing_ids, "replace")?))?) };
             let title = if link.artifact_kind.is_empty() { link.path.clone() } else { format!("{} {}", link.artifact_kind, link.artifact_ref) };
-            layout_tree_item(link_row_id(&link.id), Label::data(title), Some(link.state.clone().unwrap_or_else(|| "ok".into())), Some("link".into()), action, None)
+            let key = crate::link_presentation_key("layout-document", &link.id, position)?;
+            let title = UiText::clipped(&title);
+            let state = UiText::clipped(link.state.as_deref().unwrap_or("ok"));
+            layout_tree_item(key.as_str(), Label::data(title.as_str()), Some(state.as_str().into()), Some("link".into()), action, None)
         })?
         .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[8], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.styles.as_str())?), false, &styles, |style| {
             layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(style.description.clone()), Some("type".into()), None, None)

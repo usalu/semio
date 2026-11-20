@@ -97,7 +97,7 @@ impl KernelPoolState {
             &mut preview_sequence,
             &mut retained_progress,
         );
-        match entry.log.begin_capture(&mut context, actor, semio_framework_actor::JobReplaySchedule { worker_count, worker_slot, granted_fuel: TURN_BUDGET.fuel, deadline_class_ms: TURN_BUDGET.deadline_ms }, publication) {
+        match entry.log.begin_capture(&mut context, actor, semio_framework_actor::JobReplaySchedule { worker_count, worker_slot, granted_fuel: TURN_BUDGET.fuel, deadline_class_ms: u32::try_from(TURN_BUDGET.deadline_us / 1_000).expect("renderer duration fits its replay field") }, publication) {
             Ok(()) => entry.terminal_seen |= terminal,
             Err(rejected) => {
                 let fault = match rejected.fault {

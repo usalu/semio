@@ -27,13 +27,13 @@ import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 
  * function, not a second invented bound — see this packet's `📓️terra-web-shellhost-report.md`
  * `## lease-requests` for the ask to export it from `PluginRuntime` instead, at which point this
  * function should be deleted in favor of importing it directly. */
-/** ⏱️ One stall band line: the held program as the person knows it (its spawned window's breadcrumb, else its first app's)
+/** ⏱️ One stall band line: the held program as the person knows it (its spawned window's breadcrumb, else the breadcrumb of the app the session runs on that instance, else the program id)
  * and the held command by its own manifest label, in the person's language, with the seconds it has held its lane. */
-export function commandStallLineV1(stall: CommandStallV1, programs: readonly LoadedProgramState[], spawnedApps: readonly SpawnedAppEntry[], terminology: string, locale: string, nowMs: number): string {
+export function commandStallLineV1(stall: CommandStallV1, programs: readonly LoadedProgramState[], spawnedApps: readonly SpawnedAppEntry[], session: ActiveSession | null, terminology: string, locale: string, nowMs: number): string {
   const instanceId = Number(stall.actorId.slice(stall.actorId.lastIndexOf("#") + 1));
   const spawned = spawnedApps.find((entry) => entry.pluginId === stall.programId && entry.instanceId === instanceId);
   const program = programs.find((entry) => entry.handle.pluginId === stall.programId);
-  const app = program?.manifest.apps.find((candidate) => candidate.id === spawned?.appId) ?? program?.manifest.apps[0];
+  const app = spawned ? program?.manifest.apps.find((candidate) => candidate.id === spawned.appId) : session?.pluginId === stall.programId && session.instanceId === instanceId ? session.app : undefined;
   const programLabel = spawned ? spawned.breadcrumb.join(" · ") : app ? app.breadcrumb.join(" · ") : stall.programId;
   const actions = (program?.manifest.apps ?? []).flatMap((candidate) => [...(candidate.actions ?? []), ...candidate.windowKinds.flatMap((kind) => kind.actions ?? [])]);
   const action = stall.commandId === null ? undefined : actions.find((candidate) => candidate.id === stall.commandId);

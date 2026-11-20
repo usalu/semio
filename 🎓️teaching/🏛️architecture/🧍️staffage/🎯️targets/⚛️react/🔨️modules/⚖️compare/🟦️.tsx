@@ -14,7 +14,7 @@ import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive, useRows } from "../🧭️context/🟦️.tsx";
 import { Bar, Button, Cell, Column, Note, Notice, NumberField, PageFrame, ProgressNotice, SelectField, Segmented, Tag, asCells } from "../🪟️chrome/🟦️.tsx";
-import { FigureBoundary, UnavailableNotice, useDarkSurface } from "../🖼️previews/🟦️.tsx";
+import { FigureBoundary, RowPreview, UnavailableNotice, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
 import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import { VIEW_NAMES, valueText } from "../🗣️labels/🟦️.ts";
@@ -49,6 +49,7 @@ function ComparePaneCard(props: PaneProps): ReactElement {
   const title = row?.entry.title[language] ?? pane.asset;
   const options = ready.some((candidate) => candidate.entry.id === pane.asset) ? ready : row === undefined ? ready : [row, ...ready];
   const query = useMemo(() => (asset === undefined ? undefined : paneQuery(asset, pane.selection)), [asset, pane.selection]);
+  const previewPose = useMemo(() => asset === undefined ? undefined : { kind: "pose", pose: asset.presentation.defaultPose } as const, [asset]);
   const resolution = useMemo(() => (asset === undefined ? undefined : resolveViewpoint(asset, pane.viewpoint, scale, language)), [asset, pane.viewpoint, scale, language]);
   return (
     <Column as="section" aria-labelledby={`compare-pane-${index}`} data-compare-pane={index} className="min-w-0 flex-1 bg-panel">
@@ -69,15 +70,17 @@ function ComparePaneCard(props: PaneProps): ReactElement {
             <p className="m-0">{resolution.message[language]}</p>
             <p className="m-0 text-muted-foreground">{viewpointWord("viewpoints.nothingInstead", language)}</p>
           </Notice>
+        ) : !editable ? (
+          <RowPreview row={row!} viewpoint={pane.viewpoint} view={pane.view} scale={scale} {...(previewPose === undefined ? {} : { query: previewPose })} compact />
         ) : (
           <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact plain title={title}>{message}</Notice>}>
             <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={pane.view} viewpoint={pane.viewpoint} scale={{ denominator: scale }} language={language} theme={theme} {...(frame === undefined ? {} : { frame })} fit="contain" onInspect={(value, item) => setInspected(value === null ? null : { value, item: item?.region ?? item?.bone ?? "" })} />
           </FigureBoundary>
         )}
       </div>
-      <Cell role="status" aria-live="polite" className="min-h-4 font-mono text-[0.65rem] text-muted-foreground">
+      {editable ? <Cell role="status" aria-live="polite" className="min-h-4 font-mono text-[0.65rem] text-muted-foreground">
         {inspected === null ? t("compare.inspectHint") : `${inspected.value.label[language]}: ${valueText(inspected.value, language)}`}
-      </Cell>
+      </Cell> : null}
       {asset === undefined ? null : (
         <Cell>
           <Tag title={t("fact.height")}>{formatNumber(asset.dimensions.heightM, 2, language)} m</Tag>
@@ -149,6 +152,7 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
   const dark = useDarkSurface();
   const theme = dark ? "dark" : "light";
   const frame = useMemo(() => {
+    if (!view.opened) return undefined;
     try {
       const scenes = panes.flatMap((pane) => {
         const asset = find(pane.asset);
@@ -160,7 +164,7 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
     } catch {
       return undefined;
     }
-  }, [panes, rows, scale, language, theme]);
+  }, [view.opened, panes, rows, scale, language, theme]);
   const body =
     panes.length < COMPARE_LIMITS.min ? (
       loading.busy ? null : (
@@ -170,29 +174,33 @@ export function ComparePage(props: { readonly view: PaneView }): ReactElement {
       )
     ) : (
       <>
-        <Bar below="tablet">
-          <Segmented inline label={t("compare.scale")} value={(SCALE_PRESETS as readonly number[]).includes(scale) ? scale : null} onChange={(next) => write({ scale: next })} options={SCALE_PRESETS.map((preset) => ({ value: preset, label: `1:${preset}` }))} />
-          <NumberField label={t("compare.scaleCustom")} min={1} max={100000} step={1} value={scale} onChange={(next) => next !== null && next >= 1 && write({ scale: next })} className="lg:max-w-40" unit="1:" />
-        </Bar>
-        <Bar below="tablet" role="group" aria-label={t("compare.quick")}>
-          {asCells(
-            <>
-              <Button icon="layout-grid" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViews(first.asset, panes.length, first.selection, first.viewpoint))}>{t("compare.sameAsset")}</Button>
-              <Button icon="users" disabled={first === undefined} onClick={() => first !== undefined && setPanes(differentAssetsSameView(readyIds, first.asset, first.view, panes.length, first.viewpoint))}>{t("compare.sameView")}</Button>
-              <Button icon="box" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViewpoints(first.asset, first.view, first.selection))}>{t("compare.threeViews")}</Button>
-              <Button icon="plus" disabled={panes.length >= COMPARE_LIMITS.max} onClick={() => setPanes([...panes, nextPane(panes)])}>{t("compare.addPane")}</Button>
-              <Button icon="rotate-cw" onClick={() => setPanes(swapFirstTwo(panes))}>{t("compare.swap")}</Button>
-              <Button icon="rotate-ccw" onClick={() => navigate({ page: "compare" }, new URLSearchParams(), true)}>{t("compare.reset")}</Button>
-            </>,
-          )}
-        </Bar>
-        <Transport clock={clock} label={t("compare.transport")} onUserTime={(timeS) => write({ timeS })} onRate={(rate) => write({ rate })} onLoop={(loop) => write({ loop })} />
+        {view.opened ? (
+          <>
+            <Bar below="tablet">
+              <Segmented inline label={t("compare.scale")} value={(SCALE_PRESETS as readonly number[]).includes(scale) ? scale : null} onChange={(next) => write({ scale: next })} options={SCALE_PRESETS.map((preset) => ({ value: preset, label: `1:${preset}` }))} />
+              <NumberField label={t("compare.scaleCustom")} min={1} max={100000} step={1} value={scale} onChange={(next) => next !== null && next >= 1 && write({ scale: next })} className="lg:max-w-40" unit="1:" />
+            </Bar>
+            <Bar below="tablet" role="group" aria-label={t("compare.quick")}>
+              {asCells(
+                <>
+                  <Button icon="layout-grid" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViews(first.asset, panes.length, first.selection, first.viewpoint))}>{t("compare.sameAsset")}</Button>
+                  <Button icon="users" disabled={first === undefined} onClick={() => first !== undefined && setPanes(differentAssetsSameView(readyIds, first.asset, first.view, panes.length, first.viewpoint))}>{t("compare.sameView")}</Button>
+                  <Button icon="box" disabled={first === undefined} onClick={() => first !== undefined && setPanes(sameAssetAcrossViewpoints(first.asset, first.view, first.selection))}>{t("compare.threeViews")}</Button>
+                  <Button icon="plus" disabled={panes.length >= COMPARE_LIMITS.max} onClick={() => setPanes([...panes, nextPane(panes)])}>{t("compare.addPane")}</Button>
+                  <Button icon="rotate-cw" onClick={() => setPanes(swapFirstTwo(panes))}>{t("compare.swap")}</Button>
+                  <Button icon="rotate-ccw" onClick={() => navigate({ page: "compare" }, new URLSearchParams(), true)}>{t("compare.reset")}</Button>
+                </>,
+              )}
+            </Bar>
+            <Transport clock={clock} label={t("compare.transport")} onUserTime={(timeS) => write({ timeS })} onRate={(rate) => write({ rate })} onLoop={(loop) => write({ loop })} />
+          </>
+        ) : null}
         <Bar below="tablet" className="items-stretch">
           {panes.map((pane, index) => (
             <ComparePaneCard key={index} pane={pane} index={index} row={rowOf(pane.asset)} ready={ready} clock={clock} scale={scale} frame={frame} theme={theme} editable={view.opened} canRemove={panes.length > COMPARE_LIMITS.min} onChange={(next) => setPanes(panes.map((candidate, at) => (at === index ? next : candidate)))} onRemove={() => setPanes(panes.filter((_, at) => at !== index))} />
           ))}
         </Bar>
-        <Note>{t("compare.sharedClock", { views: ACROSS_VIEWS.length })}</Note>
+        {view.opened ? <Note>{t("compare.sharedClock", { views: ACROSS_VIEWS.length })}</Note> : null}
       </>
     );
   return (

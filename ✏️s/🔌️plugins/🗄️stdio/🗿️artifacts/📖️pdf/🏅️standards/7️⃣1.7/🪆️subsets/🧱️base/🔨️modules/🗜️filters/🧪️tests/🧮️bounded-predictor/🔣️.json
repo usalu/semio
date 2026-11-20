@@ -1,0 +1,62 @@
+[
+  {
+    "name": "PNG all filters RGB",
+    "predictor": 15,
+    "columns": 2,
+    "colors": 3,
+    "bits": 8,
+    "encoded": "789c63e01291d330b261e416955752546062646665656367e617971716e467e16465646363030030470233",
+    "inflatedLength": 35,
+    "decoded": "0a141e28323c0b151f2d363f0c1824323c4615233136404a1e28323c4650"
+  },
+  {
+    "name": "TIFF eight bit",
+    "predictor": 2,
+    "columns": 3,
+    "colors": 1,
+    "bits": 8,
+    "encoded": "789ce3e2e2626165030000b8002e",
+    "inflatedLength": 6,
+    "decoded": "0a141e04090f"
+  },
+  {
+    "name": "TIFF sixteen bit",
+    "predictor": 2,
+    "columns": 3,
+    "colors": 1,
+    "bits": 16,
+    "encoded": "789c63606410f8ffef0383fc7f06260018ac041f",
+    "inflatedLength": 12,
+    "decoded": "00010011000ff0000fff1001"
+  },
+  {
+    "name": "TIFF four bit",
+    "predictor": 2,
+    "columns": 2,
+    "colors": 2,
+    "bits": 4,
+    "encoded": "789c9357060000630043",
+    "inflatedLength": 2,
+    "decoded": "1f32"
+  },
+  {
+    "name": "TIFF two bit",
+    "predictor": 2,
+    "columns": 3,
+    "colors": 1,
+    "bits": 2,
+    "encoded": "789cab000000790079",
+    "inflatedLength": 1,
+    "decoded": "48"
+  },
+  {
+    "name": "TIFF one bit",
+    "predictor": 2,
+    "columns": 3,
+    "colors": 1,
+    "bits": 1,
+    "encoded": "789c5b000000a100a1",
+    "inflatedLength": 1,
+    "decoded": "c0"
+  }
+]

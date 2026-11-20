@@ -113,8 +113,8 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
                     horizontal(&mut graph, x, end, outer, false);
                     vertical(&mut graph, x, outer.min(seam), outer.max(seam));
                     vertical(&mut graph, end, outer.min(seam), outer.max(seam));
-                    if index == Some(active) { horizontal(&mut graph, x, end, seam, true); }
                     let rank = |role: Role| if role == Role::BorderEmphasized { 2 } else if role == Role::ActiveBase { 1 } else { 0 };
+                    if rank(role) > rank(body_role) { for xx in x + 1..end { roles.insert((xx, seam), role); } }
                     for xx in x..=end { roles.entry((xx, outer)).and_modify(|old| { if rank(role) > rank(*old) { *old = role; } }).or_insert(role); }
                     for yy in outer.min(seam)..=outer.max(seam) {
                         for xx in [x, end] {

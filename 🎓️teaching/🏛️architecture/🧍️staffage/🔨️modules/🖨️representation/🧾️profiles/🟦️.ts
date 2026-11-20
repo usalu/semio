@@ -4,7 +4,7 @@
  * @see ../../../🧬️schema/🟦️.ts — `PrintProfile`
  */
 import type { PrintProfile, PrintProfileDocument, Slug } from "../../../🧬️schema/🟦️.ts";
-import document from "../../../🗂️catalog/🖨️print-profiles/🔣️.json";
+import document from "../../../🗂️catalog/🖨️print-profiles/🔣️.json" with { type: "json" };
 
 /** 🖨️ The bundled print profile document. */
 export const PRINT_PROFILES: PrintProfileDocument = document as unknown as PrintProfileDocument;

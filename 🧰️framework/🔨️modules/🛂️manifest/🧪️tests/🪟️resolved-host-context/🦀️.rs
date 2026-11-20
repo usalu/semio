@@ -113,6 +113,9 @@ async fn the_resolved_context_decodes_in_the_guest() {
     assert_eq!(view.terminology, Terminology::Reuse);
     assert_eq!(view.window_instances.len(), 2);
     assert_eq!(view.tool_run_trace_cursor_by_window_id.get("right"), Some(&semio_framework_tool_run::ToolRunTraceCursor { run: 3, generation: 1, page: 12 }));
+    assert_eq!(view.active_utility_by_window_id.get("left"), Some(&None));
+    let left = Retiring::new(view.for_window_instance("left").expect("left window"));
+    assert_eq!(left.contextual_utility(), None);
     let right = Retiring::new(view.for_window_instance("right").expect("right window"));
     assert_eq!(right.tool_run_trace_cursor_by_window_id, view.tool_run_trace_cursor_by_window_id, "a per-window projection keeps every echoed cursor");
 }

@@ -27,6 +27,7 @@ use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schem
 use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[path = "💥️clashes/🦀️.rs"]
@@ -237,13 +238,13 @@ pub struct Diagnostic {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub storey: Option<String>,
     #[value(default)]
-    pub values: BTreeMap<String, f64>,
+    pub values: RetainedOrderedMap<String, f64>,
 }
 
 impl Diagnostic {
     /// ⚠️ A finding about `elements`.
     pub fn new(code: DiagnosticCode, elements: &[&str]) -> Self {
-        Self { code, severity: code.severity(), message_key: code.message_key(), elements: elements.iter().map(|id| id.to_string()).collect(), missing: Vec::new(), storey: None, values: BTreeMap::new() }
+        Self { code, severity: code.severity(), message_key: code.message_key(), elements: elements.iter().map(|id| id.to_string()).collect(), missing: Vec::new(), storey: None, values: RetainedOrderedMap::new() }
     }
 
     /// 🪜️ Names the storey the finding is on.
@@ -260,7 +261,7 @@ impl Diagnostic {
 
     /// 🔢️ Adds a number of the message.
     pub fn with(mut self, name: &str, value: f64) -> Self {
-        self.values.insert(name.to_string(), value);
+        self.values.cold_insert(name.to_string(), value);
         self
     }
 
@@ -322,7 +323,7 @@ pub const READS: &[&str] = &[
     "project", "materials", "wall_types", "slab_types", "ceiling_types", "ceilings", "roof_types", "column_types", "beam_types", "window_types", "door_types", "sites", "buildings", "storeys", "grids", "walls", "curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "columns", "beams", "slabs", "roofs", "openings", "wall_sweeps", "stairs", "railings", "ramps", "spaces", "dimensions", "tags", "text_notes", "leaders", "annotation_styles", "sheets", "viewports", "sheet_revisions", "views", "properties", "classifications", "property_templates", "classification_systems",
 ];
 
-fn present<'a, T>(ids: impl IntoIterator<Item = &'a String>, library: &BTreeMap<String, T>) -> DslValue {
+fn present<'a, T>(ids: impl IntoIterator<Item = &'a String>, library: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, T>) -> DslValue {
     let ids: BTreeSet<&String> = ids.into_iter().collect();
     DslValue::object(ids.into_iter().map(|id| (id.clone(), semio_framework_value::ToValue::to_value(&library.contains_key(id)))))
 }

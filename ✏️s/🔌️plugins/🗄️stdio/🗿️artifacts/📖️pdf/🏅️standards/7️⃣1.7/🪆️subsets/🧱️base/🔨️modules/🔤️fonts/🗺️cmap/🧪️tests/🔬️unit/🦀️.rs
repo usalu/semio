@@ -38,10 +38,12 @@ fn embedded_cmap_round_trips_and_splits_mixed_widths() {
     assert_eq!(parse_cmap(&printed, "x"), cmap);
     let codec = CidCodec::embedded(&cmap);
     assert_eq!(codec.split(&[0x41, 0x81, 0x40, 0x42]), vec![(0x41, 1), (0x8140, 2), (0x42, 1)]);
+    assert_eq!(codec.split(&[0x81, 0x00, 0xFF]), vec![(0x8100, 2), (0xFF, 1)]);
     assert_eq!(codec.cid(0x41), 34);
     assert_eq!(codec.cid(0x8140), 633);
     assert_eq!(codec.code_for_cid(633), Some((0x8140, 2)));
     let identity = CidCodec::identity(false);
     assert_eq!(identity.split(&[0, 5, 1, 2]), vec![(5, 2), (258, 2)]);
+    assert_eq!(identity.split(&[0, 5, 1]), vec![(5, 2), (1, 1)]);
     assert_eq!(identity.cid(258), 258);
 }

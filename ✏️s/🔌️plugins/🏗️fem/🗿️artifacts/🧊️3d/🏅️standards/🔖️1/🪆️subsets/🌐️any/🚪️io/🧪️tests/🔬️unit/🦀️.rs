@@ -32,7 +32,7 @@ async fn csv_is_the_node_table_read_by_a_third_party_reader() {
     assert_eq!(reader.headers().expect("header").iter().collect::<Vec<_>>(), ["id", "x", "y", "z"]);
     let rows: Vec<csv::StringRecord> = reader.records().map(|row| row.expect("row")).collect();
     assert_eq!(rows.len(), snapshot.nodes.len());
-    for (row, node) in rows.iter().zip(&snapshot.nodes) {
+    for (row, node) in rows.iter().zip(snapshot.nodes.iter()) {
         assert_eq!(&row[0], node.id.as_str());
         let read: Vec<f64> = row.iter().skip(1).map(|value| value.parse().expect("number")).collect();
         assert_eq!(read, [node.x, node.y, node.z].to_vec(), "coordinates survive bit for bit");

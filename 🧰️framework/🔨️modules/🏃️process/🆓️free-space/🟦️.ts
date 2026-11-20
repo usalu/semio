@@ -2,7 +2,7 @@ import{lstatSync,statfsSync}from"node:fs";
 import{dirname,resolve}from"node:path";
 import{nativeWindowsSystemHostPortV1}from"../📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts";
 
-/** 🆓️ The free space of the volume that holds a path: the bytes available to the caller and, where the host reports it, the size of the volume (a Windows host path reports the free bytes only). */
+/** 🆓️ The free space of the volume that holds a path: the bytes available to the caller and, where the host reports it, the size of the volume (on Windows the calling user’s available capacity, which may be quota-limited). */
 export type FreeSpaceV1=Readonly<{availableBytes:number;totalBytes:number|undefined}>;
 /** 🧮️ The counters of a statfs row that the judgement needs; `files` and `ffree` are the inode table (a filesystem without one reports `files` 0). */
 export type FreeSpaceRowV1=Readonly<{bsize:number|bigint;blocks:number|bigint;bavail:number|bigint;files?:number|bigint;ffree?:number|bigint}>;
@@ -11,9 +11,10 @@ export type FreeSpaceUnknownReasonV1="unreadable"|"missing"|"incoherent-row"|"em
 /** 🔎️ What a measurement of a volume says: the bytes available to the caller, the size of the volume when the host reports it, the free inodes (`null` on a filesystem without an inode table, as NTFS, btrfs or a network share, never 0) and where the number came from; or that it is unknown, with the reason and a short detail. Unknown is never a number: a caller decides what it means (refuse, warn, treat as pressure). */
 export type FreeSpaceFactsV1=Readonly<{known:true;availableBytes:number;totalBytes:number|undefined;freeInodes:number|null;source:"statfs"|"win32-host"|"reader"}>|Readonly<{known:false;reason:FreeSpaceUnknownReasonV1;detail:string}>;
 
-/** 🎛️ How a measurement is made: `nearest` lets the nearest existing ancestor answer for a path that is not there yet, `platform` stands for the host (default: this process), `read` replaces the reader (a statfs row or an already judged answer), `windowsAvailableBytes` replaces the Windows volume call. */
-export type FreeSpaceOptionsV1=Readonly<{nearest?:boolean;platform?:string;read?:(path:string)=>FreeSpaceRowV1|FreeSpaceV1;windowsAvailableBytes?:(path:string)=>number}>;
+/** 🎛️ How a measurement is made: `nearest` lets the nearest existing ancestor answer for a path that is not there yet, `platform` stands for the host (default: this process), `read` replaces the reader (a statfs row or an already judged answer), `windowsAvailableBytes` replaces the Windows volume call with caller bytes or both caller counters. */
+export type FreeSpaceOptionsV1=Readonly<{nearest?:boolean;platform?:string;read?:(path:string)=>FreeSpaceRowV1|FreeSpaceV1;windowsAvailableBytes?:(path:string)=>number|FreeSpaceV1}>;
 
+const totalFor=(available:number,total:number|undefined):number|undefined=>total!==undefined&&Number.isFinite(total)&&total>0&&total>=available?total:undefined;
 const unknown=(reason:FreeSpaceUnknownReasonV1,detail:string):FreeSpaceFactsV1=>Object.freeze({known:false as const,reason,detail});
 const count=(value:number|bigint|undefined):number|undefined=>{if(value===undefined)return undefined;const number=Number(value);return Number.isFinite(number)&&number>=0?number:undefined;};
 
@@ -32,22 +33,26 @@ export function freeSpaceOfRowV1(row:FreeSpaceRowV1):FreeSpaceV1|undefined{
  return facts.known?Object.freeze({availableBytes:facts.availableBytes,totalBytes:facts.totalBytes}):undefined;
 }
 
-/** 🪟️ The bytes a Windows volume has free for the caller, asked as `GetDiskFreeSpaceExW` through the process-wide host port (bun:ffi): the runtime's own `statfs` is not a Windows call and answers a row of zeros there. Throws with the Win32 error when the call fails. @see https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdiskfreespaceexw */
-export function windowsAvailableBytesV1(path:string):number{
+/** 🪟️ Reads both calling-user capacity counters through the native Windows volume port. @see https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdiskfreespaceexw */
+export function windowsFreeSpaceV1(path:string):FreeSpaceV1{
  const result=nativeWindowsSystemHostPortV1().availableBytes(path);
  if(!result.ok)throw Error("Host free space could not be read (Win32 error "+result.error+")");
- return result.bytes;
+ return Object.freeze({availableBytes:result.bytes,totalBytes:totalFor(result.bytes,result.totalBytes)});
 }
 
-/** 🏷️ The one free-space question of the build system, answered as typed facts: the bytes (and, where the filesystem has an inode table, the free inodes) or unknown with the reason. Never a made-up number: the reader throws, its row is incoherent or empty, or the path is missing (with `nearest`, the nearest existing ancestor answers instead, on every platform). On Windows the volume is asked for its free bytes (`windowsAvailableBytes`, default `GetDiskFreeSpaceExW`) and the facts carry no inodes; elsewhere the host's `statfs` answers. `read` replaces the reader (a statfs row or an already judged answer). @see https://nodejs.org/api/fs.html#fsstatfssyncpath-options */
+/** 📏️ Reads caller-available bytes for consumers that do not need a capacity ratio. */
+export function windowsAvailableBytesV1(path:string):number{return windowsFreeSpaceV1(path).availableBytes;}
+
+/** 🏷️ The one free-space question of the build system, answered as typed facts: the bytes (and, where the filesystem has an inode table, the free inodes) or unknown with the reason. Never a made-up number: the reader throws, its row is incoherent or empty, or the path is missing (with `nearest`, the nearest existing ancestor answers instead, on every platform). On Windows the volume is asked for both caller capacity counters (`GetDiskFreeSpaceExW`) and the facts carry no inodes; elsewhere the host's `statfs` answers. `read` replaces the reader (a statfs row or an already judged answer). @see https://nodejs.org/api/fs.html#fsstatfssyncpath-options */
 export function readFreeSpaceV1(path:string,options?:FreeSpaceOptionsV1):FreeSpaceFactsV1{
  const windows=options?.read===undefined&&(options?.platform??process.platform)==="win32";
  for(let current=resolve(path);;current=dirname(current)){
   if(options?.nearest===true){try{lstatSync(current);}catch{if(dirname(current)===current)return unknown("missing",path);continue;}}
   try{
    if(windows){
-    const bytes=(options?.windowsAvailableBytes??windowsAvailableBytesV1)(current);
-    return Number.isFinite(bytes)&&bytes>=0?Object.freeze({known:true as const,availableBytes:bytes,totalBytes:undefined,freeInodes:null,source:"win32-host" as const}):unknown("host-call",`answered ${String(bytes)}`);
+    const observed=(options?.windowsAvailableBytes??windowsFreeSpaceV1)(current);
+    const bytes=typeof observed==="number"?observed:observed.availableBytes,total=typeof observed==="number"?undefined:observed.totalBytes;
+    return Number.isFinite(bytes)&&bytes>=0?Object.freeze({known:true as const,availableBytes:bytes,totalBytes:totalFor(bytes,total),freeInodes:null,source:"win32-host" as const}):unknown("host-call",`answered ${String(bytes)}`);
    }
    const value=(options?.read??((target:string):FreeSpaceRowV1=>statfsSync(target)))(current);
    if("availableBytes" in value){const bytes=value.availableBytes;return Number.isFinite(bytes)&&bytes>=0?Object.freeze({known:true as const,availableBytes:bytes,totalBytes:value.totalBytes,freeInodes:null,source:"reader" as const}):unknown("incoherent-row",`availableBytes ${String(bytes)}`);}

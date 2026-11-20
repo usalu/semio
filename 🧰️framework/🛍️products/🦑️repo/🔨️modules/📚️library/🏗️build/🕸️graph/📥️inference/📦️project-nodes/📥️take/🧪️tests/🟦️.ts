@@ -1,14 +1,57 @@
 import Ajv from "ajv";
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {TAKE_POLICY_V1,createTakeLedgerV1,takeAdmittedV1,takeConcurrencyV1,takeLanesV1, takePassV1,takePollV1,takePollWaitV1,takeSplitV1} from "../🟨️.mjs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import cancellation from "./🧫️fixtures/take-cancellation.json" with {type:"json"};
+import {createGraphFleetClientV1} from "../../../../../🪪️graph-state/🛰️exchange/📡️client/🟦️.ts";
+import {createProjectFleetPortV1,runTakeLookV1} from "../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
 
 /** 📥️ Contract: the rules of taking records before inferring are pure and equal an independent Python model (the pause before a look at the cache, the report line of the ledger in both languages); a pass looks at every owner once and repeats only the looks the cache did not answer; the poll grows its pause, starts again when a record arrived and ends when asked.
  * @see ../🟨️.mjs */
 const here=(name:string)=>fileURLToPath(new URL(name,import.meta.url));
+
+test("a take deadline aborts the transport and waits for it to release its admission",async()=>{
+ const db=new Database(":memory:");
+ try{
+  for(const row of cancellation){
+   const pass=new AbortController(),admission={flying:0},directory=here("./");
+   let begin!:()=>void,release!:()=>void,transportSignal:AbortSignal|undefined,closed=false,settled=false;
+   const started=new Promise<void>(resolve=>{begin=resolve;}),drain=new Promise<void>(resolve=>{release=resolve;});
+   const request=async(_url:unknown,init?:RequestInit)=>{
+    transportSignal=init?.signal??undefined;
+    begin();
+    try{
+     await drain;
+     transportSignal?.throwIfAborted();
+     return new Response(null,{status:404});
+    }finally{closed=true;}
+   };
+   const client=createGraphFleetClientV1({endpoint:"https://fixture.invalid",instance:"graph",token:undefined,upload:false,stateDirectory:directory},{fetch:request as typeof fetch});
+   const port=createProjectFleetPortV1({root:directory,environment:{},client,owner:"fixture",platform:"macos"})!;
+   const attempt=takeAdmittedV1((name,signal)=>runTakeLookV1(async look=>{
+    await port.gate({cachePath:here("./test-record"),fleet:name,keyText:"[]",exportRecord:()=>undefined,import:async()=>false});
+    return look.outcome==="fault"?"fault":"miss";
+   },signal),()=>undefined,pass.signal,admission);
+   const task=takePassV1({names:["fixture"],attempt,signal:pass.signal}).finally(()=>{settled=true;});
+   await started;
+   try{
+    if(row.cancel)pass.abort(Error("Take deadline"));
+    expect(transportSignal?.aborted,row.id).toBe(row.cancel);
+    expect(admission.flying,row.id).toBe(1);
+    expect(settled,row.id).toBe(false);
+   }finally{release();await task;}
+   expect(closed,row.id).toBe(true);
+   expect(admission.flying,row.id).toBe(0);
+   const oracle=db.query("select not ?1 recorded").get(Number(row.cancel))as{recorded:number};
+   expect((await task).has("fixture"),row.id).toBe(row.recorded);
+   expect((await task).has("fixture"),row.id).toBe(Boolean(oracle.recorded));
+  }
+ }finally{db.close();}
+});
 
 test("the pause, the line and the policy equal the schema, the fixture and the Python oracle",()=>{
  const ajv=new Ajv({strict:false});

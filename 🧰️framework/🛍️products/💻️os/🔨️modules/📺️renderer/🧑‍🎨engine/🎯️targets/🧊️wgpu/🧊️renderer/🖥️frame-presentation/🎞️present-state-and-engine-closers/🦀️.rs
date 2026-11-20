@@ -210,6 +210,11 @@ pub enum AppPresentStep {
 }
 
 impl AppPresenter {
+    #[cfg(not(target_os = "wasi"))]
+    pub fn raster_is_resident(&self, key: &str) -> bool {
+        self.gpu.raster_is_resident(key)
+    }
+
     pub fn engine_surface_token_at(&self, index: usize) -> Option<semio_renderer_wgpu_engine_registry::engine_surface_registry::EngineSurfaceToken> {
         self.engine.surface_token_at(index)
     }

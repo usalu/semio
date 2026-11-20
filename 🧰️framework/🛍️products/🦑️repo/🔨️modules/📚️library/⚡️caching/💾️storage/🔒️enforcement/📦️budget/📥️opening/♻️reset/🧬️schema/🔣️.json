@@ -17,6 +17,52 @@
         "maximumMilliseconds": 600000
       }
     },
+    "ImageRecoveryEnvironment": {"const": "SEMIO_DISK_RECOVERY_IMAGE_VOLUME"},
+    "RustReclaimWait": {
+      "const": {"partition": "rust", "maximumWaitMilliseconds": 120000}
+    },
+    "RustReclaimWaitReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "partition", "outcome", "beforeBytes", "afterBytes", "settled"],
+      "properties": {
+        "version": {"const": 1},
+        "kind": {"const": "repository-cache-reclaim-wait"},
+        "partition": {"const": "rust"},
+        "outcome": {"enum": ["skipped", "reclaimed"]},
+        "reason": {"enum": ["platform", "backing-unavailable", "not-due", "opportunity-ended", "lease-timeout", "lease-failed", "reclaim-failed"]},
+        "beforeBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "afterBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "settled": {"type": "boolean"}
+      },
+      "if": {"properties": {"outcome": {"const": "skipped"}}},
+      "then": {"required": ["reason"], "properties": {"beforeBytes": {"const": 0}, "afterBytes": {"const": 0}, "settled": {"const": false}}},
+      "else": {"not": {"required": ["reason"]}}
+    },
+    "ImageRecoveryVolume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "device", "requiredFreeBytes"],
+      "properties": {
+        "version": {"const": 1},
+        "device": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "requiredFreeBytes": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+      }
+    },
+    "ImageReclaimReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "partition", "outcome", "beforeBytes", "afterBytes", "settled"],
+      "properties": {
+        "version": {"const": 1},
+        "kind": {"const": "repository-cache-reclaim"},
+        "partition": {"$ref": "#/$defs/Partition"},
+        "outcome": {"enum": ["skipped", "reclaimed"]},
+        "beforeBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "afterBytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "settled": {"type": "boolean"}
+      }
+    },
     "Partition": {
       "enum": [
         "rust",

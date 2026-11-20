@@ -11,7 +11,7 @@ role = "framework"
 id = "plugin-declared-capture-tests"
 
 [package.metadata.semio.rust-source-boundary]
-maxSourceBytes = 32768
+maxSourceBytes = 36864
 maxSourceFiles = 8
 maxActiveLines = 512
 

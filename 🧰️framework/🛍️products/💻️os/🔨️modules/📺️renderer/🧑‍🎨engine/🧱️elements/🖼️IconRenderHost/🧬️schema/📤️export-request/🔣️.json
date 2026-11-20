@@ -69,6 +69,72 @@
         "ellipse"
       ]
     },
+    "drawing": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "type": "boolean",
+          "default": true
+        },
+        "fill": {
+          "type": "boolean",
+          "default": true
+        },
+        "fillColor": {
+          "type": "string",
+          "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$",
+          "description": "Flat fill color. Omit for the shaded asset material."
+        },
+        "fillOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1
+        },
+        "visibleLines": {
+          "type": "boolean",
+          "default": true
+        },
+        "hiddenLines": {
+          "type": "boolean",
+          "default": false
+        },
+        "visibleColor": {
+          "type": "string",
+          "default": "#000000",
+          "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+        },
+        "hiddenColor": {
+          "type": "string",
+          "default": "#808080",
+          "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+        },
+        "visibleWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "hiddenWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "lineEasing": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Corner rounding radius in output pixels."
+        },
+        "mergeLines": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
     "transform": {
       "type": "object",
       "required": [

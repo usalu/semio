@@ -4,6 +4,7 @@
 //! dialect stamp, not a new schema). Its shared canonical editor renders windowed worksheet grids
 //! and inserts cells into explicitly addressed vacancies.
 
+use crate::standards::v_ecma_376::subsets::strict::io;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
@@ -132,12 +133,12 @@ impl ArtifactEditor for XlsxStrictEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
-        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(snapshot)
+        io::encode_xlsx(snapshot)
             .map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
-        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(bytes)
+        io::decode_xlsx(bytes)
             .map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
@@ -168,9 +169,15 @@ impl ArtifactEditor for XlsxStrictEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<XlsxSnapshot,semio_plugin::Fault>>{Some(||{
-        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).map_err(|error|semio_plugin::reference_birth_fault("valid authored strict XLSX initial owner",format_args!("{error:?}")))
-    })}
+    fn reference_birth() -> Option<fn() -> Result<XlsxSnapshot, Fault>> {
+        Some(|| {
+            use semio_plugin::ArtifactBuilder;
+            use semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::new_xlsx_editor_workbook;
+            io::XlsxStrictBuilderConstruction::new(new_xlsx_editor_workbook())
+                .build()
+                .map_err(|error| semio_plugin::reference_birth_fault("valid authored strict XLSX initial owner", format_args!("{error:?}")))
+        })
+    }
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits
     /// one `XlsxMutation::SetCell`. Stale addresses and revisions return a fault without mutation.

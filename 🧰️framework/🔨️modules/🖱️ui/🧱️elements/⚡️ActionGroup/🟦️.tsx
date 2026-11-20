@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { sharedBorderlessBoxProps, useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
@@ -21,7 +21,7 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
-import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+import { formControlResetClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { chromeControlGroupShellClass, chromeControlGroupSiblingDividerClass, chromeControlItemBaseClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { loadingBorderElementClass, waitingBorderElementClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
@@ -37,7 +37,7 @@ import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/
 /**
  * 🎮️ actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
-const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny [&_svg:not([class*='size-'])]:size-tiny aspect-square min-h-0 h-full p-single"));
+const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny [&_svg:not([class*='size-'])]:size-tiny aspect-square p-single"));
 
 /**
  * ⌨️ ActionGroupContext holds the data fields for a ActionGroupContext record.
@@ -172,6 +172,8 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
             {options.map((option) => (
               <button
                 key={option.value}
+                {...sharedBorderlessBoxProps}
+                data-active={value === option.value ? "true" : undefined}
                 onClick={() => handleSelect(option.value)}
                 className={cn("flex items-center gap-single p-single text-xs cursor-selectable outline-none", menuListItemClassName, value === option.value && interactiveActiveFillClass)}
               >
@@ -230,7 +232,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
       title={tooltipText}
       data-level={level}
       className={cn(
-        `relative text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
+        `relative text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlResetClass}`,
         hasText && "aspect-auto gap-single",
         interactiveHoverClass,
         borderNormalClass,

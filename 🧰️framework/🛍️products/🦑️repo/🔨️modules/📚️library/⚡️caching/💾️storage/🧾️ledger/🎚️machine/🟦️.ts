@@ -1,11 +1,12 @@
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import budgetPolicy from "../../🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {cacheTextV1,formatCacheBytesV1,type CacheLanguageV1} from "../🟦️.ts";
+import {headroomReserveBytesV1} from "../../../🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
 
-/** 🏬️ One store of the machine budget: a whole image partition or everything cached outside the images. */
-export type MachineStoreV1=Readonly<{id:string;partition?:string;loose?:true;weightBasisPoints:number;floorBytes:number;headroomBasisPoints:number;purpose:Readonly<Record<CacheLanguageV1,string>>}>;
+/** 🏬️ One store of the machine budget: a whole image partition or everything cached outside the images; `admitsCommands` marks the image whose build commands reserve their expected writes in it (the image headroom admission), so its quota leaves that room free. */
+export type MachineStoreV1=Readonly<{id:string;partition?:string;loose?:true;admitsCommands?:true;weightBasisPoints:number;floorBytes:number;headroomBasisPoints:number;purpose:Readonly<Record<CacheLanguageV1,string>>}>;
 /** 👯️ One place where identical large files are looked for and replaced by copy-on-write clones. */
 export type MachineDedupeV1=Readonly<{id:string;partition:string;directory?:string;minimumBytes:number;quietMs:number;maximumFiles:number}>;
 /** 🎚️ The closed machine disk budget policy. */
@@ -104,9 +105,12 @@ const limitOf=(quotaBytes:number,headroomBasisPoints:number):number=>Number(BigI
 const alignUp=(value:number,align:number):number=>Math.ceil(value/align)*align;
 const alignDown=(value:number,align:number):number=>Math.floor(value/align)*align;
 
+/** 🏗️ The most a store may hold of its fixed image: the image minus the room its build admission needs, the kept-free floor plus the largest reservation of one command (both declared by the headroom policy); a store without admission or without a fixed image is unbounded. */
+export const machineCapacityV1=(store:Pick<MachineStoreV1,"admitsCommands">,envelopeBytes:number|null):number=>envelopeBytes===null?Infinity:Math.max(0,envelopeBytes-(store.admitsCommands?headroomReserveBytesV1(envelopeBytes):0));
+
 /**
  * 🗺️ Plans the machine budget from what every store holds: quotas by weighted max-min fairness over the capacity each store needs for its content plus its headroom, a smaller effective total while the host is below its free-space floor, what each collector must free to reach the content limit of its quota, what only a holder or an owner can free (blocked) and the image size that would fit the quota.
- * Applying the planned evictions and planning again plans nothing further (the plan converges in one step; an excess within the tolerance is rounding, not work); a store whose demand is below its fair share is never cut.
+ * A quota never exceeds the capacity of its fixed image (`machineCapacityV1`) unless its floor is larger, so the quotas of capped stores may add up to less than the total. Applying the planned evictions and planning again plans nothing further (the plan converges in one step; an excess within the tolerance is rounding, not work); a store whose demand is below its fair share is never cut.
  */
 export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBytes:number|null;uses:readonly MachineUseV1[]}>,declared:MachinePolicyV1=machinePolicyV1()):MachinePlanV1{
  const stores=declared.stores,use=new Map(input.uses.map(row=>[row.id,row])),rows=stores.map(store=>{const held=use.get(store.id);return{store,used:held?.usedBytes??0,envelope:held?.envelopeBytes??null,allocated:held?.allocatedBytes??null,evictable:held?.evictableBytes??null};});
@@ -114,7 +118,7 @@ export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBy
  const pressureBytes=input.hostFreeBytes!==null&&input.hostFreeBytes<declared.hostFreeFloorBytes?declared.hostFreeFloorBytes-input.hostFreeBytes:0,effectiveTotalBytes=Math.max(floors,Math.min(input.totalBytes,pressureBytes>0?demandTotal-pressureBytes:input.totalBytes));
  const quotas=splitMachineBudgetV1(effectiveTotalBytes,rows.map((row,index)=>({id:row.store.id,weight:row.store.weightBasisPoints,floor:row.store.floorBytes,demand:demands[index]!})),true);
  const plans=rows.map((row,index):MachineStorePlanV1=>{
-  const quotaBytes=quotas.get(row.store.id)!,contentLimitBytes=limitOf(quotaBytes,row.store.headroomBasisPoints),excess=Math.max(0,row.used-contentLimitBytes),excessBytes=excess>declared.toleranceBytes?excess:0,evictBytes=Math.min(excessBytes,row.evictable??row.used),blockedBytes=excessBytes-evictBytes,demandBytes=demands[index]!;
+  const quotaBytes=Math.max(row.store.floorBytes,Math.min(quotas.get(row.store.id)!,machineCapacityV1(row.store,row.envelope))),contentLimitBytes=limitOf(quotaBytes,row.store.headroomBasisPoints),excess=Math.max(0,row.used-contentLimitBytes),excessBytes=excess>declared.toleranceBytes?excess:0,evictBytes=Math.min(excessBytes,row.evictable??row.used),blockedBytes=excessBytes-evictBytes,demandBytes=demands[index]!;
   const fit=row.envelope===null?null:quotaBytes>=demandBytes?Math.max(alignUp(demandBytes,declared.alignBytes),alignDown(quotaBytes,declared.alignBytes)):alignDown(quotaBytes,declared.alignBytes),resizeToBytes=fit!==null&&row.envelope!==null&&row.envelope-fit>=declared.alignBytes?fit:null;
   return Object.freeze({id:row.store.id,usedBytes:row.used,demandBytes,quotaBytes,contentLimitBytes,excessBytes,evictBytes,blockedBytes,envelopeBytes:row.envelope,resizeToBytes,state:blockedBytes>0?"blocked":evictBytes>0?"evict":"within"});
  });

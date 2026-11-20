@@ -1,9 +1,9 @@
-import { assetAbort, assetCancellation, assetPumping, bindings, closed, closing, diagnosticsStamp, failed, frameInput, frameSequence, frameTurns, INTROSPECTION_STEP_BUDGET_MS, lastStepOutcome, lastWorld3dAcceptedFrameDiagnostic, lifecycle, mediaRegistry, originalFrameSource, pageImageDecode, quarantined, runtime, setFailed, setFrameSequence, setLastFrame, setLastWorld3dAcceptedFrameDiagnostic, setPendingFault, setQuarantined } from "../🧵️state/🟦️.ts";
+import { assetAbort, assetCancellation, assetPumping, bindings, closed, closing, diagnosticsStamp, failed, frameInput, frameSequence, frameTurns, INTROSPECTION_STEP_BUDGET_MS, lastStepOutcome, lastWorld3dAcceptedFrameDiagnostic, lifecycle, mediaRegistry, originalFrameSource, quarantined, runtime, setFailed, setFrameSequence, setLastFrame, setLastWorld3dAcceptedFrameDiagnostic, setPendingFault, setQuarantined } from "../🧵️state/🟦️.ts";
 import { nextFrameSequence } from "../../🧵️frame-turn-scheduler/🟦️.ts";
 import { ownedStep, post } from "../⏱️steps-and-reporting/🟦️.ts";
 import { beginClose, fault, requestFault } from "../🧯️close-and-fault/🟦️.ts";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
-import { cancelPageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
+import { cancelPageImageDecode, hasReferencePageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
 import { scheduleAssetPump } from "../📦️assets-and-host-io/🟦️.ts";
 import type { BrowserMediaCommand } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 
@@ -24,10 +24,10 @@ export function runFrameTurn(): boolean {
     setLastFrame({ cursor: result.cursor, fullscreen: result.fullscreen });
     const assetCancellationStep = assetCancellation.step({
       hasFetch: () => assetAbort !== undefined,
-      hasPageImageDecode: () => pageImageDecode !== undefined,
+      hasPageImageDecode: hasReferencePageImageDecode,
       responseCurrent: () => runtime!.assetResponseCurrent(),
       abortFetch: () => assetAbort?.abort(),
-      cancelPageImageDecode,
+      cancelPageImageDecode: () => cancelPageImageDecode("reference"),
       returnResponseOwner: () => runtime!.abortAssetResponse(),
     });
     if (result.quarantined) setQuarantined({ code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" });

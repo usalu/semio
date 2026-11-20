@@ -1,0 +1,5 @@
+# Static Release Manifest Audit
+
+The retained `release-manifests-audit.ts` read the generated plugin and extension catalog (74 component roots, a superset of the Play runtime closure) and recursively followed local `dependencies` and `build-dependencies`, including target-specific and workspace-inherited declarations, irrespective of optional features or platform. On this live snapshot it parsed 3,687 manifests and followed 62,183 local dependency edges. It found no missing traversed Cargo manifest or explicitly declared library target and no unresolved inherited dependency name.
+
+This is not Cargo resolution or a build. It excludes dev-dependencies, generated build-script inputs and Rust module references, does not establish default library targets for manifests without an explicit lib path, and cannot prove the generated catalog is current or that all independently launched release jobs are covered. Optional and other-platform edges make the scan a superset within those limitations. The shared tree can change after the snapshot. No Cargo, build or describe process was started.

@@ -16,17 +16,18 @@ export function withObservedWorldV1(port, body) { return observedWorlds.run(port
 export function importObservedModuleV1(path) { const port = observedWorlds.getStore(); return typeof port?.importModule === "function" ? port.importModule(path) : undefined; }
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { setTimeout as settlementDelay } from "node:timers/promises";
 import { createHash } from "node:crypto";
 import { rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
 import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
-import { hollowDirectoryV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
+import { hollowDirectoryV1, machineLocalRowV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
 
 /** 🔢️ A hex SHA-256 digest, compiled once. */
 const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
 import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from "../🧠️memory/🟨️.mjs";
 import { footprintPulseV1 } from "../🧠️memory/🦶️footprint/🟨️.mjs";
 import { createRowPoolV1, createRowTableV1, factKeyV1 } from "./🔢️row-table/🟨️.mjs";
-import { describeCollectionV1 } from "../🧠️memory/📋️slice-report/🟨️.mjs";
+import { createWeakCollectionTrackerV1, describeCollectionV1 } from "../🧠️memory/📋️slice-report/🟨️.mjs";
 import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 
 /** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
@@ -97,8 +98,8 @@ const loadObservations = new Map();
 const projectComputations = new Map();
 const projectImages = new Map();
 const projectChecks = new WeakMap();
-const trackedV1={projectChecks:new Set(),sharedChecks:new Set(),scopes:new Set()},trackedSeenV1=new WeakSet();
-const trackV1=(kind,map)=>{if(map!==null&&typeof map==="object"&&!trackedSeenV1.has(map)){trackedSeenV1.add(map);trackedV1[kind].add(new WeakRef(map));}};
+const trackedV1={projectChecks:createWeakCollectionTrackerV1(),sharedChecks:createWeakCollectionTrackerV1(),scopes:createWeakCollectionTrackerV1()},trackedSeenV1=new WeakSet();
+const trackV1=(kind,map)=>{if(map!==null&&typeof map==="object"&&!trackedSeenV1.has(map)){trackedSeenV1.add(map);trackedV1[kind].track(map);}};
 const sourceAnalyses = new Map();
 const activeSourceAnalyses = new Set();
 const sourceAnalysisImages = new Map();
@@ -159,6 +160,7 @@ function residentRowsV1(rows){return rows.filter(row=>residentFactV1(row?.fact))
 function projectObservationHoldsV1(row,parent){
  parent=inferenceValidationScopes.getStore()??parent;
  const seen=rebaseRowV1(row);
+ if(machineLocalRowV1(seen.kind,seen.path))return true;
  const factText=JSON.stringify(row.fact);
  if(factText.length>8192)return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);
  let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);trackV1("projectChecks",checks);}if(parent&&!rows){rows=new WeakMap();rowChecks.set(parent,rows);}
@@ -312,15 +314,28 @@ function observationIdentityV1(row,remember=true){let value=observationIdentitie
 /** 🧠️ Distinguishes semantic results independently of their original source byte hints. */
 function observationMeaningV1(row,remember=true){let value=observationMeanings.get(row);if(value===undefined){value=JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.kind==="resolve"?canonicalResolutionV1(row.fact):row.fact);if(remember)observationMeanings.set(row,value);}return value;}
 
-/** 🧨️ Names the first contradictory source read and whether it contradicts sealed module-load authority, which no re-inference in this process can repair. */
-function conflictingInferenceErrorV1(rows){
- const seen=new Map(),authority=new Set([...loadObservations.values()].map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])));
- for(const row of rows){const key=observationIdentityV1(row),meaning=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==meaning){const loaded=authority.has(JSON.stringify([key,seen.get(key)]))||authority.has(JSON.stringify([key,meaning]));return Object.assign(Error(loaded?"Build graph implementation authority changed during inference; restart the owned build invocation: "+row.kind+":"+row.path:"Conflicting inference observations: "+row.kind+":"+row.path),{code:loaded?"BUILD_AUTHORITY_CHANGED":"BUILD_SOURCE_CONFLICT",path:row.path});}seen.set(key,meaning);}
- return Object.assign(Error("Conflicting inference observations"),{code:"BUILD_SOURCE_CONFLICT"});
+/** 🚫️ Finds the first conflicting result for the same source consumer, keeping large batch keys transient. */
+function firstObservationConflictV1(rows){
+ const seen=new Map(),remember=rows.length<=OBSERVATION_LIMITS_V1.consistencyMemoRows;
+ for(const row of rows){
+  const key=observationIdentityV1(row,remember),meaning=observationMeaningV1(row,remember),previous=seen.get(key);
+  if(previous!==meaning&&seen.has(key))return {row,key,previous,meaning};
+  seen.set(key,meaning);
+ }
 }
 
-/** 🚫️ Refuses conflicting results from the same source consumer. */
-function consistentObservationsV1(rows){const seen=new Map(),remember=rows.length<=OBSERVATION_LIMITS_V1.consistencyMemoRows;for(const row of rows){const key=observationIdentityV1(row,remember),fact=observationMeaningV1(row,remember);if(seen.has(key)&&seen.get(key)!==fact)return false;seen.set(key,fact);}return true;}
+function consistentObservationsV1(rows){return firstObservationConflictV1(rows)===undefined;}
+
+/** 🧨️ Names the first contradictory source read and whether it contradicts sealed module-load authority, which no re-inference in this process can repair. */
+function conflictingInferenceErrorV1({row,key,previous,meaning}){
+ let loaded=false;
+ for(const authority of loadObservations.values()){
+  if(observationIdentityV1(authority,false)!==key)continue;
+  const known=observationMeaningV1(authority,false);
+  if(known===previous||known===meaning){loaded=true;break;}
+ }
+ return Object.assign(Error(loaded?"Build graph implementation authority changed during inference; restart the owned build invocation: "+row.kind+":"+row.path:"Conflicting inference observations: "+row.kind+":"+row.path),{code:loaded?"BUILD_AUTHORITY_CHANGED":"BUILD_SOURCE_CONFLICT",path:row.path});
+}
 
 /** 🗃️ The plan-wide capture that keeps no row object: each distinct row (by its number in the row table) is appended once to a row log and only its log id is kept, so the memory of a capture over thousands of owners is four bytes per distinct row and the rows are read back in batches where they are consumed. */
 class SpilledCaptureV1{
@@ -439,19 +454,45 @@ function nestedObservationsHoldV1(rows){
 }
 
 /** 🔁️ Replays current registered parsers after byte changes and retains every nested dependency; a file whose size, inode and both stamps are those of the recorded source is the recorded source, exactly as for a `file` fact, and is not read again. */
-function sourceAnalysisFactHoldsV1(path,fact){
- if(sourceAnalysisContractV1.validate(fact).length)return false;
- const registered=sourceAnalyses.get(fact?.provider);
- if(!registered||registered.provider.revision!==fact.revision||!Array.isArray(fact.nestedObservations)||!fact.source||!SHA256_HEX_V1.test(fact.source.sha256??"")||!SHA256_HEX_V1.test(fact.resultSha256??""))return false;
- if(!nestedObservationsHoldV1(fact.nestedObservations))return false;
+function sourceAnalysisFactHoldsV1(path,fact){return sourceAnalysisFailureV1(path,fact)===undefined;}
+const analysisOwnerPatternV1=new RegExp(sourceAnalysisSchemaV1.$defs.sourceAnalysisOwner.pattern,"u");
+const analysisOwnerRoleV1=id=>analysisOwnerPatternV1.exec(id)?.groups?.role;
+const portableOwnerPatternV1=new RegExp(sourceAnalysisSchemaV1.$defs.portableSourceAnalysisOwner.pattern,"u");
+const recordedOwnerRoleV1=id=>analysisOwnerRoleV1(id)??portableOwnerPatternV1.exec(id)?.groups?.role;
+
+/** 🪪️ Uses the exact registered parser when present. A generated owner identity can otherwise use a locally registered alias with exactly the same role and revision.
+ * @see ./🧪️tests/🪪️parser-identity */
+function registeredAnalysisV1(fact){
+ const id=fact?.provider,exact=sourceAnalyses.get(id);
+ if(exact!==undefined)return exact;
+ const role=recordedOwnerRoleV1(id);
+ if(role!==undefined)for(const[key,entry]of sourceAnalyses)if(entry.provider.revision===fact.revision&&analysisOwnerRoleV1(key)===role)return entry;
+}
+/** 🔑️ A nested row as the comparison of a replay sees it: an analysis row by the role of its parser (no owner hash), every other row by identity and meaning. */
+function replayRowKeyV1(row){
+ if(row?.kind!=="analysis"||typeof row.fact?.provider!=="string")return JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)]);
+ const id=row.fact.provider;return JSON.stringify(["analysis",row.path,recordedOwnerRoleV1(id)??id,row.fact.revision,row.fact.resultSha256]);
+}
+/** 🧐️ Why a recorded analysis fact does not hold here, as one short token with its data (`contract`, `provider-unregistered <id>`, `revision <recorded> <registered>`, `shape`, `nested-rows`, `unreadable <message>`, `replay-result`, `replay-nested`, `replay-set`), or undefined while it holds; {@link sourceAnalysisFactHoldsV1} is exactly "no failure", so the verdict and its reason cannot differ.
+ * @see ./🧪️tests/🧐️analysis-reason */
+function sourceAnalysisFailureV1(path,fact){
+ if(sourceAnalysisContractV1.validate(fact).length)return"contract";
+ if(machineLocalRowV1("analysis",path))return undefined;
+ const registered=registeredAnalysisV1(fact);
+ if(!registered){const id=String(fact?.provider),role=recordedOwnerRoleV1(id),same=role===undefined?[]:[...sourceAnalyses.keys()].filter(key=>analysisOwnerRoleV1(key)===role);return"provider-unregistered "+id.slice(0,90)+"; registered "+sourceAnalyses.size+", same role "+(same.length===0?"none":same[0].slice(0,90));}
+ if(registered.provider.revision!==fact.revision)return"revision "+String(fact.revision).slice(0,12)+" "+String(registered.provider.revision).slice(0,12);
+ if(!Array.isArray(fact.nestedObservations)||!fact.source||!SHA256_HEX_V1.test(fact.source.sha256??"")||!SHA256_HEX_V1.test(fact.resultSha256??""))return"shape";
+ if(!nestedObservationsHoldV1(fact.nestedObservations))return"nested-rows";
  try{
-  const stamp=world.statSync(path),recorded=fact.source;if(stamp.size===recorded.size&&stamp.mtimeMs===recorded.mtimeMs&&stamp.ctimeMs===recorded.ctimeMs&&stamp.ino===recorded.ino)return true;
-  const bytes=world.readFileSync(path),sha256=sha256HexV1(bytes);if(sha256===fact.source.sha256)return true;
+  const stamp=world.statSync(path),recorded=fact.source;if(stamp.size===recorded.size&&stamp.mtimeMs===recorded.mtimeMs&&stamp.ctimeMs===recorded.ctimeMs&&stamp.ino===recorded.ino)return undefined;
+  const bytes=world.readFileSync(path),sha256=sha256HexV1(bytes);if(sha256===fact.source.sha256)return undefined;
   const replay=sourceCaptures.run(undefined,()=>recordScopes.run(undefined,()=>scopes.run(undefined,()=>sourceAnalysisImageV1(registered,path,bytes,sha256))));
-  if(sha256HexV1(replay.image)!==fact.resultSha256||!current(replay.nestedObservations))return false;
-  const before=new Set(fact.nestedObservations.map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)]))),after=new Set(replay.nestedObservations.map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])));
-  return before.size===after.size&&[...before].every(row=>after.has(row));
- }catch{return false;}
+  const moved=" "+String(fact.source.sha256).slice(0,10)+">"+sha256.slice(0,10);
+  if(sha256HexV1(replay.image)!==fact.resultSha256)return"replay-result"+moved;
+  if(!current(replay.nestedObservations))return"replay-nested"+moved;
+  const before=new Set(fact.nestedObservations.map(replayRowKeyV1)),after=new Set(replay.nestedObservations.map(replayRowKeyV1));
+  return before.size===after.size&&[...before].every(row=>after.has(row))?undefined:"replay-set"+moved;
+ }catch(error){return"unreadable "+String(error?.code??error?.message??error).slice(0,80);}
 }
 
 /** 🆔️ Fingerprints the names or typed entries of a directory read that belong to the source tree as the build sees it (`📂️source-names`): machine-local output and operating-system noise are not part of the fact, so a record made on one machine holds on every other and after a build. A name of the generated-directory list leaves only where the entry is a directory or a link (`directory` is where the untyped names were listed; none means every name is a directory). */
@@ -482,10 +523,15 @@ export function registerClosureProviderV1(provider){
  * @see ../🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs */
 export const projectRowsHoldAtEndV1=(rows,value,nested,parent)=>projectRowsHoldV1(rows,value,rest=>nested?rest.every(row=>projectObservationHoldsV1(row,parent)):current(rest));
 /** 🏁️ The same verdict for any probe of the rows that are not closure rows: `holdsRest` probes them, the closure rows are verified by the provider one closure at a time (see {@link projectRowsHoldAtEndV1}); a stored record found by a look is judged the same way, so a project that uses more closure entries than the cache holds is not refused for the entries it evicted itself. */
-export async function projectRowsHoldV1(rows,value,holdsRest){
- const verify=closureProviderV1?.verify,closure=typeof verify==="function"?rows.filter(row=>row.kind==="closure"):[],others=closure.length===0?rows:rows.filter(row=>row.kind!=="closure");
+export async function projectRowsHoldV1(rows,value,holdsRest,closureFailed){
+ const provider=closureProviderV1,verify=provider?.verify,closure=typeof verify==="function"?rows.filter(row=>row.kind==="closure"):[],others=closure.length===0?rows:rows.filter(row=>row.kind!=="closure");
  if(!holdsRest(others))return false;
- return closure.length===0||await verify.call(closureProviderV1,closure,value);
+ if(closure.length===0)return true;
+ if(closureFailed===undefined)return await verify.call(provider,closure,value);
+ let failure;
+ const holds=await verify.call(provider,closure,value,(row,why)=>{if(row===undefined||closure.includes(row))failure??={row,why};});
+ if(!holds)closureFailed(failure?.row,failure?.why,closure.length);
+ return holds;
 }
 /** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer; the provider is asked even when no row is a closure fact, because it also readies what every stored fact is checked against (the registered source analyses of a fresh process). */
 export async function settleClosureRowsV1(rows,value){
@@ -493,29 +539,43 @@ export async function settleClosureRowsV1(rows,value){
  const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
  await closureProviderV1.settle([...paths],value);
 }
-/** 🔎️ The first row of a stale record that does not hold now, named so that a read can say why a record of the fleet was refused: its kind, its path and its fact, each cut to a short text; undefined when every row holds one by one (the record was stale as a whole only). A row is judged like the whole record is: a closure row through the provider, any other as it stands. Asked only after a stale verdict.
+/** 🔎️ Probes independent rows and names the first refusal, if any. A closure row uses the provider and other rows are checked as they stand.
  * @see ./🧪️tests/🔎️stale-row */
 export async function firstFailingRowV1(rows,value){
- const short=(text,limit)=>{const line=typeof text==="string"?text:JSON.stringify(text)??"";return line.length>limit?line.slice(0,limit)+"...":line;};
  for(const row of rows){
   let holds=true;
   try{holds=row.kind==="closure"?await projectRowsHoldV1([row],value,()=>true):current([row]);}catch{holds=false;}
-  if(holds!==true)return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160)});
+  if(holds!==true)return namedStaleRowV1(row,row.kind==="analysis"?sourceAnalysisFailureV1(row.path,row.fact):undefined);
  }
  return undefined;
+}
+/** 🏷️ Renders one already observed failure without probing its source again. */
+function namedStaleRowV1(row,why){
+ const short=(text,limit)=>{const line=typeof text==="string"?text:JSON.stringify(text)??"";return line.length>limit?line.slice(0,limit)+"...":line;};
+ return Object.freeze({kind:String(row.kind),path:short(row.path,200),fact:short(row.fact,160),...why===undefined?{}:{why:short(why,300)}});
 }
 /** 🤝️ The verdict of one process on one stored project record, the only verification the record gets: the record is read plainly (a farm child holds no custody of the graph store and only reads), its closure entries are settled and every observed row is verified, the closure rows through the provider and the others as they stand now. `headerDigest` names the record by the digest of its header line, which covers every observed row and every block digest the record names, so a reader that holds the same header and adopts a `holds` verdict verifies nothing itself; `other` is a record of another key, `missing` none, `stale` a row that no longer holds. A verdict is single use and never kept: a later verdict judges the files as they are then.
  * @see ./🧪️tests/🤝️adopted-verdict */
 export async function verifyStoredProjectRecordV1({cachePath,key}){
- requireCurrentObservationV1();
+ requireCurrentObservationV1();const judge=++judgedHereV1;
  const record=plainRecordReads.run(true,()=>readInferenceRecordOrMissV1(cachePath,{say:()=>{}}));
  if(!record)return{verdict:"missing",verifier:process.pid};
  const{header,line,value}=record,headerDigest=sha256HexV1(line);
  if(header.digest!==sha256HexV1(JSON.stringify([recordStampV1(),null,key])))return{verdict:"other",headerDigest,verifier:process.pid};
  await settleClosureRowsV1(header.observations,value);
- const holds=await projectRowsHoldV1(header.observations,value,rest=>current(rest));
+ const rows=header.observations;
+ let staleRow;
+ const fail=(row,why,count)=>{staleRow=row===undefined?staleWholeRowV1(rows,why,count):namedStaleRowV1(row,why);};
+ const holds=await projectRowsHoldV1(rows,value,rest=>current(rest,fail),fail);
  if(holds)return{verdict:"holds",headerDigest,rows:header.observations.length,verifier:process.pid};
- return{verdict:"stale",headerDigest,rows:header.observations.length,staleRow:await firstFailingRowV1(header.observations,value).catch(()=>undefined),verifier:process.pid};
+ return{verdict:"stale",headerDigest,rows:header.observations.length,staleRow:staleRow===undefined?undefined:Object.freeze({...staleRow,why:(staleRow.why===undefined?"":staleRow.why+"; ")+"judge "+judge+" of pid "+process.pid}),verifier:process.pid};
+}
+let judgedHereV1=0;
+/** 🧮️ Describes an observed consistency or closure batch failure when no row-specific failure is known.
+ * @see ./🧪️tests/🧮️stale-whole */
+function staleWholeRowV1(rows,why,closureCount){
+ const kinds={};for(const row of rows)kinds[row.kind]=(kinds[row.kind]??0)+1;
+ return namedStaleRowV1({kind:"whole",path:closureCount===undefined?"record observations":"closure observations",fact:kinds},why??"consistent true, other rows true, "+closureCount+" closure rows together false");
 }
 /** 🪡️ Records the answer one closure entry gave to the running inference. */
 export function recordClosureFactV1(path,answer){record("closure",path,answer);}
@@ -526,9 +586,14 @@ export function observationCollectionsV1(){
  add("inferenceStamps",inferenceStamps);add("recordStores",recordStores);add("recordStoreHandles",recordStoreHandles);add("usedInference",usedInference);add("originalInferencePublications",originalInferencePublications);add("loadObservations",loadObservations);add("projectComputations",projectComputations);add("projectImages",projectImages);add("sourceAnalyses",sourceAnalyses);add("sourceAnalysisImages",sourceAnalysisImages);add("retainedProjectImages",retainedProjectImages);add("fieldDigests",fieldDigests);add("settledReads",settledReads);add("fileRecordImages",fileRecordImages);add("inferenceRowCounts",inferenceRowCountsV1);add("verifiedBlocks",verifiedBlocks);
  const table=rowTableV1.stats();out.push({name:"observation:rowTable",entries:table.rows,bytes:table.bytes});out.push({name:"observation:rowPool",entries:rowPoolV1.size(),bytes:rowPoolV1.size()*160});
  for(const kind of Object.keys(trackedV1)){
-  const alive=[];for(const ref of trackedV1[kind]){const value=ref.deref();if(value===undefined)trackedV1[kind].delete(ref);else alive.push(value);}
-  if(alive.length===0)continue;const largest=alive.reduce((best,value)=>(value.size??0)>(best.size??0)?value:best,alive[0]),row=describeCollectionV1("observation:"+kind+" (largest of "+alive.length+")",largest);
-  out.push({...row,entries:alive.reduce((sum,value)=>sum+(value.size??0),0)});
+  let largest,count=0,total=0;
+  for(const value of trackedV1[kind]){
+   if(!(value instanceof Map))continue;
+   const size=value.size;
+   count++;total+=size;
+   if(largest===undefined||size>largest.size)largest=value;
+  }
+  if(largest!==undefined)out.push(describeCollectionV1("observation:"+kind+" (largest of "+count+" maps, "+total+" entries total)",largest));
  }
  return out;
 }
@@ -604,7 +669,7 @@ export function retainDetachedFailureV1(error){
 /** 🤔️ Whether the shared rows of one reused computation still hold, checked once per validation round however many detached computations share them. */
 export function observationLayerHoldsV1(layer){return memoRowsHoldV1(layer,scopes.getStore());}
 /** 🧪️ Whether one stored row still holds, probed against the tree now and remembered nowhere: for a caller that keeps its own verdict per distinct row (the row dictionary of the closure layers), which asks once per row and pass, so no per-round table of rows is filled beside it. */
-export function observationRowFreshV1(row){const seen=rebaseRowV1(row);return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);}
+export function observationRowFreshV1(row){const seen=rebaseRowV1(row);if(machineLocalRowV1(seen.kind,seen.path))return true;return seen.kind==="file"?fileFactHolds(seen.path,seen.fact)&&JSON.stringify(facts.file(seen.path)?.sha256??null)===JSON.stringify(seen.fact.sha256??null):current([seen]);}
 
 /** 🫧️ The same verdict on the shared rows of one reused computation as {@link observationLayerHoldsV1}, row by row with `step` awaited between rows so a long layer gives the event loop its turns and stops at cancellation. */
 export async function observationLayerHoldsAsyncV1(layer,step){
@@ -684,6 +749,7 @@ const facts = {
 
 /** ✍️ Records one fact in the active inference scope, or — while modules evaluate before the first inference and outside every capture — in the module-load authority; captured reads outside a scope belong to their capture only. */
 function record(kind, path, fact) {
+  if(machineLocalRowV1(kind,path))return;
   footprintPulseV1();noteObservedInReadParentV1("records");
   const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
   if(!target&&!capture)return;
@@ -932,9 +998,22 @@ function fileFactHolds(path, fact) {
 }
 
 /** ✅️ True when every recorded fact still holds; stops at the first stale fact. Synchronous probes beat the four-thread pool here: each is one cached-inode syscall. */
-function current(observations) {
+function current(observations,failed) {
   observations = rebaseRowsV1(observations);
-  return consistentObservationsV1(observations)&&observations.every(({ kind, path, fact }) => kind === "file" ? fileFactHolds(path, fact) : kind==="analysis"?sourceAnalysisFactHoldsV1(path,fact):typeof facts[kind] === "function" && recordedFactHoldsV1(kind, path, fact));
+  if(!consistentObservationsV1(observations)){failed?.(undefined,"conflicting observations");return false;}
+  return observations.every(row=>{
+    const {kind,path,fact}=row;
+    if(machineLocalRowV1(kind,path))return true;
+    let why,holds;
+    if(kind==="analysis"){why=sourceAnalysisFailureV1(path,fact);holds=why===undefined;}
+    else if(kind==="field"&&failed!==undefined){
+      const digest=facts.field(path,fact).digest;
+      holds=digest===fact.digest;
+      if(!holds)why=digest==="!absent-file"?"field-source-unavailable":digest.startsWith("!")?"field-"+digest.slice(1):"field-value";
+    }else holds=kind==="file"?fileFactHolds(path,fact):typeof facts[kind]==="function"&&recordedFactHoldsV1(kind,path,fact);
+    if(!holds)failed?.(row,why);
+    return holds;
+  });
 }
 
 /**
@@ -979,7 +1058,7 @@ export async function settleObservedComputationV1(compute,{signal,limit=OBSERVAT
   const nested=new Map(),captured=new Map(),started=Date.now();let value,failure,failed=false;
   try{value=await sourceCaptures.run(captured,()=>inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute)));}catch(error){failed=true;failure=error;}
   signal?.throwIfAborted();
-  const rows=[...nested.values()],consistent=consistentObservationsV1(rows);
+  const rows=[...nested.values()],conflict=firstObservationConflictV1(rows),consistent=conflict===undefined;
   if(consistent&&!failed){accept(rows,captured.values());return value;}
   const signature=failed?JSON.stringify([failure?.code??null,(()=>{try{return String(failure?.message??failure);}catch{return"";}})()]):undefined;
   if(failed&&(failure?.code==="BUILD_AUTHORITY_CHANGED"||failure?.code==="BUILD_COLLECTED_ERRORS"||signature===previousFailure)){accept(rows,captured.values());throw failure;}
@@ -988,12 +1067,13 @@ export async function settleObservedComputationV1(compute,{signal,limit=OBSERVAT
    signal?.throwIfAborted();
    const youngest=rows.reduce((most,{kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(most,source.mtimeMs??0,source.ctimeMs??0):most;},0);
    if(youngest<started-RACY_MS){accept(rows,captured.values());throw failure;}
-   await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,Math.max(0,youngest+RACY_MS-Date.now()));signal?.addEventListener("abort",()=>{clearTimeout(timer);reject(signal.reason);},{once:true});});
+   try{await settlementDelay(Math.max(0,youngest+RACY_MS-Date.now()),undefined,{signal});}
+   catch(error){signal?.throwIfAborted();throw error;}
   }
   signal?.throwIfAborted();
-  await onRound?.({round,...(consistent?{}:{conflict:conflictingInferenceErrorV1(rows).path}),...(failed?{failure}:{})});
+  await onRound?.({round,...(conflict===undefined?{}:{conflict:conflict.row.path}),...(failed?{failure}:{})});
   signal?.throwIfAborted();
-  if(round+1>=limit){accept(rows,captured.values());throw failed?failure:conflictingInferenceErrorV1(rows);}
+  if(round+1>=limit){accept(rows,captured.values());throw failed?failure:conflictingInferenceErrorV1(conflict);}
  }
 }
 
@@ -1015,12 +1095,12 @@ export function projectClosureTravelV1(){return projectClosureTravel;}
 /** 📤️ The record at `cachePath` in portable form (digest, authority rows, every observation row expanded, result text) or undefined. */
 export function exportProjectRecordV1(cachePath){let record;try{record=readInferencePhysicalRecordV1(cachePath,true);}catch{return undefined;}if(!record)return undefined;return{digest:record.header.digest,authority:record.header.authorityObservations,observations:record.header.observations,image:JSON.stringify(record.value)};}
 
-/** 📥️ Writes a portable record as the local record at `cachePath`; the next lookup still checks every observation against this tree. */
+/** 📥️ Reports whether the graph store accepted the portable record at `cachePath`. The next lookup checks every observation against this tree. */
 export async function importProjectRecordV1(cachePath,portable){
  if(!portable||typeof portable.digest!=="string"||typeof portable.image!=="string"||!Array.isArray(portable.observations)||!Array.isArray(portable.authority))throw Error("Portable project record required");
  const started=Date.now(),header=inferenceHeaderTextV1(portable.digest,sha256HexV1(portable.image),portable.authority,portable.observations,dirname(cachePath)),packed=await packInferenceRecordV1(Buffer.from(`${header}\n${portable.image}`)),bytes=packed.byteLength,temporary=`${cachePath}.${process.pid}.${started}.tmp`;
  fs.mkdirSync(dirname(cachePath),{recursive:true});let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
- withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary,packed,{flag:"wx"});renameOverBusyFileSyncV1(temporary,cachePath);});
+ return withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary,packed,{flag:"wx"});renameOverBusyFileSyncV1(temporary,cachePath);});
 }
 
 export async function observeInference({ cachePath, key, reusable, verdict, verdictFinal = false, prepare, prepareAttempts = 1 }, compute) {
@@ -1057,7 +1137,7 @@ async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fle
   return undefined;
   };
   const port=fleet!==undefined?projectFleetPort:undefined;let gate,computedElsewhere=false;
-  const info=port?{cachePath,fleet,keyText:JSON.stringify([recordStampV1(),null,key]),exportRecord:()=>exportProjectRecordV1(cachePath),closures:projectClosureTravel,import:async portable=>{await importProjectRecordV1(cachePath,portable);return true;}}:undefined;
+  const info=port?{cachePath,fleet,keyText:JSON.stringify([recordStampV1(),null,key]),exportRecord:()=>exportProjectRecordV1(cachePath),closures:projectClosureTravel,import:portable=>importProjectRecordV1(cachePath,portable)}:undefined;
   let reused=await lookup();
   if(reused&&port&&!deferOffer)await lookupLapAsyncV1("offer",()=>port.offer(info));
   if(!reused&&port){gate=await lookupLapAsyncV1("gate",()=>port.gate(info)).catch(()=>undefined);if(gate?.deferred)throw Object.assign(Error("owner left to a live peer: this reader has other owners to infer / Owner einem aktiven Peer überlassen: dieser Leser hat andere Owner abzuleiten"),{code:"BUILD_OWNER_DEFERRED"});if(gate?.seeded)reused=await lookup();}
@@ -1074,8 +1154,8 @@ async function observeInferenceComputationV1({cachePath,key,reusable,prepare,fle
   releaseObservedRecordStoreV1(`${cachePath}.records`);
   const rows = [...authority, ...observations.values()];retainSourceFactsV1(rows);
   retainObservationsV1(parent,rows);
-  const consistent=consistentObservationsV1(rows);
-  if(!consistent&&!nestedProject)throw conflictingInferenceErrorV1(rows);
+  const conflict=firstObservationConflictV1(rows),consistent=conflict===undefined;
+  if(conflict!==undefined&&!nestedProject)throw conflictingInferenceErrorV1(conflict);
   originalInferencePublications.delete(cachePath);
   if (jsonImage(result) !== undefined) { const found={path:cachePath,digest,authorityObservations:authority,observations:rows}; originalInferencePublications.set(cachePath, found); published?.(found); }
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
@@ -1109,7 +1189,8 @@ export async function observeDependencies({ receiptPath, recordDirectory }, comp
   const run=()=>scopes.run(observations,compute),result=await(records?recordScopes.run({records,hints},run):run());
   requireCurrentObservationV1();records?.flush();if(records){if(records.stats.records>2*records.stats.accessed)records.retainAccessed();else if(records.stats.packs>RECORD_STORE_PACK_LIMIT)records.compact();}
   const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
-  if(!consistentObservationsV1(rows))throw conflictingInferenceErrorV1(rows);
+  const conflict=firstObservationConflictV1(rows);
+  if(conflict!==undefined)throw conflictingInferenceErrorV1(conflict);
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
   fs.mkdirSync(dirname(receiptPath), { recursive: true });
   const originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
@@ -1280,20 +1361,25 @@ export async function sweepSupersededObservationBlocksV1(directory,{headerPatter
 
 /**
  * 👯️ {@link current} without blocking: every recorded fact re-checked through the libuv pool, `limit` at a time; false at the first stale
- * fact. Existence, type and listing facts about entries of a directory in `stableDirectories` (absolute paths whose entry sets are proven
+ * fact. The worker limit is a positive safe integer. Existence, type and listing facts about entries of a directory in `stableDirectories` (absolute paths whose entry sets are proven
  * unchanged, e.g. by unchanged directory stamps) hold without a probe: an entry can only appear, vanish or change type by changing its parent.
  * Existence follows symbolic links, so a present entry is probed for every entry in `symlinks`, and for every entry when `symlinks` is `true`; an absent entry of a stable directory cannot appear without changing that directory.
  */
-export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale) {
-  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale));
+export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.holdNestingLimit, stableDirectories = new Set(), symlinks = new Set(),signal,onStale,onVerified) {
+  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified));
 }
 
-async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale) {
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified) {
+  signal?.throwIfAborted();
+  if(!Number.isSafeInteger(limit)||limit<1)throw new RangeError("Positive observation worker limit required");
   observations = rebaseRowsV1(observations);
-  signal?.throwIfAborted();await settleClosureRowsV1(observations);if(!consistentObservationsV1(observations)){const seen=new Map();for(const row of observations){const key=observationIdentityV1(row),fact=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==fact){onStale?.(row);break;}seen.set(key,fact);}return false;}
+  await settleClosureRowsV1(observations);signal?.throwIfAborted();
+  const conflict=firstObservationConflictV1(observations);
+  if(conflict!==undefined){onStale?.(conflict.row);return false;}
   let next = 0, stale = false;
   const check = async ({ kind, path, fact }) => {
     const parent = path.slice(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")));
+    if (machineLocalRowV1(kind, path)) return true;
     const absent = fact === false;
     const loadedAnswer = loadedImplementationAnswerV1(kind, path, fact);
     if (loadedAnswer !== undefined) return loadedAnswer;
@@ -1304,14 +1390,43 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
       try { stamp = (observedWorlds.getStore() ? world.statSync(path) : await statAsync(path)); } catch { return false; }
       if (stamp.size !== fact.size) return false;
       if (stamp.mtimeMs === fact.mtimeMs && stamp.ctimeMs === fact.ctimeMs && stamp.ino === fact.ino) return true;
-      try { return sha256HexV1((observedWorlds.getStore() ? world.readFileSync(path) : await readFileAsync(path))) === fact.sha256; } catch { return false; }
+      try {
+        if(observedWorlds.getStore())return sha256HexV1(world.readFileSync(path))===fact.sha256;
+        const hash=createHash("sha256");
+        for await(const chunk of fs.createReadStream(path,{end:fact.size,highWaterMark:OBSERVATION_LIMITS_V1.fileDigestChunkBytes,signal}))hash.update(chunk);
+        return hash.digest("hex")===fact.sha256;
+      } catch { signal?.throwIfAborted();return false; }
     }
     if (kind === "exists") { try { (observedWorlds.getStore() ? world.statSync(path) : await statAsync(path)); return fact === true; } catch { return fact === false; } }
     if(kind==="analysis")return sourceAnalysisFactHoldsV1(path,fact);
     return typeof facts[kind] === "function" && recordedFactHoldsV1(kind, path, fact);
   };
   let since = performance.now();
-  const worker = async () => { while (!stale && next < observations.length){signal?.throwIfAborted();if(performance.now()-since>=OBSERVATION_LIMITS_V1.yieldMilliseconds){since=performance.now();await new Promise(resolve=>setImmediate(resolve));if(stale||next>=observations.length)break;}const row=observations[next++];if (!await check(row)){stale = true;onStale?.(row);}} };
-  await Promise.all(Array.from({ length: Math.min(limit, observations.length) }, worker));
+  const workers=Math.min(limit,observations.length),stride=OBSERVATION_LIMITS_V1.holdProgressRows;
+  const positions=onVerified!==undefined&&observations.length>=stride?Array.from({length:workers},()=>Infinity):undefined;
+  let successful=0,published=0;
+  const publish=()=>{
+    const verified=Math.floor(positions.reduce((first,index)=>Math.min(first,index),next)/stride)*stride;
+    if(verified>published){published=verified;onVerified(verified);}
+  };
+  const worker=async(_slot,index)=>{
+    while(!stale&&next<observations.length){
+      signal?.throwIfAborted();
+      if(performance.now()-since>=OBSERVATION_LIMITS_V1.yieldMilliseconds){
+        since=performance.now();await new Promise(resolve=>setImmediate(resolve));
+        if(stale||next>=observations.length)break;
+      }
+      if(positions!==undefined)positions[index]=next;
+      const row=observations[next++];
+      if(!await check(row)){stale=true;onStale?.(row);continue;}
+      if(positions!==undefined&&!stale){
+        signal?.throwIfAborted();positions[index]=Infinity;
+        if(++successful%stride===0)publish();
+      }
+    }
+  };
+  await Promise.all(Array.from({length:workers},worker));
+  signal?.throwIfAborted();
+  if(positions!==undefined&&!stale)publish();
   return !stale;
 }

@@ -11,11 +11,11 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
-    model.buildings.insert("bldg-1".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building { site: "site-1".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    model.storeys.insert("st-ground".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
-    model.views.insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
-    model.views.insert("v-eye".into(), View { camera: Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.5, azimuth: 0.0, pitch: 0.2, distance: 10.0 }), ..View::standard("bldg-1", "Eye", ViewKind::Perspective) });
-    model.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Ground floor"));
+    model.buildings.cold_insert("bldg-1".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building { site: "site-1".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    model.storeys.cold_insert("st-ground".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    model.views.cold_insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
+    model.views.cold_insert("v-eye".into(), View { camera: Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.5, azimuth: 0.0, pitch: 0.2, distance: 10.0 }), ..View::standard("bldg-1", "Eye", ViewKind::Perspective) });
+    model.sheets.cold_insert("sh-1".into(), Sheet::standard("A-101", "Ground floor"));
     model
 }
 
@@ -106,7 +106,7 @@ fn a_viewport_needs_a_sheet_a_drawn_view_a_scale_and_a_window_with_a_size() {
 fn a_revision_needs_a_sheet_a_mark_unique_on_it_a_date_and_a_description() {
     let mut base = model();
     let row = |mark: &str| SheetRevision { sheet: "sh-1".into(), number: mark.into(), date: "2026-10-01".into(), description: "Issued for permit".into(), author: "UG".into() };
-    base.sheet_revisions.insert("rev-1".into(), row("A"));
+    base.sheet_revisions.cold_insert("rev-1".into(), row("A"));
     assert_eq!(revision_problem(&base, "rev-2", &row("B")), None);
     assert_eq!(revision_problem(&base, "rev-1", &row("A")), None);
     assert_eq!(revision_problem(&base, "rev-2", &row("A")).map(|problem| problem.field), Some("number"));
@@ -120,13 +120,13 @@ fn a_revision_needs_a_sheet_a_mark_unique_on_it_a_date_and_a_description() {
 fn the_revision_table_and_the_viewports_of_a_sheet_come_in_a_stable_order() {
     let mut base = model();
     let row = |mark: &str| SheetRevision { sheet: "sh-1".into(), number: mark.into(), date: String::new(), description: "x".into(), author: String::new() };
-    base.sheet_revisions.insert("r-z".into(), row("B"));
-    base.sheet_revisions.insert("r-a".into(), row("C"));
-    base.sheet_revisions.insert("r-m".into(), row("A"));
-    base.sheet_revisions.insert("r-other".into(), SheetRevision { sheet: "sh-2".into(), ..row("A") });
+    base.sheet_revisions.cold_insert("r-z".into(), row("B"));
+    base.sheet_revisions.cold_insert("r-a".into(), row("C"));
+    base.sheet_revisions.cold_insert("r-m".into(), row("A"));
+    base.sheet_revisions.cold_insert("r-other".into(), SheetRevision { sheet: "sh-2".into(), ..row("A") });
     assert_eq!(revisions_of(&base, "sh-1").into_iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["r-m", "r-z", "r-a"]);
-    base.viewports.insert("vp-b".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 0.0, y: 0.0 }));
-    base.viewports.insert("vp-a".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 0.0, y: 0.0 }));
-    base.viewports.insert("vp-c".into(), Viewport::standard("sh-2", "v-ground", Point2 { x: 0.0, y: 0.0 }));
+    base.viewports.cold_insert("vp-b".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 0.0, y: 0.0 }));
+    base.viewports.cold_insert("vp-a".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 0.0, y: 0.0 }));
+    base.viewports.cold_insert("vp-c".into(), Viewport::standard("sh-2", "v-ground", Point2 { x: 0.0, y: 0.0 }));
     assert_eq!(viewports_of(&base, "sh-1").into_iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["vp-a", "vp-b"]);
 }

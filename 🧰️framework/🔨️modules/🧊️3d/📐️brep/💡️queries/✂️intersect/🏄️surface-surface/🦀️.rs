@@ -26,6 +26,8 @@ pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 pub type SurfaceIntersectionSample = (Pnt3, f64, f64, f64, f64);
 
 use semio_framework_3d_brep_representation::contract::ParamDomain;
+use super::LineIntersectionRefusal;
+pub use plane_pairs::{intersect_original_analytic_surfaces, intersect_plane_plane_curve, ExactSurfaceRefusal};
 use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
 use semio_framework_3d_brep_surface::Surface;

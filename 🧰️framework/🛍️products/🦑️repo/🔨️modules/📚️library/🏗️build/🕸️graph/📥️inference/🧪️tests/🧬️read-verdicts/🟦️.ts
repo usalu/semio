@@ -1,6 +1,6 @@
 /** 🧬️ Contract: a shared closure entry and each layer of it is verified once per read, however many owners ask for it and however many processes of the read do: the first verifier writes a verdict file named by the digest into the directory of the validation round, every other look of that round reads it. A new round has a new directory, so an edit between rounds is seen at once. */
 import{afterAll,expect,test}from"bun:test";
-import{mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{existsSync,mkdirSync,mkdtempSync,realpathSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
@@ -17,7 +17,7 @@ const prepare=async()=>{
   await writer.save(root+"\0"+SI.closureRecipeKeyV1(recipe),{recipe,value:[],rows:[],layers:Array.from({length:LAYERS},(_,l)=>Array.from({length:DIRECTORIES-2*l},(_,a)=>rows[(a*7+e*l)%DIRECTORIES]))});}
  return{root,store,recipes};
 };
-const child=(job:any)=>{const run=Bun.spawnSync([process.execPath,...(process.env.R119_PRELOAD?["--preload",process.env.R119_PRELOAD]:[]),CHILD],{env:{...process.env,R119_JOB:JSON.stringify(job)}});expect(run.exitCode,run.stderr.toString()).toBe(0);return JSON.parse(run.stdout.toString().split("\n").find(l=>l.startsWith("CHILD "))!.slice(6));};
+const child=(job:any)=>{const run=Bun.spawnSync([process.execPath,...(process.env.R119_PRELOAD?["--preload",process.env.R119_PRELOAD]:[]),CHILD],{env:{...process.env,...job.tmp?{TMPDIR:job.tmp,TEMP:job.tmp,TMP:job.tmp}:{},R119_JOB:JSON.stringify(job)}});expect(run.exitCode,run.stderr.toString()).toBe(0);return JSON.parse(run.stdout.toString().split("\n").find(l=>l.startsWith("CHILD "))!.slice(6));};
 const layerWork=(c:any)=>c.layers.checked+c.layers.indexed;
 const parent=async(root:string,store:string,recipes:any[])=>{
  SI.resetClosureEntriesV1();SI.bindClosureStoreV1(root,store,false);
@@ -42,4 +42,13 @@ test("a new round has its own directory and verifies again",async()=>{
 });
 test("without a round nothing is shared and no directory exists",()=>{
  expect(SI.closureVerdictScopeV1?.()).toBeUndefined();
+});
+
+test("allocating a verdict round leaves the existing reader directories alone",async()=>{
+ const {root,store,recipes}=await prepare(),uid=process.getuid?.()??0,t=join(root,"scratch");
+ const previous=join(t,"semio-read-verdicts-"+uid,process.pid+"-past-1"),verdict=join(previous,"verdict");
+ mkdirSync(previous,{recursive:true});writeFileSync(verdict,"1");
+ const old=new Date(Date.now()-3*3600000);utimesSync(previous,old,old);
+ child({root,store,dir:"",recipes,tmp:t});
+ expect(existsSync(verdict)).toBe(true);
 });

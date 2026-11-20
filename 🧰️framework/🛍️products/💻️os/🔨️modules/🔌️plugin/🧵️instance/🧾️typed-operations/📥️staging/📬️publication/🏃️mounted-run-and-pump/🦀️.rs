@@ -74,7 +74,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
             if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
             if cx.fuel_exhausted()||(cx.should_yield()&&!mounted.page_publication_pending()&&!mounted.result_page_retirement_pending()&&!mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some())){return Ok(())}
-            let before=cx.retained_progress();let fuel=cx.fuel_remaining();
+            let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();
             let acknowledged_page = mounted.result_page_retirement_pending();
             let custody=mounted.page_publication_pending()||mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some());
             let cancelled=mounted.cancellation_lease.as_ref().is_some_and(|lease|lease.publication_is_cancelled());
@@ -96,14 +96,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let original_before=cx.retained_progress();
                 self.publish_mounted_typed_operation_unit(mounted,semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent))),cx)?;
                 let receipt = mounted.publication_ownership_progress.take();
-                if receipt.is_none() { cx.settle_receiving_scope()?; }
-                if let Some((_, unit)) = receipt {
-                    let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(unit,original_before,cx.retained_progress())?;
+                let unit = if let Some((_, unit)) = receipt {
+                    let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());
+                    let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(unit,original_before,after)?;
                     cx.consume_retained(unposted)?;
-                    *spent = spent.checked_add(unit).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                    if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-                    if unit.copied_items == 0 || semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items == 0 { return Ok(()); }
-                }
+                    unit
+                } else {
+                    cx.settle_receiving_scope()?;
+                    let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());
+                    semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(original_before,after)?
+                };
+                *spent=spent.checked_add(unit)?;
                 if self.stores.store.backbone_ref().is_some() {
                     self.stores.store.flush_announcements().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if let Some(PendingArtifactStorePublication::Artifact(publication)) = mounted.pending_artifact_publication.as_mut() {
@@ -111,12 +114,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     }
                 }
                 record_typed_operation_unit(if mounted.result_page.is_some() { TypedOperationUnitKind::Page } else { TypedOperationUnitKind::Store });
-                if receipt.is_none() && before == (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage) {
+                if (receipt.is_some() && unit.copied_items == 0) || (receipt.is_none() && before == (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage)) {
+                    if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
                     return Ok(());
                 }
             }
             if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-            if owned_child_route{let delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;*spent=spent.checked_add(delta)?;}
+            if owned_child_route{let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());let delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?;*spent=spent.checked_add(delta)?;}
+            if semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items==0{return Ok(())}
             if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
                 return Ok(());
             }

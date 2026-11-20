@@ -87,13 +87,22 @@ impl<A: ArtifactApp> PendingReserved<A> {
 }
 
 impl<A: ArtifactApp> ToolOperations<A> {
+    /// 🎟️ Borrows a mounted genesis lease only while its exact replacement handle is retained.
+    pub fn mounted_genesis_lease(&self,parent:semio_framework_job::OperationId,operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation)->Option<&semio_plugin_operation::ToolCancellationLease>{
+        let mounted=self.tool_operations.get(parent.0)?;
+        match mounted.publication.as_ref(){
+            Some(ArtifactToolCompletionValue::Genesis(None,Some((id,epoch)))) if *id==operation.0&&*epoch==generation.0=>mounted.cancellation_lease.as_ref(),
+            _=>None,
+        }
+    }
+
     /// 📨️ Moves the original completion enum before validating its route-specific output kind.
     pub fn finish_mounted_reserved_completion(&mut self,id:u64){
         let mounted=self.tool_operations.get_mut(id).expect("original reserved completion retains its exact operation");
         let taken=mounted.completion.as_ref().map_or(Ok(None),ArtifactToolCompletion::take);
         let fault=match taken{
             Ok(Some(publication))=>{mounted.publication=Some(publication);match mounted.publication.as_ref().expect("original completion enum is retained"){
-                ArtifactToolCompletionValue::Emit(Ok(_),_)=>None,
+                ArtifactToolCompletionValue::Emit(Ok(_),_) | ArtifactToolCompletionValue::Genesis(..)=>None,
                 ArtifactToolCompletionValue::Emit(Err(fault),_)=>Some(fault.bounded),
                 ArtifactToolCompletionValue::Download(_,_)=>Some(ArtifactBoundedToolFault::from_fault(&plugin_sdk_fault("reserved producer completed with original download output"))),
             }},
@@ -116,7 +125,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if state.starting||state.closing{return Ok(None)}
         if !state.complete{state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.producer_request.is_some(){
-            let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,&mut state.producer_construction,cx);
+            let mut candidate=None;let result=semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest::build_or_resume(&mut state.producer_request,&mut candidate,&mut state.producer_construction,cx);
             if let Some(job)=candidate{state.producer=Some(semio_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));}
             match result{Err(failure)=>{state.closing=true;return Err(failure)},Ok(true)if state.producer.is_none()=>{state.closing=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview producer completed without its job").into())},_=>{}}
             return Ok(None);
@@ -128,10 +137,12 @@ impl<A: ArtifactApp> ToolOperations<A> {
             match completion.take()?{
                 Some(ArtifactToolCompletionValue::Emit(emit,ephemeral))=>{let emit=emit.map_err(ArtifactCompletionFault::into_fault)?;let job=ChildEmissionPreviewJob::<A>{emit:Some(emit),ephemeral:Some(ephemeral),completion:Some(completion.clone()),retirement:None,retirement_payload:None,retirement_fault:None,rejection:None,completion_retirement:None,maximum_bytes:state.maximum_bytes,wire_mode:true,fault_publication:semio_framework_job_fault_publication::RetainedFaultPublication::new(),closing:false};state.children=Some(semio_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));return Ok(None)},
                 Some(value@ArtifactToolCompletionValue::Download(..))=>{state.publication=Some(value);state.complete=true;},
+                Some(value@ArtifactToolCompletionValue::Genesis(..))=>{state.publication=Some(value);state.closing=true;return Err(agent_lane_uncarried_fault(verb,"a document genesis").into())},
                 None=>return Err(plugin_sdk_fault("preview producer completed without its original output").into()),
             }
         }
         if state.publication.is_none(){state.publication=state.completion.as_ref().ok_or_else(||plugin_sdk_fault("original preview completion source is absent"))?.take()?;return Ok(None)}
+        if matches!(state.publication,Some(ArtifactToolCompletionValue::Genesis(..))){state.closing=true;return Err(agent_lane_uncarried_fault(verb,"a document genesis").into())}
         if state.completion.is_some()||state.completion_close.is_some(){let body=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&state.completion,&state.completion_close,body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut state.completion,&mut state.completion_close,effect))?;return Ok(None)}
         if let Some(owner)=state.lease_close.as_mut(){if owner.terminal_is_empty(){let step=semio_plugin_operation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant())?;cx.consume_retained(step)?;return Ok(None)}let canonical=self.tool_cancellations.handle().ok_or_else(||plugin_sdk_fault("active cancellation retirement requires its original canonical registry"))?;let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.retirement_demands(canonical,body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.close_step(canonical,effect))?;return Ok(None)}
         if state.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut state.lease,cx.retained_grant())?;state.lease_close=owner;cx.consume_retained(progress)?;return Ok(None)}
@@ -143,6 +154,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         match state.publication{
             Some(ArtifactToolCompletionValue::Emit(emit,ephemeral))=>emit.map(|emit|Some((emit,(ephemeral.presence.len(),ephemeral.transient.len(),ephemeral.window_transient.len()),state.steps))).map_err(|source|ArtifactCompletionFault::into_fault(source).into()),
             Some(ArtifactToolCompletionValue::Download(..))=>Err(agent_lane_uncarried_fault(verb,"a file download").into()),
+            Some(ArtifactToolCompletionValue::Genesis(..))=>unreachable!("a genesis preview enters retained close before extracting its output"),
             None=>Err(plugin_sdk_fault("preview closed without its original publication").into()),
         }
     }

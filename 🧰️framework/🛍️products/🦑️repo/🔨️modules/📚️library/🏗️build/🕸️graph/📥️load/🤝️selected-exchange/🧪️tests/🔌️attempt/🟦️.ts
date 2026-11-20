@@ -5,6 +5,8 @@ import{createHash}from"node:crypto";
 import{mkdtempSync,readFileSync,writeFileSync,existsSync,mkdirSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
+import{decodeAuthorityObservationsV1,encodeAuthorityObservationsV1}from"../../../../../👁️observation/🔢️row-table/🟨️.mjs";
+import authoritySchema from"../../../../../🧬️schema/📥️authority.json";
 import{loadSelectedThroughFleetV1}from"../../🔌️attempt/🟦️.ts";
 import{makeFleet,makeMachine,makeRecords,sha,type FleetV1,type MachineV1}from"../🌍️world/🟦️.ts";
 
@@ -18,13 +20,13 @@ function port(fleet:FleetV1,machine:MachineV1,count:number,memo:Map<string,{fact
   counts.attempts++;
   try{
    const authority=JSON.parse(readFileSync(files.authorityPath,"utf8")),source=readFileSync(files.path,"utf8");
-   if(authority.graph===createHash("sha256").update(source).digest("hex")&&authority.module===module&&await machine.holds(authority.observations))return"served";
+   if(authority.graph===createHash("sha256").update(source).digest("hex")&&authority.module===module&&await machine.holds(decodeAuthorityObservationsV1(authority.observations,authoritySchema.definitions.ObservationKind.enum)))return"served";
   }catch{}
   counts.inferred++;
   const sealed=await machine.read(undefined);
   const source=JSON.stringify({projects:projectsOf(machine,count),graph:sealed.graph});
   writeFileSync(files.path,source);
-  writeFileSync(files.authorityPath,JSON.stringify({version:3,module,membership:sealed.membership,graph:createHash("sha256").update(source).digest("hex"),seal:{},observations:sealed.rows}));
+  writeFileSync(files.authorityPath,JSON.stringify({version:authoritySchema.properties.version.const,module,membership:sealed.membership,graph:createHash("sha256").update(source).digest("hex"),seal:{},observations:JSON.parse(encodeAuthorityObservationsV1(sealed.rows,1<<20))}));
   for(const entry of sealed.admission)memo.set(entry.suffix,{facts:entry.facts,rows:[...entry.rows]});
   return"inferred";
  };

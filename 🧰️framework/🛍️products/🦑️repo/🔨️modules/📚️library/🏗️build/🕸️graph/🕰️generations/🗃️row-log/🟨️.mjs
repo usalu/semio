@@ -10,6 +10,9 @@ const P=ROW_LOG_POLICY_V1,EXTENSION=".rows",NEWLINE="\n";
 /** 🌱️ A typed array grown to hold `length` entries (doubling, never shrinking). */
 const grown=(array,length)=>{if(array.length>=length)return array;const next=new array.constructor(Math.max(length,array.length*2,1024));next.set(array);return next;};
 
+/** 🏷️ The file name of the row log one process opens: `rl-<pid>-<time in base 36>-<serial>.rows`, the shape the closure proof of the graph store knows as a private spill. */
+export const rowLogFileNameV1=(pid,time,serial)=>"rl-"+pid+"-"+time.toString(36)+"-"+serial+EXTENSION;
+const alive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code!=="ESRCH";}};
 /** 🧹️ Removes the logs of dead or long-gone processes next to `directory`, so a killed build leaves nothing behind for long. */
 function sweepStaleLogsV1(directory){
  let names;try{names=readdirSync(directory);}catch{return;}
@@ -17,7 +20,7 @@ function sweepStaleLogsV1(directory){
  for(const name of names){
   if(!name.endsWith(EXTENSION))continue;
   const path=join(directory,name);
-  try{if(now-statSync(path).mtimeMs>P.staleSeconds*1000)rmSync(path,{force:true});}catch{}
+  try{const owner=/^rl-([0-9]+)-/u.exec(name);if(now-statSync(path).mtimeMs>P.staleSeconds*1000||owner&&Number(owner[1])!==process.pid&&!alive(Number(owner[1])))rmSync(path,{force:true});}catch{}
  }
 }
 

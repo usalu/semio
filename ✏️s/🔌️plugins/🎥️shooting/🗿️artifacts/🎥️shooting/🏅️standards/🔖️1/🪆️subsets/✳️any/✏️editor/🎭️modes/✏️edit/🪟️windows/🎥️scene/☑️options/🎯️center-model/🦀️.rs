@@ -7,12 +7,12 @@ use crate::editor::shooting::terminology::ShootingLabels;
 use semio_plugin::WindowMeasure;
 
 //#region 🔖️Measure
-pub fn measure(labels: &ShootingLabels) -> WindowMeasure {
+pub fn measure(enabled: bool, labels: &ShootingLabels) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: "shooting.measure.center-model".into(),
         icon_id: "focus".into(),
         label: Some(labels.measure_center_model.into()),
-        pressed: true,
+        pressed: enabled,
         text: None,
         on_change: crate::editor::shooting::ui_helpers_and_io::shooting_window_action("setCenterModel", None),
     }

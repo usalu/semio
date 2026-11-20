@@ -107,7 +107,7 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     let mut assembly = construction.take_complete().unwrap();
     drain_mounted_job(&mut assembly);
     let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"tip"})).unwrap());
-    assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
+    assert!((0..100_000).any(|_| lifecycle_context(drain_grant(), |cx| loads.step_one(&doc, &assembly, cx)).unwrap()));
     let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
     assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
     let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
@@ -158,7 +158,7 @@ fn mounted_cantilever_sources_match_committed_oracle() {
             let tip_y = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Ty).unwrap().1.unwrap();
             let tip_rz = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Rz).unwrap().1.unwrap();
             let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:source.kind(),id:source.id()})).unwrap());
-            assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
+            assert!((0..100_000).any(|_| lifecycle_context(drain_grant(), |cx| loads.step_one(&doc, &assembly, cx)).unwrap()));
             let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
             assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
             let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
@@ -221,7 +221,7 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
         let mut assembly = construction.take_complete().unwrap();
         drain_mounted_job(&mut assembly);
         let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"area"})).unwrap());
-        assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
+        assert!((0..100_000).any(|_| lifecycle_context(drain_grant(), |cx| loads.step_one(&doc, &assembly, cx)).unwrap()));
         let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
         assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
         let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();

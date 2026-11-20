@@ -4,7 +4,11 @@ use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_plugin::{AppOperationContext,InteractionWrite};
 use semio_framework_value::{paged::{PagedUtf8,PagedUtf8AppendCursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::ErasedSnapshotRetirement as _;
+use semio_framework_value::{
+ ErasedSnapshotRetirement, OriginalRetirementCloseLoan, OriginalRetirementFailure, RetainedAllocationEffect,
+ retirement::{RetirementStep, erased_cursor_turn, record_retirement_work},
+};
+use semio_framework_value_native_owned::native_decoding::{OriginalEffectReply, OriginalEffectReplyComplete};
 use semio_s_artifact_draw_drawing_model::DrawingLayerBase;
 use semio_s_artifact_draw_drawing_model::default_drawing_transform;
 type Text=PagedUtf8<{usize::MAX}>;
@@ -17,29 +21,93 @@ impl AppendCursor{
  fn advance(&mut self,source:&str,destination:&mut Text,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.0.advance(source,destination,source.len(),grant).result}
 }
 impl semio_framework_value::retirement::RetireOwned for AppendCursor{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let mut cursor=self.0;cursor.begin_close();Box::new(AppendCursorRetirement(std::mem::ManuallyDrop::new(cursor)))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<AppendCursorRetirement>())}
+ type RetirementCursor = AppendCursorRetirement;
+ fn retirement_seed(self) -> Self::RetirementCursor {
+  let mut cursor = self.0;
+  cursor.begin_close();
+  AppendCursorRetirement(std::mem::ManuallyDrop::new(cursor))
+ }
  fn controlled_retirement_supported()->bool{true}
 }
-impl semio_framework_value::retirement::RetirementCursor for AppendCursorRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let turn=self.0.close_step(grant);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
+impl AppendCursorRetirement {
+ fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+  erased_cursor_turn(self.0.close_step(body, effect))
+ }
+}
+impl semio_framework_value::retirement::RetirementCursor for AppendCursorRetirement {
+ semio_framework_value::native_retirement_reply!();
+
+ fn requires_original_birth(&self) -> bool { self.0.requires_original_birth() }
+
+ fn close_original_birth_step(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> RetirementStep {
+  erased_cursor_turn(self.0.close_original_birth_step(original, grant))
+ }
+
+ fn requires_original_control(&self) -> bool { self.0.requires_original_control() }
+
+ fn close_original_step(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+  erased_cursor_turn(self.0.close_original_step(original, body, effect))
+ }
+
+ fn close_original_into<'reply>(&mut self, original: &mut OriginalRetirementCloseLoan<'_>, body: usize, effect: &mut RetainedAllocationEffect<'_>, reply: OriginalEffectReply<'reply, RetirementStep, OriginalRetirementFailure>) -> Result<OriginalEffectReplyComplete<'reply, RetirementStep, OriginalRetirementFailure>, ValueError> {
+  if effect.invocation().is_none() {
+   return Err(ValueError::invariant("image append retirement requires its original producer invocation"));
+  }
+  Ok(match self.close_original_step(original, body, effect) {
+   RetirementStep::Failure(error, _) => reply.complete(Err(error)),
+   step => reply.complete(Ok(step)),
+  })
+ }
+ fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+  semio_framework_value::ErasedSnapshotRetirement::next_demand(&*self.0, body)
+ }
+ fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
+  semio_framework_value::ErasedSnapshotRetirement::next_computational_work(&*self.0, body)
+ }
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.0.next_close_capacity_byte_demand(body).ok()}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_release_byte_demand().ok()}
- fn next_depth_demand(&self)->Result<usize,ValueError>{self.0.next_depth_demand()}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(semio_framework_value::ErasedSnapshotRetirement::next_demand(&*self.0, 0)?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for AppendCursorRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.0.terminal_is_empty(),"image append cursor abandoned before exact closure");unsafe{std::mem::ManuallyDrop::drop(&mut self.0);}}}
 struct PublicationHash(semio_framework_hash::Sha256);
 struct PublicationHashRetirement{value:Option<PublicationHash>}
 impl semio_framework_value::retirement::RetireOwned for PublicationHash{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(PublicationHashRetirement{value:Some(self)})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PublicationHashRetirement>())}
+ type RetirementCursor = PublicationHashRetirement;
+ fn retirement_seed(self) -> Self::RetirementCursor { PublicationHashRetirement { value: Some(self) } }
  fn controlled_retirement_supported()->bool{true}
 }
-impl semio_framework_value::retirement::RetirementCursor for PublicationHashRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if self.value.is_none(){return RetirementStep::Complete(0);}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}self.value=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}
+impl PublicationHashRetirement {
+ fn close_step(&mut self, _body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+  if self.value.is_none() {
+   return RetirementStep::Complete(0);
+  }
+  let grant = effect.grant();
+  if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+   return RetirementStep::BudgetExhausted;
+  }
+  match effect.remaining_work_units() {
+   Ok(0) => return RetirementStep::BudgetExhausted,
+   Ok(_) => (),
+   Err(error) => return RetirementStep::Failure(error.into(), 0),
+  }
+  match record_retirement_work(effect, 1) {
+   Err((error, work)) => RetirementStep::Failure(error.into(), work),
+   Ok(work) => {
+    self.value = None;
+    RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }, work)
+   }
+  }
+ }
+}
+impl semio_framework_value::retirement::RetirementCursor for PublicationHashRetirement {
+ semio_framework_value::native_retirement_reply!();
+
+ fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> {
+  Ok(u64::from(self.value.is_some()))
+ }
  fn terminal_is_empty(&self)->bool{self.value.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.value.is_none().then_some(size_of::<Self>())}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -61,7 +129,12 @@ impl DrawingImagePublicationJob{
  fn layer_identity(&self)->&str{std::str::from_utf8(&self.layer_id[..self.layer_length]).unwrap()}
  fn text_source<'a>(&'a self,input:&'a super::ImportImage)->&'a str{match self.text{0|1=>self.asset_identity(),2=>self.layer_identity(),3=>input.name.as_deref().filter(|name|!name.is_empty()).unwrap_or("Image"),4=>"normal",_=>input.parent_id.as_deref().unwrap_or("")}}
  fn string_source(&self)->&str{match self.phase{7=>semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN,8=>semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY,_=>self.layer_identity()}}
- pub fn work_demands(&self,input:&super::ImportImage,operation:&AppOperationContext,_maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{let word=size_of::<usize>();let mut demand=RetirementDemand{depth:1,..Default::default()};match self.phase{16=>demand.copy_bytes=size_of::<PublicationHash>()+operation.authoring_seed.len().saturating_sub(self.seed_offset).min(64)+2*word,17=>demand.copy_bytes=2*size_of::<[u8;160]>()+size_of::<PublicationHash>()+2*word,0=>{let child=self.append[self.text].next_advance_demand(self.text_source(input),&self.texts[self.text])?;demand.copy_bytes=child.copy_bytes+word;demand.capacity_bytes=child.capacity_bytes;},1=>demand.copy_bytes=size_of::<[usize;128]>()+5*word,2=>demand.copy_bytes=size_of::<DrawingLayerNode>()+3*size_of::<Text>()+word,3=>{demand.copy_bytes=size_of::<DrawingLayerNode>()+word;demand.capacity_bytes=size_of::<DrawingLayerNode>();},4=>{demand.copy_bytes=size_of::<Vec<DrawingMutation>>()+word;demand.capacity_bytes=2*size_of::<DrawingMutation>();},5|6=>demand.copy_bytes=size_of::<DrawingMutation>()+word,7..=9=>{demand.copy_bytes=if self.string_fill{self.string_source().len()+2*word}else{size_of::<String>()+word};demand.capacity_bytes=if self.string_fill{0}else{self.string_source().len()};},10=>{demand.copy_bytes=size_of::<Vec<protocol::InteractionTarget>>()+word;demand.capacity_bytes=size_of::<protocol::InteractionTarget>();},11=>demand.copy_bytes=size_of::<protocol::InteractionTarget>()+3*size_of::<String>()+word,12=>{demand.copy_bytes=size_of::<Vec<InteractionWrite>>()+word;demand.capacity_bytes=size_of::<InteractionWrite>();},13=>demand.copy_bytes=size_of::<InteractionWrite>()+size_of::<String>()+size_of::<Vec<protocol::InteractionTarget>>()+word,14=>demand.copy_bytes=size_of::<DrawingImagePublication>()+word,_=>return Err(refused("image publication already transferred"))};Ok(demand)}
+ pub fn work_demands(&self,input:&super::ImportImage,operation:&AppOperationContext,_maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{let word=size_of::<usize>();let mut demand=RetirementDemand{depth:1,..Default::default()};match self.phase{16=>demand.copy_bytes=size_of::<PublicationHash>()+operation.authoring_seed.len().saturating_sub(self.seed_offset).min(64)+2*word,17=>demand.copy_bytes=2*size_of::<[u8;160]>()+size_of::<PublicationHash>()+2*word,0=>{let child=self.append[self.text].next_advance_demand(self.text_source(input),&self.texts[self.text])?;demand.copy_bytes=child.copy_bytes+word;demand.capacity_bytes=child.capacity_bytes;demand.release_bytes=child.release_bytes;demand.depth=child.depth;},1=>demand.copy_bytes=size_of::<[usize;128]>()+5*word,2=>demand.copy_bytes=size_of::<DrawingLayerNode>()+3*size_of::<Text>()+word,3=>{demand.copy_bytes=size_of::<DrawingLayerNode>()+word;demand.capacity_bytes=size_of::<DrawingLayerNode>();},4=>{demand.copy_bytes=size_of::<Vec<DrawingMutation>>()+word;demand.capacity_bytes=2*size_of::<DrawingMutation>();},5|6=>demand.copy_bytes=size_of::<DrawingMutation>()+word,7..=9=>{demand.copy_bytes=if self.string_fill{self.string_source().len()+2*word}else{size_of::<String>()+word};demand.capacity_bytes=if self.string_fill{0}else{self.string_source().len()};},10=>{demand.copy_bytes=size_of::<Vec<protocol::InteractionTarget>>()+word;demand.capacity_bytes=size_of::<protocol::InteractionTarget>();},11=>demand.copy_bytes=size_of::<protocol::InteractionTarget>()+3*size_of::<String>()+word,12=>{demand.copy_bytes=size_of::<Vec<InteractionWrite>>()+word;demand.capacity_bytes=size_of::<InteractionWrite>();},13=>demand.copy_bytes=size_of::<InteractionWrite>()+size_of::<String>()+size_of::<Vec<protocol::InteractionTarget>>()+word,14=>demand.copy_bytes=size_of::<DrawingImagePublication>()+word,_=>return Err(refused("image publication already transferred"))};Ok(demand)}
+ #[cfg(any(test, feature = "testkit"))]
+ /// 🏁️ Captures publication cursor positions for the denied-work law.
+ pub fn fixture_checkpoint(&self) -> (usize,usize,usize,usize,usize,usize) {
+  (self.phase,self.text,self.seed_offset,self.root,self.depth,self.visited)
+ }
  pub fn ready(&self)->bool{self.phase==14}
  pub fn advance(&mut self,snapshot:&DrawingSnapshot,input:&super::ImportImage,operation:&AppOperationContext,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=self.work_demands(input,operation,grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes{return Ok(Default::default());}let mut receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};match self.phase{
   16=>{let end=(self.seed_offset+64).min(operation.authoring_seed.len());self.hash.as_mut().unwrap().0.update(&operation.authoring_seed.as_bytes()[self.seed_offset..end]);self.seed_offset=end;if end==operation.authoring_seed.len(){self.phase=17;}},

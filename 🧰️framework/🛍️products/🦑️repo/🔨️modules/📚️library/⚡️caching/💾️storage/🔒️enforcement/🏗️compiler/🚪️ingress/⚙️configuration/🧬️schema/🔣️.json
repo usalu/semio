@@ -9,7 +9,6 @@
         "leaseShards": 64,
         "namespace": "configuration",
         "entry": "view.json",
-        "publicationResource": "cargo:configuration-publication",
         "maximumPendingOperations": 32,
         "maximumPolicyBytes": 262144
       }

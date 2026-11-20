@@ -709,7 +709,7 @@ impl protocol::ColdMutationDiff<DrawingSnapshot> for DrawingDiff {
             self.layers = None;
         }
         match (&mut self.assets, other.assets) {
-            (Some(dst), Some(src)) => dst.entries.extend(src.entries),
+            (Some(dst), Some(src)) => dst.entries.cold_extend(src.entries.into_entries()),
             (None, Some(src)) => self.assets = Some(src),
             _ => {}
         }

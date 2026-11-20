@@ -1,0 +1,32 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-flow-brep-tessellation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Owns the Flow B-Rep tessellation invocation and retained mesh handoff"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+flow_extension_sdk = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
+pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-s-plugin-flow-brep-mesh = { path = "../../../🥽️mesh/📦️packages/🦀️rust" }
+semio-s-spatial-kernel-semio-session.workspace = true
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json.workspace = true

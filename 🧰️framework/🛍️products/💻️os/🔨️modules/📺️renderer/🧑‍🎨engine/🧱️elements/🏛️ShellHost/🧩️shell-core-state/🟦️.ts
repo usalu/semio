@@ -72,7 +72,7 @@ import { createLocalInteractionStoreV1, initialShellState, shellReducer } from "
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { leftoverOverlayCarryingSelectionV1, leftoverOverlayCarryingUtilityV1, leftoverWorldArmedWindowOverlayV1, leftoverWorldSelectionOverlayV1, leftoverWorldWindowOverlayV1, publishLeftoverWorldSelectionV1 } from "../../🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { clearPendingWorldProjections, World3dWindowViewRegistryV1 } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
-import { navbarExampleIdFromHistoryUpserts } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { type CommittedExampleV1, navbarExampleIdFromHistoryUpserts } from "../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import { interactionViewFromLeftoverOutput, leftoverInteractionStateV1 } from "../../🛠️ShellHelpers/🔩️plumbing/🎮️leftover-views/🟦️.ts";
 import { type DocumentTransferNoticeV1 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import {
@@ -225,7 +225,8 @@ export function useShellCoreState({
    * are open: a spawned program's patch would cancel the session's in-flight snapshot and vice versa. */
   const historyOrderByProgramRef = useRef(new Map<string, number>());
   const exampleOptionsRef = useRef<readonly { readonly id: string }[]>([]);
-  const lastDispatchedExampleIdRef = useRef("");
+  const committedExamplesByProgramRef = useRef(new Map<string, CommittedExampleV1>());
+  const focusedExampleProgramRef = useRef("");
   const localHistoryOrderRef = useRef(0);
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault } = shellState.pluginRuntime;
   /** 🔌️ The device's own programs ({@link localProgramsV1}): hub documents' catalog-resolved programs run beside them and
@@ -256,8 +257,9 @@ export function useShellCoreState({
       if (next.applied) applied = true;
       return next.projections;
     });
-    if (applied) {
-      const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
+    if (applied && key === focusedExampleProgramRef.current) {
+      const remembered = committedExamplesByProgramRef.current.get(key)?.exampleId ?? "";
+      const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, remembered, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
       if (navbarExample !== undefined) {
         dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
       }
@@ -649,7 +651,7 @@ export function useShellCoreState({
     catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
     brand, suppressAutoIntroduction, navbarTrailingItems, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
     measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, stagedActions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
-    historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, lastDispatchedExampleIdRef, localHistoryOrderRef,
+    historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, committedExamplesByProgramRef, focusedExampleProgramRef, localHistoryOrderRef,
     loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault, localPrograms,
     uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId,
     uiCustomThemes, uiThemeDraft, uiKeybindingOverrides, applyHistoryPatch, leftoverInspectionEpoch,

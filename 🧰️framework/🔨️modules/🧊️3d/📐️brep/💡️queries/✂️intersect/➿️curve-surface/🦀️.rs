@@ -10,6 +10,7 @@
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, upgraded in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A).
 
+use super::LineIntersectionRefusal;
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::IntersectError;
 use semio_framework_3d_brep_surface::surface_ops::closest_uv;
@@ -53,23 +54,27 @@ pub fn intersect_curve_surface(curve: &Curve3, surface: &Surface, tol: f64) -> R
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn intersect_line_plane(origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
+    Ok(intersect_line_plane_unique(origin, dir, frame, tol)?.into_iter().collect())
+}
+
+/// 🪟️ Intersects an analytic line and plane without allocating a result list.
+pub fn intersect_line_plane_unique(origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64) -> Result<Option<CurveSurfaceHit>, LineIntersectionRefusal> {
+    use LineIntersectionRefusal::{DegenerateDirection, Infinite, InvalidTolerance, NonFinite};
+    if !(tol > 0.0 && tol.is_finite()) { return Err(InvalidTolerance); }
     let n = dir.norm();
-    if n <= tol {
-        return Err(IntersectError::Degenerate("zero-length line direction".into()));
-    }
-    let normal = frame.z;
-    let denom = dir.dot(normal);
+    if n <= tol { return Err(DegenerateDirection); }
+    let denom = dir.dot(frame.z);
     let local = frame.to_local(origin);
+    if ![n, denom, local.z].into_iter().all(f64::is_finite) { return Err(NonFinite); }
     if denom.abs() <= tol * n {
-        if local.z.abs() <= tol {
-            return Err(IntersectError::Tangent);
-        }
-        return Ok(vec![]);
+        if local.z.abs() <= tol { return Err(Infinite); }
+        return Ok(None);
     }
-    let t = -local.z / (frame.to_local_vector(dir).z);
+    let t = -local.z / denom;
     let point = origin + dir * t;
     let uv = frame.to_local(point);
-    Ok(vec![CurveSurfaceHit { point, t, u: uv.x, v: uv.y }])
+    if ![t, point.x, point.y, point.z, uv.x, uv.y].into_iter().all(f64::is_finite) { return Err(NonFinite); }
+    Ok(Some(CurveSurfaceHit { point, t, u: uv.x, v: uv.y }))
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

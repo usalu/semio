@@ -21,7 +21,7 @@ fn level(elevation: f64) -> StoreyLevel {
 fn model(rows: Vec<(&str, MepSystem, MepShape, Vec<Point3>)>) -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
     for (id, system, shape, path) in rows {
-        snapshot.mep_elements.insert(id.to_string(), MepElement { storey: "s1".into(), system, shape, path, name: String::new() });
+        snapshot.mep_elements.cold_insert(id.to_string(), MepElement { storey: "s1".into(), system, shape, path, name: String::new() });
     }
     snapshot
 }

@@ -1,0 +1,150 @@
+{
+ "materials": [
+  {
+   "id": "bone",
+   "title": {
+    "en": "Bone",
+    "de": "Knochen"
+   },
+   "emissivity": 0.9,
+   "solarAbsorptivity": 0.5,
+   "densityKgM3": 1900,
+   "source": "authored-estimate"
+  }
+ ],
+ "representations": {
+  "50": {
+   "decisions": {
+    "silhouette": {
+     "en": "Every filled shape is the true orthographic outline of the 1:50 model in the default pose, per bone: head with nose, lips, ears and eyes under the cap with brim and button, short hair at temples and nape, neck in the stand collar, the softshell jacket with zip, pockets, chest pocket and hem band, the badge, sleeves with cuffs, the bare right wrist, the left fist round the pole and the right hand with the index finger along the pointer, chinos and walking shoes with sole and lacing; the pointer with grip, sections and ball tip, the 24 mm pole with ferrule, hoist sleeve and finial, the flag rippling in the wind.",
+     "de": "Jede gefüllte Form ist der wahre Normalriss des 1:50-Modells in der Standardpose, je Knochen: Kopf mit Nase, Lippen, Ohren und Augen unter der Mütze mit Schirm und Knopf, kurzes Haar an Schläfen und Nacken, Hals im Stehkragen, die Softshelljacke mit Reißverschluss, Taschen, Brusttasche und Saumbund, der Ausweis, Ärmel mit Bündchen, das freie rechte Handgelenk, die linke Faust um die Stange und die rechte Hand mit dem Zeigefinger am Zeigestab, Chinohose und Wanderschuhe mit Sohle und Schnürung; der Zeigestab mit Griff, Auszügen und Kugelspitze, die 24-mm-Stange mit Gummikappe, Hohlsaum und Knauf, die im Wind gewellte Fahne."
+    },
+    "retained": {
+     "en": "Front view strokes: the zip line, the three pocket zips, both strands of the lanyard and the mouth; eyes as their own shapes.",
+     "de": "Striche in der Vorderansicht: Reißverschlusslinie, die drei Taschenreißverschlüsse, beide Stränge des Umhängebands und der Mund; die Augen als eigene Formen."
+    },
+    "merged": {
+     "en": "Cap, brim and button are one shape, hand and fingers one shape per hand, cuff and forearm one shape, sole and lacing belong to the shoe, ferrule and hoist sleeve to the pole.",
+     "de": "Mütze, Schirm und Knopf sind eine Form, Hand und Finger eine Form je Hand, Bündchen und Unterarm eine Form, Sohle und Schnürung gehören zum Schuh, Gummikappe und Hohlsaum zur Stange."
+    },
+    "omitted": {
+     "en": "Fabric folds, seams, laces as single strands, the flag's print.",
+     "de": "Stofffalten, Nähte, Schnürsenkel als Einzelstränge, der Aufdruck der Fahne."
+    },
+    "thinElements": {
+     "en": "The pointer sections (15 to 7 mm) and the 24 mm pole are drawn at their true outline; the lanyard (7 mm) is a stroke.",
+     "de": "Die Auszüge des Zeigestabs (15 bis 7 mm) und die 24-mm-Stange sind in ihrem wahren Umriss gezeichnet; das Umhängeband (7 mm) ist ein Strich."
+    },
+    "styles": {
+     "en": "0.25 mm outlines, 0.13 mm detail strokes; jacket dark, chinos mid, skin light, flag mid, pole and pointer metal light.",
+     "de": "0,25-mm-Umrisse, 0,13-mm-Detailstriche; Jacke dunkel, Chinohose mittel, Haut hell, Fahne mittel, Stange und Zeigestab metallisch hell."
+    },
+    "overlays": {
+     "en": "Each shape carries the thermal region of the garment or body part it shows (jacket, sleeves, wrist, hands, face, hair and cap, chinos, shoes, pointer, pole, flag), in all three views.",
+     "de": "Jede Form trägt die thermische Region des Kleidungs- oder Körperteils, das sie zeigt (Jacke, Ärmel, Handgelenk, Hände, Gesicht, Haar und Mütze, Hose, Schuhe, Zeigestab, Stange, Fahne), in allen drei Ansichten."
+    }
+   }
+  },
+  "100": {
+   "decisions": {
+    "silhouette": {
+     "en": "Every filled shape is the true outline of the 1:100 model in the default pose: head with nose and ears, cap with brim, hair at the nape, neck and collar, jacket and skirt with hem band, badge, sleeves, forearms, the bare right wrist, both hands, seat, trouser legs, shoes; the pointer as grip and rod, the pole with finial and hoist sleeve, the flag.",
+     "de": "Jede gefüllte Form ist der wahre Umriss des 1:100-Modells in der Standardpose: Kopf mit Nase und Ohren, Mütze mit Schirm, Haar im Nacken, Hals und Kragen, Jacke und Schoß mit Saumbund, Ausweis, Ärmel, Unterarme, das freie rechte Handgelenk, beide Hände, Gesäß, Hosenbeine, Schuhe; der Zeigestab als Griff und Stab, die Stange mit Knauf und Hohlsaum, die Fahne."
+    },
+    "retained": {
+     "en": "The lanyard as two strokes in the front view.",
+     "de": "Das Umhängeband als zwei Striche in der Vorderansicht."
+    },
+    "merged": {
+     "en": "Fingers into one band per hand, sole into the shoe, cuff into the forearm.",
+     "de": "Finger zu einem Band je Hand, Sohle in den Schuh, Bündchen in den Unterarm."
+    },
+    "omitted": {
+     "en": "Face details, zips, pockets, lacing, ferrule.",
+     "de": "Gesichtsdetails, Reißverschlüsse, Taschen, Schnürung, Gummikappe."
+    },
+    "thinElements": {
+     "en": "Pointer and pole at their true outline (7 to 15 mm, 24 mm).",
+     "de": "Zeigestab und Stange in ihrem wahren Umriss (7 bis 15 mm, 24 mm)."
+    },
+    "styles": {
+     "en": "0.25 mm outlines, 0.13 mm strokes; tones as at 1:50.",
+     "de": "0,25-mm-Umrisse, 0,13-mm-Striche; Töne wie in 1:50."
+    },
+    "overlays": {
+     "en": "Each shape carries its thermal region in all three views.",
+     "de": "Jede Form trägt ihre thermische Region in allen drei Ansichten."
+    }
+   }
+  },
+  "200": {
+   "decisions": {
+    "silhouette": {
+     "en": "Every filled shape is the true outline of the 1:200 model in the default pose: head with nose, cap with brim, hair, neck and collar, jacket and skirt, badge, sleeves, forearms, wrist, hands, seat, trouser legs, shoes, the pole finial and the flag; pointer and pole as strips.",
+     "de": "Jede gefüllte Form ist der wahre Umriss des 1:200-Modells in der Standardpose: Kopf mit Nase, Mütze mit Schirm, Haar, Hals und Kragen, Jacke und Schoß, Ausweis, Ärmel, Unterarme, Handgelenk, Hände, Gesäß, Hosenbeine, Schuhe, der Knauf der Stange und die Fahne; Zeigestab und Stange als Streifen."
+    },
+    "retained": {
+     "en": "The badge, so the figure reads as a guide.",
+     "de": "Der Ausweis, damit die Figur als Führerin oder Führer lesbar bleibt."
+    },
+    "merged": {
+     "en": "Hands into single forms with thumb, sole into the shoe, hem band into the jacket.",
+     "de": "Hände zu einzelnen Formen mit Daumen, Sohle in den Schuh, Saumbund in die Jacke."
+    },
+    "omitted": {
+     "en": "Ears, lanyard, zips, pockets, hoist sleeve.",
+     "de": "Ohren, Umhängeband, Reißverschlüsse, Taschen, Hohlsaum."
+    },
+    "thinElements": {
+     "en": "Pointer drawn as a 24 mm strip, pole as a 30 mm strip (true 5 to 15 mm and 24 mm).",
+     "de": "Zeigestab als 24-mm-Streifen, Stange als 30-mm-Streifen gezeichnet (wahr 5 bis 15 mm und 24 mm)."
+    },
+    "styles": {
+     "en": "0.2 mm outlines; tones as at 1:50.",
+     "de": "0,2-mm-Umrisse; Töne wie in 1:50."
+    },
+    "overlays": {
+     "en": "Each shape carries its thermal region in all three views.",
+     "de": "Jede Form trägt ihre thermische Region in allen drei Ansichten."
+    }
+   }
+  },
+  "500": {
+   "decisions": {
+    "silhouette": {
+     "en": "Every filled shape is the true outline of the 1:500 model in the default pose: head, cap with brim, neck, the jacket as one form, sleeves, forearms, wrist, the hands as single forms, seat, trouser legs, shoes and the flag; pointer and pole as strips.",
+     "de": "Jede gefüllte Form ist der wahre Umriss des 1:500-Modells in der Standardpose: Kopf, Mütze mit Schirm, Hals, die Jacke als eine Form, Ärmel, Unterarme, Handgelenk, die Hände als einzelne Formen, Gesäß, Hosenbeine, Schuhe und die Fahne; Zeigestab und Stange als Streifen."
+    },
+    "retained": {
+     "en": "Cap brim, raised pointing arm, pole at its real length and the flag, so the guide reads at 4.5 mm height.",
+     "de": "Mützenschirm, gehobener Zeigearm, die Stange in wahrer Länge und die Fahne, damit die Figur bei 4,5 mm Höhe lesbar bleibt."
+    },
+    "merged": {
+     "en": "Jacket, collar and skirt into one form; hair under the cap.",
+     "de": "Jacke, Kragen und Schoß zu einer Form; das Haar unter der Mütze."
+    },
+    "omitted": {
+     "en": "Face, ears, badge, lanyard, finial, hoist sleeve, fingers.",
+     "de": "Gesicht, Ohren, Ausweis, Umhängeband, Knauf, Hohlsaum, Finger."
+    },
+    "thinElements": {
+     "en": "Pointer drawn as a 60 mm strip, pole as a 36 mm strip (true 5 to 15 mm and 24 mm); a wider pole strip would cut the left sleeve behind it into slivers that do not print.",
+     "de": "Zeigestab als 60-mm-Streifen, Stange als 36-mm-Streifen gezeichnet (wahr 5 bis 15 mm und 24 mm); ein breiterer Stangenstreifen zerschnitte den linken Ärmel dahinter in nicht druckbare Splitter."
+    },
+    "styles": {
+     "en": "0.15 mm outlines; tones as at 1:50.",
+     "de": "0,15-mm-Umrisse; Töne wie in 1:50."
+    },
+    "overlays": {
+     "en": "Each shape carries its thermal region in all three views.",
+     "de": "Jede Form trägt ihre thermische Region in allen drei Ansichten."
+    }
+   }
+  }
+ },
+ "dimensions": {
+  "heightM": 2.226,
+  "widthM": 1.239,
+  "depthM": 0.482
+ }
+}

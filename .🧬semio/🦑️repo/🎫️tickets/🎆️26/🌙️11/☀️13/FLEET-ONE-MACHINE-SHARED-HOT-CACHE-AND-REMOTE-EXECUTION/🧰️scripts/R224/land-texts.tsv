@@ -1,0 +1,14 @@
+window-missed	window missed: the next landing window (hh:00 to hh:05, hh:30 to hh:35 UTC) is %s s away, more than %s s	Fenster verpasst: das nächste Landefenster (hh:00 bis hh:05, hh:30 bis hh:35 UTC) liegt %s s entfernt, mehr als %s s
+no-lock	no lock after %s s: %s	kein Lock nach %s s: %s
+window-ended	the window ended before the lock was taken, lock released: %s	das Fenster endete vor dem Lock, Lock freigegeben: %s
+locked	lock %s after %s s as %s	Lock %s nach %s s als %s
+base-differs	live differs from its base, nothing written: %s	live weicht von der Basis ab, nichts geschrieben: %s
+new-exists	new file exists already, nothing written: %s	neue Datei existiert bereits, nichts geschrieben: %s
+no-publish	the replica did not publish the new files within %s s, restoring	die Replik hat die neuen Dateien nicht innerhalb von %s s veröffentlicht, stelle wieder her
+delivery	delivery of the new files: %s	Lieferung der neuen Dateien: %s
+changed-meanwhile	%s changed while the replica delivered, restoring and writing nothing more	%s änderte sich während der Lieferung, stelle wieder her und schreibe nichts mehr
+tests-red	staged tests are red, restoring	gestufte Tests sind rot, stelle wieder her
+restored	restored: %s files, %s directories	wiederhergestellt: %s Dateien, %s Verzeichnisse
+restore-skipped	not restored (changed by someone else since): %s	nicht wiederhergestellt (inzwischen von anderen geändert): %s
+green	GREEN %s to %s UTC	GRÜN %s bis %s UTC
+forced-red	forced red	erzwungenes Rot

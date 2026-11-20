@@ -4,18 +4,18 @@
   "fuel": 65536000000,
   "turnFuel": 2000000,
   "clockUs": 1000,
-  "deadlineUs": 1500,
+  "deadlineUs": 3600000000,
   "maximumTurns": 32768,
   "maximumIdleTurns": 4096,
   "grant": {
-    "maximumItems": 65536,
+    "maximumItems": 16777216,
     "maximumCopyBytes": 134217728,
     "maximumCapacityBytes": 268435456,
     "maximumReleaseBytes": 536870912,
     "maximumDepth": 4096
   },
   "retirementLoan": {
-    "maximumItems": 1,
+    "maximumItems": 2,
     "maximumCopyBytes": 32768,
     "maximumCapacityBytes": 262144,
     "maximumReleaseBytes": 1048576,

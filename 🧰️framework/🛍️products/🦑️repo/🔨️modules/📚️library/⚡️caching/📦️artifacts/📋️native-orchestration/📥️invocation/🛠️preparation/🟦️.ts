@@ -20,17 +20,41 @@ import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../.
 export function repositoryCargoPreparationStorageV1(root:string):CargoPreparationStorageV1{if(!isAbsolute(root))throw Error("Repository storage root must be absolute");return parseCargoPreparationStorageV1({version:1,directory:join(repositoryCachePartitionRootV1(root,"rust"),"cargo/preparation"),leaseDirectory:repositoryLeaseDirectoryV1(root),program:join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts")});}
 
 import {withRepositoryCompilerStoreV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withCompilerWorkspaceSharedWriteV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
+import {acquireCargoBuildLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+type CargoInstallationV1=<T>(body:()=>Promise<T>)=>Promise<T>;
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {nativeCallerPhaseV1} from "../🟦️.ts";
 import {scriptResourceProcessEnvironmentV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {mkdirSync} from "node:fs";
 
 /** 🏪️ Opens authentic Rust storage before selected preparation writes and retains it through child settlement. */
-export async function withRepositoryCargoPreparationV1<T>(workspace:string,root:string,invocation:ScriptInvocation,parent:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(environment:Readonly<Record<string,string|undefined>>,phase:NativeCallerPhaseV1,store:import("../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts").RepositoryCompilerStoreV1,storeControl:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl)=>Promise<T>):Promise<T>{
+export async function withRepositoryCargoPreparationV1<T>(workspace:string,root:string,invocation:ScriptInvocation,parent:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>,body:(environment:Readonly<Record<string,string|undefined>>,phase:NativeCallerPhaseV1,store:import("../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts").RepositoryCompilerStoreV1,storeControl:import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl,install:CargoInstallationV1)=>Promise<T>):Promise<T>{
  const original=nativeCallerPhaseV1(invocation,root,parent),mode=original.authority.original.buildMode;
  return withRepositoryCompilerRuntimeEntriesV1(readNativeCallerAuthorityV1(invocation.capabilities).codeRoot,invocation,parent,()=>withRequestedIssuedResourceControlV1(original.leaseControl,0,phaseControl=>withRepositoryCompilerStoreV1(workspace,mode,phaseControl,environment,(store,control)=>withRequestedIssuedResourceControlV1(control,0,async actual=>{
+  const targetDirectory=store.environment.CARGO_TARGET_DIR;
+  if(!targetDirectory)throw Error("Original Cargo preparation target required");
+  requireNativeStoragePathV1(store.root,targetDirectory);
   const declaration=repositoryCargoPreparationStorageV1(workspace),storage=environment.SEMIO_CARGO_PREPARATION_STORAGE?parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE)):declaration;if(storage.leaseDirectory!==declaration.leaseDirectory||storage.program!==declaration.program)throw Error("Preparation queue and executable belong to repository admission");requireNativeStoragePathV1(store.root,storage.directory);await store.storage.recheck();mkdirSync(storage.directory,{recursive:true});
-  const admitted=nativeCallerPhaseV1(invocation,root,actual);let live=true;const check=()=>{if(!live)throw Error("Original Cargo preparation scope retired");},bounded=scriptResourceProcessEnvironmentV1(admitted.leaseControl,{...store.environment,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),CARGO_NET_OFFLINE:String(admitted.authority.network.offline)}),phase:NativeCallerPhaseV1=Object.freeze({...admitted,budget:()=>{check();return admitted.budget();},advance:async(command:string)=>{check();await admitted.advance(command);check();},options:(requested:Readonly<Record<string,string|undefined>>)=>{check();return admitted.options({...requested,...bounded});}});
-  try{return await body(bounded,phase,store,control);}finally{live=false;await store.storage.recheck();}
+  const admitted=nativeCallerPhaseV1(invocation,root,actual);
+  let live=true;
+  const check=()=>{if(!live)throw Error("Original Cargo preparation scope retired");};
+  const bounded=scriptResourceProcessEnvironmentV1(admitted.leaseControl,{...store.environment,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),CARGO_NET_OFFLINE:String(admitted.authority.network.offline)});
+  const phase:NativeCallerPhaseV1=Object.freeze({
+   ...admitted,
+   budget:()=>{check();return admitted.budget();},
+   advance:async(command:string)=>{check();await admitted.advance(command);check();},
+   options:(requested:Readonly<Record<string,string|undefined>>)=>{
+    check();const options=admitted.options({...requested,...bounded});
+    return{...options,env:{...options.env,CARGO_TARGET_DIR:targetDirectory}};
+   },
+  });
+  const install:CargoInstallationV1=async run=>{
+   check();phase.budget();await store.storage.recheck();
+   const lease=await acquireCargoBuildLeaseV1({directory:declaration.leaseDirectory,buildDirectory:store.buildDirectory,targetDirectory,args:["--profile=release"],signal:phase.leaseControl.signal,control:phase.leaseControl});
+   try{return await withCompilerWorkspaceSharedWriteV1(store.storage,declaration.leaseDirectory,phase.leaseControl,async()=>{check();await phase.advance("native-dependencies:cargo-install:retained-release");const result=await run();phase.budget();return result;});}
+   finally{lease.release();}
+  };
+  try{return await body(bounded,phase,store,control,install);}finally{live=false;await store.storage.recheck();}
  }))));
 }

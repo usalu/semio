@@ -239,10 +239,33 @@ impl OwnedRuntime {
 
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
     pub async fn describe_observed(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<Vec<u8>, TurnFault> {
-        let state = &mut self.instantiate_actor(compiled).map_err(TurnFault::Host)?;
+        self.describe_instance(compiled, budget, progress).map(|(invocation, _)| invocation.output)
+    }
+
+    /// 🛂️ Describes a build artifact and retains a private codec origin from its initialized actor.
+    /// Each subsequent codec check forks this origin and calls the requested export.
+    pub async fn describe_with_codec_origin_observed(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<(Vec<u8>, OwnedCompiledGuest), TurnFault> {
+        let (invocation, mut state) = self.describe_instance(compiled, budget, progress)?;
+        let actor = state.actor.take().ok_or_else(|| identity_turn_fault(operation_authority::refusal(4)))?;
+        let origin = OwnedCodecOrigin {
+            actor,
+            diagnostics: std::mem::take(&mut state.diagnostics),
+            context: state.context,
+            next_resource: state.next_resource,
+            assembly_fuel: invocation.fuel_used,
+        };
+        let codec_origin = OwnedCodecOriginCell::new();
+        *codec_origin.lock() = OwnedCodecOriginState::Ready(Arc::new(origin));
+        let described = OwnedCompiledGuest { artifact: Arc::clone(&compiled.artifact), codec_origin: Arc::new(codec_origin) };
+        Ok((invocation.output, described))
+    }
+
+    fn describe_instance(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<(OwnedInvocation, OwnedGuestInstance), TurnFault> {
+        let mut state = self.instantiate_actor(compiled).map_err(TurnFault::Host)?;
         state.original_job_clock=Some((budget.retained.work.clock_binding,self.original_clock));
-        begin_owned_operation(state, OwnedOperation::Describe, None)?;
-        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_us, OwnedDeadline::Original, progress, None).map(|invocation| invocation.output)
+        begin_owned_operation(&mut state, OwnedOperation::Describe, None)?;
+        let invocation = resume_owned_operation_observed(&mut state, OwnedOperation::Describe, budget.fuel, budget.deadline_us, OwnedDeadline::Original, progress, None)?;
+        Ok((invocation, state))
     }
 
     /// 🎟️ Admits the original actor context of `state` for one retained turn.

@@ -56,7 +56,7 @@ export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { sh
 /** 📈️ Whether a look releases the shared cache: the managed memory grew `lookReleaseGrowthBytes` beyond its lowest reading, or the host is short. */
 export function lookReleaseDueV1(lowestBytes: number, managedBytes: number, options?: { shrink?: boolean; limits?: { lookReleaseGrowthBytes: number } }): boolean;
 /** 🪤️ Runs a take look in which no closure entry is derived: a missing or stale entry ends it with `BUILD_TAKE_MISS`. */
-export function runClosureTakeV1<T>(body: () => Promise<T>): Promise<T>;
+export function runClosureTakeV1<T>(body: () => Promise<T>, signal?: AbortSignal): Promise<T>;
 export function releaseAfterTakeLookV1(scripts: ScriptInputsValueV1 | undefined, options?: { shrink?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
 /** 🛃️ Walks every declared tool closure and provider port once and returns the refusals. */
 export function preflightToolClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<{ checked: number; refused: readonly { name: string; version: 1; code: string; key: string; values: Record<string, string | number> }[] }>;

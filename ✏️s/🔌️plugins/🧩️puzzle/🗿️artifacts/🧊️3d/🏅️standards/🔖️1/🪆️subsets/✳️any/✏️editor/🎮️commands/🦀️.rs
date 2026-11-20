@@ -227,6 +227,7 @@ pub fn puzzle3d_shell_only_emit<A: Puzzle3dEditor>(action: &str) -> Option<Puzzl
         "openImportSnapshot" => Some((
             Emit {
                 effects: vec![Effect::RequestFileOpen {
+                    max_file_bytes: None,
                     req: semio_plugin::RequestId(121),
                     accept: "application/json,.json".into(),
                     read_as: Some("text".into()),

@@ -1,0 +1,135 @@
+{
+  "summary": {
+    "en": "A wet-rotor heating circulator of the 25-60/180 class in its pipe run, seen along the motor shaft: cast volute housing with two threaded ports 180 mm apart, brass unions and copper tails, the flanged motor head with four screws, a sight glass and a rotating indicator, the terminal box on top; 5 W on the low stage and 45 W at full speed, of which about 30 W warm the room.",
+    "de": "Eine Nassläufer-Heizungsumwälzpumpe der Klasse 25-60/180 in ihrem Rohrstrang, gesehen längs der Motorwelle: gegossenes Spiralgehäuse mit zwei Gewindestutzen im Abstand von 180 mm, Messingverschraubungen und Kupfer-Einlegeteilen, der angeflanschte Motorkopf mit vier Schrauben, Schauglas und drehender Anzeige, oben der Klemmenkasten; 5 W auf kleiner Stufe und 45 W bei voller Drehzahl, davon erwärmen etwa 30 W den Raum."
+  },
+  "citation": "Grundfos UPS 25-60 180 and UPS 25-60 N 180, product data sheets and dimensional sketch (product numbers 96281483, 96913085): port-to-port length 180 mm, connection G 1 1/2 (ISO 228-1), 75 mm and 51 mm to either side of the pump axis seen along the shaft, 32 mm behind and 102 mm in front of the pipe axis, net weight 2.5 to 2.9 kg.",
+  "notes": {
+    "en": "Front view along the motor shaft of a DN 25 circulator of the 25-60/180 class with the envelope of the Grundfos UPS 25-60 180: 180 mm between the faces of the two G 1 1/2 thread ends (installation length, EN 16297-1), 51 mm from the shaft down to the lowest point of the volute, 75 mm up to the top of the terminal box (height 0.126 m), 32 mm from the pipe axis to the back of the housing and 102 mm to the sight glass (depth 0.134 m). The asset includes the two unions that hold it in the pipe: a brass nut of 52 mm across flats over each thread and 13 mm of the 28 mm copper tail beyond it, so the drawn width is 0.22 m. The volute is a drum of 96 mm whose centre lies 3 mm below and 1.5 mm beside the shaft, the motor can has 84 mm and sits on a square flange of 84 mm with four M6 screws on a 68 mm square; the mass of about 2.8 kg is that of the product class. The origin is the lowest point of the volute below the shaft; the pipe axis lies 51 mm above it and 35 mm behind the middle of the depth, and the asset hangs in the pipe at both tails. A high-efficiency permanent-magnet circulator takes about 45 W at full speed and 3 to 5 W at the lowest stage (EEI 0.20 class); the electrical power is the level scale (level 1 = 45 W, low = 5 W). About two thirds of it leave as heat through motor head, housing and electronics into the room (motor head 18 W, housing 10 W, terminal box 2 W at level 1: authored estimate), the rest warms the water. The sight glass with the rotor indicator is an authored simplification: the real rotor runs enclosed in the water behind the can at several thousand revolutions per minute and the motor front carries a name plate with a vent screw, so the clips show the rotation as a pointer in slow motion.",
+    "de": "Vorderansicht längs der Motorwelle einer DN-25-Umwälzpumpe der Klasse 25-60/180 mit der Hülle der Grundfos UPS 25-60 180: 180 mm zwischen den Stirnflächen der zwei Gewindeenden G 1 1/2 (Einbaulänge, EN 16297-1), 51 mm von der Welle hinab zum tiefsten Punkt der Spirale, 75 mm hinauf zur Oberkante des Klemmenkastens (Höhe 0,126 m), 32 mm von der Rohrachse zum Gehäuserücken und 102 mm zum Schauglas (Tiefe 0,134 m). Zum Asset gehören die zwei Verschraubungen, die es im Rohr halten: je eine Messingmutter mit Schlüsselweite 52 mm über dem Gewinde und dahinter 13 mm des Kupfer-Einlegeteils von 28 mm, daher ist die gezeichnete Breite 0,22 m. Die Spirale ist eine Trommel von 96 mm, deren Mittelpunkt 3 mm unter und 1,5 mm neben der Welle liegt, der Motortopf hat 84 mm und sitzt auf einem quadratischen Flansch von 84 mm mit vier M6-Schrauben im Quadrat von 68 mm; die Masse von etwa 2,8 kg ist die der Produktklasse. Der Ursprung ist der tiefste Punkt der Spirale unter der Welle; die Rohrachse liegt 51 mm darüber und 35 mm hinter der Mitte der Tiefe, und das Asset hängt an beiden Einlegeteilen im Rohr. Eine hocheffiziente Permanentmagnet-Umwälzpumpe nimmt bei voller Drehzahl etwa 45 W und auf der niedrigsten Stufe 3 bis 5 W auf (Klasse EEI 0,20); die elektrische Leistung ist die Stufenskala (Stufe 1 = 45 W, klein = 5 W). Etwa zwei Drittel davon verlassen Motorkopf, Gehäuse und Elektronik als Wärme in den Raum (Motorkopf 18 W, Gehäuse 10 W, Klemmenkasten 2 W auf Stufe 1: Schätzwert), der Rest erwärmt das Wasser. Das Schauglas mit der Rotoranzeige ist eine gestalterische Vereinfachung: der echte Rotor läuft abgeschlossen im Wasser hinter dem Spaltrohr mit mehreren tausend Umdrehungen je Minute und die Motorfront trägt ein Typenschild mit Entlüftungsschraube, daher zeigen die Clips die Drehung als Zeiger in Zeitlupe."
+  },
+  "decisions": {
+    "50": {
+      "silhouette": {
+        "en": "A 0.22 m by 0.126 m view along the motor shaft, 4.4 mm by 2.5 mm on paper: the volute drum, slightly low and to the right of the shaft, a port neck, a hexagon nut and a copper tail on each side, in front the square motor flange with its four screws, the round can with bezel and sight glass, and the terminal box with its lid on top. Front, looking along the pipe, 2.7 mm by 2.5 mm: the volute with its rounded back on the right, the two flanges, the can with its rounded front and the bezel on the left, the terminal box on the can, and the union end-on as a hexagon with the tail and its bore. Plan, 4.4 mm by 2.7 mm: the pipe run with necks, nuts and tails, the volute, the flanges, the can pointing to the viewer and the lid of the terminal box with the gland on its left.",
+        "de": "Eine Ansicht von 0,22 m mal 0,126 m längs der Motorwelle, auf Papier 4,4 mm mal 2,5 mm: die Spiraltrommel, leicht unter und rechts der Welle, an jeder Seite ein Stutzenhals, eine Sechskantmutter und ein Kupfer-Einlegeteil, davor der quadratische Motorflansch mit seinen vier Schrauben, der runde Topf mit Blende und Schauglas und oben der Klemmenkasten mit Deckel. Vorderansicht, entlang der Rohrachse, 2,7 mm auf 2,5 mm: rechts die Spirale mit gerundetem Rücken, die zwei Flansche, links der Topf mit gerundeter Front und Blende, der Klemmenkasten auf dem Topf und die Verschraubung stirnseitig als Sechskant mit Einlegeteil und Bohrung. Grundriss, 4,4 mm auf 2,7 mm: der Rohrstrang mit Hälsen, Muttern und Einlegeteilen, die Spirale, die Flansche, der Topf zum Betrachter hin und der Deckel des Klemmenkastens mit der Kabelverschraubung links."
+      },
+      "retained": {
+        "en": "Volute drum of 96 mm, port necks tapering from 43 to 39 mm with the thread shoulder, union nuts of 60 mm across corners with their edges, copper tails of 28 mm, motor flange of 84 mm with four screw heads of 10 mm, can of 84 mm with the edge of its front rounding, bezel of 61 mm, sight glass of 53 mm, pointer, tail and hub, the terminal box on its saddle with lid seam, cable gland and lamp.",
+        "de": "Spiraltrommel von 96 mm, Stutzenhälse von 43 auf 39 mm verjüngt mit Gewindeschulter, Überwurfmuttern mit Eckmaß 60 mm und ihren Kanten, Kupfer-Einlegeteile von 28 mm, Motorflansch von 84 mm mit vier Schraubenköpfen von 10 mm, Topf von 84 mm mit der Kante seiner Frontrundung, Blende von 61 mm, Schauglas von 53 mm, Zeiger, Gegenstück und Nabe, der Klemmenkasten auf seinem Sattel mit Deckelfuge, Kabelverschraubung und Leuchte."
+      },
+      "merged": {
+        "en": "Housing, necks, nuts and tails are separate shapes of the one region casing; in the view along the shaft the housing flange lies exactly behind the motor flange and is one outline with it.",
+        "de": "Gehäuse, Hälse, Muttern und Einlegeteile sind getrennte Formen der einen Region Gehäuse; in der Ansicht längs der Welle liegt der Gehäuseflansch genau hinter dem Motorflansch und ist mit ihm ein Umriss."
+      },
+      "omitted": {
+        "en": "The thread under the nuts, the flat gaskets, the cast flow arrow, the name plate and the rotor can inside the water. The sight glass sits 0.5 mm back in its bezel, so front and plan show the bezel only, as one outline with the can; indicator and lamp face the viewer of the elevation and do not appear in front or plan.",
+        "de": "Das Gewinde unter den Muttern, die Flachdichtungen, der gegossene Strömungspfeil, das Typenschild und der Spaltrohrtopf im Wasser. Das Schauglas sitzt 0,5 mm zurück in seiner Blende, daher zeigen Vorderansicht und Grundriss nur die Blende, als einen Umriss mit dem Topf; Anzeige und Leuchte weisen zum Betrachter der Ansicht und erscheinen weder in der Vorderansicht noch im Grundriss."
+      },
+      "thinElements": {
+        "en": "The pointer is 12 mm wide (0.24 mm on paper), the hub 11 mm (0.22 mm), a screw head 10 mm (0.2 mm), the visible tail 13 mm long (0.26 mm); nut edges, lid seam and the edge of the front rounding are 0.13 mm detail strokes.",
+        "de": "Der Zeiger ist 12 mm breit (0,24 mm auf Papier), die Nabe 11 mm (0,22 mm), ein Schraubenkopf 10 mm (0,2 mm), das sichtbare Einlegeteil 13 mm lang (0,26 mm); Mutterkanten, Deckelfuge und die Kante der Frontrundung sind 0,13-mm-Detailstriche."
+      },
+      "hatching": {
+        "en": "None; the housing is a mid tone, the motor head lighter, the sight glass dark.",
+        "de": "Keine; das Gehäuse ist ein mittlerer Ton, der Motorkopf heller, das Schauglas dunkel."
+      },
+      "styles": {
+        "en": "Housing 0.42, its flange 0.38, nuts 0.5, tails 0.7, motor flange 0.55, can 0.62, screws 0.3, bezel 0.5, sight glass 0.18, terminal box 0.78, lid 0.82, pointer 0.95; body pen 0.18 mm, detail 0.13 mm.",
+        "de": "Gehäuse 0,42, sein Flansch 0,38, Muttern 0,5, Einlegeteile 0,7, Motorflansch 0,55, Topf 0,62, Schrauben 0,3, Blende 0,5, Schauglas 0,18, Klemmenkasten 0,78, Deckel 0,82, Zeiger 0,95; Körperstift 0,18 mm, Detail 0,13 mm."
+      },
+      "overlays": {
+        "en": "Housing, motor, terminal box and sight glass are separate regions: in the thermal view the motor head warms most, the housing follows, the sight glass stays cool.",
+        "de": "Gehäuse, Motor, Klemmenkasten und Schauglas sind getrennte Regionen: in der Thermalansicht erwärmt sich der Motorkopf am stärksten, das Gehäuse folgt, das Schauglas bleibt kühl."
+      }
+    },
+    "100": {
+      "silhouette": {
+        "en": "A 2.2 mm by 1.3 mm view along the shaft: the volute drum behind the square flange and the round can with its dark sight-glass cap, the terminal block on top with the gland, and on each side a neck, a nut and a tail. Front, 1.3 mm by 1.3 mm: the volute with a chamfered back, the flange plate, the can with the cap, the terminal block and the union end-on. Plan, 2.2 mm by 1.3 mm: the pipe run, the volute, the flange plate, the can with the cap and the terminal block with the gland.",
+        "de": "Eine Ansicht von 2,2 mm mal 1,3 mm längs der Welle: die Spiraltrommel hinter dem quadratischen Flansch und dem runden Topf mit dunkler Schauglaskappe, oben der Klemmenblock mit der Kabelverschraubung und an jeder Seite ein Hals, eine Mutter und ein Einlegeteil. Vorderansicht, 1,3 mm auf 1,3 mm: die Spirale mit gefastem Rücken, die Flanschplatte, der Topf mit der Kappe, der Klemmenblock und die Verschraubung stirnseitig. Grundriss, 2,2 mm auf 1,3 mm: der Rohrstrang, die Spirale, die Flanschplatte, der Topf mit der Kappe und der Klemmenblock mit der Kabelverschraubung."
+      },
+      "retained": {
+        "en": "Volute drum of 96 mm, flange plate of 84 mm, can of 84 mm, the dark sight-glass cap of 57 mm, the terminal block of 62 mm by 47 mm with the gland of 20 mm, necks of 41 mm, hexagon nuts of 60 mm across corners and tails of 28 mm.",
+        "de": "Spiraltrommel von 96 mm, Flanschplatte von 84 mm, Topf von 84 mm, die dunkle Schauglaskappe von 57 mm, der Klemmenblock von 62 mm mal 47 mm mit der Kabelverschraubung von 20 mm, Hälse von 41 mm, Sechskantmuttern mit Eckmaß 60 mm und Einlegeteile von 28 mm."
+      },
+      "merged": {
+        "en": "The two bolted flanges are one plate of 15 mm in the tone of the motor; bezel and sight glass are one cap; saddle, shell and lid of the terminal box are one block; the taper and the thread shoulder of the necks are one cylinder.",
+        "de": "Die zwei verschraubten Flansche sind eine Platte von 15 mm im Ton des Motors; Blende und Schauglas sind eine Kappe; Sattel, Schale und Deckel des Klemmenkastens sind ein Block; Verjüngung und Gewindeschulter der Hälse sind ein Zylinder."
+      },
+      "omitted": {
+        "en": "Screws, the edge of the front rounding, nut edges and chamfers, lid seam, lamp, pointer, tail and hub: the rotor indicator is too fine (0.12 mm) and is not drawn. The tail has no bore.",
+        "de": "Schrauben, die Kante der Frontrundung, Mutterkanten und Fasen, Deckelfuge, Leuchte, Zeiger, Gegenstück und Nabe: die Rotoranzeige ist zu fein (0,12 mm) und nicht gezeichnet. Das Einlegeteil hat keine Bohrung."
+      },
+      "thinElements": {
+        "en": "The visible tail is 13 mm long (0.13 mm on paper) and the visible flange rim 15 mm (0.15 mm); both stay filled shapes between larger neighbours.",
+        "de": "Das sichtbare Einlegeteil ist 13 mm lang (0,13 mm auf Papier) und der sichtbare Flanschrand 15 mm (0,15 mm); beide bleiben gefüllte Formen zwischen größeren Nachbarn."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Housing 0.42, nuts 0.5, tails 0.7, flange 0.55, can 0.62, cap 0.18, terminal block 0.78, gland 0.4; one body pen of 0.18 mm.",
+        "de": "Gehäuse 0,42, Muttern 0,5, Einlegeteile 0,7, Flansch 0,55, Topf 0,62, Kappe 0,18, Klemmenblock 0,78, Kabelverschraubung 0,4; ein Körperstift von 0,18 mm."
+      },
+      "overlays": {
+        "en": "Housing, motor, cap and terminal block keep their regions, so the motor heat still shows; the rotor does not turn visibly at this scale.",
+        "de": "Gehäuse, Motor, Kappe und Klemmenblock behalten ihre Regionen, sodass die Motorwärme sichtbar bleibt; der Rotor dreht sich in diesem Maßstab nicht sichtbar."
+      }
+    },
+    "200": {
+      "silhouette": {
+        "en": "A 1.1 mm by 0.63 mm mark: a disc with a block on top and a pipe bar through it. Front, 0.67 mm wide: one stepped body of volute and motor with the terminal block and the pipe disc. Plan: the stepped body on the pipe bar with the terminal block.",
+        "de": "Ein Zeichen von 1,1 mm mal 0,63 mm: eine Scheibe mit einem Block oben und einem Rohrbalken hindurch. Vorderansicht, 0,67 mm breit: ein gestufter Körper aus Spirale und Motor mit Klemmenblock und Rohrscheibe. Grundriss: der gestufte Körper auf dem Rohrbalken mit dem Klemmenblock."
+      },
+      "retained": {
+        "en": "The 96 mm volute disc, the 62 mm terminal block and the pipe bar of 220 mm length through the housing.",
+        "de": "Die Spiralscheibe von 96 mm, der Klemmenblock von 62 mm und der Rohrbalken von 220 mm Länge durch das Gehäuse."
+      },
+      "merged": {
+        "en": "Housing, motor head and sight glass form one disc and one stepped body (three regions merged); necks, nuts and tails form one pipe bar of 44 mm.",
+        "de": "Gehäuse, Motorkopf und Schauglas bilden eine Scheibe und einen gestuften Körper (drei Regionen zusammengeführt); Hälse, Muttern und Einlegeteile bilden einen Rohrbalken von 44 mm."
+      },
+      "omitted": {
+        "en": "Flanges, screws, sight glass, rotor indicator, gland, lamp and all edges; the 6 mm ring between can and volute in the view along the shaft and the 3 mm step between them on top in the front view, which is drawn flush.",
+        "de": "Flansche, Schrauben, Schauglas, Rotoranzeige, Kabelverschraubung, Leuchte und alle Kanten; der 6-mm-Ring zwischen Topf und Spirale in der Ansicht längs der Welle und die 3-mm-Stufe zwischen ihnen oben in der Vorderansicht, die bündig gezeichnet ist."
+      },
+      "thinElements": {
+        "en": "The pipe bar is 44 mm thick (0.22 mm on paper), the mean of nut and tail, so that it stays a closed fill.",
+        "de": "Der Rohrbalken ist 44 mm dick (0,22 mm auf Papier), das Mittel aus Mutter und Einlegeteil, damit er eine geschlossene Fläche bleibt."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Housing 0.42, pipe bar 0.6, terminal block 0.78; one body pen of 0.13 mm.",
+        "de": "Gehäuse 0,42, Rohrbalken 0,6, Klemmenblock 0,78; ein Körperstift von 0,13 mm."
+      },
+      "overlays": {
+        "en": "The disc lists housing, motor and sight glass as merged regions; the terminal block stays separate.",
+        "de": "Die Scheibe führt Gehäuse, Motor und Schauglas als zusammengeführte Regionen; der Klemmenblock bleibt getrennt."
+      }
+    }
+  },
+  "reason500": {
+    "en": "At 1:500 the pump is 0.44 mm by 0.25 mm on paper, well under the 3 mm a recognisable drawing needs, and its smallest drawn part, the status lamp of 9 mm, is 0.02 mm, below the 0.2 mm office-laser minimum feature; draw it at 1:200 or larger.",
+    "de": "Bei 1:500 ist die Pumpe 0,44 mm mal 0,25 mm groß auf Papier, deutlich unter den 3 mm, die eine erkennbare Zeichnung braucht, und ihr kleinstes gezeichnetes Teil, die Statusleuchte von 9 mm, misst 0,02 mm, unter dem Mindestmerkmal von 0,2 mm des Büro-Laserdrucks; bei 1:200 oder größer zeichnen."
+  },
+  "areas": {
+    "casing": 0.053,
+    "motor": 0.035,
+    "terminal-box": 0.019,
+    "rotor-window": 0.0025
+  },
+  "structure": [
+    {
+      "en": "The 2.8 kg pump hangs in the pipe run on both union tails, 208 mm apart: a pin (pipe clamp) on the left and a roller on the right carry its weight; the housing is the beam between them and the pipe itself is rigid.",
+      "de": "Die 2,8 kg schwere Pumpe hängt an beiden Einlegeteilen der Verschraubungen im Rohrstrang, 208 mm auseinander: ein Festlager (Rohrschelle) links und ein Rollenlager rechts tragen ihr Gewicht; das Gehäuse ist der Balken dazwischen und das Rohr selbst ist starr."
+    },
+    {
+      "en": "The motor head cantilevers along the shaft from the housing flange on four M6 screws; this lever arm is lateral and does not appear in the plane of the view, where the masses of motor, rotor and terminal box act on the shaft axis.",
+      "de": "Der Motorkopf kragt längs der Welle am Gehäuseflansch an vier M6-Schrauben aus; dieser Hebelarm liegt quer zur Ansichtsebene und erscheint dort nicht, die Massen von Motor, Rotor und Klemmenkasten wirken in ihr auf der Wellenachse."
+    }
+  ]
+}

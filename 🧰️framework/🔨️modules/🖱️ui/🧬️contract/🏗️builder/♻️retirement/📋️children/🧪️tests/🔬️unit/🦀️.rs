@@ -2,6 +2,7 @@ use super::*;
 
 #[test]
 fn built_child_retirement_contention_retains_exact_page() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = BuiltNode::try_new("child", crate::Component::Separator(crate::SeparatorProps {})).unwrap();
     let mut children = BuiltChildren::default();
     children.try_push(node).unwrap();
@@ -26,6 +27,7 @@ fn built_child_retirement_contention_retains_exact_page() {
 
 #[test]
 fn built_tree_retirement_preserves_foreign_queued_page_at_full_capacity() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let contract = &fixture["foreignPage"];
     let node = || BuiltNode::try_new("node", crate::Component::Separator(crate::SeparatorProps {})).unwrap();

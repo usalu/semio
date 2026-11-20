@@ -217,6 +217,19 @@ const CONFLICTS: Readonly<Record<string, readonly string[]>> = {
 };
 
 const splitModifiers = (className: string): readonly [modifier: string, base: string] => {
+  const known = SPLITS.get(className);
+  if (known !== undefined) return known;
+  const split = splitUncached(className);
+  if (SPLITS.size >= CACHE_LIMIT) SPLITS.clear();
+  SPLITS.set(className, split);
+  return split;
+};
+
+const CACHE_LIMIT = 20_000;
+const SPLITS = new Map<string, readonly [modifier: string, base: string]>();
+const GROUPS = new Map<string, string | undefined>();
+
+const splitUncached = (className: string): readonly [modifier: string, base: string] => {
   const modifiers: string[] = [];
   let bracketDepth = 0;
   let parenthesisDepth = 0;
@@ -238,7 +251,13 @@ const splitModifiers = (className: string): readonly [modifier: string, base: st
   return [`${modifiers.join(":")}${important ? "!" : ""}`, base];
 };
 
-const classGroup = (base: string): string | undefined => CLASS_GROUPS.find(([, pattern]) => pattern.test(base))?.[0];
+const classGroup = (base: string): string | undefined => {
+  if (GROUPS.has(base)) return GROUPS.get(base);
+  const group = CLASS_GROUPS.find(([, pattern]) => pattern.test(base))?.[0];
+  if (GROUPS.size >= CACHE_LIMIT) GROUPS.clear();
+  GROUPS.set(base, group);
+  return group;
+};
 
 const appendClassTokens = (input: ClassNameInput, tokens: string[]): void => {
   if (!input) return;
@@ -257,6 +276,19 @@ const appendClassTokens = (input: ClassNameInput, tokens: string[]): void => {
 
 /** 🪢️ Composes the finite utility families used by repository UI source. */
 export function cn(...inputs: ClassNameInput[]): string {
+  if (!inputs.every(input => typeof input === "string" || !input)) return compose(inputs);
+  const key = inputs.map(input => (typeof input === "string" ? input : "")).join("\u0001");
+  const known = COMPOSED.get(key);
+  if (known !== undefined) return known;
+  const composed = compose(inputs);
+  if (COMPOSED.size >= CACHE_LIMIT) COMPOSED.clear();
+  COMPOSED.set(key, composed);
+  return composed;
+}
+
+const COMPOSED = new Map<string, string>();
+
+function compose(inputs: readonly ClassNameInput[]): string {
   const tokens: string[] = [];
   for (const input of inputs) appendClassTokens(input, tokens);
   const conflicts = new Set<string>();

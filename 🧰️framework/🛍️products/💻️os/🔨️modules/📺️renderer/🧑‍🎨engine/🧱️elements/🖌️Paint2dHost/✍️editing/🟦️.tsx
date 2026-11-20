@@ -3,7 +3,7 @@ import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selecti
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type WheelEvent, type RefObject } from "../../⚛️react-port/🟦️.ts";
 import { GestureRecognizer,type Paint2dEditingOptions } from "@semio-tech/framework";
 import { canvasPinchCamera, type CanvasCamera } from "../../📐️Canvas2dHost/📷️camera-math/🟦️.ts";
-import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, useTranslation } from "@semio-tech/ui-react";
+import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, useTranslation, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { validateExtent, type PixelImage, type PixelPoint, type SelectionMerge } from "@semio-tech/framework/pixels/editing";
 import { STROKE_POINT_CAP, cursorAnnouncement, keyboardCameraStep, keyboardMarquee, keyboardStampPath, rolloverStroke, stepKeyboardCursor, strokeLimitState, type PixelCursor } from "./⌨️keyboard/🟦️.ts";
 import { layerPoint, pixelLayers, maskLayers, pixelGestureRevision, selectionBounds, restoreSelection, type PixelLayer } from "./🟦️.ts";
@@ -31,7 +31,7 @@ type NumericFilter=Exclude<Filter,"invert"|"grayscale"|"clear"|"flipHorizontal"|
 const ranges:Record<NumericFilter,readonly [number,number,number,number]> = {
   brightness:[-1,1,0.01,0],contrast:[-1,1,0.01,0],saturation:[-1,1,0.01,0],gamma:[0.01,10,0.01,1],threshold:[0,255,1,128],posterize:[2,256,1,4],blur:[0,16,1,2],sharpen:[0,5,0.1,1]
 };
-const cell = "bg-background px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-40";
+const cell = "bg-background px-2 py-1 text-xs disabled:opacity-40";
 const toolList:Tool[] = ["layers","hand","brush","eraser","rectangle","ellipse","lasso","wand","bucket","eyedropper"];
 /** 🌊️ How many new samples a stroke gathers before it streams them as one `paintStroke{phase:"stream"}` tick — the wgpu
  * host's `RASTER_STROKE_STREAM_BATCH` (`🗺️surface/🎨️paint/✍️gesture`). */
@@ -381,7 +381,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
   if(!text) return null;
   return <>
     <canvas ref={overlay} aria-hidden="true" className="pointer-events-none absolute inset-0 z-30" />
-    <div tabIndex={0} role="application" aria-label={text.imageEditor} aria-description={text.keyboard} className={"absolute inset-0 z-30 touch-none focus-visible:outline focus-visible:outline-accent"+(tool==="layers"?" pointer-events-none":"")}
+    <div tabIndex={0} role="application" aria-label={text.imageEditor} aria-description={text.keyboard} {...sharedBorderlessBoxProps} className={"absolute inset-0 z-30 touch-none outline-none"+(tool==="layers"?" pointer-events-none":"")}
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={event=>{navigation.up(event.pointerId);pan.current=null;cancel();}} onLostPointerCapture={()=>{if(pointer.current!==null)cancel();}} onWheel={onWheel}
       onBlur={()=>{space.current=false;pan.current=null;for(const tracked of [...navigation.pointers])navigation.up(tracked.pointerId);if(pointer.current!==null)cancel();}}
       onKeyUp={event=>{if(event.code==="Space"){event.preventDefault();space.current=false;}}}

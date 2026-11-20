@@ -1,0 +1,28 @@
+{
+  "ancestor": ".cache",
+  "files": [
+    [
+      "🧰️framework/a/old.ts",
+      -60
+    ],
+    [
+      "🧰️framework/a/new.ts",
+      60
+    ],
+    [
+      "🧰️framework/node_modules/ignored.js",
+      60
+    ],
+    [
+      "🧰️framework/.cache/private.ts",
+      60
+    ],
+    [
+      "🧰️framework/unchanged.ts",
+      0
+    ]
+  ],
+  "changed": [
+    "🧰️framework/a/new.ts"
+  ]
+}

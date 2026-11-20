@@ -12,9 +12,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🧮️ `Wfc3dEditor::Config` — the camera this pane looks through, plus the tile `pin-slot` arms.
 /// `camera_*` are the 2d graph pane's pan/zoom; `orbit_*` are the 3d preview pane's orbit pose, kept
 /// as plain scalars so one config type serves both panes without a variant per surface kind.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact(extension = "wfc3dcfg")]
 #[artifact(id = "wfc.wfc3d.config")]
 #[dsl(layout = "lines")]

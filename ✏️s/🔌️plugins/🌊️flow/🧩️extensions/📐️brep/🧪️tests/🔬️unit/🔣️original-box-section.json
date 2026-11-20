@@ -1,0 +1,136 @@
+{
+  "operator": "brep.intersect.section",
+  "box": {
+    "origin": [
+      1,
+      2,
+      3
+    ],
+    "size": [
+      4,
+      4,
+      4
+    ]
+  },
+  "cases": [
+    {
+      "name": "reversed axial rectangle",
+      "origin": [
+        0,
+        0,
+        5.5
+      ],
+      "normal": [
+        0,
+        0,
+        -2
+      ],
+      "bounds": [
+        [
+          1,
+          2,
+          5.5
+        ],
+        [
+          5,
+          6,
+          5.5
+        ]
+      ],
+      "vertices": 4,
+      "area": 16
+    },
+    {
+      "name": "central oblique hexagon",
+      "origin": [
+        3,
+        4,
+        5
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "bounds": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          5,
+          6,
+          7
+        ]
+      ],
+      "vertices": 6,
+      "area": 20.784609690826528
+    },
+    {
+      "name": "oblique corner triangle",
+      "origin": [
+        1.5,
+        2,
+        3
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "bounds": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          1.5,
+          2.5,
+          3.5
+        ]
+      ],
+      "vertices": 3,
+      "area": 0.21650635094610965
+    }
+  ],
+  "refused": [
+    {
+      "origin": [
+        0,
+        0,
+        10
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "origin": [
+        0,
+        0,
+        3
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "origin": [
+        3,
+        4,
+        5
+      ],
+      "normal": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

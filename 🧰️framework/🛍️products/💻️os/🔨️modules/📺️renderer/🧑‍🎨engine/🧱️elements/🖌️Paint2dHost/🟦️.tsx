@@ -24,8 +24,7 @@ import {
   type SelectionMarqueeMethod,
   SelectionMarquee,
   CanvasPickMenu,
-  type ContextMenuItem,
-} from "@semio-tech/ui-react";
+  type ContextMenuItem, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/framework/canvas/react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
@@ -805,7 +804,7 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
       <canvas ref={canvasRef} className="block h-full w-full touch-none" />
       {text&&progress.pending&&<div className="absolute bottom-2 left-2 z-50 flex items-center gap-2 rounded bg-background p-2 text-sm" role="status">
         <span>{text.rendering}</span><progress aria-label={text.rendering} max={Math.max(1,progress.total)} value={progress.completed}/>
-        <button type="button" onClick={()=>cancelRef.current()}>{text.cancel}</button>
+        <button {...sharedBorderlessBoxProps} type="button" onClick={()=>cancelRef.current()}>{text.cancel}</button>
       </div>}
       {text&&progress.error&&<div className="absolute bottom-2 left-2 z-50 rounded bg-background p-2 text-sm" role="alert">{text.failed}: {progress.error}</div>}
     </div>

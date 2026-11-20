@@ -50,3 +50,50 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store::os_store::test_support::close_plain_test_store(&mut doc_store);
 }
 //#endregion 🔖️CommandEnvelopeTests
+
+#[test]
+fn original_operation_receives_nested_drawing_pages_from_the_declared_range() {
+    use crate::DrawingMutation;
+    use semio_framework_value::RetainedCloneGrant;
+    use semio_s_artifact_draw_drawing_model::{
+        DrawingLayerNode, PathSegment, create_drawing_group_layer, create_drawing_path_layer,
+        identity::DrawingIdentity,
+    };
+
+    let group_identity = DrawingIdentity::admit("layout-group".to_string().into()).unwrap();
+    let child_identity = DrawingIdentity::admit("layout-path".to_string().into()).unwrap();
+    let segments = std::iter::once(PathSegment::Move { to: [0.0, 0.0] })
+        .chain((1..=180).map(|x| PathSegment::Line { to: [f64::from(x), 1.5] }))
+        .collect();
+    let child = create_drawing_path_layer(child_identity, "Path", segments);
+    let mut group = create_drawing_group_layer(group_identity, "Group");
+    let DrawingLayerNode::Group(body) = &mut group else { panic!("group factory"); };
+    body.children = std::iter::once(child).collect();
+    let operation: DrawingMutation =
+        semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, group);
+
+    let mut original = vec![255];
+    original.extend(encode_op(&operation).unwrap());
+    let end = original.len();
+    original.push(255);
+    let quantum = RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: 65_536,
+        maximum_capacity_bytes: 1 << 20,
+        maximum_release_bytes: 1 << 20,
+        maximum_depth: 128,
+    };
+    let stock = dsl::original_receiving::ReceivingStock {
+        stock: RetainedCloneGrant {
+            maximum_items: 1 << 20,
+            maximum_copy_bytes: 1 << 29,
+            maximum_capacity_bytes: 1 << 29,
+            maximum_release_bytes: 1 << 29,
+            ..quantum
+        },
+        quantum,
+        fuel: 1 << 30,
+    };
+    let received = dsl::original_receiving::receive_to_completion::<DrawingMutation>(&original, (1, end), stock).unwrap();
+    assert_eq!(received, operation);
+}

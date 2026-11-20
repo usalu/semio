@@ -1,0 +1,25 @@
+# Whole Graph Producer Failure and Successor Custody
+
+Observed 2026-11-20 through 15:55 UTC. The terminal log, live read record, current pointer and custody registry were inspected read-only.
+
+## Failed Refresh
+
+`.cache/f/graph-server/read.1795188977422.log` ended at 15:36:17 UTC with exit 1 and `unserved build.graph.no-progress`. The outer log reported 34,687 seconds elapsed and the inner command reported over 33,100 seconds. Early front-door lines show 20 observations of a previous producer holding graph custody. The long-held inference pass subsequently reached 3,965 of 4,808 owners in the completion ledger. It had 46 present, 299 fetched from fleet and 3,620 inferred locally. The separate inference progress counter reached 3,968, and the remaining count in the completion ledger was 843.
+
+The failed run had 4,609 owner records present at admission. A record's presence alone does not establish that the current graph can adopt it. The run made 22 logged owner-pool refusals involving unavailable pointers, no answers or open breakers. Its farm primed 49 already-present shared recipes, then computed 29 projects by child across 32,529 elapsed seconds, with zero recorded child failures, lost replies or restarts. At log lines 4,930–4,931, the graph cache declined staged leaves for `@semio-tech/value-persistent-rs` and the farm switched the remaining inference to the parent. The source closes all pools on that disposition. The optional-adoption gate can decline for physical headroom, an optional quota reservation or a ledger publication refusal. The log gives no branch-specific measurement at that line.
+
+After farm shutdown, the log repeatedly reported finished farm owners parked before memory-governed parent reentry. The terminal watchdog observed five minutes without an owner progress signal. The most recent governor decision was waiting with 12,821 MiB reserved against a 10,575 MiB budget. Several running owners had produced some rows but had been active for 3,771–6,247 seconds, and the final GIF fixture had zero rows after 2,183 seconds. The watchdog aborts inference and its observing workers in this state. The terminal log contains no successful whole-graph generation seal or fleet publication.
+
+## Durable Pointer and Live Successor
+
+The exact whole-generation pointer `.cache/b/g/m/generations/current.json` remains generation 260, `manifest:null`, `reason:"closure-missing"`, written at 02:59:59.533 UTC. The parent digest is `a09127b692d0a7b02a627d07329d84db479232b01a05dc7446bc89894da27601`. Its historical generation-259 manifest is a 6,352,438-byte SHA-256 match with 5,100 owner entries and its fact index present. `wave-upload.json` records an upload for generation 259 at 02:58:46.773 UTC. Those records carry no evidence of a current successful seal following the invalidation.
+
+The replacement refresh started at 15:43:22.549 UTC. Its control record names runner PID 91085, frontend PID 91086, no terminal status and a current beat at 15:55:02.640 UTC. The lease observation showed inference PID 92812 holding the shared graph image, shared fact shard 7 and the exclusive `graph-custody` for the whole generations root with suffix `a24e77937c9a5d5d8b54c7f1`. There were no lease waiters in that sample. The frontend admitted at 4,096 MiB and was observed later with a 14,336 MiB show reservation. Farm grants were separate, sized at 1,536 MiB per job.
+
+The replacement found 4,631 of 4,808 owner records present and completed its child shared-closure warmup in 171 seconds with 49 loaded, zero derived and zero stale. It initially resized the farm down to one child, then the real log showed nine children available for validation and warmup. It scheduled 4,671 farm jobs for 4,808 owner looks. The 177 records absent at census are the initial inference/fetch population. The owned read also has to qualify existing records. By the observation it had progressed to 33 of 4,808 ledger completions, with 29 present and four inferred locally.
+
+## Current Acceleration
+
+The already-running producer owns the only whole-graph writer custody and has a progressing farm. A second fresh whole read would queue at that custody, and a current-only consumer needs an eligible complete head. Manually adopting or fabricating the generation-259 parent would bypass the generation-260 closure invalidation. Graph optional-cache maintenance requires exclusive physical image custody and is refused while the live producer holds the image. The safest immediate acceleration is to leave remaining admission headroom to the active producer and required compile. The farm already adjusts its grants as headroom becomes available.
+
+If the same staged-leaf refusal recurs, the supported next diagnosis is the writer's optional admission reason and live capacity at refusal. A subsequent idle maintenance route would require evidence of headroom or retained quota pressure. The historic line alone cannot justify reclaiming durable cache state. No process, cache, lease, code or graph state was changed by this audit.

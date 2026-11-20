@@ -1,6 +1,6 @@
 //! 🥽️ `mesh.primitive` computes: box, plane, cylinder, cone, ico sphere, torus, uv sphere all as stepped kernel mesh jobs.
 //!
-//! Torus and uv sphere are generated as indexed polygon sources by the mesh engine and reconstructed by the kernel's polygon source job.
+//! Torus and uv sphere are generated and reconstructed one grid element at a time.
 #![allow(clippy::result_large_err)]
 use semio_framework_3d::mesh::{MeshModelingOps};
 extern crate self as semio_s_artifact_procedural_3d_mesh_primitive;
@@ -8,7 +8,6 @@ extern crate self as semio_s_artifact_procedural_3d_mesh_primitive;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
 use semio_s_artifact_procedural_3d_mesh_support::count;
-use semio_s_artifact_procedural_3d_mesh_support::import_fault;
 use semio_s_artifact_procedural_3d_mesh_support::modeling;
 use semio_s_artifact_procedural_3d_mesh_support::scalar;
 use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
@@ -17,7 +16,6 @@ use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::HalfedgeMesh;
-use semio_framework_mesh_engine::{PolygonMeshSource};
 
 const FACE_LIMIT: usize = 100_000;
 
@@ -51,8 +49,7 @@ fn torus(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         if faces > FACE_LIMIT {
             return Err(capacity_fault(("The torus", "Der Torus"), faces, FACE_LIMIT, "rings"));
         }
-        let source = PolygonMeshSource::torus(major, minor, segments, rings).map_err(import_fault)?;
-        HalfedgeMesh::polygon_source_job(source).kernel()
+        HalfedgeMesh::torus_primitive_job(major, minor, segments, rings).kernel()
     })
 }
 
@@ -63,8 +60,7 @@ fn uv_sphere(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         if faces > FACE_LIMIT {
             return Err(capacity_fault(("The sphere", "Die Kugel"), faces, FACE_LIMIT, "rings"));
         }
-        let source = PolygonMeshSource::uv_sphere(radius, segments, rings).map_err(import_fault)?;
-        HalfedgeMesh::polygon_source_job(source).kernel()
+        HalfedgeMesh::uv_sphere_primitive_job(radius, segments, rings).kernel()
     })
 }
 

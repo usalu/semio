@@ -30,6 +30,8 @@ export default defineConfig({
       "../../../../🧪️tests/story-imports.test.ts",
       "../../../../🔨️modules/📏️border-presentation/segments.test.ts",
       "../../../../🧱️elements/🗂️WindowChrome/shared-border.test.ts",
+      "../../../../🔨️modules/👁️offscreen-culling/offscreen-culling.test.tsx",
+      "../../../../🧱️elements/🥞️LayeredOverview/🔼️pan-promotion/pan-promotion.test.ts",
       "../../../../🧱️elements/🔲️WindowSilhouette/shared-border.test.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx",
       "../../../../🧱️elements/🖱️ContextMenu/🧪️tests/🧩️component/placement.tsx",

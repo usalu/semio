@@ -1,0 +1,10 @@
+{
+  "http://cdn.localhost:8765/assets/app.js": false,
+  "http://cdn.localhost:8765/__semio/agent-bridge?poll=1": true,
+  "ws://localhost:8787/": true,
+  "http://127.0.0.1:8765/plugin.wasm": true,
+  "http://[::1]/api": true,
+  "file:///tmp/model.wasm": true,
+  "https://cdn.example.com/pane": false,
+  "blob:http://cdn.localhost:8765/id": false
+}

@@ -830,4 +830,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedExampleJobFac
 }
 //#endregion 🧵️RetainedExampleRoutes
 
-semio_plugin::retained_command::terminal_frame_bound!(SequenceRetainedArtifactWork, SequenceRetainedConfigWork, SequenceRetainedExampleWork);

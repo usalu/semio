@@ -2,6 +2,7 @@ import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {GENERATION_POLICY_V1,createNodeFilePortV1,readGenerationPointerV1,type GenerationFilePortV1} from "../🟨️.mjs";
 import {localGenerationIdentityV1,remoteGenerationExchangeV1,type GenerationCursorsV1,type GenerationExchangeOutcomeV1} from "../🌐️remote-exchange/🟦️.ts";
+import {renderGenerationMessageV1} from "../🔌️load/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📡️ The declared numbers of the wave upload. @see ./🧬️schema/🔣️.json */
@@ -48,6 +49,7 @@ export function createGenerationUploaderV1(input:Readonly<{source:GenerationUplo
    const stale=wave?.generation===generation?wave.stale:undefined,started=now(),outcome=await input.source.upload({stale,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(policy.timeoutMilliseconds)])});
    if(outcome.status==="uploaded"){
     remember(generation,true);
+    if(outcome.head)try{input.say(renderGenerationMessageV1("uploadedHead",outcome.head,input.language));}catch{}
     say("uploaded",{generation,sent:outcome.sent??outcome.documents??0,documents:outcome.documents??0,megabytes:Math.round((outcome.bytes??0)/1048576),seconds:Math.round((now()-started)/1000),stale:stale??texts.unknown});
    }else if(outcome.status==="remote-better"){remember(generation,false);say("better",{generation});}
    else if(outcome.status==="current"){remember(generation,true);say("current",{generation});}

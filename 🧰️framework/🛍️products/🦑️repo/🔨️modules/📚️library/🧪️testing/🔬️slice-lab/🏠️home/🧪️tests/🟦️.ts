@@ -9,6 +9,7 @@ import {SLICE_LAB_HOME_V1 as H,sliceLabAllStagesV1,sliceLabLauncherBuildV1,slice
 
 setDefaultTimeout(60000);
 /** 🏠️ The home of a lab machine: the toolchain a slice needs comes from the declared kinds of its owners, the environment of a machine names no path of the live account, a download is refused and logged, a seed is a copy-on-write clone, a stage and a seed are told in a table, and a change outside the seam is found by a before and after listing. */
+const checkoutRoot=join(import.meta.dir,"../../../../../../../../..");
 const live="/Users/live",root="/Users/live/work/checkout",home="/tmp/slw-ab12/m1/h";
 const base={HOME:live,PATH:`${live}/.cargo/bin:/opt/homebrew/bin:/usr/bin:${live}/.local/bin`,CARGO_HOME:`${live}/.cargo`,RUSTUP_HOME:`${live}/.rustup`,GOPATH:`${live}/go`,XDG_DATA_HOME:`${live}/.local/share`,BUN_INSTALL:`${live}/.bun`,CARGO_TARGET_DIR:`${root}/.cache/target`,KEEP:"1",SEMIO_WORKSPACE_ROOT:root};
 describe("slice lab home",()=>{
@@ -30,11 +31,11 @@ describe("slice lab home",()=>{
   expect(sliceLabKindsOfSliceV1(["zzz"],probes,["go"])).toEqual(["go"]);
  });
  test("the seeds of a Go slice hold no Rust, .NET or Python tree, the seeds of a Rust slice hold Rust",()=>{
-  const names=(tools:readonly string[]|"all")=>sliceLabHomeSeedsV1(tools,live,home).map(seed=>seed.id);
+  const names=(tools:readonly string[]|"all")=>sliceLabHomeSeedsV1(tools,live,home,checkoutRoot).map(seed=>seed.id);
   expect(names(["bun","go"])).toEqual(["launcher","runtimes","go"]);
-  expect(names(["bun","rustup","rust"])).toEqual(["launcher","runtimes","cargo","rustup"]);
+  expect(names(["bun","rustup","rust"])).toEqual(["launcher","runtimes","cargo-bin","cargo-registry","cargo-git","rustup","rustup-update"]);
   expect(names("all")).toEqual(H.seeds.map(seed=>seed.id));
-  const [first]=sliceLabHomeSeedsV1(["bun"],live,home);
+  const [first]=sliceLabHomeSeedsV1(["bun"],live,home,checkoutRoot);
   expect(first).toEqual({id:"launcher",source:`${live}/.local/share/semio/launcher`,target:`${home}/.local/share/semio/launcher`,kind:"tree"});
  });
  test("the environment of a machine names no path of the live account and drops every tool home of it",()=>{
@@ -135,7 +136,7 @@ describe("slice lab home",()=>{
   expect(sliceLabSeedToolsV1(["bun","go"],"workspace")).toEqual(["bun","go"]);
   expect(sliceLabSeedToolsV1(["bun","go"],"all")).toEqual(["bun","go","node","rustup","rust","dotnet","uv"]);
   expect(sliceLabSeedToolsV1("all","all")).toBe("all");
-  expect(sliceLabHomeSeedsV1(sliceLabSeedToolsV1(["bun","go"],"all"),live,home).map(seed=>seed.id)).toEqual(["launcher","runtimes","cargo","rustup","dotnet","go","uv-bin","uvx-bin","uv"]);
+  expect(sliceLabHomeSeedsV1(sliceLabSeedToolsV1(["bun","go"],"all"),live,home,checkoutRoot).map(seed=>seed.id)).toEqual(["launcher","runtimes","cargo-bin","cargo-registry","cargo-git","rustup","rustup-update","dotnet","go","uv-bin","uvx-bin","uv"]);
   for(const id of H.nativeTools)expect(new Set(TOOL_SETUP_V1.groups.all).has(id)).toBe(true);
  });
 
@@ -171,18 +172,30 @@ describe("slice lab home",()=>{
 describe("slice lab home: registry, warm partitions, tool selection",()=>{
  test("the launcher of a lab machine is built from the sources of the tree and replaces the seeded binary",()=>{
   const goBinary=spawnSync("/bin/sh",["-c","command -v go"],{encoding:"utf8"}).stdout.trim();
-  if(goBinary===""){expect(sliceLabLauncherBuildV1("/nonexistent","/nonexistent")).toMatchObject({ok:false,reason:"no-go"});return;}
+  if(goBinary===""){expect(()=>sliceLabLauncherBuildV1("/nonexistent","/nonexistent")).toThrow(/compiler/u);return;}
   const directory=realpathSync(mkdtempSync(join(tmpdir(),"slw-t161-"))),root=join(directory,"root"),home=join(directory,"h"),module=join(root,"🧰️framework","🛍️products","🦑️repo","🔨️modules","🚀️launcher","📦️packages","🐹️go");
   try{
    mkdirSync(join(module,"📦️main"),{recursive:true});mkdirSync(join(module,"🧭️workspace-root"),{recursive:true});
    writeFileSync(join(module,"🐹️.go"),"package launcher\n");writeFileSync(join(module,"🧭️workspace-root","🐹️.go"),'package launcher\n\nfunc Marker() string { return "built-from-sources" }\n');
    writeFileSync(join(module,"📦️main","🐹️.go"),'package main\n\nimport (\n\t"fmt"\n\tlauncher "github.com/usalu/semio/repo/launcher"\n)\n\nfunc main() { fmt.Println(launcher.Marker()) }\n');
    mkdirSync(join(home,".local","share","semio","launcher","bin"),{recursive:true});writeFileSync(join(home,".local","share","semio","launcher","bin","repo"),"seeded");
-   expect(sliceLabLauncherBuildV1(join(directory,"empty"),home,goBinary)).toMatchObject({ok:false,reason:"no-sources"});
+   expect(()=>sliceLabLauncherBuildV1(join(directory,"empty"),home,goBinary)).toThrow(/source/u);
    const row=sliceLabLauncherBuildV1(root,home,goBinary);
    expect(row).toMatchObject({ok:true,reason:"built"});
    const target=join(home,".local","share","semio","launcher","bin","repo");expect(spawnSync(target,[],{encoding:"utf8"}).stdout.trim()).toBe("built-from-sources");
   }finally{rmSync(directory,{recursive:true,force:true});}
+ });
+ test.skipIf(process.platform==="win32")("launcher compilation confines compiler scratch to the machine volume",()=>{
+  const dir=realpathSync(mkdtempSync(join(tmpdir(),"lb-"))),home=join(dir,"h"),tool=join(dir,"compiler");
+  const module=join(dir,"🧰️framework","🛍️products","🦑️repo","🔨️modules","🚀️launcher","📦️packages","🐹️go");
+  try{
+   mkdirSync(module,{recursive:true});mkdirSync(home);
+   writeFileSync(join(module,"🐹️.go"),"package launcher");
+   writeFileSync(tool,"#!/usr/bin/env python3\nimport json,os,tempfile\nfrom pathlib import Path\nh=Path.home().resolve()\npaths=[Path.cwd(),Path(tempfile.gettempdir()),Path(os.environ['GOCACHE']),Path(os.environ['GOPATH'])]\n(h/'observed').write_text(json.dumps([h in p.resolve().parents for p in paths]))\nraise SystemExit(1)\n",{mode:0o755});
+   expect(()=>sliceLabLauncherBuildV1(dir,home,tool)).toThrow(/build/u);
+   expect(JSON.parse(readFileSync(join(home,"observed"),"utf8"))).toEqual([true,true,true,true]);
+   expect(readdirSync(home).filter(name=>name.startsWith("lb-"))).toEqual([]);
+  }finally{rmSync(dir,{recursive:true,force:true});}
  });
  test("the dependencies stage runs without the offline switches and behind a refusing proxy, every other stage keeps the machine's environment",()=>{
   const base={CARGO_NET_OFFLINE:"true",RUSTUP_OFFLINE:"1",GOPROXY:"off",PATH:"/usr/bin"};
@@ -283,4 +296,24 @@ describe("slice lab home: registry, warm partitions, tool selection",()=>{
    expect(readFileSync(join(live,".cache","b","d","m","bun-cache","y"),"utf8")).toBe("y");
   }finally{rmSync(directory,{recursive:true,force:true});}
  });
+});
+
+test("the offline Rust seed copies the requested toolchain and the Cargo program and source caches",async()=>{
+ const fixture=JSON.parse(readFileSync(new URL("./rust-seeds.json",import.meta.url),"utf8"));
+ const {Database}=await import("bun:sqlite"),db=new Database(":memory:");
+ const scratch=mkdtempSync(join(tmpdir(),"rs-")),from=join(scratch,"from"),into=join(scratch,"into"),checkout=join(scratch,"repo");
+ try{
+  mkdirSync(checkout);writeFileSync(join(checkout,"rust-toolchain.toml"),'[toolchain]\nchannel = "'+fixture.rustChannel+'"\n');
+  const {rustupHostTripleV1}=await import("../../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🖥️host/🟦️.ts");
+  const {linuxHostLibcV1}=await import("../../../../🎛️commands/🔧️setup/🐧️libc/🟦️.ts");
+  const triple=rustupHostTripleV1(process.platform,process.arch,process.platform==="linux"?linuxHostLibcV1():"gnu");
+  const pinned=".rustup/toolchains/"+fixture.rustChannel+"-"+triple,foreign=".rustup/toolchains/"+fixture.foreignChannel+"-"+triple;
+  const required=[pinned,...fixture.cargoDirectories.map((name:string)=>".cargo/"+name)];
+  const excluded=[foreign,".rustup/tmp",".cargo/unrelated"];
+  db.run("CREATE TABLE seed(path TEXT, needed INTEGER)");
+  for(const name of [...required,...excluded]){db.run("INSERT INTO seed VALUES(?,?)",[name,Number(required.includes(name))]);mkdirSync(join(from,name),{recursive:true});writeFileSync(join(from,name,"marker"),name);}
+  sliceLabSeedHomeV1(sliceLabHomeSeedsV1(["rust"],from,into,checkout));
+  const result=db.query("SELECT path,needed FROM seed").all() as {path:string;needed:number}[];
+  for(const item of result)expect(existsSync(join(into,item.path,"marker")),item.path).toBe(Boolean(item.needed));
+ }finally{db.close();rmSync(scratch,{recursive:true,force:true});}
 });

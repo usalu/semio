@@ -261,4 +261,3 @@ pub(super) fn drawing_bounded_tool_job(request: &mut Option<semio_plugin::Artifa
 }
 //#endregion 🧵️BoundedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(DrawingWindowCommandWork);

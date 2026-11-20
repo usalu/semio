@@ -297,6 +297,9 @@ path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rus
 [workspace.dependencies.semio-framework-job-payload]
 path = "../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-job-testing-caller]
+path = "../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-async]
 path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
 

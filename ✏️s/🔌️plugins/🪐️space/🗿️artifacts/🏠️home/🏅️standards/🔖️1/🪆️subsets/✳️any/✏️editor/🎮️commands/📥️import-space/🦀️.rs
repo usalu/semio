@@ -24,7 +24,7 @@ pub struct ImportSpace {
 
 /// 📤️ The host-owned file request that re-dispatches `importSpace` with the picked `.os` text.
 pub fn file_request() -> Emit<SHomeMutation, HomeConfigMutation> {
-    Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(124), accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false, args: None })
+    Emit::effect(Effect::RequestFileOpen { max_file_bytes: None, req: semio_plugin::RequestId(124), accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false, args: None })
 }
 
 pub fn handle(payload: &ImportSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {

@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { useState, type ReactNode } from "@semio-tech/ui-react";
+import { useState, type ReactNode, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 
 //#region 🔖️json
 //#region 🔖️Renderer
@@ -75,7 +75,7 @@ function JsonBranch({ label, value, depth, defaultExpanded }: { readonly label: 
   }
   return (
     <div className="presentation-json-branch">
-      <button type="button" className="presentation-json-line presentation-json-toggle" style={{ paddingInlineStart: `${depth}ch` }} aria-expanded={expanded} onClick={() => setExpanded((open) => !open)}>
+      <button type="button" {...sharedBorderlessBoxProps} className="presentation-json-line presentation-json-toggle" style={{ paddingInlineStart: `${depth}ch` }} aria-expanded={expanded} onClick={() => setExpanded((open) => !open)}>
         <span className="presentation-json-caret" aria-hidden="true">
           {expanded ? "▾️" : "▸️"}
         </span>

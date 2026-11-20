@@ -26,7 +26,7 @@ pub struct LayoutExportToolJob {
     pub(super) completed: bool,
     pub(super) slot: LayoutPublicationSlot,
     pub(super) pending_download: Option<ArtifactDownloadOutput>,
-    pub(super) rejected_download: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub(super) rejected_download: semio_framework_value::retained_clone::RetainedCloneClose,
 }
 
 impl LayoutExportToolJob {
@@ -34,12 +34,12 @@ impl LayoutExportToolJob {
         let kind = payload.request.kind;
         let name = output_name(&payload.request);
         let inner = LayoutExportJob::from_admitted(operation, (operation.operation, operation.generation), payload.request, payload.output_chunks);
-        Self { inner: Some(inner), rejected_download: None, pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: None, pending_request: None, pending_output_chunks: None, completion: payload.completion, kind, name, raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: true, completed: false }
+        Self { inner: Some(inner), rejected_download: Default::default(), pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: None, pending_request: None, pending_output_chunks: None, completion: payload.completion, kind, name, raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: true, completed: false }
     }
 
     pub(super) fn from_wire_payload(operation: Operation, payload: LayoutExportToolPayload, input: RetainedToolWireInput) -> Result<Self, ToolJobFactoryError> {
         let kind = payload.request.kind;
-        let mut job = Self { inner: None, rejected_download: None, pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: Some(operation), pending_request: Some(payload.request), pending_output_chunks: Some(payload.output_chunks), completion: payload.completion, kind, name: String::new(), raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: false, completed: false };
+        let mut job = Self { inner: None, rejected_download: Default::default(), pending_download: None, slot: LayoutPublicationSlot::default(), pending_operation: Some(operation), pending_request: Some(payload.request), pending_output_chunks: Some(payload.output_chunks), completion: payload.completion, kind, name: String::new(), raw_input: None, raw_bytes: Vec::new(), raw_page_cursor: 0, raw_validated: false, completed: false };
         job.raw_bytes.try_reserve_exact(input.declared_bytes()).map_err(|_| ToolJobFactoryError::new("layout export retained decoder capacity was not admitted"))?;
         job.raw_input = Some(input);
         Ok(job)
@@ -93,15 +93,14 @@ impl LayoutExportToolJob {
 
     pub(super) fn close_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
-        if let Some(owner)=self.rejected_download.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
-        if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_download)}
+        if !self.rejected_download.is_empty()||self.pending_download.is_some(){return self.rejected_download.next_owner_demands::<ArtifactDownloadOutput>(self.pending_download.is_some(),&None,0)}
         if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{inner.close_demand()}}
         if self.pending_request.is_some(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportJob>(),..one})}
         if self.raw_bytes.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.raw_bytes.capacity(),..one})}
         if let Some(input)=self.raw_input.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:input.next_close_copy_byte_demand()?,capacity_bytes:input.next_close_capacity_byte_demand(0)?,release_bytes:input.next_close_release_byte_demand()?,depth:input.next_close_depth_demand()?.max(1)})}
         if self.name.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.name.capacity(),..one})}
         if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
-        if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
+        if self.completion.is_some(){return self.rejected_download.next_owner_demands::<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>(true,&None,0)}
         Ok(Default::default())
     }
 
@@ -187,18 +186,20 @@ impl InteractiveJob for LayoutExportToolJob {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};self.begin_close();
         if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
         if self.inner.is_none()&&self.pending_request.is_none(){if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx)?;if input.terminal_is_empty(){self.raw_input.take();}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-        let source_identity=(cx.operation(),cx.generation());let demand=self.close_demand()?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        let source_identity=(cx.operation(),cx.generation());let demand=self.close_demand()?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
+            use semio_framework_value::RetirementPollExit as Exit;
+            let result=(||->Result<RetainedCloneStep,Exit>{
             let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-            if self.rejected_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected_download,grant)}
-            if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_download,&mut self.rejected_download,grant)}
-            if self.inner.is_some(){self.inner.take();return Ok(RetainedCloneStep::Progress(item))}
-            if self.pending_request.is_some(){if self.pending_operation.is_none()||self.pending_output_chunks.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout pending producer lost one of its paired original inputs"))}let operation=self.pending_operation.take().unwrap();let request=self.pending_request.take().unwrap();let chunks=self.pending_output_chunks.take().unwrap();let mut inner=LayoutExportJob::from_admitted(operation,source_identity,request,chunks);inner.begin_close();self.inner=Some(inner);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportJob>(),..item}))}
-            if self.raw_bytes.capacity()!=0{let bytes=std::mem::take(&mut self.raw_bytes).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
-            if self.name.capacity()!=0{let bytes=std::mem::take(&mut self.name).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
-            if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
-            if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.rejected_download,grant)}
+            if !self.rejected_download.is_empty(){return Exit::resume(self.rejected_download.step_granted(0,effect))}
+            if self.pending_download.is_some(){return Ok(self.rejected_download.begin_granted(&mut self.pending_download,effect).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}
+            if self.inner.is_some(){if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.inner.take();return Ok(RetainedCloneStep::Progress(item))}
+            if self.pending_request.is_some(){if self.pending_operation.is_none()||self.pending_output_chunks.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout pending producer lost one of its paired original inputs").into())}if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}let operation=self.pending_operation.take().unwrap();let request=self.pending_request.take().unwrap();let chunks=self.pending_output_chunks.take().unwrap();let mut inner=LayoutExportJob::from_admitted(operation,source_identity,request,chunks);inner.begin_close();self.inner=Some(inner);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportJob>(),..item}))}
+            if self.raw_bytes.capacity()!=0{if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}let bytes=std::mem::take(&mut self.raw_bytes).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
+            if self.name.capacity()!=0{if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}let bytes=std::mem::take(&mut self.name).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
+            if !self.slot.terminal_is_empty(){return Ok(self.slot.close_step(effect).result?)}
+            if self.completion.is_some(){return Ok(self.rejected_download.begin_granted(&mut self.completion,effect).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}
             Ok(RetainedCloneStep::Complete(Default::default()))
-        })?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+        })();Exit::settle(effect,result)})?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.copy_bytes)}
@@ -207,7 +208,7 @@ impl InteractiveJob for LayoutExportToolJob {
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.rejected_download.is_none() && self.pending_download.is_none() && self.slot.terminal_is_empty() && self.name.capacity()==0 && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.capacity()==0 && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
+        self.rejected_download.is_empty() && self.pending_download.is_none() && self.slot.terminal_is_empty() && self.name.capacity()==0 && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.capacity()==0 && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
     }
 }
 

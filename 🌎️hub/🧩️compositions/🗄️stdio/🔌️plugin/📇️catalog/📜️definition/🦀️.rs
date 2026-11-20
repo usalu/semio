@@ -48,3 +48,7 @@ pub fn native_artifact_catalog_contribution() -> Result<semio_framework::TopicCo
     let registry = selected_registry()?;
     semio_hub_stdio_catalog_projection::artifact_catalog_contribution_for(&registry, &registry.artifact_assemblies()?)
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️executable-mappings/🦀️.rs"]
+mod executable_mapping_tests;

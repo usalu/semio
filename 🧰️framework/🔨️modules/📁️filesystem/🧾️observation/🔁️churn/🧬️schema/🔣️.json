@@ -65,13 +65,19 @@
         ],
         "staleImplementationCodes": [
           "SEMIO_STALE_IMPLEMENTATION",
-          "BUILD_AUTHORITY_CHANGED"
+          "BUILD_AUTHORITY_CHANGED",
+          "SEMIO_UNIT_KILLED"
         ],
         "languages": [
           "en",
           "de"
         ],
         "settleMilliseconds": 300,
+        "convergence": {
+          "wallClockMilliseconds": 7200000,
+          "maximumAttempts": 120,
+          "stableFailures": 2
+        },
         "quiet": {
           "windowMilliseconds": 2000,
           "ceilingMilliseconds": 30000,
@@ -149,11 +155,13 @@
         "texts": {
           "en": {
             "retry": "Another process edited {path} while it was read ({reason}). Taking a new snapshot, attempt {attempt} of {maximum}, in {delay} ms.",
-            "exhausted": "{path} kept changing in all {maximum} attempts ({reason}): another process edits it continuously. Run the command again once the edits have stopped."
+            "exhausted": "{path} kept changing in all {maximum} attempts ({reason}): another process edits it continuously. Run the command again once the edits have stopped.",
+            "stuck": "{path} is no longer being edited, yet every new snapshot of it still reports a change ({reason}) after {attempt} attempts: what it is compared with is held outside this retry. Ending this attempt so the command restarts with fresh inputs."
           },
           "de": {
             "retry": "Ein anderer Prozess änderte {path} während des Lesens ({reason}). Neuer Schnappschuss, Versuch {attempt} von {maximum}, in {delay} ms.",
-            "exhausted": "{path} änderte sich in allen {maximum} Versuchen ({reason}): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben."
+            "exhausted": "{path} änderte sich in allen {maximum} Versuchen ({reason}): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben.",
+            "stuck": "{path} wird nicht mehr bearbeitet, doch jeder neue Schnappschuss meldet weiterhin eine Änderung ({reason}) nach {attempt} Versuchen: womit verglichen wird, liegt außerhalb dieses Wiederholens. Dieser Versuch endet, damit der Befehl mit frischen Eingaben neu startet."
           }
         }
       }

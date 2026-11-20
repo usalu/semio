@@ -1,14 +1,14 @@
 //! 🔺️ Sparse diff builder for `CreateLoadCase`.
 use super::CreateLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCaseInsertion;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadCaseInsertion;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::resolve_load;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
-    if let Some(message) = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::entity_identity_breach("loadCase", &payload.load_case.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.load_case.id.clone()]); }
+    if let Some(message) = semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::entity_identity_breach("loadCase", &payload.load_case.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.load_case.id.clone()]); }
     if base.load_cases.iter().any(|case| case.id == payload.load_case.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A load case with id \"{}\" already exists.", payload.load_case.id), [payload.load_case.id.clone()]);
     }

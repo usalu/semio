@@ -55,9 +55,8 @@ fn paint_at(layer: &CorpusLayer, camera: &Value, width: f64, height: f64, point:
     let map = Affine::node(layer.transform.as_deref()).then(Affine::camera(number(camera, "x"), number(camera, "y"), number(camera, "zoom"), 0.0, 0.0, width, height));
     let contours = flatten(&layer.segments, &map);
     if let Some(stroke) = &layer.stroke {
-        let scale = map.line_scale();
-        let geometry = StrokeGeometry { width: stroke.width * scale, cap: LineCap::of(stroke.cap.as_deref()), join: LineJoin::of(stroke.join.as_deref()), dash: stroke.dash.iter().map(|value| value * scale).collect() };
-        if stroke_polygons(&contours, &geometry).iter().any(|polygon| covers(polygon, point)) {
+        let geometry = StrokeGeometry { dash_offset: 0.0, miter_limit: MITER_LIMIT, width: stroke.width, cap: LineCap::of(stroke.cap.as_deref()), join: LineJoin::of(stroke.join.as_deref()), dash: stroke.dash.clone() };
+        if affine_stroke_polygons(&contours, &geometry, &map).iter().any(|polygon| covers(polygon, point)) {
             return "stroke";
         }
     }
@@ -154,7 +153,7 @@ fn canvas_dash_and_miter_rules_hold() {
     assert_eq!(dash_pattern(&[4.0, -1.0]), None);
     assert_eq!(dash_pattern(&[0.0, 0.0]), None);
     assert_eq!(dash_pattern(&[3.0]), Some(vec![3.0, 3.0]));
-    let style = |join| StrokeGeometry { width: 2.0, cap: LineCap::Butt, join, dash: Vec::new() };
+    let style = |join| StrokeGeometry { dash_offset: 0.0, miter_limit: MITER_LIMIT, width: 2.0, cap: LineCap::Butt, join, dash: Vec::new() };
     let corner = |end: [f64; 2], join| stroke_polygons(&[Contour { points: vec![[0.0, 0.0], [10.0, 0.0], end], closed: false }], &style(join));
     let square_corner = corner([10.0, 10.0], LineJoin::Miter);
     assert_eq!(square_corner.len(), 3, "two edge quads and one join");
@@ -162,9 +161,9 @@ fn canvas_dash_and_miter_rules_hold() {
     let hairpin = corner([0.0, 0.5], LineJoin::Miter);
     assert_eq!(hairpin[2].len(), 3, "a turn sharper than the miter limit bevels");
     assert_eq!(corner([10.0, 10.0], LineJoin::Bevel)[2].len(), 3);
-    let round = &stroke_polygons(&[Contour { points: vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0]], closed: false }], &StrokeGeometry { width: 20.0, cap: LineCap::Butt, join: LineJoin::Round, dash: Vec::new() })[2];
+    let round = &stroke_polygons(&[Contour { points: vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0]], closed: false }], &StrokeGeometry { dash_offset: 0.0, miter_limit: MITER_LIMIT, width: 20.0, cap: LineCap::Butt, join: LineJoin::Round, dash: Vec::new() })[2];
     assert!(round.len() > 4 && round[1..].iter().all(|point| ((point[0] - 100.0).hypot(point[1]) - 10.0).abs() < 1e-9), "a round join fans the outer corner on the half-width circle: {round:?}");
-    let capped = stroke_polygons(&[Contour { points: vec![[0.0, 0.0], [10.0, 0.0]], closed: false }], &StrokeGeometry { width: 2.0, cap: LineCap::Square, join: LineJoin::Miter, dash: Vec::new() });
+    let capped = stroke_polygons(&[Contour { points: vec![[0.0, 0.0], [10.0, 0.0]], closed: false }], &StrokeGeometry { dash_offset: 0.0, miter_limit: MITER_LIMIT, width: 2.0, cap: LineCap::Square, join: LineJoin::Miter, dash: Vec::new() });
     assert_eq!(capped.len(), 3, "one edge and two square caps");
     assert!(capped.iter().any(|polygon| covers(polygon, [-0.5, 0.0])) && !capped.iter().any(|polygon| covers(polygon, [-1.5, 0.0])));
 }

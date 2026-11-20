@@ -21,9 +21,20 @@ use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
 #[path = "🛞️mass/🦀️.rs"]
 mod mass;
 pub use mass::{mass_properties, ShapeMassProperties, VolumetricMass};
+#[path = "📦️planar-volume/🦀️.rs"]
+mod planar_volume;
+pub use planar_volume::PlanarMeasure;
+#[path = "🎯️planar-closest/🦀️.rs"]
+mod planar_closest;
+pub use planar_closest::{PlanarClosest, closest_face_depth, planar_dual_coordinates};
+#[path = "🎯️nearest-analytic/🦀️.rs"]
+pub mod nearest_analytic;
+#[path = "📐️analytic-measure/🦀️.rs"]
+mod analytic_measure;
+pub use analytic_measure::{analytic_curve_curvature, analytic_curve_length, analytic_curve_sample, analytic_curve_span, analytic_surface_sample};
 #[path = "📦️bounds/🦀️.rs"]
 mod bounds;
-pub use bounds::{bounding_box, ShapeBounds};
+pub use bounds::{analytic_curve_bounds, bounding_box, ShapeBounds};
 #[path = "🧮️topology/🦀️.rs"]
 mod topology;
 pub use topology::{manifold_report, topology_counts, ManifoldReport, TopologyCounts, Watertightness};

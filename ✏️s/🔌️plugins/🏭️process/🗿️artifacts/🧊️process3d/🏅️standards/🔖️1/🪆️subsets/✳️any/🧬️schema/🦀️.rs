@@ -140,13 +140,7 @@ impl Process3dArtifact {
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::snapshot::Process3dSnapshot) {
-        self.workshop = snapshot.workshop;
-        self.stock_id = snapshot.stock_id;
-        self.stock_label = snapshot.stock_label;
-        self.stock_pose = snapshot.stock_pose;
-        self.stock_solid = snapshot.stock_solid;
-        self.steps = snapshot.steps;
-        self.tool_solids = snapshot.tool_solids;
+        *self = Self::from_snapshot(snapshot);
     }
 }
 //#endregion 🔖️Conversions

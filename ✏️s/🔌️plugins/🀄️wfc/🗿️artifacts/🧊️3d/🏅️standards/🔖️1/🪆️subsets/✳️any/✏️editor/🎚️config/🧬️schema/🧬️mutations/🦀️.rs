@@ -12,9 +12,11 @@ pub use change_camera::ChangeCamera;
 mod change_active_tile;
 pub use change_active_tile::ChangeActiveTile;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
 #[mutations(snapshot = Wfc3dConfig, diff = Wfc3dConfigDiff, schema = "wfc.wfc3d.config", reference = Wfc3dConfig, reference_diff = Wfc3dConfigDiff)]
 pub enum Wfc3dConfigMutation {
     ReplaceConfig(ReplaceConfig),

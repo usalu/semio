@@ -24,3 +24,16 @@ mod reference_scope {
 }
 #[path="../🧳️retained/📦️owned/🧪️tests/🦀️.rs"]
 mod owned_graph;
+
+use semio_framework_value::{RetainedAllocationEffect,ValueError,retained_clone::RetainedCloneStep};
+use semio_framework_value_clone_source_testing::{FixtureSource,drive::drive_reply};
+
+fn original_turn<T:'static>(
+    grant:RetainedCloneGrant,
+    progress:impl Fn(&T)->RetainedCloneProgress,
+    mut run:impl FnMut(&mut RetainedAllocationEffect<'_>)->Result<T,ValueError>,
+)->Result<T,ValueError>{
+    drive_reply(grant,1<<17,|value|value.as_ref().map_or_else(ValueError::retained_progress,&progress),
+        |effect,reply,recover|{assert!(!recover);Ok(reply.complete(run(effect)))}
+    ).result
+}

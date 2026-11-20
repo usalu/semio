@@ -109,6 +109,12 @@ type ShootingShotPatch {
   shape: String
   background: ShootingAssignedString
   cameraId: ShootingAssignedString
+  drawing: ShootingDrawingPatch
+  autoFit: ShootingAssignedBoolean
+}
+
+type ShootingAssignedBoolean {
+  value: Boolean
 }
 
 type ShootingSavedCameraPatch {
@@ -181,6 +187,8 @@ type ShootingShot {
   shape: String!
   background: String
   cameraId: String
+  drawing: ShootingDrawing
+  autoFit: Boolean
 }
 
 type ShootingSun {
@@ -217,4 +225,36 @@ type ShootingSceneLighting {
   ambient: ShootingAmbient!
   shadow: ShootingShadow!
   material: ShootingMaterial!
+}
+
+
+type ShootingDrawing {
+  background: Boolean!
+  fill: Boolean!
+  fillColor: String
+  fillOpacity: Float!
+  visibleLines: Boolean!
+  hiddenLines: Boolean!
+  visibleColor: String!
+  hiddenColor: String!
+  visibleWidth: Float!
+  hiddenWidth: Float!
+  lineEasing: Float!
+  mergeLines: Boolean!
+}
+
+type ShootingDrawingPatch {
+  background: Boolean
+  fill: Boolean
+  fillColor: ShootingAssignedString
+  fillOpacity: Float
+  visibleLines: Boolean
+  hiddenLines: Boolean
+  visibleColor: String
+  hiddenColor: String
+  visibleWidth: Float
+  hiddenWidth: Float
+  lineEasing: Float
+  mergeLines: Boolean
+  restoreAbsent: Boolean
 }

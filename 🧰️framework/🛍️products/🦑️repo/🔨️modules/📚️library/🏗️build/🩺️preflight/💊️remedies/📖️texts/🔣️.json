@@ -51,8 +51,8 @@
     },
     "msvc-linker": {
       "win32": {
-        "en": "The Microsoft C++ build tools (the MSVC linker Rust needs) were not found. Install the Desktop development with C++ workload: run the Windows bootstrap (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), which installs Microsoft.VisualStudio.BuildTools through winget, or add the workload in the Visual Studio Installer, then open a new terminal.",
-        "de": "Die Microsoft-C++-Buildtools (der MSVC-Linker, den Rust braucht) wurden nicht gefunden. Installiere die Workload Desktopentwicklung mit C++: führe das Windows-Bootstrap aus (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup), es installiert Microsoft.VisualStudio.BuildTools über winget, oder füge die Workload im Visual Studio Installer hinzu, und öffne danach ein neues Terminal."
+        "en": "Run the Windows bootstrap (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup) to install the Microsoft.VisualStudio.Workload.VCTools workload using the pinned Visual Studio Build Tools installer. Then run repo preflight again.",
+        "de": "Führe das Windows-Bootstrap aus (powershell -NoProfile -ExecutionPolicy Bypass -File 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1 setup). Es installiert die Workload Microsoft.VisualStudio.Workload.VCTools mit dem festgelegten Visual Studio Build Tools-Installer. Führe danach repo preflight erneut aus."
       }
     },
     "rust": {

@@ -16,12 +16,16 @@ async fn open_store(document: Wfc3dSnapshot) -> store::ArtifactStore<Wfc3dSnapsh
 }
 
 async fn close_store(mut store: store::ArtifactStore<Wfc3dSnapshot, Wfc3dMutation>) {
-    let mut steps = 0;
-    while !store.close_owned_terminal_is_empty() {
-        store.close_owned_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the wfc3d document store closes through its exact bounded owners");
-        steps += 1;
-        assert!(steps < 100_000, "the close ladder must terminate");
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<Wfc3dSnapshot, Wfc3dMutation>();
+    for _ in 0..4_096 {
+        if disposer.terminal_is_empty(&store) {
+            break;
+        }
+        let demand = disposer.retirement_demands(&store, 64 * 1024).expect("the store quotes its next retirement turn");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(64 * 1024), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        disposer.close_step_cold(&mut store, grant).expect("the wfc3d document store closes through its exact bounded owners");
     }
+    assert!(disposer.terminal_is_empty(&store), "the close ladder must terminate");
 }
 
 #[semio_framework_async_macros::async_test]

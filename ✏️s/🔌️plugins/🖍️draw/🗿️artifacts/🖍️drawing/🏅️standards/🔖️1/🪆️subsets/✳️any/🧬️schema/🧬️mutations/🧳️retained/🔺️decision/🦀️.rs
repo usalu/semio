@@ -2,7 +2,9 @@
 use crate::{DrawingMutation,retained_inverse::{DrawingOriginalFieldInverse,target,original}};
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode,FillStyle,StrokeStyle,PathSegment,layer_base,snapshot::{DrawingSnapshot,lookup::{original::{DrawingOriginalLookup,DrawingOriginalLayerAddress},original_text::DrawingOriginalText}}};
 use semio_s_artifact_draw_drawing_diff::{DrawingDiff,DrawingLayersDelta,DrawingLayerModification,DrawingLayerPatch,DrawingFillPatch,DrawingStrokePatch,DrawingShapeCoordinatePatch};
-use protocol::RetainedFieldPreparation;
+use protocol::{RetainedFieldPreparation,RetainedFlight as Flight,retained_native_child as native_child};
+use semio_framework_value::{OriginalRetirementCloseLoan,OriginalRetirementPoll,RetainedAllocationEffect,RetirementPollExit};
+use crate::retained::{field_close,measured,owner_close};
 use semio_s_artifact_draw_drawing_model::snapshot::lookup::equality::DrawingOriginalEquality;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
@@ -29,42 +31,132 @@ fn scalar(m:&DrawingMutation,n:&DrawingLayerNode)->Result<Option<bool>,&'static 
 fn extra_unchanged(m:&DrawingMutation,n:&DrawingLayerNode)->bool{match(m,n){(DrawingMutation::UpdateText(v),DrawingLayerNode::Text(n))=>v.size==n.size&&v.font_family==n.font_family,(DrawingMutation::UpdateImage(v),DrawingLayerNode::Image(n))=>v.width==n.width&&v.height==n.height,_=>true}}
 
 /// 🧳️ Every field recipient stays bound to the actual admitted command until explicit closure.
-pub struct DrawingOriginalFieldDecision{equality:DrawingOriginalEquality,error:Option<&'static str>,unchanged:bool,field_unchanged:bool,segment:usize,lookup:DrawingOriginalLookup,id:DrawingOriginalText,text:DrawingOriginalText,fill:RetainedFieldPreparation<Option<FillStyle>>,stroke:RetainedFieldPreparation<Option<StrokeStyle>>,segments:RetainedFieldPreparation<Segments>,diff:ManuallyDrop<Option<DrawingDiff>>,retirement:RetainedCloneClose,at:Option<DrawingOriginalLayerAddress>,phase:u8,closing:bool}
-impl Default for DrawingOriginalFieldDecision{fn default()->Self{Self{equality:Default::default(),error:None,unchanged:false,field_unchanged:false,segment:0,lookup:Default::default(),id:Default::default(),text:Default::default(),fill:Default::default(),stroke:Default::default(),segments:Default::default(),diff:ManuallyDrop::new(None),retirement:Default::default(),at:None,phase:0,closing:false}}}
+pub struct DrawingOriginalFieldDecision{flight:Flight,equality:DrawingOriginalEquality,error:Option<&'static str>,unchanged:bool,field_unchanged:bool,segment:usize,lookup:DrawingOriginalLookup,id:DrawingOriginalText,text:DrawingOriginalText,fill:RetainedFieldPreparation<Option<FillStyle>>,stroke:RetainedFieldPreparation<Option<StrokeStyle>>,segments:RetainedFieldPreparation<Segments>,diff:ManuallyDrop<Option<DrawingDiff>>,retirement:RetainedCloneClose,at:Option<DrawingOriginalLayerAddress>,phase:u8,closing:bool}
+impl Default for DrawingOriginalFieldDecision{fn default()->Self{Self{flight:Default::default(),equality:Default::default(),error:None,unchanged:false,field_unchanged:false,segment:0,lookup:Default::default(),id:Default::default(),text:Default::default(),fill:Default::default(),stroke:Default::default(),segments:Default::default(),diff:ManuallyDrop::new(None),retirement:Default::default(),at:None,phase:0,closing:false}}}
 impl DrawingOriginalFieldDecision{
  pub fn recognizes(m:&DrawingMutation)->bool{DrawingOriginalFieldInverse::recognizes(m)}
  fn row(&self)->Result<&DrawingLayerModification,ValueError>{self.diff.as_ref().and_then(|d|d.layers.as_ref()).and_then(|l|l.modified.first()).ok_or_else(invalid)}
  fn row_mut(&mut self)->Result<&mut DrawingLayerModification,ValueError>{self.diff.as_mut().and_then(|d|d.layers.as_mut()).and_then(|l|l.modified.first_mut()).ok_or_else(invalid)}
- pub fn demand(&self,b:RetainedCloneRef<'_,DrawingSnapshot>,m:RetainedCloneRef<'_,DrawingMutation>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||!Self::recognizes(m.get()){return Err(invalid())}let inner=body.saturating_sub(metadata());Ok(match self.phase{
+ pub fn demand(&self,b:RetainedCloneRef<'_,DrawingSnapshot>,m:RetainedCloneRef<'_,DrawingMutation>,body:usize,max:u64)->Result<RetirementDemand,ValueError>{if self.closing||!Self::recognizes(m.get()){return Err(invalid())}let inner=body.saturating_sub(metadata());Ok(match self.phase{
   0=>nested(self.lookup.demand(b,target(m)?,inner)?)?,10=>fixed(metadata()+8192),11=>nested(compare_field!(&self.equality,demand,b,m,self.at.ok_or_else(invalid)?)?)?,12=>fixed(metadata()+2*size_of::<PathSegment>()),70=>fixed(metadata()),
   1=>RetirementDemand{capacity_bytes:size_of::<DrawingLayerModification>(),..fixed(metadata())},
   2=>nested(self.id.demand(target(m)?,inner)?)?,3=>nested(self.id.take_demand()?)?,
-  4=>if self.field_unchanged&&matches!(m.get(),DrawingMutation::UpdateText(_)|DrawingMutation::UpdateImage(_)){fixed(metadata())}else if let Some(t)=field_text(m){nested(self.text.demand(t,inner)?)?}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>nested(self.fill.demand(fill(m),inner)?)?,DrawingMutation::ReplaceLayerStroke(_)=>nested(self.stroke.demand(stroke(m),inner)?)?,DrawingMutation::UpdatePathGeometry(_)=>nested(self.segments.demand(segments(m),inner)?)?,_=>fixed(metadata())}},
+  4=>if self.field_unchanged&&matches!(m.get(),DrawingMutation::UpdateText(_)|DrawingMutation::UpdateImage(_)){fixed(metadata())}else if let Some(t)=field_text(m){nested(self.text.demand(t,inner)?)?}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>nested(self.fill.demand(fill(m),inner,max.saturating_sub(1))?)?,DrawingMutation::ReplaceLayerStroke(_)=>nested(self.stroke.demand(stroke(m),inner,max.saturating_sub(1))?)?,DrawingMutation::UpdatePathGeometry(_)=>nested(self.segments.demand(segments(m),inner,max.saturating_sub(1))?)?,_=>fixed(metadata())}},
   5=>if field_text(m).is_some(){nested(self.text.take_demand()?)?}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>nested(self.fill.exchange_demand()?)?,DrawingMutation::ReplaceLayerStroke(_)=>nested(self.stroke.exchange_demand()?)?,DrawingMutation::UpdatePathGeometry(_)=>nested(self.segments.exchange_demand()?)?,_=>fixed(metadata())}},
   6=>RetirementDemand{capacity_bytes:if matches!(m.get(),DrawingMutation::SetShapeCoordinate(_)){size_of::<DrawingShapeCoordinatePatch>()}else{0},..fixed(metadata())},
   7=>fixed(2*size_of::<Option<DrawingDiff>>()),_=>return Err(invalid()),
  })}
- pub fn advance(&mut self,b:RetainedCloneRef<'_,DrawingSnapshot>,m:RetainedCloneRef<'_,DrawingMutation>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(b,m,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let result=(||->Result<(),ValueError>{match self.phase{
-  0=>{p=paid(self.lookup.advance(b,target(m)?,body.saturating_sub(metadata()),child(g))?.progress());if self.lookup.ready(){if let Some(at)=self.lookup.address()?{self.at=Some(at);self.phase=10}else{self.error=Some("mutation.target-missing");self.phase=70}}},
+ pub fn work_demand(&self,b:RetainedCloneRef<'_,DrawingSnapshot>,m:RetainedCloneRef<'_,DrawingMutation>,body:usize,max:u64)->Result<u64,ValueError>{
+  self.demand(b,m,body,max)?;
+  let inner=body.saturating_sub(metadata());
+  let child_max=max.saturating_sub(1);
+  let child=match self.phase{
+   0=>Some(self.lookup.advance_work_demand(b,target(m)?)?),
+   2=>Some(self.id.advance_work_demand(target(m)?)?),
+   4 if self.field_unchanged&&matches!(m.get(),DrawingMutation::UpdateText(_)|DrawingMutation::UpdateImage(_))=>None,
+   4=>if let Some(t)=field_text(m){Some(self.text.advance_work_demand(t)?)}else{match m.get(){
+    DrawingMutation::ReplaceLayerFill(_)=>Some(self.fill.advance_work_demand(fill(m),inner,child_max)?),
+    DrawingMutation::ReplaceLayerStroke(_)=>Some(self.stroke.advance_work_demand(stroke(m),inner,child_max)?),
+    DrawingMutation::UpdatePathGeometry(_)=>Some(self.segments.advance_work_demand(segments(m),inner,child_max)?),
+    _=>None,
+   }},
+   5 if field_text(m).is_none()=>Some(1),
+   11=>Some(compare_field!(&self.equality,advance_work_demand,b,m,self.at.ok_or_else(invalid)?)?),
+   _=>None,
+  };
+  if child==Some(0){return Ok(0)}
+  let work=child.unwrap_or(0).checked_add(1).ok_or_else(invalid)?;
+  Ok(if work<=max{work}else{0})
+ }
+ pub fn advance(&mut self,b:RetainedCloneRef<'_,DrawingSnapshot>,m:RetainedCloneRef<'_,DrawingMutation>,body:usize,max:u64,effect:&mut RetainedAllocationEffect<'_>,recover:bool,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{
+  let g=effect.grant();
+  let d=if recover{Default::default()}else{let d=self.demand(b,m,body,max)?;if !retained_clone_grant_admits(g,d)||self.work_demand(b,m,body,max)?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}d};
+  let inner=body.saturating_sub(metadata());
+  let child_max=max.saturating_sub(1);
+  let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  let result=(||->Result<(),RetirementPollExit>{match self.phase{
+  0=>{p=paid(measured(effect,work,|e| self.lookup.advance(b,target(m)?,inner,&mut e.nested(child(g))))?.progress());if self.lookup.ready(){if let Some(at)=self.lookup.address()?{self.at=Some(at);self.phase=10}else{self.error=Some("mutation.target-missing");self.phase=70}}},
   10=>{let n=original(b,self.at.ok_or_else(invalid)?);match scalar(m.get(),n.get()){Err(code)=>{self.error=Some(code);self.phase=70},Ok(Some(equal))=>{self.unchanged=equal;if equal{*self.diff=Some(DrawingDiff::default());self.phase=70}else{self.phase=1}},Ok(None)=>self.phase=if matches!(m.get(),DrawingMutation::UpdatePathGeometry(_)){12}else{11}}},
-  11=>{let at=self.at.ok_or_else(invalid)?;p=paid(compare_field!(&mut self.equality,advance,b,m,at,child(g))?.progress());if let Some(equal)=self.equality.result(){self.field_unchanged=equal;self.unchanged=equal&&extra_unchanged(m.get(),original(b,at).get());if self.unchanged{*self.diff=Some(DrawingDiff::default());self.phase=70}else{self.phase=1}}},
-  12=>{let DrawingMutation::UpdatePathGeometry(v)=m.get()else{return Err(invalid())};if let Some(segment)=v.segments.get(self.segment){if !semio_s_artifact_draw_drawing_model::valid_path_segment(segment){self.error=Some("mutation.invariant");self.phase=70}else{self.segment+=1}}else{self.phase=11}},70=>{},
-  1=>{*self.diff=Some(DrawingDiff{layers:Some(DrawingLayersDelta::default()),..Default::default()});self.phase=254;let rows=&mut self.diff.as_mut().unwrap().layers.as_mut().unwrap().modified;let result=rows.try_reserve_exact(1);p.retained_capacity_bytes=rows.capacity()*size_of::<DrawingLayerModification>();if result.is_err()||!p.fits(g){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing sparse diff row allocation refused"))}rows.push(DrawingLayerModification{id:String::new(),patch:DrawingLayerPatch::default()});self.phase=2},
-  2=>{p=paid(self.id.advance(target(m)?,body.saturating_sub(metadata()),child(g))?.progress());if self.id.ready(){self.phase=3}},
+  11=>{let at=self.at.ok_or_else(invalid)?;p=paid(measured(effect,work,|e| compare_field!(&mut self.equality,advance,b,m,at,&mut e.nested(child(g))))?.progress());if let Some(equal)=self.equality.result(){self.field_unchanged=equal;self.unchanged=equal&&extra_unchanged(m.get(),original(b,at).get());if self.unchanged{*self.diff=Some(DrawingDiff::default());self.phase=70}else{self.phase=1}}},
+  12=>{let DrawingMutation::UpdatePathGeometry(v)=m.get()else{return Err(invalid().into())};if let Some(segment)=v.segments.get(self.segment){if !semio_s_artifact_draw_drawing_model::valid_path_segment(segment){self.error=Some("mutation.invariant");self.phase=70}else{self.segment+=1}}else{self.phase=11}},70=>{},
+  1=>{*self.diff=Some(DrawingDiff{layers:Some(DrawingLayersDelta::default()),..Default::default()});self.phase=254;let rows=&mut self.diff.as_mut().unwrap().layers.as_mut().unwrap().modified;let result=rows.try_reserve_exact(1);p.retained_capacity_bytes=rows.capacity()*size_of::<DrawingLayerModification>();if result.is_err()||!p.fits(g){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing sparse diff row allocation refused").with_retained_progress(p).into())}rows.push(DrawingLayerModification{id:String::new(),patch:DrawingLayerPatch::default()});self.phase=2},
+  2=>{p=paid(measured(effect,work,|e| self.id.advance(target(m)?,inner,&mut e.nested(child(g))))?.progress());if self.id.ready(){self.phase=3}},
   3=>{let(v,q)=self.id.take(child(g))?;self.row_mut()?.id=v.ok_or_else(invalid)?;p=paid(q);self.phase=4},
-  4=>if self.field_unchanged&&matches!(m.get(),DrawingMutation::UpdateText(_)|DrawingMutation::UpdateImage(_)){self.phase=6}else if let Some(t)=field_text(m){p=paid(self.text.advance(t,body.saturating_sub(metadata()),child(g))?.progress());if self.text.ready(){self.phase=5}}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>{p=paid(self.fill.advance(fill(m),body.saturating_sub(metadata()),child(g))?.progress());if self.fill.value().is_some(){self.phase=5}},DrawingMutation::ReplaceLayerStroke(_)=>{p=paid(self.stroke.advance(stroke(m),body.saturating_sub(metadata()),child(g))?.progress());if self.stroke.value().is_some(){self.phase=5}},DrawingMutation::UpdatePathGeometry(_)=>{p=paid(self.segments.advance(segments(m),body.saturating_sub(metadata()),child(g))?.progress());if self.segments.value().is_some(){self.phase=5}},_=>self.phase=6}},
-  5=>{if field_text(m).is_some(){let(v,q)=self.text.take(child(g))?;let v=v.ok_or_else(invalid)?;p=paid(q);let patch=&mut self.row_mut()?.patch;match m.get(){DrawingMutation::SetLayerBlendMode(_)=>patch.blend_mode=Some(v),DrawingMutation::RenameLayer(_)=>patch.name=Some(v),DrawingMutation::SetLayerBooleanOperation(_)=>patch.boolean_operation=Some(v),DrawingMutation::UpdateText(_)=>patch.text_content=Some(v),DrawingMutation::UpdateImage(_)=>patch.image_key=Some(v),_=>return Err(invalid())}}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>{let(v,q)=self.fill.take(child(g))?;self.row_mut()?.patch.fill=Some(DrawingFillPatch{value:v.ok_or_else(invalid)?});p=paid(q)},DrawingMutation::ReplaceLayerStroke(_)=>{let(v,q)=self.stroke.take(child(g))?;self.row_mut()?.patch.stroke=Some(DrawingStrokePatch{value:v.ok_or_else(invalid)?});p=paid(q)},DrawingMutation::UpdatePathGeometry(_)=>{let(v,q)=self.segments.take(child(g))?;self.row_mut()?.patch.path_segments=Some(v.ok_or_else(invalid)?);p=paid(q)},_=>return Err(invalid())}}self.phase=6},
-  6=>{let old=original(b,self.at.ok_or_else(invalid)?);let patch=&mut self.row_mut()?.patch;match m.get(){DrawingMutation::SetLayerVisible(v)=>patch.visible=Some(v.visible),DrawingMutation::SetLayerLocked(v)=>patch.locked=Some(v.locked),DrawingMutation::SetLayerOpacity(v)=>patch.opacity=Some(v.opacity),DrawingMutation::UpdateLayerTransform(v)=>patch.transform=Some(semio_s_artifact_draw_drawing_model::DrawingTransform{x:v.transform.x,y:v.transform.y,scale_x:v.transform.scale_x,scale_y:v.transform.scale_y,shear:v.transform.shear,rotation:v.transform.rotation}),DrawingMutation::UpdateLayerTraceParams(v)=>patch.trace_params=Some(semio_s_artifact_draw_drawing_model::DrawingTraceParams{threshold:v.params.threshold,simplify_epsilon:v.params.simplify_epsilon}),DrawingMutation::UpdateText(v)=>{let DrawingLayerNode::Text(old)=old.get()else{return Err(invalid())};patch.text_size=(old.size!=v.size).then_some(v.size);patch.font_family=(old.font_family!=v.font_family).then_some(v.font_family)},DrawingMutation::UpdateImage(v)=>{let DrawingLayerNode::Image(old)=old.get()else{return Err(invalid())};patch.image_width=(old.width!=v.width).then_some(v.width);patch.image_height=(old.height!=v.height).then_some(v.height)},DrawingMutation::SetLayerFillRule(v)=>patch.fill_rule=Some(v.fill_rule),DrawingMutation::SetGroupIsolation(v)=>patch.isolation=Some(v.isolation),DrawingMutation::SetShapeCoordinate(v)=>{self.phase=254;let result=self.row_mut()?.patch.shape_coordinates.try_reserve_exact(1);let rows=&mut self.row_mut()?.patch.shape_coordinates;p.retained_capacity_bytes=rows.capacity()*size_of::<DrawingShapeCoordinatePatch>();if result.is_err()||!p.fits(g){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing coordinate patch allocation refused"))}rows.push(DrawingShapeCoordinatePatch{field:v.field,index:v.index,value:v.value});},_=>{}}self.phase=7},
-  7=>{},_=>return Err(invalid()),
- }Ok(())})();match result{Ok(())=>Ok(if self.phase==7||self.phase==70{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)}),Err(e)=>{let mut q=e.retained_progress();q.copied_items=q.copied_items.max(p.copied_items);q.copied_bytes=q.copied_bytes.saturating_add(metadata()).max(p.copied_bytes);q.retained_capacity_bytes=q.retained_capacity_bytes.max(p.retained_capacity_bytes);Err(e.with_retained_progress(q))}}
+  4=>if self.field_unchanged&&matches!(m.get(),DrawingMutation::UpdateText(_)|DrawingMutation::UpdateImage(_)){self.phase=6}else if let Some(t)=field_text(m){p=paid(measured(effect,work,|e| self.text.advance(t,inner,&mut e.nested(child(g))))?.progress());if self.text.ready(){self.phase=5}}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>{p=paid(protocol::retained_routed!(self.flight,effect,recover,1,inner,child_max,None,*work,|reply|
+    self.fill.advance_into(fill(m),inner,child_max,&mut effect.nested(child(g)),reply),
+    self.fill.recover_advance_into(fill(m),inner,child_max,&mut effect.nested(child(g)),reply)
+   ).map_err(RetirementPollExit::from)?.progress());if self.fill.value().is_some(){self.phase=5}},DrawingMutation::ReplaceLayerStroke(_)=>{p=paid(protocol::retained_routed!(self.flight,effect,recover,2,inner,child_max,None,*work,|reply|
+    self.stroke.advance_into(stroke(m),inner,child_max,&mut effect.nested(child(g)),reply),
+    self.stroke.recover_advance_into(stroke(m),inner,child_max,&mut effect.nested(child(g)),reply)
+   ).map_err(RetirementPollExit::from)?.progress());if self.stroke.value().is_some(){self.phase=5}},DrawingMutation::UpdatePathGeometry(_)=>{p=paid(protocol::retained_routed!(self.flight,effect,recover,3,inner,child_max,None,*work,|reply|
+    self.segments.advance_into(segments(m),inner,child_max,&mut effect.nested(child(g)),reply),
+    self.segments.recover_advance_into(segments(m),inner,child_max,&mut effect.nested(child(g)),reply)
+   ).map_err(RetirementPollExit::from)?.progress());if self.segments.value().is_some(){self.phase=5}},_=>self.phase=6}},
+  5=>{if field_text(m).is_some(){let(v,q)=self.text.take(child(g))?;let v=v.ok_or_else(invalid)?;p=paid(q);let patch=&mut self.row_mut()?.patch;match m.get(){DrawingMutation::SetLayerBlendMode(_)=>patch.blend_mode=Some(v),DrawingMutation::RenameLayer(_)=>patch.name=Some(v),DrawingMutation::SetLayerBooleanOperation(_)=>patch.boolean_operation=Some(v),DrawingMutation::UpdateText(_)=>patch.text_content=Some(v),DrawingMutation::UpdateImage(_)=>patch.image_key=Some(v),_=>return Err(invalid().into())}}else{match m.get(){DrawingMutation::ReplaceLayerFill(_)=>{let mut v=None;let q=native_child(effect,work,|e,r|self.fill.take_into(&mut v,&mut e.nested(child(g)),r))??.progress();self.row_mut()?.patch.fill=Some(DrawingFillPatch{value:v.ok_or_else(invalid)?});p=paid(q)},DrawingMutation::ReplaceLayerStroke(_)=>{let mut v=None;let q=native_child(effect,work,|e,r|self.stroke.take_into(&mut v,&mut e.nested(child(g)),r))??.progress();self.row_mut()?.patch.stroke=Some(DrawingStrokePatch{value:v.ok_or_else(invalid)?});p=paid(q)},DrawingMutation::UpdatePathGeometry(_)=>{let mut v=None;let q=native_child(effect,work,|e,r|self.segments.take_into(&mut v,&mut e.nested(child(g)),r))??.progress();self.row_mut()?.patch.path_segments=Some(v.ok_or_else(invalid)?);p=paid(q)},_=>return Err(invalid().into())}}self.phase=6},
+  6=>{let old=original(b,self.at.ok_or_else(invalid)?);let patch=&mut self.row_mut()?.patch;match m.get(){DrawingMutation::SetLayerVisible(v)=>patch.visible=Some(v.visible),DrawingMutation::SetLayerLocked(v)=>patch.locked=Some(v.locked),DrawingMutation::SetLayerOpacity(v)=>patch.opacity=Some(v.opacity),DrawingMutation::UpdateLayerTransform(v)=>patch.transform=Some(semio_s_artifact_draw_drawing_model::DrawingTransform{x:v.transform.x,y:v.transform.y,scale_x:v.transform.scale_x,scale_y:v.transform.scale_y,shear:v.transform.shear,rotation:v.transform.rotation}),DrawingMutation::UpdateLayerTraceParams(v)=>patch.trace_params=Some(semio_s_artifact_draw_drawing_model::DrawingTraceParams{threshold:v.params.threshold,simplify_epsilon:v.params.simplify_epsilon}),DrawingMutation::UpdateText(v)=>{let DrawingLayerNode::Text(old)=old.get()else{return Err(invalid().into())};patch.text_size=(old.size!=v.size).then_some(v.size);patch.font_family=(old.font_family!=v.font_family).then_some(v.font_family)},DrawingMutation::UpdateImage(v)=>{let DrawingLayerNode::Image(old)=old.get()else{return Err(invalid().into())};patch.image_width=(old.width!=v.width).then_some(v.width);patch.image_height=(old.height!=v.height).then_some(v.height)},DrawingMutation::SetLayerFillRule(v)=>patch.fill_rule=Some(v.fill_rule),DrawingMutation::SetGroupIsolation(v)=>patch.isolation=Some(v.isolation),DrawingMutation::SetShapeCoordinate(v)=>{self.phase=254;let result=self.row_mut()?.patch.shape_coordinates.try_reserve_exact(1);let rows=&mut self.row_mut()?.patch.shape_coordinates;p.retained_capacity_bytes=rows.capacity()*size_of::<DrawingShapeCoordinatePatch>();if result.is_err()||!p.fits(g){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing coordinate patch allocation refused").with_retained_progress(p).into())}rows.push(DrawingShapeCoordinatePatch{field:v.field,index:v.index,value:v.value});},_=>{}}self.phase=7},
+  7=>{},_=>return Err(invalid().into()),
+ }Ok(())})();
+  if !matches!(result,Err(RetirementPollExit::Pending(_))){*work+=1;}
+  result?;
+  Ok(if self.phase==7||self.phase==70{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
  }
  pub fn ready(&self)->bool{!self.closing&&(self.phase==7||self.phase==70)&&(self.diff.is_some()||self.error.is_some())}
  pub fn outcome(&self)->(Option<&'static str>,bool){(self.error,self.unchanged)}
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}Ok(fixed(2*size_of::<Option<DrawingDiff>>()))}
  pub fn take(&mut self,g:RetainedCloneGrant)->Result<(Option<DrawingDiff>,RetainedCloneProgress),ValueError>{let d=self.take_demand()?;if !retained_clone_grant_admits(g,d){return Ok((None,Default::default()))}self.phase=8;Ok((self.diff.take(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
- pub fn begin_close(&mut self){self.closing=true;self.equality.begin_close();self.lookup.begin_close();self.id.begin_close();self.text.begin_close();self.fill.begin_close();self.stroke.begin_close();self.segments.begin_close();}
- pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.equality.terminal_is_empty(){return self.equality.close_demand(body)}if !self.lookup.terminal_is_empty(){return self.lookup.close_demand(body)}if !self.id.terminal_is_empty(){return self.id.close_demand(body)}if !self.text.terminal_is_empty(){return self.text.close_demand(body)}if !self.fill.terminal_is_empty(){return self.fill.close_demand(body)}if !self.stroke.terminal_is_empty(){return self.stroke.close_demand(body)}if !self.segments.terminal_is_empty(){return self.segments.close_demand(body)}self.retirement.next_owner_demands::<DrawingDiff>(self.diff.is_some(),&None,body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(invalid())}let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.equality.terminal_is_empty(){return self.equality.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.lookup.terminal_is_empty(){return self.lookup.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.id.terminal_is_empty(){return self.id.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.text.terminal_is_empty(){return self.text.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.fill.terminal_is_empty(){return self.fill.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.stroke.terminal_is_empty(){return self.stroke.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.segments.terminal_is_empty(){return self.segments.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.retirement.is_empty(){return self.retirement.step_granted(g).result}if let Some(s)=self.retirement.begin_granted(&mut self.diff,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()))}Ok(RetainedCloneStep::Complete(Default::default()))}
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.equality.terminal_is_empty()&&self.lookup.terminal_is_empty()&&self.id.terminal_is_empty()&&self.text.terminal_is_empty()&&self.fill.terminal_is_empty()&&self.stroke.terminal_is_empty()&&self.segments.terminal_is_empty()&&self.diff.is_none()&&self.retirement.is_empty()}
+ pub fn begin_close(&mut self){self.closing=true;self.equality.begin_close();self.lookup.begin_close();self.id.begin_close();self.text.begin_close();}
+ pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if !self.equality.terminal_is_empty(){return self.equality.close_demand(body)}
+  if !self.lookup.terminal_is_empty(){return self.lookup.close_demand(body)}
+  if !self.id.terminal_is_empty(){return self.id.close_demand(body)}
+  if !self.text.terminal_is_empty(){return self.text.close_demand(body)}
+  if !self.fill.terminal_is_empty(){return if self.fill.close_started(){self.fill.close_demand(body)}else{Ok(self.fill.begin_close_demand())}}
+  if !self.stroke.terminal_is_empty(){return if self.stroke.close_started(){self.stroke.close_demand(body)}else{Ok(self.stroke.begin_close_demand())}}
+  if !self.segments.terminal_is_empty(){return if self.segments.close_started(){self.segments.close_demand(body)}else{Ok(self.segments.begin_close_demand())}}
+  self.retirement.next_owner_demands::<DrawingDiff>(self.diff.is_some(),&None,body)
+ }
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if !self.equality.terminal_is_empty(){return self.equality.close_work_demand(body)}
+  if !self.lookup.terminal_is_empty(){return self.lookup.close_work_demand(body)}
+  if !self.id.terminal_is_empty(){return self.id.close_work_demand(body)}
+  if !self.text.terminal_is_empty(){return self.text.close_work_demand(body)}
+  if !self.fill.terminal_is_empty(){return if self.fill.close_started(){self.fill.close_work_demand(body)}else{Ok(self.fill.begin_close_work_demand())}}
+  if !self.stroke.terminal_is_empty(){return if self.stroke.close_started(){self.stroke.close_work_demand(body)}else{Ok(self.stroke.begin_close_work_demand())}}
+  if !self.segments.terminal_is_empty(){return if self.segments.close_started(){self.segments.close_work_demand(body)}else{Ok(self.segments.begin_close_work_demand())}}
+  self.retirement.next_owner_work::<DrawingDiff>(self.diff.is_some(),&None,body)
+ }
+ pub fn requires_original_birth(&self)->bool{
+  if !self.flight.idle()||!self.equality.terminal_is_empty()||!self.lookup.terminal_is_empty()||!self.id.terminal_is_empty()||!self.text.terminal_is_empty(){return false}
+  if !self.fill.terminal_is_empty(){return self.fill.close_started()&&self.fill.requires_original_birth()}
+  if !self.stroke.terminal_is_empty(){return self.stroke.close_started()&&self.stroke.requires_original_birth()}
+  if !self.segments.terminal_is_empty(){return self.segments.close_started()&&self.segments.requires_original_birth()}
+  self.retirement.requires_original_birth()
+ }
+ pub fn requires_original_control(&self)->bool{
+  if let Some(loaned)=self.flight.loaned(){return loaned}
+  if !self.equality.terminal_is_empty()||!self.lookup.terminal_is_empty()||!self.id.terminal_is_empty()||!self.text.terminal_is_empty(){return false}
+  if !self.fill.terminal_is_empty(){return self.fill.close_started()&&self.fill.requires_original_control()}
+  if !self.stroke.terminal_is_empty(){return self.stroke.close_started()&&self.stroke.requires_original_control()}
+  if !self.segments.terminal_is_empty(){return self.segments.close_started()&&self.segments.requires_original_control()}
+  self.retirement.requires_original_control()
+ }
+ pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{
+  if !self.fill.terminal_is_empty(){return self.fill.close_original_birth_step(original,grant)}
+  if !self.stroke.terminal_is_empty(){return self.stroke.close_original_birth_step(original,grant)}
+  if !self.segments.terminal_is_empty(){return self.segments.close_original_birth_step(original,grant)}
+  self.retirement.step_original_birth(original,grant)
+ }
+ pub fn close_step(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,recover:bool,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{
+  if !self.closing{return Err(invalid().into())}
+  if !self.equality.terminal_is_empty(){return Ok(measured(effect,work,|e|self.equality.close_step(body,e))?)}
+  if !self.lookup.terminal_is_empty(){return Ok(measured(effect,work,|e|self.lookup.close_step(body,e))?)}
+  if !self.id.terminal_is_empty(){return Ok(measured(effect,work,|e|self.id.close_step(body,e))?)}
+  if !self.text.terminal_is_empty(){return Ok(measured(effect,work,|e|self.text.close_step(body,e))?)}
+  if !self.fill.terminal_is_empty(){return field_close(&mut self.fill,&mut self.flight,4,original,body,effect,recover,work)}
+  if !self.stroke.terminal_is_empty(){return field_close(&mut self.stroke,&mut self.flight,5,original,body,effect,recover,work)}
+  if !self.segments.terminal_is_empty(){return field_close(&mut self.segments,&mut self.flight,6,original,body,effect,recover,work)}
+  owner_close(&mut self.retirement,&mut self.diff,&mut self.flight,7,original,body,effect,recover,work)
+ }
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.equality.terminal_is_empty()&&self.lookup.terminal_is_empty()&&self.id.terminal_is_empty()&&self.text.terminal_is_empty()&&self.fill.terminal_is_empty()&&self.stroke.terminal_is_empty()&&self.segments.terminal_is_empty()&&self.diff.is_none()&&self.retirement.is_empty()&&self.flight.idle()}
 }
 impl Drop for DrawingOriginalFieldDecision{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Drawing sparse decision requires actual original terminal closure");}}

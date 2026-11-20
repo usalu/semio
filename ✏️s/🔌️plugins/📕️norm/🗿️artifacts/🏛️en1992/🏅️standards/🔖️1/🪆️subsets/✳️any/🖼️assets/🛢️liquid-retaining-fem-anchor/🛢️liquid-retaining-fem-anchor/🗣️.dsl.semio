@@ -1,5 +1,5 @@
 semio norm.en1992.dsl v1
-annex=de title="Liquid-retaining tank with FEM and anchor" design-working-life-years=50 delta-c-dev=0.01 cement-type=N
+annex=de title="Liquid-retaining tank with FEM and anchor" design-working-life-years=50 delta-c-dev=0.01 cement-type=n
 concrete-grades [id:TEXT name:TEXT f-ck:NUM] {
   c35 C35/45 35000000
 }
@@ -12,7 +12,7 @@ prestress-steels [id:TEXT name:TEXT f-pk:NUM f-p0-1k:NUM] {
   yp1860 Y1860S7 1860000000 1700000000
   yp1860b Y1770S7 1770000000 1520000000
 }
-members [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM concrete-grade-id:TEXT reinforcement-grade-id:TEXT prestress-steel-id:TEXT exposure:ENUM width:NUM height:NUM effective-depth:NUM cover:NUM span:NUM support:ENUM buckling-length:NUM longitudinal:TABLE stirrups:REC punching:REC prestress:REC fire:REC actions:TABLE use-fem:BOOL udl:NUM deflection-sensitive:BOOL tightness:ENUM hd-over-h:NUM liquid-sigma-s:NUM liquid-rho-p-eff:NUM liquid-f-ct-eff:NUM liquid-s-r-max:NUM bridge-sigma-c:NUM bridge-delta-sigma-s:NUM relative-humidity:NUM bearing-width:QTY section-points:TABLE bars:TABLE tendon-points:TABLE stud-rows:TABLE openings:TABLE] {
+members [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM concrete-grade-id:TEXT reinforcement-grade-id:TEXT prestress-steel-id:TEXT exposure:ENUM width:NUM height:NUM effective-depth:NUM cover:NUM span:NUM support:ENUM buckling-length:NUM bearing-width:QTY longitudinal:TABLE stirrups:REC punching:REC prestress:REC fire:REC actions:TABLE use-fem:BOOL udl:NUM deflection-sensitive:BOOL tightness:ENUM hd-over-h:NUM liquid-sigma-s:NUM liquid-rho-p-eff:NUM liquid-f-ct-eff:NUM liquid-s-r-max:NUM bridge-sigma-c:NUM bridge-delta-sigma-s:NUM relative-humidity:NUM section-points:TABLE bars:TABLE tendon-points:TABLE stud-rows:TABLE openings:TABLE] {
   wall-W1 "Tank wall W1" "Behälterwand W1" liquid-retaining c35 b500 "" xc4 0.35 0.5 0.45 0.04 7.5 continuous 0 0m [ {id=vert diameter=0.016 count=6 position=bottom anchorage-length=0.7 lap-length=0.85 bond-condition=good aggregate-size=0.016 lap-share=0} ] {diameter=0.008 spacing=0.15 legs=2} _ _ {rating=r90 axis-distance=0.04 slab-system=one-way} [ {id=G kind=permanent category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=100000 n-k=30000 v-k=50000 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=50000 n-k=15000 v-k=30000 t-k=0 v-k-punch=0} ] true 24000 false tc2 8 280000000 0.02 3200000 0.22 0 0 0.5 [ ] [ ] [ ] [ ] [ ]
 }
 anchors [id:TEXT h-ef:NUM cracked:BOOL f-uk:NUM f-yk:NUM a-s:NUM d:NUM c1:NUM f-ck:NUM actions:TABLE head-diameter:NUM] {

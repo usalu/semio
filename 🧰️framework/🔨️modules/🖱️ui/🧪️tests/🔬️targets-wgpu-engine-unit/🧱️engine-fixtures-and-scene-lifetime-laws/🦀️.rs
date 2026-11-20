@@ -279,7 +279,10 @@ fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() 
     let presented_node = ui.windows.get(window_id).and_then(|window| window.presented_tree.document_node(UiNodeId(4))).expect("presented slider node");
     let (x, y, w, h) = ui.windows.get(window_id).and_then(|window| window.presented_tree.mounted_layout(presented_node)).expect("presented slider layout");
     ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerDown { x: x + w * 0.5, y: y + h * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
-    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some());
+    assert_eq!(ui.window_pointer_capture(window_id), Some(77));
+    assert_eq!(ui.window_pointer_capture("unmounted-window"), None);
+    assert!(ui.dispatch_pointer_event(window_id, 78, UiEvent::PointerLeave).is_empty());
+    assert_eq!(ui.window_pointer_capture(window_id), Some(77));
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, 3);
     assert!(ui.publish_document(window_id, captured_slider_document(window_id, 4, 3.0, &[2, 3, 4])));
@@ -296,7 +299,7 @@ fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() 
 
     ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerMove { x: 120.0, y: 20.0, modifiers: Default::default() });
     ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerUp { x: 120.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
-    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_none());
+    assert_eq!(ui.window_pointer_capture(window_id), None);
 }
 
 #[test]

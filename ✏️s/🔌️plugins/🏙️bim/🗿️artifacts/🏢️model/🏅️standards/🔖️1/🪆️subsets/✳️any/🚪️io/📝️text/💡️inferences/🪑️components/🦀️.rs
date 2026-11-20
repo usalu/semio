@@ -176,7 +176,7 @@ const CODES: [DiagnosticCode; 8] = [
 ];
 
 fn finding_row(finding: &Diagnostic) -> FindingRow {
-    FindingRow { code: finding.code.slug().to_string(), elements: finding.elements.clone(), missing: finding.missing.clone(), values: finding.values.clone() }
+    FindingRow { code: finding.code.slug().to_string(), elements: finding.elements.clone(), missing: finding.missing.clone(), values: finding.values.iter().map(|(name, value)| (name.clone(), *value)).collect() }
 }
 
 fn sorted(mut rows: Vec<FindingRow>) -> Vec<FindingRow> {

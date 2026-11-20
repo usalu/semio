@@ -108,8 +108,13 @@ describe("build surface oracle", () => {
     expect(declared.size).toBeLessThan(policy.tools.length);
   });
 
-  it("leaves no catalogue row neither exposed nor excluded", () => {
+  it("matches every exposed or excluded command to the current CLI catalogue", () => {
     expect(uncovered()).toEqual([]);
+    for (const row of [...policy.tools, ...policy.excluded]) {
+      const operation = catalogue.operations.find((candidate: any) => candidate.name === row.operation);
+      expect(operation, row.operation).toBeDefined();
+      if (row.subcommand) expect(operation.subcommands?.some((sub: any) => sub.name === row.subcommand), `${row.operation} ${row.subcommand}`).toBe(true);
+    }
     for (const row of policy.excluded) {
       expect(row.reason.en.length).toBeGreaterThan(0);
       expect(row.reason.de.length).toBeGreaterThan(0);

@@ -1,6 +1,6 @@
 import { Fragment } from "../⚛️react-port/🟦️.ts";
 import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
-import { Button, Popover, PopoverContent, PopoverTrigger, type NavbarItem } from "@semio-tech/ui-react";
+import { Button, Popover, PopoverContent, PopoverTrigger, type NavbarItem, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 
 /** 📱️ Whether the credits fold into one footer button: a phone and a tablet have no room for the logos next to the shell's own footer items (the full row is wider than a tablet).
  *
@@ -13,7 +13,7 @@ export function shellFooterNavbarItem(item: ShellFooterItem, locale: ShellLocale
     {!compact && <span>{item.caption[locale]}</span>}
     {item.logos.map((logo, index) => <Fragment key={logo.href}>
       {!compact && index > 0 && item.separator && <span>{item.separator[locale]}</span>}
-      <a href={logo.href} target="_blank" rel="noopener noreferrer" className="hover:text-foreground" aria-label={logo.alt}>
+      <a {...sharedBorderlessBoxProps} href={logo.href} target="_blank" rel="noopener noreferrer" className="hover:text-foreground" aria-label={logo.alt}>
         <img src={logo.src} alt={logo.alt} className={logo.darkSrc ? "h-workbench w-auto dark:hidden" : "h-workbench w-auto"} />
         {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-workbench w-auto dark:block" />}
       </a>

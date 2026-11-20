@@ -24,7 +24,7 @@ type ClipboardDataStub = {
   readonly setData: (type: string, value: string) => void;
 };
 
-function mountedHost(selectedIds: readonly string[] = [], activeUtility?: string) {
+function mountedHost(selectedIds: readonly string[] = [], activeUtility?: string, interactive = true) {
   const actions: any[] = [];
   const node = {
     type: "componentScene",
@@ -34,8 +34,8 @@ function mountedHost(selectedIds: readonly string[] = [], activeUtility?: string
     inkCanvas: {
       selectionJson: JSON.stringify(selectedIds),
       activeUtility: activeUtility ?? "selectDirect",
-      viewMode: "edit",
-      interactive: true,
+      viewMode: interactive ? "edit" : "navigator",
+      interactive,
       documentJson: JSON.stringify(activeUtility == null ? fixture.document : { ...fixture.document, activeUtility }),
     },
   };
@@ -187,6 +187,13 @@ describe("InkCanvas clipboard", () => {
     expect(events[0].asset).toEqual({ mime: fixture.paste.raster.mime, data: fixture.paste.raster.dataUrl });
     expect(events[1].block).toEqual(expect.objectContaining({ kind: "image", ...fixture.paste.raster.point, ...fixture.paste.raster.size, imageKey: events[0].key }));
     expect(action.args.selectIds).toEqual([events[1].block.id]);
+  });
+
+  it("leaves the document untouched when pasting into the read-only navigator", () => {
+    const { root, actions } = mountedHost([], undefined, false);
+    const event = dispatchClipboard(root, "paste", textClipboard(fixture.paste.plainText.clipboard));
+    expect(event.defaultPrevented).toBe(false);
+    expect(inkActions(actions)).toEqual([]);
   });
 
   it("leaves copy and paste to the active contenteditable editor", () => {

@@ -4,6 +4,27 @@ export function factKeyV1(fact){
  return JSON.stringify(fact);
 }
 
+/** 🧺️ Collects each exact consumed row once in first-occurrence order, retaining every different answer to the same source question. */
+export function distinctObservationRowsV1(...captures){
+ const byKind=new Map(),distinct=[];
+ const same=(left,right)=>left===right||left.fact===right.fact||factKeyV1(left.fact)===factKeyV1(right.fact);
+ for(const rows of captures)for(const row of rows){
+  let byPath=byKind.get(row.kind);
+  if(byPath===undefined){byPath=new Map();byKind.set(row.kind,byPath);}
+  const previous=byPath.get(row.path);
+  if(previous===undefined)byPath.set(row.path,row);
+  else if(Array.isArray(previous)){
+   if(previous.some(known=>same(known,row)))continue;
+   previous.push(row);
+  }else{
+   if(same(previous,row))continue;
+   byPath.set(row.path,[previous,row]);
+  }
+  distinct.push(row);
+ }
+ return distinct;
+}
+
 const SHAPE=Object.freeze({undefined:0,null:1,false:2,true:3,string:4,number:5,flat:6,analysis:7,json:8});
 const FLAT_KEYS=Object.freeze(["size","mtimeMs","ctimeMs","ino","sha256"]);
 const ANALYSIS_KEYS=Object.freeze(["provider","revision","source","resultSha256","nestedObservations"]);
@@ -175,4 +196,64 @@ export function createRowPoolV1(){
   rows(rows){if(settled.has(rows))return rows;for(let at=0;at<rows.length;at++)rows[at]=share(rows[at]);settled.add(rows);return rows;},
   size:()=>pool.size,
  });
+}
+
+/** 🪢 Encodes dependency-ordered authority records and ordered root indexes. Each shared analysis dependency is represented by one backward reference. */
+export function encodeAuthorityObservationsV1(observations,maximumBytes,check=()=>{}){
+ const records=[],roots=[],objects=new WeakMap(),keys=new Map(),visiting=new WeakSet();
+ let bytes=2,work=0;
+ const charge=text=>{
+  if(++work%256===0)check();
+  bytes+=Buffer.byteLength(text)+(work>1?1:0);
+  if(bytes>maximumBytes)throw Error("Build graph authority exceeds its finite observation limit");
+  return text;
+ };
+ const index=row=>{
+  const known=objects.get(row);
+  if(known!==undefined)return known;
+  if(visiting.has(row))throw Error("Cyclic graph authority observations");
+  visiting.add(row);
+  const fact=row.kind==="analysis"?{...row.fact,nestedObservations:row.fact.nestedObservations.map(index)}:row.fact;
+  const text=JSON.stringify({kind:row.kind,path:row.path,fact});
+  let id=keys.get(text);
+  if(id===undefined){id=records.length;records.push(charge(text));keys.set(text,id);}
+  objects.set(row,id);visiting.delete(row);
+  return id;
+ };
+ check();
+ for(const row of observations)roots.push(charge(String(index(row))));
+ check();
+ return "["+records.join(",")+(roots.length?",":"")+roots.join(",")+"]";
+}
+
+/** 🧮 Checks indexed authority observations in stream order without retaining row data. The function is also embedded in the cache maintenance child. */
+export function createAuthorityObservationReaderV1(kinds){
+ const refuse=()=>{throw Error("Closed indexed authority observations required");};
+ let count=0,roots=false;
+ const reference=id=>Number.isSafeInteger(id)&&id>=0&&id<count;
+ return entry=>{
+  if(typeof entry==="number"){
+   if(!reference(entry))refuse();
+   roots=true;
+   return "root";
+  }
+  if(roots||entry===null||typeof entry!=="object"||Array.isArray(entry)||Object.keys(entry).sort().join()!=="fact,kind,path"||!kinds.includes(entry.kind)||typeof entry.path!=="string"||entry.path.length===0)refuse();
+  if(entry.kind==="analysis"&&(!Array.isArray(entry.fact?.nestedObservations)||!entry.fact.nestedObservations.every(reference)))refuse();
+  count++;
+  return "record";
+ };
+}
+
+/** 📖 Reconstructs the authority's ordered roots with the nested dependencies shared by identity. */
+export function decodeAuthorityObservationsV1(observations,kinds,check=()=>{}){
+ const read=createAuthorityObservationReaderV1(kinds),records=[],roots=[];
+ if(!Array.isArray(observations))throw Error("Closed indexed authority observations required");
+ for(let at=0;at<observations.length;at++){
+  if(at%256===0)check();
+  const entry=observations[at];
+  if(read(entry)==="root")roots.push(records[entry]);
+  else records.push(entry.kind==="analysis"?{...entry,fact:{...entry.fact,nestedObservations:entry.fact.nestedObservations.map(index=>records[index])}}:entry);
+ }
+ check();
+ return roots;
 }

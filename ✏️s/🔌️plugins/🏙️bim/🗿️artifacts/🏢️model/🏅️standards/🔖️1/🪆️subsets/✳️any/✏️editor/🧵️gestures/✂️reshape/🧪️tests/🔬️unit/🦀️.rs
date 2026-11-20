@@ -63,7 +63,7 @@ async fn a_wall_pressed_and_a_side_clicked_writes_one_offset_wall_and_selects_it
 #[semio_framework_async_macros::async_test]
 async fn trim_keeps_the_part_under_the_pointer_and_cuts_the_other_end_back_to_the_target() {
     let mut snapshot = room();
-    snapshot.walls.insert("w-long".into(), wall_on(&snapshot, "w-long", line((0.0, 3.0), (10.0, 3.0))));
+    snapshot.walls.cold_insert("w-long".into(), wall_on(&snapshot, "w-long", line((0.0, 3.0), (10.0, 3.0))));
     let mut rig = Rig::plan("trim", snapshot);
     let target = rig.down(8.0, 1.5);
     assert_eq!(target.pick.map(|pick| pick.targets), Some(vec![("wall".to_string(), "w-east".to_string())]), "the first press chooses the target");
@@ -76,7 +76,7 @@ async fn trim_keeps_the_part_under_the_pointer_and_cuts_the_other_end_back_to_th
 #[semio_framework_async_macros::async_test]
 async fn extend_moves_the_end_nearest_the_pointer_out_to_the_target() {
     let mut snapshot = room();
-    snapshot.walls.insert("w-short".into(), wall_on(&snapshot, "w-short", line((1.0, 4.0), (5.0, 4.0))));
+    snapshot.walls.cold_insert("w-short".into(), wall_on(&snapshot, "w-short", line((1.0, 4.0), (5.0, 4.0))));
     let mut rig = Rig::plan("extend", snapshot);
     rig.down(8.0, 1.5);
     let step = rig.down(4.9, 4.0);
@@ -95,8 +95,8 @@ async fn the_end_a_trim_or_an_extend_moves_follows_the_pointer_and_parallel_wall
     assert_eq!(end_to_move(Kind::Extend, &wall, &target, [2.0, 3.0]), Some(WallEnd::Start));
     assert_eq!(end_to_move(Kind::Trim, &wall, &line((0.0, 5.0), (10.0, 5.0)), [2.0, 3.0]), None);
     let mut snapshot = room();
-    snapshot.walls.insert("w-par".into(), wall_on(&snapshot, "w-par", line((0.0, 3.0), (6.0, 3.0))));
-    snapshot.walls.insert("w-par-2".into(), wall_on(&snapshot, "w-par-2", line((0.0, 4.0), (6.0, 4.0))));
+    snapshot.walls.cold_insert("w-par".into(), wall_on(&snapshot, "w-par", line((0.0, 3.0), (6.0, 3.0))));
+    snapshot.walls.cold_insert("w-par-2".into(), wall_on(&snapshot, "w-par-2", line((0.0, 4.0), (6.0, 4.0))));
     let mut rig = Rig::plan("trim", snapshot);
     rig.down(3.0, 3.0);
     assert!(rig.down(3.0, 4.0).refused.is_some(), "walls that never meet are refused and write nothing");
@@ -126,7 +126,7 @@ async fn with_nothing_selected_align_first_selects_the_pressed_element() {
 async fn split_parts_a_beam_where_it_is_pressed() {
     let mut snapshot = room();
     let beam = Beam { storey: "st-ground".into(), beam_type: "bm-20".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 2.0 }, end: Point2 { x: 8.0, y: 2.0 } }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: "Beam".into() };
-    snapshot.beams.insert("b-1".into(), beam);
+    snapshot.beams.cold_insert("b-1".into(), beam);
     let mut rig = Rig::plan("split", snapshot);
     rig.mv(2.0, 2.0);
     assert!(rig.shows(Shape::Path), "the cut shows across the beam");
@@ -143,7 +143,7 @@ async fn split_parts_a_beam_where_it_is_pressed() {
 async fn split_cuts_a_slab_along_the_line_of_two_clicks() {
     let mut snapshot = room();
     let slab = Slab { storey: "st-ground".into(), slab_type: "sl-200".into(), boundary: vec![corner(0.0, 0.0), corner(8.0, 0.0), corner(8.0, 6.0), corner(0.0, 6.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Floor".into() };
-    snapshot.slabs.insert("sl-1".into(), slab);
+    snapshot.slabs.cold_insert("sl-1".into(), slab);
     let mut rig = Rig::plan("split", snapshot);
     assert!(rig.down(3.0, 2.0).mutations.is_empty(), "the first press holds the slab and starts the cut line");
     rig.mv(3.0, 4.0);

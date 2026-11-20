@@ -183,33 +183,95 @@ pub fn apply_page_override(frame: &mut crate::Frame, page_override: &crate::Page
     }
 }
 
-/// 🗂️ Stable paint order follows the owning layer rows, with unassigned frames retained at the end.
-fn frames_in_layer_order<'a>(frames: &'a [Frame], layers: &[Layer]) -> Vec<(usize, &'a Frame)> {
-    let ranks: std::collections::HashMap<&str, usize> = layers.iter().enumerate().map(|(index, layer)| (layer.id.as_str(), index)).collect();
-    let mut ordered: Vec<(usize,&Frame)> = frames.iter().enumerate().collect();
-    ordered.sort_by_key(|(_,frame)| ranks.get(frame.layer_id()).copied().unwrap_or(layers.len()));
-    ordered
+/// 👁️ Changed bounds of selected live frames during one uncommitted gesture.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct FrameBoundsPreview {
+    source: usize,
+    page: usize,
+    rows: Vec<(usize, LayoutBounds)>,
 }
 
-pub fn resolve_page<'a>(doc: &'a crate::snapshot::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
-    let mut frames = Vec::new();
-    if let Some(parent_id) = &page.parent_page_id {
-        if let Some(parent) = doc.parent_pages.iter().find(|p| p.id == *parent_id) {
-            for (frame_index,frame) in frames_in_layer_order(&parent.frames, &parent.layers) {
-                let page_override = page.overrides.iter().find(|item| item.object_id == frame.id());
-                let inherited = page_override.is_none();
-                let mut resolved = frame.clone();
-                if let Some(page_override) = page_override {
-                    apply_page_override(&mut resolved, page_override);
-                }
-                frames.push(ResolvedFrame { parent:true, frame_index, frame: resolved, inherited });
+impl FrameBoundsPreview {
+    /// 📐️ Applies one transform to unlocked local targets and validates every result before publishing any.
+    pub fn for_transform(
+        doc: &crate::snapshot::LayoutSnapshot,
+        page_id: &str,
+        targets: &[String],
+        transform: impl Fn(&LayoutBounds) -> LayoutBounds,
+    ) -> Option<Self> {
+        let mut pending: std::collections::HashSet<_> = targets.iter().map(String::as_str).collect();
+        if pending.is_empty() || pending.len() != targets.len() { return None; }
+        let (page_index, page) = doc.pages.iter().enumerate().find(|(_, page)| page.id == page_id)?;
+        let mut rows = Vec::new();
+        for (index, frame) in page.frames.iter().enumerate() {
+            if !pending.remove(frame.id()) { continue; }
+            if !frame_edits_blocked(doc, page, frame) {
+                let next = transform(frame.bounds());
+                validation::validate_frame_bounds(&next).ok()?;
+                if next != *frame.bounds() { rows.push((index, next)); }
             }
+            if pending.is_empty() { break; }
         }
+        (!rows.is_empty()).then_some(Self { source: doc as *const _ as usize, page: page_index, rows })
     }
-    for (frame_index,frame) in frames_in_layer_order(&page.frames, &page.layers) {
-        frames.push(ResolvedFrame { parent:false, frame_index, frame: frame.clone(), inherited: false });
+
+    /// 🧭️ Resolves only addresses from the original snapshot and local page.
+    pub fn bounds(&self, doc: &crate::snapshot::LayoutSnapshot, page: usize, frame: usize) -> Option<&LayoutBounds> {
+        if self.source != doc as *const _ as usize || self.page != page { return None; }
+        self.bounds_at(frame)
     }
-    frames
+
+    fn bounds_at(&self, frame: usize) -> Option<&LayoutBounds> {
+        self.rows.binary_search_by_key(&frame, |(index, _)| *index).ok().map(|index| &self.rows[index].1)
+    }
+
+    fn matches_page(&self, doc: &crate::snapshot::LayoutSnapshot, page: &Page) -> bool {
+        self.source == doc as *const _ as usize && doc.pages.get(self.page).is_some_and(|original| std::ptr::eq(original, page))
+    }
+}
+
+/// 🗂️ Resolves accepted frames in stable layer order, retaining their original indices.
+pub fn resolve_page_where(doc: &crate::snapshot::LayoutSnapshot, page: &Page, include: impl Fn(&str, &LayoutBounds) -> bool) -> Vec<ResolvedFrame> {
+    resolve_page_with_preview(doc, page, None, include)
+}
+
+/// 🎨️ Projects provisional local bounds before culling and copying accepted frames.
+pub fn resolve_page_with_preview(doc: &crate::snapshot::LayoutSnapshot, page: &Page, preview: Option<&FrameBoundsPreview>, include: impl Fn(&str, &LayoutBounds) -> bool) -> Vec<ResolvedFrame> {
+    let preview = preview.filter(|preview| preview.matches_page(doc, page));
+    let mut result = Vec::new();
+    let mut append = |frames: &[Frame], layers: &[Layer], overrides: &[PageOverride], parent: bool| {
+        let ranks: std::collections::HashMap<_, _> = layers.iter().enumerate().map(|(i, layer)| (layer.id.as_str(), i)).collect();
+        let overrides: std::collections::HashMap<_, _> = overrides.iter().rev().map(|row| (row.object_id.as_str(), row)).collect();
+        let mut accepted: Vec<_> = frames.iter().enumerate().filter_map(|(index, frame)| {
+            let page_override = overrides.get(frame.id()).copied();
+            let planned = if parent { None } else { preview.and_then(|preview| preview.bounds_at(index)) };
+            let bounds = planned.or_else(|| page_override.and_then(|row| row.bounds.as_ref())).unwrap_or_else(|| frame.bounds());
+            include(frame.id(), bounds).then_some((index, frame, page_override, planned))
+        }).collect();
+        accepted.sort_by_key(|(_, frame, _, _)| ranks.get(frame.layer_id()).copied().unwrap_or(layers.len()));
+        result.extend(accepted.into_iter().map(|(frame_index, frame, page_override, planned)| {
+            let mut frame = frame.clone();
+            if let Some(row) = page_override {
+                apply_page_override(&mut frame, row);
+            }
+            if let Some(bounds) = planned {
+                match &mut frame {
+                    Frame::Rect { bounds: target, .. } | Frame::Text { bounds: target, .. } | Frame::Image { bounds: target, .. } => *target = bounds.clone(),
+                }
+            }
+            ResolvedFrame { frame, frame_index, parent, inherited: parent && page_override.is_none() }
+        }));
+    };
+    if let Some(parent) = page.parent_page_id.as_ref().and_then(|id| doc.parent_pages.iter().find(|parent| &parent.id == id)) {
+        append(&parent.frames, &parent.layers, &page.overrides, true);
+    }
+    append(&page.frames, &page.layers, &[], false);
+    result
+}
+
+/// 📄️ Resolves every parent and local frame for document-wide projections.
+pub fn resolve_page(doc: &crate::snapshot::LayoutSnapshot, page: &Page) -> Vec<ResolvedFrame> {
+    resolve_page_where(doc, page, |_, _| true)
 }
 //#endregion 📄️Document
 

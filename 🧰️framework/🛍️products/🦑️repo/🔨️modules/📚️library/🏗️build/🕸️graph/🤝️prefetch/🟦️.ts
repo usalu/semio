@@ -32,7 +32,8 @@ export async function prefetchBuildGraphProjectsV1(root:string,registry:BuildOwn
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   const owner=await import("../📥️inference/🟨️.mjs");checkResourceLeaseControl(phaseControl);
-  const context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)};
+  const context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation),ownerSignal:hooks.signal};
+  hooks.signal?.throwIfAborted();
   const stages=createPlanStageGuardV1({refuse:detail=>refuseBuildV1("unserved","graph.plan-too-heavy",detail)});
   const captured=await stages.run(()=>observationV1.captureObservedSourceInputsV1(async()=>{
     stages.mark("inference");
@@ -44,7 +45,7 @@ export async function prefetchBuildGraphProjectsV1(root:string,registry:BuildOwn
 
 
 /** 🎛️ What a continuous inference of a read that waits for the fleet consults while it runs: `skip(name)` before each project (the fleet delivered it, or the wait ended), `rank(name)` the order of the projects (lower first) and `done(name)` after each project is finished here. */
-export type OwnerHooksV1={readonly skip?:(name:string)=>boolean;readonly rank?:(name:string)=>number;readonly done?:(name:string)=>void};
+export type OwnerHooksV1={readonly signal?:AbortSignal;readonly skip?:(name:string)=>boolean;readonly rank?:(name:string)=>number;readonly done?:(name:string)=>void};
 
 export type OfferedStateV1={readonly names:Set<string>;readonly loaded:Set<string>};
 /** 🧺️ The names one read has offered and the directories their file was read from; a fresh state is a restarted read. */

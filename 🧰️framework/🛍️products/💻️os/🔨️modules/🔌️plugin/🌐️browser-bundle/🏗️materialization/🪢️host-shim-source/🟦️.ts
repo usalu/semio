@@ -35,12 +35,11 @@ let originalProducer;
 export function __checkoutOriginal(turn) { if (originalTurn || !turn || typeof turn.deadlineUs !== "bigint") throw new Error("original-turn.checkout-refused"); originalTurn = turn; }
 export function __returnOriginal(turn) { if (originalTurn !== turn) throw new Error("original-turn.foreign-return"); originalTurn = undefined; const raw = originalProducer; originalProducer = undefined; return raw; }
 function originalCheck() { if (!originalTurn) return 6; if (originalTurn.cancelled) return 1; if (operationClockUs() >= originalTurn.deadlineUs) return 3; return 0; }
-function unsupportedProducer(phase, fields) { if (originalProducer === undefined) originalProducer = { phase, fields }; return 6; }
 export function operationBegin() { const refused = originalCheck(); if (refused) throw refused; return BigInt(originalTurn.input.grant.maximumCapacityBytes); }
-export function operationProgress(completed, total, owned) { const refused = originalCheck(); if (refused) return refused; if (completed !== 0n || total !== 0n || owned !== 0n) return unsupportedProducer("progress", { completed, total, owned }); return 0; }
-export function operationAllocation(bytes, owned, next, maximum) { const refused = originalCheck(); if (refused) return refused; if (bytes !== 0n || owned !== 0n || next !== 0n) return unsupportedProducer("allocation", { bytes, owned, next, maximum }); return maximum === BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 0 : 4; }
-export function operationReserveReturn(kind, count) { const refused = originalCheck(); if (refused) return refused; return count === 0n ? 0 : unsupportedProducer("canonical-return", { kind, count }); }
-export function operationFinish(owned) { const refused = originalCheck(); if (refused) return refused; return owned === 0n ? 0 : unsupportedProducer("finish", { owned }); }
+export function operationProgress(completed, total, owned) { const refused = originalCheck(); if (refused) return refused; return owned > BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 2 : 0; }
+export function operationAllocation(bytes, owned, next, maximum) { const refused = originalCheck(); if (refused) return refused; const capacity = BigInt(originalTurn.input.grant.maximumCapacityBytes); if (maximum !== capacity) return 4; return owned > capacity || next > capacity - owned ? 2 : 0; }
+export function operationReserveReturn(kind, count) { const refused = originalCheck(); if (refused) return refused; return count > BigInt(originalTurn.input.grant.maximumItems) ? 2 : 0; }
+export function operationFinish(owned) { const refused = originalCheck(); if (refused) return refused; return owned > BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 2 : 0; }
 export function log(level, message) {
   if (level === "error") console.error(\`[actor] \${message}\`);
   else console.log(\`[actor] \${message}\`);

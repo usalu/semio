@@ -1,0 +1,196 @@
+{
+ "summary": {
+  "en": "A woman of 1.69 m in a hooded fleece sweatshirt, slim jeans and canvas sneakers stands at a 0.60 m hob base unit with a 0.90 m worktop and stirs 2.5 litres of water in a 22 cm steel pot on the front right zone of the glass-ceramic hob with a beech cooking spoon, about 1.8 met. The unit, hob, pot and spoon are part of the figure; the steam above the pot follows the hob level.",
+  "de": "Eine Frau von 1,69 m in Kapuzen-Sweatshirt aus Fleece, schmaler Jeans und Stoffsneakern steht an einem 0,60 m breiten Kochfeld-Unterschrank mit 0,90 m hoher Arbeitsplatte und rührt mit einem Buchenkochlöffel 2,5 Liter Wasser in einem 22-cm-Stahltopf auf der vorderen rechten Zone des Glaskeramik-Kochfelds, etwa 1,8 met. Schrank, Kochfeld, Topf und Löffel gehören zur Figur; der Dampf über dem Topf folgt der Herdstufe."
+ },
+ "poses": {
+  "stirring": {
+   "en": "Feet at hip width, the toes 0.08 m in front of the worktop edge, knees almost straight, the trunk leaning 7 degrees forward and the head bowed to the pot; the right forearm reaches level over the hob, the hand holds the cooking spoon between thumb and curled fingers with the bowl in the water, the left arm hangs relaxed at the side.",
+   "de": "Füße hüftbreit, die Zehen 0,08 m vor der Kante der Arbeitsplatte, die Knie fast gestreckt, der Rumpf 7 Grad nach vorn geneigt und der Kopf zum Topf gesenkt; der rechte Unterarm reicht waagrecht über das Kochfeld, die Hand hält den Kochlöffel zwischen Daumen und gekrümmten Fingern mit der Laffe im Wasser, der linke Arm hängt entspannt an der Seite."
+  },
+  "tasting": {
+   "en": "Standing almost upright at the unit, the right elbow bent 135 degrees, the hand brings the bowl of the spoon, hollow up, to just in front of the lips; the head tilted slightly forward, the left arm hanging.",
+   "de": "Fast aufrecht am Schrank stehend, der rechte Ellbogen 135 Grad gebeugt, die Hand führt die Laffe des Löffels mit der Höhlung nach oben bis knapp vor die Lippen; der Kopf leicht nach vorn geneigt, der linke Arm hängt."
+  },
+  "standing-by": {
+   "en": "Upright at the unit with the spoon in the lowered right hand beside the thigh, the head bowed a little towards the pot, waiting for the water to boil.",
+   "de": "Aufrecht am Schrank, der Löffel in der gesenkten rechten Hand neben dem Oberschenkel, der Kopf leicht zum Topf gesenkt, die Person wartet, bis das Wasser kocht."
+  }
+ },
+ "clips": {
+  "stirring": {
+   "en": "A two-second loop of eight keys: the bowl of the spoon runs on a circle of 50 mm radius 35 mm above the pot base while the handle pivots about a point above the pot, the right arm solved for every key so that the hand stays on the handle; the trunk rocks 0.8 degrees with each stroke and the head follows; the feet stay planted and the pot stands still.",
+   "de": "Eine Schleife von zwei Sekunden mit acht Schlüsselbildern: Die Laffe des Löffels läuft auf einem Kreis von 50 mm Radius 35 mm über dem Topfboden, während der Stiel um einen Punkt über dem Topf schwenkt; der rechte Arm ist für jedes Schlüsselbild so gelöst, dass die Hand am Stiel bleibt; der Rumpf wiegt sich mit jedem Zug um 0,8 Grad und der Kopf folgt; die Füße bleiben stehen und der Topf steht still."
+  }
+ },
+ "assumptions": [
+  {
+   "en": "Segments are point masses at the de Leva centres (female table).",
+   "de": "Segmente sind Punktmassen in den Schwerpunkten nach de Leva (Frauentabelle)."
+  },
+  {
+   "en": "Contacts are heel and ball of each foot; both feet stand flat at hip width in every named pose.",
+   "de": "Kontakte sind Ferse und Ballen jedes Fußes; beide Füße stehen in jeder benannten Pose flach und hüftbreit."
+  },
+  {
+   "en": "The unit of 70 kg and the pot of 4.2 kg with its water are point masses on their own bones; the unit stands on its four adjustable legs through its own contact and does not load the person.",
+   "de": "Der 70 kg schwere Schrank und der 4,2 kg schwere Topf samt Wasser sind Punktmassen auf eigenen Knochen; der Schrank steht über einen eigenen Kontakt auf seinen vier Stellfüßen und belastet die Person nicht."
+  }
+ ],
+ "notes": {
+  "en": "Figure derived by hand from the archive's standing-adult asset. Round 3 (2026-11-20): rig landmarks after Winter 2009 for a woman of 1.69 m in canvas sneakers (ankle raised 22 mm by the sole, lumbosacral joint 30 mm behind the hip joints, C7 at 0.855 H, atlanto-occipital joint 0.145 m below the vertex, shoulder joints at 0.818 H and 0.31 m apart, foot bone to the ground under the ball); the kitchen unit redrawn as a 600 mm hob base unit after DIN EN 1116 with a 580 x 510 mm four-zone hob, moved to a working distance of 0.25 m from the hip joints, the 22 cm pot on its own bone on the front right zone, the spoon bone at the grip in the hand; the right arm solved on the rig chain for both poses and all eight keys of the stirring loop so that the bowl of the spoon is in the pot or at the mouth; body, thermal model and skeleton handcrafted per scale, the 2D drawings redrawn as views of the 3D body. Unit, pot and steam values are authored estimates.",
+  "de": "Figur von Hand aus dem Archivobjekt standing-adult abgeleitet. Runde 3 (2026-11-20): Gelenkpunkte nach Winter 2009 für eine Frau von 1,69 m in Stoffsneakern (Knöchel durch die Sohle 22 mm angehoben, Lenden-Kreuzbein-Gelenk 30 mm hinter den Hüftgelenken, C7 bei 0,855 H, Kopfgelenk 0,145 m unter dem Scheitel, Schultergelenke bei 0,818 H und 0,31 m auseinander, Fußknochen bis zum Boden unter dem Ballen); der Küchenschrank neu als 600-mm-Kochfeld-Unterschrank nach DIN EN 1116 mit einem Vier-Zonen-Kochfeld von 580 x 510 mm, auf einen Arbeitsabstand von 0,25 m zu den Hüftgelenken gerückt, der 22-cm-Topf auf eigenem Knochen auf der vorderen rechten Zone, der Löffelknochen am Griffpunkt in der Hand; der rechte Arm auf der Gelenkkette für beide Posen und alle acht Schlüsselbilder der Rührschleife so gelöst, dass die Laffe im Topf oder am Mund ist; Körper, Wärmemodell und Skelett je Maßstab von Hand modelliert, die 2D-Zeichnungen als Ansichten des 3D-Körpers neu gezeichnet. Werte von Schrank, Topf und Dampf sind Schätzwerte."
+ },
+ "references": [
+  {
+   "id": "gordon-2014",
+   "citation": "Gordon, C. C. et al. (2014). 2012 Anthropometric Survey of U.S. Army Personnel (ANSUR II): Methods and Summary Statistics. NATICK/TR-15/007 (female head, hand, foot, chest, waist, hip and limb breadths, depths and girths)."
+  },
+  {
+   "id": "din-en-1116",
+   "citation": "DIN EN 1116:2018 Kitchen furniture, co-ordinating sizes for kitchen furniture and kitchen appliances (600 mm module, worktop height and depth, plinth, built-in hob cut-out)."
+  }
+ ],
+ "regions": {
+  "counter": {
+   "en": "Hob base unit, chipboard with laminate",
+   "de": "Kochfeld-Unterschrank, Spanplatte mit Beschichtung"
+  }
+ },
+ "representations": {
+  "50": {
+   "silhouette": {
+    "en": "The three views of the 1:50 body, 34 mm tall: a woman bowed over the pot with short hair, face with nose, lips, eye and brow, hood on the upper back with its rim round the neck and two drawstrings, sweatshirt with kangaroo pocket and rib hem, sleeves with rib cuffs, a relaxed left hand and the right hand closed round the spoon, slim jeans, sneakers with sole, toe cap and laces; the base unit with three drawer fronts and bar handles on a recessed plinth, worktop, hob plate with four zone rings in plan, pot with two ear handles, spoon with handle and bowl.",
+    "de": "Die drei Ansichten des 1:50-Körpers, 34 mm hoch: eine über den Topf gebeugte Frau mit kurzem Haar, Gesicht mit Nase, Lippen, Auge und Braue, Kapuze auf dem oberen Rücken mit ihrem Rand um den Hals und zwei Kordeln, Sweatshirt mit Kängurutasche und Rippsaum, Ärmel mit Rippbündchen, eine entspannte linke Hand und die rechte Hand um den Löffel geschlossen, schmale Jeans, Sneaker mit Sohle, Zehenkappe und Schnürung; der Unterschrank mit drei Schubkastenfronten und Stangengriffen auf zurückgesetztem Sockel, Arbeitsplatte, Kochfeld mit vier Zonenringen im Grundriss, Topf mit zwei Ohrgriffen, Löffel mit Stiel und Laffe."
+   },
+   "retained": {
+    "en": "Every part of the body list as its own shape on its own bone with one id in all three views; sleeves and spoon are solids of revolution and the hands prisms, so the turned arm reads in every pose.",
+    "de": "Jedes Teil der Körperliste als eigene Form auf eigenem Knochen mit einer Kennung in allen drei Ansichten; Ärmel und Löffel sind Rotationskörper und die Hände Prismen, damit der gedrehte Arm in jeder Pose stimmt."
+   },
+   "merged": {
+    "en": "Fingers, thumb and palm pads into one hand outline, knee and jeans hem into the shank, tongue into the shoe, the carcass boards into one unit body, pot shell and water into the pot body.",
+    "de": "Finger, Daumen und Handballen zu einer Handkontur, Knie und Jeanssaum in den Unterschenkel, Zunge in den Schuh, die Korpusplatten zu einem Schrankkörper, Topfwand und Wasser zum Topfkörper."
+   },
+   "omitted": {
+    "en": "Seams, pockets and rivets of the jeans, eyelets, the hollow of the spoon, the touch controls of the hob, the hob tray inside the worktop.",
+    "de": "Nähte, Taschen und Nieten der Jeans, Ösen, die Höhlung des Löffels, die Sensortasten des Kochfelds, die Kochfeldwanne in der Arbeitsplatte."
+   },
+   "thinElements": {
+    "en": "Drawstrings, laces and the mouth are open 0.10 to 0.13 mm strokes at their true place; the 11 mm spoon handle and the 6.5 mm hob plate are real filled shapes, never thickened.",
+    "de": "Kordeln, Schnürung und Mund sind offene Striche von 0,10 bis 0,13 mm an ihrem wahren Ort; der 11 mm dicke Löffelstiel und die 6,5 mm hohe Kochfeldplatte sind echte gefüllte Formen und werden nie verdickt."
+   }
+  },
+  "100": {
+   "silhouette": {
+    "en": "The views of the 1:100 body, 17 mm tall: head with hair, nose and ears, hood, sweatshirt with pocket outline, sleeves, mitten hands with thumbs, the right one a fist on the spoon, jeans, shoes with toe caps; the unit with three drawer fronts, plinth, worktop and hob plate with zone rings, pot with lugs, spoon with bowl.",
+    "de": "Die Ansichten des 1:100-Körpers, 17 mm hoch: Kopf mit Haar, Nase und Ohren, Kapuze, Sweatshirt mit Taschenkontur, Ärmel, Fäustlingshände mit Daumen, die rechte als Faust am Löffel, Jeans, Schuhe mit Zehenkappen; der Schrank mit drei Schubkastenfronten, Sockel, Arbeitsplatte und Kochfeld mit Zonenringen, Topf mit Griffnasen, Löffel mit Laffe."
+   },
+   "retained": {
+    "en": "The bowed head, the hood on the back, the level forearm over the hob, the drawer joints, the zone rings and the handles in plan as detail lines.",
+    "de": "Der gesenkte Kopf, die Kapuze auf dem Rücken, der waagrechte Unterarm über dem Kochfeld, die Schubkastenfugen, die Zonenringe und die Griffe im Grundriss als Detaillinien."
+   },
+   "merged": {
+    "en": "Fingers into mittens, hem and hood rim into the sweatshirt, cuffs into the sleeves, sole and upper into the shoe, the carcass boards into one shell.",
+    "de": "Finger zu Fäustlingen, Saum und Kapuzenrand in das Sweatshirt, Bündchen in die Ärmel, Sohle und Schaft in den Schuh, die Korpusplatten zu einer Schale."
+   },
+   "omitted": {
+    "en": "Eyes, brows, mouth, drawstrings, laces, handle posts.",
+    "de": "Augen, Brauen, Mund, Kordeln, Schnürung, Griffstützen."
+   },
+   "thinElements": {
+    "en": "The 11 mm spoon handle is a filled shape of its true width; the drawer handles are 0.1 mm detail strokes in plan only.",
+    "de": "Der 11 mm dicke Löffelstiel ist eine gefüllte Form in wahrer Breite; die Schubkastengriffe sind nur im Grundriss 0,1-mm-Detailstriche."
+   }
+  },
+  "200": {
+   "silhouette": {
+    "en": "The views of the 1:200 body, 8.6 mm tall: head with hair, hood, sweatshirt, sleeves and forearms, mitten hands, jeans and shoes; the unit as carcass with a front slab on a plinth block under the worktop with the hob inlaid, the pot as a plain vessel, the spoon as a rod.",
+    "de": "Die Ansichten des 1:200-Körpers, 8,6 mm hoch: Kopf mit Haar, Kapuze, Sweatshirt, Ärmel und Unterarme, Fäustlingshände, Jeans und Schuhe; der Schrank als Korpus mit Frontplatte auf einem Sockelblock unter der Arbeitsplatte mit eingelassenem Kochfeld, der Topf als schlichtes Gefäß, der Löffel als Stab."
+   },
+   "retained": {
+    "en": "The forward lean, the bowed head, the reaching right arm, the plinth recess and the worktop overhang.",
+    "de": "Die Vorneigung, der gesenkte Kopf, der ausgreifende rechte Arm, der Sockelrücksprung und der Überstand der Arbeitsplatte."
+   },
+   "merged": {
+    "en": "Face details into the head, pocket and hem into the sweatshirt, the three drawer fronts into one slab, the plinth boards into one block, hob plate and tray into one inlay.",
+    "de": "Gesichtsdetails in den Kopf, Tasche und Saum in das Sweatshirt, die drei Schubkastenfronten zu einer Platte, die Sockelblenden zu einem Block, Kochfeldplatte und Wanne zu einer Einlage."
+   },
+   "omitted": {
+    "en": "Nose, ears, thumbs, handles, zone rings, pot handles, the bowl of the spoon.",
+    "de": "Nase, Ohren, Daumen, Griffe, Zonenringe, Topfgriffe, die Laffe des Löffels."
+   },
+   "thinElements": {
+    "en": "The spoon is a filled shape 12 mm wide, 0.06 mm on paper, never thickened.",
+    "de": "Der Löffel ist eine gefüllte Form von 12 mm Breite, 0,06 mm auf dem Papier, nie verdickt."
+   }
+  },
+  "500": {
+   "silhouette": {
+    "en": "The views of the 1:500 body, 3.4 mm tall: head with hair, trunk, two-part arms with fists, the right arm reaching to the pot, two-part legs with shoes; the unit as one block with the hob as its top slab, the pot as a cylinder.",
+    "de": "Die Ansichten des 1:500-Körpers, 3,4 mm hoch: Kopf mit Haar, Rumpf, zweiteilige Arme mit Fäusten, der rechte Arm reicht zum Topf, zweiteilige Beine mit Schuhen; der Schrank als ein Block mit dem Kochfeld als Deckplatte, der Topf als Zylinder."
+   },
+   "retained": {
+    "en": "The stance at the unit, the bowed head, the reaching arm and the pot on the hob: the activity reads at a glance.",
+    "de": "Der Stand am Schrank, der gesenkte Kopf, der ausgreifende Arm und der Topf auf dem Kochfeld: die Tätigkeit ist auf einen Blick lesbar."
+   },
+   "merged": {
+    "en": "Hood into the trunk, hands into fists, plinth, fronts and worktop into the unit block, pot and water into one cylinder.",
+    "de": "Kapuze in den Rumpf, Hände zu Fäusten, Sockel, Fronten und Arbeitsplatte in den Schrankblock, Topf und Wasser zu einem Zylinder."
+   },
+   "omitted": {
+    "en": "Face, ears, pocket, plinth recess, worktop overhang, handles, zones and the spoon.",
+    "de": "Gesicht, Ohren, Tasche, Sockelrücksprung, Überstand der Arbeitsplatte, Griffe, Zonen und der Löffel."
+   },
+   "thinElements": {
+    "en": "The 12 mm spoon would be 0.02 mm on paper: it is not drawn and never thickened; the pot shape lists the spoon region with its own.",
+    "de": "Der 12 mm dicke Löffel wäre 0,02 mm auf dem Papier: Er wird nicht gezeichnet und nie verdickt; die Topfform führt die Löffelregion neben ihrer eigenen."
+   }
+  }
+ },
+ "volumes": {
+  "50": [
+   {
+    "en": "Body 1:50: a slim woman of 1.69 m in sneakers, stated section by section: a hooded fleece sweatshirt of 16 slices (seat, lumbar bridge, shoulder blades, bust, shoulder slope) with rib hem, kangaroo pocket, the hood lying as a flattened pouch on the upper back, its rolled rim round the neck and two drawstrings; sleeves with deltoid cap, rounded elbow, two folds and rib cuffs; slim jeans over seat, thighs, knees, calves and turned-up hems; canvas sneakers with rubber sole and foxing, upper, tongue, four lace crossings and rubber toe cap; head of twelve slices with jaw, chin, lips, nose, eyes, brows and ears, neck, short cropped hair; hands with palm pads, three-phalanx fingers and thumb, the left one relaxed, the right one closed round the spoon handle. The base unit is built as it is made: two cheeks, bottom, back panel and two rails of 16 mm board, three 19 mm drawer fronts with bar handles on posts, plinth boards, a 38 mm worktop with the hob cut-out, the hob tray in it and the 6.5 mm glass plate with four zone rings and the control strip; the pot is a revolved 1 mm shell with sandwich base and rolled rim, 2.5 litres of water and two ear handles of bent rod; the spoon has a round handle and an oval bowl with its hollow.",
+    "de": "Körper 1:50: eine schlanke Frau von 1,69 m in Sneakern, Schnitt für Schnitt angegeben: ein Kapuzen-Sweatshirt aus Fleece aus 16 Schnitten (Gesäß, Lendenbrücke, Schulterblätter, Brust, Schulterneigung) mit Rippsaum, Kängurutasche, der Kapuze als flachem Beutel auf dem oberen Rücken, ihrem gerollten Rand um den Hals und zwei Kordeln; Ärmel mit Deltakappe, gerundetem Ellbogen, zwei Falten und Rippbündchen; schmale Jeans über Gesäß, Oberschenkeln, Knien, Waden und umgeschlagenen Säumen; Stoffsneaker mit Gummisohle und Rand, Schaft, Zunge, vier Schnürkreuzungen und Gummikappe; Kopf aus zwölf Schnitten mit Kiefer, Kinn, Lippen, Nase, Augen, Brauen und Ohren, Hals, kurz geschnittenes Haar; Hände mit Ballen, dreigliedrigen Fingern und Daumen, die linke entspannt, die rechte um den Löffelstiel geschlossen. Der Unterschrank ist gebaut, wie er gefertigt wird: zwei Wangen, Boden, Rückwand und zwei Traversen aus 16-mm-Platte, drei 19 mm starke Schubkastenfronten mit Stangengriffen auf Stützen, Sockelblenden, eine 38-mm-Arbeitsplatte mit dem Kochfeldausschnitt, darin die Kochfeldwanne und die 6,5 mm hohe Glasplatte mit vier Zonenringen und dem Bedienstreifen; der Topf ist eine gedrehte 1-mm-Schale mit Sandwichboden und Rollrand, 2,5 Litern Wasser und zwei Ohrgriffen aus gebogenem Rundstahl; der Löffel hat einen runden Stiel und eine ovale Laffe mit ihrer Höhlung."
+   },
+   {
+    "en": "Thermal 1:50: nested shells with the declared layer thicknesses: the T-shirt 4.8 mm inside the fleece on trunk and upper arms, briefs 1.2 mm inside the jeans at the seat, socks 4 mm inside the sneakers; the face is the head ring below the hair line with nose, lips, chin, eyes, brows, ears and the neck; the jeans region ends at the hem of the sweatshirt (section face), above it the trunk region covers the body; the unit is the closed envelope of carcass and worktop the room air reaches, with fronts, plinth and handles, the hob the glass plate; outlets under the nose, on the lips, on the crown of the hair and on the water surface in the pot.",
+    "de": "Thermik 1:50: verschachtelte Schalen mit den angegebenen Schichtdicken: das T-Shirt 4,8 mm innerhalb des Fleece an Rumpf und Oberarmen, der Slip 1,2 mm innerhalb der Jeans am Gesäß, Socken 4 mm innerhalb der Sneaker; das Gesicht ist der Kopfring unter dem Haaransatz mit Nase, Lippen, Kinn, Augen, Brauen, Ohren und dem Hals; die Jeansregion endet am Saum des Sweatshirts (Schnittfläche), darüber bedeckt die Rumpfregion den Körper; der Schrank ist die geschlossene Hülle aus Korpus und Arbeitsplatte, die die Raumluft erreicht, mit Fronten, Sockel und Griffen, das Kochfeld die Glasplatte; Auslässe unter der Nase, auf den Lippen, auf dem Scheitel und auf der Wasseroberfläche im Topf."
+   },
+   {
+    "en": "Structure 1:50: the female skeleton stretched to this woman's segment lengths (cranium, facial skeleton, mandible, cervical spine, spine with lordosis and kyphosis and spinous processes, twelve ribs each side, sternum, clavicles, scapulae with spine and glenoid, sacrum, hip bones with pubic and ischial rami, femur with head, neck and trochanter, patella, tibia, fibula, tarsus, metatarsals, phalanges, humerus, ulna, radius, carpus, finger and thumb bones curled as the hands are), joints at the rig joints, masses at the centres of mass; the unit carries through its carcass boards and worktop onto four adjustable legs, the pot through its shell, the spoon through handle and bowl, with a joint at the grip.",
+    "de": "Tragwerk 1:50: das weibliche Skelett, auf die Segmentlängen dieser Frau gestreckt (Hirnschädel, Gesichtsschädel, Unterkiefer, Halswirbelsäule, Wirbelsäule mit Lordose und Kyphose und Dornfortsätzen, zwölf Rippen je Seite, Brustbein, Schlüsselbeine, Schulterblätter mit Gräte und Pfanne, Kreuzbein, Hüftbeine mit Scham- und Sitzbeinästen, Oberschenkelknochen mit Kopf, Hals und Rollhügel, Kniescheibe, Schienbein, Wadenbein, Fußwurzel, Mittelfußknochen, Zehenglieder, Oberarmknochen, Elle, Speiche, Handwurzel, Finger- und Daumenknochen gekrümmt wie die Hände), Gelenke an den Gelenkpunkten, Massen in den Schwerpunkten; der Schrank trägt über Korpusplatten und Arbeitsplatte auf vier Stellfüße ab, der Topf über seine Wand, der Löffel über Stiel und Laffe, mit einem Gelenk am Griffpunkt."
+   }
+  ],
+  "100": [
+   {
+    "en": "Body 1:100, stated anew for 15 mm: sweatshirt of ten slices with pocket and hood, sleeves, mitten hands with thumbs (the right one a fist), jeans in three parts per leg, shoe and toe cap, head with nose and ears, hair, neck; the unit as one hollow carcass shell with three drawer fronts, slender bar handles, plinth boards, worktop with cut-out, hob tray and plate with zone rings; the pot with a simplified wall, water and two lugs, the spoon as a slender handle with a bowl of handle thickness.",
+    "de": "Körper 1:100, neu für 15 mm angegeben: Sweatshirt aus zehn Schnitten mit Tasche und Kapuze, Ärmel, Fäustlingshände mit Daumen (die rechte als Faust), Jeans in drei Teilen je Bein, Schuh und Zehenkappe, Kopf mit Nase und Ohren, Haar, Hals; der Schrank als eine hohle Korpusschale mit drei Schubkastenfronten, schlanken Stangengriffen, Sockelblenden, Arbeitsplatte mit Ausschnitt, Kochfeldwanne und Platte mit Zonenringen; der Topf mit vereinfachter Wand, Wasser und zwei Griffnasen, der Löffel als schlanker Stiel mit einer Laffe in Stieldicke."
+   },
+   {
+    "en": "Thermal and structure 1:100: one surface per region (layers merged), the jeans cut at the sweatshirt hem, the unit as its closed envelope, the four outlets at the size floor; a merged skeleton with six rib hoops, shoulder girdle, pelvis, long bones, fibula, patella and plate hands, and the unit as two cheeks and a bottom under the worktop on four legs.",
+    "de": "Thermik und Tragwerk 1:100: eine Fläche je Region (Schichten zusammengefasst), die Jeans am Sweatshirtsaum geschnitten, der Schrank als geschlossene Hülle, die vier Auslässe an der Größenuntergrenze; ein zusammengefasstes Skelett mit sechs Rippenreifen, Schultergürtel, Becken, Röhrenknochen, Wadenbein, Kniescheibe und Plattenhänden, und der Schrank als zwei Wangen und ein Boden unter der Arbeitsplatte auf vier Füßen."
+   }
+  ],
+  "200": [
+   {
+    "en": "Body 1:200, stated anew for 30 mm: sweatshirt of eight slices with the hood as one mass, two-station limbs, mitten hands, shoe and toe cap, head, hair and neck; the unit as a hollow carcass shell with one front slab, a plinth block, the worktop with the hob as an inlaid block; the pot as a plain hollow vessel with water, the spoon as one slender rod.",
+    "de": "Körper 1:200, neu für 30 mm angegeben: Sweatshirt aus acht Schnitten mit der Kapuze als einer Masse, Gliedmaßen aus zwei bis drei Schnitten, Fäustlingshände, Schuh und Zehenkappe, Kopf, Haar und Hals; der Schrank als hohle Korpusschale mit einer Frontplatte, einem Sockelblock, der Arbeitsplatte mit dem Kochfeld als eingelassenem Block; der Topf als schlichtes hohles Gefäß mit Wasser, der Löffel als ein schlanker Stab."
+   },
+   {
+    "en": "Thermal and structure 1:200: one surface per region and the outlets at 30 mm; a skeleton of bars with three rib hoops, shoulder girdle, pelvis and ball joints, the unit as two cheeks of 30 mm and a bottom under the worktop on four legs.",
+    "de": "Thermik und Tragwerk 1:200: eine Fläche je Region und die Auslässe mit 30 mm; ein Stabskelett mit drei Rippenreifen, Schultergürtel, Becken und Kugelgelenken, der Schrank als zwei Wangen von 30 mm und ein Boden unter der Arbeitsplatte auf vier Füßen."
+   }
+  ],
+  "500": [
+   {
+    "en": "Body 1:500, stated anew for 75 mm: trunk of six slices with the hood merged into the upper back, two-station limbs, fists, shoes, head, hair and neck; the unit as one block whose top 75 mm are the worktop with the hob and the pot as a cylinder; the spoon is below what the scale can show and leaves the body. The model is already minimal for a figure at a hob.",
+    "de": "Körper 1:500, neu für 75 mm angegeben: Rumpf aus sechs Schnitten mit der Kapuze im oberen Rücken aufgegangen, Gliedmaßen aus zwei Schnitten, Fäuste, Schuhe, Kopf, Haar und Hals; der Schrank als ein Block, dessen obere 75 mm die Arbeitsplatte mit dem Kochfeld sind und der Topf als Zylinder; der Löffel liegt unter dem, was der Maßstab zeigen kann, und entfällt im Körper. Das Modell ist für eine Figur am Herd bereits minimal."
+   },
+   {
+    "en": "Thermal and structure 1:500: one surface per region, the hob as the top slab of the block, the spoon kept as a slender rod of its true 12 mm in both lists, the outlets at 75 mm; a stick skeleton of 75 mm bars with one rib hoop and the unit as a portal of two cheeks under a top slab on four legs.",
+    "de": "Thermik und Tragwerk 1:500: eine Fläche je Region, das Kochfeld als Deckplatte des Blocks, der Löffel in beiden Listen als schlanker Stab in wahren 12 mm erhalten, die Auslässe mit 75 mm; ein Strichskelett aus 75-mm-Stäben mit einem Rippenreifen und der Schrank als Portal aus zwei Wangen unter einer Deckplatte auf vier Füßen."
+   }
+  ]
+ }
+}

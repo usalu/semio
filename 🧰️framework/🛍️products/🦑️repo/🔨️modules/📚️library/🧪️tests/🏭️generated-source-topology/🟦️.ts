@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import { generatorContractIdsForOutputPath, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
@@ -8,7 +8,8 @@ import { implementationLeafBasenameFinding } from "../../🔍️discovery/🗂�
 
 type NativePackage = { readonly root: string; readonly metadataPath: string; readonly sourceReference: string };
 type SourceCase = { readonly contractId: string; readonly previousPath: string; readonly supersededPaths?: readonly string[]; readonly canonicalPath: string; readonly fileKindId: string; readonly semanticOwnerKindId: string; readonly inclusion: "ignored" | "tracked"; readonly nativePackage?: NativePackage };
-type Fixture = { readonly schemaVersion: 1; readonly kindLeaves: Readonly<Record<string, string>>; readonly cases: readonly SourceCase[] };
+type NativeConsumer = { readonly packageRoot: string; readonly outputPath: string; readonly target: string };
+type Fixture = { readonly schemaVersion: 1; readonly kindLeaves: Readonly<Record<string, string>>; readonly cases: readonly SourceCase[]; readonly nativeConsumers: readonly NativeConsumer[] };
 
 const repoRoot = getWorkspaceRoot();
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏭️generated-source-topology/🔣️.json"), "utf8")) as Fixture;
@@ -22,6 +23,25 @@ describe("generated source topology", () => {
     expect(new Set(fixture.cases.map(({ canonicalPath }) => canonicalPath)).size).toBe(30);
     const retiredPaths = fixture.cases.flatMap(({ previousPath, supersededPaths = [] }) => [previousPath, ...supersededPaths]);
     expect(new Set(retiredPaths).size).toBe(retiredPaths.length);
+  });
+
+  test("native crates schedule the producer of each generated source they mount", () => {
+    const contracts = loadCatalogTaxonomy().generatorContracts;
+    for (const { packageRoot, outputPath, target } of fixture.nativeConsumers) {
+      const manifest = Bun.TOML.parse(readFileSync(join(repoRoot, packageRoot, "Cargo.toml"), "utf8")) as { lib: { path: string } };
+      const entry = resolve(repoRoot, packageRoot, manifest.lib.path);
+      const source = readFileSync(entry, "utf8");
+      const mounts = [...source.matchAll(/^#\[path = "([^"]+)"\]/gm)].map((match) => resolve(dirname(entry), match[1]!));
+      const output = resolve(repoRoot, outputPath);
+      expect(mounts).toContain(output);
+      const oracle = Object.values(contracts).filter((contract) => contract.outputRoots.some(({ path }) => {
+        const root = resolve(repoRoot, path);
+        return output === root || output.startsWith(root + sep);
+      }));
+      expect(oracle.map((contract) => contract.target)).toEqual([target]);
+      const scheduled = Object.values(contracts).filter((contract) => contract.nativeConsumers?.includes(packageRoot));
+      expect(scheduled.map((contract) => contract.target), packageRoot).toContain(target);
+    }
   });
 
   test("every persistent source is semantic, kind-only, owned and regenerated", () => {

@@ -125,7 +125,9 @@
         "maximumInputFiles": 32,
         "index": ".semio-sdk-source.json",
         "chunkBytes": 65536,
-        "continuationEntries": 128
+        "continuationEntries": 128,
+        "captureProgressPrefix": "nx:source-index:",
+        "verifyProgressPrefix": "nx:source-verification:"
       }
     },
     "RuntimeEnvironment": {
@@ -162,6 +164,33 @@
         },
         "maximumFullParentWalks": {
           "const": 1
+        }
+      }
+    },
+    "SharedFileIdentityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device",
+        "source",
+        "destination",
+        "accepted"
+      ],
+      "properties": {
+        "device": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "destination": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "accepted": {
+          "type": "boolean"
         }
       }
     },
@@ -327,6 +356,7 @@
           "minimum": 128,
           "maximum": 2048
         },
+        "directories": {"type": "integer", "minimum": 0, "maximum": 256},
         "fault": {
           "enum": [
             "none",

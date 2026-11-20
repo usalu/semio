@@ -6,16 +6,16 @@
 //! (Warning) when the transform moves none of them; and `mutation.partial` (Warning), addressed at the ones that do
 //! not exist or cannot follow the transform, when some are skipped.
 use super::MoveSelection;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidPatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodePatch;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesModification;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsModification;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodePatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodesModification;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSolidsModification;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::node_breach;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::node_breach;
+use semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::solid_breach;
 use std::collections::HashSet;
 
 //#region 🔖️Diff

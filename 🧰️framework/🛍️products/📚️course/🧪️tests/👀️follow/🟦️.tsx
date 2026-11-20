@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen, within } from "@te
 import { computeAccessibleName } from "dom-accessibility-api";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { evolveFollow, followStep, publicPresenceRun, followedCourseState, usePresenceCapture, usePresenceViewport, type FollowEvent } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/👀️follow/🟦️.tsx";
+import { CameraRelay, evolveFollow, followStep, publicPresenceRun, followedCourseState, usePresenceCapture, usePresenceViewport, type FollowEvent } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/👀️follow/🟦️.tsx";
 import { EMPTY_PRESENCE_VIEW, FOLLOW_DEPARTURE_GRACE_MS, FOLLOW_REJOIN_GRACE_MS, Dialog, FollowProvider, LeaderboardCard, PresenceFooter, PresenceProvider, followedPreferences, initialCourseState, localStore, memoryStorageOrigin, observerSession, courseText, readPreferences, useFollow, type CoursePresenceSnapshot, type CourseSession, type RoomStatus } from "@semio-tech/course-react";
 import { RunScreen } from "@semio-tech/course-react/modules/run/.tsx";
 import type { Leaderboard, LeaderboardRow, Place, PresencePresentation, RunView, Sheet } from "@semio-tech/course";
@@ -30,6 +30,33 @@ function swipeViewport(following: boolean): { readonly root: HTMLElement; readon
   for (const cell of ignored) for (const [name, value] of Object.entries({ scrollHeight: 10_000, clientHeight: 100, scrollWidth: 10_000, clientWidth: 100, scrollTop: 9900, scrollLeft: 9900 })) Object.defineProperty(cell, name, { configurable: true, writable: true, value });
   return { root, cells, ignored };
 }
+
+describe("camera relay", () => {
+  const input = (view?: PresencePresentation) => ({ course: "c", self: undefined, at: undefined, active: true, ...(view === undefined ? {} : { view }) });
+  it("shares a moved camera with the latest presence input without any render, and carries it into the next input", () => {
+    const update = vi.fn();
+    const relay = new CameraRelay({ update });
+    const view = { locale: "en" } as PresencePresentation;
+    relay.publish({ x: 0.1, y: 0.2 });
+    expect(update).not.toHaveBeenCalled();
+    relay.adopt(input(view));
+    expect(update).toHaveBeenLastCalledWith(input({ ...view, camera: { x: 0.1, y: 0.2 } }));
+    relay.publish({ x: 0.5, y: 0.6 });
+    expect(update).toHaveBeenLastCalledWith(input({ ...view, camera: { x: 0.5, y: 0.6 } }));
+    relay.adopt(input({ ...view, locale: "de" } as PresencePresentation));
+    expect(update).toHaveBeenLastCalledWith(input({ ...view, locale: "de", camera: { x: 0.5, y: 0.6 } }));
+  });
+  it("never shares a camera while observing, when the input carries no view", () => {
+    const update = vi.fn();
+    const relay = new CameraRelay({ update });
+    relay.adopt(input());
+    update.mockClear();
+    relay.publish({ x: 0.3, y: 0.3 });
+    expect(update).not.toHaveBeenCalled();
+    relay.adopt(input());
+    expect(update).toHaveBeenLastCalledWith(input());
+  });
+});
 
 describe("presentation capture budget", () => {
   for (const vector of vectors.capture) it(`captures latest camera under the 15 Hz presence budget: ${vector.id}`, () => {
@@ -200,6 +227,14 @@ describe("ephemeral following", () => {
     expect(answer).not.toHaveBeenCalled();
     expect(refreshCrowd).not.toHaveBeenCalled();
     expect(observing.now()).toBe(42);
+  });
+  it("hands the leaderboard poll a subscription it can release, listening to nothing", () => {
+    const revived = vi.fn(() => () => undefined);
+    const session = { now: () => 42, revived } as unknown as CourseSession;
+    const release = observerSession(session, () => initialCourseState({ introduced: true, runs: {} })).revived(() => undefined);
+    expect(release).toBeTypeOf("function");
+    expect(() => release()).not.toThrow();
+    expect(revived).not.toHaveBeenCalled();
   });
   it("uses the peer's measured layout when no explicit device choice was published", () => {
     const own = { ...readPreferences(localStore(memoryStorageOrigin().tab(), "follow")), device: "tablet" as const };

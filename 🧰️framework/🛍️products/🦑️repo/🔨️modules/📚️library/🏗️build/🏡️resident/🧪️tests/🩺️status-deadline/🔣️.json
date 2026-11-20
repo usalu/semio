@@ -1,0 +1,37 @@
+[
+  {
+    "mode": "reply",
+    "result": "answered",
+    "signals": 0
+  },
+  {
+    "mode": "absent",
+    "result": "absent",
+    "signals": 0
+  },
+  {
+    "mode": "silent",
+    "result": "timeout",
+    "signals": 0
+  },
+  {
+    "mode": "cancel",
+    "result": "parent",
+    "signals": 0
+  },
+  {
+    "mode": "retire-unknown",
+    "result": "timeout",
+    "signals": 0
+  },
+  {
+    "mode": "retire-silent",
+    "result": "timeout",
+    "signals": 1
+  },
+  {
+    "mode": "command-silent",
+    "result": "command-timeout",
+    "signals": 0
+  }
+]

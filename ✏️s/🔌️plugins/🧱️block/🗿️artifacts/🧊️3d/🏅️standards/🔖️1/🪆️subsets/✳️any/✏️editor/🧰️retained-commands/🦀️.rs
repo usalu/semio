@@ -108,6 +108,10 @@ impl Block3dWindowPreviewWork {
 }
 
 impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -207,4 +211,3 @@ impl ArtifactOwnedToolJobFactory for Block3dRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(Block3dWindowPreviewWork);

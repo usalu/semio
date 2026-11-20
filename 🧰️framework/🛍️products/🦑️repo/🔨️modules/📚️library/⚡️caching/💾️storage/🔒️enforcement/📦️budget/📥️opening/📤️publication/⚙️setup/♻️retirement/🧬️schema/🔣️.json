@@ -6,6 +6,7 @@
         "maximumRetirements": 4096,
         "maximumPlanBytes": 67108864,
         "maximumBusyWaitMilliseconds": 120000,
+        "maximumBindingsReplans": 3,
         "progressResource": "dependencies:obsolete-retired",
         "returns": "physical-generation-prefixes",
         "unknown": "refuse-before-effects",

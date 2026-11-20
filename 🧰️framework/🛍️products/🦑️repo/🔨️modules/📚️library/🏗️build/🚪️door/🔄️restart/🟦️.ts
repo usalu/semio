@@ -1,6 +1,7 @@
 import {runWithStaleReexecV1} from "../../🧷️format-stamps/🔄️reexec/🟨️.mjs";
 import {useProcessWideImplementationPinV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import {graphQueueYieldPolicyV1,waitGraphQueueYieldV1} from "../../🕸️graph/🕰️generations/🛌️yield/🟨️.mjs";
+import {settleRestartCustodiesV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 
@@ -15,6 +16,11 @@ export async function runBuildWithRestartV1(run:()=>Promise<void>,argv:readonly 
  if(!service)useProcessWideImplementationPinV1();
  const outermost=environment[invocationEnvironmentV1]===undefined,ticket=graphQueueYieldPolicyV1().environment.ticket;
  if(!outermost||service)delete environment[ticket];else if(environment[ticket]===undefined)environment[ticket]=join(tmpdir(),"semio-graph-yield-"+process.pid+".json");
- const outcome=await runWithStaleReexecV1(run,{environment,outermost,yielded:next=>waitGraphQueueYieldV1({environment:next})});
+ const outcome=await runWithStaleReexecV1(run,{environment,outermost,yielded:async next=>{
+  if(next[ticket]===undefined)return undefined;
+  const waiting=(await import("../../🌡️host-capacity/🎛️control/🟦️.ts")).createCapacityControlV1(undefined,"graph-yield-wait-cancelled");
+  try{return await waitGraphQueueYieldV1({environment:next,signal:waiting.control.signal,onAccepted:settleRestartCustodiesV1});}
+  finally{waiting.dispose();}
+ }});
  if(outcome.status!=="completed")process.exit(outcome.code);
 }

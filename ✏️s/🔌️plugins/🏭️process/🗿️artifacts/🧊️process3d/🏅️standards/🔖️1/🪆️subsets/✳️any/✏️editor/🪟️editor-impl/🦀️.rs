@@ -14,7 +14,7 @@ pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, con
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
     let windows = semio_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
-        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility, selected_ids).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, config.resolved_up_to, labels, &windows).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_plugin::built_to_component_tree),
@@ -88,12 +88,13 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
-        Process3dBoundedProofs::bounded_first_step_tool_proofs().into_iter().chain(Process3dResumableProofs::bounded_first_step_tool_proofs()).collect()
+        Process3dBoundedProofs::bounded_first_step_tool_proofs().into_iter().chain(Process3dModelImportProofs::bounded_first_step_tool_proofs()).chain(Process3dResumableProofs::bounded_first_step_tool_proofs()).collect()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
-        registry.register(Process3dBoundedCommandJobFactory::new(&controller_id))?;
+        registry.register(Process3dBoundedCommandJobFactory::<false>::new(&controller_id))?;
+        registry.register(Process3dModelImportJobFactory::new(&controller_id))?;
         registry.register(Process3dResumableCommandJobFactory::new(&controller_id))
     }
 
@@ -222,8 +223,8 @@ impl ArtifactEditor for Process3dPlayApp {
                 }
                 let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
                 match semio_s_artifact_process_process3d_io::import_process3d_model("geometry-in.step", &data_url) {
-                    Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
-                    None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
+                    Ok(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
+                    Err(error) => Err(MediaError::Payload("geometry:in".into(), error.to_string())),
                 }
             }
             _ => Err(MediaError::NotImplemented),
@@ -316,7 +317,15 @@ impl ArtifactEditor for Process3dPlayApp {
                 distance: number_field("distance").unwrap_or_default(),
                 face_extent: vec2_field("faceExtent").or_else(|| vec2_field("face_extent")),
             })),
-            "importModelFile" => Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: string_field("name").unwrap_or_default(), payload: string_field("payload").unwrap_or_default() })),
+            "importModelFile" => {
+                use semio_s_artifact_process_process3d_io::{PROCESS3D_MODEL_DATA_URL_BYTES, Process3dImportError};
+                let name = string_field("name").unwrap_or_default();
+                let payload = string_field("payload").unwrap_or_default();
+                if payload.len() > PROCESS3D_MODEL_DATA_URL_BYTES {
+                    return Err(process3d_action_fault(action, Process3dImportError::InputTooLarge.to_string()));
+                }
+                Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name, payload }))
+            },
             "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
             "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
             "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera { position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]), target: vec3_field("target").unwrap_or_default(), fov: number_field("fov").unwrap_or(45.0) })),
@@ -396,21 +405,19 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty
     /// `"geometry"` domain, so the destructive row is withheld.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        process3d_context_menu_items(registry, view_state, &[])
+    fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        process3d_context_menu_items(registry, view_state, doc.snapshot, &[])
     }
 
-    /// 📱️ `removeSelectedStep` appears only for a real `"geometry"` selection — the authoritative
-    /// framework-owned one, since `ContextMenuRequest.surface.selection` only carries what the clicked
-    /// surface itself painted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    /// 📱️ The menu resolves removal against the live framework-owned geometry selection.
     fn context_menu_with_request_context(
         _request: &ContextMenuRequest,
-        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
         view_state: &semio_plugin::ViewModel,
         interaction: &semio_plugin::app::InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        process3d_context_menu_items(registry, view_state, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)
+        process3d_context_menu_items(registry, view_state, doc.snapshot, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)
     }
 }

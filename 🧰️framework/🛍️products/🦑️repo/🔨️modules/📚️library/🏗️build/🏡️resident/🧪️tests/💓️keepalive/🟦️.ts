@@ -1,3 +1,5 @@
+import {createGovernorV1} from "../../🏛️service/🚦️governor/🟨️.mjs";
+import waitCase from "./🔣️.json";
 /** 💓️ Contract: no wait for the graph service is unbounded and silent. A service that holds a request keeps it audible (a keepalive frame while a job holds the client or before it is attached), a request the service lost (a reply that never comes) ends on the client with the bilingual failure `silent` after the declared silence and is asked again, and a keepalive never lets a lost request look alive.
  * @see ../../🏛️service/🌐️host/🟨️.mjs
  * @see ../../🚪️client/🛰️plan/🟨️.mjs */
@@ -72,3 +74,74 @@ test("a service that holds a slow request keeps it audible, so a short silence d
  expect(texts[0]).toContain("holds this request");expect(texts[0]).toContain("hält diese Anfrage");
  await service.stop("test");
 },30000);
+
+test("the first and joined clients learn the real slot wait before the slot opens",async()=>{
+ const {env}=environmentOf("admission"),implementation=createHash("sha256").update("queue-replay").digest("hex");
+ const runtime=hostEndpointsV1(implementation,env),root=workspaceOf("admission");
+ const admission=createGovernorV1({maximumInFlight:1,maximumQueued:8});
+ const release=await admission.enter("occupied",new AbortController().signal);
+ let finish!:()=>void;
+ const loading=new Promise<void>(resolve=>{finish=resolve;});
+ const planner=createGraphPlannerPortV1({identify:async()=>"q".repeat(64),loadGraph:async()=>{await loading;return JSON.parse(readFileSync(GRAPH,"utf8"));}});
+ const service=createHostServiceV1({runtime,implementation,ports:{planner,admission},policy:{requestKeepaliveMilliseconds:80}});
+ const frames:any[][]=[[],[]];
+ const ask=(i:number)=>requestPlanV1({root,implementation,targets:["app:test"],agent:"a",language:"en",environment:env,onProgress:(frame:any)=>frames[i]!.push(frame)});
+ const asked:Promise<any>[]=[];
+ try{
+  await service.start();asked.push(ask(0));
+  for(let i=0;i<150&&admission.queued!==1;i++)await Bun.sleep(10);
+  expect(admission.queued).toBe(1);
+  asked.push(ask(1));
+  for(let i=0;i<150&&!frames.every(group=>group.some(f=>f.phase===waitCase.phase));i++)await Bun.sleep(10);
+  for(const group of frames){
+   const message=group.find(f=>f.phase===waitCase.phase)?.message;
+   expect(message?.en).toContain(waitCase.en);expect(message?.de).toContain(waitCase.de);expect(message?.en).toContain(String(waitCase.ahead));
+  }
+  release();
+  for(let i=0;i<150&&!frames[0]!.some(f=>f.phase==="load");i++)await Bun.sleep(10);
+  expect(frames[0]!.some(f=>f.phase==="load")).toBe(true);
+  frames.push([]);asked.push(ask(2));
+  for(let i=0;i<150&&!frames[2]!.some(f=>f.phase==="load");i++)await Bun.sleep(10);
+  expect(frames[2]!.some(f=>f.phase==="load")).toBe(true);
+  expect(frames[2]!.some(f=>f.phase===waitCase.phase)).toBe(false);
+  finish();
+  for(const answer of await Promise.all(asked))expect(answer.reply.t).toBe("plan-reply");
+ }finally{
+  release();finish();await Promise.allSettled(asked);await service.stop("test");
+ }
+},15000);
+
+for(const row of waitCase.beforeAdmission)test("quiet startup identifies the active planner operation "+row.method,async()=>{
+ const {env}=environmentOf(row.method),implementation=createHash("sha256").update(row.method).digest("hex");
+ const runtime=hostEndpointsV1(implementation,env),root=workspaceOf(row.method);
+ let release!:()=>void;
+ const gate=new Promise<void>(resolve=>{release=resolve;});
+ const inner=createGraphPlannerPortV1({loadGraph:async()=>JSON.parse(readFileSync(GRAPH,"utf8"))});
+ const planner={...inner,identify:async()=>{if(row.method==="identify")await gate;return "i".repeat(64);},
+  contentDigest:async()=>{if(row.method==="contentDigest")await gate;return "d".repeat(64);},bind:({reply}:any)=>reply};
+ const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{requestKeepaliveMilliseconds:80}});
+ const frames:any[]=[];
+ await service.start();
+ const answer=requestPlanV1({root,implementation,targets:["app:test"],agent:"a",language:"en",environment:env,onProgress:(frame:any)=>frames.push(frame)});
+ try{
+  for(let i=0;i<150&&!frames.some(f=>f.phase==="alive");i++)await Bun.sleep(10);
+  const alive=frames.find(f=>f.phase==="alive");
+  expect(alive?.message.en).toContain(row.en);expect(alive?.message.de).toContain(row.de);
+  expect([alive.done,alive.total]).toEqual([0,0]);
+ }finally{release();try{await answer;}finally{await service.stop("test");}}
+},15000);
+
+test("a reset during endpoint connection has the same availability outcome as a reset after connection",async()=>{
+ const modulePath=new URL("../../🚪️client/🛰️plan/🟨️.mjs",import.meta.url).href;
+ const fixture=waitCase.connectErrors.map(([code])=>code);
+ const script=`import {Socket} from "node:net";
+ let code;
+ Socket.prototype.connect=function(){queueMicrotask(()=>this.emit("error",Object.assign(Error(code),{code})));return this;};
+ const {requestHostStatusV1}=await import(${JSON.stringify(modulePath)});
+ const outcomes=[];
+ for(code of ${JSON.stringify(fixture)}){try{const status=await requestHostStatusV1({implementation:"a".repeat(64)});outcomes.push(status??"unavailable");}catch(error){outcomes.push(error.code);}}
+ console.log(JSON.stringify(outcomes));`;
+ const child=Bun.spawn([process.execPath,"-e",script],{env:environmentOf("reset").env,stdout:"pipe",stderr:"pipe"});
+ const [output,errors,exit]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
+ expect(exit,errors).toBe(0);expect(JSON.parse(output.trim())).toEqual(waitCase.connectErrors.map(([,outcome])=>outcome));
+});

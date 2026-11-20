@@ -89,7 +89,7 @@ async fn a_huge_group_stays_closed_and_an_opened_one_materialises_only_the_reque
     let (mut snapshot, inference) = demo();
     let template = snapshot.walls["w-south"].clone();
     for index in 0..600 {
-        snapshot.walls.insert(format!("bulk-{index:04}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
+        snapshot.walls.cold_insert(format!("bulk-{index:04}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
     }
     assert_eq!(text(&snapshot, &inference, Locale::En).matches("Bulk ").count(), 0, "a group over the open limit is not built until the host opens it");
     let group = ["bim-outliner.model", "site-1", "bldg-1", "st-ground", "st-ground::wall"].join(semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR);

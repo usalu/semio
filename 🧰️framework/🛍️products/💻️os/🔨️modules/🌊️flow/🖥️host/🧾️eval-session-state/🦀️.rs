@@ -2,67 +2,16 @@
 
 use super::*;
 
-/// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
-pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
-
-/// ⏱️ Wall-clock ceiling for ONE `flowEvalTick` dag walk, in microseconds.
-///
-/// 🚨️ [`FLOW_EVAL_TICK_STEP_BUDGET`] alone cannot bound a tick: it counts NODES, and a seven-node
-/// graph is far under 512 however expensive each node is. The reactor's own 8 ms budget cannot
-/// bound it either — `run_until_deadline` checks its deadline BETWEEN two tasks' `step()` calls,
-/// never inside one, and `flowEvalTick` is a plain synchronous `fn`, so once the executor enters it
-/// nothing can interrupt it. That is how one browser turn ran for 3.5-18.4 s against an 8 ms budget
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §1.3).
-///
-/// 🎚️ Sized at three quarters of [`semio_framework_job::INTERACTIVE_STEP_CEILING_US`] so the rest of
-/// the turn — publication, retirement, the effect the tick returns — still fits the same 8 ms the
-/// dag walk is being held to, and so a tick that yields here has not ALREADY broken the contract it
-/// exists to keep. A walk always dispatches at least one node before the deadline can stop it
-/// ([`neural::EvalStepBudget::exhausted`]), so a graph whose single cheapest node exceeds the
-/// ceiling still converges — one node per tick — instead of re-arming forever with no progress.
-pub const FLOW_EVAL_TICK_ELAPSED_CEILING_US: u64 = semio_framework_job::INTERACTIVE_STEP_CEILING_US / 4 * 3;
-
-/// ⏱️ Wall a guest turn must still have UNSPENT of [`FLOW_EVAL_TICK_ELAPSED_CEILING_US`] before a
-/// fold may run the next wave of its chain inline rather than park it for a host round trip.
-///
-/// 🔁️ A fold that continues inline saves a whole `flowEvalResolve` → `flowEvalTick` pair — measured
-/// at 1 391 ms on React (`📓️react-hop-latency-2026-09-14.md` §2.1) — but it spends that saving
-/// inside the answer's OWN turn, on top of whatever the fold already cost. Without a reserve the
-/// two additions are exactly how an 8 ms hold becomes a 14 ms one. A third of the allowance is the
-/// floor a walk needs to be worth starting at all: `EvalStepBudget::exhausted` always dispatches at
-/// least one node before a deadline can stop it, so a continuation admitted with a sliver left
-/// would overrun by one whole operator rather than yield (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub const FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US: u64 = FLOW_EVAL_TICK_ELAPSED_CEILING_US / 3;
-
-/// ⏱️ The budget ONE `flowEvalTick` dag walk runs under: [`FLOW_EVAL_TICK_STEP_BUDGET`] nodes,
-/// preempted after [`FLOW_EVAL_TICK_ELAPSED_CEILING_US`] on the process clock. Falls back to the
-/// node count alone when no clock is installed (bare wasm), which is the pre-existing behaviour.
-///
-/// 🔁️ `turn_started_us` is when the GUEST TURN this walk belongs to began. A walk that opens its own
-/// turn passes `None` and gets the whole allowance; one running inline inside a fold's turn passes
-/// that turn's start and shares the SAME deadline, which is the entire reason an inline continuation
-/// cannot stretch the interactive hold however many waves it chains.
-pub fn flow_eval_tick_budget(turn_started_us: Option<u64>) -> EvalStepBudget {
-    let started_us = turn_started_us.or_else(semio_framework_job::default_now_us);
-    match started_us {
-        Some(started_us) => EvalStepBudget::until(FLOW_EVAL_TICK_STEP_BUDGET, semio_framework_job::default_now_us, started_us.saturating_add(FLOW_EVAL_TICK_ELAPSED_CEILING_US)),
-        None => EvalStepBudget::dispatches(FLOW_EVAL_TICK_STEP_BUDGET),
-    }
+/// 🧊️ Canonical tessellation and the detail level that produced it.
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
+pub struct FlowPreviewMesh {
+    pub tolerance: f64,
+    pub mesh: MeshData,
 }
 
-/// ⏱️ Whether a turn that began at `turn_started_us` and is now at `now_us` still has
-/// [`FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US`] of its evaluation allowance left — the WALL half of
-/// [`FlowEvalSession::inline_continuation_admitted`], pure in both instants so a law can state the
-/// park boundary in microseconds instead of racing a clock.
-///
-/// 🕰️ An uninstrumented process (no clock at all, bare wasm) admits the continuation: the node
-/// budget still bounds the walk, and that is precisely the fallback [`flow_eval_tick_budget`] takes.
-pub fn flow_eval_inline_continuation_fits(turn_started_us: Option<u64>, now_us: Option<u64>) -> bool {
-    match (turn_started_us, now_us) {
-        (Some(turn_started_us), Some(now_us)) => now_us.saturating_sub(turn_started_us).saturating_add(FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US) <= FLOW_EVAL_TICK_ELAPSED_CEILING_US,
-        _ => true,
-    }
-}
+
+pub use semio_os_flow_host_source::tick_budget::{flow_eval_inline_continuation_fits, flow_eval_tick_budget, FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US, FLOW_EVAL_TICK_ELAPSED_CEILING_US, FLOW_EVAL_TICK_STEP_BUDGET};
 
 /// 🚦 Per-widget evaluation state for flow graph chrome (not persisted in config).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -122,6 +71,8 @@ pub struct FlowEvalSessionState {
     /// not reached. Advanced with the incremental baseline, under the same `remaining.is_empty()`
     /// condition and never apart from it.
     pub converged_eval_json: String,
+    /// 🎞️ The displaced converged evaluation supplies channel provenance while newer meshes arrive.
+    pub previous_converged_eval_json: String,
     pub status_json: String,
     pub(super) tick_scheduled: bool,
     /// 🔒️ One arming latch per preview window this session publishes into, keyed by
@@ -133,7 +84,7 @@ pub struct FlowEvalSessionState {
     pub window_tick_latches: HistoryFoldIndex<u64, FlowEvalWindowTickLatch>,
     pub live_geometry_handles: HistoryFoldIndex<String, ()>,
     /// 🧊️ Canonical native Mesh16 ownership lands only through the original paid receiver.
-    pub preview_mesh_by_handle: HistoryFoldIndex<String, MeshData>,
+    pub preview_mesh_by_handle: HistoryFoldIndex<String, FlowPreviewMesh>,
     /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`. A
     /// request is removed the moment its answer is folded, even a partial one — the continuation
     /// re-admits it on the next tick.
@@ -146,6 +97,7 @@ pub struct FlowEvalSessionState {
     /// 📈 Progress of every tessellation this session has admitted, keyed by `nodeHash`. Plain
     /// `Copy` rows — no heap, so retirement is a single take.
     pub tessellate_progress_by_hash: HistoryFoldIndex<u64, PreviewTessellateProgress>,
+    pub(super) preview_tessellate_tolerance: Option<f64>,
     /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
     pub preview_diagnostics_by_handle: HistoryFoldIndex<String, String>,
     /// 🔢 Which replacement of the process-wide flow extension registry every result this session
@@ -319,9 +271,10 @@ struct SessionResetFields {
     invocations:Vec<FlowInvocationEntry>,
     painted: String,
     pub(super) converged: String,
+    previous_converged: String,
     status: String,
     pub handles: HistoryFoldIndex<String, ()>,
-    meshes: HistoryFoldIndex<String, MeshData>,
+    meshes: HistoryFoldIndex<String, FlowPreviewMesh>,
     pub(super) diagnostics: HistoryFoldIndex<String, String>,
     pub(super) pending: HistoryFoldIndex<u64, String>,
     tessellate_handles: HistoryFoldIndex<u64, String>,
@@ -345,18 +298,18 @@ impl SessionResetSources {
     pub(super) fn take(state:&mut FlowEvalSessionState,reset_latches:bool)->Self {
         Self{eval:state.eval_json.take(),baseline:FlowBaselineLeases{snapshot:state.previous_snapshot.take(),channels:state.previous_channels.take(),current:None},fields:SessionResetFields{
             invocation_growth:state.invocation_origin_growth.take(),invocations:std::mem::take(&mut state.invocation_origins),
-            painted:std::mem::take(&mut state.painted_eval_json),converged:std::mem::take(&mut state.converged_eval_json),status:std::mem::take(&mut state.status_json),
+            painted:std::mem::take(&mut state.painted_eval_json),converged:std::mem::take(&mut state.converged_eval_json),previous_converged:std::mem::take(&mut state.previous_converged_eval_json),status:std::mem::take(&mut state.status_json),
             handles:std::mem::take(&mut state.live_geometry_handles),meshes:std::mem::take(&mut state.preview_mesh_by_handle),diagnostics:std::mem::take(&mut state.preview_diagnostics_by_handle),
             pending:std::mem::take(&mut state.pending_tessellate_by_hash),tessellate_handles:std::mem::take(&mut state.tessellate_handle_by_hash),
             tessellation:std::mem::take(&mut state.tessellate_progress_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash),fault:state.extension_evaluate_fault.take(),latches:reset_latches.then(||std::mem::take(&mut state.window_tick_latches)),retention:state.preview_retention.take(),
         }}
     }
     pub(super) fn restore(self,state:&mut FlowEvalSessionState){
-        let Self{eval,baseline:FlowBaselineLeases{snapshot,channels,current},fields:SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,tessellation,evaluation,fault,latches,retention}}=self;
+        let Self{eval,baseline:FlowBaselineLeases{snapshot,channels,current},fields:SessionResetFields{invocation_growth,invocations,painted,converged,previous_converged,status,handles,meshes,diagnostics,pending,tessellate_handles,tessellation,evaluation,fault,latches,retention}}=self;
         assert!(current.is_none(),"original session reset has no active Host channel lease");
         state.eval_json=eval;state.previous_snapshot=snapshot;state.previous_channels=channels;state.preview_retention=retention;
         state.invocation_origin_growth=invocation_growth;state.invocation_origins=invocations;
-        state.painted_eval_json=painted;state.converged_eval_json=converged;state.status_json=status;
+        state.painted_eval_json=painted;state.converged_eval_json=converged;state.previous_converged_eval_json=previous_converged;state.status_json=status;
         state.live_geometry_handles=handles;state.preview_mesh_by_handle=meshes;state.preview_diagnostics_by_handle=diagnostics;
         state.pending_tessellate_by_hash=pending;state.tessellate_handle_by_hash=tessellate_handles;
         state.tessellate_progress_by_hash=tessellation;state.eval_progress_by_hash=evaluation;state.extension_evaluate_fault=fault;if let Some(latches)=latches{state.window_tick_latches=latches;}
@@ -380,7 +333,7 @@ impl SessionPreviewCancellationSources {
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) enum SessionRetentionRow {
-    Mesh((String,MeshData)),Diagnostic((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
+    Mesh((String,FlowPreviewMesh)),Diagnostic((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
@@ -401,7 +354,7 @@ pub(super) enum SessionCollectionOwner {
     SourceLease(SharedOwner<String>),
     Text(String),
     Handles(HistoryFoldIndex<String, ()>),
-    Meshes(HistoryFoldIndex<String, MeshData>),
+    Meshes(HistoryFoldIndex<String, FlowPreviewMesh>),
     Diagnostics(HistoryFoldIndex<String, String>),
     Pending(HistoryFoldIndex<u64, String>),
     Latches(HistoryFoldIndex<u64, FlowEvalWindowTickLatch>),

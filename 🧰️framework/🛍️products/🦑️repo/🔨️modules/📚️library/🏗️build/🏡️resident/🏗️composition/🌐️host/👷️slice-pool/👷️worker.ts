@@ -1,7 +1,9 @@
 /** 👷 One slice load in its own process (`🧵️process`): the body of the host service's `loadSlice` (the graph of one request's selection under the service's own birth) so that its synchronous phases never block the service's event loop. */
 import{errorMessageV1,parentPort,workerData}from"./🧵️process/🟨️.mjs";
+import{exitIfStaleImplementationV1,isHalfEditedModuleLoadV1}from"../../../../🧷️format-stamps/🟨️.mjs";
 import{heapStats}from"bun:jsc";
 import{graphQueueYieldPolicyV1}from"../../../../🕸️graph/🕰️generations/🛌️yield/🟨️.mjs";
+import{READY_SLICE_REPORT_POLICY_V1}from"../../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
 /** 🛌 A slice worker is no front door: the yield ticket of the command that started the service (inherited through the service environment) is not read by anyone, so a worker that offered it left the graph queue with the restart code every 15 s and the pool restarted it for ever as if the code kept changing. Without the ticket it waits for the peer build in place and keeps reporting.
  * @see ../../../../🕸️graph/🕰️generations/🛌️yield/🟨️.mjs `graphQueueYieldsV1` */
 delete process.env[graphQueueYieldPolicyV1().environment.ticket];
@@ -13,6 +15,7 @@ useProcessWideImplementationPinV1();
 const routing=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
 const{loadBuildInvocationGraphV1}=await import("../../../../🧭️invocation/🕸️graph/🟦️.ts");
 const{withRepositoryCompilerRuntimeEntriesV1}=await import("../../../../📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts");
+const{withResidentSliceNativeRecheckV1}=await import("./🪟️recheck/🟦️.ts");
 const{publishBuildBootstrapSourcesV1}=await import("../../../../🚀️bootstrap/🟦️.ts");
 const{buildBackendCompactGraphV1,buildBackendDefaultIdV1}=await import("../../../../🔌️backends/🟦️.ts"),{loadBuildBackendV1}=await import("../../../../🔌️backends/🚚️loading/🟦️.ts");
 const{sealedGenerationPinV1}=await import("../../../../🕸️graph/🟦️.ts"),{onGenerationProgressV1}=await import("../../../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs");
@@ -39,13 +42,19 @@ onPlanStopV1(event=>{report.noteSliceReportStopV1(event);reporter.now("plan-stop
 const{settleGraphMemoryV1}=await import("../../../../🧠️memory/🧽️settle/🟨️.mjs");
 const{useSliceCeilingGateV1}=await import("../../../../🧠️memory/🦶️footprint/🟨️.mjs");
 useSliceCeilingGateV1();
-process.on("message",(message:{type?:string})=>{if(message?.type==="settle")void settleGraphMemoryV1({force:true,report:()=>undefined}).finally(()=>parentPort!.postMessage({type:"settled"}));});
+process.on("message",(message:{type?:string})=>{
+ if(message?.type==="settle")void settleGraphMemoryV1({force:true,report:()=>undefined}).finally(()=>parentPort!.postMessage({type:"settled"}));
+ if(message?.type==="slice-report"){const text=reporter.read();if(text!==undefined&&Buffer.byteLength(text)<=READY_SLICE_REPORT_POLICY_V1.fileBytes)parentPort!.postMessage({type:"slice-report",report:text});}
+});
 process.channel?.unref?.();
 try{
   await withImplementationPinV1(()=>routing.receiveScriptProcessInvocation(process.env,async(original:any)=>{
     const control=routing.createIssuedResourceControlV1(original,"graph:slice-worker",0),tool=workerData.tool??buildBackendDefaultIdV1(),backend=await loadBuildBackendV1(tool);
     publishBuildBootstrapSourcesV1(workerData.root);
-    const graph:any=await withRepositoryCompilerRuntimeEntriesV1(workerData.root,original,control,async()=>loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),await backend.graphExternalInputs?.()??[]));
+    const graph:any=await withRepositoryCompilerRuntimeEntriesV1(workerData.root,original,control,async()=>{
+     const externalInputs=await backend.graphExternalInputs?.()??[];
+     return withResidentSliceNativeRecheckV1(original,control,()=>loadBuildInvocationGraphV1(workerData.root,workerData.arguments,original,original,control,false,undefined,workerData.graphPolicy,buildBackendCompactGraphV1(tool),externalInputs));
+    });
     reporter.stop();parentPort!.postMessage({type:"done",graph,generationPin:sealedGenerationPinV1(tool),...graph?.stats===undefined?{}:{stats:graph.stats}});
   }));
-}catch(error:any){reporter.stop();parentPort!.postMessage({type:"error",...errorMessageV1(error)});}
+}catch(error:any){reporter.stop();if(isHalfEditedModuleLoadV1(error))exitIfStaleImplementationV1(error);parentPort!.postMessage({type:"error",...errorMessageV1(error)});}

@@ -62,15 +62,13 @@ describe("wrapped shared-border rows", () => {
     await waitFor(() => expect(shells.map(shell => [shell.hasAttribute("data-wrap-end"), shell.hasAttribute("data-wrap-last")])).toEqual([[false, false], [true, false], [true, true]]));
   });
 
-  it("styles wrapped cells in the stylesheet: stretched lines, a divider below, dropped dividers at the owner's own edge with a same-size margin", () => {
+  it("styles wrapped cells in the stylesheet: stretched lines and no native divider, margin or border", () => {
     const css = stylesheet();
     expect(css).toMatch(/\[data-shared-border-wrap\] \{\s*flex-wrap: wrap;/);
-    expect(css).toMatch(/\[data-shared-border-wrap\] > :is\([^{]*\) \{\s*flex: 1 0 auto;\s*border-block-end: var\(--stroke-hairline\) solid var\(--border-normal-color\);/);
-    expect(css).toMatch(/\[data-wrap-end\]:is\([^{]*\) \{\s*border-inline-end-width: 0;/);
-    expect(css).toMatch(/\[data-wrap-last\]:is\([^{]*\) \{\s*border-block-end-width: 0;/);
-    expect(css).toMatch(/> \[data-wrap-end\] \{\s*margin-inline-end: var\(--stroke-hairline\);/);
-    expect(css).toMatch(/> \[data-wrap-last\] \{\s*margin-block-end: var\(--stroke-hairline\);/);
+    expect(css).toMatch(/\[data-shared-border-wrap\] > :is\([^{]*\) \{\s*flex: 1 0 auto;\s*\}/);
+    expect(css).not.toMatch(/\[data-wrap-end\]:is\([^{]*\) \{/);
+    expect(css).not.toMatch(/> \[data-wrap-(end|last)\] \{\s*margin-/);
     expect(css.indexOf("[data-shared-border-wrap] {")).toBeLessThan(css.indexOf("@layer shared-border-priority {"));
-    expect(css.indexOf("[data-shared-border-wrap] {")).toBeGreaterThan(css.indexOf("Shared cells use one real divider"));
+    expect(css.indexOf("[data-shared-border-wrap] {")).toBeGreaterThan(css.indexOf("Cells have no native border"));
   });
 });

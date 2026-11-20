@@ -7,6 +7,7 @@ import { repoTaxonomy } from "../../../🧹️normalization/🔣️taxonomy/🏷
 import { checkStorybookFreshness } from "../🎨️storybook-freshness/🟦️.ts";
 import { policyIndexedGeneratedOutputBreaches } from "../../../⚖️laws/📇️indexed-generated-output/🟦️.ts";
 import { policyRawProcessSpawnBreaches } from "../../../⚖️laws/🚷️raw-process-spawn/🟦️.ts";
+import { policyJsonDuplicateKeyBreaches } from "../../../⚖️laws/🔑️json-duplicate-keys/🟦️.ts";
 import { policyDocumentAppShapeBreaches, policyOsStateAuthorityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚧️authority-bans/🟦️.ts";
 import { policyStandardsCoverageBreaches, policyStandardSubsetVocabularyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧾️standards/🟦️.ts";
 import { policyHandcraftedSpecP3Breaches } from "../../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
@@ -94,6 +95,16 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
           console.error(`[verify] ${b.kind}: ${b.summary}`);
         }
         throw refuseVerifyV1("breach","gates.raw-process-spawn-breach",{breaches:spawnBreaches.length});
+      }
+    }
+    sayVerifyV1("gates.json-duplicate-keys");
+    {
+      const duplicateKeyBreaches = policyJsonDuplicateKeyBreaches(this.root);
+      if (duplicateKeyBreaches.length > 0) {
+        for (const b of duplicateKeyBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw refuseVerifyV1("breach","gates.json-duplicate-key-breach",{breaches:duplicateKeyBreaches.length});
       }
     }
     sayVerifyV1("gates.os-exclusive-state-authority-policies");

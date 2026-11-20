@@ -1,0 +1,325 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "args": ["run", "repo-cache-reset:cache-reclaim-wait-rust"],
+      "platform": "darwin",
+      "marked": false,
+      "request": null,
+      "volume": { "device": 7, "availableBytes": 35000000000, "totalBytes": 100000000000 },
+      "name": "bounded Rust reclaim under real tight volume pressure",
+      "admit": true
+    },
+    {
+      "args": ["run", "repo-cache-reset:cache-reclaim-wait-rust"],
+      "platform": "darwin",
+      "marked": false,
+      "request": null,
+      "volume": { "device": 7, "availableBytes": 60000000000, "totalBytes": 100000000000 },
+      "name": "bounded Rust reclaim refuses resolved pressure",
+      "admit": false
+    },
+    {
+      "args": ["run", "repo-cache-reset:cache-reclaim-wait-rust"],
+      "platform": "darwin",
+      "marked": true,
+      "request": { "version": 1, "device": 7, "requiredFreeBytes": 50000000000 },
+      "volume": { "device": 7, "availableBytes": 35000000000, "totalBytes": 100000000000 },
+      "name": "automatic pressure cannot select the bounded operator wait",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "owned low device",
+      "admit": true
+    },
+    {
+      "args": [
+        "exec",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "other verb",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "other:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "arbitrary target",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust",
+        "--path=/unknown"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "paths through extra args",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": null,
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "forged marker alone",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": false,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "request without marker",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 8,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "foreign device",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 8192,
+        "totalBytes": 16384
+      },
+      "name": "already fits",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 32768
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "impossible request",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": null,
+      "name": "unknown device",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "linux",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "foreign platform",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reclaim-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": {
+        "version": 1,
+        "device": 7,
+        "requiredFreeBytes": 8192
+      },
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "reclaim proven exact",
+      "admit": true
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reclaim-rust"
+      ],
+      "platform": "darwin",
+      "marked": false,
+      "request": null,
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "manual in-place reclaim",
+      "admit": true
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reclaim-rust"
+      ],
+      "platform": "darwin",
+      "marked": false,
+      "request": null,
+      "volume": null,
+      "name": "manual reclaim without an image",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-regrow-rust"
+      ],
+      "platform": "darwin",
+      "marked": false,
+      "request": null,
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "manual image regrow",
+      "admit": false
+    },
+    {
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reclaim-rust"
+      ],
+      "platform": "darwin",
+      "marked": true,
+      "request": null,
+      "volume": {
+        "device": 7,
+        "availableBytes": 1024,
+        "totalBytes": 16384
+      },
+      "name": "marked reclaim without verified pressure",
+      "admit": false
+    }
+  ]
+}

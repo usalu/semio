@@ -480,8 +480,9 @@ pub mod testing {
 
         pub fn construct<T>(&mut self, demand: RetirementDemand, construct: impl FnOnce(&mut semio_framework::action_bus::OriginalToolConstructionScope<'_>) -> Result<(T, RetainedCloneProgress), ValueError>) -> T {
             let mut output = None;
+            let mut admission = semio_framework_job::OriginalConstructionAdmission::default();
             let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth.max(1) };
-            assert!(self.turn(fixture_stock(), |cx| semio_framework::action_bus::admit_original_tool_construction_scoped(cx, &mut output, demand, |scope| construct(scope).map(|(candidate, mut progress)| { progress.copied_items = progress.copied_items.max(1); (candidate, progress) }))).expect("original Puzzle fixture construction"));
+            assert_eq!(self.turn(fixture_stock(), |cx| semio_framework::action_bus::admit_original_tool_construction_scoped(cx, &mut admission, &mut output, demand, |scope| construct(scope).map(|(candidate, mut progress)| { progress.copied_items = progress.copied_items.max(1); (candidate, progress) }))).expect("original Puzzle fixture construction"), semio_framework_job::OriginalConstructionStatus::Ready);
             output.expect("original Puzzle candidate remains in fixture custody")
         }
 
@@ -581,7 +582,7 @@ pub mod testing {
 
     /// 🧹️ Maintenance borrows one exact quoted loan from the existing original fixture source.
     pub fn maintain_items<A: semio_plugin::PluginApp + ?Sized>(original: &mut OriginalFixture, app: &mut A, items: usize, body: usize) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
-        let demand = app.maintenance_retirement_demands(body)?;
+        let demand = app.maintenance_retirement_demands(body, semio_plugin::artifact_app_laws::FIXTURE_EFFECT_WORK)?;
         let grant = funded_turn(demand, items);
         original.turn(grant, |cx| { let loan = cx.retained_grant(); app.maintenance_step(cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from) }).map_err(semio_plugin::PluginLifecycleFailure::from)
     }

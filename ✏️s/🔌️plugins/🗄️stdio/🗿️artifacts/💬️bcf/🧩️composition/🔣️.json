@@ -9,7 +9,7 @@
   "apps": [
     {
       "owner": "stdio-bim",
-      "order": 10,
+      "order": 12,
       "variant": "BcfAnyEditor",
       "role": "editor",
       "type": "semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor",
@@ -22,7 +22,7 @@
     },
     {
       "owner": "stdio-bim",
-      "order": 11,
+      "order": 13,
       "variant": "BcfAnyViewer",
       "role": "viewer",
       "type": "semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer",

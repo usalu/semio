@@ -7,10 +7,14 @@
  * @see ../🧮️pipeline/🟦️.ts — `frameOf`, `inlineSvg`
  * @see ../⏱️clock/🟦️.ts — the clock figures follow
  */
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import type { Asset, DisplayRange, EvaluationQuery, Language, View, PlanarViewpoint } from "@teaching/staffage";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
-import { defaultQuery, depictionOptions, evaluateState, inlineSvg, sceneOf } from "../🧮️pipeline/🟦️.ts";
+import { driveFigure } from "../⏱️clock/🏁️frames/🟦️.ts";
+import { writeSvgMarkup } from "../🧮️pipeline/🧬️svg/🟦️.ts";
+import { defaultQuery, depictionOptions } from "../🧮️pipeline/🟦️.ts";
+import { drawFigure, type Drawing } from "../🧮️pipeline/🏁️drawing/🟦️.ts";
+import { retainDrawing } from "../🧮️pipeline/🏁️drawing/queue.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 import { VIEWPOINT_PHRASES, resolveViewpoint, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 import { clipDurationS, playable, readTrack, type TrackInput } from "../🧪️playground/🎞️timeline/🟦️.ts";
@@ -53,68 +57,86 @@ export type PlacedFigureProps = {
   readonly style?: CSSProperties;
 };
 
-function drawingQueryOf(asset: Asset, query: EvaluationQuery, view: View): EvaluationQuery {
-  if (query.kind !== "clip" || !(view.endsWith("-line") || view.endsWith("-solid"))) return query;
-  const clip = asset.clips.find((candidate) => candidate.id === query.clip);
-  if (clip === undefined || !clip.loop || clip.durationS <= 0) return query;
-  const timeS = ((query.timeS % clip.durationS) + clip.durationS) % clip.durationS;
-  return { ...query, timeS };
+type Inputs = Pick<PlacedFigureProps, "asset" | "selection" | "offsetS" | "track" | "pxPerMm" | "xPx" | "groundPx" | "travel"> & { readonly mirrored: boolean; readonly options: ReturnType<typeof depictionOptions> };
+type Painted = { markup: string; left: number; top: number; width: number; height: number; opacity: number; origin: string };
+
+function queryOf({ asset, selection, track, offsetS }: Inputs, timeS: number): EvaluationQuery {
+  return track === undefined ? placementQuery(asset, selection, timeS, offsetS) : placementQuery(asset, playable(asset, selection), readTrack(track.input, clipDurationS(asset, selection), timeS, track.timelineS).clipTimeS);
 }
 
-function useHeldFrame(clock: StaffageClock, active: boolean): number | null {
-  const last = useRef<number | null>(null);
-  const snapshot = (): number | null => {
-    if (active || last.current === null) last.current = clock.state.frame / clock.state.fps;
-    return last.current;
-  };
-  return useSyncExternalStore(clock.subscribe, snapshot, snapshot);
+function place({ asset, pxPerMm, xPx, groundPx, travel }: Inputs, query: EvaluationQuery, drawing: Drawing): Painted {
+  const lane = travel === undefined ? null : (travelledM(asset, query) + (travel.phaseM ?? 0)) % travel.laneM;
+  const shiftPx = (lane === null ? -drawing.rootM : lane) * pxPerMm * drawing.mmPerMetre;
+  const fade = lane === null || travel === undefined ? 1 : Math.min(1, lane / 0.4, (travel.laneM - lane) / 0.4);
+  return { markup: drawing.markup, left: xPx + shiftPx - drawing.origin.xMm * pxPerMm, top: groundPx - drawing.origin.yMm * pxPerMm, width: drawing.widthMm * pxPerMm, height: drawing.heightMm * pxPerMm, opacity: fade, origin: `${drawing.origin.xMm * pxPerMm}px 0` };
 }
 
-/** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
+const shown = new WeakMap<HTMLElement, Painted & { mirrored: boolean }>();
+
+function paint(element: HTMLElement, inputs: Inputs, query: EvaluationQuery, drawing: Drawing): void {
+  const next = place(inputs, query, drawing);
+  const last = shown.get(element);
+  shown.set(element, { ...next, mirrored: inputs.mirrored });
+  writeSvgMarkup(element, next.markup);
+  const { style } = element;
+  if (last?.left !== next.left) style.left = `${next.left}px`;
+  if (last?.top !== next.top) style.top = `${next.top}px`;
+  if (last?.width !== next.width) style.width = `${next.width}px`;
+  if (last?.height !== next.height) style.height = `${next.height}px`;
+  if (last?.opacity !== next.opacity) style.opacity = `${next.opacity}`;
+  if (last?.origin !== next.origin) style.transformOrigin = next.origin;
+  if (last?.mirrored !== inputs.mirrored) style.transform = inputs.mirrored ? "scaleX(-1)" : "";
+}
+
+/** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. React renders the element once per change of its props; the clock moves it through the frame driver without a render: markup, position and fade are written straight to the element, and only while it is visible. */
 export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
-  const { asset, selection, clock, offsetS = 0, track, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
+  const { asset, selection, clock, offsetS, track, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
   const mirrored = mirroredRequest && viewpoint === "elevation";
   const ref = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(true);
-  const timeS = useHeldFrame(clock, visible);
-  const query = useMemo(() => (track === undefined ? placementQuery(asset, selection, timeS, offsetS) : placementQuery(asset, playable(asset, selection), readTrack(track.input, clipDurationS(asset, selection), timeS ?? 0, track.timelineS).clipTimeS, 0)), [asset, selection, timeS, offsetS, track?.input.startS, track?.input.durationS, track?.input.speed, track?.input.loop, track?.input.holdS, track?.input.offsetS, track?.timelineS]);
-  const drawingQuery = useMemo(() => drawingQueryOf(asset, query, view), [asset, query, view]);
   const resolution = useMemo(() => resolveViewpoint(asset, viewpoint, scale, language), [asset, viewpoint, scale, language]);
-  const drawn = useMemo(() => {
-    if (!resolution.available) return null;
-    const options = depictionOptions({ view, viewpoint, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
-    const state = evaluateState(asset, drawingQuery, options.representation);
-    return { scene: sceneOf(state, props.theme === undefined ? options : { ...options, theme: props.theme }), rootM: state.bones[asset.rig.root]?.origin.x ?? 0 };
-  }, [asset, drawingQuery, view, viewpoint, scale, language, props.range, props.theme, resolution]);
-  const scene = drawn?.scene;
-  const rootM = drawn?.rootM ?? 0;
-  const markup = useMemo(() => (scene === undefined ? "" : inlineSvg(scene)), [scene]);
-  useEffect(() => {
+  const options = useMemo(() => {
+    const base = depictionOptions({ view, viewpoint, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
+    return props.theme === undefined ? base : { ...base, theme: props.theme };
+  }, [view, viewpoint, scale, language, props.range, props.theme]);
+  const inputs: Inputs = { asset, selection, offsetS, track, pxPerMm, xPx, groundPx, travel, mirrored, options };
+  const latest = useRef(inputs);
+  const held = useRef<number | null>(null);
+  const update = useRef<{ readonly asset: Asset; readonly options: Inputs["options"]; readonly clock: StaffageClock; readonly redraw: () => void } | null>(null);
+  const [failure, setFailure] = useState<Error | null>(null);
+  const available = resolution.available;
+  useLayoutEffect(() => {
+    latest.current = inputs;
+    const current = update.current;
+    if (current?.asset === asset && current.options === options && current.clock === clock) current.redraw();
+  });
+  useLayoutEffect(() => {
     const element = ref.current;
-    if (scene === undefined || element === null || typeof IntersectionObserver !== "function") return;
-    const observer = new IntersectionObserver((entries) => setVisible(entries.at(-1)?.isIntersecting ?? true));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [scene !== undefined]);
-  if (scene === undefined || resolution.available === false)
-    return resolution.available ? null : (
+    if (element === null) return;
+    let last: { readonly query: EvaluationQuery; readonly drawing: Drawing } | null = null;
+    const receive = (drawing: Drawing, query: EvaluationQuery) => {
+      last = { drawing, query };
+      paint(element, latest.current, query, drawing);
+    };
+    const lease = clock.drawBudgetMs > 0 ? retainDrawing(asset, options, true, receive, setFailure) : null;
+    const step = (timeS: number) => {
+      held.current = timeS;
+      const query = queryOf(latest.current, timeS);
+      if (lease) lease.request(query);
+      else receive(drawFigure(asset, options, query, true), query);
+    };
+    const redraw = () => {
+      if (last) paint(element, latest.current, last.query, last.drawing);
+      step(held.current ?? clock.state.frame / clock.state.fps);
+    };
+    update.current = { asset, options, clock, redraw };
+    step(clock.state.frame / clock.state.fps);
+    const stop = driveFigure(clock, { element, animated: () => latest.current.selection?.kind !== "pose", step, ...(lease ? { cancelPending: lease.cancelPending } : {}) });
+    return () => { stop(); lease?.release(); update.current = null; };
+  }, [asset, options, clock, available]);
+  if (failure !== null) throw failure;
+  if (!resolution.available)
+    return (
       <div role="img" aria-label={`${label ?? asset.title[language]}: ${viewpointWord("viewpoints.unavailable", language, { view: VIEWPOINT_PHRASES[viewpoint][language] })}. ${resolution.message[language]}`} title={resolution.message[language]} data-placed={asset.id} data-viewpoint={viewpoint} data-placed-unavailable={resolution.reason} className={className} style={{ position: "absolute", left: xPx - 6, top: groundPx - 24, width: 12, height: 24, border: "1px dashed currentColor", fontSize: 10, textAlign: "center", pointerEvents: "none", ...style }}>⊘</div>
     );
-  const lane = travel === undefined ? null : (travelledM(asset, query) + (travel.phaseM ?? 0)) % travel.laneM;
-  const shiftPx = (lane === null ? -rootM : lane) * pxPerMm * scene.metadata.mmPerMetre;
-  const width = scene.widthMm * pxPerMm;
-  const left = xPx + shiftPx - scene.metadata.origin.xMm * pxPerMm;
-  const fade = lane === null || travel === undefined ? 1 : Math.min(1, lane / 0.4, (travel.laneM - lane) / 0.4);
-  return (
-    <div
-      ref={ref}
-      role="img"
-      aria-label={label ?? asset.title[language]}
-      className={className}
-      data-placed={asset.id}
-      data-viewpoint={viewpoint}
-      style={{ position: "absolute", left, top: groundPx - scene.metadata.origin.yMm * pxPerMm, width, height: scene.heightMm * pxPerMm, opacity: fade, transform: mirrored ? "scaleX(-1)" : undefined, transformOrigin: `${scene.metadata.origin.xMm * pxPerMm}px 0`, pointerEvents: "none", ...style }}
-      dangerouslySetInnerHTML={{ __html: markup }}
-    />
-  );
+  return <div ref={ref} role="img" aria-label={label ?? asset.title[language]} className={className} data-placed={asset.id} data-viewpoint={viewpoint} style={{ position: "absolute", pointerEvents: "none", ...style }} />;
 }

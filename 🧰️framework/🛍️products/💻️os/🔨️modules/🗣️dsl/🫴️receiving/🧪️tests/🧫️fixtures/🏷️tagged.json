@@ -1,1 +1,7 @@
-{"tag":129,"firstTag":7,"text":"tagged 漢 🌱️","turn":{"items":1,"copyBytes":4096,"capacityBytes":65536,"releaseBytes":65536,"depth":128}}
+{
+  "tag": 129,
+  "firstTag": 7,
+  "text": "tagged 漢 🌱️",
+  "packWire": [1,129,1,1,18,116,97,103,103,101,100,32,230,188,162,32,240,159,140,177,239,184,143,1,1,17,16,1,7,4,116,101,120,116,6,0],
+  "turn": {"items":1,"copyBytes":4096,"capacityBytes":65536,"releaseBytes":65536,"depth":128}
+}

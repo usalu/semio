@@ -29,12 +29,29 @@ fn original_contiguous_bytes_keep_exact_birth_fill_and_return_on_the_same_source
  let mut original=original_payload::OriginalTestPayload::admit_single_page(OperationId(96004),Generation(10),JobPayloadStream::CommitOutput,b"original contiguous",JOB_PAYLOAD_PAGE_BYTES);original.birth_returns();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:32768,maximum_release_bytes:1048576,maximum_depth:64};let mut bytes=None;
  for denied in[RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:16384,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(answer,heap)=original_payload::observe(||original.original_turn(denied,|_,cx|OriginalContiguousJobBytes::admit(length,&mut bytes,cx)));assert!(!answer.unwrap());assert!(bytes.is_none());assert_eq!(heap,(0,0));}
  let mut heap=(0,0);let mut receipted=(0,0);for turn in 0..64{let(answer,turn_heap,receipt)=original.original_construction_turn(original_payload::BIRTH,|_,cx|cx.with_original_work_loan(reservation_work(cx).max(construction_work(length)),cx.original_absolute_deadline_us(),|cx|OriginalContiguousJobBytes::admit(length,&mut bytes,cx)));heap=(heap.0+turn_heap.0,heap.1+turn_heap.1);receipted=(receipted.0+receipt.retained_capacity_bytes,receipted.1+receipt.released_bytes);if answer.unwrap(){break}assert!(turn<63);}assert_eq!(heap,(length,0));assert_eq!(receipted,heap);assert!(bytes.as_ref().unwrap().ready());let source=original.caller.turn(grant,|cx|Ok(cx.original_source_parent()?.source_identity()?)).unwrap();
- let data:Vec<u8>=(0..length).map(|index|(index%251)as u8).collect();for part in data.chunks(4096){let(answer,heap)=original_payload::observe(||original.original_turn(grant,|_,cx|bytes.as_mut().unwrap().append(part,cx)));assert!(answer.unwrap());assert_eq!(heap,(0,0));}let pointer=bytes.as_ref().unwrap().borrowed_bytes().unwrap().as_ptr();
+ let data:Vec<u8>=(0..length).map(|index|(index%251)as u8).collect();
+ let append_page_bytes=law["appendPageBytes"].as_u64().unwrap() as usize;
+ let committed_lengths=law["committedLengths"].as_array().unwrap();
+ assert_eq!(data.chunks(append_page_bytes).len(),committed_lengths.len());
+ for (index,part) in data.chunks(append_page_bytes).enumerate(){
+  let committed=bytes.as_ref().unwrap().retained_length();
+  let expected=committed_lengths[index].as_u64().unwrap() as usize;
+  let mut settled=false;
+  for _ in 0..16{
+   let (answer,heap)=original_payload::observe(||original.original_turn(original_payload::BIRTH,|_,cx|bytes.as_mut().unwrap().append(part,cx)));
+   assert_eq!(heap,(0,0));
+   settled=answer.unwrap();
+   assert_eq!(bytes.as_ref().unwrap().borrowed_bytes().unwrap().len(),if settled{expected}else{committed});
+   if settled{break}
+  }
+  assert!(settled,"each original chunk settles under a funded caller");
+ }
+ let pointer=bytes.as_ref().unwrap().borrowed_bytes().unwrap().as_ptr();
  let mut foreign=original_payload::OriginalTestPayload::admit_single_page(OperationId(96004),Generation(10),JobPayloadStream::CommitOutput,b"foreign",JOB_PAYLOAD_PAGE_BYTES);let(answer,heap)=original_payload::observe(||foreign.original_turn(grant,|_,cx|bytes.as_mut().unwrap().append(&[],cx)));assert!(answer.is_err());assert_eq!(heap,(0,0));foreign.close();
  let mut reservation=bytes_reservation(&CONTIGUOUS_RETURNS,&mut original);let mut supplied=None;let(answer,heap)=original_payload::observe(||original.original_turn(grant,|_,cx|reservation.publish(&mut bytes,&mut supplied,cx)));assert!(answer.unwrap());assert_eq!(heap,(0,0));assert!(bytes.is_none());let supplied=supplied.unwrap();assert_eq!(supplied.bytes(),data.as_slice());assert_eq!(supplied.bytes().as_ptr(),pointer);assert_eq!(supplied.source_identity(),source);assert_eq!(original_payload::observe(||drop(supplied)).1,(0,0));assert!(CONTIGUOUS_RETURNS.has_returned_source(source));
  for capture in[true,false]{original.original_turn(grant,|_,cx|cx.with_original_work_loan(0,cx.original_absolute_deadline_us(),|cx|{let work=cx.original_work_units_spent();let step=CONTIGUOUS_RETURNS.close_returned_step(cx)?;assert_eq!(step.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:semio_framework_job_payload::OriginalReturnEscrowAccounting::witness_copy(capture,!capture,0).unwrap(),..Default::default()});assert_eq!(cx.original_work_units_spent()-work,1);Ok(())})).unwrap();}
  for denied in[RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:16384,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(answer,heap)=original_payload::observe(||original.original_turn(denied,|_,cx|CONTIGUOUS_RETURNS.close_returned_step(cx)));assert_eq!(answer.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert!(CONTIGUOUS_RETURNS.retains_source(source));}
- let mut released=0;for turn in 0..24{if !CONTIGUOUS_RETURNS.retains_source(source){break}let(answer,heap)=original_payload::observe(||original.original_turn(grant,|_,cx|CONTIGUOUS_RETURNS.close_returned_step(cx)));let step=answer.unwrap();assert!(!matches!(step,InteractiveJobCloseStep::Complete{..}));let progress=step.progress();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));released+=heap.1;assert!(turn<23)}assert_eq!(released,law["supplierReleaseBytes"].as_u64().unwrap()as usize);drop(reservation);original.close();assert_eq!(original_payload::observe(||drop(original)).1,(0,0));
+ let mut released=0;for turn in 0..24{if !CONTIGUOUS_RETURNS.retains_source(source){break}let(answer,heap)=original_payload::observe(||original.original_turn(RetainedCloneGrant{maximum_items:3,..grant},|_,cx|CONTIGUOUS_RETURNS.close_returned_step(cx)));let step=answer.unwrap();assert!(!matches!(step,InteractiveJobCloseStep::Complete{..}));let progress=step.progress();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));released+=heap.1;assert!(turn<23)}assert_eq!(released,law["supplierReleaseBytes"].as_u64().unwrap()as usize);drop(reservation);original.close();assert_eq!(original_payload::observe(||drop(original)).1,(0,0));
 }
 static ORDERED_RETURNS:OriginalJobPageReturnRegistry<3>=OriginalJobPageReturnRegistry::new();
 static WAKE_SOURCE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);

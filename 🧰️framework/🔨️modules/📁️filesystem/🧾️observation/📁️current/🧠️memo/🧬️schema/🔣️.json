@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/filesystem/observation/current/memo",
+  "title": "Physical file digest memo",
+  "description": "A file whose identity (device, inode, size, modification and change time) is unchanged has the digest it had when it was hashed, so a retry of a layer of the churn policy, and a restarted process, hash only what a peer edited. A digest is remembered only when the file had been quiet for the racy window before the hash started, so a rewrite within the clock granularity of its own observation is never mistaken for the old bytes. The memo is shared by every owner of one directory in a process and persisted there as one file.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "racyMilliseconds": 2000,
+        "maximumEntries": 262144,
+        "flushEntries": 2048,
+        "fileName": "digests.json"
+      }
+    },
+    "Identity": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {"type": "string", "pattern": "^[0-9]{1,24}$"}
+    },
+    "Entry": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": [
+        {"type": "string", "minLength": 1, "maxLength": 256},
+        {"$ref": "#/definitions/Identity"},
+        {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        {"type": "integer", "minimum": 0}
+      ]
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "entries"],
+      "properties": {
+        "version": {"const": 1},
+        "entries": {"type": "array", "items": {"$ref": "#/definitions/Entry"}}
+      }
+    }
+  }
+}

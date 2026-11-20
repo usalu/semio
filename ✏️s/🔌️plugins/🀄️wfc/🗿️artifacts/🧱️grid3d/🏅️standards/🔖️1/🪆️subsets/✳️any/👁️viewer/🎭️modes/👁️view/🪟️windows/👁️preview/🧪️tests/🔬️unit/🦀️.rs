@@ -29,9 +29,9 @@ fn portable_authored_preview_never_invents_an_unsolved_assignment() {
         document.cell_sizes_x=vec![1.0;document.width as usize];
         document.cell_sizes_y=vec![1.0;document.height as usize];
         document.cell_sizes_z=vec![1.0;document.depth as usize];
-        document.tiles=row["tiles"].as_array().unwrap().iter().map(|id|crate::Grid3dTile {id:id.as_str().unwrap().into(),weight:1.0,..Default::default()}).collect();
-        document.pinned=row["pins"].as_array().unwrap().iter().map(|pin|crate::Grid3dPinnedCell {x:pin[0].as_u64().unwrap() as u32,y:pin[1].as_u64().unwrap() as u32,z:pin[2].as_u64().unwrap() as u32,tile_id:pin[3].as_str().unwrap().into()}).collect();
-        document.masked=row["masked"].as_array().unwrap().iter().map(|cell|crate::Grid3dCell {x:cell[0].as_u64().unwrap() as u32,y:cell[1].as_u64().unwrap() as u32,z:cell[2].as_u64().unwrap() as u32}).collect();
+        document.tiles=row["tiles"].as_array().unwrap().iter().map(|id|crate::schema::snapshot::Grid3dTile {id:id.as_str().unwrap().into(),weight:1.0,..Default::default()}).collect();
+        document.pinned=row["pins"].as_array().unwrap().iter().map(|pin|crate::schema::snapshot::Grid3dPinnedCell {x:pin[0].as_u64().unwrap() as u32,y:pin[1].as_u64().unwrap() as u32,z:pin[2].as_u64().unwrap() as u32,tile_id:pin[3].as_str().unwrap().into()}).collect();
+        document.masked=row["masked"].as_array().unwrap().iter().map(|cell|crate::schema::snapshot::Grid3dCell {x:cell[0].as_u64().unwrap() as u32,y:cell[1].as_u64().unwrap() as u32,z:cell[2].as_u64().unwrap() as u32}).collect();
         let observed=authored_assignments(&document).into_iter().map(|((x,y,z),tile)|serde_json::json!([x,y,z,tile])).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(observed),row["expected"],"{}",row["id"]);
         render(&document).expect("authored viewer surface");

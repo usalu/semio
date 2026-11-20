@@ -224,3 +224,23 @@ async fn several_edits_inside_an_inserted_group_fold_by_mid_coordinates() {
     });
     assert_eq!(inside, Some(vec![s_id, q_id]), "two removals and one insertion landed by mid coordinates");
 }
+
+#[test]
+fn asset_delta_preserves_wire_objects_and_last_edit() {
+    let added = include_str!("../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/🔺️diff/🔣️.json");
+    let removed = include_str!("../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-image-asset/➖️removes/🔺️diff/🔣️.json");
+    let add: DrawingDiff = serde_json::from_str(added).unwrap();
+    let remove: DrawingDiff = serde_json::from_str(removed).unwrap();
+    for (diff, fixture) in [(&add, added), (&remove, removed)] {
+        assert_eq!(serde_json::to_value(diff).unwrap(), serde_json::from_str::<serde_json::Value>(fixture).unwrap());
+    }
+    let original = default_drawing_document("asset", None);
+    let with_asset = apply(&add, &original);
+    assert!(with_asset.assets.get("bitmap").is_some());
+    assert_eq!(remove.inverse(&with_asset), add);
+    assert!(apply(&remove, &with_asset).assets.is_empty());
+
+    let mut combined = add;
+    combined.absorb(remove.clone());
+    assert_eq!(combined, remove);
+}

@@ -7,6 +7,7 @@ import {resolve} from "node:path";
 import {withViteOptimizerDrainV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🔣️.json" with {type:"json"};
+import storageSchema from "../../../💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 
 test("Vite optimizer drainage outcome corpus agrees with Ajv and SQLite",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);
@@ -27,6 +28,59 @@ test("Vite optimizer drainage joins accepted work before capacity release and pr
  const release=new Error("release failure");await expect(withViteOptimizerDrainV1(async()=>1,()=>[],()=>{throw release;})).rejects.toBe(release);
 });
 
+test("Vite admission isolates request errors, retains capacity through drain, and stops on infrastructure failure",async()=>{
+ const source=readFileSync(resolve(import.meta.dir,"../../../🟦️.ts"),"utf8");
+ const {outputText}=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}});
+ const syntax=ts.createSourceFile("vite.js",outputText,ts.ScriptTarget.ESNext,true);
+ let admission:ts.Expression|undefined;
+ const visit=(node:ts.Node):void=>{
+  if(ts.isVariableDeclaration(node)&&node.name.getText(syntax)==="admitted")admission=node.initializer;
+  ts.forEachChild(node,visit);
+ };
+ visit(syntax);
+ expect(admission).toBeDefined();
+ const phase={signal:new AbortController().signal},events:string[]=[],pending=new Set<Promise<unknown>>(),failures:unknown[]=[];
+ let processing:Promise<unknown>|undefined;
+ const admitted=new Function("control","pending","storageSchema","failures","withRequestedIssuedResourceControlV1","withCompilerCapacityScopeV1","withViteOptimizerDrainV1","countedCompilerCapacityRequestV1","readNativeStorageReservationPolicyV1","checkResourceLeaseControl","store","environment","interrupt",`
+  let accepting=true;
+  return ${admission!.getText(syntax)};
+ `)(
+  phase,pending,storageSchema,failures,
+  async(_:unknown,_ms:number,body:(control:typeof phase)=>Promise<unknown>)=>body(phase),
+  async(_:unknown,body:(facts:unknown,control:typeof phase)=>Promise<unknown>)=>{try{return await body({},phase);}finally{events.push("capacity released");}},
+  withViteOptimizerDrainV1,()=>({}),()=>({}),()=>events.push("lease checked"),
+  {},{depsOptimizer:{metadata:{discovered:{fixture:{get processing(){return processing;}}}}}},
+  ()=>events.push("service interrupted"),
+ ) as <T>(operation:()=>Promise<T>)=>Promise<T>;
+
+ const requestError=new Error("request failed"),drainError=new Error("optimizer drain failed");
+ await expect(admitted(async()=>{throw requestError;})).rejects.toBe(requestError);
+ expect(pending.size).toBe(0);
+ expect(failures).toEqual([]);
+ expect(events.splice(0)).toEqual(["lease checked","capacity released"]);
+
+ const drain=Promise.withResolvers<void>(),started=Promise.withResolvers<void>();
+ processing=drain.promise;
+ const limit=storageSchema.definitions.Protocol.const.maximumPendingTransforms;
+ const requests=Array.from({length:limit},()=>admitted(async()=>{started.resolve();return 42;}));
+ await started.promise;
+ expect(pending.size).toBe(limit);
+ expect(()=>admitted(async()=>0)).toThrow("capacity exceeded");
+ expect(events).toEqual([]);
+ drain.resolve();
+ expect(await Promise.all(requests)).toEqual(Array(limit).fill(42));
+ expect(pending.size).toBe(0);
+ expect(events.splice(0)).toHaveLength(limit*2);
+
+ const failed=Promise.reject(drainError);void failed.catch(()=>{});
+ processing=failed;
+ await expect(admitted(async()=>{throw requestError;})).rejects.toBe(drainError);
+ expect(pending.size).toBe(0);
+ expect(failures).toEqual([drainError]);
+ expect(events).toEqual(["lease checked","capacity released","service interrupted"]);
+ expect(()=>admitted(async()=>0)).toThrow("admission closed");
+});
+
 test("actual Vite admitted operation retains scoped capacity through optimizer drain",()=>{
- const path=resolve(import.meta.dir,"../../../🟦️.ts"),source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.ES2022,true);const calls:ts.CallExpression[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="withViteOptimizerDrainV1")calls.push(node);node.forEachChild(visit);};visit(source);expect(calls).toHaveLength(1);const call=calls[0];if(!call)throw Error("Actual drain call missing");expect(call.arguments[0]?.getText(source)).toContain("phase.signal.throwIfAborted()");expect(call.arguments[0]?.getText(source)).toContain("return operation()");expect(call.arguments[1]?.getText(source)).toContain("environment.depsOptimizer?.metadata.discovered");expect(call.arguments[2]?.getText(source)).toContain("checkResourceLeaseControl(phase)");expect(source.text).toContain("pending.add(task)");expect(source.text).toContain("withCompilerCapacityScopeV1");
+ const path=resolve(import.meta.dir,"../../../🟦️.ts"),source=ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.ES2022,true);const calls:ts.CallExpression[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="withViteOptimizerDrainV1")calls.push(node);node.forEachChild(visit);};visit(source);expect(calls).toHaveLength(1);const call=calls[0];if(!call)throw Error("Actual drain call missing");expect(call.arguments[0]?.getText(source)).toContain("phase.signal.throwIfAborted()");expect(call.arguments[0]?.getText(source)).toContain("await operation()");expect(call.arguments[1]?.getText(source)).toContain("environment.depsOptimizer?.metadata.discovered");expect(call.arguments[2]?.getText(source)).toContain("checkResourceLeaseControl(phase)");expect(source.text).toContain("pending.add(task)");expect(source.text).toContain("withCompilerCapacityScopeV1");
 });

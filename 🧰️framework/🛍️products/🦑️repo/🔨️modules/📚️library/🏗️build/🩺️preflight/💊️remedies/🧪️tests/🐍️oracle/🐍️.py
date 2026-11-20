@@ -18,7 +18,7 @@ def lines(case):
         if facts["caseSensitive"] == "no" and facts["platform"] in texts["caseFolding"]:
             rows.append(texts["caseFolding"][facts["platform"]])
     for tool in case["requiredTools"]:
-        if tool not in facts["tools"]:
+        if "tools" in facts and tool not in facts["tools"]:
             row = texts["tools"].get(tool, {}).get(facts["platform"])
             if row:
                 rows.append(row)

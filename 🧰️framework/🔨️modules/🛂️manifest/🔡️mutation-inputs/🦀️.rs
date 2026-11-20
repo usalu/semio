@@ -179,10 +179,41 @@ fn input_union(node: &DslValue) -> Option<&[DslValue]> {
 /// plain number) define the numeric transport the reader edits as a number wherever a carrier references or restates it.
 const INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON: &str = include_str!("../../🌱️value/🧬️schema/🔣️.json");
 
+/// 🔗️ The artifact reference schema (`framework/schema/artifact-reference.json`), the `ArtifactRef` every link points through.
+const INPUT_ARTIFACT_REFERENCE_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🗿️artifact-reference/🔣️.json");
+
+/// 🔗️ The complete artifact link schema (`framework/schema/artifact-reference/link/schema.json`): target identity, history pin and role.
+const INPUT_ARTIFACT_LINK_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔣️.json");
+
+/// 📦️ The artifact blob schema (`framework/schema/artifact-reference/blob/schema.json`) a link pin may carry.
+const INPUT_ARTIFACT_BLOB_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔣️.json");
+
+/// 👶️ The artifact child schema (`framework/schema/artifact-reference/child/schema.json`).
+const INPUT_ARTIFACT_CHILD_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json");
+
+/// 🧱️ The framework bytes schema (`framework/value/bytes/schema.json`).
+const INPUT_BYTES_SCHEMA_JSON: &str = include_str!("../../🌱️value/🧬️bytes/🧬️schema/🔣️.json");
+
+/// 📖️ The framework question dictionary schema (`framework/value/question-dictionary.json`).
+const INPUT_QUESTION_DICTIONARY_SCHEMA_JSON: &str = include_str!("../../🌱️value/🧾️dictionary/🧬️schema/🔣️.json");
+
+/// 🏷️ The manifest property value schema (`framework/graph/manifest/property-value.json`).
+const INPUT_PROPERTY_VALUE_SCHEMA_JSON: &str = include_str!("../../🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔣️.json");
+
 /// 🪣️ The shared schema documents of the framework's own namespace an input schema of any plugin may `$ref`:
 /// [`registered_input_schema_document`] always holds them, so publishing them is never a plugin's duty (design §23).
-/// Today the framework value schema (`framework/value/schema.json`); the OS adds its own at every app construction.
-pub const FRAMEWORK_INPUT_SCHEMA_DOCUMENTS: [&str; 1] = [INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON];
+/// The framework value schema, the artifact reference closure (reference, link, blob, child), bytes, the question dictionary and
+/// the manifest property value; the OS adds its own at every app construction.
+pub const FRAMEWORK_INPUT_SCHEMA_DOCUMENTS: [&str; 8] = [
+    INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON,
+    INPUT_ARTIFACT_REFERENCE_SCHEMA_JSON,
+    INPUT_ARTIFACT_LINK_SCHEMA_JSON,
+    INPUT_ARTIFACT_BLOB_SCHEMA_JSON,
+    INPUT_ARTIFACT_CHILD_SCHEMA_JSON,
+    INPUT_BYTES_SCHEMA_JSON,
+    INPUT_QUESTION_DICTIONARY_SCHEMA_JSON,
+    INPUT_PROPERTY_VALUE_SCHEMA_JSON,
+];
 
 /// 🏷️ Schema keys that annotate without constraining; a shape comparison ignores them (and every `x-` key).
 const INPUT_SHAPE_ANNOTATIONS: [&str; 6] = ["title", "description", "$comment", "examples", "default", "format"];

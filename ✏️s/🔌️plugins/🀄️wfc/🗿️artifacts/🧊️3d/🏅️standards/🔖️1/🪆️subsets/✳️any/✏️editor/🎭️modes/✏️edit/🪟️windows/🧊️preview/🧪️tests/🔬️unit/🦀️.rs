@@ -132,10 +132,10 @@ fn the_window_renders_a_non_empty_surface_for_every_example() {
 
 /// 🥽️ Every catalogue entry must bind buffers the host can actually draw: one NORMAL per position
 /// (a zero-length normal attribute at item size 3 killed every instanced draw with
-/// `glDrawElements: Vertex buffer is not big enough`) and RGB — not RGBA — colours, because the host
-/// binds `color` at item size 3.
+/// `glDrawElements: Vertex buffer is not big enough`) and RGBA — not RGB — colours, because the host
+/// binds `color` at item size 4 and checks `colors.len() == vertices * 4`.
 #[test]
-fn every_catalogue_mesh_binds_one_normal_and_one_rgb_colour_per_vertex() {
+fn every_catalogue_mesh_binds_one_normal_and_one_rgba_colour_per_vertex() {
     for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
         let meshes = array(&meshes_json(&document));
         assert!(!meshes.is_empty());
@@ -145,7 +145,7 @@ fn every_catalogue_mesh_binds_one_normal_and_one_rgb_colour_per_vertex() {
             let normals = data["normals"].as_array().expect("normals").len();
             let colors = data["colors"].as_array().expect("colors").len();
             assert_eq!(normals, positions, "mesh {} binds one normal per position", mesh["id"]);
-            assert!(colors == 0 || colors == positions, "mesh {} binds RGB colours, never RGBA", mesh["id"]);
+            assert!(colors == 0 || colors == positions / 3 * 4, "mesh {} binds one RGBA colour per vertex: {colors} floats for {} vertices", mesh["id"], positions / 3);
             for normal in data["normals"].as_array().expect("normals").chunks(3) {
                 let length: f64 = normal.iter().filter_map(Value::as_f64).map(|value| value * value).sum::<f64>().sqrt();
                 assert!((length - 1.0).abs() < 1e-9, "every normal is unit length, saw {length}");

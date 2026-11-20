@@ -83,7 +83,7 @@ fn run_case(entry: &Value, tolerance: &Value) -> Result<String, String> {
     let outcome = boolean_solid(&mut body, a, b, op, 1e-6, &mut rec);
     if expected["empty"].as_bool().expect("empty") {
         return match outcome {
-            Err(KernelError::Boolean(BooleanError::InvalidResult(message))) if message.contains("empty") => Ok("empty".into()),
+            Err(KernelError::Boolean(BooleanError::EmptyResult)) => Ok("empty".into()),
             other => Err(format!("expected an empty result, got {:?}", other.map(|_| "a solid"))),
         };
     }

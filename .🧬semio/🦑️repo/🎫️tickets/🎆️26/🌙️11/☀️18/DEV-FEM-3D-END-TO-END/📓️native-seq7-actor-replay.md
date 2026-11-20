@@ -1,0 +1,9 @@
+# Native original actor replay for FEM 3D sequence 7
+
+The browser transcript records the actual FEM 3D activation, instance opening, lifecycle acknowledgement and five command pages. It retains the transport cursor and exact bytes for each command. The final page is the 477-byte `setActiveExample` command, addressed to the production editor's model window, with the Demo argument and browser view state. [Browser transcript](./browser-seq7.json)
+
+The native harness installs the production Hub FEM composition and admits the production original guest actor context. It submits the captured inputs to the native reactor through `OriginalActorGuestEntry::dispatch_value_step`. This is the same guest actor entry used by the WIT poll wrapper. The harness converts the three lifecycle inputs to native event types and transfers the five already encoded command pages without re-encoding them. It validates each returned receipt and prints the retained original cause on a semantic refusal. [Native harness](./native-actor/probe.rs)
+
+The production component's WIT failure publication, read and acknowledgement exports return `UnsupportedOwner` by design. The worker receives the semantic tag and accounting fields. The old component therefore cannot expose the retained message through those exports. The browser WASI adapter also closes its shared stdout and stderr output budget at 1 MiB per activation, so prior logging can suppress a later diagnostic.
+
+The first attempt to build through the full Hub workspace hit a missing PDF filter manifest during concurrent checkout changes. An isolated native package resolves the same FEM dependencies without unrelated workspace members. A separate editor contract build reached a concurrently changing session API whose source then omitted `equations` and `full_reactions`. The session accessors have since moved to their paged owners. The isolated build and exact replay are in progress.

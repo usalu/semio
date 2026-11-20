@@ -12,6 +12,7 @@ use semio_framework_value::{RetirementDemand,ValueRefusalKind,retirement::Retire
 /// 🧵️ The exact original typed sealer crosses only this bounded owning interface.
 pub trait ArtifactStoreBatchDigest<M>:ErasedSnapshotRetirement{
  fn next_digest_demand(&self)->Result<RetirementDemand,ValueError>;
+ fn next_digest_work_demand(&self)->Result<u64,ValueError>;
  fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
  fn ready(&self)->bool;
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>;
@@ -48,6 +49,13 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
   if let Some(admission)=self.admission.as_ref(){return if admission.phase()=="ready"{nested(header::<M>())}else if admission.phase()=="projectionStart"{nested(admission.owned_projection_demand()?)}else{nested(admission.next_demand()?)};}
   if self.source.is_some(){return nested(ArtifactCanonicalEditSealCursor::<M>::source_constructor_demand());}
   nested(header::<M>())
+ }
+ fn next_digest_work_demand(&self)->Result<u64,ValueError>{
+  if let Some(original)=self.original.as_ref(){return original.next_work_demand();}
+  if let Some(admission)=self.admission.as_ref(){
+   return match admission.phase(){"ready"=>Ok(admission.take_output_work_demand()),"projectionStart"=>Ok(1),_=>admission.advance_work_demand()};
+  }
+  Ok(1)
  }
  fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();

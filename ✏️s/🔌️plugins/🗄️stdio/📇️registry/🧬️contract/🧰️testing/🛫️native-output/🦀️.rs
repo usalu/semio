@@ -1,15 +1,70 @@
 //! 🛫️ Native-output laws every stdio SQLite snapshot owner is held to: exact ordinary bytes with cumulative admission, real interior cancellation, and the independent engine preceding late schema-copy cancellation.
-use pack::snapshot::ArtifactSqliteSnapshot as _;
-use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
-pub fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshotHost>(snapshot:&T,semantic_value_bytes:usize){
- assert!(semantic_value_bytes>0);
- for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner).result).unwrap();let expected=match encoding{SnapshotEncoding::Binary=>semio_os_kernel::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>semio_os_kernel::io::IoPayload::Text(snapshot.print_dsl())};assert!(actual==expected,"controlled native wire differs");let count=match &actual{semio_os_kernel::io::IoPayload::Binary(bytes)=>bytes.len(),semio_os_kernel::io::IoPayload::Text(text)=>text.len()};assert!(count>65536);
- let exact=SqliteDatabaseLimits{max_value_bytes:semantic_value_bytes,max_file_bytes:count,..SqliteDatabaseLimits::default()};let admitted=crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact), native_owner).result).unwrap();assert!(actual==admitted,"exact semantic and file limits changed wire");
- for measure in[true,false]{let mut reached=false;let error=crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{let cancel=event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=65536&&(if measure{event.total==0}else{event.total>65536&&event.completed<event.total});reached|=cancel;!cancel},SqliteDatabaseLimits::default()), native_owner).result).unwrap_err();assert!(reached&&error.message.contains("cancel"),"{error}")}
- for limits in[SqliteDatabaseLimits{max_value_bytes:semantic_value_bytes-1,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_file_bytes:count-1,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_rows:0,..SqliteDatabaseLimits::default()}]{assert!(crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner).result).is_err())}
- assert!(crate::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default()), native_owner).result).is_err());
- }
+
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
+use semio_os_kernel::{
+    io::IoPayload,
+    os_store::serialization::ArtifactSqliteSnapshotHost,
+    sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteSnapshotProgress, SqliteStageFailure},
+    NativeSnapshotFailure,
+};
+
+fn stage_message(failure: SqliteStageFailure<(), NativeSnapshotFailure>) -> String {
+    match failure {
+        SqliteStageFailure::NotStarted(error) => error.to_string(),
+        SqliteStageFailure::Operation(error) => error.message().into(),
+        SqliteStageFailure::Settlement { refusal, .. } => refusal.to_string(),
+        SqliteStageFailure::WorkSettlement { operation: Err(error), .. } => error.message().into(),
+        SqliteStageFailure::WorkSettlement { .. } => "original SQLite snapshot work failed to settle".into(),
+    }
+}
+
+pub fn assert_output<T: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshotHost>(snapshot: &T, semantic_value_bytes: usize) {
+    assert!(semantic_value_bytes > 0);
+    for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
+        let encode = |progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits| {
+            crate::with_encoding(|native_owner| {
+                let mut output = None;
+                let mut control = SqliteSnapshotControl::new(progress, limits);
+                snapshot.encode_sqlite_snapshot_native(encoding, &mut control, native_owner, &mut output).result.map_err(stage_message)?;
+                output.expect("native encode publishes its outcome").map_err(|error| stage_message(error.map_operation(|_| ())))
+            })
+        };
+        let actual = encode(&mut |_| true, SqliteDatabaseLimits::default()).unwrap();
+        let expected = match encoding {
+            SnapshotEncoding::Binary => IoPayload::Binary(snapshot.encode_pack()),
+            SnapshotEncoding::Text => IoPayload::Text(snapshot.print_dsl()),
+        };
+        assert!(actual == expected, "controlled native wire differs");
+        let count = match &actual {
+            IoPayload::Binary(bytes) => bytes.len(),
+            IoPayload::Text(text) => text.len(),
+        };
+        assert!(count > 65536);
+        let exact = SqliteDatabaseLimits { max_value_bytes: semantic_value_bytes, max_file_bytes: count, ..SqliteDatabaseLimits::default() };
+        let admitted = encode(&mut |_| true, exact).unwrap();
+        assert!(actual == admitted, "exact semantic and file limits changed wire");
+        for measure in [true, false] {
+            let mut reached = false;
+            let error = encode(&mut |event| {
+                let cancel = event.phase == SqliteSnapshotPhase::EncodeNative && event.completed >= 65536 && if measure {
+                    event.total == 0
+                } else {
+                    event.total > 65536 && event.completed < event.total
+                };
+                reached |= cancel;
+                !cancel
+            }, SqliteDatabaseLimits::default()).unwrap_err();
+            assert!(reached && error.contains("cancel"), "{error}");
+        }
+        for limits in [
+            SqliteDatabaseLimits { max_value_bytes: semantic_value_bytes - 1, ..SqliteDatabaseLimits::default() },
+            SqliteDatabaseLimits { max_file_bytes: count - 1, ..SqliteDatabaseLimits::default() },
+            SqliteDatabaseLimits { max_rows: 0, ..SqliteDatabaseLimits::default() },
+        ] {
+            assert!(encode(&mut |_| true, limits).is_err());
+        }
+        assert!(encode(&mut |_| false, SqliteDatabaseLimits::default()).is_err());
+    }
 }
 
 /// 🌳️ The independent engine precedes late schema-copy cancellation on the authored small retirement stack.

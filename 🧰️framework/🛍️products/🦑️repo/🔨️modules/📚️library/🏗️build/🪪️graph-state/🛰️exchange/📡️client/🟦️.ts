@@ -9,6 +9,9 @@ const EMPTY=createHash("sha256").digest("hex");
 export type GraphFleetSettingsV1=Readonly<{endpoint:string;instance:string;token:string|undefined;upload:boolean;stateDirectory:string}>;
 /** 🚦️ Why a request gave no answer. */
 export type GraphFleetFaultV1="down"|"denied"|"unsupported";
+export type GraphLookupFaultV1="unavailable"|"transport"|"denied"|"record"|"blob-missing"|"blob-integrity"|"payload"|"unknown";
+type GraphBlobFaultV1=Extract<GraphLookupFaultV1,"transport"|"denied"|"blob-missing"|"blob-integrity">;
+type GraphResponseV1={status:number;response:Response;signal:AbortSignal};
 /** 🎟️ The answer to a claim. */
 export type GraphFleetClaimV1={state:"granted";untilMilliseconds:number}|{state:"held";by:string;untilMilliseconds:number;expectedMilliseconds?:number}|{state:"stored"}|{state:"full"}|{state:"unavailable";fault:GraphFleetFaultV1};
 
@@ -21,15 +24,15 @@ export interface GraphFleetClientV1{
  usable():boolean;
  breakerRemainingMilliseconds?():number;
  claimsUsable():boolean;
- getResult(key:string):Promise<Uint8Array|"miss"|GraphFleetFaultV1>;
- getBlob(hash:string,size:number):Promise<Uint8Array|undefined>;
+ getResult(key:string,signal?:AbortSignal):Promise<Uint8Array|"miss"|GraphFleetFaultV1>;
+ getBlob(hash:string,size:number,signal?:AbortSignal,onFault?:(reason:GraphBlobFaultV1)=>void):Promise<Uint8Array|undefined>;
  hasBlob(hash:string):Promise<boolean|undefined>;
  putBlob(hash:string,bytes:Uint8Array):Promise<GraphPutV1>;
  putResult(key:string,bytes:Uint8Array,slot:string,expect?:string):Promise<GraphPutV1>;
  claim(key:string,owner:string,ttlMilliseconds:number,expectedMilliseconds?:number):Promise<GraphFleetClaimV1>;
  renew(key:string,owner:string,ttlMilliseconds:number):Promise<"granted"|"lost"|"fault">;
  release(key:string,owner:string):Promise<void>;
- await(key:string,timeoutMilliseconds:number):Promise<"stored"|"lapsed"|"timeout"|"fault">;
+ await(key:string,timeoutMilliseconds:number,signal?:AbortSignal):Promise<"stored"|"lapsed"|"timeout"|"fault">;
 }
 
 const body=(bytes:Uint8Array):BodyInit=>isOwned(bytes)?bytes:new Uint8Array(bytes),isOwned=(bytes:Uint8Array):bytes is Uint8Array<ArrayBuffer>=>bytes.buffer instanceof ArrayBuffer;
@@ -37,19 +40,45 @@ const fresh=(path:string,window:number):boolean=>{try{return Date.now()-statSync
 const remaining=(path:string,window:number):number=>{try{return Math.max(0,Math.ceil(window-(Date.now()-statSync(path).mtimeMs)));}catch{return 0;}};
 const stamp=(directory:string,name:string):void=>{try{mkdirSync(directory,{recursive:true});const path=join(directory,name);writeFileSync(path,String(Date.now()));const now=new Date();utimesSync(path,now,now);}catch{}};
 
+async function readBlobBytesV1(response:Response,size:number,signal:AbortSignal):Promise<Uint8Array|undefined>{
+ const reader=response.body?.getReader();
+ if(reader===undefined){signal.throwIfAborted();return undefined;}
+ const cancel=()=>{void reader.cancel().catch(()=>undefined);};
+ signal.addEventListener("abort",cancel,{once:true});
+ try{
+  signal.throwIfAborted();
+  let bytes:Uint8Array|undefined,written=0;
+  for(;;){
+   const {done,value}=await reader.read();
+   signal.throwIfAborted();
+   if(done)return written===size?bytes:undefined;
+   if(value.byteLength>size-written)return undefined;
+   if(value.byteLength===0)continue;
+   (bytes??=new Uint8Array(size)).set(value,written);
+   written+=value.byteLength;
+  }
+ }finally{
+  signal.removeEventListener("abort",cancel);
+  cancel();
+  reader.releaseLock();
+ }
+}
+
 /** 📡️ Creates the client of one process. */
 export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Readonly<{fetch?:typeof fetch}>={}):GraphFleetClientV1{
  const request=world.fetch??fetch,base=`${settings.endpoint}/${settings.instance}`,t=policy.timeouts,b=policy.breaker,headers=(extra:Record<string,string>={}):Record<string,string>=>({...(settings.token?{authorization:"Bearer "+settings.token}:{}),...extra});
  const faultOf=(status:number):GraphFleetFaultV1=>status===401||status===403?"denied":status===404||status===405?"unsupported":"down";
  const mark=(fault:GraphFleetFaultV1)=>stamp(settings.stateDirectory,fault==="denied"?"denied":fault==="unsupported"?"noclaims":"down");
- async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}={}):Promise<{status:number;response:Response}|GraphFleetFaultV1>{
-  const answer=await attempt(method,url,timeout,init);
+ async function call(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}={},signal?:AbortSignal):Promise<GraphResponseV1|GraphFleetFaultV1>{
+  const answer=await attempt(method,url,timeout,init,signal);
   if("error" in answer){mark("down");return "down";}
   return answer;
  }
- async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>}):Promise<{status:number;response:Response}|{error:"timeout"|"network"}>{
-  try{const response=await request(url,{method,headers:headers(init.headers),signal:AbortSignal.timeout(timeout),...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response};}
-  catch(error){return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network"};}
+ async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>},signal?:AbortSignal):Promise<GraphResponseV1|{error:"timeout"|"network"}>{
+  signal?.throwIfAborted();
+  const deadline=AbortSignal.timeout(timeout),requestSignal=signal===undefined?deadline:AbortSignal.any([signal,deadline]);
+  try{const response=await request(url,{method,headers:headers(init.headers),signal:requestSignal,...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response,signal:requestSignal};}
+  catch(error){signal?.throwIfAborted();return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network"};}
  }
  async function put(url:string,timeout:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
   const answer=await attempt("PUT",url,timeout,init);
@@ -65,18 +94,26 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
   usable(){return!fresh(join(settings.stateDirectory,"down"),b.downMilliseconds)&&!fresh(join(settings.stateDirectory,"denied"),b.deniedMilliseconds);},
   breakerRemainingMilliseconds(){return Math.max(remaining(join(settings.stateDirectory,"down"),b.downMilliseconds),remaining(join(settings.stateDirectory,"denied"),b.deniedMilliseconds));},
   claimsUsable(){return settings.upload&&!fresh(join(settings.stateDirectory,"noclaims"),b.noClaimsMilliseconds);},
-  async getResult(key){
-   const answer=await call("GET",`${base}/ac/${key}`,t.lookupMilliseconds);
+  async getResult(key,signal){
+   const answer=await call("GET",`${base}/ac/${key}`,t.lookupMilliseconds,{},signal);
    if(typeof answer==="string")return answer;
+   if(answer.status!==200||signal?.aborted){await answer.response.body?.cancel().catch(()=>undefined);signal?.throwIfAborted();}
    if(answer.status===404)return "miss";
    if(answer.status!==200){const fault=faultOf(answer.status);mark(fault==="unsupported"?"down":fault);return fault==="unsupported"?"down":fault;}
-   try{return new Uint8Array(await answer.response.arrayBuffer());}catch{mark("down");return "down";}
+   try{const bytes=new Uint8Array(await answer.response.arrayBuffer());signal?.throwIfAborted();return bytes;}catch{signal?.throwIfAborted();mark("down");return "down";}
   },
-  async getBlob(hash,size){
-   if(hash===EMPTY)return new Uint8Array(0);
-   const answer=await call("GET",`${base}/cas/${hash}`,blobTimeout(size));
-   if(typeof answer==="string"||answer.status!==200)return undefined;
-   try{const bytes=new Uint8Array(await answer.response.arrayBuffer());return bytes.length===size&&createHash("sha256").update(bytes).digest("hex")===hash?bytes:undefined;}catch{return undefined;}
+  async getBlob(hash,size,signal,onFault){
+   signal?.throwIfAborted();
+   if(!Number.isSafeInteger(size)||size<0||size>policy.blobMaximumBytes||(hash===EMPTY)!==(size===0)){onFault?.("blob-integrity");return undefined;}
+   if(size===0)return new Uint8Array(0);
+   const answer=await call("GET",`${base}/cas/${hash}`,blobTimeout(size),{},signal);
+   if(typeof answer==="string"){onFault?.("transport");return undefined;}
+   if(answer.status!==200||signal?.aborted){await answer.response.body?.cancel().catch(()=>undefined);signal?.throwIfAborted();onFault?.(answer.status===404?"blob-missing":faultOf(answer.status)==="denied"?"denied":"transport");return undefined;}
+   let bytes:Uint8Array|undefined;
+   try{bytes=await readBlobBytesV1(answer.response,size,answer.signal);}catch{signal?.throwIfAborted();onFault?.("transport");return undefined;}
+   signal?.throwIfAborted();
+   if(bytes!==undefined&&createHash("sha256").update(bytes).digest("hex")===hash)return bytes;
+   onFault?.("blob-integrity");return undefined;
   },
   async hasBlob(hash){
    if(hash===EMPTY)return true;
@@ -108,11 +145,14 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
    return answer.status===200?"granted":answer.status===409?"lost":"fault";
   },
   async release(key,owner){await call("POST",`${base}/claim/ac/${key}/release`,t.claimMilliseconds,{body:JSON.stringify({owner})});},
-  async await(key,timeoutMilliseconds){
+  async await(key,timeoutMilliseconds,signal){
    const slice=Math.min(t.awaitSliceMilliseconds,Math.max(0,Math.floor(timeoutMilliseconds)));
-   const answer=await call("GET",`${base}/claim/ac/${key}/await?timeoutMilliseconds=${slice}`,slice+t.claimMilliseconds*2);
+   const answer=await call("GET",`${base}/claim/ac/${key}/await?timeoutMilliseconds=${slice}`,slice+t.claimMilliseconds*2,{},signal);
+   if(typeof answer!=="string"&&(signal?.aborted||answer.status!==200))await answer.response.body?.cancel().catch(()=>undefined);
+   signal?.throwIfAborted();
    if(typeof answer==="string"||answer.status!==200)return "fault";
    const body=await json<{state?:string}>(answer.response);
+   signal?.throwIfAborted();
    return body?.state==="stored"||body?.state==="lapsed"||body?.state==="timeout"?body.state:"fault";
   },
  });

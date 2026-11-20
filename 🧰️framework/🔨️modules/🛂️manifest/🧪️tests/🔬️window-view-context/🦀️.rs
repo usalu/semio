@@ -22,6 +22,9 @@ async fn window_view_context_uses_the_addressed_instance() {
         assert_eq!(projected.window_id.as_deref(), Some(id));
         assert_eq!(projected.active_window_kind_id.as_deref(), Some("graph"));
         assert_eq!(projected.active_utility_id.as_deref(), case["activeUtilityId"].as_str());
+        if view.active_utility_by_window_id.get(id) == Some(&None) {
+            assert_eq!(projected.contextual_utility(), None);
+        }
         let oracle = &fixture["view"]["activeUtilityByWindowId"][id];
         assert_eq!(serde_json::to_value(&projected.active_utility_id).unwrap(), *oracle);
         assert_eq!(projected.locale, view.locale);

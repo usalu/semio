@@ -29,6 +29,8 @@ export function leaseImplementationV1():LeaseImplementationV1{
  const components=Object.freeze({...global[providerKey]?.components()}),sorted=Object.fromEntries(Object.keys(components).sort().map(key=>[key,components[key]]));
  return Object.freeze({digest:createHash("sha256").update(JSON.stringify(sorted)).digest("hex").slice(0,16),loadedAtMs,components});
 }
+/** 📌️ Whether this process committed to the implementation it loaded (a one-invocation command process under its received pin): such a run finishes and publishes the bytes it loaded, so a newer peer never makes it discard hours of work; the next invocation runs the newer code. */
+export function leaseImplementationPinnedV1():boolean{const count=(globalThis as Record<symbol,{open:number;processWide:boolean}|undefined>)[Symbol.for("semio.implementationPin.count.v1")];return count?.processWide===true&&count.open>0;}
 /** 🔗️ The component ids that bind a resource: the stamps whose movement makes a holder's result obsolete. */
 export function leaseBoundComponentsV1(resource:string):readonly string[]{return global[providerKey]?.bound(resource)??[];}
 /** 💽️ The bound component ids of a resource whose stamp on disk differs from the value this process loaded: what a holder re-reads itself instead of trusting a requester's claim. */

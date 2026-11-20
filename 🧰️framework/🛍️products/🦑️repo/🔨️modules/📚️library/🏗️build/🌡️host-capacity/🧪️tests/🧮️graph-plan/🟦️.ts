@@ -4,7 +4,7 @@ import {existsSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync} fro
 import {Database} from "bun:sqlite";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {newHostCapacityIdV1,readHostCapacityPolicyV1,withHostCapacityV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {newHostCapacityIdV1,readHostCapacityPolicyV1,withHostCapacityV1,type HostCapacityWaitV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {graphPlanObserverV1,reserveGraphPlanCapacityV1} from "../../🟦️.ts";
 
@@ -48,6 +48,34 @@ test("a plan that waits for memory is cancelled by its signal, rejects with the 
  const waiting=reserveGraphPlanCapacityV1({megabytes:6000,environment,directory,policy:fast,write:()=>undefined,signal:controller.signal,sample:async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0})}).then(()=>undefined,error=>error);
  expect(await until(()=>queue(directory).length===1)).toBe(true);controller.abort(new Error("plan cancelled"));
  expect((await waiting).message).toBe("plan cancelled");expect(queue(directory)).toEqual([]);expect(grants(directory)).toEqual([]);
+},60000);
+
+test("the actual graph reservation gate reports fair queue ordering even when a plan fits",async()=>{
+ const directory=fresh(),messages:string[]=[],views:HostCapacityWaitV1[]=[],begin=new AbortController(),tail=new AbortController(),environment={LANG:"en_US.UTF-8"};
+ const policy=readHostCapacityPolicyV1({...fast,wait:{...fast.wait,bypassMilliseconds:40}});
+ const held=await reserveGraphPlanCapacityV1({megabytes:20000,environment,directory,policy,write:()=>undefined,sample});
+ const front=reserveGraphPlanCapacityV1({megabytes:20000,environment,directory,policy,write:line=>messages.push(line),sample,signal:begin.signal}).then(grant=>{grant.release();},error=>error);
+ try{
+  expect(await until(()=>messages.filter(line=>line.includes("not enough free memory")).length>=4)).toBe(true);
+  const last=reserveGraphPlanCapacityV1({megabytes:3000,minimumMegabytes:2048,environment,directory,policy,write:()=>undefined,sample,signal:tail.signal,onWait:view=>views.push(view)}).then(grant=>{grant.release();},error=>error);
+  try{
+   expect(await until(()=>views.length>0)).toBe(true);
+   expect(views[0]).toMatchObject({reason:"queue-order",active:1,queued:2,minimumMegabytes:2048});
+   expect(views[0]!.spareMegabytes).toBeGreaterThanOrEqual(3000);
+  }finally{tail.abort(Error("cancel queued plan"));expect((await last)?.message).toBe("cancel queued plan");}
+ }finally{begin.abort(Error("cancel first plan"));await front;held.release();}
+ expect(await until(()=>queue(directory).length===0&&grants(directory).length===0)).toBe(true);
+},60000);
+
+test("the actual graph reservation gate supplies the measured memory shortage",async()=>{
+ const directory=fresh(),controller=new AbortController(),environment={LANG:"en_US.UTF-8"},views:HostCapacityWaitV1[]=[];
+ const program=reserveGraphPlanCapacityV1({megabytes:6000,minimumMegabytes:2048,environment,directory,policy:fast,write:()=>undefined,signal:controller.signal,onWait:view=>views.push(view),sample:async()=>({host:host({availableMegabytes:2500}),swappedOutMegabytes:0})}).then(grant=>{grant.release();},error=>error);
+ try{
+  expect(await until(()=>views.length>0)).toBe(true);
+  expect(views[0]).toMatchObject({reason:"memory",active:0,queued:1,minimumMegabytes:2048});
+  expect(views[0]!.spareMegabytes).toBeLessThan(2048);
+ }finally{controller.abort(Error("cancel memory wait"));expect((await program)?.message).toBe("cancel memory wait");}
+ expect(queue(directory)).toEqual([]);
 },60000);
 
 const table:readonly (readonly [number,number,number])[]=[[process.pid,1,300],[7001,process.pid,4000],[7002,7001,1000],[7003,7002,700],[7004,1,900]];

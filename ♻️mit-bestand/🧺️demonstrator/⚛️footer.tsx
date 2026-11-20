@@ -23,6 +23,7 @@ function PartnerLogoLink({ logo, locale }: { readonly logo: PartnerLogo; readonl
       href={logo.href}
       target="_blank"
       rel="noopener noreferrer"
+      data-shared-border-frame="" data-shared-border-edges=""
       className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
       aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: logo.alt })}
     >
@@ -53,6 +54,7 @@ export function fundedByZukunftBauFooterItem(key: string, locale: DemonstratorLo
         href={logo.href}
         target="_blank"
         rel="noopener noreferrer"
+        data-shared-border-frame="" data-shared-border-edges=""
         aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: `${demonstratorText("demonstrator.footer.fundedBy", locale)} ${logo.alt}` })}
         className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer no-underline"
       >

@@ -1,6 +1,5 @@
 import { terminateOwnedProcessTree } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { startToolV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runtimeCommandNameV1 } from "../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 
 export const DEV_LOCAL_HUB_READINESS_STALL_BOUND_MS = 300_000;
 
@@ -455,12 +454,9 @@ export type DevServeProfileV1 = "prototype" | "release";
  * `port`, local-only unless `hubUrl` names the hub it joins, output in `logPath`. */
 export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; renderer: DevServeRendererV1; profile: DevServeProfileV1; hubUrl: string | null; logPath: string; compositionConfigPath?: string }>;
 
-/** 🧾️ The process a spawn request becomes: `bun <script> …args` in `cwd` (all repo-relative), with `env` over the
+/** 🧾️ The managed serve command a spawn request becomes, with `env` over the
  * caller's environment — a `null` value removes the variable, so a local-only serve never inherits a hub. */
-export type DevServeCommandV1 = Readonly<{ script: string; args: readonly string[]; cwd: string; env: Readonly<Record<string, string | null>> }>;
-
-const DEV_SERVE_REACT_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
-const DEV_SERVE_WGPU_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts";
+export type DevServeCommandV1 = Readonly<{ tool: "repo"; args: readonly string[]; env: Readonly<Record<string, string | null>> }>;
 
 /** 🖥️ The playground variant a serve hosts when the caller names none: `s`, the full OS shell with every plugin (an empty variant is refused by the serve script, so a bare `serve-hold --serve <url>` could never boot). */
 export const DEV_SERVE_DEFAULT_VARIANT_V1 = "s";
@@ -468,12 +464,12 @@ export const DEV_SERVE_DEFAULT_VARIANT_V1 = "s";
 /** 🧾️ Both spawn shapes, as data: HMR is off for either shell so no peer's edit reloads a page mid-run. */
 export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeCommandV1 {
   if (request.renderer === "wgpu" && (!request.compositionConfigPath || request.compositionConfigPath.length > 4096)) throw new Error("dev serve: explicit bounded composition configuration required");
-  if (request.renderer === "react" && request.variant === "") throw new Error("dev serve: the React shell serve requires a playground variant");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\s\S])/u.test(request.variant)) throw new Error("dev serve: the shell serve requires a playground variant");
   const link = request.hubUrl === null ? { S_LOCAL_ONLY: "1", S_HUB_URL: null } : { S_LOCAL_ONLY: null, S_HUB_URL: request.hubUrl };
   const env = { SEMIO_PLUGIN: request.variant, SEMIO_RENDERER: request.renderer, SEMIO_VITE_HMR: "0", S_OS_PORT: String(request.port), ...link };
-  return request.renderer === "react"
-    ? { script: DEV_SERVE_REACT_SCRIPT, args: ["serve", request.variant, "react", request.profile], cwd: dirname(DEV_SERVE_REACT_SCRIPT), env }
-    : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port), "--composition", request.compositionConfigPath!], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
+  const args = ["run", `@semio-tech/framework-os-dev:dev-${request.variant}-${request.renderer}-${request.profile}`];
+  if (request.renderer === "wgpu") args.push("--", "--port", String(request.port), "--composition", request.compositionConfigPath!);
+  return { tool: "repo", args, env };
 }
 
 /** 🔌️ The world the serve owner acts on — the real one by default, a double in the laws. */
@@ -532,22 +528,26 @@ async function devServeAnswers(url: string): Promise<boolean> {
   }
 }
 
-/** 🌍️ The real world: {@link devServeCommandV1} under `bun` in its own process group, output in `logPath`. */
+/** 🌍️ The real world runs the managed serve target in its own process group with output in `logPath`. */
 export function devServeWorldV1(repoRoot: string): DevServeWorldV1 {
   return {
     answers: devServeAnswers,
     portInUse: devServePortHeld,
     spawnServe: (request) => {
-      mkdirSync(dirname(request.logPath), { recursive: true });
-      const log = openSync(request.logPath, "a");
       const command = devServeCommandV1(request);
       const env: NodeJS.ProcessEnv = { ...process.env };
       for (const [name, value] of Object.entries(command.env)) {
         if (value === null) delete env[name];
         else env[name] = value;
       }
-      const child = startToolV1(runtimeCommandNameV1(), [join(repoRoot, command.script), ...command.args], { cwd: join(repoRoot, command.cwd), env, stdio: ["ignore", log, log], detached: process.platform !== "win32", windowsHide: true });
-      closeSync(log);
+      mkdirSync(dirname(request.logPath), { recursive: true });
+      const log = openSync(request.logPath, "a");
+      let child: ChildProcess;
+      try {
+        child = startToolV1(command.tool, command.args, { cwd: repoRoot, env, stdio: ["ignore", log, log], detached: process.platform !== "win32", windowsHide: true });
+      } finally {
+        closeSync(log);
+      }
       child.unref();
       if (!child.pid) throw new Error(`dev serve: could not start the serve for port ${request.port}`);
       return { pid: child.pid, exited: () => child.exitCode !== null || child.signalCode !== null };

@@ -42,7 +42,7 @@ export class BrowserFrameTransport {
   private readonly requestRaf?: (callback: FrameRequestCallback) => number;
   private readonly cancelRaf?: (handle: number) => void;
   private readonly pointerIds = new Array<number>(FRAME_WORKER_POINTER_CAPACITY);
-  private readonly pointerMoves = new Array<BrowserFrameReplaceableEvent | undefined>(FRAME_WORKER_POINTER_CAPACITY);
+  private readonly pointerSamples = new Array<BrowserFrameReplaceableEvent | undefined>(FRAME_WORKER_POINTER_CAPACITY);
   private pointerCount = 0;
   private wheel: BrowserFrameReplaceableEvent | undefined;
   private resize: BrowserFrameReplaceableEvent | undefined;
@@ -115,7 +115,7 @@ export class BrowserFrameTransport {
   enqueueReplaceable(event: BrowserFrameReplaceableEvent): boolean {
     if (!this.accepting()) return false;
     this.generation++;
-    if (event.kind === "pointer-move") {
+    if (event.kind === "pointer-move" || event.kind === "pointer-leave") {
       let slot = -1;
       for (let index = 0; index < this.pointerCount; index++) {
         if (this.pointerIds[index] === event.pointerId) {
@@ -131,7 +131,7 @@ export class BrowserFrameTransport {
         slot = this.pointerCount++;
         this.pointerIds[slot] = event.pointerId;
       }
-      this.pointerMoves[slot] = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
+      this.pointerSamples[slot] = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
     }
     if (event.kind === "wheel") {
       const prior = this.wheel?.kind === "wheel" ? this.wheel : undefined;
@@ -263,13 +263,13 @@ export class BrowserFrameTransport {
     if (this.status !== "ready" || this.inFlight || !this.frameRequested) return false;
     const replaceable: BrowserFrameReplaceableEvent[] = [];
     for (let index = 0; index < this.pointerCount; index++) {
-      const event = this.pointerMoves[index];
+      const event = this.pointerSamples[index];
       if (event) replaceable.push(event);
     }
     if (this.wheel) replaceable.push(this.wheel);
     if (this.resize) replaceable.push(this.resize);
     const lossless = this.takeLosslessWireBatch();
-    this.pointerMoves.fill(undefined);
+    this.pointerSamples.fill(undefined);
     this.pointerCount = 0;
     this.wheel = undefined;
     this.resize = undefined;
@@ -776,7 +776,7 @@ export class BrowserFrameTransport {
       pending.resolve(null);
     }
     this.introspections.clear();
-    this.pointerMoves.fill(undefined);
+    this.pointerSamples.fill(undefined);
     this.pointerCount = 0;
     this.wheel = undefined;
     this.resize = undefined;

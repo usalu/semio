@@ -19,6 +19,9 @@
         "private": {
           "const": true
         },
+        "type": {
+          "const": "module"
+        },
         "exports": {
           "type": "object"
         },

@@ -149,7 +149,7 @@ async fn the_wall_finish_of_a_closed_room_is_the_room_facing_area_of_its_wall_so
 async fn a_door_between_two_rooms_is_subtracted_from_both() {
     let mut snapshot = load((*ROOMS));
     let with = infer(&snapshot);
-    snapshot.openings.remove("o-door-part");
+    snapshot.openings.cold_remove("o-door-part");
     let without = infer(&snapshot);
     for space in ["sp-west", "sp-east"] {
         let gained = area(&without, space, FinishSurface::Wall) - area(&with, space, FinishSurface::Wall);
@@ -201,7 +201,7 @@ async fn an_opening_the_wall_solid_does_not_cut_is_not_subtracted() {
 #[semio_framework_async_macros::async_test]
 async fn the_ceiling_is_the_soffit_of_the_slab_that_closes_the_room() {
     let mut snapshot = load((*ROOMS));
-    snapshot.ceilings.clear();
+    snapshot.ceilings.cold_clear();
     let inferred = infer(&snapshot);
     let net = quantity(&inferred, "sp-east").net_area;
     assert!((area(&inferred, "sp-east", FinishSurface::Ceiling) - net / 0.2f64.cos()).abs() < 1e-9, "a sloped slab has a larger soffit");
@@ -230,7 +230,7 @@ async fn the_ceiling_under_a_hung_ceiling_is_the_covered_floor_over_the_slope_of
 #[semio_framework_async_macros::async_test]
 async fn without_authored_ceilings_the_finish_falls_back_to_the_soffit() {
     let mut snapshot = load((*ROOMS));
-    snapshot.ceilings.clear();
+    snapshot.ceilings.cold_clear();
     let inferred = infer(&snapshot);
     assert_eq!(inferred.spaces["sp-west"].ceiling, "");
     assert!((area(&inferred, "sp-west", FinishSurface::Ceiling) - quantity(&inferred, "sp-west").net_area).abs() < 1e-9);

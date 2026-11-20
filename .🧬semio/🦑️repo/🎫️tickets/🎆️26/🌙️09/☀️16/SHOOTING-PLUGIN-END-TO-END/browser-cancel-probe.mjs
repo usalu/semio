@@ -106,7 +106,15 @@ page.on("response",response=>{
 });
 page.on("request",request=>{if(!["GET","HEAD","OPTIONS"].includes(request.method()))requests.push({method:request.method(),url:request.url()});});
  await page.goto(targetUrl.href,{waitUntil:"domcontentloaded"});
- await page.waitForFunction(()=>document.documentElement.getAttribute("data-semio-os-ready")==="shooting",{},{timeout:180000});
+ const boot = await page.waitForFunction(() => {
+   const html = document.documentElement;
+   const ready = html.getAttribute("data-semio-os-ready");
+   const fault = html.getAttribute("data-semio-os-error");
+   return ready !== null || fault !== null ? { ready, fault } : null;
+ }, undefined, {timeout: 180_000});
+ const {ready, fault} = await boot.jsonValue();
+ assert.equal(fault, null, `Shooting boot reported ${fault}`);
+ assert.equal(ready, "shooting", "Shooting reaches the ready beacon");
  await page.waitForFunction(()=>[...document.querySelectorAll("[data-surface-id]")].some(host=>host.querySelector("canvas")),{},{timeout:90000});
  const artifact=page.locator('[id="framework.panel.artifact"]').first(),catalogue=page.locator('[id="framework.panel.catalogue"]').first();
  await Promise.all(bootResponseWork);

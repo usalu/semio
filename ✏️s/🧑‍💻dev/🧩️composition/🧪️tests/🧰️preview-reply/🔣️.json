@@ -1,0 +1,8 @@
+{
+  "handle": "brep:solid-1",
+  "lods": [
+    {"tolerance": 0.05, "positions": [0,0,0,1,0,0,0,1,0], "indices": [0,1,2], "area": 0.5, "maximum": [1,1,0]},
+    {"tolerance": 0.01, "positions": [0,0,0,2,0,0,0,2,0], "indices": [0,1,2], "area": 2, "maximum": [2,2,0]}
+  ],
+  "invalidIndices": [0,1,4294967296]
+}

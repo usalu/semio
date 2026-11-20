@@ -1,0 +1,24 @@
+{
+  "frame": {
+    "origin": [10, 20, 30],
+    "xAxis": [2, 0, 0],
+    "yAxis": [1, 1, 1],
+    "normal": [0, -1, 1]
+  },
+  "outer": [[10, 20, 30], [18, 20, 30], [18, 26, 36], [15, 26, 36], [15, 23, 33], [13, 23, 33], [13, 26, 36], [10, 26, 36]],
+  "holes": [
+    [[11, 21, 31], [11, 22, 32], [12, 22, 32], [12, 21, 31]],
+    [[16, 21, 31], [16, 22, 32], [17, 22, 32], [17, 21, 31]]
+  ],
+  "cases": [
+    { "name": "interior plane foot", "target": [14, 20, 34], "point": [14, 22, 32] },
+    { "name": "outside finite outer edge", "target": [19, 22, 34], "point": [18, 23, 33] },
+    { "name": "outside in concave notch", "target": [14.75, 23, 35], "point": [15, 24, 34] },
+    { "name": "inside first hole", "target": [11.8, 20, 33], "point": [12, 21.5, 31.5] },
+    { "name": "hole distance in world units under skew basis", "target": [11.3, 20.15, 32.15], "point": [11.3, 21, 31] },
+    { "name": "inside second hole", "target": [16.2, 22, 31], "point": [16, 21.5, 31.5] },
+    { "name": "on inner edge", "target": [12, 21.5, 31.5], "point": [12, 21.5, 31.5] },
+    { "name": "above outer vertex", "target": [18, 18, 32], "point": [18, 20, 30] },
+    { "name": "outside nearest segment endpoint", "target": [19, 18, 30], "point": [18, 20, 30] }
+  ]
+}

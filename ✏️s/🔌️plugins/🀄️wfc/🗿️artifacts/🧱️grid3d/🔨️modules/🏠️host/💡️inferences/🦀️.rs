@@ -399,24 +399,22 @@ impl Grid3dInferenceJob {
                 receive_original_retained_work(context,turn)?;
                 return Ok(false);
             }
-            semio_framework_job::close_original_granted_step(context,|grant|{
-                let released_bytes=self.output_chunk.as_ref().unwrap().capacity();
-                if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<released_bytes {return semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()}),work:0}}
+            let demand=semio_framework_value::RetirementDemand {release_bytes:chunk.capacity(),depth:1,..Default::default()};
+            semio_framework_job::close_original_retained_step(context,demand,|_|{
                 self.output_chunk=None;
                 if !self.output_started {self.output_started=true;}
                 else if !self.output_pending_row {self.output_finished=true;}
-                semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_job::RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()}}),work:1}
+                semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::RetainedCloneStep::Complete(semio_framework_job::RetainedCloneProgress {copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}
             })?;
             return Ok(false);
         }
         if self.output_pending_row {
-            semio_framework_job::close_original_granted_step(context,|grant|{
-                let released_bytes=self.assignments.last().expect("encoded grid3d row").tile_id.capacity();
-                if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<released_bytes {return semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()}),work:0}}
+            let demand=semio_framework_value::RetirementDemand {release_bytes:self.assignments.last().expect("encoded grid3d row").tile_id.capacity(),depth:1,..Default::default()};
+            semio_framework_job::close_original_retained_step(context,demand,|_|{
                 self.assignments.pop();
                 self.encoded_entries+=1;
                 self.output_pending_row=false;
-                semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_job::RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()}}),work:1}
+                semio_framework_value::RetainedWorkOutcome {result:Ok(semio_framework_job::RetainedCloneStep::Complete(semio_framework_job::RetainedCloneProgress {copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}
             })?;
             return Ok(false);
         }
@@ -690,15 +688,18 @@ impl InteractiveJob for Grid3dInferenceJob {
             }
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            if self.publication.is_some() {return engine::job::close_publication_step(&mut self.publication,cx);}
+            if self.publication.is_some() {
+                let step=engine::job::close_publication_step(&mut self.publication,cx)?;
+                return Ok(match step {InteractiveJobCloseStep::Complete {progress}=>InteractiveJobCloseStep::Pending {progress},step=>step});
+            }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
                     cx.consume_fuel(1);
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step=semio_framework_job::receive_original_retained_work(cx,output.close_step_granted(child_grant))?;
-                return Ok(InteractiveJobCloseStep::Pending {progress:step.progress()});
+                let demand=output.retirement_demands().map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+                return semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(output.close_step(effect)));
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
@@ -706,8 +707,8 @@ impl InteractiveJob for Grid3dInferenceJob {
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step=semio_framework_job::receive_original_retained_work(cx,payload.close_step(child_grant))?;
-                return Ok(InteractiveJobCloseStep::Pending {progress:step.progress()});
+                let demand=payload.retirement_demands().map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+                return semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(payload.close_step(effect)));
             }
             if let Some(restore) = self.restore.as_mut() {
                 if restore.terminal_is_empty() {cx.consume_fuel(1);self.restore=None;return Ok(InteractiveJobCloseStep::Pending {progress:one});}

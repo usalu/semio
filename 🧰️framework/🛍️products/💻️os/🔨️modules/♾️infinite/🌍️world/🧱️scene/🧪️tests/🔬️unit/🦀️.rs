@@ -409,6 +409,34 @@ fn asset_response_rejects_page_plus_one_and_retires_partial_stream_one_page_per_
 }
 
 #[test]
+fn interrupted_asset_response_retires_pages_and_reuses_its_live_request() {
+    let _gate = semio_os_infinite_world_model::world_test_gate();
+    let mut lane = WorldAssetIoAuthority::default();
+    let token = lane.reserve_request(4, 9, WorldAssetRequestKind::Glb, "mesh").unwrap();
+    let mut owner = lane.take_next().unwrap();
+    lane.reserve_response(&mut owner, 8).unwrap();
+    owner.push_page(WorldAssetResponsePage::try_from_owned(vec![1; 4]).unwrap()).unwrap();
+    owner.push_page(WorldAssetResponsePage::try_from_owned(vec![2; 4]).unwrap()).unwrap();
+    assert_eq!(lane.release_partial_response(&mut owner), Err(WorldAssetFault::Stale));
+    assert_eq!(owner.retire_partial_response_step(), Ok(false));
+    assert_eq!(owner.received_bytes(), 4);
+    assert_eq!(owner.retire_partial_response_step(), Ok(true));
+    assert_eq!(owner.received_bytes(), 0);
+    lane.release_partial_response(&mut owner).unwrap();
+    assert_eq!(lane.reserved_bytes, 0);
+    assert_eq!(owner.token(), token);
+    lane.reserve_response(&mut owner, 12).unwrap();
+    owner.push_page(WorldAssetResponsePage::try_from_owned(vec![3; 12]).unwrap()).unwrap();
+    lane.seal_response(&mut owner).unwrap();
+    assert_eq!(owner.retire_partial_response_step(), Err(WorldAssetFault::Stale));
+    assert_eq!(owner.take_decode_page().unwrap().unwrap().bytes(), &[3; 12]);
+    owner.begin_close();
+    while !owner.close_step() {}
+    lane.finish(owner).unwrap();
+    assert!(lane.terminal_is_empty());
+}
+
+#[test]
 fn asset_decode_resume_and_stale_generation_keep_claimed_pages_until_terminal_return() {
     let _gate = semio_os_infinite_world_model::world_test_gate();
     let mut lane = WorldAssetIoAuthority::default();

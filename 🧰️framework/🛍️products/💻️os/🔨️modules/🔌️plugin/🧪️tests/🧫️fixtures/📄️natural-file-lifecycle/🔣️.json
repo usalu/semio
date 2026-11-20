@@ -668,7 +668,8 @@
     "lastWord": 21,
     "maximumWorkUnitsPerStep": 64,
     "expectedMinimumTurns": 128,
-    "expectedDecodedItems": 2048
+    "expectedDecodedItems": 2048,
+    "completedDecodeStages": [2, 3]
   },
   "browserRead": {
     "chunkBytes": 3,

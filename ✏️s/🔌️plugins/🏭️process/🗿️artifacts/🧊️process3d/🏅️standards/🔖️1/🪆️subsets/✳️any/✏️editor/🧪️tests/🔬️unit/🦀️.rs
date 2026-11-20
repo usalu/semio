@@ -4,7 +4,7 @@ extern crate semio_os_kernel as store;
 mod context;
 
 use semio_s_artifact_process_process3d_editor::*;
-use semio_s_artifact_process_process3d_kit::{axis_angle_from_up_to, builtin_installed_catalogs, catalog_machine, installable_contributions, installed_catalogs, process_json_envelope_is_bounded, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS_3D_PLAY_APP_ID, PROCESS_CONTRIBUTION_MAX_BYTES, PROCESS_CONTRIBUTION_MAX_DEPTH, PROCESS_CONTRIBUTION_MAX_ITEMS, PROCESS_CONTRIBUTION_MAX_STRING_BYTES};
+use semio_s_artifact_process_process3d_kit::{axis_angle_from_up_to, catalog_machine, installable_contributions, installed_catalogs, process_json_envelope_is_bounded, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS_3D_PLAY_APP_ID, PROCESS_CONTRIBUTION_MAX_BYTES, PROCESS_CONTRIBUTION_MAX_DEPTH, PROCESS_CONTRIBUTION_MAX_ITEMS, PROCESS_CONTRIBUTION_MAX_STRING_BYTES};
 use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
 use semio_s_artifact_process_process3d_modes;

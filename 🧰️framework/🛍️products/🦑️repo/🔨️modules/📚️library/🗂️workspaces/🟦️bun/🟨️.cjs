@@ -49,7 +49,110 @@ const bounded = (root, path) => {
 };
 
 const physicalBudget = () => ({ texts: new Map(), bytes: 0, lists: new Map(), entries: 0 });
-const physicalObservations = () => ({ paths: new Map(), order: [], frontier: new Map() });
+const stateKindNames = Object.freeze(["missing", "file", "directory", "symlink", "other"]), stateKindCodes = Object.freeze({ missing: 0, file: 1, directory: 2, symlink: 3, other: 4 });
+const listingKindChars = Object.freeze({ file: "f", directory: "d", symlink: "l", other: "o" }), listingKindNames = Object.freeze({ f: "file", d: "directory", l: "symlink", o: "other" });
+const internedNameCapacity = 262144, internedNames = new Map();
+/** 🏷️ Shares one string per distinct directory entry name, so a million listing rows hold a few thousand name strings. */
+function internName(name) {
+  let shared = internedNames.get(name);
+  if (shared === undefined) { if (internedNames.size >= internedNameCapacity) internedNames.clear(); internedNames.set(name, name); shared = name; }
+  return shared;
+}
+const emptyListing = Object.freeze({ names: Object.freeze([]), kinds: "", length: 0 });
+const isListing = value => value !== null && typeof value === "object" && typeof value.kinds === "string" && Array.isArray(value.names);
+/** 🗜️ Packs ordered `{name, kind}` rows into interned names beside one kind character per row; the packed listing is immutable. */
+function packListing(entries) {
+  if (!entries.length) return emptyListing;
+  const names = new Array(entries.length); let kinds = "";
+  for (let index = 0; index < entries.length; index++) { const kind = listingKindChars[entries[index].kind]; if (kind === undefined) throw Error("Closed Bun directory entry kind required"); names[index] = internName(entries[index].name); kinds += kind; }
+  return Object.freeze({ names, kinds, length: names.length });
+}
+/** 📖️ Unpacks a listing into fresh `{name, kind}` rows in their original order. */
+function listingEntries(listing, frozen = false) {
+  const rows = new Array(listing.length);
+  for (let index = 0; index < listing.length; index++) { const row = { name: listing.names[index], kind: listingKindNames[listing.kinds[index]] }; rows[index] = frozen ? Object.freeze(row) : row; }
+  return frozen ? Object.freeze(rows) : rows;
+}
+/** ⚖️ Compares two packed listings row by row. */
+function listingEquals(left, right) {
+  if (left === right) return true;
+  if (left.length !== right.length || left.kinds !== right.kinds) return false;
+  for (let index = 0; index < left.length; index++) if (left.names[index] !== right.names[index]) return false;
+  return true;
+}
+/** 🪶️ Holds every observed path, its physical state, its listing, its frontier stamp and the global fact order in flat typed arrays and one name per path, instead of an object graph per path. */
+class PackedObservations {
+  constructor() {
+    this.index = new Map(); this.paths = []; this.lists = [];
+    this.kind = new Uint8Array(1024); this.dev = new BigUint64Array(1024); this.ino = new BigUint64Array(1024); this.mode = new Uint32Array(1024);
+    this.mtime = new BigInt64Array(1024); this.ctime = new BigInt64Array(1024); this.settled = new Uint8Array(1024);
+    this.facts = new Uint32Array(2048); this.factCount = 0;
+  }
+  get size() { return this.paths.length; }
+  reserve(count) {
+    if (count <= this.kind.length) return;
+    const capacity = Math.max(count, this.kind.length * 2);
+    for (const name of ["kind", "dev", "ino", "mode", "mtime", "ctime", "settled"]) { const next = new this[name].constructor(capacity); next.set(this[name]); this[name] = next; }
+  }
+  addState(path, tuple) {
+    const id = this.paths.length, code = tuple[0] === "missing" ? 0 : Object.hasOwn(stateKindCodes, tuple[0]) ? stateKindCodes[tuple[0]] : undefined;
+    if (code === undefined || tuple.length !== (code === 0 ? 1 : 4)) throw Error("Closed Bun ownership observation kind required");
+    let dev = 0n, ino = 0n, mode = 0;
+    if (code !== 0) {
+      dev = BigInt.asUintN(64, BigInt(tuple[1])); ino = BigInt.asUintN(64, BigInt(tuple[2])); mode = tuple[3];
+      if (String(dev) !== tuple[1] || String(ino) !== tuple[2] || !Number.isInteger(mode) || mode < 0 || mode > 4294967295) throw Error("Closed Bun ownership observation kind required");
+    }
+    this.reserve(id + 1); this.kind[id] = code; this.dev[id] = dev; this.ino[id] = ino; this.mode[id] = mode; this.settled[id] = 0;
+    this.index.set(path, id); this.paths.push(path); this.lists.push(undefined); return id;
+  }
+  pushFact(id, operation) {
+    if (this.factCount >= this.facts.length) { const next = new Uint32Array(this.facts.length * 2); next.set(this.facts); this.facts = next; }
+    this.facts[this.factCount++] = id * 2 + (operation === "list" ? 1 : 0);
+  }
+  stateTuple(id) { const code = this.kind[id]; return code === 0 ? ["missing"] : [stateKindNames[code], String(this.dev[id]), String(this.ino[id]), this.mode[id]]; }
+  stateEquals(id, tuple) {
+    const code = this.kind[id];
+    if (code === 0) return tuple.length === 1 && tuple[0] === "missing";
+    return tuple.length === 4 && tuple[0] === stateKindNames[code] && tuple[1] === String(this.dev[id]) && tuple[2] === String(this.ino[id]) && tuple[3] === this.mode[id];
+  }
+  stateMatches(id, facts) {
+    const code = this.kind[id];
+    if (!facts) return code === 0;
+    return code === stateKindCodes[facts.isSymbolicLink() ? "symlink" : facts.isDirectory() ? "directory" : facts.isFile() ? "file" : "other"] && this.dev[id] === BigInt.asUintN(64, facts.dev) && this.ino[id] === BigInt.asUintN(64, facts.ino) && this.mode[id] === Number(facts.mode);
+  }
+  setFrontier(path, facts, settled) { const id = this.index.get(path); this.mtime[id] = BigInt.asIntN(64, facts.mtimeNs); this.ctime[id] = BigInt.asIntN(64, facts.ctimeNs); this.settled[id] = settled ? 2 : 1; }
+  clearFrontier(path) { const id = this.index.get(path); if (id !== undefined) this.settled[id] = 0; }
+  frontierMoved(id, facts) { return this.mtime[id] !== BigInt.asIntN(64, facts.mtimeNs) || this.ctime[id] !== BigInt.asIntN(64, facts.ctimeNs); }
+  rows() { return observedRows(this); }
+  factRows() { const rows = []; for (let index = 0; index < this.factCount; index++) rows.push([this.paths[this.facts[index] >>> 1], (this.facts[index] & 1) === 1 ? "list" : "state"]); return rows; }
+  record(path) { const id = this.index.get(path); return id === undefined ? undefined : packedRow(this, id); }
+}
+/** ⏱️ Collects the frontier stamps one replay proved in flat arrays and applies them only once the whole replay holds. */
+class FrontierProof {
+  constructor(size) { this.mtime = new BigInt64Array(size); this.ctime = new BigInt64Array(size); this.settled = new Uint8Array(size); }
+  set(id, facts, settled) { this.mtime[id] = BigInt.asIntN(64, facts.mtimeNs); this.ctime[id] = BigInt.asIntN(64, facts.ctimeNs); this.settled[id] = settled ? 2 : 1; }
+  applyTo(observations) { for (let id = 0; id < this.settled.length; id++) if (this.settled[id] !== 0) { observations.mtime[id] = this.mtime[id]; observations.ctime[id] = this.ctime[id]; observations.settled[id] = this.settled[id]; } }
+}
+/** 🧱️ Materializes one frozen `{path, state, list?}` row from the packed arrays of an observation set. */
+function packedRow(observations, id) {
+  const list = observations.lists[id];
+  return Object.freeze({ path: observations.paths[id], state: Object.freeze(observations.stateTuple(id)), ...(list ? { list: listingEntries(list, true) } : {}) });
+}
+/** 👁️ Presents a snapshot of the packed observations as a read-only array whose rows are built on access and never retained. */
+function observedRows(observations) {
+  const { paths, lists, kind, dev, ino, mode } = observations, count = paths.length, snapshot = { paths, lists, kind, dev, ino, mode, stateTuple: PackedObservations.prototype.stateTuple };
+  const isIndex = key => typeof key === "string" && /^(?:0|[1-9][0-9]*)$/u.test(key) && Number(key) < count;
+  let recent = -1, row;
+  const at = id => { if (id !== recent) { row = packedRow(snapshot, id); recent = id; } return row; };
+  return new Proxy([], {
+    get: (target, key, receiver) => key === "length" ? count : isIndex(key) ? at(Number(key)) : Reflect.get(target, key, receiver),
+    has: (target, key) => isIndex(key) || Reflect.has(target, key),
+    ownKeys: () => [...Array.from({ length: count }, (_, index) => String(index)), "length"],
+    getOwnPropertyDescriptor: (target, key) => isIndex(key) ? { value: at(Number(key)), writable: false, enumerable: true, configurable: true } : key === "length" ? { value: count, writable: true, enumerable: false, configurable: false } : Reflect.getOwnPropertyDescriptor(target, key),
+    set: () => false, defineProperty: () => false, deleteProperty: () => false,
+  });
+}
+const physicalObservations = () => new PackedObservations();
 const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: physicalObservations(), physical: physicalBudget() });
 function sameManifest(left, right) { return ["dev", "ino", "mode", "nlink", "size", "mtimeNs", "ctimeNs", "birthtimeNs"].every(key => left[key] === right[key]); }
 /** 📏️ Reads a bounded actual descriptor and refuses substitution, truncation or growth before returning text. */
@@ -89,6 +192,7 @@ function* documentPlan(owner, path) {
   }
   return owner.documents.get(path);
 }
+const noCandidates = Object.freeze({ paths: Object.freeze([]), collections: Object.freeze([]) });
 function* walkPlan(owner, directory) {
   if (outputDirectory(owner.root, directory)) return { paths: [], collections: [] };
   const collection = collectionRoot(owner.root, directory);
@@ -101,7 +205,7 @@ function* walkPlan(owner, directory) {
     if (entry.kind === "symlink") throw Error("Bun source directory is a symlink: " + join(directory, entry.name));
     if (entry.kind === "directory") { const child = yield* walkPlan(owner, join(directory, entry.name)); paths.push(...child.paths); collections.push(...child.collections); }
   }
-  const result = { paths, collections }; owner.inventory.set(directory, result); return result;
+  const result = paths.length || collections.length ? { paths, collections } : noCandidates; owner.inventory.set(directory, result); return result;
 }
 /** 📁️ Expands fresh physical ownership through one resumable computation. */
 function* candidatesPlan(owner, scope, excluded = new Set()) {
@@ -212,20 +316,18 @@ function ownershipChange(operation, path, previous, current) {
 function retainOwnershipObservationV1(observations, operation, path, value) {
   if (!observations) return;
   if (operation !== "state" && operation !== "list") throw Error("Closed Bun ownership observation kind required");
-  let record = observations.paths.get(path);
-  const previous = record?.[operation];
-  if (previous !== undefined) {
-    if (JSON.stringify(previous) !== JSON.stringify(value)) throw edited("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous, value)));
-    return;
+  const id = observations.index.get(path), listing = operation === "list" ? isListing(value) ? value : packListing(value) : undefined;
+  if (id !== undefined && (operation === "state" || observations.lists[id] !== undefined)) {
+    if (operation === "state" ? observations.stateEquals(id, value) : listingEquals(observations.lists[id], listing)) return;
+    const previous = operation === "state" ? observations.stateTuple(id) : listingEntries(observations.lists[id]), current = operation === "state" ? value : listingEntries(listing);
+    throw edited("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous, current)));
   }
-  if (operation === "list" && record?.state[0] !== "directory") throw Error("Original Bun directory state observation required");
-  if (!record && observations.paths.size >= limits.maximumObservationPaths) throw Error("Bun ownership physical path observation capacity exceeded");
-  if (observations.order.length >= limits.maximumObservationFacts) throw Error("Bun ownership observation fact capacity exceeded");
-  if (operation === "list") value.forEach(Object.freeze);
-  Object.freeze(value);
-  if (!record) { record = Object.seal({ path, state: value, list: undefined }); observations.paths.set(path, record); }
-  else record.list = value;
-  observations.order.push(Object.freeze({ record, operation }));
+  if (operation === "list" && (id === undefined || observations.kind[id] !== stateKindCodes.directory)) throw Error("Original Bun directory state observation required");
+  if (id === undefined && observations.size >= limits.maximumObservationPaths) throw Error("Bun ownership physical path observation capacity exceeded");
+  if (observations.factCount >= limits.maximumObservationFacts) throw Error("Bun ownership observation fact capacity exceeded");
+  const target = id === undefined ? observations.addState(path, value) : id;
+  if (operation === "list") observations.lists[target] = listing;
+  observations.pushFact(target, operation);
 }
 /** 🧊️ Remembers one directory listing under the directory's physical stamp, so a later derivation re-lists only directories whose entries could have changed. */
 const listingCache = new Map();
@@ -237,6 +339,15 @@ const byName = (a, b) => Buffer.from(a.name).compare(Buffer.from(b.name));
 const kindOf = entry => entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
 /** 🔬️ Projects the only directory entries that can change ownership, so a listing digest decides whether a cached derivation still holds. */
 const projectListing = (root, path, entries) => entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !outputName(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name))));
+/** 🪄️ Projects a packed listing exactly as `projectListing` projects its rows and shares the packed listing when nothing is dropped. */
+function projectPacked(root, path, listing) {
+  const names = [], kinds = [];
+  for (let index = 0; index < listing.length; index++) {
+    const name = listing.names[index], kind = listing.kinds[index];
+    if (name === "package.json" || !name.startsWith(".") && !outputName(name) && (kind === "l" || kind === "d" && !collectionRoot(root, join(path, name)))) { names.push(name); kinds.push(kind); }
+  }
+  return names.length === listing.length ? listing : names.length ? Object.freeze({ names, kinds: kinds.join(""), length: names.length }) : emptyListing;
+}
 /** 📋️ Lists one directory exactly as the ownership walk does and returns its projection. */
 function readListingProjection(root, path) {
   const entries = fs.readdirSync(path, { withFileTypes: true }).map(entry => ({ name: entry.name, kind: kindOf(entry) }));
@@ -246,14 +357,14 @@ function readListingProjection(root, path) {
 /** 📤️ Exports the settled directory listings this process retained under one workspace, so a later process can reuse them under their stamps. */
 function exportOwnershipIndexV1(root) {
   const rows = [];
-  for (const [path, record] of listingCache) if (record.root === root) rows.push({ path, stamp: record.stamp, count: record.count ?? record.entries.length, entries: (record.projected ??= projectListing(root, path, record.entries)).map(({ name, kind }) => ({ name, kind })) });
+  for (const [path, record] of listingCache) if (record.root === root) rows.push({ path, stamp: record.stamp, count: record.count, entries: listingEntries(record.projected ??= projectPacked(root, path, record.listing)) });
   return rows;
 }
 /** 📥️ Seeds settled directory listings persisted by an earlier process; each is trusted only while the live directory carries exactly its stamp. */
 function seedOwnershipIndexV1(root, records) {
   for (const record of records) {
     if (listingCache.size >= limits.maximumListingCacheDirectories) break;
-    if (!listingCache.has(record.path)) listingCache.set(record.path, { stamp: record.stamp, root, entries: record.entries, count: record.count, projected: record.entries });
+    if (!listingCache.has(record.path)) { const listing = packListing(record.entries); listingCache.set(record.path, { stamp: record.stamp, root, listing, count: record.count ?? listing.length, projected: listing }); }
   }
 }
 function nativeOperations(observations, root, budget = physicalBudget()) {
@@ -276,25 +387,26 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
       if (!before) { const current = observe(path); if (current.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path); before = current.entry; }
       const listedAt = Date.now(), stamp = directoryStamp(before), prior = budget.lists.get(path) ?? 0, cached = listingCache.get(path);
       let record = cached?.stamp === stamp && cached.root === root ? cached : undefined, latest = before;
+      let entries;
       if (!record) {
-        const entries = [], directory = fs.opendirSync(path, { bufferSize: limits.directoryReadBatch }); let failed = false;
+        entries = []; const directory = fs.opendirSync(path, { bufferSize: limits.directoryReadBatch }); let failed = false;
         try { for (let entry; (entry = directory.readSync()) !== null;) { if (entries.length >= limits.maximumDirectoryEntries || budget.entries - prior + entries.length + 1 > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path); entries.push({ name: entry.name, kind: kindOf(entry) }); } }
         catch (error) { failed = true; throw error; } finally { try { directory.closeSync(); } catch (error) { if (!failed) throw error; } }
         entries.sort(byName);
         const after = observe(path);
         if (after.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path);
         latest = after.entry;
-        record = { stamp, root, entries, count: entries.length, projected: undefined };
+        record = { stamp, root, listing: packListing(entries), count: entries.length, projected: undefined };
         if (directoryStamp(after.entry) === stamp && settledDirectory(after.entry, listedAt)) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
         else listingCache.delete(path);
-      } else if ((record.count ?? record.entries.length) > limits.maximumDirectoryEntries || budget.entries - prior + (record.count ?? record.entries.length) > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
-      budget.entries = budget.entries - prior + (record.count ?? record.entries.length); budget.lists.set(path, record.count ?? record.entries.length);
+      } else if (record.count > limits.maximumDirectoryEntries || budget.entries - prior + record.count > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
+      budget.entries = budget.entries - prior + record.count; budget.lists.set(path, record.count);
       if (observations) {
-        retain("list", path, record.projected ??= projectListing(root, path, record.entries));
-        if (latest.isDirectory() && directoryStamp(latest) === stamp) observations.frontier.set(path, { stamp, settled: settledDirectory(latest, listedAt) });
-        else observations.frontier.delete(path);
+        retain("list", path, record.projected ??= projectPacked(root, path, record.listing));
+        if (latest.isDirectory() && directoryStamp(latest) === stamp) observations.setFrontier(path, latest, settledDirectory(latest, listedAt));
+        else observations.clearFrontier(path);
       }
-      return record.entries;
+      return entries ?? listingEntries(record.listing);
     },
     readText(path) {
       recent = undefined;
@@ -324,8 +436,8 @@ function* publicationPlan(owner, selection, verifyPublished) {
 }
 /** 🔭️ Exposes the exact path states, directory listing projections and manifest digests one ownership computation retained, so a later process can prove the same topology by stamps. */
 function observedOwnership(owner) {
-  const paths = [...owner.observations.paths.values()].map(record => Object.freeze({ path: record.path, state: record.state, ...(record.list ? { list: record.list } : {}) })), texts = [...owner.texts].map(([path, text]) => Object.freeze({ path, sha256: createHash("sha256").update(text).digest("hex") }));
-  return Object.freeze({ root: owner.root, paths: Object.freeze(paths), texts: Object.freeze(texts) });
+  const paths = owner.observations.rows(), texts = [...owner.texts].map(([path, text]) => Object.freeze({ path, sha256: createHash("sha256").update(text).digest("hex") }));
+  return Object.freeze({ root: owner.root, paths, texts: Object.freeze(texts) });
 }
 /** 🧭️ Remembers the first path a replay saw move and the fact that moved there (existence, identity, listing or content digest), so a refusal can name it; always answers false. */
 function ownershipMoved(owner, path, fact, reason) { owner.moved ??= { path, fact, reason }; return false; }
@@ -334,15 +446,15 @@ function ownershipStateMoved(owner, record, facts) { return ownershipMoved(owner
 /** ⚡️ Replays the complete original decision frontier and fences the final awaited continuation without rediscovering packages. */
 async function replayCurrentMembershipV1(owner, control, progress) {
   let continuationFailed = false, visited = 0;
-  const observations = owner.observations, proof = new Map(), operations = nativeOperations(undefined, owner.root, owner.physical), read = path => {
+  const observations = owner.observations, proof = new FrontierProof(observations?.size ?? 0), operations = nativeOperations(undefined, owner.root, owner.physical), read = path => {
     try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined; throw error; }
   };
   try {
-    if (!observations?.paths.size || !observations.frontier) return false;
-    for (const record of observations.paths.values()) {
+    if (!observations?.size) return false;
+    for (let id = 0; id < observations.size; id++) {
       control.signal.throwIfAborted();
       const completedOperations = ++progress.completedOperations;
-      if (++visited === observations.paths.size || completedOperations % (control.frontierBatchPaths ?? 1) === 0) try { await control.advance({ operation: "frontier", path: record.path, completedOperations }); } catch (error) { continuationFailed = true; throw error; }
+      if (++visited === observations.size || completedOperations % (control.frontierBatchPaths ?? 1) === 0) try { await control.advance({ operation: "frontier", path: observations.paths[id], completedOperations }); } catch (error) { continuationFailed = true; throw error; }
       control.signal.throwIfAborted();
     }
     if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
@@ -350,39 +462,43 @@ async function replayCurrentMembershipV1(owner, control, progress) {
       control.signal.throwIfAborted();
       if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return ownershipMoved(owner, path, "content digest", "bytes");
     }
-    for (const record of observations.paths.values()) {
-      control.signal.throwIfAborted(); const facts = read(record.path);
-      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
-      if (record.list) {
-        if (!facts?.isDirectory()) return ownershipMoved(owner, record.path, "identity", "identity");
-        const before = observations.frontier.get(record.path), stamp = directoryStamp(facts), decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && settledDirectory(facts, Date.now()));
-        if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
-        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
-        proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
+    for (let id = 0; id < observations.size; id++) {
+      const path = observations.paths[id];
+      control.signal.throwIfAborted(); const facts = read(path);
+      if (!observations.stateMatches(id, facts)) return ownershipStateMoved(owner, { path, state: [stateKindNames[observations.kind[id]]] }, facts);
+      const list = observations.lists[id];
+      if (list) {
+        if (!facts?.isDirectory()) return ownershipMoved(owner, path, "identity", "identity");
+        const known = observations.settled[id] !== 0, decision = ownershipFrontierDecisionV1(known ? "known" : undefined, known && !observations.frontierMoved(id, facts) ? "known" : "moved", known && observations.settled[id] === 2 && settledDirectory(facts, Date.now()));
+        if (decision === "derive") return ownershipMoved(owner, path, "identity", "identity");
+        if (decision === "relist" && (!listingEquals(packListing(projectListing(owner.root, path, operations.list(path))), list) || directoryStamp(read(path)) !== directoryStamp(facts))) return ownershipMoved(owner, path, "listing", "roster");
+        proof.set(id, facts, settledDirectory(facts, Date.now()));
       }
     }
     if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
-    for (const [path, observation] of proof) observations.frontier.set(path, { stamp: observation.stamp, settled: observation.settled });
+    proof.applyTo(observations);
     return true;
   } catch (error) { control.signal.throwIfAborted(); if (continuationFailed) throw error; return ownershipMoved(owner, typeof error?.path === "string" ? error.path : owner.root, "content digest", "bytes"); }
 }
 /** 🧷️ Authenticates the complete candidate after the caller continuation without another await. */
 function authenticateCurrentMembershipV1(owner, control) {
-  const observations = owner.observations, operations = nativeOperations(undefined, owner.root, owner.physical), proof = new Map(), read = path => {
+  const observations = owner.observations, operations = nativeOperations(undefined, owner.root, owner.physical), proof = new FrontierProof(observations?.size ?? 0), read = path => {
     try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined; throw error; }
   };
-  if (!observations?.paths.size || !observations.frontier) return false;
+  if (!observations?.size) return false;
   if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
-  for (const record of observations.paths.values()) {
+  for (let id = 0; id < observations.size; id++) {
+    const path = observations.paths[id];
     control.signal.throwIfAborted();
-    const facts = read(record.path);
-    if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
-    if (record.list) {
-      if (!facts?.isDirectory()) return ownershipMoved(owner, record.path, "identity", "identity");
-      const before = observations.frontier.get(record.path), stamp = directoryStamp(facts), decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && settledDirectory(facts, Date.now()));
-      if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
-      if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
-      proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
+    const facts = read(path);
+    if (!observations.stateMatches(id, facts)) return ownershipStateMoved(owner, { path, state: [stateKindNames[observations.kind[id]]] }, facts);
+    const list = observations.lists[id];
+    if (list) {
+      if (!facts?.isDirectory()) return ownershipMoved(owner, path, "identity", "identity");
+      const known = observations.settled[id] !== 0, decision = ownershipFrontierDecisionV1(known ? "known" : undefined, known && !observations.frontierMoved(id, facts) ? "known" : "moved", known && observations.settled[id] === 2 && settledDirectory(facts, Date.now()));
+      if (decision === "derive") return ownershipMoved(owner, path, "identity", "identity");
+      if (decision === "relist" && (!listingEquals(packListing(projectListing(owner.root, path, operations.list(path))), list) || directoryStamp(read(path)) !== directoryStamp(facts))) return ownershipMoved(owner, path, "listing", "roster");
+      proof.set(id, facts, settledDirectory(facts, Date.now()));
     }
   }
   for (const [path, text] of owner.texts) {
@@ -391,7 +507,7 @@ function authenticateCurrentMembershipV1(owner, control) {
   }
   control.signal.throwIfAborted();
   if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
-  for (const [path, observation] of proof) observations.frontier.set(path, observation);
+  proof.applyTo(observations);
   return true;
 }
 /** 🔎️ Names the first scope manifest, package manifest or authored pattern row on which two ownership reports differ, and whether it appeared, vanished or changed in content. */

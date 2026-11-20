@@ -233,10 +233,10 @@ where
     /// A single-mutation publication is simply the `mutations.len() == 1` case of this one machine.
 
     /// 🎟️ Admits the original captured actor, input backing and transaction before any constructor work.
-    pub fn admit_apply_batch(
+    pub fn admit_apply_batch_with_pages(
         &self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, operation:semio_framework_job::OperationId, expected_generation:u64, expected_revision:[u8;32],
         actor:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>,
-        mutations:&mut Vec<Mutation>, lane:HistoryLane,
+        mutations:&mut Vec<Mutation>, pages:&mut Option<semio_os_store_one_item_publication::ArtifactMutationPages<Mutation>>, lane:HistoryLane,
         factory:Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P,Mutation>>>,
         transaction:&mut Option<protocol::TransactionRef>, verb:Option<&str>, group:Option<&str>, outbound:bool, grant:RetainedCloneGrant,
     )->Result<Option<(ArtifactStoreBatchPublication<P,Mutation>,RetainedCloneProgress)>,ValueError>
@@ -245,7 +245,8 @@ where
         let factory=factory.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"batched publication requires its original typed preparation issuer"))?;
         let retirement=store_owners.mutation_retirement_factory.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"batched publication requires its original mutation retirement issuer"))?;
         let original_actor=actor.as_ref().filter(|owner|owner.original_is_untouched()).and_then(ControlledRetirement::original).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication requires its original paid actor capture"))?;
-        if mutations.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication requires original mutation inputs"));}
+        let admitted_items = mutations.len() + pages.as_ref().map_or(0, |pages| pages.len());
+        if admitted_items==0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication requires original mutation inputs"));}
         if store_wire.durable_group_root.is_some()||store_log.envelope.open_transaction.as_ref().is_some_and(|open|transaction.as_ref().is_none_or(|transaction|transaction.id!=open.transaction.id)){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication has an unresolved original transaction or group decision"));}
         if self.generation!=expected_generation||self.content_revision!=expected_revision{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original generation or revision is stale"));}
         if store_wire.backbone.is_some()&&!outbound{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"batched publication requires its original document/outbound lane"));}
@@ -259,14 +260,13 @@ where
         if stamped.is_some_and(|text|text.is_empty()||text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||line.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||verb.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original metadata exceeds its admitted identity bound"));}
         if group.is_some_and(|text|text.is_empty()||text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original group exceeds its admitted identity bound"));}
         let text_bytes=stamped.map_or(0,str::len)+line.map_or(0,str::len)+verb.map_or(0,str::len)+group.map_or(0,str::len);
-        let copied_bytes=size_of::<ArtifactTypedBatchItemAuthority<P,Mutation>>()+size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+size_of::<ArtifactStoreOneItemLiveAuthority>()+size_of::<ArtifactStoreBatchPublication<P,Mutation>>()+size_of::<Vec<Mutation>>()+size_of::<Option<protocol::TransactionRef>>()+size_of_val(actor)+text_bytes;
+        let copied_bytes=size_of::<ArtifactTypedBatchItemAuthority<P,Mutation>>()+size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+size_of::<ArtifactStoreOneItemLiveAuthority>()+size_of::<ArtifactStoreBatchPublication<P,Mutation>>()+size_of::<Vec<Mutation>>()+pages.as_ref().map_or(0, |_| size_of_val(pages))+size_of::<Option<protocol::TransactionRef>>()+size_of_val(actor)+text_bytes;
         let retained_capacity_bytes=size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<ArtifactStoreOneItemLiveAuthority>()+text_bytes;
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<retained_capacity_bytes||grant.maximum_depth==0{return Ok(None);}
         let text=|original:&str|{let mut value=String::with_capacity(original.len());value.push_str(original);value};
         let stamped_edit_id=stamped.map(text);let line=line.map(text);let verb=verb.map(text);let group=group.map(text);
-        let admitted_items=mutations.len();
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
-        let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire);
+        let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire).with_paged_inputs(pages.take());
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, group, stamped_edit_id));
         let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,original_origins:std::mem::ManuallyDrop::new(None),origins_retirement:Default::default(),operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receiving_fault:std::mem::ManuallyDrop::new(None),receiving_fault_close:Default::default(),receiving_fault_effect:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,turn_work:0,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
@@ -347,7 +347,7 @@ where
         mutations:&mut Vec<Mutation>, transaction:&mut Option<protocol::TransactionRef>, grant:RetainedCloneGrant,
     )->Result<Option<(ArtifactStoreBatchPublication<P,Mutation>,RetainedCloneProgress)>,ValueError>
     where P:Sync,Mutation:Send {
-        self.admit_apply_batch(store_log, store_owners, store_wire, operation,expected_generation,expected_revision,actor,mutations,HistoryLane::Document,store_owners.one_item_preparation_factory.as_ref(),transaction,None,None,false,grant)
+        self.admit_apply_batch_with_pages(store_log, store_owners, store_wire, operation,expected_generation,expected_revision,actor,mutations,&mut None,HistoryLane::Document,store_owners.one_item_preparation_factory.as_ref(),transaction,None,None,false,grant)
     }
 
     /// 🧩 Uses the exact typed factory installed by the member's owner catalog.

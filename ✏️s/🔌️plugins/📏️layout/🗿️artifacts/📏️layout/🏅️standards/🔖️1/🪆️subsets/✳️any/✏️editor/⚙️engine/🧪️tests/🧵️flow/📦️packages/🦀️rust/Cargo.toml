@@ -17,3 +17,4 @@ serde_json = { workspace = true }
 semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-s-artifact-layout-layout-engine = { workspace = true, features = ["testkit"] }
 semio-framework-value = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

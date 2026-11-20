@@ -36,7 +36,7 @@ fn resumable_result(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, 
     let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
     let bytes = driver.completed_output(&mut job, 64, 2_000_000)?;
     let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    crate::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Grid3dInferenceCommit>(text).map_err(|error| error.to_string())
+    semio_s_artifact_wfc_grid3d_inferences::standards::v1::subsets::any::io::text::inferences::decode_inference_value::<Grid3dInferenceCommit>(text).map_err(|error| error.to_string())
 }
 
 #[test]

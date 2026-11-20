@@ -7,12 +7,16 @@ type Trailing<A>=(OriginalRequestLease<<A as ArtifactApp>::Config>,Option<Window
 type Fields<A>=(Leading<A>,Trailing<A>);
 
 impl<A:ArtifactApp> RetireOwned for ArtifactOwnedToolJobRequest<A>{
- type RetirementCursor=<Fields<A> as RetireOwned>::RetirementCursor;
+ type RetirementCursor=<Option<Fields<A>> as RetireOwned>::RetirementCursor;
+ fn retirement_ready(&self)->bool{self.construction.terminal_is_empty()&&self.construction_failure.is_none()&&self.failure_retirement.is_none()}
  fn retirement_seed(self)->Self::RetirementCursor{
-  let ArtifactOwnedToolJobRequest{command,input,checkpoint,controller_id,tool_id,payload_schema_id,parent_document_id,authoring_seed,snapshot,snapshot_read,config,window_config,history,interaction_state,interaction_hover,context,instance_operation_owner,output_chunks,completion,..}=self;
-  let leading=(command,input,checkpoint,controller_id,tool_id,payload_schema_id,parent_document_id,authoring_seed,OriginalRequestLease(snapshot),snapshot_read);
-  let trailing=(OriginalRequestLease(config),window_config,OriginalRequestLease(history),OriginalRequestLease(interaction_state),OriginalRequestLease(interaction_hover),context,instance_operation_owner,output_chunks,completion);
-  (leading,trailing).retirement_seed()
+  assert!(self.retirement_ready(), "original tool construction must retire before its request");
+  self.inputs.map(|inputs|{
+   let ArtifactOwnedToolJobInputs{command,input,checkpoint,controller_id,tool_id,payload_schema_id,parent_document_id,authoring_seed,snapshot,snapshot_read,config,window_config,history,interaction_state,interaction_hover,context,instance_operation_owner,output_chunks,completion,..}=inputs;
+   let leading=(command,input,checkpoint,controller_id,tool_id,payload_schema_id,parent_document_id,authoring_seed,OriginalRequestLease(snapshot),snapshot_read);
+   let trailing=(OriginalRequestLease(config),window_config,OriginalRequestLease(history),OriginalRequestLease(interaction_state),OriginalRequestLease(interaction_hover),context,instance_operation_owner,output_chunks,completion);
+   (leading,trailing)
+  }).retirement_seed()
  }
  fn controlled_retirement_supported()->bool{<A::Command as RetireOwned>::controlled_retirement_supported()&&<A::Snapshot as RetireOwned>::controlled_retirement_supported()&&<A::Config as RetireOwned>::controlled_retirement_supported()}
 }

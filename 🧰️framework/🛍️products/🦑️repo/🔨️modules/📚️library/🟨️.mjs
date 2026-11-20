@@ -30,8 +30,16 @@ export function nxBuildEngineReferencesV1(source){return classifyModuleReference
 
 /** 📄️ Resolves actual engine modules, retaining directory-index imports and missing-file refusals. */
 export function nxBuildEngineSourceFileV1(owner,specifier){
- const path=resolve(dirname(owner),specifier),candidate=[path,...[".ts",".mjs",".js",".json","/index.ts","/index.mjs","/index.js"].map(suffix=>path+suffix)].find(file=>existsSync(file)&&lstatSync(file).isFile());
- if(!candidate)throw Error(`Private Nx engine import missing: ${specifier} from ${owner}`);return candidate;
+ const path=resolve(dirname(owner),specifier);
+ let occupied=false;
+ for(const suffix of ["",".ts",".mjs",".js",".json","/index.ts","/index.mjs","/index.js"]){
+  const candidate=path+suffix,entry=lstatSync(candidate,{throwIfNoEntry:false});
+  if(entry?.isFile())return candidate;
+  if(entry)occupied=true;
+ }
+ const error=Error(`Private Nx engine import missing: ${specifier} from ${owner}`);
+ if(!occupied)error.name="PrivateEngineImportMissingError";
+ throw error;
 }
 
 /** 📦️ Resolves a bare import of a workspace package (a link in the root `node_modules` that leads back into the workspace) to the Source file its `exports` map names, so the engine closure follows the real files instead of naming the package as an external npm dependency the graph does not carry; `undefined` for every other package. */

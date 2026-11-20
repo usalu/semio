@@ -189,7 +189,7 @@ impl WorldRayPickCursor {
             return WorldInteractionStep::Pending;
         };
         if schema.indices == 0 && matches!(self.purpose, WorldRayPickPurpose::Instance | WorldRayPickPurpose::Hover) {
-            let count = if schema.edges > 0 { schema.edges } else if schema.vertex_ids == schema.vertices { schema.vertices } else { 0 };
+            let count = if schema.edges > 0 { schema.edges } else { schema.vertices };
             if self.primitive >= count as usize {
                 self.instance += 1;
                 self.primitive = 0;
@@ -206,13 +206,13 @@ impl WorldRayPickCursor {
                     let [screen_a, screen_b] = segment.screen;
                     (ui_scene::math::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then(|| ui_scene::math::ray_segment_closest(self.origin, self.direction, segment.points[0], segment.points[1]).map(|closest| closest.segment_point)).flatten()
                 })
-            } else if world_mesh_component_id(mesh, Mesh3dField::VertexIds, index) != u32::MAX {
+            } else {
                 world_mesh_vertex(mesh, index).and_then(|point| {
                     let point = instance.model.transform_point(point);
                     let screen = project(point)?;
                     ((screen[0] - self.local_x).hypot(screen[1] - self.local_y) <= PICK_VERTEX_SCREEN_PX).then_some(point)
                 })
-            } else { None };
+            };
             if let Some(point) = point {
                 let distance = point.sub(self.origin).dot(self.direction);
                 if distance.is_finite() && distance >= 0.0 && self.best.is_none_or(|best| distance < best.distance) {

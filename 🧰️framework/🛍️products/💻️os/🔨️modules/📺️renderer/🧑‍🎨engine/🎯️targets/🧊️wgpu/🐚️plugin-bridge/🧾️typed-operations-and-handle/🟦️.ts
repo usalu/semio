@@ -47,27 +47,27 @@ export const WGPU_TYPED_OPERATION_EFFECT_CAPACITY = 4_096;
  * submission owes, surface a fault page by name, and leave the remaining effects untouched for the
  * host's own routing. The page codec itself is `🖼️wire-turn/🟦️.ts`'s, shared with React. */
 export class WgpuTypedOperationDrive {
-  #acknowledgements: TypedOperationAckEvent[] = [];
+  #acknowledgements: (TypedOperationAckEvent | NonNullable<WireTurnResult["unsent"]>[number])[] = [];
   #pages = 0;
   #terminal = false;
   readonly #hostEffects = new WeakMap<WireTurnResult, readonly WireVariant[]>();
 
   constructor(private readonly instanceId: number) {}
 
-  /** 📬️ Scans every accepted turn once, keeping its non-page effects and queueing its ACKs. */
+  /** 📬️ Scans every accepted turn once, keeping its non-page effects and queueing its unsent events, then its ACKs. */
   observe(turns: readonly WireTurnResult[]): void {
     for (const turn of turns) {
       if (this.#hostEffects.has(turn)) continue;
       const scan = scanTypedOperationPages(turn.effects);
       this.#hostEffects.set(turn, scan.kept);
-      this.#acknowledgements.push(...scan.acknowledgements);
+      this.#acknowledgements.push(...(turn.unsent ?? []), ...scan.acknowledgements);
       this.#pages += scan.pages.length;
       this.#terminal ||= scan.terminal;
     }
   }
 
   /** 📬️ The acknowledgements the NEXT submitted turn owes, handed over exactly once. */
-  takeAcknowledgements(): readonly TypedOperationAckEvent[] {
+  takeAcknowledgements(): readonly (TypedOperationAckEvent | NonNullable<WireTurnResult["unsent"]>[number])[] {
     const owed = this.#acknowledgements;
     this.#acknowledgements = [];
     return owed;

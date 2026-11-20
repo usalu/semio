@@ -94,10 +94,13 @@ pub fn render(
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
     run: Option<&semio_plugin::ToolRunView>,
+    windows: &semio_plugin::TreeWindows<'_>,
+    is_de: bool,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let eval_json = preview_eval_text.unwrap_or_default();
+    let selected_generation = generation_by_id(generation, selected_id);
+    let eval_json = selected_generation.and(preview_eval_text).unwrap_or_default();
     let marks = PreviewInteractionMarks { components: Default::default(), ..marks.clone() };
-    let (payload, preview_status) = match generation_by_id(generation, selected_id) {
+    let (payload, preview_status) = match selected_generation {
         Some(_) => {
             let gen_fixture = generation_host_snapshot_for(host_snapshot, generation, selected_id);
             let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), &marks);
@@ -113,7 +116,7 @@ pub fn render(
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    semio_s_procedural_core_semantic_ui::accessible_scene_surface(
+    let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_ui_declaration::ui::World3dScene {
@@ -126,6 +129,8 @@ pub fn render(
         labels.preview_canvas.as_str(),
         labels.preview_canvas_hint.as_str(),
         semio_ui_contract::Liveness::Polite,
-    )
+    )?;
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(eval_json);
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-generate-values", if is_de { "Werte" } else { "Values" }, &rows)
 }
 //#endregion 🔖️Render

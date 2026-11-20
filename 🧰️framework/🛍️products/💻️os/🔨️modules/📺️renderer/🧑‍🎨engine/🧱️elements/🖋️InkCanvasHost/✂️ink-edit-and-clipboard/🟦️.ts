@@ -10,7 +10,7 @@ import type { InkCore3 } from "../👆️ink-pointer/🟦️.ts";
 // #region InkCanvasHost
 /** ✂️ Builds the context menu, edit commit and clipboard handlers of the ink canvas. */
 export function useInkEditAndClipboard(core: InkCore3) {
-  const { atomicGesture, doc, mapContextMenu, node, publishInteractionSelection, requestContextMenu, rootRef, selectedIds, selectedSet, setContextMenu, setTableEdit, setTextEdit, shellContextMenuFallback, textEdit, windowInstanceId } = core;
+  const { atomicGesture, doc, interactive, mapContextMenu, node, publishInteractionSelection, requestContextMenu, rootRef, selectedIds, selectedSet, setContextMenu, setTableEdit, setTextEdit, shellContextMenuFallback, windowInstanceId } = core;
   //#region ContextMenu
   const handleContextMenu = useCallback(
     (event: React.MouseEvent<HTMLDivElement>): void => {
@@ -115,20 +115,20 @@ export function useInkEditAndClipboard(core: InkCore3) {
   const handleCopy = useCallback(
     (event: React.ClipboardEvent<HTMLDivElement>) => {
       if (!doc) return;
-      if (textEdit && (event.target as HTMLElement).closest("[contenteditable]")) return;
+      if (event.target instanceof Element && event.target.closest('input, textarea, [contenteditable="true"]')) return;
       if (!selectedIds.length) return;
       const blocks = selectedIds.map((id) => findInkItem(doc, id)).filter((block): block is InkItem => Boolean(block));
       if (!blocks.length) return;
       event.preventDefault();
       event.clipboardData.setData("text/plain", inkClipboardPayload(blocks));
     },
-    [doc, selectedIds, textEdit],
+    [doc, selectedIds],
   );
 
   const handlePaste = useCallback(
     (event: React.ClipboardEvent<HTMLDivElement>) => {
-      if (!doc || !rootRef.current) return;
-      if (textEdit && (event.target as HTMLElement).closest("[contenteditable]")) return;
+      if (!interactive || !doc || !rootRef.current) return;
+      if (event.target instanceof Element && event.target.closest('input, textarea, [contenteditable="true"]')) return;
       event.preventDefault();
       const rect = rootRef.current.getBoundingClientRect();
       const [worldX, worldY] = inkMaybeSnapWorldPoint(doc, ...screenToWorld(doc.camera, rect.width / 2, rect.height / 2));
@@ -173,7 +173,7 @@ export function useInkEditAndClipboard(core: InkCore3) {
         atomicGesture([{ operation: "addBlock", block: seeded }], [seeded.id]);
       }
     },
-    [atomicGesture, doc, pasteImageAsset, textEdit],
+    [atomicGesture, doc, interactive, pasteImageAsset],
   );
   return { commitTableEdit, commitTextEdit, handleContextMenu, handleCopy, handlePaste };
 }

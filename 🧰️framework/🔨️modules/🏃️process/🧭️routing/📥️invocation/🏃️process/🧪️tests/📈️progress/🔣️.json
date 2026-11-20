@@ -1303,6 +1303,63 @@
       "expected": null
     }
   ],
+  "toolingCountCases": [
+    {
+      "name": "capture-first",
+      "command": "build",
+      "resource": "nx:source-index:128",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "environment": {
+        "LANG": "en"
+      },
+      "expected": "build · Reading build tool index: 128 entries"
+    },
+    {
+      "name": "verification-limit",
+      "command": "build",
+      "resource": "nx:source-verification:200000",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "environment": {
+        "LANG": "de"
+      },
+      "expected": "build · Build-Werkzeuge prüfen: 200000 Einträge"
+    },
+    {
+      "name": "too-many-entries",
+      "command": "build",
+      "resource": "nx:source-index:200001",
+      "mode": "shared",
+      "elapsedMs": 9000,
+      "environment": {
+        "LANG": "en"
+      },
+      "expected": null
+    },
+    {
+      "name": "noncanonical-counter",
+      "command": "build",
+      "resource": "nx:source-index:0128",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "environment": {
+        "LANG": "en"
+      },
+      "expected": null
+    },
+    {
+      "name": "no-completed-work",
+      "command": "build",
+      "resource": "nx:source-index:0",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "environment": {
+        "LANG": "en"
+      },
+      "expected": null
+    }
+  ],
   "toolingClockCases": [
     {
       "name": "repeated-verification-publishes-first-newest-and-settlement",

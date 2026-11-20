@@ -1,0 +1,8 @@
+{
+  "items": 133,
+  "itemBytes": 256,
+  "pageItems": 64,
+  "pageSlots": [64, 64, 5],
+  "pageReleaseBytes": [1280, 16384, 16384],
+  "maximumReleaseBytes": 16384
+}

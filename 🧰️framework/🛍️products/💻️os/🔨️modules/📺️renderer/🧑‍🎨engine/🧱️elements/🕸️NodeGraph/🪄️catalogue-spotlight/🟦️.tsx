@@ -11,8 +11,7 @@ import {
   floatingMenuItemClass,
   floatingMenuSurfaceClass,
   Input,
-  useLabel
-} from "@semio-tech/ui-react";
+  useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 
 //#region 🔖️NodeGraphHost
 //#region Parsing
@@ -250,7 +249,7 @@ export function FlowSpotlight({
           }}
         />
         {hasMore ? (
-          <button
+          <button {...sharedBorderlessBoxProps}
             type="button"
             aria-label={expanded ? collapseSuggestionsLabel : showAllSuggestionsLabel}
             className="text-muted-foreground hover:bg-muted/40 hover:text-foreground shrink-0 rounded px-half text-2xs"
@@ -273,7 +272,7 @@ export function FlowSpotlight({
             const active = globalIndex === activeIndex && shouldPreview;
             const key = `${item.kind}:${item.neuronKind ?? item.action ?? item.format ?? item.name}`;
             return (
-              <button
+              <button {...sharedBorderlessBoxProps}
                 key={key}
                 ref={active ? activeItemRef : undefined}
                 type="button"

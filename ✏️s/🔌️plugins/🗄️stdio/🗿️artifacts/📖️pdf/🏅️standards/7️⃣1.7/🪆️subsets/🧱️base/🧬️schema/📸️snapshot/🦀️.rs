@@ -278,8 +278,11 @@ impl pack::value::FromValue for PdfSnapshot {
 
     fn from_value(value: pack::value::DslValue) -> Result<Self, pack::value::ValueError> {
         use pack::value::FromValue;
-        let entries = value.into_object()?;
-        let field = |key: &str| entries.iter().find(|(candidate, _)| candidate == key).map(|(_, value)| value.clone());
+        let mut entries = value.into_object()?;
+        let mut field = |key: &str| {
+            entries.iter_mut().find(|(candidate, _)| candidate == key)
+                .map(|(_, value)| std::mem::replace(value, pack::value::DslValue::Null))
+        };
         fn decode_or_default<T: FromValue + Default>(value: Option<pack::value::DslValue>, key: &str) -> Result<T, pack::value::ValueError> {
             match value {
                 Some(pack::value::DslValue::Null) | None => Ok(T::default()),

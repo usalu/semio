@@ -47,16 +47,24 @@ pub(super) fn parse_quantity(cursor: &mut Cursor, declared: &'static semio_frame
     }
     let number_token = cursor.advance();
     let value = parse_f64(&number_token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,number_token.span))?;
-    let suffix = cursor.peek();
-    if suffix.kind == TokenKind::Ident && suffix.byte_range.0 == number_token.byte_range.1 {
-        let suffix_token = cursor.advance();
-        let symbol = suffix_token.text.as_str().to_string();
-        let suffix_unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("unknown unit '{symbol}'"),suffix_token.span))?;
-        let converted = if value.is_nan(){if suffix_unit.dimension!=declared.dimension{return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span));}value}else{semio_framework_dsl::convert(value,suffix_unit,declared).ok_or_else(||TextError::new(ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span))?};
-        Ok(FieldValue::Float(converted))
+    let suffix = dsl_notation::quantity_suffix_tokens(&cursor.tokens[cursor.pos..], number_token.byte_range.1);
+    let [first, ..] = suffix else { return Ok(FieldValue::Float(value)) };
+    let span = first.span;
+    let base = first.text.as_str();
+    let symbol = match suffix {
+        [_, _, factor] => std::borrow::Cow::Owned(format!("{base}*{}", factor.text.as_str())),
+        _ => std::borrow::Cow::Borrowed(base.as_ref()),
+    };
+    let suffix_unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue, format!("unknown unit '{symbol}'"), span))?;
+    let converted = if value.is_nan() && suffix_unit.dimension == declared.dimension {
+        value
     } else {
-        Ok(FieldValue::Float(value))
-    }
+        semio_framework_dsl::convert(value, suffix_unit, declared).ok_or_else(|| {
+            TextError::new(ValueRefusalKind::InvalidValue, format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), span)
+        })?
+    };
+    cursor.pos += suffix.len();
+    Ok(FieldValue::Float(converted))
 }
 
 /// 🔢️ Reads a complete numeric token for coordinate, direction, dimension and range components.

@@ -19,6 +19,7 @@ fn close(owner: &mut UiComponentCopy, grant: usize) {
 
 #[test]
 fn retained_component_copy_all_variants_match_native_serde() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let rows: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     assert_eq!(rows["cases"].as_array().unwrap().len(), fixture["componentCount"].as_u64().unwrap() as usize);

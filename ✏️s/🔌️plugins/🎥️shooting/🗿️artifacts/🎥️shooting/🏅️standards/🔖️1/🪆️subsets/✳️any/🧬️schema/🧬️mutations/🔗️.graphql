@@ -45,6 +45,8 @@ type ShootingShot {
   shape: String!
   background: String
   cameraId: String
+  drawing: ShootingDrawing
+  autoFit: Boolean
 }
 
 type ShootingSun {
@@ -81,4 +83,63 @@ type ShootingSceneLighting {
   ambient: ShootingAmbient!
   shadow: ShootingShadow!
   material: ShootingMaterial!
+}
+
+
+type ShootingDrawing {
+  background: Boolean!
+  fill: Boolean!
+  fillColor: String
+  fillOpacity: Float!
+  visibleLines: Boolean!
+  hiddenLines: Boolean!
+  visibleColor: String!
+  hiddenColor: String!
+  visibleWidth: Float!
+  hiddenWidth: Float!
+  lineEasing: Float!
+  mergeLines: Boolean!
+}
+
+type SetShotDrawing {
+  id: String!
+  patch: ShootingDrawingPatch!
+}
+
+type ShootingAssignedString {
+  value: String
+}
+
+type ShootingDrawingPatch {
+  background: Boolean
+  fill: Boolean
+  fillColor: ShootingAssignedString
+  fillOpacity: Float
+  visibleLines: Boolean
+  hiddenLines: Boolean
+  visibleColor: String
+  hiddenColor: String
+  visibleWidth: Float
+  hiddenWidth: Float
+  lineEasing: Float
+  mergeLines: Boolean
+  restoreAbsent: Boolean
+}
+
+type PatchShotCamera {
+  shotId: String!
+  field: String!
+  camera: ShootingCamera!
+  fallback: ShootingCamera!
+  release: ShotCameraSlot
+}
+
+type ShotCameraSlot {
+  seed: ShootingCamera!
+  cameraId: String
+}
+
+type SetShotAutoFit {
+  id: String!
+  autoFit: Boolean
 }

@@ -12,7 +12,7 @@ fn shared_border_language_neutral_vectors() {
         let point = |value: &Value| [value["x"].as_f64().unwrap(), value["y"].as_f64().unwrap()];
         let state = |value: &Value| match value.as_str().unwrap() {
             "normal" => SharedBorderState::Normal, "focus" => SharedBorderState::Focus,
-            "active" => SharedBorderState::Active, "waiting" => SharedBorderState::Waiting,
+            "active" => SharedBorderState::Active, "invalid" => SharedBorderState::Invalid, "waiting" => SharedBorderState::Waiting,
             "loading" => SharedBorderState::Loading, "introduced" => SharedBorderState::Introduced,
             "celebrated" => SharedBorderState::Celebrated, "hover" => SharedBorderState::Hover,
             _ => panic!("Unknown fixture state"),

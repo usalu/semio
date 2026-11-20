@@ -10,6 +10,7 @@ import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveTabActiveClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 // #endregion 🔌️Adapters
 
 // #region 📑️Contracts
@@ -202,14 +203,14 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       aria-controls={contentId}
       tabIndex={disabled ? -1 : context.focusValue === value ? 0 : -1}
       data-slot="tabs-trigger"
-      data-shared-border-frame={selected ? "" : undefined}
-      data-shared-border-edges={selected ? "top right bottom left" : undefined}
+      data-shared-border-frame=""
+      data-shared-border-edges={selected ? "top right bottom left" : ""}
       data-shared-border-state={selected ? "active" : undefined}
       data-tabs-value={value}
       data-state={selected ? "active" : "inactive"}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        "focus-visible:border-active-base focus-visible:outline-none focus-visible:ring-0 text-element relative inline-flex flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:outline-none focus-visible:ring-0 text-element relative inline-flex flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         interactiveTabActiveClass,
         interactiveHoverClass,
         className,
@@ -244,7 +245,7 @@ function TabsContent({ className, value, id, ref, ...props }: TabsContentProps) 
   const triggerId = context.triggerIds.get(value) ?? context.associationId("trigger", value);
   React.useEffect(() => context.registerId("content", value, contentId), [contentId, context.registerId, value]);
   if (!selected) return null;
-  return <div {...props} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1", className)} />;
+  return <div {...props} {...sharedBorderlessBoxProps} ref={ref} id={contentId} role="tabpanel" aria-labelledby={triggerId} tabIndex={0} data-slot="tabs-content" data-state="active" className={cn("flex-1", className)} />;
 }
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

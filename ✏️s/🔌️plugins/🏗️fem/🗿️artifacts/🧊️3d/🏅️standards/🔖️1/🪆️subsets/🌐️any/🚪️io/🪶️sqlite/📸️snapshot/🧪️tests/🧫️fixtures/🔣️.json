@@ -128,7 +128,7 @@
           {
             "kind": "area",
             "id": "load area",
-            "solidId": "missing solid",
+            "solidId": "solid 日本🧬",
             "pressureBits": "4008000000000000"
           }
         ]

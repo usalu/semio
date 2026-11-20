@@ -15,7 +15,10 @@ impl EnergyModelDocument{
  fn __dsl_spec()->RecordSpec{
   RecordSpec{keyword:Some("energy-model".into()),layout:RecordLayout::Inline,fields:vec![FieldSpec{id:Self::FIELD,key:"document".into(),position:None,shape:Shape::Value,optional:false,flatten:false,defines:None,is_call_name:false}]}
  }
- fn record(snapshot:&EnergyModelSnapshot)->RecordValue{RecordValue{fields:[(Self::FIELD,FieldValue::Value(snapshot.to_value()))].into_iter().collect()}}
+ fn record(document:DslValue)->RecordValue{RecordValue{fields:[(Self::FIELD,FieldValue::Value(document))].into_iter().collect()}}
+ fn encode_pack(document:DslValue,options:&PackEncodeOptions)->Result<Vec<u8>,PackError>{
+  Ok(wrap_binary(&envelope(Component::Pack),&pack_rt::encode_document(&Self::__dsl_spec(),&Self::record(document),options)?))
+ }
  fn receive(record:&RecordValue)->Result<EnergyModelSnapshot,ValueError>{
   match record.fields.get(&Self::FIELD){
    Some(FieldValue::Value(document))=>receive_stepped(document.clone()),
@@ -30,6 +33,10 @@ impl EnergyModelSnapshot{
  /// 🧬️ The canonical document value of one engine model under the authored schema id and empty link slots.
  pub fn document_value(model:&crate::model::Model)->DslValue{
   DslValue::object([("schema".to_string(),DslValue::String(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.to_string())),("model".to_string(),model.to_value()),("referencedModel".to_string(),DslValue::Null),("weatherLink".to_string(),DslValue::Null)])
+ }
+ /// 📦️ Encodes the model’s canonical document directly as the authored Energy Pack.
+ pub fn encode_model_pack(model:&crate::model::Model,options:&PackEncodeOptions)->Result<Vec<u8>,PackError>{
+  EnergyModelDocument::encode_pack(Self::document_value(model),options)
  }
  /// 🛬️ Receives one canonical document value into the native persistent owner.
  pub fn from_document(document:DslValue)->Result<Self,ValueError>{receive_stepped(document)}
@@ -70,13 +77,13 @@ impl ArtifactDsl for EnergyModelSnapshot{
   EnergyModelDocument::receive(&record).map_err(|error|TextError::new(ValueRefusalKind::InvalidValue,error.to_string(),TextSpan::at(1,1)))
  }
  fn print_dsl(&self)->String{
-  wrap_text(&envelope(Component::Dsl),&semio_framework_dsl_record::print(&EnergyModelDocument::record(self),&EnergyModelDocument::__dsl_spec(),JoinMode::Document))
+  wrap_text(&envelope(Component::Dsl),&semio_framework_dsl_record::print(&EnergyModelDocument::record(self.to_value()),&EnergyModelDocument::__dsl_spec(),JoinMode::Document))
  }
 }
 
 impl ArtifactPack for EnergyModelSnapshot{
  fn encode_pack_with(&self,options:&PackEncodeOptions)->Result<Vec<u8>,PackError>{
-  Ok(wrap_binary(&envelope(Component::Pack),&pack_rt::encode_document(&EnergyModelDocument::__dsl_spec(),&EnergyModelDocument::record(self),options)?))
+  EnergyModelDocument::encode_pack(self.to_value(),options)
  }
  fn decode_pack_with(bytes:&[u8],options:&PackDecodeOptions)->Result<Self,PackError>{
   let(envelope,inner)=unwrap_binary(bytes).map_err(|error|PackError::from(error.into_value_error()))?;

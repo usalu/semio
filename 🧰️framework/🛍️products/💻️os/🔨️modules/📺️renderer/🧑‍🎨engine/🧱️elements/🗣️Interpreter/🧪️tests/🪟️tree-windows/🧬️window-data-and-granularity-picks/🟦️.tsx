@@ -1,4 +1,5 @@
 /** 🧬️ The authored window data and granularity row pick tests. */
+import hover from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/tree-hover.json";
 import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️.tsx";
 
 /** 🎯 Registers the cleanup hook, the authored window and key data and the granularity pick tests. */
@@ -24,6 +25,24 @@ export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKi
     expect(leafData.window).toBeUndefined();
     expect(leafData.windowKey).toBe("objects.7");
   });
+  it("places a diagram below its disclosure label and keeps inline fields in the value column", () => {
+    const rendered = mount([
+      node(1, "diagrams", { type: "tree" }, [2]),
+      node(2, "cards", { type: "treeSection", label: "Diagrams", defaultOpen: true, window: { rowExtent: "standard", total: 2, offset: 0 } }, [3, 6]),
+      treeItem(3, "matrix", "Combination matrix", {}, [4]),
+      node(4, "matrix.card", { type: "container", role: "plain" }, [5]),
+      node(5, "matrix.plot", { type: "surface", kind: "canvas-2d", docSchema: "canvas-2d@1", doc: { bytes: [] } }),
+      treeItem(6, "inputs", "Input", {}, [7]),
+      node(7, "inputs.value", { type: "text", value: "2.5" }),
+    ], 1, () => {});
+    const matrix = rendered.getByText("Combination matrix");
+    const plot = rendered.container.querySelector('[data-ui-node-key="matrix.plot"]');
+    expect(plot?.closest('[data-slot="tree-item-content"]')).toBeTruthy();
+    expect(plot?.closest('[data-slot="tree-item-control"]')).toBeNull();
+    expect(rendered.getByText("2.5").closest('[data-slot="tree-item-control"]')).not.toBeNull();
+    fireEvent.click(matrix);
+    expect(rendered.container.querySelector('[data-ui-node-key="matrix.plot"]')).toBeNull();
+  });
   it("synthesises the tree-level interactionSelect pick for a granularity row that binds nothing itself", () => {
     const intents: any[] = [];
     const rendered = mount(
@@ -41,6 +60,23 @@ export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKi
     expect(intents[0].action).toEqual({ scope: "outliner", name: "interactionSelect", version: 1 });
     expect(intents[0].args).toEqual({ domainId: "outliner.objects" });
     expect(intents[0].input).toEqual({ merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "piece", id: "seed-left-001" }]) });
+  });
+  it("clears the pointer channel when the pointer leaves a hovered graph row", () => {
+    const intents: any[] = [];
+    const binding = {
+      trigger: "hoverPreview", action: {scope: "outliner", name: "interactionHover", version: 1},
+      args: {domainId: hover.domain, channel: hover.channel, targets: JSON.stringify(hover.enter)}, capability: null,
+    };
+    const rendered = mount([
+      node(1, "outliner", {type: "tree", interactionDomain: hover.domain}, [2]),
+      node(2, "section", {type: "treeSection", label: "Outputs", defaultOpen: true, headerToolbar: null, window: null}, [3]),
+      treeItem(3, hover.row, "Shape", {granularity: "handle"}, [], [binding]),
+    ], 1, (intent) => intents.push(intent));
+    const row = rendered.getByText("Shape");
+    row.dispatchEvent(new MouseEvent("mouseover", {bubbles: true}));
+    row.dispatchEvent(new MouseEvent("mouseout", {bubbles: true, relatedTarget: document.body}));
+    expect(intents.map(intent => intent.input?.targets ?? intent.args.targets)).toEqual([JSON.stringify(hover.enter), JSON.stringify(hover.leave)]);
+    expect(intents.map(intent => intent.args.channel)).toEqual([hover.channel, hover.channel]);
   });
   it("leaves a row that activates its own target verb on that verb, granularity or not", () => {
     const intents: any[] = [];

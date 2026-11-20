@@ -10,11 +10,10 @@ import { cn } from "../🏷️class-name-composition/🟦️.ts";
 
 // #region 🫳️InteractionPresentation
 /** 🎨️ Shared transition for interactive chrome. */
-export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
+export const interactiveControlTransitionClass = "transition-[color,background-color]";
 
 const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill";
 const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-hover";
-const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
 const hoverExcludingHandleActiveTextClass = "hover:not-data-[handle-hovered=true]:text-active-foreground";
 
 /** 🫳️ Tree-row hover fill excluding the nested drag handle. */
@@ -32,29 +31,22 @@ export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
 /** 👆️ Interactive hover fill with emphasized content. */
 export const interactiveHoverClass = cn(interactiveHoverFillClass, "hover:text-emphasized");
 
-/** 📏️ Active stroke paired with interactive active fill. */
-export const interactiveActiveBorderClass = "border-active-base";
-
-/** ☑️ Pressed and selected active presentation. */
-export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-active-foreground", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleActiveTextClass);
+/** ☑️ Pressed and selected active fill; the state line belongs to the border compositor. */
+export const interactiveActiveFillClass = cn("bg-active-base", "text-active-foreground", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveTextClass);
 
 /** 🔛️ Data-state on presentation. */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
-  "data-[state=on]:border-active-base",
   "data-[state=on]:text-active-foreground",
   "data-[state=on]:hover:bg-active-hover",
-  "data-[state=on]:hover:border-active-base",
   "data-[state=on]:hover:text-active-foreground",
 );
 
 /** 📑️ Active tab presentation. */
 export const interactiveTabActiveClass = cn(
   "data-[state=active]:bg-active-base",
-  "data-[state=active]:border-active-base",
   "data-[state=active]:text-active-foreground",
   "data-[state=active]:hover:bg-active-hover",
-  "data-[state=active]:hover:border-active-base",
   "data-[state=active]:hover:text-active-foreground",
 );
 // #endregion 🫳️InteractionPresentation

@@ -53,19 +53,23 @@
       "releasedBytes": 257
     }
   ],
+  "sessionClose": {
+    "items": 1,
+    "copy": 65536,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 64
+  },
   "clipboardOutcome": {
     "grantSource": "framework.job.original-semantic-loan",
-    "outcome": "cancelled",
+    "outcome": "never-entered",
     "deniedItems": 0,
     "sameInputPointer": true,
-    "borrowHeapBytes": 0,
-    "acknowledgementItems": 1,
+    "refusedHeapBytes": 0,
     "inputHeldUntilClose": true
   },
   "preparedOutcome": {
     "operation": 1,
-    "fuel": 100,
-    "deadlineUs": 10,
     "deniedItems": 0,
     "expected": {
       "deniedReceipt": {

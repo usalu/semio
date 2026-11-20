@@ -182,7 +182,7 @@ export function findLeaseCycleV1(nodes:readonly LeaseNodeV1[],from:string):Lease
 }
 
 const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
-const blockerText=(language:"en"|"de",row:LeaseViolationV1):string=>{
+const blockerText=(language:"en"|"de",row:Pick<LeaseViolationV1,"blockerPid"|"blockerCommand"|"blockerHeldSeconds"|"blockerSelf"|"boundMilliseconds">):string=>{
  const catalogue=schema.definitions.Messages.const;
  if(row.blockerPid===undefined)return row.boundMilliseconds===undefined?"":catalogue.blockerUnknown[language];
  const age=row.blockerHeldSeconds??0;
@@ -194,6 +194,16 @@ export function shortLeaseResourceV1(resource:string):string{const limit=protoco
 export function formatLeaseViolationV1(language:"en"|"de",row:LeaseViolationV1):string{
  const catalogue=schema.definitions.Messages.const,messages={outOfOrder:catalogue.outOfOrder[language],holdAndWait:row.boundMilliseconds===undefined?catalogue.holdAndWait[language]:catalogue.waitBound[language],selfDeadlock:catalogue.selfDeadlock[language],cycle:catalogue.cycle[language]},mode=(value:string):string=>value==="shared"?catalogue.modeShared[language]:value==="exclusive"?catalogue.modeExclusive[language]:value,values={held:shortLeaseResourceV1(row.held),heldClass:row.heldClass,heldRank:row.heldRank,heldMode:mode(row.heldMode),requested:shortLeaseResourceV1(row.requested),requestedClass:row.requestedClass,requestedRank:row.requestedRank,requestedMode:mode(row.requestedMode),seconds:Math.floor((row.waitedMilliseconds??0)/1000),cycle:(row.cycle??[]).join(" → "),blocker:blockerText(language,row),bound:Math.floor((row.boundMilliseconds??0)/1000),base:Math.round((row.boundMilliseconds??0)/(row.speedFactor??1)/1000),factor:row.speedFactor??1,holds:row.held===row.requested?catalogue.holdsNothing[language]:shortLeaseResourceV1(row.held)};
  return fill(row.kind==="out-of-order"?messages.outOfOrder:row.kind==="hold-and-wait"?messages.holdAndWait:row.kind==="self-deadlock"?messages.selfDeadlock:messages.cycle,values);
+}
+
+/** 🧾️ The facts of a lease wait that ran out: the resource, the mode asked for, the seconds waited and the holder the lease registry names (pid, command, age, or another task of this process). */
+export type LeaseTimeoutRowV1=Readonly<{resource:string;mode:string;seconds:number;blockerPid?:number;blockerCommand?:string;blockerHeldSeconds?:number;blockerSelf?:true}>;
+/** 🔍️ The holder that blocks a request for `resource` in `mode`, from the lease registry of this process and of the others; a registry that cannot be read names nobody. */
+export function leaseHolderOfV1(directory:string,resource:string,mode:LeaseModeV1):Readonly<{pid:number;heldSeconds:number;command?:string;self?:true}>|undefined{try{return leaseRegistryV1.holderOf(directory,resource,mode);}catch{return undefined;}}
+/** ⌛️ Renders a lease wait that ran out as a diagnostic in the chosen language: what was waited for, in which mode, for how long and who held it. */
+export function formatLeaseTimeoutV1(language:"en"|"de",row:LeaseTimeoutRowV1):string{
+ const catalogue=schema.definitions.Messages.const,mode=row.mode==="shared"?catalogue.modeShared[language]:row.mode==="exclusive"?catalogue.modeExclusive[language]:row.mode;
+ return fill(catalogue.timeout[language],{resource:shortLeaseResourceV1(row.resource),mode,seconds:row.seconds,blocker:blockerText(language,{...row.blockerPid===undefined?{}:{blockerPid:row.blockerPid},...row.blockerCommand===undefined?{}:{blockerCommand:row.blockerCommand},...row.blockerHeldSeconds===undefined?{}:{blockerHeldSeconds:row.blockerHeldSeconds},...row.blockerSelf===true?{blockerSelf:true as const}:{},boundMilliseconds:0})});
 }
 
 const taskIds=new WeakMap<object,number>();

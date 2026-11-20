@@ -14,7 +14,7 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+import { formControlResetClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️.tsx";
 import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
@@ -296,7 +296,7 @@ function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabl
       className={cn(
         "text-element flex w-full min-w-0 overflow-hidden border bg-transparent text-base transition-[color,border-color] outline-none md:text-sm",
         showStackedOverflow ? "h-auto min-h-0 flex-col px-single" : "h-medium items-center px-single whitespace-nowrap",
-        "aria-invalid:border-destructive flex-1 cursor-text",
+        "flex-1 cursor-text",
         disabled && "cursor-not-allowed opacity-50",
         mixed && !displayState.value && "italic text-muted-foreground/70",
         className,
@@ -510,8 +510,8 @@ function Input({ className, type, lazy, value: externalValue, defaultValue, onCh
           id={id}
           className={cn(
             `file:text-element placeholder:text-muted-foreground text-element flex h-medium w-full min-w-0 border bg-transparent p-single text-base ${borderElementClass} file:inline-flex file:h-medium file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
-            formControlFocusBorderClass,
-            "aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex-1",
+            formControlResetClass,
+            "flex-1",
             mixed && "placeholder:italic placeholder:text-muted-foreground/70",
             type === "number" && "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]",
             className,

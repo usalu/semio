@@ -138,9 +138,6 @@ pub mod editor {
     #[path = "."]
     pub mod page {
         pub use semio_s_artifact_stdio_pdf_tests_2::editor::page::*;
-        #[cfg(test)]
-        #[path = "../../../../../../../✏️editor/🖼️page/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod tests;
     }
     #[path = "."]
     pub mod pdf14a {

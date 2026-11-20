@@ -4,25 +4,29 @@
 
 use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
-use crate::standards::v1_7::subsets::base::modules::lexer::dict_get;
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, pdf_header, CosGrant};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
-use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, Resolver, WRITER_TRAILER_KEYS};
+use crate::standards::v1_7::subsets::base::modules::xref::{read_file_xref, ResolvedGraph, Resolver, XrefEntry, WRITER_TRAILER_KEYS};
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::HashMap;
+
+#[path = "../../🔨️modules/🔗️xref/📥️retained-graph/🦀️.rs"]
+pub mod retained_graph;
+use retained_graph::{PdfByteGraph, PdfByteGraphCursor, PdfByteGraphEvent};
+
+#[path = "🔁️controlled/🦀️.rs"]
+mod controlled;
+pub use controlled::{admit_pdf_natural_decode, build_pdf_natural_decode};
 
 
 //#region 🔖️Sniff
 /// 🔍️ Real magic + version probe: `%PDF-` header, version digits parsed and reported.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
-    let start = bytes.windows(5).take(1024).position(|window| window == b"%PDF-")?;
-    let rest = &bytes[start + 5..];
-    let end = rest.iter().take(8).position(|&b| b == b'\n' || b == b'\r' || b == b' ' || b == b'\t').unwrap_or(rest.len().min(8));
-    let version = String::from_utf8_lossy(&rest[..end]).trim().to_string();
-    (!version.is_empty() && version.chars().all(|c| c.is_ascii_digit() || c == '.')).then_some(version)
+    pdf_header(bytes).map(|header| header.version().to_owned())
 }
 //#endregion 🔖️Sniff
 //#region 🔖️Decode
@@ -36,17 +40,87 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
 /// standard one — never garbage).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnapshot> {
-    let declared_version = sniff_pdf(data).ok_or(PdfEngineError::NotPdf)?;
-    let start = data.windows(5).position(|window| window == b"%PDF-").unwrap_or(0);
-    let data = &data[start..];
-    let xref = build_xref(data, startxref_offset(data));
-    let mut resolver = Resolver::new(data, xref.entries.clone());
+    let OpenedPdf { declared_version, graph: ResolvedGraph { mut objects, positions }, mut trailer, encryption } =
+        match read_clear_pdf_graph(data)? {
+            Some(file) => OpenedPdf {
+                declared_version: file.header.version().to_owned(),
+                graph: ResolvedGraph { objects: file.graph.objects, positions: file.graph.positions },
+                trailer: file.trailer.into_entries(),
+                encryption: None,
+            },
+            None => read_pdf_reference(data, password)?,
+        };
+    trailer.retain(|entry| !WRITER_TRAILER_KEYS.contains(&entry.key.as_str()));
+    let Some(root) = dict_get(&trailer, "Root").and_then(PdfObject::as_ref) else {
+        return Err(PdfEngineError::Malformed("no /Root in any trailer and no /Catalog object to recover one from".into()));
+    };
+    let position = |reference: ObjRef| match positions.get(&reference.num) {
+        Some(XrefEntry::Normal { offset, gen }) if *gen == reference.gen => Some(*offset),
+        _ => None,
+    };
+    let Some(catalog) = position(root).and_then(|index| objects.get(index)) else {
+        return Err(PdfEngineError::Malformed("PDF /Root reference does not resolve to a live object".into()));
+    };
+    if catalog.value.dict_get("Type").and_then(PdfObject::as_name) != Some("Catalog") {
+        return Err(PdfEngineError::Malformed("PDF /Root does not identify a catalog".into()));
+    }
+    crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects, &mut trailer, &position).map_err(|reason| PdfEngineError::Malformed(reason.into()))?;
+    let mut source = GraphSource::with_positions(&objects, &position);
+    let lifter = lift_document_with(&trailer, &declared_version, &mut source);
+    if let Some(error)=lifter.admission_error {return Err(error);}
+    let mut snapshot = lifter.snapshot;
+    snapshot.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
+    snapshot.declared_version = declared_version;
+    snapshot.encryption = encryption;
+    if !snapshot.objects.is_empty() {
+        let mut number = objects.iter().map(|object| object.id.num).max().unwrap_or(0);
+        for mut object in std::mem::take(&mut snapshot.objects) {
+            number = number.checked_add(1).ok_or_else(|| PdfEngineError::Unsupported("PDF native custody exhausted".into()))?;
+            object.id.num = number;
+            objects.push(object);
+        }
+    }
+    snapshot.objects = objects;
+    snapshot.trailer = trailer;
+    Ok(snapshot)
+}
+struct OpenedPdf {
+    declared_version: String,
+    graph: ResolvedGraph,
+    trailer: Vec<PdfDictEntry>,
+    encryption: Option<PdfEncryption>,
+}
+
+fn read_clear_pdf_graph(data: &[u8]) -> PResult<Option<PdfByteGraph>> {
+    let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    let mut cursor = PdfByteGraphCursor::new(usize::MAX, usize::MAX);
+    let result = loop {
+        match cursor.advance(data, grant, false).event {
+            Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::More) => {}
+            Ok(PdfByteGraphEvent::Complete) => {
+                let file = cursor.take(grant).expect("completed PDF byte graph under unbounded reference grants");
+                return Ok(Some(file.0));
+            }
+            Ok(PdfByteGraphEvent::NotPdf) => break Err(PdfEngineError::NotPdf),
+            _ => break Ok(None),
+        }
+    };
+    cursor.begin_close();
+    while matches!(cursor.close_step(grant).event, Ok(PdfByteGraphEvent::More)) {}
+    result
+}
+
+fn read_pdf_reference(data: &[u8], password: &str) -> PResult<OpenedPdf> {
+    let (header, origin, xref) = read_file_xref(data)?;
+    let declared_version = header.version().to_owned();
+    let data = &data[origin..];
+    let mut resolver = Resolver::new(data, xref.entries);
     let mut encryption = None;
     let mut encrypt_object: Option<u32> = None;
     if let Some(encrypt) = dict_get(&xref.trailer, "Encrypt") {
         encrypt_object = encrypt.as_ref().map(|reference| reference.num);
         let dictionary = match encrypt {
-            PdfObject::Ref(reference) => resolver.resolve(reference.num).ok_or_else(|| PdfEngineError::Malformed("/Encrypt reference does not resolve".into()))?,
+            PdfObject::Ref(reference) => resolver.resolve_reference(*reference).ok_or_else(|| PdfEngineError::Malformed("/Encrypt reference does not resolve".into()))?,
             other => other.clone(),
         };
         let dictionary = dictionary.as_dict().ok_or_else(|| PdfEngineError::Malformed("/Encrypt is not a dictionary".into()))?.to_vec();
@@ -55,26 +129,8 @@ pub fn decode_pdf_with_password(data: &[u8], password: &str) -> PResult<PdfSnaps
         resolver.set_decryptor(Some(decryptor));
         encryption = Some(parameters);
     }
-    let mut objects = resolver.resolve_all()?;
-    if let Some(number) = encrypt_object {
-        objects.retain(|object| object.id.num != number);
-    }
-    let mut trailer: Vec<PdfDictEntry> = xref.trailer.iter().filter(|entry| !WRITER_TRAILER_KEYS.contains(&entry.key.as_str())).cloned().collect();
-    if !trailer.iter().any(|entry| entry.key == "Root") {
-        return Err(PdfEngineError::Malformed("no /Root in any trailer and no /Catalog object to recover one from".into()));
-    }
-    crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer);
-    let mut source = GraphSource::new(&objects);
-    let lifter = lift_document_with(&trailer, &declared_version, &mut source);
-    if let Some(error)=lifter.admission_error {return Err(error);}
-    let mut snapshot = lifter.snapshot;
-    snapshot.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
-    snapshot.declared_version = declared_version;
-    snapshot.encryption = encryption;
-    for mut object in std::mem::take(&mut snapshot.objects){object.id.num=objects.iter().map(|object|object.id.num).max().unwrap_or(0).checked_add(1).ok_or_else(||PdfEngineError::Unsupported("PDF native custody exhausted".into()))?;objects.push(object);}
-    snapshot.objects = objects;
-    snapshot.trailer = trailer;
-    Ok(snapshot)
+    let graph = resolver.resolve_all(encrypt_object)?;
+    Ok(OpenedPdf { declared_version, graph, trailer: xref.trailer, encryption })
 }
 //#endregion 🔖️Decode
 
@@ -88,3 +144,17 @@ pub fn page_text(snapshot: &PdfSnapshot, index: usize) -> PResult<String> {
     Ok(crate::standards::v1_7::subsets::base::modules::content::extract_text(&page.content, &codecs))
 }
 //#endregion 🔖️Text
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn document_root_must_identify_a_catalog_after_retained_resolution() {
+        let fixture = include_bytes!("../../🧪️tests/🧫️fixtures/📦️object-stream/🧪️compressed.pdf");
+        let mut bytes = fixture.to_vec();
+        let from = fixture.windows(8).position(|window| window == b"/Catalog").unwrap();
+        bytes[from..from + 8].copy_from_slice(b"/BadType");
+        assert!(matches!(decode_pdf(&bytes), Err(PdfEngineError::Malformed(reason)) if reason.contains("catalog")));
+    }
+}

@@ -112,12 +112,6 @@ export function requestBuildFarmCapacityV1(input:HostCapacityPortsV1&Readonly<{p
  return Object.freeze({granted,release:cancel});
 }
 
-/** 🧱️ What the gate applies on this machine to a plan that waits for memory, for the progress line: the free-memory floor, the physical memory (or the smaller machine `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES` declares) and how long nothing-of-ours-running may wait before the gate refuses a request whose minimum is not free.
- * @see ./📏️decision */
-export function hostCapacityWaitFactsV1(totalMegabytes:number=hostProfileV1().totalMegabytes):Readonly<{floorMegabytes:number;totalMegabytes:number;limitSeconds:number}>{
- return Object.freeze({floorMegabytes:hostFloorMegabytesV1(BUILD_HOST_CAPACITY_POLICY_V1,{totalMegabytes}),totalMegabytes,limitSeconds:Math.round(BUILD_HOST_CAPACITY_POLICY_V1.load.overrideAfterMilliseconds/1000)});
-}
-
 /** 🔭️ The megabytes a process tree holds right now, for the slice pool to learn the real peak of a worker on hosts without a cgroup limit. */
 export const observeHostTreeMegabytesV1=observeTreeMegabytesV1;
 
@@ -143,17 +137,31 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{m
 }
 
 /** 🚪️ Runs an invocation under the machine-wide capacity grant when its command is heavy: first admits it to the cache partition (`disk.low-space` refusal before anything is written, see `admitBuildDiskV1`), then waits fairly with progress lines that name what it stands behind (its request is labelled with what it builds, e.g. the target of `repo run`, without control characters), then hands the body the arguments rewritten to the granted jobs and sets the environment the children inherit; light commands pass untouched. A run of a forecast-aware tool is learned as one that executed work when an executor asked for it or when its peak exceeded the quiet size of its class, so the quiet class learns only what quiet runs hold and the next forecast follows the run's own last outcome. */
-export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{offloadAdmission?:import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").OffloadAdmissionPortsV1;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean;disk?:import("./💽️disk/🟦️.ts").BuildDiskPortsV1}>={}):Promise<T>{
- const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,ask=buildCapacityAskV1(stripped,environment,policy);
- if(!ask||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
- if(ports.plannedByService===true&&ask.lineage[ask.lineage.length-1]!.endsWith(":dry"))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+export async function withBuildCapacityV1<T>(args:readonly string[],environment:NodeJS.ProcessEnv,body:(granted:Readonly<{args:readonly string[];handle:HostCapacityHandleV1|undefined;limit:JobLimitPolicyV1|undefined;report:(outcome:JobOutcomeV1)=>void}>)=>Promise<T>,ports:HostCapacityPortsV1&Readonly<{offloadAdmission?:import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").OffloadAdmissionPortsV1;directory?:string;policy?:HostCapacityPolicyV1;write?:(line:string)=>void;control?:ResourceLeaseControl;admitDeferred?:boolean;tool?:string;forecast?:boolean;exitCode?:()=>number|string|null|undefined;park?:(error:unknown)=>boolean|Promise<boolean>;strip?:(args:readonly string[],environment:NodeJS.ProcessEnv)=>readonly string[];plannedByService?:boolean;repositoryRoot?:string;disk?:import("./💽️disk/🟦️.ts").BuildDiskPortsV1}>={}):Promise<T>{
+ const policy=ports.policy??BUILD_HOST_CAPACITY_POLICY_V1,parsed=ports.strip?undefined:(await import("../🧭️invocation/🟦️.ts")).parseBuildInvocationV1(args,environment),stripped=ports.strip?ports.strip(args,environment):parsed!.args,tool=ports.tool??parsed?.tool??environment.SEMIO_BUILD_TOOL,requested=buildCapacityAskV1(stripped,environment,policy);
+ if(!requested||buildCapacityDeferredV1(stripped)&&ports.admitDeferred!==true||await nativeDashboardLaunchV1(stripped))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+ if(ports.plannedByService===true&&requested.lineage[requested.lineage.length-1]!.endsWith(":dry"))return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+ let ask=requested,nativeImageRecovery=false;
+ if(process.platform==="darwin"&&stripped[0]==="run"&&stripped[1]?.startsWith("repo-cache-reset:cache-")&&ports.repositoryRoot!==undefined){
+  const root=ports.repositoryRoot,recovery=await import("../🚀️bootstrap/⌨️cli/🟦️.ts"),plan=recovery.readNativeRepoRecoveryPlanV1(root,stripped);
+  nativeImageRecovery=recovery.admitsNativeImageDiskRecoveryV1(root,plan,environment);
+  if(plan?.kind==="cache-image"&&(plan.target.operation==="reclaim"||plan.target.operation==="reclaim-wait"))ask={operation:"command",preferredJobs:1,kinds:[],targets:[],lineage:hostEstimateLineageV1("command",stripped[1])};
+ }
  const sized=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:ask.operation,preferredJobs:ask.preferredJobs,kinds:ask.kinds,targets:ask.targets}),base:HostRequestV1|undefined=sized&&Object.freeze({...sized,label:(ask.lineage.length<2?"":ask.lineage[ask.lineage.length-1]!.slice(ask.lineage[ask.lineage.length-2]!.length+1)).replace(/\p{Cc}/gu,"").slice(0,120)||ask.operation});
  if(!base)return body({args,handle:undefined,limit:undefined,report:()=>undefined});
- {const disk=await import("./💽️disk/🟦️.ts");await disk.admitBuildDiskV1(environment,{write:ports.write,signal:ports.control?.signal,expectedBytes:disk.expectedDiskGrowthBytesV1(environment,ask.operation),...ports.disk});}
- if(ask.operation==="cargo"){
-  const fan=await(await import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts")).offloadFanOutJobsV1(environment,ports.offloadAdmission);
-  if(fan!==undefined){(ports.write??(line=>process.stderr.write(line+"\n")))(resolveHostCapacityLanguageV1(environment)==="de"?`[capacity] cargo wartet nicht auf diese Maschine: sie kann keine Einheit mehr tragen, die Einheiten laufen mit ${fan} Aufträgen und fließen zur Flotte`:`[capacity] cargo does not queue for this machine: it cannot carry another unit, so units run with ${fan} jobs and flow to the fleet`);return body({args:grantedBuildArgumentsV1(args,"cargo",fan),handle:undefined,limit:undefined,report:()=>undefined});}
+ if(stripped[0]!=="preflight"&&!nativeImageRecovery){
+  const disk=await import("./💽️disk/🟦️.ts");
+  await disk.admitBuildDiskV1(environment,{write:ports.write,signal:ports.control?.signal,expectedBytes:disk.expectedDiskGrowthBytesV1(environment,requested.operation),...ports.disk});
  }
+ const fleetPolicy=ask.operation==="cargo"?await import("../🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts"):undefined;
+ const mode=fleetPolicy?.extractOffloadFlagV1(stripped).mode,fleetEnvironment=mode===undefined?environment:{...environment,SEMIO_OFFLOAD:mode};
+ const fleetAdmission=fleetPolicy!==undefined&&fleetPolicy.offloadModeV1(fleetEnvironment)!=="never"?(await import("../🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts")).offloadFanOutJobsV1:undefined;
+ const runWithFleet=()=>{
+  const language=resolveHostCapacityLanguageV1(environment),write=ports.write??(line=>process.stderr.write(line+"\n"));
+  write(language==="de"?"[capacity] Cargo ermittelt lokale Compilerplätze. Die Flotte kann einzelne Einheiten übernehmen.":"[capacity] Cargo admits local compiler slots. The fleet can take individual units.");
+  return body({args,handle:undefined,limit:undefined,report:()=>undefined});
+ };
+ if(fleetAdmission!==undefined&&await fleetAdmission(fleetEnvironment,ports.offloadAdmission)!==undefined)return runWithFleet();
  const directory=ports.directory??hostCapacityDirectoryV1(environment),session=currentAgentSessionV1({environment}),now=ports.now??Date.now,write=ports.write??(line=>process.stderr.write(line+"\n")),stored=readHostEstimateStoreV1(directory),client=ports.plannedByService===true,phaseless=client||PHASELESS_COMMANDS_V1.includes(ask.operation),learned=phaseless?Object.freeze({...stored,classes:Object.fromEntries(Object.entries(stored.classes).filter(([name])=>!PLANNER_PHASE_CLASSES_V1.includes(name)))}) as typeof stored:stored,estimate=estimateHostPhasesV1(policy,learned,ask.lineage,base,now());
  const total=hostProfileV1(environment).totalMegabytes,capacity=Math.max(0,total-hostFloorMegabytesV1(policy,{totalMegabytes:total})),scaled=scaleHostRequestV1(policy,{...base,priority:hostRequestPriorityV1(base.priority,leasePriorityClassV1(environment,{agentSession:session.agent.client!=="human",interactiveTerminal:session.agent.client==="human"}),estimate)},estimate.ratioBasisPoints,capacity,estimate.floorMegabytes),measured=hostClassBoundV1(policy,learned,ask.lineage,now()).source==="measured",request=rampHostRequestV1(base,scaled,estimate,measured),growth=estimate.growRatioBasisPoints<estimate.ratioBasisPoints?rampHostRequestV1(base,scaleHostRequestV1(policy,{...base,priority:request.priority},estimate.growRatioBasisPoints,capacity,estimate.floorMegabytes),estimate,measured):request;
  if(estimate.floorMegabytes>estimate.phases.execution!.megabytes)write(formatHostCapacityV1(resolveHostCapacityLanguageV1(environment),"phased",{operation:ask.operation,percent:Math.round(estimate.ratioBasisPoints/100),samples:estimate.samples,floor:estimate.floorMegabytes,phase:(estimate.phases.plan?.megabytes??0)>=(estimate.phases.assembly?.megabytes??0)?"plan":"assembly"}));
@@ -178,6 +186,9 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
    Object.assign(environment,handle.environment,tasks?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{});
    try{return await body({args:tasks&&!deferring?grantedBuildArgumentsV1(args,ask.operation,handle.jobs):args,handle,limit:grantJobLimitV1(handle),report:outcome=>{breached=outcome;}});}
    finally{for(const [key,value] of Object.entries(previous))if(value===undefined)delete environment[key];else environment[key]=value;}
+  },fleetAdmission===undefined?undefined:async signal=>{
+   const fan=await fleetAdmission(fleetEnvironment,{...ports.offloadAdmission,signal}).catch(()=>undefined);
+   return fan===undefined?undefined:()=>{waiting?.dispose();return runWithFleet();};
   });
  }finally{waiting?.dispose();}
 }

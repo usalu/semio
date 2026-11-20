@@ -80,6 +80,31 @@ for case in FIXTURE["store"]:
     expected=[{"path":f["path"],"bytes":len(f["text"].encode("utf-8")),"sha256":hashlib.sha256(f["text"].encode("utf-8")).hexdigest(),"executable":f["executable"]} for f in sorted(case["files"],key=lambda item:item["path"].encode("utf-8"))]
     check(expected==case["expected"],"store "+case["name"])
 
+for case in FIXTURE["intakeProgress"]:
+    check(len(range(0,case["bytes"],1 << 20))==case["observations"],"intake progress "+str(case["bytes"]))
+
+from collections import Counter
+
+BLOCKED_REASONS=set(SCHEMA["definitions"]["BlockedReasons"]["const"])
+for case in FIXTURE["blocked"]:
+    totals=Counter()
+    reasons=Counter()
+    last={}
+    for key,message,now in case["events"]:
+        kind=key.partition(":")[0]
+        totals[kind]+=1
+        last[kind]=now
+        if kind=="blocked":
+            reason=message.lower()
+            detail="blocked-"+(reason if reason in BLOCKED_REASONS else "other")
+            reasons[detail]+=1
+            last[detail]=now
+    def ranked(counts):
+        return [{"kind":kind,"count":counts[kind],"lastMs":last[kind]} for kind in sorted(counts,key=lambda kind:(-last[kind],kind))]
+    summary=ranked(totals)[:case["limit"]]
+    details=ranked(reasons)[:case["limit"]-len(summary)]
+    check(summary==case["totals"] and summary+details==case["results"],"blocked "+case["name"])
+
 try:
     import jsonschema
     validator=jsonschema.Draft7Validator({"$ref":"#/definitions/Fixture","definitions":SCHEMA["definitions"]})
@@ -89,4 +114,4 @@ except ImportError:
 
 if failures:
     print("\n".join(failures)); sys.exit(1)
-print("ok: %d jitter, %d closure, %d texts, %d prune, %d rotate, %d store vectors"%(len(FIXTURE["jitter"]),len(FIXTURE["closure"]),len(FIXTURE["texts"]),len(FIXTURE["prune"]),len(FIXTURE["rotate"]),len(FIXTURE["store"])))
+print("ok: %d jitter, %d closure, %d texts, %d prune, %d rotate, %d store, %d blocked, %d intake progress vectors"%(len(FIXTURE["jitter"]),len(FIXTURE["closure"]),len(FIXTURE["texts"]),len(FIXTURE["prune"]),len(FIXTURE["rotate"]),len(FIXTURE["store"]),len(FIXTURE["blocked"]),len(FIXTURE["intakeProgress"])))

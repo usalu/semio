@@ -1,13 +1,14 @@
 {
   "version": 1,
-  "expectedPackages": 37,
+  "expectedPackages": 38,
   "requiredPackages": [
     "semio-s-artifact-draw-drawing",
     "semio-s-artifact-draw-drawing-viewer",
     "semio-s-artifact-draw-drawing-geometry",
     "semio-s-artifact-draw-drawing-read",
     "semio-s-artifact-draw-drawing-write",
-    "semio-s-artifact-draw-drawing-io"
+    "semio-s-artifact-draw-drawing-io",
+    "semio-s-artifact-draw-drawing-scene-mounted"
   ],
   "cases": [
     {

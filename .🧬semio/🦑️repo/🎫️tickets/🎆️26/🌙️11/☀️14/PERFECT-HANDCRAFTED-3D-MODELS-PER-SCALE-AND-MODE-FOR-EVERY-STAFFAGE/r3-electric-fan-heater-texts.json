@@ -1,0 +1,126 @@
+{
+ "provenanceNotes": {
+  "en": "A typical 2 kW box fan heater of the household class (no single product; the envelope matches retail box heaters of 0.20 to 0.27 m by 0.20 to 0.27 m by 0.26 to 0.32 m and 1.1 to 1.8 kg): a cream ABS housing 0.182 m long, 0.228 m wide and 0.256 m high on four 0.016 m feet (rubber pads of 0.01 m under moulded bosses), made of a U-shaped shell with 2.5 mm walls, a top cover, and a chamfered front and rear frame; a black steel louvre cassette with eight slats in the front frame, a slotted polycarbonate intake panel at the back, a carry handle across the cover (0.1 m opening, 0.026 m clearance), a thermostat dial standing 0.012 m out of the right wall, which gives the overall width of 0.24 m, and a mode rocker below it. Inside: a shaded-pole motor on a bridge between the side walls, a five-blade axial fan of 0.13 m in a shroud, and a sheet-steel box with two stages of three heating coils. Mass 1.5 kg, rated 2000 W in two stages (class of IEC 60335-2-30). All 2000 W end up in the room: 1925 W as warm air (2 x 0.016 m3/s at 49 K and 51 K rise), 20 W in the outlet grille, 22 W in the top cover and 33 W in the housing; the split is an authored estimate that keeps the plastic cover near 65 degC and the grille bars near 70 degC. Each stage owns one emitter and one operating key, because the emitter model scales flow and temperature rise together with its strength, so one emitter at half strength would carry only a quarter of the heat. The supply cord is not part of the asset; only its grommet at the rear is modelled.",
+  "de": "Ein typischer Kasten-Heizlüfter von 2 kW der Haushaltsklasse (kein einzelnes Produkt; die Hülle entspricht handelsüblichen Kastengeräten von 0,20 bis 0,27 m auf 0,20 bis 0,27 m auf 0,26 bis 0,32 m und 1,1 bis 1,8 kg): ein cremefarbenes ABS-Gehäuse, 0,182 m lang, 0,228 m breit und 0,256 m hoch, auf vier 0,016 m hohen Füßen (Gummipuffer von 0,01 m unter angeformten Sockeln), gebaut aus einer U-förmigen Schale mit 2,5 mm Wand, einer Haube und je einem gefasten Front- und Rückrahmen; eine schwarze Stahl-Lamellenkassette mit acht Lamellen im Frontrahmen, ein geschlitztes Polycarbonat-Einlassgitter hinten, ein Tragegriff quer über der Haube (Öffnung 0,1 m, lichte Höhe 0,026 m), ein Thermostatregler, der 0,012 m aus der rechten Wand steht und so die Gesamtbreite von 0,24 m ergibt, und darunter ein Betriebsartenschalter. Innen: ein Spaltpolmotor auf einer Brücke zwischen den Seitenwänden, ein fünfflügliger Axiallüfter von 0,13 m in einer Düse und ein Stahlblechkasten mit zwei Stufen zu je drei Heizwendeln. Masse 1,5 kg, Nennleistung 2000 W in zwei Stufen (Klasse der IEC 60335-2-30). Alle 2000 W landen im Raum: 1925 W als Warmluft (2 x 0,016 m3/s bei 49 K und 51 K Anstieg), 20 W im Auslassgitter, 22 W in der Haube und 33 W im Gehäuse; die Aufteilung ist ein Schätzwert, der die Kunststoffhaube bei etwa 65 degC und die Gitterstäbe bei etwa 70 degC hält. Jede Stufe hat einen eigenen Emitter und einen eigenen Betriebsschlüssel, weil das Emittermodell Volumenstrom und Temperaturanstieg gemeinsam mit seiner Stärke skaliert, ein Emitter bei halber Stärke also nur ein Viertel der Wärme trüge. Das Netzkabel gehört nicht zum Asset; modelliert ist nur seine Tülle an der Rückseite."
+ },
+ "volumes": {
+  "50": [
+   {
+    "en": "The housing is built as the real mouldings: a U-shaped shell and a top cover with 2.5 mm walls and 22 mm edge radii, extruded along the air path, closed by a front and a rear frame whose edges are chamfered 13 mm; four moulded bosses carry 10 mm rubber pads.",
+    "de": "Das Gehäuse ist wie die echten Spritzgussteile gebaut: eine U-förmige Schale und eine Haube mit 2,5 mm Wand und 22 mm Kantenradius, entlang des Luftwegs extrudiert, geschlossen durch einen Front- und einen Rückrahmen mit 13 mm Fase; vier angeformte Sockel tragen 10 mm hohe Gummipuffer."
+   },
+   {
+    "en": "The outlet is a steel cassette seated in the front frame with eight 1.5 mm louvre slats that slope down and outwards and stand 4 mm proud of its rim; the intake is a polycarbonate panel with seven slots, each of which stands for two real ones; the carry handle is one loft across the cover with a 100 mm by 26 mm opening; the dial is a turned knob with a grip bar on the knob bone, the mode rocker and the cord grommet are separate parts.",
+    "de": "Der Auslass ist eine Stahlkassette im Frontrahmen mit acht 1,5 mm dicken Lamellen, die nach außen abfallen und 4 mm über ihren Rand vorstehen; der Einlass ist eine Polycarbonatplatte mit sieben Schlitzen, von denen jeder für zwei echte steht; der Tragegriff ist ein Loft quer über der Haube mit einer Öffnung von 100 mm auf 26 mm; der Regler ist ein gedrehter Knopf mit Griffsteg am Knopfknochen, Betriebsartenschalter und Kabeltülle sind eigene Teile."
+   },
+   {
+    "en": "Inside the hollow housing stand the real assemblies: the motor bridge between the side walls, the lamination stack and coil of the shaded-pole motor, the fan hub with five pitched blades in its shroud, and the sheet-steel heater box with two rows of three coils on brackets; blades, slats and coils are thinner than 7.5 mm and are marked as texture or slender parts.",
+    "de": "Im hohlen Gehäuse stehen die echten Baugruppen: die Motorbrücke zwischen den Seitenwänden, Blechpaket und Spule des Spaltpolmotors, die Lüfternabe mit fünf angestellten Flügeln in ihrer Düse und der Stahlblech-Heizkasten mit zwei Reihen zu je drei Wendeln auf Haltern; Flügel, Lamellen und Wendeln sind dünner als 7,5 mm und als Textur oder schlanke Teile markiert."
+   },
+   {
+    "en": "Thermal: every region is its real 2.5 mm, 1.5 mm or 2 mm shell; shell and cover are split on the centre plane so that their inward faces can be marked, because the validator has no cavity flood; the faces of frames, cassette, slats and intake panel that look into the housing are marked the same way; the two warm-air emitters share one outlet patch of 0.1 m on the louvre tips. The asset declares no region for coils and motor, so they appear in the body and the structure only.",
+    "de": "Thermik: Jede Region ist ihre echte Schale von 2,5 mm, 1,5 mm oder 2 mm; Schale und Haube sind in der Mittelebene geteilt, damit ihre Innenflächen markiert werden können, weil der Validator keine Hohlraumflutung kennt; die ins Gehäuse blickenden Flächen von Rahmen, Kassette, Lamellen und Einlassplatte sind ebenso markiert; die beiden Warmluft-Emitter teilen sich einen Auslassfleck von 0,1 m auf den Lamellenspitzen. Das Asset führt keine Region für Wendeln und Motor, sie erscheinen daher nur im Körper und im Tragwerk."
+   },
+   {
+    "en": "Structure: the load path of a plastic monocoque, without cladding: the U-shell, a band of the cover under the handle, the two frames as stiffening rings, the handle with a joint at each root, the motor bridge and the heater brackets with their fixings, the motor and the heater box as masses, the thermostat spindle in its bush, and the four bosses on the rubber pads as supports.",
+    "de": "Tragwerk: der Lastpfad einer selbsttragenden Kunststoffschale, ohne Verkleidung: die U-Schale, ein Band der Haube unter dem Griff, die beiden Rahmen als Aussteifungsringe, der Griff mit einem Gelenk an jeder Wurzel, die Motorbrücke und die Heizkastenhalter mit ihren Befestigungen, Motor und Heizkasten als Massen, die Thermostatspindel in ihrer Buchse und die vier Sockel auf den Gummipuffern als Auflager."
+   }
+  ],
+  "100": [
+   {
+    "en": "At 1:100 the housing is two closed masses, shell and cover, between two solid chamfered end caps; the outlet is a dark plate with four slats instead of eight, the intake a plain plate; the handle keeps its opening with a 15 mm bar; each foot is one turned stub for boss and pad; the dial is a plain disc; rocker, grommet, grip bar and all internals are left out.",
+    "de": "Bei 1:100 besteht das Gehäuse aus zwei geschlossenen Massen, Schale und Haube, zwischen zwei massiven gefasten Endkappen; der Auslass ist eine dunkle Platte mit vier statt acht Lamellen, der Einlass eine glatte Platte; der Griff behält seine Öffnung mit einem 15 mm dicken Steg; jeder Fuß ist ein gedrehter Stummel für Sockel und Puffer; der Regler ist eine glatte Scheibe; Schalter, Tülle, Griffsteg und alle Einbauten entfallen."
+   },
+   {
+    "en": "Thermal refers to these masses; the seam faces between shell, cover and caps, the backs of the plates and the tops of the feet are marked as built-in faces. Structure is the hollow U-shell, the cover band, the handle with its two root joints, one motor bridge with the motor mass, the spindle with its bush, and the four feet as supports.",
+    "de": "Die Thermik verweist auf diese Massen; die Fugenflächen zwischen Schale, Haube und Kappen, die Rückseiten der Platten und die Oberseiten der Füße sind als eingebaute Flächen markiert. Das Tragwerk ist die hohle U-Schale, das Haubenband, der Griff mit seinen zwei Wurzelgelenken, eine Motorbrücke mit der Motormasse, die Spindel mit ihrer Buchse und die vier Füße als Auflager."
+   }
+  ],
+  "200": [
+   {
+    "en": "At 1:200 the heater is one rounded block on a recessed base that stands for the four feet, with the outlet as a dark block 8 mm proud and the handle as a solid bump; intake, dial and seams are below 30 mm and merge into the block.",
+    "de": "Bei 1:200 ist der Heizlüfter ein gerundeter Block auf einem zurückgesetzten Sockel, der für die vier Füße steht, mit dem Auslass als dunklem, 8 mm vorstehendem Block und dem Griff als massivem Buckel; Einlass, Regler und Fugen liegen unter 30 mm und gehen im Block auf."
+   },
+   {
+    "en": "Thermal divides the block at the cover seam and adds the outlet, intake, dial and base as patches of their true size, so every region keeps a solid; structure is the hollow U-shell with the cover band, the handle bump, a spindle stub, the motor mass and one support rail per foot pair.",
+    "de": "Die Thermik teilt den Block an der Haubenfuge und ergänzt Auslass, Einlass, Regler und Sockel als Flecken in wahrer Größe, sodass jede Region einen Körper behält; das Tragwerk ist die hohle U-Schale mit dem Haubenband, der Griffbuckel, ein Spindelstummel, die Motormasse und je eine Auflagerschiene pro Fußpaar."
+   }
+  ]
+ },
+ "representations": {
+  "50": {
+   "silhouette": {
+    "en": "A box fan heater 3.9 mm wide and 6.2 mm high in side view: a cream housing with chamfered front and rear frames and a darker top cover, the end of the carry handle on top, the steel outlet cassette at the front with eight louvre tips, the intake panel at the back, the thermostat dial with grip bar and pointer and the mode rocker on the side wall, on two rubber feet under their bosses. Front, 4.8 mm by 6.2 mm on paper: the rounded housing with the chamfer edge of the front frame, the handle arch with its opening, the outlet cassette with eight louvre lines, two feet and the dial standing out of the right wall. Plan, 3.9 mm by 4.8 mm: the housing with chamfered corners, the top cover, the handle bar across it, the outlet cassette at the front, the intake panel at the back and the dial on the right wall.",
+    "de": "Ein Kasten-Heizlüfter, in der Seitenansicht 3,9 mm breit und 6,2 mm hoch: ein cremefarbenes Gehäuse mit gefastem Front- und Rückrahmen und dunklerer Haube, obenauf das Ende des Tragegriffs, vorn die Stahl-Auslasskassette mit acht Lamellenspitzen, hinten die Einlassplatte, an der Seitenwand der Thermostatregler mit Griffsteg und Zeiger und der Betriebsartenschalter, auf zwei Gummifüßen unter ihren Sockeln. Vorderansicht, 4,8 mm auf 6,2 mm: das gerundete Gehäuse mit der Fasenkante des Frontrahmens, der Griffbogen mit seiner Öffnung, die Auslasskassette mit acht Lamellenlinien, zwei Füße und der Regler, der aus der rechten Wand steht. Grundriss, 3,9 mm auf 4,8 mm: das Gehäuse mit gefasten Ecken, die Haube, der Griffsteg quer darüber, die Auslasskassette vorn, die Einlassplatte hinten und der Regler an der rechten Wand."
+   },
+   "retained": {
+    "en": "Length 0.196 m, height 0.31 m, overall width 0.24 m with the dial; feet 0.016 m as 10 mm pad and 6 mm boss; the 13 mm chamfers of the frames, the cover seam at 0.232 m, the 4 mm rim of the cassette and the 4 mm louvre tips beyond it, the 6 mm intake panel, the handle opening, grip bar and pointer of the dial, the mode rocker and the cord grommet.",
+    "de": "Länge 0,196 m, Höhe 0,31 m, Gesamtbreite 0,24 m mit dem Regler; Füße 0,016 m als 10 mm Puffer und 6 mm Sockel; die 13 mm Fasen der Rahmen, die Haubenfuge auf 0,232 m, der 4 mm vorstehende Kassettenrand und die 4 mm Lamellenspitzen davor, die 6 mm Einlassplatte, die Grifföffnung, Griffsteg und Zeiger des Reglers, der Betriebsartenschalter und die Kabeltülle."
+   },
+   "merged": {
+    "en": "Shell, frames, bosses and handle keep one region; the cassette rim and its slats are one grille shape with louvre strokes.",
+    "de": "Schale, Rahmen, Sockel und Griff behalten eine Region; Kassettenrand und Lamellen sind eine Gitterform mit Lamellenstrichen."
+   },
+   "omitted": {
+    "en": "Mains cable, tip-over switch, label and everything inside the housing. The joints between shell and frames lie 8 mm from the outline and are not drawn; the intake slots face backwards and appear in no view; the mode rocker and the cord grommet are omitted in front and plan (below 0.01 m).",
+    "de": "Netzkabel, Kippschalter, Typenschild und alles im Inneren des Gehäuses. Die Fugen zwischen Schale und Rahmen liegen 8 mm neben dem Umriss und sind nicht gezeichnet; die Einlassschlitze zeigen nach hinten und erscheinen in keiner Ansicht; Betriebsartenschalter und Kabeltülle entfallen in Vorderansicht und Grundriss (unter 0,01 m)."
+   },
+   "thinElements": {
+    "en": "Louvre tips and louvre lines are 0.13 mm strokes at 0.02 m (0.4 mm) spacing; the cassette rim is 4 mm and the intake panel 6 mm, about 0.1 mm on paper, and they print as their outline.",
+    "de": "Lamellenspitzen und Lamellenlinien sind 0,13-mm-Striche im Abstand von 0,02 m (0,4 mm); der Kassettenrand misst 4 mm und die Einlassplatte 6 mm, etwa 0,1 mm auf dem Papier, sie drucken als ihr Umriss."
+   },
+   "styles": {
+    "en": "Housing 0.78, handle 0.75, top cover 0.7, grille 0.2, intake 0.3, controls 0.2, feet 0.15; body pen 0.18 mm, detail 0.13 mm.",
+    "de": "Gehäuse 0,78, Griff 0,75, Haube 0,7, Gitter 0,2, Einlass 0,3, Bedienung 0,2, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm."
+   }
+  },
+  "100": {
+   "silhouette": {
+    "en": "A box fan heater 2 mm wide and 3.1 mm high: a cream block with chamfered ends and the cover edge, the handle end on top, a thin outlet plate with four louvre tips at the front, the intake plate at the back, a round dial with pointer and two stub feet. Front, 2.4 mm by 3.1 mm: the rounded block, the handle arch, the outlet plate with four louvre lines, two feet and the dial on the right wall. Plan, 2 mm by 2.4 mm: the block with chamfered corners, the handle bar, the two plates and the dial.",
+    "de": "Ein Kasten-Heizlüfter, 2 mm breit und 3,1 mm hoch: ein cremefarbener Block mit gefasten Enden und der Haubenkante, obenauf das Griffende, vorn eine dünne Auslassplatte mit vier Lamellenspitzen, hinten die Einlassplatte, ein runder Regler mit Zeiger und zwei Stummelfüße. Vorderansicht, 2,4 mm auf 3,1 mm: der gerundete Block, der Griffbogen, die Auslassplatte mit vier Lamellenlinien, zwei Füße und der Regler an der rechten Wand. Grundriss, 2 mm auf 2,4 mm: der Block mit gefasten Ecken, der Griffsteg, die beiden Platten und der Regler."
+   },
+   "retained": {
+    "en": "Overall size, the chamfered ends, four of the eight louvres, the handle with its opening, the dial, the cover edge.",
+    "de": "Gesamtgröße, die gefasten Enden, vier der acht Lamellen, der Griff mit seiner Öffnung, der Regler, die Haubenkante."
+   },
+   "merged": {
+    "en": "Frames and shell are one block, boss and pad one foot, cassette rim and slats one plate with louvre strokes; mode rocker, grommet and intake slots merge into the block.",
+    "de": "Rahmen und Schale sind ein Block, Sockel und Puffer ein Fuß, Kassettenrand und Lamellen eine Platte mit Lamellenstrichen; Betriebsartenschalter, Tülle und Einlassschlitze gehen im Block auf."
+   },
+   "omitted": {
+    "en": "Highlight, grip bar of the dial, mode mark, cable. The top cover is the edge line of the side view only.",
+    "de": "Glanzstrich, Griffsteg des Reglers, Schaltermarke, Kabel. Die Haube ist nur die Kantenlinie der Seitenansicht."
+   },
+   "thinElements": {
+    "en": "The feet are 0.016 m = 0.16 mm high; the outlet plate stands 2.5 mm and its louvre tips 8 mm proud, the intake plate 6 mm: they print as their outline; the louvre lines are 0.13 mm strokes at 0.04 m (0.4 mm).",
+    "de": "Die Füße sind 0,016 m = 0,16 mm hoch; die Auslassplatte steht 2,5 mm und ihre Lamellenspitzen 8 mm vor, die Einlassplatte 6 mm: sie drucken als ihr Umriss; die Lamellenlinien sind 0,13-mm-Striche im Abstand von 0,04 m (0,4 mm)."
+   },
+   "styles": {
+    "en": "As at 1:50 without the cover tone; body pen 0.18 mm, detail 0.13 mm.",
+    "de": "Wie bei 1:50 ohne den Haubenton; Körperstift 0,18 mm, Detail 0,13 mm."
+   }
+  },
+  "200": {
+   "silhouette": {
+    "en": "A box fan heater 1 mm wide and 1.55 mm high: one block on a recessed base with a handle bump and the outlet block at the front. Front, 1.2 mm by 1.55 mm: the block with rounded corners, the base, the handle bump and the outlet. Plan, 1 mm by 1.2 mm: one block and the outlet strip.",
+    "de": "Ein Kasten-Heizlüfter, 1 mm breit und 1,55 mm hoch: ein Block auf zurückgesetztem Sockel mit Griffbuckel und dem Auslassblock vorn. Vorderansicht, 1,2 mm auf 1,55 mm: der Block mit gerundeten Ecken, der Sockel, der Griffbuckel und der Auslass. Grundriss, 1 mm auf 1,2 mm: ein Block und der Auslassstreifen."
+   },
+   "retained": {
+    "en": "Height 0.31 m, length 0.196 m, the outlet at the front where the jet leaves, the 0.016 m gap of the feet as a recessed base.",
+    "de": "Höhe 0,31 m, Länge 0,196 m, der Auslass vorn, wo der Luftstrahl austritt, die 0,016 m hohe Fußlücke als zurückgesetzter Sockel."
+   },
+   "merged": {
+    "en": "Housing, top cover, intake, controls and feet are one block (regions listed); the handle is a solid bump.",
+    "de": "Gehäuse, Haube, Einlass, Bedienung und Füße sind ein Block (Regionen gelistet); der Griff ist ein massiver Buckel."
+   },
+   "omitted": {
+    "en": "Louvres, dial, rocker, handle opening, intake plate, chamfers and seams.",
+    "de": "Lamellen, Regler, Schalter, Grifföffnung, Einlassplatte, Fasen und Fugen."
+   },
+   "thinElements": {
+    "en": "The outlet stands 8 mm = 0.04 mm proud and is drawn at that depth within the stroke of the block.",
+    "de": "Der Auslass steht 8 mm = 0,04 mm vor und ist in dieser Tiefe innerhalb des Strichs des Blocks gezeichnet."
+   }
+  }
+ }
+}

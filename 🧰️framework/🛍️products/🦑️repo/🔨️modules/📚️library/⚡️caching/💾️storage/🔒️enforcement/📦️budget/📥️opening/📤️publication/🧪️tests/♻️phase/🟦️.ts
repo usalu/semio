@@ -3,8 +3,11 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import ts from "typescript";
 import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {posix as path} from "node:path";
 import schema from "./🔣️schema.json";
 import corpus from "./🔣️.json";
+import pressureCases from "./💽️pressure.json";
 const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");
 const tree=ts.createSourceFile("actual.ts",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
 function actual(names:readonly string[],ports:Record<string,unknown>):any{
@@ -25,12 +28,24 @@ for(const row of corpus.cases)test(row.id,async()=>{
  expect(refused,row.id).toBe(row.refused);expect(events,row.id).toEqual(row.events);expect(consumed,row.id).toBe(row.steps.includes("complete"));
 });
 
-test("the actual producer switches staging/readback to completed-receipt funding before the installer phase",async()=>{
+test.each([false,true])("the producer qualifies completed inputs before the installer, with bootstrap %s",async(bootstrap)=>{
  const control=Object.freeze({id:"phase"}),token=Object.freeze({id:"artifact"}),receipt=Object.freeze({id:"inputs"}),stop=Error("next actual phase reached"),events:string[]=[];let consumed=false;
  const native={measureNativePlatformProtectedArtifactFundingV1:async(value:unknown,phase:unknown)=>{if(value!==token||phase!==control||consumed)throw Error("unused owner required");events.push("artifact-measure");},readNativePlatformProtectedArtifactMaintenanceV1:async()=>{if(consumed)throw Error("consumed owner");},stageNativePlatformProtectedArtifactInputGroupV1:async(value:unknown,phase:unknown)=>{if(value!==token||phase!==control||consumed)throw Error("unused mutation owner required");consumed=true;events.push("stage");return receipt;},readNativePlatformProtectedFreshArtifactInputGroupV1:async(value:unknown,phase:unknown)=>{if(value!==receipt||phase!==control||!consumed)throw Error("actual completed inputs required");events.push("inputs-read");},measureNativePlatformProtectedArtifactInputGroupFundingV1:async(value:unknown,phase:unknown)=>{if(value!==receipt||phase!==control||!consumed)throw Error("actual completed funding required");events.push("inputs-measure");}};
- const api=actual(["createRepositoryDependencyProducerArtifactPhaseV1","runRepositoryDependencyProducerCompletionV1"],{dependencyMaintenanceNative:native,readJavascriptDependencyProducerMaterializationV1:()=>({scopes:[],group:{batches:[]}}),prepareRepositoryDependencyProducerEnvironmentV1:async()=>{throw stop;},console:{error:()=>{}}}),phase=api.createRepositoryDependencyProducerArtifactPhaseV1(token,control,()=>{});
- await phase.measure();let failure:unknown;try{await api.runRepositoryDependencyProducerCompletionV1("/workspace",{},control,{},token,phase,"/root",{plans:[]},()=>{},async()=>"binding",async()=>undefined,()=>{});}catch(error){failure=error;}
- expect(failure).toBe(stop);expect(events).toEqual(["artifact-measure","stage","inputs-read","inputs-measure"]);expect(consumed).toBe(true);
+ const directory="/root/j/fresh",plan={directory,generation:"generation",members:[],files:[{path:directory+"/bunfig.toml",bytes:Buffer.from("staged")}]};
+ const api=actual(["createRepositoryDependencyProducerArtifactPhaseV1","runRepositoryDependencyProducerCompletionV1"],{
+  dependencyMaintenanceNative:native,
+  readJavascriptDependencyProducerMaterializationV1:()=>({scopes:[{scope:"scope",generation:plan.generation,root:0}],group:{batches:[{roots:["j/fresh"]}]}}),
+  prepareRepositoryDependencyProducerEnvironmentV1:async()=>{throw stop;},console:{error:()=>{}},
+  basename:path.basename,relative:path.relative,join:path.join,createHash,
+  dependencyInstallSchema:{$defs:{ManagerProtocol:{const:{scopeConfig:"bunfig.toml"}}}},
+  javascriptDependencyProducerConfigurationV1:(bytes:Buffer)=>bytes,
+ }),phase=api.createRepositoryDependencyProducerArtifactPhaseV1(token,control,()=>{});
+ const qualify=bootstrap?async()=>{expect(consumed).toBe(true);events.push("bootstrap");await phase.measure();}:undefined;
+ await phase.measure();let failure:unknown;
+ try{await api.runRepositoryDependencyProducerCompletionV1("/workspace",{},control,{},token,phase,"/root",{plans:[{scope:"scope",plan}]},()=>{},async()=>"binding",async()=>undefined,()=>{},undefined,undefined,undefined,qualify);}catch(error){failure=error;}
+ expect(failure).toBe(stop);
+ expect(events).toEqual(["artifact-measure","stage","inputs-read",...bootstrap?["bootstrap"]:[],"inputs-measure"]);
+ expect(consumed).toBe(true);
 });
 
 import readerCases from "./🔎️reader.json";
@@ -46,4 +61,30 @@ for(const row of readerCases.cases)test(row.id,async()=>{
  try{value=await api.withRepositoryDependencyProducerArtifactReadV1(parent,control,phase,"/root",{},()=>{},async(context:any)=>{events.push("body");expect(pending).toBe(1);await context.recheck(control);if(row.bodyFailure)throw bodyFailure;return "value";},row.sourceOnly);}catch(error){failure=error;}
  expect(events,row.id).toEqual(["inputs-read","reader-open","body","reader-drained","inputs-read"]);expect(pending).toBe(0);expect(physicalChecks).toBeGreaterThanOrEqual(2);
  if(row.refusal==="none"){expect(value).toBe("value");expect(failure).toBeUndefined();}else{expect(value).toBeUndefined();if(row.refusal==="aggregate"){expect(failure).toBeInstanceOf(AggregateError);expect((failure as AggregateError).errors).toEqual([bodyFailure,afterFailure]);}else expect(failure).toBe(row.refusal==="body"?bodyFailure:afterFailure);}
+});
+
+test("bootstrap qualifies fresh funding across the installed scope before any binding is changed",async()=>{
+ const db=new Database(":memory:");
+ const oracle=db.query(`select
+   (select count(*) from json_each(?1) where value>?2) > ?3 or
+   (select value from json_each(?1) order by key desc limit 1)>?2 as refuse`);
+ try{
+  for(const row of pressureCases.cases){
+   const control=Object.freeze({id:"funding"}),token=Object.freeze({id:"unused"}),receipt=Object.freeze({id:"completed"});
+   const trace:string[]=[],usage=[...row.used],refusal=Error("Native funding exceeded");
+   const check=(value:unknown,phase:unknown)=>{expect(value,row.name).toBe(receipt);expect(phase).toBe(control);};
+   const native={
+    observeNativePlatformProtectedArtifactInputGroupFundingV1:async(value:unknown,phase:unknown)=>{check(value,phase);trace.push("observe");return {bytes:usage.shift()!,maximumBytes:row.limit};},
+    measureNativePlatformProtectedArtifactInputGroupFundingV1:async(value:unknown,phase:unknown)=>{check(value,phase);trace.push("refuse");throw refusal;},
+   };
+   const api=actual(["createRepositoryDependencyProducerArtifactPhaseV1","createRepositoryDependencyBootstrapFundingV1"],{dependencyMaintenanceNative:native});
+   const artifact=api.createRepositoryDependencyProducerArtifactPhaseV1(token,control,()=>{});artifact.accept(receipt);
+   const qualify=api.createRepositoryDependencyBootstrapFundingV1(artifact,async()=>{trace.push("retire");return row.eligible;},row.maximum);
+   let rejected:unknown;
+   try{await qualify();}catch(error){rejected=error;}
+   const expected=oracle.get(JSON.stringify(row.used),row.limit,row.eligible?row.maximum:0) as {refuse:number};
+   expect(rejected,row.name).toBe(expected.refuse?refusal:undefined);
+   expect(trace,row.name).toEqual(row.operations);
+  }
+ }finally{db.close();}
 });

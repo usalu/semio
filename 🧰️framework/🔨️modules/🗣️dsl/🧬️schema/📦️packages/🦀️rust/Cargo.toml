@@ -49,6 +49,10 @@ semio-framework-dsl-record-derive = { path = "../../✨️derive/📦️packages
 serde_json = { version = "1.0", features = ["float_roundtrip"] }
 
 [[test]]
+name = "json_schema_projection"
+path = "../../🧪️tests/🔬️json-schema/🦀️.rs"
+
+[[test]]
 name = "field_refusal_public"
 path = "../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs"
 

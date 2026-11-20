@@ -32,11 +32,11 @@ pub struct ViewModel {
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_tool_id: Option<String>,
     /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
-    /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
+    /// sends the full map on every refresh. A null entry records an explicit clear for that pane. Tools stay mode-wide via
     /// `active_tool_id`.
     #[serde(default, skip_serializing_if = "OrderedMap::is_empty")]
     #[value(default, skip_serializing_if = "OrderedMap::is_empty")]
-    pub active_utility_by_window_id: OrderedMap<String>,
+    pub active_utility_by_window_id: OrderedMap<Option<String>>,
     /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
     /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
@@ -220,9 +220,19 @@ impl ViewModel {
         Some(Self {
             window_id: Some(window.id.clone()),
             active_window_kind_id: Some(window.window_kind_id.clone()),
-            active_utility_id: self.active_utility_by_window_id.get(window_id).cloned(),
+            active_utility_id: self.active_utility_by_window_id.get(window_id).cloned().flatten(),
             ..self.clone()
         })
+    }
+
+    /// 🪛️ Resolves the addressed, focused and call-level utility while honoring explicit clears.
+    pub fn contextual_utility(&self) -> Option<&str> {
+        self.window_id.as_deref()
+            .and_then(|id| self.active_utility_by_window_id.get(id))
+            .or_else(|| self.focused_window_id.as_deref().and_then(|id| self.active_utility_by_window_id.get(id)))
+            .map(Option::as_deref)
+            .unwrap_or(self.active_utility_id.as_deref())
+            .filter(|utility| !utility.is_empty())
     }
 
     /// 🎚️ Resolves utilities through exact window ownership; kind requests need an addressed or unique live instance.
@@ -237,7 +247,7 @@ impl ViewModel {
             let unique = candidates.next().is_none().then_some(first);
             &instance(self.window_id.as_deref()).or_else(|| instance(self.focused_window_id.as_deref())).or(unique)?.id
         } else { requested };
-        self.active_utility_by_window_id.get(id).map(String::as_str).or_else(|| (self.window_id.as_deref() == Some(id)).then_some(self.active_utility_id.as_deref()).flatten()).filter(|utility| !utility.is_empty())
+        self.active_utility_by_window_id.get(id).map(Option::as_deref).unwrap_or_else(|| (self.window_id.as_deref() == Some(id)).then_some(self.active_utility_id.as_deref()).flatten()).filter(|utility| !utility.is_empty())
     }
 
     /// 🎬️ Overlays the host-owned mode tool, then binds the view to a window or the panel.

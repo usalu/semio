@@ -7,6 +7,7 @@ import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
 import vectors from "./🔣️.json";
+import preparation from "./📋️local-preparation.json";
 import {graphQueueRequestedAtV1,graphQueueYieldPolicyV1,graphQueueYieldRoundV1,graphQueueYieldsV1,waitGraphQueueYieldV1,yieldGraphQueueV1} from "../🟨️.mjs";
 import {runWithStaleReexecV1} from "../../../../🧷️format-stamps/🔄️reexec/🟨️.mjs";
 import {formatStampProtocolV1} from "../../../../🧷️format-stamps/🟨️.mjs";
@@ -126,3 +127,18 @@ test("a command that only waits for a peer's graph build yields at the next noti
   again();await Promise.all([four,three]);
  }finally{for(const[key,value]of[[names.ticket,saved.ticket],[names.requestedAt,saved.at],[names.round,saved.round]] as const){if(value===undefined)delete process.env[key];else process.env[key]=value;}open();}
 },60000);
+
+test("slow local builder preparation never yields the graph to a nonexistent peer",async()=>{
+ const dir=join(sandbox,"local-preparation"),ticket=join(sandbox,"local-ticket.json"),saved=process.env[names.ticket],exits:number[]=[];
+ await seed(dir,{"pkg/a/project.json":JSON.stringify({name:"a",package:"@syn/a",uses:[]}),"pkg/a/src/index.ts":"export const v=1;\n"});
+ const {host}=createMockHost(dir,{stamp:true,waitNoticeMilliseconds:preparation.noticeMilliseconds,gate:()=>sleep(preparation.preparationMilliseconds)});
+ const messages:string[]=[];
+ Object.assign(host,{yieldAfterMilliseconds:preparation.yieldMilliseconds,exitProcess:(code:number)=>exits.push(code),say:(key:string)=>messages.push(key)});
+ try{
+  process.env[names.ticket]=ticket;
+  await loadGenerationGraphV1(host);
+  expect(messages.filter(key=>key==="waiting")).toHaveLength(preparation.peerWaits);
+  expect(exits).toHaveLength(preparation.restarts);
+  expect(existsSync(ticket)).toBe(false);
+ }finally{if(saved===undefined)delete process.env[names.ticket];else process.env[names.ticket]=saved;}
+});

@@ -3,11 +3,11 @@ use super::*;
 
 struct FieldRole { key:String, reference:proc_macro2::TokenStream, present:proc_macro2::TokenStream, flatten:bool }
 
-enum Wire { Direct, Decimal, HexWord, Flatten }
+enum Wire { Direct, Decimal, HexWord, Octets, OptionalOctets, Flatten }
 #[derive(Clone, Copy, PartialEq)]
 enum Declared { Decimal, HexWord, Tree }
 
-/// 🧬️ Recognizes the intrinsic octet serializer family (`pack::value::bytes[::optional]`), whose JSON projection is the plain array of numbers (or `null`) the native `Vec<u8>`/`Option<Vec<u8>>` roles already emit.
+/// 🧬️ Recognizes the declared intrinsic byte serializer and its optional wire shape.
 fn octets_kind(path:&str,leaf:&str)->Option<&'static str> {
     let path=path.trim_start_matches("::");
     ["pack::value::bytes","semio_framework_value::bytes"].iter().find_map(|root|{
@@ -43,7 +43,9 @@ fn wire(attrs:&FieldAttrs,declared:Option<Declared>)->syn::Result<Wire> {
         (None,_,_)=>refuse("canonical field declares a controlled or decimal serializer without the plain value serializer it must equal"),
         (Some(_),_,Some(Declared::Decimal))=>Ok(Wire::Decimal),
         (Some(direct),controlled,None)=>match octets_kind(&direct,"::to_value"){
-            Some(kind)if controlled.is_none_or(|path|octets_kind(path,"::to_value_controlled")==Some(kind))=>Ok(Wire::Direct),
+            Some(kind) if controlled.is_none_or(|path| octets_kind(path, "::to_value_controlled") == Some(kind)) => {
+                Ok(if kind == "optional" { Wire::OptionalOctets } else { Wire::Octets })
+            }
             _=>refuse("canonical field requires a direct native role; custom serializers need #[canonical_json(decimal_string)], #[canonical_json(hex_word)] or the intrinsic pack::value::bytes octet role"),
         },
     }
@@ -105,7 +107,21 @@ fn named_roles(fields:&Fields,container:&ContainerAttrs,root:Option<&proc_macro2
         let ident=&field.ident;
         let reference=if let Some(root)=root{quote!(&#root.#ident)}else{quote!(#ident)};
         let present=presence(&field.attrs,&reference)?;
-        let reference=match wire(&field.attrs,canonical_field_role(&syntax.attrs)?)?{Wire::Direct=>reference,Wire::HexWord=>hex_word_reference(&syntax.ty,&reference,owner)?,Wire::Flatten=>reference,Wire::Decimal=>{let decimal=if matches!(&syntax.ty,syn::Type::Path(path)if path.path.is_ident("i64")){quote!(ArtifactCanonicalDecimalI64)}else{quote!(ArtifactCanonicalDecimalU64)};quote!(#owner::#decimal::from_ref(#reference))}};
+        let reference = match wire(&field.attrs, canonical_field_role(&syntax.attrs)?)? {
+            Wire::Direct | Wire::Flatten => reference,
+            Wire::HexWord => hex_word_reference(&syntax.ty, &reference, owner)?,
+            Wire::Octets => quote!(#owner::ArtifactCanonicalOctets::from_ref(#reference)),
+            Wire::OptionalOctets => quote!(match #reference {
+                Some(bytes) => #owner::ArtifactCanonicalOctets::from_ref(bytes) as &dyn #owner::ArtifactCanonicalJsonTree,
+                None => &() as &dyn #owner::ArtifactCanonicalJsonTree,
+            }),
+            Wire::Decimal => {
+                let decimal = if matches!(&syntax.ty, syn::Type::Path(path) if path.path.is_ident("i64")) {
+                    quote!(ArtifactCanonicalDecimalI64)
+                } else { quote!(ArtifactCanonicalDecimalU64) };
+                quote!(#owner::#decimal::from_ref(#reference))
+            }
+        };
         let flatten=field.attrs.flatten;
         out.push(FieldRole{key:field.wire_name,reference,present,flatten});
     }
@@ -148,9 +164,34 @@ pub(super) fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
                         if let Some(tag)=attrs.tag.as_deref(){
                             if let Some(content)=attrs.content.as_deref(){let(n,c,k)=roles(vec![tag_role(tag,&wire),FieldRole{key:content.into(),reference:quote!(payload),present:quote!(true),flatten:false}],&owner);(pattern,n,c,k)}
                             else{
-                                let n=quote!(match #owner::ArtifactCanonicalJsonTree::canonical_tree_node(payload)?{#owner::ArtifactCanonicalJsonNode::Object(length)=>Ok(#owner::ArtifactCanonicalJsonNode::Object(length.checked_add(1).ok_or_else(||#error)?)),_=>Err(#error)});
-                                let c=quote!(if ordinal==0{static KIND:&str=#wire;return Ok(&KIND);}#owner::ArtifactCanonicalJsonTree::canonical_tree_child(payload,ordinal-1));
-                                let k=quote!(if ordinal==0{return Ok(#tag.into());}#owner::ArtifactCanonicalJsonTree::canonical_tree_key(payload,ordinal-1));
+                                let n=quote! {
+                                    let length = match #owner::ArtifactCanonicalJsonTree::canonical_tree_node(payload)? {
+                                        #owner::ArtifactCanonicalJsonNode::Object(length) => length.checked_add(1).ok_or_else(|| #error)?,
+                                        _ => 2,
+                                    };
+                                    Ok(#owner::ArtifactCanonicalJsonNode::Object(length))
+                                };
+                                let c=quote! {
+                                    if ordinal == 0 {
+                                        static KIND: &str = #wire;
+                                        return Ok(&KIND);
+                                    }
+                                    match #owner::ArtifactCanonicalJsonTree::canonical_tree_node(payload)? {
+                                        #owner::ArtifactCanonicalJsonNode::Object(_) => #owner::ArtifactCanonicalJsonTree::canonical_tree_child(payload, ordinal - 1),
+                                        _ if ordinal == 1 => Ok(payload),
+                                        _ => Err(#error),
+                                    }
+                                };
+                                let k=quote! {
+                                    if ordinal == 0 {
+                                        return Ok(#tag.into());
+                                    }
+                                    match #owner::ArtifactCanonicalJsonTree::canonical_tree_node(payload)? {
+                                        #owner::ArtifactCanonicalJsonNode::Object(_) => #owner::ArtifactCanonicalJsonTree::canonical_tree_key(payload, ordinal - 1),
+                                        _ if ordinal == 1 => Ok("value".into()),
+                                        _ => Err(#error),
+                                    }
+                                };
                                 (pattern,n,c,k)
                             }
                         }else{let(n,c,k)=roles(vec![FieldRole{key:wire.clone(),reference:quote!(payload),present:quote!(true),flatten:false}],&owner);(pattern,n,c,k)}

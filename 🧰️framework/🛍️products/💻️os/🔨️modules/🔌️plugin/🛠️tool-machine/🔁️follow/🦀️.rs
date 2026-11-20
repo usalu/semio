@@ -1,16 +1,47 @@
 //! 🔁️ The mounted continuous-tool follower consumes genuine immutable ledger rows and publishes one complete preview epoch.
 use super::*;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand};
-use semio_framework_value::{RetainedOwnedProjection,ReplyStash,RetainedAllocationEffect,SharedUtf8,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkPoll};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
+use semio_framework_value::{RetainedOwnedProjection,ReplyStash,RetainedAllocationEffect,SharedUtf8,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll};
 use semio_framework_value::retained_clone::{RetainedCloneClose,RetainedCloneRef,RetainedOwnedProjectionAdmission,NativeAllocationIdentity};
-use semio_plugin_job_receiving::original_steps::{built_with,begun,replied,retired,retired_poll};
+use semio_plugin_job_receiving::original_steps::{begun,replied,retired,retired_poll};
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{OriginalToolLedgerSource,ScrubState,GestureState,TypingState};
 use semio_plugin_window_config::WindowConfigOwnerRegistry;
 use semio_plugin_window_config_original::OriginalWindowPreviewEpoch;
 use semio_plugin_tool_run_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,paid_effect,receive,close_paid};
-use std::mem::size_of;
+use semio_framework_value_native_storage::{NativeOwnedStorage, NativeSeedTemplate};
+use std::mem::{MaybeUninit,size_of};
+
+macro_rules! follow_seed_fields {
+    ($($field:ident: $value:expr),+ $(,)?) => {
+        fn seed_template() -> NativeSeedTemplate<Self> {
+            let _ = |Self { $($field: _,)+ }: Self| {};
+            unsafe {
+                NativeSeedTemplate::fields(
+                    [$(stringify!($field)),+].len(),
+                    |target, part| Self::seed_part::<false>(target, part),
+                    |target, part| Self::seed_part::<true>(target, part).is_some(),
+                )
+            }
+        }
+
+        unsafe fn seed_part<const WRITE: bool>(target: *mut MaybeUninit<Self>, part: usize) -> Option<usize> {
+            let fields: &[unsafe fn(*mut Self) -> usize] = &[$(
+                |target| {
+                    let field = unsafe { &raw mut (*target).$field };
+                    if WRITE {
+                        unsafe { field.write($value) };
+                    }
+                    fn field_size<T>(_: *mut T) -> usize { size_of::<T>() }
+                    field_size(field)
+                },
+            )+];
+            Some(unsafe { fields.get(part)?(target.cast()) })
+        }
+    };
+}
+
 type Machines<A>=ToolMachineRuntime<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation,<A as ArtifactApp>::Config,<A as ArtifactApp>::ConfigMutation>;
 type Document<A>=store::ArtifactStore<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;
 type Config<A>=store::ArtifactStore<<A as ArtifactApp>::Config,<A as ArtifactApp>::ConfigMutation>;
@@ -29,7 +60,7 @@ impl<T:?Sized+Sync+'static> Projection<T>{
  fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()}
 }
 /// 🧳️ The original source fence owns every selected input, private alias and pending conflict through physical close.
-pub struct OriginalToolMachineFollow<A:ArtifactApp>{binding:Option<(OriginalSourceBinding,(NativeAllocationIdentity,u64))>,request:u64,revisions:[u64;3],generations:[u64;2],contents:[[u8;32];2],phase:u8,lane:u8,index:usize,ordinal:u32,document_seen:bool,config_seen:bool,typing_started:bool,published:bool,closing:bool,
+pub struct OriginalToolMachineFollow<A:ArtifactApp>{binding:Option<(OriginalSourceBinding,(NativeAllocationIdentity,u64))>,request:u64,revisions:[u64;3],generations:[u64;2],contents:[[u8;32];2],phase:u8,lane:u8,index:usize,ordinal:u32,document_seen:bool,config_seen:bool,typing_started:bool,published:bool,closing:bool,seed_only:bool,
  document:OriginalToolOverlayFold<A::Snapshot,A::Mutation>,config:OriginalToolOverlayFold<A::Config,A::ConfigMutation>,presses:OriginalToolLedgerWalk<Press<A>>,gestures:OriginalToolLedgerWalk<GestureState<A::Mutation>>,typing:OriginalToolLedgerWalk<TypingState<A::Mutation>>,windows:Option<OriginalWindowPreviewEpoch>,document_input:Option<RetainedOwnedProjection<A::Mutation>>,config_input:Option<RetainedOwnedProjection<A::ConfigMutation>>,window_input:Option<RetainedOwnedProjection<WindowConfigMutation>>,document_admission:RetainedOwnedProjectionAdmission<A::Mutation>,config_admission:RetainedOwnedProjectionAdmission<A::ConfigMutation>,window_admission:RetainedOwnedProjectionAdmission<WindowConfigMutation>,document_candidate:Option<Arc<A::Snapshot>>,config_candidate:Option<Arc<A::Config>>,document_displaced:Option<Arc<A::Snapshot>>,config_displaced:Option<Arc<A::Config>>,rejected_window:Option<SharedUtf8>,rejected_key:Option<RetainedOriginalSlotKey>,rejected_state:Option<TypingState<A::Mutation>>,rejected_close:Option<ControlledRetirement<TypingState<A::Mutation>>>,address_close:RetainedCloneClose}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn p(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
@@ -37,10 +68,56 @@ fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKin
 impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
  /// 🧭️ Borrows scalar progress without materializing ledger rows or semantic state.
  pub fn progress(&self)->(u8,u8,usize,u32,bool,bool){(self.phase,self.lane,self.index,self.ordinal,self.published,self.closing)}
- /// 📏️ Quotes the actual boxed source header and its sole pointer recipient.
- pub fn admission_demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<Self>(),..header::<(Self,Self,Box<Self>)>()}}
- /// 📥️ Captures the actual mounted caller and unchanged Store/ledger frontiers before any preview work.
- pub fn admit(machines:&mut Machines<A>,document:&Document<A>,config:&Config<A>,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{if output.is_some()||!machines.refold_owed{return Err(invalid("original tool follow requires its pending request and empty source slot").into())}let d=Self::admission_demands();let binding=OriginalSourceBinding::borrow(cx);let mut admission=std::mem::take(&mut machines.admissions.follow);let admitted=built_with(cx,&mut admission,output,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|native|{let decoder=(native.ledger_identity(),native.retirement_recipient_identity().ok_or_else(||invalid("original tool follow requires its actual decoder"))?);Ok((Box::new(Self{binding:Some((binding,decoder)),request:machines.refold_request,revisions:[machines.presses.original_revision(),machines.gestures.original_revision(),machines.typing.original_revision()],generations:[document.generation(),config.generation()],contents:[document.content_revision(),config.content_revision()],phase:0,lane:0,index:0,ordinal:0,document_seen:false,config_seen:false,typing_started:false,published:false,closing:false,document:Default::default(),config:Default::default(),presses:Default::default(),gestures:Default::default(),typing:Default::default(),windows:None,document_input:None,config_input:None,window_input:None,document_admission:Default::default(),config_admission:Default::default(),window_admission:Default::default(),document_candidate:None,config_candidate:None,document_displaced:None,config_displaced:None,rejected_window:None,rejected_key:None,rejected_state:None,rejected_close:None,address_close:Default::default()}),RetainedCloneProgress{retained_capacity_bytes:d.capacity_bytes,..p(d)}))});machines.admissions.follow=admission;admitted}
+
+    follow_seed_fields! {
+        binding: None,
+        request: 0,
+        revisions: [0; 3],
+        generations: [0; 2],
+        contents: [[0; 32]; 2],
+        phase: 0,
+        lane: 0,
+        index: 0,
+        ordinal: 0,
+        document_seen: false,
+        config_seen: false,
+        typing_started: false,
+        published: false,
+        closing: true,
+        seed_only: true,
+        document: OriginalToolOverlayFold::vacant(),
+        config: OriginalToolOverlayFold::vacant(),
+        presses: OriginalToolLedgerWalk::vacant(),
+        gestures: OriginalToolLedgerWalk::vacant(),
+        typing: OriginalToolLedgerWalk::vacant(),
+        windows: None,
+        document_input: None,
+        config_input: None,
+        window_input: None,
+        document_admission: RetainedOwnedProjectionAdmission::vacant(),
+        config_admission: RetainedOwnedProjectionAdmission::vacant(),
+        window_admission: RetainedOwnedProjectionAdmission::vacant(),
+        document_candidate: None,
+        config_candidate: None,
+        document_displaced: None,
+        config_displaced: None,
+        rejected_window: None,
+        rejected_key: None,
+        rejected_state: None,
+        rejected_close: None,
+        address_close: RetainedCloneClose::vacant(),
+    }
+
+ fn bind(&mut self,binding:(OriginalSourceBinding,(NativeAllocationIdentity,u64)),machines:&Machines<A>,document:&Document<A>,config:&Config<A>){
+    self.binding=Some(binding);
+    self.request=machines.refold_request;
+    self.revisions=[machines.presses.original_revision(),machines.gestures.original_revision(),machines.typing.original_revision()];
+    self.generations=[document.generation(),config.generation()];
+    self.contents=[document.content_revision(),config.content_revision()];
+    self.closing=false;
+    self.seed_only=false;
+ }
+
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if !self.binding.is_some_and(|(binding,decoder)|binding.matches(cx)&&cx.native_receiving_identity()==Some(decoder)){return Err(invalid("original tool follow changed its caller or decoder"))}Ok(())}
  fn current(&self,machines:&Machines<A>,document:&Document<A>,config:&Config<A>)->bool{self.request==machines.refold_request&&self.revisions==[machines.presses.original_revision(),machines.gestures.original_revision(),machines.typing.original_revision()]&&self.generations==[document.generation(),config.generation()]&&self.contents==[document.content_revision(),config.content_revision()]}
  fn cursor_demand()->RetirementDemand{header::<(u8,usize,u32,bool)>()}
@@ -53,7 +130,7 @@ impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
   2=>{if self.config_input.is_none()&&!self.config.input_pending(){self.complete_leaf(cx)?;}else{self.config.advance_input(config,&mut self.config_input,self.ordinal,cx)?;}},
   3=>{let leaf=self.press_window(machines)?;let epoch=self.windows.as_ref().unwrap().epoch();if windows.preview_input_held(leaf.window_kind_id(),leaf.window_id(),epoch){let d=header::<u8>();paid(cx,d,|_|{self.lane=4;Ok(p(d))})?;}else{let input=self.window_input.as_ref().unwrap();let d=windows.preview_input_demands(leaf.window_kind_id(),leaf.window_id(),epoch,4096,input)?;paid_effect(cx,d,|effect|Ok(windows.preview_input(input,epoch,effect)?.unwrap_or_default()))?;}},
   4=>{if let Some(input)=self.window_input.as_mut(){let d=if input.terminal_is_empty(){header::<Option<RetainedOwnedProjection<WindowConfigMutation>>>()}else{input.close_demand(4096)?};if input.terminal_is_empty(){close_paid(cx,d,|_|{self.window_input=None;Ok(p(d))})?;}else{retired_poll(cx,d,|effect|input.close_step(4096,effect))?;}}else{let d=header::<u8>();paid(cx,d,|_|{self.lane=5;Ok(p(d))})?;}},
-  5=>{let leaf=self.press_window(machines)?;let epoch=self.windows.as_ref().ok_or_else(||invalid("follow windows are absent"))?.epoch();if windows.preview_leaf_ready(leaf.window_kind_id(),leaf.window_id(),epoch){self.complete_leaf(cx)?;}else{let d=windows.preview_leaf_demands(leaf.window_kind_id(),leaf.window_id(),epoch,4096,cx.fuel_remaining())?;receive(cx,d,|native,_,g|RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:windows.preview_leaf_step(leaf.window_kind_id(),leaf.window_id(),epoch,4096,g,native).map(|(_,p)|RetainedCloneStep::Progress(p)),work:1}))?;}},_=>return Err(invalid("original tool follow has no input lane").into())}Ok(())}
+  5=>{let leaf=self.press_window(machines)?;let epoch=self.windows.as_ref().ok_or_else(||invalid("follow windows are absent"))?.epoch();if windows.preview_leaf_ready(leaf.window_kind_id(),leaf.window_id(),epoch){self.complete_leaf(cx)?;}else{let d=windows.preview_leaf_demands(leaf.window_kind_id(),leaf.window_id(),epoch,4096,cx.fuel_remaining())?;receive(cx,d,|native,work,g|{let before=native.actual_work();let result=windows.preview_leaf_step(leaf.window_kind_id(),leaf.window_id(),epoch,4096,g,native,work).map(|(_,p)|RetainedCloneStep::Progress(p));RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:native.actual_work().saturating_sub(before)})})?;}},_=>return Err(invalid("original tool follow has no input lane").into())}Ok(())}
  fn retain_demand<T:?Sized+Sync>(admission:&RetainedOwnedProjectionAdmission<T>,source:RetainedCloneRef<'_,T>)->Result<RetirementDemand,ValueError>{if admission.terminal_is_empty(){admission.demand(source)}else{let mut d=admission.take_demand()?;d.copy_bytes+=size_of::<u8>()+size_of::<bool>();Ok(d)}}
  fn retain<T:?Sized+Sync>(admission:&mut RetainedOwnedProjectionAdmission<T>,source:RetainedCloneRef<'_,T>,output:&mut Option<RetainedOwnedProjection<T>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=Self::retain_demand(admission,source)?;let mut taken=false;paid_effect(cx,d,|effect|{let adopting=admission.terminal_is_empty();let poll=if adopting{replied::<ValueError>(effect,|effect,reply|admission.admit(source,effect,reply).map(drop))}else{replied::<ValueError>(effect,|effect,reply|admission.take(output,effect,reply).map(drop))};let RetainedWorkPoll::Complete(turn)=poll else{return Ok(Default::default())};let step=turn.result?;taken=!adopting&&matches!(step,RetainedCloneStep::Complete(_));let mut progress=step.progress();if taken{progress.copied_bytes+=size_of::<u8>()+size_of::<bool>()}Ok(progress)})?;Ok(taken)}
  fn project_press(&mut self,machines:&Machines<A>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let source=self.presses.borrow(&machines.presses)?;let index=self.index;let leaf=&source.get().entries[index].1;match leaf{PressLeaf::Member(_)=>{if Self::retain(&mut self.document_admission,source.project(index,move|state|state.entries[index].1.member().unwrap()),&mut self.document_input,cx)?{self.document_seen=true;self.lane=1;}},PressLeaf::Config(_)=>{if Self::retain(&mut self.config_admission,source.project(index,move|state|state.entries[index].1.config().unwrap()),&mut self.config_input,cx)?{self.config_seen=true;self.lane=2;}},PressLeaf::WindowConfig(_)=>{if Self::retain(&mut self.window_admission,source.project(index,move|state|state.entries[index].1.window_config().unwrap()),&mut self.window_input,cx)?{self.lane=3;}},PressLeaf::Child(_)=>self.complete_leaf(cx)?}Ok(())}
@@ -118,8 +195,108 @@ impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
   if self.binding.is_some(){close_paid(cx,d,|_|{self.binding=None;Ok(p(d))})?;return Ok(false)}Ok(true)
  }
  /// 🧺️ Neither original source custody nor unpublished/displaced aliases remain.
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.document.terminal_is_empty()&&self.config.terminal_is_empty()&&self.presses.terminal_is_empty()&&self.gestures.terminal_is_empty()&&self.typing.terminal_is_empty()&&self.windows.is_none()&&self.document_input.is_none()&&self.config_input.is_none()&&self.window_input.is_none()&&self.document_admission.terminal_is_empty()&&self.config_admission.terminal_is_empty()&&self.window_admission.terminal_is_empty()&&self.document_candidate.is_none()&&self.config_candidate.is_none()&&self.document_displaced.is_none()&&self.config_displaced.is_none()&&self.rejected_window.is_none()&&self.rejected_key.is_none()&&self.rejected_state.is_none()&&self.rejected_close.is_none()&&self.address_close.is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.seed_only||self.closing&&self.binding.is_none()&&self.document.terminal_is_empty()&&self.config.terminal_is_empty()&&self.presses.terminal_is_empty()&&self.gestures.terminal_is_empty()&&self.typing.terminal_is_empty()&&self.windows.is_none()&&self.document_input.is_none()&&self.config_input.is_none()&&self.window_input.is_none()&&self.document_admission.terminal_is_empty()&&self.config_admission.terminal_is_empty()&&self.window_admission.terminal_is_empty()&&self.document_candidate.is_none()&&self.config_candidate.is_none()&&self.document_displaced.is_none()&&self.config_displaced.is_none()&&self.rejected_window.is_none()&&self.rejected_key.is_none()&&self.rejected_state.is_none()&&self.rejected_close.is_none()&&self.address_close.is_empty()}
  /// 📦️ The final boxed header releases only after every original child is terminal.
  pub fn shell_close_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),..header::<Option<Box<Self>>>()}}
 }
 impl<A:ArtifactApp> Drop for OriginalToolMachineFollow<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tool follower retains native source custody")}}
+
+type FollowBinding=(OriginalSourceBinding,(NativeAllocationIdentity,u64));
+
+/// 📦️ Retains one native backing across funding turns and publishes only a complete mounted follower.
+pub struct OriginalToolMachineFollowSlot<A:ArtifactApp>{
+    backing:NativeOwnedStorage<OriginalToolMachineFollow<A>>,
+    birth_binding:Option<FollowBinding>,
+    ready:Option<Box<OriginalToolMachineFollow<A>>>,
+}
+impl<A:ArtifactApp> OriginalToolMachineFollowSlot<A>{
+    pub const fn vacant()->Self{Self{backing:NativeOwnedStorage::empty(),birth_binding:None,ready:None}}
+    pub fn is_some(&self)->bool{self.backing.reserved()||self.ready.is_some()}
+    pub fn as_ref(&self)->Option<&OriginalToolMachineFollow<A>>{self.ready.as_deref()}
+    pub fn as_mut(&mut self)->Option<&mut OriginalToolMachineFollow<A>>{self.ready.as_deref_mut()}
+    pub fn take(&mut self)->Option<Box<OriginalToolMachineFollow<A>>>{self.ready.take()}
+
+    fn binding_bytes()->usize{size_of::<Option<FollowBinding>>()}
+    fn frontier_bytes()->usize{size_of::<(Option<FollowBinding>,u64,[u64;3],[u64;2],[[u8;32];2],bool,bool)>()}
+
+    /// 📏️ Quotes one allocation, template page, pointer transfer or cancellation release.
+    pub fn birth_demand(&self,closing:bool)->Result<RetirementDemand,ValueError>{
+        if self.backing.initialized(){
+            let mut demand=NativeOwnedStorage::<OriginalToolMachineFollow<A>>::box_demand();
+            demand.copy_bytes+=Self::binding_bytes();
+            if !closing{demand.copy_bytes+=Self::frontier_bytes()}
+            return Ok(demand)
+        }
+        if closing{
+            let mut demand=self.backing.release_demand();
+            if self.birth_binding.is_some(){demand.copy_bytes+=Self::binding_bytes()}
+            return Ok(demand)
+        }
+        if !self.backing.reserved(){
+            let mut demand=NativeOwnedStorage::<OriginalToolMachineFollow<A>>::reserve_demand();
+            demand.copy_bytes+=Self::binding_bytes();
+            return Ok(demand)
+        }
+        self.backing.template_seed_demand(OriginalToolMachineFollow::<A>::seed_template())
+    }
+
+    /// 🌱️ Initializes native storage in bounded Source-bound turns, then captures the current frontier.
+    pub fn birth_step(&mut self,machines:&Machines<A>,document:&Document<A>,config:&Config<A>,cx:&mut StepContext<'_>,closing:bool)->Result<RetainedCloneStep,OriginalTurnFailure>{
+        if self.ready.is_some()||!machines.refold_owed{
+            return Err(invalid("original tool follow requires its pending request and empty source slot").into())
+        }
+        let demand=self.birth_demand(closing)?;
+        if !cx.retained_work_can_enter(demand)||(!closing&&cx.should_yield()){
+            return Ok(RetainedCloneStep::Progress(Default::default()))
+        }
+        let decoder=cx.native_receiving_identity().ok_or_else(||invalid("original tool follow requires its actual decoder"))?;
+        let binding=(OriginalSourceBinding::borrow(cx),decoder);
+        if self.birth_binding.is_some_and(|original|original!=binding){
+            return Err(invalid("original tool follow birth changed its caller or decoder").into())
+        }
+        let grant=cx.retained_grant();
+        let mut advance=|cx:&mut StepContext<'_>|{
+            if closing&&cx.retirement_should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}
+            let turn=cx.with_original_source_effect(grant,|_,effect|{
+                let transfer=self.backing.initialized();
+                let was_reserved=self.backing.reserved();
+                let poll=if transfer{
+                    self.backing.take_box_into(&mut self.ready,effect)
+                }else if closing{
+                    RetainedWorkPoll::Complete(self.backing.release_between_source_actions(effect))
+                }else if was_reserved{
+                    RetainedWorkPoll::Complete(self.backing.initialize_template_between_source_actions(OriginalToolMachineFollow::<A>::seed_template(),effect))
+                }else{
+                    self.backing.reserve_empty(effect)
+                };
+                let RetainedWorkPoll::Complete(turn)=poll else{return poll};
+                let result=turn.result.map(|step|{
+                    let mut progress=step.progress();
+                    if let Some(owner)=self.ready.as_mut(){
+                        self.birth_binding=None;
+                        progress.copied_bytes+=Self::binding_bytes();
+                        if !closing{
+                            owner.bind(binding,machines,document,config);
+                            progress.copied_bytes+=Self::frontier_bytes();
+                        }
+                    }else if !was_reserved&&self.backing.reserved(){
+                        self.birth_binding=Some(binding);
+                        progress.copied_bytes+=Self::binding_bytes();
+                    }else if was_reserved&&!self.backing.reserved(){
+                        self.birth_binding=None;
+                        progress.copied_bytes+=Self::binding_bytes();
+                    }
+                    if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}
+                });
+                RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:turn.work})
+            })?;
+            let Some((poll,work))=turn else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+            let result=match poll{
+                RetainedWorkPoll::Complete(turn)=>turn.result,
+                RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),
+            };
+            semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work})
+        };
+        if closing{cx.with_original_retirement(advance)}else{advance(cx)}
+    }
+}

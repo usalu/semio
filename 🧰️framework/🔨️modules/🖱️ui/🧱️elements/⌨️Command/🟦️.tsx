@@ -10,6 +10,7 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
@@ -391,6 +392,7 @@ const CommandItem = React.forwardRef<HTMLDivElement, CommandItemProps>(function 
   return (
     <div
       {...props}
+      {...sharedBorderlessBoxProps}
       ref={elementRef}
       id={itemId}
       role="option"

@@ -16,9 +16,9 @@ impl<C> NativeProjectionBacking<C>{
  pub fn get_mut(&mut self)->Option<&mut C>{self.storage.get_mut()}
  pub fn retained(&self)->Option<&C>{self.storage.get().or_else(||self.closed.as_deref())}
  fn binding_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<OriginalWorkBindingIdentity>>(),depth:1,..Default::default()}}
- pub fn validate_effect(&self,effect:&Effect<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|binding|!binding.matches_effect(effect)){Err(invalid())}else{Ok(())}}
+ pub fn validate_effect(&self,effect:&Effect<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|binding|!binding.matches_source(effect)){Err(invalid())}else{Ok(())}}
  /// 🧷️ Authenticates the same genuine Work principal before a before-effect child Birth.
- pub fn validate_work_binding(&self,work:OriginalWorkBindingIdentity)->Result<(),ValueError>{if self.binding.is_some_and(|binding|binding!=work){Err(invalid())}else{Ok(())}}
+ pub fn validate_work_binding(&self,work:OriginalWorkBindingIdentity)->Result<(),ValueError>{if self.binding.is_some_and(|binding|binding.source_turn()!=work.source_turn()){Err(invalid())}else{Ok(())}}
  fn funded(effect:&mut Effect<'_>,demand:RetirementDemand)->Result<bool,ValueError>{Ok(retained_clone_grant_admits(effect.grant(),demand)&&effect.remaining_work_units()?>=1)}
  fn local(turn:RetainedWorkPoll)->Result<RetainedWorkOutcome,ValueError>{match turn{RetainedWorkPoll::Complete(turn)=>Ok(turn),RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("closed native backing operation suspended"))}}
  /// 📏️ Quotes one actual binding, backing reservation or native seed part.

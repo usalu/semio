@@ -1,0 +1,7 @@
+# Original analytic Bounding Box
+
+The retained Bounding Box node now publishes the existing `box` output as a native closed Box with independent topology labels. The engine and synchronous query share the same exact world extrema for certified Box, Sphere, Cylinder, Cone, Torus and through-bore solids. Tilted cylinders include the radial projection onto each world axis and both axial endpoints. Placed tori combine their ring's world-axis extent with the tube radius.
+
+The retained evaluator also uses the shared analytic curve-extrema calculation for finite line and conic edges, complete conic curves and certified conic faces. Full sphere and torus surfaces are supported. Inputs whose bounds collapse along a world axis or are unbounded refuse explicitly because the output represents a solid. General topology and spline bounds still require a retained traversal and extrema solver.
+
+The native Flow fixture drives Circle → axial Extrude, translated Circle, and placed circular Revolve into Bounding Box. It verifies the declared output, world bounds and stable component references through the funded preview and tests a collapsed bound. Manifold independently reproduced all three sets of extrema using an oriented cylinder, translated cross-section points and a revolved torus. Both oracle tests passed all 18 assertions. Rust syntax parsing passed across eleven modules. The native fixture remains unexecuted because the host has insufficient space for Cargo admission.

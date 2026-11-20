@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "settled-zero",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 200,
+        "settled": true
+      },
+      "kind": "unchanged",
+      "retire": true
+    },
+    {
+      "id": "settled-positive",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 150,
+        "settled": true
+      },
+      "kind": "reclaimed",
+      "retire": false
+    },
+    {
+      "id": "unsettled-zero",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 200,
+        "settled": false
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "unsettled-positive",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 150,
+        "settled": false
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "wrong-partition",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "graph",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 200,
+        "settled": true
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "invalid-measurement",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "reclaimed",
+        "beforeBytes": 200,
+        "afterBytes": 201,
+        "settled": true
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "missing",
+      "receipt": null,
+      "kind": "unconfirmed",
+      "retire": false
+    },
+    {
+      "id": "actual-skipped",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "skipped",
+        "beforeBytes": 0,
+        "afterBytes": 0,
+        "settled": false
+      },
+      "kind": "skipped",
+      "retire": true
+    },
+    {
+      "id": "invalid-skipped",
+      "receipt": {
+        "version": 1,
+        "kind": "repository-cache-reclaim",
+        "partition": "rust",
+        "outcome": "skipped",
+        "beforeBytes": 200,
+        "afterBytes": 0,
+        "settled": false
+      },
+      "kind": "unconfirmed",
+      "retire": false
+    }
+  ]
+}

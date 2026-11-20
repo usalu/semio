@@ -35,5 +35,50 @@
       "value": "invalid",
       "expected": null
     }
+  ],
+  "drawing": {
+    "background": false,
+    "fill": true,
+    "fillColor": "#387abc",
+    "fillOpacity": 0.6,
+    "visibleLines": true,
+    "hiddenLines": true,
+    "visibleColor": "#243",
+    "hiddenColor": "#abc",
+    "visibleWidth": 2.25,
+    "hiddenWidth": 0.5,
+    "lineEasing": 3,
+    "mergeLines": true
+  },
+  "camera": {
+    "projection": "orthographic",
+    "zoom": 2.5,
+    "fov": 37
+  },
+  "poseFields": {
+    "eyeX": 8,
+    "eyeY": -9,
+    "eyeZ": 10,
+    "targetX": 1,
+    "targetY": 2,
+    "targetZ": 3,
+    "upX": 0.2,
+    "upY": 0.1,
+    "upZ": 0.9
+  },
+  "expectedPosition": [
+    8,
+    -9,
+    10
+  ],
+  "expectedTarget": [
+    1,
+    2,
+    3
+  ],
+  "expectedUp": [
+    0.2,
+    0.1,
+    0.9
   ]
 }

@@ -1,6 +1,6 @@
 //! 🧵️ Hand-projected canonical trees for the COS shapes whose wire is not a plain field-role record.
 use super::*;
-use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree, ArtifactCanonicalOctets};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 type Field<'a> = Option<(&'static str, &'a dyn Tree)>;
@@ -49,14 +49,14 @@ impl PdfObject {
             Self::Bool(value) => (&COS_KINDS[1], [field("value", value), None, None, None]),
             Self::Int(value) => (&COS_KINDS[2], [field("value", value), None, None, None]),
             Self::Real(value) => (&COS_KINDS[3], [field("negative", &value.negative), field("coefficient", &value.coefficient), field("scale", &value.scale), None]),
-            Self::Str(value) => (&COS_KINDS[4], [field("value", value), None, None, None]),
+            Self::Str(value) => (&COS_KINDS[4], [field("value", ArtifactCanonicalOctets::from_ref(value)), None, None, None]),
             Self::Text(value) => (&COS_KINDS[5], [field("value", value), None, None, None]),
             Self::Date(value) => (&COS_KINDS[6], [field("value", value), None, None, None]),
             Self::Name(value) => (&COS_KINDS[7], [field("value", value), None, None, None]),
             Self::Array(value) => (&COS_KINDS[8], [field("value", value), None, None, None]),
             Self::Dict(value) => (&COS_KINDS[9], [field("value", value), None, None, None]),
             Self::Ref(value) => (&COS_KINDS[10], [field("num", &value.num), field("gen", &value.gen), None, None]),
-            Self::Stream { dict, data, filters } => (&COS_KINDS[11], [field("dict", dict), field("data", data), field("filters", filters), None]),
+            Self::Stream { dict, data, filters } => (&COS_KINDS[11], [field("dict", dict), field("data", ArtifactCanonicalOctets::from_ref(data)), field("filters", filters), None]),
         }
     }
 }
@@ -87,7 +87,13 @@ impl PdfStreamFilter {
             Self::Dct { color_transform } => (&FILTER_KINDS[5], [field("colorTransform", color_transform), None]),
             Self::Jpx => (&FILTER_KINDS[6], [None, None]),
             Self::Ccitt { parameters } => (&FILTER_KINDS[7], [field("parameters", parameters), None]),
-            Self::Jbig2 { globals } => (&FILTER_KINDS[8], [field("globals", globals), None]),
+            Self::Jbig2 { globals } => {
+                let field = globals.as_ref().map_or_else(
+                    || field("globals", &()),
+                    |bytes| field("globals", ArtifactCanonicalOctets::from_ref(bytes)),
+                );
+                (&FILTER_KINDS[8], [field, None])
+            }
             Self::Crypt { name } => (&FILTER_KINDS[9], [field("name", name), None]),
         }
     }
@@ -113,7 +119,7 @@ impl PdfEmbeddedFile {
             field("fileName", &self.file_name),
             self.description.as_ref().map(|value| ("description", value as &dyn Tree)),
             self.mime_type.as_ref().map(|value| ("mimeType", value as &dyn Tree)),
-            field("data", &self.data),
+            field("data", ArtifactCanonicalOctets::from_ref(&self.data)),
             self.creation_date.as_ref().map(|value| ("creationDate", value as &dyn Tree)),
             self.modification_date.as_ref().map(|value| ("modificationDate", value as &dyn Tree)),
             self.relationship.as_ref().map(|value| ("relationship", value as &dyn Tree)),

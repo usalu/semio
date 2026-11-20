@@ -105,7 +105,7 @@ impl NumericalBytesPublication {
 
     /// ▶️ Advances exactly one funded builder turn; true once the finished payload sits in `lent`.
     pub fn advance(&mut self, lent: &mut Option<RetainedJobPayload>, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
-        if self.writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+        if !self.appended && self.writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
             numerical_open_writer(&mut self.writer, self.stream, context)?;
             return Ok(false);
         }

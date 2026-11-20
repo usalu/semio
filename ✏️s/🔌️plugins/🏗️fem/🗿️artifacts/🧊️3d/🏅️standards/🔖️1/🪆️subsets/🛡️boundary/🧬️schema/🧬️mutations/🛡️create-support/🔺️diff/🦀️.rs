@@ -1,13 +1,13 @@
 //! 🔺️ Sparse diff builder for `CreateSupport`.
 use super::CreateSupport;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportInsertion;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportInsertion;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<Fem3dDiff> {
-    if let Some(message) = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::entity_identity_breach("support", &payload.support.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.support.id.clone()]); }
+    if let Some(message) = semio_s_artifact_fem_3d_guards::standards::v1::subsets::any::schema::guards::entity_identity_breach("support", &payload.support.id) { return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.support.id.clone()]); }
     if base.supports.iter().any(|support| support.id == payload.support.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A support with id \"{}\" already exists.", payload.support.id), [payload.support.id.clone()]);
     }

@@ -5,6 +5,7 @@
     "default": [
       "{projectRoot}/**/*",
       "sharedGlobals",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/❄️cold-apply/🦀️.rs",
       "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/*.{ts,tsx,mts,mjs,json,rs,toml,lock,svg,png,jpg,jpeg,webp,bmp,gif,pdf,dwg,dxf,semio,wit,sql,txt,bin,graphql,proto,spicy,abnf,ksy,g4,ebnf,feature}",
       "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/🧪️tests/🧫️fixtures/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/**/📚️examples/**/*",

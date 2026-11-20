@@ -1,5 +1,5 @@
 {
-  "law": "The Flow window's graph outline carries one row per node of the open flow graph, that node's ports nested beneath it as the graph interaction domain's handle ids, and one row per wire — every node row bound to both framework interaction verbs against the graph domain.",
+  "law": "The Flow window's graph outline carries one row per node of the open flow graph, that node's ports nested beneath it as the graph interaction domain's handle ids, and one row per wire — each row dispatches hover to its graph target and picks through the tree domain.",
   "interactionDomain": "graph",
   "hostSnapshot": {
     "schema": "flow.hostSnapshot",
@@ -11,7 +11,8 @@
     ],
     "synapses": [
       { "id": "wire-height", "from": "height", "to": "result", "fromPort": "out", "toPort": "in" },
-      { "id": "wire-caption", "from": "caption", "to": "result", "fromPort": "out", "toPort": "in" }
+      { "id": "wire-caption", "from": "caption", "to": "result", "fromPort": "out", "toPort": "in" },
+      { "id": "wire-whole", "from": "height", "to": "result", "fromPort": "", "toPort": "" }
     ],
     "layout": {
       "height": { "x": 0.0, "y": 0.0 },
@@ -20,11 +21,28 @@
     }
   },
   "expected": {
+    "hoverSources": [
+      {"target": "wire-height", "sources": ["height@out"]},
+      {"target": "result@in", "sources": ["caption@out", "height@out"]},
+      {"target": "wire-whole", "sources": ["height"]},
+      {"target": "result@", "sources": ["height"]},
+      {"target": "caption@text", "sources": []},
+      {"target": "result", "sources": []}
+    ],
+    "componentHovers": [
+      {"mode": "vertex", "id": "height@number#0.vertex.1", "node": "height", "port": "number"},
+      {"mode": "edge", "id": "height@number#1.edge.0", "node": "height", "port": "number"},
+      {"mode": "face", "id": "height@number#2.face.2", "node": "height", "port": "number"},
+      {"mode": "vertex", "id": "height@number#2.face.2"},
+      {"mode": "face", "id": "height@number#2.face.2", "graphHover": "caption@text", "node": "caption", "port": "text"},
+      {"mode": "edge", "id": "height@number#1.edge.0", "graphHover": "wire-height", "node": "wire-height"}
+    ],
+    "hoverGranularities": {"nodes": "node", "ports": "handle", "wires": "edge"},
     "nodes": [
       { "id": "height", "label": "Height", "ports": ["height@number"] },
       { "id": "caption", "label": "Note", "ports": ["caption@text"] },
       { "id": "result", "label": "Preview", "ports": ["result@"] }
     ],
-    "wires": [{ "id": "wire-height" }, { "id": "wire-caption" }]
+    "wires": [{ "id": "wire-height" }, { "id": "wire-caption" }, { "id": "wire-whole" }]
   }
 }

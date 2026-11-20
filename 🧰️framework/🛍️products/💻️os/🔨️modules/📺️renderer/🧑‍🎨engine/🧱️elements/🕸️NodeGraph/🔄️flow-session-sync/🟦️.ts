@@ -4,9 +4,10 @@
  */
 
 import { serializeCanvasThemeJson } from "@semio-tech/ui-styling";
-import { type NodeGraphHover, type NodeGraphScene, type AppCatalogue } from "@semio-tech/framework";
+import { type NodeGraphScene, type AppCatalogue } from "@semio-tech/framework";
 import { parseSceneJsonField } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
 import { type FlowTask, type FlowWasmSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import type { NodeGraphHoverMark } from "../🫱️interaction-publication/🟦️.ts";
 import { DEFAULT_NODE_GRAPH_VIEWPORT } from "../🧰️graph-core/🟦️.ts";
 import {
   DAG_CONTENT_REFIT_MAX_COVERAGE,
@@ -286,13 +287,13 @@ export function syncFlowCanvasTheme(session: FlowWasmSession): void {
   observeFlowTask(session, "setCanvasThemeJson", session.setCanvasThemeJson(serializeCanvasThemeJson()));
 }
 
-function applyNodeGraphHoverFromScene(session: FlowWasmSession, hover: NodeGraphHover | undefined): void {
-  if (hover === undefined) return;
-  if (hover.nodeId && hover.portId) {
-    observeFlowTask(session, "setHoverChannel", session.setHoverChannel(hover.nodeId, hover.portId));
-  } else {
-    observeFlowTask(session, "setHover", session.setHover(hover.nodeId ?? null));
-  }
+export function setFlowSessionHover(session: FlowWasmSession, mark: NodeGraphHoverMark): void {
+  const task = mark.edgeId
+    ? session.setHover({ edgeId: mark.edgeId })
+    : mark.hoveredId && mark.portId
+      ? session.setHoverChannel(mark.hoveredId, mark.portId)
+      : session.setHover(mark.hoveredId ?? null);
+  observeFlowTask(session, "setHover", task);
 }
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
@@ -323,7 +324,6 @@ export function syncFlowSessionStructureFromScene(session: FlowWasmSession, scen
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
   if (!skipFixture && scene.hostSnapshotJson) sendFlowPayloadOnce(session, "synchronizeSnapshotJson", scene.hostSnapshotJson, (json) => session.synchronizeSnapshotJson(json));
   if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify({nodes:scene.selection,edges:[],handles:[]})));
-  applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
   if (scene.lodJson) {
     try {

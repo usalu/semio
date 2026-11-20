@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Native replacement of the inferred release prepare stage for the nine demonstrator lanes. Usage: native-lanes.sh <stage> [args]
 set -u
-ROOT="/Users/ueli/Documents/semio"
-T="$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS"
+T="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$T/../../../../../../.." && pwd)"
 G="$T/🗑️generated"; mkdir -p "$G/done"
 export SEMIO_BUILD_MODE=release
 export SEMIO_WORKSPACE_ROOT="$ROOT"
@@ -18,7 +18,7 @@ prereqs() {
   step plugin-web-support "$OSM/🔌️plugin/📦️packages/🟦️typescript" repo ./📜️script.ts support
   step font-assets "$FW/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust" repo ./📜️script.ts build
   step infinite-fonts "$OSM/♾️infinite/📦️packages/🦀️rust" repo ./📜️script.ts fonts
-  step describe-build "$OSM/🔌️plugin/🖨️describe/📦️packages/🦀️rust" repo ./📜️script.ts build --host-platform=darwin
+  step describe-build "$OSM/🔌️plugin/🖨️describe/📦️packages/🦀️rust" repo ./📜️script.ts build --host-platform="$(node -p process.platform)"
 }
 catalog() {
   step stdio-format-claims "✏️s/🧑‍💻dev" repo ./📜️script.ts stdio-format-claims

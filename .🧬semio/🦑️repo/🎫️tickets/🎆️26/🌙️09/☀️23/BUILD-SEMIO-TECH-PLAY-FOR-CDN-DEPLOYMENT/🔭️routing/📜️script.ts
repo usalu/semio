@@ -49,7 +49,7 @@ writeFileSync(worker, `try {
   console.log("[DEBUG] Worker CDN dynamic import "+${JSON.stringify(moduleURL)}+" "+imported.token);
   self.postMessage({ok:true,origin:self.location.origin,fetches:results,imported:imported.token});
 } catch(error) { self.postMessage({ok:false,error:String(error)}); }`);
-const service = servePublishedPlay(pages);
+const service = servePublishedPlay(pages, ["play", "map", "media", "modules"]);
 process.env.PLAYWRIGHT_BASE_URL = service.baseURL;
 const { default: config } = await import(pathToFileURL(join(workspace, "🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🎚️config/🟦️.ts")).href);
 let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;

@@ -37,6 +37,7 @@ fn compare(left: crate::Component, right: crate::Component, grant: usize) -> boo
 
 #[test]
 fn retained_component_compare_matches_all_native_variants_and_hostile_values() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let components: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/🌳️typed/🧩️components.json")).unwrap();
     for grant in fixture["grants"].as_array().unwrap() {
@@ -57,6 +58,7 @@ fn retained_component_compare_matches_all_native_variants_and_hostile_values() {
 
 #[test]
 fn retained_component_compare_cancellation_and_arena_contention_keep_both_roots() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let text = fixture["text"].as_str().unwrap().repeat(fixture["textRepeats"].as_u64().unwrap() as usize);
     let data = serde_json::json!({"type":"extension","extension":"nested","props":[text.clone(), {"key":[text]}]});

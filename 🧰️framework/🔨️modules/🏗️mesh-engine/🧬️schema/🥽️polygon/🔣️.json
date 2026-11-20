@@ -36,6 +36,109 @@
         }
       }
     },
+    "surface": {
+      "description": "Sparse native smooth faces, vertex normals, corner UV coordinates and seam edges in canonical polygon order.",
+      "type": "array",
+      "maxItems": 1400000,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index"
+            ],
+            "properties": {
+              "kind": {
+                "const": "smoothFace"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 599999
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index",
+              "normal"
+            ],
+            "properties": {
+              "kind": {
+                "const": "vertexNormal"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 599999
+              },
+              "normal": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number",
+                  "minimum": -3.4028234663852886e+38,
+                  "maximum": 3.4028234663852886e+38
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index",
+              "uv"
+            ],
+            "properties": {
+              "kind": {
+                "const": "cornerUv"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 599999
+              },
+              "uv": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number",
+                  "minimum": -3.4028234663852886e+38,
+                  "maximum": 3.4028234663852886e+38
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index"
+            ],
+            "properties": {
+              "kind": {
+                "const": "seamEdge"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 599999
+              }
+            }
+          }
+        ]
+      }
+    },
     "attributes": {
       "type": "object",
       "maxProperties": 64,

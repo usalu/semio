@@ -58,6 +58,7 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
       onPointerLeave={() => {
         presencePointerRef.current = null;
         publishInkPresenceView(true);
+        if (core.interactive) core.publishInteractionHover(null);
       }}
       onPointerUp={(event) => {
         if (releaseContact(event.pointerId)) handlePointerUp();

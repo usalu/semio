@@ -66,7 +66,10 @@
     "RotateFrames",
     "ScaleFrames",
     "SetPageOverrides",
-    "ReplaceDocument"
+    "ReplaceDocument",
+    "EditStory",
+    "CreatePage",
+    "DeletePage"
   ],
-  "remaining": "54/58 selected; remaining EditStory, CreatePage, DeletePage, SetParentPageContent. Genuine Drawing text edits use qualified member commands."
+  "remaining": "All 58 Layout kinds enter retained preparation through the editor factory. Drawing text edits use qualified member commands."
 }

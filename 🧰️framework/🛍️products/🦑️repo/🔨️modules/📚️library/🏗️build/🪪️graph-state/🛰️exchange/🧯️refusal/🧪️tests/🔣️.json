@@ -5,6 +5,7 @@
   {"name": "an open breaker is transient", "answer": "breaker", "expect": {"code": "breaker-open", "transient": true, "deterministic": false, "stored": false}},
   {"name": "a lapsed claim is transient", "answer": "claim-lost", "expect": {"code": "claim-lost", "transient": true, "deterministic": false, "stored": false}},
   {"name": "a machine without upload rights is not a wall for others", "answer": "no-upload", "expect": {"code": "no-upload", "transient": false, "deterministic": false, "stored": false}},
+  {"name": "a missing leaf piece is local to this machine and not a wall for others", "answer": "leaf-missing", "expect": {"code": "leaf-missing", "transient": false, "deterministic": false, "stored": false}},
   {"name": "a document above the limit is a wall for everybody", "answer": "limit-document", "expect": {"code": "limit-document", "transient": false, "deterministic": true, "stored": false}},
   {"name": "an entry above the limit is a wall for everybody", "answer": "limit-entry", "expect": {"code": "limit-entry", "transient": false, "deterministic": true, "stored": false}},
   {"name": "too many documents is a wall for everybody", "answer": "limit-documents", "expect": {"code": "limit-documents", "transient": false, "deterministic": true, "stored": false}},

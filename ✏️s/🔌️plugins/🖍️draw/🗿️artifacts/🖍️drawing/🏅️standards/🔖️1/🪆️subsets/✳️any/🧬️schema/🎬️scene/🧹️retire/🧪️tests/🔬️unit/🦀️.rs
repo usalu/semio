@@ -7,6 +7,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::retirement::*;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneJob, DocumentSceneLimits};
 use serde_json::Value;
+use semio_s_artifact_draw_drawing_scene::preparation::testkit;
 use std::sync::Arc;
 fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){let(result,allocation)=semio_framework_trace::observe_heap_allocations_on_this_thread(step);assert!(!allocation.overflowed);(result,(allocation.requested_bytes,allocation.released_bytes))}
 fn drain(plan:DocumentScenePlan){
@@ -17,9 +18,9 @@ fn drain(plan:DocumentScenePlan){
   if owner.terminal_is_empty(){break;}
   let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy==0{release}else{copy}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()};
-  let(zero,physical)=observed(||owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());
+  let(zero,physical)=observed(||testkit::physical_turn(RetainedCloneGrant{maximum_items:0,..grant},|effect|owner.close_step(copy,effect)));
   assert_eq!(physical,(0,0));assert_eq!(zero.progress(),Default::default());
-  let(step,physical)=observed(||owner.close_step(grant).unwrap());let receipt=step.progress();
+  let(step,physical)=observed(||testkit::physical_turn(grant,|effect|owner.close_step(copy,effect)));let receipt=step.progress();
   assert!(receipt.fits(grant));assert_eq!(physical.0,receipt.retained_capacity_bytes);assert_eq!(physical.1,receipt.released_bytes);
  }
  assert!(owner.terminal_is_empty());let(_,physical)=observed(||drop(owner));assert_eq!(physical,(0,0));
@@ -32,13 +33,13 @@ fn painted_scenes_retirement_funds_original_allocations_and_releases(){
  for row in contract["cases"].as_array().unwrap(){
   if row["source"].is_null(){drain(DocumentScenePlan::default());}
   else if row["source"]=="raster"{drain(DocumentScenePlan{assets:vec![semio_s_artifact_draw_drawing_scene::raster::RasterSceneAsset{id:"image".into(),image:Arc::new(semio_framework_pixels::RasterImage{width:2,height:2,pixels:vec![255;16]})}],nodes:Vec::new()});}
-  else{for source in &sources{let document:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot=serde_json::from_value(source["document"].clone()).unwrap();let v=&source["limits"];let mut job=DocumentSceneJob::new(&document,DocumentSceneLimits{max_nodes:v["maxNodes"].as_u64().unwrap()as usize,max_depth:v["maxDepth"].as_u64().unwrap()as usize,max_segments:v["maxSegments"].as_u64().unwrap()as usize,max_references:v["maxReferences"].as_u64().unwrap()as usize,max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize}).unwrap();let mut complete=false;for _ in 0..100000{if job.advance(4096).unwrap().done{complete=true;break;}}assert!(complete,"authored fixture preparation terminates");drain(job.result().unwrap());let(mut closing,output)=job.into_retirement();if let Some(output)=output{drain(output);}semio_s_artifact_draw_drawing_scene::draw_scene_physical_close!(closing,1);}}
+  else{for source in &sources{let document:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot=serde_json::from_value(source["document"].clone()).unwrap();let v=&source["limits"];let mut job=DocumentSceneJob::new(&document,DocumentSceneLimits{max_nodes:v["maxNodes"].as_u64().unwrap()as usize,max_depth:v["maxDepth"].as_u64().unwrap()as usize,max_segments:v["maxSegments"].as_u64().unwrap()as usize,max_references:v["maxReferences"].as_u64().unwrap()as usize,max_source_bytes:v["maxSourceBytes"].as_u64().unwrap()as usize}).unwrap();let mut wallet=testkit::scene_wallet();let mut complete=false;for _ in 0..100000{if wallet.turn_effect(4096,|work,effect|job.advance(4096,work,effect)).unwrap().done{complete=true;break;}}assert!(complete,"authored fixture preparation terminates");drain(job.result().unwrap());let(mut closing,output)=job.into_retirement();if let Some(output)=output{drain(output);}semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(closing,wallet,1);}}
  }
 }
 #[test]
 fn painted_scenes_retirement_zero_grants_preserve_original_owner(){
  let mut close=ScenePlanCloseJob::new(DocumentScenePlan::default());
- assert_eq!(close.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());assert!(!close.terminal_is_empty());
+ assert_eq!(testkit::physical_turn(RetainedCloneGrant::default(),|effect|close.close_step(0,effect)).progress(),Default::default());assert!(!close.terminal_is_empty());
  semio_s_artifact_draw_drawing_scene::draw_scene_physical_close!(close,1);
- assert_eq!(close.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());
+ assert_eq!(testkit::physical_turn(RetainedCloneGrant::default(),|effect|close.close_step(0,effect)).progress(),Default::default());
 }

@@ -49,6 +49,8 @@ semio-s-artifact-wfc-bitmap-snapshot = { path = "../../📸️snapshot/📦️pa
 semio-s-plugin-wfc-engine = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-projection = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-inferences = { path = "../../💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

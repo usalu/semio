@@ -110,7 +110,7 @@ mod test_arena;
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit {
     pub use super::{fixed_list::*, fixed_map_and_bytes::*, collection_arena::*, ui_list::*, ui_map::*, retirement::*};
-    pub use super::test_arena::UiArenaFixture;
+    pub use super::test_arena::{UiArenaFixture, ui_arena_serial};
 }
 
 #[path="🌱️original/🦀️.rs"]mod original;

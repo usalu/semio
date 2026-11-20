@@ -1,0 +1,7 @@
+# Retained linear BRep intersections
+
+The registered Curve Curve and Curve Surface commands now admit retained work for two analytic supporting lines and for an analytic supporting line and plane. Both reuse the existing allocation-free equations in the 3D intersection owner. The admitted tolerance controls parallelism and proximity. A unique hit uses the funded native Vertex publication and reports the existing wire channel with vertex geometry kind, matching the single-hit cold contract. Empty and non-isolated results refuse before creating a vertex. Unsupported analytic combinations report an unsupported-owner refusal.
+
+The portable fixture includes a supporting-line hit beyond the supplied endpoints, a skew pair just inside and outside tolerance, separated and coincident parallel lines, an oblique line through a plane, offset parallel and coplanar lines, and invalid tolerances. The registered Flow regression constructs its operands in the live registry, drives the operations one fuel at a time, checks the published native point, port, kind and persistent label, and checks that refusals leave only the original operands. Build storage admission still prevents the linked test from running.
+
+The independent Three.js oracle passed 11 cases. The isolated Rust harness used the exact production equations with the production vector and frame math and passed the same 11 cases. Rust parsed all nine changed sources and the scoped whitespace check passed.

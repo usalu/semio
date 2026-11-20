@@ -16,22 +16,19 @@ edges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {
 }
 tiles [id:TEXT label:TEXT weight:NUM media:VAL] {
   cap Cap 1 {
-    color={
-      a=255 b=110 g=90 r=90
+    kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ] indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] color={
+      r=90 g=90 b=110 a=255
     }
-    indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ]
   }
   deck Deck 3 {
-    color={
-      a=255 b=160 g=190 r=200
+    kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={
+      r=200 g=190 b=160 a=255
     }
-    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
   }
   pier Pier 2 {
-    color={
-      a=255 b=135 g=130 r=130
+    kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={
+      r=130 g=130 b=135 a=255
     }
-    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind="mesh" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]
   }
 }
 rules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {

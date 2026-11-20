@@ -3,7 +3,7 @@ import {spawnSync} from "node:child_process";
 import {appendFileSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {abortLeaseRootV1,leaseBoundComponentsV1,leaseEtaV1,leaseHistoryKeyV1,leaseHolderStateV1,leaseImplementationV1,leaseMovedBoundV1,leaseStandingSnapshotV1,leaseStandingTextV1,leaseStuckAfterMsV1,leaseYieldHandlerV1,probeLeaseActivityV1,type LeaseHolderStateV1,type LeaseImplementationV1,type LeaseStandingV1} from "../🟦️.ts";
+import {abortLeaseRootV1,leaseBoundComponentsV1,leaseEtaV1,leaseHistoryKeyV1,leaseHolderStateV1,leaseImplementationPinnedV1,leaseImplementationV1,leaseMovedBoundV1,leaseStandingSnapshotV1,leaseStandingTextV1,leaseStuckAfterMsV1,leaseYieldHandlerV1,probeLeaseActivityV1,type LeaseHolderStateV1,type LeaseImplementationV1,type LeaseStandingV1} from "../🟦️.ts";
 import {leaseProcessStartedAtMsV1,leaseRegistryFolderV1,leaseRegistryRootV1,leaseRegistryV1,readLeaseHistoryV1,readLeaseRegistryEntriesV1} from "../../🧭️order/🗂️registry/🟦️.ts";
 import {agentSessionAddressOfEnvironmentV1} from "../../../🪪️agent-sessions/🗄️store/🟦️.ts";
 import {liveChildPidsV1} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
@@ -31,7 +31,7 @@ export function leaseYieldDecisionV1(state:LeaseHolderStateV1["state"],mode:Leas
 }
 
 /** 📬️ What a holder weighs before honouring a request: the request, its own identity and hold, and the components that bind and moved. */
-export type LeaseYieldAcceptInputV1=Readonly<{request:LeaseYieldRequestV1;pid:number;startedAtMs:number;nowMs:number;holdsExclusive:boolean;holdSinceMs:number;standing:LeaseStandingV1;bound:readonly string[];moved:readonly string[]}>;
+export type LeaseYieldAcceptInputV1=Readonly<{request:LeaseYieldRequestV1;pid:number;startedAtMs:number;nowMs:number;holdsExclusive:boolean;holdSinceMs:number;standing:LeaseStandingV1;bound:readonly string[];moved:readonly string[];pinned?:boolean}>;
 /** 🙋️ Whether a holder honours a request: it must be the addressed holder, the request must be fresh, the resource must be held exclusively, and the holder checks the claim itself against its own evidence, never against the claim alone: a stale request needs a bound component that differs from the requester's AND moved on disk since the holder loaded it (`moved`, read by the holder), a stuck request needs the holder's own clock, fed by the work its tree does, to be silent for the stuck time, so a misdirected, forged or outdated request cannot stop a healthy holder. */
 export function leaseYieldAcceptV1(input:LeaseYieldAcceptInputV1):Readonly<{accept:boolean;refusal?:string;ids?:readonly string[]}>{
  const{request,standing}=input;
@@ -39,6 +39,7 @@ export function leaseYieldAcceptV1(input:LeaseYieldAcceptInputV1):Readonly<{acce
  if(input.nowMs-request.atMs>policy.yield.requestMaximumAgeMilliseconds)return{accept:false,refusal:"expired"};
  if(!input.holdsExclusive)return{accept:false,refusal:"not-held"};
  if(request.reason==="stale"){
+  if(input.pinned===true)return{accept:false,refusal:"pinned"};
   const ids=input.bound.filter(id=>input.moved.includes(id)&&standing.implementation.components[id]!==undefined&&request.requesterComponents[id]!==undefined&&standing.implementation.components[id]!==request.requesterComponents[id]).sort();
   return ids.length&&standing.implementation.loadedAtMs<=request.requesterStartedAtMs?{accept:true,ids}:{accept:false,refusal:"not-stale"};
  }
@@ -143,7 +144,7 @@ export function ensureLeaseYieldWatcherV1(environment:Readonly<Record<string,str
    if(!request)continue;
    const key=`${directory}\0${request.atMs}`;if(honoured.has(key))continue;
    const held=leaseRegistryV1.ownHolds(directory).find(row=>row.resource===request.resource&&row.mode==="exclusive");
-   const verdict=leaseYieldAcceptV1({request,pid:process.pid,startedAtMs:leaseProcessStartedAtMsV1,nowMs,holdsExclusive:held!==undefined,holdSinceMs:held?.sinceMs??nowMs,standing:leaseStandingSnapshotV1(agent,nowMs,environment),bound:leaseBoundComponentsV1(request.resource),moved:leaseMovedBoundV1(request.resource)});
+   const verdict=leaseYieldAcceptV1({request,pid:process.pid,startedAtMs:leaseProcessStartedAtMsV1,nowMs,holdsExclusive:held!==undefined,holdSinceMs:held?.sinceMs??nowMs,standing:leaseStandingSnapshotV1(agent,nowMs,environment),bound:leaseBoundComponentsV1(request.resource),moved:leaseMovedBoundV1(request.resource),pinned:leaseImplementationPinnedV1()});
    if(!verdict.accept)continue;
    honoured.add(key);
    const languages=leaseLanguagesV1(environment),message=languages.map(language=>request.reason==="stale"?leaseStandingTextV1(language,"yield.stale",{resource:request.resource,pid:request.requesterPid,ids:(verdict.ids??[]).join(", ")}):leaseStandingTextV1(language,"yield.stuck",{resource:request.resource,pid:request.requesterPid,minutes:Math.round(leaseStuckAfterMsV1(request.resource)/60000)})).join("\n");

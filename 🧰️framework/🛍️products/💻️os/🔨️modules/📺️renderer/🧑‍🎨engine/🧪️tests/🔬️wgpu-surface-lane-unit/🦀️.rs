@@ -21,7 +21,7 @@ fn request(generation: u64, width: u32) -> SurfaceResizeRequest {
 fn resize_job_consumes_one_scalar_per_grant() {
     with_original(|caller| {
         let mut job = SurfaceResizeJob::new(request(1, 1280));
-        caller.turn(stock(), |cx| { let deadline = cx.deadline_us(); cx.with_original_work_loan(1, deadline, |same| { assert!(matches!(job.step(same)?, Some(JobOutcomeBorrow::Yield { .. }))); Ok(()) }) }).unwrap();
+        caller.turn(stock(), |cx| { let deadline = cx.deadline_us(); cx.with_original_work_loan(1, deadline, |same| { assert!(matches!(job.step_turn(same)?, Some(JobOutcomeBorrow::Yield { .. }))); Ok(()) }) }).unwrap();
         assert_eq!(job.phase, ResizePhase::LogicalHeight);
         assert_eq!(job.logical_width, 640.0);
         assert_eq!(job.logical_height, 0.0);
@@ -91,7 +91,7 @@ fn resize_geometry_matches_the_neutral_sqlite_corpus() {
             input.physical_height = row["height"].as_u64().unwrap() as u32;
             input.scale_factor = row["scale"].as_f64().unwrap() as f32;
             let mut job = SurfaceResizeJob::new(input);
-            for _ in 0..3 { caller.turn(stock(), |cx| { let deadline = cx.deadline_us(); cx.with_original_work_loan(1, deadline, |same| { let _ = job.step(same)?; Ok(()) }) }).unwrap(); }
+            for _ in 0..3 { caller.turn(stock(), |cx| { let deadline = cx.deadline_us(); cx.with_original_work_loan(1, deadline, |same| { let _ = job.step_turn(same)?; Ok(()) }) }).unwrap(); }
             assert_eq!(job.candidate.unwrap().logical_width, row["logicalWidth"].as_f64().unwrap() as f32);
             assert_eq!(job.candidate.unwrap().logical_height, row["logicalHeight"].as_f64().unwrap() as f32);
             job.begin_close();
@@ -106,9 +106,9 @@ fn resize_job_closes_its_sealed_candidate_with_one_paid_item() {
     let mut job = SurfaceResizeJob::new(request(2, 1280));
     with_original(|caller| {
     for _ in 0..2 {
-        assert!(matches!(caller.turn(stock(), |cx| job.step(cx)), Ok(Some(JobOutcomeBorrow::Yield { .. }))));
+        assert!(matches!(caller.turn(stock(), |cx| job.step_turn(cx)), Ok(Some(JobOutcomeBorrow::Yield { .. }))));
     }
-    assert!(matches!(caller.turn(stock(), |cx| job.step(cx)), Ok(Some(JobOutcomeBorrow::Complete { .. }))));
+    assert!(matches!(caller.turn(stock(), |cx| job.step_turn(cx)), Ok(Some(JobOutcomeBorrow::Complete { .. }))));
     assert!(job.candidate.is_some());
     job.begin_close();
     assert!(matches!(caller.turn(stock(), |cx| job.close_step(cx)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items == 1));

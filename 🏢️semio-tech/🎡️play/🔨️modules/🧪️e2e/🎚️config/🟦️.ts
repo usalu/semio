@@ -20,9 +20,9 @@ const playwrightTimeoutMs = playwrightTestTimeoutMs();
 if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target: repo run @semio-tech/semio-tech-play:test-e2e");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL.endsWith("/") ? process.env.PLAYWRIGHT_BASE_URL : `${process.env.PLAYWRIGHT_BASE_URL}/`;
 
-/** 🖥️ Map and wgpu panes need a real adapter; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one. */
+/** 🖥️ Selects the system graphics backend or the explicit SwiftShader software stack. */
 function browserLaunchArgs(): readonly string[] {
-  if (process.env.PLAY_E2E_GPU === "swiftshader") return ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"];
+  if (process.env.PLAY_E2E_GPU === "swiftshader") return ["--in-process-gpu", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"];
   return [process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 }
 
@@ -37,5 +37,11 @@ export default defineConfig({
   workers: 1,
   reporter: [["list"]],
   use: { baseURL, trace: "on-first-retry" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], launchOptions: { args: [...browserLaunchArgs()] } } }],
+  projects: [{
+    name: "chromium",
+    use: {
+      ...devices["Desktop Chrome"],
+      launchOptions: { args: [...browserLaunchArgs()], headless: process.env.PLAY_E2E_GPU !== "windowed" },
+    },
+  }],
 });

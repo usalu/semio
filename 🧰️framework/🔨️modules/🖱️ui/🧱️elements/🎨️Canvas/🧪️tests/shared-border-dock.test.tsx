@@ -48,7 +48,7 @@ describe("flush dock boundaries", () => {
   it("keeps disabled and collapsed fields registered without advertising hoverable frames", () => {
     for (const control of [<Input id="field.input" disabled showLabel />, <Textarea id="field.textarea" disabled showLabel />, <Stepper id="field.stepper" disabled />]) {
       const { container, unmount } = render(control);
-      const frame = container.querySelector('[data-shared-border-frame]')!;
+      const frame = container.querySelector<HTMLElement>('[data-shared-border-frame]')!;
       expect(frame.getAttribute("aria-disabled")).toBe("true");
       if (frame.dataset.slot !== "stepper-group") expect(frame.querySelector('[data-collapsed="true"]')).not.toBeNull();
       unmount();
@@ -164,12 +164,13 @@ describe("flush dock boundaries", () => {
     expect(layout.children[2]!.querySelector('[data-testid="footer"]')).not.toBeNull();
   });
 
-  it("propagates controlled Mode selection to the complete measured outline before interaction, then transfers activation and lets hover win", async () => {
+  it("propagates controlled Mode selection to the complete measured outline before interaction, then transfers activation and lets the hovered chip close its own outline", async () => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const stack = this.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
       const x = stack?.dataset.stackPath === "1" ? 600 : 16;
       if (this.dataset.slot === "mode-dock-stack") return new DOMRect(x, 46, 584, 370);
       if (this.dataset.slot === "mode-dock-tab-cap") return new DOMRect(x, 46, 108, 30);
+      if (this.dataset.slot === "mode-dock-tab") return new DOMRect(x, 46, 108, 30);
       if (this.dataset.slot === "mode-dock-tabbar") return new DOMRect(x, 46, 584, 30);
       if (this.dataset.slot === "mode-dock-tab-gap") return new DOMRect(x + 108, 46, 476, 30);
       return stack ? new DOMRect() : new DOMRect(16, 46, 1168, 370);
@@ -182,14 +183,14 @@ describe("flush dock boundaries", () => {
     const { container } = render(<AppFixture />);
     const stacks = [...container.querySelectorAll<HTMLElement>('[data-slot="mode-dock-stack"]')];
     const border = (index: number) => stacks[index]!.querySelector('[data-slot="mode-dock-silhouette-border"]')!;
-    const paths = (index: number, state: string) => [...border(index).querySelectorAll(`path[data-shared-border-state="${state}"]`)].map(path => path.getAttribute("d") ?? "").join(" ");
-    const complete = (index: number, state: string) => {
+    const paths = (index: number, state: string) => [...border(index).querySelectorAll(`path[data-shared-border-state="${state}"]`), ...stacks[index]!.querySelectorAll(`[data-slot="mode-dock-tab"] svg path[data-shared-border-state="${state}"]`)].map(path => path.getAttribute("d") ?? "").join(" ");
+    const complete = (index: number, state: string, only?: [number, number, number, number][]) => {
       const d = paths(index, state);
       expect(d).not.toBe("");
       const commands = [...d.matchAll(/([ML])\s*([\d.e+-]+)[ ,]+([\d.e+-]+)/gi)].map(match => ({ move: match[1] === "M", x: Number(match[2]), y: Number(match[3]) }));
       const left = index === 0 ? 1 : 0, right = index === 0 ? 584 : 583;
       const edges = [[1, 1, 108, 1], [108, 1, 108, 31], [108, 31, right, 31], [right, 31, right, 369], [left, 369, right, 369], [left, 31, left, 369], [left, 1, left, 31]];
-      for (const [x1, y1, x2, y2] of edges as [number, number, number, number][]) {
+      for (const [x1, y1, x2, y2] of only ?? edges as [number, number, number, number][]) {
         const horizontal = y1 === y2, lo = horizontal ? x1 : y1, hi = horizontal ? x2 : y2;
         let covered = new Decimal(0);
         commands.forEach((to, i) => {
@@ -218,7 +219,7 @@ describe("flush dock boundaries", () => {
       expect(paths(0, "active")).toBe("");
     });
     fireEvent.pointerOver(stacks[1]!.querySelector('[role="tab"]')!);
-    await waitFor(() => { complete(1, "hover"); expect(paths(1, "active")).toBe(""); });
+    await waitFor(() => { complete(1, "hover", [[1, 1, 108, 1], [108, 1, 108, 31], [0, 31, 108, 31], [0, 1, 0, 31]]); expect(paths(1, "active")).not.toContain("M 1 1 L 108 1"); });
     fireEvent.pointerOut(stacks[1]!, { relatedTarget: document.body });
     await waitFor(() => complete(1, "active"));
   });

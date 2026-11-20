@@ -551,4 +551,3 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-semio_plugin::retained_command::terminal_frame_bound!(LowpolyRetainedCommandWork);

@@ -13,6 +13,7 @@ import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useWindowContentDeadLineInset, windowContentDeadLineScrollClass } from "../🚧️WindowContentDeadLine/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎮️Scrollable
@@ -32,8 +33,9 @@ const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentProps
     <div
       ref={setScrollerRef}
       data-slot="scroll-area"
+      {...(props.tabIndex !== undefined && props.tabIndex >= 0 ? sharedBorderlessBoxProps : undefined)}
       className={cn(
-        "relative min-h-0 min-w-0 size-full focus-visible:ring-ring/50 transition-[color,box-shadow] outline-none focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1",
+        "relative min-h-0 min-w-0 size-full outline-none",
         orientation === "horizontal" ? "overflow-x-auto overflow-y-hidden" : orientation === "vertical" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto",
         windowContentDeadLineScrollClass,
         className,

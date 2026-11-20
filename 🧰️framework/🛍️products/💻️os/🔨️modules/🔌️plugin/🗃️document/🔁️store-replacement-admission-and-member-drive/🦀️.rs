@@ -8,7 +8,23 @@ where
     Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,mut job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
+    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
+        Self::new_unpopulated(operation,generation,base_child_content_generation,job,source_identity,Some(ChildMemberRegistry::new()))
+    }
+
+    /// 🌱️ Leaves the empty member registry for its own paid turn after typed genesis admission.
+    pub fn new_mounted_genesis(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),mounted:(semio_framework_job::OperationId,[u8;32]))->Self {
+        let mut active=Self::new_unpopulated(operation,generation,base_child_content_generation,job,source_identity,None);
+        active.mounted_genesis=Some(mounted);
+        active
+    }
+
+    /// 💸️ Quotes the initialized shell without the deferred candidate indexes.
+    pub fn mounted_genesis_shell_copy_bytes()->usize{
+        size_of::<Self>()-size_of::<Option<ChildMemberRegistry<M>>>()+size_of::<usize>()
+    }
+
+    fn new_unpopulated(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,mut job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),children:Option<ChildMemberRegistry<M>>)->Self {
         job.bind_replacement(semio_framework_job::ReplacementIdentity::new(operation.0, operation, generation));
         let cancel = semio_framework_job::CancelToken::root_now();
         let cancel_signal = job.cancel_signal();
@@ -29,6 +45,7 @@ where
             outcome_terminal: None,
             terminal_target: None,
             resume_pending: false,
+            initializer_step_demand: Default::default(),
             retained_store: ManuallyDrop::new(None),
             retained_disposer: ManuallyDrop::new(None),
             member_ingress: ManuallyDrop::new(None),
@@ -36,7 +53,7 @@ where
             active_member_open: ManuallyDrop::new(None),
             member_open_admission: ManuallyDrop::new(None),
             opened_member: ManuallyDrop::new(None),
-            candidate_children: ManuallyDrop::new(Some(ChildMemberRegistry::new())),
+            candidate_children: ManuallyDrop::new(children),
             candidate_content: ManuallyDrop::new(Some(ChildContentView::EMPTY)),
             candidate_content_retirement: ManuallyDrop::new(None),
             displaced_content_retirements: ManuallyDrop::new(None),
@@ -52,6 +69,8 @@ where
             expires_at_us: u64::MAX,
             closure: None,
             committed: false,
+            committed_frontier: None,
+            mounted_genesis: None,
             refusal: None,
             fold_progress: (0, 0),
             state: ActiveArtifactStoreReplacementState::Initializing,
@@ -133,17 +152,6 @@ where
         Ok(())
     }
 
-    fn member_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, store::MemberOpenDiagnostic> {
-        if self.active_member_open.is_some() { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); }
-        let ingress = if let Some(ingress) = self.active_member_ingress.as_ref() { Some(ingress) } else {
-            self.member_ingress.as_ref().and_then(|registry| registry.entry(self.next_member_ordinal))
-        };
-        let Some(request) = self.member_open_admission.as_ref().and_then(store::MemberOpenSourceAdmission::request).or_else(||ingress.and_then(|ingress| ingress.request.as_ref())) else { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); };
-        let demand = M::open_birth_demand(request)?;
-        if demand.capacity_bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || demand.depth > 64 { return Err(store::MemberOpenDiagnostic::Capacity); }
-        Ok(demand)
-    }
-
     fn member_ingress_release_bytes(&self) -> Result<usize, store::MemberOpenDiagnostic> {
         if self.active_member_open.is_some() || self.active_member_ingress.is_some() { return Ok(0); }
         let Some(registry) = self.member_ingress.as_ref() else { return Ok(0); };
@@ -165,6 +173,11 @@ where
 
     /// 📏️ Quotes the exact next [`Self::drive_initializer`] turn.
     pub fn initializer_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.initializer_demands_for_turn(body, false)
+    }
+
+    /// 🛑️ Allows cancellation to enter before any outstanding business demand can be funded.
+    pub fn initializer_demands_for_turn(&self, body: usize, closing: bool) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         let session_demand = |session: &semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>| match session.retirement_demands(body) {
             Ok(demand) => Ok(demand),
@@ -172,17 +185,28 @@ where
             Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error),
         };
         if let Some(rejected) = self.session_rejected.as_ref() {
-            if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
-            return if rejected.admission_pending()&&!self.cancelled(){rejected.admission_demands()}else{rejected.retirement_demands(body)};
+            if rejected.terminal_is_empty() { return Ok(item); }
+            return if rejected.admission_pending() && !closing && !self.cancelled() { rejected.admission_demands() } else { rejected.retirement_demands(body) };
         }
         let Some(session) = self.session.as_ref() else { return Ok(item) };
         if self.outcome_pending { return session_demand(session); }
-        if self.resume_pending { return Ok(RetirementDemand { copy_bytes: size_of::<bool>(), ..item }); }
+        if self.resume_pending {
+            let (_, copy_bytes) = self.initializer_resume_quote(session)?;
+            return Ok(RetirementDemand { copy_bytes, ..item });
+        }
         if self.terminal_target.is_some() {
             if session.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(session), ..item }); }
             return session_demand(session);
         }
-        Ok(item)
+        Ok(if closing || self.cancelled() { item } else { RetirementDemand { depth: self.initializer_step_demand.depth.max(1), ..self.initializer_step_demand } })
+    }
+
+    pub(super) fn initializer_resume_quote(&self, session: &semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>) -> Result<(RetirementDemand, usize), ValueError> {
+        let next = if self.terminal_target.is_some() { Default::default() } else {
+            session.checked_out_job().map_or(Ok(Default::default()), ArtifactStoreInitializationJob::next_step_demands)?
+        };
+        let copy_bytes = size_of::<bool>() + usize::from(next != self.initializer_step_demand) * size_of::<RetirementDemand>();
+        Ok((next, copy_bytes))
     }
 
     /// 🧑️ Quotes the exact next [`Self::drive_member_open`] turn.
@@ -196,8 +220,20 @@ where
                 if self.next_member_ordinal == registry.expected { return registry.retirement_demands(body); }
             }
         }
-        let birth = self.member_open_birth_demand().map_err(refused)?;
-        Ok(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth.max(1), ..item })
+        let Some(admission) = self.member_open_admission.as_ref().filter(|admission| admission.source_loan.is_some()) else {
+            return Ok(item);
+        };
+        let request = admission.request().ok_or_else(|| ValueError::invariant("member constructor lost its admitted request"))?;
+        let birth = M::open_birth_demand(request).map_err(refused)?;
+        if birth.capacity_bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || birth.depth > 64 {
+            return Err(refused(store::MemberOpenDiagnostic::Capacity));
+        }
+        Ok(RetirementDemand {
+            copy_bytes: M::open_copy_byte_demand(request).map_err(refused)?,
+            capacity_bytes: birth.capacity_bytes,
+            depth: birth.depth.max(1),
+            ..item
+        })
     }
 
     pub fn closure_demands(&self) -> RetirementDemand {

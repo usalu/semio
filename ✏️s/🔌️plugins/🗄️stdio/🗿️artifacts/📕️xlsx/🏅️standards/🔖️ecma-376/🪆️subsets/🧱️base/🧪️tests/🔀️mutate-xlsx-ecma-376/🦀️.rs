@@ -238,6 +238,20 @@ mod subject {
         let projection = project_xlsx_workbook(&output, snapshot.project_workbook().map_err(|error| error.to_string())?.shared_strings.len())?;
         Ok(Outcome::with_raw(output, projection))
     }
+
+    /// 📥️ Exports a worksheet package admitted by the physical-file analyzer.
+    pub fn native_document(ctx: &Context) -> Result<Outcome, String> {
+        use semio_plugin::{io::{AnalyzeSource, Confidence}, ArtifactAnalysis};
+        use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer;
+
+        let input = mutable_input(ctx)?;
+        let analysis = XlsxAnalyzer::analyze(&[AnalyzeSource::Binary(&input)]);
+        if analysis.confidence != Confidence::High || !analysis.diagnostics.is_empty() {
+            return Err(format!("XLSX analysis failed: {:?}", analysis.diagnostics));
+        }
+        let snapshot = analysis.parts.snapshot.ok_or("XLSX analysis did not produce a snapshot")?;
+        outcome_of("native-document", &snapshot)
+    }
 }
 //#endregion 🔖️Subject
 
@@ -245,10 +259,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", round_trip_oracle).oracle("native-document", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::identity_round_trip);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("identity-round-trip", subject::identity_round_trip).subject("native-document", subject::native_document);
     }
     built
 }

@@ -1,18 +1,69 @@
 import{afterAll,expect,test}from"bun:test";
-import{existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{Database}from"bun:sqlite";
+import{existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
-import{join}from"node:path";
+import{basename,dirname,join}from"node:path";
+import{pathToFileURL}from"node:url";
 import{spawn,spawnSync}from"node:child_process";
+import{createHash}from"node:crypto";
+import Ajv from"ajv";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{SLICE_REPORT_POLICY_V1 as P,measureSliceProcessesV1,parseProcessTreeV1,sharedBytesV1,buildSliceReportV1,registerSliceReportSourceV1,startSliceProgressV1,writeSliceReportV1}from"../🟨️.mjs";
-import{createReadyPortsV1}from"../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
+import{READY_POLICY_V1,READY_STAGES_V1,createReadyPortsV1,runReadyStageV1}from"../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts";
+import{READY_CONTAINMENT_POLICY_V1,readyOwnerTokenV1}from"../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🧹️containment/🟦️.ts";
+import{ownedSliceReportSinkV1,ownedSliceReportV1,prepareOwnedSliceReportV1}from"../🏷️owner/🟦️.ts";
+import ownedFixture from"./owned.json"with{type:"json"};
+import collectionFixture from"./🧺️collections.json"with{type:"json"};
+import{captureObservedSourceInputsV1,observationCollectionsV1,recordClosureFactV1}from"../../../👁️observation/🟨️.mjs";
 
 import{collectSliceCollectionsV1,describeCollectionV1,estimateCollectionBytesV1,registerSliceCollectionsV1}from"../🟨️.mjs";
 /** 📋️ The slice memory report: a machine nobody has a shell on tells what its slice worker holds, bounded, in the store next to ready.json. */
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`slice-report-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+
+test("finished scopes release diagnostic WeakRefs even when no report samples them",()=>{
+ const vector=JSON.parse(readFileSync(join(import.meta.dir,"weak-collections.json"),"utf8"));
+ const probe=spawnSync(process.execPath,[join(import.meta.dir,"weak-collections.mjs")],{encoding:"utf8"});
+ const oracle=spawnSync("python3",["-c","import gc,sys,weakref\nclass Scope: pass\nscopes=weakref.WeakSet()\nfor _ in range(int(sys.argv[1])): scopes.add(Scope())\ngc.collect()\nprint(len(scopes))",String(vector.shortLivedScopes)],{encoding:"utf8"});
+ expect(probe.status).toBe(0);expect(oracle.status).toBe(0);
+ expect(JSON.parse(probe.stdout).retained).toBeLessThanOrEqual(Number(oracle.stdout)+vector.maximumUnrelatedReferences);
+});
+
+test("mixed observation scopes report the largest map and the full entry count",async()=>{
+ const scopes=()=>observationCollectionsV1().find(row=>row.name.startsWith("observation:scopes "));
+ const previous=scopes()?.name.match(/largest of (\d+) maps, (\d+) entries total/u),database=new Database(":memory:");
+ const unregister=registerSliceCollectionsV1("observation-fixture",observationCollectionsV1);
+ const spill={builder:()=>({add(){},finish:()=>Object.assign([],{rows:()=>[]})})};
+ try{
+  const apply=async(index:number):Promise<void>=>{
+   if(index<collectionFixture.length){
+    const {entries,width,spilled}=collectionFixture[index]!;
+    await captureObservedSourceInputsV1(async()=>{
+     for(let row=0;row<entries;row++)recordClosureFactV1("fixture/"+index+"/"+row,"a".repeat(width));
+     await apply(index+1);
+    },undefined,false,spilled?spill:undefined);
+    return;
+   }
+   const row=scopes()!;
+   const sample=row.sample?.()??[];
+   const collected=collectSliceCollectionsV1({...P,collectionsTop:100}).find(item=>item.name===row.name);
+   const oracle=database.query<{entries:number;total:number;maps:number;sampleCount:number;estimatedBytes:number},[string,number,string]>(`
+    with sizes as (select max(value->>'entries') entries,sum(value->>'entries') total,count(*) maps from json_each(?1) where value->>'spilled' is null),
+    sampled as (select avg(length(value)) width from json_each(?3))
+    select entries,total,maps,min(entries,?2) sampleCount,round(entries*width) estimatedBytes from sizes,sampled
+   `).get(JSON.stringify(collectionFixture),P.collectionSample,JSON.stringify(sample))!;
+   const {entries,total,maps,sampleCount,estimatedBytes}=oracle,scopeCount=Number(previous?.[1]??0)+maps;
+   expect(row.entries).toBe(entries);
+   expect(row.name).toBe("observation:scopes (largest of "+scopeCount+" maps, "+(total+Number(previous?.[2]??0))+" entries total)");
+   expect(sample).toHaveLength(sampleCount);
+   expect(sample.every(item=>Array.isArray(item)&&item[1]?.path.startsWith("fixture/1/"))).toBe(true);
+   expect(collected).toEqual({name:row.name,entries,estimatedBytes});
+  };
+  await apply(0);
+ }finally{unregister();database.close();}
+});
 
 test("a report is closed by its schema, names the phase, memory, heap types and every source, and a source that throws is named and does not stop it",()=>{
  registerSliceReportSourceV1("owners",()=>({jobs:703,ledger:{present:3,fetched:0,here:10}}));
@@ -50,14 +101,93 @@ import{readFileSync}from"node:fs";console.log(JSON.parse(readFileSync(process.ar
  if(process.platform!=="win32"){expect(last.processes.self.rssMegabytes).toBeGreaterThan(0);expect(last.processes.count).toBe(0);expect(last.treeFootprintMegabytes).toBeUndefined();}
 });
 
-test("the ready child copies the report next to ready.json when it mirrors the log, and a refusal line is not cut",()=>{
+test("readiness mirrors its stage owner while a concurrent side reader retains the generic report",async()=>{
+ const root=temp("owners"),store=temp("store"),script=join(root,"reader.mjs"),fixture=ownedFixture;
+ const owner=readyOwnerTokenV1(root,fixture.stage,fixture.startMs),other=readyOwnerTokenV1(root,fixture.stage,fixture.startMs+1);
+ const policy=schema.definitions.Owned.const,ownerEnv=READY_CONTAINMENT_POLICY_V1.ownerEnvironment;
+ const fileOf=(id:string)=>join(root,...policy.directory,createHash("sha256").update(id).digest("hex").slice(0,policy.slotHexCharacters),P.name);
+ const ownedFile=fileOf(owner),genericFile=join(root,P.directory,P.name),mirrorFile=join(store,"v1","origins","g1-test",P.name);
+ const grant=prepareOwnedSliceReportV1(root,owner)!;
+ writeFileSync(script,`import{noteSliceReportPhaseV1,writeSliceReportV1}from${JSON.stringify(pathToFileURL(join(import.meta.dir,"..","🟨️.mjs")).href)};
+import{ownedSliceReportSinkV1}from${JSON.stringify(pathToFileURL(join(import.meta.dir,"..","🏷️owner/🟦️.ts")).href)};
+noteSliceReportPhaseV1({phase:process.argv[3],done:1,total:3});
+const scope=ownedSliceReportSinkV1(process.argv[2]),write=()=>{const text=writeSliceReportV1(process.argv[2],{reason:"interval"});if(text!==undefined)scope?.(text);};
+write();process.stdout.write("written");await new Promise(done=>process.stdin.once("data",data=>{if(String(data)==="again")write();done();}));`);
+ const start=(phase:string,token:string,key:string)=>{
+  const child=spawn(process.execPath,[script,root,phase],{env:{...process.env,[ownerEnv]:token,[policy.grantEnvironment]:key},stdio:["pipe","pipe","inherit"]});
+  const written=new Promise<void>((resolve,reject)=>{child.stdout.once("data",()=>resolve());child.once("error",reject);child.once("exit",()=>reject(new Error("reporter exited before writing")));});
+  const exited=new Promise<void>(done=>child.once("exit",()=>done()));
+  return{child,written,exited};
+ };
+ const stage=start(fixture.ownedPhase,owner,grant);
+ let side:ReturnType<typeof start>|undefined;
+ try{
+  await stage.written;side=start(fixture.sidePhase,owner,"");await side.written;
+  const ports=createReadyPortsV1({root,environment:{SEMIO_FLEET_STORE_ROOT:store},origin:"g1-test",group:undefined,say:()=>undefined});
+  ports.mirror!(fixture.stage,["reading"],owner);
+  const generic=JSON.parse(readFileSync(genericFile,"utf8")),mirror=JSON.parse(readFileSync(mirrorFile,"utf8"));
+  expect(generic.phase.name).toBe(fixture.sidePhase);
+  expect(mirror.phase.name).toBe(fixture.ownedPhase);
+  expect(mirror.readyOwner).toBe(owner);
+  expect(existsSync(fileOf(other))).toBe(false);
+  expect(new Ajv({strict:false}).compile({...schema,$ref:"#/definitions/Report"})(mirror)).toBe(true);
+  utimesSync(mirrorFile,fixture.startMs/1000,fixture.startMs/1000);
+  const mirroredAt=statSync(mirrorFile).mtimeMs;
+  ports.mirror!(fixture.stage,["repeat"],owner);
+  expect(statSync(mirrorFile).mtimeMs).toBe(mirroredAt);
+  expect(prepareOwnedSliceReportV1(root,owner)).toBe(grant);
+  expect(JSON.parse(readFileSync(ownedFile,"utf8"))).toEqual(mirror);
+  ports.mirror!(fixture.stage+"-failed",["unowned log"]);
+  writeFileSync(ownedFile,JSON.stringify({...mirror,readyOwner:other,phase:generic.phase}));
+  ports.mirror!(fixture.stage,["reading"],owner);
+  expect(JSON.parse(readFileSync(mirrorFile,"utf8"))).toEqual(mirror);
+  const nextGrant=prepareOwnedSliceReportV1(root,other)!;
+  ports.mirror!(fixture.stage,["starting again"],other);
+  expect(existsSync(mirrorFile)).toBe(false);
+  stage.child.stdin.end("again");await stage.exited;
+  expect(existsSync(ownedFile)).toBe(false);
+  side.child.stdin.end("again");await side.exited;
+  expect(existsSync(fileOf(other))).toBe(false);
+  ownedSliceReportSinkV1(root,{[ownerEnv]:other,[policy.grantEnvironment]:nextGrant})!(JSON.stringify(generic));
+  ports.mirror!(fixture.stage,["started"],other);
+  expect(JSON.parse(readFileSync(mirrorFile,"utf8")).readyOwner).toBe(other);
+  expect(readdirSync(join(root,...policy.directory))).toEqual([basename(dirname(fileOf(other)))]);
+ }finally{
+  if(!stage.child.stdin.destroyed)stage.child.stdin.end("stop");
+  if(side!==undefined&&!side.child.stdin.destroyed)side.child.stdin.end("stop");
+  await Promise.all([stage.exited,side?.exited]);
+ }
+});
+
+test("an adopted stage mirrors the report from the recorded attempt before dropping its running record",async()=>{
+ const root=temp("adopted"),store=temp("adopted-store"),stage=READY_STAGES_V1.find(row=>row.name===ownedFixture.stage)!;
+ const directory=join(root,...READY_POLICY_V1.directory),startedMs=Date.now()-50,owner=readyOwnerTokenV1(root,stage.name,startedMs);
+ const log=join(directory,"workspace.log"),exitFile=join(directory,"workspace.exit");
+ mkdirSync(directory,{recursive:true});
+ writeFileSync(log,"real owner\n");
+ writeFileSync(join(directory,READY_POLICY_V1.inflightName),JSON.stringify({stage:stage.name,pid:process.pid,startedMs,exitFile,log}));
+ const old=readyOwnerTokenV1(root,stage.name,startedMs-1);prepareOwnedSliceReportV1(root,old);
+ const ports=createReadyPortsV1({root,environment:{SEMIO_FLEET_STORE_ROOT:store},origin:"g1-test",group:undefined,say:()=>undefined});
+ const running=runReadyStageV1({root,environment:{},stage,signal:new AbortController().signal,jobs:1,onLine:()=>undefined,mirror:ports.mirror!});
+ const file=ownedSliceReportV1(root,owner)!.file;
+ for(let count=0;count<100&&!existsSync(dirname(file));count++)await Bun.sleep(10);
+ writeFileSync(file,JSON.stringify({...buildSliceReportV1({reason:"end"}),readyOwner:owner}));
+ writeFileSync(exitFile,JSON.stringify({exit:0,signal:null,spawnFailed:false}));
+ expect(await running).toMatchObject({exit:0,startedMs,detached:false});
+ expect(existsSync(dirname(ownedSliceReportV1(root,old)!.file))).toBe(false);
+ const mirrored=JSON.parse(readFileSync(join(store,"v1","origins","g1-test",P.name),"utf8"));
+ expect(mirrored.readyOwner).toBe(owner);
+});
+
+test("an unowned log mirror leaves the generic report local and preserves the final refusal line",()=>{
  const root=temp("root"),store=temp("store");mkdirSync(join(root,P.directory),{recursive:true});
- writeFileSync(join(root,P.directory,P.name),JSON.stringify({version:1,marker:"copied"}));
+ writeFileSync(join(root,P.directory,P.name),JSON.stringify({version:1,marker:"generic"}));
  const ports=createReadyPortsV1({root,environment:{SEMIO_FLEET_STORE_ROOT:store},origin:"g1-test",group:undefined,say:()=>undefined});
  const long="The project graph could not be read on this machine yet: "+"x".repeat(900)+" END";
  ports.mirror!("workspace-failed",[long]);
- expect(JSON.parse(readFileSync(join(store,"v1","origins","g1-test",P.name),"utf8")).marker).toBe("copied");
- expect(existsSync(join(store,"v1","origins","g1-test","ready-log-workspace-failed.txt"))).toBe(true);
+ const origin=join(store,"v1","origins","g1-test");
+ expect(existsSync(join(origin,P.name))).toBe(false);
+ expect(readFileSync(join(origin,"ready-log-workspace-failed.txt"),"utf8")).toContain(long);
 });
 
 test("a structure shared by many entries is charged once, not once per referrer",()=>{

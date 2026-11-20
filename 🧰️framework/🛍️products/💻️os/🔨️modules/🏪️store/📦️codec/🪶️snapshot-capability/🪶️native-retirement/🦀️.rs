@@ -107,6 +107,7 @@ pub fn import<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&se
    take(&mut work,encode_move(native,marker,unwind_failure,size_of::<IoOutcome<IoPayload>>(),||{let diagnostics=frame.validation.take().unwrap().unwrap().diagnostics;*produced=Some(Ok(IoOutcome{value:frame.payload.take().unwrap(),diagnostics}));}))?;
    Ok(())
   })();
+  if let Some(frame)=slot.as_mut(){if let Some(snapshot)=frame.snapshot.take(){snapshot.retire_sqlite_snapshot();}}
   RetainedWorkOutcome{result,work}
  })
 }

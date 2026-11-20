@@ -1,0 +1,5 @@
+{
+  "initialStage": 0,
+  "settledStages": [1, 2, 3, 4],
+  "maximumTurnsPerStage": 32
+}

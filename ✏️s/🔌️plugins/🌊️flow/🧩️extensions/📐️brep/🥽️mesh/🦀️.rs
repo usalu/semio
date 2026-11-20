@@ -16,6 +16,8 @@ macro_rules! retire_geometry_capture {
 #[path = "🧰️mesh-operator-io/🦀️.rs"]
 mod mesh_operator_io;
 pub use mesh_operator_io::*;
+#[path = "🚪️interchange/🦀️.rs"]
+mod interchange;
 #[path = "🧮️operator-core/🦀️.rs"]
 mod operator_core;
 pub use operator_core::*;

@@ -65,14 +65,15 @@ test("cancellation before work starts prevents rendering",async()=>{
  expect(outcome.outcome).toBe("cancelled");expect(renders).toBe(0);expect(iconExportJobsSnapshot()).toEqual([]);
 });
 test("cancellation interrupts pending render and suppresses its later delivery",async()=>{
- let release!:(value:number)=>void,entered!:(value:void)=>void,delivered=0;
+ let release!:(value:number)=>void,entered!:(value:void)=>void,renderSignal:AbortSignal|undefined,delivered=0;
  const notices:string[]=[];
  const started=new Promise<void>(resolve=>{entered=resolve});
- const pending=runIconExportBatch(items,host({locale:()=>"de",announce:(text:string)=>notices.push(text),render:()=>{entered();return new Promise<number>(resolve=>{release=resolve})},deliver:()=>{delivered++}}));
+ const pending=runIconExportBatch(items,host({locale:()=>"de",announce:(text:string)=>notices.push(text),render:(_request:number,signal:AbortSignal)=>{renderSignal=signal;entered();return new Promise<number>(resolve=>{release=resolve})},deliver:()=>{delivered++}}));
  await started;
  const row=iconExportJobsSnapshot()[0]!;
  expect(cancelIconExport(iconExportTaskId(row.job))).toBe(true);
  expect(await pending).toEqual({outcome:"cancelled",completed:0});
+ expect(renderSignal?.aborted).toBe(true);
  expect(notices.at(-1)).toBe("Bildexport abgebrochen.");
  release(1);await Promise.resolve();await Promise.resolve();
  expect(delivered).toBe(0);expect(iconExportJobsSnapshot()).toEqual([]);

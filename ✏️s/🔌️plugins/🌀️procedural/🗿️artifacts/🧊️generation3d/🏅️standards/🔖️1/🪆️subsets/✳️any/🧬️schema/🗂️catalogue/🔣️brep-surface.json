@@ -162,23 +162,25 @@
         "de": "Ebene Fläche aus Kantenzug"
       },
       "description": {
-        "en": "Fills a closed wire that lies in a plane parallel to the XY plane with a planar face.",
-        "de": "Füllt einen geschlossenen Kantenzug, der in einer zur XY-Ebene parallelen Ebene liegt, mit einer ebenen Fläche."
+        "en": "Fills a closed boundary that lies in a plane parallel to the XY plane with a planar face.",
+        "de": "Füllt eine geschlossene Begrenzung, die in einer zur XY-Ebene parallelen Ebene liegt, mit einer ebenen Fläche."
       },
       "inputs": [
         {
           "name": "wire",
           "label": {
-            "en": "Wire",
-            "de": "Kantenzug"
+            "en": "Boundary",
+            "de": "Begrenzung"
           },
           "description": {
-            "en": "The closed wire to fill.",
-            "de": "Der zu füllende geschlossene Kantenzug."
+            "en": "The closed wire, curve, or edge to fill.",
+            "de": "Der zu füllende geschlossene Kantenzug oder die geschlossene Kurve oder Kante."
           },
           "type": "shape",
           "shapeKinds": [
-            "wire"
+            "wire",
+            "curve",
+            "edge"
           ]
         }
       ],
@@ -219,23 +221,25 @@
         "de": "Fläche aus Kantenzug"
       },
       "description": {
-        "en": "Creates a face bounded by a closed wire in any plane; the face points the way the wire winds counter-clockwise.",
-        "de": "Erzeugt eine Fläche, die von einem geschlossenen Kantenzug in beliebiger Ebene begrenzt wird; die Fläche zeigt in die Richtung, in der der Kantenzug gegen den Uhrzeigersinn umläuft."
+        "en": "Fills a closed boundary in any plane. The face normal follows the counter-clockwise winding of the boundary.",
+        "de": "Füllt eine geschlossene Begrenzung in einer beliebigen Ebene. Die Flächennormale folgt dem Umlauf der Begrenzung gegen den Uhrzeigersinn."
       },
       "inputs": [
         {
           "name": "wire",
           "label": {
-            "en": "Wire",
-            "de": "Kantenzug"
+            "en": "Boundary",
+            "de": "Begrenzung"
           },
           "description": {
-            "en": "The closed wire that bounds the face.",
-            "de": "Der geschlossene Kantenzug, der die Fläche begrenzt."
+            "en": "The closed wire, curve, or edge that bounds the face.",
+            "de": "Der geschlossene Kantenzug oder die geschlossene Kurve oder Kante als Begrenzung der Fläche."
           },
           "type": "shape",
           "shapeKinds": [
-            "wire"
+            "wire",
+            "curve",
+            "edge"
           ]
         }
       ],

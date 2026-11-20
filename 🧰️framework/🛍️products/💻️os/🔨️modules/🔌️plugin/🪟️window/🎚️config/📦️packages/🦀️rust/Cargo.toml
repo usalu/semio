@@ -32,6 +32,7 @@ semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/�
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-plugin-window-config-contract = { path = "../../📜️contract/📦️packages/🦀️rust" }
 semio-plugin-window-config-mutation = { path = "../../📬️mutation/📦️packages/🦀️rust" }
 semio-plugin-window-config-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
 semio-plugin-window-config-replace = { path = "../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
@@ -65,9 +66,5 @@ blake3 = { version = "1.8", features = ["pure"] }
 name = "window_genesis"
 path = "../../🧪️tests/🧬️genesis/🦀️.rs"
 
-[[test]]
-name = "window_pair_receiving_outcomes"
-path = "../../📐️owner-contract-and-mutation/🛬️receiving/🧪️tests/🦀️.rs"
-
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-framework-job/testkit"]

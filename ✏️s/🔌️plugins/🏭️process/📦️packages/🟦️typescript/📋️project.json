@@ -4,12 +4,28 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "dependsOn": ["@semio-tech/s-dev-composition:generate"],
+      "inputs": [
+        "default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/**/*",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🏭️process/**/*",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🏭️process/🧩️component/📦️packages/🦀️rust/Cargo.toml"
+      ],
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "runtimeSourceEntries": [
+        "✏️s/🔌️plugins/🏭️process/🧪️tests/🧭️dev-route/🟦️.ts",
+        "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
+        "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"
+      ]
     }
   }
 }

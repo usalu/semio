@@ -172,11 +172,11 @@ pub fn vertex_normals(positions: &[f64], indices: &[u32]) -> Vec<f64> {
     normals
 }
 
-/// 🥽️ One catalogue entry. `colors` is RGB, three floats per vertex: the host binds the `color`
-/// attribute at item size 3, so a straight RGBA copy shifts every vertex' colour by one channel.
+/// 🥽️ One catalogue entry. `colors` is RGBA, four floats per vertex: the host binds the `color`
+/// attribute at item size 4 and refuses a buffer whose length is not four times the vertex count.
 fn mesh_entry(id: &str, positions: &[f64], indices: &[u32], color: Option<[f64; 4]>) -> Value {
     let colors: Vec<f64> = match color {
-        Some(rgba) => positions.chunks(3).flat_map(|_| [rgba[0], rgba[1], rgba[2]]).collect(),
+        Some(rgba) => positions.chunks(3).flat_map(|_| rgba).collect(),
         None => Vec::new(),
     };
     json!({ "id": id, "data": { "positions": positions, "normals": vertex_normals(positions, indices), "colors": colors, "indices": indices, "uvs": Vec::<f64>::new() } })
@@ -210,9 +210,13 @@ fn instance_record(slot: &Slot3d, mesh_id: &str, label: &str) -> Value {
 }
 
 /// 🪪️ The record ONE slot contributes, or `None` when the solve did not assign it a declared tile —
-/// an unsolved slot is omitted from the lane, not drawn as a placeholder. A solved slot whose tile has
-/// no resolvable geometry borrows the shared placeholder mesh so it still has a body.
+/// an unsolved slot is omitted from the lane, not drawn as a placeholder. A contradiction places nothing,
+/// authored pins included: the verdict says no assignment exists. A solved slot whose tile has no
+/// resolvable geometry borrows the shared placeholder mesh so it still has a body.
 fn solved_instance(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, slot: &Slot3d) -> Option<Value> {
+    if transient.contradiction {
+        return None;
+    }
     let tile_id = assigned_tile(transient, &slot.id).or(slot.pinned_tile_id.as_deref())?;
     let tile = document.tiles.iter().find(|entry| entry.id == tile_id)?;
     let mesh_id = if tile_geometry(tile).is_some() { tile_mesh_id(&tile.id) } else { WFC_3D_PLACEHOLDER_MESH.to_string() };

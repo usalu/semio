@@ -54,7 +54,7 @@ pub fn conditions_of(doc: &semio_s_artifact_bim_model_examples::standards::v1::s
 pub fn read_conditions(i: &mut Import<'_>) {
     for (instance, _) in i.doc.rows("IFCSPACE") {
         let (Some(id), Some(conditions)) = (i.ids.get(&instance.id).cloned(), conditions_of(&i.doc, instance.id)) else { continue };
-        i.model.space_conditions.insert(id, conditions);
+        i.model.space_conditions.cold_insert(id, conditions);
     }
 }
 

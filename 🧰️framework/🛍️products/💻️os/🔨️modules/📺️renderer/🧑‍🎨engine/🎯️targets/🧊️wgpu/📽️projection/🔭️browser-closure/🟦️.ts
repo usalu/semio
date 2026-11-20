@@ -13,6 +13,7 @@ export interface WgpuBrowserBinding {
 /** 🔭️ The exact module set and workspace package bindings that the bundler reads for the profile entries. */
 export interface WgpuBrowserClosure {
   readonly modules: readonly string[];
+  readonly entryInputs: Readonly<Record<string, readonly string[]>>;
   readonly workspaceImports: Readonly<Record<string, WgpuBrowserBinding>>;
 }
 
@@ -25,7 +26,7 @@ export interface WgpuBrowserAuthority {
 interface WgpuBrowserProfile {
   ownerPath: string;
   inlineTestDefine: string;
-  entries: { sourceRelativePath: string }[];
+  entries: { id: string; sourceRelativePath: string }[];
   workspaceImports: Record<string, WgpuBrowserBinding>;
   sourceModulePaths: string[];
 }
@@ -36,7 +37,7 @@ interface WgpuBrowserTaxonomy {
 }
 
 interface WgpuBrowserProject {
-  namedInputs: { frameWorkerSources: unknown[] };
+  namedInputs: { browserBootSources: unknown[]; frameWorkerSources: unknown[] };
 }
 
 const contractId = "wgpu-frame-worker";
@@ -57,14 +58,22 @@ function nearestManifest(repoRoot: string, entryPath: string): string {
 /** 🔭️ Reads the closure from the bundler itself: every module it loads and every bare specifier it resolves. */
 export async function deriveWgpuBrowserClosure(repoRoot: string, profile: Pick<WgpuBrowserProfile, "ownerPath" | "inlineTestDefine" | "entries">): Promise<WgpuBrowserClosure> {
   const modules = new Set<string>(), specifiers = new Map<string, string>();
+  const entered: { id: string; paths: Set<string>; imports: Set<string> }[] = [];
   for (const entry of profile.entries) {
+    const inputs = { id: entry.id, paths: new Set<string>(), imports: new Set<string>() };
+    entered.push(inputs);
     const result = await runtimeBundleV1({ root: repoRoot, entrypoints: [join(repoRoot, profile.ownerPath, entry.sourceRelativePath)], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "wgpu-browser-closure", setup(builder) {
       builder.onResolve({ filter: /.*/u }, (request) => {
-        if (!request.path.startsWith(".") && !isAbsolute(request.path)) specifiers.set(request.path, runtimeResolveV1(request.path, dirname(request.importer)));
+        if (!request.path.startsWith(".") && !isAbsolute(request.path)) {
+          inputs.imports.add(request.path);
+          specifiers.set(request.path, runtimeResolveV1(request.path, dirname(request.importer)));
+        }
         return undefined;
       });
       builder.onLoad({ filter: /.*/u }, (request) => {
-        modules.add(posix(relative(repoRoot, request.path)));
+        const path = posix(relative(repoRoot, request.path));
+        modules.add(path);
+        inputs.paths.add(path);
         return undefined;
       });
     } }] });
@@ -80,7 +89,11 @@ export async function deriveWgpuBrowserClosure(repoRoot: string, profile: Pick<W
     if (!modules.has(entryPath) || manifest.name !== name || manifest.exports?.[subpath] !== `./${posix(relative(dirname(manifestPath), entryPath))}`) throw new Error(`WGPU browser import ${specifier} is not an exact workspace package export: ${entryPath}`);
     workspaceImports[specifier] = { manifestPath, entryPath };
   }
-  return { modules: [...modules].sort(byteCompare), workspaceImports };
+  const entryInputs = Object.fromEntries(entered.map(({ id, paths, imports }) => {
+    for (const specifier of imports) paths.add(workspaceImports[specifier]!.manifestPath);
+    return [id, [...paths].sort(byteCompare)];
+  }));
+  return { modules: [...modules].sort(byteCompare), entryInputs, workspaceImports };
 }
 
 /** 🧮️ Projects the closure onto the contract and the Nx inputs; anything not previously derived stays as authored. */
@@ -92,6 +105,9 @@ export function projectWgpuBrowserClosure(authority: WgpuBrowserAuthority, closu
   contract.inputPatterns = [...new Set([...contract.inputPatterns.filter((path) => !previous.has(path)), ...closure.modules])].sort();
   const inputs = project.namedInputs.frameWorkerSources, derived = (input: unknown): boolean => typeof input === "string" && input.startsWith(workspaceRootInput) && previous.has(input.slice(workspaceRootInput.length));
   project.namedInputs.frameWorkerSources = [...inputs.filter((input) => !derived(input)), ...source.map((path) => workspaceRootInput + path)];
+  const bootSources = new Set([...closure.entryInputs["browser-boot"]!, ...closure.entryInputs["renderer-boot"]!]);
+  const bootToolInputs = project.namedInputs.browserBootSources.filter((input) => typeof input !== "string");
+  project.namedInputs.browserBootSources = [...[...bootSources].sort(byteCompare).map((path) => workspaceRootInput + path), ...bootToolInputs];
   return { taxonomy, project };
 }
 
@@ -133,6 +149,7 @@ export async function checkWgpuBrowserClosure(repoRoot: string): Promise<void> {
     ["workspace imports missing", difference(Object.keys(derived.workspaceImports), Object.keys(declared.workspaceImports))],
     ["workspace imports the bundler does not read", difference(Object.keys(declared.workspaceImports), Object.keys(derived.workspaceImports))],
     ["inputPatterns missing", difference(projected.taxonomy.generatorContracts[contractId]!.inputPatterns, fresh.authority.taxonomy.generatorContracts[contractId]!.inputPatterns)],
+    ["browserBootSources missing", difference(projected.project.namedInputs.browserBootSources.map(String), fresh.authority.project.namedInputs.browserBootSources.map(String))],
     ["frameWorkerSources missing", difference(projected.project.namedInputs.frameWorkerSources.map(String), fresh.authority.project.namedInputs.frameWorkerSources.map(String))],
   ];
   if (render(projected.taxonomy) === fresh.taxonomyText && render(projected.project) === fresh.projectText) return;

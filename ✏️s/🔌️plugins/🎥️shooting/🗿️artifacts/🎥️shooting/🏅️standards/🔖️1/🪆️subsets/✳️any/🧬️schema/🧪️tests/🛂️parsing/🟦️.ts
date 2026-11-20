@@ -1,3 +1,6 @@
+import mutationTextSchema from "../../../🚪️io/📝️text/🧬️mutations/🔣️.json";
+import { parseShootingMutationsText } from "../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
+import cameraMutation from "../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️patch-shot-camera/📐️frames/🦠️mutation/🔣️.json";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { artifactReferenceSchema, artifactChildSchema } from "@semio-tech/framework/schema/artifact-reference";
@@ -28,3 +31,11 @@ for (const scenario of fixture.cases) {
     } else expect(() => parseShootingArtifact(input)).toThrow();
   });
 }
+
+test("the operation text facet admits a JSON-encoded camera event as one line", () => {
+  const validateText = new Ajv({ strict: false }).compile(mutationTextSchema);
+  const line = JSON.stringify(cameraMutation);
+  expect(validateText(line)).toBe(true);
+  expect(validateText(cameraMutation)).toBe(false);
+  expect(JSON.parse(parseShootingMutationsText(line))).toEqual(cameraMutation);
+});

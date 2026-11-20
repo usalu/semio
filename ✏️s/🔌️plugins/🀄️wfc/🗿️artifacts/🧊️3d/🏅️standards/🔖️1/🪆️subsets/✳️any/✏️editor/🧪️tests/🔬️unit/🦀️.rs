@@ -68,7 +68,9 @@ fn every_document_command_dispatches_to_exactly_one_mutation() {
         Wfc3dEditorCommand::CreateRule { id: "rule-x".into(), tile_a_id: "room".into(), tile_b_id: "corridor".into(), relation: None, allowed: false },
         Wfc3dEditorCommand::DeleteRule { id: "rule-room-room".into() },
     ];
-    assert_eq!(commands.len(), crate::mutations::KINDS.len(), "every document mutation kind has a command");
+    let gesture_only = ["drag-slots", "set-slot-positions"];
+    assert!(gesture_only.iter().all(|kind| crate::mutations::KINDS.contains(kind)), "the gesture-only kinds are document mutation kinds");
+    assert_eq!(commands.len(), crate::mutations::KINDS.len() - gesture_only.len(), "every document mutation kind but the drag gestures has a command");
     for command in commands {
         let emit = match dispatch(&command, &document, &config) {
             Ok(emit) => emit,
@@ -236,6 +238,12 @@ fn every_declared_action_bridges_through_command_from_action() {
         "undo",
         "redo",
         "commitCheckpoint",
+        "cancelTypedOperation",
+        "hostEvent",
+        "exportArtifactDocument",
+        "importArtifactDocument",
+        "exportMediaFile",
+        "exportSnapshotFile",
         "createAlternative",
         "switchAlternative",
         "checkoutCheckpoint",
@@ -382,7 +390,7 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_wfc3d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::wfc3d::Wfc3dEditor, || semio_plugin::App { definition: crate::editor::wfc3d::create_wfc3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::wfc3d::Wfc3dEditor, || semio_plugin::App { definition: crate::editor::wfc3d::create_wfc3d_editor(), examples: Vec::new() }, "../../..");
 
 
 #[test]
@@ -422,7 +430,7 @@ async fn mounted_graph3d_preview_is_bound_to_its_render_revision() {
     cache.source_revision = vec![1;32];
     let render = |doc: &semio_plugin::ArtifactView<'_, crate::Wfc3dSnapshot>, cache: &crate::editor::wfc3d::transient::Wfc3dTransient| {
         let tree = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, doc, &cfg, &semio_plugin::TransientView { snapshot: cache, window: None }).unwrap();
-        serde_json::to_value(&tree.root).unwrap()
+        tree_json(tree)
     };
     let empty = render(&doc, &Default::default());
     assert_ne!(render(&doc, &cache), empty);
@@ -453,10 +461,11 @@ async fn mounted_live_fill_obeys_the_portable_revision_contract() {
         let payload = crate::editor::wfc3d::modes::edit::tools::fill::Wfc3dFillTickPayload { source_revision: source.clone(), assignments: document.slots.iter().map(|slot| (slot.id.clone(), Some(document.tiles[0].id.clone()))).collect(), contradiction: false, done: false, trace: Vec::new() };
         let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, source.try_into().unwrap_or([9;32]));
         let mut run = semio_plugin::ToolRunView::new("fill", identity, semio_framework_tool_run::ToolRunState::Running);
-        run.payload = Some(crate::editor::wfc3d::modes::edit::tools::fill::encode_fill_payload(&payload).into());
-        let doc = doc.with_tool_run(Some(run));
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(crate::editor::wfc3d::modes::edit::tools::fill::encode_fill_payload(&payload)));
+        let mut doc = doc.with_tool_run(Some(run));
         let actual = crate::editor::wfc3d::render_with_transient(preview::WFC_3D_PREVIEW_BODY, &doc, &cfg, &lane).unwrap();
-        let different = serde_json::to_value(&actual.root).unwrap() != serde_json::to_value(&baseline.root).unwrap();
+        let different = tree_json(actual) != tree_json(baseline);
+        retire_run(doc.take_tool_run().expect("the run is bound"));
         assert_eq!(different, case["visible"].as_bool().unwrap(), "{}", case["id"]);
     }
 }
@@ -479,10 +488,30 @@ fn completed_live_preview_uses_authoritative_assignments_and_partial_preview_kee
         assert!(!state.is_terminal());
         let identity = semio_framework_tool_run::ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 9 }, revision);
         let mut run = semio_plugin::ToolRunView::new("fill", identity, state);
-        run.payload = Some(fill::encode_fill_payload(&payload).into());
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(fill::encode_fill_payload(&payload)));
         let expected = Wfc3dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc3dAssignment { slot_id: slot, tile_id: tile("expected") }], ..Default::default() };
         let actual = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &Wfc3dTransient::default(), Some(&run), Some(revision)).unwrap();
         let baseline = crate::editor::wfc3d::render_body(preview::WFC_3D_PREVIEW_BODY, &document, &config, &expected, None, Some(revision)).unwrap();
-        assert_eq!(serde_json::to_value(&actual.root).unwrap(), serde_json::to_value(&baseline.root).unwrap(), "{}", case["id"]);
+        retire_run(run);
+        assert_eq!(tree_json(actual), tree_json(baseline), "{}", case["id"]);
+    }
+}
+
+/// 🌳️ Projects a rendered tree through the fixture transport; its retained page children cannot be serialized directly.
+fn tree_json(tree: semio_plugin::ComponentTree) -> serde_json::Value {
+    serde_json::from_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the fixture tree projects")).expect("the projection is JSON")
+}
+
+/// ♻️ Retires both shared original storages a tool run holds instead of dropping them live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
     }
 }

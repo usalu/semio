@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::schema::snapshot::BitmapSnapshot;
-use store::{ErasedSnapshotRetirement, PackError};
+use store::PackError;
 
 /// 📦️ Encodes a `BitmapSnapshot` to its binary pack form.
 pub fn encode(document: &BitmapSnapshot) -> Vec<u8> {
@@ -18,24 +18,6 @@ pub fn encode(document: &BitmapSnapshot) -> Vec<u8> {
 pub fn decode(bytes: &[u8]) -> Result<BitmapSnapshot, PackError> {
     <BitmapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
-
-//#region ♻️Retirement
-/// 📖️ Decodes into a LIVE projection and hands back the displaced document as a bounded retirement
-/// admitted under the caller's own five-currency grant — the only decode entry point a mounted store
-/// may call, because it never drops the old snapshot inline. A refused admission restores the exact
-/// displaced document into `target` and drops only the freshly decoded, never-published one.
-pub fn decode_into(target: &mut BitmapSnapshot, bytes: &[u8], grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), PackError> {
-    let next = decode(bytes)?;
-    let displaced = std::mem::replace(target, next);
-    match semio_framework_value::retirement::admit_owned_retirement(displaced, grant) {
-        Ok(admitted) => Ok(admitted),
-        Err((error, displaced)) => {
-            drop(std::mem::replace(target, displaced));
-            Err(PackError::from(error))
-        }
-    }
-}
-//#endregion ♻️Retirement
 
 //#region 🧪️Tests
 #[cfg(test)]

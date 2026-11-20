@@ -263,7 +263,8 @@ impl ControlledCore {
         if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work()) { return Ok(Some(RetainedCloneStep::Progress(empty))); }
         if birth > grant.maximum_capacity_bytes { return Ok(Some(RetainedCloneStep::Progress(empty))); }
         let cursor_grant = RetainedCloneGrant { maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let cursor=self.cursors.get_mut(index).ok_or_else(||ValueError::invariant("get_mut target absent"))?;let maximum_work=cursor.next_computational_work(body)?;let mut child=effect.reborrow(cursor_grant,maximum_work)?;let step=invoke(cursor.as_mut(),&mut child,&mut self.child_reply,&mut self.pending_child_grant,&mut self.child_work);
+        let cursor=self.cursors.get_mut(index).ok_or_else(||ValueError::invariant("get_mut target absent"))?;let maximum_work=cursor.next_computational_work(body)?;
+let mut child=effect.reborrow(cursor_grant,maximum_work)?;let step=invoke(cursor.as_mut(),&mut child,&mut self.child_reply,&mut self.pending_child_grant,&mut self.child_work);
         self.process_child_step(index,step,grant,cursor_grant,birth)
     }
     fn process_child_step(&mut self,index:usize,step:RetirementStep,grant:RetainedCloneGrant,cursor_grant:RetainedCloneGrant,birth:usize)->Result<Option<RetainedCloneStep>,crate::OriginalRetirementFailure>{

@@ -178,30 +178,41 @@ fn large_layout_and_shaping_job_admits_one_work_unit_per_slice() {
     ui.apply_tree("large", &stack_ui(children));
     ui.set_viewport("large", 1_920.0, 1_080.0);
 
+    const JOB_STAGES: [&str; 6] = ["Layout.CollectNodes", "Layout.ShapeText", "Layout.MeasureLayout", "Layout.SolveLayout", "Layout.CollectResults", "Layout.PublishResults"];
     let pool = test_layout_pool();
     let mut slices = 0;
     let mut widest_slice = (0usize, 0usize);
     let mut admitted = (0usize, 0usize);
-    loop {
+    let mut settled = false;
+    let mut last = String::new();
+    let mut stages = std::collections::BTreeMap::<String, (usize, usize, usize)>::new();
+    for _ in 0..200_000 {
         let step = ui.step_layouts(&pool, &mut atlas);
         slices += 1;
         if let UiLayoutStep::Yielded { stage, nodes, glyphs, .. } = step {
-            widest_slice = (widest_slice.0.max(nodes), widest_slice.1.max(glyphs));
+            if JOB_STAGES.contains(&stage) {
+                widest_slice = (widest_slice.0.max(nodes), widest_slice.1.max(glyphs));
+            }
+            let seen = stages.entry(stage.to_string()).or_default();
+            *seen = (seen.0 + 1, seen.1 + nodes, seen.2 + glyphs);
             if stage == "Layout.CollectNodes" {
                 admitted = (admitted.0 + nodes, admitted.1 + glyphs);
             }
             continue;
         }
-        if matches!(step, UiLayoutStep::Idle) {
+        last = format!("{step:?}");
+        if matches!(step, UiLayoutStep::Idle) && !ui.layout_is_dirty("large") {
+            settled = true;
             break;
         }
     }
+    assert!(settled, "the large layout settles inside its finite opportunity ceiling after {slices} slices, last {last}, yielded (slices, nodes, glyphs) by stage {stages:?}");
     let tree = ui.tree("large").expect("large tree");
     let root = tree.root.expect("large root");
     let children: Vec<_> = tree.children(root).collect();
     let scalars: usize = labels.iter().map(|label| label.chars().count()).sum();
     assert!(slices > 10_000, "the 1,025-node/text workload must be observably chunked, got {slices} slices");
-    assert_eq!(widest_slice, (1, 1), "no slice may admit more than one node and one glyph, got {widest_slice:?}");
+    assert_eq!(widest_slice, (1, 1), "no layout job slice may admit more than one node and one glyph, got {widest_slice:?}; the worker session stages count retained receipt items, not admitted work");
     assert_eq!(admitted, (2 * (children.len() + 1), scalars), "admission must visit and unwind every node once and shape every label scalar once");
     assert_eq!(tree.accepted_layout(root).expect("accepted root").width, 1_920.0);
     assert!(tree.accepted_layout(*children.last().expect("last child")).expect("accepted last child").y > tree.accepted_layout(children[0]).expect("accepted first child").y);

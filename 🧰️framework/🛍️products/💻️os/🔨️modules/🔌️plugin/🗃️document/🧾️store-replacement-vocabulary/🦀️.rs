@@ -186,6 +186,7 @@ where
     pub(super) outcome_terminal: Option<(u8, ArtifactStoreRefusalCode)>,
     pub terminal_target: Option<ActiveArtifactStoreReplacementState>,
     pub resume_pending: bool,
+    pub(super) initializer_step_demand: RetirementDemand,
     pub retained_store: ManuallyDrop<Option<Box<ArtifactStore<P, Mutation>>>>,
     pub retained_disposer: ManuallyDrop<ArtifactDisposal<ArtifactStore<P, Mutation>>>,
     pub member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngressRegistry>>,
@@ -209,6 +210,8 @@ where
     pub expires_at_us: u64,
     pub closure: Option<store::OwnedDocumentClosure>,
     pub committed: bool,
+    pub committed_frontier: Option<(u64,[u8;32])>,
+    pub mounted_genesis: Option<(semio_framework_job::OperationId,[u8;32])>,
     pub refusal: Option<ArtifactStoreReplacementRefusal>,
     /// 📈️ The initializer's last reported `(operations folded, operations to fold)` (gap N17), kept after its handoff.
     pub fold_progress: (u64, u64),

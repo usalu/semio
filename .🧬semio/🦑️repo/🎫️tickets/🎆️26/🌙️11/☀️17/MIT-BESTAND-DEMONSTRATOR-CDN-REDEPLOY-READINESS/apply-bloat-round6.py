@@ -98,12 +98,12 @@ def cursor():
     old_demand_start='pub fn retirement_cursor_birth_demand<T:RetireOwned>(original:&T)->Result<crate::RetirementDemand,crate::ValueError>{\n'
     old_demand_end='\n\npub fn retirement_cursor_birth_work()->u64{4}'
     new_demand=r'''pub fn retirement_cursor_birth_demand<T:RetireOwned>(original:&T)->Result<crate::RetirementDemand,crate::ValueError>{
- retirement_cursor_birth_core(original.retirement_ready()&&T::controlled_retirement_supported(),std::mem::size_of::<T::RetirementCursor>(),original.retirement_birth_bytes(),std::mem::size_of::<Option<T>>(),std::any::type_name::<T>,std::any::type_name::<T::RetirementCursor>)
+ retirement_cursor_birth_core(original.retirement_ready()&&T::controlled_retirement_supported(),std::mem::size_of::<T::RetirementCursor>(),original.retirement_birth_bytes(),std::mem::size_of::<Option<T>>())
 }
 /// 🪝️ Quotes one cursor birth from plain facts so the arithmetic and refusals are compiled once instead of once per owner type.
-fn retirement_cursor_birth_core(ready:bool,capacity_bytes:usize,declared:Option<usize>,option_bytes:usize,owner_name:fn()->&'static str,cursor_name:fn()->&'static str)->Result<crate::RetirementDemand,crate::ValueError>{
+fn retirement_cursor_birth_core(ready:bool,capacity_bytes:usize,declared:Option<usize>,option_bytes:usize)->Result<crate::RetirementDemand,crate::ValueError>{
  if !ready{return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original cursor seed is not ready"))}
- if declared!=Some(capacity_bytes){eprintln!("[DEBUG] birth mismatch type={} cursor={} declared={:?} actual={}",owner_name(),cursor_name(),declared,capacity_bytes);return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
+ if declared!=Some(capacity_bytes){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original cursor birth differs from its defining layout"))}
  let copy_bytes=option_bytes.checked_add(capacity_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"original cursor header transfer overflow"))?;
  Ok(crate::RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
 }'''

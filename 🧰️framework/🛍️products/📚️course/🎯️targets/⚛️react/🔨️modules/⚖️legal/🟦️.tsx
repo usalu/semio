@@ -9,7 +9,7 @@
  */
 
 import { useId, useState, type ReactElement, type ReactNode } from "react";
-import { useSharedBorderFrameRef } from "@semio-tech/ui-react/chrome";
+import { useSharedBorderFrameRef, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import type { CourseLabelKey, CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 import { CardAction, CardIcon, Dialog } from "../🪟️chrome/🟦️.tsx";
 import { EveryLanguage, everyLanguage } from "../🎛️preferences/🟦️.tsx";
@@ -35,7 +35,7 @@ const LINK = "course-target inline-flex cursor-pointer items-center border-0 bg-
 
 function ExternalLink(props: { readonly href: string; readonly children: ReactNode; readonly external: ReactNode }): ReactElement {
   return (
-    <a href={props.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+    <a href={props.href} target="_blank" rel="noopener noreferrer" {...sharedBorderlessBoxProps} className={LINK}>
       {props.children}
       <span className="sr-only"> ({props.external})</span>
     </a>
@@ -108,7 +108,7 @@ export function LegalFooter(props: { readonly legal: CourseLegal | undefined; re
         <ul role="list" className="m-0 flex list-none flex-wrap items-center justify-end gap-x-double p-0">
           {text === undefined ? null : (
             <li>
-              <button type="button" className={LINK} onClick={() => setReading(true)}>
+              <button type="button" {...sharedBorderlessBoxProps} className={LINK} onClick={() => setReading(true)}>
                 {text("course.legal.privacy")}
               </button>
             </li>

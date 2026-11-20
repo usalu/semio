@@ -25,7 +25,7 @@
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
 use semio_framework_3d_brep_construction::euler::{add_shell, add_solid};
-use semio_framework_3d_brep_kernel_contract::BrepError;
+use semio_framework_3d_brep_kernel_contract::{BrepError, BrepKernel, GeometryHandle};
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -41,6 +41,24 @@ use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
 use semio_framework_mesh_engine::io::binary::{mesh_from_stl, mesh_to_stl};
 use semio_framework_mesh_engine::io::{GlbExporter, GlbImporter, MeshExporter, MeshImporter};
 
+#[path = "🖼️primitive-preview/🦀️.rs"]
+mod primitive_preview;
+pub use primitive_preview::PrimitivePreviewJob;
+#[path = "📥️original-obj/🦀️.rs"]
+mod original_obj;
+pub use original_obj::ObjDecode;
+#[path = "📥️original-stl/🦀️.rs"]
+mod original_stl;
+pub use original_stl::StlDecode;
+#[path = "📥️original-decoder/🦀️.rs"]
+mod original_decoder;
+pub use original_decoder::MeshDecode;
+#[path = "📤️mesh-text-export/🦀️.rs"]
+mod mesh_text_export;
+pub use mesh_text_export::{MeshTextExport, MeshTextFormat};
+#[path = "🏗️original-import/🦀️.rs"]
+mod original_import;
+
 // #region 🔖️Types
 
 /// 📦 Indexed triangle soup in kernel world units.
@@ -50,22 +68,52 @@ pub struct TriangleMesh {
     pub normals: Vec<Vec3>,
     pub indices: Vec<u32>,
 }
-static OPEN_IMPORTS: std::sync::Mutex<std::collections::BTreeMap<u64,usize>> = std::sync::Mutex::new(std::collections::BTreeMap::new());
-static NEXT_IMPORT_SESSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-fn open_imports() -> std::sync::MutexGuard<'static, std::collections::BTreeMap<u64,usize>> {OPEN_IMPORTS.lock().unwrap_or_else(|poisoned|poisoned.into_inner())}
-/// 🔒️ Copyable session identity whose open import mutations are counted in a process registry owned by the cursors, not by the session.
-#[derive(Clone,Copy,Default)]
-pub struct PendingMutations(u64);
-semio_framework_value::artifact_retire_leaf!(PendingMutations);
-impl PendingMutations {
-    /// 🔒️ Registers one open mutation that releases itself when its token drops.
-    pub fn open(&mut self)->PendingToken {if self.0==0 {self.0=NEXT_IMPORT_SESSION.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}*open_imports().entry(self.0).or_insert(0)+=1;PendingToken(self.0)}
-    /// 🔢️ Reports how many mutations are currently open.
-    pub fn count(&self)->usize {if self.0==0 {0}else {open_imports().get(&self.0).copied().unwrap_or(0)}}
+use semio_framework_value::retirement::{RetireOwned, arc_custody::ArcLease};
+use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+
+pub struct PendingImportCount(AtomicUsize);
+
+impl RetireOwned for PendingImportCount {
+    type RetirementCursor = <usize as RetireOwned>::RetirementCursor;
+
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        self.0.into_inner().retirement_seed()
+    }
+
+    fn controlled_retirement_supported() -> bool { true }
 }
-/// 🔒️ Ownership of one open mutation: released on explicit release or when the cursor is dropped.
-pub struct PendingToken(u64);
-impl Drop for PendingToken {fn drop(&mut self) {let mut open=open_imports();if let Some(count)=open.get_mut(&self.0) {*count-=1;if *count==0 {open.remove(&self.0);}}}}
+
+/// 🔒️ Original mutation count anchored to the owning native registry.
+#[derive(Default)]
+pub struct PendingMutations { counter: Option<ArcLease<PendingImportCount>> }
+semio_framework_value::artifact_retire_struct!(PendingMutations { counter });
+
+impl PendingMutations {
+    /// 🔒️ Opens one original mutation and retains its count until token release.
+    pub fn open(&mut self) -> PendingToken {
+        let counter = self.counter.get_or_insert_with(|| ArcLease::new(Arc::new(PendingImportCount(AtomicUsize::new(0)))));
+        let counter = counter.0.as_ref().expect("native import counter anchor");
+        counter.0.fetch_add(1, Ordering::AcqRel);
+        PendingToken(Arc::clone(counter))
+    }
+
+    /// 🔢️ Quotes the in-flight original body mutations of this registry.
+    pub fn count(&self) -> usize {
+        self.counter.as_ref().and_then(|counter| counter.0.as_deref())
+            .map_or(0, |counter| counter.0.load(Ordering::Acquire))
+    }
+}
+
+/// 🔓️ Returns one native mutation claim when the owning cursor retires.
+pub struct PendingToken(Arc<PendingImportCount>);
+
+impl Drop for PendingToken {
+    fn drop(&mut self) {
+        let previous = self.0.0.fetch_sub(1, Ordering::AcqRel);
+        assert!(previous != 0, "native import count must own this token");
+    }
+}
+
 /// 📦 Bounded private triangle import and exact owned-entity retirement in the mesh-I/O owner.
 pub struct MeshImportCursor {
     open: Option<PendingToken>,
@@ -90,12 +138,15 @@ pub struct MeshImportCursor {
     vertex_map: HistoryFoldIndex<[u64;3],semio_framework_3d_brep_representation::arena::VertexId>,
     edge_map: HistoryFoldIndex<([u64;3],[u64;3]),(semio_framework_3d_brep_representation::arena::EdgeId,usize,bool)>,
     boundary_edges: usize,
+    original: original_import::OriginalMeshImport,
 }
 struct ImportScratch {
     positions:Vec<f32>,positions64:Vec<Pnt3>,normals64:Vec<Vec3>,normals:Vec<f32>,indices:Vec<u32>,faces:Vec<semio_framework_3d_brep_representation::arena::FaceId>,
     vertices:HistoryFoldIndex<[u64;3],semio_framework_3d_brep_representation::arena::VertexId>,
     edges:HistoryFoldIndex<([u64;3],[u64;3]),(semio_framework_3d_brep_representation::arena::EdgeId,usize,bool)>,
 }
+#[derive(semio_framework_value::RetireOwned)]
+struct ImportJournal { owned: Vec<EntityRef>, recorder: OpRecorder }
 semio_framework_value::artifact_retire_struct!(ImportScratch {positions,positions64,normals64,normals,indices,faces,vertices,edges});
 #[derive(semio_framework_value::RetireOwned)]
 enum RemovedImportEntity {
@@ -110,7 +161,7 @@ enum RemovedImportEntity {
     Curve2 {value:semio_framework_3d_brep_curve::Curve2},
     Surface {value:semio_framework_3d_brep_surface::Surface},
 }
-enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<OpRecorder>) }
+enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<ImportJournal>) }
 impl ImportCloseOwner {
     fn owner(&self)->&dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
     fn owner_mut(&mut self)->&mut dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
@@ -129,7 +180,7 @@ impl MeshImportCursor {
     pub fn new(positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>, tolerance: f64) -> Result<Self,KernelError> {
         Self::validate_admission_counts(positions.len(),indices.len(),tolerance)?;
         let triangles=indices.len()/3;
-        Ok(Self { open:None,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,units:0,retired:false,retirement:None,retirement_stage:0,triangles,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0 })
+        Ok(Self { open:None,positions,positions64:Vec::new(),normals64:Vec::new(),normals,indices,phase:0,cursor:0,volume:0.0,faces:Vec::new(),shell:None,solid:None,recorder:OpRecorder::new(),cancelled:false,units:0,retired:false,retirement:None,retirement_stage:0,triangles,vertex_map:Default::default(),edge_map:Default::default(),boundary_edges:0,original:Default::default() })
     }
     /// 📦 Admits the existing owned f64 triangle representation without narrowing coordinates.
     pub fn from_triangle_mesh(mesh:TriangleMesh,tolerance:f64)->Result<Self,KernelError> {
@@ -179,7 +230,7 @@ impl MeshImportCursor {
     /// 🎟️ Borrows the original rollback slot's two independent backing costs.
     fn removal_demand(&self,body:&Body)->(usize,usize) {
         if self.retirement_stage!=2 || !self.cancelled {return (0,0);}
-        match self.recorder.last_owned() {
+        match self.last_import_entity() {
             Some(EntityRef::Vertex(id))=>body.vertices.remove_backing_demand(id),
             Some(EntityRef::Edge(id))=>body.edges.remove_backing_demand(id),
             Some(EntityRef::Coedge(id))=>body.coedges.remove_backing_demand(id),
@@ -196,20 +247,73 @@ impl MeshImportCursor {
     pub fn next_close_copy_byte_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(0),|owner|owner.owner().next_demand(0).map(|demand|demand.copy_bytes))}
     pub fn next_close_capacity_byte_demand(&self,body:&Body,copy:usize)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).0),|owner|owner.owner().next_capacity_byte_demand(copy))}
     pub fn next_close_release_byte_demand(&self,body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(self.removal_demand(body).1),|owner|owner.owner().next_release_byte_demand())}
-    pub fn next_close_depth_demand(&self,_body:&Body)->Result<usize,ValueError> {self.retirement.as_ref().filter(|owner|!owner.owner().terminal_is_empty()).map_or(Ok(usize::from(!self.retired)),|owner|owner.owner().next_depth_demand())}
-    /// 🧹️ Retains the actual scratch, removed entity and recorder until their full grants arrive.
-    pub fn close_original_step(&mut self,body:&mut Body,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
-        let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
-        if self.retired {return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(owner)=self.retirement.as_mut() {
-            if owner.owner().terminal_is_empty() {self.retirement=None;work=1;return Ok(import_progress());}
-            let poll=owner.owner_mut().close_step(grant.maximum_copy_bytes,effect);work=poll.work();return match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
+    pub fn next_close_depth_demand(&self, body: &Body) -> Result<usize, ValueError> {
+        if let Some(owner) = self.retirement.as_ref().filter(|owner| !owner.owner().terminal_is_empty()) {
+            return owner.owner().next_depth_demand();
         }
+        if self.retired { return Ok(0); }
+        if self.retirement.is_some() { return Ok(1); }
+        if self.retirement_stage != 2 || !self.cancelled { return Ok(1); }
+        match self.last_import_entity() {
+            Some(EntityRef::Vertex(id)) => body.vertices.next_remove_depth_demand(id),
+            Some(EntityRef::Edge(id)) => body.edges.next_remove_depth_demand(id),
+            Some(EntityRef::Coedge(id)) => body.coedges.next_remove_depth_demand(id),
+            Some(EntityRef::Loop(id)) => body.loops.next_remove_depth_demand(id),
+            Some(EntityRef::Face(id)) => body.faces.next_remove_depth_demand(id),
+            Some(EntityRef::Shell(id)) => body.shells.next_remove_depth_demand(id),
+            Some(EntityRef::Solid(id)) => body.solids.next_remove_depth_demand(id),
+            Some(EntityRef::Curve3(id)) => body.curves3.next_remove_depth_demand(id),
+            Some(EntityRef::Curve2(id)) => body.curves2.next_remove_depth_demand(id),
+            Some(EntityRef::Surface(id)) => body.surfaces.next_remove_depth_demand(id),
+            None => Ok(1),
+        }
+    }
+
+    /// 🧹️ Spends the caller's work before removing an original body slot or transferring scratch.
+    pub fn close_original_step(&mut self, body: &mut Body, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome {
+        let before = effect.performed_work();
+        let result = self.close_import_step(body, effect);
+        semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() - before }
+    }
+
+    fn close_import_step(&mut self, body: &mut Body, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
+        let pending = RetainedCloneStep::Progress(Default::default());
+        if self.retired { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || (!self.cancelled && self.phase < 4) {
+            return Ok(pending);
+        }
+        if let Some(owner) = self.retirement.as_mut().filter(|owner| !owner.owner().terminal_is_empty()) {
+            return match owner.owner_mut().close_step(grant.maximum_copy_bytes, effect) {
+                semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result
+                    .map(|step| RetainedCloneStep::Progress(step.progress()))
+                    .map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+                semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(pending),
+            };
+        }
+        let (capacity, release) = if self.retirement.is_some() { (0, 0) } else { self.removal_demand(body) };
+        if grant.maximum_depth < self.next_close_depth_demand(body)?
+            || grant.maximum_capacity_bytes < capacity || grant.maximum_release_bytes < release
+            || !effect.performed(1)? { return Ok(pending); }
+        if self.retirement.take().is_some() { return Ok(import_progress()); }
         match self.retirement_stage {
-            0=>{work=1;let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}
-            2=>{
-                if let Some(entity)=self.recorder.last_owned().filter(|_|self.cancelled) {
+            0 => {
+                let scratch = ImportScratch {
+                    positions: std::mem::take(&mut self.positions),
+                    positions64: std::mem::take(&mut self.positions64),
+                    normals64: std::mem::take(&mut self.normals64),
+                    normals: std::mem::take(&mut self.normals),
+                    indices: std::mem::take(&mut self.indices),
+                    faces: std::mem::take(&mut self.faces),
+                    vertices: std::mem::take(&mut self.vertex_map),
+                    edges: std::mem::take(&mut self.edge_map),
+                };
+                self.retirement = Some(ImportCloseOwner::Scratch(import_controller(scratch)));
+                self.retirement_stage = 2;
+                Ok(import_progress())
+            }
+            2 => {
+                if let Some(entity) = self.last_import_entity().filter(|_| self.cancelled) {
                     let (removed,progress)=match entity {
                         EntityRef::Vertex(id)=>{let (value,progress)=body.vertices.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Vertex{value}),progress)},
                         EntityRef::Edge(id)=>{let (value,progress)=body.edges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Edge{value}),progress)},
@@ -222,16 +326,26 @@ impl MeshImportCursor {
                         EntityRef::Curve2(id)=>{let (value,progress)=body.curves2.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve2{value}),progress)},
                         EntityRef::Surface(id)=>{let (value,progress)=body.surfaces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Surface{value}),progress)},
                     };
-                    if progress==Default::default() {return Ok(RetainedCloneStep::Progress(progress));}
-                    work=1;self.recorder.pop_retired_owned(entity);
-                    if let Some(value)=removed {self.retirement=Some(ImportCloseOwner::Entity(import_controller(value)));}
+                    if progress == Default::default() { return Ok(RetainedCloneStep::Progress(progress)); }
+                    if let Some(owned) = self.original.owned.pop() { assert_eq!(owned, entity); }
+                    else { self.recorder.pop_retired_owned(entity); }
+                    if let Some(value) = removed { self.retirement = Some(ImportCloseOwner::Entity(import_controller(value))); }
                     Ok(RetainedCloneStep::Progress(progress))
-                } else {work=1;self.retirement=Some(ImportCloseOwner::Recorder(import_controller(std::mem::take(&mut self.recorder))));self.retirement_stage=3;Ok(import_progress())}
+                } else {
+                    self.retirement = Some(ImportCloseOwner::Recorder(import_controller(ImportJournal {
+                        owned: std::mem::take(&mut self.original.owned), recorder: std::mem::take(&mut self.recorder),
+                    })));
+                    self.retirement_stage = 3;
+                    Ok(import_progress())
+                }
             }
-            _=>{work=1;self.retired=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}))}
+            _ => {
+                self.retired = true;
+                Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+            }
         }
-    })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
+
     pub fn close_step(&mut self,body:&mut Body,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.close_original_step(body,effect).result}
     fn advance(&mut self,body:&mut Body)->Result<Option<EntityRef>,KernelError> {
         use semio_framework_3d_brep_representation::topology::EntityRef;
@@ -456,6 +570,51 @@ pub fn export_glb(mesh: &TriangleMesh) -> Result<Vec<u8>, KernelError> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn import_glb(data: &[u8]) -> Result<TriangleMesh, KernelError> {
     GlbImporter.import(data).map(|data| mesh_from_mesh_data(&data)).map_err(KernelError::Operation)
+}
+
+/// ⚠️ Preserves the distinction between a kernel refusal and a GLB codec failure.
+#[derive(Debug)]
+pub enum GlbBridgeError {
+    Kernel(BrepError),
+    Codec(String),
+}
+
+impl std::fmt::Display for GlbBridgeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Kernel(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Codec(detail) => formatter.write_str(detail),
+        }
+    }
+}
+
+impl std::error::Error for GlbBridgeError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Kernel(error) => Some(error),
+            Self::Codec(_) => None,
+        }
+    }
+}
+
+/// 🧊️ Tessellates the handles in order and exports their merged triangle mesh as GLB.
+pub fn export_glb_via_tessellation(kernel: &impl BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, GlbBridgeError> {
+    let mut merged = MeshData::default();
+    for shape in shapes {
+        let transfer = kernel.tessellate(shape, deflection).map_err(GlbBridgeError::Kernel)?;
+        let mesh = mesh_data_from_mesh_transfer(&transfer).map_err(GlbBridgeError::Kernel)?;
+        let offset = (merged.positions.len() / 3) as u32;
+        merged.positions.extend(mesh.positions);
+        merged.normals.extend(mesh.normals);
+        merged.indices.extend(mesh.indices.into_iter().map(|index| index + offset));
+    }
+    GlbExporter.export(&merged).map_err(GlbBridgeError::Codec)
+}
+
+/// 📥️ Decodes the GLB mesh and ingests its OBJ representation into the kernel.
+pub fn import_glb_via_obj(kernel: &mut impl BrepKernel, bytes: &[u8], tolerance: f64) -> Result<GeometryHandle, GlbBridgeError> {
+    let mesh = GlbImporter.import(bytes).map_err(GlbBridgeError::Codec)?;
+    kernel.import_obj(&mesh_to_obj(&mesh, "glb-import"), tolerance).map_err(GlbBridgeError::Kernel)
 }
 
 /// 📦 Encodes mesh mesh bytes from a [`TriangleMesh`] via `exporter` — see [`export_solid_mesh`] for

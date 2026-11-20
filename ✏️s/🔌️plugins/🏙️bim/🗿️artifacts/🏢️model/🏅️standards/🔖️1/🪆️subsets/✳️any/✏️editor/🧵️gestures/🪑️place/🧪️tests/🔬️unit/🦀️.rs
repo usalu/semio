@@ -194,7 +194,7 @@ async fn the_library_selection_chooses_the_family_and_escape_leaves_the_tool() {
 #[semio_framework_async_macros::async_test]
 async fn without_a_family_or_a_storey_the_click_is_refused() {
     let mut bare = furnished();
-    bare.families.retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
+    bare.families.cold_retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
     let mut rig = Rig::plan(UTILITY, bare);
     assert_eq!(rig.down(2.0, 2.0).refused, Some(FAMILY_MISSING));
     assert!(rig.snapshot.components.is_empty());

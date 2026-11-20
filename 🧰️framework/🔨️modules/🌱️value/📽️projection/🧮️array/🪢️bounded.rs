@@ -11,7 +11,7 @@ impl<T:RetainedClone,const N:usize> BoundedArrayProjection<T,N>{
  fn child(&self)->Result<&ArrayProjection<T,N>,ValueError>{self.backing.get().ok_or_else(||invalid("array cursor backing is not initialized"))}
  fn child_mut(&mut self)->Result<&mut ArrayProjection<T,N>,ValueError>{self.backing.get_mut().ok_or_else(||invalid("array cursor backing is not initialized"))}
  fn check_source(&self,source:RetainedCloneRef<'_,[T;N]>)->Result<(),ValueError>{if self.source.is_some_and(|(identity,_)|identity!=source.reference_identity()){return Err(invalid("bounded array changed original Source"))}Ok(())}
- fn check_work(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if self.source.is_some_and(|(_,work)|!work.matches_effect(effect)){return Err(invalid("bounded array changed original Work"))}Ok(())}
+ fn check_work(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.source.is_none_or(|(_,work)|work.admits_between_actions(effect,false)){return Err(invalid("bounded array changed original Work"))}Ok(())}
  fn close_capture_demand(&self)->RetirementDemand{if self.source.is_some(){Self::capture_demand()}else{Default::default()}}
  fn proof(&self)->Result<Option<RetainedCursorRelease<ArrayProjection<T,N>>>,ValueError>{match self.backing.retained(){Some(cursor)=>{let proof=cursor.native_terminal_release().ok_or_else(||invalid("array cursor lacks native release"))?;if !proof.validates(cursor){return Err(invalid("array cursor release witness changed"))}Ok(Some(proof))},None=>Ok(None)}}
 }

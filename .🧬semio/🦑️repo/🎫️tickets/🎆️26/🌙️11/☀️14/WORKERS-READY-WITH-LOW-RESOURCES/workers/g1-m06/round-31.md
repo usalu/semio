@@ -1,92 +1,62 @@
 # g1-m06 Round 31
 
-Observation only; I start no setup command. Rewritten every 10 minutes, last at 2026-11-16T09:31:57Z. Machine: Mac mini, 16 GB memory, macOS 27.2.1. Whether a macOS permission dialog waits on screen: not measured (my shell cannot see the screen); the ready record below names a refusal if the tools met one.
+Observation only; I start no setup command. Rewritten every 10 minutes, last at 2026-11-16T11:52:52Z. Machine: Mac mini, 16 GB memory, macOS 27.2.1. Whether a macOS permission dialog waits on screen: not measured (my shell cannot see the screen); the ready record below names a refusal if the tools met one.
 
 ## Ready Record (`origins/g1-m06/ready.json` in the store)
 
 ```
-state: running
-stage: workspace
-attempts: 2
-exit: 75
-refusal: None
-reason: {"code": "stalled", "en": "Stage workspace showed nothing new for 10 minutes and was stopped; started again at once.", "de": "Stufe workspace zeigte 10 Minuten lang nichts Neues und wurde beendet; sofort neu gestartet."}
-ready: False
-peakMegabytes: 7539
+state: 
+stage: 
+attempts: 
+exit: 
+refusal: 
+reason: 
+ready: 
+peakMegabytes: 
 ```
 
-## Last 30 Lines of the Log of Stage workspace
+## Last 30 Lines of the Log of Stage 
 
 ```
-[capacity] run: work has to run, waiting 409s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1349 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 2360 MB)
-Reading the project graph slice (457 s).
-Reading the project graph slice (459 s).
-Reading the project graph slice (461 s).
-[capacity] run: work has to run, waiting 414s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1146 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 2360 MB)
-[repo] still working after 476 s; last phase started: door.script
-Reading the project graph slice (463 s).
-Reading the project graph slice (465 s).
-Reading the project graph slice (467 s).
-[capacity] run: work has to run, waiting 420s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1173 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 2761 MB)
-Reading the project graph slice (469 s).
-Reading the project graph slice (471 s).
-Reading the project graph slice (473 s).
-[capacity] run: work has to run, waiting 426s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1464 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 2761 MB)
-Reading the project graph slice (475 s).
-Reading the project graph slice (477 s).
-[capacity] run: work has to run, waiting 431s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1067 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 2761 MB)
-Reading the project graph slice (479 s).
-Reading the project graph slice (481 s).
-Reading the project graph slice (483 s).
-[capacity] run: work has to run, waiting 437s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1304 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 3576 MB)
-Reading the project graph slice (485 s).
-Reading the project graph slice (487 s).
-Reading the project graph slice (489 s).
-[capacity] run: work has to run, waiting 442s to grow the reservation from 512 MB to 5544 MB: not enough free memory (1357 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind graph-plan (running, 1 job(s), 3576 MB)
-Reading the project graph slice (491 s).
-[repo] still working after 506 s; last phase started: door.script
-Reading the project graph slice (493 s).
-Reading the project graph slice (495 s).
-[capacity] run: work has to run, waiting 448s to grow the reservation from 512 MB to 5544 MB: memory pressure is raised (1720 MB spare above the 2048 MB floor; 1 running, 0 ahead); behind the host itself (nothing of ours)
 ```
 
 ## Load and Memory
 
 ```
-10:31  up 1 day,  5:34, 2 users, load averages: 7.00 6.23 5.79
-Pageouts: 1465296 
+12:53  up 1 day,  7:56, 2 users, load averages: 28.81 29.64 26.40
+Pageouts: 1506293 
 
-System-wide memory free percentage: 48%
+System-wide memory free percentage: 36%
 ```
 
 Largest processes (`ps -axo pid,ppid,rss,pcpu,etime,command | sort -k3 -nr | head -25`, lines cut at 220 characters):
 
 ```
-98163 98071 3447520 128.1       08:15 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_
- 1539  1260 799360 102.9 01-05:30:21 /Applications/GitKraken.app/Contents/Frameworks/GitKraken Helper (Renderer).app/Contents/MacOS/GitKraken Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Applicat
-99438  3376 497152   3.8    08:05:22 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
- 3501  1539 213184  75.9       00:02 /Applications/GitKraken.app/Contents/Resources/app.asar.unpacked/git/bin/git -c gpg.format=openpgp -c tag.gpgSign=0 -c commit.gpgSign=0 -c fetch.prune=1 -c gpg.program=gpg -c safe.dir
-98071 98066  99936   3.6       08:18 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:p
- 2186  2185  97856   0.2 01-05:29:17 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --eff
- 1260     1  90224   0.0 01-05:30:31 /Applications/GitKraken.app/Contents/MacOS/GitKraken
- 1262     1  76432   0.0 01-05:30:31 /Applications/Claude.app/Contents/MacOS/Claude
-98003 98002  63504   0.6       08:30 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M
-73694 73693  60064   0.3       54:28 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
-  711     1  54288   0.0 01-05:33:03 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
-98066 98003  50800   0.0       08:19 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M
- 1442  1262  50496   0.0 01-05:30:24 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Suppo
-73695 73693  48464   0.0       54:28 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
-73693 29837  47008   0.6       54:28 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
-73696 73693  37792   0.2       54:28 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
- 1270     1  36784   0.3 01-05:30:31 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
-  593     1  34864   0.2 01-05:33:15 /System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN com.apple.bcmwlan 0x100000d13 com.apple.DriverKit-AppleBCMWLAN
-  778     1  31600   2.1 01-05:33:02 /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow console
- 1386  1262  25664   0.0 01-05:30:25 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandb
- 1446  1260  24416   0.0 01-05:30:24 /Applications/GitKraken.app/Contents/Frameworks/GitKraken Helper (Renderer).app/Contents/MacOS/GitKraken Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Applicat
- 2547     1  23456   0.0       01:41 /System/Library/PrivateFrameworks/SiriInference.framework/Versions/A/siriinferenced
-  779     1  22576   4.1 01-05:33:02 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
-77092     1  21792   2.4    08:32:18 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
- 2300     1  21280   0.0       02:01 /System/Library/CoreServices/CoreLocationAgent.app/Contents/MacOS/CoreLocationAgent
+  593     1  31648   6.2 01-07:55:10 /System/Library/DriverExtensions/com.apple.DriverKit-AppleBCMWLAN.dext/com.apple.DriverKit-AppleBCMWLAN com.apple.bcmwlan 0x100000d13 com.apple.DriverKit-AppleBCMWLAN
+  778     1  22944  14.9 01-07:54:57 /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow console
+ 2186  2185  19344   1.7 01-07:51:12 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --eff
+ 1262     1  13440   1.7 01-07:52:26 /Applications/Claude.app/Contents/MacOS/Claude
+  779     1  11456   4.6 01-07:54:57 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
+ 9175     1  10944   0.9    02:12:19 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[
+    1     0   9568   9.4 01-07:56:03 /sbin/launchd
+ 9427     1   8576   0.0    02:12:03 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+21372  3376   8432   0.8       54:45 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/.cache/f/code/203e01b3594f1a510964bfe95d
+  401     1   7392   5.0 01-07:55:11 /usr/libexec/logd
+ 1260     1   6848   1.0 01-07:52:26 /Applications/GitKraken.app/Contents/MacOS/GitKraken
+ 1539  1260   5824   0.7 01-07:52:16 /Applications/GitKraken.app/Contents/Frameworks/GitKraken Helper (Renderer).app/Contents/MacOS/GitKraken Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Applicat
+ 1090     1   5824   1.3 01-07:52:31 /System/Library/ExtensionKit/Extensions/WallpaperAerialsExtension.appex/Contents/MacOS/WallpaperAerialsExtension -BSServiceDomains {"XPCService":{"Services":{"MainService":{}}}} -Laun
+  442     1   5456  17.1 01-07:55:11 /usr/libexec/opendirectoryd
+  466     1   5424   2.2 01-07:55:11 /usr/sbin/bluetoothd
+  543     1   5408   2.5 01-07:55:10 /usr/libexec/airportd
+ 1264     1   5312   1.0 01-07:52:26 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+56720     1   5280  10.0       01:06 /usr/libexec/mobileassetd
+57206     1   5184   5.2       00:06 /System/Library/CoreServices/audioaccessoryd
+ 1270     1   5104   1.4 01-07:52:26 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+  478     1   5104   1.7 01-07:55:10 /usr/libexec/runningboardd
+57258     1   4832   2.4       00:01 /usr/libexec/modelmanagerd
+57252     1   4736  10.8       00:01 /usr/sbin/cfprefsd agent
+ 3376  3360   4736   0.3 01-00:57:36 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs r
+29142     1   4720   1.0    17:21:58 /usr/sbin/coreaudiod
 ```
 
 ## History (One Line per Observation)
@@ -131,4 +101,11 @@ Largest processes (`ps -axo pid,ppid,rss,pcpu,etime,command | sort -k3 -nr | hea
 2026-11-16T09:11:55Z state=running stage=workspace attempts=2 exit=75 ready=False peakMegabytes=7539 load=5.02 4.51 4.65 pressure_level=1
 2026-11-16T09:21:56Z state=running stage=workspace attempts=2 exit=75 ready=False peakMegabytes=7539 load=4.99 5.80 5.41 pressure_level=2
 2026-11-16T09:31:57Z state=running stage=workspace attempts=2 exit=75 ready=False peakMegabytes=7539 load=7.00 6.23 5.79 pressure_level=2
+2026-11-16T09:41:58Z state=running stage=workspace attempts=2 exit=75 ready=False peakMegabytes=7539 load=4.15 5.04 5.31 pressure_level=2
+2026-11-16T10:03:39Z state=running stage=workspace attempts=2 exit=75 ready=False peakMegabytes=7539 load=1.67 1.75 1.68 pressure_level=2
+2026-11-16T11:11:31Z state= stage= attempts= exit= ready= peakMegabytes= load=4.79 6.18 5.22 pressure_level=2
+2026-11-16T11:21:32Z state= stage= attempts= exit= ready= peakMegabytes= load=28.73 22.48 13.88 pressure_level=2
+2026-11-16T11:31:39Z state= stage= attempts= exit= ready= peakMegabytes= load=21.17 26.99 23.27 pressure_level=2
+2026-11-16T11:42:08Z state= stage= attempts= exit= ready= peakMegabytes= load=15.79 19.46 20.76 pressure_level=4
+2026-11-16T11:52:52Z state= stage= attempts= exit= ready= peakMegabytes= load=36.24 31.03 26.82 pressure_level=2
 ```

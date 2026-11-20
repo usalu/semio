@@ -265,6 +265,7 @@ interface effects {
     import-action: string,
     args: option<pack>,
     multiple: bool,
+    max-file-bytes: option<u32>,
   }
   record request-file-open-effect {
     req: request-id,

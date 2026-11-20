@@ -325,7 +325,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     let interaction = protocol::InteractionState::default();
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
-        let command = Puzzle5dCommand::from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None);
+        let command = Puzzle5dCommand::try_from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None).expect("registered example command");
         let extent = semio_plugin::retained_command::ArtifactCommandWork::extent(&work, &command, &snapshot, &interaction, None);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");

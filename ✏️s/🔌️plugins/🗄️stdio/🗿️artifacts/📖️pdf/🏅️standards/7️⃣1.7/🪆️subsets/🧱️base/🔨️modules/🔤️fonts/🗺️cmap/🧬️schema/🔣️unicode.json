@@ -39,6 +39,54 @@
           "type": "integer"
         }
       }
+    },
+    "sameNumericCode": {
+      "type": "object",
+      "required": [
+        "encoding",
+        "toUnicode",
+        "cmap",
+        "unicode",
+        "codes",
+        "bytes",
+        "widths",
+        "spaces",
+        "text"
+      ],
+      "properties": {
+        "encoding": {
+          "$ref": "#/properties/encoding"
+        },
+        "toUnicode": {
+          "$ref": "#/properties/toUnicode"
+        },
+        "codes": {
+          "$ref": "#/properties/codes"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "widths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/properties/expected/properties/codeWidth"
+          }
+        },
+        "spaces": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "text": {
+          "$ref": "#/properties/text"
+        }
+      }
     }
   },
   "description": "Composite code widths come from Encoding CMap; ToUnicode ranges stay compact and are resolved lazily, including supplementary scalars."

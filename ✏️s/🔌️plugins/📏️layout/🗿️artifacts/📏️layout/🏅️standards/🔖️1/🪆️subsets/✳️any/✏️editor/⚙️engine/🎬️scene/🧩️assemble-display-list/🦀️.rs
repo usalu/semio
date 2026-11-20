@@ -1,14 +1,23 @@
 //! 🧩️ Assemble display list of the layout scene: the assembly of one page display list from frames, stories, drawings, guides and layers. See [`super`].
 
 use super::*;
+use std::collections::HashSet;
 
 //#region ⚙️Scene
-pub(super) fn assemble_display_list(engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64, deferred:bool) -> DisplayList {
-    assemble_display_list_items(engine, doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, proxy_band, camera_x, camera_y, zoom, resolve_page(doc, page), true, false, deferred)
+pub(super) fn assemble_display_list(engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64, deferred:bool, preview:Option<&semio_s_artifact_layout_layout_model::FrameBoundsPreview>) -> DisplayList {
+    let selected_ids: HashSet<&str> = selected_ids.iter().map(String::as_str).collect();
+    let resolved = if engine.is_some() {
+        resolve_page(doc, page)
+    } else {
+        semio_s_artifact_layout_layout_model::resolve_page_with_preview(doc, page, preview, |id, bounds| {
+            hovered_id == Some(id) || selected_ids.contains(id) || !outside_interactive_view(bounds, camera_x, camera_y, zoom)
+        })
+    };
+    assemble_display_list_items(engine, doc, page, active_page_id, &selected_ids, hovered_id, chrome_blueprint, proxy_band, resolved, true, deferred)
 }
 
 /// 🧩️ Builds one bounded frame or background batch using the same scene primitives as the full page.
-pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64, resolved: Vec<semio_s_artifact_layout_layout_model::ResolvedFrame>, include_background: bool, export: bool, deferred:bool) -> DisplayList {
+pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &HashSet<&str>, hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, resolved: Vec<semio_s_artifact_layout_layout_model::ResolvedFrame>, include_background: bool, deferred:bool) -> DisplayList {
     let source_page_index=deferred.then(||doc.pages.iter().position(|candidate|candidate.id==page.id)).flatten();
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -34,16 +43,17 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
         }
     }
 
+    let parent_layers = page.parent_page_id.as_deref()
+        .and_then(|id| doc.parent_pages.iter().find(|parent| parent.id == id))
+        .map_or(&[][..], |parent| parent.layers.as_slice());
     let mut next_stack = 1u32;
     for item in resolved {
-        if !item.frame.visible() || !frame_layer_visible(doc, page, &item.frame) {
+        let layers = if item.parent { parent_layers } else { &page.layers };
+        if !item.frame.visible() || layers.iter().any(|layer| layer.id == item.frame.layer_id() && !layer.visible) {
             continue;
         }
-        let selected = selected_ids.iter().any(|id| id == item.frame.id());
+        let selected = selected_ids.contains(item.frame.id());
         let hovered = hovered_id.is_some_and(|id| id == item.frame.id());
-        if !export && engine.is_none() && !selected && !hovered && outside_interactive_view(item.frame.bounds(), camera_x, camera_y, zoom) {
-            continue;
-        }
         let stack = next_stack;
         next_stack += 1;
         let rect_from = rects.len();

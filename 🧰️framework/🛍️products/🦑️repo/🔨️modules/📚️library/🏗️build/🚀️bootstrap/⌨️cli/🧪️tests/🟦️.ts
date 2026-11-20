@@ -1,16 +1,21 @@
 import {test,expect} from "bun:test";
-import {readFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import ts from "typescript";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
-import {readNativeRepoRecoveryPlanV1} from "../🟦️.ts";
+import {admitsNativeImageDiskRecoveryV1,readNativeRepoRecoveryPlanV1} from "../🟦️.ts";
+import imageCases from "./💽️image-recovery/🔣️.json" with {type:"json"};
+import imageCapacityCases from "./💽️image-recovery/🌡️capacity.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import * as routing from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {BUILD_HOST_CAPACITY_POLICY_V1,withBuildCapacityV1} from "../../../🌡️host-capacity/🟦️.ts";
+import {recordHostPhasesV1,updateHostEstimateStoreV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+declareBuildTestEnvelopeV1({owner:"test:native-recovery-routing",maximumElapsedMilliseconds:180000,capabilities:{artifacts:true}});
 const protocol=schema.$defs.Protocol.const;
 const actualOwner=()=>JSON.parse(readFileSync(join(process.cwd(),protocol.owner,"📋️project.json"),"utf8"));
 function actualRecovery(readOwner:(path:string)=>string){
@@ -98,3 +103,76 @@ test("native recovery asks the injected provider only for the ports of the selec
  expect(await sut.runNativeRepoRecoveryV1("/workspace",["run","unrelated:build"],original,issued,provider)).toBe(false);
  expect(plans).toEqual(["frontend:build"]);expect(events).toEqual(["build"]);
 }));
+
+
+test("Native image ingress admits verified automatic recovery and owner-protected manual reclaim",async()=>{
+ const root=process.cwd(),manifest=JSON.parse(readFileSync(join(root,protocol.reset.owner,"📋️project.json"),"utf8")),db=new Database(":memory:");
+ const query=db.query(`WITH f AS (SELECT json_extract(?1,'$.args[0]') verb,json_extract(?1,'$.args[1]') target,json_array_length(?1,'$.args') n)
+ SELECT verb='run' AND n=2 AND target IN ('repo-cache-reset:cache-regrow-rust','repo-cache-reset:cache-reclaim-rust','repo-cache-reset:cache-reclaim-wait-rust')
+ AND json_extract(?1,'$.platform')='darwin'
+ AND ((target='repo-cache-reset:cache-reclaim-rust' AND json_extract(?1,'$.marked')=0
+ AND json_type(?1,'$.request')='null' AND json_type(?1,'$.volume')='object')
+ OR (target='repo-cache-reset:cache-reclaim-wait-rust' AND json_extract(?1,'$.marked')=0 AND json_type(?1,'$.request')='null'
+ AND json_extract(?1,'$.volume.availableBytes')<51539607552)
+ OR (target<>'repo-cache-reset:cache-reclaim-wait-rust' AND json_extract(?1,'$.marked')=1 AND coalesce(json_extract(?1,'$.request.device')=json_extract(?1,'$.volume.device')
+ AND json_extract(?1,'$.volume.availableBytes')<json_extract(?1,'$.request.requiredFreeBytes')
+ AND json_extract(?1,'$.request.requiredFreeBytes')<=json_extract(?1,'$.volume.totalBytes'),0))) AS admit FROM f`);
+ try{for(const sample of imageCases.cases){
+  expect(Boolean((query.get(JSON.stringify(sample)) as {admit:number}).admit),sample.name).toBe(sample.admit);
+  const plan=readNativeRepoRecoveryPlanV1(root,sample.args);
+  const environment={...(sample.marked?{SEMIO_DISK_RECOVERY_CHILD:"1"}:{}),...(sample.request?{SEMIO_DISK_RECOVERY_IMAGE_VOLUME:JSON.stringify(sample.request)}:{})};
+  expect(admitsNativeImageDiskRecoveryV1(root,plan,environment,sample.platform,()=>sample.volume??undefined),sample.name).toBe(sample.admit);
+ }
+ for(const name of ["cache-regrow-rust","cache-reclaim-wait-rust"])for(const field of ["command","dependencies","cache","cwd","forward"] as const){
+  const altered=structuredClone(manifest),target=altered.targets[name];
+  if(field==="command")target.options.command="repo ./other.ts";else if(field==="dependencies")target.dependsOn=["other"];else if(field==="cache")target.cache=true;else if(field==="cwd")target.options.cwd="another-folder";else target.options.forwardAllArgs=true;
+  const sut=actualRecovery(()=>JSON.stringify(altered));
+  expect(()=>sut.readNativeRepoRecoveryPlanV1(root,["run","repo-cache-reset:"+name])).toThrow("Exact authored Native image maintenance target");
+ }
+ await withBuildTestInvocationV1(async original=>{
+  const phase=routing.createIssuedResourceControlV1(original,"test:exact-image-recovery",5000);
+  const sut=actualRecovery(()=>JSON.stringify(manifest)),events:string[]=[];
+  expect(await sut.runNativeRepoRecoveryV1(root,["run","repo-cache-reset:cache-regrow-rust"],original,phase,{image:async(context:any,target:any)=>{expect(context.invocation).toBe(original);expect(context.control).toBe(phase);events.push(target.operation+"/"+target.profile);}})).toBe(true);
+  expect(await sut.runNativeRepoRecoveryV1(root,["run","repo-cache-reset:cache-reclaim-wait-rust"],original,phase,{image:async(context:any,target:any)=>{expect(context.invocation).toBe(original);expect(context.control).toBe(phase);events.push(target.operation+"/"+target.profile);}})).toBe(true);
+  expect(events).toEqual(["regrow/rust","reclaim-wait/rust"]);
+ });
+ const{createBuildBootstrapCapabilitiesV1}=await import("../../../📥️caller/📤️child/🟦️.ts"),{invocationPlanRequestV1}=await import("../../../🧭️invocation/🛰️plan/🟦️.ts");
+ for(const target of ["cache-reclaim-rust","cache-regrow-rust"]){
+  const args=["run","repo-cache-reset:"+target],environment={SEMIO_BUILD_MODE:"prototype",SEMIO_BUILD_TOOL:"nx",SEMIO_DISK_RECOVERY_CHILD:"1"};
+  const capabilities=await createBuildBootstrapCapabilitiesV1(root,["repo",...args],environment);
+  expect(capabilities.launches).toEqual([["repo",...args]]);
+  expect(await invocationPlanRequestV1(root,args,environment)).toBeUndefined();
+ }
+ }finally{db.close();}
+});
+
+test("exact Native reclaim uses one fixed command grant while other targets retain planner capacity",async()=>{
+ const artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifact)throw Error("Native recovery capacity fixture requires an admitted test artifact directory");
+ const root=process.cwd(),directory=mkdtempSync(join(artifact,"cv-")),policy=BUILD_HOST_CAPACITY_POLICY_V1;
+ const db=new Database(":memory:"),expected=db.query(`select case when ?1='darwin' then json_extract(?2,'$.darwin') else 'run' end operation`);
+ const sample=async()=>({host:{version:1,atMs:Date.now(),platform:process.platform,cores:10,totalMegabytes:32768,availableMegabytes:30000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:2000,openFilesMaximum:245760,attachedImages:0} as HostSampleV1,swappedOutMegabytes:0});
+ try{
+  await updateHostEstimateStoreV1(directory,policy,store=>{
+   let result=store;
+   for(let index=0;index<8;index++)result=recordHostPhasesV1(policy,result,["run"],"run",1024,{jobs:1,peakMegabytes:9000,activeMilliseconds:2000,peakAtMilliseconds:100,endedAtMs:Date.now(),phases:[{phase:"plan",peakMegabytes:9000,startMilliseconds:0,activeMilliseconds:1000,peakAtMilliseconds:100},{phase:"execution",peakMegabytes:900,startMilliseconds:1000,activeMilliseconds:1000,peakAtMilliseconds:1100}],keepPeak:true});
+   return result;
+  });
+  for(const fixture of imageCapacityCases.cases){
+   const {args}=fixture,oracle=expected.get(process.platform,JSON.stringify(fixture)) as {operation:string};
+   const environment={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_BUILD_PARALLEL:"1"};
+   await withBuildCapacityV1(args,environment,async granted=>{
+    expect(granted.handle).toBeDefined();
+    const rows=readdirSync(join(directory,"grants")).map(name=>JSON.parse(readFileSync(join(directory,"grants",name),"utf8")));
+    const grant=rows.find(row=>row.id===granted.handle!.id);
+    expect(grant.operation,args.join(" ")).toBe(oracle.operation);
+    const command=policy.operations.find(row=>row.name==="command")!;
+    if(oracle.operation==="command"){
+     expect(granted.handle!.jobs).toBe(1);
+     expect(granted.handle!.reservedMegabytes).toBe(command.fixedMegabytes);
+     expect(granted.args).toEqual(args);
+    }else expect(granted.handle!.reservedMegabytes).toBeGreaterThan(command.fixedMegabytes);
+   },{repositoryRoot:root,directory,policy,strip:values=>values,sample,observe:async()=>160,write:()=>{}});
+  }
+ }finally{db.close();rmSync(directory,{force:true,recursive:true});}
+});

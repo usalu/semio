@@ -36,12 +36,9 @@ impl Operator for FilletEdges {
 pub(super) struct ChamferEdges(pub(super) SessionCapture);
 
 impl Operator for ChamferEdges {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(ChamferEdges);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -56,12 +53,9 @@ impl Operator for ChamferEdges {
 pub(super) struct ShellMutation(pub(super) SessionCapture);
 
 impl Operator for ShellMutation {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(BoxShell);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -76,12 +70,9 @@ impl Operator for ShellMutation {
 pub(super) struct Draft(pub(super) SessionCapture);
 
 impl Operator for Draft {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Draft);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -92,7 +83,7 @@ impl Operator for Draft {
     }
 }
 
-geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
+geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?), OffsetSolid);
 
 pub(super) struct Defeature(pub(super) SessionCapture);
 
@@ -120,12 +111,9 @@ impl Operator for Defeature {
 pub(super) struct Section(pub(super) SessionCapture);
 
 impl Operator for Section {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Section);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let faces = kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
@@ -144,12 +132,8 @@ impl Operator for Section {
 pub(super) struct Split(pub(super) SessionCapture);
 
 impl Operator for Split {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Split);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let (positive, negative) = kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?).map_err(|error| map_kernel_error(&error))?;
@@ -161,12 +145,9 @@ impl Operator for Split {
 pub(super) struct CurveCurveIntersect(pub(super) SessionCapture);
 
 impl Operator for CurveCurveIntersect {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(CurveCurve);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let points = kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
@@ -179,12 +160,9 @@ impl Operator for CurveCurveIntersect {
 pub(super) struct CurveSurfaceIntersect(pub(super) SessionCapture);
 
 impl Operator for CurveSurfaceIntersect {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(CurveSurface);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let points = kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
@@ -199,12 +177,9 @@ impl Operator for CurveSurfaceIntersect {
 pub(super) struct SurfaceSurfaceIntersect(pub(super) SessionCapture);
 
 impl Operator for SurfaceSurfaceIntersect {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(SurfaceSurface);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let wires = kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?).map_err(|error| map_kernel_error(&error))?;
@@ -219,19 +194,45 @@ impl Operator for SurfaceSurfaceIntersect {
 // #endregion 🔖️Intersect
 
 // #region 🔖️Evaluate
-point_operation!(CurvePoint, "point", |k, i| k.curve_point(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+pub(super) struct CurvePoint(pub(super) SessionCapture);
 
-vec_operation!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+impl Operator for CurvePoint {
+    retire_geometry_capture!(0);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let curve = read_geometry(input, "curve")?;
+            let parameter = read_channel_number(input, "parameter")?;
+            let point = kernel.curve_point(&curve, parameter).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("point", point_dictionary(point)))
+        })
+    }
+
+    retained_geometry_job!(Point);
+}
+
+pub(super) struct CurveTangent(pub(super) SessionCapture);
+
+impl Operator for CurveTangent {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Tangent);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let curve = read_geometry(input, "curve")?;
+            let parameter = read_channel_number(input, "parameter")?;
+            let tangent = kernel.curve_tangent(&curve, parameter).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("tangent", vector_dictionary(tangent)))
+        })
+    }
+}
 
 pub(super) struct CurveDomain(pub(super) SessionCapture);
 
 impl Operator for CurveDomain {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Domain);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let domain = kernel.curve_domain(&read_geometry(input, "curve")?).map_err(|error| map_kernel_error(&error))?;
@@ -240,11 +241,50 @@ impl Operator for CurveDomain {
     }
 }
 
-num_operation!(CurveCurvature, "curvature", |k, i| k.curve_curvature(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+pub(super) struct CurveCurvature(pub(super) SessionCapture);
 
-point_operation!(SurfacePoint, "point", |k, i| k.surface_point(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
+impl Operator for CurveCurvature {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Curvature);
 
-vec_operation!(SurfaceNormal, "normal", |k, i| k.surface_normal(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let curve = read_geometry(input, "curve")?;
+            let result = kernel.curve_curvature(&curve, read_channel_number(input, "parameter")?).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("curvature", number_dictionary(result)))
+        })
+    }
+}
+
+pub(super) struct SurfacePoint(pub(super) SessionCapture);
+
+impl Operator for SurfacePoint {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(SurfacePoint);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let surface = read_geometry(input, "surface")?;
+            let result = kernel.surface_point(&surface, read_channel_number(input, "u")?, read_channel_number(input, "v")?).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("point", point_dictionary(result)))
+        })
+    }
+}
+
+pub(super) struct SurfaceNormal(pub(super) SessionCapture);
+
+impl Operator for SurfaceNormal {
+    retire_geometry_capture!(0);
+    retained_geometry_job!(SurfaceNormal);
+
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        self.0.with_kernel_read(|kernel| {
+            let surface = read_geometry(input, "surface")?;
+            let result = kernel.surface_normal(&surface, read_channel_number(input, "u")?, read_channel_number(input, "v")?).map_err(|error| map_kernel_error(&error))?;
+            Ok(channel_output("normal", vector_dictionary(result)))
+        })
+    }
+}
 
 /// 🎯️ Certified nearest parameter on a curve — `curve_closest_parameter` exposes the achieved
 /// `distance` alongside the point/parameter so callers can tell a converged fit from a coarse one,
@@ -252,12 +292,9 @@ vec_operation!(SurfaceNormal, "normal", |k, i| k.surface_normal(&read_geometry(i
 pub(super) struct CurveClosestParameter(pub(super) SessionCapture);
 
 impl Operator for CurveClosestParameter {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(CurveClosestParameter);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let (parameter, point, distance) = kernel.curve_closest_parameter(&read_geometry(input, "curve")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
@@ -270,12 +307,9 @@ impl Operator for CurveClosestParameter {
 pub(super) struct SurfaceClosestUv(pub(super) SessionCapture);
 
 impl Operator for SurfaceClosestUv {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(SurfaceClosestUv);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let (u, v, point, distance) = kernel.surface_closest_uv(&read_geometry(input, "surface")?, read_xyz(input, "point")?).map_err(|error| map_kernel_error(&error))?;
@@ -302,12 +336,9 @@ fn geometry_list(kernel: &Brep, handles: Vec<GeometryHandle>) -> Result<Dictiona
 pub(super) struct SolidShells(pub(super) SessionCapture);
 
 impl Operator for SolidShells {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Shells);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let shells = kernel.solid_shells(&read_geometry(input, "solid")?).map_err(|error| map_kernel_error(&error))?;
@@ -320,12 +351,9 @@ impl Operator for SolidShells {
 pub(super) struct CompoundOf(pub(super) SessionCapture);
 
 impl Operator for CompoundOf {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Compound);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let solids = read_geometry_list(input, "solids")?;
@@ -339,12 +367,9 @@ impl Operator for CompoundOf {
 pub(super) struct Explode(pub(super) SessionCapture);
 
 impl Operator for Explode {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Explode);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let solids = kernel.explode(&read_geometry(input, "compound")?).map_err(|error| map_kernel_error(&error))?;
@@ -358,12 +383,9 @@ impl Operator for Explode {
 pub(super) struct GeometryLabel(pub(super) SessionCapture);
 
 impl Operator for GeometryLabel {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(Label);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let handle = read_geometry(input, "geometry")?;

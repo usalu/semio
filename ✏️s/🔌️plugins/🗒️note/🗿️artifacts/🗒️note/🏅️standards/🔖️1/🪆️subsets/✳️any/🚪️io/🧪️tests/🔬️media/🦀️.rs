@@ -138,7 +138,7 @@ async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
 #[semio_framework_async_macros::async_test]
 async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
     let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
-    document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
+    document.assets.cold_insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
     document.blocks.push(NoteBlockNode::Image { id: "im1".into(), name: "Image".into(), x: 0.0, y: 0.0, width: 4.0, height: 4.0, rotation: 0.0, visible: true, locked: false, image_key: "asset-1".into() });
 
     let (svg, _w, _h) = note_document_to_svg(&document).expect("svg export via io_dispatch");

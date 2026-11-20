@@ -288,6 +288,32 @@ fn reap(child: &mut std::process::Child) -> Usage {
     }
 }
 
+/// 🚦️ Windows reports every server pipe instance as taken between two accepts as ERROR_PIPE_BUSY (231).
+#[cfg(any(windows, test))]
+fn pipe_busy(error: &std::io::Error) -> bool {
+    error.raw_os_error() == Some(231)
+}
+
+#[cfg(windows)]
+const PIPE_BUSY_ATTEMPTS: u32 = 600;
+#[cfg(windows)]
+const PIPE_BUSY_DELAY: Duration = Duration::from_millis(50);
+
+/// 🔁️ Runs `open` again after `delay` while `retryable` holds, at most `attempts` times.
+#[cfg(any(windows, test))]
+fn retry_while<T>(mut open: impl FnMut() -> std::io::Result<T>, retryable: impl Fn(&std::io::Error) -> bool, attempts: u32, delay: Duration) -> std::io::Result<T> {
+    let mut left = attempts;
+    loop {
+        match open() {
+            Err(error) if left > 1 && retryable(&error) => {
+                left -= 1;
+                std::thread::sleep(delay);
+            }
+            other => return other,
+        }
+    }
+}
+
 /// 🔗️ A line-oriented connection to the driver's broker: a Unix socket, or a named pipe on Windows.
 struct Broker {
     writer: Mutex<Box<dyn Write + Send>>,
@@ -295,12 +321,12 @@ struct Broker {
 }
 
 impl Broker {
-    /// 🔌️ Connects to the broker endpoint.
+    /// 🔌️ Connects to the broker endpoint, waiting out a momentarily full pipe.
     fn connect(endpoint: &str) -> std::io::Result<Broker> {
         #[cfg(unix)]
         let stream = std::os::unix::net::UnixStream::connect(endpoint)?;
         #[cfg(windows)]
-        let stream = std::fs::OpenOptions::new().read(true).write(true).open(endpoint)?;
+        let stream = retry_while(|| std::fs::OpenOptions::new().read(true).write(true).open(endpoint), pipe_busy, PIPE_BUSY_ATTEMPTS, PIPE_BUSY_DELAY)?;
         let reader = stream.try_clone()?;
         Ok(Broker { writer: Mutex::new(Box::new(stream)), reader: Mutex::new(Box::new(BufReader::new(reader))) })
     }
@@ -355,10 +381,28 @@ fn bounded_threads(args: &[OsString], tokens: Option<usize>) -> Vec<OsString> {
     result
 }
 
+/// 🗂️ Creates a fresh bounded response file, skipping names a reused process id or a killed run left behind.
+/// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
+fn bounded_response_file() -> Result<(std::path::PathBuf, std::fs::File), String> {
+    static NEXT_COPY: AtomicUsize = AtomicUsize::new(0);
+    for _ in 0..BOUNDED_RESPONSE_ATTEMPTS {
+        let copy = std::env::temp_dir().join(format!("semio-threads-{}-{}.rsp", std::process::id(), NEXT_COPY.fetch_add(1, Ordering::Relaxed)));
+        if copy.as_os_str().to_string_lossy().encode_utf16().count() > 256 { return Err("bounded response path exceeds 256 characters".to_string()) }
+        match std::fs::OpenOptions::new().write(true).create_new(true).open(&copy) {
+            Ok(file) => return Ok((copy, file)),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(format!("cannot create bounded response file: {error}")),
+        }
+    }
+    Err(format!("cannot create bounded response file: {BOUNDED_RESPONSE_ATTEMPTS} names already exist"))
+}
+
+/// 🔢️ How many successive response file names one copy tries before it refuses.
+const BOUNDED_RESPONSE_ATTEMPTS: usize = 1024;
+
 /// 📎️ Applies the front-end bound across direct and response-file arguments and retains owned copies until rustc ends.
 /// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
 fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsString>, Vec<std::path::PathBuf>), String> {
-    static NEXT_COPY: AtomicUsize = AtomicUsize::new(0);
     let mut copies = Vec::new();
     if tokens.filter(|count| *count >= 1).is_none() { return Ok((args.to_vec(), copies)) }
     let mut previous_z = false;
@@ -373,10 +417,8 @@ fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsS
         let lines: Vec<OsString> = text.lines().map(OsString::from).collect();
         let bounded: Vec<OsString> = lines.iter().map(&mut bound).collect();
         if bounded == lines { return Ok(arg.clone()) }
-        let copy = std::env::temp_dir().join(format!("semio-threads-{}-{}.rsp", std::process::id(), NEXT_COPY.fetch_add(1, Ordering::Relaxed)));
-        if copy.as_os_str().to_string_lossy().encode_utf16().count() > 256 { return Err("bounded response path exceeds 256 characters".to_string()) }
         let body = bounded.iter().map(|line| line.to_string_lossy().into_owned()).collect::<Vec<_>>().join("\n");
-        let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&copy).map_err(|error| format!("cannot create bounded response file: {error}"))?;
+        let (copy, mut file) = bounded_response_file()?;
         copies.push(copy.clone());
         file.write_all(body.as_bytes()).map_err(|error| format!("cannot write bounded response file: {error}"))?;
         let mut argument = OsString::from("@"); argument.push(copy.as_os_str()); Ok(argument)
@@ -526,6 +568,32 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 🧪️ A busy pipe is retried until it opens, a hard failure or an exhausted budget is returned as is.
+    #[test]
+    fn retries_only_busy_pipes() {
+        let mut calls = 0;
+        let opened = retry_while(|| { calls += 1; if calls < 4 { Err(std::io::Error::from_raw_os_error(231)) } else { Ok(calls) } }, pipe_busy, 10, Duration::ZERO);
+        assert_eq!(opened.expect("opens"), 4);
+        let mut hard = 0;
+        let failed: std::io::Result<u32> = retry_while(|| { hard += 1; Err(std::io::Error::from_raw_os_error(2)) }, pipe_busy, 10, Duration::ZERO);
+        assert!(failed.is_err() && hard == 1);
+        let mut spent = 0;
+        let busy: std::io::Result<u32> = retry_while(|| { spent += 1; Err(std::io::Error::from_raw_os_error(231)) }, pipe_busy, 3, Duration::ZERO);
+        assert!(busy.is_err() && spent == 3);
+    }
+
+    /// 🧪️ A response file name a reused process id or a killed run left behind is skipped instead of failing the compile.
+    #[test]
+    fn skips_leftover_response_files() {
+        let stale: Vec<std::path::PathBuf> = (0..64).map(|index| std::env::temp_dir().join(format!("semio-threads-{}-{index}.rsp", std::process::id()))).filter(|path| std::fs::OpenOptions::new().write(true).create_new(true).open(path).is_ok()).collect();
+        let created = bounded_response_file();
+        for path in &stale { let _ = std::fs::remove_file(path); }
+        let (copy, file) = created.expect("a fresh name");
+        drop(file);
+        assert!(!stale.contains(&copy));
+        std::fs::remove_file(copy).expect("fresh copy");
+    }
 
     /// 🧪️ The unit of a pipelined library compile, its externs and build-script output directory.
     #[test]

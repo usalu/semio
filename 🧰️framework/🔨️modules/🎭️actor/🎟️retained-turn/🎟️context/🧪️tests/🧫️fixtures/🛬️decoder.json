@@ -22,6 +22,11 @@
     65536,
     64
   ],
+  "interruptedReceiving": {
+    "copiedBytes": 8,
+    "sameDispatch": true,
+    "freshDispatchAfterRecovery": true
+  },
   "cases": [
     {
       "id": "denied-capacity-before-birth",

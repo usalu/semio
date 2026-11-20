@@ -804,6 +804,49 @@
       ]
     }
   ],
+  "inheritedCase": [
+    {
+      "id": "inherited",
+      "inherited": true,
+      "deny": true,
+      "after": false,
+      "effects": [
+        "probe"
+      ]
+    },
+    {
+      "id": "converted",
+      "inherited": false,
+      "deny": false,
+      "after": true,
+      "effects": [
+        "probe",
+        "set",
+        "probe"
+      ]
+    },
+    {
+      "id": "denied",
+      "inherited": false,
+      "deny": true,
+      "after": false,
+      "effects": [
+        "probe",
+        "set"
+      ]
+    },
+    {
+      "id": "still-folded",
+      "inherited": false,
+      "deny": false,
+      "after": false,
+      "effects": [
+        "probe",
+        "set",
+        "probe"
+      ]
+    }
+  ],
   "foldSafeRefusals": [
     {
       "key": "caseBuild",

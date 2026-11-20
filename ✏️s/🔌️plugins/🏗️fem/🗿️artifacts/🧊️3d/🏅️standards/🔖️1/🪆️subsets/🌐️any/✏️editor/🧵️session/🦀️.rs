@@ -85,7 +85,7 @@ use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_jo
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dSolverScalar;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dSolverView;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dNumericalStage;
-use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::FixedSlots;
+use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::PagedSlots;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::ChildEnd;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::session_pending;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::SESSION_CLOSE_COPY_BYTES;

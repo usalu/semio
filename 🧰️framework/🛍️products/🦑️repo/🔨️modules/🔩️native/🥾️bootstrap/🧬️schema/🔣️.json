@@ -16,6 +16,8 @@
     }
   },
   "definitions": {
+    "RustupInstallation": {"const":{"command":"rust-toolchain","lockFile":".semio-rustup-install.lock","lockWaitSeconds":"900","unix":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh","windows":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1","windowsProcess":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🦀️rustup/🔷️.cs"}},
+    "WindowsNodeInstallation": {"const":{"environment":"LOCALAPPDATA","directories":["semio","node"],"versionPrefix":"v","versionPattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$","executable":"node.exe","npm":"npm.cmd","script":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1","command":"node"}},
     "MsvcBootstrap": {
       "const": {
         "release": "18.11.3",

@@ -122,6 +122,7 @@ pub mod load_raw_request {
 
     pub fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen {
+            max_file_bytes: None,
             req: semio_plugin::RequestId(116),
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
             read_as: Some("dataUrl".into()),

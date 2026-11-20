@@ -74,16 +74,42 @@ pub(super) fn inspector_fields(snapshot: &PdfSnapshot, object: &PageObject) -> V
     fields
 }
 
-pub(super) fn page_fields(snapshot: &PdfSnapshot) -> Vec<InspectorField> {
-    let (width, height, rotation) = snapshot.pages.first().map(|page| (page.width(), page.height(), page.rotate as f64)).unwrap_or((0.0, 0.0, 0.0));
-    vec![
-        InspectorField { id: "pdf-page-title", label_en: "Title", label_de: "Titel", action: "set-info", key: "text", kind: ui::InputKind::Text, value: snapshot.info.title.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
-        InspectorField { id: "pdf-page-author", label_en: "Author", label_de: "Autor", action: "set-info", key: "extra", kind: ui::InputKind::Text, value: snapshot.info.author.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
+pub(super) fn page_fields(snapshot: &PdfSnapshot, index: usize) -> Vec<InspectorField> {
+    let (width, height, rotation, user_unit) = snapshot.pages.get(index).map(|page| (page.width(), page.height(), page.rotate as f64, page.user_unit.unwrap_or(1.0))).unwrap_or((0.0, 0.0, 0.0, 1.0));
+    use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::io::text::snapshot::date::print_pdf_date;
+    let text = |value: &Option<String>| value.clone().unwrap_or_default();
+    let info = &snapshot.info;
+    [
+        ("pdf-page-title", "Title", "Titel", "title", text(&info.title)),
+        ("pdf-page-author", "Author", "Autor", "author", text(&info.author)),
+        ("pdf-page-subject", "Subject", "Thema", "subject", text(&info.subject)),
+        ("pdf-page-keywords", "Keywords", "Schlagwörter", "keywords", text(&info.keywords)),
+        ("pdf-page-creator", "Creator", "Erstellt mit", "creator", text(&info.creator)),
+        ("pdf-page-producer", "Producer", "PDF-Generator", "producer", text(&info.producer)),
+        ("pdf-page-created", "Creation date", "Erstellungsdatum", "creationDate", info.creation_date.as_ref().map(print_pdf_date).unwrap_or_default()),
+        ("pdf-page-modified", "Modification date", "Änderungsdatum", "modificationDate", info.modification_date.as_ref().map(print_pdf_date).unwrap_or_default()),
+        ("pdf-page-trapped", "Trapped", "Überfüllt", "trapped", text(&info.trapped)),
+    ].into_iter().map(|(id, label_en, label_de, key, value)| InspectorField { id, label_en, label_de, action: "set-info-field", key: "text", kind: ui::InputKind::Text, value, numbers: Vec::new(), text: None, object_key: Some(key.into()) }).chain([
         InspectorField { id: "pdf-page-language", label_en: "Language", label_de: "Sprache", action: "set-language", key: "text", kind: ui::InputKind::Text, value: snapshot.language.clone().unwrap_or_default(), numbers: Vec::new(), text: None, object_key: Some(String::new()) },
         placed("pdf-page-width", "Page width", "Seitenbreite", "set-page-size", "width", width, &[("height", height)]),
         placed("pdf-page-height", "Page height", "Seitenhöhe", "set-page-size", "height", height, &[("width", width)]),
         placed("pdf-page-rotation", "Rotation", "Drehung", "set-page-rotation", "x", rotation, &[]),
-    ]
+        placed("pdf-page-user-unit", "User unit scale", "Maßstab der Benutzereinheit", "set-page-user-unit", "x", user_unit, &[]),
+    ]).collect()
+}
+
+pub(super) fn page_boundary_fields(page: &PdfPage) -> impl Iterator<Item = InspectorField> {
+    [
+        ("pdf-page-media-box", "Media box", "Medienrahmen", "box.media", Some(page.media_box)),
+        ("pdf-page-crop-box", "Crop box", "Beschnittrahmen", "box.crop", page.crop_box),
+        ("pdf-page-bleed-box", "Bleed box", "Anschnittrahmen", "box.bleed", page.bleed_box),
+        ("pdf-page-trim-box", "Trim box", "Endformatrahmen", "box.trim", page.trim_box),
+        ("pdf-page-art-box", "Art box", "Objektrahmen", "box.art", page.art_box),
+    ].into_iter().map(|(id, label_en, label_de, kind, rect)| InspectorField {
+        id, label_en, label_de, action: "set-page-extra", key: "text", kind: ui::InputKind::Text,
+        value: rect.map(|coordinates| coordinates.map(|value| value.to_string()).join(" ")).unwrap_or_default(),
+        numbers: Vec::new(), text: None, object_key: Some(kind.into()),
+    })
 }
 
 fn resource_number(id: &'static str, label_en: &'static str, label_de: &'static str, key: &'static str, value: f64, aspect: &str, resource_id: &str) -> InspectorField {

@@ -26,7 +26,7 @@ fn point(x: f64, y: f64, z: f64) -> Point3 {
 
 fn solid_of(system: MepSystem, shape: MepShape, path: Vec<Point3>) -> (MepValue, ElementSolid) {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.mep_elements.insert("m".into(), MepElement { storey: "s1".into(), system, shape, path, name: String::new() });
+    snapshot.mep_elements.cold_insert("m".into(), MepElement { storey: "s1".into(), system, shape, path, name: String::new() });
     let value = mep_of(&snapshot, "m", &StoreyLevel::default());
     let solid = mep_solid(&value);
     (value, solid)

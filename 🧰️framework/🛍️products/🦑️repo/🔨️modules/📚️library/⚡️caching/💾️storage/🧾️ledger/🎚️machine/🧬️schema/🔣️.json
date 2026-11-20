@@ -53,6 +53,7 @@
         "weightBasisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 },
         "floorBytes": { "$ref": "#/$defs/bytes" },
         "headroomBasisPoints": { "type": "integer", "minimum": 0, "maximum": 5000 },
+        "admitsCommands": { "const": true },
         "purpose": { "$ref": "#/$defs/bilingual" }
       }
     },

@@ -1,0 +1,54 @@
+{
+  "schema": null,
+  "assets": null,
+  "savedCameras": {
+    "edits": [
+      {
+        "edit": "add",
+        "index": 2,
+        "item": {
+          "id": "shot-camera:shot-close",
+          "label": "Close",
+          "camera": {
+            "position": [
+              2.0,
+              -2.0,
+              1.5
+            ],
+            "target": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "zoom": 2.5,
+            "fov": 35.0
+          }
+        }
+      }
+    ],
+    "patched": []
+  },
+  "scene": null,
+  "shots": {
+    "edits": [],
+    "patched": [
+      {
+        "id": "shot-close",
+        "patch": {
+          "label": null,
+          "width": null,
+          "height": null,
+          "format": null,
+          "shape": null,
+          "background": null,
+          "cameraId": {
+            "value": "shot-camera:shot-close"
+          }
+        }
+      }
+    ]
+  },
+  "activeShotId": null,
+  "activeAssetId": null,
+  "emblem": null
+}

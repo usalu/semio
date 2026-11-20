@@ -15,7 +15,7 @@ pub const WFC3D_DOCUMENT_SCHEMA: &str = "s.wfc.wfc3d";
 //#region 🔖️Media
 /// 🎨️ One straight 8-bit RGBA colour — the shared colour vocabulary every `wfc` artifact declares
 /// locally (no cross-artifact crate import for a four-byte record).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Color {
@@ -29,7 +29,7 @@ pub struct Color {
 /// (a unit box, `positions` as xyz triples indexed by `indices`), or a handle into a composed
 /// `s.stdio.semio@v1/mesh` child (`remodel`'s precedent). Inline geometry keeps a small catalogue
 /// self-contained; a child keeps a large one out of the document.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum TileMedia3d {
@@ -54,7 +54,7 @@ impl Default for TileMedia3d {
 
 /// 🀄️ One placeable tile — `weight` is the selection bias the solver's `WeightTable` reads, `media`
 /// is what the preview draws where the tile lands.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Tile {
@@ -71,7 +71,7 @@ pub struct Tile {
 /// `width`/`height`/`depth` its extent, so tile media authored in the unit box `0..1` is placed at the
 /// slot's origin and scaled by its extent. The solved tile assignment lives in the inference result,
 /// never here.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Slot3d {
@@ -90,7 +90,7 @@ pub struct Slot3d {
 /// 🔗 One adjacency EDGE between two slots. `relation` names the constraint channel: every distinct
 /// string becomes its own `RelationId` in the compiled model, so "above"/"beside" can admit
 /// different tile pairs over the same topology.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SlotEdge {
@@ -106,7 +106,7 @@ pub struct SlotEdge {
 /// compile onto an empty model, so a pair no rule mentions is FORBIDDEN. `allowed: true` admits the
 /// pair, `allowed: false` forbids it and always wins over an admitting rule, and `relation: None`
 /// states the rule for every relation at once.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GraphRule {

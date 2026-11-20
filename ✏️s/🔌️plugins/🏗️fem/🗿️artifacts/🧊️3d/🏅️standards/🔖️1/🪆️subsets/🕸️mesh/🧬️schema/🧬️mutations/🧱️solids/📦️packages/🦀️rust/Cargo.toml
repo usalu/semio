@@ -26,4 +26,6 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d-diff = { workspace = true }
+semio-s-artifact-fem-3d-guards = { workspace = true }
 

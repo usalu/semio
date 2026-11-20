@@ -1,4 +1,3 @@
-import {countedCompilerCapacityRequestV1} from "@semio-tech/process/compiler-capacity";
 import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
 import {requirePlaygroundVariant} from "@semio-tech/plugin-registry/playground/default";
 import { runtimeFixturePathV1 } from "@semio-tech/repo-lib/inventory";
@@ -8,7 +7,7 @@ import type {InlineConfig} from "vite";
 import {readFileSync,existsSync,statSync,realpathSync} from "node:fs";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
-import { withViteStorageV1, withViteArtifactInputsV1 } from "@semio-tech/repo-lib/dev";
+import { withViteStorageV1, withViteArtifactInputsV1, withViteCompilerCapacityV1 } from "@semio-tech/repo-lib/dev";
 import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import {withCompilerState} from "@semio-tech/process/compiler-state";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
@@ -30,9 +29,9 @@ import { runtimeKeyV1 } from "../../../../../../🔨️modules/⚙️runtime/�
 export async function compileDistributionProductV1(workspace:string,invocation:ScriptInvocation):Promise<DistributionCompileReceiptV1>{
  const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode,owner=schema.definitions.Protocol.const.owner,phase=scriptCompilerAdmissionControlV1(invocation,"vite:distribution-compile",0);
  if(resolve(workspace)!==authority.repositoryRoot||process.env.SEMIO_BUILD_MODE!==mode||process.env.SEMIO_COMPILER_CAPACITY_HELD!==undefined)throw Error("Exact unmarked distribution compiler Original required");
- return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(dependencies,dependenciesPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependenciesPhase,(products,layout,_temporary,productsPhase)=>withViteArtifactInputsV1({workspace,invocation,store:products,control:productsPhase,requests:frameworkOsViteArtifactInputsV1(products.root,{version:1,mode,renderer:"react",command:"build",engines:"distribution"})},control=>withArtifactScratchV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:control,request:{version:1,mode,owner:schema.definitions.Protocol.const.scratchOwner}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
+ return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(dependencies,dependenciesPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependenciesPhase,(products,layout,_temporary,productsPhase)=>withViteCompilerCapacityV1({store:products,control:productsPhase,environment:{...process.env,...dependencies.environment,...products.environment}},(capacityEnvironment,capacityControl)=>withViteArtifactInputsV1({workspace,invocation,store:products,control:capacityControl,requests:frameworkOsViteArtifactInputsV1(products.root,{version:1,mode,renderer:"react",command:"build",engines:"distribution"})},control=>withArtifactScratchV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:control,request:{version:1,mode,owner:schema.definitions.Protocol.const.scratchOwner}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
   const compiler=createRequire(join(workspace,"package.json"))("vite/package.json").version;
-  return withCompilerState({capacity:countedCompilerCapacityRequestV1(),root:layout.state,owner,compiler:"vite:"+compiler+":"+runtimeKeyV1(),configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,storage:products.storage,storageControl:products.control,files:["deps/_metadata.json"],environment:{...process.env,...dependencies.environment,...products.environment,...sink.environment}},async(directory,environment,control)=>{
+  return withCompilerState({capacity:null,root:layout.state,owner,compiler:"vite:"+compiler+":"+runtimeKeyV1(),configuration:JSON.stringify(DISTRIBUTION_LAYOUT),mode,control:sink.control,storage:products.storage,storageControl:products.control,files:["deps/_metadata.json"],environment:{...capacityEnvironment,...sink.environment}},async(directory,environment,control)=>{
    requireNativeStoragePathV1(products.root,directory);const selected={...environment,SEMIO_VITE_CACHE_DIRECTORY:directory,SEMIO_BUILD_MODE:mode},previous=new Map(Object.keys(selected).map(name=>[name,process.env[name]]));
    try{
     for(const[name,value]of Object.entries(selected))if(value===undefined)delete process.env[name];else process.env[name]=value;
@@ -43,7 +42,7 @@ export async function compileDistributionProductV1(workspace:string,invocation:S
     return readDistributionCompileReceiptV1(JSON.stringify({version:1,mode,owner,manifestSha256:createHash("sha256").update(manifest).digest("hex")}),mode);
    }finally{for(const[name,value]of previous)if(value===undefined)delete process.env[name];else process.env[name]=value;}
   });
- })))));
+ ))))));
 }
 
 /** 🏗️ Runs the real compiler without copy hooks, capturing main and worker input byte witnesses. */

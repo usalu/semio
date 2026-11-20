@@ -549,7 +549,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     pub fn fault(&self) -> Option<&str> { self.receiving_fault.as_ref().map(|fault|fault.message()).or_else(||self.fault.as_ref().map(|fault|fault.message.as_ref())) }
 
     /// 🚫️ Borrows the one original refusal and its actual consumed physical currencies.
-    pub fn preparation_refusal(&self) -> Option<&ValueError> { self.fault.as_ref() }
+    pub fn preparation_refusal(&self) -> Option<&ValueError> { self.receiving_preparation_refusal().and_then(|failure|failure.refusal()).or(self.fault.as_ref()) }
+
+    /// 🧮️ Borrows the receipt of the whole original action that refused preparation.
+    pub fn preparation_refusal_progress(&self)->Option<RetainedCloneProgress>{
+        self.receiving_preparation_refusal().map(|failure|failure.retained_progress()).or_else(||self.fault.as_ref().map(ValueError::retained_progress))
+    }
 
     /// 🧳️ Borrows every cause carried by the original receiving refusal.
     pub fn receiving_preparation_refusal(&self) -> Option<&semio_framework_value::OriginalReceivingPrimary> { self.receiving_fault.as_ref() }
@@ -649,7 +654,16 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if let Some(authority) = self.authority.take() {
             return match authority.retire(child) { Ok((owner, progress)) => { self.authority_retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { self.authority = Some(original); Err(error.into()) } };
         }
-        if self.receiving_fault.is_some()||!self.receiving_fault_close.is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original receiving failure requires its funded close loan").into());}
+        if self.receiving_fault.is_some() || !self.receiving_fault_close.is_empty() {
+            if self.receiving_fault_effect.phase() != semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty
+                || self.receiving_fault.as_ref().is_some_and(|fault| !semio_framework_value::retirement::RetireOwned::retirement_ready(fault))
+            {
+                return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original receiving failure requires its funded close loan").into());
+            }
+            let work = effect.remaining_work_units()?;
+            return semio_framework_value::RetirementPollExit::resume(self.close_receiving_fault(grant.maximum_copy_bytes, work, effect))
+                .map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
         if self.fault.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })); }
         if self.registry_retirement.is_some(){return semio_framework_value::RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.registry_retirement,effect.grant().maximum_copy_bytes,&mut effect.nested(grant))).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(original)=self.original_registry.take(){return match admit_artifact_retirement(original,grant,SnapshotReadRegistryAliasRetirement::new){Ok((owner,mut progress))=>{progress.copied_bytes=demand.copy_bytes;self.registry_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original_registry=Some(original);Err(error.into())}};}

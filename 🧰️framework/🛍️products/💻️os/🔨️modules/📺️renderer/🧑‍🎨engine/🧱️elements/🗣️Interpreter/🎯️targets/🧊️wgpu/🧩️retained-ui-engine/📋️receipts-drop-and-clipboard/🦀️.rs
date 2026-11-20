@@ -356,6 +356,7 @@ pub fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: semio_ui_decl
         return;
     }
     let event = match event {
+        semio_ui_wgpu_events::UiEvent::PointerLeave if kind == semio_ui_declaration::ui::SurfaceKind::InkCanvas => SceneIntentEvent::PointerLeave,
         semio_ui_wgpu_events::UiEvent::PointerDown { x, y, button, modifiers } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
         semio_ui_wgpu_events::UiEvent::PointerUp { x, y, button, modifiers } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
         semio_ui_wgpu_events::UiEvent::PointerMove { x, y, modifiers } => SceneIntentEvent::PointerMove { x: *x, y: *y, modifiers: *modifiers },

@@ -6,10 +6,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Asset, Language } from "@teaching/staffage";
 import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/🔣️.json";
 import { ArchiveProvider } from "../../🔨️modules/🧭️context/🟦️.tsx";
+import { StaffageClock } from "../../🔨️modules/⏱️clock/🟦️.ts";
 import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
 import { ENGLISH } from "../../🔨️modules/🌐️i18n/🔠️english/🟦️.ts";
 import { GERMAN } from "../../🔨️modules/🌐️i18n/🔡️german/🟦️.ts";
 import { DimensionsSection } from "../../🔨️modules/🔬️detail/📐️dimensions/🟦️.tsx";
+import { AssetPage } from "../../🔨️modules/🔬️detail/🟦️.tsx";
 import { ClipTimeline, PosesAndClips } from "../../🔨️modules/🔬️detail/🎞️clips/🟦️.tsx";
 import { SourceTag } from "../../🔨️modules/🔬️detail/🧬️model/🟦️.tsx";
 import { ProvenanceSection, referenceCounts } from "../../🔨️modules/🔬️detail/📚️provenance/🟦️.tsx";
@@ -28,6 +30,35 @@ function wrap(node: ReactElement, language: Language = "en"): ReactElement {
 }
 
 afterEach(cleanup);
+
+describe("🔬️ asset page behind the glass", () => {
+  it("keeps the closed preview and runs the editor only while the asset is opened", async () => {
+    const url = window.location.href;
+    const dispose = vi.spyOn(StaffageClock.prototype, "dispose");
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const page = (opened: boolean) => wrap(<AssetPage row={row} view={{ opened, revealed: false }} />);
+    window.history.replaceState(null, "", `#/humans/${walker.id}?t=0`);
+    try {
+      const { container, rerender } = render(page(false));
+      expect(container.querySelector("[data-viewer]")).toBeNull();
+      expect(container.querySelector("[data-preview]")).not.toBeNull();
+      rerender(page(true));
+      const viewer = container.querySelector<HTMLElement>("[data-viewer]")!;
+      const transport = within(viewer);
+      expect(transport.getByRole("slider", { name: ENGLISH["transport.scrub"] })).toBeTruthy();
+      fireEvent.click(transport.getByRole("button", { name: ENGLISH["transport.stepForward"] }));
+      await waitFor(() => expect(Number(transport.getByRole<HTMLInputElement>("slider", { name: ENGLISH["transport.scrub"] }).value)).toBeGreaterThan(0));
+      rerender(page(false));
+      expect(container.querySelector("[data-viewer]")).toBeNull();
+      expect(container.querySelector("[data-preview]")).not.toBeNull();
+      expect(dispose).toHaveBeenCalledTimes(1);
+    } finally {
+      window.history.replaceState(null, "", url);
+      dispose.mockRestore();
+      canvas.mockRestore();
+    }
+  });
+});
 
 describe("📐️ dimensions", () => {
   it("reads the size on paper at the four presets: 1.73 m is 3.46, 8.65, 17.3, 34.6 mm", () => {

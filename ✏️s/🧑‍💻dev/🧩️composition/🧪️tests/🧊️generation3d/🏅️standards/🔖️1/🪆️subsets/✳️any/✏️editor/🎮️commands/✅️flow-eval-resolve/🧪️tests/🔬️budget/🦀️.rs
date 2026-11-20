@@ -1,14 +1,14 @@
 //! ⏱️ The BUDGET law of the `evaluate` capability, replayed from
 //! `🧫️fixtures/⏱️evaluate-budget.json` against the real `FlowEvalSession`, the real fold
-//! (`preview_eval::resolve_eval`) and the real status projection.
+//! and the real status projection.
 //!
 //! The companion `🔬️unit` module pins what ONE finished answer does; this pins what an UNFINISHED
 //! one does, which is the whole reason a sixteen-second boolean no longer kills its worker
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
 
 use super::*;
-use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
-use semio_plugin::{ArtifactView, ConfigView};
+use crate::editor_domain::editor_laws::context::retire_flow_eval_session;
+use crate::preview_reply;
 use semio_framework_test_fixtures::repo_text;
 
 fn evaluate_budget_fixture_json() -> &'static str { repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⏱️evaluate-budget.json") }
@@ -26,7 +26,6 @@ struct EvaluateBudgetFixture {
     response_action: String,
     phase_labels: std::collections::BTreeMap<String, PhaseLabel>,
     job_phase_tags: std::collections::BTreeMap<String, String>,
-    rows: Vec<EvaluateBudgetRow>,
     stepped_operator: SteppedOperator,
 }
 
@@ -34,22 +33,6 @@ struct EvaluateBudgetFixture {
 struct PhaseLabel {
     en: String,
     de: String,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct EvaluateBudgetRow {
-    id: String,
-    #[serde(default)]
-    envelope: Option<serde_json::Value>,
-    #[serde(default)]
-    bare_output_json: Option<String>,
-    outcome: String,
-    seeds: bool,
-    #[serde(default)]
-    seeded_output_json: Option<String>,
-    owes_hop: bool,
-    status: ExpectedStatus,
 }
 
 #[derive(serde::Deserialize)]
@@ -86,10 +69,10 @@ fn observed_status(session: &FlowEvalSession) -> serde_json::Value {
 /// ⏱️ The hop the run dispatched before an answer can land: armed, begun, recorded unfinished, one
 /// answer outstanding — the latch state every `flowEvalResolve` folds into.
 fn park_one_evaluate_hop(session: &mut FlowEvalSession) {
-    assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "the run arms the hop");
-    session.begin_window_tick(BUDGET_WINDOW_ID);
-    session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(true, 1));
-    session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, 1);
+    assert!(session.arm_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).expect("window tick admission").0, "the run arms the hop");
+    session.begin_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(true, 1), crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
 }
 
 /// ⚖️ LAW: every row of the fixture, folded through the real command handler — what it seeds, whether
@@ -101,58 +84,58 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
     assert_eq!(fixture.capability, "evaluate", "the budgeted capability");
     assert_eq!(fixture.cancel_capability, "evaluateCancel", "the door a cancel reaches a parked evaluation through");
     assert_eq!(fixture.response_action, "flowEvalResolve", "the command this fold is bound to");
-    for row in &fixture.rows {
-        let snapshot = Generation3dSnapshot::default();
-        let history = empty_history_view();
-        let config = Generation3dConfig::default();
-        let doc = ArtifactView::new(&snapshot, &history);
-        let cfg = ConfigView { snapshot: &config, window: None };
+    let window = (BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let cases = preview_reply::evaluation_fixture();
+    for row in cases["rows"].as_array().unwrap() {
+        let name = row["id"].as_str().unwrap();
+        let expected: ExpectedStatus = serde_json::from_value(row["status"].clone()).unwrap();
         let mut session = FlowEvalSession::new();
         let cache = session.neural_cache();
         park_one_evaluate_hop(&mut session);
-        let output_json = match (&row.envelope, &row.bare_output_json) {
-            (Some(envelope), _) => serde_json::to_string(envelope).expect("envelope json"),
-            (None, Some(bare)) => bare.clone(),
-            (None, None) => panic!("{}: a row declares either an envelope or a bare output body", row.id),
-        };
-        let emit = handle(
-            &FlowEvalResolve {
-                window_id: BUDGET_WINDOW_ID.into(),
-                window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
-                node_hash: BUDGET_NODE_HASH,
-                output_json,
-                extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.into(),
-                ok: true,
-                fault_code: String::new(),
-                fault_message: String::new(),
-            },
-            &doc,
-            &cfg,
-            &mut session,
-        )
-        .expect("flowEvalResolve");
-        assert_eq!(cache.contains(BUDGET_NODE_HASH), row.seeds, "{}: seeds the node cache", row.id);
-        if let Some(expected) = &row.seeded_output_json {
-            let cached = cache.get(BUDGET_NODE_HASH).unwrap_or_else(|| panic!("{}: a seeding row must be readable", row.id));
-            let expected_value: serde_json::Value = serde_json::from_str(expected).expect("expected output json");
-            let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&cached)).expect("cached output json");
-            assert_eq!(observed, expected_value, "{}: the seeded output is exactly the envelope's own body", row.id);
+        if row["reply"]["phase"] == "cancelled" { preview_reply::cancel(&mut session, window.0); }
+        let payload = preview_reply::evaluation_payload(window, BUDGET_NODE_HASH, GEOMETRY_EXTENSION_PLUGIN_ID,
+            preview_reply::dto(row["reply"].clone()));
+        preview_reply::receive_evaluation(&mut session, payload).expect("typed evaluation reply");
+        let cached = cache.get(BUDGET_NODE_HASH);
+        let expected_body = &row["reply"]["output"];
+        assert_eq!(cached.is_some(), !expected_body.is_null(), "{name}: cache publication");
+        if let Some(cached) = cached {
+            let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&cached)).unwrap();
+            assert_eq!(observed, *expected_body, "{name}: cached Dictionary");
             semio_os_flow::neural::ColdRetire::retire_cold(cached);
         }
         drop(cache);
-        assert!(emit.effects.is_empty(), "{}: a fold dispatches nothing itself", row.id);
-        assert_eq!(session.window_tick_owed(BUDGET_WINDOW_ID), row.owes_hop, "{}: the window owes the run a hop ({} outcome)", row.id, row.outcome);
+        assert_eq!(session.window_tick_owed(window.0), row["owesHop"].as_bool().unwrap(), "{name}: continuation");
         let status = observed_status(&session);
-        assert_eq!(status["phase"].as_str(), Some(row.status.phase.as_str()), "{}: published phase", row.id);
-        let labels = fixture.phase_labels.get(&row.status.phase).unwrap_or_else(|| panic!("{}: the fixture declares a label for every phase it expects", row.id));
-        assert_eq!(status["phaseLabel"]["en"].as_str(), Some(labels.en.as_str()), "{}: english label", row.id);
-        assert_eq!(status["phaseLabel"]["de"].as_str(), Some(labels.de.as_str()), "{}: german label — the UI carries both, with no default language", row.id);
-        assert_eq!(status["progress"]["inFlight"].as_u64(), Some(row.status.in_flight), "{}: inFlight counts the budgeted evaluation too", row.id);
-        assert_eq!(status["progress"]["evalUnitsDone"].as_u64(), Some(row.status.eval_units_done), "{}: evalUnitsDone", row.id);
-        assert_eq!(status["progress"]["evalUnitsTotal"].as_u64(), Some(row.status.eval_units_total), "{}: evalUnitsTotal", row.id);
-        let ratio = status["progress"]["ratio"].as_f64().unwrap_or_else(|| panic!("{}: ratio", row.id));
-        assert!((ratio - row.status.ratio).abs() < 1e-9, "{}: ratio {ratio} != {}", row.id, row.status.ratio);
-        assert_eq!(status["cancelAction"].as_str(), Some(semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID), "{}: the surface always names the framework abort", row.id);
+        assert_eq!(status["phase"].as_str(), Some(expected.phase.as_str()), "{name}: phase");
+        let labels = &fixture.phase_labels[&expected.phase];
+        assert_eq!(status["phaseLabel"]["en"].as_str(), Some(labels.en.as_str()), "{name}: English phase");
+        assert_eq!(status["phaseLabel"]["de"].as_str(), Some(labels.de.as_str()), "{name}: German phase");
+        assert_eq!(status["progress"]["inFlight"].as_u64(), Some(expected.in_flight), "{name}: inFlight");
+        assert_eq!(status["progress"]["evalUnitsDone"].as_u64(), Some(expected.eval_units_done), "{name}: evalUnitsDone");
+        assert_eq!(status["progress"]["evalUnitsTotal"].as_u64(), Some(expected.eval_units_total), "{name}: evalUnitsTotal");
+        let ratio = status["progress"]["ratio"].as_f64().unwrap();
+        assert!((ratio - expected.ratio).abs() < 1e-9, "{name}: ratio {ratio} != {}", expected.ratio);
+        assert_eq!(status["cancelAction"].as_str(), Some(semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID));
+        retire_flow_eval_session(session);
+    }
+}
+
+#[test]
+fn invalid_original_evaluation_replies_leave_the_cache_and_window_unchanged() {
+    let window = (BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let cases = preview_reply::evaluation_fixture();
+    for reply in cases["refused"].as_array().unwrap() {
+        let mut session = FlowEvalSession::new();
+        let cache = session.neural_cache();
+        park_one_evaluate_hop(&mut session);
+        let payload = preview_reply::evaluation_payload(window, BUDGET_NODE_HASH, GEOMETRY_EXTENSION_PLUGIN_ID, preview_reply::dto(reply.clone()));
+        let failure = preview_reply::receive_evaluation(&mut session, payload).expect_err("invalid reply must be refused");
+        assert_eq!(failure.primary_value().unwrap().kind, semio_framework_value::ValueRefusalKind::InvalidValue);
+        assert!(!cache.contains(BUDGET_NODE_HASH));
+        assert_eq!(session.window_extensions_in_flight(window.0), 1);
+        assert!(!session.window_tick_owed(window.0));
+        drop(cache);
         retire_flow_eval_session(session);
     }
 }
@@ -190,11 +173,7 @@ fn every_declared_job_phase_tag_projects_to_its_declared_surface_phase() {
 fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let fixture = fixture();
-    let snapshot = Generation3dSnapshot::default();
-    let history = empty_history_view();
-    let config = Generation3dConfig::default();
-    let doc = ArtifactView::new(&snapshot, &history);
-    let cfg = ConfigView { snapshot: &config, window: None };
+    let window = (BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let mut session = FlowEvalSession::new();
     let cache = session.neural_cache();
     let mut previous_done = 0_u64;
@@ -203,31 +182,11 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
     for (index, phase) in fixture.stepped_operator.phase_order.iter().enumerate() {
         let done = index == total_steps - 1;
         let units_done = (index + 1) as u64;
-        let envelope = serde_json::json!({
-            "done": done,
-            "cancellable": !done,
-            "phase": phase,
-            "unitsDone": units_done,
-            "unitsTotal": total_steps as u64,
-            "outputJson": if done { "{\"solid\":\"brep:solid-9\"}" } else { "" },
-        });
+        let output = if done { serde_json::json!({"solid":"brep:solid-9"}) } else { serde_json::Value::Null };
         park_one_evaluate_hop(&mut session);
-        let emit = handle(
-            &FlowEvalResolve {
-                window_id: BUDGET_WINDOW_ID.into(),
-                window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
-                node_hash: BUDGET_NODE_HASH,
-                output_json: serde_json::to_string(&envelope).expect("envelope json"),
-                extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.into(),
-                ok: true,
-                fault_code: String::new(),
-                fault_message: String::new(),
-            },
-            &doc,
-            &cfg,
-            &mut session,
-        )
-        .expect("flowEvalResolve");
+        let reply = preview_reply::evaluation_response(done, phase, (units_done, total_steps as u64), output);
+        let payload = preview_reply::evaluation_payload(window, BUDGET_NODE_HASH, GEOMETRY_EXTENSION_PLUGIN_ID, reply);
+        preview_reply::receive_evaluation(&mut session, payload).expect("typed evaluation progression");
         let status = observed_status(&session);
         let observed_done = status["progress"]["evalUnitsDone"].as_u64().expect("evalUnitsDone");
         if done {
@@ -240,7 +199,6 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
             assert_ne!(status["phase"].as_str(), Some("idle"), "`{phase}` must never publish as idle");
             previous_done = observed_done;
         }
-        assert!(emit.effects.is_empty(), "`{phase}`: a fold dispatches nothing itself");
         assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "`{phase}` owes the run exactly one continuation");
     }
     if let Some(cached) = cache.get(BUDGET_NODE_HASH) {
@@ -329,24 +287,24 @@ fn replay_chain(wave_widths: &[usize], cancel_before_hop: Option<usize>, spent_t
     let mut ladder = ChainLadder::default();
     let mut cancelled = false;
     assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "the gesture that changed the document left the window owing its first hop");
-    assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "the run job dispatches that first hop");
+    assert!(session.arm_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).expect("window tick admission").0, "the run job dispatches that first hop");
     ladder.dispatched_hops += 1;
     for (index, width) in wave_widths.iter().enumerate() {
         let hop = index + 1;
-        session.begin_window_tick(BUDGET_WINDOW_ID);
-        session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, *width));
-        session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, *width);
+        session.begin_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, *width), crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, *width, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         let mut continued = false;
         for answer in 0..*width {
             let last = answer + 1 == *width;
             if last && cancel_before_hop == Some(hop + 1) {
-                session.cancel_preview_evaluation(BUDGET_WINDOW_ID);
+                preview_reply::cancel(&mut session, BUDGET_WINDOW_ID);
                 cancelled = true;
             }
-            session.settle_window_extension(BUDGET_WINDOW_ID);
+            session.settle_window_extension(BUDGET_WINDOW_ID, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
             let spent = last && spent_turn_before_hop == Some(hop + 1);
             if session.inline_continuation_admitted(BUDGET_WINDOW_ID, Some(REPLAY_TURN_STARTED_US), replay_now_us(spent)) {
-                assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "a continuation CLAIMS the hop it takes over");
+                assert!(session.arm_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).expect("window tick admission").0, "a continuation CLAIMS the hop it takes over");
                 continued = true;
                 ladder.inline_waves += 1;
                 if cancelled {
@@ -359,13 +317,13 @@ fn replay_chain(wave_widths: &[usize], cancel_before_hop: Option<usize>, spent_t
         }
         if !continued {
             assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "a declined continuation leaves the debt exactly where the scheduler reads it");
-            assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "so the run job dispatches the round trip instead");
+            assert!(session.arm_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).expect("window tick admission").0, "so the run job dispatches the round trip instead");
             ladder.dispatched_hops += 1;
         }
     }
     if !cancelled {
-        session.begin_window_tick(BUDGET_WINDOW_ID);
-        session.note_window_tick_outcome(BUDGET_WINDOW_ID, false);
+        session.begin_window_tick(BUDGET_WINDOW_ID, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_tick_outcome(BUDGET_WINDOW_ID, false, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         assert!(!session.window_tick_owed(BUDGET_WINDOW_ID), "the terminal walk owes nothing and the run settles");
     }
     retire_flow_eval_session(session);

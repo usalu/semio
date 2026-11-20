@@ -1,0 +1,9 @@
+# Compressed Indirect PDF Stream Length
+
+Controlled PDF import now resolves an ordinary stream's indirect length from the exact object number and member index in its live cross-reference entry. Compressed entries can supply lengths for generation zero. The member must be an integer that fits in an unsigned byte count. The carrier's own indirect length can use an exact-generation normal integer object. A carrier that depends on a compressed length is rejected, which also prevents dependencies from cycling through object streams. [PDF 1.7, §§7.3.8 and 7.5.7](https://udp.adobe.io/document-services/docs/assets/35e4369068f86065372c18787171a17e/PDF_ISO_32000-1.pdf)
+
+Both cross-reference lookups account for each collision slot. A separate normal-object projection decodes the carrier under the caller's grants, and a separate member cursor consumes its header and selected body. Authored-order import keeps its existing place. This independent lookup may decode the same carrier again when more than one stream references its members.
+
+The native production-source harness passed all 118 tests. The compressed-length tests use one work unit and a 32 KiB per-turn allocation and release grant. One test checks that a nonzero generation follows the existing bounded marker search. Two physical cancellation points leave their allocations in custody until granted release and finish with a zero-byte balance. A collision test meters each occupied slot and stops at the matching tombstone.
+
+The graph cursor measured 25,840 bytes. The independently admitted normal projection and member cursor measured 21,064 and 6,360 bytes. MuPDF opened the shared fixture without repair, read both indexed members, returned both content streams byte for byte across an embedded `endstream` line, and extracted the three text lines. The fixture uses a Flate carrier with its own generation-two normal length object.

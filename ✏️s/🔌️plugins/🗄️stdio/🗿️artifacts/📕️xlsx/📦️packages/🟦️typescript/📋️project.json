@@ -8,9 +8,12 @@
     "family:stdio"
   ],
   "namedInputs": {
-    "default": [
+    "xlsxSources": [
+      "{projectRoot}/../../🏅️standards/**/*",
+      "{projectRoot}/../../🟦️.ts",
+      "{projectRoot}/../../📜️artifact-definition.json",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/**/*.{ts,tsx,json,semio,wit,sql}",
-      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
     ]
   },
   "targets": {
@@ -19,7 +22,8 @@
       "cache": true,
       "inputs": [
         "production",
-        "^production"
+        "^production",
+        "xlsxSources"
       ],
       "outputs": [
         "{projectRoot}/.🧾️store/build.json"
@@ -36,7 +40,12 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "xlsxSources"
+      ]
     },
     "test": {
       "executor": "repo:script",
@@ -45,7 +54,12 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "xlsxSources"
+      ]
     }
   },
   "metadata": {

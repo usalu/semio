@@ -5,6 +5,7 @@ import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatus
 import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
 import * as React from "../../⚛️react-port/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export interface HostAppIdentity {
   readonly id: string;
   readonly role: string;
@@ -105,7 +106,7 @@ export function BootstrapStatusNotice({
       <section role="status" aria-live="polite" aria-label={text} data-semio-bootstrap-status={status.documentId}>
         <p>{text}</p>
         <progress aria-label={text} value={status.receivedBytes} max={status.totalBytes} />
-        <button type="button" onClick={() => onCancel(status.documentId)}>{copy.cancel}</button>
+        <button {...sharedBorderlessBoxProps} type="button" onClick={() => onCancel(status.documentId)}>{copy.cancel}</button>
       </section>
     );
   }
@@ -160,7 +161,7 @@ export function ExecutionTargetStatusNotice({
     <section role="status" aria-live="polite" aria-label={text} data-semio-execution-target-status={status.documentId} {...(status.progress ? { "data-semio-execution-target-stage": status.progress.stage } : {})}>
       <p>{text}</p>
       {status.progress ? <progress aria-label={text} value={status.progress.completedBytes} max={status.progress.totalBytes} /> : null}
-      <button type="button" data-semio-execution-target-cancel={status.documentId} onClick={onCancel}>{EXECUTION_TARGET_COPY[locale].cancel}</button>
+      <button {...sharedBorderlessBoxProps} type="button" data-semio-execution-target-cancel={status.documentId} onClick={onCancel}>{EXECUTION_TARGET_COPY[locale].cancel}</button>
     </section>
   ) : (
     <section role="alert" aria-live="assertive" data-semio-execution-target-status={status.documentId} {...(status.diagnostic ? { "data-semio-execution-target-diagnostic": status.diagnostic } : {})}>{text}</section>

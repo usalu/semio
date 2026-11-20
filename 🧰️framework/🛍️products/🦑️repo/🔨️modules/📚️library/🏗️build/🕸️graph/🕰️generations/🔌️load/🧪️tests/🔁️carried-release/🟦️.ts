@@ -1,35 +1,32 @@
 /** 🔁️ Contract: the host is told whether more waves of the same read follow when it releases what a wave filled, so the setup of the whole workspace and the closure entries it holds are carried to the next wave and dropped by the last one and by the end of the load; the stages the load adds around the discovery are told with the wave, a load tells what its reader and its prefetch took with the build that follows them, the first build of the process tells its start and a wave tells the seconds the read paused after the wave before it. */
 import {expect,test} from "bun:test";
 import {mkdtempSync,realpathSync,rmSync} from "node:fs";
-import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import {GENERATION_POLICY_V1,carriedStagesV1} from "../../../🟨️.mjs";
 import {loadGenerationGraphV1} from "../../🟨️.mjs";
 import {createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
+import {edit,type Info} from "./👶️process.ts";
 
-const BASE=GENERATION_POLICY_V1.ownerWave,COUNT=BASE*2+7,sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
-const edit=async(dir:string,count:number)=>{await sleep(20);for(let at=1;at<=count;at++)await writeFile(join(dir,`pkg/p${at}/src/index.ts`),`import "@syn/p${at+1}";\nexport const carried=${at};\n`);};
-type Info={phases?:Record<string,number>};
+const BASE=GENERATION_POLICY_V1.ownerWave,COUNT=BASE*2+7;
 
 test("a load tells the seconds of its reader and of its prefetch with the build that follows them, and only the first build of the process tells its start",async()=>{
- const dir=mkdtempSync(join(realpathSync(tmpdir()),"graph-boot-stages-")),first:Info[]=[],later:Info[]=[];
+ const dir=mkdtempSync(join(realpathSync(tmpdir()),"graph-boot-stages-"));
  try{
-  await seed(dir,ringFiles(8));
-  const cold=createMockHost(dir);
-  await loadGenerationGraphV1({...cold.host,published:async(_generation:number,info:Info)=>{first.push(info);}} as never);
+  const child=Bun.spawn([process.execPath,"run",fileURLToPath(new URL("./👶️process.ts",import.meta.url)),dir],{stdout:"pipe",stderr:"pipe",signal:AbortSignal.timeout(30_000)});
+  const [stdout,stderr,exit]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
+  expect(exit,stderr).toBe(0);
+  const {first,later,events}=JSON.parse(stdout) as {first:Info[];later:Info[];events:string[]};
   expect(first.length).toBe(1);
   expect(Number.isSafeInteger(first[0]!.phases!.start)).toBe(true);expect(Number.isSafeInteger(first[0]!.phases!["start.reader"])).toBe(true);
   expect(first[0]!.phases!["start.prefetch"]).toBeUndefined();
-  await edit(dir,3);
-  const mock=createMockHost(dir,{prefetch:async()=>{}});
-  await loadGenerationGraphV1({...mock.host,builderIdle:async()=>false,published:async(_generation:number,info:Info)=>{later.push(info);}} as never);
-  expect(mock.events).toContain("prefetch");
+  expect(events).toContain("prefetch");
   expect(later.length).toBe(1);
   expect(later[0]!.phases!.start).toBeUndefined();
   for(const name of ["start.reader","start.prefetch"])expect(Number.isSafeInteger(later[0]!.phases![name]),name).toBe(true);
  }finally{rmSync(dir,{recursive:true,force:true});}
-});
+},60_000);
 
 test("every release between waves says more follows, the last wave and the end of the load say nothing follows, and the load adds its cutoff and release stages",async()=>{
  const dir=mkdtempSync(join(realpathSync(tmpdir()),"graph-carried-release-")),releases:unknown[]=[],infos:Info[]=[];

@@ -1,0 +1,13 @@
+[
+  {"fault":"none","granted":true,"reclaimed":true,"reason":null},
+  {"fault":"pressure","granted":false,"reclaimed":false,"reason":"not-due"},
+  {"fault":"not-due","granted":false,"reclaimed":false,"reason":"not-due"},
+  {"fault":"retiring","granted":false,"reclaimed":false,"reason":"backing-unavailable"},
+  {"fault":"lost-while-waiting","granted":false,"reclaimed":false,"reason":"opportunity-ended"},
+  {"fault":"substitute","granted":true,"reclaimed":false,"reason":"reclaim-failed"},
+  {"fault":"mapping","granted":true,"reclaimed":false,"reason":"reclaim-failed"},
+  {"fault":"timeout","granted":false,"reclaimed":false,"reason":"lease-timeout"},
+  {"fault":"cancel","granted":false,"reclaimed":false,"reason":null},
+  {"fault":"platform","granted":false,"reclaimed":false,"reason":"platform"},
+  {"fault":"lease-failed","granted":false,"reclaimed":false,"reason":"lease-failed"}
+]

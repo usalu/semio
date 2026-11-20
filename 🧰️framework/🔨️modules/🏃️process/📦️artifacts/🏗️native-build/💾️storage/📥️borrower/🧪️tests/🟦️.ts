@@ -69,3 +69,9 @@ test("a queued nested operation outlives its stopped frame body and a full frame
  try{let done=0;const total=await borrower.withNativeImageBorrowerOperationV1(owner,control,async actual=>{void Promise.all(Array.from({length:70},()=>borrower.withNativeImageBorrowerOperationV1(owner,actual,async()=>{await pause(1);done++;})));return 70;});expect(total).toBe(70);expect(done).toBe(70);await borrower.closeNativeImageBorrowerV1(owner);
  }finally{rmSync(directory,{recursive:true,force:true});}
 }),20000);
+/** 🐌️ Pins that a frame whose body returned still admits nested work chained off its accepted descendants and drains it before settling. */
+test("a live frame admits nested work started after its body returned and drains it before settling",()=>withBuildTestInvocationV1(async original=>{
+ const base=process.env.SEMIO_TEST_ARTIFACT_DIR!;mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"borrower-late-")),control=createIssuedResourceControlV1(original,"native:late",0),resource="native-fixed-image:"+directory,lease=await leases.acquireResourceLease({directory,resource,mode:"shared",signal:control.signal,control}),owner=borrower.acceptNativeImageBorrowerV1({lease,leaseDirectory:directory,resource,control,leaseControl:control});
+ try{let late=false;const value=await borrower.withNativeImageBorrowerOperationV1(owner,control,async actual=>{void borrower.withNativeImageBorrowerOperationV1(owner,actual,async()=>{await pause(5);}).then(()=>borrower.withNativeImageBorrowerOperationV1(owner,actual,async()=>{late=true;}));return 1;});expect(value).toBe(1);expect(late).toBe(true);await borrower.closeNativeImageBorrowerV1(owner);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+}),20000);

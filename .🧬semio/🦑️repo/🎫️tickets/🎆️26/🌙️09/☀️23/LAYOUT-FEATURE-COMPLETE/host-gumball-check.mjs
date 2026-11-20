@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { pathToFileURL, fileURLToPath } from "node:url";
+import sharp from "sharp";
+
+const ticket = dirname(fileURLToPath(import.meta.url));
+const workspace = resolve(ticket, "../../../../../../..");
+const spec = JSON.parse(readFileSync(resolve(ticket, "host-gumball-cases.json"), "utf8"));
+const { visibleHorizontalHandle, changedPaintPixels } = await import(pathToFileURL(resolve(workspace, spec.support)).href);
+const wrapped = (extra = "") => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${spec.width}" height="${spec.height}"><rect width="100%" height="100%" fill="${spec.background}"/>${extra}</svg>`);
+const line = value => `<path d="${value.path}" stroke="${value.color}" stroke-width="2"/>`;
+const knob = `<circle cx="${spec.axis.knob[0]}" cy="${spec.axis.knob[1]}" r="${spec.axis.radius}" fill="${spec.axis.color}"/>`;
+const pixels = source => sharp(source).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+const before = await pixels(wrapped());
+const armed = await pixels(wrapped(line(spec.axis) + knob + line(spec.decoy)));
+assert.equal(visibleHorizontalHandle(before, before, spec.crop), null);
+assert.equal(visibleHorizontalHandle(armed, armed, spec.crop), null);
+const found = visibleHorizontalHandle(before, armed, spec.crop);
+assert.ok(found);
+assert.ok(Math.abs(found.x - spec.coordinates.x) <= spec.coordinates.tolerance);
+assert.ok(Math.abs(found.y - spec.coordinates.y) <= spec.coordinates.tolerance);
+
+const hoverStroke = path => `<path d="${path}" fill="none" stroke="${spec.hover.stroke}" stroke-width="2"/>`;
+const hovering = await pixels(wrapped(hoverStroke(spec.hover.inside)));
+const outside = await pixels(wrapped(hoverStroke(spec.hover.outside)));
+assert.equal(changedPaintPixels(before, before, spec.crop, spec.hover.delta), 0);
+assert.equal(changedPaintPixels(before, outside, spec.crop, spec.hover.delta), 0);
+assert.ok(changedPaintPixels(before, hovering, spec.crop, spec.hover.delta) >= spec.hover.minimumChanged);
+assert.equal(changedPaintPixels(before, await pixels(wrapped()), spec.crop, spec.hover.delta), 0);

@@ -40,7 +40,7 @@ fn wall_type_for(i: &mut Import<'_>, wall_ifc: u64, layers: Vec<Layer>, name: &s
     let thickness: f64 = layers.iter().map(|layer| layer.thickness).sum();
     let base = if name.is_empty() { format!("wt-{}", (thickness * 1000.0).round() as i64) } else { format!("wt-{}", Import::slug(name)) };
     let id = Import::unused(&base, |candidate| i.model.wall_types.contains_key(candidate));
-    i.model.wall_types.insert(id.clone(), WallType { name: if name.is_empty() { format!("Wall {} mm", (thickness * 1000.0).round() as i64) } else { name.to_string() }, layers });
+    i.model.wall_types.cold_insert(id.clone(), WallType { name: if name.is_empty() { format!("Wall {} mm", (thickness * 1000.0).round() as i64) } else { name.to_string() }, layers });
     id
 }
 
@@ -95,7 +95,7 @@ fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_con
     };
     let mut row = Wall { storey, wall_type, axis, location: LocationLine::Center, base_offset, top: TopConstraint::Unconnected { height }, phase: phase_of(&i.doc, instance_id), start_join: None, end_join: None, base_slab: None, name: if label_text == id { String::new() } else { label_text } };
     row.location = location_for(i, &row, left);
-    i.model.walls.insert(id.clone(), row);
+    i.model.walls.cold_insert(id.clone(), row);
     i.ids.insert(instance_id, id);
 }
 
@@ -109,7 +109,7 @@ fn window_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio
         return id.clone();
     }
     let id = Import::unused("wnd-imported", |candidate| i.model.window_types.contains_key(candidate));
-    i.model.window_types.insert(id.clone(), row);
+    i.model.window_types.cold_insert(id.clone(), row);
     id
 }
 
@@ -123,7 +123,7 @@ fn door_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_c
         return id.clone();
     }
     let id = Import::unused("dr-imported", |candidate| i.model.door_types.contains_key(candidate));
-    i.model.door_types.insert(id.clone(), row);
+    i.model.door_types.cold_insert(id.clone(), row);
     id
 }
 
@@ -175,7 +175,7 @@ fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
     let name = filler.and_then(|fill| i.doc.get(fill)).and_then(|instance| instance.primary()).map(|(_, fill_args)| text(fill_args, 2)).unwrap_or_else(|| text(args, 2));
     let reveal = set_of(&i.doc, opening_ifc, REVEAL_SET);
     let reveal_material = label(&reveal, "RevealMaterial").filter(|material| i.model.materials.contains_key(material));
-    i.model.openings.insert(
+    i.model.openings.cold_insert(
         id.clone(),
         Opening { host, kind, offset, sill_override, width: differs(width, kind_size.map(|size| size.0)), height: differs(height, kind_size.map(|size| size.1)), flip_hand, flip_facing, reveal_depth: number(&reveal, "RevealDepth"), reveal_material, name: if name == id { String::new() } else { name } },
     );

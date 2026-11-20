@@ -5,7 +5,7 @@
   "description": "Every write of the graph exchange ends in a stored entry or in exactly one refusal. A refusal comes from the answer of the cache (HTTP status and the first words of its body), from the client (no answer in time, no connection, the breaker of the machine is open) or from the limits the client checks before it sends anything. `transient` says that the same bytes may be accepted later (the caller keeps the finished work and tries again with a back-off); `deterministic` says that every machine would meet the same refusal (the caller writes a failure note so that the others stop inferring the owner); `stored` says that the cache already holds an entry for the key, so the work is not lost and not repeated. The rows are evaluated in order, the first row that matches wins.",
   "definitions": {
     "Hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "Code": {"type": "string", "enum": ["no-answer", "unreachable", "breaker-open", "denied", "unsupported", "diverged", "head-moved", "conflict", "too-large", "blob-missing", "malformed", "aborted", "capacity", "server-error", "rejected", "claim-lost", "no-upload", "limit-document", "limit-entry", "limit-documents"]},
+    "Code": {"type": "string", "enum": ["no-answer", "unreachable", "breaker-open", "denied", "unsupported", "diverged", "head-moved", "conflict", "too-large", "blob-missing", "malformed", "aborted", "capacity", "server-error", "rejected", "claim-lost", "no-upload", "leaf-missing", "limit-document", "limit-entry", "limit-documents"]},
     "Row": {
       "type": "object",
       "additionalProperties": false,
@@ -38,6 +38,7 @@
           {"code": "breaker-open", "when": {"answer": "breaker"}, "transient": true, "deterministic": false, "stored": false, "en": "an earlier request of this machine got no answer, the cache is left alone for a while", "de": "eine frühere Anfrage dieser Maschine blieb ohne Antwort, der Flottenspeicher bleibt eine Weile unberührt"},
           {"code": "claim-lost", "when": {"answer": "local", "body": "claim-lost"}, "transient": true, "deterministic": false, "stored": false, "en": "the claim lapsed before the upload", "de": "der Anspruch lief vor dem Upload ab"},
           {"code": "no-upload", "when": {"answer": "local", "body": "no-upload"}, "transient": false, "deterministic": false, "stored": false, "en": "this machine may not upload", "de": "diese Maschine darf nicht hochladen"},
+          {"code": "leaf-missing", "when": {"answer": "local", "body": "leaf-missing"}, "transient": false, "deterministic": false, "stored": false, "en": "a leaf piece the record names is not on this machine, so the record would be unusable for every reader", "de": "ein Blattstück, das der Eintrag nennt, liegt nicht auf dieser Maschine, der Eintrag wäre für jeden Leser unbrauchbar"},
           {"code": "limit-document", "when": {"answer": "local", "body": "limit-document"}, "transient": false, "deterministic": true, "stored": false, "en": "a document is above the limit of the entry", "de": "ein Dokument liegt über der Grenze des Eintrags"},
           {"code": "limit-entry", "when": {"answer": "local", "body": "limit-entry"}, "transient": false, "deterministic": true, "stored": false, "en": "the entry is above the limit", "de": "der Eintrag liegt über der Grenze"},
           {"code": "limit-documents", "when": {"answer": "local", "body": "limit-documents"}, "transient": false, "deterministic": true, "stored": false, "en": "the entry has more documents than allowed", "de": "der Eintrag hat mehr Dokumente als erlaubt"},
@@ -62,7 +63,7 @@
       "required": ["name", "answer", "expect"],
       "properties": {
         "name": {"type": "string"},
-        "answer": {"oneOf": [{"type": "integer"}, {"type": "string", "enum": ["timeout", "network", "breaker", "claim-lost", "no-upload", "limit-document", "limit-entry", "limit-documents"]}]},
+        "answer": {"oneOf": [{"type": "integer"}, {"type": "string", "enum": ["timeout", "network", "breaker", "claim-lost", "no-upload", "leaf-missing", "limit-document", "limit-entry", "limit-documents"]}]},
         "body": {"type": "string"},
         "expect": {"type": "object", "additionalProperties": false, "required": ["code", "transient", "deterministic", "stored"], "properties": {"code": {"$ref": "#/definitions/Code"}, "transient": {"type": "boolean"}, "deterministic": {"type": "boolean"}, "stored": {"type": "boolean"}}}
       }

@@ -1,9 +1,9 @@
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 #[allow(unused_imports)]
 use store::PackError;
 use semio_s_artifact_note_note_schema::NoteSnapshot;
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
-use std::collections::BTreeMap;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
@@ -15,8 +15,8 @@ async fn pack_round_trips_and_agrees_with_dsl() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_representative_document() {
-    let mut assets = BTreeMap::new();
-    assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
+    let mut assets = RetainedOrderedMap::new();
+    assets.cold_insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
     let document = NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "doc-1".into(),

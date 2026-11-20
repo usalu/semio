@@ -41,3 +41,4 @@ semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-artifact-fem-3d-mutations = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }

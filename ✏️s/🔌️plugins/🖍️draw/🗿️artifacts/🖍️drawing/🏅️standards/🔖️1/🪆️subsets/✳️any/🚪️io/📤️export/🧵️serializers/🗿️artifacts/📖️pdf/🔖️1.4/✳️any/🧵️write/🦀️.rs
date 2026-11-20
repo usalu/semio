@@ -3,7 +3,7 @@ use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, Docume
 use semio_s_artifact_draw_drawing_geometry::{ArcGeometry, arc_geometry};
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, StrokeStyle, PathSegment};
 use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;
@@ -21,9 +21,12 @@ struct Record{parent:Option<usize>,constant:Option<[f64;4]>,stops:[usize;64],sto
 impl Default for Record{fn default()->Self{Self{parent:None,constant:None,stops:[0;64],stop_count:0,spans:[Span::default();65],span_count:0,asset:None,gradient:false}}}
 semio_framework_value::artifact_retire_leaf!(Span,Record);
 #[derive(semio_framework_value::RetireOwned)]
-struct Owners{plan:DocumentScenePlan,objects:PagedList<Option<Body>,{usize::MAX}>,records:PagedList<Record,{usize::MAX}>,offsets:PagedList<usize,{usize::MAX}>,output:Body,failure:Option<String>}
+#[doc(hidden)]
+pub struct Owners{plan:DocumentScenePlan,objects:PagedList<Option<Body>,{usize::MAX}>,records:PagedList<Record,{usize::MAX}>,offsets:PagedList<usize,{usize::MAX}>,output:Body,failure:Option<String>}
 pub struct PdfWriteJob{owners:Owners,limits:PdfWriteLimits,pending:Fragment,destination:usize,phase:u8,node:usize,part:usize,search:usize,work:u64,bytes:usize,object:usize,object_page:usize,xref:usize,next_free:usize,cancelled:bool,pen:[f64;2],start:[f64;2],open:bool,arc:Option<ArcGeometry>,arc_piece:usize,arc_pieces:usize,arc_to:[f64;2],stroke_pass:bool,function_alpha:bool,resource_part:usize,source_at:usize}
-impl RetireOwned for PdfWriteJob{fn retirement(self)->Box<dyn RetirementCursor>{self.owners.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for PdfWriteJob{type RetirementCursor = <Owners as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor { self.owners.retirement_seed() }
+    fn retirement_ready(&self) -> bool { self.owners.retirement_ready() }fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
 semio_framework_2d::physical_work_retirement!(PdfWriteRetirement,PdfWriteJob);
 fn base(node:usize)->usize{7+node*11}
 fn paint(node:&DocumentSceneNode)->(Option<&FillStyle>,Option<&StrokeStyle>,&str){match &node.content{DocumentSceneContent::Path{fill,stroke,fill_rule,..}|DocumentSceneContent::Glyphs{fill,stroke,fill_rule,..}=>(fill.as_ref(),stroke.as_ref(),fill_rule.as_str()),_=>(None,None,"nonzero")}}

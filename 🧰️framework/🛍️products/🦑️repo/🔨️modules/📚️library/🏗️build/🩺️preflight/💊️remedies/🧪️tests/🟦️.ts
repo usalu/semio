@@ -26,6 +26,7 @@ test("the remedy selection equals the independent Python selection over the whol
  const grid:{facts:Record<string,unknown>;requiredExchange:boolean;requiredTools:string[];container:boolean}[]=[];
  for(const platform of platforms)for(const exchange of exchanges)for(const caseSensitive of cases)for(const container of [false,true])for(const missing of [[],["cc"],["cc","pkg-config","hdiutil"],["rust"],["developer-tools","rust"],["msvc-linker","rust"],toolPool])
   grid.push({facts:{platform,architecture:"x64",availableBytes:1,exchange,caseSensitive,tools:toolPool.filter(tool=>!missing.includes(tool))},requiredExchange:policy.platforms[platform].exchange,requiredTools:toolPool,container});
+ for(const platform of platforms)grid.push({facts:{platform,exchange:"supported",caseSensitive:"yes"},requiredExchange:policy.platforms[platform].exchange,requiredTools:toolPool,container:false});
  const directory=mkdtempSync(join(tmpdir(),"semio-remedies-")),textsFile=join(directory,"texts.json"),casesFile=join(directory,"cases.json");
  try{
   writeFileSync(textsFile,JSON.stringify(texts));writeFileSync(casesFile,JSON.stringify(grid));

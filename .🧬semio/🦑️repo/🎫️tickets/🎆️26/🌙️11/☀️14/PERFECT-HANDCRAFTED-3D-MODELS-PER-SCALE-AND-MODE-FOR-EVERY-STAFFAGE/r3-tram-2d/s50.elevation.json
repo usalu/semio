@@ -1,0 +1,1974 @@
+[
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-f1",
+  "bone": "ws-f1",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-f1",
+  "bone": "ws-f1",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.105,
+  "ry": 0.105,
+  "id": "hub-f1",
+  "bone": "ws-f1",
+  "role": "detail",
+  "z": 4.8,
+  "filled": true,
+  "tone": 0.75,
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-f2",
+  "bone": "ws-f2",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-f2",
+  "bone": "ws-f2",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.105,
+  "ry": 0.105,
+  "id": "hub-f2",
+  "bone": "ws-f2",
+  "role": "detail",
+  "z": 4.8,
+  "filled": true,
+  "tone": 0.75,
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-r1",
+  "bone": "ws-r1",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-r1",
+  "bone": "ws-r1",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.105,
+  "ry": 0.105,
+  "id": "hub-r1",
+  "bone": "ws-r1",
+  "role": "detail",
+  "z": 4.8,
+  "filled": true,
+  "tone": 0.75,
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.322,
+  "ry": 0.322,
+  "id": "wheel-r2",
+  "bone": "ws-r2",
+  "role": "body",
+  "z": 4,
+  "filled": true,
+  "tone": 0.2,
+  "region": "wheelsets",
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.2,
+  "ry": 0.2,
+  "id": "disc-r2",
+  "bone": "ws-r2",
+  "role": "detail",
+  "z": 4.4,
+  "filled": true,
+  "tone": 0.55,
+  "region": "brake-discs",
+  "material": "cast-iron"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.105,
+  "ry": 0.105,
+  "id": "hub-r2",
+  "bone": "ws-r2",
+  "role": "detail",
+  "z": 4.8,
+  "filled": true,
+  "tone": 0.75,
+  "material": "steel-wheel"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.41 -0.19 L 0.41 -0.19 L 0.45 -0.15 L 0.45 0.15 L 0.41 0.19 L -0.41 0.19 L -0.45 0.15 L -0.45 -0.15 Z M -0.76 -0.085 L -0.64 -0.085 L -0.64 0.085 L -0.76 0.085 Z M 0.64 -0.085 L 0.76 -0.085 L 0.76 0.085 L 0.64 0.085 Z M -0.64 -0.045 L -0.455 -0.045 L -0.455 0.045 L -0.64 0.045 Z M 0.455 -0.045 L 0.64 -0.045 L 0.64 0.045 L 0.455 0.045 Z",
+  "id": "motor-f",
+  "bone": "bogie-f",
+  "role": "detail",
+  "z": 3,
+  "filled": true,
+  "tone": 0.25,
+  "region": "traction-motors",
+  "material": "motor-steel"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.3,
+    -0.1
+   ],
+   [
+    0.3,
+    -0.1
+   ],
+   [
+    0.32,
+    -0.08
+   ],
+   [
+    0.32,
+    0.185
+   ],
+   [
+    0.3,
+    0.205
+   ],
+   [
+    -0.3,
+    0.205
+   ],
+   [
+    -0.32,
+    0.185
+   ],
+   [
+    -0.32,
+    -0.08
+   ]
+  ],
+  "closed": true,
+  "id": "motor-r",
+  "bone": "bogie-r",
+  "role": "detail",
+  "z": 3,
+  "filled": true,
+  "tone": 0.25,
+  "region": "traction-motors",
+  "material": "motor-steel"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.45,
+    0.28
+   ],
+   [
+    0.6205,
+    0.28
+   ],
+   [
+    0.6243,
+    0.3569
+   ],
+   [
+    0.6435,
+    0.4314
+   ],
+   [
+    0.6773,
+    0.5006
+   ],
+   [
+    0.7243,
+    0.5615
+   ],
+   [
+    0.7827,
+    0.6117
+   ],
+   [
+    0.85,
+    0.6491
+   ],
+   [
+    0.9234,
+    0.6722
+   ],
+   [
+    1.0,
+    0.68
+   ],
+   [
+    2.8,
+    0.68
+   ],
+   [
+    2.8766,
+    0.6722
+   ],
+   [
+    2.95,
+    0.6491
+   ],
+   [
+    3.0173,
+    0.6117
+   ],
+   [
+    3.0757,
+    0.5615
+   ],
+   [
+    3.1227,
+    0.5006
+   ],
+   [
+    3.1565,
+    0.4314
+   ],
+   [
+    3.1757,
+    0.3569
+   ],
+   [
+    3.1795,
+    0.28
+   ],
+   [
+    5.9205,
+    0.28
+   ],
+   [
+    5.9243,
+    0.3569
+   ],
+   [
+    5.9435,
+    0.4314
+   ],
+   [
+    5.9773,
+    0.5006
+   ],
+   [
+    6.0243,
+    0.5615
+   ],
+   [
+    6.0827,
+    0.6117
+   ],
+   [
+    6.15,
+    0.6491
+   ],
+   [
+    6.2234,
+    0.6722
+   ],
+   [
+    6.3,
+    0.68
+   ],
+   [
+    8.1,
+    0.68
+   ],
+   [
+    8.1766,
+    0.6722
+   ],
+   [
+    8.25,
+    0.6491
+   ],
+   [
+    8.3173,
+    0.6117
+   ],
+   [
+    8.3757,
+    0.5615
+   ],
+   [
+    8.4227,
+    0.5006
+   ],
+   [
+    8.4565,
+    0.4314
+   ],
+   [
+    8.4757,
+    0.3569
+   ],
+   [
+    8.4795,
+    0.28
+   ],
+   [
+    8.48,
+    0.28
+   ],
+   [
+    9.42,
+    0.28
+   ],
+   [
+    9.42,
+    0.46
+   ],
+   [
+    9.45,
+    0.46
+   ],
+   [
+    9.45,
+    0.66
+   ],
+   [
+    9.42,
+    0.66
+   ],
+   [
+    9.42,
+    1.15
+   ],
+   [
+    9.424,
+    1.149
+   ],
+   [
+    9.424,
+    1.21
+   ],
+   [
+    9.402,
+    1.21
+   ],
+   [
+    9.27,
+    1.65
+   ],
+   [
+    9.12,
+    2.15
+   ],
+   [
+    8.97,
+    2.65
+   ],
+   [
+    8.925,
+    2.8
+   ],
+   [
+    8.865,
+    2.95
+   ],
+   [
+    8.77,
+    3.1
+   ],
+   [
+    8.63,
+    3.22
+   ],
+   [
+    8.43,
+    3.31
+   ],
+   [
+    8.17,
+    3.37
+   ],
+   [
+    7.93,
+    3.395
+   ],
+   [
+    0.45,
+    3.4
+   ]
+  ],
+  "closed": true,
+  "id": "shell-end",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M 6.08 0.5 L 8.32 0.5 L 8.32 0.62 L 6.08 0.62 Z M 6.81 0.62 L 6.99 0.62 L 6.99 0.7 L 6.81 0.7 Z M 7.41 0.62 L 7.59 0.62 L 7.59 0.7 L 7.41 0.7 Z M 6.21 0.465 L 6.39 0.465 L 6.39 0.5 L 6.21 0.5 Z M 8.01 0.465 L 8.19 0.465 L 8.19 0.5 L 8.01 0.5 Z",
+  "id": "bogie-side-beam-f-l",
+  "filled": true,
+  "bone": "body-end",
+  "role": "detail",
+  "z": 2,
+  "tone": 0.62,
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M 0.78 0.5 L 3.02 0.5 L 3.02 0.62 L 0.78 0.62 Z M 1.51 0.62 L 1.69 0.62 L 1.69 0.7 L 1.51 0.7 Z M 2.11 0.62 L 2.29 0.62 L 2.29 0.7 L 2.11 0.7 Z M 0.91 0.465 L 1.09 0.465 L 1.09 0.5 L 0.91 0.5 Z M 2.71 0.465 L 2.89 0.465 L 2.89 0.5 L 2.71 0.5 Z",
+  "id": "bogie-side-beam-r-l",
+  "filled": true,
+  "bone": "body-end",
+  "role": "detail",
+  "z": 2,
+  "tone": 0.62,
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    6.0,
+    0.02
+   ],
+   [
+    0.45,
+    0.02
+   ],
+   [
+    0.45,
+    -3.1
+   ],
+   [
+    6.0,
+    -3.1
+   ]
+  ],
+  "closed": true,
+  "id": "shell-mid",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2,
+  "filled": true,
+  "tone": 0.62,
+  "regions": [
+   "body-panels",
+   "roof"
+  ],
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.45,
+    0.0
+   ],
+   [
+    0.45,
+    0.0
+   ],
+   [
+    0.45,
+    2.95
+   ],
+   [
+    -0.45,
+    2.95
+   ]
+  ],
+  "closed": true,
+  "id": "gangway",
+  "bone": "gangway",
+  "role": "body",
+  "z": 2.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "gangway",
+  "material": "rubber"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.8,
+    1.2
+   ],
+   [
+    3.3,
+    1.2
+   ],
+   [
+    3.3,
+    2.4
+   ],
+   [
+    0.8,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e1",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.0,
+    1.2
+   ],
+   [
+    6.3,
+    1.2
+   ],
+   [
+    6.3,
+    2.4
+   ],
+   [
+    5.0,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e2",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    6.45,
+    1.2
+   ],
+   [
+    7.47,
+    1.2
+   ],
+   [
+    7.47,
+    2.4
+   ],
+   [
+    6.45,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-e3",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    7.62,
+    1.2
+   ],
+   [
+    8.355,
+    1.2
+   ],
+   [
+    7.995,
+    2.4
+   ],
+   [
+    7.62,
+    2.4
+   ]
+  ],
+  "closed": true,
+  "id": "pane-cab",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.85,
+    -0.9
+   ],
+   [
+    4.25,
+    -0.9
+   ],
+   [
+    4.25,
+    -2.1
+   ],
+   [
+    5.85,
+    -2.1
+   ]
+  ],
+  "closed": true,
+  "id": "pane-m1",
+  "bone": "body-mid",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    2.55,
+    -0.9
+   ],
+   [
+    0.85,
+    -0.9
+   ],
+   [
+    0.85,
+    -2.1
+   ],
+   [
+    2.55,
+    -2.1
+   ]
+  ],
+  "closed": true,
+  "id": "pane-m2",
+  "bone": "body-mid",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.002,
+    0.0
+   ],
+   [
+    0.648,
+    0.0
+   ],
+   [
+    0.648,
+    2.15
+   ],
+   [
+    0.002,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-a1",
+  "bone": "door-a1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.11,
+    0.31
+   ],
+   [
+    0.54,
+    0.31
+   ],
+   [
+    0.54,
+    2.01
+   ],
+   [
+    0.11,
+    2.01
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-glass-a1",
+  "bone": "door-a1",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.002,
+    0.0
+   ],
+   [
+    0.648,
+    0.0
+   ],
+   [
+    0.648,
+    2.15
+   ],
+   [
+    0.002,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-a2",
+  "bone": "door-a2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.11,
+    0.31
+   ],
+   [
+    0.54,
+    0.31
+   ],
+   [
+    0.54,
+    2.01
+   ],
+   [
+    0.11,
+    2.01
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-glass-a2",
+  "bone": "door-a2",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.002,
+    0.0
+   ],
+   [
+    0.648,
+    0.0
+   ],
+   [
+    0.648,
+    2.15
+   ],
+   [
+    0.002,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-b1",
+  "bone": "door-b1",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.11,
+    0.31
+   ],
+   [
+    0.54,
+    0.31
+   ],
+   [
+    0.54,
+    2.01
+   ],
+   [
+    0.11,
+    2.01
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-glass-b1",
+  "bone": "door-b1",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.002,
+    0.0
+   ],
+   [
+    0.648,
+    0.0
+   ],
+   [
+    0.648,
+    2.15
+   ],
+   [
+    0.002,
+    2.15
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-b2",
+  "bone": "door-b2",
+  "role": "body",
+  "z": 3,
+  "filled": true,
+  "tone": 0.6,
+  "region": "doors",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.11,
+    0.31
+   ],
+   [
+    0.54,
+    0.31
+   ],
+   [
+    0.54,
+    2.01
+   ],
+   [
+    0.11,
+    2.01
+   ]
+  ],
+  "closed": true,
+  "id": "leaf-glass-b2",
+  "bone": "door-b2",
+  "role": "glazing",
+  "z": 6,
+  "filled": true,
+  "tone": 0.88,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0,
+    0
+   ],
+   [
+    1.9,
+    0
+   ]
+  ],
+  "closed": false,
+  "id": "pan-lower",
+  "bone": "pan-lower",
+  "role": "body",
+  "z": 3,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy",
+  "penMm": 0.7
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0,
+    0
+   ],
+   [
+    1.9,
+    0
+   ]
+  ],
+  "closed": false,
+  "id": "pan-upper",
+  "bone": "pan-upper",
+  "role": "body",
+  "z": 3.1,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy",
+  "penMm": 0.7
+ },
+ {
+  "kind": "ellipse",
+  "cx": 0.0,
+  "cy": 0.0,
+  "rx": 0.04,
+  "ry": 0.04,
+  "id": "pan-joint-base",
+  "bone": "pan-lower",
+  "filled": true,
+  "role": "body",
+  "z": 3,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 1.9,
+  "cy": 0.0,
+  "rx": 0.04,
+  "ry": 0.04,
+  "id": "pan-joint-knee",
+  "bone": "pan-lower",
+  "filled": true,
+  "role": "body",
+  "z": 3,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "ellipse",
+  "cx": 1.9,
+  "cy": 0.0,
+  "rx": 0.02,
+  "ry": 0.02,
+  "id": "pan-joint-tip",
+  "bone": "pan-upper",
+  "filled": true,
+  "role": "body",
+  "z": 3,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "capsule",
+  "x0": -0.17,
+  "y0": 0.011,
+  "x1": 0.17,
+  "y1": 0.011,
+  "r0": 0.025,
+  "r1": 0.025,
+  "id": "pan-head",
+  "bone": "pan-head",
+  "role": "detail",
+  "z": 3.2,
+  "filled": true,
+  "tone": 0.2,
+  "region": "pantograph",
+  "material": "carbon"
+ },
+ {
+  "kind": "path",
+  "d": "M 2.3 3.488 L 2.95 3.488 L 2.95 3.47 L 3.55 3.47 L 3.55 3.488 L 3.8 3.488 L 3.8 3.548 L 3.55 3.548 L 3.55 3.57 L 2.95 3.57 L 2.95 3.548 L 2.66 3.548 L 2.66 3.595 L 2.54 3.595 L 2.54 3.548 L 2.3 3.548 Z M 2.29 3.388 L 2.41 3.388 L 2.41 3.488 L 2.29 3.488 Z M 3.69 3.388 L 3.81 3.388 L 3.81 3.488 L 3.69 3.488 Z",
+  "id": "pan-base",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 3.3,
+  "filled": true,
+  "tone": 0.4,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    4.5,
+    3.44
+   ],
+   [
+    4.6,
+    3.44
+   ],
+   [
+    4.6,
+    3.375
+   ],
+   [
+    4.7,
+    3.375
+   ],
+   [
+    4.7,
+    3.44
+   ],
+   [
+    6.3,
+    3.44
+   ],
+   [
+    6.3,
+    3.375
+   ],
+   [
+    6.4,
+    3.375
+   ],
+   [
+    6.4,
+    3.44
+   ],
+   [
+    6.5,
+    3.44
+   ],
+   [
+    6.5,
+    3.64
+   ],
+   [
+    5.89,
+    3.64
+   ],
+   [
+    5.89,
+    3.65
+   ],
+   [
+    5.11,
+    3.65
+   ],
+   [
+    5.11,
+    3.64
+   ],
+   [
+    4.5,
+    3.64
+   ]
+  ],
+  "closed": true,
+  "id": "resistor-box",
+  "bone": "body-end",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.35,
+  "region": "brake-resistor",
+  "material": "resistor-steel"
+ },
+ {
+  "kind": "rect",
+  "x": 1.4,
+  "y": -3.36,
+  "w": 3.8,
+  "h": 0.26,
+  "r": 0.04,
+  "id": "hvac-box",
+  "bone": "body-mid",
+  "role": "body",
+  "z": 2.5,
+  "filled": true,
+  "tone": 0.7,
+  "region": "hvac-unit",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    4.8,
+    3.46
+   ],
+   [
+    4.8,
+    3.58
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-r0",
+  "bone": "body-end",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.2,
+    3.46
+   ],
+   [
+    5.2,
+    3.58
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-r1",
+  "bone": "body-end",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.6,
+    3.46
+   ],
+   [
+    5.6,
+    3.58
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-r2",
+  "bone": "body-end",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    6,
+    3.46
+   ],
+   [
+    6,
+    3.58
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-r3",
+  "bone": "body-end",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    4.8,
+    -3.16
+   ],
+   [
+    4.8,
+    -3.3
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-h0",
+  "bone": "body-mid",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    4.1,
+    -3.16
+   ],
+   [
+    4.1,
+    -3.3
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-h1",
+  "bone": "body-mid",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    3.4,
+    -3.16
+   ],
+   [
+    3.4,
+    -3.3
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-h2",
+  "bone": "body-mid",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    2.7,
+    -3.16
+   ],
+   [
+    2.7,
+    -3.3
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-h3",
+  "bone": "body-mid",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    2,
+    -3.16
+   ],
+   [
+    2,
+    -3.3
+   ]
+  ],
+  "closed": false,
+  "id": "louvre-h4",
+  "bone": "body-mid",
+  "role": "texture",
+  "z": 2.6,
+  "filled": false,
+  "tone": 0.3,
+  "penMm": 0.13
+ },
+ {
+  "kind": "ellipse",
+  "cx": 9.3468,
+  "cy": 0.92,
+  "rx": 0.0432,
+  "ry": 0.07,
+  "id": "headlamp",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 7,
+  "filled": true,
+  "tone": 0.9,
+  "material": "glass"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.55 -0.18 L -0.45 -0.18 L -0.45 0.21 L -0.55 0.21 Z M 0.45 -0.18 L 0.55 -0.18 L 0.55 0.21 L 0.45 0.21 Z M -0.46 -0.26 L 0.46 -0.26 L 0.46 -0.16 L -0.46 -0.16 Z",
+  "id": "bogie-legs-f",
+  "bone": "bogie-f",
+  "z": 3.2,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.73 0.0 L -0.7358 0.044 L -0.7528 0.085 L -0.7798 0.1202 L -0.815 0.1472 L -0.856 0.1642 L -0.9 0.17 L -0.944 0.1642 L -0.985 0.1472 L -1.0202 0.1202 L -1.0472 0.085 L -1.0642 0.044 L -1.07 0.0 L -1.0642 -0.044 L -1.0472 -0.085 L -1.0202 -0.1202 L -0.985 -0.1472 L -0.944 -0.1642 L -0.9 -0.17 L -0.856 -0.1642 L -0.815 -0.1472 L -0.7798 -0.1202 L -0.7528 -0.085 L -0.7358 -0.044 Z M 1.07 0.0 L 1.0642 0.044 L 1.0472 0.085 L 1.0202 0.1202 L 0.985 0.1472 L 0.944 0.1642 L 0.9 0.17 L 0.856 0.1642 L 0.815 0.1472 L 0.7798 0.1202 L 0.7528 0.085 L 0.7358 0.044 L 0.73 0.0 L 0.7358 -0.044 L 0.7528 -0.085 L 0.7798 -0.1202 L 0.815 -0.1472 L 0.856 -0.1642 L 0.9 -0.17 L 0.944 -0.1642 L 0.985 -0.1472 L 1.0202 -0.1202 L 1.0472 -0.085 L 1.0642 -0.044 Z",
+  "id": "gearbox-f",
+  "bone": "bogie-f",
+  "z": 4.6,
+  "tone": 0.3,
+  "region": "traction-motors",
+  "material": "motor-steel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.55 -0.18 L -0.45 -0.18 L -0.45 0.21 L -0.55 0.21 Z M 0.45 -0.18 L 0.55 -0.18 L 0.55 0.21 L 0.45 0.21 Z M -0.46 -0.26 L 0.46 -0.26 L 0.46 -0.16 L -0.46 -0.16 Z",
+  "id": "bogie-legs-r",
+  "bone": "bogie-r",
+  "z": 3.2,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "path",
+  "d": "M -0.775 0.0 L -0.7793 0.0324 L -0.7917 0.0625 L -0.8116 0.0884 L -0.8375 0.1083 L -0.8676 0.1207 L -0.9 0.125 L -0.9324 0.1207 L -0.9625 0.1083 L -0.9884 0.0884 L -1.0083 0.0625 L -1.0207 0.0324 L -1.025 0.0 L -1.0207 -0.0324 L -1.0083 -0.0625 L -0.9884 -0.0884 L -0.9625 -0.1083 L -0.9324 -0.1207 L -0.9 -0.125 L -0.8676 -0.1207 L -0.8375 -0.1083 L -0.8116 -0.0884 L -0.7917 -0.0625 L -0.7793 -0.0324 Z M 1.025 0.0 L 1.0207 0.0324 L 1.0083 0.0625 L 0.9884 0.0884 L 0.9625 0.1083 L 0.9324 0.1207 L 0.9 0.125 L 0.8676 0.1207 L 0.8375 0.1083 L 0.8116 0.0884 L 0.7917 0.0625 L 0.7793 0.0324 L 0.775 0.0 L 0.7793 -0.0324 L 0.7917 -0.0625 L 0.8116 -0.0884 L 0.8375 -0.1083 L 0.8676 -0.1207 L 0.9 -0.125 L 0.9324 -0.1207 L 0.9625 -0.1083 L 0.9884 -0.0884 L 1.0083 -0.0625 L 1.0207 -0.0324 Z",
+  "id": "axle-box-r",
+  "bone": "bogie-r",
+  "z": 4.6,
+  "tone": 0.3,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.46,
+    -0.1
+   ],
+   [
+    -0.17,
+    -0.1
+   ],
+   [
+    -0.17,
+    -0.15
+   ],
+   [
+    0.17,
+    -0.15
+   ],
+   [
+    0.17,
+    -0.1
+   ],
+   [
+    0.46,
+    -0.1
+   ],
+   [
+    0.46,
+    -0.03
+   ],
+   [
+    0.17,
+    -0.03
+   ],
+   [
+    0.17,
+    -0.01
+   ],
+   [
+    -0.17,
+    -0.01
+   ],
+   [
+    -0.17,
+    -0.03
+   ],
+   [
+    -0.46,
+    -0.03
+   ]
+  ],
+  "closed": true,
+  "id": "articulation-arm",
+  "bone": "gangway",
+  "z": 2.1,
+  "tone": 0.35,
+  "material": "steel-wheel",
+  "role": "detail",
+  "filled": true
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.4,
+    0.0
+   ],
+   [
+    -0.4,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-1",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.3,
+    0.0
+   ],
+   [
+    -0.3,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-2",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.2,
+    0.0
+   ],
+   [
+    -0.2,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-3",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    -0.1,
+    0.0
+   ],
+   [
+    -0.1,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-4",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.0,
+    0.0
+   ],
+   [
+    0.0,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-5",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.1,
+    0.0
+   ],
+   [
+    0.1,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-6",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.2,
+    0.0
+   ],
+   [
+    0.2,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-7",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.3,
+    0.0
+   ],
+   [
+    0.3,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-8",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.4,
+    0.0
+   ],
+   [
+    0.4,
+    2.95
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.13,
+  "id": "bellows-folds-9",
+  "bone": "gangway",
+  "role": "texture",
+  "z": 2.3,
+  "filled": false,
+  "tone": 0.3
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.6205,
+    0.28
+   ],
+   [
+    0.6243,
+    0.3569
+   ],
+   [
+    0.6435,
+    0.4314
+   ],
+   [
+    0.6773,
+    0.5006
+   ],
+   [
+    0.7243,
+    0.5615
+   ],
+   [
+    0.7827,
+    0.6117
+   ],
+   [
+    0.85,
+    0.6491
+   ],
+   [
+    0.9234,
+    0.6722
+   ],
+   [
+    1.0,
+    0.68
+   ],
+   [
+    2.8,
+    0.68
+   ],
+   [
+    2.8766,
+    0.6722
+   ],
+   [
+    2.95,
+    0.6491
+   ],
+   [
+    3.0173,
+    0.6117
+   ],
+   [
+    3.0757,
+    0.5615
+   ],
+   [
+    3.1227,
+    0.5006
+   ],
+   [
+    3.1565,
+    0.4314
+   ],
+   [
+    3.1757,
+    0.3569
+   ],
+   [
+    3.1795,
+    0.28
+   ]
+  ],
+  "closed": true,
+  "id": "well-r",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.15,
+  "region": "body-panels",
+  "material": "paint"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    5.9205,
+    0.28
+   ],
+   [
+    5.9243,
+    0.3569
+   ],
+   [
+    5.9435,
+    0.4314
+   ],
+   [
+    5.9773,
+    0.5006
+   ],
+   [
+    6.0243,
+    0.5615
+   ],
+   [
+    6.0827,
+    0.6117
+   ],
+   [
+    6.15,
+    0.6491
+   ],
+   [
+    6.2234,
+    0.6722
+   ],
+   [
+    6.3,
+    0.68
+   ],
+   [
+    8.1,
+    0.68
+   ],
+   [
+    8.1766,
+    0.6722
+   ],
+   [
+    8.25,
+    0.6491
+   ],
+   [
+    8.3173,
+    0.6117
+   ],
+   [
+    8.3757,
+    0.5615
+   ],
+   [
+    8.4227,
+    0.5006
+   ],
+   [
+    8.4565,
+    0.4314
+   ],
+   [
+    8.4757,
+    0.3569
+   ],
+   [
+    8.4795,
+    0.28
+   ]
+  ],
+  "closed": true,
+  "id": "well-f",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 1.5,
+  "filled": true,
+  "tone": 0.15,
+  "region": "body-panels",
+  "material": "paint"
+ },
+ {
+  "kind": "path",
+  "d": "M -0.181 -0.126 L -0.159 -0.126 L -0.159 0.017 L -0.181 0.017 Z M 0.159 -0.126 L 0.181 -0.126 L 0.181 0.017 L 0.159 0.017 Z",
+  "id": "pan-horns",
+  "bone": "pan-head",
+  "z": 3.25,
+  "role": "detail",
+  "filled": true,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.22,
+    -0.075
+   ],
+   [
+    1.84,
+    -0.06
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.35,
+  "id": "pan-lower-rod",
+  "bone": "pan-lower",
+  "role": "detail",
+  "z": 3.05,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    0.06,
+    0.06
+   ],
+   [
+    1.86,
+    0.045
+   ]
+  ],
+  "closed": false,
+  "penMm": 0.35,
+  "id": "pan-upper-rod",
+  "bone": "pan-upper",
+  "role": "detail",
+  "z": 3.05,
+  "filled": false,
+  "tone": 0.3,
+  "region": "pantograph",
+  "material": "pan-alloy"
+ },
+ {
+  "kind": "poly",
+  "points": [
+   [
+    8.936,
+    2.6999
+   ],
+   [
+    8.9647,
+    2.7085
+   ],
+   [
+    8.9073,
+    2.9001
+   ],
+   [
+    8.8785,
+    2.8915
+   ]
+  ],
+  "closed": true,
+  "id": "destination-sign",
+  "bone": "body-end",
+  "role": "glazing",
+  "z": 6.2,
+  "filled": true,
+  "tone": 0.08,
+  "region": "glazing",
+  "material": "glass"
+ },
+ {
+  "kind": "path",
+  "d": "M 9.4182 1.1676 L 9.2692 1.6476 L 9.2845 1.6524 L 9.4335 1.1724 Z M 9.3685 1.2975 L 9.1635 1.9975 L 9.1808 2.0025 L 9.3858 1.3025 Z",
+  "id": "wiper",
+  "bone": "body-end",
+  "role": "detail",
+  "z": 6.3,
+  "filled": true,
+  "tone": 0.08,
+  "region": "body-panels",
+  "material": "rubber"
+ }
+]

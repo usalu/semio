@@ -143,5 +143,68 @@
         }
       ]
     }
-  ]
+  ],
+  "labels": {
+    "description": "Which program label a stall band names: a spawned window names its own app, the instance the active session runs on names the session app, any other instance names the program id (never a guessed first app).",
+    "programId": "fem",
+    "apps": [
+      {
+        "id": "fem2d",
+        "breadcrumb": [
+          "semio",
+          "fem",
+          "fem2d"
+        ]
+      },
+      {
+        "id": "fem3d",
+        "breadcrumb": [
+          "semio",
+          "fem",
+          "fem3d"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "id": "session-instance-names-its-app",
+        "actorId": "fem#1",
+        "spawned": null,
+        "session": {
+          "instanceId": 1,
+          "appId": "fem3d"
+        },
+        "expect": "semio · fem · fem3d"
+      },
+      {
+        "id": "spawned-window-names-its-app",
+        "actorId": "fem#4",
+        "spawned": {
+          "instanceId": 4,
+          "appId": "fem2d",
+          "breadcrumb": [
+            "semio",
+            "fem",
+            "fem2d",
+            "2"
+          ]
+        },
+        "session": {
+          "instanceId": 1,
+          "appId": "fem3d"
+        },
+        "expect": "semio · fem · fem2d · 2"
+      },
+      {
+        "id": "unknown-instance-names-the-program",
+        "actorId": "fem#9",
+        "spawned": null,
+        "session": {
+          "instanceId": 1,
+          "appId": "fem3d"
+        },
+        "expect": "fem"
+      }
+    ]
+  }
 }

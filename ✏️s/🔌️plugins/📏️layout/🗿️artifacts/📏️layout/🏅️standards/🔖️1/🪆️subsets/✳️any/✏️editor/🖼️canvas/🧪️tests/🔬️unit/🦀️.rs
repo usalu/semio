@@ -90,6 +90,49 @@ async fn a_rotated_proxy_is_not_painted_as_an_upright_image() {
     assert!(json.contains("frame-image-1"), "the rotated frame is still drawn: {json}");
 }
 
+#[test]
+fn rotated_proxy_preserves_source_pixels_at_a_quarter_turn() {
+    use semio_framework_pixels::{decode_png, encode_png, RasterImage};
+    use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds};
+
+    let fixture: Value = serde_json::from_str(fixture_text!("../../../../../🖼️canvas/🧪️tests/🧫️fixtures/rotated-proxy.json")).unwrap();
+    let source = &fixture["source"];
+    let png = encode_png(&RasterImage {
+        width: serde_json::from_value(source["width"].clone()).unwrap(),
+        height: serde_json::from_value(source["height"].clone()).unwrap(),
+        pixels: serde_json::from_value(source["rgba"].clone()).unwrap(),
+    })
+    .unwrap();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.links[0].state = Some("ready".into());
+    doc.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
+    let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").unwrap();
+    let Frame::Image { bounds, .. } = frame else { panic!("image") };
+    *bounds = serde_json::from_value::<LayoutBounds>(fixture["frameBounds"].clone()).unwrap();
+
+    let layers: Value = serde_json::from_str(&canvas_layers(
+        &doc,
+        &LayoutWindowConfig::default(),
+        &LayoutWindowTransient::default(),
+        &LayoutInteractionSnapshot::default(),
+        true,
+    ))
+    .unwrap();
+    let layer = layers.as_array().unwrap().iter().find(|layer| layer["id"] == "frame-image-1.image").unwrap();
+    assert_eq!(layer["kind"], "image");
+    for coordinate in ["x", "y", "width", "height"] {
+        let expected = fixture["expectedBounds"][coordinate].as_f64().unwrap();
+        let actual = layer[coordinate].as_f64().unwrap();
+        assert!((actual - expected).abs() < 1.0e-5, "{coordinate}: {actual} != {expected}");
+    }
+    let encoded = layer["dataUrl"].as_str().unwrap().strip_prefix("data:image/png;base64,").unwrap();
+    let rendered = decode_png(&decode_base64(encoded).unwrap()).unwrap();
+    assert_eq!(
+        json!({ "width": rendered.width, "height": rendered.height, "rgba": rendered.pixels }),
+        fixture["expected"]
+    );
+}
+
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_paints_a_ready_proxy_as_an_image() {
     let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();

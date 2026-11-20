@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "imageGiB", "timeoutSeconds"],
+  "properties": {
+    "mode": { "enum": ["preflight", "run"] },
+    "imageGiB": { "type": "integer", "minimum": 41, "maximum": 48, "default": 48 },
+    "timeoutSeconds": { "type": "integer", "minimum": 30, "maximum": 14400, "default": 10800 }
+  },
+  "$defs": {
+    "exportedReceipts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["machine", "verdict", "timings"],
+      "properties": {
+        "machine": { "type": "boolean" },
+        "verdict": { "type": "boolean" },
+        "timings": { "type": "boolean" }
+      }
+    },
+    "diskWait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "freeBytes", "requiredFreeBytes"],
+      "properties": {
+        "stage": { "enum": ["before-grant", "while-queued", "after-grant"] },
+        "freeBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "requiredFreeBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "queueCases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "action", "initialFree", "changedFree", "required", "verdict"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "action": { "enum": ["measure", "cancel", "identity-error", "handoff-loss", "handoff-cancel"] },
+          "initialFree": { "type": "integer", "minimum": 0 },
+          "changedFree": { "type": "integer", "minimum": 0 },
+          "required": { "type": "integer", "minimum": 1 },
+          "verdict": { "enum": ["retry", "after-grant", "grant", "cancel", "identity-error"] }
+        }
+      }
+    }
+  },
+  "x-policy": {
+    "memoryMegabytes": 8192,
+    "cores": 4,
+    "minimumVirtualGiB": 40,
+    "minimumHostReserveGiB": 12,
+    "backingOverheadGiB": 2,
+    "freeMarginGiB": 1,
+    "maximumRuntimePathUnits": 256,
+    "capacityExtraSeconds": 900,
+    "diskAdmissionRetryMilliseconds": 30000,
+    "diskSampleMilliseconds": 2000,
+    "pathScanTimeoutMilliseconds": 120000,
+    "toolTimeoutMilliseconds": 30000,
+    "maximumReceiptBytes": 1048576
+  }
+}

@@ -671,6 +671,7 @@ dependencies = [
  "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-offset",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
@@ -721,6 +722,26 @@ dependencies = [
  "semio-framework-3d-brep-tolerance",
  "semio-framework-3d-brep-vector",
  "semio-framework-mesh-component-references",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-native-registry"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-construction",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-hash",
  "semio-framework-mesh-engine",
  "semio-framework-value",
 ]
@@ -786,6 +807,17 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-spline-construction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
 ]
 
 [[package]]

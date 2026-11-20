@@ -23,20 +23,36 @@ const ENGINE_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framew
     maximum_depth: 256,
 };
 
-/// 🧪️ Runs one bounded step of the engine close ladder under a funded original caller context.
-pub fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
-    let mut sequence = 0;
-    let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(
+/// 🪢️ Runs several close turns against one original fixture caller and releases that caller afterward.
+pub fn with_engine_close_caller<T>(
+    fuel: u64,
+    run: impl FnOnce(&mut semio_framework_job::OriginalJobFixtureCaller, semio_framework_job::RetainedCloneGrant) -> T,
+) -> T {
+    let stock = semio_framework_job::RetainedCloneGrant {
+        maximum_items: usize::MAX / 4,
+        maximum_copy_bytes: usize::MAX / 4,
+        maximum_capacity_bytes: usize::MAX / 4,
+        maximum_release_bytes: usize::MAX / 4,
+        ..ENGINE_CLOSE_GRANT
+    };
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX, ENGINE_CLOSE_GRANT),
-        semio_framework_job::root_cancel_token(),
+        stock,
         semio_framework_job::default_now_us,
-        &mut sequence,
-        &mut retained_progress,
+        u64::MAX,
+        fuel,
     );
-    step(&mut context)
+    let result = run(&mut caller, ENGINE_CLOSE_GRANT);
+    caller.retire(stock);
+    result
+}
+
+/// 🎟️ Runs one bounded step of the engine close ladder under a funded original caller context.
+pub fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
+    with_engine_close_caller(fuel, |caller, grant| {
+        caller.bare_turn(grant, |context| Ok(step(context))).expect("fixture close context")
+    })
 }
 
 /// 📦️ Runs one funded close step of a prepared engine canvas packet and reports whether it reached its exact terminal release.

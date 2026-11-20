@@ -2,6 +2,7 @@ import * as React from "../../⚛️react-port/🟦️.ts";
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
 import { isUnsavedV1, saveFailureTextV1, type SavedStateV1 } from "../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export const CLOSE_GUARD_LABELS_V1 = {
   title: { en: "Unsaved changes", de: "Nicht gespeicherte Änderungen" },
   body: { en: "“{name}” has changes that were not saved. Close anyway and lose them?", de: "„{name}“ hat Änderungen, die nicht gespeichert wurden. Trotzdem schließen und sie verlieren?" },
@@ -40,8 +41,8 @@ export function DocumentCloseDialog(props: Readonly<{ name: string; locale: stri
         {props.saving === true ? closeGuardTextV1("saving", props.locale, props.name) : closeGuardTextV1("body", props.locale, props.name)}
         {props.failure === null || props.saving === true ? null : ` ${saveFailureTextV1(props.failure, props.locale)}`}
       </p>
-      <button type="button" ref={keepRef} onClick={props.onKeep}>{closeGuardTextV1(props.saving === true ? "cancel" : "keep", props.locale)}</button>
-      {props.saving === true ? null : <button type="button" className="ml-single" onClick={props.onDiscard}>{closeGuardTextV1("discard", props.locale)}</button>}
+      <button {...sharedBorderlessBoxProps} type="button" ref={keepRef} onClick={props.onKeep}>{closeGuardTextV1(props.saving === true ? "cancel" : "keep", props.locale)}</button>
+      {props.saving === true ? null : <button {...sharedBorderlessBoxProps} type="button" className="ml-single" onClick={props.onDiscard}>{closeGuardTextV1("discard", props.locale)}</button>}
     </div>
   );
 }
@@ -55,7 +56,7 @@ export function UnsavedMarker(props: Readonly<{ saved: SavedStateV1; locale: str
       <span aria-hidden="true">●</span>
       <span className="sr-only">{closeGuardTextV1("unsaved", props.locale)}</span>
       {failure === null ? null : <span className="ml-single text-xs">{saveFailureTextV1(failure, props.locale)}</span>}
-      {failure === null || props.onRetry === undefined ? null : <button type="button" className="ml-single underline" onClick={props.onRetry}>{closeGuardTextV1("retry", props.locale)}</button>}
+      {failure === null || props.onRetry === undefined ? null : <button {...sharedBorderlessBoxProps} type="button" className="ml-single underline" onClick={props.onRetry}>{closeGuardTextV1("retry", props.locale)}</button>}
     </span>
   );
 }

@@ -10,6 +10,7 @@ pub fn cancellation_issuer_original_creation_physical_birth_and_close(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let paid=fixture["cases"].as_array().unwrap().iter().find(|row|row["expected"]=="admitted").unwrap();
  let stock=RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:134217728,maximum_capacity_bytes:268435456,maximum_release_bytes:536870912,maximum_depth:4096};let phase=RetainedCloneGrant{maximum_items:paid["items"].as_u64().unwrap()as usize,maximum_capacity_bytes:paid["capacityBytes"].as_u64().unwrap()as usize,maximum_copy_bytes:65536,maximum_release_bytes:16777216,maximum_depth:4096};
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(fixture["sourceIdentity"][0].as_u64().unwrap()),Generation(fixture["sourceIdentity"][1].as_u64().unwrap()),stock,now,1500,32768);caller.audit_heap();
+ let cleanup:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/cleanup.json")).unwrap();
  let(mut born,mut released)=(0usize,0usize);let mut cx=caller.lend_context();let identity=cx.original_recipient_identity();
  let(mut issuer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(ToolCancellationIssuer::empty);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(issuer.terminal_is_empty());assert!(issuer.handle().is_none());
  for _ in 0..32{
@@ -21,6 +22,8 @@ pub fn cancellation_issuer_original_creation_physical_birth_and_close(){
   }
   let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|{let original=same.original_source_parent()?;issuer.admit_step(original,same)}));assert!(!result.unwrap());let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));assert_eq!(cx.original_recipient_identity(),identity);
  }
+ assert_eq!(issuer.has_cleanup_work(),cleanup[0]["work"].as_bool().unwrap());
+ assert_eq!(issuer.live_cleanup_awaits_custody(),cleanup[0]["awaitsCustody"].as_bool().unwrap());
  assert!(issuer.ready());let before=cx.retained_progress();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let borrowed=issuer.handle().unwrap();assert!(Arc::ptr_eq(&borrowed.state,&issuer.issued.as_ref().unwrap().state))});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(issuer.admission.source.as_ref().unwrap().cancellation().unwrap()as*const _,cx.original_source_parent().unwrap().cancellation().unwrap()as*const _);
 
  for keyed in [false,true]{
@@ -35,11 +38,23 @@ pub fn cancellation_issuer_original_creation_physical_birth_and_close(){
    }
    if lease.is_some(){break}assert!(turn<31,"original keyed={keyed} cancellation lease birth stalled");
   }
+  assert_eq!(issuer.has_cleanup_work(),cleanup[1]["work"].as_bool().unwrap());
+  let before=cx.retained_progress();
+  let fuel=cx.fuel_remaining();
+  let slot=if keyed{TOOL_CANCELLATION_SLOTS}else{ToolCancellationHandle::slot(key.document)};
+  for _ in 0..257 {
+   assert_eq!(issuer.live_cleanup_awaits_custody(),cleanup[1]["awaitsCustody"].as_bool().unwrap());
+   assert!(!issuer.cleanup_slot(slot,&mut cx,true).unwrap());
+  }
+  assert_eq!(cx.retained_progress(),before);
+  assert_eq!(cx.fuel_remaining(),fuel);
   assert!(lease.is_some());let mut close=None;
   for turn in 0..128{
    let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|->Result<_,OriginalTurnFailure>{let grant=same.retained_grant();let(progress,posted)=if let Some(owner)=close.as_mut(){let owner:&mut Box<crate::ToolCancellationLeaseRetirement>=owner;if owner.terminal_is_empty(){(crate::original_lease_cursor_release(&mut close,grant)?,false)}else{let handle=issuer.handle().unwrap();let demand=owner.retirement_demands(handle,grant.maximum_copy_bytes)?;(semio_framework_job::close_original_effect_step(same,demand,|effect|owner.close_step(handle,effect))?.progress(),true)}}else{let(owner,progress)=crate::original_lease_cursor_admit(&mut lease,grant)?;close=owner;(progress,false)};if !posted{same.consume_retained(progress)?;if progress.copied_items>0{same.consume_fuel(1)}}Ok(progress)}));let progress=result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(cx.retained_progress(),before.checked_add(progress).unwrap());born+=heap.requested_bytes;released+=heap.released_bytes;if lease.is_none()&&close.is_none(){break}assert!(turn<127,"original keyed={keyed} lease close stalled");
   }
   assert_eq!(issuer.active_operation_count(),0);
+  assert_eq!(issuer.has_cleanup_work(),cleanup[2]["work"].as_bool().unwrap());
+  assert_eq!(issuer.live_cleanup_awaits_custody(),cleanup[2]["awaitsCustody"].as_bool().unwrap());
  }
  for turn in 0..128{
   let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|issuer.renew_scope_generation(same)));let ready=result.unwrap();let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));if ready{break}assert!(turn<127,"original paid cancellation renewal stalled");

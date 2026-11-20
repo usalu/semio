@@ -51,7 +51,7 @@ pub trait ArtifactStoreSnapshot {
 
 #[path="💾️binary/📸️export/🦀️.rs"]
 mod original_snapshot_pack_export;
-pub use original_snapshot_pack_export::{OriginalSnapshotPackView,OriginalSnapshotPackExport};
+pub use original_snapshot_pack_export::{OriginalSnapshotPackView,OriginalSnapshotPackExport,OriginalSnapshotPackOutput};
 
 /// 🧊️ Typed reference operations remain separate from original retained receiving and publication.
 pub struct ArtifactReferenceSnapshotCodec<P> {

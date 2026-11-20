@@ -129,6 +129,31 @@ test("the single-flight collector removes superseded build units of the image be
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
+test("units of the native debug lane (u/l/d/b/debug/build/<crate>/<hash>) are retired oldest first once together they exceed their budget, without any free-space pressure and without a lock backend",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-lane-")),store=join(root,"m"),free={leases:async()=>({release:()=>undefined}),lock:()=>"unsupported" as const};
+ try{
+  const lane="u/l/d/b/debug",paths=["x","y","z"].flatMap((crate,index)=>[8,7,6,5].map(age=>unit(store,lane,crate,"h"+age,65536,age+index/10)));
+  expect(unitProfilesV1(store).map(row=>relative(store,row.profileDirectory).split(sep).join("/"))).toEqual([lane]);
+  const measured=await measureUnitsV1(unitProfilesV1(store),{nowMs:Date.now(),busy:()=>false,lock:()=>"unsupported"}),total=measured.reduce((sum,row)=>sum+row.bytes,0),each=total/paths.length;
+  expect(measured).toHaveLength(paths.length);expect(measured.every(row=>!row.held)).toBe(true);
+  const idle=await collectUnitsV1(store,{dryRun:true,needBytes:()=>0,budgetBytes:total,...free});expect(idle.removed).toHaveLength(0);
+  const plan=await collectUnitsV1(store,{dryRun:true,needBytes:()=>0,budgetBytes:Math.floor(total-each*2.5),...free});expect(plan.removed.map(row=>row.path)).toEqual([join(store,lane,"build/z/h8"),join(store,lane,"build/y/h8"),join(store,lane,"build/x/h8")].sort((left,right)=>measured.find(row=>row.path===left)!.lastUsedMs-measured.find(row=>row.path===right)!.lastUsedMs));
+  expect(plan.removed.every(row=>row.reason==="pressure")).toBe(true);
+  const applied=await collectUnitsV1(store,{dryRun:false,needBytes:()=>0,budgetBytes:Math.floor(total-each*2.5),satisfied:()=>true,...free});
+  expect(applied.removed.map(row=>row.path).sort()).toEqual(plan.removed.map(row=>row.path).sort());for(const row of applied.removed)expect(existsSync(row.path)).toBe(false);
+  const rest=await collectUnitsV1(store,{dryRun:false,needBytes:()=>0,budgetBytes:0,...free});expect(rest.removed.length).toBe(paths.length-applied.removed.length);expect(readdirSync(join(store,lane,"build"))).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the explicit reclaim retires lane units beyond the unit budget of the given capacity without any free-space need, and keeps them without a capacity",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-reclaim-")),store=join(root,"m");
+ try{
+  mkdirSync(join(store,"u"),{recursive:true});const lane="u/l/d/b/debug",old=[unit(store,lane,"x","h8",65536,8),unit(store,lane,"x","h7",65536,7)],young=[unit(store,lane,"x","h6",65536,6),unit(store,lane,"x","h5",65536,5)];
+  await reclaimUnitStorageV1(store,0,{});for(const path of[...old,...young])expect(existsSync(path)).toBe(true);
+  await reclaimUnitStorageV1(store,0,{capacityBytes:1});for(const path of old)expect(existsSync(path)).toBe(false);for(const path of young)expect(existsSync(path)).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
 test("every message exists in both languages with the same placeholders",()=>{
  const messages=componentSchema.definitions.Messages.const as unknown as Record<string,{en:string;de:string}>,holes=(text:string)=>[...text.matchAll(/\{(\w+)\}/gu)].map(row=>row[1]).sort();
  for(const[key,row]of Object.entries(messages)){expect(holes(row.de),key).toEqual(holes(row.en));expect(unitTextV1(key as never,"en")).not.toBe(unitTextV1(key as never,"de"));}
@@ -141,5 +166,21 @@ test("every measured unit is grouped under its profile on any path separator, an
  try{
   const old=unit(store,"b/p/prototype","a","1",65536,40),newest=unit(store,"b/p/prototype","a","2",65536,1),result=await collectUnitsV1(store,{dryRun:false,needBytes:()=>10**9,leases:async()=>({release:()=>undefined}),lock:()=>({release:()=>undefined})});
   expect(result.removed.map(row=>row.path)).toContain(old);expect(existsSync(old)).toBe(false);expect(newest.length).toBeGreaterThan(0);expect(Object.keys(result.profiles).every(key=>!key.includes("\\"))).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a lane with a live holder loses no unit however old, idle, over budget or unlocked, and an idle lane beside it still does (the vanished proc-macro2 build script unit)",async()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"units-live-")),store=join(root,"m"),free={leases:async()=>({release:()=>undefined}),lock:()=>"unsupported" as const};
+ try{
+  const mine="u/l/p488470/prototype",other="u/l/p111111/prototype",stale=["a","b","c"].flatMap(hash=>["proc-macro2","serde"].map(crate=>unit(store,mine,crate,hash,65536,40))),spare=unit(store,other,"proc-macro2","a",65536,40);
+  const marker=join(store,"u/l/p488470/v",process.pid+"-abc123");mkdirSync(join(store,"u/l/p488470/v"),{recursive:true});writeFileSync(marker,JSON.stringify({pid:process.pid}));
+  const options={needBytes:()=>1e12,budgetBytes:0,...free},dry=await collectUnitsV1(store,{dryRun:true,...options});
+  expect(dry.removed.map(row=>row.path)).toEqual([spare]);
+  const applied=await collectUnitsV1(store,{dryRun:false,...options});
+  expect(applied.removed.map(row=>row.path)).toEqual([spare]);expect(existsSync(spare)).toBe(false);for(const path of stale)expect(existsSync(path)).toBe(true);
+  expect(applied.held).toBe(stale.length);
+  rmSync(marker);
+  const released=await collectUnitsV1(store,{dryRun:false,...options});expect(released.removed).toHaveLength(stale.length);for(const path of stale)expect(existsSync(path)).toBe(false);
+  const flipping=unit(store,mine,"quote","x",65536,40),late=await collectUnitsV1(store,{dryRun:false,...options,live:()=>true});expect(late.removed).toHaveLength(0);expect(existsSync(flipping)).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

@@ -197,6 +197,7 @@
       "patch": {
         "platform": "win32",
         "caseSensitive": "no",
+        "caseProbeFailure": "Per-directory case sensitivity failed (NTSTATUS 0xc00000bb)",
         "paths": [
           {
             "label": "workspace",
@@ -206,7 +207,7 @@
         ]
       },
       "refusals": [
-        "Microsoft-Windows-Subsystem-Linux"
+        "NTSTATUS 0xc00000bb"
       ],
       "warnings": []
     },

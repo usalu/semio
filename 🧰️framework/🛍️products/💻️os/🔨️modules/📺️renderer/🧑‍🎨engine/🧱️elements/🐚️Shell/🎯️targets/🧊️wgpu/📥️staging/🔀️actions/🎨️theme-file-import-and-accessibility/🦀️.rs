@@ -31,7 +31,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// user-activation rule `drain_gesture_bound_work` already honours for `pending_file_opens`.
     #[cfg(target_arch = "wasm32")]
     pub async fn run_theme_import_request(&mut self) {
-        let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
+        let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false, None).await;
         let Some(file) = opened.into_iter().next() else { return };
         let action = ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "value": file.contents }) };
         if let Err(error) = self.dispatch_action(action).await {

@@ -74,11 +74,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// `interactive-job.typed-operation-capacity`.
     pub(super) fn retire_typed_operation_run(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let started_us=cx.now_us();
-        for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
+        for pump in 0..INTERACTIVE_TURN_WORKER_PUMPS {
             if !self.tools.tool_operations.get(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Retiring) {
                 return Ok(());
             }
             if self.tools.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
+                // Earlier units settled directly on this recipient. Start the granted
+                // retirement receipt in its own publication window.
+                if pump != 0 { return Ok(()); }
+
                 let grant=semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
                 let demand=self.tools.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?;let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{let step=self.tools.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(same,actual)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;let step=RetainedCloneStep::Progress(step.progress().unwrap_or_default());
                 if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed operation retirement exceeded its issuer grant").with_retained_progress(step.progress()).into());}

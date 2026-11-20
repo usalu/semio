@@ -36,6 +36,7 @@ import { settleFailedInstanceOpen } from "@semio-tech/framework/actor/shard-clie
 import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 import { OwnedUiInstance } from "@semio-tech/ui-contract/retained/instance";
 import { hopTrace } from "@semio-tech/framework-trace";
+import { continueOpeningTurns } from "@semio-tech/framework-actor/wire-turn/more-work-drive";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {
@@ -48,7 +49,7 @@ import {
 } from "@semio-tech/framework/backbone/binding";
 import { notePluginLoadProgress, notePluginLoadProgressForInFlightV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1 } from "../🫀️load-progress/🟦️.ts";
 import { type PluginDocumentBindingV1, type PluginExtensionCompletion, type PluginExtensionInvokeContext, type PluginWasmHandle } from "../🧷️handle-contract/🟦️.ts";
-import { documentPortHotBytes, retainedSurfaceId, shellFrameBytes, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
+import { coerceTurnResult, documentPortHotBytes, retainedSurfaceId, shellFrameBytes, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { withTypedOperationCall } from "../📬️typed-result/🟦️.ts";
 import { getActivationRegistry, rememberInstanceForRecovery } from "../🛰️runtime-singletons/🟦️.ts";
 import { serializeCommandIngressForActor, submitPluginLifecycleTurn } from "../🧵️turn-dispatch/🟦️.ts";
@@ -124,6 +125,10 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
           { kind: "open", input: { appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } },
           "Interactive",
         );
+        const captureTurn = await continueOpeningTurns(opened.raw, () => {
+          requireOpening();
+          return lease.progress().kind === "opening" && !lease.pendingReceipt;
+        }, async () => (await submitPluginLifecycleTurn(lease, { kind: "poll" }, "Interactive")).raw);
         const captured = lease.pendingReceipt;
         const lifetime = lease.lifetime;
         if (!captured || captured.kind !== "captured" || !lifetime) throw new Error("plugin-ui.native-lifetime-required");
@@ -135,7 +140,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
         rememberInstanceForRecovery({ pluginId, instanceId, actorId, release: () => releaseInstanceMaps(instanceId, actorId) });
         requireOpening();
         await withTypedOperationCall(actorId, `open#${instanceId}`, async (call) => {
-          await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
+          await settlePluginTurn(actorId, coerceTurnResult(captureTurn), "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
           requireOpening();
           const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
           await settlePluginTurn(actorId, acknowledged.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, undefined, call);
@@ -429,7 +434,7 @@ function createDocumentPortBinder(scope: PluginHandleScope, instances: ReturnTyp
       limits: { messageBytes: BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, pendingBytes: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes, pendingMessages: DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages },
       send,
       exchange: async command => {
-        const result = await settle([{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(encodeDocumentBackboneControlV1(command)) } }]);
+        const result = await settle([{ kind: "message", payload: { source: { tag: "shell", val: instanceId }, payload: Array.from(encodeDocumentBackboneControlV1(command)) } }]);
         const { receipts, unsolicited } = splitDocumentBackboneControlTurnV1(result.effects.flatMap(effect => {
           const bytes = shellFrameBytes(effect, instanceId);
           if (bytes) return [bytes];

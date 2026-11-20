@@ -6,8 +6,8 @@
 //! (`create`/`delete`/`rename`/`change-*-enabled`/`change-*-origin`/`replace-*-measure`/
 //! `reorder-steps`), an id-keyed, unordered `machines` set
 //! (`create`/`delete`/`rename`/`change-*-icon`/`replace-*-capabilities`), the document's single
-//! `stock` facet split into its spatial (`move-stock`), identity (`change-stock-label`), and large
-//! structured (`replace-stock-solid`) fields. The replay cursor is view state (`Process3dConfig`), not a document
+//! `stock` facet split into spatial (`move-stock`), identity (`change-stock-label`), authored dimensions
+//! (`resize-stock`) and child rebinding (`replace-stock-solid`). The replay cursor is view state (`Process3dConfig`), not a document
 //! field, so it has no mutation here.
 //! Every variant wraps exactly one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
 //! `protocol::MutationKind<Process3dSnapshot, Process3dMutation>`; `#[derive(dsl::Mutations)]`
@@ -109,7 +109,7 @@ use semio_s_artifact_process_process3d_mut_steps::rename_step;
 use semio_s_artifact_process_process3d_mut_steps::reorder_steps;
 use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities;
 use semio_s_artifact_process_process3d_mut_steps::replace_step_measure;
-use semio_s_artifact_process_process3d_mut_stock::replace_stock_solid;
+use semio_s_artifact_process_process3d_mut_stock::{replace_stock_solid, resize_stock};
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
@@ -135,6 +135,7 @@ pub enum Process3dMutation {
     MoveStock(move_stock::MoveStock),
     ChangeStockLabel(change_stock_label::ChangeStockLabel),
     ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid),
+    ResizeStock(resize_stock::ResizeStock),
 }
 dsl::original_pack_value_operation_receiving!(Process3dMutation);
 //#endregion 🔖️Mutations
@@ -166,6 +167,7 @@ pub const KINDS: &[&str] = &[
     "move-stock",
     "change-stock-label",
     "replace-stock-solid",
+    "resize-stock",
 ];
 //#endregion 🔖️Kinds
 

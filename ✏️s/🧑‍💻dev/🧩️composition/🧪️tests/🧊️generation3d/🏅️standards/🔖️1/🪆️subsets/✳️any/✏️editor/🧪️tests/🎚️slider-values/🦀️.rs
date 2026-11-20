@@ -117,9 +117,9 @@ fn tessellation_refusals(eval_json: &str, host: &semio_os_flow::FlowHost, tolera
             if item.handle.is_empty() {
                 continue;
             }
-            match crate::flow_operators::geometry_session().tessellate_geometry(&item.handle, tolerance) {
+            match crate::brep_extension::with_geometry_context(|owner| crate::preview_reply::standalone_mesh(owner, &item.handle, tolerance)) {
                 Err(error) => {
-                    refusals.insert(widget_id.clone(), error.to_string());
+                    refusals.insert(widget_id.clone(), format!("{error:?}"));
                 }
                 Ok(mesh) if !semio_s_artifact_procedural_3d_preview_eval::mesh_has_preview_geometry(&mesh) => {
                     refusals.insert(widget_id.clone(), format!("the kernel tessellated {} into no geometry at all", item.handle));

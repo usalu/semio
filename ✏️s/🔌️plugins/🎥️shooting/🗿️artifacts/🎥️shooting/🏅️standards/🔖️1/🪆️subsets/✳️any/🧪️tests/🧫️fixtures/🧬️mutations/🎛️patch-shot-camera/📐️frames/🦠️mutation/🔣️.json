@@ -1,0 +1,33 @@
+{
+  "mutation": "patchShotCamera",
+  "shotId": "shot-close",
+  "field": "zoom",
+  "camera": {
+    "position": [
+      2.0,
+      -2.0,
+      1.5
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "zoom": 2.5,
+    "fov": 35.0
+  },
+  "fallback": {
+    "position": [
+      2.0,
+      -2.0,
+      1.5
+    ],
+    "target": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "zoom": 2.0,
+    "fov": 35.0
+  }
+}

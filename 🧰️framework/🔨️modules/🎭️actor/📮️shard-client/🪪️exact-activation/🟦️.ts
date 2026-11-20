@@ -50,8 +50,30 @@ export class ShardExactActivations {
         assertActive();
         if (activation.returned !== null) throw new Error("actor-return.already-owned");
         const owner = activation.instance;
-        const requestId = this.hub.transport.nextRequestId();
-        const result = await this.hub.transport.send(slot, { kind: "turn", requestId, actorId, activationGeneration: activation.generation, events, commandPage, budget }, requestId);
+        // 🚦️ A reactor turn admits exactly ONE event, so a host batch (typed-operation acknowledgements, coalesced UI events) crosses as one crossing per event, in order, and the answers are merged into the one result this API returns.
+        // ✂️ The cut is dynamic: a patch page and its receipt cannot be merged with another answer's, so the first answer that carries ui patches or a receipt ends this call, and the events not yet crossed go back to the FRONT of this actor's queue (`deferredEvents`) for the next crossing, in order. The call then answers `more-work` so every drain loop comes back for them. A command page rides the last crossing, so a batch with one is never cut.
+        const deferred = deferredEvents.get(activation) ?? [];
+        deferredEvents.delete(activation);
+        const batch: readonly ShardEventEnvelope[] = deferred.length > 0 ? [...deferred, ...events] : events;
+        const slices: readonly (readonly ShardEventEnvelope[])[] = batch.length > 1 ? batch.map((event) => [event]) : [batch];
+        const answers: unknown[] = [];
+        let postponed = false;
+        for (const [index, slice] of slices.entries()) {
+          const requestId = this.hub.transport.nextRequestId();
+          const answer = await this.hub.transport.send(slot, { kind: "turn", requestId, actorId, activationGeneration: activation.generation, events: slice, commandPage: index === slices.length - 1 ? commandPage : undefined, budget }, requestId);
+          answers.push(answer);
+          if (index < slices.length - 1) {
+            assertActive();
+            if (commandPage === undefined && carriesUiPatches(answer)) {
+              deferredEvents.set(activation, batch.slice(index + 1));
+              postponed = true;
+              break;
+            }
+          }
+        }
+        const merged = answers.length === 1 ? answers[0] : mergeSequentialTurnAnswers(answers);
+        const left = postponed ? (deferredEvents.get(activation)?.length ?? 0) : 0;
+        const result = postponed ? withMoreWork(merged, left) : deferred.length > 0 ? { ...(merged as Record<string, unknown>), deferredEvents: 0 } : merged;
         if (owner) this.hub.uiAcknowledgements.recordInstanceTurn(owner, result);
         try { assertActive(); } catch (error) { if (owner) owner.interruptedTurn = result; throw error; }
         return result;
@@ -92,4 +114,40 @@ export class ShardExactActivations {
       this.state.actorActivations.delete(actorId);
     }
   }
+}
+
+/** 🧾️ Events a batch had not crossed yet when an earlier answer carried ui patches; the next `turn` of the same activation crosses them first. */
+const deferredEvents = new WeakMap<object, readonly ShardEventEnvelope[]>();
+
+/** 🩹️ Whether one crossing's answer carries a patch page or a patch receipt (which cannot share a result with another answer's). */
+function carriesUiPatches(answer: unknown): boolean {
+  const turn = answer as Record<string, any>;
+  return (Array.isArray(turn.uiPatches) && turn.uiPatches.length > 0) || (turn.uiPatchReceipt !== undefined && turn.uiPatchReceipt !== null);
+}
+
+/** 🚥️ The answer of a cut batch: the events left over (`deferredEvents`, kept by `coerceTurnResult`) are work the guest has not seen yet, so the status says `more-work` in the shape the answers already use. A later answer that crossed them says `deferredEvents: 0`. */
+function withMoreWork(answer: unknown, left: number): unknown {
+  const turn = answer as Record<string, any>;
+  return { ...turn, deferredEvents: left, status: typeof turn.status === "string" ? "more-work" : { ...(turn.status ?? {}), tag: "more-work" } };
+}
+
+/** 🧩️ Folds the answers of one-event crossings into the single result of the batch: effects and presence concatenate, the last status and wake win, and at most ONE answer may carry ui patches/receipts (a patch page and its receipt are one unit that cannot be merged). */
+function mergeSequentialTurnAnswers(answers: readonly unknown[]): unknown {
+  const turns = answers as readonly Record<string, any>[];
+  const last = turns[turns.length - 1]!;
+  const carriers = turns.filter((turn) => (Array.isArray(turn.uiPatches) && turn.uiPatches.length > 0) || (turn.uiPatchReceipt !== undefined && turn.uiPatchReceipt !== null));
+  if (carriers.length > 1) throw new Error("actor-poll.event-batch-carried: more than one event of a batch answered with ui patches; send those events as their own crossings");
+  const carrier = carriers[0];
+  const lifecycle = turns.find((turn) => turn.lifecycleReceipt !== undefined && turn.lifecycleReceipt !== null);
+  const ingress = [...turns].reverse().find((turn) => turn.commandIngress && turn.commandIngress.tag !== "idle");
+  return {
+    ...last,
+    uiPatches: carrier ? carrier.uiPatches : last.uiPatches,
+    uiPatchReceipt: carrier ? carrier.uiPatchReceipt : last.uiPatchReceipt,
+    effects: turns.flatMap((turn) => (Array.isArray(turn.effects) ? turn.effects : [])),
+    presence: turns.flatMap((turn) => (Array.isArray(turn.presence) ? turn.presence : [])),
+    nextWake: [...turns].reverse().find((turn) => turn.nextWake !== null && turn.nextWake !== undefined)?.nextWake ?? last.nextWake,
+    lifecycleReceipt: lifecycle ? lifecycle.lifecycleReceipt : last.lifecycleReceipt,
+    commandIngress: ingress ? ingress.commandIngress : last.commandIngress,
+  };
 }

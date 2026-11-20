@@ -36,7 +36,7 @@ use semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::SetLayer
 #[allow(unused_imports)] #[cfg(test)] use semio_s_artifact_draw_drawing_model::GradientStop;
 #[allow(unused_imports)] use protocol::{Mutation, OpBinary};
 #[allow(unused_imports)] use store::ErasedSnapshotRetirement as _;
-#[allow(unused_imports)] use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep};
+#[allow(unused_imports)] use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host_arena::native_retirement::DrawingRetirementOwner;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host_arena::initialization_catalog_close::{close_initialization_catalog, initialization_catalog_close_demands};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_host::owned::mutation_candidate::*;

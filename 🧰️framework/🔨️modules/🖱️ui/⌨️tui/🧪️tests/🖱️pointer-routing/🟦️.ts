@@ -107,7 +107,7 @@ describe("🖱️ pointer routing table", () => {
     }
     for (const window of windows) {
       const active = chips.find((c) => c.window === window.window && c.index === window.active)!;
-      expect(hairline[active.x + 1], "the seam opens under the active tab").toBe(" ");
+      expect(hairline[active.x + 1], "the seam stays closed under the active tab").toBe("─");
     }
   });
 

@@ -68,11 +68,9 @@ use semio_framework_2d_compute::EngineHandles;
 mod command_enum_and_retained_routes;
 pub use command_enum_and_retained_routes::{
     wfc2d_command_id, Wfc2dEditorCommand, Wfc2dRetainedCommandJobFactory,
-    WFC_2D_NODE_GRAPH_EDIT, WFC_2D_RETAINED_TOOL_IDS, WFC_2D_SET_ACTIVE_EXAMPLE,
+    WFC_2D_NODE_GRAPH_EDIT, WFC_2D_RETAINED_OUTPUT_BYTES, WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_TOOL_IDS, WFC_2D_SET_ACTIVE_EXAMPLE,
 };
-use command_enum_and_retained_routes::{
-    wfc2d_retained_extent, Wfc2dCommandWork, WFC_2D_RETAINED_RAW_BYTES, WFC_2D_RETAINED_WORK_ITEMS,
-};
+use command_enum_and_retained_routes::{wfc2d_retained_extent, Wfc2dCommandWork, WFC_2D_RETAINED_WORK_ITEMS};
 
 #[path = "🕸️graph-view-args-and-gestures/🦀️.rs"]
 mod graph_view_args_and_gestures;

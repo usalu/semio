@@ -1,11 +1,26 @@
 {
   "title": "Dev Process React End To End",
   "emoji": "🪚️",
-  "status": "closed",
+  "status": "open",
   "description": "Get the process plugin working end to end: `@semio-tech/process-plugin:component-dev` wasm build, extension builds (metal, robotic, concrete, wood), unit tests, `activate-process3d-react-dev` → `serve-process3d-react-dev` on port 6022 (launch entry 🛠️dev🪚️process🏙️3d⚛️react), and browser evidence that the process3d editor boots, renders and mutates without console faults. Bookkeeping is manual on disk because the repo MCP failed to connect (connection closed) at session start.",
   "summary": "Process plugin works end to end on the React dev lane: fixed the framework PluginApp trait path that broke 23 plugin wasm builds, page-exact UiFixedList reservation (the 8 MiB surface budget priced one binding at ~240 KiB), process3d child-handle ids, centre-posed kernel primitives, and seven brep boolean gaps (box-through-box cycles, flush faces, blind bores, line clip window); re-minted 45 mutation fixtures and repaired the unit harness (246→294 green). Browser evidence: editor boots with 4 extension catalogs, workshop/artifact panels publish, kernel-replayed beam renders, mutations round-trip.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2791"
+  },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪27c589f9eed84523a5d1b35a7a6588cc4"
+    "⚪27c589f9eed84523a5d1b35a7a6588cc4",
+    "bd67e94c-9226-4313-b592-fdc6f9089ff2"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-20 03:43:15",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Complete process editor composition, previews and rich editing end to end."
+    }
   ]
 }

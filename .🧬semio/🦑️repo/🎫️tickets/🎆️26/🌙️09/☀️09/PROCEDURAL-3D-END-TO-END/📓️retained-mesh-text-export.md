@@ -1,0 +1,19 @@
+# Retained OBJ and STL export
+
+`brep.io.exportObj` and `brep.io.exportStl` now run as original retained jobs and return the registered `obj` and `stl` text ports. Both operators consume one certified native solid and the existing deflection. Analytic constructor provenance uses the funded primitive preview, including supported bores. Certified polygonal solids use the funded planar tessellation. Other inputs receive a typed retained refusal. The synchronous export entry points continue to serve existing cold callers.
+
+The Session export owner keeps the original borrowed handle address, native engine identity, live certification and shape revision. It checks them through text handoff. A completed preview transfers its owned mesh into the writer without cloning a backing buffer. No live native geometry or session claim is created by either export. Cancellation and normal closure use typed retirement for preview state, mesh buffers and any partly written text.
+
+The OBJ writer counts one formatted record at a time and reserves the exact text length before the write pass. It preserves vertex and optional vertex-normal correspondence and emits one-based face indices. Coordinates use round-trip scientific notation. The STL writer computes the canonical binary length, writes the little-endian triangle count and facet normals and emits base64 directly with a constant three-byte remainder. Neither writer allocates per triangle. Each retained writer action fits within a 128-byte copy grant and encoded output is limited to 64 MiB.
+
+The eight registered exchange routes are OBJ, STL, STEP and DWG import/export. OBJ and STL now have retained routes in both directions. STEP geometry still depends on cold Part-21 entity graph construction and body merge. DWG still depends on cold document decode and mesh export. PLY, OFF and BRep JSON are absent from the registered BRep exchange catalog.
+
+## Verification
+
+- The shared fixture specifies exact OBJ and base64 STL for a two-triangle mesh and the geometric measurements for a closed box. Three.js OBJLoader, STLExporter, STLLoader and BoxGeometry agreed. Two tests and six assertions passed. The STL byte comparison canonicalizes signed zero.
+- The cached native witness compiled the actual writer, Session adapter and original importer against real repository native units. It checked byte-exact fixture output, live primitive and planar tessellation through both writers and fresh native import, actual allocator receipts, wrong source and engine refusal and typed retirement. The witness uses a minimal Session registry adapter around real tessellation and Body types.
+- A later native rerun hit a replaced cache generation. The older BRep units referenced strict version hashes for `semio_framework_value` and `semio_framework_value_derive` that differed from the current files under those basenames. The final four Rust files passed the repository toolchain's crate-root parser and `git diff --check`. The additional encoding-cancel assertion and the complete registered Flow run remain pending a consistent native build.
+- The registered test `original_obj_and_stl_export_bound_the_source_through_registered_roundtrip` exercises one-item work grants for primitive and planar paths, roundtrip area and volume, cancellation after reserving output text, and the unchanged live handle set.
+- Current source closure measured 3,980 active Engine lines, 3,982 native registry lines, 2,543 mesh I/O lines, 2,688 Flow original job lines, and 3,463 Session lines. All closures fit their count and byte limits. Session is at 256,750 bytes against the 262,144-byte ceiling.
+
+The shared `🐍️obj-import-native-check.py` witness now also covers the writers. It uses the repository's current `prototype/build` unit library directory and deletes its scoped generated output after each run.

@@ -1,0 +1,14 @@
+[
+  {
+    "grant": {"maximumItems": 5, "maximumCopyBytes": 8192, "maximumCapacityBytes": 8192, "maximumReleaseBytes": 0, "maximumDepth": 8},
+    "fresh": {"copiedItems": 2, "copiedBytes": 8000, "retainedCapacityBytes": 6144, "releasedBytes": 0},
+    "reserved": {"copiedItems": 1, "copiedBytes": 748, "retainedCapacityBytes": 0, "releasedBytes": 0},
+    "remaining": {"maximumItems": 3, "maximumCopyBytes": 192, "maximumCapacityBytes": 2048, "maximumReleaseBytes": 0, "maximumDepth": 8}
+  },
+  {
+    "grant": {"maximumItems": 5, "maximumCopyBytes": 64, "maximumCapacityBytes": 0, "maximumReleaseBytes": 0, "maximumDepth": 8},
+    "fresh": {"copiedItems": 3, "copiedBytes": 55, "retainedCapacityBytes": 0, "releasedBytes": 0},
+    "reserved": {"copiedItems": 1, "copiedBytes": 118, "retainedCapacityBytes": 0, "releasedBytes": 0},
+    "remaining": {"maximumItems": 2, "maximumCopyBytes": 9, "maximumCapacityBytes": 0, "maximumReleaseBytes": 0, "maximumDepth": 8}
+  }
+]

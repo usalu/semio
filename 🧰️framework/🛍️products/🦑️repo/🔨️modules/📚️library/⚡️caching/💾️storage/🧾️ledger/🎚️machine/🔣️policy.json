@@ -19,6 +19,7 @@
       "weightBasisPoints": 4841,
       "floorBytes": 2147483648,
       "headroomBasisPoints": 1500,
+      "admitsCommands": true,
       "purpose": { "en": "Cargo build units, registry and Nx artifacts in the compiler image.", "de": "Cargo-Build-Einheiten, Registry und Nx-Artefakte im Compiler-Image." }
     },
     {

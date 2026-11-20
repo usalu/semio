@@ -33,10 +33,11 @@ export class PublishScript extends Script {
 //#endregion 🔖️PublishScript
 
 //#region 🔖️ComponentsScript
-/** 🧩️ `components describe <plugin-id…>|--all [--profile release|prototype]` writes the committed semantic descriptor
+/** 🧩️ `components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser]` writes the committed semantic descriptor
  * pairs from freshly built bytes (`describe --write`; shipped bytes through one build driver run); `components iterate <plugin-id>` is the single-plugin `prototype`
  * browser loop; `components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>` proves a semantic descriptor is
  * equal under both profiles. Every subcommand is cancellable (SIGINT/SIGTERM).
+ * `--facet model|browser` (default `model`) selects the facet the describe stage builds.
  * @see ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts */
 export class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -44,7 +45,7 @@ export class ComponentsScript extends Script {
     if (subcommand === "describe") return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot,this.invocation, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
     if (subcommand === "profile-independence") return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/⚖️comparison/🟦️.ts")).profileIndependenceV1(this.repoRoot,this.invocation,rest,scriptCompilerAdmissionControlV1(this.invocation,"components:profile",0));
     if (subcommand === "iterate" && rest.length === 1) return await (await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(this.repoRoot,this.invocation,rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
-    throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
+    throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] [--facet model|browser] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
   }
 }
 //#endregion 🔖️ComponentsScript

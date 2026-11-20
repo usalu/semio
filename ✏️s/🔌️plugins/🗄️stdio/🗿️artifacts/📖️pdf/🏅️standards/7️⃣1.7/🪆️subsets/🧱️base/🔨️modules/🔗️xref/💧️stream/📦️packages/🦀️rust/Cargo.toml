@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-xref-stream"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Controlled PDF cross-reference stream sections"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lexer = { path = "../../../../🔤️lexer/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-model = { path = "../../../../../🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

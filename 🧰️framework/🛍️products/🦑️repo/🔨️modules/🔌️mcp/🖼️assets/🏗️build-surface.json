@@ -159,8 +159,11 @@
     { "operation": "remote-cache", "subcommand": "status", "kind": "query", "flags": [] },
     { "operation": "remote-execution", "subcommand": "status", "kind": "query", "flags": [] },
     { "operation": "doctor", "kind": "query", "flags": ["--only", "--strict", "--json"], "bind": { "--json": true } },
-    { "operation": "service", "subcommand": "status", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
-    { "operation": "service", "subcommand": "probe", "kind": "query", "flags": [] },
+    {
+      "operation": "service", "subcommand": "host", "kind": "query", "flags": [],
+      "summary": { "en": "Show the host graph service status.", "de": "Zeigt den Status des Graph-Dienstes dieses Rechners." },
+      "positional": [{ "name": "action", "enum": ["status"], "description": { "en": "Read the current service status.", "de": "Liest den aktuellen Dienststatus." } }]
+    },
     { "operation": "tools", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
     { "operation": "conformance", "subcommand": "list", "kind": "query", "flags": ["--json"], "bind": { "--json": true } },
     { "operation": "conformance", "subcommand": "plan", "kind": "query", "flags": ["--scenario", "--implementations", "--json"], "bind": { "--json": true } },
@@ -204,7 +207,6 @@
     { "operation": "cache", "subcommand": "gc", "reason": { "en": "Deletes shared cache content; a human decision.", "de": "Löscht gemeinsamen Cache-Inhalt; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "clear", "reason": { "en": "Empties the shared task cache that other agents use; a human decision.", "de": "Leert den gemeinsamen Task-Cache, den andere Agenten nutzen; eine menschliche Entscheidung." } },
     { "operation": "cache", "subcommand": "dedupe", "reason": { "en": "Replaces files of the shared caches that other agents use by clones of one canonical file; a human decision.", "de": "Ersetzt Dateien der gemeinsamen Caches, die andere Agenten nutzen, durch Klone einer kanonischen Datei; eine menschliche Entscheidung." } },
-    { "operation": "cache", "subcommand": "grow", "reason": { "en": "Takes the exclusive image lease and detaches the shared rust cache image while it resizes; a human decision at a quiet point.", "de": "Nimmt die exklusive Image-Lease und hängt das gemeinsame Rust-Cache-Image während der Vergrößerung aus; eine menschliche Entscheidung zu einem ruhigen Zeitpunkt." } },
     { "operation": "bench", "subcommand": "acceptance", "reason": { "en": "Runs every acceptance scenario of the course, print and the dashboard for many minutes and, with --in-place, edits tracked files of this checkout; a human or CI decision.", "de": "Führt alle Abnahmeszenarien von Kurs, Druck und Dashboard über viele Minuten aus und ändert mit --in-place versionierte Dateien dieses Checkouts; eine Entscheidung von Mensch oder CI." } },
     { "operation": "remote-cache", "subcommand": "serve", "reason": { "en": "Starts a long-running server, not an operation.", "de": "Startet einen dauerhaften Server, keine Operation." } },
     { "operation": "remote-cache", "subcommand": "gc", "reason": { "en": "Deletes shared remote cache content; a human decision.", "de": "Löscht gemeinsamen Remote-Cache-Inhalt; eine menschliche Entscheidung." } },
@@ -213,11 +215,7 @@
     { "operation": "tools", "subcommand": "exec", "reason": { "en": "Runs any registered tool with arbitrary arguments; agents use the operation that owns the tool (run, cargo).", "de": "Führt jedes registrierte Werkzeug mit beliebigen Argumenten aus; Agenten nutzen die Operation, der das Werkzeug gehört (run, cargo)." } },
     { "operation": "units", "subcommand": "emit", "reason": { "en": "Writes build files into a directory of the caller's choice; part of the generated-target plumbing.", "de": "Schreibt Build-Dateien in ein frei gewähltes Verzeichnis; Teil der Installation generierter Targets." } },
     { "operation": "units", "subcommand": "exec", "reason": { "en": "The action of generated Nx targets and Bazel rules, not an operation of its own.", "de": "Die Aktion generierter Nx-Targets und Bazel-Regeln, keine eigene Operation." } },
-    { "operation": "service", "subcommand": "start", "reason": { "en": "Starts a long-running background service; a human decision.", "de": "Startet einen dauerhaften Hintergrunddienst; eine menschliche Entscheidung." } },
-    { "operation": "service", "subcommand": "stop", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
-    { "operation": "service", "subcommand": "restart", "reason": { "en": "Stops the service other agents use; a human decision.", "de": "Stoppt den Dienst, den andere Agenten nutzen; eine menschliche Entscheidung." } },
-    { "operation": "service", "subcommand": "issue", "reason": { "en": "Issues a capability token; a secret that never belongs in a tool result.", "de": "Stellt ein Berechtigungstoken aus; ein Geheimnis, das nie in ein Werkzeugergebnis gehört." } },
-    { "operation": "service", "subcommand": "revoke", "reason": { "en": "Cancels the running commands of other agents; a human decision.", "de": "Bricht laufende Befehle anderer Agenten ab; eine menschliche Entscheidung." } },
-    { "operation": "service", "subcommand": "drop-caches", "reason": { "en": "Forgets digests and task results for every agent; a human decision.", "de": "Vergisst Digests und Task-Ergebnisse für alle Agenten; eine menschliche Entscheidung." } }
+    { "operation": "cache", "subcommand": "cas", "reason": { "en": "Cache adoption and collection operate on the machine store through the native cache commands.", "de": "Übernahme und Bereinigung des Maschinenspeichers erfolgen über die nativen Cache-Befehle." } },
+    { "operation": "remote-cache", "subcommand": "rotate", "reason": { "en": "Rotates this machine’s fleet signing keys through the native administration command.", "de": "Wechselt die Flotten-Signaturschlüssel dieses Rechners über den nativen Verwaltungsbefehl." } }
   ]
 }

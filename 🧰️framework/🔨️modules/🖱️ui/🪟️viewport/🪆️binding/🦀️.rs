@@ -60,6 +60,11 @@ fn vector(record: &RecordValue, id: u16) -> Result<[f64; 3], String> {
 fn vector_value(value: &[f64; 3]) -> FieldValue { FieldValue::Tuple(value.iter().map(|value| FieldValue::Float(*value)).collect()) }
 
 impl DslField for Viewport2d {
+    fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{
+        use semio_framework_dsl_record::native_encoding::{FieldProjectionView,projection_path_error};
+        if path.is_empty(){return Ok(FieldProjectionView::Record(&[1,2,3]))}
+        match path[0]{0=>self.x.projection_view(&path[1..]),1=>self.y.projection_view(&path[1..]),2=>self.zoom.projection_view(&path[1..]),_=>Err(projection_path_error())}
+    }
     fn shape() -> Shape { Shape::Record(planar_producer()) }
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Ok(Shape::Record(planar_producer()))}
     fn to_value(&self) -> FieldValue {
@@ -74,6 +79,11 @@ impl DslField for Viewport2d {
 }
 
 impl DslField for Viewport3dOrbit {
+    fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{
+        use semio_framework_dsl_record::native_encoding::{FieldProjectionView,projection_path_error};
+        if path.is_empty(){return Ok(FieldProjectionView::Record(&[1,2,3,4]))}
+        match path[0]{0=>self.position.projection_view(&path[1..]),1=>self.target.projection_view(&path[1..]),2=>self.zoom.projection_view(&path[1..]),3=>match &self.up{Some(up)=>up.projection_view(&path[1..]),None if path.len()==1=>Ok(FieldProjectionView::Absent),None=>Err(projection_path_error())},_=>Err(projection_path_error())}
+    }
     fn shape() -> Shape { Shape::Record(orbit_producer()) }
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Ok(Shape::Record(orbit_producer()))}
     fn to_value(&self) -> FieldValue {

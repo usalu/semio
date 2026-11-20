@@ -79,7 +79,7 @@ impl BitmapFillPayload {
 
     /// 📥 Decode the normative JSON object.
     pub fn decode_json(text: &str) -> Option<Self> {
-        let value: semio_framework_pack_json::Value = crate::standards::v1::subsets::any::io::text::snapshot::bitmap_json_decode(text).ok()?;
+        let value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
         let object = value.as_object()?;
         Some(Self {
             pixels: object.get("pixels")?.as_str()?.to_owned(),
@@ -376,7 +376,7 @@ pub struct BitmapFillRunJob {
     last_payload: Option<BitmapFillPayload>,
     committed_solve: Option<SetSolve>,
     pending_tick: bool,
-    pending_finish: Option<(bool, BitmapFillPayload)>,
+    pending_finish: Option<bool>,
     publication: Option<Box<engine::job::Publication>>,
     closing: bool,
     trace: Vec<BitmapFillTraceEvent>,
@@ -463,8 +463,24 @@ impl BitmapFillRunJob {
         FillRun::Staged
     }
 
-    fn finish_payload(&mut self, context: &mut StepContext<'_>, payload: BitmapFillPayload, contradiction: bool) -> FillRun {
+    fn finish_child(&mut self, context: &mut StepContext<'_>, contradiction: bool) -> FillRun {
         if self.closing || context.is_cancelled() { return FillRun::Cancelled; }
+        let width = self.snapshot.output.width;
+        let height = self.snapshot.output.height;
+        let mut payload = if contradiction {
+            BitmapFillPayload {
+                pixels: String::new(),
+                decided: encode_base64(&vec![0u8; (width as usize).saturating_mul(height as usize)]),
+                width,
+                height,
+                contradiction: true,
+                done: true,
+                trace: Vec::new(),
+            }
+        } else {
+            self.payload_from_child(false, true).unwrap_or_else(|| payload_from_assignment(width, height, &[], false, true))
+        };
+        payload.trace = self.trace.clone();
         self.prep = PrepStage::Done;
         let reason = if contradiction { FillReason::Contradiction } else { FillReason::Collapsed };
         let result = self.publish_tick(context, payload, FillStage::Complete, reason, ToolRunState::Complete);
@@ -529,6 +545,7 @@ impl BitmapFillRunJob {
         let cells = (self.snapshot.output.width as usize).saturating_mul(self.snapshot.output.height as usize);
         let mut flips = Vec::new();
         let mut trace = 0usize;
+        let mut discarded = false;
         let mut solved = false;
         let mut unsatisfiable = false;
         loop {
@@ -549,6 +566,7 @@ impl BitmapFillRunJob {
                 }
                 if let Some(color) = self.color_of(flip.pattern) {
                     self.remember(BitmapFillTraceEvent { index: flip.node, color, discarded: flip.discarded });
+                    discarded |= flip.discarded;
                     trace += 1;
                 }
             }
@@ -568,25 +586,11 @@ impl BitmapFillRunJob {
             }
         }
         if solved || unsatisfiable {
-            let width = self.snapshot.output.width;
-            let height = self.snapshot.output.height;
-            let payload = if unsatisfiable {
-                BitmapFillPayload {
-                    pixels: String::new(),
-                    decided: encode_base64(&vec![0u8; (width as usize).saturating_mul(height as usize)]),
-                    width,
-                    height,
-                    contradiction: true,
-                    done: true,
-                    trace: self.trace.clone(),
-                }
-            } else {
-                let mut payload = self.payload_from_child(false, true).unwrap_or_else(|| payload_from_assignment(width, height, &[], false, true));
-                payload.trace = self.trace.clone();
-                payload
-            };
-            if let Some(child) = self.child.as_mut() { child.begin_close(); }
-            return self.finish_payload(context, payload, unsatisfiable);
+            self.child.as_mut().expect("terminal child").begin_close();
+            if !discarded {
+                return self.finish_child(context, unsatisfiable);
+            }
+            self.pending_finish = Some(unsatisfiable);
         }
         if trace == 0 {
             return FillRun::Yield;
@@ -595,7 +599,11 @@ impl BitmapFillRunJob {
         let height = self.snapshot.output.height;
         let mut payload = self.payload_from_child(false, false).unwrap_or_else(|| payload_from_assignment(width, height, &[], false, false));
         payload.trace = self.trace.clone();
-        let stage = self.child.as_ref().map(|job| FillStage::of(job.preview(0).stage)).unwrap_or(FillStage::ChooseCandidate);
+        let stage = if self.pending_finish.is_some() {
+            FillStage::BacktrackTrailEntry
+        } else {
+            self.child.as_ref().map(|job| FillStage::of(job.preview(0).stage)).unwrap_or(FillStage::ChooseCandidate)
+        };
         self.publish_tick(context, payload, stage, FillReason::Collapsed, ToolRunState::Running)
     }
 
@@ -606,8 +614,8 @@ impl BitmapFillRunJob {
 
     /// ⏭️ Runs one bounded preparation unit or child span; payloads are staged, never lent from here.
     fn run(&mut self, context: &mut StepContext<'_>) -> FillRun {
-        if let Some((contradiction, payload)) = self.pending_finish.take() {
-            return self.finish_payload(context, payload, contradiction);
+        if let Some(contradiction) = self.pending_finish.take() {
+            return self.finish_child(context, contradiction);
         }
         if self.pending_tick {
             self.pending_tick = false;
@@ -676,7 +684,7 @@ impl BitmapFillRunJob {
 }
 
 impl InteractiveJob for BitmapFillRunJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {

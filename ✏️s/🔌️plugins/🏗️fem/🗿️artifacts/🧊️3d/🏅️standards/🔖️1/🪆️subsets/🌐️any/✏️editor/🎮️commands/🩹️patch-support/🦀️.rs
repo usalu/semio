@@ -2,7 +2,7 @@
 //! 🩹️ Fem3d play app command — `patch-support`: one-field edit of a support (`nodeId`, or one of
 
 use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dSupportPatch;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 
 use semio_plugin::ArtifactView;

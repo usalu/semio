@@ -414,7 +414,7 @@ fn actual_flow_genesis_producer_preserves_original_stored_pack_and_owner_identit
  assert_eq!(third_party_json(born.facts().snapshot()),cases()["hostSnapshot"]);
  let original=born.pack().to_vec();let pointer=original.as_ptr();let digest=born.facts().digest();
  let reloaded=AdmittedArtifactGenesis::from_stored_pack(original,&producer).unwrap();
- assert_eq!(reloaded.pack().as_ptr(),pointer);assert_eq!(reloaded.pack(),born.pack());assert_eq!(reloaded.facts().digest(),digest);
+ assert_eq!(reloaded.pack().contiguous().unwrap().as_ptr(),pointer);assert_eq!(reloaded.pack(),born.pack());assert_eq!(reloaded.facts().digest(),digest);
  assert_eq!(third_party_json(reloaded.facts().snapshot()),cases()["hostSnapshot"]);
  let alias=reloaded.clone();assert!(Arc::ptr_eq(&reloaded.facts().share_snapshot(),&alias.facts().share_snapshot()));assert!(Arc::ptr_eq(&reloaded.share_pack(),&alias.share_pack()));
  drop(alias);

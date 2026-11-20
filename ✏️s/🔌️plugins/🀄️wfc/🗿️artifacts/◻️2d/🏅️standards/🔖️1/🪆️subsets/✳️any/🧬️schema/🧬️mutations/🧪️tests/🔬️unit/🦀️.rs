@@ -52,6 +52,14 @@ fn every_mutation_round_trips_through_both_op_codecs() {
     ];
     assert_eq!(mutations.len(), KINDS.len());
     for mutation in &mutations {
+        let targets: &dyn store::ArtifactOperationTargets = mutation;
+        let authored = protocol::Mutation::<crate::schema::snapshot::Wfc2dSnapshot>::target(mutation);
+        assert_eq!(targets.len(), authored.len());
+        for (index, text) in authored.iter().enumerate() {
+            let mut bytes = vec![0; targets.segment_len(index).unwrap()];
+            assert_eq!(targets.read_segment(index, 0, &mut bytes).unwrap(), text.len());
+            assert_eq!(bytes, text.as_bytes());
+        }
         let line = protocol::OpText::print_op(mutation);
         let parsed: Wfc2dMutation = protocol::OpText::parse_op(&line).expect("mutation line parses");
         assert_eq!(&parsed, mutation, "text op round trip failed for {line}");
@@ -59,4 +67,5 @@ fn every_mutation_round_trips_through_both_op_codecs() {
         let decoded: Wfc2dMutation = protocol::OpBinary::decode_op(&bytes).expect("mutation decodes");
         assert_eq!(&decoded, mutation, "binary op round trip failed for {line}");
     }
+    dsl::os_dsl::original_receiving::check_receiving_round_trip(&mutations).expect("original history receives authored mutation bytes");
 }

@@ -1,7 +1,7 @@
 //! 🎬️ by each scenario's `🧪️tests/<scenario>/🦀️.rs` with its committed quintet.
 //! ⚖️ The laws every committed `move-selection` scenario holds, written once beside the leaf's scenarios and called
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;

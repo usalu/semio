@@ -19,7 +19,7 @@ pub const WFC_GRID3D_DOCUMENT_SCHEMA: &str = "s.wfc.grid3d";
 //#region 🔖️Color
 /// 🎨️ Straight-alpha RGBA, every channel `0..=255`. Values outside that range are clamped by every
 /// reader rather than refused, so a hand-authored document never fails to render.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dColor {
@@ -34,7 +34,7 @@ pub struct Grid3dColor {
 /// 🔺️ Inline triangle geometry in the TILE-SPACE unit box `0..1` on every axis — the renderer scales
 /// it into whatever box the cell it lands in actually occupies, so one tile mesh serves every cell
 /// size on a non-uniform grid. `positions` is xyz triples, `indices` is triangle corners.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dMesh {
@@ -49,7 +49,7 @@ pub struct Grid3dMesh {
 /// 🗿️ A tile's 3D media: either geometry authored INLINE in this document, or a handle to a composed
 /// `s.stdio.semio@v1/mesh` child the host hydrates. A handle whose child is not hydrated renders as
 /// a unit-box placeholder rather than failing the surface (the raster/remodel "fail soft" rule).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum Grid3dTileMedia {
@@ -92,7 +92,7 @@ fn retire_decoded(self){<Self as semio_framework_dsl_record::DslVariants>::retir
 
 /// 🗿️ One placeable tile — the WFC pattern universe of this document. `weight` is the selection
 /// bias the solver samples with; every mutation refuses a non-positive or non-finite weight.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dTile {
@@ -113,7 +113,7 @@ pub struct Grid3dTile {
 /// accepts only `camelCase`/`kebab-case`/`lowercase`/`snake_case` there and silently ignores any
 /// other spelling, which would leave the wire on `Left`/`Right` while every schema leaf declares
 /// `LEFT`/`RIGHT` (measured on the sibling `s.wfc.grid2d`, ticket 26/09/18/EXTRACT-WFC-PLUGIN).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Grid3dDirection {
     #[value(rename = "LEFT")]
@@ -173,7 +173,7 @@ impl Grid3dDirection {
 }
 
 /// 📏️ Which per-axis size array a `change-cell-sizes` mutation addresses.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum Grid3dAxis {
@@ -215,7 +215,7 @@ impl Grid3dAxis {
 /// stencil's declared inverse, `A` in the opposite direction of `B`); `allowed = false` DENIES the
 /// pair outright, and a deny always wins over any allow. A tile pair no rule mentions for a
 /// direction is NOT allowed — the rule set is a closed allow-list, never a deny-list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dRule {
@@ -230,7 +230,7 @@ pub struct Grid3dRule {
 //#region 🔖️Cells
 /// 📌️ A hard pre-assignment the solver must respect — a domain restriction feeding the solve, never
 /// overwritten by it.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dPinnedCell {
@@ -242,7 +242,7 @@ pub struct Grid3dPinnedCell {
 
 /// 🚫️ A cell excluded from the topology entirely — it gets no arcs and is never assigned, which is
 /// how a non-box shape is carved out of the regular grid.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Grid3dCell {

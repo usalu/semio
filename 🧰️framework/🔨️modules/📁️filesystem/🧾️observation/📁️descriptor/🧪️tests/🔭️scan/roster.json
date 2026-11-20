@@ -1,0 +1,6 @@
+[
+  {"id":"unordered unicode and dangling names","remove":null,"add":null,"matches":true},
+  {"id":"missing dangling name","remove":"link-dangling","add":null,"matches":false},
+  {"id":"extra name","remove":null,"add":"not-in-roster","matches":false},
+  {"id":"replacement of equal cardinality","remove":"übung-é.txt","add":"unrelated.txt","matches":false}
+]

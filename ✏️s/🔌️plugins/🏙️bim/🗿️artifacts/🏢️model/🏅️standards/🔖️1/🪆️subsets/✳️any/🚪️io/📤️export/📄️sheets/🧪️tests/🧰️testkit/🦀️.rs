@@ -33,19 +33,19 @@ pub fn labels() -> TitleLabels {
 pub fn house_with_sheets() -> ModelSnapshot {
     let mut model = house();
     let sheet = |number: &str, name: &str, paper: Paper, orientation: Orientation| Sheet { paper, orientation, project: "House on the hill".into(), drawn_by: "UG".into(), checked_by: "AB".into(), date: "2026-10-09".into(), ..Sheet::standard(number, name) };
-    model.sheets.insert("sh-plans".into(), sheet("A-101", "Floor plans", Paper::iso(IsoSize::A3), Orientation::Landscape));
-    model.sheets.insert("sh-sections".into(), sheet("A-201", "Sections", Paper::iso(IsoSize::A3), Orientation::Portrait));
-    model.sheets.insert("sh-elevations".into(), sheet("A-301", "Elevations", Paper::iso(IsoSize::A2), Orientation::Landscape));
+    model.sheets.cold_insert("sh-plans".into(), sheet("A-101", "Floor plans", Paper::iso(IsoSize::A3), Orientation::Landscape));
+    model.sheets.cold_insert("sh-sections".into(), sheet("A-201", "Sections", Paper::iso(IsoSize::A3), Orientation::Portrait));
+    model.sheets.cold_insert("sh-elevations".into(), sheet("A-301", "Elevations", Paper::iso(IsoSize::A2), Orientation::Landscape));
     let place = |model: &mut ModelSnapshot, id: &str, sheet: &str, view: &str, x: f64, y: f64, scale: u32| {
-        model.viewports.insert(id.into(), Viewport { scale, ..Viewport::standard(sheet, view, Point2 { x, y }) });
+        model.viewports.cold_insert(id.into(), Viewport { scale, ..Viewport::standard(sheet, view, Point2 { x, y }) });
     };
     place(&mut model, "vp-ground", "sh-plans", "v-plan-st-ground", 30.0, 30.0, 100);
     place(&mut model, "vp-first", "sh-plans", "v-plan-st-first", 200.0, 30.0, 100);
     place(&mut model, "vp-section", "sh-sections", "v-section-a", 30.0, 30.0, 100);
     place(&mut model, "vp-south", "sh-elevations", "v-elevation-south", 30.0, 30.0, 100);
     place(&mut model, "vp-east", "sh-elevations", "v-elevation-east", 330.0, 30.0, 100);
-    model.sheet_revisions.insert("rev-a".into(), SheetRevision { sheet: "sh-plans".into(), number: "A".into(), date: "2026-10-01".into(), description: "Issued for permit".into(), author: "UG".into() });
-    model.sheet_revisions.insert("rev-b".into(), SheetRevision { sheet: "sh-plans".into(), number: "B".into(), date: "2026-10-05".into(), description: "Window sizes".into(), author: "AB".into() });
+    model.sheet_revisions.cold_insert("rev-a".into(), SheetRevision { sheet: "sh-plans".into(), number: "A".into(), date: "2026-10-01".into(), description: "Issued for permit".into(), author: "UG".into() });
+    model.sheet_revisions.cold_insert("rev-b".into(), SheetRevision { sheet: "sh-plans".into(), number: "B".into(), date: "2026-10-05".into(), description: "Window sizes".into(), author: "AB".into() });
     model
 }
 

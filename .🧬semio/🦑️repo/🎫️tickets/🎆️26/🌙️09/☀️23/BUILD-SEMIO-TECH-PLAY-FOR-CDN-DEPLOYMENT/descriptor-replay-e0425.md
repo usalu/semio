@@ -1,0 +1,11 @@
+# Descriptor tool replay constructor error
+
+The sixth descriptor attempt in run `wJdU0O0` failed to compile `semio-os-store-initialization-replay` with E0425. The reported call in `next_step_demands` referenced `semio_framework_job::original_construction_attempt_quote`. The driver still retains the failed attempt's tail, which records the failed crate and Rust error code. Its underlying Cargo transcript had already been retired when checked.
+
+The shared source already contains the repair. At line 860, `next_step_demands` calls `semio_framework_job::original_construction_reserve::<Box<ArtifactStore<P,M>>>(demand, 1)`. This API is re-exported from the crate root and returns the same shape the caller consumes, a checked construction demand and fuel tuple. It quotes the same-turn constructor, candidate, capture, and Source result. The replay caller still adds its receiving headroom before projecting the quote into a retirement demand. A word search of current framework Rust found no remaining uses of the removed name. The replay file's observed modification time was 05:13:41 CET. [Replay call site](../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs#L860) · [Public job API](../../../../../../../🧰️framework/🔨️modules/🧵️job/🦀️.rs#L32) · [Reservation contract](../../../../../../../🧰️framework/🔨️modules/🧵️job/🏭️construction/🦀️.rs#L143)
+
+The existing replay suite covers bounded turns and exact retirement. The concurrent release retry remains the build validation. This check changed no Rust source and launched no Cargo or descriptor process. [Replay coverage](../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧪️tests/🔬️unit/🦀️.rs)
+
+## Release compile confirmation
+
+Generation `wh7gdVT` emitted a Cargo `compiler-artifact` for `semio_os_store_initialization_replay` with `fresh: false` in `l/job-describe-tool.log`. The repaired crate compiled from current source in the replacement release attempt. The descriptor executable built and passed retained provenance and publication in the same generation. The descriptor job recorded `stage: complete` at 06:37 CET and the driver started Flow WebAssembly next. Component staging and release verification still had to run.

@@ -9,7 +9,7 @@ use crate::viewport3d::measure::MeasureState;
 use crate::viewport3d::parts::BasicTessellator;
 use crate::viewport3d::playback::{self, PlaybackState, ACTION_SEEK, ACTION_SELECT_TRACK, ACTION_SET_ACTIVE_FIELD, ACTION_SET_SPEED, ACTION_STEP, ACTION_TOGGLE_PLAY};
 use semio_s_plugin_norm_structural_scene::{Handle, LocalizedCopy, StructuralScene};
-use crate::viewport3d::window::render_viewport3d;
+use crate::viewport3d::window::render_viewport_page;
 use crate::*;
 
 pub const VIEWPORT_TOOLBAR_ID: &str = "norm-viewport-toolbar";
@@ -20,14 +20,15 @@ pub const PLAYBACK_SPEEDS: [f64; 3] = [0.5, 1.0, 2.0];
 
 /// 🎛️ Everything a viewport window renders from besides the scene: the persisted local-only configuration, the ephemeral transport state and the live lanes (grips, open drag, insert ghost, other users).
 #[derive(Clone, Debug, Default)]
-pub struct ViewportView {
+pub struct ViewportView<'a> {
     pub config: Viewport3dWindowConfig,
     pub playback: PlaybackState,
     pub lanes: LaneOverlays,
     pub lane: ViewLane,
+    pub tree_context: Option<(&'a semio_plugin::ViewModel, &'a str)>,
 }
 
-impl ViewportView {
+impl ViewportView<'_> {
     /// 🎞️ The view with the live lane folded in: the lane's colour field and speed replace the configured ones, and a lane track that the scene has becomes the transport state at its snapped value; an unknown or absent track keeps the explicit playback.
     pub fn resolved(&self, scene: &StructuralScene) -> Self {
         let mut config = self.config.clone();
@@ -64,27 +65,23 @@ fn row(controller_id: &'static str, id: String, label: String, action: &str, tex
 }
 
 /// ➕ The armed tool of the insert palette: the spec of the ghost that follows the cursor.
-fn armed_spec(view: &ViewportView) -> Option<&str> {
+fn armed_spec<'a>(view: &'a ViewportView<'_>) -> Option<&'a str> {
     match view.lanes.frame.transient.ghost.as_ref().map(|ghost| &ghost.source) {
         Some(crate::GhostSource::Insert { spec, .. }) => Some(spec.as_str()),
         _ => None,
     }
 }
 
-/// ➕ One row per insert tool (the armed one marked) and a row that disarms the tool; only live editors have a palette.
-fn insert_rows(view: &ViewportView, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<Vec<BuiltNode>> {
-    if view.lanes.palette.is_empty() {
-        return Ok(Vec::new());
-    }
+/// ➕ The Select row disarms the tool, followed by the insert tools of the live editor.
+fn insert_row(view: &ViewportView, index: usize, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<BuiltNode> {
     let armed = armed_spec(view);
-    let mut rows = Vec::new();
-    for entry in &view.lanes.palette {
-        let label = if locale == Locale::De { &entry.label_de } else { &entry.label_en };
-        let args = action_args_map(vec![("insertSpec", ui_value_text(&entry.id)?)])?;
-        rows.push(tree_item_with_action(format!("norm-viewport.insert.{}", entry.id), norm_ui_label(format!("{} {} {label}", mark(armed == Some(entry.id.as_str())), chrome("Insert", "Einfügen", locale)))?, None, norm_action(controller_id, "previewRemedy", Some(args))?)?);
+    if index == 0 {
+        return tree_item_with_action("norm-viewport.insert.off", norm_ui_label(format!("{} {}", mark(armed.is_none()), chrome("Select", "Auswählen", locale)))?, None, norm_action(controller_id, "clearPreview", None)?);
     }
-    rows.push(tree_item_with_action("norm-viewport.insert.off".to_string(), norm_ui_label(format!("{} {}", mark(armed.is_none()), chrome("Select", "Auswählen", locale)))?, None, norm_action(controller_id, "clearPreview", None)?)?);
-    Ok(rows)
+    let entry = &view.lanes.palette[index - 1];
+    let label = if locale == Locale::De { &entry.label_de } else { &entry.label_en };
+    let args = action_args_map(vec![("insertSpec", ui_value_text(&entry.id)?)])?;
+    tree_item_with_action(format!("norm-viewport.insert.{}", entry.id), norm_ui_label(format!("{} {} {label}", mark(armed == Some(entry.id.as_str())), chrome("Insert", "Einfügen", locale)))?, None, norm_action(controller_id, "previewRemedy", Some(args))?)
 }
 
 /// 🕹️ The gesture bindings of the world surface of a live editor: pointer phases (`delta` streams, `commit` releases, `abort` cancels) drive the handle drag through `setFields`; an armed insert tool also binds hover (ghost at the snapped cursor) and drop (one placement). The host merges the pick id (`handle`), the drag parameter (`s`, `origin`), the modifiers and the cursor (`at`) under the static arguments.
@@ -105,64 +102,104 @@ fn gesture_bindings(view: &ViewportView, controller_id: &'static str) -> UiAssem
     Ok(bindings)
 }
 
-fn field_rows(scene: &StructuralScene, config: &Viewport3dWindowConfig, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<Vec<BuiltNode>> {
-    let choices = fields::available(scene);
-    if choices.is_empty() {
-        return Ok(Vec::new());
+fn field_row(choices: &[fields::FieldChoice], index: usize, active: Option<&str>, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<BuiltNode> {
+    if index == 0 {
+        return row(controller_id, "norm-viewport.field.utilisation".into(), format!("{} {}", mark(active.is_none()), chrome("Utilisation", "Ausnutzung", locale)), ACTION_SET_ACTIVE_FIELD, Some(""), None);
     }
-    let active = config.active_field.as_deref();
-    let mut rows = vec![row(controller_id, "norm-viewport.field.utilisation".into(), format!("{} {}", mark(active.is_none()), chrome("Utilisation", "Ausnutzung", locale)), ACTION_SET_ACTIVE_FIELD, Some(""), None)?];
-    for choice in choices {
-        rows.push(row(controller_id, format!("norm-viewport.field.{}", choice.id), format!("{} {}", mark(active == Some(choice.id.as_str())), text_of(&choice.title, locale)), ACTION_SET_ACTIVE_FIELD, Some(choice.id.as_str()), None)?);
-    }
-    Ok(rows)
+    let choice = &choices[index - 1];
+    row(controller_id, format!("norm-viewport.field.{}", choice.id), format!("{} {}", mark(active == Some(choice.id.as_str())), text_of(&choice.title, locale)), ACTION_SET_ACTIVE_FIELD, Some(choice.id.as_str()), None)
 }
 
-fn playback_rows(scene: &StructuralScene, config: &Viewport3dWindowConfig, state: &PlaybackState, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<Vec<BuiltNode>> {
-    if scene.tracks.is_empty() {
-        return Ok(Vec::new());
+const PLAYBACK_TRANSPORT_ROWS: usize = 3;
+
+fn playback_row(scene: &StructuralScene, view: &ViewportView, index: usize, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<BuiltNode> {
+    let state = &view.playback;
+    let speed = view.config.playback_speed;
+    if index == 0 {
+        return row(controller_id, "norm-viewport.track.none".into(), format!("{} {}", mark(state.track.is_none()), chrome("Static view", "Statische Ansicht", locale)), ACTION_SELECT_TRACK, Some(""), None);
     }
-    let mut rows = vec![row(controller_id, "norm-viewport.track.none".into(), format!("{} {}", mark(state.track.is_none()), chrome("Static view", "Statische Ansicht", locale)), ACTION_SELECT_TRACK, Some(""), None)?];
-    for track in &scene.tracks {
-        rows.push(row(controller_id, format!("norm-viewport.track.{}", track.id), format!("{} {}", mark(state.track.as_deref() == Some(track.id.as_str())), text_of(&track.label, locale)), ACTION_SELECT_TRACK, Some(track.id.as_str()), None)?);
+    if let Some(track) = scene.tracks.get(index - 1) {
+        return row(controller_id, format!("norm-viewport.track.{}", track.id), format!("{} {}", mark(state.track.as_deref() == Some(track.id.as_str())), text_of(&track.label, locale)), ACTION_SELECT_TRACK, Some(track.id.as_str()), None);
     }
-    let Some(track) = state.track.as_deref().and_then(|id| playback::find(&scene.tracks, id)) else { return Ok(rows) };
-    let readout = text_of(&playback::readout(track, state.value), locale);
-    let transport = if state.playing { chrome("Pause", "Anhalten", locale) } else { chrome("Play", "Abspielen", locale) };
-    rows.push(row(controller_id, "norm-viewport.play".into(), format!("{transport} · {readout}"), ACTION_TOGGLE_PLAY, None, None)?);
-    for (id, en, de, direction) in [("back", "Step back", "Schritt zurück", -1), ("forward", "Step forward", "Schritt vor", 1)] {
-        let target = playback::reduce(state, &scene.tracks, config.playback_speed, &playback::PlaybackCommand::Step(direction)).value;
-        rows.push(row(controller_id, format!("norm-viewport.step-{id}"), chrome(en, de, locale), ACTION_STEP, None, Some(target))?);
+    let track = state.track.as_deref().and_then(|id| playback::find(&scene.tracks, id)).ok_or_else(|| ui_error("viewport.playback.track"))?;
+    let index = index - scene.tracks.len() - 1;
+    if index == 0 {
+        let readout = text_of(&playback::readout(track, state.value), locale);
+        let transport = if state.playing { chrome("Pause", "Anhalten", locale) } else { chrome("Play", "Abspielen", locale) };
+        return row(controller_id, "norm-viewport.play".into(), format!("{transport} · {readout}"), ACTION_TOGGLE_PLAY, None, None);
     }
-    for (n, key) in track.keyframes.iter().enumerate() {
+    let steps = [("back", "Step back", "Schritt zurück", -1), ("forward", "Step forward", "Schritt vor", 1)];
+    if let Some((id, en, de, direction)) = steps.get(index - 1).copied() {
+        let target = playback::reduce(state, &scene.tracks, speed, &playback::PlaybackCommand::Step(direction)).value;
+        return row(controller_id, format!("norm-viewport.step-{id}"), chrome(en, de, locale), ACTION_STEP, None, Some(target));
+    }
+    let index = index - PLAYBACK_TRANSPORT_ROWS;
+    if let Some(key) = track.keyframes.get(index) {
         let current = (key.at - state.value).abs() < track.step / 2.0;
-        rows.push(row(controller_id, format!("norm-viewport.seek.{n}"), format!("{} {}", mark(current), text_of(&key.caption, locale)), ACTION_SEEK, None, Some(key.at))?);
+        return row(controller_id, format!("norm-viewport.seek.{index}"), format!("{} {}", mark(current), text_of(&key.caption, locale)), ACTION_SEEK, None, Some(key.at));
     }
-    for speed in PLAYBACK_SPEEDS {
-        rows.push(row(controller_id, format!("norm-viewport.speed.{speed}"), format!("{} {} ×{}", mark((config.playback_speed - speed).abs() < 1e-9), chrome("Speed", "Geschwindigkeit", locale), speed), ACTION_SET_SPEED, None, Some(speed))?);
-    }
-    Ok(rows)
+    let choice = PLAYBACK_SPEEDS[index - track.keyframes.len()];
+    row(controller_id, format!("norm-viewport.speed.{choice}"), format!("{} {} ×{choice}", mark((speed - choice).abs() < 1e-9), chrome("Speed", "Geschwindigkeit", locale)), ACTION_SET_SPEED, None, Some(choice))
 }
 
-/// 🧰️ The toolbar tree: a field section (utilisation plus every scene field) and a playback section (static view, tracks, transport, keyframes, speeds); a section with nothing to choose is omitted, and the whole toolbar is `None` for a static scene without fields.
-pub fn render_toolbar(scene: &StructuralScene, view: &ViewportView, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<Option<BuiltNode>> {
-    let fields = field_rows(scene, &view.config, locale, controller_id)?;
-    let playback = playback_rows(scene, &view.config, &view.playback, locale, controller_id)?;
-    let insert = insert_rows(view, locale, controller_id)?;
-    if fields.is_empty() && playback.is_empty() && insert.is_empty() {
-        return Ok(None);
+const VIEWPORT_TOOLBAR_ROW_BUDGET: usize = 64;
+
+fn toolbar_section(tree: PanelTreeBuilder, windows: &TreeWindows<'_>, id: &str, label: String, rows: usize, windowed: bool, row: impl Fn(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<PanelTreeBuilder> {
+    let label = Some(norm_ui_label(label)?);
+    if windowed {
+        tree.window_indexed_section(windows, id, label, true, rows, row)
+    } else {
+        tree.section(id, label, true, ui_node_list((0..rows).map(row))?)
     }
+}
+
+/// 🧰️ The viewport toolbar and its maximum retained node count across host window requests.
+pub fn render_toolbar(scene: &StructuralScene, view: &ViewportView, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<(Option<BuiltNode>, usize)> {
+    let fields = fields::available(scene);
+    let insert = view.lanes.palette.len();
+    let controls = view.playback.track.as_deref().and_then(|id| playback::find(&scene.tracks, id)).map_or(0, |track| PLAYBACK_TRANSPORT_ROWS + track.keyframes.len() + PLAYBACK_SPEEDS.len());
+    let menus = [
+        (VIEWPORT_FIELD_SECTION_ID, if fields.is_empty() { 0 } else { fields.len() + 1 }),
+        (VIEWPORT_PLAYBACK_SECTION_ID, if scene.tracks.is_empty() { 0 } else { scene.tracks.len() + 1 + controls }),
+        (VIEWPORT_INSERT_SECTION_ID, if insert == 0 { 0 } else { insert + 1 }),
+    ];
+    let total = menus.iter().map(|(_, rows)| rows).sum::<usize>();
+    if total == 0 { return Ok((None, 0)); }
+    let fixed = menus.iter().map(|(_, rows)| *rows).filter(|rows| *rows <= semio_ui_contract::UI_FIXED_LIST_ITEMS).sum::<usize>();
+    let window_all = total > VIEWPORT_TOOLBAR_ROW_BUDGET && fixed >= VIEWPORT_TOOLBAR_ROW_BUDGET;
+    let windowed = |rows| rows > semio_ui_contract::UI_FIXED_LIST_ITEMS || (window_all && rows > 0);
+    let count = menus.iter().filter(|(_, rows)| windowed(*rows)).count();
+    let reserve = if window_all { 0 } else { fixed.min(VIEWPORT_TOOLBAR_ROW_BUDGET) };
+    let cap = (VIEWPORT_TOOLBAR_ROW_BUDGET - reserve) / count.max(1);
+    let reserved_nodes = 1 + menus.iter().filter(|(_, rows)| *rows > 0)
+        .map(|(_, rows)| 1 + if windowed(*rows) { (*rows).min(cap) } else { *rows }).sum::<usize>();
+    let body = view.tree_context.map_or(VIEWPORT_TOOLBAR_ID, |(_, body)| body);
+    let host = view.tree_context.map(|(host, _)| host);
+    let mut bounded = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
+    bounded.tree_windows = menus.into_iter().filter(|(_, rows)| windowed(*rows)).map(|(id, _)| {
+        let request = host.and_then(|host| host.tree_windows.iter().find(|request| request.body_key == body && request.node_key == id));
+        semio_plugin::TreeWindowRequest {
+            body_key: body.into(), node_key: id.into(), open: request.and_then(|request| request.open),
+            offset: request.map_or(0, |request| request.offset), rows: request.map_or(cap as u32, |request| request.rows.min(cap as u32)),
+        }
+    }).collect();
+    let windows = TreeWindows::for_body(&bounded, body);
     let mut tree = PanelTreeBuilder::new(VIEWPORT_TOOLBAR_ID)?;
-    if !fields.is_empty() {
-        tree = tree.section(VIEWPORT_FIELD_SECTION_ID, Some(norm_ui_label(chrome("Field", "Feld", locale))?), true, ui_node_list(fields.into_iter().map(Ok))?)?;
+    let [(_, field_count), (_, playback_count), (_, insert_count)] = menus;
+    if field_count != 0 {
+        tree = toolbar_section(tree, &windows, VIEWPORT_FIELD_SECTION_ID, chrome("Field", "Feld", locale), field_count, windowed(field_count), |index| field_row(&fields, index, view.config.active_field.as_deref(), locale, controller_id))?;
     }
-    if !playback.is_empty() {
-        tree = tree.section(VIEWPORT_PLAYBACK_SECTION_ID, Some(norm_ui_label(chrome("Playback", "Wiedergabe", locale))?), true, ui_node_list(playback.into_iter().map(Ok))?)?;
+    if playback_count != 0 {
+        tree = toolbar_section(tree, &windows, VIEWPORT_PLAYBACK_SECTION_ID, chrome("Playback", "Wiedergabe", locale), playback_count, windowed(playback_count), |index| playback_row(scene, view, index, locale, controller_id))?;
     }
-    if !insert.is_empty() {
-        tree = tree.section(VIEWPORT_INSERT_SECTION_ID, Some(norm_ui_label(chrome("Insert", "Einfügen", locale))?), true, ui_node_list(insert.into_iter().map(Ok))?)?;
+    if insert_count != 0 {
+        let row = |index| {
+            let index = if windowed(insert_count) { index } else { (index + 1) % insert_count };
+            insert_row(view, index, locale, controller_id)
+        };
+        tree = toolbar_section(tree, &windows, VIEWPORT_INSERT_SECTION_ID, chrome("Insert", "Einfügen", locale), insert_count, windowed(insert_count), row)?;
     }
-    tree.build().map(Some)
+    tree.build().map(|node| (Some(node), reserved_nodes))
 }
 
 /// ✋️ The id of the touch tree of the viewport panel: the Edit menu and the nudge buttons.
@@ -221,16 +258,26 @@ pub fn render_touch_controls(view: &ViewportView, device: Option<crate::viewport
 /// ⌨️ The id of the keyboard help section of the viewport panel.
 pub const VIEWPORT_HELP_SECTION_ID: &str = "norm-viewport-help";
 
-/// ⌨️ The keyboard help overlay: a closed section listing every documented shortcut with its scope, its label in the shell language and its chord (`⌘⇧Z` style on macOS), generated from the one shortcut table so a new shortcut cannot be missing.
-pub fn render_shortcut_help(locale: Locale, mac: bool) -> UiAssemblyResult<BuiltNode> {
+const VIEWPORT_HELP_LIST_ID: &str = "norm-viewport-help.list";
+const VIEWPORT_HELP_PAGE_ROWS: usize = 16;
+
+/// ⌨️ Pages all shortcuts with their scope and platform's key chord when the host opens help.
+pub fn render_shortcut_help(windows: &TreeWindows<'_>, locale: Locale, mac: bool) -> UiAssemblyResult<BuiltNode> {
     use crate::accessibility::focus_order::{chord_text, shortcuts, Scope};
     let all = shortcuts();
-    let mut groups = Vec::new();
-    for (scope, id, en, de) in [(Scope::Global, "global", "Everywhere", "Überall"), (Scope::Viewport, "viewport", "3D model", "3D-Modell"), (Scope::Handle, "handle", "Handle", "Griff")] {
-        let rows = all.iter().enumerate().filter(|(_, shortcut)| shortcut.scope == scope).map(|(n, shortcut)| tree_item_desc(format!("norm-viewport.help.{n}"), norm_ui_label(text_of(&shortcut.label, locale))?, Some(chord_text(shortcut.chord, mac))));
-        groups.push(tree_group(format!("{VIEWPORT_HELP_SECTION_ID}.{id}"), norm_ui_label(chrome(en, de, locale))?, true, ui_node_list(rows)?)?);
-    }
-    PanelTreeBuilder::new(VIEWPORT_HELP_SECTION_ID)?.section(format!("{VIEWPORT_HELP_SECTION_ID}.list"), Some(norm_ui_label(chrome("Keyboard shortcuts", "Tastenkürzel", locale))?), false, ui_node_list(groups.into_iter().map(Ok))?)?.build()
+    let slice = windows.slice(VIEWPORT_HELP_LIST_ID, false, all.len());
+    let scopes = [(Scope::Global, "Everywhere", "Überall"), (Scope::Viewport, "3D model", "3D-Modell"), (Scope::Handle, "Handle", "Griff")];
+    let rows = scopes.into_iter().flat_map(|(scope, en, de)| all.iter().enumerate().filter(move |(_, shortcut)| shortcut.scope == scope).map(move |(index, shortcut)| {
+        let detail = format!("{} · {}", chord_text(shortcut.chord, mac), chrome(en, de, locale));
+        tree_item_desc(format!("norm-viewport.help.{index}"), norm_ui_label(text_of(&shortcut.label, locale))?, Some(detail))
+    }));
+    let label = norm_ui_label(chrome("Keyboard shortcuts", "Tastenkürzel", locale))?;
+    let section = ui::tree_section(label).try_id(VIEWPORT_HELP_LIST_ID).map_err(|_| ui_error("ui.node.id"))?
+        .default_open(false).window(TreeWindows::window(&slice))
+        .try_children(rows.skip(slice.offset).take(slice.len.min(VIEWPORT_HELP_PAGE_ROWS)).collect::<UiAssemblyResult<Vec<_>>>()?).map_err(|_| ui_error("ui.node.children"))?
+        .try_build().map_err(|_| ui_error("ui.node.build"))?;
+    ui::tree().try_id(VIEWPORT_HELP_SECTION_ID).map_err(|_| ui_error("ui.node.id"))?
+        .try_child(section).map_err(|_| ui_error("ui.node.child"))?.try_build().map_err(|_| ui_error("ui.node.build"))
 }
 
 /// 🎥️ The lowered viewport of a resolved view with the live lanes applied; while the view lane holds a check (a click or a stepping shortcut selected it) or the frame toggle (a double tap) the camera frames the selected entities in the configured preset direction instead of the whole scene.
@@ -245,23 +292,50 @@ pub fn lowered_viewport(scene: &StructuralScene, view: &ViewportView, selected: 
     lowered
 }
 
+const VIEWPORT_SCENE_PAGER_ID: &str = "norm-viewport-scene-page";
+const VIEWPORT_SCENE_PAGER_NODES: usize = 4;
+
+fn scene_pager(page: usize, total: usize, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<BuiltNode> {
+    let page_number = page + 1;
+    let label = if locale == Locale::De { format!("Modellseite {page_number} von {total}") } else { format!("Model page {page_number} of {total}") };
+    let mut rows = Vec::new();
+    if page > 0 {
+        rows.push(row(controller_id, format!("{VIEWPORT_SCENE_PAGER_ID}.previous"), chrome("Previous model page", "Vorherige Modellseite", locale), VIEW_ACTION_SCENE_PAGE, None, Some((page - 1) as f64))?);
+    }
+    if page_number < total {
+        rows.push(row(controller_id, format!("{VIEWPORT_SCENE_PAGER_ID}.next"), chrome("Next model page", "Nächste Modellseite", locale), VIEW_ACTION_SCENE_PAGE, None, Some(page_number as f64))?);
+    }
+    PanelTreeBuilder::new(VIEWPORT_SCENE_PAGER_ID)?.section(format!("{VIEWPORT_SCENE_PAGER_ID}.controls"), Some(norm_ui_label(label)?), true, ui_node_list(rows.into_iter().map(Ok))?)?.build()
+}
+
+fn viewport_node_count(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(viewport_node_count).sum::<usize>()
+}
+
 /// 🧊️ The viewport panel of a window: lowers the scene at the transport state and stacks the toolbar above the `world-3d` surface.
 pub fn render_viewport_panel(body_key: &str, scene: &StructuralScene, view: &ViewportView, selected: &[String], domain_id: &str, controller_id: &'static str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let lang = Lang::of(locale);
     let view = &view.resolved(scene);
     publish_viewport_access(domain_id, scene, selected, &view.lanes.handles, lang);
     let lowered = lowered_viewport(scene, view, selected, lang);
-    let mut surface = render_viewport3d(body_key, &lowered, domain_id, view.config.sun)?;
+    let (toolbar, toolbar_nodes) = render_toolbar(scene, view, locale, controller_id)?;
+    let mut children: Vec<BuiltNode> = toolbar.into_iter().collect();
+    let touch = if crate::controller_is_live(controller_id) && controller_id.ends_with("#editor") {
+        render_touch_controls(view, crate::device_profiles::current_device(), domain_id, locale, controller_id)?
+    } else { None };
+    let additional_nodes = toolbar_nodes + touch.as_ref().map_or(0, viewport_node_count) + 1 + VIEWPORT_SCENE_PAGER_NODES + 2 + VIEWPORT_HELP_PAGE_ROWS;
+    children.extend(touch);
+    let windows = view.tree_context.map_or_else(TreeWindows::unhosted, |(host, body)| TreeWindows::for_body(host, body));
+    children.push(render_shortcut_help(&windows, locale, cfg!(target_os = "macos"))?);
+    let (mut surface, page, total) = render_viewport_page(body_key, &lowered, domain_id, view.config.sun, view.lane.scene_page as usize, additional_nodes)?;
     if crate::controller_is_live(controller_id) && controller_id.ends_with("#editor") {
         for binding in gesture_bindings(view, controller_id)? {
             surface.bindings.try_push(binding).map_err(|_| ui_error("ui.node.binding"))?;
         }
     }
-    let mut children: Vec<BuiltNode> = render_toolbar(scene, view, locale, controller_id)?.into_iter().collect();
-    if crate::controller_is_live(controller_id) && controller_id.ends_with("#editor") {
-        children.extend(render_touch_controls(view, crate::device_profiles::current_device(), domain_id, locale, controller_id)?);
+    if total > 1 {
+        children.push(scene_pager(page, total, locale, controller_id)?);
     }
-    children.push(render_shortcut_help(locale, cfg!(target_os = "macos"))?);
     children.push(surface);
     ui::column().try_children(children).map_err(|_| ui_error("ui.node.children"))?.try_build().map_err(|_| ui_error("ui.node.build"))
 }

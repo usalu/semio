@@ -61,7 +61,7 @@ async fn escape_drops_the_polygon_and_a_missing_type_is_refused() {
     rig.escape();
     assert!(rig.finish().mutations.is_empty());
     let mut snapshot = model();
-    snapshot.slab_types.clear();
+    snapshot.slab_types.cold_clear();
     let mut rig = Rig::plan("slab", snapshot);
     for (x, y) in [(0.0, 0.0), (4.0, 0.0), (4.0, 3.0)] {
         rig.click(x, y);
@@ -92,7 +92,7 @@ async fn the_slab_from_walls_takes_the_closed_wall_loop_around_the_click() {
 
 fn hung(mut snapshot: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let layer = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer { material: "m-concrete".into(), thickness: 0.0125, function: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Finish };
-    snapshot.ceiling_types.insert("ct-board".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![layer] });
+    snapshot.ceiling_types.cold_insert("ct-board".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![layer] });
     snapshot
 }
 

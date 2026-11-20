@@ -1,5 +1,4 @@
 //! 🎚️ Exact-window persisted-local configuration with independent event-stream authority.
-extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as pack;
@@ -7,8 +6,6 @@ extern crate semio_os_kernel as pack;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
-use std::any::Any;
-use crate::window_mutation::ErasedWindowMutationValue;
 use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
 use std::future::Future;
 use std::pin::Pin;
@@ -33,14 +30,8 @@ use semio_plugin_window_config_mutation as window_mutation;
 use registry::WindowRegistry;
 pub use retained::{WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep};
 
-#[doc(hidden)]
-#[path = "📐️owner-contract-and-mutation/🦀️.rs"]
-pub mod owner_contract_and_mutation;
+pub use semio_plugin_window_config_contract::{owner_contract_and_mutation,pack_authority_and_publication};
 pub use owner_contract_and_mutation::{WindowConfigNativePairReceiving,WindowConfigHistorySource,window_config_native_pair_demands,admit_window_config_native_pair,RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot, bounded_window_config_preparation_factory, bounded_window_config_preparation_source_birth, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners};
-
-#[doc(hidden)]
-#[path = "🔏️pack-authority-and-publication/🦀️.rs"]
-pub mod pack_authority_and_publication;
 pub use pack_authority_and_publication::{ErasedWindowConfigPublication, TypedWindowConfigPublication, WindowConfigAuthority, WindowConfigPack,WindowConfigPackSource};
 
 #[doc(hidden)]

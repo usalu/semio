@@ -1,0 +1,48 @@
+{
+  "50": [
+    {
+      "en": "Body: the compact G4 meter as it is built. Two deep-drawn sheet-steel shells, each one loft from the seam to its flat crown with 2.5 mm draft, an 18 mm shoulder and the crowned plan of a pressing; the folded seam as a rounded 9 mm band that stands 5 mm proud all round; the index head 130 by 66 mm and 28 mm proud with a 7.5 mm deep frame round the recessed face; two M30 connection stubs on brazed bosses at 110 mm spacing with open 22 mm bores, hexagonal union nuts 36 mm across flats and the tailpieces of the pipework cut 20 mm above the nuts.",
+      "de": "Körper: der kompakte G4-Zähler, wie er gebaut ist. Zwei tiefgezogene Stahlblechschalen, jede ein Loft von der Naht bis zum flachen Scheitel mit 2,5 mm Ziehschräge, einer 18-mm-Schulter und dem bombierten Grundriss eines Pressteils; die Falznaht als gerundetes 9-mm-Band, das ringsum 5 mm vorsteht; der Zählwerkskopf 130 mal 66 mm, 28 mm vorstehend, mit einem 7,5 mm tiefen Rahmen um die zurückgesetzte Front; zwei M30-Anschlussstutzen auf eingelöteten Bunden im Abstand von 110 mm mit offenen 22-mm-Bohrungen, sechskantige Überwurfmuttern mit Schlüsselweite 36 und die Einlegeteile der Leitung, 20 mm über den Muttern geschnitten."
+    },
+    {
+      "en": "Texture sheets, all thinner than the 7.5 mm the scale can show and drawn in the elevation: the dark counter window with five white and three red digit drums, the 36 mm test dial with four ticks, the pointer with its pivot on the pointer bone, the riveted data plate with two text lines, and the flow arrow embossed in the crown. The clear cover of the index is left out so that counter and dial stay readable in every view.",
+      "de": "Texturblätter, alle dünner als die 7,5 mm, die der Maßstab zeigt, und in der Ansicht gezeichnet: das dunkle Zählwerksfenster mit fünf weißen und drei roten Ziffernrollen, das 36-mm-Prüfrad mit vier Strichen, der Zeiger mit seinem Drehpunkt am Zeigerknochen, das genietete Datenschild mit zwei Textzeilen und der in den Scheitel geprägte Durchflusspfeil. Die klare Haube des Zählwerks entfällt, damit Zählwerk und Prüfrad in jeder Ansicht lesbar bleiben."
+    },
+    {
+      "en": "Thermal: the housing region is both shells, the seam and the plate; the index region is the head with its frame and the pointer; the pipes region is modelled closed, because gas and not room air fills the bores, and the cut ends of the tailpieces are section faces. The measuring unit is a hidden region inside the shells: the frame with the partition, the two domed diaphragm pans in front of and behind it, the valve deck with two slide covers, the gear tower with the crank, the drive shaft that runs to the pointer axis, and the outlet duct up to the outlet stub. Every region has a single layer, so no nested shells are needed.",
+      "de": "Thermik: die Gehäuseregion sind beide Schalen, die Naht und das Schild; die Zählwerksregion ist der Kopf mit seinem Rahmen und dem Zeiger; die Rohrregion ist geschlossen modelliert, weil Gas und nicht Raumluft die Bohrungen füllt, und die Schnittenden der Einlegeteile sind Schnittflächen. Das Messwerk ist eine verborgene Region in den Schalen: der Rahmen mit der Trennwand, die zwei gewölbten Membranschalen davor und dahinter, das Ventildeck mit zwei Schieberhauben, der Getriebeturm mit der Kurbel, die Antriebswelle zur Zeigerachse und der Auslasskanal hinauf zum Auslassstutzen. Jede Region hat nur eine Schicht, verschachtelte Schalen sind daher nicht nötig."
+    },
+    {
+      "en": "Structure: the meter hangs on its two unions, as on a meter bar. The supports are the two fixed tailpieces (pin at the inlet, roller at the outlet), the union nuts are the joints, the stubs are tension members into the crown of the upper shell; both shells are modelled as the open sheet cups they are, tied by the seam ring; the measuring unit frame and its valve deck sit in the lower cup and the outlet duct ties them to the outlet stub; the pointer has its spindle and bearing; the mass sits at the centre of mass 20 mm below the seam.",
+      "de": "Tragwerk: der Zähler hängt an seinen zwei Verschraubungen wie an einem Zählerbügel. Die Auflager sind die zwei festen Einlegeteile (Festlager am Einlass, Rollenlager am Auslass), die Überwurfmuttern sind die Gelenke, die Stutzen sind Zugglieder in den Scheitel der Oberschale; beide Schalen sind als die offenen Blechnäpfe modelliert, die sie sind, verbunden durch den Nahtring; Messwerkrahmen und Ventildeck sitzen im unteren Napf, und der Auslasskanal bindet sie an den Auslassstutzen; der Zeiger hat Welle und Lager; die Masse sitzt im Schwerpunkt 20 mm unter der Naht."
+    }
+  ],
+  "100": [
+    {
+      "en": "Body at 1:100, drawn anew: seam, draft and the two shells merge into one pressing at the width of the seam bead with shoulders in three steps; the index head is one block without its frame, with the counter strip, the dial and the pointer as sheets on its face; the data plate is a sheet on the front; the stubs are plain 30 mm pins up to the cut, without boss or bore, and the union nuts are round 40 mm drums. Digits, ticks, pivot, plate text and flow arrow are below 15 mm and left out.",
+      "de": "Körper bei 1:100, neu gezeichnet: Naht, Ziehschräge und die zwei Schalen gehen in einem Pressteil in der Breite des Nahtwulstes auf, mit Schultern in drei Stufen; der Zählwerkskopf ist ein Block ohne Rahmen, mit Zählwerksstreifen, Prüfrad und Zeiger als Blätter auf seiner Front; das Datenschild ist ein Blatt auf der Vorderseite; die Stutzen sind glatte 30-mm-Zapfen bis zum Schnitt, ohne Bund und Bohrung, und die Überwurfmuttern sind runde 40-mm-Trommeln. Ziffern, Striche, Drehpunkt, Schildtext und Durchflusspfeil liegen unter 15 mm und entfallen."
+    },
+    {
+      "en": "Thermal: housing, index block and the closed connections with cut tops; the hidden measuring unit keeps its frame, the two diaphragm pans as rounded blocks, the valve deck with the slide covers merged into it, the gear tower and the outlet duct.",
+      "de": "Thermik: Gehäuse, Zählwerksblock und die geschlossenen Anschlüsse mit Schnittflächen oben; das verborgene Messwerk behält seinen Rahmen, die zwei Membranschalen als gerundete Blöcke, das Ventildeck mit den darin aufgegangenen Schieberhauben, den Getriebeturm und den Auslasskanal."
+    },
+    {
+      "en": "Structure: stub tubes under round union joints, the two sheet cups with the seam as a 15 mm ring, the measuring unit as one slab in the lower cup with its outlet duct, the pointer spindle, the two tailpiece supports as plain pins and the mass.",
+      "de": "Tragwerk: Stutzenrohre unter runden Verschraubungsgelenken, die zwei Blechnäpfe mit der Naht als 15-mm-Ring, das Messwerk als eine Scheibe im unteren Napf mit seinem Auslasskanal, die Zeigerwelle, die zwei Einlegeteil-Auflager als glatte Zapfen und die Masse."
+    }
+  ],
+  "200": [
+    {
+      "en": "Body at 1:200, drawn anew: one block with 18 mm rounded edges for the whole housing, the index head as a 23 mm proud block with a widened counter bar, a 40 mm dial and a bolder pointer, and the two connections as solid 40 mm pins that take stub, union nut and tailpiece. Seam, shoulders' true curve, data plate and bores are below 30 mm and left out.",
+      "de": "Körper bei 1:200, neu gezeichnet: ein Block mit 18 mm gerundeten Kanten für das ganze Gehäuse, der Zählwerkskopf als 23 mm vorstehender Block mit verbreitertem Zählwerksbalken, einem 40-mm-Prüfrad und einem kräftigeren Zeiger, und die zwei Anschlüsse als volle 40-mm-Zapfen, die Stutzen, Überwurfmutter und Einlegeteil aufnehmen. Naht, die wahre Schulterkurve, Datenschild und Bohrungen liegen unter 30 mm und entfallen."
+    },
+    {
+      "en": "Thermal: block, index block and pins with cut tops; the hidden measuring unit is one core.",
+      "de": "Thermik: Block, Zählwerksblock und Zapfen mit Schnittflächen oben; das verborgene Messwerk ist ein Kern."
+    },
+    {
+      "en": "Structure: two hanger tubes pull on the crown of the upper sheet cup, the lower cup carries the measuring unit slab; both cups are plain walls with chamfered crowns. The pointer spindle, the two supports at the unions and the mass complete the load path.",
+      "de": "Tragwerk: zwei Hängerohre ziehen am Scheitel des oberen Blechnapfes, der untere Napf trägt die Messwerkscheibe; beide Näpfe sind glatte Wände mit gefasten Scheiteln. Zeigerwelle, die zwei Auflager an den Verschraubungen und die Masse vervollständigen den Lastpfad."
+    }
+  ]
+}

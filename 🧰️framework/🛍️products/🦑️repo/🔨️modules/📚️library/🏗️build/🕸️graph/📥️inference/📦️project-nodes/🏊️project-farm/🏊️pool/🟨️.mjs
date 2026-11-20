@@ -11,7 +11,7 @@ import { serialize } from "node:v8";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { runtimeHostIdV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧭️selection/🟦️.ts";
 import {refuseBuildV1} from "../../../../../📖️texts/🟦️.ts";
-import { MACHINE_SPEED_POLICY_V1, localMachineSpeedFactorV1, processCpuMillisecondsV1, scaledMillisecondsV1 } from "../../../../../🐢️speed/🟨️.mjs";
+import { MACHINE_SPEED_POLICY_V1, localMachineSpeedFactorV1, readProcessCpuMillisecondsV1, scaledMillisecondsV1 } from "../../../../../🐢️speed/🟨️.mjs";
 
 /** 🧊️ Freezes a declaration recursively. */
 const freeze = value => { if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; };
@@ -175,7 +175,7 @@ const reclaimedDirectoriesV1 = createBoundedCacheV1({ name: "inference:reclaimed
  * Every worker that runs a job is watched: its physical footprint (`footprintOf`, macOS `footprint`, Linux `smaps_rollup`) is read every `footprintMilliseconds`, and a worker above `capMegabytes` (default: `farmChildFootprintMegabytes` of the plan stage policy, the one source of the width and the caps of the farm) is stopped (SIGTERM, SIGKILL after `terminateGraceMilliseconds`; only this pool's own child) and its job goes back to the head of the queue to run ALONE: no job beside it and no further worker is started while it waits or runs. A job that passes `aloneCapMegabytes` even alone settles as `{ overrun }`, which the caller turns into a typed refusal; a capped worker is no lost worker (no attempt, no restart count).
  * With `auxiliaryFile` every worker opens that private regular file itself, named by `SEMIO_GRAPH_WORKER_SNAPSHOT`, so no two workers share a file offset and none needs this process scheduled to read it. A worker starts from its environment (`initEnvironment`, schema `Start`): it needs no message of this process, so a busy event loop of the parent never delays it. A process that ends takes every worker with it: they end when their channel closes, and this process kills the workers it still holds when it exits.
  */
-export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, priority = {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined, hold = () => false, footprintOf = readProcessFootprintBytesV1, capMegabytes = PLAN_STAGE_POLICY_V1.farmChildFootprintMegabytes["project-farm"].capMegabytes, aloneCapMegabytes = farmAloneCapV1(hostMemoryMegabytesV1()), limitMegabytes = Infinity, speed = localMachineSpeedFactorV1(environment), cpuOf = processCpuMillisecondsV1, liveness = MACHINE_SPEED_POLICY_V1 }) {
+export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, priority = {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined, hold = () => false, footprintOf = readProcessFootprintBytesV1, capMegabytes = PLAN_STAGE_POLICY_V1.farmChildFootprintMegabytes["project-farm"].capMegabytes, aloneCapMegabytes = farmAloneCapV1(hostMemoryMegabytesV1()), limitMegabytes = Infinity, speed = localMachineSpeedFactorV1(environment), cpuOf = readProcessCpuMillisecondsV1, liveness = MACHINE_SPEED_POLICY_V1 }) {
   if (!Number.isSafeInteger(workers) || workers < 1) throw Error("Graph farm of at least one worker required");
   let priorityReported = false;
   const retiring = new Set(), judging = new Set();
@@ -191,6 +191,8 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const retire = (slot, graceful) => {
     const child = slot.child, generation = slot.generation;
     clearTimeout(slot.timer);
+    slot.measurement?.abort();
+    slot.cpuMeasurement?.abort();
     slot.child = undefined;
     if (!child) { if (slot.state !== "retiring") slot.state = "empty"; return; }
     slot.state = "retiring";
@@ -270,20 +272,23 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   };
   const breathe = (slot, job, child) => {
     const now = performance.now();
-    if (now - (job.livenessAt ?? -Infinity) < liveness.livenessMilliseconds) return;
+    if (slot.cpuMeasurement || now - (job.livenessAt ?? -Infinity) < liveness.livenessMilliseconds) return;
     job.livenessAt = now;
-    Promise.resolve().then(() => cpuOf(child.pid)).then(milliseconds => {
-      if (slot.job !== job || slot.child !== child || !Number.isFinite(milliseconds)) return;
+    const measurement = new AbortController(), { signal: sampling } = measurement;
+    slot.cpuMeasurement = measurement;
+    Promise.resolve().then(() => sampling.aborted ? undefined : cpuOf(child.pid, { signal: sampling })).then(milliseconds => {
+      if (sampling.aborted || slot.job !== job || slot.child !== child || !Number.isFinite(milliseconds)) return;
       if (job.cpuMilliseconds !== undefined && milliseconds - job.cpuMilliseconds >= liveness.livenessCpuMilliseconds) armJob(slot, job);
       job.cpuMilliseconds = milliseconds;
-    }, () => {});
+    }, () => {}).finally(() => { slot.cpuMeasurement = undefined; });
   };
   const measure = () => {
     if (closed || disabled !== undefined || !slots.some(slot => slot.state === "busy")) { clearInterval(watcher); watcher = undefined; return; }
     for (const slot of slots) {
       const job = slot.job, child = slot.child;
-      if (slot.state !== "busy" || !job || !child?.pid || slot.reading) continue;
+      if (slot.state !== "busy" || !job || !child?.pid) continue;
       breathe(slot, job, child);
+      if (slot.reading) continue;
       slot.reading = true;
       Promise.resolve().then(() => footprintOf(child.pid)).then(bytes => {
         slot.reading = false;
@@ -321,6 +326,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
       else if (message?.type === "result" || message?.type === "failure") {
         const job = slot.job;
         if (!job || job.id !== message.id) return;
+        slot.cpuMeasurement?.abort();
         slot.job = undefined; slot.state = "settling";
         clearTimeout(job.timer);
         const result = message.type === "result", first = slot.served === 0 && result, weight = result && typeof message.reply?.weight === "number" ? message.reply.weight : 1;
@@ -341,7 +347,25 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
         };
         const suspect = recycleReasonV1({ heldMegabytes: message.rssMegabytes, baselineMegabytes: slot.baseline, jobs: slot.served + weight, megabytes }, policy) === "memory";
         if (!child.pid || !(first || suspect || weight >= 1)) { conclude(undefined); return; }
-        const judged = Promise.resolve().then(() => footprintOf(child.pid)).then(bytes => Number.isFinite(bytes) && bytes >= 0 ? bytes / MEGABYTE : undefined, () => undefined).then(conclude).finally(() => judging.delete(judged));
+        const controller = new AbortController();
+        const { signal: sampling } = controller;
+        slot.measurement = controller;
+        const deadline = setTimeout(() => controller.abort(), policy.settleFootprintMilliseconds);
+        deadline.unref?.();
+        const measured = new Promise(resolve => {
+          const finish = bytes => {
+            sampling.removeEventListener("abort", cancel);
+            resolve(Number.isFinite(bytes) && bytes >= 0 ? bytes / MEGABYTE : undefined);
+          };
+          const cancel = () => finish(undefined);
+          sampling.addEventListener("abort", cancel, { once: true });
+          Promise.resolve().then(() => sampling.aborted ? undefined : footprintOf(child.pid, { signal: sampling })).then(finish, cancel);
+        });
+        const judged = measured.then(conclude).finally(() => {
+          clearTimeout(deadline);
+          if (slot.measurement === controller) slot.measurement = undefined;
+          judging.delete(judged);
+        });
         judging.add(judged);
       }
     });
@@ -383,6 +407,10 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     closeWork = (async () => {
       signal?.removeEventListener("abort", abort);
       readyAccept(false);
+      for (const slot of slots) {
+        slot.measurement?.abort();
+        slot.cpuMeasurement?.abort();
+      }
       await Promise.all([...judging]);
       for (const job of queue.splice(0)) settle(job, { lost: "closed" });
       for (const slot of slots) {
@@ -405,9 +433,9 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     ready,
     get idle() { return slots.some(slot => slot.state === "idle"); },
     get usable() { return !closed && disabled === undefined; },
-    get pending() { return queue.length + slots.filter(slot => slot.state === "busy").length; },
-    /** 🔭️ The live count of the slots: children busy, idle, starting and not started, the queued jobs, whether a job runs alone (every other child waits for it) and the restarts; the line of a parked owner names them. */
-    get snapshot() { const count = state => slots.filter(slot => slot.state === state).length; return { busy: count("busy"), idle: count("idle"), starting: count("starting"), empty: count("empty"), refused: slots.filter(slot => slot.refused === true).length, queued: queue.length, alone: slots.some(slot => slot.state === "busy" && slot.job?.alone === true), restarts }; },
+    get pending() { return queue.length + slots.filter(slot => slot.state === "busy" || slot.state === "settling").length; },
+    /** 🔭️ The live slot counts, including final memory measurements and retiring workers, for the parked-owner report. */
+    get snapshot() { const count = state => slots.filter(slot => slot.state === state).length; return { busy: count("busy"), idle: count("idle"), starting: count("starting"), empty: count("empty"), settling: count("settling"), retiring: count("retiring"), refused: slots.filter(slot => slot.refused === true).length, queued: queue.length, alone: slots.some(slot => slot.state === "busy" && slot.job?.alone === true), restarts }; },
     stats: () => ({ ...stats, queuedMilliseconds: Math.round(stats.queuedMilliseconds), workedMilliseconds: Math.round(stats.workedMilliseconds), bootMilliseconds: Math.round(stats.bootMilliseconds), restarts, ...(disabled === undefined ? {} : { disabled }) }),
     refer(on) { referenced = on === true; for (const slot of slots) if (slot.child) holdChild(slot.child); },
     run(payload, options = {}) {
@@ -415,16 +443,21 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
       options.signal?.throwIfAborted();
       stats.jobs++;
       return new Promise(resolve => {
-        const job = { id: nextId++, payload, attempts: 0, alone: false, resolve, settled: false, timer: undefined, queued: performance.now(), dispatched: 0, expected: farmJobExpectedMillisecondsV1(payload, policy), front: false };
+        const job = { id: nextId++, payload, signal: options.signal, attempts: 0, alone: false, resolve, settled: false, timer: undefined, queued: performance.now(), dispatched: 0, expected: farmJobExpectedMillisecondsV1(payload, policy), front: false };
         queue.push(job);
         if (options.signal) {
           const cancel = () => {
             if (job.settled) return;
-            const at = queue.indexOf(job);
-            if (at >= 0) queue.splice(at, 1);
+            let kept = 0;
+            for (const queued of queue) {
+              if (queued.signal === options.signal) settle(queued, { lost: "aborted" });
+              else queue[kept++] = queued;
+            }
+            queue.length = kept;
             settle(job, { lost: "aborted" });
             const slot = slots.find(each => each.job === job);
-            if (slot) { slot.job = undefined; retire(slot, false); pump(); }
+            if (slot) { slot.job = undefined; retire(slot, false); }
+            pump();
           };
           if (options.signal.aborted) cancel(); else { options.signal.addEventListener("abort", cancel, { once: true }); job.release = () => options.signal.removeEventListener("abort", cancel); }
         }

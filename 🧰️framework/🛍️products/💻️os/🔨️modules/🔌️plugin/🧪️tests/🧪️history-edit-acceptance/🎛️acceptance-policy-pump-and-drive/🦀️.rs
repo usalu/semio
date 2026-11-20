@@ -8,6 +8,22 @@ pub(super) fn acceptance_policy() -> semio_plugin_mounted_owner::MountedOwnerPol
     semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
 }
 
+/// 🎟️ Establishes the original decoder receipt required to enter mounted command dispatch.
+pub(super) fn acceptance_context(caller: &mut artifact_app_laws::OriginalFixtureCaller) -> semio_framework_job::StepContext<'_> {
+    let mut cx = caller.context();
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        let mut scope = None;
+        if cx.with_native_receiving(&mut scope, |_, _| Ok(())).expect("original acceptance decoder receiving scope") {
+            let outcome = scope.expect("original acceptance decoder receipt");
+            assert!(outcome.source_refusal.is_none() && outcome.call.is_ok(), "original acceptance decoder was refused");
+            artifact_app_laws::fixture_end_turn(&mut cx).expect("original acceptance decoder receipt settles");
+            assert!(cx.native_receiving_identity().is_some(), "mounted commands require the accepted original decoder identity");
+            return cx;
+        }
+    }
+    panic!("original acceptance decoder exceeded its supplied turns");
+}
+
 /// 🪪️ The acceptance actor's action meta on the registered instance.
 pub(super) fn acceptance_meta() -> ActionMeta {
     ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(Locale::En, Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
@@ -20,23 +36,15 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut args = Some(DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect()));
-    let mut meta=Some(acceptance_meta());
-    let outcome=semio_plugin_testing_laws::with_authoring_identity!(|identity| async{
-        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            if cx.should_yield(){break}
-            let result=app.handle_action(action,&mut args,&mut meta,&mut identity,cx).await.map_err(|fault|AcceptanceError::from(fault).context(format!("{action} faulted")))?;
-            if let Some(result)=result{return match result.output.get("rejected").and_then(DslValue::as_str){Some(code)=>Err(format!("{action} was refused: {code}").into()),None=>Ok(())}}
-        }
-        Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
-    }.await);
-    let mut input=semio_framework_value::retirement::controlled::ControlledRetirement::new(args).unwrap_or_else(|_|panic!("original acceptance action input supports controlled retirement"));
-    let loan=acceptance_policy().close;
-    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-        if input.terminal_is_empty(){return outcome}
-        cx.with_retained_loan(loan,|same|semio_framework_job::close_original_effect_step(same,input.selected_demand(loan.maximum_copy_bytes)?,|effect|input.step(loan.maximum_copy_bytes,effect))).expect("original acceptance action input paid retirement");
+    let args = DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let meta = acceptance_meta();
+    let result = semio_plugin_testing_laws::with_authoring_identity!(|identity|
+        artifact_app_laws::dispatch_fixture_action(app, action, Some(args), &meta, &mut identity, cx, acceptance_policy().close).await)
+        .map_err(|fault| AcceptanceError::from(fault).context(format!("{action} faulted")))?;
+    match result.output.get("rejected").and_then(DslValue::as_str) {
+        Some(code) => Err(format!("{action} was refused: {code}").into()),
+        None => Ok(()),
     }
-    panic!("original acceptance action input exceeded its supplied close turns")
 }
 
 /// ⏱️ Drives reactor turns within the original caller's fixed deadline, fuel and supplied turn bound.
@@ -46,11 +54,16 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-        if cx.should_yield(){return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
+    let grant = cx.retained_grant();
+    let fuel = artifact_app_laws::OriginalFixtureCaller::turn_fuel();
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        if let Some((issued, progress)) = app.take_history_command_receipt() {
+            assert!(progress.fits(issued), "history command receipt exceeds its supplied original grant");
+        }
         if done(app) {
             return Ok(());
         }
+        artifact_app_laws::fixture_renew_turn(cx, fuel, grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
         semio_plugin_testing_laws::with_authoring_identity!(|identity| app.advance_typed_operation_publication(&mut identity,cx).await)?;
         while app.take_typed_operation_ui_progress().is_some() {}
     }
@@ -70,8 +83,15 @@ where
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let failed=Box::pin(acceptance_pump(app, |app| !app.time_travel.has_pending_work(),cx)).await.err();
-    artifact_app_laws::close_registered_fixture_app(app,acceptance_policy(),cx).expect("original acceptance app terminal close");
-    if let Some(failed)=failed{panic!("original acceptance driver failure after paid app close: {failed}")}
+    if let Err(close) = artifact_app_laws::close_registered_fixture_app(app, acceptance_policy(), cx) {
+        if let Some(error) = failed {
+            panic!("original acceptance pump failed with {error}; terminal close also refused with {close:?}");
+        }
+        panic!("original acceptance app terminal close failed: {close:?}");
+    }
+    if let Some(error) = failed {
+        panic!("original acceptance driver failed before app close: {error}");
+    }
 }
 
 /// 🪴️ A registered instance whose document is `base` (loaded through the document text path unless the instance boots on exactly
@@ -95,8 +115,22 @@ where
         }
         for (index, op) in ops.iter().enumerate() {
             let applied = app.stores.store.mutation_ops().map_or(0, |applied| applied.len());
-            let receipt =
-                semio_plugin_testing_laws::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
+            // 🎟️ Native operation encoding runs on the caller's original work loan; the dispatch future never suspends, so it settles inside that loan.
+            let (fuel, deadline) = (cx.fuel_remaining().min(1 << 24), cx.original_absolute_deadline_us());
+            let mut dispatched = None;
+            cx.with_original_work_loan(fuel, deadline, |loaned| {
+                // 🎟️ Authored operation identities commit under the loan's own Work, as the production reserved-commit route lends it; what the hops performed is charged back to the loan.
+                let mut work = loaned.native_encoder_work();
+                let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+                let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+                let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("acceptance authoring identity admission").with_work_lender(Box::new(artifact_app_laws::CallerIdentityWork(&mut work)));
+                dispatched = Some(block_on_acceptance(app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity)));
+                drop(identity);
+                loaned.consume_fuel(work.performed());
+                Ok(())
+            })
+            .map_err(|failure| AcceptanceSeedFault::Operation(index, format!("the seed edit has no original work loan: {failure:?}")))?;
+            let receipt = dispatched.expect("the seed dispatch ran inside its loan").map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                 return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
             }

@@ -1,0 +1,39 @@
+{
+  "steps": [
+    "cut",
+    "drill",
+    "attach"
+  ],
+  "edits": [
+    {
+      "field": "label",
+      "value": "Edited crosscut"
+    },
+    {
+      "field": "posX",
+      "value": 0.25
+    }
+  ],
+  "drillRadius": 0.042,
+  "move": {
+    "measure": "attach",
+    "index": 1
+  },
+  "expected": {
+    "order": [
+      "cut",
+      "attach",
+      "drill"
+    ],
+    "label": "Edited crosscut",
+    "positionX": 0.25,
+    "drillRadius": 0.042
+  },
+  "stockResize": {
+    "beforeWidth": 3,
+    "width": 3.25,
+    "depth": 0.2,
+    "height": 0.3,
+    "volume": 0.195
+  }
+}

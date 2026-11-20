@@ -8,48 +8,119 @@ pub fn encode_polygon_mesh_source(source:&PolygonMeshSource)->String {json::from
 /// 📜️ Reads polygon-preserving OBJ through the cooperative source cursor.
 pub fn polygon_mesh_source_from_obj(text:&str)->Result<PolygonMeshSource,String> {let mut cursor=ObjSourceCursor::new();loop {if let Some(source)=cursor.step(text,4096)?{return Ok(source);}}}
 
-/// 🖱️ Incremental form of [`polygon_mesh_source_from_obj`]: reads at most the granted number of lines per step so a host can stay inside an interactive step ceiling.
-pub struct ObjSourceCursor {offset:usize,lines:usize,vertices:Vec<[f32;3]>,faces:Vec<Vec<u32>>}
+/// 🖱️ Reads OBJ in bounded byte chunks and validates one polygon corner per turn.
+#[derive(semio_framework_value_derive::RetireOwned)]
+pub struct ObjSourceCursor {
+    offset: usize,
+    lines: usize,
+    token_start: usize,
+    line: ObjLine,
+    vertices: Vec<[f32; 3]>,
+    faces: Vec<Vec<u32>>,
+    face: usize,
+    corner: usize,
+}
 
-impl Default for ObjSourceCursor {fn default()->Self {Self::new()}}
+#[derive(semio_framework_value_derive::RetireOwned)]
+enum ObjLine {
+    Start,
+    Vertex([f32; 3], usize),
+    Face(Vec<u32>),
+    Skip,
+}
+
+impl Default for ObjSourceCursor { fn default() -> Self { Self::new() } }
 
 impl ObjSourceCursor {
-    pub fn new()->Self {Self {offset:0,lines:0,vertices:Vec::new(),faces:Vec::new()}}
+    pub fn new() -> Self {
+        Self { offset: 0, lines: 1, token_start: 0, line: ObjLine::Start, vertices: Vec::new(), faces: Vec::new(), face: 0, corner: 0 }
+    }
 
-    /// 📊 Bytes consumed and the byte length of `text`.
-    pub fn progress(&self,text:&str)->(usize,usize) {(self.offset,text.len())}
+    /// 📊 Bytes consumed and the byte length of the source.
+    pub fn progress(&self, text: &str) -> (usize, usize) { (self.offset.min(text.len()), text.len()) }
 
-    /// ⏱️ Reads up to `maximum_lines` lines of `text`; the source once the whole text is read and every face index is checked.
-    pub fn step(&mut self,text:&str,maximum_lines:usize)->Result<Option<PolygonMeshSource>,String> {
-        if text.len()>16_000_000 {return Err("obj: input exceeds 16 MB".into());}
-        for _ in 0..maximum_lines.max(1) {
-            if self.offset>=text.len() {
-                if self.faces.iter().flatten().any(|index|*index as usize>=self.vertices.len()) {return Err("obj: face index out of range".into());}
-                return Ok(Some(PolygonMeshSource {vertices:std::mem::take(&mut self.vertices),faces:std::mem::take(&mut self.faces),attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()}));
+    /// ⏱️ Advances one byte chunk or polygon corner per granted unit.
+    pub fn step(&mut self, text: &str, maximum_units: usize) -> Result<Option<PolygonMeshSource>, String> {
+        if text.len() > 16_000_000 { return Err("obj: input exceeds 16 MB".into()); }
+        for _ in 0..maximum_units {
+            if self.offset <= text.len() {
+                self.parse_chunk(text)?;
+                continue;
             }
-            let rest=&text[self.offset..];
-            let end=rest.find('\n').unwrap_or(rest.len());
-            let line=&rest[..end];
-            self.offset+=end+1;
-            self.lines+=1;
-            let mut parts=line.split_whitespace();
-            match parts.next() {
-                Some("v")=>{
-                    let coordinates=parts.take(3).map(|value|value.parse::<f32>().ok().filter(|number|number.is_finite())).collect::<Option<Vec<_>>>().filter(|coordinates|coordinates.len()==3).ok_or_else(||format!("obj: malformed v line {}",self.lines))?;
-                    self.vertices.push([coordinates[0],coordinates[1],coordinates[2]]);
+            if let Some(face) = self.faces.get(self.face) {
+                if face[self.corner] as usize >= self.vertices.len() {
+                    return Err("obj: face index out of range".into());
                 }
-                Some("f")=>{
-                    let mut face=Vec::new();
-                    for token in parts {
-                        let raw:i64=token.split('/').next().unwrap_or_default().parse().map_err(|_|format!("obj: malformed face index on line {}",self.lines))?;
-                        face.push(obj_resolve_index(raw,self.vertices.len())? as u32);
-                    }
-                    if face.len()>=3 {self.faces.push(face);}
+                self.corner += 1;
+                if self.corner == face.len() {
+                    self.face += 1;
+                    self.corner = 0;
                 }
-                _=>{}
+                continue;
             }
+            return Ok(Some(PolygonMeshSource { vertices: std::mem::take(&mut self.vertices), faces: std::mem::take(&mut self.faces), surface: Vec::new(), attributes: HistoryFoldIndex::new(), materials: HistoryFoldIndex::new(), textures: HistoryFoldIndex::new() }));
         }
         Ok(None)
+    }
+
+    fn parse_chunk(&mut self, text: &str) -> Result<(), String> {
+        let end = self.offset.saturating_add(256).min(text.len() + 1);
+        while self.offset < end {
+            let byte = text.as_bytes().get(self.offset).copied().unwrap_or(b'\n');
+            if byte.is_ascii_whitespace() || byte == b'#' {
+                if self.token_start < self.offset && !matches!(self.line, ObjLine::Skip) {
+                    self.parse_token(&text[self.token_start..self.offset])?;
+                }
+                self.token_start = self.offset + 1;
+                if byte == b'\n' || byte == b'#' {
+                    self.finish_line()?;
+                    if byte == b'#' {
+                        self.line = ObjLine::Skip;
+                    } else {
+                        self.lines += 1;
+                    }
+                }
+            }
+            self.offset += 1;
+        }
+        Ok(())
+    }
+
+    fn parse_token(&mut self, token: &str) -> Result<(), String> {
+        match &mut self.line {
+            ObjLine::Start => self.line = match token {
+                "v" => ObjLine::Vertex([0.0; 3], 0),
+                "f" => ObjLine::Face(Vec::new()),
+                _ => ObjLine::Skip,
+            },
+            ObjLine::Vertex(coordinates, count) => {
+                if let Some(coordinate) = coordinates.get_mut(*count) {
+                    *coordinate = (token.len() <= 128).then(|| token.parse::<f32>().ok()).flatten()
+                        .filter(|value| value.is_finite()).ok_or_else(|| format!("obj: malformed v line {}", self.lines))?;
+                    *count += 1;
+                }
+            }
+            ObjLine::Face(face) => {
+                let prefix = token.as_bytes().get(..32).unwrap_or(token.as_bytes());
+                let index = prefix.iter().position(|byte| *byte == b'/').map(|end| &prefix[..end])
+                    .or_else(|| (token.len() <= 32).then_some(prefix));
+                let raw = index.and_then(|index| std::str::from_utf8(index).ok()).and_then(|index| index.parse::<i64>().ok())
+                    .ok_or_else(|| format!("obj: malformed face index on line {}", self.lines))?;
+                face.push(u32::try_from(obj_resolve_index(raw, self.vertices.len())?).map_err(|_| "obj: face index out of range")?);
+            }
+            ObjLine::Skip => {}
+        }
+        Ok(())
+    }
+
+    fn finish_line(&mut self) -> Result<(), String> {
+        match std::mem::replace(&mut self.line, ObjLine::Start) {
+            ObjLine::Vertex(coordinates, 3) => self.vertices.push(coordinates),
+            ObjLine::Vertex(..) => return Err(format!("obj: malformed v line {}", self.lines)),
+            ObjLine::Face(face) if face.len() >= 3 => self.faces.push(face),
+            _ => {}
+        }
+        Ok(())
     }
 }
 
@@ -98,6 +169,9 @@ fn mesh_source_decode_admission(control:&semio_framework_value_native_owned::nat
 pub struct PolygonSourcePreparation {
     parser:Option<json::JsonParseCursor>,projection:Option<json::JsonValueProjection>,decoding:Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,stage:u8,
     raw:Option<pack::value::DslValue>,vertices:std::vec::IntoIter<pack::value::DslValue>,faces:std::vec::IntoIter<pack::value::DslValue>,
+    surface: std::vec::IntoIter<pack::value::DslValue>,
+    surface_seen: HistoryFoldIndex<(u8, u32), ()>,
+    normal_receipt: [usize; 4],
     attributes:std::vec::IntoIter<(String,pack::value::DslValue)>,materials:std::vec::IntoIter<(String,pack::value::DslValue)>,textures:std::vec::IntoIter<(String,pack::value::DslValue)>,
     source:PolygonMeshSource,face:Vec<u32>,indices:std::vec::IntoIter<pack::value::DslValue>,seen:Vec<u32>,corners:usize,
     current:Option<(String,pack::value::DslValue)>,attribute:Option<(String,MeshAttribute)>,texture:Option<(String,MeshTexture)>,
@@ -105,7 +179,7 @@ pub struct PolygonSourcePreparation {
 }
 impl PolygonSourcePreparation {
     /// 🌱️ Starts without reading or cloning source text.
-    pub fn new()->Self {Self {parser:Some(json::JsonParseCursor::new(json::JsonMemberPolicy::Reject)),projection:None,decoding:None,stage:0,raw:None,vertices:Vec::new().into_iter(),faces:Vec::new().into_iter(),attributes:Vec::new().into_iter(),materials:Vec::new().into_iter(),textures:Vec::new().into_iter(),source:PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()},face:Vec::new(),indices:Vec::new().into_iter(),seen:Default::default(),corners:0,current:None,attribute:None,texture:None,garbage:Vec::new(),retirement:None,name:None,index:0,field:0,texture_bytes:0}}
+    pub fn new()->Self {Self {parser:Some(json::JsonParseCursor::new(json::JsonMemberPolicy::Reject)),projection:None,decoding:None,stage:0,raw:None,vertices:Vec::new().into_iter(),faces:Vec::new().into_iter(),surface:Vec::new().into_iter(),surface_seen:HistoryFoldIndex::new(),normal_receipt:Default::default(),attributes:Vec::new().into_iter(),materials:Vec::new().into_iter(),textures:Vec::new().into_iter(),source:PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),surface:Vec::new(),attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()},face:Vec::new(),indices:Vec::new().into_iter(),seen:Default::default(),corners:0,current:None,attribute:None,texture:None,garbage:Vec::new(),retirement:None,name:None,index:0,field:0,texture_bytes:0}}
     /// 📍️ Exposes the current existing source preparation phase.
     pub fn phase(&self)->&'static str {match self.stage {0=>"mesh-source-parse",1..=7=>"mesh-source-project",_=>"mesh-source-admit"}}
     /// 📏️ Computes exact closure demands for explicit cold IO callers.
@@ -121,8 +195,25 @@ impl PolygonSourcePreparation {
         };
         Ok(PolygonSourceGrant{maximum_units,maximum_projection_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}})
     }
+    /// 🧾️ Carries parser and retirement effects on successful and faulting turns.
+    pub fn normal_step_retained_progress(&self) -> pack::value::retained_clone::RetainedCloneProgress {
+        let [copied_items, copied_bytes, retained_capacity_bytes, released_bytes] = self.normal_receipt;
+        pack::value::retained_clone::RetainedCloneProgress { copied_items, copied_bytes, retained_capacity_bytes, released_bytes }
+    }
+
+    fn record_receipt(&mut self, progress: pack::value::retained_clone::RetainedCloneProgress) {
+        self.normal_receipt = [progress.copied_items, progress.copied_bytes, progress.retained_capacity_bytes, progress.released_bytes];
+    }
+
     /// 💼️ Advances projection work or one independently admitted closure turn under the calling turn's effect.
     pub fn step(&mut self,text:&str,grant:PolygonSourceGrant,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<PolygonSourceStep,String> {
+        self.normal_receipt = Default::default();
+        let result = self.advance(text, grant, effect);
+        if let Ok(step) = &result { self.record_receipt(step.retirement); }
+        result
+    }
+
+    fn advance(&mut self,text:&str,grant:PolygonSourceGrant,effect:&mut pack::value::RetainedAllocationEffect<'_>)->Result<PolygonSourceStep,String> {
         let waiting=|retirement|PolygonSourceStep{source:None,retirement};
         if text.len()>16_000_000{return Err("mesh input exceeds 16 MB".into());}
         if grant.maximum_units==0{return Ok(waiting(Default::default()));}
@@ -134,8 +225,8 @@ impl PolygonSourcePreparation {
         if maximum_bytes==0{return Ok(waiting(Default::default()));}
         for _ in 0..grant.maximum_units {
             match self.stage {
-                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?,None=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted)};let parser=self.parser.as_mut().unwrap();let parsed=(||{mesh_source_decode_admission(&control,parser.normal_step_demands(text).map_err(|error|error.to_string())?)?;parser.step(text,1,&mut control,effect).map_err(|error|error.to_string())})();let progress=parser.normal_step_progress();self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=parsed? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
-                1=>{let mut accepted=|_|true;let receipt=self.decoding.take().ok_or("mesh native decoding continuation is absent")?;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?;let projection=self.projection.as_mut().unwrap();let projected=(||{mesh_source_decode_admission(&control,projection.normal_step_demands().map_err(|error|error.to_string())?)?;projection.step(1,maximum_bytes,&mut control,effect).map_err(|error|error.to_string())})();let progress=projection.normal_step_progress();self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=projected? {self.raw=Some(value);self.stage=2;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
+                0=>{let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?,None=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted)};let parser=self.parser.as_mut().unwrap();let parsed=(||{mesh_source_decode_admission(&control,parser.normal_step_demands(text).map_err(|error|error.to_string())?)?;parser.step(text,1,&mut control,effect).map_err(|error|error.to_string())})();let progress=parser.normal_step_progress();self.record_receipt(progress);self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=parsed? {self.projection=Some(json::JsonValueProjection::new(value));self.stage=1;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
+                1=>{let mut accepted=|_|true;let receipt=self.decoding.take().ok_or("mesh native decoding continuation is absent")?;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted).map_err(|(error,receipt)|{self.decoding=Some(receipt);error.to_string()})?;let projection=self.projection.as_mut().unwrap();let projected=(||{mesh_source_decode_admission(&control,projection.normal_step_demands().map_err(|error|error.to_string())?)?;projection.step(1,maximum_bytes,&mut control,effect).map_err(|error|error.to_string())})();let progress=projection.normal_step_progress();self.record_receipt(progress);self.decoding=Some(control.pause().map_err(|(error,_)|error.to_string())?);if let Some(value)=projected? {self.raw=Some(value);self.stage=2;}if !progress.fits(grant.retirement){return Err("mesh original parser/projection receipt exceeds caller grant".into());}return Ok(waiting(progress));},
                 2=>self.admit_root()?,
                 3=>{if let Some(value)=self.vertices.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()==3).ok_or("vertex must have three coordinates")?;let mut point=[0.0;3];for axis in 0..3 {point[axis]=values[axis].as_f64().filter(|number|number.is_finite() && number.abs()<=f32::MAX as f64).ok_or("coordinate must be finite")? as f32;}self.source.vertices.push(point);self.seen.push(0);self.garbage.push(self.raw.take().unwrap());}else {self.stage=4;}},
                 4=>self.project_face()?,
@@ -144,24 +235,68 @@ impl PolygonSourcePreparation {
                 7=>self.project_texture()?,
                 8=>self.admit_attribute()?,
                 9=>self.admit_material()?,
-                10=>{if !self.garbage.is_empty(){return Ok(waiting(Default::default()));}self.stage=11;},
-                _=>return Ok(PolygonSourceStep{source:Some(std::mem::replace(&mut self.source,PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()})),retirement:Default::default()}),
+                11=>self.project_surface()?,
+                10=>{if !self.garbage.is_empty(){return Ok(waiting(Default::default()));}self.stage=12;},
+                _=>return Ok(PolygonSourceStep{source:Some(std::mem::replace(&mut self.source,PolygonMeshSource {vertices:Vec::new(),faces:Vec::new(),surface:Vec::new(),attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()})),retirement:Default::default()}),
             }
         }
         Ok(waiting(Default::default()))
     }
     fn admit_root(&mut self)->Result<(),String> {
-        let fields=self.raw.as_ref().unwrap().as_object().filter(|fields|fields.len()<=5 && fields.iter().all(|(name,_)|["vertices","faces","attributes","materials","textures"].contains(&name.as_str()))).ok_or("unknown mesh field")?;
+        let fields=self.raw.as_ref().unwrap().as_object().filter(|fields|fields.len()<=6 && fields.iter().all(|(name,_)|["vertices","faces","attributes","materials","textures","surface"].contains(&name.as_str()))).ok_or("unknown mesh field")?;
         for (field,minimum,maximum) in [("vertices",3,100_000),("faces",1,100_000)] {let values=fields.iter().find(|(name,_)|name==field).and_then(|(_,value)|value.as_array()).ok_or_else(||format!("{field} must be an array"))?;if !(minimum..=maximum).contains(&values.len()) {return Err("mesh requires 3..100000 vertices and 1..100000 faces".into());}}
         for (field,maximum) in [("attributes",64),("materials",10_000),("textures",256)] {if let Some((_,value))=fields.iter().find(|(name,_)|name==field) {if value.as_object().is_none_or(|fields|fields.len()>maximum) {return Err("mesh asset declaration limit exceeded".into());}}}
+        if fields.iter().find(|(name,_)| name == "surface").is_some_and(|(_,value)| value.as_array().is_none_or(|samples| samples.len() > 1_400_000)) { return Err("mesh surface declaration limit exceeded".into()); }
         let Some(pack::value::DslValue::Object(fields))=self.raw.take() else {unreachable!()};
-        for (name,value) in fields {match (name.as_str(),value) {("vertices",pack::value::DslValue::Array(values))=>self.vertices=values.into_iter(),("faces",pack::value::DslValue::Array(values))=>self.faces=values.into_iter(),("attributes",pack::value::DslValue::Object(values))=>self.attributes=values.into_iter(),("materials",pack::value::DslValue::Object(values))=>self.materials=values.into_iter(),("textures",pack::value::DslValue::Object(values))=>self.textures=values.into_iter(),_=>unreachable!()}}
+        for (name,value) in fields {match (name.as_str(),value) {("vertices",pack::value::DslValue::Array(values))=>self.vertices=values.into_iter(),("faces",pack::value::DslValue::Array(values))=>self.faces=values.into_iter(),("surface",pack::value::DslValue::Array(values))=>self.surface=values.into_iter(),("attributes",pack::value::DslValue::Object(values))=>self.attributes=values.into_iter(),("materials",pack::value::DslValue::Object(values))=>self.materials=values.into_iter(),("textures",pack::value::DslValue::Object(values))=>self.textures=values.into_iter(),_=>unreachable!()}}
         self.stage=3;Ok(())
     }
     fn project_face(&mut self)->Result<(),String> {
         if let Some(value)=self.indices.next() {self.raw=Some(value);let id=self.raw.as_ref().unwrap().as_u64().filter(|id|*id<self.source.vertices.len() as u64).ok_or("face index out of range")? as u32;let generation=self.source.faces.len() as u32+1;if self.seen[id as usize]==generation{return Err("face contains a repeated vertex".into());}self.seen[id as usize]=generation;self.face.push(id);self.garbage.push(self.raw.take().unwrap());return Ok(());}
         if !self.face.is_empty() {self.source.faces.push(std::mem::take(&mut self.face));return Ok(());}
-        if let Some(value)=self.faces.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()>=3).ok_or("face requires at least three indices")?;self.corners=self.corners.saturating_add(values.len());if self.corners>600_000 {return Err("mesh exceeds 600000 polygon corners".into());}let Some(pack::value::DslValue::Array(values))=self.raw.take() else {unreachable!()};self.indices=values.into_iter();}else {self.stage=5;}Ok(())
+        if let Some(value)=self.faces.next() {self.raw=Some(value);let values=self.raw.as_ref().unwrap().as_array().filter(|values|values.len()>=3).ok_or("face requires at least three indices")?;self.corners=self.corners.saturating_add(values.len());if self.corners>600_000 {return Err("mesh exceeds 600000 polygon corners".into());}let Some(pack::value::DslValue::Array(values))=self.raw.take() else {unreachable!()};self.indices=values.into_iter();}else {self.stage=11;}Ok(())
+    }
+    fn project_surface(&mut self) -> Result<(), String> {
+        fn components<const N: usize>(value: &pack::value::DslValue) -> Option<[f32; N]> {
+            let fields = value.as_array().filter(|fields| fields.len() == N)?;
+            let mut result = [0.0; N];
+            for (component, field) in result.iter_mut().zip(fields) {
+                *component = field.as_f64().filter(|value| value.is_finite() && value.abs() <= f32::MAX as f64)? as f32;
+            }
+            Some(result)
+        }
+
+        const INVALID: &str = "invalid mesh surface sample";
+        let Some(value) = self.surface.next() else { self.stage = 5; return Ok(()); };
+        self.raw = Some(value);
+        let value = self.raw.as_ref().unwrap();
+        let fields = value.as_object().filter(|fields| (2..=3).contains(&fields.len())).ok_or(INVALID)?;
+        let kind = match value.get("kind").and_then(pack::value::DslValue::as_str) {
+            Some("smoothFace") => PolygonSurfaceKind::SmoothFace,
+            Some("vertexNormal") => PolygonSurfaceKind::VertexNormal,
+            Some("cornerUv") => PolygonSurfaceKind::CornerUv,
+            Some("seamEdge") => PolygonSurfaceKind::SeamEdge,
+            _ => return Err(INVALID.into()),
+        };
+        let index = value.get("index").and_then(pack::value::DslValue::as_u64).filter(|index| *index < 600_000).ok_or(INVALID)? as u32;
+        let normal = value.get("normal").map(|field| components(field).ok_or(INVALID)).transpose()?;
+        let uv = value.get("uv").map(|field| components(field).ok_or(INVALID)).transpose()?;
+        if fields.len() != 2 + usize::from(normal.is_some()) + usize::from(uv.is_some()) {
+            return Err(INVALID.into());
+        }
+        let sample = PolygonSurfaceSample { kind, index, normal, uv };
+        let limit = match (sample.kind, sample.normal, sample.uv) {
+            (PolygonSurfaceKind::SmoothFace, None, None) => self.source.faces.len(),
+            (PolygonSurfaceKind::VertexNormal, Some(normal), None) if normal != [0.0; 3] => self.source.vertices.len(),
+            (PolygonSurfaceKind::CornerUv, None, Some(_)) | (PolygonSurfaceKind::SeamEdge, None, None) => self.corners,
+            _ => return Err("mesh surface sample has invalid fields".into()),
+        };
+        if sample.index as usize >= limit || self.surface_seen.insert((sample.kind as u8, sample.index), ()).is_some() {
+            return Err("mesh surface index is duplicate or out of range".into());
+        }
+        self.source.surface.push(sample);
+        self.garbage.push(self.raw.take().unwrap());
+        Ok(())
     }
     fn project_attribute(&mut self)->Result<(),String> {
         if let Some((_,attribute))=&mut self.attribute {if let Some(value)=self.indices.next() {self.raw=Some(value);attribute.indices.as_mut().unwrap().push(u32::try_from(self.raw.as_ref().unwrap().as_u64().ok_or("invalid mesh attribute index")?).map_err(|_|"invalid mesh attribute index")?);self.garbage.push(self.raw.take().unwrap());return Ok(());}let (name,attribute)=self.attribute.take().unwrap();self.source.attributes.insert(name,attribute);return Ok(());}
@@ -476,7 +611,7 @@ pub fn mesh_from_obj(text: &str) -> Result<MeshData, String> {
 
 fn obj_resolve_index(raw: i64, count: usize) -> Result<usize, String> {
     if raw > 0 {
-        Ok((raw - 1) as usize)
+        usize::try_from(raw - 1).map_err(|_| "obj: face index out of range".into())
     } else if raw < 0 {
         let index = count as i64 + raw;
         if index < 0 {

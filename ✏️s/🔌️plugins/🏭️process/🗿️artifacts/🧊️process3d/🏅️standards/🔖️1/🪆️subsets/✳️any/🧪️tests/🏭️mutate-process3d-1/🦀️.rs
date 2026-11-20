@@ -48,13 +48,11 @@ const KINDS: &[&str] = &[
     "move-stock",
     "change-stock-label",
     "replace-stock-solid",
+    "resize-stock",
 ];
 
-/// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
-/// [`law::mutation_is_observable`] must not demand one of them. Empty: every one of the fifteen
-/// kinds — the seven step-scoped verbs included, since `26/09/01/PROCESS-END-TO-END` gave them a
-/// real diff against `step_payloads` — has a committed vector that moves the document.
-const UNOBSERVABLE: &[&str] = &[];
+/// 👁️ The resize vector repeats the current width to verify its no-op law.
+const UNOBSERVABLE: &[&str] = &["resize-stock"];
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
@@ -179,6 +177,13 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../🧫️fixtures/🧬️mutations/🧊replace-stock-solid/🧊️reissues/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../🧫️fixtures/🧬️mutations/🧊replace-stock-solid/🧊️reissues/🔺️diff/🔣️.json"),
             outcome: include_str!("../🧫️fixtures/🧬️mutations/🧊replace-stock-solid/🧊️reissues/🎯️outcome/🔣️.json"),
+        },
+        "resize-stock" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/📏resize-stock/🟰️keeps-width/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/📏resize-stock/🟰️keeps-width/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/📏resize-stock/🟰️keeps-width/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/📏resize-stock/🟰️keeps-width/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/📏resize-stock/🟰️keeps-width/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-process3d-1: no committed specification vector is registered for kind {other:?}"),
     }

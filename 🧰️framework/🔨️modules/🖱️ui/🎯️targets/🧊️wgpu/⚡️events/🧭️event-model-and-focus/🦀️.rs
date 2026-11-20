@@ -39,6 +39,7 @@ pub struct EventModifiers {
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiEvent {
     PointerCancel,
+    PointerLeave,
     PointerDown {
         x: f32,
         y: f32,
@@ -194,6 +195,7 @@ fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
     stack.activate.is_none()
         && stack.drop_action.is_none()
         && !node.flags.contains(NodeFlags::DRAG_SOURCE)
+        && !node.flags.contains(NodeFlags::DROP_TARGET)
         && !tree.disclosure_is_interactive(id)
         && !tree.authored_tree_item(id).and_then(|item| item.actions.as_deref()).is_some_and(|actions| actions.iter().any(|action| action.placement() == semio_ui_declaration::ui::UiTreeActionPlacement::Row))
 }
@@ -297,7 +299,18 @@ impl CaptureState {
 //#region 🔖️Focus
 /// 🔄️ Which `UiNode` variants participate in Tab-order focus cycling.
 fn is_focusable(node: &UiNode) -> bool {
-    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_)) && node.presence().state != UiState::Disabled
+    is_interactive_kind(node) && node.presence().state != UiState::Disabled
+}
+
+fn is_interactive_kind(node: &UiNode) -> bool {
+    matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_))
+}
+
+/// 📦️ The node as a box of the state tree: interactive when it is a control, an activatable stack or an interactive disclosure, disabled by its own presence.
+pub(super) fn node_state_box(tree: &UiTree, id: NodeId) -> Option<semio_ui_border_presentation::BoxStateInput<NodeId>> {
+    let node = tree.node(id)?;
+    let interactive = is_interactive_kind(&node.spec.0) || matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()) || tree.disclosure_is_interactive(id);
+    Some(semio_ui_border_presentation::BoxStateInput { id, parent: node.parent, interactive, disabled: node.spec.0.presence().state == UiState::Disabled, marks: semio_ui_border_presentation::BoxStateMarks::NONE })
 }
 
 pub(super) fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {

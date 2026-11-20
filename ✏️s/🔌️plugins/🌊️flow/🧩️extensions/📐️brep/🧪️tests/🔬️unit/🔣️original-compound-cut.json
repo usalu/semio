@@ -1,0 +1,182 @@
+{
+  "operator": "brep.bool.compoundCut",
+  "target": {
+    "origin": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      10,
+      8,
+      6
+    ]
+  },
+  "cases": [
+    {
+      "name": "opposite boundary notches",
+      "tools": [
+        {
+          "origin": [
+            -2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "origin": [
+            8,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      ],
+      "volume": 416,
+      "genus": 0,
+      "shells": 1
+    },
+    {
+      "name": "overlapping tools form a single through tunnel",
+      "tools": [
+        {
+          "origin": [
+            -2,
+            2,
+            1
+          ],
+          "size": [
+            6,
+            4,
+            4
+          ]
+        },
+        {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            10,
+            4,
+            4
+          ]
+        }
+      ],
+      "volume": 320,
+      "genus": 1,
+      "shells": 1
+    },
+    {
+      "name": "disjoint tool and one interior cavity",
+      "tools": [
+        {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            2,
+            4,
+            4
+          ]
+        },
+        {
+          "origin": [
+            12,
+            8,
+            0
+          ],
+          "size": [
+            2,
+            3,
+            5
+          ]
+        }
+      ],
+      "volume": 448,
+      "genus": 0,
+      "shells": 2
+    }
+  ],
+  "refused": [
+    {
+      "name": "no tools",
+      "tools": []
+    },
+    {
+      "name": "empty result",
+      "tools": [
+        {
+          "origin": [
+            -1,
+            -1,
+            -1
+          ],
+          "size": [
+            12,
+            10,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "name": "disconnected result",
+      "tools": [
+        {
+          "origin": [
+            4,
+            -1,
+            -1
+          ],
+          "size": [
+            2,
+            10,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "name": "five distinct interior stock planes",
+      "tools": [
+        {
+          "origin": [
+            1,
+            2,
+            1
+          ],
+          "size": [
+            2,
+            4,
+            4
+          ]
+        },
+        {
+          "origin": [
+            6,
+            2,
+            1
+          ],
+          "size": [
+            2,
+            4,
+            4
+          ]
+        }
+      ]
+    }
+  ]
+}

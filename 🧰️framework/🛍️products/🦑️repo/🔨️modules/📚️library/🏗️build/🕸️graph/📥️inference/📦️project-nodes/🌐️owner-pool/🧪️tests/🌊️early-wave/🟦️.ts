@@ -1,11 +1,12 @@
 import{afterAll,expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createHash}from"node:crypto";
 import{startRemoteCacheServerV1}from"../../../../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import{createProjectFleetPortV1,type ProjectRecordInfoV1}from"../../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
-import{graphFleetClientV1}from"../../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import{graphFleetClientV1,graphRefusalOfV1}from"../../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import{graphFleetSettingsV1}from"../../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import{remoteCacheFetchV1}from"../../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P,ownerPoolAcceptsRevisionV1,ownerPoolIdV1,ownerPoolRepublishV1,ownerPoolWhyIdleV1,publishOwnerPoolV1,readOwnerPoolPointerV1,type OwnerPoolManifestV1,type OwnerPoolUnitV1}from"../../🟦️.ts";
@@ -26,8 +27,8 @@ async function world(){
 }
 const unitsOf=(count:number,burn=400):OwnerPoolUnitV1[]=>Array.from({length:count},(_all,index)=>({name:`owner-${String(index).padStart(4,"0")}`,kind:"k",expectedMilliseconds:burn,json:{name:`owner-${index}`}}));
 const manifestOf=(units:readonly OwnerPoolUnitV1[],tag:string,revision:string,config:object):OwnerPoolManifestV1=>{
- const partial={version:1 as const,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
- return{head:{...partial,revision,id:ownerPoolIdV1(partial,units),createdMs:Date.now()},session:Buffer.from(JSON.stringify(config)),units};
+ const partial={version:1 as const,revision,identity:"identity-"+tag,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},publisher:"p:"+tag};
+ return{head:{...partial,id:ownerPoolIdV1(partial,units),createdMs:Date.now()},session:Buffer.from(JSON.stringify(config)),units};
 };
 
 test("the idle reason, the revision rule and the republish rule equal the authored language-agnostic cases",()=>{
@@ -82,3 +83,57 @@ test("a pool whose waves all carry another revision says why instead of a bare i
   const pointer=await readOwnerPoolPointerV1(client);expect(pointer==="fault"||pointer===undefined?0:pointer.waves.length).toBe(2);
  }finally{await server.stop();}
 },120000);
+
+test("a refused fleet offer records the bounded cache failure without response text",async()=>{
+ const {server,environment}=await world(),root=temp("refusal"),db=new Database(":memory:");
+ try{
+  for(const row of fixture.publishRefusals){
+   const said:string[]=[],privateText="Private response body must stay local";
+   const publisher=createOwnerPoolPublisherV1({
+    workspaceRoot:root,environment,identity:row.stage,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},
+    session:()=>({}),units:()=>unitsOf(1),threshold:1,say:line=>said.push(line),
+    publish:input=>publishOwnerPoolV1({...input,client:{...input.client,async putResult(key,bytes,slot,expected){
+     if((expected===undefined)===(row.stage==="manifest"))return {stored:false,refusal:graphRefusalOfV1(row.status,privateText)};
+     return input.client.putResult(key,bytes,slot,expected);
+    }}}),
+   });
+   publisher.miss(1);
+   expect(await publisher.published()).toBe(false);
+   const prefix="owner pool refusal ";
+   const line=said.find(value=>value.startsWith(prefix));
+   expect(line).toBeDefined();
+   const oracle=db.query(`select json_extract(?1,'$.stage') stage,
+    case json_extract(?1,'$.status') when 507 then 'capacity' else 'denied' end code,
+    json_extract(?1,'$.status') status`).get(JSON.stringify(row));
+   expect(JSON.parse(line!.slice(prefix.length))).toMatchObject(oracle as object);
+   expect(said.join("\n")).not.toContain(privateText);
+  }
+ }finally{db.close();await server.stop();}
+});
+
+test("a transient first offer is retried during discovery after one cooldown",async()=>{
+ const {server,environment}=await world(),root=temp("retry"),db=new Database(":memory:"),rule=fixture.firstOfferRetry;
+ try{
+  expect(P.faultRetryMilliseconds).toBe(rule.retryMilliseconds);
+  for(const status of rule.statuses){
+   const clock={at:0};let offers=0;
+   const publisher=createOwnerPoolPublisherV1({
+    workspaceRoot:root,environment,identity:"early-"+status,globals:{projectAuthority:"a",registryDigest:"r",commandRevision:"c",late:false},
+    session:()=>({}),units:()=>unitsOf(8),threshold:1,now:()=>clock.at,
+    publish:input=>{
+     if(++offers>1)return Promise.resolve(true);
+     return publishOwnerPoolV1({...input,client:{...input.client,putResult:async()=>({stored:false,refusal:graphRefusalOfV1(status)})}});
+    },
+   });
+   publisher.announce(8);
+   expect(await publisher.published()).toBe(false);
+   for(const elapsed of rule.elapsed){
+    clock.at=elapsed;
+    publisher.learn(8);publisher.miss(8);publisher.learn(8);
+    const oracle=db.query("select case when ?1=507 and ?2>=?3 then 2 else 1 end offers").get(status,elapsed,rule.retryMilliseconds) as {offers:number};
+    await publisher.published();
+    expect(offers).toBe(oracle.offers);
+   }
+  }
+ }finally{db.close();await server.stop();}
+});

@@ -2,7 +2,7 @@
 //! 🩹️ Fem3d play app command — `patch-element`: one-field edit of a member (`kind`, `start`, `end`,
 
 use semio_s_artifact_fem_3d_mesh_elements::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementPatch;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_plugin::ArtifactView;

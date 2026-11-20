@@ -138,15 +138,18 @@ const bodyOf=async(init:RequestInit|undefined,request:Request|undefined):Promise
 const bodyless=(status:number):boolean=>status===101||status===204||status===205||status===304;
 
 /** 🪝️ A `fetch` that sends every request as a sealed exchange to the server named by the URL: the server's key comes from `serverKey` (its origin public key, SPKI base64url: the registration in a store, or a pin of the topology); a server whose key is unknown answers 503 and nothing is sent. A refusal for the clock is retried once with the clock of the server. It never sends the real request in the clear, and an exchange that does not open is a 502, never a partial answer. */
-export function createSealedFetchV1(options:Readonly<{group:string;serverKey:(url:URL)=>Promise<string|undefined>|string|undefined;fetch?:typeof fetch;now?:()=>number;maximumBytes?:number}>):typeof fetch{
+export function createSealedFetchV1(options:Readonly<{group:string;serverKey:(url:URL,signal?:AbortSignal)=>Promise<string|undefined>|string|undefined;fetch?:typeof fetch;now?:()=>number;maximumBytes?:number}>):typeof fetch{
  const base=options.fetch??fetch,clock=options.now??Date.now,limit=options.maximumBytes??2**28;
  let offset=0;
  const send=async(input:RequestInfo|URL,init:RequestInit|undefined,retry:boolean):Promise<Response>=>{
-  const request=typeof input==="string"||input instanceof URL?undefined:input,url=new URL(request===undefined?String(input):request.url),key=await options.serverKey(url);
+  const request=typeof input==="string"||input instanceof URL?undefined:input,url=new URL(request===undefined?String(input):request.url),signal=init?.signal??request?.signal;
+  signal?.throwIfAborted();
+  const key=await options.serverKey(url,signal);
+  signal?.throwIfAborted();
   if(key===undefined)return new Response("Sealed transport: the key of the server is unknown\n",{status:503,headers:{"x-semio-sealed-error":"server-key-unknown"}});
   const body=await bodyOf(init,request);
   const sealed=sealRequestV1({serverPublic:exchangePublicKeyV1(key),group:options.group,now:clock()+offset,request:{method:(init?.method??request?.method??"GET").toUpperCase(),target:url.pathname+url.search,headers:headersOf(new Headers(init?.headers??request?.headers)),...(body===undefined?{}:{body})}});
-  const response=await base(`${url.origin}${SEALED_ROUTE_V1}`,{method:"POST",headers:{...sealed.headers,"content-type":"application/octet-stream"},body:sealed.body as BodyInit,...(init?.signal===undefined||init.signal===null?{}:{signal:init.signal})});
+  const response=await base(`${url.origin}${SEALED_ROUTE_V1}`,{method:"POST",headers:{...sealed.headers,"content-type":"application/octet-stream"},body:sealed.body as BodyInit,signal});
   if(response.status===401&&retry){
    const server=Number(response.headers.get("x-semio-time"));
    await response.body?.cancel();

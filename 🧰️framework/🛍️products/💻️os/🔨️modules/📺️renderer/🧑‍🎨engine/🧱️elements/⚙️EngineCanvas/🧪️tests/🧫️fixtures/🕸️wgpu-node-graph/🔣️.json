@@ -133,6 +133,7 @@
       ]
     }
   ],
+  "edgeHover": { "id": "e1", "granularity": "edge", "edgeTargetPrefix": "flow-play-document.synapse.", "targetId": "flow-play-document.synapse.e1" },
   "captionExpectation": { "nodes": 6, "ports": 13, "outputHandles": ["profile@wire", "extrusion-axis@vectorOut", "extrude@solid"] },
   "tutorialViewport": { "width": 966, "height": 836 },
   "tutorialVisibility": [ { "entity": "radius", "visible": true }, { "entity": "height", "visible": false } ],

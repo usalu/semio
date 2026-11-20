@@ -1,0 +1,9 @@
+# Retained DeletePage Decision
+
+The planner borrows the exact authored DeletePage and base Layout snapshot under their original retained source leases. Each paid turn advances a fixed phase or compares one bounded key fragment. It resolves the global page ordinal and original spread membership ordinal independently. It checks surviving inbound text threads before resolving the spread, matching the registered cold mutation's diagnostic precedence.
+
+The result supplies source coordinates for sparse removal and inverse preparation, including an absent spread-member ordinal. A refusal supplies its existing domain code and reason. The planner retains no cloned page, key list, or candidate snapshot. Close uses the original binding retirement and preserves pending action recovery.
+
+The retained mutation routes DeletePage through the sealed decision, shared page/spread membership publisher, and exact inverse assembler. It transfers the prepared DeletePage identifier into the page removal and keeps the surviving spread order. If the page must return to an earlier spread position, the inverse stores SetPageSpread ahead of CreatePage. Reverse replay first recreates the page and then restores its spread position.
+
+The fixtures cover internal thread deletion, surviving reference refusal, missing rows, missing membership, distinct page and spread order, and common-prefix multibyte IDs. The TypeScript implementation passed strict checking, six decisions, all 30 cancellation cuts, and two original-source substitution checks per input. SQLite independently matched all expected decisions, both registered post snapshots, and both spread/page patches. The mounted Rust mutation companion compares the exact inverse commands and executes them back to the original document. The Rust original-effect and companion laws await native admission. The interactive editor factory currently still uses cold publication.

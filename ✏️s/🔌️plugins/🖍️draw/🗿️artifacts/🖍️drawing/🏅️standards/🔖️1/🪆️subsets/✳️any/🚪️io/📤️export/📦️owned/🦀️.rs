@@ -4,7 +4,7 @@ use semio_s_artifact_draw_drawing_scene::preparation::{DocumentRasterJob, Docume
 use semio_plugin::Fault;
 use semio_framework_job::OriginalDomainFailure;
 use semio_os_kernel::io::io_mechanism::OwnedSerializerOutput;
-use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
+use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use crate::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteRetirement, SvgWriteLimits};
 use crate::serializers::artifacts::pdf::v1_4::any::write::{PdfWriteJob, PdfWriteRetirement, PdfWriteLimits};
 use semio_s_artifact_draw_drawing_scene_paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PaintedSceneLimits};
@@ -58,23 +58,50 @@ impl ExportProducer{
   Ok(false)
  }
  pub fn begin_close(&mut self){self.closing=true;if let Some(job)=self.vector.take(){let(close,plan)=job.into_retirement();self.vector_close=Some(close);if let Some(plan)=plan{if let Some(output)=self.output.original_mut(){output.plan=Some(plan);}}}if let Some(job)=self.raster.take(){let(close,image)=job.into_retirement();self.raster_close=Some(close);if let Some(image)=image{if let Some(output)=self.output.original_mut(){output.image=Some(image);}}}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<InteractiveJobCloseStep> {
-  use semio_framework_value::RetainedWorkOutcome;
-  let pending=|turn:RetainedWorkOutcome|RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})};
-  if !self.closing{return RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Blocked),work:0};}
-  if !self.output.terminal_is_empty(){let result=self.output.step(grant);return pending(RetainedWorkOutcome{result,work:self.output.last_turn_work()});}
-  if self.read_close.is_some()||self.read.is_some(){return pending(if self.read_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read,&mut self.read_close,grant)});}
-  if let Some(close)=&mut self.vector_close{
-   if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Blocked),work:0};}
-   if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}),work:1};}
-   let turn=close.close_original(grant);if close.terminal_is_empty(){self.vector_close=None;}return pending(turn);
+ pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+  if !self.closing { return RetainedWorkPoll::Pending { work: 0 }; }
+  let body = effect.grant().maximum_copy_bytes;
+  if !self.output.terminal_is_empty() {
+   return self.output.step(body, effect);
   }
-  if let Some(close)=&mut self.raster_close{
-   if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Blocked),work:0};}
-   if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}),work:1};}
-   let turn=close.close_original(grant);if close.terminal_is_empty(){self.raster_close=None;}return pending(turn);
+  if self.read_close.is_some() {
+   return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close, body, effect);
   }
-  RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Complete{progress:Default::default()}),work:0}
+  if self.read.is_some() {
+   let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read, &mut self.read_close, effect);
+   return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map_err(OriginalRetirementFailure::from_primary), work: turn.work });
+  }
+  if effect.grant().maximum_items == 0 || effect.grant().maximum_depth == 0 {
+   return RetainedWorkPoll::Pending { work: 0 };
+  }
+  match effect.remaining_work_units() {
+   Ok(0) => return RetainedWorkPoll::Pending { work: 0 },
+   Ok(_) => {},
+   Err(error) => return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(OriginalRetirementFailure::from_primary(error)), work: 0 }),
+  }
+  let read = self.vector_close.as_mut().and_then(DocumentVectorRetirement::take_snapshot_read)
+   .or_else(|| self.raster_close.as_mut().and_then(DocumentRasterRetirement::take_snapshot_read));
+  if let Some(read) = read {
+   self.read = Some(read);
+   let result = effect.performed(1).and_then(|paid| {
+    if !paid {
+     return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "Drawing export source handback exceeds original work"));
+    }
+    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+   });
+   return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map_err(OriginalRetirementFailure::from_primary), work: effect.performed_work() });
+  }
+  if let Some(close) = &mut self.vector_close {
+   let poll = close.close_step(body, effect);
+   if close.terminal_is_empty() { self.vector_close = None; }
+   return poll;
+  }
+  if let Some(close) = &mut self.raster_close {
+   let poll = close.close_step(body, effect);
+   if close.terminal_is_empty() { self.raster_close = None; }
+   return poll;
+  }
+  RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 })
  }
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
@@ -83,7 +110,7 @@ impl ExportProducer{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.vector.is_none()&&self.vector_close.is_none()&&self.raster.is_none()&&self.raster_close.is_none()&&self.read.is_none()&&self.read_close.is_none()&&self.output.terminal_is_empty()}
 }
 
-use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerRefusal,OwnedSerializerAdmission,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff};
+use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerRefusal,OwnedSerializerAdmission,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerStep,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{DslValue,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
@@ -121,14 +148,35 @@ impl InteractiveJob for DrawingOwnedSerializerJob{
  fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{self.step_value(cx)}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{self.outcomes.borrow_outcome(descriptor)}
  fn begin_close(&mut self){self.closing=true;self.producer.begin_close();}
- fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|{if !self.closing{return semio_framework_value::RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Blocked),work:0};}if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}if !self.metadata.terminal_is_empty(){let result=self.metadata.step(grant);return semio_framework_value::RetainedWorkOutcome{result:result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:self.metadata.last_turn_work()};}self.producer.close_step(grant)})}
+ fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+  if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+  if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+  if !self.outcomes.terminal_is_empty() {
+   return self.outcomes.close_step(cx);
+  }
+  let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+  semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+   if !self.metadata.terminal_is_empty() {
+    return self.metadata.step(effect.grant().maximum_copy_bytes, effect);
+   }
+   self.producer.close_step(effect)
+  })
+ }
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
  fn terminal_is_empty(&self)->bool{self.closing&&self.metadata.terminal_is_empty()&&self.producer.terminal_is_empty()&&self.outcomes.terminal_is_empty()}
 }
-impl OwnedSerializerJob for DrawingOwnedSerializerJob{
+impl OwnedSerializerJob for DrawingOwnedSerializerJob {
+    fn advance_serialization(&mut self, cx: &mut StepContext<'_>) -> OwnedSerializerStep {
+        match self.turn(cx) {
+            DrawingJobTurn::Yield => OwnedSerializerStep::Pending,
+            DrawingJobTurn::Complete => OwnedSerializerStep::Complete,
+            DrawingJobTurn::Fault => OwnedSerializerStep::Fault,
+            DrawingJobTurn::Cancelled => OwnedSerializerStep::Cancelled,
+        }
+    }
  fn source_authority_matches(&self,generation:u64,revision:[u8;32])->bool{generation==self.generation&&revision==self.revision&&self.producer.source_authority_matches(generation,revision)}
  fn output(&self)->Option<&OwnedSerializerOutput>{if self.finished&&!self.closing&&!self.cancelled&&!self.failed&&self.source_authority_matches(self.generation,self.revision){self.producer.output()}else{None}}
  fn take_output(&mut self,grant:RetainedCloneGrant)->Result<Option<OwnedSerializerOutputHandoff>,ValueError>{if !self.finished||self.closing||self.cancelled||self.failed||!self.source_authority_matches(self.generation,self.revision){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"captured serializer output has no current completion authority"));}if self.producer.output().is_none(){return Ok(None);}let progress=RetainedCloneBirthDemand{capacity_bytes:0,depth:1}.admit(grant)?;Ok(self.producer.take_output().map(|output|OwnedSerializerOutputHandoff{output,progress}))}

@@ -5,107 +5,15 @@ use semio_framework_test_fixtures::fixture_text;
 use store::sqlite_snapshot::{SqliteDatabase, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding};
 use semio_framework_value::ValueError;
 
-//#region 🔖️NativeOwners
-/// 🎟️ The immutable caller policy every original native owner of these laws runs under.
-fn original_caller_grant() -> semio_framework_value::RetainedCloneGrant {
-    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 4096 }
-}
-
-/// 🛬️ Runs one decode under the given SQL controller and a retained native recipient closed after the operation.
-pub(super) fn with_original_decode<O>(sql: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> O) -> O {
-    let policy = original_caller_grant();
-    let mut accepted = |_| true;
-    let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
-    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(sql.limits().max_value_bytes, &mut accepted);
-    native.install_retirement_recipient(&mut recipient).unwrap();
-    let result = {
-        let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, policy);
-        operation(sql, &mut owner)
-    };
-    for _ in 0..4096 {
-        if !native.has_retirement_owner() {
-            break;
-        }
-        let outcome = native.close_retirement_recipient(policy);
-        let progress = match &outcome.result {
-            Ok(step) => step.progress(),
-            Err(error) => error.retained_progress(),
-        };
-        assert!(progress.fits(policy), "retirement work {}", outcome.work);
-        outcome.result.unwrap_or_else(|error| panic!("retirement failed after {} work: {error:?}", outcome.work));
-    }
-    assert!(!native.has_retirement_owner());
-    result
-}
-
-/// 🛫️ Runs one encode or import under the given SQL controller and a retained native recipient closed after the operation.
-pub(super) fn with_original_encode<O>(sql: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> O) -> O {
-    let policy = original_caller_grant();
-    let mut accepted = |_| true;
-    let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
-    let mut native = semio_framework_value::NativeEncodeControl::new(sql.limits().max_value_bytes, &mut accepted);
-    native.install_retirement_recipient(&mut recipient).unwrap();
-    let result = {
-        let mut owner = store::NativeSnapshotEncodeOwner::new(&mut native, policy);
-        operation(sql, &mut owner)
-    };
-    for _ in 0..4096 {
-        if !native.has_retirement_owner() {
-            break;
-        }
-        let outcome = native.close_retirement_recipient(policy);
-        let progress = match &outcome.result {
-            Ok(step) => step.progress(),
-            Err(error) => error.retained_progress(),
-        };
-        assert!(progress.fits(policy), "retirement work {}", outcome.work);
-        outcome.result.unwrap_or_else(|error| panic!("retirement failed after {} work: {error:?}", outcome.work));
-    }
-    assert!(!native.has_retirement_owner());
-    result
-}
-
-/// 📸️ Decodes through the genuine supplied-owner typed definition.
-macro_rules! decode_native {
-    ($ty:ty; $payload:expr, $ctl:expr) => {
-        with_original_decode($ctl, |sql, owner| <$ty as store::os_store::serialization::ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native($payload, sql, owner))
-    };
-}
-pub(super) use decode_native;
-
-/// 📸️ Encodes through the genuine supplied-owner typed definition.
-macro_rules! encode_native {
-    ($value:expr; $encoding:expr, $ctl:expr) => {
-        with_original_encode($ctl, |sql, owner| $value.encode_sqlite_snapshot_native($encoding, sql, owner))
-    };
-}
-pub(super) use encode_native;
-
-/// 📤️ Runs the registered codec's export (a decode of the payload) under an original native owner.
-macro_rules! export_native {
-    ($export:expr; $schema:expr, $dialect:expr, $payload:expr, $ctl:expr) => {
-        with_original_decode($ctl, |sql, owner| ($export)($schema, $dialect, $payload, sql, owner))
-    };
-}
-pub(super) use export_native;
-
-/// 📥️ Runs the registered codec's import (an encode of the database) under an original native owner.
-macro_rules! import_native {
-    ($import:expr; $schema:expr, $dialect:expr, $database:expr, $encoding:expr, $ctl:expr) => {
-        with_original_encode($ctl, |sql, owner| {
-            let mut imported = Some($database);
-            ($import)($schema, $dialect, &mut imported, $encoding, sql, owner)
-        })
-    };
-}
-pub(super) use import_native;
-//#endregion 🔖️NativeOwners
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use store::snapshot::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::*;
 
 use semio_framework_test_original_snapshot_owners as original_owners;
+
+/// 🧾️ Settles one retained turn and its output slot into the produced value or a refusal.
+fn turn<T,E,F>(operation:impl FnOnce(&mut Option<Result<T,E>>)->semio_framework_value::RetainedWorkOutcome<(),F>)->Result<T,()>{let mut out=None;match(operation(&mut out).result,out){(Ok(()),Some(Ok(value)))=>Ok(value),_=>Err(())}}
 
 fn laws()->serde_json::Value{serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 
@@ -195,19 +103,19 @@ fn sqlite_snapshot_puzzle5d_rejects_malformed_graphs_presence_and_scalar_domains
 fn sqlite_snapshot_puzzle5d_actual_typed_and_play_erased_io_preserves_every_field(){
  let declared=store::bare_artifact_codec::<crate::Puzzle5dSnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let typed=declared.snapshot_sqlite.expect("actual typed declaration");let typed_schema=declared.schema;
  let play=store::bare_artifact_codec::<crate::Puzzle5dPlaySnapshot,crate::Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA);let play_schema=play.schema;let play=play.snapshot_sqlite.expect("actual Play declaration");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.puzzle.puzzle5d".into(),standard:"1".into(),subset:"*".into()};
- for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=original_owners::with_decoding(|native_owner|(provider.export)(schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=original_owners::with_encoding(|native_owner|(provider.import)(schema,&dialect,&mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(actual,payload);}}}
+ for hex in laws()["binary64Bits"].as_array().unwrap(){let s=complete(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};for(provider,schema)in[(&typed,&typed_schema),(&play,&play_schema)]{let d=turn(|out|original_owners::with_decoding(|native_owner|(provider.export)(schema,&dialect,&payload,out,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner))).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=turn(|out|original_owners::with_encoding(|native_owner|(provider.import)(schema,&dialect,&mut Some(d),encoding,out,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner))).unwrap().value;assert_eq!(actual,payload);}}}
 }
 
 #[test]
 fn sqlite_snapshot_puzzle5d_exact_borrowed_and_owned_row_frontiers_admit_before_copy(){
- let s=complete(0);let d=project(&s);let count=d.tables.iter().map(|t|t.rows.len()).sum::<usize>();for max_rows in[count,count-1]{let limits=SqliteDatabaseLimits{max_rows,..SqliteDatabaseLimits::default()};let mut accept=|_|true;assert_eq!(original_owners::with_sqlite_recipient(limits,&mut accept,|c|s.to_sqlite_database(c)).is_ok(),max_rows==count);assert_eq!(original_owners::with_sqlite_recipient(limits,&mut accept,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c)).is_ok(),max_rows==count);for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{assert_eq!(original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut accept,limits), native_owner)).is_ok(),max_rows==count);}}
+ let s=complete(0);let d=project(&s);let count=d.tables.iter().map(|t|t.rows.len()).sum::<usize>();for max_rows in[count,count-1]{let limits=SqliteDatabaseLimits{max_rows,..SqliteDatabaseLimits::default()};let mut accept=|_|true;assert_eq!(original_owners::with_sqlite_recipient(limits,&mut accept,|c|s.to_sqlite_database(c)).is_ok(),max_rows==count);assert_eq!(original_owners::with_sqlite_recipient(limits,&mut accept,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c)).is_ok(),max_rows==count);for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{assert_eq!(turn(|out|original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut accept,limits), native_owner,out))).is_ok(),max_rows==count);}}
  let mut s=s;s.parts[0].part_2d.text=Some("😀".repeat(100000));let limits=SqliteDatabaseLimits{max_schema_bytes:32,..SqliteDatabaseLimits::default()};assert!(original_owners::with_sqlite_recipient(limits,&mut |_|true,|c|s.to_sqlite_database(c)).is_err());assert!(restore(&project(&Puzzle5dSnapshot::default())).is_ok());
 }
 
 #[test]
 fn sqlite_snapshot_puzzle5d_all_four_copy_phases_have_real_interior_cancellation(){
  let mut s=complete(0);s.kind_catalogs_extra.as_mut().unwrap().parts[0].description="日本😀".repeat(32768);let d=project(&s);
- for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut interior=false;let mut callback=|p:SqliteSnapshotProgress|{if p.phase==phase&&p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true}};let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|s.to_sqlite_database(c).map(|_|())),SqliteSnapshotPhase::ReconstructSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c).map(|_|())),SqliteSnapshotPhase::EncodeNative=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_encoding(|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut c, native_owner)).map(|_|())},_=>{let mut c=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());original_owners::with_decoding(|native_owner|Puzzle5dSnapshot::decode_sqlite_snapshot_native(&store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s)),&mut c, native_owner)).map(|_|())}};assert!(result.is_err());assert!(interior,"phase {phase:?}");}
+ for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut interior=false;let mut callback=|p:SqliteSnapshotProgress|{if p.phase==phase&&p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true}};let result=match phase{SqliteSnapshotPhase::ProjectSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|s.to_sqlite_database(c).map(|_|()).map_err(|_|())),SqliteSnapshotPhase::ReconstructSnapshot=>original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut callback,|c|Puzzle5dSnapshot::from_sqlite_database(&d,c).map(|_|()).map_err(|_|())),SqliteSnapshotPhase::EncodeNative=>{let mut permit=|_|true;let mut c=SqliteSnapshotControl::new(&mut permit,SqliteDatabaseLimits::default());let mut native=|p:semio_framework_value::native_encoding::NativeEncodeProgress|if p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true};turn(|out|original_owners::with_encoding_observed(&mut native,|native_owner|s.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut c, native_owner,out))).map(|_|())},_=>{let mut permit=|_|true;let mut c=SqliteSnapshotControl::new(&mut permit,SqliteDatabaseLimits::default());let mut native=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|if p.total>65536&&p.completed>=65536&&p.completed<p.total{interior=true;false}else{true};turn(|out|original_owners::with_decoding_observed(&mut native,|native_owner|Puzzle5dSnapshot::decode_sqlite_snapshot_native(&store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s)),&mut c, native_owner,out))).map(|_|())}};assert!(result.is_err(),"phase {phase:?} completed without cancellation");assert!(interior,"phase {phase:?}");}
 }
 
 #[test]

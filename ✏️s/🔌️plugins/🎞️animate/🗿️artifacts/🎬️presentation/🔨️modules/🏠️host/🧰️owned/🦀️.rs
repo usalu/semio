@@ -148,8 +148,12 @@ impl PresentationPackSnapshotAuthority {
 
     /// 📏️ Quotes the next close turn: the active hex decoder, the started retirement's own frontier, or the retirement's start.
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        let native = |error: semio_framework_value::ValueError| self.diagnostic_from(error);
         if let Some(retirement) = self.retirement.as_ref() {
-            return retirement.next_demand(body).map_err(|error| self.diagnostic_from(error));
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body).map_err(native);
+        }
+        if self.value.is_some() {
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value).map_err(native);
         }
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.owners_terminal_empty()), ..Default::default() })
     }
@@ -232,45 +236,56 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         self.close_demands(0).map(|demand| demand.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        if let PresentationPackSnapshotState::Decode(authority) = &mut self.state {
-            authority.cancel();
-            self.state = PresentationPackSnapshotState::Closing;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-        }
-        if self.retirement.is_none() {
-            if let Some(value) = self.value.take() {
-                let factory = semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default();
-                return match store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value, grant).result {
-                    Ok((retirement, progress)) => {
-                        *self.retirement = Some(retirement);
-                        self.state = PresentationPackSnapshotState::Closing;
-                        Ok(RetainedCloneStep::Progress(progress))
-                    }
-                    Err((error, value)) => {
-                        *self.value = Some(value);
-                        if matches!(error.kind, semio_framework_value::ValueRefusalKind::InvariantViolated | semio_framework_value::ValueRefusalKind::InvalidValue) {
-                            Err(self.diagnostic_from(error))
-                        } else {
-                            Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))
-                        }
-                    }
-                };
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+        let result = (|| -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::ArtifactEnvelopeCloseExit> {
+            let grant = effect.grant();
+            let empty = RetainedCloneProgress::default();
+            if self.terminal_is_empty() {
+                return Ok(RetainedCloneStep::Complete(empty));
             }
-            self.state = PresentationPackSnapshotState::Complete;
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
-        }
-        let step = self.retirement.as_mut().expect("Presentation snapshot retirement remains retained").close_step(grant).result.map_err(|error| self.diagnostic_from(error))?;
-        if self.retirement.as_ref().is_some_and(|retirement| retirement.terminal_is_empty()) {
-            drop(self.retirement.take());
-            self.state = PresentationPackSnapshotState::Complete;
-            return Ok(RetainedCloneStep::Complete(step.progress()));
-        }
-        Ok(RetainedCloneStep::Progress(step.progress()))
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            let demand = self.close_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_depth < demand.depth {
+                return Err(self.diagnostic("presentation-envelope.snapshot-close-depth", 0).into());
+            }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            if let PresentationPackSnapshotState::Decode(authority) = &mut self.state {
+                authority.cancel();
+                self.state = PresentationPackSnapshotState::Closing;
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+            }
+            if self.retirement.is_none() {
+                if self.value.is_some() {
+                    let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                    let turn = semio_framework_value::retirement::admit_owned_retirement(&mut *self.value, &mut effect.nested(child));
+                    return match turn.result {
+                        Ok(Some((owner, progress))) => {
+                            *self.retirement = Some(owner);
+                            self.state = PresentationPackSnapshotState::Closing;
+                            if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes {
+                                return Err(self.diagnostic("presentation-envelope.snapshot-retirement-birth", 0).with_progress(progress).into());
+                            }
+                            Ok(RetainedCloneStep::Progress(progress))
+                        }
+                        Ok(None) => Ok(RetainedCloneStep::Progress(empty)),
+                        Err(error) => Err(self.diagnostic("presentation-envelope.snapshot-retirement-fault", 0).with_native(error).into()),
+                    };
+                }
+                self.state = PresentationPackSnapshotState::Complete;
+                return Ok(RetainedCloneStep::Complete(empty));
+            }
+            let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("presentation-envelope.snapshot-retirement-fault", 0), &failure))?;
+            if self.retirement.is_none() {
+                self.state = PresentationPackSnapshotState::Complete;
+            }
+            Ok(RetainedCloneStep::Progress(step.progress()))
+        })();
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -325,16 +340,18 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
         use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
-        if self.terminal {
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        let grant = effect.grant();
+        let step = if self.terminal {
+            RetainedCloneStep::Complete(RetainedCloneProgress::default())
+        } else if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            RetainedCloneStep::Progress(RetainedCloneProgress::default())
+        } else {
+            self.terminal = true;
+            RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+        };
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, Ok(step))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -373,16 +390,18 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
         use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
-        if self.terminal {
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        let grant = effect.grant();
+        let step = if self.terminal {
+            RetainedCloneStep::Complete(RetainedCloneProgress::default())
+        } else if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            RetainedCloneStep::Progress(RetainedCloneProgress::default())
+        } else {
+            self.terminal = true;
+            RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+        };
+        store::os_store::owned_schema_decode::artifact_envelope_close_settle(effect, Ok(step))
     }
 
     fn terminal_is_empty(&self) -> bool {

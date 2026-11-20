@@ -895,14 +895,11 @@
           "logPath": "/tmp/serve-6540.log"
         },
         "command": {
-          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+          "tool": "repo",
           "args": [
-            "serve",
-            "s",
-            "react",
-            "prototype"
+            "run",
+            "@semio-tech/framework-os-dev:dev-s-react-prototype"
           ],
-          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
           "env": {
             "SEMIO_PLUGIN": "s",
             "SEMIO_RENDERER": "react",
@@ -923,14 +920,11 @@
           "logPath": "/tmp/serve-6541.log"
         },
         "command": {
-          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+          "tool": "repo",
           "args": [
-            "serve",
-            "s",
-            "react",
-            "release"
+            "run",
+            "@semio-tech/framework-os-dev:dev-s-react-release"
           ],
-          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
           "env": {
             "SEMIO_PLUGIN": "s",
             "SEMIO_RENDERER": "react",
@@ -952,17 +946,16 @@
           "compositionConfigPath": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
         },
         "command": {
-          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+          "tool": "repo",
           "args": [
-            "serve",
-            "note",
-            "prototype",
+            "run",
+            "@semio-tech/framework-os-dev:dev-note-wgpu-prototype",
+            "--",
             "--port",
             "6550",
             "--composition",
             "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
           ],
-          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
           "env": {
             "SEMIO_PLUGIN": "note",
             "SEMIO_RENDERER": "wgpu",
@@ -984,17 +977,16 @@
           "compositionConfigPath": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
         },
         "command": {
-          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+          "tool": "repo",
           "args": [
-            "serve",
-            "s",
-            "release",
+            "run",
+            "@semio-tech/framework-os-dev:dev-s-wgpu-release",
+            "--",
             "--port",
             "6551",
             "--composition",
             "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
           ],
-          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
           "env": {
             "SEMIO_PLUGIN": "s",
             "SEMIO_RENDERER": "wgpu",

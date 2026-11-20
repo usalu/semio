@@ -11,12 +11,14 @@
   "properties": {
     "controller": {
       "const": {
-        "sourceItems": 2,
-        "sourceWork": 2,
+        "sourceItems": 4,
+        "sourceWork": 4,
         "captureItems": 1,
         "captureWork": 1,
         "candidateItems": 1,
-        "candidateWork": 1
+        "candidateWork": 1,
+        "scopeAdmissionItems": 2,
+        "scopeAdmissionWork": 2
       }
     },
     "attempts": {

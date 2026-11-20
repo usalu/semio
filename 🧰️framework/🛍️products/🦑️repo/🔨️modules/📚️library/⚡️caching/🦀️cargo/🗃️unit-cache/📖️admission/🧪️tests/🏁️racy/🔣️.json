@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "stable-fresh-file-recalls", "bytes": "pub fn a() {}\n", "after": "pub fn a() {}\n", "recalls": true },
+    { "name": "same-size-rewrite-under-same-stamp-misses", "bytes": "pub fn a() {}\n", "after": "pub fn b() {}\n", "recalls": false },
+    { "name": "longer-rewrite-under-same-stamp-misses", "bytes": "pub fn a() {}\n", "after": "pub fn a() {} // x\n", "recalls": false }
+  ]
+}

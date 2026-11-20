@@ -200,17 +200,27 @@ async function inProcess(args:readonly string[],root:string,module:string,contex
 }
 
 async function child(args:readonly string[],root:string,module:string,context:Context):Promise<number>{
- const environment=context.environment,limits=bootLimitsV1(environment),base=environment.SEMIO_FLEET_BOOT_BASE??root,source=environment.SEMIO_FLEET_BOOT_SOURCE??"worktree",worktree=resolve(base)===resolve(root);
+ const {SEMIO_FLEET_BOOT_RELOAD_TOKEN:token,...environment}=context.environment;
+ delete process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN;
+ const limits=bootLimitsV1(environment),base=environment.SEMIO_FLEET_BOOT_BASE??root,source=environment.SEMIO_FLEET_BOOT_SOURCE??"worktree",worktree=resolve(base)===resolve(root);
  const dog=startWatchdog(root,base,source,limits);
+ let ready=false,reload=false;
  const write:Sink=line=>{
   const started=line.startsWith("{\"version\":1,\"event\":\"started\""),waiting=!started&&line.startsWith("{\"version\":1,\"event\":\"blocked\"")&&line.includes("worktree-access-denied");
-  if(started)dog.phase("run");
+  if(started){ready=true;dog.phase("run");}
+  if(line==='{"version":1,"event":"restarting"}')reload=true;
   if(started||waiting){try{writeAtomic(join(bootDirectory(root),"ready.json"),JSON.stringify({pid:process.pid,waiting}));}catch{}}
   context.write(line);
  };
  const fallback=worktree?undefined:JSON.stringify({guard:"code-fallback",source,reason:(environment.SEMIO_FLEET_BOOT_REASON??"").slice(0,512)});
  const result=await attempt(args,root,module,base,{...context,write,environment:fallback===undefined?environment:{...environment,SEMIO_FLEET_CODE_FALLBACK:fallback}},{worktree,force:environment.SEMIO_FLEET_BOOT_FORCE==="1",phase:dog.phase,watch:worktree?undefined:module});
- if(result.ran)return result.code;
+ if(result.ran){
+  if(result.code===0&&ready&&reload&&!context.signal.aborted&&typeof token==="string"&&/^[a-f0-9]{32}$/u.test(token)){
+   try{writeAtomic(join(bootDirectory(root),"ready.json"),JSON.stringify({pid:process.pid,waiting:false,reloadToken:token}));}
+   catch{context.notice("The daemon could not record its graceful reload receipt / Der Daemon konnte sein geordnetes Neuladen nicht belegen");}
+  }
+  return result.code;
+ }
  context.notice(`The code ${worktree?"of the worktree":`of ${base}`} does not start (${result.reason}) / Der Code ${worktree?"des Arbeitsverzeichnisses":`von ${base}`} startet nicht (${result.reason})`);
  return result.rejected?71:70;
 }

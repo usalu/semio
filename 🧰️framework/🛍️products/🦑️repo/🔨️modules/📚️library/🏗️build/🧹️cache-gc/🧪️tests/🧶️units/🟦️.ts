@@ -134,5 +134,6 @@ test("a managed area's delegate runs after the machine plan, gets it and whether
  const noteAt=all.out.findIndex(line=>line.includes("nx-tooling reports: delegated owned")),startAt=all.out.findIndex(line=>line.startsWith("Collecting")),machineAt=all.out.findIndex(line=>line.startsWith("Machine budget"));
  expect(startAt).toBeGreaterThanOrEqual(0);expect(noteAt).toBeGreaterThan(startAt);expect(machineAt).toBeGreaterThan(noteAt);
  const named=await run(new Set(["owned"]));expect(calls.length).toBe(2);expect(calls[1]!.context.selected).toBe(true);expect(named.result.delegated.length).toBe(1);
+ const byPartition=await run(new Set(["alpha"]));expect(calls.length).toBe(3);expect(calls[2]).toMatchObject({owner:"nx-tooling",id:"owned"});expect(calls[2]!.context.selected).toBe(true);expect(byPartition.result.delegated.length).toBe(1);
  const plain=await collectCacheV1(workspace,owned,{dryRun:true},portsFor(),output(),partitions);expect(plain.delegated).toEqual([]);expect(plain.machine).toBeNull();
 });

@@ -72,6 +72,7 @@ fn forecast_encoding(value:&Fem3dSnapshot,control:&mut SqliteSnapshotControl<'_>
  semio_framework_value::RetainedWorkOutcome{result,work}
 }
 impl ArtifactSqliteSnapshotHost for Fem3dSnapshot{
+ fn retire_sqlite_snapshot(self){semio_s_fem_receiving::cold::retire(self);}
  
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome{
   store::decode_sqlite_snapshot_record_receiving(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),&mut |record,retained,original,sql|store::native_snapshot_turn(|work|{

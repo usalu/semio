@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "featureSets": [
+    [],
+    [
+      "a"
+    ],
+    [
+      "zeta",
+      "alpha"
+    ],
+    [
+      "std",
+      "serde",
+      "x-y"
+    ],
+    [
+      "a",
+      "a"
+    ]
+  ],
+  "prefetch": {
+    "units": 6,
+    "remembered": [
+      1,
+      4
+    ]
+  },
+  "analysis": {
+    "source": "#[cfg(flag)]\nmod inner;\npub const VALUE:u8=1;\n",
+    "inner": "pub const INNER:u8=2;\n",
+    "withFlag": 2,
+    "withoutFlag": 1
+  }
+}

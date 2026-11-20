@@ -7,8 +7,6 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1, type ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
-import { readGeneratedCatalogProjection as _semioCatalogGraphAnchor } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { semioLocalHubSessionVitePlugin, semioDescriptorRouteGuardVitePlugin, semioServiceWorkerScopeVitePlugin } from "../../🔌️vite-plugins/🟦️.ts";
 import { devStreamMuxServer } from "../../🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts";
 import { semioProductionTestBoundaryVitePlugin } from "../../🔌️vite-plugins/🚧️production-test-boundary/🟦️.ts";
@@ -32,10 +30,8 @@ const repoRoot = path.resolve(playDir, "../../../../..");
 export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string;readonly browserSessionFactories:readonly Readonly<{module:string;engine:string}>[] }) {
 return async ({ command, mode }: { readonly command: "build" | "serve"; readonly mode: string }): Promise<OwnedBuildConfig> => {
 const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = options.inventory;
-const { frameworkOsEngineDeliveriesV1, frameworkOsEnginePackageNameV1, frameworkOsEngineFacetV1, frameworkOsViteArtifactPathsV1, managedWasmPackagesVitePluginV1, flowBrowserDeliveryV1, runtimeAssetDeliveries, repositoryCachePartitionRootDataV1, canonicalWasmBuildVitePlugin, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt, buildModePolicy, readBuildMode, viteCacheDirectory, createAssetBuildPluginsV1, resolveAssetDeliveryModeV1, requirePlaygroundVariant, resolveShellBrandById, uiReactBuildPlugin, uiTailwindBuildPlugins, PREVIEW2_VENDOR_RELATIVE, packageAssetDeliveries, productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents, DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin, semioExtensionStoreVitePlugin } = await loadBuildOwners();
+const { frameworkOsEngineDeliveriesV1, frameworkOsEnginePackageNameV1, frameworkOsEngineFacetV1, frameworkOsViteArtifactPathsV1, managedWasmPackagesVitePluginV1, flowBrowserDeliveryV1, runtimeAssetDeliveries, repositoryCachePartitionRootDataV1, canonicalWasmBuildVitePlugin, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, playgroundSessionsRootV1, readActivationReceipt, buildModePolicy, readBuildMode, viteCacheDirectory, createAssetBuildPluginsV1, resolveAssetDeliveryModeV1, requirePlaygroundVariant, resolveShellBrandById, uiReactBuildPlugin, uiTailwindBuildPlugins, PREVIEW2_VENDOR_RELATIVE, packageAssetDeliveries, productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents, DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin, semioExtensionStoreVitePlugin } = await loadBuildOwners();
 const sourceEngineFacet=frameworkOsEngineFacetV1(options.browserSessionFactories);
-void _semioPlaygroundGraphAnchor;
-void _semioCatalogGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
@@ -50,7 +46,7 @@ const activated = command === "serve" ? readActivationReceipt(receiptDirectory) 
 const pluginModulesDir = testBrowserHost?.moduleRoot ?? builtPluginModulesRootIn(repoRoot, buildMode);
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? testBrowserHost.extensionsRoot : path.join(runtimeRoot, "extensions");
 const fontsDir = stagedInputs.fonts;
-const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
+const sessionRoot = playgroundSessionsRootV1(repoRoot, buildMode);
 const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);
 const sessionPath = sessionAlias.replacement;
 const playgroundTarget = playgrounds.find((target) => target.variant === plugin || target.aliases.includes(plugin));
@@ -83,7 +79,8 @@ const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-
 /** 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
-const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin, playgrounds, [...plugins, ...extensions]) ? playgrounds.flatMap((target) => target.assets) : (playgrounds.find((target) => target.variant === plugin)?.assets ?? []);
+const hostPlayground = isHostPlaygroundFilter(plugin, playgrounds, [...plugins, ...extensions]);
+const resolvedPlaygroundAssets = hostPlayground ? playgrounds.flatMap((target) => target.assets) : (playgrounds.find((target) => target.variant === plugin)?.assets ?? []);
 
 /** 🔌️ The wasm plugin crate(s) a production build's `dist/🔌️plugin-modules/` needs to actually ship
  * — the "s" studio hub can open any app so it needs every built plugin crate; a single-variant build
@@ -194,7 +191,7 @@ return {
     semioAgentBridgeRendezvousVitePlugin({ shellKind: "react" }),
     semioAgentCredentialInstallVitePlugin({ repoRoot }),
     semioLocalHubSessionVitePlugin(),
-    ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
+    ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents, prefetchMissingComponents: hostPlayground }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
     ...semioAssetsVitePlugin(repoRoot),
     ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : staticDirMountVitePlugins(repoRoot, [
       ...pluginModuleDirNames.map((name) => ({ kind: "static-dir" as const, route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
@@ -221,6 +218,7 @@ return {
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
     "import.meta.env.VITE_S_HUB_URL": JSON.stringify(process.env.S_HUB_URL ?? ""),
     "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
+    "import.meta.env.VITE_SEMIO_AGENT_BRIDGE_OFFER": JSON.stringify(command === "serve" ? "1" : ""),
   },
 };
 };

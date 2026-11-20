@@ -1,0 +1,6 @@
+[
+  {"name":"available", "defect":"none"},
+  {"name":"body larger than declared", "defect":"size"},
+  {"name":"manifest differs from its head", "defect":"manifest"},
+  {"name":"abort after writing an immutable document", "defect":"abort"}
+]

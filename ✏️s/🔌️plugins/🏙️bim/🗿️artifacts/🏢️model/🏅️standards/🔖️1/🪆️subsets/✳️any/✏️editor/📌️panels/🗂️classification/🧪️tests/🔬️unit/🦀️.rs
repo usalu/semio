@@ -38,8 +38,8 @@ fn item(code: &str, title: &str, parent: Option<&str>) -> ClassificationItem {
 fn model() -> ModelSnapshot {
     let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let entries = vec![item("EF", "Elements and functions", None), item("EF_25", "Walls and barriers", Some("EF")), item("EF_25_10", "Walls", Some("EF_25")), item("Pr", "Products", None), item("Pr_20", "Structure", Some("Pr"))];
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries });
-    snapshot.classifications.insert("w-south".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries });
+    snapshot.classifications.cold_insert("w-south".into(), [("cs-uni".to_string(), "EF_25_10".to_string())].into());
     snapshot
 }
 

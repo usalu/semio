@@ -4,6 +4,11 @@ use crate::schema::snapshot::Wfc2dSnapshot;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::inferences::*;
 
+/// 🏎️ Fuel one headless session step may spend: session admission quotes several work units per turn, so a single unit would never admit the worker, and a large budget lets one step do a whole turn.
+const HEADLESS_FUEL_PER_STEP: u64 = 4_096;
+/// ⏱️ Wall budget of one headless step, strictly below the interactive step ceiling (8 000 µs).
+const HEADLESS_STEP_BUDGET_US: u64 = 4_000;
+
 pub const WFC_2D_INFERENCE_JOB_KIND: &str = "semio.infer";
 
 pub const WFC_2D_INFERENCE_TOOL_ID: &str = "s.wfc.wfc2d.solve";
@@ -143,7 +148,7 @@ pub struct Wfc2dInferenceJob {
 }
 
 impl Wfc2dInferenceJob {
-    pub(crate) fn new(mut operation: semio_framework_job::Operation, request: Wfc2dInferenceRequest) -> Result<Self, String> {
+    pub fn new(mut operation: semio_framework_job::Operation, request: Wfc2dInferenceRequest) -> Result<Self, String> {
         let snapshot = request.resolve_snapshot()?;
         if snapshot.tiles.len() > MAX_WFC_2D_TILES
             || snapshot.slots.len() > MAX_WFC_2D_SLOTS
@@ -556,7 +561,7 @@ impl Wfc2dInferenceJob {
         if self.commit_bytes.capacity() != 0 {
             semio_framework_job::close_original_granted_step(context, |grant| {
                 let released_bytes = self.commit_bytes.capacity();
-                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+                if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < released_bytes { return semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
                 self.commit_bytes = Vec::new();
                 semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_job::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }), work: 1 }
             })?;
@@ -711,8 +716,7 @@ impl InteractiveJob for Wfc2dInferenceJob {
                     self.output = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, output.close_step_granted(child_grant))?;
-                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+                return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(output.close_step(effect)));
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
@@ -720,8 +724,7 @@ impl InteractiveJob for Wfc2dInferenceJob {
                     self.output_payload = None;
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                let step = semio_framework_job::receive_original_retained_work(cx, payload.close_step(child_grant))?;
-                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+                return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(payload.close_step(effect)));
             }
             if let Some(restore) = self.restore.as_mut() {
                 if restore.terminal_is_empty() {
@@ -839,7 +842,7 @@ pub fn solve_with_clock(snapshot: &Wfc2dSnapshot, now_us: fn() -> Option<u64>) -
         job,
         operation,
         now_us,
-        semio_s_plugin_wfc_engine::job::HeadlessSite { site: "wfc2d.wfc.inference.headless", label: "wfc2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000,
+        semio_s_plugin_wfc_engine::job::HeadlessSite { site: "wfc2d.wfc.inference.headless", label: "wfc2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US,
             retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
             lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
         },

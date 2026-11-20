@@ -33,3 +33,4 @@ semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trac
 
 
 semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

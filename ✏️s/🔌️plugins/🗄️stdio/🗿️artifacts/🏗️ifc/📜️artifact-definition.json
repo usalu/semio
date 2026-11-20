@@ -31,16 +31,12 @@
     {
       "id": "s.stdio.ifc.standard.4x3",
       "revision": "4x3",
-      "normative_source": "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/IFC4X3_ADD2.exp",
+      "normative_source": null,
       "publication_date": null,
-      "source_checksum": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+      "source_checksum": null,
       "redistribution_status": "unknown",
-      "clauses_or_features": [
-        "IFC4X3_ADD2 declarations",
-        "structural EXPRESS domains and bounded TypeScript EXPRESS population evaluation",
-        "native EXPRESS execution written but unverified; complete MVD conformance not established"
-      ],
-      "status": "declared"
+      "clauses_or_features": [],
+      "status": "unverified"
     }
   ],
   "profiles": [
@@ -60,7 +56,7 @@
       "id": "s.stdio.ifc.standard.4x3.profile.any",
       "standard": "s.stdio.ifc.standard.4x3",
       "profile": "any",
-      "status": "declared"
+      "status": "unimplemented"
     }
   ],
   "source_dialects": [
@@ -69,7 +65,7 @@
       "standard": "s.stdio.ifc.standard.4x3",
       "dialect": "source",
       "registered_code_points": [],
-      "status": "declared"
+      "status": "unimplemented"
     },
     {
       "id": "s.stdio.ifc.standard.2x3.dialect.source",

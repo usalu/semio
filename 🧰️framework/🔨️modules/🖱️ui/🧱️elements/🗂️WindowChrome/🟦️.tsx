@@ -8,8 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { observeChipRowAbuts } from "./chip-abut.ts";
-import { focusedWindowChipPath } from "./chip-focus.ts";
-import { deviceSnappedRect, sharedBorderStroke, useSharedWindowBorder, sizeSharedBorderOverlay } from "./shared-border.ts";
+import { deviceSnappedRect, paintSharedWindowBorder, useSharedWindowBorder, sizeSharedBorderOverlay, type SharedBorderPaintSegment } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { SurfaceScope, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
 import {
@@ -28,7 +27,7 @@ import { interactiveHoverClass } from "../../🔨️modules/🖱️interaction-p
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
-export { useSharedBorderFrameRef } from "./shared-border.ts";
+export { useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps } from "./shared-border.ts";
 
 //#region 🗂️WindowSilhouetteBorder
 /** 🖌️ All border effects the silhouette SVG can paint. */
@@ -334,20 +333,6 @@ export const WindowChromeSilhouetteBorder: React.FC<{
       mutationObserver.disconnect();
     };
   }, [stack]);
-
-  const [focusPath, setFocusPath] = reactHostPort.useState<string | null>(null);
-  reactHostPort.useLayoutEffect(() => {
-    if (!stack) return;
-    const sync = () => setFocusPath(focusedWindowChipPath(stack));
-    stack.addEventListener("focusin", sync);
-    stack.addEventListener("focusout", sync);
-    stack.addEventListener("keydown", sync);
-    return () => {
-      stack.removeEventListener("focusin", sync);
-      stack.removeEventListener("focusout", sync);
-      stack.removeEventListener("keydown", sync);
-    };
-  }, [stack]);
   const windowEl = stack?.querySelector('[data-slot="window"]') ?? introduceTarget ?? stack;
   const kind = resolveWindowSilhouetteBorderKind(windowEl, active);
   const resolvedKind =
@@ -359,22 +344,33 @@ export const WindowChromeSilhouetteBorder: React.FC<{
           ? "introduced"
           : kind;
   const metrics = resolvedGeometry.metrics;
-  const sharedSegments = useSharedWindowBorder(stack, resolvedGeometry, resolvedKind);
+  const overlayWidth = metrics.width, overlayHeight = metrics.height;
+  const overlay = reactHostPort.useRef<SVGSVGElement | null>(null);
+  const resolved = reactHostPort.useRef<readonly SharedBorderPaintSegment[] | null>(null);
+  const live = reactHostPort.useRef({ fallback: resolvedGeometry.borderPath, kind: resolvedKind });
+  live.current = { fallback: resolvedGeometry.borderPath, kind: resolvedKind };
+  const sizeOverlay = React.useCallback((svg: SVGSVGElement | null) => {
+    overlay.current = svg;
+    sizeSharedBorderOverlay(svg, overlayWidth, overlayHeight);
+  }, [overlayWidth, overlayHeight]);
+  const paint = React.useCallback((segments: readonly SharedBorderPaintSegment[]) => {
+    resolved.current = segments;
+    if (overlay.current) paintSharedWindowBorder(overlay.current, segments, live.current.fallback, live.current.kind);
+  }, []);
+  useSharedWindowBorder(stack, resolvedGeometry, resolvedKind, paint);
+  reactHostPort.useLayoutEffect(() => {
+    if (overlay.current) paintSharedWindowBorder(overlay.current, resolved.current, resolvedGeometry.borderPath, resolvedKind);
+  });
   void epoch;
 
   if (resolvedGeometry.state === "pending") {
     return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" data-dim="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
-  const path = sharedSegments === null ? resolvedGeometry.borderPath : sharedSegments.filter(segment => segment.state === resolvedKind).map(segment => segment.d).join(" ");
-  const paint = windowSilhouetteBorderPaint(resolvedKind);
-  const sharedPaint = sharedSegments?.filter(segment => segment.state !== resolvedKind).map((segment, index) => (
-    <path key={index} d={segment.d} fill="none" stroke={sharedBorderStroke(segment.state)} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={`window-silhouette-border window-silhouette-border-${segment.state}`} data-shared-border-segment="" data-shared-border-state={segment.state} />
-  ));
-  const focusPaint = focusPath ? <path d={focusPath} fill="none" stroke={sharedBorderStroke("focus")} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border" data-shared-border-segment="" data-shared-border-state="focus" data-focus-on-accent={resolvedKind === "active" ? "" : undefined} /> : null;
+  const kindPaint = windowSilhouetteBorderPaint(resolvedKind);
   if (resolvedKind === "celebrated") {
     return (
       <svg
-        ref={svg => sizeSharedBorderOverlay(svg, metrics.width, metrics.height)}
+        ref={sizeOverlay}
         data-slot={silhouetteSlot}
         data-window-silhouette-border
         data-kind={resolvedKind}
@@ -388,20 +384,19 @@ export const WindowChromeSilhouetteBorder: React.FC<{
         <defs>
           <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
             <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
-            <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
+            <path data-shared-border-main="" fill="none" stroke={kindPaint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={kindPaint.className} />
           </mask>
         </defs>
         <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
           <div className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
         </foreignObject>
-        {sharedPaint}
-        {focusPaint}
+        <g data-shared-border-extra="" />
       </svg>
     );
   }
   return (
     <svg
-      ref={svg => sizeSharedBorderOverlay(svg, metrics.width, metrics.height)}
+      ref={sizeOverlay}
       data-slot={silhouetteSlot}
       data-window-silhouette-border
       data-kind={resolvedKind}
@@ -412,9 +407,8 @@ export const WindowChromeSilhouetteBorder: React.FC<{
       viewBox={`0 0 ${metrics.width} ${metrics.height}`}
       aria-hidden
     >
-      <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={paint.className} data-shared-border-segment="" data-shared-border-state={resolvedKind} />
-      {sharedPaint}
-      {focusPaint}
+      <path data-shared-border-main="" fill="none" stroke={kindPaint.stroke} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={kindPaint.className} data-shared-border-segment="" data-shared-border-state={resolvedKind} />
+      <g data-shared-border-extra="" />
     </svg>
   );
 };

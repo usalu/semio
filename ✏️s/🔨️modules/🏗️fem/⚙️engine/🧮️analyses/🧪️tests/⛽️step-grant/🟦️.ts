@@ -22,6 +22,9 @@ export function testFemAssemblyStepGrantOracle(): void {
     assert.deepEqual(next, row.after);
     assert.deepEqual(oracle, row.after);
     assert.equal(admitted ? row.fuel - 1 : row.fuel, row.fuelRemaining);
-    assert.equal(admitted && next.complete ? "complete" : "yield", row.outcome);
+    assert.equal("yield", row.outcome);
+    if ("deferredOutcome" in row) {
+      assert.equal(admitted && next.complete ? "complete" : "yield", row.deferredOutcome);
+    }
   }
 }

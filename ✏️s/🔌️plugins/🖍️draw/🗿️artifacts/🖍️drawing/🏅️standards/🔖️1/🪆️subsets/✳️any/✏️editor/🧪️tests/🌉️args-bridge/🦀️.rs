@@ -88,3 +88,55 @@ fn path_translation_action_round_trips_the_typed_point_set() {
     store::os_store::test_support::assert_op_line_round_trip(&command);
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
 }
+
+#[test]
+fn action_bridge_matches_edit_input_fixture() {
+    let source = include_str!("🔣️.json");
+    let cases: serde_json::Value = serde_json::from_str(source).expect("edit input fixture");
+    for case in cases.as_array().expect("case list") {
+        let action = case["action"].as_str().expect("action name");
+        let args = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject)
+            .expect("action arguments");
+        let command = command_from_action(action, Some(&args)).expect("typed action");
+        let expected = case["expectedEdit"].clone();
+        match command {
+            DrawingCommand::EditPath(payload) => assert_eq!(*payload.edit, serde_json::from_value::<semio_s_artifact_draw_drawing_geometry::editing::PathEdit>(expected).expect("path edit")),
+            DrawingCommand::EditFill(payload) => assert_eq!(*payload.edit, serde_json::from_value::<semio_s_artifact_draw_drawing_model::fill::FillEdit>(expected).expect("fill edit")),
+            command => panic!("unexpected fixture action {command:?}"),
+        }
+    }
+}
+
+#[test]
+fn host_pointer_numbers_and_nullable_export_fields_are_typed() {
+    let source = include_str!("🔣️host-actions.json");
+    let cases: serde_json::Value = serde_json::from_str(source).expect("host action fixture");
+    for case in cases.as_array().expect("case list") {
+        let action = case["action"].as_str().expect("action");
+        let input = &case["args"];
+        let args = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject)
+            .expect("host action arguments");
+        let decoded = command_from_action(action, Some(&args)).expect("typed host command");
+        match decoded {
+            DrawingCommand::CanvasPointerDown(payload) => {
+                assert_eq!(payload.app_instance_id.map(u64::from), case["instance"].as_u64());
+                assert_eq!(payload.operation_id, case["operation"].as_u64());
+                assert_eq!(payload.checkpoint_pending_work, case["pending"].as_u64());
+                assert_eq!(payload.world_x, case["worldX"].as_f64());
+                assert_eq!(payload.world_y, case["worldY"].as_f64());
+            }
+            DrawingCommand::CanvasPointerMove(payload) => {
+                let expected_samples: Vec<[f64; 2]> = serde_json::from_value(case["samples"].clone()).expect("samples");
+                assert_eq!(payload.samples, expected_samples);
+                assert_eq!([payload.x, payload.y], expected_samples.last().copied().expect("current sample"));
+            }
+            DrawingCommand::ExportDocument(payload) => {
+                assert_eq!(payload.format, case["format"].as_str().expect("format"));
+                assert_eq!(payload.width.map(u64::from), case["width"].as_u64());
+                assert_eq!(payload.height.map(u64::from), case["height"].as_u64());
+                assert_eq!(payload.transparent, case["transparent"].as_bool());
+            }
+            command => panic!("unexpected host command {command:?}"),
+        }
+    }
+}

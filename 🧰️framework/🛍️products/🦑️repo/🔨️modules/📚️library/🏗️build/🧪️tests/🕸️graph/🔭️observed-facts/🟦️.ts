@@ -32,7 +32,8 @@ test("observed authority ignores unread body edits and identical rewrites while 
   try{
     for(const[path,source]of Object.entries(fixture.authority.files))await writeFile(join(root,path),source);
     const captured=await observation.captureObservedSourceInputsV1(async()=>observation.observedFs.readFileSync(join(root,fixture.authority.consumed),"utf8")),facts=captured.observations.filter((row:any)=>row.path.startsWith(root)),before=await buildGraphMembershipV1(root,await workspaceBuildFilesV1(root));
-    const contract={version:3,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:before,graph:"a".repeat(64),observations:facts};expect(new Ajv({strict:false}).compile((await import("../../../🧬️schema/📥️authority.json")).default)(contract)).toBe(true);
+    const schema=(await import("../../../🧬️schema/📥️authority.json")).default,{encodeAuthorityObservationsV1}=await import("../../../👁️observation/🔢️row-table/🟨️.mjs");
+    const contract={version:schema.properties.version.const,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:before,graph:"a".repeat(64),observations:JSON.parse(encodeAuthorityObservationsV1(facts,1<<20))};expect(new Ajv({strict:false}).compile(schema)(contract)).toBe(true);
     for(const row of fixture.authority.cases){if(row.kind==="remove")await rm(join(root,row.path));else await writeFile(join(root,row.path),row.content!);expect(await buildGraphMembershipV1(root,await workspaceBuildFilesV1(root))===before,row.name).toBe(row.membership);expect(await buildGraphSourceFactsHoldV1(facts),row.name).toBe(row.facts);}
   }finally{await rm(root,{recursive:true,force:true});}
 });

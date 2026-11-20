@@ -204,6 +204,240 @@
           "cardinality": "*"
         }
       }
+    },
+    {
+      "operator": "brep.mesh.torus",
+      "direction": "inputs",
+      "expected": {
+        "major": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 2
+          }
+        },
+        "minor": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 0.5
+          }
+        },
+        "segments": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 32
+          }
+        },
+        "rings": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 16
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.uvSphere",
+      "direction": "inputs",
+      "expected": {
+        "radius": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 1
+          }
+        },
+        "segments": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 32
+          }
+        },
+        "rings": {
+          "valueTypes": [
+            "number"
+          ],
+          "default": {
+            "$schema": "number",
+            "value": 16
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.importObj",
+      "direction": "inputs",
+      "expected": {
+        "data": {
+          "valueTypes": [
+            "text"
+          ],
+          "default": {
+            "$schema": "text",
+            "value": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.importObj",
+      "direction": "outputs",
+      "expected": {
+        "meshOut": {
+          "valueTypes": [
+            "mesh"
+          ],
+          "cardinality": "!"
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.setShading",
+      "direction": "inputs",
+      "expected": {
+        "faces": {
+          "valueTypes": [
+            "text"
+          ]
+        },
+        "smooth": {
+          "valueTypes": [
+            "boolean"
+          ],
+          "default": {
+            "$schema": "boolean",
+            "value": true
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.setShading",
+      "direction": "outputs",
+      "expected": {
+        "meshOut": {
+          "valueTypes": [
+            "mesh"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.recomputeNormals",
+      "direction": "outputs",
+      "expected": {
+        "meshOut": {
+          "valueTypes": [
+            "mesh"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.markSeams",
+      "direction": "inputs",
+      "expected": {
+        "edges": {
+          "valueTypes": [
+            "text"
+          ]
+        },
+        "seam": {
+          "valueTypes": [
+            "boolean"
+          ],
+          "default": {
+            "$schema": "boolean",
+            "value": true
+          }
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.markSeams",
+      "direction": "outputs",
+      "expected": {
+        "meshOut": {
+          "valueTypes": [
+            "mesh"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.unwrapUv",
+      "direction": "outputs",
+      "expected": {
+        "meshOut": {
+          "valueTypes": [
+            "mesh"
+          ]
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.importStl",
+      "direction": "inputs",
+      "expected": {
+        "data": {
+          "valueTypes": [
+            "text"
+          ],
+          "cardinality": "!"
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.importGlb",
+      "direction": "inputs",
+      "expected": {
+        "data": {
+          "valueTypes": [
+            "text"
+          ],
+          "cardinality": "!"
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.exportStl",
+      "direction": "outputs",
+      "expected": {
+        "stl": {
+          "valueTypes": [
+            "text"
+          ],
+          "cardinality": "!"
+        }
+      }
+    },
+    {
+      "operator": "brep.mesh.exportGlb",
+      "direction": "outputs",
+      "expected": {
+        "glb": {
+          "valueTypes": [
+            "text"
+          ],
+          "cardinality": "!"
+        }
+      }
     }
   ]
 }

@@ -30,7 +30,8 @@
         "parallelismEnvironment": "SEMIO_COMPILER_PARALLELISM",
         "coreResourcePrefix": "semio.compiler.cpu/v1/",
         "pickerResource": "semio.compiler.cpu-picker/v1",
-        "pollMs": 40
+        "pollMs": 40,
+        "pollMaximumMs": 640
       }
     },
     "Request": {

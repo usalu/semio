@@ -10,7 +10,8 @@ type Close=RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailur
 fn stock()->fixture::Wallet{fixture::Wallet::from_profile(&serde_json::from_str::<serde_json::Value>(include_str!("🎟️work/📐️.json")).unwrap())}
 fn scratch()->EffectBank{EffectBank::new(BankWallet::from_profile(&serde_json::json!({"items":1u64<<40,"copyBytes":1u64<<40,"capacityBytes":1u64<<40,"releaseBytes":1u64<<40,"depth":1u64<<20,"fuel":1u64<<60})))}
 fn observe<R>(run:impl FnOnce()->R)->(R,(usize,usize)){semio_framework_value_testing_allocator::observe_retirement_allocations(run)}
-fn quoted(wallet:&fixture::Wallet,d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=BODY);let loan=wallet.loan(1,BODY);assert!(retained_clone_grant_admits(loan,d));RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..loan}}
+/// 🎯️ Lends the items of one schema metadata step and exactly the quoted demand under the test copy body.
+fn quoted(wallet:&fixture::Wallet,d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=BODY);let loan=wallet.loan(semio_framework_value_native_schema::NATIVE_SCHEMA_METADATA_ITEMS,BODY);assert!(retained_clone_grant_admits(loan,d));RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth,..loan}}
 fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("synchronous original fixture turn stayed pending")}}
 fn progress<E:RetainedProgressOf>(turn:&RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedCloneProgress{match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.progress_of()}}
 trait RetainedProgressOf{fn progress_of(&self)->RetainedCloneProgress;}
@@ -122,7 +123,7 @@ fn close_all<I:Sync+'static,T:NativeReceive<I>>(owner:NativeReceivingOriginal<I,
 #[test]fn native_receiving_original_shell_requires_funded_input_and_receiver_custody(){
  let mut wallet=stock();let mut bank=scratch();let source=row_source(&mut bank);let pointer=std::ptr::from_ref(source.borrow().get());let(mut owner,heap)=observe(||Owner::new(source));assert_eq!(heap,(0,0));assert_eq!(std::ptr::from_ref(owner.borrow_input().unwrap().get()),pointer);assert!(!owner.receiver.reserved());let mut payer=Authorities::new();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);
  for stage in 0..2{
-  let fuel=wallet.remaining_work();let d=owner.demands(BODY,fuel).unwrap();let g=quoted(&wallet,d);
+  let fuel=wallet.remaining_work();let d=owner.demands(BODY,fuel).unwrap();let g=RetainedCloneGrant{maximum_items:1,..quoted(&wallet,d)};
   for denied in fixture::denials(g,d){let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,denied);assert_eq!(turn.work,0);assert_eq!(progress(&turn),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.demands(BODY,fuel).unwrap(),d);}
   let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,g);let p=progress(&turn);assert_eq!(turn.work,1);wallet.post(p,turn.work,g,heap);turn.result.unwrap();
   assert!(owner.receiver.reserved());assert_eq!(owner.receiver.initialized(),stage==1);assert_eq!(p.retained_capacity_bytes,heap.0);

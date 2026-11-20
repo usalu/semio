@@ -5,12 +5,37 @@
   "description": "One project's inference record as it travels through the fleet cache (in the packed form of `../🗜️packed-rows`, which stores every distinct row once): the digest it was stored under, the authority rows and every observation row of the producer, and the result text. The record is stored in the neutral form of `./🧳️portable` (root token and forward slashes, neutral provider owner and closure keys) and spelled the reading machine's way when it is taken, whatever the platform of the two, and the reader accepts it only through its own record lookup, which checks every observation row against its own tree.",
   "definitions": {
     "Policy": {
-      "description": "The revision of the stored form of a project record and its closure entries. It is part of the state a record is stored under, so a record in another form is never found and never read: version 2 stores the observation rows once each, see `../🗜️packed-rows`.",
+      "description": "The revision of the stored form of a project record and its closure entries. It is part of the state a record is stored under, so a record in another form is never found and never read: version 2 stores the observation rows once each, see `../🗜️packed-rows`; version 3 lists the leaf pieces the value names in the note of the entry and stores them in the blob store of the cache, see `./🍃️leaves`. version 4 observes a manifest of a path dependency by the part of it that concerns the reader (a `field` row of the format `cargo-manifest`, see `../🕸️graph/📥️inference/🦀️native-manifests/📐️projection`) instead of by its bytes. An entry of an older form is never found, so it is published again.",
       "type": "object",
       "additionalProperties": false,
       "required": ["form"],
-      "properties": { "form": { "const": 2 } },
-      "const": { "form": 2 }
+      "properties": { "form": { "const": 4 } },
+      "const": { "form": 4 }
+    },
+    "GateTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started", "active", "milliseconds"],
+      "properties": {
+        "started": { "type": "integer", "minimum": 0 },
+        "active": { "type": "integer", "minimum": 0 },
+        "milliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "GateTimings": {
+      "description": "Counts and elapsed time for project gate operations. Seed timing includes its nested blob reads.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metadata", "blob", "held", "seed", "claim", "peerWait", "retry"],
+      "properties": {
+        "metadata": { "$ref": "#/definitions/GateTiming" },
+        "blob": { "$ref": "#/definitions/GateTiming" },
+        "held": { "$ref": "#/definitions/GateTiming" },
+        "seed": { "$ref": "#/definitions/GateTiming" },
+        "claim": { "$ref": "#/definitions/GateTiming" },
+        "peerWait": { "$ref": "#/definitions/GateTiming" },
+        "retry": { "$ref": "#/definitions/GateTiming" }
+      }
     },
     "PortableRecord": {
       "type": "object",

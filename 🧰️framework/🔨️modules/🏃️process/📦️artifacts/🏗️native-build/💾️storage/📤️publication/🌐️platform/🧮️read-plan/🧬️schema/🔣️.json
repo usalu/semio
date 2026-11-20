@@ -7,6 +7,7 @@
     "Policy": {"const": {"version": 1, "settleNanoseconds": "5000000000", "modes": ["all", "root", "changed"]}},
     "ChunkPlan": {"const": {"version": 1, "minimumEncodedExponent": 18, "maximumEncodedExponent": 23, "batchDivisor": 4, "memoryDivisor": 128}},
     "WorkAllowance": {"const": {"version": 1, "checkpointsPerOperation": 512, "operationsBase": 16, "operationsPerRoot": 8, "operationsPerFile": 8, "operationsPerChunk": 6}},
+    "OrdinaryReadFixture": {"type":"object","additionalProperties":false,"required":["roots","files","cases"],"properties":{"roots":{"type":"array","minItems":2,"maxItems":4,"items":{"type":"string"}},"files":{"type":"array","minItems":1,"maxItems":12,"items":{"type":"string"}},"cases":{"type":"array","minItems":1,"maxItems":8,"items":{"type":"object","additionalProperties":false,"required":["change","hash","accepted"],"properties":{"change":{"enum":["none","file","directory","cancel"]},"hash":{"type":"boolean"},"accepted":{"type":"boolean"}}}}}},
     "AllowanceCase": {
       "type": "object",
       "additionalProperties": false,

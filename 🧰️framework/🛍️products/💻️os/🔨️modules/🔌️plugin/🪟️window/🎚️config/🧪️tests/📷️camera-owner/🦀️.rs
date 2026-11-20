@@ -8,7 +8,7 @@ use semio_os_kernel as protocol;
 use semio_os_kernel as store;
 
 /// 📷️ A real schema-first window camera: enveloped Pack, record spec, and a whole-record snapshot mutation.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Copy, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, Clone, Copy, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
@@ -107,7 +107,7 @@ impl protocol::ColdDiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraC
     }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum RetainedLoadCameraConfigMutation {
@@ -143,6 +143,7 @@ impl protocol::OpBinary for RetainedLoadCameraConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+dsl::original_ordinal_operation_receiving!(RetainedLoadCameraConfigMutation);
 
 impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMutation {
     type Diff = RetainedLoadCameraConfigDiff;

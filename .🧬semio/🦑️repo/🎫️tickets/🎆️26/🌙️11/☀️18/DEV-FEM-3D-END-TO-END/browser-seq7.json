@@ -1,0 +1,153 @@
+[
+  {
+    "actor": "fem#1",
+    "events": [
+      {
+        "kind": "activate",
+        "payload": {
+          "instance": 0,
+          "reason": {
+            "tag": "on-artifact-kind",
+            "val": "s.fem.fem3d"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "actor": "fem#1",
+    "events": [
+      {
+        "kind": "instance-open",
+        "payload": {
+          "instance": 1,
+          "activationGeneration": "1",
+          "requestSequence": 3,
+          "appId": "s.fem.fem3d@1/*#editor",
+          "actor": "client-21imsr7cto6",
+          "config": [],
+          "assets": [],
+          "capabilities": [],
+          "quotas": [
+            0,
+            1,
+            1,
+            17,
+            16,
+            0
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "actor": "fem#1",
+    "events": [
+      {
+        "kind": "instance-lifecycle-ack",
+        "payload": {
+          "kind": "ack",
+          "receipt": {
+            "kind": "captured",
+            "lifetime": {
+              "activationGeneration": "1",
+              "instanceId": 1,
+              "guestLifetime": "1"
+            },
+            "requestSequence": 3
+          }
+        }
+      }
+    ]
+  },
+  {
+    "actor": "fem#1",
+    "cursor": {
+      "owner": "1",
+      "generation": "1",
+      "commandIndex": 0,
+      "commandCount": 1,
+      "instance": 1,
+      "seq": "2",
+      "kind": 16,
+      "pageIndex": 0,
+      "pageCount": 1,
+      "itemCount": 0,
+      "metadata": 0
+    },
+    "hex": "1001",
+    "events": []
+  },
+  {
+    "actor": "fem#1",
+    "cursor": {
+      "owner": "1",
+      "generation": "1",
+      "commandIndex": 0,
+      "commandCount": 1,
+      "instance": 1,
+      "seq": "4",
+      "kind": 41,
+      "pageIndex": 0,
+      "pageCount": 1,
+      "itemCount": 0,
+      "metadata": 0
+    },
+    "hex": "2902",
+    "events": []
+  },
+  {
+    "actor": "fem#1",
+    "cursor": {
+      "owner": "1",
+      "generation": "1",
+      "commandIndex": 0,
+      "commandCount": 1,
+      "instance": 1,
+      "seq": "5",
+      "kind": 27,
+      "pageIndex": 0,
+      "pageCount": 1,
+      "itemCount": 0,
+      "metadata": 0
+    },
+    "hex": "1b03",
+    "events": []
+  },
+  {
+    "actor": "fem#1",
+    "cursor": {
+      "owner": "1",
+      "generation": "1",
+      "commandIndex": 0,
+      "commandCount": 1,
+      "instance": 1,
+      "seq": "6",
+      "kind": 29,
+      "pageIndex": 0,
+      "pageCount": 1,
+      "itemCount": 0,
+      "metadata": 0
+    },
+    "hex": "1d04020001",
+    "events": []
+  },
+  {
+    "actor": "fem#1",
+    "cursor": {
+      "owner": "1",
+      "generation": "1",
+      "commandIndex": 0,
+      "commandCount": 1,
+      "instance": 1,
+      "seq": "7",
+      "kind": 1,
+      "pageIndex": 0,
+      "pageCount": 1,
+      "itemCount": 0,
+      "metadata": 0
+    },
+    "hex": "0106c801060464656d6f04656469740366656d0b66656d33642d6d6f64656c16732e66656d2e66656d336440312f2a23656469746f72107365744163746976654578616d706c65010111100207076164647265737310060708616374696f6e4964060507056170704964060407066d6f6465496406010708706c7567696e49640602071077696e646f77496e7374616e636549640603070c77696e646f774b696e64496406030709617267756d656e7473100207096578616d706c6549640600070877696e646f77496406038f0205046564697402656e0b66656d33642d6d6f64656c0d66656d33642d726573756c7473066e6174697665010111100a070c6163746976654d6f64654964060007176163746976655574696c697479427957696e646f7749641000070f6163746976655574696c697479496412071261637469766557696e646f774b696e6449640602070f666f637573656457696e646f774964060207066c6f63616c650601070f73657373696f6e4964656e7469747912070b7465726d696e6f6c6f67790604070877696e646f7749640602070f77696e646f77496e7374616e6365730c021002070269640602070c77696e646f774b696e64496406021002070269640603070c77696e646f774b696e6449640603",
+    "events": []
+  }
+]

@@ -102,7 +102,7 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
         </div>
         <div className="relative mt-single h-7" data-row="events">
           {clip.events.map((event, at) => (
-            <button key={at} type="button" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="absolute top-0 min-h-6 min-w-6 -translate-x-1/2 border border-border bg-background text-xs leading-none" style={{ left: pct(event.t) }}>
+            <button key={at} type="button" data-shared-border-frame="" data-event={event.kind} aria-label={label(event)} title={label(event)} onClick={() => seek(event.t)} className="absolute top-0 min-h-6 min-w-6 -translate-x-1/2 border border-border bg-background text-xs leading-none" style={{ left: pct(event.t) }}>
               <span aria-hidden="true">{EVENT_GLYPHS[event.kind]}</span>
             </button>
           ))}
@@ -118,7 +118,7 @@ export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip
       <Note id="detail-timeline-help">{t("detail.timeline.help")}</Note>
       {clip.tracks.length === 0 ? null : <Cell><ul className="m-0 flex list-none flex-wrap gap-single p-0">{clip.tracks.map((track) => <li key={track.target}><Tag>{trackName(track.target)} · {track.keys.length} {t("detail.timeline.keys")}</Tag></li>)}</ul></Cell>}
       <details data-shared-border-cell="">
-        <summary className="min-h-6 cursor-pointer px-double py-single text-xs">{t("detail.timeline.table")}</summary>
+        <summary data-shared-border-frame="" data-shared-border-edges="" className="min-h-6 cursor-pointer px-double py-single text-xs">{t("detail.timeline.table")}</summary>
         <Column>
           <DataTable caption={t("detail.timeline.phases")} head={[t("detail.timeline.name"), t("detail.timeline.from"), t("detail.timeline.to")]}>
             {clip.phases.map((phase) => <Row key={phase.id} head={phase.title[language]} cells={[`${num(phase.fromS, language)} s`, `${num(phase.toS, language)} s`]} />)}

@@ -201,7 +201,8 @@ fn a_touch_tree_lays_every_row_out_at_least_44_pixels_tall_and_the_standard_tree
         assert!(close(standard_height, 24.0), "the standard row stays {standard_height} px");
         assert!(touch_height >= semio_ui_wgpu_layout::layout::TREE_ROW_TOUCH_MIN_PX, "the touch row {:?} is {touch_height} px tall", rect["path"]);
     }
-    assert!(touch.mounted_layout(touch_root).expect("touch tree layout").3 >= 3.0 * 44.0, "three touch rows stack to at least 132 px");
+    let section = touch.mounted_layout(child_by_key(&touch, touch_root, "generations")).expect("touch section layout").3;
+    assert!(section >= 3.0 * semio_ui_wgpu_layout::layout::TREE_ROW_TOUCH_MIN_PX, "three touch rows stack to at least 132 px inside their section, got {section}");
 }
 
 #[test]

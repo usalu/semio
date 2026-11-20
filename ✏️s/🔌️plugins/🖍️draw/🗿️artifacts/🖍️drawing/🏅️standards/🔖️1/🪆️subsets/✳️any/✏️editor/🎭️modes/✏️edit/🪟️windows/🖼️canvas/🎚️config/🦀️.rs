@@ -2,7 +2,7 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, ToValue, FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.draw.drawing.canvas-window.config", extension = "drawingcanvaswindowcfg")]
@@ -61,7 +61,7 @@ impl protocol::ColdDiffAlgebra<DrawingCanvasWindowConfig> for DrawingCanvasWindo
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum DrawingCanvasWindowConfigMutation {
@@ -69,7 +69,7 @@ pub enum DrawingCanvasWindowConfigMutation {
 }
 
 /// 🎚️ Payload record of the one set mutation; its fields are the wire fields of the tagged `set` variant.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DrawingCanvasWindowConfigSet {
@@ -176,6 +176,18 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Drawi
 
 }
 
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for DrawingCanvasWindowConfig {
+    type Receiving = store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+    }
+
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
+
 impl protocol::OpText for DrawingCanvasWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -183,11 +195,15 @@ impl protocol::OpText for DrawingCanvasWindowConfigMutation {
     }
 }
 
+semio_os_kernel::original_pack_value_operation_receiving!(DrawingCanvasWindowConfigMutation);
+
 impl protocol::OpBinary for DrawingCanvasWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        Ok(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
+    }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })
     }
 }
 
@@ -202,12 +218,28 @@ impl semio_plugin::WindowConfigOwner for DrawingCanvasWindowConfigOwner {
     const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
     type State = DrawingCanvasWindowConfig;
     type Mutation = DrawingCanvasWindowConfigMutation;
+
+    fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+    }
+
+    fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure> {
+        semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+    }
+
+    fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+        store::os_store::ArtifactOperationWire::canonical().with_original_receiving()
+    }
+
     type Edit = semio_plugin::WindowConfigApplyEdit<DrawingCanvasWindowConfig, DrawingCanvasWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new()) }
     fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
     fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::bounded_window_config_store_disposer_birth::<Self>()
+    }
     fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 

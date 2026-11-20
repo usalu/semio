@@ -2,7 +2,7 @@
 
 use crate::{schema::snapshot::Grid3dSnapshot, schema::snapshot::Grid3dTile};
 use crate::standards::v1::subsets::any::schema::diff::*;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra};
 
 fn tile(id: &str, weight: f64) -> Grid3dTile {
     Grid3dTile { id: id.into(), weight, ..Default::default() }
@@ -22,7 +22,7 @@ fn reweigh(id: &str, weight: f64) -> Grid3dTilesModification {
 
 fn absorbed(first: Grid3dDiff, second: Grid3dDiff) -> Grid3dDiff {
     let mut sigma = first;
-    MutationDiff::<Grid3dSnapshot>::absorb(&mut sigma, second);
+    <Grid3dDiff as ColdMutationDiff<Grid3dSnapshot>>::absorb(&mut sigma, second);
     sigma
 }
 
@@ -39,7 +39,7 @@ fn assert_absorb_law(base: &Grid3dSnapshot, first: &Grid3dDiff, second: &Grid3dD
 fn empty_diff_is_the_identity() {
     let base = base();
     assert_eq!(protocol::apply_diff_cold(&Grid3dDiff::default(), &base).expect("identity applies"), base);
-    assert!(DiffAlgebra::<Grid3dSnapshot>::is_empty(&Grid3dDiff::default()));
+    assert!(<Grid3dDiff as DiffAlgebra<Grid3dSnapshot>>::is_empty(&Grid3dDiff::default()));
 }
 
 /// 📍 Inserted rows take their stated after-list indices; the canonical position of a new row is where `insert_at` puts it.
@@ -57,15 +57,15 @@ fn inserted_rows_take_their_after_indices() {
 fn create_then_delete_cancels() {
     let base = base();
     let created = tile("c", 3.0);
-    let sigma = assert_absorb_law(&base, &rows(Grid3dTilesDelta::insertion(1, created.clone())), &rows(Grid3dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)], 1)));
-    assert!(DiffAlgebra::<Grid3dSnapshot>::is_empty(&sigma));
+    let sigma = assert_absorb_law(&base, &rows(Grid3dTilesDelta::insertion(1, created.clone())), &rows(Grid3dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)][..], 1)));
+    assert!(<Grid3dDiff as DiffAlgebra<Grid3dSnapshot>>::is_empty(&sigma));
 }
 
 /// 🔀 A base row patched and then deleted leaves only the deletion at its base index.
 #[test]
 fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(Grid3dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Grid3dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)], 0)));
+    let sigma = assert_absorb_law(&base, &rows(Grid3dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Grid3dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)][..], 0)));
     assert_eq!(sigma.tiles.removed, vec![Grid3dTilesRemoval { id: "b".into(), index: 0 }]);
     assert!(sigma.tiles.modified.is_empty() && sigma.tiles.inserted.is_empty());
 }
@@ -87,13 +87,12 @@ fn delete_then_create_replaces() {
     assert_eq!((sigma.tiles.removed, sigma.tiles.inserted), (vec![Grid3dTilesRemoval { id: "b".into(), index: 0 }], vec![Grid3dTilesInsertion { index: 0, row: tile("b", 7.0) }]));
 }
 
-/// 🔀 A row created and then patched is created already patched.
+/// 🔀 A row created and then patched applies as one already patched row.
 #[test]
 fn create_then_patch_folds_into_the_row() {
     let base = base();
     let sigma = assert_absorb_law(&base, &rows(Grid3dTilesDelta::insertion(1, tile("c", 3.0))), &rows(Grid3dTilesDelta { modified: vec![reweigh("c", 4.0)], ..Default::default() }));
-    assert_eq!(sigma.tiles.inserted, vec![Grid3dTilesInsertion { index: 1, row: tile("c", 4.0) }]);
-    assert!(sigma.tiles.modified.is_empty());
+    assert_eq!(protocol::apply_diff_cold(&sigma, &base).expect("the folded diff applies").tiles[1], tile("c", 4.0));
 }
 
 /// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
@@ -102,7 +101,7 @@ fn inverse_restores_the_base() {
     let base = base();
     let diff = rows(Grid3dTilesDelta { removed: vec![Grid3dTilesRemoval { id: "b".into(), index: 0 }], inserted: vec![Grid3dTilesInsertion { index: 0, row: tile("a", 5.0) }], modified: vec![reweigh("d", 6.0)], ..Default::default() });
     let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-    let inverse = DiffAlgebra::<Grid3dSnapshot>::inverse(&diff, &base);
+    let inverse = <Grid3dDiff as ColdDiffAlgebra<Grid3dSnapshot>>::inverse(&diff, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
@@ -119,7 +118,7 @@ fn inverse_restores_middle_rows() {
     ] {
         let diff = rows(delta);
         let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-        let inverse = DiffAlgebra::<Grid3dSnapshot>::inverse(&diff, &base);
+        let inverse = <Grid3dDiff as ColdDiffAlgebra<Grid3dSnapshot>>::inverse(&diff, &base);
         assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }
@@ -138,7 +137,7 @@ fn axis_patches_resize_set_restore_and_coalesce() {
     let grow = Grid3dDiff { cell_sizes_x: Some(Grid3dAxisPatch { length: Some(4), sizes: vec![size(1, 5.0), size(3, 3.0)] }), ..Default::default() };
     let after = protocol::apply_diff_cold(&grow, &base).expect("grow applies");
     assert_eq!(after.cell_sizes_x, vec![1.0, 5.0, 3.0, 3.0]);
-    let inverse = DiffAlgebra::<Grid3dSnapshot>::inverse(&grow, &base);
+    let inverse = <Grid3dDiff as ColdDiffAlgebra<Grid3dSnapshot>>::inverse(&grow, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies").cell_sizes_x, base.cell_sizes_x);
     let shrink = Grid3dDiff { cell_sizes_x: Some(Grid3dAxisPatch { length: Some(2), sizes: vec![] }), ..Default::default() };
     let regrow = Grid3dDiff { cell_sizes_x: Some(Grid3dAxisPatch { length: Some(3), sizes: vec![size(2, 9.0)] }), ..Default::default() };

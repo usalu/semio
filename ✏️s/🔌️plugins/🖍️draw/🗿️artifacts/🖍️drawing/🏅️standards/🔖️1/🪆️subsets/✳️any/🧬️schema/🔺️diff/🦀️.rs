@@ -16,7 +16,7 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_value::paged::{PagedMap, PagedUtf8, Utf8Text};
+use semio_framework_value::{paged::{PagedMap, PagedUtf8, Utf8Text}, retained_clone::ordered_map::RetainedOrderedMap};
 use semio_framework_value_persistent::list::PagedList;
 
 //#region 🔖️Diff
@@ -49,7 +49,7 @@ pub struct DrawingDiff {
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 pub struct DrawingAssetsDelta {
-    pub entries: BTreeMap<String, Option<DrawingImageAsset>>,
+    pub entries: RetainedOrderedMap<String, Option<DrawingImageAsset>>,
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.

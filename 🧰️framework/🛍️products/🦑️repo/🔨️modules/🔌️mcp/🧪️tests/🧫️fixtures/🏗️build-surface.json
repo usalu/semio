@@ -38,8 +38,7 @@
     "scheduler_cancel",
     "scheduler_run",
     "scheduler_status",
-    "service_probe",
-    "service_status",
+    "service_host",
     "session_close",
     "session_list",
     "session_open",
@@ -55,6 +54,19 @@
     "units_run"
   ],
   "vectors": [
+    {
+      "id": "service-host-status",
+      "tool": "service_host",
+      "arguments": { "action": "status" },
+      "valid": true,
+      "argv": ["service", "host", "status"]
+    },
+    {
+      "id": "service-host-query-rejects-stop",
+      "tool": "service_host",
+      "arguments": { "action": "stop" },
+      "valid": false
+    },
     {
       "id": "run-plain",
       "tool": "run",

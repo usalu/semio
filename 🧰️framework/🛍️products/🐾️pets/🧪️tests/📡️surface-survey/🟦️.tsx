@@ -14,6 +14,7 @@ import { registerTellsSurveyWentStaleTests } from "./🔸️tells-survey-went-st
 import { registerTurnsPointerStageEventsTests } from "./🟠️turns-pointer-stage-events/🟦️.tsx";
 import { registerNamesFixtureOnceGoodTests } from "./🟢️names-fixture-once-good/🟦️.tsx";
 import { registerLinesAndOpenFacesTests } from "./🟤️lines-and-open-faces/🟦️.tsx";
+import { registerSlicesAcrossFramesTests } from "./🟡️slices-across-frames/🟦️.tsx";
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -28,4 +29,5 @@ describe("📡️ surface survey", () => {
   registerTurnsPointerStageEventsTests();
   registerNamesFixtureOnceGoodTests();
   registerLinesAndOpenFacesTests();
+  registerSlicesAcrossFramesTests();
 });

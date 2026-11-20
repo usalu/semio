@@ -1,0 +1,10 @@
+const jsc=require("bun:jsc");const N=98743;
+const mb=()=>{jsc.gcAndSweep();jsc.gcAndSweep();return process.memoryUsage().heapUsed/1048576;};
+const keep=[];const meas=(l,f)=>{const a=mb();keep.push(f());const b=mb();console.log(l,(b-a).toFixed(0),"MB");};
+const paths=Array.from({length:N},(_,i)=>"/Users/ueli/Documents/semio/🧰️framework/x"+(i%977)+"/y"+(i%131)+"/z"+i);
+meas("path strings (distinct)",()=>paths.map(p=>p+"")) ;
+meas("Map<path,sealed record{path,state(frozen4),list:undefined}>",()=>{const m=new Map();paths.forEach((p,i)=>m.set(p,Object.seal({path:p,state:Object.freeze(["directory",String(16777232+i%3),String(1000000+i*7),16877]),list:undefined})));return m;});
+meas("order frozen {record,operation} x2N",()=>{const r={};const o=[];for(let i=0;i<2*N;i++)o.push(Object.freeze({record:r,operation:i&1?"list":"state"}));return o;});
+meas("frontier Map<path,{stamp str,settled}>",()=>{const m=new Map();paths.forEach((p,i)=>m.set(p,{stamp:[16777232,1000000+i*7,16877,String(1.7e18+i),String(1.7e18+i)].join(":"),settled:true}));return m;});
+meas("listing entries 2.3 per dir {name,kind}, frozen list",()=>{const a=[];for(let i=0;i<N;i++){const l=[];for(let j=0;j<2.3;j++)l.push(Object.freeze({name:"n"+(i*3+j),kind:"directory"}));a.push(Object.freeze(l));}return a;});
+meas("packed: Uint32Array x3 + BigUint64 x2 + Uint8",()=>[new Uint32Array(N),new Uint32Array(N),new Uint32Array(N),new BigUint64Array(N),new BigUint64Array(N),new Uint8Array(N)]);

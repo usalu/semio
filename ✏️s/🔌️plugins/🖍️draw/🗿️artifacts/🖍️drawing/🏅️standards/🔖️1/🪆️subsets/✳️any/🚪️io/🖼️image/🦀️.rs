@@ -2,7 +2,7 @@
 use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,ImageDecodeJob,ImageDecodeProgress,ImageDecodeError}};
 
-use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{RetainedAllocationEffect,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 #[derive(Clone,Copy,Debug)]
 pub struct DrawingImageAdmissionProgress{pub decoding:Option<ImageDecodeProgress>,pub samples:usize,pub total_samples:usize,pub work:u64,pub done:bool}
 #[derive(semio_framework_value::RetireOwned)]
@@ -16,14 +16,22 @@ impl DrawingImageAdmissionJob{
  /// 🪜️ Quotes the nesting depth of the next transition, which a sample page reservation or the decoder raises above one.
  pub fn next_depth_demand(&self)->Result<usize,ImageDecodeError>{match self.phase{0=>self.decoder.next_depth_demand(),2=>{let asset=self.asset.as_ref().ok_or(ImageDecodeError::Invalid("Drawing asset is absent"))?;if asset.samples.has_reserved_slot()||self.samples==asset.width as usize*asset.height as usize{Ok(1)}else{asset.samples.next_reserve_depth_demand().map_err(|_|ImageDecodeError::Invalid("Drawing sample depth demand refused"))}},3|4=>Ok(0),_=>Ok(1)}}
  pub fn next_capacity_byte_demand(&self)->Result<usize,ImageDecodeError>{match self.phase{0=>self.decoder.next_capacity_byte_demand(),2=>{let asset=self.asset.as_ref().unwrap();if self.samples==asset.width as usize*asset.height as usize{Ok(0)}else{asset.samples.next_allocation_bytes().map_err(|_|ImageDecodeError::Invalid("Drawing sample allocation demand refused"))}},_=>Ok(0)}}
- fn step(&mut self,source:&str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ImageDecodeError>{
-  if self.phase==0{let(progress,receipt)=self.decoder.advance(source,grant)?;self.decoding=Some(progress);if progress.done{self.phase=1;}return Ok(receipt);}
+ fn step(&mut self,source:&str,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ImageDecodeError>{
+  let grant=effect.grant();
+  if self.phase==0{let(progress,receipt)=self.decoder.advance(source,effect)?;self.decoding=Some(progress);if progress.done{self.phase=1;}return Ok(receipt);}
   if self.phase==1{let Some((image,receipt))=self.decoder.take_result(grant)?else{return Ok(Default::default());};self.asset=Some(DrawingImageAsset{width:image.width,height:image.height,samples:Default::default()});self.image=Some(image);self.phase=2;return Ok(RetainedCloneProgress{copied_bytes:receipt.copied_bytes+size_of::<DrawingImageAsset>(),..receipt});}
   let image=self.image.as_ref().unwrap();let at=self.samples*4;if at==image.pixels.len(){self.phase=3;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:4+2*size_of::<usize>(),..Default::default()});}
-  let asset=self.asset.as_mut().unwrap();if !asset.samples.has_reserved_slot(){let copy=asset.samples.next_reserve_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("Drawing sample metadata refused"))?;let reserved=asset.samples.reserve_one_funded(grant).map_err(|_|ImageDecodeError::Invalid("Drawing sample allocation refused"))?;return Ok(RetainedCloneProgress{copied_items:reserved.copied_items,copied_bytes:if reserved.copied_items>0{copy+2*size_of::<usize>()}else{0},retained_capacity_bytes:reserved.retained_capacity_bytes,..Default::default()});}
+  let asset=self.asset.as_mut().unwrap();if !asset.samples.has_reserved_slot(){let copy=asset.samples.next_reserve_copy_byte_demand().map_err(|_|ImageDecodeError::Invalid("Drawing sample metadata refused"))?;let turn=asset.samples.reserve_one_funded(effect);
+   let reserved=turn.result.map_err(|_|ImageDecodeError::Invalid("Drawing sample allocation refused"))?;
+   return Ok(match reserved {
+    semio_framework_value_persistent::list::PagedListReservationOutcome::Denied => Default::default(),
+    semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(progress) => RetainedCloneProgress {
+     copied_bytes: if progress.copied_items > 0 { copy + 2*size_of::<usize>() } else { 0 }, ..progress
+    },
+   });}
   asset.samples.push_reserved(image.pixels[at..at+4].try_into().unwrap()).map_err(|_|ImageDecodeError::Invalid("Drawing sample reservation refused"))?;self.samples+=1;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:4+2*size_of::<usize>(),..Default::default()})
  }
- pub fn advance(&mut self,source:&str,grant:RetainedCloneGrant)->Result<(DrawingImageAdmissionProgress,RetainedCloneProgress),ImageDecodeError>{self.check()?;if source.as_ptr()as usize!=self.source_identity||source.len()!=self.source_length{return Err(ImageDecodeError::Invalid("Original drawing image source changed"));}let mut receipt=RetainedCloneProgress::default();for _ in 0..grant.maximum_items{if self.phase==3{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes-receipt.released_bytes,maximum_depth:grant.maximum_depth};let step=match self.step(source,child){Ok(step)=>step,Err(error)=>{self.failure=Some(error.clone());return Err(error);}};if step.copied_items==0{break;}self.work+=step.copied_items as u64;receipt.copied_items+=step.copied_items;receipt.copied_bytes+=step.copied_bytes;receipt.retained_capacity_bytes+=step.retained_capacity_bytes;receipt.released_bytes+=step.released_bytes;}Ok((self.progress(),receipt))}
+ pub fn advance(&mut self,source:&str,effect:&mut RetainedAllocationEffect<'_>)->Result<(DrawingImageAdmissionProgress,RetainedCloneProgress),ImageDecodeError>{let grant=effect.grant();self.check()?;if source.as_ptr()as usize!=self.source_identity||source.len()!=self.source_length{return Err(ImageDecodeError::Invalid("Original drawing image source changed"));}let mut receipt=RetainedCloneProgress::default();for _ in 0..grant.maximum_items{if self.phase==3{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes-receipt.released_bytes,maximum_depth:grant.maximum_depth};let step=match self.step(source,&mut effect.nested(child)){Ok(step)=>step,Err(error)=>{self.failure=Some(error.clone());return Err(error);}};if step.copied_items==0{break;}self.work+=step.copied_items as u64;receipt.copied_items+=step.copied_items;receipt.copied_bytes+=step.copied_bytes;receipt.retained_capacity_bytes+=step.retained_capacity_bytes;receipt.released_bytes+=step.released_bytes;if effect.actual().is_some(){break;}}Ok((self.progress(),receipt))}
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&DrawingImageAsset,ImageDecodeError>{self.check()?;if self.phase!=3{return Err(ImageDecodeError::Incomplete);}self.asset.as_ref().ok_or(ImageDecodeError::Incomplete)}
  pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(DrawingImageAsset,RetainedCloneProgress)>,ImageDecodeError>{self.result()?;if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<DrawingImageAsset>()||grant.maximum_depth==0{return Ok(None);}self.phase=4;Ok(Some((self.asset.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<DrawingImageAsset>(),..Default::default()})))}
@@ -87,15 +95,47 @@ pub fn prepared_scene_node_value(node:&semio_s_artifact_draw_drawing_scene::view
  Ok(value)
 }
 
+#[cfg(any(test, feature = "testkit"))]
+fn image_fixture_wallet() -> semio_framework_value::AuthoringWallet {
+ let stock=RetainedCloneGrant{maximum_items:1<<26,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<29,maximum_depth:256};
+ semio_framework_value::AuthoringWallet::new(stock,1<<28)
+}
+
+#[cfg(any(test, feature = "testkit"))]
+fn advance_image_fixture(job:&mut DrawingImageAdmissionJob,source:&str,grant:RetainedCloneGrant,wallet:&mut semio_framework_value::AuthoringWallet)->Result<(DrawingImageAdmissionProgress,RetainedCloneProgress),ImageDecodeError> {
+ let grant=grant.restricted_by(wallet.remaining());
+ let turn=wallet.run_invoked(grant,1<<20,|effect|job.advance(source,effect)).expect("fixture gets its original effect").expect("fixture has work remaining");
+ let(progress,receipt)=turn.output?;
+ wallet.post(receipt).expect("fixture pays its actual image work");
+ Ok((progress,receipt))
+}
+
+#[cfg(any(test, feature = "testkit"))]
+fn close_image_fixture(job:DrawingImageAdmissionJob,wallet:&mut semio_framework_value::AuthoringWallet) {
+ let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain(job);
+ for _ in 0..2_000_000 {
+  if close.terminal_is_empty(){return;}
+  let body=wallet.remaining().maximum_copy_bytes.min(262144);
+  let demand=close.next_demand(body).unwrap();
+  let grant=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:demand.copy_bytes, maximum_capacity_bytes:demand.capacity_bytes, maximum_release_bytes:demand.release_bytes, maximum_depth:demand.depth };
+  let(turn,_)=wallet.run_settled(grant,1<<20,|effect|close.step(body,effect)).unwrap().unwrap();
+  let progress=turn.result.unwrap().progress();
+  assert!(progress.fits(grant));
+  wallet.post(progress).unwrap();
+ }
+ panic!("fixture decoder close stalled")
+}
+
 /// 🧪️ Cold fixture construction retains every decoder child until its quoted physical close.
 #[cfg(any(test, feature = "testkit"))]
-pub fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{
+pub fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset {
  let source=base64_codec::base64_standard_encode(bytes);
  let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&source,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}).expect("valid fixture PNG source");
- let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:16777216,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128};
- while !job.advance(&source,grant).expect("fixture PNG admission").0.done{}
- let asset=job.take_result(grant).unwrap().unwrap().0;
- let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("fixture decoder owner unsupported"));
- for _ in 0..2000000{if close.terminal_is_empty(){return asset;}let copy=close.next_copy_byte_demand().unwrap();let release=close.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:close.next_depth_demand().unwrap()};assert!(close.step(grant).unwrap().progress().fits(grant));}
- panic!("fixture decoder close stalled")
+ let mut wallet=image_fixture_wallet();
+ let grant=RetainedCloneGrant{maximum_items:4096,..wallet.remaining()};
+ while !advance_image_fixture(&mut job,&source,grant,&mut wallet).expect("fixture PNG admission").0.done {}
+ let (asset,receipt)=job.take_result(wallet.remaining()).unwrap().unwrap();
+ wallet.post(receipt).unwrap();
+ close_image_fixture(job,&mut wallet);
+ asset
 }

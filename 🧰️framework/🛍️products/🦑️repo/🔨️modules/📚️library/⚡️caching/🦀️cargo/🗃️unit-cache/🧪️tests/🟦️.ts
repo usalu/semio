@@ -13,7 +13,7 @@ import {expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseD
 import {planGcV1,type GcInputV1} from "../🧹️gc/🟦️.ts";
 import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
 import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
-import {lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
+import {foreignLanePathV1,lookupBuildRunV1,missingLinkSearchPathV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
 import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,sealedUnitCacheV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -281,7 +281,7 @@ test("the launcher block selects the wrapper chain and the focus follows the pac
  expect(unitCacheRootV1("/store")).toBe("/store/u");
 });
 
-test("an admission memo holds until a probed path changes, appears, vanishes or was too fresh to trust", () => {
+test("an admission memo holds until a probed path changes, appears, vanishes or was fresh and no longer hashes to its digest", () => {
  const directory=scratch(),root=join(directory,"memo"),source=join(directory,"lib.rs"),other=join(directory,"other.rs"),absent=join(directory,"mod.rs");
  writeFileSync(source,"pub fn a() {}\n");writeFileSync(other,"pub fn b() {}\n");
  const unit={id:"a 0.1.0",packageName:"a",manifest:"/ws/a/Cargo.toml",sourceInputs:[],compilerCfg:null,kind:"library"},policy={maxSourceBytes:10},key=admissionMemoKeyV1(unit,policy,"tc");
@@ -295,7 +295,8 @@ test("an admission memo holds until a probed path changes, appears, vanishes or 
  writeFileSync(other,"pub fn c() {}\n");expect(recallAdmissionV1(root,key),"unprobed file").toBeDefined();
  writeFileSync(absent,"");expect(recallAdmissionV1(root,key),"probed path appeared").toBeUndefined();rmSync(absent);expect(recallAdmissionV1(root,key),"and vanished again").toBeDefined();
  const later=new Date(Date.now()+2000);writeFileSync(source,"pub fn a() {}\n");utimesSync(source,later,later);expect(recallAdmissionV1(root,key),"probed file touched").toBeUndefined();
- expect(rememberAdmissionV1(root,key,{...result,startedMs:Date.now()}),"fresh file is not trusted").toBe(false);
+ expect(rememberAdmissionV1(root,key,{...result,startedMs:Date.now()}),"fresh file is remembered as racy with its digest").toBe(true);expect(recallAdmissionV1(root,key),"racy file whose bytes do not hash to the remembered digest").toBeUndefined();
+ expect(rememberAdmissionV1(root,key,{...result,probed:[source,other],startedMs:Date.now()}),"fresh file without a digest is not remembered").toBe(false);
  const port=unitAdmissionMemoV1(join(directory,"port"),"tc");port.remember(unit,policy,{...result,startedMs:Date.now()+10000});
  const recalled=port.recall({...unit,sourceInputs:[]},policy);expect(recalled?.inputs).toEqual(result.inputs);expect(recalled?.environment).toEqual({A:"1",B:null});
  writeFileSync(join(root,"a",key.slice(0,2),key+".json"),"{broken");expect(recallAdmissionV1(root,key)).toBeUndefined();
@@ -479,4 +480,15 @@ test("the stand-in reports exactly the jobserver descriptors that are open befor
  expect(reported("-j --jobserver-auth=3,5",[],{SEMIO_UNIT_CACHE_JOBSERVER_FDS:"3,5"}),"a value inherited from a parent wrapper is never trusted").toBe("");
  expect(reported("-j --jobserver-auth=3,5",[3,5],{},"MFLAGS"),"MFLAGS is the last variable read").toBe("3,5");
  expect(reported("",[3,5],{MAKEFLAGS:"-j --jobserver-auth=3,5"}),"the first variable that is set decides, even an empty one, like the jobserver crate").toBe("");
+});
+
+/** 🧭️ A replayed build script run must not send the linker into a directory that is gone or into another lane. */
+test("a build script replay naming an absent or foreign lane directory is detected",()=>{
+ const present=mkdtempSync(join(base,"link-")),gone=join(present,"gone");
+ try{
+  expect(missingLinkSearchPathV1(`cargo:rustc-link-search=native=${present}\n`)).toBeUndefined();
+  expect(missingLinkSearchPathV1(`cargo:rustc-link-lib=static=x\ncargo:rustc-link-search=native=${gone}\n`)).toBe(gone);
+  expect(foreignLanePathV1("native=/c/l/pold/out","/c/l/pnew")).toBe(true);
+  expect(foreignLanePathV1("native=<lane>/out","/c/l/pnew")).toBe(false);
+ }finally{rmSync(present,{recursive:true,force:true});}
 });

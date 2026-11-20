@@ -418,6 +418,18 @@
         "nx:sdk-derivative-recheck",
         "nx:source-index"
       ],
+      "counterPattern": "^(?:[1-9][0-9]*)$",
+      "maximumCompleted": 200000,
+      "countLabels": {
+        "en": {
+          "nx:source-index": "{command} · Reading build tool index: {completed} entries",
+          "nx:source-verification": "{command} · Verifying build tools: {completed} entries"
+        },
+        "de": {
+          "nx:source-index": "{command} · Build-Werkzeugindex lesen: {completed} Einträge",
+          "nx:source-verification": "{command} · Build-Werkzeuge prüfen: {completed} Einträge"
+        }
+      },
       "namespacePrefix": "nx-sdk-derived-namespace:",
       "minimumPublicationMilliseconds": 250,
       "maximumPathCharacters": 256,

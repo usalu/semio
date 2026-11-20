@@ -68,7 +68,7 @@ fn a_new_parameter_takes_a_free_name_and_the_default_formula_of_its_kind() {
     state = applied(&state, &edit("parameter", "add", "length", ""));
     assert!(state.family_parameters.contains_key("fam-table.new_length_2"), "the second length gets the next free name");
     let mut bare = model();
-    bare.materials.clear();
+    bare.materials.cold_clear();
     assert_eq!(apply(&bare, "fam-table", &edit("parameter", "add", "Material", ""), "x"), Err("bim.family.material-missing"));
     assert_eq!(apply(&model(), "fam-table", &edit("parameter", "add", "Colour", ""), "x"), Err("bim.family.kind-unknown"));
 }

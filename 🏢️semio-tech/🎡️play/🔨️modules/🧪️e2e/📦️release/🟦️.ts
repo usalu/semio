@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { playPageHost } from "../../📦️site/📄pages/🟦️.ts";
+import { PLAY_HOST } from "../../🧩️runtime/📇️catalog/🟦️.ts";
 
 /** 📂 Resolves only an authored static file; missing assets never fall back to HTML. */
 export function releaseAssetPath(root: string, request: string): string | undefined {
@@ -45,8 +46,9 @@ export function servePublishedPlay(pages: string, names: readonly string[]): { r
         },
       });
       servers.push(server);
-      origins[`https://${playPageHost(name, "play.semio-tech.com")}`] = server.url.origin;
+      origins[`https://${playPageHost(name, PLAY_HOST)}`] = server.url.origin;
     }
-    return { baseURL: servers[0]!.url.href, origins, async stop() { const settled=await Promise.allSettled(servers.map(server=>server.stop(true)));const failures=settled.flatMap(row=>row.status==="rejected"?[row.reason]:[]);if(failures.length)throw new AggregateError(failures,"Play listeners failed to close"); } };
+    const baseURL = new URL("/", origins[`https://${PLAY_HOST}`]).href;
+    return { baseURL, origins, async stop() { const settled=await Promise.allSettled(servers.map(server=>server.stop(true)));const failures=settled.flatMap(row=>row.status==="rejected"?[row.reason]:[]);if(failures.length)throw new AggregateError(failures,"Play listeners failed to close"); } };
   } catch (error) { for (const server of servers) server.stop(true); throw error; }
 }

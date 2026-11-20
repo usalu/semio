@@ -62,6 +62,9 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome
 [workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-plugin-ownership]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-plugin]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 

@@ -8,7 +8,7 @@
 //! from `SolidSpec`'s (now-deleted) per-variant analytic-extent switch — a strictly MORE general
 //! technique (works for any brep content, not just the three known primitive kinds) that happens to
 //! also be simpler. A brep with no vertices (the sphere/cylinder-lateral-face case, or the honest
-//! empty placeholder minted for `WorkingSolid::ImportedMesh`/`ImportedSolid`) degenerates to a
+//! empty placeholder minted for display-only `WorkingSolid::ImportedMesh`) degenerates to a
 //! single point at `pose.position` — honest given what the brep content alone can tell us.
 
 use semio_s_artifact_process_process3d_model::snapshot::Pose;

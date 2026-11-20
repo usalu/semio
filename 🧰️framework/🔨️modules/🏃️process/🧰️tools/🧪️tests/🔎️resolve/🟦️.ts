@@ -6,6 +6,7 @@ import _ from "lodash";
 import ts from "typescript";
 import {readFileSync} from "node:fs";
 import {runInNewContext} from "node:vm";
+import wasmTools from "./wasm-tools.json" with {type:"json"};
 import invocationCases from "./📣️invocations/🔣️.json" with {type:"json"};
 import invocationSchema from "./📣️invocations/🧬️schema/🔣️.json" with {type:"json"};
 import { describe, expect, test } from "bun:test";
@@ -70,6 +71,18 @@ describe("tool resolution", () => {
       expect(resolveToolV1(bun, host({ pins, execPath: "/runtime/node", present: [`/lab/s/b/t/m/bun/${digest}/bun`] })).source).toBe("provisioned");
       expect(resolveToolV1(bun, host({ pins, execPath: "/runtime/node", present: [`/repo/.cache/b/t/m/bun/${digest}/bun`] })).source).toBe("missing");
     } finally { if (declared === undefined) delete process.env.SEMIO_MACHINE_STATE_DIRECTORY; else process.env.SEMIO_MACHINE_STATE_DIRECTORY = declared; }
+  });
+  test("resolves installed Wasm tools from their managed partitions with an empty PATH", () => {
+    const root = resolve("/repo");
+    const binaryen = findToolV1("wasm-opt")!;
+    const release = { version: "130", platforms: ["darwin", "linux", "win32"].map(platform => ({ platform, architecture: "arm64", sha256: "a".repeat(64), archive: "binaryen.tar.gz", bytes: 100 })) };
+    const pins = { [resolve(root, binaryen.pin.digests!.file)]: JSON.stringify({ definitions: { Release: { const: release } } }) };
+    for (const row of wasmTools) {
+      const path = resolve(root, row.path);
+      const result = resolveToolV1(findToolV1(row.tool)!, host({ root, pins, platform: row.platform as NodeJS.Platform, present: [path], environment: { PATH: "" } }));
+      expect(result.command).toBe(path);
+      expect(result.source).toBe("provisioned");
+    }
   });
   test("builds the host and 16-digit placeholders of a provisioned Go", () => {
     const sha = "a".repeat(64), found = resolveToolV1(go, host({ pins: { ["/repo/" + BOOT]: bootstrap }, present: [`/repo/.cache/b/t/m/native/go/1.26.9/darwin-arm64-${sha.slice(0, 16)}/bin/go`] }));

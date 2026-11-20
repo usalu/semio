@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Whole graph adoption receipt v1",
+  "definitions": {
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Origin": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "Count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "generation",
+        "manifest",
+        "scope",
+        "identity",
+        "implementation",
+        "platform"
+      ],
+      "properties": {
+        "origin": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "generation": {
+          "$ref": "#/definitions/Count"
+        },
+        "manifest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "scope": {
+          "const": "all"
+        },
+        "identity": {
+          "$ref": "#/definitions/Digest"
+        },
+        "implementation": {
+          "$ref": "#/definitions/Digest"
+        },
+        "platform": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+-[a-z0-9_]+$",
+          "maxLength": 64
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "destination",
+        "head",
+        "localGeneration",
+        "localManifest",
+        "completedMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "destination": {
+          "$ref": "#/definitions/Origin"
+        },
+        "head": {
+          "$ref": "#/definitions/Head"
+        },
+        "localGeneration": {
+          "$ref": "#/definitions/Count"
+        },
+        "localManifest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "completedMs": {
+          "$ref": "#/definitions/Count",
+          "description": "Time the destination verified the published local seal."
+        }
+      }
+    },
+    "Envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "signature"
+      ],
+      "properties": {
+        "receipt": {
+          "$ref": "#/definitions/Receipt"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{86}$"
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "label": "whole-graph-adoption-v1",
+        "filename": "graph-adoption.json",
+        "role": "cache-read",
+        "maximumBytes": 4096,
+        "mirrorMilliseconds": 1500,
+        "intentFilename": "graph-adoption.intent.json",
+        "intentLabel": "whole-graph-adoption-intent-v1"
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "destination",
+        "head",
+        "localGeneration",
+        "localManifest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "destination": {
+          "$ref": "#/definitions/Origin"
+        },
+        "head": {
+          "$ref": "#/definitions/Head"
+        },
+        "localGeneration": {
+          "$ref": "#/definitions/Count"
+        },
+        "localManifest": {
+          "$ref": "#/definitions/Digest"
+        }
+      }
+    },
+    "IntentEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "signature"
+      ],
+      "properties": {
+        "receipt": {
+          "$ref": "#/definitions/Intent"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{86}$"
+        }
+      }
+    }
+  }
+}

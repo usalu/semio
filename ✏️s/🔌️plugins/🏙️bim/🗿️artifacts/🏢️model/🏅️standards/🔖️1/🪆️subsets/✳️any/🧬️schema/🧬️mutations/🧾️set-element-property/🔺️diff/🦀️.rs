@@ -36,7 +36,7 @@ pub fn diff(payload: &SetElementProperty, base: &ModelSnapshot) -> MutationOutco
     }
     let diff = match entry {
         Some(_) => Entry::Patched(PropertySetPatch { assigned: BTreeMap::from([(payload.pset.clone(), BTreeMap::from([(payload.property.clone(), Some(payload.value.clone()))]))]) }),
-        None => Entry::Created(PropertySet::from([(payload.pset.clone(), BTreeMap::from([(payload.property.clone(), payload.value.clone())]))])),
+        None => Entry::Created(PropertySet::from([(payload.pset.clone(), [(payload.property.clone(), payload.value.clone())].into())])),
     };
     MutationOutcome::new(ModelDiff::properties(payload.id.clone(), diff))
 }

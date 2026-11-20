@@ -179,7 +179,7 @@ pub fn handle(payload: &CreateView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg:
     for mut view in views {
         view.name = semio_s_artifact_bim_model_entities::editor::bim::entities::views::unique_name(&taken, &building, &view.name);
         let id = mint.mint("view", |id| semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken(snapshot, id));
-        taken.views.insert(id.clone(), view.clone());
+        taken.views.cold_insert(id.clone(), view.clone());
         made.push((view.kind, id.clone()));
         mutations.push(ModelMutation::CreateView(semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id, view }));
     }

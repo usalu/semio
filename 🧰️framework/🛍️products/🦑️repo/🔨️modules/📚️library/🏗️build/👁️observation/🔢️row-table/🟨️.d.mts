@@ -1,5 +1,7 @@
 /** 🔤️ The text identity of one fact inside an observation row. */
 export function factKeyV1(fact:unknown):string;
+/** 🧺️ Retains the first row of each exact kind, path and fact in capture order. */
+export function distinctObservationRowsV1<Row extends{readonly kind:string;readonly path:string;readonly fact:unknown}>(...captures:Iterable<Row>[]):Row[];
 /** 🧶️ A table of texts: equal texts are one string and one number, dense from zero until `clear()`. */
 export type StringTableV1=Readonly<{id(text:string):number;text(id:number):string;size():number;characters():number;clear():void}>;
 /** 🏗️ Creates a table of texts. */
@@ -34,3 +36,8 @@ export type RowPoolV1<Row extends{kind:string;path:string;fact:unknown}>=Readonl
 }>;
 /** 🏗️ Creates the weak row pool. */
 export function createRowPoolV1<Row extends{kind:string;path:string;fact:unknown}=any>():RowPoolV1<Row>;
+
+type AuthorityObservationV1=Readonly<{kind:string;path:string;fact:unknown}>;
+export function encodeAuthorityObservationsV1(observations:readonly AuthorityObservationV1[],maximumBytes:number,check?:()=>void):string;
+export function createAuthorityObservationReaderV1(kinds:readonly string[]):(entry:unknown)=>"root"|"record";
+export function decodeAuthorityObservationsV1(observations:unknown,kinds:readonly string[],check?:()=>void):AuthorityObservationV1[];

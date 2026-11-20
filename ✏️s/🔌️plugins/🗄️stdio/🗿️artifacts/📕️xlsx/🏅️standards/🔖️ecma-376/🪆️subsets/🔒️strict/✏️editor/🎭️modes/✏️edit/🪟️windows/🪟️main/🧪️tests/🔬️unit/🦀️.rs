@@ -10,6 +10,7 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn strict_grid_binds_blank_cell_creation_to_the_strict_controller() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     fn visit(node: &BuiltNode, found: &mut bool) {
@@ -22,7 +23,9 @@ async fn strict_grid_binds_blank_cell_creation_to_the_strict_controller() {
     }
     let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
     let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_plugin::UiPublicationRevision(23)).unwrap();
-    let mut found = false;
-    visit(&node, &mut found);
-    assert!(found);
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+        let mut found = false;
+        visit(node, &mut found);
+        assert!(found);
+    });
 }

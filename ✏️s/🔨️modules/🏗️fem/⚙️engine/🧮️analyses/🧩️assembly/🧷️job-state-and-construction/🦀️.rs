@@ -153,6 +153,47 @@ pub(super) struct AssemblyResumeCheckpoint {
     pub(super) partition_count: usize,
 }
 
+pub(super) enum AssemblyIndexProbe {
+    Found(usize),
+    Vacant(usize),
+    Collision,
+    Pending,
+}
+
+pub(super) fn assembly_index_probe(
+    slots: &AssemblyOrder<Option<usize>>,
+    hash: u64,
+    offset: usize,
+    maximum_depth: usize,
+    matches: impl FnOnce(usize) -> Result<Option<bool>, FemError>,
+) -> Result<AssemblyIndexProbe, FemError> {
+    let count = slots.len();
+    if offset >= count { return Err(FemError::Singular); }
+    let start = (hash % count as u64) as usize;
+    let slot = (start + offset) % count;
+    if slots.next_get_depth_demand(slot).map_err(|_| FemError::Singular)? > maximum_depth {
+        return Ok(AssemblyIndexProbe::Pending);
+    }
+    Ok(match slots.get(slot).ok_or(FemError::Singular)? {
+        Some(row) => match matches(*row)? {
+            Some(true) => AssemblyIndexProbe::Found(*row),
+            Some(false) => AssemblyIndexProbe::Collision,
+            None => AssemblyIndexProbe::Pending,
+        },
+        None => AssemblyIndexProbe::Vacant(slot),
+    })
+}
+
+pub(super) fn assembly_dof_probe(map: &DofMap, node_id: &str, dof: Dof, offset: usize, maximum_depth: usize) -> Result<AssemblyIndexProbe, FemError> {
+    if map.slots.is_empty() { return Ok(AssemblyIndexProbe::Vacant(0)); }
+    assembly_index_probe(&map.slots, DofMap::hash(node_id, dof), offset, maximum_depth, |row| {
+        if map.order.next_get_depth_demand(row).map_err(|_| FemError::Singular)? > maximum_depth {
+            return Ok(None);
+        }
+        let (id, owner) = map.order.get(row).ok_or(FemError::Singular)?;
+        Ok(Some(id == node_id && *owner == dof))
+    })
+}
 pub(super) struct AssemblyPlan {
     pub(super) dof_map: DofMap,
     pub(super) inv_perm: AssemblyOrder<usize>,
@@ -160,6 +201,8 @@ pub(super) struct AssemblyPlan {
     pub(super) free_new: AssemblyOrder<usize>,
     pub(super) compact_of_new: AssemblyOrder<Option<usize>>,
     pub(super) node_slot: HashMap<String, usize>,
+    pub(super) mounted_node_slots: AssemblyOrder<Option<usize>>,
+    pub(super) node_dofs: AssemblyOrder<u8>,
 }
 
 /// #️⃣️ Stable identity for rejecting a checkpoint against different FEM inputs.
@@ -217,7 +260,7 @@ impl AssemblyPlan {
         for (compact, &new_index) in free_new.iter().enumerate() {
             compact_of_new[new_index] = Some(compact);
         }
-        Ok(Self { dof_map, inv_perm: permutation.inv_perm.into_iter().collect(), ndof, free_new: free_new.into_iter().collect(), compact_of_new: compact_of_new.into_iter().collect(), node_slot: node_index_of(&model.nodes) })
+        Ok(Self { dof_map, inv_perm: permutation.inv_perm.into_iter().collect(), ndof, free_new: free_new.into_iter().collect(), compact_of_new: compact_of_new.into_iter().collect(), node_slot: node_index_of(&model.nodes), mounted_node_slots: AssemblyOrder::default(), node_dofs: AssemblyOrder::default() })
     }
 }
 
@@ -228,10 +271,13 @@ pub enum AssemblyConstructionStage {
     ReserveDofs,
     ReserveDofIndex,
     InitializeDofIndex,
-    ValidateNodePairs,
+    ReserveNodeSlots,
+    InitializeNodeSlots,
+    ReserveNodeDofs,
+    InitializeNodeDofs,
+    IndexNodes,
     ValidateElementReferences,
     ValidateSupportReferences,
-    DiscoverDofs,
     EmitDofs,
     CommitDofOwner,
     ReservePermutation,
@@ -290,6 +336,19 @@ impl AssemblyConstructionModel {
         }
     }
 
+    fn node_depth(&self, index: usize) -> Result<usize, FemError> {
+        match self {
+            Self::Dynamic(_) => Ok(1),
+            Self::Mounted(model) => model.nodes.values.next_get_depth_demand(index).map_err(|_| FemError::Singular),
+        }
+    }
+
+    fn node_probe(&self, slots: &AssemblyOrder<Option<usize>>, node_id: &str, offset: usize, maximum_depth: usize) -> Result<AssemblyIndexProbe, FemError> {
+        assembly_index_probe(slots, DofMap::hash(node_id, Dof::Tx), offset, maximum_depth, |row| {
+            if self.node_depth(row)? > maximum_depth { return Ok(None); }
+            Ok(Some(self.node(row).ok_or(FemError::Singular)?.id == node_id))
+        })
+    }
     pub(super) fn element(&self, index: usize) -> Option<&Elements> {
         match self {
             Self::Dynamic(model) => model.elements.get(index),
@@ -325,19 +384,17 @@ pub struct AssemblyJobConstruction {
     pub(super) operation: Operation,
     pub(super) partition_count: usize,
     pub(super) stage: AssemblyConstructionStage,
-    node_outer: usize,
-    node_inner: usize,
+    node_index_cursor: usize,
+    node_index_probe: usize,
     pub(super) element_cursor: usize,
     reference_cursor: usize,
     reference_node_cursor: usize,
     support_cursor: usize,
     support_node_cursor: usize,
     dof_node_cursor: usize,
-    dof_element_cursor: usize,
-    dof_reference_cursor: usize,
     dof_emit_cursor: usize,
+    dof_probe_offset: usize,
     pending_dof_owner: Option<(String, Dof)>,
-    active_dofs: [bool; 6],
     constraint_support_cursor: usize,
     constraint_dof_cursor: usize,
     constraint_order_cursor: usize,
@@ -368,19 +425,17 @@ impl AssemblyJobConstruction {
             operation,
             partition_count,
             stage: AssemblyConstructionStage::ReservePartitionTripletCounts,
-            node_outer: 0,
-            node_inner: 1,
+            node_index_cursor: 0,
+            node_index_probe: 0,
             element_cursor: 0,
             reference_cursor: 0,
             reference_node_cursor: 0,
             support_cursor: 0,
             support_node_cursor: 0,
             dof_node_cursor: 0,
-            dof_element_cursor: 0,
-            dof_reference_cursor: 0,
             dof_emit_cursor: 0,
+            dof_probe_offset: 0,
             pending_dof_owner: None,
-            active_dofs: [false; 6],
             constraint_support_cursor: 0,
             constraint_dof_cursor: 0,
             constraint_order_cursor: 0,
@@ -389,7 +444,7 @@ impl AssemblyJobConstruction {
             partition_triplet_counts: Vec::new(),
             partition_reserve_cursor: 0,
             partition_reserve_lane: 0,
-            plan: AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() },
+            plan: AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new(), mounted_node_slots: AssemblyOrder::default(), node_dofs: AssemblyOrder::default() },
             constrained_old: AssemblyOrder::default(),
             partitions: Vec::new(),
             merged_full: PagedList::default(),
@@ -422,6 +477,16 @@ impl AssemblyJobConstruction {
         }
         let maximum_dofs = self.model.as_ref().map_or(Some(0), |model| model.nodes_len().checked_mul(6)).ok_or(FemError::Singular)?;
         let (target, capacity, receipt) = match self.stage {
+            AssemblyConstructionStage::ReserveNodeSlots => {
+                let target = self.model.as_ref().and_then(|model| DofMap::slot_count(model.nodes_len())).ok_or(FemError::Singular)?;
+                let receipt = reserve(&mut self.plan.mounted_node_slots, target, effect)?;
+                (target, self.plan.mounted_node_slots.capacity(), receipt)
+            }
+            AssemblyConstructionStage::ReserveNodeDofs => {
+                let target = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len();
+                let receipt = reserve(&mut self.plan.node_dofs, target, effect)?;
+                (target, self.plan.node_dofs.capacity(), receipt)
+            }
             AssemblyConstructionStage::ReserveDofs => {
                 let receipt = reserve(&mut self.plan.dof_map.order, maximum_dofs, effect)?;
                 (maximum_dofs, self.plan.dof_map.order.capacity(), receipt)
@@ -463,13 +528,17 @@ impl AssemblyJobConstruction {
                 let receipt = reserve(&mut self.merged_free, self.maximum_triplets, effect)?;
                 (self.maximum_triplets, self.merged_free.capacity(), receipt)
             }
-            _ => return self.step_one().map(|complete| (complete, RetainedCloneProgress::default())),
+            _ => return self.step_with_depth(effect.grant().maximum_depth).map(|complete| (complete, RetainedCloneProgress::default())),
         };
         if receipt != RetainedCloneProgress::default() || capacity < target { return Ok((false, receipt)); }
-        self.step_one().map(|complete| (complete, receipt))
+        self.step_with_depth(effect.grant().maximum_depth).map(|complete| (complete, receipt))
     }
 
     pub fn step_one(&mut self) -> Result<bool, FemError> {
+        self.step_with_depth(usize::MAX)
+    }
+
+    fn step_with_depth(&mut self, maximum_depth: usize) -> Result<bool, FemError> {
         match self.stage {
             AssemblyConstructionStage::ReservePartitionTripletCounts => {
                 if self.partition_count == 0 {
@@ -509,39 +578,39 @@ impl AssemblyJobConstruction {
                     self.plan.dof_map.slots.push_reserved(None).map_err(|_| FemError::Singular)?;
                     return Ok(false);
                 }
-                self.stage = AssemblyConstructionStage::ValidateNodePairs;
+                self.stage = AssemblyConstructionStage::ReserveNodeSlots;
             }
-            AssemblyConstructionStage::ValidateNodePairs => self.assembly_validate_node_pairs()?,
-            AssemblyConstructionStage::ValidateElementReferences => self.assembly_validate_element_references()?,
-            AssemblyConstructionStage::ValidateSupportReferences => {
-                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-                if self.support_cursor >= model.supports_len() {
-                    self.element_cursor = 0;
-                    self.stage = AssemblyConstructionStage::DiscoverDofs;
-                } else if self.support_node_cursor >= model.nodes_len() {
-                    return Err(FemError::DanglingNodeRef(model.support_node_id(self.support_cursor).ok_or(FemError::Singular)?.to_owned()));
-                } else if model.node(self.support_node_cursor).ok_or(FemError::EmptyModel)?.id == model.support_node_id(self.support_cursor).ok_or(FemError::Singular)? {
-                    self.support_cursor += 1;
-                    self.support_node_cursor = 0;
+            AssemblyConstructionStage::ReserveNodeSlots => {
+                let target = self.model.as_ref().and_then(|model| DofMap::slot_count(model.nodes_len())).ok_or(FemError::Singular)?;
+                semio_s_fem_sparse::reserve_cold_page(&mut self.plan.mounted_node_slots, target).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.mounted_node_slots.capacity() >= target { self.stage = AssemblyConstructionStage::InitializeNodeSlots; }
+            }
+            AssemblyConstructionStage::InitializeNodeSlots => {
+                let target = self.model.as_ref().and_then(|model| DofMap::slot_count(model.nodes_len())).ok_or(FemError::Singular)?;
+                if self.plan.mounted_node_slots.len() < target {
+                    self.plan.mounted_node_slots.push_reserved(None).map_err(|_| FemError::Singular)?;
                 } else {
-                    self.support_node_cursor += 1;
+                    self.stage = AssemblyConstructionStage::ReserveNodeDofs;
                 }
             }
-            AssemblyConstructionStage::DiscoverDofs => self.assembly_discover_dofs()?,
-            AssemblyConstructionStage::EmitDofs => self.assembly_emit_dofs()?,
-            AssemblyConstructionStage::CommitDofOwner => {
-                let owner = self.pending_dof_owner.as_ref().ok_or(FemError::Singular)?;
-                if owner.0.capacity() > MOUNTED_OWNER_PAGE_BYTES {
-                    return Err(FemError::Singular);
-                }
-                let owner = self.pending_dof_owner.take().ok_or(FemError::Singular)?;
-                if let Err(owner) = self.plan.dof_map.push(owner) {
-                    self.pending_dof_owner = Some(owner);
-                    return Err(FemError::ResourceAdmission);
-                }
-                self.dof_emit_cursor += 1;
-                self.stage = AssemblyConstructionStage::EmitDofs;
+            AssemblyConstructionStage::ReserveNodeDofs => {
+                let target = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len();
+                semio_s_fem_sparse::reserve_cold_page(&mut self.plan.node_dofs, target).map_err(|_| FemError::ResourceAdmission)?;
+                if self.plan.node_dofs.capacity() >= target { self.stage = AssemblyConstructionStage::InitializeNodeDofs; }
             }
+            AssemblyConstructionStage::InitializeNodeDofs => {
+                let target = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes_len();
+                if self.plan.node_dofs.len() < target {
+                    self.plan.node_dofs.push_reserved(0).map_err(|_| FemError::Singular)?;
+                } else {
+                    self.stage = AssemblyConstructionStage::IndexNodes;
+                }
+            }
+            AssemblyConstructionStage::IndexNodes => self.assembly_index_node(maximum_depth)?,
+            AssemblyConstructionStage::ValidateElementReferences => self.assembly_validate_element_references(maximum_depth)?,
+            AssemblyConstructionStage::ValidateSupportReferences => self.assembly_validate_support(maximum_depth)?,
+            AssemblyConstructionStage::EmitDofs => self.assembly_emit_dofs(maximum_depth)?,
+            AssemblyConstructionStage::CommitDofOwner => self.assembly_commit_dof(maximum_depth)?,
             AssemblyConstructionStage::ReservePermutation => {
                 self.plan.ndof = self.plan.dof_map.len();
                 semio_s_fem_sparse::reserve_cold_page(&mut self.plan.inv_perm, self.plan.ndof).map_err(|_| FemError::ResourceAdmission)?;
@@ -568,7 +637,7 @@ impl AssemblyJobConstruction {
                     self.stage = AssemblyConstructionStage::MarkConstraints;
                 }
             }
-            AssemblyConstructionStage::MarkConstraints => self.assembly_mark_constraints()?,
+            AssemblyConstructionStage::MarkConstraints => self.assembly_mark_constraints(maximum_depth)?,
             AssemblyConstructionStage::ReserveFree => {
                 semio_s_fem_sparse::reserve_cold_page(&mut self.plan.free_new, self.plan.ndof).map_err(|_| FemError::ResourceAdmission)?;
                 if self.plan.free_new.capacity() < self.plan.ndof { return Ok(false); }
@@ -650,84 +719,94 @@ impl AssemblyJobConstruction {
     }
 
     /// 🪵️ Runs the `validate node pairs` stage of `step_one`.
-    fn assembly_validate_node_pairs(&mut self) -> Result<(), FemError> {
+    fn assembly_index_node(&mut self, maximum_depth: usize) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-        if self.node_outer >= model.nodes_len() {
+        if self.node_index_cursor == model.nodes_len() {
             self.stage = AssemblyConstructionStage::ValidateElementReferences;
-        } else if self.node_inner >= model.nodes_len() {
-            self.node_outer += 1;
-            self.node_inner = self.node_outer + 1;
-        } else {
-            let outer = model.node(self.node_outer).ok_or(FemError::EmptyModel)?;
-            let inner = model.node(self.node_inner).ok_or(FemError::EmptyModel)?;
-            if outer.id == inner.id {
-                return Err(FemError::DuplicateNodeId(outer.id.clone()));
+            return Ok(());
+        }
+        if model.node_depth(self.node_index_cursor)? > maximum_depth { return Ok(()); }
+        let node = model.node(self.node_index_cursor).ok_or(FemError::EmptyModel)?;
+        match model.node_probe(&self.plan.mounted_node_slots, &node.id, self.node_index_probe, maximum_depth)? {
+            AssemblyIndexProbe::Found(_) => return Err(FemError::DuplicateNodeId(node.id.clone())),
+            AssemblyIndexProbe::Vacant(slot) => {
+                self.plan.mounted_node_slots[slot] = Some(self.node_index_cursor);
+                self.node_index_cursor += 1;
+                self.node_index_probe = 0;
             }
-            self.node_inner += 1;
+            AssemblyIndexProbe::Collision => self.node_index_probe += 1,
+            AssemblyIndexProbe::Pending => {}
         }
         Ok(())
     }
 
-    /// 🔩️ Runs the `validate element references` stage of `step_one`.
-    fn assembly_validate_element_references(&mut self) -> Result<(), FemError> {
+    /// 🔩️ Counts one element's triplets and discovers its active DOFs through the validated node index.
+    fn assembly_validate_element_references(&mut self, maximum_depth: usize) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.element_cursor >= model.elements_len() {
             self.stage = AssemblyConstructionStage::ValidateSupportReferences;
-        } else if self.reference_cursor >= model.element(self.element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
-            let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
-            let side = element.mounted_node_id_count().and_then(|nodes| nodes.checked_mul(element.dofs_per_node().len())).ok_or(FemError::Singular)?;
+            return Ok(());
+        }
+        let element = model.element(self.element_cursor).ok_or(FemError::Singular)?;
+        let node_count = element.mounted_node_id_count().ok_or(FemError::Singular)?;
+        if self.reference_cursor == node_count {
+            let side = node_count.checked_mul(element.dofs_per_node().len()).ok_or(FemError::Singular)?;
             let triplets = side.checked_mul(side).ok_or(FemError::Singular)?;
             self.maximum_triplets = self.maximum_triplets.checked_add(triplets).ok_or(FemError::Singular)?;
             let partition = self.element_cursor % self.partition_count;
             self.partition_triplet_counts[partition] = self.partition_triplet_counts[partition].checked_add(triplets).ok_or(FemError::Singular)?;
             self.element_cursor += 1;
             self.reference_cursor = 0;
-            self.reference_node_cursor = 0;
-        } else if self.reference_node_cursor >= model.nodes_len() {
-            return Err(FemError::DanglingNodeRef(model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)?.to_owned()));
-        } else if model.node(self.reference_node_cursor).ok_or(FemError::EmptyModel)?.id == model.element(self.element_cursor).and_then(|element| element.mounted_node_id(self.reference_cursor)).ok_or(FemError::Singular)? {
-            self.reference_cursor += 1;
-            self.reference_node_cursor = 0;
-        } else {
-            self.reference_node_cursor += 1;
+            return Ok(());
         }
-        Ok(())
-    }
-
-    /// ⚙️ Runs the `discover dofs` stage of `step_one`.
-    fn assembly_discover_dofs(&mut self) -> Result<(), FemError> {
-        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
-        if self.dof_node_cursor >= model.nodes_len() {
-            self.stage = AssemblyConstructionStage::ReservePermutation;
-        } else if self.dof_element_cursor >= model.elements_len() {
-            self.dof_emit_cursor = 0;
-            self.stage = AssemblyConstructionStage::EmitDofs;
-        } else if self.dof_reference_cursor >= model.element(self.dof_element_cursor).and_then(Elements::mounted_node_id_count).ok_or(FemError::Singular)? {
-            self.dof_element_cursor += 1;
-            self.dof_reference_cursor = 0;
-        } else {
-            let element = model.element(self.dof_element_cursor).ok_or(FemError::Singular)?;
-            if element.mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.node(self.dof_node_cursor).ok_or(FemError::EmptyModel)?.id {
-                for dof in element.dofs_per_node() {
-                    self.active_dofs[dof.index()] = true;
-                }
+        let node_id = element.mounted_node_id(self.reference_cursor).ok_or(FemError::Singular)?;
+        match model.node_probe(&self.plan.mounted_node_slots, node_id, self.reference_node_cursor, maximum_depth)? {
+            AssemblyIndexProbe::Found(node) => {
+                if self.plan.node_dofs.next_get_depth_demand(node).map_err(|_| FemError::Singular)? > maximum_depth { return Ok(()); }
+                let dofs = element.dofs_per_node().iter().fold(0, |mask, dof| mask | (1 << dof.index()));
+                self.plan.node_dofs[node] |= dofs;
+                self.reference_cursor += 1;
+                self.reference_node_cursor = 0;
             }
-            self.dof_reference_cursor += 1;
+            AssemblyIndexProbe::Vacant(_) => return Err(FemError::DanglingNodeRef(node_id.to_owned())),
+            AssemblyIndexProbe::Collision => self.reference_node_cursor += 1,
+            AssemblyIndexProbe::Pending => {}
         }
         Ok(())
     }
 
+    fn assembly_validate_support(&mut self, maximum_depth: usize) -> Result<(), FemError> {
+        let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+        if self.support_cursor == model.supports_len() {
+            self.stage = AssemblyConstructionStage::EmitDofs;
+            return Ok(());
+        }
+        let node_id = model.support_node_id(self.support_cursor).ok_or(FemError::Singular)?;
+        match model.node_probe(&self.plan.mounted_node_slots, node_id, self.support_node_cursor, maximum_depth)? {
+            AssemblyIndexProbe::Found(_) => {
+                self.support_cursor += 1;
+                self.support_node_cursor = 0;
+            }
+            AssemblyIndexProbe::Vacant(_) => return Err(FemError::DanglingNodeRef(node_id.to_owned())),
+            AssemblyIndexProbe::Collision => self.support_node_cursor += 1,
+            AssemblyIndexProbe::Pending => {}
+        }
+        Ok(())
+    }
     /// 🧲️ Runs the `emit dofs` stage of `step_one`.
-    fn assembly_emit_dofs(&mut self) -> Result<(), FemError> {
-        if self.dof_emit_cursor >= self.active_dofs.len() {
+    fn assembly_emit_dofs(&mut self, maximum_depth: usize) -> Result<(), FemError> {
+        if self.dof_node_cursor == self.plan.node_dofs.len() {
+            self.stage = AssemblyConstructionStage::ReservePermutation;
+        } else if self.dof_emit_cursor == 6 {
             self.dof_node_cursor += 1;
-            self.dof_element_cursor = 0;
-            self.active_dofs = [false; 6];
-            self.stage = AssemblyConstructionStage::DiscoverDofs;
+            self.dof_emit_cursor = 0;
         } else {
-            if self.active_dofs[self.dof_emit_cursor] {
+            if self.plan.node_dofs.next_get_depth_demand(self.dof_node_cursor).map_err(|_| FemError::Singular)? > maximum_depth { return Ok(()); }
+            if self.plan.node_dofs[self.dof_node_cursor] & (1 << self.dof_emit_cursor) != 0 {
                 let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
-                let node_id = self.model.as_ref().and_then(|model| model.node(self.dof_node_cursor)).ok_or(FemError::EmptyModel)?.id.clone();
+                let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
+                if model.node_depth(self.dof_node_cursor)? > maximum_depth { return Ok(()); }
+                let node_id = model.node(self.dof_node_cursor).ok_or(FemError::EmptyModel)?.id.clone();
                 self.pending_dof_owner = Some((node_id, dof));
                 self.stage = AssemblyConstructionStage::CommitDofOwner;
                 return Ok(());
@@ -736,32 +815,62 @@ impl AssemblyJobConstruction {
         }
         Ok(())
     }
-
+    fn assembly_commit_dof(&mut self, maximum_depth: usize) -> Result<(), FemError> {
+        let (node_id, dof) = self.pending_dof_owner.as_ref().ok_or(FemError::Singular)?;
+        if node_id.capacity() > MOUNTED_OWNER_PAGE_BYTES { return Err(FemError::Singular); }
+        let slot = match assembly_dof_probe(&self.plan.dof_map, node_id, *dof, self.dof_probe_offset, maximum_depth)? {
+            AssemblyIndexProbe::Vacant(slot) => slot,
+            AssemblyIndexProbe::Found(_) => return Err(FemError::ResourceAdmission),
+            AssemblyIndexProbe::Pending => return Ok(()),
+            AssemblyIndexProbe::Collision => {
+                self.dof_probe_offset += 1;
+                return Ok(());
+            }
+        };
+        if self.plan.dof_map.order.next_push_depth_demand().map_err(|_| FemError::Singular)? > maximum_depth { return Ok(()); }
+        let owner = self.pending_dof_owner.take().ok_or(FemError::Singular)?;
+        let order = self.plan.dof_map.len();
+        if let Err(owner) = self.plan.dof_map.order.push_reserved(owner) {
+            self.pending_dof_owner = Some(owner);
+            return Err(FemError::ResourceAdmission);
+        }
+        self.plan.dof_map.slots[slot] = Some(order);
+        self.dof_emit_cursor += 1;
+        self.dof_probe_offset = 0;
+        self.stage = AssemblyConstructionStage::EmitDofs;
+        Ok(())
+    }
     /// 🪛️ Runs the `mark constraints` stage of `step_one`.
-    fn assembly_mark_constraints(&mut self) -> Result<(), FemError> {
+    fn assembly_mark_constraints(&mut self, maximum_depth: usize) -> Result<(), FemError> {
         let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
         if self.constraint_support_cursor >= model.supports_len() {
             self.stage = AssemblyConstructionStage::ReserveFree;
-        } else if self.constraint_dof_cursor >= model.support_fixed_len(self.constraint_support_cursor).ok_or(FemError::Singular)? {
+            return Ok(());
+        }
+        if self.constraint_dof_cursor >= model.support_fixed_len(self.constraint_support_cursor).ok_or(FemError::Singular)? {
             self.constraint_support_cursor += 1;
             self.constraint_dof_cursor = 0;
             self.constraint_order_cursor = 0;
-        } else if self.constraint_order_cursor >= self.plan.dof_map.order.len() {
-            self.constraint_dof_cursor += 1;
-            self.constraint_order_cursor = 0;
-        } else {
-            let (node_id, dof) = &self.plan.dof_map.order[self.constraint_order_cursor];
-            if node_id == model.support_node_id(self.constraint_support_cursor).ok_or(FemError::Singular)? && *dof == model.support_fixed(self.constraint_support_cursor, self.constraint_dof_cursor).ok_or(FemError::Singular)? {
-                self.constrained_old[self.constraint_order_cursor] = true;
-                self.constraint_dof_cursor += 1;
-                self.constraint_order_cursor = 0;
-            } else {
+            return Ok(());
+        }
+        let node_id = model.support_node_id(self.constraint_support_cursor).ok_or(FemError::Singular)?;
+        let dof = model.support_fixed(self.constraint_support_cursor, self.constraint_dof_cursor).ok_or(FemError::Singular)?;
+        match assembly_dof_probe(&self.plan.dof_map, node_id, dof, self.constraint_order_cursor, maximum_depth)? {
+            AssemblyIndexProbe::Found(order) => {
+                if self.constrained_old.next_get_depth_demand(order).map_err(|_| FemError::Singular)? > maximum_depth { return Ok(()); }
+                self.constrained_old[order] = true;
+            }
+            AssemblyIndexProbe::Vacant(_) => {}
+            AssemblyIndexProbe::Pending => return Ok(()),
+            AssemblyIndexProbe::Collision => {
                 self.constraint_order_cursor += 1;
+                return Ok(());
             }
         }
+        self.constraint_dof_cursor += 1;
+        self.constraint_order_cursor = 0;
         Ok(())
     }
-
     /// 🔧️ Runs the `build partitions` stage of `step_one`.
     fn assembly_build_partitions(&mut self) -> Result<(), FemError> {
         if self.partitions.len() < self.partition_count {
@@ -799,7 +908,7 @@ impl AssemblyJobConstruction {
             let model = self.model.take().ok_or(FemError::EmptyModel)?;
             let total_elements = model.elements_len();
             let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
-            let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new() });
+            let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: AssemblyOrder::default(), ndof: 0, free_new: AssemblyOrder::default(), compact_of_new: AssemblyOrder::default(), node_slot: HashMap::new(), mounted_node_slots: AssemblyOrder::default(), node_dofs: AssemblyOrder::default() });
             self.job = Some(AssemblyJob {
                 state: AssemblyCheckpoint {
                     stage: AssemblyJobStage::ElementTriplets,
@@ -860,6 +969,16 @@ impl AssemblyJobConstruction {
             }
             self.job = None;
             return (false, 1, 0);
+        }
+        match close_paged_owner_step(&mut self.plan.node_dofs, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        match close_paged_owner_step(&mut self.plan.mounted_node_slots, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
         match close_paged_owner_step(&mut self.plan.dof_map.slots, maximum_bytes) {
             Ok(Some((items, bytes))) => return (false, items, bytes),

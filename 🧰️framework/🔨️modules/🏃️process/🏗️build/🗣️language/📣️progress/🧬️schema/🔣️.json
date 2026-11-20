@@ -13,5 +13,20 @@
       "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "number" }] }
     },
     "level": { "enum": ["info", "warn", "error"] }
+  },
+  "definitions": {
+    "TypedRefusals": {
+      "description": "The closed list of typed refusal classes a CLI boundary renders as themselves, without the internal-error prefix, besides the refusals of the process catalog (`RepoError`), failed child commands, disk-full faults, expired resource loans and cancellations. `text` `texts`: the fault carries both languages in `texts`; `text` `message`: the message of the fault is the final text. A fault matches by its `name` or by its `code`; `exit` is the exit status.",
+      "const": [
+        { "id": "cargo-lock", "name": "CargoLockRefused", "text": "texts", "exit": 1 },
+        { "id": "nx-recipe", "name": "NxRecipeRefused", "text": "texts", "exit": 1 },
+        { "id": "tool-hook-timeout", "name": "ToolHookTimeout", "text": "texts", "exit": 1 },
+        { "id": "windows-rename", "name": "WindowsRenameRefused", "text": "texts", "exit": 1 },
+        { "id": "physical-lock", "name": "PhysicalLockError", "text": "texts", "exit": 1 },
+        { "id": "lease-timeout", "name": "ResourceLeaseTimeoutErrorV1", "text": "texts", "exit": 1 },
+        { "id": "generation-none-sealed", "code": "GENERATION_NONE_SEALED", "text": "message", "exit": 1 },
+        { "id": "generation-unknown-owner", "code": "GENERATION_UNKNOWN_OWNER", "text": "message", "exit": 1 }
+      ]
+    }
   }
 }

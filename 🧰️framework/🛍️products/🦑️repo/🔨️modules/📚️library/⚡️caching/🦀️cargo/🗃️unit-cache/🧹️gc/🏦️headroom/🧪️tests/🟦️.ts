@@ -7,7 +7,9 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import {planGcV1,type GcInputV1} from "../../🟦️.ts";
-import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,decideHeadroomV1,headroomEstimateV1,headroomFloorBytesV1,headroomOutstandingV1,headroomPriorV1,headroomQuantileV1,headroomTextV1,readHeadroomHistoryV1,readHeadroomLedgerV1,recordHeadroomSampleV1,type HeadroomHistoryV1,type HeadroomInputV1,type HeadroomRowV1} from "../🟦️.ts";
+import {activeScriptProcessWaitsV1,admissionWaitedMillisecondsV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {nativeImageBackingFilenameV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,createEffectiveMeasureV1,headroomImageMountV1,decideHeadroomV1,headroomEstimateV1,headroomFloorBytesV1,headroomOutstandingV1,headroomPriorV1,headroomQuantileV1,headroomTextV1,readHeadroomHistoryV1,readHeadroomLedgerV1,recordHeadroomSampleV1,type HeadroomHistoryV1,type HeadroomInputV1,type HeadroomRowV1} from "../🟦️.ts";
 
 const GIB=1024**3,volume=48*GIB,layout=UNIT_CACHE_POLICY_V1.layout;
 const ajv=new Ajv({strict:true});ajv.addSchema(componentSchema,"headroom.json");
@@ -189,5 +191,35 @@ test("a release learns under the temperature of the lane the command actually ra
   const base={root,capacityBytes:volume,classes:["cargo/check"],temperature:"warm" as const,label:"abc",language:"en" as const,report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:20*GIB}),sleep:noSleep},lease=await admitImageHeadroomV1(base);
   await lease.release(()=>GIB,"cold");
   expect(Object.keys(readHeadroomHistoryV1(join(root,"h")).classes)).toEqual(["cargo/check#cold"]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a command that waits in the queue is a declared wait for the whole wait, cleanup included, so the watchdog never reaps it and its deadline does not run",async()=>{
+ const root=scratch();
+ try{
+  const seen:{waits:number;admission:boolean}[]=[],started=admissionWaitedMillisecondsV1();
+  expect(activeScriptProcessWaitsV1()).toBe(0);
+  const lease=await admitImageHeadroomV1({root,capacityBytes:volume,classes:["cargo/check"],temperature:"cold",label:"queued",language:"en",report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:GIB}),sleep:noSleep,reclaim:async()=>{await new Promise(done=>setTimeout(done,20));seen.push({waits:activeScriptProcessWaitsV1(),admission:admissionWaitedMillisecondsV1()>started});return true;}});
+  expect(seen.length).toBeGreaterThan(0);for(const row of seen){expect(row.waits).toBeGreaterThan(0);expect(row.admission).toBe(true);}
+  expect(activeScriptProcessWaitsV1()).toBe(0);const settled=admissionWaitedMillisecondsV1();await new Promise(done=>setTimeout(done,10));expect(admissionWaitedMillisecondsV1()).toBe(settled);
+  await lease.release();
+  const refused=admitImageHeadroomV1({root,capacityBytes:volume,classes:["cargo/check"],temperature:"cold",label:"blocked",language:"en",report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:GIB}),sleep:noSleep,reclaim:async()=>false,signal:AbortSignal.timeout(100)});
+  await expect(refused).rejects.toBeDefined();expect(activeScriptProcessWaitsV1()).toBe(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the gate sees the space an image can really take: a stale volume figure is raised to the container free bytes capped by the host, probed once per window, never above the volume",()=>{
+ const root=scratch(),directory=join(root,"b","r"),mount=join(directory,"m"),inside=join(mount,"u");
+ try{
+  mkdirSync(inside,{recursive:true});writeFileSync(join(directory,nativeImageBackingFilenameV1()),"");
+  expect(headroomImageMountV1(inside)).toEqual({mount,directory});expect(headroomImageMountV1(root)).toBeUndefined();
+  let clock=0,stale=22.6*GIB,probes=0;const asked:string[]=[],measure=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:stale}),{now:()=>clock,container:path=>{probes++;asked.push(path);return 60*GIB;},host:path=>{asked.push(path);return 50*GIB;}});
+  expect(measure(inside,96*GIB).freeBytes).toBe(50*GIB);expect(asked).toEqual([mount,directory]);
+  stale=20*GIB;clock=1000;expect(measure(inside,96*GIB).freeBytes).toBe(47.4*GIB);expect(probes).toBe(1);
+  clock=10*60*1000;stale=58*GIB;expect(measure(inside,96*GIB).freeBytes).toBe(58*GIB);expect(probes).toBe(2);
+  const huge=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:1*GIB}),{now:()=>0,container:()=>200*GIB,host:()=>undefined});expect(huge(inside,96*GIB).freeBytes).toBe(96*GIB);
+  const honest=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:30*GIB}),{now:()=>0,container:()=>30.1*GIB,host:()=>50*GIB});expect(honest(inside,96*GIB).freeBytes).toBe(30*GIB);
+  const loose=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:5*GIB}),{now:()=>0,container:()=>{throw Error("no image");},host:()=>1});expect(()=>loose(root,96*GIB)).not.toThrow();expect(loose(root,96*GIB).freeBytes).toBe(5*GIB);
+  const blind=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:96*GIB,unmeasured:true}),{container:()=>1});expect(blind(inside,96*GIB).unmeasured).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

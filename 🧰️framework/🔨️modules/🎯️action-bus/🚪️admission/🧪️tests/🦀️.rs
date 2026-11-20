@@ -139,3 +139,37 @@ fn settled_construction_admits_exactly_its_turn_quote_and_refuses_one_below_with
  let(settled,state)=attempt(quote);assert!(settled.unwrap());assert_eq!(state,(true,false));
  for starved in[below(quote),RetainedCloneGrant{maximum_copy_bytes:quote.maximum_copy_bytes-1,..quote}]{let(settled,state)=attempt(starved);assert!(!settled.unwrap());assert_eq!(state,(false,true))}
 }
+
+#[test]
+fn original_tool_candidate_stays_resident_until_its_control_returns() {
+    let operation = Operation::new(OperationId(121), RevisionId(0), Generation(50), 0);
+    let mut caller = OriginalJobFixtureCaller::admit(operation.operation, operation.generation, grant(), clock, u64::MAX, 10000);
+    let mut decoder = admitted_decoder(&mut caller);
+    let mut resident = ResidentConstruction::default();
+    let demand = ToolJobAdmissionDemand { capacity_bytes: 1, ..ToolJobAdmissionDemand::reused_job() };
+    let mut calls = 0;
+    let mut built = false;
+    for _ in 0..64 {
+        built = caller.turn_with_decoder(grant(), &mut decoder, |cx| {
+            resident.admit_tool(cx, demand, |_| {
+                calls += 1;
+                Ok((Box::new(7u8), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: 1, ..Default::default() }))
+            })
+        }).unwrap();
+        if built { break; }
+    }
+    assert!(built);
+    assert_eq!(calls, 1);
+    let address = std::ptr::from_ref(resident.candidate().unwrap().as_ref());
+    assert!(resident.take_candidate().is_none());
+    let denied = RetainedCloneGrant { maximum_items: 0, ..grant() };
+    assert!(!caller.turn_with_decoder(denied, &mut decoder, |cx| resident.settle_tool(cx)).unwrap());
+    assert_eq!(std::ptr::from_ref(resident.candidate().unwrap().as_ref()), address);
+    assert!(caller.turn_with_decoder(grant(), &mut decoder, |cx| resident.settle_tool(cx)).unwrap());
+    let mut received = resident.take_candidate();
+    assert_eq!(std::ptr::from_ref(received.as_deref().unwrap()), address);
+    assert!(resident.terminal_is_empty());
+    retire(&mut caller, &mut received);
+    close(&mut caller, &mut decoder);
+    caller.retire(grant());
+}

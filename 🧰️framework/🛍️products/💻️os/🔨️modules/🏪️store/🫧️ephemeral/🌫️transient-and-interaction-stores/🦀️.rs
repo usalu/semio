@@ -404,7 +404,7 @@ impl<P> TransientStoreRetirement<P> {
     }
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none() && self.factory_close.is_none() }
     /// 🔒️ The retirement can only continue once the live tracked read that holds the registry is returned.
-    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !SnapshotReadLeaseRegistry::terminal_is_empty(reads)) }
+    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !reads.registry_terminal_is_empty()) }
 }
 
 impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
@@ -434,9 +434,9 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if self.root.is_some() {
             let mut factory = self.factory.clone();
             let poll = ReturnedSnapshotReadRetirement::admit_original(&mut self.root, &mut factory, &mut self.active_root, &mut effect.nested(child));
-            return semio_framework_value::RetirementPollExit::resume(poll);
+            return semio_framework_value::RetirementPollExit::resume(poll).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return semio_framework_value::RetirementPollExit::resume(snapshot_registry_alias_close_step(&mut self.reads, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(reads) = self.reads.as_ref() { if !reads.registry_terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); } return semio_framework_value::RetirementPollExit::resume(snapshot_registry_alias_close_step(&mut self.reads, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         let factory = self.factory_close.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("retained transient factory ticket is absent"))?; let step = semio_framework_value::RetirementPollExit::resume(factory.step(child.maximum_copy_bytes,&mut effect.nested(child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }

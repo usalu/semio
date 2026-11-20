@@ -6,8 +6,8 @@
   "dependencies": [],
   "standards": [
     {
-      "id": "s.stdio.idf.standard.25.2",
-      "revision": "25.2",
+      "id": "s.stdio.idf.standard.25-2",
+      "revision": "25-2",
       "normative_source": null,
       "publication_date": null,
       "source_checksum": null,
@@ -18,16 +18,16 @@
   ],
   "profiles": [
     {
-      "id": "s.stdio.idf.standard.25.2.profile.any",
-      "standard": "s.stdio.idf.standard.25.2",
+      "id": "s.stdio.idf.standard.25-2.profile.any",
+      "standard": "s.stdio.idf.standard.25-2",
       "profile": "any",
       "status": "opaque"
     }
   ],
   "source_dialects": [
     {
-      "id": "s.stdio.idf.standard.25.2.dialect.source",
-      "standard": "s.stdio.idf.standard.25.2",
+      "id": "s.stdio.idf.standard.25-2.dialect.source",
+      "standard": "s.stdio.idf.standard.25-2",
       "dialect": "source",
       "registered_code_points": [],
       "status": "opaque"
@@ -35,8 +35,8 @@
   ],
   "representations": [
     {
-      "id": "s.stdio.idf.standard.25.2.representation.document",
-      "standard": "s.stdio.idf.standard.25.2",
+      "id": "s.stdio.idf.standard.25-2.representation.document",
+      "standard": "s.stdio.idf.standard.25-2",
       "representation": "document",
       "mimes": [],
       "extensions": [
@@ -83,7 +83,7 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.idf.standard.25.2.representation.extension-idf",
+      "id": "s.stdio.idf.standard.25-2.representation.extension-idf",
       "category": "representation",
       "descriptor": "runtime-capability:representation:extension:.idf",
       "claims": [
@@ -103,7 +103,7 @@
       "positional-records"
     ],
     "profiles": [
-      "s.stdio.idf.standard.25.2.profile.any"
+      "s.stdio.idf.standard.25-2.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

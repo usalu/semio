@@ -14,6 +14,7 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_framework_2d_compute::EngineHandles;
 use semio_plugin::ArtifactEditor;
@@ -105,6 +106,11 @@ pub(crate) fn xlsx_cell_revision(value: &XlsxCellValue, shared_strings: &[String
     }
 }
 //#endregion 🔖️TableProjection
+
+/// 📄️ Creates the blank worksheet opened by a new XLSX editor session.
+pub fn new_xlsx_editor_workbook() -> XlsxWorkbook {
+    XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: Vec::new() }], shared_strings: Vec::new() }
+}
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
@@ -227,9 +233,9 @@ impl ArtifactEditor for XlsxEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->Result<XlsxSnapshot,semio_plugin::Fault>>{Some(||{
-        Ok(XlsxSnapshot::default())
-    })}
+    fn reference_birth() -> Option<fn() -> Result<XlsxSnapshot, Fault>> {
+        Some(|| Ok(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(new_xlsx_editor_workbook())))
+    }
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits
     /// one `XlsxMutation::SetCell`. Stale addresses and revisions return a fault without mutation.

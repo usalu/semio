@@ -1,8 +1,9 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
+import {Database} from "bun:sqlite";
 import {freemem,totalmem} from "node:os";
 import {formatHostCapacityErrorV1,readHostCapacityPolicyV1,resolveHostCapacityLanguageV1,type HostCommandRunnerV1} from "../../🟦️.ts";
-import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1,wholeHostProbeV1} from "../../📡️sampling/🟦️.ts";
+import {observeTreeMegabytesV1,windowsCountersV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,readHostCountersV1,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1,wholeHostProbeV1} from "../../📡️sampling/🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
@@ -12,11 +13,9 @@ test("macOS counters parse from vm_stat, vm.swapusage and the pressure level exa
  for(const item of fixture.darwin)expect(parseDarwinCountersV1(item.vmStat,item.swapUsage,item.pressureLevel,item.filesTable,item.imageInfo),item.name).toEqual(item.expect as never);
 });
 
-test("Windows counters parse from the one PowerShell command and read through an injected port",async()=>{
- for(const item of fixture.windows)expect(parseWindowsCountersV1(item.json),item.name).toEqual(item.expect as never);
- const calls:string[]=[];
- expect(await readHostCountersV1({platform:"win32",run:async(command,args)=>{calls.push([command,...args].join(" "));return fixture.windows[0]!.json;},read:async()=>null})).toEqual(fixture.windows[0]!.expect as never);
- expect(calls).toEqual(["powershell.exe -NoProfile -NonInteractive -Command "+WINDOWS_COUNTERS_COMMAND]);
+test("Windows counters are the native machine facts: free physical memory bounded by the free commit, everything else unknown",()=>{
+ expect(windowsCountersV1({known:true,totalBytes:68719476736,availableBytes:35433480192,commitLimitBytes:85899345920,commitAvailableBytes:52613349376,loadPercent:48})).toEqual({availableBytes:35433480192,compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
+ expect(windowsCountersV1({known:true,totalBytes:17179869184,availableBytes:8589934592,commitLimitBytes:21474836480,commitAvailableBytes:1073741824,loadPercent:71}).availableBytes).toBe(1073741824);
 });
 
 test("Linux counters parse from meminfo, vmstat, PSI and the cgroup v2 limit files exactly",()=>{
@@ -25,6 +24,25 @@ test("Linux counters parse from meminfo, vmstat, PSI and the cgroup v2 limit fil
 
 test("Counters reduce to one host sample: the worst of the platform level and the free share wins, the container limit caps the host and the swap rate needs a predecessor",()=>{
  for(const item of fixture.reduce)expect(reduceHostSampleV1(policy,{platform:item.platform as never,cores:item.cores,totalMegabytes:item.totalMegabytes,atMs:item.atMs,load:item.load},item.counters as never,item.previous??undefined),item.name).toEqual(item.expect as never);
+});
+
+test("Declared scheduling memory preserves physical and cgroup pressure",()=>{
+ using oracle=new Database(":memory:");
+ const available=oracle.query("SELECT min(?1,?2,coalesce(?3,?2)) AS value");
+ const pressure=oracle.query(`SELECT CASE max(CASE ?1 WHEN 'critical' THEN 2 WHEN 'warn' THEN 1 ELSE 0 END,
+   CASE WHEN ?2*10000<coalesce(?4,32768)*?5 THEN 2 WHEN ?2*10000<coalesce(?4,32768)*?6 THEN 1 ELSE 0 END,
+   CASE WHEN ?3*10000<32768*?7 THEN 0 WHEN ?3*10000<32768*?8 THEN 1 WHEN ?3 IS NOT NULL THEN 2 ELSE 0 END)
+   WHEN 2 THEN 'critical' WHEN 1 THEN 'warn' ELSE 'normal' END AS value`);
+ const basis=policy.pressure;
+ for(const row of fixture.profilePressure){
+  const counter=(value:number|null)=>value===null?null:value*1048576;
+  const facts={platform:row.cgroup===null?"darwin" as const:"linux" as const,cores:4,totalMegabytes:8192,physicalMegabytes:32768,atMs:1000,load:null};
+  const sample=reduceHostSampleV1(policy,facts,{availableBytes:counter(row.available),compressedBytes:counter(row.compressed),constrainedBytes:counter(row.cgroup),swapUsedBytes:null,swappedOutBytes:null,pressureLevel:row.kernel as "normal"|"critical"|null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null});
+  expect(available.get(row.available,8192,row.cgroup),row.name).toEqual({value:row.expectedAvailable});
+  expect(pressure.get(row.kernel,row.available,row.compressed,row.cgroup,basis.availableCriticalBasisPoints,basis.availableWarnBasisPoints,basis.compressedWarnBasisPoints,basis.compressedCriticalBasisPoints),row.name).toEqual({value:row.expectedPressure});
+  expect(sample.availableMegabytes,row.name).toBe(row.expectedAvailable);
+  expect(sample.pressure,row.name).toBe(row.expectedPressure);
+ }
 });
 
 test("The process tree sums a process and all descendants from a ps table and answers null for an unknown pid",()=>{
@@ -41,7 +59,7 @@ test("Every platform reads through injected ports, so Linux and Windows parse on
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toEqual(fixture.darwin[0]!.expect as never);
  expect(calls.sort()).toEqual(["/usr/bin/hdiutil info","sysctl -n kern.memorystatus_vm_pressure_level","sysctl -n vm.swapusage","sysctl kern.num_files kern.maxfiles","vm_stat"]);
  expect(await observeTreeMegabytesV1(102,async()=>fixture.tree.table,"darwin")).toBe(22);
- expect(await observeTreeMegabytesV1(102,async()=>{throw Error("no powershell");},"win32",undefined,()=>undefined)).toBeNull();
+ expect(await observeTreeMegabytesV1(102,undefined,"win32",undefined,()=>undefined,"footprint",{memory:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})})).toBeNull();
 });
 
 test("The optional open file table and image count fall back to unknown when their probes fail, and never fail the sample",async()=>{
@@ -49,7 +67,7 @@ test("The optional open file table and image count fall back to unknown when the
  expect(await readHostCountersV1({platform:"darwin",run,read:async()=>null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,availableBytes:fixture.darwin[0]!.expect.availableBytes});
  const only=new Map<string,string>([["/proc/meminfo",fixture.linux[0]!.meminfo],["/proc/vmstat",fixture.linux[0]!.vmstat]]);
  expect(await readHostCountersV1({platform:"linux",run:async()=>"",read:async path=>only.get(path)??null})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null});
- expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no powershell");},read:async()=>null,notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
+ expect(await readHostCountersV1({platform:"win32",run:async()=>{throw Error("no command");},read:async()=>null,windows:{memory:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}}),processes:()=>({known:false,reason:"unsupported",call:"x",error:0,detail:"",text:{en:"x",de:"x"}})},notify:()=>undefined})).toMatchObject({openFiles:null,openFilesMaximum:null,attachedImages:null,swapUsedBytes:null});
 });
 
 test("A missing Linux counter file fails closed",async()=>{
@@ -57,8 +75,12 @@ test("A missing Linux counter file fails closed",async()=>{
 });
 
 test.skipIf(process.platform!=="darwin")("macOS live sample is conservative against the kernel's own memory_pressure and consistent with os.freemem",async()=>{
- const first=await readHostSampleV1(policy,{platform:"darwin",run:async(command,args)=>{const out=spawnSync(command,[...args],{encoding:"utf8"});if(out.status!==0)throw Error(out.stderr);return out.stdout;},read:async()=>null});
+ const reports=new Map<string,string>();
+ const first=await readHostSampleV1(policy,{platform:"darwin",run:async(command,args)=>{const out=spawnSync(command,[...args],{encoding:"utf8"});if(out.status!==0)throw Error(out.stderr);reports.set([command,...args].join(" "),out.stdout);return out.stdout;},read:async()=>null},undefined,Date.now,{});
  const kernel=spawnSync("memory_pressure",[],{encoding:"utf8"}).stdout,percent=Number(/System-wide memory free percentage: (\d+)%/u.exec(kernel)?.[1]),host=first.host;
+ const heldProbe={platform:"darwin" as const,run:async(command:string,args:readonly string[])=>reports.get([command,...args].join(" "))!,read:async()=>null};
+ const declared=(await readHostSampleV1(policy,heldProbe,undefined,Date.now,{SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES:"8192",SEMIO_HOST_CAPACITY_CORES:"4"})).host;
+ expect(declared).toMatchObject({totalMegabytes:Math.min(host.totalMegabytes,8192),availableMegabytes:Math.min(host.availableMegabytes,8192),pressure:host.pressure});
  expect(host.totalMegabytes).toBe(Math.floor(totalmem()/1048576));
  expect(host.availableMegabytes).toBeGreaterThanOrEqual(Math.floor(freemem()/1048576)*0.5);
  expect(host.availableMegabytes).toBeLessThanOrEqual(host.totalMegabytes);

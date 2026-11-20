@@ -1,0 +1,6 @@
+{
+  "retryDelayMs": [250, 500, 1000, 2000],
+  "attemptOffsetsMs": [0, 250, 750, 1750, 3750],
+  "cancelAtMs": 500,
+  "cancelledAttemptOffsetsMs": [0, 250]
+}

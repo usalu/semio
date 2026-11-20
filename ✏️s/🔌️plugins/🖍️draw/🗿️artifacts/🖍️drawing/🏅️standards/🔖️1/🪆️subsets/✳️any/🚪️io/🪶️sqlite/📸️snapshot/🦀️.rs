@@ -34,6 +34,7 @@ use crate::stroke::StrokeCap;
 use crate::stroke::StrokeJoin;
 use crate::font_family::DrawingFontFamily;
 use pack::snapshot::ArtifactDsl;
+use store::os_store::serialization::{SnapshotReceivingOutcome, SnapshotReceivingOutput};
 const SCHEMA:&str=include_str!("🗄️.sql");
 fn ordinal(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}
 fn scalar(p:&mut Projection<'_,'_>,value:f64)->Result<i64,ValueError>{insert_ieee754(p,"draw_scalar",&[Cell::Real(value)],&[FloatColumn::Binary64(1)])}
@@ -102,7 +103,7 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
   if u64::from(width)*u64::from(height)!=rows.len() as u64{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Draw image sample count"));}
   let mut samples=semio_framework_value_persistent::list::PagedList::<[u8;4],{usize::MAX}>::default();
   for row in rows{let mut sample=[0u8;4];for(index,component)in sample.iter_mut().enumerate(){*component=u8::try_from(row.integer(index+3)?).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;Reconstruction::new(r.control)?.scalar()?;}
-   while !samples.has_reserved_slot(){let bytes=samples.next_allocation_bytes().map_err(ValueError::from)?;r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;r.control.admit_allocation_bytes(bytes)?;samples.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
+   while !samples.has_reserved_slot(){let bytes=samples.next_allocation_bytes().map_err(ValueError::from)?;r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;r.control.admit_allocation_bytes(bytes)?;samples.reserve_one_cold(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
    samples.push_reserved(sample).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"Draw sample reserved slot"))?;
   }
   s.assets.insert(key,DrawingImageAsset{width,height,samples});}
@@ -116,8 +117,33 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for DrawingSnaps
  
  
  fn retire_sqlite_snapshot(self){retire_decoded_drawing_snapshot(self)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {store::decode_sqlite_snapshot_record_native(payload,<Self as ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {store::encode_sqlite_snapshot_record_native(encoding,<Self as ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
+ fn decode_sqlite_snapshot_native(
+  payload: &store::io_schema::IoPayload,
+  control: &mut SqliteSnapshotControl<'_>,
+  native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,
+  output: &mut Option<SnapshotReceivingOutput<Self>>,
+ ) -> SnapshotReceivingOutcome {
+  store::decode_sqlite_snapshot_record_native(
+   payload, <Self as ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(),
+   &mut |record, snapshot, native| {
+    *snapshot = Some(Self::__dsl_from_record_controlled(record, native)?);
+    Ok(())
+   },
+   control, native_owner, output,
+  )
+ }
+ fn encode_sqlite_snapshot_native(
+  &self,
+  encoding: store::sqlite_snapshot::SnapshotEncoding,
+  control: &mut SqliteSnapshotControl<'_>,
+  native_owner: &mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,
+  output: &mut Option<SnapshotReceivingOutput<store::io_schema::IoPayload>>,
+ ) -> SnapshotReceivingOutcome {
+  store::encode_sqlite_snapshot_record_native(
+   encoding, <Self as ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(),
+   &mut |native| self.__dsl_to_record_controlled(native), control, native_owner, output,
+  )
+ }
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{if dialect.artifact_kind!="s.draw.drawing"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"Draw does not own the declared semantic subset")))}validate_sqlite_database_schema(database,SCHEMA,control.limits()).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for DrawingSnapshot {

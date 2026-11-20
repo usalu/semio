@@ -292,3 +292,33 @@ pub fn generation_form(
     }
     ui_build(root)
 }
+
+/// 🔢️ Windowed scalar channel rows share graph hover and selection in every renderer.
+pub fn channel_value_tree(windows: &semio_plugin::TreeWindows<'_>, controller: &'static str, namespace: &str, label: &str, rows: &[(String, String, String)]) -> UiAssemblyResult<BuiltNode> {
+    let factory = ActionFactory::new(controller);
+    semio_plugin::PanelTreeBuilder::new(namespace)?
+        .window_section(windows, "values", Some(ui_label(label)?), true, rows, |(id, value, targets)| {
+            let (hover, args) = factory.action(semio_plugin::INTERACTION_HOVER_ACTION_ID, Some(ui_value_map([
+                ("channel", ui_value_text("pointer")?), ("domainId", ui_value_text("graph")?), ("targets", ui_value_text(targets)?),
+            ])?))?;
+            tree_item_builder(ui_label(id)?)
+                .try_id(id).map_err(|_| ui_assembly_error("ui.value-row.id"))?
+                .description(UiText::clipped(value))
+                .granularity(ui_text("handle")?)
+                .try_on_with(Trigger::HoverPreview, hover, args.ok_or_else(|| ui_assembly_error("ui.value-row.args"))?)
+                .map_err(|_| ui_assembly_error("ui.value-row.hover"))?
+                .try_build().map_err(|_| ui_assembly_error("ui.value-row.build"))
+        })?
+        .interaction_domain(controller, "graph")?
+        .build()
+}
+
+/// 🪟️ Places a windowed value tree beside its scene when evaluated scalar channels exist.
+pub fn scene_with_channel_values(scene: BuiltNode, windows: &semio_plugin::TreeWindows<'_>, controller: &'static str, namespace: &str, label: &str, rows: &[(String, String, String)]) -> UiAssemblyResult<BuiltNode> {
+    if rows.is_empty() { return Ok(scene); }
+    let mut tree = channel_value_tree(windows, controller, namespace, label, rows)?;
+    tree.layout = LayoutSpec::Scroll(ScrollLayout { axes: ScrollAxes::Vertical, sizing: Sizing::Fill, ..Default::default() });
+    let scene = ui_build(ui_child(column().grow(true), scene)?)?;
+    let tree = ui_build(ui_child(column().grow(true), tree)?)?;
+    ui_build(ui_child(ui_child(column().grow(true), scene)?, tree)?)
+}

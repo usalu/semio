@@ -1,5 +1,5 @@
 import {describe,expect,test} from "bun:test";
-import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {spawnSync} from "node:child_process";
@@ -59,7 +59,8 @@ describe("frozen slice lab root",()=>{
   expect(()=>readSliceLabOptionsV1({...options,frozen:"yes"})).toThrow();
   const two={...options,machines:2,stagger:-1,edit:"a/b.ts"};
   expect(readSliceLabOptionsV1(two).edit).toBe("a/b.ts");
-  const {frozen:_unfrozen,...plain}=two as typeof two&{frozen?:boolean};expect(()=>readSliceLabOptionsV1(plain)).toThrow();expect(()=>readSliceLabOptionsV1({...two,machines:1})).toThrow();expect(()=>readSliceLabOptionsV1({...two,stagger:0})).toThrow();
+  const {frozen:_unfrozen,...plain}=two as typeof two&{frozen?:boolean};expect(()=>readSliceLabOptionsV1(plain)).toThrow();
+  expect(readSliceLabOptionsV1({...plain,stages:"all"}).edit).toBe("a/b.ts");expect(()=>readSliceLabOptionsV1({...plain,stages:"all",skip:["dependencies"]})).toThrow();expect(()=>readSliceLabOptionsV1({...two,machines:1})).toThrow();expect(()=>readSliceLabOptionsV1({...two,stagger:0})).toThrow();
   expect(readSliceLabOptionsV1({...plain,frozenDirectory:"/tmp/x"}).frozenDirectory).toBe("/tmp/x");
   const sample:SliceLabSampleV1={atSeconds:2,machine:"m1",stage:"workspace",state:"running",phase:null,done:null,total:null,owners:{},processes:1,busy:0,footprintMegabytes:1,cpu:0,loopLagMs:null,activity:"-"};
   const input={options,machines:["m1"],samples:[sample],results:{m1:{ready:true,failure:null,timings:[]}},duplicateOwners:0,leftoverProcesses:0,leftoverImages:0,elapsedSeconds:3,load:1,timedOut:false,frozen:{files:5,megabytes:1,seconds:1,drift:3}};
@@ -86,6 +87,45 @@ describe("frozen slice lab root",()=>{
   for(const name of ["out/x.o","ignored.txt","top.ts"])utimesSync(join(frozen,name),future,future);
   expect(treeChurnV1(frozen,after,[],true).sample).toEqual(["top.ts"]);
   expect(treeChurnV1(frozen,after,[],false).count).toBe(0);
+ });
+ test("a failed materialization cannot publish a named frozen snapshot",()=>{
+  const cases=JSON.parse(readFileSync(join(import.meta.dir,"freeze-errors.json"),"utf8")) as {entry:string;target:string}[];
+  for(const [index,row] of cases.entries()){
+   const root=join(work,`bad-${index}`),target=join(root,row.entry);
+   mkdirSync(join(target,".."),{recursive:true});
+   if(row.target==="directory")mkdirSync(target);else writeFileSync(target,"retain");
+   const oracle=spawnSync("python3",["-c","import os,shutil,sys; s,d=sys.argv[1:]; os.symlink(os.readlink(s),d) if os.path.islink(s) else shutil.copyfile(s,d)",join(live,row.entry),target],{encoding:"utf8"});
+   expect(oracle.status).toBe(1);
+   expect(()=>freezeSliceLabRootV1(live,root)).toThrow();
+   expect(()=>frozenRootV1(live,root)).toThrow();
+   expect(existsSync(`${root}.frozen.json`)).toBe(false);
+  }
+ });
+ test("a named freeze never includes a previous unfinished tree",()=>{
+  const root=join(work,"unfinished");mkdirSync(root);writeFileSync(join(root,"unrelated"),"keep");
+  expect(()=>frozenRootV1(live,root)).toThrow();
+  expect(readFileSync(join(root,"unrelated"),"utf8")).toBe("keep");
+  expect(existsSync(`${root}.frozen.json`)).toBe(false);
+ });
+ test("a dependency bootstrap gets a private snapshot without live dependency bindings",()=>{
+  const root=join(work,"cold"),machine=join(work,"private");
+  const snapshot=frozenRootV1(live,root,false);
+  expect(snapshot.ambient).toBe(0);
+  expect(()=>frozenRootV1(live,root,true)).toThrow();
+  cloneFrozenRootV1(root,live,machine,false);
+  const paths=["node_modules",".cache/b/d/m/j","🧰️framework/lib/node_modules"];
+  for(const view of [root,machine]){
+   const observed=spawnSync("python3",["-c","import json,os,sys; print(json.dumps([os.path.lexists(os.path.join(sys.argv[1],p)) for p in sys.argv[2:]]))",view,...paths],{encoding:"utf8"});
+   expect(JSON.parse(observed.stdout)).toEqual(paths.map(()=>false));
+   expect(readFileSync(join(view,"🧰️framework/lib/link.ts"),"utf8")).toBe(readFileSync(join(live,"🧰️framework/lib/a.ts"),"utf8"));
+  }
+ });
+ test("restoring the lab edit preserves a build replacement",()=>{
+  const root=join(work,"changed");mkdirSync(root);
+  const file=join(root,"input");writeFileSync(file,"before");
+  const restore=editFrozenFileV1(root,"input");
+  writeFileSync(join(root,"new"),"built");renameSync(join(root,"new"),file);
+  restore();expect(readFileSync(file,"utf8")).toBe("built");
  });
  test("cleanup",()=>{rmSync(live,{recursive:true,force:true});rmSync(work,{recursive:true,force:true});});
 });

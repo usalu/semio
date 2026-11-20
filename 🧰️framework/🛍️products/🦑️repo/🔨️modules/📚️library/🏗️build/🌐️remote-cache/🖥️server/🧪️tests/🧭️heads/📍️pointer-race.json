@@ -1,0 +1,30 @@
+{
+  "waves": [
+    {
+      "publisher": "initial",
+      "units": 5,
+      "offset": -3000
+    },
+    {
+      "publisher": "ours",
+      "units": 7,
+      "offset": -1000
+    },
+    {
+      "publisher": "theirs",
+      "units": 9,
+      "offset": -2000
+    }
+  ],
+  "samePrior": {
+    "base": "one",
+    "writers": [
+      "two",
+      "six"
+    ],
+    "statuses": [
+      200,
+      409
+    ]
+  }
+}

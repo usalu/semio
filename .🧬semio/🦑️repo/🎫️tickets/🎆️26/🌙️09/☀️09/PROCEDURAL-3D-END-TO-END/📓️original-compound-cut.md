@@ -1,0 +1,9 @@
+# Original Compound Cut
+
+The registered `brep.bool.compoundCut` operation now acquires the target certificate and up to two tool certificates through separate retained turns. It computes the exact material occupancy of the stock minus the union of the tools and publishes one certified planar solid through the existing rollback transaction. The original stock and tools remain live as inputs. No intermediate solid enters the live index. The topology phase and dictionary publication inherit the existing per-turn capacity, depth, copy, retirement and cancellation checks.
+
+The retained route accepts one or two axis-aligned certified boxes in a dense tools list. It clips each tool to stock, discards tools with zero volumetric overlap, and removes a redundant contained tool before collecting grid planes. The existing arrangement allows up to four distinct planes per axis. Empty or disconnected results, nonmanifold boundaries, and arrangements exceeding the grid limit receive explicit refusals.
+
+The language-neutral fixture specifies opposite notches, a through tunnel from overlapping tools, and one interior cavity alongside a disjoint tool. Manifold verified all three cases for solid volume, world bounds, genus and shell count, with 12 assertions. An isolated native run compiled the actual rectangular boundary builder and verified the same winding-derived volumes and Euler characteristics plus all four refused cases. The registered Rust Flow fixture drives the route one item at a time and covers atomic publication, topology, cancellation after the new solid arena row exists, and refusals. That full native fixture remains pending while the active tessellation build owns compiler capacity.
+
+The repository source closure reader found 3,969 active lines for the engine, 4,000 for native registry, 3,793 for Boolean, 257,421 active bytes for spatial Session, and 157,248 for Flow BRep. The edited Rust sources parse.

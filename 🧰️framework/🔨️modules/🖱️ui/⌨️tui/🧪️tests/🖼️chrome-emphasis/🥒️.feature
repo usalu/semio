@@ -7,7 +7,7 @@ Feature: Window tab outlines and pointer ancestor emphasis
     And inactive tab perimeters use normal borders or emphasized borders on direct hover
     And active tab interiors retain the window surface and ordinary foreground
     And inactive tab interiors retain their muted text and existing hover fill
-    And only the active tab seam opens into the window
+    And every raised tab closes its seam into the window, a stated tab in its own state color
     Examples:
       | corner       |
       | top-left     |

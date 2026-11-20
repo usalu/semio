@@ -6,6 +6,7 @@
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string, encode_text_string};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfToUnicodeMapping};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
 
@@ -20,6 +21,20 @@ pub use metrics::StandardFontMetrics;
 pub use glyph_list::ADOBE_GLYPH_LIST;
 pub use tables::{MAC_ROMAN_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
 pub use truetype::TrueTypeFont;
+
+/// 🪪️ Decodes a reversible code in the standard or WinAnsi encoding of a non-symbolic Type1 font.
+pub fn controlled_type1_text(encoding: PdfBaseEncoding, byte: u8) -> Option<&'static str> {
+    let table = match encoding {
+        PdfBaseEncoding::Standard => STANDARD_ENCODING,
+        PdfBaseEncoding::WinAnsi => WIN_ANSI_ENCODING,
+        _ => return None,
+    };
+    let code = table.binary_search_by_key(&byte, |(code, _)| *code).ok()?;
+    let glyph = table[code].1;
+    if table[..code].iter().any(|(_, name)| *name == glyph) { return None; }
+    let index = ADOBE_GLYPH_LIST.binary_search_by_key(&glyph, |(name, _)| *name).ok()?;
+    Some(ADOBE_GLYPH_LIST[index].1)
+}
 
 //#region 🔖️GlyphList
 /// 🔤 Unicode text of a glyph name: the Adobe Glyph List, `uniXXXX[XXXX…]`, `uXXXX[XX]`, ligature
@@ -376,28 +391,55 @@ impl FontCodec {
         }
     }
 
+    /// 🎨 Borrows an embedded outline program for a horizontal PDF text run.
+    pub fn outline_program(&self) -> Option<&TrueTypeFont> {
+        if self.cid_codec.as_ref().is_some_and(|codec| codec.vertical) { return None; }
+        self.program.as_ref().filter(|font| font.table("glyf").is_some())
+    }
+
     pub fn is_composite(&self) -> bool {
         self.composite
     }
 
-    /// 📖 Splits `bytes` into the glyphs they show.
+    /// 🔣 Reads the original numeric character codes in the font's authored codespace.
+    pub fn character_codes<'a>(&'a self, bytes: &'a [u8]) -> impl Iterator<Item = u32> + 'a {
+        cmap::codes(self.cid_codec.as_ref(), bytes).map(|(code, _)| code)
+    }
+
+    /// 📖 Splits `bytes` into glyphs and preserves each code's physical width.
     pub fn decode(&self, bytes: &[u8]) -> Vec<DecodedGlyph> {
-        let codes: Vec<(u32, u32)> = match &self.cid_codec {
-            Some(cid_codec) => cid_codec.split(bytes),
-            None => bytes.iter().map(|byte| (*byte as u32, 1)).collect(),
-        };
-        self.decode_codes(&codes.into_iter().map(|(code,_)|code).collect::<Vec<_>>())
+        cmap::codes(self.cid_codec.as_ref(), bytes)
+            .map(|(code, width)| self.decode_code(code, width))
+            .collect()
     }
 
     /// 🔢️ Maps already admitted integer character codes through this font binding.
-    pub fn decode_codes(&self,codes:&[u32])->Vec<DecodedGlyph> {
-        codes.iter().copied().map(|code| {
-            let code_width=self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(code));
-            let cid=self.cid_codec.as_ref().map_or(code,|codec|codec.cid(code));
-            let width=if self.composite {self.cid_widths.get(&cid).copied().unwrap_or(self.default_width)} else {self.simple_widths.get(&code).copied().unwrap_or(self.default_width)};
-            let glyph_id=if self.composite {if self.cid_to_gid_identity {u16::try_from(cid).ok()}else{self.cid_to_gid.get(&cid).copied()}}else{self.code_to_gid.get(&code).copied()};
-            DecodedGlyph {code,code_width,width,glyph_id,cid,is_space_char:code==32&&code_width==1,text:self.to_unicode.as_ref().and_then(|map|cmap::to_unicode_lookup(map,code)).or_else(||self.code_to_text.get(&code).cloned())}
+    pub fn decode_codes(&self, codes: &[u32]) -> Vec<DecodedGlyph> {
+        codes.iter().map(|&code| {
+            let width = self.cid_codec.as_ref().map_or(1, |codec| codec.width_of(code));
+            self.decode_code(code, width)
         }).collect()
+    }
+
+    fn decode_code(&self, code: u32, code_width: u32) -> DecodedGlyph {
+        let cid = self.cid_for_code(code);
+        let glyph_id = if !self.composite {
+            self.code_to_gid.get(&code).copied()
+        } else if self.cid_to_gid_identity {
+            u16::try_from(cid).ok()
+        } else {
+            self.cid_to_gid.get(&cid).copied()
+        };
+        DecodedGlyph {
+            code, code_width, width: self.advance(code, cid), glyph_id, cid,
+            is_space_char: code == 32 && code_width == 1,
+            text: self.text_for_code(code).map(Cow::into_owned),
+        }
+    }
+
+    fn text_for_code(&self, code: u32) -> Option<Cow<'_, str>> {
+        self.to_unicode.as_ref().and_then(|map| cmap::to_unicode_text(map, code))
+            .or_else(|| self.code_to_text.get(&code).map(|text| Cow::Borrowed(text.as_str())))
     }
 
     /// 📦️ Publishes logical codes using the current physical font codespace.
@@ -409,10 +451,9 @@ impl FontCodec {
 
     /// 🔤 The Unicode text `bytes` show, when every code is mapped.
     pub fn decode_text(&self, bytes: &[u8]) -> Option<String> {
-        let glyphs = self.decode(bytes);
         let mut out = String::new();
-        for glyph in glyphs {
-            out.push_str(glyph.text.as_deref()?);
+        for code in self.character_codes(bytes) {
+            out.push_str(&self.text_for_code(code)?);
         }
         Some(out)
     }
@@ -447,18 +488,22 @@ impl FontCodec {
 
     /// 📏 Width of a code in 1/1000 text space.
     pub fn width_of_code(&self, code: u32) -> f64 {
-        if self.composite {
-            let cid = self.cid_codec.as_ref().map_or(code, |c| c.cid(code));
-            self.cid_widths.get(&cid).copied().unwrap_or(self.default_width)
-        } else {
-            self.simple_widths.get(&code).copied().unwrap_or(self.default_width)
-        }
+        self.advance(code, self.cid_for_code(code))
+    }
+
+    fn cid_for_code(&self, code: u32) -> u32 {
+        self.cid_codec.as_ref().map_or(code, |codec| codec.cid(code))
+    }
+
+    fn advance(&self, code: u32, cid: u32) -> f64 {
+        let width = if self.composite { self.cid_widths.get(&cid) } else { self.simple_widths.get(&code) };
+        width.copied().unwrap_or(self.default_width)
     }
 
     /// 📏 Width of a text run in 1/1000 text space, when encodable.
     pub fn text_width(&self, text: &str) -> Option<f64> {
         let bytes = self.encode(text)?;
-        Some(self.decode(&bytes).iter().map(|glyph| glyph.width).sum())
+        Some(self.character_codes(&bytes).map(|code| self.width_of_code(code)).sum())
     }
 
     /// 🔠 The embedded TrueType program, when the font carries one.

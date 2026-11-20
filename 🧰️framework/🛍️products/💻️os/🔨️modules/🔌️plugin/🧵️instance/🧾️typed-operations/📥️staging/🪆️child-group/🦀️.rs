@@ -71,6 +71,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: Instan
             let _birth=A::owned_mutation_batch_birth_bytes().ok_or_else(||plugin_sdk_fault("owned child publication requires the parent app's exact retained mutation factory"))?;
             
             let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut()else{return Err(plugin_sdk_fault("mounted group lost its original typed emission").into());};
+            if emit.artifact_mutation_pages.is_some() { return Err(plugin_sdk_fault("paged document mutations require their local mounted edit owner").into()); }
             owner.parent_touched=!emit.artifact_mutations.is_empty();
             let mut original=Some(std::mem::take(&mut emit.artifact_mutations));
             match A::admit_owned_mutation_batch(&mut original,grant){

@@ -94,12 +94,12 @@ async fn the_wall_type_is_the_selected_library_entry_else_the_first_and_a_missin
     let mut snapshot = model();
     let mut thin = snapshot.wall_types["wt-300"].clone();
     thin.name = "Thin".into();
-    snapshot.wall_types.insert("wt-100".into(), thin);
+    snapshot.wall_types.cold_insert("wt-100".into(), thin);
     let mut rig = Rig::plan("wall", snapshot.clone());
     rig.library = vec!["wt-100".into()];
     rig.down(0.0, 0.0);
     assert_eq!(created_wall(&rig.down(1.0, 0.0).mutations).wall_type, "wt-100");
-    snapshot.wall_types.clear();
+    snapshot.wall_types.cold_clear();
     let mut rig = Rig::plan("wall", snapshot);
     rig.down(0.0, 0.0);
     assert_eq!(rig.down(1.0, 0.0).refused, Some(TYPE_MISSING));

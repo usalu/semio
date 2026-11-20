@@ -1,26 +1,37 @@
 import {afterAll,expect,mock,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import sharingQueue from "./🕰️sharing-queue.json" with {type:"json"};
 import * as real from "node:fs/promises";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
-import {appendEventsV1,formatHlcV1,readHeadV1} from "../../📒️journal/🟦️.ts";
+import {appendEventsV1,blobPathV1,formatHlcV1,readHeadV1} from "../../📒️journal/🟦️.ts";
+import {createStoreGuardV1} from "../../🛡️resilience/🟦️.ts";
+import {createHash} from "node:crypto";
 import type {ReplicaEventV1} from "../🟦️.ts";
+import fixture from "../../🛡️resilience/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
 
 type Fault={op:string;match:string;code:string;left:number};
-let faults:Fault[]=[],hook:((op:string,path:string)=>void|Promise<void>)|undefined;
+let faults:Fault[]=[],hook:((op:string,path:string)=>void|Promise<void>)|undefined,readDelay:((path:string)=>number)|undefined;
 const originals={...real};
 const wrap=(op:string)=>async(...args:unknown[])=>{
  const path=args.map(String).join("\0"),fault=faults.find(item=>item.op===op&&item.left>0&&path.includes(item.match));
  if(fault){fault.left--;throw Object.assign(Error(`${fault.code}: injected, ${op}`),{code:fault.code});}
  await hook?.(op,path);
- return (originals as unknown as Record<string,(...inner:unknown[])=>unknown>)[op]!(...args);
+ const result=await (originals as unknown as Record<string,(...inner:unknown[])=>unknown>)[op]!(...args);
+ const delay=op==="open"?readDelay?.(String(args[0])):undefined;
+ if(delay){
+  const file=result as Awaited<ReturnType<typeof real.open>>,read=file.read.bind(file) as (...inner:unknown[])=>unknown;
+  Object.defineProperty(file,"read",{value:async (...inner:unknown[])=>{await Bun.sleep(delay);return read(...inner);}});
+ }
+ return result;
 };
 mock.module("node:fs/promises",()=>({...originals,...Object.fromEntries(["rename","unlink","copyFile","symlink","stat","lstat","open"].map(op=>[op,wrap(op)]))}));
 const {closeReplicaV1,compactV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,seedV1,verifyV1}=await import("../🟦️.ts");
 
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`replica-race-${label}-`));scratch.push(path);return path;};
-afterAll(()=>{faults=[];hook=undefined;for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+afterAll(()=>{faults=[];hook=undefined;readDelay=undefined;for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 
 for(const code of ["EINVAL","ENOENT"])test(`an apply whose rename races with a directory removal (${code}) is retried in place and reported as no error`,async()=>{
  const store=temp("store"),events:ReplicaEventV1[]=[],options=(name:string)=>({worktree:temp(name),storeRoot:store,originId:name,groupId:"g1",pollMilliseconds:10,scanSeconds:900,debounceMilliseconds:5,persistMilliseconds:0});
@@ -59,7 +70,9 @@ for(const code of ["EBUSY","EPERM","EACCES"]){
   faults=[{op:"unlink",match:"held.txt",code,left:1000}];
   const result=await followOnceV1(second);
   expect(result).toMatchObject({events:1,applied:0,queued:1});
+  expect(faults[0]!.left).toBe(999);
   expect(events.filter(event=>event.event==="blocked"&&event.path==="held.txt")).toEqual([{version:1,event:"blocked",path:"held.txt",reason:"sharing-violation"}]);
+  expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-sharing-violation",count:1,lastMs:clock.ms});
   expect(events.filter(event=>event.event==="error")).toEqual([]);
   expect(existsSync(join(b.worktree,"held.txt"))).toBe(true);
   const head=(await readHeadV1(store,"a"))!;
@@ -73,6 +86,74 @@ for(const code of ["EBUSY","EPERM","EACCES"]){
   await closeReplicaV1(first);await closeReplicaV1(second);
  },60000);
 }
+
+test("a sharing-blocked put spends one rename attempt per queue turn and does not delay unrelated work",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b);
+ try{
+  put(a,"busy.txt","arriving");put(a,"unrelated.txt","ready");
+  await publishOnceV1(first);
+  const db=new Database(":memory:"),started=clock.ms;
+  try{
+   faults=[{op:"rename",match:"busy.txt",code:"EBUSY",left:sharingQueue.refusedAttempts}];
+   const rows=db.query(`with rounds as (
+     select key number,json_extract(value,'$.at') elapsed,json_extract(value,'$.due') ready,
+       json_extract(value,'$.other') other from json_each(?1)
+    ), progress as (
+     select *,sum(elapsed>=ready) over(order by number) attempts from rounds
+    )
+    select elapsed,max(0,?2-attempts) remaining,other+(attempts>?2) applied,attempts<=?2 queued
+    from progress order by number`).all(JSON.stringify(sharingQueue.rounds),sharingQueue.refusedAttempts) as {elapsed:number;remaining:number;applied:number;queued:number}[];
+   for(const row of rows){
+    clock.ms=started+row.elapsed;
+    expect(await followOnceV1(second)).toMatchObject({applied:row.applied,queued:row.queued});
+    expect(faults[0]!.left).toBe(row.remaining);
+    expect(readFileSync(join(b.worktree,"unrelated.txt"),"utf8")).toBe("ready");
+   }
+  }finally{db.close();}
+  expect(readFileSync(join(b.worktree,"busy.txt"),"utf8")).toBe("arriving");
+ }finally{faults=[];await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+test("verified incoming fragments renew the store guard only when physical bytes advance",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b);
+ try{
+  for(const {bytes,observations} of fixture.intakeProgress){
+   const name="incoming-"+bytes+".bin",content=Buffer.alloc(bytes,111);
+   writeFileSync(join(a.worktree,name),content);await publishOnceV1(first);
+   let beats=0;second.beat=()=>{beats++;};
+   expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
+   expect(readFileSync(join(b.worktree,name))).toEqual(content);
+   expect(beats,String(bytes)).toBe(observations);
+   expect(await followOnceV1(second)).toMatchObject({applied:0,queued:0});
+   expect(beats,String(bytes)).toBe(observations);clock.ms+=1000;
+  }
+ }finally{await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+test("a slow verified download survives a stalled probe while an idle download expires",async()=>{
+ const {store,a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),deadline=400;
+ try{
+  for(const [moving,delay] of [[true,90],[false,850]] as const){
+   const name=`${moving?"moving":"idle"}.bin`,content=Buffer.alloc(6*1024*1024,moving?51:52),blob=blobPathV1(store,createHash("sha256").update(content).digest("hex"));
+   writeFileSync(join(a.worktree,name),content);await publishOnceV1(first);
+   const probe=Promise.withResolvers<boolean>(),guard=createStoreGuardV1({probe:()=>probe.promise,deadlineMs:deadline,now:Date.now,changed:()=>{}});
+   let beats=0;second.beat=()=>{beats++;guard.beat();};readDelay=path=>path===blob?delay:0;
+   try{
+    const result=await guard.turn(signal=>followOnceV1(second,signal));
+    expect(result.status).toBe(moving?"done":"stalled");
+    if(moving){expect(result).toMatchObject({value:{applied:1,queued:0}});expect(readFileSync(join(b.worktree,name))).toEqual(content);}
+    else expect(existsSync(join(b.worktree,name))).toBe(false);
+   }finally{
+    probe.resolve(true);
+    const until=Date.now()+2000;
+    while(guard.outstanding()>0&&Date.now()<until)await Bun.sleep(10);
+    expect(guard.outstanding()).toBe(0);
+    expect(beats).toBe(moving?6:0);readDelay=undefined;
+   }
+   clock.ms+=1000;
+  }
+ }finally{await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
 
 test("an apply whose rename onto a held file fails keeps the old content, leaves no staging file behind and succeeds after the release",async()=>{
  const {a,b,clock,events}=await pair();
@@ -99,6 +180,8 @@ test("a write into the staging file that fails with EACCES is reported as blocke
  faults=[{op:"open",match:`${join(".cache","f","tmp")}`,code:"EACCES",left:1000}];
  expect(await followOnceV1(second)).toMatchObject({applied:0,queued:1});
  expect(events.filter(event=>event.event==="blocked"&&event.path==="new.txt").map(event=>event.reason)).toEqual(["EACCES"]);
+ expect(second.failures.summary()).toContainEqual({kind:"blocked",count:1,lastMs:clock.ms});
+ expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-eacces",count:1,lastMs:clock.ms});
  expect(events.filter(event=>event.event==="error")).toEqual([]);
  faults=[];clock.ms+=60_000;
  expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});

@@ -7,7 +7,7 @@ use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
 use semio_s_artifact_process_process3d_kit::installed_catalogs;
 use semio_s_artifact_process_process3d_kit::process3d_action;
 use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
-use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_CONTROLLER_ID};
 use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_plugin::row_action;
 use semio_plugin::row_target;
@@ -54,7 +54,7 @@ fn ui_text(value: &str) -> UiAssemblyResult<semio_plugin::UiText> {
 /// `interactionSelect` binding.
 fn machine_row(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
     let args = semio_s_artifact_process_process3d_kit::ui_value_map([("id", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
-    let target = row_target(semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
+    let target = row_target(PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
     let mut row_actions = semio_plugin::UiFixedList::default();
     row_actions.try_push(row_action("trash", labels.remove_machine.as_str(), "removeWorkshopMachine", RowActionPlacement::Menu)?).map_err(|_| workshop_error("row-actions"))?;
     let mut item = tree_item(format!("machine:{}", machine.id), semio_s_artifact_process_process3d_kit::ui_label(&machine.label)?)?;
@@ -81,7 +81,7 @@ pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &P
         .window_section(windows, PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.machines.as_str())?), true, &snapshot.workshop.machines, |machine| {
             machine_row(machine, labels)
         })?
-        .interaction_domain(PROCESS_3D_PLAY_APP_ID, PROCESS3D_INTERACTION_DOMAIN)?;
+        .interaction_domain(PROCESS_3D_PLAY_CONTROLLER_ID, PROCESS3D_INTERACTION_DOMAIN)?;
     let installed_ids: std::collections::BTreeSet<&str> = snapshot.workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
     for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();

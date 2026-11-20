@@ -1,3 +1,4 @@
+import glob
 import hashlib
 import json
 import os
@@ -6,7 +7,7 @@ import stat
 import subprocess
 import sys
 
-OPAQUE = {"🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose"}
+OPAQUE = {"🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose", "pkg"}
 
 
 def canonical(value):
@@ -127,6 +128,20 @@ def ownership(root):
     return rows
 
 
+def workspace_members(root):
+    with open(os.path.join(root, "package.json"), encoding="utf-8") as stream:
+        declared = json.load(stream)["semio"]["workspace"]["members"]
+    found = set()
+    for pattern in declared:
+        for directory in glob.glob(os.path.join(root, pattern)):
+            relative = os.path.relpath(directory, root)
+            if any(part in OPAQUE or part.startswith(".") for part in relative.split(os.sep)):
+                continue
+            if os.path.isfile(os.path.join(directory, "package.json")):
+                found.add(relative.replace(os.sep, "/"))
+    return sorted(found, key=lambda name: name.encode("utf-8"))
+
+
 def manifests(root, names):
     listing = subprocess.run(["git", "-C", root, "ls-files", "-z", "--", *[":(glob)**/" + name for name in names]], capture_output=True, check=True).stdout
     offenders, count = [], 0
@@ -157,6 +172,8 @@ def main():
         print(json.dumps(expect(sys.argv[2])))
     elif command == "ownership":
         print(json.dumps(ownership(sys.argv[2])))
+    elif command == "workspace-members":
+        print(json.dumps(workspace_members(sys.argv[2])))
     elif command == "sha":
         print(hashlib.sha256(open(sys.argv[2], "rb").read()).hexdigest())
     elif command == "nlink":
@@ -164,7 +181,7 @@ def main():
     elif command == "manifests":
         print(json.dumps(manifests(sys.argv[2], sys.argv[3:])))
     else:
-        raise SystemExit("usage: incremental.oracle.py ledger ROOT START_MS | verify (stdin) | seal JSON | expect FIXTURE | ownership ROOT | sha FILE | nlink FILE | manifests ROOT NAME...")
+        raise SystemExit("usage: incremental.oracle.py ledger ROOT START_MS | verify (stdin) | seal JSON | expect FIXTURE | ownership ROOT | workspace-members ROOT | sha FILE | nlink FILE | manifests ROOT NAME...")
 
 
 main()

@@ -39,3 +39,6 @@ semio-framework-value-snapshot-projection = { path = "../../../../../../../🧰�
 [dev-dependencies]
 serde_json = "1"
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

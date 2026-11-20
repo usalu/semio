@@ -96,7 +96,7 @@ fn a_sweep_is_contained_in_the_storey_of_its_wall_and_has_the_material_of_its_re
 #[test]
 fn a_sweep_whose_host_wall_is_gone_is_skipped_with_a_note() {
     let mut model = attic();
-    model.walls.remove("w-rail");
+    model.walls.cold_remove("w-rail");
     let (document, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(!tags(&document, "IFCMEMBER").contains(&"ws-rail".to_string()));
     assert!(notes.iter().any(|note| note.contains("ws-rail")), "{notes:?}");

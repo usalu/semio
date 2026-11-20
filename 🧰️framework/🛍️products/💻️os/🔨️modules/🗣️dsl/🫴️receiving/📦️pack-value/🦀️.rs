@@ -1,10 +1,72 @@
-//! 📦️ Plain pack-value operations keep their document parser, decoded value and typed output across original native turns.
+//! 📦️ Pack-value operations keep their parser, decoded value and typed output across original native turns.
 use super::*;
+use crate::{protocol_record, tagged_value_binary};
 use semio_framework_value::{DslValue,FromValue};
+use semio_os_pack::format::{RetainedVarintCursor, RetainedVarintStep};
 use semio_os_pack::pack_rt::{renormalize_whole_number_floats,take_received_wire_value,wire_value_spec};
-/// 🧳️ Receives one stored `pack_rt` document in bounded steps, then binds its decoded value to the typed operation under an honest quote.
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+
+enum PackOperationTag {
+    Format,
+    Varint(RetainedVarintCursor),
+    Select { tag: u64, line: usize },
+    Selected(&'static str),
+}
+
+struct TaggedPackOperation {
+    protocol: &'static str,
+    tag: PackOperationTag,
+}
+
+impl TaggedPackOperation {
+    fn selected(&self) -> Option<&'static str> {
+        match self.tag {
+            PackOperationTag::Selected(kind) => Some(kind),
+            _ => None,
+        }
+    }
+
+    fn step(&mut self, source: &[u8], range: &mut (usize, usize)) -> Result<(), ValueError> {
+        match &mut self.tag {
+            PackOperationTag::Format => {
+                if range.0 == range.1 || source[range.0] != tagged_value_binary::OP_BINARY_FORMAT {
+                    return Err(invalid("original tagged pack operation format is invalid"));
+                }
+                range.0 += 1;
+                self.tag = PackOperationTag::Varint(RetainedVarintCursor::default());
+            }
+            PackOperationTag::Varint(cursor) => {
+                if range.0 == range.1 {
+                    return Err(invalid("original tagged pack operation tag is truncated"));
+                }
+                let step = cursor.admit(source[range.0], range.0 as u64)
+                    .map_err(|_| invalid("original tagged pack operation tag is noncanonical"))?;
+                range.0 += 1;
+                if let RetainedVarintStep::Complete(tag) = step {
+                    self.tag = PackOperationTag::Select { tag, line: 0 };
+                }
+            }
+            PackOperationTag::Select { tag, line } => {
+                let record = protocol_record::next_record_line(self.protocol, line)
+                    .ok_or_else(|| invalid("original tagged pack operation tag is not declared"))?;
+                if let Some((kind, record_tag)) = record {
+                    if record_tag == *tag {
+                        self.tag = PackOperationTag::Selected(kind);
+                    }
+                }
+            }
+            PackOperationTag::Selected(_) => return Err(ValueError::invariant("original tagged pack operation was already selected")),
+        }
+        Ok(())
+    }
+}
+
+/// 🧳️ Receives one complete pack document or tagged wire value across original turns before binding its typed operation.
 pub struct OriginalPackValueReceiving<M:FromValue+RetireOwned>{
- source:(usize,usize),range:(usize,usize),record:Option<RetainedRecordReceiving>,value:OwnedSlot<DslValue>,output:OwnedSlot<M>,phase:u8,closing:u8,closed:bool,failed:bool,
+ source:(usize,usize),range:(usize,usize),tagged:Option<TaggedPackOperation>,record:Option<RetainedRecordReceiving>,value:OwnedSlot<DslValue>,output:OwnedSlot<M>,phase:u8,closing:u8,closed:bool,failed:bool,
 }
 /// ⚖️ Retained bytes of one decoded value tree: every node header plus its string, byte and key payloads.
 pub fn decoded_value_retained_bytes(value:&DslValue)->usize{
@@ -27,19 +89,37 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    if range.0>range.1||range.1>source.len(){return Err(invalid("original pack value escaped its full source"))}
    if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
    work=1;
-   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,record:None,value:Default::default(),output:Default::default(),phase:0,closing:0,closed:false,failed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
+   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,tagged:None,record:None,value:Default::default(),output:Default::default(),phase:0,closing:0,closed:false,failed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
   })();
   RetainedWorkOutcome{result,work}
+ }
+ /// 🏷️ Preserves the full source and borrows the specification for an externally tagged wire value.
+ pub fn admit_tagged_key(source:&[u8],range:(usize,usize),protocol:&'static str,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+  let turn=Self::admit(source,range,grant);
+  RetainedWorkOutcome{result:turn.result.map(|admission|admission.map(|(mut receiving,progress)|{
+   receiving.tagged=Some(TaggedPackOperation{protocol,tag:PackOperationTag::Format});
+   (receiving,progress)
+  })),work:turn.work}
  }
  fn validate(&self,source:&[u8])->Result<(),ValueError>{if self.source!=(source.as_ptr()as usize,source.len()){return Err(invalid("original pack value source identity changed"))}Ok(())}
  fn demands_inner(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{
   self.validate(source)?;
   if self.closing!=0{return self.close_demand(body)}
   let mut demand=match self.phase{
-   0=>RetainedRecordReceiving::document_birth_demand(),
+   0=>match &self.tagged{
+    Some(tagged) if tagged.selected().is_none()=>metadata::<()>(),
+    Some(_)=>RetainedRecordReceiving::birth_demand(),
+    None=>RetainedRecordReceiving::document_birth_demand(),
+   },
    1=>{let record=self.record.as_ref().ok_or_else(||ValueError::invariant("original pack value record is absent"))?;if record.is_ready(){metadata::<DslValue>()}else{record.demands(source)?}},
    2=>metadata::<DslValue>(),
-   3=>pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?),
+   3=>{
+    let mut quote=pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?);
+    if let Some(kind)=self.tagged.as_ref().and_then(TaggedPackOperation::selected){
+     quote.copy_bytes=quote.copy_bytes.saturating_add(size_of::<(String,DslValue)>()).saturating_add(kind.len());
+    }
+    quote
+   },
    _=>RetirementDemand{depth:1,..Default::default()},
   };
   demand.depth+=1;
@@ -50,7 +130,22 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
   if self.failed||self.phase>=4||self.closing!=0||!funded(grant,demand){return Ok(Default::default())}
   let child=grant_child(grant);
   match self.phase{
-   0=>{let turn=RetainedRecordReceiving::admit_document(source,(self.range.0,self.range.1),wire_value_spec(),semio_os_pack::PackLimits::default(),child);perform(effect,turn.work)?;Ok(match turn.result?{Some((owner,progress))=>{self.record=Some(owner);self.phase=1;progress},None=>Default::default()})},
+   0=>{
+    let limits=semio_os_pack::PackLimits::default();
+    let turn=if let Some(tagged)=self.tagged.as_mut(){
+     if tagged.selected().is_none(){
+      native.checkpoint()?;
+      perform(effect,1)?;
+      tagged.step(source,&mut self.range)?;
+      return Ok(receipt(demand));
+     }
+     RetainedRecordReceiving::admit(source,self.range,wire_value_spec(),limits,child)
+    }else{
+     RetainedRecordReceiving::admit_document(source,self.range,wire_value_spec(),limits,child)
+    };
+    perform(effect,turn.work)?;
+    Ok(match turn.result?{Some((owner,progress))=>{self.record=Some(owner);self.phase=1;progress},None=>Default::default()})
+   },
    1=>{
     let record=self.record.as_mut().ok_or_else(||ValueError::invariant("original pack value record is absent"))?;
     if record.is_ready(){self.phase=2;perform(effect,1)?;return Ok(receipt(demand))}
@@ -60,7 +155,11 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    _=>{
     perform(effect,1)?;
     let value=self.value.value.take().ok_or_else(||ValueError::invariant("original pack value is absent"))?;
-    let converted=M::from_value(renormalize_whole_number_floats(value)).map_err(|error|error.with_retained_progress(receipt(demand)))?;
+    let prepared=match self.tagged.as_ref().and_then(TaggedPackOperation::selected){
+     Some(kind)=>tagged_value_binary::key_payload(kind,value),
+     None=>renormalize_whole_number_floats(value),
+    };
+    let converted=M::from_value(prepared).map_err(|error|error.with_retained_progress(receipt(demand)))?;
     *self.output.value=Some(converted);self.phase=4;
     Ok(receipt(demand))
    },
@@ -134,12 +233,16 @@ impl<M:FromValue+RetireOwned> RetirementCursor for PackValueRetirement<M>{
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 impl<M:FromValue+RetireOwned> Drop for PackValueRetirement<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.0.closed,"original pack value retirement lost its retained fields");if self.0.closed{unsafe{ManuallyDrop::drop(&mut self.0)}}}}
-/// 📦️ Implements a plain `ToValue`/`FromValue` pack-document operation through its actual bounded pack-value receiving capability.
+/// 📦️ Implements an operation encoded as a pack document or an externally tagged pack wire value.
 #[macro_export]
 macro_rules! original_pack_value_operation_receiving{
- ($operation:ty)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
+ ($operation:ty $(, tagged_key = $protocol:expr)?)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
   type DomainFailure=$crate::original_receiving::ValueError;
   type Receiving=$crate::original_receiving::OriginalPackValueReceiving<Self>;
-  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->$crate::original_receiving::RetainedWorkOutcome<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>>{$crate::original_receiving::OriginalPackValueReceiving::admit(source,range,grant)}
+  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->$crate::original_receiving::RetainedWorkOutcome<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>>{
+   $crate::original_pack_value_operation_receiving!(@admit Self::Receiving, source, range, grant $(, $protocol)?)
+  }
  }};
+ (@admit $receiving:ty, $source:expr, $range:expr, $grant:expr)=>{<$receiving>::admit($source,$range,$grant)};
+ (@admit $receiving:ty, $source:expr, $range:expr, $grant:expr, $protocol:expr)=>{<$receiving>::admit_tagged_key($source,$range,$protocol,$grant)};
 }

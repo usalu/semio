@@ -66,21 +66,37 @@ fn engine_packet_close_retains_opaque_scene_until_exact_terminal_release() {
     let id = EngineSurfaceId::try_from_str("packet-retirement").expect("bounded packet identity");
     let snapshot = EngineSurfaceSnapshot { identity: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 5, generation: 7 }, id }, metrics_generation: 11 };
     let mut context = EngineCanvasBuildContext::new(13, 17);
-    let reservation = context.try_reserve_fresh_packet(snapshot).expect("fixed packet retirement authority");
-    let mut scene = canvas::Scene::new();
-    for _ in 0..128 {
-        scene.pop_layer();
-    }
-    context.publish_reserved(reservation, scene, Color::new([0.0, 0.0, 0.0, 1.0]), 640, 480);
-    let mut packet = context.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("published packet");
-    assert!(!close_engine_canvas_packet_step(&mut packet));
-    let mut turns = 1usize;
-    while !close_engine_canvas_packet_step(&mut packet) {
-        turns += 1;
-        assert!(turns < 512, "packet-retained scene reaches exact terminal release");
-    }
-    assert!(turns > 128);
-    assert!(packet.terminal_is_empty());
+    semio_renderer_wgpu_engine_registry::fixtures::with_engine_close_caller(512, |caller, grant| {
+        let mut prepared = false;
+        for _ in 0..64 {
+            prepared = caller.bare_turn(grant, |cx| context.prepare_step(cx)).unwrap();
+            if prepared { break; }
+        }
+        assert!(prepared);
+        let reservation = context.try_reserve_fresh_packet(snapshot).expect("fixed packet retirement authority");
+        let mut scene = canvas::Scene::new();
+        for _ in 0..128 {
+            scene.pop_layer();
+        }
+        context.publish_reserved(reservation, scene, Color::new([0.0, 0.0, 0.0, 1.0]), 640, 480);
+        let mut packet = context.take_packet_step().unwrap_or_else(|_| panic!("ready packet destination")).expect("published packet");
+        let mut denied = grant;
+        denied.maximum_items = 0;
+        assert_eq!(caller.bare_turn(denied, |cx| packet.close_step(cx)).unwrap().progress(), Default::default());
+        assert!(!packet.terminal_is_empty());
+        let mut turns = 0;
+        while !packet.terminal_is_empty() {
+            caller.bare_turn(grant, |cx| packet.close_step(cx)).unwrap();
+            turns += 1;
+            assert!(turns < 512, "packet-retained scene reaches exact terminal release");
+        }
+        assert!(turns > 128);
+        for _ in 0..64 {
+            if context.terminal_is_empty() { break; }
+            caller.bare_turn(grant, |cx| context.close_step(cx)).unwrap();
+        }
+        assert!(context.terminal_is_empty());
+    });
 }
 
 #[cfg(test)]

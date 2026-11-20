@@ -57,6 +57,24 @@ fn shooting_semantic_panels_match_the_json_oracle() {
         let node = render(&snapshot, &cfg, labels).expect("shot inspector");
         let fields = &node.children[0].children;
         let bindings: Vec<serde_json::Value> = [0, 3, 4].into_iter().map(|i| serde_json::to_value(&fields[i].children[0].bindings[0]).expect("independent binding oracle")).collect();
+        for (section, key) in [(1, "projectionFields"), (2, "drawingFields")] {
+            let actual: Vec<_> = node.children[section].children.iter().map(|row| {
+                let binding = serde_json::to_value(&row.children[0].bindings[0]).expect("field action");
+                assert_eq!(binding["args"]["shotIds"][0], snapshot.active_shot_id);
+                let field = &binding["args"]["field"];
+                let checks = &vectors["numericLimits"][field.as_str().expect("field name")];
+                if let semio_plugin::Component::Input(props) = &row.children[0].component {
+                    for (key, refused) in [("allow", false), ("refuse", true)] {
+                        for value in checks[key].as_array().into_iter().flatten() {
+                            let bound = props.limits.as_ref().expect("hard numeric bounds");
+                            assert_eq!(bound.crossed(value.as_f64().unwrap()).is_some(), refused, "{field}: {value}");
+                        }
+                    }
+                }
+                field.clone()
+            }).collect();
+            assert_eq!(serde_json::Value::Array(actual), vectors[key]);
+        }
         let tree = project(node);
         assert_eq!(tree["children"][0]["component"]["label"], row["shot"]);
         let fields = tree["children"][0]["children"].as_array().expect("shot fields");
@@ -64,7 +82,7 @@ fn shooting_semantic_panels_match_the_json_oracle() {
         for (index, binding) in bindings.iter().enumerate() {
             assert_eq!(binding["args"]["field"], vectors["editableFields"][index]);
             assert_eq!(binding["args"]["shotIds"][0], snapshot.active_shot_id);
-            assert_eq!(binding["trigger"], "change");
+            assert_eq!(binding["trigger"], "commit");
         }
     }
     for node in [crate::editor::shooting::modes::edit::windows::scene::render(&snapshot, &cfg, "select").expect("editor scene"), crate::viewer::shooting::modes::view::windows::scene::render(&snapshot).expect("viewer scene")] {

@@ -19,7 +19,7 @@ use semio_s_artifact_draw_drawing_structure::import_image_asset::mutation::Impor
 use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::RemoveImageAsset;
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree,semio_framework_value::NativeReceive)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, dsl::Mutations, semio_framework_value::CanonicalJsonTree,semio_framework_value::NativeReceive)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -305,8 +305,6 @@ pub type Construction = semio_plugin::app::SnapshotBuilder<DrawingSnapshot, Draw
 //#region 🪢️TaxonomyMounts
 #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
 pub mod binary;
-#[path = "../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🦀️.rs"]
-pub mod rename_prepare;
 #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
 pub mod text;
 //#endregion 🪢️TaxonomyMounts

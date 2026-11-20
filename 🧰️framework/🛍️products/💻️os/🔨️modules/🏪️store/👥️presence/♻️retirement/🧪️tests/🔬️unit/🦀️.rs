@@ -98,8 +98,6 @@ impl CountedPresence for Value { fn counted(self) -> bool { self.0 != 0 } }
 
 fn capture_clock() -> Option<u64> { Some(1000) }
 
-use semio_framework_job_worker::OriginalWorkerFixtureCaller;
-
 struct CapturedLocalJob {
     read: Option<ControlledRetirement<SnapshotRead<Value>>>,
     closing: bool,
@@ -131,17 +129,21 @@ impl semio_framework_job::InteractiveJob for CapturedLocalJob {
 fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["localCapture"];
-    assert_eq!(law["wholeCleanupPolicy"]["clockUs"],1000);
+    let policy = &law["wholeCleanupPolicy"];
+    assert_eq!(policy["clockUs"].as_u64(), capture_clock());
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["value"].as_i64().unwrap() as i32));
     assert!(owner.local_read().is_err());
     owner.install_local_retirement_factory(factory).unwrap();
     let job = CapturedLocalJob { read: Some(ControlledRetirement::new(owner.local_read().unwrap()).unwrap_or_else(|_| panic!("original controlled read"))), closing: false };
-    let stock = RetainedCloneGrant { maximum_items: 20000, maximum_copy_bytes: 16777216, maximum_capacity_bytes: 16777216, maximum_release_bytes: 16777216, maximum_depth: 128 };
+    let stock: RetainedCloneGrant = serde_json::from_value(policy["grant"].clone()).unwrap();
     let operation = semio_framework_job::allocate_operation_id();
     let generation = semio_framework_job::Generation(0);
-    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation, generation, stock, capture_clock, u64::MAX, 20000);
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(
+        operation, generation, stock, capture_clock,
+        policy["deadlineUs"].as_u64().unwrap(), policy["fuel"].as_u64().unwrap(),
+    );
     let cancel = caller.admit_alias(CLOSE_GRANT);
     let params = semio_framework_job_worker_authority::BatchJobParams {
         operation,
@@ -197,7 +199,8 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
             observed_worker_page = true;
         }
         let witnessed = session.has_original_cancel_alias_witness(&cancel).unwrap();
-        let step = caller.close_owner(CLOSE_GRANT, &mut session).unwrap();
+        let step = caller.turn(CLOSE_GRANT, |cx| session.close_step(cx)).unwrap();
+        assert_eq!(caller.receipt(), step.progress());
         assert!(step.progress().fits(CLOSE_GRANT));
         if witnessed && !session.has_original_cancel_alias_witness(&cancel).unwrap() { cancel_handbacks += 1; }
         observed_step(CLOSE_GRANT, || semio_framework_value::RetainedWorkOutcome { result: owner.maintenance_local_reads_step(CLOSE_GRANT), work: 1 });

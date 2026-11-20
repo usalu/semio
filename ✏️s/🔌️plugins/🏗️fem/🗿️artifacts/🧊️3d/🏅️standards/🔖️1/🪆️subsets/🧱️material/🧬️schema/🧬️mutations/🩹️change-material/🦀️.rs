@@ -1,6 +1,6 @@
 //! 🩹️ Material field intent whose replay and inverse preserve independently authored properties.
 
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dMaterialPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dMaterialPatch;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use protocol::MutationKind;
@@ -20,16 +20,16 @@ pub struct ChangeMaterial {
     pub patch: Fem3dMaterialPatch,
 }
 
-impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeMaterial where Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeMaterial> {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeMaterial where Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeMaterial> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "material", kind: "change-material", record: "ChangedMaterial" };
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
         semio_ui_locale::LocalizedLabel::native(&format!("Change material \"{}\"", self.id), &format!("Material \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }
-impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeMaterial where Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeMaterial> {
+impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeMaterial where Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeMaterial> {
 
-    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
 

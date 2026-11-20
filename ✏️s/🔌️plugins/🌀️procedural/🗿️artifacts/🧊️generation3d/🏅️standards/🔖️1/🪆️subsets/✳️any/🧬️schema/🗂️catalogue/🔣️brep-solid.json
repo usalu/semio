@@ -22,23 +22,25 @@
         "de": "Kantenzug extrudieren"
       },
       "description": {
-        "en": "Extrudes a closed planar wire into a solid along a vector that leaves the wire's plane.",
-        "de": "Extrudiert einen geschlossenen ebenen Kantenzug entlang eines Vektors, der die Ebene des Kantenzugs verlässt, zu einem Körper."
+        "en": "Extrudes a closed planar boundary into a solid along a vector that leaves the boundary plane.",
+        "de": "Extrudiert eine geschlossene ebene Begrenzung entlang eines Vektors, der ihre Ebene verlässt, zu einem Körper."
       },
       "inputs": [
         {
           "name": "wire",
           "label": {
-            "en": "Wire",
-            "de": "Kantenzug"
+            "en": "Boundary",
+            "de": "Begrenzung"
           },
           "description": {
-            "en": "The closed wire to extrude.",
-            "de": "Der zu extrudierende geschlossene Kantenzug."
+            "en": "The closed wire, curve, or edge to extrude.",
+            "de": "Der geschlossene Kantenzug, die geschlossene Kurve oder Kante zum Extrudieren."
           },
           "type": "shape",
           "shapeKinds": [
-            "wire"
+            "wire",
+            "curve",
+            "edge"
           ]
         },
         {

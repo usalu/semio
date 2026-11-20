@@ -49,6 +49,21 @@ export interface IconRenderTransform {
   readonly scale:readonly [number,number,number];
 }
 
+export interface IconRenderDrawing {
+  readonly background?: boolean;
+  readonly fill?: boolean;
+  readonly fillColor?: string;
+  readonly fillOpacity?: number;
+  readonly visibleLines?: boolean;
+  readonly hiddenLines?: boolean;
+  readonly visibleColor?: string;
+  readonly hiddenColor?: string;
+  readonly visibleWidth?: number;
+  readonly hiddenWidth?: number;
+  readonly lineEasing?: number;
+  readonly mergeLines?: boolean;
+}
+
 export interface IconRenderRequest {
   readonly assetUrl: string;
   readonly transform?:IconRenderTransform;
@@ -61,6 +76,7 @@ export interface IconRenderRequest {
   readonly shape?: IconRenderShape;
   readonly background?: string;
   readonly shadowEnabled?: boolean;
+  readonly drawing?: IconRenderDrawing;
   readonly material?: IconRenderMaterial;
 }
 
@@ -70,5 +86,5 @@ export interface IconRenderResult {
 }
 
 export interface IconRenderPort {
-  render(request: IconRenderRequest): Promise<IconRenderResult>;
+  render(request: IconRenderRequest, signal?: AbortSignal): Promise<IconRenderResult>;
 }

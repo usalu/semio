@@ -4,14 +4,14 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { revisionOfText } from "@teaching/staffage";
+import { revisionOfText, validateAsset } from "@teaching/staffage";
 import { staffageAssetPayload, staffageAssetVitePlugin } from "../../🌐️vite/🟦️.ts";
 
 const catalog = resolve(import.meta.dirname, "../../../../🗂️catalog");
 const assetFiles = readdirSync(catalog, { withFileTypes: true }).flatMap((group) => (group.isDirectory() ? readdirSync(resolve(catalog, group.name), { withFileTypes: true }).filter((item) => item.isDirectory()).map((item) => resolve(catalog, group.name, item.name, "🔣️.json")) : []));
-const file = assetFiles[0]!;
+const file = assetFiles.find(path => basename(dirname(path)) === "toaster")!;
 const slug = basename(dirname(file));
-const served = import.meta.glob<{ revision: string; json: string }>("../../../../🗂️catalog/*/*/🔣️.json", { query: "?staffage-asset", import: "default" });
+const served = import.meta.glob<ReturnType<typeof staffageAssetPayload>>("../../../../🗂️catalog/*/*/🔣️.json", { query: "?staffage-asset", import: "default" });
 
 describe("catalog payload", () => {
   it("ships the revision of the authored text", () => {
@@ -35,6 +35,7 @@ describe("catalog payload", () => {
     const payload = staffageAssetPayload(file);
     expect(module.revision).toBe(payload.revision);
     expect(module.json).toBe(payload.json);
+    expect(module.issues).toEqual(validateAsset(JSON.parse(payload.json)));
   });
 
   it("watches the asset file behind the served module", () => {

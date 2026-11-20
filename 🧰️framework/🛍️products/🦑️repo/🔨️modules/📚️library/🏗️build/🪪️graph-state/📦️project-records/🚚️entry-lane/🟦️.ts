@@ -30,9 +30,9 @@ export function closureEntryStateV1(input:Readonly<{root:string;recipe:unknown;p
 
 /** 🚚️ The fleet lane of closure entries of one process: take an entry another machine derived (claiming its derivation when nobody did, waiting for the holder when somebody did), offer an entry this machine derived, and take a batch before any derivation. Every fault ends in "derive here". */
 export type ClosureEntryLaneV1=Readonly<{
- take(recipe:unknown,travel:ClosureEntryTravelV1):Promise<Readonly<{outcome:"taken"}|{outcome:"compute";hold:GraphHoldV1|undefined}>>;
+ take(recipe:unknown,travel:ClosureEntryTravelV1,signal?:AbortSignal):Promise<Readonly<{outcome:"taken"}|{outcome:"compute";hold:GraphHoldV1|undefined}>>;
  offer(recipe:unknown,travel:ClosureEntryTravelV1,hold?:GraphHoldV1):Promise<boolean>;
- prefetch(recipes:readonly unknown[],travel:ClosureEntryTravelV1):Promise<number>;
+ prefetch(recipes:readonly unknown[],travel:ClosureEntryTravelV1,signal?:AbortSignal):Promise<number>;
  flush():Promise<string>;
  stats():Readonly<Record<"fetched"|"prefetched"|"computed"|"published"|"refused"|"missed"|"imported",number>>;
 }>;
@@ -50,18 +50,21 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
  const scopeOf=():Scope=>({held:new Map(),claims:new Map()});
  const releaseOf=async(scope:Scope,names:Iterable<string>=[...scope.claims.keys()])=>{for(const name of names){const release=scope.claims.get(name);if(release===undefined)continue;scope.claims.delete(name);await release().catch(()=>undefined);}};
  const pause=(milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds));
- const heldOf=(travel:ClosureEntryTravelV1,scope:Scope)=>async(entry:Readonly<{path:string;hash:string}>)=>{
+ const heldOf=(travel:ClosureEntryTravelV1,scope:Scope,signal?:AbortSignal)=>async(entry:Readonly<{path:string;hash:string}>)=>{
   const named=DOCUMENT.exec(entry.path);
   if(named===null||travel.held===undefined)return false;
   const neutral=named[1]!;
   if(scope.claims.has(neutral))return false;
   try{
+   signal?.throwIfAborted();
    let local=await travel.held(input.root,entry.hash,neutral,policy.refusedMilliseconds);
+   signal?.throwIfAborted();
    if(local===undefined&&travel.claim!==undefined){
     const release=await travel.claim(input.root,neutral,policy.claimStaleMilliseconds);
     if(release!==undefined){scope.claims.set(neutral,release);return false;}
     const until=Date.now()+policy.claimWaitMilliseconds;
-    while(travel.claimed!==undefined&&Date.now()<until&&await travel.claimed(input.root,neutral))await pause(150);
+    while(travel.claimed!==undefined&&Date.now()<until&&await travel.claimed(input.root,neutral)){signal?.throwIfAborted();await pause(150);}
+    signal?.throwIfAborted();
     local=await travel.held(input.root,entry.hash,neutral,policy.refusedMilliseconds);
    }
    if(local===undefined)return false;
@@ -85,11 +88,12 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
  let queue:Promise<unknown>=Promise.resolve();
  const serial=<T>(work:()=>Promise<T>):Promise<T>=>{const run=queue.then(work,work);queue=run.catch(()=>undefined);return run;};
  const closureName=(name:string)=>name.startsWith("closure-");
- const intake=(deferred:ReadonlyMap<string,GraphDeferredV1>,travel:ClosureEntryTravelV1,scope:Scope)=>serial(async()=>{
+ const intake=(deferred:ReadonlyMap<string,GraphDeferredV1>,travel:ClosureEntryTravelV1,scope:Scope,signal?:AbortSignal)=>serial(async()=>{
   const names=[...deferred.keys()].filter(closureName).sort();
   try{
    const found=new Map<string,string>(scope.held);let any=false,owned=false;
    for(const name of names){
+    signal?.throwIfAborted();
     const document=await deferred.get(name)!.read({keep:true});if(document===undefined)continue;
     const head=closureDocumentHeadV1(document.bytes);if(head===undefined)continue;
     any=true;owned||=head.owned;
@@ -100,6 +104,7 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
    let taken=0;
    for(const name of names){
     try{
+     signal?.throwIfAborted();
      const waiting=deferred.get(name)!,document=await waiting.read();if(document===undefined)continue;
      const entry=unpackOf(document);if(entry===undefined)continue;
      const moved=localBundleV1(entry,host,found,context),source=waiting.hash;
@@ -111,14 +116,19 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
  });
  const forEach=async<T>(items:readonly T[],width:number,work:(item:T)=>Promise<void>)=>{let next=0;await Promise.all(Array.from({length:Math.max(1,Math.min(width,items.length))},async()=>{while(next<items.length)await work(items[next++]!);}));};
  return Object.freeze({
-  async take(recipe,travel){
+  async take(recipe,travel,signal){
    const scope=scopeOf();
+    let taken=false,hold:GraphHoldV1|undefined;
    try{
-    const decision=await decideGraphEntryV1({client,state:stateOf(recipe),owner,expectedMilliseconds:policy.expectedMilliseconds,waitLimitMilliseconds:Math.max(1,Math.min(policy.waitMilliseconds,policy.waitBudgetMilliseconds-waitedMilliseconds)),skip:heldOf(travel,scope),defer:closureName});
+     signal?.throwIfAborted();
+     const decision=await decideGraphEntryV1({client,state:stateOf(recipe),owner,signal,expectedMilliseconds:policy.expectedMilliseconds,waitLimitMilliseconds:Math.max(1,Math.min(policy.waitMilliseconds,policy.waitBudgetMilliseconds-waitedMilliseconds)),skip:heldOf(travel,scope,signal),defer:closureName});
     waitedMilliseconds+=decision.waitedMs;
-    if(decision.outcome==="hit"){await intake(decision.deferred,travel,scope);counts.fetched++;return{outcome:"taken"} as const;}
-    counts.computed++;return{outcome:"compute",hold:decision.hold} as const;
-   }catch{counts.computed++;return{outcome:"compute",hold:undefined} as const;}finally{await releaseOf(scope);}
+     if(decision.outcome==="hit"){await intake(decision.deferred,travel,scope,signal);taken=true;}
+     else hold=decision.hold;
+    }catch{signal?.throwIfAborted();}finally{await releaseOf(scope);}
+    if(signal?.aborted){await hold?.release().catch(()=>undefined);signal.throwIfAborted();}
+    if(taken){counts.fetched++;return{outcome:"taken"} as const;}
+    counts.computed++;return{outcome:"compute",hold} as const;
   },
   async offer(recipe,travel,hold){
    try{
@@ -133,16 +143,18 @@ export function createClosureEntryLaneV1(input:Readonly<{root:string;environment
     })());
    }catch{await hold?.release().catch(()=>undefined);counts.refused++;return false;}
   },
-  async prefetch(recipes,travel){
+  async prefetch(recipes,travel,signal){
    let taken=0;
    await forEach(recipes,policy.fetchConcurrency,async recipe=>{
+    if(signal?.aborted)return;
     const scope=scopeOf();
     try{
-     const found=await fetchGraphEntryV1(client,stateOf(recipe),heldOf(travel,scope),closureName);
+     const found=await fetchGraphEntryV1(client,stateOf(recipe),heldOf(travel,scope,signal),closureName,signal);
      if(found===undefined||found==="fault"){counts.missed++;return;}
-     if(await intake(found.deferred,travel,scope)>0){taken++;counts.prefetched++;}
-    }catch{counts.missed++;}finally{await releaseOf(scope);}
+     if(await intake(found.deferred,travel,scope,signal)>0){taken++;counts.prefetched++;}
+    }catch{if(!signal?.aborted)counts.missed++;}finally{await releaseOf(scope);}
    });
+   signal?.throwIfAborted();
    return taken;
   },
   async flush(){await Promise.allSettled([...pending]);const texts=schema.definitions.Texts.const;return(["en","de"] as const).map(language=>texts[language].summary.replace(/\{(\w+)\}/gu,(_all,name:string)=>String((counts as Record<string,number>)[name]??0))).join(" | ");},

@@ -678,6 +678,20 @@ export function world3dInstanceInteractionTargets(instances: readonly WorldInsta
   return targets;
 }
 
+/** 🎯️ Resolves a line-segment raycast through the displayed mesh's edge identifiers. */
+export function world3dLinePick(
+  edgeIds: ArrayLike<number> | undefined,
+  vertexIndex: number | undefined,
+  edges: boolean,
+  whole: boolean,
+): { readonly mode: "edge"; readonly id: number } | { readonly mode: "object" } | undefined {
+  if (edges && vertexIndex !== undefined && Number.isInteger(vertexIndex) && vertexIndex >= 0) {
+    const id = edgeIds?.[Math.floor(vertexIndex / 2)];
+    if (id !== undefined && Number.isInteger(id) && id >= 0) return { mode: "edge", id };
+  }
+  return whole ? { mode: "object" } : undefined;
+}
+
 /** 🎯️ The interaction target of one mesh COMPONENT (face/edge/vertex) of a rendered instance under a
  * domain: `<objectInteractionId>.<granularity>.<componentId>`, the object's own target id extended by the
  * component address (the lowpoly "mesh" domain's `lowpoly-document.<objectId>.<granularity>.<id>` rows). */

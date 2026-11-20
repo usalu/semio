@@ -25,17 +25,13 @@ fn the_default_pane_looks_through_an_unzoomed_camera_with_nothing_armed() {
 #[test]
 fn every_config_operation_inverts_back_to_the_prior_pane_state() {
     let base = Wfc3dConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 3.0, active_tile_id: "room".into() };
-    let operations = vec![
-        Wfc3dConfigMutation::ChangeCamera(ChangeCamera { x: 9.0, y: 8.0, zoom: 7.0 }),
-        Wfc3dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: "corridor".into() }),
-        Wfc3dConfigMutation::ReplaceConfig(ReplaceConfig { config: Wfc3dConfig::default() }),
+    let cases = vec![
+        (Wfc3dConfigMutation::ChangeCamera(ChangeCamera { x: 9.0, y: 8.0, zoom: 7.0 }), Wfc3dConfigMutation::ChangeCamera(ChangeCamera { x: 1.0, y: 2.0, zoom: 3.0 })),
+        (Wfc3dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: "corridor".into() }), Wfc3dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: "room".into() })),
+        (Wfc3dConfigMutation::ReplaceConfig(ReplaceConfig { config: Wfc3dConfig::default() }), Wfc3dConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })),
     ];
-    for operation in operations {
-        let mut restored = operation.diff(&base).diff().clone();
-        for back in operation.inverse(&base).expect("valid retained mutation inverse fixture") {
-            restored = back.diff(&restored).diff().clone();
-        }
-        assert_eq!(restored, base, "{operation:?} must invert exactly");
+    for (operation, expected) in cases {
+        assert_eq!(operation.inverse(&base).expect("valid retained mutation inverse fixture"), vec![expected], "{operation:?} must invert exactly");
     }
 }
 

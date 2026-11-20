@@ -6,13 +6,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { sharedBorderlessBoxProps, useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { isInsideActiveScopedDialogIsolation, useDialogLayer } from "../💬️Dialog/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
+import { formControlResetClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
@@ -421,13 +421,14 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(fu
       data-slot="select-trigger"
       data-shared-border-frame=""
       data-shared-border-edges="top right bottom left"
+      data-shared-border-state={context.open ? "active" : undefined}
       data-detail-panel-control="fill"
       data-size={size}
       data-level={level}
       data-state={context.open ? "open" : "closed"}
       data-placeholder={context.selectedContent === undefined ? "" : undefined}
       className={cn(
-        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
+        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlResetClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         interactiveHoverClass,
         className,
       )}
@@ -777,6 +778,7 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(function Se
     <div
       {...props}
       ref={forwardedRef}
+      {...sharedBorderlessBoxProps}
       id={itemId}
       role="option"
       aria-selected={selected}

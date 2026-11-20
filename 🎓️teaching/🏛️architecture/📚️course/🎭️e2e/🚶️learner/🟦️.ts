@@ -372,7 +372,7 @@ export type Identity = { readonly kind: "anonymous" } | { readonly kind: "pseudo
 
 /** 🚪️ Opens the site on a device that has never been there: the introduction shows (within `timeout`, which a cold dev
  * server needs more of). */
-export async function arrive(device: Device, timeout?: number): Promise<void> {
+export async function arrive(device: Pick<Device, "page">, timeout?: number): Promise<void> {
   await device.page.goto("/");
   await expect(screen(device.page, "introduction")).toBeVisible({ timeout });
 }
@@ -487,8 +487,14 @@ export async function shownTask(device: Device): Promise<string> {
   return ((await screen(device.page, "task").getAttribute("data-presence-anchor")) ?? "").replace(/^task:/u, "");
 }
 
+/** ⏳️ Waits until the task on screen shows all of its items: they arrive in chunks, and a list that waits for more says so with `aria-busy`. */
+export async function itemsSettled(device: Device): Promise<void> {
+  await expect(screen(device.page, "task").locator('[aria-busy="true"]')).toHaveCount(0);
+}
+
 /** 🧺️ The items of the task on screen, by id, in the order they are shown. */
 export async function shownItems(device: Device): Promise<readonly string[]> {
+  await itemsSettled(device);
   const task = screen(device.page, "task");
   const ids = await task.locator("[data-course-item]").evaluateAll((elements) => elements.map((element) => (element as HTMLElement).dataset.courseItem ?? ""));
   if (ids.length > 0) return ids;
@@ -543,6 +549,7 @@ export async function guessMatching(device: Device, dimension: number, item: str
 
 /** 🗝️ Whether the task on screen hides its keys: a sorting or matching that asks for typed guesses. */
 export async function keysHidden(device: Device): Promise<boolean> {
+  await itemsSettled(device);
   const task = screen(device.page, "task");
   return (await task.locator('[data-course-item] input, section[data-keys="hidden"]').count()) > 0;
 }
@@ -556,6 +563,7 @@ export interface ShownHint {
 /** 💡️ The hints shown in the task on screen, by the item each stands beside (`""` for one beside no item; a matching
  * shows one per item and dimension, so ask it while a single dimension carries hints). */
 export async function shownHints(device: Device): Promise<Readonly<Record<string, ShownHint>>> {
+  await itemsSettled(device);
   return screen(device.page, "task")
     .locator("[data-hint]")
     .evaluateAll((elements) =>
@@ -583,6 +591,7 @@ export function quoted(label: string, locale: Locale): string {
 
 /** 📐️ Where every item of the task on screen lies, by item id: its box in whole viewport pixels (x, y, width, height). */
 export async function itemBoxes(device: Device): Promise<Readonly<Record<string, readonly number[]>>> {
+  await itemsSettled(device);
   return screen(device.page, "task")
     .locator("[data-course-item]")
     .evaluateAll((elements) =>
@@ -628,6 +637,7 @@ export async function dragInto(device: Device, item: string, category: string): 
 
 /** ↕️ The items of the sorting on screen, by id, from the smallest place to the largest. */
 export async function sortedItems(device: Device): Promise<readonly string[]> {
+  await itemsSettled(device);
   return screen(device.page, "task")
     .locator("ol > [data-course-item]")
     .evaluateAll((elements) => elements.map((element) => (element as HTMLElement).dataset.courseItem ?? ""));

@@ -120,7 +120,7 @@ export async function runBuildCliV1(root:string,typed:readonly string[],environm
   const{withBuildCapacityV1}=await profilePhaseV1("door.load",()=>import("./🌡️host-capacity/🟦️.ts"));
   const{withImplementationPinV1}=await import("./📥️inputs/🔏️revision/🟨️.mjs");
   const plannedByService=await(async()=>{try{return(await(await import("./🧭️invocation/🛰️plan/🟦️.ts")).invocationPlanRequestV1(root,args.slice(prefix),environment))!==undefined;}catch{return false;}})();
-  await profilePhaseV1("door.capacity",()=>withBuildCapacityV1(args.slice(prefix),environment,async granted=>{(await import("./🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs")).useCapacityGrantV1(()=>({handle:granted.handle,limit:granted.limit}));return profilePhaseV1("door.admitted",()=>withImplementationPinV1(()=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment)));},{plannedByService}));
+  await profilePhaseV1("door.capacity",()=>withBuildCapacityV1(args.slice(prefix),environment,async granted=>{(await import("./🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs")).useCapacityGrantV1(()=>({handle:granted.handle,limit:granted.limit}));return profilePhaseV1("door.admitted",()=>withImplementationPinV1(()=>runAdmittedBuildCliV1(root,[...args.slice(0,prefix),...granted.args],environment)));},{plannedByService,repositoryRoot:root}));
 }
 
 /** 🌡️ Creates the original script envelope and runs the CLI once the machine has admitted the invocation, so its budget starts with the grant and not with the queue. */

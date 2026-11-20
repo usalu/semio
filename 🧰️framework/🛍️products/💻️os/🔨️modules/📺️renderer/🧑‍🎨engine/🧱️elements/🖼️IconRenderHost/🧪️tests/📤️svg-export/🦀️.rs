@@ -218,3 +218,39 @@ fn svg_export_applies_subject_transform_before_projection() {
         for (actual, expected) in actual.iter().zip(expected) { assert!((actual - expected).abs() < 1e-3, "fit={fit}"); }
     }
 }
+
+#[test]
+fn svg_drawing_layers_and_line_options_match_neutral_fixture() {
+    let fixture = fixture();
+    for (index, case) in fixture["drawingCases"].as_array().unwrap().iter().enumerate() {
+        let mut request: serde_json::Value = serde_json::from_str(&request(&fixture)).unwrap();
+        request["drawing"] = case["drawing"].clone();
+        if case["background"].is_string() { request["background"] = case["background"].clone(); }
+        let mut export = IconSvgExport::new(&request.to_string(), asset(0x5356_4710 + index as u64, &fixture)).expect("SVG export");
+        let mut steps = 0;
+        while !export.advance().expect("SVG step") {
+            steps += 1;
+            assert!(steps < 256, "{}", case["name"]);
+        }
+        let markup = String::from_utf8(export.take_svg().unwrap()).unwrap();
+        let groups = markup.match_indices("<g id=\"").map(|(start, _)| markup[start + 7..].split('"').next().unwrap()).collect::<Vec<_>>();
+        let expected = case["groups"].as_array().unwrap().iter().map(|name| name.as_str().unwrap()).collect::<Vec<_>>();
+        assert_eq!(groups, expected, "{}", case["name"]);
+        if let Some(opacity) = case["backgroundOpacity"].as_str() {
+            assert!(markup.contains(&format!("fill=\"rgb(16,32,48)\" fill-opacity=\"{opacity}\"")), "{}", case["name"]);
+        }
+        if let Some(fill) = case["fill"].as_str() {
+            assert!(markup.contains(&format!("fill:{fill};fill-opacity:1")), "{}", case["name"]);
+            assert!(markup.contains("<g id=\"fills\" opacity=\"0.5\">"), "{}", case["name"]);
+        }
+        if let Some(stroke) = case["stroke"].as_str() {
+            assert!(markup.contains(&format!("stroke:{stroke}")), "{}", case["name"]);
+            let stroke_width = case["drawing"]["visibleWidth"].as_u64().unwrap_or(1);
+            assert!(markup.contains(&format!("stroke-width:{stroke_width}")), "{}", case["name"]);
+            assert_eq!(markup.matches('M').count() as u64, case["moveCount"].as_u64().unwrap(), "{}", case["name"]);
+            assert_eq!(markup.matches('Q').count() as u64, case["roundedCount"].as_u64().unwrap(), "{}", case["name"]);
+        }
+        while !export.close_step() {}
+        assert!(export.terminal_is_empty());
+    }
+}

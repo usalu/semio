@@ -39,7 +39,7 @@ fn drill_step(id: &str, radius: f64, depth: f64, pose: Pose) -> ProcessStep {
 }
 
 fn session_volume(session: &mut ProcessKernelReplay, scene: &ProcessWorkingScene, resolved_up_to: Option<usize>) -> f64 {
-    let handle = replay_process(session, scene, resolved_up_to).expect("replayed handle");
+    let handle = replay_process(session, scene, resolved_up_to).expect("replay succeeds").expect("replayed handle");
     session.kernel().volume(&handle).expect("replayed volume")
 }
 

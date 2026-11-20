@@ -265,8 +265,8 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
     }
 
-    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<LowpolyCommand>> {
-        Some(&semio_plugin::tool_contract::OriginalActionCommandBridge::<LowpolyCommand>(<Self as ArtifactEditor>::command_from_action, lowpoly_command_maximum_raw_bytes))
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<LowpolyCommand>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(<Self as ArtifactEditor>::command_from_action, lowpoly_command_maximum_raw_bytes))
     }
 
     fn command_id(command: &LowpolyCommand) -> &'static str {

@@ -10,7 +10,6 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
-use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -41,7 +40,7 @@ pub fn handle(payload: &PlaceAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
     if vector.x.hypot(vector.y) < 1e-9 {
         return Ok(Emit::default());
     }
-    let moved: BTreeMap<String, Placement> = placements.into_iter().map(|(id, placed)| (id.clone(), placed.translated(vector))).collect();
+    let moved = placements.into_iter().map(|(id, placed)| (id.clone(), placed.translated(vector))).collect();
     Ok(Emit::mutations(vec![ModelMutation::PlaceElements(semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements { placements: moved })]))
 }
 

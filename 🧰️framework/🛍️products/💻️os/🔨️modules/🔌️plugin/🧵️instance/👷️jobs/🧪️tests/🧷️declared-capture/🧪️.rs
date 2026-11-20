@@ -7,3 +7,7 @@ pub(crate) mod fixture;
 #[cfg(test)]
 #[path = "../../📥️staging/🧱️components/🏛️declarations/🌱️capture/🧪️tests/🦀️.rs"]
 mod capture;
+
+#[cfg(test)]
+#[path = "../../../../🌱️initialization/🌱️genesis/🧪️tests/🎟️admission/🦀️.rs"]
+mod genesis_admission;

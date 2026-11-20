@@ -1,9 +1,11 @@
-import catalog from "../🔣️.json";
+import catalog from "../🔣️.json" with { type: "json" };
 
 /** 🌐️ The production host play is served from; this module is the browser-safe pane catalog, free of build-time inventory. */
 export const PLAY_HOST = catalog.host;
 /** 🏠️ The OS shell variant — it hosts apps rather than being one, so play never lists it. */
 export const PLAY_HOST_VARIANT = catalog.hostVariant;
+/** 🚫️ Registry variants play deliberately never lists; they keep shipping from their own products. */
+export const PLAY_EXCLUDED_VARIANTS: readonly string[] = catalog.excludedVariants;
 /** 🗂️ The authored pane groups in grid order. */
 export const PLAY_GROUPS = catalog.groups;
 

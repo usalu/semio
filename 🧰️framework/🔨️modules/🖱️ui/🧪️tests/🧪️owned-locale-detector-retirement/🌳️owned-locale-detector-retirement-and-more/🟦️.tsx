@@ -367,9 +367,7 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
       const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
-      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
-      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?padding:\s*var\(--celebrate-border-padding\)/);
-      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:[\s\S]*?celebrate-border-spin[\s\S]*?celebrate-border-burst/);
+      expect(css).not.toMatch(/^\s*\[data-celebrated="true"\]::after/m);
       expect(css).toContain("#endregion 🎉️CelebrateContent");
       expect(css).toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="button-group-item"\]/);
       expect(css).toMatch(/\[data-celebrated="true"\]\[data-slot="introduction-interaction-label"\][\s\S]*?background-clip:\s*text/);
@@ -404,12 +402,8 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
       expect(css).toMatch(/@property --waiting-border-angle[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/@property --introduced-border-width[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/@property --celebrate-border-padding[\s\S]*?inherits:\s*false/);
-      expect(css).toMatch(/@utility border-loading[\s\S]*?opacity:\s*var\(--loading-border-pulse-opacity\)/);
-      expect(css).toMatch(/@utility border-loading[\s\S]*?animation:[\s\S]*?loading-border-spin[\s\S]*?loading-border-pulse/);
-      expect(css).toMatch(/@utility border-waiting[\s\S]*?opacity:\s*var\(--waiting-border-pulse-opacity\)/);
-      expect(css).toMatch(/@utility border-waiting[\s\S]*?animation:[\s\S]*?waiting-border-spin[\s\S]*?waiting-border-pulse/);
-      expect(css).toMatch(/\[data-introduced="true"\][\s\S]*?box-shadow:\s*inset 0 0 0 var\(--introduced-border-width\)/);
-      expect(css).toMatch(/\[data-introduced="true"\] \{[\s\S]*?animation:\s*introduced-border-pulse/);
+      expect(css).not.toMatch(/@utility border-(loading|waiting)/);
+      expect(css).not.toMatch(/\[data-introduced="true"\][\s\S]*?box-shadow:\s*inset 0 0 0 var\(--introduced-border-width\)/);
       expect(css).toMatch(/\.window-silhouette-border-introduced[\s\S]*?stroke-width:\s*var\(--introduced-border-width\)/);
       expect(css).toMatch(/\.window-silhouette-border-introduced[\s\S]*?animation:\s*introduced-border-pulse/);
       expect(css).toMatch(/\.window-silhouette-border-loading[\s\S]*?stroke-dashoffset:\s*var\(--loading-border-dashoffset\)/);

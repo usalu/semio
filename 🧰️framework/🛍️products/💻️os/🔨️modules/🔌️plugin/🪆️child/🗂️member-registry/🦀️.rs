@@ -1,6 +1,9 @@
 //! 🗂️ Member registry of the child members: the registry entries, admissions and registration errors and the child member registry with its drop. See [`super`].
 
 use super::*;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+use semio_framework_value::ValueError;
+use semio_plugin_ownership::bounded_ownership::{EmptyBacking, release_empty_backing};
 
 #[doc(hidden)]
 pub struct ChildMemberEntry<M> {
@@ -39,6 +42,15 @@ pub struct ChildMemberRegistry<M> {
     pub next_generation: u64,
     pub len: usize,
     pub allocation_admitted: bool,
+}
+
+impl<M:store::SpaceMember> EmptyBacking for ChildMemberRegistry<M>{
+    fn release_bytes(&self)->Option<usize>{
+        (self.is_empty()&&self.reserved.iter().all(|bits|*bits==0)).then(||std::mem::size_of_val(self.slots.as_ref()))
+    }
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        release_empty_backing(self.release_bytes(),grant,||{self.slots=Box::default();self.allocation_admitted=false;})
+    }
 }
 
 impl<M> ChildMemberRegistry<M> {

@@ -17,6 +17,9 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "🪡️surface-ops/🦀️.rs"]
 pub mod surface_ops;
 
+#[path="🧮️rational-preview/🦀️.rs"]
+mod rational_preview;
+
 // #endregion 🔖️Submodules
 
 use semio_framework_3d_brep_curve::bspline::{basis_function_derivatives, surface_derivatives_rational, KnotVector};
@@ -142,6 +145,48 @@ impl Surface {
             }
         }
     }
+    /// 📌️ Samples a surface point with bounded scratch across the original control lattice.
+    pub fn point_original(&self,u:f64,v:f64) -> Option<Pnt3> {
+        if !u.is_finite() || !v.is_finite() { return None; }
+        let point=if let Self::Nurbs{u_knots,v_knots,controls,weights}=self {
+            let (p,_,_)=nurbs_patch_original(u_knots,v_knots,controls,weights,u,v,None,false)?;
+            p
+        } else { self.eval(u,v) };
+        [point.x,point.y,point.z].iter().all(|n|n.is_finite()).then_some(point)
+    }
+
+    /// 🧭️ Uses exact tensor-product partials for the original surface normal.
+    pub fn normal_original(&self,u:f64,v:f64) -> Option<Vec3> {
+        if !u.is_finite() || !v.is_finite() { return None; }
+        let normal=if let Self::Nurbs{u_knots,v_knots,controls,weights}=self {
+            let (_,du,dv)=nurbs_patch_original(u_knots,v_knots,controls,weights,u,v,None,true)?;
+            du.cross(dv).normalized()?
+        } else { self.normal(u,v)? };
+        [normal.x,normal.y,normal.z].iter().all(|n|n.is_finite()).then_some(normal)
+    }
+
+    /// 🧵️ Samples one-sided spline patch position and normal at an inclusive span limit.
+    pub fn original_spline_patch_sample(&self,spans:[usize;2],u:f64,v:f64)->Option<(Pnt3,Option<Vec3>)>{
+        let Self::Nurbs{u_knots,v_knots,controls,weights}=self else{return None;};
+        let parameters=[u,v];
+        for (axis,knots) in [u_knots,v_knots].into_iter().enumerate(){
+            let lo=*knots.knots.get(spans[axis])?;let hi=*knots.knots.get(spans[axis].checked_add(1)?)?;
+            if lo>=hi||!(lo..=hi).contains(&parameters[axis]){return None;}
+        }
+        let (mut point,du,dv)=nurbs_patch_original(u_knots,v_knots,controls,weights,u,v,Some(spans),true)?;
+        let mut position_spans=spans;
+        for (axis,knots) in [u_knots,v_knots].into_iter().enumerate(){
+            if parameters[axis]==knots.knots[spans[axis]+1]{
+                let right=knots.find_span(parameters[axis]);
+                if right.saturating_sub(spans[axis])<=knots.degree{position_spans[axis]=right;}
+            }
+        }
+        if position_spans!=spans{
+            (point,_,_)=nurbs_patch_original(u_knots,v_knots,controls,weights,u,v,Some(position_spans),false)?;
+        }
+        Some((point,du.cross(dv).normalized()))
+    }
+
     /// 🗺️ Unit surface normal `du × dv` (falls back to `None` at a singular point, e.g. a sphere
     /// pole or a cone apex, where `du` degenerates to zero).
     pub fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
@@ -196,6 +241,40 @@ impl Surface {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+
+fn nurbs_patch_original(
+    u_knots:&KnotVector,v_knots:&KnotVector,controls:&[Vec<Pnt3>],weights:&[Vec<f64>],u:f64,v:f64,spans:Option<[usize;2]>,derivatives:bool,
+) -> Option<(Pnt3,Vec3,Vec3)> {
+    use semio_framework_3d_brep_curve::bspline::{homogeneous_jet_at_span_original,project_original_jet,ORIGINAL_SPLINE_MAXIMUM_DEGREE};
+    let v_count=controls.first()?.len();
+    let degree=v_knots.degree;
+    if controls.len()!=weights.len() || degree>ORIGINAL_SPLINE_MAXIMUM_DEGREE || v_count<=degree ||
+       v_knots.knots.len()!=v_count.checked_add(degree)?.checked_add(1)? { return None; }
+    if !u.is_finite()||!v.is_finite()||controls.len()<=u_knots.degree{return None;}
+    if u_knots.knots.len()!=controls.len().checked_add(u_knots.degree)?.checked_add(1)?{return None;}
+    let [u_span,v_span]=spans.unwrap_or_else(||[u_knots.find_span(u),v_knots.find_span(v)]);
+    let first=v_span.checked_sub(degree)?;
+    let order=usize::from(derivatives);
+    let mut columns=[[[0.0;4];2];ORIGINAL_SPLINE_MAXIMUM_DEGREE+1];
+    for (i,column) in columns.iter_mut().take(degree+1).enumerate() {
+        let col=first+i;
+        let jet=homogeneous_jet_at_span_original(u_knots,controls.len(),u,order,u_span,|row|{
+            let p=controls.get(row)?.get(col)?;
+            let w=*weights.get(row)?.get(col)?;
+            Some([p.x*w,p.y*w,p.z*w,w])
+        })?;
+        *column=[jet[0],jet[1]];
+    }
+    let h=homogeneous_jet_at_span_original(v_knots,v_count,v,order,v_span,|i|Some(columns.get(i.checked_sub(first)?)?[0]))?;
+    let position=project_original_jet(h,order)?;
+    let p=Pnt3::new(position[0][0],position[0][1],position[0][2]);
+    if !derivatives { return Some((p,Vec3::ZERO,Vec3::ZERO)); }
+    let du=homogeneous_jet_at_span_original(v_knots,v_count,v,0,v_span,|i|Some(columns.get(i.checked_sub(first)?)?[1]))?[0];
+    let [_,du,_]=project_original_jet([h[0],du,[0.0;4]],1)?;
+    let dv=position[1];
+    Some((p,Vec3::new(du[0],du[1],du[2]),Vec3::new(dv[0],dv[1],dv[2])))
+}
+
 fn eval_nurbs_point(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], u: f64, v: f64) -> Pnt3 {
     let u_span = u_knots.find_span(u);
     let v_span = v_knots.find_span(v);

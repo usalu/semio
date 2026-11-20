@@ -156,9 +156,9 @@ impl Puzzle3dApp {
             return;
         }
         let window = args.and_then(|value| value.get("windowId")).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or(window_id).to_string();
-        match resolve_activation(self.view.active_utility_by_window_id.get(&window).map(String::as_str), requested("utilityId")) {
+        match resolve_activation(self.view.active_utility_by_window_id.get(&window).and_then(Option::as_deref), requested("utilityId")) {
             Some(utility) => {
-                self.view.active_utility_by_window_id.insert(window, utility);
+                self.view.active_utility_by_window_id.insert(window, Some(utility));
                 self.view.active_tool_id = None;
             }
             None => {

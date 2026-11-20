@@ -14,6 +14,7 @@ import { formatPoints } from "../📏️quantity/🟦️.ts";
 import { CELL } from "../🪟️chrome/🟦️.tsx";
 
 import { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 export { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
 
 /** 💰️ `points` earned at `challenge` as text: its name and the points of its most, "Hard · Points: 261 of 300". */
@@ -30,7 +31,7 @@ export function ChallengeChooser(props: { readonly challenge: Challenge; readonl
     <fieldset data-options={CHALLENGES.length} {...CELL} className="course-kinds m-0 min-w-0 p-double">
       <legend className="p-0 text-sm font-semibold">{text("course.challenge.legend")}</legend>
       {CHALLENGES.map((option) => (
-        <div key={option} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
+        <div key={option} {...sharedBorderlessBoxProps} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
           <input
             id={`${scope}-${option}`}
             type="radio"

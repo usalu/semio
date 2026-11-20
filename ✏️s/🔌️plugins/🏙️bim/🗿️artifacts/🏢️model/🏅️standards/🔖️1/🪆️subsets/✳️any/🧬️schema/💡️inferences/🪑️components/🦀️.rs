@@ -22,6 +22,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_framework_geometry::vector::{cross, perp};
 use semio_framework_geometry::Vec2;
 use semio_framework_value::DslValue;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -128,7 +129,7 @@ pub struct ComponentValue {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub connector: Option<Connector>,
     pub overridden: Vec<String>,
-    pub parameters: BTreeMap<String, ResolvedParameter>,
+    pub parameters: RetainedOrderedMap<String, ResolvedParameter>,
     pub issues: Vec<ComponentIssue>,
 }
 
@@ -161,7 +162,7 @@ impl ComponentValue {
 /// 🎚️ The override formulas of component `id` by parameter name, read from the keyed rows `id.name` without scanning the collection.
 pub fn overrides_of(snapshot: &ModelSnapshot, id: &str) -> BTreeMap<String, String> {
     let prefix = format!("{id}.");
-    snapshot.component_overrides.range(prefix.clone()..).take_while(|(key, _)| key.starts_with(&prefix)).filter(|(_, row)| row.component == id).map(|(_, row)| (row.name.clone(), row.value.clone())).collect()
+    snapshot.component_overrides.iter().skip_while(|(key, _)| key.as_str() < prefix.as_str()).take_while(|(key, _)| key.starts_with(&prefix)).filter(|(_, row)| row.component == id).map(|(_, row)| (row.name.clone(), row.value.clone())).collect()
 }
 //#endregion 🔖️Overrides
 

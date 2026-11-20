@@ -85,8 +85,8 @@ pub fn format_percent(ratio: f64, locale: Locale) -> String {
     format!("{}\u{202f}%", format_number(ratio * 100.0, locale).replace('\u{2009}', ""))
 }
 
-/// 🖼️ The Canvas2d scene of one diagram: layers in pixel space, camera at the origin with unit zoom.
+/// 🖼️ The Canvas2d scene of one diagram with its pixel-space plot centered in the viewport.
 pub fn diagram_scene(diagram: &Diagram2d, options: &LoweringOptions) -> (Canvas2dScene, Vec<PickTarget>) {
     let lowered = lower_diagram(diagram, options);
-    (Canvas2dScene::base(0.0, 0.0, 1.0, lowered.layers_json), lowered.targets)
+    (Canvas2dScene::base(options.width / 2.0, options.height / 2.0, 1.0, lowered.layers_json), lowered.targets)
 }

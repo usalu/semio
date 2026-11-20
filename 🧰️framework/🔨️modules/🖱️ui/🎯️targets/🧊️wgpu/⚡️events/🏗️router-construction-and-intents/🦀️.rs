@@ -1,6 +1,7 @@
 //! 🏗️ Router construction and intents: the `EventRouter` constructor, the interaction transfer, the close step, the flow and tree drag settings, the intent API and the hover updates. See [`super`].
 
 use super::*;
+use crate::event_model_and_focus::node_state_box;
 
 // #region events
 //#region 🔖️UiCommand
@@ -356,16 +357,51 @@ impl EventRouter {
     /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
     /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
     pub(super) fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
-        let commands = Vec::new();
+        let mut commands = Vec::new();
         if self.hovered == target {
             return commands;
         }
+        commands.extend(self.hovered.and_then(|previous| self.scene_command(tree, previous, &UiEvent::PointerLeave)));
         let mut new_chain = Vec::new();
         if let Some(leaf) = target {
             bubble(tree, leaf, |id| {
                 new_chain.push(id);
                 false
             });
+        }
+        let bound_row = |chain: &[NodeId]| chain.iter().copied().find(|id| {
+            tree.node(*id).and_then(|node| node.intent.as_ref()).is_some_and(|binding| binding.binds(Trigger::HoverPreview))
+        });
+        let previous = bound_row(&self.hover_chain);
+        let next = bound_row(&new_chain);
+        if previous != next {
+            for (row, leaving) in [(previous, true), (next, false)] {
+                let Some(binding) = row.and_then(|id| tree.node(id)?.intent.as_ref()) else { continue };
+                let Some(action) = binding.action_for(Trigger::HoverPreview) else { continue };
+                if leaving && action.name.as_str() != "interactionHover" { continue; }
+                if intent_is_stale(binding.address.revision, tree.document().map_or(0, |doc| doc.revision().0)) { continue; }
+                let seq = self.intents.next(&binding.address.surface);
+                commands.push(UiCommand::App {
+                    window_id: self.window_id.clone(),
+                    intent: UiIntentCommand {
+                        address: binding.address.clone(), action: action.clone(), trigger: Trigger::HoverPreview,
+                        args: binding.args_for(Trigger::HoverPreview).cloned(),
+                        input: leaving.then(|| DslValue::Object(vec![("targets".into(), DslValue::String("[]".into()))])),
+                        seq,
+                    },
+                });
+            }
+        }
+        let boxes: Vec<_> = new_chain.iter().filter_map(|&id| node_state_box(tree, id)).collect();
+        let owner = target.and_then(|leaf| semio_ui_border_presentation::resolve_box_states(&boxes, Some(leaf), None).ok().and_then(|states| boxes.iter().zip(states).find(|(_, state)| *state == semio_ui_border_presentation::SharedBorderState::Hover).map(|(entry, _)| entry.id)));
+        for &id in self.hover_chain.iter().chain(&new_chain) {
+            let owned = owner == Some(id);
+            if tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::HOVER_OWNER) != owned) {
+                if let Some(node) = tree.node_mut(id) {
+                    node.flags.set(NodeFlags::HOVER_OWNER, owned);
+                }
+                tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+            }
         }
         for &previous in &self.hover_chain {
             if !new_chain.contains(&previous) {

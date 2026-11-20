@@ -3,7 +3,8 @@ import{platform as osPlatform}from"node:os";
 import{relative,sep}from"node:path";
 import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{resolveHostCapacityLanguageV1}from"../../../🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
-import{parseProcessTableV1,readHostTextV1,readLinuxProcessTableV1,runHostCommandV1,treeMegabytesV1,WINDOWS_PROCESS_TABLE_COMMAND}from"../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import{parseProcessTableV1,readHostTextV1,readLinuxProcessTableV1,runHostCommandV1,treeMegabytesV1}from"../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import{systemWindowsMemoryPortV1,type WindowsMemoryPortV1}from"../../../🏗️build/🌡️host-capacity/🪟️native-memory/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import authored from"./🔣️.json"with{type:"json"};
 
@@ -66,9 +67,9 @@ export function createTestFileGateV1(shareMegabytes:number):TestFileGateV1{
  return Object.freeze({enter:(megabytes:number)=>new Promise<TestFileSlotV1>(start=>{waiting.push({megabytes,start});pump();})});
 }
 
-/** 🗂️ Reads the process table of the host: `/proc` on Linux, `ps` on macOS, one PowerShell table on Windows. */
-export async function readTestFileProcessRowsV1(platform:string=osPlatform(),run=runHostCommandV1,proc:Readonly<{read:typeof readHostTextV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")}):Promise<TestFileProcessRowsV1>{
- if(platform==="win32")return parseProcessTableV1(await run("powershell.exe",["-NoProfile","-NonInteractive","-Command",WINDOWS_PROCESS_TABLE_COMMAND]));
+/** 🗂️ Reads the process table of the host: `/proc` on Linux, `ps` on macOS, the native process walk on Windows (a blind walk throws, so the tick is skipped and the file runs unwatched). */
+export async function readTestFileProcessRowsV1(platform:string=osPlatform(),run=runHostCommandV1,proc:Readonly<{read:typeof readHostTextV1;list:()=>Promise<readonly string[]>}>={read:readHostTextV1,list:()=>readdir("/proc")},windows?:WindowsMemoryPortV1):Promise<TestFileProcessRowsV1>{
+ if(platform==="win32"){const table=(windows??systemWindowsMemoryPortV1()).processes();if(!table.known)throw Error(table.text.en);return table.rows.map(row=>({pid:row.pid,parent:row.parent,rssKilobytes:Math.floor((row.workingSetBytes??0)/1024)}));}
  if(platform==="linux")return readLinuxProcessTableV1(proc.read,proc.list);
  return parseProcessTableV1(await run("ps",["-A","-o","pid=,ppid=,rss="]));
 }

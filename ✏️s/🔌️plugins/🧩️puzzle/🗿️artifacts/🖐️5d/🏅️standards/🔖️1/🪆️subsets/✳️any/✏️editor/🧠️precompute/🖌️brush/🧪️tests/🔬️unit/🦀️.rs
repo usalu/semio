@@ -24,7 +24,7 @@ use std::collections::HashMap;
 
 fn armed_view() -> semio_plugin::ViewModel {
     let mut view = window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID);
-    view.active_utility_by_window_id.insert(world3d::WINDOW_KIND_ID.to_string(), UTILITY_ID.to_string());
+    view.active_utility_by_window_id.insert(world3d::WINDOW_KIND_ID.to_string(), Some(UTILITY_ID.to_string()));
     view
 }
 

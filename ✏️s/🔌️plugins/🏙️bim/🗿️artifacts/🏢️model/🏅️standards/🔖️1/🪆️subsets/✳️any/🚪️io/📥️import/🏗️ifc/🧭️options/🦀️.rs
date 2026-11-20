@@ -14,13 +14,13 @@ pub fn read(i: &mut Import<'_>) {
             let name = text(args, 2);
             let id = label(&rows, "Id").filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, id).is_none()).unwrap_or_else(|| Import::unused(&format!("group-{}", Import::slug(&name)), |id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, id).is_some()));
             match kind {
-                "DesignOptionGroup" => { i.model.option_groups.insert(id.clone(), OptionGroup { name }); }
-                "Workset" => { i.model.worksets.insert(id.clone(), Workset { name, default_visible: label(&rows, "DefaultVisible").as_deref() != Some("false") }); }
+                "DesignOptionGroup" => { i.model.option_groups.cold_insert(id.clone(), OptionGroup { name }); }
+                "Workset" => { i.model.worksets.cold_insert(id.clone(), Workset { name, default_visible: label(&rows, "DefaultVisible").as_deref() != Some("false") }); }
                 _ => {
                     let Some(group) = label(&rows, "Group").filter(|id| i.model.option_groups.contains_key(id)) else { i.skip("IFCGROUP", &id, "Design option has no imported option group"); continue; };
                     let option = DesignOption { name, group, primary: label(&rows, "Primary").as_deref() == Some("true") };
                     if let Some(problem) = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules::option_problem(&i.model, &id, &option) { i.skip("IFCGROUP", &id, problem); continue; }
-                    i.model.design_options.insert(id.clone(), option);
+                    i.model.design_options.cold_insert(id.clone(), option);
                 }
             }
             i.ids.insert(instance.id, id);

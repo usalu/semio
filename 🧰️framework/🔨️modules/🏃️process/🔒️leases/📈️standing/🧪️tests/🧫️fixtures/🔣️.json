@@ -509,6 +509,50 @@
    "moved": [
     "other.component"
    ]
+  },
+  {
+   "id": "stale-refused-while-pinned",
+   "request": {
+    "version": 1,
+    "holderPid": 4242,
+    "holderStartedAtMs": 1700000000000,
+    "requesterPid": 9999,
+    "requesterStartedAtMs": 1700000500000,
+    "resource": "repository-graph-facts:/w:shard:7",
+    "reason": "stale",
+    "atMs": 1700000100000,
+    "requesterComponents": {
+     "graph.generation": "bbbbbbbbbbbb"
+    }
+   },
+   "pid": 4242,
+   "startedAtMs": 1700000000000,
+   "nowMs": 1700000200000,
+   "holdsExclusive": true,
+   "holdSinceMs": 1700000000000,
+   "standing": {
+    "version": 1,
+    "priority": "agent",
+    "implementation": {
+     "digest": "0123456789abcdef",
+     "loadedAtMs": 1700000000000,
+     "components": {
+      "graph.generation": "aaaaaaaaaaaa"
+     }
+    },
+    "progressAtMs": 1700000190000
+   },
+   "bound": [
+    "graph.generation"
+   ],
+   "expected": {
+    "accept": false,
+    "refusal": "pinned"
+   },
+   "moved": [
+    "graph.generation"
+   ],
+   "pinned": true
   }
  ],
  "terminateCases": [

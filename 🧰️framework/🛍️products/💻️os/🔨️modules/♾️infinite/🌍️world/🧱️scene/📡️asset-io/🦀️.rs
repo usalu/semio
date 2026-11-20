@@ -215,6 +215,18 @@ self.sealed = true;
         self.received_bytes
     }
 
+    /// ♻️ Returns one partial response page while retaining the live request and its admission.
+    pub fn retire_partial_response_step(&mut self) -> Result<bool, WorldAssetFault> {
+        if self.closing || self.sealed { return Err(WorldAssetFault::Stale); }
+        if self.page_len == 0 { return Ok(true); }
+        self.page_len -= 1;
+        if let Some(page) = self.pages[usize::from(self.page_len)].take() {
+            self.received_pages -= 1;
+            self.received_bytes -= page.bytes().len();
+        }
+        Ok(self.page_len == 0)
+    }
+
     /// 🔏️ Whether this response already sealed its exact byte claim. A host that must RETRY a seal —
     /// because the surface's own state was momentarily checked out by an apply — reads this to skip
     /// the half it already completed; sealing twice is refused by the authority's own witness.
@@ -291,7 +303,15 @@ impl WorldAssetIoAuthority {
         self.reserve(generation, revision, kind, url, 0)
     }
 
+    pub fn reserve_exact_request(&mut self, generation: u64, revision: u64, kind: WorldAssetRequestKind, url: &str) -> Result<WorldAssetRequestToken, WorldAssetFault> {
+        self.reserve_with_coalescing(generation, revision, kind, url, 0, false)
+    }
+
     pub fn reserve(&mut self, generation: u64, revision: u64, kind: WorldAssetRequestKind, url: &str, byte_credits: usize) -> Result<WorldAssetRequestToken, WorldAssetFault> {
+        self.reserve_with_coalescing(generation, revision, kind, url, byte_credits, true)
+    }
+
+    fn reserve_with_coalescing(&mut self, generation: u64, revision: u64, kind: WorldAssetRequestKind, url: &str, byte_credits: usize, coalesce: bool) -> Result<WorldAssetRequestToken, WorldAssetFault> {
         if self.closing {
             return Err(WorldAssetFault::Closing);
         }
@@ -300,7 +320,7 @@ impl WorldAssetIoAuthority {
         }
         if let Some((slot, claim)) = self.slots.iter().enumerate().find_map(|(slot, claim)| {
             let claim = claim.as_ref()?;
-            (!claim.cancelled && claim.kind == kind && usize::from(claim.url_len) == url.len() && &claim.url_bytes[..url.len()] == url.as_bytes()).then_some((slot, claim))
+            (coalesce && !claim.cancelled && claim.kind == kind && usize::from(claim.url_len) == url.len() && &claim.url_bytes[..url.len()] == url.as_bytes()).then_some((slot, claim))
         }) {
             if claim.revision != revision {
                 return Err(WorldAssetFault::Stale);
@@ -356,6 +376,18 @@ page_read: 0,
         claim.reserved_bytes = byte_credits;
         owner.reserved_bytes = byte_credits;
         self.reserved_bytes = next;
+        Ok(())
+    }
+
+    pub fn release_partial_response(&mut self, owner: &mut WorldAssetFetchOwner) -> Result<(), WorldAssetFault> {
+        let claim = self.slots.get_mut(usize::from(owner.token.slot)).and_then(Option::as_mut).ok_or(WorldAssetFault::Stale)?;
+        if claim.cancelled || claim.epoch != owner.token.epoch || claim.generation != owner.generation || claim.revision != owner.revision
+            || !claim.in_flight || claim.reserved_bytes != owner.reserved_bytes || owner.closing || owner.sealed || owner.page_len != 0 {
+            return Err(WorldAssetFault::Stale);
+        }
+        self.reserved_bytes -= claim.reserved_bytes;
+        claim.reserved_bytes = 0;
+        owner.reserved_bytes = 0;
         Ok(())
     }
 

@@ -86,7 +86,7 @@ function publishInputClosureV1(path,contract){
  const temporary=join(dirname(path),"~"+randomUUID());if([path,temporary].some(value=>value.length>REVISION_POLICY_V1.maximumPathUnits||[...value].length>REVISION_POLICY_V1.maximumPathUnits))throw Error("Input closure staging path exceeds "+REVISION_POLICY_V1.maximumPathUnits+" characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameOverBusyFileSyncV1(temporary,path);verify();noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
 }
 
-/** 🛰️ Adopts the leaves a farm worker staged into the graph under this process's writer custody, in the order that keeps every reference satisfied: content-addressed closures and blocks first (the first writer wins and every later copy is verified against it), the record that names them last. A receipt or pack that stands is the first writer's and keeps standing (receipts are sealed and checked when they are used); the optional leaves of one call are one batched publication. A block the adoption verified is registered as verified, so its first reader does not validate it again. Answers how many leaves were published, how many already stood and whether the quota declined them. */
+/** 🛰️ Adopts the leaves a farm worker staged into the graph under this process's writer custody, in the order that keeps every reference satisfied: content-addressed closures and blocks first (the first writer wins and every later copy is verified against it), the record that names them last. A receipt or pack that stands is the first writer's and keeps standing (receipts are sealed and checked when they are used); the optional leaves of one call are one batched publication. A block the adoption verified is registered as verified, so its first reader does not validate it again. Answers how many leaves were published, how many already stood and the reason for a publication refusal. */
 export function adoptStagedGraphLeavesV1(workspaceRoot, stagingRoot, names) {
   const root = resolve(stagingRoot), closures = [], optional = [], plan = { published: 0, present: 0, declined: false };
   for (const name of names) {
@@ -123,7 +123,7 @@ export function adoptStagedGraphLeavesV1(workspaceRoot, stagingRoot, names) {
       writeFileSync(temporary, bytes, { flag: "wx" });
       renameOverBusyFileSyncV1(temporary, target);
     }
-  });
+  }, reason => { plan.reason = reason; });
   if (!plan.declined) { plan.published = optional.length; for (const row of optional) if (row.text !== undefined) adoptVerifiedBlockV1(row.target, row.text); }
   return plan;
 }

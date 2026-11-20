@@ -165,4 +165,4 @@ impl RetainedDeflateEncoder {
     }
 }
 
-impl Drop for RetainedDeflateEncoder { fn drop(&mut self) { assert!(self.head.terminal_is_empty() && self.previous.terminal_is_empty() && self.bytes.terminal_is_empty(), "retained Deflate matching pages require a terminal-empty close witness"); } }
+impl Drop for RetainedDeflateEncoder { fn drop(&mut self) { if std::thread::panicking() { return; } assert!(self.head.terminal_is_empty() && self.previous.terminal_is_empty() && self.bytes.terminal_is_empty(), "retained Deflate matching pages require a terminal-empty close witness"); } }

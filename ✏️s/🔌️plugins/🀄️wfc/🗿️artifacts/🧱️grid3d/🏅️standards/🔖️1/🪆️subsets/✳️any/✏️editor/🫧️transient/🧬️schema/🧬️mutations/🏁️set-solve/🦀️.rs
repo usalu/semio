@@ -1,6 +1,6 @@
 //! 🏁️ Replaces the app-local solve result every WFC 3D window paints from.
 
-use super::{Grid3dTransient, Grid3dTransientDiff};
+use super::{Grid3dTransient, Grid3dTransientDiff, Grid3dTransientMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

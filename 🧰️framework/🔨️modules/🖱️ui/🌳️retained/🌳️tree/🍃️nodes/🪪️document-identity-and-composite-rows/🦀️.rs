@@ -99,7 +99,7 @@ impl UiTree {
             return false;
         }
         target.state = source.state.clone();
-        for flag in [NodeFlags::HOVERED, NodeFlags::ACTIVE, NodeFlags::FOCUSED, NodeFlags::FOCUS_VISIBLE, NodeFlags::OVERLAY] {
+        for flag in [NodeFlags::HOVERED, NodeFlags::HOVER_OWNER, NodeFlags::ACTIVE, NodeFlags::FOCUSED, NodeFlags::FOCUS_VISIBLE, NodeFlags::OVERLAY] {
             target.flags.set(flag, source.flags.contains(flag));
         }
         target.flags.set(NodeFlags::DIRTY_LAYOUT, true);

@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "name": "explicit append into empty spread",
+      "id": "page-3",
+      "spread": "spread-2",
+      "index": 2,
+      "coordinates": [
+        2,
+        1
+      ],
+      "members": [
+        "page-3"
+      ]
+    },
+    {
+      "name": "insert globally and append within a populated spread",
+      "id": "page-3",
+      "spread": "spread-1",
+      "index": 1,
+      "coordinates": [
+        1,
+        0
+      ],
+      "members": [
+        "page-1",
+        "page-2",
+        "page-3"
+      ]
+    },
+    {
+      "name": "omit index to append globally",
+      "id": "page-3",
+      "spread": "spread-1",
+      "index": null,
+      "coordinates": [
+        2,
+        0
+      ],
+      "members": [
+        "page-1",
+        "page-2",
+        "page-3"
+      ]
+    },
+    {
+      "name": "duplicate identity precedes index validation",
+      "id": "page-1",
+      "spread": "spread-2",
+      "index": 3,
+      "error": "mutation.duplicate-id"
+    },
+    {
+      "name": "position exceeds the document",
+      "id": "page-3",
+      "spread": "spread-2",
+      "index": 3,
+      "error": "mutation.target-missing"
+    },
+    {
+      "name": "owning spread is absent",
+      "id": "page-3",
+      "spread": "missing",
+      "index": 1,
+      "error": "mutation.invariant"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 //! 🎟️ One explicit headless source owns every birth, bounded turn and paid retirement.
 use super::*;
 use semio_framework_async::CancelTokenRetirement;
-use semio_framework_job::{ClockStride,OriginalCallerSourceAdmission,OriginalCallerSourceParent,OriginalRetirementPump};
+use semio_framework_job::{ClockStride,OriginalCallerSourceAdmission,OriginalCallerSourceParent,OriginalRetirementPump,OriginalSourceTurn};
 use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll};
 use std::sync::atomic::{AtomicU64,Ordering};
 
@@ -11,6 +11,7 @@ pub(super) struct HeadlessCaller {
     authority_actual:Option<usize>,
     parent:Option<OriginalCallerSourceParent>,
     source_admission:OriginalCallerSourceAdmission,
+    dispatch:Option<OriginalSourceTurn>,
     authority:Option<semio_framework_job_payload::JobPayloadAuthority>,
     cancel:Option<CancelToken>,
     cancel_retirement:Option<CancelTokenRetirement>,
@@ -48,11 +49,21 @@ impl HeadlessCaller {
         let binding=NEXT_CLOCK_BINDING.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|format!("{}-clock-binding-exhausted",site.label))?;
         let stock=site.retained_stock;
         let reserve=RetainedCloneGrant { maximum_items:stock.maximum_items/2, maximum_copy_bytes:stock.maximum_copy_bytes/2, maximum_capacity_bytes:stock.maximum_capacity_bytes/2, maximum_release_bytes:stock.maximum_release_bytes/2, ..stock };
-        Ok(Self { birth:Default::default(),authority_actual:None,parent:None,source_admission:OriginalCallerSourceAdmission::new(),authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
+        Ok(Self { birth:Default::default(),authority_actual:None,parent:None,source_admission:OriginalCallerSourceAdmission::new(),dispatch:None,authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
     }
 
     pub(super) fn receipt(&self)->RetainedCloneProgress { self.spent }
     pub(super) fn fuel_remaining(&self)->u64 { self.fuel }
+    /// 🧮️ The next business turn's grant: the per-turn cap narrowed by the stock left after the teardown reserve.
+    fn business_grant(&self)->RetainedCloneGrant {
+        let left=remaining(self.stock,self.spent);
+        narrow(HEADLESS_GRANT,RetainedCloneGrant { maximum_items:left.maximum_items.saturating_sub(self.reserve.maximum_items),maximum_copy_bytes:left.maximum_copy_bytes.saturating_sub(self.reserve.maximum_copy_bytes),maximum_capacity_bytes:left.maximum_capacity_bytes.saturating_sub(self.reserve.maximum_capacity_bytes),maximum_release_bytes:left.maximum_release_bytes.saturating_sub(self.reserve.maximum_release_bytes),..left })
+    }
+    /// 🪫️ True once the lifetime stock, not the per-turn cap, is what narrows the next business grant.
+    pub(super) fn business_stock_binds(&self)->bool {
+        let grant=self.business_grant();
+        grant.maximum_items<HEADLESS_GRANT.maximum_items||grant.maximum_copy_bytes<HEADLESS_GRANT.maximum_copy_bytes||grant.maximum_capacity_bytes<HEADLESS_GRANT.maximum_capacity_bytes||grant.maximum_release_bytes<HEADLESS_GRANT.maximum_release_bytes||grant.maximum_depth<HEADLESS_GRANT.maximum_depth
+    }
     pub(super) fn is_ready(&self)->bool { self.parent.is_some() }
     pub(super) fn terminal_is_empty(&self)->bool { self.parent.is_none()&&self.source_admission.terminal_is_empty()&&self.authority.is_none()&&self.cancel.is_none()&&self.cancel_retirement.is_none() }
     pub(super) fn retirement_grant(&self)->RetainedCloneGrant {
@@ -104,11 +115,8 @@ impl HeadlessCaller {
     }
 
     pub(super) fn turn<R:Copy>(&mut self,site:&HeadlessSite,retiring:bool,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure> {
-        let left=remaining(self.stock,self.spent);
         let available=if retiring { self.fuel } else { self.fuel.saturating_sub(self.reserve_fuel) };
-        let grant=if retiring { self.retirement_grant() } else {
-            narrow(HEADLESS_GRANT,RetainedCloneGrant { maximum_items:left.maximum_items.saturating_sub(self.reserve.maximum_items),maximum_copy_bytes:left.maximum_copy_bytes.saturating_sub(self.reserve.maximum_copy_bytes),maximum_capacity_bytes:left.maximum_capacity_bytes.saturating_sub(self.reserve.maximum_capacity_bytes),maximum_release_bytes:left.maximum_release_bytes.saturating_sub(self.reserve.maximum_release_bytes),..left })
-        };
+        let grant=if retiring { self.retirement_grant() } else { self.business_grant() };
         if available==0||grant.maximum_items==0||grant.maximum_depth==0 { return Err(refusal("headless original business or retirement budget exhausted").into()); }
         let now=(self.now_us)().ok_or_else(||refusal("headless original clock unavailable"))?;
         if !retiring&&now>=self.deadline { return Err(refusal("headless original lifetime deadline exhausted").into()); }
@@ -117,8 +125,18 @@ impl HeadlessCaller {
         if fuel==0 { return Err(refusal("headless original turn fuel exhausted").into()); }
         self.stride.begin(Some(now));
         let parent=self.parent.as_ref().ok_or_else(||refusal("headless original parent is not admitted"))?;
-        let birth=&mut self.birth;let run=|cx:&mut StepContext<'_>|{if retiring{if !birth.terminal_is_empty(){birth.close_step(cx)?;}}else{birth.service(cx)?;}run(cx)};
-        let mut cx=parent.borrow_context(StepBudget::new(self.fuel,self.deadline,self.stock),self.now_us,&mut self.sequence,&mut self.spent)?;
+        if self.dispatch.is_none() { self.dispatch=Some(parent.issue_dispatch()?); }
+        let dispatch=self.dispatch.as_ref().expect("original headless dispatch");
+        let birth=&mut self.birth;
+        let run=|cx:&mut StepContext<'_>|{
+            if retiring {
+                if !birth.terminal_is_empty() { birth.close_step(cx)?; }
+            } else if cx.return_birth_requested()&&!cx.return_birth_state()?.origin_current {
+                birth.service(cx)?;
+            }
+            run(cx)
+        };
+        let mut cx=parent.borrow_context_for_turn(dispatch,StepBudget::new(self.fuel,self.deadline,self.stock),self.now_us,&mut self.sequence,&mut self.spent)?;
         cx.bind_original_clock_binding(self.binding)?;
         cx.restore_clock_stride(self.stride);
         let result=if retiring {
@@ -126,7 +144,7 @@ impl HeadlessCaller {
         } else {
             cx.with_original_work_loan(fuel,deadline,|cx|cx.with_retained_loan(grant,run))
         };
-        self.fuel=cx.original_source_fuel_remaining().min(self.fuel);
+        self.fuel=cx.original_turn_fuel_remaining().min(cx.original_source_fuel_remaining()).min(self.fuel);
         self.stride=cx.clock_stride();
         result
     }
@@ -147,7 +165,7 @@ impl HeadlessCaller {
         if self.fuel==0||grant.maximum_items==0||grant.maximum_depth==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let(fuel,deadline,now)=(self.fuel,self.deadline,self.now_us);
         if let Some(parent)=self.parent.as_mut() {
-            if parent.terminal_is_empty() { self.parent=None;let progress=RetainedCloneProgress {copied_items:1,..Default::default()};self.pay(progress,1)?;return Ok(RetainedCloneStep::Progress(progress)); }
+            if parent.terminal_is_empty() { self.dispatch=None;self.parent=None;let progress=RetainedCloneProgress {copied_items:1,..Default::default()};self.pay(progress,1)?;return Ok(RetainedCloneStep::Progress(progress)); }
             let Some((poll,work))=pump(fuel,deadline,now,grant,|effect|parent.close_step(effect))? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
             return match poll {
                 RetainedWorkPoll::Complete(turn)=>match turn.result {Ok(step)=>{self.pay(step.progress(),work)?;Ok(step)},Err(failure)=>{let failure=OriginalTurnFailure::from(failure);self.pay(failure.retained_progress(),work)?;Err(failure)}},

@@ -390,6 +390,11 @@
     "de": "Mesh als OBJ"
   },
   {
+    "id": "brep.mesh.importObj",
+    "en": "Mesh from OBJ",
+    "de": "Mesh aus OBJ"
+  },
+  {
     "id": "brep.mesh.extrude",
     "en": "Extrude Mesh Faces",
     "de": "Mesh-Flächen extrudieren"
@@ -463,6 +468,16 @@
     "id": "brep.mesh.sphere",
     "en": "Mesh Sphere",
     "de": "Mesh-Kugel"
+  },
+  {
+    "id": "brep.mesh.torus",
+    "en": "Mesh Torus",
+    "de": "Mesh-Torus"
+  },
+  {
+    "id": "brep.mesh.uvSphere",
+    "en": "Mesh UV Sphere",
+    "de": "UV-Netzkugel"
   },
   {
     "id": "brep.mesh.subdivide",
@@ -768,5 +783,45 @@
     "id": "brep.mesh.transform",
     "en": "Transform Mesh",
     "de": "Mesh transformieren"
+  },
+  {
+    "id": "brep.mesh.setShading",
+    "en": "Set Mesh Shading",
+    "de": "Mesh-Schattierung einstellen"
+  },
+  {
+    "id": "brep.mesh.recomputeNormals",
+    "en": "Recompute Mesh Normals",
+    "de": "Mesh-Normalen neu berechnen"
+  },
+  {
+    "id": "brep.mesh.markSeams",
+    "en": "Mark Mesh UV Seams",
+    "de": "Mesh-UV-Nähte markieren"
+  },
+  {
+    "id": "brep.mesh.unwrapUv",
+    "en": "Unwrap Mesh UVs",
+    "de": "Mesh-UVs abwickeln"
+  },
+  {
+    "id": "brep.mesh.importStl",
+    "en": "Mesh from STL",
+    "de": "Mesh aus STL"
+  },
+  {
+    "id": "brep.mesh.importGlb",
+    "en": "Mesh from GLB",
+    "de": "Mesh aus GLB"
+  },
+  {
+    "id": "brep.mesh.exportStl",
+    "en": "Mesh to STL",
+    "de": "Mesh als STL"
+  },
+  {
+    "id": "brep.mesh.exportGlb",
+    "en": "Mesh to GLB",
+    "de": "Mesh als GLB"
   }
 ]

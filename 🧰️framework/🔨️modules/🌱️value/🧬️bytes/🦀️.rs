@@ -26,3 +26,6 @@ pub mod optional{
 
 /// 🧩️ Borrows the framework codec’s allocation-free padded octet fragment.
 pub fn base64_word(bytes:&[u8])->[u8;4]{semio_framework_io_base64::base64_standard_word(bytes)}
+
+/// 🔠️ Decodes one original word without allocating an octet sequence.
+pub use semio_framework_io_base64::decode_standard_quad;

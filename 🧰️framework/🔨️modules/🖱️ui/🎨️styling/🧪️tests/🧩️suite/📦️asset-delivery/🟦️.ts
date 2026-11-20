@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { readFileSync, realpathSync, mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, realpathSync, mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync, renameSync } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "@semio-tech/assets/resolver/delivery";
 import { resolveSemioAssetRoot, semioAssetsVitePlugin, SEMIO_ASSET_ROOT } from "../../../🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
@@ -259,6 +259,22 @@ describe("conditional delivery of dev-served files", () => {
         if (row.body === "full") expect(body).toBe(rewritten ? fixture.rewrite : fixture.file.content);
         if (row.method === "GET") expect({ name: row.name, fresh: fresh(headers, { etag: answer.headers.etag, "last-modified": answer.headers["last-modified"] }) }).toEqual({ name: row.name, fresh: row.status === 304 });
       }
+    } finally { rmSync(sandbox, { recursive: true, force: true }); }
+  });
+
+  it("releases the file handle when the client drops mid-download so the served directory can be renamed", async () => {
+    const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "aborted-delivery-")));
+    const live = join(sandbox, "live"), moved = join(sandbox, "moved");
+    mkdirSync(live, { recursive: true });
+    writeFileSync(join(live, "big.bin"), Buffer.alloc(8 * 1024 * 1024, 1));
+    try {
+      const res = Object.assign(new PassThrough({ highWaterMark: 1024 }), { statusCode: 200, setHeader() {} });
+      serveFileWithValidatorsV1({ method: "GET", headers: {} } as unknown as import("node:http").IncomingMessage, res as unknown as import("node:http").ServerResponse, join(live, "big.bin"), undefined);
+      await new Promise((wait) => setTimeout(wait, 50));
+      res.destroy();
+      await new Promise((wait) => setTimeout(wait, 50));
+      renameSync(live, moved);
+      expect(existsSync(join(moved, "big.bin"))).toBe(true);
     } finally { rmSync(sandbox, { recursive: true, force: true }); }
   });
 });

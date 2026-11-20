@@ -225,6 +225,13 @@
         },
         "cameraId": {
           "type": "string"
+        },
+        "drawing": {
+          "$ref": "#/$defs/ShootingDrawing"
+        },
+        "autoFit": {
+          "type": "boolean",
+          "description": "Absent inherits the scene auto-fit setting."
         }
       }
     },
@@ -425,6 +432,154 @@
         }
       },
       "additionalProperties": false
+    },
+    "ShootingDrawing": {
+      "title": "ShootingDrawing",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background",
+        "fill",
+        "fillOpacity",
+        "visibleLines",
+        "hiddenLines",
+        "visibleColor",
+        "hiddenColor",
+        "visibleWidth",
+        "hiddenWidth",
+        "lineEasing",
+        "mergeLines"
+      ],
+      "properties": {
+        "background": {
+          "type": "boolean",
+          "default": true
+        },
+        "fill": {
+          "type": "boolean",
+          "default": true
+        },
+        "visibleLines": {
+          "type": "boolean",
+          "default": true
+        },
+        "hiddenLines": {
+          "type": "boolean",
+          "default": false
+        },
+        "visibleColor": {
+          "type": "string",
+          "default": "#000000",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "hiddenColor": {
+          "type": "string",
+          "default": "#808080",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "visibleWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "hiddenWidth": {
+          "type": "number",
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "lineEasing": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 10
+        },
+        "mergeLines": {
+          "type": "boolean",
+          "default": false
+        },
+        "fillColor": {
+          "type": "string",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "fillOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 1
+        }
+      }
+    },
+    "ShootingDrawingPatch": {
+      "title": "ShootingDrawingPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "background": {
+          "type": "boolean"
+        },
+        "fill": {
+          "type": "boolean"
+        },
+        "visibleLines": {
+          "type": "boolean"
+        },
+        "hiddenLines": {
+          "type": "boolean"
+        },
+        "visibleColor": {
+          "type": "string",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "hiddenColor": {
+          "type": "string",
+          "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "visibleWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "hiddenWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 64
+        },
+        "lineEasing": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "mergeLines": {
+          "type": "boolean"
+        },
+        "fillColor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+            }
+          }
+        },
+        "fillOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "restoreAbsent": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

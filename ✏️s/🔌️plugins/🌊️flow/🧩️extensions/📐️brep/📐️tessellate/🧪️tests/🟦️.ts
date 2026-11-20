@@ -24,9 +24,26 @@ test("original tessellation keeps strict business source until complete canonica
   expect(implementation).toContain("self.completed=Some(ready.source)");
   expect(implementation).toContain("closing-tessellation-output-source");
   expect(implementation).toContain("tessellate_step");
-  expect(implementation).toContain("admit_original_domain_failure");
+  expect(implementation).toContain("flow_extension_sdk::admit_evaluation_failure");
   const guest = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   const normal = guest.slice(guest.indexOf("fn invoke(&mut self, capability:"), guest.indexOf("fn inference_context", guest.indexOf("fn invoke(&mut self, capability:")));
   expect(normal).toContain('"tessellate" => self.context.tessellate_raw(request, cx)');
   expect(normal).not.toContain("tessellate_step_envelope_json");
+});
+
+test("the tessellation invocation is compiled by its own library", () => {
+  const source = new URL("../🦀️.rs", import.meta.url);
+  const manifest = new URL("../📦️packages/🦀️rust/Cargo.toml", import.meta.url);
+  const extensionManifest = new URL("../../📦️packages/🦀️rust/Cargo.toml", import.meta.url);
+  const library = Bun.TOML.parse(readFileSync(manifest, "utf8"));
+  const extension = Bun.TOML.parse(readFileSync(extensionManifest, "utf8"));
+  const workspace = Bun.TOML.parse(readFileSync(new URL("../../Cargo.toml", import.meta.url), "utf8"));
+  expect(library.package.metadata.semio.role).toBe("library");
+  expect(workspace.workspace.members).toContain("📐️tessellate/📦️packages/🦀️rust");
+  expect(new URL(library.lib.path, manifest).href).toBe(source.href);
+  expect(new URL(extension.dependencies[library.package.name].path + "/Cargo.toml", extensionManifest).href).toBe(manifest.href);
+  expect(library.dependencies[extension.package.name]).toBeUndefined();
+  const guest = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+  expect(guest).toContain("use semio_s_plugin_flow_brep_tessellation as tessellation;");
+  expect(guest).not.toContain('📐️tessellate/🦀️.rs');
 });

@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn portable_diff_fixtures_apply_invert_and_preserve_sparse_presence() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️diff-algebra/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️diff-algebra/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
         let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -25,7 +25,7 @@ fn portable_diff_fixtures_apply_invert_and_preserve_sparse_presence() {
 
 #[test]
 fn positional_event_duplicates_are_refused_atomically() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️diff-algebra/refusals.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️diff-algebra/refusals.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let base: LayoutSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff: LayoutDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

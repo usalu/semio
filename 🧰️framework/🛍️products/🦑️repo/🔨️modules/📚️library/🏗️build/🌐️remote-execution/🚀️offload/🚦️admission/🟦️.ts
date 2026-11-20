@@ -12,12 +12,15 @@ const limits=OFFLOAD_POLICY_V1.limits;
 /** 🚦️ The machine's own answer to "may one more compiler unit start here now". */
 export type OffloadAdmissionV1=Readonly<{verdict:"admit"|"wait";reason:HostReasonV1;atMs:number}>;
 /** 🔌️ The seam of the host-capacity decision: tests hand in a probe that reports a pressured machine or a policy, production uses the machine and the authored policy. */
-export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number}>;
+export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number;signal?:AbortSignal}>;
 
 /** 🚦️ Asks the single admission decision of the host (`evaluateHostCapacityV1`) about one more unit: a sample of the machine, an empty ledger (what is committed by other builds already shows in the sample's free memory, swap, pressure and load) and one waiting request for one job of the unit's size. `wait` means the unit would queue here. */
 export async function localUnitAdmissionV1(ports:OffloadAdmissionPortsV1={}):Promise<OffloadAdmissionV1>{
  const now=(ports.now??Date.now)(),policy=ports.policy??(await import("../../../🌡️host-capacity/🎛️control/🟦️.ts")).BUILD_HOST_CAPACITY_POLICY_V1;
- const record=await readHostSampleV1(policy,ports.probe??currentHostProbeV1(),undefined,()=>now),host:HostSampleV1=record.host;
+ const signal=ports.signal,probe=ports.probe??currentHostProbeV1(signal);
+ signal?.throwIfAborted();
+ const record=await readHostSampleV1(policy,signal===undefined||probe.signal===signal?probe:{...probe,signal:probe.signal===undefined?signal:AbortSignal.any([probe.signal,signal])},undefined,()=>now),host:HostSampleV1=record.host;
+ signal?.throwIfAborted();
  const request:HostRequestV1={id:"offload-"+process.pid,operation:"rustc",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:0,perJobMegabytes:limits.unitMegabytes,cpuPerJob:1};
  const decision=evaluateHostCapacityV1(policy,host,[],[{request,arrivedAtMs:now,pid:process.pid}],now).decisions[0]!;
  return Object.freeze({verdict:decision.verdict,reason:decision.reason,atMs:now});
@@ -55,7 +58,7 @@ export function slotQueueMillisecondsV1(root:string,slots:number,now:number=Date
  return Math.max(1,oldest);
 }
 
-/** 🌊️ How many cargo jobs an invocation may run when this machine cannot carry its own grant but the fleet can take units: `undefined` when offload is off, no scheduler is published or the machine would admit one more unit; else `fanOutJobs`. The invocation then does not sleep in the machine-wide queue: its units start, each asks the per-unit admission, and what the machine cannot carry flows to the minis (the compile slots stay the local bound). */
+/** 🌊️ Returns the configured fleet fanout ceiling when a scheduler is published and a local unit would queue. The ceiling is separate from the Cargo launcher’s local compiler lease. */
 export async function offloadFanOutJobsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|undefined>{
  if(offloadModeV1(environment)==="never")return undefined;
  const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());

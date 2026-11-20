@@ -1,0 +1,91 @@
+/** 🔬️ Quiz start and pets tick profile. Env: RATE (cpu slowdown), SITE, QUIZZES (count, default 10), PETS (1 profiles the idle task screen). Prints per quiz the long tasks after the start click, the answer event times and the top inclusive functions of the pets tick. */
+import { createRequire } from "node:module";
+const require = createRequire("/Users/ueli/Documents/semio/.cache/b/d/m/j/b87aa6c238609ac86876/node_modules/@playwright/test/");
+const { chromium } = require("@playwright/test");
+const QUIZZES = ["physics", "ventilation", "heating", "cooling", "demand", "parametric-design", "grasshopper-data", "excel-workbook", "bim-concepts", "optimization-decisions"];
+const rate = Number(process.env.RATE ?? 1), site = process.env.SITE ?? "http://127.0.0.1:6069", count = Number(process.env.QUIZZES ?? 10);
+const browser = await chromium.launch();
+const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en" });
+const page = await context.newPage();
+await page.addInitScript(() => {
+  window.__t = { long: [], events: [], raf: [], frames: [], added: [], what: [] };
+  document.addEventListener("DOMContentLoaded", () => new MutationObserver((records) => { let added = 0; for (const record of records) for (const node of record.addedNodes) added += 1 + (node.nodeType === 1 ? node.getElementsByTagName("*").length : 0); if (added > 0) { __t.added.push(added); __t.what.push(records.flatMap((record) => [...record.addedNodes].filter((node) => node.nodeType === 1).map((node) => `${node.tagName.toLowerCase()}${node.getAttribute("data-card") ? "[card=" + node.getAttribute("data-card") + "]" : ""}${node.className && typeof node.className === "string" ? "." + node.className.split(" ")[0] : ""}:${1 + node.getElementsByTagName("*").length}`)).slice(0, 12).join(" ")); } }).observe(document.documentElement, { childList: true, subtree: true }));
+  const raf = window.requestAnimationFrame.bind(window);
+  let inside = null;
+  const spent = (target, name) => { const original = target[name]; target[name] = function (...args) { if (inside === null) return original.apply(this, args); const start = performance.now(); try { return original.apply(this, args); } finally { inside[name] = (inside[name] ?? 0) + performance.now() - start; inside.calls[name] = (inside.calls[name] ?? 0) + 1; } }; };
+  for (const [target, name] of [[Element.prototype, "getBoundingClientRect"], [Range.prototype, "getClientRects"], [window, "getComputedStyle"], [Element.prototype, "querySelectorAll"], [Element.prototype, "matches"], [Element.prototype, "closest"], [Document.prototype, "createTreeWalker"], [Document.prototype, "createRange"], [Element.prototype, "setAttribute"], [Node.prototype, "appendChild"], [Element.prototype, "append"], [Element.prototype, "remove"]]) spent(target, name);
+  window.requestAnimationFrame = (callback) => raf((time) => { const pets = String(callback).includes("haste"); const start = performance.now(); if (pets) inside = { calls: {} }; try { callback(time); } finally { const took = performance.now() - start; if (pets) { inside.total = took; __t.raf.push(took); __t.frames.push(inside); inside = null; } } });
+  new PerformanceObserver((l) => l.getEntries().forEach((e) => __t.long.push({ s: Math.round(e.startTime), d: Math.round(e.duration) }))).observe({ type: "longtask", buffered: true });
+  new PerformanceObserver((l) => l.getEntries().forEach((e) => __t.events.push({ n: e.name, d: e.duration, proc: Math.round(e.processingEnd - e.processingStart) }))).observe({ type: "event", durationThreshold: 16, buffered: true });
+});
+page.setDefaultTimeout(180_000);
+const cdp = await context.newCDPSession(page);
+await cdp.send("Profiler.enable");
+await cdp.send("Profiler.setSamplingInterval", { interval: 200 });
+if (rate !== 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate });
+const idle = (ms) => page.waitForTimeout(ms);
+const petStats = (raf) => { const sorted = [...raf].sort((a, b) => a - b); const at = (q) => Math.round((sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] ?? 0) * 10) / 10; return { frames: sorted.length, p50: at(0.5), p90: at(0.9), p99: at(0.99), max: at(1), over16: sorted.filter((x) => x > 16).length }; };
+const stop = async (label) => {
+  const { profile } = await cdp.send("Profiler.stop");
+  if (process.env.DUMP) (await import("node:fs")).writeFileSync(`${process.env.DUMP}/${label.replaceAll(" ", "-")}-${rate}x.cpuprofile`, JSON.stringify(profile));
+  const byId = new Map(profile.nodes.map((n) => [n.id, n]));
+  const parent = new Map(); for (const n of profile.nodes) for (const c of n.children ?? []) parent.set(c, n.id);
+  const incl = new Map();
+  profile.samples.forEach((id, i) => { const seen = new Set(); for (let at = id; at !== undefined; at = parent.get(at)) { const n = byId.get(at); const key = `${n.callFrame.functionName || "(anon)"} ${n.callFrame.url.split("/").pop().slice(0, 30)}:${n.callFrame.lineNumber}`; if (seen.has(key)) continue; seen.add(key); incl.set(key, (incl.get(key) ?? 0) + (profile.timeDeltas[i] ?? 0) / 1000); } });
+  const inclusive = [...incl.entries()].filter(([k]) => !k.startsWith("(")).sort((a, b) => b[1] - a[1]).slice(0, 22).map(([k, v]) => `${v.toFixed(0)}ms ${k}`);
+  const t = await page.evaluate(() => { const r = { long: __t.long, events: __t.events, raf: __t.raf, frames: __t.frames, added: __t.added, what: __t.what }; __t.long = []; __t.events = []; __t.raf = []; __t.frames = []; __t.added = []; __t.what = []; return r; });
+  console.log(JSON.stringify({ label, rate, long: t.long.map((x) => x.d), events: t.events.filter((e) => e.proc > 8).map((e) => `${e.n} ${e.proc}`), pets: petStats(t.raf), nodes: { batches: t.added.length, max: Math.max(0, ...t.added), total: t.added.reduce((a, b) => a + b, 0), top: [...t.added].sort((a, b) => b - a).slice(0, 4), biggest: t.what.map((w, i) => `${t.added[i]}: ${w.slice(0, 230)}`).filter((w, i) => t.added[i] > 40) }, worst: t.frames.sort((a, b) => b.total - a.total).slice(0, 3).map((f) => Object.fromEntries(Object.entries(f).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * 10) / 10 : Object.entries(v).map(([n, c]) => `${n}x${c}`).join(' ')]))), inclusive: process.env.TOP ? inclusive : undefined }));
+};
+await page.goto(site + "/", { waitUntil: "commit" });
+await page.locator('[data-slot="introduction-close"]').waitFor({ timeout: 240_000 });
+await idle(2000 * rate);
+await page.locator('[data-slot="introduction-close"]').click();
+await page.locator('[data-slot="introduction-info-box"]').waitFor({ state: "detached", timeout: 120_000 });
+const learner = page.locator('[data-course-grid][data-grid-active] > [data-layered-overview] [data-layered-card="learner"] [data-overview-card-action="primary"]');
+await learner.waitFor({ timeout: 120_000 });
+await learner.click();
+const dialog = page.getByRole("dialog").filter({ has: page.locator('input[type="radio"][value="anonymous"]') });
+await dialog.waitFor({ timeout: 120_000 });
+await dialog.locator('input[type="radio"][value="name"]').click();
+await dialog.locator('input[type="text"]').fill("Load Tester");
+await dialog.locator('[data-overview-card-action="primary"]').click();
+await page.locator('[data-course-grid][data-grid-active] > [data-layered-overview]').waitFor({ timeout: 120_000 });
+await page.goto(site + "/?preview=1", { waitUntil: "commit" });
+await page.locator('[data-course-grid][data-grid-active] > [data-layered-overview]').waitFor({ timeout: 120_000 });
+const cards = 'xpath=//*[@data-course-grid][@data-grid-active]/*[@data-layered-overview]//*[@data-layered-card][not(@data-layered-card="learner" or @data-layered-card="intro" or @data-layered-card="board" or @data-layered-card="badges" or @data-layered-card="prefs")]//*[@data-overview-card-action="primary"]';
+await page.evaluate(() => (window.location.hash = "quizzes"));
+await page.locator('[data-course-grid="quizzes"][data-grid-active]').waitFor();
+await page.locator(cards).first().waitFor();
+const available = await page.locator(cards).count();
+console.error("quiz cards", available, await page.evaluate(() => [...document.querySelectorAll("[data-course-grid][data-grid-active] > [data-layered-overview] [data-layered-card]")].map((c) => c.getAttribute("data-layered-card"))));
+for (let index = Number(process.env.FROM ?? 0); index < Math.min(count, QUIZZES.length); index++) {
+  await page.evaluate(() => (window.location.hash = "quizzes"));
+  await page.locator('[data-course-grid="quizzes"][data-grid-active]').waitFor({ timeout: 120_000 });
+  const card = page.locator(`[data-course-grid][data-grid-active] > [data-layered-overview] [data-layered-card="${QUIZZES[index]}"] [data-overview-card-action="primary"]`).first();
+  await card.waitFor({ timeout: 120_000 });
+  await idle(Number(process.env.SETTLE ?? 1500) * rate);
+  await page.evaluate(() => { __t.long = []; __t.events = []; __t.raf = []; __t.frames = []; __t.added = []; __t.what = []; });
+  await cdp.send("Profiler.start");
+  await card.evaluate((element) => element.click());
+  await page.locator('#course-main [data-card="run"]').first().waitFor({ timeout: Number(process.env.WAIT ?? 120_000) }).catch(async (error) => { console.error(index, (await page.locator('body').innerText()).slice(0, 1500), page.url()); throw error; });
+  await idle(Number(process.env.IDLE ?? 2000) * rate);
+  await stop(`quiz ${index} start`);
+  if (process.env.TASK && index === Number(process.env.TASK)) {
+    await page.locator('#course-main [data-card="run"] nav button').first().click();
+    const task = page.locator('#course-main [data-card="task"]');
+    await task.locator("[data-course-item]").first().waitFor({ timeout: 120_000 });
+    await idle(1500 * rate);
+    await page.evaluate(() => { __t.long = []; __t.events = []; __t.raf = []; __t.frames = []; __t.added = []; __t.what = []; });
+    await cdp.send("Profiler.start");
+    await idle(3000 * rate);
+    await stop(`quiz ${index} task idle`);
+    const choice = task.locator("[data-course-item] select").first();
+    const chip = task.locator("[data-course-item]").first();
+    await cdp.send("Profiler.start");
+    if ((await choice.count()) > 0) await choice.selectOption({ index: 1 });
+    else { const box = await chip.boundingBox(); await page.mouse.move(box.x + 10, box.y + 10); await page.mouse.down(); await page.mouse.move(box.x + 60, box.y + 80, { steps: 4 }); await page.mouse.up(); }
+    await idle(2000 * rate);
+    await stop(`quiz ${index} answer`);
+  }
+}
+await browser.close();

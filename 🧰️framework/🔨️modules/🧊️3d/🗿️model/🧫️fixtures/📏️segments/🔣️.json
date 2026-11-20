@@ -1,0 +1,145 @@
+{
+ "$comment": "Segments of one full circle: n = min(maxSegments, max(minSegments, ceil(pi / acos(1 - chordM / radiusM)), round.segments when radiusM > round.radiusM)). Each case is a cylinder of that radius about the Y axis.",
+ "cases": [
+  {
+   "name": "chord-rules",
+   "radiusM": 0.02,
+   "heightM": 0.08,
+   "quality": {
+    "chordM": 0.00015,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0075,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 26
+   },
+   "note": "pi / acos(1 - 0.00015 / 0.02) = 25.63, above the floor of 24"
+  },
+  {
+   "name": "floor-lifts-a-coarse-chord",
+   "radiusM": 0.01,
+   "heightM": 0.04,
+   "quality": {
+    "chordM": 0.0005,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0075,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 24
+   },
+   "note": "the chord alone asks for 9.89 segments, the radius exceeds 7.5 mm"
+  },
+  {
+   "name": "no-floor-without-round",
+   "radiusM": 0.01,
+   "heightM": 0.04,
+   "quality": {
+    "chordM": 0.0005,
+    "minSegments": 12,
+    "maxSegments": 64
+   },
+   "expected": {
+    "segments": 12
+   },
+   "note": "the same circle without round falls to minSegments"
+  },
+  {
+   "name": "below-the-floor-radius",
+   "radiusM": 0.006,
+   "heightM": 0.024,
+   "quality": {
+    "chordM": 0.0005,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0075,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 12
+   },
+   "note": "a radius of 6 mm does not exceed 7.5 mm"
+  },
+  {
+   "name": "at-the-floor-radius",
+   "radiusM": 0.0075,
+   "heightM": 0.03,
+   "quality": {
+    "chordM": 0.0005,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0075,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 12
+   },
+   "note": "a radius equal to round.radiusM does not exceed it"
+  },
+  {
+   "name": "capped-by-max-segments",
+   "radiusM": 0.3,
+   "heightM": 1.2,
+   "quality": {
+    "chordM": 0.00015,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0075,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 64
+   },
+   "note": "the chord asks for 99.34 segments"
+  },
+  {
+   "name": "floor-capped-by-max-segments",
+   "radiusM": 0.05,
+   "heightM": 0.2,
+   "quality": {
+    "chordM": 0.02,
+    "minSegments": 8,
+    "maxSegments": 16,
+    "round": {
+     "radiusM": 0.03,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 16
+   },
+   "note": "round.segments never exceeds maxSegments"
+  },
+  {
+   "name": "chord-larger-than-the-radius",
+   "radiusM": 0.001,
+   "heightM": 0.004,
+   "quality": {
+    "chordM": 0.002,
+    "minSegments": 12,
+    "maxSegments": 64,
+    "round": {
+     "radiusM": 0.0005,
+     "segments": 24
+    }
+   },
+   "expected": {
+    "segments": 24
+   },
+   "note": "the chord exceeds the radius, the floor still holds"
+  }
+ ]
+}

@@ -69,7 +69,8 @@ function Placed(props: { readonly placement: Placement; readonly row: Row | unde
           onPointerMove={props.onMove}
           onPointerUp={props.onUp}
           onPointerCancel={props.onUp}
-          className={cn("absolute cursor-grab touch-none active:cursor-grabbing", selected && "outline-2 outline-dashed outline-offset-2 outline-[var(--accent)]")}
+          data-shared-border-frame="" data-shared-border-edges=""
+          className="absolute cursor-grab touch-none outline-none active:cursor-grabbing"
           style={{ left: xPx + box.left, top: groundPx + box.top, width: box.width, height: box.height, zIndex: order + 1 }}
         />
       ) : null}

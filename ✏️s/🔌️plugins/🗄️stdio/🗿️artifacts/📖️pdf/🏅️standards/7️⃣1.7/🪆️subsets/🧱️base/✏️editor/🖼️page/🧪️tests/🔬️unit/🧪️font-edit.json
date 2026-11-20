@@ -1,0 +1,10 @@
+{
+  "base": "Helvetica",
+  "occupied": "F3",
+  "occupiedFont": "Courier",
+  "replacement": "Times-Roman",
+  "expected": [
+    "Times-Roman",
+    "Helvetica"
+  ]
+}

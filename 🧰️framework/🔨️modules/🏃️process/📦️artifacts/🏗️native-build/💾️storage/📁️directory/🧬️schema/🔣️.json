@@ -2,6 +2,42 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/directory/component.json",
   "definitions": {
+    "InheritedCaseCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "inherited",
+        "deny",
+        "after",
+        "effects"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inherited": {
+          "type": "boolean"
+        },
+        "deny": {
+          "type": "boolean"
+        },
+        "after": {
+          "type": "boolean"
+        },
+        "effects": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "enum": [
+              "probe",
+              "set"
+            ]
+          }
+        }
+      }
+    },
     "Protocol": {
       "const": {
         "version": 1,
@@ -98,6 +134,7 @@
               "notFound": 2,
               "dataBytes": 4
             },
+            "freeSpace": {"counterBytes": 8},
             "blockBytes": 4096,
             "systemRoot": {
               "pattern": "^[A-Za-z]:\\\\[^\\\\/:*?\"<>|\\u0000-\\u001f]+$",
@@ -114,10 +151,10 @@
           "swapSiblings": "Journaled directory swap requires two sibling directories",
           "windowsRename": "Directory rename refused by Windows",
           "windowsOpenHandle": "A handle is still open inside the partition (Win32 error 5 or 32); close every user of the partition before it is swapped",
-          "caseBuild": "This Windows build has no per-directory case sensitivity (build 17107 or newer on NTFS is required)",
-          "caseFeature": "Per-directory case sensitivity is unavailable: enable the optional feature Microsoft-Windows-Subsystem-Linux (dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux, then restart) and use an NTFS volume",
+          "caseBuild": "Windows rejected the directory case-sensitivity information class or flag. Check for local NTFS and Windows 10 version 1803 or newer.",
+          "caseFeature": "The cache filesystem refused per-directory case sensitivity as unsupported. Check for local NTFS and check whether the Microsoft-Windows-Subsystem-Linux optional feature is available.",
           "caseNotEmpty": "Per-directory case sensitivity can only be set on an empty directory",
-          "caseAccess": "Per-directory case sensitivity was refused (access denied) for the cache directory owner",
+          "caseAccess": "Per-directory case sensitivity was refused (access denied) for the current Windows identity.",
           "caseUnverified": "The directory still folds case after the per-directory case-sensitivity flag was set",
           "windowsInUse": "Directory is held open by another process (Win32 sharing violation); close every user of the partition"
         },

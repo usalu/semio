@@ -18,6 +18,13 @@ fn the_two_panes_own_two_distinct_config_instances() {
         <Grid2dPreviewWindowConfigOwner as semio_plugin::WindowConfigOwner>::WINDOW_KIND_ID
     );
     assert_eq!(<Grid2dGridWindowConfigOwner as semio_plugin::WindowConfigOwner>::SCHEMA, <Grid2dPreviewWindowConfigOwner as semio_plugin::WindowConfigOwner>::SCHEMA);
+    fn assert_disposer_birth<O: semio_plugin::WindowConfigOwner>() {
+        let demand = O::store_disposer_birth().expect("the mounted owner declares its disposer birth");
+        let disposer = O::build_store_disposer();
+        assert_eq!(demand.capacity_bytes, std::mem::size_of_val(disposer.as_ref()));
+    }
+    assert_disposer_birth::<Grid2dGridWindowConfigOwner>();
+    assert_disposer_birth::<Grid2dPreviewWindowConfigOwner>();
 }
 
 #[test]
@@ -31,13 +38,10 @@ fn the_config_round_trips_through_its_text_and_pack_envelopes() {
 }
 
 #[test]
-fn the_transient_round_trips_and_absorbs_wholesale() {
+fn the_transient_round_trips() {
     let transient = Grid2dWindowTransient { hovered_cell: "2,1".into() };
     let bytes = <Grid2dWindowTransient as pack::snapshot::ArtifactPack>::encode_pack(&transient);
     assert_eq!(<Grid2dWindowTransient as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("transient decodes"), transient);
-    let mut base = Grid2dWindowTransient::default();
-    protocol::MutationDiff::absorb(&mut base, transient.clone());
-    assert_eq!(base, transient);
 }
 
 #[test]

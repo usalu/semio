@@ -8,6 +8,7 @@
     "minimumBootLayers",
     "example",
     "utility",
+    "utilityPressStates",
     "gesture",
     "layerDelta",
     "persistence",
@@ -40,6 +41,9 @@
     },
     "utility": {
       "const": "shapeRect"
+    },
+    "utilityPressStates": {
+      "const": [true, false, true]
     },
     "gesture": {
       "type": "object",

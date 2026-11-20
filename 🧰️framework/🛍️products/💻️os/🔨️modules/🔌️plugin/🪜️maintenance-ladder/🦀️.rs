@@ -130,6 +130,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
         if stage==17{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.tools.latest_wins_keys.advance(effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==18{
+            if self.tools.tool_cancellations.live_cleanup_awaits_custody() {
+                return Ok(PluginLifecycleStep::AwaitingInput { reason: "cancellation cleanup awaits its original lease custody" });
+            }
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
             let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
             if complete&&progress==RetainedCloneProgress::default(){
@@ -147,7 +150,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         if stage==15{return match self.tools.live_runtime_instance_id{Some(instance)=>A::mounted_job_maintenance_step(instance,cx,grant),None=>Ok(idle())}}
         if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
         if stage==23{return Ok(match semio_framework_job_worker::pump_worker_job_retirements(1,cx)?{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
-        if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;owner.drive_worker_step(cx).map_err(Into::into)}}}
+        if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media.media_closures.next_id_from(self.maintenance.maintenance_media_cursor)else{return Ok(idle())};self.maintenance.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(PluginLifecycleStep::AwaitingInput{reason:"terminal media source remains retained until its original output receiving"})}
@@ -374,12 +377,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     /// 🎁️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
     pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
-        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        let composed=self.shared().store_replacement_target(closing).and_then(|(_,operation)|self.ingest.store_replacement_jobs.get(operation))
+            .is_some_and(|job|matches!(job.state, ActiveArtifactStoreReplacementState::Initializing | ActiveArtifactStoreReplacementState::OpeningMembers));
+        let advance=|same:&mut semio_framework_job::StepContext<'_>,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.ingest.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
             Ok((step,terminal))
-        })
+        };
+        if composed {
+            original_composed_lifecycle_step(cx,loan,demand,advance)
+        }else{
+            semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,advance)
+        }
     }
 
     fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -394,7 +404,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
         let owner = || maintenance_fault("artifact-store.replacement-owner", "store replacement changed during one fixed maintenance step");
         let active = self.ingest.store_replacement_jobs.get_mut(operation_id).ok_or_else(owner)?;
-        if closing {
+        let mounted_cancelled=active.mounted_genesis.is_some_and(|(operation,_)|{
+            let lease=self.tools.mounted_genesis_lease(operation,active.operation,active.generation);
+            lease.is_none_or(|lease|lease.publication_is_cancelled()||lease.publication_claim().is_finished())
+        });
+        if closing || mounted_cancelled && !active.committed {
             active.request_cancel();
         }
         let state = active.state;
@@ -406,12 +420,25 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             let step = active.drive_initializer(cx, grant);
             return step;
         }
-        if matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews) && active.cancelled() {
+        if (matches!(state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews)
+            || (active.mounted_genesis.is_some() && state == State::CandidateReady)) && active.cancelled() {
             active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
             return Ok(PluginLifecycleStep::Progress(item));
         }
         match state {
             State::AwaitingMembers => {
+                if active.mounted_genesis.is_some() && active.candidate_children.is_none() {
+                    let children=ChildMemberRegistry::<M>::new();
+                    let admitted=children.allocation_admitted;
+                    *active.candidate_children=Some(children);
+                    if !admitted {
+                        active.refuse(ArtifactStoreReplacementRefusal::InitializerAdmissionRejected);
+                    }
+                    return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{
+                        copied_items:1,copied_bytes:demand.copy_bytes,
+                        retained_capacity_bytes:if admitted{demand.capacity_bytes}else{0},..Default::default()
+                    }));
+                }
                 if active.member_ingress.is_some() {
                     return Ok(PluginLifecycleStep::Progress(empty));
                 }
@@ -425,7 +452,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 self.ingest.complete_store_replacement_genesis(&mut *self.stores, operation_id)?;
                 Ok(PluginLifecycleStep::Progress(item))
             }
-            State::OpeningMembers => active.drive_member_open(cx,grant),
+            State::OpeningMembers => cx.with_replacement_current(active.replacement_identity(), |owner| active.drive_member_open(owner, grant)),
             State::ClosingRejectedMember => {
                 active.state = State::RetiringRejectedMembers;
                 Ok(PluginLifecycleStep::Progress(item))
@@ -466,6 +493,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let live_generation = semio_framework_job::Generation(self.stores.store.generation_now());
         let next_content_generation = self.child_composition.child_content_generation.checked_add(1);
         let active = self.ingest.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| maintenance_fault("artifact-store.replacement-owner", "ready store candidate changed before exact commit validation"))?;
+        let mounted_permit=if let Some((operation,base_revision))=active.mounted_genesis {
+            if base_revision!=self.stores.store.content_revision_now() {
+                active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
+                return Ok(PluginLifecycleStep::Progress(item));
+            }
+            let lease=self.tools.mounted_genesis_lease(operation,active.operation,active.generation);
+            let Some(lease)=lease.filter(|lease|!lease.publication_is_cancelled()&&!lease.publication_claim().is_finished()) else {
+                active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
+                return Ok(PluginLifecycleStep::Progress(item));
+            };
+            let Some(permit)=lease.try_claim_publication() else {return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default()))};
+            Some(permit)
+        }else{None};
         let disposer = A::build_document_store_disposer().ok_or_else(|| maintenance_fault("artifact-store.replacement-disposer-missing", "app did not supply the required displaced-store disposer"))?;
         let complete_candidate = active.candidate_children.as_ref().is_some_and(|children| active.candidate_source_generation == children.len() as u64)
             && active.candidate_content.is_some()
@@ -492,7 +532,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if !self.tools.admit_document_window_reset(&mut *self.pending, cx)?{return Ok(PluginLifecycleStep::Progress(Default::default()))}
+        let before=cx.retained_progress();
+        if mounted_permit.is_none() && !self.tools.admit_document_window_reset(&mut *self.pending, cx)?{
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+        }
         let mut window_reset = Some(self.shared().prepare_document_window_reset()?);
         let active = self.ingest.store_replacement_jobs.get_mut(operation_id).expect("validated replacement remains exclusively owned across non-suspending window preparation");
         let candidate = active.retained_store.take().expect("complete replacement retains its exact parent candidate");
@@ -516,10 +559,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         *active.retained_store = Some(displaced);
         *active.candidate_children = Some(displaced_children);
         *active.candidate_content = Some(displaced_content);
-        if displaced_content_retirements.is_empty() {
-            drop(displaced_content_retirements);
-        } else {
-            *active.displaced_content_retirements = Some(displaced_content_retirements);
+        if displaced_content_retirements.empty_backing_byte_demand()!=Some(0) {
+            *active.displaced_content_retirements=Some(displaced_content_retirements);
         }
         *active.candidate_composition = Some(displaced_composition);
         if !displaced_pins.is_empty() {
@@ -527,9 +568,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         *active.retained_disposer = Some(disposer);
         active.committed = true;
+        active.committed_frontier = Some((self.stores.store.generation_now(), self.stores.store.content_revision_now()));
         active.state = State::RetiringCommittedMembers;
         self.child_composition.child_content_generation = next_content_generation.expect("candidate generation exhaustion was rejected before commit");
-        self.pending.commit_document_window_reset(&mut *self.stores, &mut *self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
+        if mounted_permit.is_some() {
+            self.pending.install_document_window_reset(&mut *self.stores,&mut *self.history,&mut window_reset)?;
+        } else {
+            self.pending.commit_document_window_reset(&mut *self.stores, &mut *self.history, &mut window_reset, self.tools.tool_cancellations.scope_generation(), cx)?;
+        }
         self.history.cache = None;
         self.history.retire_displaced_document_rows();
         self.time_travel.set_history_unavailable(false);
@@ -538,16 +584,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     /// 🔁️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
     pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let grant=semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(grant,cx.retained_grant());
         let demand=match self.shared().document_archive_target(closing) {
             Some((_,operation))=>self.ingest.document_archive_load_demands(self.ingest.document_archive_loads.get(operation).ok_or_else(||maintenance_fault("archive-load.owner","archive load original source changed before its quote"))?,closing,grant.maximum_copy_bytes)?,
             None=>self.ingest.document_archive_loads.empty_backing_byte_demand().map_or(Default::default(),|bytes|RetirementDemand{release_bytes:bytes,depth:1,..Default::default()})
         };
         if self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0)){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         if closing&&self.shared().document_archive_target(closing).is_none()&&self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes|bytes!=0){let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);if cx.retirement_should_yield()||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let step=match self.ingest.document_archive_loads.close_empty_backing_step(grant){Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_fuel(u64::from(progress!=Default::default()));cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;return Ok(PluginLifecycleStep::Progress(progress))}
-        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|{
-            let step=self.drive_document_archive_original(same,grant,closing)?;
+        original_composed_lifecycle_step(cx, grant, demand, |same, grant| {
+            let step = self.drive_document_archive_original(same, grant, closing)?;
             let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));
-            Ok((step,terminal))
+            Ok((step, terminal))
         })
     }
 
@@ -562,7 +609,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let cursor = if closing { &mut self.close.close_document_archive_cursor } else { &mut self.maintenance.maintenance_document_archive_cursor };
         *cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
         let mut active = self.ingest.document_archive_loads.remove(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive retirement authority changed during one bounded step"))?;
-        if closing&&active.terminal()&&active.terminal_is_empty(){drop(active);return Ok(PluginLifecycleStep::Progress(item()));}
         if closing && !active.terminal() {
             active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
         }
@@ -571,11 +617,27 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             self.ingest.document_archive_loads.insert_admitted(operation, active);
             return funded.map(|_| PluginLifecycleStep::Progress(empty)).map_err(Into::into);
         }
+        if closing && active.terminal() && active.inputs_are_empty() {
+            let demand = active.terminal_removal_demands();
+            if demand.release_bytes != 0 {
+                drop(std::mem::take(&mut active.fault));
+            }
+            drop(active);
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress {
+                copied_bytes: demand.copy_bytes,
+                released_bytes: demand.release_bytes,
+                ..item()
+            }));
+        }
         let step=self.ingest.advance_document_archive_load(&mut *self.stores, &mut *self.child_composition, &mut active, grant, cx);
         self.ingest.document_archive_loads.insert_admitted(operation, active);
         step
     }
 }
+
+/// 🧮️ One archive-load step may post many owned items in one receipt (the history decoder admission alone posts 6), so it never starts in a turn whose remaining item loan is smaller.
+#[doc(hidden)]
+pub const DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS:usize=16;
 
 impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
     /// 🌡️ Pressure beats fairness: a displaced-owner or child retirement queue a quarter full is drained out of turn.
@@ -752,6 +814,8 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             16 => (!self.tools.instance_operation_owner.terminal_is_empty().unwrap_or(false)).then(|| self.tools.instance_operation_owner.retirement_demands(body)).transpose()?,
             17 => (!(self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty()) && self.tools.latest_wins_keys.can_begin())).then(|| RetirementDemand { depth: 1, ..Default::default() }),
             26 => self.pending.pending_document_window_admission.as_ref().filter(|admission|admission.committed).map(|_|self.pending.document_window_admission_demands()),
+            18 if !self.tools.tool_cancellations.has_cleanup_work() => None,
+            18 if self.tools.tool_cancellations.live_cleanup_awaits_custody() => Some(RetirementDemand::default()),
             18 => {let mut demand=self.tools.tool_cancellations.cancellation_cleanup_demands(self.maintenance.maintenance_cancellation_cursor,body,true)?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original maintenance cancellation cursor quote overflow"))?;Some(demand)},
             19 => (!self.stores.presence_store.local_read_maintenance_is_idle()).then(|| self.stores.presence_store.maintenance_local_reads_demands(body)).transpose()?,
             MAINTENANCE_CHILD_MEMBER_STAGE => (!self.child_composition.child_member_retirements.is_empty()).then(|| self.child_member_retirement_demands(body)).transpose()?,
@@ -797,7 +861,19 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             let index = (cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             self.ingest.store_replacement_jobs
                 .entry(index)
-                .filter(|entry| closing || (entry.1.state != ActiveArtifactStoreReplacementState::Complete && !(entry.1.state == ActiveArtifactStoreReplacementState::AwaitingMembers && entry.1.member_ingress.is_some())))
+                .filter(|(_, replacement)| {
+                    use ActiveArtifactStoreReplacementState::{AwaitingMembers, Complete};
+                    if closing { return true; }
+                    if replacement.state == Complete { return false; }
+                    if replacement.state != AwaitingMembers || replacement.cancelled() { return true; }
+                    replacement.member_ingress.is_none() && !(0..ARTIFACT_LIVE_OUTPUT_SLOTS).any(|slot| {
+                        self.ingest.document_archive_loads.entry(slot).is_some_and(|(_, archive)| {
+                            archive.replacement.is_some_and(|handle| {
+                                handle.operation == replacement.operation && handle.generation == replacement.generation
+                            })
+                        })
+                    })
+                })
                 .map(|entry| (index, entry.0))
         })
     }
@@ -805,7 +881,15 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     /// 🏪️ Quotes the next store-replacement turn selected by the target replacement's own state.
     pub fn store_replacement_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation_id)) = self.store_replacement_target(closing) else { return Ok(RetirementDemand::default()) };
-        self.ingest.store_replacement_jobs.get(operation_id).map_or(Ok(RetirementDemand::default()), |active| store_replacement_unit_demands::<A, M>(active, closing, body))
+        self.ingest.store_replacement_jobs.get(operation_id).map_or(Ok(RetirementDemand::default()),|active|{
+            let mounted_cancelled=active.mounted_genesis.is_some_and(|(operation,_)|
+                self.tools.mounted_genesis_lease(operation,active.operation,active.generation).is_none_or(|lease|lease.publication_is_cancelled()));
+            store_replacement_unit_demands::<A,M>(active,closing||mounted_cancelled,body)
+        })
+    }
+
+    pub fn document_archive_waits_for_host(&self) -> bool {
+        !self.ingest.document_archive_loads.is_empty() && self.document_archive_target(false).is_none()
     }
 
     fn document_archive_target(&self, closing: bool) -> Option<(usize, u64)> {
@@ -834,8 +918,9 @@ pub(crate) fn store_replacement_unit_demands<A: ArtifactApp, M: ReferenceSpaceMe
     use ActiveArtifactStoreReplacementState as State;
     let live = matches!(active.state, State::AwaitingMembers | State::OpeningMembers | State::ClosingRejectedMember | State::ValidatingClosure | State::PreparingCandidateViews);
     Ok(match active.state {
-        State::Initializing => active.initializer_demands(body)?,
-        _ if live && (closing || active.cancelled()) => item_demand(),
+        State::Initializing => active.initializer_demands_for_turn(body, closing)?,
+        _ if (live || active.mounted_genesis.is_some() && active.state==State::CandidateReady) && (closing || active.cancelled()) => item_demand(),
+        State::AwaitingMembers if active.mounted_genesis.is_some() && active.candidate_children.is_none()=>ChildMemberRegistry::<M>::birth_demands()?,
         State::AwaitingMembers | State::ClosingRejectedMember => item_demand(),
         State::OpeningMembers => active.member_open_demands(body)?,
         State::ValidatingClosure => active.closure_demands(),
@@ -878,4 +963,30 @@ fn whole_receipt(step: PluginLifecycleStep, posted: RetainedCloneProgress) -> Pl
         PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Complete(cover(progress)),
         other => other,
     }
+}
+
+/// 🪙️ Lends the actual phase to a composed owner and accounts for already-posted Source controls once.
+fn original_composed_lifecycle_step(
+    cx: &mut semio_framework_job::StepContext<'_>,
+    loan: RetainedCloneGrant,
+    demand: RetirementDemand,
+    advance: impl FnOnce(&mut semio_framework_job::StepContext<'_>, RetainedCloneGrant)
+        -> Result<(PluginLifecycleStep, bool), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>,
+) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    use semio_plugin_ownership::bounded_ownership::{original_lifecycle_delta, original_lifecycle_step, original_plugin_turn_grant};
+    let grant = original_plugin_turn_grant(loan, cx.retained_grant());
+    let reserved_before = cx.reserved_return_progress();
+    let mut step = original_lifecycle_step(cx, grant, demand, |same, _| {
+        let (mut step, terminal) = same.with_retained_loan(grant, |owner| advance(owner, grant).map_err(Into::into))?;
+        if let PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) = &mut step {
+            let reserved = original_lifecycle_delta(reserved_before, same.reserved_return_progress())?;
+            *progress = original_lifecycle_delta(reserved, *progress)?;
+        }
+        Ok((step, terminal))
+    })?;
+    if let PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) = &mut step {
+        let reserved = original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
+        *progress = progress.checked_add(reserved)?;
+    }
+    Ok(step)
 }

@@ -1,20 +1,68 @@
 //! 🖼️ Blueprint and Preview borrow shared Drawing composition and publish one funded Canvas fragment per original turn.
 use super::*;
+use semio_framework_value_persistent::list::{PagedListReservationOutcome,PagedListReservationFailure};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_s_artifact_layout_layout_engine::scene::drawing_planning::{DrawingSourceAddress,DrawingPlacement,DrawingPaint,composition::{DrawingCompositionTurn,canvas}};
 #[derive(Clone,Copy)]
 pub(super) enum LiveDrawingPiece{Path{index:usize},Glyph{label:usize,glyph:usize,paint:DrawingPaint,affine:[f64;6]},Image{rect:[f64;4],affine:[f64;6]}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"layout live Drawing publication is invalid")}
-fn reserve(chunks:&mut List<Chunk>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if chunks.has_reserved_slot(){return Ok(true);}let demand=RetirementDemand{copy_bytes:chunks.next_reserve_copy_byte_demand()?,capacity_bytes:chunks.next_allocation_bytes()?,depth:chunks.next_reserve_depth_demand()?,..Default::default()};let g=cx.retained_grant();if g.maximum_items==0||g.maximum_copy_bytes<demand.copy_bytes||g.maximum_capacity_bytes<demand.capacity_bytes||g.maximum_depth<demand.depth{return Ok(false);}let result=chunks.reserve_one_funded(g);match result{Ok(progress)=>cx.consume_retained(progress)?,Err(error)=>{cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()})?;return Err(ValueError::from(error.refusal()).into());}}cx.consume_fuel(1);Ok(false)}
+pub(super) fn debit_reservation(cx:&mut StepContext<'_>,result:Result<PagedListReservationOutcome<RetainedCloneProgress>,PagedListReservationFailure>)->Result<(),OriginalTurnFailure>{
+ match result{
+  Ok(PagedListReservationOutcome::Ready(progress))=>cx.consume_retained(progress)?,
+  Ok(PagedListReservationOutcome::Denied)=>{},
+  Err(PagedListReservationFailure::Work(error))=>return Err(error.into()),
+  Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>{
+   cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0||copied_bytes!=0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()})?;
+   return Err(ValueError::from(error.refusal()).into())
+  }
+ }Ok(())
+}
+fn reserve(chunks:&mut List<Chunk>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if chunks.has_reserved_slot(){return Ok(true);}let demand=RetirementDemand{copy_bytes:chunks.next_reserve_copy_byte_demand()?,capacity_bytes:chunks.next_allocation_bytes()?,depth:chunks.next_reserve_depth_demand()?,..Default::default()};let g=cx.retained_grant();if g.maximum_items==0||g.maximum_copy_bytes<demand.copy_bytes||g.maximum_capacity_bytes<demand.capacity_bytes||g.maximum_depth<demand.depth{return Ok(false);}if let Some((result,work))=cx.with_original_effect(g,|_,effect|chunks.reserve_one_funded(effect).result)?{cx.consume_work(work);debit_reservation(cx,result)?;}Ok(false)}
 fn copy(chunks:&mut List<Chunk>,total:&mut usize,text:&str,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if !reserve(chunks,cx)?{return Ok(false);}let g=cx.retained_grant();let bytes=std::mem::size_of::<Chunk>().checked_add(text.len()).ok_or_else(invalid)?;if g.maximum_items==0||g.maximum_copy_bytes<bytes||g.maximum_capacity_bytes<text.len()||g.maximum_depth<1{return Ok(false);}let end=text.len();let next=total.checked_add(end).ok_or_else(invalid)?;let mut value=String::new();value.try_reserve_exact(end).map_err(|_|invalid())?;let capacity=value.capacity();value.push_str(text);chunks.push_reserved(Chunk{value,start:0,end}).map_err(|_|invalid())?;*total=next;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn move_image(chunks:&mut List<Chunk>,total:&mut usize,image:&mut String,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if !reserve(chunks,cx)?{return Ok(false);}let g=cx.retained_grant();if g.maximum_items==0||g.maximum_copy_bytes<std::mem::size_of::<Chunk>()||g.maximum_depth<1{return Ok(false);}let end=image.len();let next=total.checked_add(end).ok_or_else(invalid)?;chunks.push_reserved(Chunk{value:std::mem::take(image),start:0,end}).map_err(|_|invalid())?;*total=next;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Chunk>(),..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 impl LayoutRenderWork{
- pub(super) fn advance_drawing(&mut self,snapshot:&LayoutSnapshot,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub(super) fn advance_drawing(&mut self,snapshot:&LayoutSnapshot,artifact:Option<&semio_plugin::ArtifactView<'_,LayoutSnapshot>>,cx:&mut StepContext<'_>,#[cfg(test)] issued:Option<&[semio_framework_io_ports::ChildAdmissionRead<'_>;2]>)->Result<bool,OriginalTurnFailure>{
   if snapshot as*const LayoutSnapshot as usize!=self.source{return Err(invalid().into());}let document=self.owners.preview.as_ref().unwrap_or(snapshot);
   if self.phase==11{
-   if self.owners.drawing.has_active(){let g=cx.retained_grant();let result=self.owners.drawing.advance(document,semio_framework_io_ports::VectorSceneGrant{maximum_source_items:g.maximum_items,maximum_copy_bytes:g.maximum_copy_bytes,maximum_capacity_bytes:g.maximum_capacity_bytes,maximum_release_bytes:g.maximum_release_bytes,maximum_depth:g.maximum_depth});let p=self.owners.drawing.last_receipt();cx.consume_retained(RetainedCloneProgress{copied_items:p.source_items,copied_bytes:p.copied_bytes,retained_capacity_bytes:p.retained_capacity_bytes,released_bytes:p.released_bytes})?;self.drawing_demand=self.owners.drawing.next_demand(document,512)?;let turn=result.map_err(semio_plugin::Fault::from)?;match turn{DrawingCompositionTurn::Progress=>{},DrawingCompositionTurn::Done=>self.phase=self.drawing_resume,DrawingCompositionTurn::Path{index}=>{self.drawing_piece=Some(LiveDrawingPiece::Path{index});self.drawing_segment=0;self.phase=12;},DrawingCompositionTurn::Glyph{label,glyph,paint,affine}=>{self.drawing_piece=Some(LiveDrawingPiece::Glyph{label,glyph,paint,affine});self.drawing_segment=0;self.phase=12;},DrawingCompositionTurn::Image{x,y,width,height,affine,proxy}=>{self.owners.drawing_image=proxy;self.drawing_piece=Some(LiveDrawingPiece::Image{rect:[x,y,width,height],affine});self.phase=15;}}cx.consume_fuel(1);return Ok(false);}
-   let Some(page_index)=self.drawing_page else{self.phase=3;return Ok(false);};let page=document.pages.get(page_index).ok_or_else(invalid)?;let present=match self.drawing_background{0=>document.background_drawing.is_some(),1=>page.background_drawing.is_some(),_=>{self.phase=3;return Ok(false);}};let source=if self.drawing_background==0{DrawingSourceAddress::Document}else{DrawingSourceAddress::Page(page_index)};let placement=if self.drawing_background==0{DrawingPlacement::Content}else{DrawingPlacement::Canvas};self.drawing_background+=1;if present{self.owners.drawing.begin(source,placement,semio_s_artifact_layout_layout_model::LayoutBounds{x:0.0,y:0.0,width:page.width,height:page.height,rotation:0.0}).map_err(semio_plugin::Fault::from)?;self.drawing_demand=self.owners.drawing.next_demand(document,512)?;self.drawing_resume=11;}cx.consume_fuel(1);return Ok(false);
+   if self.owners.drawing.has_active(){
+    let source=self.drawing_source.ok_or_else(invalid)?;
+    let g=cx.retained_grant();
+    #[cfg(test)]
+    let supplied=issued.map(|reads|match source{
+     DrawingSourceAddress::Document=>&reads[0],
+     DrawingSourceAddress::Page(_)=>&reads[1],
+    });
+    #[cfg(not(test))]
+    let supplied:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>=None;
+    let retained;
+    let read=if let Some(issued)=supplied{issued}else{
+     let slot=match source{
+      DrawingSourceAddress::Document=>&mut self.owners.document_drawing_read,
+      DrawingSourceAddress::Page(_)=>&mut self.owners.page_drawing_read,
+     };
+     let owner=slot.get_or_insert_with(||OriginalPageDrawingSource::new(source));
+     if !owner.ready(){
+      let doc=artifact.ok_or_else(invalid)?;
+      let Some((step,work))=cx.with_original_source_effect(g,|_,effect|owner.advance(doc,effect))?else{return Ok(false)};
+      cx.consume_work(work);
+      cx.consume_retained(owner.last_receipt())?;
+      step?;
+      self.drawing_demand=if owner.ready(){
+       self.owners.drawing.next_demand(document,&owner.vector_read()?,g.maximum_copy_bytes)?
+      }else{owner.demand(g.maximum_copy_bytes)?};
+      return Ok(false)
+     }
+     retained=owner.vector_read()?;
+     &retained
+    };
+    let Some((result,work))=cx.with_original_source_effect(g,|_,effect|self.owners.drawing.advance(document,read,effect))?else{return Ok(false)};
+    cx.consume_work(work);
+    let p=self.owners.drawing.last_receipt();
+    cx.consume_retained(RetainedCloneProgress{copied_items:p.source_items,copied_bytes:p.copied_bytes,retained_capacity_bytes:p.retained_capacity_bytes,released_bytes:p.released_bytes})?;
+    self.drawing_demand=self.owners.drawing.next_demand(document,read,g.maximum_copy_bytes)?;
+    let turn=result.map_err(semio_plugin::Fault::from)?;match turn{DrawingCompositionTurn::Progress=>{},DrawingCompositionTurn::Done=>self.phase=self.drawing_resume,DrawingCompositionTurn::Path{index}=>{self.drawing_piece=Some(LiveDrawingPiece::Path{index});self.drawing_segment=0;self.phase=12;},DrawingCompositionTurn::Glyph{label,glyph,paint,affine}=>{self.drawing_piece=Some(LiveDrawingPiece::Glyph{label,glyph,paint,affine});self.drawing_segment=0;self.phase=12;},DrawingCompositionTurn::Image{x,y,width,height,affine,proxy}=>{self.owners.drawing_image=proxy;self.drawing_piece=Some(LiveDrawingPiece::Image{rect:[x,y,width,height],affine});self.phase=15;}}cx.consume_fuel(1);return Ok(false);}
+   let Some(page_index)=self.drawing_page else{self.phase=3;return Ok(false);};let page=document.pages.get(page_index).ok_or_else(invalid)?;let present=match self.drawing_background{0=>document.background_drawing.is_some(),1=>page.background_drawing.is_some(),_=>{self.phase=3;return Ok(false);}};let source=if self.drawing_background==0{DrawingSourceAddress::Document}else{DrawingSourceAddress::Page(page_index)};let placement=if self.drawing_background==0{DrawingPlacement::Content}else{DrawingPlacement::Canvas};self.drawing_background+=1;if present{self.owners.drawing.begin(source,placement,semio_s_artifact_layout_layout_model::LayoutBounds{x:0.0,y:0.0,width:page.width,height:page.height,rotation:0.0}).map_err(semio_plugin::Fault::from)?;self.drawing_source=Some(source);self.drawing_demand=Default::default();self.drawing_resume=11;}cx.consume_fuel(1);return Ok(false);
   }
   if self.phase==16{if move_image(&mut self.owners.chunks,&mut self.bytes,&mut self.owners.drawing_image,cx)?{self.phase=17;}return Ok(false);}
   if self.phase==17{if copy(&mut self.owners.chunks,&mut self.bytes,canvas::IMAGE_END,cx)?{self.finish_drawing_piece();}return Ok(false);}

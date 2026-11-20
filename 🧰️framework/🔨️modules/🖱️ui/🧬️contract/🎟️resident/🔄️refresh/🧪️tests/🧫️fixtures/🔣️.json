@@ -1,17 +1,17 @@
 {
   "version": 2,
-  "aggregateBytes": 58392576,
-  "fixedBackingBytes": 2077760,
+  "aggregateBytes": 58720256,
+  "fixedBackingBytes": 90056,
   "surfaceBytes": 8388608,
-  "documentBytes": 912384,
+  "documentBytes": 917504,
   "residentSlots": 64,
   "surfaceItems": 4097,
   "documentNodes": 128,
-  "nodeRecordBytes": 7128,
-  "openBytes": 1906,
-  "fullDocumentBytes": 928546,
-  "fullDocumentAdmittedRoots": 60,
-  "fullDocumentRefusedRoot": 61,
+  "nodeRecordBytes": 7168,
+  "openBytes": 1922,
+  "fullDocumentBytes": 933762,
+  "fullDocumentAdmittedRoots": 62,
+  "fullDocumentRefusedRoot": 63,
   "refreshes": 2,
   "retirementGrantItems": 1024,
   "retirementGrantBytes": 32768,
@@ -42,10 +42,10 @@
     }
   ],
   "peakResidentRoots": 6,
-  "peakResidentBytes": 3589692,
+  "peakResidentBytes": 3609868,
   "permitFaults": 0,
   "doubleBufferedPeakRoots": 12,
-  "doubleBufferedPeakBytes": 7179384,
+  "doubleBufferedPeakBytes": 7219736,
   "ceilingSizedRoots": 6,
   "measured": {
     "target": "http://127.0.0.1:6118/?plugin=generation3d",
@@ -62,6 +62,6 @@
     "the double-buffered order needs a second FULL set: twice the roots and twice the bytes",
     "the aggregate admits only six ceiling-sized surface reservations of its sixty-four slots, which is why a retained caller right-sizes",
     "two consecutive six-surface refreshes take no permit refusal",
-    "the byte ledger admits sixty populated full documents and refuses the sixty-first with four slot positions still free"
+    "the byte ledger admits sixty-two populated full documents and refuses the sixty-third with two slot positions still free"
   ]
 }

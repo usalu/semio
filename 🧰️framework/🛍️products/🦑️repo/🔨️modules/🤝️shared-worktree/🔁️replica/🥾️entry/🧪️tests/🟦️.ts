@@ -1,5 +1,6 @@
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import {createHash} from "node:crypto";
+import {Database} from "bun:sqlite";
 import {chmodSync,copyFileSync,cpSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {basename,dirname,extname,join} from "node:path";
@@ -17,7 +18,7 @@ afterAll(()=>{for(const proc of running)try{proc.kill("SIGKILL");}catch{}for(con
 const put=(root:string,path:string,text:string):void=>{const file=join(root,...path.split("/"));mkdirSync(dirname(file),{recursive:true});writeFileSync(file,text);};
 const sha=(data:string|Uint8Array):string=>createHash("sha256").update(data).digest("hex");
 const until=async(condition:()=>boolean|Promise<boolean>,milliseconds=30_000):Promise<void>=>{const end=Date.now()+milliseconds;while(!await condition()){if(Date.now()>end)throw Error("Timed out");await Bun.sleep(20);}};
-const fixture=JSON.parse(readFileSync(join(import.meta.dirname,"🧫️fixtures","🔣️.json"),"utf8")) as {directories:{platform:string;home:string;env:Record<string,string>;expected:string}[];hashes:{text:string;sha256:string}[];decisions:{name:string;installed:number|null;source:number;identical:boolean;damaged:boolean;selfTestBroken:boolean;expected:string}[];guards:{name:string;source:string;admitted:boolean}[]};
+const fixture=JSON.parse(readFileSync(join(import.meta.dirname,"🧫️fixtures","🔣️.json"),"utf8")) as {directories:{platform:string;home:string;env:Record<string,string>;expected:string}[];hashes:{text:string;sha256:string}[];decisions:{name:string;installed:number|null;source:number;identical:boolean;damaged:boolean;selfTestBroken:boolean;expected:string}[];guards:{name:string;source:string;admitted:boolean}[];reloads:{name:string;pid:"matching"|"different";token:"matching"|"different"|"absent"}[]};
 const program=readdirSync(sourceDirectory).find(name=>extname(name)===".mjs")!;
 const cleanEnvironment=(extra:Record<string,string>={}):Record<string,string>=>{const environment:Record<string,string>={};for(const [name,value] of Object.entries(process.env))if(value!==undefined&&!name.startsWith("SEMIO_FLEET_")&&name!=="SEMIO_WORKSPACE_ROOT")environment[name]=value;return {...environment,...extra};};
 
@@ -172,6 +173,95 @@ test("the service shim runs the worktree supervisor although the worktree script
  const code=await stopShim(shim);
  expect([0,143]).toContain(code);
 });
+
+
+test("a verified graceful worker reload keeps the shim and its detached stage alive, a real stop ends both",async()=>{
+ const oracle=new Database(":memory:");
+ try{
+  for(const row of fixture.reloads){
+   const expected=oracle.query("select ?1='matching' and ?2='matching' as reload").get(row.pid,row.token) as {reload:number};
+   const outcome=JSON.stringify(row);
+   const stageCode='const fs=require("node:fs"),file=process.argv[1],born=Date.now();const timer=setInterval(()=>{if(fs.existsSync(file)||Date.now()-born>12000){clearInterval(timer);fs.writeFileSync(file+".ended",String(process.pid));}},30);';
+   const supervisor=`
+import {spawn} from "node:child_process";
+import {existsSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+const root=process.env.SEMIO_FLEET_BOOT_ROOT,boot=join(root,".cache","f","boot"),born=join(root,"first"),stop=join(root,"stop"),stagePath=join(root,"stage");
+const fixture=${outcome};
+mkdirSync(boot,{recursive:true});
+const ready=(pid,token)=>writeFileSync(join(boot,"ready.json"),JSON.stringify({pid,waiting:false,...token===undefined?{}:{reloadToken:token}}));
+if(!existsSync(born)){
+ writeFileSync(born,String(process.pid));
+ if(fixture.pid==="matching"&&fixture.token==="matching"){
+  const stage=spawn(process.execPath,["-e",${JSON.stringify(stageCode)},stop],{detached:true,stdio:"ignore"});
+  writeFileSync(stagePath,String(stage.pid));stage.unref();
+ }
+ const token=fixture.token==="matching"?process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN:fixture.token==="different"?"0".repeat(32):undefined;
+ ready(fixture.pid==="matching"?process.pid:process.pid+1,token);
+}else{
+ ready(process.pid);
+ const pid=Number(readFileSync(stagePath,"utf8"));
+ process.kill(pid,0);
+ writeFileSync(join(root,"adopted"),JSON.stringify({pid,worker:process.pid}));
+ const keep=setInterval(()=>{},20);
+ process.on("SIGTERM",()=>{writeFileSync(stop,"stop");clearInterval(keep);const joined=setInterval(()=>{if(existsSync(stop+".ended"))clearInterval(joined);},30);});
+}`;
+   const box=sandbox("r",{supervisor}),shim=startShim(box);
+   try{
+    if(expected.reload){
+     await until(()=>existsSync(join(box.repo,"adopted"))||shim.proc.exitCode!==null,5000);
+     expect(shim.proc.exitCode,row.name).toBeNull();
+     const rec=JSON.parse(readFileSync(join(box.repo,"adopted"),"utf8"));
+     expect(rec.worker).not.toBe(Number(readFileSync(join(box.repo,"first"),"utf8")));
+     expect(rec.pid).toBe(Number(readFileSync(join(box.repo,"stage"),"utf8")));
+     expect(readEntryStateV1(box.entry)?.attempts.some(item=>item.outcome==="graceful reload")).toBe(true);
+     await stopShim(shim);
+     expect(readFileSync(join(box.repo,"stop.ended"),"utf8")).toBe(String(rec.pid));
+    }else{
+     await until(()=>shim.proc.exitCode!==null,5000);
+     expect(await shim.proc.exited,row.name).toBe(0);
+     expect(existsSync(join(box.repo,"adopted"))).toBe(false);
+    }
+   }finally{
+    if(existsSync(join(box.repo,"stage"))){
+     writeFileSync(join(box.repo,"stop"),"stop");
+     await until(()=>existsSync(join(box.repo,"stop.ended")),5000);
+    }
+    if(shim.proc.exitCode===null)await stopShim(shim);
+   }
+  }
+ }finally{oracle.close();}
+},60000);
+
+
+test("the actual replica worker signals a graceful reload only after an issued ready and successful reloading event",async()=>{
+ const supervisor=readFileSync(supervisorFile,"utf8"),box=sandbox("r",{supervisor});
+ put(box.repo,`${relative}/🛡️resilience/🟦️.ts`,"export const selfCheckV1=async()=>({ok:true}),startRejectionV1=async()=>null;");
+ put(box.repo,`${relative}/🩺️attest/🟦️.ts`,"export const codeDigestV1=async()=> 'a'.repeat(64);");
+ put(box.repo,`${relative}/🔁️replica/⌨️command/🟦️.ts`,`
+import {existsSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+export async function runReplicaCommandV1(_args,context){
+ if(context.environment.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined||process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined)throw Error("The worker token escaped its boundary");
+ const record=join(context.root,"started"),first=!existsSync(record);
+ context.write(JSON.stringify({version:1,event:"started"}));
+ if(first){
+  writeFileSync(record,String(process.pid));
+  context.write(JSON.stringify({version:1,event:"restarting"}));
+  return {exitCode:0};
+ }
+ writeFileSync(join(context.root,"next"),String(process.pid));
+ await new Promise(done=>{if(context.signal.aborted)done();else context.signal.addEventListener("abort",done,{once:true});});
+ return {exitCode:0};
+}`);
+ const shim=startShim(box);
+ try{
+  await until(()=>existsSync(join(box.repo,"next"))||shim.proc.exitCode!==null,8000);
+  expect(shim.proc.exitCode).toBeNull();
+  expect(readFileSync(join(box.repo,"next"),"utf8")).not.toBe(readFileSync(join(box.repo,"started"),"utf8"));
+  expect(readEntryStateV1(box.entry)?.attempts.some(item=>item.outcome==="graceful reload")).toBe(true);
+ }finally{if(shim.proc.exitCode===null)await stopShim(shim);}
+},30000);
 
 test("a worktree supervisor with a broken static import falls back to the newest sealed snapshot, which runs with its reason shown in both languages",async()=>{
  const box=sandbox("static",{supervisor:failingSupervisor});

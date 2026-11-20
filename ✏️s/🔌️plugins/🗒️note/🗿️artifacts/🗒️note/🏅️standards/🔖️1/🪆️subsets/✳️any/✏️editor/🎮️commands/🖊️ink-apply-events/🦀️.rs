@@ -105,7 +105,7 @@ fn apply_canvas_events(document: &NoteSnapshot, events: &[NoteCanvasEvent]) -> (
                 touch(&mut blocks, id);
             }
             NoteCanvasEvent::PutAsset { key, asset } => {
-                next.assets.insert(key.clone(), asset.clone());
+                next.assets.cold_insert(key.clone(), asset.clone());
                 touch(&mut assets, key);
             }
             NoteCanvasEvent::SetCamera { .. } => {}

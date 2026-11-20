@@ -7,6 +7,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📋️ Descriptive plan DATA carries no compiler, Source or publication authority. */
 export type CargoArtifactPlanFactsV1=Readonly<{version:1;root:string;platform:"linux"|"darwin"|"win32";mode:"prototype"|"release";product:string;compiler:string;toolchain:string;configuration:string;source:string}>;
+const chunk=262144;
 const digest=(value:string):string=>createHash("sha256").update(value).digest("hex");
 
 /** 🔤️ Uses the actual received root verbatim; path normalization belongs to its authenticated owner. */
@@ -20,19 +21,26 @@ export function cargoArtifactPlanIdentityV1(value:unknown):string{return digest(
 /** 🧬️ Streams the actual admitted graph under its original bounded control without cloning Source. */
 export async function captureCargoArtifactPlanFactsV1(graph:CargoCompilationGraphV1,recipe:CargoTargetRecipeV1,mode:"prototype"|"release",platform:CargoArtifactPlanFactsV1["platform"],control:ResourceLeaseControl,maximumBytes:number):Promise<CargoArtifactPlanFactsV1>{
  if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1)throw Error("Finite artifact plan observation required");
- let bytes=0,turn=0;const started=performance.now();
+ let bytes=0;const started=performance.now();
  const checkpoint=async()=>{checkResourceLeaseControl(control);await control.publish({resource:"cargo:artifact-plan:"+JSON.stringify({bytes,units:graph.units.length}),mode:"shared",elapsedMs:performance.now()-started});await control.yieldContinuation();checkResourceLeaseControl(control);};
  const hash=async(value:unknown):Promise<string>=>{
-  const target=createHash("sha256");
-  const write=async(text:string)=>{const extent=Buffer.byteLength(text);if(extent>maximumBytes-bytes)throw Error("Artifact plan observation capacity exceeded");bytes+=extent;target.update(text);if(++turn%64===0)await checkpoint();else checkResourceLeaseControl(control);};
-  const walk=async(row:unknown):Promise<void>=>{
-   checkResourceLeaseControl(control);
-   if(typeof row==="string"){await write('"');for(let start=0;start<row.length;){let end=Math.min(row.length,start+4096);if(end<row.length&&row.charCodeAt(end-1)>=0xd800&&row.charCodeAt(end-1)<=0xdbff)end--;await write(JSON.stringify(row.slice(start,end)).slice(1,-1));start=end;}await write('"');return;}
-   if(Array.isArray(row)){await write("[");for(let i=0;i<row.length;i++){if(i)await write(",");await walk(row[i]);}await write("]");return;}
-   if(row&&typeof row==="object"){await write("{");const keys=Object.keys(row).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));for(let i=0;i<keys.length;i++){if(i)await write(",");await walk(keys[i]);await write(":");await walk((row as Record<string,unknown>)[keys[i]!]);}await write("}");return;}
-   if(row===null||typeof row==="number"&&Number.isFinite(row)||typeof row==="boolean"){await write(JSON.stringify(row));return;}throw Error("Closed artifact plan primitive required");
+  const target=createHash("sha256");let pending="";
+  const flush=():void=>{if(!pending)return;const extent=Buffer.byteLength(pending);if(extent>maximumBytes-bytes)throw Error("Artifact plan observation capacity exceeded");bytes+=extent;target.update(pending);pending="";};
+  const sorted=(row:object):string[]=>Object.keys(row).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));
+  const put=(row:unknown):void=>{
+   if(typeof row==="string"){pending+=JSON.stringify(row);return;}
+   if(Array.isArray(row)){checkResourceLeaseControl(control);pending+="[";for(let i=0;i<row.length;i++){if(i)pending+=",";put(row[i]);}pending+="]";if(pending.length>=chunk)flush();return;}
+   if(row&&typeof row==="object"){checkResourceLeaseControl(control);pending+="{";const keys=sorted(row);for(let i=0;i<keys.length;i++){if(i)pending+=",";pending+=JSON.stringify(keys[i])+":";put((row as Record<string,unknown>)[keys[i]!]);}pending+="}";if(pending.length>=chunk)flush();return;}
+   if(row===null||typeof row==="number"&&Number.isFinite(row)||typeof row==="boolean"){pending+=JSON.stringify(row);return;}throw Error("Closed artifact plan primitive required");
   };
-  await walk(value);return target.digest("hex");
+  const walk=async(row:unknown,depth:number):Promise<void>=>{
+   if(depth>=2||!row||typeof row!=="object"){put(row);return;}
+   checkResourceLeaseControl(control);
+   const settle=async():Promise<void>=>{if(pending.length>=chunk){flush();await checkpoint();}};
+   if(Array.isArray(row)){pending+="[";for(let i=0;i<row.length;i++){if(i)pending+=",";await walk(row[i],depth+1);await settle();}pending+="]";return;}
+   pending+="{";const keys=sorted(row);for(let i=0;i<keys.length;i++){if(i)pending+=",";pending+=JSON.stringify(keys[i])+":";await walk((row as Record<string,unknown>)[keys[i]!],depth+1);await settle();}pending+="}";
+  };
+  await walk(value,0);flush();return target.digest("hex");
  };
  checkResourceLeaseControl(control);if(!graph.units.length)throw Error("Actually admitted Cargo Source graph required");
  for(const unit of graph.units){checkResourceLeaseControl(control);if(unit.provenance.kind==="workspace"&&(!unit.sourceInputs.length||unit.compilerCfg===null||unit.sourceInputs.some(input=>!/^[a-f0-9]{64}$/u.test(input.digest))))throw Error("Actually admitted Cargo Source graph required");}

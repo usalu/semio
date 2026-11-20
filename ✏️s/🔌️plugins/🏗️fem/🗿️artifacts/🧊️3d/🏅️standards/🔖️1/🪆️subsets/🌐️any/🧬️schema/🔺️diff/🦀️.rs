@@ -1,19 +1,19 @@
 //! 🧬️ Fem3d diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
-use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_s_fem_material::volumetric::FemMaterialValue;
 use semio_s_fem_node::volumetric::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSolid;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
-use crate::standards::v1::subsets::any::schema::structure::element_id;
-use crate::standards::v1::subsets::any::schema::structure::load_id;
-use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::list_delta::RowPatch;
 use protocol::ApplyCapability;
@@ -70,13 +70,6 @@ protocol::list_delta! {
         patch: Fem3dNodePatch,
         list: Vec<FemNodeValue>,
         key: String = by Fem3dNodeKey
-    }
-}
-
-impl protocol::list_delta::Keyed for FemElement {
-    type Key = String;
-    fn key(&self) -> String {
-        element_id(self).to_string()
     }
 }
 
@@ -198,7 +191,8 @@ protocol::list_delta! {
         modification: Fem3dSectionsModification,
         row: FemSection,
         patch: Fem3dSectionPatch,
-        key: id
+        list: Vec<FemSection>,
+        key: String = keyed
     }
 }
 
@@ -211,7 +205,8 @@ protocol::list_delta! {
         modification: Fem3dSolidsModification,
         row: FemSolid,
         patch: Fem3dSolidPatch,
-        key: id
+        list: Vec<FemSolid>,
+        key: String = keyed
     }
 }
 
@@ -224,7 +219,8 @@ protocol::list_delta! {
         modification: Fem3dSupportsModification,
         row: FemSupport,
         patch: Fem3dSupportPatch,
-        key: id
+        list: Vec<FemSupport>,
+        key: String = keyed
     }
 }
 
@@ -237,7 +233,8 @@ protocol::list_delta! {
         modification: Fem3dLoadCasesModification,
         row: FemLoadCase,
         patch: Fem3dLoadCasePatch,
-        key: id
+        list: Vec<FemLoadCase>,
+        key: String = keyed
     }
 }
 
@@ -248,13 +245,6 @@ pub struct Fem3dLoadCasePatch {
     pub name: Option<String>,
     pub self_weight: Option<bool>,
     pub loads: Option<Fem3dLoadsDelta>,
-}
-
-impl protocol::list_delta::Keyed for FemLoad {
-    type Key = String;
-    fn key(&self) -> String {
-        load_id(self).to_string()
-    }
 }
 
 /// ➖️ One `loads` row removed, with the base index the inverse reinserts it at.
@@ -361,7 +351,8 @@ protocol::list_delta! {
         modification: Fem3dCombinationsModification,
         row: FemCombination,
         patch: Fem3dCombinationPatch,
-        key: id
+        list: Vec<FemCombination>,
+        key: String = keyed
     }
 }
 
@@ -567,7 +558,7 @@ pub struct Fem3dSolidPatch {
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub layers: Option<usize>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
-    pub axis: Option<crate::standards::v1::subsets::any::schema::structure::FemAxis>,
+    pub axis: Option<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub material_id: Option<String>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
@@ -615,7 +606,7 @@ pub struct Fem3dSupportPatch {
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub node_id: Option<String>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
-    pub fixed: Option<Vec<crate::standards::v1::subsets::any::schema::structure::FemDof>>,
+    pub fixed: Option<Vec<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof>>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
     pub tx: Option<bool>,
     #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
@@ -654,7 +645,7 @@ impl RowPatch<FemSupport> for Fem3dSupportPatch {
 impl Fem3dSupportPatch {
     /// 🛂️ Whole sets and membership setters are disjoint authored modes.
     pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.tz.is_none() && self.rx.is_none() && self.ry.is_none() && self.rz.is_none()) }
-    fn memberships(&self, base: &[crate::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<crate::standards::v1::subsets::any::schema::structure::FemDof> {
+    fn memberships(&self, base: &[semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof> {
         let mut fixed = self.fixed.as_deref().unwrap_or(base).to_vec();
         if let Some(value) = self.tx { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); } }
         if let Some(value) = self.ty { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); } }
@@ -739,7 +730,7 @@ pub enum Fem3dLoadPatch {
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
         node_id: Option<String>,
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
-        dof: Option<crate::standards::v1::subsets::any::schema::structure::FemDof>,
+        dof: Option<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof>,
         #[value(skip_serializing_if = "Option::is_none", deserialize_with = "protocol::list_delta::supplied_value", deserialize_controlled_with = "protocol::list_delta::supplied_value_controlled", default_controlled = "protocol::list_delta::supplied_value_default", retire_with = "protocol::list_delta::supplied_value_retire")]
         value: Option<f64>,
     },
@@ -949,7 +940,7 @@ protocol::retained_empty_option_patch!(Fem3dSolidPatch { name, outline, holes, b
 protocol::retained_row_patch!(pub retained_material_fields for Fem3dMaterialPatch => FemMaterialValue {name:String,e:f64,g:f64,nu:f64,rho:f64});
 protocol::retained_row_patch!(pub retained_node_fields for Fem3dNodePatch => FemNodeValue {x:f64,y:f64,z:f64});
 protocol::retained_row_patch!(pub retained_section_fields for Fem3dSectionPatch => FemSection {name:String,area:f64,iy:f64,iz:f64,j:f64});
-protocol::retained_row_patch!(pub retained_solid_fields for Fem3dSolidPatch => FemSolid {name:String,outline:Vec<[f64;2]>,holes:Vec<Vec<[f64;2]>>,base_z:f64,height:f64,layers:usize,axis:crate::standards::v1::subsets::any::schema::structure::FemAxis,material_id:String,mesh_size:f64});
+protocol::retained_row_patch!(pub retained_solid_fields for Fem3dSolidPatch => FemSolid {name:String,outline:Vec<[f64;2]>,holes:Vec<Vec<[f64;2]>>,base_z:f64,height:f64,layers:usize,axis:semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis,material_id:String,mesh_size:f64});
 
 
 impl DiffAlgebra<Fem3dSnapshotValue> for Fem3dDiff {fn is_empty(&self)->bool{<Self as DiffAlgebra<Fem3dSnapshot>>::is_empty(self)}}

@@ -9,6 +9,7 @@ import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
 import { ENGLISH } from "../../🔨️modules/🌐️i18n/🔠️english/🟦️.ts";
 import { GERMAN } from "../../🔨️modules/🌐️i18n/🔡️german/🟦️.ts";
 import { ComparePage } from "../../🔨️modules/⚖️compare/🟦️.tsx";
+import { CategoryPage } from "../../🔨️modules/🗃️browse/🟦️.tsx";
 import { ExportPanel } from "../../🔨️modules/🔬️detail/📤️export-panel/🟦️.tsx";
 import { ArchiveStore, memoryStorage } from "../../🔨️modules/💾️persistence/🟦️.ts";
 import { CatalogStore, type CategoryDocument } from "../../🔨️modules/📚️catalog/🟦️.ts";
@@ -51,6 +52,20 @@ afterEach(() => {
 });
 
 describe("⚖️ compare page", () => {
+  it("keeps the two closed comparison drawings without the transport or an editor", async () => {
+    const catalog = source();
+    await catalog.loadManifest();
+    await catalog.loadCategory("humans");
+    const store = new ArchiveStore(memoryStorage(), VIEWS);
+    const { container } = render(
+      <ArchiveProvider language="en" t={translator("en")} catalog={catalog} store={store}>
+        <ComparePage view={{ opened: false, revealed: false }} />
+      </ArchiveProvider>,
+    );
+    expect(container.querySelectorAll("[data-compare-figure] [data-staffage-figure]")).toHaveLength(2);
+    expect(container.querySelector("input")).toBeNull();
+  });
+
   it("changes the viewpoint of a pane and writes it into the address", async () => {
     await open("compare");
     const panes = await screen.findAllByRole("region", { hidden: true }).catch(() => []);
@@ -76,6 +91,24 @@ describe("⚖️ compare page", () => {
     await open("compare", "?p=reference-walker~dark-line~~sideways&p=reference-walker~thermal");
     expect(await screen.findByText(/unknown viewpoint "sideways"/u)).toBeTruthy();
     expect(document.querySelectorAll("[data-compare-figure] [data-staffage-figure]").length).toBe(2);
+  });
+});
+
+describe("🗂️ category page", () => {
+  it("leaves the closed category load to the overview card and loads on reveal", async () => {
+    const catalog = source();
+    await catalog.loadManifest();
+    const store = new ArchiveStore(memoryStorage(), VIEWS);
+    const page = (revealed: boolean) => (
+      <ArchiveProvider language="en" t={translator("en")} catalog={catalog} store={store}>
+        <CategoryPage category="humans" view={{ opened: false, revealed }} />
+      </ArchiveProvider>
+    );
+    const { rerender } = render(page(false));
+    await act(async () => undefined);
+    expect(catalog.getSnapshot().categories.humans.state).toBe("idle");
+    rerender(page(true));
+    await waitFor(() => expect(catalog.getSnapshot().categories.humans.state).toBe("ready"));
   });
 });
 

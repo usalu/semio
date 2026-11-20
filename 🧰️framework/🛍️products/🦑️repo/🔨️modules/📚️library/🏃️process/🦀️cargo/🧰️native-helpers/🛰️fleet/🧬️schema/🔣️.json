@@ -7,7 +7,7 @@
       "const": {
         "version": 1,
         "task": "native-helper:semio-build-scheduler",
-        "binaries": ["semio-build-scheduler", "jobserver-oracle"]
+        "binaries": ["semio-build-scheduler"]
       }
     }
   }

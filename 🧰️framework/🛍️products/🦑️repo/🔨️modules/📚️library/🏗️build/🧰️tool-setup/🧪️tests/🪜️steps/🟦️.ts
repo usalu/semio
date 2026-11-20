@@ -34,7 +34,7 @@ describe("the Node native core row", () => {
     const context = machine(async (_row, pin) => (built ? {found: pin, location: "script"} : {found: null, location: null})), lines: string[] = [];
     const reports = await setupToolsV1([row], context, async (provided, pin) => { expect([provided.id, pin]).toEqual(["node-native-core", "7"]); built = true; }, signal, line => lines.push(line));
     expect(reports.map(report => [report.id, report.status])).toEqual([["node-native-core", "ok"]]);
-    expect(lines).toEqual(["Provisioning node-native-core 7.", "node-native-core 7 is ready."]);
+    expect(lines).toEqual(["Verifying node-native-core against its pin.", "Provisioning node-native-core 7.", "node-native-core 7 is ready."]);
     expect(toolRowsV1("all").some(candidate => candidate.id === "node-native-core")).toBe(true);
   });
 });

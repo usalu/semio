@@ -1,0 +1,25 @@
+{
+  "refusedAttempts": 2,
+  "rounds": [
+    {
+      "at": 0,
+      "due": 0,
+      "other": 1
+    },
+    {
+      "at": 0,
+      "due": 500,
+      "other": 0
+    },
+    {
+      "at": 500,
+      "due": 500,
+      "other": 0
+    },
+    {
+      "at": 1500,
+      "due": 1500,
+      "other": 0
+    }
+  ]
+}

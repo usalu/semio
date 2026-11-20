@@ -109,7 +109,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
         if *completed{return Ok(true)}
         let Some(transaction) = emit.transaction.as_ref() else { return Ok(true) };
         let abort = emit.transaction_phase == TransactionPhase::Abort;
-        if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {return Ok(true)}
+        if !abort && (emit.transaction_phase == TransactionPhase::Stream || emit.has_artifact_mutations()) {return Ok(true)}
         if abort{
             if resident.constructing(){resident.settle(cx)?;return Ok(false)}
             if let Some(owner)=pending.as_mut(){

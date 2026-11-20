@@ -522,3 +522,25 @@ fn bytes_publication_resumes_after_a_refused_push() {
     original.close_payload(&mut payload);
     original.finish();
 }
+
+/// 🧹️ Closing a refused outcome retires its pending decision even before a payload is lent.
+#[test]
+fn refused_outcome_marker_closes_without_a_lent_payload() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/pending-outcome.json")).unwrap();
+    let mut desk = NumericalOutcomeDesk::default();
+    assert_eq!(fixture["marker"], "complete");
+    desk.pending = Some(NumericalRun::Complete);
+    assert_eq!(fixture["initiallyEmpty"], desk.terminal_is_empty());
+    let mut caller = OriginalNumericalFixture::new(test_operation(781));
+    let demand = desk.retirement_demands().expect("marker retirement quote").unwrap();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: demand.depth };
+    let progress = caller.turn(grant, 1, u64::MAX, |cx| {
+        close_original_effect_step(cx, demand, |effect| {
+            let result = desk.close_step(effect).expect("marker owner").map(|step| RetainedCloneStep::Progress(step.progress()));
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
+        }).map(|step| step.progress())
+    }).unwrap();
+    assert_eq!(fixture["copiedItems"], progress.copied_items);
+    assert_eq!(fixture["releasedBytes"], progress.released_bytes);
+    assert_eq!(fixture["finallyEmpty"], desk.terminal_is_empty());
+}

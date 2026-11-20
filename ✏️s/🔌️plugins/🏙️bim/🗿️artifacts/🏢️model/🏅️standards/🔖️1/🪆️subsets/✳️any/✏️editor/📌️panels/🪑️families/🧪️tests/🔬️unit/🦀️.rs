@@ -87,8 +87,8 @@ async fn the_selected_family_shows_its_measures_and_the_rows_that_place_or_open_
 #[semio_framework_async_macros::async_test]
 async fn a_model_without_a_placeable_family_says_so() {
     let mut bare = placed();
-    bare.components.clear();
-    bare.families.retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
+    bare.components.cold_clear();
+    bare.families.cold_retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
     assert!(text(&bare, &[], Locale::En).contains("The model has no family to place"));
     assert!(text(&bare, &[], Locale::De).contains("keine Familie zum Platzieren"));
 }

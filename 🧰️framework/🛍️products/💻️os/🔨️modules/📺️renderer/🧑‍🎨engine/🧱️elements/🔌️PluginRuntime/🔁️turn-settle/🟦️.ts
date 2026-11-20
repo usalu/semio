@@ -375,6 +375,8 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
     results.push(...accepted.turns);
     return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
+  /** ✂️ Events a cut batch left for the next crossing: the newest answer that reports `deferredEvents` says whether any remain. */
+  const deferredPending = () => (results.findLast((turn) => turn.deferredEvents !== undefined)?.deferredEvents ?? 0) > 0;
   const hasWork = () => (cancelled() || drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   const outstanding = () => !cancelled()&&!hasRequiredUiPatches(results, requiredSurfaceIds);
   const owed = () => !cancelled()&&settleOwesRequestedSurfacesV1(results, requestedSurfaceIds);
@@ -384,7 +386,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
   let zeroProgress = 0;
   const startedMs = performance.now();
   let continuations = 0;
-  for (let continuation = 0; !quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+  for (let continuation = 0; !quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork() || deferredPending()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     continuations = continuation + 1;
     const collected = results.length;
     const cancellationEvents=cancellationPending()?cancellation!.events:[];
@@ -402,7 +404,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
     closeDecide();
     if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
   }
-  if (!quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork())) {
+  if (!quiesced && !sliced && (cancellationPending() || acknowledgements.length > 0 || hasWork() || deferredPending())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[TRACE] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +

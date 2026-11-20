@@ -31,6 +31,19 @@
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json"
     },
     {
+      "artifact": "bmp",
+      "factory_id": "stdio.native.bmp.v1",
+      "artifact_kind": "s.stdio.bmp",
+      "artifact_schema": "stdio.bmp",
+      "extension": "bmp",
+      "pack_schema_hash": "2a06f793b2efde7a3cce95eacb152fe562bc4ce3e7ad4ebb7e41c624a5c56f78",
+      "runtime_capability_id": "s.stdio.bmp.standard.v3.codec.codec-stdio-bmp-extension-bmp.v1",
+      "descriptor_codec_id": "s.stdio.bmp.standard.v3.codec.native-document.v1",
+      "protocol_source_sha256": "2a06f793b2efde7a3cce95eacb152fe562bc4ce3e7ad4ebb7e41c624a5c56f78",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📜️artifact-definition.json"
+    },
+    {
       "artifact": "csv",
       "factory_id": "stdio.native.csv.v1",
       "artifact_kind": "s.stdio.csv",
@@ -96,6 +109,32 @@
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📜️artifact-definition.json"
     },
     {
+      "artifact": "gif",
+      "factory_id": "stdio.native.gif.87a.v1",
+      "artifact_kind": "s.stdio.gif",
+      "artifact_schema": "stdio.gif",
+      "extension": "gif",
+      "pack_schema_hash": "8153c839b3d18595c3de0997cb9b3ed9762d28f02d2539cafea2e01695f8e07f",
+      "runtime_capability_id": "s.stdio.gif.standard.87a.codec.codec-stdio-gif-extension-gif.v1",
+      "descriptor_codec_id": "s.stdio.gif.standard.87a.codec.native-document.v1",
+      "protocol_source_sha256": "8153c839b3d18595c3de0997cb9b3ed9762d28f02d2539cafea2e01695f8e07f",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📜️artifact-definition.json"
+    },
+    {
+      "artifact": "gif",
+      "factory_id": "stdio.native.gif.89a.v1",
+      "artifact_kind": "s.stdio.gif",
+      "artifact_schema": "stdio.gif.89a",
+      "extension": "gif",
+      "pack_schema_hash": "a599ebc7a40f24e96e2da48d4b6e78713736c32be12694301b3436fde084f75b",
+      "runtime_capability_id": "s.stdio.gif.standard.89a.codec.codec-stdio-gif-89a-extension-gif.v1",
+      "descriptor_codec_id": "s.stdio.gif.standard.89a.codec.native-document.v1",
+      "protocol_source_sha256": "a599ebc7a40f24e96e2da48d4b6e78713736c32be12694301b3436fde084f75b",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📜️artifact-definition.json"
+    },
+    {
       "artifact": "gltf",
       "factory_id": "stdio.native.gltf.v1",
       "artifact_kind": "s.stdio.gltf",
@@ -120,6 +159,19 @@
       "protocol_source_sha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
       "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json"
+    },
+    {
+      "artifact": "idml",
+      "factory_id": "stdio.native.idml.v1",
+      "artifact_kind": "s.stdio.idml",
+      "artifact_schema": "stdio.idml",
+      "extension": "idml",
+      "pack_schema_hash": "32afdfb0a01bab498e3b3e63cc557cb8e1b9e5619be657d6bfdbd0993997757e",
+      "runtime_capability_id": "s.stdio.idml.standard.8-0.codec.codec-stdio-idml-extension-idml.v1",
+      "descriptor_codec_id": "s.stdio.idml.standard.8-0.codec.native-document.v1",
+      "protocol_source_sha256": "87cb1a366e6ae92730c77bad5e3e8e1d8fc872cb79a8d689973b5e2c100a1e0c",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/📜️artifact-definition.json"
     },
     {
       "artifact": "jpg",

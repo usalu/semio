@@ -1,0 +1,47 @@
+{
+  "pack": [
+    1,
+    3,
+    7,
+    11,
+    19
+  ],
+  "turns": [
+    {
+      "action": "unfunded",
+      "moved": false,
+      "refused": false
+    },
+    {
+      "action": "busy",
+      "moved": false,
+      "refused": false
+    },
+    {
+      "action": "wrong-source",
+      "moved": false,
+      "refused": true
+    },
+    {
+      "action": "publish",
+      "moved": true,
+      "refused": false
+    },
+    {
+      "action": "duplicate-after-take",
+      "moved": false,
+      "refused": true
+    }
+  ],
+  "mountedRefusals": [
+    {
+      "stale": true,
+      "refused": true
+    },
+    {
+      "stale": false,
+      "refused": false
+    }
+  ],
+  "orphanedReplacement": "Cancelled"
+}

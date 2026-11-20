@@ -166,3 +166,407 @@ Repo-relative paths named in this ticket's markdown notes (and the scripts they 
 - NodeGraph `Cargo.toml` with `wasm-opt = false` under `[package.metadata.wasm-pack.profile.custom]`: the crate path is not named.
 - `maintenance_retirement_demands` takes `maximum_work_units`: the defining file is not named.
 - Diagnostics change in `🪪️identity/🦀️.rs` is listed above; the `ImageProtocol` schema and the `diskutil` tool registry entry are named in the notes, but their files were not located.
+
+## Resolved Earlier Route And Image References
+
+The route notes name these artifact declarations, and their current source carries framed route claims. The ticket script did not retain its argument list, so gismap, imperative, space and playground paths below are current owners; any intervening split or move is not independently established. The broad historical bundle commit does not isolate this ticket’s edits.
+
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs`
+- `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🪪️artifact-declaration/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json`
+
+The final two files are respectively the ImageProtocol schema and diskutil tool registry described by 💽️image-reclaim.md.
+
+## November 19 continuation
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-queue.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/test-native-queue.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/verify-static.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/vitest-bridge.config.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/vitest-cdn.config.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/vitest-more-work.config.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/vitest-opening.config.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/📋️readiness-report.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️opening-lifecycle-poll.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️package-local-references.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🗂️changed-files.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🚀️redeploy-log.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🧪️bridge-queue-verification.md`
+- `♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts`
+- `♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️console/🌐️release-requests.json`
+- `♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️console/🟦️.ts`
+- `♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️console/🧪️.ts`
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn/🚚️more-work-drive/🟦️.ts`
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🔌️plugin-handle/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚚️more-work-drive/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧩️module-loader/🟦️.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-wasm.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-lanes.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-receipt.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/package-site.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/validate-local-references.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/test-local-references.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️stage16-release-provenance.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️generator-checked-out-job.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️pane-boot-dependencies.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️cargo-stale-dependency-view.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🧭️remaining-release-route.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️energy-store-settlement.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🧪️generator-verification.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️play-app/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️artifact-editor-impl/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🔭️viewer-and-interaction-topology/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️play-app-editor/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎛️flow-play-app/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/🔬️action-producer/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/🧫️fixtures/📦️wide-contributions.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🔁️follow/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✏️mesh-edit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧱️primitive-and-curve-constructors/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔍️intersection-evaluation-and-measure/🦀️.rs`
+- `🧰️framework/🔨️modules/🏗️mesh-engine/🦀️.rs`
+- `🧰️framework/🔨️modules/🏗️mesh-engine/🚪️io/📝️text/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/generator-command-probe.cjs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🦀️.rs`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🎭️actor/🎟️work/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts`
+
+## Energy opening
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🔭️envelope-close-field-registry-and-snapshot-read-laws/🦀️.rs`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧪️inference-admission/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🎫️completed-record-registry-and-completion/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🎟️field-decoder-registry-and-empty-array-authority/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🦀️.rs`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🗄️store-state/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/📒️time-travel-ledger/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧪️inference-close/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧪️inference-close/🟦️.ts`
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/🌱️genesis/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/🏭️factory/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🏪️stores/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🏪️stores/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🏪️stores/🧪️tests/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🪟️windows/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🪟️windows/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🪟️windows/🧪️tests/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🧪️tests/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/energie-console.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/energy-opening-probe.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/energy-profile.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/energy-wasm-frames.py`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/captured-site.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-site-verify.sh`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/native-final.sh`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/release-receipts.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️brep-engine-boundary.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/probe-queue-modules.py`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/📇️catalogue-owner/🧪️laws/🦀️.rs`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/verify-release-archive.py`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/test-release-archive.py`
+## B-Rep source boundary
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️brep-engine-boundary.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🗂️changed-files.md`
+- `✏️s/Cargo.lock`
+- `✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock`
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock`
+- `✏️s/🧑‍💻dev/🌊️flow/Cargo.lock`
+- `✏️s/🧑‍💻dev/📐️cad/Cargo.lock`
+- `✏️s/🧑‍💻dev/🧩️composition/Cargo.lock`
+- `✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock`
+- `🌎️hub/Cargo.lock`
+- `🧰️framework/Cargo.lock`
+- `🧰️framework/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/⏱️operation-jobs/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/⏱️operation-jobs/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/♻️retention/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🏷️validation-gate-and-labels/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🖼️primitive-preview/🕳️bore-sampling/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️planar-volume/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📮️native-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️boolean-transform-and-copy/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔌️brep-kernel-implementation/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔍️intersection-evaluation-and-measure/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔎️analysis-session/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔎️analysis-session/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🖼️primitive-preview/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🚚️shape-exchange/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🚚️shape-exchange/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️brep-session-state/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📐️polygon-face-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🔀️certified-boolean/🕳️bore-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🔀️certified-boolean/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🔀️certified-boolean/🧭️operand-projection/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🔀️certified-boolean/🧱️orthogonal-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🔄️circular-revolution/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🗃️session-state/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🗜️prism-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🛤️polygon-wire-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧊️solid-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧾️conversions-and-registry/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🪷️conic-face-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/♻️retention/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧱️primitive-and-curve-constructors/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🩺️healing-exchange-and-tessellation/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧵️wire-preview/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🪡️grid-fit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🪡️grid-fit/🌈️coons/🦀️.rs`
+
+### Paths removed by the move
+
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📐️polygon-face-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️certified-boolean/🕳️bore-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️certified-boolean/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️certified-boolean/🧭️operand-projection/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️certified-boolean/🧱️orthogonal-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🗜️prism-boundary/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🛤️polygon-wire-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧊️solid-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧾️conversions-and-registry/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🪷️conic-face-publication/🦀️.rs`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️component-headroom.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts`
+
+## Native component source retry
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️cargo-stale-dependency-view.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🗂️changed-files.md`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🧪️tests/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/overlay-serve.mjs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️opening-budget-alignment.md`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs`
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/🔗️object-model/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🎛️artifact-app-trait/🦀️.rs`
+
+## Native spline construction boundary
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️brep-engine-boundary.md`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🗂️changed-files.md`
+- `✏️s/Cargo.lock`
+- `✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock`
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock`
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock`
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock`
+- `✏️s/🧑‍💻dev/🌊️flow/Cargo.lock`
+- `✏️s/🧑‍💻dev/📐️cad/Cargo.lock`
+- `✏️s/🧑‍💻dev/🧩️composition/Cargo.lock`
+- `✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock`
+- `🌎️hub/Cargo.lock`
+- `🧰️framework/Cargo.lock`
+- `🧰️framework/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/🌙️arc/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust/📋️project.json`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/🪡️grid-fit/➿️curve/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/🪡️grid-fit/🌈️coons/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/🪡️grid-fit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🧫️fixtures/🌙️retained-arc/🔣️.json`
+
+### Original spline source paths removed by the move
+
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🪡️grid-fit/➿️curve/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🪡️grid-fit/🌈️coons/🦀️.rs`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/〰️analytic-publication/🪡️grid-fit/🦀️.rs`
+
+## Energy live maintenance verification
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/🪜️maintenance-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1-x/🗂️recursive-archive-rejection-and-stale-authority/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️early-energy-live-maintenance.md`
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/probe-linked.sh`
+
+## Streaming component stage writer order
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/📦️capture/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧪️tests/🔣️.json`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️component-stage-writer-order.md`
+
+## Stage image writer and host capacity
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/🟦️.ts`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️compiler-pass-configuration.md`
+
+## Mounted App final backing retirement
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️registry-backing/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️registry-backing/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/🗂️member-registry/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🔒️close-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🔒️close-ladder/🧺️empty-backings/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🔁️document-replacement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📥️staging/🧱️components/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/♻️root/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🧰️store-replacement-initializer-and-retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/🎟️issuer/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪆️children/📥️staging/🚪️ingress/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🧱️components/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🔒️close-terminal/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🔁️document-replacement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️mounted-final-backing-retirement.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/🧱️components/🦀️.rs`
+
+## Native Energy snapshot bridge and post-capture witness
+
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/🌉️bridge/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/🪟️native-window/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock`
+- `✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock`
+- `✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.lock`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock`
+- `✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock`
+- `✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock`
+- `✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock`
+- `✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.lock`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock`
+- `✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.lock`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock`
+- `✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.lock`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock`
+- `✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.lock`
+- `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.lock`
+
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧭️admission/🦀️.rs`
+
+## Store genesis child release and native aggregate fixture
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🎟️registration/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/📑️delegating-operations-and-publication/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧾️eval-session-state/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/⏱️tick-budget/🦀️.rs`
+
+## Spatial session source boundary verification
+
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️spatial-session-source-boundary.md`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/📥️acknowledged/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/📥️acknowledged/🧪️tests/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/📥️acknowledged/🟦️.ts`
+
+## Energy typed command ingress and example Pack
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📝️text/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🎟️typed/📨️wire/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛬️action/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧮️reduce-and-helpers/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/📜️carrier/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/📜️carrier/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧺️handle-ui-intake/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧵️turn-dispatch-lifecycle/🟦️.tsx`
+- `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/verify-plugin-runtime.py`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🦀️.rs`

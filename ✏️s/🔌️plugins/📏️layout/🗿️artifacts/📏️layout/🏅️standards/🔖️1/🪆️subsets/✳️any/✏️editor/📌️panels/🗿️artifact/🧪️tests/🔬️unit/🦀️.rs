@@ -136,6 +136,31 @@ fn row_keys(parent: &BuiltNode) -> Vec<&str> {
     parent.children.iter().map(|row| row.key.as_str()).collect()
 }
 
+#[test]
+fn oversized_link_key_keeps_the_original_frame_selection() {
+    use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::parse_dsl;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/linked-asset.json")).unwrap();
+    let boundary = &fixture["catalogueBoundary"];
+    let oversized = boundary["links"].as_array().unwrap().iter().find(|link| link["rowKeyFits"] == false).unwrap();
+    let id = oversized["character"].as_str().unwrap().repeat(oversized["count"].as_u64().unwrap() as usize);
+    let mut document = parse_dsl(include_str!("../../../../../🖼️assets/🔗️linked-asset/🗣️.dsl.semio")).unwrap();
+    document.links[0].id = id.clone();
+    let Frame::Image { link_id, .. } = &mut document.pages[0].frames[0] else { panic!("fixture image") };
+    *link_id = id;
+
+    let section_id = LAYOUT_DOCUMENT_SECTIONS[7];
+    let tree = build(&document, &viewing(48, vec![request(section_id, Some(true), 0, 1)]));
+    let row = section_node(&tree, section_id).children.get(0).unwrap();
+    assert_eq!(row.key.as_str(), "layout-document.long-link.0");
+    let Component::TreeItem(props) = &row.component else { panic!("link row") };
+    let target = props.target.as_ref().unwrap();
+    assert_eq!(target.activation.as_ref().unwrap().as_str(), INTERACTION_SELECT_ACTION_ID);
+    let (_, UiValue::Text(targets)) = target.args.as_ref().unwrap().iter().find(|(key, _)| key.as_str() == "targets").unwrap() else { panic!("selection targets") };
+    assert_eq!(serde_json::from_str::<serde_json::Value>(targets.as_str()).unwrap(), boundary["selection"]);
+    projection(tree);
+}
+
 /// 🪟️ Law (a): a print document past one viewport streams instead of truncating — every one of the
 /// nine containers stamps the FULL extent of its own list, materialises no more than the slice it
 /// was given, and the body never invents a `+N` row to stand in for the remainder.

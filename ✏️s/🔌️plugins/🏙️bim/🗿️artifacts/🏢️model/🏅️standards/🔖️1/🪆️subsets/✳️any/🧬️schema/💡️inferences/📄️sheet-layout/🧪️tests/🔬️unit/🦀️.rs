@@ -22,11 +22,11 @@ fn drawing(view: &str, bounds: (f64, f64, f64, f64)) -> ViewLinework {
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
-    model.views.insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
-    model.views.insert("v-first".into(), View::of_storey("bldg-1", "First plan", ViewKind::Plan, "st-first"));
-    model.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Ground floor"));
-    model.sheets.insert("sh-2".into(), Sheet::standard("A-102", "First floor"));
-    model.viewports.insert("vp-1".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 30.0, y: 40.0 }));
+    model.views.cold_insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
+    model.views.cold_insert("v-first".into(), View::of_storey("bldg-1", "First plan", ViewKind::Plan, "st-first"));
+    model.sheets.cold_insert("sh-1".into(), Sheet::standard("A-101", "Ground floor"));
+    model.sheets.cold_insert("sh-2".into(), Sheet::standard("A-102", "First floor"));
+    model.viewports.cold_insert("vp-1".into(), Viewport::standard("sh-1", "v-ground", Point2 { x: 30.0, y: 40.0 }));
     model
 }
 
@@ -77,9 +77,9 @@ fn a_viewport_window_is_the_drawing_at_the_scale_of_the_viewport_inside_the_fram
 #[test]
 fn the_title_block_prints_the_scales_of_the_viewports_and_the_last_revision() {
     let mut model = model();
-    model.viewports.insert("vp-2".into(), Viewport { scale: 50, ..Viewport::standard("sh-1", "v-first", Point2 { x: 130.0, y: 40.0 }) });
-    model.sheet_revisions.insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: "2026-10-01".into(), description: "Permit".into(), author: "UG".into() });
-    model.sheet_revisions.insert("r-2".into(), SheetRevision { sheet: "sh-1".into(), number: "B".into(), date: "2026-10-05".into(), description: "Windows".into(), author: "AB".into() });
+    model.viewports.cold_insert("vp-2".into(), Viewport { scale: 50, ..Viewport::standard("sh-1", "v-first", Point2 { x: 130.0, y: 40.0 }) });
+    model.sheet_revisions.cold_insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: "2026-10-01".into(), description: "Permit".into(), author: "UG".into() });
+    model.sheet_revisions.cold_insert("r-2".into(), SheetRevision { sheet: "sh-1".into(), number: "B".into(), date: "2026-10-05".into(), description: "Windows".into(), author: "AB".into() });
     let layout = layout(&model, "sh-1");
     let value = |field| layout.title_block.cells.iter().find(|cell| cell.field == field).map(|cell| cell.value.clone()).unwrap_or_default();
     assert_eq!((value(TitleField::Scale).as_str(), value(TitleField::Revision).as_str()), ("1:50, 1:100", "B"));
@@ -91,9 +91,9 @@ fn the_title_block_prints_the_scales_of_the_viewports_and_the_last_revision() {
 #[test]
 fn a_window_beyond_the_frame_over_the_title_block_or_on_another_window_is_a_finding() {
     let mut model = model();
-    model.viewports.insert("vp-out".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 350.0, y: 20.0 }));
-    model.viewports.insert("vp-title".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 200.0 }));
-    model.viewports.insert("vp-over".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 100.0, y: 60.0 }));
+    model.viewports.cold_insert("vp-out".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 350.0, y: 20.0 }));
+    model.viewports.cold_insert("vp-title".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 200.0 }));
+    model.viewports.cold_insert("vp-over".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 100.0, y: 60.0 }));
     let sheet = layout(&model, "sh-1");
     let found = issues(&sheet);
     assert!(found.contains(&(SheetIssue::ViewportOutside, vec!["vp-out"])), "{found:?}");
@@ -105,9 +105,9 @@ fn a_window_beyond_the_frame_over_the_title_block_or_on_another_window_is_a_find
 #[test]
 fn the_revision_table_is_covered_too_and_touching_windows_are_fine() {
     let mut model = model();
-    model.sheet_revisions.insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
-    model.viewports.insert("vp-table".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 165.0 }));
-    model.viewports.insert("vp-next".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 120.0, y: 40.0 }));
+    model.sheet_revisions.cold_insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
+    model.viewports.cold_insert("vp-table".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 300.0, y: 165.0 }));
+    model.viewports.cold_insert("vp-next".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 120.0, y: 40.0 }));
     let sheet = layout(&model, "sh-1");
     let found = issues(&sheet);
     assert!(found.contains(&(SheetIssue::ViewportOverTitleBlock, vec!["vp-table"])), "{found:?}");
@@ -126,7 +126,7 @@ fn a_view_without_a_drawing_is_an_empty_viewport() {
 #[test]
 fn a_viewport_of_a_missing_view_is_not_placed_and_a_missing_sheet_has_no_layout() {
     let mut model = model();
-    model.viewports.insert("vp-lost".into(), Viewport::standard("sh-1", "v-gone", Point2 { x: 130.0, y: 40.0 }));
+    model.viewports.cold_insert("vp-lost".into(), Viewport::standard("sh-1", "v-gone", Point2 { x: 130.0, y: 40.0 }));
     assert_eq!(layout(&model, "sh-1").viewports.len(), 1);
     assert_eq!(layout(&model, "sh-9"), SheetLayout::default());
 }
@@ -134,8 +134,8 @@ fn a_viewport_of_a_missing_view_is_not_placed_and_a_missing_sheet_has_no_layout(
 #[test]
 fn only_the_viewports_of_the_sheet_are_placed_in_id_order() {
     let mut model = model();
-    model.viewports.insert("vp-0".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 200.0, y: 40.0 }));
-    model.viewports.insert("vp-x".into(), Viewport::standard("sh-2", "v-first", Point2 { x: 30.0, y: 40.0 }));
+    model.viewports.cold_insert("vp-0".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 200.0, y: 40.0 }));
+    model.viewports.cold_insert("vp-x".into(), Viewport::standard("sh-2", "v-first", Point2 { x: 30.0, y: 40.0 }));
     assert_eq!(layout(&model, "sh-1").viewports.iter().map(|placed| placed.viewport.as_str()).collect::<Vec<_>>(), ["vp-0", "vp-1"]);
     assert_eq!(layout(&model, "sh-2").viewports.iter().map(|placed| placed.viewport.as_str()).collect::<Vec<_>>(), ["vp-x"]);
 }
@@ -162,13 +162,13 @@ fn the_dependency_reads_the_sheet_its_viewports_its_revisions_and_the_names_of_i
     assert!(changed(&|next| next.viewports.get_mut("vp-1").unwrap().label = Some("Entrance".into())));
     assert!(changed(&|next| next.views.get_mut("v-ground").unwrap().name = "Renamed".into()));
     assert!(changed(&|next| {
-        next.sheet_revisions.insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
+        next.sheet_revisions.cold_insert("r-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: String::new(), description: "x".into(), author: String::new() });
     }));
     assert!(!changed(&|next| next.sheets.get_mut("sh-2").unwrap().drawn_by = "UG".into()));
     assert!(!changed(&|next| next.views.get_mut("v-first").unwrap().name = "Renamed".into()));
     assert!(!changed(&|next| next.views.get_mut("v-ground").unwrap().scale = 50));
     assert!(!changed(&|next| {
-        next.viewports.insert("vp-x".into(), Viewport::standard("sh-2", "v-ground", Point2 { x: 0.0, y: 0.0 }));
+        next.viewports.cold_insert("vp-x".into(), Viewport::standard("sh-2", "v-ground", Point2 { x: 0.0, y: 0.0 }));
     }));
     assert_eq!(dependency(&base, "sh-9"), DslValue::Null);
 }
@@ -176,8 +176,8 @@ fn the_dependency_reads_the_sheet_its_viewports_its_revisions_and_the_names_of_i
 #[test]
 fn the_metrics_table_lists_each_sheet_with_its_rectangles_windows_and_findings_by_slug() {
     let mut model = model();
-    model.viewports.insert("vp-2".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 40.0, y: 50.0 }));
-    model.sheet_revisions.insert("rev-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: "2026-10-01".into(), description: "Issued".into(), author: "UG".into() });
+    model.viewports.cold_insert("vp-2".into(), Viewport::standard("sh-1", "v-first", Point2 { x: 40.0, y: 50.0 }));
+    model.sheet_revisions.cold_insert("rev-1".into(), SheetRevision { sheet: "sh-1".into(), number: "A".into(), date: "2026-10-01".into(), description: "Issued".into(), author: "UG".into() });
     let layouts: BTreeMap<String, SheetLayout> = ["sh-1", "sh-2"].into_iter().map(|id| (id.to_string(), layout(&model, id))).collect();
     let table: serde_json::Value = serde_json::from_str(&metrics_json(&layouts)).expect("the table is JSON");
     assert_eq!(table["sh-1"]["paper"], "A3");

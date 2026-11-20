@@ -1,0 +1,6 @@
+[
+  {"issued": 0, "reserved": 0, "available": 0},
+  {"issued": 32767, "reserved": 16384, "available": 16383},
+  {"issued": 33554432, "reserved": 16777216, "available": 16777216},
+  {"issued": 536870912, "reserved": 16777216, "available": 520093696}
+]

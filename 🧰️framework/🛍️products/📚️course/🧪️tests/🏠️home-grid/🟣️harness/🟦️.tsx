@@ -141,3 +141,11 @@ export function gridStrip(id: string): HTMLElement {
 export function gridVeil(id: string): HTMLElement {
   return document.querySelector<HTMLElement>(`[data-course-grid="${id}"] > [data-layered-overview] > [data-layered-veil]`)!;
 }
+
+/** 🪜️ Where `element` stands, as the 2D translation it rests at: a pan writes its strip in 3D and flattens it a moment after the last write, the place is the same.
+ *
+ * @see ../../../../../🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🔼️pan-promotion/🟦️.ts
+ */
+export function translation(element: HTMLElement): string {
+  return element.style.transform.replace(/^translate3d\(([^,()]+),\s*([^,()]+),\s*0(?:px)?\)$/u, "translate($1, $2)");
+}

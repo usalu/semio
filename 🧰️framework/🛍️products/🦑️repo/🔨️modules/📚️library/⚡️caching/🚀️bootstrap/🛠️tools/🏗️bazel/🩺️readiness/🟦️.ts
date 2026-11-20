@@ -10,7 +10,7 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 const policy=schema.definitions.PlatformPolicy.const,version=schema.definitions.Release.const.version;
 
-export type BazelPlatformFactsV1={readonly platform:"win32"|"darwin"|"linux";readonly exchange:"supported"|"unsupported"|"unprobed";readonly caseSensitive:"yes"|"no"|"unprobed";readonly imageTool:boolean;readonly paths:readonly {readonly label:"workspace"|"tools"|"dependencies"|"products"|"temporary";readonly path:string;readonly blocking:boolean}[]};
+export type BazelPlatformFactsV1={readonly platform:"win32"|"darwin"|"linux";readonly exchange:"supported"|"unsupported"|"unprobed";readonly caseSensitive:"yes"|"no"|"unprobed";readonly caseProbeFailure?:string;readonly imageTool:boolean;readonly paths:readonly {readonly label:"workspace"|"tools"|"dependencies"|"products"|"temporary";readonly path:string;readonly blocking:boolean}[]};
 export type BazelPlatformReportV1={readonly refusals:string[];readonly warnings:string[]};
 export type BazelReadinessV1={readonly version:1;readonly bazel:{readonly version:string;readonly platform:string;readonly arch:string;readonly sha256:string;readonly executable:string};readonly modules:{readonly lockSha256:string;readonly blobs:number}};
 export type BazelProgressEventV1={readonly phase:"waiting"|"verifying"|"downloading"|"ready";readonly bytes:number;readonly total:number};
@@ -30,21 +30,33 @@ export function bazelPlatformProblemsV1(facts:unknown):BazelPlatformReportV1{
  }
 
  if(actual.platform==="win32"&&actual.exchange!=="supported")refusals.push("The journaled directory swap (write-through MoveFileExW renames of sibling directories) failed its probe beneath the workspace cache root, so the directory-backed cache partitions cannot be published. Use a local NTFS volume for the checkout; no elevation is needed.");
- if((actual.platform==="linux"||actual.platform==="win32")&&actual.caseSensitive!=="yes")refusals.push(actual.platform==="win32"?"Directory-backed cache partitions need per-directory case sensitivity, which could not be set beneath the workspace cache root: it needs NTFS, Windows 10 build 17107 or newer and the optional feature Microsoft-Windows-Subsystem-Linux (run once in an elevated PowerShell, then restart: dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux). Setting the flag later needs no elevation.":"Directory-backed cache partitions need a case-sensitive filesystem beneath the workspace cache root; use a native Linux filesystem, not a case-folding bind mount.");
+ if((actual.platform==="linux"||actual.platform==="win32")&&actual.caseSensitive!=="yes")refusals.push(actual.platform==="win32"?`Directory-backed cache partitions need per-directory case sensitivity beneath the workspace cache root. ${actual.caseProbeFailure??"The case capability probe did not pass."}`:"Directory-backed cache partitions need a case-sensitive filesystem beneath the workspace cache root; use a native Linux filesystem, not a case-folding bind mount.");
  if(actual.platform==="linux"&&actual.exchange!=="supported")refusals.push("Atomic directory exchange (renameat2 RENAME_EXCHANGE) is unsupported beneath the workspace cache root, so the directory-backed cache partitions cannot be published. Use a native Linux filesystem such as ext4, xfs or btrfs on Linux 3.15 or newer; no privilege is needed.");
  if(actual.platform==="darwin"&&!actual.imageTool)refusals.push(`${policy.darwinImageTool} is missing: the fixed cache images attach through hdiutil, which ships with macOS and needs no privilege.`);
  return {refusals,warnings};
 }
 
-/** 🔬️ Observes the invoking process and the declared partition roots without writing anything. */
+/** 🔬️ Observes the invoking process and tests the filesystem in removable scratch directories. */
 export async function collectBazelPlatformFactsV1(workspace:string,roots:Readonly<Record<"tools"|"dependencies"|"products",string>>,signal:AbortSignal):Promise<BazelPlatformFactsV1>{
  signal.throwIfAborted();
  const resolved=await realpath(workspace).catch(()=>workspace),paths=[{label:"workspace" as const,path:resolved,blocking:true},...(["tools","dependencies","products"] as const).map(label=>({label,path:roots[label],blocking:true})),{label:"temporary" as const,path:tmpdir(),blocking:false}];
- let exchange:BazelPlatformFactsV1["exchange"]="unprobed",caseSensitive:BazelPlatformFactsV1["caseSensitive"]="unprobed",imageTool=true;
- if(process.platform==="linux"||process.platform==="win32"){let host=roots.tools;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}try{probeNativeDirectoryExchangeV1(host);exchange="supported";}catch{exchange="unsupported";}try{caseSensitive=probeNativeDirectoryCaseCapabilityV1(host)?"yes":"no";}catch{caseSensitive="no";}}
+ let exchange:BazelPlatformFactsV1["exchange"]="unprobed",caseSensitive:BazelPlatformFactsV1["caseSensitive"]="unprobed",caseProbeFailure:string|undefined,imageTool=true;
+ if(process.platform==="linux"||process.platform==="win32"){
+  let host=roots.tools;
+  for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}
+  try{probeNativeDirectoryExchangeV1(host);exchange="supported";}catch{exchange="unsupported";}
+  try{
+   caseSensitive=probeNativeDirectoryCaseCapabilityV1(host)?"yes":"no";
+   if(caseSensitive==="no")caseProbeFailure="Fresh descendant names still collide after preparing the cache directory.";
+  }catch(error){
+   caseSensitive="no";
+   const reason=error instanceof Error?error.message:String(error),detail=error instanceof Error&&typeof error.cause==="string"?error.cause+". ":"";
+   caseProbeFailure=(detail+reason).replace(/\s+/gu," ").trim().slice(0,schema.definitions.PlatformFacts.properties.caseProbeFailure.maxLength)||"The filesystem probe failed.";
+  }
+ }
  if(process.platform==="darwin")imageTool=await access(policy.darwinImageTool,constants.X_OK).then(()=>true,()=>false);
  signal.throwIfAborted();
- return {platform:process.platform as BazelPlatformFactsV1["platform"],exchange,caseSensitive,imageTool,paths};
+ return {platform:process.platform as BazelPlatformFactsV1["platform"],exchange,caseSensitive,...(caseProbeFailure?{caseProbeFailure}:{}),imageTool,paths};
 }
 
 /** 🚧️ Refuses before any image is attached or byte is downloaded when Bazel cannot run on this platform. */

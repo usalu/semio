@@ -1,16 +1,51 @@
 import{expect,test}from"bun:test";
-import{chmodSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{wantedServerPolicyV1}from"../../../../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts";
 import{wantedTextV1}from"../../../../../🪪️graph-state/🙋️wanted/🟦️.ts";
 import{inferGraphReadV1}from"../../../🕸️graph/🟦️.ts";
-import{awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1}from"../../../🕸️graph/🔬️stall/🟦️.ts";
+import{awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,graphRefreshCustodyHeldV1}from"../../../🕸️graph/🔬️stall/🟦️.ts";
+import{Database}from"bun:sqlite";
+import refreshCases from "./refresh.json" with {type:"json"};
 
 /** 🔬️ Contract: the serving read of the group server never waits silently: a start behind an exclusive hold of another command is told with the holder and bounded, a read that prints nothing is explained from the lease registry and the capacity gate, and the read runs in the highest class. */
 const NOW=1_794_722_160_000,MINUTE=60_000;
 const entry=(pid:number,command:string,extra:object={})=>({version:1,pid,startedAtMs:NOW-900_000,updatedAtMs:NOW-1000,command,directory:"/w/.cache/b/l/m/data",standing:{version:1,priority:"agent",phase:"x",progressAtMs:NOW-1000,parentPid:1},holds:[],waits:[],...extra}) as never;
 const IMAGE="native-fixed-image:/w/.cache/b/d",OTHER="native-fixed-image:/w/.cache/b/o";
+
+test("refresh suppression needs live held structural custody in the exact generation root",()=>{
+ const root=mkdtempSync(join(tmpdir(),"r-")),generationsRoot=join(root,"g"),leaseDirectory=join(root,"l"),directory=join(generationsRoot,"s"),token="a".repeat(24),file=join(directory,token+".json");
+ const input={generationsRoot,leaseDirectory,environment:{},signal:new AbortController().signal},db=new Database(":memory:"),pid=30229,startedAtMs=NOW-900_000;
+ try{
+  mkdirSync(directory,{recursive:true});
+  for(const row of refreshCases.claims){
+   const resource="graph-custody:"+(row.mode==="other-root"?join(root,"elsewhere"):generationsRoot)+":"+token;
+   const claim={version:1,token:row.mode==="other-token"?"b".repeat(24):token,ticket:1,queuedMs:NOW-1000,state:row.mode==="waiting"?"waiting":"held",structural:row.mode!=="selected",owners:row.mode==="selected"?["only-one"]:[],holder:{pid:row.mode==="other-holder"?pid+1:pid,startedMs:row.mode==="reused-pid"?startedAtMs+10000:startedAtMs,command:"show projects",digest:""}};
+   rmSync(file,{force:true});
+   const ask=join(directory,token+".ask.json");
+   rmSync(ask,{force:true});
+   if(row.mode==="deposed")writeFileSync(ask,JSON.stringify({version:1,reason:"stalled",atMs:Date.now()-600000,by:{pid:pid+1,digest:""}}));
+   if(row.mode==="substituted-file"){
+    if(process.platform==="win32")continue;
+    const outside=join(root,"outside");
+    writeFileSync(outside,JSON.stringify(claim));symlinkSync(outside,file);
+   }else if(row.mode==="substituted-directory"){
+    const outside=join(root,"aliased-claims");
+    mkdirSync(outside);writeFileSync(join(outside,token+".json"),JSON.stringify(claim));
+    rmSync(directory,{recursive:true});symlinkSync(outside,directory,"junction");
+   }else if(row.mode!=="released")writeFileSync(file,JSON.stringify(claim));
+   const entries=()=>[entry(pid,"show projects",{directory:leaseDirectory,holds:[{resource,mode:"exclusive",sinceMs:NOW-1000,task:1}]})];
+   const oracle=db.query("select case when ?1 and ?2 and ?3 and ?4 then 1 else 0 end defer").get(Number(claim.structural&&claim.state==="held"),Number(resource==="graph-custody:"+generationsRoot+":"+claim.token),Number(claim.holder.pid===pid&&claim.holder.startedMs===startedAtMs),Number(row.mode!=="released"&&!row.mode.startsWith("substituted-")&&row.mode!=="deposed")) as {defer:number};
+   expect(Boolean(oracle.defer),row.mode).toBe(row.defer);
+   expect(graphRefreshCustodyHeldV1(input,entries),row.mode).toBe(row.defer);
+   if(row.mode==="substituted-directory"){rmSync(directory);mkdirSync(directory);}
+  }
+  const cancelled=AbortSignal.abort();
+  expect(graphRefreshCustodyHeldV1({...input,signal:cancelled},()=>{throw Error("Unexpected observer");})).toBe(false);
+  expect(graphRefreshCustodyHeldV1(input,()=>{throw Error("Unavailable registry");})).toBe(false);
+ }finally{db.close();rmSync(root,{recursive:true,force:true});}
+});
 const setup=entry(30229,"ea3915ce tools setup all",{standing:{version:1,priority:"agent",phase:"javascript-installed-paths",progressAtMs:NOW-2000,parentPid:30192},holds:[{resource:OTHER,mode:"shared",sinceMs:NOW-789_000,task:11},{resource:IMAGE,mode:"exclusive",sinceMs:NOW-736_000,task:14}]});
 const read=entry(36610,"b8dbe158 show projects",{standing:{version:1,priority:"agent",phase:"native-fixed-image:/w/.cache/b/d",progressAtMs:NOW-71_000,parentPid:36489},holds:[{resource:OTHER,mode:"shared",sinceMs:NOW-71_000,task:11}],waits:[{resource:IMAGE,mode:"shared",sinceMs:NOW-71_000,task:32,queued:true}]});
 const other=entry(31523,"19913804 show projects",{standing:{version:1,priority:"agent",phase:"p",progressAtMs:NOW-701_000,parentPid:31500},waits:[{resource:IMAGE,mode:"shared",sinceMs:NOW-701_000,task:32,queued:true}]});

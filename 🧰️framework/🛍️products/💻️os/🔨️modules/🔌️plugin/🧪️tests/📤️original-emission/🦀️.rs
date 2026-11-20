@@ -14,9 +14,10 @@ fn original_emission_turn<T>(scope:&mut artifact_app_laws::OriginalFixtureScope,
     let cx=scope.cx();
     let before=cx.retained_progress();
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));
+    let value=result.unwrap();
     let paid=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress()).unwrap();
     assert_eq!((heap.requested_bytes,heap.released_bytes),(paid.retained_capacity_bytes,paid.released_bytes),"actual intake/publication allocations require the same caller receipt");
-    result.unwrap()
+    value
 }
 
 #[semio_framework_async_macros::async_test]
@@ -30,7 +31,7 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
         let mut app=contract_app_raw(policy,&mut identity).await;
         let baseline=app.stores.store.content_revision_now();
         let mut scope=artifact_app_laws::OriginalFixtureScope::admit();
-        original_emission_turn(&mut scope,|cx|artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app,cx));
+        artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app,scope.cx()).unwrap();
         let mut input=Some(OriginalEmissionInput::<TestApp>{verb:"increment".into(),meta:meta(),emit:Emit::mutations(vec![TestMutation::SetCount(SetCount{value})])});
         let mut receipt=None;
         let mut admitted=false;
@@ -64,13 +65,25 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
         let mut pages=0;
         let mut awaiting_producer=None;
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
+            let mut posted=semio_framework_value::RetainedCloneProgress::default();
             original_emission_turn(&mut scope,|cx|{
-                let mut task=std::task::Context::from_waker(std::task::Waker::noop());
-                let mut future=std::pin::pin!(app.advance_typed_operation_publication(&mut identity,cx));
-                match std::future::Future::poll(future.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("original publication suspended outside its source turn")}
+                let before=cx.retained_progress();
+                let result={
+                    let mut task=std::task::Context::from_waker(std::task::Waker::noop());
+                    let mut future=std::pin::pin!(app.advance_typed_operation_publication(&mut identity,cx));
+                    match std::future::Future::poll(future.as_mut(),&mut task){
+                        std::task::Poll::Ready(result)=>result.map_err(Into::into),
+                        std::task::Poll::Pending=>panic!("original publication suspended outside its source turn"),
+                    }
+                };
+                posted=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress()).unwrap();
+                result
             });
-            if let Some((id,grant,progress))=app.take_typed_operation_preparation_receipt(){assert_eq!(id.0,operation);assert!(progress.fits(grant)&&progress.fits(policy.preparation));}
-            if let Some((id,grant,progress))=app.take_typed_operation_retirement_receipt(){assert_eq!(id.0,operation);assert!(progress.fits(grant)&&progress.fits(policy.close));}
+            let preparation=app.take_typed_operation_preparation_receipt();
+            let retirement=app.take_typed_operation_retirement_receipt();
+            assert!(posted==Default::default()||preparation.is_some()!=retirement.is_some(),"every retained posting of one publication advance binds to exactly one operation family receipt");
+            if let Some((id,grant,progress))=preparation{assert_eq!(id.0,operation);assert!(progress.fits(grant)&&progress.fits(policy.preparation));assert_eq!(progress,posted,"the family receipt carries every posting of its publication advance");}
+            if let Some((id,grant,progress))=retirement{assert_eq!(id.0,operation);assert!(progress.fits(grant)&&progress.fits(policy.close));assert_eq!(progress,posted,"the family receipt carries every posting of its publication advance");}
             assert!(app.take_typed_operation_effect().is_none(),"simple original count mutation has no external effect");
             assert!(app.take_typed_operation_event().is_none(),"simple original count mutation has no app event");
             while app.take_typed_operation_ui_scope().is_some(){}
@@ -97,7 +110,7 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
                 if page.terminal_is_empty(){break}
                 original_emission_turn(&mut scope,|cx|{
                     let demand=page.next_close_demand(policy.close.maximum_copy_bytes)?;
-                    cx.with_retained_loan(policy.close,|same|semio_framework_job::close_original_retained_step(same,demand,|issued|semio_framework_value::RetainedWorkOutcome{result:page.close_step(issued),work:1})).map(|_|())
+                    cx.with_retained_loan(policy.close,|same|semio_framework_job::close_original_retained_effect_step(same,demand,|effect|page.close_step(effect))).map(|_|())
                 });
             }
             assert!(page.terminal_is_empty(),"consumer alias physically closes before its exact ACK");

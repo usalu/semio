@@ -1,6 +1,6 @@
 //! 🌉️ Bounded funded step loops that bridge a value to its native owner and back, the same bridge as the FEM snapshot.
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
-use semio_framework_value::{OriginalRetirementFailure,RetainedWorkPoll,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneGrant,RetainedCloneStep,StagedSourceAdmission}};
+use semio_framework_value::{OriginalRetirementFailure,RetainedWorkPoll,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneGrant,StagedSourceAdmission}};
 use semio_framework_value::RetainedAllocationEffect;
 use semio_framework_value_native_owned::{OriginalSourceTurn,OriginalSourceTurnIssuer};
 use semio_framework_value_native_owned::native_decoding::NativeReceivingFailure;
@@ -56,10 +56,28 @@ impl OriginalWorkRecipient for StepWork{
  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}
 }
 
+fn source_effect<R>(
+    native: &mut NativeDecodeControl<'_>,
+    turn: &OriginalSourceTurn,
+    wallet: &mut AuthoringWallet,
+    operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> R,
+) -> Result<R, ValueError> {
+    let quantum = u64::try_from(wallet.remaining_work()).unwrap_or(u64::MAX);
+    let grant = wallet.remaining();
+    let mut work = OriginalWorkAuthority::new(StepWork { quantum, turn: turn.identity() });
+    let effect = work.with_loan(&mut (), |loan| {
+        native.with_work_recipient(loan, |native| {
+            native.with_effect_reported(grant, BRIDGE_STEP_WORK.min(quantum.saturating_sub(1)), |_, effect| operation(effect))
+        })
+    })??.ok_or_else(bridge_exhausted)?;
+    wallet.charge_work(effect.1)?;
+    Ok(effect.0)
+}
+
 /// 🏗️ One funded step wallet that admits each construction demand once against the bounded step grant.
-struct StepRecipient{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,turn:OriginalSourceTurnIdentity}
-impl StepRecipient{
- fn submitted_progress(&self)->RetainedCloneProgress{self.submitted}
+struct StepRecipient{turn:OriginalSourceTurnIdentity}
+struct StepStock{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+impl StepStock{
  fn grant_for(&mut self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{
   let left=RetainedCloneGrant{maximum_items:self.grant.maximum_items.saturating_sub(self.submitted.copied_items),maximum_copy_bytes:self.grant.maximum_copy_bytes.saturating_sub(self.submitted.copied_bytes),maximum_capacity_bytes:self.grant.maximum_capacity_bytes.saturating_sub(self.submitted.retained_capacity_bytes),maximum_release_bytes:self.grant.maximum_release_bytes.saturating_sub(self.submitted.released_bytes),..self.grant};
   if retained_clone_grant_admits(left,demand){Ok(left)}else{Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"the energy snapshot bridge step grant does not admit a construction"))}
@@ -71,12 +89,12 @@ impl StepRecipient{
  }
 }
 impl OriginalConstructionRecipient for StepRecipient{
- type Context<'turn,'source>=() where 'source:'turn;
- fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError> where 'source:'turn{Ok(())}
- fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity> where 'source:'turn{Some(self.turn)}
- fn grant<'reply,'turn,'source>(&mut self,_:&mut (),quote:OriginalConstructionGrant<'reply>)->OriginalConstructionGrantComplete<'reply> where 'source:'turn{let result=self.grant_for(quote.demand());quote.complete(result)}
- fn accept<'reply,'turn,'source>(&mut self,_:&mut (),receipt:OriginalConstructionAccept<'reply>)->OriginalConstructionAcceptComplete<'reply> where 'source:'turn{let result=self.accept_for(receipt.grant(),receipt.progress());receipt.complete(result)}
- fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted_progress()}
+ type Context<'turn,'source>=StepStock where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&StepStock)->Result<(),ValueError> where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,_:&StepStock)->Option<OriginalSourceTurnIdentity> where 'source:'turn{Some(self.turn)}
+ fn grant<'reply,'turn,'source>(&mut self,stock:&mut StepStock,quote:OriginalConstructionGrant<'reply>)->OriginalConstructionGrantComplete<'reply> where 'source:'turn{let result=stock.grant_for(quote.demand());quote.complete(result)}
+ fn accept<'reply,'turn,'source>(&mut self,stock:&mut StepStock,receipt:OriginalConstructionAccept<'reply>)->OriginalConstructionAcceptComplete<'reply> where 'source:'turn{let result=stock.accept_for(receipt.grant(),receipt.progress());receipt.complete(result)}
+ fn submitted<'turn,'source>(&self,stock:&StepStock)->RetainedCloneProgress where 'source:'turn{stock.submitted}
 }
 
 /// 🌉️ Receives one canonical document value into its native owner by driving the unchanged original receiver in bounded funded steps; the same bridge as the FEM snapshot.
@@ -94,14 +112,20 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
  let mut output=None;
  let received=(||{
   for _ in 0..BRIDGE_STEPS{
-   if source.is_some(){break}
-   let staged=admission.as_mut().ok_or_else(bridge_invalid)?;
+   let Some(staged)=admission.as_mut() else{break};
    native.checkpoint()?;
-   native.charge(staged.next_demand()?.capacity_bytes)?;
-   let turn=wallet.run(wallet.remaining(),BRIDGE_STEP_WORK,|effect|staged.advance(&mut source,effect))?.ok_or_else(bridge_exhausted)?.output;
+   native.charge(staged.next_owned_demand()?.capacity_bytes)?;
+   let turn=source_effect(&mut native,&turn,&mut wallet,|effect|staged.advance_owned(&mut source,effect))?;
    wallet.post(turn.result?.progress())?;
    if staged.terminal_is_empty(){admission=None;}
   }
+  if admission.is_some(){return Err(bridge_exhausted())}
+  if source.as_ref().is_none_or(|source|source.publication_pending()){return Err(bridge_invalid())}
+  let mut work=OriginalWorkAuthority::new(StepWork{quantum:u64::try_from(wallet.remaining_work()).unwrap_or(u64::MAX),turn:turn.identity()});
+  let mut construction=OriginalConstructionAuthority::new(StepRecipient{turn:turn.identity()});
+  let mut stock=StepStock{grant:wallet.remaining(),submitted:Default::default()};
+  let mut observed_idle=false;
+  let mut observed_pending=false;
   for _ in 0..BRIDGE_STEPS{
    native.checkpoint()?;
    if slot.ready(){
@@ -110,13 +134,31 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
     return output.take().ok_or_else(bridge_invalid);
    }
    let original=source.as_ref().ok_or_else(bridge_invalid)?.borrow();
-   let grant=wallet.remaining();
-   let mut polled=None;
-   let mut recipient=OriginalConstructionAuthority::new(StepRecipient{grant,submitted:Default::default(),turn:turn.identity()});let mut work=OriginalWorkAuthority::new(StepWork{quantum:u64::try_from(wallet.remaining_work()).unwrap_or(u64::MAX).min(1<<30),turn:turn.identity()});work.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|recipient.with_loan(&mut (),|construction|native.with_construction_recipient(construction,|native|{polled=Some(slot.advance(original,native,turn.witness(),BRIDGE_BODY,BRIDGE_STEP_WORK,grant));Ok::<(),ValueError>(())}))))???;
-   match polled.ok_or_else(bridge_invalid)?{RetainedWorkPoll::Pending{..}=>return Err(bridge_exhausted()),RetainedWorkPoll::Complete(turn)=>{wallet.charge_work(turn.work)?;wallet.post(turn.result.map_err(bridge_native)?.progress())?}}
+   let stock_for_turn=stock.grant;
+   let poll=work.with_loan(&mut (),|loan|{
+    native.with_work_recipient(loan,|native|{
+     construction.with_loan(&mut stock,|construction|{
+      let grant=stock_for_turn;
+      native.with_construction_recipient(construction,|native|{
+       Ok::<_,ValueError>(slot.advance(original,native,turn.witness(),BRIDGE_BODY,BRIDGE_STEP_WORK,grant))
+      })
+     })?
+    })
+   })??;
+   match poll{
+    RetainedWorkPoll::Pending{work}=>{if !observed_pending{observed_pending=true;eprintln!("[DEBUG] Energy receiver pending work={work} stock={stock_for_turn:?}");}wallet.charge_work(work)?;},
+    RetainedWorkPoll::Complete(turn)=>{
+     wallet.charge_work(turn.work)?;
+     let progress=turn.result.map_err(bridge_native)?.progress();
+     if progress==RetainedCloneProgress::default()&&turn.work==0&&!observed_idle{observed_idle=true;eprintln!("[DEBUG] Energy receiver idle demand={:?}, next work={:?}, stock={stock_for_turn:?}",slot.demands(original,BRIDGE_BODY,BRIDGE_STEP_WORK),slot.advance_work_demand(original,BRIDGE_BODY));}
+     wallet.post(progress)?;
+     stock=StepStock{grant:wallet.remaining(),submitted:Default::default()};
+    }
+   }
   }
   Err(bridge_exhausted())
  })();
+ eprintln!("[DEBUG] Energy receive result={:?} ready={} pending={}",received.as_ref().err(),slot.ready(),slot.advance_pending());
  let mut closed:Result<(),ValueError>=Ok(());
  for _ in 0..BRIDGE_STEPS{
   if slot.is_closing(){break}
@@ -134,7 +176,20 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
    Err(error)=>{closed=closed.and(Err(error));break}
   }
  }
- if let Some(staged)=admission.take(){closed=closed.and(retire_stepped(staged));}
+ if let Some(staged)=admission.as_mut(){
+  let mut returned=None;
+  let mut recovery=bridge_wallet();
+  let release=(||{
+   for _ in 0..BRIDGE_STEPS{
+    if staged.terminal_is_empty(){return Ok(())}
+    let turn=source_effect(&mut native,&turn,&mut recovery,|effect|staged.close_owned_into(&mut returned,&mut source,effect))?;
+    recovery.post(turn.result?.progress())?;
+   }
+   Err(bridge_exhausted())
+  })();
+  closed=closed.and(release);
+  if let Some(original)=returned{closed=closed.and(retire_stepped(original));}
+ }
  if let Some(mut held)=source.take(){
   let mut handed:Option<DslValue>=None;
   for _ in 0..BRIDGE_STEPS{
@@ -160,5 +215,38 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
  }
  let grant=wallet.remaining();
  let drained:Result<(),ValueError>=native.with_retirement(grant,|native|{while native.has_retirement_owner(){let(turn,_)=wallet.run_settled(wallet.remaining(),BRIDGE_STEP_WORK,|effect|native.close_retirement_recipient(BRIDGE_BODY,effect))?.ok_or_else(bridge_exhausted)?;wallet.post(turn.result.map_err(bridge_failure)?.progress())?;}Ok::<(),ValueError>(())});
+ eprintln!("[DEBUG] Energy close result={closed:?} decoder={drained:?} slot_empty={} original_birth={} controlled={}",slot.terminal_is_empty(),slot.requires_original_birth(),slot.requires_original_control());
  let output=received?;closed?;drained?;Ok(output)
+}
+
+#[cfg(test)]
+#[test]
+fn settled_source_admits_and_refuses() {
+    assert!(receive_stepped::<bool>(DslValue::Bool(true)).unwrap());
+    assert!(receive_stepped::<bool>(DslValue::String("wrong value kind".into())).is_err());
+    let original = DslValue::Object(vec![("zone".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::String("north".into())]))]);
+    let received = receive_stepped::<DslValue>(original.clone()).unwrap();
+    assert_eq!(received, original);
+    retire_stepped(received).unwrap();
+
+    #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
+    struct Details { active: semio_framework_value::shared_issuance::SealedShared<bool> }
+    #[derive(semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    struct Record {
+        label: semio_framework_value::shared_issuance::SealedShared<String>,
+        #[value(flatten)]
+        details: semio_framework_value::shared_issuance::SealedShared<Details>,
+    }
+    let record=receive_stepped::<Record>(DslValue::Object(vec![
+        ("label".into(),DslValue::String("Retained label".into())),
+        ("active".into(),DslValue::Bool(true)),
+    ])).unwrap();
+    assert_eq!(record.label.get(),"Retained label");
+    assert!(*record.details.get().active.get());
+    retire_stepped(record).unwrap();
+    let result=receive_stepped::<Record>(DslValue::Object(vec![
+        ("label".into(),DslValue::String("Retained label".into())),
+        ("active".into(),DslValue::String("wrong nested value kind".into())),
+    ]));
+    assert!(matches!(result,Err(error) if error.kind==ValueRefusalKind::InvalidValue));
 }

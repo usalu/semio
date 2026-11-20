@@ -38,6 +38,7 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }
 
 [dev-dependencies]
 csv = { workspace = true }

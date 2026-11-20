@@ -1,0 +1,8 @@
+[
+  {"name":"refused", "kind":"refused", "inputSeq":4, "requested":"concrete-forest", "focused":true, "expected":null},
+  {"name":"superseded", "kind":"superseded", "inputSeq":4, "requested":"concrete-forest", "focused":true, "expected":null},
+  {"name":"older", "kind":"applied", "inputSeq":2, "requested":"concrete-forest", "focused":true, "expected":null},
+  {"name":"selected", "kind":"applied", "inputSeq":4, "requested":"concrete-forest", "focused":true, "expected":{"memory":{"exampleId":"concrete-forest", "inputSeq":4}, "visibleExampleId":"concrete-forest"}},
+  {"name":"default", "kind":"applied", "inputSeq":4, "requested":"", "focused":true, "expected":{"memory":{"exampleId":"house", "inputSeq":4}, "visibleExampleId":"demo"}},
+  {"name":"background program", "kind":"applied", "inputSeq":4, "requested":"concrete-forest", "focused":false, "expected":{"memory":{"exampleId":"concrete-forest", "inputSeq":4}}}
+]

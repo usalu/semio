@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/build/task-view-hermetic.schema.json",
+  "title": "Hermetic task",
+  "description": "A task that runs in a view holding only its declared inputs, with the machine-local state (target directory, tool home, views, outputs) in a state root apart from the source root, and writes only its declared outputs. / Eine Aufgabe, die in einer Sicht läuft, die nur ihre erklärten Eingaben enthält, mit dem maschinenlokalen Zustand in einer vom Quellwurzelverzeichnis getrennten Zustandswurzel, und nur ihre erklärten Ausgaben schreibt.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "layout": { "views": "v", "target": "t", "home": "h", "outputs": "o", "temporaryPrefix": ".tmp-", "receipt": "receipt.json", "keyCharacters": 32, "directory": ["f", "hm"] },
+        "environment": {
+          "allow": ["PATH", "HOME", "USERPROFILE", "SystemRoot", "TMPDIR", "TEMP", "TMP", "RUSTUP_HOME", "RUSTUP_TOOLCHAIN", "LANG"],
+          "fixed": { "CARGO_INCREMENTAL": "0", "CARGO_TERM_COLOR": "never", "CARGO_NET_OFFLINE": "true", "SOURCE_DATE_EPOCH": "0" },
+          "outputDirectory": "SEMIO_TASK_OUTPUT_DIR",
+          "stateRoot": "SEMIO_HERMETIC_STATE_ROOT"
+        },
+        "cargo": {
+          "arguments": ["--locked", "--offline"],
+          "ignoredDirectories": ["target", ".git", "node_modules", ".cache"],
+          "packageDirectories": ["src", "tests", "benches", "examples"],
+          "packageFiles": ["build.rs"],
+          "workspaceFiles": ["Cargo.toml", "Cargo.lock", "rust-toolchain", "rust-toolchain.toml"],
+          "configDirectory": ".cargo",
+          "configNames": ["config.toml", "config"],
+          "dependencyInfoDirectory": "deps",
+          "dependencyInfoSlackMilliseconds": 2000
+        },
+        "bounds": { "maximumStderrBytes": 65536, "maximumOutputBytes": 268435456, "maximumFiles": 50000, "maximumNamedPaths": 5 }
+      },
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "layout", "environment", "cargo", "bounds"],
+      "properties": {
+        "version": { "const": 1 },
+        "layout": { "type": "object" },
+        "environment": { "type": "object" },
+        "cargo": { "type": "object" },
+        "bounds": { "type": "object" }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "hash", "key", "outputs"],
+      "properties": {
+        "version": { "const": 1 },
+        "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "key": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "digest", "bytes"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "bytes": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "unavailable": "The task cannot run hermetically ({reason}). It stays on the existing path.",
+          "ambientConfig": "The directory {directory} lies below a Cargo configuration ({file}) that is not a declared input. Put the state root outside of it.",
+          "outsideWorkspace": "The declared input {path} lies outside the workspace and cannot be part of a view.",
+          "undeclaredInput": "The task read a file that is not a declared input: {paths}. Declare it or stop reading it.",
+          "wroteIntoView": "The task wrote into its view: {paths}. Outputs belong to their declared places.",
+          "readOutsideView": "The task read files outside its view: {paths}.",
+          "pathLeak": "The output {name} contains the path {path}, so it differs between machines and cannot be shared.",
+          "outputMissing": "The declared output {name} was not produced.",
+          "outputUnexpected": "The task produced outputs that are not declared: {paths}.",
+          "failed": "The task failed with exit code {code}.",
+          "aborted": "The task was cancelled."
+        },
+        "de": {
+          "unavailable": "Die Aufgabe kann nicht hermetisch laufen ({reason}). Sie bleibt auf dem bisherigen Weg.",
+          "ambientConfig": "Das Verzeichnis {directory} liegt unter einer Cargo-Konfiguration ({file}), die keine erklärte Eingabe ist. Die Zustandswurzel gehört außerhalb davon.",
+          "outsideWorkspace": "Die erklärte Eingabe {path} liegt außerhalb des Arbeitsbereichs und kann nicht Teil einer Sicht sein.",
+          "undeclaredInput": "Die Aufgabe hat eine Datei gelesen, die keine erklärte Eingabe ist: {paths}. Erkläre sie oder lies sie nicht mehr.",
+          "wroteIntoView": "Die Aufgabe hat in ihre Sicht geschrieben: {paths}. Ausgaben gehören an ihre erklärten Orte.",
+          "readOutsideView": "Die Aufgabe hat Dateien außerhalb ihrer Sicht gelesen: {paths}.",
+          "pathLeak": "Die Ausgabe {name} enthält den Pfad {path}, sie unterscheidet sich daher zwischen Maschinen und kann nicht geteilt werden.",
+          "outputMissing": "Die erklärte Ausgabe {name} wurde nicht erzeugt.",
+          "outputUnexpected": "Die Aufgabe hat Ausgaben erzeugt, die nicht erklärt sind: {paths}.",
+          "failed": "Die Aufgabe ist mit Exit-Code {code} fehlgeschlagen.",
+          "aborted": "Die Aufgabe wurde abgebrochen."
+        }
+      },
+      "type": "object",
+      "required": ["en", "de"]
+    }
+  }
+}

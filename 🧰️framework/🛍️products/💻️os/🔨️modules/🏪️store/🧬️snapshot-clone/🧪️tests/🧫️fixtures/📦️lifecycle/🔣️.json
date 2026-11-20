@@ -13,6 +13,11 @@
     "stringByteLength": 262144,
     "expectedCode": "retained-clone.step-grant-too-small"
   },
+  "cloneTurnAdmission": [
+    { "id": "mounted-remainder", "remainingCopyBytes": 622, "turnCopyBytes": 32768, "turnCapacityBytes": 16777216, "demandCopyBytes": 1856, "demandCapacityBytes": 0, "outcome": "blocked" },
+    { "id": "next-full-turn", "remainingCopyBytes": 1856, "turnCopyBytes": 32768, "turnCapacityBytes": 16777216, "demandCopyBytes": 1856, "demandCapacityBytes": 0, "outcome": "admitted" },
+    { "id": "irreducible-capacity", "remainingCopyBytes": 4096, "turnCopyBytes": 4096, "turnCapacityBytes": 65536, "demandCopyBytes": 56, "demandCapacityBytes": 262144, "outcome": "refused" }
+  ],
   "handoff": {
     "sourceEntries": 33,
     "copiedEntriesBeforeLoss": 3,

@@ -18,7 +18,10 @@ pub struct OriginalToolOverlayFold<P,M:Send+Sync+'static>{
  pub(super) dirty:bool,
  closing:bool,
 }
-impl<P,M:Send+Sync+'static> Default for OriginalToolOverlayFold<P,M>{fn default()->Self{Self{semantic:None,messages:None,retirement:None,base:None,running:None,checkpoint:None,alias:None,binding:None,ordinal:None,phase:0,accepted:false,dirty:false,closing:false}}}
+impl<P,M:Send+Sync+'static> Default for OriginalToolOverlayFold<P,M>{fn default()->Self{Self::vacant()}}
+impl<P,M:Send+Sync+'static> OriginalToolOverlayFold<P,M>{
+ pub const fn vacant()->Self{Self{semantic:None,messages:None,retirement:None,base:None,running:None,checkpoint:None,alias:None,binding:None,ordinal:None,phase:0,accepted:false,dirty:false,closing:false}}
+}
 impl<P,M> OriginalToolOverlayFold<P,M>
 where P: semio_os_kernel::StoreState,M: semio_os_kernel::StoreMutationFor<P>{
  /// 🧭️ Borrows scalar stages and the exact pending demand for original progress witnesses.

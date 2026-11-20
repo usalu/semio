@@ -2,7 +2,7 @@ import {testScratchRootV1} from "../../../../🧪️testing/🏖️sandbox/🟦�
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{mkdtemp,writeFile,mkdir,rm,rename,symlink,readdir}from"node:fs/promises";
+import{mkdtemp,writeFile,mkdir,rm,rename,symlink,readdir,readFile}from"node:fs/promises";
 import{fstatSync,lstatSync}from"node:fs";
 import{join,resolve}from"node:path";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
@@ -11,8 +11,8 @@ const root=testScratchRootV1("publication-sources");
 async function fixture(run:(directory:string)=>Promise<void>){await mkdir(root,{recursive:true});const directory=await mkdtemp(join(root,"sources-"));try{await run(directory);}finally{await rm(directory,{recursive:true,force:true});}}
 function heldIdentity(row:Readonly<{dev:number;ino:number}>){let count=0;for(let fd=0;fd<4096;fd++)try{const actual=fstatSync(fd);if(row.dev===actual.dev&&row.ino===actual.ino)count++;}catch{}return count;}
 function held(path:string){return heldIdentity(lstatSync(path));}
-const limits={maximumFiles:16384,maximumBytes:536870912};
-async function writerFree(directory:string,destination:string){const{resourceLeasePathV1}=await import("../../../../🔒️leases/🟦️.ts"),database=new Database(resourceLeasePathV1(directory,"artifact-capture:"+destination));try{database.exec("pragma busy_timeout=0");try{database.exec("begin exclusive");database.exec("rollback");return true;}catch(error){if(!/locked|busy/i.test(String(error)))throw error;return false;}}finally{database.close();}}
+const limits={maximumFiles:16384,maximumBytes:8589934592};
+async function writerFree(directory:string,destination:string,prefix="artifact-capture:"){const{resourceLeasePathV1}=await import("../../../../🔒️leases/🟦️.ts"),database=new Database(resourceLeasePathV1(directory,prefix+destination));try{database.exec("pragma busy_timeout=0");try{database.exec("begin exclusive");database.exec("rollback");return true;}catch(error){if(!/locked|busy/i.test(String(error)))throw error;return false;}}finally{database.close();}}
 test("source files schema and reserved publication paths agree with independent SQLite",async()=>{const api=await import("../🟦️.ts"),db=new Database(":memory:");try{const validator=new Ajv({strict:true});expect(validator.validate(schema,corpus.policy)).toBe(true);const nameValidator=validator.compile(schema.definitions.SourceName);for(const row of corpus.cases){const sql=db.query("select length(?1)>0 and substr(?1,1,1)<>'/' and instr('/'||?1||'/','/../')=0 and instr('/'||?1||'/','/./')=0 and substr(?1,-1)<>'/' and instr(?1,'//')=0 and instr(?1,char(92))=0 and instr(?1,':')=0 and ?1<>'.semio-artifact.json' and ?1 not like '.semio-artifact.json/%' ok").get(row.name)as{ok:number};expect(Boolean(sql.ok)).toBe(row.accepted);expect(Boolean(nameValidator(row.name))).toBe(row.accepted);expect(api.isArtifactSourceNameV1(row.name)).toBe(row.accepted);}}finally{db.close();}});
 test("source files retain exact admitted descriptors and reject copied or retired capability",async()=>{const api=await import("../🟦️.ts");await fixture(async directory=>{const path=join(directory,"in");await writeFile(path,"7");let token:import("../🟦️.ts").ArtifactSourceSetV1|undefined;await api.withArtifactSourceSetV1(new Map([["value",path]]),limits,async sources=>{token=sources;const rows=api.artifactSourceEntriesV1(sources);expect(rows).toHaveLength(1);expect(rows[0]!.sha256).toBe(new Bun.CryptoHasher("sha256").update("7").digest("hex"));expect(held(path)).toBe(1);expect(new TextDecoder().decode(await api.readArtifactSourceChunkV1(sources,"value",0,1))).toBe("7");expect(()=>api.artifactSourceEntriesV1({...sources})).toThrow();});expect(held(path)).toBe(0);expect(()=>api.artifactSourceEntriesV1(token!)).toThrow();});});
 test("source files refuse changed identity or extent and close partial admissions",async()=>{const api=await import("../🟦️.ts");await fixture(async directory=>{const path=join(directory,"in"),other=join(directory,"other"),folder=join(directory,"folder");await writeFile(path,"7");await writeFile(other,"8");await mkdir(folder);await expect(api.withArtifactSourceSetV1(new Map([["a",path],["b",folder]]),limits,async()=>{throw Error("must not enter");})).rejects.toThrow();expect(held(path)).toBe(0);await expect(api.withArtifactSourceSetV1(new Map([["a",path]]),limits,async sources=>{const original=lstatSync(path);await rename(other,path);try{await api.recheckArtifactSourceSetV1(sources);}finally{expect(heldIdentity(original)).toBe(1);}})).rejects.toThrow();expect(held(path)).toBe(0);await expect(api.withArtifactSourceSetV1(new Map([["a",path]]),limits,async sources=>{await writeFile(path,"88");await api.recheckArtifactSourceSetV1(sources);})).rejects.toThrow();expect(held(path)).toBe(0);});});
@@ -38,3 +38,33 @@ for(const kind of["error","undefined","partial","tamper","cancel"]as const)test(
 
 test("source files inventory accounts every parent root and marker within reader depth and entry limits",async()=>{const reader=(await import(process.cwd()+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🧬️schema/🔣️.json")).default.definitions.Protocol.const;expect(schema.properties.maximumDepth.const).toBe(reader.maximumDepth);expect(schema.properties.maximumEntries.const).toBe(reader.maximumEntries);const api=await import("../📋️inventory/🟦️.ts"),database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema.definitions.InventoryCounts);try{for(const row of corpus.inventories){const names="names"in row?row.names!: [Array.from({length:row.depth!},()=>"a").join("/")];const result=api.artifactSourceInventoryV1(names);expect(result.entries).toBe(row.entries);expect(result.directories).toBe(row.directories);expect(result.maximumDepth).toBe(row.maximumDepth);expect(result.entries).toBe(result.files+result.directories+1);}expect(()=>api.artifactSourceInventoryV1([Array.from({length:65},()=>"a").join("/")])).toThrow();expect(()=>api.artifactSourceInventoryV1(["a","a/b"])).toThrow();for(const row of corpus.countCases){const sql=database.query("select ?1 between 0 and 16384 and ?2>=1 and ?3 between 1 and 64 and ?1+?2+1<=262144 ok").get(row.value.files,row.value.directories,row.value.maximumDepth)as{ok:number};expect(Boolean(sql.ok)).toBe(row.accepted);expect(Boolean(validate(row.value))&&row.value.files+row.value.directories+1<=schema.properties.maximumEntries.const).toBe(row.accepted);expect(api.admitsArtifactSourceInventoryV1(row.value)).toBe(row.accepted);}}finally{database.close();}});
 test("source files publication extent holds the retained compilation and its index",()=>{const row=schema.properties;expect(row.maximumPublicationBytes.const).toBeGreaterThanOrEqual(row.maximumRetainedCompilationBytes.const+row.maximumRetainedIndexBytes.const);expect(row.maximumPublicationBytes.const).toBeGreaterThanOrEqual(row.maximumBytes.const);});
+
+
+test("retained component publication holds both actual writers before the compiler writer and preserves staged bytes",async()=>{
+ const publication=await import("../../🟦️.ts"),leases=await import("../../../../🔒️leases/🟦️.ts"),originalApi=await import("../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts"),row=corpus.retainedPublication;
+ await originalApi.withScriptProcessEnvelope(originalApi.createScriptProcessEnvelope({version:1,owner:"publication:source-law",maximumElapsedMilliseconds:0},{},Date.now()),async original=>{
+  const control=originalApi.createIssuedResourceControlV1(original,"artifact:component-stage",20000);
+  await fixture(directory=>leases.withLeaseTaskV1(async()=>{
+   const location=join(directory,"leases"),source=join(directory,"linked"),target=join(directory,"staged");
+   const held=()=>Promise.all([writerFree(location,target),writerFree(location,target,"artifact:")]);
+   const lockStates:boolean[]=[];
+   await writeFile(source,Buffer.from(row.sourceBase64,"base64"));
+   await publication.withFreshArtifactPublicationWritersV1(target,location,control,async stage=>{
+    lockStates.push(...await held());
+    const image=await leases.acquireResourceLease({directory:location,resource:"repo:compiler-writer:"+directory,mode:"shared",control,signal:control.signal});
+    try{
+     await originalApi.withRequestedIssuedResourceControlV1(control,0,phase=>stage(row.owner,new Map([[row.file,source]]),{control:phase,leaseDirectory:location}));
+     lockStates.push(...await held());
+    }finally{image.release();}
+   });
+   lockStates.push(...await held());
+   expect(lockStates).toEqual(row.leaseStates);
+   const oracle=new Database(":memory:");
+   try{
+    const bytes=await readFile(join(target,row.file));
+    expect(oracle.query("select hex(?) as value").get(bytes)).toEqual({value:row.sourceHex});
+    expect(JSON.parse(await readFile(join(target,".semio-artifact.json"),"utf8"))).toEqual({version:1,owner:row.owner,files:[row.file]});
+   }finally{oracle.close();}
+  }));
+ });
+});

@@ -19,6 +19,7 @@ pub struct PendingFileOpen {
     pub import_action: String,
     pub args: Option<semio_framework::DslValue>,
     pub multiple: bool,
+    pub max_file_bytes: Option<u32>,
 }
 
 //#endregion ShellTypes

@@ -92,17 +92,17 @@ fn authored<R>(grant:ArtifactStoreOneItemGrant,run:impl FnOnce(&mut semio_framew
 /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
 /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
 /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
-pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,body:usize,grant:ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
+pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,body:usize,grant:ArtifactStoreOneItemGrant,turn_ceiling:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
 where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
     publication.turn_work=0;let before=receiving.actual_work();
-    let result=advance_apply_batch_inner(store,publication,body,grant,receiving);
+    let result=advance_apply_batch_inner(store,publication,body,grant,turn_ceiling,receiving);
     let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
     let coordination=match &result{Ok(ArtifactStoreOneItemAdvance::Blocked|ArtifactStoreOneItemAdvance::AwaitingAck(_)|ArtifactStoreOneItemAdvance::Complete)=>0,Ok(_)=>1,Err(_)=>0};
     let reported=publication.turn_work;publication.turn_work=reported.max(observed).max(coordination);
     publication.turn_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordination!=0).map_err(VcsError::InverseRefused)?;result
 }
 
-fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
+fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
     P: semio_os_spr::StoreState,
     Mutation: semio_os_spr::StoreMutationFor<P>,
@@ -204,7 +204,7 @@ where
             }
             let owner = publication.preparation.as_mut().expect("validated batched publication item preparation");
             if owner.prepared().is_none() {
-                let result=owner.advance(body,item_grant,receiving).and_then(|step|validate_original_preparation_step(step,item_grant,owner.prepared().is_some()).map_err(Into::into));
+                let result=owner.advance_with_turn_ceiling(body,item_grant,turn_ceiling,receiving).and_then(|step|validate_original_preparation_step(step,item_grant,owner.prepared().is_some()).map_err(Into::into));
                 publication.turn_work=owner.last_turn_work();
                 let step=match result {Ok(step)=>step,Err(reason)=>{*publication.receiving_fault=Some(reason);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 return match step {
@@ -249,7 +249,8 @@ where
             if let Some(owner)=stage.digest_owner.as_mut(){
                 if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
                 if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
-                let Some(step)=receiving.with_effect(grant.retained_grant(),STEP_WORK,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
+                let work=owner.next_digest_work_demand().map_err(refusal)?;
+                let Some(step)=receiving.with_effect(grant.retained_grant(),work,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(ArtifactStoreOneItemAdvance::Blocked)};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
             }
 
             let meta = stage.edit.as_ref().expect("live staged edit owner").mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;

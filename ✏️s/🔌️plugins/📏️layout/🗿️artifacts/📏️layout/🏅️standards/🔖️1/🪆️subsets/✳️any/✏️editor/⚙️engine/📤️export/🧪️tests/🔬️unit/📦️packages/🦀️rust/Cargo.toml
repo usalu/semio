@@ -18,6 +18,9 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-io = { workspace = true }
+semio-s-artifact-stdio-pdf = { path = "../../../../../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-editor = { workspace = true }

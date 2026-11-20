@@ -44,13 +44,13 @@ pub const MAX_LAYOUT_EXPORT_FILES: usize = 3;
 /// 📤️ Derived, never a literal: the framework's own end-to-end segmented-download total cap, so this
 /// plugin's export budget cannot drift from the bound the shard worker and the host drain enforce
 /// (`🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json`'s `contract.maximumTotalBytes`).
-pub const MAX_LAYOUT_EXPORT_OUTPUT_BYTES: usize = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
+pub use semio_s_artifact_layout_layout_engine_export_primitives::MAX_LAYOUT_EXPORT_OUTPUT_BYTES;
 
 pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 642;
 
 /// 📤️ Derived, never a literal: the exact per-chunk cap [`ArtifactOutputChunks::push`] enforces. A
 /// literal that drifts from it turns a correct producer into a runtime fault on the wire.
-pub const OUTPUT_CHUNK_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
+pub use semio_s_artifact_layout_layout_engine_export_primitives::OUTPUT_CHUNK_BYTES;
 
 pub const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
 
@@ -372,8 +372,8 @@ impl LayoutExportPublication {
         self.publication.borrow_outcome(descriptor)
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        self.publication.close_step(grant)
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome {
+        self.publication.close_step(effect)
     }
 
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -403,8 +403,12 @@ impl LayoutPublicationSlot {
             return Ok(true);
         };
         if !publication.terminal_is_empty() {
-            let step = publication.close_step(context.retained_grant())?;
-            context.consume_retained(step.progress())?;
+            let grant = context.retained_grant();
+            let Some((turn,work)) = context.with_original_effect(grant,|_,effect| publication.close_step(effect))? else { return Ok(false); };
+            context.consume_work(work);
+            let progress=turn.result.as_ref().map_or_else(semio_framework_value::ValueError::retained_progress,|step|step.progress());
+            context.consume_retained(progress)?;
+            turn.result?;
             return Ok(false);
         }
         self.publication = None;
@@ -430,16 +434,16 @@ impl LayoutPublicationSlot {
         }
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome {
         let Some(publication) = self.publication.as_mut() else {
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()));
+            return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0};
         };
-        let step = publication.close_step(grant)?;
+        let turn = publication.close_step(effect);
         if publication.terminal_is_empty() {
             self.publication = None;
             self.delivered = false;
         }
-        Ok(step)
+        turn
     }
 
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -460,4 +464,4 @@ pub(super) struct NestedValidationCursor {
     pub(super) layer: usize,
 }
 
-pub(super) enum FramePlanTurn { Pending, Frame(super::frame_planning::FramePlanAddress), Complete }
+pub use semio_s_artifact_layout_layout_engine_export_primitives::frame_planning::FramePlanTurn;

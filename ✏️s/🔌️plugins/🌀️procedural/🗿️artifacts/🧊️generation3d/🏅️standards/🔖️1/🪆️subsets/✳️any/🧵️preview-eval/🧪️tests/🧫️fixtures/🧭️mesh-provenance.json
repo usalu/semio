@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "live": "face-live",
+  "previous": {
+    "a": "face-a",
+    "b": "face-b"
+  },
+  "packs": {
+    "face-a": 1,
+    "face-b": 5,
+    "face-live": 12
+  },
+  "cases": [
+    {
+      "channel": "a",
+      "available": [
+        "face-a",
+        "face-b"
+      ],
+      "diagnosed": false,
+      "expected": "face-a",
+      "position": 1,
+      "component": false
+    },
+    {
+      "channel": "b",
+      "available": [
+        "face-a",
+        "face-b"
+      ],
+      "diagnosed": false,
+      "expected": "face-b",
+      "position": 5,
+      "component": false
+    },
+    {
+      "channel": "c",
+      "available": [
+        "face-a"
+      ],
+      "diagnosed": false,
+      "expected": null,
+      "position": null,
+      "component": false
+    },
+    {
+      "channel": "a",
+      "available": [
+        "face-a"
+      ],
+      "diagnosed": true,
+      "expected": null,
+      "position": null,
+      "component": false
+    },
+    {
+      "channel": "a",
+      "available": [
+        "face-a",
+        "face-live"
+      ],
+      "diagnosed": false,
+      "expected": "face-live",
+      "position": 12,
+      "component": true
+    },
+    {
+      "channel": "a",
+      "available": [
+        "face-live"
+      ],
+      "diagnosed": false,
+      "expected": "face-live",
+      "position": 12,
+      "component": true
+    },
+    {
+      "channel": "a",
+      "available": [
+        "face-a",
+        "face-b"
+      ],
+      "diagnosed": false,
+      "advanced": true,
+      "expected": "face-a",
+      "position": 1,
+      "component": false
+    },
+    {
+      "channel": "b",
+      "available": [
+        "face-a",
+        "face-b"
+      ],
+      "diagnosed": false,
+      "advanced": true,
+      "expected": "face-b",
+      "position": 5,
+      "component": false
+    }
+  ]
+}

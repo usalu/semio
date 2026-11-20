@@ -7,6 +7,19 @@ export function shardWorkerActorStateSource(): string {
 const activatingActors = new Set();
 let lastActivationGeneration = 0n;
 const inFlightTurnActors = new Set();
+// 🚦️ One crossing at a time per actor: a later turn, frame or codec message WAITS behind the running one (FIFO) instead of being refused, because prototype turns last seconds and
+// the host legitimately posts the next crossing (ui acks, drive, lifecycle) while one is still running. The guest itself refuses overlapping calls, so this is the single admission point.
+const actorTurnTails = new Map();
+async function enterActorTurn(actorId) {
+  const previous = actorTurnTails.get(actorId) ?? Promise.resolve();
+  let leave;
+  const mine = new Promise((resolve) => { leave = resolve; });
+  const tail = previous.then(() => mine);
+  actorTurnTails.set(actorId, tail);
+  await previous;
+  inFlightTurnActors.add(actorId);
+  return () => { inFlightTurnActors.delete(actorId); leave(); if (actorTurnTails.get(actorId) === tail) actorTurnTails.delete(actorId); };
+}
 let turnSeq = 0;
 let heartbeatSabView = null;
 let heartbeatShardIndex = -1;

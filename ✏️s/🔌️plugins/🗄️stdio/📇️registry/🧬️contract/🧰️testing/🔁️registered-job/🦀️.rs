@@ -3,9 +3,10 @@
 //! @see `semio_framework_action_bus::ActionBus::admit_job`, `semio_framework_job::OriginalJobFixtureCaller`.
 
 use super::original_grant;
-use semio_framework_action_bus::{admit_original_tool_construction, ActionBus, ErasedToolJob, RetainedToolWireInput, ToolFactoryKey, ToolJobAdmissionDemand, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
-use semio_framework_job::{drive_step, InteractiveJob, InteractiveStage, JobOutcomeView, Operation, OriginalJobDecodeOwner, OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin, RetainedCloneProgress};
-use semio_framework_value_snapshot_read::{snapshot_registry_alias_close_step, SnapshotRead, SnapshotReadRegistryAliasRetirement, SnapshotReadRegistryHandle};
+use semio_framework_action_bus::{admit_original_tool_construction_settled, ActionBus, ErasedToolJob, RetainedToolWireInput, ToolFactoryKey, ToolJobAdmissionDemand, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
+use semio_framework_job::{close_original_effect_step, drive_step, InteractiveJob, InteractiveStage, JobOutcomeView, Operation, OriginalConstructionAdmission, OriginalConstructionStatus, OriginalJobDecodeOwner, OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin, RetainedCloneProgress};
+use semio_framework_value_snapshot_read::{snapshot_registry_alias_close_step, snapshot_registry_alias_demands, SnapshotRead, SnapshotReadRegistryAliasRetirement, SnapshotReadRegistryHandle};
+use semio_framework_value::{retirement::controlled::ControlledRetirement, RetirementDemand};
 use std::sync::Arc;
 
 /// 🎟️ One original caller with its decode owner, closed together by [`Session::finish`].
@@ -17,28 +18,28 @@ pub struct Session {
 
 impl Session {
     pub fn new(operation: Operation) -> Self {
-        Self { caller: OriginalJobFixtureCaller::admit(operation.operation, operation.generation, original_grant(), || Some(0), u64::MAX, 1_000_000), decoder: OriginalJobDecodeOwner::empty(), origin: OriginalJobReturnOrigin::empty() }
+        let mut caller = OriginalJobFixtureCaller::admit(operation.operation, operation.generation, original_grant(), || Some(0), u64::MAX, 1_000_000);
+        let decoder = caller.admitted_decoder();
+        Self { caller, decoder, origin: OriginalJobReturnOrigin::empty() }
     }
 
     /// 🏁️ Retires the decode owner through funded turns, then the caller.
     pub fn finish(mut self) {
-        while !self.decoder.terminal_is_empty() {
-            let decoder = &mut self.decoder;
-            self.caller
-                .turn(original_grant(), |cx| {
-                    decoder.close_on_source(cx)?;
-                    Ok(())
-                })
-                .expect("fixture decode owner closes");
-        }
         for _ in 0..4096 {
             if self.origin.terminal_is_empty() {
                 break;
             }
             let origin = &mut self.origin;
-            self.caller.turn(original_grant(), |cx| origin.close_step(cx).map(|_| ())).expect("fixture return origin closes");
+            self.caller.turn_with_decoder(original_grant(), &mut self.decoder, |cx| origin.close_step(cx).map(|_| ())).expect("fixture return origin closes");
         }
         assert!(self.origin.terminal_is_empty(), "fixture return origin kept custody after 4096 close steps");
+        for _ in 0..4096 {
+            if self.decoder.terminal_is_empty() {
+                break;
+            }
+            self.caller.turn(original_grant(), |cx| self.decoder.close_on_source(cx).map(|_| ())).expect("fixture decode owner closes");
+        }
+        assert!(self.decoder.terminal_is_empty(), "fixture decode owner kept custody after 4096 close steps");
         self.caller.retire(original_grant());
     }
 }
@@ -89,9 +90,8 @@ impl SnapshotLease {
         while retirement.is_some() {
             caller
                 .turn(original_grant(), |cx| {
-                    let step = snapshot_registry_alias_close_step(&mut retirement, cx.retained_grant())?;
-                    cx.consume_retained(step.progress())?;
-                    cx.consume_fuel(step.progress().copied_items as u64);
+                    let demand = snapshot_registry_alias_demands(&retirement)?;
+                    close_original_effect_step(cx, demand, |effect| snapshot_registry_alias_close_step(&mut retirement, effect))?;
                     Ok(())
                 })
                 .expect("snapshot issuer closes");
@@ -101,21 +101,56 @@ impl SnapshotLease {
 
 /// 🚪️ Admits `payload` with its wire and optional checkpoint through the registered factory of `key` and returns the erased job.
 pub fn admit<P: Send + 'static>(bus: &ActionBus, session: &mut Session, operation: Operation, key: ToolFactoryKey, schema: &str, payload: P, input: Option<RetainedToolWireInput>, checkpoint: Option<RetainedToolWireInput>) -> ErasedToolJob {
-    let capacity = std::mem::size_of::<P>();
+    let capacity = size_of::<P>();
+    let demand = ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: capacity, release_bytes: 0, depth: 1 };
     let mut spec = None;
-    let born = session
-        .caller
-        .turn_with_decoder(original_grant(), &mut session.decoder, |cx| {
-            admit_original_tool_construction(cx, &mut spec, ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: capacity, release_bytes: 0, depth: 1 }, |identity| {
-                Ok((ToolOperationSpec::from_owned(key, schema.to_string(), Box::new(payload), operation, identity), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() }))
-            })
+    let mut construction = OriginalConstructionAdmission::default();
+    let schema = schema.to_owned();
+    let born = session.caller.turn_with_decoder(original_grant(), &mut session.decoder, |cx| {
+        admit_original_tool_construction_settled(cx, &mut construction, &mut spec, demand, |scope| {
+            scope.admit_owner(RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })?;
+            let spec = ToolOperationSpec::from_owned(key, schema, Box::new(payload), operation, scope.identity());
+            Ok((spec, RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() }))
         })
-        .expect("fixture specification");
-    assert!(born);
+    }).expect("fixture specification");
+    assert!(born && construction.terminal_is_empty());
+
     let mut spec = spec.expect("specification born");
     let (mut input, mut checkpoint, mut output) = (input, checkpoint, None);
-    let admitted = session.caller.turn_with_decoder(original_grant(), &mut session.decoder, |cx| bus.admit_job(cx, &mut spec, &mut input, &mut checkpoint, &mut output)).expect("registered factory admits");
-    assert!(admitted && input.is_none() && checkpoint.is_none() && spec.payload.retained_payload().is_none());
+    let mut ready = false;
+    for _ in 0..64 {
+        let status = session.caller.turn_with_decoder(original_grant(), &mut session.decoder, |cx| {
+            bus.admit_job(cx, &mut construction, &mut spec, &mut input, &mut checkpoint, &mut output)
+        }).expect("registered factory admits");
+        match status {
+            OriginalConstructionStatus::Pending => continue,
+            OriginalConstructionStatus::Ready => ready = true,
+            OriginalConstructionStatus::Failed => panic!("registered fixture construction refused"),
+        }
+        break;
+    }
+    assert!(ready && input.is_none() && checkpoint.is_none() && spec.payload.retained_payload().is_none());
+    for _ in 0..64 {
+        if construction.terminal_is_empty() {
+            break;
+        }
+        session.caller.turn_with_decoder(original_grant(), &mut session.decoder, |cx| construction.close_step(cx)).expect("registered construction closes");
+    }
+    assert!(construction.terminal_is_empty());
+
+    let mut fields = ControlledRetirement::retain((spec.key.controller_id, spec.key.tool_id, spec.payload.schema_id));
+    for _ in 0..4096 {
+        if fields.terminal_is_empty() {
+            break;
+        }
+        session.caller.turn(original_grant(), |cx| {
+            let body = cx.retained_grant().maximum_copy_bytes;
+            let demand = fields.selected_demand(body)?;
+            close_original_effect_step(cx, demand, |effect| fields.step(body, effect))?;
+            Ok(())
+        }).expect("fixture specification fields close");
+    }
+    assert!(fields.terminal_is_empty());
     output.expect("job born")
 }
 

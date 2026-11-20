@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://framework.process.native-build/PhaseLedgerV1",
+  "title": "Per-phase time ledger of one Cargo task",
+  "description": "Exclusive phases of the task process sum to its wall time with the residual named `other`; rows marked `within` are summed over parallel workers inside the Cargo phase and are not part of the sum.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "task", "pid", "atMs", "final", "totalSeconds", "otherSeconds", "rows"],
+  "properties": {
+    "version": { "const": 1 },
+    "task": { "type": "string", "minLength": 1 },
+    "pid": { "type": "integer", "minimum": 0 },
+    "atMs": { "type": "integer", "minimum": 0 },
+    "final": { "type": "boolean" },
+    "totalSeconds": { "type": "number", "minimum": 0 },
+    "otherSeconds": { "type": "number", "minimum": 0 },
+    "rows": { "type": "array", "items": { "$ref": "#/definitions/Row" } }
+  },
+  "definitions": {
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "seconds", "count", "bytes", "within"],
+      "properties": {
+        "phase": { "type": "string", "pattern": "^[a-z][a-z0-9:-]{0,63}$" },
+        "seconds": { "type": "number", "minimum": 0 },
+        "count": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "within": { "type": "boolean" }
+      }
+    },
+    "Policy": {
+      "const": {
+        "directory": ["phase-ledger"],
+        "eventsDirectory": "x",
+        "slowUnitFraction": 0.1,
+        "longestUnits": 6,
+        "residualToleranceSeconds": 0.25,
+        "residualToleranceFraction": 0.02,
+        "maximumRecordBytes": 65536
+      }
+    }
+  }
+}

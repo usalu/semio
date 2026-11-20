@@ -85,6 +85,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     },
   },
   plugins: [
+    managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
       canonicalWasmBuildVitePlugin(repoRoot, readBuildMode(mode)),
     semioServeCloseVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {
@@ -94,7 +95,6 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       cnameHost: DEMONSTRATOR_HOST,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
-    managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
     playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),

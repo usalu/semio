@@ -6,6 +6,7 @@
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::BTreeMap;
 
 /// 🗺️ The snapshot collections the view phases read: the storeys, the phase-bearing element kinds and the openings that follow their host.
@@ -78,7 +79,7 @@ impl ViewPhase {
 /// 🎭️ The elements of one storey a view shows, per view phase: sorted element ids under the key of each [`ViewPhase`].
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct PhaseVisibility {
-    pub visible: BTreeMap<String, Vec<String>>,
+    pub visible: RetainedOrderedMap<String, Vec<String>>,
 }
 
 impl PhaseVisibility {
@@ -145,14 +146,14 @@ fn elements_on(snapshot: &ModelSnapshot, storey: &str) -> BTreeMap<String, Phase
         ceilings => |_: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling| Phase::New,
         ramps => |_: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp| Phase::New,
     );
-    for (id, opening) in &snapshot.openings {
+    for (id, opening) in snapshot.openings.iter() {
         let host = rows.get(&opening.host).filter(|_| snapshot.walls.contains_key(&opening.host) || snapshot.curtain_walls.contains_key(&opening.host));
         if let Some(phase) = host {
             let phase = *phase;
             rows.insert(id.clone(), phase);
         }
     }
-    for (id, sweep) in &snapshot.wall_sweeps {
+    for (id, sweep) in snapshot.wall_sweeps.iter() {
         if let Some(phase) = rows.get(&sweep.host).filter(|_| snapshot.walls.contains_key(&sweep.host)).copied() {
             rows.insert(id.clone(), phase);
         }
@@ -173,7 +174,7 @@ pub fn visibility_of(snapshot: &ModelSnapshot, storey: &str) -> PhaseVisibility 
 
 /// 📋️ The canonical JSON the phase oracle compares: `{storey id: {view phase key: [element ids]}}`.
 pub fn table_json(visibility: &BTreeMap<String, PhaseVisibility>) -> String {
-    let rows: BTreeMap<String, BTreeMap<String, Vec<String>>> = visibility.iter().map(|(storey, row)| (storey.clone(), row.visible.clone())).collect();
+    let rows: BTreeMap<String, BTreeMap<String, Vec<String>>> = visibility.iter().map(|(storey, row)| (storey.clone(), row.visible.iter().map(|(view, ids)| (view.clone(), ids.clone())).collect())).collect();
     semio_framework_pack_json::to_json_string(&rows)
 }
 

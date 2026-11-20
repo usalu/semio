@@ -1,0 +1,17 @@
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+
+/** 🧱️ The numbers of the restore width (see `./🧬️schema/🔣️.json`). */
+export const RESTORE_WIDTH_POLICY_V1=Object.freeze(schema.definitions.Policy.const);
+/** 🧬️ The schema of the width the build records. */
+export const RESTORE_WIDTH_SCHEMA_V1=schema.definitions.Width;
+
+type Environment=Readonly<Record<string,string|undefined>>;
+
+/** 🧱️ How many Cargo jobs a build runs and how many compilers may run among them. A unit served from a cache (the compiler wrapper answers it from the machine or the fleet) costs round trips, not cores, so the granted compile units bound the compilers (the wrapper's compile slots) while Cargo may keep `factor` times as many jobs running; the factor is 1 (no change) unless `SEMIO_CARGO_RESTORE_WIDTH` names a whole number from 1 to `maximumFactor`, the jobs never exceed `maximumJobs` (nor fall below the granted units), and a build without a unit cache keeps exactly its granted units.
+ * @see ./🧬️schema/🔣️.json */
+export function restoreWidthV1(granted:number,environment:Environment):Readonly<{jobs:number;slots:number;factor:number}>{
+ const policy=RESTORE_WIDTH_POLICY_V1,units=Number.isSafeInteger(granted)&&granted>=1?granted:1;
+ const cached=!!environment.RUSTC_WRAPPER&&!!environment.SEMIO_UNIT_CACHE_ROOT&&environment.SEMIO_UNIT_CACHE!=="off";
+ const asked=Number(environment[policy.environment]),factor=cached&&Number.isInteger(asked)&&asked>=1?Math.min(asked,policy.maximumFactor):policy.defaultFactor;
+ return Object.freeze({jobs:Math.max(units,Math.min(units*factor,policy.maximumJobs)),slots:units,factor});
+}

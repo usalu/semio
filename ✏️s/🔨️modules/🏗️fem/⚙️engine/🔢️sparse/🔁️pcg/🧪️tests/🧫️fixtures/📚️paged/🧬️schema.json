@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["order", "pageBytes", "diagonal", "load", "displacement"],
+  "properties": {
+    "order": { "type": "integer", "minimum": 513 },
+    "pageBytes": { "type": "integer", "minimum": 1 },
+    "diagonal": { "type": "number", "exclusiveMinimum": 0 },
+    "load": { "type": "number" },
+    "displacement": { "type": "number" }
+  }
+}

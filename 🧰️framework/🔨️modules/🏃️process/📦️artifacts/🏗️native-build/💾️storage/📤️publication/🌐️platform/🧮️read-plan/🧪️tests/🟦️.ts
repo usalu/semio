@@ -1,10 +1,13 @@
 import {expect,test} from "bun:test";
+import Ajv from "ajv";
+import {createHash} from "node:crypto";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync,renameSync} from "node:fs";
-import {tmpdir} from "node:os";
-import {join} from "node:path";
-import {protectedArtifactInputHashedV1,protectedArtifactInputWorkAllowanceV1,visitProtectedArtifactInputDirectoriesV1,type ProtectedArtifactInputHashModeV1} from "../🟦️.ts";
-import {withArtifactRelativeDirectoryV1} from "@semio-tech/framework-filesystem/observation/descriptor";
+import {lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync,renameSync} from "node:fs";
+import {freemem,tmpdir} from "node:os";
+import {dirname,join} from "node:path";
+import {protectedArtifactInputChunkV1,readProtectedArtifactInputV1,protectedArtifactInputHashedV1,protectedArtifactInputWorkAllowanceV1,visitProtectedArtifactInputDirectoriesV1,type ProtectedArtifactInputHashModeV1} from "../🟦️.ts";
+import {artifactDescriptorCustodyV1,withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativePathEntryV1,type ArtifactReadFileV1} from "@semio-tech/framework-filesystem/observation/descriptor";
 import fixture from "./🔣️.json" with {type:"json"};
 
 const row=(c:typeof fixture.decisions[number])=>protectedArtifactInputHashedV1(c.mode as ProtectedArtifactInputHashModeV1,{root:c.fileRoot},(c as {rootIndex?:number}).rootIndex,{mtimeNs:BigInt(c.mtimeNs),ctimeNs:BigInt(c.ctimeNs)},(c as {recordedAtNs?:string}).recordedAtNs===undefined?undefined:BigInt((c as {recordedAtNs?:string}).recordedAtNs!));
@@ -42,9 +45,13 @@ test("each requested directory is visited once and a replaced directory is refus
   expect([...seen].sort()).toEqual([...new Set(wanted)].sort());
   expect(names.get("g/aa/w/1")).toEqual(["package.json"]);expect(names.get("g/bb")).toEqual(["w"]);
   const other=join(base,"elsewhere");mkdirSync(other);renameSync(join(base,"g","aa"),join(base,"aa-moved"));symlinkSync(other,join(base,"g","aa"));
-  let refused="";
-  try{await withArtifactRelativeDirectoryV1(base,()=>{},async root=>{await visitProtectedArtifactInputDirectoriesV1(root,["g/aa/w/0"],async()=>{});});}catch(error){refused=(error as Error).message;}
-  expect(refused).toContain("same-device immutable input directory");
+  const oracle=spawnSync("python3",["-I",join(import.meta.dir,"oracle.py"),join(import.meta.dir,"🔣️.json"),"directories",base],{encoding:"utf8"});
+  expect(oracle.status).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.refusedDirectories);
+  for(const row of fixture.refusedDirectories){
+   await expect(withArtifactRelativeDirectoryV1(base,()=>{},root=>visitProtectedArtifactInputDirectoriesV1(root,[row.path],async()=>{}))).rejects.toThrow(
+    `Actual same-device immutable input directory required at ${JSON.stringify(row.component)} (observed ${row.observed})`
+   );
+  }
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
@@ -53,7 +60,11 @@ test("the platform reader walks each directory once and hashes by mode",()=>{
  expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);
  const body=text.slice(start,end);
  expect(body).toContain("visitProtectedArtifactInputDirectoriesV1(root,groups.keys()");expect(body).not.toContain("withProtectedArtifactInputDirectoryV1(");expect(body).toContain("protectedArtifactInputHashedV1(mode,input,rootIndex,entry,recordedAtNs)");
- expect(text).toContain('false,false,undefined,"all");await verifyProtectedArtifactInputFilesV1(root,manifest,directories,files,check,actual,false);');
+ const capture=text.slice(text.indexOf("async function recordProtectedArtifactExistingInputGroupV1("),text.indexOf("export function stageNativePlatformProtectedArtifactInputGroupV1("));
+ const observe=text.slice(text.indexOf("export function observeNativePlatformProtectedArtifactInputGroupV1("),text.indexOf("export function measureNativePlatformProtectedArtifactFundingV1("));
+ expect(capture).toContain('verifyProtectedArtifactInputFilesV1(root,manifest,directories,files,check,control,false,false,undefined,"all")');
+ expect(observe.indexOf("await recordProtectedArtifactExistingInputGroupV1(")).toBeGreaterThan(0);
+ expect(observe.indexOf("await verifyProtectedArtifactInputFilesV1(")).toBeGreaterThan(observe.indexOf("await recordProtectedArtifactExistingInputGroupV1("));
  expect(text).toContain('from"./🧮️read-plan/🟦️.ts"');
 });
 
@@ -81,4 +92,67 @@ test("the platform no longer counts staging, reading or observing against a fixe
   for(const before of spots)expect(before.slice(-120),message).not.toContain("maximumWork");
  }
  expect(text).toContain("protectedArtifactInputWorkAllowanceV1(");
+});
+
+test("ordinary input read authenticates one retained directory traversal and every file",async()=>{
+ const ts=await import("typescript"),layout=fixture.ordinaryRead,validate=new Ajv({strict:true}).compile(schema.definitions.OrdinaryReadFixture);
+ expect(validate(layout)).toBe(true);
+ const source=readFileSync(join(import.meta.dir,"..","..","🟦️.ts"),"utf8"),tree=ts.createSourceFile("owned-input-read.ts",source,ts.ScriptTarget.Latest,true);
+ const names=["protectedArtifactInputAnchorV1","protectedArtifactInputStampV1","verifyProtectedArtifactInputFilesV1"],functions=names.map(name=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!);
+ const code=ts.transpileModule(functions.map(node=>node.getText(tree)).join("\n")+";return verifyProtectedArtifactInputFilesV1;",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ for(const row of layout.cases){
+  const base=mkdtempSync(join(tmpdir(),"ir-"));
+  try{
+   const directories=new Map<string,string>(),files=new Map<string,string>(),inputs:{root:number;path:string;bytes:number;sha256:string}[]=[],recorded=new WeakMap<object,bigint>();
+   let newest=0n,opened=0,read=0,rosters=0;
+   for(const [index,root] of layout.roots.entries())for(const name of layout.files){
+    const full=root+"/"+name,parts=full.split("/");
+    mkdirSync(join(base,...parts.slice(0,-1)),{recursive:true});
+    const bytes=Buffer.from(full);
+    writeFileSync(join(base,...parts),bytes);
+    const file=lstatSync(join(base,...parts),{bigint:true});
+    const stamp=[file.dev,file.ino,file.mode,file.nlink,file.size,file.mtimeNs,file.ctimeNs].join(":");
+    const latest=file.mtimeNs>file.ctimeNs?file.mtimeNs:file.ctimeNs;if(latest>newest)newest=latest;
+    files.set(full,stamp);inputs.push({root:index,path:name,bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex")});
+    for(let count=1;count<parts.length;count++){
+     const path=parts.slice(0,count).join("/"),dir=lstatSync(join(base,path),{bigint:true});
+     directories.set(path,[dir.dev,dir.ino,dir.mode].join(":"));
+    }
+   }
+   recorded.set(directories,row.hash?0n:newest+10000000000n);
+   const physical=[...files.keys()][0]!,full=join(base,physical);
+   if(row.change==="file"){
+    renameSync(full,full+".prior");writeFileSync(full,physical);
+   }
+   if(row.change==="directory"){
+    const parent=dirname(full);
+    renameSync(parent,parent+".prior");symlinkSync(parent+".prior",parent,"junction");
+   }
+   const stop=new AbortController(),check=()=>stop.signal.throwIfAborted(),run=new Function("nativeProtectedArtifactInputProtocolV1","protectedArtifactInputChunkV1","freemem","protectedArtifactInputRecordedV1","visitProtectedArtifactInputDirectoriesV1","protectedArtifactInputHashedV1","artifactRetirementHashV1","readProtectedArtifactInputV1","nativeArtifactInputStepV1",code)(()=>({}),protectedArtifactInputChunkV1,freemem,recorded,visitProtectedArtifactInputDirectoriesV1,protectedArtifactInputHashedV1,createHash,readProtectedArtifactInputV1,()=>1);
+   const tracked=(directory:ArtifactRelativeDirectoryV1):ArtifactRelativeDirectoryV1=>Object.freeze({...directory,
+    stat:()=>directory.stat(),entry:(name:string)=>directory.entry(name),
+    withDirectoryPath:async<T>(entries:readonly ArtifactRelativePathEntryV1[],body:(opened:ArtifactRelativeDirectoryV1)=>Promise<T>)=>directory.withDirectoryPath(entries,openedDirectory=>{opened++;return body(tracked(openedDirectory));}),
+    withFile:async<T>(name:string,body:(file:ArtifactReadFileV1)=>Promise<T>)=>directory.withFile(name,file=>{read++;return body(file);}),
+    names:()=>{rosters++;return directory.names();},
+   });
+   const before=artifactDescriptorCustodyV1().active;
+   let error:unknown;
+   try{
+    await withArtifactRelativeDirectoryV1(base,check,async root=>{
+     if(row.change==="cancel")stop.abort(new Error("original input read cancellation"));
+     await run(tracked(root),{roots:layout.roots,files:inputs},directories,files,check,{publish:async()=>{},yieldContinuation:async()=>{}},false);
+    });
+   }catch(failure){error=failure;}
+   expect(error===undefined,row.change+" "+String(error)).toBe(row.accepted);
+   expect(artifactDescriptorCustodyV1().active).toBe(before);
+   if(row.change==="cancel")expect(error).toBe(stop.signal.reason);
+   if(row.accepted){
+    const oracle=spawnSync("python3",["-I",join(import.meta.dir,"oracle.py"),join(import.meta.dir,"🔣️.json"),"ordinary",base],{encoding:"utf8"});
+    expect(oracle.status).toBe(0);
+    expect(opened).toBe(JSON.parse(oracle.stdout).directories);
+    expect(read).toBe(row.hash?JSON.parse(oracle.stdout).files:0);
+    expect(rosters).toBe(0);
+   }
+  }finally{rmSync(base,{recursive:true,force:true});}
+ }
 });

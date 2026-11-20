@@ -25,8 +25,8 @@ use semio_framework_2d_compute::EngineHandles;
 /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`) are internal action ids
 ///   driving the above.
 pub trait ArtifactApp: Default + Send + 'static {
-    /// 📬️ Measures the original typed completion's exact app-owned cleanup constructor.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{crate::completion_retirement::derived_completion_birth_bytes(value)}
+    /// 📏️ Quotes the complete physical demand for retirement admission of the original completion.
+    fn completion_retirement_demand(value:&ArtifactToolCompletionValue<Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{crate::completion_retirement::derived_completion_retirement_demand(value)}
     /// 🎟️ Admits the original completion payload without consuming it on an unfunded or unsupported route.
     fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{crate::completion_retirement::derived_admit_completion_retirement(value,effect)}
     /// 📱️ Declares the exact first-party scaffold birth for an applying parent mutation source.
@@ -260,6 +260,23 @@ pub trait ArtifactApp: Default + Send + 'static {
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
         Ok(bounded_document_store_initialization_job::<_,_,AppDocumentStoreOwnerProducer<Self>>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+    }
+
+    /// 📐️ Quotes the concrete replay initializer and its one cancellation-signal allocation.
+    fn original_genesis_initializer_demand() -> RetirementDemand {
+        let mut demand=store::ArtifactStoreReplayInitializer::<Self::Snapshot,Self::Mutation,AppDocumentStoreOwnerProducer<Self>>::awaiting_envelope_birth_demands();
+        demand.capacity_bytes+=semio_framework_value::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicBool>();
+        demand
+    }
+
+    /// 🌱️ Enters the canonical replay initializer with an already-admitted genesis envelope.
+    fn build_original_genesis_initializer(
+        envelope: ArtifactEnvelope<Self::Snapshot,Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        actor: ActorId,
+    ) -> semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob<Self::Snapshot,Self::Mutation> {
+        bounded_document_store_initialization_job::<_,_,AppDocumentStoreOwnerProducer<Self>>(envelope,Self::DOCUMENT_SCHEMA,operation,generation,actor)
     }
 
     /// ⚛️ Revalidates domain-owned publication authority in the atomic replacement branch.

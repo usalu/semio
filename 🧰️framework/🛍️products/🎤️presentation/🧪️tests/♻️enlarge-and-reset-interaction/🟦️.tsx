@@ -210,7 +210,8 @@ describe("presentation interaction dom", () => {
     expect(buttons[1]?.classList.contains("presentation-interaction-enlarge")).toBe(true);
     expect(actions.hasAttribute("data-shared-border-frame")).toBe(true);
     expect(buttons.every((button) => button.hasAttribute("data-shared-border-cell"))).toBe(true);
-    expect(globalsCssSource).toMatch(/\.presentation-interactive-disposition\s*>\s*\.presentation-interaction-actions\s*\{[^}]*gap:\s*0;[^}]*border:\s*var\(--stroke-hairline\)/s);
+    expect(globalsCssSource).toMatch(/\.presentation-interactive-disposition\s*>\s*\.presentation-interaction-actions\s*\{[^}]*gap:\s*0;/s);
+    expect(globalsCssSource).not.toMatch(/\.presentation-interactive-disposition\s*>\s*\.presentation-interaction-actions\s*\{[^}]*\bborder:/s);
     expect(globalsCssSource).not.toMatch(/\.presentation-interaction-reset\s*\{[^}]*\bborder:/s);
     expect(globalsCssSource).not.toMatch(/\.presentation-interaction-enlarge,\s*\.reveal \.presentation-interaction-reset\s*\{[^}]*\bborder:/s);
     act(() => {

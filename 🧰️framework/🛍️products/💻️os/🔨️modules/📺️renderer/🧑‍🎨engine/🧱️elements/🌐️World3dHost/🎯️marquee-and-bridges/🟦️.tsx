@@ -29,8 +29,7 @@ import {
   BufferGeometry,
   OrthographicCamera,
   Quaternion,
-  Vector3
-} from "@semio-tech/ui-react";
+  Vector3, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { windowElementId, world3dComputeStatusV1, type ContextMenuItemSpec, type MergeMode } from "@semio-tech/framework";
 import { cadVec3ToThree } from "@semio-tech/framework/infinite/world/r3f";
@@ -123,7 +122,7 @@ export function WorldSurfaceStatusPane({visuals,locale,glassClass}:{readonly vis
   const version=useSyncExternalStore(useCallback(listener=>{const appearances=[...visuals.values()].flatMap(visual=>visual.appearance?[visual.appearance]:[]);for(const appearance of appearances)appearance.listeners.add(listener);return()=>{for(const appearance of appearances)appearance.listeners.delete(listener);};},[visuals]),snapshot,snapshot);
   const [pending,failed,cancelled]=version.split(":").map(Number);if(pending===undefined||failed===undefined||cancelled===undefined)throw Error("Complete owned surface status required");const language=locale?.split(/[-_]/)[0];const labels=language==="en"?{loading:"Loading surface textures",failed:"Surface could not be displayed",cancelled:"Surface texture loading cancelled",cancel:"Cancel"}:language==="de"?{loading:"Oberflächentexturen werden geladen",failed:"Oberfläche konnte nicht dargestellt werden",cancelled:"Laden der Oberflächentexturen abgebrochen",cancel:"Abbrechen"}:undefined;
   const active=Boolean(pending||failed||cancelled);
-  return <div role="status" aria-live="polite" aria-busy={pending>0 || undefined} data-slot="world-surface-status" data-surface-pending={pending} data-surface-failed={failed} data-surface-cancelled={cancelled} className={active?cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm",glassClass):"sr-only"}>{active&&<><span>{failed?labels?.failed:pending?labels?.loading:labels?.cancelled}</span>{pending>0&&<><progress value={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)-pending} max={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)} aria-label={labels?.loading}/><button type="button" onClick={()=>{for(const visual of visuals.values()){const appearance=visual.appearance;if(appearance&&!appearance.closed&&appearance.pending){appearance.fault="cancelled";disposeWorldMeshAppearance(appearance);}}}}>{labels?.cancel}</button></>}</>}</div>;
+  return <div role="status" aria-live="polite" aria-busy={pending>0 || undefined} data-slot="world-surface-status" data-surface-pending={pending} data-surface-failed={failed} data-surface-cancelled={cancelled} className={active?cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm",glassClass):"sr-only"}>{active&&<><span>{failed?labels?.failed:pending?labels?.loading:labels?.cancelled}</span>{pending>0&&<><progress value={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)-pending} max={[...visuals.values()].reduce((sum,visual)=>sum+(visual.appearance?.textures.size ?? 0),0)} aria-label={labels?.loading}/><button {...sharedBorderlessBoxProps} type="button" onClick={()=>{for(const visual of visuals.values()){const appearance=visual.appearance;if(appearance&&!appearance.closed&&appearance.pending){appearance.fault="cancelled";disposeWorldMeshAppearance(appearance);}}}}>{labels?.cancel}</button></>}</>}</div>;
 }
 
 export function WorldComputeStatusPane({
@@ -172,7 +171,7 @@ export function WorldComputeStatusPane({
         </span>
       )}
       {status.cancellable ? (
-        <button type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} data-cancel-run-id={status.cancelArgs.runId} data-cancel-generation={status.cancelArgs.generation} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
+        <button {...sharedBorderlessBoxProps} type="button" data-slot="world-compute-cancel" data-cancel-action={status.cancelAction} data-cancel-run-id={status.cancelArgs.runId} data-cancel-generation={status.cancelArgs.generation} className="rounded border px-half py-0 text-xs" onClick={onCancel}>
           {labels.cancel}
         </button>
       ) : null}

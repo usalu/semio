@@ -113,22 +113,90 @@ export function readBuildOwnerAdmissionV1(value:unknown):BuildOwnerAdmissionV1{
  return value as BuildOwnerAdmissionV1;
 }
 
+/** 📬️ Orders dirty owners by their eligible pass and the same lexical order as the admission roster. */
+function ownerAdmissionFrontierV1(){
+ type Entry={name:string;pass:number};
+ const rows:Entry[]=[],queued=new Set<string>();
+ const precedes=(a:Entry,b:Entry)=>a.pass<b.pass||a.pass===b.pass&&a.name<b.name;
+ return {
+  add(name:string,pass:number){
+   if(queued.has(name))return;
+   queued.add(name);
+   const row={name,pass};
+   let index=rows.length;
+   while(index>0){
+    const parent=(index-1)>>1;
+    if(!precedes(row,rows[parent]!))break;
+    rows[index]=rows[parent]!;index=parent;
+   }
+   rows[index]=row;
+  },
+  take(pass:number):string|undefined{
+   const first=rows[0];
+   if(first?.pass!==pass)return undefined;
+   const last=rows.pop()!;
+   queued.delete(first.name);
+   if(rows.length){
+    let index=0,left=1;
+    while(left<rows.length){
+     const right=left+1,child=right<rows.length&&precedes(rows[right]!,rows[left]!)?right:left;
+     if(!precedes(rows[child]!,last))break;
+     rows[index]=rows[child]!;index=child;left=2*index+1;
+    }
+    rows[index]=last;
+   }
+   return first.name;
+  },
+ };
+}
+
 /** 🧩️ Converges exact task prerequisites and source owners through a caller-owned observation port. */
 export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,inspect:(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>Promise<BuildOwnerAdmissionFactsV1>):Promise<BuildOwnerAdmissionV1>{
  selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
- const direct=selection.kind==="tasks"&&selection.excludeDependencies===true,byName=new Map(registry.owners.map(owner=>[owner.name,owner])),sourceOwner=createSourceOwnerResolverV1(registry),admitted=new Set<string>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),admitting=new Set<string>(),observed=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>();
+ const direct=selection.kind==="tasks"&&selection.excludeDependencies===true,byName=new Map(registry.owners.map(owner=>[owner.name,owner])),sourceOwner=createSourceOwnerResolverV1(registry),admitted=new Map<string,number>(),targets=new Map<string,Set<string>>(),inputs=new Map<string,Set<string>>(),optionalTasks=new Set<string>(),files=new Set<string>(),admitting=new Set<string>(),observed=new Set<string>(),providers=new Map<string,{ownerRoot:string;sourcePath:string}>(),revisions=new Map<string,string>(),facts=new Map<string,BuildOwnerAdmissionFactsV1>();
  const observe=async(owner:BuildOwnerRegistryV1["owners"][number],targets:readonly string[],inputs:readonly string[])=>{const value=await inspect(owner,targets,inputs);if(validateJsonSchemaSubset({$defs:admissionSchema.$defs,$ref:"#/$defs/ownerFacts"},value).length)throw Error("Closed build owner observations required");return value;};
- const admit=(name:string)=>{if(!byName.has(name))throw Error("Unknown canonical build owner: "+name);admitted.add(name);},task=(name:string,target:string,optional=false)=>{admit(name);const selected=targets.get(name)??new Set<string>(),key=name+"\0"+target;if(optional&&!selected.has(target))optionalTasks.add(key);else if(!optional)optionalTasks.delete(key);selected.add(target);targets.set(name,selected);};
+ const frontier=ownerAdmissionFrontierV1();
+ let pass=-1,cursor:string|undefined;
+ const dirty=(name:string)=>frontier.add(name,cursor!==undefined&&admitted.get(name)!<=pass&&cursor<name?pass:pass+1);
+ const admit=(name:string)=>{
+  if(!byName.has(name))throw Error("Unknown canonical build owner: "+name);
+  if(admitted.has(name))return;
+  admitted.set(name,pass+1);frontier.add(name,pass+1);
+ };
+ const task=(name:string,target:string,optional=false)=>{
+  admit(name);
+  const selected=targets.get(name)??new Set<string>(),key=name+"\0"+target,had=selected.has(target);
+  if(optional&&!had)optionalTasks.add(key);
+  const required=!optional&&optionalTasks.delete(key);
+  selected.add(target);targets.set(name,selected);
+  if(!had||required)dirty(name);
+ };
+ const requireInputs=(name:string,groups:readonly string[])=>{
+  admit(name);
+  const selected=inputs.get(name)??new Set<string>(),previous=selected.size;
+  for(const input of groups)selected.add(input);
+  inputs.set(name,selected);
+  if(selected.size!==previous)dirty(name);
+ };
  if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else if(selection.kind==="owners")for(const name of selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude)){admit(name);for(const target of selection.targets??[])task(name,target,true);}else for(const value of selection.tasks)task(value.project,value.target);
- for(let pass=0;pass<=registry.owners.length+65536;pass++){
+ for(pass=0;pass<=registry.owners.length+65536;pass++){
   let changed=false;
-  for(const name of [...admitted].sort()){
-   const owner=byName.get(name)!;if(!facts.has(name)){const base=await observe(owner,[],[]);if(base.project.name!==name)throw Error("Admitted canonical build owner differs: "+owner.manifest);facts.set(name,base);}
-   for(const target of targets.get(name)??[])if(optionalTasks.has(name+"\0"+target)&&!facts.get(name)!.project.targets[target])targets.get(name)!.delete(target);
-   const active=[...targets.get(name)??[]].sort(),requestedInputs=[...inputs.get(name)??[]].sort(),revision=JSON.stringify([active,requestedInputs]);if(revisions.get(name)===revision)continue;
-   const value=active.length||requestedInputs.length?await observe(owner,active,requestedInputs):facts.get(name)!;if(value.project.name!==name)throw Error("Admitted canonical build owner differs: "+owner.manifest);revisions.set(name,revision);facts.set(name,value);changed=true;files.add(owner.manifest);
+  for(let name=frontier.take(pass);name!==undefined;name=frontier.take(pass)){
+   cursor=name;
+   const owner=byName.get(name)!,selected=targets.get(name),optional=(target:string)=>optionalTasks.has(name+"\0"+target);
+   let prior=facts.get(name);
+   if(!prior&&[...selected??[]].some(optional)){
+    prior=await observe(owner,[],[]);
+    if(prior.project.name!==name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
+   }
+   for(const target of selected??[])if(optional(target)&&!prior?.project.targets[target])selected!.delete(target);
+   const active=[...selected??[]].sort(),requestedInputs=[...inputs.get(name)??[]].sort(),revision=JSON.stringify([active,requestedInputs]);
+   if(revisions.get(name)===revision)continue;
+   const value=active.length||requestedInputs.length||prior===undefined?await observe(owner,active,requestedInputs):prior;
+   if(value.project.name!==name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
+   revisions.set(name,revision);facts.set(name,value);changed=true;files.add(owner.manifest);
    for(const file of value.files){files.add(file);admitting.add(file);const dependency=sourceOwner(file);if(dependency&&!direct)admit(dependency);}for(const file of value.observedFiles??[]){files.add(file);observed.add(file);}if(!direct)for(const dependency of value.dependencies)admit(dependency);
-   for(const[dependency,groups]of direct?[]:Object.entries(value.dependencyInputs??{})){admit(dependency);const selected=inputs.get(dependency)??new Set<string>();for(const input of groups)selected.add(input);inputs.set(dependency,selected);}
+   for(const[dependency,groups]of direct?[]:Object.entries(value.dependencyInputs??{}))requireInputs(dependency,groups);
    for(const target of active){const operation=value.project.targets[target];if(!operation)throw Error("Unknown admitted build target: "+name+":"+target);
     if(!direct)for(const dependency of [...operation.dependsOn??[],...value.generatedDependencies?.[target]??[]]){
      if(typeof dependency==="string"){if(dependency.startsWith("^")){for(const owner of value.dependencies)task(owner,dependency.slice(1),true);}else if(dependency.includes(":")){const separator=dependency.lastIndexOf(":"),project=dependency.slice(0,separator);task(project,dependency.slice(separator+1));}else task(name,dependency);}
@@ -137,10 +205,11 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
     }
    }
   }
+  cursor=undefined;
   for(const provider of registry.catalogProviders)if(selection.kind==="all"||[...targets].some(([name,selected])=>[...selected].some(target=>facts.get(name)?.project.targets[target])&&provider.consumerRoots.some(root=>contains(root,byName.get(name)!.root)))||[...inputs.values()].some(selected=>selected.has("{workspaceRoot}/"+provider.sourcePath))){
-   if(!providers.has(provider.sourcePath)){providers.set(provider.sourcePath,{ownerRoot:provider.ownerRoot,sourcePath:provider.sourcePath});files.add(provider.sourcePath);const owner=sourceOwner(provider.sourcePath);if(!owner)throw Error("Canonical catalog provider owner required");admit(owner);const selected=inputs.get(owner)??new Set<string>();selected.add("{workspaceRoot}/"+provider.sourcePath);inputs.set(owner,selected);changed=true;}
+   if(!providers.has(provider.sourcePath)){providers.set(provider.sourcePath,{ownerRoot:provider.ownerRoot,sourcePath:provider.sourcePath});files.add(provider.sourcePath);const owner=sourceOwner(provider.sourcePath);if(!owner)throw Error("Canonical catalog provider owner required");requireInputs(owner,["{workspaceRoot}/"+provider.sourcePath]);changed=true;}
   }
-  if(!changed){const foreign=[...observed].filter(file=>!admitting.has(file)).sort(),sorted=(values:Map<string,Set<string>>)=>Object.fromEntries([...values].filter(([,values])=>values.size).sort(([a],[b])=>a.localeCompare(b)).map(([name,values])=>[name,[...values].sort()])),result={owners:[...admitted].sort(),files:[...files].sort(),...(foreign.length?{observedFiles:foreign}:{}),targets:sorted(targets),inputs:sorted(inputs),catalogProviders:[...providers.values()].sort((a,b)=>a.sourcePath.localeCompare(b.sourcePath)),...(!direct&&[...facts.values()].some(value=>Object.keys(value.generatedDependencies??{}).length)?{generatedDependencies:Object.fromEntries([...facts].filter(([,value])=>Object.keys(value.generatedDependencies??{}).length).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>[name,Object.fromEntries(Object.entries(value.generatedDependencies!).sort(([a],[b])=>a.localeCompare(b)).map(([target,producers])=>[target,[...producers].sort()]))]))}:{})};readBuildOwnerAdmissionV1(result);return result;}
+  if(!changed){const foreign=[...observed].filter(file=>!admitting.has(file)).sort(),sorted=(values:Map<string,Set<string>>)=>Object.fromEntries([...values].filter(([,values])=>values.size).sort(([a],[b])=>a.localeCompare(b)).map(([name,values])=>[name,[...values].sort()])),result={owners:[...admitted.keys()].sort(),files:[...files].sort(),...(foreign.length?{observedFiles:foreign}:{}),targets:sorted(targets),inputs:sorted(inputs),catalogProviders:[...providers.values()].sort((a,b)=>a.sourcePath.localeCompare(b.sourcePath)),...(!direct&&[...facts.values()].some(value=>Object.keys(value.generatedDependencies??{}).length)?{generatedDependencies:Object.fromEntries([...facts].filter(([,value])=>Object.keys(value.generatedDependencies??{}).length).sort(([a],[b])=>a.localeCompare(b)).map(([name,value])=>[name,Object.fromEntries(Object.entries(value.generatedDependencies!).sort(([a],[b])=>a.localeCompare(b)).map(([target,producers])=>[target,[...producers].sort()]))]))}:{})};readBuildOwnerAdmissionV1(result);return result;}
  }
  throw Error("Finite canonical owner closure exceeded");
 }
@@ -156,6 +225,7 @@ export function buildInvocationGraphSelectionV1(args:readonly string[]):BuildGra
  const head=args.slice(0,args.includes("--")?args.indexOf("--"):undefined);
  if(args[0]==="run-many"&&!head.some(argument=>argument==="--all"||argument.startsWith("--all="))){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean)),targets=[...new Set(buildOptionsV1(args,["targets","target","t"]).flatMap(value=>value.split(",").filter(Boolean)))];if(literalBuildProjectSelectorsV1(projects,exclude)&&targets.length&&targets.length<=64&&targets.every(target=>!/[*?\[\]{}()\\:]/u.test(target)))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)],targets});}
  if(args[0]==="exec"){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean));if(literalBuildProjectSelectorsV1(projects,exclude))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)]});}
+ if(args[0]==="show"&&args[1]==="project"&&args[2]&&literalBuildProjectSelectorsV1([args[2]],[]))return readBuildGraphSelectionV1({kind:"owners",projects:[args[2]],exclude:[]});
  if(args[0]!=="run")return {kind:"all"};
  const excludeDependencies=buildBooleanOptionV1(head,["exclude-dependencies","exclude-task-dependencies"])===true,identity=args[1]?.split(":");if(!identity||identity.length<2||identity.length>3||identity.some(part=>!part))throw Error("Canonical build task identity required");
  let configuration=identity[2];for(let index=2;index<args.length&&args[index]!=="--";index++){const value=args[index]!;if(value==="--configuration"||value==="-c"||value.startsWith("--configuration=")||value.startsWith("-c=")){const selected=value.includes("=")?value.slice(value.indexOf("=")+1):args[++index];if(!selected||selected.startsWith("-")||configuration&&configuration!==selected)throw Error("Conflicting task configurations");configuration=selected;}}

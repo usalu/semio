@@ -15,6 +15,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️.tsx";
 import { DiagramInner, type DiagramProps } from "./🧩️inner/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout/📜️wire/🟦️.ts";
 export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout/📜️wire/🟦️.ts";
 export type { DiagramLayoutPosition } from "./📐️layout/📜️wire/🟦️.ts";
@@ -61,6 +62,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         position: { x: (i % 3) * 150 + 50, y: Math.floor(i / 3) * 150 + 50 },
         data: { label: " " },
         draggable: false,
+        domAttributes: { ...sharedBorderlessBoxProps },
       })),
     [nodeCount],
   );

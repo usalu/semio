@@ -114,6 +114,13 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::Checkout));
     }
     if !session.take_checked_out_retained_step_receipt().is_some_and(|(issued, progress)| progress.fits(issued)) { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::TakeOutcome)); }
+    if let Some(continuation) = session.checked_out_continuation() {
+        let cause = continuation.callback.or(continuation.qualification).or(continuation.receipt_qualification);
+        debug_cleanup_continuation("live", cell.id, cause);
+        pump.terminal = true;
+        pump.faulted = true;
+        return Ok(RuntimeMaintenanceStatus::Ready);
+    }
     let (terminal, faulted) = match session.checked_out_outcome() {
         Ok(Some(view)) => (view.is_terminal(), matches!(view, semio_framework_job::JobOutcomeView::Fault { .. } | semio_framework_job::JobOutcomeView::Cancelled { .. })),
         Ok(None) => (false, false),
@@ -123,6 +130,10 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
     pump.faulted = faulted;
     pump.outcome_pending = true;
     Ok(RuntimeMaintenanceStatus::Ready)
+}
+
+fn debug_cleanup_continuation(lane: &str, instance_id: u32, cause: Option<&semio_framework_job::OriginalTurnFailure>) {
+    debug_runtime_line(format_args!("[TRACE] {lane} cleanup continuation for instance {instance_id}: {:?}", cause.map(|failure| &failure.primary)));
 }
 /// 🩺️ The structural accountant's verdict on ONE close-ladder step, priced in BOTH currencies it
 /// claims to spend: consecutive fruitless steps AND the real microseconds they burned.
@@ -313,6 +324,13 @@ pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync
         return Ok(runtime_close_fault(state, RuntimeCleanupFault::Checkout));
     }
     if !session.take_checked_out_retained_step_receipt().is_some_and(|(issued, progress)| progress.fits(issued)) { return Ok(runtime_close_fault(state, RuntimeCleanupFault::TakeOutcome)); }
+    if let Some(continuation) = session.checked_out_continuation() {
+        let cause = continuation.callback.or(continuation.qualification).or(continuation.receipt_qualification);
+        debug_cleanup_continuation("close", state.instance_id, cause);
+        pump.terminal = true;
+        pump.faulted = true;
+        return Ok(RuntimeCloseStatus::Ready);
+    }
     let (terminal, faulted) = match session.checked_out_outcome() {
         Ok(Some(view)) => {
             #[cfg(test)]

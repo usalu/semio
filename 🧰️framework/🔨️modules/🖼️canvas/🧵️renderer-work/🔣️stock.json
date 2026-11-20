@@ -9,17 +9,17 @@
       "maximumDepth": 128
     },
     "fuel": 1099511627776,
-    "maximumElapsedUs": "120000000"
+    "maximumElapsedUs": "86400000000"
   },
   "operation": {
     "grant": {
-      "maximumItems": 1048576,
-      "maximumCopyBytes": 16777216,
-      "maximumCapacityBytes": 33554432,
-      "maximumReleaseBytes": 33554432,
+      "maximumItems": 8388608,
+      "maximumCopyBytes": 1073741824,
+      "maximumCapacityBytes": 536870912,
+      "maximumReleaseBytes": 536870912,
       "maximumDepth": 64
     },
     "fuel": 50000000,
-    "maximumElapsedUs": "30000000"
+    "maximumElapsedUs": "3600000000"
   }
 }

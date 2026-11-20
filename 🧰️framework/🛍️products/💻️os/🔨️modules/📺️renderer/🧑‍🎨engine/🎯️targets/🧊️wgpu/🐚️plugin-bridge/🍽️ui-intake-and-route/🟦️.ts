@@ -230,8 +230,12 @@ export class WgpuOwnedUiInstanceRoute {
       this.#intakeSteps += cursor.steps;
       await this.#closeIntake(intake);
     }
-    const next = coerceTurnResult(acknowledged.result);
-    return [next, ...await this.accept(next, execute)];
+    const accepted: ReturnType<typeof coerceTurnResult>[] = [];
+    for (const result of acknowledged.results) {
+      const next = coerceTurnResult(result);
+      accepted.push(next, ...await this.accept(next, execute));
+    }
+    return accepted;
   }
 
   async project(surfaceId: string): Promise<WgpuOwnedUiDocument | null> {

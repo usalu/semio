@@ -187,3 +187,30 @@ mod quick {
         }
     }
 }
+
+#[test]
+fn original_rational_patch_points_and_normals_match_the_portable_fixture() {
+    let row:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/rational-patch.json")).unwrap();
+    let controls:Vec<Vec<[f64;3]>>=serde_json::from_value(row["controls"].clone()).unwrap();
+    let u_count=controls.len();
+    let v_count=controls[0].len();
+    let knot=|axis:&str,count| {
+        let values=serde_json::from_value(row[format!("{axis}Knots")].clone()).unwrap();
+        let degree=row[format!("{axis}Degree")].as_u64().unwrap() as usize;
+        KnotVector::new(values,degree,count).unwrap()
+    };
+    let surface=Surface::Nurbs{
+        u_knots:knot("u",u_count),v_knots:knot("v",v_count),
+        controls:controls.into_iter().map(|row|row.into_iter().map(|[x,y,z]|Pnt3::new(x,y,z)).collect()).collect(),
+        weights:serde_json::from_value(row["weights"].clone()).unwrap(),
+    };
+    for sample in row["samples"].as_array().unwrap(){
+        let [u,v]:[f64;2]=serde_json::from_value(sample["uv"].clone()).unwrap();
+        let p=surface.point_original(u,v).unwrap();
+        let n=surface.normal_original(u,v).unwrap();
+        for (actual, key) in [([p.x,p.y,p.z],"point"),([n.x,n.y,n.z],"normal")] {
+            let expected:[f64;3]=serde_json::from_value(sample[key].clone()).unwrap();
+            assert!(actual.into_iter().zip(expected).all(|(a,b)|(a-b).abs()<1e-12),"{key}: {actual:?}");
+        }
+    }
+}

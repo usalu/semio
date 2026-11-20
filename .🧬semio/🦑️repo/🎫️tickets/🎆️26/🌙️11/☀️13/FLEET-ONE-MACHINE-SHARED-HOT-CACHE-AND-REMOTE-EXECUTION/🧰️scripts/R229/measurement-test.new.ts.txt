@@ -1,0 +1,51 @@
+import{afterAll,expect,test}from"bun:test";
+import{chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync}from"node:fs";
+import{tmpdir}from"node:os";
+import{join}from"node:path";
+import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,readyMeasurementLinesV1,runReadyStageV1}from"../../🟦️.ts";
+import{createPhaseLedgerV1,phaseLedgerFileSinkV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧮️phase-ledger/🟦️.ts";
+
+/** 📏️ The measurement lines of a stage (the time ledger of its Rust task, the unit ledger, the Nx task hashes) are printed once at the end of the run, under the machine rows that follow; they reach the log mirror of the origin anyway, whether the stage succeeded, failed or was stopped. */
+const scratch:string[]=[];afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`measure-${label}-`));scratch.push(path);return path;};
+const posix=process.platform==="win32"?test.skip:test;
+const fakeHome=(script:string)=>{const home=temp("home"),bin=join(home,".local","bin");mkdirSync(bin,{recursive:true});writeFileSync(join(bin,"repo"),script);chmodSync(join(bin,"repo"),0o755);return home;};
+const stage={...STAGES.find(stage=>stage.name==="workspace")!,timeoutMilliseconds:600000};
+const noise=(count:number)=>`i=0; while [ $i -lt ${count} ]; do i=$((i+1)); echo '[script] {"owner":"repository:build","command":"nx:graph-inventory","stage":"running","activity":{"resource":"nx:graph-inventory","mode":"shared","elapsedMs":'$i'}}'; done\n`;
+const LEDGER=`echo "[phase] task=norm:build total=612.400 phases=611.900 other=0.500"\necho "[phase] task=norm:build name=cargo seconds=590.100 count=1"\necho "[cargo-timings] task=norm:build units=756 wall=590.0"\necho "[units] 688 restored local, 0 restored fleet, 68 compiled"\n`;
+const WANTED=["[phase] task=norm:build total=612.400","[phase] task=norm:build name=cargo seconds=590.100","[cargo-timings] task=norm:build units=756","[units] 688 restored"];
+const run=async(script:string,root:string)=>{const mirrors:string[][]=[];const result=await runReadyStageV1({home:fakeHome(script),root,environment:{},stage,signal:new AbortController().signal,jobs:1,onLine:()=>{},mirror:(_stage,lines)=>{mirrors.push([...lines]);}});return{result,mirrors};};
+
+posix("a successful stage keeps its ledger lines in the log mirror although a flood of machine rows follows them",async()=>{
+ const root=temp("root"),{result,mirrors}=await run(`#!/bin/sh\necho "stage starts"\n${LEDGER}${noise(1200)}exit 0\n`,root);
+ expect(result.exit).toBe(0);
+ const log=readFileSync(join(root,".cache","f","ready","workspace.log"),"utf8"),tailWindow=log.slice(-P.tailBytes);
+ for(const wanted of WANTED)expect(tailWindow,"the tail window alone loses it: "+wanted).not.toContain(wanted);
+ const last=mirrors.at(-1)!;
+ for(const wanted of WANTED)expect(last.some(line=>line.startsWith(wanted)),wanted).toBe(true);
+ expect(last.length).toBeLessThanOrEqual(P.mirrorLines);expect(last.slice(0,4).every(line=>/^\[(phase|cargo-timings|units)\] /u.test(line))).toBe(true);
+ expect(last.filter(line=>line.startsWith("[script] {")).length,"the rest of the mirror is still the newest log lines").toBeGreaterThan(50);
+},60000);
+
+posix("a failed stage keeps them in the failure mirror beside the error text",async()=>{
+ const root=temp("root"),{result,mirrors}=await run(`#!/bin/sh\n${LEDGER}echo "error: KNOWN-FAILURE-TEXT"\n${noise(1200)}exit 1\n`,root);
+ expect(result.exit).toBe(1);
+ const failure=result.failure!.join("\n");expect(failure).toContain("KNOWN-FAILURE-TEXT");for(const wanted of WANTED)expect(failure).toContain(wanted);
+ expect(result.failure!.length).toBeLessThanOrEqual(P.mirrorLines);expect(mirrors.length).toBeGreaterThan(0);
+},60000);
+
+test("a stage without ledger lines in its log gets the newest ledger tables its tasks wrote since it started (a stopped task prints nothing)",()=>{
+ const root=temp("root"),log=join(root,"stage.log");writeFileSync(log,"nothing here\n");
+ let clock=0;const ledger=createPhaseLedgerV1({task:"stopped:build",now:()=>clock,sink:phaseLedgerFileSinkV1(root,4242)});const end=ledger.begin("cargo");clock+=7000;end();
+ const lines=readyMeasurementLinesV1(log,root,Date.now()-60000,400);
+ expect(lines.some(line=>line.startsWith("[phase] task=stopped:build name=cargo seconds=7.000")),lines.join("\n")).toBe(true);
+ expect(lines.at(-1)).toMatch(/^\[phase\] run total=/u);
+ expect(readyMeasurementLinesV1(log,root,Date.now()+60000,400)).toEqual([]);
+});
+
+test("the measurement patterns are the markers the ledgers print, the bound holds, and a log that is not there says nothing",()=>{
+ expect(P.measurementLines).toEqual(["^\\[phase\\] ","^\\[cargo-timings\\] ","^\\[units\\] ","^\\[nx-task\\] ","^\\[restore-width\\] ","^\\[compile-units\\] "]);
+ const root=temp("root"),log=join(root,"big.log");writeFileSync(log,Array.from({length:300},(_,index)=>`[nx-task] p${index}:build hash stored`).join("\n")+"\n");
+ const lines=readyMeasurementLinesV1(log,root,0,30);expect(lines.length).toBe(P.measurementMaximumLines);expect(lines.at(-1)).toBe("[nx-task] p299:build hash stor");expect(Math.max(...lines.map(line=>line.length))).toBeLessThanOrEqual(30);
+ expect(readyMeasurementLinesV1(join(root,"missing.log"),root,0)).toEqual([]);expect(statSync(log).size).toBeGreaterThan(0);
+});

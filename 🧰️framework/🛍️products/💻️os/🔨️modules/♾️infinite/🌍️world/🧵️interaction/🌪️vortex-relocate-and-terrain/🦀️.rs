@@ -2,6 +2,11 @@
 
 use super::*;
 
+/// 🌀️ Selects the vortex pointer lane for brush tools and vertex selection on a vortex scene.
+pub fn world3d_vortex_pointer_mode(utility: &str, granularity: &str, has_vortices: bool) -> bool {
+    utility == "brush" || (utility == "select" && granularity == "vertex" && has_vortices)
+}
+
 //#region PlaceholderMeshAuthority
 //#region Terrain
 //#region Environment

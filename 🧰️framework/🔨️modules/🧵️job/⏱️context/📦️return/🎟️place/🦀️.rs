@@ -1,6 +1,6 @@
 //! 🎟️ One original source prepays fixed return capture and receiving without a context-free callback.
 use crate::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
-use crate::original_job_continuation::source::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness};
+use crate::original_job_continuation::source::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness,reserve_original_return_rows};
 use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
 
 pub use semio_framework_job_return_budget::OriginalSizedClaimReserve;
@@ -18,6 +18,8 @@ pub const fn empty()->Self{Self{credit:None,witness:None,identity:None,destinati
  pub fn terminal_is_empty(&self)->bool{self.credit.is_none()&&self.witness.is_none()&&self.identity.is_none()&&self.destination.is_none()}
  pub fn is_admitted(&self)->bool{self.credit.is_some()}
  pub fn qualify_sized(&self,cx:&StepContext<'_>,destination:usize,copy_bytes:usize)->Result<(),OriginalTurnFailure>{let credit=self.credit.as_ref().ok_or_else(||ValueError::invariant("return credit absent"))?;crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}Ok(())}
+ /// 🪑️ Frees `rows` Source return rows ahead of a claim ladder that needs them all in one turn; see [`reserve_original_return_rows`].
+ pub fn reserve_rows(cx:&mut StepContext<'_>,rows:usize)->Result<bool,OriginalTurnFailure>{reserve_original_return_rows(cx,rows)}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let destination=self as *mut Self as usize;self.admit_sized(cx,destination,0)}
  pub fn admit_sized(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{self.admit_sized_inner(cx,destination,copy_bytes,None)}
  /// ⏱️ See `README.md`.

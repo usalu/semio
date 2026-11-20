@@ -26,4 +26,5 @@ semio-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀�
 ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { version = "1.0.140" }

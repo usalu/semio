@@ -460,6 +460,7 @@ macro_rules! owners {
             type Mutation = $mutation;
             type Edit = semio_plugin::WindowConfigApplyEdit<$state, $mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
+            fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_plugin::bounded_window_config_store_disposer_birth::<Self>() }
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new()) }
             fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
             fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}

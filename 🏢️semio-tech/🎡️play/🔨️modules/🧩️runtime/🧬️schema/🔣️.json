@@ -13,6 +13,7 @@
         "host",
         "hostVariant",
         "excludedBrandPrefix",
+        "excludedVariants",
         "groups"
       ],
       "properties": {
@@ -29,6 +30,14 @@
         "excludedBrandPrefix": {
           "type": "string",
           "minLength": 1
+        },
+        "excludedVariants": {
+          "description": "Registry variants play deliberately never lists although they are not partner re-skins; they keep shipping from their own products.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PlayVariant"
+          }
         },
         "groups": {
           "type": "array",

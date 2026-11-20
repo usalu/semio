@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "cases": [
+    {"pid": 301, "mode": "counter", "workingSet": 65536, "privateBytes": 1048576, "expected": 65536},
+    {"pid": 302, "mode": "counter", "workingSet": 8388608, "privateBytes": 4096, "expected": 8388608},
+    {"pid": 303, "mode": "open-failed", "workingSet": null, "privateBytes": null, "expected": null},
+    {"pid": 304, "mode": "counter-failed", "workingSet": null, "privateBytes": null, "expected": null},
+    {"pid": 305, "mode": "counter-threw", "workingSet": null, "privateBytes": null, "expected": null},
+    {"pid": 0, "mode": "invalid", "workingSet": null, "privateBytes": null, "expected": null},
+    {"pid": 4294967296, "mode": "invalid", "workingSet": null, "privateBytes": null, "expected": null}
+  ]
+}

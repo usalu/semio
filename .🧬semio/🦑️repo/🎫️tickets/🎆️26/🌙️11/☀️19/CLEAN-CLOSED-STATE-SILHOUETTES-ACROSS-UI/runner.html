@@ -1,0 +1,103 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>UI silhouette sweep matrix</title><style>body{font:16px system-ui;margin:1rem}label,button{margin:.25rem}iframe{display:block;border:2px solid #777;resize:both}#framebox{overflow:auto;max-width:100%;height:920px}#status{white-space:pre-wrap}</style><h1>UI silhouette sweep matrix</h1><p>Press Tab to establish keyboard modality, then activate Start batch with Enter. The batch traverses apps, languages and widths, verifies locale and focus, and saves each completed cell. CAD fixture labels use the selected language. Elements and OS cover the shared locale providers. Cancel reloads the frame.</p><button id="batch">Start batch</button><button id="retry">Retry failed cells</button><button id="cancel">Cancel</button><label>App <select id="app"></select></label><label>Language <select id="locale"><option>en</option><option>de</option></select></label><label>Width <select id="width"><option>1440</option><option>768</option><option>375</option></select></label><button id="load">Load cell</button><button id="run" disabled>Run</button><div id="status" role="status" aria-live="polite"></div><div id="framebox"><iframe id="frame" title="App under test" height="900"></iframe></div><script>
+const app=document.querySelector("#app"),locale=document.querySelector("#locale"),width=document.querySelector("#width"),frame=document.querySelector("#frame"),status=document.querySelector("#status"),run=document.querySelector("#run");
+const params=new URLSearchParams(location.search), widths=[1440,768,375], cameraHeight=900;
+const choices=new Set((params.get("apps")??"").split(",").filter(Boolean));
+const requested=new Set((params.get("cells")??"").split(",").filter(Boolean));
+const name=cell=>[cell.app,cell.locale,cell.width].join(":");
+const activate=cell=>({...cell,token:++token,attempt:crypto.randomUUID(),pending:true});
+const record=(cell,state,message)=>fetch("/attempt",{method:"POST",headers:{"content-type":"application/json"},
+  body:JSON.stringify({...cell,height:cameraHeight,state,message}),keepalive:true,signal:AbortSignal.timeout(3000)}).catch(()=>{});
+let apps=[], queue=[], current=null, selected=null, timer=null, outcomes=[], started=null, token=0;
+const frameUrl=(a,cell)=>"http://127.0.0.1:"+a.proxy+a.route+"?locale="+cell.locale+"&matrix="+cell.token;
+const postRun=cell=>frame.contentWindow.postMessage({type:"matrix-run",...cell,height:cameraHeight},new URL(frame.src).origin);
+const watchdog=()=>{clearTimeout(timer);timer=setTimeout(()=>finish("Timed out loading or sweeping","timeout"),180000)};
+async function load(cell, automatic){
+  const a=apps.find(x=>x.id===cell.app);
+  if(!a) return;
+  selected=cell;
+  run.disabled=true;
+  frame.src="about:blank";
+  status.textContent="Starting "+a.id+"; "+queue.length+" remaining";
+  await record(cell,"pending");
+  if(selected!==cell)return;
+  if(started!==a.id){
+    started=a.id;
+    await fetch("/start/"+a.id);
+  }
+  const deadline=performance.now()+90000;
+  while(performance.now()<deadline&&selected===cell){
+    if((await fetch("/ready/"+a.id)).ok){
+      if(selected!==cell)return;
+      frame.width=cell.width;
+      frame.src=frameUrl(a,cell);
+      status.textContent="Loading "+name(cell)+"; "+queue.length+" remaining";
+      if(automatic)watchdog();
+      return;
+    }
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+  if(selected!==cell)return;
+  const message="Preview unavailable after 90 seconds";
+  if(automatic)finish(message,"timeout");
+  else { void record(cell,"timeout",message); status.textContent=message; }
+}
+async function next(){
+  clearTimeout(timer);
+  if(!queue.length){current=null;selected=null;started=null;await fetch("/stop");status.textContent="Batch finished: "+JSON.stringify(outcomes,null,2);return}
+  current=activate(queue.shift());
+  app.value=current.app;locale.value=current.locale;width.value=current.width;
+  await load(current,true);
+}
+async function finish(result,state){
+  const cell=current;
+  if(!cell)return;
+  clearTimeout(timer);
+  if(state)await record(cell,state,result);
+  if(current!==cell)return;
+  cell.pending=false;
+  outcomes.push({cell,result});
+  next();
+}
+const fullMatrix=()=>[...apps.filter(a=>!["elements","os"].includes(a.id)),...apps.filter(a=>["elements","os"].includes(a.id))]
+  .filter(a=>!choices.size||choices.has(a.id))
+  .flatMap(a=>["en","de"].flatMap(l=>widths.map(w=>({app:a.id,locale:l,width:w}))))
+  .filter(cell=>!requested.size||requested.has(name(cell)));
+function batch(event,cells){
+  if(!event.isTrusted||event.detail!==0){status.textContent="Use Tab and Enter to start with keyboard modality.";return}
+  if(current)return;
+  if(!cells.length){status.textContent="No matching cells.";return}
+  frame.src="about:blank";
+  outcomes=[];queue=cells;next();
+}
+document.querySelector("#batch").onclick=e=>batch(e,fullMatrix());
+document.querySelector("#retry").onclick=e=>batch(e,outcomes.filter(({result})=>typeof result==="string"||result.failures||result.errors?.length).map(({cell})=>cell));
+document.querySelector("#cancel").onclick=()=>{
+  if(selected?.pending)void record(selected,"cancelled","Cancelled by the runner");
+  queue=[];current=null;selected=null;started=null;clearTimeout(timer);fetch("/stop");frame.src="about:blank";run.disabled=true;status.textContent="Cancelled"};
+fetch("/apps").then(r=>r.json()).then(x=>{apps=x;app.innerHTML=x.map(a=>'<option>'+a.id+'</option>').join("");if(requested.size||choices.size)status.textContent="Selected "+fullMatrix().length+" cells."});
+document.querySelector("#load").onclick=()=>{if(!current)load(activate({app:app.value,locale:locale.value,width:+width.value}),false)};
+for(const select of [app,locale,width])select.onchange=()=>{if(!current){selected=null;run.disabled=true;status.textContent="Load the selected cell."}};
+run.onclick=async()=>{
+  if(!selected||current)return;
+  const cell=selected;
+  run.disabled=true;
+  if(!cell.pending){
+    cell.attempt=crypto.randomUUID();
+    cell.pending=true;
+    await record(cell,"pending");
+  }
+  if(selected!==cell)return;
+  status.textContent="Running "+name(cell);
+  postRun(cell);
+};
+addEventListener("message",e=>{
+  if(!selected||e.source!==frame.contentWindow||e.origin!==new URL(frame.src).origin)return;
+  const d=e.data;
+  if(d.token!==selected.token)return;
+  if(d.type==="matrix-ready"){if(current)postRun(current);else status.textContent="Press Tab inside the frame, then return to Run."}
+  if(d.type==="matrix-key"&&!current){run.disabled=false;status.textContent="Keyboard activated. Run "+name(selected)}
+  if(d.type==="matrix-progress"){if(current)watchdog();status.textContent=name(selected)+"; "+queue.length+" remaining; "+d.message}
+  if(d.type==="matrix-error"){if(current)finish(d.message,"error");else{void record(selected,"error",d.message);selected.pending=false;status.textContent="Error: "+d.message;run.disabled=false}}
+  if(d.type==="matrix-done"){if(current)finish({targets:d.result.targets,failures:d.result.failures,focusChecks:d.result.focusChecks,errors:d.result.errors});else{selected.pending=false;status.textContent=JSON.stringify(d.result,null,2);run.disabled=false}}
+});
+</script></html>

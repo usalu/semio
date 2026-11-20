@@ -7,7 +7,6 @@ use semio_framework_value::value::ValueRefusalKind;
 pub(super) enum PcgConstructionStage {
     ReserveB,
     InitializeB,
-    RetireMountedB,
     NormalizeB,
     ReserveX,
     InitializeX,
@@ -31,15 +30,14 @@ pub struct PcgJobConstruction {
     pub(super) matrix: Option<Csr>,
     pub(super) stage: PcgConstructionStage,
     pub(super) cursor: usize,
-    pub(super) b: VecD,
-    pub(super) mounted_b: Option<MountedScalarSlots>,
+    pub(super) b: PcgVector,
     pub(super) rhs_norm: f64,
-    pub(super) x: VecD,
-    pub(super) diag: VecD,
-    pub(super) r: VecD,
-    pub(super) z: VecD,
-    pub(super) p: VecD,
-    pub(super) ap: VecD,
+    pub(super) x: PcgVector,
+    pub(super) diag: PcgVector,
+    pub(super) r: PcgVector,
+    pub(super) z: PcgVector,
+    pub(super) p: PcgVector,
+    pub(super) ap: PcgVector,
     pub(super) complete: Option<PcgJob>,
     fault: Option<&'static [u8]>,
     pub(super) closing: bool,
@@ -52,15 +50,14 @@ impl PcgJobConstruction {
             matrix: Some(matrix),
             stage: PcgConstructionStage::ReserveB,
             cursor: 0,
-            b: VecD::from_vec(Vec::new()),
-            mounted_b: None,
+            b: PcgVector::default(),
             rhs_norm: 0.0,
-            x: VecD::from_vec(Vec::new()),
-            diag: VecD::from_vec(Vec::new()),
-            r: VecD::from_vec(Vec::new()),
-            z: VecD::from_vec(Vec::new()),
-            p: VecD::from_vec(Vec::new()),
-            ap: VecD::from_vec(Vec::new()),
+            x: PcgVector::default(),
+            diag: PcgVector::default(),
+            r: PcgVector::default(),
+            z: PcgVector::default(),
+            p: PcgVector::default(),
+            ap: PcgVector::default(),
             complete: None,
             fault: None,
             closing: false,
@@ -69,27 +66,13 @@ impl PcgJobConstruction {
 
     /// 🌬️ Retains the generation's assembled RHS and derives its convergence norm one scalar per opportunity.
     pub fn new_with_rhs(operation: Operation, matrix: Csr, rhs: VecD) -> Result<Self, (Csr, VecD)> {
-        if matrix.n != rhs.len() || rhs.0.capacity().saturating_mul(size_of::<f64>()) > PCG_SCALAR_BACKING_BYTES {
+        if matrix.n != rhs.len() || rhs.len() > MOUNTED_SCALAR_SLOTS {
             return Err((matrix, rhs));
         }
-        Ok(Self {
-            operation,
-            matrix: Some(matrix),
-            stage: PcgConstructionStage::NormalizeB,
-            cursor: 0,
-            b: rhs,
-            mounted_b: None,
-            rhs_norm: 0.0,
-            x: VecD::from_vec(Vec::new()),
-            diag: VecD::from_vec(Vec::new()),
-            r: VecD::from_vec(Vec::new()),
-            z: VecD::from_vec(Vec::new()),
-            p: VecD::from_vec(Vec::new()),
-            ap: VecD::from_vec(Vec::new()),
-            complete: None,
-            fault: None,
-            closing: false,
-        })
+        let mut construction = Self::new(operation, matrix);
+        construction.b = PcgVector::from_values(rhs.0.into_iter());
+        construction.stage = PcgConstructionStage::NormalizeB;
+        Ok(construction)
     }
 
     pub fn new_with_mounted_rhs(operation: Operation, matrix: Csr, rhs: MountedScalarSlots) -> Result<Self, (Csr, MountedScalarSlots)> {
@@ -97,10 +80,60 @@ impl PcgJobConstruction {
             return Err((matrix, rhs));
         }
         let mut construction = Self::new(operation, matrix);
-        construction.mounted_b = Some(rhs);
+        construction.b = PcgVector(rhs.into_paged());
+        construction.stage = PcgConstructionStage::NormalizeB;
         Ok(construction)
     }
 
+    /// 🪙️ Reserves each physical page under the same caller that owns the matrix and solver.
+    pub fn step_funded(&mut self, context: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if context.is_cancelled() {
+            return Err(ValueError::literal(ValueRefusalKind::Canceled, "PCG construction canceled").into());
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "PCG construction changed operation or generation").into());
+        }
+        if context.should_yield() { return Ok(false); }
+        if self.reserve_one(context)? { return Ok(false); }
+        let grant = context.retained_grant();
+        let copy_bytes = size_of::<f64>();
+        if !semio_s_fem_payload_turns::numerical_grant_covers(grant, RetirementDemand { copy_bytes, depth: 1, ..Default::default() }) {
+            return Ok(false);
+        }
+        let complete = self.step_one().map_err(Self::construction_error)?;
+        context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
+        Ok(complete)
+    }
+
+    fn construction_error(detail: &'static [u8]) -> ValueError {
+        ValueError::literal(ValueRefusalKind::InvariantViolated, std::str::from_utf8(detail).expect("PCG construction fault text"))
+    }
+
+    fn reserve_one(&mut self, context: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        let n = self.matrix.as_ref().ok_or_else(|| Self::construction_error(b"pcg-construction-matrix-missing"))?.n;
+        if n > MOUNTED_SCALAR_SLOTS {
+            return Err(Self::construction_error(b"pcg-construction-owner-page-capacity").into());
+        }
+        if let Some(owner) = self.reservation_owner() {
+            if owner.0.capacity() < n {
+                return reserve_funded_page(&mut owner.0, n, context).map(|_| true).map_err(|_| Self::construction_error(b"pcg-construction-owner-allocation").into());
+            }
+        }
+        Ok(false)
+    }
+
+    fn reservation_owner(&mut self) -> Option<&mut PcgVector> {
+        Some(match self.stage {
+            PcgConstructionStage::ReserveB => &mut self.b,
+            PcgConstructionStage::ReserveX => &mut self.x,
+            PcgConstructionStage::ReserveDiagonal => &mut self.diag,
+            PcgConstructionStage::ReserveR => &mut self.r,
+            PcgConstructionStage::ReserveZ => &mut self.z,
+            PcgConstructionStage::ReserveP => &mut self.p,
+            PcgConstructionStage::ReserveAp => &mut self.ap,
+            _ => return None,
+        })
+    }
     pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
         if let Some(fault) = self.fault { return Err(fault); }
         if self.closing { return Err(b"pcg-construction-closing"); }
@@ -111,14 +144,14 @@ impl PcgJobConstruction {
 
     fn advance_one(&mut self) -> Result<bool, &'static [u8]> {
         let n = self.matrix.as_ref().ok_or(b"pcg-construction-matrix-missing" as &'static [u8])?.n;
-        if n.checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) {
+        if n > MOUNTED_SCALAR_SLOTS {
             return Err(b"pcg-construction-owner-page-capacity");
         }
         macro_rules! reserve {
             ($owner:expr, $next:expr, $fault:expr) => {{
-                $owner.0.try_reserve_exact(n).map_err(|_| $fault as &'static [u8])?;
-                if $owner.0.capacity().checked_mul(std::mem::size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) {
-                    return Err(b"pcg-construction-owner-page-capacity");
+                if $owner.0.capacity() < n {
+                    reserve_cold_page(&mut $owner.0, n).map_err(|_| $fault as &'static [u8])?;
+                    if $owner.0.capacity() < n { return Ok(false); }
                 }
                 self.cursor = 0;
                 self.stage = $next;
@@ -127,7 +160,7 @@ impl PcgJobConstruction {
         macro_rules! initialize {
             ($owner:expr, $value:expr, $next:expr) => {{
                 if self.cursor < n {
-                    $owner.0.push($value);
+                    $owner.0.push_reserved($value).map_err(|_| b"pcg-construction-unreserved-scalar" as &'static [u8])?;
                     self.cursor += 1;
                 } else {
                     self.stage = $next;
@@ -137,20 +170,8 @@ impl PcgJobConstruction {
         match self.stage {
             PcgConstructionStage::ReserveB => reserve!(self.b, PcgConstructionStage::InitializeB, b"pcg-construction-b-allocation"),
             PcgConstructionStage::InitializeB => {
-                if self.cursor < n {
-                    let value = self.mounted_b.as_ref().and_then(|rhs| rhs.get(self.cursor)).unwrap_or(1.0);
-                    self.b.0.push(value);
-                    self.cursor += 1;
-                } else {
-                    self.cursor = 0;
-                    self.stage = if self.mounted_b.is_some() { PcgConstructionStage::RetireMountedB } else { PcgConstructionStage::NormalizeB };
-                }
-            }
-            PcgConstructionStage::RetireMountedB => {
-                if self.mounted_b.as_mut().is_some_and(MountedScalarSlots::close_step) {
-                    self.mounted_b = None;
-                    self.stage = PcgConstructionStage::NormalizeB;
-                }
+                initialize!(self.b, 1.0, PcgConstructionStage::NormalizeB);
+                if self.stage == PcgConstructionStage::NormalizeB { self.cursor = 0; }
             }
             PcgConstructionStage::NormalizeB => {
                 if self.cursor < n {
@@ -182,17 +203,17 @@ impl PcgJobConstruction {
                         operation: self.operation,
                         state: PcgCheckpoint {
                             a: self.matrix.take().expect("matrix retained through construction"),
-                            b: std::mem::replace(&mut self.b, VecD::from_vec(Vec::new())),
-                            x: std::mem::replace(&mut self.x, VecD::from_vec(Vec::new())),
+                            b: std::mem::take(&mut self.b),
+                            x: std::mem::take(&mut self.x),
                             tol_rel: 1.0e-8,
-                            max_iter: 512,
+                            max_iter: n.max(512),
                             batch_units: 1,
                             stage: PcgStage::InitializeDiagonal,
-                            diag: std::mem::replace(&mut self.diag, VecD::from_vec(Vec::new())),
-                            r: std::mem::replace(&mut self.r, VecD::from_vec(Vec::new())),
-                            z: std::mem::replace(&mut self.z, VecD::from_vec(Vec::new())),
-                            p: std::mem::replace(&mut self.p, VecD::from_vec(Vec::new())),
-                            ap: std::mem::replace(&mut self.ap, VecD::from_vec(Vec::new())),
+                            diag: std::mem::take(&mut self.diag),
+                            r: std::mem::take(&mut self.r),
+                            z: std::mem::take(&mut self.z),
+                            p: std::mem::take(&mut self.p),
+                            ap: std::mem::take(&mut self.ap),
                             b_norm: self.rhs_norm.max(1e-300),
                             residual_norm: 0.0,
                             residual_sq: 0.0,
@@ -230,8 +251,8 @@ impl PcgJobConstruction {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete.is_none() && self.matrix.is_none() && self.mounted_b.is_none()
-            && [&self.b, &self.x, &self.diag, &self.r, &self.z, &self.p, &self.ap].iter().all(|vector| vector.0.is_empty() && vector.0.capacity() == 0)
+        self.complete.is_none() && self.matrix.is_none()
+            && [&self.b, &self.x, &self.diag, &self.r, &self.z, &self.p, &self.ap].iter().all(|vector| vector.0.terminal_is_empty())
     }
 
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
@@ -266,15 +287,8 @@ impl PcgJobConstruction {
             self.matrix = None;
             return Ok(numerical_ladder_turn((false, 1, 0)));
         }
-        if let Some(rhs) = self.mounted_b.as_mut() {
-            if !rhs.close_step() {
-                return Ok(numerical_ladder_turn((false, 1, 0)));
-            }
-            self.mounted_b = None;
-            return Ok(numerical_ladder_turn((false, 1, 0)));
-        }
         for vector in [&mut self.b, &mut self.x, &mut self.diag, &mut self.r, &mut self.z, &mut self.p, &mut self.ap] {
-            if let Some(step) = numerical_owner_turn(close_vec_owner_step(&mut vector.0, maximum_bytes)) {
+            if let Some(step) = numerical_owner_turn(close_paged_owner_step(&mut vector.0, maximum_bytes)) {
                 return Ok(step);
             }
         }
@@ -282,14 +296,17 @@ impl PcgJobConstruction {
     }
 
     pub fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
-        match self.complete.as_ref() {
-            Some(complete) => complete.close_frontier(),
-            None => Ok(None),
+        if let Some(complete) = self.complete.as_ref() { return complete.close_frontier(); }
+        if let Some(matrix) = self.matrix.as_ref() {
+            if let Some(demand) = matrix_close_frontier(matrix)? { return Ok(Some(demand)); }
         }
+        [&self.b, &self.x, &self.diag, &self.r, &self.z, &self.p, &self.ap].into_iter()
+            .find(|vector| !vector.0.terminal_is_empty())
+            .map(|vector| paged_owner_retirement_demand(&vector.0))
+            .transpose()
     }
-
     pub fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
-        Ok(self.close_frontier()?.unwrap_or_else(|| numerical_rung_demand(false)))
+        Ok(self.close_frontier()?.unwrap_or(RetirementDemand { depth: 1, ..Default::default() }))
     }
 }
 
@@ -323,7 +340,7 @@ impl PcgRestoreCursor {
         let integer = |index| usize::try_from(c[index]).map_err(|_| NumericalCheckpointFault::Envelope);
         let boolean = |index| match c[index] { 0 => Ok(false), 1 => Ok(true), _ => Err(NumericalCheckpointFault::Field) };
         let n = integer(4)?;
-        if n.checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) || integer(7)? == 0 || integer(18)? > n || integer(19)? > n {
+        if n > MOUNTED_SCALAR_SLOTS || integer(7)? == 0 || integer(18)? > n || integer(19)? > n {
             return Err(NumericalCheckpointFault::Envelope);
         }
         let stage = match c[8] {
@@ -340,8 +357,8 @@ impl PcgRestoreCursor {
         };
         let state = PcgCheckpoint {
             a: Csr::from_paged_parts(n, PagedList::default(), PagedList::default(), PagedList::default()),
-            b: VecD::from_vec(Vec::new()), x: VecD::from_vec(Vec::new()), diag: VecD::from_vec(Vec::new()),
-            r: VecD::from_vec(Vec::new()), z: VecD::from_vec(Vec::new()), p: VecD::from_vec(Vec::new()), ap: VecD::from_vec(Vec::new()),
+            b: PcgVector::default(), x: PcgVector::default(), diag: PcgVector::default(),
+            r: PcgVector::default(), z: PcgVector::default(), p: PcgVector::default(), ap: PcgVector::default(),
             tol_rel: f64::from_bits(c[5]), max_iter: integer(6)?, batch_units: integer(7)?, stage,
             b_norm: f64::from_bits(c[9]), residual_norm: f64::from_bits(c[10]), residual_sq: f64::from_bits(c[11]),
             rz_old: f64::from_bits(c[12]), rz_new: f64::from_bits(c[13]), dot_accum: f64::from_bits(c[14]),
@@ -396,9 +413,8 @@ impl PcgRestoreCursor {
                     4 => &mut state.b.0, 5 => &mut state.x.0, 6 => &mut state.diag.0, 7 => &mut state.r.0,
                     8 => &mut state.z.0, 9 => &mut state.p.0, 10 => &mut state.ap.0, _ => unreachable!(),
                 };
-                let complete = restore_f64_entry(owner, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?;
-                if owner.capacity().checked_mul(size_of::<f64>()).is_none_or(|bytes| bytes > PCG_SCALAR_BACKING_BYTES) { return Err(NumericalCheckpointFault::Admission); }
-                if owner.last().is_some_and(|value| !value.is_finite()) { return Err(NumericalCheckpointFault::Envelope); }
+                let complete = restore_paged_f64_entry(owner, &page, expected, &mut self.page_entry, &mut self.owner_cursor, context)?;
+                if owner.len().checked_sub(1).and_then(|index| owner.get(index)).is_some_and(|value| !value.is_finite()) { return Err(NumericalCheckpointFault::Envelope); }
                 complete
             }
         };
@@ -429,7 +445,13 @@ impl PcgRestoreCursor {
         if self.closing || context.is_cancelled() { return Err(NumericalCheckpointFault::Cancelled); }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation { return Err(NumericalCheckpointFault::Stale); }
         if context.should_yield() { return Ok(None); }
-        context.consume_fuel(1);
+        let before = context.original_work_units_spent();
+        let result = self.advance_admitted(context);
+        if context.original_work_units_spent() == before { context.consume_fuel(1); }
+        result
+    }
+
+    fn advance_admitted(&mut self, context: &mut StepContext<'_>) -> Result<Option<PcgJob>, NumericalCheckpointFault> {
         if self.payload.is_none() {
             if !numerical_restore_admit(context, RetirementDemand { copy_bytes: size_of::<PcgJob>(), depth: 1, ..Default::default() })? { return Ok(None); }
             return Ok(self.job.take());

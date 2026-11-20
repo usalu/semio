@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-page-coordinates"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "PDF page viewports and user-space coordinates"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+serde_json.workspace = true

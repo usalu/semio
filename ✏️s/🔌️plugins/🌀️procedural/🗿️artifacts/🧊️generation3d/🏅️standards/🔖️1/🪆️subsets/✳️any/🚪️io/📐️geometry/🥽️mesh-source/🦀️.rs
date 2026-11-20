@@ -15,9 +15,9 @@ fn construct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         let text = inputs.text("data")?.to_string();
         let mut preparation = PolygonSourcePreparation::new();
         Ok(Box::new(move |fuel: usize, cx: &mut StepContext<'_>| {
-            let grant = preparation.cold_grant(&text, fuel.saturating_mul(BATCH), fuel.saturating_mul(4096)).map_err(import_fault)?;
-            let Some((step, _)) = cx.with_original_effect(cx.retained_grant(), |_, effect| preparation.step(&text, grant, effect)).map_err(|error| import_fault(error.to_string()))? else { return Ok(None) };
-            step.map(|step| step.source).map_err(import_fault)
+            let grant = preparation.cold_grant(&text, fuel.saturating_mul(BATCH), fuel.saturating_mul(4096)).map_err(|error| import_fault(error).at("data"))?;
+            let Some((step, _)) = cx.with_original_effect(cx.retained_grant(), |_, effect| preparation.step(&text, grant, effect)).map_err(|error| import_fault(error.to_string()).at("data"))? else { return Ok(None) };
+            step.map(|step| step.source).map_err(|error| import_fault(error).at("data"))
         }) as Parse)
     })
 }

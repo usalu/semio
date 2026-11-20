@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🟦️.ts";
+import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
 import { VOLUME_LIMITS } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
 import { CancelledError, GENERATED, Mask, QUALITY_FOR, TICKET, VIEWS, checkCancelled, extentOf, frames, loadAsset, meshes, projectWorld, resolveAsset, restState, toWorld, type Box, type CatalogEntry, type Json, type P2, type RestState, type Ring, type SolidMesh, type V3, type View } from "./volumes-base.ts";
@@ -113,6 +113,14 @@ export function poseState(asset: Json, scale: number): PoseState {
   const hit = poseCache.get(asset)?.get(scale);
   if (hit !== undefined) return hit;
   const pose = poseOf(asset);
+  const drawn = Object.entries((asset.representations ?? {}) as Record<string, Json>).filter(([, r]) => r.geometry !== undefined).map(([d]) => Number(d));
+  const drawnScale = drawn.includes(scale) || drawn.length === 0 ? scale : drawn.reduce((best, d) => (Math.abs(Math.log(d / scale)) < Math.abs(Math.log(best / scale)) ? d : best));
+  if (drawnScale !== scale) {
+    const near = poseState(asset, drawnScale);
+    const out: PoseState = { ...near, elevation: [], front: [], plan: [] };
+    (poseCache.get(asset) ?? poseCache.set(asset, new Map()).get(asset)!).set(scale, out);
+    return out;
+  }
   const run = (a: Json): Json => evaluate(a, { kind: "pose", pose }, { kind: "scale", scale: { denominator: scale } }) as Json;
   let state: Json;
   let degraded: string | undefined;

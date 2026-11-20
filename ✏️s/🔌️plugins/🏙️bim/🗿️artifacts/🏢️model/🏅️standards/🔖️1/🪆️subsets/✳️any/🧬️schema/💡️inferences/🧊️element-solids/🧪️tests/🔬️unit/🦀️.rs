@@ -111,8 +111,8 @@ async fn the_model_inference_carries_the_solids_of_the_house_walls() {
 
 fn grid_of_walls(count: usize) -> ModelSnapshot {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.walls.clear();
-    snapshot.openings.clear();
+    snapshot.walls.cold_clear();
+    snapshot.openings.cold_clear();
     for index in 0..count {
         let (column, row) = ((index % 25) as f64, (index / 25) as f64);
         let wall = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall {
@@ -128,10 +128,10 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
             name: String::new(),
             base_slab: None,
         };
-        snapshot.walls.insert(format!("w-{index:04}"), wall);
+        snapshot.walls.cold_insert(format!("w-{index:04}"), wall);
         if index % 4 == 0 {
             let opening = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Opening { host: format!("w-{index:04}"), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
-            snapshot.openings.insert(format!("o-{index:04}"), opening);
+            snapshot.openings.cold_insert(format!("o-{index:04}"), opening);
         }
     }
     snapshot
@@ -223,7 +223,7 @@ async fn the_plan_puts_storeys_first_and_gives_elements_their_layouts_frames_and
 #[semio_framework_async_macros::async_test]
 async fn a_wall_constrained_to_another_storey_depends_on_both() {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.storeys.insert("st-2".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
+    snapshot.storeys.cold_insert("st-2".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
     snapshot.walls.get_mut("w-plain").expect("wall").top = TopConstraint::Storey { storey: "st-2".into(), offset: -0.5 };
     let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::SOLIDS));
     let parents = steps.iter().find(|step| step.key == ModelNode::WallLayout("w-plain".into())).expect("planned").parents.clone();

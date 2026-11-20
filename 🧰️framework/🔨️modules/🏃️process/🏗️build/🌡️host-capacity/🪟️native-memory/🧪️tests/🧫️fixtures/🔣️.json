@@ -1,0 +1,28 @@
+{
+  "machines": [
+    {
+      "name": "64 GB worker, 33 GB free, plenty of commit",
+      "status": { "load": 48, "total": 68719476736, "available": 35433480192, "commit": 85899345920, "commitAvailable": 52613349376 },
+      "expect": { "totalBytes": 68719476736, "availableBytes": 35433480192, "commitLimitBytes": 85899345920, "commitAvailableBytes": 52613349376, "loadPercent": 48, "countersAvailableBytes": 35433480192 }
+    },
+    {
+      "name": "commit nearly exhausted while memory is free: the commit decides",
+      "status": { "load": 71, "total": 17179869184, "available": 8589934592, "commit": 21474836480, "commitAvailable": 1073741824 },
+      "expect": { "totalBytes": 17179869184, "availableBytes": 8589934592, "commitLimitBytes": 21474836480, "commitAvailableBytes": 1073741824, "loadPercent": 71, "countersAvailableBytes": 1073741824 }
+    }
+  ],
+  "impossible": [
+    { "name": "available above total", "status": { "load": 10, "total": 1073741824, "available": 2147483648, "commit": 4294967296, "commitAvailable": 1073741824 } },
+    { "name": "load above one hundred", "status": { "load": 140, "total": 2147483648, "available": 1073741824, "commit": 4294967296, "commitAvailable": 1073741824 } },
+    { "name": "no memory at all", "status": { "load": 0, "total": 0, "available": 0, "commit": 0, "commitAvailable": 0 } }
+  ],
+  "processes": [
+    { "pid": 0, "parent": 0, "name": "[System Process]", "threads": 8, "protected": true },
+    { "pid": 4, "parent": 0, "name": "System", "threads": 200, "protected": true },
+    { "pid": 100, "parent": 4, "name": "bun.exe", "threads": 20, "workingSet": 104857600, "private": 52428800, "peak": 125829120, "pagefile": 60817408 },
+    { "pid": 200, "parent": 100, "name": "cargo.exe", "threads": 6, "workingSet": 52428800, "private": 20971520, "peak": 62914560, "pagefile": 25165824 },
+    { "pid": 300, "parent": 100, "name": "rustc.exe", "threads": 12, "workingSet": 5242880, "private": 3145728, "peak": 8388608, "pagefile": 4194304 },
+    { "pid": 400, "parent": 1, "name": "ünïcode-🧬.exe", "threads": 1, "workingSet": 1048576, "private": 524288, "peak": 1048576, "pagefile": 524288 }
+  ],
+  "trees": { "100": { "footprint": 73, "resident": 155 }, "200": { "footprint": 20, "resident": 50 }, "300": { "footprint": 3, "resident": 5 }, "400": { "footprint": 0, "resident": 1 }, "999": null }
+}

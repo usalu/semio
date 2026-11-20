@@ -1,0 +1,366 @@
+[
+  {
+    "name": "hover belongs to the innermost interactive box only",
+    "boxes": [
+      {
+        "id": "window",
+        "parent": null,
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "group",
+        "parent": "window",
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "a",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "b",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": "a",
+    "focusVisible": null,
+    "expected": {
+      "window": "normal",
+      "group": "normal",
+      "a": "hover",
+      "b": "normal"
+    }
+  },
+  {
+    "name": "a pointer over a non-interactive gap hovers nothing",
+    "boxes": [
+      {
+        "id": "window",
+        "parent": null,
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "group",
+        "parent": "window",
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "a",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": "group",
+    "focusVisible": null,
+    "expected": {
+      "window": "normal",
+      "group": "normal",
+      "a": "normal"
+    }
+  },
+  {
+    "name": "focus and selection stay on their own cells and never reach the group",
+    "boxes": [
+      {
+        "id": "group",
+        "parent": null,
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "a",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "b",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "active"
+        ]
+      },
+      {
+        "id": "c",
+        "parent": "group",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": null,
+    "focusVisible": "a",
+    "expected": {
+      "group": "normal",
+      "a": "focus",
+      "b": "active",
+      "c": "normal"
+    }
+  },
+  {
+    "name": "an inner interactive box takes hover from an interactive card",
+    "boxes": [
+      {
+        "id": "card",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "button",
+        "parent": "card",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": "button",
+    "focusVisible": null,
+    "expected": {
+      "card": "normal",
+      "button": "hover"
+    }
+  },
+  {
+    "name": "a disabled box passes hover to the nearest enabled interactive ancestor",
+    "boxes": [
+      {
+        "id": "card",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "button",
+        "parent": "card",
+        "interactive": true,
+        "disabled": true,
+        "marks": []
+      }
+    ],
+    "pointer": "button",
+    "focusVisible": null,
+    "expected": {
+      "card": "hover",
+      "button": "normal"
+    }
+  },
+  {
+    "name": "hover outranks the box's own marks and focus",
+    "boxes": [
+      {
+        "id": "a",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "active"
+        ]
+      }
+    ],
+    "pointer": "a",
+    "focusVisible": "a",
+    "expected": {
+      "a": "hover"
+    }
+  },
+  {
+    "name": "a loading window keeps its own state while a cell inside it is hovered",
+    "boxes": [
+      {
+        "id": "window",
+        "parent": null,
+        "interactive": false,
+        "disabled": false,
+        "marks": [
+          "loading"
+        ]
+      },
+      {
+        "id": "cell",
+        "parent": "window",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": "cell",
+    "focusVisible": null,
+    "expected": {
+      "window": "loading",
+      "cell": "hover"
+    }
+  },
+  {
+    "name": "focus inside a non-interactive box rises to the nearest interactive box",
+    "boxes": [
+      {
+        "id": "row",
+        "parent": null,
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "field",
+        "parent": "row",
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "adornment",
+        "parent": "field",
+        "interactive": false,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": null,
+    "focusVisible": "adornment",
+    "expected": {
+      "row": "normal",
+      "field": "focus",
+      "adornment": "normal"
+    }
+  },
+  {
+    "name": "states are ranked hover over focus, celebrated, introduced, loading, waiting and active",
+    "boxes": [
+      {
+        "id": "a",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "active",
+          "waiting"
+        ]
+      },
+      {
+        "id": "b",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "celebrated",
+          "introduced",
+          "loading"
+        ]
+      },
+      {
+        "id": "c",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "active"
+        ]
+      }
+    ],
+    "pointer": null,
+    "focusVisible": "c",
+    "expected": {
+      "a": "waiting",
+      "b": "celebrated",
+      "c": "focus"
+    }
+  },
+  {
+    "name": "invalid ranks above active, below waiting, loading, introduced, celebrated, focus and hover",
+    "boxes": [
+      {
+        "id": "a",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "active",
+          "invalid"
+        ]
+      },
+      {
+        "id": "b",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "invalid",
+          "waiting"
+        ]
+      },
+      {
+        "id": "c",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "invalid"
+        ]
+      },
+      {
+        "id": "d",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": [
+          "invalid"
+        ]
+      }
+    ],
+    "pointer": "d",
+    "focusVisible": "c",
+    "expected": {
+      "a": "invalid",
+      "b": "waiting",
+      "c": "focus",
+      "d": "hover"
+    }
+  },
+  {
+    "name": "distinct generations of one box slot retain distinct interaction state",
+    "boxes": [
+      {
+        "id": "4294967297",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      },
+      {
+        "id": "8589934593",
+        "parent": null,
+        "interactive": true,
+        "disabled": false,
+        "marks": []
+      }
+    ],
+    "pointer": "4294967297",
+    "focusVisible": "8589934593",
+    "expected": {
+      "4294967297": "hover",
+      "8589934593": "focus"
+    }
+  }
+]

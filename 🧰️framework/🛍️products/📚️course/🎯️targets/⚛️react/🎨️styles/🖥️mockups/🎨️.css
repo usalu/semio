@@ -3,7 +3,6 @@
 .course-chip > .course-mockup, .course-sort > .course-mockup, .course-slot > .course-mockup { margin: 0; padding: var(--spacing-single); border-block-start: var(--stroke-hairline) solid var(--border-normal-color); }
 .course-mockup figcaption { margin-bottom: 0.35rem; font-weight: 600; }
 .course-mockup-scroll { max-width: 100%; overflow: auto; contain: layout paint; overscroll-behavior-inline: contain; border: 1px solid var(--border-normal-color); border-radius: 0.25rem; }
-.course-mockup-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .course-mockup [data-highlight] { outline: 3px double currentColor; outline-offset: -3px; background: var(--active-base); }
 .course-workbook { min-width: 24rem; background: var(--base); }
 .course-workbook-title { display: flex; gap: 1.5rem; padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border-normal-color); }
@@ -30,7 +29,6 @@
 .course-graph-ports ul:last-child { text-align: right; }
 .course-graph-relations { padding: 0.35rem 0.6rem; border-top: 1px solid var(--border-normal-color); }
 .course-graph-relations summary { cursor: pointer; }
-.course-graph-relations summary:focus-visible { outline: 2px solid currentColor; }
 .course-tree-panel { margin: 0.5rem; border: 1px solid currentColor; max-width: 26rem; }
 .course-tree-panel > ol { list-style: none; margin: 0; padding: 0.35rem 0.6rem; }
 .course-tree-panel > ol > li { padding: 0.2rem 0.3rem; }

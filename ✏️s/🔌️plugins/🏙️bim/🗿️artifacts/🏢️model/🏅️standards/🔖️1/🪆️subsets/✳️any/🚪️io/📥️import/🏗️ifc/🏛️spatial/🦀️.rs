@@ -101,12 +101,12 @@ fn sites(i: &mut Import<'_>, true_north: f64) {
     for (index, (instance, args)) in i.doc.rows("IFCSITE").into_iter().enumerate() {
         let id = Doc::identity(args, "IFCSITE").unwrap_or_else(|| format!("site-{}", index + 1));
         let boundary = i.doc.footprint(args).map(|ring| ring.into_iter().map(|(point, _)| Point2 { x: point[0], y: point[1] }).collect()).unwrap_or_default();
-        i.model.sites.insert(id.clone(), Site { name: text(args, 2), latitude: degrees(&reals(args, 9)), longitude: degrees(&reals(args, 10)), elevation: real(args, 11).unwrap_or(0.0), true_north, boundary });
+        i.model.sites.cold_insert(id.clone(), Site { name: text(args, 2), latitude: degrees(&reals(args, 9)), longitude: degrees(&reals(args, 10)), elevation: real(args, 11).unwrap_or(0.0), true_north, boundary });
         i.site_world.insert(id.clone(), i.doc.world(&args[5]));
         i.ids.insert(instance.id, id);
     }
     if i.model.sites.is_empty() {
-        i.model.sites.insert("site-1".into(), Site { name: String::new(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north, boundary: Vec::new() });
+        i.model.sites.cold_insert("site-1".into(), Site { name: String::new(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north, boundary: Vec::new() });
         i.site_world.insert("site-1".into(), semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY);
     }
 }
@@ -120,12 +120,12 @@ fn buildings(i: &mut Import<'_>) {
         let relative = world.relative_to(i.site_world.get(&site).unwrap_or(&semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY));
         let site_elevation = i.model.sites.get(&site).map_or(0.0, |row| row.elevation);
         let elevation = real(args, 9).map_or(relative.origin[2], |absolute| absolute - site_elevation);
-        i.model.buildings.insert(id.clone(), Building { site, name: text(args, 2), origin: Point2 { x: relative.origin[0], y: relative.origin[1] }, rotation: relative.heading(), elevation });
+        i.model.buildings.cold_insert(id.clone(), Building { site, name: text(args, 2), origin: Point2 { x: relative.origin[0], y: relative.origin[1] }, rotation: relative.heading(), elevation });
         i.building_world.insert(id.clone(), world);
         i.ids.insert(instance.id, id);
     }
     if i.model.buildings.is_empty() {
-        i.model.buildings.insert("bldg-1".into(), Building { site: first_site, name: String::new(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+        i.model.buildings.cold_insert("bldg-1".into(), Building { site: first_site, name: String::new(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
         i.building_world.insert("bldg-1".into(), semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY);
     }
 }
@@ -156,7 +156,7 @@ fn storeys(i: &mut Import<'_>) {
         for (index, row) in rows.into_iter().enumerate() {
             let level = row.level.unwrap_or(index as i32 - datum as i32);
             let height = row.height.or_else(|| above.get(index).map(|next| next - row.elevation)).unwrap_or(3.0);
-            i.model.storeys.insert(row.id.clone(), Storey { building: building.clone(), name: row.name, level, height, cut_height: None });
+            i.model.storeys.cold_insert(row.id.clone(), Storey { building: building.clone(), name: row.name, level, height, cut_height: None });
             i.storey_ids.insert(row.ifc, row.id.clone());
             i.ids.insert(row.ifc, row.id);
         }

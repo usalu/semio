@@ -95,7 +95,7 @@ async fn a_model_without_clash_sets_says_so_in_both_languages() {
 
 fn with_rule(violating: bool) -> (ModelSnapshot, ModelInference) {
     let (mut snapshot, mut inference) = frame();
-    snapshot.rules.insert("r-1".into(), Rule { name: "Door width".into(), kind: RuleKind::MinDoorWidth, limit: 0.9, severity: RuleSeverity::Warning, scope: RuleScope::all() });
+    snapshot.rules.cold_insert("r-1".into(), Rule { name: "Door width".into(), kind: RuleKind::MinDoorWidth, limit: 0.9, severity: RuleSeverity::Warning, scope: RuleScope::all() });
     let violations = if violating { vec![RuleFinding { element: "w-1".into(), measured: 0.8, limit: 0.9, storey: "st-0".into() }] } else { Vec::new() };
     inference.rule_results.insert("r-1".into(), RuleResult { checked: 4, violations });
     (snapshot, inference)
@@ -132,9 +132,9 @@ fn with_issues() -> ModelSnapshot {
         clash: Some(ClashRef { set: "cs-frame".into(), first: "b-1".into(), second: "c-1".into() }).filter(|_| viewpoint),
         viewpoint: viewpoint.then(|| semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::IssueViewpoint { camera: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewCamera { target: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }, section: None, isolate: Vec::new() }),
     };
-    snapshot.issues.insert("i-1".into(), issue("Beam hits column", IssueStatus::Open, &["b-1", "c-1"], true));
-    snapshot.issues.insert("i-2".into(), issue("Slab edge", IssueStatus::Closed, &[], false));
-    snapshot.issue_comments.insert("ic-1".into(), IssueComment { issue: "i-1".into(), author: "AB".into(), date: "2026-10-09T09:00:00Z".into(), text: "Looking at it.".into() });
+    snapshot.issues.cold_insert("i-1".into(), issue("Beam hits column", IssueStatus::Open, &["b-1", "c-1"], true));
+    snapshot.issues.cold_insert("i-2".into(), issue("Slab edge", IssueStatus::Closed, &[], false));
+    snapshot.issue_comments.cold_insert("ic-1".into(), IssueComment { issue: "i-1".into(), author: "AB".into(), date: "2026-10-09T09:00:00Z".into(), text: "Looking at it.".into() });
     snapshot
 }
 

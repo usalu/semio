@@ -417,8 +417,12 @@ members = [
     "🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
     "🔨️modules/🛠️tool-machine/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🌀️rigid/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/⚙️engine/🏗️solid-topology/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🏗️solid-transaction/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧬️kernel-contract/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/🪅️shape-value/📦️packages/🦀️rust",
@@ -427,6 +431,8 @@ members = [
     "🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪟️axial-face-preview/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪡️spline-trim/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/📸️representation/〰️polynomial/📦️packages/🦀️rust",
@@ -817,6 +823,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧩️component/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📐️projection/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️laws/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust",
@@ -988,6 +995,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗂️registry/📦️packages/🦀️rust",
@@ -1185,6 +1193,12 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
     [workspace.dependencies.semio-framework-3d-brep-tessellation]
     path = "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust"
 
+    [workspace.dependencies.semio-framework-3d-brep-axial-face-preview]
+    path = "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪟️axial-face-preview/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-spline-trim]
+    path = "🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪡️spline-trim/📦️packages/🦀️rust"
+
     [workspace.dependencies.semio-framework-3d-brep-validation]
     path = "🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust"
 
@@ -1205,6 +1219,18 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-3d-brep-engine]
     path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-native-registry]
+    path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-solid-topology]
+    path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/🏗️solid-topology/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-solid-transaction]
+    path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🏗️solid-transaction/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-3d-brep-spline-construction]
+    path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-3d-brep-kernel-contract]
     path = "🔨️modules/🧊️3d/📐️brep/⚙️engine/🧬️kernel-contract/📦️packages/🦀️rust"

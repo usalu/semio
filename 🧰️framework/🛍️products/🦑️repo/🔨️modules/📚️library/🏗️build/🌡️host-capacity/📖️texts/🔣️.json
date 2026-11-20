@@ -10,6 +10,10 @@
       "en": "Waiting for host capacity was cancelled by {signal}",
       "de": "Das Warten auf Rechnerkapazität wurde durch {signal} abgebrochen"
     },
+    "graph-yield-wait-cancelled": {
+      "en": "Waiting for the next graph generation was cancelled by {signal}",
+      "de": "Das Warten auf die nächste Graph-Generation wurde durch {signal} abgebrochen"
+    },
     "farm-wait-cancelled": {
       "en": "Waiting for farm capacity was cancelled",
       "de": "Das Warten auf Farm-Kapazität wurde abgebrochen"

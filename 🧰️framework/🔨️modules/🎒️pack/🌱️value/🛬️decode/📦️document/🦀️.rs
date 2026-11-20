@@ -36,13 +36,23 @@ fn segment_one<S:RetainedWireByteSource+?Sized>(cursor:&mut Segment,input:&S,ran
  }
 }
 impl RetainedDocumentDriver{
+ fn close_step_unpaid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{
+  let grant=effect.grant();self.last_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  self.last_work=1;
+  if !self.ids.is_empty(){if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.ids.pop();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+  if !self.ids.terminal_is_empty(){let released=match self.ids.release_empty_page(&mut effect.nested(grant)).result{Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(step))=>step.released_allocation_bytes,Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>0,Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Work(error))=>return Err(PackRefusal::from(error)),Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Release(error))=>return Err(paged(error))};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:released,..Default::default()}))}
+  if !self.value.terminal_is_empty(){return Ok(partial_close(self.value.close_step(grant.maximum_items,grant.maximum_release_bytes)?,grant.maximum_items))}
+  if !self.catalog.terminal_is_empty(){return Ok(partial_close(self.catalog.close_step(grant.maximum_items,&mut effect.nested(grant)).map_err(paged)?,grant.maximum_items))}
+  if !self.segment.terminal_is_empty(){return Ok(partial_close(self.segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
+  if !self.chunk_segment.terminal_is_empty(){return Ok(partial_close(self.chunk_segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
+  self.anchor.close_step();self.event=None;self.document_byte=None;self.pending_id=None;self.superblock=None;self.verified=None;self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:grant.maximum_items.min(1),..Default::default()}))
+ }
  pub(crate) fn last_turn_work(&self)->u64{self.last_work}
  /// 📦️ Keeps full Pack verification and chunk replay while selecting an ordinary Record root.
  pub fn record(limits:PackLimits,length:usize,maximum:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,false,effect)}
  fn declared(limits:PackLimits,length:usize,maximum:usize,intrinsic:bool,effect:&mut RetainedAllocationEffect<'_>)->Result<Self,PackRefusal>{
   let mut segment=Segment::try_new(limits.clone(),maximum)?;let mut chunk_segment=match Segment::try_new(limits.clone(),maximum){Ok(cursor)=>cursor,Err(error)=>{while segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
-  let decoded=usize::try_from(limits.max_total_alloc.min(limits.max_file_len)).unwrap_or(usize::MAX).max(length);let symbols=length.min(limits.max_symbols as usize);let chunks=length.min(usize::try_from(limits.max_items).unwrap_or(usize::MAX));
-  let mut catalog=match Catalog::try_new(limits.clone(),symbols,decoded,decoded,chunks,maximum){Ok(cursor)=>cursor,Err(error)=>{while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(catalog_fault(error))}};
+  let mut catalog=match Catalog::from_document_limits(limits.clone(),length,maximum){Ok(cursor)=>cursor,Err(error)=>{while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(catalog_fault(error))}};
   let value=match if intrinsic{Value::try_new_intrinsic(limits,maximum)}else{Value::try_new(limits,maximum)}{Ok(cursor)=>cursor,Err(error)=>{let grant=effect.grant();while catalog.close_step(1,&mut effect.nested(grant)).map_err(paged)?!=Close::Complete{}while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
   Ok(Self{anchor:Anchor::new(),segment,chunk_segment,catalog,value,ids:Default::default(),phase:Phase::Anchor,offset:0,chunk_offset:0,input_work:0,source_complete:false,chunk_complete:false,superblock:None,verified:None,event:None,document_byte:None,body_ingress:0,sealed:false,intrinsic,schema_index:0,schema_hash:semio_framework_hash::Hasher::new(),chunks:Chunks::None,pending_id:None,chunk_hash:semio_framework_hash::Hasher::new(),closed:false,last_work:0})
  }
@@ -149,15 +159,10 @@ impl RetainedValueDriver for RetainedDocumentDriver{
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PackRefusal>{
-  let grant=effect.grant();self.last_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  self.last_work=1;
-  if !self.ids.is_empty(){if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.ids.pop();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  if !self.ids.terminal_is_empty(){let released=match self.ids.release_empty_page(&mut effect.nested(grant)).result{Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(step))=>step.released_allocation_bytes,Ok(semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied)=>0,Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Work(error))=>return Err(PackRefusal::from(error)),Err(semio_framework_value_persistent::list::PagedListReleaseFailure::Release(error))=>return Err(paged(error))};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:released,..Default::default()}))}
-  if !self.value.terminal_is_empty(){return Ok(partial_close(self.value.close_step(grant.maximum_items,grant.maximum_release_bytes)?,grant.maximum_items))}
-  if !self.catalog.terminal_is_empty(){return Ok(partial_close(self.catalog.close_step(grant.maximum_items,&mut effect.nested(grant)).map_err(paged)?,grant.maximum_items))}
-  if !self.segment.terminal_is_empty(){return Ok(partial_close(self.segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
-  if !self.chunk_segment.terminal_is_empty(){return Ok(partial_close(self.chunk_segment.close_step(grant.maximum_items,grant.maximum_release_bytes),grant.maximum_items))}
-  self.anchor.close_step();self.event=None;self.document_byte=None;self.pending_id=None;self.superblock=None;self.verified=None;self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:grant.maximum_items.min(1),..Default::default()}))
+  let before=effect.performed_work();let step=self.close_step_unpaid(effect)?;
+  let recorded=effect.performed_work()-before;let owed=u128::from(self.last_work).saturating_sub(recorded);
+  if owed>0&&!effect.performed(u64::try_from(owed).map_err(|_|PackRefusal::from(ValueError::literal(ValueRefusalKind::WorkLimit,"retained Document close work does not fit one effect")))?)?{return Err(PackRefusal::from(ValueError::literal(ValueRefusalKind::WorkLimit,"retained Document close exceeded its original work")))}
+  self.last_work=u64::try_from(recorded+owed).unwrap_or(u64::MAX);Ok(step)
  }
  fn terminal_is_empty(&self)->bool{self.closed&&self.ids.terminal_is_empty()&&self.value.terminal_is_empty()&&self.catalog.terminal_is_empty()&&self.segment.terminal_is_empty()&&self.chunk_segment.terminal_is_empty()}
 }

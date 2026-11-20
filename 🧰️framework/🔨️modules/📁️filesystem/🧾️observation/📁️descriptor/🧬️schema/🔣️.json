@@ -869,6 +869,7 @@
         "numericDescriptor": "private",
         "receiver": "exact-live-object",
         "entryProof": "issued-live-parent-and-name",
+        "rosterMatch": "all-native-names-exact-membership-and-cardinality",
         "children": "accepted-before-close-and-drained",
         "unlink": "fresh-name-and-descriptor-cas",
         "rootAuthority": "ordinary-filesystem-capability-only",
@@ -1446,6 +1447,22 @@
           "probePath": 2097152,
           "probeNoFollow": true,
           "directoryUnlinkLinks": "zero",
+          "statx": {
+            "symbol": "statx",
+            "bytes": 256,
+            "flags": 2304,
+            "requiredMask": 967,
+            "mask": 0,
+            "links": 16,
+            "mode": 28,
+            "inode": 32,
+            "size": 40,
+            "ctime": 96,
+            "mtime": 112,
+            "deviceMajor": 136,
+            "deviceMinor": 140,
+            "timestampNanoseconds": 8
+          },
           "nameOffset": 19,
           "recordLengthOffset": 16,
           "nameTerminator": "first-null-inside-record",
@@ -3165,22 +3182,6 @@
           "failure": "retain-prior-and-stage-without-rollback-or-unlink"
         },
         "finalFence": "resource-free-descriptor-relative-nofollow-seven-fields-after-all-file-directory-and-publication-library-closes",
-        "linuxStatx": {
-          "symbol": "statx",
-          "bytes": 256,
-          "flags": 2304,
-          "requiredMask": 967,
-          "mask": 0,
-          "links": 16,
-          "mode": 28,
-          "inode": 32,
-          "size": 40,
-          "ctime": 96,
-          "mtime": 112,
-          "deviceMajor": 136,
-          "deviceMinor": 140,
-          "timestampNanoseconds": 8
-        },
         "append": "same-current-entry-exact-original-size-offset-bounded-total-no-truncate",
         "appendFailure": "retain-partial-prefix-for-explicit-domain-current-metadata-recovery"
       }
@@ -4106,6 +4107,19 @@
           "drained": false
         }
       ]
+    },
+    "RelativeLinuxScanStatxCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "mode", "links", "size", "scan", "publication"],
+      "properties": {
+        "id": {"type": "string"},
+        "mode": {"type": "integer", "minimum": 0, "maximum": 65535},
+        "links": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+        "size": {"type": "integer", "minimum": 0},
+        "scan": {"type": "boolean"},
+        "publication": {"type": "boolean"}
+      }
     },
     "RelativeFilePublicationLinuxStatxCase": {
       "type": "object",

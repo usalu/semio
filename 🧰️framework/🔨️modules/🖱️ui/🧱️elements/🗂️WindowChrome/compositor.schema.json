@@ -7,8 +7,8 @@
     "clippedOwner",
     "markerOnly",
     "fractional",
+    "labelChange",
     "disabled",
-    "nativeSeams",
     "cellFrames",
     "interlock"
   ],
@@ -61,6 +61,16 @@
             "uniqueItems": true
           }
         }
+      }
+    },
+    "labelChange": {
+      "type": "object",
+      "required": ["initial", "updated", "expectedOverlays"],
+      "additionalProperties": false,
+      "properties": {
+        "initial": { "type": "string" },
+        "updated": { "type": "string" },
+        "expectedOverlays": { "const": 1 }
       }
     },
     "overlay": {
@@ -140,50 +150,6 @@
         }
       }
     },
-    "nativeSeams": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "name",
-          "orientation",
-          "dir",
-          "first",
-          "second",
-          "color"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "orientation": {
-            "enum": [
-              "horizontal",
-              "vertical"
-            ]
-          },
-          "dir": {
-            "enum": [
-              "ltr",
-              "rtl"
-            ]
-          },
-          "first": {
-            "type": "string"
-          },
-          "second": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "secondContent": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "cellFrames": {
       "type": "object",
       "required": [
@@ -191,7 +157,7 @@
         "cells",
         "expectedOverlays",
         "rowPaths",
-        "seams"
+        "hoveredCellPaths"
       ],
       "additionalProperties": false,
       "properties": {
@@ -220,46 +186,12 @@
           },
           "minItems": 4
         },
-        "seams": {
+        "hoveredCellPaths": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "orientation",
-              "dir",
-              "first",
-              "second",
-              "color"
-            ],
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "orientation": {
-                "enum": [
-                  "horizontal",
-                  "vertical"
-                ]
-              },
-              "dir": {
-                "enum": [
-                  "ltr",
-                  "rtl"
-                ]
-              },
-              "first": {
-                "type": "string"
-              },
-              "second": {
-                "type": "string"
-              },
-              "color": {
-                "type": "string"
-              }
-            }
-          }
+            "type": "string"
+          },
+          "minItems": 4
         }
       }
     },

@@ -1,0 +1,18 @@
+{
+  "evaluation": {
+    "sink": {"in": {"shape": {"handle": "solid-box"}}, "out": {}},
+    "record": {"out": {"bundle": {"$schema": "dictionary", "nested": [{"handle": "edge-loop"}, {"$schema": "vector", "x": 1, "y": 0, "z": 0}], "note": "solid-fake"}}},
+    "analysis": {"in": {"shape": {"handle": "solid-box"}}, "out": {"area": {"$schema": "number", "value": 6}}}
+  },
+  "arrows": [
+    {"direction":[2,0,0],"length":2},
+    {"direction":[0,-3,0],"length":3},
+    {"direction":[1,2,2],"length":3},
+    {"direction":[0,0,0],"length":0}
+  ],
+  "expected": {
+    "sink": [["shape", 0, "solid-box"]],
+    "record": [["bundle", 0, "edge-loop"], ["bundle", 1, "vector"]],
+    "analysis": []
+  }
+}

@@ -43,11 +43,15 @@ use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 /// 📄 Serializes one or more manifold solids from `body` to STEP Part 21 (AP203 subset).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn write_step(body: &Body, solids: &[SolidId]) -> Result<String, StepError> {
+    write_step_with_length_prefix(body, solids, ".MILLI.")
+}
+
+fn write_step_with_length_prefix(body: &Body, solids: &[SolidId], length_prefix: &str) -> Result<String, StepError> {
     if solids.is_empty() {
         return Err(StepError::Syntax("no solids to export".to_string()));
     }
     let mut ctx = StepWriteContext::new();
-    let repr_context_id = ctx.write_geometric_context();
+    let repr_context_id = ctx.write_geometric_context(length_prefix);
     let product_ids = ctx.write_product_structure();
     let mut brep_ids = Vec::new();
     for &solid_id in solids {
@@ -55,7 +59,7 @@ pub fn write_step(body: &Body, solids: &[SolidId]) -> Result<String, StepError> 
     }
     let items: Vec<String> = brep_ids.iter().map(|id| format!("#{id}")).collect();
     let shape_repr_id = ctx.next_id();
-    ctx.write_entity(shape_repr_id, "ADVANCED_BREP_SHAPE_REPRESENTATION", &format!("'semio export', ({},), #{repr_context_id})", items.join(", ")));
+    ctx.write_entity(shape_repr_id, "ADVANCED_BREP_SHAPE_REPRESENTATION", &format!("'semio export', ({}), #{repr_context_id})", items.join(", ")));
     let prod_def_shape_id = ctx.next_id();
     ctx.write_entity(prod_def_shape_id, "PRODUCT_DEFINITION_SHAPE", &format!("'','',#{})", product_ids.definition));
     let shape_def_repr_id = ctx.next_id();
@@ -80,6 +84,10 @@ pub fn read_step(text: &str) -> Result<Body, StepError> {
 mod writer;
 use writer::*;
 
+#[path = "🧊️retained-box/🦀️.rs"]
+mod retained_box;
+pub use retained_box::{StepBox, StepBoxDecode};
+
 #[path = "📖️entity-parsing/🦀️.rs"]
 mod entity_parsing;
 use entity_parsing::*;
@@ -98,8 +106,12 @@ mod tests;
 
 /// 📤️ STEP format-owned geometry writer over the general mathematical engine.
 pub fn export_step(kernel: &semio_framework_3d_brep_engine::Brep, shapes: &[semio_framework_3d_brep_engine::GeometryHandle]) -> Result<String,semio_framework_3d_brep_engine::BrepError> {
+    export_step_with_length_prefix(kernel, shapes, ".MILLI.")
+}
+
+fn export_step_with_length_prefix(kernel: &semio_framework_3d_brep_engine::Brep, shapes: &[semio_framework_3d_brep_engine::GeometryHandle], length_prefix: &str) -> Result<String,semio_framework_3d_brep_engine::BrepError> {
     let solids = shapes.iter().map(|shape| kernel.geometry_solid(shape)).collect::<Result<Vec<_>,_>>()?;
-    write_step(kernel.representation(),&solids).map_err(|error| semio_framework_3d_brep_engine::BrepError::Operation(error.to_string()))
+    write_step_with_length_prefix(kernel.representation(),&solids,length_prefix).map_err(|error| semio_framework_3d_brep_engine::BrepError::Operation(error.to_string()))
 }
 /// 📥️ STEP format-owned reader preserves previously issued geometry handles.
 pub fn import_step(kernel: &mut semio_framework_3d_brep_engine::Brep, text: &str) -> Result<Vec<semio_framework_3d_brep_engine::GeometryHandle>,semio_framework_3d_brep_engine::BrepError> {
@@ -108,11 +120,19 @@ pub fn import_step(kernel: &mut semio_framework_3d_brep_engine::Brep, text: &str
 }
 /// 📤️ Owner-supplied STEP solid export codec.
 pub struct StepSolidExporter;
+/// 🌐️ Writes solids whose model coordinates are expressed in metres.
+pub struct StepMetresSolidExporter;
 /// 📥️ Owner-supplied STEP solid import codec.
 pub struct StepSolidImporter;
 impl semio_framework_3d_brep_engine::SolidExporter for StepSolidExporter {
     async fn format_kind(&self) -> &'static str { "step" }
     async fn export(&self,kernel:&semio_framework_3d_brep_engine::Brep,shapes:&[semio_framework_3d_brep_engine::GeometryHandle],_:f64) -> Result<Vec<u8>,semio_framework_3d_brep_engine::BrepError> { export_step(kernel,shapes).map(String::into_bytes) }
+}
+impl semio_framework_3d_brep_engine::SolidExporter for StepMetresSolidExporter {
+    async fn format_kind(&self) -> &'static str { "step" }
+    async fn export(&self,kernel:&semio_framework_3d_brep_engine::Brep,shapes:&[semio_framework_3d_brep_engine::GeometryHandle],_:f64) -> Result<Vec<u8>,semio_framework_3d_brep_engine::BrepError> {
+        export_step_with_length_prefix(kernel,shapes,"$").map(String::into_bytes)
+    }
 }
 impl semio_framework_3d_brep_engine::SolidImporter for StepSolidImporter {
     async fn format_kind(&self) -> &'static str { "step" }

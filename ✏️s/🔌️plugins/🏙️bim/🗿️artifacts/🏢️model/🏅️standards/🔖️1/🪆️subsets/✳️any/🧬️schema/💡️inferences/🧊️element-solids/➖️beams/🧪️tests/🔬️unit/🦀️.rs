@@ -125,9 +125,9 @@ async fn an_inclined_beam_climbs_linearly_and_keeps_its_section_perpendicular() 
 }
 
 fn joined(snapshot: &mut ModelSnapshot, at: [(f64, f64); 2], side: f64) {
-    snapshot.column_types.insert("ct-join".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ColumnType { name: "Join".into(), profile: Profile::Rectangle { width: side, depth: side }, material: "m-concrete".into() });
+    snapshot.column_types.cold_insert("ct-join".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ColumnType { name: "Join".into(), profile: Profile::Rectangle { width: side, depth: side }, material: "m-concrete".into() });
     for (index, (x, y)) in at.into_iter().enumerate() {
-        snapshot.columns.insert(format!("c-{index}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column { storey: "st-ground".into(), column_type: "ct-join".into(), position: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x, y }, rotation: 0.0, tilt: None, base_offset: 0.0, top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { offset: 0.0 }, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: String::new() });
+        snapshot.columns.cold_insert(format!("c-{index}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column { storey: "st-ground".into(), column_type: "ct-join".into(), position: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x, y }, rotation: 0.0, tilt: None, base_offset: 0.0, top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { offset: 0.0 }, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: String::new() });
     }
 }
 

@@ -24,6 +24,7 @@ semio_framework_value_derive::value_codec!{#[derive(NativeReceive)]#[value(crate
 
 pub mod native_decoding {
     pub use semio_framework_value_native_decoding::native_decoding::*;
+    pub use semio_framework_value_native_storage::{NativeOwnedStorage,NativeSeedTemplate};
     pub use super::owned;
     pub use super::owned::{NativeReceive, NativeReceiver, NativeSharedSlots};
 }

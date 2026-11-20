@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "kind": "resize",
+      "before": { "x": 14, "y": 20, "width": 32, "height": 16, "rotation": 0.25 },
+      "ticks": [{ "sx": 1.25, "sy": 1.25 }, { "sx": 1.2, "sy": 1.2 }, { "sx": 1, "sy": 1 }],
+      "expected": { "x": 6, "y": 16, "width": 48, "height": 24, "rotation": 0.25 }
+    },
+    {
+      "kind": "rotate",
+      "before": { "x": 6, "y": 16, "width": 48, "height": 24, "rotation": 0.25 },
+      "ticks": [{ "angle": 0.125 }, { "angle": 0.25 }, { "angle": 0 }],
+      "expected": { "x": 6, "y": 16, "width": 48, "height": 24, "rotation": 0.625 }
+    },
+    {
+      "kind": "cancel",
+      "before": { "x": 6, "y": 16, "width": 48, "height": 24, "rotation": 0.625 },
+      "ticks": [{ "dx": 30, "dy": 0 }, { "reason": "captureLost" }],
+      "expected": { "x": 6, "y": 16, "width": 48, "height": 24, "rotation": 0.625 }
+    }
+  ]
+}

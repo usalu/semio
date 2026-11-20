@@ -131,14 +131,14 @@ fn replay_latch_steps(session: &mut FlowEvalSession, steps: &[serde_json::Value]
     for step in steps {
         let window = text(&step["window"]);
         match text(&step["step"]) {
-            "arm" => assert!(session.arm_window_tick(window), "{window}: arm"),
-            "begin" => session.begin_window_tick(window),
-            "outcome" => session.note_window_tick_outcome(window, tick_is_unfinished(step["more"].as_bool().unwrap(), step["parked"].as_u64().unwrap() as usize)),
-            "inFlight" => session.note_window_extensions_in_flight(window, step["count"].as_u64().unwrap() as usize),
-            "settle" => resolve_tessellate(&FlowTessellateResolve { window_id: window.into(), window_kind_id: "procedural-view-preview".into(), node_hash: 1, output_json: r#"{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3}"#.into() }, session),
+            "arm" => assert!(session.arm_window_tick(window, crate::preview_reply::TURN).expect("window tick admission").0, "{window}: arm"),
+            "begin" => session.begin_window_tick(window, crate::preview_reply::TURN).map(drop).expect("original window latch turn"),
+            "outcome" => session.note_window_tick_outcome(window, tick_is_unfinished(step["more"].as_bool().unwrap(), step["parked"].as_u64().unwrap() as usize), crate::preview_reply::TURN).map(drop).expect("original window latch turn"),
+            "inFlight" => session.note_window_extensions_in_flight(window, step["count"].as_u64().unwrap() as usize, crate::preview_reply::TURN).map(drop).expect("original window latch turn"),
+            "settle" => { session.settle_window_extension(window, crate::preview_reply::TURN).expect("original window settlement"); },
             "owe" => owe_attached_previews(session, &mut link, &[(window, "procedural-view-preview")]),
             "abort" => {
-                session.cancel_preview_evaluation(window);
+                crate::preview_reply::cancel(session, window);
             }
             other => panic!("the fixture named an unknown latch step {other}"),
         }
@@ -253,23 +253,23 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
     assert_eq!(idle["progress"]["ratio"], serde_json::json!(1.0));
 
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
-    session.note_window_tick_outcome("preview-1", true);
+    session.note_window_tick_outcome("preview-1", true, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
 
     let mut frames = Vec::new();
     for round in 0..minimum {
-        session.arm_window_tick("preview-1");
-        session.begin_window_tick("preview-1");
-        session.note_window_extensions_in_flight("preview-1", 1);
+        session.arm_window_tick("preview-1", crate::preview_reply::TURN).expect("window tick admission").0;
+        session.begin_window_tick("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_extensions_in_flight("preview-1", 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         frames.push(published(&session, run.as_ref()));
         let more = if round + 1 == minimum { session.tick(&mut host, None) } else { true };
-        session.settle_window_extension("preview-1");
-        session.note_window_tick_outcome("preview-1", more);
+        session.settle_window_extension("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_tick_outcome("preview-1", more, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
         frames.push(published(&session, run.as_ref()));
     }
     while session.tick(&mut host, None) {
         frames.push(published(&session, run.as_ref()));
     }
-    session.note_window_tick_outcome("preview-1", false);
+    session.note_window_tick_outcome("preview-1", false, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
 
     let non_idle: Vec<&serde_json::Value> = frames.iter().filter(|frame| frame["phase"] != "idle").collect();
     let mut previous = f64::NEG_INFINITY;
@@ -303,14 +303,14 @@ fn an_abort_while_the_chain_is_live_settles_on_cancelled() {
     let mut host = semio_os_flow::FlowHost::default();
     let mut session = FlowEvalSession::new();
     assert!(session.sync(&host));
-    session.arm_window_tick("preview-1");
-    session.begin_window_tick("preview-1");
-    session.note_window_extensions_in_flight("preview-1", 1);
+    session.arm_window_tick("preview-1", crate::preview_reply::TURN).expect("window tick admission").0;
+    session.begin_window_tick("preview-1", crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    session.note_window_extensions_in_flight("preview-1", 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
     let live = published(&session, run.as_ref());
     assert_eq!(live["phase"], "computing");
     assert_eq!(live["cancellable"], true);
 
-    session.cancel_preview_evaluation("preview-1");
+    crate::preview_reply::cancel(&mut session, "preview-1");
     let cancelled = published(&session, run.as_ref());
     assert_eq!(cancelled["phase"], "cancelled", "the gesture's own verdict outranks every ledger");
     assert_eq!(cancelled["phaseLabel"]["en"], "Cancelled");

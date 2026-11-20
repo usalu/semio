@@ -79,6 +79,16 @@ export function parseRemoteCacheSlotsPathV1(pathname:string,defaultInstance:stri
 export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):(request:Request,peer?:string)=>Promise<Response>{
  const claims=options.claims??createClaimTableV1(),counters:RemoteCacheCountersV1={ac:row(),cas:row(),nx:row()},validation=options.validation??"complete",readOnly=options.readOnly===true,limit=options.maximumActionResultBytes??4194304,
   startedAt=(options.startedAt??new Date()).toISOString(),gate=options.gate??createFleetGateV1({tokens:{read:options.tokens.read,write:options.tokens.write}});
+ const publications=new Map<string,Promise<void>>();
+ const serializeResult=async<T>(namespace:string,key:string,operation:()=>Promise<T>):Promise<T>=>{
+  const address=namespace+"/"+key,previous=publications.get(address);
+  let release!:()=>void;
+  const complete=new Promise<void>(done=>{release=done;});
+  publications.set(address,complete);
+  await previous;
+  try{return await operation();}
+  finally{release();if(publications.get(address)===complete)publications.delete(address);}
+ };
  const bound=(access:FleetAccessV1|undefined,bytes:Uint8Array):boolean=>access===undefined||access.role==="static"||(access.content!=="-"&&fleetContentHashV1(bytes)===access.content);
  const authenticate=async(request:Request,url:URL,peer:string|undefined,write:boolean):Promise<Readonly<{denied:Response}>|Readonly<{access:FleetAccessV1|undefined}>>=>{
   const verdict=await gate.check({method:request.method,target:url.pathname+url.search,authorization:request.headers.get("authorization"),content:request.headers.get(FLEET_CONTENT_HEADER_V1),peer,sealed:isSealedRequestV1(request),roles:write?["cache-write"]:["cache-read","cache-write","admin"],tokens:write?["write"]:["read","write"],...(write?{refused:["read"]}:{})});
@@ -113,7 +123,13 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   try{
    const parsed=parseRemoteCacheActionResultV1(bytes);
    for(const value of[...parsed.references,...parsed.trees])if(!await options.store.has(namespace,"cas",value.hash))throw Error("blob left the store");
-  }catch{await options.store.remove(namespace,"ac",key);counter.stale++;counter.misses++;return text(404,"Not found");}
+  }catch{
+   await serializeResult(namespace,key,async()=>{
+    const current=await options.store.readBytes(namespace,"ac",key,limit);
+    if(current!==undefined&&Buffer.compare(current,bytes)===0)await options.store.remove(namespace,"ac",key);
+   });
+   counter.stale++;counter.misses++;return text(404,"Not found");
+  }
   counter.hits++;return new Response((method==="GET"?bytes:null) as BodyInit|null,{headers:{"content-type":"application/octet-stream","content-length":String(bytes.byteLength)}});
  };
  const answer=async(request:Request,body:RemoteCacheBodyV1,peer:string|undefined):Promise<Response>=>{
@@ -171,7 +187,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
   if(address.kind==="nx"&&length===null)return text(411,"Content-Length required");
   const declared=length===null?undefined:Number(length);
   if(declared!==undefined&&!Number.isSafeInteger(declared))return text(400,"Content-Length invalid");
-  let source:AsyncIterable<Uint8Array>=body.chunks,known=declared,fingerprint:string|undefined,unitShaped=false,prior:ReturnType<ProvenanceV1["of"]>;
+  let source:AsyncIterable<Uint8Array>=body.chunks,known=declared,action:Uint8Array|undefined;
   if(address.kind==="ac"&&validation!=="off"){
    if(declared!==undefined&&declared>limit){counter.rejected++;return text(413,"Action result exceeds the maximum size");}
    const parts:Uint8Array[]=[];let size=0;
@@ -181,8 +197,14 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
    if(!bound(access,bytes)){counter.rejected++;return text(400,"Content hash required and must match");}
    const verdict=await validateRemoteCacheActionResultV1(bytes,validation,blobs(address.namespace));
    if(!verdict.valid){counter.rejected++;return text(400,`Invalid action result: ${verdict.reason}`);}
-   if(signed&&options.provenance!==undefined){
-    const parsed=parseRemoteCacheStableResultV1(bytes,PROVENANCE_VOLATILE_OUTPUTS_V1);fingerprint=provenanceFingerprintV1([...parsed.stable,...parsed.trees].map(row=>row.hash));unitShaped=parsed.manifest;
+   action=bytes;source=(async function*(){yield bytes;})();known=size;
+  }
+  let nxHash:ReturnType<typeof createHash>|undefined;
+  if(address.kind==="nx"&&signed&&access!.content!=="-"){const hash=nxHash=createHash("sha256"),chunks=body.chunks;source=(async function*(){for await(const chunk of chunks){hash.update(chunk);yield chunk;}})();}
+  const commit=async()=>{
+   let fingerprint:string|undefined,unitShaped=false,prior:ReturnType<ProvenanceV1["of"]>;
+   if(action!==undefined&&signed&&options.provenance!==undefined){
+    const parsed=parseRemoteCacheStableResultV1(action,PROVENANCE_VOLATILE_OUTPUTS_V1);fingerprint=provenanceFingerprintV1([...parsed.stable,...parsed.trees].map(row=>row.hash));unitShaped=parsed.manifest;
     const held=await options.store.readBytes(address.namespace,"ac",address.key,limit),before=options.provenance.of(address.namespace,"ac",address.key),expect=request.headers.get("x-semio-expect");
     if(expect!==null&&held!==undefined&&expect!==createHash("sha256").update(held).digest("hex")){counter.conflicts++;return text(409,"Conflict: the head moved since it was read");}
     if(held!==undefined&&expect===null&&before?.origin!==access!.origin){
@@ -195,22 +217,20 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
     }
     prior=before;
    }
-   source=(async function*(){yield bytes;})();known=size;
-  }
-  let nxHash:ReturnType<typeof createHash>|undefined;
-  if(address.kind==="nx"&&signed&&access!.content!=="-"){const hash=nxHash=createHash("sha256"),chunks=body.chunks;source=(async function*(){for await(const chunk of chunks){hash.update(chunk);yield chunk;}})();}
-  const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader}}:{})});
-  if(nxHash!==undefined&&(outcome==="created"||outcome==="replaced")&&nxHash.digest("hex")!==access!.content){await options.store.remove(address.namespace,"nx",address.key);counter.rejected++;return text(400,"Content hash mismatch");}
-  if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint,unitShaped);
-  switch(outcome){
-   case "created":case "replaced":counter.puts++;if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
-   case "exists":if(address.kind==="nx"){counter.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
-   case "digest-mismatch":counter.rejected++;return text(400,"Digest mismatch");
-   case "length-mismatch":counter.rejected++;return text(400,"Content-Length mismatch");
-   case "too-large":counter.rejected++;return text(413,"Entry exceeds the maximum entry size");
-   case "capacity":counter.rejected++;return text(507,"Insufficient storage",{"retry-after":"5"});
-   case "aborted":return text(499,"Client closed request");
-  }
+   const outcome=await options.store.put(address.namespace,address.kind,address.key,source,{mode:mode(address.kind),verify:address.kind==="cas",declaredLength:known,...(slotHeader!==null&&address.kind!=="cas"?{slot:{slot:slotHeader}}:{})});
+   if(nxHash!==undefined&&(outcome==="created"||outcome==="replaced")&&nxHash.digest("hex")!==access!.content){await options.store.remove(address.namespace,"nx",address.key);counter.rejected++;return text(400,"Content hash mismatch");}
+   if(signed&&options.provenance!==undefined&&(outcome==="created"||outcome==="replaced")&&(prior===undefined||prior.origin===access!.origin||outcome==="created"))options.provenance.record(address.namespace,address.kind,address.key,access!.origin,fingerprint,unitShaped);
+   switch(outcome){
+    case "created":case "replaced":counter.puts++;if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
+    case "exists":if(address.kind==="nx"){counter.conflicts++;return text(409,"Conflict: cannot overwrite an existing cache entry");}if(address.kind!=="cas")claims.stored(address.namespace,address.kind,address.key);return text(200,"Stored");
+    case "digest-mismatch":counter.rejected++;return text(400,"Digest mismatch");
+    case "length-mismatch":counter.rejected++;return text(400,"Content-Length mismatch");
+    case "too-large":counter.rejected++;return text(413,"Entry exceeds the maximum entry size");
+    case "capacity":counter.rejected++;return text(507,"Insufficient storage",{"retry-after":"5"});
+    case "aborted":return text(499,"Client closed request");
+   }
+  };
+  return address.kind==="ac"?serializeResult(address.namespace,address.key,commit):commit();
  };
  return async(request,peer)=>{
   if(!gate.network(peer))return text(403,"Forbidden");
@@ -225,7 +245,7 @@ export function createRemoteCacheHandlerV1(options:RemoteCacheHandlerOptionsV1):
 export type RemoteCacheTlsV1=Readonly<{certificate:string;key:string}>;
 
 /** ⚙️ Authors one running server: where to listen, what to store, who may use it and what it checks. */
-export type RemoteCacheServerOptionsV1=Readonly<{fleet?:RemoteCacheFleetOptionsV1;peers?:FleetPeerReadThroughV1;allowWildcard?:boolean;mirror?:Readonly<{directory:string;maximumBytes?:number}>;hostStore?:import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1;directory:string;host:string;port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
+export type RemoteCacheServerOptionsV1=Readonly<{fleet?:RemoteCacheFleetOptionsV1;peers?:FleetPeerReadThroughV1;allowWildcard?:boolean;mirror?:Readonly<{directory:string;maximumBytes?:number}>;hostStore?:import("../../🗄️cas/🗃️store/🟦️.ts").CasStoreV1;directory:string;host:string;additionalHosts?:readonly string[];port:number;maximumBytes:number;maximumEntryBytes:number;maximumAgeDays:number;defaultInstance:string;tokens:RemoteCacheTokensV1;readOnly?:boolean;tls?:RemoteCacheTlsV1|undefined;validation?:RemoteCacheValidationV1;maximumActionResultBytes?:number;maintenanceSeconds?:number;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1|RemoteCacheRequestEventV1|Readonly<{stage:"listening";url:string}>|Readonly<{stage:"stopped"}>)=>void}>;
 
 /** 🛰️ A started server: its address, a live status and an orderly stop. */
 export interface RemoteCacheServerV1{readonly url:string;readonly port:number;readonly store:RemoteCacheStoreV1;readonly claims:ClaimTableV1;readonly stopped:Promise<void>;stop():Promise<void>}
@@ -240,13 +260,15 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
  const registry=options.fleet===undefined?undefined:createFleetRegistryV1({storeRoot:options.fleet.storeRoot,group:options.fleet.group,...(options.fleet.groups===undefined?{}:{groups:options.fleet.groups}),...(options.fleet.peerStores===undefined?{}:{peerStores:options.fleet.peerStores}),...(options.fleet.pinned===undefined?{}:{pinned:options.fleet.pinned}),...(options.fleet.registryTtlMilliseconds===undefined?{}:{ttlMilliseconds:options.fleet.registryTtlMilliseconds}),pinsPath:options.fleet.pinsPath??join(options.directory,"fleet","pins.json")});
  const verifier=registry===undefined||options.fleet===undefined?undefined:createFleetVerifierV1({registry,audience:"cache",adminOrigin:options.fleet.adminOrigin??`${options.fleet.group}-server`});
  const gate=createFleetGateV1({verifier,networks:options.fleet?.networks,home:options.fleet?.group,...(options.fleet?.inGroup===undefined?{}:{inGroup:options.fleet.inGroup}),tokens:{read:options.tokens.read,write:options.tokens.write}});
- if(!LOOPBACK.has(options.host)&&gate.open)throw Error("A token is required to listen beyond loopback (or fleet identities)");
- if(WILDCARD.has(options.host)&&options.fleet!==undefined&&options.allowWildcard!==true)throw Error("Listen on the fleet interface, not on a wildcard address");
+ const hosts=[...new Set([options.host,...(options.additionalHosts??[])])];
+ if(hosts.some(host=>!LOOPBACK.has(host))&&gate.open)throw Error("A token is required to listen beyond loopback (or fleet identities)");
+ if(hosts.some(host=>WILDCARD.has(host))&&options.fleet!==undefined&&options.allowWildcard!==true)throw Error("Listen on the fleet interface, not on a wildcard address");
  if(!INSTANCE.test(options.defaultInstance)||RESERVED.has(options.defaultInstance))throw Error("Valid default instance required");
  if(options.tls){for(const path of[options.tls.certificate,options.tls.key])if(!(await stat(path).catch(()=>undefined))?.isFile())throw Error(`TLS file required: ${path}`);}
  const root=join(options.directory,"v1");await mkdir(root,{recursive:true});
  const owner=await acquireRemoteCacheLockV1(root,REMOTE_CACHE_SERVER_LOCK_V1);
  if(owner.held)throw new RemoteCacheDirectoryBusyV1(options.directory);
+ const listeners:Awaited<ReturnType<typeof runtimeServeV1>>[]=[];
  let store:RemoteCacheStoreV1|undefined,timer:ReturnType<typeof setInterval>|undefined;
  const table=createClaimTableV1({journal:openClaimJournalV1(join(root,CLAIM_POLICY_V1.journalFile))});
  const provenance=await openProvenanceV1(options.directory);
@@ -257,10 +279,10 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
   store=await RemoteCacheStoreV1.open({directory:options.directory,...(options.hostStore?{host:options.hostStore}:{}),maximumBytes:options.maximumBytes,maximumEntryBytes:options.maximumEntryBytes,maximumAgeMilliseconds:options.maximumAgeDays*86400000,...(options.graceMilliseconds===undefined?{}:{graceMilliseconds:options.graceMilliseconds}),claimed:(namespace,kind,key)=>kind!=="cas"&&(table.claimed(namespace,kind,key)||options.claimed?.(namespace,kind,key)===true),...(options.signal?{signal:options.signal}:{}),...(options.onEvent?{onEvent:options.onEvent}:{})});
   const opened=store,handler=createRemoteCacheHandlerV1({store:opened,claims:table,gate,provenance,...(options.peers===undefined?{}:{peers:options.peers}),...(registry===undefined?{}:{fleetStatus}),...(options.mirror?{mirror:createMirrorHandlerV1(options.mirror)}:{}),tokens:options.tokens,defaultInstance:options.defaultInstance,...(options.readOnly===undefined?{}:{readOnly:options.readOnly}),...(options.validation===undefined?{}:{validation:options.validation}),...(options.maximumActionResultBytes===undefined?{}:{maximumActionResultBytes:options.maximumActionResultBytes}),...(options.onEvent?{onRequest:options.onEvent}:{})});
   const sealed=exchangeKey===undefined||options.fleet===undefined?undefined:createSealedHandlerV1({privateKey:exchangeKey,group:options.fleet.group,maximumBytes:options.maximumEntryBytes,handle:handler}),entry=async(request:Request,peer?:string):Promise<Response>=>{if(sealed!==undefined&&!gate.network(peer))return new Response("Forbidden\n",{status:403});return (await sealed?.(request,peer))??handler(request,peer);};
-  const server=await runtimeServeV1({hostname:options.host,port:options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:(request,peer)=>entry(request,peer)});
-  const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=server.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
+  for(const hostname of hosts)listeners.push(await runtimeServeV1({hostname,port:listeners[0]?.port??options.port,idleTimeoutSeconds:60,maximumRequestBodyBytes:options.maximumEntryBytes*2,...(options.tls?{tls:{certificate:options.tls.certificate,key:options.tls.key}}:{}),fetch:(request,peer)=>entry(request,peer)}));
+  const host=options.host.includes(":")&&!options.host.startsWith("[")?`[${options.host}]`:options.host,port=listeners[0]!.port,url=`${options.tls?"https":"http"}://${host}:${port}`;
   let finish!:()=>void;const stopped=new Promise<void>(resolve=>{finish=resolve;});let closing:Promise<void>|undefined;
-  const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);table.close();await server.stop(true);await opened.close();await provenance.flush();await owner.release();options.onEvent?.({stage:"stopped"});finish();})();
+  const stop=():Promise<void>=>closing??=(async()=>{if(timer)clearInterval(timer);table.close();await Promise.all(listeners.map(listener=>listener.stop(true)));await opened.close();await provenance.flush();await owner.release();options.onEvent?.({stage:"stopped"});finish();})();
   const maintenance=(options.maintenanceSeconds??0)*1000;
   if(maintenance>0){
    let running=false;
@@ -274,6 +296,7 @@ export async function startRemoteCacheServerV1(options:RemoteCacheServerOptionsV
   options.onEvent?.({stage:"listening",url});
   return Object.freeze({url,port,store:opened,claims:table,stopped,stop});
  }catch(error){
+  await Promise.allSettled(listeners.map(listener=>listener.stop(true)));
   await store?.close().catch(()=>{});await owner.release();throw error;
  }
 }

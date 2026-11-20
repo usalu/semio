@@ -41,26 +41,26 @@ fn run(storey: &str, system: MepSystem, shape: MepShape, path: &[(f64, f64, f64)
 }
 
 fn parameter(base: &mut ModelSnapshot, owner: &str, name: &str, value: &str) {
-    base.family_parameters.insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), FamilyParameter { family: owner.into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
+    base.family_parameters.cold_insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), FamilyParameter { family: owner.into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
 }
 
 fn over(base: &mut ModelSnapshot, owner: &str, name: &str, value: &str) {
-    base.component_overrides.insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), ComponentOverride { component: owner.into(), name: name.into(), value: value.into() });
+    base.component_overrides.cold_insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), ComponentOverride { component: owner.into(), name: name.into(), value: value.into() });
 }
 
 fn base() -> ModelSnapshot {
     let mut base = ModelSnapshot::default();
     for (id, level) in [("st", 0), ("up", 1)] {
-        base.storeys.insert(id.into(), Storey { building: "b".into(), name: id.into(), level, height: 3.0, cut_height: None });
+        base.storeys.cold_insert(id.into(), Storey { building: "b".into(), name: id.into(), level, height: 3.0, cut_height: None });
     }
-    base.buildings.insert("b".into(), decode(r#"{"site":"s","name":"House","origin":{"x":0,"y":0},"rotation":0,"elevation":0}"#));
-    base.wall_types.insert("wt".into(), decode(r#"{"name":"Brick","layers":[]}"#));
-    base.walls.insert("w".into(), wall("st"));
-    base.walls.insert("w2".into(), wall("st"));
-    base.walls.insert("wup".into(), wall("up"));
-    base.families.insert("table".into(), Family { name: "Table".into(), category: FamilyCategory::Furniture });
-    base.families.insert("basin".into(), Family { name: "Basin".into(), category: FamilyCategory::Plumbing });
-    base.families.insert("hea".into(), Family { name: "HEA".into(), category: FamilyCategory::Profile });
+    base.buildings.cold_insert("b".into(), decode(r#"{"site":"s","name":"House","origin":{"x":0,"y":0},"rotation":0,"elevation":0}"#));
+    base.wall_types.cold_insert("wt".into(), decode(r#"{"name":"Brick","layers":[]}"#));
+    base.walls.cold_insert("w".into(), wall("st"));
+    base.walls.cold_insert("w2".into(), wall("st"));
+    base.walls.cold_insert("wup".into(), wall("up"));
+    base.families.cold_insert("table".into(), Family { name: "Table".into(), category: FamilyCategory::Furniture });
+    base.families.cold_insert("basin".into(), Family { name: "Basin".into(), category: FamilyCategory::Plumbing });
+    base.families.cold_insert("hea".into(), Family { name: "HEA".into(), category: FamilyCategory::Profile });
     parameter(&mut base, "table", "width", "1.6 m");
     parameter(&mut base, "table", "depth", "0.8 m");
     parameter(&mut base, "table", "double", "2 * width");
@@ -68,11 +68,11 @@ fn base() -> ModelSnapshot {
     let mut basin = component("basin", 3.0, 0.4, "Basin");
     basin.host = Some("w".into());
     basin.elevation = 0.85;
-    base.components.insert("c-table".into(), component("table", 2.0, 3.0, "Table"));
-    base.components.insert("c-basin".into(), basin);
+    base.components.cold_insert("c-table".into(), component("table", 2.0, 3.0, "Table"));
+    base.components.cold_insert("c-basin".into(), basin);
     over(&mut base, "c-table", "width", "2 m");
     over(&mut base, "c-basin", "width", "0.5 m");
-    base.mep_elements.insert("m-duct".into(), run("st", MepSystem::Supply, MepShape::Duct { width: 0.3, height: 0.2 }, &[(1.0, 1.0, 2.5), (5.0, 1.0, 2.5)], "Duct"));
+    base.mep_elements.cold_insert("m-duct".into(), run("st", MepSystem::Supply, MepShape::Duct { width: 0.3, height: 0.2 }, &[(1.0, 1.0, 2.5), (5.0, 1.0, 2.5)], "Duct"));
     base
 }
 
@@ -163,7 +163,7 @@ fn a_component_changes_its_family_only_with_overrides_the_new_family_can_evaluat
     let fault = family_swap_fault(&base, "c-table", "basin");
     assert!(fault.is_none(), "basin has a width too");
     let mut lone = base.clone();
-    lone.families.insert("lamp".into(), Family { name: "Lamp".into(), category: FamilyCategory::Lighting });
+    lone.families.cold_insert("lamp".into(), Family { name: "Lamp".into(), category: FamilyCategory::Lighting });
     parameter(&mut lone, "lamp", "size", "0.3 m");
     assert_eq!(family_swap_fault(&lone, "c-table", "lamp").map(|fault| fault.field), Some("family".into()));
     over(&mut lone, "c-table", "depth", "double");
@@ -206,8 +206,8 @@ fn a_family_stays_while_a_component_places_it_and_cannot_become_a_profile() {
     let base = base();
     assert_eq!(refusal(&ModelMutation::DeleteFamily(DeleteFamily { id: "table".into() }), &base), ("mutation.target-referenced".into(), vec!["table".into()]));
     let mut free = base.clone();
-    free.components.retain(|_, row| row.family != "table");
-    free.component_overrides.retain(|_, row| row.component != "c-table");
+    free.components.cold_retain(|_, row| row.family != "table");
+    free.component_overrides.cold_retain(|_, row| row.component != "c-table");
     assert!(!free.components.is_empty());
     applied(&ModelMutation::DeleteFamily(DeleteFamily { id: "table".into() }), &free);
     let to_profile = ModelMutation::SetFamily(SetFamily { id: "table".into(), name: None, category: Some(FamilyCategory::Profile) });

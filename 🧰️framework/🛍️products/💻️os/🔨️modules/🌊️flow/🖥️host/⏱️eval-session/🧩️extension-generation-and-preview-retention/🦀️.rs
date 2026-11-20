@@ -79,7 +79,12 @@ impl FlowEvalSession {
     }
 
     /// 🧊️ Borrows the completed canonical mesh owned by this original session.
-    pub fn preview_mesh(&self,handle:&str)->Option<&MeshData>{self.preview_mesh_by_handle.get(handle)}
+    pub fn preview_mesh(&self,handle:&str)->Option<&MeshData>{self.preview_mesh_by_handle.get(handle).map(|entry|&entry.mesh)}
+
+    /// 🔎️ Borrows a completed mesh for this exact tessellation tolerance.
+    pub fn preview_mesh_for_tolerance(&self,handle:&str,tolerance:f64)->Option<&MeshData>{
+        self.preview_mesh_by_handle.get(handle).filter(|entry|entry.tolerance.to_bits()==tolerance.to_bits()).map(|entry|&entry.mesh)
+    }
 
     /// 📏️ Mesh-residency fingerprint the preview last published — see [`FlowEvalSessionState::published_preview_mesh_digest`].
     pub fn published_preview_mesh_digest(&self) -> u64 {
@@ -96,7 +101,7 @@ impl FlowEvalSession {
     /// 🪪️ Native scene construction borrows the exact indexed row only under its original cache epoch.
     pub fn preview_mesh_epoch(&self)->u64{self.preview_mesh_by_handle.mutation_epoch()}
     pub fn preview_mesh_slot_count(&self)->usize{self.preview_mesh_by_handle.slot_count()}
-    pub fn preview_mesh_at_slot(&self,slot:usize,epoch:u64)->Result<Option<(&str,&MeshData)>,ValueError>{if self.preview_mesh_by_handle.mutation_epoch()!=epoch{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview mesh source epoch changed"))}Ok(self.preview_mesh_by_handle.slot_entry(slot).map(|(handle,mesh)|(handle.as_str(),mesh)))}
+    pub fn preview_mesh_at_slot(&self,slot:usize,epoch:u64)->Result<Option<(&str,&MeshData)>,ValueError>{if self.preview_mesh_by_handle.mutation_epoch()!=epoch{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview mesh source epoch changed"))}Ok(self.preview_mesh_by_handle.slot_entry(slot).map(|(handle,entry)|(handle.as_str(),&entry.mesh)))}
 
 
     /// 🩺 Blocking validate-gate findings for `handle`, as a JSON array string.

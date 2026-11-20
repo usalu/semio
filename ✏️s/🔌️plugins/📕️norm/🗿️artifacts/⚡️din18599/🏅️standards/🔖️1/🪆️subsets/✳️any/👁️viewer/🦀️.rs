@@ -50,6 +50,7 @@ impl ArtifactViewer for Din18599Viewer {
     fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
         semio_s_plugin_norm_app_surface::norm_fault_notices()
     }
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Din18599Snapshot;
     type Mutation = semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
     type Config = NoConfig;
@@ -59,6 +60,14 @@ impl ArtifactViewer for Din18599Viewer {
     type Transient = crate::lanes::NormLaneTransient;
     type TransientMutation = crate::lanes::NormLaneTransientMutation;
     type Command = Din18599ViewCommand;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        Ok(semio_s_artifact_norm_din18599_model::genesis_din18599_child_pack(snapshot, slot, child_id))
+    }
 
     const DIALECT: Dialect = DIN18599_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DIN18599_DOCUMENT_SCHEMA;

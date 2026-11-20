@@ -30,12 +30,15 @@
         "pollMilliseconds": 250,
         "progressMilliseconds": 2000,
         "inflightName": "running.json",
+        "watchdogWriteMilliseconds": 10000,
+        "watchdogRecordBytes": 786432,
+        "watchdogCpuMaximum": 512,
         "cancelName": "cancel",
         "tailBytes": 16384,
         "mirrorLines": 200,
         "mirrorLineCharacters": 400,
         "refusalLineCharacters": 4000,
-        "sliceReport": {"directory": ".cache/f", "name": "slice-memory.json", "fileBytes": 65536},
+        "sliceReport": {"name": "slice-memory.json", "fileBytes": 65536},
         "mirrorBytes": 65536,
         "mirrorMilliseconds": 10000,
         "timingsKept": 40,
@@ -45,6 +48,8 @@
         "megabytesPerJob": 1536,
         "tailLines": 20,
         "failureWindowBytes": 1048576,
+        "failureEvidenceChunkBytes": 65536,
+        "failureEvidenceLines": 4,
         "failureNoise": ["^\\[script\\] \\{", "^\\[repository:command\\] still running after [0-9]+ s", "^\\[repo\\] still working after [0-9]+ s", "^Reading the project graph slice \\("],
         "previousLogSuffix": ".previous.log",
         "loopStableMilliseconds": 60000,
@@ -76,8 +81,77 @@
         }
       }
     },
-    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}}},
+    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"enum": ["stall", "overdue", "restart", "timeout", "cancel"]}}},
+    "StageStop": {"enum": ["timeout", "cancel", "stall", "overdue", "restart"]},
+    "StageLaunch": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "platform", "digest", "recipe", "prerequisites"],
+      "properties": {
+        "version": {"const": 1},
+        "platform": {"enum": ["macos", "linux", "windows"]},
+        "digest": {"$ref": "#/definitions/Hex"},
+        "recipe": {"$ref": "#/definitions/Hex"},
+        "prerequisites": {"type": "array", "maxItems": 64, "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["stage", "digest", "doneMs"],
+          "properties": {
+            "stage": {"type": "string", "minLength": 1, "maxLength": 80},
+            "digest": {"$ref": "#/definitions/Hex"},
+            "doneMs": {"$ref": "#/definitions/WatchdogInteger"},
+            "completion": {"$ref": "#/definitions/Hex"}
+          }
+        }}
+      }
+    },
     "Exit": {"type": "object", "additionalProperties": false, "required": ["exit", "signal", "spawnFailed", "endedMs"], "properties": {"exit": {"type": ["integer", "null"]}, "signal": {"type": ["string", "null"]}, "spawnFailed": {"type": "boolean"}, "endedMs": {"type": "integer"}}},
+    "Watchdog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "owner", "peakMegabytes", "progressAt", "stallAt", "armedAt", "progressKey", "phase", "phaseAt", "offset", "seen", "step", "holderSince", "holderEvidence", "semantics", "cpu"],
+      "properties": {
+        "version": {"const": 1},
+        "owner": {"$ref": "#/definitions/WatchdogDigest"},
+        "peakMegabytes": {"$ref": "#/definitions/WatchdogInteger"},
+        "progressAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "stallAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "armedAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "progressKey": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
+        "phase": {"enum": [null, "reading", "executing"]},
+        "phaseAt": {"$ref": "#/definitions/WatchdogInteger"},
+        "offset": {"$ref": "#/definitions/WatchdogInteger"},
+        "seen": {"$ref": "#/definitions/WatchdogSeen"},
+        "step": {
+          "type": "object", "additionalProperties": false, "required": ["movedAt", "identity", "seen"],
+          "properties": {
+            "movedAt": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogInteger"}]},
+            "identity": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
+            "seen": {"$ref": "#/definitions/WatchdogSeen"}
+          }
+        },
+        "holderSince": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogInteger"}]},
+        "holderEvidence": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
+        "semantics": {"type": "object", "maxProperties": 32, "additionalProperties": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]}},
+        "cpu": {"type": "array", "maxItems": 512, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/definitions/WatchdogInteger"}}},
+        "windows": {"$ref": "#/definitions/WindowsWatchdogSample"}
+      }
+    },
+    "WindowsWatchdogSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootBirth", "cpu"],
+      "properties": {
+        "rootBirth": {"$ref": "#/definitions/WindowsCreationTicks"},
+        "cpu": {"type": "array", "maxItems": 512, "items": {"type": "object", "additionalProperties": false, "required": ["pid", "birth", "kernel", "user"], "properties": {
+          "pid": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+          "birth": {"$ref": "#/definitions/WindowsCreationTicks"},
+          "kernel": {"$ref": "#/definitions/WatchdogInteger"},
+          "user": {"$ref": "#/definitions/WatchdogInteger"}
+        }}}
+      }
+    },
+    "WindowsCreationTicks": {"type": "string", "pattern": "^[1-9][0-9]{0,18}$"},
+    "WatchdogInteger": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "WatchdogDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "WatchdogSeen": {"type": "array", "maxItems": 4000, "items": {"$ref": "#/definitions/WatchdogDigest"}},
     "Human": {"type": "object", "additionalProperties": false, "required": ["version", "pid", "startedMs"], "properties": {"version": {"const": 1}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}}},
     "Stages": {
       "const": [
@@ -103,6 +177,7 @@
       "const": {
         "en": {
           "ready": "Ready: every stage is current.",
+          "sidecar-restarting": "Stage {stage} is waiting for the worker supervisor to restart with updated code.",
           "human-running": "A person is running the setup on this machine; this machine only observes.",
           "lease-held": "Another runner on this machine (process {holder}) holds the setup lease; this runner waits and observes.",
           "memory-low": "Not enough free memory for stage {stage} ({available} MB free, {needed} MB needed); waiting.",
@@ -119,7 +194,7 @@
           "disk-short": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}); the stage does not start until space is free there, checking again every minute.",
           "disk-collecting": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free: freeing space by priority now (derivable caches first, the image slack last), progress is in the log; the stage starts as soon as the need is free.",
           "disk-unmeasured": "Stage {stage}: the free space in {path} could not be measured ({reason}: {detail}); that is not the same as a full disk, so the stage starts anyway; the space gate of the stage and the write error itself still stop it.",
-          "disk-consumers": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}) and every automatic collection ran; nothing collectable remains. The largest consumers and what frees each: {consumers}. The stage does not start until space is free there, collecting and checking again every minute.",
+          "disk-consumers": "Stage {stage} needs {needed} {unit} free in {path} but only {available} {unit} are free ({resource}) after automatic collection. The largest consumers and collection commands: {consumers}. The stage does not start until space is free there, collecting and checking again every minute.",
           "loop-failed": "The readiness loop of this worker stopped with an error ({message}); it starts again in {seconds} seconds (try {count} in a row).",
           "spawn-failed": "Stage {stage} could not be started; retrying with back-off.",
           "interrupted": "Stage {stage} was stopped before it finished.",
@@ -127,6 +202,7 @@
         },
         "de": {
           "ready": "Bereit: jede Stufe ist aktuell.",
+          "sidecar-restarting": "Stufe {stage} wartet auf den Neustart des Worker-Aufsehers mit aktualisiertem Code.",
           "human-running": "Eine Person führt das Setup auf dieser Maschine aus; diese Maschine beobachtet nur.",
           "lease-held": "Ein anderer Läufer auf dieser Maschine (Prozess {holder}) hält die Setup-Sperre; dieser Läufer wartet und beobachtet.",
           "memory-low": "Zu wenig freier Speicher für Stufe {stage} ({available} MB frei, {needed} MB nötig); wartet.",
@@ -143,7 +219,7 @@
           "disk-short": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}); die Stufe startet erst, wenn dort Platz frei ist, und prüft jede Minute neu.",
           "disk-collecting": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei: Platz wird jetzt nach Priorität freigegeben (zuerst ableitbare Caches, der Image-Überhang zuletzt), der Fortschritt steht im Protokoll; die Stufe startet, sobald der Bedarf frei ist.",
           "disk-unmeasured": "Stufe {stage}: der freie Platz in {path} konnte nicht gemessen werden ({reason}: {detail}); das ist nicht dasselbe wie ein volles Laufwerk, daher startet die Stufe trotzdem; die Platzprüfung der Stufe und der Schreibfehler selbst halten sie weiterhin an.",
-          "disk-consumers": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}) und jede automatische Sammlung lief; es bleibt nichts Sammelbares. Die größten Verbraucher und was jeden freigibt: {consumers}. Die Stufe startet erst, wenn dort Platz frei ist, und sammelt und prüft jede Minute neu.",
+          "disk-consumers": "Stufe {stage} braucht {needed} {unit} frei in {path}, aber nur {available} {unit} sind frei ({resource}) nach der automatischen Bereinigung. Die größten Verbraucher und Befehle zur Bereinigung: {consumers}. Die Stufe startet erst, wenn dort Platz frei ist, und sammelt und prüft jede Minute neu.",
           "loop-failed": "Die Bereitschaftsschleife dieses Arbeiters ist mit einem Fehler beendet worden ({message}); sie startet in {seconds} Sekunden neu (Versuch {count} in Folge).",
           "spawn-failed": "Stufe {stage} konnte nicht gestartet werden; neuer Versuch mit Wartezeit.",
           "interrupted": "Stufe {stage} wurde vor dem Ende gestoppt.",
@@ -163,15 +239,15 @@
     },
     "Refusal": {
       "type": "object", "additionalProperties": false, "required": ["code", "en", "de"],
-      "properties": {"code": {"enum": ["human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
+      "properties": {"code": {"enum": ["sidecar-restarting", "human-running", "lease-held", "memory-low", "stage-failed", "tooling-compiler", "stage-timeout", "stage-stalled", "stage-stall-exhausted", "stage-code-changed", "stage-code-stale", "stage-step-overdue", "stage-holder-silent", "store-full", "disk-short", "disk-unmeasured", "disk-collecting", "disk-consumers", "loop-failed", "spawn-failed", "interrupted", "server"]}, "en": {"type": "string"}, "de": {"type": "string"}}
     },
     "Timings": {
-      "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: the last runs, newest last.",
+      "description": "Per-stage timings of one worker in the store under `v1/origins/<origin>/ready-timings.json`: newest last. A drained physical stage has no attempt count in this supervisor. A null digest means no verified launch digest was available. An observed end bounds the duration when the wrapper receipt is unavailable.",
       "type": "object", "additionalProperties": false, "required": ["version", "origin", "runs", "updatedMs"],
       "properties": {
         "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
         "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
-          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": "integer"}, "digest": {"type": "string"}}}}
+          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}}}}
       }
     },
     "Containment": {

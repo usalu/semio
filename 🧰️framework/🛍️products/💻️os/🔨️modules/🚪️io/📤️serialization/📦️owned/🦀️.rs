@@ -20,8 +20,20 @@ pub struct OwnedSerializerRequest {
  pub children:Option<Box<dyn OwnedSerializerChildren>>,
 }
 
+/// 🚦️ State of a serializer owned by a command that publishes the final result.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum OwnedSerializerStep {
+    Pending,
+    Complete,
+    Fault,
+    Cancelled,
+}
+
 /// 🌊️ A native serializer uses the same bounded job protocol as interactive commands.
 pub trait OwnedSerializerJob: semio_framework_job::InteractiveJob {
+    /// ▶️ Advances the registered producer under its parent command without issuing a second job reply.
+    fn advance_serialization(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSerializerStep;
+
  fn source_authority_matches(&self,generation:u64,revision:[u8;32])->bool;
  fn output(&self)->Option<&OwnedSerializerOutput>;
  fn take_output(&mut self,grant:RetainedCloneGrant)->Result<Option<OwnedSerializerOutputHandoff>,ValueError>;

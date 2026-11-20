@@ -41,3 +41,5 @@ record change-stock-label tag=13
 field payload bytes
 record replace-stock-solid tag=14
 field payload bytes
+record resize-stock tag=15
+field payload bytes

@@ -403,3 +403,16 @@ test("a re-entrant shared request for a lease the task already holds is no new o
  expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({requested:"outer:c"});
  later.release();early.release();
 });
+
+test("concurrent tasks of one process that queue for the rank-2 publication while the process holds a rank-3 core are refused after the grace period naming their own process; publishing before taking the core is never refused",async()=>{
+ const {directory,env}=scenario({rules:{outOfOrder:"observe",holdAndWait:"enforce",selfDeadlock:"enforce",cycle:"enforce"}});configure(env);
+ const shared=signal(),publication="middle:publication",core="inner:cpu/0";
+ const publish=(milliseconds:number)=>withLeaseTaskV1(async()=>{const lease=await acquireQueuedResourceLease({directory,resource:publication,mode:"exclusive",owner:"p"+Math.random().toString(36).slice(2,8),signal:shared});await tick(milliseconds);lease.release();});
+ const refusal=(start:number,milliseconds:number)=>(async()=>{await tick(start);try{await publish(milliseconds);return undefined;}catch(error){return error as {violation?:{kind:string;blockerSelf?:boolean;held:string;requested:string}};}})();
+ const before=await Promise.all([refusal(0,400),refusal(50,50),refusal(100,50)]);
+ expect(before).toEqual([undefined,undefined,undefined]);
+ await withLeaseTaskV1(async()=>{
+  const held=await acquireResourceLease({directory,resource:core,mode:"exclusive",signal:shared});
+  try{const [holder,refused]=await Promise.all([refusal(0,2500),refusal(100,50)]);expect(holder).toBeUndefined();expect(refused?.violation).toMatchObject({kind:"hold-and-wait",held:core,requested:publication,blockerSelf:true});}finally{held.release();}
+ });
+});

@@ -555,7 +555,7 @@
     "human": false,
     "lease": "free",
     "memoryOk": true,
-    "failure": null,
+    "failure": {"digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "nextAttemptMs": 900000},
     "now": 1000000,
     "restartPending": true
    }
@@ -698,5 +698,7 @@
     "legacyProcess": true
    }
   }
- ]
+ ],
+  "adoptedTransition": {"requested":"tools","physical":"workspace","indices":[5,4]},
+  "platformInputs": {"systems":["darwin","linux","win32"],"changes":[["node-installation","win32"],["node-locator","win32"],["linux-asset","linux"],["common-pin","all"]]}
 }

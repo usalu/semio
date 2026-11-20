@@ -4,14 +4,14 @@ import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,resourceLeaseRetirementIdlePolicyV1,resourceLeaseRetirementMessagesV1,finishResourceLeaseCleanupV1,openResourceLeaseDatabaseV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
 import { createHash, randomBytes } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,holdsSharedInProcessV1,leaseOrderPolicyV1,leaseTaskIdV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
+import {beginLeaseOrderV1,classifyLeaseResourceV1,forgetLeaseV1,currentLeaseLineageV1,heldLeasesV1,holdsSharedInProcessV1,leaseOrderPolicyV1,leaseTaskIdV1,leaseHolderOfV1,formatLeaseTimeoutV1,type LeaseOrderGuardV1} from "./🧭️order/🟦️.ts";
 export {LeaseOrderErrorV1,formatLeaseViolationV1,leaseInheritanceEnvironmentV1,leaseInvocationChainV1,otherLeaseHoldersV1,withLeaseTaskV1} from "./🧭️order/🟦️.ts";
 import {readIssuedResourceControlCapabilitiesV1,requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,noteAcceptedPhysicalCleanupProgressV1,readAcceptedPhysicalCleanupV1,requireIssuedResourceControlRefinementV1,requireIssuedResourceControlDescendantV1,withAcceptedPhysicalCleanupOperationV1,closeAcceptedPhysicalCleanupChildrenV1} from "./🦥️routing/🟦️.ts";
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import { appendFileSync, closeSync, lstatSync, openSync, statSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmdirSync, rmSync, statfsSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
-import {readLeaseQueueTicketV1,leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1,type LeaseFilePortsV1} from "./🪟️windows/🟦️.ts";
+import {readLeaseQueueTicketV1,leaseDatabaseReplacedV1,leaseDatabaseUnopenableBusyV1,leaseFileBusyV1,leaseFilePortsV1,leaseRemovalOptionsV1,leaseUnopenablePausesV1,settleLeaseFileV1,type LeaseFilePortsV1} from "./🪟️windows/🟦️.ts";
 
 /** 🛑️ The refusal texts load when a refusal happens, never at startup: every entry that takes a lease stays inside its module budget. */
 const refuseProcessV1 = (...input: Parameters<typeof import("../📖️texts/🟦️.ts").refuseProcessV1>): ReturnType<typeof import("../📖️texts/🟦️.ts").refuseProcessV1> => (createRequire(import.meta.url)("../📖️texts/🟦️.ts") as typeof import("../📖️texts/🟦️.ts")).refuseProcessV1(...input);
@@ -49,13 +49,48 @@ export function resourceLeasePathV1(directory: string, resource: string, ticket?
   return path;
 }
 
+/** 🚧️ A lease wait that ran out. The message stays `Resource lease timed out: <resource>`, which callers match; the bilingual `texts` (resource, mode, seconds waited, the holder's pid, command and age) are looked up in the lease registry when a boundary first reads them, so a try-lock that is meant to miss pays nothing. @see ./🧭️order/🟦️.ts */
+export class ResourceLeaseTimeoutErrorV1 extends Error {
+  readonly code = "SEMIO_LEASE_TIMEOUT";
+  readonly resource: string;
+  readonly mode: string;
+  readonly directory: string;
+  readonly waitedMilliseconds: number;
+  #texts: Readonly<{en: string; de: string}> | undefined;
+  constructor(request: Readonly<{directory: string; resource: string; mode?: string}>, waitedMilliseconds: number, cause?: unknown) {
+    super("Resource lease timed out: " + request.resource, cause === undefined ? undefined : {cause});
+    this.name = "ResourceLeaseTimeoutErrorV1";
+    this.resource = request.resource;
+    this.mode = request.mode ?? "exclusive";
+    this.directory = request.directory;
+    this.waitedMilliseconds = waitedMilliseconds;
+  }
+  #holder: {value: ReturnType<typeof leaseHolderOfV1>} | undefined;
+  get holder(): ReturnType<typeof leaseHolderOfV1> {
+    this.#holder ??= {value: leaseHolderOfV1(this.directory, this.resource, this.mode === "shared" ? "shared" : "exclusive")};
+    return this.#holder.value;
+  }
+  get texts(): Readonly<{en: string; de: string}> {
+    if (this.#texts === undefined) {
+      const holder = this.holder, seconds = Math.max(0, Math.round(this.waitedMilliseconds / 1000));
+      const row = {resource: this.resource, mode: this.mode, seconds, ...holder === undefined ? {} : {blockerPid: holder.pid, blockerHeldSeconds: holder.heldSeconds, ...holder.command === undefined ? {} : {blockerCommand: holder.command}, ...holder.self === true ? {blockerSelf: true as const} : {}}};
+      this.#texts = Object.freeze({en: formatLeaseTimeoutV1("en", row), de: formatLeaseTimeoutV1("de", row)});
+    }
+    return this.#texts;
+  }
+}
+/** 🏁️ The one place a lease request that ran out of time becomes an error: every wait of every lease class ends here, so every timeout is the typed bilingual refusal. */
+export function leaseTimeoutErrorV1(options: LeaseOptions, started: number, cause?: unknown): ResourceLeaseTimeoutErrorV1 {
+  return new ResourceLeaseTimeoutErrorV1(options, Date.now() - started, cause);
+}
+
 function remaining(options: LeaseOptions, started: number,cleanup?:CleanupLeaseScope): number {
   if(cleanup){const available=checkAcceptedPhysicalCleanupV1(cleanup.enrollment);if(options.control||options.signal!==readAcceptedPhysicalCleanupV1(cleanup.enrollment).cleanupSignal||options.directory!==cleanup.directory||options.resource!==cleanup.resource&&options.resource!==admissionResource)throw Error("Exact accepted cleanup lease request required");return Math.min(available,options.timeoutMs===undefined?Infinity:options.timeoutMs-(Date.now()-started));}
   options.signal.throwIfAborted();
   if (options.control && options.control.signal !== options.signal) throw Error("Original lease signal identity required");
   const original = options.control ? checkResourceLeaseControl(options.control) : null;
   const requested = options.timeoutMs === undefined ? Infinity : options.timeoutMs - (Date.now() - started);
-  if (options.timeoutMs !== undefined && options.timeoutMs > 0 && requested <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+  if (options.timeoutMs !== undefined && options.timeoutMs > 0 && requested <= 0) throw leaseTimeoutErrorV1(options,started);
   return Math.min(original ?? Infinity, requested);
 }
 
@@ -65,7 +100,7 @@ async function waitForLeaseContinuation(options:LeaseOptions,started:number,cont
  const interrupted=new Promise<never>((_,reject)=>{
   cancel=()=>reject(options.signal.reason);options.signal.addEventListener("abort",cancel,{once:true});
   const arm=(milliseconds:number):void=>{if(Number.isFinite(milliseconds))timer=setTimeout(()=>{
-   try{const left=remaining(options,started);if(left<=0)throw Error(`Resource lease timed out: ${options.resource}`);arm(left);}catch(error){reject(error);}
+   try{const left=remaining(options,started);if(left<=0)throw leaseTimeoutErrorV1(options,started);arm(left);}catch(error){reject(error);}
   },Math.max(1,Math.min(milliseconds,2147483647)));};
   arm(budget);if(options.signal.aborted)cancel();
  });
@@ -176,8 +211,9 @@ async function openLeaseDatabaseWaitingV1(path:string,options:LeaseOptions,start
  for(let attempt=0;;attempt++){
   try{return await openDatabase(path);}
   catch(error){
-   if(!leaseDatabaseUnopenableBusyV1(error))throw error;
-   if(attempt>=leaseUnopenablePausesV1.length)throw explainUnopenableLeaseV1(error,path);
+   const replaced=leaseDatabaseReplacedV1(error);
+   if(!replaced&&!leaseDatabaseUnopenableBusyV1(error))throw error;
+   if(attempt>=leaseUnopenablePausesV1.length)throw replaced?explainReplacedLeaseV1(error,path,attempt):explainUnopenableLeaseV1(error,path);
    const budget=remaining(options,started,cleanup);
    await delay(Math.max(1,Math.min(leaseUnopenablePausesV1[attempt]!,budget)),undefined,{signal:options.signal}).catch(failure=>{options.signal.throwIfAborted();throw failure;});
   }
@@ -201,7 +237,7 @@ function databasePath(directory: string, resource: string): string {
   const real = resourceLeasePathV1(realpathSync(directory), resource);
   if (!system && real !== admitted) throw Error("Resource lease materialized path changed");
   const path = system ? admitted : real;
-  try { const stat = lstatSync(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error(`Invalid resource lease database: ${path}`); }
+  try { const stat = lstatSync(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw Object.assign(new Error(`Invalid resource lease database: ${path} (${stat.isSymbolicLink() ? "symbolic link" : !stat.isFile() ? "not a regular file" : `nlink ${stat.nlink}`}, still so after ${leaseUnopenablePausesV1.length} pauses)`), { leasePublicationRace: true }); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
   return path;
 }
@@ -213,6 +249,11 @@ function explainUnopenableLeaseV1(error:unknown,path:string):Error{
   try{const stat=lstatSync(path);facts.push(`database ${stat.size} bytes nlink ${stat.nlink}`);}catch(cause){facts.push("database "+((cause as NodeJS.ErrnoException).code??String(cause)));}
   try{const stat=statfsSync(dirname(path));facts.push(`free ${stat.bavail * stat.bsize} bytes ${stat.ffree} files`);}catch(cause){facts.push("statfs "+((cause as NodeJS.ErrnoException).code??String(cause)));}
   return new Error(`Resource lease database cannot be opened: ${path} (${facts.join(", ")})`,{cause:error});
+}
+
+/** 🔁️ Explains a lease database that was replaced under its connection more often than the declared pauses allow, so the caller sees a moved or re-mounted store instead of a bare vnode I/O error. */
+function explainReplacedLeaseV1(error:unknown,path:string,reopens:number):Error{
+  return new Error(`Resource lease database was replaced under its connection ${reopens + 1} times (${(error as {code?:string}).code ?? "replaced"}), after ${reopens} reopens: ${path} (a cache image or mount holding the lease store was probably detached and attached again; retry once the store is stable)`,{cause:error});
 }
 
 /** 🪪️ Initializes one immutable resource identity under SQLite's exclusive transaction. */
@@ -237,7 +278,19 @@ function initialize(database: LeaseDatabase, resource: string): void {
 /** 📖️ Requires the privately issued shared mode through the exact live original reader. */
 export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(issued?.phase!=="held"||issued.mode!=="shared"||issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
 
-/** ⏸️ Waits cancellably for shared or exclusive access; release only after the protected operation stops. */
+/** 🏁️ Resolves the database path of one acquisition; a file seen mid-publication or mid-retirement by a concurrent process (not yet or no longer a single-link regular file) is looked at again on the declared pauses, and one that stays invalid is refused with the explanation. */
+async function settledDatabasePathV1(options:LeaseOptions,started:number,cleanup?:CleanupLeaseScope):Promise<string>{
+  for(let attempt=0;;attempt++){
+    try{return databasePath(options.directory,options.resource);}
+    catch(error){
+      if((error as{leasePublicationRace?:boolean}).leasePublicationRace!==true||attempt>=leaseUnopenablePausesV1.length)throw error;
+      const budget=remaining(options,started,cleanup),pause=leaseUnopenablePausesV1[attempt]!;
+      await delay(options.timeoutMs===0?pause:Math.max(1,Math.min(pause,budget)),undefined,{signal:options.signal}).catch(failure=>{options.signal.throwIfAborted();throw failure;});
+    }
+  }
+}
+
+/** ⏸️ Waits cancellably for shared or exclusive access; a waiter whose database file was replaced under it (`SQLITE_IOERR_VNODE`, the idle sweep retiring and recreating it) reopens the path a bounded number of times; release only after the protected operation stops. */
 async function acquireUngatedResourceLease(options: LeaseOptions,started:number,onUnclosed?:(database:LeaseDatabase)=>void,cleanup?:CleanupLeaseScope): Promise<ResourceLease> {
   options=Object.freeze({...options});
   options.signal.throwIfAborted();
@@ -245,23 +298,23 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
   if (!["shared", "exclusive"].includes(options.mode)) throw refuseProcessV1("invalid", "leases.invalid-access-mode");
   if (options.timeoutMs !== undefined && (!Number.isFinite(options.timeoutMs) || options.timeoutMs < 0)) throw refuseProcessV1("invalid", "leases.invalid-timeout");
   remaining(options, started,cleanup);
-  if(options.resource===retentionSchema.properties.resource.const&&options.maximumDatabaseBytes!==undefined&&options.maximumDatabaseBytes>retentionSchema.properties.maximumDatabaseBytes.const)throw Error("Fixed retirement catalog capacity required");const maximumDatabaseBytes=options.maximumDatabaseBytes??(options.resource===retentionSchema.properties.resource.const?retentionSchema.properties.maximumDatabaseBytes.const:undefined),maximumPages=maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(maximumDatabaseBytes),path=databasePath(options.directory,options.resource);
+  if(options.resource===retentionSchema.properties.resource.const&&options.maximumDatabaseBytes!==undefined&&options.maximumDatabaseBytes>retentionSchema.properties.maximumDatabaseBytes.const)throw Error("Fixed retirement catalog capacity required");const maximumDatabaseBytes=options.maximumDatabaseBytes??(options.resource===retentionSchema.properties.resource.const?retentionSchema.properties.maximumDatabaseBytes.const:undefined),maximumPages=maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(maximumDatabaseBytes),path=await settledDatabasePathV1(options,started,cleanup);
   if(maximumPages!==undefined){try{if(lstatSync(path).size>maximumDatabaseBytes!)throw Error("Original bootstrap SQLite exceeds capacity");}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
-  const database = await openLeaseDatabaseWaitingV1(path, options, started, cleanup);
-  let nextProgress = 0, acquired = false,failed=false,failure:unknown,unopenable=0;
+  let database = await openLeaseDatabaseWaitingV1(path, options, started, cleanup);
+  let nextProgress = 0, acquired = false,failed=false,failure:unknown,unopenable=0,replaced=0,configured=false;
   try {
-    remaining(options,started,cleanup);database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
     for (;;) {
       const budget = remaining(options, started,cleanup);
-      if (options.timeoutMs !== 0 && budget <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      if (options.timeoutMs !== 0 && budget <= 0) throw leaseTimeoutErrorV1(options,started);
       try {
+        if(!configured){database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");configured=true;}
     if(maximumPages!==undefined){database.exec("PRAGMA page_size=4096");if(database.read("PRAGMA page_size")?.page_size!==4096||Number(database.read(`PRAGMA max_page_count=${maximumPages}`)?.max_page_count)!==maximumPages)throw Error("Actual bootstrap SQLite page cap refused");}
         if (database.read("PRAGMA journal_mode")?.journal_mode !== "delete") throw new Error("Resource lease requires rollback journal mode");
         initialize(database, options.resource);
         database.exec(options.mode === "exclusive" ? "BEGIN EXCLUSIVE" : "BEGIN");
         const row = database.read("SELECT version, resource FROM semio_resource_lease WHERE id = 1");
         if (row?.version !== 1 || row.resource !== options.resource || database.read("PRAGMA application_id")?.application_id !== APPLICATION_ID) throw new Error("Resource lease identity mismatch");
-        if (remaining(options, started,cleanup) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+        if (remaining(options, started,cleanup) <= 0 && options.timeoutMs !== 0) throw leaseTimeoutErrorV1(options,started);
         acquired = true;
         let released = false;
         const issued:IssuedResourceLeaseV1={path,directory:resolve(options.directory),resource:options.resource,database,control:options.control,signal:options.signal,phase:"held",mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
@@ -271,10 +324,11 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
       } catch (error) {
         try { database.exec("ROLLBACK"); } catch {}
         const code = error as { code?: string; errcode?: number; errno?: number };
+        if (leaseDatabaseReplacedV1(error)) { if (++replaced > leaseUnopenablePausesV1.length) throw explainReplacedLeaseV1(error, path, replaced - 1); try { database.close(); } catch {} await delay(Math.max(1, Math.min(leaseUnopenablePausesV1[replaced - 1]!, remaining(options, started, cleanup))), undefined, { signal: options.signal }).catch(failure => { options.signal.throwIfAborted(); throw failure; }); database = await openLeaseDatabaseWaitingV1(path, options, started, cleanup); configured = false; continue; }
         if (code.code !== "SQLITE_BUSY" && code.errcode !== 5 && code.errno !== 5 && !(leaseDatabaseUnopenableBusyV1(error) && ++unopenable <= leaseUnopenablePausesV1.length)) throw code.code === "SQLITE_CANTOPEN" ? explainUnopenableLeaseV1(error, path) : error;
       }
       const elapsedMs = Date.now() - started;
-      if (remaining(options, started,cleanup) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      if (remaining(options, started,cleanup) <= 0) throw leaseTimeoutErrorV1(options,started);
       if (elapsedMs >= nextProgress) {
         const progress = { resource: options.resource, mode: options.mode, elapsedMs };
         await waitProgress(options, progress, started,cleanup);
@@ -413,7 +467,7 @@ async function relieveLeaseStoreBeforeCreateV1(options:LeaseOptions):Promise<voi
 function annotateLeaseStoreFullV1(error:unknown,relief:ResourceLeaseReliefV1,directory:string):Error{
  const message=error instanceof Error?error.message:String(error),text=(language:"en"|"de")=>resourceLeaseRetirementMessagesV1.full[language].replace(/\{(\w+)\}/gu,(all,name:string)=>({message:language==="en"?message:"",databases:relief.databases,queues:relief.queues,claims:relief.claims,freed:(relief.freedBytes/1048576).toFixed(1)+" MiB",directory}[name as"message"]??all)+"");
  const annotated=new Error(`${text("en")} / ${text("de").trim()}`,{cause:error}),source=error as{code?:unknown;errno?:unknown;errcode?:unknown;path?:unknown;directory?:unknown;probe?:unknown;space?:unknown};
- return Object.assign(annotated,{...source.code!==undefined?{code:source.code}:{},...source.errno!==undefined?{errno:source.errno}:{},...source.errcode!==undefined?{errcode:source.errcode}:{},path:source.path,directory:source.directory??directory,probe:source.probe,space:true,relief});
+ return Object.assign(annotated,{...source.code!==undefined?{code:source.code}:{},...source.errno!==undefined?{errno:source.errno}:{},...source.errcode!==undefined?{errcode:source.errcode}:{},path:typeof source.path==="string"&&source.path.length>0?source.path:directory,directory:source.directory??directory,probe:source.probe,space:true,relief});
 }
 /** 🐢️ Waits for a busy lease without holding the directory admission gate: each attempt takes the gate shared, tries once and gives the gate back, so retirement and every other opener are never blocked by a waiter. */
 async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Promise<ResourceLease>{
@@ -423,7 +477,7 @@ async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Pr
   try{return await acquireHoldingGate({...options,timeoutMs:0},Date.now());}
   catch(error){if(!(error instanceof Error)||error.message!=="Resource lease timed out: "+options.resource)throw error;}
   const elapsedMs=Date.now()-started;
-  if(remaining(options,started)<=0)throw new Error(`Resource lease timed out: ${options.resource}`);
+  if(remaining(options,started)<=0)throw leaseTimeoutErrorV1(options,started);
   if(elapsedMs>=nextProgress){await waitProgress(options,{resource:options.resource,mode:options.mode,elapsedMs},started);nextProgress=elapsedMs+1000;}
   if(guard)await guard.contention(elapsedMs);
   await delay(Math.max(1,Math.min(poll,remaining(options,started))),undefined,{signal:options.signal}).catch(error=>{options.signal.throwIfAborted();throw error;});
@@ -432,7 +486,7 @@ async function acquireWaitingOutsideGate(options:LeaseOptions,started:number):Pr
 }
 async function acquireHoldingGate(options:LeaseOptions,started:number,cleanup?:CleanupLeaseScope):Promise<ResourceLease>{
  let gate:ResourceLease|undefined,lease:ResourceLease|undefined,failed=false,failure:unknown;
- try{gate=await directoryAdmission(options,"shared",started,cleanup);if(cleanup)cleanupLeaseIdentity(cleanup);lease=await acquireUnderAdmission(options,gate,started,cleanup);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource){failure=Error("Resource lease timed out: "+options.resource,{cause:error});const context=Object.getOwnPropertyDescriptor(error,"resourceLeaseAdmission");if(context)Object.defineProperty(failure,"resourceLeaseAdmission",context);}}
+ try{gate=await directoryAdmission(options,"shared",started,cleanup);if(cleanup)cleanupLeaseIdentity(cleanup);lease=await acquireUnderAdmission(options,gate,started,cleanup);}catch(error){failed=true;failure=error;if(error instanceof Error&&error.message==="Resource lease timed out: "+admissionResource){failure=leaseTimeoutErrorV1(options,started,error);const context=Object.getOwnPropertyDescriptor(error,"resourceLeaseAdmission");if(context)Object.defineProperty(failure,"resourceLeaseAdmission",context);}}
  try{releaseAdmission(gate);}catch(error){if(!failed){failed=true;failure=error;}try{lease?.release();}catch{if(gate&&lease)protectAdmission(gate,originalLeases.get(lease)!.database);}}
  if(failed)throw failure;return lease!;
 }
@@ -473,8 +527,10 @@ async function queueClaimCatalog(options:LeaseOptions,mode:"shared"|"exclusive",
  let gate:ResourceLease|undefined,catalog:ResourceLease|undefined,failed=false,failure:unknown;try{gate=await directoryAdmission(options,mode,started,undefined,operation);catalog=await acquireUnderAdmission({...options,resource:retentionSchema.properties.resource.const,mode,maximumDatabaseBytes:retentionSchema.properties.maximumDatabaseBytes.const},gate,started);const held=catalog,admission=gate,combined:ResourceLease={resource:held.resource,mode:held.mode,release(){finishResourceLeaseCleanupV1(false,undefined,[()=>releaseUnderAdmission(held,admission),()=>releaseAdmission(admission)]);}};originalLeases.set(combined,originalLeases.get(held)!);catalogAdmissions.set(combined,admission);return combined;}catch(error){failed=true;failure=error;throw error;}finally{if(failed)finishResourceLeaseCleanupV1(failed,failure,[()=>{if(catalog&&gate)releaseUnderAdmission(catalog,gate);else catalog?.release();},()=>releaseAdmission(gate)]);}
 }
 type ClaimIdentity=Readonly<{path:string;resource:string;queueTicketPath:string;device:number;inode:number;allocatedBytes:number}>;
+/** 🫥️ Whether a queue claim captured for retirement still exists: its owner may release (and unlink) it between capture and this check, and a vanished claim is already retired, so only ENOENT means "skip"; every other mismatch stays a refusal. */
+function claimStillPresent(candidate:ResourceLeaseCandidateV1):boolean{try{requireResourceLeaseCandidateV1(candidate);return true;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return false;throw error;}}
 async function readClaimIdentity(directory:string,candidate:ResourceLeaseCandidateV1,control:ResourceLeaseControl,gate:ResourceLease):Promise<ClaimIdentity|undefined>{
- checkResourceLeaseControl(control);const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const));requireAdmission(gate,claims);if(candidate.directory!==claims||!/^[a-f0-9]{64}\.sqlite$/u.test(basename(candidate.path)))throw Error("Exact queue claim candidate required");let database:LeaseDatabase|undefined,failed=false,failure:unknown;try{database=await openDatabase(candidate.path,true);checkResourceLeaseControl(control);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF;BEGIN");const resource=readOwnedResourceLeaseV1(database,claims,candidate.path);if(!resource)return;const identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):("+queueSchema.definitions.Protocol.const.ticketPattern.slice(1,-1)+")$","u").exec(resource);if(!identity)throw Error("Original queue claim path identity required");queueTicketRequest(identity[2]!);checkResourceLeaseControl(control);requireResourceLeaseCandidateV1(candidate);return Object.freeze({path:candidate.path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:candidate.file.dev,inode:candidate.file.ino,allocatedBytes:candidate.allocatedBytes});}catch(error){failed=true;failure=error;throw error;}finally{if(database)finishResourceLeaseCleanupV1(failed,failure,[()=>closeDatabase(database!,gate)]);}
+ checkResourceLeaseControl(control);const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const));requireAdmission(gate,claims);if(candidate.directory!==claims||!/^[a-f0-9]{64}\.sqlite$/u.test(basename(candidate.path)))throw Error("Exact queue claim candidate required");let database:LeaseDatabase|undefined,failed=false,failure:unknown;try{database=await openDatabase(candidate.path,true);checkResourceLeaseControl(control);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF;BEGIN");const resource=readOwnedResourceLeaseV1(database,claims,candidate.path);if(!resource)return;const identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):("+queueSchema.definitions.Protocol.const.ticketPattern.slice(1,-1)+")$","u").exec(resource);if(!identity)throw Error("Original queue claim path identity required");queueTicketRequest(identity[2]!);checkResourceLeaseControl(control);if(!claimStillPresent(candidate))return;return Object.freeze({path:candidate.path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:candidate.file.dev,inode:candidate.file.ino,allocatedBytes:candidate.allocatedBytes});}catch(error){failed=true;failure=error;throw error;}finally{if(database)finishResourceLeaseCleanupV1(failed,failure,[()=>closeDatabase(database!,gate)]);}
 }
 
 /** 🔎️ Protects the complete read-only claim connection in exact parent-before-child admission custody. */
@@ -500,7 +556,7 @@ async function retireResources(directory:string,control:ResourceLeaseControl,tim
   if(idle>0&&now-Math.max(candidate.file.mtimeMs,waiting?.mtimeMs??0)<idle){kept++;continue;}
   examined++;let database:LeaseDatabase|undefined,probeFailed=false,probeFailure:unknown;
   try{requireAdmission(gate,directory,true);database=await openDatabase(path,false,false);remaining(options,started);database.exec("PRAGMA busy_timeout=0;PRAGMA trusted_schema=OFF");if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID){kept++;continue;}database.exec("BEGIN EXCLUSIVE");const logical=readOwnedResourceLeaseV1(database,directory,path);if(logical===undefined||logical.startsWith(custodySchema.properties.resourcePrefix.const)||resource!==undefined&&logical!==resource){kept++;continue;}remaining(options,started);requireResourceLeaseCandidateV1(candidate);closeDatabase(database,gate);database=undefined;const remove=()=>{requireAdmission(gate!,directory,true);requireResourceLeaseCandidateV1(candidate);ports.unlink(path);};const removal=await settleLeaseFileV1(()=>{try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}},ports,control.signal);if(!removal.settled){kept++;continue;}retired++;allocatedBytes+=candidate.allocatedBytes;if(waiting)try{rmdirSync(queue);queues++;}catch(error){if(!tolerated(error))throw error;}
-  }catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error))throw error;probeFailed=false;kept++;}finally{if(database)finishResourceLeaseCleanupV1(probeFailed,probeFailure,[()=>closeDatabase(database!,gate)]);}
+  }catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error)&&!leaseDatabaseReplacedV1(error))throw error;probeFailed=false;kept++;}finally{if(database)finishResourceLeaseCleanupV1(probeFailed,probeFailure,[()=>closeDatabase(database!,gate)]);}
   await control.yieldContinuation();checkResourceLeaseControl(control);
  }complete=resource!==undefined||at>=selected.length;if(resource===undefined){const after=at===selected.length?"":last;if(after!==prior){headroom?.recover();persistRetirementContinuation(catalog,directory,control,"resources",after,gate);}}return Object.freeze({examined,retired,allocatedBytes,queues,kept,complete});
  }catch(error){failed=true;failure=error;throw error;}finally{finishResourceLeaseCleanupV1(failed,failure,[()=>headroom?.recheck(),()=>{if(catalog&&gate)releaseUnderAdmission(catalog,gate);else catalog?.release();},()=>releaseAdmission(gate)]);}
@@ -518,7 +574,7 @@ export async function retireResourceQueueClaimsV1(directory:string,control:Resou
  checkResourceLeaseControl(control);const started=Date.now(),options:LeaseOptions={directory,resource:retentionSchema.properties.resource.const,mode:"exclusive",signal:control.signal,control,timeoutMs,...limits.admissionPatienceMs===undefined?{}:{admissionPatienceMs:limits.admissionPatienceMs}};let catalog:ResourceLease|undefined,gate:ResourceLease|undefined,headroom:ReturnType<typeof import("./📦️metadata/🟦️.ts").retainResourceQueueMetadataHeadroomV1>|undefined,failed=false,failure:unknown;let examined=0,retired=0,allocatedBytes=0;
  try{try{catalog=await queueClaimCatalog(options,"exclusive",started,"claims-retirement");gate=await directoryAdmission({...options,directory:join(directory,custodySchema.properties.claimDirectory.const),timeoutMs:0},"exclusive",started,undefined,"claims-retirement");}catch(error){if(resourceLeaseBusyV1(error))return Object.freeze({examined,retired,allocatedBytes});throw error;}headroom=(await import("./📦️metadata/🟦️.ts")).retainResourceQueueMetadataHeadroomV1(directory,catalog,control,requireResourceLeaseCustodyV1);
  const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),admissionName=basename(resourceLeasePathV1(claims,admissionResource)),names=(await resourceLeaseRetirementNamesV1(claims,control)).filter(name=>/^[a-f0-9]{64}\.sqlite$/u.test(name)&&name!==admissionName),prior=readResourceLeaseContinuationV1(retirementCatalogDatabase(catalog,directory,control),"claims");let scanned=0,at=resourceLeaseContinuationStartV1(names,prior),last="";
- for(;at<names.length;at++){const name=names[at]!;if(examined>=retentionSchema.properties.maximumClaimsPerTurn.const)break;last=name;remaining(options,started);if(++scanned%resourceLeaseRetirementScanLimitsV1.entriesPerYield===0){if(scanned===resourceLeaseRetirementScanLimitsV1.entriesPerYield||scanned%resourceLeaseRetirementScanLimitsV1.entriesPerProgress===0)await control.publish({resource:"claim-retirement-scan:"+scanned,mode:"exclusive",elapsedMs:Math.max(0,Date.now()-started)});await control.yieldContinuation();remaining(options,started);}requireAdmission(gate,claims,true);const admitted=captureResourceLeaseCandidateV1(claims,name);if(!admitted)continue;examined++;let held:ResourceLease|undefined,probeFailed=false,probeFailure:unknown;try{const row=await readClaimIdentity(directory,admitted,control,gate);if(!row)continue;held=await acquireUnderAdmission({directory:dirname(row.path),resource:row.resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const},gate,started);remaining(options,started);const candidate=captureResourceLeaseCandidateV1(dirname(row.path),name);if(!candidate||candidate.file.dev!==row.device||candidate.file.ino!==row.inode)throw Error("Original queue claim inode changed");const remove=()=>{try{unlinkSync(row.queueTicketPath);}catch(error){if((error as NodeJS.ErrnoException|undefined)?.code!=="ENOENT")throw error;}releaseUnderAdmission(held,gate!);held=undefined;requireAdmission(gate!,dirname(row.path),true);requireResourceLeaseCandidateV1(candidate);unlinkSync(row.path);};try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}retired++;allocatedBytes+=row.allocatedBytes;}catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error))throw error;}finally{finishResourceLeaseCleanupV1(probeFailed&&!resourceLeaseBusyV1(probeFailure)&&!databaseRejection(probeFailure),probeFailure,[()=>{if(held)releaseUnderAdmission(held,gate!);}]);}await control.yieldContinuation();checkResourceLeaseControl(control);
+ for(;at<names.length;at++){const name=names[at]!;if(examined>=retentionSchema.properties.maximumClaimsPerTurn.const)break;last=name;remaining(options,started);if(++scanned%resourceLeaseRetirementScanLimitsV1.entriesPerYield===0){if(scanned===resourceLeaseRetirementScanLimitsV1.entriesPerYield||scanned%resourceLeaseRetirementScanLimitsV1.entriesPerProgress===0)await control.publish({resource:"claim-retirement-scan:"+scanned,mode:"exclusive",elapsedMs:Math.max(0,Date.now()-started)});await control.yieldContinuation();remaining(options,started);}requireAdmission(gate,claims,true);const admitted=captureResourceLeaseCandidateV1(claims,name);if(!admitted)continue;examined++;let held:ResourceLease|undefined,probeFailed=false,probeFailure:unknown;try{const row=await readClaimIdentity(directory,admitted,control,gate);if(!row)continue;held=await acquireUnderAdmission({directory:dirname(row.path),resource:row.resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const},gate,started);remaining(options,started);const candidate=captureResourceLeaseCandidateV1(dirname(row.path),name);if(!candidate||candidate.file.dev!==row.device||candidate.file.ino!==row.inode)continue;const remove=()=>{try{unlinkSync(row.queueTicketPath);}catch(error){if((error as NodeJS.ErrnoException|undefined)?.code!=="ENOENT")throw error;}releaseUnderAdmission(held,gate!);held=undefined;requireAdmission(gate!,dirname(row.path),true);requireResourceLeaseCandidateV1(candidate);unlinkSync(row.path);};try{remove();}catch(error){recoverRetirementHeadroom(error,directory,headroom);remove();}retired++;allocatedBytes+=row.allocatedBytes;}catch(error){probeFailed=true;probeFailure=error;if(!resourceLeaseBusyV1(error)&&!databaseRejection(error)&&lstatSync(join(claims,name),{throwIfNoEntry:false})!==undefined)throw error;}finally{finishResourceLeaseCleanupV1(probeFailed&&!resourceLeaseBusyV1(probeFailure)&&!databaseRejection(probeFailure),probeFailure,[()=>{if(held)releaseUnderAdmission(held,gate!);}]);}await control.yieldContinuation();checkResourceLeaseControl(control);
  }const after=at===names.length?"":last;if(after!==prior){headroom?.recover();persistRetirementContinuation(catalog,directory,control,"claims",after);}return Object.freeze({examined,retired,allocatedBytes});
  }catch(error){failed=true;failure=error;throw error;}finally{finishResourceLeaseCleanupV1(failed,failure,[()=>headroom?.recheck(),()=>releaseAdmission(gate),()=>catalog?.release()]);}
 }
@@ -570,7 +626,7 @@ async function reapQueueTickets(options:QueuedLeaseOptions,queue:string,names:re
       probed.add(name);let retired:ResourceLease|undefined;
       try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),leaseRemovalOptionsV1());reaped.add(name);}
       catch(error){if(!String(error).includes("Resource lease timed out"))throw error;}
-      finally{retired?.release();}
+      finally{if(retired&&reaped.has(name))releaseQueueClaimV1(options,name,retired);else retired?.release();}
     }
     return{reaped,probed,more:false};
   }finally{sweepCatalog.release();}
@@ -581,10 +637,15 @@ function ticketPidGoneV1(pid:number,known:Map<number,boolean>):boolean{
   let gone=false;try{process.kill(pid,0);}catch(error){gone=(error as NodeJS.ErrnoException).code==="ESRCH";}
   known.set(pid,gone);return gone;
 }
+/** 🧹️ Releases a queue claim and removes its settled file at once, so a claim never outlives its acquisition: each queued acquisition owns one claim file named by its unique ticket, nobody else opens it after the ticket left the queue, and an unlink that fails (busy on Windows, a full disk) only leaves the file to the sweep of settled claims. @see ./♻️retirement/🟦️.ts */
+function releaseQueueClaimV1(options:Readonly<{directory:string;resource:string}>,ticket:string,claim:ResourceLease):void{
+ claim.release();
+ try{const row=resourceQueueClaimV1(options.directory,options.resource,ticket);unlinkSync(resourceLeasePathV1(row.directory,row.resource));}catch{}
+}
 function wrapQueuedLease(lease:ResourceLease,turn:QueuedTurn):ResourceLease{
   const queued:ResourceLease={resource:lease.resource,mode:lease.mode,release(){
     if(turn.consumed)return;
-    try{lease.release();}finally{try{rmSync(join(turn.queue,turn.ticket),leaseRemovalOptionsV1());}finally{turn.claim.release();}}
+    try{lease.release();}finally{try{rmSync(join(turn.queue,turn.ticket),leaseRemovalOptionsV1());}finally{releaseQueueClaimV1(turn.options,turn.ticket,turn.claim);}}
   }};
   originalLeases.set(queued,originalLeases.get(lease)!);queuedTurns.set(queued,turn);turn.inner=lease;return queued;
 }
@@ -630,11 +691,11 @@ async function acquireQueuedResourceLeaseBody(options: QueuedLeaseOptions,guard?
   remaining(options,started);
   const priority=options.priority??currentLeasePriorityV1(agentSessionAddressOfEnvironmentV1()!==undefined),ticket = resourceQueueTicketV1({arrivedAtMs:leaseTicketArrivalV1(priority,started),pid:process.pid,owner:options.owner});
   const admitted = resourceLeasePathV1(options.directory, options.resource, ticket);
-  const queue = databasePath(options.directory, options.resource).replace(/\.sqlite$/u, ".queue");
+  const queue = (await settledDatabasePathV1(options,started)).replace(/\.sqlite$/u, ".queue");
   if (queue !== admitted.replace(/\.sqlite$/u, ".queue")) throw Error("Resource queue materialized path changed");
   const patience=leaseOrderPolicyV1().gate.admissionPatienceMilliseconds;
   const catalog=await queueClaimCatalog({...pendingOptions(),admissionPatienceMs:patience},"shared");let claim:ResourceLease;
-  try{claim=await acquireResourceLease({...pendingOptions(),admissionPatienceMs:patience,...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});try{remaining(options,started);mkdirSync(queue,{recursive:true});writeFileSync(join(queue,ticket),JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,...options.yielding===true?{yielding:true}:{},...priority==='agent'?{}:{priority}}),{flag:"wx"});}catch(error){claim.release();throw error;}}finally{catalog.release();}
+  try{claim=await acquireResourceLease({...pendingOptions(),admissionPatienceMs:patience,...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});try{remaining(options,started);mkdirSync(queue,{recursive:true});writeFileSync(join(queue,ticket),JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,...options.yielding===true?{yielding:true}:{},...priority==='agent'?{}:{priority}}),{flag:"wx"});}catch(error){releaseQueueClaimV1(options,ticket,claim);throw error;}}finally{catalog.release();}
   return awaitQueuedTurn(options,started,queue,ticket,claim,guard);
 }
 
@@ -665,7 +726,7 @@ export async function upgradeQueuedResourceLease(lease:ResourceLease,limits:{rea
   const name=join(turn.queue,turn.ticket),temporary=join(dirname(turn.queue),turn.ticket+".u");
   try{const kept=queueTicketRow(turn.queue,turn.ticket)?.priority;writeFileSync(temporary,JSON.stringify({version:1,pid:process.pid,mode:"exclusive",sharedCohort:false,...kept===undefined||kept==="agent"?{}:{priority:kept}}),{flag:"wx"});const moved=await settleLeaseFileV1(()=>leaseFilePortsV1.rename(temporary,name));if(!moved.settled)throw moved.error;}catch(error){rmSync(temporary,leaseRemovalOptionsV1());throw error;}
   turn.consumed=true;
-  try{turn.inner.release();}catch(error){try{rmSync(name,leaseRemovalOptionsV1());}finally{turn.claim.release();}throw error;}
+  try{turn.inner.release();}catch(error){try{rmSync(name,leaseRemovalOptionsV1());}finally{releaseQueueClaimV1(turn.options,turn.ticket,turn.claim);}throw error;}
   let upgraded:ResourceLease;try{upgraded=await awaitQueuedTurn(options,started,turn.queue,turn.ticket,turn.claim,guard);}catch(error){guard?.finish();throw error;}
   guard?.hold(upgraded);return admitResourceLeaseV1(options,upgraded);
 }
@@ -675,7 +736,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
   const swept=new Map<string,number>();let nextProgress=0,poll=waitPolicy.pollInitialMilliseconds;
   try {
     for (;;) {
-      if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw leaseTimeoutErrorV1(options,started);
       const rows=(await retryInterruptedFilesystemRead(options.signal,()=>readdirSync(queue),options.control)).map(name=>{const request=queueTicketRequest(name);return{name,arrivedAtMs:request.arrivedAtMs,pid:request.pid};}).sort((left,right)=>left.arrivedAtMs-right.arrivedAtMs||left.name.localeCompare(right.name,"en")),names=rows.map(row=>row.name),own=names.indexOf(ticket),known=new Map<number,boolean>();
       let live=own<0?[...names]:names.slice(0,own);
       {
@@ -697,7 +758,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
         return wrapQueuedLease(lease,{options,queue,ticket,claim,consumed:false});
       }
       const elapsedMs = Date.now() - started;
-      if (remaining(options, started) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
+      if (remaining(options, started) <= 0) throw leaseTimeoutErrorV1(options,started);
       await guard?.contention(elapsedMs);
       if (elapsedMs >= nextProgress) {
         runAdmissionGuardsV1(options,"waiting");
@@ -711,7 +772,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       remaining(options, started);
     }
   } catch (error) {
-    try{rmSync(join(queue, ticket), leaseRemovalOptionsV1());}finally{claim.release();}
+    try{rmSync(join(queue, ticket), leaseRemovalOptionsV1());}finally{releaseQueueClaimV1(options,ticket,claim);}
     throw error;
   }
 }

@@ -1,0 +1,54 @@
+{
+  "diskAdmission": {
+    "physical": [
+      {"admitted": false, "freeBytes": 40, "requiredFreeBytes": 60},
+      {"admitted": true, "freeBytes": 61, "requiredFreeBytes": 60},
+      {"admitted": true, "freeBytes": 62, "requiredFreeBytes": 60}
+    ],
+    "underGrant": [{"stage": "after-grant", "disk": {"admitted": false, "freeBytes": 55, "requiredFreeBytes": 60}}, null],
+    "progress": [
+      {"stage": "before-grant", "freeBytes": 40, "requiredFreeBytes": 60},
+      {"stage": "after-grant", "freeBytes": 55, "requiredFreeBytes": 60}
+    ],
+    "events": ["disk", "progress", "wait", "disk", "grant", "release", "progress", "wait", "disk", "grant", "release"]
+  },
+  "queueAdmission": [
+    {"id":"disk falls during queueing","action":"measure","initialFree":61,"changedFree":57,"required":60,"verdict":"retry"},
+    {"id":"disk stays eligible through admission","action":"measure","initialFree":61,"changedFree":60,"required":60,"verdict":"grant"},
+    {"id":"parent cancels as disk falls","action":"cancel","initialFree":61,"changedFree":57,"required":60,"verdict":"cancel"},
+    {"id":"disk source identity fails in queue","action":"identity-error","initialFree":61,"changedFree":57,"required":60,"verdict":"identity-error"},
+    {"id":"disk falls at grant issuance","action":"handoff-loss","initialFree":61,"changedFree":57,"required":60,"verdict":"after-grant"},
+    {"id":"parent cancels at grant issuance","action":"handoff-cancel","initialFree":61,"changedFree":57,"required":60,"verdict":"cancel"}
+  ],
+  "runDeadlineScopes": ["granted"],
+  "arguments": [
+    { "argv": ["preflight"], "value": { "mode": "preflight", "imageGiB": 48, "timeoutSeconds": 10800 } },
+    { "argv": ["run", "--image-gib=41", "--timeout=30"], "value": { "mode": "run", "imageGiB": 41, "timeoutSeconds": 30 } },
+    { "argv": ["run", "--image-gib=44"], "value": { "mode": "run", "imageGiB": 44, "timeoutSeconds": 10800 } },
+    { "argv": ["run", "--timeout=14400"], "value": { "mode": "run", "imageGiB": 48, "timeoutSeconds": 14400 } },
+    { "argv": ["run", "--image-gib=40"] },
+    { "argv": ["run", "--image-gib=49"] },
+    { "argv": ["run", "--timeout=14401"] },
+    { "argv": ["run", "--timeout=030"] },
+    { "argv": ["run", "--image-gib=44", "--image-gib=48"] },
+    { "argv": ["run", "--work=/tmp/other"] },
+    { "argv": ["run", "--hold"] },
+    { "argv": ["run", "--skip=tools"] },
+    { "argv": ["run", "--warm=somewhere"] }
+  ],
+  "pathUnits": [
+    { "tracked": 210, "untracked": 0, "admitted": true },
+    { "tracked": 211, "untracked": 0, "admitted": true },
+    { "tracked": 217, "untracked": 0, "admitted": true },
+    { "tracked": 218, "untracked": 0, "admitted": false },
+    { "tracked": 210, "untracked": 217, "admitted": true },
+    { "tracked": 210, "untracked": 218, "admitted": false }
+  ],
+  "diskGiB": [
+    { "image": 41, "allocated": 0, "reserve": 12, "free": 56, "admitted": true },
+    { "image": 41, "allocated": 0, "reserve": 12, "free": 55, "admitted": false },
+    { "image": 44, "allocated": 0, "reserve": 12, "free": 59, "admitted": true },
+    { "image": 48, "allocated": 10, "reserve": 16, "free": 57, "admitted": true },
+    { "image": 48, "allocated": 51, "reserve": 12, "free": 80, "admitted": false }
+  ]
+}

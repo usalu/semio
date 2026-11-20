@@ -43,6 +43,9 @@ test("a server that publishes three waves after its first generation uploads thr
   const reader=scratch();await seed(reader,ringFiles(40));if(applied.length)await applyOps(reader,applied);
   const taken=mount(server,reader,"g1-test-reader"),result=await loadGenerationGraphV1(taken.host);
   expect(restored(taken.said.map(row=>row.text))).toBe(true);expect(result.stats.ownersReinferred).toBe(0);
+  const publishedHead=lines.at(-2)!,restoredHead=taken.said.find(row=>row.key==="restoredHead")?.text;
+  expect(publishedHead).toMatch(/^graph: published fleet head origin=g1-test-server producerGeneration=\d+ scope=all manifest=[0-9a-f]{64}$/u);
+  expect(restoredHead).toBe(publishedHead.replace("published fleet head","restored fleet head"));
   const restoredLine=taken.said.map(row=>row.text).find(text=>text.includes("restored from the remote cache"))!;
   expect(restoredLine).toMatch(/restored from the remote cache, \d+ documents \(\d+ MB\) downloaded in \d+ s, from a state \d+ min old with 0 projects stale$/u);
   expect(renderGenerationMessageV1("restored",{generation:7,owners:40,documents:5,megabytes:1,seconds:2,age:3,stale:9},"de")).toBe("Graph: Generation 7 (40 Projekte) aus dem Remote-Cache wiederhergestellt, 5 Dokumente (1 MB) in 2 s geladen, von einem Stand von vor 3 Min. mit 9 veralteten Projekten");
@@ -52,7 +55,7 @@ test("a server that publishes three waves after its first generation uploads thr
   expect(fewer.stats.ownersReinferred).toBeLessThanOrEqual(2);
  }
  expect(sent[0]).toBe(totals[0]);for(const at of[1,2,3])expect(sent[at]!).toBeLessThan(totals[at]!/2);
- expect(lines).toHaveLength(4);
+ expect(lines).toHaveLength(8);
 });
 
 test("a head uploaded later by a machine that holds an older state is not taken, and a refused upload leaves no head", async()=>{

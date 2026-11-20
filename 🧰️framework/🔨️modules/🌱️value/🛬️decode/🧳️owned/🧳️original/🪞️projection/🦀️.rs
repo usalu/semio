@@ -11,5 +11,5 @@ impl<I:Sync+'static,A:RetireOwned+Sync> OriginalInput<I,A>{
 }
 impl<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync> NativeReceivingOriginal<I,T,A>{
  /// 🧷️ Consumes one genuine original field projection without cloning or serializing its input.
- pub fn from_projection(original:RetainedOwnedProjection<I>)->Self{Self{original:ManuallyDrop::new(Some(OriginalInput::Projection(original))),receiver:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,output:ManuallyDrop::new(None),retirement:Default::default(),action:Default::default(),authority:ManuallyDrop::new(Some(OriginalEffectAuthority::new(NativeSlotProducer::new()))),backing:Default::default(),close_reply:ManuallyDrop::new(None),close_route:None,closing:false}}
+ pub fn from_projection(original:RetainedOwnedProjection<I>)->Self{Self{original:ManuallyDrop::new(Some(OriginalInput::Projection(original))),receiver:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,output:ManuallyDrop::new(None),retirement:Default::default(),action:Default::default(),authority:ManuallyDrop::new(Some(OriginalEffectAuthority::new(NativeSlotProducer::new()))),backing:Default::default(),close_reply:ManuallyDrop::new(None),close_route:None,closing:false,nested:None}}
 }

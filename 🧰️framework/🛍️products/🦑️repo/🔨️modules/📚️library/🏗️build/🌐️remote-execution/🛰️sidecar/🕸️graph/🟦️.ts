@@ -20,7 +20,7 @@ import {journalCursorStoreV1} from "../../../🏡️resident/🕰️graph-hooks/
 import {snapshotStoreV1} from "../../../🪪️graph-state/📍️cursor/🟦️.ts";
 import {readRemoteExecutionHostViewV1,remoteExecutionOriginV1} from "../../🌡️load/🟦️.ts";
 import {sleep,type RemoteExecutionSidecarContextV1} from "../🧰️shared/🟦️.ts";
-import {awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,readGraphLeaseEntriesV1} from "./🔬️stall/🟦️.ts";
+import {awaitGraphReadLeasesV1,describeGraphReadStallV1,graphReadBlockersV1,graphRefreshCustodyHeldV1,readGraphLeaseEntriesV1} from "./🔬️stall/🟦️.ts";
 import {measureReadTreeV1,memoryOverrunV1} from "./🔬️stall/🌳️tree/🟦️.ts";
 import {readyForegroundBusyOfStoreV1} from "../🚦️ready/🟦️.ts";
 
@@ -63,15 +63,19 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
  };
  const adopt=(signal:AbortSignal|undefined)=>adoptGraphReadV1(readInput("refresh",signal));
  const serving=(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes;
- let uploader:ReturnType<typeof createGenerationUploaderV1>|undefined,tickTimer:ReturnType<typeof setInterval>|undefined;
+ let uploader:ReturnType<typeof createGenerationUploaderV1>|undefined,tickTimer:ReturnType<typeof setInterval>|undefined,generationsRoot:string|undefined;
  if(serving){
   const{repositoryCacheBudgetV1}=await import("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),generations=join(repositoryCacheBudgetV1(context.root).partitions.graph.directory,"m","generations"),snapshots=snapshotStoreV1(context.root),cursorStore=journalCursorStoreV1(context.root,environment);
+   generationsRoot=generations;
   uploader=createGenerationUploaderV1({language,say:context.write,statePath:join(steerDirectory,WAVE_UPLOAD_POLICY_V1.stateFile),
    source:localGenerationUploadSourceV1({workspace:context.root,root:generations,environment,cursors:{snapshotFor:async generation=>{const entry=cursorStore.get("g"+generation);if(!entry||entry.carry)return undefined;const bytes=await snapshots.bytes(entry.instance);return bytes?{instance:entry.instance,bytes}:undefined;},install:async()=>undefined}}),
    async may(){const host=(await readRemoteExecutionHostViewV1(environment)).host;return host.pressure==="normal"&&host.availableMegabytes>=WAVE_UPLOAD_POLICY_V1.minimumFreeMegabytes;}});
   tickTimer=setInterval(()=>uploader?.tick(),policy.roundMilliseconds);tickTimer.unref?.();
  }
- const work=context.work;
+ const work=context.work,adoptionStop=new AbortController();
+ const adoption=serving?undefined:import("./📥️adoption/🟦️.ts").then(({runHeadAdoptionLaneV1})=>runHeadAdoptionLaneV1({...context,signal:AbortSignal.any([context.signal,adoptionStop.signal,...context.drain?[context.drain]:[]])},{environment,store,origin,serveTotalMegabytes:policy.serveTotalMegabytes,steerDirectory})).catch(error=>{
+  if(!adoptionStop.signal.aborted&&!context.signal.aborted)context.write("graph-head lane / Graphstand-Dienst "+String(error instanceof Error?error.message:error).slice(0,200));
+ });
  try{await runWantedServerV1({client,owner:origin,...work===undefined?{}:{work:{restartPending:()=>work.restartPending,report:busy=>{const was=work.busy;work.busy=busy;if(was&&!busy)work.wake?.();}}},platform:graphPlatformV1(),language,steerDirectory,costs:()=>readOwnerCostFileV1(costPath,ownerCostContextV1().ceilingMegabytes),signal:context.signal,state:serveStateFileV1(join(steerDirectory,"serve-state.json")),say:context.write,sleep,infer,adopt,
   requesters:async()=>{
    if(store===undefined)return [];
@@ -80,9 +84,10 @@ export async function runGraph(context:RemoteExecutionSidecarContextV1):Promise<
   },
   async headroom(){return graphServerHeadroomV1((await readRemoteExecutionHostViewV1(environment)).host,policy.serveTotalMegabytes);},
   async mayServe(){return(await readRemoteExecutionHostViewV1(environment)).host.totalMegabytes>=policy.serveTotalMegabytes&&!readyForegroundBusyOfStoreV1(store,origin);},
+   refreshDeferred:()=>generationsRoot!==undefined&&graphRefreshCustodyHeldV1({generationsRoot,leaseDirectory:machinePathV1(context.root,".cache/b/l/m/data"),environment,signal:context.signal}),
   async mayRefresh(){if(readyForegroundBusyOfStoreV1(store,origin))return false;const key=createHash("sha256").update(JSON.stringify(["graph-refresh",graphPlatformV1()])).digest("hex");return(await client.claim(key,origin,policy.refreshIntervalMilliseconds).catch(()=>({state:"fault"}))).state==="granted";},
   async quietMilliseconds(){try{return Math.max(0,Date.now()-statSync(machinePathV1(context.root,".cache","f","state.wal")).mtimeMs);}catch{return 0;}}});}
- finally{if(tickTimer!==undefined)clearInterval(tickTimer);uploader?.stop();await uploader?.idle();}
+ finally{adoptionStop.abort();if(tickTimer!==undefined)clearInterval(tickTimer);uploader?.stop();await uploader?.idle();await adoption;}
 }
 
 /** 🛡️ Runs the graph server beside another role of the same process (the build agent, which every machine runs): a failure or a missing fleet cache only schedules another start after `pauseMilliseconds`, it never reaches the role it runs beside, and `SEMIO_GRAPH_SERVER=off` keeps the machine from serving. */

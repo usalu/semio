@@ -38,7 +38,7 @@ fn an_unsolved_pane_draws_one_outline_per_unmasked_cell() {
 fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
     let document = crate::examples::grid2d::pipes::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit.clone()), ..Default::default() };
     let rendered = layers(&document, &config);
     assert!(!rendered.is_empty());
     assert!(rendered.iter().any(|layer| layer.get("segments").is_some()), "a vector tile must reach the canvas as a real path");
@@ -57,7 +57,7 @@ fn a_solved_vector_pane_draws_one_path_layer_per_connector() {
 fn a_solved_bitmap_pane_stays_inside_the_surface_budget() {
     let document = crate::examples::grid2d::terrain::document();
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the example solves");
-    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit.clone()), ..Default::default() };
     let rendered = layers(&document, &config);
     assert_eq!(rendered.len(), 64, "64 assigned cells, one swatch each — the 1 024-rect form overflows the surface");
     assert!(rendered.iter().all(|layer| layer["color"].as_str().is_some_and(|color| color.starts_with('#'))), "a bounds layer's colour must be a css hex or the host falls back to a hue ramp");
@@ -76,7 +76,7 @@ fn a_small_bitmap_board_still_draws_one_rect_per_pixel() {
     document.pinned.retain(|cell| cell.x < 2 && cell.y < 2);
     document.masked.retain(|cell| cell.x < 2 && cell.y < 2);
     let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the trimmed example solves");
-    let config = Grid2dWindowConfig { solve_json: cached_json(commit), ..Default::default() };
+    let config = Grid2dWindowConfig { solve_json: cached_json(commit.clone()), ..Default::default() };
     assert_eq!(layers(&document, &config).len(), 4 * 16, "4 cells × a 4×4 bitmap each");
 }
 
@@ -151,8 +151,9 @@ fn cached_and_live_previews_obey_the_portable_source_revision_contract() {
         assert_eq!(cached_commit(&document, &config, current).is_some(), visible, "cache {}", case["id"]);
         if let Ok(source) = <[u8; 32]>::try_from(source_revision.as_slice()) {
             let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, source), ToolRunState::Running);
-            run.payload = Some(Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[0].id.clone()) }], ..Default::default() }.encode().into());
+            run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[0].id.clone()) }], ..Default::default() }.encode()));
             assert_eq!(live_fill_payload(Some(&run), current).is_some(), visible, "live {}", case["id"]);
+            retire_run(run);
         }
     }
 }
@@ -170,8 +171,23 @@ fn completed_assignments_override_trace_history_through_the_live_run_adapter() {
         let done = case["done"].as_bool().unwrap();
         let payload = Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[assigned].id.clone()) }], done, trace: vec![Grid2dFillTraceEvent { x: 0, y: 0, tile_id: document.tiles[traced].id.clone(), discarded: case["discarded"].as_bool().unwrap() }], ..Default::default() };
         let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), if done { ToolRunState::Complete } else { ToolRunState::Running });
-        run.payload = Some(payload.encode().into());
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(payload.encode()));
         let painted = paint_commit(&document, &Grid2dWindowConfig::default(), Some(&run), Some([0; 32])).expect("live assignment");
         assert_eq!(painted.assignments, vec![(0, 0, document.tiles[expected].id.clone())], "{}", case["id"]);
+        retire_run(run);
+    }
+}
+
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
     }
 }

@@ -5,7 +5,7 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import{nativeStatfsV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{resolve}from"node:path";
 import{randomBytes}from"node:crypto";
-import{acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{acquireFreshResourceLeaseV1,acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{waitingDelayV1 as sleepV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
@@ -35,7 +35,7 @@ async function admitCompilerHeadroomV1<T>(image:Pick<NativeImageStorageV1,"maxim
 }
 /** 🔒️ Serializes cold compiler growth and maintenance while artifact readers retain their separate custody. */
 export async function withCompilerWriterCustodyV1<T>(image:Pick<NativeImageStorageV1,"root"|"maximumPhysicalBytes"|"recheck">,leaseDirectory:string,control:ResourceLeaseControl,request:Readonly<{version:1;wait:boolean;mode?:"exclusive"|"shared"}>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
- requireIssuedResourceControlV1(control);if(validateJsonSchemaSubset(schema.definitions.WriterRequest,request,schema).length)throw Error("Closed compiler writer request required");checkResourceLeaseControl(control);const root=resolve(image.root),current=writers.getStore();if(current?.root===root)return writerOperation(current,control,body);await image.recheck();const options={directory:leaseDirectory,resource:schema.definitions.Protocol.const.resource+":"+root,mode:(request.mode??"exclusive") as "exclusive"|"shared",...(request.mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),control,signal:control.signal},lease=request.wait?await acquireQueuedResourceLease(options):await acquireResourceLease({...options,timeoutMs:0});
+ requireIssuedResourceControlV1(control);if(validateJsonSchemaSubset(schema.definitions.WriterRequest,request,schema).length)throw Error("Closed compiler writer request required");checkResourceLeaseControl(control);const root=resolve(image.root),current=writers.getStore();if(current?.root===root)return writerOperation(current,control,body);await image.recheck();const options={directory:leaseDirectory,resource:schema.definitions.Protocol.const.resource+":"+root,mode:(request.mode??"exclusive") as "exclusive"|"shared",...(request.mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),control,signal:control.signal},lease=request.wait?await acquireQueuedResourceLease(options):request.mode==="shared"?await acquireFreshResourceLeaseV1(options):await acquireResourceLease({...options,timeoutMs:0});
  let scope:WriterScope|undefined;return withNativeImageTerminalCloseV1(async()=>{await image.recheck();const result=await withRetainedOperationsV1(control,schema.definitions.Protocol.const.maximumOperations,(lifetime,actual)=>{scope={root,control,lifetime,live:true};return writers.run(scope,()=>body(actual));});checkResourceLeaseControl(control);await image.recheck();return result;},async()=>{if(scope)scope.live=false;lease.release();});
 }
 /** 🏪️ Retains writer exclusion through the actual callback and refuses before compiler-side writes. */
@@ -68,6 +68,11 @@ export async function withCompilerSharedHeadroomV1<T>(image:Pick<NativeImageStor
 }
 /** 📝️ Like `withCompilerWorkspaceWriteV1` for compilers that only grow private lanes and the content-addressed cache: concurrent compiles of one image hold the writer custody together. */
 export function withCompilerWorkspaceSharedWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{const owner=workspaceOwner(storage,control),current=writers.getStore(),write=(actual:ResourceLeaseControl)=>withCompilerWorkspaceBorrowV1(storage,actual,phase=>withCompilerSharedHeadroomV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,phase,storage.allocation.bytes,{version:1,wait:true},body,owner.recover,undefined,owner.relieve));return current?.root===owner.root?writerOperation(current,control,write):write(control);}
+
+/** 📤️ Guards a reserved generation's staged write independently of the compiler's CPU scope by taking an immediate shared writer alongside the active compiler. */
+export function withCompilerWorkspaceStageWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:()=>Promise<T>):Promise<T>{
+ return withCompilerWorkspaceBorrowV1(storage,control,actual=>withCompilerWriterCustodyV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,actual,{version:1,wait:false,mode:"shared"},body));
+}
 
 /** 🔏️ Requires the actual live shared compiler writer before automatic physical maintenance can start. */
 export function requireCompilerWriterCustodyV1(root:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const current=writers.getStore();if(!current?.live||current.root!==resolve(root))throw Error("Original live compiler writer required");requireRetainedOperationLifetimeV1(current.lifetime,control);}

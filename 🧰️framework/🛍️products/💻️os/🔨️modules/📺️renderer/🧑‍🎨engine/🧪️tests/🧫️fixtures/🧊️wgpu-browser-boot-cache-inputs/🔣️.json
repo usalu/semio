@@ -1,9 +1,15 @@
 {
   "defaultVariant": "s",
-  "ambientVariants": [
-    "fixture-first",
-    "fixture-second"
-  ],
+  "bootCatalog": {
+    "elements": [
+      "semio-plugin-catalog",
+      "semio-native-catalog"
+    ],
+    "excludedInputs": [
+      "🎮️playground-session/🟦️.ts",
+      "🤖️generated/🎮️playgrounds/🟦️.ts"
+    ]
+  },
   "cases": [
     {
       "search": "",
@@ -274,7 +280,7 @@
         "appId": "",
         "appRole": "editor",
         "appMode": "",
-        "appExample": "🍄️hexagonal-mushroom",
+        "appExample": "🍄️hexagonal-mushroom-column",
         "brandId": "",
         "brand": {
           "windowTitle": "",
@@ -604,13 +610,25 @@
     "target": "generate-browser-boot",
     "output": "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🤖️generated/🟨️.js",
     "prerequisites": [
-      "@semio-tech/plugin-registry:generate"
+      "@semio-tech/ui-rs:generate"
     ],
     "consumers": [],
     "inputs": [
       "browserBootSources"
     ],
-    "dependencyOutput": "**/🎮️playgrounds/🟦️.ts"
+    "dependencyOutput": "**/🎚️ui-axes/🟦️.ts",
+    "externalDependencies": [
+      "@semio-tech/framework",
+      "@semio-tech/framework-actor",
+      "@semio-tech/framework-canvas-ts",
+      "@semio-tech/framework-os",
+      "@semio-tech/plugin-registry",
+      "@semio-tech/ui",
+      "@semio-tech/ui-contract",
+      "@semio-tech/ui-locale-rs",
+      "ajv",
+      "typescript"
+    ]
   },
   "refusals": [
     {

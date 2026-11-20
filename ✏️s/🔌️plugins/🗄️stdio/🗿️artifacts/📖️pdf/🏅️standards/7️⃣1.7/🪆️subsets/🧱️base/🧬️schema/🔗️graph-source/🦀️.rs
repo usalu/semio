@@ -1,12 +1,18 @@
 //! 🔗️ Reference lookup over the owned PDF graph.
 use crate::standards::v1_7::subsets::base::schema::snapshot::model::{ObjRef,PdfObject,PdfIndirectObject};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue, PdfStreamRoleKind};
 
 /// 🧭️ Follows references in a first-party owned graph.
 pub trait ObjectSource {
     /// 🎯 The object a reference points at (`None` when unresolvable).
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject>;
+    /// 🔍 Inspects an object without transferring native backing.
+    fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
+        let value = self.get(reference);
+        read(value.as_ref());
+    }
+
     /// 🪪️ Finds a logical graph identity without parsing its representation.
     fn identity_of(&self, value: &PdfObject) -> Option<PdfGraphIdentity> { value.as_ref().map(|owner| PdfGraphIdentity { owner, path: Vec::new() }) }
     /// 🧵️ Names the transitive logical inputs consumed by native admission.
@@ -17,6 +23,8 @@ pub trait ObjectSource {
     fn record_role_dependencies(&mut self, _value: &PdfObject, _kind: PdfStreamRoleKind, _dependencies: &[PdfGraphIdentity]) {}
     /// 📚️ Returns native admissions already captured by this owned source.
     fn admitted_roles(&self) -> &[PdfAdmittedStreamRole] { &[] }
+    /// 🫴️ Transfers native admissions to the published snapshot when the provider owns them.
+    fn take_admitted_roles(&mut self) -> Vec<PdfAdmittedStreamRole> { self.admitted_roles().to_vec() }
     /// 🎯️ Reads an already admitted semantic stream role.
     fn semantic_role(&mut self, _value: &PdfObject, _kind: PdfStreamRoleKind) -> Option<PdfStreamRoleValue> { None }
     /// 📄️ Reads a role whose consumer identity differs from its stream dependencies.
@@ -39,6 +47,7 @@ pub trait ObjectSource {
 /// 🧭 A source over the retained `objects` lane (already normalized).
 pub struct GraphSource<'a> {
     by_number: HashMap<ObjRef, &'a PdfObject>,
+    positions: Option<&'a (dyn Fn(ObjRef) -> Option<usize> + Sync)>,
     objects: &'a [PdfIndirectObject],
     pub admitted_roles: Vec<PdfAdmittedStreamRole>,
     pub missing_roles: Vec<(PdfGraphIdentity, PdfStreamRoleKind)>,
@@ -46,8 +55,20 @@ pub struct GraphSource<'a> {
 
 impl<'a> GraphSource<'a> {
     pub fn new(objects: &'a [PdfIndirectObject]) -> Self {
-        Self { by_number: objects.iter().map(|object| (object.id, &object.value)).collect(), objects, admitted_roles: Vec::new(), missing_roles: Vec::new() }
+        Self { by_number: objects.iter().map(|object| (object.id, &object.value)).collect(), positions: None, objects, admitted_roles: Vec::new(), missing_roles: Vec::new() }
     }
+    /// 🗂️ Borrows a directory produced while admitting the graph’s owned values.
+    pub fn with_positions(objects: &'a [PdfIndirectObject], positions: &'a (dyn Fn(ObjRef) -> Option<usize> + Sync)) -> Self {
+        Self { objects, positions: Some(positions), by_number: HashMap::new(), admitted_roles: Vec::new(), missing_roles: Vec::new() }
+    }
+
+    fn object(&self, reference: ObjRef) -> Option<&PdfObject> {
+        match self.positions {
+            Some(position) => self.objects.get(position(reference)?).filter(|object| object.id == reference).map(|object| &object.value),
+            None => self.by_number.get(&reference).copied(),
+        }
+    }
+
     /// 🛂️ Binds an immutable graph to its explicitly admitted semantic context.
     pub fn with_roles(objects: &'a [PdfIndirectObject], roles: &[PdfAdmittedStreamRole]) -> Self {
         Self { admitted_roles: roles.to_vec(), ..Self::new(objects) }
@@ -84,10 +105,10 @@ impl<'a> GraphSource<'a> {
             let mut visited = Vec::new();
             while !visited.contains(&page) && visited.len() < 64 {
                 visited.push(page);
-                let Some(value) = self.by_number.get(&page) else { break; };
+                let Some(value) = self.object(page) else { break; };
                 if let Some(resources) = value.dict_get("Resources") {
                     let (owner, path, dictionary) = match resources {
-                        PdfObject::Ref(owner) => (*owner, Vec::new(), self.by_number.get(owner).copied()),
+                        PdfObject::Ref(owner) => (*owner, Vec::new(), self.object(*owner)),
                         value => (page, vec![PdfGraphPath::Entry { key: "Resources".into() }], Some(value)),
                     };
                     if dictionary.is_some_and(|value| value.dict_get("Font").is_some()) {
@@ -99,11 +120,19 @@ impl<'a> GraphSource<'a> {
                 let Some(parent) = value.dict_get("Parent").and_then(PdfObject::as_ref) else { break; }; page = parent;
             }
         }
+        let mut visited_roots: HashSet<_> = dependencies.iter().filter(|identity| identity.path.is_empty()).map(|identity| identity.owner).collect();
         let mut index = 0;
         while index < dependencies.len() {
             let mut owners = Vec::new();
-            if let Some(value) = crate::standards::v1_7::subsets::base::schema::stream_roles::resolve_identity(self.objects, &dependencies[index]) { references(value, &mut owners); }
-            for owner in owners { let dependency = PdfGraphIdentity { owner, path: Vec::new() }; if !dependencies.contains(&dependency) { dependencies.push(dependency); } }
+            let identity = &dependencies[index];
+            if let Some(value) = self.object(identity.owner).and_then(|value| {
+                crate::standards::v1_7::subsets::base::schema::stream_roles::resolve_object_path(value, &identity.path)
+            }) {
+                references(value, &mut owners);
+            }
+            for owner in owners {
+                if visited_roots.insert(owner) { dependencies.push(PdfGraphIdentity { owner, path: Vec::new() }); }
+            }
             index += 1;
         }
         dependencies
@@ -112,10 +141,15 @@ impl<'a> GraphSource<'a> {
 }
 
 impl ObjectSource for GraphSource<'_> {
+    fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
+        read(self.object(reference));
+    }
+
     fn role_dependencies(&self, identity: &PdfGraphIdentity) -> Vec<PdfGraphIdentity> { self.dependencies_of(identity) }
     fn admitted_roles(&self) -> &[PdfAdmittedStreamRole] { &self.admitted_roles }
+    fn take_admitted_roles(&mut self) -> Vec<PdfAdmittedStreamRole> { std::mem::take(&mut self.admitted_roles) }
     fn get(&mut self, reference: ObjRef) -> Option<PdfObject> {
-        self.by_number.get(&reference).map(|value| (*value).clone())
+        self.object(reference).cloned()
     }
     fn identity_of(&self, value: &PdfObject) -> Option<PdfGraphIdentity> {
         let identities = self.identities_of(value);

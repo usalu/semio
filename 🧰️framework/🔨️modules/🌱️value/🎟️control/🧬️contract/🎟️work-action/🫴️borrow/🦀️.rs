@@ -12,6 +12,10 @@ impl OriginalWorkBindingIdentity{
  pub fn validates_loan(&self,loan:&crate::OriginalWorkLoan<'_>)->Result<bool,ValueError>{loan.validate_context()?;Ok(self.issuer==loan.identity()&&self.source==loan.source_turn())}
  /// 🧷️ Matches a genuine effect from the same original Work owner across action boundaries.
  pub fn matches_effect(&self,effect:&RetainedAllocationEffect<'_>)->bool{let action=effect.work_identity().action_identity();self.scope==action.scope&&self.issuer==action.issuer&&self.source==effect.work_source_turn()}
+ /// 🔁️ Follows the live turn: every host turn opens its own Source, Work scope and issuer, so a resident holder between actions (`pending == false`, no recorded reply awaiting recovery) re-binds to the effect that now drives it when that effect carries a Source; a pending action requires the exact binding. Answers whether the holder matches the effect afterwards.
+ pub fn follow_between_actions(&mut self,effect:&RetainedAllocationEffect<'_>,pending:bool)->bool{if !pending&&effect.work_source_turn().is_some(){*self=Self::from_effect(effect)}self.matches_effect(effect)}
+ /// 🔁️ Immutable form of [`Self::follow_between_actions`] for holders reached through shared references: between actions any effect carrying a Source is admitted, a pending action still requires the exact binding.
+ pub fn admits_between_actions(&self,effect:&RetainedAllocationEffect<'_>,pending:bool)->bool{self.matches_effect(effect)||!pending&&effect.work_source_turn().is_some()}
  /// 🔗️ Matches a genuine effect of the same Source dispatch although each effect opens its own Work issuer and scope, so a resident owner captured by one turn's effect retires under a later turn's.
  pub fn matches_source(&self,effect:&RetainedAllocationEffect<'_>)->bool{self.source==effect.work_source_turn()}
 

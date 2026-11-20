@@ -52,8 +52,9 @@ fn preview_visibility_follows_the_portable_source_revision_contract() {
         let cached = BitmapTransient { output_pixels: Some(encode_base64(&vec![1; count])), contradiction: false, output_width: snapshot.output.width, output_height: snapshot.output.height, source_revision: encode_base64(&source) };
         let cached_visible = render_layers_fingerprint(&snapshot, &cached, &config, None, current) != empty;
         let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, source), ToolRunState::Running);
-        run.payload = Some(payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false).encode_json().into_bytes().into());
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false).encode_json().into_bytes()));
         let live_visible = render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &config, Some(&run), current) != empty;
+        retire_run(run);
         assert_eq!(cached_visible, case["visible"].as_bool().unwrap(), "cached {}", case["id"]);
         assert_eq!(live_visible, cached_visible, "live {}", case["id"]);
         observations.push(cached_visible);
@@ -67,7 +68,7 @@ fn preview_visibility_follows_the_portable_source_revision_contract() {
 #[test]
 fn an_unsolved_output_still_renders_its_extent_for_every_example() {
     for snapshot in [crate::examples::rooms_16::snapshot(), crate::examples::flowers_24::snapshot()] {
-        let layers = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
+        let layers = semio_s_artifact_wfc_bitmap_snapshot::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
         assert!(layers.contains("out-extent"), "a pane with no solve is never structurally empty");
         assert!(render(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None, Some([0; 32])).is_ok());
     }
@@ -85,17 +86,17 @@ fn a_cached_solve_of_the_wrong_extent_is_discarded_rather_than_reshaped() {
         output_height: snapshot.output.height,
         source_revision: encode_base64(&[0; 32]),
     };
-    let stale_layers = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
+    let stale_layers = semio_s_artifact_wfc_bitmap_snapshot::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
     let fresh_indices = decode_base64(fresh.output_pixels.as_deref().expect("fresh pixels")).expect("fresh pixels decode");
-    let fresh_layers = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &fresh_indices, &snapshot.pinned);
+    let fresh_layers = semio_s_artifact_wfc_bitmap_snapshot::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &fresh_indices, &snapshot.pinned);
     assert_ne!(stale_layers, fresh_layers, "a fresh solve draws more than a bare extent");
 }
 
 #[test]
 fn hiding_the_pin_overlay_drops_exactly_the_pin_layers() {
     let snapshot = crate::examples::flowers_24::snapshot();
-    let with_pins = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
-    let without = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &[]);
+    let with_pins = semio_s_artifact_wfc_bitmap_snapshot::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
+    let without = semio_s_artifact_wfc_bitmap_snapshot::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &[]);
     assert!(with_pins.contains("out-pin-0-0"));
     assert!(!without.contains("out-pin-"));
 }
@@ -129,8 +130,9 @@ fn a_partial_fill_payload_paints_differently_from_empty_and_finished() {
     let finished_layers = render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None, Some([0; 32]));
     let partial = payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false);
     let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, [0; 32]), ToolRunState::Running);
-    run.payload = Some(partial.encode_json().into_bytes().into());
+    run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(partial.encode_json().into_bytes()));
     let partial_layers = render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run), Some([0; 32]));
+    retire_run(run);
     assert_ne!(partial_layers, empty);
     assert_ne!(partial_layers, finished_layers);
 }
@@ -152,5 +154,19 @@ fn completed_payload_ignores_trace_pixels_and_discard_markers() {
         let color: Vec<f64> = serde_json::from_value(painted["fill"]["color"].clone()).unwrap();
         assert_eq!(color, document.input.palette[case["expected"].as_u64().unwrap() as usize].to_unit_rgba().to_vec(), "{}", case["id"]);
         assert_eq!(layers.iter().any(|layer| layer["id"] == "out-pin-0-0"), case["showDiscard"].as_bool().unwrap(), "{}", case["id"]);
+    }
+}
+
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
     }
 }

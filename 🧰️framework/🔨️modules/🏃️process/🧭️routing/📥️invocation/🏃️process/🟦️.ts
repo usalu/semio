@@ -44,9 +44,17 @@ function cacheScanActivityV1(progress:ScriptProgress,policy=progressSchema.const
  const path=activity.resource.slice(policy.resourcePrefix.length);return path.length<=policy.maximumPathCharacters&&new RegExp(policy.pathPattern,"u").test(path);
 }
 
-function toolingActivityV1(progress:ScriptProgress):keyof typeof progressSchema.const.tooling.labels.en|null{
+function toolingActivityV1(progress:ScriptProgress):{key:keyof typeof progressSchema.const.tooling.labels.en;completed?:number}|null{
  const policy=progressSchema.const.tooling,activity=progress.activity;if(progress.stage!=="running"||!activity||activity.mode!=="shared"||!Number.isFinite(activity.elapsedMs)||activity.elapsedMs<0||activity.elapsedMs>policy.maximumElapsedMilliseconds||activity.resource.length>policy.maximumResourceCharacters||progress.command.length>policy.maximumCommandCharacters||!new RegExp(policy.commandPattern,"u").test(progress.command)||typeof progress.owner!=="string"||progress.owner.length>policy.maximumCommandCharacters||Object.keys(progress).sort().join(",")!=="activity,command,owner,stage"||Object.keys(activity).sort().join(",")!=="elapsedMs,mode,resource")return null;
- if(policy.resources.includes(activity.resource))return activity.resource as keyof typeof policy.labels.en;if(!activity.resource.startsWith(policy.namespacePrefix))return null;const path=activity.resource.slice(policy.namespacePrefix.length);return path.length<=policy.maximumPathCharacters&&new RegExp(policy.pathPattern,"u").test(path)&&new RegExp(policy.namespaceDigestPattern,"u").test(path)?"namespace":null;
+ if(policy.resources.includes(activity.resource))return {key:activity.resource as keyof typeof policy.labels.en};
+ if(activity.resource.startsWith(policy.namespacePrefix)){
+  const path=activity.resource.slice(policy.namespacePrefix.length);
+  return path.length<=policy.maximumPathCharacters&&new RegExp(policy.pathPattern,"u").test(path)&&new RegExp(policy.namespaceDigestPattern,"u").test(path)?{key:"namespace"}:null;
+ }
+ const separator=activity.resource.lastIndexOf(":"),resource=activity.resource.slice(0,separator);
+ if(separator<0||!Object.hasOwn(policy.countLabels.en,resource))return null;
+ const text=activity.resource.slice(separator+1),completed=Number(text);
+ return new RegExp(policy.counterPattern,"u").test(text)&&Number.isSafeInteger(completed)&&completed<=policy.maximumCompleted?{key:resource as keyof typeof policy.countLabels.en,completed}:null;
 }
 
 function dependencyWorkActivityV1(progress:ScriptProgress):{slot:number;family:number;count:number|undefined;elapsed:number}|null{
@@ -106,9 +114,9 @@ function createScriptProcessProgressWriterV1(write:(line:string)=>void,environme
    if(current-workAt!>=policy.minimumPublicationMilliseconds){workAt=current;drainWork();}
    return;
   }
-  const providerCount=sourceProviderCounterV1(progress),cache=cacheScanActivityV1(progress),deleting=cacheScanActivityV1(progress,progressSchema.const.cacheDelete,"exclusive"),tooling=toolingActivityV1(progress),count=providerCount??(deleting||tooling!==null?0:cache?progress.activity!.elapsedMs:null);
+  const providerCount=sourceProviderCounterV1(progress),cache=cacheScanActivityV1(progress),deleting=cacheScanActivityV1(progress,progressSchema.const.cacheDelete,"exclusive"),tooling=toolingActivityV1(progress),count=providerCount??tooling?.completed??(deleting||tooling!==null?0:cache?progress.activity!.elapsedMs:null);
   if(count===null){flushOld();key=undefined;lastAt=undefined;lastClock=undefined;lastCount=undefined;lastElapsed=undefined;emitOld(row);return;}
-  const current=now(),oldIdentity=progress.owner+"\0"+progress.command+"\0"+(cache||deleting||tooling!==null?progress.activity!.resource:"provider"),oldElapsed=progress.activity!.elapsedMs,reset=oldIdentity!==key||!deleting&&tooling===null&&(lastCount!==undefined&&count<lastCount||lastElapsed!==undefined&&oldElapsed<lastElapsed)||!Number.isFinite(current)||lastClock!==undefined&&current<lastClock;
+  const current=now(),oldIdentity=progress.owner+"\0"+progress.command+"\0"+(tooling?.completed!==undefined?tooling.key:cache||deleting||tooling!==null?progress.activity!.resource:"provider"),oldElapsed=progress.activity!.elapsedMs,reset=oldIdentity!==key||!deleting&&(tooling===null||tooling.completed!==undefined)&&(lastCount!==undefined&&count<lastCount||lastElapsed!==undefined&&oldElapsed<lastElapsed)||!Number.isFinite(current)||lastClock!==undefined&&current<lastClock;
   if(reset){flushOld();lastAt=undefined;}
   key=oldIdentity;lastClock=Number.isFinite(current)?current:undefined;lastCount=count;lastElapsed=oldElapsed;
   if(lastAt===undefined||current-lastAt>=(tooling!==null?progressSchema.const.tooling:deleting?progressSchema.const.cacheDelete:cache?progressSchema.const.cacheScan:progressSchema.const.sourceProvider).minimumPublicationMilliseconds){pending=undefined;emitOld(row);lastAt=Number.isFinite(current)?current:undefined;}else pending=row;
@@ -119,7 +127,13 @@ function createScriptProcessProgressWriterV1(write:(line:string)=>void,environme
 export function formatScriptProcessActivityV1(progress:ScriptProgress,environment:Readonly<Record<string,string|undefined>>=process.env):string|null{
  const languages=noticeLanguagesV1(["en","de"] as const,environment);if(languages.length>1){const lines=languages.map(language=>formatScriptProcessActivityV1(progress,{...environment,[LANGUAGE_PROTOCOL_V1.explicitVariable]:language}));return lines.includes(null)?null:lines.join("\n");}
  const activity=progress.activity;if(!activity){const phases=progressSchema.const.stagePhases,labels=phases.labels[progressLanguage(environment)];return Object.keys(progress).sort().join(",")==="command,owner,stage"&&progress.owner===phases.owner&&progress.stage===phases.stage&&Object.hasOwn(labels.phases,progress.command)?labels.template.replace(/\{([A-Za-z]+)\}/gu,(_token,key:string)=>key==="command"?progress.command:labels.phases[progress.command as keyof typeof labels.phases]):null;}const declaration=progressSchema.const.sourceAdmission;
- const tooling=progressSchema.const.tooling;if(tooling.resources.includes(activity.resource)||activity.resource.startsWith(tooling.namespacePrefix)){const key=toolingActivityV1(progress);return key===null?null:tooling.labels[progressLanguage(environment)][key].replace("{command}",progress.command);}
+ const tooling=progressSchema.const.tooling,resource=activity.resource;
+ if(tooling.resources.includes(resource)||resource.startsWith(tooling.namespacePrefix)||Object.hasOwn(tooling.countLabels.en,resource.slice(0,resource.lastIndexOf(":")))){
+  const row=toolingActivityV1(progress);if(row===null)return null;
+  const language=progressLanguage(environment);
+  const label=row.completed===undefined?tooling.labels[language][row.key]:tooling.countLabels[language][row.key as keyof typeof tooling.countLabels.en];
+  return label.replace("{command}",progress.command).replace("{completed}",String(row.completed));
+ }
  const provider=progressSchema.const.sourceProvider;
  if(activity.resource.startsWith(provider.resourcePrefix)){const count=sourceProviderCounterV1(progress);return count===null?null:provider.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{completed}",String(count));}
  const deletion=progressSchema.const.cacheDelete;if(activity.resource.startsWith(deletion.resourcePrefix))return cacheScanActivityV1(progress,deletion,"exclusive")?deletion.labels[progressLanguage(environment)].replace("{command}",progress.command).replace("{path}",activity.resource.slice(deletion.resourcePrefix.length)):null;
@@ -188,7 +202,8 @@ export function readScriptProcessEnvelope(value: unknown, now: number): ScriptPr
   if (!Number.isFinite(now)) throw Error("Original Script process clock refused");
   if (envelope.deadlineEpochMilliseconds !== null) {
     const remaining = envelope.deadlineEpochMilliseconds - now;
-    if (remaining <= 0 || remaining > envelope.policy.maximumElapsedMilliseconds) throw Error("Original Script process deadline refused");
+    if (remaining <= 0) throw new ResourceLoanDeadlineExhaustedV1();
+    if (remaining > envelope.policy.maximumElapsedMilliseconds) throw Error("Original Script process deadline refused");
   }
   return envelope;
 }
@@ -204,7 +219,7 @@ declare const invocationBrand:unique symbol;
 export type IssuedScriptInvocationV1=ScriptInvocation&{readonly[invocationBrand]:true};
 type Scope={live:boolean;accepting:boolean;drained?:boolean;pending:Set<Promise<unknown>>;failures:unknown[];retirements:Set<()=>void>;parent?:Scope;ownedCancellation?:Readonly<{signal:AbortSignal;parentSignal:AbortSignal}>};
 type ProjectedDeadlineV1={deadlineEpochMilliseconds:number;started:number;initialMilliseconds:number;waitedAtStart:number};
-type Birth=Scope&{invocation:IssuedScriptInvocationV1;envelope:ScriptProcessEnvelope;projectedWires:Map<string,{envelope:ScriptProcessEnvelope;deadline:ProjectedDeadlineV1|null}>};
+type Birth=Scope&{waitedAtStart:number;invocation:IssuedScriptInvocationV1;envelope:ScriptProcessEnvelope;projectedWires:Map<string,{envelope:ScriptProcessEnvelope;deadline:ProjectedDeadlineV1|null}>};
 type ControlScope=Scope&{waitedAtStart:number;birth:Birth;invocation:IssuedScriptInvocationV1;signal:AbortSignal;started:number;requestedMilliseconds:number;command:string;deadlineEpochMilliseconds:number|null;parentControl?:ControlScope;progress?:ProgressDeadlineV1;units?:number;follows?:ControlScope};
 let received=false;
 const invocations=new WeakMap<ScriptInvocation,Birth>(),controls=new WeakMap<ResourceLeaseControl,ControlScope>(),context=new AsyncLocalStorage<ScriptInvocation>();
@@ -251,7 +266,7 @@ export function withScriptProcessEnvelope<T>(envelope:ScriptProcessEnvelope,run:
  const stopTimeout=initial===null?undefined:startProcessDeadlineV1(()=>creditedDeadlineRemainingV1(Math.min(deadline!-Date.now(),initial-(performance.now()-started)),admissionWaitedMillisecondsV1()-waitedAtStart),()=>controller.abort(Error("Original Script process deadline exhausted")),true);process.once("SIGINT",interrupt);process.once("SIGTERM",terminate);process.once("SIGHUP",terminate);
  const presentation=createScriptProcessProgressWriterV1(line=>{process.stderr.write(line);},process.env,undefined,scriptProcessMachineRowsV1(process.env,process.stderr.isTTY===true));
  const invocation:ScriptInvocation=Object.freeze({policy:admitted.policy,capabilities:admitted.capabilities,control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>deadline===null||initial===null?null:Math.max(0,Math.floor(creditedDeadlineRemainingV1(Math.min(deadline-Date.now(),initial-(performance.now()-started)),admissionWaitedMillisecondsV1()-waitedAtStart))),publish:(line:ScriptProgress)=>{noteProgressV1();noteLeaseProgressV1(line);return presentation.publish(line);},yieldContinuation:()=>{noteProgressV1();return new Promise<void>(done=>setImmediate(done));}})});
- const birth:Birth={...scope(),invocation:invocation as IssuedScriptInvocationV1,envelope:admitted,projectedWires:new Map()};rememberProjectedEnvelopeV1(birth,admitted);invocations.set(invocation,birth);registerLeaseRootAbortV1(reason=>controller.abort(reason));
+ const birth:Birth={...scope(),waitedAtStart,invocation:invocation as IssuedScriptInvocationV1,envelope:admitted,projectedWires:new Map()};rememberProjectedEnvelopeV1(birth,admitted);invocations.set(invocation,birth);registerLeaseRootAbortV1(reason=>controller.abort(reason));
  return observe(context.run(invocation,()=>settle(birth,async()=>{requireIssuedScriptInvocationV1(invocation);return await run(invocation);}).then(value=>{presentation.flush();checkScriptInvocation(invocation);return value;},error=>{try{presentation.flush();}catch{}const failure=ended?.interruption??error;if(ended!==undefined){const code=ended.code,quit=(reason:unknown)=>{if(reason!==failure)throw reason;process.exit(code);};try{process.stderr.write(scriptProcessWatchdogNoticeV1("cancelled",{signal:ended.signal},firstFailureLanguagesV1(process.env)));}catch{}process.once("uncaughtException",quit);process.once("unhandledRejection",quit);}throw failure;}).finally(()=>{stopWatchdog();stopSampler();stopTimeout?.();process.removeListener("SIGINT",interrupt);process.removeListener("SIGTERM",terminate);process.removeListener("SIGHUP",terminate);})));
  }catch(error){return observe(Promise.reject(error));}
 }
@@ -334,7 +349,7 @@ function remaining(original:ControlScope,maximumOnly=false):number|null{
    if(!maximumOnly)monotonic=minimum(monotonic,cutoff);
   }
  }
- const wall=epoch===null?0:Date.now(),now=performance.now();
+ const wall=epoch===null?0:Date.now(),now=performance.now(),late=Math.max(0,admissionWaitedMillisecondsV1()-waited);
  for(const {row,cutoff}of progressRows){
   if(cutoff>now)continue;
   const left=row.progress!.remaining(),reason=row.progress!.expiry();
@@ -342,7 +357,7 @@ function remaining(original:ControlScope,maximumOnly=false):number|null{
  }
  for(const row of rows.keys()){if(!row.live)throw Error("Live Original resource control issuance required");row.signal.throwIfAborted();}
  for(const invocation of invocations)invocation.control.signal.throwIfAborted();
- const value=minimum(minimum(roots.get(original)??null,epoch===null?null:epoch-wall),monotonic===null?null:monotonic-performance.now());
+ const bound=minimum(minimum(roots.get(original)??null,epoch===null?null:epoch-wall),monotonic===null?null:monotonic-performance.now()),value=bound===null?null:bound+late;
  if(value!==null&&value<=0)throw new ResourceLoanDeadlineExhaustedV1();
  return value;
 }
@@ -389,7 +404,7 @@ export function withScriptInvocationSignalV1<T>(invocation:ScriptInvocation,addi
  return withInvocationSignalV1(invocation,additionalSignal,run,false);
 }
 function withInvocationSignalV1<T>(invocation:ScriptInvocation,additionalSignal:AbortSignal,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>,handled:boolean):Promise<T>{
- const birth=admit(invocation);if(!(additionalSignal instanceof AbortSignal))throw Error("Actual additional cancellation signal required");const signal=AbortSignal.any([invocation.control.signal,additionalSignal]),alias:ScriptInvocation=Object.freeze({policy:invocation.policy,capabilities:invocation.capabilities,control:Object.freeze({...invocation.control,signal})}),child:Birth={...scope(birth),invocation:alias as IssuedScriptInvocationV1,envelope:birth.envelope,projectedWires:birth.projectedWires,...(handled?{ownedCancellation:{signal:additionalSignal,parentSignal:invocation.control.signal}}:{})},stopping:SignalScope={parent:invocation,additionalSignal,stopped:false};invocations.set(alias,child);signalScopes.set(alias,stopping);return track(birth,()=>context.run(alias,()=>settle(child,async()=>{if(!handled)checkScriptInvocation(alias);return run(alias as IssuedScriptInvocationV1);}).then(value=>{requireIssuedScriptInvocationV1(invocation);if(!stopping.stopped&&!(handled&&additionalSignal.aborted&&!invocation.control.signal.aborted))checkScriptInvocation(alias);return value;})));
+ const birth=admit(invocation);if(!(additionalSignal instanceof AbortSignal))throw Error("Actual additional cancellation signal required");const signal=AbortSignal.any([invocation.control.signal,additionalSignal]),alias:ScriptInvocation=Object.freeze({policy:invocation.policy,capabilities:invocation.capabilities,control:Object.freeze({...invocation.control,signal})}),child:Birth={...scope(birth),waitedAtStart:birth.waitedAtStart,invocation:alias as IssuedScriptInvocationV1,envelope:birth.envelope,projectedWires:birth.projectedWires,...(handled?{ownedCancellation:{signal:additionalSignal,parentSignal:invocation.control.signal}}:{})},stopping:SignalScope={parent:invocation,additionalSignal,stopped:false};invocations.set(alias,child);signalScopes.set(alias,stopping);return track(birth,()=>context.run(alias,()=>settle(child,async()=>{if(!handled)checkScriptInvocation(alias);return run(alias as IssuedScriptInvocationV1);}).then(value=>{requireIssuedScriptInvocationV1(invocation);if(!stopping.stopped&&!(handled&&additionalSignal.aborted&&!invocation.control.signal.aborted))checkScriptInvocation(alias);return value;})));
 }
 /** 🛑️ Distinguishes completed work from an exact owned stop after every accepted child drains. */
 export type ScriptCancellationResultV1<T>=Readonly<{status:"completed";value:T}|{status:"cancelled"}>;
@@ -405,15 +420,15 @@ export function requireIssuedScriptInvocationDescendantV1(ancestor:ScriptInvocat
 export function acknowledgeScriptInvocationSignalStopV1(invocation:ScriptInvocation):void{const signal=signalScopes.get(invocation);if(!signal||!birthOf(invocation).live||!signal.additionalSignal.aborted)throw Error("Actual stopped derived Script signal scope required");requireIssuedScriptInvocationV1(signal.parent);signal.stopped=true;}
 
 /** 📤️ Carries the same admitted deadline into an owned child process environment. */
-export function scriptProcessEnvironment(envelope: ScriptProcessEnvelope, environment: Readonly<Record<string, string | undefined>>): Record<string, string | undefined> {
-  return { ...environment, [SCRIPT_PROCESS_INVOCATION_ENV]: JSON.stringify(readScriptProcessEnvelope(envelope, Date.now())) };
+export function scriptProcessEnvironment(envelope: ScriptProcessEnvelope, environment: Readonly<Record<string, string | undefined>>, now: number = Date.now()): Record<string, string | undefined> {
+  return { ...environment, [SCRIPT_PROCESS_INVOCATION_ENV]: JSON.stringify(readScriptProcessEnvelope(envelope, now)) };
 }
 
 /** 🌊️ Hands the caller's current original invocation, with its remaining deadline, to an owned child process environment. */
 export function scriptInvocationEnvironment(invocation: ScriptInvocation, environment: Readonly<Record<string, string | undefined>>): Record<string, string | undefined> {
   requireIssuedScriptInvocationV1(invocation);
-  const birth=birthOf(invocation),available=invocation.control.remainingMilliseconds(),envelope=available===null?birth.envelope:readScriptProcessEnvelope({...birth.envelope,deadlineEpochMilliseconds:Date.now()+Math.floor(available)},Date.now());
-  rememberProjectedEnvelopeV1(birth,envelope);return scriptProcessEnvironment(envelope,environment);
+  const birth=birthOf(invocation),available=invocation.control.remainingMilliseconds(),now=Date.now(),ceiling=birth.envelope.policy.maximumElapsedMilliseconds||Infinity,own=birth.envelope.deadlineEpochMilliseconds,credited=own===null?null:own+Math.floor(Math.max(0,admissionWaitedMillisecondsV1()-birth.waitedAtStart)),projected=now+Math.min(Math.ceil(available??0),ceiling),envelope=available===null?birth.envelope:readScriptProcessEnvelope({...birth.envelope,deadlineEpochMilliseconds:credited!==null&&credited>now?Math.min(credited,now+ceiling):projected},now);
+  rememberProjectedEnvelopeV1(birth,envelope);return scriptProcessEnvironment(envelope,environment,now);
 }
 
 function projectedDeadlineV1(deadlineEpochMilliseconds:number):ProjectedDeadlineV1{return{deadlineEpochMilliseconds,started:performance.now(),initialMilliseconds:deadlineEpochMilliseconds-Date.now(),waitedAtStart:admissionWaitedMillisecondsV1()};}
@@ -425,8 +440,8 @@ export function scriptResourceProcessEnvironmentV1(control:ResourceLeaseControl,
  requireIssuedResourceControlV1(control);const owner=controls.get(control)!,available=remaining(owner,true),original=owner.birth.envelope;let carried=original,carriedRemaining=Infinity;const suppliedWire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(suppliedWire!==undefined){const issued=owner.birth.projectedWires.get(suppliedWire);if(issued){carried=issued.envelope;carriedRemaining=issued.deadline===null?Infinity:projectedRemainingV1(issued.deadline);}else try{const candidate=readScriptProcessEnvelope(JSON.parse(suppliedWire),Date.now());if(candidate.policy.owner===original.policy.owner){carried=candidate;carriedRemaining=candidate.deadlineEpochMilliseconds===null?Infinity:candidate.deadlineEpochMilliseconds-Date.now();}}catch{}}
  let ceiling=Math.min(original.policy.maximumElapsedMilliseconds||Infinity,carried.policy.maximumElapsedMilliseconds||Infinity),left=Math.min(available??Infinity,carriedRemaining);for(let row:ControlScope|undefined=owner;row;row=row.parentControl){if(row.requestedMilliseconds!==0)ceiling=Math.min(ceiling,row.requestedMilliseconds);const previous=projectedChildDeadlines.get(row);if(previous){left=Math.min(left,projectedRemainingV1(previous.deadline));ceiling=Math.min(ceiling,previous.maximumMilliseconds);}}
  if(left===Infinity){rememberProjectedEnvelopeV1(owner.birth,carried);const result=scriptProcessEnvironment(carried,environment);requireIssuedResourceControlV1(control);return result;}
- if(!Number.isSafeInteger(ceiling)||ceiling<1||ceiling>policySchema.properties.maximumElapsedMilliseconds.maximum)throw Error("Representable actual child phase policy required");const now=Date.now(),deadline=now+Math.floor(Math.min(left,ceiling));if(!Number.isSafeInteger(deadline)||deadline<=now)throw Error("Original child phase deadline exhausted");
- const envelope=readScriptProcessEnvelope({version:1,policy:readScriptPolicy({...original.policy,maximumElapsedMilliseconds:ceiling}),capabilities:carried.capabilities,deadlineEpochMilliseconds:deadline},now);projectedChildDeadlines.set(owner,{deadline:projectedDeadlineV1(deadline),maximumMilliseconds:ceiling});rememberProjectedEnvelopeV1(owner.birth,envelope);const result=scriptProcessEnvironment(envelope,environment);requireIssuedResourceControlV1(control);return result;
+ if(!Number.isSafeInteger(ceiling)||ceiling<1||ceiling>policySchema.properties.maximumElapsedMilliseconds.maximum)throw Error("Representable actual child phase policy required");const now=Date.now(),deadline=now+Math.floor(Math.min(left,ceiling));if(!Number.isSafeInteger(deadline)||deadline<=now)throw new ResourceLoanDeadlineExhaustedV1();
+ const envelope=readScriptProcessEnvelope({version:1,policy:readScriptPolicy({...original.policy,maximumElapsedMilliseconds:ceiling}),capabilities:carried.capabilities,deadlineEpochMilliseconds:deadline},now);projectedChildDeadlines.set(owner,{deadline:projectedDeadlineV1(deadline),maximumMilliseconds:ceiling});rememberProjectedEnvelopeV1(owner.birth,envelope);const result=scriptProcessEnvironment(envelope,environment,now);requireIssuedResourceControlV1(control);return result;
 }
 
 const physicalCleanupOperationLimits=Object.freeze({...cleanupSchema.definitions.OperationProtocol.const});

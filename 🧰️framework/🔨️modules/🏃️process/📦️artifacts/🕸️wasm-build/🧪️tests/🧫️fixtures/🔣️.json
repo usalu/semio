@@ -27,5 +27,21 @@
     "leaseDirectory": "/leases",
     "sourceOwner": "owner"
   },
-  "wasmHex": "0061736d01000000"
+  "wasmHex": "0061736d01000000",
+  "packageIdentity": [
+    { "name": "stable.wasm", "change": "unchanged", "expected": [] },
+    { "name": "changed.wasm", "change": "retime", "expected": ["mtimeNs"] },
+    { "name": "replaced.wasm", "change": "replace", "expected": ["ino"] },
+    { "name": "linked.wasm", "change": "hardlink", "expected": ["nlink"] },
+    { "name": "missing.wasm", "change": "remove", "expected": ["missing"] }
+  ],
+  "packageRecheck": [
+    { "name": "settled.wasm", "change": "transient-timestamp", "expected": [], "observations": 1, "checks": 3 },
+    { "name": "retry.wasm", "change": "transient-observation", "expected": [], "observations": 2, "checks": 4 },
+    { "name": "retimed.wasm", "change": "persistent-timestamp", "expected": ["mtimeNs"], "observations": 0, "checks": 2 },
+    { "name": "replaced.wasm", "change": "transient-inode", "expected": ["ino"], "observations": 0, "checks": 1 },
+    { "name": "churning.wasm", "change": "persistent-observation", "expected": ["during file observation"], "observations": 2, "checks": 4 },
+    { "name": "io.wasm", "change": "io", "expected": ["Physical file observation: io"], "observations": 1, "checks": 1 },
+    { "name": "mutated.wasm", "change": "different-digest", "expected": ["bytes changed"], "observations": 1, "checks": 2 }
+  ]
 }

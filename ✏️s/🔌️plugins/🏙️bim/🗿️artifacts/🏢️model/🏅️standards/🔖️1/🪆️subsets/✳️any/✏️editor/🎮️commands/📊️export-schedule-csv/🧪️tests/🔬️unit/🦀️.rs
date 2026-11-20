@@ -26,8 +26,8 @@ use protocol::Inference;
 
 fn scheduled() -> ModelSnapshot {
     let mut snapshot = demo();
-    snapshot.schedules.insert("sch-walls".into(), preset("wall", "Wall list: ground & first").expect("the wall preset"));
-    snapshot.schedules.insert("sch-doors".into(), preset("door", "Doors").expect("the door preset"));
+    snapshot.schedules.cold_insert("sch-walls".into(), preset("wall", "Wall list: ground & first").expect("the wall preset"));
+    snapshot.schedules.cold_insert("sch-doors".into(), preset("door", "Doors").expect("the door preset"));
     snapshot
 }
 
@@ -117,6 +117,6 @@ async fn a_job_over_a_schedule_that_left_the_model_stops_with_a_fault() {
     let mut snapshot = scheduled();
     let mut job = CsvJob::new("sch-doors".into(), Some(&instance));
     job.advance(&snapshot).expect("the first step");
-    snapshot.schedules.remove("sch-doors");
+    snapshot.schedules.cold_remove("sch-doors");
     assert_eq!(job.advance(&snapshot).expect_err("gone").code.0, "app.schedule.missing");
 }

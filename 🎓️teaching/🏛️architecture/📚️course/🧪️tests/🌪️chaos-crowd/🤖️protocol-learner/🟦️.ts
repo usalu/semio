@@ -5,7 +5,7 @@ import { connect, type Socket } from "node:net";
 import { randomBytes } from "node:crypto";
 import { PRESENCE_PROTOCOL } from "../../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🧬️wire-types/🟦️.ts";
 import { presenceSocketUrl } from "../../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🛣️routes-and-sockets/🟦️.ts";
-import { learnerTag, rosterScope, type Answer, type Challenge, type Command, type RunView, type SheetTask } from "../../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
+import { learnerTag, presenceProblem, rosterScope, type Answer, type Challenge, type Command, type RunView, type SheetTask } from "../../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts";
 import { ProctorClient, ProctorUnavailable, RETRY_TIMING, newId, proctorTransport, retryTransient, type CommandVerdict, type HttpRequest, type HttpResponse, type HttpTransport } from "../../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/🔨️modules/🛂️proctor/🟦️.ts";
 import { PAR, itemOf, taskOf, type SourceQuiz } from "../../../🎭️e2e/🚶️learner/🟦️.ts";
 
@@ -252,4 +252,26 @@ export async function ghost(base: string, tenant: string, how: Vanish, origin: s
   else if (how === "reset") socket.resetAndDestroy();
   else socket.destroy();
   return () => socket.destroy();
+}
+
+/** 🔭️ What the proctor's own roster room holds: a silent observer joins the roster, collects the welcome and the batches that follow for `listenMs`, and names how many learners it saw and which of `expected` (tag to label) are missing; the evidence that tells a short server roster from a device that lost sight of learners. */
+export async function rosterAudit(base: string, tenant: string, expected: ReadonlyMap<string, string>, listenMs = 4_000): Promise<string> {
+  const sessions = new Map<string, string | undefined>();
+  const rejected = new Map<string, string>();
+  const socket = new WebSocket(presenceSocketUrl(base, rosterScope(tenant), "audit"), [PRESENCE_PROTOCOL]);
+  socket.addEventListener("message", (event) => {
+    const frame = JSON.parse(String(event.data)) as { type: string; roster?: { session: string; state?: { tag?: string } | null }[]; entries?: { session: string; state?: { tag?: string } | null }[]; left?: string[] };
+    for (const entry of [...(frame.roster ?? []), ...(frame.entries ?? [])]) {
+      sessions.set(entry.session, entry.state?.tag ?? undefined);
+      const problem = entry.state == null ? undefined : presenceProblem(entry.state);
+      if (problem === undefined) rejected.delete(entry.session);
+      else rejected.set(entry.session, `${entry.state?.tag ?? "?"}: ${problem.code} at ${problem.path}`);
+    }
+    for (const session of frame.left ?? []) (sessions.delete(session), rejected.delete(session));
+  });
+  await pause(listenMs);
+  socket.close();
+  const tags = new Set([...sessions.values()].filter((tag): tag is string => tag !== undefined));
+  const missing = [...expected].filter(([tag]) => !tags.has(tag)).map(([, label]) => label);
+  return `the proctor's roster holds ${sessions.size} sessions of ${tags.size} learners; missing of ${expected.size} expected: [${missing.join(", ")}]; sessions without state: ${[...sessions.values()].filter((tag) => tag === undefined).length}; states a client rejects: [${[...rejected.values()].join("; ")}]`;
 }

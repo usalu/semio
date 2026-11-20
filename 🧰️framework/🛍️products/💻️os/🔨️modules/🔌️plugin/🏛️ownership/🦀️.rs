@@ -7,7 +7,7 @@ use crate::sdk_fault::plugin_sdk_fault;
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure;
 pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
-pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_effect_step,plugin_settle_poll,plugin_grant_step,plugin_unit_step,plugin_effect_close,plugin_effect_idle,plugin_controlled_effect_close,plugin_poll_outcome,plugin_effect_turn,plugin_failure_error,plugin_settle_value,plugin_pay_unit,original_lifecycle_delta,original_lifecycle_unposted};
+pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_effect_step,original_lifecycle_source_effect_step,plugin_settle_poll,plugin_grant_step,plugin_unit_step,plugin_effect_close,plugin_effect_idle,plugin_controlled_effect_close,plugin_poll_outcome,plugin_effect_turn,plugin_failure_error,plugin_settle_value,plugin_pay_unit,original_lifecycle_delta,original_lifecycle_unposted};
 
 
 
@@ -61,6 +61,41 @@ pub fn original_registry_backing<S,T>(_:fn(&S)->&ArtifactFixedRegistry<T>,capaci
 pub fn original_deque_backing<S,T>(_:fn(&S)->&std::collections::VecDeque<T>,capacity:usize)->Result<usize,ValueError>{capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original deque backing extent overflow"))}
 /// 📏️ Infers the actual queue element type from its defining component field without constructing backing.
 pub fn original_queue_backing<S,T>(_:fn(&S)->&ArtifactFixedQueue<T>,capacity:usize)->Result<usize,ValueError>{ArtifactFixedQueue::<T>::birth_demands(capacity).map(|d|d.capacity_bytes)}
+
+/// 📦️ Quotes and retires the physical backing of an empty original container.
+pub trait EmptyBacking {
+    fn release_bytes(&self)->Option<usize>;
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+}
+
+/// 📮️ Returns one fully funded physical release for an empty original backing.
+pub fn release_empty_backing(bytes:Option<usize>,grant:RetainedCloneGrant,release:impl FnOnce())->Result<RetainedCloneStep,ValueError>{
+    let bytes=bytes.ok_or_else(||ValueError::invariant("mounted backing retains an active item or reservation"))?;
+    let idle=RetainedCloneProgress::default();
+    if bytes==0{return Ok(RetainedCloneStep::Complete(idle))}
+    if !plugin_grant_funds(RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},grant){return Ok(RetainedCloneStep::Progress(idle))}
+    release();
+    Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..idle}))
+}
+
+impl<T> EmptyBacking for ArtifactFixedRegistry<T>{
+    fn release_bytes(&self)->Option<usize>{self.empty_backing_byte_demand()}
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_empty_backing_granted(grant)}
+}
+
+impl<T> EmptyBacking for std::collections::VecDeque<T>{
+    fn release_bytes(&self)->Option<usize>{self.is_empty().then(||self.capacity()*size_of::<T>())}
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        release_empty_backing(self.release_bytes(),grant,||*self=Self::new())
+    }
+}
+
+impl<T> EmptyBacking for ArtifactFixedQueue<T>{
+    fn release_bytes(&self)->Option<usize>{self.items.release_bytes()}
+    fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        release_empty_backing(self.release_bytes(),grant,||{self.items=std::collections::VecDeque::new();self.allocation_admitted=false;})
+    }
+}
 
 #[derive(Debug)]
 pub struct ArtifactFixedQueue<T> {
@@ -255,55 +290,52 @@ pub const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
 /// release its close owes, under every mounted caller grant and the guest's contiguous request ceiling.
 pub const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
 
+#[path = "🧱️registry-backing/🦀️.rs"]
+mod registry_backing;
+use registry_backing::RegistryBacking;
+
 pub struct ArtifactFixedRegistry<T> {
-    pub slots: Box<[std::mem::MaybeUninit<(u64, T)>]>,
+    slots: RegistryBacking<T>,
     pub occupied: u64,
     pub allocation_admitted: bool,
     capacity: usize,
 }
 
 impl<T> ArtifactFixedRegistry<T> {
-    /// 📏️ Declares this fixed registry's exact slot body before native admission.
-    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{if capacity==0||capacity>ARTIFACT_LIVE_OUTPUT_SLOTS||ARTIFACT_LIVE_OUTPUT_SLOTS%capacity!=0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"fixed registry capacity does not divide its occupancy mask"))}let bytes=capacity.checked_mul(std::mem::size_of::<std::mem::MaybeUninit<(u64,T)>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixed registry backing extent overflow"))?;Ok(RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()})}
+    /// 📏️ Declares every physical backing extent of this fixed registry before native admission.
+    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{
+        if capacity==0||capacity>ARTIFACT_LIVE_OUTPUT_SLOTS||ARTIFACT_LIVE_OUTPUT_SLOTS%capacity!=0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"fixed registry capacity does not divide its occupancy mask"))}
+        Ok(RetirementDemand{capacity_bytes:RegistryBacking::<T>::birth_bytes(capacity)?,depth:1,..Default::default()})
+    }
 
     /// 📍️ Borrows the next unchanged physical quote without allocating any slot.
     pub fn backing_demands(&self)->Result<RetirementDemand,ValueError>{if self.allocation_admitted{Ok(Default::default())}else{Self::birth_demands(self.capacity)}}
 
-    /// 🪹️ Reserves every slot on the heap while leaving the occupied mask as the sole
-    /// initialization witness. A successful exact reservation provides capacity for all slots;
-    /// `MaybeUninit` permits extending their length without values. Insertion writes before setting
-    /// a bit, removal clears the bit before reading, and the zero initial mask prevents every read.
-    pub fn new() -> Self {
-        Self::with_slots(ARTIFACT_LIVE_OUTPUT_SLOTS)
-    }
+    /// 🪹️ Reserves every slot while leaving the occupied mask as the sole initialization witness.
+    pub fn new() -> Self { Self::with_slots(ARTIFACT_LIVE_OUTPUT_SLOTS) }
 
-    /// 📏️ A direct-mapped table of exactly `capacity` slots (a divisor of the 64-bit occupancy mask), for owners whose
-    /// slot is too large to reserve sixty-four of them inside one physical release grant.
-    pub fn with_slots(capacity: usize) -> Self {
-        assert!(capacity != 0 && capacity <= ARTIFACT_LIVE_OUTPUT_SLOTS && ARTIFACT_LIVE_OUTPUT_SLOTS % capacity == 0, "fixed artifact registry capacity divides its occupancy mask");
-        let mut slots = Vec::<std::mem::MaybeUninit<(u64, T)>>::new();
-        let allocation_admitted = slots.try_reserve_exact(capacity).is_ok();
-        if allocation_admitted {
-            unsafe { slots.set_len(capacity) };
-        }
-        Self { slots: slots.into_boxed_slice(), occupied: 0, allocation_admitted, capacity }
+    /// 📐️ Reserves exactly this divisor of the occupancy mask as direct-mapped slots.
+    pub fn with_slots(capacity:usize)->Self{
+        let mut registry=Self::unallocated(capacity);
+        if let Ok(backing)=RegistryBacking::allocate(capacity){registry.slots=backing;registry.allocation_admitted=true;}
+        registry
     }
 
     /// 🎟️ Retains the authored slot count without allocating before an original caller admits its backing.
     pub fn unallocated(capacity:usize)->Self{
         assert!(capacity!=0&&capacity<=ARTIFACT_LIVE_OUTPUT_SLOTS&&ARTIFACT_LIVE_OUTPUT_SLOTS%capacity==0);
-        Self{slots:Box::new([]),occupied:0,allocation_admitted:false,capacity}
+        Self{slots:RegistryBacking::default(),occupied:0,allocation_admitted:false,capacity}
     }
 
     /// 🪙️ Allocates the exact empty slot body under the receiving caller's independent currencies.
     pub fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}
-        let bytes=self.capacity.checked_mul(size_of::<std::mem::MaybeUninit<(u64,T)>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original registry backing extent overflow"))?;
-        if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        let mut slots=Vec::new();slots.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original registry backing allocation refused"))?;
-        let actual=slots.capacity()*size_of::<std::mem::MaybeUninit<(u64,T)>>();
-        unsafe{slots.set_len(self.capacity)};self.slots=slots.into_boxed_slice();self.allocation_admitted=true;
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:actual,..Default::default()}))
+        if self.slots.next_release()!=0{return Err(ValueError::invariant("partly retired registry backing cannot admit new slots"))}
+        let demand=Self::birth_demands(self.capacity)?;
+        if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        self.slots=RegistryBacking::allocate(self.capacity)?;
+        self.allocation_admitted=true;
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
     }
 
     fn occupied(&self, index: usize) -> bool {
@@ -335,7 +367,7 @@ impl<T> ArtifactFixedRegistry<T> {
         if self.entry(index).is_some() {
             return Err(value);
         }
-        self.slots[index].write((id, value));
+        self.slots.get_mut(index).expect("admitted registry slot").write((id, value));
         self.occupied |= 1u64 << index;
         Ok(())
     }
@@ -353,7 +385,7 @@ impl<T> ArtifactFixedRegistry<T> {
     pub fn insert_admitted(&mut self, id: u64, value: T) {
         let index = id as usize % self.capacity;
         assert!(self.can_insert(id), "fixed artifact registry admission changed before exact owner insertion");
-        self.slots[index].write((id, value));
+        self.slots.get_mut(index).expect("admitted registry slot").write((id, value));
         self.occupied |= 1u64 << index;
     }
 
@@ -361,7 +393,7 @@ impl<T> ArtifactFixedRegistry<T> {
     pub fn partition_mut<'a>(&'a mut self, id: u64, mut other: impl FnMut(&'a T)) -> Option<&'a mut T> {
         let occupied = self.occupied;
         let mut selected = None;
-        for (index, slot) in self.slots.iter_mut().enumerate() {
+        for (index, slot) in self.slots.slices_mut().iter_mut().flat_map(|page| page.iter_mut()).enumerate() {
             if occupied & (1u64 << index) == 0 { continue; }
             let (candidate, value) = unsafe { slot.assume_init_mut() };
             if *candidate == id { selected = Some(value); } else { other(value); }
@@ -388,7 +420,7 @@ impl<T> ArtifactFixedRegistry<T> {
             return None;
         }
         self.occupied &= !(1u64 << index);
-        Some(unsafe { self.slots[index].assume_init_read().1 })
+        Some(unsafe { self.slots.get_mut(index).expect("occupied registry slot").assume_init_read().1 })
     }
 
     pub fn id_at(&self, index: usize) -> Option<u64> {
@@ -416,34 +448,28 @@ impl<T> ArtifactFixedRegistry<T> {
         self.occupied == 0
     }
 
-    /// 🪵️ Borrows the full backing extent of an already empty retained registry.
-    pub fn empty_backing_byte_demand(&self) -> Option<usize> { self.is_empty().then_some(size_of_val(self.slots.as_ref())) }
+    /// 🪵️ Borrows the next physical backing release of an already empty retained registry.
+    pub fn empty_backing_byte_demand(&self) -> Option<usize> { self.is_empty().then(||self.slots.next_release()) }
 
-    /// 🧺️ Releases the exact original empty registry backing under independent authority.
+    /// 🧭️ Exposes one original vacant slot address for identity observations.
+    pub fn backing_slot_address(&self,index:usize)->Option<*const ()>{self.slots.get(index).map(|slot|std::ptr::from_ref(slot).cast())}
+
+    /// 🧺️ Releases one exact original empty registry backing block under independent authority.
     pub fn close_empty_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let idle=RetainedCloneProgress::default();
-        let bytes=self.empty_backing_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original registry backing still owns an active slot"))?;
+        let bytes=self.empty_backing_byte_demand().ok_or_else(||ValueError::invariant("original registry backing still owns an active slot"))?;
         if bytes==0{return Ok(RetainedCloneStep::Complete(idle));}
-        if grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(idle));}
-        drop(std::mem::replace(&mut self.slots,Box::default()));self.allocation_admitted=false;
+        if !plugin_grant_funds(RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},grant){return Ok(RetainedCloneStep::Progress(idle));}
+        self.slots.release_one();
+        self.allocation_admitted=false;
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..idle}))
     }
 
-    /// 🧺️ Retains every empty slot until its whole original allocation is funded.
-    pub fn close_empty_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        let empty = RetainedCloneProgress::default();
-        let Some(bytes) = self.empty_backing_byte_demand() else {
-            return Err(plugin_sdk_fault("registry backing still owns an exact active slot"));
-        };
-        if bytes == 0 {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        if !plugin_turn_admitted(RetirementDemand { release_bytes: bytes, depth: 1, ..Default::default() }, grant)? {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        self.slots = Box::default();
-        self.allocation_admitted = false;
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }))
+    /// 🧯️ Reports the same physical release through the plugin fault contract.
+    pub fn close_empty_backing_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
+        let bytes=self.empty_backing_byte_demand().ok_or_else(||plugin_sdk_fault("registry backing still owns an exact active slot"))?;
+        if bytes!=0{plugin_turn_admitted(RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},grant)?;}
+        self.close_empty_backing_granted(grant).map_err(plugin_retirement_fault)
     }
     /// 🔢️ Admitted entries — the occupied mask's population.
     pub fn len(&self) -> usize {

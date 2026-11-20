@@ -25,10 +25,13 @@ export function failureFramesV1(error){
  return lines.join("").slice(0,1500);
 }
 
+const workerFailureCauseV1=error=>typeof error?.workerCause==="string"?error.workerCause.replace(/[\u0000-\u001f\u007f]/gu," ").trim().slice(0,FAILURE_MESSAGE_CHARACTERS_V1):"";
+
 /** 💬️ The one-line message of a failure for the refusal text: its name, message and code on one line, at most 300 characters, so that a remote machine can read what failed without the service log. */
 export function failureMessageV1(error){
  const text=String(error?.message??error).replace(/\s+/gu," ").trim(),code=typeof error?.code==="string"&&!text.includes(error.code)?" ["+error.code+"]":"",owner=typeof error?.semioProject==="string"&&!text.includes(error.semioProject)?" (project "+error.semioProject+")":"";
- return(String(error?.name??"Error")+code+owner+": "+text).slice(0,FAILURE_MESSAGE_CHARACTERS_V1);
+ const cause=workerFailureCauseV1(error);
+ return(String(error?.name??"Error")+code+owner+": "+text+(cause?": "+cause:"")).slice(0,FAILURE_MESSAGE_CHARACTERS_V1);
 }
 
 /** 🔐️ Recognises the macOS file access consent: a relative filesystem call of the service that fails with `EPERM` while the worktree lies below Documents, Desktop or Downloads of the user is a process without the consent of this session (a service whose responsible process is not the launcher `repo`, or a `repo` whose binary was replaced), not a defect of the request. Returns the folder, or `undefined` for every other failure. */
@@ -117,12 +120,23 @@ export function leaseRefusalOfV1(error,depth=4){
  return leaseRefusalOfV1(error.cause,depth-1);
 }
 
+/** ⌛️ The words of a lease wait that ran out (`SEMIO_LEASE_TIMEOUT`, the typed refusal of every lease class): the resource, the mode, the seconds waited and the holder the lease registry names, as language-neutral fields, or `undefined` for every other failure. @see ../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts */
+export function leaseTimeoutRefusalOfV1(error,depth=4){
+ if(typeof error!=="object"||error===null||depth<0)return undefined;
+ if(error.code==="SEMIO_LEASE_TIMEOUT"&&typeof error.resource==="string"){
+  const clip=text=>text.length>90?"…"+text.slice(-89):text,holder=error.holder;
+  return{requested:clip(error.resource),mode:error.mode==="shared"?"shared":"exclusive",seconds:String(Math.round((error.waitedMilliseconds??0)/1000)),holderPid:holder?.pid===undefined?"?":String(holder.pid),holderCommand:String(holder?.command??"?").slice(0,120),holderSeconds:holder?.heldSeconds===undefined?"?":String(holder.heldSeconds)};
+ }
+ return leaseTimeoutRefusalOfV1(error.cause,depth-1);
+}
+
 /** 🏷️ The text a failure is logged by: its stack, led by its name, code, message and the project it belongs to (`semioProject`) whenever the stack does not carry them, so that a failure whose stack lost its message still says what failed and for which project. */
 export function failureDetailV1(error){
  const stack=String(error?.stack??error);
  if(typeof error!=="object"||error===null)return stack;
  const message=String(error.message??""),code=typeof error.code==="string"?error.code:undefined,project=typeof error.semioProject==="string"?error.semioProject:undefined,lead=[String(error.name??"Error")+(message?": "+message:""),code&&!stack.includes(code)?"code="+code:undefined,project&&!stack.includes(project)?"project="+project:undefined].filter(Boolean);
- return stack.startsWith(lead[0])&&lead.length===1?stack:lead.join(" ")+"\n"+stack;
+ const detail=stack.startsWith(lead[0])&&lead.length===1?stack:lead.join(" ")+"\n"+stack,cause=workerFailureCauseV1(error);
+ return cause?"worker cause: "+cause+"\n"+detail:detail;
 }
 
 /** 🧯 Turns an unexpected failure of a request into the refusal the client receives. The same unexpected failure (name, code and message) `sameCauseMaximum` times in a row, counted in `streak`, is deterministic and becomes the never retried `internal-repeated` refusal, as a slice worker that ends that often with the same text stops the plan. A full disk (`ENOSPC`, `database or disk is full`) is the typed `disk` refusal: when a cache image of the worktree holds the failed path or is itself full, it names that image, its size, fill, largest subtrees and `repo cache gc` (`image-full`); otherwise it names the host partition, its free bytes and the command that frees space; anything else is the `internal` refusal that carries a reference, and the failure itself (with its stack) is written to the service log under that same reference, so the message can say which log file holds the details. @see ../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts */
@@ -139,6 +153,8 @@ function failureRefusalCoreV1(error,{log,logPath,retry="later",root,platform,hom
  if(plan!==undefined){log("graph-plan-too-heavy",JSON.stringify(plan));return{code:"unserved",key:"host-graph-plan-too-heavy",fields:plan,retry:"later"};}
  const heavy=heavyRefusalOfV1(error);
  if(heavy!==undefined){log("graph-owner-too-heavy",JSON.stringify(heavy));return{code:"unserved",key:"host-graph-owner-too-heavy",fields:heavy,retry:"later"};}
+ const timeout=leaseTimeoutRefusalOfV1(error);
+ if(timeout!==undefined){log("lease-timeout",JSON.stringify(timeout));return{code:"unserved",key:timeout.holderPid==="?"?"host-lease-timeout-unregistered":"host-lease-timeout",fields:timeout,retry:"later"};}
  const lease=leaseRefusalOfV1(error);
  if(lease!==undefined){log("lease-refused",JSON.stringify(lease));return{code:"unserved",key:lease.holderPid==="?"?"host-lease-refused-unregistered":"host-lease-refused",fields:lease,retry:"later"};}
  const refused=graphMemoryRefusalOfV1(error);

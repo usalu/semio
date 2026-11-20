@@ -150,3 +150,9 @@ test("a vanished file during the fresh admission is a torn capture and is retrie
  const broken=await withMovedClosureReadmittedV1({workspace:"/w",entry:"e/broken.ts",scope:{kind:"closure"},signal:new AbortController().signal,baked:{sources:"baked-sources",resolutions:"baked-resolutions"},run:async()=>{throw moved();}},{fresh:async()=>{throw new Error("Complete immutable compiler import required: ./x");},moved:async()=>[],sleep:async ms=>{log.sleeps.push(ms);},say:()=>undefined}).catch(error=>error as Error);
  expect(broken.message).toContain("Complete immutable compiler import required");expect(log.sleeps).toHaveLength(2);
 });
+
+test("a process without an admission of its own admits the current closure from the disk at once and silently",async()=>{
+ const seen:string[]=[],log={fresh:0,said:[] as string[]},deps={fresh:async()=>({sources:"fresh-sources-"+ ++log.fresh,resolutions:"fresh-resolutions"}),moved:async()=>[],sleep:async()=>{},say:(key:string)=>{log.said.push(key);}},run:Run=async(sources,_r,fresh)=>{seen.push(sources+"|"+fresh);return "ok";};
+ for(const baked of[{sources:undefined,resolutions:undefined},{sources:"s",resolutions:undefined},{sources:undefined,resolutions:"r"}])expect(await withMovedClosureReadmittedV1({workspace:"/w",entry:"e/unadmitted-"+JSON.stringify(baked),scope:{kind:"closure"},signal:new AbortController().signal,baked,run},deps)).toBe("ok");
+ expect(seen).toEqual(["fresh-sources-1|true","fresh-sources-2|true","fresh-sources-3|true"]);expect(log.said).toEqual([]);
+});

@@ -226,6 +226,10 @@ impl GpuContext {
         self.raster_store.reserve_engine_texture(key, width, height,mip_levels, identity, candidate, expected).map_err(str::to_owned)
     }
 
+    pub fn raster_is_resident(&self, key: &str) -> bool {
+        self.raster_store.get(key).is_some()
+    }
+
     pub fn begin_raster_ownership(&mut self, witness: RasterTextureWitness) -> Result<(), String> {
         self.raster_store.begin_candidate_ownership(witness).map_err(str::to_owned)
     }

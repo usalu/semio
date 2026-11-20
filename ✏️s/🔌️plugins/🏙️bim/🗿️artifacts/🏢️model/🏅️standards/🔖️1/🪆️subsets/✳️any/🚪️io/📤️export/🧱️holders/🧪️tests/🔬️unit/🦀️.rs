@@ -15,10 +15,10 @@ fn layer(thickness: f64) -> Layer {
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
-    model.slab_types.insert("st".into(), SlabType { name: "Slab".into(), layers: vec![layer(0.1), layer(0.2)] });
-    model.slabs.insert("s-1".into(), Slab { storey: "g".into(), slab_type: "st".into(), boundary: vec![corner(0.0, 0.0), corner(5.0, 0.0), corner(5.0, 5.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: String::new() });
-    model.roof_types.insert("rt".into(), RoofType { name: "Roof".into(), layers: vec![layer(0.2)] });
-    model.roofs.insert("r-1".into(), Roof { storey: "g".into(), roof_type: "rt".into(), footprint: vec![corner(0.0, 0.0), corner(5.0, 0.0), corner(5.0, 5.0)], shape: RoofShape::Flat, overhang: 0.0, base_offset: 0.0, phase: Phase::New, name: String::new() });
+    model.slab_types.cold_insert("st".into(), SlabType { name: "Slab".into(), layers: vec![layer(0.1), layer(0.2)] });
+    model.slabs.cold_insert("s-1".into(), Slab { storey: "g".into(), slab_type: "st".into(), boundary: vec![corner(0.0, 0.0), corner(5.0, 0.0), corner(5.0, 5.0)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: String::new() });
+    model.roof_types.cold_insert("rt".into(), RoofType { name: "Roof".into(), layers: vec![layer(0.2)] });
+    model.roofs.cold_insert("r-1".into(), Roof { storey: "g".into(), roof_type: "rt".into(), footprint: vec![corner(0.0, 0.0), corner(5.0, 0.0), corner(5.0, 5.0)], shape: RoofShape::Flat, overhang: 0.0, base_offset: 0.0, phase: Phase::New, name: String::new() });
     model
 }
 

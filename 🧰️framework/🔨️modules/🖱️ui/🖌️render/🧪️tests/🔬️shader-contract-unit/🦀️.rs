@@ -317,7 +317,9 @@ fn world3d_svg_profile_uses_flat_faces_and_svg_color_output() {
     assert!(WORLD3D_LINES_SHADER.contains("world3d_svg_attachment_output"));
 }
 
-/// 🌑️ Law: the canonical WGPU mesh shader owns current Three's five-sample rotated Vogel PCF.
+/// 🌑️ Law: the canonical WGPU mesh shader owns current Three's five-sample rotated Vogel PCF; the React-dead
+/// opacity/softness lanes stay out of the shadow consumer, while `globals.shadow.y` elsewhere is the SVG face-lighting
+/// profile bit (`world3d_svg_profile_uses_flat_faces_and_svg_color_output`).
 #[test]
 fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
     for value in [
@@ -337,8 +339,10 @@ fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
     ] {
         assert!(WORLD3D_SHADER.contains(value), "the canonical WGPU shadow consumer is missing `{value}`");
     }
+    let start = WORLD3D_SHADER.find("fn world3d_shadow_visibility(").expect("the canonical WGPU shadow consumer exists");
+    let consumer = &WORLD3D_SHADER[start..start + WORLD3D_SHADER[start..].find("\n}\n").expect("the shadow consumer closes")];
     for forbidden in ["ndc.z - 0.0005", "globals.shadow.y", "globals.shadow.z", "index < 9u"] {
-        assert!(!WORLD3D_SHADER.contains(forbidden), "the canonical WGPU shadow consumer still contains React-dead or biased behavior `{forbidden}`");
+        assert!(!consumer.contains(forbidden), "the canonical WGPU shadow consumer still contains React-dead or biased behavior `{forbidden}`");
     }
 }
 

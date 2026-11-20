@@ -14,7 +14,11 @@ enum Framing<'a>{Envelope(&'a str),Prefix(&'a [u8])}
 
 fn admit(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,work:&mut NativeSnapshotWork)->Result<NativeSnapshotConstruction,NativeSnapshotFailure>{
  let grant=owner.admit_constructed(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()})?;
- work.admit(owner.native())?;Ok(grant)
+ if let Err(error)=work.admit(owner.native()){let _=owner.cancel_constructed(grant);return Err(error)}Ok(grant)
+}
+fn spanned<R>(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,work:&mut NativeSnapshotWork,body:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'_>,&mut NativeSnapshotWork)->Result<R,NativeSnapshotFailure>)->Result<R,NativeSnapshotFailure>{
+ let grant=admit(owner,bytes,work)?;
+ match body(owner,work){Ok(value)=>{receipt(owner,grant,bytes)?;Ok(value)},Err(error)=>{let _=owner.cancel_constructed(grant);Err(error)}}
 }
 fn receipt(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,grant:NativeSnapshotConstruction,bytes:usize)->Result<(),NativeSnapshotFailure>{
  owner.record_constructed_progress(grant,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})
@@ -86,11 +90,11 @@ fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
   *slot=Some((None,None,None));
   let frame=slot.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record frame is absent"))?;
   let status=(||{
-   let bytes=size_of::<Option<RecordSpec>>();let grant=admit(owner,bytes,work)?;
-   frame.0=Some(work.measured(owner.native(),|native|spec.decode(native))?);receipt(owner,grant,bytes)?;
+   let bytes=size_of::<Option<RecordSpec>>();
+   frame.0=Some(spanned(owner,bytes,work,|owner,work|work.measured(owner.native(),|native|spec.decode(native)).map_err(Into::into))?);
    let record_spec=frame.0.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record spec is absent"))?;
-   let bytes=size_of::<Option<(RecordValue,Option<pack::record::DecodeReport>)>>();let grant=admit(owner,bytes,work)?;
-   frame.1=Some(match payload{
+   let bytes=size_of::<Option<(RecordValue,Option<pack::record::DecodeReport>)>>();
+   frame.1=Some(spanned(owner,bytes,work,|owner,work|Ok::<_,NativeSnapshotFailure>(match payload{
     semio_framework_io_schema::IoPayload::Binary(bytes)=>{
      let source=match framing{
       Framing::Envelope(envelope_id)=>work.measured(owner.native(),|native|semio_os_semio::unwrap_binary_controlled(bytes,envelope_id,semio_os_semio::Component::Pack,1,native))?,
@@ -103,7 +107,7 @@ fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
      let source=work.measured(owner.native(),|native|semio_os_semio::split_text_preamble_controlled(text,envelope_id,semio_os_semio::Component::Dsl,1,native).map_err(semio_os_semio::SemioError::into_value_error))?;
      (work.measured(owner.native(),|native|semio_framework_dsl_record::parse_exact_controlled(source,record_spec,&ParseOptions{limits:Limits{max_bytes:limits.max_file_bytes,..Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document},native).map_err(|error|ValueError::new(error.kind,error.message)))?,None)
     }
-   });receipt(owner,grant,bytes)?;
+   }))?);
    let(_,record,retained)=&mut *frame;
    let record=record.as_mut().map(|record|&mut record.0).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record is absent"))?;
    work.take(settlement.with_control(|control|construct(record,retained,owner,control)))?;
@@ -117,9 +121,11 @@ fn decode_framed<T:semio_framework_value::retirement::RetireOwned>(
    (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("record body has its original settlement slot")),
    (Ok(()),Ok(()))=>{}
   }
-  let bytes=size_of::<SnapshotReceivingOutput<T>>();let grant=admit(owner,bytes,work)?;
-  let retained=frame.2.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record lost its retained output"))?;
-  *result=Some(Ok(retained));receipt(owner,grant,bytes)?;Ok(())
+  let bytes=size_of::<SnapshotReceivingOutput<T>>();
+  spanned(owner,bytes,work,|_,_|{
+   let retained=frame.2.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native record lost its retained output"))?;
+   *result=Some(Ok(retained));Ok(())
+  })
  })));
  RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(native_owner.native().owned_bytes(),error))),work:turn.work}
 }

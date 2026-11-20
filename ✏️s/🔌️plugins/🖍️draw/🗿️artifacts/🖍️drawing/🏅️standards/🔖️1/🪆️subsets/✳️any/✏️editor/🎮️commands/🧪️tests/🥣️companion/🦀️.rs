@@ -2,6 +2,8 @@
 
 #![cfg(test)]
 
+use semio_framework_value_testing_allocator as _;
+
 extern crate semio_os_kernel as protocol;
 
 #[path = "."]

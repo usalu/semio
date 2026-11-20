@@ -26,7 +26,7 @@ class Loading extends Component<{ readonly language: ModelFigureProps["language"
       return (
         <div role="alert" lang={this.props.language} data-model-state="error" style={{ padding: "0.5em", background: "color-mix(in srgb, currentColor 8%, transparent)" }}>
           <b>{t("model.error")}</b>{" "}
-          <button type="button" style={{ border: 0, padding: "0.125em 0.625em", background: "color-mix(in srgb, currentColor 14%, transparent)", color: "inherit", font: "inherit", cursor: "pointer" }} onClick={() => this.setState((previous) => ({ failed: false, attempt: previous.attempt + 1 }))}>
+          <button type="button" data-shared-border-frame="" data-shared-border-edges="" style={{ border: 0, padding: "0.125em 0.625em", background: "color-mix(in srgb, currentColor 14%, transparent)", color: "inherit", font: "inherit", cursor: "pointer" }} onClick={() => this.setState((previous) => ({ failed: false, attempt: previous.attempt + 1 }))}>
             {t("model.retry")}
           </button>
         </div>

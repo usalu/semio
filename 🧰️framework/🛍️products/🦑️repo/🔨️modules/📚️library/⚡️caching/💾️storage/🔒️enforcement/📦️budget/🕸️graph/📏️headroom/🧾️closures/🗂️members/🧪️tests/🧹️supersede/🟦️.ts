@@ -1,6 +1,6 @@
 import{afterAll,expect,test}from"bun:test";
 import {graphSourceV1} from "../../../../../../../../../../🏗️build/🕸️graph/🧪️tests/📖️source/🟦️.ts";
-import{lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,utimesSync,writeFileSync}from"node:fs";
+import{linkSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
@@ -47,8 +47,8 @@ test("a cancelled scan touches nothing",async()=>{
 });
 
 test("the build removes superseded blocks after, never inside, its builder custody, and the collector removes them first",()=>{
- const host=graphSourceV1(),build=host.indexOf("markBuildCapacityPhaseV1(\"plan\");\n      if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
- expect(build).toBeGreaterThan(0);expect(sweep).toBeGreaterThan(0);expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
+ const host=graphSourceV1(),custody=host.indexOf("()=>withGenerationCustodyV1("),plan=host.indexOf('await markBuildCapacityPhaseV1("plan");',custody),build=host.indexOf("if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
+ expect(custody).toBeGreaterThan(0);expect(plan).toBeGreaterThan(custody);expect(build).toBeGreaterThan(plan);expect(sweep).toBeGreaterThan(0);expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
  const reclaim=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",import.meta.url)),"utf8");
  expect(reclaim.indexOf("ports.supersede")).toBeGreaterThan(0);expect(reclaim.indexOf("ports.supersede")).toBeLessThan(reclaim.indexOf("ports.index(image)"));
 });
@@ -121,6 +121,39 @@ test("a leaf whose observation blocks are gone names nothing, any other refusal 
  expect(await scan.supersedeBuildGraphClosuresV1(other.root,{lease:async()=>({release(){}}),read:otherRead},control(),{graceMilliseconds:3600000})).toMatchObject({unvouched:1,removed:0});expect(closureNames(other.root).length).toBe(6);
 });
 
+
+test("a known reference-bearing leaf outside the physical read policy keeps every inventory",async()=>{
+ for(const invalidity of ["hardlink","directory"]){
+  const{root,np,record}=closureImage();
+  const path=join(np,"e".repeat(24)+".json");
+  if(invalidity==="hardlink"){record("e".repeat(24),["source:"+hex("c")]);linkSync(path,join(root,"external-alias"));}
+  else mkdirSync(path);
+  const report=await scan.supersedeBuildGraphClosuresV1(root,{lease:async()=>{throw Error("A read-only preview does not hold a writer lease");},read:closureRead()},control(),{dryRun:true});
+  expect(report,invalidity).toMatchObject({unvouched:1,candidates:0,removed:0});
+  expect(closureNames(root)).toHaveLength(6);
+ }
+});
+
+
+test("unresolved essential proof stops a preview while indexing keeps its later partial results",async()=>{
+ const{root,record}=closureImage(),b="b".repeat(24)+".json",later="c".repeat(24)+".json",requested:string[]=[];
+ record("c".repeat(24),["source:"+hex("c")]);
+ const read:ReadPortV1=async(requests,accept)=>{
+  for(const file of requests){
+   const name=file.path.slice(-29);requested.push(name);
+   if(name===b)throw Error("Essential closure proof unavailable");
+   await closureRead()([file],accept);
+  }
+ };
+ const ports={lease:async()=>({release(){}}),read};
+ expect(await scan.supersedeBuildGraphClosuresV1(root,ports,control(),{dryRun:true})).toMatchObject({unvouched:1,candidates:0,removed:0});
+ expect(requested).toEqual(["a".repeat(24)+".json",b,b]);
+ requested.length=0;
+ const partial=await scan.indexBuildGraphMembersV1(root,ports,control());
+ expect(partial).toMatchObject({refused:1,indexed:2});
+ expect(requested).toEqual(["a".repeat(24)+".json",b,b,later]);
+});
+
 const closureWorkerV1=fileURLToPath(new URL("../../../👷️closure-read-worker/🟨️.mjs",import.meta.url));
 /** 🔬️ Asks the REAL closure read child about one leaf and turns its failure packet into the refusal the child port throws. */
 const realRefusalV1=(root:string,file:{path:string;stamp:string;kind:string;bytes:number}):Error=>{
@@ -135,7 +168,7 @@ const pythonInflatesV1=(path:string):boolean=>{
 };
 
 test("a settled leaf the real closure read child cannot inflate names nothing, a young one and any other refusal keep every inventory",async()=>{
- const build=(age:number)=>{const image=closureImage(),leaf=join(image.np,"e".repeat(24)+".json");writeFileSync(leaf,Buffer.from([0]));const time=(Date.now()-age*3600000)/1000;utimesSync(leaf,time,time);return{...image,leaf};};
+ const build=(age:number)=>{const image=closureImage(),np=join(image.root,"inference","np"),leaf=join(np,"e".repeat(24)+".json");mkdirSync(np);writeFileSync(leaf,Buffer.from([0]));const time=(Date.now()-age*3600000)/1000;utimesSync(leaf,time,time);return{...image,leaf};};
  const{root,leaf}=build(2);expect(pythonInflatesV1(leaf),"the independent decoder agrees that the leaf is no complete stream").toBe(false);
  const refusing=(error:()=>Error|undefined):ReadPortV1=>async(requests,accept)=>{for(const file of requests){if(file.path.endsWith("e".repeat(24)+".json")){const refusal=error();if(refusal)throw refusal;}await closureRead()([file],accept);}};
  const real=(image:{root:string}):ReadPortV1=>async(requests,accept)=>{for(const file of requests){if(file.path.endsWith("e".repeat(24)+".json"))throw realRefusalV1(image.root,file as never);await closureRead()([file],accept);}};

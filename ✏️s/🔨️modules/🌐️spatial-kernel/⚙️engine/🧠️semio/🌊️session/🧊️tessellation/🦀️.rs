@@ -42,15 +42,17 @@ pub(super) struct RetainedTessellation {
     pub(super) geometry:Option<GeometryHandle>,
     pub(super) admission_claim:String,
     pub(super) validation_units:usize,
+    pub(super) validation_scope:Option<semio_framework_3d_brep_engine::PreviewReach>,
     pub(super) validation:Option<semio_framework_3d_brep_validation::BodyValidationJob>,
     pub(super) validated:bool,
     pub(super) job:TessellationJob,
+    pub(super) primitive_preview:Option<semio_framework_3d_brep_engine::PrimitivePreviewJob>,
     pub(super) last_step:u64,
     pub(super) retired:bool,
     pub(super) output:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>,
     pub(super) previous_mesh:Option<CachedMesh>,
 }
-semio_framework_value::artifact_retire_struct!(RetainedTessellation {identity,source,length,source_units,geometry,admission_claim,validation_units,validation,validated,job,last_step,retired,output,previous_mesh});
+semio_framework_value::artifact_retire_struct!(RetainedTessellation {identity,source,length,source_units,geometry,admission_claim,validation_units,validation_scope,validation,validated,job,primitive_preview,last_step,retired,output,previous_mesh});
 #[derive(Default)]
 pub(super) struct TessellationJobRegistry {
     pub(super) admission:Option<TessellationAdmission>,

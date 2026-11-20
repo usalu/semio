@@ -131,7 +131,11 @@ fn drawing_canvas_window_ownership_matches_neutral_fixture_and_codecs() {
     assert_eq!(DrawingCanvasWindowConfig::parse_dsl(&base_config.print_dsl()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfig::decode_pack(&base_config.encode_pack()).unwrap(), base_config);
     assert_eq!(DrawingCanvasWindowConfigMutation::parse_op(&config_mutation.print_op()).unwrap(), config_mutation);
-    assert_eq!(DrawingCanvasWindowConfigMutation::decode_op(&config_mutation.encode_op().unwrap()).unwrap(), config_mutation);
+    let binary = config_mutation.encode_op().unwrap();
+    let decoded = store::pack_rt::decode_wire_value(&binary).unwrap();
+    assert_eq!(<DrawingCanvasWindowConfigMutation as semio_framework_value::FromValue>::from_value(decoded).unwrap(), config_mutation);
+    assert_eq!(DrawingCanvasWindowConfigMutation::decode_op(&binary).unwrap(), config_mutation);
+    assert!(<DrawingCanvasWindowConfigOwner as semio_plugin::WindowConfigOwner>::native_pair_demands().is_ok());
 
     let base_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["baseTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let next_transient: DrawingCanvasWindowTransient = semio_framework_pack_json::from_json_str(&fixture["nextTransient"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

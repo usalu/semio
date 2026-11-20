@@ -8,9 +8,20 @@ pub(super) fn payload_edit(action: &str, page: u32, object: String, text: String
 }
 
 pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64, text: &str) -> Result<Vec<PdfMutation>, Fault> {
-    let object = objects(snapshot).into_iter().find(|item| item.id == object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
+    let object = find_object(snapshot, object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
     if object.kind == ObjectKind::Annotation {
-        return edit_annotation(snapshot, object.page, object_id, text, x, y, width, height);
+        use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::RemoveAnnotation;
+        let (at, mut annotation) = annotation_at(snapshot, object.page, object_id)?;
+        let index = object.page;
+        match action {
+            "delete" => return Ok(vec![PdfMutation::RemoveAnnotation(RemoveAnnotation { index, at })]),
+            "move" => annotation.rect = [x, y, x + object.width, y + object.height],
+            "resize" if width > 0.0 && height > 0.0 => annotation.rect = [x, y, x + width, y + height],
+            "set-text" => annotation.contents = Some(text.to_string()),
+            "set-fill" => annotation.color = vec![red, green, blue],
+            _ => return Err(fault(format!("unsupported PDF annotation edit '{action}'"))),
+        }
+        return Ok(vec![PdfMutation::SetAnnotation(SetAnnotation { index, at, annotation })]);
     }
     if object.kind == ObjectKind::Shading && (action == "move" || action == "resize") {
         return edit_shading(snapshot, &object, action, x, y, width, height);
@@ -18,17 +29,13 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
     let mut content = page.content.clone();
     match action {
-        "set-text" => replace_shown_text(&mut content, object.end, text),
-        "delete" => {
-            let end = object.end.min(content.len().saturating_sub(1));
-            if object.start <= end && end < content.len() {
-                content.drain(object.start..=end);
-            }
-        }
-        "move" => translate_object(&mut content, &object, x - object.x, y - object.y),
-        "resize" => resize_object(&mut content, &object, x, y, width, height),
-        "set-fill" => set_fill(&mut content, &object, red, green, blue),
-        "set-stroke" => set_stroke(&mut content, &object, red, green, blue, width),
+        "set-text" if object.kind == ObjectKind::Text => replace_shown_text(&mut content, &object, text)?,
+        "delete" if object.kind == ObjectKind::Text => delete_text(&mut content, &object)?,
+        "delete" => delete_paint(&mut content, &object),
+        "move" => translate_object(&mut content, &object, x - object.x, y - object.y)?,
+        "resize" => resize_object(&mut content, &object, x, y, width, height)?,
+        "set-fill" if matches!(object.kind, ObjectKind::Text | ObjectKind::Vector) => set_fill(&mut content, &object, red, green, blue),
+        "set-stroke" if object.kind == ObjectKind::Vector => set_stroke(&mut content, &object, red, green, blue, width),
         other => return Err(fault(format!("unknown pdf page action '{other}'"))),
     }
     Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: object.page, content })])
@@ -50,9 +57,17 @@ pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: us
                 PdfOp::SetFont { name: font_id, size },
                 PdfOp::SetFillRgb { r: red, g: green, b: blue },
                 PdfOp::SetTextMatrix { matrix: [1.0, 0.0, 0.0, 1.0, x, y] },
-                PdfOp::ShowText { text: PdfTextString::text(text) },
-                PdfOp::EndText,
             ]);
+            if text.contains('\n') {
+                content.push(PdfOp::SetLeading { leading: size * 1.2 });
+            }
+            for (index, line) in text.split('\n').enumerate() {
+                if index > 0 {
+                    content.push(PdfOp::NextLine);
+                }
+                content.push(PdfOp::ShowText { text: PdfTextString::text(line.strip_suffix('\r').unwrap_or(line)) });
+            }
+            content.push(PdfOp::EndText);
         }
         "insert-rectangle" => content.extend([PdfOp::SetFillRgb { r: red, g: green, b: blue }, PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill]),
         "insert-line" => content.extend([
@@ -75,9 +90,7 @@ pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: us
 }
 
 pub(super) fn edit_annotation(snapshot: &PdfSnapshot, page_index: usize, object_id: &str, text: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
-    let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
-    let annotation = snapshot.pages.get(page_index).and_then(|page| page.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
-    let mut annotation: PdfAnnotation = annotation;
+    let (index, mut annotation) = annotation_at(snapshot, page_index, object_id)?;
     annotation.contents = Some(text.to_string());
     if width > 0.0 && height > 0.0 {
         annotation.rect = [x, y, x + width, y + height];
@@ -86,7 +99,7 @@ pub(super) fn edit_annotation(snapshot: &PdfSnapshot, page_index: usize, object_
 }
 
 pub(super) fn replace_image_samples(snapshot: &PdfSnapshot, object_id: &str, width: f64, height: f64, hex: &str) -> Result<Vec<PdfMutation>, Fault> {
-    let object = objects(snapshot).into_iter().find(|item| item.id == object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
+    let object = find_object(snapshot, object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
     if object.kind != ObjectKind::Image {
         return Err(fault(format!("pdf object '{object_id}' is not an image")));
     }
@@ -118,14 +131,19 @@ pub(super) fn set_font_of_text(snapshot: &PdfSnapshot, object_id: &str, base_fon
     if base_font.is_empty() {
         return Err(fault("a text run needs a font name"));
     }
-    let object = objects(snapshot).into_iter().find(|item| item.id == object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
+    let object = find_object(snapshot, object_id).ok_or_else(|| fault(format!("pdf object '{object_id}' is not on the page")))?;
     if object.kind != ObjectKind::Text {
         return Err(fault(format!("pdf object '{object_id}' is not text")));
     }
     let (font_id, font_mutation) = font_for_base(snapshot, base_font);
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
     let mut content = page.content.clone();
-    content.insert(object.end, PdfOp::SetFont { name: font_id, size: object.font_size.max(1.0) });
+    let restore = text_cursor_after(&content, &object)?;
+    content.splice(object.end + 1..object.end + 1, restore);
+    if !object.font.is_empty() {
+        content.insert(object.end + 1, PdfOp::SetFont { name: object.font, size: object.font_size });
+    }
+    content.insert(object.end, PdfOp::SetFont { name: font_id, size: object.font_size });
     let mut mutations = Vec::new();
     if let Some(mutation) = font_mutation {
         mutations.push(mutation);
@@ -138,7 +156,8 @@ fn font_for_base(snapshot: &PdfSnapshot, base_font: &str) -> (String, Option<Pdf
     if let Some(font) = snapshot.fonts.iter().find(|font| font.base_font() == base_font) {
         return (font.id.clone(), None);
     }
-    let id = format!("F{}", snapshot.fonts.len() + 1);
+    let occupied: std::collections::HashSet<_> = snapshot.fonts.iter().map(|font| font.id.as_str()).collect();
+    let id = (1..).map(|index| format!("F{index}")).find(|id| !occupied.contains(id.as_str())).expect("available PDF font id");
     (id.clone(), Some(PdfMutation::SetFont(SetFont { font: PdfFont::standard(id, base_font), index: None })))
 }
 //#endregion 🖱️ObjectEdits

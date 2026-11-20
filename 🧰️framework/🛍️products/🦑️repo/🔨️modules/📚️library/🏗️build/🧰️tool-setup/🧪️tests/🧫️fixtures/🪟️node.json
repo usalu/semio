@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "pin": "24.15.0",
+  "home": "C:\\Users\\dev",
+  "cases": [
+    {
+      "name": "stale PATH after MSI installation",
+      "environment": {
+        "ProgramFiles": "C:\\Program Files",
+        "Path": "C:\\Windows\\System32"
+      },
+      "executables": {
+        "C:\\Program Files\\nodejs\\node.exe": "v24.15.0"
+      },
+      "expected": {
+        "status": "ok",
+        "location": "C:\\Program Files\\nodejs\\node.exe",
+        "found": "24.15.0"
+      }
+    },
+    {
+      "name": "native Windows MSI precedes ambient PATH",
+      "environment": {
+        "PROGRAMFILES": "C:\\Program Files",
+        "Path": "D:\\other-toolchain;C:\\Windows\\System32"
+      },
+      "executables": {
+        "C:\\Program Files\\nodejs\\node.exe": "v24.15.0",
+        "D:\\other-toolchain\\node.exe": "v0.0.0"
+      },
+      "expected": {
+        "status": "ok",
+        "location": "C:\\Program Files\\nodejs\\node.exe",
+        "found": "24.15.0"
+      }
+    },
+    {
+      "name": "wrong version at the MSI location still refuses",
+      "environment": {
+        "ProgramFiles": "C:\\Program Files",
+        "Path": "D:\\other-toolchain;C:\\Windows\\System32"
+      },
+      "executables": {
+        "C:\\Program Files\\nodejs\\node.exe": "v0.0.0",
+        "D:\\other-toolchain\\node.exe": "v24.15.0"
+      },
+      "expected": {
+        "status": "differs",
+        "location": "C:\\Program Files\\nodejs\\node.exe",
+        "found": "0.0.0"
+      }
+    },
+    {
+      "name": "native architecture installation precedes redirected Program Files",
+      "environment": {
+        "ProgramW6432": "D:\\Managed Programs",
+        "ProgramFiles": "C:\\Program Files",
+        "Path": "C:\\Windows\\System32"
+      },
+      "executables": {
+        "D:\\Managed Programs\\nodejs\\node.exe": "v24.15.0",
+        "C:\\Program Files\\nodejs\\node.exe": "v0.0.0"
+      },
+      "expected": {
+        "status": "ok",
+        "location": "D:\\Managed Programs\\nodejs\\node.exe",
+        "found": "24.15.0"
+      }
+    },
+    {
+      "name": "relative program directory is never probed",
+      "environment": {
+        "ProgramFiles": "outside",
+        "Path": "C:\\Windows\\System32"
+      },
+      "executables": {
+        "outside\\nodejs\\node.exe": "v24.15.0"
+      },
+      "expected": {
+        "status": "missing",
+        "location": null,
+        "found": null
+      }
+    },
+    {
+      "name": "ordinary PATH remains a fallback if the MSI location is absent",
+      "environment": {
+        "ProgramFiles": "C:\\Program Files",
+        "Path": "C:\\Windows\\System32;D:\\other-toolchain"
+      },
+      "executables": {
+        "D:\\other-toolchain\\node.exe": "v24.15.0"
+      },
+      "expected": {
+        "status": "ok",
+        "location": "D:\\other-toolchain\\node.exe",
+        "found": "24.15.0"
+      }
+    },
+    {
+      "name": "owned pinned archive wins over the actual stale system MSI",
+      "environment": {
+        "LOCALAPPDATA": "C:\\Users\\dev\\AppData\\Local",
+        "ProgramFiles": "C:\\Program Files",
+        "Path": "C:\\Program Files\\nodejs"
+      },
+      "executables": {
+        "C:\\Users\\dev\\AppData\\Local\\semio\\node\\v24.15.0\\node.exe": "v24.15.0",
+        "C:\\Program Files\\nodejs\\node.exe": "v24.14.1"
+      },
+      "expected": {
+        "status": "ok",
+        "location": "C:\\Users\\dev\\AppData\\Local\\semio\\node\\v24.15.0\\node.exe",
+        "found": "24.15.0"
+      }
+    }
+  ]
+}

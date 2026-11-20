@@ -22,7 +22,7 @@ export type XlsxMutation =
   | { mutation: 'renameSheet'; name: string; newName: string }
   | { mutation: 'setCell'; address: XlsxCellAddress; value: XlsxCellValue; node?: XmlNode }
   | { mutation: 'insertCell'; address: XlsxCellVacancyAddress; value: XlsxCellValue; node?: XmlNode }
-  | { mutation: 'removeCell'; address: XlsxCellAddress }
+  | { mutation: 'removeCell'; address: XlsxCellAddress; keepRow?: boolean }
   | { mutation: 'insertSharedString'; value: string; index?: number; node?: XmlNode }
   | { mutation: 'removeSharedString'; index: number }
   | { mutation: 'setSharedString'; index: number; value: string; node?: XmlNode }

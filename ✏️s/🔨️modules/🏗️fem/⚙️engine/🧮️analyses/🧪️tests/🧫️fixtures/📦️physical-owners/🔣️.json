@@ -7,7 +7,7 @@
     "maximumInlineBytes": 4096,
     "maximumBackingBytes": 4096,
     "initialAllocationBytes": 0,
-    "logicalLimits": { "node": 128, "element": 128, "support": 64 },
+    "logicalLimits": { "node": 4096, "element": 16384, "support": 64 },
     "targets": ["empty", "one", "maximum"],
     "allocationFaultOwner": "retained",
     "modelTransfer": "move"

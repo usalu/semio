@@ -433,6 +433,7 @@ const PanelTabButton: React.FC<{
         data-tab-kind={tab.kind}
         data-drag-source={isDragSource ? "true" : undefined}
         data-drop-nest={isChildDropTarget ? "true" : undefined}
+        data-shared-border-state={isChildDropTarget ? "active" : undefined}
         id={tab.id}
         data-level={level}
         data-active={isActive ? "true" : undefined}
@@ -467,7 +468,7 @@ const PanelTabButton: React.FC<{
           !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
           windowTabChrome && panelTabButtonDividerClass,
           isDragSource && "opacity-40",
-          isChildDropTarget && "bg-accent/20 !border-accent",
+          isChildDropTarget && "bg-accent/20",
           isUnitDropReady && dropZoneReadyClass,
         )}
       >

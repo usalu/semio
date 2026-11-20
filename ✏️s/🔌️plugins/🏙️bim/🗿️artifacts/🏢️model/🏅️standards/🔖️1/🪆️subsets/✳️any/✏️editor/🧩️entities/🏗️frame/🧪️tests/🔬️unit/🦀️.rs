@@ -7,10 +7,10 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 
 fn snapshot() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
-    snapshot.sites.insert("site".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.materials.cold_insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
+    snapshot.sites.cold_insert("site".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.cold_insert("bldg".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("st".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     snapshot
 }
 

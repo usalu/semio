@@ -50,7 +50,7 @@ impl Default for DrawingPlayApp {
 }
 
 impl ArtifactEditor for DrawingPlayApp {
-    fn completion_retirement_birth_bytes(value:&semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
+    fn completion_retirement_demand(value:&semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{completion::demand(value)}
     fn admit_completion_retirement(value:&mut Option<semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,effect)}
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -105,11 +105,11 @@ impl ArtifactEditor for DrawingPlayApp {
 
     /// 👥️ Returned local reads retain the actual Draw presence fields and original Arc backing.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_s_artifact_draw_drawing_editor_interaction::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<Self::Presence>::default()))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_s_artifact_draw_drawing_editor_interaction::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<Self::Presence>::default()))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
@@ -140,13 +140,17 @@ impl ArtifactEditor for DrawingPlayApp {
         DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).chain(DrawingPathProofs::bounded_first_step_tool_proofs()).chain(DrawingImageProofs::bounded_first_step_tool_proofs()).chain(DrawingExportProofs::bounded_first_step_tool_proofs()).collect()
     }
 
-    fn mounted_job_prepare_snapshot_read(operation:semio_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{semio_s_artifact_draw_drawing_scene_mounted::prepare(operation,snapshot)}
+    fn mounted_job_prepare_snapshot_read(operation: semio_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, _windows: &semio_plugin::WindowConfigOwnerRegistry, _view: Option<&semio_plugin::ViewModel>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
+        semio_plugin::MountedSnapshotReadPreparation { ready: semio_s_artifact_draw_drawing_scene_mounted::prepare(operation, snapshot), progress: Default::default() }
+    }
     fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::maintenance_demands(instance,body)}
-    fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::maintenance(instance,grant).map_err(semio_plugin::PluginLifecycleFailure::from)}
+    fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::maintenance(instance,cx,grant)}
     fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::close_demands(instance,body)}
-    fn mounted_job_close_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::close(instance,grant).map_err(semio_plugin::PluginLifecycleFailure::from)}
+    fn mounted_job_close_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::close(instance,cx,grant)}
     fn mounted_jobs_terminal_is_empty(instance:u32)->bool{semio_s_artifact_draw_drawing_scene_mounted::terminal_is_empty(instance)}
-    fn pending_effects(_owner:&semio_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{semio_s_artifact_draw_drawing_scene_mounted::reconcile(doc.render_operation(),||doc.take_snapshot_read())}
+    fn pending_effects(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&semio_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+        semio_s_artifact_draw_drawing_scene_mounted::reconcile(Some(doc.render_operation()), || doc.take_snapshot_read())
+    }
 
     fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(DrawingInstanceOperationOwner::new())

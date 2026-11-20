@@ -752,3 +752,99 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }
+
+#[test]
+fn typed_genesis_completion_preserves_the_exact_owner_under_refusals() {
+    use semio_plugin_decl_app::{completion_retirement::OriginalCompletionBirth, tool_contract::ArtifactToolCompletionValue};
+    use semio_plugin_testing_caller::OriginalWorkFixture as Caller;
+    use store::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("genesis-handoff.json")).unwrap();
+    let bytes = vectors["pack"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect::<Vec<_>>();
+    let mut caller = Caller::new();
+    let mut other = Caller::with_identity(semio_framework_job::OperationId(615),semio_framework_job::Generation(77));
+    let grant = Caller::stock();
+    let mut completion = None;
+    let mut birth = OriginalCompletionBirth::<RetirementApp>::default();
+    for _ in 0..128 {
+        if caller.turn(grant,|cx|birth.advance(&mut completion,cx)).unwrap() { break; }
+    }
+    let completion=completion.expect("original completion birth");
+    let mut source=Some(AdmittedArtifactGenesis::from_decoded_pack(TestSnapshot::default(),bytes.clone()));
+    let original=std::ptr::from_ref(source.as_ref().unwrap().pack());
+    let mut published=false;
+    let mut accepted=None;
+    for turn in vectors["turns"].as_array().unwrap() {
+        let label=turn["action"].as_str().unwrap();
+        let step=if label=="unfunded" {
+            caller.turn(semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:0,..grant},|cx|completion.complete_genesis_original(&mut source,&mut published,cx))
+        }else if label=="busy" {
+            caller.turn(grant,|cx|completion.with_busy_test_lock(||completion.complete_genesis_original(&mut source,&mut published,cx)))
+        }else if label=="wrong-source" {
+            other.turn(grant,|cx|completion.complete_genesis_original(&mut source,&mut published,cx))
+        }else if label=="publish" {
+            let result=caller.turn(grant,|cx|completion.complete_genesis_original(&mut source,&mut published,cx));
+            assert!(completion.take_emit().is_err(),"unsupported lane did not consume the genesis");
+            let Some(ArtifactToolCompletionValue::Genesis(Some(moved),None))=completion.take().unwrap() else {panic!("typed genesis output missing")};
+            assert_eq!(std::ptr::from_ref(moved.pack()),original);
+            accepted=Some(moved);
+            result
+        }else if label=="duplicate-after-take" {
+            source=Some(AdmittedArtifactGenesis::from_decoded_pack(TestSnapshot::default(),bytes.clone()));
+            published=false;
+            caller.turn(grant,|cx|completion.complete_genesis_original(&mut source,&mut published,cx))
+        }else{panic!("unknown turn {label}")};
+        assert_eq!(step.is_err(),turn["refused"].as_bool().unwrap(),"{label}");
+        assert_eq!(step.ok()==Some(true),turn["moved"].as_bool().unwrap(),"{label}");
+        assert_eq!(source.is_some(),!turn["moved"].as_bool().unwrap(),"{label}");
+    }
+    assert!(completion.take().unwrap().is_none());
+    caller.retire_owned(accepted.take().unwrap(),grant);
+    caller.retire_owned(source.take().unwrap(),grant);
+    for _ in 0..128 {
+        if birth.terminal_is_empty(){break}
+        caller.turn(grant,|cx|birth.close_step(cx)).unwrap();
+    }
+    assert!(birth.terminal_is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn typed_genesis_replacement_refusal_keeps_the_live_frontier_and_original_bytes() {
+    use semio_plugin_testing_caller::OriginalWorkFixture as Caller;
+    use store::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("genesis-handoff.json")).unwrap();
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()),artifact_app_laws::fixture_mounted_policy(),&mut artifact_app_laws::fixture_identity()).await;
+    let frontier=(app.stores.store.generation_now(),app.stores.store.content_revision_now());
+    let body=vectors["pack"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect();
+    let mut genesis=Some(AdmittedArtifactGenesis::from_decoded_pack(TestSnapshot::default(),body));
+    let original=std::ptr::from_ref(genesis.as_ref().unwrap().pack());
+    let mut caller=Caller::new();
+    let grant=Caller::stock();
+    for case in vectors["mountedRefusals"].as_array().unwrap() {
+        let stale=case["stale"].as_bool().unwrap();
+        let expected=if stale {(frontier.0+1,frontier.1)}else{frontier};
+        let supplied=semio_framework_value::RetainedCloneGrant{maximum_capacity_bytes:0,..grant};
+        let result=caller.turn(supplied,|cx|{
+            app.ingest.begin_original_genesis_replacement(&app.stores,&app.child_composition,&mut genesis,cx.operation(),expected,cx)
+        });
+        assert_eq!(result.is_err(),case["refused"].as_bool().unwrap());
+        assert!(result.ok().flatten().is_none());
+        assert_eq!(std::ptr::from_ref(genesis.as_ref().unwrap().pack()),original);
+        assert_eq!((app.stores.store.generation_now(),app.stores.store.content_revision_now()),frontier);
+    }
+    let interactive=artifact_app_laws::fixture_mounted_policy().maintenance;
+    let handle=caller.turn(interactive,|cx|{
+        app.ingest.begin_original_genesis_replacement(&app.stores,&app.child_composition,&mut genesis,cx.operation(),frontier,cx)
+    }).unwrap().expect("interactive grant admits an exact replacement shell");
+    assert!(genesis.is_none());
+    let expected=vectors["orphanedReplacement"].as_str().unwrap();
+    for _ in 0..512 {
+        if format!("{:?}",app.ingest.poll_artifact_store_replacement(handle))==expected {break}
+        caller.turn(interactive,|cx|app.ladder_ctx().drive_store_replacement_jobs(cx,interactive,false).map_err(Into::into)).unwrap();
+    }
+    assert_eq!(format!("{:?}",app.ingest.poll_artifact_store_replacement(handle)),expected);
+    assert!(app.ingest.acknowledge_artifact_store_replacement(handle).unwrap());
+    assert_eq!((app.stores.store.generation_now(),app.stores.store.content_revision_now()),frontier);
+    caller.turn(grant,|cx|{close_registered_fixture_app(&mut app,artifact_app_laws::fixture_mounted_policy(),cx).expect("terminal fixture close");Ok(())}).unwrap();
+}

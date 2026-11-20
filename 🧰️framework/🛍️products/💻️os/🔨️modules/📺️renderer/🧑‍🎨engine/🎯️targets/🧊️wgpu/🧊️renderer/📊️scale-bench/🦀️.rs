@@ -14,6 +14,7 @@
 use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
 use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
 use semio_plugin_host::shard::ShardOutcome;
+use semio_renderer_wgpu_host_base::RendererTurnLimits;
 use semio_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef};
 use semio_plugin_interpreter_runtime::OwnedRuntime;
 use serde::Deserialize;
@@ -96,8 +97,8 @@ fn unexpected_faults(outcomes: &[ShardOutcome], actors: &[ActorId], records: &[&
 /// dimensions this bench exercises, e.g. budget 6's hang deadline).
 const BENCH_FUEL: u64 = 200_000_000;
 
-fn turn_budget_of(record: &RegistryRecord) -> TurnBudget {
-    TurnBudget { fuel: BENCH_FUEL, deadline_ms: record.quotas.deadline_ms, max_effects: record.quotas.max_effects, max_patch_bytes: record.quotas.max_patch_bytes, max_frames: record.quotas.max_frames }
+fn turn_budget_of(record: &RegistryRecord) -> RendererTurnLimits {
+    RendererTurnLimits { fuel: BENCH_FUEL, deadline_us: u64::from(record.quotas.deadline_ms) * 1_000, max_effects: record.quotas.max_effects, max_patch_bytes: record.quotas.max_patch_bytes, max_frames: record.quotas.max_frames }
 }
 
 fn instance_open_event(record: &RegistryRecord, instance_id: u32) -> Event {
@@ -134,7 +135,7 @@ fn skipped(id: u32, description: &str, reason: &str) -> serde_json::Value {
 /// 🎠️KernelRuntime`'s own `apply_turn_result` doc and budget 8's own note both used to flag).
 struct Env {
     runtime: super::parallel_runtime::ParallelRuntime,
-    budgets: HashMap<u64, TurnBudget>,
+    budgets: HashMap<u64, RendererTurnLimits>,
     seq: u64,
     ordinals: HashMap<String, u16>,
     now_ms: u64,
@@ -181,9 +182,27 @@ impl Env {
         };
         let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
         let ordinal = self.ordinal(&package_id);
-        let budget = turn_budget_of(record);
+        let limits = turn_budget_of(record);
+        let now = semio_framework_job::default_now_us().ok_or_else(|| "benchmark activation clock unavailable".to_string())?;
+        let policy = semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameRootPolicyV1::initiating_event();
+        let operation = semio_framework_trace::allocate_operation_id().0;
+        let retained = semio_framework_actor::RetainedTurnInput {
+            operation,
+            generation: 1,
+            epoch: 1,
+            work: semio_framework_actor::OriginalActorTurnWork {
+                clock_binding: operation,
+                absolute_deadline_us: now.saturating_add(policy.maximum_elapsed_microseconds),
+                fuel: limits.fuel,
+            },
+            grant: policy.grant,
+        };
+        let budget = TurnBudget {
+            deadline_us: now.saturating_add(limits.deadline_us).min(retained.work.absolute_deadline_us),
+            ..TurnBudget::from_retained(retained, limits.fuel, limits.max_effects, limits.max_patch_bytes, limits.max_frames)
+        };
         let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await.map_err(|refusal| refusal.reason)?;
-        self.budgets.insert(actor.0, budget);
+        self.budgets.insert(actor.0, limits);
         Ok(actor)
     }
 
@@ -243,7 +262,7 @@ impl Env {
     /// budget 5 now uses `pump_tracking` below instead, which stamps the moment ONE specific
     /// actor's own outcome is observed rather than waiting on this method's own return.
     ///
-    /// 🔀️ Cloned BEFORE the call (a small `HashMap<u64, TurnBudget>`, one per activated
+    /// 🔀️ Cloned BEFORE the call (a small `HashMap<u64, RendererTurnLimits>`, one per activated
     /// actor) so the closure below borrows THIS local binding, not `self` — `self.runtime.
     /// tick_and_dispatch(..)` already holds `self.runtime` mutably for the duration of the
     /// call, and a closure capturing `&self.budgets` directly would conflict with that.
@@ -257,7 +276,7 @@ impl Env {
         loop {
             self.now_ms += 1;
             let budgets = self.budgets.clone();
-            let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+            let fallback = RendererTurnLimits { fuel: BENCH_FUEL, deadline_us: 50_000, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
             let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor, original| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), original)).await?;
             if decision.run.is_empty() {
                 break;
@@ -274,18 +293,7 @@ impl Env {
                         let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                     }
                     ShardOutcome::Fault { actor, message } => {
-                        let faulted = semio_framework_actor::TurnResult {
-                            cold_pair_ingress: Default::default(),
-                            ui_patches: Vec::new(),
-                            effects: Vec::new(),
-                            command_ingress: Vec::new(),
-                            lifecycle_receipt: None,
-                            ui_patch_receipt: None,
-                            next_wake: None,
-                            status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
-                            usage: semio_framework_actor::Usage::default(),
-                        };
-                        let _ = self.runtime.complete_actor(ActorId(*actor), &faulted, self.now_ms).await;
+                        let _ = self.runtime.record_transport_fault(ActorId(*actor), message.clone(), self.now_ms).await;
                     }
                     _ => {}
                 }
@@ -314,7 +322,7 @@ impl Env {
         loop {
             self.now_ms += 1;
             let budgets = self.budgets.clone();
-            let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+            let fallback = RendererTurnLimits { fuel: BENCH_FUEL, deadline_us: 50_000, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
             let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor, original| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), original)).await?;
             if decision.run.is_empty() {
                 break;
@@ -333,18 +341,7 @@ impl Env {
                             Some(*actor)
                         }
                         ShardOutcome::Fault { actor, message } => {
-                            let faulted = semio_framework_actor::TurnResult {
-                                cold_pair_ingress: Default::default(),
-                                ui_patches: Vec::new(),
-                                effects: Vec::new(),
-                                command_ingress: Vec::new(),
-                                lifecycle_receipt: None,
-                                ui_patch_receipt: None,
-                                next_wake: None,
-                                status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
-                                usage: semio_framework_actor::Usage::default(),
-                            };
-                            let _ = self.runtime.complete_actor(ActorId(*actor), &faulted, self.now_ms).await;
+                            let _ = self.runtime.record_transport_fault(ActorId(*actor), message.clone(), self.now_ms).await;
                             Some(*actor)
                         }
                         _ => None,

@@ -18,12 +18,13 @@ import{createSharedSourceFilesV1}from"../../../🕸️graph/📥️inference/�
 import{partInferenceEngagementV1}from"../../../🕸️graph/🧭️discovery/🟦️.ts";
 import{openProjectFarmV1,closeProjectFarmsV1}from"../../../🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs";
 import{noteSlowV1,releaseIfGrownV1,footprintPulseV1,bindProcessGateV1,createHeapSamplerV1,footprintStepV1,noteFootprintStepV1,useEnvironmentGateV1}from"../🟨️.mjs";
-import{createFootprintTraceV1,heapCensusV1,FOOTPRINT_MESSAGES_V1,FOOTPRINT_POLICY_V1,createFootprintGateV1,createFootprintMeterV1,decideFootprintV1,footprintGateV1,footprintHeadroomBytesV1,grantBytesOfV1,readProcessFootprintBytesV1,releaseRuntimeMemoryV1,renderFootprintMessageV1,settleWaveMemoryV1,useFootprintGateV1}from"../🟨️.mjs";
+import{createDarwinFootprintProbeV1,createFootprintTraceV1,heapCensusV1,FOOTPRINT_MESSAGES_V1,FOOTPRINT_POLICY_V1,createFootprintGateV1,createFootprintMeterV1,decideFootprintV1,footprintGateV1,footprintHeadroomBytesV1,grantBytesOfV1,readProcessFootprintBytesV1,releaseRuntimeMemoryV1,renderFootprintMessageV1,settleWaveMemoryV1,useFootprintGateV1}from"../🟨️.mjs";
 import{createGraphParentMemoryGovernorV1,createMemoryGovernorV1,serviceMemoryHeadroomBytesV1}from"../../🟨️.mjs";
 import{createClosureSettlerV1,useCapacityGrantV1}from"../../../🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{createFactIndexV1,type GenerationRowV1}from"../../../🕸️graph/🕰️generations/🟨️.mjs";
 import{derivedOwnerNameV1,suspectRowsV1}from"../../../🕸️graph/🕰️generations/✂️cutoff/🟨️.mjs";
 import{Database}from"bun:sqlite";
+import windowsCases from "./windows-process.json" with {type:"json"};
 import{GRAPH_MEMORY_POLICY_V1}from"../../🟨️.mjs";
 import{planCeilingBytesV1,useSliceCeilingGateV1}from"../🟨️.mjs";
 
@@ -67,7 +68,117 @@ test("the reader answers the footprint of one process, equal to the system tool,
  const failing=async()=>{throw Error("no tool");};
  expect(await readProcessFootprintBytesV1(1,{platform:"darwin",run:failing,rss:()=>99})).toBeUndefined();expect(await readProcessFootprintBytesV1(1,{platform:"linux",read:failing,rss:()=>99})).toBeUndefined();
  expect(await readProcessFootprintBytesV1(1,{platform:"darwin",run:async()=>"bun [1]: 64-bit    Footprint: 123456789 B\n    phys_footprint: 123456789 B\n",rss:()=>99})).toBe(123456789);
- expect(await readProcessFootprintBytesV1(1,{platform:"win32",rss:()=>99})).toBe(99);
+ expect(await readProcessFootprintBytesV1(process.pid,{platform:"win32",rss:()=>99})).toBe(99);
+ expect(await readProcessFootprintBytesV1(1,{platform:"win32",rss:()=>99,workingSet:()=>undefined})).toBeUndefined();
+});
+
+test("a Darwin footprint batch samples exact distinct PIDs and keeps valid readings when one process disappears",async()=>{
+ const db=new Database(":memory:");
+ try{
+  const pids=[501,502,503,504,505,506,507,508,509,501];
+  const rows=pids.slice(0,9).filter(pid=>pid!==504).map(pid=>({pid,bytes:pid*4096}));
+  const expected=db.query("select json_extract(probe.value,'$.bytes') as bytes from json_each(?1) request left join json_each(?2) probe on json_extract(probe.value,'$.pid')=request.value order by request.key").all(JSON.stringify(pids),JSON.stringify(rows)) as {bytes:number|null}[];
+  const calls:string[][]=[];
+  const probe=createDarwinFootprintProbeV1(async(command,args)=>{
+   expect(command).toBe("footprint");
+   calls.push([...args]);
+   return rows.map(row=>`child [${row.pid}]: 64-bit  Footprint: 32 B\n    phys_footprint: ${row.bytes} B\n`).join("");
+  });
+  expect(await Promise.all(pids.map(pid=>probe(pid)))).toEqual(expected.map(row=>row.bytes??undefined));
+  expect(calls).toEqual([["-f","bytes","--noCategories",...[...new Set(pids)].flatMap(pid=>["-p",String(pid)])]]);
+ }finally{db.close();}
+});
+
+test("each Darwin footprint request cancels independently and the final cancellation aborts its command",async()=>{
+ const started=Promise.withResolvers<AbortSignal>();
+ const a=new AbortController(),b=new AbortController(),c=new AbortController();
+ let calls=0;
+ const probe=createDarwinFootprintProbeV1((_command,_args,signal)=>{
+  if(++calls>1)return Promise.resolve("child [701]: 64-bit  Footprint: 4096 B\n");
+  started.resolve(signal!);
+  return new Promise((_resolve,reject)=>signal!.addEventListener("abort",()=>reject(signal!.reason),{once:true}));
+ });
+ const first=probe(700,a.signal),second=probe(701,b.signal),cancelled=probe(702,c.signal);
+ c.abort();expect(await cancelled).toBeUndefined();
+ const shared=await started.promise;
+ a.abort();expect(await first).toBeUndefined();expect(shared.aborted).toBe(false);
+ b.abort();expect(await second).toBeUndefined();expect(shared.aborted).toBe(true);
+ expect(await probe(701)).toBe(4096);
+ expect(calls).toBe(2);
+});
+
+test("Darwin footprint requests arriving during a probe wait for a fresh bounded batch",async()=>{
+ const started=Promise.withResolvers<void>(),firstAnswer=Promise.withResolvers<string>();
+ const calls:string[][]=[];
+ const probe=createDarwinFootprintProbeV1((_command,args)=>{
+  calls.push([...args]);
+  if(calls.length===1){started.resolve();return firstAnswer.promise;}
+  return Promise.resolve("child [801]: 64-bit  Footprint: 8192 B\n");
+ });
+ const first=probe(801);
+ await started.promise;
+ const following=Array.from({length:FOOTPRINT_POLICY_V1.processProbeBatchRequests},()=>probe(801));
+ expect(await probe(801)).toBeUndefined();
+ expect(calls).toHaveLength(1);
+ firstAnswer.resolve("child [801]: 64-bit  Footprint: 4096 B\n");
+ expect(await first).toBe(4096);
+ expect(new Set(await Promise.all(following))).toEqual(new Set([8192]));
+ expect(calls).toEqual(Array.from({length:2},()=>["-f","bytes","--noCategories","-p","801"]));
+});
+
+test.skipIf(process.platform!=="darwin")("the Darwin footprint tool returns a live PID beside a missing PID",async()=>{
+ const probe=createDarwinFootprintProbeV1();
+ const [present,missing]=await Promise.all([probe(process.pid),probe(2147483647)]);
+ expect(present).toBeGreaterThan(8*MB);
+ expect(missing).toBeUndefined();
+});
+
+test("Windows footprint reads exactly the requested process working set",async()=>{
+ const {readWindowsProcessWorkingSetV1}=await import("../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪟️native-memory/🟦️.ts");
+ const db=new Database(":memory:");
+ try{
+  expect(new Ajv({strict:true}).validate(schema.definitions.WindowsProcessCases,windowsCases)).toBe(true);
+  for(const row of windowsCases.cases){
+   const asked:number[]=[],closed:bigint[]=[];
+   const oracle=db.query("select case json_extract(?1,'$.mode') when 'counter' then json_extract(?1,'$.workingSet') end bytes").get(JSON.stringify(row)) as {bytes:number|null};
+   expect(oracle.bytes).toBe(row.expected);
+   const handle=BigInt(row.pid)+90n,kernel={
+    OpenProcess:(access:number,inherit:number,pid:number)=>{expect(access).toBe(0x1000);expect(inherit).toBe(0);asked.push(pid);return row.mode==="open-failed"?0n:handle;},
+    K32GetProcessMemoryInfo:(actual:bigint,buffer:Buffer,size:number)=>{
+     expect(actual).toBe(handle);expect(size).toBe(80);expect(buffer.readUInt32LE(0)).toBe(80);
+     if(row.mode==="counter-threw")throw Error("unavailable");
+     if(row.mode==="counter-failed")return 0;
+     buffer.writeBigUInt64LE(BigInt(row.workingSet!),16);
+     buffer.writeBigUInt64LE(BigInt(row.privateBytes!),72);
+     return 1;
+    },
+    CloseHandle:(actual:bigint)=>{closed.push(actual);return 1;},
+   };
+   const bytes=await readProcessFootprintBytesV1(row.pid,{
+    platform:"win32",
+    rss:()=>{throw Error("Reader's RSS is unrelated");},
+    run:async()=>{throw Error("Windows does not need a command");},
+    workingSet:pid=>readWindowsProcessWorkingSetV1(kernel,pid),
+   });
+   expect(bytes).toBe(oracle.bytes??undefined);
+   expect(asked).toEqual(row.mode==="invalid"?[]:[row.pid]);
+   expect(closed).toEqual(row.mode==="invalid"||row.mode==="open-failed"?[]:[handle]);
+  }
+ }finally{db.close();}
+});
+
+test("footprint cancellation stops before a read and ignores an aborted result",async()=>{
+ const controller=new AbortController();
+ let calls=0;
+ const run=async(_command:string,_args:readonly string[],signal?:AbortSignal)=>{
+  calls++;
+  expect(signal).toBe(controller.signal);
+  controller.abort();
+  return "bun [301]: 64-bit    Footprint: 123456789 B\n    phys_footprint: 123456789 B\n";
+ };
+ expect(await readProcessFootprintBytesV1(301,{platform:"darwin",run,signal:controller.signal})).toBeUndefined();
+ expect(await readProcessFootprintBytesV1(301,{platform:"darwin",run,signal:controller.signal})).toBeUndefined();
+ expect(calls).toBe(1);
 });
 
 test("the meter answers at once, reads in the background once per ttl, ignores a failed reading and prefers the reading to the resident set",async()=>{
@@ -228,12 +339,16 @@ test("the census names the heap by counters without walking it, in both language
  expect(await heapCensusV1({stats,types:3})).toEqual({heapMegabytes:300,extraMegabytes:120,objects:5000000,types:"Array 3000000, String 1200000, Object 800000"});
  expect(await heapCensusV1({stats:async()=>{throw Error("none");}})).toBeUndefined();
  const real=await heapCensusV1();expect(real?.objects).toBeGreaterThan(0);
- const lines:string[]=[];let held=900*MB;
+ const sample=JSON.parse(readFileSync(new URL("./census-settle.json",import.meta.url),"utf8"));
+ const db=new Database(":memory:");
+ const {megabytes}=db.query("select value ->> 'megabytes' as megabytes from json_each(?) where value ->> 'phase' = ?").get(JSON.stringify(sample.measurements),sample.censusPhase) as {megabytes:number};
+ db.close();
+ const lines:string[]=[];let held=sample.measurements[0].megabytes*MB;
  const meter=createFootprintMeterV1({read:async()=>held,ttlMilliseconds:0});
- const gate=createFootprintGateV1({meter,grantBytes:()=>1000*MB,release:()=>{held=300*MB;},heapCensus:()=>heapCensusV1({stats}),report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en,de"}});
+ const gate=createFootprintGateV1({meter,grantBytes:()=>1000*MB,release:()=>{held=sample.measurements[1].megabytes*MB;},heapCensus:()=>heapCensusV1({stats}),report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en,de"}});
  await gate.admit();
- expect(lines).toContain("graph: heap census at 900 MB: managed 300 MB, external 120 MB, 5000000 objects; most numerous: Array 3000000, String 1200000, Object 800000, Map 900, Set 10, Function 5");
- expect(lines.some(line=>line.startsWith("Graph: Heap-Zählung bei 900 MB: verwaltet 300 MB, extern 120 MB, 5000000 Objekte; am zahlreichsten: Array 3000000"))).toBe(true);
+ expect(lines).toContain(`graph: heap census at ${megabytes} MB: managed 300 MB, external 120 MB, 5000000 objects; most numerous: Array 3000000, String 1200000, Object 800000, Map 900, Set 10, Function 5`);
+ expect(lines.some(line=>line.startsWith(`Graph: Heap-Zählung bei ${megabytes} MB: verwaltet 300 MB, extern 120 MB, 5000000 Objekte; am zahlreichsten: Array 3000000`))).toBe(true);
 });
 
 test("the watcher settles a process whose footprint passed the soft limit while no derivation asks, and stops with the gate",async()=>{

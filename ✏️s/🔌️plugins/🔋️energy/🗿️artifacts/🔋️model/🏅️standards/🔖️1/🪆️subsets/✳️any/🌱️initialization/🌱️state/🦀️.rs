@@ -5,7 +5,9 @@ use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll,RetirementDeman
 use semio_s_artifact_energy_model_snapshot::{EnergyModelSnapshot,original::genesis::EnergyModelInitialBirth};
 use std::mem::size_of;
 /// 🌱️ The mounted caller retains every original Energy genesis field until paid transfer or cancellation.
-pub struct EnergyNativeInitialSource{binding:OriginalSourceBinding,decoder:(semio_framework_value_native_owned::NativeAllocationIdentity,u64),cursor:EnergyModelInitialBirth,body:Option<usize>,closing:bool,birth:OriginalStoreBirth,unit:Option<()>,step_stash:Option<Result<RetainedCloneStep,ValueError>>}
+pub struct EnergyNativeInitialSource{binding:OriginalSourceBinding,decoder:(semio_framework_value_native_owned::NativeAllocationIdentity,u64),cursor:EnergyModelInitialBirth,body:Option<usize>,closing:bool,birth:OriginalStoreBirth,unit:Option<()>,step_stash:Option<StagedStep>}
+/// 🌱️ One cursor step already performed whose construction settlement may span several turns, so its quote and body metadata survive a yield.
+struct StagedStep{result:Result<RetainedCloneStep,ValueError>,demand:RetirementDemand,metadata:usize}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"native Energy initial source changed its original caller or destination")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn construction(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}
@@ -14,11 +16,15 @@ impl OriginalStoreInitialSource<EnergyModelSnapshot> for EnergyNativeInitialSour
  fn advance(&mut self,cx:&mut StepContext<'_>,output:&mut Option<EnergyModelSnapshot>)->Result<bool,OriginalTurnFailure>{
   if !self.binding.matches(cx)||cx.native_receiving_identity()!=Some(self.decoder)||self.closing||output.is_some(){return Err(invalid().into())}
   let grant=cx.retained_grant();
-  if self.cursor.ready(){let mut d=self.cursor.take_demand()?;d.copy_bytes+=size_of::<Option<EnergyModelSnapshot>>();d.depth+=1;let ready=self.birth.built(cx,output,construction(d),||{let(value,mut p)=self.cursor.take(grant)?.ok_or_else(invalid)?;p.copied_bytes+=size_of::<Option<EnergyModelSnapshot>>();Ok((value,p))})?;return Ok(ready&&output.is_some())}
-  let body=self.body.unwrap_or(grant.maximum_copy_bytes);let mut d=self.cursor.demand(body)?;let metadata=if self.body.is_none(){size_of::<Option<usize>>()}else{0};d.copy_bytes+=metadata;d.depth+=1;
-  if self.step_stash.is_none(){let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-metadata,maximum_depth:grant.maximum_depth-1,..grant};let cursor=&mut self.cursor;match cx.with_original_effect(child,|_,effect|cursor.advance(body,effect))?{Some((result,performed))=>{cx.consume_work(performed);self.step_stash=Some(result);},None=>return Ok(false)}}
-  let mut stashed=self.step_stash.take();
-  let ready=self.birth.built(cx,&mut self.unit,construction(d),||{let step=stashed.take().ok_or_else(invalid)??;let mut p=step.progress();if p.copied_items>0{self.body=Some(body);p.copied_bytes+=metadata;}Ok(((),p))})?;if ready{self.unit=None;}Ok(false)
+  if self.step_stash.is_none()&&self.cursor.ready(){let mut d=self.cursor.take_demand()?;d.copy_bytes+=size_of::<Option<EnergyModelSnapshot>>();d.depth+=1;let ready=self.birth.built(cx,output,construction(d),||{let(value,mut p)=self.cursor.take(grant)?.ok_or_else(invalid)?;p.copied_bytes+=size_of::<Option<EnergyModelSnapshot>>();Ok((value,p))})?;return Ok(ready&&output.is_some())}
+  if self.step_stash.is_none(){
+   let body=self.body.unwrap_or(grant.maximum_copy_bytes);let metadata=if self.body.is_none(){size_of::<Option<usize>>()}else{0};let mut d=self.cursor.demand(body)?;d.copy_bytes+=metadata;d.depth+=1;
+   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-metadata,maximum_depth:grant.maximum_depth-1,..grant};let cursor=&mut self.cursor;
+   match cx.with_original_effect(child,|_,effect|cursor.advance(body,effect))?{Some((result,performed))=>{cx.consume_work(performed);if result.as_ref().is_ok_and(|step|step.progress().copied_items>0){self.body=Some(body);}self.step_stash=Some(StagedStep{result,demand:d,metadata});},None=>return Ok(false)}
+  }
+  let demand=self.step_stash.as_ref().ok_or_else(invalid)?.demand;
+  let stash=&mut self.step_stash;
+  let ready=self.birth.built(cx,&mut self.unit,construction(demand),||{let staged=stash.take().ok_or_else(invalid)?;let step=staged.result?;let mut p=step.progress();if p.copied_items>0{p.copied_bytes+=staged.metadata;}Ok(((),p))})?;if ready{self.unit=None;}Ok(false)
  }
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(fixed(size_of::<bool>()*2))}self.cursor.close_demand(self.body.unwrap_or(body))}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{if !self.binding.matches(cx)||cx.native_receiving_identity()!=Some(self.decoder){return Err(invalid().into())}if self.closing&&self.cursor.terminal_is_empty()&&!self.birth.terminal_is_empty(){self.unit=None;self.step_stash=None;self.birth.close_step(cx)?;return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=semio_framework_job::close_original_effect_step(cx,d,|effect|{if !self.closing{self.closing=true;self.cursor.begin_close();return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1})}self.cursor.close_step(effect)})?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}

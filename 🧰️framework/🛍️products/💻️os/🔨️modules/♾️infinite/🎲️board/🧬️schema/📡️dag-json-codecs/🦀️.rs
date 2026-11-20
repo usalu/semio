@@ -65,7 +65,7 @@ pub fn encode_dag_node_ids_json(value:&Vec<String>,control:&mut NativeEncodeCont
 
 /// 🖱️ Admits complete hover facts before publishing an interaction projection.
 pub fn decode_dag_hover_json(source:&str,control:&mut NativeDecodeControl<'_>)->Result<DagHoverFacts,ValueError>{
-    let raw=semio_framework_pack_json::from_json_str_controlled::<DslValue>(source,semio_framework_pack_json::JsonMemberPolicy::Reject,control)?.guard_decoded();closed(raw.get(),&["channel","refusal"])?;
+    let raw=semio_framework_pack_json::from_json_str_controlled::<DslValue>(source,semio_framework_pack_json::JsonMemberPolicy::Reject,control)?.guard_decoded();if let Some(edge)=raw.get().get("edge"){closed(raw.get(),&["channel","refusal","edge"])?;if !edge.is_null(){identifier(edge)?;}}else{closed(raw.get(),&["channel","refusal"])?;}
     let hovered=raw.get().get("channel").ok_or_else(refuse)?;if !hovered.is_null(){control.step()?;input_channel(hovered)?;}
     let refusal=raw.get().get("refusal").ok_or_else(refuse)?;if !refusal.is_null(){control.step()?;closed(refusal,&["source","sourceTypes","target","targetTypes"])?;for key in ["source","target"]{identifier(refusal.get(key).ok_or_else(refuse)?)?;}for key in ["sourceTypes","targetTypes"]{identifiers(refusal.get(key).ok_or_else(refuse)?,control)?;}}
     DagHoverFacts::from_value_controlled(raw.get(),control)

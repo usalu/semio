@@ -14,7 +14,7 @@ pub fn apply(inference: &mut ModelInference, value: ModelValue) {
         (ModelNode::OptionScope, Data::OptionScope(scope)) => inference.option_scope = Arc::unwrap_or_clone(scope),
         (ModelNode::StructuralAnalysis, Data::Structure(value)) => {
             let analysis = Arc::unwrap_or_clone(value);
-            inference.analytical_members = analysis.members.clone();
+            inference.analytical_members = analysis.members.iter().map(|(id, member)| (id.clone(), member.clone())).collect();
             inference.structural_analysis = analysis;
         }
         (ModelNode::Storey(id), Data::Level(level)) => {

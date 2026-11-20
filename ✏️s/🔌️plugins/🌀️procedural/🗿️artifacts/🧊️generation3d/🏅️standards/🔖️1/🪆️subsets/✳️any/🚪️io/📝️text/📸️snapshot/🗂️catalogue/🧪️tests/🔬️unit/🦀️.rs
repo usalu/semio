@@ -121,7 +121,15 @@ fn catalogue_covers_every_exposed_kernel_method_and_mesh_operation_once() {
         assert!(claimed.insert(kind), "{kind} is claimed twice");
     }
     assert_eq!(fixture["kernelCoverage"].as_array().unwrap().len(), 93);
-    assert_eq!(fixture["meshCoverage"].as_array().unwrap().len(), 42);
+    let packaged: Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).unwrap();
+    let operations: std::collections::BTreeSet<_> = fixture["meshCoverage"].as_array().unwrap().iter()
+        .map(|row| format!("brep.mesh.{}", row["operation"].as_str().unwrap())).collect();
+    for topic in packaged["manifest"]["topicContributions"].as_array().unwrap() {
+        let manifest: Value = serde_json::from_str(topic["payload"]["manifestJson"].as_str().unwrap()).unwrap();
+        let live: std::collections::BTreeSet<_> = manifest["contributes"]["operators"].as_array().unwrap().iter()
+            .filter_map(|row| row["id"].as_str().filter(|id| id.starts_with("brep.mesh.")).map(str::to_owned)).collect();
+        assert_eq!(operations, live);
+    }
     assert_eq!(fixture["unexposedKernelMethods"].as_array().unwrap().len(), 7);
 }
 

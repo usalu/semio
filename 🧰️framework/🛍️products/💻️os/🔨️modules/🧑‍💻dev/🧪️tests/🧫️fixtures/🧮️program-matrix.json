@@ -37,7 +37,8 @@
     "stdio/md": "textEdit",
     "stdio/html": "textEdit",
     "stdio/json": "set-node",
-    "stdio/xml": "set-node"
+    "stdio/xml": "set-node",
+    "stdio-office/xlsx": "set-cell"
   },
   "kindPre": {
     "puzzle/puzzle3d": "selectAll",
@@ -64,7 +65,8 @@
   "kindEdits": {
     "stdio/json.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"name:\"]", "value": "\"Matrix\"" },
     "stdio/json/i-json.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"id:\"]", "value": "\"Matrix\"" },
-    "stdio/xml.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"text:\"]", "value": "Matrix" }
+    "stdio/xml.set-node": { "control": "[data-ui-node-key=\"edit\"][aria-label^=\"text:\"]", "value": "Matrix" },
+    "stdio-office/xlsx.set-cell": { "control": "input[aria-label=\"A1\"]", "value": "Matrix workbook" }
   },
   "kindOrigin": {
     "demonstrator/generation3d": "procedural",

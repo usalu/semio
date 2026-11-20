@@ -14,6 +14,7 @@ pub enum FemIdentityKind {
     Section,
     Support,
     LoadCase,
+    Solid,
 }
 impl FemIdentityKind {
     fn index(self) -> u8 {
@@ -24,6 +25,7 @@ impl FemIdentityKind {
             Self::Section => 3,
             Self::Support => 4,
             Self::LoadCase => 5,
+            Self::Solid => 7,
         }
     }
     fn from_index(index: u8) -> Result<Self, ValueError> {
@@ -34,6 +36,7 @@ impl FemIdentityKind {
             3 => Ok(Self::Section),
             4 => Ok(Self::Support),
             5 => Ok(Self::LoadCase),
+            7 => Ok(Self::Solid),
             _ => Err(invalid()),
         }
     }
@@ -45,6 +48,7 @@ impl FemIdentityKind {
             Self::Section => "section",
             Self::Support => "support",
             Self::LoadCase => "loadCase",
+            Self::Solid => "solid",
         }
     }
 }
@@ -63,8 +67,8 @@ pub trait FemIdentitySource {
 }
 macro_rules! source{
  ($($source:ty),+)=>{$(impl FemIdentitySource for $source{
-  fn identity_count(&self,kind:FemIdentityKind)->usize{match kind{FemIdentityKind::Node=>self.nodes.len(),FemIdentityKind::Element=>self.elements.len(),FemIdentityKind::Material=>self.materials.len(),FemIdentityKind::Section=>self.sections.len(),FemIdentityKind::Support=>self.supports.len(),FemIdentityKind::LoadCase=>self.load_cases.len()}}
-  fn identity(&self,kind:FemIdentityKind,row:usize)->Option<&str>{match kind{FemIdentityKind::Node=>(*self.nodes).get(row).map(|v|v.id.as_str()),FemIdentityKind::Element=>self.elements.get(row).map(crate::standards::v1::subsets::any::schema::structure::element_id),FemIdentityKind::Material=>(*self.materials).get(row).map(|v|v.id.as_str()),FemIdentityKind::Section=>self.sections.get(row).map(|v|v.id.as_str()),FemIdentityKind::Support=>self.supports.get(row).map(|v|v.id.as_str()),FemIdentityKind::LoadCase=>self.load_cases.get(row).map(|v|v.id.as_str())}}
+  fn identity_count(&self,kind:FemIdentityKind)->usize{match kind{FemIdentityKind::Node=>self.nodes.len(),FemIdentityKind::Element=>self.elements.len(),FemIdentityKind::Material=>self.materials.len(),FemIdentityKind::Section=>self.sections.len(),FemIdentityKind::Support=>self.supports.len(),FemIdentityKind::LoadCase=>self.load_cases.len(),FemIdentityKind::Solid=>self.solids.len()}}
+  fn identity(&self,kind:FemIdentityKind,row:usize)->Option<&str>{match kind{FemIdentityKind::Node=>(*self.nodes).get(row).map(|v|v.id.as_str()),FemIdentityKind::Element=>self.elements.get(row).map(crate::standards::v1::subsets::any::schema::structure::element_id),FemIdentityKind::Material=>(*self.materials).get(row).map(|v|v.id.as_str()),FemIdentityKind::Section=>self.sections.get(row).map(|v|v.id.as_str()),FemIdentityKind::Support=>self.supports.get(row).map(|v|v.id.as_str()),FemIdentityKind::LoadCase=>self.load_cases.get(row).map(|v|v.id.as_str()),FemIdentityKind::Solid=>self.solids.get(row).map(|v|v.id.as_str())}}
   fn load_count(&self,case:usize)->usize{self.load_cases.get(case).map_or(0,|v|v.loads.len())}
   fn load_identity(&self,case:usize,row:usize)->Option<&str>{self.load_cases.get(case)?.loads.get(row).map(crate::standards::v1::subsets::any::schema::structure::load_id)}
  })+};
@@ -74,7 +78,7 @@ fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "FEM analytical identity is repeated, absent, or outside its original namespace")
 }
 
-const KINDS: [FemIdentityKind; 6] = [FemIdentityKind::Node, FemIdentityKind::Element, FemIdentityKind::Material, FemIdentityKind::Section, FemIdentityKind::Support, FemIdentityKind::LoadCase];
+const KINDS: [FemIdentityKind; 7] = [FemIdentityKind::Node, FemIdentityKind::Element, FemIdentityKind::Material, FemIdentityKind::Section, FemIdentityKind::Support, FemIdentityKind::LoadCase, FemIdentityKind::Solid];
 const LOAD: u8 = 6;
 type Row = (u8, usize, usize);
 /// 🧳️ One sorted locator vector retains no borrowed text aliases and closes through the original snapshot frame.
@@ -82,7 +86,7 @@ type Row = (u8, usize, usize);
 pub struct FemIdentityIndex {
     rows: Option<Vec<Row>>,
     source: usize,
-    counts: [usize; 6],
+    counts: [usize; 7],
 }
 impl FemIdentityIndex {
     /// 🎟️ Admits coarse cardinalities before scanning, then funds backing, sorting, duplicate checks and lookup metadata.
@@ -133,7 +137,7 @@ impl FemIdentityIndex {
                 let order=if k!=kind.index(){semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(k.cmp(&kind.index())))?}else{let key=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||source.identity(kind,row).ok_or_else(invalid))?;semio_s_fem_receiving::compare_text(key,id,original,progress,unwind,meter)?};
                 match order{Ordering::Less=>lo=mid+1,Ordering::Greater=>hi=mid,Ordering::Equal=>{meter.take(original.receive_copy(result,row))?;return Ok(())}}
             }
-            Err(ValueError::literal(ValueRefusalKind::InvalidValue,match kind{FemIdentityKind::Node=>"FEM member or support references an absent node",FemIdentityKind::Material=>"FEM member references an absent material",FemIdentityKind::Section=>"FEM member references an absent section",_=>"FEM analytical reference points to an absent identity"}).into())
+            Err(ValueError::literal(ValueRefusalKind::InvalidValue,match kind{FemIdentityKind::Node=>"FEM member or support references an absent node",FemIdentityKind::Material=>"FEM member references an absent material",FemIdentityKind::Section=>"FEM member references an absent section",FemIdentityKind::Solid=>"FEM area load references an absent solid",_=>"FEM analytical reference points to an absent identity"}).into())
         })))
     }
 

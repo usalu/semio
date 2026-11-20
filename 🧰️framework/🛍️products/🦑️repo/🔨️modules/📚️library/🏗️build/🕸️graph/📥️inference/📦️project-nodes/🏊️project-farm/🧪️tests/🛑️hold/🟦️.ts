@@ -11,8 +11,12 @@ import{PLAN_STAGE_POLICY_V1}from"../../../../../../🧠️memory/🪜️plan-sta
 const here=dirname(fileURLToPath(import.meta.url)),worker=join(here,"..","..","👷️worker","🟨️.mjs"),service=pathToFileURL(join(here,"🧫️fixtures","🟨️.mjs")).href;
 const farm=(options:Record<string,unknown>={})=>createFarmV1({entry:worker,service,session:{identity:"law"},workers:2,megabytes:100000,environment:{...process.env},accept:(identity:unknown)=>identity==="law",policy:{...GRAPH_FARM_POLICY_V1,holdRecheckMilliseconds:20},...options} as never);
 type Window={start:number;end:number};
-const overlap=(rows:Window[])=>Math.max(...rows.map(row=>rows.filter(other=>other.start+25<row.end&&row.start+25<other.end).length));
+const overlap=(rows:Window[])=>Math.max(...rows.map(({start})=>rows.filter(row=>row.start<=start&&start+25<row.end).length));
 const run=async(pool:ReturnType<typeof farm>,count:number)=>(await Promise.all(Array.from({length:count},(_,n)=>pool.run({n,delay:120})))).map(answer=>answer.reply as Window);
+
+test("two successive jobs can both overlap one other job without all three running together",()=>{
+ expect(overlap([{start:0,end:300},{start:40,end:120},{start:180,end:260}])).toBe(2);
+});
 
 test("a held farm runs its jobs one after the other and finishes all of them, an unheld farm runs two side by side",async()=>{
  let asked=0;const held=farm({hold:()=>{asked++;return true;}});

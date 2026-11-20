@@ -294,4 +294,3 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️VcsPlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(VcsEditCommandWork);

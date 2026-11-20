@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import { significantConsoleErrors } from "./🟦️.ts";
+import { isLocalReleaseDependency, significantConsoleErrors } from "./🟦️.ts";
 
 const cases = JSON.parse(readFileSync(new URL("./🧫️cases.json", import.meta.url), "utf8")) as {
   readonly cases: readonly { readonly name: string; readonly message: string; readonly significant: boolean }[];
@@ -90,4 +90,11 @@ it("uses the actual read-only automatic finalization policy in the browser workf
   expect(statement!.getText(ast)).not.toContain("toolRunFinalize");
   expect(statement!.getText(ast)).toContain("toolRunAbort");
   expect(calls).toContain("isNewToolRunGroup");
+});
+
+
+it("detects local service traffic in a CDN boot", () => {
+  const site = new URL("http://cdn.localhost:8765/");
+  const corpus = JSON.parse(readFileSync(new URL("./🌐️release-requests.json", import.meta.url), "utf8")) as Record<string, boolean>;
+  for (const [request, expected] of Object.entries(corpus)) expect(isLocalReleaseDependency(request, site), request).toBe(expected);
 });

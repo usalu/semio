@@ -11,7 +11,7 @@
 
 import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type HTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
 import { createPortal } from "react-dom";
-import { CardStack, Icon, OverviewCard, SharedBorderRow, SharedBorderRowCell, OverviewCardAction, cn, overviewCardChipClass, useSharedBorderFrameRef, type IconName, type OverviewCardActionProps } from "@semio-tech/ui-react/chrome";
+import { CardStack, Icon, OverviewCard, SharedBorderRow, SharedBorderRowCell, OverviewCardAction, cn, overviewCardChipClass, useSharedBorderFrameRef, type IconName, type OverviewCardActionProps, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import type { Icon as QuizIcon, Motion, TaskKind } from "@semio-tech/course";
 import type { CourseText } from "../🌐️i18n/🟦️.ts";
 
@@ -36,6 +36,7 @@ export function CardLink(props: { readonly href: string; readonly download?: str
       target={props.external ? "_blank" : undefined}
       rel={props.external ? "noopener noreferrer" : undefined}
       aria-label={props.label}
+      {...sharedBorderlessBoxProps}
       data-overview-card-action={props.primary ? "primary" : "secondary"}
       className={cn(overviewCardChipClass, CARD_CHIP_WRAP, "course-target cursor-pointer no-underline transition-colors", props.primary ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
       style={{ minHeight: "max(1.5rem, calc(7 * var(--ui-spacing)))" }}
@@ -93,7 +94,7 @@ export function CourseCard(props: {
         ) : (
           <a
             href={props.href}
-            className="course-card-link text-inherit no-underline hover:underline focus-visible:underline"
+            className="course-card-link text-inherit no-underline outline-none hover:underline"
             onClick={(event) => {
               if (onOpen === undefined || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               onOpen();
@@ -132,6 +133,7 @@ export function CourseCard(props: {
  * @see ../../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css — the shared-border rules */
 export const CELL = { "data-shared-border-cell": "" } as const;
 export const GROUP = { "data-shared-border-group": "", "data-orientation": "vertical" } as const;
+export const FRAME = { "data-shared-border-frame": "" } as const;
 export const ROW = { "data-shared-border-group": "", "data-shared-border-cell": "" } as const;
 
 /** 🧱️ A padded section of a flush card (or of a zone): a cell with its own padding and column of children. */
@@ -149,7 +151,7 @@ export function CardSection(props: { readonly className?: string; readonly child
  * list lies flush in a frame that already has one, such as a flush card, whose edges its outer rows coincide with, and is
  * a cell of that frame's group itself.
  * Its rows are {@link CELL}s (`<li>`) that carry their own padding. */
-export function RowList(props: { readonly as?: "ul" | "ol"; readonly framed?: boolean; readonly className?: string; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLElement>, "id" | "tabIndex" | "aria-label" | "aria-labelledby" | "onBlur">): ReactElement {
+export function RowList(props: { readonly as?: "ul" | "ol"; readonly framed?: boolean; readonly className?: string; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLElement>, "id" | "tabIndex" | "aria-label" | "aria-labelledby" | "aria-busy" | "onBlur">): ReactElement {
   const { as: Tag = "ul", framed = false, className, children, ...rest } = props;
   const ref = useSharedBorderFrameRef<HTMLElement>();
   return (
@@ -453,7 +455,7 @@ export function BodyButton(props: { readonly onClick: () => void; readonly disab
       disabled={props.disabled}
       aria-describedby={props.describedBy}
       onClick={props.onClick}
-      {...((props.row && !props.tile) || props.cell ? CELL : undefined)}
+      {...((props.row && !props.tile) || props.cell ? CELL : props.tile ? sharedBorderlessBoxProps : FRAME)}
       className={cn(
         overviewCardChipClass,
         "course-target h-auto max-h-none cursor-pointer whitespace-normal text-left leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-50",
@@ -508,7 +510,7 @@ export function ProblemNote(props: { readonly problem: Problem; readonly text: C
         {problem.detail === undefined ? null : (
           <SharedBorderRowCell className="px-double text-xs text-muted-foreground">
             <details className="w-full">
-              <summary className="course-target flex cursor-pointer items-center">{text("course.app.details")}</summary>
+              <summary {...sharedBorderlessBoxProps} className="course-target flex cursor-pointer items-center">{text("course.app.details")}</summary>
               <code lang="en" className="course-name block">
                 {problem.detail}
               </code>
@@ -524,7 +526,7 @@ export function ProblemNote(props: { readonly problem: Problem; readonly text: C
       {props.children}
       {problem.detail === undefined ? null : (
         <details className="w-full text-xs text-muted-foreground">
-          <summary className="course-target flex cursor-pointer items-center">{text("course.app.details")}</summary>
+          <summary {...sharedBorderlessBoxProps} className="course-target flex cursor-pointer items-center">{text("course.app.details")}</summary>
           <code lang="en" className="course-name block">
             {problem.detail}
           </code>

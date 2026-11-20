@@ -51,6 +51,7 @@ pub fn definition() -> WindowKindDefinition {
     actions.extend(super::grid::canvas_actions());
     for action in &mut actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+        action.args = super::grid::action_args(&action.id);
     }
     WindowKindDefinition {
         initial_utility_id: None,

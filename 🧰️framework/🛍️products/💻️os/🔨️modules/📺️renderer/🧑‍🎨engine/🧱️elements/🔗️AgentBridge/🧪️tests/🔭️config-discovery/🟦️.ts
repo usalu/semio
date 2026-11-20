@@ -161,7 +161,7 @@ describe("watchAgentBridgeOffer", () => {
     const published: (AgentBridgeConfig | null)[] = [];
     const delays: number[] = [];
     const pending: (() => void)[] = [];
-    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { fetchImpl, setTimer: (run, delayMs) => { delays.push(delayMs); pending.push(run); return pending.length; }, clearTimer: () => {} });
+    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { declared: true, fetchImpl, setTimer: (run, delayMs) => { delays.push(delayMs); pending.push(run); return pending.length; }, clearTimer: () => {} });
     for (let step = 0; step < served.length; step += 1) {
       await vi.waitFor(() => expect(delays.length).toBe(step + 1));
       if (step + 1 < served.length) pending[step]!();
@@ -183,6 +183,7 @@ describe("watchAgentBridgeOffer", () => {
     let reads = 0;
     const pending: (() => void)[] = [];
     const stop = watchAgentBridgeOffer(() => {}, {
+      declared: true,
       fetchImpl: async (input) => {
         asked.push(input);
         return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
@@ -210,10 +211,81 @@ describe("watchAgentBridgeOffer", () => {
     const { watchAgentBridgeOffer } = await import("../../🛰️offer/🟦️.ts");
     const published: (AgentBridgeConfig | null)[] = [];
     let armed = 0;
-    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { fetchImpl: async () => ({ ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1({ url: "ws://evil.example.com:6300/bridge", admissionProof: "x" }) }), setTimer: () => { armed += 1; return armed; }, clearTimer: () => {} });
+    const stop = watchAgentBridgeOffer((offer) => published.push(offer), { declared: true, fetchImpl: async () => ({ ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1({ url: "ws://evil.example.com:6300/bridge", admissionProof: "x" }) }), setTimer: () => { armed += 1; return armed; }, clearTimer: () => {} });
     await vi.waitFor(() => expect(armed).toBe(1));
     stop();
     expect(published).toEqual([]);
+  });
+});
+
+/** 📣️ LAW over `🧫️fixtures/🛰️offer-answers/🔣️.json` `declaration` and `probe`: only a build that declares the supervisor
+ * endpoint ever asks; a definitive 404/410 is "absent" and stops the poll, every other answer keeps the backoff. */
+describe("agent-bridge offer declaration and absence", () => {
+  const fixture = JSON.parse(readFileSync(join(here, "../🧫️fixtures/🛰️offer-answers/🔣️.json"), "utf8")) as {
+    readonly declaration: readonly { readonly id: string; readonly env: Record<string, string> | null; readonly declared: boolean }[];
+    readonly probe: readonly { readonly id: string; readonly status: number; readonly absent: boolean }[];
+  };
+
+  it("declares the endpoint only when the build says so", async () => {
+    const { agentBridgeOfferDeclaredV1 } = await import("../../🛰️offer/🟦️.ts");
+    for (const row of fixture.declaration) expect(agentBridgeOfferDeclaredV1(row.env ?? undefined), row.id).toBe(row.declared);
+  });
+
+  it("classifies every status as absent or not, and the watch never polls an absent endpoint again", async () => {
+    const { probeAgentBridgeOffer, watchAgentBridgeOffer } = await import("../../🛰️offer/🟦️.ts");
+    for (const row of fixture.probe) {
+      const answer: BridgeOfferFetch = async () => ({ ok: row.status >= 200 && row.status < 300, status: row.status, json: async () => agentBridgeOfferAnswerV1(null) });
+      expect((await probeAgentBridgeOffer(AGENT_BRIDGE_OFFER_ENDPOINT, answer)).absent, row.id).toBe(row.absent);
+    }
+    let asked = 0;
+    const timers: number[] = [];
+    const stop = watchAgentBridgeOffer(() => {}, {
+      declared: true,
+      fetchImpl: async () => {
+        asked += 1;
+        return { ok: false, status: 404, json: async () => ({}) };
+      },
+      setTimer: (_run, delayMs) => timers.push(delayMs),
+      clearTimer: () => {},
+    });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    stop();
+    expect(asked).toBe(1);
+    expect(timers).toEqual([]);
+  });
+
+  it("asks nothing when the build does not declare the endpoint", async () => {
+    const { watchAgentBridgeOffer } = await import("../../🛰️offer/🟦️.ts");
+    let asked = 0;
+    const fetchImpl: BridgeOfferFetch = async () => {
+      asked += 1;
+      return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
+    };
+    watchAgentBridgeOffer(() => {}, { declared: false, fetchImpl })();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(asked).toBe(0);
+  });
+
+  it("stops the hook's poll after a definitive 404", async () => {
+    const { renderHook } = await import("@testing-library/react");
+    let asked = 0;
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const hook = renderHook(() =>
+      useDiscoveredAgentBridgeConfig({
+        declared: true,
+        fetchImpl: async () => {
+          asked += 1;
+          return { ok: false, status: 404, json: async () => ({}) };
+        },
+      }),
+    );
+    try {
+      await vi.advanceTimersByTimeAsync(BRIDGE_DISCOVERY_MIN_INTERVAL_MS * 40);
+      expect(asked).toBe(1);
+    } finally {
+      hook.unmount();
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -227,7 +299,7 @@ describe("useDiscoveredAgentBridgeConfig", () => {
       return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(served) };
     };
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ fetchImpl }));
+    const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ declared: true, fetchImpl }));
     try {
       await waitFor(() => expect(hook.result.current).toEqual({ url: "ws://127.0.0.1:6300/bridge", admissionProof: "first" }));
       const firstIdentity = hook.result.current;
@@ -257,7 +329,7 @@ describe("useDiscoveredAgentBridgeConfig", () => {
       calls += 1;
       return { ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(null) };
     };
-    const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ enabled: false, fetchImpl }));
+    const hook = renderHook(() => useDiscoveredAgentBridgeConfig({ enabled: false, declared: true, fetchImpl }));
     try {
       expect(hook.result.current).toBeNull();
       expect(calls).toBe(0);
@@ -293,7 +365,7 @@ describe("useAgentBridge discovery", () => {
     let served: { url: string; admissionProof: string } | null = null;
     const fetchImpl: BridgeOfferFetch = async () => ({ ok: true, status: 200, json: async () => agentBridgeOfferAnswerV1(served) });
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const hook = renderHook(() => useAgentBridge({ discoveryFetch: fetchImpl }));
+    const hook = renderHook(() => useAgentBridge({ discoveryDeclared: true, discoveryFetch: fetchImpl }));
     try {
       await vi.advanceTimersByTimeAsync(BRIDGE_DISCOVERY_MIN_INTERVAL_MS * 4);
       expect(opened).toEqual([]);

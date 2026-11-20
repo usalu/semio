@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import lodash from "lodash";
@@ -13,8 +13,6 @@ import clipCases from "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types
 import appendCases from "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📥️retained-append/cases.json";
 import appendSchema from "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📥️retained-append/cases.schema.json";
 import clipSchema from "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📏️shared-border-clip/cases.schema.json";
-import compositorCases from "../../🧱️elements/🗂️WindowChrome/compositor.cases.json";
-import { chromium } from "playwright";
 import { resolveBorderSegments, type BorderSegment, type BorderState, type ResolvedBorderSegment } from "./🟦️.ts";
 
 /** 🔬 Independent brute-force interval oracle using third-party collection operations. */
@@ -42,7 +40,7 @@ function referenceSegments(input: readonly BorderSegment[]): ResolvedBorderSegme
   });
 }
 
-const states: BorderState[] = ["normal", "focus", "active", "waiting", "loading", "introduced", "celebrated", "hover"];
+const states: BorderState[] = ["normal", "active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"];
 
 describe("shared-border language-neutral cases", () => {
   test("whole-frame preparation vectors match independent lodash edge ownership", () => {
@@ -91,26 +89,38 @@ describe("shared-border language-neutral cases", () => {
       expect(resolveBorderSegments([...input].reverse())).toEqual(referenceSegments(input));
     }
   });
-  test("canonical CSS uses real seams, explicit attachments and order-independent hover", () => {
+  test("canonical CSS leaves every state line to the compositor overlay and maps its strokes in forced colours", () => {
     const css = postcss.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8"));
     expect(css.nodes[1].type).toBe("atrule");
     expect((css.nodes[1] as import("postcss").AtRule).params).toBe("shared-border-ownership, shared-border-priority");
     const rules: import("postcss").Rule[] = [];
     css.walkRules(rule => { rules.push(rule); });
-    const hover = rules.find(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))"));
-    expect(hover?.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.important)).toBe(true);
-    expect((hover?.parent as import("postcss").AtRule).params).toBe("shared-border-priority");
-    expect(rules.some(rule => rule.selector.includes("shared-border-cell]):last-child"))).toBe(false);
-    expect(rules.some(rule => rule.selector.includes(":not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])))"))).toBe(true);
-    expect(rules.some(rule => rule.selector.includes(":has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled=\"true\"], [aria-disabled=\"true\"] *))") && (rule.parent as import("postcss").AtRule).params === "(forced-colors: active)" && rule.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.value === "Highlight" && n.important))).toBe(true);
+    const participant = /shared-border-cell|shared-border-cells|\[data-shared-border-frame\]|\.shared-border-frame|data-window-silhouette-chip/;
+    for (const rule of rules.filter(rule => participant.test(rule.selector) && /:hover|:focus|:has\(\+|\[data-active|\[data-state|aria-(selected|pressed)|border-(loading|waiting)|data-(introduced|celebrated)/.test(rule.selector))) {
+      for (const node of rule.nodes) if (node.type === "decl") {
+        expect(/^(border(-[a-z-]+)?-color|outline-color|box-shadow)$/.test(node.prop) && !/^(none|transparent)$/.test(node.value) && !(node.prop === "box-shadow" && node.value === "none"), `${rule.selector} { ${node.prop}: ${node.value} }`).toBe(false);
+      }
+    }
+    expect(rules.some(rule => rule.selector.includes(":has(+ :is(.shared-border-cell"))).toBe(false);
+    expect(rules.some(rule => rule.selector.includes("[data-overview-card]:is(button):focus-visible"))).toBe(false);
+    expect(rules.some(rule => rule.selector.startsWith("[data-window-silhouette]:hover"))).toBe(false);
+    const hover = rules.find(rule => rule.selector === '[data-shared-border-segment][data-shared-border-state="hover"]');
+    expect(hover?.nodes.some(n => n.type === "decl" && n.prop === "stroke" && !n.important)).toBe(true);
+    const forced = rules.filter(rule => (rule.parent as import("postcss").AtRule).params === "(forced-colors: active)" && rule.selector.includes("[data-shared-border-segment]"));
+    expect(forced.some(rule => rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "CanvasText"))).toBe(true);
+    expect(forced.some(rule => rule.selector.includes("[data-shared-border-disabled]") && rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "GrayText"))).toBe(true);
+    expect(forced.some(rule => ["hover", "focus", "active"].every(state => rule.selector.includes(`[data-shared-border-state="${state}"]`)) && rule.nodes.some(n => n.type === "decl" && n.prop === "stroke" && n.value === "Highlight"))).toBe(true);
     expect(rules.some(rule => rule.selector.includes('[data-window-silhouette-chip] > *'))).toBe(false);
-    expect(rules.some(rule => rule.selector.includes(':is(.border-loading, .border-waiting, [data-celebrated="true"])::after') && rule.nodes.some(n => n.type === "decl" && n.prop === "content" && n.value === "none" && n.important))).toBe(true);
-    expect(rules.some(rule => rule.selector.includes('[data-shared-border-attached~="left"][data-introduced="true"]') && rule.nodes.some(n => n.type === "decl" && n.prop === "box-shadow" && n.value === "none" && n.important))).toBe(true);
+    expect(rules.some(rule => /::after/.test(rule.selector) && /(border-loading|border-waiting|data-celebrated)/.test(rule.selector))).toBe(false);
+    expect(rules.some(rule => /data-introduced/.test(rule.selector) && rule.nodes.some(n => n.type === "decl" && /box-shadow|animation/.test(n.prop)))).toBe(false);
+    expect(rules.some(rule => rule.selector === ".semio-scope[data-contrast=\"more\"] :focus-visible")).toBe(false);
+    expect(rules.some(rule => rule.selector.includes('[data-slot="window-measures-tree"]') && /select-trigger"\]\[data-state="open"\]|toggle-group-item"\]\[data-state="on"\]/.test(rule.selector))).toBe(false);
+    expect(css.toString()).not.toMatch(/@utility border-(loading|waiting)\b/);
     for (const side of ["top", "right", "bottom", "left"]) {
       expect(rules.some(rule => rule.selector === `[data-shared-border-attached~="${side}"]` && rule.nodes.some(n => n.type === "decl" && n.prop === `border-${side}-color` && n.value === "transparent"))).toBe(true);
     }
     for (const rule of rules.filter(rule => rule.selector.includes("shared-border-cell"))) {
-      expect(rule.nodes.some(n => n.type === "decl" && n.prop === "box-shadow" && n.value !== "none")).toBe(false);
+      expect(rule.nodes.some(n => n.type === "decl" && (n.prop === "box-shadow" && n.value !== "none" || /^border(-(inline|block|top|right|bottom|left)(-(start|end))?)?$/.test(n.prop) && /solid/.test(n.value)))).toBe(false);
     }
   });
   test("paged partition fixtures match lodash binary search", () => {
@@ -137,34 +147,6 @@ describe("shared-border language-neutral cases", () => {
     }
     expect(result).toEqual(clipCases.expected);
   });
-  test("native seams apply incident states in presentation priority", () => {
-    const css = postcss.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8"));
-    const rules: import("postcss").Rule[] = [];
-    css.walkRules(rule => { if ((rule.parent as import("postcss").AtRule).params === "shared-border-priority") rules.push(rule); });
-    for (const state of ["focus-within", 'data-state="on"', "border-waiting", "border-loading", 'data-introduced="true"', 'data-celebrated="true"']) {
-      expect(rules.some(rule => rule.selector.includes(state) && rule.selector.includes(":has(+") && rule.nodes.some(n => n.type === "decl" && n.prop === "border-color" && n.important))).toBe(true);
-    }
-  });
-  test("browser computes incident seam priority on logical axes", async () => {
-    const css = postcss.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8"));
-    const layers = css.nodes.filter(node => node.type === "atrule" && node.name === "layer" && node.params === "shared-border-priority").map(node => node.toString()).join("\n");
-    const browser = await chromium.launch({ headless: true, channel: process.platform === "win32" && !existsSync(chromium.executablePath()) ? "msedge" : undefined });
-    try {
-      const page = await browser.newPage();
-      for (const fixture of compositorCases.nativeSeams) {
-        await page.setContent('<style>' + layers + '</style><div dir="' + fixture.dir + '" data-shared-border-group data-orientation="' + fixture.orientation + '" style="--active-base:red;--loading-border-color:blue;--introduced-border-color:green"><button data-shared-border-cell ' + fixture.first + '></button><button data-shared-border-cell ' + fixture.second + '>' + (fixture.secondContent ?? '') + '</button></div>');
-        const color = await page.locator("[data-shared-border-cell]").first().evaluate(element => getComputedStyle(element).borderColor);
-        expect(color, fixture.name).toBe(fixture.color);
-      }
-      for (const fixture of compositorCases.cellFrames.seams) {
-        await page.setContent('<style>' + layers + '</style><div dir="' + fixture.dir + '" data-shared-border-cells data-shared-border-group data-orientation="' + fixture.orientation + '" style="--active-base:red;--loading-border-color:blue;--introduced-border-color:green"><button data-shared-border-frame ' + fixture.first + '></button><button data-shared-border-frame ' + fixture.second + '></button></div>');
-        expect(await page.locator("button").first().evaluate(element => getComputedStyle(element).borderColor), fixture.name).toBe(fixture.color);
-      }
-      await page.setContent('<style>' + layers + '</style><div aria-disabled="true" style="--border-emphasized-color:red"><button data-shared-border-cell>one</button><button data-shared-border-cell>two</button></div>');
-      await page.locator("[data-shared-border-cell]").last().hover();
-      expect(await page.locator("[data-shared-border-cell]").first().evaluate(element => getComputedStyle(element).borderColor)).not.toBe("rgb(255, 0, 0)");
-    } finally { await browser.close(); }
-  });
   test("hover wins every effect and either sibling position", () => {
     for (const state of states) {
       const first: BorderSegment = { id: "a", owner: "a", from: { x: 0, y: 0 }, to: { x: 4, y: 0 }, state };
@@ -187,6 +169,6 @@ describe("shared-border language-neutral cases", () => {
     expect(() => resolveBorderSegments([segment, segment])).toThrow();
     expect(() => resolveBorderSegments([{ ...segment, to: { x: 1, y: 1 } }])).toThrow();
     expect(() => resolveBorderSegments([{ ...segment, to: { x: Infinity, y: 0 } }])).toThrow();
-    expect(() => resolveBorderSegments([{ ...segment, state: "invalid" as BorderState }])).toThrow();
+    expect(() => resolveBorderSegments([{ ...segment, state: "bogus" as BorderState }])).toThrow();
   });
 });

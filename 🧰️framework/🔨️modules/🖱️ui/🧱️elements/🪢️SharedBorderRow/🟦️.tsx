@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
+import { sharedBorderlessBoxProps, useSharedBorderBox, useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 
 /** 🪢️ Direction in which the cells of a {@link SharedBorderRow} follow each other. */
 export type SharedBorderRowOrientation = "horizontal" | "vertical";
@@ -92,7 +92,7 @@ export function useSharedBorderWrap(row: React.RefObject<HTMLElement | null>, en
  * {@link SharedBorderRowField}. A scroller belongs INSIDE the row (in a cell), never around it: an `overflow` ancestor clips the painted edges.
  * `wrap` lets a horizontal row break into lines whose cells stretch to fill each line and share one hairline across lines (see {@link useSharedBorderWrap}).
  *
- * @see ../🗂️WindowChrome/shared-border.ts `isSharedBorderCellFrame`
+ * @see ../🗂️WindowChrome/shared-border.ts `isSharedBorderCell`
  * @see ../../🎨️styling/🖌️ui/🎨️.css `data-shared-border-cells`
  */
 export function SharedBorderRow({ as: TagName = "div", orientation = "horizontal", framed = true, edges = allEdges, tone = "default", wrap = false, className, ref, children, ...props }: SharedBorderRowProps) {
@@ -172,4 +172,4 @@ export function SharedBorderRowField({ label, className, children, ...props }: S
   );
 }
 
-export { useSharedBorderFrameRef };
+export { useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps };

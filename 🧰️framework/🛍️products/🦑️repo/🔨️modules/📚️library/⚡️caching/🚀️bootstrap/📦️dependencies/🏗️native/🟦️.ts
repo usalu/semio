@@ -107,7 +107,14 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
 export class NativeDependenciesScript extends Script {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===args[0]))throw new Error("Native dependency synchronization requires one environment and accepts no installer overrides");
-  try{await withRepositoryCargoPreparationV1(findWorkspaceRoot(getWorkspaceRoot()),getWorkspaceRoot(),this.invocation,createIssuedResourceControlV1(this.invocation,"native:dependencies-entry",0),process.env,async(environment,phase)=>prepareDependencies(args[0]!,getWorkspaceRoot(),this.invocation,parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE!)),phase,runNativeDependencyToolV1,{...environment}));}
+  try{await withRepositoryCargoPreparationV1(findWorkspaceRoot(getWorkspaceRoot()),getWorkspaceRoot(),this.invocation,createIssuedResourceControlV1(this.invocation,"native:dependencies-entry",0),process.env,async(environment,phase,_store,_control,install)=>{
+   const kind=args[0]!,installsCargoTools=kind==="wasm"||kind==="trunk"||kind==="browser-wasm";
+   const runner:DependencyToolRunner=installsCargoTools?(...request)=>{
+    if(request[0]==="cargo"&&request[1][0]==="install")return install(()=>runNativeDependencyToolV1(...request));
+    return runNativeDependencyToolV1(...request);
+   }:runNativeDependencyToolV1;
+   return prepareDependencies(kind,getWorkspaceRoot(),this.invocation,parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE!)),phase,runner,{...environment});
+  });}
   catch(error){this.invocation.control.signal.throwIfAborted();throw error;}
  }
 }

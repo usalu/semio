@@ -1,0 +1,105 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owners",
+    "samples",
+    "progress",
+    "handover"
+  ],
+  "properties": {
+    "owners": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "done",
+          "total"
+        ],
+        "properties": {
+          "done": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "done",
+        "total"
+      ],
+      "properties": {
+        "phase": {
+          "const": "inference"
+        },
+        "done": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "handover": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason",
+          "sampleProgress",
+          "returnsAfterAbort",
+          "events",
+          "parentCancels"
+        ],
+        "properties": {
+          "reason": {
+            "enum": [
+              "stale-code",
+              "stalled"
+            ]
+          },
+          "sampleProgress": {
+            "type": "boolean"
+          },
+          "returnsAfterAbort": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "discover",
+                "ask",
+                "abort",
+                "drain",
+                "dispose",
+                "release",
+                "successor"
+              ]
+            }
+          },
+          "parentCancels": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

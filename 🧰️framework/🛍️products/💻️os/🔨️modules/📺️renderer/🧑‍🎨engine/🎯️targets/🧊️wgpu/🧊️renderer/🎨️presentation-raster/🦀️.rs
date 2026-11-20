@@ -533,7 +533,7 @@ pub struct NativeAssetHandoff {
     pub fetch: Option<RendererAssetFetchOwner>,
     pub payload: Option<semio_framework_job_payload::RetainedJobPayload>,
     pub seal: bool,
-    pub reject: bool,
+    pub reject: Option<bool>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -589,7 +589,7 @@ impl<R> Drop for NativeAssetTransportGuard<R> {
 pub enum NativeAssetStreamFailure {
     Cancelled,
     Original(RendererSourceIoError),
-    Unavailable(String),
+    Unavailable { detail: String, retryable: bool },
     Fault(String),
 }
 

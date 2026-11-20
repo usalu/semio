@@ -21,7 +21,9 @@ fn inspector_selected_slider_has_localized_commit_control() {
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
         let control = inspector_node(&tree, case["controlKey"].as_str().unwrap()).unwrap();
-        for field in ["type", "kind", "commit"] { assert_eq!(control["component"][field], case["control"][field]); }
+        assert_eq!(control["component"]["type"], case["control"]["type"]);
+        for field in ["min", "max", "step"] { assert_eq!(control["component"][field].as_f64(), case["control"][field].as_f64()); }
+        assert_eq!(control["component"]["value"].as_f64(), case["value"].as_f64());
         assert_eq!(control["accessibility"]["label"], case["control"][locale]);
         let binding = &control["bindings"][0];
         assert_eq!(binding["trigger"], case["control"]["trigger"]);
@@ -40,6 +42,24 @@ fn inspector_mesh_source_projects_structured_fields_and_retained_actions() {
         let built = mesh_source_input(&semio_plugin::TreeWindows::unhosted(), "construct", "data", &source["meshSource"]["mesh"].to_string(), labels).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
+        let vertex = &fixture["meshVertexControl"];
+        let group = inspector_node(&tree, vertex["key"].as_str().unwrap()).expect("shared mesh vertex group");
+        assert_eq!(group["component"]["role"], vertex["role"]);
+        assert_eq!(group["accessibility"]["label"], vertex[locale]);
+        assert_eq!(group["children"].as_array().unwrap().len(), vertex["axes"].as_array().unwrap().len());
+        for expected in vertex["axes"].as_array().unwrap() {
+            let node = inspector_node(group, expected["key"].as_str().unwrap()).expect("vector axis");
+            assert_eq!(node["component"]["kind"], expected["kind"]);
+            assert_eq!(node["component"]["value"], expected["value"]);
+            assert_eq!(node["component"]["commit"], "blur");
+            assert_eq!(node["accessibility"]["label"], expected[locale]);
+            let binding = &node["bindings"][0];
+            assert_eq!(binding["trigger"], "commit");
+            assert_eq!(binding["action"]["name"], "setWidgetInput");
+            assert_eq!(binding["args"], serde_json::json!({
+                "widgetId": "construct", "channel": "data", "facet": "meshSource", "path": expected["path"],
+            }));
+        }
         for expected in fixture["meshSourceControls"].as_array().unwrap() {
             let node = inspector_node(&tree, expected["key"].as_str().unwrap()).unwrap_or_else(|| panic!("{projection}"));
             assert_eq!(node["component"]["kind"], expected["kind"]); assert_eq!(node["component"]["value"], expected["value"]); assert_eq!(node["component"]["commit"], "blur");
@@ -114,6 +134,12 @@ fn inspector_language_neutral_ports_project_editable_and_connected_controls() {
     host.retire_cold();
     for (locale, projection) in projections {
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
+        for port in fixture["coordinateGroups"].as_array().unwrap() {
+            let key = format!("procedural-play-inspector.input.{}.coordinates", port.as_str().unwrap());
+            let group = inspector_node(&tree, &key).expect("shared coordinate group");
+            assert_eq!(group["component"]["role"], "group");
+            assert_eq!(group["children"].as_array().unwrap().len(), 3);
+        }
         for expected in fixture["controls"].as_array().unwrap() {
             let port = expected["port"].as_str().unwrap();
             let coordinate = expected["component"].as_str().map(|axis| format!(".{axis}")).unwrap_or_default();
@@ -380,5 +406,52 @@ fn inspector_connected_source_navigation_retains_exact_framework_target() {
         for field in ["domainId", "merge", "method"] {assert_eq!(binding["args"][field], case["args"][field]);}
         assert_eq!(serde_json::from_str::<serde_json::Value>(binding["args"]["targets"].as_str().unwrap()).unwrap(), case["args"]["targets"]);
         assert!(!projection.contains("setWidgetInput"));
+    }
+}
+
+#[test]
+fn texture_choice_reaches_every_registered_texture() {
+    use semio_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
+    use semio_ui_locale::{Locale, Terminology};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let case = &fixture["textureWindow"];
+    let names: Vec<_> = (0..case["count"].as_u64().unwrap()).map(|i| format!("texture{i:03}")).collect();
+    let textures = semio_framework_pack_json::object(names.iter().map(|name| (name.clone(), semio_framework_pack_json::Value::Null)));
+    let key = "material.texture";
+    let view = ViewModel { tree_windows: vec![TreeWindowRequest {
+        body_key: GENERATION_3D_PLAY_BODY_INSPECTION.into(), node_key: key.into(), open: Some(true), offset: case["offset"].as_u64().unwrap() as _, rows: case["rows"].as_u64().unwrap() as _,
+    }], ..ViewModel::new(Locale::En, Terminology::Native) };
+    let path = ["materials".into(), "paint".into(), "baseColorTexture".into()];
+    let built = texture_choice(&TreeWindows::for_body(&view, GENERATION_3D_PLAY_BODY_INSPECTION), key, "Texture", "source", "data", &path, "", textures.as_object(), &Generation3dLabels::NATIVE_EN).unwrap();
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
+    let tree: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let values: Vec<_> = tree["children"].as_array().unwrap().iter().map(|row| &row["bindings"][0]["args"]["value"]).collect();
+    assert_eq!(serde_json::json!(values), case["values"]);
+}
+
+#[test]
+fn inspected_channels_share_the_graph_hover_binding() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖱️channel-hover.json")).unwrap();
+    let labels = &Generation3dLabels::NATIVE_EN;
+    let windows = semio_plugin::TreeWindows::unhosted();
+    for row in fixture["cases"].as_array().unwrap() {
+        let key = row["key"].as_str().unwrap();
+        let widget = row["widget"].as_str().unwrap();
+        let port = row["port"].as_str().unwrap();
+        let built = if row["kind"] == "output" {
+            let source = semio_framework_pack_json::parse(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let target = format!("{widget}@{port}");
+            reflected_output(&windows, key, "Value", &source, 0, labels, Some(("handle", &target))).unwrap()
+        } else {
+            connected_source(key, "Geometry", widget, port, labels).unwrap()
+        };
+        let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
+        let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
+        let node = inspector_node(&tree, key).unwrap();
+        let hover = node["bindings"].as_array().unwrap().iter().find(|binding| binding["trigger"] == fixture["trigger"]).unwrap();
+        assert_eq!(hover["action"]["name"], fixture["action"]);
+        assert_eq!(hover["args"]["domainId"], fixture["domainId"]);
+        assert_eq!(hover["args"]["channel"], fixture["channel"]);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(hover["args"]["targets"].as_str().unwrap()).unwrap(), serde_json::json!([row["target"]]));
     }
 }

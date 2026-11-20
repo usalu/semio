@@ -1,0 +1,25 @@
+{
+  "dimensions": [
+    1,
+    1,
+    1
+  ],
+  "offsets": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      3,
+      2,
+      1
+    ]
+  ],
+  "volume": 2,
+  "area": 12,
+  "triangles": 24,
+  "faces": 12,
+  "edges": 24,
+  "vertices": 16
+}

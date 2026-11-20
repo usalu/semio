@@ -11,7 +11,11 @@ pub fn renderer_asset_io() -> &'static Mutex<WorldAssetIoAuthority> {
 
 pub fn reserve_renderer_asset_request(kind: WorldAssetRequestKind, url: &str) -> Result<WorldAssetRequestToken, WorldAssetFault> {
     let generation = RENDERER_ASSET_GENERATION.fetch_add(1, Ordering::Relaxed).max(1);
-    renderer_asset_io().lock().expect("renderer asset authority lock").reserve_request(generation, 0, kind, url)
+    let mut authority = renderer_asset_io().lock().expect("renderer asset authority lock");
+    match kind {
+        WorldAssetRequestKind::Glb => authority.reserve_exact_request(generation, 0, kind, url),
+        _ => authority.reserve_request(generation, 0, kind, url),
+    }
 }
 
 pub fn take_next_renderer_asset() -> Option<WorldAssetFetchOwner> {

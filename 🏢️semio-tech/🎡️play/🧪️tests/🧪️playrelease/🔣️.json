@@ -1,4 +1,5 @@
 {
+  "families": ["map", "modules", "play", "media"],
   "paths": [
     { "request": "/", "file": "index.html" },
     { "request": "/assets/app.js?cache=fresh", "file": "assets/app.js" },

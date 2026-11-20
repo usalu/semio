@@ -73,7 +73,7 @@ async fn nonsense_edits_are_refused_with_their_fault_code() {
 #[semio_framework_async_macros::async_test]
 async fn the_command_becomes_one_set_property_template_mutation() {
     let mut snapshot = demo();
-    snapshot.property_templates.insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall], properties: Vec::new() });
+    snapshot.property_templates.cold_insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall], properties: Vec::new() });
     let mut context = ctx(&[]);
     let emit = run(&snapshot, |doc, cfg| handle(&edit("add", "", "", "FireRating"), doc, cfg, &mut context)).expect("adds a definition");
     assert!(matches!(emit.artifact_mutations.as_slice(), [ModelMutation::SetPropertyTemplate(_)]));

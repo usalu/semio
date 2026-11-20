@@ -1,0 +1,11 @@
+{
+  "operator": "brep.topology.explode",
+  "source": "compound",
+  "channel": "solids",
+  "schema": "list",
+  "memberKind": "solid",
+  "boxes": [[2, 3, 4], [1, 2, 3]],
+  "members": [1, 0, 1],
+  "keepAlias": 0,
+  "expectedVolumes": [6, 24, 6]
+}

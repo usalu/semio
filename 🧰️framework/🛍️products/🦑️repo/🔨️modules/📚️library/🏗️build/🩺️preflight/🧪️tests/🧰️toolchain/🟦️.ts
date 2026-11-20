@@ -47,14 +47,16 @@ describe("native toolchain requirements of the preflight", () => {
 
   test("the bootstraps install what the remedies point to", () => {
     const windows = read(bootstrap + "🔵️.ps1"), posix = read(bootstrap + "🐚️.sh");
-    expect(windows).toContain("Microsoft.VisualStudio.BuildTools");
-    expect(windows).toContain("Microsoft.VisualStudio.Workload.VCTools");
+    const plan = JSON.parse(read(bootstrap + "🧬️schema/🔣️.json")).definitions.MsvcBootstrap.const;
+    expect(plan.workload).toBe("Microsoft.VisualStudio.Workload.VCTools");
+    expect(windows).toContain(".definitions.MsvcBootstrap.const");
+    expect(windows).toContain('"--add", $plan.workload');
     expect(windows).toContain("rustup");
     expect(posix).toContain("xcode-select");
     expect(posix).toContain("rustup toolchain install");
     const remedy = texts.tools["msvc-linker"].win32;
-    expect(remedy.en).toContain("Microsoft.VisualStudio.BuildTools");
-    expect(remedy.de).toContain("Microsoft.VisualStudio.BuildTools");
+    expect(remedy.en).toContain(plan.workload);
+    expect(remedy.de).toContain(plan.workload);
     expect(texts.tools["developer-tools"].darwin.en).toContain("xcode-select --install");
     for (const platform of platforms) { expect(texts.tools.rust[platform].en).toContain("repo tools setup all"); expect(texts.tools.rust[platform].de).toContain("repo tools setup all"); }
   });

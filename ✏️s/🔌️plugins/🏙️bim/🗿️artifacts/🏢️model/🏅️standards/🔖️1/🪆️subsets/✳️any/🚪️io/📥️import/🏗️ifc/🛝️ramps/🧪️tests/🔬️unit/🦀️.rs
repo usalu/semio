@@ -27,12 +27,12 @@ fn a_ramp_survives_the_round_trip_exactly() {
 #[test]
 fn export_import_export_of_a_ramp_is_byte_stable() {
     let mut model = with_ramp(true);
-    model.roofs.clear();
-    model.stairs.clear();
-    model.railings.clear();
-    model.curtain_walls.clear();
-    model.slabs.remove("sl-balcony");
-    model.spaces.remove("sp-1");
+    model.roofs.cold_clear();
+    model.stairs.cold_clear();
+    model.railings.cold_clear();
+    model.curtain_walls.cold_clear();
+    model.slabs.cold_remove("sl-balcony");
+    model.spaces.cold_remove("sp-1");
     let (first, _) = export_ifc2x3(&model).expect("first export");
     let (back, _) = import_ifc2x3(&first).expect("the import");
     let (second, _) = export_ifc2x3(&back).expect("second export");

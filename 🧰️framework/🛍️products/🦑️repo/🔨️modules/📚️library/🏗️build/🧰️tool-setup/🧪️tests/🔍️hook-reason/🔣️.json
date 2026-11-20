@@ -1,0 +1,12 @@
+{
+  "missing": {
+    "code": 1,
+    "output": "Example native core absent",
+    "status": "missing"
+  },
+  "present": {
+    "code": 0,
+    "output": "Example native core ready",
+    "status": "ok"
+  }
+}

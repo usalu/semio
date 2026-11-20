@@ -1,3 +1,4 @@
+import{win32,posix}from"node:path";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
@@ -28,6 +29,18 @@ export function bazelCacheLayoutV1(roots:Readonly<{tools:string;dependencies:str
  const layout={version:1 as const,executable:join(roots.tools,"bazel/bin"),install:join(roots.tools,"bazel/install"),modules:join(roots.dependencies,"bazel/modules"),workspace:join(roots.products,"bazel/workspaces"),outputs:join(roots.products,"bazel/outputs"),actions:join(roots.products,"bazel/actions"),pool:join(roots.products,"bazel/pool"),server:bazelServerDirectoryV1(roots.products),temporary:join(roots.products,"tmp")};if(Object.values(layout).some(value=>typeof value==="string"&&value.length>256))throw Error("Bazel storage path exceeds 256 characters");if(validateJsonSchemaSubset(schema.definitions.StorageLayout,layout,schema).length)throw Error("Closed Bazel cache layout required");requireBazelHostPathsV1(process.platform,layout);return Object.freeze(layout);
 }
 /** 🎟️ Retains authenticated executable, dependency and output backing until all original children settle. */
+/** 🗃️ Projects the fixed catalog; Windows uses lowercase short directory components for the native launcher. */
+export function bazelModuleCatalogPathsV1(root:string,identity:string,platform:string){
+ const policy=schema.definitions.ModuleCatalogPathsPolicy.const,path=platform==="win32"?win32:posix;
+ if(!path.isAbsolute(root)||!new RegExp(schema.definitions.ModuleSetup.properties.identity.pattern,"u").test(identity))throw Error("Exact Bazel module catalog root and identity required");
+ const units=policy.windows.identityComponentUnits;
+ const windows=platform==="win32",parts=windows?Array.from({length:identity.length/units},(_,index)=>identity.slice(index*units,(index+1)*units)):[identity.slice(0,policy.posix.identityPrefixUnits)];
+ const names=windows?policy.windows:policy.posix,directory=path.join(root,...parts),workspace=path.join(directory,names.workspace),repository=path.join(directory,names.repository);
+ const lockPath=path.join(workspace,"MODULE.bazel.lock"),receiptPath=path.join(directory,"ready.json"),blobs=path.join(repository,"content_addressable","sha256");
+ if([lockPath,receiptPath,path.join(blobs,identity,"file")].some(value=>value.length>policy.maximumPath))throw Error("Bazel module catalog path exceeds 256 characters");
+ return Object.freeze({directory,workspace,repository,lockPath,receiptPath,blobs});
+}
+
 export interface BazelStorageV1{readonly tools:RepositoryCacheStoreV1;readonly dependencies:RepositoryCacheStoreV1;readonly products:RepositoryCacheStoreV1;readonly paths:ReturnType<typeof bazelCacheLayoutV1>}
 /** 🔐️ Refuses fabricated store contexts before the first filesystem observation or writer. */
 export async function requireBazelStorageV1(root:string,storage:BazelStorageV1):Promise<void>{for(const id of ["tools","dependencies","products"] as const){const store=storage[id];requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(root,id))throw Error("Original declared Bazel partition required");}const roots={tools:storage.tools.root,dependencies:storage.dependencies.root,products:storage.products.root},layout=bazelCacheLayoutV1(roots);if(JSON.stringify(layout)!==JSON.stringify(storage.paths))throw Error("Original Bazel partition layout required");for(const[key,path]of Object.entries(layout))if(key!=="version")requireNativeStoragePathV1(key==="executable"||key==="install"?roots.tools:key==="modules"?roots.dependencies:roots.products,path as string);}

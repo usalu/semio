@@ -95,27 +95,27 @@ fn line(from: (f64, f64), to: (f64, f64)) -> Axis {
 fn rooms_grid(rows: usize, columns: usize) -> ModelSnapshot {
     let mut snapshot = house();
     let template: Wall = snapshot.walls["w-ground-south"].clone();
-    snapshot.walls.clear();
-    snapshot.openings.clear();
-    snapshot.curtain_walls.clear();
-    snapshot.spaces.clear();
-    snapshot.columns.clear();
-    snapshot.beams.clear();
-    snapshot.slabs.clear();
-    snapshot.stairs.clear();
-    snapshot.railings.clear();
-    snapshot.roofs.clear();
+    snapshot.walls.cold_clear();
+    snapshot.openings.cold_clear();
+    snapshot.curtain_walls.cold_clear();
+    snapshot.spaces.cold_clear();
+    snapshot.columns.cold_clear();
+    snapshot.beams.cold_clear();
+    snapshot.slabs.cold_clear();
+    snapshot.stairs.cold_clear();
+    snapshot.railings.cold_clear();
+    snapshot.roofs.cold_clear();
     let side = 4.0;
     for row in 0..=rows {
         for column in 0..columns {
             let (x, y) = (column as f64 * side, row as f64 * side);
-            snapshot.walls.insert(format!("h-{row:03}-{column:03}"), Wall { axis: line((x, y), (x + side, y)), storey: "st-ground".into(), ..template.clone() });
+            snapshot.walls.cold_insert(format!("h-{row:03}-{column:03}"), Wall { axis: line((x, y), (x + side, y)), storey: "st-ground".into(), ..template.clone() });
         }
     }
     for column in 0..=columns {
         for row in 0..rows {
             let (x, y) = (column as f64 * side, row as f64 * side);
-            snapshot.walls.insert(format!("v-{column:03}-{row:03}"), Wall { axis: line((x, y), (x, y + side)), storey: "st-ground".into(), ..template.clone() });
+            snapshot.walls.cold_insert(format!("v-{column:03}-{row:03}"), Wall { axis: line((x, y), (x, y + side)), storey: "st-ground".into(), ..template.clone() });
         }
     }
     snapshot
@@ -251,9 +251,9 @@ fn a_session_removes_the_entries_of_nodes_that_leave_the_graph() {
     let doomed: Vec<String> = snapshot.openings.iter().filter(|(_, opening)| opening.host == "w-south").map(|(id, _)| id.clone()).collect();
     assert!(!doomed.is_empty());
     for id in &doomed {
-        snapshot.openings.remove(id);
+        snapshot.openings.cold_remove(id);
     }
-    snapshot.walls.remove("w-south");
+    snapshot.walls.cold_remove("w-south");
     let after = session.refresh(&snapshot).clone();
     assert!(!after.wall_layout.contains_key("w-south") && doomed.iter().all(|id| !after.opening_frames.contains_key(id) && !after.element_solids.contains_key(id) && !after.quantities.elements.contains_key(id)));
     assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));

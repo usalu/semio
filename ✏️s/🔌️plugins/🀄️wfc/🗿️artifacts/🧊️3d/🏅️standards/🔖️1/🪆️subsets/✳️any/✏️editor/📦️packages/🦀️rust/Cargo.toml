@@ -60,6 +60,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-plugin-ownership = { workspace = true }
 semio-s-artifact-wfc-3d-transient = { path = "../../🫧️transient/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-wfc-3d-inferences = { path = "../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" , features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }

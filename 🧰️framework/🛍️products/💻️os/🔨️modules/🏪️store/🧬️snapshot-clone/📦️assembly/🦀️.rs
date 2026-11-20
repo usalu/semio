@@ -21,6 +21,15 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync> Default for OriginalPublicationAssem
 }
 fn funds(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items!=0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 impl<P:RetireOwned+Send+Sync+'static,M:ArtifactCanonicalJsonTree+RetireOwned+Send+Sync+'static> OriginalPublicationAssembly<P,M>{
+ /// ⛽️ Quotes Work for the current assembly turn and its nested inverse retirement.
+ pub fn advance_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if self.stage!=9{return Ok(1)}
+  let owner=self.publication_inverse.as_ref().ok_or_else(||ValueError::invariant("original inverse backing is absent at close quote"))?;
+  if owner.terminal_is_empty(){return Ok(1)}
+  if !owner.close_started(){return Ok(owner.begin_close_work_demand())}
+  owner.next_computational_work(body)
+ }
+
  /// 📏️ Borrows the next physical frontier without scanning, allocating or transferring inputs.
  pub fn advance_demands(&self,authority:Option<&Arc<ArtifactStoreOneItemLiveAuthority>>,body:usize)->Result<RetirementDemand,ValueError>{
   Ok(match self.stage{

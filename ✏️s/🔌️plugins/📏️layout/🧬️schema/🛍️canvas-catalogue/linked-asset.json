@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Layout Catalogue Linked Asset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "sourceDocumentId", "sourceLinkId"],
+  "properties": {
+    "kind": { "const": "image" },
+    "sourceDocumentId": { "type": "string", "minLength": 1 },
+    "sourceLinkId": { "type": "string", "minLength": 1 }
+  }
+}

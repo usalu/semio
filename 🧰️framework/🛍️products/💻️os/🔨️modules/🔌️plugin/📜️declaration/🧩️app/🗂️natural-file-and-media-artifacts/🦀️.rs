@@ -22,6 +22,7 @@ pub struct NaturalFileDecodeProgress {
 
 /// 🧩️ One bounded turn of a format-owned natural-file decoder.
 pub enum NaturalFileDecodeStep<T> {
+    Yield,
     Progress(NaturalFileDecodeProgress),
     Complete { snapshot: T, progress: NaturalFileDecodeProgress },
 }

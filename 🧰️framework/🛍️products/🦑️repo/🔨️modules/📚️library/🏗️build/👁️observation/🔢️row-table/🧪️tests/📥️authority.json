@@ -1,0 +1,11 @@
+{
+ "version": 4,
+ "records": [
+  {"kind":"exists","path":"/w/🧪️/setup.json","fact":true},
+  {"kind":"file","path":"/w/é.txt","fact":{"size":3,"mtimeMs":0,"ctimeMs":0,"ino":1,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+  {"kind":"analysis","path":"/w/check.ts","fact":{"provider":"fixture","revision":"r1","source":{"size":3,"mtimeMs":0,"ctimeMs":0,"ino":1,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"resultSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","nestedObservations":[0,1]}},
+  {"kind":"analysis","path":"/w/main.ts","fact":{"provider":"fixture","revision":"r1","source":{"size":3,"mtimeMs":0,"ctimeMs":0,"ino":1,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"resultSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","nestedObservations":[2,1,2]}}
+ ],
+ "roots": [3,1,2,3],
+ "invalid": [[0],[{"kind":"exists","path":"/w","fact":true},0,{"kind":"exists","path":"/y","fact":true}],[{"kind":"analysis","path":"/w","fact":{"nestedObservations":[0]}},0]]
+}

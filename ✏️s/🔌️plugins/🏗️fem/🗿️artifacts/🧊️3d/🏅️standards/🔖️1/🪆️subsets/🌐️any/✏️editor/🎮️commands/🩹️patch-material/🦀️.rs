@@ -1,7 +1,7 @@
 //! 🩹️ FEM 3D material field commands lower to durable typed field intent.
 
 use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dMaterialPatch;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dMaterialPatch;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;

@@ -3,8 +3,30 @@
 //! Registration flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()` — same pattern
 //! `🧱️base/🚪️io` and `🔒️strict/🚪️io` already established for this artifact family.
+use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::{
+    export::serializers::encode_xlsx as encode_base_xlsx,
+    import::deserializers::{decode_xlsx as decode_base_xlsx, decode_xlsx_source},
+    require_xlsx_conformance,
+};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::{refusal::XlsxError, snapshot::XlsxSnapshot};
+
+/// 📥️ Decodes a physical XLSX workbook and requires transitional conformance.
+pub fn decode_xlsx(bytes: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
+    let snapshot = decode_base_xlsx(bytes)?;
+    require_xlsx_conformance(&check_transitional_conformance(&snapshot))?;
+    Ok(snapshot)
+}
+
+/// 📤️ Emits a physical XLSX workbook after checking transitional conformance.
+pub fn encode_xlsx(snapshot: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
+    require_xlsx_conformance(&check_transitional_conformance(snapshot))?;
+    encode_base_xlsx(snapshot)
+}
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    use super::decode_xlsx_source;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxComposer as XlsxAnyComposer;
     use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
@@ -31,7 +53,11 @@ use semio_framework_diagnostic::TextSpan;
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let inner = XlsxAnyComposer::compose(sources)?;
+            let sources: Vec<_> = sources.iter().map(|source| ComposeSource {
+                dialect: if source.dialect == Self::WRITES { DIALECT_ANY } else { source.dialect },
+                payload: source.payload.clone(),
+            }).collect();
+            let inner = XlsxAnyComposer::compose(&sources)?;
             let checks = check_transitional_conformance(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -54,7 +80,7 @@ use semio_framework_diagnostic::TextSpan;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Binary(bytes) => decode_xlsx_source(bytes).ok(),
                 IoPayload::Text(text) => <XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
@@ -95,6 +121,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
+    use super::decode_xlsx_source;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use crate::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, stamp_transitional_namespace};
@@ -137,7 +164,7 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(decode_xlsx_source(bytes)?))
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {

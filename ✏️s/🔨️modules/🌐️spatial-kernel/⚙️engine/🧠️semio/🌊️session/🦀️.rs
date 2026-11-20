@@ -11,12 +11,6 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Arc,Weak};
 
-// 🔀️ dedyn-fw-os-misc, O1/R11 case 3: `BrepKernel` has exactly one impl (`Brep`, in `🗄️stdio`) —
-// every `dyn BrepKernel` call site was already handing this module a concrete `Brep`, so the trait
-// object was a no-op coercion, not a real seam. Deleting it also clears an existing O1 violation:
-// every `BrepKernel` method is `async fn`, which is not dyn-compatible (E0038) — `dyn BrepKernel`
-// could not have compiled as-is.
-
 #[path = "🧰️operator-registration/🦀️.rs"]
 mod operator_registration;
 pub use operator_registration::{
@@ -24,7 +18,7 @@ pub use operator_registration::{
     out_box, out_center, out_classification, out_compound, out_curvature, out_curve, out_distance, out_face, out_face_result, out_geometry, out_geometry_result, out_length, out_normal, out_obj, out_point, out_point_result, out_report, out_solid,
     out_span, out_stl, out_surface, out_vertex, out_volume, out_wire, point_channel, point_dictionary, points_to_grid, read_channel_number, read_geometry, read_geometry_list, read_geometry_list_or_empty, read_list, read_nested_point_lists,
     read_optional_geometry, read_point_list, read_text, read_xyz, read_xyz_dict, reg_geo, register_typed, register_untyped, text_dictionary, text_schema, topology_element_schema, topology_list, topology_output, vector_channel, vector_dictionary,
-    wire_from_points, BrepDeconstruct,
+    wire_from_points, deconstruct_geometry,
 };
 #[path = "⚠️errors/🦀️.rs"]
 mod errors;
@@ -42,9 +36,6 @@ use retained_membership::SessionRetention;
 #[path="🧭️admission/🦀️.rs"]
 mod tessellation_admission;
 use tessellation_admission::TessellationAdmission;
-#[path = "📤️media-export/🦀️.rs"]
-mod media_export;
-pub use media_export::{export_glb_via_tessellation, import_glb_via_tessellation};
 #[path = "🌉️generic-invoke/🦀️.rs"]
 mod generic_invoke;
 use generic_invoke::{arg_bool_or, arg_f64, arg_f64_or, arg_handle, arg_handles, arg_points, arg_usize, arg_vec3, handle_result, invoke_args, mesh_result, number_result, topology_result, unit_result, vec3_result};
@@ -52,6 +43,19 @@ use generic_invoke::{arg_bool_or, arg_f64, arg_f64_or, arg_handle, arg_handles, 
 mod session_core;
 use session_core::{controlled, ownership_advance, ownership_busy, ownership_progress, record_shell, settled_poll, settled_step, shell_bytes, spend_event, SessionRetirement, SessionState, ShellAllocator, ShellArc};
 pub use session_core::{mesh_payload_bytes, GeometryOperations, Session, SessionCapture};
+#[path = "📤️mesh-export/🦀️.rs"]
+mod mesh_export;
+pub use mesh_export::NativeMeshExport;
+
+/// 📤️ Exports tessellated shapes as one GLB mesh.
+pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepModuleError> {
+    semio_framework_3d_brep_engine::export_glb_via_tessellation(kernel, shapes, deflection).map_err(BrepModuleError::from)
+}
+
+/// 📥️ Imports a GLB mesh and returns its session handle.
+pub fn import_glb_via_tessellation(kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<String>, BrepModuleError> {
+    semio_framework_3d_brep_engine::import_glb_via_obj(kernel, bytes, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)
+}
 
 /// 🧹️ Original analytic metadata keeps its exact typed owner until independently admitted release.
 #[cfg(test)]
@@ -71,69 +75,21 @@ fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
 }
 
 #[cfg(test)]
-mod physical_session_custody {
-    use super::*;
-    pub(super) fn observe<T>(work:impl FnOnce()->T)->(T,(usize,usize)) {let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
-    #[test]
-    fn original_session_capture_keeps_same_allocation_until_full_typed_grants() {
-        let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
-        let row=&fixture["box"];let custody=&fixture["physicalCustody"];
-        let identity=semio_os_flow::geometry::GeometryWorkIdentity{operation:61,generation:1};
-        let mut caller=super::original_tessellation_authority_tests::original_geometry_caller(identity);
-        let stock=super::original_tessellation_authority_tests::original_geometry_source_grant();
-        let (mut capture,factory)=observe(|| {
-            let source=Session::new();let handle=source.with_kernel(|kernel|kernel.box_prim_sync(row["width"].as_f64().unwrap(),row["depth"].as_f64().unwrap(),row["height"].as_f64().unwrap()).map_err(|error|map_kernel_error(&error))).unwrap();
-            let probe=caller.turn(stock,|cx|{let mut result=None;cx.with_original_work_loan(0,cx.deadline_us(),|same|{result=Some(source.tessellate_step(identity,handle.as_str(),0.05,same));Ok(())})?;Ok(result.unwrap())}).unwrap().unwrap();
-            assert!(matches!(probe.0,semio_os_flow::geometry::GeometryStep::Working {..}));
-            let mut warmed=false;
-            for _ in 0..custody["maximumWarmTurns"].as_u64().unwrap() {
-                let(step,_)=caller.turn(stock,|cx|Ok(source.tessellate_step(identity,handle.as_str(),0.05,cx))).unwrap().unwrap();
-                match step {semio_os_flow::geometry::GeometryStep::Working {..}=>{let owner=source.tessellation_jobs().try_lock().unwrap();let registry=owner.original().unwrap();let faces=registry.jobs.iter().find(|(key,_)|key.0==handle.0&&key.1==0.05f64.to_bits()).map_or(0,|(_,row)|row.job.progress().faces_done);if faces>=custody["warmFaces"].as_u64().unwrap()as usize {warmed=true;break}},other=>panic!("original partial tessellation did not remain owned: {other:?}")}
-            }
-            assert!(warmed,"original job must retain sampled edges and a partial mesh");
-            let capture=source.capture();drop(handle);drop(source);capture
-        });
-        let retained=factory.0.checked_sub(factory.1).unwrap();let original=Arc::as_ptr(&capture.session.as_ref().unwrap().state);
-        let (count,cancel)=observe(||capture.cancel_all_tessellations());assert_eq!(count,1);
-        assert_eq!(cancel,(custody["cancelCapacityBytes"].as_u64().unwrap() as usize,custody["cancelReleaseBytes"].as_u64().unwrap() as usize));
-        let handoff=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
-        let (step,heap)=observe(||capture.close_step(handoff).unwrap());assert!(step.progress().fits(handoff));
-        assert_eq!(heap,(custody["handoffCapacityBytes"].as_u64().unwrap() as usize,custody["handoffReleaseBytes"].as_u64().unwrap() as usize));
-        assert_eq!(capture.allocation.as_ref().unwrap().as_ptr(),original);
-        let (mut born,mut freed,mut refusals,mut turns,mut final_shell)=(0,0,0,0,0);
-        while !capture.terminal_is_empty() {
-            let copy=capture.next_close_copy_byte_demand().unwrap();let capacity=capture.next_close_capacity_byte_demand(copy).unwrap();let release=capture.next_close_release_byte_demand().unwrap();let depth=capture.next_close_depth_demand().unwrap();
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-            if release>custody["insufficientReleaseBytes"].as_u64().unwrap() as usize {
-                for _ in 0..2 {let (step,heap)=observe(||capture.close_step(RetainedCloneGrant {maximum_release_bytes:8,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(capture.next_close_release_byte_demand().unwrap(),release);refusals+=1;}
-            }
-            let parent=capture.orphan.is_none() && capture.allocation.is_some();
-            let (step,heap)=observe(||capture.close_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;freed+=heap.1;turns+=1;assert!(turns<1000000);
-            if parent && capture.terminal_is_empty() {assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!(heap.1,release);final_shell+=1;}
-        }
-        assert_eq!(retained+born,freed);assert_eq!(final_shell,1);assert!(refusals>0);
-        caller.retire(stock);
-    }
-}
+#[path = "🧪️tests/🛂️physical-custody/🦀️.rs"]
+mod physical_session_custody;
 
 #[cfg(test)]
 #[path="🧪️tests/⏱️tessellation/🦀️.rs"]
 mod original_tessellation_authority_tests;
 
 #[cfg(test)]
-mod original_capture_close_laws{
- use super::*;
- use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,close_original_retained_step};
- #[test]
- fn original_session_capture_close_keeps_actual_one_fuel_work_and_cancel_custody(){
-  let stock=RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:128<<20,maximum_capacity_bytes:256<<20,maximum_release_bytes:512<<20,maximum_depth:4096};
-  for cancel in [None,Some(0),Some(1),Some(3)]{
-   let(mut source,(births,releases))=physical_session_custody::observe(||SessionCapture::owned(Session::new()));let initial=births-releases;let(mut born,mut free)=(0,0);let mut caller=OriginalJobFixtureCaller::admit(OperationId(97146),Generation(17),stock,||Some(1000),1500,32768);let mut within=false;
-   for call in 0..100000{if source.terminal_is_empty(){within|=call<=200;break}if cancel==Some(call){caller.cancel().cancel_now()}let d=semio_framework_value::RetirementDemand{copy_bytes:source.next_close_copy_byte_demand().unwrap(),capacity_bytes:source.next_close_capacity_byte_demand(stock.maximum_copy_bytes).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()};
-    let(_,heap)=physical_session_custody::observe(||caller.turn(RetainedCloneGrant{maximum_items:0,..stock},|cx|cx.with_original_retirement(|cx|cx.with_original_work_loan(1,1500,|cx|{let turn=source.close_original_step(cx.retained_grant());assert_eq!(turn.work,0);assert_eq!(turn.result?.progress(),Default::default());Ok(())}))).unwrap());assert_eq!(heap,(0,0));assert_eq!(caller.receipt(),Default::default());
-    let(_,heap)=physical_session_custody::observe(||caller.turn(RetainedCloneGrant{maximum_items:512,..stock},|cx|cx.with_original_retirement(|cx|cx.with_original_work_loan(1,1500,|cx|{close_original_retained_step(cx,d,|g|{let turn=source.close_original_step(g);assert!(turn.work<=1);turn})?;Ok(())}))).unwrap());let progress=caller.receipt();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;free+=heap.1;
-   }
-   let closed=source.terminal_is_empty();drop(source);caller.retire(stock);assert!(closed&&within);assert_eq!(initial+born,free);
-  }
- }
-}
+#[path = "🧪️tests/🧹️capture-close/🦀️.rs"]
+mod original_capture_close_laws;
+
+#[path="🩺️validation-report/🦀️.rs"]
+mod validation_report;
+pub use semio_framework_3d_brep_engine::NativeValidationReport;
+
+#[path = "🧾️topology-reach/🦀️.rs"]
+mod topology_reach;
+pub use semio_framework_3d_brep_engine::{NativeTopologyReach, ReachedTopology};

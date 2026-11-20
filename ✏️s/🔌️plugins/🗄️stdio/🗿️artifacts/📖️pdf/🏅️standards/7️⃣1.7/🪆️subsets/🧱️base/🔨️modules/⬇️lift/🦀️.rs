@@ -20,6 +20,10 @@ use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArti
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
 
+#[path = "🌳️page-tree/🦀️.rs"]
+mod page_tree;
+pub use page_tree::*;
+
 #[path = "🧩️lifter-and-document/🦀️.rs"]
 mod lifter_and_document;
 pub use lifter_and_document::*;

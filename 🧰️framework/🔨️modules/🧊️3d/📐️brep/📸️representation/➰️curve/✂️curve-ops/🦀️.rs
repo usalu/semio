@@ -43,6 +43,33 @@ pub fn arc_length(curve: &Curve3, t0: f64, t1: f64, tol: f64) -> f64 {
     arc_length_recursive(curve, t0.min(t1), t0.max(t1), tol, 24)
 }
 
+/// 🥚️ Full ellipse length from the [complete elliptic integral](https://dlmf.nist.gov/19.8.E6).
+/// Normalizing the axes bounds the iteration. Below a ratio of 1e-9, the contribution of the
+/// short axis is smaller than binary64 rounding of the degenerate perimeter.
+pub fn ellipse_perimeter(radius_a: f64, radius_b: f64) -> f64 {
+    if !radius_a.is_finite() || !radius_b.is_finite() { return f64::NAN; }
+    let (a, b) = (radius_a.abs(), radius_b.abs());
+    let major = a.max(b);
+    let ratio = a.min(b) / major;
+    if major == 0.0 || ratio < 1e-9 {
+        return 4.0 * major;
+    }
+    let mut arithmetic = (1.0 + ratio) * 0.5;
+    let mut geometric = ratio.sqrt();
+    let mut sum = arithmetic * arithmetic;
+    let mut weight = 2.0;
+    for _ in 0..16 {
+        let difference = (arithmetic - geometric) * 0.5;
+        sum -= weight * difference * difference;
+        if difference <= f64::EPSILON * arithmetic {
+            break;
+        }
+        (arithmetic, geometric) = ((arithmetic + geometric) * 0.5, (arithmetic * geometric).sqrt());
+        weight *= 2.0;
+    }
+    major * (std::f64::consts::TAU * sum / arithmetic)
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn arc_length_recursive(curve: &Curve3, t0: f64, t1: f64, tol: f64, depth: u32) -> f64 {
     let speed = |t: f64| curve.d1(t).norm();
@@ -704,31 +731,21 @@ pub fn interpolate_centripetal(points: &[Pnt3]) -> Option<NurbsCurve3> {
     interpolate_curve(points, degree, ParamMethod::Centripetal, None, false)
 }
 
-/// 📏️ The knot-placement technique for least-squares fitting with fewer control points than data
-/// points (NURBS Book eq. 9.68/9.69): spreads the `n - p - 1` interior knots evenly across the
-/// parameter range, each positioned by linear interpolation between the two `params` values its
-/// slot falls between — unlike [`averaged_knot_vector`], which needs one knot per data point.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fitting_knot_vector(params: &[f64], p: usize, num_controls: usize) -> Vec<f64> {
-    let n = num_controls - 1;
-    let m = params.len() - 1;
-    let mut u = vec![0.0; n + p + 2];
-    for i in 0..=p {
-        u[i] = 0.0;
-        u[n + 1 + i] = 1.0;
-    }
-    if n > p {
-        let d = (m + 1) as f64 / (n - p + 1) as f64;
-        for j in 1..=(n - p) {
-            let jd = j as f64 * d;
-            let i = jd.floor() as usize;
-            let alpha = jd - i as f64;
-            let lo = params[i.saturating_sub(1)];
-            let hi = params[i.min(m)];
-            u[p + j] = (1.0 - alpha) * lo + alpha * hi;
-        }
-    }
-    u
+/// 📏️ Returns one clamped least-squares knot using the Piegl–Tiller data-parameter spacing.
+pub fn fitting_knot(params: &[f64], degree: usize, controls: usize, index: usize) -> f64 {
+    if index <= degree { return 0.0; }
+    if index >= controls { return 1.0; }
+    let d = params.len() as f64 / (controls - degree) as f64;
+    let jd = (index - degree) as f64 * d;
+    let i = jd.floor() as usize;
+    let alpha = jd - i as f64;
+    let lo = params[i.saturating_sub(1)];
+    let hi = params[i.min(params.len() - 1)];
+    (1.0 - alpha) * lo + alpha * hi
+}
+
+fn fitting_knot_vector(params: &[f64], degree: usize, controls: usize) -> Vec<f64> {
+    (0..controls + degree + 1).map(|index| fitting_knot(params, degree, controls, index)).collect()
 }
 
 /// 📏️ Least-squares curve fit (Piegl-Tiller global approximation) to exactly `n_controls` control

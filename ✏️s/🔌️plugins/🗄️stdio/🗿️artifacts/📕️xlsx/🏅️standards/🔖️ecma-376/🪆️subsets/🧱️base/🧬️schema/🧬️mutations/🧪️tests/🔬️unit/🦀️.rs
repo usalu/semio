@@ -26,7 +26,7 @@ fn set_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32, value: 
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn remove_cell_at(snapshot: &XlsxSnapshot, sheet: &str, row: u32, col: u32) -> XlsxMutation {
-    XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(snapshot, sheet, row, col) })
+    XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(snapshot, sheet, row, col), keep_row: false })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -321,7 +321,7 @@ async fn op_text_binary_roundtrip_law() {
         XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::InlineString("has, weird: [chars]".into()), node: None }),
         XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "SUM(A1:A4)".into(), cached: Some(Box::new(XlsxCellValue::Number(1.5))) }, node: None }),
         XlsxMutation::SetCell(set_cell::SetCell { address: cell(), value: XlsxCellValue::Formula { expr: "NA()".into(), cached: None }, node: None }),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell() }),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell(), keep_row: false }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None, node: None }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: Some(0), node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
@@ -371,7 +371,7 @@ async fn kinds_match_enum_and_catalog() {
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: String::new(), new_name: String::new() }),
         XlsxMutation::SetCell(set_cell::SetCell { address: address(&fixture(), "Sheet1", 1, 0), value: XlsxCellValue::Empty, node: None }),
         XlsxMutation::InsertCell(insert_cell::InsertCell { address: cell_address::xlsx_cell_vacancy_address(&fixture(), "Sheet1", 2, 1).unwrap(), value: XlsxCellValue::Empty, node: None }),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(&fixture(), "Sheet1", 1, 0) }),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: address(&fixture(), "Sheet1", 1, 0), keep_row: false }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: String::new(), index: None, node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: String::new(), node: None }),

@@ -306,7 +306,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
                 let (object_id, u, v) = pick_paint_hit(&state.session, &state.camera, &state.scene, x, y, inner)?;
                 return Some(ActionDescriptor { controller_id: state.session.controller_id.clone(), action: "paintAt".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.session.surface_id, "objectId": object_id, "u": u, "v": v, "phase": "stream" })) });
             }
-            if state.session.active_utility == "brush" || (state.session.active_utility == "select" && state.selection.granularity == "vertex") {
+            if semio_os_infinite_world_interaction::world3d_vortex_pointer_mode(&state.session.active_utility, &state.selection.granularity, !state.scene.vortices.is_empty()) {
                 if let Some(full_id) = pick_vortex_at(&state.session, &state.camera, &state.scene, x, y, inner) {
                     let merge = world_merge_mode(shift, ctrl).wire_label();
                     return Some(ActionDescriptor { controller_id: state.session.controller_id.clone(), action: "worldVortexSelect".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.session.surface_id, "fullId": full_id, "merge": merge })) });

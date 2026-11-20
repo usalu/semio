@@ -10,7 +10,9 @@ use super::engine_surface_registry::{
 use crate::element_contracts::WorkerCell;
 use canvas::Color;
 use semio_framework_canvas as canvas;
-use std::mem::ManuallyDrop;
+use std::mem::{size_of,ManuallyDrop};
+use semio_framework_job::{close_original_effect_step,close_original_retained_effect_step,InteractiveJobCloseStep};
+use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError};
 use ui_gpu::{GpuContext,EngineRasterBuild,EngineRasterStageFault};
 pub use ui_gpu::EngineRasterBuildPhase as EngineGpuBuildPhase;
 
@@ -32,11 +34,20 @@ pub struct EngineCanvasPacket {
 
 impl EngineCanvasPacket {
     pub fn next_close_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.surface.id.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}self.scene_retirement.next_demands(&self.scene,copy)}
-    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
-        let demand=self.next_close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{if !self.surface.id.terminal_is_empty(){self.surface.id.close_step();Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.scene_retirement.close_step(&mut self.scene,grant)}})?;
-        if self.terminal_is_empty(){Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()})}else{Ok(step)}
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let body=cx.retained_grant().maximum_copy_bytes;
+        let demand=self.next_close_demands(body).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        let step=if !self.surface.id.terminal_is_empty(){
+            close_original_retained_effect_step(cx,demand,|effect|->Result<_,ValueError>{
+                if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                self.surface.id.close_step();
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+            })?
+        }else{
+            close_original_effect_step(cx,demand,|effect|self.scene_retirement.close_step(&mut self.scene,body,effect))?
+        };
+        if self.terminal_is_empty(){Ok(InteractiveJobCloseStep::Complete{progress:step.progress()})}else{Ok(step)}
     }
     pub fn terminal_is_empty(&self) -> bool {self.surface.id.terminal_is_empty()&&self.scene_retirement.terminal_is_empty(&self.scene)}
 
@@ -133,7 +144,7 @@ pub enum EngineCanvasPacketDestination {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg(any(test, feature = "testkit"))]
-struct EngineCanvasPacketReservation {
+pub struct EngineCanvasPacketReservation {
     pub(super) generation: u64,
     pub sequence: u64,
     pub destination: EngineCanvasPacketDestination,
@@ -183,21 +194,50 @@ impl EngineCanvasBuildContext {
     pub fn prepare_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if cx.is_cancelled(){return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original EngineCanvas page birth canceled"),cx))}
         if self.prepared(){return Ok(true)}
-        let bytes=if !self.packets.prepared(){self.packets.birth_bytes()}else{self.rejected.birth_bytes()};
-        semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()},|grant|if !self.packets.prepared(){self.packets.birth(grant)}else{self.rejected.birth(grant)})?;Ok(self.prepared())
+        let pages=if !self.packets.prepared(){&mut self.packets}else{&mut self.rejected};
+        let demand=RetirementDemand{capacity_bytes:pages.birth_bytes(),depth:1,..Default::default()};
+        close_original_retained_effect_step(cx,demand,|effect|->Result<_,ValueError>{
+            if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            *effect.actual()=Some(0);
+            let step=pages.birth(effect.grant())?;
+            *effect.actual()=Some(step.progress().retained_capacity_bytes);
+            Ok(step)
+        })?;
+        Ok(self.prepared())
     }
-    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::InteractiveJobCloseStep as Close;
-        if self.terminal_is_empty(){return Ok(Close::Complete{progress:Default::default()})}
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let index=self.rejected_len.checked_sub(1).map(|index|(true,index)).or_else(||self.len.checked_sub(1).map(|index|(false,index)));
         if let Some((rejected,index))=index{
-            let slot=if rejected{&mut self.rejected[index]}else{&mut self.packets[index]};
-            if let Some(packet)=slot.as_mut(){let step=packet.close_step(cx)?;if packet.terminal_is_empty(){*slot=None;if rejected{self.rejected_len=index}else{self.len=index}}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}
-            return semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{if rejected{self.rejected_len=index}else{self.len=index}Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
+            let (slot,len)=if rejected{(&mut self.rejected[index],&mut self.rejected_len)}else{(&mut self.packets[index],&mut self.len)};
+            if let Some(packet)=slot.as_mut().filter(|packet|!packet.terminal_is_empty()){
+                let step=packet.close_step(cx)?;
+                return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})
+            }
+            let demand=RetirementDemand{copy_bytes:size_of::<usize>(),depth:1,..Default::default()};
+            return close_original_retained_effect_step(cx,demand,|effect|->Result<_,ValueError>{
+                if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                *slot=None;
+                *len=index;
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+            })
         }
-        let bytes=if !self.packets.empty(){self.packets.release_bytes()}else{self.rejected.release_bytes()};
-        if bytes!=0{return semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|grant|if !self.packets.empty(){self.packets.release(grant)}else{self.rejected.release(grant)})}
-        semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{self.outstanding_reservations=0;self.published_reservation_sequence=self.reservation_sequence;Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
+        let pages=if !self.packets.empty(){&mut self.packets}else{&mut self.rejected};
+        let bytes=pages.release_bytes();
+        if bytes!=0{
+            let demand=RetirementDemand{release_bytes:bytes,depth:1,..Default::default()};
+            return close_original_retained_effect_step(cx,demand,|effect|->Result<_,ValueError>{
+                if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                pages.release(effect.grant())
+            })
+        }
+        let demand=RetirementDemand{copy_bytes:size_of::<usize>()+size_of::<u64>(),depth:1,..Default::default()};
+        close_original_retained_effect_step(cx,demand,|effect|->Result<_,ValueError>{
+            if !effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            self.outstanding_reservations=0;
+            self.published_reservation_sequence=self.reservation_sequence;
+            Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+        })
     }
 
     pub fn take_packet_step(&mut self) -> Result<Option<EngineCanvasPacket>, EngineCanvasPacket> {

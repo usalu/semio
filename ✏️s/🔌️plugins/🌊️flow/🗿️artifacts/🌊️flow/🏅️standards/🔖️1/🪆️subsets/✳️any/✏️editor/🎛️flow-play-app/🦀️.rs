@@ -158,6 +158,17 @@ impl ArtifactEditor for FlowPlayApp {
 })())
 }
 
+    /// 🏭️ The declared action producer prices a contributions push at its declared whole-pack ceiling and every other command at the ordinary runtime wire ceiling.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<FlowCommand>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(
+            <Self as ArtifactEditor>::command_from_action,
+            |command| match command {
+                FlowCommand::SetContributions(_) => FLOW_CONTRIBUTIONS_RAW_BYTES,
+                _ => semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM,
+            },
+        ))
+    }
+
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
     fn command_id(command: &FlowCommand) -> &'static str {

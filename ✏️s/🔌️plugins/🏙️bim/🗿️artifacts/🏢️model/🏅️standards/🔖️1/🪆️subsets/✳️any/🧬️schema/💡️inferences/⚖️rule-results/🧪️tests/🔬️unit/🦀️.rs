@@ -124,7 +124,7 @@ fn a_member_the_model_cannot_measure_is_not_counted() {
 #[test]
 fn the_dependency_names_the_rule_and_its_members_and_nothing_else_of_the_model() {
     let mut model = house();
-    model.rules.insert("r-1".into(), rule(RuleKind::MinDoorWidth, 0.9));
+    model.rules.cold_insert("r-1".into(), rule(RuleKind::MinDoorWidth, 0.9));
     let before = dependency(&model, "r-1");
     model.project.name = "Renamed".into();
     assert_eq!(dependency(&model, "r-1"), before, "a project rename does not touch a rule");

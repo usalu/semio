@@ -3,6 +3,45 @@
 //#region 🔖️SceneCommandTests
 
 #[test]
+fn ink_pointer_leave_matches_the_shared_hover_clear_and_ignores_navigator() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).unwrap();
+    let case = |id: &str| fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap();
+    let hover = case("pointer-hover");
+    let leave = case("pointer-leave");
+    let x = hover["gesture"]["x"].as_f64().unwrap() as f32;
+    let y = hover["gesture"]["y"].as_f64().unwrap() as f32;
+    let rect = Rect::new(0.0, 0.0, 320.0, 240.0);
+    let kind = semio_ui_declaration::ui::SurfaceKind::InkCanvas;
+    let pointer = Some(ui_render::PointerId(73));
+    let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+
+    for (interactive, window, witness) in [(true, "ink-hover-editor", 455), (false, "ink-hover-navigator", 456)] {
+        let mut ink = semio_ui_scene_plane::InkCanvasScene::base(fixture["document"].to_string(), "selectDirect".into(), if interactive { "composite" } else { "navigator" }.into(), interactive);
+        ink.interaction_domain = Some(serde_json::from_value(fixture["scene"]["interactionDomain"].clone()).unwrap());
+        ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
+        let node = publish_ink_intent_document(window, 1, witness, &[4], &ink);
+        apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerMove { x, y, modifiers: Default::default() }, pointer, &mut input);
+        for _ in 0..2 {
+            apply_scene_ui_command(window, node, kind, rect, &semio_ui_wgpu_events::UiEvent::PointerLeave, pointer, &mut input);
+        }
+        drive_ink_scene_terminal(&mut input);
+        let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+        let transitions = [hover, leave];
+        let expected = if interactive { &transitions[..] } else { &[] };
+        assert_eq!(actions.len(), expected.len());
+        for (action, row) in actions.iter().zip(expected) {
+            assert_eq!(Some(action.action.as_str()), row["action"].as_str());
+            let args = action.args.as_ref().unwrap();
+            assert_eq!(args.get("surfaceId").and_then(semio_framework::DslValue::as_str), Some(window));
+            for (key, value) in row["args"].as_object().unwrap() {
+                assert_eq!(args.get(key).and_then(semio_framework::DslValue::as_str), value.as_str());
+            }
+        }
+        retire_presented_document(window);
+    }
+}
+
+#[test]
 fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishing() {
     let cancellation: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("shared scene cancellation fixture");
     let ink_case = cancellation["cases"].as_array().unwrap().iter().find(|case| case["family"] == "ink").expect("Ink cancellation case");

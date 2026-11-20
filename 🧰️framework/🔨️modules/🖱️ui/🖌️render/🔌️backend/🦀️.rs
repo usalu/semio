@@ -288,13 +288,20 @@ pub trait GraphicsBackend {
     fn recover(&mut self) -> Result<RecoveredResources, BackendError>;
 
     /// 🐞️ Forces the next [`Self::device_status`] to report `Lost`, for the cross-backend
-    /// conformance suite to exercise recovery without waiting on a real GPU fault.
+    /// conformance suite to exercise recovery without waiting on a real GPU fault. A backend built
+    /// without its own `backend-testing` feature keeps this default, so enabling the hook here never
+    /// breaks a backend that does not take part in the suite.
     #[cfg(feature = "backend-testing")]
-    fn debug_force_device_loss(&mut self);
+    fn debug_force_device_loss(&mut self) {
+        panic!("{} was built without its backend-testing feature", self.name())
+    }
 
-    /// ⏪️ Reads back the last presented frame for pixel comparison across backends.
+    /// ⏪️ Reads back the last presented frame for pixel comparison across backends; the default
+    /// belongs to a backend built without its own `backend-testing` feature.
     #[cfg(feature = "backend-testing")]
-    fn read_back(&mut self) -> Result<ReadbackImage, BackendError>;
+    fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
+        panic!("{} was built without its backend-testing feature", self.name())
+    }
 }
 
 //#endregion 🔌️GraphicsBackendTrait

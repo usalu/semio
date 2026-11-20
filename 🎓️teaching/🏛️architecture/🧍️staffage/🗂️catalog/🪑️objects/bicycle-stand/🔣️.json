@@ -9,8 +9,8 @@
       "de": "Fahrradbügel (Sheffield-Bügel)"
     },
     "summary": {
-      "en": "A galvanised 48.3 mm tube hoop with a cross rail, set in a concrete footing: 0.75 m wide, 0.80 m high, drawn face-on from the side where the bikes park; a leaning bicycle is a load, not a second asset. The plan shows the hoop as a bar with two leg dots.",
-      "de": "Ein feuerverzinkter Bügel aus 48,3-mm-Rohr mit Querholm im Betonfundament: 0,75 m breit, 0,80 m hoch, von der Parkseite her frontal gezeichnet; ein angelehntes Fahrrad ist eine Last, kein zweites Asset. Der Grundriss zeigt den Bügel als Balken mit zwei Beinpunkten."
+      "en": "A galvanised CHS 48.3 x 3.2 tube bent into an inverted U (bend radius 180 mm) with a welded cross rail at 0.40 m, set 0.3 m deep in a concrete footing: 0.75 m wide, 0.80 m high, drawn face-on from the side where the bikes park; a leaning bicycle is a load, not a second asset. Seen from above the hoop is one bar with round ends.",
+      "de": "Ein feuerverzinktes Rohr KHP 48,3 x 3,2, zu einem umgekehrten U gebogen (Biegeradius 180 mm), mit angeschweißtem Querholm auf 0,40 m, 0,3 m tief im Betonfundament: 0,75 m breit, 0,80 m hoch, von der Parkseite her frontal gezeichnet; ein angelehntes Fahrrad ist eine Last, kein zweites Asset. Von oben ist der Bügel ein Balken mit runden Enden."
     },
     "tags": [
       "bicycle-stand",
@@ -59,7 +59,7 @@
       "heightM": 0.8,
       "widthM": 0.75,
       "depthM": 0.0483,
-      "massKg": 9.97
+      "massKg": 10.02
     },
     "materials": [
       {
@@ -92,55 +92,207 @@
           "x": 0.0,
           "y": 0.0,
           "angleDeg": 0,
-          "lengthM": 0.0483,
+          "lengthM": 0,
           "joint": {
             "type": "fixed"
           }
         },
         {
-          "id": "hoop",
+          "id": "leg-left",
           "parent": "stand",
           "title": {
-            "en": "Inverted U hoop",
-            "de": "Umgekehrter U-Bügel"
+            "en": "Left leg, from the footing to the lower bend tangent",
+            "de": "Linkes Bein, vom Fundament bis zur unteren Biegetangente"
           },
-          "x": 0.0,
+          "x": -0.35085,
           "y": 0.0,
-          "angleDeg": 0,
-          "lengthM": 0.8,
+          "angleDeg": 90,
+          "lengthM": 0.59585,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 7.47,
-            "comX": 0.0,
-            "comY": 0.42,
-            "distribution": "point",
+            "kg": 2.17,
+            "comX": 0.297925,
+            "comY": 0.0,
+            "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
+          }
+        },
+        {
+          "id": "bend-left",
+          "parent": "leg-left",
+          "title": {
+            "en": "Left 90 degree bend, radius 180 mm (chord)",
+            "de": "Linker 90-Grad-Bogen, Radius 180 mm (Sehne)"
+          },
+          "x": 0.59585,
+          "y": 0.0,
+          "angleDeg": -45,
+          "lengthM": 0.254558,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.03,
+            "comX": 0.127279,
+            "comY": 0.0348,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
+          }
+        },
+        {
+          "id": "top-rail",
+          "parent": "bend-left",
+          "title": {
+            "en": "Top rail between the bend tangents",
+            "de": "Oberholm zwischen den Biegetangenten"
+          },
+          "x": 0.254558,
+          "y": 0.0,
+          "angleDeg": -45,
+          "lengthM": 0.3417,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.24,
+            "comX": 0.17085,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
+          }
+        },
+        {
+          "id": "bend-right",
+          "parent": "top-rail",
+          "title": {
+            "en": "Right 90 degree bend, radius 180 mm (chord)",
+            "de": "Rechter 90-Grad-Bogen, Radius 180 mm (Sehne)"
+          },
+          "x": 0.3417,
+          "y": 0.0,
+          "angleDeg": -45,
+          "lengthM": 0.254558,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.03,
+            "comX": 0.127279,
+            "comY": 0.0348,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
+          }
+        },
+        {
+          "id": "leg-right",
+          "parent": "bend-right",
+          "title": {
+            "en": "Right leg, from the lower bend tangent to the footing",
+            "de": "Rechtes Bein, von der unteren Biegetangente bis zum Fundament"
+          },
+          "x": 0.254558,
+          "y": 0.0,
+          "angleDeg": -45,
+          "lengthM": 0.59585,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.17,
+            "comX": 0.297925,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
           }
         },
         {
           "id": "crossbar",
-          "parent": "hoop",
+          "parent": "leg-left",
           "title": {
-            "en": "Cross rail",
-            "de": "Querholm"
+            "en": "Cross rail, welded between the legs (leg axis to leg axis)",
+            "de": "Querholm, zwischen die Beine geschweißt (Beinachse bis Beinachse)"
           },
-          "x": 0.0,
-          "y": 0.4,
-          "angleDeg": 0,
+          "x": 0.4,
+          "y": 0.0,
+          "angleDeg": -90,
           "lengthM": 0.7017,
           "joint": {
             "type": "fixed"
           },
           "mass": {
-            "kg": 2.5,
-            "comX": 0.0,
+            "kg": 2.38,
+            "comX": 0.35085,
             "comY": 0.0,
-            "distribution": "point",
+            "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
+          },
+          "section": {
+            "areaM2": 0.00045339,
+            "secondMomentM4": 1.15856e-07,
+            "extremeFibreM": 0.02415,
+            "material": "galv-steel",
+            "title": {
+              "en": "CHS 48.3 x 3.2 (EN 10219-2)",
+              "de": "KHP 48,3 x 3,2 (EN 10219-2)"
+            }
           }
         }
       ]
@@ -148,8 +300,8 @@
     "anchors": [
       {
         "id": "leg-left",
-        "bone": "hoop",
-        "x": -0.3508,
+        "bone": "leg-left",
+        "x": 0.0,
         "y": 0.0,
         "kind": "support",
         "title": {
@@ -162,8 +314,8 @@
       },
       {
         "id": "leg-right",
-        "bone": "hoop",
-        "x": 0.3508,
+        "bone": "leg-right",
+        "x": 0.59585,
         "y": 0.0,
         "kind": "support",
         "title": {
@@ -176,24 +328,24 @@
       },
       {
         "id": "lean-point",
-        "bone": "hoop",
-        "x": 0.3508,
-        "y": 0.55,
+        "bone": "leg-right",
+        "x": 0.04585,
+        "y": 0.0,
         "kind": "load",
         "title": {
-          "en": "Lean contact on the right leg",
-          "de": "Anlehnpunkt am rechten Bein"
+          "en": "Lean contact on the right leg, 0.55 m above ground",
+          "de": "Anlehnpunkt am rechten Bein, 0,55 m über Boden"
         }
       },
       {
         "id": "lock-point",
         "bone": "crossbar",
-        "x": 0.0,
+        "x": 0.35085,
         "y": 0.0,
         "kind": "load",
         "title": {
-          "en": "Lock point on the cross rail",
-          "de": "Schlosspunkt am Querholm"
+          "en": "Lock point at mid cross rail",
+          "de": "Schlosspunkt in Querholmmitte"
         }
       }
     ],
@@ -216,14 +368,71 @@
         "geometry": {
           "elevation": [
             {
-              "id": "hoop",
-              "bone": "hoop",
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05105,
+              "w": 0.59585,
+              "h": 0.0752,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.5,
               "kind": "path",
-              "d": "M -0.375 0 L -0.375 0.57 C -0.375 0.697029 -0.272029 0.8 -0.145 0.8 L 0.145 0.8 C 0.272029 0.8 0.375 0.697029 0.375 0.57 L 0.375 0 L 0.215 0 L 0.215 0.57 C 0.215 0.608661 0.183661 0.64 0.145 0.64 L -0.145 0.64 C -0.183661 0.64 -0.215 0.608661 -0.215 0.57 L -0.215 0 Z",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05105,
+              "w": 0.3417,
+              "h": 0.0752,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.05105,
+              "w": 0.59585,
+              "h": 0.0752,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -235,58 +444,80 @@
               "filled": true,
               "tone": 0.5,
               "kind": "rect",
-              "x": -0.23,
-              "y": -0.075,
-              "w": 0.46,
-              "h": 0.15,
+              "x": 0.05105,
+              "y": -0.0376,
+              "w": 0.5996,
+              "h": 0.0752,
               "region": "crossbar-galv",
               "material": "galv-steel"
             }
           ],
           "front": [
             {
-              "id": "hoop-end-on",
-              "bone": "hoop",
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0315,
+              "y": 0.0,
+              "w": 0.063,
+              "h": 0.59585,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.5,
               "kind": "path",
-              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.8 0 0.8 C 0.01334 0.8 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "d": "M -0.0315 0.59585 L -0.0315 0.7624 A 0.0315 0.0376 0 0 0 0.0315 0.7624 L 0.0315 0.59585 Z",
               "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar-end-on",
-              "bone": "crossbar",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "rect",
-              "x": -0.02415,
-              "y": 0.37585,
-              "w": 0.0483,
-              "h": 0.0483,
-              "region": "crossbar-galv",
               "material": "galv-steel"
             }
           ],
           "plan": [
             {
-              "id": "hoop-top",
-              "bone": "hoop",
+              "id": "top-rail",
+              "bone": "top-rail",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.5,
-              "kind": "capsule",
-              "x0": -0.3508,
-              "y0": 0,
-              "x1": 0.3508,
-              "y1": 0,
-              "r0": 0.02415,
-              "r1": 0.02415,
+              "kind": "rect",
+              "x": -0.17085,
+              "y": -0.0315,
+              "w": 0.3417,
+              "h": 0.063,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.17085 -0.0315 L -0.3374 -0.0315 A 0.0376 0.0315 0 0 0 -0.3374 0.0315 L -0.17085 0.0315 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.17085 -0.0315 L 0.3374 -0.0315 A 0.0376 0.0315 0 0 1 0.3374 0.0315 L 0.17085 0.0315 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             }
@@ -294,24 +525,24 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "One closed U band (1.5 x 1.6 mm on paper) with the cross rail as a bar; the 0.75 x 0.80 m outer size is kept exactly. Front and plan are one bar of 0.068 m, the hoop seen end-on and from above, widened by 0.02 m from the true 0.048 m tube so it stays printable and inside the dimension tolerance.",
-            "de": "Ein geschlossenes U-Band (1,5 x 1,6 mm auf dem Papier) mit dem Querholm als Balken; das Außenmaß 0,75 x 0,80 m bleibt exakt. Vorder- und Draufsicht sind je ein Balken von 0,068 m, der Bügel von vorn und von oben, gegenüber dem wahren Rohr von 0,048 m um 0,02 m verbreitert, damit er druckbar bleibt und in der Maßtoleranz liegt."
+            "en": "One U band per member at the print floor (75.2 mm = 0.15 mm on paper) with the cross rail between the legs; the 0.75 x 0.80 m outer size and the 204 mm outer bend radius are kept exactly. Front: the near leg and bend end-on as a 63 mm bar; plan: top rail and bends as one 63 mm bar with round ends (the lateral extent may exceed the real 48.3 mm by 15 mm at most, so the 3D tube of 75.2 mm is drawn 12 mm narrower across, 0.024 mm on paper).",
+            "de": "Ein U-Band je Stab an der Druckgrenze (75,2 mm = 0,15 mm auf dem Papier) mit dem Querholm zwischen den Beinen; das Außenmaß 0,75 x 0,80 m und der äußere Biegeradius 204 mm bleiben exakt. Ansicht: das nahe Bein und der nahe Bogen von vorn als Balken von 63 mm; Grundriss: Oberholm und Bögen als ein Balken von 63 mm mit runden Enden (die seitliche Ausdehnung darf die realen 48,3 mm um höchstens 15 mm übersteigen, daher ist das 3D-Rohr von 75,2 mm quer 12 mm schmaler gezeichnet, 0,024 mm auf dem Papier)."
           },
           "retained": {
-            "en": "Outer width 0.75 m, height 0.80 m, the cross rail at 0.40 m.",
-            "de": "Aussenbreite 0,75 m, Höhe 0,80 m, Querholm auf 0,40 m."
+            "en": "Outer width 0.75 m, height 0.80 m, outer bend radius, the cross rail at 0.40 m.",
+            "de": "Außenbreite 0,75 m, Höhe 0,80 m, äußerer Biegeradius, Querholm auf 0,40 m."
           },
           "merged": {
-            "en": "Tube wall and weld collars merge into the solid band.",
-            "de": "Rohrwand und Schweißkragen gehen im vollen Band auf."
+            "en": "Tube wall, welds and saddle joints merge into the bands.",
+            "de": "Rohrwand, Nähte und Sattelstöße gehen in den Bändern auf."
           },
           "omitted": {
-            "en": "Weld lines, bend tangents, embedded leg stubs. Crossbar, welds and leg rings are dropped in front and plan; the crossbar hides behind the near leg and below the top tube.",
-            "de": "Schweißnähte, Biegetangenten, einbetonierte Beinstummel. Querholm, Schweißnähte und Beinringe entfallen in Vorder- und Draufsicht; der Querholm verschwindet hinter dem nahen Bein und unter dem oberen Rohr."
+            "en": "Weld lines, embedded leg ends, hidden parts.",
+            "de": "Nahtlinien, einbetonierte Beinenden, verdeckte Teile."
           },
           "thinElements": {
-            "en": "The 0.0483 m tube would be 0.097 mm on paper, below the feature width: the band is thickened to 0.16 m (0.32 mm) inward from the real outer edge, so the outer size stays exact and the inner opening shrinks by 0.11 m per side; the bend radius is tightened to 0.15 m.",
-            "de": "Das 0,0483-m-Rohr wäre auf dem Papier 0,097 mm breit, unter der Mindestbreite: das Band wird vom realen Außenrand nach innen auf 0,16 m (0,32 mm) verbreitert, das Außenmaß bleibt exakt, die Innenöffnung schrumpft je Seite um 0,11 m; der Biegeradius ist auf 0,15 m verengt."
+            "en": "The 0.0483 m tube would be 0.097 mm on paper: every band is thickened inwards to 0.0752 m (0.15 mm), the print floor, so the outer size stays exact and the inner opening shrinks by 27 mm per side.",
+            "de": "Das Rohr von 0,0483 m wäre auf dem Papier 0,097 mm breit: jedes Band ist nach innen auf 0,0752 m (0,15 mm) verdickt, die Druckgrenze, so dass das Außenmaß exakt bleibt und die Innenöffnung je Seite um 27 mm schrumpft."
           },
           "hatching": {
             "en": "None.",
@@ -322,8 +553,8 @@
             "de": "Volles Band Ton 0,5, Kontur 0,13 mm; Bodenlinie 0,18 mm."
           },
           "overlays": {
-            "en": "Hoop = hoop-galv, cross rail = crossbar-galv; overlay colours map onto the two solids.",
-            "de": "Bügel = hoop-galv, Querholm = crossbar-galv; Überlagerungsfarben liegen auf den beiden Vollformen."
+            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
+            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
           }
         }
       },
@@ -345,14 +576,71 @@
         "geometry": {
           "elevation": [
             {
-              "id": "hoop",
-              "bone": "hoop",
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.375 0 L -0.375 0.596 Q -0.375 0.8 -0.19 0.8 L 0.19 0.8 Q 0.375 0.8 0.375 0.596 L 0.375 0 L 0.32665 0 L 0.32665 0.596 Q 0.32665 0.7517 0.19 0.7517 L -0.19 0.7517 Q -0.32665 0.7517 -0.32665 0.596 L -0.32665 0 Z",
+              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -360,13 +648,13 @@
               "id": "crossbar",
               "bone": "crossbar",
               "role": "body",
-              "z": 3.2,
+              "z": 2.8,
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": -0.3508,
+              "x": 0.0,
               "y": -0.02415,
-              "w": 0.7016,
+              "w": 0.7017,
               "h": 0.0483,
               "region": "crossbar-galv",
               "material": "galv-steel"
@@ -374,92 +662,70 @@
           ],
           "front": [
             {
-              "id": "hoop-end-on",
-              "bone": "hoop",
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.0,
+              "w": 0.0483,
+              "h": 0.59585,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "d": "M -0.02415 0.59585 L -0.02415 0.77585 A 0.02415 0.02415 0 0 0 0.02415 0.77585 L 0.02415 0.59585 Z",
               "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar-end-on",
-              "bone": "crossbar",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": -0.02415,
-              "y": 0.37585,
-              "w": 0.0483,
-              "h": 0.0483,
-              "region": "crossbar-galv",
               "material": "galv-steel"
             }
           ],
           "plan": [
             {
-              "id": "hoop-top",
-              "bone": "hoop",
+              "id": "top-rail",
+              "bone": "top-rail",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
-              "kind": "capsule",
-              "x0": -0.35085,
-              "y0": 0,
-              "x1": 0.35085,
-              "y1": 0,
-              "r0": 0.02415,
-              "r1": 0.02415,
+              "kind": "rect",
+              "x": -0.17085,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "bend-tangent-top-0",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1708,
-                  -0.02415
-                ],
-                [
-                  -0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
+              "id": "bend-left",
+              "bone": "bend-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.17085 -0.02415 L -0.35085 -0.02415 A 0.02415 0.02415 0 0 0 -0.35085 0.02415 L -0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "bend-tangent-top-1",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1708,
-                  -0.02415
-                ],
-                [
-                  0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.17085 -0.02415 L 0.35085 -0.02415 A 0.02415 0.02415 0 0 1 0.35085 0.02415 L 0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             }
@@ -467,20 +733,20 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Inverted U of true tube size (0.24 mm wide) with a straight cross rail between the legs. Front: the hoop tube end-on at its true 48.3 mm with the cross rail as a square joint on it; plan: one capsule of true tube width with the two bend tangents.",
-            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) mit geradem Querholm zwischen den Beinen. Vorderansicht: das Bügelrohr von vorn in wahrer Stärke von 48,3 mm mit dem Querholm als quadratischem Stoß; Draufsicht: eine Kapsel in wahrer Rohrstärke mit den beiden Biegetangenten."
+            "en": "Inverted U at true tube size (0.24 mm wide) per member, each bend arc as two quadratic curves, the cross rail as a bar from leg axis to leg axis under the legs. Front: near leg and bend end-on; plan: top rail and bends from above.",
+            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) je Stab, jeder Biegebogen als zwei quadratische Kurven, der Querholm als Balken von Beinachse zu Beinachse unter den Beinen. Ansicht: nahes Bein und naher Bogen von vorn; Grundriss: Oberholm und Bögen von oben."
           },
           "retained": {
-            "en": "Real tube diameter 0.0483 m, cross rail at 0.40 m.",
-            "de": "Reale Rohrstärke 0,0483 m, Querholm auf 0,40 m."
+            "en": "Real tube diameter 0.0483 m, bend radius 0.18 m, cross rail at 0.40 m.",
+            "de": "Reale Rohrstärke 0,0483 m, Biegeradius 0,18 m, Querholm auf 0,40 m."
           },
           "merged": {
-            "en": "The two bends are simplified to one quadratic curve each; weld collars at the rail ends merge into the legs.",
-            "de": "Die beiden Bögen sind zu je einer quadratischen Kurve vereinfacht; Schweißkragen an den Holmenden gehen in den Beinen auf."
+            "en": "The saddle joints merge into the legs (the rail runs under them).",
+            "de": "Die Sattelstöße gehen in den Beinen auf (der Holm läuft unter ihnen durch)."
           },
           "omitted": {
-            "en": "Weld lines and bend tangents. Leg rings and ground collars in front and plan.",
-            "de": "Schweißnähte und Biegetangenten. Beinringe und Bodenmanschetten in Vorder- und Draufsicht."
+            "en": "Weld chevrons, welds, vent holes, embedded leg ends, hidden parts.",
+            "de": "Nahtwinkel, Nähte, Entlüftungsbohrungen, einbetonierte Beinenden, verdeckte Teile."
           },
           "thinElements": {
             "en": "Tube is 0.24 mm wide, just above the 0.2 mm feature width; outline 0.18 mm.",
@@ -495,8 +761,8 @@
             "de": "Ton 0,45; Körperstift 0,18 mm, Boden 0,25 mm."
           },
           "overlays": {
-            "en": "Same two regions as 1:500.",
-            "de": "Dieselben zwei Regionen wie bei 1:500."
+            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
+            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
           }
         }
       },
@@ -518,14 +784,71 @@
         "geometry": {
           "elevation": [
             {
-              "id": "hoop",
-              "bone": "hoop",
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.375 0 L -0.375 0.59585 C -0.375 0.708602 -0.283577 0.8 -0.170825 0.8 L 0.170825 0.8 C 0.283577 0.8 0.375 0.708602 0.375 0.59585 L 0.375 0 L 0.32665 0 L 0.32665 0.59585 C 0.32665 0.681926 0.256901 0.7517 0.170825 0.7517 L -0.170825 0.7517 C -0.256901 0.7517 -0.32665 0.681926 -0.32665 0.59585 L -0.32665 0 Z",
+              "d": "M 0.271635 0.017077 C 0.191909 0.096802 0.062649 0.096802 -0.017077 0.017077 L 0.017076 -0.017076 C 0.07794 0.043787 0.176618 0.043787 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 C 0.191909 0.096802 0.062649 0.096802 -0.017077 0.017077 L 0.017076 -0.017076 C 0.07794 0.043787 0.176618 0.043787 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -537,9 +860,9 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": -0.32665,
+              "x": 0.02415,
               "y": -0.02415,
-              "w": 0.6533,
+              "w": 0.6534,
               "h": 0.0483,
               "region": "crossbar-galv",
               "material": "galv-steel"
@@ -554,16 +877,21 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.32665,
-                  -0.02415
+                  0.02415,
+                  0.02415
                 ],
                 [
-                  -0.32665,
-                  0.02415
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.02415,
+                  -0.02415
                 ]
               ],
               "closed": false,
-              "region": "crossbar-galv"
+              "region": "crossbar-galv",
+              "material": "galv-steel"
             },
             {
               "id": "weld-r",
@@ -575,180 +903,89 @@
               "kind": "poly",
               "points": [
                 [
-                  0.32665,
-                  -0.02415
+                  0.67755,
+                  0.02415
                 ],
                 [
-                  0.32665,
-                  0.02415
+                  0.7017,
+                  0.0
+                ],
+                [
+                  0.67755,
+                  -0.02415
                 ]
               ],
               "closed": false,
-              "region": "crossbar-galv"
+              "region": "crossbar-galv",
+              "material": "galv-steel"
             }
           ],
           "front": [
             {
-              "id": "hoop-end-on",
-              "bone": "hoop",
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.0,
+              "w": 0.0483,
+              "h": 0.59585,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar-end-on",
-              "bone": "crossbar",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": -0.02415,
-              "y": 0.37585,
-              "w": 0.0483,
-              "h": 0.0483,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-low",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.59585
-                ],
-                [
-                  0.02415,
-                  0.59585
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "ground-collar",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.004
-                ],
-                [
-                  0.02415,
-                  0.004
-                ]
-              ],
-              "closed": false,
+              "d": "M -0.02415 0.59585 L -0.02415 0.77585 A 0.02415 0.02415 0 0 0 0.02415 0.77585 L 0.02415 0.59585 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             }
           ],
           "plan": [
             {
-              "id": "hoop-top",
-              "bone": "hoop",
+              "id": "top-rail",
+              "bone": "top-rail",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
-              "kind": "capsule",
-              "x0": -0.35085,
-              "y0": 0,
-              "x1": 0.35085,
-              "y1": 0,
-              "r0": 0.02415,
-              "r1": 0.02415,
+              "kind": "rect",
+              "x": -0.17085,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "bend-tangent-top-0",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.05,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1708,
-                  -0.02415
-                ],
-                [
-                  -0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-top-1",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.05,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1708,
-                  -0.02415
-                ],
-                [
-                  0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "leg-dot-0",
-              "bone": "hoop",
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
-              "z": 4,
+              "z": 3,
               "filled": true,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": -0.35085,
-              "cy": 0,
-              "rx": 0.011,
-              "ry": 0.011,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.17085 -0.02415 L -0.35085 -0.02415 A 0.02415 0.02415 0 0 0 -0.35085 0.02415 L -0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "leg-dot-1",
-              "bone": "hoop",
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
-              "z": 4,
+              "z": 3,
               "filled": true,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": 0.35085,
-              "cy": 0,
-              "rx": 0.011,
-              "ry": 0.011,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.17085 -0.02415 L 0.35085 -0.02415 A 0.02415 0.02415 0 0 1 0.35085 0.02415 L 0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             }
@@ -756,24 +993,24 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Hoop band 0.48 mm wide at true tube size, cross rail with its two weld lines. Front: the end-on tube with cross rail joint, bend tangent and ground collar; plan: the bar with the two bend tangents and the two leg dots.",
-            "de": "Bügelband in wahrer Rohrstärke 0,48 mm breit, Querholm mit seinen zwei Schweißnähten. Vorderansicht: das Rohr von vorn mit Querholmstoß, Biegetangente und Bodenmanschette; Draufsicht: der Balken mit den beiden Biegetangenten und den zwei Beinpunkten."
+            "en": "The hoop at true size (0.48 mm band) per member, each bend as one cubic arc, the cross rail between the leg faces with its two saddle chevrons. Front: near leg and bend end-on; plan: top rail and the two bends from above.",
+            "de": "Der Bügel in wahrer Größe (Band 0,48 mm) je Stab, jeder Bogen als ein kubischer Bogen, der Querholm zwischen den Beinflächen mit seinen zwei Sattelwinkeln. Ansicht: nahes Bein und naher Bogen von vorn; Grundriss: Oberholm und die zwei Bögen von oben."
           },
           "retained": {
-            "en": "True tube size and bend radius, cross rail, both weld joints. The leg dots mark the two legs set into the footing.",
-            "de": "Wahre Rohrstärke und Biegeradius, Querholm, beide Schweißstöße. Die Beinpunkte markieren die beiden einbetonierten Beine."
+            "en": "True tube size and bend radius, cross rail at 400 mm, both saddle joints.",
+            "de": "Wahre Rohrstärke und Biegeradius, Querholm auf 400 mm, beide Sattelstöße."
           },
           "merged": {
-            "en": "Bend tangents merge into the continuous band.",
-            "de": "Biegetangenten gehen im durchgehenden Band auf."
+            "en": "Each bend arc drawn as one cubic curve (0.05 mm from the circle).",
+            "de": "Jeder Biegebogen als eine kubische Kurve gezeichnet (0,05 mm vom Kreis)."
           },
           "omitted": {
-            "en": "Embedded leg stubs, zinc texture.",
-            "de": "Einbetonierte Beinstummel, Zinktextur."
+            "en": "Welds, vent holes, embedded leg ends, hidden parts.",
+            "de": "Nähte, Entlüftungsbohrungen, einbetonierte Beinenden, verdeckte Teile."
           },
           "thinElements": {
-            "en": "Welds are 0.13 mm detail strokes across the tube (0.48 mm).",
-            "de": "Schweißnähte sind 0,13-mm-Detailstriche quer zum Rohr (0,48 mm)."
+            "en": "Saddle chevrons are 0.13 mm detail strokes across the 0.48 mm tube.",
+            "de": "Sattelwinkel sind Detailstriche von 0,13 mm quer zum 0,48-mm-Rohr."
           },
           "hatching": {
             "en": "None; the tube is too narrow for hatching.",
@@ -784,8 +1021,8 @@
             "de": "Ton 0,45; Körperstift 0,25 mm, Detail 0,13 mm, Boden 0,35 mm."
           },
           "overlays": {
-            "en": "Hoop and cross rail are separate solids, each with its region.",
-            "de": "Bügel und Querholm sind getrennte Vollformen mit je einer Region."
+            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
+            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
           }
         }
       },
@@ -807,14 +1044,71 @@
         "geometry": {
           "elevation": [
             {
-              "id": "hoop",
-              "bone": "hoop",
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.375 0 L -0.375 0.59585 C -0.375 0.708602 -0.283577 0.8 -0.170825 0.8 L 0.170825 0.8 C 0.283577 0.8 0.375 0.708602 0.375 0.59585 L 0.375 0 L 0.32665 0 L 0.32665 0.59585 C 0.32665 0.681926 0.256901 0.7517 0.170825 0.7517 L -0.170825 0.7517 C -0.256901 0.7517 -0.32665 0.681926 -0.32665 0.59585 L -0.32665 0 Z",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.02415,
+              "w": 0.59585,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -826,15 +1120,15 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": -0.32665,
+              "x": 0.02415,
               "y": -0.02415,
-              "w": 0.6533,
+              "w": 0.6534,
               "h": 0.0483,
               "region": "crossbar-galv",
               "material": "galv-steel"
             },
             {
-              "id": "weld-collar-0",
+              "id": "weld-l",
               "bone": "crossbar",
               "role": "detail",
               "z": 4,
@@ -843,19 +1137,24 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.31265,
-                  -0.02415
+                  0.02415,
+                  0.02415
                 ],
                 [
-                  -0.31265,
-                  0.02415
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.02415,
+                  -0.02415
                 ]
               ],
               "closed": false,
-              "region": "crossbar-galv"
+              "region": "crossbar-galv",
+              "material": "galv-steel"
             },
             {
-              "id": "weld-collar-1",
+              "id": "weld-r",
               "bone": "crossbar",
               "role": "detail",
               "z": 4,
@@ -864,461 +1163,89 @@
               "kind": "poly",
               "points": [
                 [
-                  0.31265,
-                  -0.02415
-                ],
-                [
-                  0.31265,
+                  0.67755,
                   0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "crossbar-galv"
-            },
-            {
-              "id": "bend-tangent-low-0",
-              "bone": "hoop",
-              "role": "texture",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.37495,
-                  0.596
                 ],
                 [
-                  -0.32665,
-                  0.596
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv"
-            },
-            {
-              "id": "bend-tangent-low-1",
-              "bone": "hoop",
-              "role": "texture",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.32665,
-                  0.596
+                  0.7017,
+                  0.0
                 ],
                 [
-                  0.37495,
-                  0.596
+                  0.67755,
+                  -0.02415
                 ]
               ],
               "closed": false,
-              "region": "hoop-galv"
-            },
-            {
-              "id": "bend-tangent-top-0",
-              "bone": "hoop",
-              "role": "texture",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1708,
-                  0.8
-                ],
-                [
-                  -0.1708,
-                  0.7517
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv"
-            },
-            {
-              "id": "bend-tangent-top-1",
-              "bone": "hoop",
-              "role": "texture",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1708,
-                  0.8
-                ],
-                [
-                  0.1708,
-                  0.7517
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv"
-            },
-            {
-              "id": "ground-collar-0",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.37495,
-                  0.004
-                ],
-                [
-                  -0.32665,
-                  0.004
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv"
-            },
-            {
-              "id": "ground-collar-1",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.32665,
-                  0.004
-                ],
-                [
-                  0.37495,
-                  0.004
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv"
+              "region": "crossbar-galv",
+              "material": "galv-steel"
             }
           ],
           "front": [
             {
-              "id": "hoop-end-on",
-              "bone": "hoop",
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.02415,
+              "y": 0.0,
+              "w": 0.0483,
+              "h": 0.59585,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M -0.02415 0 L -0.02415 0.77585 C -0.02415 0.78919 -0.01334 0.80000 0 0.80000 C 0.01334 0.80000 0.02415 0.78919 0.02415 0.77585 L 0.02415 0 Z",
+              "d": "M -0.02415 0.59585 L -0.02415 0.77585 A 0.02415 0.02415 0 0 0 0.02415 0.77585 L 0.02415 0.59585 Z",
               "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar-end-on",
-              "bone": "crossbar",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": -0.02415,
-              "y": 0.37585,
-              "w": 0.0483,
-              "h": 0.0483,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-low",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.59585
-                ],
-                [
-                  0.02415,
-                  0.59585
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-top",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.7517
-                ],
-                [
-                  0.02415,
-                  0.7517
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "ground-collar",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.004
-                ],
-                [
-                  0.02415,
-                  0.004
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "weld-collar-low",
-              "bone": "crossbar",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.38085
-                ],
-                [
-                  0.02415,
-                  0.38085
-                ]
-              ],
-              "closed": false,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "weld-collar-high",
-              "bone": "crossbar",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.02415,
-                  0.41915
-                ],
-                [
-                  0.02415,
-                  0.41915
-                ]
-              ],
-              "closed": false,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar-bore",
-              "bone": "crossbar",
-              "role": "body",
-              "z": 4.1,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": 0,
-              "cy": 0.4,
-              "rx": 0.0138,
-              "ry": 0.0138,
-              "region": "crossbar-galv",
               "material": "galv-steel"
             }
           ],
           "plan": [
             {
-              "id": "hoop-top",
-              "bone": "hoop",
+              "id": "top-rail",
+              "bone": "top-rail",
               "role": "body",
               "z": 3,
               "filled": true,
               "tone": 0.45,
-              "kind": "capsule",
-              "x0": -0.35085,
-              "y0": 0,
-              "x1": 0.35085,
-              "y1": 0,
-              "r0": 0.02415,
-              "r1": 0.02415,
+              "kind": "rect",
+              "x": -0.17085,
+              "y": -0.02415,
+              "w": 0.3417,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "bend-tangent-top-0",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.15,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1708,
-                  -0.02415
-                ],
-                [
-                  -0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-top-1",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.15,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.1708,
-                  -0.02415
-                ],
-                [
-                  0.1708,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-low-0",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.15,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.32665,
-                  -0.02415
-                ],
-                [
-                  -0.32665,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-tangent-low-1",
-              "bone": "hoop",
-              "role": "detail",
-              "z": 4.15,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.32665,
-                  -0.02415
-                ],
-                [
-                  0.32665,
-                  0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "leg-ring-0",
-              "bone": "hoop",
+              "id": "bend-left",
+              "bone": "bend-left",
               "role": "body",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": -0.35085,
-              "cy": 0,
-              "rx": 0.0138,
-              "ry": 0.0138,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "leg-ring-1",
-              "bone": "hoop",
-              "role": "body",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": 0.35085,
-              "cy": 0,
-              "rx": 0.0138,
-              "ry": 0.0138,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "leg-dot-0",
-              "bone": "hoop",
-              "role": "body",
-              "z": 4.1,
+              "z": 3,
               "filled": true,
-              "tone": 0.2,
-              "kind": "ellipse",
-              "cx": -0.35085,
-              "cy": 0,
-              "rx": 0.006,
-              "ry": 0.006,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.17085 -0.02415 L -0.35085 -0.02415 A 0.02415 0.02415 0 0 0 -0.35085 0.02415 L -0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
             {
-              "id": "leg-dot-1",
-              "bone": "hoop",
+              "id": "bend-right",
+              "bone": "bend-right",
               "role": "body",
-              "z": 4.1,
+              "z": 3,
               "filled": true,
-              "tone": 0.2,
-              "kind": "ellipse",
-              "cx": 0.35085,
-              "cy": 0,
-              "rx": 0.006,
-              "ry": 0.006,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M 0.17085 -0.02415 L 0.35085 -0.02415 A 0.02415 0.02415 0 0 1 0.35085 0.02415 L 0.17085 0.02415 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             }
@@ -1326,36 +1253,36 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Hoop band 0.97 mm wide at true size with bend tangent lines, the cross rail with weld collars at both joints and ground-level collar lines where the legs enter the footing. Front: the end-on tube with bend tangents, ground collar and the cross rail with both weld collars and its open bore; plan: the capsule bar with all four bend tangents and the two leg rings with their centre dots.",
-            "de": "Bügelband in wahrer Größe 0,97 mm breit mit Biegetangentenlinien, Querholm mit Schweißkragen an beiden Stößen und Bodenkragenlinien, wo die Beine ins Fundament eintreten. Vorderansicht: das Rohr von vorn mit Biegetangenten, Bodenmanschette und dem Querholm mit beiden Schweißmanschetten und seiner offenen Bohrung; Draufsicht: der Kapselbalken mit allen vier Biegetangenten und den zwei Beinringen mit ihren Mittelpunkten."
+            "en": "The hoop at true size (0.97 mm band) drawn per member: legs, two 90 degree bends of 180 mm centre-line radius as true arcs, top rail; the cross rail between the leg faces with the visible half of each saddle joint as a chevron. Front: the near leg and bend end-on, the far parts and the cross rail hidden behind them; plan: the top rail and the two bends seen from above, ending in the leg tubes' semicircles.",
+            "de": "Der Bügel in wahrer Größe (Band 0,97 mm) je Stab gezeichnet: Beine, zwei 90-Grad-Bögen mit 180 mm Mittellinienradius als wahre Kreisbögen, Oberholm; der Querholm zwischen den Beinflächen mit der sichtbaren Hälfte jedes Sattelstoßes als Winkel. Ansicht: das nahe Bein und der nahe Bogen von vorn, die fernen Teile und der Querholm dahinter verdeckt; Grundriss: Oberholm und die zwei Bögen von oben, mit den Halbkreisen der Beinrohre als Enden."
           },
           "retained": {
-            "en": "Real tube 48.3 mm, bend radius 0.18 m, cross rail 0.40 m, weld collars, bend tangents, ground collars. True 48.3 mm tube width in both views.",
-            "de": "Reales Rohr 48,3 mm, Biegeradius 0,18 m, Querholm 0,40 m, Schweißkragen, Biegetangenten, Bodenkragen. Wahre Rohrstärke von 48,3 mm in beiden Ansichten."
+            "en": "Tube 48.3 mm, bend radius 180 mm, cross rail at 400 mm, saddle joints, bend tangents (as the joints of the pieces).",
+            "de": "Rohr 48,3 mm, Biegeradius 180 mm, Querholm auf 400 mm, Sattelstöße, Biegetangenten (als Stöße der Stücke)."
           },
           "merged": {
-            "en": "Weld collar and tube wall form one region each.",
-            "de": "Schweißkragen und Rohrwand bilden je eine Region."
+            "en": "Tube wall and zinc coat are one filled band.",
+            "de": "Rohrwand und Zinkschicht sind ein gefülltes Band."
           },
           "omitted": {
-            "en": "Zinc spangle texture, bolted footing detail.",
-            "de": "Zinkblumen-Textur, Fundamentschrauben."
+            "en": "Fillet welds and vent holes (below 0.15 mm on paper), the 0.3 m embedded leg ends, hidden parts in front and plan.",
+            "de": "Kehlnähte und Entlüftungsbohrungen (unter 0,15 mm auf dem Papier), die 0,3 m einbetonierten Beinenden, verdeckte Teile in Ansicht und Grundriss."
           },
           "thinElements": {
-            "en": "Weld collars and tangent lines are 0.13-0.18 mm strokes across the 0.97 mm tube.",
-            "de": "Schweißkragen und Tangentenlinien sind 0,13-0,18-mm-Striche quer zum 0,97-mm-Rohr."
+            "en": "The weld chevrons are 0.18 mm detail strokes on the 0.97 mm tube.",
+            "de": "Die Nahtwinkel sind Detailstriche von 0,18 mm auf dem 0,97-mm-Rohr."
           },
           "hatching": {
             "en": "None; the tube is narrower than any hatch spacing.",
             "de": "Keine; das Rohr ist schmaler als jeder Schraffurabstand."
           },
           "styles": {
-            "en": "Tone 0.45; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm, ground 0.5 mm.",
-            "de": "Ton 0,45; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm, Boden 0,5 mm."
+            "en": "Tone 0.45; body pen 0.35 mm, detail 0.18 mm, ground 0.5 mm.",
+            "de": "Ton 0,45; Körperstift 0,35 mm, Detail 0,18 mm, Boden 0,5 mm."
           },
           "overlays": {
-            "en": "Collar lines and bend tangents carry the region of the tube they cross.",
-            "de": "Kragen- und Tangentenlinien tragen die Region des Rohrs, das sie queren."
+            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
+            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
           }
         }
       }
@@ -1396,7 +1323,7 @@
               "filled": false,
               "tone": 0.5,
               "kind": "path",
-              "d": "M -0.375 0 L -0.375 0.55 C -0.375 0.72 -0.25 0.8 0 0.8 C 0.25 0.8 0.375 0.72 0.375 0.55 L 0.375 0"
+              "d": "M -0.375 0 L -0.375 0.59585 A 0.20415 0.20415 0 0 1 -0.17085 0.8 L 0.17085 0.8 A 0.20415 0.20415 0 0 1 0.375 0.59585 L 0.375 0"
             },
             {
               "id": "hoop-inner",
@@ -1406,7 +1333,7 @@
               "filled": false,
               "tone": 0.5,
               "kind": "path",
-              "d": "M -0.3267 0 L -0.3267 0.55 C -0.3267 0.69 -0.22 0.7517 0 0.7517 C 0.22 0.7517 0.3267 0.69 0.3267 0.55 L 0.3267 0"
+              "d": "M -0.3267 0 L -0.3267 0.59585 A 0.15585 0.15585 0 0 1 -0.17085 0.7517 L 0.17085 0.7517 A 0.15585 0.15585 0 0 1 0.3267 0.59585 L 0.3267 0"
             },
             {
               "id": "cross-bar",
@@ -1417,7 +1344,7 @@
               "tone": 0.5,
               "kind": "rect",
               "x": -0.3267,
-              "y": 0.37,
+              "y": 0.37585,
               "w": 0.6534,
               "h": 0.0483
             }
@@ -1431,7 +1358,7 @@
               "filled": true,
               "tone": 0.85,
               "kind": "rect",
-              "x": -0.0242,
+              "x": -0.02415,
               "y": 0,
               "w": 0.0483,
               "h": 0.8,
@@ -1447,12 +1374,12 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.0242,
-                  0.37
+                  -0.02415,
+                  0.4
                 ],
                 [
-                  0.0242,
-                  0.37
+                  0.02415,
+                  0.4
                 ]
               ],
               "closed": false
@@ -1468,7 +1395,7 @@
               "tone": 0.85,
               "kind": "rect",
               "x": -0.375,
-              "y": -0.0242,
+              "y": -0.02415,
               "w": 0.75,
               "h": 0.0483
             },
@@ -1480,7 +1407,7 @@
               "filled": true,
               "tone": 0.85,
               "kind": "ellipse",
-              "cx": -0.3508,
+              "cx": -0.35085,
               "cy": 0,
               "rx": 0.0133,
               "ry": 0.0133
@@ -1493,7 +1420,7 @@
               "filled": true,
               "tone": 0.85,
               "kind": "ellipse",
-              "cx": 0.3508,
+              "cx": 0.35085,
               "cy": 0,
               "rx": 0.0133,
               "ry": 0.0133
@@ -2209,188 +2136,139 @@
         "denominator": 50,
         "body": [
           {
-            "id": "hoop",
-            "kind": "loft",
-            "bone": "hoop",
+            "id": "leg-left",
+            "kind": "revolve",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "sections": [
-              {
-                "at": [-0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.348604, 0.624008, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5376906623354378, 0.45923120945475615, 0.5376906623354378, -0.45923120945475615]
-              },
-              {
-                "at": [-0.34201, 0.651473, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5720640068924691, 0.4156288297485307, 0.5720640068924691, -0.4156288297485307]
-              },
-              {
-                "at": [-0.331201, 0.677568, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6029103866164223, 0.36946396009629456, 0.6029103866164223, -0.36946396009629456]
-              },
-              {
-                "at": [-0.316443, 0.701651, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6300396233188369, 0.32102122227083096, 0.6300396233188369, -0.32102122227083096]
-              },
-              {
-                "at": [-0.298099, 0.723129, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.653284456234056, 0.27059928185967863, 0.653284456234056, -0.27059928185967863]
-              },
-              {
-                "at": [-0.276621, 0.741473, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6725015732374661, 0.21850900689246905, 0.6725015732374661, -0.21850900689246905]
-              },
-              {
-                "at": [-0.252538, 0.756231, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6875724944124011, 0.16507155123614928, 0.6875724944124011, -0.16507155123614928]
-              },
-              {
-                "at": [-0.226443, 0.76704, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6984043025182279, 0.11061637457459765, 0.6984043025182279, -0.11061637457459765]
-              },
-              {
-                "at": [-0.198978, 0.773634, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7049302158560321, 0.055479211180116436, 0.7049302158560321, -0.055479211180116436]
-              },
-              {
-                "at": [-0.17082, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.0, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.17082, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.198978, 0.773634, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7049302158560321, -0.055479211180116436, 0.7049302158560321, 0.055479211180116436]
-              },
-              {
-                "at": [0.226443, 0.76704, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6984043025182279, -0.11061637457459765, 0.6984043025182279, 0.11061637457459765]
-              },
-              {
-                "at": [0.252538, 0.756231, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6875724944124011, -0.16507155123614928, 0.6875724944124011, 0.16507155123614928]
-              },
-              {
-                "at": [0.276621, 0.741473, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6725015732374661, -0.21850900689246905, 0.6725015732374661, 0.21850900689246905]
-              },
-              {
-                "at": [0.298099, 0.723129, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.653284456234056, -0.27059928185967863, 0.653284456234056, 0.27059928185967863]
-              },
-              {
-                "at": [0.316443, 0.701651, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6300396233188369, -0.32102122227083096, 0.6300396233188369, 0.32102122227083096]
-              },
-              {
-                "at": [0.331201, 0.677568, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6029103866164223, -0.36946396009629456, 0.6029103866164223, 0.36946396009629456]
-              },
-              {
-                "at": [0.34201, 0.651473, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5720640068924691, -0.4156288297485307, 0.5720640068924691, 0.4156288297485307]
-              },
-              {
-                "at": [0.348604, 0.624008, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5376906623354378, -0.45923120945475615, 0.5376906623354378, 0.45923120945475615]
-              },
-              {
-                "at": [0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              },
-              {
-                "at": [0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              }
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "bend-left",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.023686, 0.184711],
+              [0.022312, 0.189242],
+              [0.02008, 0.193417],
+              [0.017077, 0.197077],
+              [0.013417, 0.20008],
+              [0.009242, 0.202312],
+              [0.004711, 0.203686],
+              [0.0, 0.20415],
+              [-0.004711, 0.203686],
+              [-0.009242, 0.202312],
+              [-0.013417, 0.20008],
+              [-0.017077, 0.197077],
+              [-0.02008, 0.193417],
+              [-0.022312, 0.189242],
+              [-0.023686, 0.184711],
+              [-0.02415, 0.18],
+              [-0.023686, 0.175289],
+              [-0.022312, 0.170758],
+              [-0.02008, 0.166583],
+              [-0.017077, 0.162923],
+              [-0.013417, 0.15992],
+              [-0.009242, 0.157688],
+              [-0.004711, 0.156314],
+              [-0.0, 0.15585],
+              [0.004711, 0.156314],
+              [0.009242, 0.157688],
+              [0.013417, 0.15992],
+              [0.017077, 0.162923],
+              [0.02008, 0.166583],
+              [0.022312, 0.170758],
+              [0.023686, 0.175289],
+              [0.02415, 0.18]
             ],
-            "capStart": true,
-            "capEnd": true
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
           },
           {
-            "id": "ground-collar-l",
+            "id": "top-rail",
             "kind": "revolve",
-            "bone": "hoop",
+            "bone": "top-rail",
             "material": "galv-steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.0242], [0.002, 0.02465], [0.006, 0.02465], [0.008, 0.0242], [0.008, 0.0], [0.0, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0, 0.0]
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0]
           },
           {
-            "id": "ground-collar-r",
+            "id": "bend-right",
             "kind": "revolve",
-            "bone": "hoop",
+            "bone": "bend-right",
             "material": "galv-steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.0242], [0.002, 0.02465], [0.006, 0.02465], [0.008, 0.0242], [0.008, 0.0], [0.0, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0, 0.0]
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.023686, 0.184711],
+              [0.022312, 0.189242],
+              [0.02008, 0.193417],
+              [0.017077, 0.197077],
+              [0.013417, 0.20008],
+              [0.009242, 0.202312],
+              [0.004711, 0.203686],
+              [0.0, 0.20415],
+              [-0.004711, 0.203686],
+              [-0.009242, 0.202312],
+              [-0.013417, 0.20008],
+              [-0.017077, 0.197077],
+              [-0.02008, 0.193417],
+              [-0.022312, 0.189242],
+              [-0.023686, 0.184711],
+              [-0.02415, 0.18],
+              [-0.023686, 0.175289],
+              [-0.022312, 0.170758],
+              [-0.02008, 0.166583],
+              [-0.017077, 0.162923],
+              [-0.013417, 0.15992],
+              [-0.009242, 0.157688],
+              [-0.004711, 0.156314],
+              [-0.0, 0.15585],
+              [0.004711, 0.156314],
+              [0.009242, 0.157688],
+              [0.013417, 0.15992],
+              [0.017077, 0.162923],
+              [0.02008, 0.166583],
+              [0.022312, 0.170758],
+              [0.023686, 0.175289],
+              [0.02415, 0.18]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "crossbar",
@@ -2399,393 +2277,439 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0, 0.02415], [0.70164, 0.02415]],
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
             "axis": [1, 0, 0],
-            "origin": [-0.35082, 0.0, 0.0]
-          },
-          {
-            "id": "weld-collar-l",
-            "kind": "revolve",
-            "bone": "crossbar",
-            "material": "galv-steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[-0.0045, 0.0], [-0.0045, 0.0242], [-0.0025, 0.02465], [0.0025, 0.02465], [0.0045, 0.0242], [0.0045, 0.0], [-0.0045, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.31265, 0.0, 0.0]
-          },
-          {
-            "id": "weld-collar-r",
-            "kind": "revolve",
-            "bone": "crossbar",
-            "material": "galv-steel",
-            "role": "detail",
-            "tone": 0.3,
-            "profile": [[-0.0045, 0.0], [-0.0045, 0.0242], [-0.0025, 0.02465], [0.0025, 0.02465], [0.0045, 0.0242], [0.0045, 0.0], [-0.0045, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.31265, 0.0, 0.0]
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
-            "id": "th-hoop",
-            "of": "hoop",
+            "id": "th-leg-left",
+            "of": "leg-left",
             "region": "hoop-galv"
           },
           {
-            "id": "th-ground-collar-l",
-            "of": "ground-collar-l",
+            "id": "th-bend-left",
+            "of": "bend-left",
             "region": "hoop-galv"
           },
           {
-            "id": "th-ground-collar-r",
-            "of": "ground-collar-r",
+            "id": "th-top-rail",
+            "of": "top-rail",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-bend-right",
+            "of": "bend-right",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-leg-right",
+            "of": "leg-right",
             "region": "hoop-galv"
           },
           {
             "id": "th-crossbar",
             "of": "crossbar",
             "region": "crossbar-galv"
-          },
-          {
-            "id": "th-weld-collar-l",
-            "of": "weld-collar-l",
-            "region": "crossbar-galv"
-          },
-          {
-            "id": "th-weld-collar-r",
-            "of": "weld-collar-r",
-            "region": "crossbar-galv"
           }
         ],
         "structure": [
           {
-            "id": "root-l",
+            "id": "m-leg-left",
             "kind": "revolve",
-            "bone": "stand",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.0483, 0.0193], [0.0483, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0, 0.0],
-            "member": "stand",
-            "part": "member"
-          },
-          {
-            "id": "leg-l",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.54755, 0.0193], [0.54755, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0483, 0.0],
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "root-r",
-            "kind": "revolve",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.0483, 0.0193], [0.0483, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0, 0.0],
-            "member": "stand",
-            "part": "member"
-          },
-          {
-            "id": "leg-r",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.54755, 0.0193], [0.54755, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0483, 0.0],
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-l-a",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [0.005823, 0.201733],
-              [0.01125, 0.199486],
-              [0.01591, 0.19591],
-              [0.019486, 0.19125],
-              [0.021733, 0.185823],
-              [0.0225, 0.18],
-              [0.021733, 0.174177],
-              [0.019486, 0.16875],
-              [0.01591, 0.16409],
-              [0.01125, 0.160514],
-              [0.005823, 0.158267],
-              [0.0, 0.1575],
-              [0.0, 0.1607],
-              [0.004995, 0.161358],
-              [0.00965, 0.163286],
-              [0.013647, 0.166353],
-              [0.016714, 0.17035],
-              [0.018642, 0.175005],
-              [0.0193, 0.18],
-              [0.018642, 0.184995],
-              [0.016714, 0.18965],
-              [0.013647, 0.193647],
-              [0.00965, 0.196714],
-              [0.004995, 0.198642],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [-0.17082, 0.59585, 0.0],
-              "rotation": [0.0, 0.0, 0.707107, 0.707107]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-l-b",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [-0.005823, 0.201733],
-              [-0.01125, 0.199486],
-              [-0.01591, 0.19591],
-              [-0.019486, 0.19125],
-              [-0.021733, 0.185823],
-              [-0.0225, 0.18],
-              [-0.021733, 0.174177],
-              [-0.019486, 0.16875],
-              [-0.01591, 0.16409],
-              [-0.01125, 0.160514],
-              [-0.005823, 0.158267],
-              [-0.0, 0.1575],
-              [-0.0, 0.1607],
-              [-0.004995, 0.161358],
-              [-0.00965, 0.163286],
-              [-0.013647, 0.166353],
-              [-0.016714, 0.17035],
-              [-0.018642, 0.175005],
-              [-0.0193, 0.18],
-              [-0.018642, 0.184995],
-              [-0.016714, 0.18965],
-              [-0.013647, 0.193647],
-              [-0.00965, 0.196714],
-              [-0.004995, 0.198642],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [-0.17082, 0.59585, 0.0],
-              "rotation": [0.0, 0.0, 0.707107, 0.707107]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-r-a",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [0.005823, 0.201733],
-              [0.01125, 0.199486],
-              [0.01591, 0.19591],
-              [0.019486, 0.19125],
-              [0.021733, 0.185823],
-              [0.0225, 0.18],
-              [0.021733, 0.174177],
-              [0.019486, 0.16875],
-              [0.01591, 0.16409],
-              [0.01125, 0.160514],
-              [0.005823, 0.158267],
-              [0.0, 0.1575],
-              [0.0, 0.1607],
-              [0.004995, 0.161358],
-              [0.00965, 0.163286],
-              [0.013647, 0.166353],
-              [0.016714, 0.17035],
-              [0.018642, 0.175005],
-              [0.0193, 0.18],
-              [0.018642, 0.184995],
-              [0.016714, 0.18965],
-              [0.013647, 0.193647],
-              [0.00965, 0.196714],
-              [0.004995, 0.198642],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [0.17082, 0.59585, 0.0]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-r-b",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [-0.005823, 0.201733],
-              [-0.01125, 0.199486],
-              [-0.01591, 0.19591],
-              [-0.019486, 0.19125],
-              [-0.021733, 0.185823],
-              [-0.0225, 0.18],
-              [-0.021733, 0.174177],
-              [-0.019486, 0.16875],
-              [-0.01591, 0.16409],
-              [-0.01125, 0.160514],
-              [-0.005823, 0.158267],
-              [-0.0, 0.1575],
-              [-0.0, 0.1607],
-              [-0.004995, 0.161358],
-              [-0.00965, 0.163286],
-              [-0.013647, 0.166353],
-              [-0.016714, 0.17035],
-              [-0.018642, 0.175005],
-              [-0.0193, 0.18],
-              [-0.018642, 0.184995],
-              [-0.016714, 0.18965],
-              [-0.013647, 0.193647],
-              [-0.00965, 0.196714],
-              [-0.004995, 0.198642],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [0.17082, 0.59585, 0.0]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "top",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.34164, 0.0193], [0.34164, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
             "axis": [1, 0, 0],
-            "origin": [-0.17082, 0.77585, 0.0],
-            "member": "hoop",
+            "origin": [0.0, 0.0, 0.0],
+            "member": "leg-left",
             "part": "member"
           },
           {
-            "id": "crossbar-tube",
+            "id": "m-bend-left-out",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.0, 0.20415],
+              [0.004711, 0.203686],
+              [0.009242, 0.202312],
+              [0.013417, 0.20008],
+              [0.017077, 0.197077],
+              [0.02008, 0.193417],
+              [0.022312, 0.189242],
+              [0.023686, 0.184711],
+              [0.02415, 0.18],
+              [0.023686, 0.175289],
+              [0.022312, 0.170758],
+              [0.02008, 0.166583],
+              [0.017077, 0.162923],
+              [0.013417, 0.15992],
+              [0.009242, 0.157688],
+              [0.004711, 0.156314],
+              [0.0, 0.15585],
+              [0.0, 0.15905],
+              [0.004087, 0.159453],
+              [0.008017, 0.160645],
+              [0.011639, 0.162581],
+              [0.014814, 0.165186],
+              [0.017419, 0.168361],
+              [0.019355, 0.171983],
+              [0.020547, 0.175913],
+              [0.02095, 0.18],
+              [0.020547, 0.184087],
+              [0.019355, 0.188017],
+              [0.017419, 0.191639],
+              [0.014814, 0.194814],
+              [0.011639, 0.197419],
+              [0.008017, 0.199355],
+              [0.004087, 0.200547],
+              [0.0, 0.20095],
+              [0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-left",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-left-in",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [-0.0, 0.20415],
+              [-0.004711, 0.203686],
+              [-0.009242, 0.202312],
+              [-0.013417, 0.20008],
+              [-0.017077, 0.197077],
+              [-0.02008, 0.193417],
+              [-0.022312, 0.189242],
+              [-0.023686, 0.184711],
+              [-0.02415, 0.18],
+              [-0.023686, 0.175289],
+              [-0.022312, 0.170758],
+              [-0.02008, 0.166583],
+              [-0.017077, 0.162923],
+              [-0.013417, 0.15992],
+              [-0.009242, 0.157688],
+              [-0.004711, 0.156314],
+              [-0.0, 0.15585],
+              [-0.0, 0.15905],
+              [-0.004087, 0.159453],
+              [-0.008017, 0.160645],
+              [-0.011639, 0.162581],
+              [-0.014814, 0.165186],
+              [-0.017419, 0.168361],
+              [-0.019355, 0.171983],
+              [-0.020547, 0.175913],
+              [-0.02095, 0.18],
+              [-0.020547, 0.184087],
+              [-0.019355, 0.188017],
+              [-0.017419, 0.191639],
+              [-0.014814, 0.194814],
+              [-0.011639, 0.197419],
+              [-0.008017, 0.199355],
+              [-0.004087, 0.200547],
+              [-0.0, 0.20095],
+              [-0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-left",
+            "part": "member"
+          },
+          {
+            "id": "m-top-rail",
+            "kind": "revolve",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.02095], [0.0, 0.02095]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "top-rail",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-right-out",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.0, 0.20415],
+              [0.004711, 0.203686],
+              [0.009242, 0.202312],
+              [0.013417, 0.20008],
+              [0.017077, 0.197077],
+              [0.02008, 0.193417],
+              [0.022312, 0.189242],
+              [0.023686, 0.184711],
+              [0.02415, 0.18],
+              [0.023686, 0.175289],
+              [0.022312, 0.170758],
+              [0.02008, 0.166583],
+              [0.017077, 0.162923],
+              [0.013417, 0.15992],
+              [0.009242, 0.157688],
+              [0.004711, 0.156314],
+              [0.0, 0.15585],
+              [0.0, 0.15905],
+              [0.004087, 0.159453],
+              [0.008017, 0.160645],
+              [0.011639, 0.162581],
+              [0.014814, 0.165186],
+              [0.017419, 0.168361],
+              [0.019355, 0.171983],
+              [0.020547, 0.175913],
+              [0.02095, 0.18],
+              [0.020547, 0.184087],
+              [0.019355, 0.188017],
+              [0.017419, 0.191639],
+              [0.014814, 0.194814],
+              [0.011639, 0.197419],
+              [0.008017, 0.199355],
+              [0.004087, 0.200547],
+              [0.0, 0.20095],
+              [0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-right-in",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [-0.0, 0.20415],
+              [-0.004711, 0.203686],
+              [-0.009242, 0.202312],
+              [-0.013417, 0.20008],
+              [-0.017077, 0.197077],
+              [-0.02008, 0.193417],
+              [-0.022312, 0.189242],
+              [-0.023686, 0.184711],
+              [-0.02415, 0.18],
+              [-0.023686, 0.175289],
+              [-0.022312, 0.170758],
+              [-0.02008, 0.166583],
+              [-0.017077, 0.162923],
+              [-0.013417, 0.15992],
+              [-0.009242, 0.157688],
+              [-0.004711, 0.156314],
+              [-0.0, 0.15585],
+              [-0.0, 0.15905],
+              [-0.004087, 0.159453],
+              [-0.008017, 0.160645],
+              [-0.011639, 0.162581],
+              [-0.014814, 0.165186],
+              [-0.017419, 0.168361],
+              [-0.019355, 0.171983],
+              [-0.020547, 0.175913],
+              [-0.02095, 0.18],
+              [-0.020547, 0.184087],
+              [-0.019355, 0.188017],
+              [-0.017419, 0.191639],
+              [-0.014814, 0.194814],
+              [-0.011639, 0.197419],
+              [-0.008017, 0.199355],
+              [-0.004087, 0.200547],
+              [-0.0, 0.20095],
+              [-0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "leg-right",
+            "part": "member"
+          },
+          {
+            "id": "m-crossbar",
             "kind": "revolve",
             "bone": "crossbar",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.6533, 0.0193], [0.6533, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.02095], [0.0, 0.02095]],
             "axis": [1, 0, 0],
-            "origin": [-0.32665, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0],
             "member": "crossbar",
             "part": "member"
           },
           {
-            "id": "hoop-joint-l",
-            "of": "ground-collar-l",
-            "member": "hoop",
+            "id": "joint-bend-left-low",
+            "kind": "ellipsoid",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "bend-left",
             "part": "joint"
           },
           {
-            "id": "hoop-joint-r",
-            "of": "ground-collar-r",
-            "member": "hoop",
+            "id": "joint-bend-left-high",
+            "kind": "ellipsoid",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "top-rail",
             "part": "joint"
           },
           {
-            "id": "weld-joint-l",
-            "of": "weld-collar-l",
+            "id": "joint-bend-right-high",
+            "kind": "ellipsoid",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "bend-right",
+            "part": "joint"
+          },
+          {
+            "id": "joint-bend-right-low",
+            "kind": "ellipsoid",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "leg-right",
+            "part": "joint"
+          },
+          {
+            "id": "joint-weld-left",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.02415, 0.0, 0.0]
+            },
             "member": "crossbar",
             "part": "joint"
           },
           {
-            "id": "weld-joint-r",
-            "of": "weld-collar-r",
+            "id": "joint-weld-right",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.029, 0.029, 0.029],
+            "transform": {
+              "translation": [0.67755, 0.0, 0.0]
+            },
             "member": "crossbar",
             "part": "joint"
           },
           {
-            "id": "support-leg-left-block",
+            "id": "support-leg-left",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.015, 0.0483],
+            "size": [0.0075, 0.0633, 0.0633],
             "transform": {
-              "translation": [-0.35082, -0.0075, 0.0]
+              "translation": [-0.00375, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-left",
             "part": "support",
             "anchor": "leg-left"
           },
           {
-            "id": "support-leg-right-block",
+            "id": "support-leg-right",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-right",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.015, 0.0483],
+            "size": [0.0075, 0.0633, 0.0633],
             "transform": {
-              "translation": [0.35082, -0.0075, 0.0]
+              "translation": [0.5996, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-right",
             "part": "support",
             "anchor": "leg-right"
           }
         ],
         "decisions": [
           {
-            "en": "Body: the 48.3 mm tube hoop as one loft of 23 round sections along its real centre line (vertical legs to 596 mm, two 180 mm radius bends, 342 mm top rail) instead of two halves, ground collars with a chamfered edge at the foot, the 48.3 mm cross rail as a cylinder through to the leg axes (its ends are buried in the legs, as welded) and two chamfered weld rings on it. The tube is modelled as the closed outer envelope: its 3.2 mm wall is below the 7.5 mm feature and no drawing shows the bore.",
-            "de": "Körper: der Bügel aus Rohr 48,3 mm als eine Loft aus 23 runden Schnitten entlang der wirklichen Mittellinie (senkrechte Beine bis 596 mm, zwei Bögen mit 180 mm Radius, 342 mm Oberholm) statt aus zwei Hälften, Bodenmanschetten mit gefaster Kante am Fuß, der Querholm 48,3 mm als Zylinder bis zu den Beinachsen (seine Enden sind in den Beinen begraben wie angeschweißt) und zwei gefaste Schweißringe darauf. Das Rohr ist als geschlossene Außenhülle modelliert: seine Wand von 3,2 mm liegt unter der Einzelheit 7,5 mm, und keine Zeichnung zeigt die Bohrung."
+            "en": "Body: the real assembly, one cold-bent CHS 48.3 x 3.2 hoop and one welded cross rail, on the six bones of the rig: the legs (0 to 596 mm) and the 342 mm top rail as true cylinders, the two bends as true 90 degree tori of 180 mm centre-line radius (round 32-point section), the cross rail at 400 mm from leg axis to leg axis so that its union with the legs is the true saddle of an equal-diameter T joint. The leg ends at the ground are section faces: the tube continues 0.3 m into the footing. The fillet welds (about 5 mm) and the 10 mm galvanising vent holes are below the 7.5 mm feature and not modelled; the sealed tube is its outer envelope (C31).",
+            "de": "Körper: die reale Baugruppe, ein kaltgebogener Bügel aus KHP 48,3 x 3,2 und ein angeschweißter Querholm, auf den sechs Knochen des Rigs: die Beine (0 bis 596 mm) und der 342 mm lange Oberholm als wahre Zylinder, die zwei Bögen als wahre 90-Grad-Tori mit 180 mm Mittellinienradius (runder Schnitt mit 32 Punkten), der Querholm auf 400 mm von Beinachse zu Beinachse, so dass seine Vereinigung mit den Beinen der wahre Sattel eines T-Stoßes gleicher Durchmesser ist. Die Beinenden am Boden sind Schnittflächen: das Rohr geht 0,3 m ins Fundament weiter. Die Kehlnähte (etwa 5 mm) und die Entlüftungsbohrungen von 10 mm für das Verzinken liegen unter der Einzelheit 7,5 mm und sind nicht modelliert; das geschlossene Rohr ist seine Außenhülle (C31)."
           },
           {
-            "en": "Thermal: both regions are exactly body surfaces (single 3.2 mm steel wall layer, so one surface solid each, B2): hoop-galv = hoop loft and ground collars, crossbar-galv = cross rail and weld rings, referenced; there are no emitters and no hidden regions.",
-            "de": "Thermisch: beide Regionen sind genau Körperflächen (eine Stahlwand von 3,2 mm, also je ein Oberflächenkörper, B2): hoop-galv = Bügelloft und Bodenmanschetten, crossbar-galv = Querholm und Schweißringe, referenziert; es gibt keine Emitter und keine verdeckten Regionen."
+            "en": "Thermal: both regions are the galvanised outer surfaces (one 3.2 mm steel wall layer, so one surface each, B2), referenced from the six body solids; no hidden regions, no emitters.",
+            "de": "Thermisch: beide Regionen sind die verzinkten Außenflächen (eine Stahlwandschicht von 3,2 mm, also je eine Oberfläche, B2), aus den sechs Körpern referenziert; keine verdeckten Regionen, keine Emitter."
           },
           {
-            "en": "Structure: every member bone is a real hollow tube of 3.2 mm wall, modelled 1.5 mm inside the body envelope (45 mm outer instead of 48.3 mm, so that it does not coincide with the body skin and bury its exposed area; A = 4.3 cm2 instead of 4.6 cm2): the first 48.3 mm of each leg is the fixed-end zone of the stand bone, the legs, four half-ring pieces for the two 180 mm bends (a revolve cannot carry a ring section, so each bend is split on its plane), the top rail and the cross rail between the leg faces. Joints are the ground collars and the weld rings (referenced from the body), supports are two fixed blocks 48.3 x 15 x 48.3 mm under the leg axes at the footing. Masses are distributed along the tubes, so there are no extra mass solids.",
-            "de": "Tragwerk: jede Stabachse ist ein echtes Hohlrohr mit 3,2 mm Wand, 1,5 mm innerhalb der Körperhülle modelliert (45 mm außen statt 48,3 mm, damit es nicht mit der Körperhaut zusammenfällt und deren freie Fläche begräbt; A = 4,3 cm2 statt 4,6 cm2): die ersten 48,3 mm jedes Beins sind die Einspannzone der Standachse, dann die Beine, vier Halbringstücke für die beiden Bögen mit 180 mm Radius (eine Rotation trägt keinen Ringschnitt, daher ist jeder Bogen in seiner Ebene geteilt), der Oberholm und der Querholm zwischen den Beinflächen. Gelenke sind die Bodenmanschetten und die Schweißringe (aus dem Körper referenziert), Auflager sind zwei feste Blöcke 48,3 x 15 x 48,3 mm unter den Beinachsen am Fundament. Die Massen sind entlang der Rohre verteilt, daher gibt es keine zusätzlichen Massenkörper."
+            "en": "Structure: the real hollow CHS 48.3 x 3.2 (A 4.53 cm2, I 11.6 cm4) on every member bone, the bends as two half-ring sweeps each (a revolve profile must be one simple polygon), joints at the four bend tangents and at the two cross rail welds (29 mm nodes), fixed blocks 63 x 7.5 x 63 mm under the leg axes for the embedment in the footing. Masses are spread uniformly along the members (3.64 kg/m with zinc), so there is no concentrated mass solid.",
+            "de": "Tragwerk: das reale Hohlprofil KHP 48,3 x 3,2 (A 4,53 cm2, I 11,6 cm4) an jedem Stabknochen, die Bögen als je zwei Halbring-Rotationen (ein Rotationsprofil muss ein einfaches Polygon sein), Gelenke an den vier Biegetangenten und den zwei Querholmnähten (Knoten 29 mm), feste Blöcke 63 x 7,5 x 63 mm unter den Beinachsen für die Einspannung im Fundament. Die Massen sind gleichmäßig über die Stäbe verteilt (3,64 kg/m mit Zink), daher gibt es keinen Körper für eine Einzelmasse."
           }
         ]
       },
@@ -2794,82 +2718,123 @@
         "denominator": 100,
         "body": [
           {
-            "id": "hoop",
-            "kind": "loft",
-            "bone": "hoop",
+            "id": "leg-left",
+            "kind": "revolve",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "sections": [
-              {
-                "at": [-0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.326705, 0.68585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6123752232700144, 0.353555, 0.6123752232700144, -0.353555]
-              },
-              {
-                "at": [-0.26082, 0.751735, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.683015811027263, 0.18301353498244355, 0.683015811027263, -0.18301353498244355]
-              },
-              {
-                "at": [-0.17082, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.0, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.17082, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
-              },
-              {
-                "at": [0.26082, 0.751735, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6830158110272632, -0.1830135349824434, 0.6830158110272632, 0.1830135349824434]
-              },
-              {
-                "at": [0.326705, 0.68585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6123752232700145, -0.35355499999999995, 0.6123752232700145, 0.35355499999999995]
-              },
-              {
-                "at": [0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              },
-              {
-                "at": [0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              }
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "bend-left",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.023327, 0.18625],
+              [0.020915, 0.192075],
+              [0.017077, 0.197077],
+              [0.012075, 0.200915],
+              [0.00625, 0.203327],
+              [0.0, 0.20415],
+              [-0.00625, 0.203327],
+              [-0.012075, 0.200915],
+              [-0.017077, 0.197077],
+              [-0.020915, 0.192075],
+              [-0.023327, 0.18625],
+              [-0.02415, 0.18],
+              [-0.023327, 0.17375],
+              [-0.020915, 0.167925],
+              [-0.017077, 0.162923],
+              [-0.012075, 0.159085],
+              [-0.00625, 0.156673],
+              [-0.0, 0.15585],
+              [0.00625, 0.156673],
+              [0.012075, 0.159085],
+              [0.017077, 0.162923],
+              [0.020915, 0.167925],
+              [0.023327, 0.17375],
+              [0.02415, 0.18]
             ],
-            "capStart": true,
-            "capEnd": true
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "top-rail",
+            "kind": "revolve",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0]
+          },
+          {
+            "id": "bend-right",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.023327, 0.18625],
+              [0.020915, 0.192075],
+              [0.017077, 0.197077],
+              [0.012075, 0.200915],
+              [0.00625, 0.203327],
+              [0.0, 0.20415],
+              [-0.00625, 0.203327],
+              [-0.012075, 0.200915],
+              [-0.017077, 0.197077],
+              [-0.020915, 0.192075],
+              [-0.023327, 0.18625],
+              [-0.02415, 0.18],
+              [-0.023327, 0.17375],
+              [-0.020915, 0.167925],
+              [-0.017077, 0.162923],
+              [-0.012075, 0.159085],
+              [-0.00625, 0.156673],
+              [-0.0, 0.15585],
+              [0.00625, 0.156673],
+              [0.012075, 0.159085],
+              [0.017077, 0.162923],
+              [0.020915, 0.167925],
+              [0.023327, 0.17375],
+              [0.02415, 0.18]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "crossbar",
@@ -2878,15 +2843,35 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0, 0.02415], [0.6573, 0.02415]],
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
             "axis": [1, 0, 0],
-            "origin": [-0.32865, 0.0, 0.0]
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
-            "id": "th-hoop",
-            "of": "hoop",
+            "id": "th-leg-left",
+            "of": "leg-left",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-bend-left",
+            "of": "bend-left",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-top-rail",
+            "of": "top-rail",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-bend-right",
+            "of": "bend-right",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-leg-right",
+            "of": "leg-right",
             "region": "hoop-galv"
           },
           {
@@ -2897,302 +2882,368 @@
         ],
         "structure": [
           {
-            "id": "root-l",
+            "id": "m-leg-left",
             "kind": "revolve",
-            "bone": "stand",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.0483, 0.0193], [0.0483, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0, 0.0],
-            "member": "stand",
-            "part": "member"
-          },
-          {
-            "id": "leg-l",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.54755, 0.0193], [0.54755, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0483, 0.0],
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "root-r",
-            "kind": "revolve",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.0483, 0.0193], [0.0483, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0, 0.0],
-            "member": "stand",
-            "part": "member"
-          },
-          {
-            "id": "leg-r",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.54755, 0.0193], [0.54755, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0483, 0.0],
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-l-a",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [0.00861, 0.200787],
-              [0.01591, 0.19591],
-              [0.020787, 0.18861],
-              [0.0225, 0.18],
-              [0.020787, 0.17139],
-              [0.01591, 0.16409],
-              [0.00861, 0.159213],
-              [0.0, 0.1575],
-              [0.0, 0.1607],
-              [0.007386, 0.162169],
-              [0.013647, 0.166353],
-              [0.017831, 0.172614],
-              [0.0193, 0.18],
-              [0.017831, 0.187386],
-              [0.013647, 0.193647],
-              [0.007386, 0.197831],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [-0.17082, 0.59585, 0.0],
-              "rotation": [0.0, 0.0, 0.707107, 0.707107]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-l-b",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [-0.00861, 0.200787],
-              [-0.01591, 0.19591],
-              [-0.020787, 0.18861],
-              [-0.0225, 0.18],
-              [-0.020787, 0.17139],
-              [-0.01591, 0.16409],
-              [-0.00861, 0.159213],
-              [-0.0, 0.1575],
-              [-0.0, 0.1607],
-              [-0.007386, 0.162169],
-              [-0.013647, 0.166353],
-              [-0.017831, 0.172614],
-              [-0.0193, 0.18],
-              [-0.017831, 0.187386],
-              [-0.013647, 0.193647],
-              [-0.007386, 0.197831],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [-0.17082, 0.59585, 0.0],
-              "rotation": [0.0, 0.0, 0.707107, 0.707107]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-r-a",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [0.00861, 0.200787],
-              [0.01591, 0.19591],
-              [0.020787, 0.18861],
-              [0.0225, 0.18],
-              [0.020787, 0.17139],
-              [0.01591, 0.16409],
-              [0.00861, 0.159213],
-              [0.0, 0.1575],
-              [0.0, 0.1607],
-              [0.007386, 0.162169],
-              [0.013647, 0.166353],
-              [0.017831, 0.172614],
-              [0.0193, 0.18],
-              [0.017831, 0.187386],
-              [0.013647, 0.193647],
-              [0.007386, 0.197831],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [0.17082, 0.59585, 0.0]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "bend-r-b",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [0.0, 0.2025],
-              [-0.00861, 0.200787],
-              [-0.01591, 0.19591],
-              [-0.020787, 0.18861],
-              [-0.0225, 0.18],
-              [-0.020787, 0.17139],
-              [-0.01591, 0.16409],
-              [-0.00861, 0.159213],
-              [-0.0, 0.1575],
-              [-0.0, 0.1607],
-              [-0.007386, 0.162169],
-              [-0.013647, 0.166353],
-              [-0.017831, 0.172614],
-              [-0.0193, 0.18],
-              [-0.017831, 0.187386],
-              [-0.013647, 0.193647],
-              [-0.007386, 0.197831],
-              [0.0, 0.1993],
-              [0.0, 0.2025]
-            ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
-            "sweepRad": 1.570796,
-            "transform": {
-              "translation": [0.17082, 0.59585, 0.0]
-            },
-            "member": "hoop",
-            "part": "member"
-          },
-          {
-            "id": "top",
-            "kind": "revolve",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.34164, 0.0193], [0.34164, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
             "axis": [1, 0, 0],
-            "origin": [-0.17082, 0.77585, 0.0],
-            "member": "hoop",
+            "origin": [0.0, 0.0, 0.0],
+            "member": "leg-left",
             "part": "member"
           },
           {
-            "id": "crossbar-tube",
+            "id": "m-bend-left-out",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.0, 0.20415],
+              [0.00625, 0.203327],
+              [0.012075, 0.200915],
+              [0.017077, 0.197077],
+              [0.020915, 0.192075],
+              [0.023327, 0.18625],
+              [0.02415, 0.18],
+              [0.023327, 0.17375],
+              [0.020915, 0.167925],
+              [0.017077, 0.162923],
+              [0.012075, 0.159085],
+              [0.00625, 0.156673],
+              [0.0, 0.15585],
+              [0.0, 0.15905],
+              [0.005422, 0.159764],
+              [0.010475, 0.161857],
+              [0.014814, 0.165186],
+              [0.018143, 0.169525],
+              [0.020236, 0.174578],
+              [0.02095, 0.18],
+              [0.020236, 0.185422],
+              [0.018143, 0.190475],
+              [0.014814, 0.194814],
+              [0.010475, 0.198143],
+              [0.005422, 0.200236],
+              [0.0, 0.20095],
+              [0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-left",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-left-in",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [-0.0, 0.20415],
+              [-0.00625, 0.203327],
+              [-0.012075, 0.200915],
+              [-0.017077, 0.197077],
+              [-0.020915, 0.192075],
+              [-0.023327, 0.18625],
+              [-0.02415, 0.18],
+              [-0.023327, 0.17375],
+              [-0.020915, 0.167925],
+              [-0.017077, 0.162923],
+              [-0.012075, 0.159085],
+              [-0.00625, 0.156673],
+              [-0.0, 0.15585],
+              [-0.0, 0.15905],
+              [-0.005422, 0.159764],
+              [-0.010475, 0.161857],
+              [-0.014814, 0.165186],
+              [-0.018143, 0.169525],
+              [-0.020236, 0.174578],
+              [-0.02095, 0.18],
+              [-0.020236, 0.185422],
+              [-0.018143, 0.190475],
+              [-0.014814, 0.194814],
+              [-0.010475, 0.198143],
+              [-0.005422, 0.200236],
+              [-0.0, 0.20095],
+              [-0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-left",
+            "part": "member"
+          },
+          {
+            "id": "m-top-rail",
+            "kind": "revolve",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.02095], [0.0, 0.02095]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "top-rail",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-right-out",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.0, 0.20415],
+              [0.00625, 0.203327],
+              [0.012075, 0.200915],
+              [0.017077, 0.197077],
+              [0.020915, 0.192075],
+              [0.023327, 0.18625],
+              [0.02415, 0.18],
+              [0.023327, 0.17375],
+              [0.020915, 0.167925],
+              [0.017077, 0.162923],
+              [0.012075, 0.159085],
+              [0.00625, 0.156673],
+              [0.0, 0.15585],
+              [0.0, 0.15905],
+              [0.005422, 0.159764],
+              [0.010475, 0.161857],
+              [0.014814, 0.165186],
+              [0.018143, 0.169525],
+              [0.020236, 0.174578],
+              [0.02095, 0.18],
+              [0.020236, 0.185422],
+              [0.018143, 0.190475],
+              [0.014814, 0.194814],
+              [0.010475, 0.198143],
+              [0.005422, 0.200236],
+              [0.0, 0.20095],
+              [0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-bend-right-in",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [-0.0, 0.20415],
+              [-0.00625, 0.203327],
+              [-0.012075, 0.200915],
+              [-0.017077, 0.197077],
+              [-0.020915, 0.192075],
+              [-0.023327, 0.18625],
+              [-0.02415, 0.18],
+              [-0.023327, 0.17375],
+              [-0.020915, 0.167925],
+              [-0.017077, 0.162923],
+              [-0.012075, 0.159085],
+              [-0.00625, 0.156673],
+              [-0.0, 0.15585],
+              [-0.0, 0.15905],
+              [-0.005422, 0.159764],
+              [-0.010475, 0.161857],
+              [-0.014814, 0.165186],
+              [-0.018143, 0.169525],
+              [-0.020236, 0.174578],
+              [-0.02095, 0.18],
+              [-0.020236, 0.185422],
+              [-0.018143, 0.190475],
+              [-0.014814, 0.194814],
+              [-0.010475, 0.198143],
+              [-0.005422, 0.200236],
+              [-0.0, 0.20095],
+              [-0.0, 0.20415]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            },
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "leg-right",
+            "part": "member"
+          },
+          {
+            "id": "m-crossbar",
             "kind": "revolve",
             "bone": "crossbar",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0193], [0.6533, 0.0193], [0.6533, 0.0225], [0.0, 0.0225], [0.0, 0.0193]],
+            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.02095], [0.0, 0.02095]],
             "axis": [1, 0, 0],
-            "origin": [-0.32665, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0],
             "member": "crossbar",
             "part": "member"
           },
           {
-            "id": "weld-joint-l",
-            "kind": "revolve",
+            "id": "joint-bend-left-low",
+            "kind": "ellipsoid",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "bend-left",
+            "part": "joint"
+          },
+          {
+            "id": "joint-bend-left-high",
+            "kind": "ellipsoid",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "top-rail",
+            "part": "joint"
+          },
+          {
+            "id": "joint-bend-right-high",
+            "kind": "ellipsoid",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "bend-right",
+            "part": "joint"
+          },
+          {
+            "id": "joint-bend-right-low",
+            "kind": "ellipsoid",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "leg-right",
+            "part": "joint"
+          },
+          {
+            "id": "joint-weld-left",
+            "kind": "ellipsoid",
             "bone": "crossbar",
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[-0.0076, 0.0], [-0.0076, 0.0225], [0.0076, 0.0225], [0.0076, 0.0], [-0.0076, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [-0.31265, 0.0, 0.0],
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.02415, 0.0, 0.0]
+            },
             "member": "crossbar",
             "part": "joint"
           },
           {
-            "id": "weld-joint-r",
-            "kind": "revolve",
+            "id": "joint-weld-right",
+            "kind": "ellipsoid",
             "bone": "crossbar",
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "profile": [[-0.0076, 0.0], [-0.0076, 0.0225], [0.0076, 0.0225], [0.0076, 0.0], [-0.0076, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.31265, 0.0, 0.0],
+            "radii": [0.032, 0.032, 0.032],
+            "transform": {
+              "translation": [0.67755, 0.0, 0.0]
+            },
             "member": "crossbar",
             "part": "joint"
           },
           {
-            "id": "support-leg-left-block",
+            "id": "support-leg-left",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.03, 0.0483],
+            "size": [0.015, 0.0783, 0.0783],
             "transform": {
-              "translation": [-0.35082, -0.015, 0.0]
+              "translation": [-0.0075, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-left",
             "part": "support",
             "anchor": "leg-left"
           },
           {
-            "id": "support-leg-right-block",
+            "id": "support-leg-right",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-right",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.03, 0.0483],
+            "size": [0.015, 0.0783, 0.0783],
             "transform": {
-              "translation": [0.35082, -0.015, 0.0]
+              "translation": [0.60335, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-right",
             "part": "support",
             "anchor": "leg-right"
           }
         ],
         "decisions": [
           {
-            "en": "Body: the hoop is one loft of 11 round sections (a 3-segment chord per 180 mm bend instead of 10, sagitta 6 mm = under half the 15 mm feature) with the legs and top rail unchanged at 48.3 mm; the ground collars (8 mm) and the weld rings (9 mm) are below the 15 mm feature and merged into the tube, the cross rail is a plain cylinder 2 mm into each leg. The 1:100 drawing shows the weld only as a line, the leg only as a dot in plan.",
-            "de": "Körper: der Bügel ist eine Loft aus 11 runden Schnitten (3 Sehnen je Bogen von 180 mm statt 10, Pfeilhöhe 6 mm = unter der halben Einzelheit von 15 mm), Beine und Oberholm unverändert mit 48,3 mm; die Bodenmanschetten (8 mm) und die Schweißringe (9 mm) liegen unter der Einzelheit 15 mm und sind im Rohr aufgegangen, der Querholm ist ein glatter Zylinder, 2 mm in jedes Bein. Die Zeichnung 1:100 zeigt die Naht nur als Linie, das Bein im Grundriss nur als Punkt."
+            "en": "Body: the same true tube (48.3 mm is three features at 1:100) on the six bones, the bend sections simplified to 24 points (chord deviation 0.2 mm), the cross rail again from axis to axis for the saddle; welds and vent holes are far below the 15 mm feature.",
+            "de": "Körper: dasselbe wahre Rohr (48,3 mm sind bei 1:100 drei Einzelheiten) auf den sechs Knochen, die Bogenschnitte auf 24 Punkte vereinfacht (Sehnenabweichung 0,2 mm), der Querholm wieder von Achse zu Achse für den Sattel; Nähte und Entlüftungsbohrungen liegen weit unter der Einzelheit 15 mm."
           },
           {
-            "en": "Thermal: hoop-galv and crossbar-galv are referenced from the two body tubes (single steel wall layer, B2); both regions keep a solid.",
-            "de": "Thermisch: hoop-galv und crossbar-galv werden aus den beiden Körperrohren referenziert (eine Stahlwandschicht, B2); beide Regionen behalten einen Körper."
+            "en": "Thermal: hoop-galv and crossbar-galv referenced from the six body solids (one wall layer).",
+            "de": "Thermisch: hoop-galv und crossbar-galv aus den sechs Körpern referenziert (eine Wandschicht)."
           },
           {
-            "en": "Structure: the same hollow tube members as at 1:50 (45 x 3.2 mm, inside the envelope), the eight bend pieces reduced to 8 sectors, the ground joint merged into the fixed end zone, the two weld joints kept as 15 mm rings, supports are two 30 mm fixed blocks (two features) under the leg axes.",
-            "de": "Tragwerk: dieselben Hohlrohrstäbe wie bei 1:50 (45 x 3,2 mm, innerhalb der Hülle), die Bogenstücke mit 8 Sektoren, das Bodengelenk in der Einspannzone aufgegangen, die beiden Schweißgelenke als Ringe von 15 mm behalten, Auflager sind zwei feste Blöcke von 30 mm (zwei Einzelheiten) unter den Beinachsen."
+            "en": "Structure: the hollow CHS members as at 1:50 with 12-segment half rings in the bends, 32 mm joint nodes at the bend tangents and welds, fixed blocks of 15 mm under the legs.",
+            "de": "Tragwerk: die Hohlprofilstäbe wie bei 1:50 mit Halbringen aus 12 Segmenten in den Bögen, Gelenkknoten von 32 mm an den Biegetangenten und Nähten, feste Blöcke von 15 mm unter den Beinen."
           }
         ]
       },
@@ -3201,76 +3252,107 @@
         "denominator": 200,
         "body": [
           {
-            "id": "hoop",
-            "kind": "loft",
-            "bone": "hoop",
+            "id": "leg-left",
+            "kind": "revolve",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "sections": [
-              {
-                "at": [-0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5063793293110566, 0.49354283192696113, 0.5063793293110566, -0.49354283192696113]
-              },
-              {
-                "at": [-0.332951, 0.69585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5932721140095082, 0.3847502447545538, 0.5932721140095082, -0.3847502447545538]
-              },
-              {
-                "at": [-0.279344, 0.75585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6842258352742526, 0.17843642689555125, 0.6842258352742526, -0.17843642689555125]
-              },
-              {
-                "at": [-0.19, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7069497006041126, 0.015055660588487504, 0.7069497006041126, -0.015055660588487504]
-              },
-              {
-                "at": [0.19, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7069497006041126, -0.015055660588487504, 0.7069497006041126, 0.015055660588487504]
-              },
-              {
-                "at": [0.279344, 0.75585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6842258352742526, -0.17843642689555125, 0.6842258352742526, 0.17843642689555125]
-              },
-              {
-                "at": [0.332951, 0.69585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5932721140095082, -0.3847502447545538, 0.5932721140095082, 0.3847502447545538]
-              },
-              {
-                "at": [0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5063793293110566, -0.49354283192696113, 0.5063793293110566, 0.49354283192696113]
-              },
-              {
-                "at": [0.35082, 0.0, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              }
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "bend-left",
+            "kind": "revolve",
+            "bone": "bend-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.022312, 0.189242],
+              [0.017077, 0.197077],
+              [0.009242, 0.202312],
+              [0.0, 0.20415],
+              [-0.009242, 0.202312],
+              [-0.017077, 0.197077],
+              [-0.022312, 0.189242],
+              [-0.02415, 0.18],
+              [-0.022312, 0.170758],
+              [-0.017077, 0.162923],
+              [-0.009242, 0.157688],
+              [-0.0, 0.15585],
+              [0.009242, 0.157688],
+              [0.017077, 0.162923],
+              [0.022312, 0.170758],
+              [0.02415, 0.18]
             ],
-            "capStart": true,
-            "capEnd": true
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "top-rail",
+            "kind": "revolve",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0]
+          },
+          {
+            "id": "bend-right",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.02415, 0.18],
+              [0.022312, 0.189242],
+              [0.017077, 0.197077],
+              [0.009242, 0.202312],
+              [0.0, 0.20415],
+              [-0.009242, 0.202312],
+              [-0.017077, 0.197077],
+              [-0.022312, 0.189242],
+              [-0.02415, 0.18],
+              [-0.022312, 0.170758],
+              [-0.017077, 0.162923],
+              [-0.009242, 0.157688],
+              [-0.0, 0.15585],
+              [0.009242, 0.157688],
+              [0.017077, 0.162923],
+              [0.022312, 0.170758],
+              [0.02415, 0.18]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "crossbar",
@@ -3279,15 +3361,35 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0, 0.02415], [0.70164, 0.02415]],
+            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
             "axis": [1, 0, 0],
-            "origin": [-0.35082, 0.0, 0.0]
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
-            "id": "th-hoop",
-            "of": "hoop",
+            "id": "th-leg-left",
+            "of": "leg-left",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-bend-left",
+            "of": "bend-left",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-top-rail",
+            "of": "top-rail",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-bend-right",
+            "of": "bend-right",
+            "region": "hoop-galv"
+          },
+          {
+            "id": "th-leg-right",
+            "of": "leg-right",
             "region": "hoop-galv"
           },
           {
@@ -3298,149 +3400,112 @@
         ],
         "structure": [
           {
-            "id": "root-l",
-            "kind": "revolve",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.0196], [0.0483, 0.0196], [0.0483, 0.0], [0.0, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [-0.35082, 0.0, 0.0],
-            "member": "stand",
+            "id": "m-leg-left",
+            "of": "leg-left",
+            "member": "leg-left",
             "part": "member"
           },
           {
-            "id": "root-r",
-            "kind": "revolve",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.0196], [0.0483, 0.0196], [0.0483, 0.0], [0.0, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0.35082, 0.0, 0.0],
-            "member": "stand",
+            "id": "m-bend-left",
+            "of": "bend-left",
+            "member": "bend-left",
             "part": "member"
           },
           {
-            "id": "hoop-member",
-            "kind": "loft",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "sections": [
-              {
-                "at": [-0.35082, 0.0483, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.35082, 0.59585, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.5144929116792663, 0.48507895845088017, 0.5144929116792663, -0.48507895845088017]
-              },
-              {
-                "at": [-0.310615, 0.73085, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.6454212957765412, 0.28885273593672356, 0.6454212957765412, -0.28885273593672356]
-              },
-              {
-                "at": [-0.19, 0.77585, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.7063997515326146, 0.031685061695700435, 0.7063997515326146, -0.031685061695700435]
-              },
-              {
-                "at": [0.19, 0.77585, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.7063997515326146, -0.031685061695700435, 0.7063997515326146, 0.031685061695700435]
-              },
-              {
-                "at": [0.310615, 0.73085, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.6454212957765412, -0.28885273593672356, 0.6454212957765412, 0.28885273593672356]
-              },
-              {
-                "at": [0.35082, 0.59585, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.5144929116792663, -0.48507895845088017, 0.5144929116792663, 0.48507895845088017]
-              },
-              {
-                "at": [0.35082, 0.0483, 0.0],
-                "rx": 0.0196,
-                "ry": 0.0196,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "member": "hoop",
+            "id": "m-top-rail",
+            "of": "top-rail",
+            "member": "top-rail",
             "part": "member"
           },
           {
-            "id": "crossbar-member",
-            "kind": "revolve",
-            "bone": "crossbar",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0, 0.0196], [0.6533, 0.0196]],
-            "axis": [1, 0, 0],
-            "origin": [-0.32665, 0.0, 0.0],
+            "id": "m-bend-right",
+            "of": "bend-right",
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-leg-right",
+            "of": "leg-right",
+            "member": "leg-right",
+            "part": "member"
+          },
+          {
+            "id": "m-crossbar",
+            "of": "crossbar",
             "member": "crossbar",
             "part": "member"
           },
           {
-            "id": "support-leg-left-block",
+            "id": "joint-weld-left",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.04, 0.04, 0.04],
+            "transform": {
+              "translation": [0.02415, 0.0, 0.0]
+            },
+            "member": "crossbar",
+            "part": "joint"
+          },
+          {
+            "id": "joint-weld-right",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.04, 0.04, 0.04],
+            "transform": {
+              "translation": [0.67755, 0.0, 0.0]
+            },
+            "member": "crossbar",
+            "part": "joint"
+          },
+          {
+            "id": "support-leg-left",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.06, 0.0483],
+            "size": [0.03, 0.0783, 0.0783],
             "transform": {
-              "translation": [-0.35082, -0.03, 0.0]
+              "translation": [-0.015, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-left",
             "part": "support",
             "anchor": "leg-left"
           },
           {
-            "id": "support-leg-right-block",
+            "id": "support-leg-right",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-right",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0483, 0.06, 0.0483],
+            "size": [0.03, 0.0783, 0.0783],
             "transform": {
-              "translation": [0.35082, -0.03, 0.0]
+              "translation": [0.61085, 0.0, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-right",
             "part": "support",
             "anchor": "leg-right"
           }
         ],
         "decisions": [
           {
-            "en": "Body: the hoop follows the 1:200 drawing, whose bends are quadratic curves (185 mm across, 204 mm high, not the 180 mm circle of the larger scales): one loft of 9 round sections, 48.3 mm tube (above the 30 mm feature, so drawn true size), cross rail as a cylinder to the leg axes. Collars, welds and the bend-tangent marks are gone.",
-            "de": "Körper: der Bügel folgt der Zeichnung 1:200, deren Bögen quadratische Kurven sind (185 mm breit, 204 mm hoch, nicht der Kreis von 180 mm der größeren Maßstäbe): eine Loft aus 9 runden Schnitten, Rohr 48,3 mm (über der Einzelheit 30 mm, also in wahrer Größe), der Querholm als Zylinder bis zu den Beinachsen. Manschetten, Nähte und Tangentenmarken entfallen."
+            "en": "Body: the tube stays at its true 48.3 mm (above the 30 mm feature), bends as tori with 16-point sections, the cross rail axis to axis; the drawing has no weld lines at this scale.",
+            "de": "Körper: das Rohr bleibt in wahrer Stärke 48,3 mm (über der Einzelheit 30 mm), Bögen als Tori mit Schnitten aus 16 Punkten, der Querholm von Achse zu Achse; die Zeichnung hat bei diesem Maßstab keine Nahtlinien."
           },
           {
             "en": "Thermal: both regions referenced from the body tubes.",
             "de": "Thermisch: beide Regionen aus den Körperrohren referenziert."
           },
           {
-            "en": "Structure: the hollow sections are replaced by solid rods of equal bending stiffness (39.2 mm: I = pi/64 (48.3^4 - 41.9^4)), one lofted rod for the whole hoop above the fixed end zones, one for the cross rail, the end zones as short rods, supports two 60 mm blocks (two features); bends and welds are merged into the rods.",
-            "de": "Tragwerk: die Hohlquerschnitte sind durch Vollstäbe gleicher Biegesteifigkeit ersetzt (39,2 mm: I = pi/64 (48,3^4 - 41,9^4)), ein Loftstab für den ganzen Bügel über den Einspannzonen, einer für den Querholm, die Einspannzonen als kurze Stäbe, Auflager zwei Blöcke von 60 mm (zwei Einzelheiten); Bögen und Nähte gehen in den Stäben auf."
+            "en": "Structure: the body tubes are the members themselves (a bent-tube frame, D3), referenced per bone; the 3.2 mm wall is below the 30 mm feature and merges into the full section. Joints only at the two cross rail welds (80 mm nodes), the bend tangents are continuous tube; fixed blocks of 30 mm.",
+            "de": "Tragwerk: die Körperrohre sind selbst die Stäbe (ein Rahmen aus gebogenem Rohr, D3), je Knochen referenziert; die Wand von 3,2 mm liegt unter der Einzelheit 30 mm und geht im vollen Querschnitt auf. Gelenke nur an den zwei Querholmnähten (Knoten 80 mm), die Biegetangenten sind durchlaufendes Rohr; feste Blöcke von 30 mm."
           }
         ]
       },
@@ -3449,304 +3514,313 @@
         "denominator": 500,
         "body": [
           {
-            "id": "hoop",
-            "kind": "extrude",
-            "bone": "hoop",
+            "id": "leg-left",
+            "kind": "revolve",
+            "bone": "leg-left",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.59585, 0.0376], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.01345, 0.0],
+            "sectionFaces": ["-u"]
+          },
+          {
+            "id": "bend-left",
+            "kind": "revolve",
+            "bone": "bend-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
             "profile": [
-              [-0.375, 0.0],
-              [-0.375, 0.57],
-              [-0.37199, 0.607308],
-              [-0.363275, 0.642699],
-              [-0.349328, 0.6757],
-              [-0.330624, 0.705837],
-              [-0.307636, 0.732636],
-              [-0.280837, 0.755624],
-              [-0.2507, 0.774328],
-              [-0.217699, 0.788275],
-              [-0.182308, 0.79699],
-              [-0.145, 0.8],
-              [0.145, 0.8],
-              [0.182308, 0.79699],
-              [0.217699, 0.788275],
-              [0.2507, 0.774328],
-              [0.280837, 0.755624],
-              [0.307636, 0.732636],
-              [0.330624, 0.705837],
-              [0.349328, 0.6757],
-              [0.363275, 0.642699],
-              [0.37199, 0.607308],
-              [0.375, 0.57],
-              [0.375, 0.0],
-              [0.215, 0.0],
-              [0.215, 0.57],
-              [0.214084, 0.581355],
-              [0.211431, 0.592126],
-              [0.207187, 0.60217],
-              [0.201494, 0.611342],
-              [0.194498, 0.619498],
-              [0.186342, 0.626494],
-              [0.17717, 0.632187],
-              [0.167126, 0.636431],
-              [0.156355, 0.639084],
-              [0.145, 0.64],
-              [-0.145, 0.64],
-              [-0.156355, 0.639084],
-              [-0.167126, 0.636431],
-              [-0.17717, 0.632187],
-              [-0.186342, 0.626494],
-              [-0.194498, 0.619498],
-              [-0.201494, 0.611342],
-              [-0.207187, 0.60217],
-              [-0.211431, 0.592126],
-              [-0.214084, 0.581355],
-              [-0.215, 0.57],
-              [-0.215, 0.0]
+              [0.0376, 0.16655],
+              [0.032563, 0.18535],
+              [0.0188, 0.199113],
+              [0.0, 0.20415],
+              [-0.0188, 0.199113],
+              [-0.032563, 0.18535],
+              [-0.0376, 0.16655],
+              [-0.032563, 0.14775],
+              [-0.0188, 0.133987],
+              [-0.0, 0.12895],
+              [0.0188, 0.133987],
+              [0.032563, 0.14775],
+              [0.0376, 0.16655]
             ],
-            "plane": "xy",
-            "from": -0.02415,
-            "to": 0.02415
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "top-rail",
+            "kind": "revolve",
+            "bone": "top-rail",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.3417, 0.0376], [0.3417, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.01345, 0.0]
+          },
+          {
+            "id": "bend-right",
+            "kind": "revolve",
+            "bone": "bend-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [0.0376, 0.16655],
+              [0.032563, 0.18535],
+              [0.0188, 0.199113],
+              [0.0, 0.20415],
+              [-0.0188, 0.199113],
+              [-0.032563, 0.18535],
+              [-0.0376, 0.16655],
+              [-0.032563, 0.14775],
+              [-0.0188, 0.133987],
+              [-0.0, 0.12895],
+              [0.0188, 0.133987],
+              [0.032563, 0.14775],
+              [0.0376, 0.16655]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "sweepRad": 1.570796,
+            "transform": {
+              "translation": [0.127279, -0.127279, 0.0],
+              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+            }
+          },
+          {
+            "id": "leg-right",
+            "kind": "revolve",
+            "bone": "leg-right",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.59585, 0.0376], [0.59585, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.01345, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "crossbar",
-            "kind": "box",
+            "kind": "revolve",
             "bone": "crossbar",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
-            "size": [0.46, 0.15, 0.0483]
+            "profile": [[0.01345, 0.0], [0.01345, 0.0376], [0.68825, 0.0376], [0.68825, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
             "id": "th-hoop",
             "kind": "loft",
-            "bone": "hoop",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
             "sections": [
               {
-                "at": [-0.35082, 0.0, 0.0],
+                "at": [0.0, -0.0, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
+                "rotation": [0.0, 0.707107, 0.0, 0.707107]
               },
               {
-                "at": [-0.35082, 0.59585, 0.0],
+                "at": [0.59585, -0.0, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
+                "rotation": [0.0, 0.707107, 0.0, 0.707107]
               },
               {
-                "at": [-0.298099, 0.723129, 0.0],
+                "at": [0.664733, -0.013702, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.653284456234056, 0.27059928185967863, 0.653284456234056, -0.27059928185967863]
+                "rotation": [0.270598, 0.653282, 0.0, 0.707107]
               },
               {
-                "at": [-0.17082, 0.77585, 0.0],
+                "at": [0.723129, -0.052721, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+                "rotation": [0.5, 0.5, 0.0, 0.707107]
               },
               {
-                "at": [0.0, 0.77585, 0.0],
+                "at": [0.762148, -0.111117, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+                "rotation": [0.653282, 0.270598, 0.0, 0.707107]
               },
               {
-                "at": [0.17082, 0.77585, 0.0],
+                "at": [0.77585, -0.18, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+                "rotation": [0.707107, 0.0, 0.0, 0.707107]
               },
               {
-                "at": [0.298099, 0.723129, 0.0],
+                "at": [0.77585, -0.5217, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.653284456234056, -0.27059928185967863, 0.653284456234056, 0.27059928185967863]
+                "rotation": [0.707107, 0.0, 0.0, 0.707107]
               },
               {
-                "at": [0.35082, 0.59585, 0.0],
+                "at": [0.762148, -0.590583, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
+                "rotation": [0.653282, -0.270598, 0.0, 0.707107]
               },
               {
-                "at": [0.35082, 0.0, 0.0],
+                "at": [0.723129, -0.648979, 0.0],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
+                "rotation": [0.5, -0.5, 0.0, 0.707107]
+              },
+              {
+                "at": [0.664733, -0.687998, 0.0],
+                "rx": 0.02415,
+                "ry": 0.02415,
+                "rotation": [0.270598, -0.653282, 0.0, 0.707107]
+              },
+              {
+                "at": [0.59585, -0.7017, 0.0],
+                "rx": 0.02415,
+                "ry": 0.02415,
+                "rotation": [0.0, -0.707107, 0.0, 0.707107]
+              },
+              {
+                "at": [0.0, -0.7017, 0.0],
+                "rx": 0.02415,
+                "ry": 0.02415,
+                "rotation": [0.0, -0.707107, 0.0, 0.707107]
               }
             ],
             "capStart": true,
             "capEnd": true,
+            "slender": true,
             "region": "hoop-galv"
           },
           {
             "id": "th-crossbar",
-            "kind": "revolve",
-            "bone": "crossbar",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0, 0.02415], [0.70164, 0.02415]],
-            "axis": [1, 0, 0],
-            "origin": [-0.35082, 0.0, 0.0],
+            "of": "crossbar",
             "region": "crossbar-galv"
           }
         ],
         "structure": [
           {
-            "id": "root-l",
-            "kind": "box",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "size": [0.0752, 0.0752, 0.0752],
-            "transform": {
-              "translation": [-0.35082, 0.0376, 0.0]
-            },
-            "member": "stand",
+            "id": "m-leg-left",
+            "of": "leg-left",
+            "member": "leg-left",
             "part": "member"
           },
           {
-            "id": "root-r",
-            "kind": "box",
-            "bone": "stand",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "size": [0.0752, 0.0752, 0.0752],
-            "transform": {
-              "translation": [0.35082, 0.0376, 0.0]
-            },
-            "member": "stand",
+            "id": "m-bend-left",
+            "of": "bend-left",
+            "member": "bend-left",
             "part": "member"
           },
           {
-            "id": "hoop-member",
-            "kind": "loft",
-            "bone": "hoop",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "sections": [
-              {
-                "at": [-0.35082, 0.075, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, 0.5000022760448196, 0.5000022760448196, -0.5000022760448196]
-              },
-              {
-                "at": [-0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5150720645491826, 0.484463951621834, 0.5150720645491826, -0.484463951621834]
-              },
-              {
-                "at": [-0.310615, 0.73085, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6454212957765412, 0.28885273593672356, 0.6454212957765412, -0.28885273593672356]
-              },
-              {
-                "at": [-0.19, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7063997515326146, 0.031685061695700435, 0.7063997515326146, -0.031685061695700435]
-              },
-              {
-                "at": [0.19, 0.77585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.7063997515326146, -0.031685061695700435, 0.7063997515326146, 0.031685061695700435]
-              },
-              {
-                "at": [0.310615, 0.73085, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.6454212957765412, -0.28885273593672356, 0.6454212957765412, 0.28885273593672356]
-              },
-              {
-                "at": [0.35082, 0.59585, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5150720645491826, -0.484463951621834, 0.5150720645491826, 0.484463951621834]
-              },
-              {
-                "at": [0.35082, 0.075, 0.0],
-                "rx": 0.02415,
-                "ry": 0.02415,
-                "rotation": [0.5000022760448196, -0.5000022760448196, 0.5000022760448196, 0.5000022760448196]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "member": "hoop",
+            "id": "m-top-rail",
+            "of": "top-rail",
+            "member": "top-rail",
             "part": "member"
           },
           {
-            "id": "crossbar-member",
-            "kind": "revolve",
-            "bone": "crossbar",
-            "material": "galv-steel",
-            "role": "body",
-            "tone": 0.45,
-            "profile": [[0, 0.02415], [0.6533, 0.02415]],
-            "axis": [1, 0, 0],
-            "origin": [-0.32665, 0.0, 0.0],
+            "id": "m-bend-right",
+            "of": "bend-right",
+            "member": "bend-right",
+            "part": "member"
+          },
+          {
+            "id": "m-leg-right",
+            "of": "leg-right",
+            "member": "leg-right",
+            "part": "member"
+          },
+          {
+            "id": "m-crossbar",
+            "of": "crossbar",
             "member": "crossbar",
             "part": "member"
           },
           {
-            "id": "support-leg-left-block",
+            "id": "joint-weld-left",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.06, 0.06, 0.06],
+            "transform": {
+              "translation": [0.05105, 0.0, 0.0]
+            },
+            "member": "crossbar",
+            "part": "joint"
+          },
+          {
+            "id": "joint-weld-right",
+            "kind": "ellipsoid",
+            "bone": "crossbar",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.06, 0.06, 0.06],
+            "transform": {
+              "translation": [0.65065, 0.0, 0.0]
+            },
+            "member": "crossbar",
+            "part": "joint"
+          },
+          {
+            "id": "support-leg-left",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-left",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.075, 0.15, 0.075],
+            "size": [0.0752, 0.1052, 0.1052],
             "transform": {
-              "translation": [-0.35082, -0.075, 0.0]
+              "translation": [-0.0376, -0.01345, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-left",
             "part": "support",
             "anchor": "leg-left"
           },
           {
-            "id": "support-leg-right-block",
+            "id": "support-leg-right",
             "kind": "box",
-            "bone": "hoop",
+            "bone": "leg-right",
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.075, 0.15, 0.075],
+            "size": [0.0752, 0.1052, 0.1052],
             "transform": {
-              "translation": [0.35082, -0.075, 0.0]
+              "translation": [0.63345, -0.01345, 0.0]
             },
-            "member": "hoop",
+            "member": "leg-right",
             "part": "support",
             "anchor": "leg-right"
           }
         ],
         "decisions": [
           {
-            "en": "Body: the 1:500 drawing enlarges the 48.3 mm tube to a 160 mm wide band in elevation (the pen floor of 2 features) while front and plan keep the true 48.3 mm depth, so the hoop is one flat arch slab 160 x 48.3 mm extruded from the drawn outline, and the cross rail a 460 x 150 x 48.3 mm bar; the front now also draws the cross rail end-on (omission repaired in the asset, as at 1:100 and 1:200).",
-            "de": "Körper: die Zeichnung 1:500 vergrößert das Rohr 48,3 mm im Aufriss zu einem Band von 160 mm (Stiftgrenze von 2 Einzelheiten), während Ansicht und Grundriss die wahre Tiefe 48,3 mm behalten; der Bügel ist daher eine flache Bogenplatte 160 x 48,3 mm, aus dem gezeichneten Umriss extrudiert, der Querholm ein Balken 460 x 150 x 48,3 mm; die Ansicht zeichnet den Querholm jetzt auch stirnseitig (Auslassung im Asset behoben, wie bei 1:100 und 1:200)."
+            "en": "Body: the 48.3 mm tube is 0.1 mm on paper, below the 75 mm feature, so the tube is a round 75.2 mm tube at the print floor, thickened inwards from the true outer edge (outer size 0.75 x 0.80 m exact, bend outer radius 204 mm kept, inner 129 mm), bends as tori with 12-point sections, the cross rail between the thickened legs; front and plan draw it 63 mm across (lateral extent rule), 0.024 mm on paper less than the model.",
+            "de": "Körper: das Rohr 48,3 mm ist auf dem Papier 0,1 mm breit, unter der Einzelheit 75 mm, daher ist es ein rundes Rohr von 75,2 mm an der Druckgrenze, vom wahren Außenrand nach innen verdickt (Außenmaß 0,75 x 0,80 m exakt, äußerer Biegeradius 204 mm behalten, innen 129 mm), Bögen als Tori mit Schnitten aus 12 Punkten, der Querholm zwischen den verdickten Beinen; Ansicht und Grundriss zeichnen es quer 63 mm (Regel der seitlichen Ausdehnung), 0,024 mm auf dem Papier weniger als das Modell."
           },
           {
-            "en": "Thermal: the two regions are referenced from the two body solids.",
-            "de": "Thermisch: die beiden Regionen sind aus den beiden Körpern referenziert."
+            "en": "Thermal: the hoop region is the true 48.3 mm tube along its real centre line, one slender loft inside the thickened body, because the region's area is that of the real tube; the cross rail references the body rail (the C15 total then reads the real hoop and the floor-size rail).",
+            "de": "Thermisch: die Bügelregion ist das wahre Rohr 48,3 mm entlang seiner wirklichen Mittellinie, eine schlanke Loft im verdickten Körper, weil die Fläche der Region die des realen Rohrs ist; der Querholm referenziert den Körperholm (die Summe nach C15 liest dann den realen Bügel und den Holm in Mindestgröße)."
           },
           {
-            "en": "Structure: three solid rods of the drawn tube size (48.3 mm), supports two 150 mm blocks.",
-            "de": "Tragwerk: drei Vollstäbe in der gezeichneten Rohrgröße (48,3 mm), Auflager zwei Blöcke von 150 mm."
+            "en": "Structure: the 75.2 mm body tubes are the members (referenced per bone), joints at the two welds as 120 mm nodes, fixed blocks 105 x 75 x 105 mm under the legs.",
+            "de": "Tragwerk: die Körperrohre von 75,2 mm sind die Stäbe (je Knochen referenziert), Gelenke an den zwei Nähten als Knoten von 120 mm, feste Blöcke 105 x 75 x 105 mm unter den Beinen."
           }
         ]
       }

@@ -102,8 +102,12 @@ fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::dis
     let max_y = mapped.iter().map(|point| point.1).fold(f64::NEG_INFINITY, f64::max);
     let box_width = (max_x - min_x).max(1.0e-6);
     let box_height = (max_y - min_y).max(1.0e-6);
-    let out_width = ((source.width as f64) * box_width / width).round().clamp(1.0, 128.0) as u32;
-    let out_height = ((source.height as f64) * box_height / height).round().clamp(1.0, 128.0) as u32;
+    let density_x = source.width as f64 / width;
+    let density_y = source.height as f64 / height;
+    let rotated_density_x = (density_x * cos).hypot(density_y * sin);
+    let rotated_density_y = (density_x * sin).hypot(density_y * cos);
+    let out_width = (box_width * rotated_density_x).round().clamp(1.0, 128.0) as u32;
+    let out_height = (box_height * rotated_density_y).round().clamp(1.0, 128.0) as u32;
     let mut pixels = vec![0u8; (out_width as usize) * (out_height as usize) * 4];
     for row in 0..out_height {
         for column in 0..out_width {
@@ -349,7 +353,7 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
 /// leaf agree. The page IS the layer space (no `modelToLayer`), and `liveDispatch` asks both hosts to stream the gesture
 /// (`phase` stream/commit/abort): the Blueprint window previews the open transaction from its transient
 /// (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`).
-fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> Vec<Value> {
+fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, blueprint: bool, preview:Option<&semio_s_artifact_layout_layout_model::FrameBoundsPreview>) -> Vec<Value> {
     if !blueprint {
         return Vec::new();
     }
@@ -360,8 +364,17 @@ fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction
     }
     let options = transform::options();
     let Some(page) = active_page(doc, config) else { return layers };
-    let Some((pivot_x, pivot_y)) = semio_s_artifact_layout_layout_diff::layout_frame_selection_pivot(page, &interaction.ids) else { return layers };
-    let pivot = [pivot_x, pivot_y];
+    let selected:std::collections::HashSet<_>=interaction.ids.iter().map(String::as_str).collect();
+    let page_index=preview.and_then(|_|doc.pages.iter().position(|candidate|std::ptr::eq(candidate,page)));
+    let (x,y,count)=page.frames.iter().enumerate().filter(|(_,frame)|selected.contains(frame.id())).fold(
+        (0.0,0.0,0usize),|(x,y,count),(index,frame)|{
+            let bounds=preview.zip(page_index).and_then(|(preview,page)|preview.bounds(doc,page,index)).unwrap_or_else(||frame.bounds());
+            let (cx,cy)=semio_s_artifact_layout_layout_diff::layout_frame_centre(bounds);
+            (x+cx,y+cy,count+1)
+        }
+    );
+    if count==0 { return layers; }
+    let pivot=[x/count as f64,y/count as f64];
     layers.push(json!({
         "id": "meta:gumball",
         "role": "meta",
@@ -384,9 +397,12 @@ pub fn canvas_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, transien
         None => return "[]".into(),
     };
     let camera = &config.camera;
-    let list = build_interactive_display_list(doc, page, &page.id, &interaction.ids, interaction.hovered_id(), blueprint, camera.x, camera.y, camera.zoom);
+    let preview=if blueprint {
+        transient.transform_tool.as_deref().and_then(|tool|transform::layout_transform_tool_preview(doc,tool))
+    } else { None };
+    let list = build_interactive_display_list(doc, page, &page.id, &interaction.ids, interaction.hovered_id(), blueprint, camera.x, camera.y, camera.zoom,preview.as_ref());
     let mut layers = display_list_to_host_layers(&list, blueprint, &transient.drop_preview);
-    layers.extend(gumball_layers(doc, config, interaction, blueprint));
+    layers.extend(gumball_layers(doc, config, interaction, blueprint,preview.as_ref()));
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖️CanvasScene

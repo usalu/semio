@@ -168,3 +168,73 @@ fn original_actor_decoder_uses_a_paid_source_loan_and_work_issuer(){
  let(call,heap)=observe(||slot.admit_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,loan(policy,input.grant)),fixture_clock));assert!(!call.result.unwrap().ready);assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));assert_eq!(call.receipt_spent.copied_bytes,bytes);assert!(slot.context.as_ref().unwrap().decoder.work_issuer_admitted());
  epoch+=1;for _ in 0..4096{if slot.terminal_is_empty(){break}let input=retained_input(&slot,epoch);let(call,_)=observe(||slot.close_step(input,semio_framework_job::StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,loan(policy,input.grant))));call.result.unwrap();epoch+=1;}assert!(slot.terminal_is_empty());
 }
+
+#[test]
+fn actor_decoder_recovers_claimed_work_after_the_host_advances_its_epoch(){
+ use semio_framework_value::native_decoding::{NativeReceivingEffect,NativeReceivingEffectPhase};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️decoder.json")).unwrap();
+ let expected=&fixture["interruptedReceiving"];
+ let stock=RetainedCloneGrant{maximum_items:100_000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};
+ let mut slot=ManuallyDrop::new(OriginalActorContextSlot::empty());
+ let mut input=RetainedTurnInput{operation:918,generation:27,epoch:1,work:OriginalActorTurnWork{fuel:200_000,..declared_work(&fixture)},grant:stock};
+ for _ in 0..32{
+  let admission=slot.admit_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),fixture_clock);
+  input=retained_input(&slot,input.epoch+1);
+  if admission.result.unwrap().ready{break}
+ }
+ let demand=RetirementDemand{copy_bytes:expected["copiedBytes"].as_u64().unwrap() as usize,depth:1,..Default::default()};
+ let mut frame=NativeReceivingEffect::<ValueError>::default();
+ let mut reply=None;
+ let mut dispatch=None;
+ for _ in 0..32{
+  let mut receipt=Default::default();
+  let call=slot.dispatch_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),&mut receipt,fixture_clock,|cx|{
+   let mut scope=None;
+   if cx.with_native_receiving(&mut scope,|native,_|{
+    let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||native.receive_allocation_effect(demand,&mut frame,false,1,|effect|{
+     assert!(effect.performed(1).unwrap());
+     let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+     reply=Some(semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1});
+     panic!("interrupt at the original actor effect reply")
+    })));
+    assert!(result.is_err());
+    Ok(())
+   })?{dispatch=cx.original_source_turn_identity();cx.settle_receiving_scope()?}
+   Ok::<_,OriginalTurnFailure>(())
+  });
+  assert!(call.result.is_ok(),"{:?}",call.result);
+  input=retained_input(&slot,input.epoch+1);
+  if dispatch.is_some(){break}
+ }
+ assert!(dispatch.is_some());
+ assert_eq!(frame.phase(),NativeReceivingEffectPhase::EffectStarted);
+ let mut receipt=Default::default();
+ let recovered=slot.dispatch_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),&mut receipt,fixture_clock,|cx|{
+  let exact_dispatch=cx.original_source_turn_identity()==dispatch;
+  let mut scope=None;
+  let mut settled=None;
+  assert!(cx.with_original_retirement(|cx|cx.with_native_retirement_receiving(&mut scope,StepContext::native_retirement_quote(demand,1),|native,_|{
+   native.resolve_unallocated_receiving_child(&mut frame,reply.take().unwrap()).unwrap();
+   settled=Some(native.finish_receiving(&mut frame).result);
+   Ok(())
+  }))?);
+  let scope=scope.unwrap();
+  assert!(scope.source_refusal.is_none()&&scope.call.is_ok(),"{}",scope.message());
+  let progress=settled.expect("actor recovery produced its original receipt").map_err(semio_framework_job::OriginalTurnPrimary::Receiving)?;
+  Ok::<_,OriginalTurnFailure>((progress.copied_bytes,exact_dispatch))
+ });
+ let(copied_bytes,exact_dispatch)=recovered.result.unwrap();
+ assert_eq!(frame.phase(),NativeReceivingEffectPhase::Empty);
+ input=retained_input(&slot,input.epoch+1);
+ let mut receipt=Default::default();
+ let fresh=slot.dispatch_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),&mut receipt,fixture_clock,|cx|Ok::<_,OriginalTurnFailure>(cx.original_source_turn_identity()!=dispatch));
+ assert_eq!(serde_json::json!({"copiedBytes":copied_bytes,"sameDispatch":exact_dispatch,"freshDispatchAfterRecovery":fresh.result.unwrap()}),*expected);
+ for _ in 0..4096{
+  if slot.terminal_is_empty(){break}
+  input=retained_input(&slot,input.epoch+1);
+  let closed=slot.close_step(input,StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant));
+  assert!(closed.result.is_ok(),"{:?}",closed.result);
+ }
+ assert!(slot.terminal_is_empty());
+ drop(ManuallyDrop::into_inner(slot));
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "consumed": "pub struct Original;",
+  "replacement": "pub struct Renamed_;",
+  "cases": [
+    {"name":"same-length dependency change","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":2,"exit":0},
+    {"name":"stale transitive metadata","changed":"transitive","code":"E0599","initialExit":101,"retryExit":101,"graphStable":true,"attempts":2,"exit":101},
+    {"name":"unchanged input","changed":null,"code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
+    {"name":"unrelated output","changed":"unrelated","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
+    {"name":"other variant of the same package","changed":"host","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
+    {"name":"unchanged source error classification","changed":"direct","code":"E0382","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
+    {"name":"successful first compile","changed":"direct","code":"E0432","initialExit":0,"retryExit":101,"graphStable":true,"attempts":1,"exit":0},
+    {"name":"graph changed before retry","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":false,"attempts":1,"exit":null}
+  ]
+}

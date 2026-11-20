@@ -1,4 +1,4 @@
-//! 🏭️ A normal generation3d action reaches its typed command through the framework-declared action producer: the plugin declares none, yet a widget value edit and its undo run end to end on the mounted app.
+//! 🏭️ Generation3d actions reach their typed commands through the mounted editor's declared producer.
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
@@ -7,8 +7,9 @@ extern crate semio_os_kernel as store;
 #[path = "../🔬️app-fixture/🦀️.rs"]
 mod app_fixture;
 use app_fixture::{app, snapshot, Generation3dApp};
+use semio_framework::manifest::{CommandAddress, CommandOwnerAddress};
 use semio_framework_artifact_flow_flow::Widget;
-use semio_plugin::artifact_app_laws::{dispatch_fixture_action, fixture_identity, meta, settle_history_verb, settle_registered_typed_operation};
+use semio_plugin::artifact_app_laws::{dispatch_fixture_action, dispatch_fixture_command, fixture_identity, meta, settle_history_verb, settle_registered_typed_operation};
 use semio_plugin::{ArtifactApp, ArtifactEditor, EditorApp, MountedOwnerPolicyV1};
 use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
 
@@ -21,10 +22,10 @@ fn slider(app: &Generation3dApp) -> (String, f64, f64) {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn widget_value_edit_and_undo_reach_the_command_through_the_framework_declared_producer() {
+async fn widget_value_edit_and_undo_reach_the_command_through_the_editor_producer() {
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    assert!(<Generation3dPlayApp as ArtifactEditor>::original_action_command_producer().is_none(), "the plugin hand-writes no producer");
-    assert!(<EditorApp<Generation3dPlayApp> as ArtifactApp>::original_action_command_producer().is_some(), "the framework supplies the generic producer");
+    assert!(<Generation3dPlayApp as ArtifactEditor>::original_action_command_producer().is_some(), "the editor declares the contributions wire ceiling");
+    assert!(<EditorApp<Generation3dPlayApp> as ArtifactApp>::original_action_command_producer().is_some(), "the mounted editor exposes the declared producer");
     let mut app = app().await;
     let (id, base, edited) = slider(&app);
     assert_ne!(base, edited, "the edit must move the value");
@@ -47,4 +48,42 @@ async fn an_undeclared_action_is_refused_before_any_producer_is_born() {
     let mut app = app().await;
     let refused = dispatch_fixture_action(&mut app.0, "noSuchGeneration3dAction", None, &meta("local"), &mut fixture_identity(), app.1.cx(), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await;
     assert!(refused.is_err(), "an undeclared action never reaches a producer");
+}
+
+/// 📦️ A whole-pack `setContributions` crossing past the ordinary 64 KiB runtime wire ceiling reaches its typed command through the declared producer, because the producer prices it at the route's declared ceiling instead of the ordinary one.
+#[semio_framework_async_macros::async_test]
+async fn a_pack_wider_than_the_ordinary_runtime_wire_reaches_its_command() {
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
+    let mut app = app().await;
+    let action_meta = meta("local");
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("../🧫️fixtures/📦️wide-contributions.json")).expect("wide contribution fixture");
+    let padding_count = fixture["paddingCount"].as_u64().expect("padding count") as usize;
+    let json = fixture["padding"].as_str().expect("padding").repeat(padding_count)
+        + fixture["json"].as_str().expect("contributions JSON");
+    assert!(json.len() > semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM);
+    let oracle: serde_json::Value = serde_json::from_str(&json).expect("the padded contribution pack is valid JSON");
+    assert_eq!(oracle, fixture["expected"]);
+    let maximum_depth = fixture["browserMaximumDepth"].as_u64().expect("browser maximum depth") as usize;
+    let cx = app.1.cx();
+    let previous_depth = cx.retained_grant().maximum_depth;
+    semio_framework_job::testkit::retained_grant_mut(cx).maximum_depth = maximum_depth;
+    assert_eq!(cx.retained_grant().maximum_depth, maximum_depth);
+    let args: semio_framework_value::DslValue = serde_json::json!({ "json": json, "page": 0, "pageCount": 1 }).into();
+    let policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let address = CommandAddress {
+        owner: CommandOwnerAddress::App {
+            plugin_id: "procedural".into(),
+            app_id: "s.procedural.generation3d@1/*#editor".into(),
+        },
+        command_id: "setContributions".into(),
+    };
+    dispatch_fixture_command(&mut app.0, &address, Some(args), None, &action_meta, &mut fixture_identity(), app.1.cx(), policy.close)
+        .await
+        .expect("the wide contribution pack is admitted");
+    let receipt = settle_registered_typed_operation(&mut app.0, action_meta.instance_id, policy, &mut fixture_identity(), app.1.cx())
+        .await
+        .expect("the wide contribution pack settles");
+    assert_eq!(receipt.completions, fixture["expectedCompletions"].as_u64().expect("expected completions") as usize);
+    semio_framework_job::testkit::retained_grant_mut(app.1.cx()).maximum_depth = previous_depth;
 }

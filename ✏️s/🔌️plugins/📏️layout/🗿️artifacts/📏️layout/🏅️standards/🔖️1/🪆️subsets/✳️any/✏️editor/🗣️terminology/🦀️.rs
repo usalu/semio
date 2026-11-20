@@ -20,6 +20,7 @@ semio_ui_locale::app_labels! {
         styles: native_en "Styles", native_de "Formate", reuse_en "Styles", reuse_de "Formate";
         drop_here: native_en "Drop catalogue items here", native_de "Katalogelemente hier ablegen", reuse_en "Drop catalogue items here", reuse_de "Katalogelemente hier ablegen";
         catalogue_page: native_en "Page", native_de "Seite", reuse_en "Page", reuse_de "Seite";
+        catalogue_linked_assets: native_en "Linked Assets", native_de "Verknüpfte Ressourcen", reuse_en "Linked Assets", reuse_de "Verknüpfte Ressourcen";
         kind_rect: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
         kind_text: native_en "Text Frame", native_de "Textrahmen", reuse_en "Text Frame", reuse_de "Textrahmen";
         kind_image: native_en "Image Frame", native_de "Bildrahmen", reuse_en "Image Frame", reuse_de "Bildrahmen";

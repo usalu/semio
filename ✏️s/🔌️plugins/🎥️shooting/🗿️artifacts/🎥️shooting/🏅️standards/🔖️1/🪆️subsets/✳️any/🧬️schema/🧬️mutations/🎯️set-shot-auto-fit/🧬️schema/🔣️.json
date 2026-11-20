@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/mutation/set-shot-auto-fit/schema.json",
+  "title": "SetShotAutoFit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "autoFit"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setShotAutoFit"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shot",
+          "de": "Aufnahme"
+        },
+        "description": {
+          "en": "The shot this mutation addresses.",
+          "de": "Die Aufnahme, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "shot"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "autoFit": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Null removes the override so the shot inherits the scene setting."
+    }
+  }
+}

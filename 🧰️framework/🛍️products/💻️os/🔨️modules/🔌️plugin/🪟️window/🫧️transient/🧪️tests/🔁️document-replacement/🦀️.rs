@@ -115,13 +115,13 @@ mod document_window_replacement_tests {
         let(mut registries,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactFixedRegistry::<WindowTransientOwnerRegistry>::new);
         let backing=registries.empty_backing_byte_demand().unwrap();assert!(backing>0);assert_eq!((birth.requested_bytes,birth.released_bytes),(backing,0));
         let mut caller = caller();
-        let pointer=registries.slots.as_ptr();let mut cursor=0;
+        let pointer=registries.backing_slot_address(0);let mut cursor=0;
         let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:backing,maximum_depth:1,..Default::default()};
         assert_eq!(retire_document_window_registry_demands(&registries,cursor,0,false).unwrap(),RetirementDemand::default());
         assert_eq!(retire_document_window_registry_demands(&registries,cursor,0,true).unwrap(),RetirementDemand{release_bytes:backing,depth:1,..Default::default()});
         for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:backing-1,..grant},RetainedCloneGrant{maximum_release_bytes:0,maximum_capacity_bytes:backing,maximum_copy_bytes:backing,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
             let(step,heap)=effect_turn(denied,|effect|retire_document_window_registry_step(&mut registries,&mut cursor,effect,true).unwrap());
-            assert_eq!(step,PluginLifecycleStep::Progress(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(registries.slots.as_ptr(),pointer);assert_eq!(registries.empty_backing_byte_demand(),Some(backing));assert_eq!(cursor,0);
+            assert_eq!(step,PluginLifecycleStep::Progress(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(registries.backing_slot_address(0),pointer);assert_eq!(registries.empty_backing_byte_demand(),Some(backing));assert_eq!(cursor,0);
         }
         let(step,heap)=effect_turn(grant,|effect|retire_document_window_registry_step(&mut registries,&mut cursor,effect,true).unwrap());
         assert_eq!(step,PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:backing,..Default::default()}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert_eq!(registries.empty_backing_byte_demand(),Some(0));

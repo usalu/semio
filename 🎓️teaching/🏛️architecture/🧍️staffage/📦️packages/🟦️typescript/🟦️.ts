@@ -7,7 +7,7 @@ export { ANNOTATION_PEN_MM, CSS_PX_PER_MM, SCALE_PRESETS, decimalsFor, formatNum
 export type { QuantityParts, QuantityUnit } from "../../🔨️modules/📐️units/🟦️.ts";
 export { solveRig } from "../../🔨️modules/🦴️rig/🟦️.ts";
 export { clipOf, cycleOf, frameAt, poseOf, sampleClip, samplePose, transition, wrapTime } from "../../🔨️modules/🎞️animation/🟦️.ts";
-export { SolidSweepError, evaluate, flattenGeometry, flattenPath, rigBounds } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
+export { SolidSweepError, evaluate, evaluateDrawing, flattenGeometry, flattenPath, rigBounds } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 export { validateAsset, validateManifest, validateRanges, validateSymbols, viewExtent } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 export type { AssetContext, Issue } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 export { resolveThermalEnvironment } from "../../🔨️modules/🗂️catalog/🟦️.ts";

@@ -7,8 +7,9 @@ import { resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import cases from "./compositor.cases.json";
 import schema from "./compositor.schema.json";
-import { BorderCompositor, flushWithUndrawnParentEdge, isSharedBorderCellFrame, retainSharedBorderRoot, sizeSharedBorderOverlay, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
-import { measureWindowSilhouetteMetrics } from "./🟦️.tsx";
+import { BorderCompositor, isSharedBorderCell, retainSharedBorderRoot, sizeSharedBorderOverlay, useSharedBorderFrameRef, useSharedWindowBorder } from "./shared-border.ts";
+import { WindowChromeSilhouetteBorder, measureWindowSilhouetteMetrics } from "./🟦️.tsx";
+import { boxDrawnSides, type BorderSide, type SilhouetteBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { createWindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 
 const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 0, chips: [] }, bottom: { depth: 0, chips: [] } });
@@ -36,6 +37,72 @@ describe("overlay origin", () => {
     const svg = overlay(100, 20);
     sizeSharedBorderOverlay(svg, 59, 40);
     expect(svg.style.getPropertyValue("translate")).toBe("");
+  });
+});
+
+describe("silhouette overlay sizing", () => {
+  test("sizes its overlay when it appears or its size changes, not on every render of the window", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const stack = document.createElement("div");
+    host.append(stack);
+    const reads = vi.spyOn(host, "getBoundingClientRect");
+    const root = createRoot(host);
+    const draw = (kind: "normal" | "active") => React.createElement(WindowChromeSilhouetteBorder, { stack, geometry, borderKind: kind });
+    await React.act(async () => root.render(draw("normal")));
+    expect(reads).toHaveBeenCalled();
+    reads.mockClear();
+    await React.act(async () => root.render(draw("active")));
+    await React.act(async () => root.render(draw("normal")));
+    expect(reads).not.toHaveBeenCalled();
+    await React.act(async () => root.unmount());
+    host.remove();
+  });
+});
+
+describe("panning the silhouette layer", () => {
+  const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
+
+  test("repaints window outlines and frame overlays every pan frame without a React render and with one geometry read per element", async () => {
+    const scope = document.createElement("div");
+    scope.className = "semio-scope";
+    scope.innerHTML = '<div id="clip" style="overflow:hidden"><div id="stack"></div><div id="frame" data-shared-border-frame></div></div><div id="mount"></div>';
+    document.body.append(scope);
+    const clip = scope.querySelector<HTMLElement>("#clip")!, stack = scope.querySelector<HTMLElement>("#stack")!, frame = scope.querySelector<HTMLElement>("#frame")!;
+    const reads = { clip: 0, stack: 0, frame: 0 };
+    let width = 100;
+    clip.getBoundingClientRect = () => (reads.clip++, rect(0, 0, width, 100));
+    stack.getBoundingClientRect = () => (reads.stack++, rect(0, 0, 100, 100));
+    frame.getBoundingClientRect = () => (reads.frame++, rect(0, 120, 100, 40));
+    const queue: FrameRequestCallback[] = [];
+    const request = vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => { queue.push(callback); return queue.length; });
+    const cancel = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    const flush = async () => { const callbacks = queue.splice(0); await React.act(async () => callbacks.forEach(callback => callback(0))); };
+    const renders = vi.fn();
+    const root = createRoot(scope.querySelector("#mount")!);
+    try {
+      await React.act(async () => root.render(React.createElement(React.Profiler, { id: "silhouette", onRender: renders }, React.createElement(WindowChromeSilhouetteBorder, { stack, geometry, borderKind: "normal" }))));
+      await flush();
+      await flush();
+      const main = () => scope.querySelector("[data-shared-border-main]")?.getAttribute("d");
+      const settled = renders.mock.calls.length;
+      const paths = new Set<string | null | undefined>();
+      for (const next of [90, 80, 70, 60]) {
+        width = next;
+        reads.clip = reads.stack = reads.frame = 0;
+        const owner = retainSharedBorderRoot(scope);
+        owner.compositor.schedule();
+        owner.release();
+        await flush();
+        expect(reads).toEqual({ clip: 1, stack: 1, frame: 1 });
+        paths.add(main());
+      }
+      expect(renders.mock.calls.length).toBe(settled);
+      expect(paths.size).toBeGreaterThan(1);
+    } finally {
+      await React.act(async () => root.unmount());
+      request.mockRestore(); cancel.mockRestore(); scope.remove();
+    }
   });
 });
 
@@ -77,8 +144,41 @@ describe("root border compositor", () => {
       dom.window.close();
     }
   });
+  test("reattaches the owned overlay after a translated text-only button updates", async () => {
+    const scope = document.createElement("div");
+    scope.className = "semio-scope";
+    document.body.append(scope);
+    const callbacks: FrameRequestCallback[] = [];
+    const request = vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => callbacks.push(callback));
+    const flush = () => callbacks.splice(0).forEach(callback => callback(0));
+    const root = createRoot(scope);
+    const fixture = cases.labelChange;
+    const draw = (label: string) => React.createElement("button", { "data-shared-border-frame": "", "data-shared-border-state": "active" }, label);
+    const lease = retainSharedBorderRoot(scope);
+    try {
+      await React.act(async () => root.render(draw(fixture.initial)));
+      const button = scope.querySelector("button")!;
+      button.getBoundingClientRect = () => new DOMRect(0, 0, 100, 30);
+      flush();
+      const overlay = button.querySelector("svg[data-shared-border-overlay]")!;
+      expect(overlay.querySelectorAll("path").length).toBeGreaterThan(0);
+      await React.act(async () => root.render(draw(fixture.updated)));
+      expect(button.textContent).toBe(fixture.updated);
+      expect(overlay.parentElement).toBeNull();
+      lease.compositor.scheduleGeometry();
+      flush();
+      expect(button.querySelectorAll("svg[data-shared-border-overlay]")).toHaveLength(fixture.expectedOverlays);
+      expect(overlay.parentElement).toBe(button);
+    } finally {
+      lease.release();
+      await React.act(async () => root.unmount());
+      request.mockRestore();
+      scope.remove();
+    }
+  });
+
   test("marker-only sibling frames share ownership and independent participant lifetimes", () => {
-    const dom = new JSDOM('<div class="semio-scope"><div id="left" data-shared-border-frame></div><div id="right" data-shared-border-frame></div></div><div id="other" class="semio-scope"></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="left" data-shared-border-frame data-shared-border-interactive></div><div id="right" data-shared-border-frame data-shared-border-interactive></div></div><div id="other" class="semio-scope"></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
@@ -196,6 +296,8 @@ describe("root border compositor", () => {
       flush();
       root.dispatchEvent(new dom.window.Event("transitionrun"));
       expect(pending()).toBe(false);
+      root.dispatchEvent(Object.assign(new dom.window.Event("transitionend", { bubbles: true }), { propertyName: "opacity" }));
+      expect(pending()).toBe(false);
       root.dispatchEvent(Object.assign(new dom.window.Event("transitionrun", { bubbles: true }), { propertyName: "width" }));
       expect(pending()).toBe(true);
       expect(errors).toEqual([]);
@@ -269,7 +371,7 @@ describe("root border compositor", () => {
     }
   });
   test("clipped frames cannot steal visible seams; protected overlays retain effect precedence", () => {
-    const dom = new JSDOM('<div class="semio-scope"><div id="visible" data-shared-border-frame></div><div id="clip" style="overflow:hidden"><div id="hidden" data-shared-border-frame data-active="true"></div></div></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="visible" data-shared-border-frame data-shared-border-interactive></div><div id="clip" style="overflow:hidden"><div id="hidden" data-shared-border-frame data-active="true"></div></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
@@ -306,8 +408,81 @@ describe("root border compositor", () => {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
+  test("measures each clipping ancestor once per commit however many frames lie beneath it, and reads each frame's rect once to size its overlay", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div class="a" data-shared-border-frame></div><div class="b" data-shared-border-frame></div><div class="c" data-shared-border-frame></div></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const clip = root.querySelector<HTMLElement>("#clip")!;
+    const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
+    const clipRect = vi.fn(() => rect(0, 0, 400, 100));
+    clip.getBoundingClientRect = clipRect;
+    root.querySelectorAll<HTMLElement>("[data-shared-border-frame]").forEach((frame, index) => { frame.getBoundingClientRect = () => rect(index * 100, 0, 90, 90); });
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.schedule();
+      expect(clipRect).toHaveBeenCalledTimes(1);
+      clipRect.mockClear();
+      compositor.schedule();
+      expect(clipRect).toHaveBeenCalledTimes(1);
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("a hover, focus or state change measures again before painting, so a stated silhouette is never drawn from stale geometry", async () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div class="a" data-shared-border-frame data-shared-border-interactive></div><div class="b" data-shared-border-frame></div></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const rect = (left: number, top: number, width: number, height: number) => ({ left, top, width, height, right: left + width, bottom: top + height }) as DOMRect;
+    const reads = vi.fn();
+    const a = root.querySelector<HTMLElement>(".a")!, b = root.querySelector<HTMLElement>(".b")!, clip = root.querySelector<HTMLElement>("#clip")!;
+    for (const [element, box] of [[a, rect(0, 0, 90, 90)], [b, rect(100, 0, 90, 90)], [clip, rect(0, 0, 400, 100)]] as const) element.getBoundingClientRect = () => (reads(), box);
+    const compositor = new BorderCompositor(root);
+    const settle = () => new Promise(resolve => dom.window.setTimeout(resolve, 0));
+    const state = () => a.querySelector("[data-shared-border-overlay] path")?.getAttribute("data-shared-border-state");
+    try {
+      compositor.schedule();
+      expect(reads).toHaveBeenCalled();
+      await settle();
+      reads.mockClear();
+      a.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(state()).toBe("hover");
+      a.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      a.dispatchEvent(new dom.window.FocusEvent("focusin", { bubbles: true }));
+      b.setAttribute("data-active", "true");
+      await settle();
+      expect(state()).toBeDefined();
+      expect(reads).toHaveBeenCalled();
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("hands a window its segments only when they changed, so an unchanged repaint renders no window", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="window"></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const element = root.querySelector<HTMLElement>("#window")!;
+    element.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect;
+    const update = vi.fn();
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.windows.set("w", { element, geometry, state: "normal", update });
+      compositor.schedule();
+      expect(update).toHaveBeenCalledTimes(1);
+      compositor.scheduleState();
+      compositor.schedule();
+      expect(update).toHaveBeenCalledTimes(1);
+      compositor.windows.get("w")!.state = "active";
+      compositor.scheduleState();
+      expect(update).toHaveBeenCalledTimes(2);
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
   test("unequally scaled partial overlaps connect orthogonally without moving on hover", () => {
-    const dom = new JSDOM('<div class="semio-scope"><div id="parent"><div id="child"></div></div></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="parent" data-shared-border-interactive><div id="child"></div></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!, parent = root.querySelector<HTMLElement>("#parent")!, child = root.querySelector<HTMLElement>("#child")!;
@@ -334,7 +509,7 @@ describe("root border compositor", () => {
     }
   });
   test("fractional unscaled pane bounds deduplicate with their containing window", () => {
-    const dom = new JSDOM('<div class="semio-scope"><div id="parent"><div id="child"></div></div></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="parent" data-shared-border-interactive><div id="child"></div></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!, parent = root.querySelector<HTMLElement>("#parent")!, child = root.querySelector<HTMLElement>("#child")!;
@@ -374,7 +549,7 @@ describe("root border compositor", () => {
     dom.window.close();
   });
   test("deduplicates reversed-order sibling seams and restores detached frames", () => {
-    const dom = new JSDOM('<div class="semio-scope"><div id="left"></div><div id="right"></div><nav data-shared-border-frame data-shared-border-edges="bottom"></nav></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="left" data-shared-border-interactive></div><div id="right"></div><nav data-shared-border-frame data-shared-border-edges="bottom"></nav></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
@@ -428,7 +603,7 @@ describe("root border compositor", () => {
   });
   test("framed controls that are direct children of a cells owner are cells: the owner paints one frame, they register none", () => {
     const { row: size, cells, expectedOverlays, rowPaths } = cases.cellFrames;
-    const dom = new JSDOM('<div class="semio-scope"><div id="row" data-shared-border-frame data-shared-border-cells>' + '<div class="cell" data-shared-border-frame></div>'.repeat(cells) + '<div id="wrapper"><div id="deep" data-shared-border-frame></div></div></div></div>');
+    const dom = new JSDOM('<div class="semio-scope"><div id="row" data-shared-border-frame data-shared-border-cells>' + '<div class="cell" data-shared-border-frame data-shared-border-interactive></div>'.repeat(cells) + '<div id="wrapper"><div id="deep" data-shared-border-frame></div></div></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
     const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
@@ -438,7 +613,7 @@ describe("root border compositor", () => {
     const items = [...root.querySelectorAll<HTMLElement>(".cell")];
     items.forEach((item, index) => { item.getBoundingClientRect = () => rect(index * (size.width / cells), 0, size.width / cells, size.height); });
     deep.getBoundingClientRect = () => rect(0, size.height + 50, 40, size.height);
-    expect([...items, row, deep].map(isSharedBorderCellFrame)).toEqual([...items.map(() => true), false, false]);
+    expect([...items, row, deep].map(isSharedBorderCell)).toEqual([...items.map(() => true), false, false]);
     const compositor = new BorderCompositor(root);
     try {
       compositor.schedule();
@@ -448,8 +623,10 @@ describe("root border compositor", () => {
       expect(root.querySelectorAll("[data-shared-border-overlay]")).toHaveLength(expectedOverlays + 1);
       expect(deep.querySelector("svg[data-shared-border-overlay]")).not.toBeNull();
       row.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(row.querySelector(':scope > svg [data-shared-border-state="hover"]')).toBeNull();
       items[1]!.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
-      expect(row.querySelector(':scope > svg [data-shared-border-state="hover"]')).not.toBeNull();
+      const hovered = [...row.querySelectorAll(':scope > svg [data-shared-border-state="hover"]')].map(path => path.getAttribute("d"));
+      expect(hovered.sort()).toEqual([...cases.cellFrames.hoveredCellPaths].sort());
       expect(items.every(item => !item.querySelector("svg"))).toBe(true);
       items[0]!.removeAttribute("data-shared-border-frame");
       deep.parentElement!.setAttribute("data-shared-border-cells", "");
@@ -460,6 +637,301 @@ describe("root border compositor", () => {
       compositor.dispose();
       Object.assign(globalThis, previous);
       dom.window.close();
+    }
+  });
+  test("a group's cells state only themselves: hover, keyboard focus and selection close the cell's outline and never recolour the group", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="group" data-shared-border-frame><button id="a" data-shared-border-cell></button><button id="b" data-shared-border-cell></button></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const rect = (left: number, width: number) => ({ left, top: 0, right: left + width, bottom: 30, width, height: 30 }) as DOMRect;
+    const group = root.querySelector<HTMLElement>("#group")!, a = root.querySelector<HTMLElement>("#a")!, b = root.querySelector<HTMLElement>("#b")!;
+    group.getBoundingClientRect = () => rect(0, 200); a.getBoundingClientRect = () => rect(0, 100); b.getBoundingClientRect = () => rect(100, 100);
+    const compositor = new BorderCompositor(root);
+    const painted = (state: string) => [...group.querySelectorAll(`:scope > svg [data-shared-border-state="${state}"]`)].map(path => path.getAttribute("d")).sort();
+    const closed = (left: number, right: number) => [`M ${left} 1 L ${left} 29`, `M ${right} 1 L ${right} 29`, `M ${left} 1 L ${right} 1`, `M ${left} 29 L ${right} 29`].sort();
+    try {
+      compositor.schedule();
+      expect(painted("normal")).toHaveLength(7);
+      a.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(painted("hover")).toEqual(closed(1, 100));
+      expect(painted("normal")).toEqual(["M 100 1 L 199 1", "M 100 29 L 199 29", "M 199 1 L 199 29"]);
+      a.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      expect(painted("hover")).toEqual([]);
+      b.matches = (selector: string) => selector === ":focus-visible" ? false : Element.prototype.matches.call(b, selector);
+      b.focus(); compositor.scheduleState();
+      expect(painted("focus")).toEqual([]);
+      b.matches = (selector: string) => selector === ":focus-visible" || Element.prototype.matches.call(b, selector);
+      compositor.scheduleState();
+      expect(painted("focus")).toEqual(closed(100, 199));
+      b.setAttribute("aria-pressed", "true");
+      compositor.scheduleState();
+      expect(painted("focus")).toEqual(closed(100, 199));
+      expect(painted("active")).toEqual([]);
+      expect(group.querySelector('svg [data-shared-border-state="hover"]')).toBeNull();
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("a borderless box draws nothing and owns no overlay until it is stated, then closes its full outline and releases the overlay again", () => {
+    const dom = new JSDOM('<div class="semio-scope"><button id="tab" data-shared-border-frame data-shared-border-edges=""></button></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!, tab = root.querySelector<HTMLElement>("#tab")!;
+    tab.getBoundingClientRect = () => ({ left: 0, top: 0, right: 40, bottom: 20, width: 40, height: 20 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.schedule();
+      expect(tab.querySelector("svg")).toBeNull();
+      expect(tab.style.position).toBe("");
+      tab.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect([...tab.querySelectorAll('svg [data-shared-border-state="hover"]')].map(path => path.getAttribute("d")).sort()).toEqual(["M 1 1 L 1 19", "M 1 1 L 39 1", "M 1 19 L 39 19", "M 39 1 L 39 19"]);
+      expect(tab.querySelector<SVGSVGElement>("svg")!.style.zIndex).toBe("41");
+      tab.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      expect(tab.querySelector("svg")).toBeNull();
+      expect(tab.style.position).toBe("");
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  describe("nested and wrapped cells, tabs and chips", () => {
+    const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height }) as DOMRect;
+    const harness = (html: string, rects: Record<string, DOMRect>) => {
+      const dom = new JSDOM(html);
+      const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+      Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+      const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+      for (const [id, box] of Object.entries(rects)) root.querySelector<HTMLElement>(`#${id}`)!.getBoundingClientRect = () => box;
+      const compositor = new BorderCompositor(root);
+      const hover = (id: string) => root.querySelector(`#${id}`)!.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      const painted = (state: string) => [...root.querySelectorAll(`svg [data-shared-border-state="${state}"]`)].map(path => path.getAttribute("d")).sort();
+      return { dom, root, compositor, hover, painted, done: () => { compositor.dispose(); Object.assign(globalThis, previous); dom.window.close(); } };
+    };
+    const closed = (left: number, right: number, top = 1, bottom = 19) => [`M ${left} ${top} L ${left} ${bottom}`, `M ${right} ${top} L ${right} ${bottom}`, `M ${left} ${top} L ${right} ${top}`, `M ${left} ${bottom} L ${right} ${bottom}`].sort();
+
+    test("a cell inside a frame that is itself a cell is painted by the nearest owner with an overlay and stays closed without touching its ancestors", () => {
+      const h = harness('<div class="semio-scope"><div id="controls" data-shared-border-group data-shared-border-cells><div id="group" data-shared-border-frame><button id="a" data-shared-border-cell></button><button id="b" data-shared-border-cell></button></div></div></div>', { controls: rect(0, 0, 100, 20), group: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
+      try {
+        h.compositor.schedule();
+        expect(h.root.querySelector("#group > svg")).toBeNull();
+        h.hover("a");
+        expect(h.painted("hover")).toEqual(closed(1, 50));
+        expect(h.root.querySelector("#controls > svg")).not.toBeNull();
+      } finally { h.done(); }
+    });
+
+    test("a cell below a plain wrapper is owned by the nearest ancestor owner, not by its parent element, and closes per tab", () => {
+      const h = harness('<div class="semio-scope"><div id="frame" data-shared-border-frame data-shared-border-edges="bottom"><div id="tabs" data-shared-border-group><span><button id="a" data-shared-border-cell></button></span><span><button id="b" data-shared-border-cell></button></span></div></div></div>', { frame: rect(0, 0, 100, 20), tabs: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
+      try {
+        h.compositor.schedule();
+        h.hover("b");
+        expect(h.painted("hover")).toEqual(closed(50, 99));
+        expect(h.painted("normal").every(d => !d?.startsWith("M 50 1 L 50"))).toBe(true);
+      } finally { h.done(); }
+    });
+
+    test("a stepper cell flush with the bottom edge of its row closes its own bottom over its full width", () => {
+      const h = harness('<div class="semio-scope"><div id="row" data-shared-border-frame data-shared-border-edges="bottom"><div><div id="stepper" data-shared-border-frame><button id="minus" data-shared-border-cell></button><button id="plus" data-shared-border-cell></button></div></div></div></div>', { row: rect(0, 0, 200, 20), stepper: rect(100, 0, 100, 20), minus: rect(100, 0, 50, 20), plus: rect(150, 0, 50, 20) });
+      try {
+        h.compositor.schedule();
+        h.hover("plus");
+        expect(h.painted("hover")).toEqual(closed(50, 99));
+      } finally { h.done(); }
+    });
+
+    test("mode dock tabs are borderless boxes: a hovered tab closes itself and its chip stays normal", () => {
+      const h = harness('<div class="semio-scope"><div id="stack"><div id="chip" data-window-silhouette-chip><div role="tablist"><div id="tab" role="tab" data-slot="mode-dock-tab" tabindex="0"></div><div id="other" role="tab" data-slot="mode-dock-tab" tabindex="0"></div></div></div></div></div>', { stack: rect(0, 0, 100, 40), chip: rect(0, 0, 60, 20), tab: rect(0, 0, 30, 20), other: rect(30, 0, 30, 20) });
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: () => {} });
+        h.compositor.schedule();
+        expect(h.root.querySelector("#tab > svg")).toBeNull();
+        h.hover("tab");
+        expect(h.painted("hover")).toEqual(closed(1, 29));
+      } finally { h.done(); }
+    });
+
+    test("a chip inside an interactive card closes itself on hover and never states the card's silhouette", () => {
+      const h = harness('<div class="semio-scope"><div id="card" role="button" data-overview-card><div id="stack"><div id="chip" data-window-silhouette-chip><button id="control"></button></div></div></div></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
+      const updates = new Map<string, readonly { d: string; state: string }[]>();
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.schedule();
+        h.hover("control");
+        const hovered = updates.get("w")!.filter(segment => segment.state === "hover");
+        const numbers = hovered.flatMap(segment => segment.d.match(/-?\d+(?:\.\d+)?/g)!.map(Number));
+        expect(hovered.length).toBeGreaterThan(0);
+        expect(Math.max(...numbers)).toBeLessThanOrEqual(41);
+        expect(updates.get("w")!.filter(segment => segment.state === "normal").some(segment => /M 99 /.test(segment.d) || /L 99 /.test(segment.d))).toBe(true);
+        h.hover("stack");
+        expect(updates.get("w")!.some(segment => segment.state === "hover" && /99/.test(segment.d))).toBe(true);
+      } finally { h.done(); }
+    });
+
+    test("a stated cell stays closed and fully visible under a clipping row whose edge coincides with, or cuts, its bottom", () => {
+      for (const [clipHeight, bottom] of [[20, 19], [19.6, 19], [12, 11]] as const) {
+        const h = harness(`<div class="semio-scope"><div id="clip" style="overflow:hidden"><div id="group" data-shared-border-frame><button id="a" data-shared-border-cell></button><button id="b" data-shared-border-cell></button></div></div></div>`, { clip: rect(0, 0, 100, clipHeight), group: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
+        try {
+          h.compositor.schedule();
+          h.hover("b");
+          expect(h.painted("hover"), `clip height ${clipHeight}`).toEqual(closed(50, 99, 1, bottom));
+        } finally { h.done(); }
+      }
+    });
+
+    test("a utility-bar chip flush with a clipping ancestor still paints its stated outline", () => {
+      const h = harness('<div class="semio-scope"><div id="clip" style="overflow:hidden"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div></div>', { clip: rect(0, 0, 40, 20), stack: rect(0, 0, 40, 20), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
+      const updates = new Map<string, readonly { d: string; state: string }[]>();
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: { ...geometry, outline: [...geometry.outline, { x: 0, y: 0 }] }, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.schedule();
+        h.hover("unfold");
+        const hovered = updates.get("w")!.filter(segment => segment.state === "hover").map(segment => segment.d);
+        expect(hovered.length).toBeGreaterThanOrEqual(4);
+      } finally { h.done(); }
+    });
+
+    test("a narrow window chip keeps its side beside a nearby nonincident window edge", () => {
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(10, 30, 30, 24), unfold: rect(10, 30, 30, 24) });
+      const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 20, chips: [{ left: 12.5, right: 40 }] }, bottom: { depth: 0, chips: [] } });
+      let segments: readonly { d: string; state: string }[] = [];
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => { segments = value; } });
+        h.compositor.schedule();
+        h.hover("unfold");
+        expect(segments.filter(segment => segment.state === "hover").map(segment => segment.d).sort()).toEqual([
+          "M 11 31 L 11 53", "M 11 31 L 39 31", "M 11 53 L 39 53", "M 39 31 L 39 53",
+        ]);
+      } finally { h.done(); }
+    });
+
+    test("a chip as large as its whole window paints a stated outline in the window's own segments", () => {
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 100, 100), unfold: rect(0, 0, 100, 100) });
+      const updates = new Map<string, readonly { d: string; state: string }[]>();
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.schedule();
+        h.hover("unfold");
+        expect(updates.get("w")!.filter(segment => segment.state === "hover").length).toBeGreaterThanOrEqual(4);
+      } finally { h.done(); }
+    });
+
+    test("a chip of a window whose silhouette is a plain bar still paints its stated outline", () => {
+      const h = harness('<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip><button id="unfold"></button></div></div></div>', { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), unfold: rect(0, 0, 40, 20) });
+      const updates = new Map<string, readonly { d: string; state: string }[]>();
+      try {
+        h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: { ...geometry, outline: [...geometry.outline, { x: 0, y: 0 }] }, state: "normal", update: value => updates.set("w", value) });
+        h.compositor.schedule();
+        h.hover("unfold");
+        expect(updates.get("w")!.filter(segment => segment.state === "hover").length).toBeGreaterThan(0);
+        expect(updates.get("w")![0]!.state).toBe("normal");
+      } finally { h.done(); }
+    });
+  });
+  test("table rows and zero-width separators are boxes: the overlay is appended to the positioned row, and a 0 px handle paints its centre line only while stated", () => {
+    const dom = new JSDOM('<div class="semio-scope"><table><tbody><tr id="row" tabindex="0" data-shared-border-frame data-shared-border-edges=""><td>a</td></tr></tbody></table><div id="handle" role="separator" tabindex="0" data-shared-border-frame data-shared-border-edges=""></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!, row = root.querySelector<HTMLElement>("#row")!, handle = root.querySelector<HTMLElement>("#handle")!;
+    row.getBoundingClientRect = () => ({ left: 0, top: 0, right: 100, bottom: 20, width: 100, height: 20 }) as DOMRect;
+    handle.getBoundingClientRect = () => ({ left: 50, top: 30, right: 50, bottom: 60, width: 0, height: 30 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    const states = (host: HTMLElement) => [...host.querySelectorAll("svg [data-shared-border-state]")].map(path => `${path.getAttribute("data-shared-border-state")} ${path.getAttribute("d")}`).sort();
+    try {
+      compositor.schedule();
+      expect(row.querySelector("svg")).toBeNull();
+      expect(handle.querySelector("svg")).toBeNull();
+      row.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(row.querySelector(":scope > svg")).not.toBeNull();
+      expect(states(row)).toEqual(["hover M 1 1 L 1 19", "hover M 1 1 L 99 1", "hover M 1 19 L 99 19", "hover M 99 1 L 99 19"]);
+      row.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      handle.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(states(handle)).toEqual(["hover M 0 1 L 0 29"]);
+      expect(handle.querySelector("svg")!.hasAttribute("viewBox")).toBe(false);
+      handle.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      expect(handle.querySelector("svg")).toBeNull();
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("invalid and selected markers: aria-invalid or data-invalid on the box or its single control states invalid, data-selected states active, and focus outranks invalid and active while it lasts", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="field" data-shared-border-frame><input id="input" aria-invalid="true" /></div><div id="item" role="option" data-selected="true" data-shared-border-frame></div><div id="flag" data-shared-border-frame data-invalid><input /></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    for (const [index, id] of ["field", "item", "flag"].entries()) root.querySelector<HTMLElement>(`#${id}`)!.getBoundingClientRect = () => ({ left: 0, top: index * 30, right: 50, bottom: index * 30 + 20, width: 50, height: 20 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    const state = (id: string) => root.querySelector(`#${id} > svg [data-shared-border-state]`)?.getAttribute("data-shared-border-state");
+    try {
+      compositor.schedule();
+      expect([state("field"), state("item"), state("flag")]).toEqual(["invalid", "active", "invalid"]);
+      const input = root.querySelector<HTMLElement>("#input")!;
+      input.matches = (selector: string) => selector === ":focus-visible" || Element.prototype.matches.call(input, selector);
+      input.focus(); compositor.scheduleState();
+      expect(state("field")).toBe("focus");
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("a box that appears without any hook still gets a compositor, which is released when the box is gone", async () => {
+    const scope = document.createElement("div");
+    scope.className = "semio-scope";
+    const button = document.createElement("button");
+    button.setAttribute("data-shared-border-frame", ""); button.setAttribute("data-shared-border-edges", "");
+    button.getBoundingClientRect = () => ({ left: 0, top: 0, right: 40, bottom: 20, width: 40, height: 20 }) as DOMRect;
+    scope.append(button);
+    document.body.append(scope);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(scope.hasAttribute("data-shared-border-root")).toBe(true);
+      button.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 50));
+      expect(button.querySelector('svg [data-shared-border-state="hover"]')).not.toBeNull();
+      button.remove();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(scope.hasAttribute("data-shared-border-root")).toBe(false);
+    } finally { scope.remove(); }
+  });
+  test("a void or replaced element that is a box is painted by the nearest ancestor that can hold the overlay", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="wrap"><input id="field" data-shared-border-frame data-shared-border-edges="" /><img id="picture" data-shared-border-frame data-shared-border-edges="" data-shared-border-interactive /></div></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!, wrap = root.querySelector<HTMLElement>("#wrap")!, field = root.querySelector<HTMLElement>("#field")!, picture = root.querySelector<HTMLElement>("#picture")!;
+    wrap.getBoundingClientRect = () => ({ left: 10, top: 10, right: 110, bottom: 30, width: 100, height: 20 }) as DOMRect;
+    field.getBoundingClientRect = () => ({ left: 10, top: 10, right: 60, bottom: 30, width: 50, height: 20 }) as DOMRect;
+    picture.getBoundingClientRect = () => ({ left: 60, top: 10, right: 110, bottom: 30, width: 50, height: 20 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    const painted = () => [...wrap.querySelectorAll(':scope > svg [data-shared-border-state="hover"]')].map(path => path.getAttribute("d")).sort();
+    try {
+      compositor.schedule();
+      expect(wrap.querySelector("svg")).toBeNull();
+      expect(field.querySelector("svg")).toBeNull();
+      field.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(painted()).toEqual(["M 1 1 L 1 19", "M 1 1 L 49 1", "M 1 19 L 49 19", "M 49 1 L 49 19"]);
+      field.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      picture.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(painted()).toEqual(["M 51 1 L 51 19", "M 51 1 L 99 1", "M 51 19 L 99 19", "M 99 1 L 99 19"]);
+      expect(picture.querySelector("svg")).toBeNull();
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("a disabled box that draws normal edges marks them for the forced-colours disabled stroke, and the box API reaches products through the chrome entry", () => {
+    const dom = new JSDOM('<div class="semio-scope"><button id="off" disabled data-shared-border-frame></button><button id="on" data-shared-border-frame></button></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    root.querySelector<HTMLElement>("#off")!.getBoundingClientRect = () => ({ left: 0, top: 0, right: 40, bottom: 20, width: 40, height: 20 }) as DOMRect;
+    root.querySelector<HTMLElement>("#on")!.getBoundingClientRect = () => ({ left: 100, top: 0, right: 140, bottom: 20, width: 40, height: 20 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    try {
+      compositor.schedule();
+      expect(root.querySelectorAll("#off svg [data-shared-border-disabled]").length).toBeGreaterThan(0);
+      expect(root.querySelectorAll("#on svg [data-shared-border-disabled]").length).toBe(0);
+      const chrome = readFileSync(resolve(import.meta.dirname, "../../🎯️targets/⚛️react/🪟️chrome/🟦️.ts"), "utf8");
+      expect(chrome).toContain("useSharedBorderBox");
+      expect(chrome).toContain("sharedBorderlessBoxProps");
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
   test("interlocked cards: every coincident segment of a stack or grid is painted by exactly one owner", () => {
@@ -511,11 +983,13 @@ describe("root border compositor", () => {
     const nav = dom.window.document.querySelector<HTMLElement>("nav")!, footer = dom.window.document.querySelector<HTMLElement>("footer")!;
     nav.getBoundingClientRect = () => rect(0, 0, 400, 28);
     footer.getBoundingClientRect = () => rect(0, 72, 400, 100);
-    const flush = (side: string) => flushWithUndrawnParentEdge(group, rect(10, 0, 90, 28), side);
-    expect([flush("top"), flush("bottom"), flush("left"), flush("right")]).toEqual([true, false, false, false]);
-    expect(flushWithUndrawnParentEdge(group, rect(10, 3, 90, 25), "top")).toBe(false);
-    expect(flushWithUndrawnParentEdge(inset, rect(10, 72, 90, 100), "bottom")).toBe(true);
-    expect(flushWithUndrawnParentEdge(inset, rect(10, 72, 90, 100), "top")).toBe(false);
+    const parentBox = (id: string, edges: BorderSide[], box: DOMRect): SilhouetteBox => ({ id, parent: null, owner: id, rect: box, edges, state: "normal" });
+    const drawn = (parent: SilhouetteBox, box: DOMRect) => boxDrawnSides({ id: "c", parent: parent.id, owner: "c", rect: box, edges: ["top", "right", "bottom", "left"], state: "normal" }, parent);
+    const bar = parentBox("nav", ["bottom"], rect(0, 0, 400, 28)), band = parentBox("footer", ["top"], rect(0, 72, 400, 100));
+    expect(drawn(bar, rect(10, 0, 90, 28))).toEqual(["right", "bottom", "left"]);
+    expect(drawn(bar, rect(10, 3, 90, 25))).toEqual(["top", "right", "bottom", "left"]);
+    expect(drawn(band, rect(10, 72, 90, 100))).toEqual(["top", "right", "left"]);
+    expect(group.isConnected && inset.isConnected).toBe(true);
     dom.window.close();
   });
   test("navbar and footer items span the band height and stretch their framed controls", () => {
@@ -543,5 +1017,256 @@ describe("root border compositor", () => {
     const css = read("../../🎨️styling/🖌️ui/🎨️.css");
     expect(css).not.toMatch(/data-slot="(chrome-frame|side-panel-tabs|mobile-panel-tabs|accordion-item)"/);
     expect(css).toMatch(/table > tbody > tr:last-child \{\s*border-bottom-width: 0;/);
+  });
+});
+
+describe("state silhouettes of product shapes under mocked layout", () => {
+  const rect = (left: number, top: number, width: number, height: number) => ({ left, top, right: left + width, bottom: top + height, width, height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
+  const harness = (html: string, rects: Record<string, DOMRect>) => {
+    const dom = new JSDOM(html);
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    for (const [id, box] of Object.entries(rects)) root.querySelector<HTMLElement>(`#${id}`)!.getBoundingClientRect = () => box;
+    const compositor = new BorderCompositor(root);
+    const hover = (id: string) => root.querySelector(`#${id}`)!.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+    const painted = (state: string) => [...root.querySelectorAll(`svg [data-shared-border-state="${state}"]`)].map(path => path.getAttribute("d")).sort();
+    return { dom, root, compositor, hover, painted, done: () => { compositor.dispose(); Object.assign(globalThis, previous); dom.window.close(); } };
+  };
+  const closed = (left: number, right: number, top: number, bottom: number) => [`M ${left} ${top} L ${left} ${bottom}`, `M ${right} ${top} L ${right} ${bottom}`, `M ${left} ${top} L ${right} ${top}`, `M ${left} ${bottom} L ${right} ${bottom}`].sort();
+  const lines = (segments: readonly { d: string }[]) => segments.flatMap(segment => [...segment.d.matchAll(/([ML]) (-?[\d.]+) (-?[\d.]+)/g)].map(match => ({ x: Number(match[2]), y: Number(match[3]) })));
+
+  describe("mode dock tabs with several interactive controls", () => {
+    const dock = (state: "active" | "normal") => {
+      const html = `<div class="semio-scope"><div id="stack" data-window-silhouette><div id="chip" data-window-silhouette-chip data-dock="top"><div id="tabs" role="tablist" style="overflow-x:auto;overflow-y:hidden"><div id="tab" data-slot="mode-dock-tab" ${state === "active" ? 'data-active="true"' : ""}><button id="select" role="tab"></button><button id="focusing" data-slot="mode-dock-tab-focus"></button><button id="close" data-slot="mode-dock-tab-close"></button></div></div></div></div></div>`;
+      const h = harness(html, { stack: rect(0, 0, 100, 100), chip: rect(0, 0, 60, 30), tabs: rect(0, 0, 60, 30), tab: rect(0, 0, 60, 30), select: rect(0, 0, 30, 30), focusing: rect(30, 0, 15, 30), close: rect(45, 0, 15, 30) });
+      const windowGeometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: { depth: 30, chips: [{ left: 0, right: 60 }] }, bottom: { depth: 0, chips: [] } });
+      const updates: { d: string; state: string }[][] = [];
+      h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry: windowGeometry, state: state === "active" ? "active" : "normal", update: value => { updates.push([...value]); } });
+      h.compositor.schedule();
+      const all = (state: string) => [...(updates.at(-1) ?? []).filter(segment => segment.state === state), ...[...h.root.querySelectorAll(`#tab svg [data-shared-border-state="${state}"]`)].map(path => ({ d: path.getAttribute("d")!, state }))];
+      return { h, updates, all };
+    };
+
+    test("hovering any control of the tab states the tab box alone, and its closed bottom lies on the window body line", () => {
+      const { h, updates, all } = dock("active");
+      try {
+        h.hover("close");
+        const hovered = all("hover");
+        expect(hovered.length).toBeGreaterThan(0);
+        expect(h.painted("hover")).toEqual(expect.arrayContaining(["M 1 1 L 60 1", "M 1 31 L 60 31", "M 60 1 L 60 31", "M 1 1 L 1 31"]));
+        const ys = new Set(lines(hovered).map(point => point.y));
+        expect([...ys].sort((a, b) => a - b)).toEqual([1, 31]);
+        const normalOrActive = (updates.at(-1) ?? []).filter(segment => segment.state !== "hover");
+        const horizontalAtCap = lines(normalOrActive).map(point => point.y).filter(y => y > 25 && y < 35);
+        expect(new Set(horizontalAtCap)).toEqual(new Set([31]));
+        const verticalRight = lines(hovered).filter(point => point.x > 50);
+        expect(new Set(verticalRight.map(point => point.x))).toEqual(new Set([60]));
+      } finally { h.done(); }
+    });
+
+    test("the closed tab bottom and the window body top are one line without staircase jogs, whatever the tab edge offset within two pixels", () => {
+      for (const bottom of [30, 29, 31]) {
+        const { h, updates } = dock("active");
+        try {
+          h.root.querySelector<HTMLElement>("#tab")!.getBoundingClientRect = () => rect(0, 0, 60, bottom);
+          h.root.querySelector<HTMLElement>("#chip")!.getBoundingClientRect = () => rect(0, 0, 60, bottom);
+          h.compositor.schedule();
+          h.hover("select");
+          const segments = updates.at(-1) ?? [];
+          const horizontal = segments.flatMap(segment => { const points = lines([segment]); return points.length >= 2 && points[0]!.y === points[1]!.y ? [points[0]!.y] : []; });
+          expect(horizontal.filter(y => y > bottom - 4 && y < bottom + 4), `tab bottom ${bottom}`).toSatisfy((ys: number[]) => new Set(ys).size <= 1);
+        } finally { h.done(); }
+      }
+    });
+
+    test("a focused tab states only itself and the chip and window keep their own state", () => {
+      const { h, updates } = dock("normal");
+      try {
+        h.root.querySelector<HTMLElement>("#select")!.focus();
+        h.hover("select");
+        const hovered = (updates.at(-1) ?? []).filter(segment => segment.state === "hover");
+        expect(Math.max(...lines(hovered).map(point => point.x))).toBeLessThanOrEqual(60);
+        expect(Math.max(...lines(hovered).map(point => point.y))).toBeLessThanOrEqual(31);
+        expect((updates.at(-1) ?? []).some(segment => segment.state === "normal")).toBe(true);
+      } finally { h.done(); }
+    });
+  });
+
+  test("a bare input that is a direct child of a cells owner is a cell: hover closes it in the row's overlay", () => {
+    const h = harness('<div class="semio-scope"><div id="row" data-shared-border-cells data-shared-border-frame data-shared-border-edges="top bottom"><div id="label" data-shared-border-cell></div><input id="name" /></div></div>', { row: rect(0, 0, 100, 60), label: rect(0, 0, 100, 20), name: rect(0, 20, 100, 40) });
+    try {
+      h.compositor.schedule();
+      h.hover("name");
+      expect(h.painted("hover")).toEqual(closed(1, 99, 20, 59));
+      expect(h.root.querySelector("#name > svg")).toBeNull();
+      h.root.querySelector<HTMLElement>("#name")!.focus();
+      expect(isSharedBorderCell(h.root.querySelector("#name")!)).toBe(true);
+      expect(isSharedBorderCell(h.root.querySelector("#label")!)).toBe(true);
+    } finally { h.done(); }
+  });
+
+  test("a hidden input and an input outside a cells owner are not cells", () => {
+    const h = harness('<div class="semio-scope"><div id="row" data-shared-border-cells data-shared-border-group><input id="secret" type="hidden" /></div><input id="free" /></div>', {});
+    try {
+      expect(isSharedBorderCell(h.root.querySelector("#secret")!)).toBe(false);
+      expect(isSharedBorderCell(h.root.querySelector("#free")!)).toBe(false);
+    } finally { h.done(); }
+  });
+
+  describe("controls inside a horizontally scrolling table", () => {
+    const table = (scrolledOut: boolean) => harness('<div class="semio-scope"><div id="frame" data-shared-border-frame><div id="region" style="overflow-x:auto"><div id="group" data-shared-border-frame style="border:1px solid"><button id="suspend" data-shared-border-cell></button></div></div></div></div>', { frame: rect(0, 0, 100, 40), region: rect(1, 1, 98, 38), group: scrolledOut ? rect(150, 10, 32, 20) : rect(60, 10, 32, 20), suspend: scrolledOut ? rect(151, 11, 30, 18) : rect(61, 11, 30, 18) });
+
+    test("a control scrolled out of its scroller paints nothing and states no ancestor, and closes fully once it is in view", () => {
+      const out = table(true);
+      try {
+        out.compositor.schedule();
+        out.hover("suspend");
+        expect(out.painted("hover")).toEqual([]);
+        expect(out.root.querySelector("#frame > svg [data-shared-border-state='hover']")).toBeNull();
+      } finally { out.done(); }
+      const shown = table(false);
+      try {
+        shown.compositor.schedule();
+        shown.hover("suspend");
+        expect(shown.painted("hover")).toEqual(closed(1, 31, 1, 19));
+      } finally { shown.done(); }
+    });
+  });
+});
+
+describe("compositor commit economy", () => {
+  const setup = (boxes: number, figures: number, nodesPerFigure: number) => {
+    const root = document.createElement("div");
+    root.className = "semio-scope";
+    for (let box = 0; box < boxes; box++) { const frame = document.createElement("div"); frame.setAttribute("data-shared-border-frame", ""); frame.className = "box"; root.append(frame); }
+    for (let figure = 0; figure < figures; figure++) {
+      const host = document.createElement("div");
+      host.className = "figure";
+      host.setAttribute("data-time", "0");
+      host.innerHTML = `<svg><path d="M0 0"></path>${"<g><rect></rect></g>".repeat(nodesPerFigure / 2)}</svg>`;
+      root.append(host);
+    }
+    document.body.append(root);
+    const queue = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    const request = vi.spyOn(window, "requestAnimationFrame").mockImplementation(callback => { queue.set(++next, callback); return next; });
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(id => { queue.delete(id); });
+    const flush = async () => { await Promise.resolve(); const callbacks = [...queue.values()]; queue.clear(); callbacks.forEach(callback => callback(0)); };
+    return { root, queue, flush, done: () => { request.mockRestore(); root.remove(); } };
+  };
+
+  test("300 boxes and 20,000 nodes: 1,000 animated mutations inside non-box descendants commit nothing", async () => {
+    const { root, queue, flush, done } = setup(300, 100, 200);
+    const lease = retainSharedBorderRoot(root);
+    try {
+      expect(root.querySelectorAll("*").length).toBeGreaterThan(20_000);
+      await flush();
+      expect(lease.compositor.commits).toBe(1);
+      const figures = [...root.querySelectorAll<HTMLElement>(".figure")];
+      const paths = figures.map(figure => figure.querySelector("path")!);
+      for (let i = 0; i < 1000; i++) {
+        const figure = figures[i % figures.length]!;
+        if (i % 4 === 0) paths[i % paths.length]!.setAttribute("d", `M${i} 0`);
+        else if (i % 4 === 1) figure.setAttribute("data-time", String(i));
+        else if (i % 4 === 2) figure.setAttribute("aria-label", `t${i}`);
+        else figure.querySelector("rect")!.setAttribute("style", `opacity:${i / 1000}`);
+        if (i % 250 === 0) figure.innerHTML = `<svg><path d="M${i} 1"></path></svg>`;
+        if (i % 100 === 0) { await flush(); figure.style.opacity = String(i); }
+      }
+      await flush();
+      expect(lease.compositor.commits).toBe(1);
+      expect(queue.size).toBe(0);
+    } finally { lease.release(); done(); }
+  });
+
+  test("a mutation on a box or its ancestor, or a new box, commits once; geometry commits reuse the cached box list", async () => {
+    const { root, flush, done } = setup(300, 10, 100);
+    const lease = retainSharedBorderRoot(root);
+    const lookups = vi.spyOn(root, "querySelectorAll");
+    try {
+      await flush();
+      expect(lease.compositor.commits).toBe(1);
+      lookups.mockClear();
+      root.querySelector<HTMLElement>(".box")!.style.width = "10px";
+      root.style.opacity = "0.5";
+      await flush();
+      expect(lease.compositor.commits).toBe(2);
+      expect(lookups).not.toHaveBeenCalled();
+      const added = document.createElement("div");
+      added.setAttribute("data-shared-border-frame", "");
+      root.append(added);
+      await flush();
+      expect(lease.compositor.commits).toBe(3);
+      expect(lookups).toHaveBeenCalled();
+      added.setAttribute("data-active", "true");
+      await flush();
+      expect(lease.compositor.commits).toBe(4);
+    } finally { lease.release(); done(); }
+  });
+
+  test("a sibling that grows above a hovered button re-measures it on the next state commit and its parent is resize-observed", async () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="column"><p>one line</p><button data-shared-border-frame>go</button></div></div>');
+    const observed = new Set<Element>();
+    class Resize { observe(element: Element) { observed.add(element); } unobserve(element: Element) { observed.delete(element); } disconnect() { observed.clear(); } }
+    Object.assign(dom.window, { ResizeObserver: Resize });
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver, ResizeObserver: globalThis.ResizeObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver, ResizeObserver: Resize });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const button = root.querySelector<HTMLButtonElement>("button")!, paragraph = root.querySelector("p")!;
+    let top = 20;
+    const reads: number[] = [];
+    button.getBoundingClientRect = () => (reads.push(top), { left: 0, top, right: 100, bottom: top + 30, width: 100, height: 30, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    compositor.schedule();
+    try {
+      expect(observed.has(root.querySelector("#column")!)).toBe(true);
+      button.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
+      expect(reads.at(-1)).toBe(20);
+      const svg = button.querySelector("svg")!;
+      const sizeChanges: MutationRecord[] = [];
+      const observer = new dom.window.MutationObserver(records => sizeChanges.push(...records));
+      observer.observe(svg, { attributes: true, attributeFilter: ["width", "height", "viewBox"] });
+      top = 50;
+      paragraph.textContent = "one line\nthat grows\nto three lines";
+      await Promise.resolve();
+      button.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true }));
+      button.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(reads.at(-1)).toBe(50);
+      expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
+      expect(sizeChanges.length + observer.takeRecords().length).toBe(0);
+      observer.disconnect();
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+
+  test("a resize notification schedules a commit only when an observed size really changed, and the compositor's own pending marker never schedules", async () => {
+    const dom = new JSDOM('<div class="semio-scope"><div id="column"><button data-shared-border-frame>go</button></div></div>');
+    let notify: ResizeObserverCallback = () => undefined;
+    class Resize { constructor(callback: ResizeObserverCallback) { notify = callback; } observe() {} unobserve() {} disconnect() {} }
+    Object.assign(dom.window, { ResizeObserver: Resize });
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver, ResizeObserver: globalThis.ResizeObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver, ResizeObserver: Resize });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const column = root.querySelector("#column")!;
+    const compositor = new BorderCompositor(root);
+    const entry = (width: number) => [{ target: column, contentRect: { width, height: 10 } }] as unknown as ResizeObserverEntry[];
+    try {
+      compositor.schedule();
+      const base = compositor.commits;
+      notify(entry(100), {} as ResizeObserver);
+      notify(entry(100), {} as ResizeObserver);
+      expect(compositor.commits).toBe(base);
+      notify(entry(120), {} as ResizeObserver);
+      expect(compositor.commits).toBe(base + 1);
+      root.setAttribute("data-shared-border-pending", "");
+      root.removeAttribute("data-shared-border-pending");
+      await Promise.resolve();
+      expect(compositor.commits).toBe(base + 1);
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
   });
 });

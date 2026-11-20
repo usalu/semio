@@ -208,11 +208,14 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
     case "request-file-open": {
       const readAs = poptstr("readAs") ?? poptstr("read-as");
+      const maxFileBytes = some(params.maxFileBytes ?? params["max-file-bytes"]);
+      if (maxFileBytes != null && (typeof maxFileBytes !== "number" || !Number.isInteger(maxFileBytes) || maxFileBytes < 0 || maxFileBytes > 0xffffffff)) return null;
       return {
         requestFileOpen: {
           req: num("req"),
           accept: pstr("accept"),
           ...(readAs === undefined ? {} : { readAs }),
+          ...(maxFileBytes == null ? {} : { maxFileBytes }),
           importAction: pstr("importAction") || pstr("import-action"),
           ...(some(params.args) == null ? {} : { args: ppack("args") }),
           multiple: Boolean(some(params.multiple) ?? false),

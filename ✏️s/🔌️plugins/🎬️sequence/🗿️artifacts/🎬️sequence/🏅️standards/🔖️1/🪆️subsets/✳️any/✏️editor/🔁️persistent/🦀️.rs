@@ -966,4 +966,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJobFactory 
 }
 //#endregion 🧵️PersistentRemainingRoutes
 
-semio_plugin::retained_command::terminal_frame_bound!(SequencePersistentWork);

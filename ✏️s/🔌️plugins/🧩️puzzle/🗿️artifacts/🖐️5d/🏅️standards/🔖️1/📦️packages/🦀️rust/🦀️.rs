@@ -1,6 +1,7 @@
 //! 🔖️ v1 of `semio-s-artifact-puzzle-5d` — a path-preserving carve of the artifact root mounts.
 
 #![allow(clippy::result_large_err)]
+#![recursion_limit = "256"]
 
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

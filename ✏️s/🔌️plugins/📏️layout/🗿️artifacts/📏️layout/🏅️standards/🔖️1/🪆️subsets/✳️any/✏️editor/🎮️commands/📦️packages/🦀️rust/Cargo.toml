@@ -53,6 +53,7 @@ semio-framework-2d-engine = { path = "../../../../../../../../../../../../../�
 semio-framework-value-persistent = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

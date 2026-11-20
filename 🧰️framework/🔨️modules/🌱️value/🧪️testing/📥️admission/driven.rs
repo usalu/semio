@@ -67,9 +67,25 @@ impl Authorities{
         *self.grant.lock().unwrap()=g;let bound=unsafe{&*std::ptr::from_ref(&self.turn)}.witness();
         self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|control.with_source_witness(Some(bound),|control|control.with_effect(g,work,|control,effect|f(control,effect))))))).unwrap().unwrap().unwrap()
     }
+    /// 🪪️ Identifies the Source turn whose Work and construction authorities every lent effect carries.
+    pub fn source_turn(&self)->OriginalSourceTurnIdentity{self.turn.identity()}
     /// 🧾️ Reads the physical progress the resident construction recipient has accepted so far.
     pub fn submitted(&self)->RetainedCloneProgress{self.construction.inspect(|turn|turn.submitted)}
+    /// 🤝️ Lends one finite-free fixture Work loan of this Source turn to a native decode or encode scope.
+    pub fn work_loan<R>(&mut self,operation:impl FnOnce(&mut semio_framework_value_control_contract::OriginalWorkLoan<'_>)->R)->R{self.work.with_loan(&mut (),operation).expect("fixture Work loan")}
     pub fn new()->Self{let issuer=OriginalSourceTurnIssuer::new();let turn=issuer.issue().expect("fixture Source dispatch");let identity=turn.identity();let grant=std::sync::Arc::new(std::sync::Mutex::new(RetainedCloneGrant::default()));let accepted=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));Self{turn,construction:OriginalConstructionAuthority::new(ConstructionTurn{original:grant.clone(),accepted,submitted:Default::default(),turn:identity}),work:OriginalWorkAuthority::new(ConstructionWork{turn:identity}),grant}}
+    /// 🧵️ Lends Work, construction and the Source witness to one fallible native operation, exactly as every nested turn receives them.
+    pub fn lend<R>(&mut self,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{
+        *self.grant.lock().unwrap()=g;let bound=unsafe{&*std::ptr::from_ref(&self.turn)}.witness();let mut output=None;
+        self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|{control.with_source_witness(Some(bound),|control|{output=Some(operation(control))});Ok::<(),ValueError>(())}))).unwrap()).unwrap();
+        output.expect("lent operation ran")
+    }
+    /// 🧵️ Lends Work and construction to one fallible native encoder operation under the same persistent authorities.
+    pub fn lend_encode<R>(&mut self,control:&mut semio_framework_value_native_encoding::native_encoding::NativeEncodeControl<'_>,g:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_encoding::native_encoding::NativeEncodeControl<'_>)->Result<R,ValueError>)->Result<R,ValueError>{
+        *self.grant.lock().unwrap()=g;let mut output=None;
+        self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|{output=Some(operation(control));Ok::<(),ValueError>(())}))).unwrap()).unwrap();
+        output.expect("lent operation ran")
+    }
     pub fn nested<T,E>(&mut self,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>,OriginalSourceTurnWitness<'_>)->RetainedWorkPoll<T,E>)->RetainedWorkPoll<T,E>{
         *self.grant.lock().unwrap()=g;let witness=self.turn.witness();let bound=unsafe{&*std::ptr::from_ref(&self.turn)}.witness();let mut poll=None;
         self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|{control.with_source_witness(Some(bound),|control|{poll=Some(f(control,witness))});Ok::<(),ValueError>(())}))).unwrap()).unwrap();
@@ -83,9 +99,10 @@ thread_local!{
     static SESSION:std::cell::RefCell<Option<std::mem::ManuallyDrop<Session>>>=const{std::cell::RefCell::new(None)};
     static ADMIT:std::cell::RefCell<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>=const{std::cell::RefCell::new(None)};
 }
-fn open_session(bank:OriginalSourceTurnIdentity)->Session{
+/// 🪪️ Opens the decoder session whose native ownership ceiling is the bank's own funded capacity stock.
+fn open_session(bank:OriginalSourceTurnIdentity,ownership:usize)->Session{
     let callback:&'static mut dyn FnMut(super::native_decoding::NativeDecodeProgress)->bool=Box::leak(Box::new(|_|ADMIT.with(|flag|flag.borrow().as_ref().map_or(true,|flag|flag.load(std::sync::atomic::Ordering::SeqCst)))));
-    let mut session=Session{bank,payer:Authorities::new(),control:NativeDecodeControl::new(1<<24,callback)};
+    let mut session=Session{bank,payer:Authorities::new(),control:NativeDecodeControl::new(ownership,callback)};
     let recipient:&'static mut super::native_decoding::NativeDecodeRetirementRecipient=Box::leak(Box::new(super::native_decoding::NativeDecodeRetirementRecipient::new()));session.control.install_retirement_recipient(recipient).expect("session retirement recipient");
     let _=session.payer.nested(&mut session.control,RetainedCloneGrant::default(),|_,_|RetainedWorkPoll::<(),ValueError>::Pending{work:0});
     session
@@ -93,7 +110,7 @@ fn open_session(bank:OriginalSourceTurnIdentity)->Session{
 fn with_session<R>(bank:&EffectBank,operation:impl FnOnce(&mut Session)->R)->R{
     SESSION.with(|cell|{
         let mut slot=cell.borrow_mut();let id=bank.source_witness().identity();
-        if slot.as_ref().is_none_or(|session|session.bank!=id){*slot=Some(std::mem::ManuallyDrop::new(open_session(id)))}
+        if slot.as_ref().is_none_or(|session|session.bank!=id){*slot=Some(std::mem::ManuallyDrop::new(open_session(id,bank.wallet().remaining().maximum_capacity_bytes)))}
         operation(slot.as_mut().expect("decoder session open"))
     })
 }

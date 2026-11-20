@@ -5,12 +5,17 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { markSite, siteReason } from "./fresh-proctor.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../../../../../../..");
 const site = join(repo, "🎓️teaching/🏛️architecture/📚️course");
-const out = join(here, "🗑️generated/reconnect", "site");
+const out = join(here, process.env.RECONNECT_WORK ?? "🗑️generated/reconnect", "site");
 const pdfs = "/private/tmp/claude-501/-Users-ueli-Documents-semio/9d0eceba-b1b8-4814-b9cd-caae5bbd19aa/scratchpad/pdfs/out";
+const origin = (process.env.PROCTOR_URL ?? "http://127.0.0.1:8797");
+const stale = process.env.FORCE_BUILD === "1" ? "forced" : siteReason(out, origin);
+if (!stale) { console.log(`site build is fresh: ${out}`); process.exit(0); }
+console.log(`rebuilding the site: ${stale}`);
 const secret = randomBytes(32).toString("hex");
 const channel = createServer((request, response) => {
   const name = new URL(request.url ?? "/", "http://localhost").pathname.replace(/^\/pdfs\//, "");
@@ -28,4 +33,5 @@ const child = spawn(process.execPath, [join(repo, "node_modules/vite/bin/vite.js
 });
 const code = await new Promise((done) => child.once("exit", done));
 channel.close();
+if (code === 0) markSite(out, origin);
 process.exit(code ?? 1);

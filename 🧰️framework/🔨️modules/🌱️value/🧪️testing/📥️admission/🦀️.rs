@@ -10,21 +10,21 @@ mod driven_impl;
 pub use driven_impl::{Authorities,bank_run,bank_run_with_source,driven,session_admit,session_driven,session_nested,session_open,session_run,session_step};
 #[path="🪙️finite/🦀️.rs"]
 mod finite;
-pub use finite::{FiniteWork,finite_work};
+pub use finite::{FiniteWork,finite_work,sourced_work};
 pub use semio_framework_value_clone_source_testing::{admit_owned,FixtureAdmissionRecovery,FixtureSource,FixtureSourceBirth};
 
 pub fn denials(g:RetainedCloneGrant,d:crate::RetirementDemand)->impl Iterator<Item=RetainedCloneGrant>{[(true,RetainedCloneGrant{maximum_items:0,..g}),(d.copy_bytes>0,RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0,RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0,RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0,RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().filter_map(|(yes,g)|yes.then_some(g))}
 /// ♻️ Exclusively retains the actual controlled owner across every original borrowed close action.
-pub struct FixtureRetirementProducer<'owner,T:RetireOwned>{owner:&'owner mut retirement::controlled::ControlledRetirement<T>}
-impl<'owner,T:RetireOwned> FixtureRetirementProducer<'owner,T>{/// 🪢️ Takes the real exclusive owner loan, retaining it through Pending and reply settlement.
- pub fn new(owner:&'owner mut retirement::controlled::ControlledRetirement<T>)->Self{Self{owner}}
+pub struct FixtureRetirementProducer<'owner,T:RetireOwned>{owner:&'owner mut retirement::controlled::ControlledRetirement<T>,turn:Option<OriginalSourceTurnIdentity>}
+impl<'owner,T:RetireOwned> FixtureRetirementProducer<'owner,T>{/// 🪢️ Takes the real exclusive owner loan, retaining it through Pending and reply settlement, under the Source turn whose Work funds its close (`None` for an owner that never reads a Source).
+ pub fn new(owner:&'owner mut retirement::controlled::ControlledRetirement<T>,turn:Option<OriginalSourceTurnIdentity>)->Self{Self{owner,turn}}
  /// 👁️ Observes the same original controlled owner without lending mutation.
  pub fn owner(&self)->&retirement::controlled::ControlledRetirement<T>{self.owner}}
 impl<T:RetireOwned> OriginalEffectProducer for FixtureRetirementProducer<'_,T>{
  type Output=RetainedCloneStep;type Failure=semio_framework_value_retirement::OriginalRetirementFailure;
  type Context<'turn,'source>=(usize,Option<&'turn mut semio_framework_value_retirement::OriginalRetirementCloseLoan<'source>>) where 'source:'turn;
  fn validate_context<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<(),ValueError>where 'source:'turn{Ok(())}
- fn source_turn<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}
+ fn source_turn<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity>where 'source:'turn{self.turn}
  fn receive<'r,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'source:'turn{match c.1.as_deref_mut(){Some(original)=>self.owner.step_original_into(original,c.0,effect,reply),None=>self.owner.step_into(c.0,effect,reply)}}
  fn recover<'r,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Self::Output,Self::Failure>)->Result<OriginalEffectReplyComplete<'r,Self::Output,Self::Failure>,ValueError>where 'source:'turn{match c.1.as_deref_mut(){Some(original)=>self.owner.recover_step_original_into(original,c.0,effect,reply),None=>self.owner.recover_step_into(c.0,effect,reply)}}
 }

@@ -116,10 +116,7 @@ fn domain_scene(fixture: &Value, utility: &str) -> UiComponentSceneNode {
     ink.document_json = serde_json::to_string(&document).expect("document JSON");
     ink.selection_json = fixture["scene"]["selectionJson"].as_str().expect("selection JSON").into();
     ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
-    ink.interaction_domain = Some(semio_ui_scene_plane::InkCanvasInteractionDomain {
-        id: fixture["scene"]["interactionDomain"]["id"].as_str().expect("interaction domain id").into(),
-        granularity_id: fixture["scene"]["interactionDomain"]["granularityId"].as_str().expect("interaction domain granularity").into(),
-    });
+    ink.interaction_domain = Some(serde_json::from_value(fixture["scene"]["interactionDomain"].clone()).expect("interaction domain"));
     scene
 }
 
@@ -148,6 +145,9 @@ fn assert_domain_action(action: ActionDescriptor, expected_action: &str, expecte
 #[test]
 fn ink_canvas_domain_hover_uses_scoped_topology_ids() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    for domain in fixture["invalidInteractionDomains"].as_array().expect("invalid interaction domains") {
+        assert!(serde_json::from_value::<semio_ui_scene_plane::InkCanvasInteractionDomain>(domain.clone()).is_err());
+    }
     let scene = domain_scene(&fixture, "selectDirect");
     let hover = run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 40.0, y: 40.0 }).expect("hover action");
     assert_domain_action(hover, "interactionHover", &fixture["cases"][0]["args"]);

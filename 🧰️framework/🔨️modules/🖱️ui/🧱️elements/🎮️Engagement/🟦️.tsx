@@ -224,6 +224,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
               text={option.label}
               icon={option.icon ?? "circle-dot"}
               className={cn(control.value === option.id && interactiveActiveFillClass)}
+              data-state={control.value === option.id ? "on" : undefined}
               disabled={option.disabled || control.disabled}
               onClick={() => control.onSelect?.(option.id)}
             />
@@ -288,7 +289,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
         data-slot="engagement"
         data-session-active={sessionActive ? "true" : undefined}
         data-shared-border-state={sessionActive ? "active" : undefined}
-        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base shadow-sm", className)}
+        className={cn("pointer-events-auto w-full max-w-full", sessionActive && "bg-active-base", className)}
       >
         {primaryStepStatus ? (
           <SharedBorderRowCell data-slot="engagement-step-heading" className="text-foreground text-sm font-medium leading-tight">
@@ -321,7 +322,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
                 const actionLabel = normalizeEngagementActionText(option.label ?? "");
                 const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
                 return (
-                  <ButtonGroupItem key={option.id} id={optionControlId} aria-label={actionLabel} icon={option.icon} text={actionLabel} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
+                  <ButtonGroupItem key={option.id} id={optionControlId} aria-label={actionLabel} icon={option.icon} text={actionLabel} className={cn(option.pressed && interactiveActiveFillClass)} data-state={option.pressed ? "on" : undefined} onClick={option.onPress} disabled={option.disabled} />
                 );
               })}
             </ButtonGroup>

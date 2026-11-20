@@ -16,12 +16,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if !mounted.publication_failure.terminal_is_empty(){let custody=&mut mounted.publication_failure;if !custody.reservation.as_ref().is_some_and(|place|place.ready()){custody.reservation.get_or_insert_with(Default::default).prepare(cx)?;return Ok(())}let place=custody.reservation.as_mut().expect("funded publication failure reservation");if !place.pending(){place.with_body(cx,|_,slot|{*slot=custody.original.take();Ok(())})?;}if let Some(mut failure)=semio_framework_job::admit_original_domain_failure(place,cx)?{if place.terminal_is_empty(){custody.reservation=None}failure.effects=Default::default();return Err(failure.into())}return Ok(())}
         if mounted.result_page_retirement_pending() {
-            let step = cx.with_retained_loan(retained, |same| mounted.advance_acknowledged_result_page(same))?;
-            let progress = match step {
-                semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => progress,
-                _ => Default::default(),
-            };
-            mounted.publication_ownership_progress = Some((retained, progress));
+            cx.with_retained_loan(retained, |same| mounted.advance_acknowledged_result_page(same))?;
             return Ok(());
         }
         if mounted.advance_pending_result_page(cx)?{return Ok(())}
@@ -29,6 +24,35 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if lane==TypedOperationResultLane::WindowConfig{if mounted.pending_window_config_receipt.is_none(){let d=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<store::os_store::presence::LaneItemReceipt>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{mounted.pending_window_config_receipt=Some(receipt);semio_framework_value::RetainedWorkOutcome{work:1,result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(())})?;return Ok(())}return self.advance_mounted_window_config_refresh(mounted,retained,cx);}
             let revision=match mounted.pending_artifact_publication.as_ref(){Some(PendingArtifactStorePublication::Artifact(owner))=>{if owner.expected_generation!=receipt.generation_after{return Err(plugin_sdk_fault("accepted artifact receipt changed its retained generation").into())}Some(owner.expected_revision)},_=>None};
             mounted.reserve_store_result(lane,receipt,revision,cx)?;return Ok(())
+        }
+        if matches!(mounted.publication,Some(ArtifactToolCompletionValue::Genesis(_,Some(_)))) {
+            return self.advance_mounted_genesis_replacement(mounted,cx);
+        }
+        if matches!(mounted.publication,Some(ArtifactToolCompletionValue::Genesis(None,None))) && mounted.published_artifact {
+            cx.with_original_retirement(|cx|{
+                use semio_framework::kernel::UiDirtyScope;
+                if !mounted.ui_pending && mounted.terminal_fault.is_some() {
+                    mounted.reserve_result_intent(PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:PublicationRawReason::Fault},cx)?;
+                    return Ok(());
+                }
+                let copy_bytes=std::mem::size_of::<Option<PublicationPagePlan>>()+std::mem::size_of::<TypedOperationCompletionWitness>()+std::mem::size_of::<bool>();
+                let demand=semio_framework_value::RetirementDemand{copy_bytes,depth:1,..Default::default()};
+                if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) {return Ok(());}
+                cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()})?;
+                cx.consume_fuel(1);
+                let token=mounted.next_token();
+                let intent=if mounted.ui_pending {
+                    if self.tools.typed_ui_outbox.push(UiDirtyScope::Full).is_err(){return Ok(());}
+                    mounted.ui_pending=false;
+                    PublicationPageIntent::Ui
+                }else{
+                    if self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness{operation:token.operation,ui_scope:UiDirtyScope::Full}).is_err(){return Ok(());}
+                    PublicationPageIntent::Raw{lane:TypedOperationResultLane::Terminal,reason:PublicationRawReason::Complete}
+                };
+                mounted.page_publication.plan=Some(PublicationPagePlan{token,intent});
+                Ok(())
+            })?;
+            return Ok(());
         }
         if mounted.reject_cancelled_publication()? {
             mounted.reserve_cancelled_result(cx)?;
@@ -45,6 +69,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             mounted.ui_pending=matches!(mounted.publication,Some(ArtifactToolCompletionValue::Emit(Ok(_),_)));
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
             return Ok(())
+        }
+        if let Some(ArtifactToolCompletionValue::Genesis(original,slot))=mounted.publication.as_mut() {
+            let expected=(mounted.artifact_generation,mounted.canonical_revision);
+            if let Some(handle)=self.ingest.begin_original_genesis_replacement(&*self.stores,&*self.child_composition,original,mounted.operation.operation,expected,cx)? {
+                *slot=Some((handle.operation.0,handle.generation.0));
+            }
+            return Ok(());
         }
         if mounted.tool_stage!=semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete{
             let complete=self.as_render().settle_tool_operation(mounted.operation.operation.0,&mounted.canonical_revision,&mounted.meta.actor,mounted.publication.as_mut().expect("mounted publication retains its accepted emit"),&mut mounted.tool_stage,&mut mounted.tool_press_result,&mut mounted.command_logged,cx)?;
@@ -70,7 +101,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if let Some(pending)=mounted.pending_artifact_publication.as_mut(){pending.begin_close();}
             return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
         }
-        if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if !emit.artifact_mutations.is_empty()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
+        if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
             let capture=if matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_)){2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
             if retained.maximum_items==0||retained.maximum_depth==0||retained.maximum_copy_bytes<capture{return Ok(())}
@@ -86,29 +117,27 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Ok(());
             }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
+            let mut turn_ceiling = cx.original_turn_ceiling().0;
+            turn_ceiling.maximum_copy_bytes = turn_ceiling.maximum_copy_bytes.saturating_sub(capture);
             let mut scope=None;let mut stepped=None;
             if !cx.with_native_receiving(&mut scope,|receiving,_|{stepped=Some(match pending {
-                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, body_grant.maximum_copy_bytes, grant,receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
-                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, body_grant.maximum_copy_bytes, grant,receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
-                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, body_grant.maximum_copy_bytes, grant,receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
+                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch_with_turn_ceiling(publication, body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(OriginalPublicationAdvanceFailure::Domain),
                 PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
                 PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
-                PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),body_grant.maximum_copy_bytes, grant,receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
+                PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),body_grant.maximum_copy_bytes, grant, turn_ceiling, receiving).map_err(|error|OriginalPublicationAdvanceFailure::Primary(error.into())),
                 PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant,receiving).map_err(OriginalPublicationAdvanceFailure::Primary),
             });Ok(())})?{return Ok(())}
             let scope=scope.ok_or_else(||semio_framework_value::ValueError::invariant("original receiving scope vanished"))?;let result=stepped.ok_or_else(||semio_framework_value::ValueError::invariant("original receiving step did not run"))?;
             let work=match &*pending{PendingArtifactStorePublication::Artifact(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Config(publication)=>publication.last_turn_work(),PendingArtifactStorePublication::Draft(publication)=>publication.last_turn_work(),_=>0};
             cx.consume_fuel(work);
-            let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>*receipt,Err(OriginalPublicationAdvanceFailure::Primary(error))=>error.retained_progress(),Err(OriginalPublicationAdvanceFailure::Domain(error))=>{let mut progress=match error{store::VcsError::InverseRefused(error)|store::VcsError::NativeEncoding(error)=>error.retained_progress(),_=>Default::default()};progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(capture).ok_or_else(||semio_framework_value::ValueError::invariant("publication failure capture exceeds original receipt"))?;progress},_=>Default::default()};
+            let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt)|store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_,receipt))=>*receipt,Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused)=>pending.preparation_refusal_progress().ok_or_else(||plugin_sdk_fault("typed preparation refused without its original retained failure"))?,Err(OriginalPublicationAdvanceFailure::Primary(error))=>error.retained_progress(),Err(OriginalPublicationAdvanceFailure::Domain(error))=>{let mut progress=match error{store::VcsError::InverseRefused(error)|store::VcsError::NativeEncoding(error)=>error.retained_progress(),_=>Default::default()};progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(capture).ok_or_else(||semio_framework_value::ValueError::invariant("publication failure capture exceeds original receipt"))?;progress},_=>Default::default()};
             let receipt=cx.consume_receiving_retained(retained,ownership);
             if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original publication receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
             let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
             return match advance {
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, ownership) => {
-                    if ownership!=RetainedCloneProgress::default(){
-                        assert!(mounted.publication_ownership_progress.is_none(),"typed publication cannot overwrite an unreturned original receipt");
-                        mounted.publication_ownership_progress=Some((retained,ownership));
-                    }
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, _) => {
                     match pending_lane {
                         TypedOperationResultLane::Artifact => {
                             mounted.published_artifact = true;
@@ -144,18 +173,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership) => {
                     if !ownership.fits(grant.retained_grant())||grant.maximum_depth==0&&ownership!=RetainedCloneProgress::default(){return Err(plugin_sdk_fault("typed preparation violated its original full grant").into());}
-                    assert!(mounted.publication_ownership_progress.is_none(),"typed preparation cannot overwrite an unreturned original receipt");
-                    mounted.publication_ownership_progress=Some((retained,ownership));
                     mounted.note_publication_checkpoint(checkpoint);
                     Ok(())
                 }
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => {
-                    let reason=pending.preparation_refusal().ok_or_else(||plugin_sdk_fault("typed preparation refused without its original retained failure"))?;
-                    let ownership=reason.retained_progress();
-                    assert!(mounted.publication_ownership_progress.is_none(),"typed refusal cannot overwrite its unreturned actual receipt");
-                    mounted.publication_ownership_progress=Some((retained,ownership));
-                    Ok(())
-                }
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => Ok(()),
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Ok(()),
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK").into()),
@@ -164,6 +185,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let token = mounted.next_token();
         let publication_lanes = mounted.publication_lanes;
         let intent = match mounted.publication.as_mut().expect("publication owner was installed") {
+            ArtifactToolCompletionValue::Genesis(..) => unreachable!("genesis follows its retained replacement route"),
             ArtifactToolCompletionValue::Emit(Err(fault), _) | ArtifactToolCompletionValue::Download(Err(fault), _) => {
                 let _=fault;
                 PublicationPageIntent::Raw{lane:TypedOperationResultLane::Fault,reason:PublicationRawReason::Fault}
@@ -235,7 +257,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     assert!(mounted.publication_ownership_progress.is_none(),"child preparation cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));return Ok(());
                 }
                 match preparation{ChildEmitPreparationStep::Ready(_)=>{},ChildEmitPreparationStep::Pending(_)=>return Ok(()),ChildEmitPreparationStep::Refused(fault,_)=>return Err(fault.into())}
-                if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
+                if (emit.has_artifact_mutations() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
                     || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
                     || (!emit.window_config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowConfig))
                     || (!emit.draft_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Draft))
@@ -247,7 +269,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 {
                     return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract").into());
                 }
-                if !emit.artifact_mutations.is_empty() || !emit.owned_child_emits.is_empty() {
+                if emit.artifact_mutation_pages.is_some() && (!emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty()) {
+                    return Err(plugin_sdk_fault("paged document mutations require their local mounted edit owner").into());
+                }
+                if emit.has_artifact_mutations() || !emit.owned_child_emits.is_empty() {
                     self.media.require_operation_emitting_kind(&mounted.verb, self.tools.declared_dispatch_kind(&*self.host_events, &mounted.verb))?;
                     if A::ROLE == AppRole::Viewer {
                         return Err(viewer_read_only_fault(&mounted.verb).into());
@@ -258,10 +283,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     if let Some(pending_txn_id) = self.txn.pending_transaction.as_ref().map(|pending| pending.txn_id.clone()) {
                         return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", format!("verb {:?} would emit artifact mutations while transaction {pending_txn_id:?} is pending on this instance", mounted.verb)).into());
                     }
-                    if emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps) {
+                    if emit.artifact_mutation_iter().any(Mutation::may_emit_foreign_steps) {
                         let mut running = self.stores.store.snapshot().map_err(|error| error.into_fault())?;
                         let foreign = Vec::new();
-                        for op in emit.artifact_mutations.iter() {
+                        for op in emit.artifact_mutation_iter() {
                             if store::ColdMutation::foreign_step_source(op, &running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient").into()); }
                             let outcome = op.diff(&running);
                             if !outcome.is_applicable(protocol::MergePolicy::default()) {
@@ -270,8 +295,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                             running = protocol::apply_diff_cold(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                         }
                         if !foreign.is_empty() {
-                            let mut local_ops = Vec::with_capacity(emit.artifact_mutations.len());
-                            for op in emit.artifact_mutations.iter() {
+                            let mut local_ops = Vec::with_capacity(emit.artifact_mutation_count());
+                            for op in emit.artifact_mutation_iter() {
                                 local_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
                             }
                             self.txn.pending_transaction_proposal = Some(TransactionProposalDraft { local_ops, foreign });
@@ -285,12 +310,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     emit.transaction.as_ref(),
                     emit.transaction_phase,
                     !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty(),
-                    !emit.artifact_mutations.is_empty(),
-                    emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps),
+                    emit.has_artifact_mutations(),
+                    emit.artifact_mutation_iter().any(Mutation::may_emit_foreign_steps),
                 ) {
                     return Err(fault.into());
                 }
-                if !emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty() {
+                if emit.has_artifact_mutations() || !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty() {
                     if let Some(fault) = X::document_refusal(&*self.time_travel, &*self.tool_runs, &mounted.verb) {
                         return Err(fault.into());
                     }
@@ -311,16 +336,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     if self.child_composition.private_child_groups.get(operation).is_some(){mounted.owned_child_group=Some(operation);}
                     return Ok(());
                 }
-                if emit.child_emits.is_empty() && emit.owned_child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
+                if emit.child_emits.is_empty() && emit.owned_child_emits.is_empty() && emit.has_artifact_mutations() {
                     if let Some(fault) = self.stores.open_transaction_admission_fault(emit.transaction.as_ref()) {
                         return Err(fault.into());
                     }
-                    if let Err(error) = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<A::Snapshot, A::Mutation>(&emit.artifact_mutations) {
+                    if let Err(error) = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture_iter::<A::Snapshot, A::Mutation>(emit.artifact_mutation_iter()) {
                         return Err(error.into_fault().into());
                     }
                     let streams=emit.transaction_phase==TransactionPhase::Stream;
                     let outbound=self.stores.store.backbone_ref().is_some();
-                    if let Some((mut publication,ownership))=self.stores.store.admit_apply_batch(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),None,outbound,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
+                    if let Some((mut publication,ownership))=self.stores.store.admit_apply_batch_with_pages(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,&mut emit.artifact_mutation_pages,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),None,outbound,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         publication.set_transaction_open(streams);
                         emit.transaction_phase=TransactionPhase::Commit;
                         mounted.publication_ownership_progress=Some((retained,ownership));
@@ -434,4 +459,56 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         };
         mounted.reserve_result_intent(intent,cx)?;Ok(())
     }
+    fn advance_mounted_genesis_replacement(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        use semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+        use semio_plugin_instance_docs::docs_ingress::{ArtifactEnvelopeDecodeOperationHandle as Handle, ArtifactEnvelopeDecodeOperationPoll as Poll};
+        let Some(ArtifactToolCompletionValue::Genesis(None,Some((operation,generation))))=mounted.publication.as_ref() else {
+            return Err(plugin_sdk_fault("mounted genesis replacement lost its exact handle").into());
+        };
+        let handle=Handle{operation:semio_framework_job::OperationId(*operation),generation:semio_framework_job::Generation(*generation)};
+        let cancelled=cx.is_cancelled()||mounted.cancellation_lease.as_ref().is_some_and(ToolCancellationLease::publication_is_cancelled);
+        let status=self.ingest.poll_artifact_store_replacement(handle);
+        if matches!(status,Poll::Pending|Poll::Progress) {
+            if cancelled { self.ingest.cancel_artifact_store_replacement(handle)?; }
+            return Ok(());
+        }
+        let frontier=self.ingest.artifact_store_replacement_frontier(handle);
+        let demand=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<(u64,u64)>>() + 2*std::mem::size_of::<[u8;32]>() + 4*std::mem::size_of::<u64>() + 3*std::mem::size_of::<bool>() + std::mem::size_of::<Option<ArtifactBoundedToolFault>>(),depth:1,..Default::default()};
+        let settled=cx.with_original_retirement(|cx|->Result<_,semio_framework_job::OriginalTurnFailure>{
+            if cx.retirement_should_yield() || !cx.retained_work_can_enter(demand) { return Ok(None); }
+            let fault=if status==Poll::Fault {self.ingest.artifact_store_replacement_refusal(handle)} else {None};
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;
+            cx.consume_fuel(1);
+            if !self.ingest.acknowledge_artifact_store_replacement(handle)? {
+                return Err(plugin_sdk_fault("terminal typed genesis replacement lost its acknowledgment authority").into());
+            }
+            let Some(ArtifactToolCompletionValue::Genesis(_,slot))=mounted.publication.as_mut() else {unreachable!()};
+            *slot=None;
+            Ok(Some(fault))
+        })?;
+        let Some(fault)=settled else {return Ok(())};
+        if let Some((generation,revision))=frontier {
+            if generation!=self.stores.store.generation_now()||revision!=self.stores.store.content_revision_now(){
+                return Err(plugin_sdk_fault("committed typed genesis frontier changed before acknowledgment").into());
+            }
+            mounted.artifact_generation=generation;
+            mounted.canonical_revision=revision;
+            mounted.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));
+            mounted.operation.generation=semio_framework_job::Generation(generation);
+            mounted.published_artifact=true;
+            mounted.ui_pending=true;
+            mounted.command_logged=true;
+        }
+        match status {
+            Poll::Ready if frontier.is_some()=>Ok(()),
+            Poll::Cancelled=>{if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}mounted.reserve_cancelled_result(cx)?;Ok(())},
+            _=>{
+                let fault=fault.unwrap_or_else(||plugin_sdk_fault("typed genesis replacement returned no authorized commit"));
+                mounted.terminal_fault=Some(ArtifactBoundedToolFault::from_fault(&fault));
+                if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}
+                Err(fault.into())
+            },
+        }
+    }
+
 }

@@ -3,8 +3,7 @@
 use super::*;
 
 //#region ✏️PageText
-/// ✏️ Replaces the Unicode text projection while preserving every non-text page-content operator.
-pub fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Vec<PdfOp> {
+fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Option<Vec<PdfOp>> {
     fn replace_text_string(value: &mut PdfTextString, replacement: &mut Option<String>) {
         let PdfTextString::Text { text } = value else { return };
         *text = replacement.take().unwrap_or_default();
@@ -25,10 +24,7 @@ pub fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Vec<PdfOp> {
             _ => {}
         }
     }
-    if replacement.as_deref().is_some_and(|text| !text.is_empty()) {
-        content.extend([PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text(replacement.take().expect("pending replacement")) }, PdfOp::EndText]);
-    }
-    content
+    replacement.is_none().then_some(content)
 }
 
 /// 🔐️ The token an agent's omitted `set-page` revision is admitted against: the addressed page text's own token, as its draft
@@ -41,8 +37,8 @@ pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_v
     Ok(Some(semio_plugin::app::DocumentWindowKit::text_revision(&target.text())))
 }
 
-/// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
-pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<PdfMutation>, Fault> {
+/// 📄️ Builds a reversible page-text edit and supplies a font when the page has no editable text.
+pub fn page_text_edit_mutations(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Vec<PdfMutation>, Fault> {
     if item != 0 {
         return Err(Fault::new(
             FaultOrigin::App,
@@ -60,16 +56,22 @@ pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, rev
     })?;
     semio_s_artifact_stdio_contract::require_window_kit_document_revision(&target.text(), revision, "stdio.pdf.set-page.conflict")?;
     if target.text() == text {
-        return Ok(None);
+        return Ok(Vec::new());
     }
-    Ok(Some(PdfMutation::SetPageContent(SetPageContent { index: page_index, content: replace_page_unicode_text(target, text) })))
+    if let Some(content) = replace_page_unicode_text(target, text) {
+        return Ok(vec![PdfMutation::SetPageContent(SetPageContent { index: page_index, content })]);
+    }
+    let [left, bottom, right, top] = visible_page_box(target);
+    let x = (left + 12.0).min(right);
+    let y = (top - 24.0).max(bottom);
+    insert_object(snapshot, "insert-text", page_index, x, y, 0.0, 12.0, 0.0, 0.0, 0.0, text)
 }
 
 #[cfg(test)]
 mod document_text_edit_tests {
-    use super::{page_text_edit_mutation, replace_page_unicode_text};
-    use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
-    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPage, PdfSnapshot, PdfTextString};
+    use super::{page_text_edit_mutations, replace_page_unicode_text};
+    use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+    use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPage, PdfSnapshot, PdfTextString};
 
     #[test]
     fn replacement_preserves_non_text_operations_and_replaces_instead_of_appending() {
@@ -82,7 +84,7 @@ mod document_text_edit_tests {
             PdfOp::EndText,
             PdfOp::Restore,
         ];
-        page.content = replace_page_unicode_text(&page, "new\ncontent");
+        page.content = replace_page_unicode_text(&page, "new\ncontent").unwrap();
         assert_eq!(page.text(), "new\ncontent");
         assert!(matches!(page.content.first(), Some(PdfOp::Save)));
         assert!(matches!(page.content.last(), Some(PdfOp::Restore)));
@@ -94,12 +96,13 @@ mod document_text_edit_tests {
         let mut snapshot = PdfSnapshot::default();
         snapshot.pages.push(PdfPage::default());
         let revision = semio_plugin::app::DocumentWindowKit::text_revision("");
-        assert!(page_text_edit_mutation(&snapshot, 1, 0, &revision, "draft").is_err());
-        assert!(page_text_edit_mutation(&snapshot, 0, 1, &revision, "draft").is_err());
-        assert!(page_text_edit_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
-        let Some(PdfMutation::SetPageContent(edit)) = page_text_edit_mutation(&snapshot, 0, 0, &revision, "draft").expect("addressed edit") else { panic!("set page content") };
+        assert!(page_text_edit_mutations(&snapshot, 1, 0, &revision, "draft").is_err());
+        assert!(page_text_edit_mutations(&snapshot, 0, 1, &revision, "draft").is_err());
+        assert!(page_text_edit_mutations(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
+        let edits = page_text_edit_mutations(&snapshot, 0, 0, &revision, "draft").expect("addressed edit");
+        let [PdfMutation::SetFont(_), PdfMutation::SetPageContent(edit)] = edits.as_slice() else { panic!("install font and set page content") };
         let mut page = snapshot.pages[0].clone();
-        page.content = edit.content;
+        page.content.clone_from(&edit.content);
         assert_eq!(page.text(), "draft");
     }
 }

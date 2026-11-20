@@ -1,0 +1,9 @@
+# Baseline JPEG previews for authored PDF images
+
+The page editor resolves the retained DCT stream through the PDF artifact resource port. The repository JPEG decoder projects bounded 8-bit baseline components. The editor applies the Adobe APP14 or PDF ColorTransform choice, then supplies the samples to the existing affine RGBA sampler. The same path handles inline images and image XObjects. The PDF sample grid still applies Decode, color-key masks, and referenced masks.
+
+The language-neutral fixture in the page editor unit tests contains complete authored PDF inputs and RGBA samples from PyMuPDF 1.26.7. It covers a mirrored RGB XObject, an Adobe RGB stream with a conflicting PDF ColorTransform, and ASCIIHex-wrapped inline grayscale with an inverted Decode array. Pillow 12.0.0 creates the native JPEG bytes for fixture generation. The fixture generator is stored alongside this report.
+
+The preview covers DeviceGray and DeviceRGB baseline JPEG. The JPEG decoder uses nearest-neighbor chroma upsampling and the preview caps decoder working memory at 96 MiB. Progressive JPEG and other image codecs continue through the editor's existing fallback.
+
+The fixture generator reproduced the committed JSON byte for byte through the repository UV tool. Cargo manifest metadata agreed with the page-editor dependency and both JPEG package dependency closures in all six owning lockfiles. The preexisting native and browser builds started admitting sources before the page-editor dependency changed. The six existing Cargo locks containing the page editor now include the path dependency, using the same runtime dependency sections as the owning hub lock. The exclusive lock regeneration was cancelled after it remained fourth in the repository queue. The native gate is responsible for executing the new Rust test against a current source generation.

@@ -8,6 +8,8 @@ import { exportProjectRecordV1, projectClosureTravelV1, projectRecordKeyTextV1 }
 import { graphFleetClientV1 } from "../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import { graphFleetSettingsV1 } from "../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import { createProjectFleetPortV1 } from "../../../../../🪪️graph-state/📦️project-records/🟦️.ts";
+import { stagedLeafPortV1 } from "../../../../../🪪️graph-state/📦️project-records/🍃️leaves/🟦️.ts";
+import { workspaceClosurePortV1 } from "../../../../../🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts";
 import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import { ownerJobV1, ownerRecordKeyTextV1, projectRecordKeyV1 } from "../../🟨️.mjs";
 import { OWNER_POOL_POLICY_V1 as P, ownerPoolStagingDirectoryV1, publishOwnerPoolFailureV1, readOwnerPoolFailureV1 } from "../🟦️.ts";
@@ -16,18 +18,22 @@ import { OWNER_POOL_STAGING_POLICY_V1, ownerPoolStagingIoV1, ownerPoolStagingSwe
 /** 🔬️ The revision of the record code this process runs: a child whose revision differs from the wave's would file its records under other keys. */
 export const ownerPoolRevisionV1 = () => projectRecordKeyTextV1(null);
 
+/** 🧷️ The fleet port of one pool child: the leaves of a record are read from the staging directory the child infers into first, then from the store of the machine, because the child removes its staging directory after the publication and the store of the machine never holds what the child inferred. */
+export const ownerPoolFleetPortV1 = ({ root, environment, client, staging }) => createProjectFleetPortV1({ root, environment, client, leaves: stagedLeafPortV1(staging, workspaceClosurePortV1(root)) });
+
 /** 🔬️ Opens the real inference driver of one wave in this process: the inference session the publisher described, under this machine's own root, one staging directory, and the claim, run and publish of an owner: claim by the digest of the record state (a stored record is never computed, a failure note of another machine gives the claim back), infer into the staging directory, publish the record to the fleet cache and remove the staged leaves. `fleetRoot` is the checkout whose facts name the cache (the root itself unless a test brings its own cache). */
 export async function openOwnerPoolInferenceV1({ root, fleetRoot = root, environment, session: bytes, globals, say = () => {} }) {
   await libraryBootstrap;
   const settings = graphFleetSettingsV1(fleetRoot, environment);
   if (settings === undefined) throw new Error("no fleet cache");
-  const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) }), port = createProjectFleetPortV1({ root, environment, client });
-  if (port === undefined) throw new Error("no fleet port");
+  const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) });
   const service = await import("../../🏊️project-farm/👷️service/🟨️.mjs"), stagingRoot = ownerPoolStagingDirectoryV1([realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], { probe: (directory, megabytes) => { mkdirSync(directory, { recursive: true }); const file = join(directory, ".probe-" + process.pid); try { writeFileSync(file, Buffer.alloc(megabytes * 1048576, 1)); } finally { rmSync(file, { force: true }); } } }), base = (mkdirSync(stagingRoot, { recursive: true }), mkdtempSync(join(stagingRoot, OWNER_POOL_STAGING_POLICY_V1.prefix)));
   writeOwnerPoolStagingOwnerV1(base);
   ownerPoolStagingSweepV1({ parents: [realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], own: base, io: ownerPoolStagingIoV1 });
   const session = { ...deserialize(bytes), workspaceRoot: root, closureStore: undefined, stagingBase: base, authority: undefined };
   await service.open(session, { slot: 0, generation: 1 });
+  const port = ownerPoolFleetPortV1({ root, environment, client, staging: service.stagingDirectoryV1() });
+  if (port === undefined) throw new Error("no fleet port");
   const env = service.sessionEnvironmentV1(), staging = service.stagingDirectoryV1(), jobs = new Map(), leaves = new Map(), digests = new Map(), revision = projectRecordKeyTextV1(null);
   const forget = name => { for (const leaf of leaves.get(name) ?? []) rmSync(join(staging, leaf), { recursive: true, force: true }); leaves.delete(name); jobs.delete(name); };
   return {

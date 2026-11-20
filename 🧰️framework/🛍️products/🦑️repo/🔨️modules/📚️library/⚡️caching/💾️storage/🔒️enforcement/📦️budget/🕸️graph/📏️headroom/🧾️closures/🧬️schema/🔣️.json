@@ -80,7 +80,7 @@
     "Protocol": {
       "const": {
         "version": 1,
-        "maximumEntries": 262144,
+        "maximumEntries": 1048576,
         "maximumFileBytes": 536870912,
         "maximumExpandedBytes": 268435456,
         "maximumProofBytes": 17179869184,

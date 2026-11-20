@@ -11,6 +11,14 @@ use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️ExampleFixtures
+
+#[semio_framework_async_macros::async_test]
+async fn replacing_artifact_snapshot_restores_the_composed_working_scene() {
+    let document = plate_document();
+    let mut artifact = Process3dArtifact::from_snapshot(default_document());
+    artifact.set_snapshot(document.clone());
+    assert_eq!(artifact.to_snapshot(), document);
+}
 /// 🧭️ Every `step.origin` on a document must name a machine+capability that actually exists in
 /// that document's own `workshop` — the mutations' only source of truth for legal origins.
 fn assert_origins_resolve(document: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot) {

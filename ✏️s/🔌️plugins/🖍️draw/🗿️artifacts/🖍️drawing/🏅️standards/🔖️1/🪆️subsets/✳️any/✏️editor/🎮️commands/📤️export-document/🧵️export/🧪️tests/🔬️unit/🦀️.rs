@@ -1,45 +1,132 @@
 //! 🧪️ Original export sources survive interruption and every denied retirement currency.
-use semio_framework_test_fixtures::fixture_text;
-
-#[allow(unused_imports)] use semio_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-#[allow(unused_imports)] use semio_os_kernel::io::io_mechanism::{OwnedSerializerRequest,OwnedSerializerJob,OwnedSerializerOutput,io_begin_owned_serialization};
-#[allow(unused_imports)] use semio_framework_value::{DslValue,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::export_job::*;
-use semio_framework_job::InteractiveJobCloseStep;
+use super::*;
+use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, OriginalJobFixtureCaller, OriginalRetirementPump};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_framework_value::{ErasedSnapshotRetirement, OriginalRetirementPoll, RetainedAllocationEffect, RetirementDemand};
 
-fn pump_returns(issuer:&mut store::ArtifactStore<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>){let demand=if let Some(owner)=active.as_ref(){let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();store::os_store::snapshot_read::artifact_retirement_box_demands(owner,if copy>0{copy}else{release}).unwrap()}else{issuer.returned_snapshot_read_retirement_demand().unwrap()};if active.is_none()&&issuer.returned_snapshot_read_count()==0{return;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(progress,physical)=observe(||{if active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(active,grant).unwrap().progress()}else{let(owner,progress)=issuer.take_returned_snapshot_read_retirement(grant).unwrap();*active=owner;progress}});assert!(progress.fits(grant));assert_eq!(physical.requested_bytes,progress.retained_capacity_bytes);assert_eq!(physical.released_bytes,progress.released_bytes);}
+type Store = store::ArtifactStore<DrawingSnapshot, semio_s_artifact_draw_drawing_mutations::DrawingMutation>;
+
+fn grant(demand: RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: demand.copy_bytes,
+        maximum_capacity_bytes: demand.capacity_bytes,
+        maximum_release_bytes: demand.release_bytes,
+        maximum_depth: demand.depth,
+    }
+}
+
+fn effect_turn<T>(grant: RetainedCloneGrant, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> T) -> T {
+    let mut turn = OriginalRetirementPump::new().turn(1 << 24, u64::MAX, || Some(0), grant).unwrap();
+    turn.with_effect(run).unwrap().unwrap().0
+}
+
+fn progress(poll: OriginalRetirementPoll) -> RetainedCloneProgress {
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn.result.unwrap().progress(),
+        RetainedWorkPoll::Pending { .. } => Default::default(),
+    }
+}
+
+fn pump_returns(issuer: &mut Store, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>) {
+    if active.is_none() && issuer.returned_snapshot_read_count() == 0 { return; }
+    let body = active.as_ref().map_or(0, |owner| {
+        owner.next_copy_byte_demand().unwrap().max(owner.next_release_byte_demand().unwrap())
+    });
+    let demand = match active.as_ref() {
+        Some(owner) => store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body),
+        None => issuer.returned_snapshot_read_retirement_demand(),
+    }.unwrap();
+    let selected = grant(demand);
+    let (receipt, physical) = observe(|| effect_turn(selected, |effect| {
+        if active.is_some() {
+            return progress(store::os_store::snapshot_read::artifact_retirement_box_close_step(active, body, effect));
+        }
+        let (owner, receipt) = issuer.take_returned_snapshot_read_retirement(effect).unwrap();
+        *active = owner;
+        receipt
+    }));
+    assert!(receipt.fits(selected));
+    assert!(!physical.overflowed);
+    assert_eq!((physical.requested_bytes, physical.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+}
+
 #[semio_framework_async_macros::async_test]
-async fn original_export_read_returns_under_exact_physical_grants(){
- let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
- assert_eq!(corpus["readReturn"]["exportConsumer"]["identity"],"original-read");
- for format in ["png","svg","pdf","unsupported"]{
-  let document=DrawingSnapshot{id:"original-export-source".into(),..Default::default()};
-  let mut issuer=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","original-export-source",document,None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-  issuer.install_document_store_owners_exact(::semio_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
-  let read=issuer.snapshot_read().unwrap();let pointer=read.get()as*const DrawingSnapshot;
-  let mut work=Work::new(Default::default(),Default::default());work.read=Some(read);
-  work.begin_close();let mut returned=None;let mut saw_read=false;let(mut requested,mut released)=(0,0);
-  for _ in 0..100000{
-   pump_returns(&mut issuer,&mut returned);if work.terminal_is_empty(){break;}
-   if let Some(read)=work.read.as_ref(){assert_eq!(read.get()as*const DrawingSnapshot,pointer);saw_read=true;}
-   let demand=work.close_demands(4096).unwrap();
-   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-   for axis in corpus["readReturn"]["exportConsumer"]["denied"].as_array().unwrap(){
-    let axis=axis.as_str().unwrap();let mut denied=grant;
-    match axis{"items"=>denied.maximum_items=0,"copy" if demand.copy_bytes>0=>denied.maximum_copy_bytes=demand.copy_bytes-1,"capacity" if demand.capacity_bytes>0=>denied.maximum_capacity_bytes=demand.capacity_bytes-1,"release" if demand.release_bytes>0=>denied.maximum_release_bytes=demand.release_bytes-1,"depth" if demand.depth>0=>denied.maximum_depth=demand.depth-1,_=>continue}
-    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-    let(step,event)=observe(||self_funded.turn(denied, |cx| work.close_step(cx)).expect("original fixture close turn"));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
-    assert!(matches!(step,InteractiveJobCloseStep::Blocked)||matches!(step,InteractiveJobCloseStep::Pending{progress}if progress==Default::default()));
-    if let Some(read)=work.read.as_ref(){assert_eq!(read.get()as*const DrawingSnapshot,pointer);}
-   }
-   let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-   let(step,event)=observe(||self_funded.turn(grant, |cx| work.close_step(cx)).expect("original fixture close turn"));let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,other=>panic!("Original export refused exact grant: {other:?}")};
-   assert!(progress.fits(grant));assert!(!event.overflowed);assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,progress.released_bytes);requested+=event.requested_bytes;released+=event.released_bytes;
-  }
-  assert!(saw_read&&work.terminal_is_empty());for _ in 0..100000{if returned.is_none()&&issuer.returned_snapshot_read_count()==0{break;}pump_returns(&mut issuer,&mut returned);}assert!(returned.is_none()&&issuer.returned_snapshot_read_count()==0);let(_,event)=observe(||drop(work));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
-  for _ in 0..100000{if issuer.close_owned_terminal_is_empty(){break;}let demand=issuer.close_owned_demands(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};issuer.close_owned_step(grant).unwrap();}
-  assert!(issuer.close_owned_terminal_is_empty());
- }
+async fn original_export_read_returns_under_exact_physical_grants() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let law = &corpus["readReturn"]["exportConsumer"];
+    assert_eq!(law["identity"], "original-read");
+
+    let id = "original-export-source";
+    let document = DrawingSnapshot { id: id.into(), ..Default::default() };
+    let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, semio_s_artifact_draw_drawing_mutations::DrawingMutation>(
+        DRAWING_DOCUMENT_SCHEMA, id, document, None, &store::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    );
+    let mut issuer = Store::new::<store::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    issuer.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().unwrap());
+    let read = issuer.snapshot_read().unwrap();
+    let original = read.get() as *const DrawingSnapshot;
+    let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(0x44524558), Generation(issuer.generation().0), stock, || Some(0), u64::MAX, 1 << 24);
+    let mut work = Work::new(Default::default(), Default::default());
+    work.read = Some(read);
+    work.begin_close();
+    let mut returned = None;
+
+    for _ in 0..100_000 {
+        pump_returns(&mut issuer, &mut returned);
+        if work.terminal_is_empty() { break; }
+        if let Some(read) = work.read.as_ref() { assert_eq!(read.get() as *const DrawingSnapshot, original); }
+        let selected = grant(work.close_demands(4096).unwrap());
+        for axis in law["denied"].as_array().unwrap() {
+            let mut denied = selected;
+            let budget = match axis.as_str().unwrap() {
+                "items" => &mut denied.maximum_items,
+                "copy" => &mut denied.maximum_copy_bytes,
+                "capacity" => &mut denied.maximum_capacity_bytes,
+                "release" => &mut denied.maximum_release_bytes,
+                "depth" => &mut denied.maximum_depth,
+                _ => unreachable!(),
+            };
+            if *budget == 0 { continue; }
+            *budget -= 1;
+            caller.turn(selected, |cx| cx.with_original_retirement(|cx| {
+                let (result, physical) = observe(|| cx.with_retained_loan(denied, |cx| work.close_step(cx)));
+                assert!(!physical.overflowed);
+                assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
+                match result {
+                    Ok(step) => assert_eq!(step.progress(), Default::default()),
+                    Err(error) => assert_eq!(error.effects, Default::default()),
+                }
+                Ok(())
+            })).unwrap();
+            if let Some(read) = work.read.as_ref() { assert_eq!(read.get() as *const DrawingSnapshot, original); }
+        }
+        caller.turn(selected, |cx| cx.with_original_retirement(|cx| {
+            let (result, physical) = observe(|| work.close_step(cx));
+            let step = result?;
+            assert!(matches!(step, InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. }));
+            let receipt = step.progress();
+            assert!(receipt.fits(selected));
+            assert!(!physical.overflowed);
+            assert_eq!((physical.requested_bytes, physical.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+            Ok(())
+        })).unwrap();
+    }
+    assert!(work.terminal_is_empty());
+    for _ in 0..100_000 {
+        if returned.is_none() && issuer.returned_snapshot_read_count() == 0 { break; }
+        pump_returns(&mut issuer, &mut returned);
+    }
+    assert!(returned.is_none() && issuer.returned_snapshot_read_count() == 0);
+    let (_, physical) = observe(|| drop(work));
+    assert_eq!((physical.requested_bytes, physical.released_bytes), (0, 0));
+    caller.retire_exact();
+
+    for _ in 0..100_000 {
+        if issuer.close_owned_terminal_is_empty() { break; }
+        let selected = grant(issuer.close_owned_demands(4096).unwrap());
+        effect_turn(selected, |effect| progress(issuer.close_owned_step(effect)));
+    }
+    assert!(issuer.close_owned_terminal_is_empty());
 }

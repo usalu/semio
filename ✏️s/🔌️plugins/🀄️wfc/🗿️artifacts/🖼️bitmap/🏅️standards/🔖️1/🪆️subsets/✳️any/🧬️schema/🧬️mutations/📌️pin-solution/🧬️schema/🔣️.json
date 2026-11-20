@@ -9,6 +9,7 @@
   ],
   "properties": {
     "pins": {
+      "x-semio-ui": { "role": "value", "label": { "en": "Pins", "de": "Anheftungen" }, "description": { "en": "Pinned output cells with their palette colours.", "de": "Angeheftete Ausgabezellen mit ihren Palettenfarben." }, "group": "pins", "order": 10 },
       "type": "array",
       "maxItems": 262144,
       "items": {

@@ -2,8 +2,11 @@
 extern crate semio_os_kernel as store;
 use semio_plugin_window_config::{WindowConfigApplyEdit,WindowConfigApplyMutation};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+use semio_framework_value::retained_clone::{OriginalEffectAuthority,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,OriginalSourceTurnIdentity};
+use semio_framework_value::OriginalRetirementFailure;
+use std::mem::size_of;
 use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedClone,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
-use semio_framework_value_clone_source_testing::{FixtureCloseStep,FixtureSource,observe_fixture_source_allocations,drive::{drive,warm}};
+use semio_framework_value_clone_source_testing::{FixtureCloseStep,FixtureSource,observe_fixture_source_allocations,drive::{drive as drive_turn,warm}};
 use serde_json::{Value,json};
 use std::panic::{AssertUnwindSafe,catch_unwind};
 use store::snapshot_clone_preparation::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
@@ -152,19 +155,72 @@ fn drain_source<T: RetireOwned + Sync + 'static>(ledger: &mut Ledger, source: &m
     panic!("source did not close");
 }
 
+/// Work units one edit turn may spend. It must exceed every copy grant a case uses (the 32768-byte floor of the paging case included), so the copy grant (the body) and not the work ceiling bounds a page; the fixture Source bank stocks 1 MiB of work in all.
+const TURN_WORK: u64 = 1 << 17;
+struct Turn(OriginalSourceTurnIdentity);
+type Call<'a> = dyn FnMut(&mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<RetainedCloneStep, OriginalRetirementFailure> + 'a;
+struct Frame<'a, 'b> { call: &'a mut Call<'b> }
+type Reply<'r> = OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>;
+type Done<'r> = OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>;
+fn answer<'r>(frame: &mut Frame<'_, '_>, effect: &mut RetainedAllocationEffect<'_>, reply: Reply<'r>) -> Result<Done<'r>, ValueError> {
+    match (frame.call)(effect) { RetainedWorkPoll::Complete(turn) => Ok(reply.complete(turn.result)), RetainedWorkPoll::Pending { .. } => Ok(reply.pending()) }
+}
+impl OriginalEffectProducer for Turn {
+    type Output = RetainedCloneStep; type Failure = OriginalRetirementFailure; type Context<'a, 'b> = Frame<'a, 'b> where 'b: 'a;
+    fn validate_context<'a, 'b>(&self, _: &Self::Context<'a, 'b>) -> Result<(), ValueError> where 'b: 'a { Ok(()) }
+    fn source_turn<'a, 'b>(&self, _: &Self::Context<'a, 'b>) -> Option<OriginalSourceTurnIdentity> where 'b: 'a { Some(self.0) }
+    fn receive<'r, 'a, 'b>(&mut self, c: &mut Self::Context<'a, 'b>, effect: &mut RetainedAllocationEffect<'_>, reply: Reply<'r>) -> Result<Done<'r>, ValueError> where 'b: 'a { answer(c, effect, reply) }
+    fn recover<'r, 'a, 'b>(&mut self, c: &mut Self::Context<'a, 'b>, effect: &mut RetainedAllocationEffect<'_>, reply: Reply<'r>) -> Result<Done<'r>, ValueError> where 'b: 'a { answer(c, effect, reply) }
+}
+
+/// Runs one turn of the retained edit under a real original action of the Source's own bank, so record children see their original invocation.
 fn effected<S: RetireOwned + Sync + 'static, T>(base: &mut FixtureSource<S>, grant: RetainedCloneGrant, run: impl FnOnce(RetainedCloneRef<'_, S>, &mut RetainedAllocationEffect<'_>) -> Result<T, ValueError>, progress: impl FnOnce(&Result<T, ValueError>) -> RetainedCloneProgress) -> (Result<T, ValueError>, (usize, usize)) {
     base.with_bank(|original, bank| {
-        let ((poll, _), heap) = observe(|| bank.run(grant, 4096, |effect| {
-            let start = effect.performed_boundary();
-            let result = run(original, effect);
-            let work = effect.performed_since(start).unwrap();
-            RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work })
-        }));
-        let RetainedWorkPoll::Complete(turn) = poll else { panic!("fixture turn pending") };
+        let mut authority = OriginalEffectAuthority::new(Turn(bank.source_witness().identity()));
+        let (mut run, mut progress, mut out) = (Some(run), Some(progress), None);
+        let mut call = |effect: &mut RetainedAllocationEffect<'_>| {
+            let result = (run.take().expect("one edit turn per original action"))(original, effect);
+            let step = progress.take().expect("one progress quote per original action")(&result);
+            out = Some(result);
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(step)), work: 0 })
+        };
+        let turn_work = TURN_WORK.min(bank.wallet().remaining_work());
+        let mut context = Frame { call: &mut call };
+        let mut action = None;
+        let mut heap = (0usize, 0usize);
+        let mut complete = false;
+        for _ in 0..4096 {
+            let ((poll, _), observed) = observe(|| bank.run(grant, turn_work,  |effect| {
+                let start = effect.performed_boundary();
+                let ready = authority.drive(&mut context, effect, &mut action).unwrap();
+                let work = effect.performed_since(start).unwrap();
+                if ready { RetainedWorkPoll::Complete(RetainedWorkOutcome::<(), ValueError> { result: Ok(()), work }) } else { RetainedWorkPoll::Pending { work } }
+            }));
+            heap.0 += observed.requested_bytes;
+            heap.1 += observed.released_bytes;
+            if matches!(poll, RetainedWorkPoll::Pending { .. }) { continue; }
+            let step = match action.as_ref().unwrap().recorded_reply().unwrap() { Ok(step) => step.progress(), Err(error) => error.retained_progress() };
+            assert_ne!(bank.take_admitted(), Some(false));
+            bank.post(step, grant, heap);
+            complete = true;
+            break;
+        }
+        assert!(complete, "edit turn exceeded its original bound");
+        let transfer = quote_of(OriginalEffectAuthority::<Turn>::transfer_reply_demand().unwrap());
+        let mut output = None;
+        let ((poll, _), observed) = observe(|| bank.run(transfer, 1, |effect| RetainedWorkPoll::Complete(authority.transfer_reply_into(&mut context, &mut action, &mut output, effect))));
+        let RetainedWorkPoll::Complete(turn) = poll else { panic!("reply transfer pending") };
         assert_ne!(bank.take_admitted(), Some(false));
-        let heap = (heap.requested_bytes, heap.released_bytes);
-        bank.post(progress(&turn.result), grant, heap);
-        (turn.result, heap)
+        bank.post(turn.result.unwrap().unwrap(), transfer, (observed.requested_bytes, observed.released_bytes));
+        let demand = semio_framework_value::RetirementDemand { copy_bytes: 2 * size_of::<Option<Result<RetainedCloneStep, OriginalRetirementFailure>>>(), depth: 1, ..Default::default() };
+        let retire = quote_of(demand);
+        let ((poll, _), observed) = observe(|| bank.run(retire, 1, |effect| { assert!(effect.performed(1).unwrap()); drop(output.take()); RetainedWorkPoll::Complete(RetainedWorkOutcome::<(), ValueError> { result: Ok(()), work: 1 }) }));
+        let RetainedWorkPoll::Complete(_) = poll else { panic!("reply retirement pending") };
+        assert_ne!(bank.take_admitted(), Some(false));
+        bank.post(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }, retire, (observed.requested_bytes, observed.released_bytes));
+        drop(context);
+        assert!(authority.into_producer().is_ok());
+        (out.expect("edit turn produced its result"), heap)
     }).expect("fixture Source bank is idle")
 }
 
@@ -245,7 +301,7 @@ where S: RetainedClone + serde::Serialize + serde::de::DeserializeOwned, M: Wind
     for _ in 0..4096 {
         if remaining.terminal_is_empty() { break; }
         let quote = quote_of(remaining.next_demand(0).unwrap());
-        let (turn, heap) = observe(|| drive(quote, 64, |effect| remaining.step(0, effect)));
+        let (turn, heap) = observe(|| drive_turn(quote, 64, |effect| remaining.step(0, effect)));
         let progress = turn.result.unwrap().progress();
         assert!(progress.fits(quote), "receipt {progress:?} exceeds grant {quote:?}");
         ledger.record(heap);
@@ -317,8 +373,9 @@ fn window_config_apply_pages_long_text_across_small_grants() {
     let long = "é中🐚a".repeat(4000);
     let base = json!({ "activeRegister": "main", "label": "l", "ids": [], "zoom": 1.5 });
     let mutation = json!({ "kind": "set-active-register", "activeRegister": long });
-    let floor = floor::<TextState, TextMutation>(&base, &mutation, WIDE);
-    let tight = drive::<TextState, TextMutation>(&base, &from_json(&mutation), floor, RetainedCloneGrant { maximum_copy_bytes: floor, ..WIDE }, None).unwrap().unwrap();
+    let page_body = 4096;
+    let tight_grant = RetainedCloneGrant { maximum_copy_bytes: 8192, ..WIDE };
+    let tight = drive::<TextState, TextMutation>(&base, &from_json(&mutation), page_body, tight_grant, None).unwrap().unwrap();
     let large = drive::<TextState, TextMutation>(&base, &from_json(&mutation), 1<<20, RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..WIDE }, None).unwrap().unwrap();
     assert_eq!(tight.post, json!({ "activeRegister": mutation["activeRegister"], "label": "l", "ids": [], "zoom": 1.5 }));
     assert_eq!(tight.post, large.post);

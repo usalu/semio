@@ -100,9 +100,10 @@ where
     let mut entry = PresenceEntry { colour: state.presence.acquire_colour(&lane, &session), session, surface: surface.to_string(), state: OpaqueJson::Null };
     let mut room = state.presence_rooms.read(&lane, Some(&entry.session), grant.client);
     state.presence_rooms.join(&lane, &entry);
-    let seat = Seat { scope, lane: &lane, may_publish: grant.may_publish, patience: settings.idle };
+    let seat = Seat { scope, lane: &lane, grant, patience: settings.idle };
     let mut watcher = Watcher::default();
     let mut budget = StateBudget::new(settings.max_states_per_second);
+    let mut held = Held::default();
     let mut last_seen = Instant::now();
     let mut keepalive = tokio::time::interval_at(Instant::now() + settings.keepalive, settings.keepalive);
     let mut heartbeat = tokio::time::interval_at(Instant::now() + settings.heartbeat, settings.heartbeat);
@@ -114,12 +115,14 @@ where
                 last_seen = Instant::now();
                 open = match incoming {
                     Some(Ok(Message::Text(text))) => match admit_frame(text.as_str(), &settings, &mut budget, Instant::now()) {
-                        Ok(Some(PresenceFrame::State { state: shared })) => share_state(state, &seat, &mut entry, shared, sink).await,
-                        Ok(Some(PresenceFrame::Watch { scopes, interval_ms })) => match admit_watch(state, &grant.principal, &scopes) {
-                            Ok(scopes) => watcher.watch(state, &scopes, grant.client, watch_interval(interval_ms, &settings), &settings, sink).await,
-                            Err(reason) => refuse(sink, reason, settings.idle).await,
-                        },
-                        Ok(_) => true,
+                        Ok(Admitted::Now(frame)) => {
+                            held.supersede(&frame);
+                            apply(state, &seat, &settings, &mut entry, &mut watcher, frame, sink).await
+                        }
+                        Ok(Admitted::Held(frame)) => {
+                            held.keep(frame);
+                            true
+                        }
                         Err(reason) => refuse(sink, reason, settings.idle).await,
                     },
                     Some(Ok(Message::Binary(_))) => refuse(sink, REFUSED_INVALID.to_string(), settings.idle).await,
@@ -144,6 +147,12 @@ where
             }
             _ = state.kicks.kicked(&entry.session) => open = false,
             () = next_flush(&mut watcher.ticks) => open = watcher.send(&settings, sink, false).await,
+            () = refilled(held.waiting(), budget.refills_at()) => {
+                for frame in held.take() {
+                    budget.spend(Instant::now());
+                    open = open && apply(state, &seat, &settings, &mut entry, &mut watcher, frame, sink).await;
+                }
+            }
         }
     }
     drop(watcher);
@@ -153,13 +162,65 @@ where
     state.kicks.forget(&entry.session);
 }
 
-/// 💺️ Where one presence session sits: its scope and lane, whether it may publish, and how long
+/// 💺️ Where one presence session sits: its scope and lane, what it was admitted as, and how long
 /// it is given to take one frame.
 struct Seat<'a> {
     pub(super) scope: &'a Scope,
     pub(super) lane: &'a str,
-    pub(super) may_publish: bool,
+    pub(super) grant: &'a PresenceGrant,
     pub(super) patience: Duration,
+}
+
+/// 🫙️ The newest `state` and the newest `watch` a session sent over its rate ([`Admitted::Held`]),
+/// waiting for its allowance to refill; a frame of the same kind applied meanwhile supersedes them.
+#[derive(Default)]
+struct Held {
+    state: Option<PresenceFrame>,
+    watch: Option<PresenceFrame>,
+}
+
+impl Held {
+    fn slot(&mut self, frame: &PresenceFrame) -> &mut Option<PresenceFrame> {
+        if matches!(frame, PresenceFrame::Watch { .. }) { &mut self.watch } else { &mut self.state }
+    }
+
+    fn keep(&mut self, frame: PresenceFrame) {
+        let slot = self.slot(&frame);
+        *slot = Some(frame);
+    }
+
+    fn supersede(&mut self, frame: &PresenceFrame) {
+        *self.slot(frame) = None;
+    }
+
+    fn waiting(&self) -> bool {
+        self.state.is_some() || self.watch.is_some()
+    }
+
+    fn take(&mut self) -> impl Iterator<Item = PresenceFrame> {
+        [self.watch.take(), self.state.take()].into_iter().flatten()
+    }
+}
+
+/// 🔋️ Resolves at `at` while frames are [`Held`], never otherwise.
+async fn refilled(waiting: bool, at: Instant) {
+    if waiting {
+        tokio::time::sleep_until(at).await;
+    } else {
+        std::future::pending::<()>().await;
+    }
+}
+
+/// 🎬️ Apply one admitted frame: share a `state` in the joined room, or replace what a `watch` reads.
+async fn apply<I: ServerInstance, S: Sink<Message> + Unpin>(state: &ServerState<I>, seat: &Seat<'_>, settings: &PresenceSettings, entry: &mut PresenceEntry, watcher: &mut Watcher, frame: PresenceFrame, sink: &mut S) -> bool {
+    match frame {
+        PresenceFrame::State { state: shared } => share_state(state, seat, entry, shared, sink).await,
+        PresenceFrame::Watch { scopes, interval_ms } => match admit_watch(state, &seat.grant.principal, &scopes) {
+            Ok(scopes) => watcher.watch(state, &scopes, seat.grant.client, watch_interval(interval_ms, settings), settings, sink).await,
+            Err(reason) => refuse(sink, reason, settings.idle).await,
+        },
+        _ => true,
+    }
 }
 
 /// ⏳️ Resolves once `room` has something its reader was not sent and the reader's next page is due.
@@ -186,7 +247,7 @@ async fn feed<S: Sink<Message> + Unpin>(room: &mut RoomReader, entry: &PresenceE
 /// 📣️ Share one admitted state in the joined room — when the principal may publish and every
 /// module's [`ServerModule::presence_admission`] accepts it — or answer why not.
 async fn share_state<I: ServerInstance, S: Sink<Message> + Unpin>(state: &ServerState<I>, seat: &Seat<'_>, entry: &mut PresenceEntry, shared: OpaqueJson, sink: &mut S) -> bool {
-    let verdict = if seat.may_publish { state.modules.iter().try_for_each(|module| module.presence_admission(seat.scope, &shared)) } else { Err(REFUSED_FORBIDDEN.to_string()) };
+    let verdict = if seat.grant.may_publish { state.modules.iter().try_for_each(|module| module.presence_admission(seat.scope, &shared)) } else { Err(REFUSED_FORBIDDEN.to_string()) };
     match verdict {
         Ok(()) => {
             entry.state = shared;

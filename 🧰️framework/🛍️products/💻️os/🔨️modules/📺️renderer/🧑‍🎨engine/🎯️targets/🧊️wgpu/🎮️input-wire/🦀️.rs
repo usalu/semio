@@ -34,6 +34,13 @@ pub enum BrowserWireEvent {
         tilt_x: Option<f32>,
         tilt_y: Option<f32>,
     },
+    PointerLeave {
+        pointer_id: u64,
+        pointer_kind: BrowserPointerKind,
+        pressure: Option<f32>,
+        tilt_x: Option<f32>,
+        tilt_y: Option<f32>,
+    },
     PointerMove {
         pointer_id: u64,
         pointer_kind: BrowserPointerKind,
@@ -223,6 +230,7 @@ pub fn accessibility_address_within_credits(window_id: &str, node_key: &str) -> 
 pub fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEvent> {
     Some(match event {
         BrowserWireEvent::PointerCancel { pointer_id, pointer_kind, pressure, tilt_x, tilt_y } => DispatchEvent::PointerCancel { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y) },
+        BrowserWireEvent::PointerLeave { pointer_id, pointer_kind, pressure, tilt_x, tilt_y } => DispatchEvent::PointerLeave { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y) },
         BrowserWireEvent::PointerMove { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, shift, ctrl, alt, meta } => {
             DispatchEvent::PointerMove { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } }
         }

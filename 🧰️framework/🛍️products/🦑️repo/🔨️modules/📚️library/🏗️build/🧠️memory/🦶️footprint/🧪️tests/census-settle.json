@@ -1,0 +1,13 @@
+{
+  "measurements": [
+    {
+      "phase": "before",
+      "megabytes": 900
+    },
+    {
+      "phase": "after",
+      "megabytes": 300
+    }
+  ],
+  "censusPhase": "after"
+}

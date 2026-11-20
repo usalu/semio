@@ -31,13 +31,7 @@ impl OriginalJobReturnOrigin{
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
 
- pub fn debug_state(&self)->String{format!("parent={} pending={} returning={} closing={} source_ready={} frame={} credit={:?} witness={} continuation={} outcome={}",self.source.parent.is_some(),self.source.pending.is_some(),self.source.returning.is_some(),self.receiver.closing,self.receiver.source_ready,self.receiver.frame.is_some(),self.receiver.credit.as_ref().map(|c|(c.live,c.capture,c.receive,c.capture_observed,c.receive_observed,c.serial,c.slot)),self.receiver.witness.is_some(),self.receiver.continuation.is_some(),self.receiver.outcome.is_some())}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let before=cx.retained_progress();let result=self.admit_inner(cx);
-  if matches!(result,Ok(false))&&before==cx.retained_progress(){semio_framework_job_context::debug_probe("origin_admit_false",format!("cancelled={} yield={} borrowed={} state=[{}]",cx.is_cancelled(),cx.should_yield(),cx.original_return_budget_is_borrowed(),self.debug_state()));}
-  result
- }
- fn admit_inner(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.receiver.closing||cx.is_cancelled()||cx.should_yield(){return Ok(false)}
   if self.source.parent.is_none(){
    if self.source.returning.is_some(){return Ok(false)}
@@ -81,8 +75,7 @@ impl OriginalJobReturnReceiver{
  pub fn continuation(&self)->Option<&OriginalJobContinuation>{self.continuation.as_ref()}
  pub fn outcome(&self)->Option<&JobOutcomeDescriptor>{self.outcome.as_ref()}
  pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate_source(cx)?;if self.closing||self.continuation.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original outcome acknowledgement requires its live receiving place").into())}
-  let Some(outcome)=self.outcome.as_ref()else{return Ok(true)};let acknowledged=outcome.is_acknowledged();let depth=if acknowledged{1}else{2};
+  self.validate_source(cx)?;let Some(outcome)=self.outcome.as_ref()else{return Ok(true)};if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original outcome acknowledgement requires its live receiving place").into())}let acknowledged=outcome.is_acknowledged();let depth=if acknowledged{1}else{2};
   crate::close_original_retained_step(cx,RetirementDemand{depth,..Default::default()},|grant|{
    if !acknowledged{let Some(outcome)=self.outcome.as_mut()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("outcome absent")),work:0}};let turn=outcome.acknowledge(semio_framework_value_retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
    self.outcome.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}

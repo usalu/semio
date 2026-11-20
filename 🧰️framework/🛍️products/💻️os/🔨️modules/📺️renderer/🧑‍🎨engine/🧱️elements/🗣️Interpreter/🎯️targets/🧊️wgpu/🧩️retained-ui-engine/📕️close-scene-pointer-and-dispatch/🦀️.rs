@@ -330,6 +330,11 @@ pub fn retained_pointer_capture_window(pointer_id: ui_render::PointerId) -> Opti
     UI_ENGINE.with(|cell| cell.borrow().window_with_pointer_capture(pointer_id.0).map(str::to_owned))
 }
 
+/// 🎯️ Finds the capture owner for one retained window.
+pub fn retained_window_pointer_capture(window_id: &str) -> Option<ui_render::PointerId> {
+    UI_ENGINE.with(|cell| cell.borrow().window_pointer_capture(window_id).map(ui_render::PointerId))
+}
+
 pub fn retained_any_pointer_capture() -> Option<(String, ui_render::PointerId)> {
     UI_ENGINE.with(|cell| cell.borrow().any_pointer_capture().map(|(window_id, pointer_id)| (window_id.to_owned(), ui_render::PointerId(pointer_id))))
 }

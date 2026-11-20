@@ -16,7 +16,7 @@ pub const WFC_GRID2D_DOCUMENT_SCHEMA: &str = "s.wfc.grid2d";
 //#region 🔖️Media
 /// 🎨️ One 8-bit-per-channel colour — the single colour vocabulary every `wfc` artifact defines
 /// locally (never imported across artifact crates: app-to-app coupling is audited and forbidden).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcColor {
@@ -28,7 +28,7 @@ pub struct WfcColor {
 
 /// 📍️ One point in a tile's own `0..1` unit space — the tile is drawn scaled into the cell rect, so
 /// media coordinates are resolution independent.
-#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcPoint2 {
@@ -39,7 +39,7 @@ pub struct WfcPoint2 {
 /// ✏️ One SVG-flavoured path command (`M`/`L`/`Q`/`C`/`Z`), mirroring `🖍️draw`'s own `PathSegment`
 /// vocabulary field-for-field WITHOUT depending on that crate — a deliberate local copy, since an
 /// artifact crate may never import another app plugin's crate.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WfcPathSegment {
@@ -51,7 +51,7 @@ pub enum WfcPathSegment {
 }
 
 /// 🖊️ One filled/stroked outline inside a vector tile.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcVectorPath {
@@ -69,7 +69,7 @@ pub struct WfcVectorPath {
 /// pixel, row-major — a compact, wire-safe carrier that keeps a 64×64 tile far under the retained
 /// surface budget (`format: "base64"`, never `contentEncoding`: the owned JSON-Schema validator
 /// refuses that keyword).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum WfcTileMedia2d {
@@ -87,7 +87,7 @@ impl Default for WfcTileMedia2d {
 /// 🀄️ One authored tile — the WFC pattern universe is exactly this list, in canonical id order.
 /// `weight` is the sampling bias (`wfc_engine::weights::WeightTable` input); a non-positive weight
 /// is refused by `create-tile`/`change-tile-weight`.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcTile2d {
@@ -104,7 +104,7 @@ pub struct WfcTile2d {
 /// only `camelCase`/`kebab-case`/`lowercase`/`snake_case` and SILENTLY ignores anything else, which
 /// would leave the wire on PascalCase while the JSON Schema and the GraphQL enum declare
 /// `SCREAMING_SNAKE_CASE`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum WfcDirection2d {
     #[default]
@@ -147,7 +147,7 @@ impl WfcDirection2d {
 /// complete whitelist, so an empty rule set collapses to an unsatisfiable problem the moment the
 /// grid has two cells. `allowed = false` rows are authored so an editor can carry an explicit
 /// refusal (and so a rule can be toggled without losing its id).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct WfcAdjacencyRule2d {

@@ -76,9 +76,7 @@ async fn catalogue_reflects_workshop_after_machine_removal() {
     assert!(!after.contains("Circular Saw"), "removed machine must disappear from the catalogue tree");
 }
 
-/// ⚖️ The real four-extension pack pushed through `setContributions` renders each catalog id ONCE —
-/// the shipped `process-extension-*` bundles re-contribute the ids this build compiles in, and before
-/// `installed_catalogs` deduped them the Werkstatt showed nine sections instead of five.
+/// ⚖️ The four-extension pack renders each active catalog id once.
 #[semio_framework_async_macros::async_test]
 async fn the_real_extension_pack_renders_each_catalog_section_once() {
     use semio_s_artifact_process_process3d_commands::contribution::set_contributions;
@@ -98,8 +96,8 @@ async fn the_real_extension_pack_renders_each_catalog_section_once() {
     unique.dedup();
     assert_eq!(rendered_ids.len(), unique.len(), "no catalog id may open two sections: {rendered_ids:?}");
     assert!(rendered_ids.iter().any(|id| id == "metal"), "the metal catalog still has machines left to add: {rendered_ids:?}");
-    let builtin: Vec<String> = installed_catalogs("[]").iter().map(|catalog| catalog.catalog_id().to_string()).collect();
-    assert!(rendered_ids.iter().all(|id| builtin.contains(id)), "the shipped packs re-contribute built-in ids, so nothing new may appear: {rendered_ids:?}");
+    let active: Vec<String> = installed_catalogs(&pack).iter().map(|catalog| catalog.catalog_id().to_string()).collect();
+    assert!(rendered_ids.iter().all(|id| active.contains(id)), "all sections come from active catalogs: {rendered_ids:?}");
 }
 
 /// 🔧 `measure_for_capability` sizing a cut tool from a capability's own edited parameter,

@@ -1,0 +1,29 @@
+{
+  "file": "racy source\n",
+  "cases": [
+    {
+      "mode": "complete",
+      "expected": {
+        "computations": 2,
+        "rounds": 1,
+        "aborted": false
+      }
+    },
+    {
+      "mode": "abort",
+      "expected": {
+        "computations": 1,
+        "rounds": 0,
+        "aborted": true
+      }
+    },
+    {
+      "mode": "pre-abort",
+      "expected": {
+        "computations": 0,
+        "rounds": 0,
+        "aborted": true
+      }
+    }
+  ]
+}

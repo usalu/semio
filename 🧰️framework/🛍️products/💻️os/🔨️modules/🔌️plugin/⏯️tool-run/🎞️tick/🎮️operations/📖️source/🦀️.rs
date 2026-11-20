@@ -7,7 +7,10 @@ use semio_framework_job::OriginalSourceBinding;
 type Issuer<S>=Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<S>>;
 /// 🔗️ A source owner keeps its actual resident key, immutable issuer and original caller until return.
 pub struct OriginalToolLedgerRead<S:RetireOwned+Send+Sync+'static>{binding:Option<OriginalSourceBinding>,decoder:Option<Decoder>,revision:u64,window:Option<SharedUtf8>,key:Option<RetainedOriginalSlotKey>,factory:Option<Issuer<S>>,returned_factory:Option<Issuer<S>>,factory_close:Option<FactoryAuthority>,retirement:RetainedCloneClose,read_reply:Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,return_reply:Option<Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>>,read_pending:bool,return_pending:bool,ready:bool,returned:bool,closing:bool}
-impl<S:RetireOwned+Send+Sync+'static> Default for OriginalToolLedgerRead<S>{fn default()->Self{Self{binding:None,decoder:None,revision:0,window:None,key:None,factory:None,returned_factory:None,factory_close:None,retirement:Default::default(),read_reply:None,return_reply:None,read_pending:false,return_pending:false,ready:false,returned:false,closing:false}}}
+impl<S:RetireOwned+Send+Sync+'static> Default for OriginalToolLedgerRead<S>{fn default()->Self{Self::vacant()}}
+impl<S:RetireOwned+Send+Sync+'static> OriginalToolLedgerRead<S>{
+ const fn vacant()->Self{Self{binding:None,decoder:None,revision:0,window:None,key:None,factory:None,returned_factory:None,factory_close:None,retirement:RetainedCloneClose::vacant(),read_reply:None,return_reply:None,read_pending:false,return_pending:false,ready:false,returned:false,closing:false}}
+}
 impl<S:RetireOwned+Send+Sync+'static> OriginalToolLedgerRead<S>{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if !self.binding.is_some_and(|binding|binding.matches(cx))||cx.native_receiving_identity()!=self.decoder{return Err(invalid("original tool state read changed its caller or decoder"))}Ok(())}
  /// 📏️ Quotes the authentic resident alias and source fence before any admission.

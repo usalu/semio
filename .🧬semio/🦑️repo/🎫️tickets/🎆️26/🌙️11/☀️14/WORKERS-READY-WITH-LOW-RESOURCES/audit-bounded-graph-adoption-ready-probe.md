@@ -1,0 +1,7 @@
+# Bounded Ready Probe for Graph Adoption
+
+The graph adoption lane previously synchronously opened the replicated Ready record on the event loop, including immediately before publishing a graph pointer under structural writer custody. A stalled replica volume could outlast the adoption turn and keep the writer occupied.
+
+The lane now reads a regular file through an asynchronous descriptor, with the existing 1 MiB byte ceiling, a one-second observation deadline, and the active turn's cancellation. The publication check also carries the original issued control's signal. A deadline or cancellation declines the observation and allows the writer callback and cleanup to settle. The underlying filesystem operation retains its process-local per-path slot until it resolves and closes. A late completion cannot authorize the cancelled turn, and later ticks cannot enqueue repeated reads against that stalled path. Freshness is evaluated after the read with the original closed Ready schema, origin and platform checks. Disk and graph lease admission are unchanged.
+
+The neutral fixture held an injected read unresolved, independently checked the read count with SQLite, and confirmed both deadline and turn cancellation paths declined while the event loop advanced. It also confirmed a later read could proceed after settlement, rejected oversized input, and kept the real stale, malformed and wrong-origin record assertions. The focused graph adoption and stall suites passed 14 tests and 110 assertions. Whitespace verification passed. No physical worker was invoked.

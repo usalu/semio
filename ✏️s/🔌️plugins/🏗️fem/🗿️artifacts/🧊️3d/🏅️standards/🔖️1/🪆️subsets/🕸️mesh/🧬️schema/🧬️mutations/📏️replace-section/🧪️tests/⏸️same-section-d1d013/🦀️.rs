@@ -49,7 +49,7 @@ fn applies_to_committed_after() {
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
     let produced = <Fem3dMutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-section/same-section-d1d013: a no-op must carry the identity diff");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-section/same-section-d1d013: a no-op must carry the identity diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-section/same-section-d1d013: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replace-section/same-section-d1d013: a redundant write is reported as no-op, never as target-missing");
@@ -96,7 +96,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed identity diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
     let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-section/same-section-d1d013: committed diff JSON is not canonical");
@@ -105,7 +105,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed identity delta on `before` reproduces the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-section/same-section-d1d013: committed diff did not carry before to after");
 }

@@ -24,6 +24,7 @@
     }
   ],
   "definitions": {
+    "PublishStage": { "type": "string", "enum": ["manifest", "manifest-verification", "pointer-read", "pointer-write"] },
     "Policy": {
       "const": {
         "version": 1,

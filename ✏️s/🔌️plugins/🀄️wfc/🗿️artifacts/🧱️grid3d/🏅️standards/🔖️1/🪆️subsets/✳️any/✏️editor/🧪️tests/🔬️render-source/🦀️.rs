@@ -1,5 +1,10 @@
 //! 🪪️ Actual mounted render authority controls the instance-local completed grid3d preview.
 use super::*;
+/// 🌳️ Projects a rendered tree through the fixture transport; its retained page children cannot be serialized directly.
+fn tree_json(tree:semio_plugin::ComponentTree)->serde_json::Value{
+    serde_json::from_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the fixture tree projects")).expect("the projection is JSON")
+}
+
 #[semio_framework_async_macros::async_test]
 async fn mounted_render_uses_canonical_render_revision_and_local_transient() {
     let snapshot=crate::examples::blocks::snapshot();
@@ -14,11 +19,11 @@ async fn mounted_render_uses_canonical_render_revision_and_local_transient() {
     let transient=Grid3dTransient{payload_json:String::from_utf8(payload.encode()).unwrap()};
     let empty=Grid3dEditor::render_bodies(preview::BODY_KEY,&doc,&config,&view,&Grid3dTransient::default()).unwrap();
     let fresh=Grid3dEditor::render_bodies(preview::BODY_KEY,&doc,&config,&view,&transient).unwrap();
-    let empty=serde_json::to_value(&empty.root).unwrap();
-    assert_ne!(serde_json::to_value(&fresh.root).unwrap(),empty);
+    let empty=tree_json(empty);
+    assert_ne!(tree_json(fresh),empty);
     let changed=ArtifactView::with_render_context(&snapshot,&history,semio_plugin::ChildContentView::EMPTY,semio_plugin::AppRenderOperationContext{canonical_base_revision:[8;32],..context},"grid3d",None).await;
     let stale=Grid3dEditor::render_bodies(preview::BODY_KEY,&changed,&config,&view,&transient).unwrap();
-    assert_eq!(serde_json::to_value(&stale.root).unwrap(),empty);
+    assert_eq!(tree_json(stale),empty);
 }
 
 /// 🛡️ Completed background commands cannot publish unfinished or stale results.
@@ -31,7 +36,7 @@ fn completion_refusals_keep_their_localized_domain_codes() {
     let config=ConfigView{snapshot:&no_config,window:None};
     for (payload,code) in [(fill_tool::Grid3dFillPayload{source_revision:vec![7;32],done:false,..Default::default()},"wfc.grid3d.fill.invalid"),(fill_tool::Grid3dFillPayload{source_revision:vec![8;32],done:true,..Default::default()},"wfc.grid3d.fill.stale")] {
         let command=Grid3dEditorCommand::CommitFill{payload_json:String::from_utf8(payload.encode()).unwrap()};
-        let fault=grid3d_command_emit(&command,&doc,&config,None).unwrap_err();
+        let fault=grid3d_command_emit(&command,&doc,&config,None).err().expect("the command must be refused");
         assert_eq!(fault.code,semio_plugin::FaultCode::new(code));
         assert!(Grid3dEditor::fault_notices().iter().any(|(notice,_)|*notice==code));
     }

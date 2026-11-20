@@ -55,6 +55,9 @@ const KINDS: &[&str] = &[
     "change-scene-ambient-intensity",
     "change-scene-shadow-enabled",
     "change-scene-material-roughness",
+    "set-shot-drawing",
+    "patch-shot-camera",
+    "set-shot-auto-fit",
 ];
 
 /// 📸️ The one before-snapshot all thirty-one of this vocabulary's committed leaf fixtures share, read

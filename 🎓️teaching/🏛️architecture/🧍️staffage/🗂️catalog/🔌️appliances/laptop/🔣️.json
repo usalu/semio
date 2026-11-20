@@ -48,16 +48,24 @@
         {
           "id": "iso-10456-2007",
           "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values."
+        },
+        {
+          "id": "asus-zenbook-14-ux3402-2022",
+          "citation": "ASUSTeK Computer Inc. (2022). Zenbook 14 OLED (UX3402) technical specifications: 14.0-inch 16:10 display, 313.6 x 220.6 x 16.9 mm, 1.39 kg, 75 Wh battery. https://www.asus.com/laptops/for-home/zenbook/zenbook-14-oled-ux3402/techspec/"
+        },
+        {
+          "id": "apple-macbook-pro-14-2021",
+          "citation": "Apple Inc. (2021). MacBook Pro (14-inch, 2021) technical specifications: 14.2-inch display, height 1.55 cm, width 31.26 cm, depth 22.12 cm, 1.6 kg. https://support.apple.com/kb/SP854"
         }
       ],
       "notes": {
-        "en": "Side elevation of a 14-inch aluminium unibody laptop of the common thin-and-light class: 0.313 m wide, 0.218 m deep, 13 mm thick base and 6.5 mm lid, 1.30 kg with battery; all measures are rounded from that product class (authored estimate, no single product). Electrical power at level 1 is 45 W (peak of the 30 to 60 W class of Wilkins and Hosni 2011), idle 11 W and sleep 1.4 W (authored estimates for the same class). All electrical power ends as heat in the room: 17 W at the keyboard deck, 24 W at the underside above the processor and the battery, 4 W at the lid and the display backlight. The split between the deck and the underside is an authored estimate; the radiative share of the equipment follows Hosni et al. 1999.",
-        "de": "Seitenansicht eines 14-Zoll-Laptops aus Aluminium (Unibody) der gängigen flachen Leichtklasse: 0,313 m breit, 0,218 m tief, 13 mm dicke Basis und 6,5 mm Deckel, 1,30 kg mit Akku; alle Maße sind aus dieser Produktklasse gerundet (Schätzwert, kein einzelnes Produkt). Die elektrische Leistung auf Stufe 1 beträgt 45 W (Spitze der Klasse von 30 bis 60 W nach Wilkins und Hosni 2011), im Leerlauf 11 W und im Ruhezustand 1,4 W (Schätzwerte für dieselbe Klasse). Die gesamte elektrische Leistung endet als Wärme im Raum: 17 W am Tastaturdeck, 24 W an der Unterseite über Prozessor und Akku, 4 W am Deckel und an der Displayhintergrundbeleuchtung. Die Aufteilung auf Deck und Unterseite ist ein Schätzwert; der Strahlungsanteil der Geräte folgt Hosni et al. 1999."
+        "en": "Side elevation of a 14-inch aluminium clamshell laptop of the common thin-and-light class (ASUS Zenbook 14 OLED UX3402: 313.6 x 220.6 x 16.9 mm, 1.39 kg; Apple MacBook Pro 14-inch 2021: 312.6 x 221.2 x 15.5 mm, 1.6 kg): 0.313 m wide, 0.218 m deep, the chassis 10.5 mm thick on 2 mm rubber feet (the deck 12.5 mm above the desk, 13 mm rounded) and the lid 6.5 mm, 17 mm closed without the feet, 1.30 kg with battery. The bottom cover is a tub with a rounded bilge, the keyboard deck a plate with the keyboard well, the trackpad and a ledge at the rear, on which the 9 mm hinge barrel of the lid sits; the hinge axis lies 4.5 mm in front of the rear edge and 2 mm above the deck, and the gap under the barrel is the exhaust. The 14.0-inch 16:10 panel measures 301.6 x 188.5 mm behind a cover glass with a 3 mm rim. With the lid open at 105 degrees the envelope is 0.273 m long and 0.221 m high. All measures are rounded from that product class (authored estimate, no single product). Electrical power at level 1 is 45 W (peak of the 30 to 60 W class of Wilkins and Hosni 2011), idle 11 W and sleep 1.4 W (authored estimates for the same class). All electrical power ends as heat in the room: 17 W at the keyboard deck, 24 W at the underside above the processor and the battery, 4 W at the lid and the display backlight. The split between the deck and the underside is an authored estimate; the radiative share of the equipment follows Hosni et al. 1999.",
+        "de": "Seitenansicht eines 14-Zoll-Klapplaptops aus Aluminium der gängigen flachen Leichtklasse (ASUS Zenbook 14 OLED UX3402: 313,6 x 220,6 x 16,9 mm, 1,39 kg; Apple MacBook Pro 14 Zoll 2021: 312,6 x 221,2 x 15,5 mm, 1,6 kg): 0,313 m breit, 0,218 m tief, das Chassis 10,5 mm dick auf 2 mm hohen Gummifüßen (das Deck 12,5 mm über dem Tisch, gerundet 13 mm) und der Deckel 6,5 mm, geschlossen 17 mm ohne Füße, 1,30 kg mit Akku. Die Bodenschale ist eine Wanne mit gerundeter Kimm, das Tastaturdeck eine Platte mit Tastaturmulde, Touchpad und einem Absatz hinten, auf dem die 9-mm-Scharnierwalze des Deckels sitzt; die Scharnierachse liegt 4,5 mm vor der Hinterkante und 2 mm über dem Deck, und der Spalt unter der Walze ist der Abluftauslass. Das 14,0-Zoll-Panel im Format 16:10 misst 301,6 x 188,5 mm hinter einem Deckglas mit 3 mm Rand. Bei auf 105 Grad geöffnetem Deckel ist die Hülle 0,273 m lang und 0,221 m hoch. Alle Maße sind aus dieser Produktklasse gerundet (Schätzwert, kein einzelnes Produkt). Die elektrische Leistung auf Stufe 1 beträgt 45 W (Spitze der Klasse von 30 bis 60 W nach Wilkins und Hosni 2011), im Leerlauf 11 W und im Ruhezustand 1,4 W (Schätzwerte für dieselbe Klasse). Die gesamte elektrische Leistung endet als Wärme im Raum: 17 W am Tastaturdeck, 24 W an der Unterseite über Prozessor und Akku, 4 W am Deckel und an der Displayhintergrundbeleuchtung. Die Aufteilung auf Deck und Unterseite ist ein Schätzwert; der Strahlungsanteil der Geräte folgt Hosni et al. 1999."
       }
     },
     "dimensions": {
-      "heightM": 0.218,
-      "widthM": 0.275,
+      "heightM": 0.221,
+      "widthM": 0.273,
       "depthM": 0.313,
       "massKg": 1.3
     },
@@ -103,6 +111,34 @@
         "specificHeatJKgK": 1800,
         "source": "authored-estimate",
         "reference": "iso-10456-2007"
+      },
+      {
+        "id": "keycap-plastic",
+        "title": {
+          "en": "Black ABS of key caps, keyboard bed and hinge cover",
+          "de": "Schwarzes ABS der Tastenkappen, des Tastaturbetts und der Scharnierabdeckung"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1050,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1400,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "hinge-steel",
+        "title": {
+          "en": "Stainless steel of hinges and brackets",
+          "de": "Edelstahl der Scharniere und Winkel"
+        },
+        "emissivity": 0.22,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 7900,
+        "conductivityWmK": 14.9,
+        "specificHeatJKgK": 477,
+        "source": "literature",
+        "reference": "incropera-2018"
       }
     ],
     "rig": {
@@ -116,7 +152,7 @@
             "en": "Base with keyboard, battery and board",
             "de": "Basis mit Tastatur, Akku und Platine"
           },
-          "x": 0,
+          "x": -0.109,
           "y": 0,
           "angleDeg": 0,
           "lengthM": 0.218,
@@ -125,8 +161,8 @@
           },
           "mass": {
             "kg": 0.82,
-            "comX": 0,
-            "comY": 0.0065,
+            "comX": 0.109,
+            "comY": 0.0074,
             "source": "authored-estimate",
             "distribution": "point"
           }
@@ -138,10 +174,10 @@
             "en": "Lid with display",
             "de": "Deckel mit Display"
           },
-          "x": -0.104,
-          "y": 0.0125,
+          "x": 0.0045,
+          "y": 0.0145,
           "angleDeg": 0,
-          "lengthM": 0.213,
+          "lengthM": 0.2135,
           "joint": {
             "type": "revolute",
             "minDeg": 0,
@@ -149,8 +185,8 @@
           },
           "mass": {
             "kg": 0.48,
-            "comX": 0.106,
-            "comY": 0.003,
+            "comX": 0.1,
+            "comY": 0.0008,
             "source": "authored-estimate",
             "distribution": "point"
           }
@@ -161,8 +197,8 @@
       {
         "id": "feet-contact",
         "bone": "base",
-        "x": 0,
-        "y": 0,
+        "x": 0.109,
+        "y": 0.0,
         "kind": "contact",
         "title": {
           "en": "Rubber feet on the desk",
@@ -176,7 +212,7 @@
       {
         "id": "deck-top",
         "bone": "base",
-        "x": 0.01,
+        "x": 0.114,
         "y": 0.0125,
         "kind": "emitter",
         "title": {
@@ -211,9 +247,9 @@
               "filled": true,
               "tone": 0.15,
               "kind": "rect",
-              "x": 0.08,
-              "y": 0,
-              "w": 0.02,
+              "x": 0.192,
+              "y": 0.0,
+              "w": 0.012,
               "h": 0.002,
               "region": "underside",
               "material": "rubber-foot"
@@ -226,9 +262,9 @@
               "filled": true,
               "tone": 0.15,
               "kind": "rect",
-              "x": -0.1,
-              "y": 0,
-              "w": 0.02,
+              "x": 0.014,
+              "y": 0.0,
+              "w": 0.012,
               "h": 0.002,
               "region": "underside",
               "material": "rubber-foot"
@@ -240,12 +276,22 @@
               "z": 3,
               "filled": true,
               "tone": 0.5,
-              "kind": "rect",
-              "x": -0.109,
-              "y": 0.002,
-              "w": 0.218,
-              "h": 0.0046,
-              "r": 0.0012,
+              "kind": "poly",
+              "points": [
+                [0.2115, 0.002],
+                [0.215, 0.0026],
+                [0.217, 0.0036],
+                [0.2178, 0.005],
+                [0.218, 0.0062],
+                [0.218, 0.0085],
+                [0.0, 0.0085],
+                [0.0, 0.0062],
+                [0.0002, 0.005],
+                [0.001, 0.0036],
+                [0.003, 0.0026],
+                [0.0065, 0.002]
+              ],
+              "closed": true,
               "region": "underside",
               "material": "alu-anodised"
             },
@@ -256,39 +302,13 @@
               "z": 3.1,
               "filled": true,
               "tone": 0.62,
-              "kind": "path",
-              "d": "M -0.109 0.0066 L 0.109 0.0066 L 0.109 0.0125 L -0.106 0.0125 C -0.108 0.0125 -0.109 0.0115 -0.109 0.0105 Z",
+              "kind": "rect",
+              "x": 0.0095,
+              "y": 0.0085,
+              "w": 0.2082,
+              "h": 0.004,
               "region": "deck",
               "material": "alu-anodised"
-            },
-            {
-              "id": "hinge-shoulder",
-              "bone": "base",
-              "role": "body",
-              "z": 3.15,
-              "filled": true,
-              "tone": 0.58,
-              "kind": "rect",
-              "x": -0.109,
-              "y": 0.0066,
-              "w": 0.034,
-              "h": 0.0105,
-              "r": 0.003,
-              "region": "deck",
-              "material": "alu-anodised"
-            },
-            {
-              "id": "keys",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": -0.068,
-              "y": 0.0125,
-              "w": 0.101,
-              "h": 0.0012
             },
             {
               "id": "lid-shell",
@@ -297,29 +317,22 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.55,
-              "kind": "rect",
-              "x": 0,
-              "y": 0,
-              "w": 0.213,
-              "h": 0.0065,
-              "r": 0.0022,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.0025],
+                [0.2132, 0.0035],
+                [0.2125, 0.0041],
+                [0.2113, 0.0045],
+                [-0.0023, 0.0045],
+                [-0.0035, 0.0041],
+                [-0.0042, 0.0035],
+                [-0.0045, 0.0025],
+                [-0.0045, -0.0014]
+              ],
+              "closed": true,
               "region": "lid",
               "material": "alu-anodised"
-            },
-            {
-              "id": "display",
-              "bone": "lid",
-              "role": "glazing",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.1,
-              "kind": "rect",
-              "x": 0.005,
-              "y": 0.0003,
-              "w": 0.203,
-              "h": 0.0023,
-              "region": "lid",
-              "material": "display-glass"
             },
             {
               "id": "hinge",
@@ -327,25 +340,14 @@
               "role": "body",
               "z": 3.6,
               "filled": true,
-              "tone": 0.4,
+              "tone": 0.3,
               "kind": "ellipse",
-              "cx": 0.002,
-              "cy": 0.00325,
-              "rx": 0.0048,
-              "ry": 0.0048,
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.0045,
+              "ry": 0.0045,
               "region": "lid",
-              "material": "alu-anodised"
-            },
-            {
-              "id": "vent-slot",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.8,
-              "filled": false,
-              "tone": 0.1,
-              "kind": "poly",
-              "points": [[-0.103, 0.0092], [-0.083, 0.0092]],
-              "closed": false
+              "material": "keycap-plastic"
             },
             {
               "id": "port-strip",
@@ -355,209 +357,31 @@
               "filled": false,
               "tone": 0.1,
               "kind": "poly",
-              "points": [
-                [
-                  0.05,
-                  0.005
-                ],
-                [
-                  0.068,
-                  0.005
-                ]
-              ],
+              "points": [[0.0238, 0.0069], [0.0468, 0.0069]],
               "closed": false
-            }
-          ],
-          "plan": [
-            {
-              "id": "plan-lid-shell",
-              "bone": "lid",
-              "role": "body",
-              "z": 3.4,
-              "filled": true,
-              "tone": 0.55,
-              "kind": "rect",
-              "x": -0.005,
-              "y": 0,
-              "w": 0.218,
-              "h": 0.0065,
-              "r": 0.0022,
-              "region": "lid",
-              "material": "alu-anodised",
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.1565,
-                "z1": 0.1565
-              }
-            },
-            {
-              "id": "plan-deck",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.62,
-              "kind": "rect",
-              "x": -0.109,
-              "y": -0.1565,
-              "w": 0.218,
-              "h": 0.313,
-              "r": 0.008,
-              "region": "deck",
-              "material": "alu-anodised"
-            },
-            {
-              "id": "plan-key-row-1",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": -0.068,
-              "y": -0.115,
-              "w": 0.017,
-              "h": 0.23
-            },
-            {
-              "id": "plan-key-row-2",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": -0.047,
-              "y": -0.115,
-              "w": 0.017,
-              "h": 0.23
-            },
-            {
-              "id": "plan-key-row-3",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": -0.026,
-              "y": -0.115,
-              "w": 0.017,
-              "h": 0.23
-            },
-            {
-              "id": "plan-key-row-4",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": -0.005,
-              "y": -0.115,
-              "w": 0.017,
-              "h": 0.23
-            },
-            {
-              "id": "plan-key-row-5",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.016,
-              "y": -0.115,
-              "w": 0.017,
-              "h": 0.23
-            },
-            {
-              "id": "plan-trackpad",
-              "bone": "base",
-              "role": "detail",
-              "z": 3.2,
-              "filled": false,
-              "tone": 0.55,
-              "kind": "rect",
-              "x": 0.056,
-              "y": -0.04,
-              "w": 0.036,
-              "h": 0.08,
-              "r": 0.002
             }
           ],
           "front": [
             {
-              "id": "foot-left",
-              "bone": "base",
+              "id": "hinge",
+              "bone": "lid",
               "role": "body",
-              "z": 3,
+              "z": 2.8,
               "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": 0.1,
-              "y": 0.0,
-              "w": 0.02,
-              "h": 0.002,
-              "region": "underside",
-              "material": "rubber-foot"
-            },
-            {
-              "id": "foot-right",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": -0.12,
-              "y": 0.0,
-              "w": 0.02,
-              "h": 0.002,
-              "region": "underside",
-              "material": "rubber-foot"
-            },
-            {
-              "id": "base",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.6,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1565,
-                  0.001
-                ],
-                [
-                  0.1565,
-                  0.001
-                ],
-                [
-                  0.1565,
-                  0.0092
-                ],
-                [
-                  0.14,
-                  0.0125
-                ],
-                [
-                  -0.14,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.0105
-                ]
-              ],
-              "closed": true,
-              "regions": [
-                "deck",
-                "underside"
-              ],
-              "material": "alu-anodised"
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.0045,
+              "ry": 0.0045,
+              "region": "lid",
+              "material": "keycap-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.135,
+                "z1": 0.135
+              }
             },
             {
               "id": "lid-shell",
@@ -566,12 +390,20 @@
               "z": 2.9,
               "filled": true,
               "tone": 0.55,
-              "kind": "rect",
-              "x": 0,
-              "y": 0,
-              "w": 0.213,
-              "h": 0.0065,
-              "r": 0.0022,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.0025],
+                [0.2132, 0.0035],
+                [0.2125, 0.0041],
+                [0.2113, 0.0045],
+                [-0.0023, 0.0045],
+                [-0.0035, 0.0041],
+                [-0.0042, 0.0035],
+                [-0.0045, 0.0025],
+                [-0.0045, -0.0014]
+              ],
+              "closed": true,
               "region": "lid",
               "material": "alu-anodised",
               "solid": {
@@ -589,49 +421,289 @@
               "filled": true,
               "tone": 0.1,
               "kind": "rect",
-              "x": 0.005,
-              "y": 0.0003,
-              "w": 0.203,
+              "x": 0.011,
+              "y": -0.0017,
+              "w": 0.1995,
+              "h": 0.0021,
+              "region": "lid",
+              "material": "display-glass",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1535,
+                "z1": 0.1535
+              }
+            },
+            {
+              "id": "screen",
+              "bone": "lid",
+              "role": "glazing",
+              "z": 2.97,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.016,
+              "y": -0.0019,
+              "w": 0.1885,
               "h": 0.0023,
               "region": "lid",
               "material": "display-glass",
               "solid": {
                 "kind": "extruded",
                 "sweep": "w",
-                "z0": -0.145,
-                "z1": 0.145
+                "z0": -0.1508,
+                "z1": 0.1508
+              }
+            },
+            {
+              "id": "foot-left",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": 0.128,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "foot-right",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "rect",
+              "x": -0.14,
+              "y": 0.0,
+              "w": 0.012,
+              "h": 0.002,
+              "region": "underside",
+              "material": "rubber-foot"
+            },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [0.15, 0.002],
+                [0.1535, 0.0026],
+                [0.1555, 0.0036],
+                [0.1563, 0.005],
+                [0.1565, 0.0062],
+                [0.1565, 0.0085],
+                [0.1565, 0.0125],
+                [-0.1565, 0.0125],
+                [-0.1565, 0.0085],
+                [-0.1565, 0.0062],
+                [-0.1563, 0.005],
+                [-0.1555, 0.0036],
+                [-0.1535, 0.0026],
+                [-0.15, 0.002]
+              ],
+              "closed": true,
+              "regions": ["deck", "underside"],
+              "material": "alu-anodised"
+            }
+          ],
+          "plan": [
+            {
+              "id": "plan-deck",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.109,
+              "y": -0.1565,
+              "w": 0.218,
+              "h": 0.313,
+              "r": 0.009,
+              "region": "deck",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "plan-hinge",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.0045,
+              "ry": 0.0045,
+              "region": "lid",
+              "material": "keycap-plastic",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.135,
+                "z1": 0.135
+              }
+            },
+            {
+              "id": "plan-key-row-1",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.09,
+              "y": -0.13625,
+              "w": 0.0095,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-key-row-2",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.0777,
+              "y": -0.13625,
+              "w": 0.0155,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-key-row-3",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.0597,
+              "y": -0.13625,
+              "w": 0.0155,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-key-row-4",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.0417,
+              "y": -0.13625,
+              "w": 0.0155,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-key-row-5",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.0237,
+              "y": -0.13625,
+              "w": 0.0155,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-key-row-6",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.0057,
+              "y": -0.13625,
+              "w": 0.0155,
+              "h": 0.2725
+            },
+            {
+              "id": "plan-trackpad",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": 0.019,
+              "y": -0.065,
+              "w": 0.078,
+              "h": 0.13,
+              "r": 0.002
+            },
+            {
+              "id": "plan-lid-shell",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.0025],
+                [0.2132, 0.0035],
+                [0.2125, 0.0041],
+                [0.2113, 0.0045],
+                [-0.0023, 0.0045],
+                [-0.0035, 0.0041],
+                [-0.0042, 0.0035],
+                [-0.0045, 0.0025],
+                [-0.0045, -0.0014]
+              ],
+              "closed": true,
+              "region": "lid",
+              "material": "alu-anodised",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.1565,
+                "z1": 0.1565
               }
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.275 m by 0.218 m side view, 5.5 mm by 4.4 mm on paper: a wedge-fronted base slab on two rubber feet with a raised hinge shoulder at the rear and a tall lid leaning back by 15 degrees, joined by a 9.6 mm hinge barrel. Front view: the 0.313 m wide base with its two front feet and chamfered front edge as one block of deck and underside, and the lid as a slab behind it whose top edge rises with the lid angle; the dark display fills its face. Top view: the base with five key rows and trackpad, covered by the lid, which draws back over the hinge as it opens.",
-            "de": "Eine Seitenansicht von 0,275 m mal 0,218 m, auf Papier 5,5 mm mal 4,4 mm: eine Basisplatte mit keilförmiger Vorderkante auf zwei Gummifüßen und erhöhter Scharnierschulter hinten sowie ein hoher, um 15 Grad nach hinten geneigter Deckel, verbunden durch eine Scharniertrommel von 9,6 mm. Vorderansicht: die 0,313 m breite Basis mit ihren zwei vorderen Füßen und der abgeschrägten Vorderkante als ein Block aus Deck und Unterseite und der Deckel als Platte dahinter, deren Oberkante mit dem Deckelwinkel steigt; das dunkle Display füllt seine Fläche. Draufsicht: die Basis mit fünf Tastenreihen und Touchpad, vom Deckel bedeckt, der sich beim Öffnen über das Scharnier zurückzieht."
+            "en": "A 0.273 m by 0.221 m side view, 5.5 mm by 4.4 mm on paper: the chassis as a 10.5 mm slab with a boat-shaped bilge on two rubber feet, its keyboard deck ending at a ledge before the rear edge, on which the 9 mm hinge barrel sits, and the lid rising from the barrel, leaning back by 15 degrees. Front view: the 0.313 m wide chassis on its two front feet with the bilge at both sides and the lid behind it with the dark glass and the lit panel on its face. Top view: the chassis with rounded corners, six key rows and the trackpad, and the lid seen from above as a band behind the hinge barrel.",
+            "de": "Eine Seitenansicht von 0,273 m mal 0,221 m, auf Papier 5,5 mm mal 4,4 mm: das Chassis als 10,5-mm-Platte mit bootsförmiger Kimm auf zwei Gummifüßen, dessen Tastaturdeck vor der Hinterkante an einem Absatz endet, auf dem die 9-mm-Scharnierwalze sitzt, und der Deckel, der aus der Walze aufsteigt und sich um 15 Grad nach hinten lehnt. Vorderansicht: das 0,313 m breite Chassis auf seinen zwei vorderen Füßen mit der Kimm an beiden Seiten und dahinter der Deckel mit dem dunklen Glas und dem leuchtenden Panel auf seiner Fläche. Draufsicht: das Chassis mit gerundeten Ecken, sechs Tastenreihen und Touchpad sowie der Deckel von oben als Band hinter der Scharnierwalze."
           },
           "retained": {
-            "en": "Overall height 0.218 m with the lid open at 105 degrees, base depth 0.218 m, base thickness 12.5 mm, lid thickness 6.5 mm, both feet, the wedge front, the hinge barrel, the glass of the display and a row of key tops.",
-            "de": "Gesamthöhe 0,218 m bei 105 Grad geöffnetem Deckel, Basistiefe 0,218 m, Basisdicke 12,5 mm, Deckeldicke 6,5 mm, beide Füße, die Keilkante, die Scharniertrommel, das Displayglas und eine Reihe Tastenköpfe."
+            "en": "Overall height 0.221 m with the lid open at 105 degrees, chassis depth 0.218 m, deck 12.5 mm above the desk, lid thickness 6.5 mm, the feet, the bilge, the parting line of the two covers, the hinge ledge and barrel, the glass with its lit panel, the key rows and the trackpad.",
+            "de": "Gesamthöhe 0,221 m bei 105 Grad geöffnetem Deckel, Chassistiefe 0,218 m, Deck 12,5 mm über dem Tisch, Deckeldicke 6,5 mm, die Füße, die Kimm, die Trennfuge der zwei Schalen, Scharnierabsatz und Walze, das Glas mit seinem leuchtenden Panel, die Tastenreihen und das Touchpad."
           },
           "merged": {
-            "en": "The anodised shell of the underside and the one of the deck are two stacked slabs; the lid shell, bezel and back cover are one shape.",
-            "de": "Die eloxierte Unterschale und die Deckschale bilden zwei gestapelte Platten; Deckelschale, Rahmen und Rückwand sind eine Form."
+            "en": "The bottom cover and the keyboard deck are two stacked shapes; lid shell and rim are one profile; each key row is one bar; the two ports of the right side are one stroke.",
+            "de": "Bodenschale und Tastaturdeck sind zwei gestapelte Formen; Deckelschale und Rand sind ein Profil; jede Tastenreihe ist ein Balken; die zwei Buchsen der rechten Seite sind ein Strich."
           },
           "omitted": {
-            "en": "Ports, vents, the touchpad recess, the camera and the speaker slots, which lie outside the side view. Front and top view omit the keycap relief, hinge barrels and the rear feet.",
-            "de": "Anschlüsse, Lüftungsschlitze, die Touchpad-Mulde, die Kamera und die Lautsprecherschlitze, die außerhalb der Seitenansicht liegen. Vorder- und Draufsicht lassen das Tastenrelief, die Scharnierwalzen und die hinteren Füße weg."
+            "en": "The keys and the trackpad in the side and front views, where they lie below the deck plane; the exhaust grille under the barrel, the speaker fields, the camera and the single key caps. The top view draws the lid in its aluminium tone in every pose: the paint order within one bone is that of the closed lid, whose back hides the display.",
+            "de": "Tasten und Touchpad in Seiten- und Vorderansicht, wo sie unter der Deckebene liegen; das Abluftgitter unter der Walze, die Lautsprecherfelder, die Kamera und die einzelnen Tastenkappen. Die Draufsicht zeichnet den Deckel in jeder Pose in seinem Aluminiumton: die Malreihenfolge innerhalb eines Knochens ist die des geschlossenen Deckels, dessen Rücken das Display verdeckt."
           },
           "thinElements": {
-            "en": "The 2.3 mm display glass is drawn as a 0.046 mm glass slab inside the lid; the 2 mm feet stay real and rely on the pen weight to reach the feature width.",
-            "de": "Das 2,3 mm dicke Displayglas ist als 0,046-mm-Glasplatte im Deckel gezeichnet; die 2 mm hohen Füße bleiben real und erreichen die Mindestbreite durch die Strichstärke."
+            "en": "The 2.1 mm cover glass and the 2.3 mm panel stack are side profiles inside the lid that only the front view projects; the 2 mm feet stay real and rely on the pen weight to reach the feature width.",
+            "de": "Das 2,1 mm dicke Deckglas und der 2,3 mm dicke Panelaufbau sind Seitenprofile im Deckel, die nur die Vorderansicht projiziert; die 2 mm hohen Füße bleiben real und erreichen die Mindestbreite durch die Strichstärke."
           },
           "hatching": {
-            "en": "None; the key tops are one detail polyline.",
-            "de": "Keine; die Tastenköpfe sind ein Detailzug."
+            "en": "None; the key rows are six detail bars.",
+            "de": "Keine; die Tastenreihen sind sechs Detailbalken."
           },
           "styles": {
-            "en": "Slabs 0.5 to 0.62, lid 0.55, display 0.1 dark, feet 0.15; body pen 0.18 mm, detail 0.13 mm, glazing 0.18 mm, ground 0.18 mm so the 12.5 mm base is not swallowed by the desk line.",
-            "de": "Platten 0,5 bis 0,62, Deckel 0,55, Display 0,1 dunkel, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm, Glas 0,18 mm, Boden 0,18 mm, damit die 12,5 mm dicke Basis nicht von der Tischlinie verschluckt wird."
+            "en": "Bottom cover 0.5, deck 0.62, lid 0.55, glass 0.1 dark with the lit panel 0.3, barrel 0.3, feet 0.15; body pen 0.18 mm, detail 0.13 mm, glazing 0.18 mm, ground 0.18 mm so the 12.5 mm chassis is not swallowed by the desk line.",
+            "de": "Bodenschale 0,5, Deck 0,62, Deckel 0,55, Glas 0,1 dunkel mit dem leuchtenden Panel 0,3, Walze 0,3, Füße 0,15; Körperstift 0,18 mm, Detail 0,13 mm, Glas 0,18 mm, Boden 0,18 mm, damit das 12,5 mm hohe Chassis nicht von der Tischlinie verschluckt wird."
           },
           "overlays": {
             "en": "The keyboard deck, the underside and the lid are separate regions, so the thermal view paints the hot underside and deck apart from the cooler lid.",
@@ -650,7 +722,7 @@
           "body": 0.18,
           "detail": 0.13,
           "texture": null,
-          "glazing": null,
+          "glazing": 0.18,
           "ground": 0.25
         },
         "hatches": [],
@@ -663,12 +735,9 @@
               "z": 3,
               "filled": true,
               "tone": 0.5,
-              "kind": "rect",
-              "x": -0.109,
-              "y": 0,
-              "w": 0.218,
-              "h": 0.0066,
-              "r": 0.0012,
+              "kind": "poly",
+              "points": [[0.2115, 0.0], [0.216, 0.0012], [0.2177, 0.003], [0.218, 0.005], [0.218, 0.0085], [0.0, 0.0085], [0.0, 0.005], [0.0003, 0.003], [0.002, 0.0012], [0.0065, 0.0]],
+              "closed": true,
               "region": "underside",
               "material": "alu-anodised"
             },
@@ -679,8 +748,11 @@
               "z": 3.1,
               "filled": true,
               "tone": 0.62,
-              "kind": "path",
-              "d": "M -0.109 0.0066 L 0.109 0.0066 L 0.109 0.0092 L 0.078 0.0125 L -0.106 0.0125 C -0.108 0.0125 -0.109 0.0115 -0.109 0.0105 Z",
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0085,
+              "w": 0.218,
+              "h": 0.004,
               "region": "deck",
               "material": "alu-anodised"
             },
@@ -691,30 +763,46 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.5,
-              "kind": "rect",
-              "x": 0,
-              "y": 0,
-              "w": 0.213,
-              "h": 0.0065,
-              "r": 0.002,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.003],
+                [0.212, 0.0045],
+                [-0.003, 0.0045],
+                [-0.0045, 0.003],
+                [-0.0045, -0.0014],
+                [-0.0032, -0.0032],
+                [0.0, -0.0045],
+                [0.0032, -0.0032],
+                [0.0043, -0.0014]
+              ],
+              "closed": true,
               "region": "lid",
               "material": "alu-anodised"
             }
           ],
-          "plan": [
+          "front": [
             {
-              "id": "plan-lid-shell",
+              "id": "lid-shell",
               "bone": "lid",
               "role": "body",
-              "z": 3.4,
+              "z": 2.9,
               "filled": true,
               "tone": 0.5,
-              "kind": "rect",
-              "x": 0,
-              "y": 0,
-              "w": 0.213,
-              "h": 0.0065,
-              "r": 0.002,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.003],
+                [0.212, 0.0045],
+                [-0.003, 0.0045],
+                [-0.0045, 0.003],
+                [-0.0045, -0.0014],
+                [-0.0032, -0.0032],
+                [0.0, -0.0045],
+                [0.0032, -0.0032],
+                [0.0043, -0.0014]
+              ],
+              "closed": true,
               "region": "lid",
               "material": "alu-anodised",
               "solid": {
@@ -724,6 +812,68 @@
                 "z1": 0.1565
               }
             },
+            {
+              "id": "display",
+              "bone": "lid",
+              "role": "glazing",
+              "z": 2.95,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "rect",
+              "x": 0.012,
+              "y": -0.0017,
+              "w": 0.197,
+              "h": 0.0032,
+              "region": "lid",
+              "material": "display-glass",
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": -0.152,
+                "z1": 0.152
+              }
+            },
+            {
+              "id": "base-lower",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [0.15, 0.0],
+                [0.1545, 0.0012],
+                [0.1562, 0.003],
+                [0.1565, 0.005],
+                [0.1565, 0.0085],
+                [-0.1565, 0.0085],
+                [-0.1565, 0.005],
+                [-0.1562, 0.003],
+                [-0.1545, 0.0012],
+                [-0.15, 0.0]
+              ],
+              "closed": true,
+              "region": "underside",
+              "material": "alu-anodised"
+            },
+            {
+              "id": "base-upper",
+              "bone": "base",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "rect",
+              "x": -0.1565,
+              "y": 0.0085,
+              "w": 0.313,
+              "h": 0.004,
+              "region": "deck",
+              "material": "alu-anodised"
+            }
+          ],
+          "plan": [
             {
               "id": "plan-deck",
               "bone": "base",
@@ -736,7 +886,7 @@
               "y": -0.1565,
               "w": 0.218,
               "h": 0.313,
-              "r": 0.008,
+              "r": 0.009,
               "region": "deck",
               "material": "alu-anodised"
             },
@@ -748,80 +898,45 @@
               "filled": true,
               "tone": 0.3,
               "kind": "rect",
-              "x": -0.07,
-              "y": -0.115,
-              "w": 0.12,
-              "h": 0.23
-            }
-          ],
-          "front": [
+              "x": -0.09,
+              "y": -0.138,
+              "w": 0.1,
+              "h": 0.276
+            },
             {
-              "id": "base-lower",
+              "id": "plan-trackpad",
               "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.55,
               "kind": "rect",
-              "x": -0.1565,
-              "y": 0.0,
-              "w": 0.313,
-              "h": 0.0066,
-              "r": 0.0012,
-              "region": "underside",
-              "material": "alu-anodised"
+              "x": 0.019,
+              "y": -0.065,
+              "w": 0.078,
+              "h": 0.13
             },
             {
-              "id": "base-upper",
-              "bone": "base",
-              "role": "body",
-              "z": 3.1,
-              "filled": true,
-              "tone": 0.62,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.1565,
-                  0.0066
-                ],
-                [
-                  0.1565,
-                  0.0066
-                ],
-                [
-                  0.1565,
-                  0.0092
-                ],
-                [
-                  0.14,
-                  0.0125
-                ],
-                [
-                  -0.14,
-                  0.0125
-                ],
-                [
-                  -0.1565,
-                  0.0105
-                ]
-              ],
-              "closed": true,
-              "region": "deck",
-              "material": "alu-anodised"
-            },
-            {
-              "id": "lid-shell",
+              "id": "plan-lid-shell",
               "bone": "lid",
               "role": "body",
-              "z": 2.9,
+              "z": 3.4,
               "filled": true,
               "tone": 0.5,
-              "kind": "rect",
-              "x": 0,
-              "y": 0,
-              "w": 0.213,
-              "h": 0.0065,
-              "r": 0.002,
+              "kind": "poly",
+              "points": [
+                [0.2135, -0.0014],
+                [0.2135, 0.003],
+                [0.212, 0.0045],
+                [-0.003, 0.0045],
+                [-0.0045, 0.003],
+                [-0.0045, -0.0014],
+                [-0.0032, -0.0032],
+                [0.0, -0.0045],
+                [0.0032, -0.0032],
+                [0.0043, -0.0014]
+              ],
+              "closed": true,
               "region": "lid",
               "material": "alu-anodised",
               "solid": {
@@ -835,32 +950,32 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "An L-shaped side sign 2.8 mm by 2.2 mm: a sloped-front base slab with the lid leaning back from its rear edge. Front view: base and a lid slab whose top edge rises with the lid angle. Top view: the base with one key field, covered by the lid, which draws back over the hinge as it opens.",
-            "de": "Ein L-förmiges Seitenzeichen von 2,8 mm mal 2,2 mm: eine Basisplatte mit geneigter Vorderkante, von deren Hinterkante sich der Deckel nach hinten lehnt. Vorderansicht: Basis und eine Deckelplatte, deren Oberkante mit dem Deckelwinkel steigt. Draufsicht: die Basis mit einem Tastenfeld, vom Deckel bedeckt, der sich beim Öffnen über das Scharnier zurückzieht."
+            "en": "An L-shaped side sign 2.7 mm by 2.2 mm: the chassis as a hull with its bilge standing on the desk and the lid leaning back from the round hinge foot at its rear edge. Front view: the chassis and the lid behind it with its dark glass. Top view: the chassis with one key field and the trackpad outline, and the lid seen from above as a band.",
+            "de": "Ein L-förmiges Seitenzeichen von 2,7 mm mal 2,2 mm: das Chassis als Rumpf mit Kimm, der auf dem Tisch steht, und der Deckel, der sich vom runden Scharnierfuß an dessen Hinterkante nach hinten lehnt. Vorderansicht: das Chassis und dahinter der Deckel mit seinem dunklen Glas. Draufsicht: das Chassis mit einem Tastenfeld und dem Umriss des Touchpads sowie der Deckel von oben als Band."
           },
           "retained": {
-            "en": "Overall height 0.218 m, base depth 0.218 m, the wedge front, the base slab height and the lid thickness; the screen face as one line.",
-            "de": "Gesamthöhe 0,218 m, Basistiefe 0,218 m, die Keilkante, die Höhe der Basisplatte und die Deckeldicke; die Bildschirmseite als ein Strich."
+            "en": "Overall height 0.221 m, chassis depth 0.218 m, the bilge, the parting line of the two covers, the lid thickness and the round hinge foot; the glass, the key field and the trackpad.",
+            "de": "Gesamthöhe 0,221 m, Chassistiefe 0,218 m, die Kimm, die Trennfuge der zwei Schalen, die Deckeldicke und der runde Scharnierfuß; das Glas, das Tastenfeld und das Touchpad."
           },
           "merged": {
-            "en": "The feet join the underside slab, the hinge barrel joins the lid shell, glass and bezel join the lid.",
-            "de": "Die Füße gehen in der Unterplatte auf, die Scharniertrommel in der Deckelschale, Glas und Rahmen im Deckel."
+            "en": "The feet and their 2 mm air gap join the bottom cover, the hinge barrel joins the lid profile, the lit panel joins the glass, the key rows join one key field.",
+            "de": "Die Füße und ihr 2-mm-Luftspalt gehen in der Bodenschale auf, die Scharnierwalze im Deckelprofil, das leuchtende Panel im Glas, die Tastenreihen in einem Tastenfeld."
           },
           "omitted": {
-            "en": "Key tops, hinge barrel as a separate form, ports, vents, camera. Front and top view omit the feet, the display, the key rows and the trackpad.",
-            "de": "Tastenköpfe, die Scharniertrommel als eigene Form, Anschlüsse, Lüftung, Kamera. Vorder- und Draufsicht lassen Füße, Display, Tastenreihen und Touchpad weg."
+            "en": "The hinge ledge, the keyboard well, ports, grille, speaker fields and camera; the display face in the top view.",
+            "de": "Scharnierabsatz, Tastaturmulde, Buchsen, Gitter, Lautsprecherfelder und Kamera; die Displayfläche in der Draufsicht."
           },
           "thinElements": {
-            "en": "The 12.5 mm base is 0.125 mm of paper; the 0.18 mm pen outline lifts the slab to the feature width, so the two base slabs read as one dark block with a lighter deck line.",
-            "de": "Die 12,5 mm dicke Basis sind 0,125 mm Papier; die 0,18-mm-Umrisslinie hebt die Platte auf die Mindestbreite, sodass die beiden Basisplatten als ein dunkler Block mit hellerer Decklinie lesen."
+            "en": "The 12.5 mm chassis is 0.125 mm of paper; the 0.18 mm pen outline lifts it to the feature width, so the two covers read as one dark block with a lighter deck line.",
+            "de": "Das 12,5 mm hohe Chassis sind 0,125 mm Papier; die 0,18-mm-Umrisslinie hebt es auf die Mindestbreite, sodass die zwei Schalen als ein dunkler Block mit hellerer Decklinie lesen."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Underside 0.5, deck 0.62, lid 0.5; body pen 0.18 mm, the screen line 0.13 mm.",
-            "de": "Unterseite 0,5, Deck 0,62, Deckel 0,5; Körperstift 0,18 mm, der Bildschirmstrich 0,13 mm."
+            "en": "Bottom cover 0.5, deck 0.62, lid 0.5, glass 0.1, key field 0.3; body pen 0.18 mm, glazing pen 0.18 mm for the display stack, detail pen 0.13 mm for the key field and the trackpad.",
+            "de": "Bodenschale 0,5, Deck 0,62, Deckel 0,5, Glas 0,1, Tastenfeld 0,3; Körperstift 0,18 mm, Glasstift 0,18 mm für den Displayaufbau, Detailstift 0,13 mm für Tastenfeld und Touchpad."
           },
           "overlays": {
             "en": "Deck, underside and lid keep their own regions, so the heat of the underside and the keyboard deck reads separately from the lid.",
@@ -892,16 +1007,10 @@
               "z": 3,
               "filled": true,
               "tone": 0.55,
-              "kind": "rect",
-              "x": -0.109,
-              "y": 0,
-              "w": 0.218,
-              "h": 0.0125,
-              "r": 0.002,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "kind": "poly",
+              "points": [[0.215, 0.0], [0.218, 0.003], [0.218, 0.0125], [0.0, 0.0125], [0.0, 0.003], [0.003, 0.0]],
+              "closed": true,
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             },
             {
@@ -912,29 +1021,27 @@
               "filled": true,
               "tone": 0.5,
               "kind": "rect",
-              "x": -0.003,
-              "y": -0.003,
-              "w": 0.219,
-              "h": 0.0095,
-              "r": 0.002,
+              "x": -0.0045,
+              "y": -0.002,
+              "w": 0.218,
+              "h": 0.0065,
               "region": "lid",
               "material": "alu-anodised"
             }
           ],
-          "plan": [
+          "front": [
             {
-              "id": "plan-lid",
+              "id": "lid",
               "bone": "lid",
               "role": "body",
-              "z": 3.4,
+              "z": 2.9,
               "filled": true,
               "tone": 0.5,
               "kind": "rect",
-              "x": -0.003,
-              "y": -0.003,
-              "w": 0.219,
-              "h": 0.0095,
-              "r": 0.002,
+              "x": -0.0045,
+              "y": -0.002,
+              "w": 0.218,
+              "h": 0.0065,
               "region": "lid",
               "material": "alu-anodised",
               "solid": {
@@ -944,6 +1051,21 @@
                 "z1": 0.1565
               }
             },
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [[0.1535, 0.0], [0.1565, 0.003], [0.1565, 0.0125], [-0.1565, 0.0125], [-0.1565, 0.003], [-0.1535, 0.0]],
+              "closed": true,
+              "regions": ["deck", "underside"],
+              "material": "alu-anodised"
+            }
+          ],
+          "plan": [
             {
               "id": "plan-base",
               "bone": "base",
@@ -956,47 +1078,22 @@
               "y": -0.1565,
               "w": 0.218,
               "h": 0.313,
-              "r": 0.004,
-              "regions": [
-                "deck",
-                "underside"
-              ],
-              "material": "alu-anodised"
-            }
-          ],
-          "front": [
-            {
-              "id": "base",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.55,
-              "kind": "rect",
-              "x": -0.1565,
-              "y": 0.0,
-              "w": 0.313,
-              "h": 0.0125,
-              "r": 0.002,
-              "regions": [
-                "deck",
-                "underside"
-              ],
+              "r": 0.009,
+              "regions": ["deck", "underside"],
               "material": "alu-anodised"
             },
             {
-              "id": "lid",
+              "id": "plan-lid",
               "bone": "lid",
               "role": "body",
-              "z": 2.9,
+              "z": 3.4,
               "filled": true,
               "tone": 0.5,
               "kind": "rect",
-              "x": -0.003,
-              "y": -0.003,
-              "w": 0.219,
-              "h": 0.0095,
-              "r": 0.002,
+              "x": -0.0045,
+              "y": -0.002,
+              "w": 0.218,
+              "h": 0.0065,
               "region": "lid",
               "material": "alu-anodised",
               "solid": {
@@ -1010,36 +1107,36 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Two bars, 1.4 mm by 1.1 mm on paper: a base bar and a lid bar leaning back from its rear end. Front view: base block and a lid slab raised with the lid angle. Top view: the base covered by the lid, which draws back over the hinge as it opens.",
-            "de": "Zwei Balken, auf Papier 1,4 mm mal 1,1 mm: ein Basisbalken und ein Deckelbalken, der sich von dessen hinterem Ende nach hinten lehnt. Vorderansicht: Basisblock und eine mit dem Deckelwinkel gehobene Deckelplatte. Draufsicht: die vom Deckel bedeckte Basis, wobei sich der Deckel beim Öffnen über das Scharnier zurückzieht."
+            "en": "Two bars, 1.4 mm by 1.1 mm on paper: the chassis bar and the lid bar leaning back with its foot in the rear edge of the chassis. Front view: the chassis block and the lid plate raised with the lid angle. Top view: the chassis and the lid seen from above behind its rear edge.",
+            "de": "Zwei Balken, auf Papier 1,4 mm mal 1,1 mm: der Chassisbalken und der Deckelbalken, der sich mit seinem Fuß in der Hinterkante des Chassis nach hinten lehnt. Vorderansicht: der Chassisblock und die mit dem Deckelwinkel gehobene Deckelplatte. Draufsicht: das Chassis und der Deckel von oben hinter dessen Hinterkante."
           },
           "retained": {
-            "en": "Overall height 0.218 m, depth 0.218 m, the lid angle and the hinge at the rear edge of the base.",
-            "de": "Gesamthöhe 0,218 m, Tiefe 0,218 m, der Deckelwinkel und das Scharnier an der Hinterkante der Basis."
+            "en": "Overall height 0.221 m, depth 0.218 m, the real thicknesses of 12.5 and 6.5 mm, the lid angle and the hinge at the rear edge of the chassis.",
+            "de": "Gesamthöhe 0,221 m, Tiefe 0,218 m, die realen Dicken von 12,5 und 6,5 mm, der Deckelwinkel und das Scharnier an der Hinterkante des Chassis."
           },
           "merged": {
-            "en": "Deck and underside merge into one base bar; hinge, shell, bezel and glass merge into one lid bar.",
-            "de": "Deck und Unterseite gehen in einem Basisbalken auf; Scharnier, Schale, Rahmen und Glas in einem Deckelbalken."
+            "en": "Deck and underside merge into one chassis bar; hinge, shell, rim and glass merge into one lid bar.",
+            "de": "Deck und Unterseite gehen in einem Chassisbalken auf; Scharnier, Schale, Rand und Glas in einem Deckelbalken."
           },
           "omitted": {
-            "en": "Feet, wedge front, key tops, display line and every port. Front and top view carry no detail beyond the two plates.",
-            "de": "Füße, Keilkante, Tastenköpfe, Displaylinie und alle Anschlüsse. Vorder- und Draufsicht tragen keine Einzelheiten außer den zwei Platten."
+            "en": "Feet, bilge, key field, trackpad, glass and every port. Front and top view carry no detail beyond the two plates.",
+            "de": "Füße, Kimm, Tastenfeld, Touchpad, Glas und alle Buchsen. Vorder- und Draufsicht tragen keine Einzelheiten außer den zwei Platten."
           },
           "thinElements": {
-            "en": "The 6.5 mm lid is widened to 9.5 mm (0.0475 mm paper) so that pen and fill reach the feature width; the base keeps its real 12.5 mm.",
-            "de": "Der 6,5 mm dicke Deckel ist auf 9,5 mm verbreitert (0,0475 mm Papier), damit Strich und Füllung die Mindestbreite erreichen; die Basis behält ihre realen 12,5 mm."
+            "en": "The 6.5 mm lid is 0.03 mm of paper and the 12.5 mm chassis 0.06 mm; both keep their real thickness and rely on the 0.18 mm pen outline to reach the feature width.",
+            "de": "Der 6,5 mm dicke Deckel sind 0,03 mm Papier und das 12,5 mm hohe Chassis 0,06 mm; beide behalten ihre reale Dicke und erreichen die Mindestbreite durch die 0,18-mm-Umrisslinie."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Base 0.55, lid 0.5; one body pen of 0.18 mm.",
-            "de": "Basis 0,55, Deckel 0,5; ein Körperstift von 0,18 mm."
+            "en": "Chassis 0.55, lid 0.5; one body pen of 0.18 mm.",
+            "de": "Chassis 0,55, Deckel 0,5; ein Körperstift von 0,18 mm."
           },
           "overlays": {
-            "en": "The base bar lists deck and underside as merged regions; the lid bar is the lid region.",
-            "de": "Der Basisbalken führt Deck und Unterseite als zusammengeführte Regionen; der Deckelbalken ist die Deckelregion."
+            "en": "The chassis bar lists deck and underside as merged regions; the lid bar is the lid region.",
+            "de": "Der Chassisbalken führt Deck und Unterseite als zusammengeführte Regionen; der Deckelbalken ist die Deckelregion."
           }
         }
       },
@@ -1672,15 +1769,15 @@
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.15,
-            "profile": [[0, 0.0095], [0.002, 0.009]],
+            "profile": [[0.0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
             "axis": [0, 1, 0],
             "origin": [0, 0, 0],
             "transform": {
-              "translation": [-0.09, 0, 0.11]
+              "translation": [0.02, 0.0, 0.134]
             },
             "repeat": {
               "count": 2,
-              "translation": [0.18, 0, 0]
+              "translation": [0.178, 0.0, 0.0]
             }
           },
           {
@@ -1690,276 +1787,1156 @@
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.15,
-            "profile": [[0, 0.0095], [0.002, 0.009]],
+            "profile": [[0.0, 0.0052], [0.0006, 0.006], [0.0024, 0.006]],
             "axis": [0, 1, 0],
             "origin": [0, 0, 0],
             "transform": {
-              "translation": [-0.09, 0, -0.11]
+              "translation": [0.02, 0.0, -0.134]
             },
             "repeat": {
               "count": 2,
-              "translation": [0.18, 0, 0]
+              "translation": [0.178, 0.0, 0.0]
             }
           },
           {
-            "id": "base",
+            "id": "tub",
+            "kind": "loft",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0105, 0.313],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0, 0.00725, 0]
-            }
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.109, 0.002, 0.0],
+                "rx": 0.15,
+                "ry": 0.1025,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0026, 0.0],
+                "rx": 0.1535,
+                "ry": 0.106,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0036, 0.0],
+                "rx": 0.1555,
+                "ry": 0.108,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.005, 0.0],
+                "rx": 0.1563,
+                "ry": 0.1088,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0062, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0085, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
-            "id": "hinge-shoulder",
-            "kind": "box",
+            "id": "deck",
+            "kind": "extrude",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.58,
-            "size": [0.034, 0.0105, 0.28],
-            "cornerRadius": 0.003,
+            "tone": 0.62,
+            "profile": [
+              [0.1562, 0.109],
+              [0.15616, 0.20382],
+              [0.15602, 0.20774],
+              [0.1558, 0.21007],
+              [0.15547, 0.21173],
+              [0.15505, 0.213],
+              [0.15451, 0.21401],
+              [0.15385, 0.21483],
+              [0.15305, 0.21551],
+              [0.15207, 0.21607],
+              [0.15089, 0.21653],
+              [0.14944, 0.2169],
+              [0.14762, 0.21719],
+              [0.14524, 0.21742],
+              [0.14188, 0.21758],
+              [0.13625, 0.21767],
+              [0.0, 0.2177],
+              [-0.13625, 0.21767],
+              [-0.14188, 0.21758],
+              [-0.14524, 0.21742],
+              [-0.14762, 0.21719],
+              [-0.14944, 0.2169],
+              [-0.15089, 0.21653],
+              [-0.15207, 0.21607],
+              [-0.15305, 0.21551],
+              [-0.15385, 0.21483],
+              [-0.15451, 0.21401],
+              [-0.15505, 0.213],
+              [-0.15547, 0.21173],
+              [-0.1558, 0.21007],
+              [-0.15602, 0.20774],
+              [-0.15616, 0.20382],
+              [-0.1562, 0.109],
+              [-0.15616, 0.01418],
+              [-0.15602, 0.01026],
+              [-0.15597, 0.0095],
+              [0.15597, 0.0095],
+              [0.15602, 0.01026],
+              [0.15616, 0.01418]
+            ],
+            "plane": "zx",
+            "from": 0.0085,
+            "to": 0.0125,
+            "holes": [
+              [[-0.1375, 0.017], [0.1375, 0.017], [0.1395, 0.019], [0.1395, 0.119], [0.1375, 0.121], [-0.1375, 0.121], [-0.1395, 0.119], [-0.1395, 0.019]],
+              [[-0.063, 0.128], [0.063, 0.128], [0.065, 0.13], [0.065, 0.204], [0.063, 0.206], [-0.063, 0.206], [-0.065, 0.204], [-0.065, 0.13]]
+            ]
+          },
+          {
+            "id": "keyboard-bed",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "detail",
+            "tone": 0.16,
+            "size": [0.104, 0.003, 0.279],
             "transform": {
-              "translation": [-0.092, 0.01185, 0]
+              "translation": [0.069, 0.0095, 0.0]
             }
           },
           {
-            "id": "keys",
+            "id": "keys-fn-1",
             "kind": "box",
             "bone": "base",
-            "material": "alu-anodised",
+            "material": "keycap-plastic",
             "role": "texture",
-            "tone": 0.3,
-            "size": [0.017, 0.0012, 0.23],
-            "cornerRadius": 0.0004,
+            "tone": 0.25,
+            "size": [0.0095, 0.0012, 0.01668],
             "transform": {
-              "translation": [-0.0595, 0.0131, 0]
+              "translation": [0.02375, 0.0116, -0.12791]
             },
+            "texture": true,
             "repeat": {
-              "count": 5,
-              "translation": [0.021, 0, 0]
+              "count": 14,
+              "translation": [0.0, 0.0, 0.01968]
             }
+          },
+          {
+            "id": "keys-digits-1",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.03905, 0.0116, -0.12825]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 13,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-digits-2",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.0255],
+            "transform": {
+              "translation": [0.03905, 0.0116, 0.1235]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-upper-1",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.0255],
+            "transform": {
+              "translation": [0.05705, 0.0116, -0.1235]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-upper-2",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.05705, 0.0116, -0.09975]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 13,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-home-1",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.03025],
+            "transform": {
+              "translation": [0.07505, 0.0116, -0.12112]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-home-2",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.07505, 0.0116, -0.095]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 11,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-home-3",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.03025],
+            "transform": {
+              "translation": [0.07505, 0.0116, 0.12113]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-lower-1",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.03975],
+            "transform": {
+              "translation": [0.09305, 0.0116, -0.11637]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-lower-2",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.09305, 0.0116, -0.0855]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 10,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-lower-3",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.03975],
+            "transform": {
+              "translation": [0.09305, 0.0116, 0.11638]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-space-1",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.11105, 0.0116, -0.12825]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 3,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-space-2",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.02075],
+            "transform": {
+              "translation": [0.11105, 0.0116, -0.06887]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-space-3",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.092],
+            "transform": {
+              "translation": [0.11105, 0.0116, -0.0095]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-space-4",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.02075],
+            "transform": {
+              "translation": [0.11105, 0.0116, 0.04988]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-space-5",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.0155, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.11105, 0.0116, 0.07125]
+            },
+            "texture": true
+          },
+          {
+            "id": "keys-arrow-lower",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.007, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.1153, 0.0116, 0.09025]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 3,
+              "translation": [0.0, 0.0, 0.019]
+            }
+          },
+          {
+            "id": "keys-arrow-up",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.007, 0.0012, 0.016],
+            "transform": {
+              "translation": [0.1068, 0.0116, 0.10925]
+            },
+            "texture": true
           },
           {
             "id": "trackpad",
             "kind": "box",
             "bone": "base",
+            "material": "display-glass",
+            "role": "detail",
+            "tone": 0.52,
+            "size": [0.078, 0.0043, 0.13],
+            "transform": {
+              "translation": [0.167, 0.01015, 0.0]
+            }
+          },
+          {
+            "id": "intake-l",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.08,
+            "size": [0.028, 0.0003, 0.0012],
+            "transform": {
+              "translation": [0.054, 0.00185, -0.0945]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 14,
+              "translation": [0.0, 0.0, 0.003]
+            }
+          },
+          {
+            "id": "intake-r",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.08,
+            "size": [0.028, 0.0003, 0.0012],
+            "transform": {
+              "translation": [0.054, 0.00185, 0.0555]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 14,
+              "translation": [0.0, 0.0, 0.003]
+            }
+          },
+          {
+            "id": "screw-rear",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "profile": [[0.0017, 0.0015], [0.002, 0.0015]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0.012, 0.0, -0.1]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 3,
+              "translation": [0.0, 0.0, 0.1]
+            }
+          },
+          {
+            "id": "screw-mid",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "profile": [[0.0017, 0.0015], [0.002, 0.0015]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0.109, 0.0, -0.146]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, 0.292]
+            }
+          },
+          {
+            "id": "screw-front",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "profile": [[0.0017, 0.0015], [0.002, 0.0015]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0.206, 0.0, -0.1]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 3,
+              "translation": [0.0, 0.0, 0.1]
+            }
+          },
+          {
+            "id": "speaker",
+            "kind": "box",
+            "bone": "base",
             "material": "alu-anodised",
             "role": "texture",
-            "tone": 0.55,
-            "size": [0.036, 0.0004, 0.08],
-            "cornerRadius": 0.0002,
+            "tone": 0.42,
+            "size": [0.088, 0.00015, 0.01],
             "transform": {
-              "translation": [0.074, 0.0127, 0]
+              "translation": [0.069, 0.01257, -0.1475]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, 0.295]
+            }
+          },
+          {
+            "id": "vent-grille",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.1,
+            "size": [0.007, 0.0003, 0.24],
+            "transform": {
+              "translation": [0.005, 0.00865, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "port-usb-c-r",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.08,
+            "size": [0.0085, 0.0026, 0.0006],
+            "transform": {
+              "translation": [0.028, 0.0069, -0.1563]
+            },
+            "texture": true
+          },
+          {
+            "id": "port-audio-r",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.08,
+            "size": [0.0036, 0.0036, 0.0006],
+            "transform": {
+              "translation": [0.045, 0.0069, -0.1563]
+            },
+            "texture": true
+          },
+          {
+            "id": "port-usb-c-l",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.08,
+            "size": [0.0085, 0.0026, 0.0006],
+            "transform": {
+              "translation": [0.028, 0.0069, 0.1563]
+            },
+            "texture": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0.016, 0.0, 0.0]
             }
           },
           {
             "id": "lid-shell",
+            "kind": "loft",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "body",
             "tone": 0.55,
-            "kind": "box",
-            "size": [0.218, 0.0075, 0.313],
-            "cornerRadius": 0.0022,
-            "transform": {
-              "translation": [0.104, 0.00375, 0]
-            }
+            "sections": [
+              {
+                "at": [0.1045, -0.0014, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0025, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0035, 0.0],
+                "rx": 0.1562,
+                "ry": 0.1087,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0041, 0.0],
+                "rx": 0.1555,
+                "ry": 0.108,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0045, 0.0],
+                "rx": 0.1543,
+                "ry": 0.1068,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
             "id": "display",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "lid",
             "material": "display-glass",
             "role": "glazing",
-            "tone": 0.1,
-            "size": [0.203, 0.0028, 0.29],
+            "tone": 0.08,
+            "profile": [
+              [0.1535, 0.11075],
+              [0.15346, 0.20395],
+              [0.15332, 0.20611],
+              [0.1531, 0.20736],
+              [0.15277, 0.20822],
+              [0.15232, 0.20886],
+              [0.15174, 0.20935],
+              [0.15098, 0.20973],
+              [0.14999, 0.21002],
+              [0.14866, 0.21024],
+              [0.14674, 0.21038],
+              [0.14343, 0.21047],
+              [0.0, 0.2105],
+              [-0.14343, 0.21047],
+              [-0.14674, 0.21038],
+              [-0.14866, 0.21024],
+              [-0.14999, 0.21002],
+              [-0.15098, 0.20973],
+              [-0.15174, 0.20935],
+              [-0.15232, 0.20886],
+              [-0.15277, 0.20822],
+              [-0.1531, 0.20736],
+              [-0.15332, 0.20611],
+              [-0.15346, 0.20395],
+              [-0.1535, 0.11075],
+              [-0.15346, 0.01755],
+              [-0.15332, 0.01539],
+              [-0.1531, 0.01414],
+              [-0.15277, 0.01328],
+              [-0.15232, 0.01264],
+              [-0.15174, 0.01215],
+              [-0.15098, 0.01177],
+              [-0.14999, 0.01148],
+              [-0.14866, 0.01126],
+              [-0.14674, 0.01112],
+              [-0.14343, 0.01103],
+              [0.0, 0.011],
+              [0.14343, 0.01103],
+              [0.14674, 0.01112],
+              [0.14866, 0.01126],
+              [0.14999, 0.01148],
+              [0.15098, 0.01177],
+              [0.15174, 0.01215],
+              [0.15232, 0.01264],
+              [0.15277, 0.01328],
+              [0.1531, 0.01414],
+              [0.15332, 0.01539],
+              [0.15346, 0.01755]
+            ],
+            "plane": "zx",
+            "from": -0.0017,
+            "to": 0.0004
+          },
+          {
+            "id": "screen",
+            "kind": "box",
+            "bone": "lid",
+            "material": "display-glass",
+            "role": "texture",
+            "tone": 0.3,
+            "size": [0.1885, 0.0003, 0.3016],
             "transform": {
-              "translation": [0.1065, 0.0012, 0]
-            }
+              "translation": [0.11025, -0.00175, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "camera",
+            "kind": "revolve",
+            "bone": "lid",
+            "material": "display-glass",
+            "role": "texture",
+            "tone": 0.02,
+            "profile": [[-0.0019, 0.0014], [-0.0017, 0.0014]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0.2075, 0.0, 0.0]
+            },
+            "texture": true
           },
           {
             "id": "hinge",
             "kind": "revolve",
             "bone": "lid",
-            "material": "alu-anodised",
+            "material": "keycap-plastic",
             "role": "body",
-            "tone": 0.4,
-            "profile": [[-0.12, 0.0048], [0.12, 0.0048]],
+            "tone": 0.3,
+            "profile": [[-0.135, 0.004], [-0.1345, 0.0045], [0.1345, 0.0045], [0.135, 0.004]],
             "axis": [0, 0, 1],
-            "origin": [0.002, 0.00325, 0]
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
+            "id": "th-foot-l",
+            "of": "foot-l",
+            "region": "underside"
+          },
+          {
+            "id": "th-foot-r",
+            "of": "foot-r",
+            "region": "underside"
+          },
+          {
+            "id": "th-tub",
+            "of": "tub",
+            "region": "underside",
+            "sectionFaces": ["+v"]
+          },
+          {
             "id": "th-deck",
-            "bone": "base",
-            "material": "alu-anodised",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0105, 0.313],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0, 0.00725, 0]
-            },
-            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"],
+            "of": "deck",
+            "region": "deck",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-keyboard-bed",
+            "of": "keyboard-bed",
+            "region": "deck",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-keys-fn-1",
+            "of": "keys-fn-1",
             "region": "deck"
           },
           {
-            "id": "th-keys",
-            "of": "keys",
-            "region": "deck",
-            "layer": "deck-shell"
+            "id": "th-keys-digits-1",
+            "of": "keys-digits-1",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-digits-2",
+            "of": "keys-digits-2",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-upper-1",
+            "of": "keys-upper-1",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-upper-2",
+            "of": "keys-upper-2",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-home-1",
+            "of": "keys-home-1",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-home-2",
+            "of": "keys-home-2",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-home-3",
+            "of": "keys-home-3",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-lower-1",
+            "of": "keys-lower-1",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-lower-2",
+            "of": "keys-lower-2",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-lower-3",
+            "of": "keys-lower-3",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-space-1",
+            "of": "keys-space-1",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-space-2",
+            "of": "keys-space-2",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-space-3",
+            "of": "keys-space-3",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-space-4",
+            "of": "keys-space-4",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-space-5",
+            "of": "keys-space-5",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-arrow-lower",
+            "of": "keys-arrow-lower",
+            "region": "deck"
+          },
+          {
+            "id": "th-keys-arrow-up",
+            "of": "keys-arrow-up",
+            "region": "deck"
           },
           {
             "id": "th-trackpad",
             "of": "trackpad",
             "region": "deck",
-            "layer": "deck-shell"
+            "sectionFaces": ["-v"]
           },
           {
-            "id": "th-hinge-shoulder",
-            "of": "hinge-shoulder",
-            "region": "deck",
-            "layer": "deck-shell"
+            "id": "th-vent-grille",
+            "of": "vent-grille",
+            "region": "underside"
           },
           {
-            "id": "th-underside",
-            "bone": "base",
-            "material": "alu-anodised",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0105, 0.313],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0, 0.00725, 0]
-            },
-            "sectionFaces": ["+v", "+u", "-u", "+w", "-w"],
+            "id": "th-port-usb-c-r",
+            "of": "port-usb-c-r",
+            "region": "underside"
+          },
+          {
+            "id": "th-port-audio-r",
+            "of": "port-audio-r",
+            "region": "underside"
+          },
+          {
+            "id": "th-port-usb-c-l",
+            "of": "port-usb-c-l",
             "region": "underside"
           },
           {
             "id": "th-lid-shell",
             "of": "lid-shell",
-            "region": "lid",
-            "layer": "lid-shell"
+            "region": "lid"
           },
           {
             "id": "th-display",
             "of": "display",
-            "region": "lid",
-            "layer": "lid-shell"
+            "region": "lid"
+          },
+          {
+            "id": "th-screen",
+            "of": "screen",
+            "region": "lid"
           },
           {
             "id": "th-hinge",
             "of": "hinge",
-            "region": "lid",
-            "layer": "lid-shell"
+            "region": "lid"
           },
           {
             "id": "th-deck-plume",
+            "kind": "extrude",
             "bone": "base",
             "material": "alu-anodised",
-            "role": "detail",
+            "role": "texture",
             "tone": 0.6,
-            "kind": "extrude",
             "profile": [
-              [0.0, 0.11],
-              [0.02588, 0.10659],
-              [0.05, 0.0966],
-              [0.07071, 0.08071],
-              [0.0866, 0.06],
-              [0.09659, 0.03588],
-              [0.1, 0.01],
-              [0.09659, -0.01588],
-              [0.0866, -0.04],
-              [0.07071, -0.06071],
-              [0.05, -0.0766],
-              [0.02588, -0.08659],
-              [0.0, -0.09],
-              [-0.02588, -0.08659],
-              [-0.05, -0.0766],
-              [-0.07071, -0.06071],
-              [-0.0866, -0.04],
-              [-0.09659, -0.01588],
-              [-0.1, 0.01],
-              [-0.09659, 0.03588],
-              [-0.0866, 0.06],
-              [-0.07071, 0.08071],
-              [-0.05, 0.0966],
-              [-0.02588, 0.10659]
+              [0.0, 0.214],
+              [0.01951, 0.21208],
+              [0.03827, 0.20639],
+              [0.05556, 0.19715],
+              [0.07071, 0.18471],
+              [0.08315, 0.16956],
+              [0.09239, 0.15227],
+              [0.09808, 0.13351],
+              [0.1, 0.114],
+              [0.09808, 0.09449],
+              [0.09239, 0.07573],
+              [0.08315, 0.05844],
+              [0.07071, 0.04329],
+              [0.05556, 0.03085],
+              [0.03827, 0.02161],
+              [0.01951, 0.01592],
+              [0.0, 0.014],
+              [-0.01951, 0.01592],
+              [-0.03827, 0.02161],
+              [-0.05556, 0.03085],
+              [-0.07071, 0.04329],
+              [-0.08315, 0.05844],
+              [-0.09239, 0.07573],
+              [-0.09808, 0.09449],
+              [-0.1, 0.114],
+              [-0.09808, 0.13351],
+              [-0.09239, 0.15227],
+              [-0.08315, 0.16956],
+              [-0.07071, 0.18471],
+              [-0.05556, 0.19715],
+              [-0.03827, 0.20639],
+              [-0.01951, 0.21208]
             ],
             "plane": "zx",
-            "from": 0.0135,
-            "to": 0.0215,
-            "sectionFaces": ["+v", "-v"],
+            "from": 0.0125,
+            "to": 0.0129,
+            "texture": true,
             "region": "deck",
             "tags": ["deck-plume"]
           }
         ],
         "structure": [
           {
-            "id": "member-base",
-            "of": "base",
-            "member": "base",
-            "part": "member"
-          },
-          {
-            "id": "member-lid",
-            "of": "lid-shell",
-            "member": "lid",
-            "part": "member"
-          },
-          {
-            "id": "joint-hinge",
-            "of": "hinge",
-            "member": "lid",
-            "part": "joint"
-          },
-          {
             "id": "support-feet",
+            "kind": "box",
             "bone": "base",
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.1,
-            "kind": "box",
-            "size": [0.19, 0.002, 0.28],
+            "size": [0.19, 0.0005, 0.28],
             "transform": {
-              "translation": [0, 0.001, 0]
+              "translation": [0.109, 0.00025, 0.0]
             },
-            "anchor": "feet-contact",
             "member": "base",
-            "part": "support"
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "post-foot-l",
+            "of": "foot-l",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "post-foot-r",
+            "of": "foot-r",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "tray-floor",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.146, 0.005], [0.146, 0.005], [0.152, 0.011], [0.152, 0.207], [0.146, 0.213], [-0.146, 0.213], [-0.152, 0.207], [-0.152, 0.011]],
+            "plane": "zx",
+            "from": 0.0024,
+            "to": 0.0044,
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "frame-walls",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1495, 0.0095], [0.1495, 0.0095], [0.1555, 0.0155], [0.1555, 0.2105], [0.1495, 0.2165], [-0.1495, 0.2165], [-0.1555, 0.2105], [-0.1555, 0.0155]],
+            "plane": "zx",
+            "from": 0.004,
+            "to": 0.0105,
+            "holes": [
+              [[-0.1475, 0.0135], [0.1475, 0.0135], [0.1515, 0.0175], [0.1515, 0.2085], [0.1475, 0.2125], [-0.1475, 0.2125], [-0.1515, 0.2085], [-0.1515, 0.0175]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "rib-palm-rest",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.003, 0.0061, 0.303],
+            "transform": {
+              "translation": [0.124, 0.00745, 0.0]
+            },
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "rib-battery",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.087, 0.0061, 0.003],
+            "transform": {
+              "translation": [0.169, 0.00745, 0.069]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, -0.138]
+            },
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "deck-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1495, 0.0095], [0.1495, 0.0095], [0.1555, 0.0155], [0.1555, 0.2105], [0.1495, 0.2165], [-0.1495, 0.2165], [-0.1555, 0.2105], [-0.1555, 0.0155]],
+            "plane": "zx",
+            "from": 0.0105,
+            "to": 0.0125,
+            "holes": [
+              [[-0.1375, 0.017], [0.1375, 0.017], [0.1395, 0.019], [0.1395, 0.119], [0.1375, 0.121], [-0.1375, 0.121], [-0.1395, 0.119], [-0.1395, 0.019]],
+              [[-0.063, 0.128], [0.063, 0.128], [0.065, 0.13], [0.065, 0.204], [0.063, 0.206], [-0.063, 0.206], [-0.065, 0.204], [-0.065, 0.13]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "hinge-bracket",
+            "kind": "box",
+            "bone": "base",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.003, 0.0101, 0.014],
+            "transform": {
+              "translation": [0.0045, 0.00945, 0.115]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, -0.23]
+            },
+            "member": "base",
+            "part": "member"
           },
           {
             "id": "mass-base",
+            "kind": "ellipsoid",
             "bone": "base",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.004, 0.12],
+            "radii": [0.012, 0.0028, 0.06],
             "transform": {
-              "translation": [0, 0.0072, 0]
+              "translation": [0.109, 0.0074, 0.0]
             },
             "member": "base",
             "part": "mass"
           },
           {
+            "id": "back-plate",
+            "kind": "box",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.213, 0.0021, 0.308],
+            "transform": {
+              "translation": [0.1045, 0.00345, 0.0]
+            },
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "lid-rim",
+            "kind": "extrude",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.148, -0.002], [0.148, -0.002], [0.154, 0.004], [0.154, 0.205], [0.148, 0.211], [-0.148, 0.211], [-0.154, 0.205], [-0.154, 0.004]],
+            "plane": "zx",
+            "from": -0.001,
+            "to": 0.0024,
+            "holes": [
+              [[-0.146, 0.006], [0.146, 0.006], [0.15, 0.01], [0.15, 0.203], [0.146, 0.207], [-0.146, 0.207], [-0.15, 0.203], [-0.15, 0.01]]
+            ],
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "hinge-arm",
+            "kind": "box",
+            "bone": "lid",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.07, 0.003, 0.01],
+            "transform": {
+              "translation": [0.035, 0.0009, 0.115]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, -0.23]
+            },
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "joint-hinge",
+            "kind": "revolve",
+            "bone": "lid",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.103, 0.003], [0.127, 0.003]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, -0.23]
+            },
+            "member": "lid",
+            "part": "joint"
+          },
+          {
             "id": "mass-lid",
+            "kind": "ellipsoid",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.004, 0.12],
+            "radii": [0.032, 0.0016, 0.055],
             "transform": {
-              "translation": [0.106, 0.00375, 0]
+              "translation": [0.1, 0.0008, 0.0]
             },
             "member": "lid",
             "part": "mass"
@@ -1967,16 +2944,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: the seed is repaired to 1:50: the two stacked base boxes (4.6 and 7.1 mm, both thinner than 7.5 mm) are one 10.5 mm aluminium chassis slab, the lid is a 7.5 mm slab (drawn 6.5 mm), the hinge shoulder, the display glass, the hinge barrel, the four rubber feet as ground sheets and the key rows and the track pad as texture sheets.",
-            "de": "Körper: der Seed ist auf 1:50 repariert: die zwei gestapelten Basis-Kästen (4,6 und 7,1 mm, beide dünner als 7,5 mm) sind eine 10,5 mm dicke Aluminiumchassisplatte, der Deckel ist eine 7,5-mm-Platte (gezeichnet 6,5 mm), dazu Scharnierschulter, Displayglas, Scharniertrommel, vier Gummifüße als Bodenblätter sowie Tastenreihen und Touchpad als Texturblätter."
+            "en": "Body: the real clamshell at 1:50. The bottom cover is a tub with a boat-shaped bilge (6.5 mm high, flat bottom 300 x 205 mm) on four round rubber feet of 12 mm; the keyboard deck is a 4 mm plate over it that ends 9.5 mm before the rear edge, so the hinge barrel of 9 mm sits on a ledge with the 1.5 mm exhaust gap under it; the deck has the keyboard well (279 x 104 mm, 1.5 mm deep) with 78 key caps in six rows below the deck plane, the glass trackpad (130 x 78 mm) 0.2 mm deep in its opening, two speaker fields and the exhaust grille on the ledge; the space row ends in the inverted T of the arrow keys; two USB-C ports on the left, one USB-C and the audio jack on the right; the flat bottom carries two fields of fourteen intake slots under the fans and the eight screws of the cover; the camera lens sits in the top rim of the glass; the lid is a 5.9 mm shell with a rounded back edge, the cover glass with a 3 mm rim and the lit 14-inch 16:10 panel (301.6 x 188.5 mm). Closed, nothing touches: 0.3 mm between glass and deck.",
+            "de": "Körper: das reale Klappgehäuse bei 1:50. Die Bodenschale ist eine Wanne mit bootsförmiger Kimm (6,5 mm hoch, flacher Boden 300 x 205 mm) auf vier runden Gummifüßen von 12 mm; das Tastaturdeck ist eine 4-mm-Platte darüber, die 9,5 mm vor der Hinterkante endet, sodass die Scharnierwalze von 9 mm auf einem Absatz mit dem 1,5 mm hohen Abluftspalt darunter sitzt; das Deck hat die Tastaturmulde (279 x 104 mm, 1,5 mm tief) mit 78 Tastenkappen in sechs Reihen unter der Deckebene, das Glas-Touchpad (130 x 78 mm) 0,2 mm tief in seiner Öffnung, zwei Lautsprecherfelder und das Abluftgitter auf dem Absatz; die Leertastenreihe endet im umgekehrten T der Pfeiltasten; zwei USB-C-Buchsen links, eine USB-C- und die Klinkenbuchse rechts; der flache Boden trägt zwei Felder mit je vierzehn Ansaugschlitzen unter den Lüftern und die acht Schrauben der Schale; die Kameralinse sitzt im oberen Rand des Glases; der Deckel ist eine 5,9-mm-Schale mit gerundeter Rückkante, das Deckglas mit 3 mm Rand und das leuchtende 14-Zoll-Panel im Format 16:10 (301,6 x 188,5 mm). Geschlossen berührt sich nichts: 0,3 mm zwischen Glas und Deck."
           },
           {
-            "en": "Thermal: the deck is the top face of the chassis (all other faces are section faces), the underside its bottom face, the lid its slab with display and hinge; the deck-plume emitter is an 8 mm disc of 0.2 m diameter over the keyboard whose faces are openings. The underside face lies within the contact tolerance of the desk plane and cannot count as exposed area (author request).",
-            "de": "Thermik: das Deck ist die Oberseite des Chassis (alle anderen Flächen sind Schnittflächen), die Unterseite seine Unterfläche, der Deckel seine Platte mit Display und Scharnier; der Emitter Deckfahne ist eine 8-mm-Scheibe von 0,2 m Durchmesser über der Tastatur, deren Flächen Öffnungen sind. Die Unterseite liegt innerhalb der Kontakttoleranz der Tischebene und kann nicht als freie Fläche zählen (Autorenanfrage)."
+            "en": "Thermal: every body solid is the surface of its region. Underside: the tub, the feet, the ports and the grille; deck: the deck plate, the keyboard bed, the keys and the trackpad; lid: shell, glass, panel and hinge barrel. The faces where tub, deck plate and the two inlays meet are joints of one sealed casing and count for no area. Each region has one aluminium layer, so there are no nested shells; the asset declares no hidden region, so no internals are modelled. The deck plume leaves from a 0.2 m outlet patch lying on the deck.",
+            "de": "Thermik: jeder Körper des Bodys ist die Oberfläche seiner Region. Unterseite: Wanne, Füße, Buchsen und Gitter; Deck: Deckplatte, Tastaturbett, Tasten und Touchpad; Deckel: Schale, Glas, Panel und Scharnierwalze. Die Flächen, an denen Wanne, Deckplatte und die zwei Einlagen aufeinandertreffen, sind Fugen eines geschlossenen Gehäuses und zählen nicht zur Fläche. Jede Region hat eine Aluminiumschicht, daher gibt es keine verschachtelten Schalen; das Asset erklärt keine verdeckte Region, daher sind keine Innenteile modelliert. Die Deckfahne geht von einem 0,2 m großen Auslassfeld auf dem Deck aus."
           },
           {
-            "en": "Structure: chassis and lid slab are the two members, the hinge barrel the joint, the 190 x 280 mm foot pad the support on the desk, and one mass ellipsoid per half carries 0.82 and 0.48 kg.",
-            "de": "Tragwerk: Chassis und Deckelplatte sind die zwei Stäbe, die Scharniertrommel das Gelenk, das 190 x 280 mm große Fußpolster das Auflager auf dem Tisch, und ein Masseellipsoid je Hälfte trägt 0,82 und 0,48 kg."
+            "en": "Structure: the chassis is a tray: the floor plate on the four feet, the perimeter walls, the cross rib between keyboard bay and battery bay with the two ribs beside the trackpad, and the deck plate with its two openings as the upper flange; two steel brackets rise from the floor to the hinge axis, the two friction hinges are the joints, and the lid is a back plate with a rim and two steel hinge arms. Plates are modelled 2 mm thick (real 1 to 1.2 mm). The masses of 0.82 and 0.48 kg sit at the centres of mass, the contact pad of 190 x 280 mm lies under the feet.",
+            "de": "Tragwerk: das Chassis ist eine Wanne: die Bodenplatte auf den vier Füßen, die umlaufenden Wände, die Querrippe zwischen Tastatur- und Akkufach mit den zwei Rippen neben dem Touchpad und die Deckplatte mit ihren zwei Öffnungen als Obergurt; zwei Stahlwinkel steigen vom Boden zur Scharnierachse, die zwei Reibscharniere sind die Gelenke, und der Deckel ist eine Rückplatte mit Rand und zwei stählernen Scharnierarmen. Platten sind 2 mm dick modelliert (real 1 bis 1,2 mm). Die Massen von 0,82 und 0,48 kg sitzen in den Schwerpunkten, das Kontaktpolster von 190 x 280 mm liegt unter den Füßen."
           }
         ]
       },
@@ -1986,160 +2963,412 @@
         "body": [
           {
             "id": "base",
+            "kind": "loft",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "cornerRadius": 0.002,
-            "transform": {
-              "translation": [0, 0.00625, 0]
-            }
+            "tone": 0.58,
+            "sections": [
+              {
+                "at": [0.109, 0.0, 0.0],
+                "rx": 0.15,
+                "ry": 0.1025,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0012, 0.0],
+                "rx": 0.1545,
+                "ry": 0.107,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.003, 0.0],
+                "rx": 0.1562,
+                "ry": 0.1087,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.005, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0125, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
-            "id": "lid-shell",
+            "id": "key-field",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.1, 0.0002, 0.276],
+            "transform": {
+              "translation": [0.069, 0.0126, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "trackpad",
+            "kind": "box",
+            "bone": "base",
+            "material": "display-glass",
+            "role": "texture",
+            "tone": 0.5,
+            "size": [0.078, 0.0002, 0.13],
+            "transform": {
+              "translation": [0.167, 0.0126, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "lid",
+            "kind": "loft",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "body",
             "tone": 0.55,
+            "sections": [
+              {
+                "at": [0.1045, -0.0014, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.003, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0045, 0.0],
+                "rx": 0.155,
+                "ry": 0.1075,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "display",
             "kind": "box",
-            "size": [0.218, 0.0065, 0.313],
-            "cornerRadius": 0.002,
+            "bone": "lid",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.197, 0.0021, 0.304],
             "transform": {
-              "translation": [0.104, 0.00325, 0]
+              "translation": [0.1105, -0.00065, 0.0]
             }
+          },
+          {
+            "id": "hinge",
+            "kind": "revolve",
+            "bone": "lid",
+            "material": "keycap-plastic",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[-0.135, 0.0045], [0.135, 0.0045]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0]
           }
         ],
         "thermal": [
           {
-            "id": "th-deck",
-            "bone": "base",
-            "material": "alu-anodised",
-            "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0, 0.00625, 0]
-            },
-            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"],
-            "region": "deck"
-          },
-          {
             "id": "th-underside",
+            "kind": "loft",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "cornerRadius": 0.003,
-            "transform": {
-              "translation": [0, 0.00625, 0]
-            },
-            "sectionFaces": ["+v", "+u", "-u", "+w", "-w"],
-            "region": "underside"
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.109, 0.0, 0.0],
+                "rx": 0.15,
+                "ry": 0.1025,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0012, 0.0],
+                "rx": 0.1545,
+                "ry": 0.107,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.003, 0.0],
+                "rx": 0.1562,
+                "ry": 0.1087,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.005, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0085, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "underside",
+            "sectionFaces": ["+v"]
           },
           {
-            "id": "th-lid-shell",
-            "of": "lid-shell",
+            "id": "th-deck",
+            "kind": "loft",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.62,
+            "sections": [
+              {
+                "at": [0.109, 0.0085, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0125, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "region": "deck",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-lid",
+            "of": "lid",
+            "region": "lid"
+          },
+          {
+            "id": "th-display",
+            "of": "display",
+            "region": "lid"
+          },
+          {
+            "id": "th-hinge",
+            "of": "hinge",
             "region": "lid"
           },
           {
             "id": "th-deck-plume",
+            "kind": "extrude",
             "bone": "base",
             "material": "alu-anodised",
-            "role": "detail",
+            "role": "texture",
             "tone": 0.6,
-            "kind": "extrude",
             "profile": [
-              [0.0, 0.11],
-              [0.02588, 0.10659],
-              [0.05, 0.0966],
-              [0.07071, 0.08071],
-              [0.0866, 0.06],
-              [0.09659, 0.03588],
-              [0.1, 0.01],
-              [0.09659, -0.01588],
-              [0.0866, -0.04],
-              [0.07071, -0.06071],
-              [0.05, -0.0766],
-              [0.02588, -0.08659],
-              [0.0, -0.09],
-              [-0.02588, -0.08659],
-              [-0.05, -0.0766],
-              [-0.07071, -0.06071],
-              [-0.0866, -0.04],
-              [-0.09659, -0.01588],
-              [-0.1, 0.01],
-              [-0.09659, 0.03588],
-              [-0.0866, 0.06],
-              [-0.07071, 0.08071],
-              [-0.05, 0.0966],
-              [-0.02588, 0.10659]
+              [0.0, 0.214],
+              [0.01951, 0.21208],
+              [0.03827, 0.20639],
+              [0.05556, 0.19715],
+              [0.07071, 0.18471],
+              [0.08315, 0.16956],
+              [0.09239, 0.15227],
+              [0.09808, 0.13351],
+              [0.1, 0.114],
+              [0.09808, 0.09449],
+              [0.09239, 0.07573],
+              [0.08315, 0.05844],
+              [0.07071, 0.04329],
+              [0.05556, 0.03085],
+              [0.03827, 0.02161],
+              [0.01951, 0.01592],
+              [0.0, 0.014],
+              [-0.01951, 0.01592],
+              [-0.03827, 0.02161],
+              [-0.05556, 0.03085],
+              [-0.07071, 0.04329],
+              [-0.08315, 0.05844],
+              [-0.09239, 0.07573],
+              [-0.09808, 0.09449],
+              [-0.1, 0.114],
+              [-0.09808, 0.13351],
+              [-0.09239, 0.15227],
+              [-0.08315, 0.16956],
+              [-0.07071, 0.18471],
+              [-0.05556, 0.19715],
+              [-0.03827, 0.20639],
+              [-0.01951, 0.21208]
             ],
             "plane": "zx",
-            "from": 0.0135,
-            "to": 0.0215,
-            "sectionFaces": ["+v", "-v"],
+            "from": 0.0127,
+            "to": 0.0131,
+            "texture": true,
             "region": "deck",
             "tags": ["deck-plume"]
           }
         ],
         "structure": [
           {
-            "id": "member-base",
-            "of": "base",
-            "member": "base",
-            "part": "member"
-          },
-          {
-            "id": "member-lid",
-            "of": "lid-shell",
-            "member": "lid",
-            "part": "member"
-          },
-          {
             "id": "support-feet",
+            "kind": "box",
             "bone": "base",
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.1,
-            "kind": "box",
-            "size": [0.19, 0.0125, 0.28],
+            "size": [0.19, 0.0005, 0.28],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.00025, 0.0]
             },
-            "anchor": "feet-contact",
             "member": "base",
-            "part": "support"
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "tray-floor",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.146, 0.005], [0.146, 0.005], [0.152, 0.011], [0.152, 0.207], [0.146, 0.213], [-0.146, 0.213], [-0.152, 0.207], [-0.152, 0.011]],
+            "plane": "zx",
+            "from": 0.0005,
+            "to": 0.0045,
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "frame-walls",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1495, 0.0095], [0.1495, 0.0095], [0.1555, 0.0155], [0.1555, 0.2105], [0.1495, 0.2165], [-0.1495, 0.2165], [-0.1555, 0.2105], [-0.1555, 0.0155]],
+            "plane": "zx",
+            "from": 0.0045,
+            "to": 0.0085,
+            "holes": [
+              [[-0.1455, 0.0155], [0.1455, 0.0155], [0.1495, 0.0195], [0.1495, 0.2065], [0.1455, 0.2105], [-0.1455, 0.2105], [-0.1495, 0.2065], [-0.1495, 0.0195]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "rib-palm-rest",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.006, 0.004, 0.299],
+            "transform": {
+              "translation": [0.1245, 0.0065, 0.0]
+            },
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "deck-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1495, 0.0095], [0.1495, 0.0095], [0.1555, 0.0155], [0.1555, 0.2105], [0.1495, 0.2165], [-0.1495, 0.2165], [-0.1555, 0.2105], [-0.1555, 0.0155]],
+            "plane": "zx",
+            "from": 0.0085,
+            "to": 0.0125,
+            "holes": [
+              [[-0.1375, 0.017], [0.1375, 0.017], [0.1395, 0.019], [0.1395, 0.119], [0.1375, 0.121], [-0.1375, 0.121], [-0.1395, 0.119], [-0.1395, 0.019]]
+            ],
+            "member": "base",
+            "part": "member"
           },
           {
             "id": "mass-base",
+            "kind": "ellipsoid",
             "bone": "base",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.005, 0.12],
+            "radii": [0.011, 0.002, 0.06],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.0065, 0.0]
             },
             "member": "base",
             "part": "mass"
           },
           {
+            "id": "lid-frame",
+            "kind": "extrude",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.148, -0.002], [0.148, -0.002], [0.154, 0.004], [0.154, 0.205], [0.148, 0.211], [-0.148, 0.211], [-0.154, 0.205], [-0.154, 0.004]],
+            "plane": "zx",
+            "from": -0.0014,
+            "to": 0.0045,
+            "holes": [
+              [[-0.142, 0.008], [0.142, 0.008], [0.146, 0.012], [0.146, 0.199], [0.142, 0.203], [-0.142, 0.203], [-0.146, 0.199], [-0.146, 0.012]]
+            ],
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "joint-hinge",
+            "kind": "revolve",
+            "bone": "lid",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.1, 0.0035], [0.13, 0.0035]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "repeat": {
+              "count": 2,
+              "translation": [0.0, 0.0, -0.23]
+            },
+            "member": "lid",
+            "part": "joint"
+          },
+          {
             "id": "mass-lid",
+            "kind": "ellipsoid",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.0034, 0.12],
+            "radii": [0.032, 0.0016, 0.055],
             "transform": {
-              "translation": [0.106, 0.00325, 0]
+              "translation": [0.1, 0.0008, 0.0]
             },
             "member": "lid",
             "part": "mass"
@@ -2147,16 +3376,16 @@
         ],
         "decisions": [
           {
-            "en": "1:100 draws the laptop as two slabs: the 12.5 mm chassis (the two base boxes, feet, hinge shoulder, keys and track pad merged) and the 6.5 mm lid slab (display and hinge merged). Both are thinner than 15 mm exactly as their 2D drawings are, so the thinnest drawn extent sets the feature.",
-            "de": "1:100 zeichnet das Notebook als zwei Platten: das 12,5 mm dicke Chassis (beide Basis-Kästen, Füße, Scharnierschulter, Tasten und Touchpad zusammengefasst) und die 6,5 mm dicke Deckelplatte (Display und Scharnier aufgegangen). Beide sind dünner als 15 mm, genau wie ihre 2D-Zeichnungen; die dünnste gezeichnete Ausdehnung bestimmt die Strukturgröße."
+            "en": "Body: at 1:100 the chassis is one hull that stands on the desk (feet and the 2 mm air gap merged, bilge kept), the keys are one dark key field and the trackpad one inlay, both as sheets on the deck; the lid is one shell with its glass (the lit panel merged into it), and the hinge barrel stays because it joins lid and chassis in every pose. Ports, speaker fields, grille, the hinge ledge and the keyboard well are left out.",
+            "de": "Körper: bei 1:100 ist das Chassis ein Rumpf, der auf dem Tisch steht (Füße und 2 mm Luftspalt aufgegangen, Kimm erhalten), die Tasten sind ein dunkles Tastenfeld und das Touchpad eine Einlage, beide als Blätter auf dem Deck; der Deckel ist eine Schale mit ihrem Glas (das leuchtende Panel darin aufgegangen), und die Scharnierwalze bleibt, weil sie Deckel und Chassis in jeder Pose verbindet. Buchsen, Lautsprecherfelder, Gitter, Scharnierabsatz und Tastaturmulde entfallen."
           },
           {
-            "en": "Thermal: deck top, underside bottom, lid slab and the 8 mm plume disc, derived anew from this scale's two slabs.",
-            "de": "Thermik: Deckoberseite, Unterseite, Deckelplatte und die 8-mm-Fahnenscheibe, neu aus den zwei Platten dieses Maßstabs abgeleitet."
+            "en": "Thermal: the hull is split at the parting line of the two covers (8.5 mm) into the underside and the deck, whose meeting faces are a joint; the key field and the trackpad are part of the deck surface; lid, glass and barrel are the lid; the plume outlet lies on the deck.",
+            "de": "Thermik: der Rumpf ist an der Trennfuge der zwei Schalen (8,5 mm) in Unterseite und Deck geteilt, deren Berührflächen eine Fuge sind; Tastenfeld und Touchpad gehören zum Deck; Deckel, Glas und Walze sind der Deckel; der Fahnenauslass liegt auf dem Deck."
           },
           {
-            "en": "Structure: the two slabs are the members, a 190 x 280 mm foot pad and two masses; the hinge joint is merged into the lid.",
-            "de": "Tragwerk: die beiden Platten sind die Stäbe, ein 190 x 280 mm großes Fußpolster und zwei Massen; das Scharniergelenk geht im Deckel auf."
+            "en": "Structure: floor plate, wall frame with the one cross rib and the deck plate with the keyboard opening; the lid is a frame on two hinge joints; back plate, brackets, hinge arms, battery ribs and the feet are merged; two masses and the contact pad.",
+            "de": "Tragwerk: Bodenplatte, Wandrahmen mit der einen Querrippe und die Deckplatte mit der Tastaturöffnung; der Deckel ist ein Rahmen an zwei Scharniergelenken; Rückplatte, Winkel, Scharnierarme, Akkurippen und Füße sind aufgegangen; zwei Massen und das Kontaktpolster."
           }
         ]
       },
@@ -2166,166 +3395,266 @@
         "body": [
           {
             "id": "base",
+            "kind": "loft",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "transform": {
-              "translation": [0, 0.00625, 0]
-            }
+            "tone": 0.58,
+            "sections": [
+              {
+                "at": [0.109, 0.0, 0.0],
+                "rx": 0.1535,
+                "ry": 0.106,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.003, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.109, 0.0125, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           },
           {
             "id": "lid",
+            "kind": "loft",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.55,
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.1045, -0.002, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.1045, 0.0045, 0.0],
+                "rx": 0.1565,
+                "ry": 0.109,
+                "exponent": 34,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "display",
             "kind": "box",
-            "size": [0.219, 0.0095, 0.319],
+            "bone": "lid",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.197, 0.0004, 0.304],
             "transform": {
-              "translation": [0.1065, 0.00175, 0]
+              "translation": [0.1105, -0.0022, 0.0]
             }
+          },
+          {
+            "id": "key-field",
+            "kind": "box",
+            "bone": "base",
+            "material": "keycap-plastic",
+            "role": "texture",
+            "tone": 0.25,
+            "size": [0.1, 0.0004, 0.276],
+            "transform": {
+              "translation": [0.069, 0.0127, 0.0]
+            },
+            "texture": true
           }
         ],
         "thermal": [
           {
-            "id": "th-deck",
+            "id": "th-underside",
+            "kind": "box",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "cornerRadius": 0.003,
+            "tone": 0.5,
+            "size": [0.21, 0.0012, 0.305],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.0006, 0.0]
             },
-            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"],
-            "region": "deck"
+            "region": "underside",
+            "layer": "bottom-shell",
+            "sectionFaces": ["+v"]
           },
           {
-            "id": "th-underside",
+            "id": "th-deck",
+            "kind": "box",
             "bone": "base",
             "material": "alu-anodised",
             "role": "body",
-            "tone": 0.6,
-            "kind": "box",
-            "size": [0.218, 0.0125, 0.313],
-            "cornerRadius": 0.003,
+            "tone": 0.62,
+            "size": [0.214, 0.0012, 0.309],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.0119, 0.0]
             },
-            "sectionFaces": ["+v", "+u", "-u", "+w", "-w"],
-            "region": "underside"
+            "region": "deck",
+            "layer": "deck-shell",
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-lid",
-            "bone": "lid",
-            "material": "alu-anodised",
-            "role": "body",
-            "tone": 0.55,
-            "kind": "box",
-            "size": [0.219, 0.0095, 0.319],
-            "transform": {
-              "translation": [0.1065, 0.00175, 0]
-            },
+            "of": "lid",
+            "region": "lid"
+          },
+          {
+            "id": "th-display",
+            "of": "display",
             "region": "lid"
           },
           {
             "id": "th-deck-plume",
+            "kind": "extrude",
             "bone": "base",
             "material": "alu-anodised",
-            "role": "detail",
+            "role": "texture",
             "tone": 0.6,
-            "kind": "extrude",
             "profile": [
-              [0.0, 0.11],
-              [0.02588, 0.10659],
-              [0.05, 0.0966],
-              [0.07071, 0.08071],
-              [0.0866, 0.06],
-              [0.09659, 0.03588],
-              [0.1, 0.01],
-              [0.09659, -0.01588],
-              [0.0866, -0.04],
-              [0.07071, -0.06071],
-              [0.05, -0.0766],
-              [0.02588, -0.08659],
-              [0.0, -0.09],
-              [-0.02588, -0.08659],
-              [-0.05, -0.0766],
-              [-0.07071, -0.06071],
-              [-0.0866, -0.04],
-              [-0.09659, -0.01588],
-              [-0.1, 0.01],
-              [-0.09659, 0.03588],
-              [-0.0866, 0.06],
-              [-0.07071, 0.08071],
-              [-0.05, 0.0966],
-              [-0.02588, 0.10659]
+              [0.0, 0.214],
+              [0.01951, 0.21208],
+              [0.03827, 0.20639],
+              [0.05556, 0.19715],
+              [0.07071, 0.18471],
+              [0.08315, 0.16956],
+              [0.09239, 0.15227],
+              [0.09808, 0.13351],
+              [0.1, 0.114],
+              [0.09808, 0.09449],
+              [0.09239, 0.07573],
+              [0.08315, 0.05844],
+              [0.07071, 0.04329],
+              [0.05556, 0.03085],
+              [0.03827, 0.02161],
+              [0.01951, 0.01592],
+              [0.0, 0.014],
+              [-0.01951, 0.01592],
+              [-0.03827, 0.02161],
+              [-0.05556, 0.03085],
+              [-0.07071, 0.04329],
+              [-0.08315, 0.05844],
+              [-0.09239, 0.07573],
+              [-0.09808, 0.09449],
+              [-0.1, 0.114],
+              [-0.09808, 0.13351],
+              [-0.09239, 0.15227],
+              [-0.08315, 0.16956],
+              [-0.07071, 0.18471],
+              [-0.05556, 0.19715],
+              [-0.03827, 0.20639],
+              [-0.01951, 0.21208]
             ],
             "plane": "zx",
-            "from": 0.0135,
-            "to": 0.0261,
-            "sectionFaces": ["+v", "-v"],
+            "from": 0.0129,
+            "to": 0.0133,
+            "texture": true,
             "region": "deck",
             "tags": ["deck-plume"]
           }
         ],
         "structure": [
           {
-            "id": "member-base",
-            "of": "base",
-            "member": "base",
-            "part": "member"
-          },
-          {
-            "id": "member-lid",
-            "of": "lid",
-            "member": "lid",
-            "part": "member"
-          },
-          {
             "id": "support-feet",
+            "kind": "box",
             "bone": "base",
             "material": "rubber-foot",
             "role": "ground",
             "tone": 0.1,
-            "kind": "box",
-            "size": [0.19, 0.0125, 0.28],
+            "size": [0.19, 0.0005, 0.28],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.00025, 0.0]
             },
-            "anchor": "feet-contact",
             "member": "base",
-            "part": "support"
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "chassis-frame",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1485, 0.0], [0.1485, 0.0], [0.1565, 0.008], [0.1565, 0.21], [0.1485, 0.218], [-0.1485, 0.218], [-0.1565, 0.21], [-0.1565, 0.008]],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.0125,
+            "holes": [
+              [[-0.1325, 0.02], [0.1325, 0.02], [0.1365, 0.024], [0.1365, 0.194], [0.1325, 0.198], [-0.1325, 0.198], [-0.1365, 0.194], [-0.1365, 0.024]]
+            ],
+            "member": "base",
+            "part": "member"
           },
           {
             "id": "mass-base",
+            "kind": "ellipsoid",
             "bone": "base",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.0065, 0.12],
+            "radii": [0.03, 0.00625, 0.05],
             "transform": {
-              "translation": [0, 0.00625, 0]
+              "translation": [0.109, 0.00625, 0.0]
             },
             "member": "base",
             "part": "mass"
           },
           {
+            "id": "lid-frame",
+            "kind": "extrude",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.1485, -0.0045], [0.1485, -0.0045], [0.1565, 0.0035], [0.1565, 0.2055], [0.1485, 0.2135], [-0.1485, 0.2135], [-0.1565, 0.2055], [-0.1565, 0.0035]],
+            "plane": "zx",
+            "from": -0.002,
+            "to": 0.0045,
+            "holes": [
+              [[-0.1375, 0.0105], [0.1375, 0.0105], [0.1415, 0.0145], [0.1415, 0.1945], [0.1375, 0.1985], [-0.1375, 0.1985], [-0.1415, 0.1945], [-0.1415, 0.0145]]
+            ],
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "joint-hinge",
+            "kind": "revolve",
+            "bone": "lid",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[-0.12, 0.0035], [0.12, 0.0035]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "lid",
+            "part": "joint"
+          },
+          {
             "id": "mass-lid",
+            "kind": "ellipsoid",
             "bone": "lid",
             "material": "alu-anodised",
             "role": "detail",
             "tone": 0.6,
-            "kind": "ellipsoid",
-            "radii": [0.08, 0.005, 0.12],
+            "radii": [0.03, 0.00325, 0.05],
             "transform": {
-              "translation": [0.106, 0.00175, 0]
+              "translation": [0.1, 0.00125, 0.0]
             },
             "member": "lid",
             "part": "mass"
@@ -2333,22 +3662,216 @@
         ],
         "decisions": [
           {
-            "en": "Minimal: 1:200 is two plates: chassis 218 x 12.5 x 313 mm and lid 219 x 9.5 x 319 mm (drawn with its 3 mm overhang), nothing else; the corner radii of 1:100 are dropped.",
-            "de": "Minimal: 1:200 sind zwei Platten: Chassis 218 x 12,5 x 313 mm und Deckel 219 x 9,5 x 319 mm (mit gezeichneten 3 mm Überstand), sonst nichts; die Eckenradien von 1:100 entfallen."
+            "en": "Body: at 1:200 the laptop is two plates with rounded plan corners: the chassis 218 x 12.5 x 313 mm with a chamfered bottom edge and the lid 218 x 6.5 x 313 mm, which stands with its foot in the rear edge of the chassis so that the joint is closed in every pose; the dark glass face of the lid and the dark key field on the deck stay as sheets, because both are several features large; trackpad, barrel and bilge are merged.",
+            "de": "Körper: bei 1:200 ist der Laptop zwei Platten mit gerundeten Grundrissecken: das Chassis 218 x 12,5 x 313 mm mit gefaster Unterkante und der Deckel 218 x 6,5 x 313 mm, der mit seinem Fuß in der Hinterkante des Chassis steht, sodass das Gelenk in jeder Pose geschlossen ist; die dunkle Glasfläche des Deckels und das dunkle Tastenfeld auf dem Deck bleiben als Blätter, weil beide mehrere Merkmalsgrößen groß sind; Touchpad, Walze und Kimm sind aufgegangen."
           },
           {
-            "en": "Thermal: deck top, underside, lid slab and the plume disc.",
-            "de": "Thermik: Deckoberseite, Unterseite, Deckelplatte und die Fahnenscheibe."
+            "en": "Thermal: the 1.2 mm bottom plate and the 1.2 mm deck plate of the chassis as the shells of their layers (their inner faces are joints of the casing), the lid plate with its glass and the plume outlet on the deck.",
+            "de": "Thermik: die 1,2 mm dicke Bodenplatte und die 1,2 mm dicke Deckplatte des Chassis als Schalen ihrer Schichten (ihre Innenflächen sind Fugen des Gehäuses), die Deckelplatte mit ihrem Glas und der Fahnenauslass auf dem Deck."
           },
           {
-            "en": "Structure: the two plates as members, the foot pad and two masses.",
-            "de": "Tragwerk: die zwei Platten als Stäbe, das Fußpolster und zwei Massen."
+            "en": "Structure: the chassis as a perimeter frame, the lid as a frame on one hinge axle, the two masses and the contact pad.",
+            "de": "Tragwerk: das Chassis als umlaufender Rahmen, der Deckel als Rahmen an einer Scharnierachse, die zwei Massen und das Kontaktpolster."
           }
         ]
       },
       "500": {
-        "status": "unavailable",
-        "denominator": 500
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "base",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.58,
+            "size": [0.218, 0.0125, 0.313],
+            "transform": {
+              "translation": [0.109, 0.00625, 0.0]
+            }
+          },
+          {
+            "id": "lid",
+            "kind": "box",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.218, 0.0065, 0.313],
+            "transform": {
+              "translation": [0.1045, 0.00125, 0.0]
+            }
+          },
+          {
+            "id": "display",
+            "kind": "box",
+            "bone": "lid",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.191, 0.0004, 0.298],
+            "transform": {
+              "translation": [0.1105, -0.0022, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-underside",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.218, 0.00625, 0.313],
+            "transform": {
+              "translation": [0.109, 0.00313, 0.0]
+            },
+            "region": "underside",
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-deck",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.62,
+            "size": [0.218, 0.00625, 0.313],
+            "transform": {
+              "translation": [0.109, 0.00938, 0.0]
+            },
+            "region": "deck",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-lid",
+            "of": "lid",
+            "region": "lid"
+          },
+          {
+            "id": "th-display",
+            "of": "display",
+            "region": "lid"
+          },
+          {
+            "id": "th-deck-plume",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "texture",
+            "tone": 0.6,
+            "profile": [[0.0, 0.214], [0.07071, 0.18471], [0.1, 0.114], [0.07071, 0.04329], [0.0, 0.014], [-0.07071, 0.04329], [-0.1, 0.114], [-0.07071, 0.18471]],
+            "plane": "zx",
+            "from": 0.0125,
+            "to": 0.0129,
+            "texture": true,
+            "region": "deck",
+            "tags": ["deck-plume"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "support-feet",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.19, 0.0005, 0.28],
+            "transform": {
+              "translation": [0.109, 0.00025, 0.0]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "floor-plate",
+            "kind": "box",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.208, 0.004, 0.303],
+            "transform": {
+              "translation": [0.109, 0.004, 0.0]
+            },
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "mass-base",
+            "kind": "ellipsoid",
+            "bone": "base",
+            "material": "alu-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.025, 0.005, 0.045],
+            "transform": {
+              "translation": [0.109, 0.0074, 0.0]
+            },
+            "member": "base",
+            "part": "mass"
+          },
+          {
+            "id": "back-plate",
+            "kind": "box",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.2105, 0.003, 0.307],
+            "transform": {
+              "translation": [0.10525, 0.003, 0.0]
+            },
+            "member": "lid",
+            "part": "member"
+          },
+          {
+            "id": "joint-hinge",
+            "kind": "box",
+            "bone": "lid",
+            "material": "hinge-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.007, 0.007, 0.24],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "lid",
+            "part": "joint"
+          },
+          {
+            "id": "mass-lid",
+            "kind": "ellipsoid",
+            "bone": "lid",
+            "material": "alu-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.025, 0.003, 0.045],
+            "transform": {
+              "translation": [0.1, 0.0008, 0.0]
+            },
+            "member": "lid",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Minimal: at 1:500 the laptop is smaller than three features (313 x 218 mm against 75 mm), so it is two plain rectangular plates, the chassis 218 x 12.5 x 313 mm and the lid 218 x 6.5 x 313 mm standing in the rear edge of the chassis, and the dark glass face of the lid, which alone tells the screen side from the back; corner radii, key field and every other part are merged. The scale has no printed drawing (below the printable feature); the model serves the digital views.",
+            "de": "Minimal: bei 1:500 ist der Laptop kleiner als drei Merkmalsgrößen (313 x 218 mm gegenüber 75 mm), daher ist er zwei schlichte rechteckige Platten, das Chassis 218 x 12,5 x 313 mm und der Deckel 218 x 6,5 x 313 mm, der in der Hinterkante des Chassis steht, sowie die dunkle Glasfläche des Deckels, die allein die Bildschirmseite von der Rückseite unterscheidet; Eckradien, Tastenfeld und alle übrigen Teile sind aufgegangen. Der Maßstab hat keine gedruckte Zeichnung (unter der druckbaren Merkmalsgröße); das Modell dient den digitalen Ansichten."
+          },
+          {
+            "en": "Thermal: the chassis plate is halved at mid height into the underside and the deck (the meeting faces are a joint of the casing), the lid with its glass is the lid, and the plume leaves from an octagonal outlet patch on the deck.",
+            "de": "Thermik: die Chassisplatte ist auf halber Höhe in Unterseite und Deck geteilt (die Berührflächen sind eine Fuge des Gehäuses), der Deckel mit seinem Glas ist der Deckel, und die Fahne geht von einem achteckigen Auslassfeld auf dem Deck aus."
+          },
+          {
+            "en": "Structure: the floor plate of the chassis on the contact pad, the back plate of the lid on one square hinge axle, and the two masses at the centres of mass.",
+            "de": "Tragwerk: die Bodenplatte des Chassis auf dem Kontaktpolster, die Rückplatte des Deckels an einer quadratischen Scharnierachse und die zwei Massen in den Schwerpunkten."
+          }
+        ]
       }
     },
     "presentation": {

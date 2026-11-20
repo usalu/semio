@@ -62,7 +62,7 @@ async fn mounted_viewer_uses_current_cache_and_authored_pins() {
     let context = semio_plugin::AppRenderOperationContext { app_instance_id: 1, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(1), canonical_base_revision: [7;32], mounted_policy: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT };
     let project = |doc: &semio_plugin::ArtifactView<'_, crate::Wfc3dSnapshot>, cache: &Wfc3dTransient, locale| {
         let tree = crate::viewer::wfc3d::render_with_transient(preview::WFC_3D_VIEW_BODY, doc, cache, locale, Terminology::Native).unwrap();
-        serde_json::to_value(&tree.root).unwrap()
+        tree_json(tree)
     };
     for case in fixture["cases"].as_array().unwrap() {
         let current: Option<[u8;32]> = serde_json::from_value(case["currentRevision"].clone()).unwrap();
@@ -83,4 +83,9 @@ async fn mounted_viewer_uses_current_cache_and_authored_pins() {
         let instance_label = format!("{} · {}", document.slots[0].id, document.tiles[0].id);
         assert_eq!(actual.contains(&instance_label), case["authored"].as_bool().unwrap(), "{}", case["id"]);
     }
+}
+
+/// 🌳️ Projects a rendered tree through the fixture transport; its retained page children cannot be serialized directly.
+fn tree_json(tree: semio_plugin::ComponentTree) -> serde_json::Value {
+    serde_json::from_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the fixture tree projects")).expect("the projection is JSON")
 }

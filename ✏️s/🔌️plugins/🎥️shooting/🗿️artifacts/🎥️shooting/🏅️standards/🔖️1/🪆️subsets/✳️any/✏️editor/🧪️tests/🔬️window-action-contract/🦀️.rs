@@ -147,7 +147,7 @@ fn shooting_window_actions_match_the_json_oracle() {
     for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
         let view_state = semio_plugin::ViewModel { locale, ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native) };
         let labels = shooting_play_labels(&view_state);
-        for (kind, measures) in [("scene", scene_window::window_measures(&document, labels)), ("icon", icon_window::window_measures(&document, labels))] {
+        for (kind, measures) in [("scene", scene_window::window_measures(&document, false, labels)), ("icon", icon_window::window_measures(&document, labels))] {
             let json = serde_json::to_value(measures).expect("independent window oracle");
             let actions = json
                 .as_array()

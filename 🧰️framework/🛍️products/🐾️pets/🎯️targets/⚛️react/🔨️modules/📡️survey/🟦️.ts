@@ -1,6 +1,6 @@
 /** 📡️ The senses of the pet layer: measures a document into the `surveyed` event of the stage (the top edges pets may stand on, the floor, everything they must not cover, the sides they may climb), tells when that measurement went stale and turns the pointer into stage events.
  *
- * Every DOM read of the pets target happens here, in one batch per call and without a single write. The document and
+ * Every DOM read of the pets target happens here, in one batch per call (or per slice of a {@link surveyJob}, which the layer runs a few elements per frame) and without a single write. The document and
  * the window are passed in, so the module runs against a real page, jsdom or a fake alike. Nothing here ever calls
  * `preventDefault` or `stopPropagation`; every listener is passive.
  *
@@ -254,7 +254,7 @@ function linesOf(element: Element): Edges[] | null {
   return lines;
 }
 
-/** 🗺️ Measures `root` into the `surveyed` event of a stage, reads only.
+/** 🔭️ Measures `root` into the `surveyed` event of a stage, reads only.
  *
  * Surfaces are the top edges of the elements matching `surfaces` that are neither inert, hidden nor concealed, cross the stage,
  * are not clipped away by a scrolling ancestor and stay at least {@link SURFACE_WIDTH} wide, in document order, each
@@ -297,7 +297,7 @@ function linesOf(element: Element): Edges[] | null {
  *
  * All numbers are pixels relative to the stage ({@link stageBox}).
  */
-export function survey(root: Document | Element, options: SurveyOptions = {}): Surveyed {
+function* surveying(root: Document | Element, options: SurveyOptions): Generator<void, Surveyed, void> {
   const page = documentOf(root);
   const view = page.defaultView;
   const stage = stageBox(root, options.frame);
@@ -318,6 +318,7 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     for (let node = element.parentElement; node !== null && !carriers.has(node); node = node.parentElement) carriers.add(node);
     const box = element.getBoundingClientRect();
     const region = shown(box, clipOf(element, view, clips));
+    yield;
     if (region === null || staged(region, stage) === null) continue;
     sides(element, box, region);
     const edge = region.top <= box.top && region.right - region.left >= SURFACE_WIDTH;
@@ -333,6 +334,7 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     if (grounds.has(element)) continue;
     const box = element.getBoundingClientRect();
     const region = shown(box, clipOf(element, view, clips));
+    yield;
     if (region !== null && staged(region, stage) !== null) sides(element, box, region);
   }
   surfaces.push({ id: FLOOR, x0: 0, x1: stage.width, y: stage.height });
@@ -342,6 +344,7 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     if (grounds.has(element) || carriers.has(element)) continue;
     const clip = clipOf(element, view, clips);
     const lines = element.matches(PET_LINES) && !element.matches(PET_PRESS_CONTROLS) && !element.hasAttribute("data-pet-keepout") && !(named !== "" && element.matches(named)) ? linesOf(element) : null;
+    yield;
     for (const region of lines === null ? [shown(element.getBoundingClientRect(), clip)] : lines.map((line) => shown({ ...line, width: line.right - line.left, height: line.bottom - line.top }, clip))) {
       const box = region === null ? null : keepout(region, KEEPOUT_MARGIN, surfaces, stage);
       if (box !== null) keepouts.push(box);
@@ -361,6 +364,7 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     if (key === null || key === "") continue;
     const box = element.getBoundingClientRect();
     const region = shown(box, clipOf(element, view, clips));
+    yield;
     if (region === null || region.left !== box.left || region.top !== box.top || region.right !== box.right || region.bottom !== box.bottom) continue;
     const x = box.left - stage.x;
     const y = box.top - stage.y;
@@ -370,6 +374,35 @@ export function survey(root: Document | Element, options: SurveyOptions = {}): S
     if (copyable(element)) fixtures.push({ id: fixtureId(element), key, x, y, width: box.width, height: box.height });
   }
   return { kind: "surveyed", width: stage.width, height: stage.height, surfaces, keepouts, walls, fixtures };
+}
+
+/** 🗺️ Measures `root` as one go: {@link surveying} run to its end. See {@link surveying} for what is measured and how. */
+export function survey(root: Document | Element, options: SurveyOptions = {}): Surveyed {
+  const job = surveying(root, options);
+  for (let step = job.next(); ; step = job.next()) if (step.done === true) return step.value;
+}
+
+/** ⏱️ A survey that runs in slices, so that no frame pays for all of it. */
+export interface SurveyJob {
+  /** ⏯️ Reads elements one after the other until `budget` milliseconds of the job's clock are spent — at least one step per call, and the reads of every step before any decision about the next — and returns the survey once all of it is read, `null` before. A finished job keeps returning its survey. */
+  readonly run: (budget: number) => Surveyed | null;
+}
+
+/** 🧵️ Starts the survey of `root` as a {@link SurveyJob}: the same survey as {@link survey} of the page as it is when the last slice reads it, taken a few elements at a time. The options are those of the start. `now` is the clock of the budget (`performance.now` when absent). */
+export function surveyJob(root: Document | Element, options: SurveyOptions = {}, now: () => number = () => performance.now()): SurveyJob {
+  const job = surveying(root, options);
+  let done: Surveyed | null = null;
+  return {
+    run: (budget) => {
+      if (done !== null) return done;
+      const start = now();
+      do {
+        const step = job.next();
+        if (step.done === true) return (done = step.value);
+      } while (now() - start < budget);
+      return null;
+    },
+  };
 }
 //#endregion 🔖️Measurement
 

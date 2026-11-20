@@ -62,8 +62,28 @@ export function rustStringValue(token: RustToken | undefined): string | null {
   return value;
 }
 
-/** 🎨️ Tokenizes Rust with atomic literals and nested comments. */
+type TokenEntry = { readonly tokens: readonly RustToken[]; pairs?: ReadonlyMap<number, number> };
+const tokenMemoLimitCharacters = 8_388_608;
+const tokenEntries = new Map<string, TokenEntry>();
+const tokenIssues = new WeakMap<readonly RustToken[], TokenEntry>();
+let tokenMemoCharacters = 0;
+
+/** 🎨️ Tokenizes Rust with atomic literals and nested comments. The token stream of identical source text is computed once and shared by the passes that read it (delimiter faults, cfg selection, compile references, module scopes); every call still returns its own array of the shared immutable tokens, and the memo holds at most 8 Mi characters of source. */
 export function rustTokens(source: string): RustToken[] {
+  let entry = tokenEntries.get(source);
+  if (!entry) {
+    entry = { tokens: tokenizeRust(source) };
+    if (source.length <= tokenMemoLimitCharacters / 2) {
+      if (tokenMemoCharacters + source.length > tokenMemoLimitCharacters) { tokenEntries.clear(); tokenMemoCharacters = 0; }
+      tokenEntries.set(source, entry); tokenMemoCharacters += source.length;
+    }
+  }
+  const tokens = entry.tokens.slice();
+  tokenIssues.set(tokens, entry);
+  return tokens;
+}
+
+function tokenizeRust(source: string): RustToken[] {
   const tokens: RustToken[] = [];
   const punctuation = ["::", "=>", "->", "..=", "...", "..", "&&", "||", "<=", ">=", "==", "!=", "<<=", ">>=", "<<", ">>"];
   let index = 0;
@@ -174,6 +194,12 @@ export function rustTokens(source: string): RustToken[] {
 
 /** 🧩️ Pairs Rust delimiter tokens so all structural scans can skip nested syntax exactly. */
 export function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number, number> {
+  const entry = tokenIssues.get(tokens);
+  if (entry && entry.tokens.length === tokens.length && tokens.every((token, index) => token === entry.tokens[index])) return entry.pairs ??= pairTokens(tokens);
+  return pairTokens(tokens);
+}
+
+function pairTokens(tokens: readonly RustToken[]): ReadonlyMap<number, number> {
   const pairs = new Map<number, number>();
   const stack: { readonly index: number; readonly token: string }[] = [];
   const closeFor: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" };

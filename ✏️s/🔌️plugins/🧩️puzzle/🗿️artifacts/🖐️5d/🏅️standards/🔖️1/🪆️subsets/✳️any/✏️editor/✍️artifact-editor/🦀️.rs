@@ -154,7 +154,15 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "addNode" => owned!(Puzzle5dAddNodeWork, |request, scope| Puzzle5dAddNodeWork::from_original_construction(scope).map(|(work, progress)| (work.bound(nonce), progress))),
             "createFastener" => work!(|request| Puzzle5dCreateFastenerWork::default().bound(nonce)),
             "exportSnapshot" => work!(|request| Puzzle5dExportWork::default()),
-            "setActiveExample" => owned!(Puzzle5dSetActiveExampleWork, |request, scope| Puzzle5dSetActiveExampleWork::from_original_construction(scope)),
+            "setActiveExample" => {
+                let capacity = Puzzle5dSetActiveExampleWork::mutation_capacity(&original.command, &original.snapshot);
+                let demand = Puzzle5dSetActiveExampleWork::original_birth_demands(capacity)?;
+                semio_plugin::retained_command::producer::admit_retained_tool_producer_measured_scoped(
+                    request, output, cx, Puzzle5dCommand::action_id, PUZZLE5D_RETAINED_RAW_BYTES,
+                    crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS, true, demand,
+                    |_, scope| Puzzle5dSetActiveExampleWork::from_original_construction(capacity, scope),
+                )
+            }
             "registerBrushMesh" => work!(|request| Puzzle5dRegisterBrushMeshWork::default()),
             "setPartKindWeight" | "setGripKindWeight" => owned!(Puzzle5dKindWeightWork, |_request, scope| Puzzle5dKindWeightWork::from_original_construction(tool_id, scope)),
             "worldPointerDown" | "canvasPointerDown" => work!(|request| crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),

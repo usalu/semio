@@ -41,7 +41,7 @@ pub mod compiler {
         }
     }
 
-    pub type Result<T> = std::result::Result<T, PresentationCompileError>;
+    pub type CompileResult<T> = std::result::Result<T, PresentationCompileError>;
 
     /// 📦️ Rendered scene clip paths for presentation sites and plugin export.
     #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -55,7 +55,7 @@ pub mod compiler {
     }
 
     /// 🎬️ Renders one animate scene hash into `output_dir/scenes/{hash}`.
-    pub async fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<SceneAssetBundle> {
+    pub async fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> CompileResult<SceneAssetBundle> {
         let scene_dir = output_dir.join("scenes").join(scene_hash);
         fs::create_dir_all(&scene_dir).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
@@ -70,7 +70,7 @@ pub mod compiler {
     /// replaced is deleted outright (`styles.css`/`player.js`/`manifest.json`/`deck.json` are plain
     /// CSS/JS/JSON sidecars, not HTML — no ad-hoc HTML codec logic lived at those sites, so they stay
     /// unchanged `fs::write`s).
-    pub fn compile_presentation_site(deck: &PresentationSnapshot, output_dir: &Path) -> Result<()> {
+    pub fn compile_presentation_site(deck: &PresentationSnapshot, output_dir: &Path) -> CompileResult<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let deck_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(deck));
         let deck_json = semio_framework_pack_json::to_string_pretty(&deck_value);

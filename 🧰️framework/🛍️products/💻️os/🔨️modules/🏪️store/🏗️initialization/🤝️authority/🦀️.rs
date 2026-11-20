@@ -26,6 +26,8 @@ where
     fn progress(&self) -> (u64, u64) {
         (0, 0)
     }
+    /// 📏️ Quotes an indivisible next business step before the worker enters its callback.
+    fn next_step_demands(&self) -> Result<RetirementDemand, ValueError> { Ok(Default::default()) }
     /// 🧷️ Binds the replacement slot identity this initializer belongs to, so its staleness is judged against the store's current slot; an initializer without staleness semantics ignores it.
     fn bind_replacement(&mut self, _replacement: semio_framework_job::ReplacementIdentity) {}
     fn request_cancel(&mut self);

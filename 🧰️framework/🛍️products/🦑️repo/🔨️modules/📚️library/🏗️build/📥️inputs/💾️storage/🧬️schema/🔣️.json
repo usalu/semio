@@ -8,6 +8,10 @@
     "admission"
   ],
   "definitions": {
+    "OptionalPublicationRefusal": {
+      "type": "string",
+      "enum": ["disk-headroom", "retained-quota", "ledger-contention"]
+    },
     "GraphWriterLeaseProtocol": {
       "const": {
         "version": 1,

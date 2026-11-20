@@ -17,16 +17,16 @@ pub mod kit {
 
     pub fn model() -> ModelSnapshot {
         let mut snapshot = ModelSnapshot::default();
-        snapshot.materials.insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
+        snapshot.materials.cold_insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
         snapshot
     }
 
     pub fn family(snapshot: &mut ModelSnapshot, id: &str, category: FamilyCategory) {
-        snapshot.families.insert(id.into(), Family { name: id.into(), category });
+        snapshot.families.cold_insert(id.into(), Family { name: id.into(), category });
     }
 
     pub fn parameter(snapshot: &mut ModelSnapshot, family: &str, name: &str, kind: ParameterKind, value: &str) {
-        snapshot.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, name), FamilyParameter { family: family.into(), name: name.into(), kind, value: value.into() });
+        snapshot.family_parameters.cold_insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, name), FamilyParameter { family: family.into(), name: name.into(), kind, value: value.into() });
     }
 
     pub fn point3(x: &str, y: &str, z: &str) -> ExprPoint3 {
@@ -42,7 +42,7 @@ pub mod kit {
     }
 
     pub fn solid(snapshot: &mut ModelSnapshot, id: &str, family: &str, shape: SolidShape) {
-        snapshot.family_solids.insert(id.into(), FamilySolid { family: family.into(), name: id.into(), shape, material: "\"m-steel\"".into(), visible: "true".into(), offset: point3("0 m", "0 m", "0 m") });
+        snapshot.family_solids.cold_insert(id.into(), FamilySolid { family: family.into(), name: id.into(), shape, material: "\"m-steel\"".into(), visible: "true".into(), offset: point3("0 m", "0 m", "0 m") });
     }
 
     pub fn extrusion(profile: ParametricProfile, base: &str, height: &str) -> SolidShape {
@@ -153,7 +153,7 @@ fn the_dependency_is_exactly_what_the_family_reads() {
     solid.family_solids.get_mut("s-hea").expect("solid").visible = "false".into();
     assert_ne!(dependency(&solid, "fam-hea"), base, "an own solid is read");
     let mut materials = snapshot.clone();
-    materials.materials.remove("m-steel");
+    materials.materials.cold_remove("m-steel");
     assert_ne!(dependency(&materials, "fam-hea"), base, "the material ids are read");
     assert_eq!(dependency(&snapshot.clone(), "fam-hea"), base, "deterministic");
 }

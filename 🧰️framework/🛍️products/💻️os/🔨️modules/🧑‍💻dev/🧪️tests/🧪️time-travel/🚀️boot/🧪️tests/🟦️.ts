@@ -60,7 +60,7 @@ describe("catalog history serve request", () => {
       const request = timeTravelServeRequestV1(selection, admitted);
       expect(request).toEqual(oracle);
       const command = devServeCommandV1(request);
-      expect(command.args).toContain(law.profile);
+      expect(command.args[1]).toBe(`@semio-tech/framework-os-dev:dev-${request.variant}-${law.renderer}-${law.profile}`);
       if (law.renderer === "wgpu") expect(command.args.slice(-2)).toEqual(["--composition",row.compositionConfigPath]);
     }
   });
@@ -93,7 +93,7 @@ describe("owned history journey startup", () => {
             expect(actual.profile).toBe(request.profile);
             expect(actual.compositionConfigPath).toBe(request.compositionConfigPath);
             const command = devServeCommandV1(actual);
-            expect(command.args).toContain(request.profile);
+            expect(command.args[1]).toBe(`@semio-tech/framework-os-dev:dev-${request.variant}-${request.renderer}-${request.profile}`);
             if (actual.renderer === "wgpu") expect(command.args.slice(-2)).toEqual(["--composition", request.compositionConfigPath]);
             trace.push("spawn"); spawned = true; return { pid: 17, exited: () => false };
           },

@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { expect, test as browserTest, type Locator, type Page } from "@playwright/test";
-import { significantConsoleErrors } from "./🧬️console/🟦️.ts";
+import { isLocalReleaseDependency, significantConsoleErrors } from "./🧬️console/🟦️.ts";
 import { isNewToolRunGroup } from "./🧬️simulation/🟦️.ts";
 import { assertDemonstratorE2eArtifactPath } from "../../🔨️modules/🧪️e2e/📁️artifacts/🟦️.ts";
 import languageCases from "../../🔨️modules/🧪️e2e/📁️artifacts/🧫️cases.json" with { type: "json" };
@@ -42,7 +42,7 @@ const SURFACE_CONTENT_TIMEOUT_MS = 60_000;
 
 /** 🩺️ Enforces the same error policy for every browser case, including interaction and funding. */
 const test = browserTest.extend<{ browserHealth: void }>({
-  browserHealth: [async ({ page }, use, testInfo) => {
+  browserHealth: [async ({ page, baseURL }, use, testInfo) => {
     expect(testInfo.title.length, "bounded diagnostic title").toBeLessThanOrEqual(artifactPolicy.maxTitleChars);
     for (const name of ["trace.zip", "error-context.md", "p.png"]) {
       assertDemonstratorE2eArtifactPath(join(testInfo.outputDir, name));
@@ -50,6 +50,15 @@ const test = browserTest.extend<{ browserHealth: void }>({
     }
     const pageErrors: string[] = [];
     const consoleErrors: string[] = [];
+    const localDependencies = new Set<string>();
+    if (process.env.DEMONSTRATOR_VERIFY_CDN === "1") {
+      const site = new URL(baseURL!);
+      const observe = (value: string) => {
+        if (isLocalReleaseDependency(value, site)) localDependencies.add(value);
+      };
+      page.context().on("request", request => observe(request.url()));
+      page.on("websocket", socket => observe(socket.url()));
+    }
     page.on("pageerror", (error) => pageErrors.push(error.message));
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
@@ -57,6 +66,7 @@ const test = browserTest.extend<{ browserHealth: void }>({
     try {
       await use();
     } finally {
+      expect.soft([...localDependencies], "release boot requested local development services").toEqual([]);
       expect.soft(pageErrors, "unexpected browser page errors").toEqual([]);
       expect.soft(significantConsoleErrors(consoleErrors), "unexpected browser console errors").toEqual([]);
     }

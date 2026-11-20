@@ -59,6 +59,8 @@ export { BodyButton, CELL, CardAction, CardIcon, CardLink, CardSection, Dialog, 
 export type { Announcement, Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export { ClassificationTaskView, classificationHintText } from "./🔨️modules/🗂️classification/🟦️.tsx";
 export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
+export { IDLE_FALLBACK_MS, usePreload, whenIdle } from "./🔨️modules/💤️idle-preload/🟦️.ts";
+export { ITEM_CHUNK, ITEMS_FIRST, useGradualCount } from "./🔨️modules/🧱️gradual-items/🟦️.ts";
 export { MatchingTaskView, assignCard } from "./🔨️modules/🃏️matching/🟦️.tsx";
 export { COURSE_LANGUAGE_ANCHOR, CourseIntroduction, courseIntroduction } from "./🔨️modules/👋️introduction/🟦️.tsx";
 export { LearnerCard, LearnerPage, SwitchIdentity } from "./🔨️modules/📇️profile/🟦️.tsx";
@@ -81,7 +83,7 @@ export { BadgesCard, BadgesPage, awardOf, badgesEarnedIn } from "./🔨️module
 export { LegalFooter, PrivacyNotice, legalLink } from "./🔨️modules/⚖️legal/🟦️.tsx";
 export type { CourseLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
 export { EMPTY_PRESENCE_VIEW, PRESENCE_ANCHORS, placeText, presenceSelf, presenceView } from "./🔨️modules/👥️presence/👁️view/🟦️.ts";
-export { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_JOIN_MS, PRESENCE_SILENCE_MS, PRESENCE_STABLE_MS, PresenceRoom, THINKING_FRAME_INTERVAL_MS, WATCH_INTERVAL_MS, browserPresenceConnect, rejoinDelay } from "./🔨️modules/👥️presence/🔌️socket/🟦️.ts";
+export { MAX_WATCHED_ROOMS, PRESENCE_FRAME_HZ, PRESENCE_FRAME_INTERVAL_MS, PRESENCE_JOIN_MS, PRESENCE_SILENCE_MS, PRESENCE_STABLE_MS, PRESENCE_STALL_GRACE_MS, PRESENCE_STALL_MS, PresenceRoom, THINKING_FRAME_INTERVAL_MS, WATCH_INTERVAL_MS, browserPresenceConnect, rejoinDelay } from "./🔨️modules/👥️presence/🔌️socket/🟦️.ts";
 export { OnlineMark, PEER_LABEL_CLEARANCE_PX, PanePeers, PresenceList, PresenceOverlay, PresenceProvider, PresenceStatus, PresenceFooter, CardPresence, cursorAt, viewportCursor, paintStyle, peerInk, placePeers, useDocumentVisible, usePresencePointer, usePresenceTask, usePresenceView } from "./🔨️modules/👥️presence/🟦️.tsx";
 export { CoursePresence, homeWatchScopes, presenceDrafts, presencePlace, sheetItemLabels } from "./🔨️modules/👥️presence/🧭️rooms/🟦️.ts";
 export type { PeerCursor, PresenceView } from "./🔨️modules/👥️presence/👁️view/🟦️.ts";

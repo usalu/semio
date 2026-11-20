@@ -68,9 +68,9 @@ impl NormViewerFrame {
         self.selection.primary(&self.report).or_else(|| self.report.checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|check| check.subject.entity_id.clone())).map(|id| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned())
     }
 
-    pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
+    pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, host: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         let selected = self.selection.highlights(scene.entities.iter().map(|entity| (entity.entity.kind, entity.entity.id.as_str())));
-        crate::toolbar::render_viewport_panel(body, scene, &crate::toolbar::ViewportView { lane: self.lane.clone(), ..Default::default() }, &selected, domain, controller, locale)
+        crate::toolbar::render_viewport_panel(body, scene, &crate::toolbar::ViewportView { lane: self.lane.clone(), tree_context: Some((host, body)), ..Default::default() }, &selected, domain, controller, host.locale)
     }
 
     pub fn render_checks(&self, windows: &semio_plugin::TreeWindows<'_>, domain: &'static str, controller: &'static str, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
@@ -86,7 +86,7 @@ impl NormViewerFrame {
 pub fn render_norm_viewer<V: NormViewerSurface>(body_key: &str, doc: &ArtifactView<'_, V::Snapshot>, cfg: &ConfigView<'_, V::Config>, view: &semio_plugin::ViewModel, transient: &semio_plugin::TransientView<'_, V::Transient>, interaction: &semio_plugin::app::InteractionView<'_>) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
     let frame = NormViewerFrame::new(V::view_report(doc.snapshot), V::view_lane(transient.snapshot), &interaction.selection(V::INTERACTION_DOMAIN).ids);
     let rendered = match body_key {
-        key if key == V::VIEWPORT_BODY => frame.render_viewport(body_key, &V::view_scene(doc.snapshot, &frame.report, &view_options_of(&frame.lane)), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
+        key if key == V::VIEWPORT_BODY => frame.render_viewport(body_key, &V::view_scene(doc.snapshot, &frame.report, &view_options_of(&frame.lane)), V::INTERACTION_DOMAIN, V::CONTROLLER, view),
         key if key == V::CHECKS_BODY => frame.render_checks(&semio_plugin::TreeWindows::for_body(view, body_key), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
         key if key == V::DIAGRAMS_BODY => frame.render_diagrams(body_key, &V::view_diagrams(doc.snapshot, &frame.report, frame.diagram_focus().as_deref()), &semio_plugin::TreeWindows::for_body(view, body_key), view.locale),
         _ => return V::render(body_key, doc, cfg, view).map(Some).map_err(Into::into),

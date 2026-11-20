@@ -1,7 +1,7 @@
 //! 🧰️ The one shared app test harness — every test target of the family mounts it as `context`.
 
 use semio_s_artifact_process_process3d_editor::*;
-use semio_s_artifact_process_process3d_kit::{builtin_installed_catalogs, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_APP_ID;
 use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
 use semio_s_artifact_process_process3d_modes;
@@ -338,13 +338,12 @@ pub fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
     ::semio_framework_async::poll::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
 }
 
-/// 🧩️ The four shipped `process-extension-*` packs, exactly as those crates emit them
-/// (`✏️s/🔌️plugins/🏭️process/🧩️extensions/*/🦀️.rs` builds this payload from the same `MachineCatalog`
-/// this crate compiles in), plus the foreign `cad.computer` / `sourcing.module` entries the
-/// DEMONSTRATOR's `consumes` row puts in the same pack. This is the real host closure, not a toy.
+/// 🧩️ A demonstrator-shaped contribution pack built from the four domain model catalogs, plus
+/// foreign entries for the other consumed topics. Descriptor delivery is tested separately.
 pub fn demonstrator_contributions_pack() -> String {
     let mut entries: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
-    for catalog in builtin_installed_catalogs().into_iter().filter(|catalog| catalog.catalog_id() != "geometry") {
+    let catalogs: Vec<semio_s_artifact_process_process3d_model::snapshot::MachineCatalogs> = vec![semio_s_artifact_process_process3d_model::wood_catalog().into(), semio_s_artifact_process_process3d_model::concrete_catalog().into(), semio_s_artifact_process_process3d_model::metal_catalog().into(), semio_s_artifact_process_process3d_model::robotic_catalog().into()];
+    for catalog in catalogs {
         entries.push(semio_framework::ProgramContributionEntry {
             plugin_id: format!("process-extension-{}", catalog.catalog_id()),
             topic_contribution: Some(semio_framework::TopicContribution::new(

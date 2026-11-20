@@ -33,7 +33,7 @@ export type Effect =
    * as an event-sourced job with progress and cancellation, for a plugin holding {@link MEDIA_VIDEO_RENDER_CAPABILITY}.
    * Twin of Rust `Effect::VideoRenderExport`. */
   | { readonly videoRenderExport: { readonly filename: string; readonly program: VideoRenderProgram } }
-  | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly args?: unknown; readonly multiple?: boolean } }
+  | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly args?: unknown; readonly multiple?: boolean; readonly maxFileBytes?: number } }
   /** 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
    * and re-dispatch `frameAction` once per sampled frame with `{payload: dataUrl(image/jpeg), name,
    * frameIndex, timestampMs, index, total, width, height, ...args}`, then `doneAction` once with

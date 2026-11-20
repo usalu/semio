@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "mixed",
+      "reports": [
+        {
+          "id": "bun",
+          "pin": "1.4.0",
+          "found": "1.4.0",
+          "status": "ok",
+          "location": "p"
+        },
+        {
+          "id": "formatter",
+          "pin": "-",
+          "found": null,
+          "status": "deferred",
+          "location": null,
+          "message": "Install dependencies first"
+        },
+        {
+          "id": "node",
+          "pin": "24.13.0",
+          "found": null,
+          "status": "failed",
+          "location": "C:\\Program Files\\nodejs\\node.exe",
+          "message": "process failed\r\nchild detail"
+        },
+        {
+          "id": "rustup",
+          "pin": "1.28.2",
+          "found": "1.27.0",
+          "status": "differs",
+          "location": "C:\\Users\\tester\\.cargo\\bin\\rustup.exe"
+        }
+      ],
+      "expected": [
+        {
+          "id": "node",
+          "phase": "verify",
+          "status": "failed",
+          "pin": "24.13.0",
+          "found": null,
+          "location": "C:\\Program Files\\nodejs\\node.exe",
+          "primary": "process failed"
+        },
+        {
+          "id": "rustup",
+          "phase": "verify",
+          "status": "differs",
+          "pin": "1.28.2",
+          "found": "1.27.0",
+          "location": "C:\\Users\\tester\\.cargo\\bin\\rustup.exe",
+          "primary": null
+        }
+      ]
+    },
+    {
+      "name": "all deferred",
+      "reports": [
+        {
+          "id": "formatter",
+          "pin": "-",
+          "found": null,
+          "status": "deferred",
+          "location": null
+        },
+        {
+          "id": "linter",
+          "pin": "-",
+          "found": null,
+          "status": "deferred",
+          "location": null
+        }
+      ],
+      "expected": []
+    }
+  ]
+}

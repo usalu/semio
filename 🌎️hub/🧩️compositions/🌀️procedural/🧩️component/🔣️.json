@@ -133,7 +133,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -179,7 +179,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1777,7 +1777,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1823,7 +1823,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1869,7 +1869,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1915,7 +1915,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3513,7 +3513,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3569,7 +3569,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3623,7 +3623,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -3677,7 +3677,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -5281,7 +5281,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -6886,7 +6886,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -6932,7 +6932,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -6978,7 +6978,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -7024,7 +7024,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8602,7 +8602,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8743,7 +8743,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8797,7 +8797,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8851,7 +8851,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8906,7 +8906,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8962,7 +8962,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -9016,7 +9016,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -9072,7 +9072,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -9127,7 +9127,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -11672,6 +11672,42 @@
             },
             "iconId": "eye",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -11923,7 +11959,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -11970,7 +12006,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -12069,7 +12105,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -13364,7 +13400,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13410,7 +13446,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13456,7 +13492,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13511,7 +13547,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13566,7 +13602,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13621,7 +13657,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13676,7 +13712,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -13731,7 +13767,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -15497,6 +15533,71 @@
                               "de": "Eckpunkte am Raster ausrichten"
                             }
                           }
+                        },
+                        {
+                          "value": "filletEdges",
+                          "label": {
+                            "native": {
+                              "en": "Fillet B-Rep Edges",
+                              "de": "B-Rep-Kanten verrunden"
+                            },
+                            "reuse": {
+                              "en": "Fillet B-Rep Edges",
+                              "de": "B-Rep-Kanten verrunden"
+                            }
+                          }
+                        },
+                        {
+                          "value": "chamferEdges",
+                          "label": {
+                            "native": {
+                              "en": "Chamfer B-Rep Edges",
+                              "de": "B-Rep-Kanten fasen"
+                            },
+                            "reuse": {
+                              "en": "Chamfer B-Rep Edges",
+                              "de": "B-Rep-Kanten fasen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "shell",
+                          "label": {
+                            "native": {
+                              "en": "Shell B-Rep Faces",
+                              "de": "B-Rep-Flächen aushöhlen"
+                            },
+                            "reuse": {
+                              "en": "Shell B-Rep Faces",
+                              "de": "B-Rep-Flächen aushöhlen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "draft",
+                          "label": {
+                            "native": {
+                              "en": "Draft B-Rep Faces",
+                              "de": "B-Rep-Flächen mit Formschräge versehen"
+                            },
+                            "reuse": {
+                              "en": "Draft B-Rep Faces",
+                              "de": "B-Rep-Flächen mit Formschräge versehen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "defeature",
+                          "label": {
+                            "native": {
+                              "en": "Remove B-Rep Features",
+                              "de": "B-Rep-Formelemente entfernen"
+                            },
+                            "reuse": {
+                              "en": "Remove B-Rep Features",
+                              "de": "B-Rep-Formelemente entfernen"
+                            }
+                          }
                         }
                       ]
                     },
@@ -15780,6 +15881,71 @@
                       0.0,
                       0.0
                     ]
+                  },
+                  {
+                    "id": "angle",
+                    "label": {
+                      "native": {
+                        "en": "Draft Angle (rad)",
+                        "de": "Formschrägenwinkel (rad)"
+                      },
+                      "reuse": {
+                        "en": "Draft Angle (rad)",
+                        "de": "Formschrägenwinkel (rad)"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.1
+                  },
+                  {
+                    "id": "pullDirection",
+                    "label": {
+                      "native": {
+                        "en": "Pull Direction",
+                        "de": "Entformungsrichtung"
+                      },
+                      "reuse": {
+                        "en": "Pull Direction",
+                        "de": "Entformungsrichtung"
+                      }
+                    },
+                    "schema": {
+                      "kind": "vector",
+                      "dims": 3
+                    },
+                    "required": false,
+                    "default": [
+                      0.0,
+                      0.0,
+                      1.0
+                    ]
+                  },
+                  {
+                    "id": "neutralPoint",
+                    "label": {
+                      "native": {
+                        "en": "Neutral Point",
+                        "de": "Neutralpunkt"
+                      },
+                      "reuse": {
+                        "en": "Neutral Point",
+                        "de": "Neutralpunkt"
+                      }
+                    },
+                    "schema": {
+                      "kind": "vector",
+                      "dims": 3
+                    },
+                    "required": false,
+                    "default": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ]
                   }
                 ],
                 "inPalette": true,
@@ -15806,7 +15972,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -15908,7 +16074,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -15963,7 +16129,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16009,7 +16175,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16064,7 +16230,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16119,7 +16285,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16174,7 +16340,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16229,7 +16395,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16284,7 +16450,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16339,7 +16505,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16394,7 +16560,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -18006,7 +18172,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -18061,7 +18227,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -18116,7 +18282,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -18171,7 +18337,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -19776,7 +19942,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21381,7 +21547,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21427,7 +21593,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21482,7 +21648,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21537,7 +21703,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21592,7 +21758,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21647,7 +21813,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21702,7 +21868,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21757,7 +21923,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -21812,7 +21978,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -23540,7 +23706,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -23594,7 +23760,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -23649,7 +23815,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -23828,7 +23994,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -23883,7 +24049,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24218,7 +24384,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -24263,7 +24429,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24314,7 +24480,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24494,7 +24660,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24548,7 +24714,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24603,7 +24769,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -24658,7 +24824,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -27423,6 +27589,42 @@
             },
             "iconId": "eye",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -27760,7 +27962,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -27807,7 +28009,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -27854,7 +28056,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -27901,7 +28103,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -27948,7 +28150,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -28047,7 +28249,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -28708,6 +28910,19 @@
             }
           },
           {
+            "code": "generation3d.analysis.source-unavailable",
+            "label": {
+              "native": {
+                "en": "The selected output changed or is unavailable. Wait for evaluation and select it again.",
+                "de": "Die ausgewählte Ausgabe wurde geändert oder ist nicht verfügbar. Die Auswertung abwarten und erneut auswählen."
+              },
+              "reuse": {
+                "en": "The selected output changed or is unavailable. Wait for evaluation and select it again.",
+                "de": "Die ausgewählte Ausgabe wurde geändert oder ist nicht verfügbar. Die Auswertung abwarten und erneut auswählen."
+              }
+            }
+          },
+          {
             "code": "generation3d.preview.session-closing",
             "label": {
               "native": {
@@ -28881,7 +29096,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -28936,7 +29151,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -28991,7 +29206,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -29037,7 +29252,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -29092,7 +29307,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -29147,7 +29362,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -29202,7 +29417,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -30927,7 +31142,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -31094,7 +31309,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -31631,6 +31846,42 @@
             },
             "iconId": "eye",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -32020,7 +32271,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32102,7 +32353,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32176,15 +32427,15 @@
                 "required": false
               },
               {
-                "id": "outputJson",
+                "id": "output",
                 "label": {
                   "native": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   },
                   "reuse": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   }
                 },
                 "schema": {
@@ -32218,7 +32469,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32292,15 +32543,15 @@
                 "required": false
               },
               {
-                "id": "outputJson",
+                "id": "output",
                 "label": {
                   "native": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   },
                   "reuse": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   }
                 },
                 "schema": {
@@ -32334,7 +32585,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32416,7 +32667,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32473,15 +32724,15 @@
                 "required": false
               },
               {
-                "id": "outputJson",
+                "id": "output",
                 "label": {
                   "native": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   },
                   "reuse": {
-                    "en": "outputJson",
-                    "de": "outputJson"
+                    "en": "output",
+                    "de": "output"
                   }
                 },
                 "schema": {
@@ -32532,7 +32783,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -32760,7 +33011,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=94.75581571737445 y=-97.50833134679668 zoom=1.7844325616011099\n}\nlayout={\n  column-preview=x=237.4197774877085 y=-103.14518978933415 extrude=x=34.842068675720895 y=-154.18083645790136 extrusion-axis=x=-65.26327021036892 y=-116.45687403531778 height=x=-197.1913555449187 y=-102.70789997839545 profile=x=-64.49671116929301 y=-163.40310309861746 radius=x=-156.03796288966 y=-177.3373596163105 sides=x=-156.43467044109153 y=-155.28679730672846\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 height@number->extrusion-axis@z\n  e2 radius@number->profile@radius\n  e3 sides@number->profile@sides\n  e4 profile@wire->extrude@wire\n  e5 extrusion-axis@vectorOut->extrude@vector\n  e6 extrude@solid->column-preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"height\" label=\"Column Height\" value=6 min=0 max=10 step=0.5\n  input-slider id=\"radius\" label=\"Profile Radius\" value=0.5 min=0.1 max=2 step=0.05\n  input-slider id=\"sides\" label=\"Side Count\" value=6 min=3 max=12 step=1\n  neuron id=\"profile\" neuron-kind=brep.curve.polygon preview=true input-ports=[ \"radius\" \"sides\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrusion-axis\" neuron-kind=math.vector preview=true input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"column-preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=94.75581571737445 y=-97.50833134679668 zoom=1.7844325616011099\n}\nlayout={\n  column-preview={x=237.4197774877085 y=-103.14518978933415} extrude={x=34.842068675720895 y=-154.18083645790136} extrusion-axis={x=-65.26327021036892 y=-116.45687403531778} height={x=-197.1913555449187 y=-102.70789997839545} profile={x=-64.49671116929301 y=-163.40310309861746} radius={x=-156.03796288966 y=-177.3373596163105} sides={x=-156.43467044109153 y=-155.28679730672846}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 height@number->extrusion-axis@z\n  e2 radius@number->profile@radius\n  e3 sides@number->profile@sides\n  e4 profile@wire->extrude@wire\n  e5 extrusion-axis@vectorOut->extrude@vector\n  e6 extrude@solid->column-preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"height\" label=\"Column Height\" value=6 min=0 max=10 step=0.5\n  input-slider id=\"radius\" label=\"Profile Radius\" value=0.5 min=0.1 max=2 step=0.05\n  input-slider id=\"sides\" label=\"Side Count\" value=6 min=3 max=12 step=1\n  neuron id=\"profile\" neuron-kind=brep.curve.polygon preview=true input-ports=[ \"radius\" \"sides\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrusion-axis\" neuron-kind=math.vector preview=true input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"column-preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32780,7 +33031,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera { x=100 y=-40 zoom=1.5 }\nlayout={\n  box=x=20 y=0 inset=x=220 y=0 extrude=x=420 y=0 analysis=x=620 y=140 preview=x=620 y=-80 amount=x=20 y=160 distance=x=220 y=160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 box@meshOut->inset@mesh\n  e2 amount@number->inset@amount\n  e3 inset@meshOut->extrude@mesh\n  e4 distance@number->extrude@distance\n  e5 extrude@meshOut->analysis@mesh\n  e6 extrude@meshOut->preview@mesh\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"amount\" label=\"Inset\" value=0.1 min=0.01 max=0.3 step=0.01\n  input-slider id=\"distance\" label=\"Extrusion\" value=0.5 min=0.01 max=2 step=0.01\n  neuron id=\"box\" neuron-kind=brep.mesh.box preview=false input-ports=[ \"width\" \"height\" \"depth\" ] output-ports=[ ] params=[ ]\n  neuron id=\"inset\" neuron-kind=brep.mesh.inset preview=false input-ports=[ \"mesh\" \"faces\" \"amount\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.mesh.extrude preview=true input-ports=[ \"mesh\" \"faces\" \"distance\" ] output-ports=[ ] params=[ ]\n  neuron id=\"analysis\" neuron-kind=brep.mesh.analyze preview=false input-ports=[ \"mesh\" ] output-ports=[ ] params=[ ]\n  neuron id=\"preview\" neuron-kind=brep.mesh.toBrep preview=false input-ports=[ \"mesh\" \"tolerance\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera { x=100 y=-40 zoom=1.5 }\nlayout={\n  box={x=20 y=0} inset={x=220 y=0} extrude={x=420 y=0} analysis={x=620 y=140} preview={x=620 y=-80} amount={x=20 y=160} distance={x=220 y=160}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 box@meshOut->inset@mesh\n  e2 amount@number->inset@amount\n  e3 inset@meshOut->extrude@mesh\n  e4 distance@number->extrude@distance\n  e5 extrude@meshOut->analysis@mesh\n  e6 extrude@meshOut->preview@mesh\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"amount\" label=\"Inset\" value=0.1 min=0.01 max=0.3 step=0.01\n  input-slider id=\"distance\" label=\"Extrusion\" value=0.5 min=0.01 max=2 step=0.01\n  neuron id=\"box\" neuron-kind=brep.mesh.box preview=false input-ports=[ \"width\" \"height\" \"depth\" ] output-ports=[ ] params=[ ]\n  neuron id=\"inset\" neuron-kind=brep.mesh.inset preview=false input-ports=[ \"mesh\" \"faces\" \"amount\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.mesh.extrude preview=true input-ports=[ \"mesh\" \"faces\" \"distance\" ] output-ports=[ ] params=[ ]\n  neuron id=\"analysis\" neuron-kind=brep.mesh.analyze preview=false input-ports=[ \"mesh\" ] output-ports=[ ] params=[ ]\n  neuron id=\"preview\" neuron-kind=brep.mesh.toBrep preview=false input-ports=[ \"mesh\" \"tolerance\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32800,7 +33051,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=140 y=-60 zoom=2.2\n}\nlayout={\n  distance=x=120 y=20 extrude=x=280 y=-40 height=x=40 y=-20 rect=x=120 y=-40 vector=x=200 y=20 volume=x=360 y=-40 width=x=40 y=-60\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->extrude@wire\n  e4 distance@number->vector@z\n  e5 vector@vectorOut->extrude@vector\n  e6 extrude@solid->volume@geometry\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=3 min=0.1 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  neuron id=\"volume\" neuron-kind=brep.measure.volume preview=false input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=140 y=-60 zoom=2.2\n}\nlayout={\n  distance={x=120 y=20} extrude={x=280 y=-40} height={x=40 y=-20} rect={x=120 y=-40} vector={x=200 y=20} volume={x=360 y=-40} width={x=40 y=-60}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->extrude@wire\n  e4 distance@number->vector@z\n  e5 vector@vectorOut->extrude@vector\n  e6 extrude@solid->volume@geometry\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=2 min=0.1 max=10 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=3 min=0.1 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.solid.extrude preview=true input-ports=[ \"wire\" \"vector\" ] output-ports=[ ] params=[ ]\n  neuron id=\"volume\" neuron-kind=brep.measure.volume preview=false input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32820,7 +33071,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=236.23395167940356 y=-84.58346179033974 zoom=1.8417539215092311\n}\nlayout={\n  brep_bool_cut_5=x=273.87672971964196 y=-102.61212609570688 brep_measure_volume_2=x=351.6308736946091 y=-109.21856873190009 brep_prim3d_sphere_3=x=185.31861712806045 y=-119.2657196857918 brep_prim3d_torus_4=x=186.8402671208016 y=-79.66369132376984 preview_3=x=426.7737428942639 y=-99.84528083558972 slider_2=x=105.90625 y=-117.7890625\n}\nsynapses [id:TEXT wire:WIRE] {\n  e100 slider_2@number->brep_prim3d_sphere_3@radius\n  e101 brep_prim3d_sphere_3@solid->brep_bool_cut_5@a\n  e102 brep_prim3d_torus_4@solid->brep_bool_cut_5@b\n  e103 brep_bool_cut_5@solid->brep_measure_volume_2@geometry\n  e108 brep_measure_volume_2@volume->preview_3\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"slider_2\" label=\"Torus Major Radius\" value=2.2 min=0 max=10 step=0.1\n  neuron id=\"brep_prim3d_sphere_3\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_prim3d_torus_4\" neuron-kind=brep.prim3d.torus preview=false input-ports=[ \"major\" \"minor\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_bool_cut_5\" neuron-kind=brep.bool.cut preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_measure_volume_2\" neuron-kind=brep.measure.volume preview=true input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview_3\" preview [key:TEXT value:BLOCK] {\n    \"$schema\" {text=\"number\"}\n    \"value\" {decimal=37.73359174067349}\n  } expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=236.23395167940356 y=-84.58346179033974 zoom=1.8417539215092311\n}\nlayout={\n  brep_bool_cut_5={x=273.87672971964196 y=-102.61212609570688} brep_measure_volume_2={x=351.6308736946091 y=-109.21856873190009} brep_prim3d_sphere_3={x=185.31861712806045 y=-119.2657196857918} brep_prim3d_torus_4={x=186.8402671208016 y=-79.66369132376984} preview_3={x=426.7737428942639 y=-99.84528083558972} slider_2={x=105.90625 y=-117.7890625}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e100 slider_2@number->brep_prim3d_sphere_3@radius\n  e101 brep_prim3d_sphere_3@solid->brep_bool_cut_5@a\n  e102 brep_prim3d_torus_4@solid->brep_bool_cut_5@b\n  e103 brep_bool_cut_5@solid->brep_measure_volume_2@geometry\n  e108 brep_measure_volume_2@volume->preview_3\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"slider_2\" label=\"Torus Major Radius\" value=2.2 min=0 max=10 step=0.1\n  neuron id=\"brep_prim3d_sphere_3\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_prim3d_torus_4\" neuron-kind=brep.prim3d.torus preview=false input-ports=[ \"major\" \"minor\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_bool_cut_5\" neuron-kind=brep.bool.cut preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  neuron id=\"brep_measure_volume_2\" neuron-kind=brep.measure.volume preview=true input-ports=[ \"geometry\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview_3\" preview [key:TEXT value:BLOCK] {\n    \"$schema\" {text=\"number\"}\n    \"value\" {decimal=37.73359174067349}\n  } expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32840,7 +33091,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=120 y=-80 zoom=2\n}\nlayout={\n  box=x=80 y=-60 fillet=x=240 y=-60 preview=x=360 y=-60 radius=x=40 y=-100 size=x=40 y=-140\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->fillet@geometry\n  e5 radius@number->fillet@radius\n  e6 fillet@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"radius\" label=\"Fillet Radius\" value=0.15 min=0.01 max=0.5 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fillet\" neuron-kind=brep.solid.fillet preview=true input-ports=[ \"geometry\" \"radius\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=120 y=-80 zoom=2\n}\nlayout={\n  box={x=80 y=-60} fillet={x=240 y=-60} preview={x=360 y=-60} radius={x=40 y=-100} size={x=40 y=-140}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->fillet@geometry\n  e5 radius@number->fillet@radius\n  e6 fillet@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"radius\" label=\"Fillet Radius\" value=0.15 min=0.01 max=0.5 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fillet\" neuron-kind=brep.solid.fillet preview=true input-ports=[ \"geometry\" \"radius\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32860,7 +33111,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=140 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-80 fuse=x=280 y=-80 preview=x=400 y=-80 radius=x=40 y=-120 size=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 radius@number->sphere@radius\n  e2 size@number->box@width\n  e3 size@number->box@depth\n  e4 size@number->box@height\n  e5 sphere@solid->fuse@a\n  e6 box@solid->fuse@b\n  e7 fuse@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"radius\" label=\"Sphere Radius\" value=1.2 min=0.2 max=3 step=0.1\n  input-slider id=\"size\" label=\"Size\" value=1.5 min=0.5 max=4 step=0.1\n  neuron id=\"sphere\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fuse\" neuron-kind=brep.bool.fuse preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=140 y=-70 zoom=2\n}\nlayout={\n  box={x=80 y=-80} fuse={x=280 y=-80} preview={x=400 y=-80} radius={x=40 y=-120} size={x=40 y=-160}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 radius@number->sphere@radius\n  e2 size@number->box@width\n  e3 size@number->box@depth\n  e4 size@number->box@height\n  e5 sphere@solid->fuse@a\n  e6 box@solid->fuse@b\n  e7 fuse@solid->preview\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"radius\" label=\"Sphere Radius\" value=1.2 min=0.2 max=3 step=0.1\n  input-slider id=\"size\" label=\"Size\" value=1.5 min=0.5 max=4 step=0.1\n  neuron id=\"sphere\" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ \"radius\" ] output-ports=[ ] params=[ ]\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"fuse\" neuron-kind=brep.bool.fuse preview=true input-ports=[ \"a\" \"b\" ] output-ports=[ ] params=[ ]\n  output-preview id=\"preview\" preview=[ ] expanded=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32880,7 +33131,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=120 y=-60 zoom=2.2\n}\nlayout={\n  rect=x=60 y=-60 face=x=200 y=-60 extrude=x=340 y=-60 height=x=60 y=-100 width=x=60 y=-120\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->face@wire\n  e4 face@face->extrude@face\n  e5 distance@number->vector@z\n  e6 vector@vectorOut->extrude@vector\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.5 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.5 max=6 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=4 min=0.5 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"face\" neuron-kind=brep.surf.planarFaceWire preview=false input-ports=[ \"wire\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.sweep.extrude preview=true input-ports=[ \"face\" \"vector\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=120 y=-60 zoom=2.2\n}\nlayout={\n  rect={x=60 y=-60} face={x=200 y=-60} extrude={x=340 y=-60} height={x=60 y=-100} width={x=60 y=-120}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n  e3 rect@wire->face@wire\n  e4 face@face->extrude@face\n  e5 distance@number->vector@z\n  e6 vector@vectorOut->extrude@vector\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.5 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.5 max=6 step=0.1\n  input-slider id=\"distance\" label=\"Extrusion Distance\" value=4 min=0.5 max=10 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=false input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"face\" neuron-kind=brep.surf.planarFaceWire preview=false input-ports=[ \"wire\" ] output-ports=[ ] params=[ ]\n  neuron id=\"vector\" neuron-kind=math.vector preview=false input-ports=[ \"x\" \"y\" \"z\" ] output-ports=[ ] params=[ ]\n  neuron id=\"extrude\" neuron-kind=brep.sweep.extrude preview=true input-ports=[ \"face\" \"vector\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32900,7 +33151,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=100 y=-50 zoom=2.5\n}\nlayout={\n  rect=x=120 y=-80 width=x=40 y=-120 height=x=40 y=-160\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.2 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.2 max=6 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=true input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=100 y=-50 zoom=2.5\n}\nlayout={\n  rect={x=120 y=-80} width={x=40 y=-120} height={x=40 y=-160}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 width@number->rect@width\n  e2 height@number->rect@height\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"width\" label=\"Width\" value=2 min=0.2 max=6 step=0.1\n  input-slider id=\"height\" label=\"Height\" value=1.5 min=0.2 max=6 step=0.1\n  neuron id=\"rect\" neuron-kind=brep.curve.rectangle preview=true input-ports=[ \"width\" \"height\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",
@@ -32920,7 +33171,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=130 y=-70 zoom=2\n}\nlayout={\n  box=x=80 y=-70 shell=x=260 y=-70 size=x=40 y=-110 thickness=x=40 y=-150\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->shell@geometry\n  e5 thickness@number->shell@thickness\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"thickness\" label=\"Shell Thickness\" value=0.2 min=0.05 max=0.8 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"shell\" neuron-kind=brep.solid.shell preview=true input-ports=[ \"geometry\" \"thickness\" \"openFaces\" ] output-ports=[ ] params=[ ]\n}\n",
+        "artifactJson": "semio procedural.generation3d.dsl v1\nschema=\"flow.host_snapshot\"\ncamera {\n  x=130 y=-70 zoom=2\n}\nlayout={\n  box={x=80 y=-70} shell={x=260 y=-70} size={x=40 y=-110} thickness={x=40 y=-150}\n}\nsynapses [id:TEXT wire:WIRE] {\n  e1 size@number->box@width\n  e2 size@number->box@depth\n  e3 size@number->box@height\n  e4 box@solid->shell@geometry\n  e5 thickness@number->shell@thickness\n}\ngenerations [id:TEXT name:TEXT values:VAL] {\n}\nwidgets {\n  input-slider id=\"size\" label=\"Size\" value=2 min=0.5 max=5 step=0.1\n  input-slider id=\"thickness\" label=\"Shell Thickness\" value=0.2 min=0.05 max=0.8 step=0.01\n  neuron id=\"box\" neuron-kind=brep.prim3d.box preview=false input-ports=[ \"width\" \"depth\" \"height\" ] output-ports=[ ] params=[ ]\n  neuron id=\"shell\" neuron-kind=brep.solid.shell preview=true input-ports=[ \"geometry\" \"thickness\" \"openFaces\" ] output-ports=[ ] params=[ ]\n}\n",
         "dialect": {
           "artifactKind": "s.procedural.generation3d",
           "standard": "1",

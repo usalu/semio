@@ -4,22 +4,88 @@ use crate::effect_fixture::{invoked as fx,prime};
 use semio_framework_value::testing::settled;
 
 #[test]
-fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_and_paid_cancellation(){
+fn snapshot_publication_original_build_frontiers_preserve_native_pointers_and_paid_cancellation(){
     prime();
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
-    let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
+    let frame_bytes=law["preparationTurnBytes"].as_u64().unwrap() as usize;
+    let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:frame_bytes,maximum_capacity_bytes:frame_bytes,maximum_release_bytes:262144,maximum_depth:4096};
+    let frontier=|owner:&RetainedClonePreparation<u64,BirthMutation,BirthEdit>| {
+        owner.build_stage as usize + owner.assembly.as_ref().map_or(0, |assembly| {
+            1 + usize::from(assembly.publication_post.is_some()) + usize::from(assembly.publication_inverse.is_some())
+        })
+    };
     for stop in 0..=law["originalFrontiers"].as_array().unwrap().len(){
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0;32], 0, 1, semio_os_spr::HybridLogicalTimestamp::new(1,0), "actor α\0😀".into(), None, None, None));
         let((mutation,inverse),initial)=observe(||(BirthMutation{text:"forward α\0😀".repeat(8192)},vec![BirthMutation{text:"first inverse".repeat(8192)},BirthMutation{text:"second inverse".repeat(8192)}]));
         let forward_pointer=mutation.text.as_ptr();let inverse_pointer=inverse[0].text.as_ptr();
         let((source,_,_),source_birth)=observe(||semio_framework_value::testing::admit_owned_source(mutation,ArcLease::new(Arc::clone(&authority))));
-        let mut owner=RetainedClonePreparation::<u64,BirthMutation,BirthEdit>{pending_base:None,pending_base_close:None,pending_mutation_close:None,pending_mutation:None,pending_mutation_authority:None,pending_mutation_authority_close:None,edit:None,source:None,clone_cursor:None,clone_handoff:None,copied:Some(7),edit_cursor:None,foreign_step_presence:None,inverse:Some(inverse),assembly:OriginalPublicationAssembly::default(),build_stage:0,mutation:Some(source),authority:Some(Arc::clone(&authority)),mutation_retirement:None,snapshot_retirement:None,source_admission:None,source_projection:StagedProjection::default(),mutation_admission:None,mutation_projection:StagedProjection::default(),clone_reply:ReplyStash::default(),mutation_reply:ReplyStash::default(),copied_close:None,inverse_close:None,authority_close:None,factory_close:None,footprint:ArtifactStoreOneItemFootprint{retained_bytes:usize::MAX,work_items:2},retained_capacity_bytes:0,maximum_depth:4096,checkpoint:Default::default(),ownership:Default::default(),last_work:0,seal_base:Default::default(),phase:RetainedClonePreparationPhase::Build,cancelled:false,closing:false};
+        let mut owner=RetainedClonePreparation::<u64,BirthMutation,BirthEdit>{pending_base:None,pending_base_close:None,pending_mutation_close:None,pending_mutation:None,pending_mutation_authority:None,pending_mutation_authority_close:None,edit:None,source:None,clone_cursor:None,clone_handoff:None,copied:Some(7),edit_cursor:None,foreign_step_presence:None,inverse:Some(inverse),assembly:None,build_stage:0,mutation:Some(source),authority:Some(Arc::clone(&authority)),mutation_retirement:None,snapshot_retirement:None,source_admission:None,source_projection:StagedProjection::default(),mutation_admission:None,mutation_projection:StagedProjection::default(),clone_reply:ReplyStash::default(),mutation_reply:ReplyStash::default(),copied_close:None,inverse_close:None,authority_close:None,factory_close:None,footprint:ArtifactStoreOneItemFootprint{retained_bytes:usize::MAX,work_items:2},retained_capacity_bytes:0,maximum_depth:4096,checkpoint:Default::default(),ownership:Default::default(),last_work:0,seal_base:Default::default(),phase:RetainedClonePreparationPhase::Build,cancelled:false,closing:false};
         let mut births=source_birth.requested_bytes;let mut releases=source_birth.released_bytes;
-        for _ in 0..100000{if owner.build_stage as usize==stop{break;}let stage=owner.build_stage;let(result,heap)=observe(||{let denied=ArtifactStoreOneItemGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0,..grant};fx(denied.retained_grant(),|e|owner.build_sealer(denied,e)).unwrap()});assert!(!result);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.build_stage,stage);let(result,heap)=observe(||fx(grant.retained_grant(),|e|owner.build_sealer(grant,e)).unwrap());assert!(result);let receipt=owner.ownership;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;if let Some(source)=owner.mutation.as_ref(){if let Ok(original)=source.try_borrow(){assert_eq!(original.get().text.as_ptr(),forward_pointer);}}if let Some(original)=owner.pending_mutation.as_ref(){assert_eq!(original.text.as_ptr(),forward_pointer);}if let Some(inverse)=owner.assembly.publication_inverse.as_ref(){assert_eq!(inverse.remaining()[0].text.as_ptr(),inverse_pointer);}if let Some(post)=owner.assembly.publication_post.as_ref(){assert_eq!(**post,7);}}
-        assert_eq!(owner.build_stage as usize,stop);owner.begin_close();
+        for _ in 0..100000 {
+            let current = frontier(&owner);
+            if current == stop { break; }
+            let assembly_birth = (owner.build_stage == 4 && owner.assembly.is_none())
+                .then(frame_birth::<OriginalPublicationAssembly<u64, BirthMutation>>);
+            let turn = assembly_birth.map_or(grant, |birth| {
+                assert!(birth.fits(grant.retained_grant()));
+                ArtifactStoreOneItemGrant {
+                    maximum_copy_bytes: birth.copied_bytes,
+                    maximum_capacity_bytes: birth.retained_capacity_bytes,
+                    ..grant
+                }
+            });
+            let denied = if assembly_birth.is_some() {
+                ArtifactStoreOneItemGrant { maximum_capacity_bytes: turn.maximum_capacity_bytes - 1, ..turn }
+            } else {
+                ArtifactStoreOneItemGrant { maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0, ..turn }
+            };
+            let (advanced, heap) = observe(|| fx(denied.retained_grant(), |effect| owner.build_sealer(denied, effect)).unwrap());
+            assert!(!advanced);
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(frontier(&owner), current);
+            let (advanced, heap) = observe(|| fx(turn.retained_grant(), |effect| owner.build_sealer(turn, effect)).unwrap());
+            assert!(advanced);
+            let receipt = owner.ownership;
+            assert!(receipt.fits(turn.retained_grant()));
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
+            births += heap.requested_bytes;
+            releases += heap.released_bytes;
+            if let Some(source) = owner.mutation.as_ref() {
+                if let Ok(original) = source.try_borrow() { assert_eq!(original.get().text.as_ptr(), forward_pointer); }
+            }
+            if let Some(original) = owner.pending_mutation.as_ref() { assert_eq!(original.text.as_ptr(), forward_pointer); }
+            if let Some(assembly) = owner.assembly.as_ref() {
+                if let Some(inverse) = assembly.publication_inverse.as_ref() { assert_eq!(inverse.remaining()[0].text.as_ptr(), inverse_pointer); }
+                if let Some(post) = assembly.publication_post.as_ref() { assert_eq!(**post, 7); }
+            }
+        }
+        assert_eq!(frontier(&owner), stop);
+        owner.begin_close();
         for _ in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||settled(fx(grant.retained_grant(),|e|owner.close_step(e))).result.unwrap());let receipt=step.progress();assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;}
         assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(releases,initial.requested_bytes+births);
+    }
+}
+
+#[test]
+fn snapshot_clone_does_not_refuse_a_spent_turn_remainder() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️lifecycle/🔣️.json")).unwrap();
+    for row in fixture["cloneTurnAdmission"].as_array().unwrap() {
+        let number = |key: &str| row[key].as_u64().unwrap() as usize;
+        let remaining = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: number("remainingCopyBytes"), maximum_capacity_bytes: number("turnCapacityBytes"), maximum_depth: 64, ..Default::default() };
+        let ceiling = RetainedCloneGrant { maximum_copy_bytes: number("turnCopyBytes"), ..remaining };
+        let demand = RetirementDemand { copy_bytes: number("demandCopyBytes"), capacity_bytes: number("demandCapacityBytes"), depth: 2, ..Default::default() };
+        let result = snapshot_clone_turn_admitted(remaining, demand, ceiling, || Ok(demand));
+        let outcome = match result {
+            Ok(true) => "admitted",
+            Ok(false) => "blocked",
+            Err(error) => {
+                assert_eq!(error.kind, ValueRefusalKind::OwnershipLimit);
+                assert!(error.message.starts_with(fixture["largeCapacity"]["expectedCode"].as_str().unwrap()));
+                "refused"
+            }
+        };
+        assert_eq!(outcome, row["outcome"].as_str().unwrap(), "{}", row["id"]);
     }
 }
 

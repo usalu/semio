@@ -46,7 +46,7 @@ describe("controls placed directly in a shared-border row are cells of the row",
     expect(group.hasAttribute("data-shared-border-edges")).toBe(false);
   });
 
-  it("registers one overlay for the row and none for its Button, Input, Textarea or nested row cells", async () => {
+  it("registers one overlay for the row, one for the nested row that owns cells of its own, and none for its Button, Input or Textarea cells", async () => {
     mockRects();
     const { container } = render(
       <div className="semio-scope">
@@ -61,15 +61,16 @@ describe("controls placed directly in a shared-border row are cells of the row",
     );
     const row = container.querySelector<HTMLElement>('[data-slot="shared-border-row"]')!;
     await waitFor(() => expect(row.querySelectorAll(":scope > svg[data-shared-border-overlay] [data-shared-border-segment]").length).toBeGreaterThan(0));
-    expect(overlays(container)).toHaveLength(1);
+    expect(overlays(container)).toHaveLength(2);
     expect(row.querySelector(":scope > svg[data-shared-border-overlay]")).not.toBeNull();
     for (const cell of row.querySelectorAll<HTMLElement>(":scope > [data-shared-border-frame]")) {
       expect(cell.hasAttribute("data-shared-border-attached")).toBe(false);
-      expect(cell.querySelector(":scope > svg[data-shared-border-overlay]")).toBeNull();
+      expect(cell.querySelector(":scope > svg[data-shared-border-overlay]") === null).toBe(!cell.hasAttribute("data-shared-border-cells"));
     }
     expect(row.querySelectorAll(":scope > [data-shared-border-frame]").length).toBe(4);
     const paths = [...row.querySelectorAll(":scope > svg [data-shared-border-segment]")].map((path) => path.getAttribute("d"));
-    expect(paths.sort()).toEqual([`M ${WIDTH - 1} 1 L ${WIDTH - 1} ${HEIGHT - 1}`, `M 1 ${HEIGHT - 1} L ${WIDTH - 1} ${HEIGHT - 1}`, `M 1 1 L ${WIDTH - 1} 1`, `M 1 1 L 1 ${HEIGHT - 1}`].sort());
+    for (const edge of [`M 1 1 L 1 ${HEIGHT - 1}`, `M ${WIDTH - 1} 1 L ${WIDTH - 1} ${HEIGHT - 1}`]) expect(paths).toContain(edge);
+    expect(paths.every(d => /^M [\d.]+ [\d.]+ L [\d.]+ [\d.]+$/.test(d ?? ""))).toBe(true);
   });
 
   it("registers a framed control again as soon as it is no longer a direct child of the owner", async () => {
@@ -87,12 +88,10 @@ describe("controls placed directly in a shared-border row are cells of the row",
     const own = css.match(/\[data-shared-border-cells\] > \[data-shared-border-frame\] \{([^}]*)\}/)![1]!;
     for (const declaration of ["border-width: 0;", "border-radius: 0;", "align-self: stretch;", "height: auto;", "max-height: none;"]) expect(own).toContain(declaration);
     expect(css).toMatch(/\[data-shared-border-cells\] > \[data-shared-border-frame\] > :is\(\[data-slot="input"\], \[data-slot="textarea"\]\) \{\s*border-width: 0;/);
-    const unit = ":is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])";
-    expect(css).toContain(`${unit}:not(:has(~ ${unit})) {\n  border-inline-end-width: 0;`);
+    expect(css).not.toContain("border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);\n}\n:is(.shared-border-cell");
     const priority = css.slice(css.indexOf("@layer shared-border-priority {"), css.indexOf("@layer shared-border-ownership {"));
-    expect(priority).toContain(`${unit}:where(:focus-within, :has(+ ${unit}:focus-within))`);
-    expect(priority).toContain(`${unit}:hover:not(`);
-    expect(priority).not.toMatch(/:is\(\.shared-border-cell, \[data-shared-border-cell\]\)/);
+    expect(priority).not.toContain(":has(+");
+    expect(priority).not.toContain("border-color: var(--active-base) !important");
   });
 });
 
@@ -139,17 +138,14 @@ describe("row primitives for lists, labels, native fields and tones", () => {
     const css = stylesheet();
     expect(css).toMatch(/\[data-shared-border-cell\]:where\(select, textarea, input:not\([^)]*\), \[contenteditable\]:not\(\[contenteditable="false"\]\)\) \{\s*border-width: 0;\s*border-radius: 0;/);
     expect(css).toMatch(/\[data-shared-border-field\] > :where\(select, textarea[^{]*\) \{\s*border-width: 0;\s*border-radius: 0;/);
-    expect(css.indexOf('[data-shared-border-cell]:where(select')).toBeLessThan(css.indexOf("Shared cells use one real divider"));
+    expect(css.indexOf('[data-shared-border-cell]:where(select')).toBeLessThan(css.indexOf("Cells have no native border"));
   });
 
-  it("marks destructive rows and cells and gives them the lowest seam priority", () => {
+  it("marks destructive rows and cells and paints a destructive row's normal strokes destructive", () => {
     const { container } = render(<div className="semio-scope"><SharedBorderRow tone="destructive"><SharedBorderRowCell tone="destructive">x</SharedBorderRowCell></SharedBorderRow></div>);
     expect(container.querySelector('[data-slot="shared-border-row"]')!.getAttribute("data-tone")).toBe("destructive");
     expect(container.querySelector('[data-slot="shared-border-row-cell"]')!.getAttribute("data-tone")).toBe("destructive");
     const css = stylesheet();
-    const priority = css.slice(css.indexOf("@layer shared-border-priority {"), css.indexOf("@layer shared-border-ownership {"));
-    expect(priority.indexOf('[data-tone="destructive"]')).toBeGreaterThan(-1);
-    expect(priority.indexOf('[data-tone="destructive"]')).toBeLessThan(priority.indexOf(":focus-within"));
     expect(css).toContain('[data-shared-border-state="normal"] { stroke: var(--destructive-border); }');
   });
 

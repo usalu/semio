@@ -11,6 +11,7 @@ fn label(value: &str) -> crate::Label {
 //#region 🔖️WireCost
 #[test]
 fn button_serializes_to_minimal_json() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = button(label("Save")).try_build().unwrap_or_else(|_| panic!("button build"));
     let json = serde_json::to_value(&node).expect("serialize");
     assert!(json.get("layout").is_none());
@@ -27,6 +28,7 @@ fn button_serializes_to_minimal_json() {
 //#region 🔖️NestedShape
 #[test]
 fn nested_column_builds_expected_shape() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = column().try_children([text(label("A")), text(label("B"))]).unwrap_or_else(|_| panic!("bounded children")).try_build().unwrap_or_else(|_| panic!("column build"));
     assert!(matches!(node.component, crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Plain, .. })));
     assert!(matches!(node.layout, crate::LayoutSpec::Stack(crate::StackLayout { axis: crate::Axis::Vertical, .. })));
@@ -43,6 +45,7 @@ fn nested_column_builds_expected_shape() {
 
 #[test]
 fn built_children_expose_bounded_shared_and_mutable_lookup() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut node = column().try_children([text(label("A")), text(label("B"))]).unwrap_or_else(|_| panic!("bounded children")).try_build().unwrap_or_else(|_| panic!("column build"));
 
     assert!(matches!(node.children.get(0).map(|child| &child.component), Some(crate::Component::Text(_))));
@@ -53,6 +56,7 @@ fn built_children_expose_bounded_shared_and_mutable_lookup() {
 
 #[test]
 fn mixed_child_types_nest_through_child() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = row().try_child(text(label("A"))).unwrap_or_else(|_| panic!("first child")).try_child(button(label("Go"))).unwrap_or_else(|_| panic!("second child")).try_build().unwrap_or_else(|_| panic!("row build"));
     assert_eq!(node.children.len(), 2);
     assert!(matches!(node.children[0].component, crate::Component::Text(_)));
@@ -63,6 +67,7 @@ fn mixed_child_types_nest_through_child() {
 //#region 🔖️Bindings
 #[test]
 fn on_lands_in_bindings() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let action = crate::ActionId::try_v1("app", "save").expect("bounded action id");
     let node = button(label("Save")).try_on(crate::Trigger::Activate, action.clone()).unwrap_or_else(|_| panic!("bounded binding")).try_build().unwrap_or_else(|_| panic!("button build"));
     assert_eq!(node.bindings.len(), 1);
@@ -74,6 +79,7 @@ fn on_lands_in_bindings() {
 
 #[test]
 fn on_with_carries_args() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let action = crate::ActionId::try_v1("app", "setValue").expect("bounded action id");
     let value = crate::UiText::try_from_str("hi").expect("bounded fixture text");
     let node = input(crate::InputKind::Text).try_on_with(crate::Trigger::Change, action, crate::UiValue::Text(value.clone())).unwrap_or_else(|_| panic!("bounded binding")).try_build().unwrap_or_else(|_| panic!("input build"));
@@ -82,6 +88,7 @@ fn on_with_carries_args() {
 
 #[test]
 fn input_builder_carries_opaque_draft_target() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = input(crate::InputKind::Text)
         .draft_target(ui_text("fixture.controller/row/name/set-cell"))
         .try_build()
@@ -93,6 +100,7 @@ fn input_builder_carries_opaque_draft_target() {
 
 #[test]
 fn input_builder_carries_native_publication_revision() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = input(crate::InputKind::Text).value(ui_text("B")).publication_revision(crate::UiPublicationRevision(u64::MAX)).try_build().expect("publication revision input");
     let crate::Component::Input(props) = &node.component else { panic!("input") };
     assert_eq!(props.publication_revision, Some(crate::UiPublicationRevision(u64::MAX)));
@@ -103,12 +111,14 @@ fn input_builder_carries_native_publication_revision() {
 //#region 🔖️Accessibility
 #[test]
 fn button_auto_derives_accessibility_label_from_visible_label() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = button(label("Save")).try_build().unwrap_or_else(|_| panic!("button build"));
     assert_eq!(node.accessibility.label, Some(label("Save")));
 }
 
 #[test]
 fn explicit_label_overrides_auto_derived_accessibility_label() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = button(label("Save")).try_label("Save the document").unwrap_or_else(|_| panic!("bounded label")).try_build().unwrap_or_else(|_| panic!("button build"));
     assert_eq!(node.accessibility.label, Some(label("Save the document")));
 }
@@ -119,11 +129,13 @@ fn explicit_label_overrides_auto_derived_accessibility_label() {
 /// next reader finds the negative case instead of assuming it was dropped.
 #[test]
 fn image_builder_no_alt_state_has_no_build_method_verified_by_the_type_doc_compile_fail_test() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _: ImageBuilder<NoAlt> = image(ui_text("atlas://logo"));
 }
 
 #[test]
 fn image_decorative_hides_from_accessibility_tree_and_omits_alt() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = image(ui_text("atlas://deco")).decorative().try_build().unwrap_or_else(|_| panic!("decorative image build"));
     assert!(node.accessibility.hidden);
     match node.component {
@@ -134,6 +146,7 @@ fn image_decorative_hides_from_accessibility_tree_and_omits_alt() {
 
 #[test]
 fn image_alt_populates_component_and_accessibility() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = image(ui_text("atlas://logo")).alt(label("Company logo")).try_build().unwrap_or_else(|_| panic!("image build"));
     assert_eq!(node.accessibility.label, Some(label("Company logo")));
     match node.component {
@@ -146,6 +159,7 @@ fn image_alt_populates_component_and_accessibility() {
 //#region 🔖️Keys
 #[test]
 fn positional_keys_are_stable_and_distinct_among_siblings() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let build = || column().try_children([text(label("A")), text(label("B")), text(label("C"))]).unwrap_or_else(|_| panic!("bounded children")).try_build().unwrap_or_else(|_| panic!("column build"));
     let first = build();
     let second = build();
@@ -159,6 +173,7 @@ fn positional_keys_are_stable_and_distinct_among_siblings() {
 
 #[test]
 fn explicit_id_overrides_positional_key() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let first = text(label("A")).try_id("first").unwrap_or_else(|_| panic!("bounded id"));
     let node = column().try_child(first).unwrap_or_else(|_| panic!("first child")).try_child(text(label("B"))).unwrap_or_else(|_| panic!("second child")).try_build().unwrap_or_else(|_| panic!("column build"));
     assert_eq!(node.children[0].key.as_str(), "first");
@@ -173,6 +188,7 @@ fn action(name: &str) -> crate::ActionId {
 
 #[test]
 fn slider_snaps_accept_the_detent_law_and_refuse_breaking_it() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let slider = slider(5.0).min(0.0).max(10.0).step(0.5);
     let slider = slider.try_snap(2.5).unwrap_or_else(|_| panic!("first snap")).try_snap(5.0).unwrap_or_else(|_| panic!("second snap"));
     let slider = refused(slider.try_snap(5.0), "a repeated snap is refused");
@@ -200,6 +216,7 @@ fn slider_without_snaps_wire() -> serde_json::Value {
 
 #[test]
 fn number_stepper_builder_carries_bounds_precision_and_mixed_state() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = number_stepper(2.5).step(0.25).min(0.0).max(10.0).precision(2).mixed().try_build().unwrap_or_else(|_| panic!("stepper build"));
     assert_eq!(node.component, crate::Component::NumberStepper(crate::NumberStepperProps { value: 2.5, step: 0.25, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(2), snaps: Default::default(), unit: None, display_unit: None, display_factor: None, limits: None }));
     let capped = number_stepper(1.0).precision(40).try_build().unwrap_or_else(|_| panic!("stepper build"));
@@ -209,6 +226,7 @@ fn number_stepper_builder_carries_bounds_precision_and_mixed_state() {
 
 #[test]
 fn select_builder_is_a_menu_unless_it_is_declared_segmented() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let menu = select(ui_text("a")).try_item(ui_text("a"), label("A")).unwrap_or_else(|_| panic!("bounded option")).try_build().unwrap_or_else(|_| panic!("select build"));
     let crate::Component::Select(props) = &menu.component else { panic!("a select") };
     assert_eq!(props.appearance, crate::SelectAppearance::Menu);
@@ -218,6 +236,7 @@ fn select_builder_is_a_menu_unless_it_is_declared_segmented() {
 
 #[test]
 fn icon_select_builder_carries_its_icon_its_classifier_and_a_mixed_state() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = icon_select(ui_text("circle"), ui_text("icon")).try_build().unwrap_or_else(|_| panic!("icon select build"));
     assert_eq!(node.component, crate::Component::IconSelect(crate::IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("icon") }));
     let mixed = icon_select(ui_text(""), ui_text("icon")).mixed().try_build().unwrap_or_else(|_| panic!("icon select build"));
@@ -227,6 +246,7 @@ fn icon_select_builder_carries_its_icon_its_classifier_and_a_mixed_state() {
 
 #[test]
 fn number_input_prints_its_value_at_its_precision() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let node = input(crate::InputKind::Number).precision(2).number(2.5).try_build().unwrap_or_else(|_| panic!("input build"));
     let crate::Component::Input(props) = &node.component else { panic!("an input") };
     assert_eq!(props.value.as_str(), "2.50");
@@ -235,6 +255,7 @@ fn number_input_prints_its_value_at_its_precision() {
 
 #[test]
 fn vector_input_is_a_labelled_group_of_keyed_number_fields_sharing_unit_step_and_precision() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let bind = |name: &'static str| move |field: InputBuilder| field.try_on(crate::Trigger::Commit, action(name)).map_err(|(field, _)| field);
     let node = vector_input(label("Offset"))
         .unit(ui_text("mm"))
@@ -276,6 +297,7 @@ fn vector_input_is_a_labelled_group_of_keyed_number_fields_sharing_unit_step_and
 
 #[test]
 fn reference_list_shows_chips_that_remove_a_use_selection_button_and_an_optional_candidate_list() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let labels = || ReferenceListLabels { use_selection: label("Use selection"), empty: label("Nothing selected") };
     let empty = reference_list(label("Targets"), labels()).try_use_selection(action("useSelection"), None, false).unwrap_or_else(|_| panic!("use selection")).try_build().unwrap_or_else(|_| panic!("empty build"));
     let keys: Vec<&str> = empty.children.iter().map(|child| child.key.as_str()).collect();
@@ -329,6 +351,7 @@ fn flat_shape(node: &BuiltNode) -> Vec<serde_json::Value> {
 
 #[test]
 fn the_recipes_build_exactly_the_conformance_corpus_shapes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let vector = vector_input(label("Offset"))
         .unit(ui_text("mm"))
         .step(0.5)

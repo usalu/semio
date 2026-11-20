@@ -1,0 +1,44 @@
+[
+  {
+    "name": "second enrolled origin",
+    "head": "exact",
+    "result": "restored",
+    "signer": "receiver",
+    "expected": true
+  },
+  {
+    "name": "producer does not consume its own head",
+    "head": "self",
+    "result": "restored",
+    "signer": "receiver",
+    "expected": false
+  },
+  {
+    "name": "producer head drift",
+    "head": "drift",
+    "result": "restored",
+    "signer": "receiver",
+    "expected": false
+  },
+  {
+    "name": "partial scope",
+    "head": "partial",
+    "result": "restored",
+    "signer": "receiver",
+    "expected": false
+  },
+  {
+    "name": "no-op is not a consumption",
+    "head": "exact",
+    "result": "local",
+    "signer": "receiver",
+    "expected": false
+  },
+  {
+    "name": "another enrolled signer cannot write destination evidence",
+    "head": "exact",
+    "result": "restored",
+    "signer": "producer",
+    "expected": false
+  }
+]

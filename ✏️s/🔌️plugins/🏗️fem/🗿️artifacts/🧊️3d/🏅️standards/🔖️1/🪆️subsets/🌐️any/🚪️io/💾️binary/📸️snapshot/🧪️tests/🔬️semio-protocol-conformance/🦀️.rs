@@ -14,4 +14,5 @@ fn verify_protocol_bytes_against_encoded_pack() {
     let bytes = encode(&document);
     let g = semio_framework_dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
     ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");
+    std::mem::forget(document);
 }

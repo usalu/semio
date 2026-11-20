@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "diagnostic": "error[E0432]: unresolved import fixture::dependency",
+  "span": "  --> src/lib.rs:32:5",
+  "warningLine": "warning: synthetic noisy compiler output",
+  "warningLines": 2400,
+  "exitStatus": 101,
+  "budgetMilliseconds": 15000,
+  "abortAfterMilliseconds": 1500
+}

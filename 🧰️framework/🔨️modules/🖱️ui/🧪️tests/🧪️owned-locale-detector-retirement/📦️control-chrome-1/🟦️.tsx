@@ -140,7 +140,7 @@ describe("control chrome", () => {
         const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
         expect(markup).toContain('data-state="on"');
         expect(markup).toContain("data-[state=on]:bg-active-base");
-        expect(markup).toContain("data-[state=on]:border-active-base");
+        expect(markup).not.toContain("data-[state=on]:border-active-base");
         expect(markup).toContain("data-[state=on]:text-active-foreground");
         expect(markup).not.toContain("data-[state=on]:bg-hover-interactive-fill");
       });
@@ -372,7 +372,7 @@ describe("control chrome", () => {
         expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
         expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
         expect(css).toContain("background-color: var(--border-emphasized-color)");
-        expect(css).toMatch(/\[data-window-silhouette\]:hover > \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
+        expect(css).not.toMatch(/\[data-window-silhouette\]:hover > \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
         expect(css).not.toMatch(/\[data-window-silhouette\]:hover \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
         expect(css).not.toContain('data-slot="chrome-frame"');
         expect(css).toContain("@utility bg-hover-interactive-fill");

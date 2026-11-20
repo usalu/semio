@@ -1,1 +1,87 @@
-{"same":true,"foreignPending":false,"foreignIdle":false,"rebound":true}
+{
+  "ops": {
+    "claim": "[claim, key, pending, holdsAfter]: one paid claim turn of the lane; true only once the lane holds the lease",
+    "poor": "[poor, key, pending, holdsAfter]: a claim turn whose grant cannot afford the claim; nothing changes",
+    "holds": "[holds, key, expected]",
+    "queued": "[queued, key, expected]",
+    "leave": "[leave, key, changed]: the lane releases or drops its queue slot",
+    "idle": "[idle, expected]: no holder and no waiter"
+  },
+  "scripts": {
+    "heldUntilReleased": [
+      ["idle", true],
+      ["claim", "a", false, false],
+      ["holds", "a", true],
+      ["claim", "a", true, true],
+      ["claim", "b", true, false],
+      ["claim", "b", false, false],
+      ["holds", "a", true],
+      ["holds", "b", false],
+      ["queued", "b", true],
+      ["idle", false],
+      ["leave", "a", true],
+      ["holds", "a", false],
+      ["idle", false],
+      ["claim", "b", false, false],
+      ["holds", "b", true],
+      ["claim", "b", false, true],
+      ["leave", "b", true],
+      ["leave", "b", false],
+      ["idle", true]
+    ],
+    "foreignIdleNeverOverwrites": [
+      ["claim", "a", false, false],
+      ["claim", "b", false, false],
+      ["claim", "b", false, false],
+      ["claim", "b", false, false],
+      ["holds", "a", true],
+      ["claim", "a", false, true]
+    ],
+    "queueIsFifoAndGrantsOnlyTheHead": [
+      ["claim", "a", false, false],
+      ["claim", "b", false, false],
+      ["claim", "c", false, false],
+      ["leave", "a", true],
+      ["claim", "c", false, false],
+      ["holds", "c", false],
+      ["claim", "b", false, false],
+      ["holds", "b", true],
+      ["claim", "c", false, false],
+      ["holds", "c", false],
+      ["leave", "b", true],
+      ["claim", "c", false, false],
+      ["claim", "c", false, true]
+    ],
+    "pendingSharedSourceBlocksTheGrant": [
+      ["claim", "a", true, false],
+      ["holds", "a", false],
+      ["queued", "a", true],
+      ["claim", "a", true, false],
+      ["claim", "a", false, false],
+      ["holds", "a", true]
+    ],
+    "unaffordableClaimChangesNothing": [
+      ["poor", "a", false, false],
+      ["idle", true],
+      ["claim", "a", false, false],
+      ["poor", "b", false, false],
+      ["queued", "b", false],
+      ["claim", "b", false, false],
+      ["queued", "b", true],
+      ["leave", "b", true],
+      ["leave", "a", true],
+      ["idle", true]
+    ],
+    "droppedWaiterLeavesNoSlot": [
+      ["claim", "a", false, false],
+      ["claim", "b", false, false],
+      ["leave", "b", true],
+      ["queued", "b", false],
+      ["leave", "b", false],
+      ["holds", "a", true],
+      ["leave", "a", true],
+      ["idle", true]
+    ]
+  },
+  "fairness": {"rounds": 8, "eachCompletesWithin": 4, "order": ["a", "b"]}
+}

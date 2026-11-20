@@ -60,12 +60,47 @@ impl NativeFrameCaller{
  /// 🪴️ Binding, cancellation, ledger and source births yield separately under actual issued root receipts.
  pub fn admit_step(&mut self)->Result<OriginalActorCall<OriginalActorAdmission,OriginalTurnFailure>,ValueError>{let(mut input,budget)=self.issue(false)?;input.grant=self.remaining();if !self.permits(budget)?{return Ok(OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Ok(OriginalActorAdmission{ready:false,progress:Default::default()})})}let call=self.entry.admit_step(input,StepBudget{retained:self.remaining_business(),..budget},self.clock);self.receive_raw(call.receipt_spent,call.work_units_spent)?;if let Ok(admission)=&call.result{self.ready=admission.ready}Ok(call)}
  /// ▶️ The body borrows the exact source, cumulative recipient under its immutable stock ceiling; the actual context exposes only remaining currencies.
- pub fn dispatch_step<T:Copy>(&mut self,produce:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<OriginalActorCall<T,OriginalActorEntryFailure>,ValueError>{let(input,budget)=self.issue(false)?;if !self.permits(budget)?{return Ok(Self::denied(input))}let before=self.recipient;let fuel=self.fuel.saturating_sub(self.policy.retirement_reserve.fuel);let business=self.remaining_business();let mut call=self.entry.dispatch_value_step(input,budget,&mut self.recipient,self.clock,|cx|{cx.bind_original_retained_total(business)?;cx.with_original_work_loan(fuel,self.deadline,|cx|cx.with_retained_loan(business,produce))});call.receipt_spent=Self::delta(before,self.recipient);self.fuel=self.fuel.saturating_sub(call.work_units_spent);Ok(call)}
+ pub fn dispatch_step<T:Copy>(&mut self,produce:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<OriginalActorCall<T,OriginalActorEntryFailure>,ValueError>{
+  let(input,budget)=self.issue(false)?;
+  if !self.permits(budget)?{return Ok(Self::denied(input))}
+  let before=self.recipient;
+  let fuel=self.fuel.saturating_sub(self.policy.retirement_reserve.fuel);
+  let business=self.remaining_business();
+  let mut call=self.entry.dispatch_value_step(input,budget,&mut self.recipient,self.clock,|cx|{
+   cx.with_original_work_loan(fuel,self.deadline,|cx|cx.with_retained_loan(business,|cx|{
+    cx.bind_original_retained_total(cx.retained_grant())?;
+    produce(cx)
+   }))
+  });
+  call.receipt_spent=Self::delta(before,self.recipient);
+  self.fuel=self.fuel.saturating_sub(call.work_units_spent);
+  Ok(call)
+ }
  /// ♻️ Original cleanup remains available after semantic failure and original cancellation.
  pub fn dispatch_cleanup_step<T>(&mut self,produce:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<OriginalActorCall<T,OriginalActorEntryFailure>,ValueError>{let(input,budget)=self.issue(true)?;if !self.permits_retirement(budget){return Ok(Self::denied(input))}let before=self.recipient;let mut call=self.entry.dispatch_cleanup_step(input,budget,&mut self.recipient,self.clock,produce);call.receipt_spent=Self::delta(before,self.recipient);self.fuel=self.fuel.saturating_sub(call.work_units_spent);Ok(call)}
  fn denied<T>(input:RetainedTurnInput)->OriginalActorCall<T,OriginalActorEntryFailure>{OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(OriginalActorEntryFailure::Authority(ValueError::literal(ValueRefusalKind::WorkLimit,"original native root callback has no supplied work or depth")))}}
  pub fn original_failure(&self)->Option<&OriginalTurnFailure>{self.entry.original_job_refusal()}
  pub fn original_cleanup_failure(&self)->Option<&OriginalTurnFailure>{self.entry.original_cleanup_refusal()}
+ /// 🧯️ The native issuer funds admission-refusal cleanup before the admitted Source exists.
+ pub fn retire_admission_failure_step(&mut self,failure:&mut Option<OriginalTurnFailure>,retirement:&mut semio_framework_value::retained_clone::RetainedCloneClose)->Result<(),OriginalTurnFailure>{
+  use semio_framework_value::RetainedWorkPoll;
+  let grant=self.remaining();
+  let body=grant.maximum_copy_bytes;
+  let required=retirement.next_owner_work::<OriginalTurnFailure>(failure.is_some(),&None,body)?;
+  if self.fuel<required||grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+  let mut turn=semio_framework_job::OriginalRetirementPump::new().turn(self.fuel,self.deadline,self.clock,grant)?;
+  let Some((settled,work))=turn.with_effect(|effect|{
+   if retirement.is_empty(){return retirement.begin_granted(failure,effect).result.map(|step|step.map(|step|step.progress()).unwrap_or_default()).map_err(OriginalTurnFailure::from)}
+   match retirement.step_granted(body,effect){
+    RetainedWorkPoll::Pending{..}=>Ok(Default::default()),
+    RetainedWorkPoll::Complete(outcome)=>outcome.result.map(|step|step.progress()).map_err(OriginalTurnFailure::from),
+   }
+  })?else{return Ok(())};
+  let progress=match &settled{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
+  let work=u64::try_from(work).map_err(|_|ValueError::invariant("native admission failure retirement exceeded u64 work"))?;
+  self.receive_raw(progress,work)?;
+  settled.map(|_|())
+ }
  /// 🧾️ The same original entry closes each retained owner before terminal native root removal.
  pub fn close_step(&mut self)->Result<OriginalActorCall<RetainedCloneStep,OriginalActorContextError>,ValueError>{let(mut input,budget)=self.issue(true)?;input.grant=self.remaining();if !self.permits_retirement(budget)&&!self.entry.terminal_is_empty(){return Ok(OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Ok(RetainedCloneStep::Progress(Default::default()))})}let call=self.entry.close_step(input,budget);self.receive_raw(call.receipt_spent,call.work_units_spent)?;if matches!(&call.result,Ok(RetainedCloneStep::Complete(_)))&&self.entry.terminal_is_empty(){self.ready=false;self.closed=true}Ok(call)}
  pub fn terminal_is_empty(&self)->bool{self.entry.terminal_is_empty()}

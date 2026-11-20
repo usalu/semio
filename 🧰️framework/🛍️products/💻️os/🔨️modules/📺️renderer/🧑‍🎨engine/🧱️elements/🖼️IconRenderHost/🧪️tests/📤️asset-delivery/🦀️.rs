@@ -12,22 +12,25 @@ pub fn retire(token: WorldAssetRequestToken) {
 #[test]
 fn icon_export_asset_fault_is_delivered_once_to_its_exact_request() {
     let mut first = IconExportAssetRequest::new("/mesh/export-first.glb").unwrap();
-    let mut sibling = IconExportAssetRequest::new("/mesh/export-sibling.glb").unwrap();
+    let mut sibling = IconExportAssetRequest::new("/mesh/export-first.glb").unwrap();
     let first_token = first.token.unwrap();
     let sibling_token = sibling.token.unwrap();
-    reject(first_token, "first transport failed");
-    assert_eq!(first.take_ready().unwrap().unwrap_err(), "first transport failed");
+    assert_ne!(first_token, sibling_token);
+    reject(first_token, IconExportAssetFault::Transport { retryable: true });
+    assert!(first.take_ready().unwrap().unwrap_err().is_retryable());
     assert!(first.take_ready().is_none());
     assert!(sibling.take_ready().is_none());
     retire(first_token);
     let mut replacement = IconExportAssetRequest::new("/mesh/export-replacement.glb").unwrap();
     let replacement_token = replacement.token.unwrap();
     assert_ne!(first_token, replacement_token);
-    reject(first_token, "stale failure");
+    reject(first_token, IconExportAssetFault::Transport { retryable: true });
     assert!(replacement.take_ready().is_none());
     assert!(sibling.take_ready().is_none());
-    reject(sibling_token, "sibling transport failed");
-    assert_eq!(sibling.take_ready().unwrap().unwrap_err(), "sibling transport failed");
+    reject(sibling_token, IconExportAssetFault::Rejected("invalid GLB".into()));
+    let fault = sibling.take_ready().unwrap().unwrap_err();
+    assert!(!fault.is_retryable());
+    assert_eq!(fault.to_string(), "invalid GLB");
     while !replacement.close_step() {}
     retire(sibling_token);
     retire(replacement_token);

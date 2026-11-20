@@ -21,11 +21,17 @@ function parseSealed<T extends {sha256:string}>(bytes:Uint8Array,maximum:number,
  return Object.freeze(value);
 }
 const encodeRows=(rows:readonly (readonly unknown[])[]):Buffer=>Buffer.from(rows.map(row=>JSON.stringify(row)).join("\n")+(rows.length?"\n":""));
-function decodeRows(bytes:Uint8Array,expected:Readonly<{sha256:string;bytes:number;rows:number}>,label:string):(readonly unknown[])[]{
+function forEachEvidenceRow(bytes:Uint8Array,expected:Readonly<{sha256:string;bytes:number;rows:number}>,label:string,project:(row:readonly unknown[])=>void):void{
  if(bytes.length!==expected.bytes||generationSha256V1(bytes)!==expected.sha256)throw Error("Sealed "+label+" evidence required");
- const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),rows=text.length?text.slice(0,-1).split("\n").map(line=>JSON.parse(line)as unknown[]):[];
- if(rows.length!==expected.rows||rows.some(row=>!Array.isArray(row)))throw Error("Complete "+label+" evidence rows required");
- return rows;
+ const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes),end=text.length-1;
+ let seen=0;
+ for(let from=0;from<=end;){
+  const next=text.indexOf("\n",from),to=next===-1?end:next,row:unknown=JSON.parse(text.slice(from,to));
+  if(++seen>expected.rows||!Array.isArray(row))throw Error("Complete "+label+" evidence rows required");
+  project(row);
+  from=to+1;
+ }
+ if(seen!==expected.rows)throw Error("Complete "+label+" evidence rows required");
 }
 
 /** 🪪️ Is the seven field physical stamp of one directory as decimal strings in schema order. */
@@ -68,14 +74,14 @@ export function encodeInstalledLedgerV1(rows:readonly InstalledRowV1[]):Readonly
 }
 /** 📤️ Decodes ledger evidence and refuses anything but a complete, byte ordered directory tree rooted at ".". */
 export function decodeInstalledLedgerV1(bytes:Uint8Array,expected:InstalledReceiptV1["evidence"]):readonly InstalledRowV1[]{
- const raw=decodeRows(bytes,expected,"installed ledger"),rows:InstalledRowV1[]=[],seen=new Set<string>();let previous:string|undefined;
- for(const row of raw){
+ const rows:InstalledRowV1[]=[],seen=new Set<string>();let previous:Buffer|undefined;
+ forEachEvidenceRow(bytes,expected,"installed ledger",row=>{
   if(row.length!==14||row[0]!=="g"||typeof row[1]!=="string"||row.slice(2,9).some(value=>!decimal(value))||row[9]!==0&&row[9]!==1||typeof row[10]!=="string"||row.slice(11).some(value=>!Number.isSafeInteger(value)||(value as number)<0))throw Error("Closed installed ledger row required");
-  const path=row[1];if(previous!==undefined&&compareBytes(previous,path)>=0)throw Error("Ordered installed ledger required");previous=path;seen.add(path);
+  const path=row[1],bytes=Buffer.from(path);if(previous!==undefined&&Buffer.compare(previous,bytes)>=0)throw Error("Ordered installed ledger required");previous=bytes;seen.add(path);
   rows.push(Object.freeze({path,stamp:row.slice(2,9)as unknown as InstalledStampV1,settled:row[9]===1,children:row[10],directories:row[11]as number,files:row[12]as number,links:row[13]as number}));
- }
+ });
  if(rows[0]?.path!==".")throw Error("Installed ledger root required");
- for(const row of rows.slice(1)){const cut=row.path.lastIndexOf("/"),parent=cut<0?".":row.path.slice(0,cut);if(!seen.has(parent))throw Error("Connected installed ledger required");}
+ for(let i=1;i<rows.length;i++){const path=rows[i]!.path,cut=path.lastIndexOf("/"),parent=cut<0?".":path.slice(0,cut);if(!seen.has(parent))throw Error("Connected installed ledger required");}
  installedCountsV1(rows);return Object.freeze(rows);
 }
 /** 🔐️ Seals an installed-paths receipt over its generation, device, scan shape and evidence reference. */
@@ -163,11 +169,11 @@ export function encodeOwnershipIndexV1(root:string,records:readonly OwnershipRec
 }
 /** 📥️ Decodes ownership index evidence into absolute records under the given workspace, refusing malformed rows. */
 export function decodeOwnershipIndexV1(root:string,bytes:Uint8Array,expected:Readonly<{sha256:string;bytes:number;rows:number}>):readonly OwnershipRecordV1[]{
- const out:OwnershipRecordV1[]=[];
- for(const row of decodeRows(bytes,expected,"ownership index")){
+ const out:OwnershipRecordV1[]=[],prefix=root.replace(/\/$/u,"")+"/";
+ forEachEvidenceRow(bytes,expected,"ownership index",row=>{
   if(row.length!==9||row[0]!=="d"||typeof row[1]!=="string"||row.slice(2,7).some(value=>!decimal(value))||!Number.isSafeInteger(row[7])||!Array.isArray(row[8])||row[8].length>protocol.ownership.maximumEntries||row[8].some(entry=>!Array.isArray(entry)||entry.length!==2||typeof entry[0]!=="string"||typeof entry[1]!=="string"))throw Error("Closed ownership index row required");
-  out.push(Object.freeze({path:row[1]==="."?root:root.replace(/\/$/u,"")+"/"+row[1],stamp:(row.slice(2,7)as string[]).join(":"),count:row[7]as number,entries:Object.freeze((row[8]as [string,string][]).map(entry=>Object.freeze({name:entry[0],kind:entry[1]})))}));
- }
+  out.push(Object.freeze({path:row[1]==="."?root:prefix+row[1],stamp:(row.slice(2,7)as string[]).join(":"),count:row[7]as number,entries:Object.freeze((row[8]as [string,string][]).map(entry=>Object.freeze({name:entry[0],kind:entry[1]})))}));
+ });
  return Object.freeze(out);
 }
 /** 🏷️ Seals an ownership index receipt over its evidence reference. */

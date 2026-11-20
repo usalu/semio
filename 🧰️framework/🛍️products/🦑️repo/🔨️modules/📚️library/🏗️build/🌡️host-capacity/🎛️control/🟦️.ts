@@ -10,8 +10,8 @@ export const refuseCapacityV1=(...input:Parameters<typeof import("../📖️text
 export const BUILD_HOST_CAPACITY_POLICY_V1:HostCapacityPolicyV1=readHostCapacityPolicyV1((buildPolicy as unknown as {hostCapacity:unknown}).hostCapacity);
 
 /** 🛑️ A control for the wait before any invocation exists: it is cancelled by an interrupt or termination signal and has no deadline of its own, so the invocation's budget starts when the grant does. */
-export function createCapacityControlV1(process_:Pick<NodeJS.Process,"once"|"removeListener">=process):Readonly<{control:ResourceLeaseControl;dispose:()=>void}>{
- const controller=new AbortController(),handlers=(["SIGINT","SIGTERM"] as const).map(name=>[name,()=>controller.abort(refuseCapacityV1("cancelled","wait-cancelled",{signal:name}))] as const);
+export function createCapacityControlV1(process_:Pick<NodeJS.Process,"once"|"removeListener">=process,reason:"wait-cancelled"|"graph-yield-wait-cancelled"="wait-cancelled"):Readonly<{control:ResourceLeaseControl;dispose:()=>void}>{
+ const controller=new AbortController(),handlers=(["SIGINT","SIGTERM"] as const).map(name=>[name,()=>controller.abort(refuseCapacityV1("cancelled",reason,{signal:name}))] as const);
  for(const [name,handler] of handlers)process_.once(name,handler);
  return Object.freeze({control:Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))}),dispose:()=>{for(const [name,handler] of handlers)process_.removeListener(name,handler);}});
 }

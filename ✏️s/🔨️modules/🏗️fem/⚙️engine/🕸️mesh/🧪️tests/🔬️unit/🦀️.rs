@@ -1,6 +1,58 @@
 use super::*;
+use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_job_payload::RetainedPayloadBuilder;
-use semio_s_fem_test_support::close_turn;
+
+#[test]
+fn mounted_house_raft_mesh_reaches_completion_across_owner_pages() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕸️mounted-footprint.json")).unwrap();
+    let outer: Vec<[f64; 2]> = serde_json::from_value(law["outer"].clone()).unwrap();
+    let mut domain = MountedPlanarDomain::new();
+    while !domain.admit_outer_one(outer.len()).unwrap() {}
+    for point in outer { domain.push_outer(point).unwrap(); }
+    let options = MeshOpts { max_edge: law["maximumEdge"].as_f64().unwrap(), min_angle_deg: law["minimumAngleDegrees"].as_f64().unwrap() };
+    let operation = mesh_operation();
+    let mut job = MeshJob::new_mounted_bounded(domain, options, operation, law["maximumPoints"].as_u64().unwrap() as usize, law["maximumTriangles"].as_u64().unwrap() as usize);
+    let mut caller = mounted_mesh_caller(operation);
+    for _ in 0..5_000_000 {
+        match step_mounted_mesh(&mut caller, &mut job) {
+            Seen::Complete { .. } => {
+                let (points, triangles) = job.completed_counts().expect("mounted geometry available");
+                assert_eq!(points, law["expected"]["points"].as_u64().unwrap() as usize);
+                assert_eq!(triangles, law["expected"]["triangles"].as_u64().unwrap() as usize);
+                let area = (0..triangles).map(|i| {
+                    let triangle = job.completed_triangle(i).unwrap();
+                    shoelace_area(&triangle.map(|vertex| job.completed_point(vertex as usize).unwrap()))
+                }).sum::<f64>();
+                assert!((area - law["expected"]["area"].as_f64().unwrap()).abs() < 1e-10);
+                close_mesh_job(&mut job);
+                caller.retire_exact();
+                return;
+            }
+            Seen::Fault(detail) => panic!("mounted raft failed at {:?}: {}", job.stage, String::from_utf8_lossy(&detail)),
+            Seen::Cancelled => panic!("mounted raft was cancelled"),
+            _ => {}
+        }
+    }
+    panic!("mounted raft never completed");
+}
+
+fn mounted_mesh_caller(operation: Operation) -> OriginalJobFixtureCaller {
+    let stock = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 128 };
+    OriginalJobFixtureCaller::admit(operation.operation, operation.generation, stock, || Some(0), u64::MAX, 1_000_000_000)
+}
+
+fn step_mounted_mesh(caller: &mut OriginalJobFixtureCaller, job: &mut MeshJob) -> Seen {
+    step_mesh_with_budget(caller, job, 128, u64::MAX)
+}
+
+fn step_mesh_with_budget(caller: &mut OriginalJobFixtureCaller, job: &mut MeshJob, fuel: u64, deadline: u64) -> Seen {
+    let mut observed = None;
+    caller.bare_turn(TEST_GRANT, |context| context.with_original_work_loan(fuel, deadline, |context| {
+        observed = Some(seen_of(Ok::<_, OriginalTurnFailure>(job.step_plain(context)?)));
+        Ok(())
+    })).unwrap();
+    observed.unwrap()
+}
 
 #[test]
 fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
@@ -8,7 +60,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         (
             format!("{owner:?}"),
             [owner.points.as_ptr() as usize, owner.point_indices.as_ptr() as usize, owner.constraints.as_ptr() as usize],
-            [owner.points.capacity() * size_of::<[f64; 2]>(), owner.point_indices.capacity() * size_of::<((u64, u64), usize)>(), owner.constraints.capacity() * size_of::<Edge>()],
+            [owner.points.allocated_bytes(), owner.point_indices.allocated_bytes(), owner.constraints.allocated_bytes()],
         )
     }
 
@@ -22,11 +74,12 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         for point in outer { domain.push_outer(point).unwrap(); }
         let mut job = MeshJob::new_mounted_bounded(domain, no_refine(), operation, row["maximumPoints"].as_u64().unwrap() as usize, row["maximumTriangles"].as_u64().unwrap() as usize);
         let mut sequence = 0;
-        for _ in 0..4 {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
+        let mut caller = mounted_mesh_caller(operation);
+        for _ in 0..16 {
+            assert_eq!(step_mounted_mesh(&mut caller, &mut job), Seen::Yield);
+            if job.stage == MeshJobStage::PrepareInput { break; }
         }
+        assert_eq!(job.stage, MeshJobStage::PrepareInput);
         let admitted = witness(job.preparation.as_ref().unwrap()).2.iter().sum::<usize>();
         let mut fault = false;
         let mut holds = true;
@@ -41,18 +94,13 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
                 holds &= outcome == if cancelled { Seen::Cancelled } else { Seen::Yield };
                 holds &= witness(job.preparation.as_ref().unwrap()) == before;
             }
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            match seen_of(job.step_plain(&mut context)) {
+            match step_mounted_mesh(&mut caller, &mut job) {
                 Seen::Fault(_) => {
                     fault = true;
                     holds &= witness(job.preparation.as_ref().unwrap()) == before;
                     let stage = job.stage;
                     let failed = witness(job.preparation.as_ref().unwrap());
-                    drop(context);
-                    let mut sequence_receipt = RetainedCloneProgress::default();
-                    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                    match seen_of(job.step_plain(&mut context)) {
+                    match step_mounted_mesh(&mut caller, &mut job) {
                         Seen::Fault(_) => {}
                         _ => holds = false,
                     }
@@ -70,15 +118,9 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
             "pendingPoint": owner.pending_point.is_some(), "pendingIndex": owner.pending_index.is_some()
         });
         let retained = witness(owner).2.iter().sum::<usize>();
-        InteractiveJob::begin_close(&mut job);
-        let mut released = 0;
-        for _ in 0..1024 {
-            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(4096));
-            holds &= items <= 1 && bytes <= 4096;
-            released += bytes;
-            if complete { break; }
-        }
+        let released = close_preparation_pages(&mut job);
         let terminal = InteractiveJob::terminal_is_empty(&job);
+        caller.retire_exact();
         observations.push((row["id"].clone(), actual, row["expected"].clone(), fault, holds, admitted, retained, released, terminal));
     }
     for (id, actual, expected, fault, holds, admitted, retained, released, terminal) in observations {
@@ -91,143 +133,91 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
 
 #[test]
 fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
-    fn witness(job: &MeshJob) -> ([usize; 3], [usize; 3], [usize; 3]) {
-        job.preparation.as_ref().map(|owner| (
-            [owner.points.capacity(), owner.point_indices.capacity(), owner.constraints.capacity()],
-            [owner.points.len(), owner.point_indices.len(), owner.constraints.len()],
-            [owner.points.as_ptr() as usize, owner.point_indices.as_ptr() as usize, owner.constraints.as_ptr() as usize],
-        )).unwrap_or(([0; 3], [0; 3], [0; 3]))
-    }
-
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).expect("neutral preparation cases");
-    let mut observations = Vec::new();
-    for row in corpus["cases"].as_array().expect("cases") {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️preparation-owners/🔣️.json")).unwrap();
+    for row in corpus["cases"].as_array().unwrap() {
         let operation = mesh_operation();
         let mut domain = MountedPlanarDomain::new();
-        while !domain.admit_outer_one(4).expect("mounted domain credit") {}
-        for point in square(1.0) { domain.push_outer(point).expect("admitted point"); }
+        while !domain.admit_outer_one(4).unwrap() {}
+        for point in square(1.0) { domain.push_outer(point).unwrap(); }
         let mut job = MeshJob::new_mounted_bounded(domain, no_refine(), operation, row["maximumPoints"].as_u64().unwrap() as usize, row["maximumTriangles"].as_u64().unwrap() as usize);
-        let mut sequence = 0;
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
+        let mut caller = mounted_mesh_caller(operation);
         let mut reservations = Vec::new();
-        let mut fault = false;
-        let mut fault_detail = None;
-        let mut holds = true;
-        drop(context);
-        for _ in 0..8 {
-            let before = (job.stage, witness(&job));
-            for (fuel, deadline, cancel) in [(0, u64::MAX, false), (1, 0, false), (1, u64::MAX, true)] {
-                let token = root_cancel_token();
-                if cancel { token.cancel_now(); }
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                let outcome = seen_of(job.step_plain(&mut context));
-                holds &= outcome == if cancel { Seen::Cancelled } else { Seen::Yield };
-                holds &= (job.stage, witness(&job)) == before;
-            }
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            match seen_of(job.step_plain(&mut context)) {
-                Seen::Fault(detail) => { fault_detail = Some(detail); fault = true; }
-                Seen::Yield => {}
-                other => panic!("unexpected preparation outcome: {other:?}"),
-            }
-            holds &= context.fuel_remaining() == 0;
-            reservations.push(witness(&job).0.map(|capacity| capacity != 0));
-            if fault || job.stage == MeshJobStage::PrepareInput { break; }
-        }
-        let admitted = witness(&job);
-        if fault {
-            let before = (job.stage, witness(&job));
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            let Seen::Fault(repeated) = seen_of(job.step_plain(&mut context)) else { panic!("preparation fault must remain sticky") };
-            holds &= Some(repeated) == fault_detail;
-            holds &= (job.stage, witness(&job)) == before;
-        }
-        let admitted_bytes = admitted.0[0] * size_of::<[f64; 2]>() + admitted.0[1] * size_of::<((u64, u64), usize)>() + admitted.0[2] * size_of::<Edge>();
-        let close_grant = 4096.max(admitted.0[0] * size_of::<[f64; 2]>()).max(admitted.0[1] * size_of::<((u64, u64), usize)>()).max(admitted.0[2] * size_of::<Edge>());
-        let mut preserves_index = false;
-        if !fault {
-            for _ in 0..4096 {
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
-                if job.stage == MeshJobStage::CountInput { break; }
-            }
-            let retained = witness(&job);
-            preserves_index = retained.0[1] == admitted.0[1] && retained.2[1] == admitted.2[1] && retained.1[1] != 0;
-            holds &= job.prepared_input.as_ref().is_some_and(|(points, edges)| points.len() == 4 && edges.len() == 4 && points.as_ptr() as usize == admitted.2[0] && edges.as_ptr() as usize == admitted.2[2]);
-        }
-        InteractiveJob::begin_close(&mut job);
-        let before = witness(&job);
-        holds &= close_turn(&mut job, RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) }).expect("mesh close turn") == InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        holds &= witness(&job) == before;
-        let mut released = 0;
+        let mut previous = [false; 3];
+        let mut backing = 0;
+        let mut pointers = [0; 3];
         for _ in 0..4096 {
-            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(close_grant));
-            holds &= items <= 1 && bytes <= 4096;
-            released += bytes;
-            if complete { break; }
+            if let Some(owner) = job.preparation.as_ref() {
+                if job.stage == MeshJobStage::PrepareInput && owner.points.len() == 4 && owner.constraints.len() == 4 {
+                    pointers = [owner.points.as_ptr() as usize, owner.point_indices.as_ptr() as usize, owner.constraints.as_ptr() as usize];
+                }
+            }
+            assert_eq!(step_mounted_mesh(&mut caller, &mut job), Seen::Yield);
+            let owner = job.preparation.as_ref().unwrap();
+            if job.stage == MeshJobStage::CountInput {
+                let (points, edges) = job.prepared_input.as_ref().unwrap();
+                assert_eq!([points.as_ptr() as usize, owner.point_indices.as_ptr() as usize, edges.as_ptr() as usize], pointers);
+                assert_eq!([points.len(), owner.point_indices.len(), edges.len()], [4; 3]);
+                break;
+            }
+            let owners = [&owner.points.capacity(), &owner.point_indices.capacity(), &owner.constraints.capacity()].map(|capacity| *capacity != 0);
+            if owners != previous {
+                reservations.push(owners);
+                previous = owners;
+            }
+            backing = owner.points.allocated_bytes() + owner.point_indices.allocated_bytes() + owner.constraints.allocated_bytes();
         }
-        let actual = serde_json::json!({ "reservations": reservations, "fault": fault, "preservesIndexOnHandoff": preserves_index });
-        observations.push((row["id"].clone(), actual, row["expected"].clone(), holds, admitted_bytes, released, InteractiveJob::terminal_is_empty(&job)));
-    }
-    for (id, actual, expected, holds, admitted, released, terminal) in observations {
-        assert_eq!(actual, expected, "{id}");
-        assert!(holds && terminal, "{id}");
-        assert_eq!(released, admitted, "{id} retires every admitted backing");
+        assert_eq!(job.stage, MeshJobStage::CountInput);
+        let actual = serde_json::json!({ "reservations": reservations, "fault": false, "preservesIndexOnHandoff": true });
+        assert_eq!(actual, row["expected"], "{}", row["id"]);
+        assert_eq!(close_preparation_pages(&mut job), backing);
+        caller.retire_exact();
     }
 }
 
 #[test]
 fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() {
-    for cut in 1..=4 {
+    for cut in 1..=7 {
         let operation = mesh_operation();
         let mut domain = MountedPlanarDomain::new();
         while !domain.admit_outer_one(4).unwrap() {}
         for point in square(1.0) { domain.push_outer(point).unwrap(); }
         let mut job = MeshJob::new_mounted_bounded(domain, no_refine(), operation, 8, 8);
         let mut sequence = 0;
+        let mut caller = mounted_mesh_caller(operation);
         for _ in 0..cut {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
+            assert_eq!(step_mounted_mesh(&mut caller, &mut job), Seen::Yield);
         }
         let owner = job.preparation.as_ref().unwrap();
-        let allocations = [owner.points.capacity() * size_of::<[f64; 2]>(), owner.point_indices.capacity() * size_of::<((u64, u64), usize)>(), owner.constraints.capacity() * size_of::<Edge>()];
-        let admitted = allocations.iter().sum::<usize>();
+        let admitted = owner.points.allocated_bytes() + owner.point_indices.allocated_bytes() + owner.constraints.allocated_bytes();
         let token = root_cancel_token();
         token.cancel_now();
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
+        let mut receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut receipt);
         assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Cancelled);
-        assert_eq!(context.fuel_remaining(), 1);
-        InteractiveJob::begin_close(&mut job);
-        assert_eq!(close_turn(&mut job, RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) }).expect("mesh close turn"), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-        let mut released = 0;
-        for _ in 0..128 {
-            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(0));
-            assert_eq!(bytes, 0);
-            if complete || items == 0 { break; }
-        }
-        if let Some(bytes) = allocations.into_iter().find(|bytes| *bytes != 0) {
-            assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes - 1)), (false, 0, 0));
-            assert_eq!(observe_mesh_close(&mut job, mesh_release_grant(bytes)), (false, 1, bytes));
-            released += bytes;
-        }
-        for _ in 0..128 {
-            let (complete, items, bytes) = observe_mesh_close(&mut job, mesh_release_grant(4096));
-            assert!(items <= 1 && bytes <= 4096);
-            released += bytes;
-            if complete { break; }
-        }
-        assert!(InteractiveJob::terminal_is_empty(&job));
-        assert_eq!(released, admitted);
-        eprintln!("mesh preparation cancellation cut={cut}, admitted={admitted}, released={released}");
+        assert!(context.fuel_remaining() <= 1);
+        assert_eq!(close_preparation_pages(&mut job), admitted);
+        caller.retire_exact();
     }
+}
+
+fn close_preparation_pages(job: &mut MeshJob) -> usize {
+    InteractiveJob::begin_close(job);
+    let no_items = RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) };
+    assert_eq!(observe_mesh_close(job, no_items), (false, 0, 0));
+    let mut released = 0;
+    for _ in 0..4096 {
+        let demand = job.retirement_demand().unwrap();
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        if demand.release_bytes > 0 {
+            let short = RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
+            assert_eq!(observe_mesh_close(job, short), (false, 0, 0));
+        }
+        let (complete, items, bytes) = observe_mesh_close(job, grant);
+        assert!(items <= 1 && bytes <= 4096);
+        released += bytes;
+        if complete { return released; }
+    }
+    panic!("mounted preparation did not close");
 }
 
 #[test]
@@ -240,7 +230,7 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         let count = triangles.len();
         let mut job = MeshJob::new_bounded(PlanarDomain { outer: points.clone(), holes: Vec::new() }, no_refine(), operation, 62, row["maximumTriangles"].as_u64().expect("triangle limit") as usize);
         job.triangulation = Some(OwnedTriangulation {
-            points, triangles, input_len: 4, insert_cursor: 4, insertion_order: Vec::new(), insertion: None,
+            points: points.into(), triangles: triangles.into(), input_len: 4, insert_cursor: 4, insertion_order: MeshRows::default(), insertion: PointInsertion::new(false),
             maximum_triangles: job.maximum_triangles, allocation_fault: false,
             mounted_initialization: MountedTriangulationInitialization { stage: MountedTriangulationStage::Complete, cursor: 0, sort_outer: 4, sort_inner: 4, bounds: [0.0, 1.0, 0.0, 1.0], center: [0.5, 0.5], span: 1.0 },
             finish: TriangulationFinishCursor { stage: TriangulationFinishStage::Complete, read: count, write: count, sort_outer: count, sort_inner: count },
@@ -383,23 +373,18 @@ impl StepLatency {
 }
 
 fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, StepLatency) {
-    fn now() -> Option<u64> {
-        Some(0)
-    }
-    let cancel = root_cancel_token();
-    let mut sequence = 0;
+    let mut caller = mounted_mesh_caller(job.operation);
     let mut previews = 0;
     let mut latency = StepLatency::default();
     for _ in 0..10_000_000 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(64, 10, TEST_GRANT), cancel.clone(), now, &mut sequence, &mut sequence_receipt);
         let started = Instant::now();
-        let outcome = seen_of(job.step_plain(&mut context));
+        let outcome = step_mounted_mesh(&mut caller, &mut job);
         latency.admit(started.elapsed());
         match outcome {
             Seen::Preview(_) => previews += 1,
             Seen::Complete { output, .. } => {
                 close_mesh_job(&mut job);
+                caller.retire_exact();
                 return (output, previews, latency);
             }
             Seen::Checkpoint(_) => {}
@@ -561,7 +546,7 @@ fn bounded_mesh_plus_one_fault_retains_the_exact_domain_for_cursor_close() {
     let mut job = MeshJob::new_bounded(domain, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, operation, 64, 128);
     let mut sequence = 0;
     let mut faulted = false;
-    for _ in 0..256 {
+    for _ in 0..8192 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         if matches!(seen_of(job.step_plain(&mut context)), Seen::Fault(_)) {
@@ -582,12 +567,12 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
     let operation = mesh_operation();
     let points = vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
     let triangulation = OwnedTriangulation {
-        points: points.clone(),
-        triangles: vec![[0, 1, 2], [0, 2, 3]],
+        points: points.clone().into(),
+        triangles: vec![[0, 1, 2], [0, 2, 3]].into(),
         input_len: 4,
         insert_cursor: 4,
-        insertion_order: vec![0, 1, 2, 3],
-        insertion: None,
+        insertion_order: vec![0, 1, 2, 3].into(),
+        insertion: PointInsertion::new(false),
         maximum_triangles: 4,
         allocation_fault: false,
         mounted_initialization: MountedTriangulationInitialization { stage: MountedTriangulationStage::Complete, cursor: 0, sort_outer: 4, sort_inner: 4, bounds: [0.0, 1.0, 0.0, 1.0], center: [0.5, 0.5], span: 1.0 },
@@ -595,9 +580,9 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
     };
     let mut job = MeshJob::new_bounded(PlanarDomain { outer: points, holes: Vec::new() }, no_refine(), operation, 4, 4);
     job.triangulation = Some(triangulation);
-    job.constraints = vec![Edge::new(1, 3)];
+    job.constraints = vec![Edge::new(1, 3)].into();
     job.stage = MeshJobStage::ConstrainBoundary;
-    job.indexed_constraint_edges.try_reserve_exact(12).expect("fixed edge authority");
+    job.indexed_constraint_edges = Vec::with_capacity(12).into();
     for triangle in 0..2 {
         for local in 0..3 {
             assert!(job.begin_edge_index_candidate(triangle, local));
@@ -663,7 +648,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
     let mut close_turns = 0;
     loop {
         close_turns += 1;
-        let (terminal, released_items, _) = observe_mesh_close(&mut job, mesh_release_grant(usize::MAX));
+        let (terminal, released_items, _) = observe_mesh_close(&mut job, mesh_release_grant(4096));
         assert!(released_items <= 1);
         if terminal {
             break;
@@ -676,8 +661,15 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
 /// 📦️ Mounted preparation, construction, finish, and payload cursors interrupt and replay exactly.
 #[test]
 fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_replay_timing_and_close() {
-    fn domain() -> PlanarDomain {
-        PlanarDomain { outer: square(2.0), holes: vec![square(0.5).into_iter().map(|point| [point[0] + 0.75, point[1] + 0.75]).collect()] }
+    fn domain() -> MountedPlanarDomain {
+        let mut domain = MountedPlanarDomain::new();
+        while !domain.admit_outer_one(4).unwrap() {}
+        for point in square(2.0) { domain.push_outer(point).unwrap(); }
+        while !domain.admit_hole_one(1).unwrap() {}
+        let hole = domain.begin_hole().unwrap();
+        while !domain.admit_hole_point_one(hole, 4).unwrap() {}
+        for point in square(0.5) { domain.push_hole_point(hole, [point[0] + 0.75, point[1] + 0.75]).unwrap(); }
+        domain
     }
 
     fn snapshot(job: &MeshJob) -> impl PartialEq + std::fmt::Debug {
@@ -718,8 +710,9 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
     }
 
     fn run(operation: Operation) -> (Vec<u8>, u128) {
-        let mut job = MeshJob::new_bounded(domain(), MeshOpts { max_edge: 2.0, min_angle_deg: 0.0 }, operation, 128, 20);
+        let mut job = MeshJob::new_mounted_bounded(domain(), MeshOpts { max_edge: 2.0, min_angle_deg: 0.0 }, operation, 128, 20);
         let mut sequence = 0;
+        let mut caller = mounted_mesh_caller(operation);
         let mut maximum_micros = 0;
         let mut initialization_seen = HashSet::new();
         let mut finish_seen = HashSet::new();
@@ -740,12 +733,9 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
             }
             if matches!(job.stage, MeshJobStage::PrepareInput | MeshJobStage::Initialize | MeshJobStage::InsertBoundary | MeshJobStage::PublishPreview | MeshJobStage::PublishCheckpoint | MeshJobStage::Complete) {
                 let before = snapshot(&job);
-                let mut sequence_receipt = RetainedCloneProgress::default();
-                let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step_plain(&mut deadline)), Seen::Yield);
+                assert_eq!(step_mesh_with_budget(&mut caller, &mut job, 1, 0), Seen::Yield);
                 assert_eq!(snapshot(&job), before);
                 let mut sequence_receipt = RetainedCloneProgress::default();
-                drop(deadline);
                 let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
                 assert!(matches!(seen_of(job.step_plain(&mut stale)), Seen::Fault(_)));
                 assert_eq!(snapshot(&job), before);
@@ -757,10 +747,8 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
                 assert_eq!(seen_of(job.step_plain(&mut cancelled)), Seen::Cancelled);
                 assert_eq!(snapshot(&job), before);
             }
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             let started = Instant::now();
-            let outcome = seen_of(job.step_plain(&mut context));
+            let outcome = step_mounted_mesh(&mut caller, &mut job);
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());
             match outcome {
                 Seen::Preview(_) | Seen::Checkpoint(_) => {}
@@ -798,6 +786,7 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
                     }
                     assert!(preparation_lookup_seen && preparation_polygon_seen);
                     close_mesh_job(&mut job);
+                    caller.retire_exact();
                     return (output, maximum_micros);
                 }
                 Seen::Yield => {}
@@ -813,12 +802,10 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
     assert_eq!(first.0, second.0);
     assert!(first.1.max(second.1) < 8_000);
 
-    let mut interrupted = MeshJob::new_bounded(domain(), MeshOpts { max_edge: 2.0, min_angle_deg: 0.0 }, operation, 128, 20);
-    let mut sequence = 0;
+    let mut interrupted = MeshJob::new_mounted_bounded(domain(), MeshOpts { max_edge: 2.0, min_angle_deg: 0.0 }, operation, 128, 20);
+    let mut caller = mounted_mesh_caller(operation);
     for _ in 0..1_000_000 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(interrupted.step_plain(&mut context)) {
+        match step_mounted_mesh(&mut caller, &mut interrupted) {
             Seen::Fault(detail) => panic!("interrupted mesh fixture fault: {detail:?}"),
             _ => {}
         }
@@ -828,15 +815,9 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
     }
     assert!(interrupted.publication_writer.is_some());
     InteractiveJob::begin_close(&mut interrupted);
-    assert_eq!(close_turn(&mut interrupted, mesh_release_grant(0)).expect("mesh close turn"), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-    for _ in 0..100_000 {
-        match close_turn(&mut interrupted, mesh_release_grant(usize::MAX)).expect("mounted mesh close has no refusal") {
-            InteractiveJobCloseStep::Pending { progress } => assert!(progress.copied_items <= 1),
-            InteractiveJobCloseStep::Complete { .. } => break,
-            InteractiveJobCloseStep::Blocked => panic!("mounted mesh close cannot block"),
-        }
-    }
-    assert!(InteractiveJob::terminal_is_empty(&interrupted));
+    assert_eq!(observe_mesh_close(&mut interrupted, RetainedCloneGrant { maximum_items: 0, ..TEST_GRANT }), (false, 0, 0));
+    close_mesh_job(&mut interrupted);
+    caller.retire_exact();
 }
 
 fn mesh_release_grant(release_bytes: usize) -> RetainedCloneGrant {

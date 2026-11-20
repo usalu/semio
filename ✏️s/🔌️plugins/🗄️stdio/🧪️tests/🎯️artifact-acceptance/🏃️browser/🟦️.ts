@@ -7,8 +7,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Download, FileChooser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
-import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { ensureRepositoryBrowserPathV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 import { FAULT, NOISE, awaitBeacon, clickUncovered, dismissIntroduction, fillStagedArgument, mutateUndoRedo, readShell, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { REPO_ROOT, hexBytes, readMatrix, resolveSample, selectEditorProgram, type AcceptanceRow } from "../📇️matrix/🟦️.ts";
 import { judgeBytes, persistedContent } from "../🔬️oracles/🟦️.ts";
@@ -351,11 +351,13 @@ export async function runJourney(options: Readonly<{ baseUrl: string; tag: strin
   mkdirSync(outDir, { recursive: true });
   const report: JourneyReport = { entry:options.entry, baseUrl: options.baseUrl, tag: options.tag, locale: options.locale, started: new Date().toISOString(), rows: [] };
   const flush = (): void => writeFileSync(join(outDir, "journey.json"), JSON.stringify(report, null, 1));
-  ensureRepositoryBrowserPathV1(repoRoot,process.env);
+  ensureRepositoryBrowserPathV1(REPO_ROOT, process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const scratch = resolve(outDir, "browser-tmp");
   mkdirSync(scratch, { recursive: true });
-  const browser: Browser = await chromium.launch({ headless: !options.headed, args: ["--use-angle=swiftshader"], env: { ...process.env, TMPDIR: scratch, TMP: scratch, TEMP: scratch } });
+  const args = ["--use-angle=swiftshader"];
+  if (!options.headed && process.platform === "darwin") args.push("--in-process-gpu", "--disable-accelerated-2d-canvas");
+  const browser: Browser = await chromium.launch({ headless: !options.headed, args, env: { ...process.env, TMPDIR: scratch, TMP: scratch, TEMP: scratch } });
   const abort = (): void => { void browser.close(); };
   options.signal.addEventListener("abort", abort, { once: true });
   if (options.signal.aborted) abort();

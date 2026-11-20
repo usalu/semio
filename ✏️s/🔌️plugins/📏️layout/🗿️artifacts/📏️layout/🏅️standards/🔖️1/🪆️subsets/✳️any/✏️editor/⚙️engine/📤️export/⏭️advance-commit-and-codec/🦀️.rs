@@ -47,12 +47,12 @@ impl LayoutExportJob {
     fn package_commit_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let output=if self.request.as_ref().unwrap().kind.binary()||self.projected_media(){&mut self.encoded}else{&mut self.output};
         let queue=self.output_chunks.as_ref().unwrap();
-        if output.publishing.is_some(){
+        if output.publication_pending(){
             let demand=ArtifactOutputChunks::original_push_demands();let grant=context.retained_grant();let own=std::mem::size_of::<usize>();if grant.maximum_items<2||grant.maximum_copy_bytes<demand.copy_bytes.saturating_add(own)||grant.maximum_depth<demand.depth{return Ok(false);}
-            let accepted=context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_copy_bytes:grant.maximum_copy_bytes-own,..grant},|same|queue.push_original(&mut output.publishing,self.media_output_credit.as_ref(),same))?;
+            let accepted=context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_copy_bytes:grant.maximum_copy_bytes-own,..grant},|same|queue.push_original(output.publication_mut(),self.media_output_credit.as_ref(),same))?;
             if accepted{self.commit_cursor+=1;context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:own,..Default::default()})?;}return Ok(accepted);
         }
-        let result=output.transfer_one(context.retained_grant());let progress=match &result{Ok((_,_,progress))=>*progress,Err(error)=>error.retained_progress()};context.consume_retained(progress)?;let(chunk,done,_)=result?;*output.publishing=chunk;
+        let result=output.transfer_one(context.retained_grant());let progress=match &result{Ok((_,_,progress))=>*progress,Err(error)=>error.retained_progress()};context.consume_retained(progress)?;let(chunk,done,_)=result?;*output.publication_mut()=chunk;
         if done{let demand=ArtifactOutputChunks::original_seal_demands();let grant=context.retained_grant();let own=size_of::<ExportStage>();if grant.maximum_items<2||grant.maximum_copy_bytes<demand.copy_bytes.saturating_add(own)||grant.maximum_depth<demand.depth{return Ok(false);}let accepted=context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_copy_bytes:grant.maximum_copy_bytes-own,..grant},|same|queue.seal_original(same))?;if !accepted{return Ok(false);}self.stage=ExportStage::Complete;context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:own,..Default::default()})?;return Ok(true);}Ok(false)
     }
 
@@ -70,9 +70,6 @@ impl LayoutExportJob {
     }
 
     fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<LayoutCloseTurn, Fault> {
-        if self.close_stage == LayoutExportCloseStage::Publication {
-            return Ok(self.close_publication_step(grant));
-        }
         self.close_export_step(grant.maximum_items, grant.maximum_release_bytes)
     }
 
@@ -82,41 +79,65 @@ impl LayoutExportJob {
         if self.close_terminal_is_empty(){return Ok(Default::default())}
         if self.close_stage==LayoutExportCloseStage::Output||self.close_stage==LayoutExportCloseStage::Encoded{let output=if self.close_stage==LayoutExportCloseStage::Output{&self.output}else{&self.encoded};return if output.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportCloseStage>(),..one})}else{output.close_demand()};}
         if self.close_stage==LayoutExportCloseStage::Interchange{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.interchange_session.as_ref().map_or(0,InterchangeExportSession::next_release_bytes),..one})}
-        if self.close_stage==LayoutExportCloseStage::FramePlanning { if let Some(owner)=self.frame_plan_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.frame_plan.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.frame_plan)} return Ok(one) }
-        if self.close_stage==LayoutExportCloseStage::Drawing { if let Some(owner)=self.drawing_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.drawing.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.drawing)} return Ok(one) }
-        if self.close_stage==LayoutExportCloseStage::Paragraphs { if let Some(owner)=self.text_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.text.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.text)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::FramePlanning { if self.frame_plan_retirement.is_some()||self.frame_plan.is_some(){return super::plan_storage::owner_close_demand(&self.frame_plan,&self.frame_plan_retirement)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::Drawing { if self.drawing_retirement.is_some()||self.drawing.is_some(){return super::plan_storage::owner_close_demand(&self.drawing,&self.drawing_retirement)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::Paragraphs { if self.text_retirement.is_some()||self.text.is_some(){return super::plan_storage::owner_close_demand(&self.text,&self.text_retirement)} return Ok(one) }
         if self.close_stage==LayoutExportCloseStage::PdfOffsets{return if self.pdf_offsets.terminal_is_empty(){Ok(one)}else{self.pdf_offsets.next_close_demand()};}
         if self.close_stage==LayoutExportCloseStage::PdfItems{return if self.pdf_items.terminal_is_empty(){Ok(one)}else{self.pdf_items.next_close_demand()};}
         if self.close_stage==LayoutExportCloseStage::PdfPages{return if self.pdf_pages.terminal_is_empty(){Ok(one)}else{self.pdf_pages.next_close_demand()};}
-        if self.close_stage==LayoutExportCloseStage::Fidelity { if let Some(owner)=self.fidelity_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.fidelity.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fidelity)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::Fidelity { if self.fidelity_retirement.is_some()||self.fidelity.is_some(){return super::plan_storage::owner_close_demand(&self.fidelity,&self.fidelity_retirement)} return Ok(one) }
         if matches!(self.close_stage,LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit){
-            if let Some(owner)=self.output_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
-            if self.close_stage==LayoutExportCloseStage::OutputChunks&&self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output_chunks)}
-            if self.close_stage==LayoutExportCloseStage::MediaCredit&&self.media_output_credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_output_credit)}return Ok(one)
+            if self.close_stage==LayoutExportCloseStage::OutputChunks&&(self.output_chunks.is_some()||self.output_retirement.is_some()){return super::plan_storage::owner_close_demand(&self.output_chunks,&self.output_retirement)}
+            if self.close_stage==LayoutExportCloseStage::MediaCredit&&(self.media_output_credit.is_some()||self.output_retirement.is_some()){return super::plan_storage::owner_close_demand(&self.media_output_credit,&self.output_retirement)}return Ok(one)
         }
         if self.close_stage==LayoutExportCloseStage::Snapshot{return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportRequest>(),..one})}
         if self.close_stage==LayoutExportCloseStage::SnapshotOwner{return Ok(self.snapshot_close.as_ref().map_or(one,|lease|if lease.terminal_is_empty(){one}else{lease.retirement_demands()}))}
         Ok(semio_framework_value::RetirementDemand{release_bytes:self.next_manual_close_release_bytes(),..one})
     }
-    fn close_paired_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
-        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-        if self.output_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.output_retirement,grant)}
+    fn close_paired_turn(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind};
+        let grant=effect.grant();
+        let before=effect.performed_work();
+        if self.output_retirement.is_some(){return super::plan_storage::close_owner_box(&mut self.output_retirement,effect)}
         match self.close_stage{
-            LayoutExportCloseStage::PdfOffsets=>{if !self.pdf_offsets.terminal_is_empty(){return self.pdf_offsets.close_one(grant);}self.close_stage=LayoutExportCloseStage::PdfItems;}
-            LayoutExportCloseStage::PdfItems=>{if !self.pdf_items.terminal_is_empty(){return self.pdf_items.close_one(grant);}self.close_stage=LayoutExportCloseStage::PdfPages;}
-            LayoutExportCloseStage::PdfPages=>{if !self.pdf_pages.terminal_is_empty(){return self.pdf_pages.close_one(grant);}self.close_stage=LayoutExportCloseStage::Interchange;}
-
-            LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded=>{let output=if self.close_stage==LayoutExportCloseStage::Output{&mut self.output}else{&mut self.encoded};if !output.terminal_is_empty(){return output.close_one(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}self.close_stage=if self.close_stage==LayoutExportCloseStage::Output{LayoutExportCloseStage::Encoded}else{LayoutExportCloseStage::PngRow};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportCloseStage>(),..item}));}
-            LayoutExportCloseStage::FramePlanning=>{if self.frame_plan_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.frame_plan_retirement,grant)}if self.frame_plan.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.frame_plan,&mut self.frame_plan_retirement,grant)}self.close_stage=LayoutExportCloseStage::ZipEntries;}
-            LayoutExportCloseStage::Drawing=>{if self.drawing_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.drawing_retirement,grant)}if self.drawing.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.drawing,&mut self.drawing_retirement,grant)}self.drawing_source=None;self.close_stage=LayoutExportCloseStage::Paragraphs;}
-            LayoutExportCloseStage::Paragraphs=>{if self.text_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.text_retirement,grant)}if self.text.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.text,&mut self.text_retirement,grant)}self.close_stage=LayoutExportCloseStage::FramePlanning;}
-            LayoutExportCloseStage::Fidelity=>{if self.fidelity_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.fidelity_retirement,grant)}if self.fidelity.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.fidelity,&mut self.fidelity_retirement,grant)}self.close_stage=LayoutExportCloseStage::Drawing;}
-            LayoutExportCloseStage::OutputChunks=>{if self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output_chunks,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::MediaCredit;}
-            LayoutExportCloseStage::MediaCredit=>{if self.media_output_credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_output_credit,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::Snapshot;}
+            LayoutExportCloseStage::PdfOffsets if !self.pdf_offsets.terminal_is_empty()=>return self.pdf_offsets.close_one(effect),
+            LayoutExportCloseStage::PdfItems if !self.pdf_items.terminal_is_empty()=>return self.pdf_items.close_one(effect),
+            LayoutExportCloseStage::PdfPages if !self.pdf_pages.terminal_is_empty()=>return self.pdf_pages.close_one(effect),
+            LayoutExportCloseStage::FramePlanning if self.frame_plan.is_some()||self.frame_plan_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.frame_plan,&mut self.frame_plan_retirement,effect),
+            LayoutExportCloseStage::Drawing if self.drawing.is_some()||self.drawing_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.drawing,&mut self.drawing_retirement,effect),
+            LayoutExportCloseStage::Paragraphs if self.text.is_some()||self.text_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.text,&mut self.text_retirement,effect),
+            LayoutExportCloseStage::Fidelity if self.fidelity.is_some()||self.fidelity_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.fidelity,&mut self.fidelity_retirement,effect),
+            LayoutExportCloseStage::OutputChunks if self.output_chunks.is_some()||self.output_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.output_chunks,&mut self.output_retirement,effect),
+            LayoutExportCloseStage::MediaCredit if self.media_output_credit.is_some()||self.output_retirement.is_some()=>return super::plan_storage::close_owner_slot(&mut self.media_output_credit,&mut self.output_retirement,effect),
+            _=>{},
+        }
+        let result=(||{
+            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+            if effect.remaining_work_units()?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            if !effect.performed(1)?{return Err(ValueError::invariant("Layout paired close exceeded admitted work"))}
+            match self.close_stage{
+                LayoutExportCloseStage::PdfOffsets=>self.close_stage=LayoutExportCloseStage::PdfItems,
+                LayoutExportCloseStage::PdfItems=>self.close_stage=LayoutExportCloseStage::PdfPages,
+                LayoutExportCloseStage::PdfPages=>self.close_stage=LayoutExportCloseStage::Interchange,
+                LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded=>{
+                    let output=if self.close_stage==LayoutExportCloseStage::Output{&mut self.output}else{&mut self.encoded};
+                    if !output.terminal_is_empty(){return output.close_one(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
+                    self.close_stage=if self.close_stage==LayoutExportCloseStage::Output{LayoutExportCloseStage::Encoded}else{LayoutExportCloseStage::PngRow};
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportCloseStage>(),..item}))
+                },
+                LayoutExportCloseStage::FramePlanning=>{self.close_stage=LayoutExportCloseStage::ZipEntries},
+                LayoutExportCloseStage::Drawing=>{self.drawing_source=None;self.close_stage=LayoutExportCloseStage::Paragraphs},
+                LayoutExportCloseStage::Paragraphs=>{self.close_stage=LayoutExportCloseStage::FramePlanning},
+                LayoutExportCloseStage::Fidelity=>{self.close_stage=LayoutExportCloseStage::Drawing},
+                LayoutExportCloseStage::OutputChunks=>{self.close_stage=LayoutExportCloseStage::MediaCredit},
+                LayoutExportCloseStage::MediaCredit=>{self.close_stage=LayoutExportCloseStage::Snapshot},
             LayoutExportCloseStage::Snapshot=>{if let Some(request)=self.request.as_ref(){if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(&request.snapshot)>1,|lease|lease.can_release(&request.snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout snapshot lost its paired original supplier"))}if request.page_id.is_some()||request.preflight_json.is_some()||!request.parent_document_id.is_empty()||!request.canonical_base_revision_hex.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout request metadata remains live before snapshot return"))}self.request.take();self.close_stage=LayoutExportCloseStage::SnapshotOwner;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportRequest>(),..item}))}self.close_stage=LayoutExportCloseStage::SnapshotOwner;}
             LayoutExportCloseStage::SnapshotOwner=>{if let Some(lease)=self.snapshot_close.as_mut(){if lease.terminal_is_empty(){self.snapshot_close.take();}else{return lease.close_step(grant)}}else{self.close_stage=LayoutExportCloseStage::Complete;}}
             _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout paired roots were closed outside their authored stage")),
-        }Ok(RetainedCloneStep::Progress(item))
+            }
+            Ok(RetainedCloneStep::Progress(item))
+        })().map_err(Into::into);
+        RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work().saturating_sub(before)})
     }
 
 }
@@ -190,7 +211,8 @@ impl InteractiveJob for LayoutExportJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();let demand=self.close_demand()?;
-        if matches!(self.close_stage,LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded|LayoutExportCloseStage::PdfOffsets|LayoutExportCloseStage::PdfItems|LayoutExportCloseStage::PdfPages|LayoutExportCloseStage::Fidelity|LayoutExportCloseStage::Drawing|LayoutExportCloseStage::Paragraphs|LayoutExportCloseStage::FramePlanning|LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner){return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_paired_turn(grant))}
+        if self.close_stage==LayoutExportCloseStage::Publication{return semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_publication_step(effect))}
+        if matches!(self.close_stage,LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded|LayoutExportCloseStage::PdfOffsets|LayoutExportCloseStage::PdfItems|LayoutExportCloseStage::PdfPages|LayoutExportCloseStage::Fidelity|LayoutExportCloseStage::Drawing|LayoutExportCloseStage::Paragraphs|LayoutExportCloseStage::FramePlanning|LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner){return semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_paired_turn(effect))}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let step=layout_close_step(self.close_turn(grant))?;cx.consume_retained(step.progress())?;if step.progress().copied_items>0{cx.consume_fuel(1)}Ok(step)
     }
@@ -335,16 +357,7 @@ pub(super) fn decode_checkpoint(operation: &Operation, request: &LayoutExportReq
     Ok(checkpoint)
 }
 
-pub fn crc32_update(mut crc: u32, bytes: &[u8]) -> u32 {
-    crc = !crc;
-    for byte in bytes {
-        crc ^= u32::from(*byte);
-        for _ in 0..8 {
-            crc = (crc >> 1) ^ (0xedb88320 & 0u32.wrapping_sub(crc & 1));
-        }
-    }
-    !crc
-}
+pub use semio_s_artifact_layout_layout_engine_export_primitives::crc32_update;
 
 pub(super) fn push_u16(bytes: &mut Vec<u8>, value: u16) {
     bytes.extend_from_slice(&value.to_le_bytes());
@@ -371,36 +384,5 @@ pub fn output_name(request: &LayoutExportRequest) -> String {
     }
 }
 
-pub fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
-    let mut result = Vec::with_capacity(value.len() / 4 * 3);
-    for quartet in value.as_bytes().chunks_exact(4) {
-        let a = base64_value(quartet[0])?;
-        let b = base64_value(quartet[1])?;
-        let c = base64_value(quartet[2])?;
-        let d = base64_value(quartet[3])?;
-        result.push(a << 2 | b >> 4);
-        if c != 64 {
-            result.push(b << 4 | c >> 2);
-        }
-        if d != 64 {
-            result.push(c << 6 | d);
-        }
-    }
-    if value.len() % 4 != 0 {
-        return Err("layout-export-invalid-base64".into());
-    }
-    Ok(result)
-}
-
-fn base64_value(byte: u8) -> Result<u8, String> {
-    match byte {
-        b'A'..=b'Z' => Ok(byte - b'A'),
-        b'a'..=b'z' => Ok(byte - b'a' + 26),
-        b'0'..=b'9' => Ok(byte - b'0' + 52),
-        b'+' => Ok(62),
-        b'/' => Ok(63),
-        b'=' => Ok(64),
-        _ => Err("layout-export-invalid-base64".into()),
-    }
-}
+pub use semio_s_artifact_layout_layout_engine_export_primitives::decode_base64;
 //#endregion 🔧️CodecPrimitives

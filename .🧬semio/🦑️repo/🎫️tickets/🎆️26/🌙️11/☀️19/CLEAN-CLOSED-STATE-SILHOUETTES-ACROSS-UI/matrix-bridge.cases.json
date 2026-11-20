@@ -1,0 +1,7 @@
+[
+  {
+    "name": "A Staffage sweep records runtime errors during the first target",
+    "runtimeError": "Preview drawing failed",
+    "progress": ["Waiting for app content", "Waiting for initial Staffage paint", "Loading Staffage probe", "Starting Staffage sweep", "Staffage: target 1", "Completed 1 targets"]
+  }
+]

@@ -107,6 +107,7 @@ export type BrowserFramePointer = BrowserFrameModifiers & {
 
 export type BrowserFrameReplaceableEvent =
   | ({ readonly kind: "pointer-move" } & BrowserFramePointer)
+  | ({ readonly kind: "pointer-leave" } & BrowserFramePointer)
   | ({ readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
   | { readonly kind: "resize"; readonly width: number; readonly height: number; readonly dpr: number };
 

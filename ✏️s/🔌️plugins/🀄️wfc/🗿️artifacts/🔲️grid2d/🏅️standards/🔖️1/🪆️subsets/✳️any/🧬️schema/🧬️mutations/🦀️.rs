@@ -10,8 +10,11 @@ use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcTile2d};
 use protocol::{ColdMutation, Mutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
+
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Grid2dSnapshot, diff = Grid2dDiff, schema = "wfcgrid2d", reference = Grid2dSnapshot, reference_diff = Grid2dDiff)]
 pub enum Grid2dMutation {

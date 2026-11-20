@@ -21,8 +21,11 @@
         "seeds": [
           {"id": "launcher", "path": ".local/share/semio/launcher", "kind": "tree", "tools": []},
           {"id": "runtimes", "path": "Library/Caches/semio/runtimes", "kind": "tree", "tools": []},
-          {"id": "cargo", "path": ".cargo", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
-          {"id": "rustup", "path": ".rustup", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "cargo-bin", "path": ".cargo/bin", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "cargo-registry", "path": ".cargo/registry", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "cargo-git", "path": ".cargo/git", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "rustup", "path": ".rustup/toolchains/{toolchain}", "kind": "tree", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
+          {"id": "rustup-update", "path": ".rustup/update-hashes/{toolchain}", "kind": "file", "tools": ["rustup", "rust", "cargo-nextest", "cargo-llvm-cov", "wasm-pack", "wasm-bindgen", "trunk"]},
           {"id": "dotnet", "path": ".dotnet", "kind": "tree", "tools": ["dotnet"]},
           {"id": "go", "path": ".local/go", "kind": "tree", "tools": ["go"]},
           {"id": "uv-bin", "path": ".local/bin/uv", "kind": "file", "tools": ["uv"]},
@@ -84,6 +87,7 @@
       "const": {
         "en": {
           "refused": "download refused by the slice lab (no network use without permission): {program} {arguments}",
+          "invalidRustPin": "Invalid Rust channel for a lab seed: {channel}",
           "unknownKind": "unknown toolchain kind {kind}; declared kinds: {kinds}",
           "stageHeader": "stage | seconds | verdict",
           "seedHeader": "seed | method | seconds",
@@ -94,6 +98,7 @@
         },
         "de": {
           "refused": "Download vom Slice-Labor abgelehnt (keine Netznutzung ohne Erlaubnis): {program} {arguments}",
+          "invalidRustPin": "Ungültiger Rust-Kanal für das Labor: {channel}",
           "unknownKind": "unbekannte Werkzeugart {kind}; deklarierte Arten: {kinds}",
           "stageHeader": "Stufe | Sekunden | Urteil",
           "seedHeader": "Saat | Verfahren | Sekunden",

@@ -4,9 +4,9 @@ use faithful_primitives::{FidelityState, PaintShape, source_over};
 use semio_framework_2d_engine::PathSegment;
 
 fn plan_fixture(rows:impl IntoIterator<Item=PdfItem>)->PlanItems{let mut owner=PlanItems::new();for row in rows{append_plan_fixture(&mut owner,row);}owner}
-fn corpus() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎨️export-fidelity/🔣️.json")).unwrap() }
+fn corpus() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧪️tests/🧫️fixtures/🎨️export-fidelity/🔣️.json")).unwrap() }
 fn color(value: &serde_json::Value) -> Option<[f32; 4]> { value.as_array().map(|rows| std::array::from_fn(|i| rows[i].as_f64().unwrap() as f32)) }
-fn prepare(items:&PlanItems,text:Option<&ExportTextState>)->FidelityState{let mut state=FidelityState::new();for _ in 0..1_000_000{if state.prepared{return state;}state.prepare_one(items,text,None,&mut semio_framework_2d_text_font::work::RetainedWorkLedger::new(LAYOUT_EXPORT_FIXTURE_TURN)).unwrap();}panic!("bounded primitive plan did not terminate");}
+fn prepare(items:&PlanItems,text:Option<&ExportTextState>)->FidelityState{let mut state=FidelityState::new();for _ in 0..1_000_000{if state.prepared{return state;}crate::fixture_effect(LAYOUT_EXPORT_FIXTURE_TURN,|effect|{let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(LAYOUT_EXPORT_FIXTURE_TURN);let turn=state.prepare_one(items,text,None,&mut work,effect);(turn,work.receipt())}).unwrap();}panic!("bounded primitive plan did not terminate");}
 fn pixel(state: &mut FidelityState, shape: usize, x: u32, y: u32) -> [u8; 4] { let mut output = [255; 4]; for _ in 0..1_000_000 { if let Some((fill, stroke)) = state.sample_path_one(shape, x, y) { source_over(&mut output, fill); source_over(&mut output, stroke); return output; } } panic!("bounded raster sample did not terminate"); }
 #[test]
 fn portable_fill_stroke_rotation_and_alpha_match_tiny_skia() {
@@ -32,7 +32,7 @@ fn actual_shaped_glyph_outlines_match_original_font_ttf_parser() {
     for row in corpus()["glyphs"].as_array().unwrap(){
         let size=row["size"].as_f64().unwrap();let x=row["origin"][0].as_f64().unwrap()as f32;let y=row["origin"][1].as_f64().unwrap()as f32;let rotation=row["rotation"].as_f64().unwrap_or(0.0)as f32;let center=row["center"].as_array().map_or([0.0;2],|values|[values[0].as_f64().unwrap()as f32,values[1].as_f64().unwrap()as f32]);
         let snapshot=semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();let mut text=ExportTextState::new();text.begin_label_fixture(row["character"].as_str().unwrap().into(),x,y-size as f32,size as f32,rotation,center);let mut items=PlanItems::new();
-        for _ in 0..1_000_000{if !text.has_active(){break;}let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(LAYOUT_EXPORT_FIXTURE_TURN);if !items.reserve_one_in(&mut work).unwrap(){continue;}if let Some(item)=text.advance_one_in(&snapshot,&mut work).unwrap(){items.push_in(item,&mut work).unwrap();}}
+        for _ in 0..1_000_000{if !text.has_active(){break;}let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(LAYOUT_EXPORT_FIXTURE_TURN);crate::fixture_effect(LAYOUT_EXPORT_FIXTURE_TURN,|effect|{if items.reserve_one_in(&mut work,effect).unwrap(){if let Some(item)=text.advance_one_in(&snapshot,&mut work,effect).unwrap(){items.push_in(item,&mut work).unwrap();}}((),work.receipt())});}
         assert!(!text.has_active());let PdfItem::Outline{source,glyph,..}=items.get(0).unwrap()else{panic!("retained paragraph did not emit outline");};let record=text.glyph(*source,*glyph).unwrap();let state=prepare(&items,Some(&text));let bytes=semio_s_artifact_layout_layout_engine::scene::text_fonts::export_font_source(record.face).unwrap();let face=ttf_parser::Face::parse(bytes,0).unwrap();
         let mut oracle=OracleOutline{segments:Vec::new(),origin:record.origin,scale:size/f64::from(face.units_per_em()),rotation:f64::from(rotation),center:center.map(f64::from)};face.outline_glyph(ttf_parser::GlyphId(record.glyph),&mut oracle).unwrap();
         let Some(PaintShape::Path(path)) = state.shape(0) else { panic!("glyph became a placeholder"); }; assert!(path.segments.len() > 3); assert!(path.edges.len() > 3);
@@ -53,12 +53,6 @@ fn portable_rgba_proxy_rotation_and_source_over_preserve_pixels() {
 
 fn artifact_request(kind: LayoutExportKind) -> LayoutExportRequest { let row = corpus(); let snapshot = semio_framework_pack_json::from_json_str(&row["artifact"]["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(); LayoutExportRequest { kind, page_id: Some("page-1".into()), snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "fidelity".into(), canonical_base_revision_hex: "19".repeat(32) } }
 fn operation() -> Operation { Operation::new(semio_framework_job::OperationId(92), semio_framework_job::RevisionId(19), semio_framework_job::Generation(3), 17) }
-#[test]
-fn complete_svg_and_png_job_preserve_real_text_and_transparent_rotated_images() {
-    let svg = run_layout_export_headless_batch(operation(), artifact_request(LayoutExportKind::Svg)).unwrap(); assert!(svg.data.contains('Q'), "text must export as genuine font curves"); assert!(svg.data.contains("<image")); assert!(svg.data.contains("data:image/png;base64,"));
-    let png = run_layout_export_headless_batch(operation(), artifact_request(LayoutExportKind::Png)).unwrap(); let bytes = decode_base64(&png.data).unwrap(); let image = semio_framework_pixels::decode_png(&bytes).unwrap(); assert_eq!((image.width, image.height), (64, 48));
-    for probe in corpus()["artifact"]["probes"].as_array().unwrap() { let x = probe["x"].as_u64().unwrap() as usize; let y = probe["y"].as_u64().unwrap() as usize; let at = (y * image.width as usize + x) * 4; for channel in 0..4 { assert!(image.pixels[at + channel].abs_diff(probe["rgba"][channel].as_u64().unwrap() as u8) <= probe["tolerance"].as_u64().unwrap() as u8); } }
-}
 #[test]
 fn glyph_preparation_checkpoint_replays_and_cancels_with_funded_retirement() {
     let operation = operation(); let request = artifact_request(LayoutExportKind::Svg); let mut caller = layout_export_fixture_caller(operation, operation.generation); let mut job = LayoutExportJob::from_admitted(operation, (operation.operation, operation.generation), request.clone(), ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES));

@@ -227,6 +227,71 @@ pub fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
     (0..=p).map(|j| n[j] * control_values[span - p + j]).sum()
 }
 
+
+/// 🎛️ Largest degree evaluated with fixed original scratch.
+pub const ORIGINAL_SPLINE_MAXIMUM_DEGREE: usize = 32;
+
+/// 🧮️ Evaluates up to two derivatives of a local homogeneous spline span without heap scratch.
+pub fn homogeneous_jet_original(
+    knots: &KnotVector, controls: usize, t: f64, order: usize,
+    control: impl Fn(usize) -> Option<[f64; 4]>,
+) -> Option<[[f64; 4]; 3]> {
+    let p = knots.degree;
+    if p > ORIGINAL_SPLINE_MAXIMUM_DEGREE || order > 2 || controls <= p || !t.is_finite()
+        || knots.knots.len() != controls.checked_add(p)?.checked_add(1)?
+    { return None; }
+    homogeneous_jet_at_span_original(knots,controls,t,order,knots.find_span(t),control)
+}
+
+/// 🎚️ Evaluates on a specified nonempty span, including its left and right limits.
+pub fn homogeneous_jet_at_span_original(knots:&KnotVector,controls:usize,t:f64,order:usize,span:usize,control:impl Fn(usize)->Option<[f64;4]>) -> Option<[[f64;4];3]> {
+    let p=knots.degree;
+    if p>ORIGINAL_SPLINE_MAXIMUM_DEGREE || order>2 || span<p || span>=controls || !t.is_finite() || knots.knots.len()!=controls.checked_add(p)?.checked_add(1)? {return None;}
+    let first = span - p;
+    let u = &knots.knots;
+    let mut coefficients = [[0.0; 4]; ORIGINAL_SPLINE_MAXIMUM_DEGREE + 1];
+    for (j, value) in coefficients.iter_mut().take(p + 1).enumerate() {
+        *value = control(first + j)?;
+        if value.iter().any(|v| !v.is_finite()) { return None; }
+    }
+    let mut jet = [[0.0; 4]; 3];
+    for derivative in 0..=order.min(p) {
+        let degree = p - derivative;
+        let mut local = coefficients;
+        for level in 1..=degree {
+            for j in (level..=degree).rev() {
+                let left = u[first + j + derivative];
+                let right = u[first + j + p + 1 - level];
+                if !left.is_finite() || !right.is_finite() || right < left { return None; }
+                let alpha = if right == left { 0.0 } else { (t - left) / (right - left) };
+                for axis in 0..4 {
+                    local[j][axis] = local[j - 1][axis] * (1.0 - alpha) + local[j][axis] * alpha;
+                }
+            }
+        }
+        jet[derivative] = local[degree];
+        if derivative == order { break; }
+        for j in 0..degree {
+            let width = u[first + j + p + 1] - u[first + j + derivative + 1];
+            let factor = if width == 0.0 { 0.0 } else { degree as f64 / width };
+            for axis in 0..4 { coefficients[j][axis] = (coefficients[j + 1][axis] - coefficients[j][axis]) * factor; }
+        }
+    }
+    jet.iter().flatten().all(|v| v.is_finite()).then_some(jet)
+}
+
+/// 🧮️ Projects homogeneous position and its first two derivatives into Euclidean space.
+pub fn project_original_jet(jet: [[f64; 4];3], order:usize) -> Option<[[f64;3];3]> {
+    let [p,d,dd]=jet;
+    let w=p[3];
+    if w==0.0 || !w.is_finite() || order>2 { return None; }
+    let position=std::array::from_fn(|axis| p[axis]/w);
+    let tangent=if order>0 {std::array::from_fn(|axis| (d[axis]-position[axis]*d[3])/w)}else{[0.0;3]};
+    let acceleration=if order>1 {std::array::from_fn(|axis| (dd[axis]-2.0*tangent[axis]*d[3]-position[axis]*dd[3])/w)}else{[0.0;3]};
+    let result=[position,tangent,acceleration];
+    result.iter().flatten().all(|v|v.is_finite()).then_some(result)
+}
+
 // #endregion 🔖️DeBoor
 
 // #region 🔖️Refine

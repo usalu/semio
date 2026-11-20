@@ -43,6 +43,7 @@ pub enum PresentationMutation {
     ResizeTileCrop(resize_tile_crop::ResizeTileCrop),
     ReorderTiles(reorder_tiles::ReorderTiles),
 }
+dsl::original_pack_value_operation_receiving!(PresentationMutation);
 
 /// 🏷️ The kebab spelling of every [`PresentationMutation`] variant, in DECLARATION ORDER — the one list
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other

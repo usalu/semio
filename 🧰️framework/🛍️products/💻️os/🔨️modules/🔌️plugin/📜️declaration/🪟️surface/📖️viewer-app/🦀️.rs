@@ -33,7 +33,7 @@ impl<V: ArtifactViewer> ViewerApp<V> {
 
 impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { V::owned_mutation_batch_birth_bytes() }
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{V::completion_retirement_birth_bytes(value)}
+    fn completion_retirement_demand(value:&ArtifactToolCompletionValue<Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{V::completion_retirement_demand(value)}
     fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{V::admit_completion_retirement(value,effect)}
 
     fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, RetainedCloneProgress)>, ValueError> { V::admit_owned_mutation_batch(values, grant) }

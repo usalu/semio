@@ -12,7 +12,7 @@ fn sample_asset(id: &str) -> ShootingAsset {
 }
 
 fn sample_shot(id: &str) -> ShootingShot {
-    ShootingShot { id: id.into(), label: format!("Shot {id}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None }
+    ShootingShot { id: id.into(), label: format!("Shot {id}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None, drawing: None, auto_fit: None }
 }
 
 fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
@@ -46,8 +46,8 @@ fn representative_snapshot() -> ShootingSnapshot {
             material: crate::ShootingMaterial { color: "#abcdef".into(), metalness: 0.3, roughness: 0.7, emissive: "#123456".into(), emissive_intensity: 0.1, stroke: "#000000".into() },
         },
         shots: vec![
-            ShootingShot { id: "s1".into(), label: "Overview".into(), width: 256, height: 256, format: "svg".into(), shape: "rectangle".into(), background: Some("#ffffff".into()), camera_id: Some("cam1".into()) },
-            ShootingShot { id: "s2".into(), label: "Detail".into(), width: 512, height: 512, format: "png".into(), shape: "ellipse".into(), background: None, camera_id: None },
+            ShootingShot { id: "s1".into(), label: "Overview".into(), width: 256, height: 256, format: "svg".into(), shape: "rectangle".into(), background: Some("#ffffff".into()), camera_id: Some("cam1".into()), drawing: None, auto_fit: None },
+            ShootingShot { id: "s2".into(), label: "Detail".into(), width: 512, height: 512, format: "png".into(), shape: "ellipse".into(), background: None, camera_id: None, drawing: None, auto_fit: None },
         ],
         active_shot_id: "s1".into(),
         active_asset_id: "a1".into(),
@@ -462,3 +462,103 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🔖️KindsCatalog
+
+
+#[test]
+fn independent_shot_drawing_edits_and_undo_preserve_other_controls() {
+    use protocol::{OpBinary, OpText};
+    use set_shot_drawing::SetShotDrawing;
+    use crate::{ShootingAssigned, ShootingDrawingPatch};
+
+    let base = representative_snapshot();
+    let set = |patch| ShootingMutation::SetShotDrawing(SetShotDrawing { id: "s1".into(), patch });
+    let first = set(ShootingDrawingPatch { visible_width: Some(2.5), ..Default::default() });
+    let other = set(ShootingDrawingPatch {
+        fill_color: Some(ShootingAssigned::new(Some("#123".into()))),
+        hidden_lines: Some(true),
+        ..Default::default()
+    });
+    assert_eq!(ShootingMutation::parse_op(&first.print_op()).unwrap(), first);
+    assert_eq!(ShootingMutation::decode_op(&first.encode_op().unwrap()).unwrap(), first);
+    let with_first = round_trip(&base, &first);
+    let with_both = round_trip(&with_first, &other);
+    let drawing = with_both.shots[0].drawing.as_ref().unwrap();
+    assert_eq!(drawing.visible_width, 2.5);
+    assert_eq!(drawing.fill_color.as_deref(), Some("#123"));
+    assert!(drawing.hidden_lines);
+    assert_eq!(with_both.shots[1], base.shots[1]);
+
+    let undo_first = first.inverse(&base).unwrap().pop().unwrap();
+    let only_other = store::apply_mutation(&with_both, &undo_first).unwrap().0;
+    assert_eq!(only_other, store::apply_mutation(&base, &other).unwrap().0);
+    let clear = set(ShootingDrawingPatch { fill_color: Some(ShootingAssigned::new(None)), ..Default::default() });
+    assert_eq!(round_trip(&only_other, &clear).shots[0].drawing.as_ref().unwrap().fill_color, None);
+    let invalid = set(ShootingDrawingPatch { line_easing: Some(11.0), ..Default::default() });
+    assert!(store::apply_mutation(&base, &invalid).is_err());
+}
+
+#[test]
+fn shot_camera_first_capture_and_sparse_edits_survive_with_independent_undo() {
+    use patch_shot_camera::PatchShotCamera;
+    use protocol::{OpBinary, OpText};
+
+    let base = representative_snapshot();
+    let fallback = ShootingCamera::default();
+    let edit = |id: &str, field: &str, camera: ShootingCamera| {
+        ShootingMutation::PatchShotCamera(PatchShotCamera {
+            shot_id: id.into(), field: field.into(), camera, fallback: fallback.clone(), release: None,
+        })
+    };
+    let initial = edit("s2", "zoom", ShootingCamera { zoom: 2.5, ..fallback.clone() });
+    assert_eq!(ShootingMutation::parse_op(&initial.print_op()).unwrap(), initial);
+    assert_eq!(ShootingMutation::decode_op(&initial.encode_op().unwrap()).unwrap(), initial);
+    let framed = round_trip(&base, &initial);
+    assert_eq!(framed.shots[1].camera_id.as_deref(), Some("shot-camera:s2"));
+    assert_eq!(framed.saved_cameras.last().unwrap().camera.zoom, 2.5);
+    assert_eq!(framed.shots[0], base.shots[0]);
+
+    let up = edit("s2", "upX", ShootingCamera { up: Some([0.5, 0.0, 1.0]), ..fallback.clone() });
+    let both = round_trip(&framed, &up);
+    let camera = &both.saved_cameras.last().unwrap().camera;
+    assert_eq!(camera.zoom, 2.5);
+    assert_eq!(camera.up, Some([0.5, 0.0, 1.0]));
+    let undo_initial = initial.inverse(&base).unwrap().pop().unwrap();
+
+    let remove_slot = ShootingMutation::DeleteSavedCamera(delete_saved_camera::DeleteSavedCamera { id: "shot-camera:s2".into() });
+    let released = store::apply_mutation(&framed, &remove_slot).unwrap().0;
+    assert_eq!(store::apply_mutation(&released, &undo_initial).unwrap().0, released);
+
+    let only_up = store::apply_mutation(&both, &undo_initial).unwrap().0;
+    assert_eq!(only_up, store::apply_mutation(&base, &up).unwrap().0);
+
+    let mut shared = base.clone();
+    shared.shots[1].camera_id = shared.shots[0].camera_id.clone();
+    let isolated = round_trip(&shared, &initial);
+    assert_eq!(isolated.saved_cameras[0], shared.saved_cameras[0]);
+    assert_eq!(isolated.shots[0], shared.shots[0]);
+    assert_eq!(isolated.shots[1].camera_id.as_deref(), Some("shot-camera:s2"));
+
+    let invalid = edit("s2", "zoom", ShootingCamera { zoom: 0.0, ..fallback.clone() });
+    assert!(store::apply_mutation(&base, &invalid).is_err());
+}
+
+#[test]
+fn shot_auto_fit_retains_inheritance_and_isolates_other_shots() {
+    use protocol::{OpBinary, OpText};
+    use set_shot_auto_fit::SetShotAutoFit;
+
+    let base = representative_snapshot();
+    let set = |auto_fit| ShootingMutation::SetShotAutoFit(SetShotAutoFit { id: "s1".into(), auto_fit });
+    for value in [None, Some(false), Some(true)] {
+        let mutation = set(value);
+        assert_eq!(ShootingMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+        assert_eq!(ShootingMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+    }
+    assert!(ShootingMutation::parse_op(r#"{"mutation":"setShotAutoFit","id":"s1"}"#).is_err());
+    let disabled = round_trip(&base, &set(Some(false)));
+    assert_eq!(disabled.shots[0].auto_fit, Some(false));
+    assert_eq!(disabled.shots[1], base.shots[1]);
+    let enabled = round_trip(&disabled, &set(Some(true)));
+    assert_eq!(enabled.shots[0].auto_fit, Some(true));
+    assert_eq!(round_trip(&enabled, &set(None)), base);
+}

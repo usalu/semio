@@ -1,6 +1,8 @@
 /** 👻️ Contract: a client run whose parent process or standard output consumer is gone gives its grant back through the heartbeat of the gate.
  * @see ../../🎫️gate/👻️orphan/🟦️.ts */
 import {afterAll,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import sharedWatchCases from "./🔣️.json" with {type:"json"};
 import {mkdtempSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
@@ -24,17 +26,30 @@ test("The orphan watch is lost only when the output consumer hangs up: a reparen
  closed=true;expect(watch.lost(),"broken pipe").toBe(true);
 });
 
-test("The orphan watch of a process notes a broken pipe on its standard output and nothing else",async()=>{
+test("The process shares its stdout watch across grants and detects a broken output pipe",async()=>{
  const {spawn}=await import("node:child_process"),source=fileURLToPath(new URL("../../🎫️gate/👻️orphan/🟦️.ts",import.meta.url));
- const script=`import {currentHostOrphanWatchV1} from ${JSON.stringify(source)};const watch=currentHostOrphanWatchV1();const before=watch.lost();process.stdout.write("x\\n".repeat(100000),()=>{});setTimeout(()=>{console.error(JSON.stringify({before,after:watch.lost()}));process.exit(0);},400);`;
+ const script=`import {currentHostOrphanWatchV1} from ${JSON.stringify(source)};
+ const initial=process.stdout.listenerCount("error");
+ const watches=Array.from({length:Number(process.argv[2])},()=>currentHostOrphanWatchV1());
+ const before=watches.some(watch=>watch.lost()),added=process.stdout.listenerCount("error")-initial;
+ process.stdout.write("x\\n".repeat(100000),()=>{});
+ setTimeout(()=>{console.error(JSON.stringify({before,added,after:watches.every(watch=>watch.lost())}));process.exit(0);},400);`;
  const file=join(fresh(),"watch.ts");writeFileSync(file,script);
- const run=(mode:"pipe-closed"|"file")=>new Promise<string>(resolve=>{
-  const child=spawn(process.execPath,[file],{stdio:["ignore",mode==="file"?"ignore":"pipe","pipe"]});let err="";child.stderr!.on("data",chunk=>{err+=String(chunk);});
-  if(mode==="pipe-closed")child.stdout!.destroy();
-  child.on("close",()=>resolve(err));
+ const run=(mode:string,count:number)=>new Promise<string>((resolve,reject)=>{
+  const child=spawn(process.execPath,[file,String(count)],{stdio:["ignore",mode==="closed"?"pipe":"ignore","pipe"]});let err="";
+  child.stderr!.on("data",chunk=>{err+=String(chunk);});
+  if(mode==="closed")child.stdout!.destroy();
+  child.on("error",reject);
+  child.on("close",code=>{if(code===0)resolve(err);else reject(Error(err));});
  });
- expect(JSON.parse((await run("file")).trim().split("\n").pop()!),"stdout is the null device").toEqual({before:false,after:false});
- expect(JSON.parse((await run("pipe-closed")).trim().split("\n").pop()!),"reader hung up").toEqual({before:false,after:true});
+ const db=new Database(":memory:"),oracle=db.query(`select 0 before, ?1='closed' after, min(?2,1) added`);
+ try{
+  for(const fixture of sharedWatchCases.cases){
+   const result=JSON.parse((await run(fixture.consumer,fixture.grants)).trim().split("\n").pop()!);
+   const row=oracle.get(fixture.consumer,fixture.grants) as {before:number;after:number;added:number};
+   expect(result,fixture.consumer).toEqual({before:Boolean(row.before),after:Boolean(row.after),added:row.added});
+  }
+ }finally{db.close();}
 });
 
 test("A held grant whose client lost its output consumer is stopped by the heartbeat and its reservation is released when the run ends",async()=>{

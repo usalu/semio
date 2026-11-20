@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "rounds": [
+    {"at": 0, "holding": true},
+    {"at": 5000, "holding": false},
+    {"at": 10000, "holding": false},
+    {"at": 185000, "holding": false}
+  ],
+  "attempted": [5000, 185000],
+  "started": [185000]
+}

@@ -48,7 +48,17 @@ CREATE TABLE shooting_saved_camera (
 CREATE TABLE shooting_shot (
  id INTEGER PRIMARY KEY CHECK(id>0),document_id INTEGER NOT NULL REFERENCES shooting_document(id) CHECK(document_id=1),ordinal INTEGER NOT NULL CHECK(ordinal>=0),
  shot_id TEXT NOT NULL,label TEXT NOT NULL,width INTEGER NOT NULL CHECK(width BETWEEN 0 AND 4294967295),height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4294967295),
- format TEXT NOT NULL,shape TEXT NOT NULL,background TEXT,camera_id TEXT
+ format TEXT NOT NULL,shape TEXT NOT NULL,background TEXT,camera_id TEXT,
+ drawing_background INTEGER CHECK(drawing_background IN (0,1)),drawing_fill INTEGER CHECK(drawing_fill IN (0,1)),
+ drawing_fill_color TEXT,drawing_fill_opacity REAL,
+ drawing_visible_lines INTEGER CHECK(drawing_visible_lines IN (0,1)),drawing_hidden_lines INTEGER CHECK(drawing_hidden_lines IN (0,1)),
+ drawing_visible_color TEXT,drawing_hidden_color TEXT,drawing_visible_width REAL,drawing_hidden_width REAL,drawing_line_easing REAL,
+ drawing_merge_lines INTEGER CHECK(drawing_merge_lines IN (0,1)),
+ auto_fit INTEGER CHECK(auto_fit IN (0,1)),
+ drawing_fill_opacity_bits INTEGER,drawing_fill_opacity_class TEXT CHECK(drawing_fill_opacity_class='finite'),
+ drawing_visible_width_bits INTEGER,drawing_visible_width_class TEXT CHECK(drawing_visible_width_class='finite'),
+ drawing_hidden_width_bits INTEGER,drawing_hidden_width_class TEXT CHECK(drawing_hidden_width_class='finite'),
+ drawing_line_easing_bits INTEGER,drawing_line_easing_class TEXT CHECK(drawing_line_easing_class='finite')
 );
 CREATE TABLE shooting_emblem (
  id INTEGER PRIMARY KEY CHECK(id>0),document_id INTEGER NOT NULL REFERENCES shooting_document(id) CHECK(document_id=1),

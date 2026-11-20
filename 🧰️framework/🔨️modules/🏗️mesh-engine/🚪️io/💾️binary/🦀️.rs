@@ -93,7 +93,7 @@ fn gltf_split_container(bytes: &[u8]) -> Result<(Vec<u8>, Option<Vec<u8>>), Stri
         let chunk_len = u32::from_le_bytes(bytes[pos..pos + 4].try_into().unwrap()) as usize;
         let chunk_type = &bytes[pos + 4..pos + 8];
         let data_start = pos + 8;
-        let data_end = data_start + chunk_len;
+        let data_end = data_start.checked_add(chunk_len).ok_or("glb: invalid chunk extent")?;
         if data_end > bytes.len() {
             return Err("glb: chunk length exceeds buffer".into());
         }
@@ -218,11 +218,11 @@ fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Vec<u8>], bv
 
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` — dense `bufferView` read,
 /// then `accessor.sparse` substitution (base is zero-filled when there's no `bufferView`).
-fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_index: usize) -> Result<Vec<f64>, String> {
+fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_index: usize, maximum: usize) -> Result<Vec<f64>, String> {
     let accessor = document.get("accessors").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(accessor_index).ok_or_else(|| format!("gltf: accessor index {accessor_index} out of range"))?;
     let component_type = accessor.get("componentType").and_then(json::Value::as_u64).ok_or_else(|| "gltf: accessor missing componentType".to_string())?;
     let accessor_type = accessor.get("type").and_then(json::Value::as_str).ok_or_else(|| "gltf: accessor missing type".to_string())?;
-    let count = accessor.get("count").and_then(json::Value::as_u64).unwrap_or(0) as usize;
+    let count = accessor.get("count").and_then(json::Value::as_u64).and_then(|value| usize::try_from(value).ok()).filter(|count| *count <= maximum).ok_or("gltf: accessor count exceeds capacity")?;
     let normalized = accessor.get("normalized").and_then(json::Value::as_bool).unwrap_or(false);
     let nc = gltf_accessor_type_components(accessor_type)?;
 
@@ -233,7 +233,7 @@ fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_in
     }
 
     if let Some(sparse) = accessor.get("sparse") {
-        let sparse_count = sparse.get("count").and_then(json::Value::as_u64).unwrap_or(0) as usize;
+        let sparse_count = sparse.get("count").and_then(json::Value::as_u64).and_then(|value| usize::try_from(value).ok()).filter(|sparse| *sparse <= count).ok_or("gltf: invalid sparse accessor count")?;
         let indices = sparse.get("indices").ok_or_else(|| "gltf: sparse accessor missing indices".to_string())?;
         let values = sparse.get("values").ok_or_else(|| "gltf: sparse accessor missing values".to_string())?;
         let indices_bv = indices.get("bufferView").and_then(json::Value::as_u64).ok_or_else(|| "gltf: sparse indices missing bufferView".to_string())? as usize;
@@ -246,10 +246,10 @@ fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_in
         let val_values = gltf_read_bufferview_elements(document, buffers, values_bv, values_offset, component_type, accessor_type, sparse_count)?;
         for i in 0..sparse_count {
             let idx = idx_values[i] as usize;
-            let dst = idx * nc;
-            if dst + nc > components.len() {
+            if idx >= count {
                 return Err(format!("gltf: sparse accessor index {idx} out of range for count {count}"));
             }
+            let dst = idx * nc;
             components[dst..dst + nc].copy_from_slice(&val_values[i * nc..i * nc + nc]);
         }
     }
@@ -309,26 +309,29 @@ fn gltf_triangle_indices(mode: u64, source: Vec<u32>) -> Vec<u32> {
     }
 }
 
-fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive: &json::Value, buffers: &[Vec<u8>], matrix: GlbMatrix) -> Result<(), String> {
+fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive: &json::Value, buffers: &[Vec<u8>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
     let mode = primitive.get("mode").and_then(json::Value::as_u64).unwrap_or(4);
     if !matches!(mode, 4..=6) {
         return Ok(());
     }
+    let remaining = maximum_triangles.saturating_sub(mesh.triangle_count());
+    let maximum = remaining.saturating_mul(3);
     let attributes = primitive.get("attributes").ok_or_else(|| "gltf: primitive missing attributes".to_string())?;
     let position_accessor = attributes.get("POSITION").and_then(json::Value::as_u64).ok_or_else(|| "glb triangle primitive missing POSITION".to_string())? as usize;
-    let positions: Vec<[f32; 3]> = gltf_decode_accessor(document, buffers, position_accessor)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
+    let positions: Vec<[f32; 3]> = gltf_decode_accessor(document, buffers, position_accessor, maximum)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect();
 
     let source_indices: Vec<u32> = if let Some(indices_accessor) = primitive.get("indices").and_then(json::Value::as_u64) {
-        gltf_decode_accessor(document, buffers, indices_accessor as usize)?.into_iter().map(|value| value as u32).collect()
+        gltf_decode_accessor(document, buffers, indices_accessor as usize, maximum)?.into_iter().map(|value| value as u32).collect()
     } else {
         (0..positions.len() as u32).collect()
     };
     let indices = gltf_triangle_indices(mode, source_indices);
+    if !indices.len().is_multiple_of(3) || indices.len() / 3 > remaining { return Err("glb: triangles exceed capacity or are incomplete".into()); }
     if indices.iter().any(|index| *index as usize >= positions.len()) {
         return Err("glb triangle index outside POSITION accessor".into());
     }
     let normals: Vec<[f32; 3]> = if let Some(normal_accessor) = attributes.get("NORMAL").and_then(json::Value::as_u64) {
-        gltf_decode_accessor(document, buffers, normal_accessor as usize)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect()
+        gltf_decode_accessor(document, buffers, normal_accessor as usize, maximum)?.as_chunks::<3>().0.iter().map(|c| [c[0] as f32, c[1] as f32, c[2] as f32]).collect()
     } else {
         let mut local = MeshData { positions: positions.iter().flatten().copied().collect(), indices: indices.clone(), ..Default::default() };
         local.compute_normals();
@@ -348,25 +351,44 @@ fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive:
     Ok(())
 }
 
-fn gltf_append_mesh(mesh: &mut MeshData, document: &json::Value, mesh_index: usize, buffers: &[Vec<u8>], matrix: GlbMatrix) -> Result<(), String> {
+fn gltf_append_mesh(mesh: &mut MeshData, document: &json::Value, mesh_index: usize, buffers: &[Vec<u8>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
     let source = document.get("meshes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(mesh_index).ok_or_else(|| format!("gltf: mesh index {mesh_index} out of range"))?;
     for primitive in source.get("primitives").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
-        gltf_append_primitive(mesh, document, primitive, buffers, matrix)?;
+        gltf_append_primitive(mesh, document, primitive, buffers, matrix, maximum_triangles)?;
     }
     Ok(())
 }
 
-fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usize, parent: GlbMatrix, buffers: &[Vec<u8>]) -> Result<(), String> {
+struct GltfSceneBudget {
+    maximum_triangles: usize,
+    visits: usize,
+    path: Vec<usize>,
+}
+
+impl GltfSceneBudget {
+    fn enter(&mut self, index: usize) -> Result<(), String> {
+        if self.visits >= 100_000 || self.path.len() >= 128 || self.path.contains(&index) {
+            return Err("glb: active scene is cyclic or exceeds its capacity".into());
+        }
+        self.visits += 1;
+        self.path.push(index);
+        Ok(())
+    }
+}
+
+fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usize, parent: GlbMatrix, buffers: &[Vec<u8>], budget: &mut GltfSceneBudget) -> Result<(), String> {
+    budget.enter(node_index)?;
     let node = document.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(node_index).ok_or_else(|| format!("gltf: node index {node_index} out of range"))?;
     let matrix = glb_matrix_mul(parent, gltf_node_local_matrix(node));
     if let Some(mesh_index) = node.get("mesh").and_then(json::Value::as_u64) {
-        gltf_append_mesh(mesh, document, mesh_index as usize, buffers, matrix)?;
+        gltf_append_mesh(mesh, document, mesh_index as usize, buffers, matrix, budget.maximum_triangles)?;
     }
     for child in node.get("children").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
         if let Some(child_index) = child.as_u64() {
-            gltf_append_node(mesh, document, child_index as usize, matrix, buffers)?;
+            gltf_append_node(mesh, document, child_index as usize, matrix, buffers, budget)?;
         }
     }
+    budget.path.pop();
     Ok(())
 }
 
@@ -374,6 +396,11 @@ fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usi
 /// mesh, via this crate's own glTF 2.0 codec (`pack::json` + `semio_framework_io_base64`) —
 /// never the `gltf` crate, which survives only as a `[dev-dependencies]` differential-test oracle.
 pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
+    mesh_from_glb_limited(bytes, 1_000_000)
+}
+
+/// 🚧️ Applies a triangle and scene limit before decoding active GLB accessors.
+pub fn mesh_from_glb_limited(bytes: &[u8], maximum_triangles: usize) -> Result<MeshData, String> {
     let (json_bytes, bin) = gltf_split_container(bytes)?;
     let text = std::str::from_utf8(&json_bytes).map_err(|error| format!("gltf json is not valid utf-8: {error}"))?;
     let document = json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("gltf json parse error: {error}"))?;
@@ -385,15 +412,16 @@ pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
     let scene = scene_index.and_then(|index| scenes.get(index)).or_else(|| scenes.first());
 
     if let Some(scene) = scene {
+        let mut budget = GltfSceneBudget { maximum_triangles, visits: 0, path: Vec::new() };
         for node in scene.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
             if let Some(node_index) = node.as_u64() {
-                gltf_append_node(&mut mesh, &document, node_index as usize, glb_identity(), &buffers)?;
+                gltf_append_node(&mut mesh, &document, node_index as usize, glb_identity(), &buffers, &mut budget)?;
             }
         }
     } else {
         let mesh_count = document.get("meshes").and_then(json::Value::as_array).map_or(0, Vec::len);
         for mesh_index in 0..mesh_count {
-            gltf_append_mesh(&mut mesh, &document, mesh_index, &buffers, glb_identity())?;
+            gltf_append_mesh(&mut mesh, &document, mesh_index, &buffers, glb_identity(), maximum_triangles)?;
         }
     }
 
@@ -432,59 +460,76 @@ fn json_vec3_max(positions: &[f32]) -> String {
 
 //#region Stl
 /// 🧱️ Hand-rolled binary STL: 80-byte header, `u32` little-endian triangle count, then per triangle a `f32x3` facet normal, three `f32x3` vertices, and a `u16` attribute-byte-count (written as 0). No vertex dedupe, matching the binary STL convention of one independent triangle per record.
-pub fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
-    let triangle_count = mesh.triangle_count() as u32;
-    let mut out = Vec::with_capacity(80 + 4 + triangle_count as usize * 50);
-    out.extend_from_slice(&[0u8; 80]);
-    out.extend_from_slice(&triangle_count.to_le_bytes());
-    for tri in mesh.indices.as_chunks::<3>().0 {
-        let p0 = stl_vertex(&mesh.positions, tri[0]);
-        let p1 = stl_vertex(&mesh.positions, tri[1]);
-        let p2 = stl_vertex(&mesh.positions, tri[2]);
-        let normal = stl_face_normal(p0, p1, p2);
-        for component in normal {
-            out.extend_from_slice(&component.to_le_bytes());
+/// 📝️ Writes the binary STL header and a bounded number of facets per turn.
+#[derive(Default)]
+pub struct BinaryStlWriter { header: bool, facet: usize }
+
+impl BinaryStlWriter {
+    pub fn step(&mut self, mesh: &MeshData, output: &mut Vec<u8>, maximum_facets: usize) -> bool {
+        let triangles = mesh.indices.as_chunks::<3>().0;
+        if !self.header {
+            output.extend_from_slice(&[0; 80]);
+            output.extend_from_slice(&(triangles.len() as u32).to_le_bytes());
+            self.header = true;
         }
-        for vertex in [p0, p1, p2] {
-            for component in vertex {
-                out.extend_from_slice(&component.to_le_bytes());
+        let end = self.facet.saturating_add(maximum_facets).min(triangles.len());
+        for triangle in &triangles[self.facet..end] {
+            let [a, b, c] = triangle.map(|index| stl_vertex(&mesh.positions, index));
+            let normal = stl_face_normal(a, b, c);
+            for vector in [normal, a, b, c] {
+                for component in vector { output.extend_from_slice(&component.to_le_bytes()); }
+            }
+            output.extend_from_slice(&[0; 2]);
+        }
+        self.facet = end;
+        self.facet == triangles.len()
+    }
+}
+
+pub fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
+    let mut output = Vec::with_capacity(84 + mesh.triangle_count() * 50);
+    BinaryStlWriter::default().step(mesh, &mut output, usize::MAX);
+    output
+}
+
+/// 📥️ Parses a bounded number of facets per turn from a checked binary STL payload.
+#[derive(semio_framework_value_derive::RetireOwned)]
+pub struct BinaryStlReader { facets: usize, facet: usize, mesh: MeshData }
+
+impl BinaryStlReader {
+    pub fn new(bytes: &[u8], maximum_facets: usize) -> Result<Self, String> {
+        let count = bytes.get(80..84).ok_or("stl: truncated header")?;
+        let facets = u32::from_le_bytes(count.try_into().unwrap()) as usize;
+        if facets > maximum_facets { return Err("stl: triangle count exceeds capacity".into()); }
+        let expected = facets.checked_mul(50).and_then(|bytes| bytes.checked_add(84)).ok_or("stl: triangle data exceeds capacity")?;
+        if bytes.len() < expected { return Err("stl: truncated triangle data".into()); }
+        Ok(Self { facets, facet: 0, mesh: MeshData::default() })
+    }
+
+    pub fn step(&mut self, bytes: &[u8], maximum_facets: usize) -> Result<Option<MeshData>, String> {
+        let end = self.facet.saturating_add(maximum_facets).min(self.facets);
+        for triangle in self.facet..end {
+            let offset = 84 + triangle * 50;
+            let facet = bytes.get(offset..offset + 50).ok_or("stl: truncated triangle data")?;
+            let vector = |index: usize| std::array::from_fn::<_, 3, _>(|axis| {
+                let start = index * 12 + axis * 4;
+                f32::from_le_bytes(facet[start..start + 4].try_into().unwrap())
+            });
+            let normal = vector(0);
+            for corner in 1..=3 {
+                let index = self.mesh.vertex_count() as u32;
+                self.mesh.indices.push(index);
+                self.mesh.positions.extend(vector(corner));
+                self.mesh.normals.extend(normal);
             }
         }
-        out.extend_from_slice(&0u16.to_le_bytes());
+        self.facet = end;
+        Ok((self.facet == self.facets).then(|| std::mem::take(&mut self.mesh)))
     }
-    out
 }
 
 pub fn mesh_from_stl(bytes: &[u8]) -> Result<MeshData, String> {
-    if bytes.len() < 84 {
-        return Err("stl: truncated header".into());
-    }
-    let triangle_count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
-    let expected_len = 84 + triangle_count * 50;
-    if bytes.len() < expected_len {
-        return Err("stl: truncated triangle data".into());
-    }
-    let mut mesh = MeshData::default();
-    for triangle in 0..triangle_count {
-        let base = 84 + triangle * 50;
-        let mut normal = [0f32; 3];
-        for axis in 0..3 {
-            normal[axis] = f32::from_le_bytes(bytes[base + axis * 4..base + axis * 4 + 4].try_into().unwrap());
-        }
-        let vertex_base = base + 12;
-        for corner in 0..3 {
-            let corner_base = vertex_base + corner * 12;
-            let mut position = [0f32; 3];
-            for axis in 0..3 {
-                position[axis] = f32::from_le_bytes(bytes[corner_base + axis * 4..corner_base + axis * 4 + 4].try_into().unwrap());
-            }
-            let index = (mesh.positions.len() / 3) as u32;
-            mesh.positions.extend_from_slice(&position);
-            mesh.normals.extend_from_slice(&normal);
-            mesh.indices.push(index);
-        }
-    }
-    Ok(mesh)
+    BinaryStlReader::new(bytes, usize::MAX)?.step(bytes, usize::MAX)?.ok_or_else(|| "stl: incomplete triangle data".into())
 }
 
 fn stl_vertex(positions: &[f32], index: u32) -> [f32; 3] {

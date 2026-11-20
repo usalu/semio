@@ -182,7 +182,7 @@
         "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧪️tests/🧫️fixtures/🔤️set-string/➡️after.json"
       ],
       "invalid": [
-        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/⚠️malformed.json"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️tests/🎯️artifact-acceptance/🧫️fixtures/🚫️invalid-json.json"
       ]
     },
     "las": {

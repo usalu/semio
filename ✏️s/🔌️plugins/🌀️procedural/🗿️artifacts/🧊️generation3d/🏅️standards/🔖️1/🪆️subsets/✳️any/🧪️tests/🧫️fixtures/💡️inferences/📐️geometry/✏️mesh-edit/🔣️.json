@@ -429,6 +429,29 @@
    }
   },
   {
+   "name": "merge toward the first listed vertex when the lower id is second",
+   "kind": "mesh.edit.mergeVertices",
+   "inputs": {
+    "mesh": {
+     "positions": [[0, 0, 0], [3, 0, 0], [2, 1, 0], [0, 1, 0]],
+     "faces": [[0, 1, 2, 3]]
+    },
+    "vertices": [1, 0],
+    "mode": "first"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 3,
+     "faces": 1,
+     "edges": 3,
+     "area": 1,
+     "bbox": [[0, 0, 0], [3, 1, 0]],
+     "positions": [[3, 0, 0], [2, 1, 0], [0, 1, 0]],
+     "polygons": [[0, 1, 2]]
+    }
+   }
+  },
+  {
    "name": "loop cut through four parallel cube edges",
    "kind": "mesh.edit.loopCut",
    "inputs": {

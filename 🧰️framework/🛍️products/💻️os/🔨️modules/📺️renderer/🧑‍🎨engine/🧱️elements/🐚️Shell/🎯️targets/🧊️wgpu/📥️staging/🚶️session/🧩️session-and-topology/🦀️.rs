@@ -274,7 +274,7 @@ impl<'ctx> SessionCtx<'ctx> {
         if !spawned {
             view_state.window_instances = session_window_instances(session, &self.dock.dock);
         }
-        view_state.active_utility_by_window_id = self.windows.active_utility_by_window.clone();
+        view_state.active_utility_by_window_id = self.windows.active_utility_by_window.iter().map(|(id, utility)| (id.clone(), Some(utility.clone()))).collect();
         view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.surfaces.world3d_states.values());
         view_state.tool_run_trace_cursor_by_window_id.extend(semio_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors());
         if !spawned {

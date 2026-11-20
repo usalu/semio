@@ -39,6 +39,7 @@ export function useFlowInteractionPublication(core: FlowCoreAfterFlowCanvasSurfa
     const session = sessionRef.current;
     if (!session) return;
     const request=++hoverRequestRef.current;
+    const sceneHoverRevision = interactionLedger.sceneHoverRevision;
     void Promise.all([
       readObservedFlowTask(session, "selectionDomainsJson:interaction", session.selectionDomainsJson()),
       readObservedFlowTask(session, "hoveredWidgetId:interaction", session.hoveredWidgetId()),
@@ -51,10 +52,11 @@ export function useFlowInteractionPublication(core: FlowCoreAfterFlowCanvasSurfa
       const hover=await decodeDagHoverJson(flowJsonText(channelValue),admission);
       if(sessionRef.current!==session||request!==hoverRequestRef.current)return;
       const portId=hover.channel?.port;
+      const edgeId=hover.edge ?? undefined;
       const selectionDue=interactionLedger.publishSelection(selection);
-      const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId });
+      const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId, edgeId }, sceneHoverRevision);
       if (selectionDue) publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, selection);
-      if (hoverDue) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, portId);
+      if (hoverDue) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, portId, edgeId);
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, interactionLedger, paintOverlays]);

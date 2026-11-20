@@ -59,6 +59,23 @@ pub mod history {
     #[value(transparent)]
     pub struct PersistentLabel(pub u64);
 
+    impl PersistentLabel {
+        /// 🔢️ Writes this label's decimal digits into a caller-owned buffer.
+        pub fn decimal(self, buffer: &mut [u8; 20]) -> &str {
+            let mut label = self.0;
+            let mut at = buffer.len();
+            loop {
+                at -= 1;
+                buffer[at] = b'0' + (label % 10) as u8;
+                label /= 10;
+                if label == 0 {
+                    break;
+                }
+            }
+            std::str::from_utf8(&buffer[at..]).expect("persistent label uses decimal digits")
+        }
+    }
+
     /// 📜️ Issues fresh, never-repeating labels for one `Body`.
     #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::semio_framework_value")]

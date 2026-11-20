@@ -1,6 +1,6 @@
 /** 📝️ Window panes, staged args: the staged argument controls (reference, color, vector, number) and the form gate of an action. */
 import { type ActionArgControl, type ActionDefinition, argControl, actionArgNumberFacets, type ActionArgNumberFacets, referenceIdText, referenceIdValue, type ReferenceIdType } from "@semio-tech/framework";
-import { Icon, IconSelector, Input, SharedBorderRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type UIDialogFieldBinding } from "@semio-tech/ui-react";
+import { Icon, IconSelector, Input, SharedBorderRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Slider, Stepper, Textarea, Toggle, ToggleGroup, uiDataLabel, type UIDialogFieldBinding, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { type ReactElement, useState } from "../../../⚛️react-port/🟦️.ts";
 import { parseUiColorHex, uiColorHex, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "@semio-tech/ui-contract/component";
 import type { InteractionState } from "@semio-tech/framework-interaction";
@@ -64,7 +64,7 @@ export function StagedReferenceField({ id, labelledBy, value, many, maxItems, do
           ))}
         </SharedBorderRow>
       )}
-      <button type="button" data-staged-reference-use-selection="" disabled={disabled || selection === undefined} className="self-start text-xs underline" onClick={() => {
+      <button {...sharedBorderlessBoxProps} type="button" data-staged-reference-use-selection="" disabled={disabled || selection === undefined} className="self-start text-xs underline" onClick={() => {
         const picked = [...new Set(selection?.(domain) ?? [])];
         commit(many ? picked.slice(0, maxItems ?? picked.length) : picked.slice(0, 1));
       }}>
@@ -248,7 +248,7 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
   return (
     <div className="flex w-full min-w-0 items-center gap-single" data-staged-nullable="">
       <div className="min-w-0 flex-1">{control}</div>
-      <button type="button" aria-pressed={cleared} aria-describedby={field?.labelledBy} disabled={disabled} className="shrink-0 text-xs underline" onClick={() => onChange(cleared ? undefined : null)}>
+      <button {...sharedBorderlessBoxProps} type="button" aria-pressed={cleared} aria-describedby={field?.labelledBy} disabled={disabled} className="shrink-0 text-xs underline" onClick={() => onChange(cleared ? undefined : null)}>
         {shellLabel("ui.nullableInput.clear")}
       </button>
     </div>

@@ -36,12 +36,12 @@ impl NativeSnapshotFailure{
  /// 🛫️ Projects all causes through the supplied original encode control.
  pub fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{
   object(control,8,|entries,control|{
-   let cause=match &self.cause{
+   let cause=match self.cause.as_deref(){
     None=>DslValue::Null,
     Some(NativeSnapshotCause::Value(value))=>object(control,2,|entries,control|{let kind=DslValue::String(control.copy_text("value")?);field(entries,"type",kind,control)?;let value=value.to_value_controlled(control)?;field(entries,"value",value,control)})?,
     Some(NativeSnapshotCause::Receiving(value))=>receiving_primary_value(value,true,control)?,
     Some(NativeSnapshotCause::Retirement(value))=>object(control,2,|entries,control|{let kind=DslValue::String(control.copy_text("retirement")?);field(entries,"type",kind,control)?;let field_value=retirement_value(value,control)?;field(entries,"value",field_value,control)})?
-   };field(entries,"cause",cause,control)?;let value=match &self.allocation{Some(value)=>allocation_value(value,control)?,None=>DslValue::Null};field(entries,"allocation",value,control)?;let value=match &self.encode_effect{Some(value)=>encode_effect_value(value,control)?,None=>DslValue::Null};field(entries,"encodeEffect",value,control)?;
+   };field(entries,"cause",cause,control)?;let value=match self.allocation.as_deref(){Some(value)=>allocation_value(value,control)?,None=>DslValue::Null};field(entries,"allocation",value,control)?;let value=match self.encode_effect.as_deref(){Some(value)=>encode_effect_value(value,control)?,None=>DslValue::Null};field(entries,"encodeEffect",value,control)?;
    let value=optional_error(self.receipt_refusal.as_ref(),control)?;field(entries,"receiptRefusal",value,control)?;let value=optional_error(self.context_refusal.as_ref(),control)?;field(entries,"contextRefusal",value,control)?;let value=optional_error(self.work_refusal.as_ref(),control)?;field(entries,"workRefusal",value,control)?;let value=optional_error(self.settlement_refusal.as_ref(),control)?;field(entries,"settlementRefusal",value,control)?;let value=self.progress.to_value_controlled(control)?;field(entries,"progress",value,control)
   })
  }

@@ -501,11 +501,8 @@ fn render_ink_canvas_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut 
 /// is already capped by `INK_INTERACTION_ITEM_CAPACITY`.
 const INK_CANVAS_RESERVE_ITEMS: usize = 8192;
 
-/** 🖼️ Paints one `SurfaceKind::IconRender` scene: the GLB shot goes through the SAME world-3d pass
- * every `World3d` surface uses (React's `iconRenderPort` renders offscreen with the same renderer),
- * and the aspect-fit frame, size/shape badge and footer caption paint on top of it.
- *
- * @see `🧱️elements/🖼️IconRenderHost/🟦️.tsx` — `IconShotFrame` */
+/// 🖼️ Paints the aspect-fit shot, using the prepared SVG raster or the shaded World3d PNG preview.
+/// See `🧱️elements/🖼️IconRenderHost/🟦️.tsx` for the React frame.
 fn render_icon_render_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
         ENGINE_PHASE => {

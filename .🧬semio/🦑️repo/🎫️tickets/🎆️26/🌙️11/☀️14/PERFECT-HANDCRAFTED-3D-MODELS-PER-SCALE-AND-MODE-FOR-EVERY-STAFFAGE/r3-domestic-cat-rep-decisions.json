@@ -1,0 +1,24 @@
+{
+ "50": {
+  "silhouette": {
+   "en": "Full articulation at 15.4 × 7.2 mm, drawn as the true orthographic view of the 1:50 body in the standing-alert pose (ruling E1): four trunk masses (rump, loin, hind and fore ribcage) with a level back and the belly tucked up to the flank, a short thick neck, a domed head with the jowls covering the mandible back to the mouth corner below the eye, a short muzzle with the chin, five tail pieces, and every leg segment with its muscle mass, paw and pads; brow, mouth line, inner ear, toes, shoulder and hip lines and tabby stripes are restated by hand on the new form. Front and plan are traced from the same body per bone: leg segments and ears follow their bones (followTip), so walking, stalking, sitting and stretching stay closed; from above the trunk hides the legs.",
+   "de": "Volle Gliederung bei 15,4 × 7,2 mm, gezeichnet als wahre Parallelprojektion des Körpers von 1:50 in der Haltung aufmerksamer Stand (Regel E1): vier Rumpfmassen (Kruppe, Lende, hinterer und vorderer Brustkorb) mit geradem Rücken und zur Flanke aufgezogenem Bauch, ein kurzer kräftiger Hals, ein gewölbter Kopf, dessen Backen den Unterkiefer bis zum Mundwinkel unter dem Auge bedecken, eine kurze Schnauze mit Kinn, fünf Schwanzstücke und jedes Beinglied mit seiner Muskelmasse, Pfote und Ballen; Braue, Maullinie, Innenohr, Zehen, Schulter- und Hüftlinie und die Tabbystreifen sind von Hand auf der neuen Form neu gesetzt. Vorderansicht und Grundriss sind je Knochen vom selben Körper abgenommen: Beinglieder und Ohren folgen ihren Knochen (followTip), sodass Gehen, Anschleichen, Sitzen und Strecken geschlossen bleiben; von oben verdeckt der Rumpf die Beine."
+  }
+ },
+ "100": {
+  "silhouette": {
+   "en": "Articulated outline 8.0 × 3.6 mm, the true orthographic view of the 1:100 body in the standing-alert pose (ruling E1): four trunk masses, neck, head with the jowls over the mandible, jaw, two ears, five tail pieces and each limb in its anatomical segments with paw outline and pad mark; eye, tongue and shoulder line restated by hand. Front and plan are traced per bone from the same body: hindquarters, mid body and chest, neck, head with jaw and two ears, five tail pieces and every leg segment bound to its bone (followTip). Front and plan leave out the eyes and, in front, the nose (below 0.1 mm); the 1:50 sheets draw them.",
+   "de": "Gegliederter Umriss 8,0 × 3,6 mm, die wahre Parallelprojektion des Körpers von 1:100 im aufmerksamen Stand (Regel E1): vier Rumpfmassen, Hals, Kopf mit den Backen über dem Unterkiefer, Unterkiefer, zwei Ohren, fünf Schwanzstücke und jede Gliedmaße in ihren anatomischen Gliedern mit Pfotenumriss und Ballenmarke; Auge, Zunge und Schulterlinie von Hand neu gesetzt. Vorderansicht und Grundriss sind je Knochen vom selben Körper abgenommen: Hinterhand, Mittelkörper und Brust, Hals, Kopf mit Unterkiefer und zwei Ohren, fünf Schwanzstücke und jedes Beinglied an seinen Knochen gebunden (followTip). Vorderansicht und Grundriss lassen die Augen und vorn die Nase weg (unter 0,1 mm); die Blätter in 1:50 zeichnen sie."
+  }
+ },
+ "200": {
+  "silhouette": {
+   "en": "One composed profile 4.0 × 1.8 mm, the true orthographic view of the generalised 1:200 body in the standing-alert pose (ruling E1): hindquarters with loin, ribcage with chest, neck, head with a separate jaw, two pointed ears, the tail as two pieces, and each leg in three bone-bound pieces (thigh or upper arm, lower leg, foot), all in real proportion. Front and plan are traced per bone from the same body: the two trunk masses, neck, head with jaw and two ears, two tail pieces and the three pieces of every leg, which follow their bones (followTip).",
+   "de": "Ein zusammengefasstes Profil 4,0 × 1,8 mm, die wahre Parallelprojektion des verallgemeinerten Körpers von 1:200 im aufmerksamen Stand (Regel E1): Hinterhand mit Lende, Brustkorb mit Brust, Hals, Kopf mit eigenem Unterkiefer, zwei spitze Ohren, der Schwanz in zwei Stücken und jedes Bein in drei an Knochen gebundenen Stücken (Oberschenkel oder Oberarm, Unterbein, Fuß), alles in wahren Proportionen. Vorderansicht und Grundriss sind je Knochen vom selben Körper abgenommen: die zwei Rumpfmassen, Hals, Kopf mit Unterkiefer und zwei Ohren, zwei Schwanzstücke und die drei Stücke jedes Beins, die ihren Knochen folgen (followTip)."
+  },
+  "thinElements": {
+   "en": "Lower legs (0.022-0.04 m = 0.11-0.2 mm) and the tail (0.03 m = 0.15 mm) are drawn at the width of the 1:200 body, which carries them at its generalised thickness so that they print at the smallest feature.",
+   "de": "Unterbeine (0,022-0,04 m = 0,11-0,2 mm) und Schwanz (0,03 m = 0,15 mm) sind in der Breite des Körpers von 1:200 gezeichnet, der sie in seiner verallgemeinerten Dicke trägt, damit sie mit dem kleinsten Merkmal drucken."
+  }
+ }
+}

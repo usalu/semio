@@ -1,0 +1,11 @@
+{
+  "apps": ["elements", "course", "os", "cad", "hub", "demo", "staffage", "play"],
+  "cases": [
+    { "query": "", "count": 48 },
+    { "query": "?apps=play,os,elements", "count": 18 },
+    { "query": "?apps=cad", "count": 6, "contains": ["cad:en:375", "cad:de:1440"] },
+    { "query": "?cells=course:en:375,hub:de:768", "count": 2, "contains": ["course:en:375", "hub:de:768"] },
+    { "query": "?apps=play&cells=play:de:375,course:en:375", "count": 1, "contains": ["play:de:375"] },
+    { "query": "?cells=hub:fr:768,play:en:400", "count": 0 }
+  ]
+}

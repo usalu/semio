@@ -17,7 +17,16 @@
 
 /* 🎯️ Every control of the quiz is at least 24 px tall (WCAG 2.2 SC 2.5.8); touch spacing makes it taller. */
 .course-target {
-  min-height: max(1.5rem, calc(7 * var(--ui-spacing)));
+  min-height: max(1.5rem, min(var(--chip-row-height), calc(7 * var(--ui-spacing))));
+}
+
+/* 🧩️ A target that is a cell of a shared-border row takes the row's height: the row holds the minimum, so a cell never grows past its owner's line. */
+[data-shared-border-cells]:has(> .course-target) {
+  min-height: max(1.5rem, min(var(--chip-row-height), calc(7 * var(--ui-spacing))));
+}
+
+[data-shared-border-cells] > .course-target {
+  min-height: 0;
 }
 
 /* 🏷️ What the quizzes are about, in the middle of the navbar: the logo and the title on one line, as wide as the band

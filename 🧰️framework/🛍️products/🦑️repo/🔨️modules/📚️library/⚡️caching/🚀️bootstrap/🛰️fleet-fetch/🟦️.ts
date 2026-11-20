@@ -6,7 +6,7 @@ import {dirname,join} from "node:path";
 import {Readable} from "node:stream";
 import {remoteCacheFetchV1,resolveRemoteCacheV1,fleetStoreRootV1} from "../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {claimFleetWorkV1} from "./🎟️work-claim/🟦️.ts";
+import {claimFleetWorkV1,WORK_CLAIM_POLICY_V1,type WorkClaimEventV1} from "./🎟️work-claim/🟦️.ts";
 
 /** 📐️ The authored fetch policy: store layout, timeouts, size limits and environment names.
  * @see ./🧬️schema/🔣️.json */
@@ -21,6 +21,7 @@ export type FleetFetchContextV1=Readonly<{
  remote:Readonly<{endpoint:string;instance:string;token:string|undefined;authenticated:boolean}>|undefined;
  fetch:typeof fetch;
  now:()=>number;
+ say?:(line:string)=>void;
 }>;
 
 /** 🧾️ One answered or uploaded blob, as the ledger records it. */
@@ -165,12 +166,23 @@ export function pinFromIntegrityV1(url:string,integrity:string,bytes?:number):Pi
 /** 🌐️ What a pinned download is: the upstream URL, the sha256 that is its whole trust and its size when pinned. */
 export type PinnedDownloadV1=Readonly<{url:string;sha256:string;bytes?:number}>;
 
+/** 📣️ Makes the progress sink of one blob claim: the first wait and then every `everyMilliseconds` it says in both languages who is fetching which blob and how long this machine has waited of the bound, so a download that waits for the fleet is never silent. @see ./🧬️schema/🔣️.json */
+export function claimWaitNoticeV1(context:FleetFetchContextV1,pin:PinnedDownloadV1):(event:WorkClaimEventV1)=>void{
+ const texts=schema.definitions.ClaimTexts.const,started=context.now(),say=context.say??((line:string)=>{process.stderr.write(line+"\n");});let last=-Infinity;
+ return event=>{
+  if(event.stage!=="wait"||context.now()-last<texts.everyMilliseconds)return;
+  last=context.now();
+  const values={holder:event.holder??"?",blob:`${pin.sha256.slice(0,12)} (${(()=>{try{return new URL(pin.url).host;}catch{return "?";}})()})`,seconds:Math.round((last-started)/1000),bound:Math.round(WORK_CLAIM_POLICY_V1.waitMaximumMilliseconds/1000)};
+  for(const language of ["en","de"] as const)try{say(texts.wait[language].replace(/\{(\w+)\}/gu,(_,name:string)=>String(values[name as keyof typeof values]??"")));}catch{}
+ };
+}
+
 /** ⬇️ A drop-in `fetch` for one pinned artifact. The fleet is asked first, by the sha256, and answers from the group store or the cache without touching the internet; on a miss the upstream is fetched, and while the body streams to the caller it is hashed and staged, and a body whose hash and size match the pin is published to the fleet when the stream ends. The caller keeps verifying the pin itself. On a fleet miss the download is claimed first (`claimFleetWorkV1`, kind `blob`, identity the pin), so of any number of machines asking at once exactly one downloads while the others wait and are served the published blob; a claim that cannot be had means the download runs here as before. A request with a method other than GET, a `Range` header or a non-success status passes through unchanged. */
 export async function pinnedFetchV1(context:FleetFetchContextV1,pin:PinnedDownloadV1,init:RequestInit={}):Promise<Response>{
  const method=(init.method??"GET").toUpperCase(),headers=new Headers(init.headers);
  if(method!=="GET"||headers.has("range")||!DIGEST.test(pin.sha256))return context.fetch(pin.url,init);
  const found:{blob?:FleetBlobV1}={blob:await fleetBlobOpenV1(context,pin.sha256,pin.bytes)};
- const claim=found.blob?undefined:await claimFleetWorkV1(context,{kind:"blob",identity:pin.sha256,ready:async()=>(found.blob??=await fleetBlobOpenV1(context,pin.sha256,pin.bytes))!==undefined});
+ const claim=found.blob?undefined:await claimFleetWorkV1(context,{kind:"blob",identity:pin.sha256,ready:async()=>(found.blob??=await fleetBlobOpenV1(context,pin.sha256,pin.bytes))!==undefined,event:claimWaitNoticeV1(context,pin)});
  const hit=found.blob;
  if(hit){
   const stream=Readable.toWeb(createReadStream(hit.path)) as unknown as ReadableStream<Uint8Array>,closing=new TransformStream<Uint8Array,Uint8Array>({flush:async()=>{await hit.dispose();}});

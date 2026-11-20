@@ -10,6 +10,7 @@ use neural_engine::Value;
 use semio_framework_3d_brep_engine::GeometryHandle;
 use neural_engine::Atom;
 use neural_engine::OperatorJob;
+use neural_engine::OperatorJobStep;
 use semio_framework_value::ValueError;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
@@ -23,22 +24,24 @@ use semio_framework_3d::mesh::VertexId;
 use semio_framework_3d::mesh::WeldMode;
 use semio_framework_3d::mesh::MirrorAxis;
 use semio_framework_3d::mesh::MeshModelingOps;
-use semio_framework_3d::mesh::MeshModelingJob;
+use semio_framework_3d::mesh::{MeshModelingJob, MeshSurfaceJob};
 use semio_framework_3d::mesh::MeshModelingStep;
 use semio_framework_3d::mesh::MeshModelingProgress;
 use semio_framework_3d::mesh::MeshTessellationJob;
 use semio_framework_3d::mesh::MeshTessellationStep;
 use std::collections::HashMap;
+use std::fmt::Write;
 use semio_framework_3d_brep_tessellation::TessellationJob;
 use semio_framework_3d_brep_tessellation::TessellationStep;
 use semio_framework_mesh_engine::HistoryFoldIndex;
-use semio_framework_mesh_engine::io::text::PolygonSourcePreparation;
+use semio_framework_mesh_engine::io::text::{ObjSourceCursor, PolygonSourcePreparation};
 use semio_framework_value::{ErasedSnapshotRetirement,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll};
+use super::interchange::{BinaryMeshFormat, BinaryMeshSource, BinaryMeshWriter};
 use super::{LIMIT, settled, add_progress, affine_matrix, analyze, component_pivot, component_vertices, count, decode_mesh, drive_job, encode_mesh, invalid, mesh_error, mesh_output, modeling_slice, operator_progress, positive, read_mesh, scalar, selection, sync_grant, tessellation_slice, turn_grant, value_error, vector};
 
 
 pub enum MeshRetirement {
-    Source(PolygonSourcePreparation),Modeling(MeshModelingJob),Tessellation(MeshTessellationJob),Output(MeshJobOutput),Transfer(semio_framework_3d::mesh::MeshTransfer),
+    Source(MeshSourcePreparation),Modeling(MeshModelingJob),Surface(MeshSurfaceJob),Tessellation(MeshTessellationJob),Output(MeshJobOutput),Transfer(semio_framework_3d::mesh::MeshTransfer),
     Kernel(MeshKernelRetirement),Session(SessionCapture),Fault(EvalError),Owned(Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>),Empty,
 }
 pub struct MeshKernelRetirement {
@@ -61,7 +64,7 @@ impl MeshRetirement {
     pub fn terminal_is_empty(&self)->bool {match self {Self::Empty|Self::Owned(None)=>true,Self::Kernel(owner)=>owner.terminal_is_empty(),Self::Session(owner)=>owner.terminal_is_empty(),_=>false}}
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         use semio_framework_value::retirement::owned_retirement_birth_bytes as birth;
-        let capacity=match self {Self::Source(_)=>birth::<PolygonSourcePreparation>(),Self::Modeling(job)=>job.retirement_birth_bytes(),Self::Tessellation(job)=>job.retirement_birth_bytes(),Self::Output(_)=>birth::<MeshJobOutput>(),Self::Transfer(_)=>birth::<semio_framework_3d::mesh::MeshTransfer>(),Self::Kernel(owner)=>return owner.demands(copy),Self::Session(owner)=>return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?}),Self::Fault(_)=>birth::<EvalError>(),Self::Owned(Some(owner))=>return semio_framework_value::factory_ticket_demands(owner,copy),Self::Owned(None)|Self::Empty=>return Ok(Default::default())};
+        let capacity=match self {Self::Source(_)=>birth::<MeshSourcePreparation>(),Self::Modeling(job)=>job.retirement_birth_bytes(),Self::Surface(job)=>job.retirement_birth_bytes(),Self::Tessellation(job)=>job.retirement_birth_bytes(),Self::Output(_)=>birth::<MeshJobOutput>(),Self::Transfer(_)=>birth::<semio_framework_3d::mesh::MeshTransfer>(),Self::Kernel(owner)=>return owner.demands(copy),Self::Session(owner)=>return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?}),Self::Fault(_)=>birth::<EvalError>(),Self::Owned(Some(owner))=>return semio_framework_value::factory_ticket_demands(owner,copy),Self::Owned(None)|Self::Empty=>return Ok(Default::default())};
         Ok(RetirementDemand {capacity_bytes:capacity,depth:1,..Default::default()})
     }
     pub fn step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
@@ -71,6 +74,7 @@ impl MeshRetirement {
         let (next,result)=match std::mem::replace(self,Self::Empty) {
             Self::Source(source)=>Self::admit(source,effect,Self::Source),
             Self::Modeling(job)=>Self::admit_job(job.into_original_retirement(effect),Self::Modeling),
+            Self::Surface(job)=>Self::admit_job(job.into_original_retirement(effect),Self::Surface),
             Self::Tessellation(job)=>Self::admit_job(job.into_original_retirement(effect),Self::Tessellation),
             Self::Output(output)=>Self::admit(output,effect,Self::Output),
             Self::Transfer(transfer)=>Self::admit(transfer,effect,Self::Transfer),
@@ -93,6 +97,7 @@ impl MeshRetirement {
 
 pub struct MeshOperatorJob {
     pub job: Option<MeshModelingJob>,
+    pub surface: Option<MeshSurfaceJob>,
     pub brep_job: Option<(Session,GeometryHandle,TessellationJob)>,
     pub import: Option<MeshImportState>,
     pub preparation: Option<MeshPreparation>,
@@ -112,7 +117,7 @@ pub struct MeshPreparation {
     pub operation:&'static str,
     pub session:Option<Session>,
     pub input:Option<Dictionary>,
-    pub source:Option<PolygonSourcePreparation>,
+    pub source:Option<MeshSourcePreparation>,
     pub reconstruction:Option<MeshModelingJob>,
     pub next:Option<Box<MeshOperatorJob>>,
     pub input_retirement:neural_engine::ValueRetirement,
@@ -120,7 +125,25 @@ pub struct MeshPreparation {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-pub enum MeshJobOutput { Mesh(MeshOutputState), Analysis(MeshAnalysisState) }
+#[value(send_only)]
+pub enum MeshSourcePreparation {
+    Polygon(PolygonSourcePreparation),
+    Obj(ObjSourceCursor),
+    Binary(BinaryMeshSource),
+}
+
+impl MeshSourcePreparation {
+    fn phase(&self) -> &'static str {
+        match self {
+            Self::Polygon(source) => source.phase(),
+            Self::Obj(_) => "mesh-source-obj",
+            Self::Binary(_) => "mesh-source-binary",
+        }
+    }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+pub enum MeshJobOutput { Mesh(MeshOutputState), Analysis(MeshAnalysisState), Inspection(MeshInspectionState) }
 pub struct MeshImportState {
     pub session: Option<Session>,
     pub tessellation: Option<MeshTessellationJob>,
@@ -131,9 +154,100 @@ pub struct MeshImportState {
     pub fault: Option<EvalError>,
 }
 impl MeshJobOutput {
-    pub fn phase(&self)->&'static str { match self { Self::Mesh(value)=>value.phase(),Self::Analysis(value)=>value.phase() } }
-    pub fn estimate(&self)->usize { match self { Self::Mesh(value)=>value.estimate(),Self::Analysis(value)=>value.estimate() } }
-    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Dictionary>,EvalError> { match self { Self::Mesh(value)=>value.advance(cx),Self::Analysis(value)=>value.advance(cx) } }
+    pub fn phase(&self)->&'static str { match self { Self::Mesh(value)=>value.phase(),Self::Analysis(value)=>value.phase(),Self::Inspection(_)=>"mesh-inspect" } }
+    pub fn estimate(&self)->usize { match self { Self::Mesh(value)=>value.estimate(),Self::Analysis(value)=>value.estimate(),Self::Inspection(value)=>value.estimate() } }
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Dictionary>,EvalError> { match self { Self::Mesh(value)=>value.advance(cx),Self::Analysis(value)=>value.advance(cx),Self::Inspection(value)=>value.advance() } }
+}
+
+enum MeshInspectionKind { Vertex(VertexId), Edge(EdgeId), Face(FaceId) }
+
+/// 🔎️ Borrowed topology reads share the prepared mesh and own each in-flight face projection.
+pub struct MeshInspectionState {
+    mesh: HalfedgeMesh,
+    kind: MeshInspectionKind,
+    start: EdgeId,
+    next: Option<EdgeId>,
+    flipped: bool,
+    corners: Vec<VertexId>,
+    corner: usize,
+    normal: [f64; 3],
+    center: [f64; 3],
+    vertices: String,
+}
+
+impl MeshInspectionState {
+    fn new(mesh: HalfedgeMesh, kind: MeshInspectionKind) -> Self {
+        Self { mesh, kind, start: EdgeId(0), next: None, flipped: false, corners: Vec::new(), corner: 0, normal: [0.0; 3], center: [0.0; 3], vertices: String::new() }
+    }
+
+    fn estimate(&self) -> usize {
+        if matches!(self.kind, MeshInspectionKind::Face(_)) { self.mesh.halfedge_count().saturating_mul(2).saturating_add(1) } else { 1 }
+    }
+
+    fn point(&self, vertex: VertexId) -> Result<[f64; 3], EvalError> {
+        self.mesh.vertex_position(vertex).map(|value| value.0.map(f64::from)).map_err(mesh_error)
+    }
+
+    fn advance(&mut self) -> Result<Option<Dictionary>, EvalError> {
+        match self.kind {
+            MeshInspectionKind::Vertex(id) => Ok(Some(channel_output("point", point_dictionary(self.point(id)?)))),
+            MeshInspectionKind::Edge(id) => {
+                let (from, to) = self.mesh.edge_endpoints(id).map_err(mesh_error)?;
+                let (start, end) = (self.point(from)?, self.point(to)?);
+                let length = (end[0] - start[0]).hypot(end[1] - start[1]).hypot(end[2] - start[2]);
+                Ok(Some(Dictionary::new().insert("start", Value::Dictionary(point_dictionary(start))).insert("end", Value::Dictionary(point_dictionary(end))).insert("length", Value::Dictionary(number_dictionary(length)))))
+            }
+            MeshInspectionKind::Face(id) => self.advance_face(id),
+        }
+    }
+
+    fn advance_face(&mut self, id: FaceId) -> Result<Option<Dictionary>, EvalError> {
+        if self.corners.is_empty() {
+            (self.start, self.flipped) = self.mesh.face_boundary(id).map_err(mesh_error)?;
+            self.next = Some(self.start);
+        }
+        if let Some(edge) = self.next {
+            let (vertex, next) = self.mesh.boundary_corner(edge).map_err(mesh_error)?;
+            self.corners.push(vertex);
+            self.next = (next != self.start).then_some(next);
+            return Ok(None);
+        }
+        let count = self.corners.len();
+        if count < 3 { return Err(invalid("face normal is degenerate")); }
+        if self.corner < count {
+            let index = |i| if self.flipped { count - 1 - i } else { i };
+            let vertex = self.corners[index(self.corner)];
+            let start = self.point(vertex)?;
+            let end = self.point(self.corners[index((self.corner + 1) % count)])?;
+            let origin = self.point(self.corners[index(0)])?;
+            let [ax, ay, az] = std::array::from_fn(|axis| start[axis] - origin[axis]);
+            let [bx, by, bz] = std::array::from_fn(|axis| end[axis] - origin[axis]);
+            let contribution = [(ay - by) * (az + bz), (az - bz) * (ax + bx), (ax - bx) * (ay + by)];
+            for axis in 0..3 {
+                self.normal[axis] += contribution[axis];
+                self.center[axis] += start[axis] / count as f64;
+            }
+            let separator = if self.corner == 0 { '[' } else { ',' };
+            write!(&mut self.vertices, "{separator}{}", vertex.0).unwrap();
+            self.corner += 1;
+            return Ok(None);
+        }
+        let [x, y, z] = self.normal;
+        let length = x.hypot(y).hypot(z);
+        if length == 0.0 { return Err(invalid("face normal is degenerate")); }
+        self.vertices.push(']');
+        Ok(Some(Dictionary::new()
+            .insert("vertices", Value::Dictionary(text_dictionary(std::mem::take(&mut self.vertices))))
+            .insert("normal", Value::Dictionary(vector_dictionary(self.normal.map(|axis| axis / length))))
+            .insert("center", Value::Dictionary(point_dictionary(self.center)))))
+    }
+}
+
+impl semio_framework_value::retirement::RetireOwned for MeshInspectionState {
+    type RetirementCursor = <(HalfedgeMesh, Vec<VertexId>, String) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::RetireOwned::retirement_seed((self.mesh, self.corners, self.vertices)) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self::RetirementCursor>()) }
+    fn controlled_retirement_supported() -> bool { true }
 }
 
 pub struct MeshAnalysisState {
@@ -216,6 +330,8 @@ pub struct MeshOutputState {
     pub json_only:bool,
     pub obj_only:bool,
     pub obj_uv:bool,
+    pub binary: Option<BinaryMeshFormat>,
+    pub binary_writer: Option<BinaryMeshWriter>,
     pub tessellation: Option<MeshTessellationJob>,
     pub encoder: Option<MeshPackEncodingJob>,
     pub phase: u8,
@@ -232,6 +348,8 @@ pub struct MeshOutputState {
     pub corner_remapped:bool,
     pub edge_remapped:bool,
     pub metadata:semio_framework_mesh_engine::io::text::MeshMetadataCursor,
+    pub surface_group: usize,
+    pub surface_written: bool,
     pub corner_base: usize,
     pub preview_data: Option<semio_framework_mesh_engine::MeshData>,
     pub cursor: usize,
@@ -244,9 +362,9 @@ impl MeshOutputState {
     pub fn new(mesh: HalfedgeMesh) -> Result<Self, EvalError> {
         if mesh.vertex_count() < 3 || mesh.face_count() == 0 { return Err(invalid("mesh operation produced empty geometry")); }
         if mesh.vertex_count() > LIMIT || mesh.face_count() > LIMIT || mesh.halfedge_count() > LIMIT * 6 { return Err(invalid("result exceeds mesh capacity (100000 vertices, 100000 faces, 600000 corners)")); }
-        Ok(Self {json_only:false,obj_only:false,obj_uv:false,tessellation: Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)), encoder: None, phase: 0, vertex: 0, face: 0, start: EdgeId(0), next: EdgeId(0), flipped: false, corners: Vec::new(), halfedges: Vec::new(), edge_remap: HashMap::new(),serialized_corners:Vec::new(),serialized_edges:Vec::new(),corner_remapped:false,edge_remapped:false,metadata:Default::default(), corner_base: 0, preview_data: None, cursor: 0, data: "{\"vertices\":[".into(), bytes: Vec::new(), preview: String::new() })
+        Ok(Self {json_only:false,obj_only:false,obj_uv:false,binary:None,binary_writer:None,tessellation: Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)), encoder: None, phase: 0, vertex: 0, face: 0, start: EdgeId(0), next: EdgeId(0), flipped: false, corners: Vec::new(), halfedges: Vec::new(), edge_remap: HashMap::new(),serialized_corners:Vec::new(),serialized_edges:Vec::new(),corner_remapped:false,edge_remapped:false,metadata:Default::default(), surface_group: 0, surface_written: false, corner_base: 0, preview_data: None, cursor: 0, data: "{\"vertices\":[".into(), bytes: Vec::new(), preview: String::new() })
     }
-    pub fn phase(&self) -> &'static str { ["mesh-output-vertices", "mesh-output-face-corners", "mesh-output-face-json", "mesh-output-tessellate", "mesh-output-edge-identities", "mesh-output-pack", "mesh-output-base64", "mesh-output-done","mesh-output-metadata","mesh-output-json-done","mesh-output-obj-uv-scan","mesh-output-obj-uv"][self.phase as usize] }
+    pub fn phase(&self) -> &'static str { ["mesh-output-vertices", "mesh-output-face-corners", "mesh-output-face-json", "mesh-output-tessellate", "mesh-output-edge-identities", "mesh-output-pack", "mesh-output-base64", "mesh-output-done","mesh-output-metadata","mesh-output-json-done","mesh-output-obj-uv-scan","mesh-output-obj-uv","mesh-output-surface","mesh-output-binary","mesh-output-binary-write"][self.phase as usize] }
     pub fn estimate(&self) -> usize { let mesh = self.tessellation.as_ref().unwrap().source(); mesh.vertex_count().saturating_add(mesh.face_count().saturating_mul(4)).saturating_add(mesh.halfedge_count().saturating_mul(24)).saturating_add(1) }
     pub fn advance(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Dictionary>, EvalError> {
         match self.phase {
@@ -288,7 +406,15 @@ impl MeshOutputState {
                     MeshTessellationStep::Cancelled(_) => return Err(invalid("mesh output cancelled")),
                     MeshTessellationStep::Done(transfer) => {
                         let preview = semio_framework_mesh_engine::MeshData { colors:transfer.colors,attributes:transfer.attributes,materials:transfer.materials,textures:transfer.textures,positions: transfer.positions, normals: transfer.normals, indices: transfer.indices, face_ids: transfer.face_ids, vertex_ids: transfer.vertex_ids, edge_positions: transfer.edge_positions, edge_ids: transfer.edge_ids, uvs: transfer.uvs, edge_uvs: transfer.edge_uvs, edge_is_seam: transfer.edge_is_seam, ..Default::default() };
-                        self.preview_data = Some(preview); self.cursor = 0; self.phase = 4;
+                        if let Some(format) = self.binary {
+                            self.preview_data = Some(preview);
+                            self.binary_writer = Some(BinaryMeshWriter::new(format, self.preview_data.as_ref().unwrap())?);
+                            self.phase = 14;
+                        } else {
+                            self.preview_data = Some(preview);
+                            self.cursor = 0;
+                            self.phase = 4;
+                        }
                     }
                 }
             }
@@ -303,7 +429,7 @@ impl MeshOutputState {
             6 => {
                 let end = (self.cursor+3072).min(self.bytes.len());
                 self.preview.push_str(&encode_base64(&self.bytes[self.cursor..end])); self.cursor = end;
-                if end == self.bytes.len() { self.phase = 7; }
+                if end == self.bytes.len() { self.phase = if self.binary.is_some() { 13 } else { 7 }; }
             }
             7 => {
                 let mesh = Dictionary::with_schema("mesh").insert("data", Value::Atom(Atom::String(std::mem::take(&mut self.data)))).insert("preview", Value::Atom(Atom::String(std::mem::take(&mut self.preview))));
@@ -313,15 +439,61 @@ impl MeshOutputState {
             9=>return Ok(Some(channel_output("text",text_dictionary(std::mem::take(&mut self.data))))),
             10=>{let mesh=self.tessellation.as_ref().unwrap().source();if self.cursor==mesh.halfedge_count() {self.cursor=0;self.phase=if self.obj_uv {11}else {1};}else {self.obj_uv|=mesh.corner_uv(EdgeId(self.cursor as u32)).map_err(mesh_error)?!=[0.0,0.0];self.cursor+=1;}},
             11=>{let mesh=self.tessellation.as_ref().unwrap().source();if self.cursor==mesh.halfedge_count() {self.cursor=0;self.phase=1;}else {let uv=mesh.corner_uv(EdgeId(self.cursor as u32)).map_err(mesh_error)?;self.data.push_str(&format!("vt {} {}\n",uv[0],uv[1]));self.cursor+=1;}},
+            12 => self.advance_surface(),
+            13 => return Ok(Some(channel_output(self.binary.unwrap().port(), text_dictionary(std::mem::take(&mut self.preview))))),
+            14 => {
+                let complete = self.binary_writer.as_mut().unwrap().step(self.preview_data.as_ref().unwrap(), &mut self.bytes)?;
+                if self.bytes.len().div_ceil(3) * 4 > 16_000_000 { return Err(invalid("binary output exceeds 16 MB of base64 text")); }
+                if complete {
+                    self.binary_writer = None;
+                    self.cursor = 0;
+                    self.phase = 6;
+                }
+            }
             _ => unreachable!(),
         }
         if self.data.len() > 16_000_000 { return Err(invalid("mesh output exceeds 16 MB")); }
         Ok(None)
     }
 
+    fn advance_surface(&mut self) {
+        use semio_framework_mesh_engine::PolygonSurfaceKind::*;
+        use semio_framework_value::ToValue;
+        let mesh = self.tessellation.as_ref().unwrap().source();
+        let groups = [
+            (VertexNormal, None, mesh.vertex_count()),
+            (SmoothFace, None, mesh.face_count()),
+            (CornerUv, Some(self.serialized_corners.as_slice()), mesh.halfedge_count()),
+            (SeamEdge, Some(self.serialized_edges.as_slice()), mesh.halfedge_count()),
+        ];
+        if let Some((kind, ids, count)) = groups.get(self.surface_group).copied() {
+            if self.cursor == count {
+                self.cursor = 0;
+                self.surface_group += 1;
+                return;
+            }
+            let index = self.cursor as u32;
+            let source = ids.map_or(index, |ids| ids[self.cursor]);
+            if let Some(sample) = mesh.polygon_surface_sample(kind, index, source) {
+                if self.surface_written {
+                    self.data.push(',');
+                } else {
+                    self.data.push_str(",\"surface\":[");
+                    self.surface_written = true;
+                }
+                self.data.push_str(&semio_framework_pack_json::from_dsl_value(&sample.to_value()).to_string());
+            }
+            self.cursor += 1;
+            return;
+        }
+        if self.surface_written { self.data.push(']'); }
+        self.data.push('}');
+        self.phase = if self.json_only { 9 } else { 3 };
+    }
+
     pub fn advance_metadata(&mut self)->Result<(),EvalError> {
         let mesh=self.tessellation.as_ref().unwrap().source();
-        if self.metadata.step(mesh.attributes(),mesh.materials(),mesh.textures(),None,self.corner_remapped.then_some(self.serialized_corners.as_slice()),self.edge_remapped.then_some(self.serialized_edges.as_slice()),&mut self.data).map_err(invalid)? {self.data.push('}');self.phase=if self.json_only {9}else {3};}
+        if self.metadata.step(mesh.attributes(),mesh.materials(),mesh.textures(),None,self.corner_remapped.then_some(self.serialized_corners.as_slice()),self.edge_remapped.then_some(self.serialized_edges.as_slice()),&mut self.data).map_err(invalid)? {self.cursor=0;self.phase=12;}
         Ok(())
     }
 }
@@ -337,9 +509,14 @@ impl MeshOperatorJob {
     pub fn preparation(operation:&'static str,session:Session,input:&Dictionary)->Result<Self,EvalError> {
         Self::source_text(operation,input)?;
         let progress=neural_engine::OperatorProgress {phase:"mesh-source-parse",units_done:0,units_total:1};
-        Ok(Self {job:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session:Some(session),input:None,source:Some(PolygonSourcePreparation::new()),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,progress,cancelled:false})
+        Ok(Self {job:None,surface:None,brep_job:None,import:None,preparation:Some(MeshPreparation {operation,session:Some(session),input:None,source:Some(match operation {
+            "importObj" => MeshSourcePreparation::Obj(ObjSourceCursor::new()),
+            "importStl" => MeshSourcePreparation::Binary(BinaryMeshSource::new(BinaryMeshFormat::Stl)),
+            "importGlb" => MeshSourcePreparation::Binary(BinaryMeshSource::new(BinaryMeshFormat::Glb)),
+            _ => MeshSourcePreparation::Polygon(PolygonSourcePreparation::new()),
+        }),reconstruction:None,next:None,input_retirement:Default::default(),retire_input:false}),retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,progress,cancelled:false})
     }
-    pub fn source_text<'a>(operation:&str,input:&'a Dictionary)->Result<&'a str,EvalError> {if operation=="construct" {return input.get("data").and_then(Value::as_dictionary).and_then(|text|text.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("data must be text"));}let mesh=input.get("mesh").and_then(Value::as_dictionary).filter(|mesh|mesh.schema()==Some("mesh")).ok_or_else(||invalid("mesh requires a mesh"))?;mesh.get("data").and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("mesh data is missing"))}
+    pub fn source_text<'a>(operation:&str,input:&'a Dictionary)->Result<&'a str,EvalError> {if uses_source_text(operation) {return input.get("data").and_then(Value::as_dictionary).and_then(|text|text.get("value")).and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("data must be text"));}let mesh=input.get("mesh").and_then(Value::as_dictionary).filter(|mesh|mesh.schema()==Some("mesh")).ok_or_else(||invalid("mesh requires a mesh"))?;mesh.get("data").and_then(Value::as_atom).and_then(Atom::as_str).ok_or_else(||invalid("mesh data is missing"))}
     pub fn step_preparation(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
         if budget==0 || grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
         let child=turn_grant(grant);
@@ -382,18 +559,37 @@ impl MeshOperatorJob {
                 return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
             } else if let Some(source)=&mut state.source {
                 let text=Self::source_text(state.operation,state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?)?;
-                let source_grant=semio_framework_mesh_engine::io::text::PolygonSourceGrant{maximum_units:1,maximum_projection_bytes:grant.maximum_copy_bytes,retirement:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth}};
-                let prepared=match cx.with_original_effect(source_grant.retirement,|_,effect|source.step(text,source_grant,effect)) {Ok(Some((step,_)))=>step.map(|step|step.source),Ok(None)=>Ok(None),Err(error)=>Err(format!("{error:?}"))};
+                let source_grant = semio_framework_mesh_engine::io::text::PolygonSourceGrant {
+                    maximum_units: 1,
+                    maximum_projection_bytes: grant.maximum_copy_bytes,
+                    retirement: RetainedCloneGrant { maximum_items: 1, ..grant },
+                };
+                let reconstruct = |source| HalfedgeMesh::polygon_source_job(source).map_err(mesh_error);
+                let prepared = match source {
+                    MeshSourcePreparation::Polygon(source) => match cx.with_original_effect(source_grant.retirement, |_, effect| source.step(text, source_grant, effect)) {
+                        Ok(Some((result, work))) => {
+                            cx.consume_work(work);
+                            self.receipt = add_progress(self.receipt, source.normal_step_retained_progress());
+                            result.map_err(invalid).and_then(|step| step.source.map(reconstruct).transpose())
+                        }
+                        Ok(None) => Ok(None),
+                        Err(error) => Err(EvalError::Retained(error)),
+                    },
+                    MeshSourcePreparation::Obj(source) => source.step(text, 1).map_err(invalid).and_then(|source| source.map(reconstruct).transpose()),
+                    MeshSourcePreparation::Binary(source) => source.step(text).and_then(|source| source.map(|mesh| {
+                        HalfedgeMesh::indexed_triangle_job(mesh.positions, mesh.indices, mesh.normals).map_err(mesh_error)
+                    }).transpose()),
+                };
                 match prepared {
-                    Ok(Some(source))=>{state.reconstruction=Some(HalfedgeMesh::polygon_source_job(source).map_err(mesh_error)?);self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));self.progress.phase="mesh-source-capture";},
+                    Ok(Some(job))=>{state.reconstruction=Some(job);self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));self.progress.phase="mesh-source-capture";},
                     Ok(None)=>self.progress.phase=source.phase(),
-                    Err(error)=>{self.fault=Some(invalid(error));self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},
+                    Err(error)=>{self.fault=Some(error);self.retirement=Some(MeshRetirement::Source(state.source.take().unwrap()));state.retire_input=true;self.progress.phase="mesh-fault-retire";},
                 }
             } else if let Some(job)=&mut state.reconstruction {
                 match modeling_slice(job,1,cx) {
                     Ok(MeshModelingStep::Working(progress))=>self.progress.phase=progress.phase,
                     Ok(MeshModelingStep::Done(mesh))=>{
-                        state.next=Some(Box::new(if state.operation=="construct" {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.as_ref().ok_or_else(||invalid("original preparation session is absent"))?.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
+                        state.next=Some(Box::new(if uses_source_text(state.operation) {Self::output(mesh)?}else {Self::owned_plan(state.operation,state.session.as_ref().ok_or_else(||invalid("original preparation session is absent"))?.clone(),state.input.as_ref().ok_or_else(||invalid("mesh preparation lost its original input"))?,mesh)?}));
                         self.retirement=Some(MeshRetirement::Modeling(state.reconstruction.take().unwrap()));
                         state.retire_input=true;
                     },
@@ -420,6 +616,7 @@ impl MeshOperatorJob {
         let child=turn_grant(grant);
         if self.retirement.is_none() {
             if let Some(job)=self.job.take() {self.retirement=Some(MeshRetirement::Modeling(job));}
+            else if let Some(job)=self.surface.take(){self.retirement=Some(MeshRetirement::Surface(job))}
             else if let Some((session,shape,job))=self.brep_job.take() {self.retirement=Some(MeshRetirement::Kernel(MeshKernelRetirement::new(session,shape,job,None)));}
             else if let Some(output)=self.output.take() {self.retirement=Some(MeshRetirement::Output(output));}
         }
@@ -441,7 +638,7 @@ impl MeshOperatorJob {
             self.receipt=add_progress(self.receipt,step.progress());
             return Ok(neural_engine::OperatorJobStep::Working(self.progress));
         }
-        if self.job.is_some() || self.brep_job.is_some() || self.output.is_some() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
+        if self.job.is_some() || self.surface.is_some() || self.brep_job.is_some() || self.output.is_some() {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
         Ok(neural_engine::OperatorJobStep::Cancelled(self.progress))
     }
     pub fn close_failed(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
@@ -451,7 +648,7 @@ impl MeshOperatorJob {
         }
     }
     pub fn to_brep(session:Session,mesh:HalfedgeMesh,tolerance:f64)->Result<Self,EvalError> {
-        Ok(Self {job:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,import:Some(MeshImportState {session:Some(session),tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
+        Ok(Self {job:None,surface:None,brep_job:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,import:Some(MeshImportState {session:Some(session),tessellation:Some(MeshTessellationJob::with_preview_capacity(mesh,64_000_000)),cursor:None,tolerance,source_retirement:None,transfer_retirement:None,fault:None}),modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:0,units_total:1,phase:"mesh-to-brep-tessellate"}})
     }
     pub fn step_import(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(neural_engine::OperatorJobStep::Working(self.progress));}
@@ -501,18 +698,25 @@ impl MeshOperatorJob {
     }
     pub fn from_brep(session:Session,shape:GeometryHandle,deflection:f64)->Result<Self,EvalError> {
         let job=session.with_kernel_read(|kernel|kernel.tessellate_job_sync(&shape,deflection).map_err(|error|map_kernel_error(&error)))?;
-        let progress=job.progress();Ok(Self {job:None,brep_job:Some((session,shape,job)),import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:progress.units_done,units_total:progress.units_total,phase:progress.phase.tag()}})
+        let progress=job.progress();Ok(Self {job:None,surface:None,brep_job:Some((session,shape,job)),import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,cancelled:false,progress:neural_engine::OperatorProgress {units_done:progress.units_done,units_total:progress.units_total,phase:progress.phase.tag()}})
     }
     pub fn modeling_progress(&self,progress:MeshModelingProgress)->neural_engine::OperatorProgress {let mut progress=operator_progress(progress);progress.units_done=progress.units_done.saturating_add(self.modeling_base);progress.units_total=progress.units_total.saturating_add(self.modeling_base);progress}
     pub fn analysis(mesh:HalfedgeMesh)->Result<Self,EvalError> {
-        let output=MeshJobOutput::Analysis(MeshAnalysisState::new(mesh)?);
-        Ok(Self { job:None,brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,progress:neural_engine::OperatorProgress { units_done:0,units_total:output.estimate(),phase:output.phase() },output:Some(output),cancelled:false })
+        Ok(Self::with_output(MeshJobOutput::Analysis(MeshAnalysisState::new(mesh)?)))
+    }
+    fn with_output(output: MeshJobOutput) -> Self {
+        Self { job: None, surface: None, brep_job: None, import: None, preparation: None, retirement: None, pending_output: None, value_retirement: Default::default(), receipt: Default::default(), pending_input: None, fault: None, modeling_base: 0, progress: neural_engine::OperatorProgress { units_done: 0, units_total: output.estimate(), phase: output.phase() }, output: Some(output), cancelled: false }
     }
     pub fn obj(mesh:HalfedgeMesh)->Result<Self,EvalError> {let mut job=Self::output(mesh)?;let Some(MeshJobOutput::Mesh(output))=&mut job.output else {unreachable!()};output.obj_only=true;output.data="# kernel_3d_mesh OBJ export\n".into();Ok(job)}
+    pub fn binary(mesh: HalfedgeMesh, format: BinaryMeshFormat) -> Result<Self, EvalError> {
+        let mut state = MeshOutputState::new(mesh)?;
+        state.binary = Some(format);
+        state.phase = 3;
+        Ok(Self::with_output(MeshJobOutput::Mesh(state)))
+    }
     pub fn json(mesh:HalfedgeMesh)->Result<Self,EvalError> {let mut job=Self::output(mesh)?;let Some(MeshJobOutput::Mesh(output))=&mut job.output else {unreachable!()};output.json_only=true;Ok(job)}
     pub fn output(mesh: HalfedgeMesh) -> Result<Self, EvalError> {
-        let output = MeshJobOutput::Mesh(MeshOutputState::new(mesh)?);
-        Ok(Self { job: None, brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,progress: neural_engine::OperatorProgress { units_done: 0, units_total: output.estimate(), phase: output.phase() }, output: Some(output), cancelled: false })
+        Ok(Self::with_output(MeshJobOutput::Mesh(MeshOutputState::new(mesh)?)))
     }
 }
 
@@ -520,8 +724,14 @@ impl MeshOperatorJob {
     pub fn advance(&mut self,budget:usize,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,EvalError> {
         if self.preparation.is_some() {return self.step_preparation(budget,grant,cx);}
         if self.fault.is_some() {return self.close_failed(grant,cx);}
-        if self.cancelled && self.import.is_none() {return self.close_cancelled(grant,cx);}
-        if self.import.is_some() { return self.step_import(budget,grant,cx); }
+        if self.cancelled {
+            if self.import.is_none() { return self.close_cancelled(grant, cx); }
+            self.progress.phase = "mesh-to-brep-retire";
+            let step = Self::effect_step(cx, turn_grant(grant), |effect| self.close_original_event(effect))?;
+            self.receipt = add_progress(self.receipt, step.progress());
+            return Ok(if self.terminal_is_empty() { OperatorJobStep::Cancelled(self.progress) } else { OperatorJobStep::Working(self.progress) });
+        }
+        if self.import.is_some() { return self.step_import(budget, grant, cx); }
         if let Some(retirement)=&mut self.retirement {
             let step=Self::effect_step(cx,turn_grant(grant),|effect|retirement.step(effect))?;
             self.receipt=add_progress(self.receipt,step.progress());
@@ -538,6 +748,7 @@ impl MeshOperatorJob {
             if done {let (session,shape,mut job)=self.brep_job.take().unwrap();let (mut mesh,_)=job.take_mesh().ok_or_else(||invalid("BRep tessellation completed without geometry"))?;let next=HalfedgeMesh::indexed_triangle_job(std::mem::take(&mut mesh.position),std::mem::take(&mut mesh.index),std::mem::take(&mut mesh.normal));self.retirement=Some(MeshRetirement::Kernel(MeshKernelRetirement::new(session,shape,job,Some(mesh))));let job=next.map_err(mesh_error)?;self.modeling_base=self.progress.units_done;self.progress=self.modeling_progress(job.progress());self.job=Some(job);}
             return Ok(neural_engine::OperatorJobStep::Working(self.progress));
         }
+        if self.surface.is_some() {return self.advance_surface(budget);}
         if self.output.is_none() {
             let job = self.job.as_mut().ok_or_else(|| invalid("mesh job is retired"))?;
             let step=match modeling_slice(job,budget,cx) {Ok(step)=>step,Err(error)=>{self.fault=Some(mesh_error(error));self.retirement=Some(MeshRetirement::Modeling(self.job.take().unwrap()));self.progress.phase="mesh-fault-retire";return Ok(neural_engine::OperatorJobStep::Working(self.progress));}};
@@ -569,6 +780,37 @@ impl MeshOperatorJob {
         }
         Ok(neural_engine::OperatorJobStep::Working(self.progress))
     }
+    fn advance_surface(&mut self, budget: usize) -> Result<neural_engine::OperatorJobStep, EvalError> {
+        let job = self.surface.as_mut().unwrap();
+        match job.step(budget) {
+            Ok(MeshModelingStep::Working(progress)) => self.progress = self.modeling_progress(progress),
+            Ok(MeshModelingStep::Done(mesh)) => {
+                let progress = job.progress();
+                self.progress = self.modeling_progress(progress);
+                self.retirement = self.surface.take().map(MeshRetirement::Surface);
+                self.output = Some(MeshJobOutput::Mesh(MeshOutputState::new(mesh)?));
+                self.progress.units_total = self.progress.units_done.saturating_add(self.output.as_ref().unwrap().estimate());
+                self.progress.phase = self.output.as_ref().unwrap().phase();
+            }
+            Ok(MeshModelingStep::Cancelled(progress)) => {
+                self.progress = self.modeling_progress(progress);
+                self.cancelled = true;
+                self.retirement = self.surface.take().map(MeshRetirement::Surface);
+            }
+            Err(error) => {
+                self.fault = Some(mesh_error(error));
+                self.retirement = self.surface.take().map(MeshRetirement::Surface);
+                self.progress.phase = "mesh-fault-retire";
+            }
+        }
+        Ok(OperatorJobStep::Working(self.progress))
+    }
+
+    fn next_import_rollback_demand(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
+        if self.cancelled && self.import.is_some() { self.close_demand(copy) }
+        else { Ok(RetirementDemand { depth: 1, ..Default::default() }) }
+    }
+
     fn spend(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.performed(1)? {Ok(())}else {Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh close exceeds its work ceiling"))}}
     fn close_original_event(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();let body=grant.maximum_copy_bytes;
@@ -596,13 +838,14 @@ impl MeshOperatorJob {
             else if let Some(session)=import.session.take(){self.retirement=Some(MeshRetirement::Session(SessionCapture::owned(session)))}
             else{self.import=None}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
         }
-        if !self.value_retirement.terminal_is_empty()&&self.job.is_none()&&self.brep_job.is_none()&&self.output.is_none(){return settled(self.value_retirement.close_step(body,effect))}
-        if (self.pending_input.is_some()||self.pending_output.is_some())&&self.job.is_none()&&self.brep_job.is_none()&&self.output.is_none(){
+        if !self.value_retirement.terminal_is_empty()&&self.job.is_none()&&self.surface.is_none()&&self.brep_job.is_none()&&self.output.is_none(){return settled(self.value_retirement.close_step(body,effect))}
+        if (self.pending_input.is_some()||self.pending_output.is_some())&&self.job.is_none()&&self.surface.is_none()&&self.brep_job.is_none()&&self.output.is_none(){
             let progress=if self.pending_input.is_some(){Self::push_input(&mut self.value_retirement,&mut self.pending_input,effect)?}else {Self::push_input(&mut self.value_retirement,&mut self.pending_output,effect)?};
             return Ok(RetainedCloneStep::Progress(progress))
         }
         Self::spend(effect)?;
         if let Some(job)=self.job.take(){self.retirement=Some(MeshRetirement::Modeling(job))}
+        else if let Some(job)=self.surface.take(){self.retirement=Some(MeshRetirement::Surface(job))}
         else if let Some((session,shape,job))=self.brep_job.take(){self.retirement=Some(MeshRetirement::Kernel(MeshKernelRetirement::new(session,shape,job,None)))}
         else if let Some(output)=self.output.take(){self.retirement=Some(MeshRetirement::Output(output))}
         else{return Ok(RetainedCloneStep::Complete(empty))}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
@@ -624,12 +867,12 @@ impl MeshOperatorJob {
             if let Some(cursor)=import.cursor.as_ref(){if cursor.retirement_complete(){return Ok(metadata)}let session=import.session.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original import session is absent"))?;return Ok(RetirementDemand{copy_bytes:session.next_mesh_import_copy_byte_demand(cursor)?,capacity_bytes:session.next_mesh_import_capacity_byte_demand(cursor,copy)?,release_bytes:session.next_mesh_import_release_byte_demand(cursor)?,depth:session.next_mesh_import_depth_demand(cursor)?})}
             return Ok(metadata)
         }
-        if self.job.is_some()||self.brep_job.is_some()||self.output.is_some(){return Ok(metadata)}
+        if self.job.is_some()||self.surface.is_some()||self.brep_job.is_some()||self.output.is_some(){return Ok(metadata)}
         if !self.value_retirement.terminal_is_empty(){return value(&self.value_retirement)}
         Ok(metadata)
     }
     pub fn terminal_is_empty(&self)->bool {
-        self.job.is_none() && self.brep_job.is_none() && self.import.is_none() && self.preparation.is_none() && self.retirement.is_none() && self.pending_output.is_none() && self.pending_input.is_none() && self.output.is_none() && self.value_retirement.terminal_is_empty()
+        self.job.is_none() && self.surface.is_none() && self.brep_job.is_none() && self.import.is_none() && self.preparation.is_none() && self.retirement.is_none() && self.pending_output.is_none() && self.pending_input.is_none() && self.output.is_none() && self.value_retirement.terminal_is_empty()
     }
     pub fn attach_input(&mut self,input:Dictionary,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Dictionary)> {
         if grant.maximum_items==0 {return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"mesh input transfer requires one admitted item"),input));}
@@ -649,10 +892,10 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         Ok((step,self.receipt))
     }
     fn normal_step_progress(&self)->RetainedCloneProgress {self.receipt}
-    fn next_step_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
-    fn next_step_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(0)}
-    fn next_step_release_byte_demand(&self)->Result<usize,ValueError> {Ok(0)}
-    fn next_step_depth_demand(&self)->Result<usize,ValueError> {Ok(1)}
+    fn next_step_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.next_import_rollback_demand(0)?.copy_bytes) }
+    fn next_step_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.next_import_rollback_demand(copy)?.capacity_bytes) }
+    fn next_step_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.next_import_rollback_demand(0)?.release_bytes) }
+    fn next_step_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.next_import_rollback_demand(0)?.depth) }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demand(0)?.release_bytes)}
@@ -666,11 +909,22 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
         if self.cancelled {return;}
         if self.preparation.is_some() {self.cancelled=true;return;}
         if let Some(import)=&mut self.import {self.cancelled=true;if let Some(cursor)=&mut import.cursor {cursor.cancel();}return;}
-        if self.cancelled || (self.output.is_none() && self.job.is_none() && self.brep_job.is_none() && self.retirement.is_none() && self.pending_output.is_none()) { return; }
         if let Some(job) = &mut self.job { job.cancel(); let progress=job.progress();self.progress=neural_engine::OperatorProgress {units_done:progress.units_done.saturating_add(self.modeling_base),units_total:progress.units_total.saturating_add(self.modeling_base),phase:progress.phase}; }
+        if let Some(job)=&mut self.surface {job.cancel();}
         if let Some((_,_,job))=&mut self.brep_job {job.cancel();}
         self.cancelled=true;
 
+    }
+}
+
+fn uses_source_text(operation: &str) -> bool {
+    matches!(operation, "construct" | "importObj" | "importStl" | "importGlb")
+}
+
+fn surface_flag(input: &Dictionary, field: &str) -> Result<bool, EvalError> {
+    match input.get(field).and_then(Value::as_dictionary).and_then(|value| value.get("value")).and_then(Value::as_atom) {
+        Some(Atom::Boolean(value)) => Ok(*value),
+        _ => Err(invalid(format!("{field} must be a boolean"))),
     }
 }
 
@@ -680,18 +934,19 @@ pub struct MeshOperation(pub(crate) &'static str, pub(crate) SessionCapture);
 impl MeshOperation {
     pub fn plan_job(&self, input: &Dictionary) -> Result<Option<MeshOperatorJob>, EvalError> {
         if self.0=="transform" {HalfedgeMesh::validate_affine_matrix(affine_matrix(input)?).map_err(mesh_error)?;}
-        if self.0=="construct" {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
+        if uses_source_text(self.0) {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
         let primitive=match self.0 {
             "box"=>Some(HalfedgeMesh::box_primitive_job(positive(input,"width")?,positive(input,"height")?,positive(input,"depth")?)),
             "plane"=>Some(HalfedgeMesh::plane_primitive_job(positive(input,"width")?,positive(input,"depth")?)),
             "cylinder"=>Some(HalfedgeMesh::cylinder_primitive_job(positive(input,"radius")?,positive(input,"height")?,count(input,"segments",3,1024)?)),
             "cone"=>Some(HalfedgeMesh::cone_primitive_job(positive(input,"radius")?,positive(input,"height")?,count(input,"segments",3,1024)?)),
+            "torus" => Some(HalfedgeMesh::torus_primitive_job(positive(input,"major")?, positive(input,"minor")?, count(input,"segments",3,1024)?, count(input,"rings",3,1024)?)),
+            "uvSphere" => Some(HalfedgeMesh::uv_sphere_primitive_job(positive(input,"radius")?, count(input,"segments",3,1024)?, count(input,"rings",2,1024)?)),
             "sphere"=>Some(HalfedgeMesh::sphere_primitive_job(positive(input,"radius")?,count(input,"subdivisions",0,5)?)),_=>None,
-        };if let Some(job)=primitive {let job=job.map_err(mesh_error)?;let progress=operator_progress(job.progress());return Ok(Some(MeshOperatorJob {job:Some(job),brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,progress,cancelled:false}));}
+        };if let Some(job)=primitive {let job=job.map_err(mesh_error)?;let progress=operator_progress(job.progress());return Ok(Some(MeshOperatorJob {job:Some(job),surface:None,brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output:None,progress,cancelled:false}));}
         if self.0=="fromBrep" {return Ok(Some(MeshOperatorJob::from_brep(self.1.clone(),read_geometry(input,"geometry")?,positive(input,"deflection")? as f64)?));}
-        if matches!(self.0,"toBrep"|"analyze"|"exportObj"|"exportJson") {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
+        if matches!(self.0,"toBrep"|"analyze"|"exportObj"|"exportJson"|"exportStl"|"exportGlb"|"inspectVertex"|"inspectEdge"|"inspectFace"|"setShading"|"recomputeNormals"|"markSeams"|"unwrapUv") {return Ok(Some(MeshOperatorJob::preparation(self.0,self.1.clone(),input)?));}
         if !matches!(self.0, "bevel" | "decimate" | "mirror" | "mergeVertices" | "mergeCoplanar" | "dissolveEdges" | "dissolveVertices" | "weld" | "subdivide" | "loopCut" | "knifeCut" | "extrude" | "inset" | "orient" | "fillHoles" | "transform" | "translate" | "rotate" | "scale" | "translateComponents" | "rotateComponents" | "scaleComponents" | "moveVertices" | "triangulate" | "snapVertices" | "moveProportional" | "deleteFaces" | "flip") {
-            if matches!(self.0,"inspectVertex" | "inspectEdge" | "inspectFace" | "analyze" | "exportObj" | "exportJson" | "toBrep") { return Ok(None); }
             let MeshEvaluation::Mesh(mesh) = self.prepare(input)? else { return Err(invalid("mesh operator produced an unexpected value")); };
             return Ok(Some(MeshOperatorJob::output(mesh)?));
         }
@@ -739,7 +994,36 @@ impl MeshOperatorJob {
             "analyze"=>return Self::analysis(mesh),
             "exportObj"=>return Self::obj(mesh),
             "exportJson"=>return Self::json(mesh),
+            "exportStl"=>return Self::binary(mesh, BinaryMeshFormat::Stl),
+            "exportGlb"=>return Self::binary(mesh, BinaryMeshFormat::Glb),
             _=>{},
+        }
+        if matches!(operation, "inspectVertex" | "inspectEdge" | "inspectFace") {
+            let index = count(input, "index", 0, u32::MAX)?;
+            let kind = match operation {
+                "inspectVertex" => MeshInspectionKind::Vertex(VertexId(index)),
+                "inspectEdge" => MeshInspectionKind::Edge(EdgeId(index)),
+                _ => MeshInspectionKind::Face(FaceId(index)),
+            };
+            return Ok(Self::with_output(MeshJobOutput::Inspection(MeshInspectionState::new(mesh, kind))));
+        }
+        if matches!(operation, "setShading" | "recomputeNormals" | "markSeams" | "unwrapUv") {
+            let job = match operation {
+                "setShading" => {
+                    let faces = selection(input, "faces", mesh.face_count())?.into_iter().map(FaceId).collect::<Vec<_>>();
+                    mesh.set_shading_job_owned(&faces, surface_flag(input, "smooth")?)
+                }
+                "recomputeNormals" => mesh.recompute_normals_job_owned(),
+                "markSeams" => {
+                    let edges = selection(input, "edges", mesh.halfedge_count())?.into_iter().map(EdgeId).collect::<Vec<_>>();
+                    mesh.set_uv_seams_job_owned(&edges, surface_flag(input, "seam")?)
+                }
+                _ => mesh.unwrap_uv_job_owned(),
+            }.map_err(mesh_error)?;
+            let progress = operator_progress(job.progress());
+            return Ok(Self { job: None, surface: Some(job), brep_job: None, import: None, preparation: None, retirement: None,
+                pending_output: None, value_retirement: Default::default(), receipt: Default::default(), pending_input: None,
+                fault: None, modeling_base: 0, output: None, progress, cancelled: false });
         }
         let source_vertices=mesh.vertex_count();let source_corners=mesh.halfedge_count();let source_faces=mesh.face_count();
         let job = if matches!(operation,"snapVertices"|"moveProportional") {let ids=selection(input,"selection",source_vertices)?.into_iter().map(VertexId).collect();if operation=="snapVertices" {mesh.snap_vertices_job_owned(ids,positive(input,"grid")?).map_err(mesh_error)?}else {mesh.move_proportional_job_owned(ids,vector(input,"offset")?,vector(input,"center")?,positive(input,"radius")?).map_err(mesh_error)?}}else if matches!(operation,"translateComponents"|"rotateComponents"|"scaleComponents"|"moveVertices") {
@@ -755,7 +1039,7 @@ impl MeshOperatorJob {
             }
         }else if operation=="mergeCoplanar" {mesh.merge_coplanar_faces_job_owned().map_err(mesh_error)?}
         else if operation=="dissolveEdges" {let ids=selection(input,"edges",source_corners)?.into_iter().map(EdgeId).collect::<Vec<_>>();mesh.dissolve_edges_job_owned(&ids).map_err(mesh_error)?}
-        else if operation=="dissolveVertices" {let ids=selection(input,"vertices",source_vertices)?.into_iter().map(VertexId).collect::<Vec<_>>();mesh.dissolve_vertices_job_owned(&ids).map_err(mesh_error)?}
+        else if operation=="dissolveVertices" {let ids=selection(input,"selection",source_vertices)?.into_iter().map(VertexId).collect::<Vec<_>>();mesh.dissolve_vertices_job_owned(&ids).map_err(mesh_error)?}
         else if operation=="weld" {mesh.weld_coincident_vertices_job_owned(positive(input,"tolerance")?).map_err(mesh_error)?}
         else if operation=="transform" {mesh.affine_transform_job_owned(affine_matrix(input)?).map_err(mesh_error)?}
         else if operation=="translate" {mesh.translate_job_owned(vector(input,"offset")?).map_err(mesh_error)?}
@@ -792,7 +1076,7 @@ impl MeshOperatorJob {
             mesh.merge_vertices_job_owned(&ids,mode,tolerance).map_err(mesh_error)?
         };
         let progress = operator_progress(job.progress());
-        Ok(MeshOperatorJob { job: Some(job), brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output: None, progress, cancelled: false })
+        Ok(MeshOperatorJob { job: Some(job), surface: None, brep_job:None,import:None,preparation:None,retirement:None,pending_output:None,value_retirement:Default::default(),receipt:Default::default(),pending_input:None,fault:None,modeling_base:0,output: None, progress, cancelled: false })
     }
 }
 
@@ -888,31 +1172,6 @@ impl MeshOperation {
             "weld" => { mesh.weld_coincident_vertices(positive(input, "tolerance")?).map_err(mesh_error)?; }
             "orient" => { mesh.orient_faces_consistently().map_err(mesh_error)?; }
             "fillHoles" => { mesh.fill_holes().map_err(mesh_error)?; }
-            "inspectVertex" => {
-                let id = VertexId(count(input, "index", 0, mesh.vertex_count().saturating_sub(1) as u32)?);
-                return Ok(MeshEvaluation::Value(channel_output("point", point_dictionary(mesh.vertex_position(id).map_err(mesh_error)?.0.map(f64::from)))));
-            }
-            "inspectEdge" => {
-                let id = EdgeId(count(input, "index", 0, mesh.halfedge_count().saturating_sub(1) as u32)?);
-                let (a, b) = mesh.edge_endpoints(id).map_err(mesh_error)?;
-                let start = mesh.vertex_position(a).map_err(mesh_error)?.0.map(f64::from);
-                let end = mesh.vertex_position(b).map_err(mesh_error)?.0.map(f64::from);
-                let length = (end[0] - start[0]).hypot(end[1] - start[1]).hypot(end[2] - start[2]);
-                return Ok(MeshEvaluation::Value(Dictionary::new().insert("start", Value::Dictionary(point_dictionary(start))).insert("end", Value::Dictionary(point_dictionary(end))).insert("length", Value::Dictionary(number_dictionary(length)))));
-            }
-            "inspectFace" => {
-                let id = FaceId(count(input, "index", 0, mesh.face_count().saturating_sub(1) as u32)?);
-                let ids = mesh.face_vertex_ids(id).map_err(mesh_error)?;
-                let normal = mesh.face_normal(id).map_err(mesh_error)?.0.map(f64::from);
-                if normal.iter().all(|value| *value == 0.0) { return Err(invalid("face normal is degenerate")); }
-                let mut center = [0.0; 3];
-                for &vertex in &ids {
-                    let point = mesh.vertex_position(vertex).map_err(mesh_error)?.0;
-                    for axis in 0..3 { center[axis] += point[axis] as f64 / ids.len() as f64; }
-                }
-                let vertices = semio_framework_pack_json::to_string(&semio_framework_pack_json::array(ids.iter().map(|id| semio_framework_pack_json::Value::from(id.0))));
-                return Ok(MeshEvaluation::Value(Dictionary::new().insert("vertices", Value::Dictionary(text_dictionary(vertices))).insert("normal", Value::Dictionary(vector_dictionary(normal))).insert("center", Value::Dictionary(point_dictionary(center)))));
-            }
             "analyze" => return analyze(&mesh).map(MeshEvaluation::Value),
             "exportObj" => return Ok(MeshEvaluation::Value(channel_output("text", text_dictionary(mesh.to_obj().map_err(mesh_error)?)))),
             "exportJson" => return Ok(MeshEvaluation::Value(channel_output("text", text_dictionary(encode_mesh(&mesh)?)))),

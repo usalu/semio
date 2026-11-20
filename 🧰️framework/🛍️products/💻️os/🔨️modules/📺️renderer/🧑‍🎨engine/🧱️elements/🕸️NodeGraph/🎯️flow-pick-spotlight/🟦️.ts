@@ -30,7 +30,7 @@ import {
   parseFlowCatalogueSections
 } from "../🪄️catalogue-spotlight/🟦️.tsx";
 import { dagScreenToWorld, parseDagOverlayCamera } from "../🖼️dag-overlays/🟦️.tsx";
-import { observeFlowTask, readObservedFlowTask, syncFlowCanvasTheme, syncFlowSessionAppCatalogue } from "../🔄️flow-session-sync/🟦️.ts";
+import { observeFlowTask, readObservedFlowTask, setFlowSessionHover, syncFlowCanvasTheme, syncFlowSessionAppCatalogue } from "../🔄️flow-session-sync/🟦️.ts";
 import type { FlowCoreAfterFlowSessionAttach } from "../🔌️flow-session-attach/🟦️.ts";
 //#region 🔖️NodeGraphHost
 //#region 🔖️flow-graph-canvas-host
@@ -76,25 +76,27 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
     onHoverFocus: (focus) => {
       const session = sessionRef.current;
       if (!session) return;
-      const request=++hoverRequestRef.current;
+      const request = ++hoverRequestRef.current;
+      const sceneHoverRevision = interactionLedger.sceneHoverRevision;
+      const isCurrent = () => sessionRef.current === session && request === hoverRequestRef.current && sceneHoverRevision === interactionLedger.sceneHoverRevision;
       const target = focus.target;
       const channel = nodeGraphPickChannel(target);
-      if (!target) {
-        observeFlowTask(session, "setHover", session.setHover(null));
-      } else if (channel) {
-        observeFlowTask(session, "setHoverChannel", session.setHoverChannel(channel.nodeId, channel.portId));
-      } else {
-        observeFlowTask(session, "setHover", session.setHover(target.id));
-      }
+      interactionLedger.beginLocalHover();
+      setFlowSessionHover(session, channel
+        ? { hoveredId: channel.nodeId, portId: channel.portId }
+        : target?.domain === "edge"
+          ? { edgeId: target.id }
+          : { hoveredId: target?.id });
       void Promise.all([
         readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
         readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
       ]).then(async ([hoveredValue, channelValue]) => {
         const hoveredId = typeof hoveredValue === "string" ? hoveredValue : undefined;
-        const hover=await decodeDagHoverJson(flowJsonText(channelValue),nodeGraphInputDecodeControl(()=>sessionRef.current===session&&request===hoverRequestRef.current,()=>schedulerRef.current?.invalidate()));
-        if(sessionRef.current!==session||request!==hoverRequestRef.current)return;
+        const hover = await decodeDagHoverJson(flowJsonText(channelValue), nodeGraphInputDecodeControl(isCurrent, () => schedulerRef.current?.invalidate()));
+        if (!isCurrent()) return;
         const portId=hover.channel?.port;
-        if (interactionLedger.publishHover({ hoveredId, portId })) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId);
+        const edgeId=hover.edge ?? undefined;
+        if (interactionLedger.publishHover({ hoveredId, portId, edgeId }, sceneHoverRevision)) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId, edgeId);
       }).catch(() => {});
       schedulerRef.current?.invalidate();
     },

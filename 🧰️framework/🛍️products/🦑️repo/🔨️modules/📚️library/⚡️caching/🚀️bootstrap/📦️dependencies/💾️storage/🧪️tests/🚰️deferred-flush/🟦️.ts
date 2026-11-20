@@ -38,7 +38,8 @@ test("the Windows binding flush honours the deferral, the loop releases it in a 
 });
 
 test("a stale selected-retirement request is refused before the payload read",()=>{
- const call=publication.indexOf("requireRepositoryDependencySelectionCurrentV1(request,bindings,candidate);"),read=publication.indexOf("readJavascriptDependencySelectedPayloadV1(context,current,request.selection.prefix,members)");
+ const call=publication.indexOf("requireRepositoryDependencySelectionCurrentV1(request,bindings,candidate,ownedBindingCounts);"),read=publication.indexOf("readJavascriptDependencySelectedPayloadV1(context,current,request.selection.prefix,members)");
  expect(call).toBeGreaterThan(0);expect(read).toBeGreaterThan(call);
- expect(publication).toContain('current.sha256!==selection.currentBindingsSha256)throw Error("Every current dependency scope must be qualified before inactivity")');
+ const qualified=publication.indexOf('throw Error("Every current dependency scope must be qualified before inactivity")'),moved=publication.indexOf('throw refuseCachingV1("failed","dependency-store.bindings-moved"');
+ expect(qualified).toBeGreaterThan(0);expect(moved).toBeGreaterThan(qualified);
 });

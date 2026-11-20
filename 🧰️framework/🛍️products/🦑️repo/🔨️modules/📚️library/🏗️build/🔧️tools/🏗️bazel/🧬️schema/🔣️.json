@@ -250,6 +250,54 @@
         }
       }
     },
+    "ModuleCatalogPathsPolicy": {
+      "const": {
+        "maximumPath": 256,
+        "windows": {"identityComponentUnits": 8, "workspace": "work", "repository": "repo"},
+        "posix": {"identityPrefixUnits": 16, "workspace": "workspace", "repository": "repositories"}
+      }
+    },
+    "ModuleCatalogCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "root",
+        "identity",
+        "workspace",
+        "repository"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "win32",
+            "linux",
+            "darwin"
+          ]
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "workspace": {
+          "enum": [
+            "work",
+            "workspace"
+          ]
+        },
+        "repository": {
+          "enum": [
+            "repo",
+            "repositories"
+          ]
+        }
+      }
+    },
     "ModuleSetup": {
       "type": "object",
       "additionalProperties": false,

@@ -1,20 +1,45 @@
 //! 📥️ Exact-request GLB delivery through the renderer's existing paged asset lane.
 use std::sync::{Mutex, OnceLock};
-use infinite_world::world::{World3dMeshAsset, WorldAssetRequestKind, WorldAssetRequestToken};
+use infinite_world::world::{World3dMeshAsset, WorldAssetFault, WorldAssetRequestKind, WorldAssetRequestToken};
 
 pub const CAPACITY: usize = 16;
 
 struct Slot {
     token: WorldAssetRequestToken,
     asset: Option<World3dMeshAsset>,
-    fault: Option<String>,
+    fault: Option<IconExportAssetFault>,
     cancelled: bool,
 }
 
 static SLOTS: OnceLock<Mutex<[Option<Slot>; CAPACITY]>> = OnceLock::new();
 
-pub fn slots() -> &'static Mutex<[Option<Slot>; CAPACITY]> {
+fn slots() -> &'static Mutex<[Option<Slot>; CAPACITY]> {
     SLOTS.get_or_init(|| Mutex::new(std::array::from_fn(|_| None)))
+}
+
+#[derive(Debug)]
+pub enum IconExportAssetFault {
+    Busy,
+    Authority(WorldAssetFault),
+    Transport { retryable: bool },
+    Rejected(String),
+}
+
+impl IconExportAssetFault {
+    pub fn is_retryable(&self) -> bool {
+        matches!(self, Self::Busy | Self::Authority(WorldAssetFault::ItemCapacity) | Self::Transport { retryable: true })
+    }
+}
+
+impl std::fmt::Display for IconExportAssetFault {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Busy => formatter.write_str("icon export asset requests are at capacity"),
+            Self::Authority(fault) => write!(formatter, "icon export asset request: {fault:?}"),
+            Self::Transport { .. } => formatter.write_str("asset transport was unavailable"),
+            Self::Rejected(detail) => formatter.write_str(detail),
+        }
+    }
 }
 
 pub struct IconExportAssetRequest {
@@ -22,15 +47,15 @@ pub struct IconExportAssetRequest {
 }
 
 impl IconExportAssetRequest {
-    pub fn new(url: &str) -> Result<Self, String> {
+    pub fn new(url: &str) -> Result<Self, IconExportAssetFault> {
         let mut slots = slots().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let index = slots.iter().position(Option::is_none).ok_or("icon export asset requests are at capacity")?;
-        let token = crate::asset_authority::reserve_renderer_asset_request(WorldAssetRequestKind::Glb, url).map_err(|fault| format!("icon export asset request: {fault:?}"))?;
+        let index = slots.iter().position(Option::is_none).ok_or(IconExportAssetFault::Busy)?;
+        let token = crate::asset_authority::reserve_renderer_asset_request(WorldAssetRequestKind::Glb, url).map_err(IconExportAssetFault::Authority)?;
         slots[index] = Some(Slot { token, asset: None, fault: None, cancelled: false });
         Ok(Self { token: Some(token) })
     }
 
-    pub fn take_ready(&mut self) -> Option<Result<World3dMeshAsset, String>> {
+    pub fn take_ready(&mut self) -> Option<Result<World3dMeshAsset, IconExportAssetFault>> {
         let token = self.token?;
         let mut slots = slots().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         let index = slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.token == token))?;
@@ -105,11 +130,11 @@ pub fn publish(token: WorldAssetRequestToken, asset: World3dMeshAsset) -> Result
     Ok(())
 }
 
-pub fn reject(token: WorldAssetRequestToken, fault: &str) {
+pub fn reject(token: WorldAssetRequestToken, fault: IconExportAssetFault) {
     let mut slots = slots().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(slot) = slots.iter_mut().flatten().find(|slot| slot.token == token) {
         if !slot.cancelled && slot.asset.is_none() && slot.fault.is_none() {
-            slot.fault = Some(fault.to_string());
+            slot.fault = Some(fault);
         }
     }
 }

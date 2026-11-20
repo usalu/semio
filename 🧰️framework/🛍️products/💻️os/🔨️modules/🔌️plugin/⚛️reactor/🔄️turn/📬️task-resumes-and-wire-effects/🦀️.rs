@@ -113,7 +113,11 @@ fn decode_wire_request_file_open(value: &semio_framework_value::DslValue) -> Opt
     let import_action = file.get("importAction").or_else(|| file.get("import_action")).and_then(semio_framework_value::DslValue::as_str)?.to_string();
     let read_as = file.get("readAs").or_else(|| file.get("read_as")).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
     let multiple = file.get("multiple").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false);
-    Some(Effect::RequestFileOpen { req: semio_framework::kernel::RequestId(req), accept, read_as, import_action, multiple, args: file.get("args").cloned() })
+    let max_file_bytes = match file.get("maxFileBytes").filter(|value| !value.is_null()) {
+        Some(value) => Some(u32::try_from(value.as_u64()?).ok()?),
+        None => None,
+    };
+    Some(Effect::RequestFileOpen { req: semio_framework::kernel::RequestId(req), accept, read_as, import_action, multiple, args: file.get("args").cloned(), max_file_bytes })
 }
 
 pub(super) fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, effect: Effect) {

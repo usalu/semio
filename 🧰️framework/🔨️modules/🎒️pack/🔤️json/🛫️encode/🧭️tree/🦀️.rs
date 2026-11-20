@@ -12,15 +12,16 @@ pub fn retained_alias_demand<T:?Sized+Sync>(child:RetainedCloneRef<'_,T>)->Resul
 }
 /// ⛽️ Quotes the Work of binding and publishing one owning alias.
 pub fn retained_alias_work_demand<T:?Sized+Sync>(child:RetainedCloneRef<'_,T>)->Result<u64,ValueError>{RetainedOwnedProjectionAdmission::<T>::default().work_demand(child)?.checked_add(1).ok_or_else(||refusal("canonical alias work overflow"))}
-/// 🪪️ Binds and publishes one owning alias of a projected reference; `None` when the turn's Work cannot carry both hops.
+/// 🪪️ Binds and publishes one owning alias of a projected reference with both hops charged to its original turn.
 pub fn retained_alias<T:?Sized+Sync>(child:RetainedCloneRef<'_,T>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<(RetainedOwnedProjection<T>,RetainedCloneProgress)>,ValueError>{
-    if effect.remaining_work_units()?<retained_alias_work_demand(child)?{return Ok(None)}
+    if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),retained_alias_demand(child)?)||effect.remaining_work_units()?<retained_alias_work_demand(child)?{return Ok(None)}
     let mut admission=RetainedOwnedProjectionAdmission::<T>::default();
     let mut slot=None;admission.admit(child,effect,OriginalEffectReply::borrow(&mut slot)?)?;
     let bound=match slot.take(){Some(Ok(RetainedCloneStep::Complete(progress)))=>progress,Some(Err(error))=>return Err(error),_=>return Err(refusal("canonical alias admission was denied after its quote"))};
     let mut output=None;admission.take(&mut output,effect,OriginalEffectReply::borrow(&mut slot)?)?;
     let published=match slot.take(){Some(Ok(RetainedCloneStep::Complete(progress)))=>progress,Some(Err(error))=>return Err(error),_=>return Err(refusal("canonical alias publication was denied after its quote"))};
-    Ok(Some((output.ok_or_else(||refusal("canonical alias publication left no projection"))?,bound.checked_add(published)?)))
+    let progress=RetainedCloneProgress{copied_items:1,..bound.checked_add(published)?};
+    Ok(Some((output.ok_or_else(||refusal("canonical alias publication left no projection"))?,progress)))
 }
 
 fn refusal(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
@@ -31,19 +32,26 @@ pub(super) fn settled<V>(poll:semio_framework_value::OriginalRetirementPoll<V>)-
 #[cfg(test)]
 #[path="📋️persistent/🧪️tests/🦀️.rs"]
 mod persistent_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🏷️tagged-payload/🦀️.rs"]
+mod tagged_payload_tests;
 
 pub trait ArtifactCanonicalJsonTree: Sync + 'static {
     fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError>;
+    /// 📥️ Borrows an explicitly authored binary value whose JSON projection is an array of octets.
+    fn canonical_tree_octets(&self) -> Option<&[u8]> { None }
     fn canonical_tree_child(&self, _ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> { Err(refusal("canonical tree scalar has no child")) }
     fn canonical_tree_key(&self, _ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> { Err(refusal("canonical tree node has no key")) }
 }
 
 impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for semio_framework_value::RetainedPublicationRoot<T>{
+ fn canonical_tree_octets(&self)->Option<&[u8]>{(**self).canonical_tree_octets()}
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{(**self).canonical_tree_node()}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{(**self).canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{(**self).canonical_tree_key(ordinal)}
 }
 impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::shared_issuance::SealedShared<T> {
+ fn canonical_tree_octets(&self)->Option<&[u8]>{self.get().canonical_tree_octets()}
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.get().canonical_tree_node()}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get().canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get().canonical_tree_key(ordinal)}
@@ -176,6 +184,31 @@ impl ArtifactCanonicalJsonTree for String { fn canonical_tree_node(&self)->Resul
 impl ArtifactCanonicalJsonTree for std::borrow::Cow<'static,str> { fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::String(self))} }
 impl ArtifactCanonicalJsonTree for semio_framework_value::SharedUtf8 {fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::String(&**self))}}
 impl ArtifactCanonicalJsonTree for &'static str { fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::String(self))} }
+/// 🧬️ Preserves a declared intrinsic byte role while presenting its ordinary JSON array.
+#[repr(transparent)]
+pub struct ArtifactCanonicalOctets<T>(T);
+
+impl<T> ArtifactCanonicalOctets<T> {
+    /// 🫳️ Borrows the original backing through its transparent octet role.
+    pub const fn from_ref(value: &T) -> &Self {
+        unsafe { &*(value as *const T).cast::<Self>() }
+    }
+}
+
+impl<T: AsRef<[u8]> + Sync + 'static> ArtifactCanonicalJsonTree for ArtifactCanonicalOctets<T> {
+    fn canonical_tree_node(&self) -> Result<Node<'_>, ValueError> {
+        Ok(Node::Array(self.0.as_ref().len()))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
+        self.0.as_ref().get(ordinal)
+            .map(|byte| byte as &dyn ArtifactCanonicalJsonTree)
+            .ok_or_else(|| refusal("canonical octet ordinal is absent"))
+    }
+    fn canonical_tree_octets(&self) -> Option<&[u8]> {
+        Some(self.0.as_ref())
+    }
+}
+
 impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Vec<T> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|value|value as &dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical original vector ordinal is absent"))}
@@ -185,11 +218,13 @@ impl<T:ArtifactCanonicalJsonTree,const N:usize> ArtifactCanonicalJsonTree for [T
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|value|value as &dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical original fixed array ordinal is absent"))}
 }
 impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Option<T> {
+ fn canonical_tree_octets(&self)->Option<&[u8]>{self.as_ref()?.canonical_tree_octets()}
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.as_ref().map_or(Ok(Node::Null),|value|value.canonical_tree_node())}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.as_ref().ok_or_else(||refusal("canonical absent optional field has no child"))?.canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.as_ref().ok_or_else(||refusal("canonical absent optional field has no key"))?.canonical_tree_key(ordinal)}
 }
 impl<T:ArtifactCanonicalJsonTree> ArtifactCanonicalJsonTree for Box<T> {
+ fn canonical_tree_octets(&self)->Option<&[u8]>{self.as_ref().canonical_tree_octets()}
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{self.as_ref().canonical_tree_node()}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.as_ref().canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.as_ref().canonical_tree_key(ordinal)}
@@ -263,6 +298,7 @@ impl ArtifactCanonicalJsonTree for semio_framework_value::Number {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(match self{semio_framework_value::Number::UInt(value)=>Node::U64(*value),semio_framework_value::Number::Int(value)=>Node::I64(*value),semio_framework_value::Number::Float(value)=>Node::F64(*value)})}
 }
 impl ArtifactCanonicalJsonTree for semio_framework_value::DslValue {
+ fn canonical_tree_octets(&self)->Option<&[u8]>{match self{Self::Bytes(bytes)=>Some(bytes),_=>None}}
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{
   use semio_framework_value::DslValue;
   Ok(match self{DslValue::Null=>Node::Null,DslValue::Bool(value)=>Node::Bool(*value),DslValue::Number(number)=>return number.canonical_tree_node(),DslValue::String(text)=>Node::String(text),DslValue::Bytes(bytes)=>Node::Array(bytes.len()),DslValue::Array(items)=>Node::Array(items.len()),DslValue::Object(entries)=>Node::Object(entries.len())})

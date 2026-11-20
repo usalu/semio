@@ -11,6 +11,7 @@
         "DRAWING_EXPORT_TOOL_IDS"
       ],
       "source": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "manifestSource": "🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛂️manifest/🦀️.rs",
       "routes": [
         {
           "id": "canvasPointerDown",

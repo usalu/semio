@@ -20,6 +20,7 @@ name = "integration"
 path = "../../🧪️tests/🧩️integration/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-semio = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
@@ -49,7 +50,6 @@ semio-s-plugin-norm-results-config = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-din18599-mutations = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-din18599-inferences = { workspace = true, features = ["test-support"] }

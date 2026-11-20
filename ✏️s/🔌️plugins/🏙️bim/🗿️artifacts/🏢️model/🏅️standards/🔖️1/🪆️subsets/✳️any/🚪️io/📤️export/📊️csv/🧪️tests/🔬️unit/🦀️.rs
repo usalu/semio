@@ -20,7 +20,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    snapshot.schedules.insert("sch-walls".into(), preset("wall", "Walls").expect("the wall preset"));
+    snapshot.schedules.cold_insert("sch-walls".into(), preset("wall", "Walls").expect("the wall preset"));
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     (snapshot, inferred)
 }

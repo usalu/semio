@@ -1,5 +1,7 @@
 /** 🧪️ Contract: the machine has one disk budget derived from its volume, every writer of the build system is registered with a collector and a priority, the gate frees derivable artefacts first and the least recently used cache objects last, before it refuses and until the command's declared need fits, and it refuses with the largest remaining consumers and the exact command to free each; the writers that had no bound have one. */
 import {afterAll,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import verdictCases from "./🧬️verdict-bounds.json" with {type:"json"};
 import {mkdirSync,mkdtempSync,existsSync,rmSync,symlinkSync,utimesSync,writeFileSync,readdirSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -14,7 +16,7 @@ import {casPartitionBudgetV1,casPartitionPolicyForV1,decideCasEnforcementV1} fro
 import {CAS_BUDGET_V1,CAS_POLICY_V1,CAS_RESERVE_FACTOR_V1} from "../../../🗄️cas/🧬️schema/🟦️.ts";
 import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../../💽️disk/🟦️.ts";
 import {DISK_WRITERS_V1,consumersOfV1,judgeDiskV1,machineDiskBudgetV1,recoverDiskV1,refuseDiskRecoveryV1,requireDiskWritersV1,type DiskFactsV1,type DiskWriterRowV1,type DiskWriterV1} from "../🟦️.ts";
-import {applyBoundV1,DISK_BOUNDS_V1,selectExpiredV1,selectOlderThanV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
+import {applyBoundV1,DISK_BOUNDS_V1,finishedReadVerdictV1,selectExpiredV1,selectRotatedV1,selectTemporaryV1} from "../🧺️bounds/🟦️.ts";
 import {collectMachineBoundsV1,realDiskWritersV1} from "../🔌️real/🟦️.ts";
 import {CACHE_SIZE_FILE_V1,readCacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {readMachinePolicyV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
@@ -194,7 +196,7 @@ test("bounds: waves go by age and keep the newest few, footprint logs are bounde
  const logs=Array.from({length:300},(_,index)=>entry("l"+index,index/10,now,false));
  const rotated=selectRotatedV1(logs,now,DISK_BOUNDS_V1.footprintLogs);
  expect(logs.length-rotated.length).toBeLessThanOrEqual(DISK_BOUNDS_V1.footprintLogs.keepNewest);expect(rotated).not.toContain("l0");
- expect(selectOlderThanV1([entry("fresh",1,now),entry("old",3,now)],now,DISK_BOUNDS_V1.readVerdicts.maximumAgeMilliseconds)).toEqual(["old"]);
+ expect([entry("1-fresh-1",1,now),entry("1-old-2",3,now)].filter(finishedReadVerdictV1(now,DISK_BOUNDS_V1.readVerdicts,()=>false)).map(row=>row.name)).toEqual(["1-old-2"]);
  const lost=Array.from({length:40},(_,index)=>entry("x"+index,index*24,now));
  const gone=selectExpiredV1(lost,now,DISK_BOUNDS_V1.replicaLost);
  expect(gone).not.toContain("x0");expect(gone).not.toContain("x15");expect(gone).toContain("x39");
@@ -211,7 +213,7 @@ test("bounds on a real directory: only expired entries inside the root go, a lin
  writeFileSync(join(outside,"precious"),"keep");
  for(const [name,hours] of [["old-a",100],["old-b",90],["new-a",1],["new-b",2]] as const){mkdirSync(join(root,name));writeFileSync(join(root,name,"f"),"x".repeat(5000));const time=(now-hours*3600000)/1000;utimesSync(join(root,name,"f"),time,time);utimesSync(join(root,name),time,time);}
  symlinkSync(outside,join(root,"link"));const old=(now-500*3600000)/1000;
- const select=(entries:readonly {name:string;newestMs:number}[])=>selectOlderThanV1(entries,now,24*3600000);
+ const select=(entries:readonly {name:string;newestMs:number}[])=>entries.filter(entry=>now-entry.newestMs>24*3600000).map(entry=>entry.name);
  const dry=await applyBoundV1({directory:root,limit:1000,dryRun:true,select});
  expect(dry.removed.sort()).toEqual(["old-a","old-b"]);expect(readdirSync(root).length).toBe(5);
  const real=await applyBoundV1({directory:root,limit:1000,dryRun:false,select});
@@ -266,4 +268,28 @@ test("`repo cache gc` applies the machine bounds after the ledger, in the langua
  const real=await run(["gc"],"en");
  expect(real.text).toContain("Machine bound stale-waves: ");expect(readdirSync(join(workspace,".cache","f","owner-pool-waves")).length).toBe(DISK_BOUNDS_V1.waves.keepNewest);
  const json=await run(["gc","--json"],"en");expect(JSON.parse(json.text).machineBounds).toBeDefined();
+});
+
+test("verdict collection measures and removes only expired directories of dead readers",async()=>{
+ const root=fresh(),now=Date.now(),bounds=DISK_BOUNDS_V1.readVerdicts,dir=join(root,"semio-read-verdicts-501");
+ mkdirSync(dir);
+ const alive=new Set(verdictCases.entries.filter(entry=>entry.alive).map(entry=>entry.pid));
+ for(const entry of verdictCases.entries){
+  const child=join(dir,entry.name),file=join(child,"one-verdict");
+  mkdirSync(child);writeFileSync(file,"1");
+  const at=new Date(now-entry.age);
+  utimesSync(file,at,at);utimesSync(child,at,at);
+ }
+ const db=new Database(":memory:");
+ try{
+  const expectKept=(db.query(`select json_extract(value,'$.name') name from json_each(?1)
+     where json_extract(value,'$.pid') is null or json_extract(value,'$.alive') or json_extract(value,'$.age')<=?2
+     order by name`).all(JSON.stringify(verdictCases.entries),bounds.maximumAgeMilliseconds) as {name:string}[]).map(row=>row.name);
+  const probes:number[]=[];
+  const writers=realDiskWritersV1({workspace:root,home:root,tmp:root,uid:501,environment:{},now:()=>now,alive:pid=>{probes.push(pid);return alive.has(pid);}});
+  const result=await writers.find(writer=>writer.row.id==="read-verdicts")!.collect!({needBytes:1});
+  expect(result).toBeGreaterThan(0);
+  expect(readdirSync(dir).sort()).toEqual(expectKept);
+  expect([...new Set(probes)].sort()).toEqual([18021,18022]);
+ }finally{db.close();}
 });

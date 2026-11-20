@@ -53,7 +53,8 @@ impl OriginalManifestCommandReceiving{
  pub fn identity(&self)->(semio_framework_job::OperationId,semio_framework_job::Generation){self.identity}
  fn admit_raw_failure(&mut self,cx:&mut StepContext<'_>)->Result<Option<OriginalTurnFailure>,OriginalTurnFailure>{if !self.raw_place.as_ref().is_some_and(|place|place.ready()){if self.raw_place.is_none(){*self.raw_place=Some(Default::default());}self.raw_place.as_mut().ok_or_else(||refusal("original command failure place"))?.prepare(cx)?;return Ok(None)}let place=self.raw_place.as_mut().ok_or_else(||refusal("original command failure place"))?;if !place.pending(){let original=&mut *self.raw_failure;place.with_body(cx,|_,slot|{*slot=original.take();Ok(())})?;}let admitted=semio_framework_job::admit_original_domain_failure(place,cx)?;if self.raw_place.as_ref().is_some_and(|place|place.terminal_is_empty()){*self.raw_place=None;}Ok(admitted)}
  pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?||self.recipient!=cx.original_recipient_identity()||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its exact immutable source and caller").into())}if let Some(bytes)=self.parser.as_ref().and_then(|parser|parser.input()){if self.source!=(bytes.as_ptr()as usize,bytes.len()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original manifest immutable source identity changed").into())}}if !self.returning{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
- pub fn advance_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original command receiving was cancelled").into())}if self.loan.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.loan,cx)?{return Ok(false)}}if cx.should_yield(){return Ok(false)}
+ pub fn advance_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;
+if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original command receiving was cancelled").into())}if self.loan.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.loan,cx)?{return Ok(false)}}if cx.should_yield(){return Ok(false)}
   if self.raw_failure.is_some()||self.raw_place.is_some(){return match self.admit_raw_failure(cx)?{Some(failure)=>Err(failure),None=>Ok(false)}}
   if self.phase==0{
    let parser=self.parser.as_mut().unwrap();let d=match parser.original_step_demands(){Ok(d)=>d,Err(original)=>{*self.raw_failure=Some(OriginalCommandPackFailure{original});return Ok(false)}};let cancelled=cx.is_cancelled();let mut call=None;funded(cx,d,|effect|{let turn=parser.advance_original_step(effect,cancelled);let work=effect.performed_work();call=Some(turn.result);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok::<_,ValueError>(RetainedCloneStep::Progress(turn.progress)),work})})?;
@@ -204,7 +205,7 @@ impl OriginalDecodedPluginCommand{
   if self.media_poll.is_some()||self.media_poll_close.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_poll,&self.media_poll_close,cx.retained_grant().maximum_copy_bytes)?;retired_poll(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.media_poll,&mut self.media_poll_close,effect))?;return Ok(false)}
   if self.media_status.is_some()||self.media_status_close.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_status,&self.media_status_close,cx.retained_grant().maximum_copy_bytes)?;retired_poll(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.media_status,&mut self.media_status_close,effect))?;return Ok(false)}
   if self.media_submission.is_some()||self.media_submission_close.is_some(){let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.media_submission,&self.media_submission_close,cx.retained_grant().maximum_copy_bytes)?;retired_poll(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.media_submission,&mut self.media_submission_close,effect))?;return Ok(false)}
-  if self.receiving.is_some(){let(source,_,receiving)=self.command_parts()?;let owner=receiving.as_mut().unwrap();if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_is_empty(){return Ok(false)}if !paid(cx,0)?{return Ok(false)}receiving.take();return Ok(false)}if !self.construction.terminal_is_empty(){return semio_plugin_job_receiving::original_steps::unbuilt(cx,&mut self.construction)}self.wire.close_original_step(cx)}
+  if self.receiving.is_some(){let owner=self.receiving.as_mut().unwrap();if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_is_empty(){return Ok(false)}if !paid(cx,0)?{return Ok(false)}self.receiving.take();return Ok(false)}if !self.construction.terminal_is_empty(){return semio_plugin_job_receiving::original_steps::unbuilt(cx,&mut self.construction)}self.wire.close_original_step(cx)}
  pub fn close_step(&mut self,bytes:usize)->(bool,usize,usize){if self.media_value_receiver.is_some()||self.media_value.is_some()||self.media_value_close.is_some()||self.media_source.is_some()||self.media_source_close.is_some()||self.media_meta.is_some()||self.media_descriptor_receiver.is_some()||self.media_descriptor.is_some()||self.media_descriptor_close.is_some()||!self.window_load.terminal_is_empty()||self.receiving.is_some()||self.media_submission.is_some()||self.media_submission_close.is_some()||self.media_poll.is_some()||self.media_poll_close.is_some()||self.media_status.is_some()||self.media_status_close.is_some()||self.media_chunk.is_some()||self.media_chunk_close.is_some()||!self.construction.terminal_is_empty(){(false,0,0)}else{self.wire.close_step(bytes)}}
  pub fn terminal_is_empty(&self)->bool{self.media_value_receiver.is_none()&&self.media_value.is_none()&&self.media_value_close.is_none()&&self.media_source.is_none()&&self.media_source_close.is_none()&&self.media_meta.is_none()&&self.media_descriptor_receiver.is_none()&&self.media_descriptor.is_none()&&self.media_descriptor_close.is_none()&&self.window_load.terminal_is_empty()&&self.receiving.is_none()&&self.media_submission.is_none()&&self.media_submission_close.is_none()&&self.media_poll.is_none()&&self.media_poll_close.is_none()&&self.media_status.is_none()&&self.media_status_close.is_none()&&self.media_chunk.is_none()&&self.media_chunk_close.is_none()&&self.construction.terminal_is_empty()&&self.media_place.terminal_is_empty()&&self.compound_place.terminal_is_empty()&&self.wire.terminal_is_empty()}
 }
@@ -213,14 +214,47 @@ impl Drop for OriginalDecodedPluginCommand{fn drop(&mut self){assert!(std::threa
 
 use semio_plugin_job_receiving::original_pack_failure::OriginalCommandPackFailure;
 
+/// 🪜️ Repeats one paid receiving step within the turn's own slice while each step spends fuel or retained budget; stops on completion, on the slice ending or on a step that spent nothing, so a command whose bytes need many parser steps is received in a few turns instead of one step per turn.
+fn step_slice(cx:&mut StepContext<'_>,mut step:impl FnMut(&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
+ loop{
+  let before=(cx.retained_progress(),cx.fuel_remaining());
+  if step(cx)?{return Ok(true)}
+  if cx.should_yield()||(cx.retained_progress(),cx.fuel_remaining())==before{return Ok(false)}
+ }
+}
+
+impl OriginalManifestCommandReceiving {
+    async fn advance_surface_refresh<PA: PluginApp>(
+        &mut self,
+        runtime: &PluginRuntime<PA>,
+        instance_id: u32,
+        cx: &mut StepContext<'_>,
+    ) -> Result<bool, OriginalTurnFailure> {
+        if self.refresh_ready {
+            return Ok(true);
+        }
+        let Some(refresh) = self.refresh.as_mut() else {
+            OriginalSurfaceRefresh::admit(cx, &mut self.construction, &mut self.refresh)?;
+            return Ok(false);
+        };
+        let meta = self.metadata.as_mut().and_then(|metadata| metadata.meta.as_mut())
+            .ok_or_else(|| refusal("original surface metadata is absent"))?;
+        self.refresh_ready = with_instances_turn_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            step_slice(cx, |cx| refresh.advance(&mut instance.surface_contexts, &mut meta.view_state, cx))
+        }).await?;
+        Ok(self.refresh_ready)
+    }
+}
+
 impl OriginalDecodedPluginCommand{
  pub async fn advance_manifest_step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,instance_id:u32,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut StepContext<'_>)->Result<Option<(u64,InvocationResult)>,OriginalTurnFailure>{
   let seq=self.command_seq.ok_or_else(||refusal("original manifest receiving lost its command sequence"))?;
   if self.receiving.is_none(){let artifact=self.artifact;let(source,_,receiving)=self.command_parts()?;let mut limits=store::os_pack::PackLimits::default();limits.max_total_alloc=runtime.mounted_policy.preparation.maximum_capacity_bytes as u64;limits.max_file_len=source.len()as u64;limits.max_depth=u16::try_from(runtime.mounted_policy.preparation.maximum_depth).map_err(|_|refusal("original manifest depth ceiling exceeds Pack u16"))?;*receiving=OriginalManifestCommandReceiving::admit(source,artifact,limits,cx)?;return Ok(None)}
   if !self.receiving.as_ref().unwrap().finished(){
-   let(_,view_state,receiving)=self.command_parts()?;let receiving=receiving.as_mut().unwrap();if !receiving.advance_step(cx)?{return Ok(None)}
+   let(_,view_state,receiving)=self.command_parts()?;let receiving=receiving.as_mut().unwrap();if !step_slice(cx,|cx|receiving.advance_step(cx))?{return Ok(None)}
    if receiving.metadata.is_none(){let mut limits=store::os_pack::PackLimits::default();limits.max_total_alloc=runtime.mounted_policy.preparation.maximum_capacity_bytes as u64;limits.max_depth=u16::try_from(runtime.mounted_policy.preparation.maximum_depth).map_err(|_|refusal("original metadata depth ceiling exceeds Pack u16"))?;OriginalManifestMetadata::admit(view_state,limits,cx,&mut receiving.construction,&mut receiving.metadata)?;return Ok(None)}
-   {let actors=runtime.instance_actors.try_borrow().map_err(|_|refusal("original actor registry is busy"))?;let actor=actors.get(instance_id).ok_or_else(||refusal("original actor authority is absent"))?;let actor=std::str::from_utf8(&actor.bytes[..usize::from(actor.len)]).map_err(|_|refusal("original actor authority is malformed"))?;if !receiving.metadata.as_mut().unwrap().advance(actor,instance_id,cx)?{return Ok(None)}}
+   {let actors=runtime.instance_actors.try_borrow().map_err(|_|refusal("original actor registry is busy"))?;let actor=actors.get(instance_id).ok_or_else(||refusal("original actor authority is absent"))?;let actor=std::str::from_utf8(&actor.bytes[..usize::from(actor.len)]).map_err(|_|refusal("original actor authority is malformed"))?;if !step_slice(cx,|cx|receiving.metadata.as_mut().unwrap().advance(actor,instance_id,cx))?{return Ok(None)}}
 
    let result=if receiving.is_artifact(){let(action,args,meta)=receiving.artifact_parts();if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action){return Err(refusal("original ArtifactCommand action is not owned by this command channel"))}with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;drive_self_waking_ready(instance.app.handle_action(action,args,meta,identity,cx))}).await?}else if receiving.is_action(){
     if !receiving.context_ready{
@@ -230,15 +264,15 @@ impl OriginalDecodedPluginCommand{
       receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("staged original metadata is absent"))?.expected_document_revision=expected;
       OriginalWindowViewBinding::admit(cx,&mut receiving.construction,&mut receiving.projection)?;return Ok(None)
      }
-     let address=receiving.action.as_ref().unwrap();let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original action metadata is absent"))?;let projection=receiving.projection.as_mut().unwrap();if !projection.advance(meta,address,cx)?{return Ok(None)}receiving.action_mode_active=projection.mode_active;receiving.context_ready=true;
+     let address=receiving.action.as_ref().unwrap();let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original action metadata is absent"))?;let projection=receiving.projection.as_mut().unwrap();if !step_slice(cx,|cx|projection.advance(meta,address,cx))?{return Ok(None)}receiving.action_mode_active=projection.mode_active;receiving.context_ready=true;
     }
-    if !receiving.refresh_ready{if receiving.refresh.is_none(){OriginalSurfaceRefresh::admit(cx,&mut receiving.construction,&mut receiving.refresh)?;return Ok(None)}let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original surface metadata is absent"))?;let complete=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;receiving.refresh.as_mut().unwrap().advance(&mut instance.surface_contexts,&mut meta.view_state,cx)}).await?;if !complete{return Ok(None)}receiving.refresh_ready=true;}
+    if !receiving.advance_surface_refresh(runtime,instance_id,cx).await?{return Ok(None)}
     let mode_active=receiving.action_mode_active;let(address,args,fault,meta)=receiving.action_parts();
     if !runtime.plugin.borrow().as_ref().is_some_and(|program|program.manifest.plugin_id==address.plugin_id){return Err(refusal("original action plugin owner is foreign"))}
     with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;drive_self_waking_ready(instance.app.handle_action_invocation(address,args,fault,mode_active.then_some(address.mode_id.as_str()),meta,identity,cx))}).await?
    }else{
     if !receiving.context_ready{if let ManifestCommandOwnerAddress::Mode{mode_id,..}=&receiving.address.as_ref().unwrap().owner{if receiving.metadata.as_ref().unwrap().meta.as_ref().and_then(|meta|meta.view_state.as_deref()).and_then(|view|view.active_mode_id.as_deref())!=Some(mode_id.as_str()){return Err(refusal("original command mode is inactive"))}}receiving.context_ready=true;}
-    if !receiving.refresh_ready&&matches!(receiving.address.as_ref().unwrap().owner,ManifestCommandOwnerAddress::App{..}|ManifestCommandOwnerAddress::Mode{..}){if receiving.refresh.is_none(){OriginalSurfaceRefresh::admit(cx,&mut receiving.construction,&mut receiving.refresh)?;return Ok(None)}let meta=receiving.metadata.as_mut().unwrap().meta.as_mut().ok_or_else(||refusal("original surface metadata is absent"))?;let complete=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;receiving.refresh.as_mut().unwrap().advance(&mut instance.surface_contexts,&mut meta.view_state,cx)}).await?;if !complete{return Ok(None)}receiving.refresh_ready=true;}
+    if matches!(receiving.address.as_ref().unwrap().owner,ManifestCommandOwnerAddress::App{..}|ManifestCommandOwnerAddress::Mode{..})&&!receiving.advance_surface_refresh(runtime,instance_id,cx).await?{return Ok(None)}
     let(address,args,fault,meta)=receiving.dispatch_parts();let active=match &address.owner{ManifestCommandOwnerAddress::Mode{mode_id,..}=>Some(mode_id.as_str()),_=>None};match &address.owner{
      ManifestCommandOwnerAddress::Os=>return Err(refusal("OS commands require their actual OS dispatcher")),
      ManifestCommandOwnerAddress::Plugin{..}=>{let program=runtime.plugin.borrow();let program=program.as_ref().ok_or_else(||refusal("original command plugin is unavailable"))?;let args=args.as_ref().ok_or_else(||refusal("original plugin command arguments are absent"))?;Some(program.handle_plugin_command(&semio_framework::manifest::CommandInvocationView{address,arguments:args},meta.as_ref().ok_or_else(||refusal("original plugin metadata is absent"))?)?)},

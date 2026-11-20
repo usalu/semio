@@ -18,6 +18,8 @@ class TestScript extends BundleScript {
       join(subset, "✏️editor/🧪️tests/📷️shot-camera/🟦️.ts"),
       join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"),
       join(subset, "📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts"),
+      join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/🕶️line-visibility/🟦️.ts"),
+      join(subset, "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),
       join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"),
     ]);
   }

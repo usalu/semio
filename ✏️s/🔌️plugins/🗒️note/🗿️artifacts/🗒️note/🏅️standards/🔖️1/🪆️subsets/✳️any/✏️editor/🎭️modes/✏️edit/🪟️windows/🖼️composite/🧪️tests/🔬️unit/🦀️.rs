@@ -54,3 +54,26 @@ async fn definition_declares_the_ink_canvas_surface_and_body_key() {
     assert!(matches!(definition.surface_kind, SurfaceKind::InkCanvas));
     assert!(definition.options.measures.is_empty(), "measures are config-derived per frame, never frozen into the manifest");
 }
+
+#[test]
+fn routes_canvas_interactions_only_in_the_editable_window() {
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("canvas scene fixture");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
+    let camera = NoteCamera::default();
+    let composite = render(&document, &camera, "selectDirect").expect("editable canvas");
+    let navigator = crate::editor::note::modes::edit::windows::navigator::render(&document, &camera, "selectDirect").expect("read-only navigator");
+    for (window, node) in [("composite", composite), ("navigator", navigator)] {
+        let scene = semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(
+            semio_plugin::built_to_component_tree(node),
+            |root| semio_plugin::artifact_app_laws::built_surface_scene::<InkCanvasScene>(root).expect("canvas scene"),
+        );
+        let document: serde_json::Value = serde_json::from_str(&scene.document_json).expect("ink document");
+        let route = serde_json::json!({
+            "viewMode": scene.view_mode,
+            "interactive": scene.interactive,
+            "interactionDomain": scene.interaction_domain,
+        });
+        assert_eq!(document["schema"], expected["documentSchema"]);
+        assert_eq!(route, expected[window]);
+    }
+}

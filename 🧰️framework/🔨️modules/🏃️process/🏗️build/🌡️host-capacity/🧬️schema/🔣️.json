@@ -4,7 +4,7 @@
   "title": "Host capacity: machine-wide admission of expensive operations",
   "definitions": {
     "Observers": {
-      "description": "How each platform reads the memory a process tree holds. The measure is the footprint: what the processes hold privately plus what was swapped or compressed out of them (macOS phys_footprint, Linux proportional set size plus swapped proportional set size, Windows private working set). The resident set stays at the high-water mark of a process after it freed memory on macOS and does not count compressed pages at all, so it is the fallback of a platform whose footprint source cannot be read, never the first choice. The store of learned peaks is stamped with the measure, so peaks of another measure never mix with it.",
+      "description": "How each platform reads the memory a process tree holds. The measure is the footprint: what the processes hold privately plus what was swapped or compressed out of them (macOS phys_footprint, Linux proportional set size plus swapped proportional set size, Windows private commit of the process (K32GetProcessMemoryInfo PrivateUsage)). The resident set stays at the high-water mark of a process after it freed memory on macOS and does not count compressed pages at all, so it is the fallback of a platform whose footprint source cannot be read, never the first choice. The store of learned peaks is stamped with the measure, so peaks of another measure never mix with it.",
       "const": {
         "measure": "footprint",
         "platforms": {
@@ -42,23 +42,14 @@
             }
           },
           "win32": {
+            "source": "native",
             "footprint": {
-              "command": "powershell.exe",
-              "arguments": [
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "Get-CimInstance Win32_PerfFormattedData_PerfProc_Process|ForEach-Object{'{0} {1} {2}' -f $_.IDProcess,$_.CreatingProcessID,[int64]($_.WorkingSetPrivate/1024)}"
-              ]
+              "call": "K32GetProcessMemoryInfo",
+              "field": "PrivateUsage"
             },
             "resident": {
-              "command": "powershell.exe",
-              "arguments": [
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "Get-CimInstance Win32_Process|ForEach-Object{'{0} {1} {2}' -f $_.ProcessId,$_.ParentProcessId,[int64]($_.WorkingSetSize/1024)}"
-              ]
+              "call": "K32GetProcessMemoryInfo",
+              "field": "WorkingSetSize"
             }
           }
         }
@@ -602,6 +593,7 @@
           "minimum": 0
         },
         "pressure": {
+          "description": "Worst of native pressure, memory availability within the physical or cgroup boundary, and compressor occupancy relative to physical memory. A declared scheduling profile changes the available budget without rescaling physical pressure.",
           "$ref": "#/definitions/Level"
         },
         "swapUsedMegabytes": {
@@ -910,6 +902,20 @@
         "starved",
         "lent"
       ]
+    },
+    "WaitProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "waitedSeconds", "active", "queued", "spareMegabytes", "floorMegabytes", "minimumMegabytes"],
+      "properties": {
+        "reason": {"$ref": "#/definitions/Reason"},
+        "waitedSeconds": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "active": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "queued": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "spareMegabytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "floorMegabytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "minimumMegabytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}
+      }
     },
     "Decision": {
       "type": "object",
@@ -1446,7 +1452,7 @@
           "estimated": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class",
           "treeUnobserved": "[capacity] the memory of running process trees cannot be observed on {platform} ({reason}); nothing is learned from this run and admission uses the declared sizes",
           "footprintFallback": "[capacity] the memory footprint of running process trees cannot be read on {platform} ({reason}); the resident set is used instead, which can overstate what a process holds",
-          "countersPartial": "[capacity] the {platform} memory counters could not be read ({reason}); pressure and swap are unknown and the host is treated as under raised pressure, available memory is the operating system's free memory",
+          "countersPartial": "[capacity] the {platform} memory counters could not be read ({reason}); pressure and swap are unknown (unknown is not pressure), available memory is the operating system's free memory",
           "availableUnread": "[capacity] the memory this {platform} host can still give out cannot be read ({reason}); limits that depend on it are not applied and no run waits for it",
           "phased": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class, at least {floor} MB because of its {phase} phase",
           "quiet": "[capacity] {operation}: forecast quiet because the last run of its class executed nothing ({samples} quiet run(s) behind its size, {percent}% of the recent runs): {reserved} MB reserved now, the full {full} MB only if work has to run",
@@ -1527,7 +1533,7 @@
           "estimated": "[capacity] {operation}: auf {percent} % des Standardwerts bemessen, aus {samples} früheren Läufen seiner Klasse",
           "treeUnobserved": "[capacity] Der Speicher laufender Prozessbäume kann unter {platform} nicht beobachtet werden ({reason}); aus diesem Lauf wird nichts gelernt und die Zulassung nutzt die deklarierten Größen",
           "footprintFallback": "[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter {platform} nicht gelesen werden ({reason}); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält",
-          "countersPartial": "[capacity] Die Speicherzähler von {platform} konnten nicht gelesen werden ({reason}); Speicherdruck und Auslagerung sind unbekannt, der Rechner gilt als unter erhöhtem Druck, verfügbar ist der freie Speicher des Betriebssystems",
+          "countersPartial": "[capacity] Die Speicherzähler von {platform} konnten nicht gelesen werden ({reason}); Speicherdruck und Auslagerung sind unbekannt (unbekannt ist kein Druck), verfügbar ist der freie Speicher des Betriebssystems",
           "availableUnread": "[capacity] der Speicher, den dieser {platform}-Host noch hergeben kann, ist nicht lesbar ({reason}); davon abhängige Grenzen gelten nicht und kein Lauf wartet darauf",
           "phased": "[capacity] {operation}: auf {percent} % des Standardwerts bemessen, aus {samples} früheren Läufen seiner Klasse, mindestens {floor} MB wegen der Phase {phase}",
           "quiet": "[capacity] {operation}: ruhig prognostiziert, weil der letzte Lauf seiner Klasse nichts ausführte ({samples} ruhige Läufe hinter ihrer Größe, {percent} % der jüngsten Läufe): jetzt {reserved} MB reserviert, die vollen {full} MB nur, wenn Arbeit laufen muss",
@@ -2165,15 +2171,6 @@
               "-A",
               "-o",
               "pid=,ppid=,rss=,comm="
-            ]
-          },
-          "win32": {
-            "command": "powershell.exe",
-            "arguments": [
-              "-NoProfile",
-              "-NonInteractive",
-              "-Command",
-              "Get-CimInstance Win32_Process|ForEach-Object{'{0} {1} {2} {3}' -f $_.ProcessId,$_.ParentProcessId,[int64]($_.WorkingSetSize/1024),$_.Name}"
             ]
           }
         }

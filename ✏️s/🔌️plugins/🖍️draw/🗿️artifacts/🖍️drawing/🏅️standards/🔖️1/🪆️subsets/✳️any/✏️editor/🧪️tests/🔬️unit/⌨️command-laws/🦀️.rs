@@ -64,6 +64,24 @@ fn every_command() -> Vec<DrawingCommand> {
     ]
 }
 
+#[test]
+fn drawing_action_bridge_round_trips_every_command() {
+    use semio_framework_value::{DslValue, ToValue};
+    let commands = every_command();
+    assert_eq!(commands.len(), DrawingCommand::TOOL_JOB_IDS.len());
+    for (expected, action) in commands.into_iter().zip(DrawingCommand::TOOL_JOB_IDS) {
+        assert_eq!(expected.command_id(), *action);
+        let DslValue::Object(mut fields) = expected.to_value() else {
+            panic!("expected an externally tagged command value");
+        };
+        assert_eq!(fields.len(), 1);
+        let (_, payload) = fields.pop().expect("command payload");
+        let decoded = semio_s_artifact_draw_drawing_editor::args_bridge::command_from_action(action, Some(&payload))
+            .unwrap_or_else(|fault| panic!("cannot decode {action}: {fault:?}"));
+        assert_eq!(decoded, expected);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn drawing_command_op_text_round_trips_every_variant() {
     for command in every_command() {

@@ -11,6 +11,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,readdirSync,
 import {join} from "node:path";
 import {spawnSync,spawn} from "node:child_process";
 import {acquireCompilerCapacityLeaseV1,scriptCompilerAdmissionControlV1} from "../🟦️.ts";
+import {acquireQueuedResourceLease} from "../../../🔒️leases/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import orderPolicy from "../../../🔒️leases/🧭️order/🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
@@ -46,14 +47,24 @@ test("Bounded single-worker claims run real children concurrently and give a who
   for(const claim of held.splice(0))claim.release();const all=await writer;expect(all.parallelism).toBe(availableParallelism());expect(order).toEqual(["writer"]);all.release();const last=await reader;last.release();expect(order).toEqual(fixture.fairOrder);
  }finally{for(const claim of held)claim.release();}
 }),120_000);
-test("Multi-core claims are granted whole and first come first served behind the core picker",()=>withBuildTestInvocationV1(async original=>{invocation=original;
+test("Multi-core claims are granted whole and an unsatisfiable wide claim never holds the core picker against a satisfiable narrow one",()=>withBuildTestInvocationV1(async original=>{invocation=original;
  const law=fixture.multiCore;if(availableParallelism()<law.waiterParallelism+law.holderShortfall)return;
  const holder=await acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:availableParallelism()-law.holderShortfall}}),order=[] as string[];
  try{expect(holder.parallelism).toBe(availableParallelism()-law.holderShortfall);
   const wide=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:law.waiterParallelism}}).then(claim=>{order.push("wide");return claim;});await Bun.sleep(100);
-  const narrow=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:1}}).then(claim=>{order.push("narrow");return claim;});await Bun.sleep(100);expect(order).toEqual([]);
+  const narrow=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:1}}).then(claim=>{order.push("narrow");return claim;});await Bun.sleep(100);expect(order).toEqual(["narrow"]);
   holder.release();const first=await wide,second=await narrow;try{expect(first.parallelism).toBe(law.waiterParallelism);expect(second.parallelism).toBe(1);expect(order).toEqual(law.order);}finally{first.release();second.release();}
  }finally{holder.release();}
+}),120_000);
+test("A claim waiting for cores never holds the core picker, so a core holder that queues for the picker cannot deadlock it",()=>withBuildTestInvocationV1(async original=>{invocation=original;
+ const law=fixture.multiCore,host=availableParallelism();if(host<law.waiterParallelism+law.holderShortfall)return;
+ const picker=schema.definitions.Protocol.const.pickerResource,holder=await acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:host-law.holderShortfall}});
+ let waiter:Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>>|undefined;const waiting=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:law.waiterParallelism}}).then(claim=>waiter=claim);
+ try{await Bun.sleep(300);expect(waiter).toBeUndefined();
+  for(let attempt=0;attempt<5;attempt++){const own=control(),queued=await acquireQueuedResourceLease({directory:storage,resource:picker,mode:"exclusive",owner:"holder"+attempt,signal:own.signal,control:own,timeoutMs:2000});queued.release();await Bun.sleep(50);}
+  expect(waiter).toBeUndefined();
+  holder.release();await waiting;expect(waiter!.parallelism).toBe(law.waiterParallelism);
+ }finally{holder.release();(await waiting.catch(()=>undefined))?.release();}
 }),120_000);
 test("Cancelled whole-host requests and crashed single-worker owners release gate and core claims",()=>withBuildTestInvocationV1(async original=>{invocation=original;
  const first=await acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},request:{kind:"exact",parallelism:1}});try{expect(first.parallelism).toBe(1);const controller=new AbortController(),waiting=acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:storage,control:control(controller.signal),environment:{}});await Bun.sleep(50);controller.abort();await expect(waiting).rejects.toMatchObject({name:fixture.cancel});}finally{first.release();}

@@ -172,12 +172,11 @@ semio_plugin::app_commands! {
 #[derive(Default)]
 pub struct Process3dPlayApp;
 
-/// 🖱️ The one context-menu implementation both `ArtifactEditor` entry points share — the destructive
-/// `removeSelectedStep` row exists only for a non-empty `"geometry"` selection, so a right-click on
-/// empty space never offers a verb that would silently no-op in `remove_selected_step::handle`.
-fn process3d_context_menu_items(registry: &AppActionRegistry, view_state: &semio_plugin::ViewModel, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
+/// 🖱️ Builds the process menu using the selection identity shared with the inspector.
+fn process3d_context_menu_items(registry: &AppActionRegistry, view_state: &semio_plugin::ViewModel, doc: &Process3dSnapshot, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
     let menu = Menu::of(registry, view_state).action("addStep");
-    let menu = if selected_ids.is_empty() { menu } else { menu.destructive("removeSelectedStep") };
+    let selected_step = selected_ids.first().is_some_and(|id| doc.step_payloads.iter().any(|step| &step.id == id));
+    let menu = if selected_step { menu.destructive("removeSelectedStep") } else { menu };
     menu.separator().action("undo").action("redo").build()
 }
 
@@ -219,13 +218,25 @@ impl Process3dBoundedProofs {
             "engagementSubmit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "worldPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "worldFaceDragEnd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "importModelFile" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "exportModel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "stepCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "stepCursorBack" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "stepCursorForward" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
         }
+    }
+}
+
+struct Process3dModelImportProofs;
+impl Process3dModelImportProofs {
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<Process3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.process.process3d@1/*#editor",
+        artifact_schema: "process.3d",
+        factory: "Process3dModelImportJobFactory",
+        factory_type: Process3dModelImportJobFactory,
+        tools: { "importModelFile" => process3d_model_import_contract(), }
     }
 }
 
@@ -398,7 +409,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_describe("moveStep", LocalizedLabel::native("Moves one process step to a new position (index) in the timeline, changing the order in which it is applied.", "Verschiebt einen Prozessschritt an eine neue Position (Index) der Zeitleiste und ändert damit die Reihenfolge seiner Anwendung."))
             .action_describe("updateStep", LocalizedLabel::native("Updates one process step to the supplied definition, changing only the fields that differ.", "Aktualisiert einen Prozessschritt auf die übergebene Definition und ändert nur die abweichenden Felder."))
             .action_describe("setStepEnabled", LocalizedLabel::native("Sets one process step on or off, to exactly the value passed, so repeating it changes nothing; a disabled step stays in the timeline but is not applied to the stock.", "Schaltet einen Prozessschritt genau nach dem übergebenen Wert ein oder aus, sodass eine Wiederholung nichts ändert; ein deaktivierter Schritt bleibt in der Zeitleiste, wird aber nicht auf das Rohteil angewendet."))
-            .action_describe("patchInspector", LocalizedLabel::native("Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.", "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."))
+            .action_describe("patchInspector", LocalizedLabel::native("Edits one inspector field of the stock, a process step or a workshop machine with a number or text value.", "Bearbeitet ein Inspektorfeld des Rohteils, eines Prozessschritts oder einer Werkstattmaschine mit einem Zahlen- oder Textwert."))
             .action_describe("setCursor", LocalizedLabel::native("Sets how many process steps the timeline cursor has applied, which the 3D view shows the stock after.", "Legt fest, wie viele Prozessschritte der Zeitleisten-Cursor angewendet hat, wonach die 3D-Ansicht das Rohteil zeigt."))
             .action_describe("stepCursor", LocalizedLabel::native("Moves the timeline cursor by the given number of steps forward or back (never below zero).", "Bewegt den Zeitleisten-Cursor um die angegebene Zahl von Schritten vor oder zurück (nie unter null)."))
             .action_describe("stepCursorBack", LocalizedLabel::native("Moves the timeline cursor one step back so the 3D view shows the stock before the last applied step.", "Bewegt den Zeitleisten-Cursor einen Schritt zurück, sodass die 3D-Ansicht das Rohteil vor dem zuletzt angewendeten Schritt zeigt."))

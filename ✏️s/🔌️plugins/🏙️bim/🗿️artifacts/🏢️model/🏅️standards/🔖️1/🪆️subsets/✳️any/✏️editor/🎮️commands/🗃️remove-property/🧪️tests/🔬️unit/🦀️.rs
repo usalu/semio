@@ -16,7 +16,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 
 fn described() -> ModelSnapshot {
     let mut snapshot = demo();
-    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset".to_string(), std::collections::BTreeMap::from([("Load".to_string(), PropertyValue::Real { value: 2.5 }), ("Fire".to_string(), PropertyValue::Integer { value: 90 })]))]));
+    snapshot.properties.cold_insert("w-south".into(), [("Pset".to_string(), [("Load".to_string(), PropertyValue::Real { value: 2.5 }), ("Fire".to_string(), PropertyValue::Integer { value: 90 })].into())].into());
     snapshot
 }
 

@@ -43,6 +43,15 @@ impl Default for ArtifactOperationTextCursor {
 impl ArtifactOperationTextCursor {
     pub fn is_complete(&self) -> bool { self.complete }
 
+    /// 📐️ Quotes the current node and the selected child descent, if any.
+    pub(super) fn next_depth_demand(&self, source: &dyn ArtifactOperationText) -> Result<usize, ValueError> {
+        if self.complete { return Ok(0); }
+        let frame = self.frames[self.depth];
+        let descends = frame.phase == 3 && matches!(source.operation_text_node(&self.path[..self.depth])?, ArtifactOperationTextNode::Sequence { length, .. } if frame.child < length);
+        Ok(self.depth + 1 + usize::from(descends))
+    }
+
+
     pub fn pop(&mut self) { if self.depth == 0 { self.complete = true; } else { self.depth -= 1; } }
 
     pub fn advance(&mut self, source: &dyn ArtifactOperationText, output: &mut [u8], grant: RetainedCloneGrant) -> Result<usize, ArtifactPreparedOperationError> {

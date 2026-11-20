@@ -86,6 +86,30 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/norm-energy-plugin",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/norm-eurocode-materials-plugin",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/norm-eurocode-plugin",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/norm-eurocode-structural-plugin",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/norm-mechanics-rs",
       "root": "✏️s/🔌️plugins/📕️norm/🧮️mechanics/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/📕️norm/🧮️mechanics/📦️packages/🦀️rust/📋️project.json",
@@ -4482,6 +4506,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/os-renderer-projected-linework-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📐️projection/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📐️projection/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/os-renderer-wgpu-icon-host-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/💠️icon-host/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/💠️icon-host/📦️packages/🦀️rust/📋️project.json",
@@ -6310,6 +6340,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/plugin-window-config-contract-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/plugin-window-config-mutation-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust/📋️project.json",
@@ -7444,6 +7480,36 @@
       ]
     },
     {
+      "name": "@semio-tech/semio-framework-3d-brep-native-registry",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/semio-framework-3d-brep-solid-topology",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🏗️solid-topology/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🏗️solid-topology/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/semio-framework-3d-brep-solid-transaction",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🏗️solid-transaction/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🏗️solid-transaction/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/semio-framework-3d-brep-spline-construction",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️native-registry/🧮️spline-construction/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/semio-s-plugin-flow-brep-original-jobs",
+      "root": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/〰️analytic-curves/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/semio-tech-play",
       "root": "🏢️semio-tech/🎡️play",
       "manifest": "🏢️semio-tech/🎡️play/📋️project.json",
@@ -8038,6 +8104,18 @@
       "packages": [
         "@semio-tech/stdio-pdf"
       ]
+    },
+    {
+      "name": "@semio-tech/stdio-pdf-page-editor-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/stdio-pdf-page-editor-tests-rs",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
     },
     {
       "name": "@semio-tech/stdio-pdf-plugin",
@@ -10038,6 +10116,12 @@
       "packages": []
     },
     {
+      "name": "semio-framework-3d-brep-axial-face-preview",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪟️axial-face-preview/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪟️axial-face-preview/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-framework-3d-brep-boolean",
       "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust/Cargo.toml",
@@ -10101,6 +10185,12 @@
       "name": "semio-framework-3d-brep-representation",
       "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-3d-brep-spline-trim",
+      "root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪡️spline-trim/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🪡️spline-trim/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -10475,6 +10565,30 @@
       "name": "semio-framework-value-source-hold",
       "root": "🧰️framework/🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-hub-norm-energy-component",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📒️energy/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-hub-norm-eurocode-component",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📗️eurocode/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-hub-norm-eurocode-materials-component",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/🧩️component/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📙️eurocode-materials/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-hub-norm-eurocode-structural-component",
+      "root": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🧩️component/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/📕️norm/🧩️extensions/📓️eurocode-structural/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -11124,6 +11238,18 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-fem-3d-diff",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-fem-3d-guards",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🛡️guards/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🛡️guards/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-flow-flow-editor-publication",
       "root": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️child-publication/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️child-publication/📦️packages/🦀️rust/Cargo.toml",
@@ -11145,6 +11271,18 @@
       "name": "semio-s-artifact-forms-forms-viewer",
       "root": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-layout-layout-engine-export-primitives",
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧱️primitives/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧱️primitives/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-layout-layout-mutations-fields",
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🏗️fields/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🏗️fields/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -11388,6 +11526,12 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-note-note-schema-descriptor",
+      "root": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-procedural-2d-retained-provisional",
       "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-provisional/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-provisional/📦️packages/🦀️rust/Cargo.toml",
@@ -11436,6 +11580,36 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-stdio-pdf-editor-document",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/📄️document/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/📄️document/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-filters",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-lexer",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-page-coordinates",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-xref-stream",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔗️xref/💧️stream/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔗️xref/💧️stream/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-stdio-semio-drawing-png-export",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust/Cargo.toml",
@@ -11448,9 +11622,21 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-wfc-grid3d-transient",
+      "root": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-fem-receiving",
       "root": "✏️s/🔌️plugins/🏗️fem/🧩️receiving/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🏗️fem/🧩️receiving/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-plugin-flow-brep-tessellation",
+      "root": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📐️tessellate/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📐️tessellate/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

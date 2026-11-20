@@ -9,6 +9,7 @@
 import * as React from "react";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { SharedBorderRow } from "../🪢️SharedBorderRow/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 import { createPortal } from "react-dom";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
@@ -568,7 +569,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       <SurfaceScope level="dialog" fill="glass">
         {children}
         {showCloseButton && (
-          <DialogClose className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small">
+          <DialogClose {...sharedBorderlessBoxProps} className="data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small">
             <CloseIconAlt />
             <span className="sr-only">{closeLabel}</span>
           </DialogClose>

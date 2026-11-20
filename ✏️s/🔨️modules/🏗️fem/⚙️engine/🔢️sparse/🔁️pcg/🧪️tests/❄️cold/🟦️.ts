@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "bun:test";
 import Ajv from "ajv/dist/2020";
-import { lusolve } from "mathjs";
+import { diag, lusolve } from "mathjs";
 import corpus from "../🧫️fixtures/❄️cold/🔣️.json";
 import schema from "../🧫️fixtures/❄️cold/🧬️schema.json";
+import pagedCase from "../🧫️fixtures/📚️paged/🔣️.json";
+import pagedSchema from "../🧫️fixtures/📚️paged/🧬️schema.json";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 function arithmetic(sample: typeof corpus.cases[number]) {
@@ -70,5 +72,17 @@ test("mathematical wrappers share arithmetic without minting native authority; n
   assert(subspace.includes("self.state.advance_non_positive_certificate()")); assert(subspace.includes("self.advance_non_positive_certificate()?"));
   assert(assembly.includes("Some(element_contribution(&self.plan, dynamic")); assert(body(assembly, "assemble_system").includes("element_contribution(&plan, model"));
   assert(!common.includes("StepContext::new")); assert(!common.includes("root_cancel_token")); assert(!common.includes("numerical_owned_close_turn"));
-  assert(body(common, "numerical_batch_step<J: InteractiveJob>").includes("job.step(context)?"));
+  assert(body(common, "numerical_batch_step<J: InteractiveJob>").includes("job.step(context, claim)"));
+});
+
+
+test("House-order diagonal system agrees with sparse LU", () => {
+  const valid = new Ajv({ strict: true }).compile(pagedSchema);
+  assert.ok(valid(pagedCase), JSON.stringify(valid.errors));
+  assert.ok(pagedCase.order * Float64Array.BYTES_PER_ELEMENT > pagedCase.pageBytes);
+  const matrix = diag(Array<number>(pagedCase.order).fill(pagedCase.diagonal), 0, "sparse");
+  const loads = Array<number>(pagedCase.order).fill(pagedCase.load);
+  const solution = lusolve(matrix, loads, 0, 1).valueOf() as number[][];
+  assert.equal(solution.length, pagedCase.order);
+  for (const row of solution) assert.equal(row[0], pagedCase.displacement);
 });

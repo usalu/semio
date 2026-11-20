@@ -74,8 +74,13 @@ pub struct PdfAdmittedStreamRole {
 
 /// 🎯️ Resolves an exact generation and structural path without decoding native data.
 pub fn resolve_identity<'a>(objects: &'a [PdfIndirectObject], identity: &PdfGraphIdentity) -> Option<&'a PdfObject> {
-    let mut value = &objects.iter().find(|object| object.id == identity.owner)?.value;
-    for part in &identity.path {
+    let value = &objects.iter().find(|object| object.id == identity.owner)?.value;
+    resolve_object_path(value, &identity.path)
+}
+
+/// 🧭️ Follows the typed path from an already admitted object owner.
+pub fn resolve_object_path<'a>(mut value: &'a PdfObject, path: &[PdfGraphPath]) -> Option<&'a PdfObject> {
+    for part in path {
         value = match part {
             PdfGraphPath::Entry { key } => value.dict_get(key)?,
             PdfGraphPath::Item { index } => value.as_array()?.get(*index)?,

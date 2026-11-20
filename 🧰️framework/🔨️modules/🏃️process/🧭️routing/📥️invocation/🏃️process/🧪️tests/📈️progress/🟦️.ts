@@ -343,3 +343,13 @@ test("a progress line without a chosen language is written in every offered lang
  expect(noticeLanguagesV1(["en","de"] as const,{LANG:"C"})).toEqual(["en","de"]);expect(en).not.toBe(de);
  for(const environment of [{},{LANG:"C"},{LC_ALL:"fr_FR.UTF-8",LANG:"de_DE.UTF-8"},{SEMIO_LANGUAGE:"fr"}])expect(formatScriptProcessActivityV1(progress,environment),JSON.stringify(environment)).toBe(`${en}\n${de}`);
 });
+
+test("SDK work progress renders only bounded counts in both languages",()=>{
+ const{const:_policy,...schema}=contract;
+ const validate=new Ajv({strict:true}).compile({...schema,$ref:"#/definitions/ParserCases"});
+ expect(validate(fixture.toolingCountCases)).toBe(true);
+ for(const row of fixture.toolingCountCases){
+  const frame:ScriptProgress={owner:"tooling-count",command:row.command,stage:"running",activity:{resource:row.resource,mode:"shared",elapsedMs:row.elapsedMs}};
+  expect(formatScriptProcessActivityV1(frame,row.environment),row.resource).toBe(row.expected);
+ }
+});

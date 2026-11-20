@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { createHash } from "node:crypto";
 import { CATALOG_LANGUAGES_V1, handleTextV1, qualifiedKeyV1, type CatalogHandleV1, type TextValuesV1 } from "../📖️catalog/🟦️.ts";
 import { isRepoErrorV1, renderRepoErrorV1, repoErrorExitCodeV1, type RepoErrorV1 } from "../🚨️error/🟦️.ts";
 import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -74,19 +75,25 @@ export const refuseChildFailureV1 = (failure: OwnedCommandFailure): RepoErrorV1 
   : refuseProcessV1("failed", "execution.child-killed", { label: failure.label, signal: failure.outcome.signal ?? "" }, { cause: failure });
 
 type RefusalOptionsV1 = Readonly<{ environment?: LanguageEnvironmentV1; args?: readonly string[]; osLanguages?: OsLanguageListV1; write?: ProgressWriteV1; setExitCode?: (code: number) => void }>;
-type BilingualRefusalV1 = Readonly<{ name: "CargoLockRefused" | "WindowsRenameRefused"; texts: Readonly<Record<string, string>>; diagnostic?: Readonly<{ stderr?: string }> }>;
 
-const isBilingualRefusalV1 = (value: unknown): value is BilingualRefusalV1 => {
-  const row = value as Partial<BilingualRefusalV1> | null;
-  return typeof value === "object" && row !== null && (row.name === "CargoLockRefused" || row.name === "WindowsRenameRefused") && typeof row.texts === "object" && row.texts !== null;
-};
+/** 🏷️ One typed refusal class of the boundary: a fault matched by `name` or `code` whose text is in `texts` (both languages) or is its `message`. @see ./🧬️schema/🔣️.json */
+export type TypedRefusalClassV1 = Readonly<{ id: string; name?: string; code?: string; text: "texts" | "message"; exit: number }>;
 
-/** 🔎️ The first typed bilingual refusal of a fault, looked for through aggregated faults and causes (first failure first, bounded depth), so a settlement that wrapped it renders it instead of an internal error. */
-const firstBilingualRefusalV1 = (error: unknown, depth = 0): BilingualRefusalV1 | undefined => {
-  if (isBilingualRefusalV1(error)) return error;
+/** 📋️ The closed list of typed refusal classes the boundary renders as themselves; the law over this list is the proof that no typed refusal reaches the internal-error text. */
+export const TYPED_REFUSAL_CLASSES_V1: readonly TypedRefusalClassV1[] = Object.freeze(schema.definitions.TypedRefusals.const as readonly TypedRefusalClassV1[]);
+
+type TypedRefusalV1 = Readonly<{ kind: TypedRefusalClassV1; error: Error & { texts?: Readonly<Record<string, string>>; diagnostic?: Readonly<{ stderr?: string }> } }>;
+
+const typedRefusalClassV1 = (error: Error & { code?: unknown; texts?: unknown }): TypedRefusalClassV1 | undefined => TYPED_REFUSAL_CLASSES_V1.find((kind) => (kind.name !== undefined && error.name === kind.name || kind.code !== undefined && error.code === kind.code) && (kind.text === "message" || typeof error.texts === "object" && error.texts !== null));
+
+/** 🔎️ The first typed refusal of a fault, looked for through aggregated faults and causes (first failure first, bounded depth), so a settlement that wrapped it renders it instead of an internal error. */
+const firstTypedRefusalV1 = (error: unknown, depth = 0): TypedRefusalV1 | undefined => {
+  if (typeof error !== "object" || error === null) return undefined;
+  const kind = typedRefusalClassV1(error as Error);
+  if (kind) return { kind, error: error as TypedRefusalV1["error"] };
   if (depth >= 8 || !(error instanceof Error)) return undefined;
   for (const member of error instanceof AggregateError ? error.errors : error.cause === undefined ? [] : [error.cause]) {
-    const found = firstBilingualRefusalV1(member, depth + 1);
+    const found = firstTypedRefusalV1(member, depth + 1);
     if (found) return found;
   }
   return undefined;
@@ -95,19 +102,22 @@ const firstBilingualRefusalV1 = (error: unknown, depth = 0): BilingualRefusalV1 
 /** 🪆️ The message of a fault with the messages of the faults it aggregates, so a settlement that failed for several reasons names each of them instead of only its own summary. */
 export const faultMessageV1 = (error: unknown): string => error instanceof AggregateError ? `${error.message}: ${error.errors.map(faultMessageV1).join("; ")}` : error instanceof Error ? error.message : String(error);
 
-/** 🧯️ Turns anything that is not a typed refusal into a refusal that keeps the original message and never the stack: an expired resource loan is classified as such, a full disk (`ENOSPC`, `database or disk is full`) becomes the typed disk refusal that names the partition, its free bytes and the command that frees space, and only the rest is an internal fault. */
+/** 🔖️ The reference of an unexpected fault: eight hexadecimal digits of the digest of its name and message, so the same fault carries the same reference on every machine and a report can be matched without a stack. */
+export const faultReferenceV1 = (error: unknown): string => createHash("sha256").update(`${error instanceof Error ? error.name : typeof error}\n${faultMessageV1(error)}`).digest("hex").slice(0, 8);
+
+/** 🧯️ Turns anything that is not a typed refusal into a refusal that keeps the original message and never the stack: an expired resource loan is classified as such, a full disk (`ENOSPC`, `database or disk is full`) becomes the typed disk refusal that names the partition, its free bytes and the command that frees space, and only the rest is an internal fault with its reference. */
 export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceof Error && error.name === "ResourceLoanDeadlineExhausted"
   ? refuseProcessV1("failed", "execution.loan-expired", { label: "repo", message: error.message }, { cause: error })
-  : refuseDiskFullV1(error) ?? refuseProcessV1("failed", "error.internal", { message: faultMessageV1(error) }, { cause: error });
+  : refuseDiskFullV1(error) ?? refuseProcessV1("failed", "error.internal", { message: faultMessageV1(error), reference: faultReferenceV1(error) }, { cause: error });
 
-/** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
+/** 🚪️ Reports a refusal at the CLI boundary: a typed refusal of `TYPED_REFUSAL_CLASSES_V1` or a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
 export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}): boolean {
-  const bilingual = firstBilingualRefusalV1(error);
-  if (bilingual) {
+  const typed = firstTypedRefusalV1(error);
+  if (typed) {
     const language = resolveLanguageV1(CATALOG_LANGUAGES_V1, options.args ?? [], options.environment ?? process.env, options.osLanguages).language, write = options.write ?? processWriteV1;
-    write(bilingual.texts[language] ?? "");
-    if (bilingual.diagnostic?.stderr) write(bilingual.diagnostic.stderr.trimEnd());
-    (options.setExitCode ?? ((code) => { process.exitCode = code; }))(1);
+    write(typed.kind.text === "texts" ? typed.error.texts?.[language] ?? "" : typed.error.message);
+    if (typed.error.diagnostic?.stderr) write(typed.error.diagnostic.stderr.trimEnd());
+    (options.setExitCode ?? ((code) => { process.exitCode = code; }))(typed.kind.exit);
     return true;
   }
   const child = isOwnedCommandFailureV1(error) ? error : undefined, refusal = child ? refuseChildFailureV1(child) : isRepoErrorV1(error) ? error : undefined;

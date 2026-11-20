@@ -153,29 +153,29 @@ fn drain(context:&OriginalJobNativeTurnContext<'_,'_,'_>,work:&mut OriginalWorkB
 }
 fn chain(context:&OriginalJobNativeTurnContext<'_,'_,'_>,work:&mut OriginalWorkBorrow<'_>,physical:&mut OriginalConstructionLoan<'_>,state:OriginalReturnBirthState,stash:&std::cell::RefCell<Stash>)->Result<(Progress,[u64;7]),ValueError>{
  let mut spent=Progress::default();let mut stages=[0u64;7];let table_needed=state.table!=Phase::Live;let publisher_needed=state.publisher_wanted&&state.publisher!=Phase::Live;
- let fuel=||context.with_source(|cx|cx.fuel_remaining());
+ let done=||context.with_source(|cx|u64::try_from(cx.original_work_units_spent()).unwrap_or(u64::MAX));
  if state.origin_current{if table_needed||publisher_needed{return Err(refused("original return birth requires its origin committed in this chain"))}return Ok((spent,stages))}
  let origin_demand=semio_framework_job_return_budget::OriginalReturnBudget::<semio_framework_job_context::original_return_source::OriginalReturnSourceInput>::refresh_turn_demand();
- let mark=fuel();let mut first=Park::new(paid(work,physical,origin_demand,ACTION_WORK,|b,e|context.with_source(|cx|cx.birth_origin_action(b,e)))?,stash);spent=spent.checked_add(first.held().progress)?;
+ let mark=done();let mut first=Park::new(paid(work,physical,origin_demand,ACTION_WORK,|b,e|context.with_source(|cx|cx.birth_origin_action(b,e)))?,stash);spent=spent.checked_add(first.held().progress)?;
  let commit_demand=context.with_source(|cx|cx.return_origin_commit_demand())?;
- let committed={let accepted=first.held().accepted(work,physical)?;stages[0]+=mark-fuel();let mark=fuel();let held=paid(work,physical,commit_demand,ACTION_WORK,|b,e|context.with_source(|cx|cx.birth_origin_commit_action(&accepted,b,e)))?;stages[1]+=mark-fuel();Park::new(held,stash)};spent=spent.checked_add(committed.held().progress)?;
- let mark=fuel();spent=spent.checked_add(retire(work,physical,&mut first)?)?;stages[0]+=mark-fuel();
+ let committed={let accepted=first.held().accepted(work,physical)?;stages[0]+=done()-mark;let mark=done();let held=paid(work,physical,commit_demand,ACTION_WORK,|b,e|context.with_source(|cx|cx.birth_origin_commit_action(&accepted,b,e)))?;stages[1]+=done()-mark;Park::new(held,stash)};spent=spent.checked_add(committed.held().progress)?;
+ let mark=done();spent=spent.checked_add(retire(work,physical,&mut first)?)?;stages[0]+=done()-mark;
  let mut table=None;let mut publisher=None;
  if table_needed{
-  let origin=committed.held().accepted(work,physical)?;let mark=fuel();let mut built=filled(context,work,physical,Stage::Table,(&origin,None,None,None),&mut spent,stash)?;stages[2]+=mark-fuel();
-  let mark=fuel();let sealed={let birth=built.held().accepted(work,physical)?;Park::new(staged(context,work,physical,Stage::TableCommit,(&origin,None,Some(&birth),None))?,stash)};stages[3]+=mark-fuel();spent=spent.checked_add(sealed.held().progress)?;
-  let mark=fuel();spent=spent.checked_add(retire(work,physical,&mut built)?)?;stages[2]+=mark-fuel();table=Some(sealed);
+  let origin=committed.held().accepted(work,physical)?;let mark=done();let mut built=filled(context,work,physical,Stage::Table,(&origin,None,None,None),&mut spent,stash)?;stages[2]+=done()-mark;
+  let mark=done();let sealed={let birth=built.held().accepted(work,physical)?;Park::new(staged(context,work,physical,Stage::TableCommit,(&origin,None,Some(&birth),None))?,stash)};stages[3]+=done()-mark;spent=spent.checked_add(sealed.held().progress)?;
+  let mark=done();spent=spent.checked_add(retire(work,physical,&mut built)?)?;stages[2]+=done()-mark;table=Some(sealed);
  }
  if publisher_needed{
   let origin=committed.held().accepted(work,physical)?;let table_proof=match table.as_ref(){Some(park)=>Some(park.held().accepted(work,physical)?),None=>None};
-  let mark=fuel();let mut built=filled(context,work,physical,Stage::Publisher,(&origin,table_proof.as_ref(),None,None),&mut spent,stash)?;stages[4]+=mark-fuel();
-  let mark=fuel();let sealed={let birth=built.held().accepted(work,physical)?;Park::new(staged(context,work,physical,Stage::PublisherCommit,(&origin,table_proof.as_ref(),Some(&birth),None))?,stash)};stages[5]+=mark-fuel();spent=spent.checked_add(sealed.held().progress)?;
-  let mark=fuel();spent=spent.checked_add(retire(work,physical,&mut built)?)?;stages[4]+=mark-fuel();publisher=Some(sealed);
+  let mark=done();let mut built=filled(context,work,physical,Stage::Publisher,(&origin,table_proof.as_ref(),None,None),&mut spent,stash)?;stages[4]+=done()-mark;
+  let mark=done();let sealed={let birth=built.held().accepted(work,physical)?;Park::new(staged(context,work,physical,Stage::PublisherCommit,(&origin,table_proof.as_ref(),Some(&birth),None))?,stash)};stages[5]+=done()-mark;spent=spent.checked_add(sealed.held().progress)?;
+  let mark=done();spent=spent.checked_add(retire(work,physical,&mut built)?)?;stages[4]+=done()-mark;publisher=Some(sealed);
  }
- let mark=fuel();let mut released={let origin=committed.held().accepted(work,physical)?;let table_proof=match table.as_ref(){Some(park)=>Some(park.held().accepted(work,physical)?),None=>None};let publisher_proof=match publisher.as_ref(){Some(park)=>Some(park.held().accepted(work,physical)?),None=>None};Park::new(staged(context,work,physical,Stage::Release,(&origin,table_proof.as_ref(),None,publisher_proof.as_ref()))?,stash)};
+ let mark=done();let mut released={let origin=committed.held().accepted(work,physical)?;let table_proof=match table.as_ref(){Some(park)=>Some(park.held().accepted(work,physical)?),None=>None};let publisher_proof=match publisher.as_ref(){Some(park)=>Some(park.held().accepted(work,physical)?),None=>None};Park::new(staged(context,work,physical,Stage::Release,(&origin,table_proof.as_ref(),None,publisher_proof.as_ref()))?,stash)};
  spent=spent.checked_add(released.held().progress)?;spent=spent.checked_add(retire(work,physical,&mut released)?)?;
  for mut park in[Some(committed),table,publisher].into_iter().flatten(){spent=spent.checked_add(retire(work,physical,&mut park)?)?}
- stages[6]+=mark-fuel();Ok((spent,stages))
+ stages[6]+=done()-mark;Ok((spent,stages))
 }
 /// 🌗️ Reports what one Source turn's birth chain did.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

@@ -385,6 +385,50 @@
   ],
   "meshCoverage": [
     {
+      "operation": "importStl",
+      "kind": "mesh.interchange.importStl"
+    },
+    {
+      "operation": "importGlb",
+      "kind": "mesh.interchange.importGlb"
+    },
+    {
+      "operation": "exportStl",
+      "kind": "mesh.interchange.exportStl"
+    },
+    {
+      "operation": "exportGlb",
+      "kind": "mesh.interchange.exportGlb"
+    },
+    {
+      "operation": "setShading",
+      "kind": "mesh.shading.setShading"
+    },
+    {
+      "operation": "recomputeNormals",
+      "kind": "mesh.shading.recomputeNormals"
+    },
+    {
+      "operation": "markSeams",
+      "kind": "mesh.uv.markSeams"
+    },
+    {
+      "operation": "unwrapUv",
+      "kind": "mesh.uv.unwrap"
+    },
+    {
+      "operation": "torus",
+      "kind": "mesh.primitive.torus"
+    },
+    {
+      "operation": "uvSphere",
+      "kind": "mesh.primitive.uvSphere"
+    },
+    {
+      "operation": "importObj",
+      "kind": "mesh.interchange.importObj"
+    },
+    {
       "operation": "construct",
       "kind": "mesh.primitive.construct"
     },

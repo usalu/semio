@@ -3,6 +3,7 @@ import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,r
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
+import {pathToFileURL} from "node:url";
 import {spawnSync} from "node:child_process";
 import {HERE,ORACLE,sleep} from "../🟦️.ts";
 import {createIndexPoolV1} from "../../🏛️service/🌐️host/🧊️pool/🟨️.mjs";
@@ -11,6 +12,9 @@ import {planRetentionV1} from "../../🏛️service/🌐️host/🧹️retention
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {spawnHostServiceV1} from "../../🏗️composition/🌐️host/🟨️.mjs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
+import {createProcessWorkerV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs";
+import {READY_SLICE_REPORT_POLICY_V1,ownedSliceReportV1,prepareOwnedSliceReportV1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
+import {READY_CONTAINMENT_POLICY_V1,readyOwnerTokenV1} from "../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🧹️containment/🟦️.ts";
 import {GRAPH_MEMORY_POLICY_V1} from "../../../🧠️memory/🟨️.mjs";
 import {GRAPH_CUT_POLICY_V1} from "../../../🧠️memory/✂️cut/🟨️.mjs";
 import {PlanRefusedErrorV1,connectHostV1,holdHostV1,requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
@@ -114,6 +118,46 @@ describe("host service pins revisions",()=>{
 
 describe("slice worker pool",()=>{
  const slow=new URL("./🐌️slow-slice-worker.mjs",import.meta.url),graphText=readFileSync(GRAPH,"utf8");
+ test("an owned readiness client joins a preexisting shared host read and receives snapshots only until it cancels",async()=>{
+  const root=workspace("ready-report"),env=environment("ready-report"),implementation=digestOf("ready-report"),runtime=hostEndpointsV1(implementation,env);
+  const owner=readyOwnerTokenV1(root,"workspace",Date.now()),grant=prepareOwnedSliceReportV1(root,owner)!;
+  const identity={[READY_CONTAINMENT_POLICY_V1.ownerEnvironment]:owner},issued={...identity,[READY_SLICE_REPORT_POLICY_V1.grantEnvironment]:grant};
+  const reportFile=ownedSliceReportV1(root,owner)!.file,started=join(root,"started"),end=join(root,"end"),requests=join(root,"requests"),worker=join(root,"report.mjs");
+  const reportsModule=new URL("../../../🧠️memory/📋️slice-report/🟨️.mjs",import.meta.url).href;
+  const processModule=new URL("../../🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs",import.meta.url).href;
+  writeFileSync(worker,`import{appendFileSync,existsSync,writeFileSync}from"node:fs";
+import{parentPort,workerData}from${JSON.stringify(processModule)};
+import{noteSliceReportPhaseV1,startSliceReportV1}from${JSON.stringify(reportsModule)};
+const report=startSliceReportV1({root:workerData.root,table:async()=>""});
+noteSliceReportPhaseV1({phase:"ready-report",done:1,total:2});report.now("interval");writeFileSync(workerData.started,"");
+let asked=0;process.on("message",message=>{if(message?.type==="slice-report"){appendFileSync(workerData.requests,"1");parentPort.postMessage({type:"slice-report",report:++asked===1?"x".repeat(${READY_SLICE_REPORT_POLICY_V1.fileBytes+1}):report.read()});}});
+const timer=setInterval(()=>{if(existsSync(workerData.end)){clearInterval(timer);report.stop();parentPort.postMessage({type:"done",graph:JSON.parse(workerData.graphText)});}},20);`);
+  const pool=createSlicePoolV1({workerUrl:pathToFileURL(worker),heartbeatMilliseconds:40,now:()=>performance.now()*10000,createWorker:(url,data,workerEnv)=>createProcessWorkerV1(url,data,{...workerEnv,...issued})});
+  const graph=JSON.parse(graphText),planner=createGraphPlannerPortV1({identify:async()=>implementation,loadGraph:async()=>graph,loadSlice:request=>pool.run({root:request.root,arguments:request.arguments,graphText,started,end,requests},{signal:request.signal,onProgress:request.onProgress,wantsReport:request.wantsReport})});
+  const service=createHostServiceV1({runtime,implementation,ports:{planner}}),controller=new AbortController();
+  const ask=(clientEnv:Record<string,string>,signal?:AbortSignal)=>requestPlanV1({root,implementation,targets:["app:test"],arguments:["run","app:test"],agent:"a",language:"en",environment:clientEnv,...signal===undefined?{}:{signal}});
+  await service.start();
+  const ordinary=ask({...env,...identity}).then(result=>({result}),error=>({error}));
+  let readiness:Promise<unknown>|undefined;
+  try{
+   for(let count=0;count<100&&!existsSync(started);count++)await sleep(20);
+   expect(existsSync(started)).toBe(true);await sleep(120);
+   expect(existsSync(requests)).toBe(false);expect(existsSync(reportFile)).toBe(false);
+   readiness=ask({...env,...issued},controller.signal).catch(error=>error);
+   for(let count=0;count<100&&!existsSync(reportFile);count++)await sleep(20);
+   const report=JSON.parse(readFileSync(reportFile,"utf8"));
+   expect(report.readyOwner).toBe(owner);expect(report.phase.name).toBe("ready-report");
+   expect(readFileSync(requests,"utf8").length).toBeGreaterThanOrEqual(2);
+   controller.abort(new Error("readiness stopped"));
+   expect(await readiness).toBeInstanceOf(Error);
+   await sleep(100);
+   const taken=readFileSync(requests,"utf8");await sleep(120);
+   expect(readFileSync(requests,"utf8")).toBe(taken);
+   expect(service.counters.coalesced).toBe(1);expect(pool.stats().started).toBe(1);
+   writeFileSync(end,"");
+   const answered=await ordinary;expect("result" in answered&&answered.result.reply.t).toBe("plan-reply");
+  }finally{controller.abort();writeFileSync(end,"");await Promise.allSettled([ordinary,readiness]);await pool.close();await service.stop("test");}
+ });
  test("a slow synchronous slice load on a worker never blocks the service: status answers within a second while the load runs, and its heartbeat reports progress",async()=>{
   let notes=0;const pool=createSlicePoolV1({workerUrl:slow,maximum:2,heartbeatMilliseconds:200,note:()=>{notes++;}}),beats:number[]=[];
   const h=inProcess("pool-latency",{},0),root=workspace("w-pool");await h.service.start();

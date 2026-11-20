@@ -279,6 +279,7 @@ pub fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, sess
         status => return Err(format!("kernel: unexpected job status in reactor turn: {status:?}")),
     };
     Ok(TurnResult {
+        retained_receipt: result.retained_receipt,
         ui_patches: if result.ui_patches.is_empty() {
             semio_framework::kernel::UiTurnPatches::default()
         } else {
@@ -302,7 +303,7 @@ pub fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, sess
 /// ⛽️ One generous constant turn budget until the DRR scheduler threads a real per-lane one
 /// through (same honestly-flagged gap `PluginInstanceHandle`'s `RELAY_JOB_BUDGET` already
 /// documents on the host side for jobs — this is its `reactor::poll` turn-budget twin).
-pub const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
+pub const TURN_BUDGET: semio_renderer_wgpu_host_base::RendererTurnLimits = semio_renderer_wgpu_host_base::RendererTurnLimits { fuel: 50_000_000, deadline_us: 100_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
 
 /// 🎟️ The retained grant one job-replay-log step is funded with: the pages, copy, capacity and release of one operation's state and output payloads (the declared actor bridge grant), shared by the pool and the retained-state recovery close.
 pub const JOB_REPLAY_STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant {

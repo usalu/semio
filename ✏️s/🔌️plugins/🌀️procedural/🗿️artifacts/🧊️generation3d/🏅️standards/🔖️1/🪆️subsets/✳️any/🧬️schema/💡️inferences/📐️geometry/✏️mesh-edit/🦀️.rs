@@ -50,13 +50,22 @@ fn dissolve_vertices(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 fn merge_vertices(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     modeling(kind, move || {
         let mesh = owned_mesh(&inputs, "mesh")?;
-        let selected = vertices(&inputs, &mesh, "vertices")?;
+        let mut selected = vertices(&inputs, &mesh, "vertices")?;
         let mode = match inputs.text("mode")? {
             "first" => WeldMode::First,
             "center" => WeldMode::Center,
             "distance" => WeldMode::ByDistance,
             other => return Err(WidgetFault::new("generation3d.geometry.input-option", format!("The merge mode \u{201c}{other}\u{201d} is not first, center or distance."), format!("Der Verschmelzmodus \u{201c}{other}\u{201d} ist weder first, center noch distance.")).at("mode")),
         };
+        if mode == WeldMode::First {
+            let selection = inputs.selection("vertices")?;
+            let first_index = selection.ids.first().and_then(|first| {
+                selected.binary_search_by_key(first, |vertex| u64::from(vertex.0)).ok()
+            });
+            if let Some(index) = first_index {
+                selected[..=index].rotate_right(1);
+            }
+        }
         mesh.merge_vertices_job_owned(&selected, mode, scalar(&inputs, "tolerance")?).kernel()
     })
 }

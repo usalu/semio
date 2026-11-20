@@ -137,10 +137,10 @@ pub const WFC_2D_RETAINED_TOOL_IDS: &[&str] = &[
 
 const WFC_2D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.wfc2d.tool-command.v1";
 
-pub(super) const WFC_2D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+pub const WFC_2D_RETAINED_RAW_BYTES: usize = 2 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
 /// 📬️ Two complete solve records and their sparse diff fit within the admitted tick carrier.
-pub(super) const WFC_2D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
+pub const WFC_2D_RETAINED_OUTPUT_BYTES: usize = 4 * semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX + 16_384;
 
 pub(super) const WFC_2D_RETAINED_WORK_ITEMS: usize = 4_096;
 
@@ -212,6 +212,10 @@ impl Wfc2dCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -333,4 +337,3 @@ mod completion_source_tests {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Wfc2dCommandWork);

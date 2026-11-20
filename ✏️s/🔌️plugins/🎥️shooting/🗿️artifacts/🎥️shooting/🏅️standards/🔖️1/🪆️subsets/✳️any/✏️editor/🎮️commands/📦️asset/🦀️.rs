@@ -135,7 +135,7 @@ pub mod import_asset_request {
     pub struct ImportAssetRequest {}
 
     pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen { max_file_bytes: None, req: semio_plugin::RequestId(108), accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️ImportAssetRequest

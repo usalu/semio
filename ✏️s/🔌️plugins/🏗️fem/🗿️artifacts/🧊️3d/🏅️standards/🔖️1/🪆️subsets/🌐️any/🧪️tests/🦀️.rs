@@ -25,6 +25,21 @@ use semio_s_fem_material::volumetric::FemMaterialValue;
 use semio_s_fem_node::volumetric::FemNodeValue;
 
 #[cfg(test)]
+use semio_framework_test_original_snapshot_owners as original_owners;
+#[cfg(test)]
+struct Lend(semio_framework_value_testing_admission::Authorities, RetainedCloneGrant);
+#[cfg(test)]
+impl Lend {
+    fn on<R>(&mut self, native: &mut NativeDecodeControl<'_>, operation: impl FnOnce(&mut NativeDecodeControl<'_>) -> Result<R, ValueError>) -> Result<R, ValueError> {
+        self.0.lend(native, self.1, operation)
+    }
+}
+#[cfg(test)]
+fn with_lend<R>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut Lend) -> R) -> R {
+    operation(&mut Lend(semio_framework_value_testing_admission::Authorities::new(), grant))
+}
+
+#[cfg(test)]
 #[path = "native-tests.rs"]
 mod native_tests;
 #[cfg(test)]
@@ -42,9 +57,6 @@ mod examples_tests;
 #[cfg(test)]
 #[path = "diff-tests.rs"]
 mod diff_tests;
-#[cfg(test)]
-#[path = "cold-tests.rs"]
-mod cold_tests;
 #[cfg(test)]
 #[path = "roundtrip-tests.rs"]
 mod roundtrip_tests;

@@ -1,0 +1,13 @@
+# PDF lexer registry retry and selected owner admission
+
+The coordinator whole graph reached 928 of 4,792 projects before its pinned process reported that the PDF lexer Cargo package had no owner. Registry follow printed a moved registry and then failed with closed Original admission. Its immutable worker had started about 01:39 UTC. The custody fix under the graph load and registry-follow modules landed at 01:48–01:49 UTC. The old runner and read processes were still live after the failure was printed. A three-second macOS process sample showed activity in Bun frames without source symbols. It established no particular cleanup delay.
+
+The current registry SHA-256 was `98e4e44100f5a0f06a78b8229d8182849a77ac570e5b82791c7a61d7c5562824` at inspection. It assigns `semio-s-artifact-stdio-pdf-lexer` to `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust`. The physical Cargo.toml names that package. A fresh selected graph inferred the exact owner, sealed it through one repair round, expanded all seven input closures and published a selected seal. The command then refused the unregistered output report name. A second invocation requests the same selected project on stdout.
+
+Selected admission previously observed every newly seen owner with empty demands and then often inspected that same owner with required targets or inputs. The base result was needed when deciding whether an optional target exists. The required-only and input-only routes now make one initial observation with the real demand. Optional target and plain owner-only admission retain their existing checks. The Python sweep oracle confirmed the same closure and the reduced inspection trace, including mixed optional, required and cancellation cases. All 18 tests across four adjacent suites passed with 2,395 assertions.
+
+The selected seal establishes that the current graph can find this owner. It does not establish completion of a whole graph, physical peer reuse of a whole seal, or the old attempt's terminal receipt.
+
+The older read completed cleanup and exited 1. All three recorded process identities were absent when rechecked. A fresh selected invocation without the report flag exited 0 and printed the exact registry name and path and its build, check and test targets. It published another selected seal. The independent whole repo show projects retry started as PID 32248 after the recorder cleared and the old processes disappeared.
+
+A natural follower started during the independent retry and remained at the capacity door. The measured coordinator showed only one live inference grant at that snapshot. The foreground retry had reached 149 of 4,797 owners.

@@ -88,7 +88,7 @@ fn window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape() {
     assert!(!row1.contains('\u{2922}'), "a lone window has nothing to maximize against: {row1:?}");
     assert!(!row1.contains('\u{29C9}'), "the per-tab new-window glyph is gone: {row1:?}");
     assert!(row1.contains('\u{2715}'), "close glyph: {row1:?}");
-    assert!(row2.contains('\u{2517}'), "tab bends into body: {row2:?}");
+    assert!(row2.contains('\u{253b}'), "tab closes onto the body: {row2:?}");
     assert_eq!(row2.chars().last(), Some('\u{2513}'), "flat top-right at body: {row2:?}");
     assert_eq!(row_text(&buf, 4).chars().next(), Some('\u{2517}'));
     assert_eq!(row_text(&buf, 4).chars().last(), Some('\u{251b}'));
@@ -117,7 +117,7 @@ fn window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted() {
     assert!(row0.starts_with('\u{250c}'), "{row0:?}");
     assert!(row1.contains("Log"), "{row1:?}");
     assert!(!row1.contains('\u{2922}') && !row1.contains('\u{2715}'), "no action glyphs: {row1:?}");
-    assert!(row2.contains('\u{2514}'), "bend into body: {row2:?}");
+    assert!(row2.contains('\u{2534}'), "chip closes onto the body: {row2:?}");
     assert_eq!(row2.chars().last(), Some('\u{2510}'), "flat right corner: {row2:?}");
     assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
 }

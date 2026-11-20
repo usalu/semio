@@ -57,6 +57,7 @@
           "unreadable"
         ]
       },
+      "reconcile": { "const": "still-old" },
       "funding": {
         "enum": [
           "old",

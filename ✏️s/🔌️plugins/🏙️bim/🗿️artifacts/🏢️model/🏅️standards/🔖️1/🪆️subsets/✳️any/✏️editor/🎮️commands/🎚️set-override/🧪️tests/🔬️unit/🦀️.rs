@@ -26,7 +26,7 @@ fn call(snapshot: &ModelSnapshot, name: &str, value: &str) -> Result<Emit<ModelM
 
 fn overridden() -> ModelSnapshot {
     let mut snapshot = placed();
-    snapshot.component_overrides.insert("c-table.width".into(), ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.cold_insert("c-table.width".into(), ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     snapshot
 }
 

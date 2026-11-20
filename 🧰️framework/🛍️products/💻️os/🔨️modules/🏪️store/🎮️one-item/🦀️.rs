@@ -55,7 +55,12 @@ impl ArtifactStoreOneItemFootprint {
     /// [`VcsError::TooLarge`] (`mutation.too-large`, a framework notice) above [`ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS`],
     /// before any preparation, so the runtime tells the person instead of the batch admission failing closed.
     pub fn for_gesture<P, M: Mutation<P>>(mutations: &[M]) -> Result<Self, VcsError> {
-        let rows = mutations.iter().fold(0usize, |rows, mutation| rows.saturating_add(Self::for_leaf::<P, M>(mutation, 0).work_items));
+        Self::for_gesture_iter::<P, M>(mutations)
+    }
+
+    /// 📚️ Checks the same declared row bounds for separately retained mutation pages.
+    pub fn for_gesture_iter<'a, P, M: Mutation<P> + 'a>(mutations: impl IntoIterator<Item = &'a M>) -> Result<Self, VcsError> {
+        let rows = mutations.into_iter().fold(0usize, |rows, mutation| rows.saturating_add(Self::for_leaf::<P, M>(mutation, 0).work_items));
         if rows > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS {
             return Err(VcsError::TooLarge { rows, capacity: ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS });
         }

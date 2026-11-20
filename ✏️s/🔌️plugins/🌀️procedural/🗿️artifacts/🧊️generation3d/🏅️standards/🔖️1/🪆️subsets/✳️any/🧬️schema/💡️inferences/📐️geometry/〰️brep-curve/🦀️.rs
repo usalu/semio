@@ -17,10 +17,8 @@ use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
 use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, ShapeRoot, ShapeValue, ShapeWire};
-use semio_framework_3d_brep_construction::euler::{make_edge, make_vertex};
-use semio_framework_3d_brep_construction::primitives::make_polyline_wire;
+use semio_framework_3d_brep_construction::primitives::{make_curve_wire, make_polyline_wire};
 use semio_framework_3d_brep_curve::Curve3;
-use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
@@ -144,25 +142,11 @@ pub fn polyline_value(points: &[[f64; 3]], closed: bool) -> Result<ShapeValue, W
 
 /// 〰️ A curve as a one-edge wire over its natural range: a line spans its segment `[0, 1]`, a periodic curve one period, a spline its knot domain.
 fn curve_wire(curve: &Curve3) -> Result<ShapeValue, WidgetFault> {
-    let range = match curve {
-        Curve3::Line { .. } => (0.0, 1.0),
-        Curve3::Circle { .. } | Curve3::Ellipse { .. } => (0.0, TAU),
-        Curve3::Nurbs { knots, .. } => knots.domain(),
-    };
-    let (first, last) = (curve.eval(range.0), curve.eval(range.1));
-    if ![first.x, first.y, first.z, last.x, last.y, last.z].iter().all(|axis| axis.is_finite()) {
-        return Err(refusal("degenerate-path", "The curve has no finite end points.", "Die Kurve hat keine endlichen Endpunkte."));
-    }
-    let closed = first.distance(last) <= 1e-9;
     let mut body = Body::new();
-    let mut rec = OpRecorder::new();
-    let curve_id = body.curves3.insert(curve.clone());
-    let start = make_vertex(&mut body, first, Tol::DEFAULT, &mut rec);
-    let end = if closed { start } else { make_vertex(&mut body, last, Tol::DEFAULT, &mut rec) };
-    let edge = make_edge(&mut body, curve_id, range, start, end, Tol::DEFAULT, &mut rec);
+    let wire = make_curve_wire(&mut body, curve.clone(), &mut OpRecorder::new())
+        .map_err(|_| refusal("degenerate-path", "The curve has no finite end points.", "Die Kurve hat keine endlichen Endpunkte."))?;
     let label = body.new_label();
-    let vertices = if closed { vec![start] } else { vec![start, end] };
-    Ok(ShapeValue { root: ShapeRoot::Wire(ShapeWire { members: vec![(edge, true)], vertices, closed, label }), body })
+    Ok(ShapeValue { root: ShapeRoot::Wire(ShapeWire { members: wire.members, vertices: wire.vertices, closed: wire.closed, label }), body })
 }
 
 /// 🛤️ A path input read as a wire value: a wire is itself, an edge and a curve become one-edge wires.

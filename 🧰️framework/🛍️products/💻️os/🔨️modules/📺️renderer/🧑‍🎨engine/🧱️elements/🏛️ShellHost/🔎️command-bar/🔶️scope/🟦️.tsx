@@ -19,7 +19,7 @@ import type { ShellCoreAfterCheckInAndSync } from "../../✅️check-in-sync/�
 /** 🔷 Builds scope, hostMode, mobile, locks of useCommandBar. */
 export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAndSync }) {
   const {
-    scope, hostMode, mobile, locks, dispatch, historyStore, exampleOptionsRef, lastDispatchedExampleIdRef, loadedPlugins,
+    scope, hostMode, mobile, locks, dispatch, historyStore, exampleOptionsRef, loadedPlugins,
     session, localPrograms, uiLocale, uiTerminology, applyHistoryPatch, applyLeftoverInteractionView, landingAppId,
     appLabelsOverlay, actionPaneStagedArgsByKey, commandStagedArgsByCommandId, activeExampleId, extraWindowInstances,
     surfaceSwitchBusy, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
@@ -67,11 +67,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         id="playground.navbar.fixture"
         value={activeExampleId}
         options={exampleOptions}
-        onValueChange={(exampleId) => {
-          if (exampleId) lastDispatchedExampleIdRef.current = exampleId;
-          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-          dispatchActiveExample(exampleId || "");
-        }}
+        onValueChange={(exampleId) => { void dispatchActiveExample(exampleId); }}
       />
     );
   }, [session, focusedApp, exampleOptions, locks.exampleId, hostMode, landingAppId, activeExampleId, dispatchActiveExample]);

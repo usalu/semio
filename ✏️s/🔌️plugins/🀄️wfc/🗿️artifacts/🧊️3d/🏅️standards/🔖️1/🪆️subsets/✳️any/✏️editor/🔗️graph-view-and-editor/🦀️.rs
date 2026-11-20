@@ -62,6 +62,22 @@ impl ArtifactEditor for Wfc3dEditor {
     type TransientMutation = Wfc3dTransientMutation;
     type Command = Wfc3dEditorCommand;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(|operation| Some(operation)).with_original_receiving();
+            (owners, progress)
+        }))
+    }
+
     const DIALECT: Dialect = WFC3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;
 
@@ -161,7 +177,7 @@ impl ArtifactEditor for Wfc3dEditor {
         if wfc3d_retained_extent(&original.command, &original.snapshot).is_none() {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "WFC 3D bounded route exceeded its declared work extent").into());
         }
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wfc3d_command_id, WFC_3D_RETAINED_RAW_BYTES, WFC_3D_RETAINED_WORK_ITEMS, false, |request| Box::new(Wfc3dCommandWork::new(tool_id)))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, wfc3d_command_id, WFC_3D_RETAINED_RAW_BYTES, WFC_3D_RETAINED_WORK_ITEMS, false, |request| Wfc3dCommandWork::new(tool_id))
     }
 
     semio_plugin::bounded_first_step_tool_proofs! {

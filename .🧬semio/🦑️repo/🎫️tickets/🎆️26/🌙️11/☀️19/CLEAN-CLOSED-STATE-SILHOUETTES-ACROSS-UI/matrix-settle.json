@@ -1,0 +1,8 @@
+[
+  { "name": "pending sibling", "ownerAttached": true, "ownerPending": false, "frames": 6 },
+  { "name": "owner attaches during paint", "ownerAttached": false, "ownerPending": false, "readyFrame": 4, "frames": 8 },
+  { "name": "own compositor becomes ready", "ownerAttached": true, "ownerPending": true, "readyFrame": 4, "frames": 8 },
+  { "name": "owner clears in the first two frames", "ownerAttached": true, "ownerPending": true, "readyFrame": 2, "frames": 6 },
+  { "name": "owner schedules work during paint", "ownerAttached": true, "ownerPending": false, "pendingFrame": 2, "readyFrame": 4, "frames": 8 },
+  { "name": "pending guard is bounded", "ownerAttached": true, "ownerPending": true, "frames": 86 }
+]

@@ -162,12 +162,12 @@ fn read_types(i: &mut Import<'_>) {
             let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("fam-{}", Import::slug(&name)), |candidate| i.model.families.contains_key(candidate)));
             if !i.model.families.contains_key(&id) {
                 for (parameter, row) in parameters {
-                    i.model.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), FamilyParameter { family: id.clone(), ..row });
+                    i.model.family_parameters.cold_insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), FamilyParameter { family: id.clone(), ..row });
                 }
                 for (key, row) in solids {
-                    i.model.family_solids.insert(key, FamilySolid { family: id.clone(), ..row });
+                    i.model.family_solids.cold_insert(key, FamilySolid { family: id.clone(), ..row });
                 }
-                i.model.families.insert(id.clone(), family);
+                i.model.families.cold_insert(id.clone(), family);
             }
             i.type_ids.insert(instance.id, id);
         }
@@ -187,9 +187,9 @@ fn cuboid_family(i: &mut Import<'_>, known: &mut BTreeMap<String, String>, categ
         return id.clone();
     }
     let id = Import::unused(&format!("fam-{}", Import::slug(name)), |candidate| i.model.families.contains_key(candidate));
-    i.model.families.insert(id.clone(), Family { name: name.to_string(), category });
+    i.model.families.cold_insert(id.clone(), Family { name: name.to_string(), category });
     for (parameter, value) in [("width", size[0]), ("depth", size[1]), ("height", size[2])] {
-        i.model.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, parameter), FamilyParameter { family: id.clone(), name: parameter.into(), kind: ParameterKind::Length, value: metres(value) });
+        i.model.family_parameters.cold_insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, parameter), FamilyParameter { family: id.clone(), name: parameter.into(), kind: ParameterKind::Length, value: metres(value) });
     }
     let solid = FamilySolid {
         family: id.clone(),
@@ -199,7 +199,7 @@ fn cuboid_family(i: &mut Import<'_>, known: &mut BTreeMap<String, String>, categ
         visible: "true".into(),
         offset: ExprPoint3 { x: "0 m".into(), y: "0 m".into(), z: "0 m".into() },
     };
-    i.model.family_solids.insert(format!("fs-{}-body", id.trim_start_matches("fam-")), solid);
+    i.model.family_solids.cold_insert(format!("fs-{}-body", id.trim_start_matches("fam-")), solid);
     known.insert(key, id.clone());
     id
 }
@@ -254,10 +254,10 @@ pub fn read(i: &mut Import<'_>) {
             };
             for (parameter, value) in set_of(&i.doc, instance.id, OVERRIDES_SET) {
                 if let Some(formula_text) = string_of(&value) {
-                    i.model.component_overrides.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), ComponentOverride { component: id.clone(), name: parameter, value: formula_text });
+                    i.model.component_overrides.cold_insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), ComponentOverride { component: id.clone(), name: parameter, value: formula_text });
                 }
             }
-            i.model.components.insert(id.clone(), component);
+            i.model.components.cold_insert(id.clone(), component);
             i.ids.insert(instance.id, id);
         }
     }

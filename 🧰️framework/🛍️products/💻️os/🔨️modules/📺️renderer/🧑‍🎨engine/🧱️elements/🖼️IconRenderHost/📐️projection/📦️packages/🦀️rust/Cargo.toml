@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-renderer-projected-linework"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Projected frustum clipping, line visibility and vector path assembly"
+
+[package.metadata.semio]
+role = "framework"
+id = "renderer-projected-linework"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+serde_json = { workspace = true }

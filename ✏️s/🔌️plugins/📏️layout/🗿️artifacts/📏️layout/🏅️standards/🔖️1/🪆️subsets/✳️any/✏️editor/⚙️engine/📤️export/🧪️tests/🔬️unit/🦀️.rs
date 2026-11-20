@@ -17,6 +17,11 @@ use semio_s_artifact_layout_layout_model::PageOverride;
 use std::sync::Arc;
 
 
+#[path = "../📦️formats/🦀️.rs"]
+mod format_job_tests;
+#[path = "../🎨️fidelity/📤️formats.rs"]
+mod fidelity_format_tests;
+
 include!("📕️pdf-structure/🦀️.rs");
 include!("🎟️harness-pdf-and-dispatch-laws/🦀️.rs");
 include!("🚧️caps-json-checkpoint-pdf-style/🦀️.rs");
@@ -26,7 +31,7 @@ include!("📕️streamed-images-and-unicode/🦀️.rs");
 
 #[test]
 fn original_media_vector_projection_escapes_and_cancels_with_original_writer_and_credit(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎥️media-export-job-and-factories/🧪️fixture.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🎥️media-export-job-and-factories/🧪️fixture.json")).unwrap();
     for row in fixture["projectionCases"].as_array().unwrap(){
         let svg=row["svg"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap_or(1)as usize);
         let mut expected=row["expected"].clone();expected["svg"]=serde_json::Value::String(svg.clone());

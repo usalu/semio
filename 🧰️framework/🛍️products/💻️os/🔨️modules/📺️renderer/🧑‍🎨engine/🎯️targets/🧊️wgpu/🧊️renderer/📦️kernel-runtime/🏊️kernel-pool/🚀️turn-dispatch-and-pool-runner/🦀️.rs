@@ -234,18 +234,7 @@ impl KernelPoolState {
                     }
                     ShardOutcome::Fault { actor: reported, message } => {
                         self.begin_fault_close(ActorId(reported));
-                        let faulted = semio_framework_actor::TurnResult {
-                            cold_pair_ingress: Default::default(),
-                            ui_patches: Vec::new(),
-                            effects: Vec::new(),
-                            command_ingress: Vec::new(),
-                            lifecycle_receipt: None,
-                            ui_patch_receipt: None,
-                            next_wake: None,
-                            status: semio_framework_actor::TurnStatus::Faulted { detail: message.as_bytes().to_vec() },
-                            usage: semio_framework_actor::Usage::default(),
-                        };
-                        let _ = self.runtime.complete_actor(ActorId(reported), &faulted, self.now_ms).await;
+                        let _ = self.runtime.record_transport_fault(ActorId(reported), message.clone(), self.now_ms).await;
                         if reported == actor.0 {
                             if let Some(slot) = self.reserved_jobs.iter_mut().find(|slot| slot.as_ref().is_some_and(|job| job.actor == actor && Some(job.job) == stepped_reserved_job)) {
                                 *slot = None;

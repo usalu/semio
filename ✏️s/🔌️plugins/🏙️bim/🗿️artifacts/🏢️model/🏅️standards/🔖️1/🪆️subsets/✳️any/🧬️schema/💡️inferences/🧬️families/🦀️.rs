@@ -11,6 +11,7 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Railing};
 use semio_framework_value::DslValue;
 use std::borrow::Cow;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::BTreeMap;
 
 #[path = "🧮️parameters/🦀️.rs"]
@@ -68,8 +69,8 @@ pub struct FamilyValue {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub category: Option<FamilyCategory>,
     pub order: Vec<String>,
-    pub parameters: BTreeMap<String, ResolvedParameter>,
-    pub solids: BTreeMap<String, FamilySolidMesh>,
+    pub parameters: RetainedOrderedMap<String, ResolvedParameter>,
+    pub solids: RetainedOrderedMap<String, FamilySolidMesh>,
     pub outline: Vec<Vertex>,
     pub issues: Vec<FamilyIssue>,
 }
@@ -102,7 +103,7 @@ fn marked(outline: &[semio_framework_geometry::loops::Vertex]) -> Vec<Vertex> {
 pub fn family_of(snapshot: &ModelSnapshot, id: &str, overrides: &BTreeMap<String, String>) -> FamilyValue {
     let Some(family) = snapshot.families.get(id) else { return FamilyValue::default() };
     let resolution = parameters::resolve(snapshot, id, overrides);
-    let mut value = FamilyValue { name: family.name.clone(), category: Some(family.category), order: resolution.order.clone(), parameters: resolution.parameters.clone(), issues: resolution.issues.clone(), ..FamilyValue::default() };
+    let mut value = FamilyValue { name: family.name.clone(), category: Some(family.category), order: resolution.order, parameters: resolution.parameters.into_iter().collect(), issues: resolution.issues, ..FamilyValue::default() };
     let mut sections: Vec<(Vec<semio_framework_geometry::loops::Vertex>, [f64; 3])> = Vec::new();
     for (solid_id, solid) in snapshot.family_solids.iter().filter(|(_, solid)| solid.family == id) {
         let (evaluated, found) = solids::evaluate_solid(solid_id, solid, &resolution.env, &resolution.names, snapshot);
@@ -112,7 +113,7 @@ pub fn family_of(snapshot: &ModelSnapshot, id: &str, overrides: &BTreeMap<String
                 sections.push((section, evaluated.offset));
             }
         }
-        value.solids.insert(solid_id.clone(), evaluated.mesh);
+        value.solids.cold_insert(solid_id.clone(), evaluated.mesh);
     }
     if family.category == FamilyCategory::Profile {
         match sections.into_iter().next() {

@@ -10,7 +10,7 @@ use protocol::Inference;
 fn model() -> ModelSnapshot {
     let mut snapshot = furnished();
     let storey = snapshot.storeys.keys().next().cloned().expect("a storey");
-    snapshot.mep_elements.insert("m-duct".into(), MepElement { storey, system: MepSystem::Supply, shape: MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![Point3 { x: 0.0, y: 0.0, z: 2.5 }, Point3 { x: 4.0, y: 0.0, z: 2.5 }], name: "Duct 1".into() });
+    snapshot.mep_elements.cold_insert("m-duct".into(), MepElement { storey, system: MepSystem::Supply, shape: MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![Point3 { x: 0.0, y: 0.0, z: 2.5 }, Point3 { x: 4.0, y: 0.0, z: 2.5 }], name: "Duct 1".into() });
     snapshot
 }
 

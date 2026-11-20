@@ -71,6 +71,34 @@ fn canvas2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     merged.lanes = Vec::new();
     assert_eq!(merged, assembled);
 }
+
+#[test]
+fn canvas2d_diagram_layers_that_exceed_the_surface_doc_round_trip() {
+    use std::hash::Hasher;
+
+    let contract = canvas2d_lane_contract();
+    let large = &contract["largeLayers"];
+    let count = large["count"].as_u64().unwrap() as usize;
+    let layer = large["layerJson"].as_str().unwrap();
+    let layers = format!("[{}]", vec![layer; count].join(","));
+    assert_eq!(serde_json::from_str::<Vec<Value>>(&layers).unwrap().len(), count);
+    let expected: SceneLaneRef = serde_json::from_value(large["reference"].clone()).unwrap();
+    let mut reference_hash = fnv::FnvHasher::default();
+    reference_hash.write(layers.as_bytes());
+    assert_eq!(format!("{:016x}", reference_hash.finish()), expected.hash);
+    let scene = Canvas2dScene::base(0.0, 0.0, 1.0, layers.clone());
+    assert!(ui_contract::UiFixedBytes::try_from_vec(scene.encode_pack().unwrap()).is_err());
+
+    let (spine, lanes) = scene.split_lanes();
+    assert_eq!(spine.lanes, [expected]);
+    assert_eq!(spine.layers_json, "[]");
+    assert!(ui_contract::UiFixedBytes::try_from_vec(spine.encode_pack().unwrap()).is_ok());
+    let [lane] = lanes.try_into().unwrap();
+    let SceneLanePayload { key, payload } = lane;
+    let mut restored = spine;
+    assert!(restored.merge_lane(key, payload));
+    assert_eq!(restored.layers_json, layers);
+}
 //#endregion 🚚️Canvas2dSceneLanes
 
 //#region 🚚️Board2dSceneLanes

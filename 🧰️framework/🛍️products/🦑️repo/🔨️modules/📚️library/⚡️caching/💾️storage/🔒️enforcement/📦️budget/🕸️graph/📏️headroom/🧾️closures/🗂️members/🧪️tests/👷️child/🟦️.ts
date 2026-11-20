@@ -1,11 +1,12 @@
 import{test,expect}from"bun:test";
-import{lstatSync,mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import{lstatSync,mkdirSync,mkdtempSync,renameSync,rmSync,truncateSync,writeFileSync}from"node:fs";
 import{spawnSync}from"node:child_process";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{createHash}from"node:crypto";
 import{brotliCompressSync}from"node:zlib";
 import{fileURLToPath,pathToFileURL}from"node:url";
+import descriptorCases from"./descriptor-cases.json";
 import closures from"../../../🧬️schema/🔣️.json";
 
 const sha=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex"),worker=fileURLToPath(new URL("../../../👷️closure-read-worker/🟨️.mjs",import.meta.url)),P=closures.definitions.Protocol.const;
@@ -31,5 +32,39 @@ test("the closure read child answers a one-leaf request with that leaf's own has
   expect(first.rows).toHaveLength(1);expect(first.rows[0]).toMatchObject({path:leaf,hash:sha(brotliCompressSync(Buffer.from(header+"\n"+body))),publicationGraph:null});
   expect(first.references).toEqual(["source:"+closure]);expect(first.links).toEqual([{path:join(dirname(leaf),"ob",block+".br"),missing:"block"}]);
   expect(second.rows[0]).toMatchObject({path:plain});expect(second.references).toEqual([]);expect(second.links).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},60000);
+
+
+test("the real closure child distinguishes descriptor stamp, type and size without exposing the path or facts",()=>{
+ const root=mkdtempSync(join(tmpdir(),"md-"));
+ try{
+  for(const[at,{scope,observation,code,detail}] of descriptorCases.entries()){
+   if(process.platform==="win32"&&observation!=="replaced")continue;
+   const path=join(root,"private-"+at),indexPath=path+"-index";
+   if(observation==="directory")mkdirSync(path);
+   else writeFileSync(path,"leaf");
+   if(observation==="oversize")truncateSync(path,P.maximumFileBytes+1);
+   if(scope==="pack index")writeFileSync(indexPath,"idx");
+   const identity=(name:string)=>({path:name,stamp:stamp(name),bytes:lstatSync(name).size});
+   const file={...identity(path),kind:scope==="authority"?"authority":scope==="pack index"?"pack":"inference",...scope==="pack index"?{index:{...identity(indexPath),hash:sha("idx")}}:{}};
+   if(observation==="replaced"){
+    const replaced=scope==="pack index"?indexPath:path;
+    const before=lstatSync(replaced,{bigint:true});
+    writeFileSync(replaced+"-next",scope==="pack index"?"idx":"leaf");
+    renameSync(replaced+"-next",replaced);
+    expect(lstatSync(replaced,{bigint:true}).ino).not.toBe(before.ino);
+   }
+   const packet=JSON.stringify({files:[file],imageRoot:root,remainingBytes:P.maximumProofBytes,root:process.cwd()});
+   const input=JSON.stringify({version:1,maximumReplyBytes:SESSION_CREDIT_V1})+"\n"+packet+"\nnull\n";
+   const run=spawnSync(process.versions.bun?"node":process.execPath,["--input-type=module","-e","const module=await import(process.argv[1]);await module.runCapturedBuildSourceV1();",pathToFileURL(worker).href],{input,cwd:root,encoding:"utf8",maxBuffer:P.maximumResultBytes});
+   expect(run.status,run.stderr).toBe(1);
+   const reply=JSON.parse(run.stdout.split("\n").find(Boolean)!);
+   expect(reply.failure).toMatchObject({code,messageTruncated:false,messageRedacted:false});
+   expect(reply.failure.message).toContain("Closure proof "+scope+" descriptor");
+   expect(reply.failure.message).toContain(detail);
+   expect(run.stdout).not.toContain("private-");
+   expect(run.stdout).not.toContain(file.stamp);
+  }
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);

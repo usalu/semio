@@ -112,10 +112,14 @@ export function localTextV1(text:string,host:HostV1,policy:PortableRowsPolicyV1=
 
 const providerPrefix=(id:string,policy:PortableRowsPolicyV1)=>{const match=new RegExp(policy.ownerPattern,"u").exec(id);return match===null?undefined:match[1];};
 const neutralOwner=(text:string,policy:PortableRowsPolicyV1)=>{const prefix=providerPrefix(text,policy);return prefix===undefined?text:prefix+policy.ownerToken;};
-const localOwner=(providers:readonly string[],policy:PortableRowsPolicyV1)=>(text:string)=>{
- if(!text.endsWith(policy.ownerToken))return text;
- const prefix=text.slice(0,text.length-policy.ownerToken.length);
- return providers.find(id=>providerPrefix(id,policy)===prefix)??text;
+const localOwner=(providers:readonly string[],policy:PortableRowsPolicyV1)=>{
+ const owners=new Map<string,string>();
+ for(const id of providers){
+  const prefix=providerPrefix(id,policy);if(prefix===undefined)continue;
+  const portable=prefix+policy.ownerToken,prior=owners.get(portable);
+  owners.set(portable,prior===undefined||prior===id?id:portable);
+ }
+ return(text:string)=>owners.get(text)??text;
 };
 
 type Direction=Readonly<{host:HostV1;keys:KeyMapV1;owner:(text:string)=>string;path:(text:string)=>string;text:(text:string)=>string;item?:(text:string)=>string}>;

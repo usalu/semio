@@ -285,6 +285,9 @@ impl Ui {
         if window.layout_retirement_refusal.is_some_and(|refusal|refusal.stage=="Layout.WorkerRefusal")&&window.layout_session.as_ref().is_some_and(|session|session.checked_out_failure().is_some()){window.layout_retirement_refusal=None;}
         if let Some(refusal) = window.layout_retirement_refusal {
             if !matches!(refusal.stage, "Layout.Admission" | "Layout.CloseAdmission") { return UiSurfaceCloseStep::Refused(refusal); }
+            if let Some(closed) = window.close_layout_birth_step(cx) {
+                return closed.map_or_else(UiSurfaceCloseStep::Refused, |()| UiSurfaceCloseStep::Pending);
+            }
             if !window.layout_admission.terminal_is_empty() {
                 if let Err(error) = close_layout_admission(cx, &mut window.layout_admission, ui_contract::UI_WORKER_RETIREMENT_POLICY, false) {
                     let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseAdmission", kind: error.kind, progress: error.retained_progress() };
@@ -320,6 +323,9 @@ impl Ui {
                 UiSurfaceClosePhase::LayoutAdmission
             }
             UiSurfaceClosePhase::LayoutAdmission => {
+                if let Some(closed) = window.close_layout_birth_step(cx) {
+                    return closed.map_or_else(UiSurfaceCloseStep::Refused, |()| UiSurfaceCloseStep::Pending);
+                }
                 if !window.layout_admission.terminal_is_empty() {
                     if let Err(error) = close_layout_admission(cx, &mut window.layout_admission, ui_contract::UI_WORKER_RETIREMENT_POLICY, false) {
                         let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseAdmission", kind: error.kind, progress: error.retained_progress() };

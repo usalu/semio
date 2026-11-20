@@ -3,12 +3,13 @@
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum BorderState {
     Normal,
-    Focus,
     Active,
+    Invalid,
     Waiting,
     Loading,
     Introduced,
     Celebrated,
+    Focus,
     Hover,
 }
 
@@ -18,6 +19,7 @@ impl BorderState {
             "normal" => Self::Normal,
             "focus" => Self::Focus,
             "active" => Self::Active,
+            "invalid" => Self::Invalid,
             "waiting" => Self::Waiting,
             "loading" => Self::Loading,
             "introduced" => Self::Introduced,

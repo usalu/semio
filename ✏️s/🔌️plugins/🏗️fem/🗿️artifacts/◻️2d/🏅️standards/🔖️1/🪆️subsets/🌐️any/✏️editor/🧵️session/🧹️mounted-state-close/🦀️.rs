@@ -225,7 +225,9 @@ impl MountedState {
         child: RetainedCloneGrant,
     ) -> Result<Option<PluginLifecycleStep>, PluginLifecycleFailure> {
         if let Some(loads) = self.load_build.as_mut() {
-            if !loads.close_step() { return Ok(Some(session_pending(1, 0))); }
+            let (done, items, bytes) = loads.close_step(maximum_bytes);
+            if !done { return Ok(Some(session_pending(items, bytes))); }
+            if maximum_bytes < size_of::<MountedLoadBuild>() { return Ok(Some(session_pending(0, 0))); }
             self.load_build = None;
             return Ok(Some(session_pending(1, size_of::<MountedLoadBuild>())));
         }

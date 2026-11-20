@@ -77,13 +77,17 @@ fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {
     };
     assert_eq!(observed, LayoutExportObserved::Preview(b"layout-preview".to_vec()));
     let zero = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    assert_eq!(publication.close_step(zero).expect("zero grant close"), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+    let close=|publication:&mut LayoutExportPublication,cx:&mut StepContext<'_>|{
+        let demand=publication.retirement_demands()?;
+        semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)))
+    };
+    assert_eq!(caller.turn(zero,|cx|close(&mut publication,cx)).expect("zero grant close").progress(),RetainedCloneProgress::default());
     assert!(!publication.terminal_is_empty());
     let mut slices = 0usize;
     while !publication.terminal_is_empty() {
         slices += 1;
         assert!(slices < LAYOUT_EXPORT_FIXTURE_TURN_BUDGET, "the publication's close ladder never reached terminal-empty");
-        publication.close_step(LAYOUT_EXPORT_FIXTURE_TURN).expect("exact publication close");
+        caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|close(&mut publication,cx)).expect("exact publication close");
     }
     caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
 }

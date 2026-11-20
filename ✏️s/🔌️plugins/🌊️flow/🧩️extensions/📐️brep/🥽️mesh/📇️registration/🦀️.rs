@@ -22,6 +22,8 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         ("construct", "Construct Mesh", "Mesh Creation", &[]),
         ("box", "Mesh Box", "Mesh Creation", &[("width", 1.0), ("height", 1.0), ("depth", 1.0)]),
         ("plane", "Mesh Plane", "Mesh Creation", &[("width", 1.0), ("depth", 1.0)]),
+        ("torus", "Mesh Torus", "Mesh Creation", &[("major", 2.0), ("minor", 0.5), ("segments", 32.0), ("rings", 16.0)]),
+        ("uvSphere", "Mesh UV Sphere", "Mesh Creation", &[("radius", 1.0), ("segments", 32.0), ("rings", 16.0)]),
         ("sphere", "Mesh Sphere", "Mesh Creation", &[("radius", 1.0), ("subdivisions", 2.0)]),
         ("cylinder", "Mesh Cylinder", "Mesh Creation", &[("radius", 1.0), ("height", 1.0), ("segments", 32.0)]),
         ("cone", "Mesh Cone", "Mesh Creation", &[("radius", 1.0), ("height", 1.0), ("segments", 32.0)]),
@@ -55,21 +57,38 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         ("weld", "Weld Mesh Vertices", "Mesh Repair", &[("tolerance", 0.0001)]),
         ("orient", "Orient Mesh Faces", "Mesh Repair", &[]),
         ("fillHoles", "Fill Mesh Holes", "Mesh Repair", &[]),
+        ("setShading", "Set Mesh Shading", "Mesh Surface", &[]),
+        ("recomputeNormals", "Recompute Mesh Normals", "Mesh Surface", &[]),
+        ("markSeams", "Mark Mesh UV Seams", "Mesh Surface", &[]),
+        ("unwrapUv", "Unwrap Mesh UVs", "Mesh Surface", &[]),
         ("inspectVertex", "Inspect Mesh Vertex", "Mesh Analysis", &[("index", 0.0)]),
         ("inspectEdge", "Inspect Mesh Edge", "Mesh Analysis", &[("index", 0.0)]),
         ("inspectFace", "Inspect Mesh Face", "Mesh Analysis", &[("index", 0.0)]),
         ("analyze", "Analyze Mesh", "Mesh Analysis", &[]),
+        ("importObj", "Mesh from OBJ", "Mesh Interchange", &[]),
+        ("importStl", "Mesh from STL", "Mesh Interchange", &[]),
+        ("importGlb", "Mesh from GLB", "Mesh Interchange", &[]),
+        ("exportStl", "Mesh to STL", "Mesh Interchange", &[]),
+        ("exportGlb", "Mesh to GLB", "Mesh Interchange", &[]),
         ("exportObj", "Mesh to OBJ", "Mesh Interchange", &[]),
         ("exportJson", "Mesh to JSON", "Mesh Interchange", &[]),
     ];
     for &(operation, name, group, parameters) in definitions {
         let id = format!("brep.mesh.{operation}");
         let mut inputs = Vec::new();
-        if !matches!(operation, "construct" | "box" | "plane" | "sphere" | "cylinder" | "cone" | "fromBrep") { inputs.push(ChannelSpec::requires("mesh", &[&id]).with_value_types(&["mesh"])); }
+        if !matches!(operation, "construct" | "importObj" | "importStl" | "importGlb" | "box" | "plane" | "torus" | "uvSphere" | "sphere" | "cylinder" | "cone" | "fromBrep") { inputs.push(ChannelSpec::requires("mesh", &[&id]).with_value_types(&["mesh"])); }
         if operation == "construct" { inputs.push(ChannelSpec::text_default("data", r#"{"vertices":[[0,0,0],[1,0,0],[0,1,0]],"faces":[[0,1,2]]}"#, &[&id])); }
+        if operation == "importObj" { inputs.push(ChannelSpec::text_default("data", "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n", &[&id])); }
+        if matches!(operation, "importStl" | "importGlb") { inputs.push(ChannelSpec::requires("data", &[&id]).with_value_types(&["text"])); }
         if operation == "fromBrep" { inputs.push(geometry_channel("geometry", &id)); }
         if matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges") {
             inputs.push(ChannelSpec::requires(match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", _ => "faces" }, &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("[0]"))));
+        }
+        for (id_suffix, selection, flag) in [("setShading", "faces", "smooth"), ("markSeams", "edges", "seam")] {
+            if operation == id_suffix {
+                inputs.push(ChannelSpec::text_default(selection, "[0]", &[&id]));
+                inputs.push(ChannelSpec::boolean_default(flag, true, &[&id]));
+            }
         }
         if matches!(operation, "moveProportional" | "snapVertices" | "mergeVertices" | "dissolveVertices") {
             inputs.push(ChannelSpec::requires("selection", &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary(if operation == "mergeVertices" { "[0,1]" } else { "[0]" }))));
@@ -108,6 +127,8 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
             "inspectEdge" => (vec![ChannelSpec::named("S", "Start", "start", "EdgeStart").with_value_types(&["point"]), ChannelSpec::named("E", "End", "end", "EdgeEnd").with_value_types(&["point"]), out_length()], vec!["point", "number"]),
             "inspectFace" => (vec![ChannelSpec::named("V", "Verts", "vertices", "FaceVertices").with_value_types(&["text"]), out_normal("FaceNormal"), out_center().with_value_types(&["point"])], vec!["text", "vector", "point"]),
             "toBrep" => (vec![out_geometry("FacetedGeometry")], vec!["geometry"]),
+            "exportStl" => (vec![ChannelSpec::named("STL", "STL", "stl", "BinaryStl").with_value_types(&["text"])], vec!["text"]),
+            "exportGlb" => (vec![ChannelSpec::named("GLB", "GLB", "glb", "BinaryGlb").with_value_types(&["text"])], vec!["text"]),
             "exportObj" | "exportJson" => (vec![ChannelSpec::named("T", "Text", "text", "MeshText").with_value_types(&["text"])], vec!["text"]),
             _ => (vec![ChannelSpec::named("M", "Mesh", "meshOut", "PolygonMesh").with_value_types(&["mesh"])], vec!["mesh"]),
         };
@@ -115,6 +136,8 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
             "construct" => "Create a polygon mesh from JSON vertices and zero-based face indices.",
             "box" => "Create a closed box with six quad faces and independent width, height, and depth.",
             "plane" => "Create one open quad in the horizontal plane.",
+            "torus" => "Create a closed torus from quad rings.",
+            "uvSphere" => "Create a latitude-longitude sphere with pole fans and quad bands.",
             "sphere" => "Create a closed triangular sphere; each subdivision increases surface detail.",
             "cylinder" => "Create a closed cylinder with polygon caps and quad sides.",
             "cone" => "Create a closed cone with a polygon base and triangular sides.",
@@ -148,10 +171,19 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
             "weld" => "Merge vertices within the tolerance and remove collapsed faces.",
             "orient" => "Make adjacent face winding consistent across connected components.",
             "fillHoles" => "Cap open boundary loops with polygon faces.",
+            "setShading" => "Set selected faces to smooth or flat shading and rebuild their vertex normals.",
+            "recomputeNormals" => "Rebuild vertex normals from the polygon faces and their shading modes.",
+            "markSeams" => "Mark or clear selected mesh edges as UV seams.",
+            "unwrapUv" => "Unwrap the mesh along its seams and pack the UV islands into the unit square.",
             "inspectVertex" => "Read the position of a zero-based vertex without changing mesh data.",
             "inspectEdge" => "Read endpoints and length of a preview halfedge index without changing mesh data.",
             "inspectFace" => "Read polygon corner indices, unit normal, and the arithmetic mean of corner positions.",
             "analyze" => "Measure surface area, bounds, and topology; volume is available for closed, consistently oriented meshes.",
+            "importObj" => "Read indexed vertices and polygon faces from OBJ text.",
+            "importStl" => "Read standard base64 binary STL as indexed mesh triangles.",
+            "importGlb" => "Read standard base64 binary glTF geometry as indexed mesh triangles.",
+            "exportStl" => "Tessellate mesh polygons and encode binary STL as standard base64.",
+            "exportGlb" => "Tessellate mesh polygons and encode binary glTF as standard base64.",
             "exportObj" => "Serialize mesh vertices and polygon faces as OBJ text.",
             "exportJson" => "Serialize editable indexed vertices and polygon faces as JSON text.",
             _ => name,

@@ -145,6 +145,19 @@ impl ToolCancellationIssuer{
   else{let bytes=size_of::<semio_framework_job::CancelToken>()+size_of::<PublicationClaimHandle>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let canonical=self.issued.as_mut().unwrap();let token=std::mem::replace(&mut canonical.app_scope,self.renew_cancel.take().unwrap());let claim=std::mem::replace(&mut canonical.publication_scope,self.renew_claim.take().unwrap());*self.pending_close=Some(crate::CancellationLeaseParts::unpublished(None,[Some(token),None,None],[Some(claim),None,None,None],None));self.renew_swapped=true;progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};}
   cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(false)
  }
+ /// 🧹️ A live slot or an already detached lease can require maintenance.
+ pub fn has_cleanup_work(&self)->bool{self.pending_close.is_some()||self.active_operation_count()>0}
+
+ /// 🪢️ Live cleanup waits while the lease's original source or another registry handle retains custody.
+ pub fn live_cleanup_awaits_custody(&self) -> bool {
+  self.has_cleanup_work() && (self.pending.is_some() || self.renew_swapped
+   || self.pending_close.is_none() && self.issued.as_ref().is_some_and(|handle| !Self::owns_cleanup_registry(handle)))
+ }
+
+ fn owns_cleanup_registry(handle: &ToolCancellationHandle) -> bool {
+  Arc::strong_count(&handle.state) == 1 && Arc::weak_count(&handle.state) == 0
+ }
+
  #[doc(hidden)]
  pub fn cancellation_cleanup_demands(&self,index:usize,body:usize,finished_only:bool)->Result<RetirementDemand,ValueError>{
   if let Some(parts)=self.pending_close.as_ref(){return parts.retirement_demands(self.issued.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"registered cancellation close lost canonical owner"))?,self.admission.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"registered cancellation close lost original creation source"))?.cancellation()?,body)}
@@ -160,7 +173,7 @@ impl ToolCancellationIssuer{
    if !parts.terminal_is_empty(){let parent=self.admission.source.as_ref().unwrap().cancellation()?;let demand=parts.retirement_demands(self.issued.as_ref().unwrap(),parent,grant.maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|parts.close_step(self.issued.as_ref().unwrap(),parent,effect))?;return Ok(false)}
    if grant.maximum_copy_bytes<size_of::<usize>(){return Ok(false)}self.pending_close.take();self.cleanup_index=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)
   }
-  let canonical=self.issued.as_ref().unwrap();if Arc::strong_count(&canonical.state)!=1||Arc::weak_count(&canonical.state)!=0{return Ok(false)}let mut state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};
+  let canonical=self.issued.as_ref().unwrap();if !Self::owns_cleanup_registry(canonical){return Ok(false)}let mut state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};
   let scope=if index<TOOL_CANCELLATION_SLOTS{state.get(index)}else{state.keyed_operations.id_at(index-TOOL_CANCELLATION_SLOTS).and_then(|id|state.keyed_operations.get(id))};
   let Some(scope)=scope.filter(|scope|!finished_only||scope.publication_claim.is_finished())else{return Ok(true)};
   let bytes=size_of::<ToolDocumentCancellationScope>()+size_of::<ToolKeyedDocumentCancellationScope>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let document_id=u64::from(scope.document.0);
@@ -189,8 +202,8 @@ impl ToolCancellationIssuer{
   if self.issued.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationHandle>(),..one})}
   if let Some(state)=source.state.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationState>(),release_bytes:if Arc::strong_count(state)==1&&Arc::weak_count(state)==0{semio_framework_value::shared_retirement_allocation_bytes::<RetainedOwnerGate<ToolCancellationState>>()}else{0},..one})}
   if let Some(slots)=source.slots.as_ref(){return Ok(RetirementDemand{release_bytes:slots.len()*size_of::<ToolDocumentCancellationScope>(),..one})}
-  if let Some(registry)=source.operations.as_ref(){return Ok(RetirementDemand{release_bytes:registry.slots.len()*size_of::<(u64,ToolDocumentCancellationScope)>(),..one})}
-  if let Some(registry)=source.documents.as_ref(){return Ok(RetirementDemand{release_bytes:registry.slots.len()*size_of::<(u64,ToolKeyedDocumentCancellationScope)>(),..one})}
+  if let Some(registry)=source.operations.as_ref(){return Ok(RetirementDemand{release_bytes:registry.empty_backing_byte_demand().unwrap_or(0),..one})}
+  if let Some(registry)=source.documents.as_ref(){return Ok(RetirementDemand{release_bytes:registry.empty_backing_byte_demand().unwrap_or(0),..one})}
   if source.cancel.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_job::CancelToken>(),..one})}
   if let Some(cancel)=source.cancel_close.as_ref(){return if cancel.terminal_is_empty()||cancel.is_original_alias_witness(source.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancellation quote lost its creation source loan"))?.cancellation()?){Ok(one)}else{cancel.retirement_demands()}}
   if source.claim.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<PublicationClaimHandle>(),..one})}
@@ -219,8 +232,8 @@ impl ToolCancellationIssuer{
    let Ok(borrowed)=state.try_lock()else{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})};if borrowed.occupied.iter().any(|word|*word!=0)||borrowed.keyed_operations.occupied!=0||borrowed.keyed_documents.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}drop(borrowed);
    match Arc::try_unwrap(source.state.take().unwrap()){Ok(state)=>{let ToolCancellationState{slots,keyed_operations,keyed_documents,..}=state.into_inner();source.slots=Some(slots);source.operations=Some(keyed_operations);source.documents=Some(keyed_documents)},Err(state)=>{source.state=Some(state);return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}}
   }else if source.slots.is_some(){source.slots.take();}
-  else if let Some(registry)=source.operations.as_ref(){if registry.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}source.operations.take();}
-  else if let Some(registry)=source.documents.as_ref(){if registry.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}source.documents.take();}
+  else if let Some(registry)=source.operations.as_mut(){if registry.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}if registry.empty_backing_byte_demand()==Some(0){source.operations.take();}else{progress=registry.close_empty_backing_granted(grant)?.progress();}}
+  else if let Some(registry)=source.documents.as_mut(){if registry.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}if registry.empty_backing_byte_demand()==Some(0){source.documents.take();}else{progress=registry.close_empty_backing_granted(grant)?.progress();}}
   else if let Some(cancel)=source.cancel.take(){source.cancel_close=Some(semio_framework_async::CancelTokenRetirement::from_token(cancel));}
   else if let Some(cancel)=source.cancel_close.as_mut(){
    if cancel.terminal_is_empty(){source.cancel_close.take();}else{let witness=parent.cancellation()?;let alias=cancel.is_original_alias_witness(witness);return semio_framework_job::close_original_effect_step(cx,demand,|effect|{use semio_framework_value::RetirementPollExit as Exit;let turn=if alias{cancel.return_alias_step(witness,effect)}else{cancel.close_step(effect)};let result=match turn.result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(failure))=>Err(Exit::from(failure))};Exit::settle(effect,result)})}

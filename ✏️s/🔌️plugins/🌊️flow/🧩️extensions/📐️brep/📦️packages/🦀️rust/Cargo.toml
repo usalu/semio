@@ -25,7 +25,6 @@ semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step.workspace = true
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-framework-mesh-engine.workspace = true
@@ -37,11 +36,12 @@ semio-s-artifact-stdio-semio-brep-export = { workspace = true }
 semio-s-artifact-stdio-semio-brep-import = { workspace = true }
 flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step-geometry = { workspace = true }
 semio-s-plugin-flow-brep-mesh = { path = "../../🥽️mesh/📦️packages/🦀️rust" }
+semio-s-plugin-flow-brep-original-jobs = { path = "../../〰️analytic-curves/📦️packages/🦀️rust" }
+semio-s-plugin-flow-brep-tessellation = { path = "../../📐️tessellate/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 parry3d = "0.17"

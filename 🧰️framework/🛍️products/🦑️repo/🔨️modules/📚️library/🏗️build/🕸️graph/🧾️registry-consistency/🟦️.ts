@@ -1,5 +1,6 @@
 
-import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import cachingPolicy from "../../../⚡️caching/🔣️policy.json" with { type: "json" };
 import ownershipPolicy from "../../../🗂️workspaces/🔣️policy.json" with { type: "json" };
@@ -250,15 +251,21 @@ export function moveOwnerScopes(moves: readonly Readonly<{ sourcePath: string; d
 /** 🔄️ Re-reads the registry file at call time because peers edit it concurrently, syncs the rows below `scope`, replaces the file atomically when anything changed, and lists the findings that remain (catalog providers are authored, not synced; native roots follow their row). */
 export function reconcileBuildOwnerRegistry(repoRoot: string, options: { scope?: OwnerScope; write: boolean }, policy: OwnerTreePolicy = OWNER_TREE_POLICY): OwnerSync & { changed: boolean; findings: OwnerFinding[] } {
   const file = join(repoRoot, BUILD_OWNER_REGISTRY_FILE);
-  const registry = readBuildOwnerRegistryV1(JSON.parse(readFileSync(file, "utf8")));
+  const source = readFileSync(file, "utf8");
+  const registry = readBuildOwnerRegistryV1(JSON.parse(source));
   const tree = readOwnerTree(repoRoot, policy, options.scope);
   const result = syncOwnerRegistry(registry, tree, policy, options.scope);
   const text = `${JSON.stringify(result.registry, null, 2)}\n`;
   const changed = JSON.stringify(result.registry) !== JSON.stringify(registry);
   if (changed && options.write) {
-    const pending = `${file}.${process.pid}.tmp`;
-    writeFileSync(pending, text);
-    renameSync(pending, file);
+    const pending = `${file}.${randomUUID()}.tmp`;
+    try {
+      writeFileSync(pending, text, { flag: "wx" });
+      if (readFileSync(file, "utf8") !== source) throw Error("Build owner registry changed during reconciliation");
+      renameSync(pending, file);
+    } finally {
+      rmSync(pending, { force: true });
+    }
   }
   return { ...result, changed, findings: findOwnerFindings(result.registry, tree, policy, options.scope) };
 }

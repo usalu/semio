@@ -13,7 +13,7 @@ fn dropping_a_pdf_links_the_native_artifact_on_an_image_frame() {
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle(
-        &CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "pdf".into(), x: 10.0, y: 10.0, width: 800.0, height: 600.0, artifact_ref: "doc-pdf".into(), proxy_data_url: String::new() },
+        &CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "pdf".into(), x: 10.0, y: 10.0, width: 800.0, height: 600.0, artifact_ref: "doc-pdf".into(), proxy_data_url: String::new(), source_document_id: None, source_link_id: None },
         &doc,
         &cfg,
     )
@@ -34,7 +34,7 @@ fn every_placeable_artifact_kind_links_its_native_dialect() {
     let doc = ArtifactView::new(&document, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     for (kind, _, artifact_kind) in semio_s_artifact_layout_layout_editor_commands::NATIVE_PLACEMENTS {
-        let emit = handle(&CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: (*kind).into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, artifact_ref: format!("ref-{kind}"), proxy_data_url: String::new() }, &doc, &cfg).expect(kind);
+        let emit = handle(&CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: (*kind).into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, artifact_ref: format!("ref-{kind}"), proxy_data_url: String::new(), source_document_id: None, source_link_id: None }, &doc, &cfg).expect(kind);
         let LayoutMutation::CreateLink(created) = &emit.artifact_mutations[0] else { panic!("{kind} link") };
         assert_eq!(created.link.artifact_kind, *artifact_kind, "{kind}");
         assert_eq!(created.link.artifact_ref, format!("ref-{kind}"));

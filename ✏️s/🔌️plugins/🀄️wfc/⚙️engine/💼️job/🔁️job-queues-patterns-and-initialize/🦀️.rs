@@ -45,7 +45,9 @@ impl<T: Topology + Clone> WfcJob<T> {
     }
 
     fn note_visible(&mut self, node: NodeId, pattern: PatternId, discarded: bool) {
-        self.visible.push(VisibleCell { node: node.get(), pattern: pattern.get(), discarded });
+        if self.publish_intermediate {
+            self.visible.push(VisibleCell { node: node.get(), pattern: pattern.get(), discarded });
+        }
     }
 
     /// 👁 Moves the collapses and discards recorded since the last drain into `into`.

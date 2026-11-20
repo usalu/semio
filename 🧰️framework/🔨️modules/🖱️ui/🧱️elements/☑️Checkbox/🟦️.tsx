@@ -6,6 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 // #endregion 🔌️Adapters
 
 // #region ☑️Checkbox
@@ -25,6 +26,6 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(functi
     if (inputRef.current) inputRef.current.indeterminate = checked === "indeterminate";
   }, [checked]);
 
-  return <input ref={inputRef} {...props} data-slot="checkbox" type="checkbox" checked={checked === "indeterminate" ? false : checked} aria-checked={checked === "indeterminate" ? "mixed" : checked} />;
+  return <input ref={inputRef} {...props} {...sharedBorderlessBoxProps} data-slot="checkbox" type="checkbox" checked={checked === "indeterminate" ? false : checked} aria-checked={checked === "indeterminate" ? "mixed" : checked} />;
 });
 // #endregion ☑️Checkbox

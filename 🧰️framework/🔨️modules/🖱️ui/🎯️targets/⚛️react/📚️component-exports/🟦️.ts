@@ -7,7 +7,7 @@ import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFi
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement, type SelectAlign, type SelectContentProps, type SelectGroupProps, type SelectItemProps, type SelectLabelProps, type SelectPosition, type SelectPreventableEvent, type SelectProps, type SelectScrollButtonProps, type SelectSeparatorProps, type SelectSide, type SelectTriggerProps, type SelectValueProps } from "@semio-tech/ui/elements/Select";
 import { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, type SliderDirection, type SliderOrientation, type SliderProps, type SliderRange, type SliderValue } from "@semio-tech/ui/elements/Slider";
 import { Stepper } from "@semio-tech/ui/elements/Stepper";
-import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, useSharedBorderFrameRef, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowElement, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps, type SharedBorderRowTone } from "@semio-tech/ui/elements/SharedBorderRow";
+import { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowElement, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps, type SharedBorderRowTone } from "@semio-tech/ui/elements/SharedBorderRow";
 import { Textarea } from "@semio-tech/ui/elements/Textarea";
 import { Toggle, type ToggleItem, type ToggleProps } from "@semio-tech/ui/elements/Toggle";
 import { LanguageChoice, type LanguageChoiceOption, type LanguageChoiceProps } from "@semio-tech/ui/elements/LanguageChoice";
@@ -80,7 +80,7 @@ export {
 };
 export { Slider, sliderValuesMatch, resolveSliderDraftClear, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, type SliderDirection, type SliderOrientation, type SliderProps, type SliderRange, type SliderValue };
 export { Stepper };
-export { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, useSharedBorderFrameRef, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowElement, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps, type SharedBorderRowTone };
+export { SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, SharedBorderRowLabel, useSharedBorderFrameRef, useSharedBorderBox, sharedBorderlessBoxProps, type SharedBorderRowCellProps, type SharedBorderRowEdge, type SharedBorderRowElement, type SharedBorderRowFieldProps, type SharedBorderRowLabelProps, type SharedBorderRowOrientation, type SharedBorderRowProps, type SharedBorderRowTone };
 export { Textarea };
 export { Toggle };
 export type { ToggleItem, ToggleProps };

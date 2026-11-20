@@ -13,5 +13,47 @@
       "url": "data:model/gltf+json;base64,e30=",
       "transport": "data:model/gltf+json;base64,e30="
     }
+  ],
+  "drawingCases": [
+    {
+      "drawing": {
+        "visibleColor": "#345",
+        "hiddenWidth": 1.25,
+        "fillOpacity": 0.6,
+        "lineEasing": 3,
+        "mergeLines": true
+      },
+      "accept": true
+    },
+    {
+      "drawing": {
+        "visibleColor": "red"
+      },
+      "accept": false
+    },
+    {
+      "drawing": {
+        "hiddenWidth": 0
+      },
+      "accept": false
+    },
+    {
+      "drawing": {
+        "fillOpacity": 1.01
+      },
+      "accept": false
+    },
+    {
+      "drawing": {
+        "lineEasing": 11
+      },
+      "accept": false
+    },
+    {
+      "drawing": {
+        "additionalControl": true
+      },
+      "accept": false
+    }
   ]
 }

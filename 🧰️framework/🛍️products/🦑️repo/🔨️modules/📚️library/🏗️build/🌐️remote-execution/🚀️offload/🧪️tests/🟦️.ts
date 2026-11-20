@@ -325,7 +325,7 @@ test("a cache endpoint that answered is remembered for a while: a build of many 
  }finally{cache.stop(true);}
 });
 
-test("an invocation that this machine cannot carry does not queue for it when the fleet can take units: the fan-out is granted only with offload on, a scheduler published and a machine that says wait",async()=>{
+test("the fleet fanout ceiling is available with offload enabled, a published scheduler, and a busy host",async()=>{
  const busy={probe:testHostProbeV1("critical-pressure-gigabyte-swap")},quiet={probe:testHostProbeV1("quiet-no-swap",true)},scheduler={SEMIO_WORKSPACE_ROOT:realpathSync(mkdtempSync(join(tmpdir(),"fanout-"))),SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://192.0.2.1:8980"};
  expect(await offloadFanOutJobsV1(scheduler,busy)).toBe(Math.min(OFFLOAD_POLICY_V1.limits.fanOutJobs,availableParallelism()));
  expect(await offloadFanOutJobsV1(scheduler,quiet),"a machine that admits one more unit queues normally").toBeUndefined();

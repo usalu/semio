@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts
 import { type LocalizedLabel } from "@semio-tech/framework";
 import { modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
 import { spawnedIdOfWindowInstanceV1, spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
-import { App, borderNormalBottomClass, CanvasSkeleton, cn, insertWindowAtDropZone, resolveStackPathForWindowId, splitWithWindow, loadingBorderClass, Mode, uiDataLabel } from "@semio-tech/ui-react";
+import { App, borderNormalBottomClass, CanvasSkeleton, cn, insertWindowAtDropZone, resolveStackPathForWindowId, splitWithWindow, loadingBorderClass, Mode, uiDataLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { ShellFaultBoundary } from "../../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { clearPendingWorldProjection } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
@@ -59,7 +59,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology, uiLocale)) }];
     const studioHomeBar =
       hostMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
-        <button
+        <button {...sharedBorderlessBoxProps}
           type="button"
           className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")}
           onClick={() => onAction({ controllerId: session.app.controllerId, action: "goHome" })}
@@ -70,7 +70,7 @@ export function useCanvas({ hostMode, notFoundPath, navigateShellUri, primaryPlu
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
-        <button type="button" className="hover:text-foreground" onClick={() => (openSpaceIdRef.current ? navigateShellUri(`/spaces/${openSpaceIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
+        <button {...sharedBorderlessBoxProps} type="button" className="hover:text-foreground" onClick={() => (openSpaceIdRef.current ? navigateShellUri(`/spaces/${openSpaceIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
           ← {shellLabel("ui.common.backToWorkflow")}
         </button>
         <span>·</span>

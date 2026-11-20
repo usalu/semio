@@ -262,6 +262,7 @@ impl BrowserRendererWorker {
             "available": true,
             "url": owner.url(),
             "referenceImage": matches!(owner.kind(), WorldAssetRequestKind::ReferenceImage),
+            "world": matches!(owner, RendererAssetFetchOwner::World { .. }),
             "responseByteCapacity": WORLD_ASSET_RESPONSE_BYTE_CAPACITY,
             "pageByteCapacity": WORLD_ASSET_RESPONSE_PAGE_BYTES
         }))
@@ -309,6 +310,17 @@ impl BrowserRendererWorker {
             semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => Ok(true),
             semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => Ok(false),
             semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => Err(js_error("asset-response-credits", detail)),
+        }
+    }
+
+    #[wasm_bindgen(js_name = resetWorldAssetResponseStep)]
+    pub fn reset_world_asset_response_step(&mut self) -> Result<bool, JsValue> {
+        let owner = self.asset_fetch.as_mut().ok_or_else(|| js_error("asset-request-state", "asset retry arrived without an active request"))?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        match host.runtime.reset_world_asset_response_step(owner) {
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted => Ok(true),
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Busy => Ok(false),
+            semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Refused(detail) => Err(js_error("asset-response-retry", detail)),
         }
     }
 
@@ -392,7 +404,7 @@ impl BrowserRendererWorker {
     }
 
     #[wasm_bindgen(js_name = rejectAssetResponse)]
-    pub fn reject_asset_response(&mut self) -> Result<bool, JsValue> {
+    pub fn reject_asset_response(&mut self, retryable: bool) -> Result<bool, JsValue> {
         let Some(owner) = self.asset_fetch.as_ref() else { return Ok(true) };
         let Some(host) = self.host.as_ref() else {
             let mut owner = self.asset_fetch.take().expect("checked asset owner");
@@ -400,7 +412,7 @@ impl BrowserRendererWorker {
             self.asset_blocked = Some(owner);
             return Err(js_error("worker-closed", "renderer host is unavailable"));
         };
-        if !host.runtime.reject_renderer_asset(owner) {
+        if !host.runtime.reject_renderer_asset(owner, retryable) {
             return Ok(false);
         }
         let mut owner = self.asset_fetch.take().expect("checked asset owner");
@@ -511,7 +523,7 @@ impl BrowserRendererWorker {
             return match original.result{Ok(Some(descriptor))=>{self.original_failure_output=Some(descriptor);Ok(2)},Ok(None)=>Ok(0),Err(_)=>Err(js_error("original-frame-failure-publication","original failure publication retains its native cause"))};
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
-        let original=self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx|{if let Some(output)=self.original_output.as_mut(){return output.advance(cx).map(|ready|if ready{1}else{0})}if cancelled&&!cx.is_cancelled(){let grant=cx.retained_grant();if let Some(progress)=cx.borrowed_original_cancel_token()?.signal_cancelled_flag_step(grant){cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64)}}let Some(outcome)=host.redraw_offscreen_worker(cx)?else{return Ok(0)};let text_fault=host.runtime.take_text_fault();let frame_fault=host.runtime.take_frame_fault();let fault_code=if text_fault.is_some(){"text-input-failed"}else if frame_fault.is_some(){"frame-credits"}else{"present-failed"};let present_fault=host.present_fault.take().or(text_fault).or(frame_fault);let continue_frame=!host.presenter.awaiting_runtime()&&(host.runtime.has_pending_text_work()||host.runtime.has_pending_world3d_work()||host.runtime.has_pending_raster_selection_work()||host.runtime.has_pending_settle()||host.runtime.has_pending_applies()||host.frame_build.has_live_session()||host.presenter.has_pending_presentation());let output=BrowserTickOutput{presentation_generation:generation,media_slots:BrowserMediaOutput::Snapshot(outcome.media_slots),cursor:outcome.cursor_css,fullscreen:host.platform_fullscreen.take(),request_frame:continue_frame,next_deadline_delay_ms:host.scheduler.next_deadline().map(|deadline|((deadline.due-host.clock.now_seconds())*1000.0).max(0.0)).filter(|delay|delay.is_finite()),continue_frame,progress:1.0,quarantined:present_fault.is_some(),fault_code:present_fault.as_ref().map(|_|fault_code),fault_detail:present_fault};self.original_output=Some(OriginalBrowserOutput::new(output));Ok(0)});
+        let original=self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx|{if let Some(output)=self.original_output.as_mut(){return output.advance(cx).map(|ready|if ready{1}else{0})}if cancelled&&!cx.is_cancelled(){let grant=cx.retained_grant();if let Some(progress)=cx.borrowed_original_cancel_token()?.signal_cancelled_flag_step(grant){cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64)}}let Some(outcome)=host.redraw_offscreen_worker(cx)?else{return Ok(0)};let text_fault=host.runtime.take_text_fault();let frame_fault=host.runtime.take_frame_fault();let fault_code=if text_fault.is_some(){"text-input-failed"}else if frame_fault.is_some(){"frame-credits"}else{"present-failed"};let present_fault=host.present_fault.take().or(text_fault).or(frame_fault);let continue_frame=host.runtime.has_pending_icon_svg_preview()||!host.presenter.awaiting_runtime()&&(host.runtime.has_pending_text_work()||host.runtime.has_pending_world3d_work()||host.runtime.has_pending_raster_selection_work()||host.runtime.has_pending_settle()||host.runtime.has_pending_applies()||host.frame_build.has_live_session()||host.presenter.has_pending_presentation());let output=BrowserTickOutput{presentation_generation:generation,media_slots:BrowserMediaOutput::Snapshot(outcome.media_slots),cursor:outcome.cursor_css,fullscreen:host.platform_fullscreen.take(),request_frame:continue_frame,next_deadline_delay_ms:host.scheduler.next_deadline().map(|deadline|((deadline.due-host.clock.now_seconds())*1000.0).max(0.0)).filter(|delay|delay.is_finite()),continue_frame,progress:1.0,quarantined:present_fault.is_some(),fault_code:present_fault.as_ref().map(|_|fault_code),fault_detail:present_fault};self.original_output=Some(OriginalBrowserOutput::new(output));Ok(0)});
         let authority=match &original.result{Err(semio_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error))=>Some(error.kind),_=>None};
         self.original_receipt.write(semio_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});
         match original.result{Ok(status)=>Ok(status),Err(semio_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Semantic)=>Ok(0),Err(_)=>Err(js_error("original-frame-failure","original frame producer retains its complete native failure"))}

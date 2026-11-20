@@ -55,6 +55,8 @@ export type WireTurnResult = {
   readonly presence?: readonly { readonly update?: unknown }[];
   readonly nextWake: number | null;
   readonly status?: unknown;
+  /** ✂️ Events of a host batch this answer did not cross (cut at a patch-carrying answer); `0` once a later answer crossed them. */
+  readonly deferredEvents?: number;
   readonly commandIngress?: WireVariant;
 };
 
@@ -73,7 +75,7 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
   if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array)) throw new Error("actor-lifecycle.receipt-bytes");
   const uiPatchReceipt = record.uiPatchReceipt;
   if (uiPatchReceipt !== undefined && uiPatchReceipt !== null && !(uiPatchReceipt instanceof Uint8Array)) throw new Error("actor-ui-patch.receipt-bytes");
-  return { original: raw !== null && typeof raw === "object" ? raw : undefined, lifecycleReceipt: lifecycleReceipt ?? undefined, uiPatchReceipt: uiPatchReceipt ?? undefined, uiPatches, effects, presence, nextWake, status, commandIngress };
+  return { original: raw !== null && typeof raw === "object" ? raw : undefined, lifecycleReceipt: lifecycleReceipt ?? undefined, uiPatchReceipt: uiPatchReceipt ?? undefined, uiPatches, effects, presence, nextWake, status, commandIngress, ...(typeof record.deferredEvents === "number" ? { deferredEvents: record.deferredEvents } : {}) };
 }
 
 /** 🧯️ Decodes the scalar WIT command-ingress fault envelope while retaining readable kernel

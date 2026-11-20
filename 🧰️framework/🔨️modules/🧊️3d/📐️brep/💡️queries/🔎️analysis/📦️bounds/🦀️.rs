@@ -53,7 +53,8 @@ fn within(angle: f64, from: f64, to: f64) -> bool {
     (angle - from).rem_euclid(TAU) <= to - from + 1e-12
 }
 
-fn add_curve(curve: &Curve3, range: (f64, f64), acc: &mut Accumulator) {
+fn add_analytic_curve(curve: &Curve3, range: (f64, f64), acc: &mut Accumulator) -> bool {
+    if matches!(curve, Curve3::Nurbs { .. }) { return false; }
     acc.add(curve.eval(range.0));
     acc.add(curve.eval(range.1));
     match curve {
@@ -72,27 +73,40 @@ fn add_curve(curve: &Curve3, range: (f64, f64), acc: &mut Accumulator) {
                 }
             }
         }
-        Curve3::Nurbs { .. } => {
-            acc.exact = false;
-            const SAMPLES: usize = 256;
-            let (a, b) = (range.0.min(range.1), range.0.max(range.1));
-            let at = |i: usize| a + (b - a) * i as f64 / SAMPLES as f64;
-            for axis in AXES {
-                for sign in [1.0, -1.0] {
-                    let score = |t: f64| sign * (curve.eval(t) - Pnt3::new(0.0, 0.0, 0.0)).dot(axis);
-                    let best = (0..=SAMPLES).max_by(|&i, &j| score(at(i)).total_cmp(&score(at(j)))).unwrap_or(0);
-                    let (mut lo, mut hi) = (at(best.saturating_sub(1)), at((best + 1).min(SAMPLES)));
-                    for _ in 0..60 {
-                        let (m1, m2) = (lo + (hi - lo) / 3.0, hi - (hi - lo) / 3.0);
-                        if score(m1) < score(m2) {
-                            lo = m1;
-                        } else {
-                            hi = m2;
-                        }
-                    }
-                    acc.add(curve.eval(0.5 * (lo + hi)));
+        Curve3::Nurbs { .. } => unreachable!(),
+    }
+    true
+}
+
+/// 📏️ Bounds one finite line or conic trim with the same extrema used for shape analysis.
+pub fn analytic_curve_bounds(curve: &Curve3, range: (f64, f64)) -> Option<ShapeBounds> {
+    if !range.0.is_finite() || !range.1.is_finite() { return None; }
+    let mut acc = Accumulator { min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3], exact: true };
+    add_analytic_curve(curve, range, &mut acc).then_some(ShapeBounds { min: acc.min, max: acc.max, exact: true })
+}
+
+fn add_curve(curve: &Curve3, range: (f64, f64), acc: &mut Accumulator) {
+    if add_analytic_curve(curve, range, acc) { return; }
+    acc.add(curve.eval(range.0));
+    acc.add(curve.eval(range.1));
+    acc.exact = false;
+    const SAMPLES: usize = 256;
+    let (a, b) = (range.0.min(range.1), range.0.max(range.1));
+    let at = |i: usize| a + (b - a) * i as f64 / SAMPLES as f64;
+    for axis in AXES {
+        for sign in [1.0, -1.0] {
+            let score = |t: f64| sign * (curve.eval(t) - Pnt3::new(0.0, 0.0, 0.0)).dot(axis);
+            let best = (0..=SAMPLES).max_by(|&i, &j| score(at(i)).total_cmp(&score(at(j)))).unwrap_or(0);
+            let (mut lo, mut hi) = (at(best.saturating_sub(1)), at((best + 1).min(SAMPLES)));
+            for _ in 0..60 {
+                let (m1, m2) = (lo + (hi - lo) / 3.0, hi - (hi - lo) / 3.0);
+                if score(m1) < score(m2) {
+                    lo = m1;
+                } else {
+                    hi = m2;
                 }
             }
+            acc.add(curve.eval(0.5 * (lo + hi)));
         }
     }
 }

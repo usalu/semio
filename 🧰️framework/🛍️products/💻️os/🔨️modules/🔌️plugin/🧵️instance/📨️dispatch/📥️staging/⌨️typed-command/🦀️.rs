@@ -11,7 +11,7 @@ use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle};
 use store::os_store::store_schema::ArtifactCommand;
 use semio_plugin_decl_media::ArtifactOutputChunks;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::child_view::ChildContentView;
 use crate::dispatch_bundle::DispatchCtx;
@@ -214,7 +214,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             artifact_owned_tool_birth_grant(),
             cx,
         ).0.admitted().map_err(|error| error.into_fault())?) } else { None };
-        let producer_request = Some(ArtifactOwnedToolJobRequest {
+        let producer_request = Some(ArtifactOwnedToolJobRequest::new(ArtifactOwnedToolJobInputs {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
                 command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,retained_wire.as_ref().expect("original typed wire remains retained"),semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
@@ -241,8 +241,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 instance_operation_owner: self.tools.instance_operation_owner.clone(),
                 output_chunks: output_chunks.clone(),
                 completion: completion.clone(),
-            construction: Default::default(),
-            });
+            }));
         let session=None;let session_rejected=None;
         self.tools.tool_operations.insert_admitted(
             operation_id.0,

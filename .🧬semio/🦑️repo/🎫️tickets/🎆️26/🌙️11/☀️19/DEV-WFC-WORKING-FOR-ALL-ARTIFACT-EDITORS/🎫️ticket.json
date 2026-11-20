@@ -1,0 +1,22 @@
+{
+  "title": "Dev WFC Working for All Artifact Editors",
+  "emoji": "🎮",
+  "status": "open",
+  "description": "Get dev wfc working for all five WFC artifact editors (bitmap, grid2d, wfc2d, grid3d, wfc3d) end to end; fall back to native tools when the shared fleet blocks.",
+  "goal": "🎯runningwfc",
+  "sessions": [
+    "8acf6cc3-c0c8-48cf-a358-a5fdcb5d7d68"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-19 00:25:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Get dev wfc working for all five WFC artifact editors (bitmap, grid2d, wfc2d, grid3d, wfc3d) end to end; fall back to native tools when the shared fleet blocks.",
+      "llm": "opus-5-5"
+    }
+  ]
+}

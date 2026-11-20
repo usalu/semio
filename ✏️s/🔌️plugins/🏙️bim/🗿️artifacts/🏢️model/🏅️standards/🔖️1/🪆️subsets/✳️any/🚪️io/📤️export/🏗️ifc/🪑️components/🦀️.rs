@@ -100,7 +100,7 @@ fn family_rows(family: &semio_s_artifact_bim_model_snapshot::standards::v1::subs
 fn family_type(x: &mut Export<'_>, family_id: &str, family: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Family, kind: Kind, primary: bool, solids: &BTreeMap<&str, BTreeMap<String, FamilySolid>>) -> u64 {
     let key = if primary { family_id.to_string() } else { format!("{family_id}|{kind:?}") };
     let prefix = format!("{family_id}.");
-    let parameters: BTreeMap<String, FamilyParameter> = x.model.family_parameters.range(prefix.clone()..).take_while(|(name, _)| name.starts_with(&prefix)).filter(|(_, row)| row.family == family_id).map(|(_, row)| (row.name.clone(), row.clone())).collect();
+    let parameters: BTreeMap<String, FamilyParameter> = x.model.family_parameters.iter().skip_while(|(name, _)| name.as_str() < prefix.as_str()).take_while(|(name, _)| name.starts_with(&prefix)).filter(|(_, row)| row.family == family_id).map(|(_, row)| (row.name.clone(), row.clone())).collect();
     let authoring = property_set(x, &format!("component-type:{key}:authoring"), "Semio_Authoring", family_rows(family, &parameters, solids.get(family_id)));
     let (entity, tail) = kind.type_object(x);
     let mut args = vec![unset(), refs(&[authoring]), unset(), opt_text(family_id), unset()];

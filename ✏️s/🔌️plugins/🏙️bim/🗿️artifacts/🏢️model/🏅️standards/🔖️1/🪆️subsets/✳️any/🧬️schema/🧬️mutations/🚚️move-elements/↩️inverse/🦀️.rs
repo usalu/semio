@@ -15,7 +15,7 @@ where
         return Vec::new();
     }
     match semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::changes(base, &payload.ids, |placement| placement.translated(vector)) {
-        Ok(change) if !change.before.is_empty() => vec![Op::from(PlaceElements { placements: change.before })],
+        Ok(change) if !change.before.is_empty() => vec![Op::from(PlaceElements { placements: change.before.into_iter().collect() })],
         _ => Vec::new(),
     }
 }

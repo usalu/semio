@@ -191,7 +191,7 @@ async fn the_infill_is_a_slab_per_bay_inset_by_half_a_post_in_glass_or_in_the_ra
     assert_eq!(quantities.elements["r-balusters-glass"].balusters, 30);
     assert_eq!((quantities.elements["r-straight"].balusters, quantities.elements["r-straight"].surface_area), (0, 0.0));
     let mut without_glass = snapshot.clone();
-    without_glass.materials.remove("m-glass");
+    without_glass.materials.cold_remove("m-glass");
     assert_eq!(compute_element_solids(&without_glass)["r-glass"].groups.iter().find(|group| group.part == parts::INFILL).map(|group| group.material.as_str()), Some("m-steel"), "no glass in the library: the railing material");
 }
 
@@ -201,7 +201,7 @@ async fn the_sections_and_the_infill_are_part_of_the_dependency_of_the_solid() {
     let railing = snapshot.railings["r-glass"].clone();
     let base = dependency(&snapshot, &railing);
     let mut without_glass = snapshot.clone();
-    without_glass.materials.remove("m-glass");
+    without_glass.materials.cold_remove("m-glass");
     assert_ne!(base, dependency(&without_glass, &railing), "the glass of the library is read");
     let mut other = railing.clone();
     other.infill = Infill::Glass { thickness: 0.02 };

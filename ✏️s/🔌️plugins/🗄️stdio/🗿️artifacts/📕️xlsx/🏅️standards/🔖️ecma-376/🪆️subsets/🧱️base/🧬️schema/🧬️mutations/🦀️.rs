@@ -330,7 +330,7 @@ pub fn demo_mutation_cases() -> Vec<XlsxMutation> {
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: "Sheet2".into(), new_name: "Renamed".into() }),
         XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(true), node: None }),
         XlsxMutation::InsertCell(insert_cell::InsertCell { address: vacancy, value: XlsxCellValue::InlineString("created".into()), node: None }),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address") }),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: cell_address::xlsx_cell_address(&base, "Sheet1", 1, 0).expect("fixture cell address"), keep_row: false }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: "z".into(), index: None, node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: "y".into(), node: None }),

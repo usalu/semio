@@ -30,17 +30,28 @@ enum NodeGraphEngineRetirement {
 }
 
 impl NodeGraphEngineRetirement {
-    pub(in super::super) fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
-        match self {
-            Self::Dag(owner) => owner.close_step(context),
-            Self::Flow(owner) => owner.close_step(context),
+    fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
+        let owner = match self {
+            Self::Dag(owner) => return Ok(owner.close_step(context)),
+            Self::Flow(owner) => owner,
+        };
+        let grant = context.retained_grant();
+        if !context.admit_work_step(owner.close_demands(grant.maximum_copy_bytes)?)? {
+            return Ok(false);
         }
+        let Some((result, performed)) = context.with_original_effect(grant, |_, effect| owner.close_step(effect))? else {
+            return Ok(false);
+        };
+        let progress = result.as_ref().map_or_else(|error| error.retained_progress(), |step| step.progress());
+        context.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX).max(u64::from(progress != Default::default())));
+        context.consume_retained(progress)?;
+        Ok(matches!(result?, semio_framework_value::RetainedCloneStep::Complete(_)))
     }
 
     pub(in super::super) fn terminal_nonopaque_is_empty(&self) -> bool {
         match self {
             Self::Dag(owner) => owner.terminal_nonopaque_is_empty(),
-            Self::Flow(owner) => owner.terminal_nonopaque_is_empty(),
+            Self::Flow(owner) => owner.terminal_is_empty(),
         }
     }
 }
@@ -301,13 +312,15 @@ impl EngineSurfaceRetirement {
                         self.phase = EngineSurfaceClosePhase::NodeGraphSync;
                     }
                     context.consume_fuel(1);
-                } else if self.node_graph.as_mut().is_some_and(|owner| owner.close_step(context)) {
-                    if !self.node_graph.as_ref().is_some_and(NodeGraphEngineRetirement::terminal_nonopaque_is_empty) {
-                        self.faulted = true;
-                        return false;
+                } else if let Some(owner) = self.node_graph.as_mut() {
+                    match owner.close_step(context) {
+                        Ok(true) if owner.terminal_nonopaque_is_empty() => {
+                            self.node_graph = None;
+                            self.phase = EngineSurfaceClosePhase::NodeGraphSync;
+                        }
+                        Ok(false) => {}
+                        _ => self.faulted = true,
                     }
-                    self.node_graph = None;
-                    self.phase = EngineSurfaceClosePhase::NodeGraphSync;
                 }
                 return false;
             }

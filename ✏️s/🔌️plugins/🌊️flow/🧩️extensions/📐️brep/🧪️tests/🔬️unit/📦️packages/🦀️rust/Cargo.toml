@@ -40,6 +40,8 @@ semio-s-plugin-flow-brep = { path = "../../../../📦️packages/🦀️rust", f
 semio-s-plugin-flow-brep-mesh = { path = "../../../../🥽️mesh/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-3d-brep-curve = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust" }
+semio-framework-3d-brep-surface = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 parry3d = "0.17"
 serde_json.workspace = true
@@ -52,3 +54,19 @@ path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/�
 [[test]]
 name = "original-operator-close"
 path = "../../🧵️original-close.rs"
+
+[[test]]
+name = "original-brep-queries"
+path = "../../🧭️original-queries.rs"
+
+[[test]]
+name = "original-brep-solids"
+path = "../../🧊️original-solids.rs"
+
+[[test]]
+name = "original-brep-faces"
+path = "../../📐️original-faces.rs"
+
+[[test]]
+name = "retained-mesh-workbench"
+path = "../../🥽️mesh-workbench.rs"

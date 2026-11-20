@@ -113,8 +113,8 @@ fn a_finished_space_names_its_materials_in_pset_space_covering_requirements_and_
 #[test]
 fn a_model_without_zones_finishes_or_schemes_writes_none_of_it() {
     let mut model = house();
-    model.zones.clear();
-    model.area_schemes.clear();
+    model.zones.cold_clear();
+    model.area_schemes.cold_clear();
     let document = document(&model);
     assert_eq!((count(&document, "IFCZONE"), count(&document, "IFCRELASSIGNSTOGROUP")), (0, 0));
     assert!(rows(&document, "IFCGROUP").iter().all(|(_, args)| string(args, 4).as_deref() != Some("AreaScheme")));

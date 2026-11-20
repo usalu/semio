@@ -13,6 +13,9 @@ import { tmpdir } from "node:os";
 import { join, dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
+import {Database} from "bun:sqlite";
+import {withObservedWorldV1} from "../🟨️.mjs";
+import holdProgress from "./🧮️hold-progress.json" with {type:"json"};
 
 type Scenario = { id: string; mutation: { op: "none" | "write" | "replace-directory-with-file"; path?: string; content?: string }; expected: "hit" | "miss" };
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[];corruption:{value:string;computations:number};races:{before:string;after:string;entry:string;directory:string;conflict:string;text:string;ports:string[]};semantic:{parentValidation:{projects:number;expectedReads:number};provider:{id:string;revision:string;nextRevision:string};before:string;bodyChanged:string;importsChanged:string;expected:string[];changedExpected:string[];cacheMaximumBytes:number;oversizedCharacters:number;malformedFactPatches:unknown[][];nested:{path:string;before:string;after:string;missing:string};replayError:string} };
@@ -188,6 +191,28 @@ test("consumed TypeScript BOM text agrees with the independent compiler host",as
  try{for(const encoding of ["utf8","utf16le","utf16be"]){const body=Buffer.from(fixture.races.text,encoding==="utf8"?"utf8":"utf16le"),bytes=encoding==="utf8"?Buffer.concat([Buffer.from([239,187,191]),body]):Buffer.concat([Buffer.from([255,254]),body]);if(encoding==="utf16be")bytes.swap16();writeFileSync(path,bytes);const actual=await captureObservedSourceInputsV1(()=>observedTypeScriptHost(ts.sys).readFile(path));expect(actual.value).toBe(ts.sys.readFile(path));expect(actual.value).toBe(fixture.races.text);expect(await observationsHold(actual.observations)).toBe(true);}}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
+for(const vector of holdProgress)test(`verified observation prefix ${vector.mode} (${vector.rows} rows, ${vector.limit} workers, report ${vector.report!==false})`,async()=>{
+ const db=new Database(":memory:"),signal=new AbortController(),reason=Object.freeze({mode:vector.mode}),verified:number[]=[];
+ const rows=Array.from({length:vector.rows},(_,index)=>({kind:"exists",path:resolve("verified-observation-fixture",String(index)),fact:true}));
+ const indexes=new Map(rows.map((row,index)=>[row.path,index]));
+ const latest=db.query<{done:number},[number,number]>("select case when ?1<0 then ?2 else ?1 end as done").get(vector.halt,vector.rows)!.done;
+ try{
+  const pending=withObservedWorldV1({...rawFs,statSync(...args:Parameters<typeof rawFs.statSync>){
+   const index=indexes.get(String(args[0]));
+   if(index===undefined)return rawFs.statSync(...args);
+   if(index===vector.halt){if(vector.mode==="cancelled")signal.abort(reason);else throw Object.assign(Error("fixture absent"),{code:"ENOENT"});}
+   return {};
+  }},()=>observationsHold(rows,Number(vector.limit),new Set(),new Set(),signal.signal,undefined,vector.report===false?undefined:count=>verified.push(count)));
+  if(vector.mode==="cancelled"){
+   if(rows.length===0)signal.abort(reason);
+   await expect(pending).rejects.toBe(reason);
+  }else if(vector.mode==="invalid")await expect(pending).rejects.toThrow("Positive observation worker limit required");
+  else expect(await pending).toBe(vector.mode==="held");
+  expect(verified).toEqual(vector.verified);
+  expect(verified.every(value=>value<=latest)).toBe(true);
+ }finally{db.close();}
+});
+
 test("conflicting repeated actual reads are retained and inference is refused",async()=>{
  const root=workspace(),path=join(root,"a/one.txt"),cachePath=join(root,"conflict.json");let failed:any[]=[];
  try{await expect(captureObservedSourceInputsV1(()=>observeInference({cachePath,key:"conflict"},()=>{const first=observedFs.readFileSync(path,"utf8");writeFileSync(path,fixture.races.after);const second=observedFs.readFileSync(path,"utf8");return {first,second};}),(rows:any[])=>{failed=rows;})).rejects.toThrow(fixture.races.conflict);const rows=failed.filter(row=>row.kind==="file"&&row.path===path);expect(rows).toHaveLength(2);expect(new Set(rows.map(row=>row.fact.sha256))).toEqual(new Set([digest(fixture.files["a/one.txt"]!),digest(fixture.races.after)]));expect(await observationsHold(rows,64,new Set([join(root,"a")]))).toBe(false);expect(rawFs.existsSync(cachePath)).toBe(false);}finally{rmSync(root,{recursive:true,force:true});}
@@ -284,7 +309,7 @@ test("observed TOML receives literal astral paths and refuses surrogate escapes 
  const corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).tomlReceiving,parser=createRequire(import.meta.url)("smol-toml"),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️toml-failure.json",import.meta.url),"utf8")),admit=new Ajv({strict:true}).compile(schema),parent=artifactRoot,root=mkdtempSync(join(parent,"toml-")),path=join(root,"Cargo.toml"),plugin=await import("../../🕸️graph/📥️inference/🟨️.mjs"),api=await import("../🟨️.mjs");await plugin.libraryBootstrap;
  try{for(const row of corpus.cases){writeFileSync(path,row.source);let independent:any,builtin:any,error:any,receipt:any;try{independent=parser.parse(row.source);}catch{}try{builtin=Bun.TOML.parse(row.source);}catch{}try{receipt=await api.captureObservedSourceInputsV1(()=>plugin.cacheInternals.nativeDependencyRoots(".",root,false,new Map(),new Map()),undefined,false);}catch(value){error=value;}
   expect(Boolean(independent),row.name).toBe(row.smolAccepted);const bunDiverges=/\\U[0-9A-Fa-f]{8}|\\u[dD][89a-fA-F][0-9A-Fa-f]{2}/u.test(row.source);if(!bunDiverges)expect(Boolean(builtin),row.name).toBe(row.accepted);expect(error===undefined,row.name).toBe(row.accepted);
-  if(row.accepted){expect(independent.lib.path).toBe(row.path);if(!bunDiverges)expect(builtin.lib.path).toBe(row.path);expect(receipt.observations.some((fact:any)=>fact.kind==="file"&&fact.path===path)).toBe(true);expect(await api.observationsHold(receipt.observations)).toBe(true);}else{expect(error.message).toContain("Observed TOML parse refused");expect(admit(error.tomlObservation)).toBe(true);expect(error.tomlObservation.path).toBe(path);expect(error.tomlObservation.sha256).toBe(createHash("sha256").update(row.source).digest("hex"));expect(error.tomlObservation.bytes).toBe(Buffer.byteLength(row.source));expect(error.tomlObservation.sourceLine).toBe(row.source.split("\n")[error.tomlObservation.line??0]);expect(error.cause.message).toMatch(/0xD800 - 0xDFFF|Unicode scalar value/u);}
+  if(row.accepted){expect(independent.lib.path).toBe(row.path);if(!bunDiverges)expect(builtin.lib.path).toBe(row.path);expect(receipt.observations.some((fact:any)=>fact.kind==="field"&&fact.path===path&&fact.fact.format==="cargo-manifest"&&fact.fact.pointer==="graph")).toBe(true);expect(await api.observationsHold(receipt.observations)).toBe(true);}else{expect(error.message).toContain("Observed TOML parse refused");expect(admit(error.tomlObservation)).toBe(true);expect(error.tomlObservation.path).toBe(path);expect(error.tomlObservation.sha256).toBe(createHash("sha256").update(row.source).digest("hex"));expect(error.tomlObservation.bytes).toBe(Buffer.byteLength(row.source));expect(error.tomlObservation.sourceLine).toBe(row.source.split("\n")[error.tomlObservation.line??0]);expect(error.cause.message).toMatch(/0xD800 - 0xDFFF|Unicode scalar value/u);}
  }
  }finally{rmSync(root,{recursive:true,force:true});}
 });

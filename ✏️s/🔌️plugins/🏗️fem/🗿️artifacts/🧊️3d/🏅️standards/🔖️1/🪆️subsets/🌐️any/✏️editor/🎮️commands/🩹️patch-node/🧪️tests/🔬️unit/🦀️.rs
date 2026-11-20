@@ -61,7 +61,7 @@ async fn patch_node_emits_only_the_authored_ordinate_3d() {
     let emitted = emit(&demo(), PatchNode { id: "n00_l2".into(), field: "y".into(), value: "0.5".into() }).expect("handle");
     let [Fem3dMutation::ChangeNode(change)] = emitted.artifact_mutations.as_slice() else { panic!("one sparse change-node") };
     assert_eq!(change.id, "n00_l2");
-    assert_eq!(change.patch, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodePatch { y: Some(0.5), ..Default::default() });
+    assert_eq!(change.patch, semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dNodePatch { y: Some(0.5), ..Default::default() });
 }
 
 #[semio_framework_async_macros::async_test]

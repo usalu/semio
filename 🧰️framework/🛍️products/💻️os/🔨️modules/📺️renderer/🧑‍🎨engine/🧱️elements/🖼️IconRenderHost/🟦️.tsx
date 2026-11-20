@@ -34,21 +34,20 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
     setPreview(null);
     setError(null);
     if (!request) return;
-    let cancelled = false;
-    void renderIconRequest(request)
+    const controller = new AbortController();
+    void renderIconRequest(request, controller.signal)
       .then((result) => {
-        if (!cancelled) setPreview(result.dataUrl);
+        if (!controller.signal.aborted) setPreview(result.dataUrl);
       })
       .catch((renderError: unknown) => {
-        if (!cancelled) setError(renderError instanceof Error ? renderError.message : String(renderError));
+        if (!controller.signal.aborted) setError(renderError instanceof Error ? renderError.message : String(renderError));
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [request]);
   if (!scene || !request) {
     return <div className="flex h-full items-center justify-center text-sm opacity-60">{emptySceneLabel}</div>;
   }
+  const frameBackground = request.format === "svg" && (preview !== null || request.drawing?.background === false) ? "transparent" : request.background;
   const content = error ? (
     <div className="flex h-full flex-col items-center justify-center p-4 text-center text-sm text-destructive"><span>{failedLabel}</span><span>{error}</span></div>
   ) : preview ? (
@@ -59,7 +58,7 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
   return (
     <div className="semio-icon-render-host absolute inset-0 flex flex-col" data-surface-id={node.surfaceId}>
       <div className="relative min-h-0 flex-1">
-        <IconShotFrame background={request.background} height={request.height} shape={request.shape ?? "rectangle"} width={request.width}>
+        <IconShotFrame background={frameBackground} height={request.height} shape={request.shape ?? "rectangle"} width={request.width}>
           {content}
         </IconShotFrame>
       </div>

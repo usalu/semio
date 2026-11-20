@@ -1,0 +1,17 @@
+{
+  "maximum": 1,
+  "roots": [
+    "/private-leader",
+    "/private-departing",
+    "/private-follower"
+  ],
+  "reason": "original cancellation at slot transfer",
+  "replay": {
+    "progress": {
+      "phase": "owners",
+      "done": 2,
+      "total": 3
+    },
+    "reason": "original cancellation during progress replay"
+  }
+}

@@ -10,7 +10,7 @@ pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
 pub use semio_s_artifact_shooting_shooting_inferences::{ShootingShot, quat_from_axis_angle, quat_mul, shooting_asset_scale};
-pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingShotPatch};
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingDrawingPatch, ShootingShotPatch};
 
 #[path = "."]
 pub mod standards {
@@ -93,6 +93,16 @@ pub mod standards {
                             #[path = "../../📏️change-shot-width/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../📏️change-shot-width/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                        }
+                        #[path = "."]
+                        pub mod set_shot_drawing {
+                            #[path = "../../✒️set-shot-drawing/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "../../✒️set-shot-drawing/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../✒️set-shot-drawing/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]

@@ -30,7 +30,6 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff;
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-#[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};

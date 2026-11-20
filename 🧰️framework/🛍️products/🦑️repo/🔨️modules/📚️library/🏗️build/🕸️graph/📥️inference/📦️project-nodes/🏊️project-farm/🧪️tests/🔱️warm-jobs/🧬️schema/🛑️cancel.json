@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "blocked"
+    ],
+    "properties": {
+      "blocked": {
+        "enum": [
+          "warm",
+          "observe"
+        ]
+      }
+    }
+  }
+}

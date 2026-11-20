@@ -1,0 +1,20 @@
+[package]
+name = "fem3d-native-original-actor-probe"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[[bin]]
+name = "fem3d-native-original-actor-probe"
+path = "probe.rs"
+
+[dependencies]
+serde_json = "1"
+semio-hub-fem = { path = "../../../../../../../../🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-actor = { path = "../../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

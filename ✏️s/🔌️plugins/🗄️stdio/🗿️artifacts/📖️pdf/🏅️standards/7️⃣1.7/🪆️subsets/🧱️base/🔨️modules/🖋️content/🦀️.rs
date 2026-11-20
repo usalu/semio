@@ -6,15 +6,22 @@
 use crate::standards::v1_7::subsets::base::modules::colour::{lift_colour_space_inline, lower_colour_space_inline};
 use crate::standards::v1_7::subsets::base::modules::filters::{decode_stream, encode_stream};
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
-use crate::standards::v1_7::subsets::base::modules::lexer::{is_ws, number_text, write_object, Lexer, Token};
+use crate::standards::v1_7::subsets::base::modules::images::{packed_image_geometry, unpack_image_samples};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, number_text, write_object, ContentToken, ContentTokenCursor, InlineImageBoundary, InlineImageSpanCursor, InlineImageSpanStep};
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 use std::collections::HashMap;
+
+#[path = "🧵️program/🦀️.rs"]
+mod program;
+pub use program::{ContentProgramCursor, ContentProgramEvent, ContentProgramReceipt};
 
 //#region 🔖️FontTable
 /// 🔤 The fonts a content stream may select, by resource name.
 pub trait FontTable {
     fn font(&self, name: &str) -> Option<&FontCodec>;
+    /// 🔡 Supplies the qualified Type1 encoding for measured content turns.
+    fn controlled_type1(&self, _name: &str) -> Option<PdfBaseEncoding> { None }
     fn content_artifact(&self,_reference:&semio_framework_artifact_reference::ArtifactRef)->PResult<PdfObject>{Err(PdfEngineError::Unsupported("content artifact resolution is unavailable".into()))}
 }
 
@@ -36,12 +43,42 @@ impl FontTable for NoFonts {
 
 //#region 🔖️Parse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+const MAX_CONTROLLED_REAL_DIGITS: usize = 128;
+
+/// 🔢️ Converts a bounded PDF decimal exactly as the reference parser without heap scratch.
+pub fn bounded_number(value: &PdfObject) -> Result<Option<f64>, &'static str> {
+    use std::io::Write;
+    match value {
+        PdfObject::Int(value) => Ok(Some(*value as f64)),
+        PdfObject::Real(decimal) if bounded_spelling(value) => {
+            let mut text = [0u8; MAX_CONTROLLED_REAL_DIGITS + 4];
+            let mut remaining = text.as_mut_slice();
+            write!(&mut remaining, "{decimal}").map_err(|_| "PDF decimal exceeds bounded scratch")?;
+            let length = MAX_CONTROLLED_REAL_DIGITS + 4 - remaining.len();
+            Ok(std::str::from_utf8(&text[..length]).ok().and_then(|text| text.parse().ok()))
+        }
+        PdfObject::Real(_) => Err("PDF decimal exceeds bounded scratch"),
+        _ => Ok(None),
+    }
+}
+
+fn bounded_spelling(value: &PdfObject) -> bool {
+    match value {
+        PdfObject::Real(decimal) => decimal.coefficient.len() <= MAX_CONTROLLED_REAL_DIGITS && decimal.scale as usize <= MAX_CONTROLLED_REAL_DIGITS,
+        _ => true,
+    }
+}
+
+fn number(value: &PdfObject) -> Option<f64> {
+    bounded_number(value).unwrap_or_else(|_| value.as_f64())
+}
+
 fn num(operands: &[PdfObject], index: usize) -> f64 {
-    operands.get(index).and_then(PdfObject::as_f64).unwrap_or(0.0)
+    operands.get(index).and_then(number).unwrap_or(0.0)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn nums(operands: &[PdfObject]) -> Vec<f64> {
-    operands.iter().filter_map(PdfObject::as_f64).collect()
+    operands.iter().filter_map(number).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn name(operands: &[PdfObject], index: usize) -> Option<String> {
@@ -49,8 +86,8 @@ fn name(operands: &[PdfObject], index: usize) -> Option<String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn matrix(operands: &[PdfObject]) -> Option<[f64; 6]> {
-    let values = nums(operands);
-    (values.len() >= 6).then(|| [values[0], values[1], values[2], values[3], values[4], values[5]])
+    let mut numbers = operands.iter().filter_map(number);
+    Some([numbers.next()?, numbers.next()?, numbers.next()?, numbers.next()?, numbers.next()?, numbers.next()?])
 }
 
 /// 🔤 Decodes a string operand through the current font: `Text` when the font maps every code to
@@ -66,12 +103,12 @@ fn text_string(bytes: &[u8], font: Option<&FontCodec>) -> PdfTextString {
                 }
             }
         }
-        None if bytes.iter().all(|byte| (0x20..=0x7E).contains(byte)) => {
+        None if bytes.iter().all(|byte| plain_text_byte(*byte)) => {
             return PdfTextString::Text { text: bytes.iter().map(|byte| *byte as char).collect() };
         }
         None => {}
     }
-    PdfTextString::Codes { codes:font.map_or_else(||bytes.iter().map(|byte|u32::from(*byte)).collect(),|font|font.decode(bytes).iter().map(|glyph|glyph.code).collect()) }
+    PdfTextString::Codes { codes:font.map_or_else(||bytes.iter().map(|byte|u32::from(*byte)).collect(),|font|font.character_codes(bytes).collect()) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -79,11 +116,8 @@ fn text_array(items: &[PdfObject], font: Option<&FontCodec>) -> Vec<PdfTextArray
     items
         .iter()
         .filter_map(|item| match item {
-            PdfObject::Str(bytes) => Some(match text_string(bytes, font) {
-                PdfTextString::Text { text } => PdfTextArrayItem::Text { text },
-                PdfTextString::Codes { codes } => PdfTextArrayItem::Codes { codes },
-            }),
-            other => other.as_f64().map(|amount| PdfTextArrayItem::Adjust { amount }),
+            PdfObject::Str(bytes) => Some(array_text_item(text_string(bytes, font))),
+            other => number(other).map(|amount| PdfTextArrayItem::Adjust { amount }),
         })
         .collect()
 }
@@ -144,211 +178,331 @@ fn expand_inline_value(key: &str, value: PdfObject) -> PdfObject {
     }
 }
 
-/// 🖼️ Reads the binary body of an inline image after `ID`: an unfiltered image has a known
-/// length; a filtered one ends at the first `EI` delimited by whitespace.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inline_image_body<'a>(data: &'a [u8], start: usize, dict: &[PdfDictEntry]) -> (&'a [u8], usize) {
-    let int = |key: &str| dict.iter().find(|e| e.key == key).and_then(|e| e.value.as_i64()).unwrap_or(0).max(0) as usize;
-    let filtered = dict.iter().any(|e| e.key == "Filter" && !matches!(&e.value, PdfObject::Null) && !matches!(&e.value, PdfObject::Array(items) if items.is_empty()));
-    if !filtered {
-        let width = int("Width");
-        let height = int("Height");
-        let mask = dict.iter().any(|e| e.key == "ImageMask" && e.value.as_bool() == Some(true));
-        let bpc = if mask { 1 } else { int("BitsPerComponent").max(1) };
-        let components = if mask {
-            1
+/// 🔢️ Reads an inline-image dictionary integer within the typed image domain.
+fn inline_image_integer(dict: &[PdfDictEntry], key: &str, default: Option<u32>) -> PResult<u32> {
+    let value = match dict_get(dict, key) {
+        Some(PdfObject::Int(value)) => u32::try_from(*value).ok().filter(|value| *value > 0),
+        None => default,
+        _ => None,
+    };
+    value.ok_or_else(|| PdfEngineError::Malformed(format!("invalid inline image {key}")))
+}
+
+/// 🖼️ Reads the authored source span through the same framing cursor used by retained parsers.
+fn inline_image_body(data: &[u8], id_end: usize, boundary: InlineImageBoundary) -> PResult<(&[u8], usize)> {
+    let mut cursor = InlineImageSpanCursor::new(id_end, boundary);
+    loop {
+        match cursor.advance(data, 4096, false).1 {
+            Ok(InlineImageSpanStep::More) => {}
+            Ok(InlineImageSpanStep::Complete(span)) => return Ok((&data[span.start..span.end], span.resume)),
+            Ok(InlineImageSpanStep::Cancelled) => return Err(PdfEngineError::Malformed("inline image framing was cancelled".into())),
+            Err(reason) => return Err(PdfEngineError::Malformed(reason.into())),
+        }
+    }
+}
+
+#[derive(Default)]
+struct FontState {
+    current: Option<String>,
+    saved: Option<Box<SavedFont>>,
+}
+
+struct SavedFont {
+    name: Option<String>,
+    next: Option<Box<SavedFont>>,
+}
+
+impl FontState {
+    fn save(&mut self) -> PdfOp {
+        self.saved = Some(Box::new(SavedFont { name: self.current.clone(), next: self.saved.take() }));
+        PdfOp::Save
+    }
+
+    fn restore(&mut self) -> PdfOp {
+        if let Some(mut saved) = self.saved.take() {
+            self.current = saved.name.take();
+            self.saved = saved.next.take();
+        }
+        PdfOp::Restore
+    }
+
+    fn select(&mut self, operands: &[PdfObject]) -> PdfOp {
+        let name = name(operands, 0).unwrap_or_default();
+        self.current = Some(name.clone());
+        PdfOp::SetFont { name, size: num(operands, 1) }
+    }
+
+    fn codec<'a>(&self, fonts: &'a dyn FontTable) -> Option<&'a FontCodec> {
+        self.current.as_deref().and_then(|name| fonts.font(name))
+    }
+}
+
+impl Drop for FontState {
+    fn drop(&mut self) {
+        while let Some(mut frame) = self.saved.take() {
+            self.saved = frame.next.take();
+        }
+    }
+}
+
+fn plain_text_byte(byte: u8) -> bool {
+    (0x20..=0x7E).contains(&byte)
+}
+
+#[derive(Clone, Copy)]
+enum TextShow {
+    Here,
+    Next,
+    Spaced { word_spacing: f64, char_spacing: f64 },
+}
+
+impl TextShow {
+    fn new(word: &str, operands: &[PdfObject]) -> Option<Self> {
+        Some(match word {
+            "Tj" => Self::Here,
+            "'" => Self::Next,
+            "\"" => Self::Spaced { word_spacing: num(operands, 0), char_spacing: num(operands, 1) },
+            _ => return None,
+        })
+    }
+
+    fn bytes(self, operands: &[PdfObject]) -> &[u8] {
+        let index = if matches!(self, Self::Spaced { .. }) { 2 } else { 0 };
+        operands.get(index).and_then(PdfObject::as_str_bytes).unwrap_or(&[])
+    }
+
+    fn finish(self, text: PdfTextString) -> PdfOp {
+        match self {
+            Self::Here => PdfOp::ShowText { text },
+            Self::Next => PdfOp::NextLineShowText { text },
+            Self::Spaced { word_spacing, char_spacing } => PdfOp::NextLineShowTextSpaced { word_spacing, char_spacing, text },
+        }
+    }
+}
+
+fn fixed_operator(word: &str, operands: &[PdfObject]) -> Option<PdfOp> {
+    Some(match word {
+        "w" => PdfOp::SetLineWidth { width: num(operands, 0) },
+        "J" => PdfOp::SetLineCap { cap: match num(operands, 0) as i64 { 1 => PdfLineCap::Round, 2 => PdfLineCap::Square, _ => PdfLineCap::Butt } },
+        "j" => PdfOp::SetLineJoin { join: match num(operands, 0) as i64 { 1 => PdfLineJoin::Round, 2 => PdfLineJoin::Bevel, _ => PdfLineJoin::Miter } },
+        "M" => PdfOp::SetMiterLimit { limit: num(operands, 0) },
+        "i" => PdfOp::SetFlatness { flatness: num(operands, 0) },
+        "cm" => PdfOp::Transform { matrix: matrix(operands).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]) },
+        "m" => PdfOp::MoveTo { x: num(operands, 0), y: num(operands, 1) },
+        "l" => PdfOp::LineTo { x: num(operands, 0), y: num(operands, 1) },
+        "c" => PdfOp::CurveTo { x1: num(operands, 0), y1: num(operands, 1), x2: num(operands, 2), y2: num(operands, 3), x3: num(operands, 4), y3: num(operands, 5) },
+        "v" => PdfOp::CurveToInitial { x2: num(operands, 0), y2: num(operands, 1), x3: num(operands, 2), y3: num(operands, 3) },
+        "y" => PdfOp::CurveToFinal { x1: num(operands, 0), y1: num(operands, 1), x3: num(operands, 2), y3: num(operands, 3) },
+        "h" => PdfOp::ClosePath,
+        "re" => PdfOp::Rectangle { x: num(operands, 0), y: num(operands, 1), width: num(operands, 2), height: num(operands, 3) },
+        "S" => PdfOp::Stroke,
+        "s" => PdfOp::CloseStroke,
+        "f" | "F" => PdfOp::Fill,
+        "f*" => PdfOp::FillEvenOdd,
+        "B" => PdfOp::FillStroke,
+        "B*" => PdfOp::FillStrokeEvenOdd,
+        "b" => PdfOp::CloseFillStroke,
+        "b*" => PdfOp::CloseFillStrokeEvenOdd,
+        "n" => PdfOp::EndPath,
+        "W" => PdfOp::Clip,
+        "W*" => PdfOp::ClipEvenOdd,
+        "BT" => PdfOp::BeginText,
+        "ET" => PdfOp::EndText,
+        "Tc" => PdfOp::SetCharSpacing { spacing: num(operands, 0) },
+        "Tw" => PdfOp::SetWordSpacing { spacing: num(operands, 0) },
+        "Tz" => PdfOp::SetHorizontalScale { scale: num(operands, 0) },
+        "TL" => PdfOp::SetLeading { leading: num(operands, 0) },
+        "Tr" => PdfOp::SetTextRenderingMode { mode: num(operands, 0).max(0.0) as u32 },
+        "Ts" => PdfOp::SetTextRise { rise: num(operands, 0) },
+        "Td" => PdfOp::MoveText { tx: num(operands, 0), ty: num(operands, 1) },
+        "TD" => PdfOp::MoveTextSetLeading { tx: num(operands, 0), ty: num(operands, 1) },
+        "Tm" => PdfOp::SetTextMatrix { matrix: matrix(operands).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]) },
+        "T*" => PdfOp::NextLine,
+        "d0" => PdfOp::SetGlyphWidth { wx: num(operands, 0), wy: num(operands, 1) },
+        "d1" => PdfOp::SetGlyphWidthAndBox { wx: num(operands, 0), wy: num(operands, 1), llx: num(operands, 2), lly: num(operands, 3), urx: num(operands, 4), ury: num(operands, 5) },
+        "G" => PdfOp::SetStrokeGray { gray: num(operands, 0) },
+        "g" => PdfOp::SetFillGray { gray: num(operands, 0) },
+        "RG" => PdfOp::SetStrokeRgb { r: num(operands, 0), g: num(operands, 1), b: num(operands, 2) },
+        "rg" => PdfOp::SetFillRgb { r: num(operands, 0), g: num(operands, 1), b: num(operands, 2) },
+        "K" => PdfOp::SetStrokeCmyk { c: num(operands, 0), m: num(operands, 1), y: num(operands, 2), k: num(operands, 3) },
+        "k" => PdfOp::SetFillCmyk { c: num(operands, 0), m: num(operands, 1), y: num(operands, 2), k: num(operands, 3) },
+        "EMC" => PdfOp::EndMarkedContent,
+        "BX" => PdfOp::BeginCompatibility,
+        "EX" => PdfOp::EndCompatibility,
+        _ => return None,
+    })
+}
+
+fn named_operator(word: &str, value: impl FnOnce() -> String) -> Option<PdfOp> {
+    Some(match word {
+        "ri" => PdfOp::SetRenderingIntent { intent: value() },
+        "gs" => PdfOp::SetExtGState { name: value() },
+        "CS" => PdfOp::SetStrokeColorSpace { name: value() },
+        "cs" => PdfOp::SetFillColorSpace { name: value() },
+        "sh" => PdfOp::PaintShading { name: value() },
+        "Do" => PdfOp::PaintXObject { name: value() },
+        "MP" => PdfOp::MarkedContentPoint { tag: value() },
+        "BMC" => PdfOp::BeginMarkedContent { tag: value() },
+        _ => return None,
+    })
+}
+
+fn first_array(operands: &[PdfObject]) -> &[PdfObject] {
+    operands.first().and_then(PdfObject::as_array).unwrap_or(&[])
+}
+
+#[derive(Clone, Copy)]
+enum NumericArray {
+    Dash,
+    Stroke,
+    Fill,
+    StrokePattern,
+    FillPattern,
+}
+
+impl NumericArray {
+    fn new(word: &str) -> Option<Self> {
+        Some(match word {
+            "d" => Self::Dash,
+            "SC" => Self::Stroke,
+            "sc" => Self::Fill,
+            "SCN" => Self::StrokePattern,
+            "scn" => Self::FillPattern,
+            _ => return None,
+        })
+    }
+
+    fn values(self, operands: &[PdfObject]) -> &[PdfObject] {
+        if matches!(self, Self::Dash) { first_array(operands) } else { operands }
+    }
+
+    fn pattern(self, operands: &[PdfObject]) -> Option<&str> {
+        if matches!(self, Self::StrokePattern | Self::FillPattern) {
+            operands.last().and_then(PdfObject::as_name)
         } else {
-            match dict.iter().find(|e| e.key == "ColorSpace").map(|e| &e.value) {
-                Some(PdfObject::Name(name)) => match name.as_str() {
-                    "DeviceRGB" | "CalRGB" | "Lab" => 3,
-                    "DeviceCMYK" => 4,
-                    _ => 1,
-                },
-                Some(PdfObject::Array(items)) => match items.first().and_then(PdfObject::as_name) {
-                    Some("DeviceRGB") | Some("CalRGB") | Some("Lab") => 3,
-                    Some("DeviceCMYK") => 4,
-                    Some("ICCBased") => items.get(1).and_then(|v| v.dict_get("N")).and_then(PdfObject::as_i64).unwrap_or(1) as usize,
-                    _ => 1,
-                },
-                _ => 1,
-            }
-        };
-        let length = (width * components * bpc).div_ceil(8) * height;
-        if start + length <= data.len() {
-            let mut end = start + length;
-            let mut lexer = Lexer::new(data).at(end);
-            lexer.skip_ws();
-            if lexer.consume_keyword(b"EI") {
-                return (&data[start..end], lexer.pos);
-            }
-            end = start;
-            let _ = end;
+            None
         }
     }
-    let mut cursor = start;
-    while cursor + 2 <= data.len() {
-        if data[cursor] == b'E' && data[cursor + 1] == b'I' && (cursor + 2 == data.len() || is_ws(data[cursor + 2])) && (cursor == 0 || is_ws(data[cursor - 1])) {
-            let mut end = cursor;
-            if end > start && is_ws(data[end - 1]) {
-                end -= 1;
-            }
-            return (&data[start..end], cursor + 2);
+
+    fn finish(self, components: Vec<f64>, operands: &[PdfObject]) -> PdfOp {
+        match self {
+            Self::Dash => PdfOp::SetDash { array: components, phase: num(operands, 1) },
+            Self::Stroke => PdfOp::SetStrokeColor { components },
+            Self::Fill => PdfOp::SetFillColor { components },
+            Self::StrokePattern => PdfOp::SetStrokeColorN { components, pattern: self.pattern(operands).map(str::to_owned) },
+            Self::FillPattern => PdfOp::SetFillColorN { components, pattern: self.pattern(operands).map(str::to_owned) },
         }
-        cursor += 1;
     }
-    (&data[start..], data.len())
+}
+
+fn array_text_item(text: PdfTextString) -> PdfTextArrayItem {
+    match text {
+        PdfTextString::Text { text } => PdfTextArrayItem::Text { text },
+        PdfTextString::Codes { codes } => PdfTextArrayItem::Codes { codes },
+    }
+}
+
+fn reference_operator(word: &str, operands: &mut Vec<PdfObject>, fonts: &mut FontState, table: &dyn FontTable) -> PdfOp {
+    if let Some(op) = fixed_operator(word, operands) {
+        return op;
+    }
+    if let Some(op) = named_operator(word, || name(operands, 0).unwrap_or_default()) {
+        return op;
+    }
+    if let Some(numbers) = NumericArray::new(word) {
+        return numbers.finish(nums(numbers.values(operands)), operands);
+    }
+    let font = fonts.codec(table);
+    if let Some(show) = TextShow::new(word, operands) {
+        return show.finish(text_string(show.bytes(operands), font));
+    }
+    match word {
+        "q" => fonts.save(),
+        "Q" => fonts.restore(),
+        "Tf" => fonts.select(operands),
+        "TJ" => PdfOp::ShowTextArray { items: text_array(first_array(operands), font) },
+        "DP" => PdfOp::MarkedContentPointWithProperties { tag: name(operands, 0).unwrap_or_default(), properties: property_list(operands.get(1)) },
+        "BDC" => PdfOp::BeginMarkedContentWithProperties { tag: name(operands, 0).unwrap_or_default(), properties: property_list(operands.get(1)) },
+        other => PdfOp::Unknown { operator: other.to_string(), operands: std::mem::take(operands) },
+    }
+}
+
+fn parse_inline_image(data: &[u8], tokens: &mut ContentTokenCursor, resources: &mut dyn crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort) -> PResult<PdfOp> {
+    let mut entries: Vec<PdfDictEntry> = Vec::new();
+    let mut key: Option<String> = None;
+    loop {
+        match tokens.next_token(data) {
+            Ok(ContentToken::Value(PdfObject::Name(name))) if key.is_none() => key = Some(name),
+            Ok(ContentToken::Value(value)) => {
+                if let Some(k) = key.take() {
+                    let expanded = expand_inline_key(&k).to_string();
+                    let value = expand_inline_value(&expanded, value);
+                    entries.push(PdfDictEntry { key: expanded, value });
+                }
+            }
+            Ok(ContentToken::Operator { start, end }) if &data[start..end] == b"ID" => break,
+            Ok(ContentToken::Operator { .. }) => {}
+            Ok(ContentToken::End) | Err(_) => return Err(PdfEngineError::Malformed("missing inline image ID operator".into())),
+        }
+    }
+    let width = inline_image_integer(&entries, "Width", None)?;
+    let height = inline_image_integer(&entries, "Height", None)?;
+    let bits_per_component = inline_image_integer(&entries, "BitsPerComponent", Some(0))?;
+    let image_mask = dict_get(&entries, "ImageMask").and_then(PdfObject::as_bool) == Some(true);
+    let color_space = dict_get(&entries, "ColorSpace").map(lift_colour_space_inline);
+    let components = if image_mask { 1 } else { color_space.as_ref().and_then(|color| color.components()).unwrap_or(1) };
+    let sample_bits = if image_mask { 1 } else { bits_per_component };
+    let filter = match dict_get(&entries, "Filter") {
+        None | Some(PdfObject::Null) => None,
+        Some(PdfObject::Array(items)) => items.first(),
+        value => value,
+    };
+    let boundary = match filter {
+        None => InlineImageBoundary::Packed(packed_image_geometry(width, height, components, sample_bits)?.1),
+        Some(value) if value.as_name() == Some("ASCII85Decode") => InlineImageBoundary::Ascii85,
+        _ => InlineImageBoundary::Delimited,
+    };
+    let (raw, resume) = inline_image_body(data, tokens.position(), boundary)?;
+    if !tokens.resume_after_image(resume) { return Err(PdfEngineError::Malformed("invalid inline image span".into())); }
+    let (decoded, filters) = decode_stream(&entries, raw)?;
+    let mut image = PdfInlineImage {
+        width, height, bits_per_component, color_space, image_mask,
+        decode: entries.iter().find(|e| e.key == "Decode").and_then(|e| e.value.as_array()).map(nums).unwrap_or_default(),
+        interpolate: entries.iter().any(|e| e.key == "Interpolate" && e.value.as_bool() == Some(true)),
+        body:PdfImageBody::Samples {values:Vec::new()},
+        extra: entries.into_iter().filter(|e| !matches!(e.key.as_str(), "Width" | "Height" | "BitsPerComponent" | "ColorSpace" | "ImageMask" | "Decode" | "Interpolate" | "Filter" | "DecodeParms" | "Length")).collect(),
+    };
+    image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:decoded,filters})?}}else{PdfImageBody::Samples {values:unpack_image_samples(width, height, components, sample_bits, &decoded)?}};
+    Ok(PdfOp::InlineImage { image })
 }
 
 /// 📖 Parses a content stream into typed operators.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_content(data: &[u8], fonts: &dyn FontTable,resources:&mut dyn crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort) -> PResult<Vec<PdfOp>> {
     let mut ops = Vec::new();
-    let mut lexer = Lexer::new(data);
+    let mut tokens = ContentTokenCursor::new(0);
     let mut operands: Vec<PdfObject> = Vec::new();
-    let mut current_font: Option<String> = None;
-    let mut font_stack: Vec<Option<String>> = Vec::new();
+    let mut state = FontState::default();
     loop {
-        let token = match lexer.next_token() {
+        let token = match tokens.next_token(data) {
             Ok(token) => token,
-            Err(_) => {
-                lexer.pos += 1;
-                continue;
-            }
+            Err(_) if tokens.recover() => continue,
+            Err(reason) => return Err(PdfEngineError::Malformed(reason.into())),
         };
         let word = match token {
-            Token::End => break,
-            Token::Object(value) => {
+            ContentToken::End => break,
+            ContentToken::Value(value) => {
                 if operands.len() < 64 {
                     operands.push(value);
                 }
                 continue;
             }
-            Token::Keyword(word) => word,
+            ContentToken::Operator { start, end } => String::from_utf8_lossy(&data[start..end]),
         };
-        let font = current_font.as_deref().and_then(|name| fonts.font(name));
-        let op = match word.as_str() {
-            "w" => PdfOp::SetLineWidth { width: num(&operands, 0) },
-            "J" => PdfOp::SetLineCap { cap: match num(&operands, 0) as i64 { 1 => PdfLineCap::Round, 2 => PdfLineCap::Square, _ => PdfLineCap::Butt } },
-            "j" => PdfOp::SetLineJoin { join: match num(&operands, 0) as i64 { 1 => PdfLineJoin::Round, 2 => PdfLineJoin::Bevel, _ => PdfLineJoin::Miter } },
-            "M" => PdfOp::SetMiterLimit { limit: num(&operands, 0) },
-            "d" => PdfOp::SetDash { array: operands.first().and_then(PdfObject::as_array).map(nums).unwrap_or_default(), phase: num(&operands, 1) },
-            "ri" => PdfOp::SetRenderingIntent { intent: name(&operands, 0).unwrap_or_default() },
-            "i" => PdfOp::SetFlatness { flatness: num(&operands, 0) },
-            "gs" => PdfOp::SetExtGState { name: name(&operands, 0).unwrap_or_default() },
-            "q" => {
-                font_stack.push(current_font.clone());
-                PdfOp::Save
-            }
-            "Q" => {
-                if let Some(saved) = font_stack.pop() {
-                    current_font = saved;
-                }
-                PdfOp::Restore
-            }
-            "cm" => PdfOp::Transform { matrix: matrix(&operands).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]) },
-            "m" => PdfOp::MoveTo { x: num(&operands, 0), y: num(&operands, 1) },
-            "l" => PdfOp::LineTo { x: num(&operands, 0), y: num(&operands, 1) },
-            "c" => PdfOp::CurveTo { x1: num(&operands, 0), y1: num(&operands, 1), x2: num(&operands, 2), y2: num(&operands, 3), x3: num(&operands, 4), y3: num(&operands, 5) },
-            "v" => PdfOp::CurveToInitial { x2: num(&operands, 0), y2: num(&operands, 1), x3: num(&operands, 2), y3: num(&operands, 3) },
-            "y" => PdfOp::CurveToFinal { x1: num(&operands, 0), y1: num(&operands, 1), x3: num(&operands, 2), y3: num(&operands, 3) },
-            "h" => PdfOp::ClosePath,
-            "re" => PdfOp::Rectangle { x: num(&operands, 0), y: num(&operands, 1), width: num(&operands, 2), height: num(&operands, 3) },
-            "S" => PdfOp::Stroke,
-            "s" => PdfOp::CloseStroke,
-            "f" | "F" => PdfOp::Fill,
-            "f*" => PdfOp::FillEvenOdd,
-            "B" => PdfOp::FillStroke,
-            "B*" => PdfOp::FillStrokeEvenOdd,
-            "b" => PdfOp::CloseFillStroke,
-            "b*" => PdfOp::CloseFillStrokeEvenOdd,
-            "n" => PdfOp::EndPath,
-            "W" => PdfOp::Clip,
-            "W*" => PdfOp::ClipEvenOdd,
-            "BT" => PdfOp::BeginText,
-            "ET" => PdfOp::EndText,
-            "Tc" => PdfOp::SetCharSpacing { spacing: num(&operands, 0) },
-            "Tw" => PdfOp::SetWordSpacing { spacing: num(&operands, 0) },
-            "Tz" => PdfOp::SetHorizontalScale { scale: num(&operands, 0) },
-            "TL" => PdfOp::SetLeading { leading: num(&operands, 0) },
-            "Tf" => {
-                let font_name = name(&operands, 0).unwrap_or_default();
-                current_font = Some(font_name.clone());
-                PdfOp::SetFont { name: font_name, size: num(&operands, 1) }
-            }
-            "Tr" => PdfOp::SetTextRenderingMode { mode: num(&operands, 0).max(0.0) as u32 },
-            "Ts" => PdfOp::SetTextRise { rise: num(&operands, 0) },
-            "Td" => PdfOp::MoveText { tx: num(&operands, 0), ty: num(&operands, 1) },
-            "TD" => PdfOp::MoveTextSetLeading { tx: num(&operands, 0), ty: num(&operands, 1) },
-            "Tm" => PdfOp::SetTextMatrix { matrix: matrix(&operands).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]) },
-            "T*" => PdfOp::NextLine,
-            "Tj" => PdfOp::ShowText { text: text_string(operands.first().and_then(PdfObject::as_str_bytes).unwrap_or(&[]), font) },
-            "'" => PdfOp::NextLineShowText { text: text_string(operands.first().and_then(PdfObject::as_str_bytes).unwrap_or(&[]), font) },
-            "\"" => PdfOp::NextLineShowTextSpaced { word_spacing: num(&operands, 0), char_spacing: num(&operands, 1), text: text_string(operands.get(2).and_then(PdfObject::as_str_bytes).unwrap_or(&[]), font) },
-            "TJ" => PdfOp::ShowTextArray { items: text_array(operands.first().and_then(PdfObject::as_array).unwrap_or(&[]), font) },
-            "d0" => PdfOp::SetGlyphWidth { wx: num(&operands, 0), wy: num(&operands, 1) },
-            "d1" => PdfOp::SetGlyphWidthAndBox { wx: num(&operands, 0), wy: num(&operands, 1), llx: num(&operands, 2), lly: num(&operands, 3), urx: num(&operands, 4), ury: num(&operands, 5) },
-            "CS" => PdfOp::SetStrokeColorSpace { name: name(&operands, 0).unwrap_or_default() },
-            "cs" => PdfOp::SetFillColorSpace { name: name(&operands, 0).unwrap_or_default() },
-            "SC" => PdfOp::SetStrokeColor { components: nums(&operands) },
-            "sc" => PdfOp::SetFillColor { components: nums(&operands) },
-            "SCN" => PdfOp::SetStrokeColorN { components: nums(&operands), pattern: operands.last().and_then(PdfObject::as_name).map(str::to_string) },
-            "scn" => PdfOp::SetFillColorN { components: nums(&operands), pattern: operands.last().and_then(PdfObject::as_name).map(str::to_string) },
-            "G" => PdfOp::SetStrokeGray { gray: num(&operands, 0) },
-            "g" => PdfOp::SetFillGray { gray: num(&operands, 0) },
-            "RG" => PdfOp::SetStrokeRgb { r: num(&operands, 0), g: num(&operands, 1), b: num(&operands, 2) },
-            "rg" => PdfOp::SetFillRgb { r: num(&operands, 0), g: num(&operands, 1), b: num(&operands, 2) },
-            "K" => PdfOp::SetStrokeCmyk { c: num(&operands, 0), m: num(&operands, 1), y: num(&operands, 2), k: num(&operands, 3) },
-            "k" => PdfOp::SetFillCmyk { c: num(&operands, 0), m: num(&operands, 1), y: num(&operands, 2), k: num(&operands, 3) },
-            "sh" => PdfOp::PaintShading { name: name(&operands, 0).unwrap_or_default() },
-            "Do" => PdfOp::PaintXObject { name: name(&operands, 0).unwrap_or_default() },
-            "BI" => {
-                let mut entries: Vec<PdfDictEntry> = Vec::new();
-                let mut key: Option<String> = None;
-                loop {
-                    match lexer.next_token() {
-                        Ok(Token::Object(PdfObject::Name(n))) if key.is_none() => key = Some(n),
-                        Ok(Token::Object(value)) => {
-                            if let Some(k) = key.take() {
-                                let expanded = expand_inline_key(&k).to_string();
-                                let value = expand_inline_value(&expanded, value);
-                                entries.push(PdfDictEntry { key: expanded, value });
-                            }
-                        }
-                        Ok(Token::Keyword(k)) if k == "ID" => break,
-                        Ok(Token::Keyword(_)) => {}
-                        Ok(Token::End) | Err(_) => break,
-                    }
-                }
-                let body_start = (lexer.pos + 1).min(data.len());
-                let (raw, resume) = inline_image_body(data, body_start, &entries);
-                lexer.pos = resume;
-                let (decoded, filters) = decode_stream(&entries, raw)?;
-                let int = |k: &str| entries.iter().find(|e| e.key == k).and_then(|e| e.value.as_i64()).unwrap_or(0).max(0) as u32;
-                let mut image = PdfInlineImage {
-                    width: int("Width"),
-                    height: int("Height"),
-                    bits_per_component: int("BitsPerComponent"),
-                    color_space: entries.iter().find(|e| e.key == "ColorSpace").map(|e| lift_colour_space_inline(&e.value)),
-                    image_mask: entries.iter().any(|e| e.key == "ImageMask" && e.value.as_bool() == Some(true)),
-                    decode: entries.iter().find(|e| e.key == "Decode").and_then(|e| e.value.as_array()).map(nums).unwrap_or_default(),
-                    interpolate: entries.iter().any(|e| e.key == "Interpolate" && e.value.as_bool() == Some(true)),
-                    body:PdfImageBody::Samples {values:Vec::new()},
-                    extra: entries.into_iter().filter(|e| !matches!(e.key.as_str(), "Width" | "Height" | "BitsPerComponent" | "ColorSpace" | "ImageMask" | "Decode" | "Interpolate" | "Filter" | "DecodeParms" | "Length")).collect(),
-                };
-                let components=if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)};
-                image.body=if let Some(filter)=filters.iter().find(|filter|filter.is_image_codec()) {let kind=match filter {crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};PdfImageBody::Artifact {reference:resources.admit(kind,PdfObject::Stream {dict:Vec::new(),data:decoded,filters})?}}else{PdfImageBody::Samples {values:crate::standards::v1_7::subsets::base::modules::images::unpack_image_samples(image.width,image.height,components,if image.image_mask{1}else{image.bits_per_component},&decoded)?}};
-                operands.clear();
-                ops.push(PdfOp::InlineImage { image });
-                continue;
-            }
-            "MP" => PdfOp::MarkedContentPoint { tag: name(&operands, 0).unwrap_or_default() },
-            "DP" => PdfOp::MarkedContentPointWithProperties { tag: name(&operands, 0).unwrap_or_default(), properties: property_list(operands.get(1)) },
-            "BMC" => PdfOp::BeginMarkedContent { tag: name(&operands, 0).unwrap_or_default() },
-            "BDC" => PdfOp::BeginMarkedContentWithProperties { tag: name(&operands, 0).unwrap_or_default(), properties: property_list(operands.get(1)) },
-            "EMC" => PdfOp::EndMarkedContent,
-            "BX" => PdfOp::BeginCompatibility,
-            "EX" => PdfOp::EndCompatibility,
-            other => PdfOp::Unknown { operator: other.to_string(), operands: std::mem::take(&mut operands) },
+        let op = if word == "BI" {
+            parse_inline_image(data, &mut tokens, resources)?
+        } else {
+            reference_operator(&word, &mut operands, &mut state, fonts)
         };
         operands.clear();
         ops.push(op);

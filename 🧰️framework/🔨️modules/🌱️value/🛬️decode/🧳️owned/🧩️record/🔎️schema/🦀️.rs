@@ -11,6 +11,7 @@ use engine::source::key_frame::NativeSchemaKeyFrame;
 #[path="🗝️key.rs"]mod key;
 #[path="🧭walk.rs"]mod walk;
 #[path="🎛️drive.rs"]mod drive;
+pub use drive::NATIVE_SCHEMA_METADATA_ITEMS;
 pub use walk::NativeSchemaMatchSelection;
 pub use key::{NativeSchemaKeyPoll,NativeSchemaKeyMetadata};
 fn page<T>(value:Result<T,PagedListError>)->Result<T,ValueError>{value.map_err(Into::into)}

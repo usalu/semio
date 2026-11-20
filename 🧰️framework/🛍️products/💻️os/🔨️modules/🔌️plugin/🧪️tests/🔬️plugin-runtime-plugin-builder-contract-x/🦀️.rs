@@ -322,7 +322,8 @@ pub fn test_restart_build<const RETAINED:bool,const TOOLS:u8>(request:&mut Optio
 /// `ArtifactEditor::build_tool_job` is sync for the same bounded-stack reason.
 #[doc(hidden)]
 #[inline(never)]
-pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::job_close_fixture::admit_fixture_tool_job(request,output,construction,cx,|mut request|{
+pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::job_close_fixture::admit_fixture_tool_job(request,output,construction,cx,|request|{
+    let mut request = request.into_inputs();
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,

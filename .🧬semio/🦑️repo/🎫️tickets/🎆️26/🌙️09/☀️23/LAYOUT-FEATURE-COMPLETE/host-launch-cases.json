@@ -1,0 +1,10 @@
+{
+  "journey": "browser-journey.mjs",
+  "pluginId": "layout",
+  "exampleId": "demo",
+  "port": 6179,
+  "exampleSource": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+  "browserJourneyDir": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END",
+  "browserChannel": "chromium",
+  "componentDescriptor": "🌎️hub/🧩️compositions/📏️layout/🧩️component/🔣️.json"
+}

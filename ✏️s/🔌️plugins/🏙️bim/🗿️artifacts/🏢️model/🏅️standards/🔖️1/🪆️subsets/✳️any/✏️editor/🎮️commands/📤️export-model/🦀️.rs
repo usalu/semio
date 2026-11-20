@@ -188,6 +188,10 @@ fn preview(stage: &str) -> &'static [u8] {
 }
 
 impl ArtifactCommandWork<EditorApp<BimModelApp>> for ModelExportWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -223,4 +227,3 @@ pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
 
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(ModelExportWork);

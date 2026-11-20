@@ -35,7 +35,7 @@ async fn an_endpoint_beats_a_midpoint_beats_the_edge_and_nothing_in_reach_is_fre
 async fn grid_lines_snap_along_themselves_and_at_their_intersections() {
     let mut snapshot = room();
     for (id, label, start, end) in [("g-a", "A", (-1.0, 3.0), (9.0, 3.0)), ("g-1", "1", (2.0, -1.0), (2.0, 7.0))] {
-        snapshot.grids.insert(id.into(), GridLine { building: "bldg-1".into(), label: label.into(), start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } });
+        snapshot.grids.cold_insert(id.into(), GridLine { building: "bldg-1".into(), label: label.into(), start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } });
     }
     let hit = snap(&snapshot, [2.05, 3.04], &request(0.1));
     assert_eq!((hit.point, hit.kind), ([2.0, 3.0], SnapKind::Intersection));

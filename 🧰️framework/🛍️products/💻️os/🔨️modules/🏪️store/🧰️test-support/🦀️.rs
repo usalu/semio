@@ -451,6 +451,23 @@ where
     P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
     Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
 {
+    document_text_round_trip(store, retire_parsed_document).await
+}
+
+/// 🧊️ [`assert_document_text_round_trip`] for a sealed snapshot whose last owner must retire through its own controlled cursor.
+pub async fn assert_owned_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
+where
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P> + semio_framework_value::retirement::RetireOwned + Sync,
+{
+    document_text_round_trip(store, retire_owned_parsed_document).await
+}
+
+async fn document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>, retire: impl FnOnce(ParsedDocumentText<P, Mutation>))
+where
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
+{
     let live = store.snapshot().expect("store snapshot");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(&files.dsl, &files.ops, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
@@ -461,7 +478,7 @@ where
         assert!(&parsed.envelope == store.envelope(), "document-text round trip lost durable history");
         assert_eq!(parsed.snapshot, live, "document-text round trip diverged from store snapshot");
     }
-    retire_parsed_document(parsed);
+    retire(parsed);
 }
 
 /// 🧹️ Bounded retirement for a parse-produced document that belongs to no store.
@@ -480,6 +497,20 @@ where
     drive_retirement(&mut retirement).expect("parsed document retires within its quoted demands");
     assert!(retirement.terminal_is_empty(), "parsed document must reach its terminal-empty shell");
     drop(snapshot);
+}
+
+/// 🧊️ [`retire_parsed_document`] for owners that retire through their own controlled cursors, so a sealed snapshot is never bare-dropped.
+pub fn retire_owned_parsed_document<P, Mutation>(parsed: ParsedDocumentText<P, Mutation>)
+where
+    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    Mutation: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+{
+    let ParsedDocumentText { envelope, snapshot } = parsed;
+    let mut retirement = ArtifactStoreEnvelopeRetirement::new(envelope, Arc::new(semio_os_store_engine_owners::BoundedArtifactRetirementFactory::<P>::new()), Arc::new(semio_os_store_engine_owners::BoundedArtifactRetirementFactory::<Mutation>::new()));
+    drive_retirement(&mut retirement).expect("parsed document retires within its quoted demands");
+    assert!(retirement.terminal_is_empty(), "parsed document must reach its terminal-empty shell");
+    let mut snapshot = semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).unwrap_or_else(|(error, _)| panic!("parsed snapshot refused its controlled retirement: {error}"));
+    drive_retirement(&mut snapshot).expect("parsed snapshot retires within its quoted demands");
 }
 
 /// 🧪️ Retirement authorities for a test document whose snapshot and mutations are plain
@@ -588,6 +619,15 @@ impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRe
 struct RoundTripValueRetirement<T>(Option<T>);
 
 impl<T: Send + Sync + 'static> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
+    fn close_into<'reply>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retirement::__control::OriginalEffectReply<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retirement::__control::OriginalEffectReplyComplete<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        match self.close_step(body, effect) {
+            semio_framework_value::RetainedWorkPoll::Complete(turn) => Ok(reply.complete(turn.result)),
+            semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(ValueError::invariant("plain test retirement never stays pending")),
+        }
+    }
+    fn recover_close_into<'reply>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retirement::__control::OriginalEffectReply<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<semio_framework_value::retirement::__control::OriginalEffectReplyComplete<'reply, RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        self.close_into(body, effect, reply)
+    }
     fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let empty = RetainedCloneProgress::default();
         if self.0.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -596,6 +636,8 @@ impl<T: Send + Sync + 'static> ErasedSnapshotRetirement for RoundTripValueRetire
         drop(self.0.take());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
     })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
+    /// The terminal shell is the plain boxed header of this one-value owner: it carries no extra release or work.
+    fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
     fn terminal_is_empty(&self) -> bool { self.0.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -644,6 +686,23 @@ where
     P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
     Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
 {
+    document_pack_round_trip(store, retire_parsed_document).await
+}
+
+/// 🧊️ [`assert_document_pack_round_trip`] for a sealed snapshot whose last owner must retire through its own controlled cursor.
+pub async fn assert_owned_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
+where
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P> + semio_framework_value::retirement::RetireOwned + Sync,
+{
+    document_pack_round_trip(store, retire_owned_parsed_document).await
+}
+
+async fn document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>, retire: impl Fn(ParsedDocumentText<P, Mutation>))
+where
+    P: ArtifactDsl + ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + semio_os_spr::StoreState,
+    Mutation: PartialEq + semio_os_spr::StoreMutationFor<P>,
+{
     let live = store.snapshot().expect("store snapshot");
     let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
     let parsed_pack: ParsedDocumentText<P, Mutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
@@ -656,8 +715,8 @@ where
     if viewer == (&None, &None) {
         assert_eq!(parsed_pack.snapshot, parsed_text.snapshot, "document-pack path diverged from document-text path");
     }
-    retire_parsed_document(parsed_pack);
-    retire_parsed_document(parsed_text);
+    retire(parsed_pack);
+    retire(parsed_text);
 }
 
 /// ✉️ Asserts that converting an `Edit<Mutation>` into `semio_os_spr::MutationEnvelope`s

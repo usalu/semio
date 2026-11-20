@@ -38,5 +38,80 @@
     "height": 256,
     "shape": "rectangle",
     "badge": true
+  },
+  "projectionFields": [
+    "autoFit",
+    "projection",
+    "zoom",
+    "fov",
+    "eyeX",
+    "eyeY",
+    "eyeZ",
+    "targetX",
+    "targetY",
+    "targetZ",
+    "upX",
+    "upY",
+    "upZ"
+  ],
+  "drawingFields": [
+    "background",
+    "fill",
+    "fillColor",
+    "fillOpacity",
+    "visibleLines",
+    "hiddenLines",
+    "visibleColor",
+    "hiddenColor",
+    "visibleWidth",
+    "hiddenWidth",
+    "lineEasing",
+    "mergeLines"
+  ],
+  "numericLimits": {
+    "zoom": {
+      "allow": [
+        0.1,
+        12.5
+      ],
+      "refuse": [
+        -1,
+        0
+      ]
+    },
+    "fov": {
+      "allow": [
+        0.1,
+        45,
+        179.9
+      ],
+      "refuse": [
+        0,
+        180,
+        181
+      ]
+    },
+    "visibleWidth": {
+      "allow": [
+        0.1,
+        3,
+        64
+      ],
+      "refuse": [
+        0,
+        65
+      ]
+    },
+    "hiddenWidth": {
+      "allow": [
+        0.1,
+        3,
+        64
+      ],
+      "refuse": [
+        0,
+        65
+      ]
+    }
   }
 }

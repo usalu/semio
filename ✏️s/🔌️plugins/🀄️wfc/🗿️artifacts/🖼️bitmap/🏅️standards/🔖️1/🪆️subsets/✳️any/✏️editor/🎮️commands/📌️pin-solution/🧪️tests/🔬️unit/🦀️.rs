@@ -101,17 +101,26 @@ struct PinFixtureRemnant { cursor: BitmapPinCursor, output: Vec<crate::schema::s
 fn retire_pin_fixture(caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture, cursor: BitmapPinCursor, output: Vec<crate::schema::snapshot::BitmapPinnedPixel>, grant: semio_framework_job::RetainedCloneGrant) {
     use semio_plugin::__value::retirement::admit_owned_retirement;
     let mut owner = caller.turn(grant, |cx| {
-        let turn = admit_owned_retirement(PinFixtureRemnant { cursor, output }, cx.retained_grant());
-        cx.consume_fuel(turn.work);
-        let (owner, progress) = turn.result.map_err(|(error, _)| semio_framework_job::OriginalTurnFailure::from(error))?;
+        let mut input = Some(PinFixtureRemnant { cursor, output });
+        let funded = cx.retained_grant();
+        let ran = cx.with_original_effect(funded, |_, effect| admit_owned_retirement(&mut input, effect)).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+        let Some((turn, performed)) = ran else { return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::invariant("pin fixture retirement admission was not funded"), cx)) };
+        cx.consume_work(performed);
+        let admitted = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+        let Some((owner, progress)) = admitted else { return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::invariant("pin fixture retirement admission was refused"), cx)) };
         cx.consume_retained(progress)?;
         Ok(owner)
     }).expect("same original pin source admits retirement");
     for _ in 0..100_000 {
         if owner.terminal_is_empty() { break; }
         caller.turn(grant, |cx| cx.with_original_retirement(|cx| {
-            let demand = owner.next_demand(grant.maximum_copy_bytes)?;
-            semio_framework_job::close_original_retained_step(cx, demand, |remaining| owner.close_step(remaining))
+            let funded = cx.retained_grant();
+            let ran = cx.with_original_effect(funded, |_, effect| owner.close_step(grant.maximum_copy_bytes, effect)).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+            match ran {
+                Some((semio_framework_value::RetainedWorkPoll::Complete(turn), performed)) => { cx.consume_work(performed); semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: turn.result, work: 0 }) }
+                Some((semio_framework_value::RetainedWorkPoll::Pending { .. }, performed)) => { cx.consume_work(performed); Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())) }
+                None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+            }
         })).expect("same original pin source retires every backing");
     }
     assert!(owner.terminal_is_empty());
@@ -152,7 +161,7 @@ fn pin_materialization_is_incremental_atomic_and_cancellable_at_the_schema_limit
             }).expect("one paid bounded pin turn");
             turns += 1;
             if output.is_some() { break; }
-            if !case["complete"].as_bool().unwrap() && cursor.progress().0 > 0 { caller.cancel().cancel(); break; }
+            if !case["complete"].as_bool().unwrap() && cursor.progress().0 > 0 { caller.cancel().cancel_now(); break; }
         }
         assert!(turns > 1);
         assert_eq!(snapshot, before, "no document state changes before the single publication");

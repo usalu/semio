@@ -1,0 +1,5 @@
+# Retained BRep vertex
+
+The registered brep.util.vertex operator now admits the original geometry job. It validates a finite Point, reserves the same persistent-label namespace as the cold constructor, and funds one unpublished native vertex slot. The existing session publication path stages the authority claim and only makes the handle live once its result payload and index are ready. Closing a cancelled job removes its unpublished slot and has the existing staged-claim rollback available if the claim was reached.
+
+The registered Flow fixture drives the operator with one item and one fuel per turn. It checks that the slot never appears under a live handle before completion, cancellation removes the slot, and the published handle reaches WirePreview with the same persistent label as the native vertex. The matching portable Three.js oracle passed both positions with 10 assertions. Rust syntax parsing passed the eight affected Rust sources and the scoped diff passed whitespace validation. The linked Flow fixture remains pending because repo cargo is waiting at its 16 GiB free-space admission with roughly 1.36 GiB available.

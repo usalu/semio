@@ -13,7 +13,7 @@
 
 use crate::editor::pdf17::modes::edit;
 use crate::editor::pdf17::modes::edit::windows::main;
-use crate::editor::page::page_text_edit_mutation;
+use crate::editor::page::page_text_edit_mutations;
 use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
 use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
@@ -117,6 +117,8 @@ impl ArtifactEditor for Pdf17Editor {
     const DIALECT: Dialect = PDF17_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
+    const SINGLE_TURN_NATURAL_DECODE: bool = true;
+
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.7", extension: ".pdf", media_type: "application/pdf", binary: true })
     }
@@ -127,6 +129,17 @@ impl ArtifactEditor for Pdf17Editor {
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
         crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| semio_plugin::MediaError::Payload(semio_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
+    }
+
+    fn build_natural_file_decode_owner(bytes: Vec<u8>, contract: semio_plugin::ToolExecutionContract) -> Result<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>, semio_plugin::MediaError> {
+        crate::standards::v1_7::subsets::base::io::import::build_pdf_natural_decode(bytes, contract)
+    }
+
+    fn admit_natural_file_decode_owner(
+        bytes: &mut Option<Vec<u8>>, contract: semio_plugin::ToolExecutionContract,
+        owner: &mut Option<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>>, context: &mut semio_plugin::StepContext<'_>,
+    ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        crate::standards::v1_7::subsets::base::io::import::admit_pdf_natural_decode(bytes, contract, owner, context)
     }
 
     fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
@@ -184,8 +197,8 @@ impl ArtifactEditor for Pdf17Editor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::SetPage { page, item, revision, text }) => {
-                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
-                Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
+                let artifact_mutations = page_text_edit_mutations(doc.snapshot, *page, *item, revision, text)?;
+                Ok(Emit { artifact_mutations, ..Default::default() })
             }
                         semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::PageEdit { action, payload }) => {
                 crate::editor::page::emit_page_edit(doc.snapshot, action, payload)
@@ -197,7 +210,7 @@ impl ArtifactEditor for Pdf17Editor {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(built_to_component_tree),
-            crate::editor::page::TEXT_LAYER_BODY_KEY => crate::editor::page::render_text_layer(doc.snapshot, view_state.locale).map(built_to_component_tree),
+            crate::editor::page::TEXT_LAYER_BODY_KEY => crate::editor::page::render_text_layer(doc.snapshot, "s.stdio.pdf@1.7/*#editor", view_state.locale).map(built_to_component_tree),
             crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
@@ -225,7 +238,7 @@ impl ArtifactEditor for Pdf17Editor {
             return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);
         }
         if body_key == crate::editor::page::TEXT_LAYER_BODY_KEY {
-            return crate::editor::page::render_text_layer(doc.snapshot, view_state.locale).map(built_to_component_tree);
+            return crate::editor::page::render_text_layer(doc.snapshot, "s.stdio.pdf@1.7/*#editor", view_state.locale).map(built_to_component_tree);
         }
         if body_key == crate::editor::page::INSPECTOR_BODY_KEY {
             let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);
@@ -262,8 +275,8 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     reduce: |command, snapshot| {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::SetPage { page, item, revision, text }) => {
-                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
-                Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
+                let artifact_mutations = page_text_edit_mutations(snapshot, *page, *item, revision, text)?;
+                Ok(Emit { artifact_mutations, ..Default::default() })
             }
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::PageEdit { action, payload }) => {
                 crate::editor::page::emit_page_edit(snapshot, action, payload)

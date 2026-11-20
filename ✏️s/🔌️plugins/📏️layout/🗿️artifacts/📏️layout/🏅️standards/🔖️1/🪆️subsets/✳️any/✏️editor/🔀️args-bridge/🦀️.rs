@@ -124,18 +124,30 @@ fn catalogue_args(action: &str, args: Option<&DslValue>) -> Result<DslValue, Fau
         let mut kind = None;
         let mut artifact_ref = None;
         let mut proxy_data_url = None;
+        let mut source_document_id = None;
+        let mut source_link_id = None;
         for (key, item) in payload {
             let DslValue::String(text) = item else { return Err(invalid()) };
             match key.as_str() {
                 "kind" => kind = Some(catalogue_kind(&text).ok_or_else(invalid)?),
                 "artifactRef" | "artifact_ref" => artifact_ref = Some(text.clone()),
-                "proxyDataUrl" | "proxy_data_url" => proxy_data_url = Some(text.clone()),
+                "proxyDataUrl" | "proxy_data_url" => proxy_data_url = Some(text),
+                "sourceDocumentId" if !text.is_empty() => source_document_id = Some(text),
+                "sourceLinkId" if !text.is_empty() => source_link_id = Some(text),
                 _ => return Err(invalid()),
             }
         }
         let kind = kind.ok_or_else(invalid)?;
-        entries.retain(|(key, _)| !matches!(key.as_str(), "types" | "drag_data"));
+        entries.retain(|(key, _)| !matches!(key.as_str(), "types" | "drag_data" | "source_document_id" | "source_link_id"));
         put(entries, "kind", DslValue::String(kind.into()));
+        match (source_document_id, source_link_id) {
+            (Some(document_id), Some(link_id)) if kind == "image" && artifact_ref.is_none() && proxy_data_url.is_none() => {
+                put(entries, "source_document_id", DslValue::String(document_id));
+                put(entries, "source_link_id", DslValue::String(link_id));
+            }
+            (None, None) => {}
+            _ => return Err(invalid()),
+        }
         if let Some(reference) = artifact_ref {
             put(entries, "artifact_ref", DslValue::String(reference));
         }

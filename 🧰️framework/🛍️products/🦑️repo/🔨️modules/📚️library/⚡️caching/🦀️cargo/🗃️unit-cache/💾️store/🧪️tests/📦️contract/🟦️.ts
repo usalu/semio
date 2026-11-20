@@ -40,12 +40,12 @@ for(const[index,scenario]of [...corpus.scenarios,...corpus.runs].entries()){
   mkdirSync(cache,{recursive:true});const host=join(root,"host"),hostObjects=join(host,"v1","o");process.env.SEMIO_CAS_ROOT=host;
   const removeHost=(digests:string[])=>digests.filter(digest=>{try{rmSync(casObjectPathV1(host,digest),{force:false});return true;}catch{return false;}}).length;
   const listHost=()=>(existsSync(hostObjects)?readdirSync(hostObjects):[]).flatMap(shard=>readdirSync(join(hostObjects,shard)).map(name=>({digest:shard+name,bytes:statSync(join(hostObjects,shard,name)).size})));
-  const fill=(text:string,lane="A")=>text.replaceAll("{laneA}",roots.laneA!).replaceAll("{laneB}",roots.laneB!).replaceAll("{outA}",join(roots.laneA!,"out")).replaceAll("{outB}",join(roots.laneB!,"out")).replaceAll("{lane}",roots["lane"+lane]!).replaceAll("{out}",join(roots["lane"+lane]!,"out"));
+  const fill=(text:string,lane="A")=>text.replaceAll("{laneA}",roots.laneA!).replaceAll("{laneB}",roots.laneB!).replaceAll("{outA}",join(roots.laneA!,"out")).replaceAll("{outB}",join(roots.laneB!,"out")).replaceAll("{lane}",roots["lane"+lane]!).replaceAll("{out}",join(roots["lane"+lane]!,"out")).replaceAll("{outDir}",join(roots["lane"+lane]!,"out-dir"));
   let last:UnitEntryV1|undefined,lastRun:BuildEntryV1|undefined;
   const objectOf=(name:string)=>last!.outputs.find(row=>row.name===name)!.sha256;
   for(const[position,raw]of scenario.steps.entries()){
    const step=raw as any,label=`${scenario.name} #${position} ${step.op}`;
-   const lane=step.lane??"A",laneRoot=roots["lane"+lane]!;
+   const lane=step.lane??"A",laneRoot=roots["lane"+lane]!,callerRoot=step.callerRoot==="run"?join(root,"run"+lane):laneRoot;
    if(step.op==="sleep"){Bun.sleepSync(step.milliseconds);}
    else if(step.op==="mutate"){mkdirSync(dirname(join(laneRoot,step.file)),{recursive:true});writeFileSync(join(laneRoot,step.file),step.content);}
    else if(step.op==="remove"){rmSync(join(laneRoot,step.file));}
@@ -88,7 +88,7 @@ for(const[index,scenario]of [...corpus.scenarios,...corpus.runs].entries()){
      if(spec.symlink!==undefined)symlinkSync(spec.symlink,path);
      else{writeFileSync(path,spec.text!==undefined?fill(spec.text,lane):Buffer.concat([Buffer.from(spec.hex,"hex"),Buffer.from(spec.embeds?fill(spec.embeds,lane):"")]));if(spec.executable)chmodSync(path,0o755);}
     }
-    const entry=publishBuildRunV1(cache,{key:step.key,package:"x",cwd:join(laneRoot,"pkg"),laneRoot,directives:step.directives,environment:step.env,outDir,stdout:fill(step.stdout,lane),stderr:fill(step.stderr,lane),stampDirectory:undefined});
+    const entry=publishBuildRunV1(cache,{key:step.key,package:"x",cwd:join(laneRoot,"pkg"),laneRoot:callerRoot,directives:step.directives,environment:step.env,outDir,stdout:fill(step.stdout,lane),stderr:fill(step.stderr,lane),stampDirectory:undefined});
     expect(entry!==undefined,label).toBe(step.expect.published);
     if(entry){
      lastRun=entry;expect(validator("BuildEntry")(entry),label+" "+JSON.stringify(validator("BuildEntry").errors)).toBe(true);
@@ -99,11 +99,11 @@ for(const[index,scenario]of [...corpus.scenarios,...corpus.runs].entries()){
    }
    else if(step.op==="runLookup"||step.op==="runRestore"){
     if(step.file!==undefined){mkdirSync(dirname(join(laneRoot,step.file)),{recursive:true});writeFileSync(join(laneRoot,step.file),step.content);}
-    const found=lookupBuildRunV1(cache,step.key,{cwd:join(laneRoot,"pkg"),laneRoot,environment:step.env,stampDirectory:undefined});
+    const found=lookupBuildRunV1(cache,step.key,{cwd:join(laneRoot,"pkg"),laneRoot:callerRoot,environment:step.env,stampDirectory:undefined});
     if(step.op==="runLookup")expect(found!==undefined?"hit":"miss",label).toBe(step.expect);
     else{
      expect(found,label).toBeDefined();
-     const outDir=join(laneRoot,"out-dir"),streams=restoreBuildRunV1(cache,found!,{outDir,laneRoot});
+     const outDir=join(laneRoot,"out-dir"),streams=restoreBuildRunV1(cache,found!,{outDir,laneRoot:callerRoot});
      for(const[name,wanted]of Object.entries(step.expect.files as Record<string,any>)){
       const bytes=readFileSync(join(outDir,name));
       if(wanted.text!==undefined)expect(bytes.toString("utf8"),label+" "+name).toBe(fill(wanted.text,lane));else expect(bytes.toString("hex"),label+" "+name).toBe(wanted.hex);

@@ -1,4 +1,9 @@
 {
+  "authorizerManifests": {
+    "pathStem": "workspace/nx/authorizer/source/a-package-with-a-long-name/a-component-with-a-long-name/groups/material/physical/implementation/package-source-",
+    "sourceRows": 1689,
+    "compilerRows": 1854
+  },
   "rows": [
     {
       "path": "node_modules/parser/a.wasm",

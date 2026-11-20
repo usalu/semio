@@ -6,7 +6,7 @@ export { flowBrowserDeliveryV1 } from "../../../../../📦️packages/🟦️typ
 export { runtimeAssetDeliveries } from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 export { repositoryCachePartitionRootDataV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 export { canonicalWasmBuildVitePlugin } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
-export { builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../../♻️activation/🟦️.ts";
+export { builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, playgroundSessionsRootV1, readActivationReceipt } from "../../../♻️activation/🟦️.ts";
 export { buildModePolicy, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 export { viteCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 export { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";

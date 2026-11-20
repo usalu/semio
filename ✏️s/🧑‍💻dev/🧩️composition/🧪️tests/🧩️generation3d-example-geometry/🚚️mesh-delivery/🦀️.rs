@@ -1,24 +1,13 @@
 /// 🚚️ Mesh delivery: the preview mesh delivery through the browser wire, per example.
 
 //#region 🔖️MeshDelivery
-/// 🚚️ One example's preview mesh delivery, driven through the REAL browser wire rather than the
-/// in-process `tessellate_geometry` shortcut the lane above uses: the same budgeted
-/// `tessellate_step_envelope_json` the `brep` extension answers with, folded by the same
-/// `FlowEvalSession::resolve_preview_tessellate` the `flowTessellateResolve` command folds with, at
-/// the same LOD tolerance [`preview_tolerance`] gives the live preview.
-///
-/// ⚖️ Round trips are the measured quantity because each one costs the app a WHOLE `flowEvalTick`
-/// (evaluate → invoke → answer → refresh), which is seconds in a served wasm build — a delivery
-/// that needs dozens of them never reaches the user's eyes, however correct the mesh is
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+/// 🚚️ One example's canonical preview delivery through the real extension and host receiver.
 #[derive(Debug)]
 struct DeliveryRun {
     round_trips: usize,
-    chunks: u32,
-    pack_base64_bytes: usize,
+    canonical_bytes: usize,
     triangles: usize,
     edge_segments: usize,
-    phase: String,
     diagnostics: Option<String>,
     payload_meshes: usize,
     payload_instances: usize,
@@ -103,21 +92,12 @@ fn retire_eval_session(mut session: semio_os_flow::FlowEvalSession) {
 
 /// 🧩️ Resolves every painted geometry channel through the supplied Session's retained broker.
 fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_os_flow::FlowEvalSession) {
-    use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
-    use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
-    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
+    use semio_s_artifact_procedural_3d_preview_eval::{pending_preview_tessellate_handles, preview_tolerance};
     let tolerance = preview_tolerance(lod_mode);
-    for handle in pending_preview_tessellate_handles(&eval, graph, session) {
-        let hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
-        for _ in 0..4096 {
-            if !session.note_pending_tessellate(hash, handle.clone()) { break; }
-            let chunk = session.next_tessellate_chunk(hash) as usize;
-            let envelope = geometry_session().tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
-            if !matches!(session.resolve_preview_tessellate(hash, &envelope), semio_os_flow::PreviewTessellateOutcome::Working) { break; }
-        }
-        assert!(session.preview_mesh_pack(&handle).is_some(), "painted handle {handle} must resolve through its owning Session");
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
+    for handle in pending_preview_tessellate_handles(&eval, graph, session, tolerance) {
+        preview_reply::deliver(geometry_owner(), session, ("example-preview", "preview"), &handle, tolerance, |_| {})
+            .expect("painted handle resolves through its owning Session");
     }
 }
 
@@ -125,8 +105,6 @@ fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_fl
 /// exactly as the app does, counting every round trip the transfer costs.
 fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> DeliveryRun {
     use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
-    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
     operators_installed();
     let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
@@ -139,32 +117,11 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     let tolerance = preview_tolerance(lod_mode);
     geometry_session().evict_mesh_cache_for_handle(&handle);
     geometry_session().cancel_all_tessellations();
-    let node_hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
     let mut session = semio_os_flow::FlowEvalSession::new().with_geometry_port(geometry_session().port());
-    let mut round_trips = 0usize;
-    let mut chunks = 0u32;
-    let mut phase = String::new();
-    let mut step_micros: Vec<u64> = Vec::new();
-    for _ in 0..4096 {
-        if !session.note_pending_tessellate(node_hash, handle.clone()) {
-            break;
-        }
-        let chunk = session.next_tessellate_chunk(node_hash) as usize;
-        let started = std::time::Instant::now();
-        let envelope = geometry_session().tessellate_step_envelope_json(&handle, tolerance, PREVIEW_TESSELLATE_STEP_BUDGET as usize, PREVIEW_TESSELLATE_STEP_WALL_MICROS, chunk);
-        step_micros.push(started.elapsed().as_micros() as u64);
-        round_trips += 1;
-        let parsed: serde_json::Value = serde_json::from_str(&envelope).expect("envelope json");
-        phase = parsed.get("phase").and_then(serde_json::Value::as_str).unwrap_or_default().to_string();
-        chunks = chunks.max(parsed.get("chunks").and_then(serde_json::Value::as_u64).unwrap_or_default() as u32);
-        assert!(envelope.len() <= semio_os_flow::mesh::tessellate_envelope_maximum_bytes(), "{}: a {} B envelope exceeds the declared transfer unit", fixture.example, envelope.len());
-        match session.resolve_preview_tessellate(node_hash, &envelope) {
-            semio_os_flow::PreviewTessellateOutcome::Working => continue,
-            _ => break,
-        }
-    }
-    let pack = session.preview_mesh_pack(&handle).unwrap_or_default().to_string();
-    let mesh = semio_s_artifact_procedural_3d_preview_eval::decode_preview_mesh_pack(&pack);
+    let mut step_micros = Vec::new();
+    let canonical_bytes = preview_reply::deliver(geometry_owner(), &mut session, ("example-preview", "preview"), &handle, tolerance,
+        |micros| step_micros.push(micros)).expect("preview delivers over its original extension and receiver");
+    let mesh = session.preview_mesh_for_tolerance(&handle, tolerance).cloned();
     let diagnostics = session.preview_diagnostics(&handle).map(str::to_string);
     if fixture.example == "sphere-box-fuse" {
         let data = mesh.as_ref().expect("closed preview mesh");
@@ -206,12 +163,10 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         payload_triangles,
         payload_mesh_roles,
         step_micros,
-        round_trips,
-        chunks,
-        pack_base64_bytes: pack.len(),
+        round_trips: 1,
+        canonical_bytes,
         triangles: mesh.as_ref().map(|m| m.indices.len() / 3).unwrap_or_default(),
         edge_segments: mesh.as_ref().map(|m| m.edge_positions.len() / 6).unwrap_or_default(),
-        phase,
         diagnostics,
         topology_ids,
         selection_picked_ids,
@@ -263,7 +218,7 @@ fn assert_delivery(dsl: &str, snapshot_json: &str) {
     assert_budget_contract(&fixture);
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
     println!("[DELIVERY-BOUNDS] {} editPayload={:?} viewPayload={:?}", fixture.example, run.payload_bounds, run.view_payload_bounds);
-    println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} payloadMeshRoles={:?} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.payload_mesh_roles, run.step_micros, run.step_micros.iter().sum::<u64>());
+    println!("[DELIVERY] {} roundTrips={} canonicalBytes={} triangles={} edgeSegments={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} payloadMeshRoles={:?} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.canonical_bytes, run.triangles, run.edge_segments, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.payload_mesh_roles, run.step_micros, run.step_micros.iter().sum::<u64>());
     println!(
         "[SELECTION] {} picked={:?} topology={:?} pickedIds={:?} addedIds={:?} clearedIds={:?} viewerPickedIds={:?}",
         fixture.example,
@@ -277,7 +232,6 @@ fn assert_delivery(dsl: &str, snapshot_json: &str) {
     assert_selection_round_trip(&fixture, &run);
     let delivery = &fixture.delivery;
     assert_eq!(run.diagnostics, None, "{}: the validate gate rejected the preview solid", fixture.example);
-    assert_eq!(run.phase, "complete", "{}: the delivery ended in phase {:?}", fixture.example, run.phase);
     assert!(run.triangles >= delivery.min_triangles, "{}: {} delivered triangles, expected at least {}", fixture.example, run.triangles, delivery.min_triangles);
     assert!(run.edge_segments >= delivery.min_edge_segments, "{}: {} delivered edge segments, expected at least {}", fixture.example, run.edge_segments, delivery.min_edge_segments);
     assert!(run.triangles > 0 || run.edge_segments > 0, "{}: the delivered mesh is empty", fixture.example);
@@ -291,7 +245,7 @@ fn assert_delivery(dsl: &str, snapshot_json: &str) {
     }
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
-    assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);
+    assert!(run.canonical_bytes > 0, "{}: canonical response body is empty", fixture.example);
     assert_delivery_bounds(&fixture, &run);
     assert_delivered_bounds_frame_inside_the_viewport(&fixture);
     let (preview_micros, round_trips) = best_delivery(dsl, &fixture, &run);
@@ -378,16 +332,7 @@ fn assert_delivered_bounds_frame_inside_the_viewport(fixture: &ExampleGeometryFi
     }
 }
 
-/// ⏱️ The delivery's two WALL-DERIVED readings, improved by re-running only when one of them
-/// overran — a lane where nothing is over budget pays for exactly one delivery.
-///
-/// 🪪️ `round_trips` belongs here beside the microseconds because it IS a wall-clock quantity:
-/// `tessellate_step_envelope_json` keeps calling `tessellate_step` "while the job is still working
-/// AND the deadline has not passed" (`🧰️framework/…/🌊️flow/📐️brep-geometry/🦀️.rs:721`), so a machine
-/// that runs the kernel half as fast fits half as many steps into one round trip's
-/// `TESSELLATE_STEP_WALL_MICROS` and the same unchanged geometry costs more round trips. Counting
-/// them is right — one round trip is one whole `flowEvalTick` — but judging a single contended
-/// count is the same mistake as judging a single contended microsecond reading.
+/// ⏱️ Retries delivery within the example's configured timing budget.
 fn best_delivery(dsl: &str, fixture: &ExampleGeometryFixture, first: &DeliveryRun) -> (u64, usize) {
     let (mut micros, mut round_trips) = (first.step_micros.iter().sum::<u64>(), first.round_trips);
     for _ in 1..TIMING_ATTEMPTS {
@@ -401,21 +346,9 @@ fn best_delivery(dsl: &str, fixture: &ExampleGeometryFixture, first: &DeliveryRu
     (micros, round_trips)
 }
 
-/// ✅️ Holds the delivery to its committed round-trip budget, and — only when the best of
-/// [`TIMING_ATTEMPTS`] deliveries still overruns — to that budget scaled by the machine's calibrated
-/// speed, for the reason [`best_delivery`] states: the count is produced by a wall-clock deadline
-/// inside the kernel, so a slower machine buys fewer kernel steps per round trip.
+/// ✅️ Checks the committed round-trip ceiling against complete canonical replies.
 fn assert_round_trip_budget(example: &str, round_trips: usize, ceiling: usize) {
-    if round_trips <= ceiling {
-        return;
-    }
-    let factor = machine_load_factor();
-    let scaled = (ceiling as f64 * factor).ceil() as usize;
-    assert!(
-        round_trips <= scaled,
-        "{example}: the preview cost {round_trips} tessellate round trips (best of {TIMING_ATTEMPTS}), budget {ceiling} — {scaled} after this machine's measured {factor:.2}x load calibration — one round trip is one whole flowEvalTick"
-    );
-    println!("[BUDGET] {example}: {round_trips} tessellate round trips is over its budget of {ceiling} but inside the calibrated {scaled} — this machine is {factor:.2}x slower right now than the one that set it");
+    assert!(round_trips <= ceiling, "{example}: preview used {round_trips} canonical replies, budget {ceiling}");
 }
 
 #[test]

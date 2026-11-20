@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Locator, Page } from "@playwright/test";
-import { readIntroduction, activeOverview, openQuizGrid, boxOf, card, expect, learnerId, primary, screen, swipeTo, test, way } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { arrive, readIntroduction, activeOverview, openQuizGrid, boxOf, card, expect, learnerId, primary, screen, swipeTo, test, way } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 interface Seen {
   readonly device: string;
@@ -75,7 +75,7 @@ for (const seen of vectors.devices) {
     const steps = screen(page, "run").locator("nav button");
     const where = (place: string): string => `${seen.device}, ${place}`;
 
-    await page.goto("/");
+    await arrive({ page });
     await readIntroduction({ page });
     await expectNoSidewaysScroll(page, where("the identity step"));
     await primary(screen(page, "identity")).click();
@@ -98,6 +98,7 @@ for (const seen of vectors.devices) {
     expect((await rem(page.locator(".course-task"))) >= tier("course-classify") ? "panes" : "stacked", where("the pool and the bins, by their room")).toBe(seen.classification);
     await expectNoSidewaysScroll(page, where("a classification"));
 
+    await expect(task.locator('[aria-busy="true"]')).toHaveCount(0);
     const items = await task.locator("[data-course-item]").evaluateAll((elements) => elements.map((element) => (element as HTMLElement).dataset.courseItem ?? ""));
     for (const item of items) await task.locator(`[data-course-item="${item}"] select`).selectOption({ index: 1 });
     const sorted = task.locator('[data-course-drop^="category:"] .course-chip').first();

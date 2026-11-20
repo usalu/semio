@@ -184,8 +184,8 @@ fn a_model_without_parents_writes_no_parents_set() {
 #[test]
 fn a_holder_outside_the_export_a_system_outside_the_library_and_a_code_outside_the_table_are_noted() {
     let mut model = psets();
-    model.classifications.insert("ghost".into(), [("cs-din-276".to_string(), "300".to_string())].into());
-    model.classifications.insert("w-east".into(), [("cs-missing".to_string(), "1".to_string()), ("cs-din-276".to_string(), "999".to_string())].into());
+    model.classifications.cold_insert("ghost".into(), [("cs-din-276".to_string(), "300".to_string())].into());
+    model.classifications.cold_insert("w-east".into(), [("cs-missing".to_string(), "1".to_string()), ("cs-din-276".to_string(), "999".to_string())].into());
     let (document, notes) = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(notes.iter().any(|note| note.starts_with("classification ghost: the holder")), "{notes:?}");
     assert!(notes.iter().any(|note| note.starts_with("classification w-east: the system cs-missing")), "{notes:?}");

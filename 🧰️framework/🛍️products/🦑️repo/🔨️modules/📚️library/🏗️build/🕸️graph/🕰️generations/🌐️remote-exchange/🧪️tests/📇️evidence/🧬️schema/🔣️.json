@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exchanges",
+    "pinDrift"
+  ],
+  "properties": {
+    "exchanges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "language",
+          "producer",
+          "consumer",
+          "fresherPartial"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "pattern": "^(all|[a-f0-9]{64})$"
+          },
+          "language": {
+            "enum": [
+              "en",
+              "de"
+            ]
+          },
+          "producer": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+          },
+          "consumer": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+          },
+          "fresherPartial": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "origin",
+              "olderCompleteMilliseconds",
+              "stale"
+            ],
+            "properties": {
+              "origin": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+              },
+              "olderCompleteMilliseconds": {
+                "type": "integer",
+                "minimum": 60000
+              },
+              "stale": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "pinDrift": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "generation",
+          "stale",
+          "implementation",
+          "scope",
+          "origin",
+          "manifest"
+        ]
+      }
+    }
+  }
+}

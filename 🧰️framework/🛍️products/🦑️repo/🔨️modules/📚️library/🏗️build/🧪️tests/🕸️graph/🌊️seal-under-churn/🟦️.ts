@@ -1,4 +1,6 @@
 /** 🌊️ Contract: a read of a tree that changes while it is read seals in bounded time, with work proportional to the changes, and an owner whose file changed after its observation is stale in the NEXT read only (200 seeded worlds, the real `loadBuildGraphAttemptV1` and the real owner facts memo over a model tree whose files change on a logical clock). */
+import{decodeAuthorityObservationsV1,distinctObservationRowsV1,encodeAuthorityObservationsV1}from"../../../👁️observation/🔢️row-table/🟨️.mjs";
+import sliceReportSchema from "../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json" with {type:"json"};
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
@@ -48,7 +50,7 @@ const world=(seed:number)=>{
   discoverBuildOwnerAdmissionFactsV1:async(owner:{name:string})=>{advance(OBSERVE);observed[owner.name]!++;observation.observedFs.readFileSync(owner.name+"/manifest");observation.observedFs.readFileSync("tooling/shared.ts");return{project:{name:owner.name,targets:{}},files:[],dependencies:[]};},
  };
  const hold=async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{advance(HOLD);const stale=rows.filter(row=>(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0;};
- const bindings={
+ const bindings={distinctObservationRowsV1,decodeAuthorityObservationsV1,encodeAuthorityObservationsV1,sourceAuthoritySchema:authoritySchema,sliceReportSchema,
   importMetaV1:{url:"file:///owned/graph.ts"},graphSelfUrlsV1:()=>[],physicalSourceOriginV1:(url:string)=>new URL(url),observationV1:observation,
   importModuleV1:async(specifier:string)=>specifier==="../📥️inference/🟨️.mjs"?producer:{},
   requireIssuedResourceControlInvocationV1:()=>{},checkResourceLeaseControl:()=>{},checkScriptInvocation:()=>{},
@@ -78,8 +80,8 @@ const world=(seed:number)=>{
   GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,
  };
  bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(new Map(),limits.definitions.Limits.const);
- const run=async()=>{const execute=Function(...Object.keys(bindings),extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
- const receipt=()=>JSON.parse(store.get("/owned/cache/selected/scope.authority.json")!) as{membership:string;observations:Row[];seal:ReturnType<typeof sealVerdictV1>};
+ const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
+ const receipt=()=>{const packed=JSON.parse(store.get("/owned/cache/selected/scope.authority.json")!);return {...packed,observations:decodeAuthorityObservationsV1(packed.observations,authoritySchema.definitions.ObservationKind.enum) as Row[],seal:packed.seal as ReturnType<typeof sealVerdictV1>};};
  return{run,tree,names,counts,inferred,observed,changes,lines,receipt,quiesce:()=>{churning=false;},owners,period,records,clock:()=>clock};
 };
 
@@ -133,7 +135,7 @@ test("the seal verdict and the receipt that carries it satisfy their schemas and
   for(const row of rows){const owner=holderOf(state,row.path);groups.set(owner,[...(groups.get(owner)??[]),JSON.stringify([row.kind,row.path,row.fact])]);}
   const independent=Object.fromEntries([...groups].sort(([left],[right])=>left<right?-1:1).map(([owner,list])=>[owner,createHash("sha256").update(list.sort().join("\n")).digest("hex")]));
   expect(written.seal.owners).toEqual(independent);
-  const full={version:3,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:"c".repeat(64),graph:"d".repeat(64),seal:written.seal,observations:rows.map(row=>({...row,kind:"file"}))};
+  const full={version:authoritySchema.properties.version.const,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:"c".repeat(64),graph:"d".repeat(64),seal:written.seal,observations:JSON.parse(encodeAuthorityObservationsV1(rows,1<<20))};
   expect(receipt(full),JSON.stringify(receipt.errors)).toBe(true);
   expect(receipt({...full,seal:{...written.seal,mode:"later"}})).toBe(false);
  }

@@ -43,8 +43,8 @@ async fn storeys_are_offered_by_building_then_level_and_name_the_building_only_w
     assert!(levels.windows(2).all(|pair| pair[0] <= pair[1]), "by level within the building");
     assert!(single.iter().all(|(id, label)| *label == snapshot.storeys[id].name), "a single building is not named");
     let building = snapshot.buildings.values().next().expect("a building").clone();
-    snapshot.buildings.insert("bldg-annex".into(), Building { name: "Annex".into(), origin: Point2 { x: 20.0, y: 0.0 }, ..building });
-    snapshot.storeys.insert("st-annex".into(), Storey { building: "bldg-annex".into(), name: "Annex ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.buildings.cold_insert("bldg-annex".into(), Building { name: "Annex".into(), origin: Point2 { x: 20.0, y: 0.0 }, ..building });
+    snapshot.storeys.cold_insert("st-annex".into(), Storey { building: "bldg-annex".into(), name: "Annex ground".into(), level: 0, height: 3.0, cut_height: None });
     let several = storey_choices(&snapshot, &BimLabels::NATIVE_EN);
     assert_eq!(several.len(), snapshot.storeys.len() );
     assert!(several.iter().all(|(_, label)| label.ends_with(')')), "{several:?}");

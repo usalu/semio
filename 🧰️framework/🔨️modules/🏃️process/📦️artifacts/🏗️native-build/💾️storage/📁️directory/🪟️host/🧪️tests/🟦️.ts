@@ -6,7 +6,7 @@ import {nativeDirectoryProtocolV1} from "../../📋️contract/🟦️.ts";
 
 const protocol=nativeDirectoryProtocolV1(),windows=protocol.exchange.windows,python=testPythonV1();
 const py=(code:string,...args:string[])=>{if(!python)return undefined;const run=Bun.spawnSync([python,"-I","-c",code,...args],{stdout:"pipe",stderr:"pipe"});if(run.exitCode!==0)throw Error(run.stderr.toString());return run.stdout.toString().trim();};
-const recorder=(script:{handle?:bigint;moveOk?:boolean;flushOk?:boolean;closeOk?:boolean;freeOk?:boolean;free?:number;status?:number;error?:number}={})=>{
+const recorder=(script:{handle?:bigint;moveOk?:boolean;flushOk?:boolean;closeOk?:boolean;freeOk?:boolean;free?:number;total?:number;status?:number;error?:number}={})=>{
  const calls:unknown[][]=[];
  const binding:NativeWindowsBindingV1={
   moveFileEx:(from,to,flags)=>{calls.push(["MoveFileExW",from.toString("hex"),to.toString("hex"),flags]);return script.moveOk===false?0:1;},
@@ -14,7 +14,7 @@ const recorder=(script:{handle?:bigint;moveOk?:boolean;flushOk?:boolean;closeOk?
   flushFileBuffers:handle=>{calls.push(["FlushFileBuffers",handle]);return script.flushOk===false?0:1;},
   closeHandle:handle=>{calls.push(["CloseHandle",handle]);return script.closeOk===false?0:1;},
   setCaseInformation:(handle,status,information,bytes,informationClass)=>{calls.push(["NtSetInformationFile",handle,status.length,information.toString("hex"),bytes,informationClass]);return script.status??0;},
-  getDiskFreeSpaceEx:(path,available)=>{calls.push(["GetDiskFreeSpaceExW",path.toString("hex")]);available.writeBigUInt64LE(BigInt(script.free??0));return script.freeOk===false?0:1;},
+  getDiskFreeSpaceEx:(path,available,total)=>{calls.push(["GetDiskFreeSpaceExW",path.toString("hex"),available.length,total.length]);available.writeBigUInt64LE(BigInt(script.free??0));total.writeBigUInt64LE(BigInt(script.total??0));return script.freeOk===false?0:1;},
   lastError:()=>script.error??0,
   close:()=>{}
  };
@@ -75,19 +75,28 @@ test("setCaseSensitive with false clears the flag, so a directory created below 
 });
 
 test("availableBytes reads the caller's free bytes through GetDiskFreeSpaceExW and openExclusive probes with share mode zero",()=>{
- const wide=(text:string)=>Buffer.from(text+"\0","utf16le").toString("hex"),free=recorder({free:123456789}),host=createNativeWindowsHostPortV1(free.binding);
- expect(host.availableBytes("C:\\cache")).toEqual({ok:true,error:0,bytes:123456789});expect(free.calls).toEqual([["GetDiskFreeSpaceExW",wide("\\\\?\\C:\\cache")]]);
+ const wide=(text:string)=>Buffer.from(text+"\0","utf16le").toString("hex"),free=recorder({free:123456789,total:400000000000}),host=createNativeWindowsHostPortV1(free.binding);
+ expect(host.availableBytes("C:\\cache")).toEqual({ok:true,error:0,bytes:123456789,totalBytes:400000000000});expect(free.calls).toEqual([["GetDiskFreeSpaceExW",wide("\\\\?\\C:\\cache"),8,8]]);
  expect(createNativeWindowsHostPortV1(recorder({freeOk:false,error:3}).binding).availableBytes("C:\\cache")).toEqual({ok:false,error:3,bytes:0});
  const probe=recorder(),open=createNativeWindowsHostPortV1(probe.binding).openExclusive("C:\\cache\\o\\m");
  expect(open).toEqual({ok:true,error:0});expect(probe.calls).toEqual([["CreateFileW",wide("\\\\?\\C:\\cache\\o\\m"),windows.createFile.fileReadAttributes,0,3,windows.createFile.backupSemantics],["CloseHandle",5n]]);
  expect(windows.createFile.fileReadAttributes).toBe(0x80);
+ const denied=recorder({freeOk:false,error:5,free:123456789,total:400000000000});expect(createNativeWindowsHostPortV1(denied.binding).availableBytes("C:\\cache")).toEqual({ok:false,error:5,bytes:0,totalBytes:undefined});
  const busy=recorder({handle:BigInt(windows.invalidHandle),error:32});expect(createNativeWindowsHostPortV1(busy.binding).openExclusive("C:\\cache")).toEqual({ok:false,error:32});
 });
 
 test("every NTSTATUS of the case-sensitivity call maps to its declared refusal",()=>{
  for(const row of fixture.caseStatuses){
   const run=()=>requireNativeWindowsCaseStatusV1({opened:true,error:0,status:row.status});
-  if(row.refusal===null)run();else if(row.refusal==="generic")expect(run,row.id).toThrow("NTSTATUS 0x"+row.status.toString(16));else expect(run,row.id).toThrow((protocol.refusals as Record<string,string>)[row.refusal]!);
+  if(row.refusal===null){run();continue;}
+  let observed:unknown;try{run();}catch(error){observed=error;}
+  expect(observed,row.id).toBeInstanceOf(Error);
+  const failure=observed as Error,status="NTSTATUS 0x"+row.status.toString(16).padStart(8,"0");
+  if(row.refusal==="generic")expect(failure.message,row.id).toContain(status);
+  else{
+   expect(failure.message,row.id).toBe((protocol.refusals as Record<string,string>)[row.refusal]!);
+   expect(failure.cause,row.id).toBe(status);
+  }
  }
  expect(()=>requireNativeWindowsCaseStatusV1({opened:false,error:5,status:0})).toThrow(protocol.refusals.caseAccess);
  expect(()=>requireNativeWindowsCaseStatusV1({opened:false,error:3,status:0})).toThrow("Win32 error 3");
@@ -108,7 +117,7 @@ test.skipIf(process.platform==="win32")("the real FFI binding is refused off Win
 });
 
 test("the Windows census substitute refuses a busy directory with the declared message and passes a free one",async()=>{
- const{requireNativeDirectoryUnusedV1}=await import("../../🟦️.ts"),seen:string[]=[],host={moveFile:()=>({ok:true,error:0}),flushDirectory:()=>({ok:true,error:0}),setCaseSensitive:()=>({opened:true,error:0,status:0}),availableBytes:()=>({ok:true,error:0,bytes:0}),openExclusive:(path:string)=>{seen.push(path);return path.endsWith("busy")?{ok:false,error:32}:path.endsWith("odd")?{ok:false,error:5}:{ok:true,error:0};}};
+ const{requireNativeDirectoryUnusedV1}=await import("../../🟦️.ts"),seen:string[]=[],host={moveFile:()=>({ok:true,error:0}),flushDirectory:()=>({ok:true,error:0}),setCaseSensitive:()=>({opened:true,error:0,status:0}),availableBytes:()=>({ok:true,error:0,bytes:0,totalBytes:undefined}),openExclusive:(path:string)=>{seen.push(path);return path.endsWith("busy")?{ok:false,error:32}:path.endsWith("odd")?{ok:false,error:5}:{ok:true,error:0};}};
  requireNativeDirectoryUnusedV1(["C:\\a","C:\\b"],host);expect(seen).toEqual(["C:\\a","C:\\b"]);
  expect(()=>requireNativeDirectoryUnusedV1(["C:\\a","C:\\busy","C:\\never"],host)).toThrow(protocol.refusals.windowsInUse);expect(seen).not.toContain("C:\\never");
  expect(()=>requireNativeDirectoryUnusedV1(["C:\\odd"],host)).toThrow("Win32 error 5");

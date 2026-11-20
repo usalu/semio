@@ -2,16 +2,8 @@
 
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller, OriginalTurnFailure, RetainedCloneGrant, RetainedCloneStep};
+pub use semio_s_artifact_layout_layout_engine_export_primitives::test_oracle::{layout_export_fixture_caller,append_offset_fixture,append_output_fixture,close_output_fixture,output_append_refused_fixture,LAYOUT_EXPORT_FIXTURE_STOCK,LAYOUT_EXPORT_FIXTURE_TURN,LAYOUT_EXPORT_FIXTURE_TURN_BUDGET};
 use semio_framework_job_worker::{BatchJobSession, OriginalWorkerFixtureCaller, WorkerJobPoll};
-
-/// 🎟️ The one stock every fixture caller of the batch driver is born with.
-pub const LAYOUT_EXPORT_FIXTURE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: usize::MAX / 4, maximum_copy_bytes: usize::MAX / 4, maximum_capacity_bytes: usize::MAX / 4, maximum_release_bytes: usize::MAX / 4, maximum_depth: 64 };
-
-/// 🎟️ The grant of one fixture turn: wide enough for a complete publication frontier, narrow enough to stay bounded.
-pub const LAYOUT_EXPORT_FIXTURE_TURN: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 32 };
-
-/// 🚧️ How many turns this oracle gives one ladder before it calls the ladder broken. A close ladder that answers `Blocked` forever turns `while !terminal_is_empty()` into a livelock that the 30-minute test-binary watchdog turns into a lost binary; bounded here, a stuck ladder is a named failing test.
-pub const LAYOUT_EXPORT_FIXTURE_TURN_BUDGET: usize = 100_000;
 
 /// 🔭️ One owned observation of a borrowed step outcome: the payload bytes are copied out before the loan ends.
 #[derive(Debug, PartialEq, Eq)]
@@ -51,11 +43,6 @@ impl LayoutExportObserved {
     pub fn is_terminal(&self) -> bool {
         matches!(self, Self::Complete { .. } | Self::Cancelled | Self::Fault(_))
     }
-}
-
-/// 🎟️ Admits a fixture caller whose identity is the exact operation and generation a job will run under.
-pub fn layout_export_fixture_caller(operation: Operation, generation: Generation) -> OriginalJobFixtureCaller {
-    OriginalJobFixtureCaller::admit(operation.operation, generation, LAYOUT_EXPORT_FIXTURE_STOCK, semio_framework_job::default_now_us, u64::MAX, u64::MAX)
 }
 
 /// 🏃️ Drives one job to its terminal outcome through an admitted batch session, step by step on one original caller.
@@ -190,26 +177,6 @@ pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -
     let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)?;
     decode_base64(&commit.data).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)
 }
-
-/// 🧪️ Test bytes enter the real output owner using the same admitted original caller as its later close.
-pub fn append_output_fixture(output:&mut ChunkRope,source:&[u8],caller:&mut OriginalJobFixtureCaller){for bytes in source.chunks(OUTPUT_BODY_BYTES){for turn in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if output.has_room(bytes.len()){break;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let result=output.prepare_one(bytes.len(),cx.retained_grant());let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;result?;Ok(())}).expect("original output fixture backing");assert!(turn+1<LAYOUT_EXPORT_FIXTURE_TURN_BUDGET);}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let mut work=OutputWork::new(cx.retained_grant());let result=output.append(bytes,&mut work);cx.consume_retained(work.receipt())?;result.map_err(Fault::from)?;Ok(())}).expect("original output fixture payload");}}
-
-/// ♻️ Tests retire every physical byte page using the exact original writer caller.
-pub fn close_output_fixture(output:&mut ChunkRope,caller:&mut OriginalJobFixtureCaller){for turn in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if output.terminal_is_empty(){return;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let step=output.close_one(cx.retained_grant())?;cx.consume_retained(step.progress())?;Ok(())}).expect("original output fixture close");assert!(turn+1<LAYOUT_EXPORT_FIXTURE_TURN_BUDGET);}panic!("original output fixture close did not finish");}
-
-/// 🚧️ Tests observe the real append refusal without replacing the original caller or output owner.
-pub fn output_append_refused_fixture(output:&mut ChunkRope,source:&[u8],caller:&mut OriginalJobFixtureCaller)->bool{caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let mut work=OutputWork::new(cx.retained_grant());let result=output.append(source,&mut work);cx.consume_retained(work.receipt())?;Ok(result.is_err())}).expect("original output fixture refusal")}
-
-/// 🗃️ Fixture rows move only after the original caller funds their backing and metadata copy.
-pub(super) fn append_plan_fixture<T:semio_framework_value::retirement::RetireOwned>(owner:&mut plan_storage::PlanList<T>,value:T){let operation=Operation::new(semio_framework_job::OperationId(918),semio_framework_job::RevisionId(1),semio_framework_job::Generation(1),0);let mut caller=layout_export_fixture_caller(operation,operation.generation);let mut source=Some(value);for _ in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if source.is_none(){break;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(cx.retained_grant());let result:Result<(),semio_framework_value::ValueError>=(||{if owner.reserve_one_in(&mut work)?{owner.push_in(source.take().unwrap(),&mut work)?;}Ok(())})();cx.consume_retained(work.receipt())?;result?;Ok(())}).unwrap();}assert!(source.is_none());caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);}
-/// ♻️ Fixture teardown pays the same original plan owner and validates terminal emptiness.
-pub(super) fn close_plan_fixture<T:semio_framework_value::retirement::RetireOwned>(owner:&mut plan_storage::PlanList<T>){let operation=Operation::new(semio_framework_job::OperationId(919),semio_framework_job::RevisionId(1),semio_framework_job::Generation(1),0);let mut caller=layout_export_fixture_caller(operation,operation.generation);for _ in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if owner.terminal_is_empty(){break;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let result=owner.close_one(cx.retained_grant());let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;result?;Ok(())}).unwrap();}assert!(owner.terminal_is_empty());caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);}
-
-/// 📍️ Companion laws append a real funded PDF offset without exporting private paint-row types.
-pub fn append_offset_fixture(owner:&mut PlanOffsets,value:u32){append_plan_fixture(owner,value);}
-
-/// ♻️ Native contour fixtures return successful child originals through their paired paid owner.
-pub(super) fn close_original_fixture<T:semio_framework_value::retirement::RetireOwned>(value:T){let operation=Operation::new(semio_framework_job::OperationId(920),semio_framework_job::RevisionId(1),semio_framework_job::Generation(1),0);let mut caller=layout_export_fixture_caller(operation,operation.generation);let mut source=Some(value);let mut retirement=None;for _ in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if source.is_none()&&retirement.is_none(){break;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let result=if retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut retirement,cx.retained_grant())}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut source,&mut retirement,cx.retained_grant())};let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;result?;Ok(())}).unwrap();}assert!(source.is_none()&&retirement.is_none());caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);}
 
 /// 🧾️ Exercises the exact bounded checkpoint writer through the public cold testkit boundary.
 pub fn encode_export_checkpoint_fixture(operation:&Operation,request:&LayoutExportRequest,checkpoint:&LayoutExportCheckpoint)->Result<[u8;MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES],String>{encode_checkpoint(operation,request,checkpoint)}

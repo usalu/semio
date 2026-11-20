@@ -13,8 +13,44 @@ fn numeric_index_rotations_keep_logarithmic_depth_and_reuse_slots(){
 
 #[test]
 fn numeric_scratch_retained_pages_match_shared_admission_and_close_contract(){
- let fixture:serde_json::Value=serde_json::from_str(crate::text("🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/📜️fixtures/🔣️.json")).unwrap();let keys=fixture["retained"]["keys"].as_u64().unwrap() as usize;let mut index=NumericIndex::<usize,usize>::new();
- for key in 0..keys{loop{match index.insert_reserved(key,key){Ok(previous)=>{assert_eq!(previous,None);break;},Err((retained_key,retained_value))=>{assert_eq!((retained_key,retained_value),(key,key));let quote=index.next_allocation_bytes().unwrap();assert!(quote>0);assert!(!index.reserve_one(quote-1).unwrap().progressed);assert!(index.reserve_one(quote).unwrap().progressed);}}}}
- for key in 0..keys{assert_eq!(index.get(&key),Some(&key));}let stored=index.stored_keys();index.reset();for key in (0..keys).rev(){assert_eq!(index.insert_reserved(key,key*2).unwrap(),None);}assert_eq!(index.stored_keys(),stored);
- let mut turns=0;let mut released=0;while !index.terminal_is_empty(){let quote=index.next_close_release_byte_demand().unwrap();let copy=index.next_close_copy_byte_demand();if copy>0{assert!(!index.close_copy_step_funded(1,copy-1,quote).unwrap().progressed);}assert!(!index.close_copy_step_funded(0,copy,quote).unwrap().progressed);if quote>0{assert!(!index.close_copy_step_funded(1,copy,quote-1).unwrap().progressed);}let step=index.close_copy_step_funded(1,copy,quote).unwrap();assert!(step.progressed);released+=step.released_allocation_bytes;turns+=1;assert!(turns<fixture["maximumCloseTurns"].as_u64().unwrap() as usize);}assert!(released>0);assert_eq!(index.stored_keys(),0);
+ use semio_framework_value_persistent::list::{PagedListReleaseOutcome,PagedListReservationOutcome};
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🗂️ordered/🔢️numeric/🧮️scratch/🧪️tests/📜️fixtures/🔣️.json")).unwrap();
+ let keys=fixture["retained"]["keys"].as_u64().unwrap() as usize;
+ let mut index=NumericIndex::<usize,usize>::new();
+ for key in 0..keys{
+  loop{
+   let demand=index.next_reserve_demand().unwrap();
+   if demand.depth==0{break;}
+   let grant=crate::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};
+   let denied=crate::RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant};
+   assert!(matches!(crate::effect_fixture::with_effect(denied,1024,&mut None,|effect|index.reserve_one_funded(effect)).result.unwrap(),PagedListReservationOutcome::Denied));
+   let PagedListReservationOutcome::Ready(step)=crate::effect_fixture::with_effect(grant,1024,&mut None,|effect|index.reserve_one_funded(effect)).result.unwrap()else{panic!("original reservation denied")};
+   assert_eq!(step.retained_capacity_bytes,demand.capacity_bytes);
+  }
+  assert_eq!(index.insert_reserved(key,key),Ok(None));
+ }
+ for key in 0..keys{assert_eq!(index.get(&key),Some(&key));}
+ let stored=index.stored_keys();
+ index.reset();
+ for key in (0..keys).rev(){assert_eq!(index.insert_reserved(key,key*2),Ok(None));}
+ assert_eq!(index.stored_keys(),stored);
+ let mut turns=0;
+ let mut released=0;
+ while !index.terminal_is_empty(){
+  let demand=index.next_close_demand().unwrap();
+  let grant=crate::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:0,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+  let mut close=|grant|crate::effect_fixture::with_effect(grant,1024,&mut None,|effect|index.close_copy_step(effect)).result.unwrap();
+  let denied=crate::RetainedCloneGrant{maximum_items:0,..grant};
+  assert!(matches!(close(denied),PagedListReleaseOutcome::Denied));
+  if demand.copy_bytes>0{assert!(matches!(close(crate::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant}),PagedListReleaseOutcome::Denied));}
+  if demand.release_bytes>0{assert!(matches!(close(crate::RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant}),PagedListReleaseOutcome::Denied));}
+  let PagedListReleaseOutcome::Ready(step)=close(grant)else{panic!("original close denied")};
+  assert!(step.progressed);
+  assert_eq!(step.released_allocation_bytes,demand.release_bytes);
+  released+=step.released_allocation_bytes;
+  turns+=1;
+  assert!(turns<fixture["maximumCloseTurns"].as_u64().unwrap() as usize);
+ }
+ assert!(released>0);
+ assert_eq!(index.stored_keys(),0);
 }

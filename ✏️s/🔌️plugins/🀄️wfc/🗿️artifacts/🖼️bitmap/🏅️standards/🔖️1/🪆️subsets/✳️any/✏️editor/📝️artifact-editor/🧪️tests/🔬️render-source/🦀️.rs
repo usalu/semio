@@ -1,9 +1,11 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
+use semio_plugin::artifact_app_laws::{project_and_retire_fixture_tree, FixtureUiArena};
 
 /// 🎨️ Mounted render authority, rather than command authority, admits a matching preview.
 #[semio_framework_async_macros::async_test]
 async fn a_mounted_render_uses_its_own_source_revision() {
+    let _arena = FixtureUiArena::admit();
     let snapshot = crate::examples::rooms_16::snapshot();
     let history = semio_plugin::HistoryView::empty();
     let context = semio_plugin::AppRenderOperationContext {
@@ -26,9 +28,9 @@ async fn a_mounted_render_uses_its_own_source_revision() {
     };
     let empty = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &BitmapTransient::default(), None).expect("empty output");
     let fresh = BitmapEditor::render_bodies(output::BODY_KEY, &doc, &config, &cache, None).expect("matching output");
-    let empty = serde_json::to_value(&empty.root).expect("empty output tree");
-    assert_ne!(serde_json::to_value(&fresh.root).expect("fresh output tree"), empty);
+    let empty = project_and_retire_fixture_tree(empty).expect("empty output tree");
+    assert_ne!(project_and_retire_fixture_tree(fresh).expect("fresh output tree"), empty);
     let changed = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [2; 32], ..context }, "bitmap", None).await;
     let stale = BitmapEditor::render_bodies(output::BODY_KEY, &changed, &config, &cache, None).expect("stale output");
-    assert_eq!(serde_json::to_value(&stale.root).expect("stale output tree"), empty);
+    assert_eq!(project_and_retire_fixture_tree(stale).expect("stale output tree"), empty);
 }

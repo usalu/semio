@@ -56,11 +56,11 @@ export function enterLaneV1(root:string,id:string,owner?:LaneOwnerV1,crates?:rea
  return Object.freeze({paths,release(){if(released)return;released=true;clearInterval(beat);rmSync(marker,{force:true});touch();}});
 }
 
-/** 🫀️ Whether any marker of the lane belongs to a live, recently heartbeating process. */
+/** 🫀️ Whether any marker of the lane belongs to a live process, however old its heartbeat: a holder whose event loop is busy for long (a provenance snapshot) is still a holder; only a dead one frees the lane. */
 export function laneLiveV1(paths:ReturnType<typeof lanePathsV1>,nowMs:number):boolean{
  let names:string[];try{names=readdirSync(paths.live);}catch{return false;}
  for(const name of names){
-  try{const age=nowMs-statSync(join(paths.live,name)).mtimeMs,pid=Number(name.split("-")[0]);if(age<=policy.gc.liveMarkerStaleMilliseconds&&processAliveV1(pid))return true;if(age>policy.gc.liveMarkerStaleMilliseconds||!processAliveV1(pid))rmSync(join(paths.live,name),{force:true});}catch{}
+  try{if(processAliveV1(Number(name.split("-")[0])))return true;rmSync(join(paths.live,name),{force:true});}catch{}
  }
  return false;
 }

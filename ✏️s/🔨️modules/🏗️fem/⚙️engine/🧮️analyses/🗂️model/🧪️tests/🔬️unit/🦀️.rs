@@ -36,7 +36,8 @@ fn mounted_fixture_coordinates(model: &MountedAnalysisModel, kind: &str) -> (usi
 
 fn close_mounted_fixture(model: &mut MountedAnalysisModel) -> (usize, bool) {
     let mut released = 0;
-    for _ in 0..4_096 {
+    let owners = model.nodes_len() + model.elements_len() + model.supports.values.len();
+    for _ in 0..(4096 + owners * 16) {
         let before = model.physical_backing_bytes().into_iter().sum::<usize>();
         let step = model.close_step(MOUNTED_ANALYSIS_BACKING_BYTES);
         let after = model.physical_backing_bytes().into_iter().sum::<usize>();
@@ -61,7 +62,7 @@ fn assembly_triplet_pages_mounted_model_admits_one_backing_and_preserves_refused
             let mut allocated = 0;
             let mut allocations = 0;
             let mut complete = false;
-            for _ in 0..4_096 {
+            for _ in 0..(4096 + 2 * target) {
                 let before = model.physical_backing_bytes();
                 let coordinates = mounted_fixture_coordinates(&model, kind);
                 let demand = query(&model, target).expect("exact model allocation demand");

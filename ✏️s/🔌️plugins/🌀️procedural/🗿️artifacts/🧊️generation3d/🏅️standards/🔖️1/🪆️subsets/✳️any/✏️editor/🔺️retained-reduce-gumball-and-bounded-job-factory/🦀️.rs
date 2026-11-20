@@ -202,7 +202,11 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             } else {
                 owner.with_session_and_gumball(|session, gumball| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session, gumball))??
             };
-            if owner.gumball.revision() != gestures {
+            let current_tolerance = preview_eval::preview_tolerance(&input.config.lod_mode);
+            let detail_changed = emit.config_mutations.iter().any(|mutation| matches!(mutation,
+                Generation3dConfigMutation::SetLodMode(detail)
+                    if preview_eval::preview_tolerance(&detail.value) != current_tolerance));
+            if detail_changed || owner.gumball.revision() != gestures {
                 owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
             } else {
                 owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit, input.operation.retained)?;

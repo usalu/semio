@@ -3,9 +3,9 @@ use super::*;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,receive_original_retained_work};
 use semio_framework_value::{RetirementPollExit,RetainedWorkPoll,RetainedWorkOutcome};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use crate::retained::{Construction,direct_unit,receive_progress};
+use crate::retained::{direct_unit,receive_progress};
 /// 🧳️ The same original caller and decoder own traversal, visibility and every displaced preview read.
-pub struct OriginalWindowPreviewEpoch{construction:Construction,binding:Option<OriginalSourceBinding>,decoder:(semio_framework_value_native_owned::NativeAllocationIdentity,u64),lifetime:u64,epoch:u64,previous:u64,body:usize,owner:usize,partition:usize,partition_ready:bool,ready:bool,published:bool,closing:bool}
+pub struct OriginalWindowPreviewEpoch{binding:Option<OriginalSourceBinding>,decoder:(semio_framework_value_native_owned::NativeAllocationIdentity,u64),lifetime:u64,epoch:u64,previous:u64,body:usize,owner:usize,partition:usize,partition_ready:bool,ready:bool,published:bool,closing:bool}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,message)}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
@@ -16,7 +16,7 @@ impl OriginalWindowPreviewEpoch{
  pub fn admit(registry:&mut WindowConfigOwnerRegistry,body:usize,cx:&mut StepContext<'_>,output:&mut Option<Self>)->Result<bool,OriginalTurnFailure>{
   if output.is_some()||registry.preview_active_epoch.is_some()||body==0{return Err(invalid("original Window preview requires an empty epoch recipient and an unreserved registry").into())}
   let epoch=registry.preview_visible_epoch.checked_add(1).filter(|epoch|*epoch!=0).ok_or_else(||invalid("original Window preview epoch exhausted"))?;
-  let binding=OriginalSourceBinding::borrow(cx);let d=Self::admission_demands();let decoder=cx.native_receiving_identity().ok_or_else(||invalid("original Window preview requires its actual decoder"))?;direct_unit(cx,d,|_|{registry.preview_active_epoch=Some(epoch);*output=Some(Self{construction:Default::default(),binding:Some(binding),decoder,lifetime:registry.lifetime,epoch,previous:registry.preview_visible_epoch,body,owner:0,partition:0,partition_ready:false,ready:false,published:false,closing:false});Ok(progress(d))})?;Ok(output.is_some())
+  let binding=OriginalSourceBinding::borrow(cx);let d=Self::admission_demands();let decoder=cx.native_receiving_identity().ok_or_else(||invalid("original Window preview requires its actual decoder"))?;direct_unit(cx,d,|_|{registry.preview_active_epoch=Some(epoch);*output=Some(Self{binding:Some(binding),decoder,lifetime:registry.lifetime,epoch,previous:registry.preview_visible_epoch,body,owner:0,partition:0,partition_ready:false,ready:false,published:false,closing:false});Ok(progress(d))})?;Ok(output.is_some())
  }
  /// 🔗️ Validates original authority before an enclosing common publication event.
  pub fn validate_context(&self,registry:&WindowConfigOwnerRegistry,cx:&StepContext<'_>)->Result<(),ValueError>{if !self.binding.is_some_and(|binding|binding.matches(cx))||cx.native_receiving_identity()!=Some(self.decoder)||registry.lifetime!=self.lifetime||registry.preview_active_epoch!=Some(self.epoch)||registry.preview_visible_epoch!=if self.published{self.epoch}else{self.previous}{return Err(invalid("original Window preview changed its caller, decoder or registry epoch"))}Ok(())}
@@ -31,10 +31,10 @@ impl OriginalWindowPreviewEpoch{
  }
  /// 🪜️ Prepares exactly one original partition fragment; earlier previews remain visible.
  pub fn advance(&mut self,registry:&mut WindowConfigOwnerRegistry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate_context(registry,cx)?;if self.closing{return Err(invalid("original Window preview is closing").into())}if self.ready{return Ok(true)}if self.construction.resume(){self.construction.settle(cx)?;return Ok(false)}let d=self.demands(registry)?;
-  let Some(owner)=registry.owners.get_index(self.owner)else{paid(cx,&mut self.construction,d,|_|{self.ready=true;Ok(progress(d))})?;return Ok(self.ready)};
-  if self.partition_ready||self.partition>=owner.preview_partition_count(){paid(cx,&mut self.construction,d,|_|{if self.partition_ready{self.partition+=1;self.partition_ready=false}else{self.owner+=1;self.partition=0}Ok(progress(d))})?;return Ok(false)}
-  receive_progress(cx,d,|native,g|{let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-size_of::<bool>(),..g};let(done,mut p)=registry.owners.get_index_mut(self.owner).unwrap().preview_partition_step(self.partition,self.epoch,false,self.body,child,native)?;self.partition_ready=done;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>();Ok(p)})?;Ok(false)
+  self.validate_context(registry,cx)?;if self.closing{return Err(invalid("original Window preview is closing").into())}if self.ready{return Ok(true)}let d=self.demands(registry)?;
+  let Some(owner)=registry.owners.get_index(self.owner)else{direct_unit(cx,d,|_|{self.ready=true;Ok(progress(d))})?;return Ok(self.ready)};
+  if self.partition_ready||self.partition>=owner.preview_partition_count(){direct_unit(cx,d,|_|{if self.partition_ready{self.partition+=1;self.partition_ready=false}else{self.owner+=1;self.partition=0}Ok(progress(d))})?;return Ok(false)}
+  receive_progress(cx,d,|native,g,units|{let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-size_of::<bool>(),..g};let(done,mut p)=registry.owners.get_index_mut(self.owner).unwrap().preview_partition_step(self.partition,self.epoch,false,self.body,child,native,units)?;if done{self.partition_ready=true;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>()}Ok(p)})?;Ok(false)
  }
  /// ✅️ All declared partitions now hold their complete private candidate or explicit cleared preview.
  pub fn ready(&self)->bool{self.ready&&!self.closing}
@@ -53,7 +53,7 @@ impl OriginalWindowPreviewEpoch{
  }
  /// ♻️ Cancelled callers keep their original native closure authority until every private read returns.
  pub fn close_step(&mut self,registry:&mut WindowConfigOwnerRegistry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.terminal_is_empty(){return Ok(true)}self.validate_context(registry,cx)?;if !self.construction.close(cx)?{return Ok(false)}let d=self.close_demands(registry)?;
+  if self.terminal_is_empty(){return Ok(true)}self.validate_context(registry,cx)?;let d=self.close_demands(registry)?;
   if !self.closing{close_paid(cx,d,|_|{self.closing=true;self.owner=0;self.partition=0;self.partition_ready=false;Ok(progress(d))})?;return Ok(false)}
   let Some(owner)=registry.owners.get_index(self.owner)else{close_paid(cx,d,|_|{registry.preview_active_epoch=None;self.binding=None;Ok(progress(d))})?;return Ok(self.terminal_is_empty())};
   if self.partition_ready||self.partition>=owner.preview_partition_count(){close_paid(cx,d,|_|{if self.partition_ready{self.partition+=1;self.partition_ready=false}else{self.owner+=1;self.partition=0}Ok(progress(d))})?;return Ok(false)}
@@ -61,7 +61,7 @@ impl OriginalWindowPreviewEpoch{
   let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};let(partition,epoch,published,body)=(self.partition,self.epoch,self.published,self.body);let owner=registry.owners.get_index_mut(self.owner).unwrap();let mut ready=false;
   let Some((polled,performed))=cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|native|{
    let child=RetainedCloneGrant{maximum_copy_bytes:effect.grant().maximum_copy_bytes-size_of::<bool>(),..effect.grant()};
-   let result=effect.reborrow(child,effect.maximum_work_units()).and_then(|mut child|owner.preview_epoch_close_step(partition,epoch,published,body,&mut child,native)).map(|(done,mut p)|{ready=done;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>();RetainedCloneStep::Progress(p)});
+   let result=effect.reborrow(child,effect.maximum_work_units()).and_then(|mut child|owner.preview_epoch_close_step(partition,epoch,published,body,&mut child,native)).map(|(done,mut p)|{if done{ready=true;p.copied_items=p.copied_items.max(1);p.copied_bytes+=size_of::<bool>()}RetainedCloneStep::Progress(p)});
    Ok::<_,ValueError>(RetirementPollExit::settle(effect,result.map_err(RetirementPollExit::from)))
   }))?else{return Ok(false)};
   let turn=match polled?{RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},RetainedWorkPoll::Complete(turn)=>turn};
@@ -70,9 +70,8 @@ impl OriginalWindowPreviewEpoch{
   Ok(false)
  }
  /// 🧺️ The original registry reservation and every retained private source have closed.
- pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.construction.terminal_is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.binding.is_none()}
 }
-fn paid(cx:&mut StepContext<'_>,construction:&mut Construction,d:RetirementDemand,run:impl FnOnce(RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{construction.run_unit(cx,d,|grant,_|run(grant).map(|p|((),p)))?;Ok(())}
 fn close_paid(cx:&mut StepContext<'_>,d:RetirementDemand,run:impl FnOnce(RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>)->Result<(),OriginalTurnFailure>{semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=run(effect.grant()).map(RetainedCloneStep::Progress).map_err(semio_framework_value::RetirementPollExit::from);semio_framework_value::RetirementPollExit::settle(effect,result)}).map(|_|())}
 impl Drop for OriginalWindowPreviewEpoch{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Window preview epoch requires paid source closure")}}
 

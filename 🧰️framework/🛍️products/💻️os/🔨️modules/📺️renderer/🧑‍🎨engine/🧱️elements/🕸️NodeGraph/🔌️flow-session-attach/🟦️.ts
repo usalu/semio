@@ -15,6 +15,7 @@ import {
   observeFlowTask,
   readObservedFlowTask,
   refitFlowCameraIfContentLeftView,
+  setFlowSessionHover,
   syncFlowCanvasTheme,
   syncFlowSessionFromScene
 } from "../🔄️flow-session-sync/🟦️.ts";
@@ -38,7 +39,8 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
       focus: (nodeId) => {
         const session = sessionRef.current;
         if (!session) return;
-        observeFlowTask(session, "setHover", session.setHover(nodeId));
+        interactionLedger.beginLocalHover();
+        setFlowSessionHover(session, { hoveredId: nodeId ?? undefined });
         emitInteractionState();
       },
       select: (nodeIds) => {
@@ -51,7 +53,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
     return () => {
       keyboardPort.current = null;
     };
-  }, [emitInteractionState, keyboardPort]);
+  }, [emitInteractionState, interactionLedger, keyboardPort]);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +62,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
         void session.free();
         return;
       }
+      interactionLedger.retire();
       sessionRef.current = session;
       setSessionReady(true);
     }, (error: unknown) => {
@@ -72,7 +75,12 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
       }
       sessionRef.current = null;
     };
-  }, [surfaceId]);
+  }, [interactionLedger, surfaceId]);
+
+  const applySceneHover = useCallback((session: NonNullable<typeof sessionRef.current>) => {
+    const mark = interactionLedger.reconcileSceneHover(sceneRef.current.hover);
+    if (mark) setFlowSessionHover(session, mark);
+  }, [interactionLedger, sceneRef]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -92,6 +100,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
         attachedSurfaceRef.current = typeof handle?.surface === "number" && typeof handle.surfaceGeneration === "number" ? { surface: handle.surface, surfaceGeneration: handle.surfaceGeneration, presentsOnGpu: handle.presentsOnGpu === true } : null;
         surfaceReadyRef.current = true;
         syncFlowSessionFromScene(session, sceneRef.current, appCatalogueRef.current);
+        applySceneHover(session);
         const opening = isGestureActive() ? { camera: { x: 0, y: 0, zoom: 1 }, fitted: false } : applyFlowStartupCamera(session, sceneRef.current, Math.round(rect.width), Math.round(rect.height));
         framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
         if (opening.fitted) {
@@ -126,7 +135,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
       attachment.cancel();
       cleanupAttached?.();
     };
-  }, [sessionReady, isGestureActive, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
+  }, [applySceneHover, sessionReady, isGestureActive, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
 
   /** 🎬️ Hands the session the current scene and re-frames only when the graph left the view. Held as a
    * callback rather than inlined in the effect so a gesture that deferred a scene can run the very
@@ -137,7 +146,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
     const scene = sceneRef.current;
     syncFlowSessionFromScene(session, scene, appCatalogueRef.current);
     if (scene.selection) interactionLedger.adoptSelection({ nodeIds: scene.selection });
-    if (scene.hover !== undefined) interactionLedger.adoptHover({ hoveredId: scene.hover?.nodeId ?? undefined, portId: scene.hover?.portId ?? undefined });
+    applySceneHover(session);
     const signature = nodeGraphContentSignature(scene.nodes);
     const rect = containerRef.current?.getBoundingClientRect();
     if (rect && surfaceReadyRef.current && framedGraphSignatureRef.current !== null && framedGraphSignatureRef.current !== signature) {
@@ -157,7 +166,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
     renderFlow();
     paintOverlays();
     schedulerRef.current?.invalidate();
-  }, [interactionLedger, isGestureActive, paintOverlays, renderFlow, surfaceId]);
+  }, [applySceneHover, interactionLedger, isGestureActive, paintOverlays, renderFlow, surfaceId]);
   applyDeferredSceneRef.current = applyScene;
 
   useEffect(() => {

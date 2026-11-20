@@ -145,7 +145,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 📸️ One paid strong alias retains the exact original presentation for an owned command context.
     pub fn capture_original_view_for(&self,window_id:Option<&str>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,ValueError>{
         let Some(index)=self.window_index(window_id).or_else(||self.primary_index())else{return Ok(None)};let entry=&self.entries[index];
-        let Some((captured,performed))=cx.with_original_effect(cx.retained_grant(),|_,effect|entry.native.capture(entry.identity,entry.slot.state,effect))?else{return Ok(None)};
+        let Some((captured,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|entry.native.capture(entry.identity,entry.slot.state,effect))?else{return Ok(None)};
         if let Some((capture,receipt))=captured?{cx.consume_retained(receipt)?;cx.consume_fuel(1u64.max(u64::try_from(performed).unwrap_or(u64::MAX)));Ok(Some(capture))}else{Ok(None)}
     }
 

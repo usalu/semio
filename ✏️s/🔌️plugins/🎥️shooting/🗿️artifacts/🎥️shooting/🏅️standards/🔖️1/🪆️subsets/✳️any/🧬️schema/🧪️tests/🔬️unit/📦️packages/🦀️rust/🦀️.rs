@@ -7,8 +7,8 @@ extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
-pub use semio_s_artifact_shooting_shooting_inferences::{SHOOTING_DOCUMENT_SCHEMA, ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, active_asset, active_shot, empty_shooting_snapshot, is_transparent_shooting_background, shooting_asset_scale};
-pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShotPatch};
+pub use semio_s_artifact_shooting_shooting_inferences::{shooting_resolve_shot_camera, SHOOTING_DOCUMENT_SCHEMA, ShootingAsset, ShootingCamera, ShootingDrawing, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, active_asset, active_shot, empty_shooting_snapshot, is_transparent_shooting_background, shooting_asset_scale};
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssetPatch, ShootingAssigned, ShootingDrawingPatch, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShotPatch};
 
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;

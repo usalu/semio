@@ -431,7 +431,7 @@ fn pointer_down_selects_the_hit_object_and_clears_a_miss() {
     assert_eq!(value["domainId"], "objects");
     assert_eq!(value["merge"], "replace");
     assert!(value["targets"].as_str().expect("targets").contains(&text.id));
-    let miss = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(1.0))]))).expect("miss");
+    let miss = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(-1.0)), ("y", semio_framework_value::DslValue::float(1.0))]))).expect("miss");
     let cleared = emit_page_edit(&snapshot, &miss.action, &miss.payload).expect("clear");
     let semio_plugin::Effect::DispatchAction { action, args: cleared_args, .. } = &cleared.effects[0] else { panic!("clear effect") };
     assert_eq!(action, "clearSelection");
@@ -633,7 +633,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     let mut empty_shown = Vec::new();
     collect_inspector(&empty, &mut empty_names, &mut empty_shown);
     assert!(empty_names.iter().any(|name| name == "set-page-size"));
-    assert!(empty_names.iter().any(|name| name == "set-info"));
+    assert!(empty_names.iter().any(|name| name == "set-info-field"));
     assert!(empty_shown.iter().any(|value| value == "200"));
     apply(&mut edited, edit_from_action("set-page-size", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("field", semio_framework_value::DslValue::String("width".into())), ("height", semio_framework_value::DslValue::float(300.0)), ("value", semio_framework_value::DslValue::float(180.0))]))).unwrap());
     assert!((edited.pages[0].width() - 180.0).abs() < 0.01);
@@ -654,3 +654,886 @@ fn collect_inspector(node: &semio_ui_contract::BuiltNode, names: &mut Vec<String
         collect_inspector(child, names, shown);
     }
 }
+
+#[test]
+fn canvas_vector_paint_matches_document_paths() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️vector-paint.json")).unwrap();
+    let stream = fixture["content"].as_array().unwrap().iter().map(|line| line.as_str().unwrap()).collect::<Vec<_>>().join("\n");
+    let pdf = pdf_with_content(fixture["width"].as_u64().unwrap(), fixture["height"].as_u64().unwrap(), &stream);
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let layers = &scene.as_array().unwrap()[1..];
+    let paths = fixture["paths"].as_array().unwrap();
+    assert_eq!(layers.len(), paths.len(), "an unpainted path is not an editor object");
+    for (layer, path) in layers.iter().zip(paths) {
+        let mode = path["type"].as_str().unwrap();
+        assert_eq!(!layer["fill"].is_null(), mode.contains('f'));
+        assert_eq!(!layer["stroke"].is_null(), mode.contains('s'));
+        assert_eq!(layer["fillRule"], path["rule"]);
+        let segments = layer["segments"].as_array().unwrap();
+        if let Some(expected) = path["curves"].as_array() {
+            let curves = segments.iter().filter(|segment| segment["kind"] == "cubic").collect::<Vec<_>>();
+            assert_eq!(curves.len(), expected.len());
+            for (segment, curve) in curves.into_iter().zip(expected) {
+                for key in ["ctrl1", "ctrl2", "to"] {
+                    assert_layer_point(layer, &segment[key], &curve[key]);
+                }
+            }
+        } else {
+            assert_layer_point(layer, &segments[0]["to"], &path["start"]);
+            assert_layer_point(layer, &segments[2]["to"], &path["end"]);
+        }
+    }
+    let scale = layers[0]["transform"][0].as_f64().unwrap();
+    let width = layers[0]["stroke"]["width"].as_f64().unwrap();
+    assert_eq!(Some(width * scale), fixture["scaledStrokeWidth"].as_f64());
+    for probe in fixture["pixels"].as_array().unwrap() {
+        let x = probe["at"][0].as_f64().unwrap() + 0.5;
+        let y = probe["at"][1].as_f64().unwrap() + 0.5;
+        assert_eq!(hit_test(&snapshot, x, y).is_some(), probe["rgb"] != serde_json::json!([255, 255, 255]));
+    }
+    assert_eq!(hit_test(&snapshot, 40.0, 120.0).as_deref(), layers[0]["id"].as_str());
+    assert_eq!(hit_test(&snapshot, 210.0, 115.0), None);
+}
+
+
+fn assert_layer_point(layer: &Value, actual: &Value, expected: &Value) {
+    if layer["transform"].is_null() {
+        assert_point(actual, expected);
+    } else {
+        let [a, b, c, d, e, f]: [f64; 6] = serde_json::from_value(layer["transform"].clone()).unwrap();
+        let x = actual[0].as_f64().unwrap();
+        let y = actual[1].as_f64().unwrap();
+        assert_point(&serde_json::json!([a * x + c * y + e, b * x + d * y + f]), expected);
+    }
+}
+fn assert_point(actual: &Value, expected: &Value) {
+    for axis in 0..2 {
+        assert_eq!(actual[axis].as_f64(), expected[axis].as_f64());
+    }
+}
+
+#[test]
+fn inspector_can_clear_title_without_removing_author() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
+    let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📄️natural-file-edit/🔣️.json")).unwrap();
+    let case = &fixture["metadataEdit"];
+    let mut snapshot = sample();
+    snapshot.info.title = Some(case["before"]["title"].as_str().unwrap().into());
+    snapshot.info.author = Some(case["before"]["author"].as_str().unwrap().into());
+    let commit = args(vec![
+        ("object", semio_framework_value::DslValue::String("title".into())),
+        ("field", semio_framework_value::DslValue::String("text".into())),
+        ("value", semio_framework_value::DslValue::String(case["value"].as_str().unwrap().into())),
+    ]);
+    apply(&mut snapshot, edit_from_action("set-info-field", Some(&commit)).unwrap());
+    let bytes = crate::standards::v1_7::subsets::base::io::export::encode_pdf(&snapshot).unwrap();
+    let parsed: Value = serde_json::from_str(&oracle::project_pdf_1_7(&bytes).unwrap().to_string()).unwrap();
+    assert_eq!(parsed["metadata"], case["after"]);
+}
+
+#[test]
+fn canvas_repaints_image_samples_after_replacement() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️image-paint.json")).unwrap();
+    let bytes = |state: &str| serde_json::from_value::<Vec<u8>>(fixture[state].clone()).unwrap();
+    let width_points = fixture["page"][0].as_f64().unwrap();
+    let height_points = fixture["page"][1].as_f64().unwrap();
+    let mut page = PdfPage::new(width_points, height_points);
+    page.content = vec![
+        PdfOp::Save,
+        PdfOp::Transform { matrix: serde_json::from_value(fixture["matrix"].clone()).unwrap() },
+        PdfOp::PaintXObject { name: "Im1".into() },
+        PdfOp::Restore,
+    ];
+    let mut snapshot = PdfSnapshot::default();
+    snapshot.pages.push(page);
+    let width = fixture["width"].as_u64().unwrap() as u32;
+    let height = fixture["height"].as_u64().unwrap() as u32;
+    snapshot.images.push(PdfImage::rgb8("Im1", width, height, bytes("before")));
+    let object = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).unwrap();
+    let verify = |snapshot: &PdfSnapshot, expected: Vec<u8>| {
+        let canvas: Value = serde_json::from_str(&canvas_layers(snapshot, Some(&object.id))).unwrap();
+        let image = canvas.as_array().unwrap().iter().find(|layer| layer["id"] == object.id.as_str()).unwrap();
+        assert_eq!(image["kind"], "image");
+        for (index, key) in ["x", "y", "width", "height"].into_iter().enumerate() {
+            assert_eq!(image[key].as_f64(), fixture["bounds"][index].as_f64());
+        }
+        let data = image["image"]["src"].as_str().unwrap().strip_prefix("data:image/png;base64,").unwrap();
+        let png = semio_framework_io_base64::base64_standard_decode(data).unwrap();
+        let raster = semio_framework_pixels::decode_png(&png).unwrap();
+        assert_eq!((raster.width, raster.height), (width, height));
+        assert_eq!(raster.pixels, expected);
+        render_window(snapshot).expect("image scene admission");
+    };
+    let opaque_rgba = |state| bytes(state).chunks_exact(3).flat_map(|rgb| [rgb[0], rgb[1], rgb[2], 255]).collect();
+    verify(&snapshot, opaque_rgba("before"));
+    let set_mask = |snapshot: &mut PdfSnapshot, kind: &str, value: String| {
+        apply(snapshot, edit_from_action("set-image-mask", Some(&args(vec![
+            ("object", semio_framework_value::DslValue::String("Im1".into())),
+            ("text", semio_framework_value::DslValue::String(kind.into())),
+            ("extra", semio_framework_value::DslValue::String(value)),
+        ]))).unwrap());
+    };
+    let mut masked = snapshot.clone();
+    masked.images[0].decode = serde_json::from_value(fixture["decode"].clone()).unwrap();
+    let key = fixture["mask"].as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(",");
+    set_mask(&mut masked, "colorKey", key);
+    verify(&masked, bytes("maskedRgba"));
+    for case in fixture["referencedMasks"].as_array().unwrap() {
+        let mut masked = snapshot.clone();
+        if let Some(source) = case.get("source") {
+            masked.images[0] = PdfImage::rgb8("Im1", width, height, serde_json::from_value(source.clone()).unwrap());
+        }
+        let kind = case["kind"].as_str().unwrap();
+        let number = |key: &str| case[key].as_u64().unwrap().try_into().unwrap();
+        let mut mask = PdfImage::samples("Mask1", number("width"), number("height"), PdfColorSpace::DeviceGray,
+            number("bits"), serde_json::from_value(case["samples"].clone()).unwrap());
+        mask.image_mask = kind == "stencil";
+        if mask.image_mask {
+            mask.color_space = None;
+        }
+        mask.decode = serde_json::from_value(case["decode"].clone()).unwrap();
+        mask.matte = serde_json::from_value(case["matte"].clone()).unwrap();
+        masked.images.push(mask);
+        if case["overridesColorKey"] == true {
+            set_mask(&mut masked, "colorKey", "0,255,0,255,0,255".into());
+        }
+        set_mask(&mut masked, kind, "Mask1".into());
+        verify(&masked, serde_json::from_value(case["expectedRgba"].clone()).unwrap());
+    }
+    let samples = bytes("after").iter().map(u8::to_string).collect::<Vec<_>>().join(",");
+    apply(&mut snapshot, edit_from_action("set-image", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(object.id.clone())),
+        ("width", semio_framework_value::DslValue::float(f64::from(width))),
+        ("height", semio_framework_value::DslValue::float(f64::from(height))),
+        ("text", semio_framework_value::DslValue::String(samples)),
+    ]))).unwrap());
+    verify(&snapshot, opaque_rgba("after"));
+}
+
+#[test]
+fn canvas_text_uses_a_catalog_face_and_pdf_baseline() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️text-paint.json")).unwrap();
+    let mut page = PdfPage::new(fixture["page"][0].as_f64().unwrap(), fixture["page"][1].as_f64().unwrap());
+    let expected = &fixture["expected"];
+    page.content = vec![
+        PdfOp::Transform { matrix: serde_json::from_value(fixture["ctm"].clone()).unwrap() },
+        PdfOp::BeginText,
+        PdfOp::SetFont { name: "F1".into(), size: expected["text"]["size"].as_f64().unwrap() },
+        PdfOp::SetTextMatrix { matrix: serde_json::from_value(fixture["textMatrix"].clone()).unwrap() },
+        PdfOp::SetTextRise { rise: fixture["textRise"].as_f64().unwrap() },
+        PdfOp::ShowText { text: PdfTextString::text(expected["text"]["content"].as_str().unwrap()) },
+        PdfOp::EndText,
+    ];
+    let mut snapshot = PdfSnapshot::default();
+    snapshot.pages.push(page);
+    snapshot.fonts.push(PdfFont::standard("F1", fixture["baseFont"].as_str().unwrap()));
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let layer = &scene[1];
+    assert_eq!(layer["text"], expected["text"]);
+    for key in ["x", "y"] {
+        assert_eq!(layer[key].as_f64(), expected[key].as_f64());
+    }
+    for axis in 0..6 {
+        assert_eq!(layer["transform"][axis].as_f64(), expected["transform"][axis].as_f64());
+    }
+    render_window(&snapshot).expect("catalog text scene admission");
+}
+
+#[test]
+fn moving_resizing_and_deleting_an_annotation_preserves_its_note_until_removal() {
+    use semio_framework_test_fixtures::fixture_bytes;
+    use crate::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf};
+    let before = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/📍️remove-annotation/⬅️before.pdf");
+    let after = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/📍️remove-annotation/➡️after.pdf");
+    let mut doc = decode_pdf(before).unwrap();
+    let original = doc.pages[0].annotations[0].clone();
+    for (action, rect) in [("move", [5.0, 8.0, 25.0, 28.0]), ("resize", [5.0, 8.0, 65.0, 78.0])] {
+        let edit = edit_from_action(action, Some(&args(vec![
+            ("page", semio_framework_value::DslValue::float(0.0)),
+            ("object", semio_framework_value::DslValue::String("p0:a0".into())),
+            ("x", semio_framework_value::DslValue::float(5.0)), ("y", semio_framework_value::DslValue::float(8.0)),
+            ("width", semio_framework_value::DslValue::float(60.0)), ("height", semio_framework_value::DslValue::float(70.0)),
+        ]))).unwrap();
+        apply(&mut doc, edit);
+        assert_eq!(doc.pages[0].annotations[0].rect, rect);
+        assert_eq!(doc.pages[0].annotations[0].contents, original.contents);
+    }
+    let removal = edit_from_action("delete", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String("p0:a0".into())),
+    ]))).unwrap();
+    apply(&mut doc, removal);
+    let reopened = decode_pdf(&encode_pdf(&doc).unwrap()).unwrap();
+    let independent = decode_pdf(after).unwrap();
+    assert!(independent.pages[0].annotations.is_empty());
+    assert_eq!(reopened.pages[0].annotations, independent.pages[0].annotations);
+    assert_eq!(reopened.pages[1].text(), independent.pages[1].text());
+}
+
+#[test]
+fn canvas_paints_nested_form_content_at_its_pdf_placement() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️form-paint.json")).unwrap();
+    let forms = fixture["forms"].as_array().unwrap();
+    let stream = |dictionary: &str, data: &str| format!("<< {dictionary} /Length {} >>\nstream\n{data}\nendstream", data.len());
+    let coordinates = |values: &Value| values.as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ");
+    let mut pdf_objects = vec![
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {}] /Contents 4 0 R /Resources << /XObject << /Outer 5 0 R >> >> >>", coordinates(&fixture["page"])),
+        stream("", fixture["pageContent"].as_str().unwrap()),
+    ];
+    for form in forms {
+        let resources = if form["use"].is_null() { "" } else { "/Resources << /XObject << /Inner 6 0 R >> >>" };
+        let dictionary = format!("/Type /XObject /Subtype /Form /BBox [{}] /Matrix [{}] {resources}", coordinates(&form["bbox"]), coordinates(&form["matrix"]));
+        pdf_objects.push(stream(&dictionary, form["content"].as_str().unwrap()));
+    }
+    let bytes = pdf_objects_bytes(&pdf_objects);
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes.as_bytes()).unwrap();
+    let selectable = objects(&snapshot);
+    assert_eq!(selectable.len(), 1);
+    assert_eq!(selectable[0].kind, ObjectKind::Form);
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    assert_eq!(scene.as_array().unwrap().len(), 3);
+    for (layer, form) in scene.as_array().unwrap()[1..].iter().zip(forms) {
+        assert!(layer["id"].as_str().unwrap().starts_with(&selectable[0].id));
+        for axis in 0..4 {
+            assert_eq!(layer["clipRect"][axis].as_f64(), form["clip"][axis].as_f64());
+        }
+        assert_point(&layer["segments"][0]["to"], &form["start"]);
+        assert_point(&layer["segments"][2]["to"], &form["end"]);
+    }
+    assert_eq!(hit_test(&snapshot, 42.0, 60.0).as_deref(), Some(selectable[0].id.as_str()));
+    assert_eq!(hit_test(&snapshot, 65.0, 60.0), None);
+}
+
+fn pdf_objects_bytes(objects: &[String]) -> String {
+    let mut pdf = "%PDF-1.7\n".to_string();
+    let mut xref = String::new();
+    for (index, object) in objects.iter().enumerate() {
+        xref.push_str(&format!("{:010} 00000 n \n", pdf.len()));
+        pdf.push_str(&format!("{} 0 obj\n{object}\nendobj\n", index + 1));
+    }
+    let size = objects.len() + 1;
+    pdf.push_str(&format!("xref\n0 {size}\n0000000000 65535 f \n{xref}trailer\n<< /Root 1 0 R /Size {size} >>\nstartxref\n{}\n%%EOF\n", pdf.len()));
+    pdf
+}
+
+#[test]
+fn canvas_viewport_crops_page_paint_and_hit_testing() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️page-viewport.json")).unwrap();
+    let content = fixture["rectangles"].as_array().unwrap().iter().flat_map(|rectangle| {
+        let [r, g, b]: [f64; 3] = serde_json::from_value(rectangle["rgb"].clone()).unwrap();
+        let [x, y, width, height]: [f64; 4] = serde_json::from_value(rectangle["bounds"].clone()).unwrap();
+        [PdfOp::SetFillRgb { r, g, b }, PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill]
+    }).collect::<Vec<_>>();
+    let point = |value: &Value| -> [f64; 2] { serde_json::from_value(value.clone()).unwrap() };
+
+    for case in fixture["cases"].as_array().unwrap() {
+        for crop in ["cropBox", "overrunCropBox"] {
+            let mut snapshot = PdfSnapshot::default();
+            snapshot.pages.push(PdfPage {
+                media_box: serde_json::from_value(fixture["mediaBox"].clone()).unwrap(),
+                crop_box: Some(serde_json::from_value(fixture[crop].clone()).unwrap()),
+                user_unit: fixture["userUnit"].as_f64(),
+                rotate: case["rotate"].as_i64().unwrap() as i32,
+                content: content.clone(),
+                ..Default::default()
+            });
+            snapshot.pages.push(PdfPage::new(100.0, 100.0));
+
+            let id = objects(&snapshot)[0].id.clone();
+            let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, Some(&id))).unwrap();
+            let [width, height] = point(&case["size"]);
+            assert_point(&scene[0]["segments"][2]["to"], &case["size"]);
+            assert_layer_point(&scene[2], &scene[2]["segments"][0]["to"], &case["firstPoint"]);
+            for layer in &scene.as_array().unwrap()[2..] {
+                let clip: [f64; 4] = serde_json::from_value(layer["clipRect"].clone()).unwrap();
+                assert_eq!(clip, [0.0, 0.0, width, height]);
+            }
+            let [x, y] = point(&case["ink"]);
+            assert_eq!(hit_test(&snapshot, x, y).as_deref(), Some(id.as_str()));
+            let [x, y] = point(&case["blank"]);
+            assert_eq!(hit_test(&snapshot, x, y), None);
+            if case["rotate"] == 90 {
+                assert_eq!(scene[1]["segments"][0]["to"][1].as_f64(), fixture["secondPageTop"].as_f64());
+                for probe in ["outsideFirstPage", "onSecondPage"] {
+                    let [x, y] = point(&fixture[probe]);
+                    assert_eq!(hit_test(&snapshot, x, y), None);
+                }
+                let [x, y, width, height]: [f64; 4] = serde_json::from_value(fixture["secondPageInk"].clone()).unwrap();
+                snapshot.pages[1].content = vec![PdfOp::Rectangle { x, y, width, height }, PdfOp::Fill];
+                let [x, y] = point(&fixture["onSecondPage"]);
+                assert_eq!(hit_test(&snapshot, x, y).as_deref(), Some("p1:v0"));
+                let [x, y] = point(&fixture["pageGap"]);
+                assert_eq!(hit_test(&snapshot, x, y), None);
+            }
+        }
+    }
+}
+
+#[test]
+fn deleting_a_path_retains_the_graphics_state_used_by_the_next_path() {
+    let case: Value = serde_json::from_str(include_str!("🧪️delete-path.json")).unwrap();
+    let pdf = pdf_with_content(50, 50, case["before"].as_str().unwrap());
+    let mut snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
+    let removal = edit_from_action("delete", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String("p0:v0".into())),
+    ]))).unwrap();
+    apply(&mut snapshot, removal);
+    let remaining = objects(&snapshot);
+    assert_eq!(remaining.len(), 1);
+    assert_eq!(remaining[0].fill, [1.0, 0.0, 0.0]);
+    assert_eq!(remaining[0].x, 20.0);
+    let bytes = crate::standards::v1_7::subsets::base::io::export::encode_pdf(&snapshot).unwrap();
+    let expected = pdf_with_content(50, 50, case["after"].as_str().unwrap());
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7;
+    let projection = |bytes: &[u8]| -> Value { serde_json::from_str(&project_pdf_1_7(bytes).unwrap().to_string()).unwrap() };
+    assert_eq!(projection(&bytes)["pages"], projection(expected.as_bytes())["pages"]);
+
+}
+
+fn pdf_with_content(width: u64, height: u64, stream: &str) -> String {
+    let objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R >>", width, height),
+        format!("<< /Length {} >>\nstream\n{stream}\nendstream", stream.len()),
+    ];
+    let pdf = pdf_objects_bytes(&objects);
+    pdf
+}
+
+#[test]
+fn canvas_projects_axial_shading_with_unextended_ends() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️shading-paint.json")).unwrap();
+    let words = |key: &str| fixture[key].as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ");
+    let bbox = words("bbox");
+    let coords = words("coords");
+    let extend = words("extend");
+    let colors = fixture["colors"].as_array().unwrap().iter().map(|color| color.as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>();
+    let objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {}] /Contents 4 0 R /Resources << /Shading << /Sh1 5 0 R >> >> >>", words("page")),
+        "<< /Length 7 >>\nstream\n/Sh1 sh\nendstream".into(),
+        format!("<< /ShadingType 2 /ColorSpace /DeviceRGB /BBox [{bbox}] /Coords [{coords}] /Extend [{extend}] /Function << /FunctionType 2 /Domain [0 1] /C0 [{}] /C1 [{}] /N 1 >> >>", colors[0], colors[1]),
+    ];
+    let bytes = pdf_objects_bytes(&objects);
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let layer = &scene[1];
+    let fill = &layer["fill"];
+    assert_eq!(fill["kind"], "linearGradient");
+    for (index, axis) in ["x1", "y1", "x2", "y2"].into_iter().enumerate() {
+        assert_eq!(fill[axis].as_f64(), fixture["coords"][index].as_f64());
+    }
+    let stops = fill["stops"].as_array().unwrap();
+    assert_eq!(stops.len(), 2);
+    for channel in 0..3 {
+        assert_eq!(stops[0]["color"][channel].as_f64(), fixture["colors"][0][channel].as_f64());
+        assert_eq!(stops[1]["color"][channel].as_f64(), fixture["colors"][1][channel].as_f64());
+    }
+    for axis in 0..6 {
+        assert_eq!(layer["transform"][axis].as_f64(), fixture["transform"][axis].as_f64());
+    }
+    let vertices = layer["segments"].as_array().unwrap().iter().filter_map(|segment| {
+        Some([segment["to"][0].as_f64()?, segment["to"][1].as_f64()?])
+    }).collect::<Vec<_>>();
+    let expected = &fixture["expectedRect"];
+    assert_eq!(vertices.len(), 4);
+    assert!(vertices.iter().all(|point| (0..2).all(|axis| {
+        [axis, axis + 2].into_iter().any(|bound| (point[axis] - expected[bound].as_f64().unwrap()).abs() < 1e-8)
+    })));
+}
+
+#[test]
+fn restyling_one_path_preserves_its_neighbors() {
+    let case: Value = serde_json::from_str(include_str!("🧪️edit-paint.json")).unwrap();
+    let pdf = pdf_with_content(50, 50, case["before"].as_str().unwrap());
+    let mut doc = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
+    let original = objects(&doc);
+    let target = &original[1].id;
+    let edit = edit_from_action("set-fill", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(target.clone())),
+        ("red", semio_framework_value::DslValue::float(0.0)), ("green", semio_framework_value::DslValue::float(1.0)),
+        ("blue", semio_framework_value::DslValue::float(0.0)),
+    ]))).unwrap();
+    apply(&mut doc, edit);
+    let edited = objects(&doc);
+    assert_eq!(edited[0].fill, original[0].fill);
+    assert_eq!(edited[1].fill, [0.0, 1.0, 0.0]);
+    assert_eq!(edited[2].fill, original[2].fill);
+    let bytes = crate::standards::v1_7::subsets::base::io::export::encode_pdf(&doc).unwrap();
+    let expected = pdf_with_content(50, 50, case["after"].as_str().unwrap());
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7;
+    let projection = |bytes: &[u8]| -> Value { serde_json::from_str(&project_pdf_1_7(bytes).unwrap().to_string()).unwrap() };
+    assert_eq!(projection(&bytes)["pages"], projection(expected.as_bytes())["pages"]);
+    assert_eq!(&edited[1].id, target, "editing paint preserves the inspector selection");
+    let selected = target.clone();
+    let stroke = edit_from_action("set-stroke", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(selected)),
+        ("red", semio_framework_value::DslValue::float(0.0)), ("green", semio_framework_value::DslValue::float(0.0)),
+        ("blue", semio_framework_value::DslValue::float(1.0)), ("width", semio_framework_value::DslValue::float(3.0)),
+    ]))).unwrap();
+    apply(&mut doc, stroke);
+    let painted = objects(&doc);
+    assert_eq!(painted[1].stroke, [0.0, 0.0, 1.0]);
+    assert_eq!(painted[1].line_width, 3.0);
+    assert_eq!(painted[2].stroke, original[2].stroke);
+    assert_eq!(painted[2].line_width, original[2].line_width);
+
+}
+
+#[test]
+fn canvas_clips_a_skewed_pdf_form_to_its_transformed_corners() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️oriented-form-clip.json")).unwrap();
+    let words = |key: &str| fixture[key].as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ");
+    let content = fixture["formContent"].as_str().unwrap();
+    let objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>".to_string(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {}] /Contents 4 0 R /Resources << /XObject << /Form 5 0 R >> >> >>", words("page")),
+        "<< /Length 8 >>\nstream\n/Form Do\nendstream".into(),
+        format!("<< /Type /XObject /Subtype /Form /BBox [{}] /Matrix [{}] /Length {} >>\nstream\n{content}\nendstream", words("bbox"), words("matrix"), content.len()),
+    ];
+    let bytes = pdf_objects_bytes(&objects);
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    assert_eq!(scene[1]["clipPolygons"].as_array().unwrap().len(), 1);
+    for point in 0..4 {
+        assert_point(&scene[1]["clipPolygons"][0][point], &fixture["polygon"][point]);
+    }
+    for probe in fixture["probes"].as_array().unwrap() {
+        let x = probe["at"][0].as_f64().unwrap() + 0.5;
+        let y = probe["at"][1].as_f64().unwrap() + 0.5;
+        assert_eq!(hit_test(&snapshot, x, y).is_some(), probe["rgb"][1] == 0);
+    }
+}
+
+#[test]
+fn resizing_a_transformed_curve_moves_its_control_points() {
+    let case: Value = serde_json::from_str(include_str!("🧪️resize-curve.json")).unwrap();
+    let file = |stream: &Value| pdf_with_content(240, 240, stream.as_str().unwrap());
+    let open = |stream: &Value| crate::standards::v1_7::subsets::base::io::import::decode_pdf(file(stream).as_bytes()).unwrap();
+    let mut doc = open(&case["before"]);
+    let original = objects(&doc);
+    let edit = edit_from_action("resize", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
+        ("x", semio_framework_value::DslValue::float(30.0)), ("y", semio_framework_value::DslValue::float(40.0)),
+        ("width", semio_framework_value::DslValue::float(80.0)), ("height", semio_framework_value::DslValue::float(20.0)),
+    ]))).unwrap();
+    apply(&mut doc, edit);
+    assert_eq!(canvas_layers(&doc, None), canvas_layers(&open(&case["after"]), None));
+}
+
+#[test]
+fn moving_one_image_preserves_another_painted_in_the_same_transform() {
+    let mut doc = sample();
+    let case: Value = serde_json::from_str(include_str!("🧪️image-move.json")).unwrap();
+    let matrix: [f64; 6] = serde_json::from_value(case["ctm"].clone()).unwrap();
+    doc.pages[0].content = vec![
+        PdfOp::Transform { matrix },
+        PdfOp::PaintXObject { name: "Im1".into() },
+        PdfOp::PaintXObject { name: "Im1".into() },
+    ];
+    let images = objects(&doc);
+    let edit = edit_from_action("move", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(images[0].id.clone())),
+        ("x", semio_framework_value::DslValue::float(case["target"][0].as_f64().unwrap())),
+        ("y", semio_framework_value::DslValue::float(case["target"][1].as_f64().unwrap())),
+    ]))).unwrap();
+    apply(&mut doc, edit);
+    let result = objects(&doc);
+    assert_eq!([result[0].x, result[0].y], [70.0, 90.0]);
+    assert_eq!(result[1].ctm, matrix);
+    assert_eq!(result[0].id, images[0].id);
+}
+
+#[test]
+fn font_edits_preserve_following_text_and_existing_resources() {
+    let case: Value = serde_json::from_str(include_str!("🧪️font-edit.json")).unwrap();
+    let mut doc = sample();
+    let occupied = case["occupied"].as_str().unwrap();
+    doc.fonts.push(PdfFont::standard(occupied, case["occupiedFont"].as_str().unwrap()));
+    let content = &mut doc.pages[0].content;
+    content.insert(content.len() - 1, PdfOp::ShowText { text: PdfTextString::text("Following") });
+    let following = objects(&doc).into_iter().find(|object| object.text == "Following").unwrap();
+    let selected = objects(&doc).into_iter().find(|object| object.kind == ObjectKind::Text).unwrap();
+    let edit = edit_from_action("set-font", Some(&args(vec![
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("object", semio_framework_value::DslValue::String(selected.id)),
+        ("text", semio_framework_value::DslValue::String(case["replacement"].as_str().unwrap().into())),
+    ]))).unwrap();
+    apply(&mut doc, edit);
+    let after = objects(&doc).into_iter().find(|object| object.text == "Following").unwrap();
+    assert!((following.x - after.x).abs() < 0.001 && (following.y - after.y).abs() < 0.001);
+    let fonts: Vec<_> = objects(&doc).into_iter().filter(|o| o.kind == ObjectKind::Text)
+        .map(|o| doc.fonts.iter().find(|f| f.id == o.font).unwrap().base_font()).collect();
+    assert_eq!(serde_json::json!(fonts), case["expected"]);
+    assert_eq!(doc.fonts.iter().find(|f| f.id == occupied).unwrap().base_font(), case["occupiedFont"].as_str().unwrap());
+}
+
+#[test]
+fn moving_a_show_operator_preserves_the_following_text_position() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️move-text-run.json")).unwrap();
+    let mut doc = sample();
+    doc.pages[0].content = vec![
+        PdfOp::BeginText,
+        PdfOp::SetFont { name: "F1".into(), size: 10.0 },
+        PdfOp::MoveText { tx: 20.0, ty: 100.0 },
+        PdfOp::ShowText { text: PdfTextString::text("A") },
+        PdfOp::ShowText { text: PdfTextString::text("B") },
+        PdfOp::EndText,
+    ];
+    let original = objects(&doc);
+    assert!((original[1].x - fixture["followingX"].as_f64().unwrap()).abs() < 1e-5);
+    let mut deleted = doc.clone();
+    apply(&mut deleted, edit_from_action("delete", Some(&args(vec![
+        ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
+        ("page", semio_framework_value::DslValue::float(0.0)),
+    ]))).unwrap());
+    let remaining = objects(&deleted);
+    assert_eq!(remaining.len(), 1);
+    assert_eq!(remaining[0].text, "B");
+    assert!((remaining[0].x - original[1].x).abs() < 1e-5);
+    let mut resized = doc.clone();
+    let target = &fixture["resize"];
+    apply(&mut resized, edit_from_action("resize", Some(&args(vec![
+        ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("x", semio_framework_value::DslValue::float(target["x"].as_f64().unwrap())),
+        ("y", semio_framework_value::DslValue::float(target["y"].as_f64().unwrap())),
+        ("width", semio_framework_value::DslValue::float(target["width"].as_f64().unwrap())),
+        ("height", semio_framework_value::DslValue::float(target["height"].as_f64().unwrap())),
+    ]))).unwrap());
+    let result = objects(&resized);
+    for (actual, key) in [(result[0].x, "x"), (result[0].y, "y"), (result[0].width, "width"), (result[0].height, "height")] {
+        assert!((actual - target[key].as_f64().unwrap()).abs() < 1e-5);
+    }
+    assert!((result[1].x - original[1].x).abs() < 1e-5);
+    assert_eq!(result[1].y, original[1].y);
+    let x = original[0].x + fixture["offset"][0].as_f64().unwrap();
+    let y = original[0].y + fixture["offset"][1].as_f64().unwrap();
+    apply(&mut doc, edit_from_action("move", Some(&args(vec![
+        ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
+        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("x", semio_framework_value::DslValue::float(x)), ("y", semio_framework_value::DslValue::float(y)),
+    ]))).unwrap());
+    let moved = objects(&doc);
+    assert_eq!(moved.len(), 2);
+    assert_eq!((moved[0].x, moved[0].y), (x, y));
+    assert!((moved[1].x - original[1].x).abs() < 1e-7);
+    assert_eq!(moved[1].y, original[1].y);
+    for snapshot in [&doc, &resized, &deleted] {
+        use crate::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf};
+        use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7;
+        let bytes = encode_pdf(snapshot).unwrap();
+        project_pdf_1_7(&bytes).expect("lopdf accepts the edited text document");
+        let saved = objects(&decode_pdf(&bytes).unwrap());
+        let expected = objects(snapshot);
+        assert_eq!(saved.len(), expected.len());
+        for (actual, expected) in saved.iter().zip(expected) {
+            assert_eq!(actual.text, expected.text);
+            for (a, b) in [(actual.x, expected.x), (actual.y, expected.y), (actual.width, expected.width), (actual.height, expected.height)] {
+                assert!((a - b).abs() < 1e-4);
+            }
+        }
+    }
+}
+
+#[test]
+fn text_render_modes_select_fill_stroke_and_invisible_text() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️text-rendering.json")).unwrap();
+    let mut doc = sample();
+    let mut ops = vec![PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 }];
+    for mode in fixture["modes"].as_array().unwrap() {
+        let value = mode["value"].as_u64().unwrap() as u32;
+        ops.extend([PdfOp::SetTextRenderingMode { mode: value }, PdfOp::ShowText { text: PdfTextString::text(value.to_string()) }]);
+    }
+    ops.push(PdfOp::EndText);
+    doc.pages[0].content = ops;
+    let scene: Value = serde_json::from_str(&canvas_layers(&doc, None)).unwrap();
+    assert_eq!(objects(&doc).len(), 8);
+    for mode in fixture["modes"].as_array().unwrap() {
+        let layer = scene.as_array().unwrap().iter().find(|layer| layer["text"]["content"].as_str() == Some(mode["label"].as_str().unwrap()));
+        if mode["fill"] == false && mode["stroke"] == false {
+            assert!(layer.is_none());
+        } else {
+            let layer = layer.unwrap();
+            assert_eq!(layer.get("fill").is_some(), mode["fill"].as_bool().unwrap());
+            assert_eq!(layer.get("stroke").is_some(), mode["stroke"].as_bool().unwrap());
+        }
+    }
+}
+
+#[test]
+fn skewed_image_pointer_hits_follow_its_painted_quadrilateral() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️oriented-form-clip.json")).unwrap();
+    let mut page = PdfPage::new(100.0, 100.0);
+    page.content = vec![PdfOp::Transform { matrix: [20.0, 10.0, 8.0, 16.0, 20.0, 20.0] }, PdfOp::PaintXObject { name: "Im1".into() }];
+    let mut snapshot = PdfSnapshot::default();
+    snapshot.pages.push(page);
+    snapshot.images.push(PdfImage::rgb8("Im1", 1, 1, vec![255, 0, 0]));
+    for probe in fixture["probes"].as_array().unwrap() {
+        let x = probe["at"][0].as_f64().unwrap() + 0.5;
+        let y = probe["at"][1].as_f64().unwrap() + 0.5;
+        assert_eq!(hit_test(&snapshot, x, y).is_some(), probe["rgb"][1] == 0);
+    }
+}
+
+#[test]
+fn blank_second_page_selects_its_own_inspector_and_rotation() {
+    let mut snapshot = sample();
+    snapshot.info.subject = Some("Subject of the PDF".into());
+    snapshot.pages.truncate(1);
+    snapshot.pages.push(PdfPage::new(140.0, 190.0));
+    let edit = edit_from_action("canvasPointerDown", Some(&args(vec![("x", semio_framework_value::DslValue::float(10.0)), ("y", semio_framework_value::DslValue::float(336.0))]))).unwrap();
+    let result = emit_page_edit(&snapshot, &edit.action, &edit.payload).unwrap();
+    let semio_plugin::Effect::DispatchAction { args: Some(selection), .. } = &result.effects[0] else { panic!("page selection") };
+    let value = serde_json::Value::from(selection.clone());
+    assert!(value["targets"].as_str().unwrap().contains("p1:paper"));
+    let inspector = render_inspector(&snapshot, Some("p1:paper"), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), Locale::En).unwrap();
+    let mut shown = Vec::new();
+    let mut bindings = Vec::new();
+    collect_inspector(&inspector, &mut bindings, &mut shown);
+    assert!(shown.iter().any(|value| value == "140"));
+    assert!(shown.iter().any(|value| value == "Subject of the PDF"));
+    for name in ["insert-page", "move-page", "remove-page"] { assert!(bindings.iter().any(|value| value == name)); }
+    let edit = edit_from_action("set-page-rotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(90.0))]))).unwrap();
+    apply(&mut snapshot, edit);
+    assert_eq!(snapshot.pages[1].rotate, 90);
+    assert_eq!(snapshot.pages[0].rotate, 0);
+}
+
+#[test]
+fn replacing_a_text_run_keeps_the_following_run_at_its_original_baseline() {
+    let mut doc = sample();
+    doc.pages[0].content = vec![
+        PdfOp::BeginText, PdfOp::SetFont { name: "F1".into(), size: 12.0 },
+        PdfOp::MoveText { tx: 20.0, ty: 100.0 },
+        PdfOp::ShowText { text: PdfTextString::text("A") }, PdfOp::ShowText { text: PdfTextString::text("B") }, PdfOp::EndText,
+    ];
+    let original = objects(&doc);
+    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(original[0].id.clone())), ("text", semio_framework_value::DslValue::String("Longer replacement".into()))]))).unwrap();
+    apply(&mut doc, edit);
+    let edited = objects(&doc);
+    assert_eq!(edited[0].text, "Longer replacement");
+    assert!((edited[1].x - original[1].x).abs() < 0.001);
+    assert!((edited[1].y - original[1].y).abs() < 0.001);
+}
+
+#[test]
+fn compound_pdf_clips_preserve_fill_rule_order_and_hit_testing() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️path-clips.json")).unwrap();
+    let mut page = PdfPage::new(fixture["width"].as_f64().unwrap(), fixture["height"].as_f64().unwrap());
+    page.content = fixture["ops"].as_array().unwrap().iter().map(|op| {
+        let num = |index: usize| op[index].as_f64().unwrap();
+        match op[0].as_str().unwrap() {
+            "q" => PdfOp::Save,
+            "Q" => PdfOp::Restore,
+            "n" => PdfOp::EndPath,
+            "W" => PdfOp::Clip,
+            "W*" => PdfOp::ClipEvenOdd,
+            "f" => PdfOp::Fill,
+            "h" => PdfOp::ClosePath,
+            "m" => PdfOp::MoveTo { x: num(1), y: num(2) },
+            "l" => PdfOp::LineTo { x: num(1), y: num(2) },
+            "c" => PdfOp::CurveTo { x1: num(1), y1: num(2), x2: num(3), y2: num(4), x3: num(5), y3: num(6) },
+            "re" => PdfOp::Rectangle { x: num(1), y: num(2), width: num(3), height: num(4) },
+            "rg" => PdfOp::SetFillRgb { r: num(1), g: num(2), b: num(3) },
+            unexpected => panic!("unknown clip fixture operator {unexpected}"),
+        }
+    }).collect();
+    let mut snapshot = PdfSnapshot::default();
+    snapshot.pages.push(page);
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let expected = fixture["layers"].as_array().unwrap();
+    let scene = &scene.as_array().unwrap()[1..];
+    assert_eq!(scene.len(), expected.len());
+    for (actual, expected) in scene.iter().zip(expected) {
+        for key in ["segments", "fill", "fillRule", "clipPaths", "clipPolygons"] {
+            assert_eq!(actual[key], expected[key], "clip fixture {key}");
+        }
+    }
+    for probe in fixture["probes"].as_array().unwrap() {
+        let id = probe["object"].as_u64().map(|ordinal| format!("p0:v{ordinal}"));
+        assert_eq!(hit_test(&snapshot, probe["at"][0].as_f64().unwrap() + 0.5, probe["at"][1].as_f64().unwrap() + 0.5), id);
+    }
+}
+
+#[path = "📝️native-page-edit/🦀️.rs"]
+mod native_page_edit;
+
+#[test]
+fn authored_strokes_round_trip_from_pdf_to_scene_and_selection() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️stroke-style.json")).unwrap();
+    let pdf = pdf_with_content(fixture["width"].as_u64().unwrap(), fixture["height"].as_u64().unwrap(), fixture["ops"].as_str().unwrap());
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let layers = &scene.as_array().unwrap()[1..];
+    let reference = fixture["layers"].as_array().unwrap();
+    assert_eq!(layers.len(), reference.len());
+    for (actual, expected) in layers.iter().zip(reference) {
+        assert_eq!(actual["stroke"]["cap"], expected["stroke"]["cap"]);
+        assert_eq!(actual["stroke"]["join"], expected["stroke"]["join"]);
+        let numbers = |values: &Value| values.as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect::<Vec<_>>();
+        for key in ["width", "dashOffset", "miterLimit"] {
+            assert_eq!(actual["stroke"][key].as_f64(), expected["stroke"][key].as_f64());
+        }
+        for key in ["dash", "color"] {
+            assert_eq!(numbers(&actual["stroke"][key]), numbers(&expected["stroke"][key]));
+        }
+        assert_eq!(numbers(&actual["transform"]), numbers(&expected["transform"]));
+        for (actual, expected) in actual["segments"].as_array().unwrap().iter().zip(expected["segments"].as_array().unwrap()) {
+            assert_eq!(actual["kind"], expected["kind"]);
+            if expected["kind"] != "close" { assert_point(&actual["to"], &expected["to"]); }
+        }
+    }
+    for probe in fixture["probes"].as_array().unwrap() {
+        let expected = probe["object"].as_u64().map(|ordinal| format!("p0:v{ordinal}"));
+        let x = probe["at"][0].as_f64().unwrap() + 0.5;
+        let y = probe["at"][1].as_f64().unwrap() + 0.5;
+        assert_eq!(hit_test(&snapshot, x, y), expected, "{probe}");
+    }
+}
+
+#[test]
+fn canvas_paints_selected_annotation_appearance_at_the_authored_rect() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️annotation-appearance.json")).unwrap();
+    let words = |key: &str| fixture[key].as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ");
+    let stream = |key: &str| {
+        let content = fixture[key].as_str().unwrap();
+        format!("<< /Type /XObject /Subtype /Form /BBox [{}] /Matrix [{}] /Length {} >>\nstream\n{content}\nendstream", words("bbox"), words("matrix"), content.len())
+    };
+    let appearance = format!("<< /Type /Annot /Subtype /Stamp /Rect [{}] /AP << /N << /On 5 0 R /Off 6 0 R >> >> /AS /{} >>", words("rect"), fixture["state"].as_str().unwrap());
+    let pdf = pdf_objects_bytes(&[
+        "<< /Type /Catalog /Pages 2 0 R >>".into(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {}] /Annots [4 0 R] >>", words("page")),
+        appearance,
+        stream("selected"),
+        stream("unselected"),
+    ]);
+    let mut snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    assert_eq!(scene.as_array().unwrap().len(), 2);
+    assert!(scene[1]["id"].as_str().unwrap().starts_with("p0:a0/"));
+    assert_eq!(scene[1]["fill"]["color"], serde_json::json!([1.0, 0.0, 0.0, 1.0]));
+    assert_point(&scene[1]["segments"][0]["to"], &fixture["start"]);
+    assert_point(&scene[1]["segments"][2]["to"], &fixture["end"]);
+    for axis in 0..4 { assert_eq!(scene[1]["clipRect"][axis].as_f64(), fixture["clip"][axis].as_f64()); }
+    assert_eq!(hit_test(&snapshot, 100.0, 80.0).as_deref(), Some("p0:a0"));
+    snapshot.pages[0].annotations[0].flags |= 32;
+    let hidden: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    assert_eq!(hidden.as_array().unwrap().len(), 1);
+    assert_eq!(hit_test(&snapshot, 100.0, 80.0), None);
+}
+
+#[test]
+fn canvas_paints_authored_type3_glyphs_and_pdf_text_adjustments() {
+    let fixture: Value = serde_json::from_str(include_str!("🧪️type3-paint.json")).unwrap();
+    let words = |entry: &Value| entry.as_array().unwrap().iter().map(Value::to_string).collect::<Vec<_>>().join(" ");
+    let stream = |body: &str| format!("<< /Length {} >>\nstream\n{body}\nendstream", body.len());
+    let font = &fixture["type3"];
+    let mut rows = vec![
+        "<< /Type /Catalog /Pages 2 0 R >>".into(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>", words(&fixture["page"])),
+        stream(fixture["pageContent"].as_str().unwrap()),
+        format!("<< /Type /Font /Subtype /Type3 /FontBBox [{}] /FontMatrix [{}] /FirstChar 65 /LastChar 66 /Widths [{}] /Encoding << /Differences [65 /A /B] >> /CharProcs << /A 6 0 R /B 7 0 R >> /Resources <<>> >>", words(&font["bbox"]), words(&font["matrix"]), words(&font["widths"])),
+    ];
+    for (glyph, width) in font["glyphs"].as_array().unwrap().iter().zip(font["widths"].as_array().unwrap()) {
+        rows.push(stream(&format!("{width} 0 d0 {}", glyph.as_str().unwrap())));
+    }
+    let input = pdf_objects_bytes(&rows);
+    let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(input.as_bytes()).unwrap();
+    let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
+    let scene = scene.as_array().unwrap();
+    assert_eq!(scene.len(), 3);
+    for glyph in 0..2 {
+        let layer = &scene[glyph + 1];
+        assert!(layer["id"].as_str().unwrap().starts_with("p0:t0/"));
+        assert_point(&layer["segments"][0]["to"], &fixture["starts"][glyph]);
+        assert_eq!(layer["fill"]["color"][if glyph == 0 { 0 } else { 2 }].as_f64(), Some(1.0));
+    }
+    for rendering in fixture["renderModes"].as_array().unwrap() {
+        let mode = rendering["mode"].as_u64().unwrap();
+        let content = fixture["pageContent"].as_str().unwrap().replacen(" Tf ", &format!(" Tf {mode} Tr "), 1);
+        rows[3] = stream(&content);
+        let input = pdf_objects_bytes(&rows);
+        let decoded = crate::standards::v1_7::subsets::base::io::import::decode_pdf(input.as_bytes()).unwrap();
+        let actual: Vec<Value> = serde_json::from_str(&canvas_layers(&decoded, None)).unwrap();
+        if rendering["visible"].as_bool().unwrap() {
+            assert_eq!(&actual, scene);
+        } else {
+            assert_eq!(actual.len(), 1);
+        }
+    }
+}
+
+#[test]
+fn canvas_paints_the_embedded_true_type_program_as_curved_outlines() {
+    use std::fmt::Write;
+    let case: Value = serde_json::from_str(include_str!("🧪️truetype-outline.json")).unwrap();
+    let font = include_bytes!("../../../../../../../../../../../../../🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🖥️share-tech-mono/💻️ShareTechMono-Regular.ttf");
+    let widths = &case["widths"];
+    let (first, last, advance) = (widths["first"].as_u64().unwrap(), widths["last"].as_u64().unwrap(), widths["advance"].as_u64().unwrap());
+    let advances = (first..=last).map(|_| advance.to_string()).collect::<Vec<_>>().join(" ");
+    let mut hex = String::with_capacity(font.len() * 2 + 1);
+    for byte in font { write!(hex, "{byte:02x}").unwrap(); }
+    hex.push('>');
+    let content = format!("BT /F1 32 Tf 1 0 0 1 20 40 Tm <{}> Tj ET", case["codes"].as_str().unwrap());
+    let pdf = |content: &str| pdf_objects_bytes(&[
+        "<< /Type /Catalog /Pages 2 0 R >>".into(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>", case["page"][0], case["page"][1]),
+        format!("<< /Length {} >>\nstream\n{content}\nendstream", content.len()),
+        format!("<< /Type /Font /Subtype /TrueType /BaseFont /ShareTechMono-Regular /Encoding /WinAnsiEncoding /FontDescriptor 6 0 R /FirstChar {first} /LastChar {last} /Widths [{advances}] >>"),
+        "<< /Type /FontDescriptor /FontName /ShareTechMono-Regular /Flags 32 /FontBBox [0 -250 700 850] /ItalicAngle 0 /Ascent 800 /Descent -200 /CapHeight 675 /StemV 80 /FontFile2 7 0 R >>".into(),
+        format!("<< /Filter /ASCIIHexDecode /Length {} /Length1 {} >>\nstream\n{hex}\nendstream", hex.len(), font.len()),
+    ]);
+    let decode = |content: &str| crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf(content).as_bytes()).unwrap();
+    let decoded = decode(&content);
+    assert_eq!(decoded.pages[0].text(), case["paintText"].as_str().unwrap());
+    let scene: Value = serde_json::from_str(&canvas_layers(&decoded, None)).unwrap();
+    assert_eq!(scene[1]["id"].as_str(), Some("p0:t0"));
+    assert!(scene[1].get("text").is_none());
+    let matrix = |value: &Value| serde_json::from_value::<[f64; 6]>(value.clone()).unwrap();
+    assert_eq!(matrix(&scene[1]["transform"]), matrix(&case["matrix"]));
+    let segments = scene[1]["segments"].as_array().unwrap();
+    assert!(segments.len() >= 32);
+    assert!(segments.iter().any(|segment| segment["kind"] == "cubic"));
+    let clip = decode(case["clip"]["content"].as_str().unwrap());
+    let scene: Value = serde_json::from_str(&canvas_layers(&clip, None)).unwrap();
+    let layers = scene.as_array().unwrap();
+    assert_eq!(layers.len(), 3, "clip-only glyphs themselves do not paint");
+    let paths = layers[1]["clipPaths"].as_array().unwrap();
+    assert_eq!(paths.len(), 1, "a text object contributes one combined clip");
+    assert_eq!(paths[0]["fillRule"], "nonzero");
+    let glyphs = paths[0]["segments"].as_array().unwrap();
+    for region in case["clip"]["regions"].as_array().unwrap() {
+        let [left, top, right, bottom] = serde_json::from_value::<[f64; 4]>(region.clone()).unwrap();
+        assert!(glyphs.iter().filter_map(|segment| segment.get("to")).any(|point| {
+            let x = point[0].as_f64().unwrap();
+            let y = point[1].as_f64().unwrap();
+            (left..=right).contains(&x) && (top..=bottom).contains(&y)
+        }));
+    }
+    assert!(layers[2].get("clipPaths").is_none(), "Q restores the preceding clip");
+    let mut raw = decoded;
+    let shown = raw.pages[0].content.iter_mut().find_map(|op| match op { PdfOp::ShowText { text } => Some(text), _ => None }).unwrap();
+    *shown = PdfTextString::Codes { codes: vec![65, 103, 233, 128] };
+    let objects = objects(&raw);
+    assert_eq!(objects[0].text, case["paintText"].as_str().unwrap());
+    assert!((objects[0].width - 64.0).abs() < 0.001);
+}
+
+#[path = "🔆️coded-image/🦀️.rs"]
+mod coded_image;

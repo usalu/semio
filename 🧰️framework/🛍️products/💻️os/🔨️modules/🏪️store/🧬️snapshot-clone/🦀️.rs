@@ -6,7 +6,7 @@ use semio_os_store_canonical_json::ArtifactCanonicalJson;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_os_store_one_item_publication::native_source::pay;
 use semio_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest, admit_artifact_batch_digest};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, RetainedAllocationEffect, OriginalRetirementPoll, RetirementPollExit};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, RetainedAllocationEffect, OriginalRetirementPoll, RetirementDemand, RetirementPollExit};
 use semio_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
 use semio_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
 use semio_os_store_command::HistoryLane;
@@ -164,7 +164,7 @@ where
             edit_cursor: None,
             inverse: None,
             foreign_step_presence: None,
-            assembly:OriginalPublicationAssembly::default(),
+            assembly:None,
             build_stage: 0,
             mutation: None,
             authority: Some(authority),
@@ -196,6 +196,7 @@ enum RetainedClonePreparationPhase {
     EditCursor,
     Clone,
     TakeClone,
+    HandoffClone,
     CloseClone,
     Edit,
     CaptureForeignStepPresence,
@@ -221,13 +222,13 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     pending_mutation_authority_close: Option<ControlledRetirement<ArcLease<ArtifactStoreOneItemLiveAuthority>>>,
     pub edit: Option<Arc<E>>,
     pub source: Option<RetainedCloneSource<P,SnapshotRead<P>>>,
-    clone_cursor: Option<P::Cursor>,
+    clone_cursor: Option<Box<P::Cursor>>,
     clone_handoff: Option<RetainedCloneCursorHandoff<P>>,
     pub copied: Option<P>,
-    edit_cursor: Option<E::Cursor>,
+    edit_cursor: Option<Box<E::Cursor>>,
     pub inverse: Option<Vec<M>>,
     pub foreign_step_presence: Option<bool>,
-    assembly:OriginalPublicationAssembly<P,M>,
+    assembly:Option<Box<OriginalPublicationAssembly<P,M>>>,
     build_stage: u8,
     pub mutation: Option<RetainedCloneSource<M>>,
     pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
@@ -250,17 +251,6 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
 }
 
 impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
-    fn handoff_clone_cursor(&mut self, effect:&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
-        if self.clone_handoff.is_some() {
-            return Ok(Default::default());
-        }
-        let mut cursor = self.clone_cursor.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone preparation lost its cursor before close handoff"))?;
-        let grant = effect.grant();
-        let started = if cursor.close_started() { Ok(Default::default()) } else { cursor.begin_close_paid(&mut effect.nested(grant)).result };
-        self.clone_handoff = Some(RetainedCloneCursorHandoff::new(cursor));
-        started
-    }
-
     /// 📏️ Charges a turn against the admitted footprint as live retained capacity: a turn first retains its birth (the peak), then frees its release.
     fn charge_footprint(&mut self, progress: RetainedCloneProgress, message: &'static str) -> Result<(), ValueError> {
         let live = self.retained_capacity_bytes.checked_add(progress.retained_capacity_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"retained clone preparation retained capacity overflow").with_retained_progress(self.ownership))?;
@@ -297,6 +287,23 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         })
     }
 
+    fn clone_handoff_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand{
+            copy_bytes:size_of::<Option<Box<P::Cursor>>>()+size_of::<Option<RetainedCloneCursorHandoff<P>>>(),
+            depth:1,
+            ..Default::default()
+        }
+    }
+
+    fn handoff_clone(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+        let demand=Self::clone_handoff_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?==0{return Ok(None)}
+        pay(effect,1)?;
+        let cursor=self.clone_cursor.take().ok_or_else(||ValueError::invariant("retained clone preparation lost its cursor before close handoff"))?;
+        self.clone_handoff=Some(RetainedCloneCursorHandoff::new(cursor));
+        Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+    }
+
     pub fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         macro_rules! typed {
@@ -306,9 +313,17 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             ($value:expr) => { return Ok(RetirementDemand { copy_bytes: $value.next_copy_byte_demand()?, capacity_bytes: $value.next_capacity_byte_demand(body)?, release_bytes: $value.next_release_byte_demand()?, depth: $value.next_depth_demand()? }); };
         }
         if let Some(owner) = self.clone_handoff.as_ref() { controlled!(owner); }
-        if let Some(owner) = self.clone_cursor.as_ref() { typed!(owner); }
-        if let Some(owner)=self.edit_cursor.as_ref(){if !owner.terminal_is_empty(){typed!(owner);}}
-        if let Some(demand)=self.assembly.close_demands(body)?{return Ok(demand);}
+        if let Some(owner) = self.clone_cursor.as_ref() {
+            if self.clone_reply.pending(){typed!(owner);}
+            return Ok(Self::clone_handoff_demand());
+        }
+        if let Some(owner)=self.edit_cursor.as_ref(){
+            if owner.terminal_is_empty(){return Ok(frame_release_demand::<E::Cursor>())}
+            typed!(owner);
+        }
+        if let Some(assembly)=self.assembly.as_ref(){
+            return Ok(assembly.close_demands(body)?.unwrap_or_else(frame_release_demand::<OriginalPublicationAssembly<P,M>>));
+        }
         if let Some(owner) = self.inverse_close.as_ref() { controlled!(owner); }
         if self.inverse.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Vec<M>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.copied_close.as_ref() { controlled!(owner); }
@@ -332,9 +347,19 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         use semio_framework_value::RetirementDemand;
         let g=grant.retained_grant();
         if self.build_stage>=4{
-            let Some(progress)=self.assembly.advance(OriginalPublicationInputs{forward:&mut self.pending_mutation,post:&mut self.copied,inverse:&mut self.inverse,authority:&mut self.authority,mutations:&mut self.mutation_retirement,snapshots:&mut self.snapshot_retirement},effect)?else{return Ok(false);};
+            if self.assembly.is_none(){
+                let progress=frame_birth::<OriginalPublicationAssembly<P,M>>();
+                if !progress.fits(g)||g.maximum_depth==0{return Ok(false)}
+                pay(effect,1)?;
+                self.assembly=Some(Box::new(OriginalPublicationAssembly::default()));
+                self.record_progress(progress)?;
+                return Ok(true);
+            }
+            let assembly=self.assembly.as_mut().unwrap();
+            let Some(progress)=assembly.advance(OriginalPublicationInputs{forward:&mut self.pending_mutation,post:&mut self.copied,inverse:&mut self.inverse,authority:&mut self.authority,mutations:&mut self.mutation_retirement,snapshots:&mut self.snapshot_retirement},effect)?else{return Ok(false);};
+            let sealed=assembly.sealer().is_some();
             self.record_progress(progress)?;
-            if self.assembly.sealer().is_some(){self.phase=RetainedClonePreparationPhase::Seal;self.seal_base=self.checkpoint;}
+            if sealed{self.phase=RetainedClonePreparationPhase::Seal;self.seal_base=self.checkpoint;}
             return Ok(true);
         }
         let demand=match self.build_stage{
@@ -357,8 +382,8 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         Ok(true)
     }
 
-    /// ⛽️ Quotes the Work of the selected source admission or staged projection action of this turn.
-    fn admission_work_demand(&self) -> Result<u64, ValueError> {
+    /// ⛽️ Quotes the original Work of the selected preparation frontier.
+    fn preparation_work_demand(&self, body:usize, copy_bytes:usize) -> Result<u64, ValueError> {
         macro_rules! quote {
             ($admission:expr, $projection:expr) => {{
                 let Some(admission) = $admission.as_ref() else { return Ok(1) };
@@ -370,15 +395,28 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         match self.phase {
             RetainedClonePreparationPhase::Source => quote!(self.source_admission, self.source_projection),
             RetainedClonePreparationPhase::MutationSource => quote!(self.mutation_admission, self.mutation_projection),
+            RetainedClonePreparationPhase::Clone => {
+                let cursor=self.clone_cursor.as_ref().ok_or_else(||ValueError::invariant("snapshot clone cursor is absent at advance quote"))?;
+                let source=self.source.as_ref().ok_or_else(||ValueError::invariant("snapshot clone source is absent at advance quote"))?;
+                cursor.advance_work_demand(source.borrow(),body,u64::MAX)
+            }
+            RetainedClonePreparationPhase::TakeClone => self.clone_cursor.as_ref().ok_or_else(||ValueError::invariant("snapshot clone cursor is absent at take quote"))?.take_work_demand(),
+            RetainedClonePreparationPhase::CloseClone => self.clone_handoff.as_ref().ok_or_else(||ValueError::invariant("snapshot clone handoff is absent at close quote"))?.next_computational_work(copy_bytes),
+            RetainedClonePreparationPhase::Build => match self.build_stage {
+                0=>self.mutation.as_ref().ok_or_else(||ValueError::invariant("original forward source is absent at take quote"))?.next_take_work_demand(copy_bytes),
+                1=>self.mutation.as_ref().ok_or_else(||ValueError::invariant("original forward source is absent at close quote"))?.next_close_work_demand(copy_bytes),
+                _=>self.assembly.as_ref().map_or(Ok(1),|assembly|assembly.advance_work_demand(copy_bytes)),
+            },
             _ => Ok(1),
         }
     }
 
     fn seal_turn(&mut self, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         let clone_grant = RetainedCloneGrant { maximum_items: 1, ..grant.retained_grant() };
-                let result = self.assembly.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its canonical sealer").with_retained_progress(self.ownership))?.advance(grant,receiving);
-                self.last_work=self.assembly.sealer.as_ref().unwrap().last_turn_work();
-                let receipt=self.assembly.sealer.as_ref().unwrap().ownership_progress();
+                let sealer=self.assembly.as_mut().and_then(|assembly|assembly.sealer.as_mut()).ok_or_else(||ValueError::invariant("retained clone preparation lost its canonical sealer").with_retained_progress(self.ownership))?;
+                let result=sealer.advance(grant,receiving);
+                self.last_work=sealer.last_turn_work();
+                let receipt=sealer.ownership_progress();
                 self.ownership=receipt;
                 admit_retained_clone_progress(clone_grant,receipt,"retained clone preparation original canonical source").map_err(|error|error.with_retained_progress(receipt))?;
                 self.charge_footprint(receipt,"retained clone original canonical source exceeded admitted footprint")?;
@@ -452,8 +490,13 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             }
             RetainedClonePreparationPhase::CloneCursor => {
                 let demand=self.edit.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost native clone birth authority").with_retained_progress(self.ownership))?.snapshot_cursor_birth_demand();
-                let progress=match demand.admit(clone_grant){Ok(progress)=>progress,Err(_)=>{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}};
-                self.clone_cursor=Some(P::retained_clone_cursor());self.record_progress(progress)?;
+                let Ok(original)=demand.admit(clone_grant)else{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
+                let frame=frame_birth::<P::Cursor>();
+                let progress=RetainedCloneProgress{copied_items:1,..original.checked_add(frame)?};
+                if !progress.fits(clone_grant){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
+                pay(effect,1)?;
+                self.clone_cursor=Some(Box::new(P::retained_clone_cursor()));
+                self.record_progress(progress)?;
 
                 self.phase=RetainedClonePreparationPhase::EditCursor;
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
@@ -461,11 +504,17 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             RetainedClonePreparationPhase::EditCursor => {
                 let edit=self.edit.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its original editor authority").with_retained_progress(self.ownership))?;
                 let demand=edit.begin_demand();
-                if demand.admit(clone_grant).is_err(){{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
-                let(cursor,progress)=edit.begin(clone_grant)?;
-                self.edit_cursor=Some(cursor);
+                let frame=frame_birth::<E::Cursor>();
+                if !frame.fits(clone_grant){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
+                let pointer=size_of::<Option<Box<E::Cursor>>>();
+                let child=RetainedCloneGrant{maximum_copy_bytes:clone_grant.maximum_copy_bytes-pointer,maximum_capacity_bytes:clone_grant.maximum_capacity_bytes-frame.retained_capacity_bytes,..clone_grant};
+                if demand.admit(child).is_err(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
+                pay(effect,1)?;
+                let(cursor,original)=edit.begin(child)?;
+                let progress=RetainedCloneProgress{copied_bytes:original.copied_bytes.max(size_of::<E::Cursor>()).checked_add(pointer).ok_or_else(||ValueError::invariant("edit frame copy extent overflow"))?,retained_capacity_bytes:original.retained_capacity_bytes.checked_add(frame.retained_capacity_bytes).ok_or_else(||ValueError::invariant("edit frame capacity extent overflow"))?,..original};
+                self.edit_cursor=Some(Box::new(cursor));
                 let progress=admit_retained_clone_progress(clone_grant,progress,"snapshot clone native edit constructor")?;
-                if progress.retained_capacity_bytes!=demand.capacity_bytes{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot clone editor constructor disagrees with its original admitted birth demand").with_retained_progress(self.ownership)).into());}
+                if original.retained_capacity_bytes!=demand.capacity_bytes{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot clone editor constructor disagrees with its original admitted birth demand").with_retained_progress(progress)).into());}
                 self.record_progress(progress)?;self.phase=RetainedClonePreparationPhase::Clone;
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
@@ -478,7 +527,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 let step=answer.map_err(|failure|failure.into_value_error())?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone")?;
                 if progress == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) {
-                    return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained-clone.step-grant-too-small: the snapshot clone cursor cannot fund its next contiguous owner within one turn grant").with_retained_progress(self.ownership)).into());
+                    return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
                 }
                 self.record_document_progress(progress)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -488,24 +537,29 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             }
             RetainedClonePreparationPhase::TakeClone=>{
                 let cursor=self.clone_cursor.as_mut().ok_or_else(||ValueError::invariant("completed snapshot clone cursor is absent"))?;
-                let(mut candidate,mut slot):(Option<P>,Option<Result<RetainedCloneStep,ValueError>>)=(None,None);
-                {let reply=OriginalEffectReply::borrow(&mut slot)?;cursor.take(&mut candidate,&mut effect.nested(clone_grant),reply)?;}
+                let mut slot=None;
+                {let reply=OriginalEffectReply::borrow(&mut slot)?;cursor.take(&mut self.copied,&mut effect.nested(clone_grant),reply)?;}
                 let step=slot.take().ok_or_else(||ValueError::invariant("snapshot clone cursor take left its reply pending"))??;
-                let Some(value)=candidate else{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);};
-                self.copied=Some(value);self.record_document_progress(step.progress())?;let started=self.handoff_clone_cursor(effect)?;self.record_document_progress(started)?;self.phase=RetainedClonePreparationPhase::CloseClone;
+                if self.copied.is_none(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
+                self.record_document_progress(step.progress())?;
+                self.phase=RetainedClonePreparationPhase::HandoffClone;
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             },
+            RetainedClonePreparationPhase::HandoffClone => {
+                let Some(progress)=self.handoff_clone(effect)?else{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
+                self.phase=RetainedClonePreparationPhase::CloseClone;
+                self.record_document_progress(progress)?;
+                Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
+            }
             RetainedClonePreparationPhase::CloseClone => {
                 let handoff = self.clone_handoff.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its Store-owned clone cursor handoff").with_retained_progress(self.ownership))?;
-                if handoff.terminal_is_empty() {
-                    self.clone_handoff = None;
-                    self.record_document_progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
-                    self.phase = RetainedClonePreparationPhase::Edit;
-                    return Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership));
-                }
                 let step=settled_step(handoff.close_step(clone_grant.maximum_copy_bytes,&mut effect.nested(clone_grant)))?;
                 let step = admit_retained_clone_close(clone_grant, step, handoff.terminal_is_empty(), "retained clone preparation clone close")?;
-                self.record_document_progress(step.progress())?;
+                if handoff.terminal_is_empty(){
+                    self.clone_handoff=None;
+                    self.phase=RetainedClonePreparationPhase::Edit;
+                    self.record_progress(step.progress())?;
+                }else{self.record_document_progress(step.progress())?;}
                 Ok(if step.progress() == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership) })
             }
             RetainedClonePreparationPhase::Edit => {
@@ -530,10 +584,15 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                 Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership))
             }
             RetainedClonePreparationPhase::CloseEdit => {
+                if self.edit_cursor.as_ref().is_some_and(|cursor|cursor.terminal_is_empty()){
+                    let Some(progress)=release_frame(&mut self.edit_cursor,effect)?else{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};
+                    self.phase=RetainedClonePreparationPhase::Build;
+                    self.record_progress(progress)?;
+                    return Ok(ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership));
+                }
                 let step=self.edit_cursor.as_mut().unwrap().close_step(&mut effect.nested(clone_grant))?;
                 let step = admit_retained_clone_close(clone_grant, step, self.edit_cursor.as_ref().is_none_or(|cursor|cursor.terminal_is_empty()), "retained clone preparation edit close")?;
                 self.record_progress(step.progress())?;
-                if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = RetainedClonePreparationPhase::Build; }
                 Ok(if step.progress() == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) { ArtifactStoreOneItemPreparationStep::Blocked } else { ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,self.ownership) })
             }
             RetainedClonePreparationPhase::Build => {
@@ -547,7 +606,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
             RetainedClonePreparationPhase::RecordForeignStepPresence => {
                 let copy=size_of::<bool>()+size_of::<RetainedClonePreparationPhase>();if clone_grant.maximum_copy_bytes<copy||clone_grant.maximum_depth==0{{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)};}
                 let presence=self.foreign_step_presence.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained edit foreign-step decision is absent").with_retained_progress(self.ownership))?;
-                if !self.assembly.sealer.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealer is absent before declaration").with_retained_progress(self.ownership))?.record_foreign_step_presence(presence){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared owner is absent before declaration").with_retained_progress(self.ownership)).into());}
+                if !self.assembly.as_mut().and_then(|assembly|assembly.sealer.as_mut()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original sealer is absent before declaration").with_retained_progress(self.ownership))?.record_foreign_step_presence(presence){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared owner is absent before declaration").with_retained_progress(self.ownership)).into());}
                 self.phase=RetainedClonePreparationPhase::Prepared;self.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,self.ownership))
             }
@@ -559,6 +618,32 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
 
 /// 📏️ The authority lease handed to its controlled retirement.
 fn authority_close_bytes() -> usize { size_of::<ArcLease<ArtifactStoreOneItemLiveAuthority>>() + size_of::<ControlledRetirement<ArcLease<ArtifactStoreOneItemLiveAuthority>>>() }
+
+fn snapshot_clone_turn_admitted(
+    grant: RetainedCloneGrant, demand: RetirementDemand, turn_ceiling: RetainedCloneGrant,
+    full_demand: impl FnOnce() -> Result<RetirementDemand, ValueError>,
+) -> Result<bool, ValueError> {
+    use semio_framework_value::retained_clone::retained_clone_grant_admits;
+    if retained_clone_grant_admits(grant, demand) { return Ok(true); }
+    if retained_clone_grant_admits(turn_ceiling, full_demand()?) { return Ok(false); }
+    Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained-clone.step-grant-too-small: the snapshot clone cursor cannot fund its next contiguous owner within one turn grant"))
+}
+
+fn frame_birth<T>() -> RetainedCloneProgress {
+    RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>() + size_of::<Option<Box<T>>>(), retained_capacity_bytes: size_of::<T>(), ..Default::default() }
+}
+
+fn frame_release_demand<T>() -> semio_framework_value::RetirementDemand {
+    semio_framework_value::RetirementDemand { copy_bytes: size_of::<Option<Box<T>>>(), release_bytes: size_of::<T>(), depth: 1, ..Default::default() }
+}
+
+fn release_frame<T>(slot: &mut Option<Box<T>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, ValueError> {
+    let demand = frame_release_demand::<T>();
+    if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(), demand) || effect.remaining_work_units()? == 0 { return Ok(None); }
+    pay(effect, 1)?;
+    *slot = None;
+    Ok(Some(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }))
+}
 
 /// 🚦️ A pending child keeps its resident effect and reports no progress; a settled failure becomes the primary refusal.
 fn settled_step(poll: OriginalRetirementPoll) -> Result<RetainedCloneStep, ValueError> {
@@ -575,21 +660,36 @@ where
     E: RetainedCloneEdit<P, M>,
 {
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.advance_with_turn_ceiling(body, grant, grant.retained_grant(), receiving)
+    }
+
+    fn advance_with_turn_ceiling(&mut self, body: usize, grant: ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work=0;self.ownership=Default::default();
         if self.cancelled||self.closing||!grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        if self.phase == RetainedClonePreparationPhase::Clone {
+            let cursor = self.clone_cursor.as_ref().ok_or_else(|| ValueError::invariant("snapshot clone cursor is absent at advance quote"))?;
+            let source = self.source.as_ref().ok_or_else(|| ValueError::invariant("snapshot clone source is absent at advance quote"))?.borrow();
+            let demand = cursor.advance_demands(source, body, u64::MAX)?;
+            let admitted = snapshot_clone_turn_admitted(grant.retained_grant(), demand, turn_ceiling, || {
+                cursor.advance_demands(source, turn_ceiling.maximum_copy_bytes, u64::MAX)
+            });
+            match admitted {
+                Ok(true) => {},
+                Ok(false) => return Ok(ArtifactStoreOneItemPreparationStep::Blocked),
+                Err(error) => { self.cancelled = true; return Err(error.into()); }
+            }
+        }
         let before=receiving.actual_work();
         let result=if self.phase==RetainedClonePreparationPhase::Seal{self.seal_turn(grant,receiving)}else{
-            let demand=if self.phase==RetainedClonePreparationPhase::Edit{self.edit_cursor.as_ref().ok_or_else(||ValueError::invariant("original editor cursor is absent"))?.next_work_demand(self.source.as_ref().ok_or_else(||ValueError::invariant("original edit source is absent"))?.borrow(),self.copied.as_ref().ok_or_else(||ValueError::invariant("original post is absent"))?,self.mutation.as_ref().ok_or_else(||ValueError::invariant("original mutation source is absent"))?.borrow(),body)?}else{self.admission_work_demand()?};
+            let demand=if self.phase==RetainedClonePreparationPhase::Edit{self.edit_cursor.as_ref().ok_or_else(||ValueError::invariant("original editor cursor is absent"))?.next_work_demand(self.source.as_ref().ok_or_else(||ValueError::invariant("original edit source is absent"))?.borrow(),self.copied.as_ref().ok_or_else(||ValueError::invariant("original post is absent"))?,self.mutation.as_ref().ok_or_else(||ValueError::invariant("original mutation source is absent"))?.borrow(),body)?}else{self.preparation_work_demand(body,grant.maximum_copy_bytes)?.max(1)};
             let local=RetainedCloneGrant{maximum_items:1,..grant.retained_grant()};
-            match receiving.with_effect(local,demand,|_,effect|{let result=self.advance_local(body,grant,effect);(result,effect.performed_work())})?{
+            match receiving.with_effect_reported(local,demand,|_,effect|self.advance_local(body,grant,effect))?{
                 Some((result,work))=>{self.last_work=u64::try_from(work).unwrap_or(u64::MAX);result},
                 None=>return Ok(ArtifactStoreOneItemPreparationStep::Blocked),
             }
         };
         let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);let coordinated=result.as_ref().is_ok_and(|step|step.ownership_progress()!=Default::default());
-        let reported=self.last_work;
-        if self.phase!=RetainedClonePreparationPhase::Seal{self.last_work=reported.max(observed).max(u64::from(coordinated));}
-        self.last_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordinated)?;
+        self.last_work=semio_os_store_one_item::original_one_item_turn_work(self.last_work,observed,coordinated)?;
         match result {
             Ok(step)=>Ok(step),
             Err(error)=>{self.cancelled=true;if error.retained_progress()!=Default::default(){self.ownership=error.retained_progress();}Err(error.with_retained_progress(self.ownership).into())}
@@ -607,18 +707,18 @@ where
 
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, M>> {
         if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
-        self.assembly.sealer.as_ref().and_then(ArtifactStoreOneItemSealer::prepared)
+        self.assembly.as_ref().and_then(|assembly|assembly.sealer.as_ref()).and_then(ArtifactStoreOneItemSealer::prepared)
     }
 
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, M>> {
         if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
-        self.assembly.sealer.as_mut().and_then(ArtifactStoreOneItemSealer::take_prepared)
+        self.assembly.as_mut().and_then(|assembly|assembly.sealer.as_mut()).and_then(ArtifactStoreOneItemSealer::take_prepared)
     }
 
     fn cancel(&mut self) {
         self.cancelled = true;
         if let Some(cursor)=self.edit_cursor.as_mut(){cursor.cancel();}
-        if let Some(sealer) = self.assembly.sealer.as_mut() {
+        if let Some(sealer) = self.assembly.as_mut().and_then(|assembly|assembly.sealer.as_mut()) {
             sealer.cancel();
         }
     }
@@ -629,7 +729,7 @@ where
         }
         self.closing = true;
         if let Some(cursor)=self.edit_cursor.as_mut(){let _=cursor.begin_close();}
-        if let Some(sealer) = self.assembly.sealer.as_mut() {
+        if let Some(sealer) = self.assembly.as_mut().and_then(|assembly|assembly.sealer.as_mut()) {
             sealer.begin_close();
         }
     }
@@ -648,7 +748,7 @@ where
         self.closing
             && self.clone_cursor.is_none()
             && self.clone_handoff.is_none()
-            && self.edit_cursor.as_ref().is_none_or(|cursor|cursor.terminal_is_empty())
+            && self.edit_cursor.is_none()
             && self.source_admission.is_none()
             && self.mutation_admission.is_none()
             && self.pending_base.is_none()
@@ -669,7 +769,7 @@ where
             && self.source.is_none()
             && self.copied.is_none()
             && self.inverse.is_none()
-            && self.assembly.terminal_is_empty()
+            && self.assembly.is_none()
             && self.mutation.is_none()
            
             && self.authority.is_none()
@@ -703,14 +803,19 @@ impl<P, M, E> RetainedClonePreparation<P, M, E> where P: RetainedClone, M: Artif
             let answer = self.clone_reply.run(|reply, _| cursor.recover_advance_into(source, body, maximum, nested, reply).map(drop))?.ok_or(RetirementPollExit::Pending(0))?;
             return Ok(RetainedCloneStep::Progress(answer?.progress()));
         }
-        if let Some(cursor) = self.clone_cursor.as_mut() {
-            if !cursor.close_started() { let turn=cursor.begin_close_paid(&mut effect.nested(grant)); return Ok(RetainedCloneStep::Progress(turn.result?)); }
-            let step=RetirementPollExit::resume(cursor.close_step(grant.maximum_copy_bytes,&mut effect.nested(grant)))?;
-            if cursor.terminal_is_empty() { self.clone_cursor = None; }
+        if self.clone_cursor.is_some() {
+            return Ok(RetainedCloneStep::Progress(self.handoff_clone(effect)?.unwrap_or_default()));
+        }
+        if let Some(owner)=self.edit_cursor.as_mut(){
+            if owner.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(release_frame(&mut self.edit_cursor,effect)?.unwrap_or_default()))}
+            let step=owner.close_step(&mut effect.nested(grant))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(owner)=self.edit_cursor.as_mut(){let step=owner.close_step(&mut effect.nested(grant))?;if owner.terminal_is_empty(){self.edit_cursor=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if !self.assembly.terminal_is_empty(){return self.assembly.close_step(&mut effect.nested(grant));}
+        if let Some(assembly)=self.assembly.as_mut(){
+            if assembly.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(release_frame(&mut self.assembly,effect)?.unwrap_or_default()))}
+            let step=assembly.close_step(&mut effect.nested(grant))?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
         if let Some(owner) = self.inverse_close.as_mut() {
             let step=RetirementPollExit::resume(owner.step(grant.maximum_copy_bytes,&mut effect.nested(grant)))?;
             if owner.terminal_is_empty() { self.inverse_close = None; }

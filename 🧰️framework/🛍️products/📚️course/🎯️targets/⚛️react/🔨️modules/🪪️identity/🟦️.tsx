@@ -18,6 +18,7 @@ import type { CourseNotice } from "../🧭️session/🧮️state/🟦️.ts";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
 import type { SessionFailure } from "../🧭️session/📋️session-model/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 /** 🏷️ How a learner is named in public: their handle, or the localized "Anonymous" with their tag — never with any
  * part of their id, which acts as their credential. */
 export function learnerName(identity: Identity | undefined, tag: string, text: CourseText): string {
@@ -185,7 +186,7 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
         <fieldset {...CELL} className="course-kinds m-0 min-w-0 p-double">
           <legend className="p-0 text-sm font-semibold">{text("course.identity.kind")}</legend>
           {KINDS.map((option) => (
-            <div key={option.kind} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
+            <div key={option.kind} {...sharedBorderlessBoxProps} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
               <input
                 id={`${scope}-${option.kind}`}
                 type="radio"

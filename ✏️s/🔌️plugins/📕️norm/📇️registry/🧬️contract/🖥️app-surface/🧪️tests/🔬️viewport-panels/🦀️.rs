@@ -152,10 +152,10 @@ fn the_toolbar_lists_fields_tracks_and_the_readout_in_both_languages() {
     let mut scene = scene_of(vec![field_beam("b1", vec![vertex_field("temp@0", QuantityKind::Temperature, vec![20.0, 20.0])], "temp@0")]);
     scene.tracks = vec![fire_track()];
     let view = ViewportView { playback: PlaybackState { track: Some("fire".into()), value: 1800.0, ..PlaybackState::default() }, ..ViewportView::default() };
-    let text = |locale| projected(render_toolbar(&scene, &view, locale, "s.norm.test@1/*#editor").expect("toolbar").expect("some"));
+    let text = |locale| projected(render_toolbar(&scene, &view, locale, "s.norm.test@1/*#editor").expect("toolbar").0.expect("some"));
     assert!(text(semio_ui_locale::Locale::En).contains("Fire duration: 30 min"));
     assert!(text(semio_ui_locale::Locale::De).contains("Branddauer: 30 min"));
-    assert!(render_toolbar(&scene_of(vec![]), &ViewportView::default(), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").is_none());
+    assert!(render_toolbar(&scene_of(vec![]), &ViewportView::default(), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").0.is_none());
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn a_viewport_action_changes_the_rendered_state() {
     use crate::{view_event, NormTransient, VIEW_ACTION_FIELD, VIEW_ACTION_SEEK, VIEW_ACTION_TOGGLE, VIEW_ACTION_TRACK};
     let mut scene = scene_of(vec![field_beam("b1", vec![vertex_field("temp@0", QuantityKind::Temperature, vec![20.0, 20.0]), vertex_field("stress", QuantityKind::Stress, vec![1.0, 2.0])], "temp@0")]);
     scene.tracks = vec![fire_track()];
-    let toolbar = |view: &ViewportView| projected(render_toolbar(&scene, &view.resolved(&scene), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").expect("some"));
+    let toolbar = |view: &ViewportView| projected(render_toolbar(&scene, &view.resolved(&scene), semio_ui_locale::Locale::En, "s.norm.test@1/*#editor").expect("toolbar").0.expect("some"));
     let fold = |events: &[(&str, Option<&str>, Option<f64>)]| events.iter().filter_map(|(a, t, n)| view_event(a, *t, *n)).fold(NormTransient::default(), NormTransient::apply).view;
     let rest = ViewportView::default();
     assert!(!toolbar(&rest).contains("Fire duration: "));
@@ -263,7 +263,21 @@ fn a_lane_check_frames_the_camera_on_the_selected_entities_and_a_free_lane_keeps
 #[test]
 fn the_keyboard_help_lists_every_shortcut_in_english_and_german() {
     use crate::accessibility::focus_order::{chord_text, shortcuts};
-    let help = |locale, mac| projected(crate::toolbar::render_shortcut_help(locale, mac).expect("help"));
+    let body = "norm.x.viewport";
+    let host = semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let closed = crate::toolbar::render_shortcut_help(&semio_plugin::TreeWindows::for_body(&host, body), host.locale, false).expect("closed help");
+    let section = closed.children.iter().next().expect("help section");
+    assert_eq!(section.children.len(), 0);
+    let help = |locale, mac| {
+        let mut host = host.clone();
+        let mut pages = String::new();
+        for offset in (0..shortcuts().len()).step_by(16) {
+            host.tree_windows = vec![semio_plugin::TreeWindowRequest { body_key: body.into(), node_key: "norm-viewport-help.list".into(), open: Some(true), offset: offset as u32, rows: 16.min(shortcuts().len() - offset) as u32 }];
+            let page = crate::toolbar::render_shortcut_help(&semio_plugin::TreeWindows::for_body(&host, body), locale, mac).expect("help");
+            pages.push_str(&projected(page));
+        }
+        pages
+    };
     let (en, de) = (help(semio_ui_locale::Locale::En, false), help(semio_ui_locale::Locale::De, false));
     for shortcut in shortcuts() {
         assert!(en.contains(&shortcut.label.en) && de.contains(&shortcut.label.de), "{:?}", shortcut.action);

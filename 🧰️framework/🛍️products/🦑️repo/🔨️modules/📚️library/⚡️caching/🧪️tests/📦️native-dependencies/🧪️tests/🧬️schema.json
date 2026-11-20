@@ -9,7 +9,8 @@
     "systemCases",
     "receipts",
     "failures",
-    "tooling"
+    "tooling",
+    "ownedTarget"
   ],
   "properties": {
     "version": {
@@ -165,6 +166,43 @@
           },
           "accepted": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "ownedTarget": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "install",
+          "requested"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "defaults",
+              "foreign-overrides"
+            ]
+          },
+          "install": {
+            "type": "boolean"
+          },
+          "requested": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "CARGO_TARGET_DIR": {
+                "type": "string"
+              },
+              "CARGO_BUILD_BUILD_DIR": {
+                "type": "string"
+              }
+            }
           }
         }
       }

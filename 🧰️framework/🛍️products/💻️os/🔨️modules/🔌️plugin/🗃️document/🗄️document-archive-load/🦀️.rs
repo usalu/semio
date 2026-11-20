@@ -337,6 +337,17 @@ where
         self.inputs_are_empty() && self.fault.capacity() == 0
     }
 
+    /// 📏️ Quotes the fault bytes still resident when an unacknowledged terminal archive closes.
+    pub fn terminal_removal_demands(&self) -> RetirementDemand {
+        let release_bytes = self.fault.capacity();
+        RetirementDemand {
+            copy_bytes: if release_bytes == 0 { 0 } else { 2 * std::mem::size_of::<Vec<u8>>() },
+            release_bytes,
+            depth: 1,
+            ..Default::default()
+        }
+    }
+
     pub fn request_terminal(&mut self, target: ActiveDocumentArchiveLoadState) {
         if self.terminal_target.is_none() {
             self.terminal_target = Some(target);
@@ -361,6 +372,12 @@ where
         if let Some(owner)=self.retained.as_ref(){return parent(store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body)?);}
         if let Some(owner)=self.archive_retirement.as_ref(){return parent(store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body)?);}
         if let Some(hydration)=self.hydration.as_ref(){
+            if hydration.original_failure.is_some() {
+                return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&hydration.original_failure);
+            }
+            if hydration.original_context_failure.is_some() {
+                return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&hydration.original_context_failure);
+            }
             if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){return Ok(RetirementDemand{depth:1,..Default::default()});}
             return parent(RetirementDemand{copy_bytes:store::ErasedSnapshotRetirement::next_copy_byte_demand(hydration)?,capacity_bytes:store::ErasedSnapshotRetirement::next_capacity_byte_demand(hydration,body)?,release_bytes:store::ErasedSnapshotRetirement::next_release_byte_demand(hydration)?,depth:store::ErasedSnapshotRetirement::next_depth_demand(hydration)?});
         }

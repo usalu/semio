@@ -465,16 +465,18 @@ fn a_state_frame_is_bounded_by_size_rate_and_shape() {
     let settings = PresenceSettings::default();
     let now = Instant::now();
     let mut budget = StateBudget::new(settings.max_states_per_second);
-    assert_eq!(admit_frame(r#"{"type":"state","state":{"x":1}}"#, &settings, &mut budget, now), Ok(Some(PresenceFrame::State { state: serde_json::json!({ "x": 1 }) })));
+    assert_eq!(admit_frame(r#"{"type":"state","state":{"x":1}}"#, &settings, &mut budget, now), Ok(Admitted::Now(PresenceFrame::State { state: serde_json::json!({ "x": 1 }) })));
     let large = format!(r#"{{"type":"state","state":"{}"}}"#, "x".repeat(settings.max_state_bytes));
     assert_eq!(admit_frame(&large, &settings, &mut budget, now), Err(REFUSED_TOO_LARGE.to_string()));
     assert_eq!(admit_frame(r#"{"type":"batch","entries":[],"left":[]}"#, &settings, &mut budget, now), Err(REFUSED_INVALID.to_string()));
     assert_eq!(admit_frame("not json", &settings, &mut budget, now), Err(REFUSED_INVALID.to_string()));
     let mut spent = StateBudget::new(settings.max_states_per_second);
     let start = Instant::now();
-    let admitted = (0..40).filter(|_| admit_frame(r#"{"type":"state","state":1}"#, &settings, &mut spent, start) == Ok(Some(PresenceFrame::State { state: serde_json::json!(1) }))).count();
-    assert_eq!(admitted, settings.max_states_per_second as usize);
-    assert_eq!(admit_frame(r#"{"type":"state","state":1}"#, &settings, &mut spent, start + Duration::from_secs(1)), Ok(Some(PresenceFrame::State { state: serde_json::json!(1) })));
+    let verdicts: Vec<_> = (0..40).map(|n| admit_frame(&format!(r#"{{"type":"state","state":{n}}}"#), &settings, &mut spent, start)).collect();
+    assert_eq!(verdicts.iter().filter(|verdict| matches!(verdict, Ok(Admitted::Now(_)))).count(), settings.max_states_per_second as usize);
+    assert_eq!(verdicts.last(), Some(&Ok(Admitted::Held(PresenceFrame::State { state: serde_json::json!(39) }))), "a frame over the rate is held, never dropped");
+    assert!(spent.refills_at() > start && spent.refills_at() <= start + Duration::from_secs(1), "the allowance refills when the window that began before the burst ends");
+    assert_eq!(admit_frame(r#"{"type":"state","state":1}"#, &settings, &mut spent, start + Duration::from_secs(1)), Ok(Admitted::Now(PresenceFrame::State { state: serde_json::json!(1) })));
 }
 
 #[test]

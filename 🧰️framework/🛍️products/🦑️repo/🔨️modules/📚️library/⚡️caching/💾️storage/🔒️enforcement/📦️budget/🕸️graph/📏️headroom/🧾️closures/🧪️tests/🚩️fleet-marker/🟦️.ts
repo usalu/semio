@@ -32,6 +32,7 @@ test("the reader admits a bare digest as a marker without references and refuses
  const admit=Function(ts.transpileModule(node.getText(worker),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText+";return fleetMarker")() as (bytes:Uint8Array)=>null;
  const digest=createHash("sha256").update("state").digest("hex"),bytes=(text:string)=>new TextEncoder().encode(text);
  expect(admit(bytes(digest))).toBeNull();
- for(const text of["",digest+"\n",digest.slice(1),digest.toUpperCase(),"{\"version\":1}","SEMIO_SOURCE_CLOSURE_"+digest])expect(()=>admit(bytes(text)),text).toThrow("Bare fleet marker digest required");
+ for(const text of[digest+":4505:1795025581994",digest+":4505:1795025581994:closures-1",digest+":closures-1"])expect(admit(bytes(text)),text).toBeNull();
+ for(const text of["",digest+"\n",digest+":1",digest+":1:2:3",digest+":a:b",digest+":closures-2",digest+":1:2:closures-1:x",digest.slice(1),digest.toUpperCase(),"{\"version\":1}","SEMIO_SOURCE_CLOSURE_"+digest])expect(()=>admit(bytes(text)),text).toThrow("Bare fleet marker digest required");
  expect(()=>admit(new Uint8Array([0xff,0xfe]))).toThrow();
 });

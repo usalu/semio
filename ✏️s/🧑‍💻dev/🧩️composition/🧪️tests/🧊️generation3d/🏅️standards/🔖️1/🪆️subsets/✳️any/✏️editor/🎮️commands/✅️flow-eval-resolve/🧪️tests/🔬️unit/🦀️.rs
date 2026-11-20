@@ -1,40 +1,33 @@
+//! 🧠️ Original evaluation replies seed the retained cache and settle only their addressed hop.
 use super::*;
-use crate::editor_domain::editor_laws::context::{empty_history_view, retire_flow_eval_session};
-use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
-use semio_plugin::{ArtifactView, ConfigView};
+use crate::editor_domain::editor_laws::context::retire_flow_eval_session;
+use crate::preview_reply::{evaluation_payload, evaluation_response, receive_evaluation};
+use semio_framework_artifact_flow_flow::neural::ColdRetire;
 
-/// ⚖️ LAW: an `evaluate` extension result carried back as `flowEvalResolve` seeds the session's shared
-/// neural cache under the requested `nodeHash` and leaves its window owing the `previewEval` run exactly
-/// one more hop, so the very next tick reads the extension's output out of cache instead of
-/// re-dispatching the same node forever.
-///
-/// 🧹️ Every neural owner this test touches is retired explicitly: both `Dictionary`s through
-/// `ColdRetire`, the borrowed `Arc<NeuralCache>` before the session claims its cache root, and the
-/// session itself through the granted close loop — each one panics on a live drop by design.
 #[test]
 fn eval_result_seeds_the_node_cache_and_owes_the_run_one_hop() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let snapshot = Generation3dSnapshot::default();
-    let history = empty_history_view();
-    let config = Generation3dConfig::default();
-    let doc = ArtifactView::new(&snapshot, &history);
-    let cfg = ConfigView { snapshot: &config, window: None };
     let mut session = FlowEvalSession::new();
     let cache = session.neural_cache();
-    let output = Dictionary::new().insert("geometry", NeuralValue::Atom(Atom::String("brep:solid-1".into()))).insert("count", NeuralValue::Atom(Atom::Integer(3)));
     let node_hash = 0x5eed_c0de_u64;
-    assert!(!cache.contains(node_hash), "the node must be uncached before the extension answers");
-    assert!(session.arm_window_tick("procedural-preview-test"), "the run arms the hop");
-    session.begin_window_tick("procedural-preview-test");
-    session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, 1));
-    session.note_window_extensions_in_flight("procedural-preview-test", 1);
-    let emit = handle(&FlowEvalResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: semio_framework_pack_json::to_json_string(&output), extension_id: String::new(), ok: true, fault_code: String::new(), fault_message: String::new() }, &doc, &cfg, &mut session).expect("flowEvalResolve");
-    let cached = cache.get(node_hash).expect("the seeded node must be readable from the shared neural cache");
-    assert_eq!(cached, output, "the extension output must round-trip through the shared neural cache");
+    let window = ("procedural-preview-test", semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let output = serde_json::json!({"geometry":"brep:solid-1","count":3});
+    assert!(!cache.contains(node_hash));
+    for id in [window.0, "unrelated-preview"] {
+        assert!(session.arm_window_tick(id, crate::preview_reply::TURN).expect("window tick admission").0);
+        session.begin_window_tick(id, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_tick_outcome(id, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, 1), crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+        session.note_window_extensions_in_flight(id, 1, crate::preview_reply::TURN).map(drop).expect("original window latch turn");
+    }
+    let payload = evaluation_payload(window, node_hash, "flow-extension-brep",
+        evaluation_response(true, "complete", (3, 3), output.clone()));
+    receive_evaluation(&mut session, payload).expect("original evaluation reply folds");
+    let cached = cache.get(node_hash).expect("seeded Dictionary");
+    let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&cached)).unwrap();
+    assert_eq!(observed, output);
     cached.retire_cold();
-    output.retire_cold();
     drop(cache);
-    assert!(emit.effects.is_empty(), "a fold dispatches nothing itself — the run job schedules the next hop");
-    assert_eq!((session.window_extensions_in_flight("procedural-preview-test"), session.window_tick_owed("procedural-preview-test")), (0, true), "resolving one node settles its answer and leaves exactly its own window owing the run one hop");
+    assert_eq!((session.window_extensions_in_flight(window.0), session.window_tick_owed(window.0)), (0, true));
+    assert_eq!(session.window_extensions_in_flight("unrelated-preview"), 1);
     retire_flow_eval_session(session);
 }

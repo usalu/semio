@@ -1,4 +1,4 @@
-//! 🧰️ Operator helpers: dictionaries, channel specs, schemas, registration and the `BrepDeconstruct` operator.
+//! 🧰️ Operator helpers: dictionaries, channel specs, schemas, registration and cold deconstruction.
 
 use super::*;
 
@@ -413,8 +413,6 @@ fn selected_topology(kernel: &Brep, input: &Dictionary, key: &str, handles: &[Ge
     labels.into_iter().map(|label| found.remove(&label).ok_or_else(|| EvalError::InvalidInput(format!("component label {label} no longer exists in the selected source topology")))).collect()
 }
 
-pub struct BrepDeconstruct(pub SessionCapture);
-
 /// 🪪️ Resolves one current collection leaf by its captured handle and reports its current index.
 fn scoped_brep_source(input: &Dictionary) -> Result<(GeometryHandle, u32), EvalError> {
     let captured = read_text(input, "sourceHandle")?;
@@ -436,37 +434,24 @@ fn scoped_brep_source(input: &Dictionary) -> Result<(GeometryHandle, u32), EvalE
     found.map(|index| (GeometryHandle(captured), index)).ok_or_else(|| EvalError::InvalidInput("selected source geometry no longer exists in its collection".into()))
 }
 
-impl Operator for BrepDeconstruct {
-    fn retirement_is_empty(&self) -> bool { self.0.terminal_is_empty() }
-    fn next_retire_copy_byte_demand(&self)->Result<usize,ValueError> {self.0.next_close_copy_byte_demand()}
-    fn next_retire_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.0.next_close_capacity_byte_demand(copy)}
-    fn next_retire_release_byte_demand(&self)->Result<usize,ValueError> {self.0.next_close_release_byte_demand()}
-    fn next_retire_depth_demand(&self)->Result<usize,ValueError> {self.0.next_close_depth_demand()}
-    fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:&mut neural_engine::ValueRetirement)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit> {Ok(self.0.close_step(effect)?)}
-    fn retire_cold(mut self:Box<Self>) { self.0.retire_cold(); }
-    fn step_plan(&self,input:Dictionary,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,RetainedCloneProgress),(EvalError,Dictionary)> {neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,ValueError> {Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,ValueError> {Ok(1)}
-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        self.0.with_kernel(|kernel| {
-            let (shape, source_index) = scoped_brep_source(input)?;
-            let topology = kernel.deconstruct(&shape).map_err(|error| map_kernel_error(&error))?;
-            let selected_edges = selected_topology(kernel,input,"edgeLabels",&topology.edges)?;
-            let selected_faces = selected_topology(kernel,input,"faceLabels",&topology.faces)?;
-            Ok(Dictionary::new()
-                .insert(neural_engine::produced_channel_id("brep"), Value::Dictionary(geometry_dict(kernel, &shape)?))
-                .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
-                .insert("edge", Value::Dictionary(topology_list("edge", topology.edges)))
-                .insert("face", Value::Dictionary(topology_list("face", topology.faces)))
-                .insert("shell", Value::Dictionary(topology_list("shell", topology.shells)))
-                .insert("selectedEdges", Value::Dictionary(topology_list("edge", selected_edges)))
-                .insert("selectedFaces", Value::Dictionary(topology_list("face", selected_faces)))
-                .insert("sourceIndex", Value::Dictionary(number_dictionary(f64::from(source_index))))
-                .insert("errors", Value::Dictionary(Dictionary::with_schema("list"))))
-        })
-    }
+/// 🧊️ Synchronous deconstruction for callers without a retained evaluation context.
+pub fn deconstruct_geometry(capture: &SessionCapture, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    capture.with_kernel(|kernel| {
+        let (shape, source_index) = scoped_brep_source(input)?;
+        let topology = kernel.deconstruct(&shape).map_err(|error| map_kernel_error(&error))?;
+        let selected_edges = selected_topology(kernel,input,"edgeLabels",&topology.edges)?;
+        let selected_faces = selected_topology(kernel,input,"faceLabels",&topology.faces)?;
+        Ok(Dictionary::new()
+            .insert(neural_engine::produced_channel_id("brep"), Value::Dictionary(geometry_dict(kernel, &shape)?))
+            .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
+            .insert("edge", Value::Dictionary(topology_list("edge", topology.edges)))
+            .insert("face", Value::Dictionary(topology_list("face", topology.faces)))
+            .insert("shell", Value::Dictionary(topology_list("shell", topology.shells)))
+            .insert("selectedEdges", Value::Dictionary(topology_list("edge", selected_edges)))
+            .insert("selectedFaces", Value::Dictionary(topology_list("face", selected_faces)))
+            .insert("sourceIndex", Value::Dictionary(number_dictionary(f64::from(source_index))))
+            .insert("errors", Value::Dictionary(Dictionary::with_schema("list"))))
+    })
 }
 
 pub fn topology_output(code: &str, abbreviation: &str, name: &str, schema: &str) -> ChannelSpec {

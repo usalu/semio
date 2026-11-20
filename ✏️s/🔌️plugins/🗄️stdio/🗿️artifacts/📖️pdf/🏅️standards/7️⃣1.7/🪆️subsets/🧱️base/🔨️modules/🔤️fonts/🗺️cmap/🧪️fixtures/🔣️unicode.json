@@ -140,5 +140,25 @@
     "text": "AÄ中😀",
     "encoding": "begincmap /CMapName /Mixed def 4 begincodespacerange <00> <7F> <8140> <9FFC> <A10000> <A1FFFF> <B1000000> <B1FFFFFF> endcodespacerange 4 begincidchar <41> 1 <8140> 2 <A10001> 3 <B1000001> 4 endcidchar endcmap",
     "toUnicode": "begincmap 4 begincodespacerange <00> <7F> <8140> <9FFC> <A10000> <A1FFFF> <B1000000> <B1FFFFFF> endcodespacerange 4 beginbfchar <41> <0041> <8140> <00C4> <A10001> <4E2D> <B1000001> <D83DDE00> endbfchar endcmap"
+  },
+  "sameNumericCode": {
+    "cmap": {
+      "name": "RepeatedCode",
+      "codespace": [
+        { "byteWidth": 1, "low": 32, "high": 32 },
+        { "byteWidth": 2, "low": 32, "high": 32 }
+      ]
+    },
+    "unicode": {
+      "byteWidth": 1,
+      "mappings": [{ "kind": "char", "code": 32, "text": "X" }]
+    },
+    "codes": [32, 32],
+    "bytes": [32, 0, 32],
+    "widths": [1, 2],
+    "spaces": [true, false],
+    "text": "XX",
+    "encoding": "begincmap /CMapName /RepeatedCode def 2 begincodespacerange <20> <20> <0020> <0020> endcodespacerange 2 begincidchar <20> 1 <0020> 1 endcidchar endcmap",
+    "toUnicode": "begincmap 2 begincodespacerange <20> <20> <0020> <0020> endcodespacerange 2 beginbfchar <20> <0058> <0020> <0058> endbfchar endcmap"
   }
 }

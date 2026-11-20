@@ -56,7 +56,7 @@ async fn a_capacity_filled_context_fits_the_bound() {
         active_mode_id: Some(identifier()),
         active_window_kind_id: Some(identifier()),
         active_utility_id: Some(identifier()),
-        active_utility_by_window_id: (0..VIEW_CONTEXT_UTILITY_ENTRIES).map(|index| (format!("{index}{}", identifier()), identifier())).collect(),
+        active_utility_by_window_id: (0..VIEW_CONTEXT_UTILITY_ENTRIES).map(|index| (format!("{index}{}", identifier()), Some(identifier()))).collect(),
         active_tool_id: Some(identifier()),
         panel_json: Some(long()),
         extension_input_json: Some(long()),

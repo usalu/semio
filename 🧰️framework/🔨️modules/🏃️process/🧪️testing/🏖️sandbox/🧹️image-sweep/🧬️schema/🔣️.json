@@ -40,6 +40,19 @@
         "sandboxesKept": { "type": "integer", "minimum": 0 }
       }
     },
+    "WorkspaceCollectorCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode", "outcome"],
+        "properties": {
+          "mode": {"enum": ["exit", "hung-inventory", "caller-stop", "already-stopped"]},
+          "outcome": {"enum": ["completed", "deadline", "cancelled"]}
+        }
+      }
+    },
     "Protocol": {
       "const": {
         "version": 1,
@@ -48,6 +61,9 @@
         "sandboxName": "^r[A-Za-z0-9]{6}$",
         "sandboxSegment": "/.cache/test-sandbox/",
         "ourSegment": "/.cache/b/",
+        "workspaceOnlyFlag": "--workspace-images-only",
+        "workspaceCollectorBudgetMilliseconds": 30000,
+        "workspaceCollectorOutput": {"maximumBytes": 4096, "maximumLines": 128},
         "messages": {
           "en": "{total} disk images are attached: {ours} are ours, {leaked} belong to dead test sandboxes and {foreign} are foreign",
           "de": "{total} Disk-Images sind eingehängt: {ours} gehören uns, {leaked} gehören toten Test-Sandboxes und {foreign} sind fremd",

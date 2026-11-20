@@ -171,10 +171,20 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  /// ⛽️ Quotes the exact work of the next owned handoff turn; the canonical cursor keeps its whole turn ceiling.
  pub fn take_owned_work_demand(&self,body:usize,ceiling:u64)->Result<u64,ValueError>{
   self.take_owned_demands(body)?;
+  self.take_work(body,ceiling,false)
+ }
+ /// 🧮️ Quotes work in the exact order of the original value-and-issuer handoff.
+ pub fn take_original_work_demand(&self,body:usize,ceiling:u64)->Result<u64,ValueError>{
+  self.take_original_demand(body)?;
+  self.take_work(body,ceiling,true)
+ }
+ fn take_work(&self,body:usize,ceiling:u64,projection_first:bool)->Result<u64,ValueError>{
   if !self.taking_owned{return Ok(1)}
   if let Some(canonical)=self.canonical.as_ref(){return Ok(if canonical.terminal_is_empty(){1}else{ceiling})}
+  let projection_work=|projection:&RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>|if projection.terminal_is_empty(){Ok(1)}else{projection.close_work_demand(body)};
+  if let Some(projection)=self.canonical_projection.as_ref().filter(|_|projection_first){return projection_work(projection)}
   if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(1)}else{output.close_work_demand(body)}}
-  if let Some(projection)=self.canonical_projection.as_ref(){return if projection.terminal_is_empty(){Ok(1)}else{projection.close_work_demand(body)}}
+  if let Some(projection)=self.canonical_projection.as_ref(){return projection_work(projection)}
   if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(1)}else{source.next_take_work_demand(body)}}
   Ok(1)
  }
@@ -184,11 +194,11 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned handoff changed its decoder ledger"))}if output.is_some(){return Err(invalid("original JSON owned handoff destination is occupied"))}
   let d=self.take_owned_demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
-  if !self.taking_owned{self.taking_owned=true;if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close()}{Self::pay(effect)?;return Ok(unit())}}
-  if let Some(canonical)=self.canonical.as_mut(){if canonical.terminal_is_empty(){self.canonical.take();{Self::pay(effect)?;return Ok(unit())}}let step=canonical.advance(&mut[],effect)?;return Ok(step.ownership)}
-  if let Some(projection)=self.output.as_mut(){if projection.terminal_is_empty(){self.output.take();{Self::pay(effect)?;return Ok(unit())}}return Ok(settled(projection.close_step(body,effect))?.0)}
-  if let Some(projection)=self.canonical_projection.as_mut(){if projection.terminal_is_empty(){self.canonical_projection.take();{Self::pay(effect)?;return Ok(unit())}}return Ok(settled(projection.close_step(body,effect))?.0)}
-  if let Some(source)=self.typed_source.as_mut(){if source.terminal_is_empty(){self.typed_source.take();{Self::pay(effect)?;return Ok(unit())}}let authority=&mut *self.authority;return Ok(RetainedCloneStep::Progress(take_authority(source,authority,body,effect)?.progress()))}
+  if !self.taking_owned{Self::pay(effect)?;self.taking_owned=true;if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close()}return Ok(unit())}
+  if let Some(canonical)=self.canonical.as_mut(){if canonical.terminal_is_empty(){Self::pay(effect)?;self.canonical.take();return Ok(unit())}let step=canonical.advance(&mut[],effect)?;return Ok(step.ownership)}
+  if let Some(projection)=self.output.as_mut(){if projection.terminal_is_empty(){Self::pay(effect)?;self.output.take();return Ok(unit())}return Ok(settled(projection.close_step(body,effect))?.0)}
+  if let Some(projection)=self.canonical_projection.as_mut(){if projection.terminal_is_empty(){Self::pay(effect)?;self.canonical_projection.take();return Ok(unit())}return Ok(settled(projection.close_step(body,effect))?.0)}
+  if let Some(source)=self.typed_source.as_mut(){if source.terminal_is_empty(){Self::pay(effect)?;self.typed_source.take();return Ok(unit())}let authority=&mut *self.authority;return Ok(RetainedCloneStep::Progress(take_authority(source,authority,body,effect)?.progress()))}
   let mut factory=None;let step=transfer_original(self.authority.as_mut().ok_or_else(||invalid("original JSON owned handoff requires its unique authority"))?,output,&mut factory,effect)?;match(factory,step){(Some(factory),RetainedCloneStep::Complete(p))=>{self.authority.take();self.factory_close=Some(FactoryAuthority::new(factory));self.closing=true;Ok(RetainedCloneStep::Complete(p))},(None,step)=>Ok(RetainedCloneStep::Progress(step.progress())),_=>Err(invalid("original JSON owned handoff transferred a partial pair"))}
  }
 
@@ -207,19 +217,44 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   let g=effect.grant();
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned transfer changed its decoder ledger"));}let d=self.take_original_demand(body)?;if !retained_clone_grant_admits(g,d){return Ok((RetainedCloneStep::Progress(Default::default()),None));}control.checkpoint()?;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
-  if !self.taking_owned{self.taking_owned=true;if let Some(c)=self.canonical.as_mut(){c.begin_close();}{Self::pay(effect)?;return Ok((unit(),None))};}
-  if let Some(c)=self.canonical.as_mut(){if c.terminal_is_empty(){self.canonical.take();{Self::pay(effect)?;return Ok((unit(),None))};}let s=c.advance(&mut[],effect)?;return Ok((RetainedCloneStep::Progress(s.ownership.progress()),None));}
-  if let Some(c)=self.canonical_projection.as_mut(){if c.terminal_is_empty(){self.canonical_projection.take();{Self::pay(effect)?;return Ok((unit(),None))};}let(step,_)=settled(c.close_step(body,effect))?;return Ok((RetainedCloneStep::Progress(step.progress()),None));}
-  if let Some(c)=self.output.as_mut(){if c.terminal_is_empty(){self.output.take();{Self::pay(effect)?;return Ok((unit(),None))};}let(step,_)=settled(c.close_step(body,effect))?;return Ok((RetainedCloneStep::Progress(step.progress()),None));}
-  if let Some(s)=self.typed_source.as_mut(){if s.terminal_is_empty(){self.typed_source.take();{Self::pay(effect)?;return Ok((unit(),None))};}let copied=2*size_of::<Option<FactoryOwnedSourceAuthority<M>>>();let narrowed=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copied,..g};let authority=&mut *self.authority;let mut p=take_authority(s,authority,body,&mut effect.nested(narrowed))?.progress();p.copied_bytes=p.copied_bytes.checked_add(copied).ok_or_else(||invalid("original JSON source transfer receipt overflow"))?;return Ok((RetainedCloneStep::Progress(p),None));}
+  if !self.taking_owned{Self::pay(effect)?;self.taking_owned=true;if let Some(c)=self.canonical.as_mut(){c.begin_close();}return Ok((unit(),None));}
+  if let Some(c)=self.canonical.as_mut(){if c.terminal_is_empty(){Self::pay(effect)?;self.canonical.take();return Ok((unit(),None));}let s=c.advance(&mut[],effect)?;return Ok((RetainedCloneStep::Progress(s.ownership.progress()),None));}
+  if let Some(c)=self.canonical_projection.as_mut(){if c.terminal_is_empty(){Self::pay(effect)?;self.canonical_projection.take();return Ok((unit(),None));}let(step,_)=settled(c.close_step(body,effect))?;return Ok((RetainedCloneStep::Progress(step.progress()),None));}
+  if let Some(c)=self.output.as_mut(){if c.terminal_is_empty(){Self::pay(effect)?;self.output.take();return Ok((unit(),None));}let(step,_)=settled(c.close_step(body,effect))?;return Ok((RetainedCloneStep::Progress(step.progress()),None));}
+  if let Some(s)=self.typed_source.as_mut(){if s.terminal_is_empty(){Self::pay(effect)?;self.typed_source.take();return Ok((unit(),None));}let copied=2*size_of::<Option<FactoryOwnedSourceAuthority<M>>>();let narrowed=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copied,..g};let authority=&mut *self.authority;let mut p=take_authority(s,authority,body,&mut effect.nested(narrowed))?.progress();p.copied_bytes=p.copied_bytes.checked_add(copied).ok_or_else(||invalid("original JSON source transfer receipt overflow"))?;return Ok((RetainedCloneStep::Progress(p),None));}
   let mut value=None;let mut factory=None;let step=transfer_original(self.authority.as_mut().ok_or_else(||invalid("original JSON owned authority vanished"))?,&mut value,&mut factory,effect)?;match(value,factory,step){(Some(value),Some(factory),RetainedCloneStep::Complete(mut p))=>{self.authority.take();self.closing=true;self.begin_close();p.copied_bytes=d.copy_bytes;Ok((RetainedCloneStep::Complete(p),Some((value,factory))))},(None,None,step)=>Ok((RetainedCloneStep::Progress(step.progress()),None)),_=>Err(invalid("original JSON owned transfer produced a partial pair"))}
  }
 
  /// 💰️ Performs the one paid unit of a handoff turn that delegates to no nested owner.
  fn pay(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original JSON owned handoff exceeded its work authority"))}Ok(())}
+ /// 🛟️ Quotes the originating request while a local receiving callback is still resident.
+ pub fn pending_receiving_demand(&self)->Option<RetirementDemand>{self.action.effect.pending_request().map(|(demand,_)|demand)}
+ /// 🧷️ Loans only the retained local receiving action so the store can recover its original reply.
+ pub fn pending_receiving_recovery(&mut self)->Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>>{
+  self.action.effect.pending_recovery().map(semio_framework_value::native_decoding::construction::NativeRecoveryLoan::Value)
+ }
+ /// 🧾️ Releases the finished local reply before closing the underlying native owners.
+ pub fn finish_receiving_recovery(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_,'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
+  let turn=control.finish_receiving(&mut self.action.effect);
+  if !self.action.effect.has_pending_recovery(){self.action=Default::default();}
+  turn
+ }
  pub fn begin_close(&mut self){self.closing=true;if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close();}}
+ fn closing_projection_demand(&self)->Result<Option<RetirementDemand>,ValueError>{
+  use semio_framework_value::retained_clone::OriginalProjectionFramePhase::*;
+  let Some(frame)=self.typed_frame.as_ref()else{return Ok(None)};
+  let admission=self.typed_admission.as_ref().ok_or_else(||invalid("original JSON projection lost its source admission"))?;
+  Ok(Some(match frame.phase()?{
+   Drive if frame.has_pending_action()=>frame.projection_demand(),
+   Drive|TransferProducer=>frame.producer_transfer_demand()?,
+   AcceptAnswer=>admission.projection_answer_demand(frame)?,
+   ReturnOwner=>admission.return_projection_owner_demand(frame)?,
+   Finish=>admission.finish_projection_demand(),
+  }))
+ }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
+  if let Some(demand)=self.closing_projection_demand()?{return Ok(demand)}
   if let Some(admission)=self.typed_admission.as_ref(){return admission.next_return_demand();}
   if let Some(admission)=self.source_admission.as_ref(){return admission.next_return_demand();}
   if let Some(alias)=self.canonical_alias.as_ref(){return if alias.terminal_is_empty(){Ok(close_header::<Option<RetainedOwnedProjectionAdmission<dyn ArtifactCanonicalJsonTree>>>())}else{alias.close_demand(body)};}
@@ -247,6 +282,18 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
    if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
    let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
    if !self.retirement.is_empty(){return X::resume(self.retirement.step_granted(body,effect));}
+   if let Some(frame)=self.typed_frame.as_mut(){
+    use semio_framework_value::retained_clone::OriginalProjectionFramePhase::*;
+    let admission=self.typed_admission.as_mut().ok_or_else(||invalid("original JSON projection lost its source admission"))?;
+    let step=match frame.phase()?{
+     Drive if frame.has_pending_action()=>return Err(X::Pending(0)),
+     Drive|TransferProducer=>frame.transfer_producer(effect).result?.unwrap_or_default(),
+     AcceptAnswer=>admission.accept_projection(frame,effect).result?.progress(),
+     ReturnOwner=>admission.return_projection_owner(frame,effect).result?.progress(),
+     Finish=>admission.finish_projection(&mut self.typed_frame,effect).result?.progress(),
+    };
+    return Ok(RetainedCloneStep::Progress(step))
+   }
    if let Some(admission)=self.typed_admission.as_mut(){if admission.phase()=="ready"{let turn=admission.take_output(&mut self.typed_source,effect);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((authority,()))=returned{*self.authority=Some(authority);}if admission.terminal_is_empty(){self.typed_admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
    if let Some(admission)=self.source_admission.as_mut(){if admission.phase()=="ready"{let turn=admission.take_output(&mut self.parsed_source,effect);return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((parsed,()))=returned{*self.parsed=Some(parsed);}if admission.terminal_is_empty(){self.source_admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
    if let Some(canonical)=self.canonical.as_mut(){

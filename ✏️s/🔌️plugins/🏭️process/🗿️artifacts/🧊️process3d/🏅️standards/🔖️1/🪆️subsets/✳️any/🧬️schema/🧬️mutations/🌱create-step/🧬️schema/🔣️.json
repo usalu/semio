@@ -360,7 +360,7 @@
                       "additionalProperties": false,
                       "required": [
                         "kind",
-                        "solidHandle"
+                        "brepPack"
                       ],
                       "properties": {
                         "kind": {
@@ -374,14 +374,15 @@
                             }
                           }
                         },
-                        "solidHandle": {
+                        "brepPack": {
                           "type": "string",
+                          "maxLength": 65536,
                           "x-semio-ui": {
                             "widget": "text",
                             "role": "value",
                             "label": {
-                              "en": "Solid handle",
-                              "de": "Volumenkörper-Handle"
+                              "en": "B-Rep pack",
+                              "de": "B-Rep-Paket"
                             },
                             "description": {
                               "en": "Handle of the imported B-rep solid.",
@@ -965,7 +966,7 @@
                       "additionalProperties": false,
                       "required": [
                         "kind",
-                        "solidHandle"
+                        "brepPack"
                       ],
                       "properties": {
                         "kind": {
@@ -979,14 +980,15 @@
                             }
                           }
                         },
-                        "solidHandle": {
+                        "brepPack": {
                           "type": "string",
+                          "maxLength": 65536,
                           "x-semio-ui": {
                             "widget": "text",
                             "role": "value",
                             "label": {
-                              "en": "Solid handle",
-                              "de": "Volumenkörper-Handle"
+                              "en": "B-Rep pack",
+                              "de": "B-Rep-Paket"
                             },
                             "description": {
                               "en": "Handle of the imported B-rep solid.",

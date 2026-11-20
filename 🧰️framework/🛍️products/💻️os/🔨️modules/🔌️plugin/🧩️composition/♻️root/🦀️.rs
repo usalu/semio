@@ -41,11 +41,9 @@ pub fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut Art
     let Some(demand) = original_child_root_retirement_demands(registry, children, retiring.as_deref(), *cursor, grant.maximum_copy_bytes, closing).map_err(|error| Fault::from(error.into_message()))? else { return Ok(RetainedCloneStep::Complete(Default::default())); };
     if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
     let Some((index, generation)) = registry.next_id_from(*cursor) else {
-        let released_bytes = registry.empty_backing_byte_demand().expect("original empty child registry remains empty");
-        let backing = std::mem::take(&mut registry.slots);
-        registry.allocation_admitted = false;
-        drop(backing);
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<ArtifactFixedRegistry<ChildContentRetirement>>(), released_bytes, ..Default::default() }));
+        let mut progress=registry.close_empty_backing_step(grant)?.progress();
+        progress.copied_bytes=demand.copy_bytes;
+        return Ok(RetainedCloneStep::Progress(progress));
     };
     if registry.get(generation).is_some_and(ChildContentRetirement::terminal_is_empty) {
         let retirement = registry.remove(generation).expect("terminal original child registry identity remains occupied");

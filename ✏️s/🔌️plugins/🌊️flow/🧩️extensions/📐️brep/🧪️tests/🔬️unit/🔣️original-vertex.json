@@ -1,0 +1,47 @@
+{
+  "operator": "brep.util.vertex",
+  "input": "point",
+  "output": "vertex",
+  "kind": "vertex",
+  "previewDeflection": 0.025,
+  "cases": [
+    {
+      "coordinates": [
+        1.25,
+        -2.5,
+        3.75
+      ],
+      "preview": {
+        "positions": [
+          1.25,
+          -2.5,
+          3.75
+        ],
+        "indices": [],
+        "edgePositions": [],
+        "vertexIds": [
+          0
+        ]
+      }
+    },
+    {
+      "coordinates": [
+        -0.125,
+        0,
+        128.5
+      ],
+      "preview": {
+        "positions": [
+          -0.125,
+          0,
+          128.5
+        ],
+        "indices": [],
+        "edgePositions": [],
+        "vertexIds": [
+          0
+        ]
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 
 /// 🚦️ What one Drawing job turn decided before its outcome is lent.
@@ -81,14 +81,12 @@ impl DrawingJobOutcomes {
         self.publication.retirement_demands()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        self.publication.close_step(grant)
-    }
-
-    /// 🔁️ Maps one paid publication close receipt onto the job close protocol; completion is the job's own terminal witness.
-    pub fn close_job_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<InteractiveJobCloseStep> {
-        let turn=self.publication.close_step(grant);
-        semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}
+    /// 🔁️ Retires the publication on the job's original effect and returns its actual progress.
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        let demand = self.retirement_demands()?;
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+            semio_framework_value::RetainedWorkPoll::Complete(self.publication.close_step(effect))
+        })
     }
 }
 

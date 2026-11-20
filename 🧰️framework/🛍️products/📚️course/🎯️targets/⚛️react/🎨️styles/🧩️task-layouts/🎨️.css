@@ -49,10 +49,6 @@
     min-inline-size: 0;
   }
 
-  .course-steps > * {
-    --shared-border-flow: 1;
-  }
-
   .course-step {
     flex-direction: column;
     align-items: flex-start;
@@ -83,7 +79,6 @@
   margin: 0;
   border: 0;
   border-radius: 0;
-  border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-chip {
@@ -104,8 +99,6 @@
 .course-chip > select {
   grid-column: 1 / -1;
   inline-size: 100%;
-  border-inline-start: 0;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 @container course-rows (min-width: 30rem) {
@@ -115,8 +108,6 @@
 
   .course-chip > select {
     grid-column: 3;
-    border-block-start: 0;
-    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   }
 }
 
@@ -130,10 +121,6 @@
   .course-pool {
     position: sticky;
     inset-block-start: 0;
-  }
-
-  .course-classify > * {
-    --shared-border-flow: 1;
   }
 
   .course-classify > .course-categories {
@@ -172,12 +159,10 @@
 
 .course-sort-up {
   grid-area: up;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-sort-down {
   grid-area: down;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-guess {
@@ -211,7 +196,6 @@
   min-inline-size: 4.5rem;
   max-inline-size: 11rem;
   border: 0;
-  border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
   padding-inline: var(--spacing-single);
 }
 
@@ -219,11 +203,6 @@
   .course-sort {
     grid-template-columns: auto 2em minmax(0, 1fr) minmax(9rem, 13rem) auto auto;
     grid-template-areas: "grip place label guess up down";
-  }
-
-  .course-sort-up,
-  .course-sort-down {
-    border-block-start: 0;
   }
 
   .course-guess {
@@ -293,28 +272,16 @@
   grid-area: card;
   inline-size: 100%;
   min-inline-size: 0;
-  border-inline-start: 0;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-slot > button {
   grid-area: clear;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 @container course-rows (min-width: 30rem) {
   .course-slot {
     grid-template-columns: minmax(0, 1fr) clamp(10rem, 40%, 20rem) auto;
     grid-template-areas: "label card clear";
-  }
-
-  .course-slot > select {
-    border-block-start: 0;
-    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
-  }
-
-  .course-slot > button {
-    border-block-start: 0;
   }
 }
 
@@ -340,10 +307,6 @@
 
   .course-cards-cell {
     grid-area: cards;
-  }
-
-  .course-match > .course-cards-cell {
-    --shared-border-flow: 1;
   }
 
   .course-cards {

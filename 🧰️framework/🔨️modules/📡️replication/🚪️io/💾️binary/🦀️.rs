@@ -29,11 +29,17 @@ pub trait OpBinaryReceivingCursor<M:OpBinaryReceiving>:semio_framework_value::re
     fn demands(&self,source:&[u8],maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
     /// ⛽️ Work units one native step may spend; the funded effect records the actual performed work.
     const STEP_WORK:u64=1;
+    /// 🧮️ Quotes the selected phase when one receiving turn needs more than the fixed work grant.
+    fn step_work_demand(&self, _source: &[u8], _maximum_copy_bytes: usize) -> Result<u64, semio_framework_value::ValueError> { Ok(Self::STEP_WORK) }
     /// 🪙️ Runs one step inside the caller's funded effect; reported work is the effect's performed work.
     fn step_in(&mut self,source:&[u8],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress,semio_framework_value_native_owned::OriginalReceivingPrimary>;
     /// 🎟️ Funds one step from the native control; an unadmitted quote ran nothing and charges nothing.
     fn step(&mut self,source:&[u8],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,body:usize,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress,semio_framework_value_native_owned::OriginalReceivingPrimary>{
-        match native.with_effect(grant,Self::STEP_WORK,|control,effect|self.step_in(source,control,body,effect)){Ok(Some(turn))=>turn,Ok(None)=>semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}
+        let work = match self.step_work_demand(source, body) {
+            Ok(work) => work,
+            Err(error) => return semio_framework_value::RetainedWorkOutcome { result: Err(error.into()), work: 0 },
+        };
+        match native.with_effect(grant,work,|control,effect|self.step_in(source,control,body,effect)){Ok(Some(turn))=>turn,Ok(None)=>semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}
     }
     fn domain_failure(&self)->Option<&M::DomainFailure>;
     fn domain_failure_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;

@@ -7,7 +7,7 @@ use pack::snapshot::ArtifactPack;
 
 #[test]
 fn original_cancellation_reaches_spatial_children_scan() {
-    let mut source=source();for level in 2..514{source.storeys.insert(format!("storey{level}"),Storey{building:"building".into(),name:format!("Level {level}"),level,height:3.,cut_height:Some(1.2)});}
+    let mut source=source();for level in 2..514{source.storeys.cold_insert(format!("storey{level}"),Storey{building:"building".into(),name:format!("Level {level}"),level,height:3.,cut_height:Some(1.2)});}
     let graph=bim_to_ifc_controlled(&source,&mut |_|true).unwrap().snapshot;
     let mut observed=false;
     let result=ifc_to_bim_controlled(&graph,&mut |p|{if p.phase=="bim-hierarchy-children"&&p.completed==257{observed=true;false}else{true}});
@@ -18,9 +18,9 @@ fn source()->ModelSnapshot {
     let mut source=ModelSnapshot::default();
     source.project.name="Native spatial".into();
     source.project.author="Author".into();
-    source.sites.insert("site".into(),Site {name:"Site".into(),latitude:47.5,longitude:8.25,elevation:400.,true_north:0.2,boundary:vec![]});
-    source.buildings.insert("building".into(),Building {site:"site".into(),name:"Building".into(),origin:Point2 {x:1.,y:2.},rotation:0.3,elevation:0.5});
-    for level in [0,1] {source.storeys.insert(format!("storey{level}"),Storey {building:"building".into(),name:format!("Level {level}"),level,height:3.,cut_height:Some(1.2)});}
+    source.sites.cold_insert("site".into(),Site {name:"Site".into(),latitude:47.5,longitude:8.25,elevation:400.,true_north:0.2,boundary:vec![]});
+    source.buildings.cold_insert("building".into(),Building {site:"site".into(),name:"Building".into(),origin:Point2 {x:1.,y:2.},rotation:0.3,elevation:0.5});
+    for level in [0,1] {source.storeys.cold_insert(format!("storey{level}"),Storey {building:"building".into(),name:format!("Level {level}"),level,height:3.,cut_height:Some(1.2)});}
     source
 }
 

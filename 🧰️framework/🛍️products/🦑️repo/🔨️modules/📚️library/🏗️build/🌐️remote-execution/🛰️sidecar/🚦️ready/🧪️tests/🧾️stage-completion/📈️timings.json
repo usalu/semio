@@ -1,0 +1,10 @@
+[
+  {"legacy":true,"exit":0,"stop":null,"peak":7539,"outcome":"ok","receipt":true},
+  {"legacy":false,"exit":14,"stop":null,"peak":278,"outcome":"stage-failed","receipt":true},
+  {"legacy":false,"exit":14,"stop":"timeout","peak":681,"outcome":"stage-timeout","receipt":true},
+  {"legacy":true,"exit":14,"stop":null,"peak":953,"receipt":false,"outcome":"stage-failed"},
+  {"legacy":false,"exit":14,"stop":"timeout","peak":1111,"receipt":false,"outcome":"stage-timeout"},
+  {"legacy":false,"exit":14,"stop":"stall","peak":1112,"receipt":false,"outcome":"stalled"},
+  {"legacy":false,"exit":14,"stop":"cancel","peak":1113,"receipt":false,"outcome":"interrupted"},
+  {"legacy":true,"exit":14,"stop":"timeout","peak":1114,"receipt":false,"outcome":"stage-failed"}
+]

@@ -27,7 +27,7 @@ use std::f64::consts::TAU;
 
 fn extrude_wire(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     guarded(kind, || {
-        let wire = inputs.shape("wire")?.clone();
+        let wire = path_wire(inputs.shape("wire")?, "wire")?;
         let vector = inputs.vector("vector")?;
         let along = direction(vector, "vector", "extrusion vector", "Der Extrusionsvektor")?;
         let outline = wire_corners(&wire).and_then(|corners| fit_plane(&corners, WIRE)).map_err(|fault| fault.at("wire"))?;

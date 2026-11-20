@@ -1,6 +1,6 @@
 //! 🏁️ Replaces the app-local solve result every WFC 3D window paints from.
 
-use super::{Wfc3dTransient, Wfc3dTransientDiff};
+use super::{Wfc3dTransient, Wfc3dTransientDiff, Wfc3dTransientMutation};
 use crate::editor::wfc3d::transient::Wfc3dAssignment;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

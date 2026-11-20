@@ -1,5 +1,13 @@
 {
   "version": 1,
+  "referenceObservations": [
+    {"mode":"without-singletons","schema":true,"observed":true},
+    {"mode":"unknown-field","schema":false,"observed":false},
+    {"mode":"unknown-edge-field","schema":false,"observed":false},
+    {"mode":"unknown-singleton-owner","schema":true,"observed":false},
+    {"mode":"corrupt-store-anchor","schema":true,"observed":false},
+    {"mode":"corrupt-source-anchor","schema":true,"observed":false}
+  ],
   "workspace": "/workspace",
   "root": "/store",
   "receipt": {

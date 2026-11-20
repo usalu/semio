@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { act, render } from "@testing-library/react";
 import { Diagram, type Node } from "../../../🟦️.tsx";
-import { DIAGRAM_KEYBOARD_FOCUS_CLASS, type DiagramNavigableNode, type DiagramKeyboardStep, diagramKeyboardStep, diagramReadingOrderPosition, diagramKeyboardAnnouncement, diagramArrowNavigationTarget, DIAGRAM_ARROW_KEYS, diagramActivateSelection } from "../../../⌨️keyboard/🟦️.tsx";
+import { DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES, type DiagramNavigableNode, type DiagramKeyboardStep, diagramKeyboardStep, diagramReadingOrderPosition, diagramKeyboardAnnouncement, diagramArrowNavigationTarget, DIAGRAM_ARROW_KEYS, diagramActivateSelection } from "../../../⌨️keyboard/🟦️.tsx";
 import keyboardFixture from "../../🧫️fixtures/⌨️keyboard.json";
 import { flowCapture } from "../🧰️harness/🟦️.ts";
 
@@ -47,7 +47,7 @@ describe("♿️ diagram keyboard and ARIA affordances", () => {
     press(surface, "ArrowRight");
     expect(surface.getAttribute("data-diagram-focused-node")).toBe("a");
     expect(live.textContent).toMatch(/^a, 1 (of|von) 4$/u);
-    const ringed = (node: Node) => DIAGRAM_KEYBOARD_FOCUS_CLASS.split(" ").every((token) => (node.className ?? "").split(" ").includes(token));
+    const ringed = (node: Node) => Object.entries(DIAGRAM_KEYBOARD_FOCUS_ATTRIBUTES).every(([name, value]) => (node.domAttributes as Record<string, string> | undefined)?.[name] === value);
     expect(ringed(flowCapture.props?.nodes.find((node: Node) => node.id === "a"))).toBe(true);
     press(surface, "ArrowRight");
     expect(surface.getAttribute("data-diagram-focused-node")).toBe("b");

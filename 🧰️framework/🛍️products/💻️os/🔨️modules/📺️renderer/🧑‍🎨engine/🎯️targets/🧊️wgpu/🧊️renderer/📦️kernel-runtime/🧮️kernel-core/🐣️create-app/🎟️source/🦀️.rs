@@ -1,9 +1,10 @@
 //! 🐣️ Borrowed CreateApp intake retains one configured finite compiler issuer in fixed process custody.
 use crate::native_caller::NativeFrameCaller;
+use super::super::{KernelConstruction,kernel_metadata};
 use semio_framework_actor::retained_context::{OriginalActorCall,OriginalActorContextError};
 use semio_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
-use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext,admit_original_construction,close_original_retained_step};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
+use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};
+use semio_framework_value::{retained_clone::RetainedCloneClose,ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_framework_async::{WorkerMaintenanceTicket,WorkerMaintenanceStep,WorkerMaintenanceError,Lane};
 use std::{cell::UnsafeCell,mem::size_of,path::{Path,PathBuf},sync::{Mutex,atomic::{AtomicBool,AtomicU64,Ordering}},task::{Context,Poll,Waker},future::Future,pin::Pin};
 
@@ -26,30 +27,59 @@ static SCHEDULER_FAILURE:Mutex<Option<WorkerMaintenanceError>>=Mutex::new(None);
 pub enum CreateAppSourceFailureKind{RegistryFull,Maintenance(WorkerMaintenanceError),Source,Stale,Closed,Backend,Cancelled}
 pub struct CreateAppSourceFailure{kind:CreateAppSourceFailureKind,owner:Option<CreateAppRequestOwner>,initial:Option<ValueError>}
 impl std::fmt::Debug for CreateAppSourceFailure{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{std::fmt::Display::fmt(self,f)}}
-impl std::fmt::Display for CreateAppSourceFailure{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{if let Some(error)=self.initial.as_ref(){return write!(f,"{error}")}if let Some(owner)=self.owner.as_ref(){if let Some(result)=with_node(owner.index,owner.generation,|node|{if let Some(error)=node.failures.iter().flatten().next(){return write!(f,"{error}")}if let Some(error)=node.root_failure.as_ref(){return write!(f,"{error:?}")}if let Some(error)=node.caller.original_failure(){return write!(f,"{error:?}")}if let Some(error)=node.caller.original_cleanup_failure(){return write!(f,"{error:?}")}if let Some(task)=node.compiler.as_ref(){write!(f,"{:?}: ",self.kind)?;return task.describe(f)}write!(f,"{:?}",self.kind)}){return result}}write!(f,"{:?}",self.kind)}}
+impl std::fmt::Display for CreateAppSourceFailure{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{if let Some(error)=self.initial.as_ref(){return write!(f,"{error}")}if let Some(owner)=self.owner.as_ref(){if let Some(result)=with_node(owner.index,owner.generation,|node|{if let Some(error)=node.admission_failure.as_ref(){return write!(f,"{error:?}")}if let Some(error)=node.failures.iter().flatten().next(){return write!(f,"{error}")}if let Some(error)=node.root_failure.as_ref(){return write!(f,"{error:?}")}if let Some(error)=node.caller.original_failure(){return write!(f,"{error:?}")}if let Some(error)=node.caller.original_cleanup_failure(){return write!(f,"{error:?}")}if let Some(task)=node.compiler.as_ref(){write!(f,"{:?}: ",self.kind)?;return task.describe(f)}write!(f,"{:?}",self.kind)}){return result}}write!(f,"{:?}",self.kind)}}
 
 impl From<CreateAppSourceFailure> for semio_renderer_wgpu_contracts::ProgramFault{fn from(error:CreateAppSourceFailure)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:None,create_app_source:Some(semio_renderer_wgpu_contracts::CreateAppSourceRefusal::new(error.to_string()))}}}
-struct Node{caller:NativeFrameCaller,cursor:usize,failed:bool,closed:bool,failures:[Option<ValueError>;4],root_failure:Option<OriginalActorContextError>,compiler:Option<compiler::CompilerTask>}
+struct Node{caller:NativeFrameCaller,cursor:usize,failed:bool,closed:bool,admission_failure:Option<OriginalTurnFailure>,admission_retirement:RetainedCloneClose,failures:[Option<ValueError>;4],root_failure:Option<OriginalActorContextError>,construction:KernelConstruction,compiler:Option<compiler::CompilerTask>}
 impl Node{
- fn new(caller:NativeFrameCaller)->Self{Self{caller,cursor:0,failed:false,closed:false,failures:std::array::from_fn(|_|None),root_failure:None,compiler:None}}
+ fn new(caller:NativeFrameCaller)->Self{Self{caller,cursor:0,failed:false,closed:false,admission_failure:None,admission_retirement:Default::default(),failures:std::array::from_fn(|_|None),root_failure:None,construction:Default::default(),compiler:None}}
  fn room(&self)->bool{self.root_failure.is_none()&&self.failures.iter().any(Option::is_none)}
  fn retain(&mut self,error:ValueError){*self.failures.iter_mut().find(|field|field.is_none()).expect("original CreateApp turn reserved refusal custody")=Some(error);self.failed=true;}
  fn accept<T>(&mut self,call:Result<OriginalActorCall<T,OriginalActorEntryFailure>,ValueError>)->Option<T>{match call{Ok(call)=>match call.result{Ok(value)=>Some(value),Err(OriginalActorEntryFailure::Semantic)=>{self.failed=true;None},Err(OriginalActorEntryFailure::Authority(error))=>{self.retain(error);None}},Err(error)=>{self.retain(error);None}}}
  fn receive(&mut self,slot:&Slot,input:CreateAppBorrowed<'_>){
   if self.failed||!self.room()||!self.caller.ready()||slot.published.load(Ordering::Acquire){return}
   let fields=unsafe{&mut*slot.fields.get()};let cursor=self.cursor;
-  if cursor==4{let mut output=None;let call=self.caller.dispatch_step(|cx|admit_original_construction(cx,&mut output,OriginalConstructionDemand{items:1,copy_bytes:size_of::<bool>(),capacity_bytes:0,release_bytes:0,depth:1},|_|Ok((true,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()}))));if self.accept(call)==Some(true){slot.published.store(true,Ordering::Release);}return}
-  let data=if cursor==0{input.path.as_os_str().as_encoded_bytes()}else{[input.plugin,input.app,input.schema][cursor-1].as_bytes()};let length=data.len();let demand=OriginalConstructionDemand{items:1,copy_bytes:length,capacity_bytes:length,release_bytes:0,depth:1};
-  let call=if cursor==0{self.caller.dispatch_step(|cx|admit_original_construction(cx,&mut fields.path,demand,|_|{let mut bytes=Vec::new();bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"CreateApp original path allocation refused"))?;bytes.extend_from_slice(data);let capacity=bytes.capacity();let path=PathBuf::from(unsafe{std::ffi::OsString::from_encoded_bytes_unchecked(bytes)});Ok((path,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))}))}
-  else{let output=match cursor{1=>&mut fields.plugin,2=>&mut fields.app,_=>&mut fields.schema};self.caller.dispatch_step(|cx|admit_original_construction(cx,output,demand,|_|{let mut text=String::new();text.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"CreateApp original text allocation refused"))?;text.push_str(std::str::from_utf8(data).expect("borrowed CreateApp text remains UTF8"));let capacity=text.capacity();Ok((text,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))}))};
+  if cursor==4{
+   let demand=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};
+   let call=self.caller.dispatch_step(|cx|kernel_metadata(cx,demand,||slot.published.store(true,Ordering::Release)));
+   self.accept(call);return
+  }
+  let data=if cursor==0{input.path.as_os_str().as_encoded_bytes()}else{[input.plugin,input.app,input.schema][cursor-1].as_bytes()};
+  let length=data.len();
+  let demand=OriginalConstructionDemand{items:1,copy_bytes:length,capacity_bytes:length,release_bytes:0,depth:1};
+  let construction=&mut self.construction;
+  let call=if cursor==0{
+   self.caller.dispatch_step(|cx|construction.admit(cx,&mut fields.path,demand,|actual|{
+    let mut bytes=Vec::new();
+    bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"CreateApp original path allocation refused"))?;
+    bytes.extend_from_slice(data);
+    let capacity=bytes.capacity();*actual=Some(capacity);
+    let path=PathBuf::from(unsafe{std::ffi::OsString::from_encoded_bytes_unchecked(bytes)});
+    Ok((path,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))
+   }))
+  }else{
+   let output=match cursor{1=>&mut fields.plugin,2=>&mut fields.app,_=>&mut fields.schema};
+   self.caller.dispatch_step(|cx|construction.admit(cx,output,demand,|actual|{
+    let mut text=String::new();
+    text.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"CreateApp original text allocation refused"))?;
+    text.push_str(std::str::from_utf8(data).expect("borrowed CreateApp text remains UTF8"));
+    let capacity=text.capacity();*actual=Some(capacity);
+    Ok((text,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))
+   }))
+  };
   if self.accept(call)==Some(true){self.cursor+=1;slot.notify_client.store(true,Ordering::Release);}
  }
  fn close_one(&mut self,slot:&Slot){
   if !self.room(){return}if !self.caller.original_loans_are_returned(){return}
+  if self.admission_failure.is_some()||!self.admission_retirement.is_empty(){
+   if let Err(error)=self.caller.retire_admission_failure_step(&mut self.admission_failure,&mut self.admission_retirement){self.root_failure=Some(OriginalActorContextError::Original(error));}
+   return
+  }
+  if !self.construction.terminal_is_empty(){let call=self.caller.dispatch_cleanup_step(|cx|self.construction.close_step(cx));self.accept(call);return}
   let fields=unsafe{&mut*slot.fields.get()};
-  if let Some(path)=fields.path.as_ref(){let demand=RetirementDemand{copy_bytes:size_of::<Option<PathBuf>>(),release_bytes:path.capacity(),depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|close_original_retained_step(cx,demand,|_|{fields.path.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}));self.accept(call);return}
-  for text in [&mut fields.plugin,&mut fields.app,&mut fields.schema]{if let Some(value)=text.as_ref(){let demand=RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:value.capacity(),depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|close_original_retained_step(cx,demand,|_|{text.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}));self.accept(call);return}}
-  if let Some(index)=self.failures.iter().position(Option::is_some){let release=match &self.failures[index].as_ref().unwrap().message{std::borrow::Cow::Owned(text)=>text.capacity(),_=>0};if !self.caller.ready(){if release==0{self.failures[index].take();}return}let field=&mut self.failures[index];let demand=RetirementDemand{copy_bytes:size_of::<Option<ValueError>>(),release_bytes:release,depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|close_original_retained_step(cx,demand,|_|{field.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}));self.accept(call);return}
+  if let Some(path)=fields.path.as_ref(){let demand=RetirementDemand{copy_bytes:size_of::<Option<PathBuf>>(),release_bytes:path.capacity(),depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|kernel_metadata(cx,demand,||{fields.path.take();}));self.accept(call);return}
+  for text in [&mut fields.plugin,&mut fields.app,&mut fields.schema]{if let Some(value)=text.as_ref(){let demand=RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:value.capacity(),depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|kernel_metadata(cx,demand,||{text.take();}));self.accept(call);return}}
+  if let Some(index)=self.failures.iter().position(Option::is_some){let release=match &self.failures[index].as_ref().unwrap().message{std::borrow::Cow::Owned(text)=>text.capacity(),_=>0};if !self.caller.ready(){if release==0{self.failures[index].take();}return}let field=&mut self.failures[index];let demand=RetirementDemand{copy_bytes:size_of::<Option<ValueError>>(),release_bytes:release,depth:1,..Default::default()};let call=self.caller.dispatch_cleanup_step(|cx|kernel_metadata(cx,demand,||{field.take();}));self.accept(call);return}
   match self.caller.close_step(){Ok(call)=>match call.result{Ok(RetainedCloneStep::Complete(_))if self.caller.terminal_is_empty()=>self.closed=true,Ok(_)=>{},Err(error)=>{self.root_failure=Some(error);self.failed=true;}},Err(error)=>self.retain(error)}
  }
  fn pump(&mut self,slot:&Slot)->bool{
@@ -57,7 +87,7 @@ impl Node{
   if slot.detached.load(Ordering::Acquire){
    if let Some(task)=self.compiler.as_ref(){if task.can_close()&&self.room(){let call=self.caller.dispatch_cleanup_step(|cx|self.compiler.as_mut().unwrap().close(None,cx));self.accept(call);if self.compiler.as_ref().is_some_and(compiler::CompilerTask::terminal){self.compiler.take();}}}
    else{self.close_one(slot);}
-  }else if !self.failed&&self.room()&&!self.caller.ready(){match self.caller.admit_step(){Ok(call)=>if let Err(error)=call.result{self.retain(error)},Err(error)=>self.retain(error)}}
+  }else if !self.failed&&self.room()&&!self.caller.ready(){match self.caller.admit_step(){Ok(call)=>if let Err(error)=call.result{self.admission_failure=Some(error);self.failed=true;},Err(error)=>self.retain(error)}}
   before!=(self.caller.retained_spent(),self.caller.fuel_remaining(),self.caller.ready(),self.closed)
  }
 }
@@ -85,20 +115,43 @@ impl CreateAppRequestOwner{
  pub fn plugin(&self)->&str{self.fields().plugin.as_deref().unwrap()}
  pub fn app(&self)->&str{self.fields().app.as_deref().unwrap()}
  pub fn schema(&self)->&str{self.fields().schema.as_deref().unwrap()}
+ pub async fn activation_budget(&self)->Result<semio_framework::kernel::Budget,CreateAppSourceFailureKind>{
+  let limits=super::super::TURN_BUDGET;
+  loop{
+   if let Some(budget)=self.dispatch(|cx|{
+    let retained=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;
+    let now=(cx.clock_source())().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"renderer activation requires its original clock"))?;
+    let deadline_us=now.saturating_add(limits.deadline_us).min(cx.deadline_us());
+    let fuel=limits.fuel.min(cx.fuel_remaining());
+    Ok(semio_framework::kernel::Budget{retained,retained_policy:cx.retained_grant(),work_fuel:fuel,fuel,deadline_us,max_effects:limits.max_effects,max_patch_bytes:limits.max_patch_bytes,max_frames:limits.max_frames})
+   })?{return Ok(budget)}
+   semio_framework_async::yield_once().await;
+  }
+ }
  pub fn cancel_compiler(&self){let slot=&SLOTS[self.index];if slot.generation.load(Ordering::Acquire)==self.generation{slot.compiler_cancelled.store(true,Ordering::Release);wake();}}
  fn valid(&self)->Result<(),CreateAppSourceFailureKind>{if self.closing{return Err(CreateAppSourceFailureKind::Closed)}if SLOTS[self.index].generation.load(Ordering::Acquire)!=self.generation{return Err(CreateAppSourceFailureKind::Stale)}if let Some(error)=*SCHEDULER_FAILURE.lock().unwrap_or_else(std::sync::PoisonError::into_inner){return Err(CreateAppSourceFailureKind::Maintenance(error))}Ok(())}
  pub fn into_failure(self,kind:CreateAppSourceFailureKind)->CreateAppSourceFailure{CreateAppSourceFailure{kind,owner:Some(self),initial:None}}
  /// 🏗️ Only the actual initiating caller can admit the sealed compiler frame and its original immutable inputs.
  pub fn start_compiler(&self,runtime:&std::sync::Arc<semio_plugin_host::GuestRuntimes>,hash:semio_framework_actor::PackageHash,bytes:&mut Option<semio_framework_job::OriginalSuppliedJobBytes>)->Result<bool,CreateAppSourceFailureKind>{
-  self.valid()?;if SLOTS[self.index].compiler_cancelled.load(Ordering::Acquire){return Err(CreateAppSourceFailureKind::Cancelled)}compiler_maintenance().map_err(CreateAppSourceFailureKind::Maintenance)?;let result=with_node(self.index,self.generation,|node|{if node.failed{return Err(CreateAppSourceFailureKind::Source)}if let Some(task)=node.compiler.as_ref(){return if task.matches(runtime,hash,bytes){Ok(true)}else{node.retain(ValueError::literal(ValueRefusalKind::InvariantViolated,"compiler retry changed its original runtime, package or input custody"));Err(CreateAppSourceFailureKind::Source)}}let call=node.caller.dispatch_step(|cx|compiler::admit(self.index,self.generation,runtime,hash,bytes,&mut node.compiler,cx));match node.accept(call){Some(true)=>{node.compiler.as_mut().unwrap().committed=true;Ok(true)},Some(false)=>{node.retain(ValueError::literal(ValueRefusalKind::WorkLimit,"compiler frame does not fit its unchanged original request stock"));Err(CreateAppSourceFailureKind::Source)},None=>Err(CreateAppSourceFailureKind::Source)}});if matches!(result,Some(Ok(true))){wake_compiler();}else if result.is_none(){wake();}result.unwrap_or(Ok(false))
+  self.valid()?;if SLOTS[self.index].compiler_cancelled.load(Ordering::Acquire){return Err(CreateAppSourceFailureKind::Cancelled)}compiler_maintenance().map_err(CreateAppSourceFailureKind::Maintenance)?;let result=with_node(self.index,self.generation,|node|{if node.failed{return Err(CreateAppSourceFailureKind::Source)}if let Some(task)=node.compiler.as_ref().filter(|task|task.committed){return if task.matches(runtime,hash,bytes){Ok(true)}else{node.retain(ValueError::literal(ValueRefusalKind::InvariantViolated,"compiler retry changed its original runtime, package or input custody"));Err(CreateAppSourceFailureKind::Source)}}let call=node.caller.dispatch_step(|cx|compiler::admit(self.index,self.generation,runtime,hash,bytes,&mut node.compiler,&mut node.construction,cx));match node.accept(call){Some(true)=>{node.compiler.as_mut().unwrap().committed=true;Ok(true)},Some(false)=>{SLOTS[self.index].notify_client.store(true,Ordering::Release);Ok(false)},None=>Err(CreateAppSourceFailureKind::Source)}});if matches!(result,Some(Ok(true))){wake_compiler();}else if result.is_none()||matches!(result,Some(Ok(false))){wake();}result.unwrap_or(Ok(false))
  }
  /// 🧾️ The full result stays in its original mailbox through receipt, exact frame close and current-source final publication.
  pub fn poll_compiler(&self,waker:&Waker,witness:&std::sync::Arc<semio_plugin_host::GuestRuntimes>,output:&mut Option<semio_plugin_host::CompiledHandle>)->Result<bool,CreateAppSourceFailureKind>{
   self.valid()?;let slot=&SLOTS[self.index];if slot.compiler_cancelled.load(Ordering::Acquire){return Err(CreateAppSourceFailureKind::Cancelled)}*slot.waiter.lock().unwrap_or_else(std::sync::PoisonError::into_inner)=Some(waker.clone());let result=with_node(self.index,self.generation,|node|{
    if node.failed{return Err(CreateAppSourceFailureKind::Source)}let task=node.compiler.as_ref().ok_or(CreateAppSourceFailureKind::Stale)?;if task.status()==compiler::Status::BackendRefusal{return Err(CreateAppSourceFailureKind::Backend)}if task.status()==compiler::Status::Pending{return Ok(false)}
-   if !task.prepared(){let call=node.caller.dispatch_step(|cx|node.compiler.as_mut().unwrap().prepare(cx));match node.accept(call){Some(true)=>{node.compiler.as_mut().unwrap().prepare_committed();slot.notify_client.store(true,Ordering::Release);return Ok(false)},Some(false)=>node.retain(ValueError::literal(ValueRefusalKind::WorkLimit,"compiler result preparation does not fit its unchanged original stock")),None=>{}}return Err(CreateAppSourceFailureKind::Source)}
+   if !task.prepared(){let call=node.caller.dispatch_step(|cx|node.compiler.as_mut().unwrap().prepare(cx));match node.accept(call){Some(true)=>{slot.notify_client.store(true,Ordering::Release);return Ok(false)},Some(false)=>node.retain(ValueError::literal(ValueRefusalKind::WorkLimit,"compiler result preparation does not fit its unchanged original stock")),None=>{}}return Err(CreateAppSourceFailureKind::Source)}
    if !task.frame_closed(){let before=(node.caller.retained_spent(),node.caller.fuel_remaining());let call=node.caller.dispatch_cleanup_step(|cx|node.compiler.as_mut().unwrap().close(Some(witness),cx));if node.accept(call).is_none(){return Err(CreateAppSourceFailureKind::Source)}if before==(node.caller.retained_spent(),node.caller.fuel_remaining()){node.retain(ValueError::literal(ValueRefusalKind::WorkLimit,"compiler frame cleanup has no remaining original stock or work"));return Err(CreateAppSourceFailureKind::Source)}slot.notify_client.store(true,Ordering::Release);return Ok(false)}
-   let mut receipt=None;let demand=OriginalConstructionDemand{items:1,copy_bytes:size_of::<Option<semio_plugin_host::CompiledHandle>>(),capacity_bytes:0,release_bytes:0,depth:1};let call=node.caller.dispatch_step(|cx|admit_original_construction(cx,&mut receipt,demand,|_|Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))));match node.accept(call){Some(true)=>{},Some(false)=>{node.retain(ValueError::literal(ValueRefusalKind::WorkLimit,"compiler result publication does not fit its unchanged original stock"));return Err(CreateAppSourceFailureKind::Source)},None=>return Err(CreateAppSourceFailureKind::Source)}assert!(output.is_none(),"compiler consumer must retain one empty original result slot");*output=Some(node.compiler.as_mut().unwrap().take_prepared());node.compiler.take();Ok(true)
+   assert!(output.is_none(),"compiler consumer must retain one empty original result slot");
+   let demand=RetirementDemand{copy_bytes:size_of::<Option<semio_plugin_host::CompiledHandle>>(),depth:1,..Default::default()};
+   let compiler=&mut node.compiler;
+   let call=node.caller.dispatch_step(|cx|{
+    kernel_metadata(cx,demand,||*output=Some(compiler.as_mut().unwrap().take_prepared())).map(|step|step.progress().copied_items!=0)
+   });
+   match node.accept(call){
+    Some(true)=>{node.compiler.take();Ok(true)},
+    Some(false)=>{slot.notify_client.store(true,Ordering::Release);Ok(false)},
+    None=>Err(CreateAppSourceFailureKind::Source),
+   }
   });if slot.notify_client.load(Ordering::Acquire){wake();}else if result.is_none(){slot.notify_client.store(true,Ordering::Release);wake();}result.unwrap_or(Ok(false))
  }
  /// ▶️ The actual request issuer, never its byte supplier, lends the finite compiler producer its original context.

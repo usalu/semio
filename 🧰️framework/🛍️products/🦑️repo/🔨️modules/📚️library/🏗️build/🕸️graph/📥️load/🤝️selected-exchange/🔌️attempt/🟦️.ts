@@ -6,6 +6,9 @@ import {hostOfRootV1,type ObservationRowV1} from "../../../../🪪️graph-state
 import {graphFleetClientV1,type GraphFleetClientV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import {graphFleetSettingsV1} from "../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import {remoteCacheFetchV1} from "../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {decodeAuthorityObservationsV1,encodeAuthorityObservationsV1} from "../../../../👁️observation/🔢️row-table/🟨️.mjs";
+import authoritySchema from "../../../../🧬️schema/📥️authority.json" with {type:"json"};
+import snapshotPolicy from "../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json" with {type:"json"};
 import {createProjectFileIndexV1} from "../../../🧭️file-owner/🟨️.mjs";
 import {registerSliceReportSourceV1,sliceReadStepV1,sliceReadActiveV1} from "../../../../🧠️memory/📋️slice-report/🟨️.mjs";
 import {SELECTED_EXCHANGE_TEXTS_V1,selectedGenerationV1,type SelectedAdmissionEntryV1,type SelectedSealedV1} from "../🟦️.ts";
@@ -42,11 +45,11 @@ export async function loadSelectedThroughFleetV1<G>(port:SelectedAttemptPortV1<G
  const language=environment.SEMIO_LANGUAGE==="de"?"de":"en",say=port.say??((line:string)=>{try{process.stderr.write(line+"\n");}catch{}}),host=hostOfRootV1(port.root),platform=port.platform??`${process.platform}-${process.arch}`.toLowerCase();
  let result:G|undefined,ran=false,failed=false,failure:unknown,ownerOf:(relative:string)=>string|undefined=()=>undefined;
  const sealedOf=async():Promise<SelectedSealedV1|undefined>=>{
-  const source=await readFile(port.path,"utf8"),authority=JSON.parse(await readFile(port.authorityPath,"utf8")) as {membership:string;graph:string;observations:ObservationRowV1[]};
-  if(authority.graph!==sha(source))return undefined;
+  const source=await readFile(port.path,"utf8"),authority=JSON.parse(await readFile(port.authorityPath,"utf8")) as {version:number;membership:string;graph:string;observations:unknown};
+  if(authority.version!==authoritySchema.properties.version.const||authority.graph!==sha(source))return undefined;
   const projects=(JSON.parse(source) as {projects?:Record<string,{root:string}>}).projects??{};ownerOf=createProjectFileIndexV1(projects);
   const admission:SelectedAdmissionEntryV1[]=port.facts.entries(port.scope).map(entry=>({owner:entry.suffix.slice(0,entry.suffix.indexOf("\0")),suffix:entry.suffix,facts:entry.facts,rows:entry.rows as ObservationRowV1[]}));
-  return{graph:source,rows:authority.observations,membership:authority.membership,admission};
+  return{graph:source,rows:decodeAuthorityObservationsV1(authority.observations,authoritySchema.definitions.ObservationKind.enum,()=>port.signal?.throwIfAborted()) as ObservationRowV1[],membership:authority.membership,admission};
  };
  const outcome=await selectedGenerationV1({
   client,scope:port.scope,platform,host,owner:port.owner??`${hostname()}:${process.pid}:${randomUUID().slice(0,6)}`,
@@ -57,7 +60,8 @@ export async function loadSelectedThroughFleetV1<G>(port:SelectedAttemptPortV1<G
    for(const entry of plan.fetched.admission)if(matching.has(entry.owner))port.facts.seed(port.scope,entry.suffix,entry.facts,entry.rows);
    if(!plan.complete)return;
    const rows=[...plan.fetched.rowsByOwner.values()].flat(),projects=(JSON.parse(plan.fetched.graph) as {projects?:unknown}).projects??{};
-   const authority=JSON.stringify({version:3,module:port.module,membership:plan.fetched.head.membership,graph:sha(plan.fetched.graph),seal:port.verdict({projects,rows}),observations:rows});
+   const header=JSON.stringify({version:authoritySchema.properties.version.const,module:port.module,membership:plan.fetched.head.membership,graph:sha(plan.fetched.graph),seal:port.verdict({projects,rows})}).slice(0,-1)+',"observations":';
+   const authority=header+encodeAuthorityObservationsV1(rows as readonly (ObservationRowV1 & {fact:unknown})[],snapshotPolicy.maximumSnapshotBytes-Buffer.byteLength(header)-1,()=>port.signal?.throwIfAborted())+"}";
    await mkdir(dirname(port.path),{recursive:true});
    const graphTemp=port.path+"."+randomUUID(),receiptTemp=port.authorityPath+"."+randomUUID();
    try{await writeFile(graphTemp,plan.fetched.graph,{flag:"wx"});await writeFile(receiptTemp,authority,{flag:"wx"});await rename(graphTemp,port.path);await rename(receiptTemp,port.authorityPath);}finally{await Promise.all([rm(graphTemp,{force:true}),rm(receiptTemp,{force:true})]);}

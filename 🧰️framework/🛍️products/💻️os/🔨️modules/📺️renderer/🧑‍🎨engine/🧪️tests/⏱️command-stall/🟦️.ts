@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️command-stall.json" with { type: "json" };
 import { COMMAND_STALL_CONTRACT_V1, CommandCancelledErrorV1, commandStallBandTextV1, commandStallCancelTextV1, commandStallHeldSecondsV1, createCommandStallWatchV1 } from "../../🧱️elements/🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 import { serializePerActor } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+import { commandStallLineV1 } from "../../🧱️elements/🏛️ShellHost/🔌️extension-runtime/🟦️.ts";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -72,4 +73,17 @@ describe("command stall watch (fixture)", () => {
     await watch.watch({ actorId: "settled", programId: "law", commandId: "addNode" }, async () => undefined);
     expect(watch.cancel(1)).toBe(false);
   });
+});
+
+describe("command stall band label (fixture)", () => {
+  const { programId, apps } = fixture.labels;
+  const programs = [{ handle: { pluginId: programId }, manifest: { apps: apps.map((app) => ({ ...app, windowKinds: [] })) } }] as unknown as Parameters<typeof commandStallLineV1>[1];
+  for (const testCase of fixture.labels.cases) {
+    it(testCase.id, () => {
+      const stall = { id: 1, actorId: testCase.actorId, programId, commandId: null, startedAtMs: 0 };
+      const spawned = testCase.spawned === null ? [] : [{ pluginId: programId, ...testCase.spawned }] as unknown as Parameters<typeof commandStallLineV1>[2];
+      const session = { pluginId: programId, instanceId: testCase.session.instanceId, app: apps.find((app) => app.id === testCase.session.appId) } as unknown as Parameters<typeof commandStallLineV1>[3];
+      expect(commandStallLineV1(stall, programs, spawned, session, "default", "en", COMMAND_STALL_CONTRACT_V1.stallBoundMs)).toBe(commandStallBandTextV1(testCase.expect, null, COMMAND_STALL_CONTRACT_V1.stallBoundMs / 1_000, "en"));
+    });
+  }
 });

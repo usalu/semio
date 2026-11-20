@@ -1,0 +1,185 @@
+{
+  "cases": [
+    {
+      "name": "exact streamed bytes",
+      "size": 4,
+      "expectedBody": "abcd",
+      "chunks": [
+        "a",
+        "bcd"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": 4,
+        "fault": null,
+        "requests": 1,
+        "chunksRead": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "decoded HTTP bytes with wire length",
+      "size": 4,
+      "expectedBody": "abcd",
+      "chunks": [
+        "ab",
+        "cd"
+      ],
+      "headers": {
+        "content-encoding": "gzip",
+        "content-length": "23"
+      },
+      "expected": {
+        "bytes": 4,
+        "fault": null,
+        "requests": 1,
+        "chunksRead": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "overflow cancels at its first excessive chunk",
+      "size": 4,
+      "expectedBody": "abcd",
+      "chunks": [
+        "ab",
+        "cdef",
+        "unread"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 1,
+        "chunksRead": 2,
+        "cancelled": true
+      }
+    },
+    {
+      "name": "undersize fails at end of stream",
+      "size": 4,
+      "expectedBody": "abcd",
+      "chunks": [
+        "ab",
+        "c"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 1,
+        "chunksRead": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "exact size with wrong digest",
+      "size": 4,
+      "expectedBody": "abcd",
+      "chunks": [
+        "ab",
+        "ce"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 1,
+        "chunksRead": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "valid empty CAS shorthand",
+      "size": 0,
+      "expectedBody": "",
+      "chunks": [],
+      "headers": {},
+      "expected": {
+        "bytes": 0,
+        "fault": null,
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "empty digest with positive size",
+      "size": 1,
+      "expectedBody": "",
+      "chunks": [],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "nonempty digest with zero size",
+      "size": 0,
+      "expectedBody": "a",
+      "chunks": [
+        "a"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "negative size",
+      "size": -1,
+      "expectedBody": "a",
+      "chunks": [
+        "a"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "fractional size",
+      "size": 1.5,
+      "expectedBody": "a",
+      "chunks": [
+        "a"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "size above producer blob limit",
+      "size": 33554433,
+      "expectedBody": "a",
+      "chunks": [
+        "a"
+      ],
+      "headers": {},
+      "expected": {
+        "bytes": null,
+        "fault": "blob-integrity",
+        "requests": 0,
+        "chunksRead": 0,
+        "cancelled": false
+      }
+    }
+  ]
+}

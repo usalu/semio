@@ -25,6 +25,42 @@ fn shared_mesh_selection_cases_emit_typed_absolute_inputs() {
 }
 
 #[test]
+fn selected_mesh_merge_applies_ordered_inputs_on_the_contributed_graph() {
+    let descriptor = std::fs::read_to_string(fixture_path!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).unwrap();
+    let descriptor: serde_json::Value = serde_json::from_str(&descriptor).unwrap();
+    let manifest = descriptor["manifest"]["topicContributions"][0]["payload"]["manifestJson"].as_str().unwrap();
+    semio_os_flow::install_flow_extension_manifest("brep", manifest).unwrap();
+
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🥽️edit-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let case = fixture["valid"].as_array().unwrap().iter().find(|case| case["payload"]["mergeMode"] == "first").unwrap();
+    let payload = semio_framework_pack_json::from_json_str(&case["payload"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let ids: Vec<String> = serde_json::from_value(case["ids"].clone()).unwrap();
+    let mut snapshot = Generation3dSnapshot::default();
+    let (initial, (merge, rows)) = with_host(&snapshot.host_snapshot, |host| {
+        host.add_widget(r#"{"kind":"neuron","id":"extrude","neuronKind":"brep.mesh.box"}"#, 0.0, 0.0).unwrap();
+        host.add_widget(r#"{"kind":"neuron","id":"analysis","neuronKind":"brep.mesh.analyze"}"#, 500.0, 0.0).unwrap();
+        host.connect_ports("extrude", "meshOut", "analysis", "mesh").unwrap();
+        (host.host_snapshot.clone(), edit_rows(&payload, &host.host_snapshot, &ids).unwrap())
+    }).unwrap();
+    std::mem::replace(&mut snapshot.host_snapshot, initial).retire_cold();
+    let mut actual = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(snapshot);
+    for row in rows {
+        semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut actual, &row).unwrap();
+        row.retire_cold();
+    }
+
+    let Widget::Neuron { neuron_kind, params, preview, .. } = actual.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == merge).unwrap() else { panic!("mesh merge widget") };
+    assert_eq!(neuron_kind, "brep.mesh.mergeVertices");
+    assert!(*preview);
+    for channel in ["selection", "mode"] {
+        let text = params.get(channel).and_then(|value| value.as_dictionary()).and_then(|value| value.get("value")).and_then(|value| value.as_atom()).and_then(|value| value.as_str());
+        assert_eq!(text, case["inputs"][channel].as_str(), "{channel}");
+    }
+    assert!(actual.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.from_port == "meshOut" && wire.to == merge && wire.to_port == "mesh"));
+    assert!(actual.host_snapshot.synapses.iter().any(|wire| wire.from == merge && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh"));
+}
+
+#[test]
 fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
 
     for (id, descriptor) in [("brep", &*std::fs::read_to_string(fixture_path!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).expect("flow extension descriptor")), ("list", &*std::fs::read_to_string(fixture_path!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🧩️component/🔣️.json")).expect("flow extension descriptor"))] {

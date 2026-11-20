@@ -1,7 +1,7 @@
 /// 🧪️ Real job integration with independent image, text, transform and alpha observations.
 #[test]
 fn pdf_export_streams_large_transparent_images_and_keeps_positioned_unicode() {
-    let case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📕️pdf/integration.json")).unwrap();
+    let case: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/📕️pdf/integration.json")).unwrap();
     let width = case["image"]["width"].as_u64().unwrap() as u32;
     let height = case["image"]["height"].as_u64().unwrap() as u32;
     let pattern: Vec<[u8; 4]> = case["image"]["pattern"].as_array().unwrap().iter().map(|pixel| std::array::from_fn(|channel| pixel[channel].as_u64().unwrap() as u8)).collect();

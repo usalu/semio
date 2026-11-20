@@ -5,6 +5,8 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::element_matches;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::expanded_element_name;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::namespace_scope;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::positioned_worksheet_children;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::WorksheetAxis;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS_STRICT;
@@ -15,8 +17,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, REL_TYPE_OFFICE_DOCUMENT};
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
-pub const XLSX_MAX_ROW: u32 = 1_048_576;
-pub const XLSX_MAX_COLUMN: u32 = 16_383;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{XLSX_MAX_COLUMN, XLSX_MAX_ROW};
 const SPREADSHEETML_NAMESPACES: [&str; 2] = [SML_NS, SML_NS_STRICT];
 const OFFICE_RELATIONSHIP_NAMESPACES: [&str; 2] = [R_NS, R_NS_STRICT];
 
@@ -49,6 +50,16 @@ pub struct XlsxCellVacancyAddress {
     pub worksheet: XlsxWorksheetAddress,
     pub row: u32,
     pub column: u32,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub placement: Option<XlsxCellPlacement>,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct XlsxCellPlacement {
+    pub index: usize,
+    pub unanchor_next: bool,
 }
 
 pub struct ResolvedXlsxCellAddress<'a> {
@@ -92,7 +103,7 @@ fn validate_revision(revision: &str, kind: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn scoped_node_at_path<'a>(root: &'a XmlNode, path: &[usize]) -> Result<(&'a XmlNode, Vec<(String, String)>), String> {
+pub(super) fn scoped_node_at_path<'a>(root: &'a XmlNode, path: &[usize]) -> Result<(&'a XmlNode, Vec<(String, String)>), String> {
     let mut node = root;
     let mut bindings = namespace_scope(&[], node);
     for &index in path {
@@ -237,48 +248,37 @@ fn worksheet_path(snapshot: &XlsxSnapshot, sheet_name: &str) -> Result<String, S
 
 fn cell_path(root: &XmlNode, row: u32, column: u32) -> Result<Vec<usize>, String> {
     validate_coordinates(row, column)?;
-    let reference = format!("{}{}", column_letter(column), row);
-    let row_text = row.to_string();
-    let root_bindings = namespace_scope(&[], root);
-    if !element_matches(root, &root_bindings, &SPREADSHEETML_NAMESPACES, "worksheet")? {
-        return Err("worksheet root is not a SpreadsheetML worksheet element".into());
-    }
-    let XmlNode::Element { children, .. } = root else { unreachable!() };
-    let mut sheet_data_match = None;
-    for (index, node) in children.iter().enumerate() {
-        let bindings = namespace_scope(&root_bindings, node);
-        if element_matches(node, &bindings, &SPREADSHEETML_NAMESPACES, "sheetData")? {
-            let XmlNode::Element { children, .. } = node else { unreachable!() };
-            sheet_data_match = Some((index, children, bindings));
-            break;
-        }
-    }
-    let (sheet_data_index, sheet_data, sheet_data_bindings) = sheet_data_match.ok_or_else(|| "worksheet has no SpreadsheetML sheetData element".to_string())?;
-    for (row_index, row_node) in sheet_data.iter().enumerate() {
-        let row_bindings = namespace_scope(&sheet_data_bindings, row_node);
-        let XmlNode::Element { children, .. } = row_node else { continue };
-        if !element_matches(row_node, &row_bindings, &SPREADSHEETML_NAMESPACES, "row")? || attribute_value(row_node, &row_bindings, &[""], "r")? != Some(row_text.as_str()) {
+    let mut path = sheet_data_path(root)?;
+    let (sheet_data, scope) = scoped_node_at_path(root, &path)?;
+    let XmlNode::Element { name, children, .. } = sheet_data else { unreachable!() };
+    let (namespace, _) = expanded_element_name(name, &scope)?;
+    for entry in positioned_worksheet_children(children, &scope, &namespace, WorksheetAxis::Rows) {
+        let entry = entry?;
+        if entry.position != row {
             continue;
         }
-        for (cell_index, node) in children.iter().enumerate() {
-            let bindings = namespace_scope(&row_bindings, node);
-            if element_matches(node, &bindings, &SPREADSHEETML_NAMESPACES, "c")? && attribute_value(node, &bindings, &[""], "r")? == Some(reference.as_str()) {
-                return Ok(vec![sheet_data_index, row_index, cell_index]);
+        let XmlNode::Element { children, .. } = entry.node else { unreachable!() };
+        for cell in positioned_worksheet_children(children, &entry.scope, &namespace, WorksheetAxis::Columns(row)) {
+            let cell = cell?;
+            if cell.position == column {
+                path.extend([entry.index, cell.index]);
+                return Ok(path);
             }
         }
     }
-    Err(format!("missing cell {reference}"))
+    Err(format!("missing cell {}{row}", column_letter(column)))
 }
 
 fn sheet_data_path(root: &XmlNode) -> Result<Vec<usize>, String> {
-    let root_bindings = namespace_scope(&[], root);
-    if !element_matches(root, &root_bindings, &SPREADSHEETML_NAMESPACES, "worksheet")? {
+    let root_scope = namespace_scope(&[], root);
+    let XmlNode::Element { name, children, .. } = root else { return Err("worksheet root is not an element".into()) };
+    let (namespace, local) = expanded_element_name(name, &root_scope)?;
+    if local != "worksheet" || !SPREADSHEETML_NAMESPACES.contains(&namespace.as_str()) {
         return Err("worksheet root is not a SpreadsheetML worksheet element".into());
     }
-    let XmlNode::Element { children, .. } = root else { unreachable!() };
     for (index, node) in children.iter().enumerate() {
-        let bindings = namespace_scope(&root_bindings, node);
-        if element_matches(node, &bindings, &SPREADSHEETML_NAMESPACES, "sheetData")? {
+        let scope = namespace_scope(&root_scope, node);
+        if element_matches(node, &scope, &[&namespace], "sheetData")? {
             return Ok(vec![index]);
         }
     }
@@ -309,7 +309,7 @@ pub fn xlsx_cell_vacancy_address(snapshot: &XlsxSnapshot, sheet_name: &str, row:
         Err(error) if error.starts_with("missing cell ") => {}
         Err(error) => return Err(error),
     }
-    Ok(XlsxCellVacancyAddress { worksheet, row, column })
+    Ok(XlsxCellVacancyAddress { worksheet, row, column, placement: None })
 }
 
 pub fn xlsx_cell_target_revision(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32) -> Result<String, String> {
@@ -412,8 +412,13 @@ pub fn resolve_xlsx_cell_vacancy_address<'a>(snapshot: &'a XlsxSnapshot, address
     let resolved = resolve_xlsx_worksheet_address(snapshot, &address.worksheet)?;
     let part = &snapshot.xml_parts[resolved.part_index];
     let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {} has no root", address.worksheet.part_path))?;
-    if cell_path(root, address.row, address.column).is_ok() {
-        return Err(format!("cell {}{} is no longer vacant", column_letter(address.column), address.row));
+    match cell_path(root, address.row, address.column) {
+        Ok(_) => return Err(format!("cell {}{} is no longer vacant", column_letter(address.column), address.row)),
+        Err(error) if error.starts_with("missing cell ") => {}
+        Err(error) => return Err(error),
+    }
+    if let Some(placement) = &address.placement {
+        validate_node_path(&[placement.index], "cell placement")?;
     }
     Ok(resolved)
 }

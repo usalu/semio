@@ -38,6 +38,7 @@ export function usePrefersReducedMotion(): boolean {
 
 /** 🎞️ The ambient clock rate of previews, frames per second. */
 export const AMBIENT_FPS = 12;
+const AMBIENT_DRAW_BUDGET_MS = 5;
 
 /** 🧭️ Provides the shared services to a subtree. */
 export function ArchiveProvider(props: { readonly language: Language; readonly t: Translate; readonly catalog: CatalogStore; readonly store: ArchiveStore; readonly children: ReactNode }): ReactElement {
@@ -45,7 +46,7 @@ export function ArchiveProvider(props: { readonly language: Language; readonly t
   const { preferences } = useArchiveState(store);
   const device = usePrefersReducedMotion();
   const reducedMotion = preferences.motion === "reduced" || (preferences.motion === "system" && device);
-  const ambient = useMemo(() => new StaffageClock({ fps: AMBIENT_FPS, playing: false, reducedMotion: true }), []);
+  const ambient = useMemo(() => new StaffageClock({ fps: AMBIENT_FPS, playing: false, reducedMotion: true, drawBudgetMs: AMBIENT_DRAW_BUDGET_MS }), []);
   useEffect(() => {
     if (reducedMotion) ambient.pause();
     else ambient.play();

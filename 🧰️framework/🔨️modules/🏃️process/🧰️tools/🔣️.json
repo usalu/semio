@@ -6,7 +6,8 @@
     "de"
   ],
   "partitions": {
-    "tools": ".cache/b/t/m"
+    "tools": ".cache/b/t/m",
+    "rust": ".cache/b/r/m"
   },
   "packageRoots": [
     "node_modules",
@@ -2034,8 +2035,9 @@
           "kind": "provisioned",
           "partition": "tools",
           "segments": [
-            "wasm-opt",
-            "{sha256}",
+            "binaryen",
+            "{version}",
+            "{host}-{sha256}",
             "bin"
           ],
           "executable": "wasm-opt"
@@ -2175,6 +2177,16 @@
         {
           "kind": "environment",
           "name": "SEMIO_TOOL_WASM_PACK"
+        },
+        {
+          "kind": "provisioned",
+          "partition": "rust",
+          "segments": [
+            "cargo",
+            "home",
+            "bin"
+          ],
+          "executable": "wasm-pack"
         },
         {
           "kind": "path",
@@ -2816,6 +2828,16 @@
         {
           "kind": "environment",
           "name": "SEMIO_TOOL_WASM_BINDGEN"
+        },
+        {
+          "kind": "provisioned",
+          "partition": "rust",
+          "segments": [
+            "cargo",
+            "home",
+            "bin"
+          ],
+          "executable": "wasm-bindgen"
         },
         {
           "kind": "path",

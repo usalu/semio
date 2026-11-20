@@ -10,6 +10,9 @@ use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 use super::complete_pinned_indices;
 
+/// 🧾️ The canonical problem revision a fresh preview must carry.
+const REVISION: [u8; 32] = [7; 32];
+
 /// 🧷️ A kept bitmap renders from complete authored pins after its transient preview expires.
 #[test]
 fn complete_pins_follow_the_portable_output_contract() {
@@ -45,13 +48,14 @@ fn an_unsolved_output_still_renders_its_extent_for_every_example() {
 #[test]
 fn a_cached_solve_of_the_wrong_extent_is_discarded_rather_than_reshaped() {
     let snapshot = crate::examples::rooms_16::snapshot();
-    let stale = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 1, 0])), contradiction: false, output_width: 2, output_height: 2 };
+    let stale = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 1, 0])), contradiction: false, output_width: 2, output_height: 2, ..BitmapTransient::default() };
     assert!(render(&snapshot, &stale, &BitmapOutputWindowConfig::default(), None, None).is_ok());
     let fresh = BitmapTransient {
         output_pixels: Some(encode_base64(&vec![0u8; (snapshot.output.width * snapshot.output.height) as usize])),
         contradiction: false,
         output_width: snapshot.output.width,
         output_height: snapshot.output.height,
+        ..BitmapTransient::default()
     };
     let stale_layers = crate::bitmap_layers_json("out", snapshot.output.width, snapshot.output.height, &snapshot.input.palette, &[], &snapshot.pinned);
     let fresh_indices = decode_base64(fresh.output_pixels.as_deref().expect("fresh pixels")).expect("fresh pixels decode");
@@ -73,8 +77,8 @@ fn hiding_the_pin_overlay_drops_exactly_the_pin_layers() {
 fn a_contradiction_transient_paints_a_labelled_overlay_not_a_silent_empty() {
     let snapshot = crate::examples::rooms_16::snapshot();
     let empty = render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None, None);
-    let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height };
-    let layers = render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None, None);
+    let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height, source_revision: encode_base64(&REVISION), ..BitmapTransient::default() };
+    let layers = render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None, Some(REVISION));
     assert!(layers.contains("out-contradiction"), "contradiction must be visually labelled");
     assert_ne!(layers, empty);
 }
@@ -92,13 +96,29 @@ fn a_partial_fill_payload_paints_differently_from_empty_and_finished() {
         contradiction: false,
         output_width: snapshot.output.width,
         output_height: snapshot.output.height,
+        source_revision: encode_base64(&REVISION),
+        ..BitmapTransient::default()
     };
-    let finished_layers = render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None, None);
+    let finished_layers = render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None, Some(REVISION));
     let partial = payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false);
     let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, [0; 32]), ToolRunState::Running);
-    run.payload = Some(partial.encode_json().into_bytes().into());
-    let partial_layers = render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run), None);
+    run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(partial.encode_json().into_bytes()));
+    let partial_layers = render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run), Some([0; 32]));
+    retire_run(run);
     assert_ne!(partial_layers, empty);
     assert_ne!(partial_layers, finished_layers);
 }
 
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
+    }
+}

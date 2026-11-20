@@ -32,9 +32,9 @@ pub struct MountedOwnerJobReceiptV1 {
 }
 
 impl MountedOwnerPolicyV1 {
-    /// 🎛️ The interactive component embedding every hub composition grants per host turn: 32 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and 32 KiB copy (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
+    /// 🎛️ The interactive component embedding every hub composition grants per host turn: 64 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and 32 KiB copy (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
     pub const INTERACTIVE_COMPONENT: Self = {
-        let grant = RetainedCloneGrant { maximum_items: 32, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let grant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         Self { preparation: grant, maintenance: grant, close: grant }
     };
 
@@ -60,7 +60,19 @@ pub struct MountedOwnerTurnV1<'turn, 'context> {
     phase: MountedOwnerPhaseV1,
     grant: RetainedCloneGrant,
     progress: RetainedCloneProgress,
+    current_progress: RetainedCloneProgress,
     context: &'turn mut StepContext<'context>,
+}
+
+fn receipt_delta(before: RetainedCloneProgress, after: RetainedCloneProgress) -> Result<RetainedCloneProgress, ValueError> {
+    let delta = |earlier: usize, later: usize| later.checked_sub(earlier)
+        .ok_or_else(|| ValueError::invariant("mounted receipt decreased"));
+    Ok(RetainedCloneProgress {
+        copied_items: delta(before.copied_items, after.copied_items)?,
+        copied_bytes: delta(before.copied_bytes, after.copied_bytes)?,
+        retained_capacity_bytes: delta(before.retained_capacity_bytes, after.retained_capacity_bytes)?,
+        released_bytes: delta(before.released_bytes, after.released_bytes)?,
+    })
 }
 
 impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
@@ -75,7 +87,7 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         let policy_grant=policy.grant(phase);let original=context.retained_grant();
         let grant=RetainedCloneGrant {maximum_items:policy_grant.maximum_items.min(original.maximum_items),maximum_copy_bytes:policy_grant.maximum_copy_bytes.min(original.maximum_copy_bytes),maximum_capacity_bytes:policy_grant.maximum_capacity_bytes.min(original.maximum_capacity_bytes),maximum_release_bytes:policy_grant.maximum_release_bytes.min(original.maximum_release_bytes),maximum_depth:policy_grant.maximum_depth.min(original.maximum_depth)};
         if grant.maximum_items == 0 { return Ok(None); }
-        Ok(Some(Self { identity: expected, phase, grant, progress: RetainedCloneProgress::default(), context }))
+        Ok(Some(Self { identity: expected, phase, grant, progress: RetainedCloneProgress::default(), current_progress: RetainedCloneProgress::default(), context }))
     }
 
     fn scheduling_should_yield(&self)->bool{if self.phase==MountedOwnerPhaseV1::Close{self.context.retirement_should_yield()}else{self.context.should_yield()}}
@@ -90,10 +102,10 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
     pub fn grant(&self) -> RetainedCloneGrant {
         let original = self.context.retained_grant();
         RetainedCloneGrant {
-            maximum_items: self.grant.maximum_items.saturating_sub(self.progress.copied_items).min(original.maximum_items),
-            maximum_copy_bytes: self.grant.maximum_copy_bytes.saturating_sub(self.progress.copied_bytes).min(original.maximum_copy_bytes),
-            maximum_capacity_bytes: self.grant.maximum_capacity_bytes.saturating_sub(self.progress.retained_capacity_bytes).min(original.maximum_capacity_bytes),
-            maximum_release_bytes: self.grant.maximum_release_bytes.saturating_sub(self.progress.released_bytes).min(original.maximum_release_bytes),
+            maximum_items: self.grant.maximum_items.saturating_sub(self.current_progress.copied_items).min(original.maximum_items),
+            maximum_copy_bytes: self.grant.maximum_copy_bytes.saturating_sub(self.current_progress.copied_bytes).min(original.maximum_copy_bytes),
+            maximum_capacity_bytes: self.grant.maximum_capacity_bytes.saturating_sub(self.current_progress.retained_capacity_bytes).min(original.maximum_capacity_bytes),
+            maximum_release_bytes: self.grant.maximum_release_bytes.saturating_sub(self.current_progress.released_bytes).min(original.maximum_release_bytes),
             maximum_depth: self.grant.maximum_depth.min(original.maximum_depth),
         }
     }
@@ -112,9 +124,10 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         let admitted=receipt.fits(grant)&&(grant.maximum_depth!=0||receipt==RetainedCloneProgress::default())&&(!complete||terminal_is_empty);
         let progress = self.progress.checked_add(receipt).map_err(|error|error.with_retained_progress(receipt))?;
         self.progress = progress;
+        self.current_progress = self.current_progress.checked_add(receipt)?;
         if receipt != RetainedCloneProgress::default() { self.context.consume_fuel(1); }
         self.context.consume_retained(receipt)?;
-        if !admitted||!progress.fits(self.grant) {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted owner actual receipt or terminal witness exceeded its authority").with_retained_progress(receipt));}
+        if !admitted||!self.current_progress.fits(self.grant) {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted owner actual receipt or terminal witness exceeded its authority").with_retained_progress(receipt));}
         Ok(())
     }
 
@@ -124,17 +137,15 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         if self.scheduling_should_yield() { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted job has no original scheduling authority")); }
         let grant = self.grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted job has no original physical turn authority")); }
-        let before_fuel = self.context.fuel_remaining();
-        let before_physical=self.context.retained_progress();
+        let before_fuel = self.context.original_turn_fuel_remaining();
+        let before = self.context.retained_progress();
+        let reserved_before = self.context.reserved_return_progress();
         let result = job(self.context, grant);
-        let after=self.context.retained_progress();
-        let difference=|later:usize,earlier:usize|later.checked_sub(earlier).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original nested receipt recipient decreased"));
-        let actual=RetainedCloneProgress {copied_items:difference(after.copied_items,before_physical.copied_items)?,copied_bytes:difference(after.copied_bytes,before_physical.copied_bytes)?,retained_capacity_bytes:difference(after.retained_capacity_bytes,before_physical.retained_capacity_bytes)?,released_bytes:difference(after.released_bytes,before_physical.released_bytes)?};
-        self.progress = self.progress.checked_add(actual).map_err(|error|error.with_retained_progress(actual))?;
+        let (actual, current) = self.receive_posted(before, reserved_before)?;
         let receipt = result?;
-        let spent = before_fuel.saturating_sub(self.context.fuel_remaining());
-        let minimum_debit = u64::from(actual != RetainedCloneProgress::default());
-        if actual!=receipt.progress||!actual.fits(grant)||!self.progress.fits(self.grant)||spent<minimum_debit||spent>before_fuel||receipt.complete&&!receipt.terminal_is_empty {
+        let spent = before_fuel.saturating_sub(self.context.original_turn_fuel_remaining());
+        let minimum_debit = u64::from(current != RetainedCloneProgress::default());
+        if actual!=receipt.progress||!current.fits(grant)||!self.current_progress.fits(self.grant)||spent<minimum_debit||spent>before_fuel||receipt.complete&&!receipt.terminal_is_empty {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted nested job receipt differs from original physical, scheduling or terminal authority").with_retained_progress(actual));
         }
         Ok(receipt.progress)
@@ -147,22 +158,24 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         }
         let grant = self.grant();
         let before = self.context.retained_progress();
-        let before_fuel = self.context.fuel_remaining();
+        let before_fuel = self.context.original_turn_fuel_remaining();
+        let reserved_before = self.context.reserved_return_progress();
         let result = producer(self.context, grant);
-        let after = self.context.retained_progress();
-        let difference = |later: usize, earlier: usize| later.checked_sub(earlier).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original lifecycle recipient decreased"));
-        let actual = RetainedCloneProgress {
-            copied_items: difference(after.copied_items, before.copied_items)?,
-            copied_bytes: difference(after.copied_bytes, before.copied_bytes)?,
-            retained_capacity_bytes: difference(after.retained_capacity_bytes, before.retained_capacity_bytes)?,
-            released_bytes: difference(after.released_bytes, before.released_bytes)?,
-        };
-        self.progress = self.progress.checked_add(actual)?;
+        let (actual, current) = self.receive_posted(before, reserved_before)?;
         let step = result?;
-        if step.retirement_progress().unwrap_or_default() != actual || !actual.fits(grant) || !self.progress.fits(self.grant) || actual != RetainedCloneProgress::default() && self.context.fuel_remaining() == before_fuel {
+        if step.retirement_progress().unwrap_or_default() != actual || !current.fits(grant) || !self.current_progress.fits(self.grant) || current != RetainedCloneProgress::default() && self.context.original_turn_fuel_remaining() == before_fuel {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original lifecycle receipt differs from its caller authority").with_retained_progress(actual).into());
         }
         Ok(step)
+    }
+
+    fn receive_posted(&mut self, before: RetainedCloneProgress, reserved_before: RetainedCloneProgress) -> Result<(RetainedCloneProgress, RetainedCloneProgress), ValueError> {
+        let actual = receipt_delta(before, self.context.retained_progress())?;
+        let reserved = receipt_delta(reserved_before, self.context.reserved_return_progress())?;
+        let current = receipt_delta(reserved, actual)?;
+        self.progress = self.progress.checked_add(actual)?;
+        self.current_progress = self.current_progress.checked_add(current)?;
+        Ok((actual, current))
     }
 
     /// 📈️ Exposes all four physical receipt currencies to the actual runtime caller.

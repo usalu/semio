@@ -51,6 +51,7 @@ pub fn plugin_drive_displaced_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA
     let instances = runtime.instances.try_borrow().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "runtime instance authority is busy"))?;
     let (mut cursor, mut pending) = (0, false);
     while let Some((index, _, cell)) = instances.next_entry_from(cursor) {
+        if index < cursor { break }
         cursor = index + 1;
         let Some(mut instance) = cell.host_instance() else { pending = true; continue };
         if cx.should_yield() { return Ok(true) }

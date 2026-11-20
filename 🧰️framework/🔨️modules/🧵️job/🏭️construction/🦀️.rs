@@ -60,7 +60,7 @@ fn child_primary(failure:semio_framework_value_native_owned::native_decoding::Na
 /// 🏠️ One caller-owned frame survives callback interruption and every failed publication.
 #[derive(Default,semio_framework_value::RetireOwned)]
 #[value(crate="::semio_framework_value")]
-pub struct OriginalConstructionAdmission{binding:Option<super::OriginalSourceBinding>,authority:Option<semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority<ConstructionProducer>>,frame:semio_framework_value_native_owned::native_decoding::NativeReceivingEffect,source:Option<super::OriginalNativeReceivingOutcome>,child:Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>,failed_taken:bool,complete:bool,captured:bool}
+pub struct OriginalConstructionAdmission{binding:Option<super::OriginalSourceBinding>,authority:Option<semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority<ConstructionProducer>>,frame:semio_framework_value_native_owned::native_decoding::NativeReceivingEffect,source:Option<super::OriginalNativeReceivingOutcome>,child:Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>,failed_taken:bool,complete:bool}
 impl OriginalConstructionAdmission{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("constructor changed its actual Source").into())}Ok(())}
  /// 🧾️ True while a born candidate still owns its unsettled Source outcome, which the next constructor call must settle before any reset.
@@ -158,7 +158,9 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
  if admission.binding.is_none(){if construction_metadata(context,std::mem::size_of_val(&admission.binding),1)?{admission.binding=Some(super::OriginalSourceBinding::borrow(context))}return Ok(OriginalConstructionStatus::Pending)}
  let candidate=std::mem::size_of::<Option<O>>();let capture=RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of_val(&admission.child),..Default::default()};let(complete,total_work)=original_construction_reserve::<O>(demand,work)?;
  if work==0||!complete.fits(context.retained_grant())||context.fuel_remaining()<total_work{return Ok(OriginalConstructionStatus::Pending)}
- if !admission.captured{context.consume_retained(capture)?;context.consume_fuel(1);admission.captured=true}
+ // The resident authority keeps the capture reservation across retries until
+ // this attempt is settled or closed. A new attempt pays for its own capture.
+ if admission.authority.is_none(){context.consume_retained(capture)?;context.consume_fuel(1);}
  let mut physical=demand.physical();physical.copy_bytes+=candidate;let body_grant=RetainedCloneGrant{maximum_items:demand.items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
  let OriginalConstructionAdmission{frame,source,child,authority,..}=admission;let authority=authority.get_or_insert_with(||semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority::new(ConstructionProducer::default()));
  let quote=RetainedCloneGrant{maximum_items:complete.items,maximum_copy_bytes:complete.copy_bytes,maximum_capacity_bytes:complete.capacity_bytes,maximum_release_bytes:complete.release_bytes,maximum_depth:complete.depth};
@@ -168,11 +170,13 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
    let mut run=|effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>|->Result<RetainedCloneStep,ValueError>{
     let construct=construct.take().ok_or_else(||ValueError::invariant("construction call already consumed"))?;
     let turn=scope.with_limits(body_grant,work,|scope|construct(scope,effect.actual()))?;
-    let step=turn.result.and_then(|(candidate,progress)|{*output=Some(candidate);progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<O>>(),..Default::default()}).map(RetainedCloneStep::Complete)})?;
-    scope.checkpoint().map_err(|error|error.with_retained_progress(step.progress()))?;
+    if effect.actual().is_none(){if let Ok((_,progress))=&turn.result{if progress.retained_capacity_bytes!=0{*effect.actual()=Some(progress.retained_capacity_bytes)}}}
+    let step=turn.result.and_then(|(candidate,progress)|{*output=Some(candidate);progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<O>>(),..Default::default()}).map(RetainedCloneStep::Complete)});
     let total=turn.work.checked_add(u128::from(output.is_some())).expect("primitive work is bounded by its held construction scope");
     let owed=u64::try_from(total.saturating_sub(effect.performed_work())).map_err(|_|ValueError::invariant("construction work overflow"))?;
     if owed!=0&&!effect.performed(owed)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"construction exceeded its original work"))}
+    let step=step?;
+    scope.checkpoint().map_err(|error|error.with_retained_progress(step.progress()))?;
     Ok(step)
    };
    authority.drive(&mut ConstructionRun{witness,run:&mut run},effect,action)
@@ -180,6 +184,9 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
   if let semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPoll::Complete(turn)=poll{*child=Some(turn.result.map(|step|step.progress()).map_err(child_primary));}
   Ok(())
  })?;
+ // The physical receipt belongs to this caller, even when the candidate's metadata
+ // must wait for another turn. Other admissions may use this context in between.
+ if source.is_some() { context.settle_receiving_scope()?; }
  Ok(if admission.is_failed(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})
 }
 
@@ -205,7 +212,7 @@ pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admis
             None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
         })?;
         match status{
-            OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
+            OriginalConstructionStatus::Ready=>{if !admission.reset_step(context)?{return Ok(false)}if output.is_some(){return Ok(true)}committed=false}
             OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
             OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
         }

@@ -305,10 +305,12 @@ pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜�
 
 //#region 🧩️ArtifactItems4
 pub mod artifact_items_4 {
-use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{native_codecs, ARTIFACT_DEFINITION_SCHEMA};
 
 pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
 }
 //#endregion 🧩️ArtifactItems4

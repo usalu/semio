@@ -66,6 +66,11 @@ impl PreviewTessellatePhase {
         }
     }
 
+    /// 🚧️ Whether the request ended with a geometry or delivery failure.
+    pub fn is_failure(self) -> bool {
+        matches!(self, Self::Invalid | Self::Failed | Self::Faulted)
+    }
+
     /// 🛑 True while a cancel can still retire the job.
     pub fn is_cancellable(self) -> bool {
         matches!(self, Self::AwaitingGrant | Self::AdmittingSource | Self::Validating | Self::SamplingEdges | Self::MeshingFaces | Self::PackingEdges | Self::Transferring)

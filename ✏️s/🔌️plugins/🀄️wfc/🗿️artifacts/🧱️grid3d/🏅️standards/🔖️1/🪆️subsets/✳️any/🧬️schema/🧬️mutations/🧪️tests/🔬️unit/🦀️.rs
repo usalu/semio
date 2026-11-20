@@ -70,7 +70,7 @@ fn every_mutation_and_its_inverse_return_the_document_to_where_it_started() {
         if vcs::apply_mutation(&snapshot, &mutation).map(|(applied_state, _)| { snapshot = applied_state; }).is_err() {
             continue;
         }
-        for step in &inverse {
+        for step in inverse.iter().rev() {
             vcs::apply_mutation(&snapshot, step).map(|(applied_state, _)| { snapshot = applied_state; }).expect("inverse step applies");
         }
         assert_eq!(snapshot, base, "inverse did not restore the document for {:?}", protocol::SemanticMutation::<Grid3dSnapshot>::semantics(&mutation).kind);

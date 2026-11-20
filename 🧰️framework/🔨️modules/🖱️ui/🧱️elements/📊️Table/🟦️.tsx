@@ -17,6 +17,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -27,6 +28,9 @@ import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/�
 
 /** 📊️ Private interactive table-row presentation. */
 const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
+
+/** 🔲️ Interactive rows are borderless boxes whose state silhouette is painted by the border compositor. */
+const tableRowBoxProps = { ...sharedBorderlessBoxProps, "data-shared-border-interactive": "" } as const;
 
 /** ☑️ Private selected table-row presentation. */
 const tableRowSelectedClass = interactiveActiveFillClass;
@@ -202,6 +206,8 @@ function TableHtml5DragRow<T>({
     <tr
       className={cn(baseRowClassName, dragClassName)}
       draggable={effectiveDraggable || undefined}
+      {...(onRowClick ? tableRowBoxProps : undefined)}
+      data-active={isSelected ? "true" : undefined}
       {...restDragProps}
       onClick={(e) => {
         if (e.detail >= 2) {
@@ -257,13 +263,16 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
     setDraggableRef(node);
     setDroppableRef(node);
   };
-  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized !border-b-[color:var(--active-base)]");
+  const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass, isOver && !isSelected && "bg-hover-interactive-fill text-emphasized");
   const isDragging = activeId === rowId || isDraggingHook;
   return (
     <tr
       ref={combinedRef}
       style={style}
       className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
+      {...(onRowClick ? tableRowBoxProps : undefined)}
+      data-active={isSelected ? "true" : undefined}
+      data-shared-border-state={isOver && !isSelected ? "active" : undefined}
       {...(canDragRow && driverSurfaceDrag ? { ...attributes, ...listeners } : canDragRow ? { ...attributes } : {})}
       onClick={(e) => {
         if (e.detail >= 2) {

@@ -111,7 +111,7 @@ fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
         .or_else(|| window_id.filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind)))
         .unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
     let id = window_id.or(requested).unwrap_or(kind);
-    ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
+    ActionMeta { view_state: Some(std::sync::Arc::new(window_view(kind, id))), ..meta("local") }
 }
 
 /// 📄️ Drains everything one settle turn can have left behind — presented pages, effects, events,
@@ -233,7 +233,7 @@ fn take_page(app: &mut Puzzle2dApp) -> Result<Option<semio_plugin::app::TypedOpe
 /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,
 /// such as the window's active utility.
 pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
-    let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
     settle(app, result)
 }
@@ -410,7 +410,7 @@ pub fn first_node_id(app: &Puzzle2dApp) -> String {
 impl Puzzle2dApp {
     /// 🧼️ One maintenance opportunity keeps its original caller and exact five-currency quote.
     pub fn maintain(&mut self, body: usize) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
-        let demand = self.0.maintenance_retirement_demands(body)?;
+        let demand = self.0.maintenance_retirement_demands(body, semio_plugin::artifact_app_laws::FIXTURE_EFFECT_WORK)?;
         let grant = semio_s_plugin_puzzle_jobs::testing::funded_turn(demand, 1);
         let app = &mut self.0;
         self.1.cx().with_retained_loan(grant, |cx| {

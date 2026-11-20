@@ -33,12 +33,35 @@ pub struct MeshSurfaceJob {
     retired: bool,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 enum Work {
     Basic(Box<Basic>),
     Unwrap(Box<Unwrap>),
 }
 
 impl MeshSurfaceJob {
+    /// 🪙 Quotes the original retirement cursor for the in-flight surface state.
+    pub fn retirement_birth_bytes(&self) -> usize {
+        semio_framework_value::retirement::owned_retirement_birth_bytes::<Work>()
+    }
+
+    /// ♻️ Transfers unfinished surface state into the original bounded retirement path.
+    pub fn into_original_retirement(self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>)
+        -> semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::RetainedCloneProgress), (semio_framework_value::ValueError, Option<Self>)>
+    {
+        use semio_framework_value::{RetainedWorkOutcome, ValueError, ValueRefusalKind, retirement::admit_owned_retirement};
+        let Self { work, progress, cancelled, retired } = self;
+        let mut slot = Some(work);
+        let turn = admit_owned_retirement(&mut slot, effect);
+        let restore = |slot: Option<Work>| slot.map(|work| Self { work, progress, cancelled, retired });
+        let result = match turn.result {
+            Ok(Some(admitted)) => Ok(admitted),
+            Ok(None) => Err((ValueError::literal(ValueRefusalKind::WorkLimit, "mesh surface retirement quote was not admitted"), restore(slot))),
+            Err(error) => Err((error, restore(slot))),
+        };
+        RetainedWorkOutcome { result, work: turn.work }
+    }
+
     /// 📊 Completed units and a conservative remaining-work estimate.
     pub fn progress(&self) -> MeshModelingProgress {
         self.progress
@@ -104,12 +127,14 @@ impl MeshSurfaceJob {
 
 //#region 🔖️Basic
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum Plan {
     Shading,
     Normals,
     Seams,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct Basic {
     mesh: HalfedgeMesh,
     plan: Plan,
@@ -321,11 +346,13 @@ impl HalfedgeMesh {
 //#endregion 🔖️Normals
 
 //#region 🔖️Unwrap
+#[derive(semio_framework_value::RetireOwned)]
 struct Triangle {
     corners: [usize; 3],
     weights: [Complex; 3],
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct Solve {
     vertices: Vec<u32>,
     triangles: Vec<Triangle>,
@@ -348,6 +375,7 @@ struct Solve {
     limit: usize,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct Unwrap {
     mesh: HalfedgeMesh,
     phase: u8,

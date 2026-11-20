@@ -434,6 +434,15 @@ class BrowserWorkerCheckScript extends BundleScript {
   }
 }
 
+/** 🔭️ Refreshes the declared browser modules and build inputs from the bundle compiler. */
+class GenerateBrowserClosureScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Expected generate-browser-closure");
+    const { generateWgpuBrowserClosure } = await import("../../📽️projection/🔭️browser-closure/🟦️.ts");
+    await generateWgpuBrowserClosure(this.repoRoot);
+  }
+}
+
 /** 🧵️ Generates only the deterministic browser frame-worker artifact. */
 class GenerateFrameWorkerScript extends BundleScript {
   async run(): Promise<void> {
@@ -496,6 +505,8 @@ class LintScript extends BundleScript {
 class BootCacheInputCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Expected check-boot-cache-inputs");
+    const { checkWgpuBrowserClosure } = await import("../../📽️projection/🔭️browser-closure/🟦️.ts");
+    await checkWgpuBrowserClosure(this.repoRoot);
     const { testWgpuBootInputs } = await import("../../../../../../../📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
     const { repoTestArtifactEnvironment } = await import("../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts");
     const { mkdirSync } = await import("node:fs");
@@ -541,6 +552,7 @@ const router = new ScriptRouter(import.meta.dirname)
   .register("test-preview-generated", PreviewGeneratedTestScript)
   .register("check-browser-worker", BrowserWorkerCheckScript)
   .register("check-boot-cache-inputs", BootCacheInputCheckScript)
+  .register("generate-browser-closure", GenerateBrowserClosureScript)
   .register("generate-frame-worker", GenerateFrameWorkerScript)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-frame-worker", CheckFrameWorkerScript)

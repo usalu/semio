@@ -398,7 +398,11 @@ impl BooleanJob {
                 }
                 BooleanPhase::Stitch => {
                     if self.selected.is_empty() {
-                        return Err(KernelError::Boolean(BooleanError::InvalidResult("exact boolean selection kept no faces".into())));
+                        let outcome = match self.op {
+                            BooleanOp::Cut | BooleanOp::Intersect => BooleanError::EmptyResult,
+                            BooleanOp::Unite => BooleanError::InvalidResult("exact boolean union kept no faces".into()),
+                        };
+                        return Err(KernelError::Boolean(outcome));
                     }
                     let selected_set: HashSet<FaceId> = self.selected.iter().copied().collect();
                     let result = stitch_selected_faces(body, &self.selected, self.tol, rec)?;

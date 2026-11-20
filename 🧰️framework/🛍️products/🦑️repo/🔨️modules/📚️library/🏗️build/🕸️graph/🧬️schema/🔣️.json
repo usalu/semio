@@ -44,6 +44,31 @@
           "sealStalePaths": "Wie viele geänderte beobachtete Zeilen ein versiegeltes Lesen behält, um die Eigentümer zu nennen, die im nächsten Lesen veraltet sind."
         }
       }
+    },
+    "OwnerRegistryRefusal": {
+      "description": "EN: A graph read could not resolve a native dependency after following the owner registry. DE: Der Graph konnte eine native Abhängigkeit nach dem Abgleich mit dem Eigentümerregister nicht auflösen.",
+      "const": {
+        "code": "BUILD_OWNER_REGISTRY_INCONSISTENT",
+        "en": "The build owner registry is inconsistent for {roots} after {rounds} follow-up rounds (registry moved: {moved}). Run `repo run workspace:verify -- build-owners sync`, then read again. Cause: {cause}",
+        "de": "Das Eigentümerregister des Builds ist nach {rounds} Folgerunden für {roots} inkonsistent (Register geändert: {moved}). `repo run workspace:verify -- build-owners sync` ausführen und erneut lesen. Ursache: {cause}"
+      }
+    },
+    "OwnerRegistryWorkerFailures": {
+      "description": "EN: Native registry failures that must restart the current graph wave. DE: Fehler des nativen Eigentümerregisters, die den aktuellen Graph-Durchlauf neu starten.",
+      "const": [
+        {
+          "code": "BUILD_SOURCE_AUTHORITY",
+          "prefix": "Native dependency has no build project owner: "
+        },
+        {
+          "code": "BUILD_SOURCE_AUTHORITY",
+          "prefix": "Canonical native dependency owner required: "
+        },
+        {
+          "code": "BUILD_OWNER_MANIFEST_ABSENT",
+          "prefix": "Native execution contract requires a native project owner: "
+        }
+      ]
     }
   }
 }

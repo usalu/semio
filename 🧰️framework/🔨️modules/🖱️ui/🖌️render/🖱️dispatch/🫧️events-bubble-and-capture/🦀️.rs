@@ -83,6 +83,7 @@ pub enum AccessibilityEvent {
 #[derive(Clone, Debug, PartialEq)]
 pub enum DispatchEvent {
     PointerCancel { pointer: PointerInfo },
+    PointerLeave { pointer: PointerInfo },
     PointerDown { pointer: PointerInfo, x: f32, y: f32, button: PointerButton, modifiers: EventModifiers },
     PointerUp { pointer: PointerInfo, x: f32, y: f32, button: PointerButton, modifiers: EventModifiers },
     PointerMove { pointer: PointerInfo, x: f32, y: f32, modifiers: EventModifiers },
@@ -102,7 +103,7 @@ pub enum DispatchEvent {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub(super) fn event_pointer(event: &DispatchEvent) -> Option<PointerId> {
     match event {
-        DispatchEvent::PointerDown { pointer, .. } | DispatchEvent::PointerUp { pointer, .. } | DispatchEvent::PointerMove { pointer, .. } | DispatchEvent::PointerCancel { pointer } => Some(pointer.id),
+        DispatchEvent::PointerDown { pointer, .. } | DispatchEvent::PointerUp { pointer, .. } | DispatchEvent::PointerMove { pointer, .. } | DispatchEvent::PointerCancel { pointer } | DispatchEvent::PointerLeave { pointer } => Some(pointer.id),
         _ => None,
     }
 }

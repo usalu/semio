@@ -339,22 +339,36 @@ describe("exact analytic component interaction targets", () => {
       expect(getWorldGumballTransformPreview("trace-app")).toBeNull();
     } finally { view.unmount(); }
   });
-  it("paints neutral pure points in default object mode without fabricating surfaces or edges", async () => {
-    const fixture = (await loadEngineVertexProvenanceFixture());
-    const point = fixture.cases.find(row => row.kind === "point")!;
+  it("paints object-mode points with and without topology labels", async () => {
+    const fixture = await loadEngineVertexProvenanceFixture();
+    const position = fixture.cases.find(row => row.kind === "point")!.points.flat();
     const three = await vi.importActual<typeof import("three")>("three");
-    const oracle = new three.Points(new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(point.points.flat(), 3)), new three.PointsMaterial({ sizeAttenuation: false }));
-    const data = { positions: point.points.flat(), normals: [], indices: [], vertexIds: [0], edgeIds: [], edgePositions: [] };
-    const view = render(sceneNode(null, { meshesJson: JSON.stringify([{ id: "neutral-point", data }]), instancesJson: JSON.stringify([{ id: "point@geometry#0", meshId: "neutral-point" }]), selectionJson: JSON.stringify({ ids: [], selectionMode: "object", targets: { mesh: true, vertex: false, edge: false, face: false } }), referencesJson: "[]" }));
+    const oracle = new three.Points(
+      new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(position, 3)),
+      new three.PointsMaterial({ sizeAttenuation: false }),
+    );
     try {
-      const painted = [...view.container.querySelectorAll("points")].map(node => recorded.geometries.find(geometry => geometry.uuid === node.getAttribute("geometry"))).filter((geometry): geometry is BufferGeometry => Boolean(geometry));
-      expect(painted, "an unselected object-mode pure point must have a visible original mesh instance").toHaveLength(1);
-      expect(Array.from(painted[0]!.getAttribute("position").array)).toEqual(Array.from(oracle.geometry.getAttribute("position").array));
-      expect(painted[0]!.getIndex()).toBeNull();
-      expect(view.container.querySelectorAll("lineSegments")).toHaveLength(0);
-      expect(oracle.geometry.getAttribute("position").count).toBe(1);
+      for (const vertexIds of [[], [0]]) {
+        const data = { positions: position, normals: [], indices: [], vertexIds, edgeIds: [], edgePositions: [] };
+        const view = render(sceneNode(null, {
+          meshesJson: JSON.stringify([{ id: "neutral-point", data }]),
+          instancesJson: JSON.stringify([{ id: "point@geometry#0", meshId: "neutral-point" }]),
+          selectionJson: JSON.stringify({ ids: [], selectionMode: "object", targets: { mesh: true, vertex: false, edge: false, face: false } }),
+          referencesJson: "[]",
+        }));
+        try {
+          const painted = [...view.container.querySelectorAll("points")]
+            .map(node => recorded.geometries.find(geometry => geometry.uuid === node.getAttribute("geometry")))
+            .filter((geometry): geometry is BufferGeometry => Boolean(geometry));
+          expect(painted).toHaveLength(1);
+          expect(Array.from(painted[0]!.getAttribute("position").array)).toEqual(Array.from(oracle.geometry.getAttribute("position").array));
+          expect(painted[0]!.getIndex()).toBeNull();
+          expect(view.container.querySelectorAll("lineSegments")).toHaveLength(0);
+        } finally {
+          view.unmount();
+        }
+      }
     } finally {
-      view.unmount();
       oracle.geometry.dispose();
       oracle.material.dispose();
     }

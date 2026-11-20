@@ -3,6 +3,15 @@ use semio_framework_pixels::{editing::validate_image, png_encoding::PngEncodeJob
 
 const PIXELS_PER_STEP: usize = 1024;
 
+pub(super) fn unpremultiply_rgba(pixels: &mut [u8]) {
+    for rgba in pixels.chunks_exact_mut(4) {
+        let alpha = u32::from(rgba[3]);
+        for channel in &mut rgba[..3] {
+            *channel = if alpha == 0 { 0 } else { ((u32::from(*channel) * 255 + alpha / 2) / alpha).min(255) as u8 };
+        }
+    }
+}
+
 pub enum Phase {
     Normalize { image: RasterImage, pixel: usize },
     Encode { encoder: PngEncodeJob, completed: usize, total: usize },
@@ -25,12 +34,7 @@ impl IconPngExport {
         match &mut self.phase {
             Phase::Normalize { image, pixel } => {
                 let end = (*pixel + PIXELS_PER_STEP).min(image.pixels.len() / 4);
-                for rgba in image.pixels[*pixel * 4..end * 4].chunks_exact_mut(4) {
-                    let alpha = u32::from(rgba[3]);
-                    for channel in &mut rgba[..3] {
-                        *channel = if alpha == 0 { 0 } else { ((u32::from(*channel) * 255 + alpha / 2) / alpha).min(255) as u8 };
-                    }
-                }
+                unpremultiply_rgba(&mut image.pixels[*pixel * 4..end * 4]);
                 *pixel = end;
                 if end == image.pixels.len() / 4 {
                     let total = image.pixels.len() + image.height as usize;

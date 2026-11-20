@@ -21,5 +21,6 @@
       "text": "solid mesh\nendsolid mesh\n",
       "contents": "data:model/stl;base64,c29saWQgbWVzaAplbmRzb2xpZCBtZXNoCg=="
     }
-  ]
+  ],
+  "bound": { "maximumBytes": 3, "name": "bounded.obj", "oversized": "large.obj", "octets": [0, 128, 255] }
 }

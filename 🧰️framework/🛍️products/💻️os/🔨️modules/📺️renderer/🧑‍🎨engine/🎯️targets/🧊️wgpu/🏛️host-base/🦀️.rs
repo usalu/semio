@@ -27,8 +27,19 @@ use wasm_bindgen::prelude::*;
 /// `🖥️host/🧵️shard/🦀️.rs`'s own `BudgetBridge` region already uses for the REVERSE
 /// direction (`GRANT_BUDGET_DEFAULT_MAX_FRAMES`).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, original: semio_plugin_host::shard::grant::ShardResourceBudget) -> semio_plugin_host::shard::grant::ShardResourceBudget {
-    semio_plugin_host::shard::grant::ShardResourceBudget { fuel: budget.fuel, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames, ..original }
+#[derive(Clone, Copy)]
+pub struct RendererTurnLimits {
+    pub fuel: u64,
+    pub deadline_us: u64,
+    pub max_effects: u32,
+    pub max_patch_bytes: u32,
+    pub max_frames: u32,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn actor_budget_from_turn_budget(limits: RendererTurnLimits, original: semio_plugin_host::shard::grant::ShardResourceBudget) -> semio_plugin_host::shard::grant::ShardResourceBudget {
+    let wall_ms = u32::try_from(limits.deadline_us / 1_000).unwrap_or(u32::MAX);
+    semio_plugin_host::shard::grant::ShardResourceBudget { fuel: limits.fuel, wall_ms: original.wall_ms.min(wall_ms), max_effects: limits.max_effects, max_patch_bytes: limits.max_patch_bytes, max_frames: limits.max_frames, ..original }
 }
 //#endregion 🔖️ActorBudgetBridge
 
@@ -658,6 +669,12 @@ pub use boot_subphase::*;
 #[path = "📥️lifted/🎨️presentation-raster/🦀️.rs"]
 mod host_waker;
 pub use host_waker::*;
+
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+#[path = "💻️browser-svg-preview/🦀️.rs"]
+mod browser_svg_preview;
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+pub use browser_svg_preview::rasterize_browser_svg;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

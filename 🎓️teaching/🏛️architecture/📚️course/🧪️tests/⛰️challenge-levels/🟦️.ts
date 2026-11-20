@@ -456,6 +456,7 @@ test("expert runs every task against its own clock: a task past its deadline tak
   await guessSorting(learner, first, itemOf(late, first).value!, late.quantity!);
   await learner.page.clock.fastForward((Number(allowed![1]) * 60 + Number(allowed![2]) + 2) * 1000);
   await expect(task.locator('[data-clock="up"]')).toBeVisible();
+  await expect(task.locator('[aria-busy="true"]')).toHaveCount(0);
   for (const field of await task.locator("[data-course-item] input").all()) await expect(field).toHaveAttribute("readonly", "");
 
   await openTask(learner, 2);

@@ -13,6 +13,11 @@ impl ComponentReferenceTable {
         Self { entries }
     }
     pub fn into_entries(self) -> Vec<(String, Vec<String>)> { self.entries }
+    /// 🎚️ Keeps the component-table entries that still have renderable streams.
+    pub fn retain_domains(&mut self, keep: impl FnMut(&str) -> bool) {
+        let mut keep = keep;
+        self.entries.retain(|(key,_)| keep(key));
+    }
     pub fn iter(&self) -> std::slice::Iter<'_,(String,Vec<String>)> { self.entries.iter() }
     pub fn len(&self) -> usize { self.entries.len() }
     pub fn is_empty(&self) -> bool { self.entries.is_empty() }

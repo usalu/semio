@@ -8,7 +8,7 @@ use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, R
 use semio_framework_value::ValueError;
 use semio_os_spr::{Edit, Mutation};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use semio_os_store_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_os_store_read::ArtifactStoreOperationRowOwners;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;

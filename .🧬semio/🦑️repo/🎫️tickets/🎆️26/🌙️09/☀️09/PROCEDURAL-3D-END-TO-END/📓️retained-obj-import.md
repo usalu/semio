@@ -1,0 +1,20 @@
+# Retained OBJ import
+
+The registered `brep.io.importObj` routes the original text input through a retained OBJ decoder and native mesh publication. It returns the existing `geometry` channel, with the literal kind `shell` for an open mesh or `solid` when all undirected edges have two coherent uses.
+
+The text decoder keeps the original borrowed text address and length and checks both before each scan. A first pass counts and validates finite vertex and face tokens. Two separately granted allocations reserve the exact typed positions and indices. The second pass writes at most one vertex or triangle per action, resolving positive and negative face indices and fan-triangulating polygon records. Each scan examines at most 48 bytes and handles at most one 64-byte token. The typed header transfer leaves the original text under the Flow job's existing input owner.
+
+The existing MeshImportCursor has a funded forward path alongside its compatibility API for synchronous callers. It applies one bounded triangle, arena, lookup or link action per effect. Shared vertices and edges use exact finite coordinate keys. Each private inserted record goes into the rollback journal immediately, independent of whether its triangle has completed. An unfinished import retires the transferred typed buffers, map backing and native entities using the existing paid close path. Registry binding and shape revision protect forward mutation. Cancellation retains the original owner check and may clean up after a revision change.
+
+Publication uses the ordinary two-phase Session claim gate. The cursor stays private through face and shell construction and emits one canonical native key. A granted live-index insertion commits the journal and the matching Session claim. After commit, cleanup releases the journal and scratch while preserving the live topology.
+
+The retained OBJ subset uses geometric `v` and `f` records and discards materials, textures and shading normals. Polygon fans have the same triangulation limitations as the original cold OBJ codec. Shared edges require coherent manifold winding, and the existing mesh cursor uses a single native shell and its signed aggregate triangle volume as an orientation cue. Non-geometric OBJ records are skipped. Bounds are 600,000 vertices and 100,000 triangles, with exact positional welding. STL now uses the same publication gate through its own decoder.
+
+## Verification
+
+- The shared fixture exercises a closed tetrahedron with negative indices, an open CRLF quad without a final newline, an out-of-range index and incoherent winding. Three.js OBJLoader independently checked unique vertex and edge counts, triangle count, surface area and signed volume. Six assertions passed.
+- The standalone native witness compiled the actual OBJ decoder, mesh cursor and Engine publication adapter against cached repository-unit libraries for the arena, construction, map and retained-effect contracts. It checked physical heap receipts on every action, open and closed roots, commit and rollback, invalid input, wrong source and kernel ownership, shape revision, and one granted live-index insertion. The Engine wrapper ran against a minimal registry adapter with real body and native map types.
+- The registered Flow test is `original_obj_import_publishes_shell_or_solid_after_funded_topology`. It covers one-item turns, native area and volume, no visible root before completion, cancellation after private topology creation, and rollback after invalid input. The full registered native run is coordinated by the parent ticket.
+- Repository source closure after the OBJ wiring measured 3,966 active Engine lines, 4,000 native registry lines, 1,927 mesh I/O lines, and 2,540 original geometry job lines. `git diff --check` passed.
+
+To rerun the standalone witness, pass the current repository Cargo unit store's `prototype/build` directory to `🐍️obj-import-native-check.py` using `repo tools exec --light python`. Scoped generated outputs are deleted after each run.

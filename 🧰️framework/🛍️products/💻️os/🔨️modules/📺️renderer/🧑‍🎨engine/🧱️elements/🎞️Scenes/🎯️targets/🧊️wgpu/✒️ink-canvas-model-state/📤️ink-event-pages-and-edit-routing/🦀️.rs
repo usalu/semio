@@ -269,8 +269,19 @@ pub(super) fn write_ink_interaction_selection(input: &mut semio_ui_wgpu_input::I
     reservation.publish_with(mutate)
 }
 
-pub(super) fn write_ink_interaction_hover(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, id: Option<&str>) -> Result<(), semio_ui_action::BoundedActionFault> {
+pub(super) fn write_ink_interaction_hover(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, hit: Option<(&str, &str)>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let Some(ink) = scene.ink_canvas.as_ref().filter(|ink| ink.interactive && ink.view_mode != "navigator") else { return Ok(()) };
     let Some((domain_id, granularity)) = ink_interaction_domain(scene) else { return Ok(()) };
+    let block_id = hit.map(|(block_id, _)| block_id);
+    let unchanged = SCENE_STATE.with(|cell| {
+        let states = cell.borrow();
+        let hovered = states.get(&scene.host_id).and_then(|state| state.ink_last_hover.as_ref()).unwrap_or(&ink.hovered_id);
+        hovered.as_deref() == block_id
+    });
+    if unchanged {
+        return Ok(());
+    }
+    let id = hit.map(|(_, interaction_id)| interaction_id);
     let targets = serde_json::to_string(&id.map(|id| vec![json!({ "granularity": granularity, "id": id })]).unwrap_or_default()).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
     let bytes = semio_ui_action::checked_action_string_bytes(&[&scene.controller_id, "interactionHover", "surfaceId", &scene.surface_id, "domainId", domain_id, "channel", "pointer", "targets", &targets])?;
     let mut reservation = input.reserve_action(&scene.controller_id, "interactionHover", bytes)?;
@@ -281,7 +292,14 @@ pub(super) fn write_ink_interaction_hover(input: &mut semio_ui_wgpu_input::Input
     builder.string(Some("channel"), "pointer")?;
     builder.string(Some("targets"), &targets)?;
     builder.end_container()?;
-    reservation.publish()
+    reservation.publish_with(|| mutate_scene_state(&scene.host_id, |state| {
+        state.ink_last_hover = Some(block_id.map(str::to_owned));
+    }))
+}
+
+/// 👋️ Clears the retained Ink pointer hover without ending a gesture.
+pub fn ink_pointer_leave_into(scene: &UiComponentSceneNode, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    write_ink_interaction_hover(input, scene, None)
 }
 
 pub(crate) fn clear_ink_pointer_state(surface_id: &str) {

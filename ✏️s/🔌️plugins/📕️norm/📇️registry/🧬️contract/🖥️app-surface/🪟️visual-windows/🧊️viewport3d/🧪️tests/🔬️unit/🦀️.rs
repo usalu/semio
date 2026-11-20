@@ -595,7 +595,7 @@ fn station_fields_bake_a_ramp_along_the_member_with_a_matching_legend() {
     let out = at_state(&scene, &[], PlaybackState::default(), &Viewport3dWindowConfig::default());
     let colours = meshes_colours(&out);
     assert_eq!(colours.len(), 1);
-    assert!(colours[0].chunks(3).any(|c| c != &colours[0][0..3]), "ramp must vary along the member");
+    assert!(colours[0].chunks(4).any(|c| c != &colours[0][0..4]), "ramp must vary along the member");
     let field = out.scalar_field.expect("legend field");
     let (lo, hi) = field.values.iter().flatten().fold((f64::MAX, f64::MIN), |a, v| (a.0.min(*v), a.1.max(*v)));
     assert!(lo.abs() < 1e-9 && (hi - 100.0).abs() < 1e-9);

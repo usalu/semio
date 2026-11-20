@@ -11,9 +11,7 @@
 //! Every other node (rows, columns, styles, merged ranges, the other parts, the OPC layer) has no kind and is refused.
 
 use super::*;
-use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
-use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letters_of;
-use canonical_edit::{node_cell_value, part_role, shared_string_position, shared_string_text, sheet_element_name, PartRole};
+use canonical_edit::{inserted_cell_coordinates, node_cell_value, part_role, shared_string_position, shared_string_text, sheet_element_name, PartRole};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditError, SnapshotEditEvent};
@@ -69,14 +67,6 @@ fn edited_node(node: &XmlNode, prefix: &str, event: &SnapshotEditEvent, pointer:
     decode_node(&edited_subtree(&node.to_value(), prefix, event)?, pointer)
 }
 
-fn reference_of(node: &XmlNode) -> Option<(u32, u32)> {
-    let XmlNode::Element { attrs, .. } = node else { return None };
-    let reference = attrs.iter().find(|attr| attr.name == "r")?.value.as_str();
-    let column = column_index(column_letters_of(reference))?;
-    let row = reference.trim_start_matches(|character: char| character.is_ascii_alphabetic()).parse().ok()?;
-    Some((row, column))
-}
-
 struct Located<'a> {
     event: &'a SnapshotEditEvent,
     pointer: &'a str,
@@ -124,10 +114,16 @@ fn worksheet_edit(at: &Located<'_>, sheet: &str) -> Result<Option<Vec<XlsxMutati
     let cell_path = |index: usize| [at.path.as_slice(), &[index]].concat();
     match at.event {
         SnapshotEditEvent::InsertValue { value, .. } => {
-            child_position(position, children.len(), pointer, true)?;
+            let index = child_position(position, children.len(), pointer, true)?;
             let node = decode_node(value, pointer)?;
-            let (row_number, column) = reference_of(&node).ok_or_else(|| refusal(pointer, "an inserted cell carries a reference such as B7 in its r attribute"))?;
-            let address = cell_address::xlsx_cell_vacancy_address(at.snapshot, sheet, row_number, column).map_err(|message| refusal(pointer, message))?;
+            let worksheet = cell_address::xlsx_worksheet_address(at.snapshot, sheet).map_err(map)?;
+            let Some((&row_index, sheet_data)) = at.path.split_last() else { unreachable!() };
+            if worksheet.part_path != at.part_path || worksheet.node_path.as_slice() != sheet_data {
+                return Ok(None);
+            }
+            let (row, column) = inserted_cell_coordinates(at.root, &worksheet, row_index, index, &node).map_err(map)?;
+            let placement = Some(cell_address::XlsxCellPlacement { index, unanchor_next: false });
+            let address = cell_address::XlsxCellVacancyAddress { worksheet, row, column, placement };
             let value = node_cell_value(at.snapshot, at.part_path, &at.path, &node).map_err(|message| refusal(pointer, message))?;
             Ok(Some(vec![XlsxMutation::InsertCell(insert_cell::InsertCell { address, value, node: Some(node) })]))
         }
@@ -137,7 +133,7 @@ fn worksheet_edit(at: &Located<'_>, sheet: &str) -> Result<Option<Vec<XlsxMutati
             if address.local_name != "c" {
                 return Ok(None);
             }
-            Ok(Some(vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address })]))
+            Ok(Some(vec![XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row: false })]))
         }
         SnapshotEditEvent::SetValue { value, .. } => {
             let index = child_position(position, children.len(), pointer, false)?;

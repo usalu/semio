@@ -36,3 +36,4 @@ semio-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/�
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { version = "1.0.140" }
 semio-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust", features = ["testkit"] }
+semio-ui-contract-values = { path = "../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }

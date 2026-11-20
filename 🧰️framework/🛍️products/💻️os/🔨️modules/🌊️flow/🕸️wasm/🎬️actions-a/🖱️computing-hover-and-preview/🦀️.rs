@@ -210,7 +210,11 @@ impl FlowActionState for FlowAction2526 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_hover(optional_text(args, "widgetId")?);
+                        if let Some(edge) = optional_text(args,"edgeId")? {
+                            domain.host.dag.graph.set_hover_edge(Some(edge));
+                        } else {
+                            domain.host.set_hover(optional_text(args,"widgetId")?);
+                        }
                         ok()
                     }
                 };

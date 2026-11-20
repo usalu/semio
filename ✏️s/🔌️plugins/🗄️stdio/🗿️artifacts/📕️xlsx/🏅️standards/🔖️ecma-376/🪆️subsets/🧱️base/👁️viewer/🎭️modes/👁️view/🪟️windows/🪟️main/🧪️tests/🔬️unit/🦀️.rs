@@ -14,6 +14,7 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_projects_used_cells_and_a_vacant_edge_as_a_read_only_grid() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
@@ -23,18 +24,21 @@ async fn render_projects_used_cells_and_a_vacant_edge_as_a_read_only_grid() {
         ..Default::default()
     });
     let node = render(&document, Locale::En, &TreeWindows::unhosted()).expect("render");
-    let table = descendant(&node, "xlsx-viewer-sheet-0-grid").expect("worksheet grid");
-    let Component::Table(props) = &table.component else { panic!("expected windowed table") };
-    assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["A", "B"]);
-    assert_eq!(props.window.map(|window| window.total), Some(2));
-    assert_eq!(props.column_window.map(|window| window.total), Some(2));
-    let Component::TableRow(row) = &table.children[0].component else { panic!("expected grid row") };
-    assert_eq!(row.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), ["1", ""]);
-    assert!(table.children.iter().all(|row| row.bindings.is_empty() && row.children.iter().all(|cell| cell.bindings.is_empty())));
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+        let table = descendant(node, "xlsx-viewer-sheet-0-grid").expect("worksheet grid");
+        let Component::Table(props) = &table.component else { panic!("expected windowed table") };
+        assert_eq!(props.columns.iter().map(|label| label.0.as_str()).collect::<Vec<_>>(), ["A", "B"]);
+        assert_eq!(props.window.map(|window| window.total), Some(2));
+        assert_eq!(props.column_window.map(|window| window.total), Some(2));
+        let Component::TableRow(row) = &table.children[0].component else { panic!("expected grid row") };
+        assert_eq!(row.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), ["1", ""]);
+        assert!(table.children.iter().all(|row| row.bindings.is_empty() && row.children.iter().all(|cell| cell.bindings.is_empty())));
+    });
 }
 
 #[test]
 fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
@@ -90,20 +94,22 @@ fn viewer_projects_requested_sparse_grid_windows_against_calamine() {
             ..ViewModel::new(locale, semio_ui_locale::Terminology::Native)
         };
         let node = render(&document, locale, &TreeWindows::for_body(&view, BODY_KEY)).unwrap();
-        let table = descendant(&node, &table_id).expect("requested worksheet table");
-        let Component::Table(props) = &table.component else { panic!("expected windowed table") };
-        assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((4, row_offset as u32)));
-        assert_eq!(props.column_window.map(|window| (window.total, window.offset)), Some((2, column_offset as u32)));
-        assert_eq!(table.children.len(), row_count);
-        assert_eq!(props.columns.len(), column_count);
-        assert_eq!(props.row_label.as_ref().unwrap().0.as_str(), fixture["labels"][language]["row"].as_str().unwrap());
-        assert_eq!(props.column_label.as_ref().unwrap().0.as_str(), fixture["labels"][language]["column"].as_str().unwrap());
-        let keys: Vec<String> = serde_json::from_value(fixture["expectedKeys"].clone()).unwrap();
-        assert_eq!(table.children.iter().map(|row| row.key.as_str()).collect::<Vec<_>>(), keys.iter().map(String::as_str).collect::<Vec<_>>());
-        for (row, expected) in table.children.iter().zip(&reference_window) {
-            let Component::TableRow(props) = &row.component else { panic!("expected grid row") };
-            assert_eq!(props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), expected.iter().map(String::as_str).collect::<Vec<_>>());
-            assert!(row.bindings.is_empty() && row.children.iter().all(|cell| cell.bindings.is_empty()));
-        }
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| {
+            let table = descendant(node, &table_id).expect("requested worksheet table");
+            let Component::Table(props) = &table.component else { panic!("expected windowed table") };
+            assert_eq!(props.window.map(|window| (window.total, window.offset)), Some((4, row_offset as u32)));
+            assert_eq!(props.column_window.map(|window| (window.total, window.offset)), Some((2, column_offset as u32)));
+            assert_eq!(table.children.len(), row_count);
+            assert_eq!(props.columns.len(), column_count);
+            assert_eq!(props.row_label.as_ref().unwrap().0.as_str(), fixture["labels"][language]["row"].as_str().unwrap());
+            assert_eq!(props.column_label.as_ref().unwrap().0.as_str(), fixture["labels"][language]["column"].as_str().unwrap());
+            let keys: Vec<String> = serde_json::from_value(fixture["expectedKeys"].clone()).unwrap();
+            assert_eq!(table.children.iter().map(|row| row.key.as_str()).collect::<Vec<_>>(), keys.iter().map(String::as_str).collect::<Vec<_>>());
+            for (row, expected) in table.children.iter().zip(&reference_window) {
+                let Component::TableRow(props) = &row.component else { panic!("expected grid row") };
+                assert_eq!(props.cells.iter().map(|cell| cell.as_str()).collect::<Vec<_>>(), expected.iter().map(String::as_str).collect::<Vec<_>>());
+                assert!(row.bindings.is_empty() && row.children.iter().all(|cell| cell.bindings.is_empty()));
+            }
+        });
     }
 }

@@ -1,0 +1,7 @@
+[
+  {"id":"wake","initialGeneration":7,"publishesGeneration":8,"competes":true,"signal":null,"round":1,"adopted":false,"exit":0},
+  {"id":"immediate","initialGeneration":8,"publishesGeneration":null,"competes":false,"signal":null,"round":1,"adopted":false,"exit":0},
+  {"id":"cancel","initialGeneration":7,"publishesGeneration":null,"competes":false,"signal":"SIGTERM","round":null,"adopted":null,"exit":130},
+  {"id":"bad-ticket","initialGeneration":7,"publishesGeneration":null,"competes":false,"signal":null,"round":0,"adopted":true,"exit":0},
+  {"id":"inherited","initialGeneration":7,"publishesGeneration":8,"competes":false,"signal":null,"round":1,"adopted":false,"exit":0}
+]

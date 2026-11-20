@@ -87,6 +87,7 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiText> for UiTextNativeReceiv
  fn close_original_step<'reply>(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_step(body,effect,reply)}
  fn recover_close_original_step<'reply>(&mut self,_:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.recover_close_step(body,effect,reply)}
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
+ fn native_terminal_release(&self)->Option<semio_framework_value::retained_clone::RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{semio_framework_value::retained_clone::RetainedCursorRelease::native(|receiver:&Self|receiver.terminal_is_empty())})}
 }
 impl<I:NativeValueSource+?Sized> Drop for UiTextNativeReceiver<I>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"UI text receiving reached Drop before funded closure")}}
 impl NativeDefaultValue for UiText{

@@ -341,7 +341,7 @@ fn measure_widget_separator_uses_theme_control_height_floor() {
     let theme = Theme::default();
     let (w, h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Separator);
     assert_eq!(w, theme.control_height.max(1.0));
-    assert_eq!(h, 1.0 + theme.gap_standard);
+    assert_eq!(h, 1.0, "a separator measures its own hairline; the stack owns the gap around it");
 }
 
 #[test]

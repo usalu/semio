@@ -449,7 +449,7 @@ describe("ConnectionsPage", () => {
 //#region 🛡️AdminTabs
 /** 🪢️ Framed descendants that are not cells of an owner, i.e. would paint a second frame inside the owner `root`. */
 function ownFrames(root: Element): Element[] {
-  return [...root.querySelectorAll("[data-shared-border-frame]")].filter((frame) => !frame.parentElement?.hasAttribute("data-shared-border-cells"));
+  return [...root.querySelectorAll("[data-shared-border-frame]")].filter((frame) => frame.getAttribute("data-shared-border-edges") !== "" && !frame.parentElement?.hasAttribute("data-shared-border-cells"));
 }
 
 describe("Stat tiles", () => {

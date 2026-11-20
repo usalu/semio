@@ -1,0 +1,49 @@
+{
+  "instance": "plane@origin#0",
+  "mesh": {
+    "positions": [
+      2.5,
+      -1.25,
+      4
+    ],
+    "normals": [],
+    "colors": [],
+    "indices": [],
+    "edgePositions": [],
+    "edgeIds": []
+  },
+  "camera": {
+    "position": [
+      2.5,
+      -1.25,
+      8
+    ],
+    "target": [
+      2.5,
+      -1.25,
+      4
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "fov": 50
+  },
+  "pointer": [
+    200,
+    200
+  ],
+  "variants": [
+    {
+      "vertexIds": [],
+      "semantic": false
+    },
+    {
+      "vertexIds": [
+        0
+      ],
+      "semantic": true
+    }
+  ]
+}

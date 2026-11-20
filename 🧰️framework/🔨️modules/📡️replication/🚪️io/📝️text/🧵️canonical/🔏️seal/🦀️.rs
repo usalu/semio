@@ -1,8 +1,8 @@
 //! 🔏️ Two native tree passes seal one original boxed edit and return its exact owned fields.
 use crate::Edit;
 use semio_framework_hash::Sha256;
-use semio_framework_pack_json::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,OriginalEffectReply,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_pack_json::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor,retained_alias,retained_alias_demand,retained_alias_work_demand};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneRef,RetainedCloneSource,OriginalEffectReply,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
@@ -58,6 +58,9 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
  fn source_demands(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||refusal("seal original source is absent"))?;let work=source.next_close_copy_byte_demand()?;child(RetirementDemand{copy_bytes:work,capacity_bytes:source.next_close_capacity_byte_demand(work)?,release_bytes:source.next_close_release_byte_demand()?,depth:source.next_close_depth_demand()?})}
  fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{let owner=self.retirement.as_ref().unwrap();let work=owner.next_copy_byte_demand()?;child(RetirementDemand{copy_bytes:work,capacity_bytes:owner.next_capacity_byte_demand(work)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
  fn take_demands(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||refusal("seal original source is absent"))?;let work=source.next_take_copy_byte_demand()?;child(RetirementDemand{copy_bytes:work,capacity_bytes:source.next_take_capacity_byte_demand(work)?,release_bytes:source.next_take_release_byte_demand()?,depth:source.next_take_depth_demand()?})}
+ fn tree_reference(&self)->Result<RetainedCloneRef<'_,dyn ArtifactCanonicalJsonTree>,ValueError>{
+  self.source.as_ref().ok_or_else(||refusal("seal original source is absent"))?.borrow().try_project(0,|edit|Ok::<&dyn ArtifactCanonicalJsonTree,ValueError>(edit as &dyn ArtifactCanonicalJsonTree))
+ }
  pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{
   if self.hash_pending{return Ok(copy((self.page_length-self.hash_offset).min(SEAL_TURN_BYTES)));}
   if let Some(tree)=self.tree.as_ref(){return if tree.terminal_is_empty(){Ok(copy(size_of::<Option<ArtifactCanonicalJsonTreeCursor>>()))}else{child(tree.next_demand()?)};}
@@ -68,7 +71,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
    return Ok(Default::default());
   }
   Ok(match self.phase{
-   Phase::CountStart|Phase::HashStart=>child(copy(RetainedCloneBinding::alias_copy_bytes()+ArtifactCanonicalJsonTreeCursor::constructor_demand().copy_bytes))?,
+   Phase::CountStart|Phase::HashStart=>child(retained_alias_demand(self.tree_reference()?)?)?,
    Phase::Header=>copy(1),
    Phase::TakeOwner=>self.take_demands()?,
    Phase::SourceClose=>if self.source.as_ref().unwrap().terminal_is_empty(){copy(size_of::<Option<RetainedCloneSource<Box<Edit<M>>>>>() )}else{return self.source_demands();},
@@ -85,6 +88,14 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
  pub fn next_take_demand(&self)->RetirementDemand{if self.is_ready(){copy(size_of::<Option<Box<Edit<M>>>>()+32)}else{Default::default()}}
  /// ⛽️ Quotes the bounded byte window or fixed ownership transitions before original caller reservation.
  pub fn next_work_demand(&self)->Result<u64,ValueError>{
+  if !self.closing&&self.tree.is_none()&&matches!(self.phase,Phase::CountStart|Phase::HashStart){return retained_alias_work_demand(self.tree_reference()?)?.checked_add(1).ok_or_else(||refusal("seal tree construction work overflow"));}
+  if self.tree.is_none()&&!self.hash_pending{
+   if let Some(source)=self.source.as_ref(){
+    if !self.closing&&self.phase==Phase::TakeOwner{return source.next_take_work_demand(source.next_take_copy_byte_demand()?);}
+    if (self.closing||self.phase==Phase::SourceClose)&&!source.terminal_is_empty(){return source.next_close_work_demand(source.next_close_copy_byte_demand()?);}
+   }
+   if let Some(owner)=self.retirement.as_ref().filter(|owner|self.closing&&!owner.terminal_is_empty()){return owner.next_computational_work(owner.next_copy_byte_demand()?);}
+  }
   Ok(if self.terminal_is_empty()||self.is_ready(){0}else if self.hash_pending{(self.page_length-self.hash_offset).min(SEAL_TURN_BYTES).max(1)as u64}else if self.tree.is_some()||!self.closing&&self.phase==Phase::Header{SEAL_TURN_BYTES as u64}else{2})
  }
  /// 🧮️ Reports the complete most recent call, including failed child work and zero on admission denial.
@@ -113,11 +124,12 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
    else if let Some(owner)=self.retirement.as_mut(){if owner.terminal_is_empty(){self.retirement=None;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(owner.step(effect.grant().maximum_copy_bytes,&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}}
   }else{match self.phase{
    Phase::CountStart|Phase::HashStart=>{
-    let reference=self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.borrow().try_project(0,|edit|Ok::<&dyn ArtifactCanonicalJsonTree,ValueError>(edit as &dyn ArtifactCanonicalJsonTree))?;
+    let reference=self.tree_reference()?;
+    if effect.remaining_work_units()?<self.next_work_demand()?{self.last_work=0;return Ok(RetainedCloneStep::Progress(Default::default()));}
     let before=effect.performed_work();
-    match semio_framework_pack_json::retained_alias(reference,&mut effect.nested(child_grant(grant)))?{
+    match retained_alias(reference,&mut effect.nested(child_grant(grant)))?{
      None=>{self.last_work=effect.performed_work()-before;progress=Default::default();}
-     Some((projection,bound))=>{self.last_work=effect.performed_work()-before+1;let(tree,built)=ArtifactCanonicalJsonTreeCursor::admit(projection,child_grant(grant)).map_err(|_|ValueError::invariant("seal preadmitted original native tree"))?;self.tree=Some(tree);self.phase=if self.phase==Phase::CountStart{Phase::Count}else{Phase::Hash};progress=bound.checked_add(built)?;progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;}
+     Some((projection,bound))=>{self.last_work=effect.performed_work()-before+1;let(tree,built)=ArtifactCanonicalJsonTreeCursor::admit(projection,child_grant(grant)).map_err(|_|ValueError::invariant("seal preadmitted original native tree"))?;self.tree=Some(tree);self.phase=if self.phase==Phase::CountStart{Phase::Count}else{Phase::Hash};progress=RetainedCloneProgress{copied_items:1,..bound.checked_add(built)?};}
     }
    },
    Phase::Header=>{let limit=grant.maximum_copy_bytes.min(SEAL_TURN_BYTES);let mut taken=0usize;self.last_work=0;while taken<limit{self.last_work+=1;if let Some(byte)=self.header_byte()?{self.hash.as_mut().unwrap().update(&[byte]);self.header+=1;taken+=1;}else{if self.buffered{if self.page_length as u64!=self.length{return Err(refusal("seal buffered canonical bytes differ from their counted length").into());}self.hash_pending=true;self.phase=Phase::TakeOwner;}else{self.phase=Phase::HashStart;}break;}}progress.copied_bytes=taken.max(demand.copy_bytes);},

@@ -199,11 +199,11 @@ use semio_plugin::MediaPayload;
 
     /// 🚦️ The fault a refused command answers, whichever door raises it: admission (`dispatch_typed`) or the retained
     /// job's own step (surfaced by the settle the host drives).
-    pub async fn dispatch_refusal(app: &mut PresentationApp, command: PresentationCommand) -> semio_plugin::Fault {
+    pub async fn dispatch_refusal(app: &mut PresentationApp, command: PresentationCommand) -> semio_framework_job::OriginalTurnFailure {
         match semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
             Err(fault) => fault,
             Ok(_) => match settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
-                Err(fault) => fault,
+                Err(failure) => failure.into(),
                 Ok(_) => panic!("the command is refused while it runs"),
             },
         }
@@ -240,6 +240,7 @@ use crate::editor::animate::support::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
+    use semio_framework_value::{FromValue, ToValue};
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory as _;
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
@@ -251,8 +252,10 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
         let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
         let mutation = PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value });
-        let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
-        let decoded: PresentationConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+        let value = serde_json::Value::from(mutation.to_value());
+        let encoded = serde_json::to_vec(&value).expect("third-party JSON encode");
+        let decoded: serde_json::Value = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+        let decoded = PresentationConfigMutation::from_value(decoded.into()).expect("typed mutation decode");
         assert_eq!(decoded, mutation);
         assert_eq!(factory.preflight(&decoded, store::os_store::store_schema::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
     }
@@ -261,28 +264,42 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
 #[test]
 fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use std::io::Write as _;
+    use semio_framework_value::{RetainedCloneGrant, RetainedWorkPoll};
+    use store::os_store::one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation as _;
     let value = "x".repeat(ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES);
-    let mut preparation = AnimatePresentationConfigPreparation {
-        base: None,
-        mutation: Some(PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value })),
-        authority: None,
-        candidate: None,
-        sealed_candidate: None,
-        serialized_bytes: None,
-        prepared: None,
-        checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
-        cancelled: false,
-        closing: false,
-    };
-    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+    let mut preparation = AnimatePresentationConfigPreparation::detached(PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value }));
+    let mut allow = |_| true;
+    let mut receiving = semio_framework_value::NativeDecodeControl::new(65_536, &mut allow);
+    let page = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 };
+    assert!(matches!(preparation.advance(0, ArtifactStoreOneItemGrant { maximum_items: 0, ..page }, &mut receiving), Ok(ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(matches!(preparation.advance(0, ArtifactStoreOneItemGrant { maximum_copy_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES - 1, ..page }, &mut receiving), Ok(ArtifactStoreOneItemPreparationStep::Blocked)));
     preparation.cancel();
-    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));
+    assert!(matches!(preparation.advance(0, page, &mut receiving), Ok(ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(!preparation.has_pending_receiving_recovery());
     preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
-    assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
-    assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
-    assert!(preparation.terminal_is_empty());
+    assert!(matches!(preparation.advance(0, page, &mut receiving), Ok(ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(!preparation.terminal_is_empty());
+    let mut bank = semio_framework_test_original_snapshot_owners::original_bank();
+    let mut turns = 0;
+    while !preparation.terminal_is_empty() {
+        let copy = preparation.next_close_copy_byte_demand().expect("copy demand").max(4_096);
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: copy,
+            maximum_capacity_bytes: preparation.next_close_capacity_byte_demand(copy).expect("capacity demand"),
+            maximum_release_bytes: preparation.next_close_release_byte_demand().expect("release demand"),
+            maximum_depth: preparation.next_close_depth_demand().expect("depth demand").max(1),
+        };
+        let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, grant, 1 << 20, |effect| preparation.close_step(effect));
+        if let RetainedWorkPoll::Complete(turn) = poll {
+            assert!(turn.result.expect("one owner per fully granted turn").progress().fits(grant));
+        }
+        turns += 1;
+        assert!(turns < 64, "the close ladder terminates");
+    }
+    let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 }, 1 << 20, |effect| preparation.close_step(effect));
+    assert!(matches!(poll, RetainedWorkPoll::Complete(turn) if matches!(turn.result, Ok(semio_framework_value::RetainedCloneStep::Complete(_)))));
     let mut counter = AnimatePresentationConfigByteCounter { bytes: 0 };
     assert_eq!(counter.write(&[0; 4_096]).expect("maximum serialized envelope"), 4_096);
     assert!(counter.write(&[0]).is_err());
@@ -391,7 +408,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted, instance_a.1.cx()).await.expect("a's checkpoint commit settles");
     settle_registered_typed_operation(&mut instance_a.0, receiver, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
     instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a), probe(&instance_b), "a replicated checkpoint keeps both instances converged");
@@ -588,44 +605,24 @@ pub(crate) fn every_command() -> Vec<PresentationCommand> {
 /// (`document-archive-replacement.closure-rejected`).
 #[semio_framework_async_macros::async_test]
 async fn demo_example_load_settles_through_the_host_document_archive_door() {
-    use semio_plugin::{artifact_app_laws, PluginApp};
+    use semio_plugin::artifact_app_laws;
     let mut app = context::presentation_app_with_registry().await;
     let instance = 7;
     app.bind_instance_id(instance).await;
     let meta = semio_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
     semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PresentationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
-    let mut loaded = None;
-    for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(page) = app.take_typed_operation_result_page(instance) {
-            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
-        }
-        if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
-            loaded = Some((pack, spr));
-        }
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        if !app.has_pending_typed_operations() {
-            break;
-        }
-        std::thread::yield_now();
-    }
-    let (parent_pack, parent_spr) = loaded.expect("the demo example publishes a document load");
-    PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
-    let mut status = None;
-    for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
-        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
-            status = Some(polled);
-            break;
-        }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
-        std::thread::yield_now();
-    }
-    let status = status.expect("archive load reaches a terminal state");
-    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app.0, 91).expect("archive acknowledgement");
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let mut identity = artifact_app_laws::fixture_identity();
+    let output = artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance, policy, &mut identity, app.1.cx())
+        .await.expect("the demo example publishes");
+    let (parent_pack, parent_spr) = output.effects.into_iter().find_map(|effect| match effect {
+        semio_plugin::kernel::Effect::LoadDocument { pack, spr } => Some((pack, spr)),
+        _ => None,
+    }).expect("the demo example publishes a document load");
+    let archive = protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() };
+    artifact_app_laws::admit_document_archive_load(&mut app.0, 91, archive, app.1.cx()).expect("archive admission");
+    artifact_app_laws::settle_document_archive_load(&mut app.0, 91, &mut identity, app.1.cx())
+        .await.expect("archive reaches Ready and its acknowledgement settles");
     let snapshot = app.snapshot().expect("loaded snapshot");
     for (slot, child_id) in [("presentation", snapshot.presentation.child_id.clone()), ("animation", snapshot.animation.child_id.clone())] {
         assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");

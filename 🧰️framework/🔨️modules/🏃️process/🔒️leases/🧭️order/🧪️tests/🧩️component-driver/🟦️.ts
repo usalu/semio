@@ -60,7 +60,7 @@ test("component builds hold the compiler writer shared so they run beside ordina
 
 test("the warm component driver compiles in a private lane of its agent, never in the shared build directory: its shared target and build and the pass inputs it requests come from one lane, so its build-directory custody is never contended by another driver",()=>{
  const text=readFileSync(owners[0]!,"utf8");
- expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,sharedBuild:store.buildDirectory,workspace:repoRoot,environment:options.environment,control,policyControl:store.control}")).toBe(true);
+ expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,sharedBuild:store.buildDirectory,workspace:repoRoot,crates:declarations.map(row=>row.packageName),environment:options.environment,control,policyControl:store.control}")).toBe(true);
  expect(text.includes("shared:{target:lane.target,build:lane.build}")).toBe(true);
  expect(text.includes("build:lane.build,target:lane.target")).toBe(true);
  expect(text.includes("CARGO_TARGET_DIR!,build:store.buildDirectory")).toBe(false);
@@ -89,4 +89,12 @@ for(const scenario of interleavings.scenarios)test(`interleavings of ${scenario.
  if(scenario.deadlock)expect(refused.length,"a deadlocking mix contains a task the product refuses").toBeGreaterThan(0);
  if(scenario.id==="declared-order-only"||scenario.id==="registry-before-writer")expect(refused).toEqual([]);
  if(scenario.id==="fetch-first-only")expect(refused.length).toBeGreaterThan(0);
+});
+
+test("the native build driver publishes every distinct Cargo configuration view before it takes compiler capacity, and its jobs open theirs through the shared manifest and environment owners",()=>{
+ const text=readFileSync(join(here,"..","..","..","..","📦️artifacts","🏗️native-build","🧩️component-pass","🟦️.ts"),"utf8"),publish=text.indexOf("await publishNativeBuildCargoConfigurationsV1(options,"),capacity=text.indexOf("return await withCapacity(async(capacity,cpuControl,driverScope)=>{");
+ expect(publish).toBeGreaterThan(0);expect(capacity).toBeGreaterThan(publish);
+ expect(text.includes("nativeBuildPassInputRequestsV1(plan,{cwd:options.cwd,build:generation.build,target:generation.target,environment:options.environment,control:options.control}),...jobs.flatMap(")).toBe(true);
+ expect(text.split("jobEnvironmentOf(job").length-1).toBe(2);
+ expect(text.split("nativeBuildJobManifestV1(job)").length-1).toBe(2);
 });

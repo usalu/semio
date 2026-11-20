@@ -26,7 +26,7 @@ use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::{Rgba, Theme};
 use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
 use infinite_canvas::{board_set_camera, board_set_grid_visible};
-use semio_os_infinite_board_dag_graph::{adopt_camera_or_fit, refit_camera_if_content_left_view, set_hover_channel};
+use semio_os_infinite_board_dag_graph::{adopt_camera_or_fit, refit_camera_if_content_left_view, hovered_node_id_ref, set_hover_channel};
 use semio_os_infinite_board_dag_host::{set_computing_progress, set_dimmed, set_node_statuses};
 use semio_os_infinite_board_normal_focus::{set_camera_silent, set_selection_ids_silent};
 use semio_os_infinite_board_normal_gestures::set_transform_flags;

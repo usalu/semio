@@ -122,6 +122,12 @@ impl<'a, P> ArtifactView<'a, P> {
         self.tool_run.as_ref()
     }
 
+    /// 🎟️ Hands the bound run back so its owned payload storage can be retired explicitly instead of dropped live; test-only.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn take_tool_run(&mut self) -> Option<ToolRunView> {
+        self.tool_run.take()
+    }
+
     /// 🔢️ Binds the instance's continuous-tool overlay generation, which moves on every tick, release and zero-trace
     /// abort of an open press or typing run.
     pub fn with_provisional_generation(mut self, generation: u64) -> Self {

@@ -81,7 +81,7 @@ fn subdivide_curve_segment(curve: &Curve3, ta: f64, tb: f64, deflection: f64, an
 /// chord deviates from the arc by at most `deflection` *and* each step turns by at most
 /// `angular_tol`: `n = ceil(arc_range / min(2·acos(1 − deflection/radius), angular_tol))`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, angular_tol: f64) -> usize {
+pub(super) fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64, angular_tol: f64) -> usize {
     if radius <= 0.0 || arc_range <= 0.0 {
         return 1;
     }

@@ -72,7 +72,7 @@ pub mod export {
 }
 //#endregion 🧩️Modules
 
-use semio_s_artifact_stdio_step::geometry::StepSolidExporter;
+use semio_s_artifact_stdio_step::geometry::StepMetresSolidExporter;
 use semio_s_artifact_stdio_step::geometry::StepSolidImporter;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
@@ -142,7 +142,7 @@ pub use derived_composition::*;
 use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::WorkingSolid};
 use semio_framework::DslValue;
 use semio_framework::mesh_io::{MeshExporter, MeshImporter};
-use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StlSolidExporter, StlSolidImporter};
+use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, GlbSolidImporter, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StlSolidExporter, StlSolidImporter};
 
 /// 📤️ A pending native-geometry export ready to become a `Effect::DownloadMediaExport`.
 pub struct Process3dModelExport {
@@ -163,7 +163,7 @@ const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 /// same shape `dyn_enum_close!` would generate (O1: no `Box<dyn SolidExporter>`).
 enum ProcessSolidExporter {
     Obj(ObjSolidExporter),
-    Step(StepSolidExporter),
+    Step(StepMetresSolidExporter),
     Stl(StlSolidExporter),
 }
 
@@ -191,6 +191,7 @@ enum ProcessSolidImporter {
     Step(StepSolidImporter),
     Obj(ObjSolidImporter),
     Stl(StlSolidImporter),
+    Glb(GlbSolidImporter),
 }
 
 impl SolidImporter for ProcessSolidImporter {
@@ -199,6 +200,7 @@ impl SolidImporter for ProcessSolidImporter {
             Self::Step(importer) => importer.format_kind().await,
             Self::Obj(importer) => importer.format_kind().await,
             Self::Stl(importer) => importer.format_kind().await,
+            Self::Glb(importer) => importer.format_kind().await,
         }
     }
 
@@ -207,6 +209,7 @@ impl SolidImporter for ProcessSolidImporter {
             Self::Step(importer) => importer.import(kernel, bytes, tolerance).await,
             Self::Obj(importer) => importer.import(kernel, bytes, tolerance).await,
             Self::Stl(importer) => importer.import(kernel, bytes, tolerance).await,
+            Self::Glb(importer) => importer.import(kernel, bytes, tolerance).await,
         }
     }
 }
@@ -228,18 +231,12 @@ fn process_export_format(format_kind: &str) -> Result<semio_plugin::io::FormatDe
 /// 📤️ Encodes the replayed stock through `format`'s codec. STEP/OBJ/STL go through the
 /// `ProcessSolidExporter`-dispatched `SolidExporter` codecs (real B-Rep, exact where the format
 /// allows it); GLB goes through
-/// the mesh tessellation bridge (`schema::inferences::processed_mesh` → `GlbExporter`), matching how
-/// it is already rendered/exported elsewhere in this app.
-///
-/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: takes a real, literal
-/// `ProcessWorkingScene` now (never a bare `Process3dSnapshot` — its composed `stock_solid`/`steps`
-/// children carry no resolvable content without a `LinkResolver` this ticket doesn't add; see
-/// `ProcessWorkingScene`'s own doc comment in the artifact root file). Callers that only have a
-/// persisted snapshot get the honest empty scene from `process_working_scene_from_snapshot` — this
-/// export then legitimately returns `None` (no stock to replay), the same documented gap.
+/// the evaluated mesh and `GlbExporter`. Imported solids replay from the same persisted exact
+/// B-Rep used by the preview and the composed stock child.
+
 pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Result<Option<Process3dModelExport>, String> {
     if format == "glb" {
-        let Some(mesh) = semio_s_artifact_process_process3d_inferences::processed_mesh(scene, resolved_up_to) else {
+        let Some(mesh) = semio_s_artifact_process_process3d_inferences::processed_mesh(scene, resolved_up_to).map_err(|error| error.to_string())? else {
             return Ok(None);
         };
         let bytes = semio_framework::mesh_io::GlbExporter.export(&mesh)?;
@@ -251,10 +248,10 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     let exporter: ProcessSolidExporter = match format {
         "obj" => ProcessSolidExporter::Obj(ObjSolidExporter),
         "stl" => ProcessSolidExporter::Stl(StlSolidExporter),
-        _ => ProcessSolidExporter::Step(StepSolidExporter),
+        _ => ProcessSolidExporter::Step(StepMetresSolidExporter),
     };
     let mut session = semio_s_artifact_process_process3d_inferences::ProcessKernelReplay::new();
-    let Some(handle) = semio_s_artifact_process_process3d_inferences::replay_process(&mut session, scene, resolved_up_to) else {
+    let Some(handle) = semio_s_artifact_process_process3d_inferences::replay_process(&mut session, scene, resolved_up_to).map_err(|error| error.to_string())? else {
         return Ok(None);
     };
     let bytes = ::semio_framework_async::poll::resolve_ready(exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE)).map_err(|error| error.to_string())?;
@@ -266,46 +263,83 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data, mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }))
 }
 
-/// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")` payload into raw bytes.
-fn process3d_bytes_from_data_url(data_url: &str) -> Option<Vec<u8>> {
-    if let Some((header, encoded)) = data_url.split_once(',') {
-        if header.starts_with("data:") {
-            return base64_codec::base64_standard_decode(encoded).ok();
-        }
-    }
-    Some(data_url.as_bytes().to_vec())
+pub use semio_s_artifact_process_process3d_model::snapshot::{PROCESS3D_MODEL_DATA_URL_BYTES, PROCESS3D_MODEL_FILE_BYTES};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Process3dImportError {
+    InputTooLarge,
+    InvalidData,
+    UnsupportedFormat,
+    UnsupportedStepUnits,
+    MissingSolid,
+    MultipleSolids,
+    SolidTooLarge,
 }
 
-/// 📥️ Imports a picked file into a brand-new stock-only fixture (steps cleared): STEP/OBJ/STL go
-/// through the `ProcessSolidImporter`-dispatched `SolidImporter` codecs and land as
-/// `WorkingSolid::ImportedSolid` (real B-Rep,
-/// reusable as a Cut/Drill/Attach operand); GLB is decoded once (via the mesh tessellation bridge,
-/// `GlbImporter`) purely to validate it, then kept as `WorkingSolid::ImportedMesh` referencing the
-/// original data url directly — it carries no exact B-Rep, so it is never re-imported into the
-/// kernel. Real WRITE-side construction (mints real composed children from literal content via
-/// `process_working_scene_to_snapshot` — the only place this migration can do so; see
-/// `ProcessWorkingScene`'s own doc comment).
-pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSnapshot> {
-    let bytes = process3d_bytes_from_data_url(data_url)?;
-    if name.ends_with(".glb") {
-        semio_framework::mesh_io::GlbImporter.import(&bytes).ok()?;
-        let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
-        return Some(semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()));
+impl std::fmt::Display for Process3dImportError {
+    fn fmt(&self, output: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InputTooLarge => write!(output, "Select a model file up to {PROCESS3D_MODEL_FILE_BYTES} bytes."),
+            Self::InvalidData => output.write_str("The model file could not be decoded."),
+            Self::UnsupportedFormat => output.write_str("Select a STEP, OBJ, STL, or GLB model."),
+            Self::UnsupportedStepUnits => output.write_str("The STEP model must declare one supported metric length unit."),
+            Self::MissingSolid => output.write_str("The model does not contain a closed solid."),
+            Self::MultipleSolids => output.write_str("Select a model file with one closed solid for the workpiece."),
+            Self::SolidTooLarge => output.write_str("The exact imported geometry exceeds the Process3d document's solid budget."),
+        }
     }
-    let (importer, label): (ProcessSolidImporter, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
-        (ProcessSolidImporter::Step(StepSolidImporter), "Imported STEP")
-    } else if name.ends_with(".obj") {
-        (ProcessSolidImporter::Obj(ObjSolidImporter), "Imported OBJ")
-    } else if name.ends_with(".stl") {
-        (ProcessSolidImporter::Stl(StlSolidImporter), "Imported STL")
-    } else {
-        return None;
-    };
-    let mut session = semio_s_artifact_process_process3d_inferences::ProcessKernelReplay::new();
-    let handle = ::semio_framework_async::poll::resolve_ready(importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?.into_iter().next()?;
-    let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
-    Some(semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
 }
+
+/// 📥️ Imports exact solid geometry or keeps an open GLB as display-only stock.
+pub fn import_process3d_model(name: &str, data_url: &str) -> Result<Process3dSnapshot, Process3dImportError> {
+    use semio_s_artifact_process_process3d_model::snapshot::{capture_imported_brep, decode_process3d_model_data_url};
+
+    if data_url.len() > PROCESS3D_MODEL_DATA_URL_BYTES {
+        return Err(Process3dImportError::InputTooLarge);
+    }
+    let bytes = decode_process3d_model_data_url(data_url).ok_or(Process3dImportError::InvalidData)?;
+    if bytes.len() > PROCESS3D_MODEL_FILE_BYTES as usize {
+        return Err(Process3dImportError::InputTooLarge);
+    }
+    let extension = name.rsplit_once('.').map(|(_, extension)| extension.to_ascii_lowercase());
+    let (importer, label) = match extension.as_deref() {
+        Some("stp" | "step") => (ProcessSolidImporter::Step(StepSolidImporter), "Imported STEP"),
+        Some("obj") => (ProcessSolidImporter::Obj(ObjSolidImporter), "Imported OBJ"),
+        Some("stl") => (ProcessSolidImporter::Stl(StlSolidImporter), "Imported STL"),
+        Some("glb") => (ProcessSolidImporter::Glb(GlbSolidImporter), "Imported GLB"),
+        _ => return Err(Process3dImportError::UnsupportedFormat),
+    };
+
+    let scale = if matches!(&importer, ProcessSolidImporter::Step(_)) {
+        let source = std::str::from_utf8(&bytes).map_err(|_| Process3dImportError::InvalidData)?;
+        semio_s_artifact_stdio_step::step_length_in_metres(source).ok().flatten().ok_or(Process3dImportError::UnsupportedStepUnits)?
+    } else {
+        1.0
+    };
+    let mut kernel = Brep::new();
+    let handles = ::semio_framework_async::poll::resolve_ready(importer.import(&mut kernel, &bytes, PROCESS3D_TESSELLATION_TOLERANCE));
+    let handle = {
+        let mut solids = handles.unwrap_or_default().into_iter().filter(|handle| kernel.geometry_solid(handle).is_ok());
+        let first = solids.next();
+        if solids.next().is_some() {
+            return Err(Process3dImportError::MultipleSolids);
+        }
+        first
+    };
+    let solid = if let Some(handle) = handle {
+        let handle = if scale == 1.0 { handle } else { kernel.scale_sync(&handle, scale, [0.0; 3]).map_err(|_| Process3dImportError::InvalidData)? };
+        let shape = kernel.export_shape(&handle).map_err(|_| Process3dImportError::InvalidData)?;
+        capture_imported_brep(&shape).ok_or(Process3dImportError::SolidTooLarge)?
+    } else if matches!(importer, ProcessSolidImporter::Glb(_)) {
+        semio_framework::mesh_io::GlbImporter.import(&bytes).map_err(|_| Process3dImportError::InvalidData)?;
+        WorkingSolid::ImportedMesh { mesh_url: data_url.into() }
+    } else {
+        return Err(Process3dImportError::MissingSolid);
+    };
+    let stock = Stock { id: "stock".into(), label: label.into(), solid, pose: Pose::default() };
+    Ok(semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
+}
+
 //#endregion 🔖️MediaImportExport
 
 //#region 🚪️DerivedIoRegistry

@@ -373,9 +373,10 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
                 assert_eq!(allocated, demand.capacity_bytes);
                 assert_eq!(genesis.facts().digest(), [7; 32]);
                 let (snapshot, pack) = genesis.into_owners();
-                assert_eq!((snapshot.as_ptr(), pack.as_ptr()), original);
+                let bytes = pack.contiguous().unwrap();
+                assert_eq!((snapshot.as_ptr(), bytes.as_ptr()), original);
                 assert_eq!(serde_json::to_value(snapshot.as_str()).unwrap(), serde_json::json!(row["text"].as_str().unwrap()));
-                assert_eq!(pack.as_slice(), snapshot.as_bytes());
+                assert_eq!(bytes, snapshot.as_bytes());
                 close(SharedControlledRetirement::lease(snapshot), SharedControlledRetirement::lease(pack), policy, original_bytes + allocated);
             }
         }

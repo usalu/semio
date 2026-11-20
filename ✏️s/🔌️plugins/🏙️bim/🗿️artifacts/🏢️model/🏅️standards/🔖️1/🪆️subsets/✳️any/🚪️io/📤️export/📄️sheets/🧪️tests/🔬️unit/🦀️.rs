@@ -24,7 +24,7 @@ use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::
 fn sheets_print_in_the_order_of_their_numbers_then_ids() {
     let mut model = ModelSnapshot::default();
     for (id, number) in [("sh-b", "A-102"), ("sh-a", "A-102"), ("sh-c", "A-101"), ("sh-d", "B-001")] {
-        model.sheets.insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Sheet::standard(number, "x"));
+        model.sheets.cold_insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Sheet::standard(number, "x"));
     }
     assert_eq!(ordered(&model), ["sh-c", "sh-a", "sh-b", "sh-d"]);
 }

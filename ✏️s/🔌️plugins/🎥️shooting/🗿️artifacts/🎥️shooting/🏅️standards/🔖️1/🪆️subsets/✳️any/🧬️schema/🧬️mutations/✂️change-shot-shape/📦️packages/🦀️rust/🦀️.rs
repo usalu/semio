@@ -10,7 +10,7 @@ pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
 pub use semio_s_artifact_shooting_shooting_inferences::{ShootingCamera, ShootingSavedCamera};
-pub use semio_s_artifact_shooting_shooting_schema::{ShootingSavedCameraPatch, ShootingShotPatch};
+pub use semio_s_artifact_shooting_shooting_schema::{ShootingAssigned, ShootingSavedCameraPatch, ShootingShotPatch};
 
 #[path = "."]
 pub mod standards {
@@ -53,6 +53,16 @@ pub mod standards {
                             #[path = "../../../📷️replace-shot-camera/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../../📷️replace-shot-camera/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                        }
+                        #[path = "."]
+                        pub mod patch_shot_camera {
+                            #[path = "../../../🎛️patch-shot-camera/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "../../../🎛️patch-shot-camera/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "../../../🎛️patch-shot-camera/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
                         #[path = "."]

@@ -102,60 +102,46 @@ pub(super) fn document_over_byte_bound_snapshot() -> DrawingSnapshot {
     snapshot
 }
 
-pub(super) fn drain_snapshot(value: DrawingSnapshot) {
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingSnapshotRetirementFactory::default(), value);
-    for _ in 0..100_000 {
-        match retirement.close_step(1, DRAWING_OWNED_FIELD_BYTES).expect("Drawing snapshot retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= DRAWING_OWNED_FIELD_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("owned Drawing snapshot retirement cannot block"),
-        }
-    }
-    panic!("Drawing snapshot retirement did not terminate")
+#[path = "../../🎟️retained-effect/🦀️.rs"]
+mod fixture_effect;
+pub(super) use fixture_effect::{effect_from_bank, effect_turn};
+
+pub(super) fn close_decoded<T: semio_framework_value::retirement::RetireOwned>(owner: &mut DrawingDecodedFieldRetirement<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    let body = grant.maximum_copy_bytes;
+    let work = owner.owner.next_computational_work(body).unwrap().max(1);
+    effect_turn(grant, work, |effect| {
+        store::os_store::snapshot_read::settle_close_poll(owner.step(body, effect))
+    })
 }
 
-pub(super) fn drain_mutation(value: DrawingMutation) {
-    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingMutationRetirementFactory::default(), value);
+fn drain_decoded<T: semio_framework_value::retirement::RetireOwned>(value: T) {
+    let mut owner = DrawingDecodedFieldRetirement::try_new(value).unwrap_or_else(|_| panic!("Drawing original owns typed retirement"));
     for _ in 0..100_000 {
-        match retirement.close_step(1, DRAWING_OWNED_FIELD_BYTES).expect("Drawing mutation retirement") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                drop(retirement);
-                return;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= DRAWING_OWNED_FIELD_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("owned Drawing mutation retirement cannot block"),
-        }
+        if owner.terminal_is_empty() { return; }
+        let grant = owner.next_grant().expect("Drawing owner retirement grant");
+        close_decoded(&mut owner, grant).expect("Drawing original retirement");
     }
-    panic!("Drawing mutation retirement did not terminate")
+    panic!("Drawing original retirement did not terminate")
 }
 
-/// 🚪️ Drives one candidate close to terminal. The arena pool is PROCESS-global and returned under
-/// `try_lock`, so a concurrent law holding it makes one slice answer `Blocked` — contention, not a
-/// stuck ladder; the slice is retried inside the same bound, which still fails a ladder that never ends.
+pub(super) fn drain_snapshot(value: DrawingSnapshot) { drain_decoded(value); }
+
+pub(super) fn drain_mutation(value: DrawingMutation) { drain_decoded(value); }
+
+/// 🚪️ Retries the bounded candidate closer until its original ownership and arena slots are returned.
 pub(super) fn close_candidate(authority: &mut DrawingMutationCandidateAuthority, mut source: Option<&mut DrawingSnapshot>) {
     for _ in 0..100_000 {
-        match authority.close_step(source.as_deref_mut(), DRAWING_OWNED_FIELD_BYTES).expect("Drawing candidate close") {
-            store::SnapshotRetirementStep::Complete => {
-                assert!(authority.terminal_is_empty());
-                return;
-            }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= DRAWING_OWNED_FIELD_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => std::thread::yield_now(),
+        let demand = authority.close_demands(DRAWING_OWNED_FIELD_BYTES).expect("Drawing candidate demand");
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
+        assert_eq!(effect_turn(denied, 0, |effect| authority.close_step(source.as_deref_mut(), effect)).unwrap().progress(), RetainedCloneProgress::default());
+        let step = effect_turn(grant, DRAWING_OWNED_FIELD_BYTES as u64, |effect| authority.close_step(source.as_deref_mut(), effect)).expect("Drawing candidate close");
+        assert!(step.progress().fits(grant));
+        if matches!(step, RetainedCloneStep::Complete(_)) {
+            assert!(authority.terminal_is_empty());
+            return;
         }
+        if step.progress() == RetainedCloneProgress::default() { std::thread::yield_now(); }
     }
     panic!("Drawing candidate close did not terminate")
 }

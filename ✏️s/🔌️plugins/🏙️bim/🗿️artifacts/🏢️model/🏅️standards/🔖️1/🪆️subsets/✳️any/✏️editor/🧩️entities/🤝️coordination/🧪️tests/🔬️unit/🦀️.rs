@@ -12,12 +12,12 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
     model.project.author = "UG".into();
-    model.clash_sets.insert("cs-1".into(), ClashSet { name: "Beams against walls".into(), a: ElementSelector { classes: vec![ElementClass::Beam], storeys: vec!["st-0".into()], phases: vec![Phase::New], ids: Vec::new() }, b: ElementSelector::of_classes(&[ElementClass::Wall]), tolerance: 0.002, clearance: 0.05 });
-    model.rules.insert("r-1".into(), Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: RuleSeverity::Error, scope: RuleScope { storeys: vec!["st-0".into()], phases: Vec::new(), ids: Vec::new(), filter: "Corridor".into() } });
+    model.clash_sets.cold_insert("cs-1".into(), ClashSet { name: "Beams against walls".into(), a: ElementSelector { classes: vec![ElementClass::Beam], storeys: vec!["st-0".into()], phases: vec![Phase::New], ids: Vec::new() }, b: ElementSelector::of_classes(&[ElementClass::Wall]), tolerance: 0.002, clearance: 0.05 });
+    model.rules.cold_insert("r-1".into(), Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: RuleSeverity::Error, scope: RuleScope { storeys: vec!["st-0".into()], phases: Vec::new(), ids: Vec::new(), filter: "Corridor".into() } });
     let camera = ViewCamera { target: Point2 { x: 1.0, y: 2.0 }, target_height: 1.5, azimuth: 0.5, pitch: 0.4, distance: 12.0 };
     let viewpoint = IssueViewpoint { camera, section: Some(SectionBox { min: Point3 { x: 0.0, y: 0.0, z: 0.0 }, max: Point3 { x: 1.0, y: 1.0, z: 1.0 } }), isolate: vec!["w-1".into()] };
-    model.issues.insert("i-1".into(), Issue { title: "Beam hits wall".into(), description: String::new(), status: IssueStatus::Open, priority: IssuePriority::High, assignee: "AB".into(), author: "UG".into(), created: "2026-10-09T08:00:00Z".into(), labels: vec!["Clash".into()], elements: vec!["b-1".into(), "w-1".into()], clash: Some(ClashRef { set: "cs-1".into(), first: "b-1".into(), second: "w-1".into() }), viewpoint: Some(viewpoint) });
-    model.issue_comments.insert("c-1".into(), IssueComment { issue: "i-1".into(), author: "AB".into(), date: "2026-10-09T09:00:00Z".into(), text: "On it, will check the bearing before Friday.".into() });
+    model.issues.cold_insert("i-1".into(), Issue { title: "Beam hits wall".into(), description: String::new(), status: IssueStatus::Open, priority: IssuePriority::High, assignee: "AB".into(), author: "UG".into(), created: "2026-10-09T08:00:00Z".into(), labels: vec!["Clash".into()], elements: vec!["b-1".into(), "w-1".into()], clash: Some(ClashRef { set: "cs-1".into(), first: "b-1".into(), second: "w-1".into() }), viewpoint: Some(viewpoint) });
+    model.issue_comments.cold_insert("c-1".into(), IssueComment { issue: "i-1".into(), author: "AB".into(), date: "2026-10-09T09:00:00Z".into(), text: "On it, will check the bearing before Friday.".into() });
     model
 }
 

@@ -46,6 +46,32 @@ impl ArtifactEditor for BitmapEditor {
     type TransientMutation = BitmapTransientMutation;
     type Command = BitmapEditorCommand;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        type Preparation<S, M> = store::PagedOneItemPreparationFactory<S, M, store::MutationApplyEdit<S, M>>;
+        store::os_store::document_store_owners::bounded_artifact_store_owners_shared_semantic_source_demands::<Self::Snapshot, Self::Mutation, Preparation<Self::Snapshot, Self::Mutation>>(
+            semio_plugin::__value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 },
+            0,
+        )
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        type Preparation<S, M> = store::PagedOneItemPreparationFactory<S, M, store::MutationApplyEdit<S, M>>;
+        Some(store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(
+            grant,
+            semio_plugin::__value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 },
+            0,
+            Preparation::<Self::Snapshot, Self::Mutation>::default,
+        ).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(|operation| Some(operation)).with_original_receiving();
+            (owners, progress)
+        }))
+    }
+
     const DIALECT: Dialect = WFC_BITMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WFC_BITMAP_DOCUMENT_SCHEMA;
 

@@ -11,6 +11,7 @@ import { scenesOf, tessellate, validateModel, type ModelDocument } from "../../.
 import type { View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { VIEWS } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { MODES, ModelRequestError, VIEWS_OF, authoredScales, modelOf, modelOfAsset, modeOf, sceneIdOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
+import { checkVolumes } from "../../🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
 import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import { scaledFigure } from "../🧰️support/🧊️volumes/🟦️.ts";
 
@@ -23,6 +24,19 @@ const solidCount = (document: ModelDocument, scene: string): number => document.
 
 describe("🧊️ one model per scale and mode", () => {
   it("authors every scale of the fixture", () => expect(authoredScales(asset.volumes)).toEqual([50, 100, 200, 500]));
+
+  it("keeps the physical model and its three scenes at a scale below the printable feature", async () => {
+    const scale = 500;
+    const drawing = { status: "unavailable", denominator: scale, cause: "below-printable-feature", reason: { en: "The fingers merge on paper.", de: "Die Finger verschmelzen auf Papier." }, limitingFeature: { en: "Finger", de: "Finger" }, limitingSizeM: 0.018, alternatives: [{ kind: "scale", denominator: 200 }] } as const;
+    const digital = { ...asset, representations: { ...asset.representations, "500": drawing } };
+    const findings = checkVolumes(digital, { scale, rules: ["volumes-availability", "volumes-feature", "volumes-bounds", "volumes-silhouette", "volumes-views-disagree", "volumes-cross-scale"] });
+    expect(findings.filter((finding) => finding.rule === "volumes-availability" || finding.rule === "volumes-feature")).toEqual([]);
+    const oversized = { ...digital, dimensions: { ...digital.dimensions, widthM: 50 } };
+    expect(checkVolumes(oversized, { scale, rules: ["volumes-bounds"] }).some((finding) => finding.rule === "volumes-bounds")).toBe(true);
+    const document = await modelOfAsset(digital, { scales: [scale], poses: [asset.presentation.defaultPose], clips: [] });
+    expect(validateSchema(document), JSON.stringify(validateSchema.errors)).toBe(true);
+    expect(document.scenes?.map((scene) => scene.id)).toEqual(MODES.map((mode) => sceneIdOf(scale, mode)));
+  });
 
   it.each(SCALES.flatMap((scale) => VIEWS.map((view) => [scale, view] as const)))("1:%i %s: modelOf is a valid kernel document of the mode's own list", async (scale, view) => {
     const document = await modelOf(asset, { scale, view });

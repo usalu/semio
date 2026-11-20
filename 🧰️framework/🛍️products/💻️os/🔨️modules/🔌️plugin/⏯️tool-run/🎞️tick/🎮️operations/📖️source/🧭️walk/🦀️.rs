@@ -2,7 +2,10 @@
 use super::*;
 /// 🗂️ Returning a row closes every source alias before the next real resident is selected.
 pub struct OriginalToolLedgerWalk<S:RetireOwned+Send+Sync+'static>{read:OriginalToolLedgerRead<S>,after:Option<SharedUtf8>,displaced:Option<SharedUtf8>,addresses:RetainedCloneClose,binding:Option<(OriginalSourceBinding,Decoder)>,revision:u64,returning:bool,saved:bool,done:bool,closing:bool}
-impl<S:RetireOwned+Send+Sync+'static> Default for OriginalToolLedgerWalk<S>{fn default()->Self{Self{read:Default::default(),after:None,displaced:None,addresses:Default::default(),binding:None,revision:0,returning:false,saved:false,done:false,closing:false}}}
+impl<S:RetireOwned+Send+Sync+'static> Default for OriginalToolLedgerWalk<S>{fn default()->Self{Self::vacant()}}
+impl<S:RetireOwned+Send+Sync+'static> OriginalToolLedgerWalk<S>{
+ pub const fn vacant()->Self{Self{read:OriginalToolLedgerRead::vacant(),after:None,displaced:None,addresses:RetainedCloneClose::vacant(),binding:None,revision:0,returning:false,saved:false,done:false,closing:false}}
+}
 impl<S:RetireOwned+Send+Sync+'static> OriginalToolLedgerWalk<S>{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|(binding,decoder)|!binding.matches(cx)||cx.native_receiving_identity()!=Some(decoder)){return Err(invalid("original tool traversal changed its caller or decoder"))}Ok(())}
  fn addresses_pending(&self)->bool{self.displaced.is_some()||!self.addresses.is_empty()}

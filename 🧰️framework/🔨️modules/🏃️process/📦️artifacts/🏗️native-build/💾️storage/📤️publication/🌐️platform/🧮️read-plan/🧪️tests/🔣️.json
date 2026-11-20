@@ -1,4 +1,10 @@
 {
+  "ordinaryRead": {"roots":["j/aa","j/bb","j/cc","j/dd"],"files":["package.json","bun.lock","w/0/package.json","w/1/package.json","w/2/package.json","w/3/package.json","w/4/package.json","w/5/package.json"],"cases":[{"change":"none","hash":false,"accepted":true},{"change":"none","hash":true,"accepted":true},{"change":"file","hash":false,"accepted":false},{"change":"directory","hash":true,"accepted":false},{"change":"cancel","hash":true,"accepted":false}]},
+ "refusedDirectories": [
+  {"path":"g/absent/w", "component":"g/absent", "observed":"missing"},
+  {"path":"g/aa/w/0", "component":"g/aa", "observed":"link"},
+  {"path":"g/bb/w/0/package.json/deeper", "component":"g/bb/w/0/package.json", "observed":"file"}
+ ],
  "decisions": [
   {
    "name": "recording pass hashes",

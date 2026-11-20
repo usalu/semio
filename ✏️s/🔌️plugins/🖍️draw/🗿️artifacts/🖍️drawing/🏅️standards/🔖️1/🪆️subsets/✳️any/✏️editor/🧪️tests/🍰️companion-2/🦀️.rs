@@ -20,11 +20,6 @@ pub mod completion {
     #[path = "../../📬️completion/🧪️tests/🦀️.rs"]
     pub mod tests;
 }
-#[path = "."]
-pub mod export_job {
-    #[path = "../../🎮️commands/📤️export-document/🧵️export/🧪️tests/🔬️unit/🦀️.rs"]
-    pub mod tests;
-}
 #[path = "../🔬️gesture-operation-owner/🦀️.rs"]
 pub mod gesture_operation_owner_tests;
 #[path = "."]

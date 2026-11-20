@@ -62,6 +62,26 @@ describe("independent introduction contract", () => {
     expect(onDismiss).toHaveBeenCalledWith(true);
   });
 
+  it("does not survey the page beneath it again when only its own surface activates", async () => {
+    initUiLocaleSync("en");
+    const frames = [0, 1, 2].map(() => Object.assign(document.body.appendChild(document.createElement("div")), { hidden: false }));
+    frames.forEach((frame, index) => frame.setAttribute("data-slot", `demonstrator-pane-card-${index}`));
+    const stacks: string[] = [];
+    const surveyed = () => (stacks.push(new Error().stack ?? ""), { left: 0, top: 0, right: 10, bottom: 10, width: 10, height: 10, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+    frames.forEach(frame => { frame.getBoundingClientRect = surveyed; });
+    const { container } = render(<UIIntroduction introduction={fixture.introduction as IntroductionDefinition} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+    const box = container.ownerDocument.querySelector<HTMLElement>('[data-slot="introduction-info-box"]')!;
+    const press = async (): Promise<void> => {
+      fireEvent.pointerDown(box.querySelector('[data-slot="introduction-body"]') ?? box);
+      await new Promise(settle => setTimeout(settle, 50));
+    };
+    await press();
+    stacks.length = 0;
+    await press();
+    expect(stacks).toHaveLength(0);
+    frames.forEach(frame => frame.remove());
+  });
+
   it("projects shared fixtures with the independent Three vector oracle", () => {
     for (const { ndc, expected } of fixture.projection) {
       const { left, top, width, height } = fixture.viewport;

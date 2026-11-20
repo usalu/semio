@@ -21,11 +21,11 @@ async fn strict_editor_declares_its_dialect_and_main_window() {
 async fn strict_cell_action_preserves_unicode_and_requires_a_complete_address() {
     let fixture = serde_json::json!({ "sheetName": "Tabelle %20", "row": 4, "column": 2, "revision": "0123456789abcdef", "value": "Grüße\n\\s %20" });
     let arguments = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&fixture.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let command = XlsxStrictEditor::command_from_action("set-cell", Some((arguments).clone()), None).unwrap();
+    let command = XlsxStrictEditor::command_from_action("set-cell", &mut Some(arguments), &mut None).unwrap();
     let encoded = protocol::OpBinary::encode_op(&command).unwrap();
     assert_eq!(<semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<XlsxStrictEditorCommand> as protocol::OpBinary>::decode_op(&encoded).unwrap(), command);
     let incomplete = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"row":4,"column":2,"value":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert!(XlsxStrictEditor::command_from_action("set-cell", Some((incomplete).clone()), None).is_err());
+    assert!(XlsxStrictEditor::command_from_action("set-cell", &mut Some(incomplete), &mut None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -39,9 +39,28 @@ async fn strict_cell_edit_uses_the_canonical_lineage_revision() {
     assert!(xlsx_set_cell_emit(&snapshot, &XlsxStrictEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 99, column: 0, revision: command_revision(&command), value: "false".into() }).is_err());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn new_workbook_provides_an_editable_sheet_and_roundtrips_through_its_native_codec() {
+    let snapshot = XlsxStrictEditor::reference_birth().unwrap()().unwrap();
+    let workbook = snapshot.project_workbook().unwrap();
+    assert_eq!(workbook.sheets.len(), 1);
+    let sheet = &workbook.sheets[0];
+    assert!(sheet.cells.is_empty());
+    let vacancy = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address(&snapshot, &sheet.name, 1, 0).unwrap();
+    let command = XlsxStrictEditorCommand::SetCell { sheet_name: sheet.name.clone(), row: 1, column: 0, revision: vacancy.worksheet.revision, value: "=1+2".into() };
+    let emitted = xlsx_set_cell_emit(&snapshot, &command).unwrap();
+    assert_eq!(emitted.artifact_mutations.len(), 1);
+    let mut edited = snapshot;
+    let outcome = protocol::ColdMutation::diff(&emitted.artifact_mutations[0], &edited);
+    edited = protocol::apply_diff_cold(outcome.diff(), &edited).unwrap();
+    let bytes = XlsxStrictEditor::encode_natural_file(&edited).unwrap();
+    let reopened = XlsxStrictEditor::decode_natural_file(&bytes).unwrap();
+    assert_eq!(reopened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Formula { expr: "1+2".into(), cached: None });
+}
+
 fn command_revision(command: &XlsxStrictEditorCommand) -> String {
     let XlsxStrictEditorCommand::SetCell { revision, .. } = command;
     revision.clone()
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxStrictEditor, || semio_plugin::App { definition: super::create_xlsx_strict_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base");
+semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxStrictEditor, || semio_plugin::App { definition: super::create_xlsx_strict_editor(), examples: Vec::new() }, "../../../🧱️base");

@@ -1,6 +1,6 @@
 # Worker Route Adapter Proof
 
-Ran 2026-10-07T00:35:13.161Z using the exact production `installPublishedPlayRoutes` installer and actual acceptance browser-launch settings. All pages in this probe are explicitly synthetic.
+Ran 2026-11-19T22:47:18.538Z using the exact production `installPublishedPlayRoutes` installer and actual acceptance browser-launch settings. All pages in this probe are explicitly synthetic.
 
 Status: PASSED.
 
@@ -11,7 +11,7 @@ Observed worker result:
 ```json
 {
   "ok": true,
-  "origin": "http://127.0.0.1:53998",
+  "origin": "http://127.0.0.1:58620",
   "fetches": [
     {
       "url": "https://map.assets.semio-tech.com/osm/%F0%9F%A7%AA%EF%B8%8Frouting/%F0%9F%8C%8D%EF%B8%8Fmap.json",

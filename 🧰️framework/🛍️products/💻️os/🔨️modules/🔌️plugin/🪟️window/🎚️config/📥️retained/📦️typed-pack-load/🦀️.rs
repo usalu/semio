@@ -1,7 +1,7 @@
 //! 📦️ Original native Window loading preserves private registry custody until its typed Store is ready.
 use super::*;
 use crate::registry;
-use crate::owner_contract_and_mutation::WindowConfigAuthorityIdentity;
+use crate::WindowConfigAuthorityIdentity;
 #[path="🛬️native/🦀️.rs"]
 pub mod native;
 pub use native::TypedWindowConfigPackLoad;

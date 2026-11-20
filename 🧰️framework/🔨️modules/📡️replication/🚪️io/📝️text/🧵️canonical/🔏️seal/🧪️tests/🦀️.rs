@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use crate::retained_sources::{stage,extracted,closed,polled,stepped};
 
-fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes+demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes<=32_768&&demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 fn hex(bytes:[u8;32])->String{bytes.iter().map(|byte|format!("{byte:02x}")).collect()}
 
 #[test]

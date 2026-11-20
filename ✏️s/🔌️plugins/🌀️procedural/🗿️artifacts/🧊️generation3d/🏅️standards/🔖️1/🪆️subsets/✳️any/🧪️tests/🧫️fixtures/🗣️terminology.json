@@ -679,6 +679,12 @@
       "reuseEn": "Mesh to OBJ",
       "reuseDe": "Mesh als OBJ"
     },
+    "catalogue_brep_mesh_import_obj": {
+      "nativeEn": "Mesh from OBJ",
+      "nativeDe": "Mesh aus OBJ",
+      "reuseEn": "Mesh from OBJ",
+      "reuseDe": "Mesh aus OBJ"
+    },
     "catalogue_brep_mesh_extrude": {
       "nativeEn": "Extrude Mesh Faces",
       "nativeDe": "Mesh-Flächen extrudieren",
@@ -762,6 +768,18 @@
       "nativeDe": "Mesh-Komponenten skalieren",
       "reuseEn": "Scale Mesh Components",
       "reuseDe": "Mesh-Komponenten skalieren"
+    },
+    "catalogue_brep_mesh_torus": {
+      "nativeEn": "Mesh Torus",
+      "nativeDe": "Mesh-Torus",
+      "reuseEn": "Mesh Torus",
+      "reuseDe": "Mesh-Torus"
+    },
+    "catalogue_brep_mesh_uv_sphere": {
+      "nativeEn": "Mesh UV Sphere",
+      "nativeDe": "UV-Netzkugel",
+      "reuseEn": "Mesh UV Sphere",
+      "reuseDe": "UV-Netzkugel"
     },
     "catalogue_brep_mesh_sphere": {
       "nativeEn": "Mesh Sphere",
@@ -2376,6 +2394,78 @@
       "nativeDe": "Analysieren",
       "reuseEn": "Analyze",
       "reuseDe": "Analysieren"
+    },
+    "input_name_rings": {
+      "nativeEn": "Rings",
+      "nativeDe": "Ringe",
+      "reuseEn": "Rings",
+      "reuseDe": "Ringe"
+    },
+    "catalogue_brep_mesh_set_shading": {
+      "nativeEn": "Set Mesh Shading",
+      "nativeDe": "Mesh-Schattierung einstellen",
+      "reuseEn": "Set Mesh Shading",
+      "reuseDe": "Mesh-Schattierung einstellen"
+    },
+    "catalogue_brep_mesh_recompute_normals": {
+      "nativeEn": "Recompute Mesh Normals",
+      "nativeDe": "Mesh-Normalen neu berechnen",
+      "reuseEn": "Recompute Mesh Normals",
+      "reuseDe": "Mesh-Normalen neu berechnen"
+    },
+    "catalogue_brep_mesh_mark_seams": {
+      "nativeEn": "Mark Mesh UV Seams",
+      "nativeDe": "Mesh-UV-Nähte markieren",
+      "reuseEn": "Mark Mesh UV Seams",
+      "reuseDe": "Mesh-UV-Nähte markieren"
+    },
+    "catalogue_brep_mesh_unwrap_uv": {
+      "nativeEn": "Unwrap Mesh UVs",
+      "nativeDe": "Mesh-UVs abwickeln",
+      "reuseEn": "Unwrap Mesh UVs",
+      "reuseDe": "Mesh-UVs abwickeln"
+    },
+    "form_field": {
+      "nativeEn": "Field",
+      "nativeDe": "Feld",
+      "reuseEn": "Field",
+      "reuseDe": "Feld"
+    },
+    "form_no_image": {
+      "nativeEn": "(no image)",
+      "nativeDe": "(kein Bild)",
+      "reuseEn": "(no image)",
+      "reuseDe": "(kein Bild)"
+    },
+    "form_no_inputs": {
+      "nativeEn": "No input widgets to generate from.",
+      "nativeDe": "Keine Eingabeelemente zum Generieren vorhanden.",
+      "reuseEn": "No input widgets to generate from.",
+      "reuseDe": "Keine Eingabeelemente zum Generieren vorhanden."
+    },
+    "catalogue_brep_mesh_import_stl": {
+      "nativeEn": "Mesh from STL",
+      "nativeDe": "Mesh aus STL",
+      "reuseEn": "Mesh from STL",
+      "reuseDe": "Mesh aus STL"
+    },
+    "catalogue_brep_mesh_import_glb": {
+      "nativeEn": "Mesh from GLB",
+      "nativeDe": "Mesh aus GLB",
+      "reuseEn": "Mesh from GLB",
+      "reuseDe": "Mesh aus GLB"
+    },
+    "catalogue_brep_mesh_export_stl": {
+      "nativeEn": "Mesh to STL",
+      "nativeDe": "Mesh als STL",
+      "reuseEn": "Mesh to STL",
+      "reuseDe": "Mesh als STL"
+    },
+    "catalogue_brep_mesh_export_glb": {
+      "nativeEn": "Mesh to GLB",
+      "nativeDe": "Mesh als GLB",
+      "reuseEn": "Mesh to GLB",
+      "reuseDe": "Mesh als GLB"
     }
   },
   "portLabels": {
@@ -2389,9 +2479,21 @@
     "selectedEdges": "input_name_selected_edges",
     "selectedFaces": "input_name_selected_faces",
     "sourceHandle": "input_name_source_handle",
-    "sourceIndex": "input_name_source_index"
+    "sourceIndex": "input_name_source_index",
+    "rings": "input_name_rings"
   },
   "catalogueLabels": {
-    "brep.shell": "catalogue_brep_shell"
+    "brep.shell": "catalogue_brep_shell",
+    "brep.mesh.importObj": "catalogue_brep_mesh_import_obj",
+    "brep.mesh.torus": "catalogue_brep_mesh_torus",
+    "brep.mesh.uvSphere": "catalogue_brep_mesh_uv_sphere",
+    "brep.mesh.setShading": "catalogue_brep_mesh_set_shading",
+    "brep.mesh.recomputeNormals": "catalogue_brep_mesh_recompute_normals",
+    "brep.mesh.markSeams": "catalogue_brep_mesh_mark_seams",
+    "brep.mesh.unwrapUv": "catalogue_brep_mesh_unwrap_uv",
+    "brep.mesh.importStl": "catalogue_brep_mesh_import_stl",
+    "brep.mesh.importGlb": "catalogue_brep_mesh_import_glb",
+    "brep.mesh.exportStl": "catalogue_brep_mesh_export_stl",
+    "brep.mesh.exportGlb": "catalogue_brep_mesh_export_glb"
   }
 }

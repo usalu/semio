@@ -498,7 +498,7 @@ impl SnapshotReadLeaseRegistryOwner {
     pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
     /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
     pub fn close_custody_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
-        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !SnapshotReadLeaseRegistry::terminal_is_empty(owner)) { return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
+        if self.0.as_ref().is_some_and(|owner| !owner.closed() && (owner.strong_count() != 1 || !SnapshotReadLeaseRegistry::terminal_is_empty(owner))) { return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }); }
         snapshot_registry_alias_close_step(&mut self.0, effect)
     }
 }

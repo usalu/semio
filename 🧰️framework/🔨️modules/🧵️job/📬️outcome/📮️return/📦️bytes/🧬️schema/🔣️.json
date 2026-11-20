@@ -5,6 +5,8 @@
   "required": [
     "version",
     "capacityBytes",
+    "appendPageBytes",
+    "committedLengths",
     "sourceLoans",
     "consumerReleaseBytes",
     "supplierReleaseBytes",
@@ -19,6 +21,12 @@
     },
     "capacityBytes": {
       "const": 16385
+    },
+    "appendPageBytes": {
+      "const": 4096
+    },
+    "committedLengths": {
+      "const": [4096, 8192, 12288, 16384, 16385]
     },
     "sourceLoans": {
       "const": 2

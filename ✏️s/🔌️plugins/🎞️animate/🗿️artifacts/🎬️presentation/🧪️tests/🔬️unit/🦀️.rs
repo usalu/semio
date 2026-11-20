@@ -12,16 +12,25 @@ fn artifact_kind_matches_the_store_schema() {
 }
 
 
-/// 🏗 DSL txt carrier: serialize then deserialize must restore the snapshot exactly.
-#[semio_framework_async_macros::async_test]
-async fn txt_dsl_carrier_round_trips_exactly() {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_os_kernel::io::io_mechanism::{Deserializer, Serializer};
+/// 🏗️ The UTF-8 DSL carrier preserves the complete presentation snapshot.
+#[test]
+fn txt_dsl_carrier_round_trips_exactly() {
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::PresentationIntoTxt;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::TxtIntoPresentation;
     use semio_framework::io_schema::IoPayload;
-    let snapshot = crate::default_presentation_snapshot();
-    let exported = export::txt::v_utf_8::any::PresentationIntoTxt::serialize(&snapshot,&semio_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    use semio_framework_async::poll::resolve_ready;
+    use semio_framework_test_original_snapshot_owners::{original_grant, with_decoding, with_encoding};
+    use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, IoRunControl, Serializer};
+
+    let snapshot = default_presentation_snapshot();
+    let exported = with_encoding(|owner| {
+        let mut control = IoRunControl::encoding(owner.native(), original_grant());
+        resolve_ready(PresentationIntoTxt::serialize(&snapshot, &ArchiveChildren::empty(), &mut control))
+    }).expect("DSL text export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
-    let back = import::txt::v_utf_8::any::TxtIntoPresentation::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
+    let back = with_decoding(|owner| {
+        let mut control = IoRunControl::decoding(owner.native(), original_grant());
+        resolve_ready(TxtIntoPresentation::deserialize(&IoPayload::Text(text), &mut control))
+    }).expect("DSL text import");
     assert_eq!(back.value, snapshot);
 }

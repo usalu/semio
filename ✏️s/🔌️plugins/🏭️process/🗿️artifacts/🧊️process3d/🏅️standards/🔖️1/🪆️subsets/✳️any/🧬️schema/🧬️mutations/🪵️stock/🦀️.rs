@@ -35,4 +35,6 @@ pub mod replace_stock_solid {
     #[path = "../🧊replace-stock-solid/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
+#[path = "../📏resize-stock/🦀️.rs"]
+pub mod resize_stock;
 //#endregion 🧩️Modules

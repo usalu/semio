@@ -18,7 +18,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::schema::snapshot::{Wfc2dBitmapMedia, Wfc2dImageMedia, Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, Wfc2dVectorMedia, WFC_2D_DOCUMENT_SCHEMA};
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct Wfc2dSlotDsl {
     pub id: String,
     pub x: f64,
@@ -29,7 +29,7 @@ pub struct Wfc2dSlotDsl {
     pub pinned_tile_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct Wfc2dSlotEdgeDsl {
     pub id: String,
     pub from_slot_id: String,
@@ -51,7 +51,7 @@ impl Default for Wfc2dTileDsl {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct Wfc2dRuleDsl {
     pub id: String,
     pub tile_a_id: String,

@@ -92,6 +92,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
       | move-stock                    | 📍move-stock                   | 🎈️lifts                                  |
       | change-stock-label            | 🔤change-stock-label           | 🔤️relabels                            |
       | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues                       |
+      | resize-stock                  | 📏resize-stock                | 🟰️keeps-width                    |
 
   @id-inverse
   @level-exhaustive
@@ -120,6 +121,7 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
       | move-stock                    | 📍move-stock                   | 🎈️lifts                                  |
       | change-stock-label            | 🔤change-stock-label           | 🔤️relabels                            |
       | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues                       |
+      | resize-stock                  | 📏resize-stock                | 🟰️keeps-width                    |
 
   @id-identity-round-trip
   @level-long

@@ -1,7 +1,8 @@
 /** 🦀️ Resolves Cargo and Go manifests, native dependency closures, mounted Rust Source and native generator preparation. */
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, sep, join, relative, resolve } from "node:path";
-import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs, jsonPointerValueV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedComputationV1, memoizedFileRecord, observedSourceAnalysisV1, observedFs, observedFieldV1, jsonPointerValueV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { cargoManifestProjectionV1 } from "./📐️projection/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -107,7 +108,7 @@ export function assertedCargoBuildScriptInputsV1(cargo,script,workspaceRoot,oper
 function cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled) {
   const directory = join(workspaceRoot, root), manifest = join(directory, "Cargo.toml"), unresolved = (reason, message) => ({ version: 1, root, resolved: false, reason, ...(message ? { message } : {}) });
   if (!existsSync(manifest)) return unresolved("no-manifest");
-  const cargo = readToml(manifest), entries = [cargo.lib?.path ?? "src/lib.rs", "src/main.rs", ...(cargo.bin ?? []).map((target) => target.path), ...(includeTests ? [...(cargo.test ?? []), ...(cargo.bench ?? []), ...(cargo.example ?? [])].map((target) => target.path) : []), ...(cargo.package?.build === false ? [] : [typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"])].filter(Boolean).map((path) => resolve(directory, path)).filter(existsSync);
+  const cargo = readCargoManifestRoleV1(manifest, includeTests ? "sources-tests" : "sources"), entries = [cargo.lib?.path ?? "src/lib.rs", "src/main.rs", ...(cargo.bin ?? []).map((target) => target.path), ...(includeTests ? [...(cargo.test ?? []), ...(cargo.bench ?? []), ...(cargo.example ?? [])].map((target) => target.path) : []), ...(cargo.package?.build === false ? [] : [typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"])].filter(Boolean).map((path) => resolve(directory, path)).filter(existsSync);
   const buildScript=cargo.package?.build===false?undefined:resolve(directory,typeof cargo.package?.build==="string"?cargo.package.build:"build.rs"),hasBuildScript=buildScript&&existsSync(buildScript);
   for (const source of ["src/bin", ...(includeTests ? ["tests", "examples", "benches"] : [])]) {
     if (!existsSync(join(directory, source))) continue;
@@ -145,6 +146,16 @@ let tomlParsing;
 
 /** 🔌️ A TOML key path as a JSON pointer into the parsed record: the field a walker reads of a manifest, so an edit of any other key moves nothing. */
 registerFieldExtractorV1("toml", (text, pointer) => jsonPointerValueV1(runtimeParseTomlV1(text), pointer));
+
+/** 📐️ The part of a Cargo manifest one role depends on as a `field` row (format `cargo-manifest`, pointer = role): a reader of a dependency's manifest holds while the part that concerns it is equal, so an edit of a test target, a version, a feature or a registry dependency of that crate leaves the record of every dependent as it was. */
+registerFieldExtractorV1("cargo-manifest", (text, role) => cargoManifestProjectionV1(runtimeParseTomlV1(text), role));
+
+/** 📖️ Reads one role of a manifest through its projection (the row names the digest of that part only); an absent or unparsable file takes the whole-file path with its row and its refusal as before.
+ * @see ./📐️projection/🟨️.mjs */
+export function readCargoManifestRoleV1(path, role) {
+  try { return observedFieldV1(path, "cargo-manifest", role); }
+  catch { return readToml(path); }
+}
 
 /** 📏️ The tooling TOML boundary exposes only repository-owned plain records, memoized per parser version (resolved on first use). */
 export function readToml(path) {
@@ -198,20 +209,20 @@ export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache 
   let names = NATIVE_DIRECTORY_NAMES.get(closures);
   if (!names) NATIVE_DIRECTORY_NAMES.set(closures, names = new Map());
   const spelled = (path) => { let name = names.get(path); if (name === undefined) names.set(path, name = buildPath(relative(workspaceRoot, path)) || "."); return name; };
-  const read = path => memoizedObservedComputationV1(cache,path,()=>readToml(path));
+  const read = (path, role) => memoizedObservedComputationV1(cache,role+"\0"+path,()=>readCargoManifestRoleV1(path, role));
   const children = function* (directory, includeTests) {
     const manifestPath = join(directory, "Cargo.toml");
     if (!existsSync(manifestPath)) { const error = new Error(`Native dependency has no Cargo manifest: ${manifestPath}`); error.code = "NATIVE_INPUT_ADMISSION"; error.manifest=manifestPath; throw error; }
-    const manifest = read(manifestPath);
+    const manifest = read(manifestPath, includeTests ? "graph-tests" : "graph");
     let workspace = directory;
     if (manifest.package?.workspace) workspace = resolve(directory, manifest.package.workspace);
-    else while (workspace !== workspaceRoot && !read(join(workspace, "Cargo.toml"))?.workspace) {
+    else while (workspace !== workspaceRoot && !read(join(workspace, "Cargo.toml"), "graph")?.workspace) {
       workspace = dirname(workspace);
       while (workspace !== workspaceRoot && !existsSync(join(workspace, "Cargo.toml"))) workspace = dirname(workspace);
       if (buildPath(relative(workspaceRoot, workspace)).startsWith("../")) throw new Error(`Native workspace escapes repository: ${directory}`);
     }
     if (buildPath(relative(workspaceRoot, workspace)).startsWith("../")) throw new Error(`Native workspace escapes repository: ${directory}`);
-    const authority = existsSync(join(workspace, "Cargo.toml")) ? read(join(workspace, "Cargo.toml")).workspace ?? {} : {};
+    const authority = existsSync(join(workspace, "Cargo.toml")) ? read(join(workspace, "Cargo.toml"), "graph").workspace ?? {} : {};
     for (const dependency of nativeDependencies(manifest, authority)) {
       if (dependency.kind === "dev-dependencies" && !includeTests) continue;
       const child = resolve(dependency.workspace ? workspace : directory, dependency.path);

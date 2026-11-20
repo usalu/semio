@@ -8,7 +8,7 @@ import { roomScope } from "@semio-tech/course";
 import { EMPTY_PRESENCE_VIEW, Glyph, LeaderboardCard, LeaderboardPage, PresenceProvider, courseText, textPresentation, type PresenceView, type CourseSession } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import { COURSE, Home, PAGES, SNOW_EMOJI, STATE, fixture, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
-import { SNOW_TEXT, SPACING, gridStrip, gridVeil, layerRules, moveMouseOver, peer } from "../🟣️harness/🟦️.tsx";
+import { SNOW_TEXT, SPACING, gridStrip, gridVeil, layerRules, moveMouseOver, peer, translation } from "../🟣️harness/🟦️.tsx";
 
 /** 🟡 Registers the zooms hovered topic pans tests of the 🏠️ home overview suite. */
 export function registerZoomsHoveredTopicPansTests(): void {
@@ -17,21 +17,21 @@ export function registerZoomsHoveredTopicPansTests(): void {
     const topics = fixture.hierarchy.topics!.map((topic) => ({ ...topic, quizzes: topic.id === "energy" ? ["physics", "heating", "cooling", "demand", "storage", "network"] : [] }));
     render(<Home session={stubSession()} course={{ ...COURSE, topics }} initial={{ screen: "home", page: "quizzes" }} />);
     moveMouseOver(1, 1);
-    expect(gridStrip("quizzes").style.transform).toBe("translate3d(-50%, 0%, 0)");
-    expect(gridStrip("energy").style.transform).toBe("translate3d(-66.6667%, -50%, 0)");
+    expect(translation(gridStrip("quizzes"))).toBe("translate(-50%, 0%)");
+    expect(translation(gridStrip("energy"))).toBe("translate(-66.6667%, -50%)");
     expect(gridVeil("energy").dataset.veil).toBe("whole");
     const explore = within(screen.getByRole("region", { name: "Energy" })).getByRole("button", { name: "Explore" });
     fireEvent.pointerOver(explore, { pointerType: "mouse" });
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
-    expect(gridStrip("quizzes").style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(translation(gridStrip("quizzes"))).toBe("translate(0%, 0%)");
     expect(gridVeil("quizzes").dataset.veil, "hovering only centers the page").toBe("whole");
     fireEvent.pointerDown(explore, { pointerType: "mouse", button: 0 });
     expect(gridVeil("quizzes").dataset.veil, "pressing clears it").toBe("clear");
-    expect(gridStrip("energy").style.transform).toBe("translate3d(-66.6667%, -50%, 0)");
+    expect(translation(gridStrip("energy"))).toBe("translate(-66.6667%, -50%)");
     moveMouseOver(0, 0);
-    expect(gridStrip("quizzes").style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(translation(gridStrip("quizzes"))).toBe("translate(0%, 0%)");
     expect(gridVeil("quizzes").dataset.veil).toBe("clear");
-    expect(gridStrip("energy").style.transform).toBe("translate3d(0%, 0%, 0)");
+    expect(translation(gridStrip("energy"))).toBe("translate(0%, 0%)");
     expect(gridVeil("energy").dataset.veil).toBe("whole");
     for (const id of ["physics", "heating", "cooling", "demand", "storage", "network"]) expect(document.querySelector(`[data-course-grid="energy"] [data-layered-card="${id}"]`)!.hasAttribute("data-revealed"), id).toBe(false);
   });
@@ -42,16 +42,16 @@ export function registerZoomsHoveredTopicPansTests(): void {
     const explore = within(screen.getByRole("region", { name: "Quizzes" })).getByRole("button", { name: "Explore" });
     fireEvent.pointerOver(explore, { pointerType: "mouse" });
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
-    expect(gridStrip("root").style.transform).toBe("translate3d(-33.3333%, 0%, 0)");
+    expect(translation(gridStrip("root"))).toBe("translate(-33.3333%, 0%)");
     expect(gridVeil("root").dataset.veil, "hovering only centers the page").toBe("whole");
     fireEvent.pointerDown(explore, { pointerType: "mouse", button: 0 });
     expect(gridVeil("root").dataset.veil, "pressing clears it").toBe("clear");
     moveMouseOver(1, 1);
-    expect(gridStrip("root").style.transform).toBe("translate3d(-33.3333%, 0%, 0)");
+    expect(translation(gridStrip("root"))).toBe("translate(-33.3333%, 0%)");
     expect(gridVeil("root").dataset.veil).toBe("clear");
-    expect(gridStrip("quizzes").style.transform).toBe("translate3d(-50%, 0%, 0)");
+    expect(translation(gridStrip("quizzes"))).toBe("translate(-50%, 0%)");
     expect(gridVeil("quizzes").dataset.veil).toBe("whole");
-    expect(gridStrip("energy").style.transform).toBe("translate3d(-66.6667%, -50%, 0)");
+    expect(translation(gridStrip("energy"))).toBe("translate(-66.6667%, -50%)");
     expect(gridVeil("energy").dataset.veil).toBe("whole");
     expect(document.querySelector('[data-layered-card="energy"]')!.hasAttribute("data-revealed")).toBe(false);
     for (const id of ["physics", "heating", "cooling", "demand", "storage", "network"]) expect(document.querySelector(`[data-layered-card="${id}"]`)!.hasAttribute("data-revealed"), id).toBe(false);
@@ -64,15 +64,15 @@ export function registerZoomsHoveredTopicPansTests(): void {
     const strip = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-strip]')!;
     const veil = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-veil]')!;
     moveMouseOver(1, 1);
-    expect(strip.style.transform).toBe("translate3d(-33.3333%, -50%, 0)");
+    expect(translation(strip)).toBe("translate(-33.3333%, -50%)");
     const explore = within(screen.getByRole("region", { name: "Badges" })).getByRole("button", { name: "All badges" });
     fireEvent.pointerOver(explore, { pointerType: "mouse" });
     fireEvent.pointerDown(explore, { pointerType: "mouse", button: 0 });
-    expect(strip.style.transform, "the glide starts where the pan stood").toBe("translate3d(-33.3333%, -50%, 0)");
+    expect(translation(strip), "the glide starts where the pan stood").toBe("translate(-33.3333%, -50%)");
     for (let spent = 0; spent < 250; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(veil.dataset.veil, "under way the pressed glass has a hole over the page").toBe("hole");
     for (let spent = 0; spent < 350; spent += 10) act(() => void vi.advanceTimersByTime(10));
-    expect(strip.style.transform).toBe("translate3d(0%, -50%, 0)");
+    expect(translation(strip)).toBe("translate(0%, -50%)");
     expect(veil.dataset.veil).toBe("clear");
   });
   it("shows the others inside the pages behind the cards on each page's own anchors, and none with cursors off", () => {

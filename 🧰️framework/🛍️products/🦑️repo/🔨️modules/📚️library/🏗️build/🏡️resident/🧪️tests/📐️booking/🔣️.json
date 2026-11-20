@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "id": "older request with sufficient memory",
+      "wait": {
+        "reason": "queue-order",
+        "waitedSeconds": 43,
+        "active": 4,
+        "queued": 7,
+        "spareMegabytes": 7900,
+        "floorMegabytes": 2048,
+        "minimumMegabytes": 2048
+      },
+      "en": "an earlier request is still waiting",
+      "de": "eine frühere Anfrage wartet noch"
+    },
+    {
+      "id": "gate-confirmed memory shortage",
+      "wait": {
+        "reason": "memory",
+        "waitedSeconds": 20,
+        "active": 1,
+        "queued": 1,
+        "spareMegabytes": 512,
+        "floorMegabytes": 2048,
+        "minimumMegabytes": 2048
+      },
+      "en": "not enough free memory",
+      "de": "nicht genug freier Speicher"
+    },
+    {
+      "id": "gate has supplied no decision",
+      "wait": null,
+      "en": "waiting for a host capacity decision",
+      "de": "warte auf die Kapazitätsentscheidung"
+    }
+  ]
+}

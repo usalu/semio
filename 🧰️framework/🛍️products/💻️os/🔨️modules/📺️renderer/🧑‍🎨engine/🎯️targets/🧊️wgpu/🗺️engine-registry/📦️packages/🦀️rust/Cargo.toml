@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-renderer-wgpu-contracts/testkit"]
+testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-framework-job/testkit"]
 
 [dependencies]
 semio-renderer-wgpu-asset-authority = { path = "../../../🗂️asset-authority/📦️packages/🦀️rust" }
@@ -61,3 +61,4 @@ ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯�
 vello = { version = "0.9.0", default-features = false, features = ["wgpu"] }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }

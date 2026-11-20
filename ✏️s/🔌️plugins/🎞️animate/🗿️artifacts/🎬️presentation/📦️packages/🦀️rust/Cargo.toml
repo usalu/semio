@@ -87,6 +87,9 @@ roxmltree = "0.20.0"
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 
 # 🖥️ The NATIVE host crate. Excluded from `wasm32-wasip2` because a WASI guest component never
 # hosts anything — and because `target_arch = "wasm32"` is TRUE for wasip2, a bare arch gate

@@ -54,6 +54,18 @@
       "held": 1,
       "host": 4,
       "expected": null
+    },
+    {
+      "capacity": "io",
+      "held": 0,
+      "host": 4,
+      "expected": 0
+    },
+    {
+      "capacity": "io",
+      "held": 1,
+      "host": 4,
+      "expected": null
     }
   ],
   "lifetime": {

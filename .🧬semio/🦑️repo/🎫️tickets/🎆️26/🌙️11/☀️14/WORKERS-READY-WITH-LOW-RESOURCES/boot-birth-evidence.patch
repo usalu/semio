@@ -1,0 +1,265 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️entry/🟨️.mjs
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️entry/🟨️.mjs
+@@ -7,7 +7,7 @@
+ import {fileURLToPath} from "node:url";
+ 
+ /** 🔢️ Version of the installed boot program, which moves forward only after its own self-test. */
+-export const bootVersionV1=7;
++export const bootVersionV1=8;
+ 
+ /** 🧭️ Where the module lives below the repository root. */
+ export const moduleRelativeV1="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
+@@ -131,14 +131,14 @@
+  const {root,moduleRel,environment,limits,signal,state,say}=context;
+  return new Promise(done=>{
+   const boot=join(root,".cache","f","boot"),beatFile=join(boot,"beat.json"),readyFile=join(boot,"ready.json"),startedAt=Date.now(),replica=join(root,...moduleRel.split("/"),"🔁️replica"),reloadToken=randomBytes(16).toString("hex");
+-  let ready=false,waiting=false,stopping=false,finished=false,recording=false,killed="",termTimer;
+-  const proc=spawn(process.execPath,[spec.script,"--boot-child",...context.args],{cwd:existsSync(replica)?replica:root,env:{...environment,SEMIO_FLEET_ENTRY:"boot",SEMIO_FLEET_BOOT_ROOT:root,SEMIO_FLEET_BOOT_BASE:spec.base,SEMIO_FLEET_BOOT_SOURCE:spec.source,SEMIO_FLEET_BOOT_REASON:spec.reason,SEMIO_FLEET_BOOT_FORCE:spec.force?"1":"",SEMIO_FLEET_BOOT_RELOAD_TOKEN:reloadToken,...spec.watch===undefined?{}:{SEMIO_FLEET_CODE_WATCH:spec.watch}},stdio:"inherit",windowsHide:true});
++  let ready=false,waiting=false,stopping=false,finished=false,recording=false,sentWatchdog=false,killed="",termTimer;
++  const proc=spawn(process.execPath,[spec.script,"--boot-child",...context.args],{cwd:existsSync(replica)?replica:root,env:{...environment,SEMIO_FLEET_ENTRY:"boot",SEMIO_FLEET_BOOT_ROOT:root,SEMIO_FLEET_BOOT_BASE:spec.base,SEMIO_FLEET_BOOT_SOURCE:spec.source,SEMIO_FLEET_BOOT_REASON:spec.reason,SEMIO_FLEET_BOOT_FORCE:spec.force?"1":"",SEMIO_FLEET_BOOT_RELOAD_TOKEN:reloadToken,SEMIO_FLEET_BOOT_EVIDENCE:JSON.stringify({bootPid:process.pid,bootVersion:bootVersionV1,bootStartedMs:state.get().startedMs,daemonStartedMs:startedAt,...context.transition}),...spec.watch===undefined?{}:{SEMIO_FLEET_CODE_WATCH:spec.watch}},stdio:"inherit",windowsHide:true});
+   const pid=proc.pid??0,kill=(why,beat,reason)=>{
+    killed=killed||why;
+    if(beat!==undefined&&reason!==undefined&&beat.phase==="run"){
+     if(recording)return;
+     recording=true;
+-    recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{try{proc.kill("SIGKILL");}catch{}});
++    recordBlock(root,pid,beat,reason).catch(()=>{}).finally(()=>{if(!finished)try{sentWatchdog=proc.kill("SIGKILL");}catch{}});
+     return;
+    }
+    try{proc.kill("SIGKILL");}catch{}
+@@ -166,11 +166,11 @@
+   proc.on("exit",(code,name)=>{
+    const status=code??(name===null?1:128+({SIGTERM:15,SIGINT:2,SIGKILL:9,SIGHUP:1}[name]??0)||1),uptime=Date.now()-startedAt;
+    if(stopping)return end({kind:"exit",code:killed===""?code??0:status});
+-   if(code===0){const receipt=readJson(readyFile);if(receipt?.pid===pid&&receipt.waiting===false&&receipt.reloadToken===reloadToken&&Object.keys(receipt).sort().join(",")==="pid,reloadToken,waiting")return end({kind:"reload"});}
++   if(code===0){const receipt=readJson(readyFile);if(receipt?.pid===pid&&receipt.waiting===false&&receipt.reloadToken===reloadToken&&Object.keys(receipt).sort().join(",")==="pid,reloadToken,waiting")return end({kind:"reload",pid});}
+    if(code===0||code===75)return end({kind:"exit",code});
+    if(!ready||uptime<limits.earlyMs)return end({kind:"early",code:status,reason:killed===""?`exit ${status}`:killed,uptime});
+    if(killed!=="")say(`The daemon was ended (${killed}) / Der Daemon wurde beendet (${killed})`);
+-   return end({kind:"exit",code:status,killed});
++   return end({kind:"exit",code:status,killed,pid,watchdog:sentWatchdog&&name==="SIGKILL"});
+   });
+  });
+ }
+@@ -235,7 +235,7 @@
+ 
+ /** 🥾️ The boot loop: it runs the daemon from the first code that starts, in this order, and never ends by itself. (1) The code of the worktree, as the child process of its supervisor file. (2) The newest sealed snapshot below `<worktree>/.cache/f/code` or `<entry>/code` that is intact (every file hash checked) and not refused. (3) A snapshot of `<store>/v1/bootstrap/code/<digest>/`, ranked by fresh attestations, fetched with a per-file sha256 check into `<entry>/code`. (4) The worktree code once more, forced, when it was refused only as a revert. A start that ends early (not ready or under `earlyMs`) with an error moves on to the next code and refuses a failing snapshot for `refuseMs`; a verified graceful reload starts a new worker under the same boot owner. Unmarked exit 0, exit 75 and actual stop end the owner, while a late crash is restarted with bounded delay. With nothing runnable the loop writes `state.json` (phase `exhausted`, reasons, attempts, the next try) and polls again after a doubling backoff. A missing worktree is the phase `waiting`. `context`: `entry`, `worktree`, `moduleRel`, `storeRoot` (function), `environment`, `limits`, `args`, `say`. */
+ export async function runBootV1(context,signal){
+- const startedMs=Date.now(),state=stateOf(context.entry,startedMs),full={...context,root:context.worktree,signal,state};
++ const startedMs=Date.now(),state=stateOf(context.entry,startedMs),full={...context,root:context.worktree,signal,state,transition:{transition:"initial",previousDaemonPid:null}};
+  const beat=setInterval(()=>{state.set({});},10_000);beat.unref?.();
+  try{
+   let wait=context.limits.backoffMs,crashes=[];
+@@ -243,6 +243,7 @@
+    if(signal.aborted)return 143;
+    const result=await cycle(full);
+    if(result.kind==="reload"){
++    full.transition={transition:"graceful-reload",previousDaemonPid:result.pid};
+     const delay=context.limits.backoffMs;
+     state.set({phase:"starting",reason:"daemon requested a graceful reload",nextMs:Date.now()+delay});
+     context.say("The daemon requested a graceful reload and will restart inside the running boot stage / Der Daemon hat ein geordnetes Neuladen angefordert und startet innerhalb der laufenden Boot-Stufe neu");
+@@ -251,6 +252,7 @@
+    }
+    if(result.kind==="exit"){
+     if(result.code===0||result.code===75||signal.aborted)return result.code;
++    if(result.pid>0)full.transition={transition:result.watchdog?"watchdog":"crash",previousDaemonPid:result.pid};
+     const now=Date.now();
+     crashes=[...crashes.filter(at=>now-at<600_000),now];
+     const delay=Math.min(context.limits.backoffMs*2**(crashes.length-1),context.limits.backoffMaxMs);
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts
+@@ -200,8 +200,13 @@
+ }
+ 
+ async function child(args:readonly string[],root:string,module:string,context:Context):Promise<number>{
+- const {SEMIO_FLEET_BOOT_RELOAD_TOKEN:token,...environment}=context.environment;
++ const {SEMIO_FLEET_BOOT_RELOAD_TOKEN:token,SEMIO_FLEET_BOOT_EVIDENCE:evidence,...environment}=context.environment;
+  delete process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN;
++ delete process.env.SEMIO_FLEET_BOOT_EVIDENCE;
++ if(typeof evidence==="string"&&evidence.length<=256)try{
++  const launch=JSON.parse(evidence);
++  if(launch?.bootPid===process.ppid)(globalThis as unknown as Record<symbol,unknown>)[Symbol.for("semio.fleet.bootBirth")]=Object.freeze({...launch,daemonPid:process.pid});
++ }catch{}
+  const limits=bootLimitsV1(environment),base=environment.SEMIO_FLEET_BOOT_BASE??root,source=environment.SEMIO_FLEET_BOOT_SOURCE??"worktree",worktree=resolve(base)===resolve(root);
+  const dog=startWatchdog(root,base,source,limits);
+  let ready=false,reload=false;
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🟦️.ts
+@@ -15,7 +15,19 @@
+ export type FleetGuardsV1=Readonly<{version:string|null;pins:string;volume:Readonly<{caseInsensitive:boolean;normalisationInsensitive:boolean;symlinks:boolean;longPaths:boolean|null}>;infoExclude:number;caseIgnore:number;caseMismatch:number;trackedIgnored:number;trackedRefused:number;links:number;overBudget:number;modeMismatch:number|null}>;
+ 
+ /** 🩺️ What one worker states about itself in `origins/<origin>/attest.json`: identity, clocks, replication cursors, the order-independent digest of its shared files, the git state, the working-tree view, the guards of that view and the digest of its own code. */
+-export type FleetAttestationV1=Readonly<{version:1;originId:string;groupId:string;platform:string;wallMs:number;hlc:string;sync:boolean;code:string;cursors:Readonly<Record<string,FleetCursorV1>>;files:number;manifest:string;head:Readonly<{ref:string;commit:string}>|null;indexTree:string|null;view:FleetViewV1|null;guards:FleetGuardsV1|null;latency:LatencyReportV1;queue:Readonly<{incoming:number}>;checkpoints?:FleetCheckpointsV1;pending?:Readonly<{code:string;ok:false;reason:string}>;failures?:readonly FailureSummaryV1[];fallback?:FleetFallbackV1;legacy?:true}>;
++export type FleetAttestationV1=Readonly<{version:1;originId:string;groupId:string;platform:string;wallMs:number;hlc:string;sync:boolean;code:string;cursors:Readonly<Record<string,FleetCursorV1>>;files:number;manifest:string;head:Readonly<{ref:string;commit:string}>|null;indexTree:string|null;view:FleetViewV1|null;guards:FleetGuardsV1|null;latency:LatencyReportV1;queue:Readonly<{incoming:number}>;checkpoints?:FleetCheckpointsV1;pending?:Readonly<{code:string;ok:false;reason:string}>;failures?:readonly FailureSummaryV1[];fallback?:FleetFallbackV1;boot?:FleetBootBirthV1;legacy?:true}>;
++
++/** 🥾️ Correlates a live replica child with its installed boot process and the transition that issued it. */
++type FleetBootBirthV1=Readonly<{bootPid:number;bootVersion:number;bootStartedMs:number;daemonPid:number;daemonStartedMs:number;transition:"initial"|"graceful-reload"|"watchdog"|"crash";previousDaemonPid:number|null}>;
++
++/** 🔎️ Reads bounded boot evidence attached at this child’s physical process birth. */
++function replicaBootBirthV1():FleetBootBirthV1|undefined{
++ const value=(globalThis as unknown as Record<symbol,unknown>)[Symbol.for("semio.fleet.bootBirth")];
++ if(value===undefined)return undefined;
++ try{requireAttestShapeV1("BootBirth",value,"Closed replica boot birth required");}catch{return undefined;}
++ const birth=value as FleetBootBirthV1;
++ return birth.daemonPid===process.pid&&birth.bootPid===process.ppid&&birth.bootStartedMs<=birth.daemonStartedMs?birth:undefined;
++}
+ 
+ /** 📍️ A cut through the event history: for every origin the position up to which the worker has read and folded its journal. The fold of the events below a cut is deterministic, so two workers that hold the same cut hold the same shared files. */
+ export type FleetCutV1=Readonly<Record<string,FleetCursorV1>>;
+@@ -72,7 +84,7 @@
+ const missing=(error:unknown):boolean=>(error as {code?:string}).code==="ENOENT";
+ 
+ /** 🛡️ Validates a value against one definition of the attestation schema. */
+-export function requireAttestShapeV1(definition:"Attestation"|"Report"|"Retirement"|"Fixture",value:unknown,message:string):void{
++export function requireAttestShapeV1(definition:"Attestation"|"Report"|"Retirement"|"Fixture"|"BootBirth",value:unknown,message:string):void{
+  let validator=validators.get(definition);
+  if(validator===undefined){validator=compileJsonSchemaSubset({$ref:`#/definitions/${definition}`},schema);validators.set(definition,validator);}
+  const errors=validator.validate(value);
+@@ -635,6 +647,7 @@
+ 
+ /** 🏭️ Creates an attester. */
+ export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
++ const boot=replicaBootBirthV1();
+  const heartbeat=options.heartbeatMilliseconds??5000,stable=options.stableMilliseconds??5000,spacing=Math.min(1000,heartbeat),probe=createCodeProbeV1(options.codeRoot??codeRootV1),watching=options.watchRoot===undefined?probe:createCodeProbeV1(options.watchRoot),platform=options.platform??platformV1(),viewEvery=options.viewMilliseconds??120_000,viewQuiet=options.viewDebounceMilliseconds??5000,deltaQuiet=options.deltaDebounceMilliseconds??1000,deltaLimit=options.deltaLimit??1500,guardsEvery=options.guardsMilliseconds??300_000,guardsMinimum=options.guardsMinimumMilliseconds??10_000;
+  let started="",bootAt=0,reported=false,adopt:{digest:string;since:number}|undefined,admission:{digest:string;ok:boolean;reason:string;at:number}|undefined,admitting:Promise<void>|undefined,verdict:{digest:string;ok:boolean;reason:string;retryAt?:number}|undefined,checking:Promise<void>|undefined,signature="",wrote=-Infinity,gitAt=-Infinity,gitState:AttesterGitV1|undefined,gitBusy:Promise<void>|undefined,codeAt=-Infinity;
+  let holdGitSince:number|undefined,currentBuckets:Readonly<{digest:string;buckets:string}>|undefined,manifestCheckpoint:FleetManifestCheckpointV1|undefined,gitCheckpoint:FleetGitCheckpointV1|undefined,viewCheckpoint:FleetViewCheckpointV1|undefined,lastCut:FleetCutV1|undefined,gitPending:Readonly<{before:FleetCutV1;wallMs:number;head:string|null;indexTree:string|null}>|undefined,viewPending:Readonly<{before:FleetCutV1;wallMs:number;digest:string;buckets:string}>|undefined;
+@@ -745,7 +758,7 @@
+     const git=gitState,view=viewState;if(git===undefined||view===undefined)return;
+     if(view!==null&&view.digest!==viewStored){await writeViewLinesV1(options.storeRoot,options.originId,view.lines);viewStored=view.digest;}
+      const commit=git.commit,head=git.present&&commit!==null?{ref:git.head??"HEAD",commit}:null;
+-     await writeAttestationV1(options.storeRoot,{version:1,originId:options.originId,groupId:options.groupId,platform,wallMs:now,hlc:snapshot.hlc,sync:snapshot.sync,code:started,cursors:snapshot.cursors,files:snapshot.files,manifest:snapshot.manifest,head,indexTree:git.present?git.indexTree:null,view:view===null?null:{staged:view.staged,modified:view.modified,deleted:view.deleted,untracked:view.untracked,digest:view.digest,...(viewStale?{stale:true}:{})},guards:guardsState??null,latency:options.latency?.()??silentLatencyV1(),queue:{incoming:snapshot.incoming},...checkpoints===undefined?{}:{checkpoints},...refusal===undefined?{}:{pending:refusal},...failures.length===0?{}:{failures},...options.fallback===undefined?{}:{fallback:options.fallback}});
++     await writeAttestationV1(options.storeRoot,{version:1,originId:options.originId,groupId:options.groupId,platform,wallMs:now,hlc:snapshot.hlc,sync:snapshot.sync,code:started,cursors:snapshot.cursors,files:snapshot.files,manifest:snapshot.manifest,head,indexTree:git.present?git.indexTree:null,view:view===null?null:{staged:view.staged,modified:view.modified,deleted:view.deleted,untracked:view.untracked,digest:view.digest,...(viewStale?{stale:true}:{})},guards:guardsState??null,latency:options.latency?.()??silentLatencyV1(),queue:{incoming:snapshot.incoming},...checkpoints===undefined?{}:{checkpoints},...refusal===undefined?{}:{pending:refusal},...failures.length===0?{}:{failures},...options.fallback===undefined?{}:{fallback:options.fallback},...boot===undefined?{}:{boot}});
+    };
+    if(options.store===undefined)await write();
+    else{try{await options.store(write);}catch(error){if(error instanceof StoreStalledV1)return "idle";throw error;}}
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧬️schema/🔣️.json
+@@ -141,6 +141,24 @@
+    "additionalProperties": false,
+    "required": ["commit", "ref"],
+    "properties": {"ref": {"type": "string", "minLength": 1, "maxLength": 1024}, "commit": {"$ref": "#/definitions/Oid"}}
++  },
++  "BootBirth": {
++   "type": "object",
++   "additionalProperties": false,
++   "required": ["bootPid", "bootVersion", "bootStartedMs", "daemonPid", "daemonStartedMs", "transition", "previousDaemonPid"],
++   "properties": {
++    "bootPid": {"type": "integer", "minimum": 1, "maximum": 2147483647},
++    "bootVersion": {"type": "integer", "minimum": 1, "maximum": 1000000},
++    "bootStartedMs": {"$ref": "#/definitions/Count"},
++    "daemonPid": {"type": "integer", "minimum": 1, "maximum": 2147483647},
++    "daemonStartedMs": {"$ref": "#/definitions/Count"},
++    "transition": {"enum": ["initial", "graceful-reload", "watchdog", "crash"]},
++    "previousDaemonPid": {"anyOf": [{"type": "null"}, {"type": "integer", "minimum": 1, "maximum": 2147483647}]}
++   },
++   "oneOf": [
++    {"properties": {"transition": {"const": "initial"}, "previousDaemonPid": {"type": "null"}}},
++    {"properties": {"transition": {"enum": ["graceful-reload", "watchdog", "crash"]}, "previousDaemonPid": {"type": "integer"}}}
++   ]
+   },
+   "Attestation": {
+    "type": "object",
+@@ -170,6 +188,7 @@
+      "properties": {"incoming": {"$ref": "#/definitions/Count"}}
+     },
+     "checkpoints": {"$ref": "#/definitions/Checkpoints"},
++    "boot": {"$ref": "#/definitions/BootBirth"},
+     "pending": {
+      "type": "object",
+      "additionalProperties": false,
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️entry/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️entry/🧪️tests/🟦️.ts
+@@ -242,8 +242,10 @@
+ import {existsSync,writeFileSync} from "node:fs";
+ import {join} from "node:path";
+ export async function runReplicaCommandV1(_args,context){
+- if(context.environment.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined||process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined)throw Error("The worker token escaped its boundary");
++ if(context.environment.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined||process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN!==undefined||context.environment.SEMIO_FLEET_BOOT_EVIDENCE!==undefined||process.env.SEMIO_FLEET_BOOT_EVIDENCE!==undefined)throw Error("The worker token escaped its boundary");
+  const record=join(context.root,"started"),first=!existsSync(record);
++ const evidence=globalThis[Symbol.for("semio.fleet.bootBirth")];
++ writeFileSync(join(context.root,first?"initial":"reload"),JSON.stringify(evidence));
+  context.write(JSON.stringify({version:1,event:"started"}));
+  if(first){
+   writeFileSync(record,String(process.pid));
+@@ -258,7 +260,19 @@
+  try{
+   await until(()=>existsSync(join(box.repo,"next"))||shim.proc.exitCode!==null,8000);
+   expect(shim.proc.exitCode).toBeNull();
+-  expect(readFileSync(join(box.repo,"next"),"utf8")).not.toBe(readFileSync(join(box.repo,"started"),"utf8"));
++  const first=JSON.parse(readFileSync(join(box.repo,"initial"),"utf8")),second=JSON.parse(readFileSync(join(box.repo,"reload"),"utf8"));
++  const transition=readEntryStateV1(box.entry);
++  const oracle=new Database(":memory:");
++  try{
++   const expected=oracle.query("select json_object('transition','graceful-reload','bootPid',json_extract(?1,'$.bootPid'),'bootVersion',json_extract(?1,'$.bootVersion'),'bootStartedMs',json_extract(?1,'$.bootStartedMs'),'previousDaemonPid',json_extract(?1,'$.daemonPid')) as evidence").get(JSON.stringify(first)) as {evidence:string};
++   expect(second).toMatchObject(JSON.parse(expected.evidence));
++  }finally{oracle.close();}
++  expect(first.transition).toBe("initial");expect(first.previousDaemonPid).toBeNull();
++  expect(first.bootPid).toBe(transition?.pid);expect(first.bootVersion).toBe(transition?.bootVersion);
++  expect(first.daemonPid).toBe(Number(readFileSync(join(box.repo,"started"),"utf8")));
++  expect(second.daemonPid).toBe(Number(readFileSync(join(box.repo,"next"),"utf8")));
++  expect(second.daemonPid).not.toBe(first.daemonPid);
++  expect(second.daemonStartedMs).toBeGreaterThan(first.daemonStartedMs);
+   expect(readEntryStateV1(box.entry)?.attempts.some(item=>item.outcome==="graceful reload")).toBe(true);
+  }finally{if(shim.proc.exitCode===null)await stopShim(shim);}
+ },30000);
+@@ -287,16 +301,21 @@
+  await until(()=>!alive(child.pid),20_000);
+ });
+ 
+-const blockedSupervisor=`import {mkdirSync,writeFileSync} from "node:fs";\nimport {join} from "node:path";\nconst root=process.env.SEMIO_FLEET_BOOT_ROOT,boot=join(root,".cache","f","boot");\nmkdirSync(boot,{recursive:true});\nwriteFileSync(join(root,"ran.txt"),process.env.SEMIO_FLEET_BOOT_SOURCE+" "+(process.env.SEMIO_FLEET_BOOT_BASE??""));\nwriteFileSync(join(boot,"ready.json"),JSON.stringify({pid:process.pid,waiting:false}));\nconst beat=()=>writeFileSync(join(boot,"beat.json"),JSON.stringify({version:1,pid:process.pid,parent:process.ppid,startedMs:Date.now(),wallMs:Date.now(),phase:"run",base:root,source:"worktree",lagMs:Number(process.env.FAKE_LAG??"0"),activity:"walk"}));\nbeat();setInterval(beat,100);\n`;
++const blockedSupervisor=`import {mkdirSync,writeFileSync} from "node:fs";\nimport {join} from "node:path";\nconst root=process.env.SEMIO_FLEET_BOOT_ROOT,boot=join(root,".cache","f","boot");\nmkdirSync(boot,{recursive:true});\nwriteFileSync(join(root,"ran.txt"),process.env.SEMIO_FLEET_BOOT_SOURCE+" "+(process.env.SEMIO_FLEET_BOOT_BASE??""));\nwriteFileSync(join(boot,"ready.json"),JSON.stringify({pid:process.pid,waiting:false}));\nconst evidence=JSON.parse(process.env.SEMIO_FLEET_BOOT_EVIDENCE??"null");\nif(evidence?.transition==="watchdog")writeFileSync(join(root,"watchdog-birth"),JSON.stringify({...evidence,daemonPid:process.pid}));\nconst beat=()=>writeFileSync(join(boot,"beat.json"),JSON.stringify({version:1,pid:process.pid,parent:process.ppid,startedMs:Date.now(),wallMs:Date.now(),phase:"run",base:root,source:"worktree",lagMs:Number(process.env.FAKE_LAG??"0"),activity:"walk"}));\nbeat();setInterval(beat,100);\n`;
+ 
+ test("the installed boot program ends a daemon whose beat says its loop is blocked for the kill limit, leaves a loop-blocked-restart record with the declared activity, shows the end in its state and starts again",async()=>{
+  const box=sandbox("blocked-entry",{supervisor:blockedSupervisor});
+  const shim=startShim(box,{SEMIO_FLEET_ENTRY_KILL_MS:"3000",SEMIO_FLEET_ENTRY_EARLY_MS:"200",FAKE_LAG:"5000"});
+  const recordFile=join(box.repo,".cache","f","boot","loop-blocked-restart.json");
+  await until(()=>existsSync(recordFile),60_000);
+- const record=JSON.parse(readFileSync(recordFile,"utf8")) as {count:number;phase:string;reason:string;activity:string;lagMs:number};
++ const record=JSON.parse(readFileSync(recordFile,"utf8")) as {pid:number;count:number;phase:string;reason:string;activity:string;lagMs:number};
+  expect(record.count).toBeGreaterThanOrEqual(1);expect(record.phase).toBe("run");expect(record.reason).toBe("blocked");expect(record.activity).toBe("walk");expect(record.lagMs).toBe(5000);
+  await until(()=>shim.out().includes("Der Daemon wurde beendet")&&shim.out().includes("event loop was blocked for 5 s in walk"),30_000);
++ await until(()=>existsSync(join(box.repo,"watchdog-birth")),30_000);
++ const birth=JSON.parse(readFileSync(join(box.repo,"watchdog-birth"),"utf8")),boot=readEntryStateV1(box.entry);
++ expect(birth).toMatchObject({transition:"watchdog",previousDaemonPid:record.pid,bootPid:boot?.pid,bootVersion:boot?.bootVersion});
++ expect(birth.daemonPid).not.toBe(record.pid);
++ expect(shim.proc.exitCode).toBeNull();
+  await stopShim(shim);
+ });
+ 
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🩺️attest/🧪️tests/🟦️.ts
+@@ -921,3 +921,34 @@
+  expect(await readThroughReplacementV1(async()=>{throw failure("ENOENT");},wait)).toBeUndefined();
+  await expect(readThroughReplacementV1(async()=>{throw failure("EIO");},wait)).rejects.toThrow("EIO");
+ });
++
++test("fleet attestation carries only the current process's bounded boot birth",async()=>{
++ const key=Symbol.for("semio.fleet.bootBirth"),global=globalThis as unknown as Record<symbol,unknown>;
++ const base={bootPid:process.ppid,bootVersion:8,bootStartedMs:10,daemonPid:process.pid,daemonStartedMs:11,transition:"initial",previousDaemonPid:null};
++ const shape=validator("BootBirth"),store=temp("boot"),root=code("boot"),saved=global[key];
++ const gitAbsent=async()=>({present:false,head:null,commit:null,indexTree:null});
++ try{
++  const scenarios=[
++   {row:base,expected:true},
++   {row:{...base,transition:"watchdog",previousDaemonPid:99},expected:true},
++   {row:{...base,daemonPid:process.pid+1},expected:false},
++   {row:{...base,bootPid:process.ppid+1},expected:false},
++   {row:{...base,daemonStartedMs:9},expected:false},
++   {row:{...base,path:"private"},expected:false},
++   {row:{...base,transition:"watchdog"},expected:false},
++   {row:undefined,expected:false},
++  ];
++  const snapshot={sync:true,files:1,manifest:"0".repeat(64),hlc:"0000000000001-000000-a1",cursors:{},incoming:0};
++  for(const [at,{row,expected}] of scenarios.entries()){
++   const origin="b"+at;
++   global[key]=row;
++   const attester=createAttesterV1({storeRoot:store,originId:origin,groupId:"g1",platform:"linux",now:()=>15000,codeRoot:root,git:gitAbsent,reachable:async()=>true});
++   await attester.start();
++   expect(await attester.tick(snapshot)).toBe("written");
++   const received=await readAttestationV1(store,origin);
++   expect(received).toBeDefined();
++   if(expected){expect(shape(row)).toBe(true);expect(received?.boot).toEqual(row);}
++   else expect(received?.boot).toBeUndefined();
++  }
++ }finally{if(saved===undefined)delete global[key];else global[key]=saved;}
++});

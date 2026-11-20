@@ -251,6 +251,15 @@ test("an unreachable store (probe false) is reported as unreachable and recovers
  expect(states).toEqual(["unreachable","ok"]);
 });
 
+test("replica diagnostics keep bounded classified block reasons alongside unchanged totals",()=>{
+ for(const row of fixture.blocked){let now=0;const tracker=createFailuresV1({now:()=>now,capacity:2});
+  for(const [key,reason,at] of row.events){now=Number(at);tracker.note(String(key),String(reason));}
+  expect(tracker.summary(row.limit),row.name).toEqual(row.totals);
+  expect(tracker.diagnostics(row.limit),row.name).toEqual(row.results);
+  for(const item of tracker.diagnostics(row.limit))requireResilienceShapeV1("Failure",item,row.name);
+ }
+});
+
 test("recurring failures stay visible: announced first, again once per window, counted per kind and forgotten on success",()=>{
  let now=1000;
  const failures=createFailuresV1({now:()=>now,windowMs:60_000,capacity:3});

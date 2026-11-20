@@ -230,7 +230,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         }
         let demand = disposer.retirement_demands(&store, 1 << 20).expect("the store quotes its next retirement turn");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        disposer.close_step(&mut store, grant).expect("the store retires");
+        disposer.close_step_cold(&mut store, grant).expect("the store retires");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

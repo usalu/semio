@@ -6,7 +6,7 @@ import {javascriptInstallSchemaV1} from "../../../../../../../🚀️bootstrap/�
 import {planSelectedRepositoryDependencyGenerationsV1,maintainSelectedRepositoryDependencyGenerationV1,repositoryCacheImagePublicationOptionsV1} from "../../🟦️.ts";
 import {retryWhileDependencyStoreBusyV1,dependencyStoreWaitPortsForV1,type DependencyStoreWaitPortsV1} from "../💰️funding/🟦️.ts";
 import {refuseCachingV1,sayCachingV1} from "../../../../../../../📖️texts/🟦️.ts";
-import {isRepoErrorV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
+import {isRepoErrorV1,type RepoErrorV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {observeRepositoryDependencyMaintenanceParentV1} from "../../📸️observation/🟦️.ts";
 import retirementSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -32,19 +32,41 @@ function busyRepositoryDependencyOwnerResultV1(value:unknown):boolean{return typ
 /** ♻️ Retires only proven obsolete physical prefixes through genuine fresh plan, observe and retire owners, preserving the retained whole charge. A store held by another process is waited for with a progress line that names the holder and, past the bounded retirement wait, the rest is deferred to the next setup; every phase replans from the store, so an interrupted or half-retired store resumes where it stopped. */
 export async function retireObsoleteRepositoryDependencyGenerationsV1(invocation:ScriptInvocation,control:ResourceLeaseControl,owners:RetirementOwnersV1=retirementOwnersV1):Promise<readonly string[]>{
  const retired:string[]=[],started=performance.now(),check=()=>{checkResourceLeaseControl(control);control.signal.throwIfAborted();},waits=owners.waits(invocation,control),acquire=(call:()=>Promise<unknown>):Promise<unknown>=>retryWhileDependencyStoreBusyV1(control,async()=>{const value=await call();return busyRepositoryDependencyOwnerResultV1(value)?Object.freeze({acquired:false as const}):Object.freeze({acquired:true as const,value});},waits);
+ let moved=0;
  try{
   for(;;){
+   try{
    check();const plan=readRepositoryDependencyRetirementPlanV1(await acquire(async()=>owners.plan(invocation,control,{version:1,purpose:"plan-current-dependency-generations",selectedPrefix:null,parent:(await owners.observe(invocation,control)).parent}))),candidate=selectRepositoryDependencyRetirementCandidateV1(plan);check();
    if(candidate===null)return Object.freeze(retired);if(retired.includes(candidate.prefix))throw Error("Retired dependency generation reappeared");if(retired.length>=retirementProtocol.maximumRetirements)throw Error("Dependency obsolete retirement count exhausted");
   const selection=candidate.status==="inactive"||candidate.status==="retained-unready"?{kind:candidate.status==="inactive"?"inactive-generation"as const:"retained-unready"as const,prefix:candidate.prefix,generation:candidate.generation!,receiptFingerprint:candidate.receiptFingerprint!,rootStamp:candidate.rootStamp,currentBindingsSha256:plan.current.sha256}:{kind:candidate.status==="unready"?"unready-generation"as const:candidate.status==="unready-metadata"?"unready-metadata"as const:"empty-generation"as const,prefix:candidate.prefix,rootStamp:candidate.rootStamp,currentBindingsSha256:plan.current.sha256};
    sayCachingV1("dependency-store.retiring",{prefix:candidate.prefix,retired:retired.length});
    const snapshot=readRepositoryDependencyRetirementSettlementV1(await acquire(async()=>owners.maintain(invocation,control,readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"observe",selection,parent:(await owners.observe(invocation,control)).parent,artifact:plan.artifact,expected:null}))),"observe",selection,plan.artifact);check();
-   readRepositoryDependencyRetirementSettlementV1(await acquire(async()=>owners.maintain(invocation,control,readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"retire",selection,parent:(await owners.observe(invocation,control)).parent,artifact:plan.artifact,expected:snapshot.selected}))),"retire",selection,plan.artifact);retired.push(candidate.prefix);await control.publish({resource:retirementProtocol.progressResource+":"+retired.length,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();check();
+   readRepositoryDependencyRetirementSettlementV1(await acquire(async()=>owners.maintain(invocation,control,readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"retire",selection,parent:(await owners.observe(invocation,control)).parent,artifact:plan.artifact,expected:snapshot.selected}))),"retire",selection,plan.artifact);retired.push(candidate.prefix);moved=0;await control.publish({resource:retirementProtocol.progressResource+":"+retired.length,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();check();
+   }catch(error){
+    const found=bindingsMovedV1(error);if(found===null)throw error;
+    if(++moved>retirementProtocol.maximumBindingsReplans){sayCachingV1("dependency-store.retirement-moved",{limit:retirementProtocol.maximumBindingsReplans,retired:retired.length},"warn");return Object.freeze(retired);}
+    sayCachingV1("dependency-store.bindings-replanned",{planned:found.values.planned,current:found.values.current,attempt:moved+1,limit:retirementProtocol.maximumBindingsReplans+1},"warn");
+   }
   }
  }catch(error){
   if(isRepoErrorV1(error)&&error.key==="caching.dependency-store.busy-timeout"){sayCachingV1("dependency-store.retirement-deferred",{seconds:Number(error.values.seconds),retired:retired.length},"warn");return Object.freeze(retired);}
   throw error;
  }
+}
+
+/** 🌀️ Returns the stale binding refusal when every reported failure permits a fresh retirement plan. */
+export function bindingsMovedV1(error:unknown):RepoErrorV1|null{
+ if(isRepoErrorV1(error))return error.key==="caching.dependency-store.bindings-moved"?error:null;
+ if(error instanceof AggregateError){
+  let moved:RepoErrorV1|null=null;
+  for(const part of error.errors){
+   const found=bindingsMovedV1(part);
+   if(found===null)return null;
+   moved??=found;
+  }
+  return moved;
+ }
+ return null;
 }
 
 /** 📋️ Accepts only complete acquired qualified plan DATA; a busy or malformed observation never becomes an empty plan. */

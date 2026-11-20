@@ -69,7 +69,7 @@ pub fn generation3d_render_body(
     }
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),
-        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, run, active_utility, marks, labels),
+        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, run, active_utility, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(
             &document.generation,
             selected_generation_id,
@@ -78,7 +78,7 @@ pub fn generation3d_render_body(
             &semio_plugin::TreeWindows::for_body(view_state, generations::GENERATION_3D_PLAY_BODY_GENERATIONS),
         ),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_snapshot, &document.generation, selected_generation_id, labels),
-        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run),
+        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
         artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => {

@@ -85,7 +85,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if !self.fold_output.terminal_is_empty(){return poll_outcome(self.fold_output.close_step(effect),RetainedCloneStep::Progress)}
         if !self.empty_messages.terminal_is_empty(){return poll_outcome(self.empty_messages.close_step(effect),RetainedCloneStep::Progress)}
         if !self.original_meta.terminal_is_empty(){return poll_outcome(self.original_meta.close_step(effect),RetainedCloneStep::Progress)}
-        if let Some(cursor)=self.mutation_receiving.as_mut(){if !cursor.terminal_is_empty(){return poll_outcome(cursor.close_step(effect),|step|step)}let copy=std::mem::size_of_val(&self.mutation_receiving);let release=std::mem::size_of::<M::Receiving>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.mutation_receiving.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}}
+        if let Some(cursor)=self.mutation_receiving.as_mut(){if !cursor.terminal_is_empty(){return poll_outcome(cursor.close_step(effect),|step|RetainedCloneStep::Progress(step.progress()))}let copy=std::mem::size_of_val(&self.mutation_receiving);let release=std::mem::size_of::<M::Receiving>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.mutation_receiving.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}}
         if !self.mutation_output.terminal_is_empty(){return poll_outcome(self.mutation_output.close_step(effect),RetainedCloneStep::Progress)}
         let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
@@ -96,7 +96,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)); }
+        if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.fold_job.is_some() { return semio_os_store_read::settle_close_poll(semio_os_store_read::retirement_owner_close(&mut self.fold_job, effect)).map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
             ($field:ident) => { if self.$field.is_some() { return semio_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, effect).result; } };

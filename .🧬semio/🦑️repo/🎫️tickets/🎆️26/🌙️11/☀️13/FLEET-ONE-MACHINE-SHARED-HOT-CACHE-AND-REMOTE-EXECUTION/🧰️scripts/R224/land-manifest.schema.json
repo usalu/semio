@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:scripts/land-manifest/v1",
+  "title": "Landing manifest",
+  "description": "The change set of one landing as a tab separated text file, one line per file: a kind and a path relative to the repository root. N is a file that does not exist yet (created first, in a directory that may be new), M is a file that exists and is replaced after the replica delivered every N. Each line is validated against the pattern of `Line`. The base copy of an M file (the live bytes the patch was built on) lies in `<state>/base/<path>`, the payload of every line in `<state>/new/<path>`. / Die Änderungsmenge einer Landung als tabulatorgetrennte Textdatei: je Datei eine Art und ein Pfad relativ zur Repositorywurzel. N ist eine noch nicht vorhandene Datei (zuerst angelegt, in einem möglicherweise neuen Verzeichnis), M eine vorhandene Datei, die ersetzt wird, nachdem die Replik jede N-Datei geliefert hat.",
+  "type": "string",
+  "$defs": {
+    "Line": {
+      "type": "string",
+      "pattern": "^[NM]\\t(?!(.*/)?\\.\\.(/|$))[^\\t\\\\/][^\\t\\\\]*$",
+      "maxLength": 1024
+    }
+  }
+}

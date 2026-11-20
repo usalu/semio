@@ -27,6 +27,7 @@ semio-framework-schema = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-layout-layout-host = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 serde_json = { workspace = true }

@@ -73,7 +73,7 @@ export function useDispatchGraphEditsState({ keyboardPort, sessionRef, paintOver
       }
       try {
         const hovered = session.hoveredNodeId();
-        publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, channel?.portId);
+        publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, channel?.portId, target?.domain === "edge" ? target.id : undefined);
       } catch {}
       session.renderFrame();
       paintOverlays();

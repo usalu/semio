@@ -1,0 +1,7 @@
+# Note Dev Wiring Audit — 2026-11-20
+
+The owned `serve-note` wrapper passes the generated Specific catalog and prototype mode to the framework ServeScript. The launch report records successful catalog and session publication, browser support and fonts, followed by refusal for the missing Note module. The independent Vite config check identifies its required activation receipt as `.cache/b/p/m/browser/prototype/runtime/react/note/activation/🔣️receipt.json`; this is an activation product, not proof of guest publication itself. At inspection the runtime/react/note directory and Note module were absent; the prototype browser session existed. Attempt 18 was still in progress, so these observations are a snapshot, not its outcome.
+
+The acceptance probe has a confirmed portability limitation: Chromium is always launched with `--use-angle=metal`, even on native Windows and Linux. Its keyboard modifier already branches by platform, but its GPU backend does not. Browser startup succeeded on this macOS host according to the previous acceptance report; that does not establish cross-platform probe execution. The probe records diagnostics and asserts interaction results only after running the entire sequence, so an early boot failure may cause later timeouts before the assertion identifies it. Neither is evidence of a Note runtime defect.
+
+No compiler, graph, server, or browser acceptance was run during this audit. The existing acceptance report explicitly says no live interaction has yet been verified.

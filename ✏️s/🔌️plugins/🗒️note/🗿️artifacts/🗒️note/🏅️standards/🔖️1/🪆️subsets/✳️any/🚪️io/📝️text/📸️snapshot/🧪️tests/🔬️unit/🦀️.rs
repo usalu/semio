@@ -1,7 +1,7 @@
 use semio_s_artifact_note_note_schema::NoteSnapshot;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
-use std::collections::BTreeMap;
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
@@ -11,8 +11,8 @@ async fn semio_example_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn note_dsl_round_trips_representative_document() {
-    let mut assets = BTreeMap::new();
-    assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
+    let mut assets = RetainedOrderedMap::new();
+    assets.cold_insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
     let document = NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "doc-1".into(),

@@ -87,6 +87,15 @@ export function generation3dWidgetInputSelfTests(): number {
     assert.equal(validate({widgetId:"construct",channel:"data",facet:"meshSource",...entry.command}),!("schemaValid" in entry && entry.schemaValid===false),entry.id+": "+JSON.stringify(validate.errors));
     checks+=2;
   }
+  for (const axis of inspectorFixture.meshVertexControl.axes) {
+    const command = { widgetId: "construct", channel: "data", facet: "meshSource", path: axis.path, value: axis.edit };
+    assert(validate(command), JSON.stringify(validate.errors));
+    const expected = applyPatch(fixture.meshSource.mesh, [{ op: "replace", path: "/" + axis.path.join("/"), value: Number(axis.edit) }], true, false).newDocument;
+    const actual = JSON.parse(editMeshSource(JSON.stringify(fixture.meshSource.mesh), command)!);
+    assert.deepEqual(actual, expected);
+    assert(validateMesh(actual), JSON.stringify(validateMesh.errors));
+    checks += 3;
+  }
   const imported=JSON.parse(editMeshTexture(JSON.stringify(fixture.meshAssets.mesh),fixture.textureImport.target.textureId,fixture.textureImport.payload));
   assert.deepEqual(imported.textures.image,{mime:fixture.textureImport.mime,bytes:fixture.textureImport.bytes});
   assert.deepEqual([...PNG.sync.read(Buffer.from(imported.textures.image.bytes)).data],fixture.textureImport.pixel);
@@ -129,6 +138,54 @@ export function generation3dWidgetInputSelfTests(): number {
   assert(Math.abs(measurements.area-inspectorFixture.selectedBrepControls.numericOracle.area)<1e-10);
   const dom=widgetDomOracleV1();
   try {
+    for (const port of inspectorFixture.coordinateGroups) {
+      for (const locale of ["en", "de"] as const) {
+        const group = dom.document.createElement("fieldset");
+        const axes = inspectorFixture.controls.filter(control => control.port === port && control.component);
+        for (const axis of axes) {
+          const input = dom.document.createElement("input");
+          input.type = "number";
+          input.value = String(axis.value);
+          input.setAttribute("aria-label", axis[locale]);
+          group.append(input);
+        }
+        dom.document.body.replaceChildren(group);
+        assert.equal(getByRole(dom.document.body, "group"), group);
+        for (const axis of axes) assert.equal((getByRole(group, "spinbutton", {name: axis[locale]}) as HTMLInputElement).valueAsNumber, Number(axis.value));
+        checks += axes.length + 1;
+      }
+    }
+    const vertex = inspectorFixture.meshVertexControl;
+    for (const locale of ["en", "de"] as const) {
+      const group = dom.document.createElement("fieldset");
+      group.setAttribute("aria-label", vertex[locale]);
+      for (const axis of vertex.axes) {
+        const input = dom.document.createElement("input");
+        input.type = axis.kind;
+        input.value = axis.value;
+        input.setAttribute("aria-label", axis[locale]);
+        group.append(input);
+      }
+      dom.document.body.replaceChildren(group);
+      assert.equal(getByRole(dom.document.body, vertex.role, { name: vertex[locale] }), group);
+      for (const axis of vertex.axes) assert.equal((getByRole(group, "spinbutton", { name: axis[locale] }) as HTMLInputElement).valueAsNumber, Number(axis.value));
+      checks += vertex.axes.length + 1;
+    }
+    const slider = inspectorFixture.selectionPublication;
+    for (const locale of ["en", "de"] as const) {
+      const range = dom.document.createElement("input");
+      range.type = "range";
+      range.min = String(slider.control.min);
+      range.max = String(slider.control.max);
+      range.step = String(slider.control.step);
+      range.value = String(slider.value);
+      range.setAttribute("aria-label", slider.control[locale]);
+      dom.document.body.replaceChildren(range);
+      assert.equal(getByRole(dom.document.body, slider.control.type, {name: slider.control[locale]}), range);
+      range.stepUp();
+      assert.equal(range.valueAsNumber, slider.value + slider.control.step);
+      checks += 2;
+    }
   for(const entry of inspectorFixture.selectedBrepControls.cases) for(const control of entry.controls) {
     const expected={$schema:"number",value:control.committedValue};
     assert.deepEqual(editInputValue(["number"],{$schema:"number",value:control.value},String(control.committedValue)),expected);

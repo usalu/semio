@@ -27,7 +27,8 @@ pub(crate) struct BlurGlobals {
     pub _pad: [f32; 7],
 }
 
-/// 🌐️ Mirrors `WORLD3D_SHADER`'s 240-byte per-pass environment and shadow globals.
+/// 🌐️ Mirrors `WORLD3D_SHADER`'s 256-byte per-pass environment, shadow and section-plane globals; the core
+/// [`ui_render::SurfacePass`] carries no SVG profile or section plane, so `shadow.y` stays off and `clip_plane` clips nothing.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub(crate) struct World3dGlobals {
@@ -40,6 +41,7 @@ pub(crate) struct World3dGlobals {
     pub material: [f32; 4],
     pub material_emissive: [f32; 4],
     pub shadow: [f32; 4],
+    pub clip_plane: [f32; 4],
 }
 
 impl World3dGlobals {
@@ -53,13 +55,15 @@ impl World3dGlobals {
             sun: [pass.lighting.sun_color[0], pass.lighting.sun_color[1], pass.lighting.sun_color[2], pass.lighting.sun_intensity],
             material: [pass.neutral_material.metalness, pass.neutral_material.roughness, pass.neutral_material.emissive_intensity, if pass.lighting.sun_enabled { 1.0 } else { 0.0 }],
             material_emissive: [pass.neutral_material.emissive[0], pass.neutral_material.emissive[1], pass.neutral_material.emissive[2], 0.0],
-            shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, pass.shadow.opacity, pass.shadow.softness, 0.0],
+            shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0],
+            clip_plane: [0.0; 4],
         }
     }
 }
 
-/// 🧊️ Mirrors `WORLD3D_SHADER`'s per-instance `InstanceInput` (`model0..3`/`color`/`flags`), built
-/// from [`ui_render::MeshInstance`]'s row-major model, color, and resolved material policy.
+/// 🧊️ Mirrors `WORLD3D_SHADER`'s per-instance `InstanceInput` (`model0..3`/`color`/`flags`/`emissive_cutoff`), built
+/// from [`ui_render::MeshInstance`]'s row-major model, color, and resolved material policy; the core instance has no
+/// authored emissive or alpha cutoff, so `emissive_cutoff` adds nothing and never discards.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub(crate) struct World3dGpuInstance {
@@ -69,6 +73,7 @@ pub(crate) struct World3dGpuInstance {
     pub model3: [f32; 4],
     pub color: [f32; 4],
     pub flags: [f32; 4],
+    pub emissive_cutoff: [f32; 4],
 }
 
 impl World3dGpuInstance {
@@ -81,6 +86,7 @@ impl World3dGpuInstance {
             model3: [m[12], m[13], m[14], m[15]],
             color: instance.color,
             flags: [if instance.preserve_vertex_color { 1.0 } else { 0.0 }, instance.emissive_intensity, instance.metalness, instance.roughness],
+            emissive_cutoff: [0.0, 0.0, 0.0, -1.0],
         }
     }
 }

@@ -73,3 +73,9 @@ record change-scene-shadow-enabled tag=29
 field payload bytes
 record change-scene-material-roughness tag=30
 field payload bytes
+record set-shot-drawing tag=31
+field payload bytes
+record patch-shot-camera tag=32
+field payload bytes
+record set-shot-auto-fit tag=33
+field payload bytes

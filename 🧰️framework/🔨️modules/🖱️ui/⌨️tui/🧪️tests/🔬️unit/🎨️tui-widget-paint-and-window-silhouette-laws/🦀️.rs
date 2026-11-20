@@ -99,7 +99,7 @@ fn window_silhouette_keeps_one_continuous_outline_around_the_notch() {
     assert_eq!(buf.get(38, 0).copied(), Some(sentinel), "the notch beside the title chip stays outside the window");
     assert_eq!(buf.get(2, 4).unwrap().bg, theme.surface(Surface::Window));
     let hair = row_text(&buf, 2);
-    let bend = hair.rfind('\u{2514}').expect("chip bends into the body");
+    let bend = hair.rfind('\u{2534}').expect("chip closes onto the body");
     let tail = &hair[bend..];
     assert!(tail.chars().all(|ch| ch != ' ' && ch != '.'), "outline breaks across the body cap: {hair:?}");
     assert!(tail.ends_with('\u{2510}'), "body cap does not close on the right: {hair:?}");
@@ -136,7 +136,7 @@ fn composed_window_keeps_the_silhouette_when_the_body_paints() {
     let win = tui.scene.rect(chrome);
     let frame = tui.frame();
     let hair = row_text(frame, win.y + 2);
-    let bend = hair.rfind('\u{2517}').unwrap_or_else(|| panic!("missing bend {hair:?}"));
+    let bend = hair.rfind('\u{253b}').unwrap_or_else(|| panic!("missing bend {hair:?}"));
     assert!(hair[bend..].chars().all(|ch| ch != ' '), "body overwrote the silhouette: {hair:?}");
     let body = row_text(frame, win.y + 3);
     assert!(body.contains('/'), "wizard should start under the outline, got {body:?}");
@@ -144,7 +144,7 @@ fn composed_window_keeps_the_silhouette_when_the_body_paints() {
 }
 
 #[test]
-fn window_hairline_opens_only_under_the_active_tab() {
+fn window_hairline_closes_under_every_tab() {
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 60, 8);
     for active in [0usize, 1] {
@@ -166,17 +166,12 @@ fn window_hairline_opens_only_under_the_active_tab() {
                 assert_eq!(buf.get(x, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase), "focused body junction at {x}");
             }
 for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
-                let ch = buf.get(x, layout.top_body_y).unwrap().ch;
-                if open {
-                    assert_eq!(ch, ' ', "active tab {active} must stay open at {x}: {}", row_text(&buf, layout.top_body_y));
-                } else {
-                    assert_eq!(ch, '\u{2501}', "inactive tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, layout.top_body_y));
-                                    assert_eq!(buf.get(x, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase), "closed seam belongs to the focused body");
-}
+                assert_eq!(buf.get(x, layout.top_body_y).unwrap().ch, '\u{2501}', "tab {} closes its seam at {x} ({open}): {}", tab.index, row_text(&buf, layout.top_body_y));
+                assert_eq!(buf.get(x, layout.top_body_y).unwrap().fg, theme.role(Role::ActiveBase), "closed seam belongs to the focused body");
             }
         }
         let hair = row_text(&buf, layout.top_body_y);
-        let bend = hair.rfind('\u{2517}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
+        let bend = hair.rfind('\u{253b}').unwrap_or_else(|| panic!("missing active bend {hair:?}"));
         assert!(hair[bend..].chars().all(|ch| ch != ' '), "silhouette breaks after the active tab: {hair:?}");
         assert!(hair.ends_with('\u{2513}'), "body cap does not close: {hair:?}");
         
@@ -191,7 +186,7 @@ for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
 }
 
 #[test]
-fn window_bottom_hairline_opens_only_under_the_active_tab() {
+fn window_bottom_hairline_closes_under_every_tab() {
     use semio_ui_tui_frame::chrome::WindowStackTabState;
     use semio_ui_tui_core::docking::WindowStackCorner;
     let theme = Theme::new(AppearanceName::Dark);
@@ -219,13 +214,8 @@ fn window_bottom_hairline_opens_only_under_the_active_tab() {
             assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::ActiveBase), "focused bottom body junction at {x}");
         }
 for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
-            let ch = buf.get(x, y).unwrap().ch;
-            if open {
-                assert_eq!(ch, ' ', "active bottom tab must stay open at {x}: {}", row_text(&buf, y));
-            } else {
-                assert_eq!(ch, '\u{2501}', "inactive bottom tab must stay closed at {x} (heavy line set while focused): {}", row_text(&buf, y));
-                            assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::ActiveBase), "closed bottom seam belongs to the focused body");
-}
+            assert_eq!(buf.get(x, y).unwrap().ch, '\u{2501}', "bottom tab {} closes its seam at {x} ({open}): {}", tab.index, row_text(&buf, y));
+            assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::ActiveBase), "closed bottom seam belongs to the focused body");
         }
     }
     assert_eq!(buf.get(0, rect.height - 1).unwrap().fg, theme.role(Role::BorderNormal), "the first bottom tab is inactive despite body focus");

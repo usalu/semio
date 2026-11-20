@@ -1,0 +1,3 @@
+# Play Bun Publication Tests
+
+On the current shared worktree, the pinned Bun 1.4.2 ran `🧪️tests/🧩️release-job-order/🟦️.ts` and the registered `🧪️tests/🧪️playpages/🟦️.ts` through the retained `play-pages-bun.test.ts` harness: 21 passed, 0 failed, 168 assertions. The two job-order laws passed, as did the 19 publication laws covering relocation, worker imports, final byte accounting and the page budget. The initial invocation lacked Bun's `./` path prefix and selected no tests; the reported result is the subsequent successful run with explicit paths. No source fix was necessary. These fixture tests do not measure the full release cohort. No Cargo, build, or describe operation was run.

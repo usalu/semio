@@ -15,7 +15,29 @@ test("Plugin fixture caller admits independent finite original authority",()=>{
 });
 /** 🪙️ Real fixture helpers borrow one original context across phase loans and return the complete original failure. */
 test("Plugin settle close and history consumers preserve original fixture authority",()=>{
- const root=resolve(import.meta.dirname,"../../.."),source=readModuleTreeSource(resolve(root,"🧪️testing/🦀️.rs"));for(const name of ["settle_registered_typed_operation","close_registered_fixture_app"]){const start=source.indexOf("fn "+name+"<"),end=source.indexOf("\n///",start+1),body=source.slice(start,end);assert(body.includes("cx:&mut semio_framework_job::StepContext"),name+" borrows caller-owned context");assert(body.includes("PluginLifecycleFailure"),name+" preserves complete owned causes");assert(body.includes("original_lifecycle_step(cx"),name+" lends same original phase");assert(!body.includes("fixture_step_context")&&!body.includes("runtime_lifecycle_step")&&!body.includes("into_message()")&&!body.includes("typed_operation_refusal()"),name+" does not mint finance or reconstruct failure")}const caller=readFileSync(resolve(root,"🧪️testing/🎟️caller/🦀️.rs"),"utf8");assert(source.includes("OriginalFixtureCaller")&&caller.includes("original fixture context can only be issued once"),"original fixture caller retains one-shot finite budget");const history=readModuleTreeSource(resolve(root,"🧪️tests/🧪️history-edit-acceptance/🦀️.rs"));assert(!history.includes("advance_typed_operation_publication(&mut identity, acceptance_policy().maintenance)")&&!history.includes("runtime_lifecycle_grant()"),"history consumer carries original context");
+ const root = resolve(import.meta.dirname, "../../..");
+ const source = readModuleTreeSource(resolve(root, "🧪️testing/🦀️.rs"));
+ const phaseCalls = {
+  settle_registered_typed_operation: [
+   "MountedOwnerTurnV1::admit(receiver, caller, phase, mounted_policy, cx)",
+   "app.mounted_owner_maintenance_step(&mut turn)",
+  ],
+  close_registered_fixture_app: ["original_lifecycle_step(cx", "app.close_step(same, grant)"],
+ };
+ for (const [name, calls] of Object.entries(phaseCalls)) {
+  const start = source.indexOf("fn " + name + "<");
+  const body = source.slice(start, source.indexOf("\n///", start + 1));
+  assert(body.includes("cx:&mut semio_framework_job::StepContext"), name + " borrows caller-owned context");
+  assert(body.includes("PluginLifecycleFailure"), name + " preserves complete owned causes");
+  assert(calls.every(call => body.includes(call)), name + " lends same original phase");
+  for (const forbidden of ["fixture_step_context", "runtime_lifecycle_step", "into_message()", "typed_operation_refusal()"]) {
+   assert(!body.includes(forbidden), name + " avoids " + forbidden);
+  }
+ }
+ const caller = readFileSync(resolve(root, "🧪️testing/🎟️caller/🦀️.rs"), "utf8");
+ assert(source.includes("OriginalFixtureCaller") && caller.includes("original fixture context can only be issued once"), "original fixture caller retains one-shot finite budget");
+ const history = readModuleTreeSource(resolve(root, "🧪️tests/🧪️history-edit-acceptance/🦀️.rs"));
+ assert(!history.includes("advance_typed_operation_publication(&mut identity, acceptance_policy().maintenance)") && !history.includes("runtime_lifecycle_grant()"), "history consumer carries original context");
 });
 
 /** 📨️ The defining complete failure wire uses the same closed caller input through output and issuer retirement. */
@@ -39,10 +61,22 @@ test("External tool and history fixture callers retain supplied original context
 });
 
 /** 🪢️ Source loans and paid parent retirement retain the actual admitted fixture parent. */
-test("Plugin fixture source loans use its canonical admitted parent",()=>{const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));assert(source.includes("OriginalCallerSourceParent::admit(authority,cancel,remaining)"));assert(source.includes(".borrow_context(budget,fixture_now_us,&mut self.sequence,&mut self.receipt)"));assert(source.includes("pub fn retire(&mut self,mut fuel:u64)"));assert(!source.includes("StepContext::with_payload_authority("));});
+test("Plugin fixture source loans use its canonical admitted parent", () => {
+ const caller = readModuleTreeSource(new URL("../🦀️.rs", import.meta.url));
+ const job = readModuleTreeSource(new URL("../../../../../../../🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs", import.meta.url));
+ assert(caller.includes("OriginalJobFixtureCaller::admit("));
+ assert(caller.includes("self.caller.lend_refreshed_context().with_original_decoder(&mut self.decoder)"));
+ assert(job.includes("admission.prepare(&mut authority,&mut cancel,e)"));
+ assert(job.includes("admission.admit_backing(e)"));
+ assert(job.includes("admission.publish(&mut parent,e)"));
+ assert(job.includes("parent.borrow_context(budget,self.clock,&mut self.sequence,&mut self.spent)"));
+ assert(caller.includes("self.caller.settle_lent_fuel(fuel)"));
+ assert(caller.includes("self.caller.retire_step(loan)"));
+ assert(!caller.includes("StepContext::with_payload_authority("));
+});
 
 /** 🧷️ Acceptance annotations retain the same owned original failure through child seeding and reload. */
 test("History acceptance annotations retain complete original failures",()=>{const source=readModuleTreeSource(new URL("../../../🧪️tests/🧪️history-edit-acceptance/🦀️.rs",import.meta.url));assert(source.includes('reason.context("the seed does not land".into())'));assert(source.includes('reason.context("after the conflict was resolved the finalized document does not survive save and load".into())'));assert(!source.includes('map_err(|reason| format!("the seed does not land: {reason}"))'));assert(source.includes("Original(AcceptanceError)"));assert(source.includes("Err(AcceptanceSeedFault::Original(reason)) => return AcceptanceVerdict::Fail(reason)"));assert(!source.includes('AcceptanceSeedFault::Base(format!("the base document does not load: {fault:?}"))'));});
 
 /** 📨️ Closed unit/data fixture commands use the same retained action endpoint and one genuine decoder. */
-test("Original typed fixture action projection agrees with schemas and independent SQLite",()=>{const base=resolve(import.meta.dirname,".."),law=JSON.parse(readFileSync(resolve(base,"🧪️tests/🧫️fixtures/📨️command.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(base,"🧬️schema/📨️command.json"),"utf8"));assert.deepEqual(validateJsonSchemaSubset(schema,law),[]);const accepted:boolean=new Ajv({strict:true}).compile(schema)(law);assert(accepted);const db=new Database(":memory:");try{for(const row of law.cases){const projected=row.variant==="Noop"?null:{value:row.value};const other=db.query("SELECT CASE WHEN ?1='Noop' THEN 'null' ELSE json_object('value',?2) END AS args").get(row.variant,row.value)as{args:string};assert.deepEqual(projected,JSON.parse(other.args));assert.deepEqual(projected,row.expectedArgs);}}finally{db.close()}const caller=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url)),helpers=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url));assert(caller.includes(".with_original_decoder(&mut self.decoder)"));assert(caller.includes("fn original_plugin_fixture_decoder_constructs_and_closes_under_the_same_source"));assert(caller.includes("&mut self.receipt,&mut self.decoder,fuel"));assert(helpers.includes("fn original_fixture_command_projection_matches_the_closed_unit_and_data_cases"));assert(helpers.includes("dispatch_fixture_action(app,action,args,meta,identity,cx,mounted_policy.maintenance)"));assert(!readFileSync(new URL("../../🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs",import.meta.url),"utf8").includes(".dispatch_typed("));});
+test("Original typed fixture action projection agrees with schemas and independent SQLite",()=>{const base=resolve(import.meta.dirname,".."),law=JSON.parse(readFileSync(resolve(base,"🧪️tests/🧫️fixtures/📨️command.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(base,"🧬️schema/📨️command.json"),"utf8"));assert.deepEqual(validateJsonSchemaSubset(schema,law),[]);const accepted:boolean=new Ajv({strict:true}).compile(schema)(law);assert(accepted);const db=new Database(":memory:");try{for(const row of law.cases){const projected=row.variant==="Noop"?null:{value:row.value};const other=db.query("SELECT CASE WHEN ?1='Noop' THEN 'null' ELSE json_object('value',?2) END AS args").get(row.variant,row.value)as{args:string};assert.deepEqual(projected,JSON.parse(other.args));assert.deepEqual(projected,row.expectedArgs);}}finally{db.close()}const caller=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url)),helpers=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url));assert(caller.includes(".with_original_decoder(&mut self.decoder)"));assert(caller.includes("fn original_plugin_fixture_decoder_constructs_and_closes_under_the_same_source"));assert(caller.includes("caller.retire(fuel).unwrap();assert!(caller.decoder.terminal_is_empty())"));assert(helpers.includes("fn original_fixture_command_projection_matches_the_closed_unit_and_data_cases"));assert(helpers.includes("dispatch_fixture_action(app,action,args,meta,identity,cx,mounted_policy.maintenance)"));assert(!readFileSync(new URL("../../🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs",import.meta.url),"utf8").includes(".dispatch_typed("));});

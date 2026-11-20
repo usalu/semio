@@ -20,9 +20,8 @@ for required in index.html CNAME .nojekyll; do
   [[ -f "$SITE/$required" ]] || fail "missing $required in $SITE"
 done
 
-if hits="$(grep -rnIE 'file://|localhost|127\.0\.0\.1' --include='*.html' --include='*.js' "$SITE")"; then
-  fail "absolute file:// or localhost references found"
-  printf '%s\n' "$hits" >&2
+if ! repo tools exec python -- "$TICKET/validate-local-references.py" "$SITE"; then
+  fail "unaudited local references found or scan failed"
 fi
 
 count=0
@@ -51,5 +50,9 @@ printf 'manifest: %s\n' "$SITE/SHA256SUMS"
 
 mkdir -p "$OUT_DIR"
 archive="$OUT_DIR/site-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
-tar -czf "$archive" -C "$SITE" .
+temporary="$(mktemp "$OUT_DIR/.site-XXXXXXXX")"
+trap 'rm -f "$temporary"' EXIT
+COPYFILE_DISABLE=1 tar -czf "$temporary" -C "$SITE" .
+repo tools exec python -- "$TICKET/verify-release-archive.py" "$temporary"
+mv "$temporary" "$archive"
 printf 'archive: %s\n' "$archive"

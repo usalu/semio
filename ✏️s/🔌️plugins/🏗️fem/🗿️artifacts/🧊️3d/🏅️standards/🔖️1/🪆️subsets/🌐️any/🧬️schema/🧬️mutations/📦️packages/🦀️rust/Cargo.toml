@@ -89,6 +89,7 @@ semio-s-artifact-fem-3d-material = { workspace = true }
 semio-s-artifact-fem-3d-mesh = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
@@ -99,3 +100,4 @@ semio-framework-dsl = { workspace = true }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-fem-test-support = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }

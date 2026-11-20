@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { DEMONSTRATOR_RUNTIME_TARGETS } from "../🟦️.ts";
 import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
+import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentModuleOwnerV1 } from "@semio-tech/plugin-registry/deployment";
 import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
 import type { BrowserArtifactSource } from "@semio-tech/framework-plugin/browser-bundle/distribution";
 
@@ -25,10 +25,10 @@ export function demonstratorRuntimeAssetSources(workspace: string, profile: "pro
   return [
     ...ids.map(id => {
       const row = catalog.get(id)!, name = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), extension = row.role === "extension";
-      return { root: join(moduleRoot, name), destination: `${(extension ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE).slice(1)}/${name}`, owner: `${row.cratePath}/Cargo.toml:browser:${profile}`, ...(extension ? { shimDirectory: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}` } : {}) };
+      return { root: join(moduleRoot, name), destination: `${(extension ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE).slice(1)}/${name}`, owner: componentModuleOwnerV1(row.cratePath), ...(extension ? { shimDirectory: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}` } : {}) };
     }),
-    { root: join(moduleRoot, PREVIEW2_VENDOR_RELATIVE), destination: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}`, owner: `browser-support:${profile}:preview2` },
-    { root: join(moduleRoot, MODULE_SHARD_DIRECTORY), destination: `${pluginRoute}/${MODULE_SHARD_DIRECTORY}`, owner: `browser-support:${profile}:shard` },
+    { root: join(moduleRoot, PREVIEW2_VENDOR_RELATIVE), destination: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}`, owner: "browser-support:preview2" },
+    { root: join(moduleRoot, MODULE_SHARD_DIRECTORY), destination: `${pluginRoute}/${MODULE_SHARD_DIRECTORY}`, owner: "browser-support:shard" },
     { root: staged.fonts, destination: `${pluginRoute}/${MODULE_VENDOR_DIRECTORY}`, owner: "infinite:fonts" },
     ...staged.canvas.map(({root,destination,owner})=>({root,destination,owner})),
   ];

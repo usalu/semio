@@ -5,13 +5,14 @@
       {"id":"normal","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"normal"},
       {"id":"focus","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"focus"},
       {"id":"active","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"active"},
+      {"id":"invalid","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"invalid"},
       {"id":"waiting","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"waiting"},
       {"id":"loading","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"loading"},
       {"id":"introduced","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"introduced"},
       {"id":"celebrated","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"celebrated"},
       {"id":"hover","owner":"z","from":{"x":1,"y":0},"to":{"x":0,"y":0},"state":"hover"}
     ],
-    "expected":[{"id":"hover","owner":"z","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"hover","contributors":["active","celebrated","focus","hover","introduced","loading","normal","waiting"]}]
+    "expected":[{"id":"hover","owner":"z","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"hover","contributors":["active","celebrated","focus","hover","introduced","invalid","loading","normal","waiting"]}]
   },
   {
     "name": "partial child hover splits active parent without removing other edges",

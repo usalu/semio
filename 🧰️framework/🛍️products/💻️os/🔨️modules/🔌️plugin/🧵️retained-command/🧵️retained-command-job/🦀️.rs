@@ -147,10 +147,27 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         for input in[&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){if owner.terminal_is_empty(){input.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Ok(match semio_plugin_ownership::bounded_ownership::plugin_unit_step(effect,|grant|owner.close_step(grant))?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(owner)=self.download_retirement.as_mut(){if owner.terminal_is_empty(){self.download_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(grant.maximum_copy_bytes,effect)))}
-        if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let outcome=emit.close_child_original(&mut effect.nested(child));return match outcome.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?{Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
-        if self.ephemeral.is_some(){return Err(Self::unadmitted_input().into())}
+        use store::os_store::snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step};
+        if self.input_retirement.is_some() {
+            return Self::controlled_close_step(Self::poll_step(artifact_retirement_box_close_step(&mut self.input_retirement, grant.maximum_copy_bytes, effect)));
+        }
+        if let Some(emit) = self.emit.as_mut() {
+            if emit.child_close_demands(grant.maximum_copy_bytes)?.is_some() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+                let outcome = emit.close_child_original(&mut effect.nested(child));
+                use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+                return match outcome.map_err(|failure| semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))? {
+                    Some(PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
+                    Some(PluginLifecycleStep::Blocked { .. } | PluginLifecycleStep::AwaitingInput { .. }) => Ok(InteractiveJobCloseStep::Blocked),
+                    None => Err(ValueError::invariant("retained emitted child close frontier disappeared").into()),
+                };
+            }
+            return Self::controlled_close_step(artifact_retirement_admit_owned(&mut self.emit, &mut self.input_retirement, effect).result);
+        }
+        if self.ephemeral.is_some() {
+            return Self::controlled_close_step(artifact_retirement_admit_owned(&mut self.ephemeral, &mut self.input_retirement, effect).result);
+        }
         if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return Ok(match work.close_step(cx)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}let bytes=work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?;self.work.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
-        if self.input_retirement.is_some(){return Self::controlled_close_step(Self::poll_step(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.input_retirement,effect.grant().maximum_copy_bytes,effect)))}
         let admitted=if self.command.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.input_retirement,effect))}
             else if self.snapshot_read.get_mut().is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(self.snapshot_read.get_mut(),&mut self.input_retirement,effect))}
             else if self.snapshot.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot,&mut self.input_retirement,effect))}
@@ -179,16 +196,21 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         for input in [&self.checkpoint_input,&self.raw_input]{if let Some(owner)=input.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?})};}}
         if self.download.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.download_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Ok(owner.selected_demand(copy)?)};}
-        if let Some(emit)=self.emit.as_ref(){
-            if let Some(mut demand)=emit.child_close_demands(copy)?{
-                demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retained emitted child depth overflow"))?;
+        use store::os_store::snapshot_read::{artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
+        if let Some(owner) = self.input_retirement.as_ref() {
+            return artifact_retirement_box_demands(owner, copy);
+        }
+        if let Some(emit) = self.emit.as_ref() {
+            if let Some(mut demand) = emit.child_close_demands(copy)? {
+                demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "retained emitted child depth overflow"))?;
                 return Ok(demand);
             }
-            return Err(Self::unadmitted_input());
+            return artifact_retirement_owned_birth_demands(&self.emit);
         }
-        if self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
+        if self.ephemeral.is_some() {
+            return artifact_retirement_owned_birth_demands(&self.ephemeral);
+        }
         if let Some(work)=self.work.as_ref(){return if work.terminal_is_empty(){Ok(RetirementDemand{release_bytes:work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?,depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?})};}
-        if let Some(owner)=self.input_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,copy);}
         if self.command.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.command);}
         if let Ok(original)=self.snapshot_read.try_borrow(){if original.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*original);}}else{return Ok(RetirementDemand{depth:1,..Default::default()});}
         if self.snapshot.is_some(){return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.snapshot);}
@@ -425,7 +447,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
 
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_pending_emit_shape(&self) -> Option<(usize, usize, Vec<String>)> {
-        self.emit.as_ref().map(|emit| (emit.child_emits.len(), emit.artifact_mutations.len(), emit.child_emits.iter().map(|child| child.child_id.clone()).collect()))
+        self.emit.as_ref().map(|emit| (emit.child_emits.len(), emit.artifact_mutation_count(), emit.child_emits.iter().map(|child| child.child_id.clone()).collect()))
     }
 }
 

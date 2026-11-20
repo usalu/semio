@@ -4,6 +4,18 @@ import { createHash, randomUUID } from "node:crypto";
 import { dirname, join, relative, sep } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { ConcurrentEditErrorV1, concurrentEditV1, filesystemBusyErrorV1, retryOnConcurrentEditV1 } from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+
+/** 🛻️ Publishes a staged entry directory, retrying a busy rename (a Windows scanner or indexer still holding one of its files) on the `read` layer's declared pauses; the last busy failure is thrown as it was. See https://learn.microsoft.com/windows/win32/fileio/obtaining-a-handle-to-a-file-for-renaming */
+export async function renameBusyDirectoryV1(from: string, to: string, signal?: AbortSignal, platform: string = process.platform, move: (from: string, to: string) => Promise<void> = rename): Promise<void> {
+  let original: unknown;
+  try {
+    await retryOnConcurrentEditV1("read", async () => {
+      try { await move(from, to); }
+      catch (error) { if (!filesystemBusyErrorV1(error, platform) || (error as { code?: string }).code === "EEXIST") throw error; original = error; throw concurrentEditV1("busy", to, String((error as { code?: string }).code)); }
+    }, { onRetry: () => undefined, ...signal ? { signal } : {} });
+  } catch (error) { throw error instanceof ConcurrentEditErrorV1 && original !== undefined ? original : error; }
+}
 
 /** 🔏️ Stage cache policy: warm and fresh store names, the entry manifest and the temporary prefix. */
 export const STAGE_CACHE_POLICY_V1 = schema.definitions.Policy.const;
@@ -133,7 +145,7 @@ export function stageCacheV1(root: string): StageCacheV1 {
         }
         const manifest: StageEntryV1 = admitDefinition<StageEntryV1>("StageEntryV1", { version: 1, key, digest, files });
         await writeFile(join(temporary, STAGE_CACHE_POLICY_V1.entryFile), `${JSON.stringify(manifest)}\n`, { flag: "wx" });
-        try { await rename(temporary, entry); storedBytes += files.reduce((sum, file) => sum + file.bytes, 0); }
+        try { await renameBusyDirectoryV1(temporary, entry, signal); storedBytes += files.reduce((sum, file) => sum + file.bytes, 0); }
         catch (error) { if (!["EEXIST", "ENOTEMPTY", "EPERM"].includes((error as { code?: string }).code ?? "") || !await readEntry(entry, digest)) throw error; }
         misses++;
         const published = (await readEntry(entry, digest))!;

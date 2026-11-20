@@ -13,16 +13,15 @@ import { runOwnedCommand, OwnedCommandFailure } from "../../../../../../🔨️m
 import { prepareTestCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🚦️protocol/🟦️.ts";
 import { type CompilerAdmissionControl, requestedCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs, buildPreparationBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { pinnedGoEnvironmentV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
 import { systemNativeToolPortV1 } from "../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
 import { repositoryCachePartitionRootV1, repositoryLeaseDirectoryV1, withRepositoryCommandCustodyV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { openRepositoryCachePartitionV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
 import { requireNativeStoragePathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import { withRepositoryCacheStoreV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import { withRepositoryToolingOperationV1, type RepositoryToolingStoreV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import type { RepositoryToolingStoreV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import { runRepositoryToolingGoBuildV1 } from "../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🐹️go/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
-import { repoToolCacheEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
 
 export type CanonicalGoPlan = Readonly<{
   packages: readonly string[];
@@ -244,11 +243,7 @@ export async function runCanonicalGoTests(moduleRoot:string,args:string[],invoca
 
 /** 🏗️Builds domain-owned Go sources through the same standard-toolchain projection used by tests. */
 export async function runCanonicalGoBuildInStoreV1(moduleRoot:string,args:string[],workspace:string,store:RepositoryToolingStoreV1,control:CompilerAdmissionControl,opts:{env?:NodeJS.ProcessEnv;budgetMs?:number}={}):Promise<void>{
- await withRepositoryToolingOperationV1(workspace,store,control,async actual=>{
-  const mode=readBuildMode((opts.env??process.env).SEMIO_BUILD_MODE),environment=await pinnedGoEnvironmentV1({...repoToolCacheEnv(workspace,opts.env??process.env),TMPDIR:store.environment.TMPDIR,TMP:store.environment.TMP,TEMP:store.environment.TEMP,GOCACHE:join(store.root,"go","cache"),GOMODCACHE:join(store.root,"go","mod")},store.root,systemNativeToolPortV1(workspace,(opts.env??process.env).CARGO_NET_OFFLINE==="true"),actual.signal),plan=canonicalGoPlan(moduleRoot),captureDirectory=environment.SEMIO_TEST_ARTIFACT_DIR?resolve(environment.SEMIO_TEST_ARTIFACT_DIR):resolve(moduleRoot,"dist"),leaseDirectory=repositoryLeaseDirectoryV1(workspace);
-  mkdirSync(captureDirectory,{recursive:true});const temporary=mkdtempSync(join(captureDirectory,"go-overlay-")),overlay=join(temporary,"overlay.json");
-  try{writeFileSync(overlay,JSON.stringify({Replace:plan.replacements}));const {buildGoArtifactsV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts");await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory,budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control:actual});await store.recheck();checkResourceLeaseControl(actual);}finally{rmSync(temporary,{recursive:true,force:true});}
- });
+ await runRepositoryToolingGoBuildV1(moduleRoot,args,workspace,store,control,{...opts,overlay:()=>canonicalGoPlan(moduleRoot).replacements});
 }
 
 /** 🏗️Builds domain-owned Go sources through the same standard-toolchain projection used by tests. */

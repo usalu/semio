@@ -64,9 +64,9 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(snapshot: &ShootingSnapshot, center_model: bool, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     vec![
-        options::center_model::measure(labels),
+        options::center_model::measure(center_model, labels),
         options::sun_enabled::measure(snapshot, labels),
         options::sun_azimuth::measure(snapshot, labels),
         options::sun_elevation::measure(snapshot, labels),

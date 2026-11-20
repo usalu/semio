@@ -141,7 +141,15 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
   const activateBinding = rowActivationBinding(record);
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
-  const controlRecords = collectTreeItemControls(state, record.children ?? []);
+  const contentRecords: UiNodeRecord[] = [];
+  const controlRecords = collectTreeItemControls(state, record.children ?? []).filter(child => {
+    const contained = child.component.type === "container" ? child.children : undefined;
+    const visual = contained?.some(id => state.nodes.get(id)?.component.type === "surface");
+    const prose = contained !== undefined && contained.length > 1 && contained.every(id => state.nodes.get(id)?.component.type === "text");
+    const content = child.component.type === "surface" || visual || prose;
+    if (content) contentRecords.push(child);
+    return !content;
+  });
   const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate") && treeRowStandsForControl(child, props.label));
   const granularity = typeof props.granularity === "string" && props.granularity.length > 0 ? props.granularity : undefined;
   if (granularity && walk?.pick) walk.pickTargets?.set(domId, { key: record.key, granularity });
@@ -155,7 +163,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     className: record.style.tone === undefined ? undefined : TREE_ROW_TONE_CLASSES[record.style.tone],
     description: [props.description, ...(presence.notes ?? [])].filter((line): line is string => typeof line === "string" && line !== "").join(" · ") || undefined,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
-    defaultOpen: props.defaultOpen ?? undefined,
+    defaultOpen: props.defaultOpen ?? (contentRecords.length > 0 || undefined),
     isSelected: props.selected === true || Boolean(presence.selected) || leftoverItemSelectedV1(record.key, leftoverIds),
     isHighlighted: presence.hovered === true || presence.previewed === true ? true : undefined,
     loading: record.activity === "loading",
@@ -164,9 +172,11 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), { ...context, domScope: domId })}</> : undefined,
+    content: contentRecords.length > 0 ? <>{renderTreeItemControls(store, contentRecords, { ...context, domScope: domId })}</> : undefined,
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath, rowAdmission)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
+    onPointerLeave: hoverBinding?.action.name === "interactionHover" ? () => dispatchTrigger(context, record, "hoverPreview", {targets: "[]"}) : undefined,
     actions: rowTreeActions(record, props, context, rowAdmission),
   };
 }
@@ -448,7 +458,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                   }}
                   onKeyDown={(event) => onRowKeyDown(event, row, index)}
                   data-shared-border-frame="" data-shared-border-edges="bottom"
-                  className="grid min-w-0 cursor-default text-xs outline-none hover:bg-muted/40 focus-visible:bg-muted/60 focus-visible:ring-1 focus-visible:ring-primary"
+                  className="grid min-w-0 cursor-default text-xs outline-none hover:bg-muted/40 focus-visible:bg-muted/60"
                   style={{ gridTemplateColumns: template, minHeight: rowPx, height: cellNodes.length > 0 ? undefined : rowPx }}
                 >
                   {columnLeading > 0 ? <div aria-hidden="true" data-table-column-spacer="leading" /> : null}

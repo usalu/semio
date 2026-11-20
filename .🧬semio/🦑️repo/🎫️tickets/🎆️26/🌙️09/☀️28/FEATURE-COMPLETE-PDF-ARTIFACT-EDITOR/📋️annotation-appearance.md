@@ -1,0 +1,5 @@
+# PDF annotation appearance painting
+
+The page scene now follows the annotation’s authored normal appearance. A direct form is rendered immediately. A state dictionary selects the form named by the annotation’s appearance state. The renderer maps the form’s matrix-transformed bounding box to the annotation rectangle, clips to that rectangle and keeps selection on the annotation. Hidden and NoView annotations are absent from the canvas and pointer hit test. Their authored values remain available through the editor’s non-canvas controls.
+
+The language-independent test fixture selects a rotated red appearance and supplies a different blue appearance for the unselected state. MuPDF matched all three raster probes, including the white area inside the rectangle outside the selected shape. An isolated Rust run using the actual scene mapper and page-coordinate code matched the selected state, transformed points, clip, and missing-state behavior. The governed page test uses the full native importer and scene generator and remains in progress.

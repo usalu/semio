@@ -11,9 +11,26 @@
   ],
   "properties": {
     "version": {
-      "const": 3
+      "const": 4
     },
-    "module": {"type":"object","required":["implementation","publication"],"properties":{"implementation":{"type":"string","pattern":"^[a-f0-9]{64}$"},"publication":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+    "module": {
+      "type": "object",
+      "required": [
+        "implementation",
+        "publication"
+      ],
+      "properties": {
+        "implementation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publication": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
     "membership": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$"
@@ -78,44 +95,67 @@
       }
     },
     "observations": {
+      "description": "Observation records in dependency order followed by the ordered indexes of the captured roots. An analysis fact stores indexes of earlier records in nestedObservations.",
       "type": "array",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "path",
-          "fact"
-        ],
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "file",
-              "exists",
-              "stat",
-              "lstat",
-              "readdir",
-              "realpath",
-              "realpathNative",
-              "resolve",
-              "readdirNames",
-              "fileExists",
-              "directoryExists",
-              "directories",
-              "typescriptText",
-              "typescriptRealpath",
-              "analysis",
-              "field"
-            ]
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Observation"
           },
-          "path": {
-            "type": "string",
-            "minLength": 1
-          },
-          "fact": {}
-        }
+          {
+            "$ref": "#/definitions/Index"
+          }
+        ]
       }
+    }
+  },
+  "definitions": {
+    "ObservationKind": {
+      "type": "string",
+      "enum": [
+        "file",
+        "exists",
+        "stat",
+        "lstat",
+        "readdir",
+        "realpath",
+        "realpathNative",
+        "resolve",
+        "readdirNames",
+        "fileExists",
+        "directoryExists",
+        "directories",
+        "typescriptText",
+        "typescriptRealpath",
+        "analysis",
+        "stamp",
+        "closure",
+        "registry",
+        "field"
+      ]
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "fact"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/definitions/ObservationKind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fact": {}
+      }
+    },
+    "Index": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }

@@ -2,6 +2,14 @@
 
 use super::*;
 
+struct RetainedBrepDeconstruct(SessionCapture);
+
+impl Operator for RetainedBrepDeconstruct {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> { deconstruct_geometry(&self.0, input) }
+    retained_geometry_job!(Deconstruct);
+    retire_geometry_capture!(0);
+}
+
 /// 📦 Registers the geometry, topology, brep and text schemas and the brep deconstruct operator.
 pub(super) fn register_schemas_and_deconstruct(registry: &mut Registry, session: &Session) {
     registry.register_schema(geometry_schema());
@@ -34,7 +42,7 @@ pub(super) fn register_schemas_and_deconstruct(registry: &mut Registry, session:
             group: vec!["Schemas".into()],
             ..Default::default()
         },
-        ["geometry", "list"].into_iter().map(|schema| OperatorImpl { schemas: vec![schema.into(), "text".into(), "text".into(), "text".into()], operator: Box::new(BrepDeconstruct(session.capture())) as Box<dyn Operator> }).collect(),
+        ["geometry", "list"].into_iter().map(|schema| OperatorImpl { schemas: vec![schema.into(), "text".into(), "text".into(), "text".into()], operator: Box::new(RetainedBrepDeconstruct(session.capture())) as Box<dyn Operator> }).collect(),
         &["geometry", "list"],
     );
 }

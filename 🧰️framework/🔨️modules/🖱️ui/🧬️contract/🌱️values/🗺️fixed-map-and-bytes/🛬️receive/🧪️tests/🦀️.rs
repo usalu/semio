@@ -1,26 +1,39 @@
 //! 🧰️ Real paged collection construction matches independent wire decoding and conserves every physical owner.
-use super::*;
-use semio_ui_contract_values::*;
+use semio_ui_contract_values::{UiFixedBytes,UiFixedList,UiFixedMap,UiValue};
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::owned::NativeReceive;
+use semio_framework_value_testing_admission::{EffectBank,Wallet};
 use serde::Serialize;
-use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,NativeDecodeControl,native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeReceive,NativeReceiver,OriginalReceivingPrimary},retirement::controlled::ControlledRetirement};
-use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
-use semio_framework_value_testing_admission as source_fixture;
-use source_fixture::{Wallet,receive,post_step,close_owned};
-struct Construction(RetainedCloneGrant,RetainedCloneProgress);
-impl NativeDecodeConstructionRecipient for Construction{fn submitted(&self)->RetainedCloneProgress{self.1}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.0,d));Ok(self.0)}fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.1=self.1.checked_add(p)?;assert!(p.fits(g)&&p.fits(self.0));Ok(())}}
-struct Work<'a>(&'a u64);
-impl NativeDecodeWorkRecipient for Work<'_>{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{let limit:u64=(*self.0).min(1);limit.checked_sub(observed).ok_or_else(||ValueError::invariant("native observed work exceeds its actual finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=(*self.0).min(1)))}}
-pub(crate) fn run<T:NativeReceive<DslValue>+Serialize>(row:&serde_json::Value,cut:Option<usize>,profile:&serde_json::Value){
- let mut bank=Wallet::from_profile(&profile["stock"]);let input=if row["entries"].is_array(){DslValue::Object(row["entries"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),DslValue::from(pair[1].clone()))).collect())}else{DslValue::from(serde_json::from_str::<serde_json::Value>(row["wire"].as_str().unwrap()).unwrap())};
- let mut source=source_fixture::capture(input,&mut bank,|w|w.loan(1,4096),|w|w.work_remaining(),|w,p,q,h,g|w.post(p,q,g,h));let identity=std::ptr::from_ref(source.borrow().get());let mut receiver=T::receiver();let mut allow=|_|true;let mut control=NativeDecodeControl::new_retained(&mut allow);let mut output=None;let mut refused=false;
- for at in 0..100000{if cut==Some(at){break}let g=bank.loan(1,4096);let denied=RetainedCloneGrant{maximum_items:0,..g};let(turn,heap)=observe(||receive(&mut control,denied,bank.work_loan(bank.work_remaining()),|control|{let maximum=control.available_work_units().unwrap();receiver.advance(source.borrow(),control,4096,maximum,denied)}));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));
-  let(turn,heap)=observe(||receive(&mut control,g,bank.work_loan(bank.work_remaining()),|control|{let maximum=control.available_work_units().unwrap();receiver.advance(source.borrow(),control,4096,maximum,g)}));let result=post_step(&mut bank,turn,g,heap,OriginalReceivingPrimary::retained_progress);if result.is_err(){assert_eq!(row["accepted"],false);refused=true;break}assert_eq!(std::ptr::from_ref(source.borrow().get()),identity);if receiver.output_ready(){let(turn,heap)=observe(||receiver.take(g));let(value,p)=turn.result.unwrap().expect("funded collection handoff");bank.post(p,turn.work,g,heap);assert_eq!(serde_json::to_value(&value).unwrap(),row["expected"]);output=Some(value);break}}
- if cut.is_none(){assert_eq!(refused,!row["accepted"].as_bool().unwrap());assert_eq!(output.is_some(),row["accepted"].as_bool().unwrap());}let g=bank.loan(1,4096);let q=receiver.begin_close_work_demand().unwrap();assert!(q<=bank.work_remaining());let(turn,heap)=observe(||receiver.begin_close_step(g,q));post_step(&mut bank,turn,g,heap,|e|panic!("unexpected close intent refusal: {e:?}")).unwrap();let mut marker=None;
- for _ in 0..100000{if receiver.terminal_is_empty()&&marker.is_none(){break}let g=bank.loan(1,4096);let(turn,heap)=observe(||source_fixture::close_step(&mut marker,g,bank.work_remaining(),receiver.close_demands(4096),receiver.close_work_demand(4096),|g,a|receiver.close_step(g,a)));post_step(&mut bank,turn,g,heap,|e|e.retained_progress()).unwrap();}assert!(receiver.terminal_is_empty());assert!(marker.is_none());
- if let Some(value)=output{close_owned(value,&mut bank,4096,100000)}for _ in 0..100000{if source.terminal_is_empty()&&marker.is_none(){break}let g=bank.loan(1,4096);let(turn,heap)=observe(||source_fixture::close_step(&mut marker,g,bank.work_remaining(),source.next_close_demand(4096),source.next_close_work_demand(4096),|g,a|source.close_step(g,a)));post_step(&mut bank,turn,g,heap,|e|e.retained_progress()).unwrap();}assert!(source.terminal_is_empty());assert!(marker.is_none());assert!(bank.work_remaining()>0);
+#[path="../../../../../../🌱️value/🧪️testing/📥️admission/receiver-driver.rs"]
+mod driver;
+const BODY:usize=4096;
+fn input(row:&serde_json::Value)->DslValue{if row["entries"].is_array(){DslValue::Object(row["entries"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),DslValue::from(pair[1].clone()))).collect())}else{DslValue::from(serde_json::from_str::<serde_json::Value>(row["wire"].as_str().unwrap()).unwrap())}}
+/// 🔁️ Receives one case or cancels it after `cut` turns, then closes the receiver, the output and the genuine Source.
+fn run<T:NativeReceive<DslValue>+Serialize>(row:&serde_json::Value,cut:Option<usize>,law:&serde_json::Value){
+ let mut bank=EffectBank::new(Wallet::from_profile(&law["stock"]));let source=driver::admit(&mut bank,input(row));
+ let published=driver::lifecycle(T::receiver(),source,&mut bank,BODY,cut.map(|cut|cut as u64),|value:&T|assert_eq!(numeric(serde_json::to_value(value).unwrap()),numeric(row["expected"].clone())));
+ let accepted=row["accepted"].as_bool().unwrap_or(true);
+ match(cut,accepted){(None,true)=>assert_eq!(published,Ok(true),"{row}"),(None,false)=>assert!(published.is_err(),"{row}"),(Some(_),true)=>assert!(published.is_ok(),"{row}"),(Some(_),false)=>{}}
+ assert!(bank.wallet().remaining_work()>0);
+}
+/// 🔢️ JSON numbers compare by value: an integral float and an integer denote the same UI number.
+fn numeric(value:serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(n)=>serde_json::json!(n.as_f64().unwrap()),serde_json::Value::Array(items)=>serde_json::Value::Array(items.into_iter().map(numeric).collect()),serde_json::Value::Object(entries)=>serde_json::Value::Object(entries.into_iter().map(|(k,v)|(k,numeric(v))).collect()),other=>other}}
+fn cuts(law:&serde_json::Value)->impl Iterator<Item=Option<usize>>+'_{std::iter::once(None).chain(law["cancelPrefixes"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize)))}
+#[test]
+fn native_bounded_ui_collections_preserve_original_owners_on_refusal_and_cancellation(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){
+  let wire=row["wire"].as_str().unwrap();let accepted=row["accepted"].as_bool().unwrap();
+  let oracle=match row["kind"].as_str().unwrap(){"map"=>serde_json::from_str::<UiFixedMap<u64>>(wire).map(|v|serde_json::to_value(v).unwrap()),"bytes"=>serde_json::from_str::<UiFixedBytes>(wire).map(|v|serde_json::to_value(v).unwrap()),_=>serde_json::from_str::<UiFixedList<u64>>(wire).map(|v|serde_json::to_value(v).unwrap())};
+  assert_eq!(oracle.is_ok(),accepted);if let Ok(value)=oracle{assert_eq!(value,row["expected"])}
+  for cut in cuts(&law){match row["kind"].as_str().unwrap(){"map"=>run::<UiFixedMap<u64>>(row,cut,&law),"bytes"=>run::<UiFixedBytes>(row,cut,&law),_=>run::<UiFixedList<u64>>(row,cut,&law)}}
+ }
 }
 #[test]
-fn native_bounded_ui_collections_preserve_original_owners_on_refusal_and_cancellation(){let c:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();for row in c["cases"].as_array().unwrap(){let wire=row["wire"].as_str().unwrap();let accepted=row["accepted"].as_bool().unwrap();let oracle=match row["kind"].as_str().unwrap(){"map"=>serde_json::from_str::<UiFixedMap<u64>>(wire).map(|v|serde_json::to_value(v).unwrap()),"bytes"=>serde_json::from_str::<UiFixedBytes>(wire).map(|v|serde_json::to_value(v).unwrap()),_=>serde_json::from_str::<UiFixedList<u64>>(wire).map(|v|serde_json::to_value(v).unwrap())};assert_eq!(oracle.is_ok(),accepted);if let Ok(value)=oracle{assert_eq!(value,row["expected"])}for cut in std::iter::once(None).chain(c["cancelPrefixes"].as_array().unwrap().iter().map(|v|Some(v.as_u64().unwrap()as usize))){match row["kind"].as_str().unwrap(){"map"=>run::<UiFixedMap<u64>>(row,cut,&c),"bytes"=>run::<UiFixedBytes>(row,cut,&c),_=>run::<UiFixedList<u64>>(row,cut,&c)}}}}
-
-#[test]
-fn native_recursive_ui_values_keep_scalar_and_empty_owners_without_global_arena_birth(){let c:serde_json::Value=serde_json::from_str(include_str!("../../../🛬️receive/🔣️.json")).unwrap();for row in c["cases"].as_array().unwrap().iter().filter(|row|row["needsArena"]==false){if row["expected"].is_number(){let oracle: f64=serde_json::from_str(row["wire"].as_str().unwrap()).unwrap();assert_eq!(oracle,row["expected"].as_f64().unwrap());}else{let oracle:serde_json::Value=serde_json::from_str(row["wire"].as_str().unwrap()).unwrap();assert_eq!(oracle,row["expected"]);}for cut in std::iter::once(None).chain(c["cancelPrefixes"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){run::<UiValue>(row,cut,&c);}}}
+fn native_recursive_ui_values_keep_scalar_and_empty_owners_without_global_arena_birth(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🛬️receive/🔣️.json")).unwrap();
+ for row in law["cases"].as_array().unwrap().iter().filter(|row|row["needsArena"]==false){
+  if row["expected"].is_number(){let oracle:f64=serde_json::from_str(row["wire"].as_str().unwrap()).unwrap();assert_eq!(oracle,row["expected"].as_f64().unwrap());}else{let oracle:serde_json::Value=serde_json::from_str(row["wire"].as_str().unwrap()).unwrap();assert_eq!(oracle,row["expected"]);}
+  for cut in cuts(&law){run::<UiValue>(row,cut,&law);}
+ }
+}

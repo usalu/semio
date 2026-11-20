@@ -1,10 +1,22 @@
 import { spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { attachedDiskImagesV1 } from "../🖼️images/🟦️.ts";
 
 const protocol = schema.definitions.Protocol.const;
+
+type SandboxImageSweepCaptureV1 = typeof import("../../../🎛️owned-execution/🟦️.ts").captureOwnedCommandV1;
+
+/** ⏳️ Runs the workspace-scoped sweep in an owned process group with a fixed deadline and bounded output. */
+export async function sweepWorkspaceSandboxImagesV1(workspace:string,signal?:AbortSignal,capture?:SandboxImageSweepCaptureV1):Promise<void>{
+  const root=resolve(workspace),deadline=AbortSignal.timeout(protocol.workspaceCollectorBudgetMilliseconds),active=signal?AbortSignal.any([signal,deadline]):deadline;
+  active.throwIfAborted();
+  const run=capture??(await import("../../../🎛️owned-execution/🟦️.ts")).captureOwnedCommandV1;
+  await run(process.execPath,[fileURLToPath(new URL("./📜️script.ts",import.meta.url)),"--root="+root,protocol.workspaceOnlyFlag],root,{signal:active,output:protocol.workspaceCollectorOutput});
+  active.throwIfAborted();
+}
 
 /** 🪪️ Names the process that owns a sandbox: its pid and the start time the system reports for it, so a recycled pid is never taken for the owner. */
 export type SandboxOwnerV1 = Readonly<{ version: 1; pid: number; start: string | null }>;

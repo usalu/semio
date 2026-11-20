@@ -125,8 +125,9 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
   const { manifest, categories } = useRows();
   const rows = useCategoryRows(category);
   const id = useId();
+  const warm = !compact || card.revealed;
   useEffect(() => {
-    if (compact && !card.revealed) return;
+    if (!warm) return;
     const controller = new AbortController();
     const index = CATEGORIES.indexOf(category);
     const timer = setTimeout(() => void catalog.loadCategory(category, { signal: controller.signal }), compact ? 1200 + index * 800 : 400 + index * 350);
@@ -134,7 +135,7 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
       clearTimeout(timer);
       controller.abort();
     };
-  }, [catalog, category, compact, card.revealed]);
+  }, [catalog, category, compact, warm]);
   const entry = manifest?.categories.find((candidate) => candidate.id === category);
   const progress = categories[category];
   const ready = rows.filter((row) => row.status === "ready");
@@ -160,7 +161,7 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
       <div className="min-h-0 flex-1">
         {progress.state === "idle" ? (
           <div className="flex h-full min-h-12 items-center">
-            <button type="button" onClick={() => void catalog.loadCategory(category)} className="text-xs text-primary">{t("category.load")}</button>
+            <button type="button" data-shared-border-frame="" data-shared-border-edges="" onClick={() => void catalog.loadCategory(category)} className="text-xs text-primary">{t("category.load")}</button>
           </div>
         ) : progress.state === "failed" ? (
           <Notice kind="error" compact plain title={t("state.categoryFailed.title")}>{progress.failure?.[language]}</Notice>
@@ -183,8 +184,13 @@ function HeroCard(props: { readonly card: { readonly revealed: boolean; readonly
   const featured = useMemo(() => manifest?.collections.find((collection) => collection.id === APP_CONFIG.featuredCollection)?.assets ?? [], [manifest]);
   const frieze = useMemo(() => featured.flatMap((asset) => rows.filter((row) => row.entry.id === asset && row.status === "ready")), [featured, rows]);
   const pending = featured.some((asset) => rows.some((row) => row.entry.id === asset && row.status === "pending"));
-  const needed = useMemo(() => [...new Set(featured.flatMap((asset) => rows.filter((row) => row.entry.id === asset && row.status === "pending").map((row) => row.entry.category)))], [featured, rows]);
-  useFriezeLoad(needed.join(","), needed, catalog);
+  const needed = useMemo(() => [...new Set(featured.flatMap((asset) => (manifest?.entries ?? []).filter((entry) => entry.id === asset).map((entry) => entry.category)))], [featured, manifest]);
+  useEffect(() => {
+    if (needed.length === 0) return;
+    const controller = new AbortController();
+    for (const category of needed) void catalog.loadCategory(category, { signal: controller.signal });
+    return () => controller.abort();
+  }, [needed, catalog]);
   return (
     <ArchiveCard
       id={id}
@@ -209,15 +215,6 @@ function HeroCard(props: { readonly card: { readonly revealed: boolean; readonly
       </div>
     </ArchiveCard>
   );
-}
-
-function useFriezeLoad(key: string, needed: readonly CategoryId[], catalog: ReturnType<typeof useArchive>["catalog"]): void {
-  useEffect(() => {
-    if (key === "") return;
-    const controller = new AbortController();
-    for (const category of needed) void catalog.loadCategory(category, { signal: controller.signal });
-    return () => controller.abort();
-  }, [key, catalog]);
 }
 
 /** 📚️ The collections card: the curated collections and the reader's favorites with a live preview of them. */

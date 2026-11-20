@@ -29,9 +29,21 @@ impl DocumentWindowResetAdmission{
 impl<A: ArtifactApp> PendingReserved<A> {
     pub fn commit_document_window_reset(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>,replacement:&mut Option<WindowTransientOwnerRegistry>,scope_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         let admission=self.pending_document_window_admission.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication has no original renewal admission"))?;admission.validate(scope_generation,cx)?;if admission.generation.is_none()||admission.committed{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"window publication requires one ready unused original renewal" ).into())}
-        let replacement=replacement.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"document reset lost its retained replacement"))?;
-        let generation=replacement.document_generation();let displaced=std::mem::replace(&mut stores.window_transient_store,replacement);if !displaced.terminal_is_empty(){stores.retired_window_transient_stores.insert_admitted(generation,displaced)}self.pending_document_window_admission.as_mut().unwrap().committed=true;history.cache=None;Ok(())
+        self.install_document_window_reset(stores,history,replacement)?;
+        self.pending_document_window_admission.as_mut().unwrap().committed=true;
+        Ok(())
     }
+
+    /// 🪟️ Installs prepared windows while the mounted document replacement holds its publication permit.
+    pub fn install_document_window_reset(&mut self,stores:&mut InstanceStores<A>,history:&mut CommandHistory<A>,replacement:&mut Option<WindowTransientOwnerRegistry>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        let replacement=replacement.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"document reset lost its retained replacement"))?;
+        let generation=replacement.document_generation();
+        let displaced=std::mem::replace(&mut stores.window_transient_store,replacement);
+        if !displaced.terminal_is_empty(){stores.retired_window_transient_stores.insert_admitted(generation,displaced);}
+        history.cache=None;
+        Ok(())
+    }
+
 
     pub fn document_window_admission_demands(&self)->semio_framework_value::RetirementDemand{self.pending_document_window_admission.as_ref().map_or(Default::default(),|admission|admission.source.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},semio_framework_job::OriginalCallerSourceLoan::retirement_demands))}
 

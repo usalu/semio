@@ -212,7 +212,7 @@ fn focused_view() -> ViewModel {
 
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
-    let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
+    let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }

@@ -91,40 +91,45 @@ fn newell_normal(points: &[Pnt3]) -> Option<Vec3> {
 }
 
 /// 🧱 Inserts a `Curve2::Line` p-curve (`origin + dir·t`) — the common shape for every straight
-/// (non-seam-circle) p-curve segment below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn line2(body: &mut Body, origin: (f64, f64), dir: (f64, f64)) -> Curve2Id {
-    body.curves2.insert(Curve2::Line { origin: Pnt2::new(origin.0, origin.1), dir: Vec2::new(dir.0, dir.1) })
-}
 
 /// 🧱 Inserts a `Curve2::Circle` p-curve — used where a 3D circle edge lands on a *planar* cap
-/// whose local frame is a reflection of the circle's own frame (see `w1e-primitives.md` §caps).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn circle2(body: &mut Body, center: (f64, f64), radius: f64) -> Curve2Id {
-    body.curves2.insert(Curve2::Circle { center: Pnt2::new(center.0, center.1), radius })
+
+/// 🧭️ Projects a planar edge curve into face coordinates while preserving its parameters.
+pub fn planar_pcurve(curve: &Curve3, plane: Frame3) -> Curve2 {
+    let point = |p| {
+        let local = plane.to_local(p);
+        Pnt2::new(local.x, local.y)
+    };
+    let vector = |v| {
+        let local = plane.to_local_vector(v);
+        Vec2::new(local.x, local.y)
+    };
+    let ellipse = |frame: Frame3, major_radius, minor_radius: f64| Curve2::Ellipse {
+        center: point(frame.origin),
+        x_axis: vector(frame.x),
+        major_radius,
+        minor_radius: minor_radius.copysign(plane.z.dot(frame.z)),
+    };
+    match curve {
+        Curve3::Line { origin, dir } => Curve2::Line { origin: point(*origin), dir: vector(*dir) },
+        Curve3::Circle { frame, radius } => ellipse(*frame, *radius, *radius),
+        Curve3::Ellipse { frame, major_radius, minor_radius } => ellipse(*frame, *major_radius, *minor_radius),
+        Curve3::Nurbs { knots, controls, weights } => Curve2::Nurbs {
+            knots: knots.clone(),
+            controls: controls.iter().copied().map(point).collect(),
+            weights: weights.clone(),
+        },
+    }
 }
 
-/// 🧱 Attaches an exact planar p-curve to every coedge of `face`'s outer loop, via
-/// [`Surface::project_curve`] (exact for `Line`/`Circle`/`Ellipse` edges on a `Plane` through its
-/// `analytic_pcurve_shortcut`, tolerance-checked fit otherwise) — the general-purpose counterpart
-/// to the hand-derived `line2`/`circle2` + [`set_outer_pcurves`] calls the analytic primitives
-/// (sphere/cylinder/cone/torus) use for their own known-simple edges. `make_box`/
-/// `make_convex_hull`/[`make_planar_face_from_wire`] call this so their planar faces' coedges
-/// carry p-curves too — every coedge must, per `check_missing_pcurves`'s ERROR-level rule
-/// (`✅validation-report/🧪️body/🦀️.rs`), and these builders had no p-curve step at all before
-/// (a wave-1/wave-1 integration gap between this file and validation's stricter check, not a
-/// pre-existing bug in either alone). `prange` is always the edge's own `(0.0, 1.0)` order, per
-/// [`set_outer_pcurves`]'s own documented convention — never reversed for `forward`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, members: &[(EdgeId, bool)], tol: f64) {
-    let surface = Surface::Plane { frame };
+/// 📎️ Gives each planar coedge its exact trim in the edge's original parameter range.
+fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, members: &[(EdgeId, bool)]) {
     let pcurves: Vec<(Curve2Id, (f64, f64))> = members
         .iter()
-        .map(|&(edge_id, _forward)| {
-            let edge = body.edges.get(edge_id).expect("member edge exists");
-            let curve3 = body.curves3.get(edge.curve).expect("edge curve exists").clone();
-            let pcurve = surface.project_curve(&curve3, edge.range, tol);
-            (body.curves2.insert(pcurve), (0.0, 1.0))
+        .map(|&(id, _)| {
+            let edge = body.edges.get(id).expect("member edge exists");
+            let curve = body.curves3.get(edge.curve).expect("edge curve exists");
+            (body.curves2.insert(planar_pcurve(curve, frame)), edge.range)
         })
         .collect();
     set_outer_pcurves(body, face, &pcurves);
@@ -161,64 +166,48 @@ pub fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
 
 // #endregion 🔖️Helpers
 
+#[path = "🧊️analytic-solids/🦀️.rs"]
+mod analytic_solids;
+pub use analytic_solids::{BoxSectionDraft, BoxSectionPolygon, PrimitiveEdge, PrimitiveTrim, SolidPrimitive};
+use analytic_solids::make_analytic_solid;
+
 // #region 🔖️Solids
+
+/// 📐 The oriented analytic boundary shared by the synchronous and retained Box constructors.
+pub struct BoxGeometry;
+
+impl BoxGeometry {
+    pub const EDGES: [[usize; 2]; 12] = [
+        [0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7],
+    ];
+    pub const FACES: [[(usize, bool); 4]; 6] = [
+        [(0, false), (3, false), (2, false), (1, false)],
+        [(4, true), (5, true), (6, true), (7, true)],
+        [(0, true), (9, true), (4, false), (8, false)],
+        [(2, true), (11, true), (6, false), (10, false)],
+        [(3, true), (8, true), (7, false), (11, false)],
+        [(1, true), (10, true), (5, false), (9, false)],
+    ];
+
+    pub fn corners(w: f64, d: f64, h: f64) -> [Pnt3; 8] {
+        [
+            Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(w, 0.0, 0.0), Pnt3::new(w, d, 0.0), Pnt3::new(0.0, d, 0.0),
+            Pnt3::new(0.0, 0.0, h), Pnt3::new(w, 0.0, h), Pnt3::new(w, d, h), Pnt3::new(0.0, d, h),
+        ]
+    }
+
+    pub fn frame(corners: &[Pnt3; 8], face: usize) -> Frame3 {
+        let (origin, normal) = [(0, -Vec3::Z), (4, Vec3::Z), (0, -Vec3::Y), (3, Vec3::Y), (0, -Vec3::X), (1, Vec3::X)][face];
+        Frame3::from_normal(corners[origin], normal).expect("box face normal is an axis")
+    }
+}
 
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
 /// Threads the caller-owned `rec` through every euler call so the whole box's [`semio_framework_3d_brep_representation::topology::history::OpDelta`]
 /// is observable after this call returns, instead of being discarded at the function boundary.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("box width", w)?;
-    require_positive("box depth", d)?;
-    require_positive("box height", h)?;
-    let tol = Tol::DEFAULT;
-    let corners = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(w, 0.0, 0.0), Pnt3::new(w, d, 0.0), Pnt3::new(0.0, d, 0.0), Pnt3::new(0.0, 0.0, h), Pnt3::new(w, 0.0, h), Pnt3::new(w, d, h), Pnt3::new(0.0, d, h)];
-    let v: Vec<VertexId> = corners.iter().map(|&p| make_vertex(body, p, tol, rec)).collect();
-    let eb0 = line_edge(body, corners[0], corners[1], v[0], v[1], tol, rec);
-    let eb1 = line_edge(body, corners[1], corners[2], v[1], v[2], tol, rec);
-    let eb2 = line_edge(body, corners[2], corners[3], v[2], v[3], tol, rec);
-    let eb3 = line_edge(body, corners[3], corners[0], v[3], v[0], tol, rec);
-    let et0 = line_edge(body, corners[4], corners[5], v[4], v[5], tol, rec);
-    let et1 = line_edge(body, corners[5], corners[6], v[5], v[6], tol, rec);
-    let et2 = line_edge(body, corners[6], corners[7], v[6], v[7], tol, rec);
-    let et3 = line_edge(body, corners[7], corners[4], v[7], v[4], tol, rec);
-    let ev0 = line_edge(body, corners[0], corners[4], v[0], v[4], tol, rec);
-    let ev1 = line_edge(body, corners[1], corners[5], v[1], v[5], tol, rec);
-    let ev2 = line_edge(body, corners[2], corners[6], v[2], v[6], tol, rec);
-    let ev3 = line_edge(body, corners[3], corners[7], v[3], v[7], tol, rec);
-
-    let frame_bottom = Frame3::from_normal(corners[0], -Vec3::Z).expect("plane frame");
-    let frame_top = Frame3::from_normal(corners[4], Vec3::Z).expect("plane frame");
-    let frame_front = Frame3::from_normal(corners[0], -Vec3::Y).expect("plane frame");
-    let frame_back = Frame3::from_normal(corners[3], Vec3::Y).expect("plane frame");
-    let frame_left = Frame3::from_normal(corners[0], -Vec3::X).expect("plane frame");
-    let frame_right = Frame3::from_normal(corners[1], Vec3::X).expect("plane frame");
-    let s_bottom = body.surfaces.insert(Surface::Plane { frame: frame_bottom });
-    let s_top = body.surfaces.insert(Surface::Plane { frame: frame_top });
-    let s_front = body.surfaces.insert(Surface::Plane { frame: frame_front });
-    let s_back = body.surfaces.insert(Surface::Plane { frame: frame_back });
-    let s_left = body.surfaces.insert(Surface::Plane { frame: frame_left });
-    let s_right = body.surfaces.insert(Surface::Plane { frame: frame_right });
-    let bottom_members = [(eb0, false), (eb3, false), (eb2, false), (eb1, false)];
-    let top_members = [(et0, true), (et1, true), (et2, true), (et3, true)];
-    let front_members = [(eb0, true), (ev1, true), (et0, false), (ev0, false)];
-    let back_members = [(eb2, true), (ev3, true), (et2, false), (ev2, false)];
-    let left_members = [(eb3, true), (ev0, true), (et3, false), (ev3, false)];
-    let right_members = [(eb1, true), (ev2, true), (et1, false), (ev1, false)];
-    let bottom = attach_face(body, s_bottom, &bottom_members, false, tol, rec);
-    let top = attach_face(body, s_top, &top_members, false, tol, rec);
-    let front = attach_face(body, s_front, &front_members, false, tol, rec);
-    let back = attach_face(body, s_back, &back_members, false, tol, rec);
-    let left = attach_face(body, s_left, &left_members, false, tol, rec);
-    let right = attach_face(body, s_right, &right_members, false, tol, rec);
-    let tolv = tol.value();
-    attach_planar_face_pcurves(body, bottom, frame_bottom, &bottom_members, tolv);
-    attach_planar_face_pcurves(body, top, frame_top, &top_members, tolv);
-    attach_planar_face_pcurves(body, front, frame_front, &front_members, tolv);
-    attach_planar_face_pcurves(body, back, frame_back, &back_members, tolv);
-    attach_planar_face_pcurves(body, left, frame_left, &left_members, tolv);
-    attach_planar_face_pcurves(body, right, frame_right, &right_members, tolv);
-    Ok(finish_solid(body, vec![bottom, top, front, back, left, right], rec))
+    make_analytic_solid(body, SolidPrimitive::axis_box(w, d, h), rec)
 }
 
 /// 🧱 Sphere centered at the origin: ONE analytic [`Surface::Sphere`] face, bounded by a single
@@ -230,74 +219,14 @@ pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -
 /// own single-seam convention) — see `w1e-primitives.md` for the coordinate-with-W1-F note.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_sphere(body: &mut Body, radius: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("sphere radius", radius)?;
-    let tol = Tol::DEFAULT;
-    let frame = Frame3::WORLD;
-    let south_pt = Pnt3::new(0.0, 0.0, -radius);
-    let north_pt = Pnt3::new(0.0, 0.0, radius);
-    let v_south = make_vertex(body, south_pt, tol, rec);
-    let v_north = make_vertex(body, north_pt, tol, rec);
-
-    let meridian_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
-    let meridian = body.curves3.insert(Curve3::Circle { frame: meridian_frame, radius });
-    let e_seam = make_edge(body, meridian, (-FRAC_PI_2, FRAC_PI_2), v_south, v_north, tol, rec);
-
-    let south_curve = body.curves3.insert(Curve3::Line { origin: south_pt, dir: Vec3::ZERO });
-    let e_south = make_edge(body, south_curve, (0.0, TAU), v_south, v_south, tol, rec);
-    let north_curve = body.curves3.insert(Curve3::Line { origin: north_pt, dir: Vec3::ZERO });
-    let e_north = make_edge(body, north_curve, (0.0, TAU), v_north, v_north, tol, rec);
-
-    let surface = body.surfaces.insert(Surface::Sphere { frame, radius });
-    let face = attach_face(body, surface, &[(e_south, true), (e_seam, true), (e_north, false), (e_seam, false)], false, tol, rec);
-
-    let p_seam_u0 = line2(body, (0.0, 0.0), (0.0, 1.0));
-    let p_north = line2(body, (0.0, FRAC_PI_2), (1.0, 0.0));
-    let p_seam_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
-    let p_south = line2(body, (0.0, -FRAC_PI_2), (1.0, 0.0));
-    set_outer_pcurves(body, face, &[(p_south, (0.0, TAU)), (p_seam_u_tau, (-FRAC_PI_2, FRAC_PI_2)), (p_north, (0.0, TAU)), (p_seam_u0, (-FRAC_PI_2, FRAC_PI_2))]);
-
-    Ok(finish_solid(body, vec![face], rec))
+    make_analytic_solid(body, SolidPrimitive::sphere(radius), rec)
 }
 
 /// 🧱 Cylinder along +Z from `z=0` to `z=height`: one analytic [`Surface::Cylinder`] lateral face
 /// (single seam at u=0) plus two planar caps, all four faces' coedges carrying exact p-curves.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("cylinder radius", radius)?;
-    require_positive("cylinder height", height)?;
-    let tol = Tol::DEFAULT;
-    let bottom_frame = Frame3::WORLD;
-    let top_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, height), x: Vec3::X, y: Vec3::Y, z: Vec3::Z };
-    let bot_pt = bottom_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
-    let top_pt = top_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
-    let v_bot = make_vertex(body, bot_pt, tol, rec);
-    let v_top = make_vertex(body, top_pt, tol, rec);
-
-    let bot_circle = body.curves3.insert(Curve3::Circle { frame: bottom_frame, radius });
-    let e_bot = make_edge(body, bot_circle, (0.0, TAU), v_bot, v_bot, tol, rec);
-    let top_circle = body.curves3.insert(Curve3::Circle { frame: top_frame, radius });
-    let e_top = make_edge(body, top_circle, (0.0, TAU), v_top, v_top, tol, rec);
-    let e_seam = line_edge(body, bot_pt, top_pt, v_bot, v_top, tol, rec);
-
-    let cyl = body.surfaces.insert(Surface::Cylinder { frame: Frame3::WORLD, radius });
-    let lateral = attach_face(body, cyl, &[(e_bot, true), (e_seam, true), (e_top, false), (e_seam, false)], false, tol, rec);
-    let p_bot_lat = line2(body, (0.0, 0.0), (1.0, 0.0));
-    let p_seam_up = line2(body, (0.0, 0.0), (0.0, height));
-    let p_top_lat = line2(body, (0.0, height), (1.0, 0.0));
-    set_outer_pcurves(body, lateral, &[(p_bot_lat, (0.0, TAU)), (p_seam_up, (0.0, 1.0)), (p_top_lat, (0.0, TAU)), (p_seam_up, (0.0, 1.0))]);
-
-    let bottom_cap_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
-    let s_bottom = body.surfaces.insert(Surface::Plane { frame: bottom_cap_frame });
-    let bottom = attach_face(body, s_bottom, &[(e_bot, false)], false, tol, rec);
-    let p_bot_cap = circle2(body, (0.0, 0.0), radius);
-    set_outer_pcurves(body, bottom, &[(p_bot_cap, (0.0, -TAU))]);
-
-    let s_top = body.surfaces.insert(Surface::Plane { frame: top_frame });
-    let top = attach_face(body, s_top, &[(e_top, true)], false, tol, rec);
-    let p_top_cap = circle2(body, (0.0, 0.0), radius);
-    set_outer_pcurves(body, top, &[(p_top_cap, (0.0, TAU))]);
-
-    Ok(finish_solid(body, vec![lateral, bottom, top], rec))
+    make_analytic_solid(body, SolidPrimitive::cylinder(radius, height), rec)
 }
 
 /// 🧱 Pointed cone with base radius at `z=0` and apex at `(0,0,height)`: one analytic
@@ -310,38 +239,7 @@ pub fn make_cylinder(body: &mut Body, radius: f64, height: f64, rec: &mut OpReco
 /// both endpoints of the same seam edge and so each needs its own degenerate closer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_cone(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("cone radius", radius)?;
-    require_positive("cone height", height)?;
-    let tol = Tol::DEFAULT;
-    let half_angle = radius.atan2(height);
-    if half_angle <= Tol::DEFAULT.value() || half_angle >= FRAC_PI_2 {
-        return Err(KernelError::InvalidInput(format!("cone half-angle out of range: {half_angle}")));
-    }
-    let apex = Pnt3::new(0.0, 0.0, height);
-    let base_frame = Frame3::WORLD;
-    let base_pt = base_frame.to_world(Pnt3::new(radius, 0.0, 0.0));
-    let v_apex = make_vertex(body, apex, tol, rec);
-    let v_base = make_vertex(body, base_pt, tol, rec);
-
-    let base_circle = body.curves3.insert(Curve3::Circle { frame: base_frame, radius });
-    let e_circle = make_edge(body, base_circle, (0.0, TAU), v_base, v_base, tol, rec);
-    let e_seam = line_edge(body, base_pt, apex, v_base, v_apex, tol, rec);
-
-    let cone_frame = Frame3 { origin: apex, x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
-    let cone_surf = body.surfaces.insert(Surface::Cone { frame: cone_frame, half_angle });
-    let lateral = attach_face(body, cone_surf, &[(e_circle, true), (e_seam, true), (e_seam, false)], false, tol, rec);
-    let p_base_lat = line2(body, (TAU, height), (-1.0, 0.0));
-    let p_seam_u0 = line2(body, (0.0, height), (0.0, -height));
-    let p_seam_u_tau = line2(body, (TAU, height), (0.0, -height));
-    set_outer_pcurves(body, lateral, &[(p_base_lat, (0.0, TAU)), (p_seam_u0, (0.0, 1.0)), (p_seam_u_tau, (0.0, 1.0))]);
-
-    let base_cap_frame = Frame3 { origin: Pnt3::new(0.0, 0.0, 0.0), x: Vec3::X, y: -Vec3::Y, z: -Vec3::Z };
-    let s_base = body.surfaces.insert(Surface::Plane { frame: base_cap_frame });
-    let base = attach_face(body, s_base, &[(e_circle, false)], false, tol, rec);
-    let p_base_cap = circle2(body, (0.0, 0.0), radius);
-    set_outer_pcurves(body, base, &[(p_base_cap, (0.0, -TAU))]);
-
-    Ok(finish_solid(body, vec![lateral, base], rec))
+    make_analytic_solid(body, SolidPrimitive::cone(radius, height), rec)
 }
 
 /// 🧱 Torus in the XY plane: ONE analytic [`Surface::Torus`] face, the classic "fundamental
@@ -351,32 +249,7 @@ pub fn make_cone(body: &mut Body, radius: f64, height: f64, rec: &mut OpRecorder
 /// genus 1 ⇒ χ = V−E+F = 1−2+1 = 0 (the existing test's own expectation, unlike the χ=2 solids).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_torus(body: &mut Body, major: f64, minor: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    require_positive("torus major radius", major)?;
-    require_positive("torus minor radius", minor)?;
-    if minor >= major {
-        return Err(KernelError::InvalidInput(format!("torus minor radius ({minor}) must be less than major radius ({major})")));
-    }
-    let tol = Tol::DEFAULT;
-    let shared_pt = Pnt3::new(major + minor, 0.0, 0.0);
-    let v_shared = make_vertex(body, shared_pt, tol, rec);
-
-    let meridian_frame = Frame3 { origin: Pnt3::new(major, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
-    let meridian = body.curves3.insert(Curve3::Circle { frame: meridian_frame, radius: minor });
-    let e_meridian = make_edge(body, meridian, (0.0, TAU), v_shared, v_shared, tol, rec);
-
-    let equatorial = body.curves3.insert(Curve3::Circle { frame: Frame3::WORLD, radius: major + minor });
-    let e_equatorial = make_edge(body, equatorial, (0.0, TAU), v_shared, v_shared, tol, rec);
-
-    let surface = body.surfaces.insert(Surface::Torus { frame: Frame3::WORLD, major_radius: major, minor_radius: minor });
-    let face = attach_face(body, surface, &[(e_equatorial, true), (e_meridian, true), (e_equatorial, false), (e_meridian, false)], false, tol, rec);
-
-    let p_meridian_u0 = line2(body, (0.0, 0.0), (0.0, 1.0));
-    let p_equatorial_v_tau = line2(body, (0.0, TAU), (1.0, 0.0));
-    let p_meridian_u_tau = line2(body, (TAU, 0.0), (0.0, 1.0));
-    let p_equatorial_v0 = line2(body, (0.0, 0.0), (1.0, 0.0));
-    set_outer_pcurves(body, face, &[(p_equatorial_v0, (0.0, TAU)), (p_meridian_u_tau, (0.0, TAU)), (p_equatorial_v_tau, (0.0, TAU)), (p_meridian_u0, (0.0, TAU))]);
-
-    Ok(finish_solid(body, vec![face], rec))
+    make_analytic_solid(body, SolidPrimitive::torus(major, minor), rec)
 }
 
 /// 🧱 Builds a (possibly non-convex) solid from a triangle soup — used ONLY for mesh import and
@@ -499,6 +372,49 @@ pub fn make_planar_face_from_points(body: &mut Body, points: &[Pnt3], rec: &mut 
     make_planar_face_from_wire(body, &wire, points[0], normal, rec)
 }
 
+/// 🧵️ Builds a one-edge wire over a curve's natural domain, with a single seam vertex when closed.
+pub fn make_curve_wire(body: &mut Body, curve: Curve3, rec: &mut OpRecorder) -> Result<Wire, KernelError> {
+    let range = match &curve {
+        Curve3::Line { .. } => (0.0, 1.0),
+        Curve3::Circle { .. } | Curve3::Ellipse { .. } => (0.0, TAU),
+        Curve3::Nurbs { knots, .. } => knots.domain(),
+    };
+    let (first, last) = (curve.eval(range.0), curve.eval(range.1));
+    if ![first.x, first.y, first.z, last.x, last.y, last.z].iter().all(|coordinate| coordinate.is_finite()) {
+        return Err(KernelError::InvalidInput("curve wire requires finite endpoints".into()));
+    }
+    let closed = matches!(curve, Curve3::Circle { .. } | Curve3::Ellipse { .. }) || first.distance(last) <= 1e-9;
+    let curve = body.curves3.insert(curve);
+    let start = make_vertex(body, first, Tol::DEFAULT, rec);
+    let end = if closed { start } else { make_vertex(body, last, Tol::DEFAULT, rec) };
+    let edge = make_edge(body, curve, range, start, end, Tol::DEFAULT, rec);
+    Ok(Wire { members: vec![(edge, true)], vertices: if closed { vec![start] } else { vec![start, end] }, closed })
+}
+
+/// 📐️ Infers a closed wire's winding plane from its oriented curve samples.
+pub fn planar_wire_support(body: &Body, wire: &Wire) -> Result<(Pnt3, Vec3), KernelError> {
+    if !wire.closed {
+        return Err(KernelError::InvalidInput("profile boundary must be closed".into()));
+    }
+    let mut points = Vec::with_capacity(wire.members.len());
+    for &(id, forward) in &wire.members {
+        let edge = body.edges.get(id).ok_or_else(|| KernelError::MissingEntity(format!("edge {id:?}")))?;
+        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
+        let (from, to) = if forward { edge.range } else { (edge.range.1, edge.range.0) };
+        let samples = if matches!(curve, Curve3::Line { .. }) { 1 } else { 32 };
+        points.extend((0..samples).map(|step| curve.eval(from + (to - from) * step as f64 / samples as f64)));
+    }
+    let normal = newell_normal(&points)
+        .filter(|normal| normal.norm().is_finite() && normal.norm() > 0.0)
+        .ok_or_else(|| KernelError::InvalidInput("profile boundary encloses no planar area".into()))?;
+    let origin = points[0];
+    let extent = points.iter().map(|&point| point.distance(origin)).fold(1.0_f64, f64::max);
+    if points.iter().any(|&point| (point - origin).dot(normal).abs() > Tol::DEFAULT.value() * extent) {
+        return Err(KernelError::InvalidInput("profile boundary must be planar".into()));
+    }
+    Ok((origin, normal))
+}
+
 /// 🧱 Planar face whose outer loop is an existing closed [`Wire`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, normal: Vec3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
@@ -511,7 +427,7 @@ pub fn make_planar_face_from_wire(body: &mut Body, wire: &Wire, origin: Pnt3, no
     let frame = Frame3::from_normal(origin, normal).expect("plane frame");
     let surface = body.surfaces.insert(Surface::Plane { frame });
     let face = attach_face(body, surface, &wire.members, false, Tol::DEFAULT, rec);
-    attach_planar_face_pcurves(body, face, frame, &wire.members, Tol::DEFAULT.value());
+    attach_planar_face_pcurves(body, face, frame, &wire.members);
     Ok(face)
 }
 
@@ -759,7 +675,7 @@ impl StagedOperation for ConvexHullJob {
                 let frame = Frame3::from_normal(self.pts[boundary[0]], self.groups[unit.index].normal).expect("plane frame");
                 let surface = body.surfaces.insert(Surface::Plane { frame });
                 let face = attach_face(body, surface, &members, false, tol, rec);
-                attach_planar_face_pcurves(body, face, frame, &members, tol.value());
+                attach_planar_face_pcurves(body, face, frame, &members);
                 self.solid_faces.push(face);
             }
             _ => return Ok(StageStep::Done(StageOutput::Solid(finish_solid(body, std::mem::take(&mut self.solid_faces), rec)))),

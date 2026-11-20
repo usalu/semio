@@ -54,6 +54,8 @@ message ShootingShot {
   string shape = 6;
   optional string background = 7;
   optional string camera_id = 8;
+  optional ShootingDrawing drawing = 9;
+  optional bool auto_fit = 10;
 }
 
 message ShootingSun {
@@ -90,4 +92,63 @@ message ShootingSceneLighting {
   ShootingAmbient ambient = 3;
   ShootingShadow shadow = 4;
   ShootingMaterial material = 5;
+}
+
+
+message ShootingDrawing {
+  bool background = 1;
+  bool fill = 2;
+  optional string fill_color = 3;
+  double fill_opacity = 4;
+  bool visible_lines = 5;
+  bool hidden_lines = 6;
+  string visible_color = 7;
+  string hidden_color = 8;
+  double visible_width = 9;
+  double hidden_width = 10;
+  double line_easing = 11;
+  bool merge_lines = 12;
+}
+
+message SetShotDrawing {
+  string id = 1;
+  ShootingDrawingPatch patch = 2;
+}
+
+message ShootingAssignedString {
+  optional string value = 1;
+}
+
+message ShootingDrawingPatch {
+  optional bool background = 1;
+  optional bool fill = 2;
+  optional ShootingAssignedString fill_color = 3;
+  optional double fill_opacity = 4;
+  optional bool visible_lines = 5;
+  optional bool hidden_lines = 6;
+  optional string visible_color = 7;
+  optional string hidden_color = 8;
+  optional double visible_width = 9;
+  optional double hidden_width = 10;
+  optional double line_easing = 11;
+  optional bool merge_lines = 12;
+  optional bool restore_absent = 13;
+}
+
+message PatchShotCamera {
+  string shot_id = 1;
+  string field = 2;
+  ShootingCamera camera = 3;
+  ShootingCamera fallback = 4;
+  optional ShotCameraSlot release = 5;
+}
+
+message ShotCameraSlot {
+  ShootingCamera seed = 1;
+  optional string camera_id = 2;
+}
+
+message SetShotAutoFit {
+  string id = 1;
+  optional bool auto_fit = 2;
 }

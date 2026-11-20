@@ -156,7 +156,7 @@ function ToggleGroup(props: ToggleGroupProps) {
     () => ({ level, radio, disabled, orientation, dir, loop, rovingFocus, focusValue: (radio ? enabledItems.find((item) => selected.has(item.value))?.value : undefined) ?? focusValue, selected, activate, moveFocus, setFocusValue }),
     [activate, dir, disabled, enabledItems, focusValue, level, loop, moveFocus, orientation, radio, rovingFocus, selected],
   );
-  const rootDataState = selected.size > 0 ? "on" : "off";
+  const rootSelection = selected.size > 0 ? "on" : "off";
   const { value: _value, defaultValue: _defaultValue, onValueChange: _onValueChange, semantics: _semantics, ...htmlProps } = rootProps as ToggleGroupBaseProps & { value?: unknown; defaultValue?: unknown; onValueChange?: unknown; semantics?: unknown };
   const element = (
     <div
@@ -171,10 +171,10 @@ function ToggleGroup(props: ToggleGroupProps) {
       data-shared-border-frame=""
       data-shared-border-edges="top right bottom left"
       data-detail-panel-control="fit"
-      data-state={rootDataState}
+      data-selection={rootSelection}
       data-disabled={disabled ? "" : undefined}
       data-orientation={orientation}
-      className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", orientation === "vertical" && "flex-col h-auto", wrap && orientation === "horizontal" && "flex-wrap h-auto", className)}
+      className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", orientation === "vertical" && "flex-col h-auto [&>*]:min-h-medium", wrap && orientation === "horizontal" && "flex-wrap h-auto [&>*]:min-h-medium", className)}
     >
       <ToggleGroupContext.Provider value={context}>
         {items.map((item) => (
@@ -227,7 +227,6 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         data-shared-border-cell={action ? "" : undefined}
         className={cn(
           toggleVariants(),
-          context.orientation !== "vertical" && "min-h-0",
           inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
           (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
           inlineText && "w-auto",
@@ -255,7 +254,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       </button>
       {action ? (
-        <div data-slot="toggle-group-item-action" data-shared-border-cell="" data-shared-border-cells="" data-orientation="horizontal" aria-disabled={itemDisabled || undefined} className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}>
+        <div data-slot="toggle-group-item-action" data-shared-border-cell="" data-shared-border-cells="" data-orientation="horizontal" aria-disabled={itemDisabled || undefined} className={cn("flex items-center justify-center aspect-square self-stretch flex-shrink-0", surfaceClass, text && "ms-single")}>
           {action}
         </div>
       ) : null}

@@ -7,6 +7,11 @@
     "mediaType": "application/pdf",
     "binary": true
   },
+  "action": {
+    "id": "set-page-rotation",
+    "page": 1,
+    "x": 90
+  },
   "mutation": {
     "kind": "set-page-rotation",
     "params": {
@@ -25,5 +30,32 @@
       "trailer"
     ]
   },
-  "invalidText": "This is not a PDF."
+  "largeVector": {
+    "pageCount": 48,
+    "segmentCount": 44,
+    "byteLength": 49279
+  },
+  "largeType1": {
+    "pageCount": 48,
+    "segmentCount": 48,
+    "minimumByteLength": 4096,
+    "labelPrefix": "Page",
+    "font": {
+      "name": "helv",
+      "face": "Helvetica",
+      "encoding": "WinAnsiEncoding"
+    }
+  },
+  "invalidText": "This is not a PDF.",
+  "metadataEdit": {
+    "before": {
+      "title": "Draft",
+      "author": "Ada"
+    },
+    "value": "",
+    "after": {
+      "title": null,
+      "author": "Ada"
+    }
+  }
 }

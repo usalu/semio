@@ -1,11 +1,13 @@
 /** 🗣️ Contract: the real error text of a slice worker travels with the restart decision (so a worker that dies on a missing module is not reported as "the code changed under it"), and a worker that dies early again and again with the same text stops the plan with that text instead of looping. */
 import{expect,test}from"bun:test";
-import{mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import{mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createSlicePoolV1}from"../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import{createProcessWorkerV1,workerCauseV1}from"../../🏗️composition/🌐️host/👷️slice-pool/🧵️process/🟨️.mjs";
 import{HOST_POLICY_V1,renderTextV1}from"../../📨️protocol/🎚️policy/🟨️.mjs";
+import{failureRefusalV1}from"../../🏛️service/🧯️failure/🟨️.mjs";
+import corpus from"./🔣️.json" with {type:"json"};
 
 const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
 const MISSING="error: Cannot find module '/w/🏗️ifc/🦀️render.ts' from '/w/🏗️ifc/📁️generate.ts'";
@@ -24,6 +26,25 @@ test("the cause of a worker is the line of its last words that names the error, 
  expect(workerCauseV1(`some output\n\u001b[31m${MISSING}\u001b[0m\n\nBun v1.4.2 (macOS arm64)\n`)).toBe(MISSING);
  expect(workerCauseV1("first\nlast words without a keyword\n")).toBe("last words without a keyword");
  expect(workerCauseV1("error: "+"x".repeat(1000)).length).toBeLessThanOrEqual(300);
+});
+
+for(const vector of corpus)test("an ordinary slice exit preserves worker evidence "+(vector.cause||"when silent"),async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"slice-exit-")),logs:string[]=[],{pool,run,started}=harness([{exit:vector.exit,tail:vector.stderr}]);
+ try{
+  const error=await run(directory).then(()=>undefined,reason=>reason);
+  const refusal=failureRefusalV1(error,{log:(_event:string,text:string)=>logs.push(text),logPath:"/fixture/host.log",environment:{SEMIO_FLEET_STORE_ROOT:directory,SEMIO_FLEET_ORIGIN:"fixture"}});
+  const block=readFileSync(join(directory,"v1","origins","fixture","service-failure.txt"),"utf8");
+  expect(error.exit).toBe(vector.exit);expect(error.restart).toBe(false);expect(error.message).toBe("Slice worker exited with code "+vector.exit);
+  expect(started).toHaveLength(1);expect(refusal.key).toBe("internal");
+  if(vector.cause){
+   expect(refusal.fields.message).toContain(vector.cause);
+   expect(logs[0]).toContain("worker cause: "+vector.cause);
+   expect(block).toContain("worker cause: "+vector.cause);
+  }else{
+   expect(block).not.toContain("worker cause:");
+   expect(refusal.fields.message).toBe("Error: Slice worker exited with code "+vector.exit);
+  }
+ }finally{await pool.close();rmSync(directory,{recursive:true,force:true});}
 });
 
 test("a restart carries the worker's own text and the English and German announcement shows it",async()=>{
@@ -58,13 +79,13 @@ test("the declared policy bounds the same-cause restarts at a small number",()=>
  expect(Number.isInteger(maximum)&&maximum>=2&&maximum<=5).toBe(true);
 });
 
-test("a real worker process that dies with a message leaves that message in its tail before its exit is reported",async()=>{
+for(const exit of [1,75])test(`a real worker process with exit ${exit} leaves its message in the drained stderr tail`,async()=>{
  const directory=mkdtempSync(join(tmpdir(),"slice-cause-")),script=join(directory,"worker.mjs");
  try{
-  writeFileSync(script,`process.stderr.write(${JSON.stringify(MISSING+"\n")});process.exit(75);`);
+  writeFileSync(script,`process.stderr.write(${JSON.stringify(MISSING+"\n")});process.exit(${exit});`);
   const worker:any=createProcessWorkerV1(script,{},{...process.env});
   const code=await new Promise<number>(done=>worker.on("exit",done));
-  expect(code).toBe(75);expect(workerCauseV1(worker.stderrTail())).toBe(MISSING);
+  expect(code).toBe(exit);expect(workerCauseV1(worker.stderrTail())).toBe(MISSING);
   await worker.terminate();
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

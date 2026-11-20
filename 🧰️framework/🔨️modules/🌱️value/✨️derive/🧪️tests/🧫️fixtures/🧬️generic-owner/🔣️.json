@@ -14,5 +14,12 @@
     "K: RetainedClone",
     "V: RetainedClone"
   ],
-  "coldDeclarationUnconstrained": true
+  "coldDeclarationUnconstrained": true,
+  "wideRetirement": {
+    "fields": 66,
+    "maximumDepth": 64,
+    "firstRelease": 10000,
+    "lastRelease": 10065,
+    "totalReleased": 662145
+  }
 }

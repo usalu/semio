@@ -74,7 +74,7 @@ async fn authored_seed_and_pins_survive_actual_pack_spr_replay() {
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     let mut turns = 0;
     while !store.close_owned_terminal_is_empty() {
-        store.close_owned_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("replay store closes through original owners");
+        store.close_owned_step_cold(semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 }).expect("replay store closes through original owners");
         turns += 1;
         assert!(turns < 100_000, "replay store retirement terminates");
     }

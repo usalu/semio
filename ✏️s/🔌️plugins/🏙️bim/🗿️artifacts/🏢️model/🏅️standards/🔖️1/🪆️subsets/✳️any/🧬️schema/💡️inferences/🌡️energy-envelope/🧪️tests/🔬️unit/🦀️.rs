@@ -79,46 +79,46 @@ fn heated(setpoint: Option<f64>) -> SpaceConditions {
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m".into(), material("Brick", 0.8));
-    snapshot.materials.insert("ins".into(), material("Insulation", 0.04));
-    snapshot.wall_types.insert("wt".into(), WallType { name: "Insulated brick".into(), layers: vec![layer("m", 0.2), layer("ins", 0.1)] });
-    snapshot.slab_types.insert("st".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m", 0.25)] });
-    snapshot.window_types.insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.05, frame_depth: 0.08, panes: 2, material: "m".into(), u_value: Some(1.0), g_value: Some(0.5), frame_fraction: Some(0.2) });
-    snapshot.sites.insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.materials.cold_insert("m".into(), material("Brick", 0.8));
+    snapshot.materials.cold_insert("ins".into(), material("Insulation", 0.04));
+    snapshot.wall_types.cold_insert("wt".into(), WallType { name: "Insulated brick".into(), layers: vec![layer("m", 0.2), layer("ins", 0.1)] });
+    snapshot.slab_types.cold_insert("st".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m", 0.25)] });
+    snapshot.window_types.cold_insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.05, frame_depth: 0.08, panes: 2, material: "m".into(), u_value: Some(1.0), g_value: Some(0.5), frame_fraction: Some(0.2) });
+    snapshot.sites.cold_insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.cold_insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     snapshot
 }
 
 fn rectangle(snapshot: &mut ModelSnapshot, storey: &str, width: f64, depth: f64) {
     let corners = [(0.0, 0.0), (width, 0.0), (width, depth), (0.0, depth)];
     for (index, name) in ["south", "east", "north", "west"].into_iter().enumerate() {
-        snapshot.walls.insert(format!("w-{name}"), wall(storey, line(corners[index], corners[(index + 1) % 4])));
+        snapshot.walls.cold_insert(format!("w-{name}"), wall(storey, line(corners[index], corners[(index + 1) % 4])));
     }
-    snapshot.slabs.insert("sl".into(), Slab { storey: storey.into(), slab_type: "st".into(), boundary: vec![corner(0.0, 0.0), corner(width, 0.0), corner(width, depth), corner(0.0, depth)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Slab".into() });
+    snapshot.slabs.cold_insert("sl".into(), Slab { storey: storey.into(), slab_type: "st".into(), boundary: vec![corner(0.0, 0.0), corner(width, 0.0), corner(width, depth), corner(0.0, depth)], holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: "Slab".into() });
 }
 
 fn window(snapshot: &mut ModelSnapshot, host: &str, offset: f64) {
-    snapshot.openings.insert("o-win".into(), Opening { host: host.into(), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
+    snapshot.openings.cold_insert("o-win".into(), Opening { host: host.into(), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
 }
 
 fn room() -> ModelSnapshot {
     let mut snapshot = base();
     rectangle(&mut snapshot, "st-0", 4.0, 3.0);
     window(&mut snapshot, "w-south", 2.0);
-    snapshot.spaces.insert("sp".into(), space("st-0", (2.0, 1.5)));
-    snapshot.space_conditions.insert("sp".into(), heated(Some(20.0)));
+    snapshot.spaces.cold_insert("sp".into(), space("st-0", (2.0, 1.5)));
+    snapshot.space_conditions.cold_insert("sp".into(), heated(Some(20.0)));
     snapshot
 }
 
 fn two_rooms(other: Option<f64>) -> ModelSnapshot {
     let mut snapshot = base();
     rectangle(&mut snapshot, "st-0", 8.0, 3.0);
-    snapshot.walls.insert("w-part".into(), wall("st-0", line((4.0, 0.0), (4.0, 3.0))));
-    snapshot.spaces.insert("sp-a".into(), space("st-0", (2.0, 1.5)));
-    snapshot.spaces.insert("sp-b".into(), space("st-0", (6.0, 1.5)));
-    snapshot.space_conditions.insert("sp-a".into(), heated(Some(20.0)));
-    snapshot.space_conditions.insert("sp-b".into(), heated(other));
+    snapshot.walls.cold_insert("w-part".into(), wall("st-0", line((4.0, 0.0), (4.0, 3.0))));
+    snapshot.spaces.cold_insert("sp-a".into(), space("st-0", (2.0, 1.5)));
+    snapshot.spaces.cold_insert("sp-b".into(), space("st-0", (6.0, 1.5)));
+    snapshot.space_conditions.cold_insert("sp-a".into(), heated(Some(20.0)));
+    snapshot.space_conditions.cold_insert("sp-b".into(), heated(other));
     snapshot
 }
 
@@ -141,7 +141,7 @@ fn surfaces<'a>(envelope: &'a EnvelopeSpace, kind: SurfaceKind) -> Vec<&'a Envel
 #[test]
 fn a_model_without_conditions_has_no_envelope() {
     let mut snapshot = room();
-    snapshot.space_conditions.clear();
+    snapshot.space_conditions.cold_clear();
     let inference = infer(&snapshot);
     assert!(inference.energy_envelopes.is_empty() && inference.energy_totals.is_empty());
 }
@@ -244,8 +244,8 @@ fn equal_set_points_make_a_partition_adiabatic_and_different_ones_a_neighbour() 
 #[test]
 fn a_zone_counts_the_partition_to_another_zone_with_the_neighbour_factor() {
     let mut snapshot = two_rooms(Some(22.0));
-    snapshot.zones.insert("z-a".into(), Zone { name: "A".into(), category: "Thermal".into(), occupancy_density: 0.0 });
-    snapshot.zones.insert("z-b".into(), Zone { name: "B".into(), category: "Thermal".into(), occupancy_density: 0.0 });
+    snapshot.zones.cold_insert("z-a".into(), Zone { name: "A".into(), category: "Thermal".into(), occupancy_density: 0.0 });
+    snapshot.zones.cold_insert("z-b".into(), Zone { name: "B".into(), category: "Thermal".into(), occupancy_density: 0.0 });
     snapshot.spaces.get_mut("sp-a").expect("space").zone = Some("z-a".into());
     snapshot.spaces.get_mut("sp-b").expect("space").zone = Some("z-b".into());
     let inference = infer(&snapshot);
@@ -258,10 +258,10 @@ fn a_zone_counts_the_partition_to_another_zone_with_the_neighbour_factor() {
 #[test]
 fn walls_below_the_datum_lie_against_the_ground() {
     let mut snapshot = base();
-    snapshot.storeys.insert("st-b".into(), Storey { building: "bldg".into(), name: "Cellar".into(), level: -1, height: 3.0, cut_height: None });
+    snapshot.storeys.cold_insert("st-b".into(), Storey { building: "bldg".into(), name: "Cellar".into(), level: -1, height: 3.0, cut_height: None });
     rectangle(&mut snapshot, "st-b", 4.0, 3.0);
-    snapshot.spaces.insert("sp".into(), space("st-b", (2.0, 1.5)));
-    snapshot.space_conditions.insert("sp".into(), heated(Some(15.0)));
+    snapshot.spaces.cold_insert("sp".into(), space("st-b", (2.0, 1.5)));
+    snapshot.space_conditions.cold_insert("sp".into(), heated(Some(15.0)));
     let envelope = infer(&snapshot).energy_envelopes["sp"].clone();
     let walls = surfaces(&envelope, SurfaceKind::Wall);
     assert_eq!(walls.len(), 4);
@@ -291,7 +291,7 @@ fn a_window_type_without_a_u_value_is_reported() {
 #[test]
 fn spaces_without_conditions_are_reported_once_when_others_state_them() {
     let mut snapshot = two_rooms(Some(20.0));
-    snapshot.space_conditions.remove("sp-b");
+    snapshot.space_conditions.cold_remove("sp-b");
     let inference = infer(&snapshot);
     let found: Vec<_> = inference.diagnostics.iter().filter(|finding| finding.code == semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::EnergyConditionsMissing).collect();
     assert_eq!(found.len(), 1);

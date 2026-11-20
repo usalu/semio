@@ -69,6 +69,24 @@ pub mod standards {
                             pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_width::inverse;
                         }
                         #[path = "."]
+                        pub mod set_shot_drawing {
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::set_shot_drawing::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::set_shot_drawing::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::set_shot_drawing::inverse;
+                        }
+                        #[path = "."]
+                        pub mod set_shot_auto_fit {
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::set_shot_auto_fit::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::set_shot_auto_fit::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_family::standards::v1::subsets::any::schema::mutations::set_shot_auto_fit::inverse;
+                        }
+                        #[path = "."]
+                        pub mod patch_shot_camera {
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::patch_shot_camera::*;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::patch_shot_camera::diff;
+                            pub use semio_s_artifact_shooting_shooting_mut_any_2::standards::v1::subsets::any::schema::mutations::patch_shot_camera::inverse;
+                        }
+                        #[path = "."]
                         pub mod change_shot_height {
                             pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_height::*;
                             pub use semio_s_artifact_shooting_shooting_mut_any::standards::v1::subsets::any::schema::mutations::change_shot_height::diff;

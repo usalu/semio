@@ -1,0 +1,11 @@
+name	currentChannel	ownerWindow	requestChannel	requestWindow	clear
+delay after other window enter	pointer	world-view	pointer	graph-view	false
+current window leaves	pointer	world-view	pointer	world-view	true
+same target in both views	pointer	flow-outline	pointer	inspector	false
+keyboard leave when pointer owns hover	pointer	world-view	keyboard	world-view	false
+programmatic clear on channel	pointer	world-view	pointer		true
+unowned current hover	pointer		pointer	world-view	true
+empty domain			pointer	world-view	true
+inspector leave after preview enter	pointer	world-view	pointer	@panel	false
+preview leave after inspector enter	pointer	@panel	pointer	world-view	false
+inspector clears its own hover	pointer	@panel	pointer	@panel	true

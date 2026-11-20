@@ -148,7 +148,13 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     let mut host = host_with_test_fixture();
     host.dag.viewport.set_automatic_lod(false);
     host.dag.viewport.set_forced_draw_lod_label("detail");
+    let wire = host.dag.graph.host_snapshot.edges.first().expect("fixture wire").id.clone();
+    host.set_hover(Some(&wire));
+    assert_eq!(host.hover_facts().edge.as_deref(), Some(wire.as_str()));
+    assert!(host.hovered_widget_id().is_none());
+    assert!(host.hover_facts().channel.is_none());
     host.set_hover_channel(Some("add"), Some("a"));
+    assert!(host.hover_facts().edge.is_none());
     let hovered=host.hover_facts().channel.unwrap();
     assert_eq!(hovered.widget_id, "add");
     assert_eq!(hovered.port, "a");

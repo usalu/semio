@@ -9,3 +9,15 @@ pub mod list_move;
 pub mod chained_plan;
 #[path="../🪢️positional-chain/🦀️.rs"]
 pub mod positional_chain;
+
+#[path="🗃️page-cache/🦀️.rs"]
+pub mod page_cache;
+
+#[path="🚚️final-list/🦀️.rs"]
+pub mod final_list;
+
+#[path="👁️borrowed-rows/🦀️.rs"]
+pub mod borrowed_rows;
+
+#[path="📦️collection/🦀️.rs"]
+pub mod collection;

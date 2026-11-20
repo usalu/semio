@@ -2,7 +2,7 @@
 
 use super::*;
 #[path="🌱️opening/🦀️.rs"]mod opening;
-pub use opening::{UiArenaOpening,UiArenaBacking};
+pub use opening::{UiArenaOpening,UiArenaBacking,release_vec_demand};
 #[path="📌️registration/🦀️.rs"]mod registration;
 pub use registration::{UiArenaRegistry,UiArenaRegistration,UiArenaBorrow,ui_value_arena_registry};
 #[path="🎟️source/🦀️.rs"]mod source;

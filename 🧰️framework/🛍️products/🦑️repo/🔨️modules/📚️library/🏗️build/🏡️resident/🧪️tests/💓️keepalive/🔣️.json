@@ -1,0 +1,40 @@
+{
+  "phase": "queued",
+  "ahead": 0,
+  "en": "Waiting for a free slot",
+  "de": "Warte auf einen freien Platz",
+  "beforeAdmission": [
+    {
+      "method": "identify",
+      "en": "identifying the workspace graph",
+      "de": "ermittelt die Identität des Workspace-Graphen"
+    },
+    {
+      "method": "contentDigest",
+      "en": "checking which inputs this plan uses",
+      "de": "prüft die Eingaben dieses Plans"
+    }
+  ],
+  "connectErrors": [
+    [
+      "ENOENT",
+      "unavailable"
+    ],
+    [
+      "ECONNREFUSED",
+      "unavailable"
+    ],
+    [
+      "ECONNRESET",
+      "unavailable"
+    ],
+    [
+      "EACCES",
+      "EACCES"
+    ],
+    [
+      "EMFILE",
+      "EMFILE"
+    ]
+  ]
+}

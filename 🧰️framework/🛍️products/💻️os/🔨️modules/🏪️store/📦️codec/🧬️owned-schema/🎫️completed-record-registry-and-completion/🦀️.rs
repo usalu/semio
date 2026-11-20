@@ -1,6 +1,7 @@
 //! 🎫️ Completed record registry and completion: the completed record ticket, fault, target and owner, the registry state and registry and the decode completion. See [`super`].
 
 use super::*;
+use semio_framework_value::retirement::controlled::RetainedOwnerGate;
 
 pub const ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY: usize = 64;
 
@@ -176,14 +177,14 @@ impl<P, Mutation> Drop for ArtifactEnvelopeCompletedRecordRegistryState<P, Mutat
 
 /// 🗄️ Fixed app-owned completed-record registry; result publication never puts a deep envelope on a job stack.
 pub struct ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
-    pub state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+    pub state: RetainedOwnerGate<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
 }
 
 impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
     /// 🧾️ Quotes the exact final shared issuer and fixed empty backing; outstanding aliases keep custody unchanged.
     pub fn empty_release_demands(owner:&Arc<Self>)->Result<Option<semio_framework_value::RetirementDemand>,ValueError>{
         if Arc::strong_count(owner)!=1 || Arc::weak_count(owner)!=0{return Ok(None)}
-        let state=match owner.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original envelope issuer mutex is poisoned"))};
+        let Ok(state) = owner.state.try_lock() else { return Ok(None) };
         if state.live != 0 || state.occupied != 0 || state.closing != 0 || state.free_len != ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY{return Ok(None)}
         let backing=state.slots.len()*std::mem::size_of::<ArtifactEnvelopeCompletedRecordSlot<P,Mutation>>();
         Ok(Some(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()+backing+2*std::mem::size_of::<Option<Arc<Self>>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Self>()+backing,depth:2,..Default::default()}))
@@ -206,7 +207,7 @@ impl<P, Mutation> ArtifactEnvelopeCompletedRecordRegistry<P, Mutation> {
         for (index, slot) in free.iter_mut().enumerate() {
             *slot = index as u16;
         }
-        Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+        Arc::new(Self { state: RetainedOwnerGate::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
     }
 
     pub fn try_admit(&self, owner: Box<dyn ArtifactEnvelopeCompletedRecord<P, Mutation>>) -> Result<ArtifactEnvelopeCompletedRecordTicket, (ArtifactEnvelopeCompletedRecordFault, Box<dyn ArtifactEnvelopeCompletedRecord<P, Mutation>>)> {

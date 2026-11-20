@@ -5,7 +5,8 @@
     "activeUtilityId": "pan",
     "activeUtilityByWindowId": {
       "left": "pan",
-      "right": "measure"
+      "right": "measure",
+      "third": null
     },
     "locale": "de",
     "terminology": "native",
@@ -83,6 +84,7 @@
     { "windowId": "graph", "currentWindowId": null, "activeUtilityId": "measure" },
     { "windowId": "graph", "currentWindowId": null, "focusedWindowId": null, "activeUtilityId": null },
     { "windowId": "graph", "currentWindowId": null, "focusedWindowId": "missing", "activeUtilityId": null },
+    { "windowId": "left", "utilities": { "left": null }, "activeUtilityId": null },
     { "windowId": "left", "utilities": { "left": "" }, "activeUtilityId": null },
     { "windowId": "left", "utilities": { "left": "measure" }, "activeUtilityId": "measure" },
     { "windowId": "graph", "currentWindowId": null, "focusedWindowId": null, "windows": [{ "id": "right", "windowKindId": "graph" }], "activeUtilityId": "measure" },

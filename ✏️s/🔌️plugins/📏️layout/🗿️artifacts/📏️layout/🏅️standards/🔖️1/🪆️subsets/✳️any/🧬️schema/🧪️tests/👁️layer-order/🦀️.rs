@@ -18,3 +18,15 @@ fn resolved_frames_follow_portable_layer_order_and_keep_overrides() {
         }
     }
 }
+
+#[test]
+fn bounded_resolution_keeps_original_indices_and_applies_parent_overrides_before_selection() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/👁️layer-order/🔣️.json")).unwrap();
+    let case = &corpus["cases"][0];
+    let document: LayoutSnapshot = semio_framework_pack_json::from_json_str(&case["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let selection = &case["boundedResolution"];
+    let minimum = selection["minimumX"].as_f64().unwrap();
+    let rows = resolve_page_where(&document, &document.pages[0], |_, bounds| bounds.x >= minimum);
+    let projected: Vec<_> = rows.iter().map(|row| (row.frame.id(), row.frame_index)).collect();
+    assert_eq!(serde_json::to_value(projected).unwrap(), selection["rows"]);
+}

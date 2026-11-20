@@ -239,11 +239,12 @@ fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select(
     view.active_utility_id = Some(grid::UTILITY_MASK.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_MASK);
     view.focused_window_id = Some("focused".into());
-    view.active_utility_by_window_id.cold_insert("focused".into(), grid::UTILITY_PIN.into());
+    view.active_utility_by_window_id.insert("focused".into(), Some(grid::UTILITY_PIN.into()));
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_PIN);
     view.window_id = Some("rendered".into());
-    view.active_utility_by_window_id.cold_insert("rendered".into(), grid::UTILITY_SELECT.into());
+    view.active_utility_by_window_id.insert("rendered".into(), Some(grid::UTILITY_SELECT.into()));
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_SELECT);
+    std::mem::take(&mut view.active_utility_by_window_id).retire_cold();
 }
 
 #[test]
@@ -344,7 +345,7 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_grid2d_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::grid2d::Grid2dEditor, || semio_plugin::App { definition: crate::editor::grid2d::create_grid2d_editor(), examples: Vec::new() }, "../../🪆️subsets/✳️any");
 /// 🎬️ The shared picker contract loads the boot document when its selection is cleared.
 #[test]
 fn the_example_picker_obeys_the_language_neutral_selection_contract() {
@@ -409,6 +410,8 @@ fn the_action_forms_obey_the_language_neutral_argument_contract() {
 #[semio_framework_async_macros::async_test]
 async fn mounted_preview_uses_render_authority_for_live_source_binding() {
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
+    use semio_plugin::artifact_app_laws::{FixtureUiArena, project_and_retire_fixture_tree};
+    let _arena = FixtureUiArena::admit();
     let snapshot = crate::examples::grid2d::pipes::document();
     let history = semio_plugin::HistoryView::empty();
     let context = semio_plugin::AppRenderOperationContext {
@@ -421,7 +424,7 @@ async fn mounted_preview_uses_render_authority_for_live_source_binding() {
     let payload = fill_tool::Grid2dFillPayload { assignments: vec![fill_tool::Grid2dFillCell { x: 0, y: 0, tile_id: Some(snapshot.tiles[0].id.clone()) }], ..Default::default() };
     let make_run = || {
         let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), ToolRunState::Running);
-        run.payload = Some(payload.encode().into());
+        run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(payload.encode()));
         run
     };
     let no_config = NoConfig::default();
@@ -430,12 +433,15 @@ async fn mounted_preview_uses_render_authority_for_live_source_binding() {
     let doc = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, context, "grid2d", None).await;
     assert!(doc.operation_optional().is_none());
     let empty = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &doc, &config, &view).expect("empty");
-    let fresh = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &doc.with_tool_run(Some(make_run())), &config, &view).expect("fresh");
-    let empty = serde_json::to_value(&empty.root).expect("empty tree");
-    assert_ne!(serde_json::to_value(&fresh.root).expect("fresh tree"), empty);
-    let changed = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [1; 32], ..context }, "grid2d", None).await.with_tool_run(Some(make_run()));
+    let mut fresh_doc = doc.with_tool_run(Some(make_run()));
+    let fresh = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &fresh_doc, &config, &view).expect("fresh");
+    retire_run(fresh_doc.take_tool_run().expect("the bound run"));
+    let empty = project_and_retire_fixture_tree(empty).expect("empty tree");
+    assert_ne!(project_and_retire_fixture_tree(fresh).expect("fresh tree"), empty);
+    let mut changed = ArtifactView::with_render_context(&snapshot, &history, semio_plugin::ChildContentView::EMPTY, semio_plugin::AppRenderOperationContext { canonical_base_revision: [1; 32], ..context }, "grid2d", None).await.with_tool_run(Some(make_run()));
     let stale = <Grid2dEditor as ArtifactEditor>::render(preview::BODY_KEY, &changed, &config, &view).expect("stale");
-    assert_eq!(serde_json::to_value(&stale.root).expect("stale tree"), empty);
+    assert_eq!(project_and_retire_fixture_tree(stale).expect("stale tree"), empty);
+    retire_run(changed.take_tool_run().expect("the stale run"));
 }
 
 #[test]
@@ -484,5 +490,19 @@ fn completed_cache_callbacks_publish_only_for_current_command_authority() {
         let emitted = Grid2dEditor::dispatch(&command, &doc, &cfg, Some(&view)).expect("completion");
         assert_eq!(emitted.window_config_mutations.len(), usize::from(case["visible"].as_bool().unwrap()), "{}", case["id"]);
         assert!(emitted.artifact_mutations.is_empty());
+    }
+}
+
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
+        }
     }
 }

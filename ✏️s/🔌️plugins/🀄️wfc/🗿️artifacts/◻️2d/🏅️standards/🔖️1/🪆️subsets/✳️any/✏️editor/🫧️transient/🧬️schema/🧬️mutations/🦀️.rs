@@ -14,6 +14,7 @@ pub enum Wfc2dTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
 }
+dsl::original_pack_value_operation_receiving!(Wfc2dTransientMutation);
 
 
 
@@ -30,6 +31,7 @@ pub struct Wfc2dTransientDiff {
 }
 
 protocol::retained_row_patch!(pub retained_fields for Wfc2dTransientDiff => Wfc2dTransient { assignments: Vec<Wfc2dAssignment>, contradiction: bool, source_revision: Vec<u8> });
+protocol::retained_empty_option_patch!(Wfc2dTransientDiff { assignments, contradiction, source_revision });
 protocol::retained_patch_diff!(Wfc2dTransientDiff => Wfc2dTransient);
 
 impl protocol::DiffAlgebra<Wfc2dTransient> for Wfc2dTransientDiff {

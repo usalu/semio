@@ -47,6 +47,13 @@ impl From<semio_framework_3d_brep_engine::BrepError> for BrepModuleError {
     }
 }
 
+impl From<semio_framework_3d_brep_engine::GlbBridgeError> for BrepModuleError {
+    fn from(error: semio_framework_3d_brep_engine::GlbBridgeError) -> Self {
+        use semio_framework_3d_brep_engine::GlbBridgeError::{Codec, Kernel};
+        match error { Kernel(error) => Self::Kernel(error), Codec(detail) => Self::Mesh(detail) }
+    }
+}
+
 impl From<EvalError> for BrepModuleError {
     fn from(error: EvalError) -> Self {
         Self::Codec(error)

@@ -202,7 +202,7 @@ pub async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect,
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => {
             let args = match inner.params.args { Some(bytes) => decode_dsl(&bytes).await, None => None };
-            Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: inner.params.import_action, multiple: inner.params.multiple, args }
+            Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: inner.params.import_action, multiple: inner.params.multiple, args, max_file_bytes: inner.params.max_file_bytes }
         },
         E::RequestMediaFrames(inner) => {
             let args = match inner.params.args {

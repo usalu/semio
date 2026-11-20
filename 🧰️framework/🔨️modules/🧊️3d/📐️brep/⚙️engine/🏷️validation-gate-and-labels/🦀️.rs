@@ -19,14 +19,14 @@ impl Brep {
     /// shape reaches is somebody else's problem; an issue whose label this rule cannot read at all
     /// still blocks, because an unreadable diagnostic is not evidence of health.
     pub fn validate_gate_sync(&self, shape: &GeometryHandle) -> Result<(), Vec<ValidationIssue>> {
-        let Ok(entity) = self.entity(shape) else {
+        let Ok(entity) = self.native.entity(shape) else {
             return Err(vec![ValidationIssue { entity: shape.as_str().to_string(), code: "unknown-handle", message: format!("handle {} is not live in this kernel", shape.as_str()) }]);
         };
-        if !matches!(entity, Entity::Solid(_) | Entity::Shell(_) | Entity::Compound(_, _)) {
+        if !matches!(entity, Entity::Solid(_, _) | Entity::Shell(_) | Entity::Compound(_, _)) {
             return Ok(());
         }
-        let reach = self.body.reachable_from(&entity_roots(entity));
-        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-") && !(matches!(entity,Entity::Shell(_)) && issue.code=="shell-not-closed")).filter(|issue| issue_reaches(&reach, &issue.entity)).collect();
+        let reach = self.native.body.reachable_from(&entity_roots(entity));
+        let blocking: Vec<ValidationIssue> = validate_body(&self.native.body).into_iter().filter(|issue| !issue.code.starts_with("warning-") && !(matches!(entity,Entity::Shell(_)) && issue.code=="shell-not-closed")).filter(|issue| issue_reaches(&reach, &issue.entity)).collect();
         if blocking.is_empty() {
             Ok(())
         } else {
@@ -38,57 +38,63 @@ impl Brep {
     /// runs the arena GC (see [`Brep::compact_unreachable`]) — dispose is not merely a registry
     /// removal, it is the operation that actually frees the topology.
     pub fn dispose_sync(&mut self, shape: &GeometryHandle) -> usize {
-        let removed = self.live.remove(shape.as_str()).is_some();
-        if removed{self.advance_live_revision();}
+        let removed = self.native.live.remove(shape.as_str()).is_some();
+        if removed{self.native.advance_live_revision();}
         if removed {
-            self.compact_unreachable();
+            self.native.compact_unreachable();
         }
         usize::from(removed)
     }
     /// 🏷️ The [`PersistentLabel`] `handle` currently resolves to, or `None` for an unknown handle.
     pub fn label_of(&self, handle: &GeometryHandle) -> Option<PersistentLabel> {
-        self.live.get(handle.as_str()).and_then(|e| label_of_entity(&self.body, e))
+        self.native.live.get(handle.as_str()).and_then(|e| label_of_entity(&self.native.body, e))
     }
+    /// 🔢️ Reads a persistent label without copying its live handle.
+    pub fn original_geometry_label(&self, handle: &str) -> Result<u64, semio_framework_value::ValueError> {
+        label_of_entity(&self.native.body, self.native.original_query_entity(handle)?).map(|label| label.0)
+            .ok_or_else(|| semio_framework_value::ValueError::invariant("live geometry is missing its label"))
+    }
+
     /// 🏷️ The handle for `label`, searching every arena store in turn — `None` if no live entity
     /// carries that label. Re-mints (deterministically, see [`Brep::mint`]) rather than requiring
     /// the caller to have kept the original handle string around.
     pub fn handle_for_label(&mut self, label: PersistentLabel) -> Option<GeometryHandle> {
-        let vertex = self.body.vertices.iter().find(|(_, v)| v.label == label).map(|(id, _)| id);
+        let vertex = self.native.body.vertices.iter().find(|(_, v)| v.label == label).map(|(id, _)| id);
         if let Some(id) = vertex {
-            return Some(self.mint(GeometryKind::Vertex, Entity::Vertex(id)));
+            return Some(self.native.mint(GeometryKind::Vertex, Entity::Vertex(id)));
         }
-        let edge = self.body.edges.iter().find(|(_, e)| e.label == label).map(|(id, _)| id);
+        let edge = self.native.body.edges.iter().find(|(_, e)| e.label == label).map(|(id, _)| id);
         if let Some(id) = edge {
-            return Some(self.mint(GeometryKind::Edge, Entity::Edge(id)));
+            return Some(self.native.mint(GeometryKind::Edge, Entity::Edge(id)));
         }
-        let face = self.body.faces.iter().find(|(_, f)| f.label == label).map(|(id, _)| id);
+        let face = self.native.body.faces.iter().find(|(_, f)| f.label == label).map(|(id, _)| id);
         if let Some(id) = face {
-            return Some(self.mint(GeometryKind::Face, Entity::Face(id)));
+            return Some(self.native.mint(GeometryKind::Face, Entity::Face(id)));
         }
-        let shell = self.body.shells.iter().find(|(_, s)| s.label == label).map(|(id, _)| id);
+        let shell = self.native.body.shells.iter().find(|(_, s)| s.label == label).map(|(id, _)| id);
         if let Some(id) = shell {
-            return Some(self.mint(GeometryKind::Shell, Entity::Shell(id)));
+            return Some(self.native.mint(GeometryKind::Shell, Entity::Shell(id)));
         }
-        let solid = self.body.solids.iter().find(|(_, s)| s.label == label).map(|(id, _)| id);
+        let solid = self.native.body.solids.iter().find(|(_, s)| s.label == label).map(|(id, _)| id);
         if let Some(id) = solid {
-            return Some(self.mint(GeometryKind::Solid, Entity::Solid(id)));
+            return Some(self.native.mint(GeometryKind::Solid, Entity::Solid(id, None)));
         }
         None
     }
     pub fn solid_shells_sync(&mut self, shape: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
-        let solid = self.solid_id(shape)?;
-        Ok(self.body.solid_shells(solid).into_iter().map(|s| self.register_shell(s)).collect())
+        let solid = self.native.solid_id(shape)?;
+        Ok(self.native.body.solid_shells(solid).into_iter().map(|s| self.native.register_shell(s)).collect())
     }
     pub fn compound_sync(&mut self, solids: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         let mut ids = Vec::with_capacity(solids.len());
         for s in solids {
-            ids.push(self.solid_id(s)?);
+            ids.push(self.native.solid_id(s)?);
         }
-        Ok(self.register_compound(ids))
+        Ok(self.native.register_compound(ids))
     }
     pub fn explode_sync(&mut self, compound: &GeometryHandle) -> Result<Vec<GeometryHandle>, BrepError> {
-        match self.entity(compound)?.clone() {
-            Entity::Compound(solids, _) => Ok(solids.into_iter().map(|s| self.register_solid(s)).collect()),
+        match self.native.entity(compound)?.clone() {
+            Entity::Compound(solids, _) => Ok(solids.into_iter().map(|s| self.native.register_solid(s)).collect()),
             _ => Err(BrepError::InvalidInput(format!("{} is not a compound", compound.as_str()))),
         }
     }

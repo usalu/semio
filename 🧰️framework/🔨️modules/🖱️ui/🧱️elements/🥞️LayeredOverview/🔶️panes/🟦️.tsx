@@ -1,4 +1,5 @@
 /** 🔶️ The panes phase of LayeredOverview. */
+import { writeTransform } from "../🔼️pan-promotion/🟦️.ts";
 import * as React from "react";
 import { cellOffset, followStep, glideOffset, layeredClearedId, resolveLifecycle, restingCell, settleOffset, stripGrid, stripTransform, veilClip, windowAround, type LayeredGrid, type LayeredLanding, type LayeredRevealSource, type LayeredOffset, type LayeredWindow } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import type { LayeredOverviewProps } from "../📋️types/🟦️.ts";
@@ -68,8 +69,8 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
     offsetRef.current = offset;
     const { grid: strip, cells: placed, radius: reach, paneAt: at } = latest.current;
     const transform = stripTransform(offset, strip);
-    if (stripRef.current) stripRef.current.style.transform = transform;
-    if (cardStripRef.current) cardStripRef.current.style.transform = transform;
+    if (stripRef.current) writeTransform(stripRef.current, transform);
+    if (cardStripRef.current) writeTransform(cardStripRef.current, transform);
     if (veilRef.current) applyVeil(veilRef.current, veilClip(placed[layeredClearedId(revealedRef.current, pressedRef.current) ?? ""] ?? null, offset));
     const next = windowAround(offset, reach);
     if (!sameWindow(next, windowRef.current)) {

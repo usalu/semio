@@ -1,5 +1,5 @@
 use semio_framework_test_fixtures::repo_text;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use protocol::{ColdMutation, Mutation};
@@ -77,7 +77,7 @@ fn element_field_intent_wire_refuses_unknown_outer_fields() {
 /// 📨️ Sparse wire fields retain absence, authored empty collections and controlled decode ownership.
 #[test]
 fn sparse_patch_codec_preserves_authored_presence(){
-    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementPatch;
+    use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dElementPatch;
     use semio_framework_value::FromValue;
     use semio_framework_value::ToValue;
     let patch=semio_framework_pack_json::from_json_str::<Fem3dElementPatch>(r#"{"start":"n3"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sparse patch");

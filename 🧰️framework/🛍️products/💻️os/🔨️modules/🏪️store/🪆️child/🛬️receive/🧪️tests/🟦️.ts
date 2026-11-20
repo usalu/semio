@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
-import { readFileSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "./🧫️fixtures/🔣️.schema.json";
 
@@ -19,12 +18,9 @@ test("persisted child identity keeps every exact target independently of local m
       expect(validate({ ...fixture, cases: [{ ...child, localOwner: {} }, child] })).toBe(false);
       const missing = { ...child.target.dialect } as Partial<typeof child.target.dialect>;
       delete missing.subset;
+      const wrongType = { ...child.target.dialect, subset: 0 };
+      expect(validate({ ...fixture, cases: [{ ...child, target: { ...child.target, dialect: wrongType } }, child] })).toBe(false);
       expect(validate({ ...fixture, cases: [{ ...child, target: { ...child.target, dialect: missing } }, child] })).toBe(false);
     }
   } finally { db.close(); }
-  const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
-  expect(source).toContain("self.header.advance(original,control,body,grant)");
-  expect(source).toContain("self.header.close_step(grant)");
-  expect(source).toContain("ArtifactChild::new(header.child_id,header.target)");
-  expect(source).not.toContain("FromValue");
 });

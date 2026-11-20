@@ -1,0 +1,28 @@
+{
+  "role": "build:producer-revision-law:v1:",
+  "initial": "initial parser revision",
+  "replacement": "replacement parser revision",
+  "cases": [
+    {
+      "kind": "same-role alias",
+      "provider": "alias",
+      "expected": true
+    },
+    {
+      "kind": "portable same-role owner",
+      "provider": "⟦analysis-owner⟧",
+      "expected": true
+    },
+    {
+      "kind": "unregistered named lookalike",
+      "provider": "not-an-owner-hash",
+      "expected": false
+    },
+    {
+      "kind": "exact provider replaced while old alias remains",
+      "provider": "exact",
+      "replace": true,
+      "expected": false
+    }
+  ]
+}

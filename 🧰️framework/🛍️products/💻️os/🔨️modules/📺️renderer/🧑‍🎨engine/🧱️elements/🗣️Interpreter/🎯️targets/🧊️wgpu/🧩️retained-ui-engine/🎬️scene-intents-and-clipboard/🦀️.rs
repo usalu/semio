@@ -12,6 +12,7 @@ pub const SCENE_INTENT_ID_BYTES: usize = 256;
 /// state (`marqueeModeFromModifiers`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:900`).
 #[derive(Clone, Copy)]
 pub enum SceneIntentEvent {
+    PointerLeave,
     PointerDown { x: f32, y: f32, button: i16, modifiers: semio_ui_wgpu_events::EventModifiers },
     PointerUp { x: f32, y: f32, button: i16, modifiers: semio_ui_wgpu_events::EventModifiers },
     PointerMove { x: f32, y: f32, modifiers: semio_ui_wgpu_events::EventModifiers },
@@ -220,10 +221,10 @@ struct MountedClipboardIo {
 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-struct MountedClipboardSlot { generation:u64,mounted:Option<MountedClipboardIo> }
+struct MountedClipboardSlot { generation:u64,mounted:Option<MountedClipboardIo>,pending_source:Option<semio_framework_job::OriginalCallerSourceLoan> }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-static MOUNTED_CLIPBOARD_IO:WorkerCell<[MountedClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|MountedClipboardSlot{generation:0,mounted:None}));
+static MOUNTED_CLIPBOARD_IO:WorkerCell<[MountedClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|MountedClipboardSlot{generation:0,mounted:None,pending_source:None}));
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 fn clipboard_refusal(message:&'static str)->semio_framework_job::OriginalTurnFailure {semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message).into()}
@@ -240,9 +241,10 @@ pub fn validate_clipboard_source(source:semio_ui_wgpu_input::ClipboardIntentSour
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 pub fn submit_clipboard_io(source:&mut Option<semio_ui_wgpu_input::OriginalClipboardIntent>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let Some(intent)=source.as_ref()else{return Ok(true)};validate_clipboard_source(intent.source,cx)?;
-    MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.is_none()&&slot.generation<u64::MAX)else{return Ok(false)};
+    MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.is_none()&&slot.pending_source.is_none()&&slot.generation<u64::MAX)else{return Ok(false)};
         let grant=cx.retained_grant();let bytes=std::mem::size_of::<MountedClipboardIo>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)};
-        let parent=cx.original_source_parent()?;let Some(original)=parent.admit_loan(cx)?else{return Ok(false)};
+        if !cx.original_source_parent()?.admit_loan(&mut slot.pending_source,cx)?{return Ok(false)}
+        let original=slot.pending_source.take().expect("admitted original clipboard source");
         let intent=source.take().expect("admitted original clipboard intent");let invocation:ClipboardInvocationInput=ClipboardInvocationInput{original,source:intent.source,recipient:intent.recipient,slot:index as u8,generation:slot.generation+1};
         let initializer=match intent.text{Some(text)=>semio_ui_wgpu_hosting::host::ClipboardIoJobInitializer::write(text),None=>semio_ui_wgpu_hosting::host::ClipboardIoJobInitializer::read()};
         slot.generation=invocation.generation;slot.mounted=Some(MountedClipboardIo{invocation,initializer,params:None,parameter_cancel:None,preparation:None,session:None,outcome:None,copied:None,delivered:false,closing:false});
@@ -264,7 +266,14 @@ pub fn deliver_clipboard_recipient(recipient:&semio_ui_wgpu_input::ClipboardInte
 pub fn pump_clipboard_io_one(input:&mut semio_ui_wgpu_input::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>,cleanup:bool)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     use semio_framework_job::{InteractiveJob};
 use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_worker_authority::{WorkerJobInitializer};
-    MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.as_ref().is_some_and(|owner|owner.invocation.source.operation==cx.operation()&&owner.invocation.source.generation==cx.generation()))else{return Ok(false)};
+    MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();
+        if let Some(slot)=slots.iter_mut().find(|slot|slot.pending_source.as_ref().is_some_and(|loan|loan.validate_retirement_context(cx).is_ok())){
+            let loan=slot.pending_source.as_mut().expect("retained clipboard source");
+            loan.close_step(cx.original_source_parent()?,cx)?;
+            if loan.terminal_is_empty(){slot.pending_source=None;}
+            return Ok(true)
+        }
+        let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.as_ref().is_some_and(|owner|owner.invocation.source.operation==cx.operation()&&owner.invocation.source.generation==cx.generation()))else{return Ok(false)};
         let owner=slot.mounted.as_mut().unwrap();validate_clipboard_source(owner.invocation.source,cx)?;if owner.invocation.slot as usize!=index||owner.invocation.generation!=slot.generation{return Err(clipboard_refusal("clipboard recipient generation changed before original acknowledgement"))}if !owner.invocation.original.terminal_is_empty(){owner.invocation.original.validate_context(cx)?;}
         if cx.should_yield(){return Ok(true)}if cleanup||cx.is_cancelled(){owner.closing=true;}
         if owner.closing {

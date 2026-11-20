@@ -60,16 +60,20 @@ test("the claim by path equals the independent Python model on seeded corpora (o
 },180000);
 
 test("shaping many owners that share one long block inserts into sets once per row, not once per owner and row",()=>{
- const {owners,sharedRows,foundRows,maximumInsertionsPerRow}=fixture.memory,shared:Row[]=Array.from({length:sharedRows},(_,i)=>({kind:"exists",path:"/w/lib/f"+i,fact:"v"+(i%7)}));
+ const {owners,sharedRows,foundRows,maximumInsertionsPerRow,maximumListPasses}=fixture.memory,shared:Row[]=Array.from({length:sharedRows},(_,i)=>({kind:"exists",path:"/w/lib/f"+i,fact:"v"+(i%7)}));
  const capture:Row[]=[...shared],part={owners:[] as unknown[],edgeOnly:[],edges:[],rows:capture,env:{digest:"x",rows:[]},externalNodes:{},parseUnavailable:[],replaceTags:[]};
+ let visits=0;
  for(let owner=0;owner<owners;owner++){
   const own:Row[]=Array.from({length:foundRows},(_,i)=>({kind:"file",path:"/w/p"+owner+"/f"+i,fact:"o"+owner}));
-  capture.push(...own);part.owners.push({name:"o"+owner,root:"p"+owner,node:{targets:{}},nodeRows:[...shared,...own]});
+  const rows=[...shared,...own];
+  rows[Symbol.iterator]=function*(){for(let at=0;at<rows.length;at++){visits++;yield rows[at]!;}};
+  capture.push(...own);part.owners.push({name:"o"+owner,root:"p"+owner,node:{targets:{}},nodeRows:rows});
  }
  const NativeSet=globalThis.Set;let insertions=0;
  class CountingSet<T> extends NativeSet<T>{add(value:T){insertions++;return super.add(value);}}
  let shaped;
  try{(globalThis as {Set:unknown}).Set=CountingSet;shaped=shapeComputeResultV1({workspaceRoot:"/w",part:part as never,stubs:{} as never});}finally{(globalThis as {Set:unknown}).Set=NativeSet;}
  expect(shaped.owners.length).toBe(owners);expect(shaped.owners[0]!.rows!.length).toBe(sharedRows+foundRows);
+ expect(visits,"owner visits with the final array copy").toBeLessThanOrEqual(owners*(sharedRows+foundRows)*maximumListPasses);
  expect(insertions,"set insertions while shaping "+owners+" owners of "+sharedRows+" shared rows").toBeLessThan(capture.length*maximumInsertionsPerRow);
 });

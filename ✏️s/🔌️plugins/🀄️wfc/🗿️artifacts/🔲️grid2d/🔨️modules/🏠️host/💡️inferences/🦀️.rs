@@ -63,6 +63,27 @@ pub struct Grid2dInferenceRequest {
     pub checkpoint: Option<Vec<u8>>,
 }
 
+/// 🏎️ Fuel one headless session step may spend: session admission quotes several work units per turn, so a single unit would never admit the worker, and a large budget lets one step do a whole propagation wave.
+const HEADLESS_FUEL_PER_STEP: u64 = 4_096;
+/// ⏱️ Wall budget of one headless step, strictly below the interactive step ceiling (8 000 µs).
+const HEADLESS_STEP_BUDGET_US: u64 = 4_000;
+
+/// 🪙️ Runs one payload close turn inside one actual original effect and charges its performed work to the job turn.
+fn close_effect<E: Into<semio_framework_job::OriginalTurnPrimary>>(
+    cx: &mut semio_framework_job::StepContext<'_>,
+    grant: semio_framework_job::RetainedCloneGrant,
+    run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneStep, E>,
+) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_job::OriginalTurnFailure> {
+    match cx.with_original_effect(grant, |_, effect| run(effect)) {
+        Ok(Some((turn, performed))) => {
+            cx.consume_work(performed);
+            semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: turn.result, work: 0 })
+        }
+        Ok(None) => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+        Err(error) => Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
+    }
+}
+
 impl Grid2dInferenceRequest {
     /// 📸️ The snapshot this request states, from whichever of its two carriers is present — the
     /// ONE resolution path every caller of this inference takes.
@@ -580,9 +601,11 @@ impl Grid2dInferenceJob {
             return if payload.terminal_is_empty() { Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }) } else { nested(payload.retirement_demands()?) };
         }
         if let Some(restore) = self.restore.as_ref() {
+            if restore.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: restore.next_close_copy_byte_demand()?, capacity_bytes: restore.next_close_capacity_byte_demand(0)?, release_bytes: restore.next_close_release_byte_demand()?, depth: restore.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(child) = self.child.as_ref() {
+            if child.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: child.next_close_copy_byte_demand()?, capacity_bytes: child.next_close_capacity_byte_demand(0)?, release_bytes: child.next_close_release_byte_demand()?, depth: child.next_close_depth_demand()?.saturating_add(1) });
         }
         if let Some(chunk) = self.output_chunk.as_ref() {
@@ -697,7 +720,8 @@ impl InteractiveJob for Grid2dInferenceJob {
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let child_grant = semio_framework_job::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
             if self.publication.is_some() {
-                return wfc::job::close_publication_step(&mut self.publication, cx);
+                let step = wfc::job::close_publication_step(&mut self.publication, cx)?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(output) = self.output.as_mut() {
                 if output.terminal_is_empty() {
@@ -705,7 +729,8 @@ impl InteractiveJob for Grid2dInferenceJob {
                     cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return cx.with_retained_loan(child_grant, |same| semio_framework_job::close_original_retained_step(same, output.retirement_demands()?, |grant| output.close_step_granted(grant)));
+                let step = close_effect(cx, child_grant, |effect| output.close_step(effect))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(payload) = self.output_payload.as_mut() {
                 if payload.terminal_is_empty() {
@@ -713,7 +738,8 @@ impl InteractiveJob for Grid2dInferenceJob {
                     cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return cx.with_retained_loan(child_grant, |same| semio_framework_job::close_original_retained_step(same, payload.retirement_demands()?, |grant| payload.close_step(grant)));
+                let step = close_effect(cx, child_grant, |effect| payload.close_step(effect))?;
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
             }
             if let Some(restore) = self.restore.as_mut() {
                 if restore.terminal_is_empty() {
@@ -721,7 +747,8 @@ impl InteractiveJob for Grid2dInferenceJob {
                     cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return cx.with_retained_loan(child_grant, |same| restore.close_step(same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
+                let step = cx.with_retained_loan(child_grant, |same| restore.close_step(same))?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(child) = self.child.as_mut() {
                 if child.terminal_is_empty() {
@@ -729,7 +756,8 @@ impl InteractiveJob for Grid2dInferenceJob {
                     cx.consume_fuel(1);
                     return Ok(InteractiveJobCloseStep::Pending { progress: one });
                 }
-                return cx.with_retained_loan(child_grant, |same| child.close_step(same)).map(|step| match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
+                let step = cx.with_retained_loan(child_grant, |same| child.close_step(same))?;
+                return Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step });
             }
             if let Some(chunk) = self.output_chunk.as_ref() {
                 let released_bytes = chunk.capacity();
@@ -835,7 +863,7 @@ pub fn solve_with_clock(snapshot: &Grid2dSnapshot, now_us: fn() -> Option<u64>) 
         job,
         operation,
         now_us,
-        wfc::job::HeadlessSite { site: "wfc.grid2d.inference.headless", label: "grid2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 2000,
+        wfc::job::HeadlessSite { site: "wfc.grid2d.inference.headless", label: "grid2d-inference-headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US,
             retained_stock: semio_framework_job::RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 },
             lifetime_fuel: 100_000_000, lifetime_budget_us: 60_000_000,
         },

@@ -16,7 +16,8 @@
     { "tag": "replace-machine-capabilities", "semantic": "replace-addressed-capability-list", "owners": ["id", "newCapabilities"] },
     { "tag": "move-stock", "semantic": "replace-finite-pose", "owners": ["newPose"] },
     { "tag": "change-stock-label", "semantic": "replace-stock-label", "owners": ["newLabel"] },
-    { "tag": "replace-stock-solid", "semantic": "replace-child-handle", "owners": ["newSolid"] }
+    { "tag": "replace-stock-solid", "semantic": "replace-child-handle", "owners": ["newSolid"] },
+    { "tag": "resize-stock", "semantic": "resize-solid", "owners": ["field"] }
   ],
   "laws": [
     "variant-tags-are-unique",

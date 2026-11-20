@@ -1,4 +1,4 @@
-/** 💽️ Contract: a stage whose declared need does not fit starts the collection of the registry (priority order, progress lines in both languages, cancellation) before it waits; it starts once the need fits; when nothing collectable remains it waits with the typed refusal that lists the largest consumers and the exact command for each; a stage that already runs is never gated; the need is derived from measured growth when the machine has it. */
+/** 💽️ Contract: a stage whose declared need does not fit starts the collection of the registry (priority order, progress lines in both languages, cancellation) before it waits; it starts once the need fits; when automatic collection did not free enough space it waits with the typed refusal that lists the largest consumers and the exact command for each; a stage that already runs is never gated; the need is derived from measured growth when the machine has it. */
 import{afterAll,expect,test}from"bun:test";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -55,9 +55,9 @@ test("2993 MB free, 4096 MB needed: the collectors run in priority order until t
  expect(w.updates.some(update=>update.refusal?.code==="disk-collecting"&&update.refusal.en.includes("4096")&&update.refusal.de.includes("4096"))).toBe(true);
 });
 
-test("nothing collectable: the stage waits with the typed refusal that lists the largest consumers and the exact command for each, in both languages, and starts when space returns",async()=>{
+test("automatic collection left the volume short: the stage waits with the typed refusal that lists the largest consumers and the exact command for each, in both languages, and starts when space returns",async()=>{
  const volume={freeMegabytes:2993},log:string[]=[];
- const w=world(volume,[writer(volume,"cas-lru",5000,0,log),writer(volume,"image-slack",12_000,0,log),writer(volume,"read-verdicts",300,0,log),writer(volume,"replica-lost",40,0,log)],{stopAfterSleeps:6,external:round=>{if(round===3)volume.freeMegabytes=4200;}});
+ const w=world(volume,[writer(volume,"cas-lru",5000,0,log),writer(volume,"image-slack",12_000,0,log,{fail:true}),writer(volume,"read-verdicts",300,0,log),writer(volume,"replica-lost",40,0,log)],{stopAfterSleeps:6,external:round=>{if(round===3)volume.freeMegabytes=4200;}});
  await runReadyV1(w.ports,w.controller.signal);
  const refusals=w.updates.map(update=>update.refusal).filter(refusal=>refusal?.code==="disk-consumers");
  expect(refusals.length).toBeGreaterThanOrEqual(2);
@@ -66,6 +66,8 @@ test("nothing collectable: the stage waits with the typed refusal that lists the
  expect(first.en.indexOf("/ws/image-slack")).toBeLessThan(first.en.indexOf("/ws/cas-lru"));
  expect(first.en).toContain(rowOf("cas-lru").command);expect(first.en).toContain("repo");
  expect(first.en).not.toBe(first.de);
+ expect(first.en).toContain("after automatic collection");expect(first.de).toContain("nach der automatischen Bereinigung");
+ expect(w.said.some(line=>line.includes("boom image-slack"))).toBe(true);
  expect(w.calls).toContain("workspace");
  expect(log.filter(id=>id==="cas-lru").length).toBeGreaterThanOrEqual(2);
 });

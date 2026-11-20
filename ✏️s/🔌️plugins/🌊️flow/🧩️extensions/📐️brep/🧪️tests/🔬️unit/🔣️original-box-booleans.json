@@ -1,0 +1,220 @@
+{
+  "a": {
+    "size": [
+      4,
+      3,
+      2
+    ],
+    "origin": [
+      1,
+      2,
+      3
+    ]
+  },
+  "b": {
+    "size": [
+      3,
+      3,
+      2
+    ],
+    "origin": [
+      3,
+      2,
+      3
+    ]
+  },
+  "cases": [
+    {
+      "operator": "brep.bool.fuse",
+      "volume": 30,
+      "minimum": [
+        1,
+        2,
+        3
+      ],
+      "maximum": [
+        6,
+        5,
+        5
+      ]
+    },
+    {
+      "operator": "brep.bool.intersect",
+      "volume": 12,
+      "minimum": [
+        3,
+        2,
+        3
+      ],
+      "maximum": [
+        5,
+        5,
+        5
+      ]
+    },
+    {
+      "operator": "brep.bool.cut",
+      "volume": 12,
+      "minimum": [
+        1,
+        2,
+        3
+      ],
+      "maximum": [
+        3,
+        5,
+        5
+      ]
+    }
+  ],
+  "cylinders": {
+    "radius": 1.5,
+    "aHeight": 4,
+    "bHeight": 3,
+    "bStart": 2,
+    "cases": [
+      {
+        "operator": "brep.bool.fuse",
+        "volume": 35.34291735288517
+      },
+      {
+        "operator": "brep.bool.intersect",
+        "volume": 14.137166941154069
+      },
+      {
+        "operator": "brep.bool.cut",
+        "volume": 14.137166941154069
+      }
+    ]
+  },
+  "orthogonal": {
+    "a": {
+      "size": [
+        4,
+        3,
+        2
+      ],
+      "origin": [
+        1,
+        2,
+        3
+      ]
+    },
+    "b": {
+      "size": [
+        3,
+        3,
+        2
+      ],
+      "origin": [
+        3,
+        3,
+        3
+      ]
+    },
+    "cases": [
+      {
+        "operator": "brep.bool.fuse",
+        "volume": 34,
+        "minimum": [
+          1,
+          2,
+          3
+        ],
+        "maximum": [
+          6,
+          6,
+          5
+        ]
+      },
+      {
+        "operator": "brep.bool.cut",
+        "volume": 16,
+        "minimum": [
+          1,
+          2,
+          3
+        ],
+        "maximum": [
+          5,
+          5,
+          5
+        ]
+      }
+    ]
+  },
+  "acquisition": {
+    "boxFaces": 6,
+    "cylinderFaces": 3,
+    "operator": "brep.bool.cut"
+  },
+  "cavity": {
+    "a": {
+      "size": [
+        4,
+        3,
+        2
+      ],
+      "origin": [
+        1,
+        2,
+        3
+      ]
+    },
+    "b": {
+      "size": [
+        1,
+        1,
+        1
+      ],
+      "origin": [
+        2,
+        3,
+        3.5
+      ]
+    },
+    "cases": [
+      {
+        "operator": "brep.bool.cut",
+        "volume": 23,
+        "minimum": [
+          1,
+          2,
+          3
+        ],
+        "maximum": [
+          5,
+          5,
+          5
+        ],
+        "innerShells": 1
+      }
+    ]
+  },
+  "bore": {
+    "stock": {
+      "size": [
+        4,
+        3,
+        2
+      ],
+      "origin": [
+        1,
+        2,
+        3
+      ]
+    },
+    "tool": {
+      "radius": 0.6,
+      "length": 4,
+      "origin": [
+        2.25,
+        3.75,
+        2
+      ]
+    },
+    "volume": 21.738053289415348,
+    "faces": 7,
+    "holes": 2
+  }
+}

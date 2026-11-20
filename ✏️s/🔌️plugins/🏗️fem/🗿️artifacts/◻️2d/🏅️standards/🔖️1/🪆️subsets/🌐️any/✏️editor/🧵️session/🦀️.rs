@@ -150,7 +150,7 @@ impl MountedLoadBuild {
         Ok(())
     }
 
-    fn step_one(&mut self, snapshot: &Fem2dSnapshot, assembly: &AssemblyJob<'static>) -> Result<bool, Vec<u8>> {
+    fn step_one(&mut self, snapshot: &Fem2dSnapshot, assembly: &AssemblyJob<'static>, cx: &mut StepContext<'_>) -> Result<bool, Vec<u8>> {
         if snapshot.load_cases.len() > self.factors.len() || snapshot.combinations.len() > self.stack.len() { return Err(b"fem2d.source-capacity".to_vec()); }
         match self.stage {
             LoadBuildStage::Select => {
@@ -187,8 +187,8 @@ impl MountedLoadBuild {
                     }
                 } else { self.depth -= 1; }
             }
-            LoadBuildStage::AdmitFull => if self.full.admit_one(assembly.visual_full_order()).map_err(|_| b"fem2d.load-full-capacity".to_vec())? { self.stage = LoadBuildStage::AdmitFree; },
-            LoadBuildStage::AdmitFree => if self.free.admit_one(assembly.visual_free_order()).map_err(|_| b"fem2d.load-free-capacity".to_vec())? { self.stage = LoadBuildStage::ZeroFull; },
+            LoadBuildStage::AdmitFull => if self.full.admit_in(assembly.visual_full_order(), cx).map_err(|_| b"fem2d.load-full-capacity".to_vec())? { self.stage = LoadBuildStage::AdmitFree; },
+            LoadBuildStage::AdmitFree => if self.free.admit_in(assembly.visual_free_order(), cx).map_err(|_| b"fem2d.load-free-capacity".to_vec())? { self.stage = LoadBuildStage::ZeroFull; },
             LoadBuildStage::ZeroFull => if self.full.len() < assembly.visual_full_order() { self.full.push(0.0).map_err(|_| b"fem2d.load-full-owner".to_vec())?; } else { self.stage = LoadBuildStage::ZeroFree; },
             LoadBuildStage::ZeroFree => if self.free.len() < assembly.visual_free_order() { self.free.push(0.0).map_err(|_| b"fem2d.load-free-owner".to_vec())?; } else { self.stage = LoadBuildStage::Nodal; },
             LoadBuildStage::Nodal => {
@@ -248,10 +248,13 @@ impl MountedLoadBuild {
         Ok(false)
     }
 
-    fn close_step(&mut self) -> bool {
-        if !self.full.close_step() || !self.free.close_step() || !self.reactions.close_step() { return false; }
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        for lane in [&mut self.full, &mut self.free, &mut self.reactions] {
+            let step = lane.close_step(maximum_bytes);
+            if !step.0 { return step; }
+        }
         self.source = None;
-        true
+        (true, 0, 0)
     }
 }
 

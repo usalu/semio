@@ -48,11 +48,11 @@ pub fn ordered_storeys(snapshot: &ModelSnapshot, building: &str) -> Vec<String> 
     rows.into_iter().map(|(_, id)| id.clone()).collect()
 }
 
-pub fn keys<T>(map: &BTreeMap<String, T>) -> Vec<String> {
+pub fn keys<T>(map: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, T>) -> Vec<String> {
     map.keys().cloned().collect()
 }
 
-pub fn first<T>(map: &BTreeMap<String, T>) -> Option<String> {
+pub fn first<T>(map: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, T>) -> Option<String> {
     map.keys().next().cloned()
 }
 

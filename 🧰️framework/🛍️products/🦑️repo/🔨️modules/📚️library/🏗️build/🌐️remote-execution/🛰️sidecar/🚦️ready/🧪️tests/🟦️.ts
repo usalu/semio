@@ -13,7 +13,7 @@ import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,cre
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`ready-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
-const fixtureFile=join(import.meta.dir,"🧫️fixtures","🔣️.json"),schemaFile=join(import.meta.dir,"..","🧬️schema","🔣️.json");
+const fixtureFile=join(import.meta.dir,"🧫️fixtures","🔣️.json"),schemaFile=join(import.meta.dir,"..","🧬️schema","🔣️.json"),nativeSchemaFile=join(import.meta.dir,"../../../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json");
 
 test("digests, back-off, jobs, tree size and the decision equal an independent implementation on the authored fixture",()=>{
  const fixture=JSON.parse(readFileSync(fixtureFile,"utf8")) as {digests:{platform:"linux"|"macos"|"windows";files:Record<string,string>}[];backoff:{attempts:number;unit:number}[];jobs:{cores:number;availableMegabytes:number|null}[];tree:{rows:string;root:number}[];decide:{name:string;input:Parameters<typeof readyDecideV1>[0]}[];human:{name:string;input:Parameters<typeof readyHumanVerdictV1>[0]}[]};
@@ -33,7 +33,7 @@ test("digests, back-off, jobs, tree size and the decision equal an independent i
  expect(ours.digests[0]!.stages[2]!.digest).not.toBe(ours.digests[1]!.stages[2]!.digest);
  expect(ours.digests[0]!.stages[3]!.digest,"a lock file edit touches only the stage that reads it").toBe(ours.digests[1]!.stages[3]!.digest);
  expect(ours.digests[0]!.stages[4]!.digest).toBe(ours.digests[1]!.stages[4]!.digest);
- const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile],{encoding:"utf8"});
+ const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile,nativeSchemaFile],{encoding:"utf8"});
  expect(python.status).toBe(0);
  expect(JSON.parse(python.stdout)).toEqual(JSON.parse(JSON.stringify(ours)));
 });
@@ -72,6 +72,17 @@ function world(options:Readonly<{outcomes?:Outcome[];server?:boolean;human?:bool
  };
  return{ports,controller,shared,sleeps,updates,said,digest,last:()=>Object.assign({},...updates) as Partial<ReadyStatusV1>};
 }
+
+test("a pending supervisor restart publishes the current wait after a workspace timeout",async()=>{
+ const w=world({repo:true,stopAfterSleeps:1});
+ const stages=Object.fromEntries(w.digest.stages.filter(row=>row.name!=="workspace").map(row=>[row.name,{digest:row.digest,doneMs:1}]));
+ const failure={stage:"workspace",digest:w.digest.digest,attempts:1,exit:1,code:"stage-timeout" as const,atMs:10,nextAttemptMs:20,tail:[]};
+ w.shared.state={...w.shared.state,stages,failure,attempts:1};
+ await runReadyV1({...w.ports,restartPending:()=>true},w.controller.signal);
+ expect(w.shared.calls).toEqual([]);
+ expect(w.last()).toMatchObject({state:"waiting",stage:"workspace",refusal:{code:"sidecar-restarting"}});
+ expect(w.shared.state.failure).toEqual(failure);
+});
 
 test("a ready machine does nothing: no stage, no marker write, status ready",async()=>{
  const probe=world({stopAfterSleeps:1}),done=Object.fromEntries(probe.digest.stages.map(stage=>[stage.name,{digest:stage.digest,doneMs:1}]));
@@ -250,7 +261,7 @@ posix("a real stage reports a failing exit and a missing binary, never throws",a
 
 posix("a stage outlives the runner that started it: aborting the signal detaches, a new runner adopts the same process and gets its result, and the cancel file ends the whole process group",async()=>{
  const pidFile=join(temp("pids"),"pid");
- const {home}=fakeHome(`#!/bin/sh\n(sleep 30 & echo $! > ${pidFile}; wait) &\nsleep 1\necho adopted-output\nwait\n`);
+ const {home}=fakeHome(`#!/bin/sh\nif [ "$1" = run-many ]; then echo workspace-complete; exit 0; fi\n(sleep 30 & echo $! > "${pidFile}"; wait) &\nsleep 1\necho adopted-output\nwait\n`);
  const gone=(pid:number):boolean=>{try{process.kill(pid,0);return false;}catch{return true;}};
  const root=temp("root"),first=new AbortController(),lines:string[]=[];
  const run=(signal:AbortSignal,timeout?:number)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",timeout),signal,jobs:1,onLine:line=>lines.push(line)});
@@ -263,16 +274,19 @@ posix("a stage outlives the runner that started it: aborting the signal detaches
  expect(gone(sleeper),"the stage keeps running after its runner left").toBe(false);
  const record=JSON.parse(readFileSync(join(root,...P.directory,P.inflightName),"utf8")) as {stage:string;pid:number};
  expect(record.stage).toBe("tools");
- const second=run(new AbortController().signal),other=runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined});
+ const transitions:[string,boolean][]=[];
+ const second=run(new AbortController().signal),other=runReadyStageV1({home,root,environment:{},stage:stageOf("workspace"),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,onStage:(stage,adopted)=>transitions.push([stage,adopted])});
  await new Promise<void>(done=>setTimeout(done,800));
  writeFileSync(join(root,...P.directory,P.cancelName),"");
  const cancelled=await second;
  expect(cancelled.cancelled).toBe(true);expect(cancelled.detached).toBe(false);expect(cancelled.exit).not.toBe(0);
  for(let waited=0;!gone(sleeper)&&waited<3000;waited+=50)await new Promise<void>(done=>setTimeout(done,50));
- expect(gone(sleeper),"the cancel ended the whole process group").toBe(true);
+ const survivor=spawnSync("ps",["-p",String(sleeper),"-o","pid=,ppid=,pgid=,stat=,command="],{encoding:"utf8"});
+ expect(gone(sleeper),"the cancel ended the whole process group: "+survivor.stdout.trim()).toBe(true);
  expect(existsSync(join(root,...P.directory,P.inflightName))).toBe(false);
  const after=await other;
  expect(after.exit).toBe(0);
+ expect(transitions).toEqual([["tools",true],["workspace",false]]);
 });
 
 posix("a silent stage that spends processor time is alive and is not stopped as stalled, a silent stage that spends none is, and the kill is recorded with its killer in both languages",async()=>{
@@ -342,6 +356,56 @@ test("readiness hashes what is provisioned, not the words: texts of the tool tab
  expect(readyInputHashV1("package.json",pkg({scripts:{a:"b"},dependencies:{x:"1"}}))).toBe(readyInputHashV1("package.json",pkg({})));
  expect(readyInputHashV1("package.json",pkg({packageManager:"bun@1.4.3"}))).not.toBe(readyInputHashV1("package.json",pkg({})));
  expect(readyInputHashV1("bun.lock","a")).not.toBe(readyInputHashV1("bun.lock","b"));
+});
+
+test("readiness invalidates only hosts that consume a changed provisioning input",()=>{
+ const fixture=JSON.parse(readFileSync(fixtureFile,"utf8")).platformInputs as {systems:NodeJS.Platform[];changes:[string,string][]};
+ const bootstrap="x/🥾️bootstrap/🧬️schema/🔣️.json",table="x/🧰️tool-setup/🔣️.json";
+ const native=(change:string)=>{
+  const assets=fixture.systems.map(platform=>JSON.stringify({tool:"node",version:platform==="linux"&&change==="linux-asset"?"2":"1",platform,arch:"arm64"}));
+  return JSON.stringify({definitions:{WindowsNodeInstallation:{const:{environment:change==="node-installation"?"NEW":"OLD"}},Pins:{const:{assets:"$rows"}}}}).replace('"$rows"',"[\n"+assets.join(",\n")+"\n]");
+ };
+ const catalog=(change:string)=>JSON.stringify({groups:{all:["node"]},tools:[{id:"node",pin:change==="common-pin"?"2":"1",locate:[...(change==="node-locator"?[{kind:"bootstrap-node"}]:[]),{kind:"path",names:["node"],...(change==="node-locator"?{windowsProgramDirectories:["nodejs"]}:{})}],setup:{kind:change==="node-locator"?"bootstrap-node":"bootstrap"}}],steps:[]});
+ const actual=fixture.changes.map(([change])=>fixture.systems.filter(platform=>[bootstrap,table].some((path,i)=>{
+  const input=i===0?native:catalog;
+  return readyInputHashV1(path,input(""),platform)!==readyInputHashV1(path,input(change),platform);
+ })));
+ const oracle=spawnSync("python3",["-c","import json,sys; f=json.loads(sys.argv[1]); print(json.dumps([[p for p in f['systems'] if target in (p,'all')] for _,target in f['changes']]))",JSON.stringify(fixture)],{encoding:"utf8"});
+ expect(oracle.status).toBe(0);expect(actual).toEqual(JSON.parse(oracle.stdout));
+ const compact=JSON.stringify(JSON.parse(native("")));
+ expect(readyInputHashV1(bootstrap,native(""),"darwin")).not.toBe(readyInputHashV1(bootstrap,compact,"darwin"));
+ expect(readyInputHashV1(bootstrap,native(""),"win32")).toBe(readyInputHashV1(bootstrap,compact,"win32"));
+});
+
+test("the Rustup launcher source is an input only of Windows native readiness",()=>{
+ const path=JSON.parse(readFileSync(nativeSchemaFile,"utf8")).definitions.RustupInstallation.const.windowsProcess;
+ for(const platform of["windows","macos","linux"] as const){
+  const digest=(revision:string)=>readyDigestsV1({platform,hash:file=>file===path?revision:"shared"}).stages.map(stage=>stage.digest);
+  const first=digest("first"),second=digest("second");
+  expect(first.map((value,index)=>value!==second[index])).toEqual(STAGES.map(stage=>platform==="windows"&&stage.name==="native"));
+ }
+});
+
+test("a different adopted stage is reported until the requested stage actually starts",async()=>{
+ const fixture=JSON.parse(readFileSync(fixtureFile,"utf8")).adoptedTransition as {requested:string;physical:string;indices:number[]};
+ const probe=world({stopAfterSleeps:1}),at=probe.digest.stages.findIndex(row=>row.name===fixture.requested);
+ const prior=Object.fromEntries(probe.digest.stages.slice(0,at).map(row=>[row.name,{digest:row.digest,doneMs:1}]));
+ const w=world({stopAfterSleeps:1,state:{...emptyReadyStateV1(),stages:prior,failure:{digest:"d".repeat(64),stage:"native",attempts:1,exit:1,code:"stage-failed",nextAttemptMs:0,atMs:1,tail:["earlier run ended"]}}});
+ const observed:{stage:string|null|undefined;index:number|undefined;reason:string|undefined}[]=[];
+ const starting:unknown[]=[];
+ const capture=()=>{const status=w.last();observed.push({stage:status.stage,index:status.stageIndex,reason:status.reason?.code});};
+ await runReadyV1({...w.ports,inflight:()=>fixture.physical,run:async(stage,options)=>{
+  starting.push({tail:w.last().tail,exit:w.last().exit});
+  capture();options.onStage?.(stage.name,false);capture();
+  w.controller.abort();return{...await w.ports.run(stage,options),detached:true};
+ }},w.controller.signal);
+ expect(starting).toEqual([{tail:[],exit:null}]);
+ const expected=[fixture.physical,fixture.requested];
+ const oracle=spawnSync("python3",["-c","import json,sys; names=json.loads(sys.argv[1]); print(json.dumps([names.index(s)+1 for s in sys.argv[2:]]))",JSON.stringify(STAGES.map(row=>row.name)),...expected],{encoding:"utf8"});
+ expect(oracle.status).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.indices);
+ expect(observed.map(row=>row.stage)).toEqual(expected);
+ expect(observed.map(row=>row.index)).toEqual(fixture.indices);
+ expect(observed.map(row=>row.reason)).toEqual(["adopted","first-run"]);
 });
 
 test("ready.json says why a stage was started: first run, inputs changed, previous failed, adopted",async()=>{
@@ -498,21 +562,38 @@ test("what a stage run reaped and what survived its stop is in ready.json in Eng
 });
 
 const BUN_LAUNCH=`const {spawn}=require("node:child_process");const c=spawn(process.execPath,[__dirname+"/grandchild.js",...process.argv.slice(2)],{detached:true,stdio:"ignore"});c.unref();`;
-const BUN_GRANDCHILD=`const fs=require("node:fs");const [folder,command,directory,session]=process.argv.slice(2);const startedAtMs=Math.round(performance.timeOrigin);const entry={version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command,directory,...session?{session}:{},...process.env.SEMIO_LEASE_OWNER?{owner:process.env.SEMIO_LEASE_OWNER}:{},holds:[{resource:"native-fixed-image:x",mode:"shared",sinceMs:Date.now(),task:1}],waits:[]};fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(folder+"/"+process.pid+"-"+startedAtMs+".json",JSON.stringify(entry));setInterval(()=>{},1000);`;
+const BUN_GRANDCHILD=`const fs=require("node:fs");const [folder,command,directory,session]=process.argv.slice(2);const startedAtMs=Math.round(performance.timeOrigin);const entry={version:1,pid:process.pid,startedAtMs,updatedAtMs:Date.now(),command,directory,...session?{session}:{},...process.env.SEMIO_LEASE_OWNER?{owner:process.env.SEMIO_LEASE_OWNER}:{},holds:[{resource:"native-fixed-image:x",mode:"shared",sinceMs:Date.now(),task:1}],waits:[]};fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(folder+"/"+process.pid+"-"+startedAtMs+".json",JSON.stringify(entry));setInterval(()=>{if(!fs.existsSync(__filename))process.exit(0);},250);setTimeout(()=>process.exit(0),125000);`;
 const toolsDirectory=(label:string):string=>{const directory=temp(label);writeFileSync(join(directory,"launch.js"),BUN_LAUNCH);writeFileSync(join(directory,"grandchild.js"),BUN_GRANDCHILD);return directory;};
 const registryEntryV1=(folder:string):{pid:number;startedAtMs:number}|undefined=>{try{return JSON.parse(readFileSync(join(folder,readdirSync(folder)[0]!),"utf8")) as {pid:number;startedAtMs:number};}catch{return undefined;}};
 const gone=async(pid:number,milliseconds:number=4000):Promise<boolean>=>{for(let waited=0;waited<milliseconds;waited+=50){try{process.kill(pid,0);}catch{return true;}await new Promise<void>(done=>setTimeout(done,50));}return false;};
+
+posix("a detached test grandchild exits when its private fixture directory closes",async()=>{
+ const tools=toolsDirectory("orphan-lifetime"),registry=temp("orphan-lifetime-registry"),started=Date.now();
+ const run=spawnSync(process.execPath,[join(tools,"launch.js"),registry,"test-child",tools],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ let child=registryEntryV1(registry);
+ while(!child&&Date.now()-started<5000){
+  await Bun.sleep(20);
+  child=registryEntryV1(registry);
+ }
+ expect(child).toBeDefined();
+ const pid=child!.pid;
+ try{
+  rmSync(tools,{recursive:true,force:true});
+  expect(await gone(pid,4000)).toBe(true);
+ }finally{try{process.kill(pid,"SIGKILL");}catch{}}
+},15000);
 
 posix("a stage that starts a detached grandchild whose parent exits is stopped without it, and the next stage start reaps it by pid and start time and says so in both languages, while a process that started in a person's working window is left alone",async()=>{
  const tools=toolsDirectory("tools"),registry=temp("registry"),root=temp("root"),command="fed0aa7c7c00cedaa8abc3ae7c9a032a8655b5ef9d0d37095feddf0e08b75442 show projects",lease=`${root}/.cache/b/l/m/data`;
  const files={orphan:join(registry,"aaaa"),agent:join(registry,"bbbb"),person:join(registry,"cccc")};
  const script=`#!/bin/sh\nsleep 0.7\n"${process.execPath}" ${tools}/launch.js ${files.orphan} "${command}" ${lease}\n"${process.execPath}" ${tools}/launch.js ${files.agent} "${command}" ${lease} claude-code:s1\nsleep 1.5\n"${process.execPath}" ${tools}/launch.js ${files.person} "${command}" ${lease}\nwhile true; do echo "Reading the project graph slice (1 s): verification 3575 of 3575."; sleep 0.3; done\n`;
- const fake=fakeHome(script);let pids:number[]=[];
+ const fake=fakeHome(script);
  try{
   const began=Date.now(),first=await runReadyStageV1({home:fake.home,root,environment:{},stage:stageOf("dependencies",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:5000}});
   const ended=Date.now();
   expect(first.stalled).toBe(true);expect(Date.now()-began).toBeLessThan(40000);
-  const found=Object.values(files).map(folder=>registryEntryV1(folder)?.pid);expect(found.every(pid=>pid!==undefined),JSON.stringify(found)).toBe(true);pids=found as number[];
+  const found=Object.values(files).map(folder=>registryEntryV1(folder)?.pid);expect(found.every(pid=>pid!==undefined),JSON.stringify(found)).toBe(true);const pids=found as number[];
   const [orphan,agent,person]=pids as [number,number,number];
   for(const pid of pids)expect(()=>process.kill(pid,0),`pid ${pid} survived the stop of its stage: it is a detached grandchild of an exited parent`).not.toThrow();
   const personEntry=registryEntryV1(files.person)!;
@@ -522,7 +603,13 @@ posix("a stage that starts a detached grandchild whose parent exits is stopped w
   expect(second.containment!.reaped.map(row=>[row.pid,row.kind]).sort()).toEqual([[orphan,"registry"],[agent,"registry"]].sort());
   const line=said.find(text=>text.includes(`Stopped orphan ${orphan}`))!;expect(line).toContain(" / Verwaisten Prozess ");
   expect(readFileSync(join(root,".cache","f","ready","tools.log"),"utf8"),"the reap is in the log of the stage").toContain(`Stopped orphan ${orphan}`);
- }finally{fake.restore();for(const pid of pids)try{process.kill(pid,"SIGKILL");}catch{}}
+ }finally{
+  for(const folder of Object.values(files)){
+   const child=registryEntryV1(folder);
+   if(child)try{process.kill(child.pid,"SIGKILL");}catch{}
+  }
+  fake.restore();
+ }
 },120000);
 
 posix("a stage that waits on a holder that is an orphan of a stopped try reaps it at once instead of waiting",async()=>{
@@ -583,4 +670,17 @@ test("a stage stopped because it had run long while its code changed starts agai
  expect(w.said.find(text=>text.includes("had run for at least"))).toContain("Stufe tools lief mindestens");
  const restarted=w.updates.filter(update=>update.state==="running"&&update.stage==="tools");
  expect(restarted[1]!.reason!.code).toBe("code-stale");expect(restarted[1]!.reason!.en).toContain("30 minutes");expect(restarted[1]!.reason!.de).toContain("30 Minuten");expect(restarted[1]!.reason!.de).toContain("neuen Code");
+});
+
+test("a stopped current attempt replaces the historical failure tail while it waits to restart",async()=>{
+ const {historical:previous,latest:current,provenance,expectedExit}=await import("./🧷️failure-log/🔣️.json",{with:{type:"json"}}).then(row=>row.default);
+ const probe=world(),stages=Object.fromEntries(probe.digest.stages.filter(stage=>stage.name!=="workspace").map(stage=>[stage.name,{digest:stage.digest,doneMs:1}]));
+ const state={...emptyReadyStateV1(),stages,attempts:1,failure:{digest:probe.digest.digest,stage:"workspace",attempts:1,exit:1,signal:null,code:"stage-failed" as const,nextAttemptMs:0,atMs:0,tail:[previous]}};
+ const mirrors=new Map<string,readonly string[]>(),failure=[provenance,current];
+ const w=world({state,outcomes:[{exit:null,tail:[current],failure,stalled:true}],stopAfterSleeps:1});
+ await runReadyV1({...w.ports,mirror:(stage,lines)=>{mirrors.set(stage,lines);}},w.controller.signal);
+ const waiting=w.updates.find(update=>update.refusal?.code==="stage-stalled");
+ expect(waiting?.tail).toEqual([current]);expect(waiting?.exit).toBe(expectedExit);
+ expect(mirrors.get("workspace-stalled")).toEqual(failure);
+ expect(w.shared.state.failure?.tail).toEqual([previous]);
 });

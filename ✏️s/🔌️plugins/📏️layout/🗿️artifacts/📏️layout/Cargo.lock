@@ -2772,6 +2772,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-axial-face-preview"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-curve"
 version = "0.1.0"
 dependencies = [
@@ -2823,6 +2835,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-spline-trim"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-surface"
 version = "0.1.0"
 dependencies = [
@@ -2836,8 +2857,10 @@ dependencies = [
 name = "semio-framework-3d-brep-tessellation"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d-brep-axial-face-preview",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-trim",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-vector",
  "semio-framework-mesh-engine",
@@ -5416,6 +5439,7 @@ dependencies = [
  "semio-framework-value-native-decoding",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-storage",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -5860,6 +5884,7 @@ dependencies = [
  "semio-framework-value-clone-source-testing",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-testing-allocator",
@@ -10482,6 +10507,7 @@ dependencies = [
  "semio-plugin-decl-tool-contract",
  "semio-plugin-ownership",
  "semio-plugin-retained-command",
+ "semio-ui-contract-values",
  "serde",
  "serde_json",
 ]
@@ -10659,6 +10685,7 @@ dependencies = [
  "semio-framework-tool-machine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-storage",
  "semio-framework-value-original-aliases",
  "semio-os-kernel",
  "semio-plugin-decl-app",
@@ -10804,9 +10831,28 @@ dependencies = [
  "semio-os-store-operation-wire",
  "semio-os-store-text-io",
  "semio-plugin-ownership",
+ "semio-plugin-window-config-contract",
  "semio-plugin-window-config-mutation",
  "semio-plugin-window-config-registry",
  "semio-plugin-window-config-replace",
+]
+
+[[package]]
+name = "semio-plugin-window-config-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retirement-queue",
+ "semio-os-kernel",
+ "semio-os-store-codec-registry",
+ "semio-os-store-operation-wire",
+ "semio-os-store-text-io",
+ "semio-plugin-ownership",
+ "semio-plugin-window-config-mutation",
 ]
 
 [[package]]
@@ -12330,10 +12376,13 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-dictionary",
+ "semio-framework-value-snapshot-projection",
  "semio-framework-value-testing-allocator",
  "semio-os-kernel",
  "semio-plugin",
@@ -12347,8 +12396,12 @@ dependencies = [
 name = "semio-s-artifact-layout-layout-diff-plan"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
+ "semio-framework-value-dictionary",
  "semio-os-kernel",
+ "semio-s-artifact-layout-layout-model",
  "serde_json",
 ]
 
@@ -12376,6 +12429,7 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-tool-machine",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-dictionary",
  "semio-framework-value-native-owned",
@@ -12391,6 +12445,7 @@ dependencies = [
  "semio-s-artifact-layout-layout-engine-export",
  "semio-s-artifact-layout-layout-engine-json",
  "semio-s-artifact-layout-layout-examples",
+ "semio-s-artifact-layout-layout-host",
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations",
  "semio-s-artifact-layout-layout-mutations-content",
@@ -12418,6 +12473,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-schema",
+ "semio-framework-test-fixtures",
  "semio-framework-tool-machine",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -12549,6 +12605,8 @@ dependencies = [
  "semio-s-artifact-layout-layout-editor-commands",
  "semio-s-artifact-layout-layout-editor-panels",
  "semio-s-artifact-layout-layout-engine",
+ "semio-s-artifact-layout-layout-examples",
+ "semio-s-artifact-layout-layout-host",
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations",
  "semio-s-artifact-layout-layout-mutations-content",
@@ -12632,6 +12690,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-schema",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -12641,6 +12700,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-editor",
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-layout-layout-engine",
+ "semio-s-artifact-layout-layout-engine-export-primitives",
  "semio-s-artifact-layout-layout-engine-json",
  "semio-s-artifact-layout-layout-io",
  "semio-s-artifact-layout-layout-model",
@@ -12648,6 +12708,23 @@ dependencies = [
  "serde_json",
  "tiny-skia",
  "ttf-parser",
+]
+
+[[package]]
+name = "semio-s-artifact-layout-layout-engine-export-primitives"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-text-font",
+ "semio-framework-job",
+ "semio-framework-pack-json",
+ "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
+ "semio-plugin",
+ "semio-s-artifact-layout-layout-engine",
+ "semio-s-artifact-layout-layout-model",
+ "serde_json",
 ]
 
 [[package]]
@@ -12660,6 +12737,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-pixels",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-dictionary",
@@ -12673,9 +12751,11 @@ dependencies = [
  "semio-s-artifact-layout-layout-engine",
  "semio-s-artifact-layout-layout-engine-export",
  "semio-s-artifact-layout-layout-engine-json",
+ "semio-s-artifact-layout-layout-io",
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations",
  "semio-s-artifact-layout-layout-mutations-frames",
+ "semio-s-artifact-stdio-pdf",
  "serde_json",
 ]
 
@@ -12685,6 +12765,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-persistent",
  "semio-s-artifact-layout-layout-engine",
  "semio-s-artifact-layout-layout-model",
@@ -12728,6 +12809,7 @@ dependencies = [
  "semio-framework-pixels",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-persistent",
  "semio-framework-value-testing-allocator",
  "semio-os-kernel",
@@ -12763,12 +12845,14 @@ dependencies = [
 name = "semio-s-artifact-layout-layout-host"
 version = "0.1.0"
 dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-pack-json",
- "semio-framework-schema",
+ "semio-framework-artifact-reference",
+ "semio-framework-composition-admission",
+ "semio-framework-job",
  "semio-framework-value",
  "semio-os-kernel",
+ "semio-s-artifact-draw-drawing-editor-store-preparation",
+ "semio-s-artifact-draw-drawing-model",
+ "semio-s-artifact-draw-drawing-mutations",
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations",
 ]
@@ -12871,6 +12955,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-testing-allocator",
  "semio-plugin",
  "semio-s-artifact-layout-layout-model",
@@ -12885,11 +12970,15 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-job-context",
+ "semio-framework-job-testing-caller",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-state",
+ "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-framework-value-derive",
  "semio-framework-value-dictionary",
  "semio-framework-value-factory",
@@ -12902,6 +12991,7 @@ dependencies = [
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations-content",
  "semio-s-artifact-layout-layout-mutations-decisions",
+ "semio-s-artifact-layout-layout-mutations-fields",
  "semio-s-artifact-layout-layout-mutations-frames",
  "semio-ui-locale",
  "serde",
@@ -13003,6 +13093,19 @@ dependencies = [
  "semio-s-artifact-layout-layout-mutations-content",
  "semio-s-artifact-layout-layout-mutations-frames",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-layout-layout-mutations-fields"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-dictionary",
+ "semio-framework-value-factory",
+ "semio-os-kernel",
+ "semio-s-artifact-layout-layout-diff",
+ "semio-s-artifact-layout-layout-model",
+ "semio-s-artifact-layout-layout-mutations-decisions",
 ]
 
 [[package]]
@@ -13112,6 +13215,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-layout-layout-host",
  "semio-s-artifact-layout-layout-model",
  "semio-s-artifact-layout-layout-mutations",
  "semio-ui-locale",
@@ -14417,6 +14521,68 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-jpg-inferences"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-operations",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-jpg-operations"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-2d",
+ "semio-framework-action-bus",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-json"
 version = "0.1.0"
 dependencies = [
@@ -14810,6 +14976,23 @@ name = "semio-s-artifact-stdio-pdf-diff-surfaces"
 version = "0.1.0"
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-editor-document"
+version = "0.1.0"
+dependencies = [
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-filters"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-fonts"
 version = "0.1.0"
 dependencies = [
@@ -14872,11 +15055,13 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-xref-stream",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -14908,6 +15093,8 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-filters",
+ "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-schema-2",
  "semio-s-artifact-stdio-pdf-snapshot-2",
@@ -14915,6 +15102,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-lexer"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]
@@ -14948,6 +15143,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-base-4",
  "semio-s-artifact-stdio-pdf-mut-family-5",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-s-artifact-stdio-pdf-xref-stream",
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
@@ -16092,6 +16288,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-page-coordinates"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-page-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-io-base64",
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-jpg-inferences",
+ "semio-s-artifact-stdio-pdf-editor-document",
+ "semio-s-artifact-stdio-pdf-fonts",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-mut-base-4",
+ "semio-s-artifact-stdio-pdf-mut-family-8",
+ "semio-s-artifact-stdio-pdf-page-coordinates",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests"
 version = "0.1.0"
 dependencies = [
@@ -16103,8 +16326,10 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pixels",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -16540,8 +16765,10 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pixels",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -16564,6 +16791,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-mut-vt",
+ "semio-s-artifact-stdio-pdf-page-editor",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -16606,6 +16834,17 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-xref-stream"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lexer",
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]
@@ -22138,6 +22377,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-ui-border-presentation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -22259,6 +22505,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
@@ -22290,6 +22537,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-paged-list",
+ "semio-ui-border-presentation",
  "semio-ui-scene-algebra",
  "semio-ui-scene-camera",
  "semio-ui-scene-mesh",
@@ -22782,6 +23030,7 @@ dependencies = [
  "semio-framework-value",
  "semio-ui-contract",
  "semio-ui-declaration",
+ "semio-ui-draw-contract",
  "semio-ui-locale",
  "semio-ui-theme",
 ]

@@ -34,7 +34,7 @@ impl Tui {
                 }
             }
         }
-                if let Some(preview) = &mut self.dock_preview { preview.window.spin = frame; }
+                if let Some(preview) = &mut self.dock_preview { for (_, _, window) in &mut preview.windows { window.spin = frame; } }
 self.animated = animated;
         if self.tooltip.is_none() && now_ms.saturating_sub(self.hover_since_ms) >= TOOLTIP_DELAY_MS {
             if let (Some(text), Some(pos)) = (self.hover_tip.clone(), self.hover_pos) {

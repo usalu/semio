@@ -1,6 +1,7 @@
 //! 🎛️ Control nodes: the retained paint steps of the button, input, select, toggle and icon select nodes. See [`super`].
 
 use super::*;
+use crate::progress_celebrate_and_widget_painters::hover_owner;
 
 /// 🔘 Paints one step of a button node: chrome, border and label.
 #[allow(clippy::too_many_arguments, reason = "one retained paint context plus the arm payload")]
@@ -17,7 +18,7 @@ pub(super) fn paint_button_node_step(
 ) -> RetainedNodePaintStep {
     match cursor.phase {
         0 => {
-            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && hover_owner(flags);
             let result = retained_fixed_output(draw, |draw| {
                 push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
@@ -71,7 +72,7 @@ pub(super) fn paint_input_node_step(
     match cursor.phase {
         0 => {
             let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, bounds, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg, if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
+                push_control_border(draw, bounds, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg, if refused { semio_ui_draw_contract::SharedBorderState::Invalid } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some((swatch, color, _)) = swatch {
                     draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
                 }
@@ -129,7 +130,7 @@ pub(super) fn paint_select_node_step(
     }
     match cursor.phase {
         0 => {
-            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && hover_owner(flags);
             let result = retained_fixed_output(draw, |draw| {
                 push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg }, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
@@ -291,13 +292,13 @@ pub(super) fn paint_toggle_node_step(
     match cursor.phase {
         0 => {
             let pressed = toggle.presence.selected;
-            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && hover_owner(flags);
             let result = retained_fixed_output(draw, |draw| {
                 if toggle.appearance == ui_contract::ToggleAppearance::Checkbox {
                     paint_checkbox(toggle, bounds, flags, theme, inline, draw);
                     return;
                 }
-                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if pressed { semio_ui_draw_contract::SharedBorderState::Active } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
+                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else if pressed { semio_ui_draw_contract::SharedBorderState::Active } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
                     push_icon(draw, icons, toggle.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
                 }

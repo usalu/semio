@@ -40,7 +40,16 @@ where
     where
         P: Sync,
     {
-        semio_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, body, grant, receiving)
+        self.advance_apply_batch_with_turn_ceiling(publication, body, grant, grant.retained_grant(), receiving)
+    }
+
+    /// 📏️ Supplies the whole issued turn for admission and the spendable remainder for effects.
+    pub fn advance_apply_batch_with_turn_ceiling(
+        &mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize,
+        grant: ArtifactStoreOneItemGrant, turn_ceiling: semio_framework_value::RetainedCloneGrant,
+        receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
+    ) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
+        semio_os_store_engine_bundle::advance_apply_batch(&mut self.parts(), publication, body, grant, turn_ceiling, receiving)
     }
 }
 

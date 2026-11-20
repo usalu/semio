@@ -188,6 +188,17 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(::semio_framework_async::poll::resolve_ready(generation2d_io()))
     }
 
+    /// 🏭️ The declared action producer prices a contributions push at its declared whole-pack ceiling and every other command at the ordinary runtime wire ceiling.
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Generation2dCommand>> {
+        Some(&semio_plugin::OriginalActionCommandBridge(
+            <Self as ArtifactEditor>::command_from_action,
+            |command| match command {
+                Generation2dCommand::SetContributions(_) => GENERATION2D_CONTRIBUTIONS_RAW_BYTES,
+                _ => semio_plugin::RUNTIME_COMMAND_WIRE_MAXIMUM,
+            },
+        ))
+    }
+
     fn command_id(command: &Generation2dCommand) -> &'static str {
         command.command_id()
     }

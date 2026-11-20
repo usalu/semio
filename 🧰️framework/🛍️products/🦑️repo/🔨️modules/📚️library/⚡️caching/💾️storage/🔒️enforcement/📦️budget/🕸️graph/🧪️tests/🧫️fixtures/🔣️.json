@@ -38,5 +38,28 @@
     "admission"
   ],
   "refusedNamespace": "../outside",
+  "snapshotPaths": [
+    {
+      "path": "C:\\semio\\.cache\\b\\g\\m\\snapshots\\d1959efcddc5610f7d6a928f81d31bb6d1959efcddc5610f7d6a928f81d31bb6.gz",
+      "extension": ".gz",
+      "nonce": "7b9a698a",
+      "digest": "d1959efcddc5610f7d6a928f81d31bb6d1959efcddc5610f7d6a928f81d31bb6",
+      "temporaryName": "d1959efcddc5610f7d6a928f81d31bb6d1959efcddc5610f7d6a928f81d31bb6~7b9a698a"
+    },
+    {
+      "path": "C:\\semio\\.cache\\b\\g\\m\\snapshots\\0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.json",
+      "extension": ".json",
+      "nonce": "0123abcd",
+      "digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "temporaryName": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef~0123abcd"
+    },
+    {
+      "path": "/workspace/.cache/b/g/m/snapshots/fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210.json",
+      "extension": ".json",
+      "nonce": "89abcdef",
+      "digest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "temporaryName": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210~89abcdef"
+    }
+  ],
   "writerManifest": "bounded-graph-fixture/Cargo.toml"
 }

@@ -5,7 +5,13 @@ use infinite_world::world::{World3dMeshAsset, World3dPrimitiveMaterial};
 use ui_scene::math::{Mat4Math, Mat4, Mesh3dField, Mesh3dLease, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneViewportMask3d, Vec3, Vec3Math};
 
 use super::scene::{validate_request, IconExportFormat};
-use super::super::{IconRenderCameraFields, IconRenderMaterialFields, IconRenderProjection, IconRenderRequestFields};
+use super::super::{icon_render_camera_pose, IconRenderCameraPose, IconRenderMaterialFields, IconRenderRequestFields};
+
+use semio_renderer_projected_linework::{
+    frustum::{clip_line, clip_polygon},
+    linework::{scalar, LineGraph},
+    visibility::{LineStep, Occluders, ProjectedLine},
+};
 
 const SVG_OUTPUT_CAPACITY: usize = 64 * 1024 * 1024;
 
@@ -22,13 +28,50 @@ pub enum Phase {
     Close,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum SvgLayer {
+    Fills,
+    HiddenLines,
+    VisibleLines,
+}
+
+impl SvgLayer {
+    fn id(self) -> &'static str {
+        match self {
+            Self::Fills => "fills",
+            Self::HiddenLines => "hidden-lines",
+            Self::VisibleLines => "visible-lines",
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct LineStyle {
+    color: [f32; 4],
+    width: f32,
+    dashed: bool,
+}
+
+impl LineStyle {
+    fn svg(self) -> String {
+        let [red, green, blue, alpha] = self.color;
+        let mut style = format!("fill:none;stroke:{};stroke-opacity:{};stroke-width:{};stroke-linecap:round;stroke-linejoin:round", css_rgb([red, green, blue]), scalar(alpha), scalar(self.width));
+        if self.dashed {
+            style.push_str(&format!(";stroke-dasharray:{} {}", scalar(4.0 * self.width), scalar(3.0 * self.width)));
+        }
+        style
+    }
+}
+
 struct SvgItem {
+    layer: SvgLayer,
     style: String,
     path: String,
 }
 
 #[derive(Clone, Copy)]
 struct SvgSortKey {
+    layer: SvgLayer,
     depth: f32,
     sequence: u64,
 }
@@ -49,7 +92,7 @@ impl PartialOrd for SvgSortKey {
 
 impl Ord for SvgSortKey {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.depth.total_cmp(&self.depth).then_with(|| self.sequence.cmp(&other.sequence))
+        self.layer.cmp(&other.layer).then_with(|| other.depth.total_cmp(&self.depth)).then_with(|| self.sequence.cmp(&other.sequence))
     }
 }
 
@@ -63,7 +106,13 @@ struct SvgScene {
     sun_color: [f32; 3],
     sun_intensity: f32,
     material_override: Option<SceneAuthoredMaterial3d>,
-    outline_color: Option<[f32; 4]>,
+    fill: bool,
+    fill_color: Option<[f32; 3]>,
+    fill_opacity: f32,
+    visible_lines: Option<LineStyle>,
+    hidden_lines: Option<LineStyle>,
+    line_easing: f32,
+    merge_lines: bool,
     primitives: Vec<World3dPrimitiveMaterial>,
 }
 
@@ -106,11 +155,15 @@ pub struct IconSvgExport {
     draw: usize,
     index: u32,
     edge: u32,
+    occluders: Occluders,
+    projected_line: Option<ProjectedLine>,
+    lines: [LineGraph; 2],
     items: BTreeMap<SvgSortKey, SvgItem>,
     item_bytes: usize,
     item_sequence: u64,
     work_completed: usize,
     work_total: usize,
+    body_layer: Option<SvgLayer>,
     body_style: Option<String>,
     output: Option<Vec<u8>>,
     fault: Option<String>,
@@ -140,16 +193,18 @@ impl IconSvgExport {
             Err(fault) => return Err(IconSvgRejected { fault: format!("icon SVG mesh bounds were unavailable: {fault:?}"), asset: Some(asset) }),
         };
         let scene = svg_scene(&validated.request, validated.dimensions, bounds, asset.appearance.primitives().to_vec());
+        let has_lines = scene.visible_lines.is_some() || scene.hidden_lines.is_some();
+        let has_geometry = scene.fill || has_lines;
         let Some(work_total) = scene
             .primitives
             .iter()
-            .try_fold(0usize, |total, primitive| total.checked_add(primitive.index_count as usize / 3))
-            .and_then(|total| total.checked_add(if scene.outline_color.is_some() { schema.edges as usize } else { 0 }))
+            .try_fold(0usize, |total, primitive| total.checked_add(if has_geometry { primitive.index_count as usize / 3 } else { 0 }))
+            .and_then(|total| total.checked_add(if has_lines { schema.edges as usize } else { 0 }))
         else {
             return Err(IconSvgRejected { fault: "icon SVG work count overflowed".into(), asset: Some(asset) });
         };
         Ok(Self {
-            phase: Phase::Faces,
+            phase: if has_geometry { Phase::Faces } else { Phase::Retire },
             scene: Some(scene),
             mesh,
             asset: Some(asset),
@@ -157,11 +212,15 @@ impl IconSvgExport {
             draw: 0,
             index: 0,
             edge: 0,
+            occluders: Occluders::new(validated.dimensions),
+            projected_line: None,
+            lines: Default::default(),
             items: BTreeMap::new(),
             item_bytes: 0,
             item_sequence: 0,
             work_completed: 0,
             work_total,
+            body_layer: None,
             body_style: None,
             output: None,
             fault: None,
@@ -197,6 +256,9 @@ impl IconSvgExport {
         (self.phase as u8, self.work_completed.min(self.work_total), self.work_total)
     }
 
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    pub(super) fn dimensions(&self) -> (u32, u32) { self.dimensions }
+
     pub fn take_svg(&mut self) -> Option<Vec<u8>> {
         (self.phase == Phase::Complete).then(|| self.output.take()).flatten()
     }
@@ -208,6 +270,16 @@ impl IconSvgExport {
 
     pub fn close_step(&mut self) -> bool {
         self.phase = Phase::Close;
+        if let Some(line) = self.projected_line.as_mut() {
+            if !line.close_step() {
+                return false;
+            }
+            self.projected_line = None;
+            return false;
+        }
+        if !self.occluders.close_step() {
+            return false;
+        }
         if let Some(asset) = self.asset.as_mut() {
             if !asset.close_step() {
                 return false;
@@ -221,7 +293,11 @@ impl IconSvgExport {
             return false;
         }
         self.output = None;
+        self.body_layer = None;
         self.body_style = None;
+        if self.lines.iter_mut().any(LineGraph::remove_one) {
+            return false;
+        }
         if self.items.pop_first().is_some() {
             return false;
         }
@@ -234,11 +310,13 @@ impl IconSvgExport {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.asset.is_none() && self.scene.is_none() && self.items.is_empty() && self.body_style.is_none() && self.output.is_none()
+        self.asset.is_none() && self.projected_line.is_none() && self.occluders.is_empty() && self.scene.is_none() && self.items.is_empty() && self.lines.iter().all(LineGraph::is_empty) && self.body_layer.is_none() && self.body_style.is_none() && self.output.is_none()
     }
 
     fn face_step(&mut self) -> Result<(), String> {
         let scene = self.scene.as_ref().ok_or("icon SVG scene was missing")?;
+        let draw_fill = scene.fill;
+        let draw_lines = scene.visible_lines.is_some() || scene.hidden_lines.is_some();
         let Some(draw) = scene.primitives.get(self.draw) else {
             self.phase = Phase::Lines;
             return Ok(());
@@ -271,23 +349,32 @@ impl IconSvgExport {
             [1.0; 4]
         };
         let diffuse = [0, 1, 2].map(|axis| material.diffuse[axis] * vertex_color[axis]);
-        let fill = lit_color(scene, diffuse, material.emissive, normal);
+        let fill = scene.fill_color.unwrap_or_else(|| lit_color(scene, diffuse, material.emissive, normal));
         let opacity = material.opacity;
         if opacity <= 0.0 {
             return Ok(());
         }
         let clip = world.map(|point| transform_clip(scene.view_proj, point));
-        let polygon = clip_near_far(&clip);
+        let polygon = clip_polygon(&clip);
         if polygon.len() < 3 {
             return Ok(());
         }
         let projected: Vec<_> = polygon.iter().map(|point| project(*point, self.dimensions)).collect();
         for index in 1..projected.len() - 1 {
             let mut triangle = [projected[0], projected[index], projected[index + 1]];
-            if !material.double_sided && !front_facing(triangle) {
-                continue;
+            if !front_facing(triangle) {
+                if !material.double_sided {
+                    continue;
+                }
+                triangle.swap(1, 2);
             }
             if !visible(triangle, self.dimensions) {
+                continue;
+            }
+            if opacity >= 1.0 && draw_lines {
+                self.occluders.insert(triangle);
+            }
+            if !draw_fill {
                 continue;
             }
             overdraw(&mut triangle, 0.5);
@@ -295,6 +382,7 @@ impl IconSvgExport {
             self.insert_item(
                 depth,
                 SvgItem {
+                    layer: SvgLayer::Fills,
                     style: format!("fill:{};fill-opacity:{}", css_rgb(fill), scalar(opacity)),
                     path: format!("M{},{}L{},{}L{},{}z", scalar(triangle[0][0]), scalar(triangle[0][1]), scalar(triangle[1][0]), scalar(triangle[1][1]), scalar(triangle[2][0]), scalar(triangle[2][1])),
                 },
@@ -305,35 +393,50 @@ impl IconSvgExport {
 
     fn line_step(&mut self) -> Result<(), String> {
         let scene = self.scene.as_ref().ok_or("icon SVG scene was missing")?;
-        let schema = self.mesh.schema().map_err(|fault| format!("icon SVG mesh schema became unavailable: {fault:?}"))?;
-        let Some(color) = scene.outline_color else {
+        let (visible_style, hidden_style) = (scene.visible_lines, scene.hidden_lines);
+        if visible_style.is_none() && hidden_style.is_none() {
             self.phase = Phase::Retire;
             return Ok(());
-        };
+        }
+        if let Some(line) = self.projected_line.as_mut() {
+            match line.next(&self.occluders) {
+                LineStep::Pending => {}
+                LineStep::Complete => {
+                    self.projected_line = None;
+                    self.work_completed = self.work_completed.saturating_add(1);
+                }
+                LineStep::Segment { points, hidden } => {
+                    let (layer, style) = if hidden { (SvgLayer::HiddenLines, hidden_style) } else { (SvgLayer::VisibleLines, visible_style) };
+                    if let Some(style) = style {
+                        self.insert_line(points, layer, style)?;
+                    }
+                }
+            }
+            return Ok(());
+        }
+        let schema = self.mesh.schema().map_err(|fault| format!("icon SVG mesh schema became unavailable: {fault:?}"))?;
         if self.edge >= schema.edges {
             self.phase = Phase::Retire;
             return Ok(());
         }
         let edge = self.mesh.edge(self.edge).map_err(|fault| format!("icon SVG edge read failed: {fault:?}"))?;
         self.edge += 1;
-        self.work_completed = self.work_completed.saturating_add(1);
         let clip = edge.map(|position| transform_clip(scene.view_proj, scene.model.transform_point_m(vec3(position))));
-        let Some(clipped) = clip_line_near_far(clip) else { return Ok(()) };
-        let points = clipped.map(|point| project(point, self.dimensions));
-        if !visible_line(points, self.dimensions) {
-            return Ok(());
+        if let Some(clipped) = clip_line(clip) {
+            let points = clipped.map(|point| project(point, self.dimensions));
+            if points[0][..2] != points[1][..2] && points.iter().flatten().all(|value| value.is_finite()) {
+                self.projected_line = Some(self.occluders.line(points));
+                return Ok(());
+            }
         }
-        self.insert_item(
-            points[0][2].max(points[1][2]),
-            SvgItem {
-                style: format!("fill:none;stroke:{};stroke-opacity:{};stroke-width:1;stroke-linecap:round", css_rgb([color[0], color[1], color[2]]), scalar(color[3])),
-                path: format!("M{},{}L{},{}", scalar(points[0][0]), scalar(points[0][1]), scalar(points[1][0]), scalar(points[1][1])),
-            },
-        )?;
+        self.work_completed = self.work_completed.saturating_add(1);
         Ok(())
     }
 
     fn retire_step(&mut self) -> Result<(), String> {
+        if !self.occluders.close_step() {
+            return Ok(());
+        }
         let Some(asset) = self.asset.as_mut() else {
             self.phase = Phase::Sort;
             return Ok(());
@@ -344,7 +447,28 @@ impl IconSvgExport {
         Ok(())
     }
 
+    fn insert_line(&mut self, points: [[f32; 3]; 2], layer: SvgLayer, style: LineStyle) -> Result<(), String> {
+        let scene = self.scene.as_ref().ok_or("icon SVG scene was missing")?;
+        if scene.merge_lines || scene.line_easing > 0.0 {
+            let index = usize::from(layer == SvgLayer::VisibleLines);
+            self.lines[index].insert(points);
+            if self.lines.iter().map(LineGraph::len).sum::<usize>() > SVG_OUTPUT_CAPACITY / 256 {
+                return Err("icon SVG line assembly exceeded its candidate budget".into());
+            }
+            return Ok(());
+        }
+        let path = format!("M{},{}L{},{}", scalar(points[0][0]), scalar(points[0][1]), scalar(points[1][0]), scalar(points[1][1]));
+        self.insert_item(0.0, SvgItem { layer, style: style.svg(), path })
+    }
+
     fn sort_step(&mut self) -> Result<(), String> {
+        let scene = self.scene.as_ref().ok_or("icon SVG scene was missing")?;
+        for (index, layer, style) in [(0, SvgLayer::HiddenLines, scene.hidden_lines), (1, SvgLayer::VisibleLines, scene.visible_lines)] {
+            if let Some(path) = self.lines[index].next(scene.merge_lines, scene.line_easing) {
+                let style = style.ok_or("icon SVG line style was missing")?.svg();
+                return self.insert_item(0.0, SvgItem { layer, style, path });
+            }
+        }
         self.phase = Phase::Header;
         Ok(())
     }
@@ -354,27 +478,22 @@ impl IconSvgExport {
         let (width, height) = self.dimensions;
         let half_width = width as f32 * 0.5;
         let half_height = height as f32 * 0.5;
-        let background = scene.clear_color.map(|color| css_rgb([color[0], color[1], color[2]]));
         let mut header = format!(
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\" width=\"{}\" height=\"{}\"",
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{} {} {} {}\" width=\"{}\" height=\"{}\">",
             scalar(-half_width), scalar(-half_height), width, height, width, height
         );
-        if scene.viewport_mask == SceneViewportMask3d::Rectangle {
-            if let Some(background) = background.as_deref() {
-                header.push_str(&format!(" style=\"background-color:{}\"", background));
-            }
-            header.push('>');
-        } else {
+        if scene.viewport_mask == SceneViewportMask3d::Ellipse {
             header.push_str(&format!(
-                "><defs><clipPath id=\"semio-icon-ellipse-clip\"><ellipse cx=\"0\" cy=\"0\" rx=\"{}\" ry=\"{}\"/></clipPath></defs><g clip-path=\"url(#semio-icon-ellipse-clip)\">",
+                "<defs><clipPath id=\"semio-icon-ellipse-clip\"><ellipse cx=\"0\" cy=\"0\" rx=\"{}\" ry=\"{}\"/></clipPath></defs><g clip-path=\"url(#semio-icon-ellipse-clip)\">",
                 scalar(half_width), scalar(half_height)
             ));
-            if let Some(background) = background.as_deref() {
-                header.push_str(&format!(
-                    "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\"/>",
-                    scalar(-half_width), scalar(-half_height), width, height, background
-                ));
-            }
+        }
+        if let Some([red, green, blue, alpha]) = scene.clear_color {
+            let opacity = if alpha < 1.0 { format!(" fill-opacity=\"{}\"", scalar(alpha)) } else { String::new() };
+            header.push_str(&format!(
+                "<g id=\"background\"><rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"{}\"{opacity}/></g>",
+                scalar(-half_width), scalar(-half_height), width, height, css_rgb([red, green, blue])
+            ));
         }
         append_output(&mut self.output, &header)?;
         self.phase = Phase::Body;
@@ -382,26 +501,40 @@ impl IconSvgExport {
     }
 
     fn body_step(&mut self) -> Result<(), String> {
-        let Some((_, item)) = self.items.first_key_value() else {
-            if let Some(style) = self.body_style.take() {
-                append_output(&mut self.output, &format!("\" style=\"{}\"/>", style))?;
-                return Ok(());
-            }
-            self.phase = Phase::Footer;
-            return Ok(());
-        };
-        if self.body_style.as_deref().is_some_and(|style| style != item.style.as_str()) {
-            let style = self.body_style.take().expect("checked SVG body style");
+        let next = self.items.first_key_value().map(|(_, item)| item);
+        let layer = next.map(|item| item.layer);
+        if self.body_style.as_deref().is_some_and(|style| {
+            self.body_layer != layer || next.is_none_or(|item| item.style != style)
+        }) {
+            let style = self.body_style.take().expect("open SVG path");
             append_output(&mut self.output, &format!("\" style=\"{}\"/>", style))?;
             return Ok(());
         }
+        if self.body_layer != layer {
+            if self.body_layer.take().is_some() {
+                append_output(&mut self.output, "</g>")?;
+                return Ok(());
+            }
+            if let Some(layer) = layer {
+                let scene = self.scene.as_ref().ok_or("icon SVG scene was missing")?;
+                let opacity = if layer == SvgLayer::Fills && scene.fill_opacity < 1.0 {
+                    format!(" opacity=\"{}\"", scalar(scene.fill_opacity))
+                } else {
+                    String::new()
+                };
+                append_output(&mut self.output, &format!("<g id=\"{}\"{opacity}>", layer.id()))?;
+                self.body_layer = Some(layer);
+            }
+        }
+        let Some((_, item)) = self.items.pop_first() else {
+            self.phase = Phase::Footer;
+            return Ok(());
+        };
         if self.body_style.is_none() {
-            self.body_style = Some(item.style.clone());
+            self.body_style = Some(item.style);
             append_output(&mut self.output, "<path d=\"")?;
         }
-        let (_, item) = self.items.pop_first().expect("checked SVG body item");
-        append_output(&mut self.output, &item.path)?;
-        Ok(())
+        append_output(&mut self.output, &item.path)
     }
 
     fn insert_item(&mut self, depth: f32, item: SvgItem) -> Result<(), String> {
@@ -413,7 +546,7 @@ impl IconSvgExport {
         let sequence = self.item_sequence;
         self.item_sequence = self.item_sequence.checked_add(1).ok_or("icon SVG painter sequence overflowed")?;
         self.item_bytes = next_bytes;
-        self.items.insert(SvgSortKey { depth, sequence }, item);
+        self.items.insert(SvgSortKey { layer: item.layer, depth, sequence }, item);
         Ok(())
     }
 
@@ -450,27 +583,39 @@ fn lit_color(scene: &SvgScene, diffuse: [f32; 3], emissive: [f32; 3], normal: Ve
 }
 
 fn svg_scene(request: &IconRenderRequestFields, dimensions: (u32, u32), bounds: ([f32; 3], [f32; 3]), primitives: Vec<World3dPrimitiveMaterial>) -> SvgScene {
-    let camera = resolved_camera(request, dimensions, bounds);
+    let camera = icon_render_camera_pose(request, Some(bounds));
     let lights = request.lights.clone().unwrap_or_default();
     let azimuth = lights.sun_azimuth.to_radians() as f32;
     let elevation = lights.sun_elevation.to_radians() as f32;
     let light_dir = [elevation.cos() * azimuth.cos(), elevation.cos() * azimuth.sin(), elevation.sin()];
     let material_override = request.material.as_ref().map(material_override);
-    let outline_color = request.material.as_ref().and_then(|material| material.stroke.as_deref()).map(str::trim).map_or_else(
-        || Some(parse_color("#000000")),
-        |stroke| if stroke.eq_ignore_ascii_case("none") || stroke.eq_ignore_ascii_case("transparent") { None } else { Some(parse_color(stroke)) },
-    );
+    let default_drawing = Default::default();
+    let drawing = request.drawing.as_ref().unwrap_or(&default_drawing);
+    let stroke = drawing.visible_color.as_deref().or_else(|| request.material.as_ref().and_then(|material| material.stroke.as_deref())).unwrap_or("#000000").trim();
+    let visible_lines = (drawing.visible_lines && !stroke.eq_ignore_ascii_case("none") && !stroke.eq_ignore_ascii_case("transparent"))
+        .then(|| LineStyle { color: parse_color(stroke), width: drawing.visible_width, dashed: false });
+    let hidden_lines = drawing.hidden_lines.then(|| LineStyle {
+        color: parse_color(drawing.hidden_color.as_deref().unwrap_or("#808080")),
+        width: drawing.hidden_width,
+        dashed: true,
+    });
     SvgScene {
         model: super::super::icon_render_model(request),
         view_proj: camera_view_projection(&camera, dimensions),
         viewport_mask: if request.shape.as_deref() == Some("ellipse") { SceneViewportMask3d::Ellipse } else { SceneViewportMask3d::Rectangle },
-        clear_color: request.background.as_deref().filter(|background| !background.eq_ignore_ascii_case("transparent") && !background.is_empty()).map(parse_color),
+        clear_color: request.background.as_deref().map(str::trim).filter(|background| drawing.background && !background.eq_ignore_ascii_case("transparent") && !background.is_empty()).map(parse_color),
         light_dir,
         ambient_color: parse_color(lights.ambient_color.as_deref().unwrap_or("#ffffff"))[..3].try_into().expect("fixed color prefix"),
         sun_color: parse_color(lights.sun_color.as_deref().unwrap_or("#ffffff"))[..3].try_into().expect("fixed color prefix"),
         sun_intensity: lights.sun_intensity as f32,
         material_override,
-        outline_color,
+        fill: drawing.fill && drawing.fill_opacity > 0.0,
+        fill_color: drawing.fill_color.as_deref().map(parse_color).map(|[r, g, b, _]| [r, g, b]),
+        fill_opacity: drawing.fill_opacity,
+        visible_lines,
+        hidden_lines,
+        line_easing: drawing.line_easing,
+        merge_lines: drawing.merge_lines,
         primitives,
     }
 }
@@ -493,53 +638,10 @@ fn material_override(material: &IconRenderMaterialFields) -> SceneAuthoredMateri
     normal_scale:[1.0;2],occlusion_strength:1.0,}
 }
 
-#[derive(Clone, Copy)]
-struct ResolvedCamera {
-    position: [f32; 3],
-    target: [f32; 3],
-    up: [f32; 3],
-    zoom: f32,
-    fov: f32,
-    parallel: bool,
-}
-
-fn resolved_camera(request: &IconRenderRequestFields, dimensions: (u32, u32), bounds: ([f32; 3], [f32; 3])) -> ResolvedCamera {
-    let bounds = super::super::icon_render_subject_bounds(request, bounds);
-    let IconRenderCameraFields { position, target, zoom, fov, up, projection } = &request.camera;
-    let mut position = position.map(|value| value as f32);
-    let mut target = target.map(|value| value as f32);
-    let mut zoom = *zoom as f32;
-    let fov = fov.unwrap_or(50.0) as f32;
-    let parallel = *projection == IconRenderProjection::Orthographic;
-    if let Some(fit) = request.fit.as_ref().filter(|fit| fit.enabled) {
-        let radius = (0..3).map(|axis| (bounds.1[axis] - bounds.0[axis]).powi(2)).sum::<f32>().sqrt() * 0.5;
-        if radius.is_finite() && radius > 0.0 {
-            let padding = fit.padding.unwrap_or(1.25).max(1.0) as f32;
-            let mut direction = vec3([position[0] - target[0], position[1] - target[1], position[2] - target[2]]);
-            let length = direction.length_m();
-            if length < 1e-6 {
-                direction = vec3([1.0, -1.0, 0.85]);
-            }
-            direction = direction.normalize_m();
-            target = std::array::from_fn(|axis| (bounds.0[axis] + bounds.1[axis]) * 0.5);
-            let distance = if parallel {
-                zoom = (dimensions.0.min(dimensions.1) as f32 * 0.5 / (radius * padding).max(0.5)).max(1e-3);
-                if length > 1e-6 { length } else { (radius * 4.0).max(2.0) }
-            } else {
-                let vertical = (fov.to_radians() * 0.5).clamp(0.02, 1.5);
-                let horizontal = (vertical.tan() * (dimensions.0 as f32 / dimensions.1 as f32).max(0.05)).atan().clamp(0.02, 1.5);
-                (radius.max(1e-4) / vertical.min(horizontal).sin() * padding).max(0.5)
-            };
-            position = [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance];
-        }
-    }
-    ResolvedCamera { position, target, up: up.unwrap_or([0.0, 0.0, 1.0]).map(|value| value as f32), zoom, fov, parallel }
-}
-
-fn camera_view_projection(camera: &ResolvedCamera, dimensions: (u32, u32)) -> Mat4 {
-    let eye = vec3(camera.position);
-    let target = vec3(camera.target);
-    let up = vec3(camera.up);
+fn camera_view_projection(camera: &IconRenderCameraPose, dimensions: (u32, u32)) -> Mat4 {
+    let eye = vec3(camera.position.map(|value| value as f32));
+    let target = vec3(camera.target.map(|value| value as f32));
+    let up = vec3(camera.up.map(|value| value as f32));
     let mut z = eye.sub_m(target);
     if z.length_m() <= f32::EPSILON {
         z.z = 1.0;
@@ -568,12 +670,11 @@ fn camera_view_projection(camera: &ResolvedCamera, dimensions: (u32, u32)) -> Ma
     let near = 0.1;
     let far = 10_000.0;
     let projection = if camera.parallel {
-        let width = dimensions.0 as f32 / camera.zoom;
-        let height = dimensions.1 as f32 / camera.zoom;
+        let width = dimensions.0 as f32 / camera.zoom as f32;
+        let height = dimensions.1 as f32 / camera.zoom as f32;
         Mat4 { cols: [[2.0 / width, 0.0, 0.0, 0.0], [0.0, 2.0 / height, 0.0, 0.0], [0.0, 0.0, -2.0 / (far - near), 0.0], [0.0, 0.0, -(far + near) / (far - near), 1.0]] }
     } else {
-        let effective_fov = 2.0 * ((camera.fov.to_radians() * 0.5).tan() / camera.zoom).atan();
-        let f = 1.0 / (effective_fov * 0.5).tan();
+        let f = (camera.zoom / (camera.fov.to_radians() * 0.5).tan()) as f32;
         let aspect = dimensions.0 as f32 / dimensions.1 as f32;
         Mat4 { cols: [[f / aspect, 0.0, 0.0, 0.0], [0.0, f, 0.0, 0.0], [0.0, 0.0, -(far + near) / (far - near), -1.0], [0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0]] }
     };
@@ -585,13 +686,14 @@ fn mul4(left: Mat4, right: Mat4) -> Mat4 {
 }
 
 fn parse_color(value: &str) -> [f32; 4] {
-    let hex = value.trim().strip_prefix('#').unwrap_or("94a3b8");
+    let hex = value.trim().strip_prefix('#').filter(|hex| hex.is_ascii()).unwrap_or("94a3b8");
     let expanded = if hex.len() == 3 { hex.chars().flat_map(|digit| [digit, digit]).collect::<String>() } else { hex.to_string() };
     if expanded.len() < 6 {
         return parse_color("#94a3b8");
     }
     let channels = [0, 2, 4].map(|offset| u8::from_str_radix(&expanded[offset..offset + 2], 16).unwrap_or(148) as f32 / 255.0);
-    [srgb_to_linear(channels[0]), srgb_to_linear(channels[1]), srgb_to_linear(channels[2]), 1.0]
+    let alpha = if expanded.len() == 8 { f32::from(u8::from_str_radix(&expanded[6..8], 16).unwrap_or(255)) / 255.0 } else { 1.0 };
+    [srgb_to_linear(channels[0]), srgb_to_linear(channels[1]), srgb_to_linear(channels[2]), alpha]
 }
 
 fn srgb_to_linear(channel: f32) -> f32 {
@@ -605,53 +707,6 @@ fn transform_clip(matrix: Mat4, point: Vec3) -> [f32; 4] {
         point.x * matrix.cols[0][2] + point.y * matrix.cols[1][2] + point.z * matrix.cols[2][2] + matrix.cols[3][2],
         point.x * matrix.cols[0][3] + point.y * matrix.cols[1][3] + point.z * matrix.cols[2][3] + matrix.cols[3][3],
     ]
-}
-
-fn clip_near_far(points: &[[f32; 4]; 3]) -> Vec<[f32; 4]> {
-    let mut input = points.to_vec();
-    for far in [false, true] {
-        let mut output = Vec::with_capacity(5);
-        for index in 0..input.len() {
-            let a = input[index];
-            let b = input[(index + 1) % input.len()];
-            let da = if far { a[3] - a[2] } else { a[3] + a[2] };
-            let db = if far { b[3] - b[2] } else { b[3] + b[2] };
-            match (da >= 0.0, db >= 0.0) {
-                (true, true) => output.push(a),
-                (true, false) => {
-                    output.push(a);
-                    output.push(lerp4(a, b, da / (da - db)));
-                }
-                (false, true) => output.push(lerp4(a, b, da / (da - db))),
-                (false, false) => {}
-            }
-        }
-        input = output;
-        if input.is_empty() {
-            break;
-        }
-    }
-    input
-}
-
-fn clip_line_near_far(mut points: [[f32; 4]; 2]) -> Option<[[f32; 4]; 2]> {
-    for far in [false, true] {
-        let da = if far { points[0][3] - points[0][2] } else { points[0][3] + points[0][2] };
-        let db = if far { points[1][3] - points[1][2] } else { points[1][3] + points[1][2] };
-        if da < 0.0 && db < 0.0 {
-            return None;
-        }
-        if da < 0.0 {
-            points[0] = lerp4(points[0], points[1], da / (da - db));
-        } else if db < 0.0 {
-            points[1] = lerp4(points[0], points[1], da / (da - db));
-        }
-    }
-    Some(points)
-}
-
-fn lerp4(a: [f32; 4], b: [f32; 4], t: f32) -> [f32; 4] {
-    std::array::from_fn(|axis| a[axis] + (b[axis] - a[axis]) * t)
 }
 
 pub fn project(point: [f32; 4], dimensions: (u32, u32)) -> [f32; 3] {
@@ -670,14 +725,6 @@ pub fn visible(points: [[f32; 3]; 3], dimensions: (u32, u32)) -> bool {
     let minimum = [0, 1].map(|axis| points.iter().map(|point| point[axis]).fold(f32::INFINITY, f32::min));
     let maximum = [0, 1].map(|axis| points.iter().map(|point| point[axis]).fold(f32::NEG_INFINITY, f32::max));
     maximum[0] >= -half[0] && minimum[0] <= half[0] && maximum[1] >= -half[1] && minimum[1] <= half[1]
-}
-
-fn visible_line(points: [[f32; 3]; 2], dimensions: (u32, u32)) -> bool {
-    let half = [dimensions.0 as f32 * 0.5, dimensions.1 as f32 * 0.5];
-    points[0][0].max(points[1][0]) >= -half[0]
-        && points[0][0].min(points[1][0]) <= half[0]
-        && points[0][1].max(points[1][1]) >= -half[1]
-        && points[0][1].min(points[1][1]) <= half[1]
 }
 
 fn overdraw(points: &mut [[f32; 3]; 3], pixels: f32) {
@@ -714,20 +761,6 @@ fn css_rgb(linear: [f32; 3]) -> String {
     format!("rgb({},{},{})", values[0], values[1], values[2])
 }
 
-pub fn scalar(value: f32) -> String {
-    if value.abs() < 0.000_000_5 {
-        return "0".into();
-    }
-    let mut value = format!("{value:.6}");
-    while value.ends_with('0') {
-        value.pop();
-    }
-    if value.ends_with('.') {
-        value.pop();
-    }
-    value
-}
-
 fn append_output(output: &mut Option<Vec<u8>>, value: &str) -> Result<(), String> {
     let output = output.get_or_insert_with(Vec::new);
     let next = output.len().checked_add(value.len()).ok_or("icon SVG byte count overflowed")?;
@@ -740,4 +773,8 @@ fn append_output(output: &mut Option<Vec<u8>>, value: &str) -> Result<(), String
 
 #[cfg(test)]
 #[path = "../../../../🧪️tests/📤️svg-export/🦀️.rs"]
-mod tests;
+pub(super) mod tests;
+
+#[cfg(test)]
+#[path = "../../../../🧪️tests/🕶️line-visibility/🦀️.rs"]
+mod visibility_tests;

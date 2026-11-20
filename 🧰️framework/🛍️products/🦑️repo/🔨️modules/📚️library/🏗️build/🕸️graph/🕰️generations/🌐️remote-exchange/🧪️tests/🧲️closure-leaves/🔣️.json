@@ -1,0 +1,9 @@
+[
+  { "name": "a complete head whose closure is missing is refused", "selectedHead": "complete", "closure": "missing" },
+  { "name": "unavailable closure qualification is refused", "selectedHead": "complete", "closure": "unknown" },
+  { "name": "withdrawal while acquiring the leaf preserves the pointer", "selectedHead": "complete", "closure": "cancelled" },
+  { "name": "an initially complete head replaced by a partial head is refused", "selectedHead": "partial", "closure": "available" },
+  { "name": "an initially complete head replaced by other code is refused", "selectedHead": "other-code", "closure": "available" },
+  { "name": "a head whose owner count disagrees with its manifest is refused", "selectedHead": "manifest-mismatch", "closure": "available" },
+  { "name": "a complete head with its closure is usable", "selectedHead": "complete", "closure": "available" }
+]

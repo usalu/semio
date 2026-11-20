@@ -15,6 +15,7 @@ import { hasNonEmptyChildren, useTreeOpenState } from "../🌿️state/🟦️.t
 import { renderTreeRowIcon, treeFoldChevronIcon, treeItemContentPaddingTopPx, treeItemLabelSlotClassName, treePresentationLabelStyle, treeRowChromeContentFillClasses, treeRowChromeShellClasses, treeRowShellClassName } from "../🎨️chrome/🟦️.tsx";
 import { renderTreeHeaderActions } from "../⚡️actions/🟦️.tsx";
 import { TreeBranchContent } from "../🌲️branch/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 /**
  * 🌳️ SortableTreeItem holds the data fields for a SortableTreeItem record.
@@ -86,6 +87,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             data-tree-group
             data-draggable={isDragHandle ? "true" : undefined}
             role="treeitem"
+            {...sharedBorderlessBoxProps}
             aria-selected={isSelected}
             data-selected={isSelected ? "true" : undefined}
             data-highlighted={isHighlighted ? "true" : undefined}
@@ -160,6 +162,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           data-tree-row-kind="group"
           data-tree-group
           role="treeitem"
+          {...sharedBorderlessBoxProps}
           aria-selected={isSelected}
           data-selected={isSelected ? "true" : undefined}
           data-highlighted={isHighlighted ? "true" : undefined}
@@ -237,6 +240,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         data-hover-scope
         data-tree-row-kind="property"
         role="treeitem"
+        {...sharedBorderlessBoxProps}
         aria-selected={isSelected}
         data-selected={isSelected ? "true" : undefined}
         data-highlighted={isHighlighted ? "true" : undefined}
@@ -279,6 +283,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       data-hover-scope
       data-tree-row-kind="leaf"
       role="treeitem"
+      {...sharedBorderlessBoxProps}
       aria-selected={isSelected}
       data-selected={isSelected ? "true" : undefined}
       data-highlighted={isHighlighted ? "true" : undefined}

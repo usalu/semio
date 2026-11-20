@@ -5,6 +5,7 @@ import{join}from"node:path";
 import{noticeLanguagesV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{runtimeCollectGarbageV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import{observeTreeMegabytesV1,parseFootprintV1,parseSmapsRollupV1,readHostTextV1,runHostCommandV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import{systemWindowsProcessWorkingSetV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪟️native-memory/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import memorySchema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{readLiveHostCapacityReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
@@ -41,13 +42,60 @@ export function footprintHeadroomBytesV1({footprintBytes,grantBytes,policy=P}){
  return grantBytes>0&&Number.isFinite(footprintBytes)?Math.floor(grantBytes*policy.hardPercent/100-footprintBytes):Infinity;
 }
 
-/** 🔬️ Reads the physical footprint of ONE process in bytes: macOS `footprint` (phys_footprint), Linux `smaps_rollup` (Pss plus SwapPss), every other platform its resident set (the working set on Windows); a reading that fails answers undefined, never the resident set, which counts freed pages the footprint does not. */
-export async function readProcessFootprintBytesV1(pid,{platform=osPlatform(),run=runHostCommandV1,read=readHostTextV1,rss=()=>process.memoryUsage().rss}={}){
- if(platform!=="darwin"&&platform!=="linux")return rss();
+/** 🐚️ Collects neighboring host footprint requests into one bounded Darwin probe. */
+export function createDarwinFootprintProbeV1(run=runHostCommandV1){
+ const pending=new Set();
+ let timer,running=false;
+ const schedule=()=>{
+  if(!running&&timer===undefined&&pending.size)timer=setTimeout(flush,P.processProbeBatchMilliseconds);
+ };
+ async function flush(){
+  timer=undefined;
+  if(!pending.size)return;
+  const batch=[...pending],active={controller:new AbortController(),remaining:batch.length};
+  pending.clear();running=true;
+  for(const row of batch)row.active=active;
+  let measured;
+  try{
+   const pids=[...new Set(batch.map(row=>row.pid))];
+   measured=parseFootprintV1(await run("footprint",["-f","bytes","--noCategories",...pids.flatMap(pid=>["-p",String(pid)])],active.controller.signal));
+  }catch{}
+  for(const row of batch)row.finish(measured?.get(row.pid));
+  running=false;schedule();
+ }
+ return(pid,signal)=>{
+  if(!Number.isInteger(pid)||pid<1||pid>0x7fffffff||signal?.aborted||pending.size>=P.processProbeBatchRequests)return Promise.resolve(undefined);
+  return new Promise(resolve=>{
+   const row={pid,active:undefined,done:false,finish(bytes,cancelled=false){
+    if(row.done)return;
+    row.done=true;signal?.removeEventListener("abort",cancel);
+    pending.delete(row);
+    if(row.active&&--row.active.remaining===0&&cancelled)row.active.controller.abort();
+    resolve(bytes);
+   }};
+   const cancel=()=>row.finish(undefined,true);
+   pending.add(row);signal?.addEventListener("abort",cancel,{once:true});schedule();
+  });
+ };
+}
+
+const darwinProcessFootprintV1=createDarwinFootprintProbeV1();
+
+/** 🔬️ Reads one process's physical footprint in bytes: macOS phys_footprint, Linux Pss plus SwapPss, Windows working set and the reader's own resident set on other platforms. Unavailable readings are undefined. */
+export async function readProcessFootprintBytesV1(pid,{platform=osPlatform(),run=runHostCommandV1,read=readHostTextV1,rss=()=>process.memoryUsage().rss,workingSet=systemWindowsProcessWorkingSetV1,signal}={}){
+ if(signal?.aborted||!Number.isInteger(pid)||pid<1||pid>0xffffffff)return undefined;
  try{
-  if(platform==="darwin")return parseFootprintV1(await run("footprint",["-f","bytes","--noCategories","-p",String(pid)])).get(pid);
-  const text=await read(`/proc/${pid}/smaps_rollup`),kilobytes=text===null?undefined:parseSmapsRollupV1(text);
-  return kilobytes===undefined?undefined:kilobytes*1024;
+  if(platform==="darwin"){
+   if(pid!==process.pid&&run===runHostCommandV1)return await darwinProcessFootprintV1(pid,signal);
+   const text=await run("footprint",["-f","bytes","--noCategories","-p",String(pid)],signal);
+   return signal?.aborted?undefined:parseFootprintV1(text).get(pid);
+  }
+  if(platform==="linux"){
+   const text=await read(`/proc/${pid}/smaps_rollup`),kilobytes=signal?.aborted||text===null?undefined:parseSmapsRollupV1(text);
+   return kilobytes===undefined?undefined:kilobytes*1024;
+  }
+  const bytes=pid===process.pid?rss():platform==="win32"?workingSet(pid):undefined;
+  return !signal?.aborted&&typeof bytes==="number"&&Number.isSafeInteger(bytes)&&bytes>=0?bytes:undefined;
  }catch{return undefined;}
 }
 
@@ -140,7 +188,7 @@ export function createFootprintGateV1({meter=createFootprintMeterV1(),grantBytes
   release();lastSettle=now();stats.settled++;
   const after=await meter.refresh();
   say("relieved",{before:megabytes(before),after:megabytes(after),grant:megabytes(grant()??0)});
-  if(report!==undefined&&before*100>=(grant()??Infinity)*policy.softPercent)await census(before);
+  if(report!==undefined&&before*100>=(grant()??Infinity)*policy.softPercent)await census(after);
   return after;
  };
  return Object.freeze({

@@ -53,7 +53,8 @@ fn shared_dock_frames_abut_and_resize_hit_stays_centered() {
     let mut atlas = FontAtlas::builtin();
     let (bodies, silhouettes) = dock.stack_body_rects_with_silhouettes(bounds, &theme, &HashMap::new(), &mut atlas);
     assert_eq!(silhouettes["a"].bounds.x + silhouettes["a"].bounds.w, silhouettes["b"].bounds.x);
-    assert_eq!(bodies[1].1.x - bodies[0].1.x - bodies[0].1.w, theme.padding_standard * 2.0);
+    let body_gap = bodies[1].1.x - bodies[0].1.x - bodies[0].1.w;
+    assert!((body_gap - theme.padding_standard * 2.0).abs() < 0.001);
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let labels = HashMap::new();
@@ -63,7 +64,7 @@ fn shared_dock_frames_abut_and_resize_hit_stays_centered() {
     let hit = input.staged_hits().iter().find(|hit| matches!(hit.kind, HitKind::DockSplit)).unwrap();
     assert_eq!(hit.rect.w, 20.0);
     assert_eq!(hit.rect.x + hit.rect.w * 0.5, 400.0);
-    assert_eq!(dock.split_axis_extent(&[], bounds, 0.0), Some(800.0));
+    assert_eq!(dock.split_axis_extent(&Vec::new(), bounds, 0.0), Some(800.0));
 }
 
 #[test]

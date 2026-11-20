@@ -183,6 +183,7 @@ impl<P: Send + Sync + 'static> BoundedTransientRootRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedTransientRootRetirement<P> {
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
     fn next_demand(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { Ok(self.demand()) }
 
     fn next_computational_work(&self, _body: usize) -> Result<u64, ValueError> { Ok(self.work()) }

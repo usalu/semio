@@ -1,0 +1,4 @@
+[
+  {"major": 2, "minor": 2, "deflection": 0.01, "minimumSegments": 32, "diskArea": 12.566370614359172},
+  {"major": 4, "minor": 1, "deflection": 0.01, "minimumSegments": 45, "diskArea": 12.566370614359172}
+]

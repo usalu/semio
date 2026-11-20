@@ -12,8 +12,8 @@ impl OpeningState {
     /// A cancelled picker dispatches nothing and is not an error.
     #[cfg(target_arch = "wasm32")]
     pub async fn run_file_open_request(&mut self, request: PendingFileOpen, docs: &DocumentState) {
-        let PendingFileOpen { controller_id, accept, read_as, import_action, args, multiple } = request;
-        let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
+        let PendingFileOpen { controller_id, accept, read_as, import_action, args, multiple, max_file_bytes } = request;
+        let opened = request_file_open(&accept, read_as.as_deref(), multiple, max_file_bytes).await;
         debug_log(&format!("[TRACE] wgpu-shell file open accept={accept} action={import_action} files={} bytes={}", opened.len(), opened.iter().map(|file| file.contents.len()).sum::<usize>()));
         self.begin_import_transfer(PickedImport { controller_id, import_action, opened, args, multiple }, docs);
     }

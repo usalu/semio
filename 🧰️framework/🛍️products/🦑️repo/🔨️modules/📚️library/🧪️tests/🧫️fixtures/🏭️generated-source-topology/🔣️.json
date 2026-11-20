@@ -7,6 +7,23 @@
     "rust-source": "🦀️.rs",
     "typescript-source": "🟦️.ts"
   },
+  "nativeConsumers": [
+    {
+      "packageRoot": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧬️schema/📦️packages/🦀️rust",
+      "outputPath": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+      "target": "@semio-tech/assets:build"
+    },
+    {
+      "packageRoot": "🧰️framework/🔨️modules/🖼️canvas/🪪️icon-codec/📦️packages/🦀️rust",
+      "outputPath": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+      "target": "@semio-tech/assets:build"
+    },
+    {
+      "packageRoot": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
+      "outputPath": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🤖️generated/🦀️.rs",
+      "target": "@semio-tech/ui-rs:generate"
+    }
+  ],
   "cases": [
     {
       "contractId": "assets-build",

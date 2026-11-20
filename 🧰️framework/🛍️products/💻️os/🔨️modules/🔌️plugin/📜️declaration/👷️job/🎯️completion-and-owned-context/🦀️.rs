@@ -54,7 +54,7 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
                 return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault: Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned") });
             }
         };
-        if value.is_some() {
+        if value.is_some() || self.inner.genesis_sealed() {
             return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault: Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.duplicate-output"), "app-owned tool job attempted to complete more than once") });
         }
         *value = Some(ArtifactToolCompletionValue::Emit(emit.map_err(ArtifactCompletionFault::new), ephemeral));
@@ -75,11 +75,39 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied{return Ok(false)}
         let locked=self.inner.try_lock();cx.consume_fuel(1);
         let Ok(mut value)=locked else{return Ok(false)};
-        if value.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original emission completion receiver is occupied").into())}
+        if value.is_some()||self.inner.genesis_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original emission completion receiver is occupied").into())}
         let(emit,ephemeral)=source.take().unwrap();
         *value=Some(ArtifactToolCompletionValue::Emit(emit.map_err(ArtifactCompletionFault::new),ephemeral));*published=true;
         let turn:semio_framework_value::RetainedWorkOutcome=semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})),work:0};
         semio_framework_job::receive_original_retained_work(cx,turn)?;
+        Ok(true)
+    }
+
+    /// 🌱️ Transfers the original paged genesis to its exact mounted completion once.
+    pub fn complete_genesis_original(&self, source: &mut Option<semio_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<A::Snapshot>>, published: &mut bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if self.inner.genesis_source()!=Some((cx.operation(),cx.generation())) {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original genesis completion changed its source operation").into());
+        }
+        if *published {
+            if source.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"published original genesis cannot be overwritten").into()); }
+            return Ok(true);
+        }
+        if source.is_none() { return Ok(false); }
+        let copied = std::mem::size_of_val(source) + std::mem::size_of::<Option<ArtifactToolCompletionValue<A>>>() + std::mem::size_of::<bool>();
+        let grant = cx.retained_grant();
+        if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copied { return Ok(false); }
+        let locked = self.inner.try_lock();
+        cx.consume_fuel(1);
+        let Ok(mut value) = locked else { return Ok(false) };
+        if value.is_some() || self.inner.genesis_sealed() {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original genesis completion receiver is occupied").into());
+        }
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})?;
+        self.inner.seal_genesis();
+        *value = Some(ArtifactToolCompletionValue::Genesis(source.take(),None));
+        *published = true;
         Ok(true)
     }
 
@@ -97,28 +125,40 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         let Some(download)=source.as_ref()else{return Ok(false)};let metadata=download.filename.len().checked_add(download.mime_type.len()).and_then(|n|n.checked_add(download.encoding.as_ref().map_or(0,String::len))).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata extent overflow"))?;
         if metadata>semio_plugin_decl_media::ARTIFACT_OUTPUT_METADATA_BYTES||download.mime_type.is_empty()||!download.chunks.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata or sealed output is invalid").into())}
         let copied=std::mem::size_of::<ArtifactDownloadOutput>()+std::mem::size_of::<EphemeralEmit<A>>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied{return Ok(false)}
-        let Ok(mut value)=self.inner.try_lock()else{return Ok(false)};if value.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original download completion receiver is occupied").into())}
+        let Ok(mut value)=self.inner.try_lock()else{return Ok(false)};if value.is_some()||self.inner.genesis_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original download completion receiver is occupied").into())}
         *value=Some(ArtifactToolCompletionValue::Download(Ok(source.take().unwrap()),EphemeralEmit::default()));*published=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
     pub fn complete_download(&self,download:Result<ArtifactDownloadOutput,Fault>,ephemeral:EphemeralEmit<A>)->Result<(),ArtifactDownloadCompletionRejection<A>>{
         let mut value=match self.inner.try_lock(){Ok(value)=>value,Err(_)=>return Err(ArtifactDownloadCompletionRejection{download,ephemeral,fault:Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.tool-completion-busy"),"tool completion authority is busy or poisoned")})};
-        if value.is_some(){return Err(ArtifactDownloadCompletionRejection{download,ephemeral,fault:Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.duplicate-output"),"app-owned tool job attempted to complete more than once")})}
+        if value.is_some()||self.inner.genesis_sealed(){return Err(ArtifactDownloadCompletionRejection{download,ephemeral,fault:Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.duplicate-output"),"app-owned tool job attempted to complete more than once")})}
         *value=Some(ArtifactToolCompletionValue::Download(download.map_err(ArtifactCompletionFault::new),ephemeral));Ok(())
     }
 
     #[doc(hidden)]
-    pub fn test_take_download(&self)->Result<Option<(Result<ArtifactDownloadOutput,Fault>,EphemeralEmit<A>)>,Fault>{match self.take()?{Some(ArtifactToolCompletionValue::Download(output,ephemeral))=>Ok(Some((output.map_err(ArtifactCompletionFault::into_fault),ephemeral))),None=>Ok(None),_=>Err(Fault::from("expected original download completion"))}}
+    pub fn test_take_download(&self)->Result<Option<(Result<ArtifactDownloadOutput,Fault>,EphemeralEmit<A>)>,Fault>{
+        let mut cell = self.inner.try_lock().map_err(|_| plugin_sdk_fault("tool completion authority is busy or poisoned"))?;
+        match cell.as_ref() {
+            Some(ArtifactToolCompletionValue::Download(..)) => {},
+            None => return Ok(None),
+            _ => return Err(Fault::from("expected original download completion")),
+        }
+        let Some(ArtifactToolCompletionValue::Download(output,ephemeral)) = cell.take() else { unreachable!() };
+        Ok(Some((output.map_err(ArtifactCompletionFault::into_fault),ephemeral)))
+    }
 
     pub fn take(&self) -> Result<Option<ArtifactToolCompletionValue<A>>, Fault> {
         self.inner.try_lock().map(|mut value| value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.tool-completion-busy"), "tool completion authority is busy or poisoned"))
     }
 
     pub fn take_emit(&self) -> Result<Option<ArtifactToolEmission<A>>, Fault> {
-        match self.take()? {
-            Some(ArtifactToolCompletionValue::Emit(emit, ephemeral)) => Ok(Some((emit.map_err(ArtifactCompletionFault::into_fault), ephemeral))),
-            Some(ArtifactToolCompletionValue::Download(_, _)) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unexpected-download-output"), "reserved clipboard/import route completed with a segmented download")),
-            None => Ok(None),
+        let mut cell = self.inner.try_lock().map_err(|_| plugin_sdk_fault("tool completion authority is busy or poisoned"))?;
+        match cell.as_ref() {
+            Some(ArtifactToolCompletionValue::Emit(..)) => {},
+            None => return Ok(None),
+            _ => return Err(plugin_sdk_fault("reserved emission receiver requires an emission completion")),
         }
+        let Some(ArtifactToolCompletionValue::Emit(emit,ephemeral)) = cell.take() else { unreachable!() };
+        Ok(Some((emit.map_err(ArtifactCompletionFault::into_fault),ephemeral)))
     }
 }
 

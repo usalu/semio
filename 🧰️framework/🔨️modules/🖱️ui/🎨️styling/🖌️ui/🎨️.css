@@ -3,6 +3,14 @@
 @import "tailwindcss";
 @import "../🎨️palette/🎨️.css";
 @plugin "@tailwindcss/typography";
+
+/* 🎯️ The compositor is the only painter of state lines: inside a compositor root the browser focus outline is off. Declared after the framework layers so it outranks utilities without `!important`. */
+@layer shared-border-outline {
+  [data-shared-border-root] :focus-visible,
+  .react-flow__node:focus-visible {
+    outline: none;
+  }
+}
 /* 🧱️ The 🖱️ui module IS the class-name surface of this stylesheet, so it scans itself. Only the file
    that carries `@import "tailwindcss"` has its `@source` honoured, and only relative to itself — the
    two `@source` lines further out in `🧵️styles/🎨️.css` are resolved somewhere else entirely and reach
@@ -1267,94 +1275,6 @@
   }
 }
 
-/* Clockwise spinning + pulsing loading ring in the element's normal border color; recolor via --loading-border-color. */
-@utility border-loading {
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    border-radius: inherit;
-    padding: var(--stroke-hairline);
-    opacity: var(--loading-border-pulse-opacity);
-    animation:
-      loading-border-spin var(--loading-border-duration) linear infinite,
-      loading-border-pulse var(--loading-border-duration) ease-in-out infinite;
-    background:
-      conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))), conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
-    -webkit-mask:
-      linear-gradient(black 0 0) content-box,
-      linear-gradient(black 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-      linear-gradient(black 0 0) content-box,
-      linear-gradient(black 0 0);
-    mask-composite: exclude;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    &::after {
-      opacity: 1;
-      animation: none;
-    }
-  }
-}
-
-/* Recolor the loading ring to the active stroke (selected/on elements). */
-@utility border-loading-active {
-  --loading-border-color: var(--active-base);
-}
-
-/* Recolor the loading ring to the level-aware element border color. */
-@utility border-loading-element {
-  --loading-border-color: var(--border-element-color);
-}
-
-/* Clockwise dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color; recolor via --waiting-border-color. */
-@utility border-waiting {
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    border-radius: inherit;
-    padding: var(--stroke-hairline);
-    opacity: var(--waiting-border-pulse-opacity);
-    animation:
-      waiting-border-spin var(--waiting-border-duration) linear infinite,
-      waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite;
-    background:
-      repeating-conic-gradient(from var(--waiting-border-angle), var(--waiting-border-color, var(--border-normal-color)) 0deg 18deg, transparent 18deg 30deg), conic-gradient(color-mix(in oklab, var(--waiting-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
-    -webkit-mask:
-      linear-gradient(black 0 0) content-box,
-      linear-gradient(black 0 0);
-    -webkit-mask-composite: xor;
-    mask:
-      linear-gradient(black 0 0) content-box,
-      linear-gradient(black 0 0);
-    mask-composite: exclude;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    &::after {
-      opacity: 1;
-      animation: none;
-    }
-  }
-}
-
-/* Recolor the waiting ring to the active stroke (selected/on elements). */
-@utility border-waiting-active {
-  --waiting-border-color: var(--active-base);
-}
-
-/* Recolor the waiting ring to the level-aware element border color. */
-@utility border-waiting-element {
-  --waiting-border-color: var(--border-element-color);
-}
-
 @keyframes celebrate-border-spin {
   to {
     --celebrate-border-angle: 360deg;
@@ -1371,12 +1291,10 @@
   }
 }
 
-/* 🎉️ Any element stamped data-celebrated="true" (authored state: "celebrating", or the transient
-   completion stamp from celebrateElements()) rings a spinning conic gradient of the three brand
-   colors whose THICKNESS bursts — the celebratory sibling of the introduced pulse, built on the
-   border-loading masked-ring template. Recolor via --celebrate-border-color-{a,b,c}. */
+/* 🎉️ The three-brand conic ink of a celebrating element (authored state: "celebrating", or the transient
+   completion stamp from celebrateElements()). Its outline is the compositor's celebrated stroke; this
+   variable only feeds the label, icon and guide ink below. Recolor via --celebrate-border-color-{a,b,c}. */
 [data-celebrated="true"] {
-  position: relative;
   --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
@@ -1384,35 +1302,6 @@
     var(--celebrate-border-color-c, var(--color-tertiary)),
     var(--celebrate-border-color-a, var(--color-primary))
   );
-}
-
-[data-celebrated="true"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  border-radius: inherit;
-  padding: var(--celebrate-border-padding);
-  animation:
-    celebrate-border-spin var(--celebrate-border-duration) linear infinite,
-    celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
-  background: var(--celebrate-conic);
-  -webkit-mask:
-    linear-gradient(black 0 0) content-box,
-    linear-gradient(black 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(black 0 0) content-box,
-    linear-gradient(black 0 0);
-  mask-composite: exclude;
-}
-
-/* 🪟️ Window silhouettes: the SVG border owns every outer stroke — suppress rectangular body rings. */
-[data-window-silhouette] [data-slot="window"][data-celebrated="true"]::after,
-[data-window-silhouette] [id^="framework.window."][data-celebrated="true"]:not([id*=".action."])::after {
-  content: none !important;
-  animation: none !important;
 }
 
 @keyframes introduced-border-pulse {
@@ -1423,28 +1312,6 @@
   50% {
     --introduced-border-width: var(--stroke-focus);
   }
-}
-
-/* 🎓️ Any element stamped data-introduced="true" (by the introduction system, or declaratively) pulses an
-   inset ring in the highlight color whose THICKNESS breathes — deliberately not the spinning border-loading
-   conic ring. Inset so it stays inside an introduction cutout rather than sitting under the glass veil. */
-[data-introduced="true"] {
-  box-shadow: inset 0 0 0 var(--introduced-border-width) var(--introduced-border-color, var(--color-secondary));
-  animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
-}
-
-/* 🪟️ Window silhouettes: rectangular body rings are wrong for window-chrome introduce targets — the
-   silhouette SVG owns those. Suppress only the window body stamp (scroll surface / `[data-slot="window"]`),
-   not nested introduce targets such as a utility toggle. Action-row ids keep their pulse. */
-[data-window-silhouette] [data-slot="window"][data-introduced="true"],
-[data-window-silhouette] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
-  box-shadow: none !important;
-}
-
-[data-window-silhouette] [data-slot="window"].border-loading::after,
-[data-window-silhouette] [data-slot="window"].border-waiting::after {
-  content: none !important;
-  display: none !important;
 }
 
 @keyframes window-silhouette-border-loading-dash {
@@ -1522,8 +1389,6 @@
 @media (prefers-reduced-motion: reduce) {
   /* 🛑️ One stop for every element-scoped phase clock in 🔁️BorderEffectClocks — the clocks live on the
      painting elements now, so reduced motion silences them there rather than on `:root`. */
-  [data-introduced="true"],
-  [data-celebrated="true"]::after,
   .window-silhouette-border-introduced,
   .window-silhouette-border-loading,
   .window-silhouette-border-waiting,
@@ -1531,19 +1396,6 @@
   .window-silhouette-border-celebrated-fill,
   [data-slot="tree-guide"] [data-tree-guide-line] {
     animation: none;
-  }
-
-  [data-introduced="true"] {
-    box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
-  }
-
-  [data-window-silhouette] [data-slot="window"][data-introduced="true"],
-  [data-window-silhouette] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
-    box-shadow: none !important;
-  }
-
-  [data-celebrated="true"]::after {
-    padding: var(--stroke-default);
   }
 
   .window-silhouette-border-introduced,
@@ -6683,7 +6535,6 @@
 [data-slot="footer"] [data-slot="panel-tab-button"][data-state="on"]:not(:disabled),
 :is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="panel-tab-button"])[data-state="on"]:not(:disabled) {
   background-color: var(--active-base);
-  border-color: var(--active-base) !important;
   color: var(--active-foreground);
 }
 
@@ -6740,12 +6591,11 @@
 :where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="right"])) { border-right-width: 0; }
 :where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="bottom"])) { border-bottom-width: 0; }
 :where([data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="left"])) { border-left-width: 0; }
-/* A standalone input or textarea frame is painted by its overlay alone: the inner native control carries no second border at the same coordinates, and an invalid control recolours the overlay instead. */
+/* A standalone input or textarea frame is painted by its overlay alone: the inner native control carries no second border at the same coordinates, and an invalid control (`aria-invalid` or `data-invalid`) is the compositor's invalid state. */
 [data-shared-border-frame] > :is([data-slot="input"], [data-slot="textarea"]) {
   border-width: 0;
   border-radius: 0;
 }
-[data-shared-border-frame]:has(> :is([data-slot="input"], [data-slot="textarea"])[aria-invalid="true"]) > svg[data-shared-border-overlay] [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--destructive-border); }
 /* A shared-border owner (`data-shared-border-cells`: a row, or a flush card's content group) turns its direct framed controls into cells: no frame of their own, their outer edges are the owner's edges, the one divider to the next cell is theirs, and they stretch across the owner. */
 [data-shared-border-cells] > [data-shared-border-frame] {
   border-style: solid;
@@ -6800,104 +6650,28 @@
   background-color: color-mix(in oklab, var(--destructive-border) 10%, transparent);
 }
 [data-shared-border-cells][data-tone="destructive"] > svg[data-shared-border-overlay] [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--destructive-border); }
-/* Shared cells use one real divider, never a second inset-shadow separator. */
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
-  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
-}
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
-  border-inline-end-width: 0;
-}
-:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
-  border-width: 0;
-  border-inline-end-width: var(--stroke-hairline);
-}
-:is(.shared-border-frame, [data-shared-border-frame]) > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
-  border-inline-end-width: 0;
-}
-/* A vertical owner lays its cells out in one column; a product that lays them side by side at a width sets `--shared-border-flow: 1` on those cells (a cell's own value, never inherited), so the same one divider per seam moves from the block end to the inline end. */
-@property --shared-border-flow {
-  syntax: "<integer>";
-  inherits: false;
-  initial-value: 0;
-}
-:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
-  border-inline-end-width: calc(var(--stroke-hairline) * var(--shared-border-flow));
-  border-block-end: calc(var(--stroke-hairline) * (1 - var(--shared-border-flow))) solid var(--border-normal-color);
-}
-:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):not(:has(~ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]))) {
-  border-inline-end-width: 0;
-  border-block-end-width: 0;
-}
-/* A framed cell that leaves its bottom edge to another owner (a card grid that closes it) draws no block-end divider either: the owner paints that one line. */
-:is([data-shared-border-frame], [data-shared-border-group])[data-orientation="vertical"] > [data-shared-border-frame][data-shared-border-edges]:not([data-shared-border-edges~="bottom"]) {
-  border-block-end-width: 0;
-}
-/* A collapsed disclosure has no visible cell after its summary: the summary is the last cell, so the parent's divider closes it. */
-details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], [data-shared-border-group]) > summary:is(.shared-border-cell, [data-shared-border-cell]) {
-  border-block-end-width: 0;
-}
-/* A wrapping owner (`data-shared-border-wrap`: a `SharedBorderRow wrap` or a wrapping `ToggleGroup`, whose cells are tagged `data-wrap-end` / `data-wrap-last` by `useSharedBorderWrap`) breaks its cells into lines that stretch to the owner's width. Every cell draws one divider to the right and one below; the cell closing a line drops the right one and the cells of the last line the lower one, where the owner's own edge is painted, so a seam is one hairline across lines too. A dropped divider leaves a margin of the same size, so a cell never changes size (and never re-wraps) when it is tagged. */
+/* 🧱️ Cells have no native border: the compositor paints every divider, cell outline and state line (hover, focus-visible, selection, effects) as strokes of the owner's overlay, so a stated cell is always a closed silhouette. */
+/* A wrapping owner (`data-shared-border-wrap`: a `SharedBorderRow wrap` or a wrapping `ToggleGroup`) breaks its cells into lines that stretch to the owner's width; the compositor paints the dividers between and across lines. */
 [data-shared-border-wrap] {
   flex-wrap: wrap;
 }
 [data-shared-border-wrap] > :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) {
   flex: 1 0 auto;
-  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
 }
 [data-shared-border-wrap] > [data-shared-border-frame] > [data-slot="button-group-item"] {
   flex-grow: 1;
 }
-[data-shared-border-wrap] > [data-wrap-end]:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-frame]) {
-  border-inline-end-width: 0;
-}
-[data-shared-border-wrap] > [data-wrap-last]:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-frame]) {
-  border-block-end-width: 0;
-}
-:is([data-shared-border-cells][data-shared-border-wrap], [data-shared-border-cells] > [data-shared-border-wrap]) > [data-wrap-end] {
-  margin-inline-end: var(--stroke-hairline);
-}
-:is([data-shared-border-cells][data-shared-border-wrap], [data-shared-border-cells] > [data-shared-border-wrap]) > [data-wrap-last] {
-  margin-block-end: var(--stroke-hairline);
-}
 /* First-layer important ownership/hover rules outrank active utilities and unlayered overrides. */
 @layer shared-border-priority {
-  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-tone="destructive"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-tone="destructive"])) { border-color: var(--destructive-border); }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):focus-within)) { border-color: var(--active-base) !important; }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(> :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) > :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: var(--active-base) !important; }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(.border-waiting, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]).border-waiting)) { border-color: var(--waiting-border-color, var(--border-normal-color)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(.border-loading, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]).border-loading)) { border-color: var(--loading-border-color, var(--border-normal-color)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-introduced="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-introduced="true"])) { border-color: var(--introduced-border-color, var(--color-secondary)) !important; }
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where([data-celebrated="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame])[data-celebrated="true"])) { border-color: var(--border-normal-color) !important; }
-/* A seam belongs to the preceding cell but reflects either incident cell's hover. */
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
-:is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)) {
-  border-color: var(--border-emphasized-color) !important;
-}
-:is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
-  border-color: var(--border-emphasized-color) !important;
-}
-[data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color) !important; }
-/* ⌨️ A whole-card button recolours the card's own silhouette lines on keyboard focus. */
-[data-overview-card]:is(button):focus-visible [data-window-silhouette-border] path { stroke: var(--active-base) !important; }
-
-/* ⌨️ Keyboard focus on a bordered control of a shared-border frame or cell is the recolour of its lines (cells: the seams of both incident cells above; a frame: its own edge and the compositor's focus segments), never a ring, inset shadow or outline 0-3 px from them. Pointer focus keeps the controls' own treatment. */
+/* ⌨️ Keyboard focus on a participant is a stroke of the compositor's overlay (`resolveBoxStates`), never a ring, inset shadow or outline: the native ring is off. */
 :is(.shared-border-cell, [data-shared-border-cell], .shared-border-frame, [data-shared-border-frame], [data-shared-border-cells] > [data-shared-border-frame]):focus-visible,
 :is(.shared-border-cell, [data-shared-border-cell], .shared-border-frame, [data-shared-border-frame]):has(> :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible) {
   outline: none !important;
   box-shadow: none !important;
 }
-:is(.shared-border-frame, [data-shared-border-frame]):focus-visible,
-:is(.shared-border-frame, [data-shared-border-frame]):has(> :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]):focus-visible) {
-  border-color: var(--active-base) !important;
-}
-/* ⌨️ A focusable tabpanel is the window it holds: its focus is the recolour of the window edge it coincides with (one 1 px line on that edge), never the browser ring. */
-[role="tabpanel"]:focus-visible {
-  outline: 1px solid var(--active-base) !important;
-  outline-offset: -1px;
-}
 /* ⌨️ A control that already paints the accent (selected, pressed, active) cannot show focus by recolouring its seam, so keyboard focus underlines its label, and inside an active window chip the focus path doubles its weight (below). */
-:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"]):not([role="tabpanel"], [data-window-silhouette]):focus-visible,
-:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"]):not([role="tabpanel"], [data-window-silhouette], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette]):focus-visible,
+:is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
@@ -6908,22 +6682,13 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   border-inline-end-color: var(--border-emphasized-color) !important;
 }
 @media (forced-colors: active) {
-  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]) { border-color: CanvasText !important; }
-  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):focus-within), :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: Highlight !important; }
-  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
-  :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):has(+ :is(.shared-border-cell, [data-shared-border-cell], [data-shared-border-cells] > [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)),
-  :is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
-    border-color: Highlight !important;
-  }
   [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
     border-inline-end-color: Highlight !important;
   }
-  :is(.shared-border-frame, [data-shared-border-frame]):focus-visible { border-color: Highlight !important; }
-  [role="tabpanel"]:focus-visible { outline-color: Highlight !important; }
   [data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke-width: 2; }
-  [data-overview-card]:is(button):focus-visible [data-window-silhouette-border] path { stroke: Highlight !important; }
   [data-shared-border-segment] { stroke: CanvasText !important; }
-  [data-shared-border-segment]:is([data-shared-border-state="hover"], [data-shared-border-state="focus"]) { stroke: Highlight !important; }
+  [data-shared-border-segment]:is([data-shared-border-state="hover"], [data-shared-border-state="focus"], [data-shared-border-state="active"], [data-shared-border-state="invalid"]) { stroke: Highlight !important; }
+  [data-shared-border-segment][data-shared-border-state="normal"][data-shared-border-disabled] { stroke: GrayText !important; }
 }
 }
 /* Suppress only replaced paint, never border layout: measurement must remain stable. */
@@ -6935,16 +6700,12 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
 [data-shared-border-attached~="left"] { border-left-color: transparent !important; }
 [data-slot="navbar"][data-shared-border-attached~="bottom"]::after,
 [data-slot="footer"][data-shared-border-attached~="top"]::before { background-color: transparent !important; }
-[data-shared-border-attached~="top"][data-shared-border-attached~="right"][data-shared-border-attached~="bottom"][data-shared-border-attached~="left"]:is(.border-loading, .border-waiting, [data-celebrated="true"])::after {
-  content: none !important;
-}
-[data-shared-border-attached~="top"][data-shared-border-attached~="right"][data-shared-border-attached~="bottom"][data-shared-border-attached~="left"][data-introduced="true"] {
-  box-shadow: none !important;
-}
 }
 [data-shared-border-segment] { pointer-events: none; }
 [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--border-normal-color); }
 [data-shared-border-segment]:is([data-shared-border-state="active"], [data-shared-border-state="focus"]) { stroke: var(--active-base); }
+[data-shared-border-segment][data-shared-border-state="invalid"] { stroke: var(--destructive-border); }
+[data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color); }
 
 @utility gap-single {
   gap: var(--spacing-single);
@@ -7413,6 +7174,17 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
+/* 👁️ Culled surfaces: whatever the off-screen observer (`🔨️modules/👁️offscreen-culling`) marks `data-offscreen` lies a viewport or more from the view, so it holds no blur, no promoted layer and no shadow until it is near again. The fill, the borders and the geometry stay as they are, so it looks the same when it comes back. */
+[data-offscreen] :is(.ui-glass, .ui-veil),
+:is(.ui-glass, .ui-veil)[data-offscreen] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-offscreen],
+[data-offscreen] * {
+  will-change: auto !important;
+  box-shadow: none !important;
+}
 /* 🧊 Backdrop pages of a layered landing show their content blurred through the veil but never a border: every border colour and outline of the subtree is transparent
    and the compositor overlay / silhouette strokes are not painted, so no bordered box or edge fragment ghosts through a U-gap, a chip band or an edge hint. */
 [data-layered-backdrop] *,
@@ -7502,14 +7274,6 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
 /* Last row of a table inside a shared frame defers its bottom edge to that frame. */
 :is([data-shared-border-frame], [data-slot="popover-content"], [data-slot="dialog-content"]) table > tbody > tr:last-child {
   border-bottom-width: 0;
-}
-
-/* 🪟️ Window / panel / pane silhouette stacks: emphasize this stack's own SVG stroke while the pointer is
- * inside the unit (`:hover` only — never `:focus-within`). Direct-child only — nested pane/panel chips
- * inside a window body must not inherit the enclosing window's hover emphasis. Only `data-kind="normal"`. */
-[data-window-silhouette]:hover > [data-window-silhouette-border][data-kind="normal"]:not([data-pending]) path {
-  stroke: var(--border-emphasized-color);
-  transition: stroke 120ms ease;
 }
 
 /* 🎓️ Introduction step body: emphasize only the paragraph under the pointer — never sibling
@@ -7685,19 +7449,6 @@ details:not([open])[data-orientation="vertical"]:is([data-shared-border-frame], 
   border-width: 0;
   border-style: none;
   border-color: transparent !important;
-}
-
-[data-slot="introduction-info-box"]:hover,
-[data-slot="dialog-content"]:hover {
-  border-color: transparent !important;
-}
-
-/* 🎓️ The introduction box's real border is the silhouette SVG (see `WindowChromeSilhouetteBorder`),
- * not the box's own (permanently transparent) CSS border — emphasize its stroke only while the
- * pointer is inside and the box isn't already active-clicked, never on `:focus-within` so a button
- * click does not leave it stuck emphasized after the pointer leaves. */
-[data-slot="introduction-info-box"]:not([data-active="true"]):hover [data-window-silhouette-border] path {
-  stroke: var(--border-emphasized-color);
 }
 
 /* 🎓️ Introduction step unit hover: title + drag handle — not footer step-count chip. */
@@ -7972,17 +7723,6 @@ table thead.border-b {
   line-height: var(--text-2xs--line-height) !important;
 }
 
-[data-slot="window-measures-tree"] [data-slot="select-trigger"][data-state="open"],
-[data-slot="window-measures-tree"] [data-slot="select-trigger"]:focus-visible {
-  border-color: var(--accent);
-  box-shadow: none;
-  outline: none;
-}
-
-[data-slot="window-measures-tree"] [data-slot="toggle-group-item"][data-state="on"] {
-  box-shadow: none;
-}
-
 /* Puzzle 2d (and other full-bleed canvases) fill the window body; stack padding is for panel chrome only. */
 [data-slot="mode-dock-stack-body"]:has([data-testid="puzzle2d-canvas"]) {
   padding: 0;
@@ -8013,9 +7753,8 @@ table thead.border-b {
   scroll-behavior: auto !important;
 }
 
-.semio-scope[data-contrast="more"] :focus-visible {
-  outline: 3px solid currentColor;
-  outline-offset: 2px;
+.semio-scope[data-contrast="more"] [data-shared-border-segment]:is([data-shared-border-state="focus"], [data-shared-border-state="hover"], [data-shared-border-state="active"], [data-shared-border-state="invalid"]) {
+  stroke-width: calc(var(--stroke-hairline) * 3);
 }
 
 .semio-scope [data-grip-focused="true"] {

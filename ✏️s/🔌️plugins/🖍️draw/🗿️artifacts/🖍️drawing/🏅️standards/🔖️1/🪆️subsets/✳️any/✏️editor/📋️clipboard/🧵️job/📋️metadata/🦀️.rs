@@ -16,7 +16,7 @@ impl<T:RetireAuthority> Table<T>{
         if key.is_empty()||key.len()>MAX_ID_BYTES||self.entries.len()==MAX_NODES||self.pending_key.is_some()||self.pending_value.is_some(){return Err(fault(refused()));}
         let maximum=MAX_NODES.checked_mul(MAX_ID_BYTES+4096+size_of::<(String,T,bool)>()*2).ok_or_else(||fault(refused()))?;
         let mut accepted=|_|true;let mut control=NativeDecodeControl::new(maximum.checked_sub(self.admitted).ok_or_else(||fault(refused()))?,&mut accepted);
-        let result=(||{while !self.entries.has_reserved_slot(){let bytes=self.entries.next_allocation_bytes().map_err(fault)?;control.charge(bytes).map_err(fault)?;self.entries.reserve_one(bytes).map_err(|error|fault(error.refusal()))?;}control.charge(key.len().checked_add(extra).ok_or_else(||fault(refused()))?).map_err(fault)?;
+        let result=(||{while !self.entries.has_reserved_slot(){let bytes=self.entries.next_allocation_bytes().map_err(fault)?;control.charge(bytes).map_err(fault)?;self.entries.reserve_one_cold(bytes).map_err(|error|fault(error.refusal()))?;}control.charge(key.len().checked_add(extra).ok_or_else(||fault(refused()))?).map_err(fault)?;
             let mut owned=String::new();owned.try_reserve_exact(key.len()).map_err(fault)?;owned.push_str(key);self.pending_key=Some(owned);self.pending_value=Some(make()?);
             let entry=(self.pending_key.take().unwrap(),self.pending_value.take().unwrap(),true);self.entries.push_reserved(entry).map_err(|(key,value,_)|{self.pending_key=Some(key);self.pending_value=Some(value);fault(refused())})?;self.live+=1;Ok(true)
         })();self.admitted=self.admitted.checked_add(control.owned_bytes()).ok_or_else(||fault(refused()))?;result

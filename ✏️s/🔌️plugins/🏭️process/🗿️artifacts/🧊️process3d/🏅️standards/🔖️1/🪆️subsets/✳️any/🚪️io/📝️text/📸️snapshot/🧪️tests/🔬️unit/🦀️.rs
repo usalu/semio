@@ -75,7 +75,7 @@ async fn process3d_dsl_round_trips_imported_solid_shapes() {
             cut_step("cut-1"),
             drill_step("drill-1"),
             attach_step("attach-1"),
-            ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() } },
+            ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: semio_s_artifact_process_process3d_model::snapshot::pack_imported_brep(&semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("exact sphere fixture"), pose: Pose::default() } },
         ],
     };
     let document = process_working_scene_to_snapshot(&scene, Workshop { machines: vec![circular_saw_machine()] });
@@ -248,12 +248,12 @@ async fn concrete_forest_example_replays_every_step_on_the_kernel() {
     use semio_framework_3d_brep_engine::BrepKernel;
     let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
     let mut session = ProcessKernelReplay::new();
-    let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays");
+    let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays").expect("stock is solid");
     let stock_volume = session.kernel().volume(&stock).expect("stock volume");
     assert!((stock_volume - 14.0998).abs() < 1e-3, "stock volume {stock_volume}");
     let mut previous = stock_volume;
     for resolved in 1..=scene.steps.len() {
-        let handle = replay_process(&mut session, &scene, Some(resolved)).unwrap_or_else(|| panic!("step {} replays", scene.steps[resolved - 1].id));
+        let handle = replay_process(&mut session, &scene, Some(resolved)).unwrap_or_else(|error| panic!("step {} replays: {error}", scene.steps[resolved - 1].id)).expect("step leaves a solid");
         let volume = session.kernel().volume(&handle).expect("step volume");
         match scene.steps[resolved - 1].measure {
             ProcessMeasure::Attach { .. } => assert!(volume > previous + 1e-9, "step {} adds material ({previous} → {volume})", scene.steps[resolved - 1].id),

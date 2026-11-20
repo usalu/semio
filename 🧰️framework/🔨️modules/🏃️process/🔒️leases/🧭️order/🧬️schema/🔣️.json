@@ -625,6 +625,10 @@
           "en": "Deadlock detected: {cycle}. This request was chosen to fail so the others can proceed.",
           "de": "Verklemmung erkannt: {cycle}. Diese Anfrage wurde zum Scheitern gewählt, damit die anderen fortfahren können."
         },
+        "timeout": {
+          "en": "Waited {seconds} s for {resource} ({mode}) and it did not become free in time{blocker}. Run the command again once the holder has finished; a holder that is still running and renewing its claim is working, not stuck.",
+          "de": "{seconds} s auf {resource} ({mode}) gewartet; es wurde nicht rechtzeitig frei{blocker}. Den Befehl erneut ausführen, sobald der Halter fertig ist; ein Halter, der noch läuft und seinen Anspruch erneuert, arbeitet und steckt nicht fest."
+        },
         "modeShared": {
           "en": "shared",
           "de": "geteilt"

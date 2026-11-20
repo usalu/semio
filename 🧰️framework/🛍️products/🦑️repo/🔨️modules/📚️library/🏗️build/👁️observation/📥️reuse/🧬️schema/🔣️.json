@@ -15,6 +15,41 @@
         "changeAttempts": 3
       }
     },
+    "ConsumerTimings": {
+      "description": "Elapsed milliseconds summed across started batches, including the currently active portion. Reader runs until the retained consumer starts. Verify phases cover their respective store.verify calls. Body covers the inventory callback.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reader", "preVerify", "body", "postVerify"],
+      "properties": {
+        "reader": { "$ref": "#/definitions/ConsumerTiming" },
+        "preVerify": { "$ref": "#/definitions/ConsumerTiming" },
+        "body": { "$ref": "#/definitions/ConsumerTiming" },
+        "postVerify": { "$ref": "#/definitions/ConsumerTiming" }
+      }
+    },
+    "BodyTimings": {
+      "description": "Wall milliseconds and call counts at existing operations inside the inventory presence body, including active work. No paths, counters for individual records, or verifications outside the body.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storeRecheck": { "$ref": "#/definitions/ConsumerTiming" },
+        "continuation": { "$ref": "#/definitions/ConsumerTiming" },
+        "fileChecks": { "$ref": "#/definitions/ConsumerTiming" },
+        "recordRead": { "$ref": "#/definitions/ConsumerTiming" },
+        "implementationCheck": { "$ref": "#/definitions/ConsumerTiming" }
+      }
+    },
+    "ConsumerTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started", "active", "milliseconds"],
+      "properties": {
+        "started": { "$ref": "#/definitions/TimingNumber" },
+        "active": { "$ref": "#/definitions/TimingNumber" },
+        "milliseconds": { "$ref": "#/definitions/TimingNumber" }
+      }
+    },
+    "TimingNumber": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
     "Value": {
       "anyOf": [
         {

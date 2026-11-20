@@ -78,4 +78,9 @@ fn set_mutation_wire_is_the_flat_tagged_record() {
     let expected: semio_framework_value::DslValue = serde_json::json!({ "kind": "set", "viewport": { "x": 1.5, "y": -2.0, "zoom": 3.0 }, "framed": true }).into();
     assert_eq!(mutation.to_value(), expected);
     assert_eq!(DrawingViewerCanvasWindowConfigMutation::from_value(expected).expect("flat tagged set decodes"), mutation);
+    let binary = protocol::OpBinary::encode_op(&mutation).unwrap();
+    let decoded = store::pack_rt::decode_wire_value(&binary).unwrap();
+    assert_eq!(DrawingViewerCanvasWindowConfigMutation::from_value(decoded).unwrap(), mutation);
+    assert_eq!(<DrawingViewerCanvasWindowConfigMutation as protocol::OpBinary>::decode_op(&binary).unwrap(), mutation);
+    assert!(DrawingViewerCanvasWindowConfigOwner::native_pair_demands().is_ok());
 }

@@ -1,0 +1,50 @@
+{
+  "tolerance": 0.05,
+  "requests": [
+    {
+      "nodeHash": 519,
+      "windowId": "model-preview-a",
+      "windowKindId": "three-dimensional",
+      "line": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "nodeHash": 764,
+      "windowId": "detail-preview-b",
+      "windowKindId": "second-three-dimensional",
+      "line": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          4
+        ]
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "cancel": null
+    },
+    {
+      "cancel": 0
+    },
+    {
+      "cancel": 1
+    }
+  ]
+}

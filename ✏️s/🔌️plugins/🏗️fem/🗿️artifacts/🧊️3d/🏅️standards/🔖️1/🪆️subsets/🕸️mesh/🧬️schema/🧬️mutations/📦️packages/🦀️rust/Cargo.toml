@@ -28,6 +28,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-artifact-fem-3d-mesh-solids = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }
+semio-s-artifact-fem-3d-guards = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-fem-3d-mutations = { workspace = true }

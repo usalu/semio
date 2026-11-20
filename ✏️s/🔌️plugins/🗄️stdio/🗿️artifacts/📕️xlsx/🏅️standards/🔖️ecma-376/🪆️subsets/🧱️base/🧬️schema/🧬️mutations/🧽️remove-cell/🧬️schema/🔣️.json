@@ -25,6 +25,15 @@
         "widget": "hidden"
       }
     },
+    "keepRow": {
+      "type": "boolean",
+      "default": false,
+      "description": "Keep an existing row when undoing insertion of its only cell.",
+      "x-semio-ui": {
+        "label": { "en": "Keep row", "de": "Zeile behalten" },
+        "widget": "hidden"
+      }
+    },
     "mutation": {
       "const": "removeCell",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."

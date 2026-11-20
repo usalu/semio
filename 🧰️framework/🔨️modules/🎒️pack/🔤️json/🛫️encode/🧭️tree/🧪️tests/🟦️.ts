@@ -51,6 +51,24 @@ test("native canonical paged traversal retains original byte prefixes and closes
   expect(source).not.toContain("let mut escape = [0; 6]");
 });
 
+test("a canonical alias counts one item and charges both transfers", () => {
+  const root = new URL("../", import.meta.url);
+  const { aliasTransfer } = JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🔣️.json", root), "utf8"));
+  const db = new Database(":memory:");
+  try {
+    db.run("CREATE TABLE transfers(owner INTEGER, bytes INTEGER, work INTEGER)");
+    for (const hop of aliasTransfer.hops) db.run("INSERT INTO transfers VALUES (?, ?, ?)", [aliasTransfer.owner, hop.copyBytes, hop.work]);
+    expect(db.query("SELECT count(DISTINCT owner) AS items, sum(bytes) AS copyBytes, sum(work) AS work FROM transfers").get()).toEqual(aliasTransfer.expected);
+  } finally {
+    db.close();
+  }
+  const source = readFileSync(new URL("🦀️.rs", root), "utf8");
+  const helper = source.slice(source.indexOf("pub fn retained_alias<"), source.indexOf("fn refusal("));
+  expect(helper.indexOf("retained_clone_grant_admits(effect.grant(),retained_alias_demand(child)?)")).toBeLessThan(helper.indexOf("admission.admit("));
+  expect(helper).toContain("retained_alias_work_demand(child)?");
+  expect(helper).toContain("RetainedCloneProgress{copied_items:1,..bound.checked_add(published)?}");
+});
+
 test("original CQT header transfer agrees with strict neutral authority and SQLite alias identity",()=>{
  const root=new URL("../",import.meta.url);const law=JSON.parse(readFileSync(new URL("🧪️tests/🧫️fixtures/🎟️header.json",root),"utf8"));const schema=JSON.parse(readFileSync(new URL("🧬️schema/🎟️header.json",root),"utf8"));const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,headerAdmission:{...law.headerAdmission,copyBytes:1}})).toBe(false);
  const db=new Database(":memory:");db.run("CREATE TABLE aliases (id INTEGER PRIMARY KEY, owner TEXT NOT NULL, source INTEGER NOT NULL)");db.run("INSERT INTO aliases VALUES (1,'source',17),(2,'projection',17)");

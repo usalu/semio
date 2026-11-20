@@ -66,7 +66,7 @@ const LayeredNeighbourHint = /* @__PURE__ */ React.memo(function LayeredNeighbou
       tabIndex={moving ? -1 : undefined}
       onClick={() => props.onGo(neighbour)}
       className={cn(
-        "ui-glass absolute z-[32] inline-flex items-center justify-center gap-[4px] border-0 text-xs font-medium text-foreground outline-none transition-opacity duration-150 focus-visible:ring-2 focus-visible:ring-ring",
+        "ui-glass absolute z-[32] inline-flex items-center justify-center gap-[4px] border-0 text-xs font-medium text-foreground outline-none transition-opacity duration-150",
         HINT_PLACES[neighbour.direction],
         moving && "pointer-events-none opacity-0",
       )}

@@ -3,7 +3,7 @@ use semio_s_artifact_draw_drawing_model::PathSegment;
 use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
 use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour},retirement::WorkRetirementProgress};
-use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand};
+use semio_framework_value::{work::RetainedWorkLedger,RetainedAllocationEffect,RetirementDemand};
 use semio_s_artifact_draw_drawing_geometry::raster::close_one;
 type Point=[f64;2];
 #[derive(Clone,Debug)]
@@ -47,37 +47,37 @@ impl PaintedPathHitJob{
   let[x,y]=self.query.point;if (a[1]<=y&&b[1]>y)||(b[1]<=y&&a[1]>y){let t=(y-a[1])/(b[1]-a[1]);if a[0]*(1.0-t)+b[0]*t>x{self.winding+=if b[1]>a[1]{1}else{-1};}}
   Ok(())
  }
- fn retire_one(&mut self,ledger:&mut RetainedWorkLedger)->Result<bool,String>{
+ fn retire_one(&mut self,ledger:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,String>{
   if self.cleanup==8{return Ok(true);}
   let complete=match self.cleanup{
-   0=>{if let Some(child)=&mut self.flatten_retirement{if !child.terminal_is_empty(){self.close_child(0,ledger)?;return Ok(false);}self.flatten_retirement=None;}true},
-   1=>{if let Some(child)=&mut self.outline_retirement{if !child.terminal_is_empty(){self.close_child(1,ledger)?;return Ok(false);}self.outline_retirement=None;}true},
+   0=>{if let Some(child)=&mut self.flatten_retirement{if !child.terminal_is_empty(){self.close_child(0,ledger,effect)?;return Ok(false);}self.flatten_retirement=None;}true},
+   1=>{if let Some(child)=&mut self.outline_retirement{if !child.terminal_is_empty(){self.close_child(1,ledger,effect)?;return Ok(false);}self.outline_retirement=None;}true},
    2=>retire_flat(&mut self.flat),3=>{if self.contours.pop().is_some(){false}else{self.contours=Vec::new();true}},4=>retire_polygons(&mut self.polygons),5=>{self.segments=Vec::new();true},
    6=>{self.style=None;self.query.stroke=None;true},7=>{self.failure=None;true},_=>unreachable!(),
   };if complete{self.cleanup+=1;}Ok(self.cleanup==8)
  }
- fn close_child(&mut self,which:u8,ledger:&mut RetainedWorkLedger)->Result<(),String>{
-  let turn=match which{0=>close_one(&mut self.flatten_retirement.as_mut().ok_or("Painted query lost its working state")?.owner,ledger),_=>close_one(&mut self.outline_retirement.as_mut().ok_or("Painted query lost its working state")?.owner,ledger)};
+ fn close_child(&mut self,which:u8,ledger:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<(),String>{
+  let turn=match which{0=>close_one(&mut self.flatten_retirement.as_mut().ok_or("Painted query lost its working state")?.owner,ledger,effect),_=>close_one(&mut self.outline_retirement.as_mut().ok_or("Painted query lost its working state")?.owner,ledger,effect)};
   self.nested=true;self.last_turn_work+=turn.cpu;if let Some(error)=turn.error{return Err(error.message.to_string());}Ok(())
  }
- fn step(&mut self,source:&mut impl FnMut(usize)->Option<PathSegment>,ledger:&mut RetainedWorkLedger)->Result<bool,String>{
+ fn step(&mut self,source:&mut impl FnMut(usize)->Option<PathSegment>,ledger:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,String>{
   match self.phase{
-   "admitting"=>{if let Some(segment)=source(self.next){if self.next>=65536{return Err("Painted query exceeds segment limit".into());}if self.segments.capacity()<=self.segments.len(){let wanted=(self.segments.len()+1).max(self.segments.capacity().saturating_mul(2)).min(65536);if !ledger.reserve_vec(&mut self.segments,wanted).map_err(|e|e.to_string())?{return Ok(false);}}if !ledger.copy_bytes(std::mem::size_of::<semio_framework_2d::PathSegment>()){return Ok(false);}self.segments.push(semio_s_artifact_draw_drawing_geometry::to_kernel_segment(&segment));self.next+=1;}else{self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.segments),transform:self.query.transform,tolerance:self.query.flatness}));self.phase="flattening";}},
-   "flattening"=>{let child=self.flatten.as_mut().ok_or("Painted query lost its working state")?;if child.result().is_ok(){let(retired,output)=self.flatten.take().ok_or("Painted query lost its working state")?.into_retirement();self.flatten_retirement=Some(retired);self.flat=output.ok_or("Painted query lost its flat contours")?;self.phase="flattenCleanup";}else{self.nested=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result.map_err(|e|e.to_string())?;}return Ok(false);},
-   "flattenCleanup"=>{if let Some(owner)=&mut self.flatten_retirement{if !owner.terminal_is_empty(){self.close_child(0,ledger)?;return Ok(false);}self.flatten_retirement=None;}self.phase="fill";return Ok(false);},
+   "admitting"=>{if let Some(segment)=source(self.next){if self.next>=65536{return Err("Painted query exceeds segment limit".into());}if self.segments.capacity()<=self.segments.len(){let wanted=(self.segments.len()+1).max(self.segments.capacity().saturating_mul(2)).min(65536);if !ledger.reserve_vec(&mut self.segments,wanted,effect.actual()).map_err(|e|e.to_string())?{return Ok(false);}}if !ledger.copy_bytes(std::mem::size_of::<semio_framework_2d::PathSegment>()){return Ok(false);}self.segments.push(semio_s_artifact_draw_drawing_geometry::to_kernel_segment(&segment));self.next+=1;}else{self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.segments),transform:self.query.transform,tolerance:self.query.flatness}));self.phase="flattening";}},
+   "flattening"=>{let child=self.flatten.as_mut().ok_or("Painted query lost its working state")?;if child.result().is_ok(){let(retired,output)=self.flatten.take().ok_or("Painted query lost its working state")?.into_retirement();self.flatten_retirement=Some(retired);self.flat=output.ok_or("Painted query lost its flat contours")?;self.phase="flattenCleanup";}else{self.nested=true;let result=child.advance(1,ledger,effect);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result.map_err(|e|e.to_string())?;}return Ok(false);},
+   "flattenCleanup"=>{if let Some(owner)=&mut self.flatten_retirement{if !owner.terminal_is_empty(){self.close_child(0,ledger,effect)?;return Ok(false);}self.flatten_retirement=None;}self.phase="fill";return Ok(false);},
    "fill"=>{if let Some(contour)=self.flat.get(self.at){if !self.query.fill||contour.points.len()<2{self.at+=1;self.edge=0;}else if self.edge<contour.points.len(){let a=map(contour.points[self.edge],self.query.transform);let b=map(contour.points[(self.edge+1)%contour.points.len()],self.query.transform);self.edge+=1;self.line(a,b)?;}else{self.at+=1;self.edge=0;}}else{self.phase="contours";}},
    "contours"=>{if let Some(c)=self.flat.pop(){if self.style.is_some(){self.contours.push(StrokeContour{points:c.points,closed:c.closed});}}else{self.flat=Vec::new();if let Some(style)=self.style.take(){self.outline=Some(StrokeOutlineJob::new(StrokeOutlineInput{contours:std::mem::take(&mut self.contours),transform:self.query.transform,tolerance:self.query.flatness,style}));self.phase="stroke";}else{self.publish();self.phase="cleanup";}}},
-   "stroke"=>{let child=self.outline.as_mut().ok_or("Painted query lost its working state")?;if child.result().is_ok(){let(retired,output)=self.outline.take().ok_or("Painted query lost its working state")?.into_retirement();self.outline_retirement=Some(retired);self.polygons=output.ok_or("Painted query lost its stroke polygons")?;self.phase="strokeCleanup";}else{self.nested=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result.map_err(|e|e.to_string())?;}return Ok(false);},
-   "strokeCleanup"=>{if let Some(owner)=&mut self.outline_retirement{if !owner.terminal_is_empty(){self.close_child(1,ledger)?;return Ok(false);}self.outline_retirement=None;}self.publish();self.winding=0;self.boundary=false;self.at=0;self.edge=0;self.phase="polygons";return Ok(false);},
+   "stroke"=>{let child=self.outline.as_mut().ok_or("Painted query lost its working state")?;if child.result().is_ok(){let(retired,output)=self.outline.take().ok_or("Painted query lost its working state")?.into_retirement();self.outline_retirement=Some(retired);self.polygons=output.ok_or("Painted query lost its stroke polygons")?;self.phase="strokeCleanup";}else{self.nested=true;let result=child.advance(1,ledger,effect);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result.map_err(|e|e.to_string())?;}return Ok(false);},
+   "strokeCleanup"=>{if let Some(owner)=&mut self.outline_retirement{if !owner.terminal_is_empty(){self.close_child(1,ledger,effect)?;return Ok(false);}self.outline_retirement=None;}self.publish();self.winding=0;self.boundary=false;self.at=0;self.edge=0;self.phase="polygons";return Ok(false);},
    "polygons"=>{if let Some(polygon)=self.polygons.get(self.at){if self.edge<polygon.len(){let a=map(polygon[self.edge],self.query.transform);let b=map(polygon[(self.edge+1)%polygon.len()],self.query.transform);self.edge+=1;self.line(a,b)?;}else{self.stroke_hit|=self.boundary||self.winding!=0;self.winding=0;self.boundary=false;self.at+=1;self.edge=0;}}else{let fill=self.output.unwrap().contains;self.output=Some(PaintedPathHit{contains:fill||self.stroke_hit,bounds:self.bounds[0].is_finite().then_some(self.bounds)});self.phase="cleanup";}},
-   "cleanup"=>{if self.retire_one(ledger)?{self.phase="complete";}return Ok(false);},"complete"=>{},_=>return Err("Painted query phase is invalid".into()),
+   "cleanup"=>{if self.retire_one(ledger,effect)?{self.phase="complete";}return Ok(false);},"complete"=>{},_=>return Err("Painted query phase is invalid".into()),
   }Ok(true)
  }
  fn publish(&mut self){self.output=Some(PaintedPathHit{contains:self.query.fill&&(self.boundary||if self.query.fill_rule==FillRule::Evenodd{self.winding%2!=0}else{self.winding!=0}),bounds:self.bounds[0].is_finite().then_some(self.bounds)});}
  pub fn next_work_demand(&self)->RetirementDemand{self.demand}
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
- pub fn advance(&mut self,grant:usize,ledger:&mut RetainedWorkLedger,mut source:impl FnMut(usize)->Option<PathSegment>)->Result<PaintedPathProgress,String>{
+ pub fn advance(&mut self,grant:usize,ledger:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>,mut source:impl FnMut(usize)->Option<PathSegment>)->Result<PaintedPathProgress,String>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;
   if grant==0||grant as u128>9_007_199_254_740_991{return Err("Invalid painted query work grant".into());}if self.cancelled{return Err("Painted query cancelled".into());}if let Some(error)=&self.failure{return Err(error.clone());}
   for _ in 0..grant{
@@ -85,12 +85,12 @@ impl PaintedPathHitJob{
    if !ledger.admits_absolute(self.demand){ledger.require_absolute(self.demand);break;}
    let Some(root)=ledger.enter()else{self.demand=ledger.next_demand();break;};
    self.nested=false;let before=ledger.receipt();let cpu=self.last_turn_work;let semantic=self.last_turn_semantic_work;
-   let result=self.step(&mut source,ledger);
+   let result=self.step(&mut source,ledger,effect);
    if !self.nested&&(ledger.receipt()!=before||!ledger.blocked()){self.last_turn_work+=1;self.last_turn_semantic_work+=match &result{Ok(true)|Err(_)=>1,_=>0};}
    if self.last_turn_work>cpu{ledger.note_source(root);}
    self.work+=self.last_turn_semantic_work-semantic;ledger.exit();self.demand=ledger.next_demand();
    if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}
-   if ledger.blocked()||self.last_turn_work==cpu{break;}
+   if ledger.blocked()||effect.actual().is_some()||self.last_turn_work==cpu{break;}
   }
   Ok(PaintedPathProgress{phase:self.phase,work:self.work,done:self.phase=="complete"})
  }
@@ -107,14 +107,14 @@ pub struct PaintedPathRetirement{job:Option<PaintedPathHitJob>,work:u64,last_tur
 impl PaintedPathRetirement{
  pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
- pub fn advance(&mut self,grant:usize,ledger:&mut RetainedWorkLedger)->Result<WorkRetirementProgress,&'static str>{
+ pub fn advance(&mut self,grant:usize,ledger:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<WorkRetirementProgress,&'static str>{
   self.last_turn_work=0;if grant==0||grant as u128>9_007_199_254_740_991{return Err("Invalid painted query cleanup grant");}
   for _ in 0..grant{
    let Some(job)=self.job.as_mut()else{break};
    let Some(root)=ledger.enter()else{break};job.nested=false;
-   let before=job.last_turn_work;let result=job.retire_one(ledger);if !job.nested{self.last_turn_work+=1;}else{self.last_turn_work+=job.last_turn_work-before;}ledger.note_source(root);ledger.exit();
+   let before=job.last_turn_work;let result=job.retire_one(ledger,effect);if !job.nested{self.last_turn_work+=1;}else{self.last_turn_work+=job.last_turn_work-before;}ledger.note_source(root);ledger.exit();
    match result{Ok(true)=>{self.job=None;}Ok(false)=>{}Err(_)=>return Err("Painted query cleanup refused")}
-   self.work+=1;if ledger.blocked(){break;}
+   self.work+=1;if ledger.blocked()||effect.actual().is_some(){break;}
   }
   Ok(WorkRetirementProgress{phase:"cleanup",work:self.work,done:self.job.is_none()})
  }

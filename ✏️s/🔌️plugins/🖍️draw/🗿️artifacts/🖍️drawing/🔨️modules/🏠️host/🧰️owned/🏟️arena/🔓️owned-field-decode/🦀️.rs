@@ -1,6 +1,11 @@
 //! 🔓️ Drawing arena owned-field decode: the retirement factories, the decoded field retirement, the macro-generated owned-field authorities and the envelope owned-field catalog.
 
 use super::*;
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect};
+use store::os_store::owned_schema_decode::{
+    ArtifactEnvelopeCloseExit, ArtifactEnvelopeClosePoll, artifact_envelope_close_resume_with,
+    artifact_envelope_close_settle, artifact_envelope_failure_diagnostic,
+};
 
 pub const DRAWING_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
@@ -11,7 +16,7 @@ pub type DrawingSnapshotRetirementFactory = semio_framework_value::OwnedValueRet
 pub type DrawingMutationRetirementFactory = semio_framework_value::OwnedValueRetirementFactory<DrawingMutation>;
 
 fn decode_drawing_snapshot_pack(bytes: &[u8]) -> Result<DrawingSnapshot, ()> {
-    <DrawingSnapshot as store::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <DrawingSnapshot as store::os_store::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {
@@ -37,7 +42,9 @@ impl<T: semio_framework_value::retirement::RetireOwned> DrawingDecodedFieldRetir
         Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) })
     }
 
-    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> { self.owner.step(grant) }
+    pub fn step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        self.owner.step(body, effect)
+    }
 
     pub fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
 }
@@ -162,40 +169,45 @@ macro_rules! drawing_owned_field_authority {
 
             drawing_owned_field_close_capacity!($authority_trait, $value);
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-                let empty = RetainedCloneProgress::default();
-                if self.terminal_is_empty() {
-                    return Ok(RetainedCloneStep::Complete(empty));
-                }
-                if grant.maximum_items == 0 {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                let demand = self.close_demands(grant.maximum_copy_bytes)?;
-                if grant.maximum_depth < demand.depth {
-                    return Err(self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-depth"), 0));
-                }
-                if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                if let $state::Decode(authority) = &mut self.state {
-                    authority.cancel();
+            fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+                let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+                    let empty = RetainedCloneProgress::default();
+                    if self.terminal_is_empty() {
+                        return Ok(RetainedCloneStep::Complete(empty));
+                    }
+                    let grant = effect.grant();
+                    if grant.maximum_items == 0 || effect.remaining_work_units().map_err(|error| self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-work"), 0).with_native(error))? == 0 {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    let body = grant.maximum_copy_bytes;
+                    let demand = self.close_demands(body)?;
+                    let diagnostic = self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-fault"), 0);
+                    if grant.maximum_depth < demand.depth {
+                        return Err(self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-depth"), 0).into());
+                    }
+                    if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    if let $state::Decode(authority) = &mut self.state {
+                        authority.cancel();
+                        self.state = $state::Closing;
+                        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: DRAWING_OWNED_FIELD_BYTES, ..empty }));
+                    }
+                    let step = if self.retirement.is_some() {
+                        artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, body, effect), |failure| artifact_envelope_failure_diagnostic(diagnostic, &failure))?
+                    } else if self.value.is_some() {
+                        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(|error| diagnostic.with_native(error))?
+                    } else {
+                        RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty })
+                    };
                     self.state = $state::Closing;
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: DRAWING_OWNED_FIELD_BYTES, ..empty }));
-                }
-                let step = if self.retirement.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result
-                } else if self.value.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).result
-                } else {
-                    Ok(RetainedCloneStep::Complete(empty))
-                }
-                .map_err(|error| self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-fault"), 0).with_native(error))?;
-                self.state = $state::Closing;
-                if self.value.is_none() && self.retirement.is_none() {
-                    self.state = $state::Complete;
-                    return Ok(RetainedCloneStep::Complete(step.progress()));
-                }
-                Ok(RetainedCloneStep::Progress(step.progress()))
+                    if self.value.is_none() && self.retirement.is_none() {
+                        self.state = $state::Complete;
+                        return Ok(RetainedCloneStep::Complete(step.progress()));
+                    }
+                    Ok(RetainedCloneStep::Progress(step.progress()))
+                })();
+                artifact_envelope_close_settle(effect, result)
             }
 
             fn terminal_is_empty(&self) -> bool {
@@ -259,15 +271,22 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 
     fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if self.terminal {
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = if self.terminal {
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        } else {
+            let grant = effect.grant();
+            match effect.remaining_work_units() {
+                Err(error) => Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("drawing-envelope.conflict-retirement-work", store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT).with_native(error).into()),
+                Ok(0) => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
+                Ok(_) if grant.maximum_items == 0 || grant.maximum_depth == 0 => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
+                Ok(_) => {
+                    self.terminal = true;
+                    Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                }
+            }
+        };
+        artifact_envelope_close_settle(effect, result)
     }
 
     fn terminal_is_empty(&self) -> bool {

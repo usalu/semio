@@ -61,7 +61,7 @@ impl OriginalSurfaceViewRead{
    0=>{
     if registry.cached_capture.is_some(){return Ok(false)}
     let me=self as*const Self as usize;
-    self.unit.step(cx,demand::<Self>(),||{self.registry=Some(registry as*const _ as usize);registry.cached_capture=Some(me);registry.captured_slot=None;self.selection=selection;self.selected=surface.is_none();self.locked=true;self.phase=1})?;
+    self.unit.step(cx,demand::<Self>(),||{self.registry=Some(registry as*const _ as usize);registry.cached_capture=Some(me);registry.captured_slot=None;self.selection=selection;self.selected=surface.is_none();self.locked=true;self.phase=1;})?;
    },
    1=>{
     if self.selected{self.unit.step(cx,demand::<u8>(),||self.phase=2)?;return Ok(false)}
@@ -85,7 +85,7 @@ impl OriginalSurfaceViewRead{
    },
    3=>{
     self.admission.drive(cx,&mut registry.cached_source)?;
-    if registry.cached_source.is_some(){self.phase=4}
+    if registry.cached_source.as_ref().is_some_and(|source|!source.publication_pending()){self.phase=4}
    },
    4=>return Ok(true),
    _=>return Err(invalid().into()),
@@ -112,7 +112,7 @@ impl OriginalSurfaceViewRead{
    if registry.cached_source.as_ref().is_some_and(RetainedCloneSource::terminal_is_empty){registry.cached_source.take();}
    return Ok(false)
   }
-  if self.locked{retire_metadata(cx,demand::<(Option<usize>,Option<usize>,bool)>(),||{registry.cached_capture=None;registry.captured_slot=None;self.locked=false})?;return Ok(false)}
+  if self.locked{retire_metadata(cx,demand::<(Option<usize>,Option<usize>,bool)>(),||{registry.cached_capture=None;registry.captured_slot=None;self.locked=false;})?;return Ok(false)}
   if !unbuilt(cx,&mut self.unit.admission)?{return Ok(false)}
   Ok(self.terminal_is_empty())
  }

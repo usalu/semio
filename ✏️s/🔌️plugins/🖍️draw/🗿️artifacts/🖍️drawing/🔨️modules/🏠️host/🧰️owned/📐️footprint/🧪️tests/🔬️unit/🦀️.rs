@@ -4,6 +4,14 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
 use semio_framework_value_persistent::list::PagedList;
+use store::os_store::snapshot_read::settle_close_poll;
+#[path = "../../../🧪️tests/🎟️retained-effect/🦀️.rs"]
+mod fixture_effect;
+use fixture_effect::effect_turn;
+
+fn close_grant(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
 
 #[test]
 fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes() {
@@ -22,26 +30,26 @@ fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes()
                 for turn in 0..partial {
                     rewrite.append_active = true;
                     let grant = initial_snapshot_clone_grant(turn);
-                    let (step, allocation) = observe(|| rewrite.append.advance("layer-0123456789abcdef", &mut *rewrite.native_id, grant).unwrap());
+                    let (step, allocation) = observe(|| rewrite.append.advance("layer-0123456789abcdef", &mut *rewrite.native_id, "layer-0123456789abcdef".len(), grant).result.unwrap());
                     assert!(step.progress().fits(grant));assert!(allocation.requested_bytes <= step.progress().retained_capacity_bytes);assert!(allocation.released_bytes <= step.progress().released_bytes);
                 }
             }
             for grant in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: usize::MAX }] {
-                let (step, allocation) = observe(|| rewrite.close_granted(grant).unwrap());
+                let (step, allocation) = observe(|| effect_turn(grant, 4096, |effect| rewrite.close_step(effect)).unwrap());
                 assert_eq!(step.progress(), Default::default());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             }
             let mut released = 0;
             let mut turns = 0;
-            for turn in 0..100000 {
-                let grant = initial_snapshot_clone_grant(turn);
-                let (step, allocation) = observe(|| rewrite.close_granted(grant).unwrap());
+            for _ in 0..100000 {
+                let grant = close_grant(rewrite.close_demands(4096).unwrap());
+                let (step, allocation) = observe(|| effect_turn(grant, 4096, |effect| rewrite.close_step(effect)).unwrap());
                 let progress = step.progress();assert!(progress.fits(grant));assert!(!allocation.overflowed);
                 assert!(allocation.requested_bytes <= progress.retained_capacity_bytes);assert!(allocation.released_bytes <= progress.released_bytes);
                 assert!(progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
                 released += allocation.released_bytes;turns += 1;
                 if matches!(step, RetainedCloneStep::Complete(_)) { break; }
             }
-            let (step, allocation) = observe(|| rewrite.close_granted(RetainedCloneGrant::one_release_turn(4096, usize::MAX)).unwrap());
+            let (step, allocation) = observe(|| effect_turn(RetainedCloneGrant::one_release_turn(4096, usize::MAX), 4096, |effect| rewrite.close_step(effect)).unwrap());
             assert_eq!(step, RetainedCloneStep::Complete(Default::default()));assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
             let (owners, allocation) = observe(|| rewrite.take_owners().expect("duplicate closure returns empty pool owners once"));
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));assert!(rewrite.take_owners().is_none());assert!(rewrite.terminal_is_empty());
@@ -60,27 +68,26 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_actual_birth_and_rel
         let retained = field.capacity();
         let (mut retirement, allocation) = observe(|| super::super::DrawingDecodedFieldRetirement::try_new(field).unwrap_or_else(|_| panic!("native decoded text supports retirement")));
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        for (items, bytes) in [(0, 4096), (1, 0)] {
-            let (step, allocation) = observe(|| retirement.step(items, bytes).unwrap());
-            assert_eq!(step.progress(), Default::default());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        }
+        let empty = RetainedCloneGrant::default();
+        let (blocked, allocation) = observe(|| effect_turn(empty, 4096, |effect| settle_close_poll(retirement.step(4096, effect))).unwrap());
+        assert_eq!(blocked.progress(), Default::default());
+        assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         let mut released = 0;
-        let mut turns = 0;
-        let mut scaffold_extent = 0;
         for _ in 0..10000 {
-            let (demand, allocation) = observe(|| retirement.next_close_byte_demand().unwrap());
+            let (demand, allocation) = observe(|| retirement.owner.next_demand(4096).unwrap());
             assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            if demand > 0 {
-                let (step, allocation) = observe(|| retirement.step(1, demand - 1).unwrap());
-                assert_eq!(step.progress(), Default::default());assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            }
-            let grant = 4096.max(demand);
-            scaffold_extent = scaffold_extent.max(demand);
-            let (step, allocation) = observe(|| retirement.step(1, grant).unwrap());
+            let grant = close_grant(demand);
+            let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
+            let (blocked, allocation) = observe(|| effect_turn(denied, 4096, |effect| settle_close_poll(retirement.step(4096, effect))).unwrap());
+            assert_eq!(blocked.progress(), Default::default());
+            assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
+            let (step, allocation) = observe(|| effect_turn(grant, 4096, |effect| settle_close_poll(retirement.step(4096, effect))).unwrap());
             let progress = step.progress();
-            assert!(!allocation.overflowed);assert!(allocation.requested_bytes <= progress.retained_capacity_bytes);assert!(allocation.released_bytes <= progress.released_bytes);
-            assert!(progress.retained_capacity_bytes + progress.released_bytes <= grant);
-            released += allocation.released_bytes;turns += 1;
+            assert!(!allocation.overflowed);
+            assert!(progress.fits(grant));
+            assert!(allocation.requested_bytes <= progress.retained_capacity_bytes);
+            assert!(allocation.released_bytes <= progress.released_bytes);
+            released += allocation.released_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() { break; }
         }
         assert!(retirement.terminal_is_empty());assert!(released >= retained);
@@ -147,7 +154,7 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
     let mut turns = 0;
     for turn in 0..100000 {
         let grant = match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, usize::MAX), 1 => RetainedCloneGrant::one_payload_turn(4096, usize::MAX), _ => RetainedCloneGrant::one_release_turn(4096, usize::MAX) };
-        let (step, allocation) = observe(|| retirement.step(grant).unwrap());
+        let (step, allocation) = observe(|| effect_turn(grant, 4096, |effect| settle_close_poll(retirement.step(grant.maximum_copy_bytes, effect))).unwrap());
         let progress = step.progress();
         assert!(!allocation.overflowed);assert!(allocation.requested_bytes <= progress.retained_capacity_bytes);assert!(allocation.released_bytes <= progress.released_bytes);
         assert!(progress.copied_bytes + progress.retained_capacity_bytes + progress.released_bytes <= 4096);
@@ -398,7 +405,7 @@ fn paged_native_drawing_snapshot_text_footprint_counts_empty_spare_backing_exact
             1 => RetainedCloneGrant::one_payload_turn(4096, usize::MAX),
             _ => RetainedCloneGrant::one_release_turn(4096, usize::MAX),
         };
-        let (result, allocation) = observe(|| retirement.step(grant));
+        let (result, allocation) = observe(|| effect_turn(grant, 4096, |effect| settle_close_poll(retirement.step(grant.maximum_copy_bytes, effect))));
         let step = result.unwrap();let progress = step.progress();
         assert!(!allocation.overflowed);
         assert!(allocation.requested_bytes <= progress.retained_capacity_bytes);

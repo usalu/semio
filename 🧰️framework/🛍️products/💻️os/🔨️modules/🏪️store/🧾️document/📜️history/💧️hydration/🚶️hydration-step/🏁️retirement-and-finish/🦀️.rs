@@ -21,6 +21,9 @@ where
         retire!(pin_refs);
         retire!(edit_lookup);
         retire!(fold);
+        // The Envelope target leaves replay to the replacement Store initializer.
+        retire!(replay_ids);
+        retire!(replay_order);
         if self.target==PersistedDocumentHydrationTarget::Envelope&&self.actor.0.has_owner(){if !owned_frame_funded::<semio_framework_value::SharedUtf8>(grant){return PersistedDocumentHydrationStep::Pending(self.progress())}let actor=std::mem::take(&mut self.actor.0);if let Err(error)=self.admit_active(actor,cx,grant){return self.reject(error)}return PersistedDocumentHydrationStep::Pending(self.progress())}
         self.phase = Phase::RetirePack;
         cx.consume_fuel(1);

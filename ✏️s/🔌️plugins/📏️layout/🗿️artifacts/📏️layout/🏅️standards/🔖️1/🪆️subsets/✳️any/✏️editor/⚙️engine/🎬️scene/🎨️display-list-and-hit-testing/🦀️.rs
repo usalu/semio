@@ -148,12 +148,43 @@ impl DisplayList {
     }
 }
 
-/// 👆 Topmost visible frame whose axis-aligned bounds contain `(x, y)`.
-///
-/// Parent frames are tested first and page frames after, matching paint order.
-/// This does not construct a [`LayoutEngine`] and does not shape text.
+/// 👆 Finds the topmost visible frame from borrowed bounds in page paint order.
 pub fn hit_test_page_frames(doc: &LayoutSnapshot, page: &Page, x: f32, y: f32) -> Option<String> {
-    resolve_page(doc, page).into_iter().rev().find(|row| row.frame.visible() && frame_layer_visible(doc, page, &row.frame) && frame_bounds_contain(row.frame.bounds(), x, y)).map(|row| row.frame.id().to_string())
+    if let Some(frame) = topmost_hit(&page.frames, &page.layers, &Default::default(), x, y) {
+        return Some(frame.id().into());
+    }
+    let parent_id = page.parent_page_id.as_deref()?;
+    let parent = doc.parent_pages.iter().find(|parent| parent.id == parent_id)?;
+    let overrides = page.overrides.iter().rev().map(|row| (row.object_id.as_str(), row)).collect();
+    topmost_hit(&parent.frames, &parent.layers, &overrides, x, y).map(|frame| frame.id().into())
+}
+
+fn topmost_hit<'a>(
+    frames: &'a [Frame],
+    layers: &[semio_s_artifact_layout_layout_model::Layer],
+    overrides: &std::collections::HashMap<&str, &semio_s_artifact_layout_layout_model::PageOverride>,
+    x: f32,
+    y: f32,
+) -> Option<&'a Frame> {
+    let layers_by_id: std::collections::HashMap<_, _> =
+        layers.iter().enumerate().map(|(rank, layer)| (layer.id.as_str(), (rank, layer.visible))).collect();
+    let mut top = None;
+    for frame in frames.iter().rev() {
+        let row = overrides.get(frame.id());
+        let bounds = row.and_then(|row| row.bounds.as_ref()).unwrap_or_else(|| frame.bounds());
+        let visible = row.and_then(|row| row.visible).unwrap_or_else(|| frame.visible());
+        if !visible || !frame_bounds_contain(bounds, x, y) {
+            continue;
+        }
+        let (rank, layer_visible) = layers_by_id.get(frame.layer_id()).copied().unwrap_or((layers.len(), true));
+        if layer_visible && top.is_none_or(|(best, _)| rank > best) {
+            if rank == layers.len() {
+                return Some(frame);
+            }
+            top = Some((rank, frame));
+        }
+    }
+    top.map(|(_, frame)| frame)
 }
 
 pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {

@@ -21,7 +21,7 @@ pub const BITMAP_EXAMPLE_FLOWERS_TEXT: &str = include_str!("../../../📚️exam
 //#endregion 🔖️Examples
 
 //#region 🔖️DslMirror
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct BitmapColorDsl {
     pub r: u32,
     pub g: u32,
@@ -143,10 +143,19 @@ pub fn bitmap_document_from_dsl(parsed: BitmapSnapshotDsl) -> Result<BitmapSnaps
 
 
 /// 🛬️ Moves the authored bitmap grammar into persisted fields under one native ownership control.
-pub fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<BitmapSnapshot,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+pub fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<BitmapSnapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome {
     let maximum_rows=control.limits().max_rows;
-    let snapshot=work.take(store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),|record,snapshot_output,native| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {construct_native_record(record,native,maximum_rows)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))?;snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
-})}
+    let outcome=store::decode_sqlite_snapshot_record_native(payload,<BitmapSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),BitmapSnapshotDsl::__dsl_spec_producer(),&mut |record,snapshot_output,native| { *snapshot_output = Some(construct_native_record(record,native,maximum_rows)?); Ok(()) },control,native_control,output);
+    if outcome.result.is_ok() {
+        if let Some(Ok(snapshot))=output.as_ref() {
+            if let Err(error)=snapshot.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative) {
+                output.take();
+                return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:outcome.work};
+            }
+        }
+    }
+    outcome
+}
 
 /// 🛫️ Admits every owned bitmap native field before its canonical record and physical output.
 pub fn encode_sqlite_snapshot_native(document:&BitmapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{

@@ -3,6 +3,7 @@
 //! data-uri image asset/block — real pixel content is carried but not decomposed into note
 //! structure, so this hop is `IoFidelity::Lossy`.
 
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use crate::schema::{create_note_id, NoteIdOwner};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_note_snapshot};
 use crate::{NoteBlockNode, NoteImageAsset};
@@ -11,7 +12,6 @@ use semio_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_pixels::decode_png;
-use std::collections::BTreeMap;
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
@@ -49,8 +49,8 @@ impl Deserializer<NoteSnapshot> for PngIntoNote {
         let mut snap = empty_note_snapshot();
         snap.id = create_note_id(&mut ids, "png-import");
         snap.title = Some("Imported PNG".into());
-        let mut assets = BTreeMap::new();
-        assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(bytes)), width: Some(png.width as f64), height: Some(png.height as f64) });
+        let mut assets = RetainedOrderedMap::new();
+        assets.cold_insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(bytes)), width: Some(png.width as f64), height: Some(png.height as f64) });
         snap.assets = assets;
         snap.blocks.push(NoteBlockNode::Image { id: "png-image-1".into(), name: "PNG".into(), x: 0.0, y: 0.0, width: png.width.max(1) as f64, height: png.height.max(1) as f64, rotation: 0.0, visible: true, locked: false, image_key: key });
         Ok(IoOutcome::clean(snap))

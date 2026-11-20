@@ -1,7 +1,7 @@
 //! 🧪️ Unit laws of the fem3d diff algebra: `absorb` coalesces same-key rows, `inverse` is the negative delta, and the absorbed diff applies exactly like its parts in sequence.
 
 use super::*;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::*;
+use semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 
 fn node(id: &str, x: f64) -> FemNodeValue {
@@ -200,9 +200,9 @@ fn stable_identity_refuses_whole_node_renames_atomically() {
         assert!(semio_framework_pack_json::from_json_str::<Fem3dNodePatch>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "node patch cannot author an identity");
     }
 }
-/// 🪆️ Nested load identity refusal publishes no earlier node change from the same artifact diff.
+/// 🪆️ Nested load variant refusal publishes no earlier node change from the same artifact diff.
 #[test]
-fn stable_identity_nested_load_refusal_is_atomic() {
+fn nested_load_variant_refusal_is_atomic() {
     let original = base();
     let mut diff = patch_node("n1", 8.0);
     diff.load_cases = Some(Fem3dLoadCasesDelta {
@@ -213,8 +213,8 @@ fn stable_identity_nested_load_refusal_is_atomic() {
         } }],
         ..Default::default()
     });
-    let error = protocol::apply_diff_cold(&diff, &original).expect_err("nested identity change refuses");
-    assert_eq!(error.code, "mutation.apply.identity-change");
+    let error = protocol::apply_diff_cold(&diff, &original).expect_err("a nodal load rejects an area patch");
+    assert_eq!(error.code, "mutation.apply.variant-mismatch");
     assert_eq!(original, base());
 }
 

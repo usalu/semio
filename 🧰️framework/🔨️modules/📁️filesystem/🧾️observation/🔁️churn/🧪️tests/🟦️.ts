@@ -48,10 +48,10 @@ test("the policy table is closed under its schema: attempts, pauses and EN/DE te
  for(const language of protocol.languages){
   expect(Object.keys(protocol.reasons[language]!).sort()).toEqual([...reasons].sort());
   for(const value of Object.values(protocol.reasons[language]!))expect(text(value)).toBe(true);
-  for(const key of ["retry","exhausted"] as const)expect(text(protocol.texts[language]![key])).toBe(true);
+  for(const key of ["retry","exhausted","stuck"] as const)expect(text(protocol.texts[language]![key])).toBe(true);
  }
- const placeholders=(language:string,key:"retry"|"exhausted")=>[...protocol.texts[language]![key].matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
- for(const key of ["retry","exhausted"] as const)expect(placeholders("en",key)).toEqual(placeholders("de",key));
+ const placeholders=(language:string,key:"retry"|"exhausted"|"stuck")=>[...protocol.texts[language]![key].matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
+ for(const key of ["retry","exhausted","stuck"] as const)expect(placeholders("en",key)).toEqual(placeholders("de",key));
 });
 
 test("the implementation replays every scripted scenario exactly like the independent Python model, asynchronous and synchronous",async()=>{
@@ -196,4 +196,41 @@ test("a file whose modification time lies in the future (clock skew) is not wait
  try{writeFileSync(file,"x");const future=new Date(Date.now()+3600000);utimesSync(file,future,future);expect(quietWaitMillisecondsV1(file,0)).toBe(0);
   const now=new Date();utimesSync(file,now,now);expect(quietWaitMillisecondsV1(file,0)).toBeGreaterThan(0);}
  finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("a converging build layer retries until the schema wall clock is spent, with the last declared pause",async()=>{
+ const limit=protocol.convergence.wallClockMilliseconds,pauses:number[]=[],events:ChurnRetryEventV1[]=[];let clock=0,runs=0;
+ const options={converge:true,now:()=>clock,sleep:async(milliseconds:number)=>{pauses.push(milliseconds);clock+=Math.floor(limit/10);},onRetry:(event:ChurnRetryEventV1)=>{events.push(event);}};
+ await expect(retryOnConcurrentEditV1("build",async()=>{runs++;throw concurrentEditV1("bytes","/x/key-frame.rs");},options)).rejects.toThrow("/x/key-frame.rs");
+ expect(runs).toBeGreaterThan(protocol.profiles.build.maximumAttempts);expect(runs).toBe(11);
+ expect(pauses.slice(0,3)).toEqual([...protocol.profiles.build.backoffMs]);expect(new Set(pauses.slice(3))).toEqual(new Set([protocol.profiles.build.backoffMs.at(-1)!]));
+ expect(events.every(event=>event.maximum===protocol.convergence.maximumAttempts&&!event.text.includes("∞"))).toBe(true);
+ clock=0;runs=0;pauses.length=0;
+ await expect(retryOnConcurrentEditV1("build",async()=>{runs++;if(runs<8)throw concurrentEditV1("bytes","/x/key-frame.rs");return "done";},options)).resolves.toBe("done");
+ expect(runs).toBe(8);
+ runs=0;await expect(retryOnConcurrentEditV1("build",async()=>{runs++;throw concurrentEditV1("bytes","/x/key-frame.rs");},{...options,converge:false})).rejects.toThrow();expect(runs).toBe(protocol.profiles.build.maximumAttempts);
+});
+
+test("a converging layer ends once every new snapshot reports the same edit of a path that no longer moves, and is bounded by attempts",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"churn-stuck-")),file=join(directory,"Cargo.lock"),pauses:number[]=[],events:ChurnRetryEventV1[]=[];
+ try{
+  writeFileSync(file,"a");let runs=0;const pinned="a";
+  const options={converge:true,modifiedAgeMs:()=>undefined,sleep:async(milliseconds:number)=>{pauses.push(milliseconds);},onRetry:(event:ChurnRetryEventV1)=>{events.push(event);}};
+  writeFileSync(file,"b");
+  const failure=await retryOnConcurrentEditV1("build",async()=>{runs++;if(await Bun.file(file).text()!==pinned)throw concurrentEditV1("bytes",file);return "done";},options).catch(error=>error);
+  expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);expect(failure.path).toBe(file);expect(failure.rank).toBe(protocol.profiles.build.rank);
+  expect(runs).toBe(protocol.convergence.stableFailures+1);expect(events.length).toBe(runs-1);expect(failure.message).toContain(file);
+  expect(failure.message).toContain("held outside this retry");expect(failure.message).toContain("außerhalb dieses Wiederholens");
+  expect(concurrentEditOfV1(failure)?.path).toBe(file);
+  runs=0;
+  const converged=await retryOnConcurrentEditV1("build",async()=>{runs++;if(runs<2)throw concurrentEditV1("bytes",file);return "done";},options);
+  expect(converged).toBe("done");expect(runs).toBe(2);
+  runs=0;let edits=0;
+  const moving=await retryOnConcurrentEditV1("build",async()=>{runs++;if(runs<=6){writeFileSync(file,"m"+runs);edits++;throw concurrentEditV1("bytes",file);}return "done";},options);
+  expect(moving).toBe("done");expect(edits).toBe(6);
+  runs=0;let tick=0;
+  const bounded=await retryOnConcurrentEditV1("build",async()=>{runs++;throw concurrentEditV1("bytes",file);},{...options,identityOf:()=>String(tick++)}).catch(error=>error);
+  expect(bounded).toBeInstanceOf(ConcurrentEditErrorV1);expect(runs).toBe(protocol.convergence.maximumAttempts);
+  expect(bounded.message).toContain(String(protocol.convergence.maximumAttempts));
+ }finally{rmSync(directory,{recursive:true,force:true});}
 });

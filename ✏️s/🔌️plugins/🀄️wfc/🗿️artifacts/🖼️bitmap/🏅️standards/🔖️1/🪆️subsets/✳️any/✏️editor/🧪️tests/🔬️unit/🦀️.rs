@@ -72,7 +72,7 @@ fn stroke(points: &[(u32, u32)], color: Option<u32>, phase: Option<&str>) -> Bit
 fn every_mutation_kind_is_reachable_from_a_window() {
     let declared: Vec<String> = create_bitmap_editor().window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for kind in crate::mutations::KINDS {
-        let verb = match *kind { "paint-input-stroke" => "paint-stroke", "restore-pins" => "pin-preview", _ => kind };
+        let verb = match *kind { "paint-input-stroke" => "paint-stroke", "restore-pins" | "pin-solution" => "pin-preview", _ => kind };
         assert!(declared.iter().any(|action| action == verb), "mutation '{kind}' is not reachable from any window action");
     }
     for verb in ["set-active-color", "solve", "paint-stroke"] {
@@ -278,8 +278,9 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
 
     let partial = payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false);
     let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 3 }, [0; 32]), ToolRunState::Running);
-    run.payload = Some(partial.encode_json().into_bytes().into());
+    run.payload = Some(semio_framework_value::factory::SharedOriginalStorage::from_cold(partial.encode_json().into_bytes()));
     let partial_layers = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run), Some([0; 32]));
+    retire_run(run);
     assert_ne!(partial_layers, empty);
     assert_ne!(partial_layers, finished_layers);
 }
@@ -320,7 +321,7 @@ fn the_editor_declares_the_artifact_kind_it_edits() {
     assert_eq!(create_bitmap_editor().artifact_kinds, vec![crate::artifact_kind()]);
 }
 
-semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("wfc", crate::editor::bitmap::BitmapEditor, || semio_plugin::App { definition: crate::editor::bitmap::create_bitmap_editor(), examples: Vec::new() }, "../../../../..");
 
 
 /// 🎬️ Bitmap selection follows the shared picker cases without an unknown-id fallback.
@@ -341,6 +342,20 @@ fn the_example_picker_obeys_the_language_neutral_selection_contract() {
             let loaded = <BitmapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("loaded snapshot");
             let expected = if case["select"] == "default" { crate::examples::rooms_16::snapshot() } else { crate::examples::flowers_24::snapshot() };
             assert_eq!(loaded, expected, "{}", case["id"]);
+        }
+    }
+}
+
+/// ♻️ Retires the run's cold shared storages (its provisional entities and payload) so no original alias drops live.
+fn retire_run(run: semio_plugin::ToolRunView) {
+    use semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease;
+    let semio_plugin::ToolRunView { provisional_entities, payload, .. } = run;
+    if let SharedOriginalRelease::Original(mut original) = provisional_entities.retire() {
+        drop(original.take_value());
+    }
+    if let Some(storage) = payload {
+        if let SharedOriginalRelease::Original(mut original) = storage.retire() {
+            drop(original.take_value());
         }
     }
 }

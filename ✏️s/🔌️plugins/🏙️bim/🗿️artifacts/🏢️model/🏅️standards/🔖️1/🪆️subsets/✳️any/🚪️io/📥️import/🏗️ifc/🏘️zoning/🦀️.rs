@@ -63,7 +63,7 @@ fn zones(i: &mut Import<'_>) {
         let name = text(args, 2);
         let id = label(&rows, "Id").filter(|candidate| free(i, candidate)).unwrap_or_else(|| Import::unused(&format!("z-{}", Import::slug(&name)), |candidate| !free(i, candidate)));
         let category = label(&rows, "Category").or_else(|| opt_text(args, 4)).unwrap_or_default();
-        i.model.zones.insert(id.clone(), Zone { name, category, occupancy_density: number(&rows, "OccupancyDensity").filter(|density| density.is_finite() && *density >= 0.0).unwrap_or(0.0) });
+        i.model.zones.cold_insert(id.clone(), Zone { name, category, occupancy_density: number(&rows, "OccupancyDensity").filter(|density| density.is_finite() && *density >= 0.0).unwrap_or(0.0) });
         i.ids.insert(instance.id, id);
     }
     for (_, args) in i.doc.rows("IFCRELASSIGNSTOGROUP") {
@@ -87,7 +87,7 @@ fn schemes(i: &mut Import<'_>) {
         let id = label(&rows, "Id").filter(|candidate| free(i, candidate)).unwrap_or_else(|| Import::unused(&format!("as-{}", Import::slug(&name)), |candidate| !free(i, candidate)));
         let measure = if label(&rows, "Measure").as_deref() == Some("Gross") { AreaMeasure::Gross } else { AreaMeasure::Net };
         let zones: Vec<String> = list(&rows, "Zones").into_iter().filter(|zone| i.model.zones.contains_key(zone)).collect();
-        i.model.area_schemes.insert(id.clone(), AreaScheme { name, measure, usages: list(&rows, "Usages").into_iter().filter(|usage| !usage.trim().is_empty()).collect(), zones });
+        i.model.area_schemes.cold_insert(id.clone(), AreaScheme { name, measure, usages: list(&rows, "Usages").into_iter().filter(|usage| !usage.trim().is_empty()).collect(), zones });
         i.ids.insert(instance.id, id);
     }
 }

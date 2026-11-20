@@ -6,7 +6,7 @@ pub struct CompletionEffect(pub Effect);
 macro_rules! birth{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($value)),*])};}
 macro_rules! sequence{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence(vec![$(Box::new(semio_framework_value::retirement::deferred($value))as Box<dyn RetirementCursor>),*])};}
 impl CompletionEffect{pub fn supported(effect:&Effect)->bool{matches!(effect,Effect::Notify{..}|Effect::Navigate{..}|Effect::LoadDocument{..}|Effect::OpenExternalUrl{..}|Effect::SetPanel{..}|Effect::DownloadMediaExport{..}|Effect::RequestFileOpen{..}|Effect::SetActiveUtility{..}|Effect::SetActiveTool{..}|Effect::OpenDialog{..}|Effect::DispatchAction{..}|Effect::ReplayShellCommand{..}|Effect::ClipboardWrite{..})}}
-impl CompletionEffect{pub fn original_birth(effect:&Effect)->Option<usize>{match effect{Effect::Notify{message}=>birth!(message),Effect::Navigate{uri}=>birth!(uri),Effect::LoadDocument{pack,spr}=>birth!(pack,spr),Effect::OpenExternalUrl{url}=>birth!(url),Effect::SetPanel{panel_json}=>birth!(panel_json),Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>birth!(filename,mime_type,data,encoding),Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple}=>birth!(&req.0,accept,read_as,import_action,args,multiple),Effect::SetActiveUtility{window_id,utility_id}=>birth!(window_id,utility_id),Effect::SetActiveTool{tool_id}=>birth!(tool_id),Effect::OpenDialog{req,dialog_id,args}=>birth!(&req.0,dialog_id,args),Effect::DispatchAction{req,action,args,delay_ms}=>birth!(&req.0,action,args,delay_ms),Effect::ReplayShellCommand{action_id,args}=>birth!(action_id,args),Effect::ClipboardWrite{fragment}=>birth!(fragment),_=>None}}}
+impl CompletionEffect{pub fn original_birth(effect:&Effect)->Option<usize>{match effect{Effect::Notify{message}=>birth!(message),Effect::Navigate{uri}=>birth!(uri),Effect::LoadDocument{pack,spr}=>birth!(pack,spr),Effect::OpenExternalUrl{url}=>birth!(url),Effect::SetPanel{panel_json}=>birth!(panel_json),Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>birth!(filename,mime_type,data,encoding),Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes}=>birth!(&req.0,accept,read_as,import_action,args,multiple,max_file_bytes),Effect::SetActiveUtility{window_id,utility_id}=>birth!(window_id,utility_id),Effect::SetActiveTool{tool_id}=>birth!(tool_id),Effect::OpenDialog{req,dialog_id,args}=>birth!(&req.0,dialog_id,args),Effect::DispatchAction{req,action,args,delay_ms}=>birth!(&req.0,action,args,delay_ms),Effect::ReplayShellCommand{action_id,args}=>birth!(action_id,args),Effect::ClipboardWrite{fragment}=>birth!(fragment),_=>None}}}
 struct Unsupported{original:ManuallyDrop<Effect>}
 impl RetirementCursor for Unsupported{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
@@ -26,7 +26,7 @@ Effect::LoadDocument{pack,spr}=>sequence!(pack,spr),
 Effect::OpenExternalUrl{url}=>sequence!(url),
 Effect::SetPanel{panel_json}=>sequence!(panel_json),
 Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>sequence!(filename,mime_type,data,encoding),
-Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple}=>sequence!(req.0,accept,read_as,import_action,args,multiple),
+Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes}=>sequence!(req.0,accept,read_as,import_action,args,multiple,max_file_bytes),
 Effect::SetActiveUtility{window_id,utility_id}=>sequence!(window_id,utility_id),
 Effect::SetActiveTool{tool_id}=>sequence!(tool_id),
 Effect::OpenDialog{req,dialog_id,args}=>sequence!(req.0,dialog_id,args),
@@ -39,7 +39,7 @@ Self(Effect::LoadDocument{pack,spr})=>birth!(pack,spr),
 Self(Effect::OpenExternalUrl{url})=>birth!(url),
 Self(Effect::SetPanel{panel_json})=>birth!(panel_json),
 Self(Effect::DownloadMediaExport{filename,mime_type,data,encoding})=>birth!(filename,mime_type,data,encoding),
-Self(Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple})=>birth!(&req.0,accept,read_as,import_action,args,multiple),
+Self(Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes})=>birth!(&req.0,accept,read_as,import_action,args,multiple,max_file_bytes),
 Self(Effect::SetActiveUtility{window_id,utility_id})=>birth!(window_id,utility_id),
 Self(Effect::SetActiveTool{tool_id})=>birth!(tool_id),
 Self(Effect::OpenDialog{req,dialog_id,args})=>birth!(&req.0,dialog_id,args),

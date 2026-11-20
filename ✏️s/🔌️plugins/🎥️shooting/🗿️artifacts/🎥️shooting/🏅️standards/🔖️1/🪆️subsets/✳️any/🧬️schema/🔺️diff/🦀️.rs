@@ -149,7 +149,14 @@ impl ShootingPatchAlgebra<ShootingAsset> for ShootingAssetPatch {
 
 impl ShootingPatchAlgebra<ShootingShot> for ShootingShotPatch {
     fn merge(&mut self, later: Self) {
-        take_later!(self, later, label, width, height, format, shape, background, camera_id);
+        take_later!(self, later, label, width, height, format, shape, background, camera_id, auto_fit);
+        if let Some(patch) = later.drawing {
+            if let Some(current) = &mut self.drawing {
+                current.merge(patch);
+            } else {
+                self.drawing = Some(patch);
+            }
+        }
     }
 
     fn restoring(&self, row: &ShootingShot) -> Self {
@@ -161,6 +168,8 @@ impl ShootingPatchAlgebra<ShootingShot> for ShootingShotPatch {
             shape: self.shape.as_ref().map(|_| row.shape.clone()),
             background: self.background.as_ref().map(|_| ShootingAssigned::new(row.background.clone())),
             camera_id: self.camera_id.as_ref().map(|_| ShootingAssigned::new(row.camera_id.clone())),
+            auto_fit: self.auto_fit.as_ref().map(|_| ShootingAssigned::new(row.auto_fit)),
+            drawing: self.drawing.as_ref().map(|patch| patch.inverse(row.drawing.as_ref())),
         }
     }
 }

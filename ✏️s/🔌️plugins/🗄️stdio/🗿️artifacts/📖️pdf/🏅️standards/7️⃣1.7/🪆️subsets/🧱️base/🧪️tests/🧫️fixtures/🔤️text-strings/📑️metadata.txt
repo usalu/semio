@@ -1,0 +1,4 @@
+# lexical PDF text bytes, Unicode output UTF-8 bytes
+5469746c658093a0 5469746c65e280a2efac81e282ac
+feff0047d83dde0000e9 47f09f9880c3a9
+efbbbf726573756dc3a9 726573756dc3a9

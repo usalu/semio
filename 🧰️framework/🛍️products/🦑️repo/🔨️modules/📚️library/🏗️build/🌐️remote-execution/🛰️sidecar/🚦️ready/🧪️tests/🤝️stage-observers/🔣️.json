@@ -1,0 +1,4 @@
+{
+  "simultaneous": ["tools"],
+  "turnover": ["tools", "workspace"]
+}

@@ -51,13 +51,10 @@ impl LayoutPlayApp {
         }
         let labels = layout_labels(view_state);
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => match transient.transform_tool.as_deref() {
-                Some(tool) => blueprint::render(&blueprint::transform::layout_transform_tool_preview(document, tool), &config, transient, interaction),
-                None => blueprint::render(document, &config, transient, interaction),
-            },
+            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, &config, transient, interaction),
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
             LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
+            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.links, doc.parent_document_id(), labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_INSPECTION)),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
             _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
@@ -73,8 +70,12 @@ mod host_event_birth_tests;
 impl ArtifactEditor for LayoutPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
-        vec![semio_s_artifact_layout_layout_examples::demo::source()]
+        vec![
+            semio_s_artifact_layout_layout_examples::demo::source(),
+            semio_s_artifact_layout_layout_examples::linked_asset::source(),
+        ]
     }
+    type Members = semio_s_artifact_layout_layout_host::LayoutDrawingMembers;
     type Snapshot = LayoutSnapshot;
     type Mutation = LayoutMutation;
     type Config = NoConfig;
@@ -90,6 +91,16 @@ impl ArtifactEditor for LayoutPlayApp {
 
     const DIALECT: Dialect = semio_s_artifact_layout_layout_model::LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
+
+
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(semio_s_artifact_layout_layout_host::layout_envelope_decode_owner_bundle())
+    }
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_s_artifact_layout_layout_host::ChildRestoreProjection<'_>, Fault> {
+        semio_s_artifact_layout_layout_host::restore_drawing_children(snapshot)
+            .map_err(|error| Fault::from(format!("layout child projection failed: {error}")))
+    }
 
     fn reference_birth()->Option<fn()->Result<LayoutSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document())
@@ -145,13 +156,9 @@ impl ArtifactEditor for LayoutPlayApp {
         Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every
-    /// document verb at dispatch (`declares the unsupported artifact publication lane`). The paged document-lane
-    /// preparation clones the snapshot page by page, so `CreatePage` (a whole page with its layers) and
-    /// `ChangeDataFields` (a `fields:in` dictionary) are bounded only by their own encoded mutation footprint
-    /// (`ArtifactStoreOneItemFootprint::for_leaf`).
+    /// 🧾️ Issues the Layout mutation and sparse diff under the host’s original document authority.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -306,7 +313,7 @@ impl ArtifactEditor for LayoutPlayApp {
                 if !work.advance(doc,&config,cx)? { return Ok(None); }
                 work.render(doc.snapshot,&config,&LayoutInteractionSnapshot::from_interaction(interaction),layout_labels(view_state),&semio_plugin::TreeWindows::for_body(view_state,LAYOUT_PLAY_BODY_INSPECTION)).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into)
             }
-            LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,cx)?{return Ok(None);}work.take_tree().map(Some).map_err(Into::into)}
+            LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,Some(doc),cx)?{return Ok(None);}work.take_tree().map(Some).map_err(Into::into)}
         }
     }
 

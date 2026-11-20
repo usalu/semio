@@ -408,11 +408,11 @@ impl Host {
         self.emit(Effect::IconRenderExport { items }).await;
     }
 
-    pub async fn request_file_open(&self, accept: impl Into<String>, read_as: Option<String>, import_action: impl Into<String>, multiple: bool) -> Result<Vec<u8>, Fault> {
+    pub async fn request_file_open(&self, accept: impl Into<String>, read_as: Option<String>, import_action: impl Into<String>, multiple: bool, max_file_bytes: Option<u32>) -> Result<Vec<u8>, Fault> {
         let accept = accept.into();
         let import_action = import_action.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple, args: None }).await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple, args: None, max_file_bytes }).await,
         }
     }
 

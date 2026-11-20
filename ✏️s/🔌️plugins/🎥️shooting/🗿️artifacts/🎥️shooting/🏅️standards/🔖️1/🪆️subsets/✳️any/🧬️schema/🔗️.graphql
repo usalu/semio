@@ -47,6 +47,8 @@ type ShootingShot {
   shape: String!
   background: String
   cameraId: String
+  drawing: ShootingDrawing
+  autoFit: Boolean
 }
 
 type ShootingSun {
@@ -93,4 +95,20 @@ type ShootingRetainedCommandStepContract {
   maxStepMicros: Int!
   maxCheckpointBytes: Int
   maxInFlightPages: Int
+}
+
+
+type ShootingDrawing {
+  background: Boolean!
+  fill: Boolean!
+  fillColor: String
+  fillOpacity: Float!
+  visibleLines: Boolean!
+  hiddenLines: Boolean!
+  visibleColor: String!
+  hiddenColor: String!
+  visibleWidth: Float!
+  hiddenWidth: Float!
+  lineEasing: Float!
+  mergeLines: Boolean!
 }

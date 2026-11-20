@@ -3,6 +3,7 @@ import * as React from "react";
 import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
+import { sharedBorderlessBoxProps } from "../../🗂️WindowChrome/shared-border.ts";
 
 /** 📍️ Where a triggered menu anchors on its target: just below its trailing edge. */
 export function contextMenuAnchorPointV1(rect: Readonly<{ left: number; top: number; right: number; bottom: number }>): Readonly<{ x: number; y: number }> {
@@ -29,8 +30,9 @@ export const ContextMenuTriggerButton: React.FC<ContextMenuTriggerButtonProps> =
       aria-label={label}
       title={label}
       aria-haspopup="menu"
+      {...sharedBorderlessBoxProps}
       data-context-menu-trigger=""
-      className={cn("inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent focus-visible:outline focus-visible:outline-2 [@media(pointer:coarse)]:size-10", className)}
+      className={cn("inline-flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent [@media(pointer:coarse)]:size-10", className)}
       onClick={(event) => {
         event.stopPropagation();
         const button = event.currentTarget;

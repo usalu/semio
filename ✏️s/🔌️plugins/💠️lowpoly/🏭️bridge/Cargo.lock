@@ -409,6 +409,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-source-hold",
 ]
 
 [[package]]
@@ -1196,6 +1197,13 @@ dependencies = [
  "semio-framework-value",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-source-hold"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
 ]
 
 [[package]]

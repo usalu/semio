@@ -179,6 +179,9 @@ function wireInput(root: HTMLElement, canvas: HTMLCanvasElement, transport: Brow
     }, options);
     canvas.addEventListener("pointerup", (event) => admit(browserFramePointerDomEvent(event, "pointerup"), performance.now()), options);
     canvas.addEventListener("pointercancel", (event) => admit(browserFramePointerDomEvent(event, "pointercancel"), performance.now()), options);
+    canvas.addEventListener("pointerleave", (event) => {
+        if (event.pointerType !== "touch") admit(browserFramePointerDomEvent(event, "pointerleave"), performance.now());
+    }, options);
     canvas.addEventListener("wheel", (event) => {
         const startedAt = performance.now();
         event.preventDefault();

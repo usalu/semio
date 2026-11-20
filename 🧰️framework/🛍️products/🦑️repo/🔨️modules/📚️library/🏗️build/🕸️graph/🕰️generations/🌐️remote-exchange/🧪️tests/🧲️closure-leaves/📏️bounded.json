@@ -1,0 +1,37 @@
+[
+  {
+    "local": "corrupt",
+    "remote": "missing",
+    "write": "succeed"
+  },
+  {
+    "local": "valid",
+    "remote": "missing",
+    "write": "succeed"
+  },
+  {
+    "local": "corrupt",
+    "remote": "valid",
+    "write": "refuse"
+  },
+  {
+    "local": "corrupt",
+    "remote": "valid",
+    "write": "succeed"
+  },
+  {
+    "local": "absent",
+    "remote": "valid",
+    "write": "ignore"
+  },
+  {
+    "local": "absent",
+    "remote": "corrupt",
+    "write": "succeed"
+  },
+  {
+    "local": "absent",
+    "remote": "oversized",
+    "write": "succeed"
+  }
+]

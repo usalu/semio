@@ -14,6 +14,8 @@ fn failed(error:ValueError)->Poll{engine::RetainedWorkPoll::Complete(RetainedWor
 
 
 fn finish_partial(work:&mut OriginalWorkBorrow<'_>,action:Option<OriginalWorkActionIdentity>,actual:u128,proof:&mut Option<OriginalWorkActionProof>)->Result<(),ValueError>{let mut partial=None;if !work.settle_partial_into(action,&mut partial)?{return Err(ValueError::invariant("schema acknowledgement Work settlement pending"))}let(_,_,_,admitted,refusal)=partial.take().ok_or_else(invalid)?.into_parts();if !admitted||refusal.is_some(){return Err(ValueError::invariant("schema acknowledgement Work was refused"))}if !work.commit(actual,action,proof)?{return Err(ValueError::invariant("schema acknowledgement Work commit pending"))}Ok(())}
+/// 🔢️ Construction items one metadata step accepts in its single turn: the metadata action, its Source Post and the completion release; a turn grant funding the step lends at least this many items.
+pub const NATIVE_SCHEMA_METADATA_ITEMS:usize=3;
 impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  fn settlement(&self)->Result<Settle,ValueError>{settlement_of(self.key_backing.get().ok_or_else(invalid)?).ok_or_else(invalid)}
  fn local_work(&self,selection:S,body:usize)->Result<u64,ValueError>{Ok(match selection{S::Complete|S::KeyPost=>0,S::KeyBirth=>self.key_birth_work_demand()?,S::PendingSlot=>self.pending_slot_work_demand()?,S::CompareLeaf=>self.compare_leaf_work_demand(body)?,S::CaptureFrame=>self.capture_frame_work_demand()?,S::ApplyFrame=>self.apply_frame_work_demand()?,S::PopFrame=>self.pop_frame_work_demand()?,S::FinishPopped=>self.finish_popped_work_demand()?,S::Finish=>2,_=>1})}
@@ -79,7 +81,7 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
   let mut error=None;let mut slot=None;drop(self.key_error_into(&mut error,effect,OriginalEffectReply::borrow(&mut slot)?)?);
   Ok(match(error,slot.take()){(Some(error),Some(Ok(step)))=>reply.complete(Err(error.with_retained_progress(step.progress()).into())),(Some(error),_)=>reply.complete(Err(error.into())),(None,Some(Ok(step)))=>reply.complete(Ok(RetainedCloneStep::Progress(step.progress()))),(None,Some(Err(error)))=>reply.complete(Err(error.into())),(None,None)=>reply.pending()})
  }
- /// 🧾️ Performs one acknowledgement metadata action and authenticates its Source Post under the actual Work and construction authorities.
+ /// 🧾️ Performs one acknowledgement metadata action and authenticates its Source Post under the actual Work and construction authorities; it reports one step item while its action, Post and release accept [`NATIVE_SCHEMA_METADATA_ITEMS`] construction items in the same turn.
  pub fn advance_metadata(&mut self,control:&mut NativeDecodeControl<'_>,operation:NativeSchemaKeyMetadata)->Result<RetainedCloneProgress,ValueError>{
   let demand=self.key_metadata_demand(operation)?;
   control.with_original_work_and_construction(|work,physical|{

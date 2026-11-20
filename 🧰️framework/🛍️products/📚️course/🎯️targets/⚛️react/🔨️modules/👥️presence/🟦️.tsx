@@ -22,7 +22,7 @@
 
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { type Anchor, type CourseView, type Cursor, type Place, type PresenceState } from "@semio-tech/course";
-import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint } from "@semio-tech/ui-react/chrome";
+import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { cn } from "../🪟️chrome/🟦️.tsx";
 import { CoursePresence } from "./🧭️rooms/🟦️.ts";
@@ -439,7 +439,7 @@ export function PresenceList(props: { readonly course: CourseView; readonly text
   if (roster === undefined) return null;
   return (
     <details data-presence-list="" className={cn("relative min-h-0 overflow-auto text-xs", props.className)}>
-      <summary className="course-target cursor-pointer text-foreground">
+      <summary {...sharedBorderlessBoxProps} className="course-target cursor-pointer text-foreground">
         {text("course.presence.online", { count: roster.online })} · {text("course.presence.whoIsWhere")}
       </summary>
       <ul role="list" className="m-0 mt-single flex list-none flex-col gap-single p-0 text-muted-foreground">

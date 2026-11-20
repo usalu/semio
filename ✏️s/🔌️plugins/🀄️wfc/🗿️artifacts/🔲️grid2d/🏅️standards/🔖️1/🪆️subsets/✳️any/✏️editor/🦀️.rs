@@ -16,7 +16,6 @@ use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcTile2d, WfcTileMedia2d};
 use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
-use semio_plugin::{ActionArgDef, ActionArgOption};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::AppOperationContext;
 use semio_plugin::ArtifactEditor;
@@ -56,13 +55,7 @@ use semio_framework_2d_compute::EngineHandles;
 /// into the flat `active_utility_id`, so a pane that is not the active window would otherwise read
 /// `None` and run every click as a plain pick.
 pub fn grid2d_active_utility(view: &ViewModel) -> &str {
-    view.window_id
-        .as_deref()
-        .and_then(|window| view.active_utility_by_window_id.get(window))
-        .or_else(|| view.focused_window_id.as_deref().and_then(|window| view.active_utility_by_window_id.get(window)))
-        .map(String::as_str)
-        .filter(|utility| !utility.is_empty())
-        .or(view.active_utility_id.as_deref())
+    view.contextual_utility()
         .unwrap_or(grid::UTILITY_SELECT)
 }
 //#endregion 🔖️ActiveUtility
@@ -298,6 +291,10 @@ struct Grid2dCommandWork {
 impl ArtifactCommandWork<EditorApp<Grid2dEditor>> for Grid2dCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
     }
 
     fn extent(
@@ -604,6 +601,22 @@ impl ArtifactEditor for Grid2dEditor {
     type TransientMutation = NoTransientMutation;
     type Command = Grid2dEditorCommand;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(|operation| Some(operation)).with_original_receiving();
+            (owners, progress)
+        }))
+    }
+
     const DIALECT: Dialect = WFC_GRID2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WFC_GRID2D_DOCUMENT_SCHEMA;
 
@@ -828,67 +841,6 @@ pub fn create_grid2d_editor() -> semio_plugin::AppDefinition {
     }
     builder
         .window_kind_utilities(grid::WINDOW_KIND_ID, vec![grid::UTILITY_SELECT.into(), grid::UTILITY_PIN.into(), grid::UTILITY_MASK.into()])
-        .action_args("unpin-cell", vec![ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0), ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0)])
-        .action_args("mask-cell", vec![ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0), ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0)])
-        .action_args("unmask-cell", vec![ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0), ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0)])
-        .action_args("pick-cell", vec![ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0), ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0)])
-        .action_args("create-tile", vec![
-            ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required(),
-            ActionArgDef::number("weight", LocalizedLabel::native("Weight", "Gewicht")).default_value(&1.0),
-        ])
-        .action_args("delete-tile", vec![ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required()])
-        .action_args("change-tile-weight", vec![
-            ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required(),
-            ActionArgDef::number("weight", LocalizedLabel::native("Weight", "Gewicht")).default_value(&1.0),
-        ])
-        .action_args("change-tile-media", vec![
-            ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required(),
-            ActionArgDef::text("mediaJson", LocalizedLabel::native("Media JSON", "Medien-JSON")).required(),
-        ])
-        .action_args("create-rule", vec![
-            ActionArgDef::text("id", LocalizedLabel::native("Rule", "Regel")).required(),
-            ActionArgDef::text("tileAId", LocalizedLabel::native("Tile A", "Kachel A")).required(),
-            ActionArgDef::text("tileBId", LocalizedLabel::native("Tile B", "Kachel B")).required(),
-            ActionArgDef::select("direction", LocalizedLabel::native("Direction", "Richtung"), vec![
-                ActionArgOption::new("RIGHT", LocalizedLabel::native("East", "Osten")),
-                ActionArgOption::new("LEFT", LocalizedLabel::native("West", "Westen")),
-                ActionArgOption::new("BOTTOM", LocalizedLabel::native("South", "Süden")),
-                ActionArgOption::new("TOP", LocalizedLabel::native("North", "Norden")),
-            ]).required().default_value(&"RIGHT"),
-            ActionArgDef::toggle("allowed", LocalizedLabel::native("Allowed", "Erlaubt")).default_value(&true),
-        ])
-        .action_args("delete-rule", vec![ActionArgDef::text("id", LocalizedLabel::native("Rule", "Regel")).required()])
-        .action_args("resize-grid", vec![
-            ActionArgDef::number("width", LocalizedLabel::native("Columns", "Spalten")).required().default_value(&16),
-            ActionArgDef::number("height", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&16),
-        ])
-        .action_args("change-cell-size", vec![
-            ActionArgDef::number("cellWidth", LocalizedLabel::native("Cell Width", "Zellbreite")).required().default_value(&1.0),
-            ActionArgDef::number("cellHeight", LocalizedLabel::native("Cell Height", "Zellhöhe")).required().default_value(&1.0),
-        ])
-        .action_args("change-periodicity", vec![
-            ActionArgDef::toggle("periodicX", LocalizedLabel::native("Wrap Horizontally", "Horizontal umlaufen")).default_value(&false),
-            ActionArgDef::toggle("periodicY", LocalizedLabel::native("Wrap Vertically", "Vertikal umlaufen")).default_value(&false),
-        ])
-        .action_args("change-seed", vec![ActionArgDef::number("seed", LocalizedLabel::native("Seed", "Startwert")).required().default_value(&0)])
-        .action_args("pin-cell", vec![
-            ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0),
-            ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0),
-            ActionArgDef::text("tileId", LocalizedLabel::native("Tile", "Kachel")).required(),
-        ])
-        .action_args("set-active-tile", vec![ActionArgDef::text("tileId", LocalizedLabel::native("Tile", "Kachel")).required()])
-        .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-            ActionArgOption::new(crate::examples::grid2d::pipes::ID, crate::examples::grid2d::pipes::label()),
-            ActionArgOption::new(crate::examples::grid2d::terrain::ID, crate::examples::grid2d::terrain::label()),
-        ]).default_value(&crate::examples::grid2d::pipes::ID)])
-        .action_args("set-camera", vec![
-            ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(&0.0),
-            ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(&0.0),
-            ActionArgDef::number("zoom", LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
-        ])
-        .action_args("set-grid-visible", vec![ActionArgDef::toggle("visible", LocalizedLabel::native("Visible", "Sichtbar")).default_value(&true)])
-        .action_args("set-grid-snap-enabled", vec![ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(&true)])
-        .action_args("set-grid-factor", vec![ActionArgDef::number("factor", LocalizedLabel::native("Grid Factor", "Rasterfaktor")).required().default_value(&1.0)])
         .action_destructive("delete-tile")
         .action_destructive("delete-rule")
         .action_destructive("setActiveExample")
@@ -924,5 +876,3 @@ pub fn create_grid2d_editor() -> semio_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-semio_plugin::retained_command::terminal_frame_bound!(Grid2dCommandWork);

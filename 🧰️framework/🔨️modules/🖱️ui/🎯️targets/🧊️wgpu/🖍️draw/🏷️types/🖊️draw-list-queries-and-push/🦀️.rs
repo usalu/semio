@@ -135,17 +135,33 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         }
-        let candidate = ClipRegion::from_disjoint_rects(rects, self.screen_h);
+        let _ = self.begin_clip_region(ClipRegion::from_disjoint_rects(rects, self.screen_h));
+    }
+
+    /// 🗜️ Clips paint to vertically disjoint scanline groups with ordered spans of logical pixels.
+    pub fn begin_scanline_clip(&mut self, bands: &[[u32; 4]]) -> bool {
+        if bands.iter().any(|&[x, y, w, h]| w == 0 || h == 0 || x.checked_add(w).is_none() || y.checked_add(h).is_none())
+            || bands.windows(2).any(|pair| {
+                let [[x, y, width, height], [next_x, next_y, _, next_height]] = [pair[0], pair[1]];
+                if y == next_y && height == next_height { x + width > next_x } else { y + height > next_y }
+            })
+        {
+            return false;
+        }
+        self.begin_clip_region(ClipRegion { scissors: bands.iter().map(|&[x, y, w, h]| ScissorRect { x, y, w, h }).collect() })
+    }
+
+    fn begin_clip_region(&mut self, candidate: ClipRegion) -> bool {
         let Some(items) = candidate.scissors.len().checked_add(2) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
-            return;
+            return false;
         };
         let Some(bytes) = candidate.scissors.len().checked_mul(size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(size_of::<DrawLayer>())) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
-            return;
+            return false;
         };
         if !self.claim_retained_output(items, bytes) {
-            return;
+            return false;
         }
         let mut clip = candidate;
         if let Some(parent) = self.clip_stack.last() {
@@ -153,6 +169,7 @@ impl DrawList {
         }
         self.clip_stack.push(clip.clone());
         self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        true
     }
 
     pub fn end_silhouette_clip(&mut self) {

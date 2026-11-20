@@ -1,15 +1,17 @@
 import type { ScriptInvocation } from "@semio-tech/process/routing";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { runCmd } from "@semio-tech/process/execution";
 
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
-type Group = { status: "migrated"; execution: "bounded" | "resumable"; lanes: Lane[]; routes: string[] };
+type Group = { status: "migrated"; execution: "bounded" | "file-import" | "resumable"; lanes: Lane[]; routes: string[] };
 type Fixture = {
   schema: string;
   source: string;
+  modules: string[];
   routeCount: number;
   migratedCount: number;
+  modelImport: { source: string; rawFileBytes: number; dataUrlFramingBytes: number; dataUrlBytes: number; metadataBytes: number; wireBytes: number };
   limits: { rawBytes: number; workItems: number; chunkBytes: number; stepMicros: number; storeBytes: number; documentGrantBytes: number; documentMaximumBytes: number };
   groups: Group[];
   oracleCases: { bytes: number; expectedExtent: number | null }[];
@@ -45,16 +47,20 @@ function proofRows(source: string): string[] {
   for (let start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!"); start >= 0; start = source.indexOf("semio_plugin::bounded_first_step_tool_proofs!", start + 1)) {
     const end = source.indexOf("\n    }", start);
     if (end < start) continue;
-    rows.push(...[...source.slice(start, end).matchAll(/^\s*"([^"]+)" =>/gm)].map((match) => match[1]!));
+    rows.push(...[...source.slice(start, end).matchAll(/"([A-Za-z][A-Za-z0-9]+)"\s*=>/g)].map((match) => match[1]!));
   }
   return rows;
 }
 function fixtureOracle(fixture: Fixture): boolean {
   const migrated = fixture.groups.flatMap((group) => group.routes);
+  const modelImport = fixture.modelImport;
   const expectedExtent = (bytes: number) => bytes > fixture.limits.rawBytes ? null : Math.max(1, Math.ceil(bytes / fixture.limits.chunkBytes));
   return migrated.length === fixture.migratedCount
     && fixture.migratedCount === fixture.routeCount
     && new Set(migrated).size === fixture.routeCount
+    && exact(fixture.groups.filter(group => group.execution === "file-import").flatMap(group => group.routes), ["importModelFile"])
+    && modelImport.dataUrlBytes === 4 * Math.ceil(modelImport.rawFileBytes / 3) + modelImport.dataUrlFramingBytes
+    && modelImport.wireBytes === modelImport.dataUrlBytes + modelImport.metadataBytes
     && fixture.groups.every((group) => group.status === "migrated" && group.routes.length > 0 && group.lanes.length > 0 && new Set(group.lanes).size === group.lanes.length && (!group.lanes.includes("host-only") || group.lanes.length === 1))
     && fixture.oracleCases.every((test) => expectedExtent(test.bytes) === test.expectedExtent)
     && Object.entries(fixture.laws).every(([law, value]) => law === "scanThenMonolithRoutes" ? Array.isArray(value) && value.length === 0 : value === true);
@@ -62,6 +68,7 @@ function fixtureOracle(fixture: Fixture): boolean {
 function sourceOracle(fixture: Fixture, source: string): boolean {
   const migrated = fixture.groups.flatMap((group) => group.routes);
   const bounded = fixture.groups.filter((group) => group.execution === "bounded").flatMap((group) => group.routes);
+  const fileImport = fixture.groups.filter((group) => group.execution === "file-import").flatMap((group) => group.routes);
   const resumable = fixture.groups.filter((group) => group.execution === "resumable").flatMap((group) => group.routes);
   const classifications = manifestRows(source, migrated);
   const publications = publicationRows(source);
@@ -70,13 +77,22 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
     && source.includes(`const PROCESS3D_RETAINED_RAW_BYTES: usize = ${fixture.limits.rawBytes.toLocaleString("en-US").replace(",", "_")};`)
     && source.includes(`const PROCESS3D_RETAINED_WORK_ITEMS: usize = ${fixture.limits.workItems};`)
     && source.includes(`const PROCESS3D_SCAN_BYTES: usize = ${fixture.limits.chunkBytes};`)
-    && source.includes(`const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = ${fixture.limits.storeBytes.toLocaleString("en-US").replace(",", "_")};`)
+    && source.includes(`const PROCESS3D_CONFIG_FILTER_STORE_BYTES: usize = ${fixture.limits.storeBytes.toLocaleString("en-US").replace(",", "_")};`)
     && source.includes(`const PROCESS3D_DOCUMENT_GRANT_BYTES: usize = ${fixture.limits.documentGrantBytes.toLocaleString("en-US").replace(",", "_")};`)
     && source.includes(`const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = ${fixture.limits.documentMaximumBytes / 1_024} * 1_024;`)
-    && source.includes(`ToolExecutionContract::resumable(PROCESS3D_RETAINED_RAW_BYTES, 64, 1, 16_384, ${fixture.limits.stepMicros.toLocaleString("en-US").replace(",", "_")}, 1, 1)`)
+    && source.includes("PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = PROCESS3D_CONFIG_FILTER_STORE_BYTES + PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES;")
+    && source.includes("PROCESS3D_RESUMABLE_OUTPUT_BYTES: usize = PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES + PROCESS3D_CONFIG_MUTATION_ENVELOPE_BYTES;")
+    && source.includes(`ToolExecutionContract::resumable(semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, PROCESS3D_RESUMABLE_OUTPUT_BYTES, ${fixture.limits.stepMicros.toLocaleString("en-US").replace(",", "_")}, 1, 1)`)
     && classifications.size === fixture.routeCount
     && migrated.every((route) => classifications.get(route) === "Migrated")
     && exact(constantRoutes(source, "PROCESS3D_BOUNDED_TOOL_IDS"), bounded)
+    && exact(constantRoutes(source, "PROCESS3D_MODEL_IMPORT_TOOL_IDS"), fileImport)
+    && source.includes(`const PROCESS3D_MODEL_FILE_BYTES: u32 = ${fixture.modelImport.rawFileBytes.toLocaleString("en-US").replaceAll(",", "_")};`)
+    && source.includes(`const PROCESS3D_MODEL_DATA_URL_BYTES: usize = (PROCESS3D_MODEL_FILE_BYTES as usize).div_ceil(3) * 4 + ${fixture.modelImport.dataUrlFramingBytes};`)
+    && source.includes(`const PROCESS3D_MODEL_IMPORT_RAW_BYTES: usize = semio_s_artifact_process_process3d_io::PROCESS3D_MODEL_DATA_URL_BYTES + ${fixture.modelImport.metadataBytes.toLocaleString("en-US").replaceAll(",", "_")};`)
+    && source.includes('"importModelFile" => PROCESS3D_MODEL_IMPORT_RAW_BYTES')
+    && source.includes('"importModelFile" => process3d_model_import_contract()')
+    && source.includes("ToolExecutionContract::bounded_first_step(PROCESS3D_MODEL_IMPORT_RAW_BYTES, PROCESS3D_RETAINED_WORK_ITEMS, 1,")
     && exact(constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS"), resumable)
     && exact(proofRows(source), migrated)
     && exact(publications.map((row) => row.route), migrated)
@@ -90,7 +106,9 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
     && source.includes("fn build_config_store_one_item_preparation_factory()")
     && source.includes("fn build_artifact_store_one_item_preparation_factory()")
     && source.includes("struct Process3dArtifactPreparationFactory")
-    && source.split("grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES").length - 1 === 2
+    && source.includes("grant.maximum_copy_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES")
+    && source.includes("self.retained_bytes = PROCESS3D_DOCUMENT_GRANT_BYTES;")
+    && source.includes("grant.maximum_copy_bytes < self.retained_bytes")
     && source.includes("authority.prepare_one_item(edit")
     && source.includes("request.base_revision != request.authority.base_revision()")
     && source.split("fn cancel(&mut self)").length - 1 === 2
@@ -102,12 +120,22 @@ function sourceOracle(fixture: Fixture, source: string): boolean {
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
-  runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(context.repoRoot, path))], { cwd: context.repoRoot });
+  runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🧪️tests/🧭️dev-route/🟦️.ts", "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(context.repoRoot, path))], { cwd: context.repoRoot });
 
-  const pluginRoot = resolve(context.root, "../..");
+  await checkRetainedRoutes(resolve(context.root, "../.."));
+}
+
+export async function checkRetainedRoutes(pluginRoot: string): Promise<void> {
   const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/🧫️fixtures/⚖️retained-route-laws/🔣️.json")).json() as Fixture;
   if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");
-  const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
+  const entry = resolve(pluginRoot, fixture.source);
+  const rootSource = await Bun.file(entry).text();
+  const modules = await Promise.all(fixture.modules.map(async path => {
+    if (!rootSource.includes(`#[path = "${path}"]`)) throw new Error(`Process3d route module is disconnected: ${path}`);
+    return Bun.file(resolve(dirname(entry), path)).text();
+  }));
+  const modelSource = await Bun.file(resolve(pluginRoot, fixture.modelImport.source)).text();
+  const source = [rootSource, ...modules, modelSource].join("\n");
   if (!sourceOracle(fixture, source)) throw new Error("Process3d retained route source diverged from the strict fixture");
   const firstArtifact = fixture.groups.find((group) => group.lanes.includes("artifact"))!.routes[0]!;
   const hostileDeactivation = source.includes(".interactive_jobs(InteractiveJobClassification::Migrated)")
@@ -116,23 +144,26 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
   const hostileUnclassified = source.replace(".interactive_jobs(InteractiveJobClassification::Migrated)", "");
   const hostileProof = source.replace(new RegExp(`^\\s*"${firstArtifact}" =>.*$`, "m"), "");
   const hostilePublication = `${source}\nArtifactToolPublicationContract { tool_id: "${firstArtifact}", lanes: &[ArtifactToolPublicationLane::HostOnly] }`;
-  const hostileGrant = source.replaceAll("grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES", "grant.maximum_bytes < process3d_document_bytes(base)?");
-  const hostilePartialGrant = source.replace("grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES", "grant.maximum_bytes < bytes");
+  const hostileGrant = source.replace("grant.maximum_copy_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES", "grant.maximum_copy_bytes < process3d_document_bytes(base)?");
+  const hostilePartialGrant = source.replace("grant.maximum_copy_bytes < self.retained_bytes", "grant.maximum_copy_bytes < bytes");
+  const hostileImportLimit = source.replace('"importModelFile" => PROCESS3D_MODEL_IMPORT_RAW_BYTES', '"importModelFile" => PROCESS3D_RETAINED_RAW_BYTES');
   const hostileFixture = { ...fixture, migratedCount: fixture.migratedCount - 1 };
   if (
     hostileDeactivation === source
     || hostileProof === source
     || hostileGrant === source
     || hostilePartialGrant === source
+    || hostileImportLimit === source
     || sourceOracle(fixture, hostileDeactivation)
     || sourceOracle(fixture, hostileUnclassified)
     || sourceOracle(fixture, hostileProof)
     || sourceOracle(fixture, hostilePublication)
     || sourceOracle(fixture, hostileGrant)
     || sourceOracle(fixture, hostilePartialGrant)
+    || sourceOracle(fixture, hostileImportLimit)
     || fixtureOracle(hostileFixture)
   ) {
-    throw new Error("Process3d retained route audit accepted hostile deactivation, missing proof, publication, measured-grant, partial-grant, or count drift");
+    throw new Error("Process3d retained route audit accepted hostile deactivation, missing proof, publication, grant, import-limit, or count drift");
   }
-  console.error(`validated Process3d retained routes; routes=${fixture.routeCount}; migrated=${fixture.migratedCount}; bounded=${constantRoutes(source, "PROCESS3D_BOUNDED_TOOL_IDS").length}; resumable=${constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS").length}; batchOnly=0; scanThenMonolith=0; oracle=independent`);
+  console.error(`validated Process3d retained routes; routes=${fixture.routeCount}; migrated=${fixture.migratedCount}; bounded=${constantRoutes(source, "PROCESS3D_BOUNDED_TOOL_IDS").length}; fileImport=${constantRoutes(source, "PROCESS3D_MODEL_IMPORT_TOOL_IDS").length}; resumable=${constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS").length}; batchOnly=0; scanThenMonolith=0; oracle=independent`);
 }

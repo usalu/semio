@@ -32,15 +32,17 @@ fn line(label: &str, building: &str, start: (f64, f64), end: (f64, f64)) -> Grid
 
 fn gridded() -> (ModelSnapshot, String) {
     let mut snapshot = demo();
-    snapshot.columns.clear();
-    snapshot.grids.clear();
+    snapshot.columns.cold_clear();
+    snapshot.grids.cold_clear();
     let (storey, building) = snapshot.storeys.iter().next().map(|(id, row)| (id.clone(), row.building.clone())).expect("a storey");
     if snapshot.column_types.is_empty() {
-        snapshot.materials.entry("m-steel".into()).or_insert(Material { name: "Steel".into(), category: MaterialCategory::Metal, color: Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
-        snapshot.column_types.insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-steel".into() });
+        if !snapshot.materials.contains_key("m-steel") {
+            snapshot.materials.cold_insert("m-steel".into(), Material { name: "Steel".into(), category: MaterialCategory::Metal, color: Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
+        }
+        snapshot.column_types.cold_insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-steel".into() });
     }
     for (id, grid) in [("g-a", line("A", &building, (0.0, -1.0), (0.0, 5.0))), ("g-b", line("B", &building, (4.0, -1.0), (4.0, 5.0))), ("g-1", line("1", &building, (-1.0, 0.0), (5.0, 0.0))), ("g-2", line("2", &building, (-1.0, 3.0), (5.0, 3.0)))] {
-        snapshot.grids.insert(id.into(), grid);
+        snapshot.grids.cold_insert(id.into(), grid);
     }
     (snapshot, storey)
 }
@@ -89,6 +91,6 @@ async fn only_the_named_grid_lines_are_crossed() {
 #[semio_framework_async_macros::async_test]
 async fn a_model_without_a_column_type_is_refused_with_its_own_code() {
     let (mut snapshot, storey) = gridded();
-    snapshot.column_types.clear();
+    snapshot.column_types.cold_clear();
     assert_eq!(place(&snapshot, &storey, &[]).err().map(|fault| fault.code.0), Some("bim.grid-columns.type-missing".to_string()));
 }

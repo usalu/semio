@@ -195,7 +195,7 @@ fn focused_view() -> ViewModel {
 
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
-    let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
+    let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
     let result = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&args)), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
 }
@@ -575,7 +575,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     let waiting = block_on(remote.history_snapshot()).expect("history").reprojection.expect("the remote history change waits for its replay");
     assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
-    let meta = ActionMeta { view_state: Some(focused_view()), ..semio_plugin::artifact_app_laws::meta("remote") };
+    let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..semio_plugin::artifact_app_laws::meta("remote") };
     let cancelled = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut remote.0, "historyEditCancelReplay", Some(semio_framework_value::ToValue::to_value(&json!({}))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), remote.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("cancel");
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
     assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
@@ -639,7 +639,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         assert_eq!(board_trace(&mut app), before, "nothing of the switch shows before its adoption");
         assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
         let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
-        let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
+        let meta = ActionMeta { view_state: Some(std::sync::Arc::new(focused_view())), ..meta("local") };
         let busy = block_on(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "historyEditBegin", Some(semio_framework_value::ToValue::to_value(&json!({ "mutationId": first }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close)).expect("begin answers");
         assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {

@@ -4,9 +4,9 @@ import {readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {Database} from "bun:sqlite";
 import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import {withRepositoryBuildGraphArtifactV1} from "../🟦️.ts";
+import {graphSnapshotDigestV1,graphSnapshotTemporaryNameV1,withRepositoryBuildGraphArtifactV1} from "../🟦️.ts";
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
-import {join} from "node:path";
+import {dirname,join,sep} from "node:path";
 import type { BuildGraphV1 } from "../../../../../../🏗️build/🕸️graph/📋️model/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,requireRepositoryBuildGraphWriterV1} from "../../../../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
@@ -15,9 +15,21 @@ import {rm} from "node:fs/promises";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
 
+test("graph snapshot paths preserve publication and retention identities",()=>{
+ const database=new Database(":memory:");
+ try{
+  const oracle=database.query("WITH names(digest) AS (SELECT substr(?1,length(?1)-length(?2)-63,64)) SELECT digest,digest || '~' || ?3 AS temporaryName FROM names");
+  for(const {path,extension,nonce,digest,temporaryName} of fixture.snapshotPaths){
+   const expected={digest,temporaryName};
+   expect(oracle.get(path,extension,nonce)).toEqual(expected);
+   expect({digest:graphSnapshotDigestV1(path),temporaryName:graphSnapshotTemporaryNameV1(path,nonce)},path).toEqual(expected);
+  }
+ }finally{database.close();}
+});
+
 test("all graph fact namespaces use the finite authored graph partition",()=>{
  const database=new Database(":memory:"),workspace=repository.root;
- try{for(const namespace of fixture.namespaces){const path=repositoryBuildGraphDataDirectoryV1(workspace,namespace as "inference"),expected=database.query("SELECT ? || '/.cache/b/g/m/' || ? AS path").get(workspace,namespace) as {path:string};expect(path).toBe(expected.path);}expect(()=>repositoryBuildGraphDataDirectoryV1(workspace,fixture.refusedNamespace as never)).toThrow();}finally{database.close();}
+ try{for(const namespace of fixture.namespaces){const path=repositoryBuildGraphDataDirectoryV1(workspace,namespace as "inference"),expected=database.query("SELECT ? || ? || ? AS path").get(workspace,["",".cache","b","g","m",""].join(sep),namespace) as {path:string};expect(path).toBe(expected.path);}expect(()=>repositoryBuildGraphDataDirectoryV1(workspace,fixture.refusedNamespace as never)).toThrow();}finally{database.close();}
 });
 
 test("synchronous fact publication requires live enforcing graph writer custody",async()=>{
@@ -33,7 +45,7 @@ test("actual bounded graph publication retains exact immutable bytes through ori
   const source=JSON.stringify(fixture.graph),database=new Database(":memory:");
   try{await withRepositoryBuildGraphArtifactV1(repository.root,fixture.graph as BuildGraphV1,original,scriptCompilerAdmissionControlV1(original,"graph:artifact-fixture",0),async(artifact,actualPhase)=>{
    const bytes=await readFile(artifact.path),manifest=JSON.parse(bytes.toString());
-   expect(manifest.version).toBe(2);expect(artifact.digest).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(artifact.path).toContain("/.cache/b/g/m/");expect(Object.keys(manifest.graph).sort()).toEqual(Object.keys(fixture.graph).filter(key=>!["projects","dependencies","externalNodes"].includes(key)).sort());for(const[,digest]of manifest.projects)expect((await readFile(join(artifact.path.replace(/[^/]+$/u,""),digest+".gz"))).byteLength).toBeGreaterThan(0);
+   expect(manifest.version).toBe(2);expect(artifact.digest).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",bytes)).toString("hex"));expect(dirname(artifact.path)).toBe(join(repository.root,".cache","b","g","m","snapshots"));expect(Object.keys(manifest.graph).sort()).toEqual(Object.keys(fixture.graph).filter(key=>!["projects","dependencies","externalNodes"].includes(key)).sort());for(const[,digest]of manifest.projects)expect((await readFile(join(dirname(artifact.path),digest+".gz"))).byteLength).toBeGreaterThan(0);
    const contender=new Database(resourceLeasePathV1(join(repository.root,".cache/b/l/m/data"),"build-graph:"+artifact.path));try{expect(()=>contender.exec("BEGIN EXCLUSIVE")).toThrow("database is locked");}finally{contender.close();}
    await withRepositoryBuildGraphArtifactV1(repository.root,fixture.graph as BuildGraphV1,original,actualPhase,async again=>{expect(again).toEqual(artifact);});
   });}finally{database.close();}
@@ -44,7 +56,7 @@ test("a pin sweeps the retained snapshots only when it adds bytes and the last i
  await withBuildTestInvocationV1(async original=>{
   const graph=fixture.graph as BuildGraphV1,phase=(label:string)=>scriptCompilerAdmissionControlV1(original,label,0),grown=(name:string)=>({...graph,projects:{...graph.projects,[name]:{...graph.projects.fixture,name,root:name}}}) as BuildGraphV1;
   await withRepositoryBuildGraphArtifactV1(repository.root,graph,original,phase("graph:artifact-first"),async artifact=>{
-   const directory=artifact.path.replace(/[^/]+$/u,""),ledger=join(directory,"retained.ledger"),decoy=(label:string)=>join(directory,"f".repeat(64)+"~"+label),swept=async(label:string)=>readFile(decoy(label),"utf8").then(()=>false,()=>true);
+   const directory=dirname(artifact.path),ledger=join(directory,"retained.ledger"),decoy=(label:string)=>join(directory,"f".repeat(64)+"~"+label),swept=async(label:string)=>readFile(decoy(label),"utf8").then(()=>false,()=>true);
    const pin=(value:BuildGraphV1,label:string,body?:(pinned:{path:string;digest:string})=>Promise<void>)=>withRepositoryBuildGraphArtifactV1(repository.root,value,original,phase(label),async pinned=>{await body?.(pinned);});
    try{
     await writeFile(decoy("deadbeef"),"decoy");

@@ -1,0 +1,11 @@
+[
+  {"mode":"unavailable","delays":0,"computed":1,"value":true,"file":null},
+  {"mode":"malformed","delays":0,"computed":1,"value":true,"file":"x"},
+  {"mode":"peer-finishes","delays":1,"computed":0,"value":false,"file":"0"},
+  {"mode":"peer-disappears","delays":1,"computed":1,"value":true,"file":"1"},
+  {"mode":"cancel-wait","delays":1,"computed":0,"value":null,"file":""},
+  {"mode":"bounded-timeout","delays":1200,"computed":1,"value":true,"file":""},
+  {"mode":"cancel-owner","delays":0,"computed":1,"value":null,"file":null},
+  {"mode":"peer-completes-own-path","delays":0,"computed":1,"value":true,"file":"0"},
+  {"mode":"owner-replaced","delays":0,"computed":1,"value":null,"file":""}
+]

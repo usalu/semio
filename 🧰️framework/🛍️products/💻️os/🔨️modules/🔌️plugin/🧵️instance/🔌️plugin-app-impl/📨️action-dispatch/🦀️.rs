@@ -11,7 +11,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         if address.window_instance_id.trim().is_empty() {
             return Err((plugin_sdk_fault("action window instance id must be non-empty")).into());
         }
-        let reserved_kind = framework_reserved_action_kind(&address.action_id);
+        let reserved_kind = framework_reserved_action_kind(&address.action_id).or_else(|| (address.action_id == semio_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID && self.tools.registry.get(&address.action_id).is_none()).then_some(ActionKind::Mutation));
         if reserved_kind.is_none() {
             if !self.tools.registry.has_mode(&address.mode_id).await {
                 return Err((plugin_sdk_fault(format!("unknown action mode owner {}", address.mode_id))).into());

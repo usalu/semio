@@ -410,12 +410,16 @@ test("edit expectations follow from independent constructions: CSG, Euler's form
   only("mesh.edit.mergeVertices", (c) => {
     const base = c.inputs.mesh as Mesh;
     const [a, b] = c.inputs.vertices as number[];
-    const middle = v(base.positions[a!]!).add(v(base.positions[b!]!)).multiplyScalar(0.5).toArray() as V3;
-    const positions = [...base.positions, middle];
+    const targetPosition = c.inputs.mode === "first" ? base.positions[a!]! : v(base.positions[a!]!).lerp(v(base.positions[b!]!), 0.5).toArray() as V3;
+    const positions = [...base.positions, targetPosition];
     const target = positions.length - 1;
     const faces = base.faces.map((face) => face.map((i) => (i === a || i === b ? target : i)).filter((i, k, all) => i !== all[(k + 1) % all.length] || all.length < 2));
-    const measured = measureOf(positions, faces.filter((face) => face.length >= 3));
-    return differences(measured, stated(c), 1e-6, ["vertices", "edges", "faces", "euler", "closed", "oriented"]);
+    const polygons = faces.filter((face) => face.length >= 3);
+    const measured = measureOf(positions, polygons);
+    const expected = stated(c);
+    const failures = differences(measured, expected, 1e-6, solidKeys);
+    if (expected.positions && JSON.stringify(canonical(positions, polygons)) !== JSON.stringify(canonical(expected.positions, expected.polygons))) failures.push("merged polygons differ");
+    return failures;
   });
 });
 

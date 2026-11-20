@@ -18,7 +18,7 @@ class NativeTranspileBuildScript extends BundleScript {
     const platform = requireHostPlatformBuildArgumentsV1(segments, process.platform);
     const name = nativeTranspileBinaryNameV1(platform);
     const destination = join(this.repoRoot, ".cache", "b", "p", "m", "browser", "release", "tools", "native-transpile", platform, name);
-    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--profile", "release", "--bin", "semio-native-transpile"], this.repoRoot, {
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--bin", "semio-native-transpile"], this.repoRoot, {
       producer: "artifact",
       invocation: this.invocation,
       control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", buildBudgetMs()),

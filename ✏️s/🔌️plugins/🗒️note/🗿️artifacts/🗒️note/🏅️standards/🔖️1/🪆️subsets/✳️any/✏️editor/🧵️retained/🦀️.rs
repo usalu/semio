@@ -475,4 +475,3 @@ pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::os_store::one
 
 //#endregion 📬️StorePreparation
 
-semio_plugin::retained_command::terminal_frame_bound!(NoteCommandWork);

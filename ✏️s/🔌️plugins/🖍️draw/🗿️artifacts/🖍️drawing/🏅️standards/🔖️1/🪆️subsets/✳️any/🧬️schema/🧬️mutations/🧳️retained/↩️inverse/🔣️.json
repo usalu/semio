@@ -44,5 +44,10 @@
     "displaced-new-fields",
     "inverse-row",
     "original-bindings"
-  ]
+  ],
+  "visibilityLaw": {
+    "authored": {"mutation": "setLayerVisible", "layerId": "group", "visible": false},
+    "inverse": [{"mutation": "setLayerVisible", "layerId": "group", "visible": true}],
+    "cancelAfterTurns": [0, 1, 20, 200]
+  }
 }

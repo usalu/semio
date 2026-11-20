@@ -93,7 +93,7 @@ pub mod load_mesh_request {
     pub struct LoadMeshRequest {}
 
     pub fn handle(_payload: &LoadMeshRequest, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        Ok(Emit::effect(Effect::RequestFileOpen { req: semio_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false, args: None }))
+        Ok(Emit::effect(Effect::RequestFileOpen { max_file_bytes: None, req: semio_plugin::RequestId(LOWPOLY_MESH_FILE_OPEN_REQUEST), accept: LOWPOLY_MESH_FILE_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importMeshFile".into(), multiple: false, args: None }))
     }
 }
 //#endregion 🔖️LoadMeshRequest

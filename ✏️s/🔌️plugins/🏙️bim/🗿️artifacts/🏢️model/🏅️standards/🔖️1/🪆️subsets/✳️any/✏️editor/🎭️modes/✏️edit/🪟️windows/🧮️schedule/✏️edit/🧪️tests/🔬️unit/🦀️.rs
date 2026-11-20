@@ -14,7 +14,7 @@ use semio_s_artifact_bim_model_ramp_runs::editor::bim::modes::edit::windows::sch
 
 fn walls() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.schedules.insert("sch".into(), created("wall", "Walls"));
+    snapshot.schedules.cold_insert("sch".into(), created("wall", "Walls"));
     snapshot
 }
 

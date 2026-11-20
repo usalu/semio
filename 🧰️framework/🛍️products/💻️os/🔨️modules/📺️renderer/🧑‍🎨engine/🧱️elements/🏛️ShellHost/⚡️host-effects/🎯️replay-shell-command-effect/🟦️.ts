@@ -8,8 +8,6 @@ import { LOCAL_CATALOG_ACTIONS_V1, localCatalogAdmissionV1, localCatalogAdmitMut
 import { retireLocalDocument } from "@semio-tech/framework/config/mutations";
 import { sharedDocumentOpeningRoleV1 } from "../../🧭️opening/🟦️.ts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { resolveBootExampleId } from "../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { SET_ACTIVE_EXAMPLE_ACTION_ID } from "../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import { isShellOwnedCommandId } from "../../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { reduceArtifactCreationProgressUiV1 } from "../../🌱️artifact-creation/🟦️.tsx";
@@ -20,7 +18,7 @@ import { shellSpaceAdministrationOpening } from "../../🏠️space-administrati
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
 /** 🎭️ Replays a shell-owned command against the directory, the space index and the artifact creation lane. */
-export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, exampleOptionsRef, defaults, lastDispatchedExampleIdRef, dispatch, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openResolvedArtifactRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef" | "exampleOptionsRef" | "defaults" | "lastDispatchedExampleIdRef" | "dispatch"> & {
+export async function applyReplayShellCommandEffect({ showTransientNoticeRef, uiLocaleRef, spaceAdministrationEpochRef, identityRef, ensureBackboneWorker, spaceAdministrationRef, setSpaceAdministration, openDocumentSessionsRef, shellStateRef, spaceArtifactCreationCatalogRef, spaceArtifactCreationCatalogUiRef, spaceArtifactCreationOwnersRef, setSpaceArtifactCreationUi, spaceDirectoryHistoriesRef, hostPorts, adoptSharedSpaceAccess, resolveArtifactOpeningWithActivationRef, openResolvedArtifactRef, isCurrentEffectOwner, openDocumentRef, localDataDir, writeLocalDocumentRef, recordLocalCatalogRef, loadedPluginsRef, resolvedTargetViewState, rehydratedLocalDocumentsRef, localCatalogRef, replayShellOwnedCommandRef, effect, baseSession, effectOrigin, effectOwner, applyHostEffects, core }: Pick<ShellCoreAfterSpawnedSession, "showTransientNoticeRef" | "uiLocaleRef" | "spaceAdministrationEpochRef" | "identityRef" | "ensureBackboneWorker" | "spaceAdministrationRef" | "setSpaceAdministration" | "openDocumentSessionsRef" | "shellStateRef" | "spaceArtifactCreationCatalogRef" | "spaceArtifactCreationCatalogUiRef" | "spaceArtifactCreationOwnersRef" | "setSpaceArtifactCreationUi" | "spaceDirectoryHistoriesRef" | "hostPorts" | "adoptSharedSpaceAccess" | "resolveArtifactOpeningWithActivationRef" | "openResolvedArtifactRef" | "isCurrentEffectOwner" | "openDocumentRef" | "localDataDir" | "writeLocalDocumentRef" | "recordLocalCatalogRef" | "loadedPluginsRef" | "resolvedTargetViewState" | "rehydratedLocalDocumentsRef" | "localCatalogRef" | "replayShellOwnedCommandRef"> & {
   readonly effect: Extract<Effect, Readonly<Record<"replayShellCommand", unknown>>>;
   readonly baseSession: ActiveSession;
   readonly effectOrigin: ReturnType<ShellCoreAfterSpawnedSession["captureEffectOwner"]>["presentation"];
@@ -158,12 +156,6 @@ export async function applyReplayShellCommandEffect({ showTransientNoticeRef, ui
       refuseReplay("unrouted-command", "no shell route for chrome command", actionId);
     }
   } else {
-    if (actionId === SET_ACTIVE_EXAMPLE_ACTION_ID) {
-      const raw = typeof argsRecord?.exampleId === "string" ? argsRecord.exampleId : "";
-      const exampleId = raw || resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId);
-      if (raw) lastDispatchedExampleIdRef.current = raw;
-      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-    }
     core.onActionRef.current({
       controllerId: baseSession.app.controllerId,
       action: actionId,

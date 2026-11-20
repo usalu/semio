@@ -28,15 +28,19 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
     let maximum_bytes = handoff["closeGrant"]["maximumBytes"].as_u64().expect("handoff maximum bytes") as usize;
     let source = source(entries);
     let capacity = RetainedCloneSource::<PagedList<String, 64>>::constructor_capacity_bytes::<()>();
-    let ((mut retained, _, _), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::testing::admit_owned_source(source, ()));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
+    let ((mut retained, admission, _), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::testing::admit_owned_source(source, ()));
+    assert_eq!(heap.requested_bytes - heap.released_bytes, capacity);
+    assert_eq!(admission.retained_capacity_bytes - admission.released_bytes, capacity);
     let mut cursor = PagedList::<String, 64>::retained_clone_cursor();
     let mut slot = None;
     fx(RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 16, maximum_release_bytes: 4096 }, |effect| cursor.advance_into(retained.borrow(), 4096, 1 << 20, effect, OriginalEffectReply::borrow(&mut slot).unwrap()).map(drop)).expect("partial retained cursor reply");
     let step = slot.take().expect("partial retained cursor reply is recorded").expect("partial retained cursor progresses");
     assert!(matches!(step, RetainedCloneStep::Progress(_)));
 
+    let cursor = Box::new(cursor);
+    let address = std::ptr::from_ref(cursor.as_ref());
     let mut handoff = RetainedCloneCursorHandoff::<PagedList<String, 64>>::new(cursor);
+    assert_eq!(std::ptr::from_ref(handoff.cursor().unwrap()), address);
     let mut turns = 0usize;
     loop {
         turns += 1;

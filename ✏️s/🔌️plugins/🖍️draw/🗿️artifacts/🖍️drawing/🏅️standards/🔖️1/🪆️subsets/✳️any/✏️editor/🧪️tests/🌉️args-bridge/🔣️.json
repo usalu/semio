@@ -1,0 +1,41 @@
+[
+  {
+    "action": "editPath",
+    "args": {
+      "layerId": "path",
+      "edit": "{\"kind\":\"convert\",\"index\":1.0,\"target\":\"cubic\"}"
+    },
+    "expectedEdit": {
+      "kind": "convert",
+      "index": 1,
+      "target": "cubic"
+    }
+  },
+  {
+    "action": "editFill",
+    "args": {
+      "layerId": "layer",
+      "edit": {
+        "kind": "color",
+        "index": 1.0,
+        "value": [
+          0,
+          0,
+          0,
+          0.25
+        ]
+      },
+      "value": "#fff"
+    },
+    "expectedEdit": {
+      "kind": "color",
+      "index": 1,
+      "value": [
+        1,
+        1,
+        1,
+        0.25
+      ]
+    }
+  }
+]

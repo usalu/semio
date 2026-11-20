@@ -1,8 +1,20 @@
 //! 🚪️ SpreadsheetML physical codecs and composition.
 
+/// 🛡️ Preserves the subset refusal when a physical workbook crosses the codec boundary.
+pub fn require_xlsx_conformance(diagnostics: &[semio_framework_diagnostic::Diagnostic]) -> Result<(), semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
+    use semio_framework_diagnostic::Severity;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
+
+    match diagnostics.iter().find(|diagnostic| matches!(diagnostic.severity, Severity::Error | Severity::Fatal)) {
+        Some(diagnostic) => Err(XlsxError::Malformed(diagnostic.message.clone())),
+        None => Ok(()),
+    }
+}
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer;
+    use semio_s_artifact_stdio_zip::{standards::v2_0::subsets::base::io::encode_zip, ZipSnapshot};
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use {semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactComposition,semio_plugin::io::ComposeError,semio_plugin::io::ComposeSource,semio_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -20,14 +32,23 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            let native: Vec<AnalyzeSource<'_>> = sources
-                .iter()
-                .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP)
-                .map(|s| match &s.payload {
-                    AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
-                    AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
-                })
-                .collect();
+            let zip_sources: Vec<Option<Vec<u8>>> = sources.iter().map(|source| {
+                if source.dialect != DEP_ZIP {
+                    return Ok(None);
+                }
+                let zip = match source.payload {
+                    AnalyzeSource::Text(text) => <ZipSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()),
+                    AnalyzeSource::Binary(bytes) if bytes.starts_with(&store::semio_format::BINARY_MAGIC) => <ZipSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string()),
+                    AnalyzeSource::Binary(_) => return Ok(None),
+                };
+                zip.and_then(|zip| encode_zip(&zip).map_err(|error| error.to_string())).map(Some)
+            }).collect::<Result<_, _>>().map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let native: Vec<AnalyzeSource<'_>> = sources.iter().zip(&zip_sources).filter_map(|(source, zip)| {
+                if let Some(bytes) = zip {
+                    return Some(AnalyzeSource::Binary(bytes));
+                }
+                (source.dialect == DIALECT || source.dialect == DEP_ZIP).then(|| source.payload.clone())
+            }).collect();
             if native.is_empty() {
                 return Err(ComposeError { message: "XlsxComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
@@ -59,6 +80,7 @@ pub mod io_registry {
 
 
 pub mod derived_construction {
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx_source;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
@@ -89,7 +111,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<XlsxSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(decode_xlsx_source(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::ColdMutation::diff(&mutation, &self.snapshot));
@@ -138,6 +160,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
+    use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx_source, sniff_xlsx_bytes};
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use {semio_plugin::io::Analysis,semio_plugin::io::AnalyzeSource,semio_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -159,7 +182,7 @@ pub mod derived_analysis {
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_plugin::io::Confidence {
             match source {
-                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_xlsx_bytes(bytes) => semio_plugin::io::Confidence::High,
+                AnalyzeSource::Binary(bytes) if sniff_xlsx_bytes(bytes) => semio_plugin::io::Confidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => semio_plugin::io::Confidence::Low,
             }
         }
@@ -177,7 +200,7 @@ pub mod derived_analysis {
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match decode_xlsx_source(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_plugin::io::Confidence::Low;
@@ -203,3 +226,7 @@ semio_plugin::derive_artifact_facets!(
     analyzer: XlsxAnalyzer,
     composer: XlsxComposer,
 );
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️native-document/🦀️.rs"]
+mod native_document_tests;

@@ -280,6 +280,10 @@ impl SelectPixelsWork {
 }
 
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(::core::mem::size_of::<Self>())
+    }
+
     fn tool_id(&self)->&'static str{"selectPixels"}
     fn receive_original_command(&mut self,command:&mut RasterCommand,_cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.request.is_none(){let RasterCommand::SelectPixels(request)=command else{return Err(refused("raster-selection-route-mismatch"));};self.request=Some(std::mem::take(request));}Ok(true)}
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::SelectPixels(_)).then_some(1)}
@@ -335,4 +339,3 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 
-semio_plugin::retained_command::terminal_frame_bound!(SelectPixelsWork);

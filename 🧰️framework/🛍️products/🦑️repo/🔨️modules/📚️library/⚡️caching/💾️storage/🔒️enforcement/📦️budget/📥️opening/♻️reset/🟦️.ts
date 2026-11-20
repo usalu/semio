@@ -1,5 +1,7 @@
 import{refuseCachingV1}from"../../../../../📖️texts/🟦️.ts";
-import{captureNativePlatformRecomputableRetirementV1,retireNativePlatformRecomputableStorageV1,resumeNativePlatformRecomputableRetirementV1,type NativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {meetsImageRecoveryPressureV1,type ImageRecoveryVolumeV1} from "./🧭️volume/🟦️.ts";
+import diskRecoverySchema from "../../../../../../🏗️build/🌡️host-capacity/🧹️disk-recovery/🧬️schema/🔣️.json" with {type:"json"};
+import{openExistingNativePlatformImageV1,captureNativePlatformRecomputableRetirementV1,retireNativePlatformRecomputableStorageV1,resumeNativePlatformRecomputableRetirementV1,type NativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import { repositoryCacheStoreReservationV1 } from "../🏪️store/🎟️reservation/🟦️.ts";
 import{nativeRecomputableRetirementVerdictAtV1,nativeRecomputableRetirementPendingV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🟦️.ts";
 import{nativeImageRootV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
@@ -13,17 +15,20 @@ import {formatStampLanguagesV1} from "../../../../../../🏗️build/🧷️form
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,readIssuedResourceControlCapabilitiesV1,type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {acquireResourceLease,acquireQueuedResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireResourceLease,acquireQueuedResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,ResourceLeaseTimeoutErrorV1,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withArtifactRelativeDirectoryV1,requireArtifactDescriptorClosureV1,type ArtifactRelativeDirectoryV1,type ArtifactRelativeEntryV1} from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {captureOwnedCommandV1,captureOwnedCommandResultV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {nativeImageInventoryV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts";
+import {captureNativeImageBackingAncestryV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts";
+import {requireNativeImagePublicationSettledV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {readNativeImageAncestryV1,requireNativeImageAncestryBindingV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts";
 import {readNativeMountPathsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts";
 import {requireNativeInactiveCapsuleReadersV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
 import {callerRepositoryRootV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {openRepositoryCachePartitionAttemptV1,repositoryLeaseDirectoryV1,repositoryCachePartitionNativeImageV1} from "../🟦️.ts";
-import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionReclaimDueV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
-import {createNativeImageReclaimPortV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimOutcomeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
-import {existsSync,lstatSync,statSync,readdirSync} from "node:fs";
+import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionReclaimDueV1,repositoryPartitionReclaimRuleV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
+import {createNativeImageReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,type NativeImageReclaimOutcomeV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+import {existsSync,lstatSync,statfsSync,statSync,readdirSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
 const protocol=schema.$defs.InactivePublicationProtocol.const;
 
@@ -97,8 +102,25 @@ export type RepositoryCacheResetProfileV1="graph"|"nx"|"rust"|"products";
 /** 🧾️ Reports whole images actually retired without inventing an internal file census. */
 export type InactiveRepositoryCacheResetOutcomeV1=Readonly<{version:1;partition:RepositoryCacheResetProfileV1;operation:"reset-inactive";retiredImages:0|1;logicalBytes:number}>;
 /** ♻️ Recovers only one canonical recomputable image under the same actual caller and complete Native retirement protocol. */
-export function resetInactiveRepositoryCacheNamespaceV1(invocation:ScriptInvocation,control:ResourceLeaseControl,profile:RepositoryCacheResetProfileV1):Promise<InactiveRepositoryCacheResetOutcomeV1>{
- requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);if(validateJsonSchemaSubset(schema.$defs.Profile,profile).length)throw Error("Closed repository cache reset profile required");return withRequestedIssuedResourceControlV1(control,schema.$defs.Protocol.const.maximumMilliseconds,async phase=>{requireIssuedResourceControlInvocationV1(phase,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),declaration=repositoryCacheBudgetV1(workspace).partitions[profile],leases=await openRepositoryCachePartitionV1(workspace,"leases",phase);let image:NativeImageStorageV1|undefined,failed=false,primary:unknown;try{await leases.recheck();checkResourceLeaseControl(phase);const options={directory:declaration.directory,leaseDirectory:repositoryLeaseDirectoryV1(workspace),filesystemBytes:declaration.filesystemBytes,maximumPhysicalBytes:declaration.capacityBytes,control:phase},progress=async(stage:string)=>{checkResourceLeaseControl(phase);await phase.publish({resource:"cache:reset-inactive-"+profile+":"+stage,mode:"exclusive",elapsedMs:0});await phase.yieldContinuation();checkResourceLeaseControl(phase);};const observe=(row:Readonly<{phase:"manifest"|"quarantine"|"remove"|"rescan";entries:number;maximumEntries:number}>)=>{checkResourceLeaseControl(phase);console.error(JSON.stringify({version:1,kind:"repository-cache-reset-progress",partition:profile,...row}));checkResourceLeaseControl(phase);};await progress("resume");if(await resumeNativePlatformRecomputableRetirementV1(options,observe)){await progress("retired");return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:1,logicalBytes:declaration.maximumArtifactBytes});}checkResourceLeaseControl(phase);try{const row=lstatSync(declaration.directory);if(!row.isDirectory()||row.isSymbolicLink())throw Error("Ordinary canonical cache reset capsule required");}catch(error){if((error as NodeJS.ErrnoException)?.code==="ENOENT")return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0});throw error;}await progress("opening");image=await openRepositoryCachePartitionV1(workspace,profile,phase);const opened=image,native=repositoryCachePartitionNativeImageV1(opened);let logicalBytes=0;const captured=await opened.withExclusiveMaintenance({version:1,wait:true,yielding:true},async(_port,custody)=>{if(custody.kind!=="kernel-ex")throw Error("Actual whole-cache reset writer required");requireIssuedResourceControlInvocationV1(custody.control,invocation);const verdict=nativeRecomputableRetirementVerdictAtV1(native.root,native.maximumPhysicalBytes);if(verdict!=="admitted")return verdict;const reservation=await repositoryCacheStoreReservationV1(workspace,profile,opened,custody.control);logicalBytes=reservation.allocation.bytes;return captureNativePlatformRecomputableRetirementV1(native,custody,reservation,custody.control);});if(!captured.acquired)throw Error("Whole-cache reset EX admission required");if(typeof captured.value==="string"){console.error(renderPublicationNoticeV1("declined",profile,declaration.directory,captured.value));return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0});}await progress("closing");await opened.close();image=undefined;checkResourceLeaseControl(phase);if(!await retireNativePlatformRecomputableStorageV1(captured.value,phase,observe))throw Error("Actual whole-cache retirement did not complete");await progress("retired");return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:1,logicalBytes});}catch(error){failed=true;primary=error;throw error;}finally{for(const owned of[image,leases])try{await owned?.close();}catch(error){if(!failed){failed=true;primary=error;}}if(failed)throw primary;}});
+export function resetInactiveRepositoryCacheNamespaceV1(invocation:ScriptInvocation,control:ResourceLeaseControl,profile:RepositoryCacheResetProfileV1):Promise<InactiveRepositoryCacheResetOutcomeV1>{return resetRepositoryCacheNamespaceV1(invocation,control,profile);}
+function resetRepositoryCacheNamespaceV1(invocation:ScriptInvocation,control:ResourceLeaseControl,profile:RepositoryCacheResetProfileV1,recovery?:ImageRecoveryVolumeV1):Promise<InactiveRepositoryCacheResetOutcomeV1&Readonly<{disposition?:"journal"}>>{
+ const existingOnly=recovery!==undefined;requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);if(validateJsonSchemaSubset(schema.$defs.Profile,profile).length)throw Error("Closed repository cache reset profile required");return withRequestedIssuedResourceControlV1(control,schema.$defs.Protocol.const.maximumMilliseconds,async phase=>{requireIssuedResourceControlInvocationV1(phase,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),budget=repositoryCacheBudgetV1(workspace),declaration=budget.partitions[profile],leaseImage=budget.partitions.leases,leases=existingOnly?await openExistingNativePlatformImageV1({directory:leaseImage.directory,leaseDirectory:budget.controlDirectory,filesystemBytes:leaseImage.filesystemBytes,maximumPhysicalBytes:leaseImage.capacityBytes,maximumLeaseDatabaseBytes:16384,control:phase},"mounted"):await openRepositoryCachePartitionV1(workspace,"leases",phase);let image:NativeImageStorageV1|undefined,failed=false,primary:unknown;try{await leases.recheck();checkResourceLeaseControl(phase);const options={directory:declaration.directory,leaseDirectory:repositoryLeaseDirectoryV1(workspace),filesystemBytes:declaration.filesystemBytes,maximumPhysicalBytes:declaration.capacityBytes,control:phase},progress=async(stage:string)=>{checkResourceLeaseControl(phase);await phase.publish({resource:"cache:reset-inactive-"+profile+":"+stage,mode:"exclusive",elapsedMs:0});await phase.yieldContinuation();checkResourceLeaseControl(phase);};const observe=(row:Readonly<{phase:"manifest"|"quarantine"|"remove"|"rescan";entries:number;maximumEntries:number}>)=>{checkResourceLeaseControl(phase);console.error(JSON.stringify({version:1,kind:"repository-cache-reset-progress",partition:profile,...row}));checkResourceLeaseControl(phase);};if(existingOnly){
+ const leaseDirectory=lstatSync(options.leaseDirectory,{throwIfNoEntry:false});
+ if(!leaseDirectory?.isDirectory()||leaseDirectory.isSymbolicLink()||leaseDirectory.dev!==lstatSync(leases.root).dev)throw Error("Original mounted cache lease catalog required");
+}
+await progress("resume");if((!existingOnly||nativeRecomputableRetirementPendingV1(declaration.directory))&&await resumeNativePlatformRecomputableRetirementV1(options,observe)){await progress("retired");return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:1,logicalBytes:declaration.maximumArtifactBytes});}checkResourceLeaseControl(phase);try{const row=lstatSync(declaration.directory);if(!row.isDirectory()||row.isSymbolicLink())throw Error("Ordinary canonical cache reset capsule required");}catch(error){if((error as NodeJS.ErrnoException)?.code==="ENOENT")return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0});throw error;}await progress("opening");if(existingOnly){
+ const backing=lstatSync(join(options.directory,"fixed.dmg"),{throwIfNoEntry:false});
+ if(!backing?.isFile()||backing.isSymbolicLink()||backing.nlink!==1||backing.dev!==recovery.device)return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0});
+ const host=statfsSync(options.directory);
+ if(!meetsImageRecoveryPressureV1({device:backing.dev,availableBytes:host.bavail*host.bsize,totalBytes:host.blocks*host.bsize},recovery))return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0});
+ image=await openExistingNativePlatformImageV1(options,"maintenance");
+ }else image=await openRepositoryCachePartitionV1(workspace,profile,phase);const opened=image,native=repositoryCachePartitionNativeImageV1(opened);let logicalBytes=0;const captured=await opened.withExclusiveMaintenance({version:1,wait:!existingOnly,...(!existingOnly?{yielding:true}:{})},async(_port,custody)=>{if(custody.kind!=="kernel-ex")throw Error("Actual whole-cache reset writer required");requireIssuedResourceControlInvocationV1(custody.control,invocation);
+ if(recovery){
+  const host=statfsSync(declaration.directory),inside=statfsSync(opened.root),backing=lstatSync(opened.image),root=lstatSync(opened.root);
+  const measured={device:backing.dev,mountDevice:root.dev,availableBytes:host.bavail*host.bsize,totalBytes:host.blocks*host.bsize,allocatedBytes:backing.blocks*512,usedBytes:(inside.blocks-inside.bfree)*inside.bsize};
+  if(!isImageRecoveryStillDueV1(measured,recovery))return "not-pressed" as const;
+ }
+ const verdict=nativeRecomputableRetirementVerdictAtV1(native.root,native.maximumPhysicalBytes);if(verdict!=="admitted")return verdict;const reservation=await repositoryCacheStoreReservationV1(workspace,profile,opened,custody.control,existingOnly);logicalBytes=reservation.allocation.bytes;return captureNativePlatformRecomputableRetirementV1(native,custody,reservation,custody.control);});if(!captured.acquired)throw Error("Resource lease timed out: native-fixed-image:"+declaration.directory);if(typeof captured.value==="string"){if(captured.value!=="not-pressed")console.error(renderPublicationNoticeV1("declined",profile,declaration.directory,captured.value));return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:0,logicalBytes:0,...(recovery&&captured.value!=="not-pressed"?{disposition:"journal" as const}:{})});}await progress("closing");await opened.close();image=undefined;checkResourceLeaseControl(phase);if(!await retireNativePlatformRecomputableStorageV1(captured.value,phase,observe,!existingOnly))throw Error(existingOnly?"Resource lease timed out: native-fixed-image:"+declaration.directory:"Actual whole-cache retirement did not complete");await progress("retired");return Object.freeze({version:1,partition:profile,operation:"reset-inactive",retiredImages:1,logicalBytes});}catch(error){failed=true;primary=error;throw error;}finally{for(const owned of[image,leases])try{await owned?.close();}catch(error){if(!failed){failed=true;primary=error;}}if(failed)throw primary;}});
 }
 
 
@@ -143,30 +165,126 @@ export async function openRepositoryCachePartitionV1(workspace:string,id:Reposit
 export function planElasticRegrowV1(row:Readonly<{record:boolean;due:boolean;verdict:string}>):"resume"|"skip"|"decline"|"reset"{return row.record?"resume":!row.due?"skip":row.verdict==="admitted"?"reset":"decline";}
 /** 🌱️ What one elastic regrow answered: `retired` (an interrupted retirement was resumed or the image was retired; the next opener creates it at the elastic size), `held` (a command holds the image mapped: the exclusive non-waiting try ended silently), `journal` (the journal does not admit whole retirement, or the retirement failed), `skipped` (not due). */
 export type ElasticRegrowOutcomeV1="retired"|"held"|"journal"|"skipped";
+const imageSlack=diskRecoverySchema.definitions.ImageSlack.const;
+type ImageRecoveryMeasurementV1=Readonly<{device:number;mountDevice:number;availableBytes:number;totalBytes:number;allocatedBytes:number;usedBytes:number}>;
+/** 🔎️ Requires current host pressure and mounted slack on the originally pressured device before automatic retirement. */
+export function isImageRecoveryStillDueV1(measured:ImageRecoveryMeasurementV1,request:ImageRecoveryVolumeV1):boolean{
+ const slack=measured.allocatedBytes-measured.usedBytes-imageSlack.filesystemOverheadBytes;
+ const floor=Math.max(imageSlack.minimumSlackBytes,Math.ceil(measured.allocatedBytes*imageSlack.minimumSlackPercent/100));
+ return measured.mountDevice!==measured.device&&meetsImageRecoveryPressureV1(measured,request)&&slack>=floor;
+}
 /** 🌱️ Recreates an elastic image (the graph, compiler or products image) at the first quiescent moment: it resumes an interrupted retirement, or - only when the journal admits whole retirement - after a cheap precheck (an image that is `pressed` by the volume, or whose size and pressure from the image receipt and its mounted free space make it due) makes one non-waiting exclusive try that any holder ends silently (`held`), then the yielding reset; the next opener creates the image at the elastic size. A refusal inside the reset would close the whole process admission, so a journal that cannot be retired never enters it. It never fails the caller. */
-export async function regrowElasticImageOutcomeV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",pressed:boolean=false):Promise<ElasticRegrowOutcomeV1>{
+export async function regrowElasticImageOutcomeV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products",pressed:boolean=false,recovery?:ImageRecoveryVolumeV1):Promise<ElasticRegrowOutcomeV1>{
  try{
   requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),declaration=repositoryCacheBudgetV1(workspace).partitions[partition],directory=declaration.directory;
-  const plan=planElasticRegrowV1({record:nativeRecomputableRetirementPendingV1(directory),due:pressed||repositoryPartitionRegrowDueV1(workspace,partition),verdict:nativeRecomputableRetirementVerdictAtV1(nativeImageRootV1(directory),declaration.capacityBytes)});
+  const record=nativeRecomputableRetirementPendingV1(directory);
+  if(recovery){
+   if(process.platform!=="darwin"||!pressed)throw Error("Pressed Darwin image recovery required");
+   const result=await resetRepositoryCacheNamespaceV1(invocation,control,partition,recovery);
+   return result.retiredImages===1?"retired":result.disposition??"skipped";
+  }
+  const verdict=nativeRecomputableRetirementVerdictAtV1(nativeImageRootV1(directory),declaration.capacityBytes);
+  const plan=planElasticRegrowV1({record,due:pressed||repositoryPartitionRegrowDueV1(workspace,partition),verdict});
   if(plan==="skip")return "skipped";
   if(plan==="decline")return "journal";
   if(plan==="reset")repositoryPartitionGrowthRecordV1(workspace,partition);
   if(plan==="reset"){try{(await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0})).release();}catch{checkResourceLeaseControl(control);return "held";}}
   await resetInactiveRepositoryCacheNamespaceV1(invocation,control,partition);return "retired";
- }catch{checkResourceLeaseControl(control);return "journal";}
+ }catch(error){checkResourceLeaseControl(control);return error instanceof Error&&error.message.startsWith("Resource lease timed out: native-")?"held":"journal";}
 }
 /** 🌱️ The boolean form of the regrow for callers that only ask whether an image was retired or resumed. */
 export async function regrowElasticImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:"graph"|"rust"|"products"):Promise<boolean>{return (await regrowElasticImageOutcomeV1(invocation,control,partition))==="retired";}
 /** ♻️ Returns the host blocks an idle, bloated image holds but no longer uses, without recreating it or touching its bytes: at the first quiescent moment (a non-waiting exclusive try on the image lease succeeds, no retirement is pending) it detaches the image, attaches it once through the UNMAP-capable stack so the volume trims its free space, waits until the host allocation settles and detaches it again; the next opener attaches it as after a restart. Progress and cancellation reach every step and the image never stays attached by this call. It answers the outcome, or null when the platform has no such mechanism, the image is not bloated, held or retiring, or the cycle failed; cancellation propagates. */
-export async function reclaimImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:RepositoryCachePartitionIdV1,progress?:(done:number,total:number)=>void):Promise<NativeImageReclaimOutcomeV1|null>{
+export async function reclaimImageIfQuiescentV1(invocation:ScriptInvocation,control:ResourceLeaseControl,partition:RepositoryCachePartitionIdV1,progress?:(done:number,total:number)=>void,recovery?:ImageRecoveryVolumeV1):Promise<NativeImageReclaimOutcomeV1|null>{
  const mechanism=nativeImageReclaimMechanismV1(process.platform);if(mechanism===null)return null;
  try{
   requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),directory=repositoryCacheBudgetV1(workspace).partitions[partition].directory;
   if(nativeRecomputableRetirementPendingV1(directory)||!repositoryPartitionReclaimDueV1(workspace,partition))return null;
   const lease=await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0});
   try{
-   const image=join(directory,mechanism.imageName),port=existsSync(image)?createNativeImageReclaimPortV1(process.platform,{image,cwd:directory,run:(program,args)=>captureOwnedCommandV1(program,args,directory,{control,output:{maximumBytes:1048576,maximumLines:32768}})}):null;
+   const image=join(directory,mechanism.imageName);
+   if(recovery){
+    const backing=lstatSync(image,{throwIfNoEntry:false}),parent=lstatSync(directory),host=statfsSync(directory);
+    if(!backing?.isFile()||backing.isSymbolicLink()||backing.nlink!==1||backing.dev!==parent.dev||!meetsImageRecoveryPressureV1({device:backing.dev,availableBytes:host.bavail*host.bsize,totalBytes:host.blocks*host.bsize},recovery))return null;
+   }
+   const port=existsSync(image)?createNativeImageReclaimPortV1(process.platform,{image,cwd:directory,run:(program,args)=>captureOwnedCommandV1(program,args,directory,{control,output:{maximumBytes:1048576,maximumLines:32768}})}):null;
    return port===null?null:await reclaimNativeImageV1(port,{check:()=>checkResourceLeaseControl(control),progress});
   }finally{lease.release();}
  }catch{checkResourceLeaseControl(control);return null;}
+}
+
+/** 🛂️ Accepts one exact published backing and measures whether its mounted filesystem is worth returning host blocks from. */
+function captureRepositoryRustReclaimV1(directory:string,image:string,root:string,declared:Readonly<{filesystemBytes:number;capacityBytes:number}>){
+ const ancestry=captureNativeImageBackingAncestryV1(directory),backing=lstatSync(image,{bigint:true}),dir=lstatSync(directory,{bigint:true}),mount=lstatSync(root,{bigint:true});
+ const receiptPath=join(directory,protocol.receipt),receipt=readNativeImageRetirementFileV1(receiptPath,protocol.maximumReceiptBytes),published=JSON.parse(receipt.bytes.toString());
+ if(validateJsonSchemaSubset(nativeStorageSchema.definitions.ImageReceipt,published,nativeStorageSchema,[nativeMountSchema]).length||published.filesystemBytes!==declared.filesystemBytes||published.maximumPhysicalBytes>declared.capacityBytes||backing.dev!==dir.dev||backing.ino!==BigInt(published.ino)||backing.size!==BigInt(published.size)||!mount.isDirectory()||mount.isSymbolicLink()||mount.dev===dir.dev)throw Error("Original mounted Rust image required");
+ requireNativeImageAncestryBindingV1({published:published.ancestry,current:readNativeImageAncestryV1(directory)});
+ const check=()=>{
+  ancestry();requireNativeImagePublicationSettledV1(directory);
+  const current=lstatSync(image,{bigint:true});
+  if(!current.isFile()||current.isSymbolicLink()||current.nlink!==1n||current.dev!==backing.dev||current.ino!==backing.ino||current.size!==backing.size||readNativeImageRetirementFileV1(receiptPath,protocol.maximumReceiptBytes).stamp!==receipt.stamp||nativeRecomputableRetirementPendingV1(directory))throw Error("Original Rust backing or publication changed");
+  return current;
+ };
+ const rule=repositoryPartitionReclaimRuleV1("rust");
+ const due=()=>{
+  const current=check(),mounted=lstatSync(root,{bigint:true}),host=statfsSync(directory),volume=statfsSync(root);
+  return mounted.isDirectory()&&!mounted.isSymbolicLink()&&mounted.dev===mount.dev&&mounted.ino===mount.ino&&mounted.mode===mount.mode
+    &&host.bavail*host.bsize<Math.min(host.blocks*host.bsize,rule.reclaimTightHostFreeBytes)
+    &&nativeImageReclaimDueV1(rule,Number(current.blocks*512n),(volume.blocks-volume.bfree)*volume.bsize,host.bavail*host.bsize);
+ };
+ return {check,due};
+}
+
+/** 🗺️ Holds the current mapping to this one backed mount before starting any reclaim effect. */
+function requireRepositoryRustReclaimMappingV1(information:Record<string,unknown>,image:string,root:string):void{
+ const rows=information.images;
+ if(!Array.isArray(rows)||rows.length>1024)throw Error("Complete bounded Rust image inventory required");
+ const entries=rows.filter(row=>row?.["image-path"]===image),mounts=rows.flatMap(row=>Array.isArray(row?.["system-entities"])?row["system-entities"].filter((entity:Record<string,unknown>)=>entity?.["mount-point"]===root):[]);
+ const entities=entries[0]?.["system-entities"];
+ if(entries.length!==1||!Array.isArray(entities)||mounts.length!==1||!entities.includes(mounts[0])
+  ||entities.some(entity=>entity?.["mount-point"]!==undefined&&entity["mount-point"]!==root)
+  ||typeof entities[0]?.["dev-entry"]!=="string"||!/^\/dev\/disk[0-9]+$/u.test(entities[0]["dev-entry"]))throw Error("Exact original Rust image mapping required");
+}
+
+type RustReclaimWaitReasonV1="platform"|"backing-unavailable"|"not-due"|"opportunity-ended"|"lease-timeout"|"lease-failed"|"reclaim-failed";
+
+/** ⏳️ Gives the exact existing Rust image a brief operator-only exclusive turn while disk pressure and eligibility hold. */
+export async function reclaimRepositoryRustImageWithWaitV1(invocation:ScriptInvocation,control:ResourceLeaseControl,progress?:(done:number,total:number)=>void){
+ requireIssuedResourceControlInvocationV1(control,invocation);checkResourceLeaseControl(control);
+ const receipt={version:1,kind:"repository-cache-reclaim-wait",partition:"rust"} as const;
+ const skip=(reason:RustReclaimWaitReasonV1)=>({...receipt,outcome:"skipped",reason,beforeBytes:0,afterBytes:0,settled:false} as const);
+ const mechanism=nativeImageReclaimMechanismV1(process.platform);
+ if(process.platform!=="darwin"||mechanism===null)return skip("platform");
+ const ended=Error("Rust reclaim opportunity ended");
+ let failure:RustReclaimWaitReasonV1="backing-unavailable";
+ try{
+  const{partition,maximumWaitMilliseconds}=schema.$defs.RustReclaimWait.const,workspace=callerRepositoryRootV1(invocation.capabilities),declared=repositoryCacheBudgetV1(workspace).partitions[partition];
+  const{directory}=declared,image=join(directory,mechanism.imageName),root=nativeImageRootV1(directory),held=captureRepositoryRustReclaimV1(directory,image,root,declared);
+  if(!held.due())return skip("not-due");
+  failure="lease-failed";
+  const leaseDirectory=repositoryLeaseDirectoryV1(workspace),resource="native-fixed-image:"+directory,path=resourceLeasePathV1(leaseDirectory,resource);
+  const lease=await acquireQueuedResourceLease({directory:leaseDirectory,resource,mode:"exclusive",owner:randomBytes(12).toString("hex"),signal:control.signal,control,timeoutMs:maximumWaitMilliseconds,yielding:false,onWait:()=>{if(!held.due())throw ended;}});
+  failure="reclaim-failed";
+  try{
+   const proof=captureResourceLeaseWriterProofV1(lease,leaseDirectory,resource,control);
+   const check=()=>{checkResourceLeaseControl(control);requireResourceLeaseWriterProofV1(proof,{directory:leaseDirectory,resource,path},control);held.check();};
+   check();if(!held.due())return skip("opportunity-ended");
+   let mappingChecked=false;
+   const port=createNativeImageReclaimPortV1(process.platform,{image,cwd:directory,run:async(program,args)=>{
+    check();
+    if(!mappingChecked&&(program!==mechanism.detachProgram||args.length!==2||args[0]!=="info"||args[1]!=="-plist"))throw Error("Rust image device must be observed before reclaim");
+    const value=await captureOwnedCommandV1(program,args,directory,{control,output:{maximumBytes:protocol.maximumInformationBytes,maximumLines:protocol.maximumInformationLines}});
+    check();
+    if(!mappingChecked){requireRepositoryRustReclaimMappingV1(nativeImageInventoryV1(value),image,root);if(!held.due())throw ended;mappingChecked=true;}
+    return value;
+   }});
+   if(port===null)return skip("reclaim-failed");
+   return {...receipt,outcome:"reclaimed" as const,...await reclaimNativeImageV1(port,{check,progress})};
+  }finally{lease.release();}
+ }catch(error){
+  checkResourceLeaseControl(control);
+  if(error===ended)return skip("opportunity-ended");
+  if(failure==="lease-failed"&&error instanceof ResourceLeaseTimeoutErrorV1)return skip("lease-timeout");
+  return skip(failure);
+ }
 }

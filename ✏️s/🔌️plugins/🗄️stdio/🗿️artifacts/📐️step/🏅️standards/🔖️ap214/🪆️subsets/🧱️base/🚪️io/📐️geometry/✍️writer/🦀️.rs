@@ -50,9 +50,9 @@ impl StepWriteContext {
         id
     }
 
-    pub(super) fn write_geometric_context(&mut self) -> u64 {
+    pub(super) fn write_geometric_context(&mut self, length_prefix: &str) -> u64 {
         let len_unit = self.next_id();
-        let _ = writeln!(self.entities, "#{len_unit} = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );");
+        let _ = writeln!(self.entities, "#{len_unit} = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT({length_prefix},.METRE.) );");
         let angle_unit = self.next_id();
         let _ = writeln!(self.entities, "#{angle_unit} = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );");
         let solid_angle_unit = self.next_id();

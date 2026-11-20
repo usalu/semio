@@ -1,6 +1,7 @@
+use semio_os_kernel as store;
 use crate::LayoutMutation;
 use crate::binary::*;
-use semio_s_artifact_layout_layout_mutations_content::rename_layout;
+use semio_s_artifact_layout_layout_mutations_content::{rename_layout, set_page_background_drawing};
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
@@ -8,6 +9,17 @@ async fn op_binary_round_trips_and_agrees_with_text() {
     store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
+}
+
+#[test]
+fn original_receiving_uses_the_layout_protocol_tag_for_the_page_drawing() {
+    let operation = LayoutMutation::SetPageBackgroundDrawing(set_page_background_drawing::SetPageBackgroundDrawing {
+        page_id: "📄 Front".into(),
+        drawing: None,
+    });
+    let bytes = encode_op(&operation).expect("encode Layout page Drawing operation");
+    assert_eq!(&bytes[..2], &[1, 59]);
+    store::os_dsl::original_receiving::check_receiving_round_trip(&[operation]).unwrap();
 }
 
 #[semio_framework_async_macros::async_test]

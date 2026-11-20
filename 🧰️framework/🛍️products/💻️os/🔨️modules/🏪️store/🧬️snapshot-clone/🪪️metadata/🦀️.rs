@@ -1,7 +1,7 @@
 //! 🪪️ Native metadata consumes original actor leases and ordered mutations through independent turns.
 use super::*;
 use semio_framework_hash::Hasher;
-use semio_framework_value::{RetirementDemand, retirement::{RetirementCursor, deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes}};
+use semio_framework_value::RetirementDemand;
 use semio_framework_value_persistent::list::PagedList;
 
 fn refuses(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
@@ -72,9 +72,9 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
     pub fn terminal_is_empty(&self)->bool{self.edit.is_none()&&self.meta.is_none()&&self.inverse_pending.is_none()}
 }
 impl<M:RetireOwned+Send+'static> RetireOwned for NativeEditMetadata<M>{
-    type RetirementCursor=Box<dyn RetirementCursor>;
-    fn retirement_seed(mut self)->Box<dyn RetirementCursor>{sequence(vec![Box::new(deferred(self.edit.take())),Box::new(deferred(self.meta.take())),Box::new(deferred(self.inverse_pending.take()))])}
-    fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&*self.edit),deferred_birth_bytes_for(&*self.meta),deferred_birth_bytes_for(&*self.inverse_pending)])}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<Edit<M>>,Option<MutationMeta>,Option<M>);
+    fn retirement_ready(&self)->bool{self.edit.retirement_ready()&&self.meta.retirement_ready()&&self.inverse_pending.retirement_ready()}
+    fn retirement_seed(mut self)->Self::RetirementCursor{semio_framework_value::retirement_fields_seed!(self.edit.take(),self.meta.take(),self.inverse_pending.take())}
     fn controlled_retirement_supported()->bool{M::controlled_retirement_supported()}
 }
 impl<M:RetireOwned> Drop for NativeEditMetadata<M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"native metadata abandoned original retained fields");if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.edit);std::mem::ManuallyDrop::drop(&mut self.meta);std::mem::ManuallyDrop::drop(&mut self.inverse_pending);}}}}

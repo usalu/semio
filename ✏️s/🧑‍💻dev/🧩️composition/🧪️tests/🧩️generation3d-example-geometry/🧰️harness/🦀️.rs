@@ -205,7 +205,7 @@ fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     let handle = geometry.get("handle").and_then(serde_json::Value::as_str).expect("geometry handle").to_string();
     geometry_session().evict_mesh_cache_for_handle(&handle);
     let started = std::time::Instant::now();
-    let mesh = geometry_session().tessellate_geometry(&handle, fixture.tessellation_tolerance).expect("preview tessellates");
+    let mesh = preview_reply::standalone_mesh(geometry_owner(), &handle, fixture.tessellation_tolerance).expect("preview tessellates");
     let tessellate_micros = started.elapsed().as_micros() as u64;
     let incidence = edge_incidence(&mesh.positions, &mesh.indices);
     let (surface_min, surface_max) = bounds(if mesh.positions.is_empty() { &mesh.edge_positions } else { &mesh.positions });

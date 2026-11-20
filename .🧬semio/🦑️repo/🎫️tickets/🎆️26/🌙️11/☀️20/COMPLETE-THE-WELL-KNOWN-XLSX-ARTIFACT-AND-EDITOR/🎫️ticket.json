@@ -1,0 +1,21 @@
+{
+  "title": "Complete the Well-Known XLSX Artifact and Editor",
+  "emoji": "📗",
+  "status": "open",
+  "description": "Deliver and verify end-to-end XLSX file recognition, workbook editing and natural-file round trips.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS/RUNNING-OS/RUNNING-S/RUNNING-PLUGINS/RUNNING-STDIO/RUNNING-XLSX",
+  "sessions": [
+    "4623b9a5-682c-4920-b6ec-6215d3e13bbf"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 03:55:16",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Deliver and verify end-to-end XLSX file recognition, workbook editing and natural-file round trips."
+    }
+  ]
+}

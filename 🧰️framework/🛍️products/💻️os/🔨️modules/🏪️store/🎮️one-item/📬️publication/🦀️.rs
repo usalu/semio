@@ -41,6 +41,10 @@ use semio_os_spr::{ActorId, HybridLogicalTimestamp, MutationId, UndoPolicy};
 use semio_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+
+#[path = "📦️input-pages/🦀️.rs"]
+mod input_pages;
+pub use input_pages::ArtifactMutationPages;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::{SnapshotRead, artifact_retirement_box_close_step, artifact_retirement_box_demands};
@@ -452,6 +456,10 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn outcome_messages(&self) -> &[semio_os_spr::MutationMessage] { &[] }
 
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary>;
+    /// 📏️ The whole turn ceiling classifies permanent misfits without increasing the spendable grant.
+    fn advance_with_turn_ceiling(&mut self, body: usize, grant: ArtifactStoreOneItemGrant, _turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.advance(body, grant, receiving)
+    }
     /// ⛽️ The entire latest advance reports actual work, including observed native work and failures, and resets on denial.
     fn last_turn_work(&self)->u64;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
@@ -625,6 +633,7 @@ pub trait ArtifactStoreBatchSource<P, Mutation>: Send {
 pub struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> {
     pub authority: Option<A>,
     pub inputs: VecDeque<A::Input>,
+    paged_inputs: Option<ArtifactMutationPages<A::Input>>,
     census: usize,
     pub footprint: ArtifactStoreOneItemFootprint,
     issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>,
@@ -638,16 +647,38 @@ pub struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuth
 impl<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
     fn input_transfer_copy_bytes()->Result<usize,ValueError>{size_of::<A::Input>().checked_mul(2).and_then(|bytes|size_of::<ArtifactStoreBatchItemRequest<P,Mutation>>().checked_mul(2).and_then(|headers|bytes.checked_add(headers))).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original batch input/header quote overflow"))}
     pub fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>, wire: Option<ArtifactOperationWire<Mutation>>) -> Self {
-        Self { authority: Some(authority), inputs: inputs.into(), census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), wire, marker: PhantomData }
+        Self { authority: Some(authority), inputs: inputs.into(), paged_inputs: None, census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), wire, marker: PhantomData }
+    }
+
+    /// 🫴️ Takes original input pages so publication owns their separate backing allocations.
+    pub fn with_paged_inputs(mut self, paged_inputs: Option<ArtifactMutationPages<A::Input>>) -> Self {
+        assert!(self.issuer.is_none() || paged_inputs.is_none());
+        self.paged_inputs = paged_inputs;
+        self
+    }
+
+    fn input(&self, index: usize) -> Option<&A::Input> {
+        if index < self.inputs.len() { return self.inputs.get(index); }
+        self.paged_inputs.as_ref()?.get(index - self.inputs.len())
+    }
+
+    fn take_input(&mut self) -> Option<(A::Input, bool)> {
+        if let Some(input) = self.inputs.pop_front() { return Some((input, true)); }
+        self.paged_inputs.as_mut()?.pop_front().map(|input| (input, false))
+    }
+
+    fn return_input(&mut self, input: A::Input, flat: bool) {
+        if flat { self.inputs.push_front(input); }
+        else { self.paged_inputs.as_mut().expect("original mutation pages").restore_front(input); }
     }
 }
 
 impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSource<P, Mutation> for ArtifactStoreBatchSourceOf<P, Mutation, A> {
     fn operation_wire_source<'a>(&self, mutation: &'a Mutation) -> Option<ArtifactPreparedOperationSource<'a>> { self.authority.as_ref()?.operation_wire_source(mutation).or_else(|| self.wire.and_then(|wire| wire.source(mutation))) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a Mutation) -> Option<(&'a str, &'a str)> { self.authority.as_ref()?.operation_schema_parts(mutation).or_else(|| self.wire.and_then(|wire| wire.schema(mutation))) }
-    fn remaining(&self) -> usize { self.inputs.len() }
+    fn remaining(&self) -> usize { self.inputs.len() + self.paged_inputs.as_ref().map_or(0, ArtifactMutationPages::len) }
     fn census_one(&mut self, lane: HistoryLane) -> Result<Option<ArtifactStoreOneItemFootprint>, String> {
-        let Some(input) = self.inputs.get(self.census) else { return Ok(Some(self.footprint)); };
+        let Some(input) = self.input(self.census) else { return Ok(Some(self.footprint)); };
         let item = self.authority.as_ref().ok_or_else(|| "batch source lost its exact app-owned item authority".to_string())?.preflight(input, lane)?;
         let footprint = self.footprint.merged(item);
         if !item.is_admissible() || !footprint.is_admissible() { return Err("one-item preparation footprint exceeds its fixed item or byte capacity".into()); }
@@ -657,12 +688,12 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
     }
     fn next_begin_demand(&self, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> {
         let authority=self.authority.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source lost its original item authority"))?;
-        let input=self.inputs.front().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before preparation birth"))?;
+        let input=self.input(0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before preparation birth"))?;
         authority.begin_demand(input,lane)
     }
     fn next_begin_copy_byte_demand(&self,lane:HistoryLane)->Result<usize,ValueError>{
         let authority=self.authority.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source lost its original copy issuer"))?;
-        let input=self.inputs.front().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before header capture"))?;
+        let input=self.input(0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before header capture"))?;
         authority.begin_copy_byte_demand(input,lane)?.checked_add(Self::input_transfer_copy_bytes()?).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original batch child header quote overflow"))
     }
     fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)> {
@@ -672,15 +703,15 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         if grant.maximum_copy_bytes<copy{return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original batch input/header transfer is not funded"),request));}
         let transfer=match Self::input_transfer_copy_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err((error,request))};
         let child=ArtifactStoreOneItemGrant{maximum_copy_bytes:grant.maximum_copy_bytes-transfer,..grant};
+        let (mutation, flat)=self.take_input().expect("observed original batch item input");
         let authority=self.authority.as_ref().expect("observed original batch item authority");
-        let mutation=self.inputs.pop_front().expect("observed original batch item input");
         let ArtifactStoreBatchItemRequest{operation,generation,base_revision,lane,authority:live,base,mutation_retirement,snapshot_retirement}=request;
         let item=ArtifactStoreOneItemPreparationRequest{operation,generation,base_revision,lane,authority:live,base,mutation,mutation_retirement,snapshot_retirement};
         match authority.begin(item,child){
             Ok((owner,mut progress))=>{progress.copied_bytes=progress.copied_bytes.checked_add(transfer).unwrap_or_else(||unreachable!("preflighted original batch header extent"));Ok((owner,progress))},
             Err((error,item))=>{
                 let ArtifactStoreOneItemPreparationRequest{operation,generation,base_revision,lane,authority,base,mutation,mutation_retirement,snapshot_retirement}=item;
-                self.inputs.push_front(mutation);
+                self.return_input(mutation, flat);
                 let mut progress=error.retained_progress();progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(transfer).unwrap_or_else(||unreachable!("preflighted original batch refusal header extent"));
                 Err((error.with_retained_progress(progress),ArtifactStoreBatchItemRequest{operation,generation,base_revision,lane,authority,base,mutation_retirement,snapshot_retirement}))
             }
@@ -696,13 +727,14 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         if let Some(retirement) = self.retirement.as_ref() { return if retirement.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }) } else { nested(retirement.demands(maximum_body_bytes)?) }; }
         if let Some(issuer) = self.issuer.as_ref() { return Ok(RetirementDemand { capacity_bytes: issuer.birth_bytes, depth: 2, ..Default::default() }); }
         if let Some(active) = self.active_input.as_ref() { return nested(artifact_retirement_box_demands(active, maximum_body_bytes)?); }
-        if let Some(input) = self.inputs.front() { return Ok(RetirementDemand { capacity_bytes: self.authority.as_ref().expect("original batch authority").input_retirement_birth_bytes(input), depth: 2, ..Default::default() }); }
+        if let Some(input) = self.input(0) { return Ok(RetirementDemand { capacity_bytes: self.authority.as_ref().expect("original batch authority").input_retirement_birth_bytes(input), depth: 2, ..Default::default() }); }
         if self.inputs.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.inputs.capacity().checked_mul(size_of::<A::Input>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch source backing layout overflow"))?, depth: 1, ..Default::default() }); }
+        if let Some(pages) = self.paged_inputs.as_ref() { return Ok(RetirementDemand { release_bytes: pages.empty_release_bytes(), depth: 1, ..Default::default() }); }
         if self.authority.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<A>(), depth: 1, ..Default::default() }); }
         if let Some(authority) = self.authority_close.iter().find_map(Option::as_ref) { return nested(authority.demands(maximum_body_bytes)?); }
         Ok(Default::default())
     }
-    fn terminal_is_empty(&self) -> bool { self.inputs.capacity() == 0 && self.inputs.is_empty() && self.authority.is_none() && self.retirement.is_none() && self.issuer.is_none() && self.active_input.is_none() && self.authority_close.iter().all(Option::is_none) }
+    fn terminal_is_empty(&self) -> bool { self.inputs.capacity() == 0 && self.inputs.is_empty() && self.paged_inputs.is_none() && self.authority.is_none() && self.retirement.is_none() && self.issuer.is_none() && self.active_input.is_none() && self.authority_close.iter().all(Option::is_none) }
 }
 
 impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
@@ -730,10 +762,10 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
             };
         }
         if self.active_input.is_some() { let step = RetirementPollExit::resume(artifact_retirement_box_close_step(&mut self.active_input, child.maximum_copy_bytes, &mut effect.nested(child)))?; return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if !self.inputs.is_empty() {
-            let mut input = self.inputs.pop_front();
+        if let Some((value, flat)) = self.take_input() {
+            let mut input = Some(value);
             let poll = self.authority.as_ref().expect("original batch input authority").retire_input(&mut input, &mut effect.nested(child));
-            if let Some(input) = input { self.inputs.push_front(input); }
+            if let Some(input) = input { self.return_input(input, flat); }
             let (owner, progress) = RetirementPollExit::resume(poll)?;
             self.active_input = Some(owner);
             if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch input constructor changed its receipt").into()); }
@@ -741,6 +773,11 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         }
         if self.inputs.capacity() != 0 {
             self.inputs = VecDeque::new();
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
+        }
+        if let Some(pages) = self.paged_inputs.as_mut() {
+            pages.release_empty_backing();
+            if pages.backing_is_empty() { self.paged_inputs = None; }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
         if let Some(authority) = self.authority.take() {

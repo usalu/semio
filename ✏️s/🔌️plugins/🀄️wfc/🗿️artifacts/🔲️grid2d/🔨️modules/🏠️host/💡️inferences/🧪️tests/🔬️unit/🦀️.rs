@@ -133,8 +133,9 @@ fn the_routed_metadata_names_this_artifact_and_its_own_tool_id() {
 fn the_inference_descriptor_carries_five_real_leaves() {
     let descriptor = grid2d_artifact_inference_descriptor();
     assert_eq!(descriptor.id, "s.wfc.grid2d.solve");
-    for leaf in [descriptor.inference.rust, descriptor.inference.typescript, descriptor.inference.graphql, descriptor.inference.json_schema, descriptor.inference.proto] {
-        assert!(!leaf.trim().is_empty());
+    for format in semio_framework_schema_registry::SchemaFormat::ALL {
+        let leaf = semio_framework_schema_registry::resolved_leaf_body(descriptor.id, "inference", format, &descriptor.inference);
+        assert!(!leaf.trim().is_empty(), "{format:?}");
     }
 }
 

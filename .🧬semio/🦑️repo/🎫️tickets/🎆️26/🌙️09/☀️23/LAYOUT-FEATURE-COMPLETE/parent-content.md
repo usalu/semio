@@ -1,0 +1,7 @@
+# Retained Parent Page Content
+
+The retained Set Parent Page Content path now runs in the concrete Layout mutation preparation. The planner borrows the original proposal and base, finds the selected parent, compares normalized layer metadata and native frame words, and records inheriting pages and stale override ordinals. An unchanged proposal settles before output allocation.
+
+The output replaces the selected parent at its original position and prepares derived membership through PageCachePreparation. Only inheriting pages that lose an override receive a page patch. Each removal keeps its original row position and object identity. The inverse preserves all inheriting override vectors and emits the old parent contents as the last event, so reverse replay restores the parent before reapplying its page overrides.
+
+The mounted mutation laws share the structural corpus with the independent Ajv and RFC 6902 oracle. They check captured content, invalid parent content, stale-override removal, exact inverse event order, actual reverse replay, signed-zero frame words, and funded retirement at interrupted preparation steps. The independent portable checks passed two tests and 124 assertions. Touched Rust sources parsed and passed whitespace checks. The native laws and full guest remain unverified. The guest reached repository source admission and rejected the concrete mutation crate at 270,079 bytes against 262,144. Story output and inverse are being moved to the existing typed fields package to reduce that closure.

@@ -24,7 +24,7 @@ fn definition(name: &str, kind: PropertyKind, default_value: Option<PropertyValu
 fn with_template() -> ModelSnapshot {
     let mut snapshot = demo();
     let properties = vec![definition("FireRating", PropertyKind::Text, Some(PropertyValue::Text { value: "EI30".into() })), definition("Mass", PropertyKind::Real, None), definition("External", PropertyKind::Boolean, Some(PropertyValue::Boolean { value: false }))];
-    snapshot.property_templates.insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties });
+    snapshot.property_templates.cold_insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties });
     snapshot
 }
 
@@ -48,7 +48,7 @@ async fn applying_gives_the_defaults_a_holder_does_not_state_and_nothing_twice()
 #[semio_framework_async_macros::async_test]
 async fn a_stated_value_is_kept_and_a_type_is_a_holder_the_instances_inherit_from() {
     let mut snapshot = with_template();
-    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), PropertyValue::Text { value: "EI90".into() })]))]));
+    snapshot.properties.cold_insert("w-south".into(), [("Pset_WallCommon".to_string(), [("FireRating".to_string(), PropertyValue::Text { value: "EI90".into() })].into())].into());
     let emit = apply(&snapshot, &[], "pt-wall", &["w-south", "wt-300"]).expect("applies to the selection");
     let after = applied(&snapshot, &emit);
     assert_eq!(after.properties["w-south"]["Pset_WallCommon"]["FireRating"], PropertyValue::Text { value: "EI90".into() });

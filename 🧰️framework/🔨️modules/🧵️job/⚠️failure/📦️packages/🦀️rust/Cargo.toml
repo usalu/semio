@@ -22,6 +22,9 @@ workspace = true
 name = "semio_framework_job_failure"
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-framework-async/testkit"]
+
 [dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-job-receiving = { path = "../../../🛬️receiving/📦️packages/🦀️rust" }

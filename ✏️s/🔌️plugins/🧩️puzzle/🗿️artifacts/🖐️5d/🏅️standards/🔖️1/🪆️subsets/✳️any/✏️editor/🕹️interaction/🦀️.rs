@@ -326,12 +326,6 @@ macro_rules! puzzle5d_command_variants {
                 }
             }
 
-            #[cfg(test)]
-            fn from_action(action: &str, args: Option<semio_framework_pack_json::Value>, window_id: Option<String>) -> Self {
-                Self::try_from_action(action, args, window_id)
-                    .unwrap_or_else(|| panic!("unknown puzzle5d action id in test: {action}"))
-            }
-
             /// 🪶️ Hand-written JSON bridge (see this macro's own doc comment on why `OpBinary` here
             /// is a plain JSON-bytes bridge, not a derive): reproduces serde's default externally
             /// tagged struct-variant shape (`{"VariantName": {"window_id": ..., "args": ...}}`) so

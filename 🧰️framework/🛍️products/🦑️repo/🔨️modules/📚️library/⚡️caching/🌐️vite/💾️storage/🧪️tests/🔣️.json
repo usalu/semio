@@ -14,6 +14,10 @@
   ],
   "writerShards": 16,
   "payload": "finite-vite-artifact",
+  "requests": [
+    {"path": "missing.js", "status": 404},
+    {"path": "entry.js", "status": 200}
+  ],
   "reader": {
     "file": "index.html",
     "before": "<p>first retained artifact</p>",

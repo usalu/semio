@@ -457,6 +457,8 @@ impl InteractiveJob for PreparedRenderJob {
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<CloseStep,semio_framework_job::OriginalTurnFailure> {
+        if !self.closing { return Ok(CloseStep::Blocked); }
+        if PreparedRenderJob::terminal_is_empty(self) { return Ok(CloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         let quote=self.next_close_demands(0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
         let step=prepared_close_turn(cx,quote,|effect|self.close_granted(effect))?;
         if matches!(step,CloseStep::Complete{..})&&!PreparedRenderJob::terminal_is_empty(self){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job close completed with a non-empty terminal witness").into())}

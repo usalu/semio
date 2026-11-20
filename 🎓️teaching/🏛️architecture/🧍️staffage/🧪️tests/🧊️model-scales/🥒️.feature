@@ -28,3 +28,9 @@ Feature: One individually authored 3D model per scale and mode
     Given the authored scales
     When modelOfAsset builds the document
     Then it has a scene per scale and mode in order over one skeleton, the seven views as variants, skips an unavailable scale, tessellates scene by scene with falling triangles, is deterministic and cancellable
+
+  Scenario: A digital model remains available below the printable feature size
+    Given a scale with a handcrafted volume and an unavailable print drawing
+    When its digital model is validated and exported
+    Then body, thermal and structural scenes retain their authored scale
+    And the print drawing remains unavailable

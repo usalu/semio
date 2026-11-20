@@ -107,7 +107,7 @@ describe("wgpu browser input wire", () => {
   it("covers every input the shell admits", () => {
     expect(fixture.rows.length).toBeGreaterThanOrEqual(12);
     const kinds = new Set(fixture.rows.map((row) => String(row.wire.kind)));
-    expect([...kinds].sort()).toEqual(["key-down", "key-up", "pointer-cancel", "pointer-down", "pointer-move", "pointer-up", "resize", "wheel"]);
+    expect([...kinds].sort()).toEqual(["key-down", "key-up", "pointer-cancel", "pointer-down", "pointer-leave", "pointer-move", "pointer-up", "resize", "wheel"]);
     for (const row of fixture.rows) expect(row.why, `${row.id} must say why it exists`).toBeTruthy();
   });
 
@@ -117,6 +117,25 @@ describe("wgpu browser input wire", () => {
       expect(browserFrameEventFromDom(event, dpr)).toEqual(row.wire);
     });
   }
+
+  it("keeps each pointer's latest move or leave sample", () => {
+    const move = fixture.rows.find((row) => row.id === "pointer-move-over-a-tree-row")!;
+    const leave = fixture.rows.find((row) => row.id === "pointer-leave-clears-mouse-hover")!;
+    for (const [first, last] of [[move, leave], [leave, move]]) {
+      const worker = new FakeWorker();
+      const transport = readyTransport(worker);
+      for (const row of [first, last]) {
+        const { event, dpr } = domEvent(row);
+        const wire = browserFrameEventFromDom(event, dpr);
+        if (!browserFrameEventIsReplaceable(wire)) throw new Error(`${row.id} must be replaceable`);
+        expect(transport.enqueueReplaceable(wire)).toBe(true);
+      }
+      expect(transport.flush()).toBe(true);
+      const batch = worker.messages.findLast((message): message is Extract<BrowserFrameUiMessage, { kind: "batch" }> => message.kind === "batch");
+      expect(batch?.replaceable).toEqual([expect.objectContaining(last.wire)]);
+      expect(batch?.lossless).toEqual([]);
+    }
+  });
 
   /** 📐️ Pointer coordinates are CSS pixels on BOTH sides of this wire: the renderer lays out,
    * hit-tests and paints in logical pixels exactly like the React host's DOM, so a density change
@@ -177,11 +196,11 @@ describe("wgpu browser input wire", () => {
     expect(move).toMatchObject({ x: 2, y: 2, shift: false });
   });
 
-  it("puts pointer moves, wheels and resizes on the coalescing lane and transitions on the lossless one", () => {
+  it("coalesces pointer samples, wheels and resizes while preserving gesture transitions", () => {
     for (const row of fixture.rows) {
       const { event, dpr } = domEvent(row);
       const projected = browserFrameEventFromDom(event, dpr);
-      expect(browserFrameEventIsReplaceable(projected), row.id).toBe(["pointer-move", "wheel", "resize"].includes(String(row.wire.kind)));
+      expect(browserFrameEventIsReplaceable(projected), row.id).toBe(["pointer-move", "pointer-leave", "wheel", "resize"].includes(String(row.wire.kind)));
     }
   });
 
@@ -203,10 +222,11 @@ describe("wgpu browser input wire", () => {
     /** ⏱️ The transport stamps `timestampMs` on what it carries; the fixture pins the meaning, not the clock. */
     const carries = (wire: Record<string, unknown>) => transferred.some((event) => Object.entries(wire).every(([field, value]) => JSON.stringify(event[field]) === JSON.stringify(value)));
     for (const row of fixture.rows) {
-      if (row.wire.kind === "pointer-move") continue;
+      if (row.wire.kind === "pointer-move" || row.wire.kind === "pointer-leave") continue;
       expect(carries(row.wire), `${row.id} must cross the wire`).toBe(true);
     }
-    expect(admitted.filter((event) => !["pointer-move", "resize"].includes(String(event.kind))).length, "every non-coalescing input is carried").toBe(transferred.filter((event) => !["pointer-move", "resize"].includes(String(event.kind))).length);
+    const counted = (event: Record<string, unknown>) => !["pointer-move", "pointer-leave", "resize"].includes(String(event.kind));
+    expect(admitted.filter(counted).length, "every non-coalescing input is carried").toBe(transferred.filter(counted).length);
     const moves = batch!.replaceable.filter((event) => event.kind === "pointer-move");
     expect(moves.map((event) => (event as { pointerId: number }).pointerId).sort(), "one coalesced move per pointer identity").toEqual([1, 3, 7]);
   });

@@ -441,4 +441,3 @@ impl ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(EquationRetainedCommandWork);

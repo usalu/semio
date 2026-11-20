@@ -11,5 +11,5 @@ fn the_compute_table_and_the_fixture_cover_exactly_the_catalogue_kinds() {
 
 #[test]
 fn every_fixture_case_holds_at_fuel_one_at_unbounded_fuel_and_on_repetition() {
-    assert_eq!(h::run_fixture(catalogue(), FIXTURE, COMPUTES), 16);
+    assert_eq!(h::run_fixture(catalogue(), FIXTURE, COMPUTES), 17);
 }

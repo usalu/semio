@@ -101,10 +101,61 @@ impl<O> ResidentConstruction<O>{
     pub fn drive_tool(&mut self,context:&mut StepContext<'_>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<Option<O>,OriginalTurnFailure>{
         Ok(if admit_original_tool_construction_settled(context,&mut self.admission,&mut self.output,demand,construct)?{self.output.take()}else{None})
     }
-    /// 🏦️ The constructed output with the scope credit its consumed payload held, moved to a carrier that settles when the output retires.
-    pub fn drive_tool_credited(&mut self,context:&mut StepContext<'_>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<Option<std::result::Result<semio_framework_job::OriginalCreditedOutput<O>,O>>,OriginalTurnFailure>{
-        match self.drive_tool(context,demand,construct)?{Some(output)=>Ok(Some(context.adopt_original_credit(output)?)),None=>Ok(None)}
+    /// 🏗️ Keeps both the construction and its candidate resident until the caller receives them.
+    pub fn admit_tool(&mut self, context: &mut StepContext<'_>, demand: ToolJobAdmissionDemand, construct: impl FnOnce(&mut OriginalToolConstructionScope<'_>) -> Result<(O, RetainedCloneProgress), ValueError>) -> Result<bool, OriginalTurnFailure> {
+        admit_original_tool_construction_settled(context, &mut self.admission, &mut self.output, demand, construct)
     }
+
+    /// 🧾️ Returns the completed control before the caller takes an already-born candidate.
+    pub fn settle_tool(&mut self, context: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if self.output.is_none() {
+            return Err(ValueError::invariant("original construction has no resident candidate").into());
+        }
+        if self.admission.is_failed() {
+            return Err(ValueError::invariant("original construction failed; its complete causes remain in the admission").into());
+        }
+        self.admission.close_step(context)
+    }
+
+    /// 📦️ Borrows the same candidate while its constructor or caller retains custody.
+    pub fn candidate(&self) -> Option<&O> { self.output.as_ref() }
+
+    /// 🚦️ Reports when the original control has returned to its caller.
+    pub fn control_is_empty(&self) -> bool { self.admission.terminal_is_empty() }
+
+    /// 📐️ Quotes more than a metadata turn only to move the original constructor failure.
+    pub fn control_close_demand(&self) -> RetirementDemand {
+        if self.admission.failure_untaken() {
+            let demand = self.admission.take_failure_demand();
+            RetirementDemand { copy_bytes: demand.copy_bytes, depth: demand.depth, ..Default::default() }
+        } else {
+            self.admission.close_demand()
+        }
+    }
+
+    /// 🎒️ Transfers the candidate once the construction control is terminal.
+    pub fn take_candidate(&mut self) -> Option<O> {
+        if self.admission.terminal_is_empty() { self.output.take() } else { None }
+    }
+
+    /// 🧹️ Advances retirement of an already-born candidate on its original caller.
+    pub fn close_candidate(&mut self, context: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure>
+    where O: InteractiveJob {
+        let Some(candidate) = self.output.as_mut() else { return Ok(()) };
+        if !candidate.terminal_is_empty() {
+            candidate.begin_close();
+            candidate.close_step(context)?;
+            return Ok(());
+        }
+        let demand = RetirementDemand { copy_bytes: size_of::<Option<O>>(), depth: 1, ..Default::default() };
+        semio_framework_job::close_original_retained_step(context, demand, |_| {
+            self.output.take();
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+            semio_framework_value::RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Complete(progress)), work: 1 }
+        })?;
+        Ok(())
+    }
+
     /// 🪢️ The resident admission, lent to producers that build into their own candidate slot.
     pub fn admission(&mut self)->&mut semio_framework_job::OriginalConstructionAdmission{&mut self.admission}
     pub fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.admission.terminal_is_empty()}

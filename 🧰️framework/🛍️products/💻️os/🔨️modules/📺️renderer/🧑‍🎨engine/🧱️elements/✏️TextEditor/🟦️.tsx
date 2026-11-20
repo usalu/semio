@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import { useEffect, useMemo, useRef, useState } from "../⚛️react-port/🟦️.ts";
 import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
-import { Button, cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Input, SharedBorderRow, SharedBorderRowCell, Textarea, useLabel } from "@semio-tech/ui-react";
+import { Button, cn, ContextMenuController, ContextMenuTriggerButton, glassClass, Input, SharedBorderRow, SharedBorderRowCell, Textarea, useLabel, sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ActionDispatchLifecycleV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
@@ -256,7 +256,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
               return (
                 <div className={cn("pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border p-1 shadow-md", glassClass)} data-level="menu" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
                   {completions.map((item, index) => (
-                    <button
+                    <button {...sharedBorderlessBoxProps}
                       key={`${item.label}-${index}`}
                       type="button"
                       className={`block w-full rounded px-2 py-1 text-left font-mono text-[0.6875rem] ${index === completionIndex ? "bg-accent text-accent-foreground" : "hover:bg-active-base"}`}

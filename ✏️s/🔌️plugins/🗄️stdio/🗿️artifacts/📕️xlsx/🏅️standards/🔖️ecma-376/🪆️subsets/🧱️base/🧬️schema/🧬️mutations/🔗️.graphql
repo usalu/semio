@@ -35,7 +35,8 @@ input XlsxWorksheetAddressInput {
   localName: String!
   revision: String!
 }
-input XlsxCellVacancyAddressInput { worksheet: XlsxWorksheetAddressInput!, row: Int!, column: Int! }
+input XlsxCellPlacementInput { index: Int!, unanchorNext: Boolean! }
+input XlsxCellVacancyAddressInput { worksheet: XlsxWorksheetAddressInput!, row: Int!, column: Int!, placement: XlsxCellPlacementInput }
 scalar XlsxMutationValue
 input XlsxMutationInput {
   mutation: XlsxMutationTag!
@@ -46,6 +47,7 @@ input XlsxMutationInput {
   vacancy: XlsxCellVacancyAddressInput
   value: XlsxMutationValue
   index: Int
+  keepRow: Boolean
   node: XlsxMutationValue
   slot: XlsxMutationValue
 }

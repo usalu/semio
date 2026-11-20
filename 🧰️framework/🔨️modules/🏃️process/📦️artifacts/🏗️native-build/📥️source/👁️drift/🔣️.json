@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "maximumDirectories": 128,
+  "maximumInputs": 4096,
+  "maximumQueuedInputs": 128,
+  "maximumReadBytes": 8388608,
+  "readChunkBytes": 65536,
+  "millisecondsBetweenReads": 200,
+  "millisecondsPerRead": 2000,
+  "metadataBatchSize": 32,
+  "millisecondsBetweenMetadataBatches": 500,
+  "metadataClockToleranceMs": 1000
+}

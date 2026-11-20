@@ -152,6 +152,11 @@
             "unprobed"
           ]
         },
+        "caseProbeFailure": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
         "imageTool": {
           "type": "boolean"
         },

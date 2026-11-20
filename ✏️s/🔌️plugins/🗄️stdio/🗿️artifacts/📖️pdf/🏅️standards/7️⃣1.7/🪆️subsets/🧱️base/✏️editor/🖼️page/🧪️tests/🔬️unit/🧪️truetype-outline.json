@@ -1,0 +1,93 @@
+{
+  "font": "🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🖥️share-tech-mono/💻️ShareTechMono-Regular.ttf",
+  "characters": [
+    "A",
+    "g",
+    "é",
+    " "
+  ],
+  "minimumSegments": [
+    10,
+    10,
+    12,
+    0
+  ],
+  "page": [
+    160,
+    110
+  ],
+  "paintText": "Agé€",
+  "codes": "4167E980",
+  "matrix": [
+    1,
+    0,
+    0,
+    -1,
+    20,
+    70
+  ],
+  "widths": {
+    "first": 65,
+    "last": 233,
+    "advance": 500
+  },
+  "origins": [
+    [
+      20,
+      70
+    ],
+    [
+      36,
+      70
+    ],
+    [
+      52,
+      70
+    ],
+    [
+      68,
+      70
+    ]
+  ],
+  "clip": {
+    "content": "q BT /F1 40 Tf 7 Tr 1 0 0 1 10 35 Tm (A) Tj 1 0 0 1 70 35 Tm (g) Tj ET 1 0 0 rg 0 0 160 110 re f Q 0 0 1 rg 140 5 10 10 re f",
+    "regions": [
+      [
+        10,
+        47,
+        31,
+        75
+      ],
+      [
+        70,
+        50,
+        90,
+        85
+      ]
+    ],
+    "probes": [
+      {
+        "at": [
+          50,
+          65
+        ],
+        "rgb": [
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "at": [
+          145,
+          100
+        ],
+        "rgb": [
+          0,
+          0,
+          255
+        ]
+      }
+    ]
+  }
+}

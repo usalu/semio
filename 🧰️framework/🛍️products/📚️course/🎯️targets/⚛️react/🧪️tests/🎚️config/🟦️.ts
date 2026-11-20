@@ -32,6 +32,8 @@ export default defineConfig(async () => ({
       "../../../../🧪️tests/📬️outbox-delivery/🟦️.tsx",
       "../../../../🧪️tests/🫡️deputy-decisions/🟦️.tsx",
       "../../../../🧪️tests/⌨️task-keyboard/🟦️.tsx",
+      "../../../../🧪️tests/🧱️gradual-items/🟦️.tsx",
+      "../../../../🧪️tests/💤️idle-preload/🟦️.tsx",
       "../../../../🧪️tests/🚶️journey-and-tabs/🟦️.tsx",
       "../../../../🧪️tests/🧩️deputy-and-contract/🟦️.tsx",
       "../../../../🧪️tests/🏔️challenge-session/🟦️.tsx",

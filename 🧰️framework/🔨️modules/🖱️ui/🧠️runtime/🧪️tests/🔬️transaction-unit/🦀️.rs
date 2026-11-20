@@ -149,6 +149,7 @@ fn drive_stepped<S: crate::CommandSink, D: crate::ProjectionDelta>(transaction: 
 //#region 🔖️IntentMutatesAndPatches
 #[test]
 fn an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");
@@ -258,6 +259,7 @@ fn the_effect_fixpoint_terminates_and_a_pathological_observer_hits_the_storm_bud
 //#region 🔖️GatewayBackpressure
 #[test]
 fn a_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime: UiRuntime<FailsAfterSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(10, FailsAfterSink { calls: Cell::new(0), accepts: 1 }), 16, apply_fake_delta);
     let surface = surface("s");
@@ -331,6 +333,7 @@ fn two_surfaces_are_independent_dirtying_one_does_not_re_present_the_other() {
 //#region 🔖️ResumableStress
 #[test]
 fn one_fuel_slices_bound_an_intent_storm_and_preserve_fifo_output() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime: UiRuntime<AlwaysAcceptsSink, FakeDelta> = UiRuntime::new(crate::CommandGateway::new(128, AlwaysAcceptsSink), 16, apply_fake_delta);
     let surface = surface("s");
@@ -365,6 +368,7 @@ fn an_effect_storm_remains_resumable_and_retains_the_cycle_fault_semantics() {
 
 #[test]
 fn repeated_new_input_supersedes_staged_presentation_without_losing_an_accepted_command() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let mut runtime = test_runtime();
     let surface = surface("s");

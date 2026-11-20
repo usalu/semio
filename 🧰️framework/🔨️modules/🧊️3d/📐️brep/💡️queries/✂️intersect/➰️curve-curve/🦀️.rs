@@ -9,6 +9,7 @@
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, upgraded in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A).
 
+use super::LineIntersectionRefusal;
 use semio_framework_3d_brep_curve::bezier::RationalBezier3;
 use semio_framework_3d_brep_curve::{Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
@@ -52,11 +53,16 @@ pub fn intersect_curve_curve(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<Cur
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn intersect_line_line(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
+    Ok(intersect_line_line_unique(o1, d1, o2, d2, tol)?.into_iter().collect())
+}
+
+/// 📍️ Intersects two supporting lines without allocating a result list.
+pub fn intersect_line_line_unique(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Option<CurveCurveHit>, LineIntersectionRefusal> {
+    use LineIntersectionRefusal::{DegenerateDirection, Infinite, InvalidTolerance, NonFinite};
+    if !(tol > 0.0 && tol.is_finite()) { return Err(InvalidTolerance); }
     let n1 = d1.norm();
     let n2 = d2.norm();
-    if n1 <= tol || n2 <= tol {
-        return Err(IntersectError::Degenerate("zero-length line direction".into()));
-    }
+    if n1 <= tol || n2 <= tol { return Err(DegenerateDirection); }
     let w0 = o1 - o2;
     let a = d1.dot(d1);
     let b = d1.dot(d2);
@@ -64,21 +70,22 @@ fn intersect_line_line(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Resu
     let d = d1.dot(w0);
     let e = d2.dot(w0);
     let denom = a * c - b * b;
+    if ![n1, n2, d, e, denom].into_iter().all(f64::is_finite) { return Err(NonFinite); }
     if denom.abs() <= tol * tol * a * c {
-        let dist = w0.cross(d1).norm() / n1;
-        if dist <= tol {
-            return Err(IntersectError::Tangent);
-        }
-        return Ok(vec![]);
+        let distance = w0.cross(d1).norm() / n1;
+        if !distance.is_finite() { return Err(NonFinite); }
+        if distance <= tol { return Err(Infinite); }
+        return Ok(None);
     }
     let t_a = (b * e - c * d) / denom;
     let t_b = (a * e - b * d) / denom;
     let p_a = o1 + d1 * t_a;
     let p_b = o2 + d2 * t_b;
-    if p_a.distance(p_b) > tol {
-        return Ok(vec![]);
-    }
-    Ok(vec![CurveCurveHit { point: Pnt3::new((p_a.x + p_b.x) * 0.5, (p_a.y + p_b.y) * 0.5, (p_a.z + p_b.z) * 0.5), t_a, t_b, tangent: false, multiplicity: 1 }])
+    let distance = p_a.distance(p_b);
+    if ![t_a, t_b, distance].into_iter().all(f64::is_finite) { return Err(NonFinite); }
+    if distance > tol { return Ok(None); }
+    let point = p_a + (p_b - p_a) * 0.5;
+    Ok(Some(CurveCurveHit { point, t_a, t_b, tangent: false, multiplicity: 1 }))
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

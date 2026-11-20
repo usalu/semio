@@ -3,7 +3,7 @@
 use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, rect_of};
 use crate::standards::v1_7::subsets::base::modules::content::parse_content;
 use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
-use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name, CosGrant};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use std::collections::{HashMap, HashSet};
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
@@ -11,6 +11,15 @@ use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtif
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};
 use crate::standards::v1_7::subsets::base::modules::lift::*;
+
+#[path = "🧭️document-lift/🦀️.rs"]
+mod document_lift;
+pub use document_lift::*;
+
+#[path = "📜️page-content/🦀️.rs"]
+mod page_content;
+pub use page_content::{project_content_bytes, PageContentBarrier, PageContentCursor, PageContentEvent, PageContentReceipt, PageProgramCursor};
+
 
 //#region 🔖️Lifter
 /// 🏷️ Resource categories whose ids share one namespace each (`Page` keys pages by index).
@@ -26,6 +35,23 @@ pub enum Category {
     EmbeddedFile,
     OptionalContent,
     Page,
+}
+
+/// 📦️ Holds the native lifting state independently of each turn's graph borrow.
+#[derive(Default)]
+pub struct DocumentLiftState {
+    pub snapshot: PdfSnapshot,
+    pub admitted_stream_roles: Vec<PdfAdmittedStreamRole>,
+    pub ids: HashMap<(Category, ObjRef), String>,
+    used: HashMap<Category, HashSet<String>>,
+    inline_ids: HashMap<(Category, usize, String), String>,
+    in_progress: HashSet<(Category, ObjRef)>,
+    pub page_refs: Vec<ObjRef>,
+    pub annotation_refs: HashMap<ObjRef, (u32, u32)>,
+    font_codecs: HashMap<String, FontCodec>,
+    scope: usize,
+    pub admission_error: Option<PdfEngineError>,
+    artifacts: NativePdfArtifactResources<'static>,
 }
 
 /// 🧭 One lifting pass over a document.
@@ -57,8 +83,26 @@ impl FontTable for MappedFonts<'_> {
 }
 
 impl<'s> Lifter<'s> {
-    pub fn new(source: &'s mut dyn ObjectSource) -> Self {
-        Self { source, snapshot: PdfSnapshot::default(), admitted_stream_roles: Vec::new(), ids: HashMap::new(), used: HashMap::new(), inline_ids: HashMap::new(), in_progress: HashSet::new(), page_refs: Vec::new(), annotation_refs: HashMap::new(), font_codecs: HashMap::new(), scope: 0, admission_error:None, artifacts:NativePdfArtifactResources::default() }
+    fn bind(source: &'s mut dyn ObjectSource, state: DocumentLiftState) -> Self {
+        let DocumentLiftState {
+            snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            font_codecs, scope, admission_error, artifacts,
+        } = state;
+        Self {
+            source, snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            font_codecs, scope, admission_error, artifacts,
+        }
+    }
+
+    fn unbind(self) -> DocumentLiftState {
+        let Self {
+            source: _, snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs,
+            annotation_refs, font_codecs, scope, admission_error, artifacts,
+        } = self;
+        DocumentLiftState {
+            snapshot, admitted_stream_roles, ids, used, inline_ids, in_progress, page_refs, annotation_refs,
+            font_codecs, scope, admission_error, artifacts,
+        }
     }
 
     pub(crate) fn text(&mut self, value: Option<&PdfObject>) -> Option<String> {
@@ -124,39 +168,23 @@ pub fn lift_document(trailer: &[PdfDictEntry], declared_version: &str, source: &
 /// ⬇️ Lifts a whole document and hands back the lifter (its reference → id maps included).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, source: &'s mut dyn ObjectSource) -> Lifter<'s> {
-    let mut lifter = Lifter::new(source);
-    lifter.snapshot.declared_version = declared_version.to_string();
-    let root = dict_get(trailer, "Root").map(|value| lifter.source.deref(value)).unwrap_or(PdfObject::Null);
-    let catalog = root.as_dict().map(<[PdfDictEntry]>::to_vec).unwrap_or_default();
-    if let Some(version) = dict_name(&catalog, "Version") {
-        if version > declared_version {
-            lifter.snapshot.declared_version = version.to_string();
+    let mut cursor = DocumentLiftCursor::new();
+    let grant = DocumentLiftGrant {
+        traversal: CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX }, semantic: true,
+    };
+    loop {
+        match cursor.advance(trailer, declared_version, source, grant, false).status {
+            DocumentLiftStatus::Complete => return Lifter::bind(source, cursor.take_result().expect("complete document lift")),
+            DocumentLiftStatus::Failed => {
+                while cursor.close_traversal_step(grant.traversal).is_some() {}
+                while cursor.close_page_content_step(grant.traversal).is_some() {}
+                let partial = cursor.take_partial().expect("failed document lift");
+                return Lifter::bind(source, partial.lifter);
+            }
+            DocumentLiftStatus::More => {}
+            _ => unreachable!("synchronous lift admitted both traversal and semantic work"),
         }
     }
-    if let Some(info) = dict_get(trailer, "Info") {
-        let info = lifter.source.deref(info);
-        if let Some(dict) = info.as_dict() {
-            lifter.snapshot.info = lifter.lift_info(dict);
-        }
-    }
-    if let Some(PdfObject::Array(items)) = dict_get(trailer, "ID") {
-        if let [PdfObject::Str(a), PdfObject::Str(b)] = items.as_slice() {
-            lifter.snapshot.document_id = Some([a.clone(), b.clone()]);
-        }
-    }
-    lifter.lift_optional_content(&catalog);
-    lifter.lift_embedded_files(&catalog);
-    lifter.lift_pages(&catalog);
-    let mut pages = Vec::new();
-    for (index, page_ref) in lifter.page_refs.clone().iter().enumerate() {
-        pages.push(lifter.lift_page(index as u32, *page_ref));
-    }
-    lifter.snapshot.pages = pages;
-    lifter.lift_catalog(&catalog);
-    lifter.snapshot.admitted_stream_roles = lifter.source.admitted_roles().to_vec();
-    lifter.snapshot.admitted_stream_roles.extend(lifter.admitted_stream_roles.clone());
-    lifter.snapshot.objects=std::mem::take(&mut lifter.artifacts).into_objects();
-    lifter
 }
 
 impl Lifter<'_> {
@@ -175,102 +203,86 @@ impl Lifter<'_> {
         }
     }
 
-    /// 🌳 Walks `/Pages → /Kids` to the leaves, cycle-guarded, recording page references in order.
-    pub(crate) fn lift_pages(&mut self, catalog: &[PdfDictEntry]) {
-        let Some(pages_ref) = dict_get(catalog, "Pages").and_then(PdfObject::as_ref) else { return };
-        let mut visited = HashSet::new();
-        let mut stack = vec![pages_ref];
-        let mut order = Vec::new();
-        self.walk_pages(pages_ref, &mut visited, &mut order, 0);
-        stack.clear();
-        self.page_refs = order;
+    fn attribute_value(&mut self, attribute: PageAttribute) -> Option<PdfObject> {
+        let mut result = None;
+        self.source.inspect(attribute.owner, &mut |node| {
+            result = node.and_then(PdfObject::as_dict).and_then(|dict| dict.get(attribute.entry)).map(|entry| entry.value.clone());
+        });
+        result
     }
 
-    pub(crate) fn walk_pages(&mut self, node_ref: ObjRef, visited: &mut HashSet<u32>, order: &mut Vec<ObjRef>, depth: usize) {
-        if !visited.insert(node_ref.num) || depth > 64 {
-            return;
-        }
-        let Some(node) = self.source.get(node_ref) else { return };
-        let is_pages = node.dict_get("Type").and_then(PdfObject::as_name) == Some("Pages") || (node.dict_get("Kids").is_some() && node.dict_get("Contents").is_none());
-        if is_pages {
-            if let Some(resources) = node.dict_get("Resources").cloned() {
-                let saved_scope = self.scope;
-                self.scope = node_ref.num as usize;
-                self.lift_resources(&resources);
-                self.scope = saved_scope;
-            }
-            let kids: Vec<ObjRef> = node.dict_get("Kids").map(|kids| self.source.deref(kids)).and_then(|kids| kids.as_array().map(|items| items.iter().filter_map(PdfObject::as_ref).collect())).unwrap_or_default();
-            for kid in kids {
-                self.walk_pages(kid, visited, order, depth + 1);
-            }
-        } else if node.as_dict().is_some() {
-            order.push(node_ref);
-        }
+    fn attribute_identity(&mut self, attribute: PageAttribute) -> Option<PdfGraphIdentity> {
+        let mut identity = None;
+        self.source.inspect(attribute.owner, &mut |object| {
+            let entry = object.and_then(PdfObject::as_dict).and_then(|entries| entries.get(attribute.entry));
+            identity = entry.map(|entry| {
+                if let Some(owner) = entry.value.as_ref() {
+                    PdfGraphIdentity { owner, path: Vec::new() }
+                } else {
+                    PdfGraphIdentity { owner: attribute.owner, path: vec![PdfGraphPath::Entry { key: entry.key.clone() }] }
+                }
+            });
+        });
+        identity
     }
 
-    /// 🧬 The inherited attribute `key` of a page: its own entry, else the nearest ancestor's.
-    pub(crate) fn inherited(&mut self, page: &[PdfDictEntry], key: &str) -> Option<PdfObject> {
-        let mut current = page.to_vec();
-        let mut depth = 0;
-        loop {
-            if let Some(value) = dict_get(&current, key) {
-                return Some(self.source.deref(value));
-            }
-            let parent = dict_get(&current, "Parent")?.clone();
-            let parent = self.source.deref(&parent);
-            current = parent.as_dict()?.to_vec();
-            depth += 1;
-            if depth > 64 {
-                return None;
-            }
+    fn inherited(&mut self, page_ref: ObjRef, page: &[PdfDictEntry], attribute: Option<PageAttribute>) -> Option<PdfObject> {
+        let attribute = attribute?;
+        if attribute.owner == page_ref {
+            return Some(self.source.deref(&page.get(attribute.entry)?.value));
         }
+        let value = self.attribute_value(attribute)?;
+        Some(self.source.deref(&value))
     }
 
-    pub(crate) fn lift_page(&mut self, index: u32, page_ref: ObjRef) -> PdfPage {
-        let dict = self.source.get(page_ref).and_then(|page| page.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
-        let media_box = self.inherited(&dict, "MediaBox").and_then(|v| rect_of(Some(&v))).unwrap_or([0.0, 0.0, 612.0, 792.0]);
+    fn lift_page(&mut self, index: u32, leaf: PageTreeLeaf, prepared: Option<Vec<PdfOp>>) -> PdfPage {
+        let PageTreeLeaf { reference: page_ref, inheritance } = leaf;
+        let dict = match self.source.get(page_ref) {
+            Some(PdfObject::Dict(dict) | PdfObject::Stream { dict, .. }) => dict,
+            _ => Vec::new(),
+        };
+        let media_box = self.inherited(page_ref, &dict, inheritance.media_box).and_then(|v| rect_of(Some(&v))).unwrap_or([0.0, 0.0, 612.0, 792.0]);
         let mut page = PdfPage::new(media_box[2] - media_box[0], media_box[3] - media_box[1]);
         page.media_box = media_box;
-        page.crop_box = self.inherited(&dict, "CropBox").and_then(|v| rect_of(Some(&v)));
+        page.crop_box = self.inherited(page_ref, &dict, inheritance.crop_box).and_then(|v| rect_of(Some(&v)));
         page.bleed_box = rect_of(dict_get(&dict, "BleedBox"));
         page.trim_box = rect_of(dict_get(&dict, "TrimBox"));
         page.art_box = rect_of(dict_get(&dict, "ArtBox"));
-        page.rotate = self.inherited(&dict, "Rotate").and_then(|v| v.as_i64()).unwrap_or(0) as i32;
+        page.rotate = self.inherited(page_ref, &dict, inheritance.rotate).and_then(|v| v.as_i64()).unwrap_or(0) as i32;
         page.user_unit = dict_f64(&dict, "UserUnit");
-        let resources = self.inherited(&dict, "Resources").unwrap_or(PdfObject::Dict(Vec::new()));
+        let resources = self.inherited(page_ref, &dict, inheritance.resources).unwrap_or(PdfObject::Dict(Vec::new()));
         self.scope = page_ref.num as usize;
         let map = self.lift_resources(&resources);
-        let mut content = Vec::new();
-        if let Some(contents) = dict_get(&dict, "Contents").cloned() {
-            let contents = self.source.deref(&contents);
-            let parts: Vec<PdfObject> = match contents {
-                PdfObject::Array(items) => items.iter().map(|item| self.source.deref(item)).collect(),
-                other => vec![other],
-            };
-            for part in parts {
-                if let PdfObject::Stream { data, .. } = part {
-                    if !content.is_empty() {
-                        content.push(b'\n');
-                    }
-                    content.extend_from_slice(&data);
-                }
+        let program = match prepared {
+            Some(operators) => Ok(operators),
+            None => {
+                let fonts = MappedFonts { map: &map.fonts, codecs: &self.font_codecs };
+                let artifacts = &mut self.artifacts;
+                page_content::project_content_bytes(self.source, dict_get(&dict, "Contents"), |data| parse_content(data, &fonts, artifacts))
             }
-        }
-        let operators = match parse_content(&content, &MappedFonts {map:&map.fonts,codecs:&self.font_codecs},&mut self.artifacts){Ok(ops)=>ops,Err(error)=>{self.admission_error=Some(error);Vec::new()}};
+        };
+        let operators = match program {
+            Ok(operators) => operators,
+            Err(error) => { self.admission_error = Some(error); Vec::new() }
+        };
         page.content = rename_content(operators.clone(), &map);
         if dict_get(&dict, "Contents").is_some() {
             let identity = PdfGraphIdentity { owner: page_ref, path: vec![PdfGraphPath::Entry { key: "Contents".into() }] };
             let mut dependencies = self.source.role_dependencies(&identity);
-            if let Some(mut font_context) = self.source.identity_of(&resources) {
-                font_context.path.push(PdfGraphPath::Entry { key: "Font".into() });
-                if resources.dict_get("Font").is_some() { dependencies.extend(self.source.role_dependencies(&font_context)); }
+            if resources.dict_get("Font").is_some() {
+                if let Some(mut font_context) = inheritance.resources.and_then(|attribute| self.attribute_identity(attribute)) {
+                    font_context.path.push(PdfGraphPath::Entry { key: "Font".into() });
+                    dependencies.extend(self.source.role_dependencies(&font_context));
+                }
             }
-            for ((category, object), _) in &self.ids {
-                if *category == Category::Font { dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner: *object, path: Vec::new() })); }
+
+            let mut fonts: Vec<_> = self.ids.keys().filter_map(|&(category, reference)| (category == Category::Font).then_some(reference)).collect();
+            fonts.sort_unstable();
+            for owner in fonts {
+                dependencies.extend(self.source.role_dependencies(&PdfGraphIdentity { owner, path: Vec::new() }));
             }
-            let mut unique = Vec::new();
-            for dependency in dependencies { if !unique.contains(&dependency) { unique.push(dependency); } }
-            let dependencies = unique;
+            let mut seen = HashSet::new();
+            dependencies.retain(|dependency| seen.insert(dependency.clone()));
             self.admitted_stream_roles.push(PdfAdmittedStreamRole { identity, dependencies, value: PdfStreamRoleValue::Operators { content: operators } });
         }
         page.group = dict_get(&dict, "Group").map(|g| self.source.deref(g)).and_then(|g| g.as_dict().map(|g| self.lift_group(g)));
@@ -320,3 +332,87 @@ impl Lifter<'_> {
 }
 
 //#endregion 🔖️Document
+
+#[cfg(test)]
+#[test]
+fn document_lifting_preserves_inherited_page_geometry_and_text_resources() {
+    use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
+    let objects = super::page_tree::tests::objects();
+    let mut source = GraphSource::new(&objects);
+    let trailer = [PdfDictEntry::new("Root", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))];
+    let lifted = lift_document_with(&trailer, "1.7", &mut source);
+    assert!(lifted.admission_error.is_none());
+    assert_eq!(lifted.page_refs.iter().map(|reference| reference.num).collect::<Vec<_>>(), [6, 5, 3]);
+    let pages = &lifted.snapshot.pages;
+    let probes = [
+        ([0.0, 0.0, 200.0, 250.0], Some([10.0, 20.0, 190.0, 230.0]), 180, "FInner", "Override"),
+        ([0.0, 0.0, 300.0, 400.0], Some([10.0, 20.0, 190.0, 230.0]), 90, "FInner", "Inner"),
+        ([0.0, 0.0, 300.0, 400.0], None, 0, "FRoot", "Root"),
+    ];
+    assert_eq!(pages.len(), probes.len());
+    for (page, (media, crop, rotation, font, label)) in pages.iter().zip(probes) {
+        assert_eq!((page.media_box, page.crop_box, page.rotate), (media, crop, rotation));
+        assert!(page.content.iter().any(|op| matches!(op, PdfOp::SetFont { name, .. } if name == font)));
+        assert!(page.content.iter().any(|op| matches!(op, PdfOp::ShowText { text: PdfTextString::Text { text } } if text == label)));
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn semantic_lift_stages_pages_and_transfers_cancelled_or_failed_results() {
+    use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
+    let graph = super::page_tree::tests::objects();
+    let trailer = [PdfDictEntry::new("Root", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))];
+    let mut cursor = DocumentLiftCursor::new();
+    let traversal = CosGrant { work: 1, allocation_bytes: 64 * 1024, release_bytes: 64 * 1024 };
+    let planned = DocumentLiftGrant { traversal, semantic: false };
+    {
+        let mut first_borrow = GraphSource::new(&graph);
+        let first = cursor.advance(&trailer, "1.7", &mut first_borrow, planned, false);
+        assert_eq!(first.status, DocumentLiftStatus::NeedsSemantic(DocumentLiftAction::Header));
+    }
+    let mut source = GraphSource::new(&graph);
+    for _ in 0..2048 {
+        let plan = cursor.advance(&trailer, "1.7", &mut source, planned, false);
+        assert!(plan.semantic.is_none());
+        if let Some(turn) = plan.traversal {
+            assert!(turn.work <= traversal.work);
+        }
+        if let DocumentLiftStatus::NeedsSemantic(action) = plan.status {
+            let turn = cursor.advance(&trailer, "1.7", &mut source, DocumentLiftGrant { traversal: CosGrant::default(), semantic: true }, false);
+            assert_eq!(turn.semantic, Some(action));
+            assert!(turn.traversal.is_none());
+            if action == (DocumentLiftAction::ProjectPage { index: 0 }) {
+                assert_eq!(cursor.page_progress(), (3, 1));
+                assert_eq!(cursor.advance(&trailer, "1.7", &mut source, DocumentLiftGrant::default(), true).status, DocumentLiftStatus::Cancelled);
+                assert!(cursor.take_result().is_none());
+                let retained = cursor.take_partial().expect("partial semantic result");
+                assert_eq!(retained.lifter.snapshot.pages.len(), 1);
+                assert_eq!(retained.pages.len(), 3);
+                break;
+            }
+        }
+    }
+    assert_eq!(cursor.page_progress().1, 1);
+    drop(cursor);
+    drop(source);
+
+    let mut graph = graph;
+    let PdfObject::Stream { data, .. } = &mut graph[12].value else { panic!("fixture content stream"); };
+    *data = b"BI /W 1 /H 1 /BPC 8 /CS /G /F /VendorFilter ID x EI\n".to_vec();
+    let mut source = GraphSource::new(&graph);
+    let mut cursor = DocumentLiftCursor::new();
+    let grant = DocumentLiftGrant { traversal, semantic: true };
+    for _ in 0..2048 {
+        let turn = cursor.advance(&trailer, "1.7", &mut source, grant, false);
+        if turn.status == DocumentLiftStatus::Failed {
+            assert!(cursor.take_result().is_none());
+            let retained = cursor.take_partial().expect("failed semantic result");
+            assert!(retained.lifter.admission_error.is_some());
+            assert!(retained.failed_page.is_some());
+            assert!(retained.lifter.snapshot.pages.is_empty());
+            return;
+        }
+    }
+    panic!("malformed page did not stop the semantic lift");
+}

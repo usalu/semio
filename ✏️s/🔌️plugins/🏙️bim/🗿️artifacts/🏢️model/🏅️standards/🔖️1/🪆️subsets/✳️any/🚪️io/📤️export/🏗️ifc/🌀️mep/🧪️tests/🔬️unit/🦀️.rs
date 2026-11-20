@@ -26,7 +26,7 @@ fn duct(path: Vec<Point3>) -> semio_s_artifact_bim_model_snapshot::standards::v1
 #[test]
 fn elements_of_one_section_share_one_type_object_and_each_section_has_its_own() {
     let mut model = components();
-    model.mep_elements.insert("mep-extra".into(), duct(vec![Point3 { x: 0.0, y: 0.5, z: 2.0 }, Point3 { x: 2.0, y: 0.5, z: 2.0 }]));
+    model.mep_elements.cold_insert("mep-extra".into(), duct(vec![Point3 { x: 0.0, y: 0.5, z: 2.0 }, Point3 { x: 2.0, y: 0.5, z: 2.0 }]));
     let document = document(&model);
     assert_eq!(count(&document, "IFCDUCTSEGMENTTYPE"), 2);
     let (_, relation) = rows(&document, "IFCRELDEFINESBYTYPE").into_iter().find(|(_, relation)| target(&document, relation, 5).and_then(|kind| kind.entity("IFCDUCTSEGMENTTYPE")).is_some_and(|kind| string(kind, 2).as_deref() == Some("Duct 400x250"))).expect("the 400x250 type");
@@ -56,7 +56,7 @@ fn the_ifc4_systems_carry_their_predefined_type() {
 #[test]
 fn a_run_without_length_is_noted_and_not_written() {
     let mut model = components();
-    model.mep_elements.insert("mep-point".into(), duct(vec![Point3 { x: 1.0, y: 1.0, z: 1.0 }, Point3 { x: 1.0, y: 1.0, z: 1.0 }]));
+    model.mep_elements.cold_insert("mep-point".into(), duct(vec![Point3 { x: 1.0, y: 1.0, z: 1.0 }, Point3 { x: 1.0, y: 1.0, z: 1.0 }]));
     let (document, notes) = model_to_part21(Schema::Ifc2x3, &model).expect("the export");
     assert!(notes.iter().any(|note| note.contains("mep-point")), "{notes:?}");
     assert!(!tags(&document, "IFCFLOWSEGMENT").contains(&"mep-point".to_string()));
@@ -67,7 +67,7 @@ fn a_run_on_a_missing_storey_is_noted_and_not_written() {
     let mut model = components();
     let mut ghost = duct(vec![Point3 { x: 0.0, y: 0.0, z: 1.0 }, Point3 { x: 1.0, y: 0.0, z: 1.0 }]);
     ghost.storey = "st-ghost".into();
-    model.mep_elements.insert("mep-ghost".into(), ghost);
+    model.mep_elements.cold_insert("mep-ghost".into(), ghost);
     let (document, notes) = model_to_part21(Schema::Ifc2x3, &model).expect("the export");
     assert!(notes.iter().any(|note| note.contains("mep-ghost")), "{notes:?}");
     assert!(!tags(&document, "IFCFLOWSEGMENT").contains(&"mep-ghost".to_string()));

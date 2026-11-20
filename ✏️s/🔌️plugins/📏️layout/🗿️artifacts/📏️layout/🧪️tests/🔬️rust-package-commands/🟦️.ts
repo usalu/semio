@@ -1,6 +1,6 @@
 import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { runCmd } from "@semio-tech/process/execution";
-import { runCargo } from "@semio-tech/process/execution";
+import { runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
 import { scriptInvocationBudget, scriptInvocationEnvironment } from "@semio-tech/process/routing";
 import { join, resolve } from "node:path";
 import { runOwnedCommand } from "@semio-tech/process/execution";
@@ -86,8 +86,7 @@ if (segments[0] === "layout-window-ownership") {
     testLayoutWindowOwnershipOracle();
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📐️blueprint/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts")], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/process/execution");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_window_ownership_", "--", "--nocapture"], context.repoRoot);
+      await runAdmittedCargoPackageTestsV1(["semio-s-artifact-layout-layout-editor-commands-tests"], context.root, context.invocation, ["--lib", "layout_window_ownership_"]);
     }
     return;
   }
@@ -95,8 +94,7 @@ if (segments[0] === "layout-document-contract") {
     const schemaRoot = join(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/process/execution");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_document_contract", "--", "--nocapture"], context.repoRoot);
+      await runAdmittedCargoPackageTestsV1(["semio-s-artifact-layout-layout"], context.root, context.invocation, ["--lib", "layout_document_contract"]);
     }
     return;
   }
@@ -105,7 +103,7 @@ if (segments[0] === "layout-frame-selection") {
     runCmd("bun", ["test", join(mutationsRoot, "🧪️tests/🧪️frame-selection/🟦️.ts")], { cwd: context.repoRoot });
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", "--types", "bun", join(mutationsRoot, "🟦️.ts"), join(mutationsRoot, "🧪️tests/🧪️frame-selection/🟦️.ts")], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "frames", "--", "--nocapture"], context.repoRoot);
+      await runAdmittedCargoPackageTestsV1(["semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2"], context.root, context.invocation, ["--lib", "frames"]);
     }
     return;
   }

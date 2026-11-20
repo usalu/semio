@@ -11,7 +11,7 @@ use protocol::Inference;
 fn sample_snapshot() -> ShootingSnapshot {
     ShootingSnapshot {
         saved_cameras: vec![ShootingSavedCamera { id: "cam-1".into(), label: "Front".into(), camera: ShootingCamera::default() }],
-        shots: vec![ShootingShot { id: "shot-1".into(), label: "Shot 1".into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: Some("cam-1".into()) }],
+        shots: vec![ShootingShot { id: "shot-1".into(), label: "Shot 1".into(), width: 1024, height: 768, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: Some("cam-1".into()), drawing: None, auto_fit: None }],
         ..ShootingSnapshot::default()
     }
 }

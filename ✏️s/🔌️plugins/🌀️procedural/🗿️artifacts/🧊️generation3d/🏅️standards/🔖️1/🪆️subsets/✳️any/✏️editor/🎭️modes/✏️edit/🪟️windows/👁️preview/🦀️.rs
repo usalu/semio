@@ -32,7 +32,7 @@ use semio_plugin::app::InteractionView;
 use std::collections::HashMap;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
-use semio_s_artifact_procedural_3d_preview_eval::{apply_show_mode_mesh, decode_preview_mesh_pack, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, point_marker_mesh, preview_channel_items_for_widget, preview_mesh_role, preview_tolerance, vector_marker_mesh};
+use semio_s_artifact_procedural_3d_preview_eval::{apply_show_mode_mesh, inline_preview_mesh, PreviewMeshLookup, mesh_has_preview_geometry, preview_channel_items_for_widget, preview_mesh_role};
 
 #[path = "🫧️transient/🦀️.rs"]
 pub mod transient;
@@ -103,7 +103,7 @@ pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedu
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, is_de: bool) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_eval_text.unwrap_or_default().to_string();
     let payload = preview_payload(&eval_json, &document.host_snapshot, config, Some(session), marks);
     let selection_json = preview_selection_json(config, active_utility, &payload);
@@ -113,7 +113,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let sun = config.sun();
     let status_json = preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    semio_s_procedural_core_semantic_ui::accessible_scene_surface(
+    let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,
         semio_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_ui_declaration::ui::World3dScene {
@@ -126,7 +126,9 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
         labels.preview_canvas.as_str(),
         labels.preview_canvas_hint.as_str(),
         semio_ui_contract::Liveness::Polite,
-    )
+    )?;
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&eval_json);
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-preview-values", if is_de { "Werte" } else { "Values" }, &rows)
 }
 //#endregion 🔖️Render
 
@@ -226,22 +228,36 @@ impl PreviewInteractionMarks {
         base.split_once('@').map(|(_, port)| port)
     }
 
-    /// 🕸️ `(nodeId, portId)` the node graph paints as hovered — a preview instance hovered in the
-    /// world resolves to its node AND its channel, so the graph highlights the exact output port
-    /// whose geometry the pointer is over.
-    pub fn hovered_graph_target(&self) -> Option<(String, Option<String>)> {
-        let id = self.hovered.iter().next()?;
-        Some((Self::widget_of(id).to_string(), Self::port_of(id).map(str::to_string)))
+    fn component_hover(&self)->Option<selection::ComponentTarget<'_>>{
+        if !self.hovered.is_empty()||!self.components.active(){return None;}
+        self.components.hovered.as_deref().and_then(selection::ComponentTarget::parse)
+            .filter(|target|target.granularity==self.components.granularity)
     }
 
-    /// 🕸️ Every id the node graph should highlight: each hovered id plus the widget it belongs to,
-    /// deduplicated and ordered.
-    pub fn graph_highlight_ids(&self) -> Vec<String> {
-        let mut ids: std::collections::BTreeSet<String> = self.hovered.clone();
-        for id in &self.hovered {
-            ids.insert(Self::widget_of(id).to_string());
+    /// 🕸️ Projects the active pointer source to its graph node and optional port.
+    pub fn hovered_graph_target(&self)->Option<(String,Option<String>)>{
+        if let Some(id)=self.hovered.iter().next(){
+            return Some((Self::widget_of(id).to_owned(),Self::port_of(id).map(str::to_owned)));
         }
+        self.component_hover().map(|target|(target.widget.to_owned(),Some(target.channel.to_owned())))
+    }
+
+    /// 💡️ Returned graph highlights share the same pointer ownership as its hover target.
+    pub fn graph_highlight_ids(&self)->Vec<String>{
+        let mut ids=self.hovered.clone();
+        if let Some(target)=self.component_hover(){
+            ids.insert(target.widget.to_owned());
+            ids.insert(format!("{}@{}",target.widget,target.channel));
+        }
+        ids.extend(self.hovered.iter().map(|id|Self::widget_of(id).to_owned()));
         ids.into_iter().collect()
+    }
+
+    /// 🎯️ Keeps component selection while the graph owns a simultaneous pointer hover.
+    pub fn preview_components(&self)->selection::ComponentSelection{
+        let mut components=self.components.clone();
+        if !self.hovered.is_empty(){components.hovered=None;}
+        components
     }
 
     /// 🕸️ The `graph` selection split into the node and edge domains a context menu addresses. A
@@ -346,16 +362,12 @@ fn vec3_json(v: [f64; 3]) -> semio_framework_pack_json::Value {
 }
 
 pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
-    if eval_json.is_empty() {
-        return PreviewPayload::default();
-    }
-    if let Ok(parsed) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-        if parsed.get("error").and_then(semio_framework_pack_json::Value::as_str).is_some() {
-            return PreviewPayload::default();
-        }
-    }
-    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
-    let tolerance = preview_tolerance(&cfg.lod_mode);
+    let eval = match semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+        Ok(value) if value.get("error").and_then(semio_framework_pack_json::Value::as_str).is_none() => value,
+        _ => return PreviewPayload::default(),
+    };
+    let hover_sources = semio_s_artifact_procedural_3d_preview_eval::preview_hover_sources(host_snapshot, &marks.hovered);
+    let lookup = session.map(PreviewMeshLookup::new);
     let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
     let mut meshes: Vec<semio_framework_pack_json::Value> = Vec::new();
     let mut instances: Vec<semio_framework_pack_json::Value> = Vec::new();
@@ -363,7 +375,7 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
     let mut selected_ids: Vec<String> = Vec::new();
     let mut hovered_id: Option<String> = None;
     let component_selected: std::collections::BTreeSet<&str> = marks.components.selected.iter().filter_map(|id| selection::ComponentTarget::parse(id)).filter(|target| target.granularity == marks.components.granularity).map(|target| target.instance).collect();
-    let component_hovered = marks.components.hovered.as_deref().and_then(selection::ComponentTarget::parse).filter(|target| target.granularity == marks.components.granularity);
+    let component_hovered = marks.component_hover();
     let component_group = selection::component_group(&marks.components.selected).ok().filter(|(target, _)| target.index == 0 && target.granularity == marks.components.granularity);
     let mut component_pivot = None;
     for widget in &host_snapshot.widgets {
@@ -379,64 +391,62 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
         for item in &items {
             let PreviewChannelItem { channel, index, handle, inline } = item;
             let instance_id = format!("{id}@{channel}#{index}");
-            let own_mesh_id = format!("eval-{id}@{channel}#{index}");
-            let mesh_id = if handle.is_empty() { own_mesh_id } else { mesh_id_by_handle.get(handle).cloned().unwrap_or(own_mesh_id) };
-            if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+            let resolved = lookup.as_ref().and_then(|lookup| lookup.resolve(&id, item));
+            let source_handle = resolved.as_ref().map(|(source, _)| source.as_ref());
+            let exact_native = source_handle == Some(handle.as_str());
+            if marks.components.active() && inline.is_none() && !exact_native { continue; }
+            let mesh_id = if let Some(cached) = source_handle.and_then(|source| mesh_id_by_handle.get(source)) {
+                cached.clone()
+            } else {
                 let data = match inline {
-                    Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(*x, *y, *z)),
-                    Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(*x, *y, *z)),
-                    Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(preview),
-                    None => session
-                        .map(|session| mesh_data_for_session_preview_channel(handle, &id, channel, *index, tolerance, session, host_snapshot))
-                        .unwrap_or_else(|| mesh_data_for_preview_handle(handle, tolerance, session)),
+                    Some(inline) => inline_preview_mesh(inline),
+                    None => resolved.as_ref().map(|(_, mesh)| (*mesh).clone()),
                 };
-                if let Some(data) = data {
-                    let data = apply_show_mode_mesh(data, show_mode);
-                    if mesh_has_preview_geometry(&data) {
-                        let mut mesh_object = semio_framework_pack_json::Object::new();
-                        mesh_object.insert("id", semio_framework_pack_json::Value::String(mesh_id.clone()));
-                        mesh_object.insert("role", semio_framework_pack_json::Value::String(preview_mesh_role(inline.as_ref(), &data).to_string()));
-                        mesh_object.insert("data", semio_framework_pack_json::Value::from(data));
-                        meshes.push(semio_framework_pack_json::Value::Object(mesh_object));
-                        if !handle.is_empty() {
-                            mesh_id_by_handle.insert(handle.clone(), mesh_id.clone());
-                        }
-                    }
+                let Some(data) = data.map(|mesh| apply_show_mode_mesh(mesh, show_mode)).filter(mesh_has_preview_geometry) else { continue };
+                let mesh_id = format!("eval-{instance_id}");
+                let mut mesh_object = semio_framework_pack_json::Object::new();
+                mesh_object.insert("id", semio_framework_pack_json::Value::String(mesh_id.clone()));
+                mesh_object.insert("role", semio_framework_pack_json::Value::String(preview_mesh_role(inline.as_ref(), &data).to_string()));
+                mesh_object.insert("data", semio_framework_pack_json::Value::from(data));
+                meshes.push(semio_framework_pack_json::Value::Object(mesh_object));
+                if let Some(source) = source_handle {
+                    mesh_id_by_handle.insert(source.to_owned(), mesh_id.clone());
                 }
+                mesh_id
+            };
+            if let (Some((target, ids)), Some(PreviewInlineGeometry::Mesh { data, .. })) = (&component_group, inline) {
+                if target.instance == instance_id { component_pivot = selection::component_pivot(data, target.granularity, ids); }
             }
-            if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-                if let (Some((target, ids)), Some(PreviewInlineGeometry::Mesh { data, .. })) = (&component_group, inline) {
-                    if target.instance == instance_id { component_pivot = selection::component_pivot(data, target.granularity, ids); }
-                }
-                let selected = if marks.components.active() { component_selected.contains(instance_id.as_str()) } else { marks.selects(&id, channel, *index) };
-                let hovered = if marks.components.active() { component_hovered.as_ref().is_some_and(|target| target.instance == instance_id) } else { marks.hovers(&id, channel, *index) };
-                if selected {
-                    selected_ids.push(instance_id.clone());
-                }
-                if hovered && hovered_id.is_none() {
-                    hovered_id = Some(instance_id.clone());
-                }
-                let mut instance_object = semio_framework_pack_json::Object::new();
-                instance_object.insert("id", semio_framework_pack_json::Value::String(instance_id.clone()));
-                instance_object.insert("meshId", semio_framework_pack_json::Value::String(mesh_id));
-                instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
-                instance_object.insert("rotation", semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(1.0)]));
-                instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
-                instance_object.insert("label", semio_framework_pack_json::Value::String(format!("{id}@{channel}")));
-                instance_object.insert("interactionId", semio_framework_pack_json::Value::String(if marks.components.active() { instance_id } else { format!("{id}@{channel}") }));
-                if let Some(revision) = marks.source_revision.as_ref().filter(|_| inline.is_none() && !handle.is_empty()) {
-                    let mut source = semio_framework_pack_json::Object::new();
-                    source.insert("handle", semio_framework_pack_json::Value::String(handle.clone()));
-                    source.insert("revision", semio_framework_pack_json::Value::String(revision.clone()));
-                    instance_object.insert("componentSource", semio_framework_pack_json::Value::Object(source));
-                }
-                instance_object.insert("selected", semio_framework_pack_json::Value::Bool(selected));
-                instance_object.insert("hovered", semio_framework_pack_json::Value::Bool(hovered));
-                instances.push(semio_framework_pack_json::Value::Object(instance_object));
+            let selected = if marks.components.active() { component_selected.contains(instance_id.as_str()) } else { marks.selects(&id, channel, *index) };
+            let hovered = component_hovered.as_ref().is_some_and(|target| target.instance == instance_id)
+                || marks.hovers(&id,channel,*index)
+                || hover_sources.contains(&id) || hover_sources.contains(&format!("{id}@{channel}"));
+            if selected {
+                selected_ids.push(instance_id.clone());
             }
+            if hovered && hovered_id.is_none() {
+                hovered_id = Some(instance_id.clone());
+            }
+            let mut instance_object = semio_framework_pack_json::Object::new();
+            instance_object.insert("id", semio_framework_pack_json::Value::String(instance_id.clone()));
+            instance_object.insert("meshId", semio_framework_pack_json::Value::String(mesh_id));
+            instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
+            instance_object.insert("rotation", semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(0.0), semio_framework_pack_json::Value::from(1.0)]));
+            instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
+            instance_object.insert("label", semio_framework_pack_json::Value::String(format!("{id}@{channel}")));
+            instance_object.insert("interactionId", semio_framework_pack_json::Value::String(if marks.components.active() { instance_id } else { format!("{id}@{channel}") }));
+            if let Some(revision) = marks.source_revision.as_ref().filter(|_| exact_native) {
+                let mut source = semio_framework_pack_json::Object::new();
+                source.insert("handle", semio_framework_pack_json::Value::String(handle.clone()));
+                source.insert("revision", semio_framework_pack_json::Value::String(revision.clone()));
+                instance_object.insert("componentSource", semio_framework_pack_json::Value::Object(source));
+            }
+            instance_object.insert("selected", semio_framework_pack_json::Value::Bool(selected));
+            instance_object.insert("hovered", semio_framework_pack_json::Value::Bool(hovered));
+            instances.push(semio_framework_pack_json::Value::Object(instance_object));
         }
     }
-    PreviewPayload { components: marks.components.clone(), component_pivot, meshes_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(meshes)), instances_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances)), selected_ids, hovered_id }
+    PreviewPayload { components: marks.preview_components(), component_pivot, meshes_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(meshes)), instances_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(instances)), selected_ids, hovered_id }
 }
 //#endregion 🔖️PreviewPipeline
 

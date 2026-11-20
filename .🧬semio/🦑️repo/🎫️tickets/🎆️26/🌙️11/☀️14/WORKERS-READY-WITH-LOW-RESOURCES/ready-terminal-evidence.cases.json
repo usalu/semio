@@ -1,0 +1,5 @@
+[
+  {"name":"hard cap across adoption","softMs":750,"idleMs":60000,"hardMultiplier":4,"complete":3890,"floodRows":24000,"deadline":"hard-cap"},
+  {"name":"soft cap idle across adoption","softMs":1700,"idleMs":300,"hardMultiplier":4,"complete":3889,"floodRows":24000,"deadline":"soft-cap-idle"},
+  {"name":"step overdue across adoption and recorded exit","softMs":60000,"idleMs":60000,"hardMultiplier":4,"complete":3891,"floodRows":0,"step":{"seconds":9000,"bound":2,"quietMs":1375,"speed":1.25}}
+]

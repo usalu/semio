@@ -469,7 +469,7 @@ impl SurfaceReconcileCursor {
                     allocator: self.allocator.clone(),
                     document: None,
                     native_resources: self.native_resources.take(),
-                    native_resource_loans: Default::default(),
+                    native_resource_loans: None,
                     assembly: take(&mut self.assembly),
                     ordinals: self.new_ordinals.take_all(),
                     key_index: self.new_key_index.take_all(),

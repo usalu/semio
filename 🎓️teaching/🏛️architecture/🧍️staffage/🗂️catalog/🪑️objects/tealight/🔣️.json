@@ -42,11 +42,15 @@
         {
           "id": "incropera-2018",
           "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of surfaces, convection, plumes, thermal properties of metals, glass and polymers)."
+        },
+        {
+          "id": "tealight-trade-sizes",
+          "citation": "Trade sizes of standard tealights and their deep-drawn aluminium cups (38 mm diameter by 16 mm height; cups of 36 to 39 mm by 15 to 18 mm; separate wick with a tin-plate sustainer), en.wikipedia.org/wiki/Tealight and candle-making suppliers, read 2026-11-20."
         }
       ],
       "notes": {
-        "en": "A standard tealight: a cup of 0.1 mm aluminium foil, 38 mm across the rim and 16 mm high, filled with 12.8 g of paraffin up to 14 mm and a braided cotton wick standing about 5 mm above the wax. The flame is 22 mm high and 8 mm wide at the widest point. A tealight burns about 4 hours, which is 3.2 g of wax per hour or 0.9 mg per second; at the heat of combustion of paraffin of 42 to 46 MJ/kg this is 38 to 41 W, of which roughly 85 percent leave the flame as convective plume and radiation; the pose lit takes 35 W and the flicker peak 40 W (authored estimate from this range). The unlit pose hides the flame inside the cup by lowering the flame bones, so one asset shows all states. The origin is the centre of the base on the surface.",
-        "de": "Ein handelsübliches Teelicht: ein Schälchen aus 0,1 mm Aluminiumfolie, 38 mm am Rand weit und 16 mm hoch, mit 12,8 g Paraffin bis 14 mm Höhe gefüllt und einem geflochtenen Baumwolldocht, der etwa 5 mm über das Wachs ragt. Die Flamme ist 22 mm hoch und an der breitesten Stelle 8 mm breit. Ein Teelicht brennt etwa 4 Stunden, das sind 3,2 g Wachs je Stunde oder 0,9 mg je Sekunde; bei einem Heizwert von Paraffin von 42 bis 46 MJ/kg sind das 38 bis 41 W, von denen etwa 85 Prozent als konvektive Fahne und Strahlung die Flamme verlassen; die Pose brennend nimmt 35 W und das Flackermaximum 40 W (Schätzwert aus diesem Bereich). Die Pose unbrennend verbirgt die Flamme im Schälchen, indem sie die Flammenknochen absenkt, sodass ein Asset alle Zustände zeigt. Der Ursprung ist die Mitte des Bodens auf der Unterlage."
+        "en": "A standard tealight: a deep-drawn cup of 0.1 mm aluminium foil, 38 mm across the cut rim, 36 mm across the base (3.6 degrees of draft, 1 mm base radius) and 16 mm high, with an embossed floor that stands on a ring of 28 to 34 mm; a pressed puck of 12.8 g of paraffin, 14 mm high, lies loose in it up to 14.5 mm; a braided cotton wick of 2 mm in a tin-plate sustainer of 12 mm runs through the puck and stands about 7 mm above the wax. The flame is 22 mm high and 8 mm wide at the widest point, a third of the way up, and begins 4 mm above the wax. A tealight burns about 4 hours, which is 3.2 g of wax per hour or 0.9 mg per second; at the heat of combustion of paraffin of 42 to 46 MJ/kg this is 38 to 41 W, of which roughly 85 percent leave the flame as convective plume and radiation; the pose lit takes 35 W and the flicker peak 40 W (authored estimate from this range). The unlit pose hides the flame inside the wax and the wick by lowering the flame bones, so one asset shows all states. The origin is the centre of the base on the surface; every bone runs up the axis of the candle.",
+        "de": "Ein handelsübliches Teelicht: ein tiefgezogenes Schälchen aus 0,1 mm Aluminiumfolie, 38 mm am Schnittrand und 36 mm am Boden weit (3,6 Grad Auszugsschräge, 1 mm Bodenradius) und 16 mm hoch, mit geprägtem Boden, der auf einem Ring von 28 bis 34 mm steht; darin liegt lose ein gepresster Körper aus 12,8 g Paraffin, 14 mm hoch, bis auf 14,5 mm; ein geflochtener Baumwolldocht von 2 mm in einem Dochthalter aus Weissblech von 12 mm läuft durch den Wachskörper und ragt etwa 7 mm über das Wachs. Die Flamme ist 22 mm hoch und an der breitesten Stelle, auf einem Drittel der Höhe, 8 mm breit und beginnt 4 mm über dem Wachs. Ein Teelicht brennt etwa 4 Stunden, das sind 3,2 g Wachs je Stunde oder 0,9 mg je Sekunde; bei einem Heizwert von Paraffin von 42 bis 46 MJ/kg sind das 38 bis 41 W, von denen etwa 85 Prozent als konvektive Fahne und Strahlung die Flamme verlassen; die Pose brennend nimmt 35 W und das Flackermaximum 40 W (Schätzwert aus diesem Bereich). Die Pose unbrennend verbirgt die Flamme in Wachs und Docht, indem sie die Flammenknochen absenkt, sodass ein Asset alle Zustände zeigt. Der Ursprung ist die Mitte des Bodens auf der Unterlage; jeder Knochen läuft die Achse der Kerze hinauf."
       }
     },
     "dimensions": {
@@ -121,7 +125,7 @@
           "parent": null,
           "x": 0,
           "y": 0,
-          "angleDeg": 0,
+          "angleDeg": 90,
           "title": {
             "en": "Aluminium cup",
             "de": "Aluminiumschälchen"
@@ -132,8 +136,8 @@
           },
           "mass": {
             "kg": 0.001,
-            "comX": 0,
-            "comY": 0.007,
+            "comX": 0.007,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -141,21 +145,21 @@
         {
           "id": "wax",
           "parent": "cup",
-          "x": 0,
-          "y": 0.0014,
+          "x": 0.0005,
+          "y": 0,
           "angleDeg": 0,
           "title": {
             "en": "Wax fill",
             "de": "Wachsfüllung"
           },
-          "lengthM": 0.013,
+          "lengthM": 0.014,
           "joint": {
             "type": "fixed"
           },
           "mass": {
             "kg": 0.0128,
-            "comX": 0,
-            "comY": 0.0065,
+            "comX": 0.007,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -163,21 +167,21 @@
         {
           "id": "wick",
           "parent": "wax",
-          "x": 0,
-          "y": 0.0131,
+          "x": 0.014,
+          "y": 0,
           "angleDeg": 0,
           "title": {
             "en": "Wick with sustainer tab",
             "de": "Docht mit Dochtfuß"
           },
-          "lengthM": 0.005,
+          "lengthM": 0.007,
           "joint": {
             "type": "fixed"
           },
           "mass": {
             "kg": 0.0002,
-            "comX": 0,
-            "comY": 0.0025,
+            "comX": -0.011,
+            "comY": 0,
             "distribution": "point",
             "source": "authored-estimate"
           }
@@ -185,18 +189,18 @@
         {
           "id": "flame",
           "parent": "wick",
-          "x": 0,
-          "y": 0.004,
+          "x": 0.004,
+          "y": 0,
           "angleDeg": 0,
           "title": {
-            "en": "Flame lift (hides the flame in the cup)",
-            "de": "Flammenhub (verbirgt die Flamme im Schälchen)"
+            "en": "Flame lift (hides the flame in the wax)",
+            "de": "Flammenhub (verbirgt die Flamme im Wachs)"
           },
-          "lengthM": 0.0125,
+          "lengthM": 0,
           "joint": {
             "type": "prismatic",
-            "axisDeg": 90,
-            "minM": -0.0165,
+            "axisDeg": 0,
+            "minM": -0.01775,
             "maxM": 0.003
           }
         },
@@ -210,7 +214,7 @@
             "en": "Flame body, leans in a draught",
             "de": "Flammenkörper, neigt sich im Luftzug"
           },
-          "lengthM": 0.0125,
+          "lengthM": 0.0135,
           "joint": {
             "type": "revolute",
             "minDeg": -25,
@@ -220,8 +224,8 @@
         {
           "id": "flame-tip",
           "parent": "flame-body",
-          "x": 0,
-          "y": 0.008,
+          "x": 0.008,
+          "y": 0,
           "angleDeg": 0,
           "title": {
             "en": "Flame tongue, stretches at the flicker peak",
@@ -230,8 +234,8 @@
           "lengthM": 0.014,
           "joint": {
             "type": "prismatic",
-            "axisDeg": 90,
-            "minM": -0.011,
+            "axisDeg": 0,
+            "minM": -0.006,
             "maxM": 0.006
           }
         }
@@ -245,19 +249,19 @@
         "y": 0,
         "kind": "contact",
         "title": {
-          "en": "Base of the cup on the surface",
-          "de": "Boden des Schälchens auf der Unterlage"
+          "en": "Standing ring of the cup on the surface",
+          "de": "Standring des Schälchens auf der Unterlage"
         },
         "support": "contact",
-        "footprintLengthM": 0.031,
-        "footprintWidthM": 0.031,
+        "footprintLengthM": 0.034,
+        "footprintWidthM": 0.034,
         "frictionCoefficient": 0.4
       },
       {
         "id": "flame-top",
         "bone": "flame-tip",
-        "x": 0,
-        "y": 0.0135,
+        "x": 0.014,
+        "y": 0,
         "kind": "emitter",
         "title": {
           "en": "Tip of the flame",
@@ -290,114 +294,68 @@
               "z": 3.2,
               "filled": true,
               "tone": 0.97,
-              "kind": "path",
-              "d": "M 0 0 C 0.0016 0.002 0.0019 0.007 0.0007 0.012 C 0.0004 0.0133 0.0002 0.0138 0 0.014 C -0.0002 0.0138 -0.0004 0.0133 -0.0007 0.012 C -0.0019 0.007 -0.0016 0.002 0 0 Z",
-              "region": "flame",
-              "material": "flame"
-            },
-            {
-              "id": "flame",
-              "bone": "flame-body",
-              "role": "body",
-              "z": 3.3,
-              "filled": true,
-              "tone": 0.9,
-              "kind": "path",
-              "d": "M 0 0 C 0.0058 0.003 0.0058 0.009 0.0016 0.0125 C 0.0008 0.0133 0.0003 0.0137 0 0.014 C -0.0003 0.0137 -0.0008 0.0133 -0.0016 0.0125 C -0.0058 0.009 -0.0058 0.003 0 0 Z",
-              "region": "flame",
-              "material": "flame"
-            },
-            {
-              "id": "wick",
-              "bone": "wick",
-              "role": "detail",
-              "z": 3.4,
-              "filled": false,
-              "tone": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0,
-                  0.0053
-                ]
-              ],
-              "closed": false,
-              "region": "wick",
-              "material": "wick-cotton"
-            },
-            {
-              "id": "cup",
-              "bone": "cup",
-              "role": "body",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.0155,
-                  0
-                ],
-                [
-                  0.0155,
-                  0
-                ],
-                [
-                  0.019,
-                  0.016
-                ],
-                [
-                  -0.019,
-                  0.016
-                ]
-              ],
-              "closed": true,
-              "region": "cup",
-              "material": "aluminium-cup"
-            },
-            {
-              "id": "wax-surface",
-              "bone": "wax",
-              "role": "detail",
-              "z": 3.6,
-              "filled": false,
-              "tone": 0.85,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.0172,
-                  0.0126
-                ],
-                [
-                  0,
-                  0.0132
-                ],
-                [
-                  0.0172,
-                  0.0126
-                ]
-              ],
-              "closed": false,
-              "region": "wax",
-              "material": "paraffin"
-            }
-          ],
-          "front": [
-            {
-              "id": "tongue",
-              "bone": "flame-tip",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.97,
               "region": "flame",
               "material": "flame",
-              "kind": "path",
-              "d": "M 0 0.0265 C 0.0016 0.0285 0.0019 0.0335 0.0007 0.0385 C 0.0004 0.0398 0.0002 0.0403 0 0.0405 C -0.0002 0.0403 -0.0004 0.0398 -0.0007 0.0385 C -0.0019 0.0335 -0.0016 0.0285 0 0.0265 Z"
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0025,
+                  0.0
+                ],
+                [
+                  -0.002,
+                  0.0026
+                ],
+                [
+                  -0.001,
+                  0.00325
+                ],
+                [
+                  0.0,
+                  0.0033
+                ],
+                [
+                  0.004,
+                  0.00325
+                ],
+                [
+                  0.007,
+                  0.0024
+                ],
+                [
+                  0.011,
+                  0.0011
+                ],
+                [
+                  0.014,
+                  0.0
+                ],
+                [
+                  0.011,
+                  -0.0011
+                ],
+                [
+                  0.007,
+                  -0.0024
+                ],
+                [
+                  0.004,
+                  -0.00325
+                ],
+                [
+                  0.0,
+                  -0.0033
+                ],
+                [
+                  -0.001,
+                  -0.00325
+                ],
+                [
+                  -0.002,
+                  -0.0026
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "flame",
@@ -408,8 +366,58 @@
               "tone": 0.9,
               "region": "flame",
               "material": "flame",
-              "kind": "path",
-              "d": "M 0 0.0185 C 0.0058 0.02116 0.0058 0.02746 0.00161 0.031 C 0.00081 0.0318 0.00032 0.03221 0 0.0325 C -0.00032 0.03221 -0.00081 0.0318 -0.00161 0.031 C -0.0058 0.02746 -0.0058 0.02116 0 0.0185 Z"
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.001,
+                  0.0022
+                ],
+                [
+                  0.0035,
+                  0.0036
+                ],
+                [
+                  0.007,
+                  0.004
+                ],
+                [
+                  0.011,
+                  0.0035
+                ],
+                [
+                  0.0126,
+                  0.0029
+                ],
+                [
+                  0.0135,
+                  0.0
+                ],
+                [
+                  0.0126,
+                  -0.0029
+                ],
+                [
+                  0.011,
+                  -0.0035
+                ],
+                [
+                  0.007,
+                  -0.004
+                ],
+                [
+                  0.0035,
+                  -0.0036
+                ],
+                [
+                  0.001,
+                  -0.0022
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "wick",
@@ -423,12 +431,12 @@
               "kind": "poly",
               "points": [
                 [
-                  0.0,
-                  0.0145
+                  0,
+                  0
                 ],
                 [
-                  0.0,
-                  0.0198
+                  0.007,
+                  0
                 ]
               ],
               "closed": false
@@ -445,20 +453,20 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.019,
-                  0.016
+                  0.0,
+                  0.018
                 ],
                 [
-                  -0.0155,
-                  0.0
+                  0.016,
+                  0.019
                 ],
                 [
-                  0.0155,
-                  0.0
+                  0.016,
+                  -0.019
                 ],
                 [
-                  0.019,
-                  0.016
+                  0.0,
+                  -0.018
                 ]
               ],
               "closed": true
@@ -475,16 +483,220 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.0172,
+                  0.014,
                   0.014
+                ],
+                [
+                  0.014,
+                  -0.014
+                ]
+              ],
+              "closed": false
+            }
+          ],
+          "front": [
+            {
+              "id": "tongue",
+              "bone": "flame-tip",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.97,
+              "region": "flame",
+              "material": "flame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.024
+                ],
+                [
+                  0.0026,
+                  0.0245
+                ],
+                [
+                  0.00325,
+                  0.0255
+                ],
+                [
+                  0.0033,
+                  0.0265
+                ],
+                [
+                  0.00325,
+                  0.0305
+                ],
+                [
+                  0.0024,
+                  0.0335
+                ],
+                [
+                  0.0011,
+                  0.0375
                 ],
                 [
                   0.0,
-                  0.0146
+                  0.0405
                 ],
                 [
-                  0.0172,
-                  0.014
+                  -0.0011,
+                  0.0375
+                ],
+                [
+                  -0.0024,
+                  0.0335
+                ],
+                [
+                  -0.00325,
+                  0.0305
+                ],
+                [
+                  -0.0033,
+                  0.0265
+                ],
+                [
+                  -0.00325,
+                  0.0255
+                ],
+                [
+                  -0.0026,
+                  0.0245
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "flame",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "region": "flame",
+              "material": "flame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0185
+                ],
+                [
+                  0.0022,
+                  0.0195
+                ],
+                [
+                  0.0036,
+                  0.022
+                ],
+                [
+                  0.004,
+                  0.0255
+                ],
+                [
+                  0.0035,
+                  0.0295
+                ],
+                [
+                  0.0029,
+                  0.0311
+                ],
+                [
+                  0.0,
+                  0.032
+                ],
+                [
+                  -0.0029,
+                  0.0311
+                ],
+                [
+                  -0.0035,
+                  0.0295
+                ],
+                [
+                  -0.004,
+                  0.0255
+                ],
+                [
+                  -0.0036,
+                  0.022
+                ],
+                [
+                  -0.0022,
+                  0.0195
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wick",
+              "bone": "wick",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.1,
+              "region": "wick",
+              "material": "wick-cotton",
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0.0145
+                ],
+                [
+                  0,
+                  0.0215
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "cup",
+              "bone": "cup",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "region": "cup",
+              "material": "aluminium-cup",
+              "kind": "poly",
+              "points": [
+                [
+                  0.018,
+                  0.0
+                ],
+                [
+                  0.019,
+                  0.016
+                ],
+                [
+                  -0.019,
+                  0.016
+                ],
+                [
+                  -0.018,
+                  0.0
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "wax-surface",
+              "bone": "wax",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.85,
+              "region": "wax",
+              "material": "paraffin",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.014,
+                  0.0145
+                ],
+                [
+                  0.014,
+                  0.0145
                 ]
               ],
               "closed": false
@@ -518,8 +730,8 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0172,
-              "ry": 0.0172
+              "rx": 0.0178,
+              "ry": 0.0178
             },
             {
               "id": "flame",
@@ -533,31 +745,31 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0058,
-              "ry": 0.0058
+              "rx": 0.004,
+              "ry": 0.004
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 38 mm by 40 mm candle, 0.8 mm by 0.8 mm on paper: a flat aluminium cup with a flame standing on it; the flame is drawn 11 mm wide so that it prints. Front view: the conical cup, the wax surface line, the wick, the flame and its tongue; flame and tongue lift and flicker with their bones. Plan view: the cup rim disc, the wax surface disc and the flame disc in the middle (hidden behind the wax disc when the flame is sunk in the unlit pose); the wick and the tongue are hidden below and above the flame.",
-            "de": "Eine Kerze von 38 mm mal 40 mm, auf Papier 0,8 mm mal 0,8 mm: ein flaches Aluminiumschälchen mit einer Flamme darauf; die Flamme ist 11 mm breit gezeichnet, damit sie druckt. Vorderansicht: das konische Schälchen, die Wachsoberfläche, der Docht, die Flamme und ihre Zunge; Flamme und Zunge heben sich und flackern mit ihren Knochen. Draufsicht: die Randscheibe des Schälchens, die Wachsoberfläche und die Flammenscheibe in der Mitte (bei versenkter Flamme der gelöschten Pose hinter der Wachsscheibe verdeckt); Docht und Zunge liegen unter und über der Flamme verdeckt."
+            "en": "A 38 mm by 40.5 mm candle, 0.8 mm by 0.8 mm on paper, drawn as the true view of the 1:50 body: the cup with 3.6 degrees of draft (36 mm at the base, 38 mm at the rim) and the flame of 8 mm by 22 mm standing on the wick. Side and front view: the cup, the wax level as a line inside it, the wick, the flame bulb and its tongue; bulb and tongue lift, lean and stretch with their bones. Plan view: the rim disc, the wax disc and the flame disc in the middle; in the unlit pose the flame parts sink into the wax and the wick and are hidden.",
+            "de": "Eine Kerze von 38 mm mal 40,5 mm, auf Papier 0,8 mm mal 0,8 mm, gezeichnet als wahre Ansicht des 1:50-Körpers: das Schälchen mit 3,6 Grad Auszugsschräge (36 mm am Boden, 38 mm am Rand) und die Flamme von 8 mm mal 22 mm auf dem Docht. Seiten- und Vorderansicht: das Schälchen, der Wachsspiegel als Linie darin, der Docht, die Flammenzwiebel und ihre Zunge; Zwiebel und Zunge heben, neigen und strecken sich mit ihren Knochen. Draufsicht: die Randscheibe, die Wachsscheibe und die Flammenscheibe in der Mitte; in der gelöschten Pose versinken die Flammenteile in Wachs und Docht und sind verdeckt."
           },
           "retained": {
-            "en": "The 16 mm cup tapering from 31 to 38 mm, the wick standing 4 mm above the cup, the flame with its tongue, and the wax surface as a curved line at the cup rim. Front view: wick, wax line, tongue. Plan view: wax disc.",
-            "de": "Das 16 mm hohe Schälchen, das sich von 31 auf 38 mm weitet, der 4 mm über das Schälchen ragende Docht, die Flamme mit ihrer Zunge und die Wachsoberfläche als gebogene Linie am Schälchenrand. Vorderansicht: Docht, Wachslinie, Zunge. Draufsicht: Wachsscheibe."
+            "en": "The 16 mm cup widening from 36 to 38 mm, the wax level at 14.5 mm as a straight line, the wick standing 7 mm above the wax, the flame bulb and its tongue. Front view: the same. Plan view: rim, wax disc, flame disc.",
+            "de": "Das 16 mm hohe Schälchen, das sich von 36 auf 38 mm weitet, der Wachsspiegel bei 14,5 mm als gerade Linie, der 7 mm über das Wachs ragende Docht, die Flammenzwiebel und ihre Zunge. Vorderansicht: dasselbe. Draufsicht: Rand, Wachsscheibe, Flammenscheibe."
           },
           "merged": {
             "en": "The wax lies inside the cup: its surface shape carries the wax region, the cup wall carries the aluminium.",
             "de": "Das Wachs liegt im Schälchen: seine Oberflächenform trägt die Wachsregion, die Schälchenwand das Aluminium."
           },
           "omitted": {
-            "en": "Cup ribs, the sustainer tab, the blue flame base and the melt pool. Plan view: the wick and the tongue are hidden by the flame; the sustainer tab is hidden below the wax.",
-            "de": "Rippen des Schälchens, der Dochtfuß, der blaue Flammenfuß und das Schmelzbad. Draufsicht: Docht und Zunge sind von der Flamme verdeckt; der Dochtfuß liegt verdeckt unter dem Wachs."
+            "en": "The embossed floor and the base radius of the cup, the sustainer, the foil thickness, the blue flame foot and the melt pool. Plan view: the wick and the tongue are hidden by the flame; the sustainer is hidden below the wax.",
+            "de": "Der geprägte Boden und der Bodenradius des Schälchens, der Dochthalter, die Folienstärke, der blaue Flammenfuss und das Schmelzbad. Draufsicht: Docht und Zunge sind von der Flamme verdeckt; der Dochthalter liegt verdeckt unter dem Wachs."
           },
           "thinElements": {
-            "en": "The flame is thickened from 8 to 11 mm (0.22 mm); the wick is a 0.13 mm line; the flame tongue is a sharp tip.",
-            "de": "Die Flamme ist von 8 auf 11 mm (0,22 mm) verdickt; der Docht ist eine 0,13-mm-Linie; die Flammenzunge läuft spitz zu."
+            "en": "The flame keeps its true 8 mm (0.16 mm on paper, above the 0.15 mm feature); the wick and the wax level are 0.13 mm lines (the wax line stops 4 mm short of the wall so that its pen stays inside the cup); the tongue runs out into a sharp tip.",
+            "de": "Die Flamme behält ihre wahren 8 mm (0,16 mm auf Papier, über dem Merkmal von 0,15 mm); Docht und Wachsspiegel sind 0,13-mm-Linien (die Wachslinie endet 4 mm vor der Wand, damit ihr Stift im Schälchen bleibt); die Zunge läuft spitz aus."
           },
           "hatching": {
             "en": "None.",
@@ -597,70 +809,52 @@
               "z": 3.2,
               "filled": true,
               "tone": 0.97,
-              "kind": "path",
-              "d": "M 0 0 C 0.0016 0.002 0.0019 0.007 0.0007 0.012 C 0.0004 0.0133 0.0002 0.0138 0 0.014 C -0.0002 0.0138 -0.0004 0.0133 -0.0007 0.012 C -0.0019 0.007 -0.0016 0.002 0 0 Z",
               "region": "flame",
-              "material": "flame"
-            },
-            {
-              "id": "flame",
-              "bone": "flame-body",
-              "role": "body",
-              "z": 3.3,
-              "filled": true,
-              "tone": 0.9,
-              "kind": "path",
-              "d": "M 0 0 C 0.0072 0.0027 0.0072 0.009 0.002 0.0125 C 0.001 0.0133 0.0004 0.0137 0 0.014 C -0.0004 0.0137 -0.001 0.0133 -0.002 0.0125 C -0.0072 0.009 -0.0072 0.0027 0 0 Z",
-              "region": "flame",
-              "material": "flame"
-            },
-            {
-              "id": "cup",
-              "bone": "cup",
-              "role": "body",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.5,
+              "material": "flame",
               "kind": "poly",
               "points": [
                 [
-                  -0.0155,
-                  0
+                  -0.0025,
+                  0.0
                 ],
                 [
-                  0.0155,
-                  0
+                  -0.0015,
+                  0.0031
                 ],
                 [
-                  0.0195,
-                  0.016
+                  0.0,
+                  0.0033
                 ],
                 [
-                  -0.0195,
-                  0.016
+                  0.004,
+                  0.00325
+                ],
+                [
+                  0.009,
+                  0.00175
+                ],
+                [
+                  0.014,
+                  0.0
+                ],
+                [
+                  0.009,
+                  -0.00175
+                ],
+                [
+                  0.004,
+                  -0.00325
+                ],
+                [
+                  0.0,
+                  -0.0033
+                ],
+                [
+                  -0.0015,
+                  -0.0031
                 ]
               ],
-              "closed": true,
-              "regions": [
-                "cup",
-                "wax",
-                "wick"
-              ],
-              "material": "aluminium-cup"
-            }
-          ],
-          "front": [
-            {
-              "id": "tongue",
-              "bone": "flame-tip",
-              "role": "body",
-              "z": 3.2,
-              "filled": true,
-              "tone": 0.97,
-              "region": "flame",
-              "material": "flame",
-              "kind": "path",
-              "d": "M 0 0.0265 C 0.0016 0.0285 0.0019 0.0335 0.0007 0.0385 C 0.0004 0.0398 0.0002 0.0403 0 0.0405 C -0.0002 0.0403 -0.0004 0.0398 -0.0007 0.0385 C -0.0019 0.0335 -0.0016 0.0285 0 0.0265 Z"
+              "closed": true
             },
             {
               "id": "flame",
@@ -671,8 +865,42 @@
               "tone": 0.9,
               "region": "flame",
               "material": "flame",
-              "kind": "path",
-              "d": "M 0 0.0185 C 0.0072 0.02116 0.0072 0.02746 0.002 0.031 C 0.001 0.0318 0.0004 0.03221 0 0.0325 C -0.0004 0.03221 -0.001 0.0318 -0.002 0.031 C -0.0072 0.02746 -0.0072 0.02116 0 0.0185 Z"
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.002,
+                  0.003
+                ],
+                [
+                  0.007,
+                  0.004
+                ],
+                [
+                  0.011,
+                  0.0035
+                ],
+                [
+                  0.0135,
+                  0.0
+                ],
+                [
+                  0.011,
+                  -0.0035
+                ],
+                [
+                  0.007,
+                  -0.004
+                ],
+                [
+                  0.002,
+                  -0.003
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "cup",
@@ -690,20 +918,156 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.0155,
+                  0.0,
+                  0.018
+                ],
+                [
+                  0.016,
+                  0.019
+                ],
+                [
+                  0.016,
+                  -0.019
+                ],
+                [
+                  0.0,
+                  -0.018
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "tongue",
+              "bone": "flame-tip",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.97,
+              "region": "flame",
+              "material": "flame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.024
+                ],
+                [
+                  0.0031,
+                  0.025
+                ],
+                [
+                  0.0033,
+                  0.0265
+                ],
+                [
+                  0.00325,
+                  0.0305
+                ],
+                [
+                  0.00175,
+                  0.0355
+                ],
+                [
+                  0.0,
+                  0.0405
+                ],
+                [
+                  -0.00175,
+                  0.0355
+                ],
+                [
+                  -0.00325,
+                  0.0305
+                ],
+                [
+                  -0.0033,
+                  0.0265
+                ],
+                [
+                  -0.0031,
+                  0.025
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "flame",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "region": "flame",
+              "material": "flame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0185
+                ],
+                [
+                  0.003,
+                  0.0205
+                ],
+                [
+                  0.004,
+                  0.0255
+                ],
+                [
+                  0.0035,
+                  0.0295
+                ],
+                [
+                  0.0,
+                  0.032
+                ],
+                [
+                  -0.0035,
+                  0.0295
+                ],
+                [
+                  -0.004,
+                  0.0255
+                ],
+                [
+                  -0.003,
+                  0.0205
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cup",
+              "bone": "cup",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "cup",
+                "wax",
+                "wick"
+              ],
+              "material": "aluminium-cup",
+              "kind": "poly",
+              "points": [
+                [
+                  0.018,
                   0.0
                 ],
                 [
-                  0.0155,
+                  0.019,
+                  0.016
+                ],
+                [
+                  -0.019,
+                  0.016
+                ],
+                [
+                  -0.018,
                   0.0
-                ],
-                [
-                  0.0195,
-                  0.016
-                ],
-                [
-                  -0.0195,
-                  0.016
                 ]
               ],
               "closed": true
@@ -722,8 +1086,8 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0195,
-              "ry": 0.0195
+              "rx": 0.019,
+              "ry": 0.019
             },
             {
               "id": "wax-top",
@@ -740,8 +1104,8 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0168,
-              "ry": 0.0168
+              "rx": 0.0178,
+              "ry": 0.0178
             },
             {
               "id": "flame",
@@ -755,19 +1119,19 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0072,
-              "ry": 0.0072
+              "rx": 0.004,
+              "ry": 0.004
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.4 mm by 0.4 mm candle: a cup wedge with a teardrop flame on top. Front view: the cup trapezoid, the flame and its tongue as two teardrops; the tongue rides on its own bone, so it flickers independently. Plan view: the cup disc, the wax top disc and the flame disc inside it (the sunken flame of the unlit pose is hidden behind the wax); the tongue sits above the flame and is hidden.",
-            "de": "Eine Kerze von 0,4 mm mal 0,4 mm: ein Schälchenkeil mit einer tropfenförmigen Flamme darauf. Vorderansicht: das Schälchentrapez, die Flamme und ihre Zunge als zwei Tropfen; die Zunge hängt an einem eigenen Knochen und flackert unabhängig. Draufsicht: die Schälchenscheibe, die Wachsscheibe und darin die Flammenscheibe (die versenkte Flamme der gelöschten Pose liegt hinter dem Wachs verdeckt); die Zunge liegt über der Flamme und ist verdeckt."
+            "en": "A 0.4 mm by 0.4 mm candle, the true view of the 1:100 body: the cup cone of 36 to 38 mm with the flame of 8 mm by 22 mm above it. Side and front view: the cup trapezoid, the flame bulb and its tongue as two five-station drops; the tongue rides on its own bone and stretches independently. Plan view: the cup disc, the wax disc and the flame disc inside it (the sunk flame of the unlit pose is hidden).",
+            "de": "Eine Kerze von 0,4 mm mal 0,4 mm, die wahre Ansicht des 1:100-Körpers: der Schälchenkegel von 36 auf 38 mm mit der Flamme von 8 mm mal 22 mm darüber. Seiten- und Vorderansicht: das Schälchentrapez, die Flammenzwiebel und ihre Zunge als zwei Tropfen mit fünf Stationen; die Zunge hängt an einem eigenen Knochen und streckt sich unabhängig. Draufsicht: die Schälchenscheibe, die Wachsscheibe und darin die Flammenscheibe (die versenkte Flamme der gelöschten Pose ist verdeckt)."
           },
           "retained": {
-            "en": "The cup wedge of 16 mm height and 39 mm rim, the flame with its tongue and its lean. Front and plan view: cup (merged), flame; front view: tongue.",
-            "de": "Der Schälchenkeil von 16 mm Höhe und 39 mm Rand, die Flamme mit ihrer Zunge und ihrer Neigung. Vorder- und Draufsicht: Schälchen (verschmolzen), Flamme; Vorderansicht: Zunge."
+            "en": "The cup cone of 16 mm height and 38 mm rim, the flame with its tongue and its lean. Front and plan view: cup (merged), flame; front view: tongue.",
+            "de": "Der Schälchenkegel von 16 mm Höhe und 38 mm Rand, die Flamme mit ihrer Zunge und ihrer Neigung. Vorder- und Draufsicht: Schälchen (verschmolzen), Flamme; Vorderansicht: Zunge."
           },
           "merged": {
             "en": "Wax and wick join the cup (regions cup, wax and wick merged).",
@@ -778,8 +1142,8 @@
             "de": "Wachslinie, Dochtlinie, Schälchenrand und Rippen. Vorder- und Draufsicht: Wachslinie und Docht sind nicht gezeichnet."
           },
           "thinElements": {
-            "en": "The flame is thickened from 8 to 14 mm (0.14 mm wide with its pen 0.32 mm); the tongue stays a sharp tip.",
-            "de": "Die Flamme ist von 8 auf 14 mm verdickt (0,14 mm breit, mit Stift 0,32 mm); die Zunge bleibt eine scharfe Spitze."
+            "en": "The flame keeps its true 8 mm: 0.08 mm on paper, which the 0.18 mm body pen carries to 0.26 mm; nothing is thickened, so the drawing and the 1:100 body are one form.",
+            "de": "Die Flamme behält ihre wahren 8 mm: 0,08 mm auf Papier, die der Körperstift von 0,18 mm auf 0,26 mm trägt; nichts ist verdickt, Zeichnung und 1:100-Körper sind eine Form."
           },
           "hatching": {
             "en": "None.",
@@ -803,7 +1167,7 @@
           "maxDenominator": 350
         },
         "pens": {
-          "body": 0.13,
+          "body": 0.18,
           "detail": null,
           "texture": null,
           "glazing": null,
@@ -819,58 +1183,44 @@
               "z": 3.3,
               "filled": true,
               "tone": 0.9,
-              "kind": "path",
-              "d": "M 0 0 C 0.01176 0.0025 0.01176 0.01 0.00381 0.0155 C 0.0019 0.0183 0.00067 0.0205 0 0.022 C -0.00067 0.0205 -0.0019 0.0183 -0.00381 0.0155 C -0.01176 0.01 -0.01176 0.0025 0 0 Z",
               "region": "flame",
-              "material": "flame"
-            },
-            {
-              "id": "cup",
-              "bone": "cup",
-              "role": "body",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.5,
+              "material": "flame",
               "kind": "poly",
               "points": [
                 [
-                  -0.0165,
-                  0
+                  0.0,
+                  0.0
                 ],
                 [
-                  0.0165,
-                  0
+                  0.002,
+                  0.003
                 ],
                 [
-                  0.0215,
-                  0.016
+                  0.007,
+                  0.004
                 ],
                 [
-                  -0.0215,
-                  0.016
+                  0.013,
+                  0.003
+                ],
+                [
+                  0.022,
+                  0.0
+                ],
+                [
+                  0.013,
+                  -0.003
+                ],
+                [
+                  0.007,
+                  -0.004
+                ],
+                [
+                  0.002,
+                  -0.003
                 ]
               ],
-              "closed": true,
-              "regions": [
-                "cup",
-                "wax",
-                "wick"
-              ],
-              "material": "aluminium-cup"
-            }
-          ],
-          "front": [
-            {
-              "id": "flame",
-              "bone": "flame-body",
-              "role": "body",
-              "z": 3.3,
-              "filled": true,
-              "tone": 0.9,
-              "region": "flame",
-              "material": "flame",
-              "kind": "path",
-              "d": "M 0 0.0185 C 0.01176 0.021 0.01176 0.0285 0.00381 0.034 C 0.0019 0.0368 0.00067 0.039 0 0.0405 C -0.00067 0.039 -0.0019 0.0368 -0.00381 0.034 C -0.01176 0.0285 -0.01176 0.021 0 0.0185 Z"
+              "closed": true
             },
             {
               "id": "cup",
@@ -888,20 +1238,102 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.0165,
-                  0
+                  0.0,
+                  0.018
                 ],
                 [
-                  0.0165,
-                  0
+                  0.016,
+                  0.019
                 ],
                 [
-                  0.0215,
+                  0.016,
+                  -0.019
+                ],
+                [
+                  0.0,
+                  -0.018
+                ]
+              ],
+              "closed": true
+            }
+          ],
+          "front": [
+            {
+              "id": "flame",
+              "bone": "flame-body",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.9,
+              "region": "flame",
+              "material": "flame",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0185
+                ],
+                [
+                  0.003,
+                  0.0205
+                ],
+                [
+                  0.004,
+                  0.0255
+                ],
+                [
+                  0.003,
+                  0.0315
+                ],
+                [
+                  0.0,
+                  0.0405
+                ],
+                [
+                  -0.003,
+                  0.0315
+                ],
+                [
+                  -0.004,
+                  0.0255
+                ],
+                [
+                  -0.003,
+                  0.0205
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cup",
+              "bone": "cup",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "cup",
+                "wax",
+                "wick"
+              ],
+              "material": "aluminium-cup",
+              "kind": "poly",
+              "points": [
+                [
+                  0.018,
+                  0.0
+                ],
+                [
+                  0.019,
                   0.016
                 ],
                 [
-                  -0.0215,
+                  -0.019,
                   0.016
+                ],
+                [
+                  -0.018,
+                  0.0
                 ]
               ],
               "closed": true
@@ -920,8 +1352,8 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0215,
-              "ry": 0.0215
+              "rx": 0.019,
+              "ry": 0.019
             },
             {
               "id": "wax-top",
@@ -938,8 +1370,8 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0185,
-              "ry": 0.0185
+              "rx": 0.0178,
+              "ry": 0.0178
             },
             {
               "id": "flame",
@@ -953,15 +1385,15 @@
               "kind": "ellipse",
               "cx": 0.0,
               "cy": 0.0,
-              "rx": 0.0105,
-              "ry": 0.0105
+              "rx": 0.004,
+              "ry": 0.004
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.2 mm dot with a flame: a cup wedge and a drop. Front view: the cup as one 0.4 mm trapezoid and the flame as one teardrop above it; the flame bone lifts it out of the cup. Plan view: the cup disc and the flame disc in its middle; the wax top disc sits on the wick bone, so the sunken flame of the unlit pose is painted behind it and disappears.",
-            "de": "Ein Punkt von 0,2 mm mit einer Flamme: ein Schälchenkeil und ein Tropfen. Vorderansicht: das Schälchen als ein 0,4 mm breites Trapez und die Flamme als ein Tropfen darüber; der Flammenhub hebt sie aus dem Schälchen. Draufsicht: die Schälchenscheibe und die Flammenscheibe in ihrer Mitte; die Wachsscheibe hängt am Dochtknochen, die versenkte Flamme der gelöschten Pose wird deshalb dahinter gemalt und verschwindet."
+            "en": "A 0.2 mm dot with a flame, the true view of the 1:200 body: the cup cone of 36 to 38 mm and one flame drop of 8 mm by 22 mm. Side and front view: the cup trapezoid and the drop above it; the flame bone lifts it out of the cup. Plan view: the cup disc and the flame disc in its middle; the wax disc sits on the wick bone, so the sunk flame of the unlit pose is painted behind it and disappears.",
+            "de": "Ein Punkt von 0,2 mm mit einer Flamme, die wahre Ansicht des 1:200-Körpers: der Schälchenkegel von 36 auf 38 mm und ein Flammentropfen von 8 mm mal 22 mm. Seiten- und Vorderansicht: das Schälchentrapez und der Tropfen darüber; der Flammenhub hebt ihn aus dem Schälchen. Draufsicht: die Schälchenscheibe und die Flammenscheibe in ihrer Mitte; die Wachsscheibe hängt am Dochtknochen, die versenkte Flamme der gelöschten Pose wird deshalb dahinter gemalt und verschwindet."
           },
           "retained": {
             "en": "Cup wedge and flame as the two masses. Front and plan view: cup (merged with wax and wick in the front view) and flame.",
@@ -976,16 +1408,16 @@
             "de": "Jede Detaillinie und die eigene Flammenzunge. Vorder- und Draufsicht: Zungenspitze, Wachslinie und Docht sind nicht gezeichnet."
           },
           "thinElements": {
-            "en": "The cup is thickened from 31 to 33 mm at the foot and from 38 to 43 mm at the rim, the flame from 8 to 21 mm, to reach the feature width of 0.2 mm on paper.",
-            "de": "Das Schälchen ist am Fuß von 31 auf 33 mm und am Rand von 38 auf 43 mm verdickt, die Flamme von 8 auf 21 mm, um die Mindestbreite von 0,2 mm auf Papier zu erreichen."
+            "en": "Nothing is thickened: the cup is 0.19 mm and the flame 0.04 mm on paper, and the body pen of 0.18 mm (raised from 0.13 mm) carries both above the 0.2 mm print feature over the whole band from 1:150 to 1:350; drawing and 1:200 body are one form in true size.",
+            "de": "Nichts ist verdickt: das Schälchen misst 0,19 mm und die Flamme 0,04 mm auf Papier, und der Körperstift von 0,18 mm (von 0,13 mm angehoben) trägt beide über das Druckmerkmal von 0,2 mm im ganzen Band von 1:150 bis 1:350; Zeichnung und 1:200-Körper sind eine Form in wahrer Grösse."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Cup 0.5, flame 0.9; one body pen of 0.13 mm.",
-            "de": "Schälchen 0,5, Flamme 0,9; ein Körperstift von 0,13 mm."
+            "en": "Cup 0.5, flame 0.9; one body pen of 0.18 mm.",
+            "de": "Schälchen 0,5, Flamme 0,9; ein Körperstift von 0,18 mm."
           },
           "overlays": {
             "en": "Cup wedge and flame carry the same regions as at 1:100.",
@@ -1032,10 +1464,10 @@
         },
         "bones": {
           "flame": {
-            "dy": -0.0165
+            "dx": -0.01775
           },
           "flame-tip": {
-            "dy": -0.011
+            "dx": -0.00575
           }
         },
         "ground": "auto",
@@ -1133,13 +1565,13 @@
         },
         "bones": {
           "flame": {
-            "dy": 0.002
+            "dx": 0.002
           },
           "flame-body": {
             "angleDeg": -10
           },
           "flame-tip": {
-            "dy": 0.004
+            "dx": 0.004
           }
         },
         "ground": "auto",
@@ -1224,7 +1656,7 @@
                 "angleDeg": 4
               },
               "flame-tip": {
-                "dy": 0.002
+                "dx": 0.002
               }
             }
           },
@@ -1513,7 +1945,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "aluminium-cup",
-          "areaM2": 0.005,
+          "areaM2": 0.0056,
           "characteristicLengthM": 0.016,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1546,7 +1978,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "paraffin",
-          "areaM2": 0.0032,
+          "areaM2": 0.0011,
           "characteristicLengthM": 0.036,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.5,
@@ -1579,8 +2011,8 @@
           "kind": "surface",
           "model": "passive",
           "material": "wick-cotton",
-          "areaM2": 3e-05,
-          "characteristicLengthM": 0.005,
+          "areaM2": 4.7e-05,
+          "characteristicLengthM": 0.007,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
           "layers": [
@@ -1679,8 +2111,8 @@
       ],
       "assumptions": [
         {
-          "en": "The 14 g candle stands on its base: a unilateral contact of 31 mm by 31 mm carries the weight.",
-          "de": "Die 14 g schwere Kerze steht auf ihrem Boden: ein einseitiger Kontakt von 31 mm mal 31 mm trägt das Gewicht."
+          "en": "The 14 g candle stands on the embossed standing ring of its cup: a unilateral annular contact of 28 to 34 mm carries the weight.",
+          "de": "Die 14 g schwere Kerze steht auf dem geprägten Standring ihres Schälchens: ein einseitiger Ringkontakt von 28 bis 34 mm trägt das Gewicht."
         }
       ],
       "clinical": false
@@ -1691,14 +2123,33 @@
         "denominator": 50,
         "body": [
           {
-            "id": "cup-shell",
+            "id": "cup",
             "kind": "revolve",
             "bone": "cup",
             "material": "aluminium-cup",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.0], [0.0, 0.0162], [0.016, 0.0195], [0.016, 0.017], [0.002, 0.0135], [0.002, 0.0]],
-            "axis": [0, 1, 0],
+            "profile": [
+              [0.00035, 0.0],
+              [0.00035, 0.013],
+              [0.0, 0.014],
+              [0.0, 0.01706],
+              [7.6e-05, 0.01744],
+              [0.000293, 0.01777],
+              [0.000617, 0.01798],
+              [0.001, 0.01806],
+              [0.016, 0.019],
+              [0.016, 0.0189],
+              [0.001, 0.01796],
+              [0.00068, 0.01789],
+              [0.00037, 0.0177],
+              [0.00017, 0.0174],
+              [0.0001, 0.01706],
+              [0.0001, 0.01404],
+              [0.00045, 0.01304],
+              [0.00045, 0.0]
+            ],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
           {
@@ -1708,8 +2159,20 @@
             "material": "paraffin",
             "role": "body",
             "tone": 0.85,
-            "profile": [[-0.00035, 0.0], [-0.00035, 0.01544], [0.0126, 0.01844], [0.01271, 0.01659], [0.01286, 0.01383], [0.01305, 0.00922], [0.01316, 0.00461], [0.0132, 0.0]],
-            "axis": [0, 1, 0],
+            "profile": [
+              [0.0, 0.0063],
+              [0.0, 0.0169],
+              [0.001, 0.01782],
+              [0.0132, 0.0186],
+              [0.014, 0.0178],
+              [0.014, 0.00105],
+              [0.0034, 0.00105],
+              [0.0034, 0.0019],
+              [0.0006, 0.0019],
+              [0.0006, 0.0063],
+              [0.0, 0.0063]
+            ],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
           {
@@ -1717,10 +2180,22 @@
             "kind": "revolve",
             "bone": "wick",
             "material": "wick-cotton",
-            "role": "body",
+            "role": "detail",
             "tone": 0.1,
-            "profile": [[-0.0134, 0.0], [-0.0134, 0.004], [-0.0129, 0.004], [-0.0129, 0.001], [0.0001, 0.001], [0.0053, 0.001], [0.0053, 0.0]],
-            "axis": [0, 1, 0],
+            "profile": [
+              [-0.014, 0.0],
+              [-0.014, 0.006],
+              [-0.0137, 0.006],
+              [-0.0137, 0.0023],
+              [-0.0133, 0.0017],
+              [-0.011, 0.0017],
+              [-0.011, 0.001],
+              [0.006, 0.001],
+              [0.0066, 0.00085],
+              [0.0069, 0.0005],
+              [0.007, 0.0]
+            ],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
           {
@@ -1732,20 +2207,21 @@
             "tone": 0.9,
             "profile": [
               [0.0, 0.0],
-              [0.00172, 0.00242],
-              [0.0038, 0.00393],
-              [0.00606, 0.00455],
-              [0.00837, 0.00434],
-              [0.01057, 0.00334],
-              [0.0125, 0.0016],
-              [0.01287, 0.00122],
-              [0.01318, 0.0009],
-              [0.01344, 0.00061],
-              [0.01366, 0.00037],
-              [0.01384, 0.00017],
-              [0.014, 0.0]
+              [0.0003, 0.0012],
+              [0.001, 0.0022],
+              [0.002, 0.003],
+              [0.0035, 0.0036],
+              [0.005, 0.0039],
+              [0.007, 0.004],
+              [0.009, 0.00385],
+              [0.011, 0.0035],
+              [0.012, 0.00325],
+              [0.0126, 0.0029],
+              [0.0131, 0.0022],
+              [0.0134, 0.0012],
+              [0.0135, 0.0]
             ],
-            "axis": [0, 1, 0],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
           {
@@ -1756,28 +2232,30 @@
             "role": "body",
             "tone": 0.97,
             "profile": [
-              [0.0, 0.0],
-              [0.00124, 0.00069],
-              [0.00289, 0.00116],
-              [0.00487, 0.0014],
-              [0.00711, 0.00141],
-              [0.00951, 0.00118],
-              [0.012, 0.0007],
-              [0.01259, 0.00056],
-              [0.01305, 0.00043],
-              [0.01341, 0.00031],
-              [0.01368, 0.0002],
-              [0.01387, 0.0001],
+              [-0.0025, 0.0],
+              [-0.00235, 0.0016],
+              [-0.002, 0.0026],
+              [-0.0015, 0.0031],
+              [-0.001, 0.00325],
+              [0.0, 0.0033],
+              [0.002, 0.0033],
+              [0.004, 0.00325],
+              [0.005, 0.003],
+              [0.007, 0.0024],
+              [0.009, 0.00175],
+              [0.011, 0.0011],
+              [0.0125, 0.0006],
+              [0.0135, 0.00025],
               [0.014, 0.0]
             ],
-            "axis": [0, 1, 0],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           }
         ],
         "thermal": [
           {
-            "id": "th-cup-shell",
-            "of": "cup-shell",
+            "id": "th-cup",
+            "of": "cup",
             "region": "cup",
             "layer": "foil"
           },
@@ -1785,11 +2263,274 @@
             "id": "th-wax",
             "of": "wax",
             "region": "wax",
-            "layer": "wax"
+            "layer": "wax",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
           },
           {
             "id": "th-wick",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.1,
+            "profile": [[0.0, 0.0], [0.0, 0.001], [0.006, 0.001], [0.0066, 0.00085], [0.0069, 0.0005], [0.007, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "region": "wick",
+            "layer": "braid"
+          },
+          {
+            "id": "th-wick-root",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.25,
+            "profile": [[-0.014, 0.0], [-0.014, 0.006], [-0.0137, 0.006], [-0.0137, 0.0023], [-0.0133, 0.0017], [-0.011, 0.0017], [-0.011, 0.001], [-5e-05, 0.001], [-5e-05, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "region": "wick",
+            "layer": "braid",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-flame",
+            "of": "flame",
+            "region": "flame",
+            "layer": "envelope"
+          },
+          {
+            "id": "th-flame-tongue",
+            "of": "flame-tongue",
+            "region": "flame",
+            "layer": "envelope"
+          },
+          {
+            "id": "th-flame-plume",
+            "kind": "revolve",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "profile": [
+              [0.0142, 0.0],
+              [0.0135, 0.00045],
+              [0.0125, 0.0008],
+              [0.011, 0.0013],
+              [0.009, 0.00195],
+              [0.008, 0.00228],
+              [0.008, 0.00208],
+              [0.009, 0.00175],
+              [0.011, 0.0011],
+              [0.0125, 0.0006],
+              [0.0135, 0.00025],
+              [0.014, 0.0]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "region": "flame",
+            "layer": "envelope",
+            "tags": ["flame-plume"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-cup",
+            "of": "cup",
+            "member": "cup",
+            "part": "member"
+          },
+          {
+            "id": "member-wax",
+            "kind": "revolve",
+            "bone": "wax",
+            "material": "paraffin",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [[0.0, 0.0], [0.0, 0.013], [0.014, 0.013], [0.014, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "wax",
+            "part": "member"
+          },
+          {
+            "id": "member-wick",
             "of": "wick",
+            "member": "wick",
+            "part": "member"
+          },
+          {
+            "id": "member-flame-body",
+            "kind": "capsule",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.9,
+            "p0": [0.0003, 0, 0],
+            "p1": [0.0132, 0, 0],
+            "r0": 0.00028,
+            "r1": 0.00028,
+            "slender": true,
+            "member": "flame-body",
+            "part": "member"
+          },
+          {
+            "id": "member-flame-tip",
+            "kind": "capsule",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "p0": [0.0, 0, 0],
+            "p1": [0.0136, 0, 0],
+            "r0": 0.00028,
+            "r1": 0.00028,
+            "slender": true,
+            "member": "flame-tip",
+            "part": "member"
+          },
+          {
+            "id": "joint-wax",
+            "kind": "revolve",
+            "bone": "wax",
+            "material": "paraffin",
+            "role": "ground",
+            "tone": 0.3,
+            "profile": [[-0.00015, 0.0], [-0.00015, 0.013], [0.00015, 0.013], [0.00015, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "wax",
+            "part": "joint"
+          },
+          {
+            "id": "joint-wick",
+            "kind": "ellipsoid",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.00375, 0.00375, 0.00375],
+            "member": "wick",
+            "part": "joint"
+          },
+          {
+            "id": "mass-wax",
+            "kind": "ellipsoid",
+            "bone": "wax",
+            "material": "paraffin",
+            "role": "detail",
+            "tone": 0.15,
+            "radii": [0.00375, 0.0055, 0.0055],
+            "transform": {
+              "translation": [0.007, 0, 0]
+            },
+            "member": "wax",
+            "part": "mass"
+          },
+          {
+            "id": "support-base-contact",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "ground",
+            "tone": 0.1,
+            "profile": [[-0.0003, 0.014], [-0.0003, 0.01706], [0.0, 0.01706], [0.0, 0.014], [-0.0003, 0.014]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "cup",
+            "part": "support",
+            "anchor": "base-contact",
+            "tags": ["base-contact"]
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body 1:50, the real tealight part by part: the deep-drawn cup is one shell of 0.1 mm foil (C30) with the embossed floor (centre panel raised 0.35 mm inside a standing ring of 28 to 34 mm), the 1 mm base radius and the wall with 3.6 degrees of draft from 36 mm at the base to 38 mm at the cut rim; the pressed paraffin puck of 14 mm lies loose in it (0.15 mm clearance, chamfered edges, the recess for the sustainer and the wick bore); the wick is one solid of the 2 mm braid with its sustainer (12 mm disc, 3 mm crimp neck) standing on the floor, running through the puck and standing 7 mm above the wax; the flame is the luminous teardrop of 8 mm by 22 mm in two parts that slide into each other (lower bulb on flame-body, upper tongue on flame-tip), so that the stretched flame of the flicker poses stays closed. In the unlit pose both flame parts sink completely into the puck and the wick.",
+            "de": "Körper 1:50, das echte Teelicht Teil für Teil: das tiefgezogene Schälchen ist eine Schale aus 0,1 mm Folie (C30) mit geprägtem Boden (Mittelfeld 0,35 mm angehoben in einem Standring von 28 bis 34 mm), dem Bodenradius von 1 mm und der Wand mit 3,6 Grad Auszugsschräge von 36 mm am Boden auf 38 mm am Schnittrand; der gepresste Paraffinkörper von 14 mm liegt lose darin (0,15 mm Spiel, gefaste Kanten, Aussparung für den Dochthalter und Dochtbohrung); der Docht ist ein Körper aus dem 2-mm-Geflecht mit seinem Dochthalter (Scheibe 12 mm, Quetschhals 3 mm), der auf dem Boden steht, durch den Wachskörper läuft und 7 mm über das Wachs ragt; die Flamme ist der leuchtende Tropfen von 8 mm mal 22 mm in zwei ineinander gleitenden Teilen (untere Zwiebel am Knochen flame-body, obere Zunge am Knochen flame-tip), damit die gestreckte Flamme der Flackerposen geschlossen bleibt. In der gelöschten Pose versinken beide Flammenteile vollständig im Wachskörper und im Docht."
+          },
+          {
+            "en": "Thermal 1:50: the cup is its real foil shell (layer foil, inside and outside count); the wax region is the puck with only its top face as surface (the faces against cup, wick and sustainer are section faces); the wick region is the 7 mm of braid in the air, and its root (the braid inside the puck with the sustainer) is a real internal whose faces lie against the wax and count for no area; the flame region is both flame parts; the emitter flame-plume is an outlet cap of 0.2 mm on the upper 6 mm of the tongue, where the plume leaves the flame (D2).",
+            "de": "Thermik 1:50: das Schälchen ist seine echte Folienschale (Schicht foil, innen und aussen zählen); die Wachsregion ist der Wachskörper mit nur seiner Oberseite als Oberfläche (die Flächen gegen Schälchen, Docht und Dochthalter sind Schnittflächen); die Dochtregion sind die 7 mm Geflecht an der Luft, und ihre Wurzel (das Geflecht im Wachskörper mit dem Dochthalter) ist echtes Innenleben, dessen Flächen am Wachs anliegen und keine Fläche zählen; die Flammenregion sind beide Flammenteile; der Emitter flame-plume ist eine Auslasskappe von 0,2 mm auf den oberen 6 mm der Zunge, wo die Fahne die Flamme verlässt (D2)."
+          },
+          {
+            "en": "Structure 1:50, the real load path: the puck (12.8 g, mass at its centre) stands as a pressure column of 26 mm on the raised floor panel (bearing joint), the foil shell carries it through the embossed floor into the standing ring, and the annular pad under the ring is the support base-contact; the wick is a strand in its sustainer foot with a joint marker of one feature where it leaves the wax; the flame bones are massless axes (slender rods of 0.56 mm) and carry no load, so they have no joint markers.",
+            "de": "Tragwerk 1:50, der echte Lastpfad: der Wachskörper (12,8 g, Masse im Schwerpunkt) steht als Drucksäule von 26 mm auf dem angehobenen Bodenfeld (Lagerfuge), die Folienschale trägt ihn über den geprägten Boden in den Standring, und das Ringpolster unter dem Standring ist das Auflager base-contact; der Docht ist ein Strang in seinem Halterfuss mit einer Gelenkmarke von einem Merkmal am Austritt aus dem Wachs; die Flammenknochen sind masselose Achsen (schlanke Stäbe von 0,56 mm) und tragen keine Last, deshalb haben sie keine Gelenkmarken."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "cup",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.019], [0.016, 0.0189], [0.0001, 0.0179], [0.0001, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "wax-top",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "paraffin",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-0.01435, 0.0], [-0.01435, 0.01775], [0.0, 0.0186], [0.0, 0.001], [0.0065, 0.001], [0.007, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "flame",
+            "kind": "revolve",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0005, 0.0015], [0.0015, 0.0027], [0.0035, 0.0036], [0.007, 0.004], [0.011, 0.0035], [0.0126, 0.0029], [0.0135, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "flame-tongue",
+            "kind": "revolve",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "body",
+            "tone": 0.97,
+            "profile": [[-0.0025, 0.0], [-0.002, 0.0026], [-0.001, 0.00325], [0.0, 0.0033], [0.004, 0.00325], [0.007, 0.0024], [0.011, 0.0011], [0.014, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-cup",
+            "of": "cup",
+            "region": "cup",
+            "layer": "foil"
+          },
+          {
+            "id": "th-wax",
+            "of": "wax-top",
+            "region": "wax",
+            "layer": "wax",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-wick",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.1,
+            "profile": [[0.0, 0.0], [0.0, 0.00105], [0.0065, 0.00105], [0.0071, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "region": "wick",
             "layer": "braid"
           },
@@ -1807,393 +2548,105 @@
           },
           {
             "id": "th-flame-plume",
-            "kind": "extrude",
+            "kind": "revolve",
             "bone": "flame-tip",
             "material": "flame",
-            "role": "body",
+            "role": "detail",
             "tone": 0.97,
+            "profile": [[0.0143, 0.0], [0.011, 0.0014], [0.008, 0.00235], [0.008, 0.00208], [0.011, 0.0011], [0.014, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "region": "flame",
             "layer": "envelope",
-            "profile": [
-              [0.01, 0.0],
-              [0.00966, 0.00259],
-              [0.00866, 0.005],
-              [0.00707, 0.00707],
-              [0.005, 0.00866],
-              [0.00259, 0.00966],
-              [0.0, 0.01],
-              [-0.00259, 0.00966],
-              [-0.005, 0.00866],
-              [-0.00707, 0.00707],
-              [-0.00866, 0.005],
-              [-0.00966, 0.00259],
-              [-0.01, 0.0],
-              [-0.00966, -0.00259],
-              [-0.00866, -0.005],
-              [-0.00707, -0.00707],
-              [-0.005, -0.00866],
-              [-0.00259, -0.00966],
-              [0.0, -0.01],
-              [0.00259, -0.00966],
-              [0.005, -0.00866],
-              [0.00707, -0.00707],
-              [0.00866, -0.005],
-              [0.00966, -0.00259]
-            ],
-            "plane": "zx",
-            "from": 0.0135,
-            "to": 0.021,
-            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"],
             "tags": ["flame-plume"]
           }
         ],
         "structure": [
           {
             "id": "member-cup",
-            "of": "cup-shell",
+            "of": "cup",
             "member": "cup",
             "part": "member"
           },
           {
             "id": "member-wax",
-            "of": "wax",
+            "of": "wax-top",
             "member": "wax",
             "part": "member"
           },
           {
             "id": "member-wick",
-            "of": "wick",
-            "member": "wick",
-            "part": "member"
-          },
-          {
-            "id": "member-flame",
-            "of": "flame",
-            "member": "flame",
-            "part": "member"
-          },
-          {
-            "id": "member-flame-body",
-            "of": "flame",
-            "member": "flame-body",
-            "part": "member"
-          },
-          {
-            "id": "member-flame-tip",
-            "of": "flame-tongue",
-            "member": "flame-tip",
-            "part": "member"
-          },
-          {
-            "id": "joint-wick",
-            "of": "wick",
-            "member": "wick",
-            "part": "joint"
-          },
-          {
-            "id": "joint-flame",
-            "of": "flame",
-            "member": "flame",
-            "part": "joint"
-          },
-          {
-            "id": "joint-flame-body",
-            "of": "flame",
-            "member": "flame-body",
-            "part": "joint"
-          },
-          {
-            "id": "mass-wax",
-            "kind": "ellipsoid",
-            "bone": "wax",
-            "material": "aluminium-cup",
-            "role": "detail",
-            "tone": 0.15,
-            "member": "wax",
-            "part": "mass",
-            "radii": [0.011, 0.005, 0.011],
-            "transform": {
-              "translation": [0, 0.0065, 0]
-            }
-          },
-          {
-            "id": "support-base-contact",
-            "kind": "revolve",
-            "bone": "cup",
-            "material": "aluminium-cup",
-            "role": "detail",
-            "tone": 0.1,
-            "member": "cup",
-            "part": "support",
-            "profile": [[0, 0.0155], [0.0075, 0.0155]],
-            "axis": [0, 1, 0],
-            "origin": [0, 0.0, 0],
-            "tags": ["base-contact"],
-            "anchor": "base-contact"
-          }
-        ],
-        "decisions": [
-          {
-            "en": "Own 1:50 model of the 38 mm tealight against the drawings (lit pose): the cup is a true 0.1 mm foil shell (one revolve) with the conical wall 31 to 38 mm, a rolled rim lip, a 0.1 mm floor and the pressed-in underside with its 1.5 mm standing ring; the paraffin fill is a separate revolve that lies 0.05 mm into the foil, 14 mm deep with the drawn 0.6 mm dome on top; the wick is one revolve of the 2 mm braid with the 8 mm sustainer tab at the floor (the tab keeps the part above the print feature and is hidden in the wax); the flame and its tongue are revolves of the drawn teardrop outlines on their own bones. The wax surface of the drawing was 1.2 mm higher: it is lowered to the 14 mm fill the notes state (a surface line on the very rim made the drawn silhouette protrude over the cup).",
-            "de": "Eigenes 1:50-Modell des 38-mm-Teelichts nach den Zeichnungen (Pose brennend): das Schälchen ist eine echte 0,1-mm-Folienschale (eine Drehfläche) mit der konischen Wand von 31 auf 38 mm, einer gerollten Randlippe, einem 0,1-mm-Boden und der eingedrückten Unterseite mit ihrem 1,5 mm breiten Standring; die Paraffinfüllung ist eine eigene Drehfläche, die 0,05 mm in die Folie reicht, 14 mm tief mit der gezeichneten Wölbung von 0,6 mm oben; der Docht ist eine Drehfläche aus dem 2-mm-Geflecht mit dem 8-mm-Dochtfuß am Boden (der Fuß hält das Teil über dem Druckmerkmal und liegt im Wachs verborgen); Flamme und Zunge sind Drehflächen der gezeichneten Tropfenumrisse an ihren eigenen Knochen. Die Wachsoberfläche der Zeichnung lag 1,2 mm höher: sie ist auf die in den Notizen genannte Füllung von 14 mm abgesenkt (eine Oberflächenlinie genau am Rand liess die gezeichnete Silhouette über das Schälchen ragen)."
-          },
-          {
-            "en": "Thermal: cup, wax, wick and flame/tongue reference their body solids (the cup region exposes outer cone and the 2 mm of inner wall above the wax; floor and wax sides are buried); the flame region is the operating region (heater, key burn) and its emitter flame-plume is a 20 mm disc of 7.5 mm at the flame-top anchor (tag flame-plume, all faces section faces: a virtual outlet of the rising plume). The unlit pose lowers the flame bones into the cup, so no hidden region is needed.",
-            "de": "Thermik: Schälchen, Wachs, Docht und Flamme/Zunge verweisen auf ihre Körper (die Schälchenregion zeigt den Aussenkegel und die 2 mm Innenwand über dem Wachs; Boden und Wachsflanken sind verdeckt); die Flammenregion ist die Betriebsregion (Heizer, Schlüssel burn) und ihr Emitter flame-plume eine 20-mm-Scheibe von 7,5 mm am Anker flame-top (Markierung flame-plume, alle Flächen Schnittflächen: ein virtueller Auslass der aufsteigenden Fahne). Die Pose unbrennend senkt die Flammenknochen ins Schälchen, daher braucht es keine verborgene Region."
-          },
-          {
-            "en": "Structure: the cup shell, the wax, the wick and the flame bones are members (referencing their solids), wick/flame/flame-body the joints, a wax mass ellipsoid at the 12.8 g centre of mass and the 31 mm contact disc under the base as the support of the anchor base-contact.",
-            "de": "Tragwerk: Schälchenschale, Wachs, Docht und die Flammenknochen sind Stäbe (mit Verweis auf ihre Körper), Docht/Flamme/Flammenkörper die Gelenke, ein Wachs-Massenellipsoid im Schwerpunkt der 12,8 g und die 31-mm-Kontaktscheibe unter dem Boden als Auflager des Ankers base-contact."
-          }
-        ]
-      },
-      "100": {
-        "status": "authored",
-        "denominator": 100,
-        "body": [
-          {
-            "id": "cup-shell",
-            "kind": "revolve",
-            "bone": "cup",
-            "material": "aluminium-cup",
-            "role": "body",
-            "tone": 0.5,
-            "profile": [[0.0001, 0.0], [0.0, 0.0], [0.0, 0.0155], [0.014, 0.019], [0.016, 0.0195], [0.016, 0.0194], [0.014, 0.0189], [0.0001, 0.0154]],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          },
-          {
-            "id": "wax-wick",
-            "kind": "revolve",
-            "bone": "wick",
-            "material": "paraffin",
-            "role": "body",
-            "tone": 0.85,
-            "profile": [
-              [-0.01442, 0.0],
-              [-0.01442, 0.01547],
-              [-0.0005, 0.01895],
-              [-0.00024, 0.01421],
-              [-5e-05, 0.00948],
-              [6e-05, 0.00474],
-              [0.0001, 0.001],
-              [0.0053, 0.001],
-              [0.0053, 0.0]
-            ],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          },
-          {
-            "id": "flame",
-            "kind": "revolve",
-            "bone": "flame-body",
-            "material": "flame",
-            "role": "body",
-            "tone": 0.9,
-            "profile": [
-              [0.0, 0.0],
-              [0.00162, 0.00301],
-              [0.00366, 0.00487],
-              [0.00595, 0.00565],
-              [0.0083, 0.00539],
-              [0.01055, 0.00416],
-              [0.0125, 0.002],
-              [0.01287, 0.00153],
-              [0.01318, 0.00113],
-              [0.01344, 0.00078],
-              [0.01366, 0.00047],
-              [0.01384, 0.00022],
-              [0.014, 0.0]
-            ],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          },
-          {
-            "id": "flame-tongue",
-            "kind": "revolve",
-            "bone": "flame-tip",
-            "material": "flame",
-            "role": "body",
-            "tone": 0.97,
-            "profile": [
-              [0.0, 0.0],
-              [0.00124, 0.00069],
-              [0.00289, 0.00116],
-              [0.00487, 0.0014],
-              [0.00711, 0.00141],
-              [0.00951, 0.00118],
-              [0.012, 0.0007],
-              [0.01259, 0.00056],
-              [0.01305, 0.00043],
-              [0.01341, 0.00031],
-              [0.01368, 0.0002],
-              [0.01387, 0.0001],
-              [0.014, 0.0]
-            ],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          }
-        ],
-        "thermal": [
-          {
-            "id": "th-cup-shell",
-            "of": "cup-shell",
-            "region": "cup",
-            "layer": "foil"
-          },
-          {
-            "id": "th-wax",
-            "of": "wax-wick",
-            "region": "wax",
-            "layer": "wax",
-            "sectionFaces": ["+u", "-u", "+w", "-w", "-v"]
-          },
-          {
-            "id": "th-wick",
-            "kind": "revolve",
+            "kind": "capsule",
             "bone": "wick",
             "material": "wick-cotton",
             "role": "detail",
             "tone": 0.1,
-            "region": "wick",
-            "layer": "braid",
-            "profile": [[-0.0005, 0.0], [-0.0005, 0.001], [0.0053, 0.001], [0.0053, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          },
-          {
-            "id": "th-flame",
-            "of": "flame",
-            "region": "flame",
-            "layer": "envelope"
-          },
-          {
-            "id": "th-flame-tongue",
-            "of": "flame-tongue",
-            "region": "flame",
-            "layer": "envelope"
-          },
-          {
-            "id": "th-flame-plume",
-            "kind": "extrude",
-            "bone": "flame-tip",
-            "material": "flame",
-            "role": "body",
-            "tone": 0.97,
-            "region": "flame",
-            "layer": "envelope",
-            "profile": [
-              [0.01, 0.0],
-              [0.00966, 0.00259],
-              [0.00866, 0.005],
-              [0.00707, 0.00707],
-              [0.005, 0.00866],
-              [0.00259, 0.00966],
-              [0.0, 0.01],
-              [-0.00259, 0.00966],
-              [-0.005, 0.00866],
-              [-0.00707, 0.00707],
-              [-0.00866, 0.005],
-              [-0.00966, 0.00259],
-              [-0.01, 0.0],
-              [-0.00966, -0.00259],
-              [-0.00866, -0.005],
-              [-0.00707, -0.00707],
-              [-0.005, -0.00866],
-              [-0.00259, -0.00966],
-              [0.0, -0.01],
-              [0.00259, -0.00966],
-              [0.005, -0.00866],
-              [0.00707, -0.00707],
-              [0.00866, -0.005],
-              [0.00966, -0.00259]
-            ],
-            "plane": "zx",
-            "from": 0.0135,
-            "to": 0.0285,
-            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"],
-            "tags": ["flame-plume"]
-          }
-        ],
-        "structure": [
-          {
-            "id": "member-cup",
-            "of": "cup-shell",
-            "member": "cup",
-            "part": "member"
-          },
-          {
-            "id": "member-wax",
-            "of": "wax-wick",
-            "member": "wax",
-            "part": "member"
-          },
-          {
-            "id": "member-wick",
-            "of": "wax-wick",
+            "p0": [-0.0138, 0, 0],
+            "p1": [0.0066, 0, 0],
+            "r0": 0.00045,
+            "r1": 0.00045,
+            "slender": true,
             "member": "wick",
             "part": "member"
           },
           {
-            "id": "member-flame",
-            "of": "flame",
-            "member": "flame",
-            "part": "member"
-          },
-          {
             "id": "member-flame-body",
-            "of": "flame",
+            "kind": "capsule",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.9,
+            "p0": [0.0004, 0, 0],
+            "p1": [0.013, 0, 0],
+            "r0": 0.0003,
+            "r1": 0.0003,
+            "slender": true,
             "member": "flame-body",
             "part": "member"
           },
           {
             "id": "member-flame-tip",
-            "of": "flame-tongue",
+            "kind": "capsule",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "p0": [0.0002, 0, 0],
+            "p1": [0.0134, 0, 0],
+            "r0": 0.0003,
+            "r1": 0.0003,
+            "slender": true,
             "member": "flame-tip",
             "part": "member"
-          },
-          {
-            "id": "mass-wax",
-            "kind": "ellipsoid",
-            "bone": "wax",
-            "material": "aluminium-cup",
-            "role": "detail",
-            "tone": 0.15,
-            "member": "wax",
-            "part": "mass",
-            "radii": [0.012, 0.0078, 0.012],
-            "transform": {
-              "translation": [0, 0.0054, 0]
-            }
           },
           {
             "id": "support-base-contact",
             "kind": "revolve",
             "bone": "cup",
             "material": "aluminium-cup",
-            "role": "detail",
+            "role": "ground",
             "tone": 0.1,
+            "profile": [[-0.0004, 0.014], [-0.0004, 0.0175], [0.0, 0.0175], [0.0, 0.014], [-0.0004, 0.014]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "member": "cup",
             "part": "support",
-            "profile": [[0, 0.0155], [0.015, 0.0155]],
-            "axis": [0, 1, 0],
-            "origin": [0, -0.0075, 0],
-            "tags": ["base-contact"],
-            "anchor": "base-contact"
+            "anchor": "base-contact",
+            "tags": ["base-contact"]
           }
         ],
         "decisions": [
           {
-            "en": "Own 1:100 model: the foil cup as a 0.1 mm shell with a flat floor and the drawn trapezoid (no lip, no standing ring); wax and wick are one revolve on the wick bone (the drawing merges them): the fill to 14 mm with its dome and the 2 mm wick stub up to 19.8 mm, which also keeps the part above the 15 mm print feature; flame and tongue are revolves of the drawn outlines.",
-            "de": "Eigenes 1:100-Modell: das Folienschälchen als 0,1-mm-Schale mit flachem Boden und dem gezeichneten Trapez (keine Lippe, kein Standring); Wachs und Docht sind eine Drehfläche am Dochtknochen (die Zeichnung fasst sie zusammen): die Füllung bis 14 mm mit ihrer Wölbung und dem 2-mm-Dochtstummel bis 19,8 mm, was das Teil auch über dem Druckmerkmal von 15 mm hält; Flamme und Zunge sind Drehflächen der gezeichneten Umrisse."
+            "en": "Body 1:100, drawn anew for this scale: the cup is a plain foil cone (flat floor, straight wall from 36 to 38 mm, no embossing, no base radius); the wax fill and the wick are one plug on the wick bone, a plain truncated cone with a 2 mm pin of 7 mm on top (the sustainer, the bore and the clearance are gone); the flame is the same two sliding parts with fewer profile stations. Nothing is thickened: the candle keeps its true size.",
+            "de": "Körper 1:100, für diesen Maßstab neu gezeichnet: das Schälchen ist ein schlichter Folienkegel (flacher Boden, gerade Wand von 36 auf 38 mm, keine Prägung, kein Bodenradius); Wachsfüllung und Docht sind ein Pfropfen am Dochtknochen, ein schlichter Kegelstumpf mit einem 2-mm-Stift von 7 mm obenauf (Dochthalter, Bohrung und Spiel entfallen); die Flamme sind dieselben zwei gleitenden Teile mit weniger Profilstationen. Nichts ist verdickt: die Kerze behält ihre wahre Grösse."
           },
           {
-            "en": "Thermal: cup, wax and flame/tongue by reference (the wax reference declares its sides and underside, the interface to the foil, as section faces so that only the free top counts), the wick as its own 2 mm braid solid (layer braid, true thickness, buried in the plug above the wax), emitter disc of 15 mm at flame-top. The wax region is not compared per region here (below 6 x feature^2).",
-            "de": "Thermik: Schälchen, Wachs und Flamme/Zunge als Verweis (der Wachsverweis erklärt Flanken und Unterseite, die Grenze zur Folie, als Schnittflächen, damit nur die freie Oberseite zählt), der Docht als eigener 2-mm-Geflechtkörper (Schicht braid, wahre Dicke, über dem Wachs im Stopfen verdeckt), Emitterscheibe von 15 mm bei flame-top. Die Wachsregion wird hier nicht je Region verglichen (unter 6 x Merkmal^2)."
+            "en": "Thermal 1:100: cup shell and wax plug by reference (wax: top face only), the wick as its own pin over the pin of the plug, both flame parts, and a plain cone cap on the upper 6 mm of the tongue as the emitter outlet.",
+            "de": "Thermik 1:100: Schälchenschale und Wachspfropfen als Verweis (Wachs: nur die Oberseite), der Docht als eigener Stift über dem Stift des Pfropfens, beide Flammenteile und eine schlichte Kegelkappe auf den oberen 6 mm der Zunge als Emitterauslass."
           },
           {
-            "en": "Structure: six members (cup, wax, wick, flame, flame-body, flame-tip), the wax mass ellipsoid (15 mm, the smallest the feature allows, so it ends 1 mm below the floor) and the 31 mm contact disc, which stands under the base (-7.5 to 7.5 mm) so that it does not bury the wax top; the joints of 1:50 are dropped.",
-            "de": "Tragwerk: sechs Stäbe (Schälchen, Wachs, Docht, Flamme, Flammenkörper, Flammenspitze), das Wachs-Massenellipsoid (15 mm, das Kleinste, was das Merkmal erlaubt, daher endet es 1 mm unter dem Boden) und die 31-mm-Kontaktscheibe, die unter dem Boden steht (-7,5 bis 7,5 mm), damit sie die Wachsoberseite nicht verdeckt; die Gelenke von 1:50 entfallen."
+            "en": "Structure 1:100: the foil shell, the wax plug as the pressure block it is, the wick as a slender strand from the floor to its tip, the two massless flame axes and the annular support under the base. Joint markers and the mass marker are left out: one feature (15 mm) is larger than the 14 mm puck that would have to hold them.",
+            "de": "Tragwerk 1:100: die Folienschale, der Wachspfropfen als der Druckblock, der er ist, der Docht als schlanker Strang vom Boden bis zur Spitze, die zwei masselosen Flammenachsen und das Ringauflager unter dem Boden. Gelenkmarken und die Massenmarke entfallen: ein Merkmal (15 mm) ist grösser als der 14 mm hohe Wachskörper, der sie aufnehmen müsste."
           }
         ]
       },
@@ -2202,25 +2655,14 @@
         "denominator": 200,
         "body": [
           {
-            "id": "cup-shell",
+            "id": "cup",
             "kind": "revolve",
             "bone": "cup",
             "material": "aluminium-cup",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0001, 0.0], [0.0, 0.0], [0.0, 0.0165], [0.014, 0.02088], [0.016, 0.0215], [0.016, 0.0214], [0.014, 0.02077], [0.0001, 0.0164]],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
-          },
-          {
-            "id": "wax-wick",
-            "kind": "revolve",
-            "bone": "cup",
-            "material": "paraffin",
-            "role": "body",
-            "tone": 0.85,
-            "profile": [[8e-05, 0.0], [8e-05, 0.01648], [0.014, 0.02083], [0.01426, 0.01562], [0.01445, 0.01041], [0.01456, 0.00521], [0.0146, 0.001], [0.0198, 0.001], [0.0198, 0.0]],
-            "axis": [0, 1, 0],
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.019], [0.016, 0.0188], [0.0145, 0.0185], [0.0145, 0.0]],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
           {
@@ -2230,8 +2672,8 @@
             "material": "paraffin",
             "role": "detail",
             "tone": 0.85,
-            "profile": [[-0.001, 0.0], [-0.001, 0.0185], [-0.0005, 0.0185], [-0.0005, 0.0]],
-            "axis": [0, 1, 0],
+            "profile": [[0.0, 0.0], [0.0, 0.0183], [0.0003, 0.0183], [0.0003, 0.001], [0.007, 0.0]],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0],
             "texture": true
           },
@@ -2242,38 +2684,24 @@
             "material": "flame",
             "role": "body",
             "tone": 0.9,
-            "profile": [
-              [0.0, 0.0],
-              [0.00163, 0.00492],
-              [0.00391, 0.00799],
-              [0.00662, 0.0093],
-              [0.00959, 0.00897],
-              [0.01262, 0.0071],
-              [0.0155, 0.00381],
-              [0.01685, 0.00291],
-              [0.0181, 0.00213],
-              [0.01924, 0.00144],
-              [0.02027, 0.00086],
-              [0.02119, 0.00038],
-              [0.022, 0.0]
-            ],
-            "axis": [0, 1, 0],
+            "profile": [[0.0, 0.0], [0.002, 0.003], [0.007, 0.004], [0.013, 0.003], [0.019, 0.0011], [0.022, 0.0]],
+            "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           }
         ],
         "thermal": [
           {
-            "id": "th-cup-shell",
-            "of": "cup-shell",
+            "id": "th-cup",
+            "of": "cup",
             "region": "cup",
             "layer": "foil"
           },
           {
             "id": "th-wax",
-            "of": "wax-wick",
+            "of": "wax-top",
             "region": "wax",
             "layer": "wax",
-            "sectionFaces": ["+u", "-u", "+w", "-w", "-v"]
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
           },
           {
             "id": "th-wick",
@@ -2282,11 +2710,11 @@
             "material": "wick-cotton",
             "role": "detail",
             "tone": 0.1,
+            "profile": [[0.0, 0.0], [0.0, 0.00105], [0.0065, 0.00105], [0.0072, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "region": "wick",
-            "layer": "braid",
-            "profile": [[-0.0005, 0.0], [-0.0005, 0.001], [0.0053, 0.001], [0.0053, 0.0]],
-            "axis": [0, 1, 0],
-            "origin": [0, 0, 0]
+            "layer": "braid"
           },
           {
             "id": "th-flame",
@@ -2296,131 +2724,300 @@
           },
           {
             "id": "th-flame-plume",
-            "kind": "extrude",
-            "bone": "flame-tip",
+            "kind": "revolve",
+            "bone": "flame-body",
             "material": "flame",
-            "role": "body",
+            "role": "detail",
             "tone": 0.97,
+            "profile": [[0.0223, 0.0], [0.016, 0.0023], [0.016, 0.00205], [0.022, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "region": "flame",
             "layer": "envelope",
-            "profile": [
-              [0.01, 0.0],
-              [0.00966, 0.00259],
-              [0.00866, 0.005],
-              [0.00707, 0.00707],
-              [0.005, 0.00866],
-              [0.00259, 0.00966],
-              [0.0, 0.01],
-              [-0.00259, 0.00966],
-              [-0.005, 0.00866],
-              [-0.00707, 0.00707],
-              [-0.00866, 0.005],
-              [-0.00966, 0.00259],
-              [-0.01, 0.0],
-              [-0.00966, -0.00259],
-              [-0.00866, -0.005],
-              [-0.00707, -0.00707],
-              [-0.005, -0.00866],
-              [-0.00259, -0.00966],
-              [0.0, -0.01],
-              [0.00259, -0.00966],
-              [0.005, -0.00866],
-              [0.00707, -0.00707],
-              [0.00866, -0.005],
-              [0.00966, -0.00259]
-            ],
-            "plane": "zx",
-            "from": 0.0135,
-            "to": 0.0435,
-            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"],
             "tags": ["flame-plume"]
           }
         ],
         "structure": [
           {
             "id": "member-cup",
-            "of": "cup-shell",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.019], [0.016, 0.0188], [0.0002, 0.0178], [0.0002, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "member": "cup",
             "part": "member"
           },
           {
             "id": "member-wax",
-            "of": "wax-wick",
+            "of": "cup",
             "member": "wax",
             "part": "member"
           },
           {
             "id": "member-wick",
-            "of": "wax-top",
+            "kind": "capsule",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.1,
+            "p0": [-0.0136, 0, 0],
+            "p1": [0.0064, 0, 0],
+            "r0": 0.00045,
+            "r1": 0.00045,
+            "slender": true,
             "member": "wick",
             "part": "member"
           },
           {
-            "id": "member-flame",
-            "of": "flame",
-            "member": "flame",
-            "part": "member"
-          },
-          {
             "id": "member-flame-body",
-            "of": "flame",
+            "kind": "capsule",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.9,
+            "p0": [0.0005, 0, 0],
+            "p1": [0.0129, 0, 0],
+            "r0": 0.0003,
+            "r1": 0.0003,
+            "slender": true,
             "member": "flame-body",
             "part": "member"
           },
           {
             "id": "member-flame-tip",
-            "of": "flame",
+            "kind": "capsule",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "p0": [0.0004, 0, 0],
+            "p1": [0.0124, 0, 0],
+            "r0": 0.00027,
+            "r1": 0.00027,
+            "slender": true,
             "member": "flame-tip",
             "part": "member"
-          },
-          {
-            "id": "mass-wax",
-            "kind": "ellipsoid",
-            "bone": "wax",
-            "material": "aluminium-cup",
-            "role": "detail",
-            "tone": 0.15,
-            "member": "wax",
-            "part": "mass",
-            "radii": [0.0165, 0.015, 0.0165],
-            "transform": {
-              "translation": [0, -0.0018, 0]
-            }
           },
           {
             "id": "support-base-contact",
             "kind": "revolve",
             "bone": "cup",
             "material": "aluminium-cup",
-            "role": "detail",
+            "role": "ground",
             "tone": 0.1,
+            "profile": [[-0.0005, 0.0], [-0.0005, 0.018], [0.0, 0.018], [0.0, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
             "member": "cup",
             "part": "support",
-            "profile": [[0, 0.0155], [0.03, 0.0155]],
-            "axis": [0, 1, 0],
-            "origin": [0, -0.0165, 0],
-            "tags": ["base-contact"],
-            "anchor": "base-contact"
+            "anchor": "base-contact",
+            "tags": ["base-contact"]
           }
         ],
         "decisions": [
           {
-            "en": "Own 1:200 model: the foil cup shell with the drawn thickened trapezoid (33 to 43 mm), the merged wax-and-wick plug on the cup bone (its fill reaches 19.8 mm, above the 16 mm drawn extent of the cup), the one drawn flame drop of 22 mm as a revolve of its outline; the wick bone is drawn only as the wax-top disc of the plan, modelled as the 0.5 mm wax top skin flagged texture (a surface sheet below every print feature, left out of silhouette and feature rules).",
-            "de": "Eigenes 1:200-Modell: die Folienschale mit dem gezeichneten verdickten Trapez (33 bis 43 mm), der zusammengefasste Wachs-Docht-Stopfen am Schälchenknochen (seine Füllung reicht bis 19,8 mm, über die gezeichnete Ausdehnung des Schälchens von 16 mm), der eine gezeichnete Flammentropfen von 22 mm als Drehfläche seines Umrisses; der Dochtknochen ist nur als Wachsscheibe der Draufsicht gezeichnet, modelliert als 0,5 mm dicke Wachshaut mit Kennzeichen texture (eine Oberflächenschicht unter jedem Druckmerkmal, aus Silhouetten- und Merkmalregeln ausgenommen)."
+            "en": "Body 1:200, three masses: the cup with its wax fill as one solid cone of 36 to 38 mm with the wax level sunk 1.5 mm inside the rim (C30: the cavity is below the feature), the wax surface with the wick as a cone of 7 mm on the wick bone, as the plan draws it (a 0.3 mm sheet, flagged texture), and the flame as one drop of 8 mm by 22 mm on flame-body; the separate tongue, the sustainer, embossing and radii are gone. The model keeps the true size of the candle: it is 0.19 mm on paper and is not thickened.",
+            "de": "Körper 1:200, drei Massen: das Schälchen mit seiner Wachsfüllung als ein voller Kegel von 36 auf 38 mm mit dem 1,5 mm im Rand abgesenkten Wachsspiegel (C30: der Hohlraum liegt unter dem Merkmal), die Wachsoberfläche mit dem Docht als Kegel von 7 mm am Dochtknochen, wie ihn die Draufsicht zeichnet (eine Schicht von 0,3 mm, Kennzeichen texture), und die Flamme als ein Tropfen von 8 mm mal 22 mm am Knochen flame-body; die eigene Zunge, der Dochthalter, Prägung und Radien entfallen. Das Modell behält die wahre Grösse der Kerze: sie misst 0,19 mm auf dem Papier und wird nicht verdickt."
           },
           {
-            "en": "Thermal: cup and wax by reference, flame as the one drop, the wick as its own 2 mm braid solid, emitter disc of 30 mm at flame-top; only the total area is compared at this scale.",
-            "de": "Thermik: Schälchen und Wachs als Verweis, Flamme als der eine Tropfen, der Docht als eigener 2-mm-Geflechtkörper, Emitterscheibe von 30 mm bei flame-top; in diesem Maßstab wird nur die Gesamtfläche verglichen."
+            "en": "Thermal 1:200: the cup cone and the wax surface by reference (wax: top face only), the wick as its own 2 mm pin over the cone, the flame drop, and a cone cap on its upper 6 mm as the emitter outlet; only the total area is compared at this scale.",
+            "de": "Thermik 1:200: der Schälchenkegel und die Wachsoberfläche als Verweis (Wachs: nur die Oberseite), der Docht als eigener 2-mm-Stift über dem Kegel, der Flammentropfen und eine Kegelkappe auf seinen oberen 6 mm als Emitterauslass; in diesem Maßstab wird nur die Gesamtfläche verglichen."
           },
           {
-            "en": "Structure: six members referencing the solids, a 30 mm wax mass ellipsoid (the smallest the feature allows, centred at the ground so that it ends below the wax top) and the 30 mm contact disc beneath the base (-16.5 to 13.5 mm); no joints.",
-            "de": "Tragwerk: sechs Stäbe mit Verweis auf die Körper, ein 30-mm-Wachs-Massenellipsoid (das Kleinste, was das Merkmal erlaubt, am Boden zentriert, damit es unter der Wachsoberseite endet) und die 30-mm-Kontaktscheibe unter dem Boden (-16,5 bis 13,5 mm); keine Gelenke."
+            "en": "Structure 1:200: a cone shell with a 0.2 mm wall as the cup member, the solid cone inside it as the wax block, the wick as a slender strand, the two massless flame axes and one full contact disc under the base as the support; no joint or mass markers (one feature, 30 mm, is as large as the candle).",
+            "de": "Tragwerk 1:200: eine Kegelschale mit 0,2 mm Wand als Schälchenstab, der volle Kegel darin als Wachsblock, der Docht als schlanker Strang, die zwei masselosen Flammenachsen und eine volle Kontaktscheibe unter dem Boden als Auflager; keine Gelenk- und Massenmarken (ein Merkmal, 30 mm, ist so gross wie die Kerze)."
           }
         ]
       },
       "500": {
-        "status": "unavailable",
-        "denominator": 500
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "cup",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.019], [0.0145, 0.0183], [0.0145, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "wax-top",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "paraffin",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0.0, 0.0], [0.0, 0.0182], [0.0002, 0.0182], [0.0002, 0.001], [0.007, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "flame",
+            "kind": "revolve",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0015, 0.0028], [0.007, 0.004], [0.022, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-cup",
+            "of": "cup",
+            "region": "cup",
+            "layer": "foil"
+          },
+          {
+            "id": "th-wax",
+            "of": "wax-top",
+            "region": "wax",
+            "layer": "wax",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-wick",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.1,
+            "profile": [[0.0001, 0.0], [0.0001, 0.0011], [0.0071, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "region": "wick",
+            "layer": "braid"
+          },
+          {
+            "id": "th-flame",
+            "of": "flame",
+            "region": "flame",
+            "layer": "envelope"
+          },
+          {
+            "id": "th-flame-plume",
+            "kind": "revolve",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "profile": [[0.0223, 0.0], [0.014, 0.0024], [0.014, 0.00213], [0.022, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "region": "flame",
+            "layer": "envelope",
+            "tags": ["flame-plume"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-cup",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.018], [0.016, 0.019], [0.016, 0.0187], [0.0003, 0.0177], [0.0003, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "cup",
+            "part": "member"
+          },
+          {
+            "id": "member-wax",
+            "kind": "revolve",
+            "bone": "wax",
+            "material": "paraffin",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [[0.0, 0.0], [0.0, 0.013], [0.0135, 0.013], [0.0135, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "wax",
+            "part": "member"
+          },
+          {
+            "id": "member-wick",
+            "kind": "revolve",
+            "bone": "wick",
+            "material": "wick-cotton",
+            "role": "detail",
+            "tone": 0.1,
+            "profile": [[-0.0135, 0.0], [-0.0135, 0.00045], [0.006, 0.00045], [0.006, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "slender": true,
+            "member": "wick",
+            "part": "member"
+          },
+          {
+            "id": "member-flame-body",
+            "kind": "revolve",
+            "bone": "flame-body",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0005, 0.0], [0.0005, 0.00027], [0.0125, 0.00027], [0.0125, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "slender": true,
+            "member": "flame-body",
+            "part": "member"
+          },
+          {
+            "id": "member-flame-tip",
+            "kind": "revolve",
+            "bone": "flame-tip",
+            "material": "flame",
+            "role": "detail",
+            "tone": 0.97,
+            "profile": [[0.0005, 0.0], [0.0005, 0.00025], [0.011, 0.00025], [0.011, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "slender": true,
+            "member": "flame-tip",
+            "part": "member"
+          },
+          {
+            "id": "support-base-contact",
+            "kind": "revolve",
+            "bone": "cup",
+            "material": "aluminium-cup",
+            "role": "ground",
+            "tone": 0.1,
+            "profile": [[-0.0006, 0.0], [-0.0006, 0.018], [0.0, 0.018], [0.0, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "member": "cup",
+            "part": "support",
+            "anchor": "base-contact",
+            "tags": ["base-contact"]
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body 1:500, digital only (the candle is 0.08 mm on paper, the 2D representation is unavailable): the cup with its wax as one solid cone of 36 to 38 mm with a sunk top, the wax surface with a wick cone that reaches the flame, and the flame as one four-station drop of 8 mm by 22 mm, all in true size. The model is already minimal.",
+            "de": "Körper 1:500, nur digital (die Kerze misst 0,08 mm auf dem Papier, die 2D-Darstellung ist nicht verfügbar): das Schälchen mit seinem Wachs als ein voller Kegel von 36 auf 38 mm mit abgesenkter Oberseite, die Wachsoberfläche mit einem Dochtkegel, der die Flamme erreicht, und die Flamme als ein Tropfen von 8 mm mal 22 mm mit vier Stationen, alles in wahrer Grösse. Das Modell ist bereits minimal."
+          },
+          {
+            "en": "Thermal 1:500: the cup cone and the wax surface by reference (wax: top face only), the wick as a cone, the flame drop and its outlet cap; only the total area is compared at this scale.",
+            "de": "Thermik 1:500: der Schälchenkegel und die Wachsoberfläche als Verweis (Wachs: nur die Oberseite), der Docht als Kegel, der Flammentropfen und seine Auslasskappe; in diesem Maßstab wird nur die Gesamtfläche verglichen."
+          },
+          {
+            "en": "Structure 1:500: not the body block but the load path in its plainest form: a cone shell with a 0.3 mm wall, the wax pressure column, plain slender cylinders for the wick strand and the two massless flame axes, and the contact disc as the support. The model is already minimal.",
+            "de": "Tragwerk 1:500: nicht der Körperblock, sondern der Lastpfad in seiner schlichtesten Form: eine Kegelschale mit 0,3 mm Wand, die Wachs-Drucksäule, schlichte schlanke Zylinder für den Dochtstrang und die zwei masselosen Flammenachsen und die Kontaktscheibe als Auflager. Das Modell ist bereits minimal."
+          }
+        ]
       }
     },
     "presentation": {

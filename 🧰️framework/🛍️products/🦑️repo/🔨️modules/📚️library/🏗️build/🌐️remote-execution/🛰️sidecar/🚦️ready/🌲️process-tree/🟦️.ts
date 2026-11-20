@@ -1,6 +1,7 @@
 import {spawn,spawnSync} from "node:child_process";
 import {mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
+import {createHash} from "node:crypto";
 import {scaledMillisecondsV1} from "../../../../🐢️speed/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -10,7 +11,7 @@ export const READY_TREE_POLICY_V1=schema.definitions.Policy.const;
 const P=READY_TREE_POLICY_V1;
 
 /** 🧾️ One row of the process table: the pid, the pid of its parent, the start time in milliseconds since the epoch and, where the table says it, the name of the program. */
-export type ReadyProcessV1=Readonly<{pid:number;ppid:number;startMs:number;name?:string}>;
+export type ReadyProcessV1=Readonly<{pid:number;ppid:number;startMs:number;name?:string;windows?:Readonly<{birth:string;cpu?:Readonly<{kernel:number;user:number}>;workingSetBytes?:number}>}>;
 /** 🪪️ A process named by pid and start time (and, once seen in the table, by the name of its program, so a report can name it): a reused pid has another start time and is another process. */
 export type ReadyKnownV1=Readonly<{pid:number;startMs:number;name?:string}>;
 
@@ -82,12 +83,14 @@ export function readyStallRestartV1(input:Readonly<{consecutive:number;policy?:t
  return{action:"restart",waitMilliseconds:Math.min(policy.stallRestartBackoffMaximumMilliseconds,policy.stallRestartBackoffMilliseconds*2**(count-1))};
 }
 
-/** ⏳️ What to do with a stage past its soft cap: it runs while inside the cap; between the soft and the hard cap (`hardCapMultiplier` times the soft cap) it goes on, `extended`, as long as a counter of its log changed within the stall limit; otherwise it is stopped, `stalled` when the counters stood still, `timeout` at the hard cap. A pure function.
+/** ⏳️ What to do with a stage past its soft cap: it runs while inside the cap; between the soft and the hard cap (the configured stage multiplier times the soft cap) it goes on, `extended`, as long as a counter of its log changed within the stall limit; otherwise it is stopped, `stalled` when the counters stood still, `timeout` at the hard cap. A pure function.
  * @see ./🧪️tests/🐍️.py */
-export function readyDeadlineV1(input:Readonly<{elapsedMs:number;softMs:number;sinceProgressMs:number;policy?:typeof P}>):"run"|"extended"|"timeout"|"stalled"{
+export function readyDeadlineV1(input:Readonly<{stage?:string;elapsedMs:number;softMs:number;sinceProgressMs:number;policy?:typeof P}>):"run"|"extended"|"timeout"|"stalled"{
  const policy=input.policy??P;
  if(input.elapsedMs<=input.softMs)return"run";
- if(input.elapsedMs>input.softMs*policy.hardCapMultiplier)return"timeout";
+ const overrides:Readonly<Record<string,number>>=policy.stageHardCapMultipliers;
+ const multiplier=input.stage!==undefined&&Object.hasOwn(overrides,input.stage)?overrides[input.stage]!:policy.hardCapMultiplier;
+ if(input.elapsedMs>input.softMs*multiplier)return"timeout";
  return input.sinceProgressMs<=policy.stallMilliseconds?"extended":"stalled";
 }
 
@@ -107,15 +110,19 @@ export function readyNormaliseLineV1(line:string,patterns:readonly string[]=P.no
  return text;
 }
 
+const watchdogDigestV1=(text:string):string=>createHash("sha256").update(text).digest("hex");
+
 /** 🐢️ The stall tracker of one stage run: `observe` takes the last lines of the log and answers whether any of them is new, that is differs after normalisation from every line seen earlier in this run; the run made progress exactly then. A line that only changed its seconds counter is not new, one whose counter moved (`1957 of 2927`) is. At most `stallSeenMaximum` distinct lines are kept; a full memory is forgotten at once and counts as progress. Empty lines are no progress. A pure function of the lines seen so far.
  * @see ./🧪️tests/🐍️.py */
-export function readyStallTrackerV1(policy:typeof P=P):Readonly<{observe(lines:readonly string[]):boolean}>{
- const seen=new Set<string>();
- return Object.freeze({observe(lines){
+export function readyStallTrackerV1(policy:typeof P=P,prior:readonly string[]=[]):Readonly<{observe(lines:readonly string[]):boolean;snapshot():readonly string[]}>{
+ const seen=new Set(prior);
+ return Object.freeze({snapshot:()=>[...seen],observe(lines){
   let fresh=false;
   for(const line of lines){
-   const key=readyNormaliseLineV1(line,policy.normalisePatterns);
-   if(key===""||seen.has(key))continue;
+   const normalized=readyNormaliseLineV1(line,policy.normalisePatterns);
+   if(normalized==="")continue;
+   const key=watchdogDigestV1(normalized);
+   if(seen.has(key))continue;
    if(seen.size>=policy.stallSeenMaximum)seen.clear();
    seen.add(key);fresh=true;
   }
@@ -147,20 +154,24 @@ export function readyStepOverdueSecondsV1(boundSeconds:number,policy:typeof P=P)
  return Math.ceil((scaledMillisecondsV1(boundSeconds*1000,policy.speedFactor)+policy.stallStopMilliseconds)/1000);
 }
 
+export type ReadyStepWatchCheckpointV1=Readonly<{movedAt:number|null;identity:string|null;seen:readonly string[]}>;
+
 /** 🪜️ The step watch of one stage run: `observe` takes the last lines of the log and the clock and answers the newest step, whether it is overdue and for how long nothing else moved. Something else moved when a line that is no step line is new after normalisation (a counter such as `taken 8 of 590`, an owner finished, a message) or when the step is another step than before; the seconds counter of the step itself, the processor time of the tree and a repeated heartbeat are not progress, because a wait that re-reads the same thing for hours shows all of them. Overdue is the step past `readyStepOverdueSecondsV1` and nothing else moved for `stallStopMilliseconds`. A pure function of the lines and clocks seen so far.
  * @see ./🧪️tests/🪜️step-overdue */
-export function readyStepWatchV1(policy:typeof P=P):Readonly<{observe(lines:readonly string[],nowMs:number):Readonly<{step:ReadyStepV1|undefined;overdue:boolean;quietMs:number}>}>{
- const seen=new Set<string>(),expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u"));let movedAt:number|null=null,identity:string|null=null;
- return Object.freeze({observe(lines,nowMs){
+export function readyStepWatchV1(policy:typeof P=P,prior?:ReadyStepWatchCheckpointV1):Readonly<{observe(lines:readonly string[],nowMs:number):Readonly<{step:ReadyStepV1|undefined;overdue:boolean;quietMs:number}>;snapshot():ReadyStepWatchCheckpointV1}>{
+ const seen=new Set(prior?.seen),expressions=policy.stepLinePatterns.map(pattern=>new RegExp(pattern,"u"));let movedAt=prior?.movedAt??null,identity=prior?.identity??null;
+ return Object.freeze({snapshot:()=>({movedAt,identity,seen:[...seen]}),observe(lines,nowMs){
   if(movedAt===null)movedAt=nowMs;
   for(const line of lines){
    if(expressions.some(expression=>expression.test(line.replace(/\r/gu,"").trim())))continue;
-   const key=readyNormaliseLineV1(line,policy.normalisePatterns);
-   if(key===""||seen.has(key))continue;
+   const normalized=readyNormaliseLineV1(line,policy.normalisePatterns);
+   if(normalized==="")continue;
+   const key=watchdogDigestV1(normalized);
+   if(seen.has(key))continue;
    if(seen.size>=policy.stallSeenMaximum)seen.clear();
    seen.add(key);movedAt=nowMs;
   }
-  const step=readyStepOfV1(lines,policy),key=step===undefined?null:readyNormaliseLineV1(step.text,policy.normalisePatterns);
+  const step=readyStepOfV1(lines,policy),key=step===undefined?null:watchdogDigestV1(readyNormaliseLineV1(step.text,policy.normalisePatterns));
   if(key!==null&&key!==identity){if(identity!==null)movedAt=nowMs;identity=key;}
   const quietMs=nowMs-movedAt;
   return{step,overdue:step!==undefined&&step.seconds>=readyStepOverdueSecondsV1(step.bound,policy)&&quietMs>=policy.stallStopMilliseconds,quietMs};
@@ -169,9 +180,9 @@ export function readyStepWatchV1(policy:typeof P=P):Readonly<{observe(lines:read
 
 /** 🪤️ The tracker of a wait on a named holder (a log line matching `holderWaitPatterns`): `observe` takes the last lines of the log and the clock and answers for how long the stage has waited for a holder without a round that showed none; a round without a holder line starts the count again.
  * @see ./🧪️tests/🐍️.py */
-export function readyHolderWaitTrackerV1(policy:typeof P=P):Readonly<{observe(lines:readonly string[],nowMs:number):number}>{
- const expressions=policy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u"));let since:number|null=null;
- return Object.freeze({observe(lines,nowMs){
+export function readyHolderWaitTrackerV1(policy:typeof P=P,prior:number|null=null):Readonly<{observe(lines:readonly string[],nowMs:number):number;snapshot():number|null}>{
+ const expressions=policy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u"));let since=prior;
+ return Object.freeze({snapshot:()=>since,observe(lines,nowMs){
   if(!lines.some(line=>expressions.some(expression=>expression.test(line)))){since=null;return 0;}
   since??=nowMs;return nowMs-since;
  }});
@@ -249,19 +260,19 @@ export function readyStagePhaseV1(lines:readonly string[],previous:ReadyPhaseV1,
 export function readyStaleStopV1(phase:ReadyPhaseV1,phaseAgeMs:number,policy:typeof P=P):boolean{return phase!=="executing"&&readyStaleRestartV1(phaseAgeMs,true,policy);}
 
 /** 🧬️ The declared semantics of the code a stage loaded: the value of every `semanticsSources` pointer, keyed by file and pointer, `null` for a source that cannot be read now (a landing may be replacing it). A stage that loaded one semantics produces results that another process accepts exactly while the semantics are the same; an edit of any other file changes nothing a result says. Reads two small files, never a tree. A source is bumped when a result changes that another process accepts or reads (the head key a peer accepts from a sealed read, the persisted record format); it is NOT bumped for a change of how a read waits, what it counts as progress or what it says (R184 changed a wait bound and a progress sign: a bump would hand over every healthy read of the fleet and make peers refuse each other's sealed reads for a change that alters no result). A read that does not end itself on old code is ended from outside by the step rule (`readyStepWatchV1`, reason `step-overdue`). */
-export function readySemanticsV1(root:string,policy:typeof P=P):Readonly<Record<string,string|null>>{
+export function readySemanticsV1(root:string,policy:typeof P=P,fingerprint=(value:string)=>value):Readonly<Record<string,string|null>>{
  const rows:Record<string,string|null>={};
  for(const source of policy.semanticsSources){
   let value:string|null=null;
-  try{let node:unknown=JSON.parse(readFileSync(join(root,source.file),"utf8"));for(const part of source.pointer.split("/").slice(1)){node=(node as Record<string,unknown>)?.[part.replaceAll("~1","/").replaceAll("~0","~")];}if(node!==undefined)value=JSON.stringify(node);}catch{value=null;}
+  try{let node:unknown=JSON.parse(readFileSync(join(root,source.file),"utf8"));for(const part of source.pointer.split("/").slice(1)){node=(node as Record<string,unknown>)?.[part.replaceAll("~1","/").replaceAll("~0","~")];}if(node!==undefined)value=fingerprint(JSON.stringify(node));}catch{value=null;}
   rows[source.file+"#"+source.pointer]=value;
  }
  return Object.freeze(rows);
 }
 
 /** 🧬️ The first semantics source (its file as written in the policy) whose value is now another value than `before`, `null` when none is: the code a stage loaded at its start can no longer produce a result another process would accept. A source that cannot be read now or could not be read before is no change. A pure function of the two files. */
-export function readySemanticsChangedV1(root:string,before:Readonly<Record<string,string|null>>,policy:typeof P=P):string|null{
- const now=readySemanticsV1(root,policy);
+export function readySemanticsChangedV1(root:string,before:Readonly<Record<string,string|null>>,policy:typeof P=P,fingerprint?:(value:string)=>string):string|null{
+ const now=readySemanticsV1(root,policy,fingerprint);
  for(const source of policy.semanticsSources){const key=source.file+"#"+source.pointer,was=before[key],is=now[key];if(was!==null&&was!==undefined&&is!==null&&is!==undefined&&was!==is)return source.file;}
  return null;
 }
@@ -278,11 +289,49 @@ export function readyParseUnixTableV1(text:string,nowMs:number):readonly ReadyPr
  return rows;
 }
 
-/** 📜️ The process table from the lines `pid,ppid,startMs,name` that the PowerShell command of {@link readyTableCommandV1} prints on Windows. */
+const unsigned=(text:string|undefined):number|undefined=>{if(text===undefined||!/^\d+$/u.test(text))return undefined;const value=Number(text);return Number.isSafeInteger(value)?value:undefined;};
+
+/** 📜️ Decodes the tab-separated CIM process table, including exact creation ticks, raw CPU ticks and working-set bytes. */
 export function readyParseWindowsTableV1(text:string):readonly ReadyProcessV1[]{
  const rows:ReadyProcessV1[]=[];
- for(const line of text.split(/\r?\n/u)){const found=/^\s*(\d+),(\d+),(\d+)(?:,(.*?))?\s*$/u.exec(line);if(found!==null)rows.push({pid:Number(found[1]),ppid:Number(found[2]),startMs:Number(found[3]),...found[4]===undefined||found[4]===""?{}:{name:found[4]}});}
+ for(const line of text.split(/\r?\n/u)){
+  const [p,pp,start,birth,k,u,working,name]=line.split("\t"),pid=unsigned(p),ppid=unsigned(pp),startMs=unsigned(start);
+  if(pid===undefined||ppid===undefined||!startMs||pid>0xffffffff||ppid>0xffffffff||birth===undefined||!/^[1-9][0-9]{0,18}$/u.test(birth))continue;
+  const kernel=unsigned(k),user=unsigned(u),workingSetBytes=unsigned(working);
+  rows.push({pid,ppid,startMs,...name?{name}:{},windows:{birth,...kernel===undefined||user===undefined?{}:{cpu:{kernel,user}},...workingSetBytes?{workingSetBytes}:{}}});
+ }
  return rows;
+}
+
+export type ReadyWindowsWatchdogSampleV1=Readonly<{rootBirth:string;cpu:readonly Readonly<{pid:number;birth:string;kernel:number;user:number}>[]}>;
+
+/** 🪟️ Reuses the authorized roster and credits only monotonic processor time of the same Windows process birth. */
+export function readyWindowsTreeSampleV1(input:Readonly<{table:readonly ReadyProcessV1[];root:number;members:readonly ReadyKnownV1[];previous?:ReadyWindowsWatchdogSampleV1;maximum:number;minimumCpuMilliseconds:number}>):Readonly<{checkpoint:ReadyWindowsWatchdogSampleV1;progress:boolean;megabytes:number|null;changed:boolean}>|undefined{
+ const rows=new Map(input.table.map(row=>[row.pid,row])),root=rows.get(input.root),rootBirth=root?.windows?.birth;
+ if(rootBirth===undefined||!input.members.some(member=>member.pid===input.root&&member.startMs===root!.startMs)||input.previous!==undefined&&input.previous.rootBirth!==rootBirth)return undefined;
+ const previous=new Map(input.previous?.cpu.map(row=>[row.pid,row])),cpu:ReadyWindowsWatchdogSampleV1["cpu"][number][]=[],seen=new Set<number>();
+ let bytes=0,complete=true,overflow=false;
+ for(const member of input.members){
+  if(seen.has(member.pid))continue;
+  seen.add(member.pid);
+  const row=rows.get(member.pid),metrics=row?.startMs===member.startMs?row.windows:undefined;
+  if(metrics?.workingSetBytes===undefined)complete=false;
+  else bytes+=metrics.workingSetBytes;
+  if(metrics?.cpu!==undefined){
+   if(cpu.length<input.maximum)cpu.push({pid:member.pid,birth:metrics.birth,...metrics.cpu});
+   else overflow=true;
+  }
+ }
+ if(overflow)cpu.length=0;
+ let ticks=0,changed=input.previous===undefined||previous.size!==cpu.length;
+ for(const row of cpu){
+  const before=previous.get(row.pid);
+  if(before===undefined||before.birth!==row.birth){changed=true;continue;}
+  if(before.kernel===row.kernel&&before.user===row.user)continue;
+  changed=true;
+  if(row.kernel>=before.kernel&&row.user>=before.user)ticks+=row.kernel-before.kernel+row.user-before.user;
+ }
+ return{checkpoint:{rootBirth,cpu},progress:ticks>=input.minimumCpuMilliseconds*10000,megabytes:complete&&Number.isSafeInteger(bytes)?Math.round(bytes/1048576):null,changed};
 }
 
 /** ⏱️ The elapsed time of `ps -o etime=` (`[[dd-]hh:]mm:ss`) in milliseconds, `null` when the text is not that. */
@@ -308,25 +357,28 @@ export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=proc
 /** 🖥️ The command that prints the process table on this platform. */
 export function readyTableCommandV1(platform:NodeJS.Platform=process.platform):Readonly<{command:string;args:readonly string[]}>{
  return platform==="win32"
-  ?{command:"powershell.exe",args:["-NoProfile","-NonInteractive","-Command","Get-CimInstance Win32_Process | ForEach-Object { '{0},{1},{2},{3}' -f $_.ProcessId,$_.ParentProcessId,([DateTimeOffset]$_.CreationDate).ToUnixTimeMilliseconds(),$_.Name }"]}
+  ?{command:"powershell.exe",args:["-NoProfile","-NonInteractive","-Command","Get-CimInstance -ClassName Win32_Process -Property ProcessId,ParentProcessId,CreationDate,KernelModeTime,UserModeTime,WorkingSetSize,Name -ErrorAction Stop | ForEach-Object { if ($null -ne $_.CreationDate) { $born = [DateTimeOffset]$_.CreationDate; @($_.ProcessId,$_.ParentProcessId,$born.ToUnixTimeMilliseconds(),$born.UtcTicks,$_.KernelModeTime,$_.UserModeTime,$_.WorkingSetSize,$_.Name) -join [char]9 } }"]}
   :{command:"ps",args:["-A","-o","pid=,ppid=,etime=,comm="]};
 }
 
 /** 📜️ Reads the process table of this machine; an empty list when the command fails or takes longer than `timeoutMilliseconds`. The start times are counted from the moment the command was started, not from the moment it ended: `ps` states the elapsed time of a process as of its own start, so a table that took 30 s on a swapping machine otherwise made every process look 30 s younger and the stage wrapper "another process that reused the pid". `run` replaces the command (a test); it answers the text or `null`.
  * @see ./🧪️tests/🪜️step-overdue */
-export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now,run?:(command:string,args:readonly string[],timeoutMilliseconds:number)=>Promise<string|null>):Promise<readonly ReadyProcessV1[]>{
+export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now,run?:(command:string,args:readonly string[],timeoutMilliseconds:number)=>Promise<string|null>,signal?:AbortSignal):Promise<readonly ReadyProcessV1[]>{
+ if(signal?.aborted)return Promise.resolve([]);
  const {command,args}=readyTableCommandV1(platform),sampledAt=now();
  const parse=(out:string|null):readonly ReadyProcessV1[]=>out===null?[]:platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out,sampledAt);
- if(run!==undefined)return run(command,args,timeoutMilliseconds).then(parse,()=>[]);
+ if(run!==undefined)return run(command,args,timeoutMilliseconds).then(text=>signal?.aborted?[]:parse(text),()=>[]);
  return new Promise(done=>{
   let out="",finished=false;
-  const end=(table:readonly ReadyProcessV1[])=>{if(!finished){finished=true;clearTimeout(timer);done(table);}};
+  const end=(table:readonly ReadyProcessV1[])=>{if(!finished){finished=true;clearTimeout(timer);signal?.removeEventListener("abort",stop);done(table);}};
   let child:ReturnType<typeof spawn>;
   try{child=spawn(command,[...args],{windowsHide:true,stdio:["ignore","pipe","ignore"]});}catch{return done([]);}
-  const timer=setTimeout(()=>{try{child.kill();}catch{}end([]);},timeoutMilliseconds);
+  const stop=()=>{try{child.kill();}catch{}end([]);};
+  const timer=setTimeout(stop,timeoutMilliseconds);
+  signal?.addEventListener("abort",stop,{once:true});
   child.stdout?.on("data",chunk=>{out+=String(chunk);});
   child.on("error",()=>end([]));
-  child.on("close",()=>end(parse(out)));
+  child.on("close",code=>end(code===0?parse(out):[]));
  });
 }
 

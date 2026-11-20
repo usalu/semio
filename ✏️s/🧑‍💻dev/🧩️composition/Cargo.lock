@@ -2476,6 +2476,7 @@ dependencies = [
  "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-offset",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
@@ -2526,6 +2527,26 @@ dependencies = [
  "semio-framework-3d-brep-tolerance",
  "semio-framework-3d-brep-vector",
  "semio-framework-mesh-component-references",
+ "semio-framework-mesh-engine",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-native-registry"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-construction",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-hash",
  "semio-framework-mesh-engine",
  "semio-framework-value",
 ]
@@ -2591,6 +2612,17 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-spline-construction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -10608,9 +10640,9 @@ dependencies = [
  "semio-os-kernel",
  "semio-os-store-codec-registry",
  "semio-os-store-operation-wire",
- "semio-os-store-text-io",
  "semio-plugin-ownership",
  "semio-plugin-window-config-mutation",
+ "semio-plugin-window-config-owner-contract",
  "semio-plugin-window-config-registry",
  "semio-plugin-window-config-replace",
 ]
@@ -10648,6 +10680,22 @@ dependencies = [
  "semio-plugin-window-config-registry",
  "semio-plugin-window-config-replace",
 ]
+
+[[package]]
+name = "semio-plugin-window-config-owner-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-os-kernel",
+ "semio-os-store-codec-registry",
+ "semio-os-store-operation-wire",
+ "semio-plugin-ownership",
+ "semio-plugin-window-config-mutation",
+]
+
 
 [[package]]
 name = "semio-plugin-window-config-registry"
@@ -16501,6 +16549,7 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-fonts",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lexer",
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-mut-base",
  "semio-s-artifact-stdio-pdf-schema-2",
@@ -16544,6 +16593,14 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-locale",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-lexer"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-pdf-model",
+ "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
 
 [[package]]
@@ -24533,10 +24590,8 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-job",
  "semio-framework-mesh-engine",
- "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-value",
- "semio-framework-value-native-owned",
  "semio-os-flow",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
@@ -24545,6 +24600,8 @@ dependencies = [
  "semio-s-artifact-stdio-step",
  "semio-s-artifact-stdio-step-geometry",
  "semio-s-plugin-flow-brep-mesh",
+ "semio-s-plugin-flow-brep-original-jobs",
+ "semio-s-plugin-flow-brep-tessellation",
  "semio-s-spatial-kernel-semio-session",
 ]
 
@@ -24563,6 +24620,34 @@ dependencies = [
  "semio-os-flow",
  "semio-os-kernel-neural-engine",
  "semio-plugin",
+ "semio-s-spatial-kernel-semio-session",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-brep-original-jobs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-engine",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-os-kernel-neural-engine",
+ "semio-s-artifact-stdio-step-geometry",
+ "semio-s-spatial-kernel-semio-session",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-brep-tessellation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-os-flow",
+ "semio-plugin",
+ "semio-s-plugin-flow-brep-mesh",
  "semio-s-spatial-kernel-semio-session",
 ]
 

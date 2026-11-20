@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 struct FixtureJob {
     operation: Operation,
     id: u64,
-    source: Option<usize>,
+    source: Option<(usize, semio_framework_job::OriginalSourceTurnIdentity)>,
     close_open: &'static AtomicBool,
     closes: &'static AtomicUsize,
     fail: bool,
@@ -15,7 +15,7 @@ impl FixtureJob {
     fn bind_source(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         assert_eq!(cx.operation(), self.operation.operation);
         assert_eq!(cx.generation(), self.operation.generation);
-        let source = cx.original_source_parent()?.source_identity()?;
+        let source = (cx.original_source_parent()?.source_identity()?, cx.original_source_turn_identity().expect("headless dispatch"));
         if let Some(original) = self.source { assert_eq!(source, original); }
         else {
             self.source = Some(source); cx.consume_fuel(1);
@@ -46,7 +46,7 @@ impl InteractiveJob for FixtureJob {
         if self.source.is_none() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         assert_eq!(cx.operation(), self.operation.operation);
         assert_eq!(cx.generation(), self.operation.generation);
-        assert_eq!(Some(cx.original_source_parent()?.source_identity()?), self.source);
+        assert_eq!(Some((cx.original_source_parent()?.source_identity()?, cx.original_source_turn_identity().expect("headless dispatch"))), self.source);
         if !self.close_open.load(Ordering::SeqCst) { return Ok(InteractiveJobCloseStep::Blocked); }
         semio_framework_job::close_original_granted_step(cx, |grant| {
             if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetainedWorkOutcome::<_, ValueError> { result: Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }

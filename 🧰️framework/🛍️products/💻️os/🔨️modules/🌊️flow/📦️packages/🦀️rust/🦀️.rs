@@ -88,7 +88,7 @@ pub use semio_os_flow_host_session::{
     flow_eval_step_ledger, flow_eval_tick_budget, FLOW_EVAL_TICK_ELAPSED_CEILING_US, FLOW_EVAL_TICK_STEP_BUDGET, flow_host_with_session, FlowBackedNodeGraphExtras,
     FlowEvalPublication, FlowEvalPublicationLedger, FlowEvalSession, FlowEvalSessionState, FlowEvalWindowKey, FlowEvalWindowKeyWork, FlowEvalWindowKeyAdvance, FlowEvalStepLedger, FlowEvaluationWork, FlowEvaluationCompletion, FlowEvaluationPipeline, FlowEvaluationPrepared, FlowWorkPublication, invocation_publication, original_window_latch, FlowEvaluationReplyAddress,
     FlowEvaluationReplyIntakeSource, FlowEvaluationReplyReceiver, FlowInvocationIdentity, FlowInvocationOrigin, FlowInvocationOriginLease, FlowPreviewCompletedAddress,
-    FlowPreviewCompletedIntakeSource, FlowPreviewCompletedReceiver, FlowPreviewLedgerFold, FlowSnapshotIntakeFailure, io, merge_unanswered_eval_entries,
+    FlowPreviewCompletedIntakeSource, FlowPreviewCompletedReceiver, FlowPreviewLedgerFold, FlowPreviewMesh, FlowSnapshotIntakeFailure, io, merge_unanswered_eval_entries,
     NodeEvalStatus, preview_tessellate_node_hash, PreviewChainStatus, PreviewEvalOutcome, PreviewEvalPhase, PreviewEvalProgress,
     PreviewEvalStatus, PreviewTessellateOutcome, PreviewTessellatePhase, PreviewTessellateProgress, PreviewTessellateStatus, record_flow_eval_step,
     reset_flow_eval_publication_ledger, reset_flow_eval_step_ledger, retire_invocation_reply_cold, unserved_flow_operator_kinds, initial_flow_status_json,

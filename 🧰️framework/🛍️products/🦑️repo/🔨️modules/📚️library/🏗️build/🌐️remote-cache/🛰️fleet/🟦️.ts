@@ -129,9 +129,10 @@ const sealedSignedV1=(root:string,group:string,audience:"cache"|"execution",base
  let found=sealedFetchers.get(key);
  if(found===undefined){
   let held:{key:string;at:number}|undefined;
-  const serverKey=async():Promise<string|undefined>=>{
+   const serverKey=async(_url:URL,signal?:AbortSignal):Promise<string|undefined>=>{
+    signal?.throwIfAborted();
    if(held!==undefined&&Date.now()-held.at<60000)return held.key;
-   const store=fleetStoreRootV1(root),read=store===undefined?undefined:await readFleetOriginKeyV1([store],`${group}-server`);
+    const store=fleetStoreRootV1(root),read=store===undefined?undefined:await readFleetOriginKeyV1([store],`${group}-server`,signal);
    if(read!==undefined)held={key:read,at:Date.now()};
    return read;
   };

@@ -1,0 +1,9 @@
+# Process Model File Picker Trace
+
+In the demonstrator, enter `/#bearbeiten`, open the `catalogue` document tab, and expand the stock section `process3d-play-catalogue.stock`. Its import tree row has the stable element ID `process3d-catalogue.stock-import`; use the existing `paneElementSelector("bearbeiten", id)` convention and click its `[data-slot="tree-label"]`. Arm `page.waitForEvent("filechooser")` before clicking and call `setFiles` on the resulting chooser. The editor also declares the shell action `loadModelRequest` with English label `Load Model…` and German label `Modell laden…`.
+
+The row emits `RequestFileOpen` for one file, with accept `.stp,.step,.obj,.stl,.glb`, read as a data URL, then dispatches `importModelFile` with name and payload. The React shell's `requestFileOpen` reads the complete file via `FileReader.readAsDataURL` and has no browser-side size check on this path. The separate natural-file route has a 512 MiB browser gate; it does not apply to this effect. The editor's `importModelFile` tool contract has an 8,192-byte raw command envelope, including data URL and serialized arguments, so the source file must be considerably smaller than 6 KiB to fit after base64 expansion and overhead.
+
+This is a source trace; the locator has not been exercised in a live browser in this investigation.
+
+Standalone uses the same actual DOM `id` on tree items: `[id="process3d-catalogue.stock-import"] [data-slot="tree-label"]`. The stock section has `default_open=false`. The effect is typed in `🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🟦️.ts` and owned in Rust by `🎠️kernel/🦀️.rs`. Its React handler in `📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/📥️document-load-effects/🟦️.ts` receives no `maxRawInputBytes`; the effect type has no such field and no renderer TypeScript reference was found.

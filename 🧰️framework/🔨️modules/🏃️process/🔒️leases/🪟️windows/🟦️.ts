@@ -26,6 +26,12 @@ export function leaseDatabaseUnopenableBusyV1(error:unknown,platform:string=proc
  return rule!==undefined&&(value?.code===rule.code||((value?.errcode??value?.errno??-1)&255)===rule.primary);
 }
 
+/** 🔁️ Whether SQLite reports the database file replaced or moved under an open connection (`SQLITE_IOERR_VNODE`, extended result 6922, raised by macOS when a file's vnode changes); the connection is dead and only a close and reopen recovers. See https://www.sqlite.org/rescode.html#ioerr_vnode */
+export function leaseDatabaseReplacedV1(error:unknown):boolean{
+ const rule=policy.replaced,value=error!==null&&typeof error==="object"?error as{code?:string;errcode?:number;errno?:number}:undefined;
+ return value?.code===rule.code||(value?.errcode??value?.errno)===rule.extended;
+}
+
 /** ⏱️ The pauses before a transiently unopenable lease database is given up on, in milliseconds. */
 export const leaseUnopenablePausesV1:readonly number[]=Object.freeze([...policy.pausesMilliseconds]);
 

@@ -121,10 +121,14 @@ const decodeRows=(bytes:Uint8Array,expected:GenerationEvidenceV1):(readonly unkn
  decodedLast={sha256:expected.sha256,rows,timer};
  return rows;
 };
-const evidenceOf=(rows:readonly (readonly unknown[])[],suffix:string):Readonly<{evidence:GenerationEvidenceV1;file:Readonly<{name:string;bytes:Buffer}>}>=>{
- const bytes=encodeRows(rows),sha256=generationSha256V1(bytes);
- if(rows.length>protocol.maximumRows||bytes.length>protocol.maximumEvidenceBytes)throw Error("Generation evidence capacity exceeded");
- return Object.freeze({evidence:Object.freeze({name:sha256+suffix,sha256,bytes:bytes.length,rows:rows.length}),file:Object.freeze({name:sha256+suffix,bytes})});
+/** 🌊️ Encodes evidence rows one by one into digested chunks, so a capture never holds every row as a nested array; the bytes are the rows as JSON lines, the name is their digest with the suffix. */
+export const evidenceSinkV1=(suffix:string)=>{
+ const hash=createHash("sha256"),parts:Buffer[]=[];let pending:string[]=[],rows=0,bytes=0;
+ const flush=()=>{if(!pending.length)return;const chunk=Buffer.from(pending.join(""));hash.update(chunk);parts.push(chunk);bytes+=chunk.length;pending=[];if(bytes>protocol.maximumEvidenceBytes)throw Error("Generation evidence capacity exceeded");};
+ return{
+  push(row:readonly unknown[]):void{if(++rows>protocol.maximumRows)throw Error("Generation evidence capacity exceeded");pending.push(JSON.stringify(row)+"\n");if(pending.length>=4096)flush();},
+  finish():Readonly<{evidence:GenerationEvidenceV1;file:Readonly<{name:string;bytes:Buffer}>}>{flush();const sha256=hash.digest("hex");return Object.freeze({evidence:Object.freeze({name:sha256+suffix,sha256,bytes,rows}),file:Object.freeze({name:sha256+suffix,bytes:Buffer.concat(parts)})});},
+ };
 };
 const deferred=(reason:string,path?:string):GenerationCaptureResultV1=>Object.freeze({status:"deferred",reason,...(path===undefined?{}:{path})});
 
@@ -132,29 +136,29 @@ const deferred=(reason:string,path?:string):GenerationCaptureResultV1=>Object.fr
 export async function captureGenerationReceiptV1(input:GenerationCaptureInputV1):Promise<GenerationCaptureResultV1>{
  const{workspace,storeRoot,control,membership}=input,threshold=BigInt(Math.trunc(input.startedAtMs)-protocol.settleMilliseconds)*1000000n;let work=0;
  const advance=async()=>{if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);};
- const frontier:(readonly unknown[])[]=[],listed=new Map<string,readonly Readonly<{name:string;kind:string}>[]>(),memo=new Map<string,boolean>();
- for(const row of membership.paths)if(row.list)listed.set(row.path,row.list);
+ const frontier=evidenceSinkV1(protocol.frontierSuffix),listed=new Map<string,number>(),memo=new Map<string,boolean>(),rowsOf=membership.paths,count=rowsOf.length;
+ for(let index=0;index<count;index++){const row=rowsOf[index]!;if(row.list)listed.set(row.path,index);}
  const relevant=(path:string):boolean=>{
   const known=memo.get(path);if(known!==undefined)return known;
-  const list=listed.get(path);memo.set(path,true);
+  const at=listed.get(path),list=at===undefined?undefined:rowsOf[at]!.list;memo.set(path,true);
   const value=list===undefined||list.some(entry=>entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&relevant(join(path,entry.name)));
   memo.set(path,value);return value;
  };
- for(const row of membership.paths){
-  await advance();const path=posixRelative(workspace,row.path);
+ for(let index=0;index<count;index++){
+  const row=rowsOf[index]!;await advance();const path=posixRelative(workspace,row.path);
   if(!row.list){frontier.push(["s",path,...row.state]);continue;}
   const facts=lstatBig(row.path);
   if(!facts||!facts.isDirectory()||stateTuple(facts)!==JSON.stringify(row.state))return deferred("membership-directory-moved",path);
   frontier.push(["d",path,String(facts.dev),String(facts.ino),Number(facts.mode),String(facts.mtimeNs),String(facts.ctimeNs),facts.mtimeNs<threshold&&facts.ctimeNs<threshold?1:0,generationProjectionDigestV1(row.list),generationProjectionDigestV1(row.list.filter(entry=>entry.kind!=="directory"||relevant(join(row.path,entry.name)))),relevant(row.path)?1:0]);
  }
- const observations:(readonly unknown[])[]=[];
+ const observations=evidenceSinkV1(protocol.executionSuffix);
  for(const row of input.execution.observations){
   await advance();
   if(row.full&&row.stamp!==null){const parts=row.stamp.split(":");if(BigInt(parts[5]!)>=threshold||BigInt(parts[6]!)>=threshold)return deferred("provider-observation-unsettled",generationLocationV1(row.path,workspace,storeRoot));}
   observations.push(["o",generationLocationV1(row.path,workspace,storeRoot),kindLetter(row.kind),row.anchor,row.stamp,row.target,row.full?1:0]);
  }
  const inputs=input.inputs.map(group=>Object.freeze({scope:group.scope,sources:Object.freeze(group.sources.map(source=>Object.freeze({path:generationLocationV1(source.path,workspace,storeRoot),kind:source.kind,dev:source.dev,ino:source.ino,mode:source.mode,sha256:source.kind==="file"?generationSha256V1(source.bytes):null})))}));
- const frontierFile=evidenceOf(frontier,protocol.frontierSuffix),executionFile=evidenceOf(observations,protocol.executionSuffix),sha=(text:string)=>generationSha256V1(text);
+ const frontierFile=frontier.finish(),executionFile=observations.finish(),sha=(text:string)=>generationSha256V1(text);
  const receipt=sealGenerationReceiptV1({
   version:1,purpose:"dependency-generation-receipt",scope:input.scope,walkStamp:protocol.walkStamp,runtime:input.runtime,producer:input.producer,recipeSha256:input.recipeSha256,ownershipSha256:input.ownershipSha256,required:[...input.required],inputs,
   membership:{frontier:frontierFile.evidence,texts:membership.texts.map(row=>({path:row.path,sha256:row.sha256}))},

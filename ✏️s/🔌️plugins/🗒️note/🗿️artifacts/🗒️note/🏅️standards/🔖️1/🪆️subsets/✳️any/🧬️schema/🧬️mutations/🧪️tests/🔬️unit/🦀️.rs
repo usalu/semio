@@ -53,7 +53,7 @@ fn sample_snapshot() -> NoteSnapshot {
         rows: vec![vec![crate::NoteTableCell { content: String::new() }, crate::NoteTableCell { content: String::new() }]],
     });
     snapshot.blocks.push(NoteBlockNode::Math { id: "b4".into(), name: "Math".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false, tex: "x".into(), display_mode: true });
-    snapshot.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None });
+    snapshot.assets.cold_insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None });
     snapshot
 }
 

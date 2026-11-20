@@ -25,4 +25,6 @@ semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-diff = { workspace = true }
+semio-s-artifact-fem-3d-guards = { workspace = true }
 

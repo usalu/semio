@@ -67,9 +67,9 @@
       "durationMs": 30000
     },
     "expectedCounts": {
-      "targets": 70,
+      "targets": 74,
       "hosts": 1,
-      "playgrounds": 156
+      "playgrounds": 158
     },
     "rejectedMaxRows": 128
   }

@@ -1,5 +1,43 @@
 # Readiness Report: Mit-Bestand Demonstrator CDN Redeploy
 
+## November 20 verification at 07:55 PST
+
+Three of 32 modules have current build receipts: Energy, Flow BIM and Flow Dictionary. Both static-locale Energy probes timed out before the shell reported ready, as did the independent probe of its linked English guest. Fresh browser tracing reached `setActiveExample` and remained in command processing through epoch 110,855. The last full static suite is still 0/16. Packaging is pending.
+
+Overnight builds repeatedly failed while compiling Window configuration and admitting the spatial session. The current registry and its caller forward the full turn ceiling. The spatial crate now passes Wasm source admission at 252,921 bytes. The two build lanes are running Playbook and FEM. Removing 13,228 MiB of obsolete compiler logs from completed failed runs restored Rust image headroom. The latest failed runs and the per-run reports remain available.
+
+## Current verification on November 19
+
+CDN readiness is pending. The last complete eight-pane run recorded 0/16 passes. The Rust cache is writable after remount, and the release site rebuilt with host support for long openings. The host drove the previously staged Energy guest through 112 opening crossings in 16 seconds. The bridge suite passed 20/20, the opening suite 32/32, and the browser health contract suite 22/22. Native Cargo checked all four generator-related packages successfully. The updated Energy and procedural modules still need browser verification. Packaging requires all 16 checks to pass against the final static site.
+
+### Build evidence at 19:31 PST
+
+The staged Generator accepted the wide contribution command in both languages, then failed during maintenance. Its compiled instance-app unit predates the reserved-return accounting fix. The staged Energy completed Store creation, then stalled at window registration. Both locale probes failed for each guest. The window donation fix is in the clean Energy build. Demonstrator is compiling, and Procedural and FEM have the next two queue slots. The durable archive is pending the final static acceptance run.
+
+### Build evidence at 20:20 PST
+
+The fresh Procedural and Demonstrator retries stopped at the BREP crate source boundary. A crate split is in progress. The clean Energy component reached final Rust code generation, and Flow's BIM extension passed source admission. CAD and Process also need another build after the split. The native mounted-owner suite passed 15/15 and its independent fixture suite passed 19/19. The final verifier now compares all 32 copied site receipts with the receipts from successful queue runs; the last complete browser result is still 0/16.
+
+### Build evidence at 20:41 PST
+
+Flow's BIM extension staged successfully. Its receipt starts with source digest `3b335836cef6`. Procedural passed source admission after the BREP split and is compiling. The final Energy component is in Rust code generation. The most recent complete static browser suite remains 0/16. The native Flow catalogue owner passed its targeted executable test, and the real release tree passed the packaging command's local-reference scan. There is no acceptance-verified archive yet.
+
+### Build evidence at 21:17 PST
+
+The 1,026-unit Energy build reached its first example-selection action in the English diagnostic browser. The guest refused a live maintenance turn at epoch 24,527. Its TimeTravel dependency predates the Store initialization fix. A second Energy build is queued. The trace and its provenance are in `🔬️early-energy-live-maintenance.md`. The last complete static result is still 0/16.
+
+Procedural reached 1,097 compiler units. Three errors affected BREP curve fitting, its analysis dependency, and canonical JSON for a PDF indirect object. The consuming PDF snapshot crate now passes its pinned Rust check. Ajv and SQLite validated all ten COS wire tags. A subsequent BREP edit pushed the native registry beyond 4,000 active lines and stopped Demonstrator and CAD at admission. The spline-construction split brings that crate back below the limit. Flow Dictionary is compiling while the affected hubs await their next queue runs.
+
+### Build evidence at 21:29 PST
+
+The optimized Energy release failed both locale probes. The ingress trace shows live maintenance exhausted its progress credit immediately after acknowledgement of the new instance. The first example-selection action then encountered that existing fault. Its replacement and Procedural are building. Flow Dictionary and Flow BIM have successful current queue receipts. Packaging awaits a rebuilt site with all 16 static boots passing.
+
+### Build evidence at 22:34 PST
+
+The last complete static run remains 0/16. Current receipts cover Flow BIM and Dictionary. Procedural linked 1,207 units on its first run but failed the staging writer check. Its second run exposed new dependencies in BREP and the PDF graph projection. The locked PDF graph now resolves the lexer directly. The next Procedural run follows Demonstrator, which has cleared disk admission. Energy is compiling with the source-publication repair. The native window harness passes the former post-capture stall and reaches close at turn 4,585. Its close still has 432 bytes awaiting accounting.
+
+The following November 18 snapshot is historical. The November 19 results above supersede it.
+
 Draft, 2026-11-18. Ticket `MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS`, goal `runningdemonstrator`. Sources: the ticket folder markdown files (main log `🚀️redeploy-log.md`) and the driver scripts in the ticket folder. Fixes dated 2026-11-17 to the early hours of 2026-11-18.
 
 ## Status

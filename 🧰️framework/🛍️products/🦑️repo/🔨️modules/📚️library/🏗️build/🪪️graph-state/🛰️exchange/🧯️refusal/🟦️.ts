@@ -9,9 +9,9 @@ export type GraphRefusalCodeV1=(typeof GRAPH_REFUSAL_POLICY_V1.rows)[number]["co
 export type GraphRefusalV1=Readonly<{code:GraphRefusalCodeV1;status:number|null;detail:string;transient:boolean;deterministic:boolean;stored:boolean;text:string}>;
 
 /** 📥️ What a request ended with: an HTTP status, no answer in time, no connection, an open breaker, or a limit of the client named by its code. */
-export type GraphAnswerV1=number|"timeout"|"network"|"breaker"|"claim-lost"|"no-upload"|"limit-document"|"limit-entry"|"limit-documents";
+export type GraphAnswerV1=number|"timeout"|"network"|"breaker"|"claim-lost"|"no-upload"|"leaf-missing"|"limit-document"|"limit-entry"|"limit-documents";
 
-const LOCAL=new Set(["claim-lost","no-upload","limit-document","limit-entry","limit-documents"]);
+const LOCAL=new Set(["claim-lost","no-upload","leaf-missing","limit-document","limit-entry","limit-documents"]);
 
 /** 🧯️ Classifies one answer: the first row of the policy whose conditions hold (kind of answer, status range, words of the body). A pure function.
  * @see ./🧪️tests/🐍️.py */

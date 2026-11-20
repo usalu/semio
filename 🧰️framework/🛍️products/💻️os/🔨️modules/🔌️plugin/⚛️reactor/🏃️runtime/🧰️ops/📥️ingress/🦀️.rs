@@ -3,7 +3,7 @@
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_decl_app::{ArtifactApp, MediaArtifactError};
 use semio_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
-use semio_framework_value::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind};
 use semio_framework::kernel::{Effect, InvocationResult};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use semio_framework::manifest::{CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -212,7 +212,8 @@ impl PluginCommandIngress {
 
     pub fn advance_original(self,moves:usize,cx:&mut semio_framework_job::StepContext<'_>)->PluginCommandIngressStep{
         if let Self::FailedDecoded{mut owner,mut failure,identity,mut close_failure,mut compound,mut raw_media}=self{
-            if identity!=(cx.operation(),cx.generation())||cx.retirement_should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
+            if identity!=(cx.operation(),cx.generation()){return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:ValueError::literal(ValueRefusalKind::InvariantViolated,"failed command retirement runs under another operation or generation than its failure").into()}}
+            if cx.retirement_should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
             if let Some(actual)=close_failure.take(){return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
             if raw_media.is_some()||!owner.media_place.terminal_is_empty(){
                 match cx.with_original_retirement(|cx|admit_place(&mut owner.media_place,&mut raw_media,cx)){Ok(Some(original))=>{if failure.is_none(){failure=Some(original)}else{close_failure=Some(original)}},Ok(None)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
@@ -224,7 +225,7 @@ impl PluginCommandIngress {
             }
             let grant=cx.retained_grant();
             if !owner.terminal_is_empty(){
-                match owner.close_original_step(cx){Ok(_)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
+                match cx.with_original_retirement(|cx|owner.close_original_step(cx)){Ok(_)=>{},Err(actual)=>return PluginCommandIngressStep::Refused{owner:Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media},failure:actual}}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
             if grant.maximum_items>0&&grant.maximum_depth>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).expect("original failure donation was preflighted");cx.consume_fuel(1);return PluginCommandIngressStep::TerminalOriginalFailure(failure.take().expect("failed decoded initial source remains original"))}

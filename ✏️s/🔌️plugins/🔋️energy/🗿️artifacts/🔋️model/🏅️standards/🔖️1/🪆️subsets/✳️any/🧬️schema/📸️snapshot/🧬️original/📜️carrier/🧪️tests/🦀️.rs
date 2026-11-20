@@ -59,3 +59,17 @@ fn document_value_agrees_with_an_independent_json_reader(){
 fn a_wire_value_outside_the_schema_is_refused_without_a_leaked_owner(){
  assert!(EnergyModelSnapshot::from_document(DslValue::Null).is_err());
 }
+
+#[test]
+fn engine_model_pack_uses_the_canonical_document_field(){
+ let model=crate::model::Model{name:"direct-pack".into(),..Default::default()};
+ let options=PackEncodeOptions::default();
+ let bytes=EnergyModelSnapshot::encode_model_pack(&model,&options).unwrap();
+ let(header,body)=unwrap_binary(&bytes).unwrap();
+ assert!(header.matches_identity(EnergyModelSnapshot::envelope_id(),Component::Pack,1));
+ let(record,_)=pack_rt::decode_document(&body,&EnergyModelDocument::__dsl_spec(),&PackDecodeOptions::default()).unwrap();
+ let Some(FieldValue::Value(document))=record.fields.get(&EnergyModelDocument::FIELD)else{panic!("canonical document field is absent")};
+ let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(document)).unwrap();
+ let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&EnergyModelSnapshot::document_value(&model))).unwrap();
+ assert_eq!(actual,expected);
+}

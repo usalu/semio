@@ -31,12 +31,12 @@ use semio_os_kernel::io::io_mechanism::Deserializer;
 /// 🔁️ The part of the house that the import understands: no roof, stair, railing, curtain wall, sloped slab or inferred space.
 fn importable() -> ModelSnapshot {
     let mut model = house();
-    model.roofs.clear();
-    model.stairs.clear();
-    model.railings.clear();
-    model.curtain_walls.clear();
-    model.slabs.remove("sl-balcony");
-    model.spaces.remove("sp-1");
+    model.roofs.cold_clear();
+    model.stairs.cold_clear();
+    model.railings.cold_clear();
+    model.curtain_walls.cold_clear();
+    model.slabs.cold_remove("sl-balcony");
+    model.spaces.cold_remove("sp-1");
     model
 }
 
@@ -262,12 +262,12 @@ fn the_phase_of_every_importable_element_survives_the_round_trip() {
 /// 🏷️ The part of the psets model that the import understands: the house without roofs, stairs, railings, curtain walls, the sloped slab and the inferred space.
 fn psets_importable() -> ModelSnapshot {
     let mut model = psets();
-    model.roofs.clear();
-    model.stairs.clear();
-    model.railings.clear();
-    model.curtain_walls.clear();
-    model.slabs.remove("sl-balcony");
-    model.spaces.remove("sp-1");
+    model.roofs.cold_clear();
+    model.stairs.cold_clear();
+    model.railings.cold_clear();
+    model.curtain_walls.cold_clear();
+    model.slabs.cold_remove("sl-balcony");
+    model.spaces.cold_remove("sp-1");
     model
 }
 

@@ -79,10 +79,10 @@ async fn note_document_round_trips_assets_and_grid_settings() {
         snap_grid_spacing: Some(8.0),
         pencil_width: Some(3.0),
         eraser_radius: Some(12.0),
-        assets: BTreeMap::new(),
+        assets: Default::default(),
         linked_artifact: None,
     };
-    document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
+    document.assets.cold_insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
     document.grid_subdivisions = Some(6.0);
     document.grid_opacity = Some(0.5);
     let json_text = semio_framework_pack_json::to_json_string(&document);

@@ -4,6 +4,7 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧱️primitives/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
@@ -37,6 +38,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️frames-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🔎️decisions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🏗️fields/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
     "🔨️modules/🧩️drawing-composition/📦️packages/🦀️rust",
@@ -255,6 +257,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️p
 [workspace.dependencies.semio-s-artifact-layout-layout-engine-export]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-layout-layout-engine-export-primitives]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧱️primitives/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-layout-layout-engine-json]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust"
 
@@ -287,3 +292,6 @@ redundant_clone = "warn"
 
 [workspace.dependencies.semio-s-artifact-layout-layout-mutations-decisions]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🔎️decisions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-layout-layout-mutations-fields]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️retained/🏗️fields/📦️packages/🦀️rust"

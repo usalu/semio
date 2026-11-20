@@ -6,12 +6,12 @@ extern crate self as semio_s_artifact_procedural_3d_brep_surface;
 
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_brep_curve::coincide;
-use semio_s_artifact_procedural_3d_brep_curve::cross;
 use semio_s_artifact_procedural_3d_brep_curve::direction;
 use semio_s_artifact_procedural_3d_brep_curve::dot;
 use semio_s_artifact_procedural_3d_brep_curve::guarded;
 use semio_s_artifact_procedural_3d_brep_curve::minus;
 use semio_s_artifact_procedural_3d_brep_curve::norm;
+use semio_s_artifact_procedural_3d_brep_curve::path_wire;
 use semio_s_artifact_procedural_3d_brep_curve::points;
 use semio_s_artifact_procedural_3d_brep_curve::refusal;
 use semio_s_artifact_procedural_3d_phased_job::Pipeline;
@@ -28,7 +28,6 @@ use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
 use semio_framework_3d_brep_curve::Curve3;
-use std::f64::consts::PI;
 
 //#region 🔖️Fit
 /// 🧭️ The plane of a closed outline: its mean point and the unit normal turned the way the outline winds counter-clockwise.
@@ -104,31 +103,12 @@ pub fn wire_corners(shape: &ShapeValue) -> Result<Vec<[f64; 3]>, WidgetFault> {
     Ok(corners)
 }
 
-/// 🔁️ The rotation about the origin that turns `normal` onto +Z, or `None` when it already is +Z.
-fn alignment(normal: [f64; 3]) -> Option<([f64; 3], f64)> {
-    let along = normal[2].clamp(-1.0, 1.0);
-    if along >= 1.0 - 1e-12 {
-        return None;
-    }
-    if along <= -1.0 + 1e-12 {
-        return Some(([1.0, 0.0, 0.0], PI));
-    }
-    let axis = cross(normal, [0.0, 0.0, 1.0]);
-    let length = norm(axis);
-    Some(([axis[0] / length, axis[1] / length, axis[2] / length], along.acos()))
-}
-
-/// 🖼️ Fills the closed wire imported as input `index` with a planar face: the wire is turned flat onto the XY plane, filled there and turned back, so the face normal is the wire's orientation normal.
+/// 🖼️ Fills the closed wire imported as input `index` with a planar face oriented with the boundary.
 pub fn fill_wire(work: &mut Work, index: usize, port: &str) -> Result<GeometryHandle, WidgetFault> {
     let source = work.source(index)?;
-    let plane = wire_corners(&source).and_then(|corners| fit_plane(&corners, WIRE)).map_err(|fault| fault.at(port))?;
+    wire_corners(&source).and_then(|corners| fit_plane(&corners, WIRE)).map_err(|fault| fault.at(port))?;
     let wire = work.handle(index)?;
-    let brep = work.session.brep();
-    let face = match alignment(plane.normal) {
-        None => brep.planar_face_from_wire_sync(&wire),
-        Some((axis, angle)) => brep.rotate_sync(&wire, axis, angle).and_then(|flat| brep.planar_face_from_wire_sync(&flat)).and_then(|face| brep.rotate_sync(&face, axis, -angle)),
-    };
-    face.map_err(|error| kernel_fault(&error))
+    work.session.brep().face_from_wire_sync(&wire).map_err(|error| kernel_fault(&error).at(port))
 }
 
 /// 🖼️ The face of input `index`: a face as it is, a wire filled.
@@ -204,7 +184,7 @@ fn coons_outputs(inputs: &WidgetInputs) -> Result<Outputs, WidgetFault> {
 
 fn wire_face(kind: &Kind, inputs: &WidgetInputs, parallel_to_xy: bool) -> Box<dyn WidgetJob> {
     guarded(kind, || {
-        let wire = inputs.shape("wire")?.clone();
+        let wire = path_wire(inputs.shape("wire")?, "wire")?;
         Ok(Pipeline::new(kind)
             .import(&wire)
             .once(move |work| {

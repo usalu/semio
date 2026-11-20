@@ -219,7 +219,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             && emit.interaction_writes.is_empty()
             && mounted.pending_artifact_publication.is_none()
             && mounted.owned_child_group.is_none()
-            && emit.artifact_mutations.is_empty()
+            && !emit.has_artifact_mutations()
             && emit.config_mutations.is_empty()
             && emit.window_config_mutations.is_empty()
             && emit.draft_mutations.is_empty()

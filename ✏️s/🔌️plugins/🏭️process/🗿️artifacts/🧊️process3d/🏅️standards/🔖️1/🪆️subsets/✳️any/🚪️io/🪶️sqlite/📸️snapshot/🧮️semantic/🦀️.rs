@@ -17,7 +17,7 @@ impl<C:Check> Cells<'_,C>{
   WorkingSolid::Cylinder{radius,height}=>{self.text("cylinder")?;self.float(*radius)?;self.float(*height)?;},
   WorkingSolid::Sphere{radius}=>{self.text("sphere")?;self.float(*radius)?;},
   WorkingSolid::ImportedMesh{mesh_url}=>self.texts(["importedMesh",mesh_url])?,
-  WorkingSolid::ImportedSolid{solid_handle}=>self.texts(["importedSolid",solid_handle])?,
+  WorkingSolid::ImportedSolid{brep_pack}=>self.texts(["importedSolid",brep_pack])?,
   WorkingSolid::Reference{reference_id}=>self.texts(["reference",reference_id])?,
  }Ok(())}
  fn child<S>(&mut self,v:&store::os_store::artifact_child::ArtifactChild<S>,ordered:bool)->Result<(),ValueError>{self.add(if ordered{24}else{16})?;let t=&v.target;self.texts([v.child_id.as_str(),t.artifact_id.as_str(),t.dialect.artifact_kind.as_str(),t.dialect.standard.as_str(),t.dialect.subset.as_str()])}

@@ -108,6 +108,8 @@ impl ArtifactEditor for Pdf14Editor {
     const DIALECT: Dialect = PDF14_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
+    const SINGLE_TURN_NATURAL_DECODE: bool = true;
+
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.4", extension: ".pdf", media_type: "application/pdf", binary: true })
     }

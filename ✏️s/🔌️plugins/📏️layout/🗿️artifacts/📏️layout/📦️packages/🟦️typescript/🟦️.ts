@@ -4,11 +4,11 @@ export type {FlowRect,FlowBounds,FlowFrame,FlowFrameSource,FlowFrameContext,Flow
 export {parseLayoutArtifact} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
 export {parseLayoutDiff,applyLayoutDiff,composeLayoutDiffs,diffLayoutSnapshots,inverseLayoutDiff,LayoutDiffError,replayLayoutDiffs} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
 export type {LayoutArtifact} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-export type {LayoutDiff,LayoutDiffContext} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
+export type {LayoutDiff} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
 export {normalizeParentContent,validateDocument,validateFrameCreation,validateFrameRemoval,validateId,validatePageCreation,validateStory,validateStyleRuns,validateThreadEdge} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts";
 export type {LayoutMutation} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts";
 export {evaluateLayoutMutation,LAYOUT_MUTATION_KINDS} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️evaluate/🟦️.ts";
-export type {LayoutMutationContext,LayoutMutationMessage,LayoutMutationOutcome} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️evaluate/🟦️.ts";
+export type {LayoutMutationMessage,LayoutMutationOutcome} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️evaluate/🟦️.ts";
 export {parseLayoutMutation,layoutMutationFromNativeJson,layoutMutationNativeJson} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🪪️native-json/🟦️.ts";
 
 export {FlowProjection} from "./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️flow/📇️projection/🟦️.ts";

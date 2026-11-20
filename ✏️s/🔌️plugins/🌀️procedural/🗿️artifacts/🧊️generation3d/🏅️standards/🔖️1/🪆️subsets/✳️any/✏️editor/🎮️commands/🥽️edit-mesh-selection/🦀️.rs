@@ -52,7 +52,7 @@ impl EditMeshSelection {
 /// 🎛️ The inputs a mesh edit sets on its operator, validated: the selected components (as the operator's text list) and
 /// the operation's own value — the offset, the cut count, or the extrude distance / inset amount.
 pub fn inputs(payload: &EditMeshSelection, ids: &[String]) -> Result<Vec<(&'static str, WidgetInputValue)>, String> {
-    let (target, components) = component_group(ids)?;
+    let (target, mut components) = component_group(ids)?;
     if target.granularity != payload.granularity() || target.analytic.is_none() && target.index != 0 { return Err("Select matching components of a single mesh".into()); }
     let operation = payload.operation.as_str();
     if !matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges" | "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" | "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("Unknown mesh operation".into()); }
@@ -72,6 +72,10 @@ pub fn inputs(payload: &EditMeshSelection, ids: &[String]) -> Result<Vec<(&'stat
         return Ok(vec![(channel, selection), (parameter, WidgetInputValue::Number(value))]);
     }
     if target.analytic.is_some() { return Err("Analytic components require a B-Rep operation".into()); }
+    if operation == "mergeVertices" {
+        let index = components.binary_search(&target.component).expect("selected target belongs to its component group");
+        components[..=index].rotate_right(1);
+    }
     let field = match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" => "selection", _ => "faces" };
     let mut inputs = vec![(field, WidgetInputValue::Text(semio_framework_pack_json::to_string(&semio_framework_pack_json::array(components.into_iter().map(semio_framework_pack_json::Value::from)))))];
     match operation {

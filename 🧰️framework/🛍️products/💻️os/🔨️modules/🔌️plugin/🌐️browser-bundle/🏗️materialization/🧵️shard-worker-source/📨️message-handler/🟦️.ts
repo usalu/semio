@@ -30,7 +30,7 @@ self.addEventListener("message", async (event) => {
   // 📬️ The host said something. A drive in flight reads this counter every step and crosses back the
   // moment it moves, so an ingress message, a cancel or a view-state change never waits behind a
   // guest the worker is pumping. Bumped BEFORE any dispatch, for every kind without exception.
-  hostInputSeq += 1;
+  const inputMark = ++hostInputSeq;
   const msg = event.data ?? {};
   const { kind } = msg;
   if (kind === "attachHeartbeatSab") {
@@ -45,10 +45,17 @@ self.addEventListener("message", async (event) => {
   }
   if (kind === "dispose") {
     const actor = actors.get(msg.actorId);
-    if (!actor || actor.activationGeneration !== msg.activationGeneration) return;
+    if (!actor || actor.activationGeneration !== msg.activationGeneration || actor.disposeRequested) return;
     actor.disposeRequested = true;
-    if (inFlightTurnActors.has(msg.actorId)) { actor.api.originalSource.cancel(); return; }
-    await closeOriginalActor(msg.actorId, msg.activationGeneration);
+    if (inFlightTurnActors.has(msg.actorId)) actor.api.originalSource.cancel();
+    beginRequest();
+    const leaveTurn = await enterActorTurn(msg.actorId);
+    try {
+      await closeOriginalActor(msg.actorId, msg.activationGeneration);
+    } finally {
+      leaveTurn();
+      endRequest();
+    }
     return;
   }
   // 🧪️ terra-web-bridges: an effect-complete/effect-error \`"frame"\` is a REPLY to something THIS
@@ -66,6 +73,7 @@ self.addEventListener("message", async (event) => {
   beginRequest();
   faultPhase = kind;
   faultActorId = actorId;
+  let leaveTurn;
   try {
     if (kind === "activate") {
       const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl, msg.originalAdmission);
@@ -83,77 +91,75 @@ self.addEventListener("message", async (event) => {
       return;
     }
     if (!actor) throw new Error(\`shard worker: actor \${actorId} not activated\`);
+    if (["turn", "codec", "frame"].includes(kind) && actor.activationGeneration !== msg.activationGeneration) {
+      throw new Error("actor-lifecycle.activation-mismatch");
+    }
+    leaveTurn = await enterActorTurn(actorId);
+    if (actors.get(actorId) !== actor || actor.disposeRequested) throw new Error("actor-lifecycle.activation-mismatch");
     switch (kind) {
       case "turn": {
-        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
-        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
-        inFlightTurnActors.add(actorId);
         faultPhase = (actor.turns ?? 0) === 0 ? "first-step" : "turn";
         actor.turns = (actor.turns ?? 0) + 1;
-        try {
-          const admitted = spliceInstanceOpenAssets(actor, msg.events);
-          timings.guestEnteredAtEpochMs = hopEpochNow();
-          let result = await actor.api.poll(admitted, msg.commandPage, undefined, msg.budget);
-          // 🚚️ THE worker-owned MoreWork drive. A \`more-work\` answer that carried nothing is not a
-          // message for the host — it is the guest asking to be pumped, and in the browser the host
-          // round trip IS the pump. So the WORKER owns that pump: it runs the next turn itself and
-          // crosses only to deliver something the host can act on. Every discarded result satisfied
-          // \`shardTurnCarriesNothing\`, so the drive is lossless by construction.
-          //
-          // Five other stops, and each one is a promise to somebody: the guest went \`idle\`;
-          // \`hostInputSeq\` moved, so a host-owned input is pending behind the drive and must not wait
-          // for it; the actor was disposed or re-activated; the derived step ceiling is spent; the
-          // derived wall budget is spent. The ceiling and the budget come from
-          // \`shardTurnDriveSteps\`/\`shardTurnDriveBudgetMs\` — the wall the host GRANTED for this
-          // crossing divided by what one turn MEASURES — never from the reactor's own 8 ms executor
-          // slice, which is smaller than one whole turn and therefore admitted no further turn at all.
-          const originalDriveSource = actor.api.originalSource;
-          const remainingUs = originalDriveSource.deadlineUs - originalDriveSource.operationClockUs();
-          const grantWallMs = Number(remainingUs > 0n ? remainingUs : 0n) / 1000;
-          // 🚚️ The WALL bounds this drive; \`DRIVE_STEP_CEILING\` is the hard backstop against an
-          // unbounded loop, and \`shardTurnDriveSteps\` is the grant's derived EXPECTATION, reported so
-          // the host can read what one crossing was meant to cover.
-          const driveSteps = DRIVE_STEP_CEILING;
-          const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
-          const driveDeadline = originalDriveSource.deadlineUs;
-          const inputMark = hostInputSeq;
-          let drivePolls = 0;
-          let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
-          while (driveStopped === "") {
-            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
-            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
-            if (originalDriveSource.operationClockUs() >= driveDeadline || originalDriveSource.fuelRemaining === 0) { driveStopped = "budget"; break; }
-            if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
-            // 📬️ One macrotask before the next turn, so a message the host already posted is
-            // DELIVERED and \`hostInputSeq\` can actually move. Without it the drive is
-            // uninterruptible: an \`await\` settles on the microtask queue, which never drains the
-            // message queue.
-            await driveYield();
-            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
-            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
-            result = await actor.api.poll([], undefined, undefined, msg.budget);
-            drivePolls += 1;
-            driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
-          }
-          timings.guestLeftAtEpochMs = hopEpochNow();
-          timings.drivePolls = drivePolls;
-          timings.driveSteps = driveExpectedSteps;
-          timings.driveStopped = driveStopped;
-          timings.patches = result && Array.isArray(result.uiPatches) ? result.uiPatches.length : 0;
-          timings.status = result && result.status && typeof result.status.tag === "string" ? result.status.tag : String(result && result.status);
-          // 🫀️ THE step boundary. A guest running a BUDGETED job (a resumable tessellation, a
-          // resumable boolean) crosses this point once per step and blocks the event loop in
-          // between, so the while-busy ticker cannot fire and the only thing that distinguishes it
-          // from a dead worker is a beat taken HERE, the moment the guest hands control back
-          // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-          // \`📓️extension-evaluate-budget-2026-09-12.md\`). It RIDES the reply rather than costing its
-          // own \`postMessage\`, because the reply is already crossing at this exact instant and
-          // \`ShardClient\` reads liveness off every inbound message it receives.
-          reply(requestId, result, timings, beat("turn-step"));
-        } finally {
-          inFlightTurnActors.delete(actorId);
-          if (actor.disposeRequested) await closeOriginalActor(actorId, actor.activationGeneration);
+        const admitted = spliceInstanceOpenAssets(actor, msg.events);
+        timings.guestEnteredAtEpochMs = hopEpochNow();
+        // 🧩️ A reactor turn admits at most ONE event (reactor.wit poll); the host sends every event as its own crossing (the lifecycle ui-acknowledgements do), so a batch is a host defect.
+        if (admitted.length > 1) throw new Error("actor-poll.event-count: a crossing carries at most one event; send each event as its own crossing");
+        let result = await actor.api.poll(admitted, msg.commandPage, undefined, msg.budget);
+        // 🚚️ THE worker-owned MoreWork drive. A \`more-work\` answer that carried nothing is not a
+        // message for the host — it is the guest asking to be pumped, and in the browser the host
+        // round trip IS the pump. So the WORKER owns that pump: it runs the next turn itself and
+        // crosses only to deliver something the host can act on. Every discarded result satisfied
+        // \`shardTurnCarriesNothing\`, so the drive is lossless by construction.
+        //
+        // Five other stops, and each one is a promise to somebody: the guest went \`idle\`;
+        // \`hostInputSeq\` moved, so a host-owned input is pending behind the drive and must not wait
+        // for it; the actor was disposed or re-activated; the derived step ceiling is spent; the
+        // derived wall budget is spent. The ceiling and the budget come from
+        // \`shardTurnDriveSteps\`/\`shardTurnDriveBudgetMs\` — the wall the host GRANTED for this
+        // crossing divided by what one turn MEASURES — never from the reactor's own 8 ms executor
+        // slice, which is smaller than one whole turn and therefore admitted no further turn at all.
+        const originalDriveSource = actor.api.originalSource;
+        const remainingUs = originalDriveSource.deadlineUs - originalDriveSource.operationClockUs();
+        const grantWallMs = Number(remainingUs > 0n ? remainingUs : 0n) / 1000;
+        // 🚚️ The WALL bounds this drive; \`DRIVE_STEP_CEILING\` is the hard backstop against an
+        // unbounded loop, and \`shardTurnDriveSteps\` is the grant's derived EXPECTATION, reported so
+        // the host can read what one crossing was meant to cover.
+        const driveSteps = DRIVE_STEP_CEILING;
+        const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
+        const driveDeadline = originalDriveSource.deadlineUs;
+        let drivePolls = 0;
+        let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
+        while (driveStopped === "") {
+          if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+          if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
+          if (originalDriveSource.operationClockUs() >= driveDeadline || originalDriveSource.fuelRemaining === 0) { driveStopped = "budget"; break; }
+          if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
+          // 📬️ One macrotask before the next turn, so a message the host already posted is
+          // DELIVERED and \`hostInputSeq\` can actually move. Without it the drive is
+          // uninterruptible: an \`await\` settles on the microtask queue, which never drains the
+          // message queue.
+          await driveYield();
+          if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+          if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
+          result = await actor.api.poll([], undefined, undefined, msg.budget);
+          drivePolls += 1;
+          driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
         }
+        timings.guestLeftAtEpochMs = hopEpochNow();
+        timings.drivePolls = drivePolls;
+        timings.driveSteps = driveExpectedSteps;
+        timings.driveStopped = driveStopped;
+        timings.patches = result && Array.isArray(result.uiPatches) ? result.uiPatches.length : 0;
+        timings.status = result && result.status && typeof result.status.tag === "string" ? result.status.tag : String(result && result.status);
+        // 🫀️ THE step boundary. A guest running a BUDGETED job (a resumable tessellation, a
+        // resumable boolean) crosses this point once per step and blocks the event loop in
+        // between, so the while-busy ticker cannot fire and the only thing that distinguishes it
+        // from a dead worker is a beat taken HERE, the moment the guest hands control back
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // \`📓️extension-evaluate-budget-2026-09-12.md\`). It RIDES the reply rather than costing its
+        // own \`postMessage\`, because the reply is already crossing at this exact instant and
+        // \`ShardClient\` reads liveness off every inbound message it receives.
+        reply(requestId, result, timings, beat("turn-step"));
         break;
       }
       case "startJob":
@@ -194,19 +200,10 @@ self.addEventListener("message", async (event) => {
         await actor.api.restore(msg.state);
         reply(requestId, undefined);
         break;
-      case "codec": {
-        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
-        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
-        inFlightTurnActors.add(actorId);
-        try {
-          reply(requestId, await actor.api.codec(msg.request), undefined, beat("turn-step"));
-        } finally {
-          inFlightTurnActors.delete(actorId);
-        }
+      case "codec":
+        reply(requestId, await actor.api.codec(msg.request), undefined, beat("turn-step"));
         break;
-      }
       case "frame": {
-        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
         const result = interpretFrame(msg.frame, actorId);
         if (result.action === "register") {
           reply(requestId, undefined);
@@ -221,20 +218,17 @@ self.addEventListener("message", async (event) => {
           reply(requestId, { ignored: true });
           break;
         }
-        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
-        inFlightTurnActors.add(actorId);
-        try {
-          const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
-          timings.events = events.length;
-          timings.guestEnteredAtEpochMs = hopEpochNow();
-          // One guest turn per envelope, in frame order, like the native ShardLoop: a reactor turn admits at most one event. A frame of several envelopes answers one turn result per envelope.
-          const polls = [];
-          for (const batch of events.length === 0 ? [[]] : events.map((event) => [event])) polls.push(await actor.api.poll(batch, undefined, undefined, result.budget));
-          timings.guestLeftAtEpochMs = hopEpochNow();
-          reply(requestId, polls.length === 1 ? polls[0] : polls, timings);
-        } finally {
-          inFlightTurnActors.delete(actorId);
+        const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
+        timings.events = events.length;
+        timings.guestEnteredAtEpochMs = hopEpochNow();
+        // One guest turn per envelope, in frame order, like the native ShardLoop: a reactor turn admits at most one event. A frame of several envelopes answers one turn result per envelope.
+        const polls = [];
+        for (const batch of events.length === 0 ? [[]] : events.map((event) => [event])) {
+          if (actor.disposeRequested) throw new Error("actor-lifecycle.activation-mismatch");
+          polls.push(await actor.api.poll(batch, undefined, undefined, result.budget));
         }
+        timings.guestLeftAtEpochMs = hopEpochNow();
+        reply(requestId, polls.length === 1 ? polls[0] : polls, timings);
         break;
       }
       default:
@@ -250,6 +244,7 @@ self.addEventListener("message", async (event) => {
     else reportWorkerFault("handler", error, null);
     replyError(requestId, error, msg.events, retryableLifecycle);
   } finally {
+    if (leaveTurn) leaveTurn();
     endRequest();
     faultPhase = "idle";
   }

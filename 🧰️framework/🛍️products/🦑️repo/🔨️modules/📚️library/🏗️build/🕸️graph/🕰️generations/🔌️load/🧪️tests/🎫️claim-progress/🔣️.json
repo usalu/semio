@@ -1,0 +1,68 @@
+{
+  "owners": 3,
+  "samples": [
+    {
+      "done": 1,
+      "total": 3
+    },
+    {
+      "done": 2,
+      "total": 3
+    },
+    {
+      "done": 2,
+      "total": 3
+    }
+  ],
+  "progress": {
+    "phase": "inference",
+    "done": 2,
+    "total": 3
+  },
+  "handover": [
+    {
+      "reason": "stale-code",
+      "sampleProgress": false,
+      "returnsAfterAbort": true,
+      "events": [
+        "discover",
+        "ask",
+        "abort",
+        "drain",
+        "dispose",
+        "release",
+        "successor"
+      ],
+      "parentCancels": false
+    },
+    {
+      "reason": "stalled",
+      "sampleProgress": true,
+      "returnsAfterAbort": false,
+      "events": [
+        "discover",
+        "ask",
+        "abort",
+        "drain",
+        "release",
+        "successor"
+      ],
+      "parentCancels": false
+    },
+    {
+      "reason": "stale-code",
+      "sampleProgress": false,
+      "returnsAfterAbort": true,
+      "events": [
+        "discover",
+        "ask",
+        "abort",
+        "drain",
+        "dispose",
+        "release",
+        "successor"
+      ],
+      "parentCancels": true
+    }
+  ]
+}

@@ -251,6 +251,26 @@
     "retained": "retained-modules",
     "extra": "node_modules/nx/extra.txt"
   },
+  "sharedFileIdentity": [
+    {
+      "device": "37",
+      "source": "9007199254740993",
+      "destination": "9007199254740993",
+      "accepted": true
+    },
+    {
+      "device": "37",
+      "source": "9007199254740993",
+      "destination": "9007199254740992",
+      "accepted": false
+    },
+    {
+      "device": "9007199254740995",
+      "source": "9007199254740992",
+      "destination": "9007199254740992",
+      "accepted": true
+    }
+  ],
   "readerTraversal": {
     "files": 32,
     "bytesPerFile": 64,
@@ -343,6 +363,7 @@
     }
   ],
   "readCheckpoints": [
+    {"operation":"capture","records":256,"directories":127,"fault":"none","checkpoints":3,"peak":1,"outcome":"value"},
     {
       "operation": "capture",
       "records": 256,

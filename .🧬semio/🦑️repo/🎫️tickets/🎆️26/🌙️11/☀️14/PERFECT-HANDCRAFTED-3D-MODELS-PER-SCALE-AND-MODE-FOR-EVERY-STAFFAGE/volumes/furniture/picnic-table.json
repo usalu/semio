@@ -1,1 +1,7328 @@
-{"volumes":{"50":{"status":"authored","denominator":50,"body":[{"id":"leg-l","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[-0.25,0.71],[-0.19,0.71],[-0.66,0],[-0.708,0],[-0.72,0.012]],"plane":"xy","from":0.7775,"to":0.8225,"repeat":{"count":2,"translation":[0,0,-1.6]}},{"id":"leg-r","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[0.19,0.71],[0.25,0.71],[0.72,0.012],[0.708,0],[0.66,0]],"plane":"xy","from":0.7775,"to":0.8225,"repeat":{"count":2,"translation":[0,0,-1.6]}},{"id":"top-beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.6,0.045,0.045],"cornerRadius":0.003,"transform":{"translation":[0,0.6875,0.8]},"repeat":{"count":2,"translation":[0,0,-1.6]}},{"id":"beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.96,0.045,0.045],"cornerRadius":0.003,"transform":{"translation":[0,0.3775,0.8]},"repeat":{"count":2,"translation":[0,0,-1.6]}},{"id":"hinge-l","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[-0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0,0,-1.45]}},{"id":"hinge-r","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0,0,-1.45]}},{"id":"top-plank","kind":"box","bone":"top","material":"pine-timber","role":"body","tone":0.7,"size":[0.138,0.04,1.8],"cornerRadius":0.004,"transform":{"translation":[0.069,0.02,0]},"repeat":{"count":5,"translation":[0.14,0,0]}},{"id":"bench-r","kind":"box","bone":"bench-r","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.04,1.7],"cornerRadius":0.01,"transform":{"translation":[0.12,0.02,0]}},{"id":"bench-l","kind":"box","bone":"bench-l","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.04,1.7],"cornerRadius":0.01,"transform":{"translation":[0.12,-0.02,0]}}],"thermal":[{"id":"th-leg-l","of":"leg-l","region":"a-frame","layer":"frame-member"},{"id":"th-leg-r","of":"leg-r","region":"a-frame","layer":"frame-member"},{"id":"th-top-beam","of":"top-beam","region":"a-frame","layer":"frame-member"},{"id":"th-beam","of":"beam","region":"a-frame","layer":"frame-member"},{"id":"th-hinge-l","of":"hinge-l","region":"hinges","layer":"hinge-plate"},{"id":"th-hinge-r","of":"hinge-r","region":"hinges","layer":"hinge-plate"},{"id":"th-top-plank","of":"top-plank","region":"table-top","layer":"top-plank"},{"id":"th-bench-r","of":"bench-r","region":"bench-seats","layer":"seat-plank"},{"id":"th-bench-l","of":"bench-l","region":"bench-seats","layer":"seat-plank"}],"structure":[{"id":"member-feet","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.0475],"transform":{"translation":[-0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-feet-r","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.0475],"transform":{"translation":[0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-leg-l","of":"leg-l","member":"frame","part":"member"},{"id":"member-leg-r","of":"leg-r","member":"frame","part":"member"},{"id":"member-beam","of":"beam","member":"frame","part":"member"},{"id":"member-top-beam","of":"top-beam","member":"frame","part":"member"},{"id":"member-top-plank","of":"top-plank","member":"top","part":"member"},{"id":"member-bench-r","of":"bench-r","member":"bench-r","part":"member"},{"id":"member-bench-l","of":"bench-l","member":"bench-l","part":"member"},{"id":"joint-hinge-r","of":"hinge-r","member":"bench-r","part":"joint"},{"id":"joint-hinge-l","of":"hinge-l","member":"bench-l","part":"joint"},{"id":"support-foot-left-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.05],"transform":{"translation":[-0.684,0.004,0.8]},"member":"frame","part":"support","anchor":"foot-left-l"},{"id":"support-foot-left-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.05],"transform":{"translation":[-0.684,0.004,-0.8]},"member":"frame","part":"support","anchor":"foot-left-r"},{"id":"support-foot-right-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.05],"transform":{"translation":[0.684,0.004,0.8]},"member":"frame","part":"support","anchor":"foot-right-l"},{"id":"support-foot-right-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.008,0.05],"transform":{"translation":[0.684,0.004,-0.8]},"member":"frame","part":"support","anchor":"foot-right-r"},{"id":"mass-frame","kind":"ellipsoid","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.2,0.015,0.03],"transform":{"translation":[0.0,0.73,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"frame","part":"mass"},{"id":"mass-top","kind":"ellipsoid","bone":"top","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.25,0.015,0.6],"transform":{"translation":[0.35,0.02,0.0]},"member":"top","part":"mass"},{"id":"mass-bench-r","kind":"ellipsoid","bone":"bench-r","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,0.02,0.0]},"member":"bench-r","part":"mass"},{"id":"mass-bench-l","kind":"ellipsoid","bone":"bench-l","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,-0.02,0.0]},"member":"bench-l","part":"mass"}],"decisions":[{"en":"Detailed model from the seed: four 45 mm A-frame leg boards as extrusions of the drawn raked profile, two top beams and two stretcher beams, galvanised hinge blocks, five tabletop planks and two rounded bench boards on their hinge bones.","de":"Detailmodell aus dem Startmodell: vier 45 mm starke A-Rahmenbeine als Strangkörper des gezeichneten geneigten Profils, zwei obere und zwei untere Querbalken, verzinkte Scharnierblöcke, fünf Tischplatten und zwei gerundete Bankbretter auf ihren Scharnierknochen."},{"en":"Thermal: references by material (planks, bench boards, frame members, hinge plates, single layers). Structure: leg boards, beams and plank/bench boards as members, hinge blocks as joints, foot blocks as the ground-bone members, four floor pads at the support anchors, masses in frame, top and benches.","de":"Thermik: Verweise nach Material (Bretter, Bankbretter, Rahmenteile, Scharnierplatten, einzelne Schichten). Tragwerk: Beinbretter, Balken und Platten-/Bankbretter als Stäbe, Scharnierblöcke als Gelenke, Fußblöcke als Stäbe des Bodenknochens, vier Bodenplatten an den Auflagern, Massen in Rahmen, Platte und Bänken."}]},"100":{"status":"authored","denominator":100,"body":[{"id":"leg-l","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[-0.25,0.71],[-0.19,0.71],[-0.66,0.0],[-0.72,0.0]],"plane":"xy","from":0.7775,"to":0.8225,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"leg-r","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[0.19,0.71],[0.25,0.71],[0.72,0.0],[0.66,0.0]],"plane":"xy","from":0.7775,"to":0.8225,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"top-beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.6,0.045,0.045],"transform":{"translation":[0.0,0.6875,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.96,0.045,0.045],"transform":{"translation":[0.0,0.3775,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"hinge-l","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[-0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"hinge-r","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"top","kind":"box","bone":"top","material":"pine-timber","role":"body","tone":0.7,"size":[0.7,0.04,1.8],"cornerRadius":0.004,"transform":{"translation":[0.35,0.02,0.0]}},{"id":"bench-r","kind":"box","bone":"bench-r","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.04,1.7],"cornerRadius":0.008,"transform":{"translation":[0.12,0.02,0.0]}},{"id":"bench-l","kind":"box","bone":"bench-l","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.04,1.7],"cornerRadius":0.008,"transform":{"translation":[0.12,-0.02,0.0]}}],"thermal":[{"id":"th-leg-l","of":"leg-l","region":"a-frame","layer":"frame-member"},{"id":"th-leg-r","of":"leg-r","region":"a-frame","layer":"frame-member"},{"id":"th-top-beam","of":"top-beam","region":"a-frame","layer":"frame-member"},{"id":"th-beam","of":"beam","region":"a-frame","layer":"frame-member"},{"id":"th-hinge-l","of":"hinge-l","region":"hinges","layer":"hinge-plate"},{"id":"th-hinge-r","of":"hinge-r","region":"hinges","layer":"hinge-plate"},{"id":"th-top","of":"top","region":"table-top","layer":"top-plank"},{"id":"th-bench-r","of":"bench-r","region":"bench-seats","layer":"seat-plank"},{"id":"th-bench-l","of":"bench-l","region":"bench-seats","layer":"seat-plank"}],"structure":[{"id":"member-feet","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.0475],"transform":{"translation":[-0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-feet-r","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.0475],"transform":{"translation":[0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-leg-l","of":"leg-l","member":"frame","part":"member"},{"id":"member-leg-r","of":"leg-r","member":"frame","part":"member"},{"id":"member-beam","of":"beam","member":"frame","part":"member"},{"id":"member-top-beam","of":"top-beam","member":"frame","part":"member"},{"id":"member-top","of":"top","member":"top","part":"member"},{"id":"member-bench-r","of":"bench-r","member":"bench-r","part":"member"},{"id":"member-bench-l","of":"bench-l","member":"bench-l","part":"member"},{"id":"joint-hinge-r","of":"hinge-r","member":"bench-r","part":"joint"},{"id":"joint-hinge-l","of":"hinge-l","member":"bench-l","part":"joint"},{"id":"support-foot-left-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.05],"transform":{"translation":[-0.684,0.008,0.8]},"member":"frame","part":"support","anchor":"foot-left-l"},{"id":"support-foot-left-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.05],"transform":{"translation":[-0.684,0.008,-0.8]},"member":"frame","part":"support","anchor":"foot-left-r"},{"id":"support-foot-right-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.05],"transform":{"translation":[0.684,0.008,0.8]},"member":"frame","part":"support","anchor":"foot-right-l"},{"id":"support-foot-right-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.016,0.05],"transform":{"translation":[0.684,0.008,-0.8]},"member":"frame","part":"support","anchor":"foot-right-r"},{"id":"mass-frame","kind":"ellipsoid","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.2,0.015,0.03],"transform":{"translation":[0.0,0.73,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"frame","part":"mass"},{"id":"mass-top","kind":"ellipsoid","bone":"top","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.25,0.015,0.6],"transform":{"translation":[0.35,0.02,0.0]},"member":"top","part":"mass"},{"id":"mass-bench-r","kind":"ellipsoid","bone":"bench-r","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,0.02,0.0]},"member":"bench-r","part":"mass"},{"id":"mass-bench-l","kind":"ellipsoid","bone":"bench-l","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,-0.02,0.0]},"member":"bench-l","part":"mass"}],"decisions":[{"en":"Modelled anew: tabletop planks merged into one slab, benches as one board each; leg profile reduced to a four-point parallelogram; screws and bolt heads are left out.","de":"Neu modelliert: Tischplatten zu einer Platte zusammengefasst, Bänke als je ein Brett; Beinprofil auf ein Parallelogramm mit vier Punkten reduziert; Schrauben und Bolzenköpfe entfallen."},{"en":"Thermal: the two legs, the top beam and the cross beam reference the A-frame region, the two hinges the hinges region, the one-slab top the table-top region and the two benches the bench-seats region, all by reference to the 1:100 body solids. Structure: two foot members on the ground, members for both legs, the cross beam, the top beam, the top slab and each bench board, a hinge joint at each bench, four foot supports (two per leg pair) and mass solids for the frame, the top and both benches.","de":"Thermik: die zwei Beine, der obere Balken und der Querbalken verweisen auf die Region A-Gestell, die zwei Scharniere auf die Region Scharniere, die einteilige Platte auf die Region Tischplatte und die zwei Bänke auf die Region Sitzbänke, alle per Verweis auf die Körper von 1:100. Tragwerk: zwei Fußstäbe am Boden, Stäbe für beide Beine, den Querbalken, den oberen Balken, die Tischplatte und jedes Bankbrett, ein Scharniergelenk an jeder Bank, vier Fußauflager (je zwei pro Beinpaar) und Massenkörper für Gestell, Tischplatte und beide Bänke."}]},"200":{"status":"authored","denominator":200,"body":[{"id":"leg-l","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[-0.25,0.71],[-0.19,0.71],[-0.66,0.0],[-0.72,0.0]],"plane":"xy","from":0.775,"to":0.825,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"leg-r","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[0.19,0.71],[0.25,0.71],[0.72,0.0],[0.66,0.0]],"plane":"xy","from":0.775,"to":0.825,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"beam","kind":"box","bone":"frame","material":"pine-timber","role":"body","tone":0.5,"size":[0.96,0.05,0.05],"transform":{"translation":[0.0,0.375,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"hinge-l","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[-0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"hinge-r","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"slab","kind":"box","bone":"top","material":"pine-timber","role":"body","tone":0.7,"size":[0.7,0.085,1.8],"transform":{"translation":[0.35,-0.0025,0.0]}},{"id":"bench-r","kind":"box","bone":"bench-r","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.05,1.7],"transform":{"translation":[0.12,0.025,0.0]}},{"id":"bench-l","kind":"box","bone":"bench-l","material":"pine-timber","role":"body","tone":0.7,"size":[0.36,0.05,1.7],"transform":{"translation":[0.12,-0.025,0.0]}}],"thermal":[{"id":"th-leg-l","of":"leg-l","region":"a-frame","layer":"frame-member"},{"id":"th-leg-r","of":"leg-r","region":"a-frame","layer":"frame-member"},{"id":"th-beam","of":"beam","region":"a-frame","layer":"frame-member"},{"id":"th-hinge-l","of":"hinge-l","region":"hinges","layer":"hinge-plate"},{"id":"th-hinge-r","of":"hinge-r","region":"hinges","layer":"hinge-plate"},{"id":"th-slab","of":"slab","region":"table-top","layer":"top-plank"},{"id":"th-bench-r","of":"bench-r","region":"bench-seats","layer":"seat-plank"},{"id":"th-bench-l","of":"bench-l","region":"bench-seats","layer":"seat-plank"}],"structure":[{"id":"member-feet","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.05],"transform":{"translation":[-0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-feet-r","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.036,0.031,0.05],"transform":{"translation":[0.668,0.0155,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-leg-l","of":"leg-l","member":"frame","part":"member"},{"id":"member-leg-r","of":"leg-r","member":"frame","part":"member"},{"id":"member-beam","of":"beam","member":"frame","part":"member"},{"id":"member-top","of":"slab","member":"top","part":"member"},{"id":"member-bench-r","of":"bench-r","member":"bench-r","part":"member"},{"id":"member-bench-l","of":"bench-l","member":"bench-l","part":"member"},{"id":"joint-hinge-r","of":"hinge-r","member":"bench-r","part":"joint"},{"id":"joint-hinge-l","of":"hinge-l","member":"bench-l","part":"joint"},{"id":"support-foot-left-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.05],"transform":{"translation":[-0.684,0.0155,0.8]},"member":"frame","part":"support","anchor":"foot-left-l"},{"id":"support-foot-left-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.05],"transform":{"translation":[-0.684,0.0155,-0.8]},"member":"frame","part":"support","anchor":"foot-left-r"},{"id":"support-foot-right-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.05],"transform":{"translation":[0.684,0.0155,0.8]},"member":"frame","part":"support","anchor":"foot-right-l"},{"id":"support-foot-right-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.06,0.031,0.05],"transform":{"translation":[0.684,0.0155,-0.8]},"member":"frame","part":"support","anchor":"foot-right-r"},{"id":"mass-frame","kind":"ellipsoid","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.2,0.015,0.03],"transform":{"translation":[0.0,0.73,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"frame","part":"mass"},{"id":"mass-top","kind":"ellipsoid","bone":"top","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.25,0.015,0.6],"transform":{"translation":[0.35,0.02,0.0]},"member":"top","part":"mass"},{"id":"mass-bench-r","kind":"ellipsoid","bone":"bench-r","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,0.02,0.0]},"member":"bench-r","part":"mass"},{"id":"mass-bench-l","kind":"ellipsoid","bone":"bench-l","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.015,0.6],"transform":{"translation":[0.12,-0.02,0.0]},"member":"bench-l","part":"mass"}],"decisions":[{"en":"Modelled anew: top slab and top beams merged into one 85 mm slab as drawn, benches 50 mm, legs 50 mm; no corner radii.","de":"Neu modelliert: Platte und obere Balken zu einer 85-mm-Platte zusammengefasst wie gezeichnet, Bänke 50 mm, Beine 50 mm; keine Eckenradien."},{"en":"Thermal and structure follow the 1:200 body; the top beams are merged into the slab.","de":"Thermik und Tragwerk folgen dem Körper 1:200; die oberen Balken sind in der Platte aufgegangen."}]},"500":{"status":"authored","denominator":500,"body":[{"id":"leg-l","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[-0.285,0.7],[-0.175,0.7],[-0.62,0.0],[-0.73,0.0]],"plane":"xy","from":0.76,"to":0.84,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"leg-r","kind":"extrude","bone":"frame","material":"pine-timber","role":"body","tone":0.55,"profile":[[0.175,0.7],[0.285,0.7],[0.73,0.0],[0.62,0.0]],"plane":"xy","from":0.76,"to":0.84,"repeat":{"count":2,"translation":[0.0,0.0,-1.6]}},{"id":"hinge-l","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[-0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"hinge-r","kind":"box","bone":"frame","material":"steel-galvanised","role":"body","tone":0.2,"size":[0.08,0.1,0.11],"transform":{"translation":[0.46,0.39,0.725]},"repeat":{"count":2,"translation":[0.0,0.0,-1.45]}},{"id":"slab","kind":"box","bone":"top","material":"pine-timber","role":"body","tone":0.7,"size":[0.7,0.1,1.8],"transform":{"translation":[0.35,-0.01,0.0]}},{"id":"bench-r","kind":"box","bone":"bench-r","material":"pine-timber","role":"body","tone":0.7,"size":[0.41,0.07,1.7],"transform":{"translation":[0.095,0.0,0.0]}},{"id":"bench-l","kind":"box","bone":"bench-l","material":"pine-timber","role":"body","tone":0.7,"size":[0.41,0.07,1.7],"transform":{"translation":[0.095,0.0,0.0]}}],"thermal":[{"id":"th-leg-l","of":"leg-l","region":"a-frame","layer":"frame-member"},{"id":"th-leg-r","of":"leg-r","region":"a-frame","layer":"frame-member"},{"id":"th-hinge-l","of":"hinge-l","region":"hinges","layer":"hinge-plate"},{"id":"th-hinge-r","of":"hinge-r","region":"hinges","layer":"hinge-plate"},{"id":"th-slab","of":"slab","region":"table-top","layer":"top-plank"},{"id":"th-bench-r","of":"bench-r","region":"bench-seats","layer":"seat-plank"},{"id":"th-bench-l","of":"bench-l","region":"bench-seats","layer":"seat-plank"}],"structure":[{"id":"member-feet","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.09,0.077,0.077],"transform":{"translation":[-0.668,0.0385,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-feet-r","kind":"box","bone":"ground","material":"pine-timber","role":"body","tone":0.3,"size":[0.09,0.077,0.077],"transform":{"translation":[0.668,0.0385,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"ground","part":"member"},{"id":"member-leg-l","of":"leg-l","member":"frame","part":"member"},{"id":"member-leg-r","of":"leg-r","member":"frame","part":"member"},{"id":"member-top","of":"slab","member":"top","part":"member"},{"id":"member-bench-r","of":"bench-r","member":"bench-r","part":"member"},{"id":"member-bench-l","of":"bench-l","member":"bench-l","part":"member"},{"id":"joint-hinge-r","of":"hinge-r","member":"bench-r","part":"joint"},{"id":"joint-hinge-l","of":"hinge-l","member":"bench-l","part":"joint"},{"id":"support-foot-left-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.09,0.076,0.076],"transform":{"translation":[-0.684,0.038,0.8]},"member":"frame","part":"support","anchor":"foot-left-l"},{"id":"support-foot-left-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.09,0.076,0.076],"transform":{"translation":[-0.684,0.038,-0.8]},"member":"frame","part":"support","anchor":"foot-left-r"},{"id":"support-foot-right-l","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.09,0.076,0.076],"transform":{"translation":[0.684,0.038,0.8]},"member":"frame","part":"support","anchor":"foot-right-l"},{"id":"support-foot-right-r","kind":"box","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"size":[0.09,0.076,0.076],"transform":{"translation":[0.684,0.038,-0.8]},"member":"frame","part":"support","anchor":"foot-right-r"},{"id":"mass-frame","kind":"ellipsoid","bone":"frame","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.2,0.0385,0.0385],"transform":{"translation":[0.0,0.73,0.8]},"repeat":{"count":2,"translation":[0.0,0.0,-1.6]},"member":"frame","part":"mass"},{"id":"mass-top","kind":"ellipsoid","bone":"top","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.25,0.0385,0.6],"transform":{"translation":[0.35,0.02,0.0]},"member":"top","part":"mass"},{"id":"mass-bench-r","kind":"ellipsoid","bone":"bench-r","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.0385,0.6],"transform":{"translation":[0.12,0.0,0.0]},"member":"bench-r","part":"mass"},{"id":"mass-bench-l","kind":"ellipsoid","bone":"bench-l","material":"pine-timber","role":"detail","tone":0.15,"radii":[0.15,0.0385,0.6],"transform":{"translation":[0.12,0.0,0.0]},"member":"bench-l","part":"mass"}],"decisions":[{"en":"Modelled anew against the 1:500 drawings: the legs are 80 mm timbers on the drawn parallelograms, the slab is the drawn 100 mm top, each bench is a 70 mm board (the drawing's hairlines are repaired to filled 70 mm outlines because a 40 mm board is far below the 75 mm feature and the pen floor of 90 mm), hinge plates are the drawn 80 x 100 mm blocks; the stretcher beams and top beams are merged into the legs.","de":"Neu modelliert gegen die Zeichnungen 1:500: die Beine sind 80-mm-Hölzer auf den gezeichneten Parallelogrammen, die Platte die gezeichnete 100-mm-Tischplatte, jede Bank ein 70-mm-Brett (die Haarlinien der Zeichnung sind zu gefüllten 70-mm-Umrissen repariert, weil ein 40-mm-Brett weit unter dem Merkmal von 75 mm und der Federuntergrenze von 90 mm liegt), die Beschlagplatten sind die gezeichneten Blöcke 80 x 100 mm; Querbalken und Sattelbalken sind in den Beinen aufgegangen."},{"en":"Thermal and structure follow the 1:500 body; the stretcher beams are merged into the legs.","de":"Thermik und Tragwerk folgen dem Körper 1:500; die unteren Balken sind in den Beinen aufgegangen."}]}}}
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "top-plank",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.00067,
+       0.0025
+      ],
+      [
+       0.0025,
+       0.00067
+      ],
+      [
+       0.005,
+       0.0
+      ],
+      [
+       0.127,
+       0.0
+      ],
+      [
+       0.1295,
+       0.00067
+      ],
+      [
+       0.13133,
+       0.0025
+      ],
+      [
+       0.132,
+       0.005
+      ],
+      [
+       0.132,
+       0.035
+      ],
+      [
+       0.13133,
+       0.0375
+      ],
+      [
+       0.1295,
+       0.03933
+      ],
+      [
+       0.127,
+       0.04
+      ],
+      [
+       0.005,
+       0.04
+      ],
+      [
+       0.0025,
+       0.03933
+      ],
+      [
+       0.00067,
+       0.0375
+      ],
+      [
+       0.0,
+       0.035
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": 0.9,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-cleat",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.07,
+       -0.07
+      ],
+      [
+       0.63,
+       -0.07
+      ],
+      [
+       0.66,
+       -0.04
+      ],
+      [
+       0.66,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.04,
+       -0.04
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "leg-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.708
+      ],
+      [
+       0.01039,
+       -0.714
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-r-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.708
+      ],
+      [
+       0.01039,
+       -0.714
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "leg-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.01039,
+       0.714
+      ],
+      [
+       0.0,
+       0.708
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-l-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.01039,
+       0.714
+      ],
+      [
+       0.0,
+       0.708
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "cleat",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.285
+      ],
+      [
+       0.615,
+       -0.285
+      ],
+      [
+       0.66,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ],
+      [
+       0.66,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "cleat-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.285
+      ],
+      [
+       0.615,
+       -0.285
+      ],
+      [
+       0.66,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ],
+      [
+       0.66,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "stretcher",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.5
+      ],
+      [
+       0.3275,
+       -0.5
+      ],
+      [
+       0.3575,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ],
+      [
+       0.3575,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "stretcher-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.5
+      ],
+      [
+       0.3275,
+       -0.5
+      ],
+      [
+       0.3575,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ],
+      [
+       0.3575,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "brace",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       0.8225,
+       0.33262
+      ],
+      [
+       0.8225,
+       0.40738
+      ],
+      [
+       0.0225,
+       0.70738
+      ],
+      [
+       0.0225,
+       0.63262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "brace-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       -0.0225,
+       0.63262
+      ],
+      [
+       -0.0225,
+       0.70738
+      ],
+      [
+       -0.8225,
+       0.40738
+      ],
+      [
+       -0.8225,
+       0.33262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "plate-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.38504,
+       -0.39339
+      ],
+      [
+       0.29498,
+       -0.44539
+      ],
+      [
+       0.29205,
+       -0.45632
+      ],
+      [
+       0.32805,
+       -0.51868
+      ],
+      [
+       0.33898,
+       -0.52161
+      ],
+      [
+       0.42904,
+       -0.46961
+      ],
+      [
+       0.43197,
+       -0.45868
+      ],
+      [
+       0.39597,
+       -0.39632
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7695,
+     "to": 0.7775,
+     "holes": [
+      [
+       [
+        0.32345,
+        -0.44269
+       ],
+       [
+        0.32107,
+        -0.44031
+       ],
+       [
+        0.3202,
+        -0.43706
+       ],
+       [
+        0.32107,
+        -0.43381
+       ],
+       [
+        0.32345,
+        -0.43143
+       ],
+       [
+        0.3267,
+        -0.43056
+       ],
+       [
+        0.32995,
+        -0.43143
+       ],
+       [
+        0.33233,
+        -0.43381
+       ],
+       [
+        0.3332,
+        -0.43706
+       ],
+       [
+        0.33233,
+        -0.44031
+       ],
+       [
+        0.32995,
+        -0.44269
+       ],
+       [
+        0.3267,
+        -0.44356
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "plate-r-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.38504,
+       -0.39339
+      ],
+      [
+       0.29498,
+       -0.44539
+      ],
+      [
+       0.29205,
+       -0.45632
+      ],
+      [
+       0.32805,
+       -0.51868
+      ],
+      [
+       0.33898,
+       -0.52161
+      ],
+      [
+       0.42904,
+       -0.46961
+      ],
+      [
+       0.43197,
+       -0.45868
+      ],
+      [
+       0.39597,
+       -0.39632
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7695,
+     "holes": [
+      [
+       [
+        0.32345,
+        -0.44269
+       ],
+       [
+        0.32107,
+        -0.44031
+       ],
+       [
+        0.3202,
+        -0.43706
+       ],
+       [
+        0.32107,
+        -0.43381
+       ],
+       [
+        0.32345,
+        -0.43143
+       ],
+       [
+        0.3267,
+        -0.43056
+       ],
+       [
+        0.32995,
+        -0.43143
+       ],
+       [
+        0.33233,
+        -0.43381
+       ],
+       [
+        0.3332,
+        -0.43706
+       ],
+       [
+        0.33233,
+        -0.44031
+       ],
+       [
+        0.32995,
+        -0.44269
+       ],
+       [
+        0.3267,
+        -0.44356
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "plate-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.39597,
+       0.39632
+      ],
+      [
+       0.43197,
+       0.45868
+      ],
+      [
+       0.42904,
+       0.46961
+      ],
+      [
+       0.33898,
+       0.52161
+      ],
+      [
+       0.32805,
+       0.51868
+      ],
+      [
+       0.29205,
+       0.45632
+      ],
+      [
+       0.29498,
+       0.44539
+      ],
+      [
+       0.38504,
+       0.39339
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7695,
+     "to": 0.7775,
+     "holes": [
+      [
+       [
+        0.3267,
+        0.44356
+       ],
+       [
+        0.32995,
+        0.44269
+       ],
+       [
+        0.33233,
+        0.44031
+       ],
+       [
+        0.3332,
+        0.43706
+       ],
+       [
+        0.33233,
+        0.43381
+       ],
+       [
+        0.32995,
+        0.43143
+       ],
+       [
+        0.3267,
+        0.43056
+       ],
+       [
+        0.32345,
+        0.43143
+       ],
+       [
+        0.32107,
+        0.43381
+       ],
+       [
+        0.3202,
+        0.43706
+       ],
+       [
+        0.32107,
+        0.44031
+       ],
+       [
+        0.32345,
+        0.44269
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "plate-l-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.39597,
+       0.39632
+      ],
+      [
+       0.43197,
+       0.45868
+      ],
+      [
+       0.42904,
+       0.46961
+      ],
+      [
+       0.33898,
+       0.52161
+      ],
+      [
+       0.32805,
+       0.51868
+      ],
+      [
+       0.29205,
+       0.45632
+      ],
+      [
+       0.29498,
+       0.44539
+      ],
+      [
+       0.38504,
+       0.39339
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7695,
+     "holes": [
+      [
+       [
+        0.3267,
+        0.44356
+       ],
+       [
+        0.32995,
+        0.44269
+       ],
+       [
+        0.33233,
+        0.44031
+       ],
+       [
+        0.3332,
+        0.43706
+       ],
+       [
+        0.33233,
+        0.43381
+       ],
+       [
+        0.32995,
+        0.43143
+       ],
+       [
+        0.3267,
+        0.43056
+       ],
+       [
+        0.32345,
+        0.43143
+       ],
+       [
+        0.32107,
+        0.43381
+       ],
+       [
+        0.3202,
+        0.43706
+       ],
+       [
+        0.32107,
+        0.44031
+       ],
+       [
+        0.32345,
+        0.44269
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "cleat-dome-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       -0.0005,
+       0.012
+      ],
+      [
+       0.002,
+       0.0112
+      ],
+      [
+       0.0042,
+       0.0085
+      ],
+      [
+       0.0056,
+       0.0045
+      ],
+      [
+       0.006,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      0.8675
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-dome-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       -0.0005,
+       0.012
+      ],
+      [
+       0.002,
+       0.0112
+      ],
+      [
+       0.0042,
+       0.0085
+      ],
+      [
+       0.0056,
+       0.0045
+      ],
+      [
+       0.006,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      -0.8675
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-dome-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       -0.0005,
+       0.012
+      ],
+      [
+       0.002,
+       0.0112
+      ],
+      [
+       0.0042,
+       0.0085
+      ],
+      [
+       0.0056,
+       0.0045
+      ],
+      [
+       0.006,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      0.8675
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-dome-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       -0.0005,
+       0.012
+      ],
+      [
+       0.002,
+       0.0112
+      ],
+      [
+       0.0042,
+       0.0085
+      ],
+      [
+       0.0056,
+       0.0045
+      ],
+      [
+       0.006,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      -0.8675
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-nut-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      0.7775
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-nut-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      -0.7775
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-nut-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      0.7775
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cleat-nut-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      -0.7775
+     ],
+     "texture": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "pivot-nut-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.0025,
+       0.014
+      ],
+      [
+       0.0025,
+       0.0105
+      ],
+      [
+       0.012,
+       0.0105
+      ],
+      [
+       0.012,
+       0.006
+      ],
+      [
+       0.016,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "pivot-nut-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.0025,
+       0.014
+      ],
+      [
+       0.0025,
+       0.0105
+      ],
+      [
+       0.012,
+       0.0105
+      ],
+      [
+       0.012,
+       0.006
+      ],
+      [
+       0.016,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      -0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "pivot-nut-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.0025,
+       0.014
+      ],
+      [
+       0.0025,
+       0.0105
+      ],
+      [
+       0.012,
+       0.0105
+      ],
+      [
+       0.012,
+       0.006
+      ],
+      [
+       0.016,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "pivot-nut-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.0025,
+       0.014
+      ],
+      [
+       0.0025,
+       0.0105
+      ],
+      [
+       0.012,
+       0.0105
+      ],
+      [
+       0.012,
+       0.006
+      ],
+      [
+       0.016,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      -0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "lap-nut-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.405,
+      -0.43117,
+      0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "lap-nut-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.405,
+      -0.43117,
+      -0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "lap-nut-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.405,
+      0.43117,
+      0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "lap-nut-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0115
+      ],
+      [
+       0.002,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.0085
+      ],
+      [
+       0.0095,
+       0.005
+      ],
+      [
+       0.013,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.405,
+      0.43117,
+      -0.8675
+     ],
+     "texture": true
+    },
+    {
+     "id": "seat-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       0.03
+      ],
+      [
+       0.01067,
+       0.0275
+      ],
+      [
+       0.0125,
+       0.02567
+      ],
+      [
+       0.015,
+       0.025
+      ],
+      [
+       0.15,
+       0.025
+      ],
+      [
+       0.1525,
+       0.02567
+      ],
+      [
+       0.15433,
+       0.0275
+      ],
+      [
+       0.155,
+       0.03
+      ],
+      [
+       0.155,
+       0.06
+      ],
+      [
+       0.15433,
+       0.0625
+      ],
+      [
+       0.1525,
+       0.06433
+      ],
+      [
+       0.15,
+       0.065
+      ],
+      [
+       0.015,
+       0.065
+      ],
+      [
+       0.0125,
+       0.06433
+      ],
+      [
+       0.01067,
+       0.0625
+      ],
+      [
+       0.01,
+       0.06
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.155,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "batten-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.02,
+       -0.02
+      ],
+      [
+       0.3,
+       -0.02
+      ],
+      [
+       0.3,
+       0.025
+      ],
+      [
+       0.02,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "gusset-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.01,
+       -0.045
+      ],
+      [
+       0.075,
+       -0.045
+      ],
+      [
+       0.29,
+       0.003
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7595,
+     "to": 0.7675
+    },
+    {
+     "id": "gusset-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       -0.01,
+       -0.045
+      ],
+      [
+       0.075,
+       -0.045
+      ],
+      [
+       0.29,
+       0.003
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7675,
+     "to": -0.7595
+    },
+    {
+     "id": "flange-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       0.017
+      ],
+      [
+       0.29,
+       0.017
+      ],
+      [
+       0.29,
+       0.025
+      ],
+      [
+       0.01,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7195,
+     "to": 0.7595
+    },
+    {
+     "id": "flange-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       0.017
+      ],
+      [
+       0.29,
+       0.017
+      ],
+      [
+       0.29,
+       0.025
+      ],
+      [
+       0.01,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7595,
+     "to": -0.7195
+    },
+    {
+     "id": "pivot-head-r",
+     "kind": "revolve",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.7595
+     ],
+     "texture": true
+    },
+    {
+     "id": "pivot-head-r-b",
+     "kind": "revolve",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.7595
+     ],
+     "texture": true
+    },
+    {
+     "id": "plunger-r",
+     "kind": "revolve",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.014,
+       0.005
+      ],
+      [
+       0.014,
+       0.009
+      ],
+      [
+       0.03,
+       0.009
+      ],
+      [
+       0.03,
+       0.011
+      ],
+      [
+       0.036,
+       0.011
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.0483,
+      -0.01294,
+      0.7735
+     ],
+     "texture": true
+    },
+    {
+     "id": "plunger-r-b",
+     "kind": "revolve",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.014,
+       0.005
+      ],
+      [
+       0.014,
+       0.009
+      ],
+      [
+       0.03,
+       0.009
+      ],
+      [
+       0.03,
+       0.011
+      ],
+      [
+       0.036,
+       0.011
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0483,
+      -0.01294,
+      -0.7735
+     ],
+     "texture": true
+    },
+    {
+     "id": "seat-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       -0.06
+      ],
+      [
+       0.01067,
+       -0.0625
+      ],
+      [
+       0.0125,
+       -0.06433
+      ],
+      [
+       0.015,
+       -0.065
+      ],
+      [
+       0.15,
+       -0.065
+      ],
+      [
+       0.1525,
+       -0.06433
+      ],
+      [
+       0.15433,
+       -0.0625
+      ],
+      [
+       0.155,
+       -0.06
+      ],
+      [
+       0.155,
+       -0.03
+      ],
+      [
+       0.15433,
+       -0.0275
+      ],
+      [
+       0.1525,
+       -0.02567
+      ],
+      [
+       0.15,
+       -0.025
+      ],
+      [
+       0.015,
+       -0.025
+      ],
+      [
+       0.0125,
+       -0.02567
+      ],
+      [
+       0.01067,
+       -0.0275
+      ],
+      [
+       0.01,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.155,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "batten-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.02,
+       -0.025
+      ],
+      [
+       0.3,
+       -0.025
+      ],
+      [
+       0.3,
+       0.02
+      ],
+      [
+       0.02,
+       0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "gusset-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.003
+      ],
+      [
+       0.075,
+       0.045
+      ],
+      [
+       -0.01,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7595,
+     "to": 0.7675
+    },
+    {
+     "id": "gusset-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.003
+      ],
+      [
+       0.075,
+       0.045
+      ],
+      [
+       -0.01,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7675,
+     "to": -0.7595
+    },
+    {
+     "id": "flange-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.017
+      ],
+      [
+       0.01,
+       -0.017
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7195,
+     "to": 0.7595
+    },
+    {
+     "id": "flange-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.017
+      ],
+      [
+       0.01,
+       -0.017
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7595,
+     "to": -0.7195
+    },
+    {
+     "id": "pivot-head-l",
+     "kind": "revolve",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.7595
+     ],
+     "texture": true
+    },
+    {
+     "id": "pivot-head-l-b",
+     "kind": "revolve",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0075,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.7595
+     ],
+     "texture": true
+    },
+    {
+     "id": "plunger-l",
+     "kind": "revolve",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.014,
+       0.005
+      ],
+      [
+       0.014,
+       0.009
+      ],
+      [
+       0.03,
+       0.009
+      ],
+      [
+       0.03,
+       0.011
+      ],
+      [
+       0.036,
+       0.011
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.0483,
+      0.01294,
+      0.7735
+     ],
+     "texture": true
+    },
+    {
+     "id": "plunger-l-b",
+     "kind": "revolve",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.12,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.014,
+       0.005
+      ],
+      [
+       0.014,
+       0.009
+      ],
+      [
+       0.03,
+       0.009
+      ],
+      [
+       0.03,
+       0.011
+      ],
+      [
+       0.036,
+       0.011
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0483,
+      0.01294,
+      -0.7735
+     ],
+     "texture": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-top-plank",
+     "of": "top-plank",
+     "region": "table-top",
+     "layer": "top-plank"
+    },
+    {
+     "id": "th-top-cleat",
+     "of": "top-cleat",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-leg-r",
+     "of": "leg-r",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-leg-r-b",
+     "of": "leg-r-b",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-leg-l",
+     "of": "leg-l",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-leg-l-b",
+     "of": "leg-l-b",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-cleat",
+     "of": "cleat",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-cleat-b",
+     "of": "cleat-b",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-stretcher",
+     "of": "stretcher",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-stretcher-b",
+     "of": "stretcher-b",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-brace",
+     "of": "brace",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-brace-b",
+     "of": "brace-b",
+     "region": "a-frame",
+     "layer": "frame-member"
+    },
+    {
+     "id": "th-plate-r",
+     "of": "plate-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plate-r-b",
+     "of": "plate-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plate-l",
+     "of": "plate-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plate-l-b",
+     "of": "plate-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-dome-r",
+     "of": "cleat-dome-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-dome-r-b",
+     "of": "cleat-dome-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-dome-l",
+     "of": "cleat-dome-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-dome-l-b",
+     "of": "cleat-dome-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-nut-r",
+     "of": "cleat-nut-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-nut-r-b",
+     "of": "cleat-nut-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-nut-l",
+     "of": "cleat-nut-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-cleat-nut-l-b",
+     "of": "cleat-nut-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-nut-r",
+     "of": "pivot-nut-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-nut-r-b",
+     "of": "pivot-nut-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-nut-l",
+     "of": "pivot-nut-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-nut-l-b",
+     "of": "pivot-nut-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-lap-nut-r",
+     "of": "lap-nut-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-lap-nut-r-b",
+     "of": "lap-nut-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-lap-nut-l",
+     "of": "lap-nut-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-lap-nut-l-b",
+     "of": "lap-nut-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-seat-r",
+     "of": "seat-r",
+     "region": "bench-seats",
+     "layer": "seat-plank"
+    },
+    {
+     "id": "th-batten-r",
+     "of": "batten-r",
+     "region": "bench-seats",
+     "layer": "seat-plank"
+    },
+    {
+     "id": "th-gusset-r",
+     "of": "gusset-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-gusset-r-b",
+     "of": "gusset-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-flange-r",
+     "of": "flange-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-flange-r-b",
+     "of": "flange-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-head-r",
+     "of": "pivot-head-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-head-r-b",
+     "of": "pivot-head-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plunger-r",
+     "of": "plunger-r",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plunger-r-b",
+     "of": "plunger-r-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-seat-l",
+     "of": "seat-l",
+     "region": "bench-seats",
+     "layer": "seat-plank"
+    },
+    {
+     "id": "th-batten-l",
+     "of": "batten-l",
+     "region": "bench-seats",
+     "layer": "seat-plank"
+    },
+    {
+     "id": "th-gusset-l",
+     "of": "gusset-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-gusset-l-b",
+     "of": "gusset-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-flange-l",
+     "of": "flange-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-flange-l-b",
+     "of": "flange-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-head-l",
+     "of": "pivot-head-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-pivot-head-l-b",
+     "of": "pivot-head-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plunger-l",
+     "of": "plunger-l",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    },
+    {
+     "id": "th-plunger-l-b",
+     "of": "plunger-l-b",
+     "region": "hinges",
+     "layer": "hinge-plate"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-top-plank",
+     "of": "top-plank",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-top-cleat",
+     "of": "top-cleat",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r",
+     "of": "leg-r",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r-b",
+     "of": "leg-r-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l",
+     "of": "leg-l",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l-b",
+     "of": "leg-l-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat",
+     "of": "cleat",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat-b",
+     "of": "cleat-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher",
+     "of": "stretcher",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-b",
+     "of": "stretcher-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace",
+     "of": "brace",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace-b",
+     "of": "brace-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "j-plate-r",
+     "of": "plate-r",
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-r-b",
+     "of": "plate-r-b",
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-l",
+     "of": "plate-l",
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-l-b",
+     "of": "plate-l-b",
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "m-seat-r",
+     "of": "seat-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-batten-r",
+     "of": "batten-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-gusset-r",
+     "of": "gusset-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-gusset-r-b",
+     "of": "gusset-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-r",
+     "of": "flange-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-r-b",
+     "of": "flange-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-l",
+     "of": "seat-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-batten-l",
+     "of": "batten-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-gusset-l",
+     "of": "gusset-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-gusset-l-b",
+     "of": "gusset-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-l",
+     "of": "flange-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-l-b",
+     "of": "flange-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "pivot-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.132,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.132,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      -0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.132,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.006
+      ],
+      [
+       0.132,
+       0.006
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      -0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      0.7645
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-stretcher-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.405,
+      -0.43117,
+      0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      -0.2955,
+      -0.7645
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       0.0225,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-stretcher-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.405,
+      -0.43117,
+      -0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      0.7645
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-stretcher-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.405,
+      0.43117,
+      0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.64,
+      0.2955,
+      -0.7645
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.03897,
+       -0.0225,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-stretcher-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.005
+      ],
+      [
+       0.109,
+       0.005
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.405,
+      0.43117,
+      -0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-a",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.085,
+       0.004
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      0.845
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-m",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.085,
+       0.004
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      0.0
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-b",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.004
+      ],
+      [
+       0.085,
+       0.004
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      -0.845
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.0075,
+       0.61
+      ],
+      [
+       0.0075,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.0075,
+       0.61
+      ],
+      [
+       0.0075,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.0075,
+       -0.72
+      ],
+      [
+       0.0075,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.0075,
+       -0.72
+      ],
+      [
+       0.0075,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.018,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.35,
+       0.02,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-a",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.018,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-b",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.018,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       -0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-r",
+     "kind": "ellipsoid",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.018,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       0.045,
+       0.0
+      ]
+     },
+     "member": "bench-r",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-l",
+     "kind": "ellipsoid",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.018,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       -0.045,
+       0.0
+      ]
+     },
+     "member": "bench-l",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored for 7.5 mm: five 132 x 40 mm top planks with 5 mm eased edges and 10 mm drainage gaps on two end cleats and a centre cleat; two A-frames, each of two 95 x 45 mm legs raked 60 degrees (level cuts at ground and top, eased toe) and, lapped on their outer faces, a 95 x 45 mm cleat with bevelled ends and a 95 x 45 mm stretcher; two 70 x 45 mm braces from the stretchers up to the centre cleat; the domed heads and nuts of the M10 carriage bolts in every lap and nut and washer of the M12 pivot bolts. Each bench: two 145 x 40 mm eased planks 1.50 m long with a centre batten, hanging between the frames on two folded 8 mm gusset brackets (web beside the plank ends, flange under the planks) that turn on the pivot bolts; an 8 mm bearing plate on each inner leg face with the open stow hole; pivot bolt heads and spring plungers on the gussets.",
+     "de": "Körper, für 7,5 mm gebaut: fünf Tischbohlen 132 x 40 mm mit 5 mm gebrochenen Kanten und 10-mm-Wasserfugen auf zwei Endriegeln und einem Mittelriegel; zwei A-Böcke, je aus zwei um 60 Grad geneigten Beinen 95 x 45 mm (waagerechte Schnitte am Boden und oben, gebrochene Zehe) und, außen aufgeblattet, einem Riegel 95 x 45 mm mit gefasten Enden und einer Zange 95 x 45 mm; zwei Streben 70 x 45 mm von den Zangen hinauf zum Mittelriegel; Rundköpfe und Muttern der M10-Schlossschrauben in jeder Überblattung sowie Mutter und Scheibe der M12-Drehbolzen. Jede Bank: zwei gefaste Bohlen 145 x 40 mm, 1,50 m lang, mit Mittelleiste, zwischen den Böcken an zwei gekanteten 8-mm-Knotenblechkonsolen (Steg neben den Bohlenenden, Flansch unter den Bohlen), die um die Drehbolzen schwenken; eine 8-mm-Lagerplatte auf jeder Beininnenseite mit dem offenen Rastloch der Parkstellung; Drehbolzenköpfe und Federrastbolzen auf den Knotenblechen."
+    },
+    {
+     "en": "Thermal: every region is the surface of its body solids with its one layer (40 mm planks, 45 mm frame timber, 8 mm steel); no hidden regions, no emitters. Structure: planks, cleats, legs, stretchers, braces, bench planks, battens and gusset brackets are the members themselves; joints are the pivot bolts through gusset, bearing plate, leg and stretcher, the bearing plates, the lap bolts and one screw per plank and cleat; a pad under each of the four feet; masses of top and benches at their centres, the frame's mass in each stretcher.",
+     "de": "Thermik: jede Region ist die Oberfläche ihrer Körper mit ihrer einen Schicht (40-mm-Bohlen, 45-mm-Gestellholz, 8-mm-Stahl); keine verdeckten Regionen, keine Emitter. Tragwerk: Bohlen, Riegel, Beine, Zangen, Streben, Bankbohlen, Leisten und Knotenblechkonsolen sind die Stäbe selbst; Gelenke sind die Drehbolzen durch Knotenblech, Lagerplatte, Bein und Zange, die Lagerplatten, die Blattbolzen und je eine Schraube pro Bohle und Riegel; ein Auflager unter jedem der vier Füße; Massen von Platte und Bänken in ihren Schwerpunkten, die Gestellmasse in jeder Zange."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "top-plank",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.132,
+       0.0
+      ],
+      [
+       0.132,
+       0.04
+      ],
+      [
+       0.0,
+       0.04
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": 0.9,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-cleat",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       -0.07
+      ],
+      [
+       0.66,
+       -0.07
+      ],
+      [
+       0.66,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "leg-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-r-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "leg-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-l-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "cleat",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.285
+      ],
+      [
+       0.615,
+       -0.285
+      ],
+      [
+       0.66,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ],
+      [
+       0.66,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "cleat-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.285
+      ],
+      [
+       0.615,
+       -0.285
+      ],
+      [
+       0.66,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ],
+      [
+       0.66,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "stretcher",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.53
+      ],
+      [
+       0.3275,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "stretcher-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.53
+      ],
+      [
+       0.3275,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "brace",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       0.8225,
+       0.33262
+      ],
+      [
+       0.8225,
+       0.40738
+      ],
+      [
+       0.0225,
+       0.70738
+      ],
+      [
+       0.0225,
+       0.63262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "brace-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       -0.0225,
+       0.63262
+      ],
+      [
+       -0.0225,
+       0.70738
+      ],
+      [
+       -0.8225,
+       0.40738
+      ],
+      [
+       -0.8225,
+       0.33262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "seat-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       0.025
+      ],
+      [
+       0.155,
+       0.025
+      ],
+      [
+       0.155,
+       0.065
+      ],
+      [
+       0.01,
+       0.065
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.155,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "batten-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.02,
+       -0.02
+      ],
+      [
+       0.3,
+       -0.02
+      ],
+      [
+       0.3,
+       0.025
+      ],
+      [
+       0.02,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "bracket-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.045
+      ],
+      [
+       0.075,
+       -0.045
+      ],
+      [
+       0.29,
+       0.005
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7625,
+     "to": 0.7775
+    },
+    {
+     "id": "bracket-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.045
+      ],
+      [
+       0.075,
+       -0.045
+      ],
+      [
+       0.29,
+       0.005
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7625
+    },
+    {
+     "id": "flange-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       0.01
+      ],
+      [
+       0.29,
+       0.01
+      ],
+      [
+       0.29,
+       0.025
+      ],
+      [
+       0.01,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7225,
+     "to": 0.7625
+    },
+    {
+     "id": "flange-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       0.01
+      ],
+      [
+       0.29,
+       0.01
+      ],
+      [
+       0.29,
+       0.025
+      ],
+      [
+       0.01,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7625,
+     "to": -0.7225
+    },
+    {
+     "id": "seat-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       -0.065
+      ],
+      [
+       0.155,
+       -0.065
+      ],
+      [
+       0.155,
+       -0.025
+      ],
+      [
+       0.01,
+       -0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.155,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "batten-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.02,
+       -0.025
+      ],
+      [
+       0.3,
+       -0.025
+      ],
+      [
+       0.3,
+       0.02
+      ],
+      [
+       0.02,
+       0.02
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "bracket-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.045
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.005
+      ],
+      [
+       0.075,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7625,
+     "to": 0.7775
+    },
+    {
+     "id": "bracket-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.045
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.005
+      ],
+      [
+       0.075,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7625
+    },
+    {
+     "id": "flange-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.01
+      ],
+      [
+       0.01,
+       -0.01
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7225,
+     "to": 0.7625
+    },
+    {
+     "id": "flange-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.01,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.01
+      ],
+      [
+       0.01,
+       -0.01
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7625,
+     "to": -0.7225
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-top-plank",
+     "of": "top-plank",
+     "region": "table-top"
+    },
+    {
+     "id": "th-top-cleat",
+     "of": "top-cleat",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-r",
+     "of": "leg-r",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-r-b",
+     "of": "leg-r-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-l",
+     "of": "leg-l",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-l-b",
+     "of": "leg-l-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-cleat",
+     "of": "cleat",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-cleat-b",
+     "of": "cleat-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-stretcher",
+     "of": "stretcher",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-stretcher-b",
+     "of": "stretcher-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-brace",
+     "of": "brace",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-brace-b",
+     "of": "brace-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-seat-r",
+     "of": "seat-r",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-batten-r",
+     "of": "batten-r",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-r",
+     "of": "bracket-r",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-r-b",
+     "of": "bracket-r-b",
+     "region": "hinges"
+    },
+    {
+     "id": "th-flange-r",
+     "of": "flange-r",
+     "region": "hinges"
+    },
+    {
+     "id": "th-flange-r-b",
+     "of": "flange-r-b",
+     "region": "hinges"
+    },
+    {
+     "id": "th-seat-l",
+     "of": "seat-l",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-batten-l",
+     "of": "batten-l",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-l",
+     "of": "bracket-l",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-l-b",
+     "of": "bracket-l-b",
+     "region": "hinges"
+    },
+    {
+     "id": "th-flange-l",
+     "of": "flange-l",
+     "region": "hinges"
+    },
+    {
+     "id": "th-flange-l-b",
+     "of": "flange-l-b",
+     "region": "hinges"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-top-plank",
+     "of": "top-plank",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-top-cleat",
+     "of": "top-cleat",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r",
+     "of": "leg-r",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r-b",
+     "of": "leg-r-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l",
+     "of": "leg-l",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l-b",
+     "of": "leg-l-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat",
+     "of": "cleat",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat-b",
+     "of": "cleat-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher",
+     "of": "stretcher",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-b",
+     "of": "stretcher-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace",
+     "of": "brace",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace-b",
+     "of": "brace-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-r",
+     "of": "seat-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-batten-r",
+     "of": "batten-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r",
+     "of": "bracket-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r-b",
+     "of": "bracket-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-r",
+     "of": "flange-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-r-b",
+     "of": "flange-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-l",
+     "of": "seat-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-batten-l",
+     "of": "batten-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l",
+     "of": "bracket-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l-b",
+     "of": "bracket-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-l",
+     "of": "flange-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-flange-l-b",
+     "of": "flange-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "pivot-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.132,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.132,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      -0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.132,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.132,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      -0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.109,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.66,
+      -0.28395,
+      0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.109,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.66,
+      -0.28395,
+      -0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.109,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.66,
+      0.28395,
+      0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "lap-cleat-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.109,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.66,
+      0.28395,
+      -0.7645
+     ],
+     "member": "frame",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-a",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.085,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      0.845
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-m",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.085,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      0.0
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "screw-top-b",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.085,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "origin": [
+      0.066,
+      0.037,
+      -0.845
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.142,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.015,
+       0.61
+      ],
+      [
+       0.015,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.015,
+       0.61
+      ],
+      [
+       0.015,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.015,
+       -0.72
+      ],
+      [
+       0.015,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.015,
+       -0.72
+      ],
+      [
+       0.015,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.35,
+       0.02,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-a",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-b",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       -0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-r",
+     "kind": "ellipsoid",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       0.045,
+       0.0
+      ]
+     },
+     "member": "bench-r",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-l",
+     "kind": "ellipsoid",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       -0.045,
+       0.0
+      ]
+     },
+     "member": "bench-l",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored for 15 mm: square-edged planks with their gaps, centre cleat, legs without the eased toe, cleats with bevels, plain stretchers, braces; bench planks square with the batten; each bracket as a 15 mm web against the leg that takes up the bearing plate, its flange drawn at the 15 mm floor; bolts, nuts and plungers are left out.",
+     "de": "Körper, für 15 mm gebaut: scharfkantige Bohlen mit ihren Fugen, Mittelriegel, Beine ohne gebrochene Zehe, Riegel mit Fasen, glatte Zangen, Streben; Bankbohlen scharfkantig mit Leiste; jede Konsole als 15-mm-Steg am Bein, der die Lagerplatte aufnimmt, ihr Flansch im 15-mm-Mindestmaß; Schrauben, Muttern und Rastbolzen entfallen."
+    },
+    {
+     "en": "Thermal: references to the merged body solids, one surface per region. Structure: the same load path with one 15 mm lap bolt per cleat joint, 15 mm pivot bolts and plank screws, 15 mm foot pads.",
+     "de": "Thermik: Verweise auf die zusammengefassten Körper, eine Oberfläche je Region. Tragwerk: derselbe Lastpfad mit einem 15-mm-Blattbolzen je Riegelanschluss, 15-mm-Drehbolzen und Bohlenschrauben, 15-mm-Auflagern."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "top-slab",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.7,
+       0.0
+      ],
+      [
+       0.7,
+       0.04
+      ],
+      [
+       0.0,
+       0.04
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": 0.9
+    },
+    {
+     "id": "leg-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-r-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "leg-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225
+    },
+    {
+     "id": "leg-l-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775
+    },
+    {
+     "id": "cleat",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.33
+      ],
+      [
+       0.615,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "cleat-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.615,
+       0.33
+      ],
+      [
+       0.615,
+       -0.33
+      ],
+      [
+       0.71,
+       -0.33
+      ],
+      [
+       0.71,
+       0.33
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "stretcher",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.53
+      ],
+      [
+       0.3275,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8225,
+     "to": 0.8675
+    },
+    {
+     "id": "stretcher-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.3275,
+       0.53
+      ],
+      [
+       0.3275,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       0.53
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8225
+    },
+    {
+     "id": "brace",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       0.8225,
+       0.33262
+      ],
+      [
+       0.8225,
+       0.40738
+      ],
+      [
+       0.0225,
+       0.70738
+      ],
+      [
+       0.0225,
+       0.63262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "brace-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.46,
+     "profile": [
+      [
+       -0.0225,
+       0.63262
+      ],
+      [
+       -0.0225,
+       0.70738
+      ],
+      [
+       -0.8225,
+       0.40738
+      ],
+      [
+       -0.8225,
+       0.33262
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
+     "id": "seat-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       0.025
+      ],
+      [
+       0.31,
+       0.025
+      ],
+      [
+       0.31,
+       0.065
+      ],
+      [
+       0.01,
+       0.065
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.045
+      ],
+      [
+       0.06,
+       -0.045
+      ],
+      [
+       0.29,
+       -0.005
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7475,
+     "to": 0.7775
+    },
+    {
+     "id": "bracket-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.025
+      ],
+      [
+       -0.03,
+       -0.045
+      ],
+      [
+       0.06,
+       -0.045
+      ],
+      [
+       0.29,
+       -0.005
+      ],
+      [
+       0.29,
+       0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7475
+    },
+    {
+     "id": "seat-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       -0.065
+      ],
+      [
+       0.31,
+       -0.065
+      ],
+      [
+       0.31,
+       -0.025
+      ],
+      [
+       0.01,
+       -0.025
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.045
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       0.005
+      ],
+      [
+       0.06,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7475,
+     "to": 0.7775
+    },
+    {
+     "id": "bracket-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       -0.03,
+       0.045
+      ],
+      [
+       -0.03,
+       -0.025
+      ],
+      [
+       0.29,
+       -0.025
+      ],
+      [
+       0.29,
+       0.005
+      ],
+      [
+       0.06,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.7775,
+     "to": -0.7475
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-top-slab",
+     "of": "top-slab",
+     "region": "table-top"
+    },
+    {
+     "id": "th-leg-r",
+     "of": "leg-r",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-r-b",
+     "of": "leg-r-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-l",
+     "of": "leg-l",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-leg-l-b",
+     "of": "leg-l-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-cleat",
+     "of": "cleat",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-cleat-b",
+     "of": "cleat-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-stretcher",
+     "of": "stretcher",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-stretcher-b",
+     "of": "stretcher-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-brace",
+     "of": "brace",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-brace-b",
+     "of": "brace-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-seat-r",
+     "of": "seat-r",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-r",
+     "of": "bracket-r",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-r-b",
+     "of": "bracket-r-b",
+     "region": "hinges"
+    },
+    {
+     "id": "th-seat-l",
+     "of": "seat-l",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-l",
+     "of": "bracket-l",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-l-b",
+     "of": "bracket-l-b",
+     "region": "hinges"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-top-slab",
+     "of": "top-slab",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r",
+     "of": "leg-r",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-r-b",
+     "of": "leg-r-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l",
+     "of": "leg-l",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-leg-l-b",
+     "of": "leg-l-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat",
+     "of": "cleat",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-cleat-b",
+     "of": "cleat-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher",
+     "of": "stretcher",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-b",
+     "of": "stretcher-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace",
+     "of": "brace",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-brace-b",
+     "of": "brace-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-r",
+     "of": "seat-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r",
+     "of": "bracket-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r-b",
+     "of": "bracket-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-l",
+     "of": "seat-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l",
+     "of": "bracket-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l-b",
+     "of": "bracket-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "pivot-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.132,
+       0.015
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.132,
+       0.015
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      -0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.132,
+       0.015
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.132,
+       0.015
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      -0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "seat-top-a",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.335,
+       -0.015
+      ],
+      [
+       0.365,
+       -0.015
+      ],
+      [
+       0.365,
+       0.015
+      ],
+      [
+       0.335,
+       0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.8375,
+     "to": 0.8675,
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "seat-top-b",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.335,
+       -0.015
+      ],
+      [
+       0.365,
+       -0.015
+      ],
+      [
+       0.365,
+       0.015
+      ],
+      [
+       0.335,
+       0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.8375,
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.03,
+       0.61
+      ],
+      [
+       0.03,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.03,
+       0.61
+      ],
+      [
+       0.03,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.03,
+       -0.72
+      ],
+      [
+       0.03,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8225,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.03,
+       -0.72
+      ],
+      [
+       0.03,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8225,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.35,
+       0.02,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-a",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-b",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       -0.845
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-r",
+     "kind": "ellipsoid",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       0.045,
+       0.0
+      ]
+     },
+     "member": "bench-r",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-l",
+     "kind": "ellipsoid",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       -0.045,
+       0.0
+      ]
+     },
+     "member": "bench-l",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored for 30 mm: the top as one 40 mm slab (gaps and centre cleat merged), each bench as one 300 x 40 mm board, legs, square cleats, stretchers and braces member by member at 45 mm, each bracket as a 30 mm block that fills the gap between board end and leg.",
+     "de": "Körper, für 30 mm gebaut: die Platte als eine 40-mm-Scheibe (Fugen und Mittelriegel aufgegangen), jede Bank als ein Brett 300 x 40 mm, Beine, kantige Riegel, Zangen und Streben Stab für Stab mit 45 mm, jede Konsole als 30-mm-Block, der die Lücke zwischen Brettende und Bein füllt."
+    },
+    {
+     "en": "Thermal: one surface per region on the merged solids. Structure: slab on cleats, cleats and stretchers on legs, braces, boards on bracket blocks; pivot bolts 30 mm, the seat of the slab on each cleat as a joint block, 30 mm foot pads.",
+     "de": "Thermik: eine Oberfläche je Region auf den zusammengefassten Körpern. Tragwerk: Scheibe auf Riegeln, Riegel und Zangen an Beinen, Streben, Bretter auf Konsolblöcken; Drehbolzen 30 mm, das Auflager der Scheibe auf jedem Riegel als Gelenkblock, 30-mm-Fußauflager."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "top-slab",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       -0.035
+      ],
+      [
+       0.7,
+       -0.035
+      ],
+      [
+       0.7,
+       0.04
+      ],
+      [
+       0.0,
+       0.04
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": 0.9
+    },
+    {
+     "id": "a-frame",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.32902,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.47602
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ],
+      [
+       0.4225,
+       -0.36602
+      ],
+      [
+       0.4225,
+       0.36602
+      ],
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.4225,
+       0.47602
+      ],
+      [
+       0.4225,
+       0.53
+      ],
+      [
+       0.32902,
+       0.53
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.3275,
+       0.42088
+      ],
+      [
+       0.3275,
+       -0.42088
+      ],
+      [
+       0.0,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8675
+    },
+    {
+     "id": "a-frame-b",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.32902,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.53
+      ],
+      [
+       0.4225,
+       -0.47602
+      ],
+      [
+       0.71,
+       -0.31
+      ],
+      [
+       0.71,
+       -0.2
+      ],
+      [
+       0.4225,
+       -0.36602
+      ],
+      [
+       0.4225,
+       0.36602
+      ],
+      [
+       0.71,
+       0.2
+      ],
+      [
+       0.71,
+       0.31
+      ],
+      [
+       0.4225,
+       0.47602
+      ],
+      [
+       0.4225,
+       0.53
+      ],
+      [
+       0.32902,
+       0.53
+      ],
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.3275,
+       0.42088
+      ],
+      [
+       0.3275,
+       -0.42088
+      ],
+      [
+       0.0,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.7775
+    },
+    {
+     "id": "seat-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       -0.01
+      ],
+      [
+       0.31,
+       -0.01
+      ],
+      [
+       0.31,
+       0.065
+      ],
+      [
+       0.01,
+       0.065
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-r",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       0.01,
+       -0.085
+      ],
+      [
+       0.085,
+       -0.085
+      ],
+      [
+       0.085,
+       -0.01
+      ],
+      [
+       0.01,
+       -0.01
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.675,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-r-b",
+     "kind": "extrude",
+     "bone": "bench-r",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       0.01,
+       -0.085
+      ],
+      [
+       0.085,
+       -0.085
+      ],
+      [
+       0.085,
+       -0.01
+      ],
+      [
+       0.01,
+       -0.01
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": -0.675
+    },
+    {
+     "id": "seat-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.01,
+       -0.065
+      ],
+      [
+       0.31,
+       -0.065
+      ],
+      [
+       0.31,
+       0.01
+      ],
+      [
+       0.01,
+       0.01
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-l",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       0.01,
+       0.01
+      ],
+      [
+       0.085,
+       0.01
+      ],
+      [
+       0.085,
+       0.085
+      ],
+      [
+       0.01,
+       0.085
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.675,
+     "to": 0.75
+    },
+    {
+     "id": "bracket-l-b",
+     "kind": "extrude",
+     "bone": "bench-l",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.22,
+     "profile": [
+      [
+       0.01,
+       0.01
+      ],
+      [
+       0.085,
+       0.01
+      ],
+      [
+       0.085,
+       0.085
+      ],
+      [
+       0.01,
+       0.085
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.75,
+     "to": -0.675
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-top-slab",
+     "of": "top-slab",
+     "region": "table-top"
+    },
+    {
+     "id": "th-a-frame",
+     "of": "a-frame",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-a-frame-b",
+     "of": "a-frame-b",
+     "region": "a-frame"
+    },
+    {
+     "id": "th-seat-r",
+     "of": "seat-r",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-r",
+     "of": "bracket-r",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-r-b",
+     "of": "bracket-r-b",
+     "region": "hinges"
+    },
+    {
+     "id": "th-seat-l",
+     "of": "seat-l",
+     "region": "bench-seats"
+    },
+    {
+     "id": "th-bracket-l",
+     "of": "bracket-l",
+     "region": "hinges"
+    },
+    {
+     "id": "th-bracket-l-b",
+     "of": "bracket-l-b",
+     "region": "hinges"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-top-slab",
+     "of": "top-slab",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-a-frame",
+     "of": "a-frame",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-a-frame-b",
+     "of": "a-frame-b",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-r",
+     "of": "seat-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r",
+     "of": "bracket-r",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-r-b",
+     "of": "bracket-r-b",
+     "member": "bench-r",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-l",
+     "of": "seat-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l",
+     "of": "bracket-l",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "m-bracket-l-b",
+     "of": "bracket-l-b",
+     "member": "bench-l",
+     "part": "member"
+    },
+    {
+     "id": "pivot-r-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.132,
+       0.0375
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-r-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.132,
+       0.0375
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      -0.45,
+      -0.7515
+     ],
+     "member": "bench-r",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-a",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.132,
+       0.0375
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "pivot-l-b",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.132,
+       0.0375
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      -1.0
+     ],
+     "origin": [
+      0.375,
+      0.45,
+      -0.7515
+     ],
+     "member": "bench-l",
+     "part": "joint"
+    },
+    {
+     "id": "seat-top-a",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.3125,
+       -0.0375
+      ],
+      [
+       0.3875,
+       -0.0375
+      ],
+      [
+       0.3875,
+       0.0375
+      ],
+      [
+       0.3125,
+       0.0375
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7925,
+     "to": 0.8675,
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "seat-top-b",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.3125,
+       -0.0375
+      ],
+      [
+       0.3875,
+       -0.0375
+      ],
+      [
+       0.3875,
+       0.0375
+      ],
+      [
+       0.3125,
+       0.0375
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.7925,
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.075,
+       0.61
+      ],
+      [
+       0.075,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8675,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.72
+      ],
+      [
+       0.0,
+       0.61
+      ],
+      [
+       0.075,
+       0.61
+      ],
+      [
+       0.075,
+       0.72
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.075,
+       -0.72
+      ],
+      [
+       0.075,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.7775,
+     "to": 0.8675,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "ground",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       -0.61
+      ],
+      [
+       0.0,
+       -0.72
+      ],
+      [
+       0.075,
+       -0.72
+      ],
+      [
+       0.075,
+       -0.61
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.8675,
+     "to": -0.7775,
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.35,
+       0.0025,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-a",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       0.8225
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-frame-b",
+     "kind": "ellipsoid",
+     "bone": "frame",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.375,
+       0.0,
+       -0.8225
+      ]
+     },
+     "member": "frame",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-r",
+     "kind": "ellipsoid",
+     "bone": "bench-r",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       0.0275,
+       0.0
+      ]
+     },
+     "member": "bench-r",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bench-l",
+     "kind": "ellipsoid",
+     "bone": "bench-l",
+     "material": "pine-timber",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.14951,
+       -0.0275,
+       0.0
+      ]
+     },
+     "member": "bench-l",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body, authored for 75 mm: the top with its cleats as one 75 mm slab, each A-frame as one 90 mm plate of both legs and the stretcher (legs and stretcher keep their 95 mm), each bench as a 75 mm board with its top at seat height, each bracket as a 75 mm block under the board end; braces (45 mm) are left out.",
+     "de": "Körper, für 75 mm gebaut: die Platte mit ihren Riegeln als eine 75-mm-Scheibe, jeder A-Bock als eine 90-mm-Scheibe aus beiden Beinen und der Zange (Beine und Zange behalten ihre 95 mm), jede Bank als 75-mm-Brett mit Oberkante auf Sitzhöhe, jede Konsole als 75-mm-Block unter dem Brettende; die Streben (45 mm) entfallen."
+    },
+    {
+     "en": "Thermal: one surface per region. Structure: slab on two A-frames, boards on bracket blocks, 75 mm pivot pins, seat blocks of the slab and foot pads; the model is minimal at this scale.",
+     "de": "Thermik: eine Oberfläche je Region. Tragwerk: Scheibe auf zwei A-Böcken, Bretter auf Konsolblöcken, 75-mm-Drehbolzen, Auflagerblöcke der Scheibe und Fußauflager; das Modell ist in diesem Maßstab minimal."
+    }
+   ]
+  }
+ }
+}

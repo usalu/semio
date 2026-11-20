@@ -23,6 +23,7 @@ impl DocumentOwner{
   if let Some(driver)=self.driver_mut(){if !driver.terminal_is_empty(){let result=driver.close_step(effect);return RetainedWorkOutcome{result,work:u128::from(driver.last_turn_work())}}}
   let demand=RetirementDemand{release_bytes:usize::from(self.storage.is_some())*size_of::<RetainedDocumentDriver>(),depth:1,..Default::default()};
   if !funded(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(PackRefusal::from(ValueError::literal(ValueRefusalKind::WorkLimit,"retained Document release exceeded its original work"))),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(PackRefusal::from(error)),work:0}}
   self.initialized=false;drop(self.storage.take());self.closed=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}
  }
 }

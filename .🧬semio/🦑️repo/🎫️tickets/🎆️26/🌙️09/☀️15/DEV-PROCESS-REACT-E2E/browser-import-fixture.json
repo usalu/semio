@@ -1,0 +1,15 @@
+{
+  "maximumRawFileBytes": 24576,
+  "maximumFilenameUtf16Units": 255,
+  "step": {
+    "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/⚽️cut-sphere-from-box/🅰️operand-a.step",
+    "rawFileBytes": 15447,
+    "extentMetres": [0.02, 0.02, 0.02]
+  },
+  "workshop": [
+    { "catalog": "metal", "catalogLabel": "Metal", "machine": "chopSaw", "capability": "chop", "operation": "slab", "toolSizeMetres": [0.355, 0.355, 0.003], "remainingVolumeMetresCubed": 0.0000074 },
+    { "catalog": "concrete", "catalogLabel": "Concrete", "machine": "diamondSaw", "capability": "crosscut", "operation": "slab", "toolSizeMetres": [0.35, 0.35, 0.004], "remainingVolumeMetresCubed": 0.0000072 },
+    { "catalog": "wood", "catalogLabel": "Wood", "machine": "circularSaw", "capability": "crosscut", "operation": "slab", "toolSizeMetres": [0.184, 0.184, 0.002], "remainingVolumeMetresCubed": 0.0000072 },
+    { "catalog": "robotic", "catalogLabel": "Robotic", "machine": "sixAxisMill", "capability": "mill", "operation": "corner", "toolSizeMetres": [0.02, 0.02, 0.1], "remainingVolumeMetresCubed": 0.0000054 }
+  ]
+}

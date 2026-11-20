@@ -71,6 +71,8 @@ export interface TreeDataItem {
   description?: React.ReactNode;
   /** 🎛️ Inline control rendered in a property-style tree row. */
   control?: React.ReactNode;
+  /** 🖼️ Full-width content beneath the row label. */
+  content?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
   /** 🌿️ Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */

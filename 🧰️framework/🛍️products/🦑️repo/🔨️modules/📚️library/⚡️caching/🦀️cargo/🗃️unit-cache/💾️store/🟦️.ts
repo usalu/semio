@@ -328,15 +328,16 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
    if(entry.isDirectory()){walk(path);continue;}
    if(!entry.isFile()){refused=true;return;}
    const stat=statSync(path);total+=stat.size;if(total>policy.buildScript.maximumOutputBytes){refused=true;return;}
-   const bytes=readFileSync(path),text=isText(bytes),neutral=text?laneNeutralV1(bytes.toString("utf8"),input.laneRoot):undefined;
-   if(!text&&input.laneRoot&&bytes.includes(Buffer.from(input.laneRoot))){refused=true;return;}
+   const bytes=readFileSync(path),text=isText(bytes),neutral=text?buildRunNeutralV1(bytes.toString("utf8"),input.outDir,input.laneRoot):undefined;
+   if(!text&&[input.outDir,...(input.laneRoot?[input.laneRoot]:[])].some(own=>bytes.includes(Buffer.from(own)))){refused=true;return;}
    const template=neutral!==undefined&&neutral!==bytes.toString("utf8"),stored=template?Buffer.from(neutral!):bytes;
    outputs.push({path:name,sha256:putObject(root,stored),bytes:stored.length,executable:(stat.mode&0o111)!==0,template});
   }
  };
  walk(input.outDir);
  if(refused)return undefined;
- const neutral=(text:string)=>laneNeutralV1(text,input.laneRoot);
+ const neutral=(text:string)=>buildRunNeutralV1(text,input.outDir,input.laneRoot);
+ if(input.laneRoot&&[input.stdout,input.stderr].some(stream=>foreignLanePathV1(neutral(stream),input.laneRoot!)))return undefined;
  const entry:BuildEntryV1={version:1,key:input.key,package:input.package,facts:known.facts,environment:known.environment,outputs,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,createdMs:Date.now()};
  const directory=ensure(runDirectory(root,input.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
  writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
@@ -344,16 +345,40 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
  return entry;
 }
 
+/** 🧭️ The text of a build script run without the paths of the lane that ran it: the script's own OUT_DIR (which its `cargo:rustc-link-search` and generated sources name) becomes the output token, then the lane root becomes the lane token, so a replay in any lane names that lane's own OUT_DIR and never the directory of a lane that a collector may remove. Neutralizing the lane root alone is not enough: it is only the lane when the caller names the lane, and a build driver names its run directory. */
+export function buildRunNeutralV1(text:string,outDir:string,laneRoot:string|undefined):string{return laneNeutralV1(text.split(outDir).join(policy.key.outputToken),laneRoot);}
+
+/** ⏮️ The inverse of {@link buildRunNeutralV1} in the lane that replays the run. */
+export function buildRunRestoreV1(text:string,outDir:string,laneRoot:string|undefined):string{return laneRestoreV1(text,laneRoot).split(policy.key.outputToken).join(outDir);}
+
+/** 🚧️ Whether a text still names the directory of another lane of the same pool once this lane's root is neutralized, which a replay in a third lane could never resolve. */
+export function foreignLanePathV1(neutralText:string,laneRoot:string):boolean{
+ const siblings=dirname(laneRoot)+sep;
+ return new RegExp(siblings.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"[a-z0-9]+","u").test(neutralText);
+}
+
 /** ⏪️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them; throws (the caller runs the script) when a recorded file is not in place afterwards. */
 export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined}>):{stdout:string;stderr:string}{
  ensure(context.outDir);
  for(const row of entry.outputs){
   const destination=join(context.outDir,row.path),source=objectPath(row.sha256);ensure(dirname(destination));
-  if(row.template){const text=laneRestoreV1(readFileSync(source,"utf8"),context.laneRoot);placeV1(destination,temporary=>writeFileSync(temporary,text));}else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,0o644);});
+  if(row.template){const text=buildRunRestoreV1(readFileSync(source,"utf8"),context.outDir,context.laneRoot);placeV1(destination,temporary=>writeFileSync(temporary,text));}else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,0o644);});
   if(row.executable)chmodSync(destination,0o755);
   touchCasObjectSyncV1(casRootV1(),row.sha256);
  }
  for(const row of entry.outputs)if(!lstatSync(join(context.outDir,row.path)).isFile())throw Error("Restored OUT_DIR file absent: "+row.path);
- const text=(sha:string|null)=>sha===null?"":laneRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.laneRoot);
- return{stdout:text(entry.stdout),stderr:text(entry.stderr)};
+ const text=(sha:string|null)=>sha===null?"":buildRunRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.outDir,context.laneRoot);
+ const streams={stdout:text(entry.stdout),stderr:text(entry.stderr)},foreign=context.laneRoot===undefined?undefined:[streams.stdout,streams.stderr].find(stream=>foreignLanePathV1(buildRunNeutralV1(stream,context.outDir,context.laneRoot),context.laneRoot!)),missing=missingLinkSearchPathV1(streams.stdout);
+ if(foreign!==undefined)throw Error("Replayed output names the directory of another lane");
+ if(missing!==undefined)throw Error("Replayed link search path absent: "+missing);
+ return streams;
+}
+
+/** 🧭️ The first absolute `cargo:rustc-link-search` directory a build script's output names that does not exist, so a replay that would send the linker to a path of a lane that is gone is a miss instead; `undefined` when every one exists. */
+export function missingLinkSearchPathV1(stdout:string):string|undefined{
+ for(const line of stdout.split(/\r?\n/u)){
+  const match=/^cargo::?rustc-link-search=(?:[a-z]+=)?(.+)$/u.exec(line);
+  if(match&&isAbsolute(match[1]!)&&!existsSync(match[1]!))return match[1];
+ }
+ return undefined;
 }

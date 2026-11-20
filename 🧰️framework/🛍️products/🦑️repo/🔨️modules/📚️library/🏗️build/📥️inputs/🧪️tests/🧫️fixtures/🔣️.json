@@ -34,6 +34,7 @@
           },
           "uniqueItems": true
         },
+        "directoriesRead": {"type":"array","items":{"type":"string"}},
         "compilations": {
           "type": "integer",
           "minimum": 0
@@ -41,6 +42,18 @@
       }
     },
     "cases": [
+      {
+        "id": "root-basename-glob-ignores-every-descendant-directory",
+        "files": ["lib.rs","src/lib.rs","src/deep/lib.rs","root.ts"],
+        "patterns": ["*.rs","r??t.ts"], "expected": ["lib.rs","root.ts"],
+        "compilations": 2, "directoriesRead": ["."]
+      },
+      {
+        "id": "recursive-pattern-on-the-same-root-still-sees-descendants-on-one-walk",
+        "files": ["lib.rs","src/lib.rs","src/deep/lib.rs"],
+        "patterns": ["*.rs","**/lib.rs"], "expected": ["lib.rs","src/deep/lib.rs","src/lib.rs"],
+        "compilations": 2, "directoriesRead": [".","src","src/deep"]
+      },
       {
         "id": "repeated-positive-and-exclusions",
         "files": [

@@ -62,6 +62,8 @@ impl NodeFlags {
     /// control takes focus without painting the accent ring React would only show for the keyboard.
     pub const FOCUS_VISIBLE: NodeFlags = NodeFlags(1 << 13);
     pub const DISCLOSURE_CHANGED: NodeFlags = NodeFlags(1 << 14);
+    /// 🏆️ The one innermost enabled interactive node of the hover chain: the only node whose own state paints hover, while [`NodeFlags::HOVERED`] keeps marking the whole chain.
+    pub const HOVER_OWNER: NodeFlags = NodeFlags(1 << 15);
 
     pub const fn empty() -> Self {
         NodeFlags(0)

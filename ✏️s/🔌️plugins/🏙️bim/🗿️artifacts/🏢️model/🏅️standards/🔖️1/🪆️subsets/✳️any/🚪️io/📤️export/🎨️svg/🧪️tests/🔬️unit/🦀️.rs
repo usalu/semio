@@ -134,7 +134,7 @@ fn a_model_without_views_exports_an_empty_sheet_and_a_view_at_another_scale_gets
     assert!(slot(&at_50).width > slot(&at_100).width && slot(&at_50).height > slot(&at_100).height);
     assert_eq!(slot(&at_50).frame.mm, 20.0);
     assert!(tags(&svg(&model)).iter().any(|tag| tag.attribute("data-view") == Some("v-plan-st-ground") && tag.attribute("data-scale") == Some("50")));
-    model.views.clear();
+    model.views.cold_clear();
     let found = tags(&svg(&model));
     assert!(found.iter().all(|tag| !(tag.name == "g" && tag.has_class("view"))));
 }

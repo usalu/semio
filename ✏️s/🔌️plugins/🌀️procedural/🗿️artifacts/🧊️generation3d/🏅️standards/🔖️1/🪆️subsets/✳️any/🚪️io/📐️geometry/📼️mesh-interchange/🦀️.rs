@@ -166,7 +166,7 @@ fn import_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     from_source(kind, move || {
         let text = inputs.text("data")?.to_string();
         let mut cursor = ObjSourceCursor::new();
-        Ok(Box::new(move |fuel: usize, _: &mut StepContext<'_>| cursor.step(&text, fuel.saturating_mul(BATCH * 16)).map_err(import_fault)) as Parse)
+        Ok(Box::new(move |fuel: usize, _: &mut StepContext<'_>| cursor.step(&text, fuel.saturating_mul(BATCH * 16)).map_err(|error| import_fault(error).at("data"))) as Parse)
     })
 }
 
@@ -184,7 +184,7 @@ impl Machine for ImportBinary {
         if self.job.is_none() {
             if self.cursor < self.encoded.len() {
                 let end = (self.cursor + DECODE_CHUNK.saturating_mul(fuel)).min(self.encoded.len());
-                self.decoded.extend(base64_standard_decode(&self.encoded[self.cursor..end]).map_err(import_fault)?);
+                self.decoded.extend(base64_standard_decode(&self.encoded[self.cursor..end]).map_err(|error| import_fault(error).at("data"))?);
                 self.cursor = end;
                 return Ok(Flow::Working(0.3 * self.cursor as f32 / self.encoded.len().max(1) as f32));
             }
@@ -192,7 +192,7 @@ impl Machine for ImportBinary {
                 Binary::Stl => mesh_from_stl(&self.decoded),
                 Binary::Glb => mesh_from_glb(&self.decoded),
             }
-            .map_err(import_fault)?;
+            .map_err(|error| import_fault(error).at("data"))?;
             self.decoded = Vec::new();
             let triangles = data.indices.len() / 3;
             if triangles > FACE_LIMIT {

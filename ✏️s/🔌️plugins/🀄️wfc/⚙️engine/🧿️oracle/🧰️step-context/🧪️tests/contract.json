@@ -17,7 +17,7 @@
   "cases": [
     {
       "id": "pending",
-      "stepFuel": 8,
+      "stepFuel": 1,
       "expectedReturned": "outcome",
       "businessSteps": 2,
       "observed": "yield"

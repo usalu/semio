@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import {homedir} from "node:os";
-import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import {CurrentPhysicalOwnerV1,memoizedPhysicalFilesV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,7 +118,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
       if (provenanceRoot) {
         const { writeCompletedCargoInvocationProvenanceV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts");
         const manifest = cargoInvocationManifestV1(args, cwd);
-        const physical=()=>new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped)||control.signal.aborted,remainingMs:()=>control.remainingMilliseconds(),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("provenance"))}));
+        const physical=()=>new CurrentPhysicalOwnerV1(cwd,cargoProvenancePhysicalControlV1({cancelled:()=>Boolean(stopped)||control.signal.aborted,remainingMs:()=>control.remainingMilliseconds(),onProgress:cargoProvenanceProgressSinkV1(cargoProvenanceConsoleSinkV1("provenance"))}),memoizedPhysicalFilesV1(buildDirectory!));
         await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts },new Map(),resolve(env.CARGO_HOME??join(homedir(),".cargo")),physical,{signal:control.signal});
       }
     } finally {

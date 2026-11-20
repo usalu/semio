@@ -1,0 +1,12 @@
+{
+  "mutation": "setShotDrawing",
+  "id": "shot-close",
+  "patch": {
+    "fillColor": {
+      "value": "#A5F"
+    },
+    "hiddenLines": true,
+    "visibleWidth": 2.5,
+    "mergeLines": true
+  }
+}

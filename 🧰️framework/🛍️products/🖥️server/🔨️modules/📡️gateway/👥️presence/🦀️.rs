@@ -176,7 +176,8 @@ pub struct PresenceSettings {
     pub heartbeat: Duration,
     /// 📏️ The largest client frame (`state` or `watch`) accepted, in bytes.
     pub max_state_bytes: usize,
-    /// 🚦️ How many client frames per second a session may send; the excess is dropped.
+    /// 🚦️ How many client frames per second a session may send; of the excess, the newest `state` and the newest
+    /// `watch` wait for the next second ([`Admitted::Held`]), the others are superseded.
     pub max_states_per_second: u32,
     /// 🏷️ The longest `surface` a session may join with, in characters.
     pub max_surface_chars: usize,
@@ -810,19 +811,31 @@ impl StateBudget {
         self.spent += 1;
         self.spent <= self.limit
     }
+
+    /// 🔋️ When the current window ends and the allowance is whole again.
+    pub fn refills_at(&self) -> Instant {
+        self.window + Duration::from_secs(1)
+    }
 }
 
-/// 🛃️ Judge one client text frame: `Ok(Some(frame))` — a `state` or a `watch` — to apply,
-/// `Ok(None)` to drop silently (over the rate), `Err(reason)` to answer with a `refused` frame.
-pub fn admit_frame(text: &str, settings: &PresenceSettings, budget: &mut StateBudget, now: Instant) -> Result<Option<PresenceFrame>, String> {
+/// ⚖️ What becomes of one admitted client frame: applied now, or — over the session's rate — held as
+/// the newest of its kind and applied once the allowance refills ([`StateBudget::refills_at`]), so a
+/// burst is slowed down but its last word is never lost.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Admitted {
+    Now(PresenceFrame),
+    Held(PresenceFrame),
+}
+
+/// 🛃️ Judge one client text frame — a `state` or a `watch` — as [`Admitted`], or answer `Err(reason)`
+/// for a `refused` frame.
+pub fn admit_frame(text: &str, settings: &PresenceSettings, budget: &mut StateBudget, now: Instant) -> Result<Admitted, String> {
     if text.len() > settings.max_state_bytes {
         return Err(REFUSED_TOO_LARGE.to_string());
     }
-    if !budget.spend(now) {
-        return Ok(None);
-    }
+    let within = budget.spend(now);
     match serde_json::from_str::<PresenceFrame>(text) {
-        Ok(frame @ (PresenceFrame::State { .. } | PresenceFrame::Watch { .. })) => Ok(Some(frame)),
+        Ok(frame @ (PresenceFrame::State { .. } | PresenceFrame::Watch { .. })) => Ok(if within { Admitted::Now(frame) } else { Admitted::Held(frame) }),
         _ => Err(REFUSED_INVALID.to_string()),
     }
 }

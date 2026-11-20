@@ -113,7 +113,7 @@ fn global_ids_do_not_change_when_unrelated_elements_are_added() {
     let mut larger = model.clone();
     let mut extra = larger.walls["w-free"].clone();
     extra.name = "Extra".into();
-    larger.walls.insert("w-extra".into(), extra);
+    larger.walls.cold_insert("w-extra".into(), extra);
     let guids = |model: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot| -> std::collections::BTreeMap<String, String> {
         let document = document(model);
         let mut map = std::collections::BTreeMap::new();
@@ -139,18 +139,18 @@ fn global_ids_do_not_change_when_unrelated_elements_are_added() {
 #[test]
 fn a_model_without_any_element_exports_the_project_skeleton_only() {
     let mut model = house();
-    model.walls.clear();
-    model.curtain_walls.clear();
-    model.columns.clear();
-    model.beams.clear();
-    model.slabs.clear();
-    model.roofs.clear();
-    model.openings.clear();
-    model.stairs.clear();
-    model.railings.clear();
-    model.spaces.clear();
-    model.properties.clear();
-    model.classifications.clear();
+    model.walls.cold_clear();
+    model.curtain_walls.cold_clear();
+    model.columns.cold_clear();
+    model.beams.cold_clear();
+    model.slabs.cold_clear();
+    model.roofs.cold_clear();
+    model.openings.cold_clear();
+    model.stairs.cold_clear();
+    model.railings.cold_clear();
+    model.spaces.cold_clear();
+    model.properties.cold_clear();
+    model.classifications.cold_clear();
     let document = document(&model);
     assert_eq!(tags(&document, "IFCWALL"), Vec::<String>::new());
     assert_eq!(document.by_type("IFCBUILDINGSTOREY").count(), 4);

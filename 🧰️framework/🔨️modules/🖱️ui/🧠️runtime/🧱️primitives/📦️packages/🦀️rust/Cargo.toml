@@ -31,3 +31,4 @@ semio-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️pa
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }
+semio-ui-contract-values = { path = "../../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }

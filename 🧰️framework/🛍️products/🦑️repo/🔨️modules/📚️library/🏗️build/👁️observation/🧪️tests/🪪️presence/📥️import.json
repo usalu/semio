@@ -1,0 +1,4 @@
+[
+  {"id":"declined","funded":false,"expected":{"stored":0,"seeded":0,"lookups":1,"computed":1,"value":"local"}},
+  {"id":"admitted","funded":true,"expected":{"stored":1,"seeded":1,"lookups":2,"computed":0,"value":"remote"}}
+]

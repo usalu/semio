@@ -27,7 +27,7 @@ pub const WFC_2D_DEFAULT_RELATION: &str = "adjacent";
 //#region 🔖️Color
 /// 🎨 One straight-alpha sRGB colour, 0–255 per channel — the one colour vocabulary every media
 /// variant shares, so a palette entry and a vector fill are the same type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dColor {
@@ -40,14 +40,14 @@ pub struct Wfc2dColor {
 
 //#region 🔖️Media
 /// 📍️ The one target point of a move or line segment.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dSegmentTo {
     pub to: [f64; 2],
 }
 
 /// 〰️ A quadratic curve segment: one control point and a target.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dSegmentQuad {
     pub ctrl: [f64; 2],
@@ -55,7 +55,7 @@ pub struct Wfc2dSegmentQuad {
 }
 
 /// 🌀️ A cubic curve segment: two control points and a target.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dSegmentCubic {
     pub ctrl1: [f64; 2],
@@ -66,7 +66,7 @@ pub struct Wfc2dSegmentCubic {
 /// ✏️ One path command in TILE SPACE (`0.0..=1.0` on both axes) — an SVG-flavoured subset, drawn
 /// scaled into whatever rectangle the slot occupies. Each drawing variant carries its own record so
 /// the persisted form stays externally tagged (`{"Line": {"to": [..]}}`).
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Wfc2dPathSegment {
     #[default]
@@ -78,7 +78,7 @@ pub enum Wfc2dPathSegment {
 }
 
 /// 🖍️ One filled/stroked subpath of a vector tile.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dVectorPath {
@@ -93,7 +93,7 @@ pub struct Wfc2dVectorPath {
 }
 
 /// 🎨 Palette-indexed inline pixels of a bitmap tile.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dBitmapMedia {
     pub width: u32,
@@ -103,14 +103,14 @@ pub struct Wfc2dBitmapMedia {
 }
 
 /// 🖍️ Tile-space paths of a vector tile.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dVectorMedia {
     pub paths: Vec<Wfc2dVectorPath>,
 }
 
 /// 🖼️ The composed child image a tile addresses.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dImageMedia {
     pub child: store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>,
@@ -125,7 +125,7 @@ pub struct Wfc2dImageMedia {
 /// cannot see, so a host never hydrates it and the preview window draws an outline placeholder for
 /// such a tile. Wiring composed-child hydration (genesis pack, `SemioMembers` on both surfaces) is a
 /// real remaining increment, deliberately out of this slice — every bundled example uses `Vector`.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Wfc2dTileMedia {
     #[default]
@@ -139,7 +139,7 @@ pub enum Wfc2dTileMedia {
 //#region 🔖️Tile
 /// 🀄️ One placeable tile — the WFC pattern alphabet. `weight` is the selection bias the engine's
 /// `WeightTable` consumes; `media` is what the preview window paints into a solved slot.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dTile {
@@ -154,7 +154,7 @@ pub struct Wfc2dTile {
 
 //#region 🔖️Slot
 /// 📍 One position the solver must fill — a free rectangle, never a grid cell.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dSlot {
@@ -172,7 +172,7 @@ pub struct Wfc2dSlot {
 /// 🔗 One adjacency edge between two slots. `relation` names the adjacency CLASS (`"adjacent"`,
 /// `"above"`, `"ring"`, …); each distinct string compiles to its own `RelationId` in the model, so
 /// rules can be scoped per class.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dSlotEdge {
@@ -186,7 +186,7 @@ pub struct Wfc2dSlotEdge {
 //#region 🔖️Rule
 /// ⛓️ One adjacency permission between two tile ids. `relation: None` means EVERY relation class;
 /// `allowed: false` is a hard deny and always wins over any allow of the same pair.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Wfc2dRule {

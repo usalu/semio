@@ -1,0 +1,7 @@
+[
+  { "platform": "darwin", "pid": 42, "text": " 1:02.75\n" },
+  { "platform": "linux", "pid": 42, "text": "42 (child ) with spaces) S 1 1 1 0 -1 0 0 0 0 0 250 71 0 0 20 0 1 0 100\n" },
+  { "platform": "linux", "pid": 42, "text": "42 (bad) S\n" },
+  { "platform": "win32", "pid": 42, "text": " 1:02.75\n" },
+  { "platform": "darwin", "pid": 0, "text": " 1:02.75\n" }
+]

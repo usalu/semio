@@ -85,7 +85,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "delete-solid/removes-the-roof-slab-f0fb64: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "delete-solid/removes-the-roof-slab-f0fb64: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "delete-solid/removes-the-roof-slab-f0fb64: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "delete-solid/removes-the-roof-slab-f0fb64: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "delete-solid/removes-the-roof-slab-f0fb64: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("delete-solid/removes-the-roof-slab-f0fb64: unknown outcome status {other:?}"),
@@ -107,7 +107,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
     let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-solid/removes-the-roof-slab-f0fb64: committed diff JSON is not canonical");
@@ -116,7 +116,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `solids.removed` id on `before` must leave an empty solid list.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_diff::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(&DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff_cold(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-solid/removes-the-roof-slab-f0fb64: committed diff did not carry before to after");
 }

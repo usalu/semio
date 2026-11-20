@@ -1,0 +1,8 @@
+# Preview LOD Current Audit
+
+Read-only source audit; no builds run.
+
+- The session admission method now requires a tolerance, but older composition tests still use two arguments: `✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs`, `🧩️generation3d-example-geometry/🚚️mesh-delivery/🦀️.rs`, `🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🧪️tests/🔬️unit/🦀️.rs`, `✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🧪️tests/🔬️unit/🦀️.rs`, `👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs`, and `🧊️generation3d/🧪️tests/🔬️flow-operators/🦀️.rs` (last four paths relative to the composition tests tree). The first two already calculate the intended tolerance.
+- Several same tests still call the former two-argument `resolve_preview_tessellate` API; the current method takes a receiver, address, and step context. These require adaptation to current completion/ledger ownership, not just an extra argument.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs:23` accesses `.paint_texture_base64` directly on `FlowPreviewMesh`; it now belongs under `.mesh`. Other direct cache uses found are receiver, retirement, session accessors, and updated inserts.
+- `PreviewTessellateReceive::step` commits before folding the ledger, and `FlowEvalSession::resolve_preview_tessellate` does not verify pending ownership. Preview retention can remove an in-flight handle when the graph drops it; if it returns and admits a new LOD, the old response can arrive after the new one and overwrite the cache. Keeping in-flight handles in the retention roster prevents that route; cancellation and duplicate delivery need separate ownership analysis.

@@ -80,6 +80,23 @@ impl MeshAttribute {
 #[value(crate = "::pack::value")]
 pub struct MeshTexture { pub mime: String, pub bytes: Vec<u8> }
 
+/// 🪡️ Native surface fields indexed by persisted polygon order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned)]
+#[value(crate = "::pack::value", rename_all = "camelCase")]
+pub enum PolygonSurfaceKind { SmoothFace, VertexNormal, CornerUv, SeamEdge }
+
+/// 🎨️ One sparse smooth face, vertex normal, corner UV, or seam edge.
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned)]
+#[value(crate = "::pack::value")]
+pub struct PolygonSurfaceSample {
+    pub kind: PolygonSurfaceKind,
+    pub index: u32,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub normal: Option<[f32; 3]>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub uv: Option<[f32; 2]>,
+}
+
 /// 🥽️ Canonical indexed polygon source shared by artifact edits and inference.
 #[derive(Clone,Debug,PartialEq,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue)]
 #[value(crate = "::pack::value")]
@@ -92,35 +109,111 @@ pub struct PolygonMeshSource {
     pub materials:HistoryFoldIndex<String,pack::value::DslValue>,
     #[value(default,skip_serializing_if="HistoryFoldIndex::is_empty")]
     pub textures:HistoryFoldIndex<String,MeshTexture>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub surface: Vec<PolygonSurfaceSample>,
+}
+
+/// 🌐️ The sampling grid of a closed surface of revolution around the Y axis.
+#[derive(Clone, Copy)]
+pub struct ParametricMeshGrid {
+    surface: ParametricSurface,
+    segments: usize,
+    rings: usize,
+}
+
+#[derive(Clone, Copy)]
+enum ParametricSurface {
+    Sphere(f32),
+    Torus { major: f32, minor: f32 },
+}
+
+impl ParametricMeshGrid {
+    pub fn uv_sphere(radius: f32, segments: u32, rings: u32) -> Result<Self, String> {
+        if !radius.is_finite() || radius <= 0.0 || !(2..=1024).contains(&rings) {
+            return Err("invalid uv sphere dimensions".into());
+        }
+        Self::grid(ParametricSurface::Sphere(radius), segments, rings)
+    }
+
+    pub fn torus(major: f32, minor: f32, segments: u32, rings: u32) -> Result<Self, String> {
+        if !(major + minor).is_finite() || minor <= 0.0 || major <= minor || !(3..=1024).contains(&rings) {
+            return Err("invalid torus dimensions".into());
+        }
+        Self::grid(ParametricSurface::Torus { major, minor }, segments, rings)
+    }
+
+    fn grid(surface: ParametricSurface, segments: u32, rings: u32) -> Result<Self, String> {
+        if !(3..=1024).contains(&segments) || segments * rings > PARAMETRIC_FACE_LIMIT as u32 {
+            return Err("invalid parametric mesh resolution".into());
+        }
+        Ok(Self { surface, segments: segments as usize, rings: rings as usize })
+    }
+
+    pub fn face_count(self) -> usize { self.segments * self.rings }
+
+    pub fn vertex_count(self) -> usize {
+        match self.surface {
+            ParametricSurface::Sphere(_) => 2 + self.segments * (self.rings - 1),
+            ParametricSurface::Torus { .. } => self.face_count(),
+        }
+    }
+
+    pub fn vertex(self, index: usize) -> Option<[f32; 3]> {
+        use std::f64::consts::{PI, TAU};
+        if index >= self.vertex_count() { return None; }
+        let (ring_radius, y, segment) = match self.surface {
+            ParametricSurface::Sphere(radius) => {
+                if index == 0 { return Some([0.0, radius, 0.0]); }
+                if index + 1 == self.vertex_count() { return Some([0.0, -radius, 0.0]); }
+                let ring = 1 + (index - 1) / self.segments;
+                let phi = ring as f64 / self.rings as f64 * PI;
+                (radius as f64 * phi.sin(), radius as f64 * phi.cos(), (index - 1) % self.segments)
+            }
+            ParametricSurface::Torus { major, minor } => {
+                let phi = (index / self.segments) as f64 / self.rings as f64 * TAU;
+                (major as f64 + minor as f64 * phi.cos(), minor as f64 * phi.sin(), index % self.segments)
+            }
+        };
+        let theta = segment as f64 / self.segments as f64 * TAU;
+        Some([(ring_radius * theta.cos()) as f32, y as f32, (ring_radius * theta.sin()) as f32])
+    }
+
+    pub fn face(self, index: usize) -> Option<Vec<u32>> {
+        if index >= self.face_count() { return None; }
+        let ring = index / self.segments;
+        let segment = index % self.segments;
+        let next = (segment + 1) % self.segments;
+        Some(match self.surface {
+            ParametricSurface::Sphere(_) => {
+                let at = |r, s| (1 + (r - 1) * self.segments + s) as u32;
+                if ring == 0 { vec![0, at(1, next), at(1, segment)] }
+                else if ring + 1 == self.rings { vec![self.vertex_count() as u32 - 1, at(ring, segment), at(ring, next)] }
+                else { vec![at(ring, segment), at(ring, next), at(ring + 1, next), at(ring + 1, segment)] }
+            }
+            ParametricSurface::Torus { .. } => {
+                let at = |r, s| (r % self.rings * self.segments + s) as u32;
+                vec![at(ring, segment), at(ring + 1, segment), at(ring + 1, next), at(ring, next)]
+            }
+        })
+    }
+
+    fn polygon_source(self) -> PolygonMeshSource {
+        PolygonMeshSource {
+            vertices: (0..self.vertex_count()).filter_map(|i| self.vertex(i)).collect(),
+            faces: (0..self.face_count()).filter_map(|i| self.face(i)).collect(),
+            surface: Vec::new(),
+            attributes: HistoryFoldIndex::new(), materials: HistoryFoldIndex::new(), textures: HistoryFoldIndex::new(),
+        }
+    }
 }
 
 impl PolygonMeshSource {
-    /// 🌐️ Closed latitude-longitude sphere around the Y axis: pole fans plus quad bands, wound outward, with shared vertices.
-    pub fn uv_sphere(radius:f32,segments:u32,rings:u32)->Result<Self,String> {
-        if !radius.is_finite() || radius<=0.0 || !(3..=1024).contains(&segments) || !(2..=1024).contains(&rings) || segments as usize*rings as usize>PARAMETRIC_FACE_LIMIT {return Err("invalid uv sphere dimensions".into());}
-        let (segments,rings)=(segments as usize,rings as usize);
-        let mut vertices=vec![[0.0,radius,0.0]];
-        for ring in 1..rings {let phi=ring as f64/rings as f64*std::f64::consts::PI;for segment in 0..segments {let theta=segment as f64/segments as f64*std::f64::consts::TAU;let r=radius as f64;vertices.push([(r*phi.sin()*theta.cos()) as f32,(r*phi.cos()) as f32,(r*phi.sin()*theta.sin()) as f32]);}}
-        vertices.push([0.0,-radius,0.0]);
-        let at=|ring:usize,segment:usize|(1+(ring-1)*segments+segment%segments) as u32;
-        let south=(vertices.len()-1) as u32;
-        let mut faces=Vec::with_capacity(segments*rings);
-        for segment in 0..segments {faces.push(vec![0,at(1,segment+1),at(1,segment)]);}
-        for ring in 1..rings-1 {for segment in 0..segments {faces.push(vec![at(ring,segment),at(ring,segment+1),at(ring+1,segment+1),at(ring+1,segment)]);}}
-        for segment in 0..segments {faces.push(vec![south,at(rings-1,segment),at(rings-1,segment+1)]);}
-        Ok(Self {vertices,faces,attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()})
+    pub fn uv_sphere(radius: f32, segments: u32, rings: u32) -> Result<Self, String> {
+        Ok(ParametricMeshGrid::uv_sphere(radius, segments, rings)?.polygon_source())
     }
 
-    /// 🍩️ Closed torus around the Y axis from quads wound outward: `segments` around the ring, `rings` around the tube.
-    pub fn torus(major:f32,minor:f32,segments:u32,rings:u32)->Result<Self,String> {
-        if !major.is_finite() || !minor.is_finite() || minor<=0.0 || major<=minor || !(3..=1024).contains(&segments) || !(3..=1024).contains(&rings) || segments as usize*rings as usize>PARAMETRIC_FACE_LIMIT {return Err("invalid torus dimensions".into());}
-        let (segments,rings)=(segments as usize,rings as usize);
-        let mut vertices=Vec::with_capacity(segments*rings);
-        for ring in 0..rings {let phi=ring as f64/rings as f64*std::f64::consts::TAU;for segment in 0..segments {let theta=segment as f64/segments as f64*std::f64::consts::TAU;let distance=major as f64+minor as f64*phi.cos();vertices.push([(distance*theta.cos()) as f32,(minor as f64*phi.sin()) as f32,(distance*theta.sin()) as f32]);}}
-        let at=|ring:usize,segment:usize|((ring%rings)*segments+segment%segments) as u32;
-        let mut faces=Vec::with_capacity(segments*rings);
-        for ring in 0..rings {for segment in 0..segments {faces.push(vec![at(ring,segment),at(ring+1,segment),at(ring+1,segment+1),at(ring,segment+1)]);}}
-        Ok(Self {vertices,faces,attributes:HistoryFoldIndex::new(),materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new()})
+    pub fn torus(major: f32, minor: f32, segments: u32, rings: u32) -> Result<Self, String> {
+        Ok(ParametricMeshGrid::torus(major, minor, segments, rings)?.polygon_source())
     }
 }
 
@@ -603,6 +696,6 @@ pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], in
 }
 //#endregion Primitives
 
-pack::value::artifact_retire_struct!(PolygonMeshSource {vertices,faces,attributes,materials,textures});
+pack::value::artifact_retire_struct!(PolygonMeshSource {vertices,faces,attributes,materials,textures,surface});
 #[path="🚪️io/🦀️.rs"]
 pub mod io;

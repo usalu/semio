@@ -67,9 +67,12 @@ function bakedRowsV1(baked:AdmissionV1):readonly AdmittedRowV1[]{const value=bak
 /** 🏗️ Runs one capture against the list its process admitted at its start and, when a peer moved the closure since, against the current disk as a new admission of the task's own (kept for the next capture of this process while it holds). */
 export async function withMovedClosureReadmittedV1<T>(request:MovableCaptureV1<T>,deps:MovableDepsV1={}):Promise<T>{
  const key=request.workspace+"\0"+request.entry+"\0"+JSON.stringify(request.scope),cached=admissions.get(key);let first:unknown;
- try{return await request.run(cached?.sources??request.baked.sources,cached?.resolutions??request.baked.resolutions,cached!==undefined);}
- catch(error){if(!closureMovedErrorV1(error))throw error;if(cached)admissions.delete(key);first=error;}
- const seeds=[request.entry,...(request.scope.kind==="static"?[...request.scope.roots,...request.scope.leaves]:[])],mark=key+"\0"+String((first as{values?:{path?:unknown}}).values?.path??messageOf(first)),firstTime=!announced.has(mark);announced.add(mark);
+ const unadmitted=cached===undefined&&(request.baked.sources===undefined||request.baked.resolutions===undefined);
+ if(!unadmitted){
+  try{return await request.run(cached?.sources??request.baked.sources,cached?.resolutions??request.baked.resolutions,cached!==undefined);}
+  catch(error){if(!closureMovedErrorV1(error))throw error;if(cached)admissions.delete(key);first=error;}
+ }
+ const seeds=[request.entry,...(request.scope.kind==="static"?[...request.scope.roots,...request.scope.leaves]:[])],mark=key+"\0"+String((first as{values?:{path?:unknown}}|undefined)?.values?.path??(first===undefined?"":messageOf(first))),firstTime=!unadmitted&&!announced.has(mark);announced.add(mark);
  return readmitMovedClosureV1({
   capture:async()=>{const admission=await(deps.fresh??freshAdmissionV1)(request.workspace,seeds,request.signal);admissions.set(key,admission);try{return await request.run(admission.sources,admission.resolutions,true);}catch(error){if(closureMovedErrorV1(error)){admissions.delete(key);throw Object.assign(new Error("Implementation Source changed during capture: "+messageOf(error)),{cause:error});}throw error;}},
   moved:()=>(deps.moved??movedClosureFilesV1)(request.workspace,bakedRowsV1(request.baked)),sleep:deps.sleep??pause,say:deps.say??((name,values)=>sayBuildV1(name,values)),origin:deps.origin,announce:firstTime,signal:request.signal,

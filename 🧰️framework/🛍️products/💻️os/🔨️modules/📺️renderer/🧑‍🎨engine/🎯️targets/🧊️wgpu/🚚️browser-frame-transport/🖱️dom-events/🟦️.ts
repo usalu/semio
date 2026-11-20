@@ -10,6 +10,7 @@ type BrowserFrameKeyDomFields = { readonly key: string; readonly shift: boolean;
 
 export type BrowserFrameDomEvent =
   | ({ readonly type: "pointercancel" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointerleave" } & BrowserFramePointerDomFields)
   | ({ readonly type: "pointermove" } & BrowserFramePointerDomFields)
   | ({ readonly type: "pointerdown" } & BrowserFramePointerDomFields)
   | ({ readonly type: "pointerup" } & BrowserFramePointerDomFields)
@@ -35,7 +36,7 @@ function pointerButtonName(button: number | undefined): "primary" | "secondary" 
 
 /** 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
  * renderer hit-tests in logical pixels. */
-function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" }>): BrowserFramePointer {
+function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" | "pointerleave" }>): BrowserFramePointer {
   return {
     pointerId: event.pointerId,
     pointerKind: event.pointerType === "touch" || event.pointerType === "pen" || event.pointerType === "eraser" ? event.pointerType : "mouse",
@@ -57,7 +58,7 @@ export function browserFrameModifiersFromDom(event: Pick<MouseEvent, "shiftKey" 
 }
 
 /** 🖱️ Reduces one real DOM pointer event into the owned input vocabulary. */
-export function browserFramePointerDomEvent(event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel"): BrowserFrameDomEvent {
+export function browserFramePointerDomEvent(event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" | "pointerleave"): BrowserFrameDomEvent {
   return {
     type,
     pointerId: event.pointerId,
@@ -88,7 +89,7 @@ export function browserFrameWheelDomEvent(event: WheelEvent): BrowserFrameDomEve
  * `devicePixelRatio` reaches exactly one event kind: `resize`, whose width/height ARE the physical
  * surface extent. Pointer and wheel positions stay CSS pixels. */
 export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixelRatio: number): BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent {
-  if (event.type === "pointercancel") return { kind: "pointer-cancel", ...pointerFields(event) };
+  if (event.type === "pointercancel" || event.type === "pointerleave") return { kind: event.type === "pointercancel" ? "pointer-cancel" : "pointer-leave", ...pointerFields(event) };
   if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event) };
   if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event), button: pointerButtonName(event.button) };
   if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
@@ -100,5 +101,5 @@ export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixe
  * than the credit-bearing lossless lane. A pointer MOVE, a wheel and a resize are each "the newest one
  * wins"; a button transition and a key transition are not, because dropping one latches shell state. */
 export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent): event is BrowserFrameReplaceableEvent {
-  return event.kind === "pointer-move" || event.kind === "wheel" || event.kind === "resize";
+  return event.kind === "pointer-move" || event.kind === "pointer-leave" || event.kind === "wheel" || event.kind === "resize";
 }

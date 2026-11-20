@@ -92,6 +92,96 @@ impl Curve3 {
             Curve3::Nurbs { knots, controls, weights } => eval_nurbs_curve(knots, controls, weights, t),
         }
     }
+    /// 🧮️ Samples a position and up to two derivatives with bounded original scratch.
+    pub fn jet_original(&self, t:f64, order:usize) -> Option<(Pnt3,Vec3,Vec3)> {
+        if !t.is_finite() || order>2 { return None; }
+        if let Self::Nurbs{knots,controls,weights}=self {
+            if controls.len()!=weights.len() { return None; }
+            let homogeneous=bspline::homogeneous_jet_original(knots,controls.len(),t,order,|i|{
+                let p=controls.get(i)?;
+                let w=*weights.get(i)?;
+                Some([p.x*w,p.y*w,p.z*w,w])
+            })?;
+            let [p,d,dd]=bspline::project_original_jet(homogeneous,order)?;
+            return Some((Pnt3::new(p[0],p[1],p[2]),Vec3::new(d[0],d[1],d[2]),Vec3::new(dd[0],dd[1],dd[2])));
+        }
+        let position=self.eval(t);
+        let tangent=if order>0 { self.d1(t) } else { Vec3::ZERO };
+        let acceleration=if order>1 { self.d2(t) } else { Vec3::ZERO };
+        [position.x,position.y,position.z,tangent.x,tangent.y,tangent.z,acceleration.x,acceleration.y,acceleration.z]
+            .iter().all(|v|v.is_finite()).then_some((position,tangent,acceleration))
+    }
+
+
+    /// 📐️ Gives the finite extent of a standalone spline's nonempty knot intervals.
+    pub fn original_spline_span_range(&self) -> Option<(usize,usize)> {
+        let Self::Nurbs{knots,controls,weights}=self else {return None;};
+        let count=controls.len();
+        let degree=knots.degree;
+        (degree<=bspline::ORIGINAL_SPLINE_MAXIMUM_DEGREE && count>degree && weights.len()==count &&
+         knots.knots.len()==count.checked_add(degree)?.checked_add(1)?).then_some((degree,count))
+    }
+
+    /// 🎚️ Samples inside one authored span, preserving both limits at repeated knots.
+    pub fn original_spline_span_point(&self,span:usize,t:f64) -> Option<Pnt3> {
+        let Self::Nurbs{knots,controls,weights}=self else {return None;};
+        let h=bspline::homogeneous_jet_at_span_original(knots,controls.len(),t,0,span,|i|{
+            let p=controls.get(i)?;
+            let w=*weights.get(i)?;
+            Some([p.x*w,p.y*w,p.z*w,w])
+        })?;
+        let [p,_,_]=bspline::project_original_jet(h,0)?;
+        Some(Pnt3::new(p[0],p[1],p[2]))
+    }
+
+    /// 📏️ Bounds chord error with local homogeneous derivative control hulls.
+    pub fn original_spline_subdivision(&self, span:usize, tolerance:f64) -> Option<(f64,f64,usize)> {
+        let Self::Nurbs{knots,controls,weights}=self else {return None;};
+        let (degree,end)=self.original_spline_span_range()?;
+        if !(degree..end).contains(&span) || !tolerance.is_finite() || tolerance<=0.0 {return None;}
+        let u=&knots.knots;
+        let (lo,hi)=(u[span],u[span+1]);
+        let width=hi-lo;
+        if !width.is_finite() || width<0.0 {return None;}
+        if width==0.0 {return Some((lo,hi,0));}
+        let start=span-degree;
+        let anchor=controls[start];
+        let local_weights=&weights[start..=span];
+        if local_weights.iter().any(|v|!v.is_finite() || *v<=0.0) {return None;}
+        let scale=local_weights.iter().copied().fold(0.0,f64::max);
+        let w_min=local_weights.iter().copied().fold(f64::INFINITY,f64::min)/scale;
+        if w_min<=0.0 {return None;}
+        let mut entries=[(Vec3::ZERO,0.0);bspline::ORIGINAL_SPLINE_MAXIMUM_DEGREE+1];
+        let mut radius=0.0_f64;
+        let mut h=[0.0_f64;3];
+        let mut w=[0.0_f64;3];
+        for (i,entry) in entries.iter_mut().take(degree+1).enumerate() {
+            let d=controls[start+i]-anchor;
+            let weight=local_weights[i]/scale;
+            radius=radius.max(d.x.hypot(d.y).hypot(d.z));
+            *entry=(d*weight,weight);
+        }
+        for order in 1..=2.min(degree) {
+            let length=degree+1-order;
+            for j in 0..length {
+                let divisor=u[start+j+degree+1]-u[start+j+order];
+                if !divisor.is_finite() || divisor<0.0 {return None;}
+                let factor=if divisor==0.0 {0.0} else {length as f64 / divisor};
+                let v=(entries[j+1].0-entries[j].0)*factor;
+                let dw=(entries[j+1].1-entries[j].1)*factor;
+                if ![v.x,v.y,v.z,dw].iter().all(|v|v.is_finite()){return None;}
+                entries[j]=(v,dw);
+                h[order]=h[order].max(v.x.hypot(v.y).hypot(v.z));
+                w[order]=w[order].max(dw.abs());
+            }
+        }
+        let speed=(h[1]+radius*w[1])/w_min;
+        let acceleration=(h[2]+radius*w[2]+2.0*speed*w[1])/w_min;
+        let segments=width*(acceleration/(8.0*tolerance)).sqrt();
+        if !segments.is_finite() {return None;}
+        Some((lo,hi,(segments*(1.0+1e-12)).ceil().max(1.0) as usize))
+    }
+
     /// 🌀️ First derivative `dC/dt`.
     pub fn d1(&self, t: f64) -> Vec3 {
         match self {
@@ -213,41 +303,61 @@ fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)
 /// reproduce `(radius·cos t, radius·sin t)` to a numeric tolerance at arbitrary `t`, not just as a
 /// set of points.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn arc_to_nurbs_with_span(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64), max_span: f64) -> NurbsCurve3 {
-    let span = domain.1 - domain.0;
-    let n_spans = (span.abs() / max_span).ceil().max(1.0) as usize;
-    let step = span / n_spans as f64;
-    let mut controls = Vec::with_capacity(2 * n_spans + 1);
-    let mut weights = Vec::with_capacity(2 * n_spans + 1);
-    let local_point = |angle: f64, r_scale: f64| Pnt3::new(radius_x * angle.cos() * r_scale, radius_y * angle.sin() * r_scale, 0.0);
-    for span_i in 0..n_spans {
-        let a0 = domain.0 + step * span_i as f64;
-        let a1 = a0 + step;
-        let half = (a1 - a0) * 0.5;
-        let mid = (a0 + a1) * 0.5;
-        let w1 = half.cos();
-        let p0 = local_point(a0, 1.0);
-        let p2 = local_point(a1, 1.0);
-        let p1 = local_point(mid, 1.0 / w1);
-        if span_i == 0 {
-            controls.push(frame.to_world(p0));
-            weights.push(1.0);
-        }
-        controls.push(frame.to_world(p1));
-        weights.push(w1);
-        controls.push(frame.to_world(p2));
-        weights.push(1.0);
+/// 🪜️ Exact rational-quadratic control and knot recipe for a bounded conic arc.
+#[derive(Clone,Copy)]
+pub struct ArcSplineRecipe {
+    frame:Frame3,
+    radii:[f64;2],
+    range:(f64,f64),
+    spans:usize,
+    affine:Option<Affine3>,
+}
+
+semio_framework_value::artifact_retire_leaf!(ArcSplineRecipe);
+
+impl ArcSplineRecipe {
+    pub fn new(frame:Frame3,radii:[f64;2],range:(f64,f64),maximum_span:f64) -> Option<Self> {
+        let sweep=range.1-range.0;
+        let spans=(sweep/maximum_span).ceil().max(1.0) as usize;
+        if !sweep.is_finite() || sweep<0.0 || !maximum_span.is_finite() || maximum_span<=0.0 ||
+           radii.iter().any(|r|!r.is_finite()) || spans>(usize::MAX-4)/2 { return None; }
+        Some(Self{frame,radii,range,spans,affine:None})
     }
-    let mut knots = vec![domain.0, domain.0, domain.0];
-    for span_i in 1..n_spans {
-        let knot = domain.0 + step * span_i as f64;
-        knots.push(knot);
-        knots.push(knot);
+
+    pub fn control_count(self) -> usize {2*self.spans+1}
+    pub fn knot_count(self) -> usize {self.control_count()+3}
+
+    fn angle(self,span:usize) -> f64 {
+        if span==self.spans {self.range.1}
+        else {self.range.0+(self.range.1-self.range.0)*span as f64/self.spans as f64}
     }
-    knots.push(domain.1);
-    knots.push(domain.1);
-    knots.push(domain.1);
-    NurbsCurve3 { knots: KnotVector::new(knots, 2, controls.len()).unwrap(), controls, weights }
+
+    pub fn knot(self,index:usize) -> f64 {
+        if index<3 {self.range.0}
+        else if index>=self.knot_count()-3 {self.range.1}
+        else {self.angle(1+(index-3)/2)}
+    }
+
+    pub fn control(self,index:usize) -> (Pnt3,f64) {
+        let start=self.angle(index/2);
+        let (angle,weight)=if index%2==0 {(start,1.0)} else {
+            let half=(self.angle(index/2+1)-start)*0.5;
+            (start+half,half.cos())
+        };
+        let [rx,ry]=self.radii;
+        let point=self.frame.to_world(Pnt3::new(rx*angle.cos()/weight,ry*angle.sin()/weight,0.0));
+        (self.affine.map_or(point, |affine| affine.apply_point(point)),weight)
+    }
+
+    fn materialize(self) -> NurbsCurve3 {
+        let (controls,weights)=(0..self.control_count()).map(|i|self.control(i)).unzip();
+        let knots=(0..self.knot_count()).map(|i|self.knot(i)).collect();
+        NurbsCurve3{knots:KnotVector{knots,degree:2},controls,weights}
+    }
+}
+
+fn arc_to_nurbs_with_span(frame:&Frame3,radius_x:f64,radius_y:f64,domain:(f64,f64),max_span:f64) -> NurbsCurve3 {
+    ArcSplineRecipe::new(*frame,[radius_x,radius_y],domain,max_span).expect("valid rational conic interval").materialize()
 }
 
 // #endregion 🔖️Curve3
@@ -287,6 +397,22 @@ impl Curve2 {
             Curve2::Nurbs { knots, .. } => knots.domain(),
         }
     }
+    /// 📌️ Samples an original planar trim curve without heap scratch.
+    pub fn sample_original(&self,t:f64) -> Option<Pnt2> {
+        if let Self::Nurbs{knots,controls,weights}=self {
+            if controls.len()!=weights.len() { return None; }
+            let homogeneous=bspline::homogeneous_jet_original(knots,controls.len(),t,0,|i|{
+                let p=controls.get(i)?;
+                let w=*weights.get(i)?;
+                Some([p.x*w,p.y*w,0.0,w])
+            })?;
+            let [p,_,_]=bspline::project_original_jet(homogeneous,0)?;
+            return Some(Pnt2::new(p[0],p[1]));
+        }
+        let p=self.eval(t);
+        (p.x.is_finite()&&p.y.is_finite()).then_some(p)
+    }
+
     pub fn eval(&self, t: f64) -> Pnt2 {
         match self {
             Curve2::Line { origin, dir } => *origin + *dir * t,
@@ -386,12 +512,20 @@ impl Curve3 {
     /// — required because [`Self::transformed`]'s own contract is a pointwise pushforward
     /// (`transformed.eval(t) == map(self.eval(t))`), not merely a shape-preserving conversion.
     fn transformed_via_nurbs(&self, map: &Affine3) -> Curve3 {
-        let nurbs = match self {
-            Curve3::Circle { frame, radius } => arc_to_nurbs_with_span(frame, *radius, *radius, self.domain(), refined_max_span(*radius)),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs_with_span(frame, *major_radius, *minor_radius, self.domain(), refined_max_span(major_radius.max(*minor_radius))),
-            _ => self.to_nurbs(self.domain()),
+        let nurbs = self.affine_conic_recipe(*map).expect("valid rational conic interval").materialize();
+        Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights }
+    }
+
+    /// 🧭️ Plans the cold rational conic image without allocating knots or controls.
+    pub fn affine_conic_recipe(&self, map: Affine3) -> Option<ArcSplineRecipe> {
+        let (frame, radii) = match self {
+            Curve3::Circle { frame, radius } => (*frame, [*radius; 2]),
+            Curve3::Ellipse { frame, major_radius, minor_radius } => (*frame, [*major_radius, *minor_radius]),
+            _ => return None,
         };
-        Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls.into_iter().map(|p| map.apply_point(p)).collect(), weights: nurbs.weights }
+        let mut recipe = ArcSplineRecipe::new(frame, radii, self.domain(), refined_max_span(radii[0].max(radii[1])))?;
+        recipe.affine = Some(map);
+        Some(recipe)
     }
 }
 

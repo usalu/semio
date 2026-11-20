@@ -18,6 +18,7 @@ use semio_framework_pack_json::Value;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
 use crate::editor::puzzle5d::entities::{CAPSULE_DREAM_EXAMPLE_DOCUMENT, CONCRETE_FOREST_EXAMPLE_DOCUMENT, EMPTY_EXAMPLE_DOCUMENT, NAKAGIN_EXAMPLE_DOCUMENT, PUZZLE5D_EXAMPLE_CAPSULE_DREAM, PUZZLE5D_EXAMPLE_CONCRETE_FOREST, PUZZLE5D_EXAMPLE_NAKAGIN, PUZZLE5D_INTERACTION_DOMAIN, Puzzle5dDocument, Puzzle5dPart, puzzle5d_editor_projection};
 use semio_framework_job::StepContext;
+use semio_os_kernel::os_store::one_item_publication::ArtifactMutationPages;
 use crate::editor::puzzle5d::interaction::{Puzzle5dCommand, puzzle5d_notice_emit};
 
 //#region 🔖️PlayApp
@@ -35,10 +36,6 @@ const PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 64;
 /// 🔢️ Stage transitions and whole-document rows a switch always pays on top of its chunks (label, domain,
 /// description, catalogs and one exhaustion step per cursored stage). 3d's own count, kept identical.
 const PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
-
-/// 🧮️ Mutations one switch may accumulate: exactly what the declared extent can legitimately produce, so
-/// `push` can never refuse work `extent` already admitted.
-const PUZZLE5D_SET_ACTIVE_EXAMPLE_MUTATIONS: usize = crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS * PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Puzzle5dSetActiveExampleStage {
@@ -60,6 +57,7 @@ pub(super) enum Puzzle5dSetActiveExampleStage {
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dSetActiveExampleWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
+    pub mutation_pages: Option<ArtifactMutationPages<Puzzle5dMutation>>,
     pub before: Option<semio_framework_value::retirement::arc_custody::ArcLease<Puzzle5dSetActiveExampleBefore>>,
 }
 
@@ -68,6 +66,7 @@ pub struct Puzzle5dSetActiveExampleWork {
     pub cursor: usize,
     pub admitted: bool,
     pub mutations: Vec<Puzzle5dMutation>,
+    mutation_pages: Option<ArtifactMutationPages<Puzzle5dMutation>>,
     /// 🗂️ The BEFORE document's ids to clear — fastener ids, part ids and compatibility pairs —
     /// harvested ONCE and then merely indexed by the cursored clearing stages.
     ///
@@ -91,7 +90,7 @@ struct Puzzle5dSetActiveExampleBefore {
 
 impl Default for Puzzle5dSetActiveExampleWork {
     fn default() -> Self {
-        Self { close_owners: Default::default(), stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::new(), before: None }
+        Self { close_owners: Default::default(), stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::new(), mutation_pages: None, before: None }
     }
 }
 
@@ -101,17 +100,39 @@ impl Puzzle5dSetActiveExampleWork {
     /// and fasteners, each counted in `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK`-sized steps, plus the fixed
     /// stage-transition and whole-document rows.
     pub fn units(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot) -> Option<usize> {
-        let projection = puzzle5d_editor_projection(snapshot);
+        Self::row_counts(command, snapshot).and_then(Self::work_units)
+    }
+
+    fn row_counts(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot) -> Option<[usize; 6]> {
         let target = Self::target(command)?;
-        let rows = [
-            snapshot.typed().fasteners.len(),
-            projection.get("parts").and_then(Value::as_array).map_or(0, Vec::len),
-            projection.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len),
+        let current = snapshot.typed();
+        Some([
+            current.fasteners.len(),
+            current.parts.len(),
+            current.kind_compatibility.len(),
             Self::compatibility_rows(target).len(),
             target.parts.len(),
             target.fasteners.len(),
-        ];
-        rows.into_iter().try_fold(PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS, |units, len| units.checked_add(len.div_ceil(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK)))
+        ])
+    }
+
+    fn work_units(rows: [usize; 6]) -> Option<usize> {
+        let capacity = rows.into_iter().try_fold(4usize, usize::checked_add)?;
+        let pages = if ArtifactMutationPages::<Puzzle5dMutation>::needs_pages(capacity) {
+            ArtifactMutationPages::<Puzzle5dMutation>::page_count(capacity)
+        } else {
+            0
+        };
+        rows.into_iter().try_fold(PUZZLE5D_SET_ACTIVE_EXAMPLE_FIXED_STEPS.checked_add(pages)?, |units, len| units.checked_add(len.div_ceil(PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK)))
+    }
+
+    /// 🧮️ Counts the original mutation entries this example switch will emit.
+    pub fn mutation_capacity(command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot) -> usize {
+        let Some(rows) = Self::row_counts(command, snapshot) else { return 0 };
+        if Self::work_units(rows).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
+            return 0;
+        }
+        4 + rows.into_iter().sum::<usize>()
     }
 
     /// ✂️ The next `PUZZLE5D_SET_ACTIVE_EXAMPLE_CHUNK` rows of a cursored stage, advancing the cursor.
@@ -141,7 +162,10 @@ impl Puzzle5dSetActiveExampleWork {
     }
 
     pub fn push(&mut self, mutation: Puzzle5dMutation) -> Result<(), Fault> {
-        if self.mutations.len() >= PUZZLE5D_SET_ACTIVE_EXAMPLE_MUTATIONS {
+        if let Some(pages) = self.mutation_pages.as_mut() {
+            return pages.push(mutation).map_err(|_| Fault::from("puzzle5d-set-active-example-output-capacity"));
+        }
+        if self.mutations.len() >= self.mutations.capacity() {
             return Err(Fault::from("puzzle5d-set-active-example-output-capacity"));
         }
         self.mutations.push(mutation);
@@ -154,21 +178,29 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         "setActiveExample"
     }
 
-    /// 🧯️ An example whose switch costs more than one edit's fixed work capacity is REFUSED with a notice
-    /// on the first step, not admitted and faulted: `🌙️capsule-dream` is 2,880 parts + 2,865 fasteners, so
-    /// it exceeds `PUZZLE_COMMAND_WORK_ITEMS` (4,096) on its own, and a bare `None` here would surface as
-    /// the framework's opaque "exceeds fixed semantic work capacity" fault instead of a sentence the user
-    /// can read. The refusal path therefore declares one unit, and `step` completes with the notice.
+    /// 🧯️ A switch beyond the edit's chunk and page budget declares one unit to publish a localized notice.
     fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let units = Self::units(command, snapshot)?;
         Some(if units <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS { units } else { 1 })
     }
 
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if let Some(demand) = self.mutation_pages.as_ref().and_then(|pages| pages.next_page_demand()) {
+            return Ok(demand);
+        }
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        if let Some(pages) = self.mutation_pages.as_mut().filter(|pages| pages.next_page_demand().is_some()) {
+            let progress = pages.admit_page(cx.retained_grant())?;
+            cx.consume_retained(progress)?;
+            cx.consume_fuel(1);
+            return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Progress {
+                stage: "puzzle5d-example-mutation-page",
+                preview: br#"{"en":"Preparing example edit","de":"Beispieländerung wird vorbereitet"}"#,
+            });
+        }
         let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
@@ -317,6 +349,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let interaction_writes = if targets.is_empty() { Vec::new() } else { vec![InteractionWrite { domain: PUZZLE5D_INTERACTION_DOMAIN.into(), targets, merge: MergeMode::Subtractive }] };
                 Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
+                    artifact_mutation_pages: self.mutation_pages.take(),
                     config_mutations: config.mutations_to(&Puzzle5dConfig::default()),
                     interaction_writes,
                     ui_scope: UiDirtyScope::Full,
@@ -335,7 +368,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dSetActiveExampleStage::Closing;
-        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), before: std::mem::take(&mut self.before).map(semio_framework_value::retirement::arc_custody::ArcLease::new) });
+        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), mutation_pages: self.mutation_pages.take(), before: std::mem::take(&mut self.before).map(semio_framework_value::retirement::arc_custody::ArcLease::new) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -528,14 +561,25 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 //#endregion 🔖️PlayApp
 
 impl Puzzle5dSetActiveExampleWork {
-    pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-  let capacity=0_usize.checked_add((crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS as usize).checked_mul(std::mem::size_of::<Puzzle5dMutation>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Puzzle5D vector extent overflow"))?;
-  Ok(semio_framework_value::RetirementDemand{capacity_bytes:capacity,depth:1,..Default::default()})
- }
+    pub fn original_birth_demands(capacity: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if ArtifactMutationPages::<Puzzle5dMutation>::needs_pages(capacity) {
+            return Ok(ArtifactMutationPages::<Puzzle5dMutation>::directory_demand(capacity));
+        }
+        let capacity_bytes = capacity.checked_mul(size_of::<Puzzle5dMutation>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original Puzzle5D vector extent overflow"))?;
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    }
 
-    pub fn from_original_construction(scope:&mut semio_framework_action_bus::OriginalToolConstructionScope<'_>)->Result<(Self,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
-  scope.admit_owner(Self::original_birth_demands()?)?;
-  let work=Self{mutations:Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),..Self::default()};let capacity=work.mutations.capacity()*std::mem::size_of::<Puzzle5dMutation>();
-  Ok((work,semio_framework_value::RetainedCloneProgress{retained_capacity_bytes:capacity,..Default::default()}))
- }
+    pub fn from_original_construction(capacity: usize, scope: &mut semio_framework_action_bus::OriginalToolConstructionScope<'_>) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = Self::original_birth_demands(capacity)?;
+        scope.admit_owner(demand)?;
+        if ArtifactMutationPages::<Puzzle5dMutation>::needs_pages(capacity) {
+            let pages = ArtifactMutationPages::new(capacity)?;
+            let retained_capacity_bytes = pages.directory_bytes();
+            return Ok((Self { mutation_pages: Some(pages), ..Self::default() }, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes, ..Default::default() }));
+        }
+        let mut mutations = Vec::new();
+        mutations.try_reserve_exact(capacity).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "original Puzzle5D example mutation allocation was refused"))?;
+        let retained_capacity_bytes = mutations.capacity() * size_of::<Puzzle5dMutation>();
+        Ok((Self { mutations, ..Self::default() }, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes, ..Default::default() }))
+    }
 }

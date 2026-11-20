@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 3,
+  "maxItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "softMs", "idleMs", "hardMultiplier", "complete", "floodRows"],
+    "oneOf": [{"required": ["deadline"]}, {"required": ["step"]}],
+    "properties": {
+      "name": {"type": "string", "minLength": 1},
+      "softMs": {"type": "integer", "minimum": 1},
+      "idleMs": {"type": "integer", "minimum": 1},
+      "hardMultiplier": {"type": "integer", "minimum": 2},
+      "complete": {"type": "integer", "minimum": 2},
+      "floodRows": {"type": "integer", "minimum": 0},
+      "deadline": {"enum": ["hard-cap", "soft-cap-idle"]},
+      "step": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seconds", "bound", "quietMs", "speed"],
+        "properties": {
+          "seconds": {"type": "integer", "minimum": 1},
+          "bound": {"type": "integer", "minimum": 1},
+          "quietMs": {"type": "integer", "minimum": 1},
+          "speed": {"type": "number", "minimum": 1}
+        }
+      }
+    }
+  }
+}

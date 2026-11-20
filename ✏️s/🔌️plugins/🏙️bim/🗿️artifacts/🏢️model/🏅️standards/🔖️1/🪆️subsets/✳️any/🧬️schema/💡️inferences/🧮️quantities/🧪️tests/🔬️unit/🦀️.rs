@@ -44,32 +44,32 @@ fn material(density: f64) -> Material {
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m-brick".into(), material(1800.0));
-    snapshot.materials.insert("m-wool".into(), material(40.0));
-    snapshot.materials.insert("m-concrete".into(), material(2400.0));
-    snapshot.wall_types.insert("wt".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallType { name: "Brick 300".into(), layers: vec![layer("m-brick", 0.2, LayerFunction::Structure), layer("m-wool", 0.1, LayerFunction::Insulation)] });
-    snapshot.slab_types.insert("slt".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m-concrete", 0.25, LayerFunction::Structure)] });
-    snapshot.column_types.insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
-    snapshot.beam_types.insert("bt".into(), BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
-    snapshot.window_types.insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.0, sill: 0.9, frame_width: 0.06, frame_depth: 0.1, panes: 2, material: "m-wool".into(), u_value: None, g_value: None, frame_fraction: None });
-    snapshot.door_types.insert("door".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-wool".into(), u_value: None });
-    snapshot.sites.insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 2.5, cut_height: None });
-    snapshot.storeys.insert("st-1".into(), Storey { building: "bldg".into(), name: "First".into(), level: 1, height: 3.0, cut_height: None });
+    snapshot.materials.cold_insert("m-brick".into(), material(1800.0));
+    snapshot.materials.cold_insert("m-wool".into(), material(40.0));
+    snapshot.materials.cold_insert("m-concrete".into(), material(2400.0));
+    snapshot.wall_types.cold_insert("wt".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallType { name: "Brick 300".into(), layers: vec![layer("m-brick", 0.2, LayerFunction::Structure), layer("m-wool", 0.1, LayerFunction::Insulation)] });
+    snapshot.slab_types.cold_insert("slt".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m-concrete", 0.25, LayerFunction::Structure)] });
+    snapshot.column_types.cold_insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
+    snapshot.beam_types.cold_insert("bt".into(), BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
+    snapshot.window_types.cold_insert("win".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.0, sill: 0.9, frame_width: 0.06, frame_depth: 0.1, panes: 2, material: "m-wool".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.door_types.cold_insert("door".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.1, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-wool".into(), u_value: None });
+    snapshot.sites.cold_insert("site".into(), Site { name: "Site".into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.cold_insert("bldg".into(), Building { site: "site".into(), name: "Building".into(), origin: point(0.0, 0.0), rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.cold_insert("st-0".into(), Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 2.5, cut_height: None });
+    snapshot.storeys.cold_insert("st-1".into(), Storey { building: "bldg".into(), name: "First".into(), level: 1, height: 3.0, cut_height: None });
     snapshot
 }
 
 fn single_wall() -> ModelSnapshot {
     let mut snapshot = base();
-    snapshot.walls.insert("w".into(), wall(line((0.0, 0.0), (5.0, 0.0))));
+    snapshot.walls.cold_insert("w".into(), wall(line((0.0, 0.0), (5.0, 0.0))));
     snapshot
 }
 
 fn with_openings() -> ModelSnapshot {
     let mut snapshot = single_wall();
-    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 1.5, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
-    snapshot.openings.insert("o-door".into(), Opening { host: "w".into(), kind: OpeningKind::Door { door_type: "door".into() }, offset: 3.8, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Door".into() });
+    snapshot.openings.cold_insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 1.5, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
+    snapshot.openings.cold_insert("o-door".into(), Opening { host: "w".into(), kind: OpeningKind::Door { door_type: "door".into() }, offset: 3.8, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Door".into() });
     snapshot
 }
 
@@ -104,8 +104,8 @@ async fn the_wall_volume_agrees_with_the_mesh_of_its_solid() {
 #[semio_framework_async_macros::async_test]
 async fn joined_walls_share_the_corner_without_double_counting() {
     let mut snapshot = base();
-    snapshot.walls.insert("w-a".into(), wall(line((0.0, 0.0), (4.0, 0.0))));
-    snapshot.walls.insert("w-b".into(), wall(line((4.0, 0.0), (4.0, 3.0))));
+    snapshot.walls.cold_insert("w-a".into(), wall(line((0.0, 0.0), (4.0, 0.0))));
+    snapshot.walls.cold_insert("w-b".into(), wall(line((4.0, 0.0), (4.0, 3.0))));
     snapshot.wall_types.get_mut("wt").expect("type").layers = vec![layer("m-brick", 0.2, LayerFunction::Structure)];
     let found = quantities(&snapshot);
     let footprint = found.elements["w-a"].gross_area + found.elements["w-b"].gross_area;
@@ -117,7 +117,7 @@ async fn joined_walls_share_the_corner_without_double_counting() {
 async fn curved_walls_use_the_arc_length_and_the_layer_areas_of_the_annulus() {
     let mut snapshot = base();
     snapshot.wall_types.get_mut("wt").expect("type").layers = vec![layer("m-brick", 0.2, LayerFunction::Structure), layer("m-wool", 0.1, LayerFunction::Insulation)];
-    snapshot.walls.insert("w".into(), wall(Axis::Arc { start: point(2.0, 0.0), end: point(-2.0, 0.0), bulge: 1.0 }));
+    snapshot.walls.cold_insert("w".into(), wall(Axis::Arc { start: point(2.0, 0.0), end: point(-2.0, 0.0), bulge: 1.0 }));
     let wall = &quantities(&snapshot).elements["w"];
     assert!(close(wall.length, std::f64::consts::PI * 2.0));
     let (outer, inner) = (2.15f64, 1.85f64);
@@ -129,7 +129,7 @@ async fn curved_walls_use_the_arc_length_and_the_layer_areas_of_the_annulus() {
 #[semio_framework_async_macros::async_test]
 async fn a_slab_with_a_hole_and_a_slope() {
     let mut snapshot = base();
-    snapshot.slabs.insert("sl".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
+    snapshot.slabs.cold_insert("sl".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
     let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let slab = &inferred.quantities.elements["sl"];
     assert!(close(slab.gross_area, 24.0) && close(slab.net_area, 23.0) && close(slab.perimeter, 20.0 + 4.0) && close(slab.width, 0.25));
@@ -141,11 +141,11 @@ async fn a_slab_with_a_hole_and_a_slope() {
 #[semio_framework_async_macros::async_test]
 async fn columns_beams_stairs_railings_and_spaces() {
     let mut snapshot = single_wall();
-    snapshot.columns.insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.beams.insert("b".into(), Beam { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), beam_type: "bt".into(), axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 3.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: 0.0 } }, top_offset: 0.0, end_top_offset: None, name: "Beam".into() });
-    snapshot.stairs.insert("s".into(), Stair { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
-    snapshot.railings.insert("r".into(), Railing { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, host: None, name: "Railing".into() });
-    snapshot.spaces.insert("sp".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+    snapshot.columns.cold_insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.beams.cold_insert("b".into(), Beam { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), beam_type: "bt".into(), axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 3.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: 0.0 } }, top_offset: 0.0, end_top_offset: None, name: "Beam".into() });
+    snapshot.stairs.cold_insert("s".into(), Stair { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
+    snapshot.railings.cold_insert("r".into(), Railing { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, host: None, name: "Railing".into() });
+    snapshot.spaces.cold_insert("sp".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     let found = quantities(&snapshot);
     let (column, beam, stair, railing, space) = (&found.elements["c"], &found.elements["b"], &found.elements["s"], &found.elements["r"], &found.elements["sp"]);
     assert!(close(column.length, 2.5) && close(column.gross_area, 0.09) && close(column.net_volume, 0.225) && close(column.mass, 0.225 * 2400.0) && close(column.perimeter, 1.2));
@@ -164,8 +164,8 @@ fn stair_tread(snapshot: &ModelSnapshot) -> f64 {
 #[semio_framework_async_macros::async_test]
 async fn totals_add_up_per_kind_type_material_storey_building_and_project() {
     let mut snapshot = with_openings();
-    snapshot.columns.insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.walls.insert("w-up".into(), Wall { storey: "st-1".into(), ..wall(line((0.0, 0.0), (2.0, 0.0))) });
+    snapshot.columns.cold_insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.walls.cold_insert("w-up".into(), Wall { storey: "st-1".into(), ..wall(line((0.0, 0.0), (2.0, 0.0))) });
     let found = quantities(&snapshot);
     let walls: Vec<&ElementQuantity> = found.elements.values().filter(|element| element.kind == QuantityKind::Wall).collect();
     let project = &found.project;
@@ -283,7 +283,7 @@ async fn the_take_off_subtracts_exactly_the_holes_the_solid_cuts() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_flush_with_the_wall_end_is_reported_and_not_cut() {
     let mut snapshot = single_wall();
-    snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 0.6, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() });
+    snapshot.openings.cold_insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 0.6, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() });
     let flush = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(flush.opening_frames["o-win"].issues, vec![semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::OutsideTrimmedExtent]);
     assert!(close(flush.quantities.elements["w"].opening_area, 0.0) && close(flush.element_solids["w"].volume, flush.quantities.elements["w"].gross_volume));
@@ -301,7 +301,7 @@ async fn a_density_edit_recomputes_only_the_quantities_that_use_the_material_and
     use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
     use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     let mut snapshot = with_openings();
-    snapshot.columns.insert("c".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(8.0, 8.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: String::new() });
+    snapshot.columns.cold_insert("c".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(8.0, 8.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: String::new() });
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).quantities.clone();
     let wool = ModelDiff::materials("m-wool", Entry::Patched(MaterialPatch { density: Some(80.0), ..Default::default() }));
@@ -322,7 +322,7 @@ fn ramp(path: Vec<Vertex>, top: TopConstraint) -> semio_s_artifact_bim_model_sna
 
 fn with_ramp(ramp: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp) -> ModelSnapshot {
     let mut snapshot = base();
-    snapshot.ramps.insert("rp".into(), ramp);
+    snapshot.ramps.cold_insert("rp".into(), ramp);
     snapshot
 }
 

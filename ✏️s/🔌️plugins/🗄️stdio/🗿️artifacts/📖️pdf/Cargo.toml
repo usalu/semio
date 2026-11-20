@@ -3,6 +3,11 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔗️xref/💧️stream/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧭️geometry/🧭️coordinates/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/📄️document/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🧬️schema/📦️packages/🦀️rust",
@@ -26,12 +31,14 @@ members = [
   "🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/🚀️insert-launch-action/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬇️lift/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🔡️glyph-list/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🅰️tables/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🖋️content/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🗜️filters/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/🧬️mutations/📦️packages/🦀️rust",

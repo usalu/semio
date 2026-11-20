@@ -18,15 +18,17 @@ impl<T: Topology + Clone> WfcJob<T> {
                 WfcStage::DetectContradiction => self.detect(),
                 WfcStage::BacktrackTrailEntry => self.backtrack_one(),
                 WfcStage::CommitSlot => {
-                    if self.state.observations == 1 || self.state.observations.is_multiple_of(CHECKPOINT_INTERVAL) {
+                    if self.publish_intermediate && (self.state.observations == 1 || self.state.observations.is_multiple_of(CHECKPOINT_INTERVAL)) {
                         if self.begin_checkpoint(false).is_err() {
                             return self.stage_fault(Vec::new());
                         }
                     } else {
                         self.state.stage = WfcStage::FindMinimumEntropySlot;
                     }
-                    let Some(now_us) = context.now_us() else { return WfcRun::Yield };
-                    return self.emit_preview(context, now_us / 1_000);
+                    if self.publish_intermediate {
+                        let Some(now_us) = context.now_us() else { return WfcRun::Yield };
+                        return self.emit_preview(context, now_us / 1_000);
+                    }
                 }
                 WfcStage::MaterializeCheckpoint => {
                     let checkpoint = match self.checkpoint_one() {
@@ -76,7 +78,7 @@ impl<T: Topology + Clone> WfcJob<T> {
                 return WfcRun::Cancelled;
             }
             let now_us = context.now_us();
-            if let Some(now_ms) = now_us.map(|now_us| now_us / 1_000).filter(|now_ms| self.preview_stage() && self.preview_due(*now_ms)) {
+            if let Some(now_ms) = now_us.map(|now_us| now_us / 1_000).filter(|now_ms| self.publish_intermediate && self.preview_stage() && self.preview_due(*now_ms)) {
                 return self.emit_preview(context, now_ms);
             }
             if context.fuel_exhausted() || now_us.is_none_or(|now_us| now_us >= context.deadline_us()) {

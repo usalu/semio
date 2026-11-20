@@ -2993,3 +2993,1748 @@ Five largest processes (rss KiB, pid, ppid, command):
 573068 279120  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
 530176 281246  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
 ```
+
+## 2026-11-18T12:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":247854,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"previous-failed","en":"Stage tools failed before; retrying after the back-off.","de":"Stufe tools schlug zuvor fehl; neuer Versuch nach der Wartezeit."},"peakMegabytes":1876,"tail":["[repo] still working after 770 s; last phase started: source.served"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795004098039,"updatedMs":1795005613530,"containment":null}`
+
+MemAvailable 4284 MB, SwapFree 22902 MB, load 14.26 15.21 14.66
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2341","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2342","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 740 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2343","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2344","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 740 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2345","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2346","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2347","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2348","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2349","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2350","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2351","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 750 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2352","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2353","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2354","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2355","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2356","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2357","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2358","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 760 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2359","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2360","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2361","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 770 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2362","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2363","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 770 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2364","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1220492 280250 247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+956012 278920  278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+772404 298440  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+765540 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+746656 305866  247853 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T12:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":315104,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repository:command] still running after 1370 s"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795005779521,"updatedMs":1795006218085,"containment":null}`
+
+MemAvailable 2770 MB, SwapFree 23078 MB, load 21.23 18.29 16.20
+
+Last 30 lines of `tools.log`:
+
+```
+[repo] still working after 1340 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2874","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2875","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2876","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 1340 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2877","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2878","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2879","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2880","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2881","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2882","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2883","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 1350 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2884","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2885","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2886","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2887","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2888","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2889","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2890","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 1360 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2891","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2892","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2893","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2894","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 1370 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2895","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2896","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 1370 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-stage:2897","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+981652 315577  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+963616 278920  278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+857132 314811  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+839180 316236  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+826348 317216  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T13:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":315104,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repo] still working after 1970 s; last phase started: source.served"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795005779521,"updatedMs":1795006814456,"containment":null}`
+
+MemAvailable 3428 MB, SwapFree 23038 MB, load 18.56 17.74 17.26
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1705819","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1705883","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1705947","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706011","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706075","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706139","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706203","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706267","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706331","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706395","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706459","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706523","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706587","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706651","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706715","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706779","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706843","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706907","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1706971","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707035","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707099","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707163","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707227","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707291","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707355","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707419","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707483","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707547","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707611","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:1707675","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1140764 443912 312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+1097128 278920 278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+773212 511193  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+766112 315577  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+747484 465934  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T13:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":315104,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:6260\",\"mode\":\"exclusive\",\"elapsedMs\":0}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795005779521,"updatedMs":1795007418497,"containment":null}`
+
+MemAvailable 2004 MB, SwapFree 22002 MB, load 20.18 19.67 18.42
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:2428528","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:2428592","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:2428656","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:funded-ownership:frontier:2428687","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 2471 s
+[repo] still working after 2480 s; last phase started: source.served
+[repository:command] still running after 2481 s
+[repository:command] still running after 2491 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6252","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 2501 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6253","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 2510 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6254","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 2511 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6255","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6256","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 2521 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-preserving-source:2","mode":"exclusive","elapsedMs":6.0255650002509356}}
+[repository:command] still running after 2531 s
+[repo] still working after 2540 s; last phase started: source.served
+[repository:command] still running after 2541 s
+[repository:command] still running after 2551 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-preserving-source:323","mode":"exclusive","elapsedMs":507.51397400023416}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6257","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6258","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 2561 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6259","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 2570 s; last phase started: source.served
+[repository:command] still running after 2571 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6260","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1544492 278920 278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+808072 443912  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+703128 572873  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+600992 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+553692   6325    2675 claude --resume
+```
+
+## Git Stage Identical to the Fleet Since 13:15 UTC on 2026-11-18 (Was `objects-missing` From 12:04 UTC)
+
+- After the return the files were identical within minutes (manifest digest and file count equal to g1-m01, same commit `3d62b2ef22`), but the git stage was not: `Git state: waiting for objects of the shared stage`, `queue.incoming` 7206, git view 5067 modified / 13 deleted / 3570 untracked against 99 / 11 / 92 elsewhere. It did not heal in 70 minutes.
+- Cause, local: `.git/objects/pack/multi-pack-index`, written by git on this machine at 03:38 UTC on 2026-11-18 (during the outage, a git client ran here), named three packs; the daemon removed two of them after the return (`repaired git local-packs 448`). `git multi-pack-index verify`: `failed to load pack in position 0`, `… position 2`. With it git could not read objects that the fleet pack `pack-2678b326…` holds: 162 folder trees of the stage base `a4d0762fc86b` (published by g1-server, hlc `1794923253279`) read as missing; `git -c core.multiPackIndex=false cat-file -t` found them.
+- Done at 13:14 UTC: the stale `multi-pack-index` was moved out of the repository (to `~/.cache/semio-stale-multi-pack-index-20261118`; the file is never shared, README "Pack gate"). 30 s later: `repaired git objects-missing`, `Git state: shared`, stage tree `da285029bd71`.
+- Before that, at 12:56 UTC, four objects of the stage tree were written from byte-identical local files (`git hash-object -w` for three blobs, `git mktree` for the tree of `.claude`); only objects, no file, stage or ref was changed. They were absent for the same reason or were never published; not determined.
+- Check at 13:18 UTC (attestations): g1-m04, g1-m01, g1-m07 and g1-server all `indexTree da285029bd71`, manifest `fc8eb0a99486`, 318 549 files, commit `3d62b2ef22`, view 0 staged / 68 modified / 10 deleted / 40 untracked with the same digest `e1f3b499…`, `queue.incoming` 0; `status` verdict for g1-m04 `ok`.
+- What this machine published after the return, outside its own folders: git objects, the ref file `.git/refs/remotes/origin/🐙ueli/⛳wip`, and two files of the ticket `☀️18/DEV-PUZZLE-5D-FULLY-WORKING-END-TO-END` that was opened on this machine during the outage. No stage register, no other path.
+
+For the coordinator: a `multi-pack-index` that names packs the pack rescue then deletes leaves git unable to read objects of the remaining pack; the daemon reports `objects-missing` and waits without end. Removing the `multi-pack-index` together with the rescued packs would avoid it.
+
+## 2026-11-18T13:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":315104,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repo] still working after 3170 s; last phase started: source.served"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795005779521,"updatedMs":1795008013712,"containment":null}`
+
+MemAvailable 2722 MB, SwapFree 21958 MB, load 12.68 15.25 16.82
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:47999","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48063","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48127","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48191","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48255","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48319","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48383","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 3161 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48447","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48511","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48575","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48639","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48703","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48767","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48831","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48895","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:48959","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49023","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49087","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49151","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 3170 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49215","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49279","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49343","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49407","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49471","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 3171 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49535","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49599","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:workspace-edges:49663","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1257696 278920 278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+1048488 641968 312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+966036 443912  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+650484 484190  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+575952 672466  312734 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T13:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":679153,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"native-artifact-input-read:6556\",\"mode\":\"exclusive\",\"elapsedMs\":0}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795008243447,"updatedMs":1795008615536,"containment":null}`
+
+MemAvailable 3504 MB, SwapFree 20951 MB, load 21.90 17.73 16.74
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6597","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6598","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6599","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6600","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6601","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6602","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6603","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6604","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6605","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6606","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6607","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 3771 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6608","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6609","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6610","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6611","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6612","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6613","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6614","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6615","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6616","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6617","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6618","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6619","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6620","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6621","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6622","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6623","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6624","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read:6625","mode":"exclusive","elapsedMs":0}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+988692 278920  278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+705948 684469  684456 claude
+662480 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+506504 683654  682891 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🏭️walk-farm/👷️chi
+461492 678863  678786 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/
+```
+
+## 2026-11-18T13:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":679153,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":39,"exit":null,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repo] still working after 4370 s; last phase started: source.served"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795008243447,"updatedMs":1795009214193,"containment":null}`
+
+MemAvailable 4708 MB, SwapFree 21949 MB, load 18.56 17.83 17.32
+
+Last 30 lines of `tools.log`:
+
+```
+[repo] still working after 4160 s; last phase started: source.served
+[repository:command] still running after 4161 s
+[repository:command] still running after 4171 s
+[repository:command] still running after 4181 s
+[repo] still working after 4190 s; last phase started: source.served
+[repository:command] still running after 4191 s
+[repository:command] still running after 4201 s
+[repository:command] still running after 4211 s
+[repo] still working after 4220 s; last phase started: source.served
+[repository:command] still running after 4221 s
+[repository:command] still running after 4231 s
+[repository:command] still running after 4241 s
+[repo] still working after 4250 s; last phase started: source.served
+[repository:command] still running after 4251 s
+[repository:command] still running after 4261 s
+[repository:command] still running after 4271 s
+[repo] still working after 4280 s; last phase started: source.served
+[repository:command] still running after 4281 s
+[repository:command] still running after 4291 s
+[repository:command] still running after 4301 s
+[repo] still working after 4310 s; last phase started: source.served
+[repository:command] still running after 4311 s
+[repository:command] still running after 4321 s
+[repository:command] still running after 4331 s
+[repo] still working after 4340 s; last phase started: source.served
+[repository:command] still running after 4341 s
+[repository:command] still running after 4351 s
+[repository:command] still running after 4361 s
+[repo] still working after 4370 s; last phase started: source.served
+[repository:command] still running after 4371 s
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1203064 278920 278721 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+721636 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+595248 684469  684456 claude
+542216 732377  732326 rustc --crate-name semio_framework_manifest_arg_schema --edition=2021 🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type l
+493240 732265  732176 rustc --crate-name semio_os_inference --edition=2021 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep
+```
+
+## 2026-11-18T13:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":679153,"state":"waiting","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":{"code":"stage-failed","en":"Stage tools failed (exit status 124); retrying with back-off.","de":"Stufe tools schlug fehl (Exit-Status 124); neuer Versuch mit Wartezeit."},"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["ship:frontier:2663789\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released.","repository:command failed with exit code 124"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795008243447,"updatedMs":1795009816737,"containment":null}`
+
+MemAvailable 9564 MB, SwapFree 23059 MB, load 13.17 14.25 16.22
+
+Last 30 lines of `tools.log`:
+
+```
+[repo] still working after 4520 s; last phase started: source.served
+[repository:command] still running after 4521 s
+[repository:command] still running after 4531 s
+[repository:command] still running after 4541 s
+[repo] still working after 4550 s; last phase started: source.served
+[repository:command] still running after 4551 s
+[repository:command] still running after 4561 s
+[repository:command] still running after 4571 s
+[repo] still working after 4580 s; last phase started: source.served
+[repository:command] still running after 4581 s
+[repository:command] still running after 4591 s
+[repository:command] still running after 4601 s
+[repo] still working after 4610 s; last phase started: source.served
+[repository:command] still running after 4611 s
+[repository:command] still running after 4621 s
+[repository:command] still running after 4631 s
+[repo] still working after 4640 s; last phase started: source.served
+[repository:command] still running after 4641 s
+[repository:command] still running after 4651 s
+[repository:command] still running after 4661 s
+[repo] still working after 4670 s; last phase started: source.served
+[repository:command] still running after 4671 s
+[repository:command] still running after 4681 s
+[repository:command] still running after 4691 s
+[repo] still working after 4700 s; last phase started: source.served
+[repository:command] still running after 4701 s
+[repository:command] still running after 4711 s
+[repository:command] still running after 4721 s
+This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released.
+repository:command failed with exit code 124
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1381376 744495 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+743080 684469  684456 claude
+730856 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+282160 742659  741829 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+265420   1955    1788 /usr/lib/kf6/baloo_file
+```
+
+## 2026-11-18T14:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":763179,"state":"backoff","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":{"code":"stage-failed","en":"Stage tools failed (exit status 124); retrying with back-off.","de":"Stufe tools schlug fehl (Exit-Status 124); neuer Versuch mit Wartezeit."},"reason":null,"peakMegabytes":1876,"tail":["ship:frontier:2663789\",\"mode\":\"exclusive\",\"elapsedMs\":0}}","This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released.","repository:command failed with exit code 124"],"nextAttemptMs":1795010771386,"readyMs":null,"startedMs":1795009864290,"updatedMs":1795010344561,"containment":null}`
+
+MemAvailable 7909 MB, SwapFree 23221 MB, load 7.04 8.87 12.68
+
+Last 30 lines of `tools.log`:
+
+```
+[repo] still working after 4520 s; last phase started: source.served
+[repository:command] still running after 4521 s
+[repository:command] still running after 4531 s
+[repository:command] still running after 4541 s
+[repo] still working after 4550 s; last phase started: source.served
+[repository:command] still running after 4551 s
+[repository:command] still running after 4561 s
+[repository:command] still running after 4571 s
+[repo] still working after 4580 s; last phase started: source.served
+[repository:command] still running after 4581 s
+[repository:command] still running after 4591 s
+[repository:command] still running after 4601 s
+[repo] still working after 4610 s; last phase started: source.served
+[repository:command] still running after 4611 s
+[repository:command] still running after 4621 s
+[repository:command] still running after 4631 s
+[repo] still working after 4640 s; last phase started: source.served
+[repository:command] still running after 4641 s
+[repository:command] still running after 4651 s
+[repository:command] still running after 4661 s
+[repo] still working after 4670 s; last phase started: source.served
+[repository:command] still running after 4671 s
+[repository:command] still running after 4681 s
+[repository:command] still running after 4691 s
+[repo] still working after 4700 s; last phase started: source.served
+[repository:command] still running after 4701 s
+[repository:command] still running after 4711 s
+[repository:command] still running after 4721 s
+This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released.
+repository:command failed with exit code 124
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1242028 767972 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+918208 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+900940 684469  684456 claude
+809076 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+441568 768019  740275 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+```
+
+## 2026-11-18T14:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":775001,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"previous-failed","en":"Stage tools failed before; retrying after the back-off.","de":"Stufe tools schlug zuvor fehl; neuer Versuch nach der Wartezeit."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.7247619999980088}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795010585045,"updatedMs":1795011019817,"containment":null}`
+
+MemAvailable 5678 MB, SwapFree 22546 MB, load 6.62 6.69 9.63
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7825310000043828}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (189 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8913860000029672}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.833796999999322}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8068570000177715}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7762389999988955}}
+[repository:command] still running after 200 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8605380000080913}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (200 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7432170000101905}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.6327100000053179}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0564359999843873}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":13.722427000000607}}
+[repository:command] still running after 210 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.177503999992041}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (210 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9458289999747649}}
+[repo] still working after 230 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7903560000122525}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2920789999770932}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.80053500001668}}
+[repository:command] still running after 220 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.7029920000059064}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7745960000029299}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (222 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0471580000012182}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8379150000109803}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7757879999990109}}
+[repository:command] still running after 230 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7247619999980088}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1069712 780016 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+841340 742659  741829 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+837220 684469  684456 claude
+702108 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+558832 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+
+## 2026-11-18T14:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":775001,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"previous-failed","en":"Stage tools failed before; retrying after the back-off.","de":"Stufe tools schlug zuvor fehl; neuer Versuch nach der Wartezeit."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.7633869999554008}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795010585045,"updatedMs":1795011617640,"containment":null}`
+
+MemAvailable 5555 MB, SwapFree 20771 MB, load 21.39 18.97 14.30
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1034569999901578}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0668380000861362}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7240430000238121}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8501809999579564}}
+[repository:command] still running after 800 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7459440000820905}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (799 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.640300999977626}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.0298410000978038}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1112120000179857}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.040028000017628}}
+[repository:command] still running after 810 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.8462999999755993}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (809 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0610469999955967}}
+[repo] still working after 830 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8222780000651255}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.877422999939881}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.0851749998982996}}
+[repository:command] still running after 820 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.6797519999090582}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (819 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0581709999823943}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4818690000101924}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.27247600001283}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6623610000824556}}
+[repository:command] still running after 830 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7633869999554008}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.012125000008382}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (831 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1692296 792378 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+788592 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+681464 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+570672 684469  684456 claude
+561504 835121  835109 rustc --crate-name semio_os_directory_schema --edition=2021 /home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-inc
+```
+
+## 2026-11-18T14:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":902333,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":1.303662999998778}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795012065532,"updatedMs":1795012214179,"containment":null}`
+
+MemAvailable 4304 MB, SwapFree 20823 MB, load 27.43 26.49 20.63
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 1390 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8500590000767261}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (1389 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2589889999944717}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9220639998093247}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1335120000876486}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.8337509999983013}}
+[repository:command] still running after 1400 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9033889998681843}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (1399 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9555079999845475}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2874020000454038}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.287044999888167}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0920039999764413}}
+[repository:command] still running after 1410 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.014930000063032}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (1411 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8672410000581294}}
+[repo] still working after 1430 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0090980001259595}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1274310001172125}}
+[repository:command] still running after 1420 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6257770000956953}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.605135000078008}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (1422 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.303662999998778}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5166730000637472}}
+[repository:command] still running after 1430 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4603569998871535}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.0067549999803305}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1672304 792378 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+900528 912845  912842 rustc --crate-name semio_s_artifact_stdio_pdf_snapshot_2 --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=di
+799700 911869  911859 rustc --crate-name semio_s_artifact_stdio_xml_mutations --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=dia
+793540 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+746228 684469  684456 claude
+```
+
+## 2026-11-18T14:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":902333,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":14.774788999930024}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795012065532,"updatedMs":1795012817738,"containment":null}`
+
+MemAvailable 4730 MB, SwapFree 14863 MB, load 21.58 22.23 21.17
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0618769999127835}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 1992 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":1470}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1853}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (1991 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.066655999980867}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.611983000067994}}
+[repository:command] still running after 2002 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":18.60348099982366}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2002 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.320750000188127}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.122690999880433}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9781200001016259}}
+[repository:command] still running after 2012 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.4903740000445396}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8960749998223037}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2012 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4322640001773834}}
+[repo] still working after 2032 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.210456999950111}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.1693100000265986}}
+[repository:command] still running after 2022 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.75199000001885}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1986940000206232}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2025 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":14.774788999930024}}
+[repository:command] still running after 2032 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1343839999753982}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.6199769999366254}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2064344 792378 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+995748 942493  942492 rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust/🦀️.rs --error-forma
+637468 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+636544 958290  958289 rustc --crate-name semio_s_artifact_stdio_png_mutations_schema --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust/🦀️.rs --error-format=json
+621900 958418  958417 rustc --crate-name semio_s_artifact_puzzle_3d_editor_modes --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust/../../🦀️.rs --error-format=json -
+```
+
+## 2026-11-18T14:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":902333,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":1.7547059999778867}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795012065532,"updatedMs":1795013417578,"containment":null}`
+
+MemAvailable 5723 MB, SwapFree 18296 MB, load 25.45 22.34 21.42
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1057}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.1268859999254346}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6478920001536608}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0599279999732971}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2597 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.60786799993366}}
+[repository:command] still running after 2602 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.7685120003297925}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.097107999958098}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0938910003751516}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0486079999245703}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2608 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1251099999062717}}
+[repository:command] still running after 2612 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1316419998183846}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.216010000091046}}
+[repo] still working after 2632 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9096479997970164}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9405159996822476}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.512533999979496}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2619 s of at most 21600 s)
+[repository:command] still running after 2622 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1081390003673732}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9154160004109144}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4733609999530017}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.7547059999778867}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.283557000104338}}
+[repository:command] still running after 2632 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":21.419964999891818}}
+Process 766887 (72d0317c3a3247fd2450aefb59ce275e08979b01599670bf404a49f5059a0670 show projects) holds the dependency store since 2026-11-18T13:54:29.596Z; waiting for it (2631 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2217840 792378 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.
+757616 766887  766558 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+703448 684469  684456 claude
+692060 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+489408 994098  990372 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+```
+
+## 2026-11-18T15:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":902333,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3228 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795012065532,"updatedMs":1795014017905,"containment":null}`
+
+MemAvailable 4334 MB, SwapFree 13353 MB, load 28.54 31.54 27.03
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":635}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":45}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":741}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.391067000105977}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3196 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.012852999847382}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.8252269998192787}}
+[repository:command] still running after 3202 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.9328930000774562}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.742646999657154}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.006175999995321}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3206 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.364201999735087}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9725939999334514}}
+[repository:command] still running after 3212 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9548510001040995}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.786555000115186}}
+[repo] still working after 3233 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.392560999840498}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3217 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6390869999304414}}
+[repository:command] still running after 3222 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":18.64517700020224}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.8355809999629855}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.591153000015765}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3228 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.728631000034511}}
+[repository:command] still running after 3232 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":8.09643999999389}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1760328 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1446720 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+670508 684469  684456 claude
+654384 1051590 1051585 rustc --crate-name semio_s_artifact_stdio_deflate_schema --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagno
+639444 1052180 1052179 rustc --crate-name semio_s_artifact_stdio_txt_mutations --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=d
+```
+
+## 2026-11-18T15:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1062017,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repository:command] still running after 3832 s"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795014123274,"updatedMs":1795014619385,"containment":null}`
+
+MemAvailable 3662 MB, SwapFree 12686 MB, load 33.96 33.56 30.58
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":8.495858000125736}}
+[repo] still working after 3803 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":8.024994999635965}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3786 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.5661479998379946}}
+[repository:command] still running after 3792 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4497809996828437}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.106297000311315}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.941217000130564}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":1247}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":60}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1492}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3798 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.470329999923706}}
+[repository:command] still running after 3802 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.5329649997875094}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":21.147680000402033}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":14.446779999881983}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":37.14040199993178}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3810 s of at most 21600 s)
+[repository:command] still running after 3812 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":370.85745200002566}}
+[repo] still working after 3833 s; last phase started: source.served
+[repository:command] still running after 3822 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (3826 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":32.18799599958584}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.711079000029713}}
+[repository:command] still running after 3832 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.048665000125766}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1706424 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1680668 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+890936 1096080 1096044 rustc --crate-name semio_s_artifact_stdio_pdf_mut_base_2 --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-inc
+803780 684469  684456 claude
+603040 1097352 1096741 rustc --crate-name semio_framework_mesh_engine --edition=2021 /home/deck/semio/🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type l
+```
+
+## 2026-11-18T15:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1062017,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repository:command] still running after 4432 s"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795014123274,"updatedMs":1795015220100,"containment":null}`
+
+MemAvailable 2547 MB, SwapFree 10411 MB, load 29.31 29.08 29.60
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 4382 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.588961999863386}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.246083999983966}}
+[repo] still working after 4403 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.748546000570059}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 589 s, so it may be blocked; waiting for it (4386 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.5383050004020333}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.9096750002354383}}
+[repository:command] still running after 4392 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":28.14844399970025}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.980053000152111}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9179440001025796}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":863}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1003}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 602 s, so it may be blocked; waiting for it (4399 s of at most 21600 s)
+[repository:command] still running after 4402 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.390812000259757}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.7117450004443526}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.174956999719143}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3864529998973012}}
+[repository:command] still running after 4412 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1438880003988743}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 614 s, so it may be blocked; waiting for it (4411 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4853499997407198}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6266030007973313}}
+[repo] still working after 4433 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.167879999615252}}
+[repository:command] still running after 4422 s
+[repository:command] still running after 4432 s
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1593688 1145968 1134023 rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_objects --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust/🦀️.rs --error-for
+1451848 1144814 1133889 rustc --crate-name semio_s_artifact_stdio_dwg_snapshot_document --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust/🦀️.rs --error-f
+1130864 1147219 1144874 rustc --crate-name semio_plugin_actor_input --edition=2021 /home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-a
+947768 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+644372 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+```
+
+## 2026-11-18T15:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1062017,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repository:command] still running after 5027 s"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795014123274,"updatedMs":1795015819522,"containment":null}`
+
+MemAvailable 4242 MB, SwapFree 9535 MB, load 43.54 36.07 32.32
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.889456000179052}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":16.6484019998461}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.816672000102699}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (4993 s of at most 21600 s)
+[repository:command] still running after 4997 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7729030000045896}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":29.14023600053042}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.018658000044525}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.599930999800563}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5004 s of at most 21600 s)
+[repository:command] still running after 5007 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.336114000529051}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.5358800003305078}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.384003999643028}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.707975999452174}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1005499996244907}}
+[repository:command] still running after 5017 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":216}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":279}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5015 s of at most 21600 s)
+[repo] still working after 5033 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0842289999127388}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1829249998554587}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0855010002851486}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.481800999492407}}
+[repository:command] still running after 5027 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2288.6196710001677}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5031 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.8565119998529553}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1957332 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+664384 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+419568 684469  684456 claude
+414124 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+315904 994098  990372 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypt
+```
+
+## 2026-11-18T15:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1201968,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":1.1887240000069141}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795016175023,"updatedMs":1795016418343,"containment":null}`
+
+MemAvailable 3762 MB, SwapFree 12740 MB, load 25.53 31.57 33.27
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7966169994324446}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5590 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9781689997762442}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.637066000141203}}
+[repository:command] still running after 5597 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.068417999893427}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8492259997874498}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9527409998700023}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5603 s of at most 21600 s)
+[repository:command] still running after 5607 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6825130004435778}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9940679995343089}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":14.353698999620974}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5615 s of at most 21600 s)
+[repository:command] still running after 5617 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":10.413693999871612}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[repo] still working after 5634 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":181}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":258}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.234179999679327}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.290284000337124}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.79309899918735}}
+[repository:command] still running after 5627 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1446420000866055}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (5626 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1686269994825125}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1887240000069141}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":12.478653999976814}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.5227510007098317}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2746368 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1253824 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+649552 1218858 1218853 rustc --crate-name semio_s_artifact_stdio_semio_brep_viewer --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnosti
+585820 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+436480 684469  684456 claude
+```
+
+## 2026-11-18T15:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1201968,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6230 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795016175023,"updatedMs":1795017020495,"containment":null}`
+
+MemAvailable 2646 MB, SwapFree 12572 MB, load 35.38 33.35 32.87
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.8429129999130964}}
+[repository:command] still running after 6187 s
+[repo] still working after 6204 s; last phase started: source.served
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6194 s of at most 21600 s)
+[repository:command] still running after 6197 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":39.45238899998367}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":25.09525000024587}}
+[repository:command] still running after 6207 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6207 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.4967310000211}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4521890003234148}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4325419999659061}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.529482999816537}}
+[repository:command] still running after 6217 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.459442999213934}}
+[repo] still working after 6234 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2951540006324649}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":202}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":282}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6219 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0429790001362562}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.131976000033319}}
+[repository:command] still running after 6227 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.2430750001221895}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9426210001111031}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3600159995257854}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6230 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.42763000074774}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.252182999625802}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2739516 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1229808 1251904 1251301 rustc --crate-name semio_s_artifact_stdio_binary_io_registry --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifa
+809920 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+687136 1255945 1255916 rustc --crate-name semio_s_artifact_puzzle_3d_model --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rend
+652972 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+
+## 2026-11-18T16:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1257648,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6833 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795017051401,"updatedMs":1795017622064,"containment":null}`
+
+MemAvailable 3792 MB, SwapFree 11195 MB, load 35.08 30.60 31.04
+
+Last 30 lines of `tools.log`:
+
+```
+[repo] still working after 6804 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9036560002714396}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.071179000660777}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.488212000578642}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.2057679994031787}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6796 s of at most 21600 s)
+[repository:command] still running after 6798 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.361235000193119}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.7373259998857975}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.2574199996888638}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":18.25657599978149}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6806 s of at most 21600 s)
+[repository:command] still running after 6808 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7985880002379417}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.926360999234021}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.8550230003893375}}
+[repository:command] still running after 6818 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":239.03363300021738}}
+[repo] still working after 6835 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":6}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":1306}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1450}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6822 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.498135999776423}}
+[repository:command] still running after 6828 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.517842999659479}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.534645999781787}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":17.70976199954748}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.536845000460744}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (6833 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2068640 1285339 1278165 rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust/🦀️.rs --error-format=json --js
+1166272 1287586 1287154 rustc --crate-name semio_s_artifact_stdio_binary_io_registry --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifa
+1089792 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+673152 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+592668 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+
+## 2026-11-18T16:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1321316,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":1.0450419997796416}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795018178754,"updatedMs":1795018223011,"containment":null}`
+
+MemAvailable 3138 MB, SwapFree 12551 MB, load 23.08 26.95 29.37
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 7388 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7480140002444386}}
+[repo] still working after 7405 s; last phase started: source.served
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (7390 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.162464999593794}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3749510003253818}}
+[repository:command] still running after 7398 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1403919998556376}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (7403 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.7683979999274015}}
+[repository:command] still running after 7408 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.697565000504255}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.184780000708997}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9811220001429319}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9295659996569157}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (7414 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3200890002772212}}
+[repository:command] still running after 7418 s
+[repo] still working after 7435 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.874061000533402}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2757959999144077}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.415799000300467}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":183}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":251}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.296264000236988}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (7425 s of at most 21600 s)
+[repository:command] still running after 7428 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.608492000028491}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0450419997796416}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2029132 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1505636 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1487976 1322747 1321757 rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust/🦀️.rs --error-format=json --js
+749284 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+636432 684469  684456 claude
+```
+
+## 2026-11-18T16:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1321316,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.823866999708116}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795018178754,"updatedMs":1795018821881,"containment":null}`
+
+MemAvailable 4703 MB, SwapFree 12638 MB, load 25.02 28.00 28.67
+
+Last 30 lines of `tools.log`:
+
+```
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 357 s, so it may be blocked; waiting for it (7987 s of at most 21600 s)
+[repository:command] still running after 7989 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8877379996702075}}
+[repo] still working after 8007 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.658894999884069}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.414206000044942}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9731959998607635}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1077309995889664}}
+[repository:command] still running after 7999 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1584259998053312}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 374 s, so it may be blocked; waiting for it (8004 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":12.888856999576092}}
+[repository:command] still running after 8009 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":22.91004899982363}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.613157999701798}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.7839790005236864}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 385 s, so it may be blocked; waiting for it (8015 s of at most 21600 s)
+[repository:command] still running after 8019 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.2883979994803667}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7293199999257922}}
+[repo] still working after 8037 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8269530003890395}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":674}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1563}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 397 s, so it may be blocked; waiting for it (8027 s of at most 21600 s)
+[repository:command] still running after 8029 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.823866999708116}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8325129998847842}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.176129000261426}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1273996 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1168268 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1128788 1363754 1362832 rustc --crate-name semio_s_artifact_puzzle_3d_editor --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-re
+764124 1364288 1364287 rustc --crate-name semio_s_artifact_stdio_semio_kit_editor --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-
+715364 684469  684456 claude
+```
+
+## 2026-11-18T16:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1321316,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"lease-sweep:nested\",\"mode\":\"exclusive\",\"elapsedMs\":503}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795018178754,"updatedMs":1795019418212,"containment":null}`
+
+MemAvailable 2720 MB, SwapFree 10065 MB, load 25.50 30.20 29.60
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 8593 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":42.39312299899757}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":69.42646200023592}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":30.015966000035405}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":42.16962399892509}}
+[repository:command] still running after 8603 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (8601 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9084719996899366}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":30.54809599928558}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.0328080002218485}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9868589993566275}}
+[repository:command] still running after 8613 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.59150000102818}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (8612 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6438110005110502}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3552429992705584}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":24.129481999203563}}
+[repo] still working after 8637 s; last phase started: source.served
+[repository:command] still running after 8623 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":287.3621689993888}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (8624 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":19.48268200084567}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":20.499169999733567}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":440}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":503}}
+[repository:command] still running after 8633 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":8.472610000520945}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (8634 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":14.083499999716878}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+4721024 1386554 1386385 .cache/b/r/m/cargo/home/bin/wasm-bindgen .cache/b/r/m/u/l/pa8e5c4/t-ce555540/wasm32-unknown-unknown/prototype/semio_hub_puzzle_component.wasm --out-dir 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg --typescript --target web --out-
+1042968 1388259 1388108 rustc --crate-name semio_s_artifact_puzzle_5d_tests --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs --error-format=json 
+637916 684469  684456 claude
+591300 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+458936 1011346 994098 /home/deck/semio/.cache/b/t/m/r/699c2d5d27a9c904/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu/bin/cargo build --lib --profile prototype --target wasm32-unknown-unknown --config profile.prototype.inherits="dev" --config profile.p
+```
+
+## 2026-11-18T16:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1393179,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9236 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795019566551,"updatedMs":1795020024677,"containment":null}`
+
+MemAvailable 3888 MB, SwapFree 5680 MB, load 15.50 17.85 23.09
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6496900003403425}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2479929998517036}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.9641929995268583}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9199 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3567780014127493}}
+[repository:command] still running after 9203 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.6993509996682405}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.962052000686526}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.078023999929428}}
+[repository:command] still running after 9213 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.52178299985826}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9213 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7733319997787476}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8014350011944771}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8603450004011393}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9288039989769459}}
+[repo] still working after 9238 s; last phase started: source.served
+[repository:command] still running after 9223 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5364340003579855}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9224 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.784752000123262}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.923573998734355}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0925810001790524}}
+[repository:command] still running after 9233 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":324}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1081}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0094750002026558}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9236 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0973199997097254}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2037796 1394631 1394596 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+1538980 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1121828 1386554 1386385 .cache/b/r/m/cargo/home/bin/wasm-bindgen .cache/b/r/m/u/l/pa8e5c4/t-ce555540/wasm32-unknown-unknown/prototype/semio_hub_puzzle_component.wasm --out-dir 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg --typescript --target web --out-
+1112496 1282347 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+964544 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+```
+
+## 2026-11-18T16:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1393179,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9835 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795019566551,"updatedMs":1795020625027,"containment":null}`
+
+MemAvailable 1786 MB, SwapFree 7493 MB, load 14.54 14.43 18.74
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5143240001052618}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":13.643371000885963}}
+[repository:command] still running after 9803 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.408452000468969}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9802 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":33.21854299865663}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":17.899222999811172}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":68.05929099954665}}
+[repository:command] still running after 9813 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":67.32048300094903}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9814 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.771571001037955}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.9398389998823404}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.600103000178933}}
+[repo] still working after 9838 s; last phase started: source.served
+[repository:command] still running after 9823 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8326040003448725}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.219301000237465}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9824 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4709120001643896}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9050599988549948}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1758880000561476}}
+[repository:command] still running after 9833 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5967800002545118}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":6}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":612}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":1199}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (9835 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.959672000259161}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7209140006452799}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+2623692 1394631 1394596 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+1708984 1386554 1386385 .cache/b/r/m/cargo/home/bin/wasm-bindgen .cache/b/r/m/u/l/pa8e5c4/t-ce555540/wasm32-unknown-unknown/prototype/semio_hub_puzzle_component.wasm --out-dir 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg --typescript --target web --out-
+1643720 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1378920 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1093664 1282347 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+```
+
+## 2026-11-18T17:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1406326,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.879772000014782}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795021141065,"updatedMs":1795021227296,"containment":null}`
+
+MemAvailable 2411 MB, SwapFree 7866 MB, load 14.06 13.81 16.51
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0046970006078482}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.608602998778224}}
+[repository:command] still running after 10403 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1024399995803833}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9789390005171299}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9050590004771948}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (10407 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7356819994747639}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9100890010595322}}
+[repository:command] still running after 10413 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8847420010715723}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7915870007127523}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0602310001850128}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (10419 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":22.015505999326706}}
+[repo] still working after 10439 s; last phase started: source.served
+[repository:command] still running after 10424 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.899134000763297}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.924574000760913}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.6352600008249283}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (10430 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5670929998159409}}
+[repository:command] still running after 10434 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.674314999952912}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"resource-directory-admission:v1","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":243}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":319}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0459739994257689}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.879772000014782}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+3282344 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+2048344 1386554 1386385 .cache/b/r/m/cargo/home/bin/wasm-bindgen .cache/b/r/m/u/l/pa8e5c4/t-ce555540/wasm32-unknown-unknown/prototype/semio_hub_puzzle_component.wasm --out-dir 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg --typescript --target web --out-
+1513660 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1048080 1282347 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+716544 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+
+## 2026-11-18T17:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1408581,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"lease-sweep:nested\",\"mode\":\"exclusive\",\"elapsedMs\":265}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795021477495,"updatedMs":1795021825207,"containment":null}`
+
+MemAvailable 2831 MB, SwapFree 7504 MB, load 14.81 15.88 16.74
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9650560002774}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6165000014007092}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (10999 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7661010008305311}}
+[repository:command] still running after 11004 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.7344150003045797}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2433289997279644}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.045233998447657}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11009 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.78214200027287}}
+[repository:command] still running after 11014 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9530520010739565}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7328989990055561}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.035928001627326}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5694209989160299}}
+[repo] still working after 11039 s; last phase started: source.served
+[repository:command] still running after 11024 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11022 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.622989000752568}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7702990006655455}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9619999993592501}}
+[repository:command] still running after 11034 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2876620013266802}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11033 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7643079999834299}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":179}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":265}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8074089996516705}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.167595999315381}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+3474268 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1619844 1386554 1386385 .cache/b/r/m/cargo/home/bin/wasm-bindgen .cache/b/r/m/u/l/pa8e5c4/t-ce555540/wasm32-unknown-unknown/prototype/semio_hub_puzzle_component.wasm --out-dir 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg --typescript --target web --out-
+1167588 1394631 1394596 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+1130328 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+528640 684469  684456 claude
+```
+
+## 2026-11-18T17:20Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1408581,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"lease-sweep:nested\",\"mode\":\"exclusive\",\"elapsedMs\":327}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795021477495,"updatedMs":1795022427608,"containment":null}`
+
+MemAvailable 3736 MB, SwapFree 12062 MB, load 12.48 13.53 15.31
+
+Last 30 lines of `tools.log`:
+
+```
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11596 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7978700008243322}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8794229999184608}}
+[repository:command] still running after 11604 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.389379000291228}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2169770002365112}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11606 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.5629469994455576}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8925170004367828}}
+[repository:command] still running after 11614 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0734279993921518}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.2116569988429546}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9689910002052784}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11618 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":61.996763000264764}}
+[repo] still working after 11639 s; last phase started: source.served
+[repository:command] still running after 11624 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.403784999623895}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7792940009385347}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":6.579375999048352}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11629 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.8311209995299578}}
+[repository:command] still running after 11634 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9704940002411604}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.7851749993860722}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":234}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":327}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.214612999930978}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (11640 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+3788272 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1615512 1394631 1394596 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+1543252 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+754120 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+650652 684469  684456 claude
+```
+
+## 2026-11-18T17:30Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1422064,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12238 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795022802161,"updatedMs":1795023028878,"containment":null}`
+
+MemAvailable 3229 MB, SwapFree 12656 MB, load 9.59 14.23 15.20
+
+Last 30 lines of `tools.log`:
+
+```
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12195 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3926959987729788}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.0095859989523888}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0290130004286766}}
+[repository:command] still running after 12204 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0972119998186827}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6985220015048981}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12207 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8544549997895956}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.302877999842167}}
+[repository:command] still running after 12214 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7916580010205507}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7944919988512993}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.852522000670433}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12217 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.05048399977386}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":15.325306000187993}}
+[repo] still working after 12239 s; last phase started: source.served
+[repository:command] still running after 12224 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8284660000354052}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9634899999946356}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8313629999756813}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12227 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9285649992525578}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7238609995692968}}
+[repository:command] still running after 12234 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7324970010668039}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8088700007647276}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8760160002857447}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12238 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+4608636 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1564200 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1442664 1394631 1394596 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+740932 684469  684456 claude
+581032 1421391 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+```
+
+## 2026-11-18T17:40Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1422064,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.7288899999111891}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795022802161,"updatedMs":1795023623388,"containment":null}`
+
+MemAvailable 9339 MB, SwapFree 13407 MB, load 43.43 30.20 21.53
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 12785 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9288570005446672}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2675130013376474}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3876689989119768}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.662746001034975}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12792 s of at most 21600 s)
+[repo] still working after 12810 s; last phase started: source.served
+[repository:command] still running after 12795 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.392296999692917}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7387079987674952}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8791630007326603}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12803 s of at most 21600 s)
+[repository:command] still running after 12805 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0528590008616447}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.1576260011643171}}
+[repository:command] still running after 12815 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12815 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.730433000251651}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7700279988348484}}
+[repo] still working after 12840 s; last phase started: source.served
+[repository:command] still running after 12825 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2978199999779463}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12825 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5595820005983114}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.143418999388814}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7288899999111891}}
+[repository:command] still running after 12835 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8402589987963438}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (12837 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9775970000773668}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+796320 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+616768 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+526796 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+465420 1501063 1500788 rustc --crate-name wgpu --edition=2021 /home/deck/semio/.cache/b/r/m/cargo/home/registry/src/index.crates.io-1949cf8c6b5b557f/wgpu-29.0.4/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-ty
+308152 1421391 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+```
+
+## 2026-11-18T17:50Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1422064,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 807 s, so it may be blocked; waiting for it (13441 s of at most 21600 s)"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795022802161,"updatedMs":1795024229744,"containment":null}`
+
+MemAvailable 7270 MB, SwapFree 9400 MB, load 29.40 30.63 26.01
+
+Last 30 lines of `tools.log`:
+
+```
+[repository:command] still running after 13381 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8730209991335869}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.529433999210596}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8723300006240606}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 755 s, so it may be blocked; waiting for it (13389 s of at most 21600 s)
+[repository:command] still running after 13391 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":18.68213799968362}}
+[repo] still working after 13412 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":5.848802000284195}}
+[repository:command] still running after 13401 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.10185999982059}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 768 s, so it may be blocked; waiting for it (13402 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0617249999195337}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8508689999580383}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8500970005989075}}
+[repository:command] still running after 13411 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8949719984084368}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4434629995375872}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 780 s, so it may be blocked; waiting for it (13414 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.3551169987767935}}
+[repository:command] still running after 13421 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8769579995423555}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.084697999060154}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 791 s, so it may be blocked; waiting for it (13425 s of at most 21600 s)
+[repo] still working after 13442 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":9.507306998595595}}
+[repository:command] still running after 13431 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8438459988683462}}
+[repository:command] still running after 13441 s
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z and has not renewed its registration for 807 s, so it may be blocked; waiting for it (13441 s of at most 21600 s)
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+1052716 1540418 1540409 rustc --crate-name semio_s_artifact_stdio_pdf_model --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust/🦀️.rs --error-format=json --js
+963264 1556768 1556767 rustc --crate-name semio_s_artifact_stdio_svg_mut_family --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/➕insert-tiny-element/📦️packages/🦀️rust/🦀️.rs --error
+861200 1557133 1557132 rustc --crate-name semio_s_artifact_stdio_zip_editor --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat -
+803724 1557113 1557087 rustc --crate-name semio_s_artifact_stdio_pdf_mut_family_3 --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧬️schema/🧬️mutations/🚀️insert-launch-action/📦️packages/🦀️rust/🦀️.rs --err
+751676 1557286 1557283 rustc --crate-name semio_s_artifact_stdio_svg_mutations_2 --edition=2021 /home/deck/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs --error-format=json --json=
+```
+
+## 2026-11-18T18:00Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1422064,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"dependencies:maintenance-parent-observation\",\"mode\":\"shared\",\"elapsedMs\":0.7455209996551275}}"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795022802161,"updatedMs":1795024827392,"containment":null}`
+
+MemAvailable 4245 MB, SwapFree 13086 MB, load 9.91 15.49 20.23
+
+Last 30 lines of `tools.log`:
+
+```
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9048800002783537}}
+[repository:command] still running after 14001 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":8.805285001173615}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14001 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7029410004615784}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7419339995831251}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2344990000128746}}
+[repository:command] still running after 14011 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.8078269995748997}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8386059999465942}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14012 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8901729993522167}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.033552000299096}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7664799988269806}}
+[repository:command] still running after 14021 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8239479996263981}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7941819988191128}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14024 s of at most 21600 s)
+[repo] still working after 14043 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8052429985255003}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8987789992243052}}
+[repository:command] still running after 14031 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8750050012022257}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6023119986057281}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8761470001190901}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14035 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7455209996551275}}
+[repository:command] still running after 14041 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4477909989655018}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9800310004502535}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+4077836 1571740 1571710 /home/deck/.local/share/semio/zig/v0.14.1/zig ld.lld --error-limit=0 -mllvm -float-abi=hard --entry _start -z stack-size=16777216 --build-id=none --image-base=0 --gc-sections --eh-frame-hdr -znow -m elf_x86_64 -pie -o /home/deck/semio/.
+2715428 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+2118632 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+886848 1421391 1002739 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cryp
+736720 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```
+
+## 2026-11-18T18:10Z
+
+`ready.json`: `{"version":1,"origin":"g1-m04","host":"ueli-workstation-lin-1","platform":"linux","pid":1574803,"state":"running","digest":"304d5d981c97cdc0530ab42f49062e950146e9cb7308a2fe2d2ac37474bd0653","ready":false,"stage":"tools","stageIndex":4,"stageCount":5,"attempts":40,"exit":124,"refusal":null,"reason":{"code":"adopted","en":"Adopted stage tools, which was already running; not restarted.","de":"Stufe tools übernommen, sie lief schon; nicht neu gestartet."},"peakMegabytes":1876,"tail":["[repository:command] still running after 14641 s"],"nextAttemptMs":null,"readyMs":null,"startedMs":1795024917875,"updatedMs":1795025428552,"containment":null}`
+
+MemAvailable 3775 MB, SwapFree 16963 MB, load 13.24 11.86 15.68
+
+Last 30 lines of `tools.log`:
+
+```
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14600 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":4.289378998801112}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9176249988377094}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.8150680009275675}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.89079400151968}}
+[repository:command] still running after 14611 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":3.461694000288844}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2412419989705086}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14611 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0160889998078346}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0814820006489754}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.9705829992890358}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8862050008028746}}
+[repository:command] still running after 14621 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9104809984564781}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7735339999198914}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14621 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7633440010249615}}
+[repo] still working after 14643 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6683959998190403}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9112819992005825}}
+[repository:command] still running after 14631 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8439659997820854}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":7.0099220015108585}}
+Process 1002739 (d2029d2b3ae99d2de0a8242e633c3b7cce5736c9cd96584e3679c98ed3b7d38d show projects) holds the dependency store since 2026-11-18T14:50:11.081Z; waiting for it (14632 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2212150003761053}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.915430000051856}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.081743000075221}}
+[repository:command] still running after 14641 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9771970007568598}}
+```
+
+Five largest processes (rss KiB, pid, ppid, command):
+
+```
+3482136 1016421 1015727 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+2377504 1002739 1002482 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:cry
+1974644 1574484 742659 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker
+780620 684469  684456 claude
+531200 246505  246467 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+```

@@ -1,13 +1,14 @@
 //! 🎞️ Layout import work borrows its original reserved media and authority until paid terminal close.
 use super::*;
 use semio_plugin::plugin_app_close_prelude::ArtifactReservedWork;
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneStep,RetirementPollExit,retained_clone::RetainedCloneClose};
 
 //#region 🎞️ReservedImport
 pub(super) const LAYOUT_IMPORT_TOOL_ID:&str="import-media";
 const LAYOUT_IMPORT_PORT:&str="fields:in";
 pub(super) struct LayoutImportJob{
  pub(super) mutations:Option<Vec<LayoutMutation>>,
- pub(super) active:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+ active:RetainedCloneClose,
  checkpoint_publication:semio_framework_job_publication::RetainedJobPublication,
  checkpoint_delivered:bool,
  pub(super) fault_publication:semio_framework_job_publication::RetainedJobPublication,
@@ -16,11 +17,10 @@ pub(super) struct LayoutImportJob{
  pub(super) completed:bool,
  closing:bool,
  pending_completion_rejection:Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>,
- last_close_work:u64,
 }
 type LayoutJobTurn<'a>=Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>;
 impl Default for LayoutImportJob{
- fn default()->Self{Self{mutations:None,active:None,checkpoint_publication:semio_framework_job_publication::RetainedJobPublication::new(),checkpoint_delivered:false,fault_publication:semio_framework_job_publication::RetainedJobPublication::new(),fault_detail:None,decoded:false,completed:false,closing:false,pending_completion_rejection:None,last_close_work:0}}
+ fn default()->Self{Self{mutations:None,active:Default::default(),checkpoint_publication:semio_framework_job_publication::RetainedJobPublication::new(),checkpoint_delivered:false,fault_publication:semio_framework_job_publication::RetainedJobPublication::new(),fault_detail:None,decoded:false,completed:false,closing:false,pending_completion_rejection:None}}
 }
 impl LayoutImportJob{
  pub(super) fn fault<'a>(&'a mut self,cx:&mut StepContext<'_>,detail:&str)->LayoutJobTurn<'a>{
@@ -36,25 +36,20 @@ impl LayoutImportJob{
  fn demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
   if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands()}
   if !self.checkpoint_publication.terminal_is_empty(){return self.checkpoint_publication.retirement_demands()}
-  if let Some(active)=self.active.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}
-  if self.pending_completion_rejection.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection)}
-  if self.mutations.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutations)}
-  if self.fault_detail.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fault_detail)}
+  if !self.active.is_empty()||self.pending_completion_rejection.is_some(){return self.active.next_owner_demands::<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>(self.pending_completion_rejection.is_some(),&None,body)}
+  if self.mutations.is_some(){return self.active.next_owner_demands::<Vec<LayoutMutation>>(true,&None,body)}
+  if self.fault_detail.is_some(){return self.active.next_owner_demands::<Vec<u8>>(true,&None,body)}
   Ok(Default::default())
  }
- fn close_value(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
-  use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome};
-  self.last_close_work=0;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let demand=self.demands(grant.maximum_copy_bytes)?;
-  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  let turn:RetainedWorkOutcome<RetainedCloneStep>=if !self.fault_publication.terminal_is_empty(){self.fault_publication.close_step(grant)}
-  else if !self.checkpoint_publication.terminal_is_empty(){self.checkpoint_publication.close_step(grant)}
-  else if self.active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
-  else if self.pending_completion_rejection.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection,&mut self.active,grant)}
-  else if self.mutations.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations,&mut self.active,grant)}
-  else if self.fault_detail.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.fault_detail,&mut self.active,grant)}
+ fn close_value(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  if !self.fault_publication.terminal_is_empty(){return Ok(self.fault_publication.close_step(effect).result?)}
+  if !self.checkpoint_publication.terminal_is_empty(){return Ok(self.checkpoint_publication.close_step(effect).result?)}
+  if !self.active.is_empty(){return RetirementPollExit::resume(self.active.step_granted(body,effect))}
+  let turn=if self.pending_completion_rejection.is_some(){self.active.begin_granted(&mut self.pending_completion_rejection,effect)}
+  else if self.mutations.is_some(){self.active.begin_granted(&mut self.mutations,effect)}
+  else if self.fault_detail.is_some(){self.active.begin_granted(&mut self.fault_detail,effect)}
   else{return Ok(RetainedCloneStep::Complete(Default::default()))};
-  self.last_close_work=turn.work;turn.result.map(|step|if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+  Ok(turn.result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))
  }
  /// 🪜️ Reads media and completion directly from the same retained source request.
  fn step_value<'a>(&'a mut self,request:&ArtifactReservedToolJobRequest<EditorApp<LayoutPlayApp>>,cx:&mut StepContext<'_>)->LayoutJobTurn<'a>{
@@ -80,9 +75,16 @@ impl ArtifactReservedWork<EditorApp<LayoutPlayApp>> for LayoutImportJob{
  fn begin_close(&mut self){self.closing=true;}
  fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(body)}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-  self.begin_close();semio_framework_job::close_original_granted_step(cx,|grant|{let result=self.close_value(grant).map(|step|if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}});semio_framework_value::RetainedWorkOutcome{result,work:self.last_close_work}})
+  self.begin_close();
+  let body=cx.retained_grant().maximum_copy_bytes;
+  let demand=self.demands(body)?;
+  let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
+   let result=self.close_value(body,effect);
+   RetirementPollExit::settle(effect,result)
+  })?;
+  Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}})
  }
- fn terminal_is_empty(&self)->bool{self.closing&&self.mutations.is_none()&&self.active.is_none()&&self.pending_completion_rejection.is_none()&&self.fault_detail.is_none()&&self.fault_publication.terminal_is_empty()&&self.checkpoint_publication.terminal_is_empty()}
+ fn terminal_is_empty(&self)->bool{self.closing&&self.mutations.is_none()&&self.active.is_empty()&&self.pending_completion_rejection.is_none()&&self.fault_detail.is_none()&&self.fault_publication.terminal_is_empty()&&self.checkpoint_publication.terminal_is_empty()}
 }
 //#endregion 🎞️ReservedImport
 
@@ -107,7 +109,7 @@ pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToo
     }
     let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<LayoutExportToolJob>() + std::mem::size_of::<LayoutExportToolPayload>(), release_bytes: 0, depth: 1 };
     semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
-        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original layout export request is absent"))?;
+        let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original layout export request is absent"))?.into_inputs();
         let canonical_base_revision_hex = taken.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
         drop(taken.output_chunks);
         let payload = LayoutExportToolPayload {

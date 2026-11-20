@@ -1,0 +1,39 @@
+{
+  "stock": {
+    "width": 2,
+    "depth": 2,
+    "height": 2
+  },
+  "tinyStock": {
+    "width": 0.02,
+    "depth": 0.02,
+    "height": 0.02
+  },
+  "cut": {
+    "width": 0.5,
+    "editedWidth": 1,
+    "depth": 3,
+    "height": 3,
+    "x": 1
+  },
+  "completeCut": {
+    "width": 4,
+    "depth": 4,
+    "height": 4
+  },
+  "expected": {
+    "stock": "8.0000",
+    "tinyStock": "8.0000e-6",
+    "cut": "7.0000",
+    "editedCut": "6.0000",
+    "completeCut": "0.0000",
+    "emptyCut": "0.0000",
+    "restored": "0.7500"
+  },
+  "restore": {
+    "width": 0.5,
+    "depth": 0.75,
+    "height": 2,
+    "invalidWidth": 0
+  }
+}

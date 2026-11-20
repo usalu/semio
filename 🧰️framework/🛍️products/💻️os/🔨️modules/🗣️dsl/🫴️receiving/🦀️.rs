@@ -128,6 +128,14 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
 }
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants+OpBinaryReceiving<DomainFailure=ValueError>> protocol::OpBinaryReceivingCursor<M> for OriginalOperationReceiving<M>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands_inner(source,body)}
+ fn step_work_demand(&self,_source:&[u8],body:usize)->Result<u64,ValueError>{
+  if self.phase==5 {
+   if let Some(binding)=self.binding.as_ref().filter(|binding|!binding.is_ready()){
+    if let OwnedAdvanceSelection::Local{work}=binding.select_advance(&self.generic.value,body,u64::MAX)?{return Ok(work.max(1))}
+   }
+  }
+  Ok(Self::STEP_WORK)
+ }
  fn step_in(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.step_inner(source,native,body,effect)}
  fn domain_failure(&self)->Option<&ValueError>{None}
  fn domain_failure_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
@@ -167,22 +175,22 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> Drop for OperationRetireme
 #[derive(Clone,Copy,Debug)]
 pub struct ReceivingStock{pub stock:RetainedCloneGrant,pub quantum:RetainedCloneGrant,pub fuel:u64}
 use semio_framework_value_native_owned::native_decoding::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalSourceTurnIdentity,OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete};
-struct TurnWork(u64);
+struct TurnWork(u64,OriginalSourceTurnIdentity);
 struct TurnWorkDriver;
 impl OriginalWorkRecipient for TurnWorkDriver{
  type Context<'t,'s>=TurnWork where 's:'t;
  fn validate_context<'t,'s>(&self,_:&TurnWork)->Result<(),ValueError> where 's:'t{Ok(())}
- fn source_turn<'t,'s>(&self,_:&TurnWork)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+ fn source_turn<'t,'s>(&self,c:&TurnWork)->Option<OriginalSourceTurnIdentity> where 's:'t{Some(c.1)}
  fn admits<'r,'t,'s>(&mut self,c:&mut TurnWork,quote:OriginalWorkQuote<'r>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'r> where 's:'t{quote.complete(Ok(observed.checked_add(additional).is_some_and(|work|work<=c.0)))}
  fn settle_partial<'r,'t,'s>(&mut self,_:&mut TurnWork,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.complete(Ok(()))}
  fn recover_partial<'r,'t,'s>(&mut self,_:&mut TurnWork,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
 }
-struct TurnPhysical(RetainedCloneGrant);
+struct TurnPhysical(RetainedCloneGrant,OriginalSourceTurnIdentity);
 struct TurnPhysicalDriver;
 impl OriginalConstructionRecipient for TurnPhysicalDriver{
  type Context<'t,'s>=TurnPhysical where 's:'t;
  fn validate_context<'t,'s>(&self,_:&TurnPhysical)->Result<(),ValueError> where 's:'t{Ok(())}
- fn source_turn<'t,'s>(&self,_:&TurnPhysical)->Option<OriginalSourceTurnIdentity> where 's:'t{None}
+ fn source_turn<'t,'s>(&self,c:&TurnPhysical)->Option<OriginalSourceTurnIdentity> where 's:'t{Some(c.1)}
  fn grant<'r,'t,'s>(&mut self,c:&mut TurnPhysical,quote:OriginalConstructionGrant<'r>)->OriginalConstructionGrantComplete<'r> where 's:'t{quote.complete(Ok(c.0))}
  fn accept<'r,'t,'s>(&mut self,c:&mut TurnPhysical,receipt:OriginalConstructionAccept<'r>)->OriginalConstructionAcceptComplete<'r> where 's:'t{let(grant,progress)=(receipt.grant(),receipt.progress());let result=if !progress.fits(grant)||!progress.fits(c.0){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"receiving progress exceeds its physical grant"))}else{debit(&mut c.0,progress);Ok(())};receipt.complete(result)}
  fn submitted<'t,'s>(&self,_:&TurnPhysical)->RetainedCloneProgress where 's:'t{RetainedCloneProgress::default()}
@@ -193,19 +201,49 @@ fn spend(stock:&mut ReceivingStock,progress:RetainedCloneProgress,work:u128){deb
 fn stalled(text:&'static str)->OriginalReceivingPrimary{ValueError::literal(ValueRefusalKind::WorkLimit,text).into()}
 /// 🧪️ Drives one stored operation through its own original receiving cursor, paying every turn and the paid close from the explicit stock. A close that the stock cannot pay refuses with `WorkLimit` and abandons the unpaid cursor without running its terminal-empty drop assertions.
 pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usize),mut stock:ReceivingStock)->Result<M,OriginalReceivingPrimary>{
+ let issuer=semio_framework_value_native_owned::OriginalSourceTurnIssuer::new();
+ let dispatch=issuer.issue().map_err(|_|ValueError::invariant("original receiving fixture could not issue its Source"))?;
+ let mut work_issuer=OriginalWorkAuthority::new(TurnWorkDriver);
+ let mut physical_issuer=OriginalConstructionAuthority::new(TurnPhysicalDriver);
  let turn=M::admit_receiving(source,range,quantum_of(&stock));let admitted=turn.result?;let Some((mut cursor,progress))=admitted else{return Err(stalled("original receiving was denied admission"))};spend(&mut stock,progress,turn.work);
  let mut callback=|_|true;let mut native=NativeDecodeControl::new(stock.stock.maximum_capacity_bytes,&mut callback);let mut failure=None;
  while !cursor.is_ready()&&failure.is_none(){
   if stock.fuel==0{failure=Some(stalled("original receiving exhausted its work"));break}
-  let grant=quantum_of(&stock);let mut work=TurnWork(1);let mut physical=TurnPhysical(grant);
-  let turn=OriginalWorkAuthority::new(TurnWorkDriver).with_loan(&mut work,|work|native.with_work_recipient(work,|native|OriginalConstructionAuthority::new(TurnPhysicalDriver).with_loan(&mut physical,|physical|native.with_construction_recipient(physical,|native|Ok::<_,ValueError>(cursor.step(source,native,stock.quantum.maximum_copy_bytes,grant))))?)).and_then(|turn|turn);
+  let grant=quantum_of(&stock);
+  let requested=match cursor.step_work_demand(source,stock.quantum.maximum_copy_bytes){Ok(work)=>work,Err(error)=>{failure=Some(error.into());break}};
+  let (_,turn_work)=match semio_framework_value::invocation_extent(grant,requested){Ok(extent)=>extent,Err(error)=>{failure=Some(error.into());break}};
+  let mut work=TurnWork(turn_work.min(stock.fuel),dispatch.identity());let mut physical=TurnPhysical(grant,dispatch.identity());
+  let prior_work=native.actual_work();
+  let turn=native.with_source_witness(Some(dispatch.witness()),|native|work_issuer.with_loan(&mut work,|work|native.with_work_recipient(work,|native|{
+   physical_issuer.with_loan(&mut physical,|physical|native.with_construction_recipient(physical,|native|Ok::<_,ValueError>(cursor.step(source,native,stock.quantum.maximum_copy_bytes,grant))))?
+  }))).and_then(|turn|turn);
   let turn=match turn{Ok(turn)=>turn,Err(error)=>{failure=Some(error.into());break}};
-  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default();spend(&mut stock,progress,turn.work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),turn.work);failure=Some(error)}}
+  let actual_work=native.actual_work().saturating_sub(prior_work);
+  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default();spend(&mut stock,progress,actual_work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),actual_work);failure=Some(error)}}
  }
  let mut output=None;
  if failure.is_none(){let turn=cursor.take_into(&mut output,quantum_of(&stock));match turn.result{Ok(progress)=>spend(&mut stock,progress,turn.work),Err(error)=>failure=Some(error.into())}}
- let mut closes=stock.fuel.saturating_add(1);
- while !cursor.terminal_is_empty()&&closes>0{closes-=1;let grant=quantum_of(&stock);let wallet=AuthoringWallet::new(grant,u128::from(stock.fuel)).run_settled(grant,stock.fuel,|effect|cursor.close_step(effect));match wallet{Ok(Some((turn,_)))=>{let work=turn.work;match turn.result{Ok(step)=>spend(&mut stock,step.progress(),work),Err(error)=>{spend(&mut stock,error.retained_progress(),work);failure.get_or_insert(stalled("original receiving close was refused"));}}},Ok(None)=>{failure.get_or_insert(stalled("original receiving close was not admitted"));break},Err(error)=>{failure.get_or_insert(error.into());break}}}
+ let mut closes=stock.fuel;
+ while !cursor.terminal_is_empty()&&closes>0&&stock.fuel>0{
+  closes-=1;
+  let grant=quantum_of(&stock);
+  let before=u128::from(stock.fuel);
+  let mut wallet=AuthoringWallet::new(stock.stock,before);
+  let work=stock.fuel.saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK);
+  let closed=wallet.run_settled(grant,work,|effect|cursor.close_step(effect));
+  let spent=before-wallet.remaining_work();
+  match closed{
+   Ok(Some((turn,_)))=>match turn.result{
+    Ok(step)=>spend(&mut stock,step.progress(),spent),
+    Err(error)=>{
+     spend(&mut stock,error.retained_progress(),spent);
+     failure.get_or_insert(stalled("original receiving close was refused"));
+    }
+   },
+   Ok(None)=>{failure.get_or_insert(stalled("original receiving close was not admitted"));break},
+   Err(error)=>{spend(&mut stock,Default::default(),spent);failure.get_or_insert(error.into());break},
+  }
+ }
  if !cursor.terminal_is_empty(){failure.get_or_insert(stalled("original receiving close exhausted its work"));std::mem::forget(cursor)}
  match(failure,output){(Some(error),_)=>Err(error),(None,Some(output))=>Ok(output),(None,None)=>Err(stalled("original receiving produced no operation"))}
 }
@@ -223,3 +261,6 @@ pub fn check_receiving_round_trip<M:OpBinaryReceiving+PartialEq+std::fmt::Debug>
 }
 #[path="🧭️mirrored/🦀️.rs"]
 pub mod mirrored;
+
+#[path = "🔄️converted/🦀️.rs"]
+pub mod converted;

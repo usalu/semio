@@ -1,8 +1,6 @@
 //! ⏱️ The strict lifecycle authority must price the guest's own work, never the browser's or the
 //! operating system's descheduling of a suspended turn.
-use std::cell::Cell;
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_plugin_reactor_turn::{guest_turn_executing_us, with_turn_execution};
 use std::future::Future as _;
 
 #[doc(hidden)]

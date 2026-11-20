@@ -4,6 +4,7 @@ import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/
 import type { PluginOperationCompletion, PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import type { ViewModel } from "../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
 export const DIRECTORY_PROJECTION_RECEIPT_SCHEMA = "semio.space.home.directory-projection-receipt.v1";
 
 export type DirectoryProjectionReceiptV1 = Readonly<{
@@ -395,7 +396,7 @@ export function DirectoryBootstrapStatusNotice(props: Readonly<{ state: Director
   return (
     <div role="status" aria-live="polite" aria-current="true" data-directory-bootstrap={props.state.kind}>
       <span>{text}</span>
-      {props.state.kind === "pending" ? <button type="button" onClick={props.onCancel}>{labels.cancel}</button> : null}
+      {props.state.kind === "pending" ? <button {...sharedBorderlessBoxProps} type="button" onClick={props.onCancel}>{labels.cancel}</button> : null}
     </div>
   );
 }

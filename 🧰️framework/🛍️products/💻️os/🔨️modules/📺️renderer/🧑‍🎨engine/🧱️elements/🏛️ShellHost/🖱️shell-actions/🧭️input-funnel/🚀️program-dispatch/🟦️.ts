@@ -6,8 +6,7 @@ import { type ActionDispatchLifecycleV1, SemioFaultError, SURFACE_FAULT_CODES, r
 import { programHistoryKeyV1, programHistoryProjectionV1 } from "../../../🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, inputCommitReceiptV1, inputDiagnosticV1, type InputCommitReceiptV1, type InputDiagnosticV1, type InputDraftDispositionV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1 } from "../../../🎯️input-ledger/🟦️.ts";
 import { type ActiveSession } from "../../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { resolveBootExampleId } from "../../../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { navbarExampleIdFromHistoryUpserts, historyRefreshNeededV1 } from "../../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { historyRefreshNeededV1 } from "../../../../🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import { appFaultNoticeV1, historyFaultNoticeV1, historyInputDraftDispositionV1, historyOutputNoticeV1, historySilentRefusalOfFaultV1, historySilentRefusalOfOutputV1 } from "../../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { viewerReadOnlyNoticeText } from "../../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -76,7 +75,7 @@ export async function dispatchDirectBrowserActorAction({ dispatchDirectBrowserAc
 }
 
 /** 🎬️ Runs an action through the program handler, applies its history patch and host effects and settles the ledger entry. */
-export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, lastDispatchedExampleIdRef, exampleOptionsRef, defaults, dispatch, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, entry, actionOwner, lifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "sessionWorkRef" | "isCurrentEffectOwner" | "applyHistoryPatch" | "applyLeftoverInteractionView" | "historyStore" | "lastDispatchedExampleIdRef" | "exampleOptionsRef" | "defaults" | "dispatch" | "refreshHistorySnapshot" | "applyHostEffects" | "observeLocalInteraction" | "awaitOperationSettle" | "uiTerminologyRef" | "uiLocale" | "dropForSealedInstance" | "dropForRetiredInstance"> & {
+export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwner, applyHistoryPatch, applyLeftoverInteractionView, historyStore, refreshHistorySnapshot, applyHostEffects, observeLocalInteraction, awaitOperationSettle, uiTerminologyRef, uiLocale, dropForSealedInstance, dropForRetiredInstance, targetSession, plugin, dispatchViewState, action, dispatchExtraInstances, dispatchWindowId, expectedDocumentRevision, entry, actionOwner, lifecycle, onAction, actionOrigin, hostWindowId, core, applied, refuse, refusalReasonForError, propagateFailure }: Pick<ShellCoreAfterShellUriAndDocuments, "sessionWorkRef" | "isCurrentEffectOwner" | "applyHistoryPatch" | "applyLeftoverInteractionView" | "historyStore" | "refreshHistorySnapshot" | "applyHostEffects" | "observeLocalInteraction" | "awaitOperationSettle" | "uiTerminologyRef" | "uiLocale" | "dropForSealedInstance" | "dropForRetiredInstance"> & {
   readonly targetSession: ActiveSession;
   readonly plugin: ShellCoreAfterShellUriAndDocuments["loadedPlugins"][number]["handle"];
   readonly dispatchViewState: NonNullable<ReturnType<typeof hostArmedViewContext>>;
@@ -113,8 +112,6 @@ export async function dispatchProgramAction({ sessionWorkRef, isCurrentEffectOwn
     if (rejectedNotice !== null) core.showTransientNotice(rejectedNotice.text, rejectedNotice.kind, rejectedNotice.code);
     const ignoredRefusal = historySilentRefusalOfOutputV1(response.output);
     if (ignoredRefusal !== null) console.debug(`[os-shell] ${action.action} was ignored: ${ignoredRefusal}`);
-    const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
-    if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
     const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
     if (!isCurrentEffectOwner(actionOwner)) {
       const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);

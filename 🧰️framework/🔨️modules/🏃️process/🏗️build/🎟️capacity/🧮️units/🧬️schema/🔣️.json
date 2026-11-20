@@ -15,10 +15,6 @@
           "bun-bundle": {
             "maximumUnits": 4,
             "minimumUnits": 2
-          },
-          "vite-dev-service": {
-            "maximumUnits": 2,
-            "minimumUnits": 1
           }
         },
         "unitQuantileBasisPoints": 7500,

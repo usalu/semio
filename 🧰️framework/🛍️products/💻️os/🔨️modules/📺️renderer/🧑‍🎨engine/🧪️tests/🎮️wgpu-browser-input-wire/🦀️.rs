@@ -73,6 +73,7 @@ fn dispatch_json(event: &DispatchEvent) -> Value {
     let key_json = |kind: &str, key: &str, modifiers: &ui_render::EventModifiers| serde_json::json!({ "kind": kind, "key": key, "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta });
     match event {
         DispatchEvent::PointerCancel { pointer } => serde_json::json!({ "kind": "pointer-cancel", "pointerId": pointer.id.0, "pointerKind": pointer_kind_name(pointer.kind), "pressure": pointer.pressure, "tilt": pointer.tilt }),
+        DispatchEvent::PointerLeave { pointer } => serde_json::json!({ "kind": "pointer-leave", "pointerId": pointer.id.0, "pointerKind": pointer_kind_name(pointer.kind), "pressure": pointer.pressure, "tilt": pointer.tilt }),
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => pointer_json(pointer, modifiers, Vec::new(), "pointer-move", *x, *y),
         DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => pointer_json(pointer, modifiers, vec![("button", Value::from(pointer_button_name(*button)))], "pointer-down", *x, *y),
         DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => pointer_json(pointer, modifiers, vec![("button", Value::from(pointer_button_name(*button)))], "pointer-up", *x, *y),

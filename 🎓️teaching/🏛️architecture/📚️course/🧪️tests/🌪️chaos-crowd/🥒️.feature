@@ -26,7 +26,9 @@ Feature: A Whole Class Learns While Everything Fails
 
   Scenario: A Hundred Real Browsers Attend at Once
     Given a hundred real browser learners and no protocol learner, each with pets and icon animations switched off through the preferences
-    When the class arrives over a couple of minutes and every browser plays one quiz, spread evenly over the course
+    When the class arrives over a couple of minutes
+    Then every browser counts the whole class of a hundred online at once
+    When every browser plays one quiz, spread evenly over the course, a few at the same moment, while its network drops and returns, its page reloads and the proctor is killed and started again
     Then every browser stays connected and presence counts a hundred online
     And no browser shows a page error, every submission is scored exactly once and the leaderboard is right
     And the time to the first task and to the results of a submission are measured

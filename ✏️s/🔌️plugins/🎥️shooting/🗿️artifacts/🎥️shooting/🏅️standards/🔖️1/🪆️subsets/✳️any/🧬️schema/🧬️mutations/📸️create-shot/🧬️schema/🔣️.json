@@ -161,6 +161,12 @@
             "group": "camera",
             "order": 80
           }
+        },
+        "drawing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingDrawing"
+        },
+        "autoFit": {
+          "type": "boolean"
         }
       },
       "x-semio-ui": {

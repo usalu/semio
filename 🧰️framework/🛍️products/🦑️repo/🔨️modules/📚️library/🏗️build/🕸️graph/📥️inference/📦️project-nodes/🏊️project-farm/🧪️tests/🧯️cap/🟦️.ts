@@ -1,4 +1,4 @@
-/** 🧯️ Contract: a worker above its footprint cap is stopped and its job runs alone; a job above the alone cap fails with a typed bilingual refusal naming it; nothing else is lost. The decision table lives in `🔣️.json` and is evaluated by an independent Python model; the real footprint of a real child is checked against `ps`.
+/** 🧯️ Contract: a worker above its footprint cap is stopped and its job runs alone; a job above the alone cap fails with a typed bilingual refusal naming it; nothing else is lost. The decision table lives in `🔣️.json` and is evaluated by an independent Python model; the process test holds memory until the live kernel sampler observes it.
  * @see ../../🏊️pool/🟨️.mjs */
 import{expect,test}from"bun:test";
 import{mkdtempSync,readFileSync,readdirSync,rmSync}from"node:fs";
@@ -45,19 +45,20 @@ test("the refusal of an overrun names the owner and both numbers in English and 
 });
 
 test("a real child that holds memory is read at its real footprint, stopped by SIGTERM and gone, and its job passes alone; a job above the alone cap fails",async()=>{
- const dir=mkdtempSync(join(tmpdir(),"farm-cap-real-")),events:Event[]=[],pool=open({capMegabytes:350,aloneCapMegabytes:650},events,2);
+ const dir=mkdtempSync(join(tmpdir(),"farm-cap-real-")),events:Event[]=[],pool=open({capMegabytes:112,aloneCapMegabytes:256,policy:{...GRAPH_FARM_POLICY_V1,footprintMilliseconds:100}},events,2);
  try{
-  const fits:any=await pool.run({n:0,megabytes:[500,500],real:true,delay:2500,dir});
-  expect(fits.reply.run,"second run").toBe(1);expect(fits.reply.held).toBe(500*MiB);
-  expect(fits.reply.rssMegabytes,"ps agrees that the child holds what it allocated").toBeGreaterThanOrEqual(500);
-  expect(fits.footprintMegabytes,"the pool read the real footprint").toBeGreaterThanOrEqual(450);
-  const capped=events.find(each=>each.event==="capped");expect(capped?.fields.alone).toBe(false);expect(Number(capped?.fields.megabytes)).toBeGreaterThan(350);expect(capped?.fields.project).toBeUndefined();
+  const fits:any=await pool.run({n:0,megabytes:[160,160],real:true,delay:5500,dir});
+  expect(fits.reply.run,"second run").toBe(1);expect(fits.reply.held).toBe(160*MiB);
+  expect(fits.reply.sentinel,"the child can still read the end of its allocation").toBe(73);
+  expect(fits.footprintMegabytes,"the pool read the real footprint").toBeGreaterThanOrEqual(144);
+  const capped=events.find(each=>each.event==="capped");expect(capped?.fields.alone).toBe(false);expect(Number(capped?.fields.megabytes)).toBeGreaterThan(112);expect(capped?.fields.project).toBeUndefined();
   const pids=readdirSync(dir).filter(name=>name.startsWith("pid-")).map(name=>Number(name.slice(4))).filter(pid=>pid!==fits.reply.pid);
   expect(pids.length).toBe(1);
   const until=Date.now()+10000;while(farmProcessAliveV1(pids[0]!)&&Date.now()<until)await Bun.sleep(50);
   expect(farmProcessAliveV1(pids[0]!),"the stopped child is gone").toBe(false);
-  const heavy:any=await pool.run({n:1,megabytes:[800,800],real:true,delay:2500,dir});
-  expect(heavy.overrun.capMegabytes).toBe(650);expect(heavy.overrun.megabytes).toBeGreaterThan(650);
+  const heavy:any=await pool.run({n:1,megabytes:[336,336],real:true,delay:5500,dir});
+  expect(heavy,JSON.stringify({events,stats:pool.stats()})).toMatchObject({overrun:{capMegabytes:256}});
+   expect(heavy.overrun.megabytes).toBeGreaterThan(256);
   expect(events.filter(each=>each.event==="capped").length).toBe(3);
  }finally{await pool.close();rmSync(dir,{recursive:true,force:true});}
 },180000);

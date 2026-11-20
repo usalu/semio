@@ -148,9 +148,17 @@ fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
             let oracle = serde_json::from_value::<semio_framework::ViewModel>(input);
             assert!(owned.is_ok(), "{}: {:?}", row["id"], owned.err());
             assert!(oracle.is_ok(), "{}: {:?}", row["id"], oracle.err());
-            let owned = owned.unwrap();
+            let mut owned = owned.unwrap();
             assert_eq!(owned, oracle.unwrap());
             assert_eq!(serde_json::to_value(&owned.active_utility_by_window_id).unwrap(), row["activeUtilityByWindowId"]);
+            let address = row["windowId"].as_str().unwrap();
+            if owned.active_utility_by_window_id.get(address) == Some(&None) {
+                owned.window_id = Some(address.into());
+                owned.focused_window_id = Some("other-canvas".into());
+                owned.active_utility_by_window_id.insert("other-canvas".into(), Some("shapeRect".into()));
+                owned.active_utility_id = Some("shapeEllipse".into());
+                assert_eq!(semio_s_artifact_draw_drawing_editor::drawing_active_utility(&owned), semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY);
+            }
         }
     }
 }

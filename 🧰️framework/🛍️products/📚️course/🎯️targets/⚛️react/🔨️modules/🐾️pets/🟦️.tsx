@@ -34,7 +34,7 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { useMediaQuery } from "@semio-tech/ui-react/chrome";
+import { useMediaQuery, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import type { Menagerie, Slug } from "@semio-tech/pets";
 import type { PetLayerHandle } from "@semio-tech/pets-react";
 import type { CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
@@ -250,7 +250,7 @@ export function PetsSwitch(props: { readonly shown: boolean; readonly label: str
   const { offered } = useContext(CoursePetsContext);
   if (!offered) return null;
   return (
-    <label className="course-target flex w-fit cursor-pointer items-center gap-single text-xs text-muted-foreground" data-pets-switch="">
+    <label {...sharedBorderlessBoxProps} className="course-target flex w-fit cursor-pointer items-center gap-single text-xs text-muted-foreground" data-pets-switch="">
       <input type="checkbox" className="course-check" checked={props.shown} onChange={(event) => props.onChange(event.target.checked)} />
       {props.label}
     </label>

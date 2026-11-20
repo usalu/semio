@@ -36,10 +36,17 @@ pub fn render_outliner_document(tree: &DslValue, entities: &[OutlinedCollection]
 
 fn outline(tree: &DslValue, collections: impl IntoIterator<Item = (String, String)>, meta_fn: Option<NormFieldMetaFn>, context: &OutlinerContext<'_, '_>) -> UiAssemblyResult<BuiltNode> {
     let locale = context.locale;
-    let mut groups = Vec::new();
-    for (path, label) in collections {
-        let Some(DslValue::Array(items)) = tree.get(&path) else { continue };
-        groups.push(render_collection(context, &path, &label, items, true, meta_fn, |row| {
+    let groups: Vec<_> = collections.into_iter().filter_map(|(path, label)| {
+        let items = tree.get(&path)?.as_array()?;
+        Some((path, label, items))
+    }).collect();
+    let tree = PanelTreeBuilder::new("norm-outliner-tree")?.window_section(
+        context.windows,
+        "norm-outliner-root",
+        Some(norm_ui_label(chrome("Outliner", "Gliederung", locale))?),
+        true,
+        &groups,
+        |(path, label, items)| render_collection(context, path, label, items, true, meta_fn, |row| {
             let action = match worst_check_index(context.report, row) {
                 Some(index) => Some(norm_action(context.controller_id, "setSelectedCheckIndex", Some(action_args_map(vec![("index", UiValue::Number(index as f64))])?))?),
                 None => None,
@@ -50,10 +57,8 @@ fn outline(tree: &DslValue, collections: impl IntoIterator<Item = (String, Strin
                 Some(action) => tree_item_with_action(id, label, Some(row.title.clone()), action),
                 None => tree_item_desc(id, label, Some(row.title.clone())),
             }
-        })?);
-    }
-    let rows = ui_node_list(groups.into_iter().map(Ok))?;
-    let tree = PanelTreeBuilder::new("norm-outliner-tree")?.section("norm-outliner-root", Some(norm_ui_label(chrome("Outliner", "Gliederung", locale))?), true, rows)?;
+        }),
+    )?;
     match context.state.interaction_domain {
         Some(domain) => tree.interaction_domain(context.controller_id, domain.to_string())?.build(),
         None => tree.build(),

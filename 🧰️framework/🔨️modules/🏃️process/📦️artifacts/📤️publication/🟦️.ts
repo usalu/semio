@@ -6,7 +6,7 @@ import{withArtifactDescriptorSlotV1}from"./📥️sources/🟦️.ts";
 import{readArtifactPublicationManifestV1,type ArtifactPublicationManifestV1}from"./📋️manifest/🟦️.ts";
 import { waitingDelayV1 as delay } from "../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import { basename, dirname, resolve, join, isAbsolute, relative } from "node:path";
-import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLeaseControl, type LeaseWait } from "../../🔒️leases/🟦️.ts";
+import { acquireFreshResourceLeaseV1, acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLease, type ResourceLeaseControl, type ResourceLeaseWriterProofV1, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 
 import{requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
@@ -67,6 +67,46 @@ async function renameArtifactDirectory(source: string, destination: string, sign
 /** 🧱️ Reuses identical owned artifacts or replaces their tree with rollback on publication failure. */
 export function stageArtifacts(staging:string,owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions):Promise<void>{return withArtifactSourceCaptureV1(resolve(staging),files,{...options,owner},capture=>executeArtifactPublicationV1(staging,owner,capture,options));}
 
+type ArtifactPublicationWritersV1 = Readonly<{capture:ResourceLeaseWriterProofV1;destination:ResourceLeaseWriterProofV1}>;
+type StageWithPublicationWritersV1 = (owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions&{control:ResourceLeaseControl})=>Promise<void>;
+
+/** 🗝️ Retains both physical writers for one fresh destination before entering its higher writer scope. */
+export async function withFreshArtifactPublicationWritersV1<T>(destination:string,leaseDirectory:string,control:ResourceLeaseControl,body:(stage:StageWithPublicationWritersV1)=>Promise<T>):Promise<T>{
+  requireIssuedResourceControlV1(control);
+  if(!isAbsolute(leaseDirectory)||!isAbsolute(destination)||resolve(destination)!==destination)throw Error("Exact fresh publication destination required");
+  leaseDirectory=resolve(leaseDirectory);
+  const leases:ResourceLease[]=[],failures:unknown[]=[];
+  const acquire=async(resource:string)=>{
+    const lease=await acquireFreshResourceLeaseV1({directory:leaseDirectory,resource,mode:"exclusive",control,signal:control.signal});
+    leases.push(lease);
+    return captureResourceLeaseWriterProofV1(lease,leaseDirectory,resource,control);
+  };
+  let accepting=true,stage:Promise<void>|undefined,value:T|undefined;
+  try{
+    const writers={capture:await acquire("artifact-capture:"+destination),destination:await acquire("artifact:"+destination)};
+    value=await body((owner,files,options)=>{
+      if(!accepting||stage||resolve(options.leaseDirectory)!==leaseDirectory)throw Error("Live originally declared publication destination required");
+      stage=stageArtifactsWithWritersV1(destination,owner,files,Object.freeze({...options}),writers);
+      void stage.catch(()=>undefined);
+      return stage;
+    });
+  }catch(error){failures.push(error);}
+  accepting=false;
+  try{await stage;}catch(error){if(!failures.some(value=>Object.is(value,error)))failures.push(error);}
+  for(const lease of leases.reverse())try{lease.release();}catch(error){failures.push(error);}
+  if(failures.length>1)throw new AggregateError(failures,"Artifact publication and writer release failed");
+  if(failures.length)throw failures[0];
+  return value as T;
+}
+
+/** 🔑️ Publishes through the original capture and destination transactions before their shared owner releases either. */
+function stageArtifactsWithWritersV1(staging:string,owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions&{control:ResourceLeaseControl},writers:ArtifactPublicationWritersV1):Promise<void>{
+  staging=resolve(staging);
+  const resource="artifact:"+staging;
+  requireResourceLeaseWriterProofV1(writers.destination,{directory:options.leaseDirectory,resource,path:resourceLeasePathV1(options.leaseDirectory,resource)},options.control);
+  return withArtifactSourceCaptureV1(staging,files,{...options,owner},capture=>executeArtifactPublicationV1(staging,owner,capture,options,undefined,writers.destination),writers.capture);
+}
+
 /** 🛟️ Requires the exact pre-funded token and body authority before accepting the actual publication writer. */
 export function stageOwnedArtifactsV1(staging:string,owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions&Readonly<{control:ResourceLeaseControl;cleanup:AcceptedPhysicalCleanupV1}>):Promise<void>{const captured=Object.freeze({...options}),facts=readAcceptedPhysicalCleanupV1(captured.cleanup);requireAcceptedPhysicalCleanupControlV1(captured.cleanup,captured.control);if(facts.kind!=="artifact-scratch"||facts.resource!=="artifact:"+resolve(staging))throw Error("Exact artifact publication cleanup enrollment required");return withArtifactSourceCaptureV1(resolve(staging),files,{...captured,owner,cleanup:captured.cleanup},capture=>executeArtifactPublicationV1(staging,owner,capture,captured,captured.cleanup));}
 
@@ -78,18 +118,18 @@ export function artifactOwnerRelocatedV1(markerOwner:string,owner:string):boolea
  return shared>=4&&shared<left.length&&shared<right.length;
 }
 
-async function executeArtifactPublicationV1(staging:string,owner:string,capture:ArtifactSourceCaptureV1,options:ArtifactPublicationOptions,cleanup?:AcceptedPhysicalCleanupV1):Promise<void>{
- options=Object.freeze({...options});if(!isAbsolute(options.leaseDirectory))throw refuseProcessV1("invalid","publication.lease-directory-required");staging=resolve(staging);const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Artifact publication requires original signal");}const resource="artifact:"+staging,started=Date.now(),lease=await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal,control,onWait:options.onWait,...options.timeoutMs===undefined?{}:{timeoutMs:options.timeoutMs}});let guardLive=true,temporary:string|undefined,previous:string|undefined,published=false,cleanupStarted=false,parentIdentity:ReturnType<typeof lstatSync>|undefined,temporaryIdentity:ReturnType<typeof lstatSync>|undefined,previousIdentity:ReturnType<typeof lstatSync>|undefined;const failures:unknown[]=[];
+async function executeArtifactPublicationV1(staging:string,owner:string,capture:ArtifactSourceCaptureV1,options:ArtifactPublicationOptions,cleanup?:AcceptedPhysicalCleanupV1,retainedWriter?:ResourceLeaseWriterProofV1):Promise<void>{
+ options=Object.freeze({...options});if(!isAbsolute(options.leaseDirectory))throw refuseProcessV1("invalid","publication.lease-directory-required");staging=resolve(staging);const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Artifact publication requires original signal");}const resource="artifact:"+staging,started=Date.now(),lease=retainedWriter?undefined:await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal,control,onWait:options.onWait,...options.timeoutMs===undefined?{}:{timeoutMs:options.timeoutMs}});let guardLive=true,temporary:string|undefined,previous:string|undefined,published=false,cleanupStarted=false,parentIdentity:ReturnType<typeof lstatSync>|undefined,temporaryIdentity:ReturnType<typeof lstatSync>|undefined,previousIdentity:ReturnType<typeof lstatSync>|undefined;const failures:unknown[]=[];
  const same=(path:string,identity:ReturnType<typeof lstatSync>|undefined)=>{const value=lstatSync(path);if(!identity||!value.isDirectory()||value.isSymbolicLink()||value.dev!==identity.dev||value.ino!==identity.ino)throw Error("Exact retained artifact directory inode required");};
  const cleanupSignal=async():Promise<AbortSignal>=>{try{await drainArtifactCaptureV1(capture);}catch(error){if(!failures.some(value=>Object.is(value,error)))failures.push(error);}if(!cleanup)return new AbortController().signal;if(!guardLive)throw Error("Actual retained artifact writer required");if(!cleanupStarted){cleanupStarted=true;try{await beginAcceptedPhysicalCleanupV1(cleanup);}catch(error){if(!failures.some(value=>Object.is(value,error)))failures.push(error);}}checkAcceptedPhysicalCleanupV1(cleanup);if(parentIdentity)same(dirname(staging),parentIdentity);return readAcceptedPhysicalCleanupV1(cleanup).cleanupSignal;};
  try{
-  if(cleanup){const proof=captureResourceLeaseWriterProofV1(lease,options.leaseDirectory,resource,control!);requireResourceLeaseWriterProofV1(proof,{directory:options.leaseDirectory,resource,path:resourceLeasePathV1(options.leaseDirectory,resource)},control!);}
+  if(cleanup){const proof=captureResourceLeaseWriterProofV1(lease!,options.leaseDirectory,resource,control!);requireResourceLeaseWriterProofV1(proof,{directory:options.leaseDirectory,resource,path:resourceLeasePathV1(options.leaseDirectory,resource)},control!);}
   const files=artifactCaptureEntriesV1(capture),marker=".semio-artifact.json";for(let parent=staging;dirname(parent)!==parent;parent=dirname(parent))if(existsSync(parent)&&lstatSync(parent).isSymbolicLink())throw Error(`Symlink artifact destination: ${parent}`);
   let metadata:ArtifactPublicationManifestV1|undefined;if(existsSync(staging)){const markerPath=join(staging,marker);if(!existsSync(markerPath))throw Error(`Unowned artifact directory: ${staging}`);metadata=await readArtifactPublicationManifestV1(staging,{control,signal});if(metadata.owner!==owner&&!artifactOwnerRelocatedV1(metadata.owner,owner))throw Error(`Unowned artifact directory: ${staging}`);}
   const identical=await hasIdenticalArtifacts(staging,marker,owner,capture,metadata,signal,control);if(identical)await recheckArtifactCaptureV1(capture);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);
-  if(!identical){mkdirSync(dirname(staging),{recursive:true});parentIdentity=lstatSync(dirname(staging));temporary=artifactCaptureDirectoryV1(capture);temporaryIdentity=lstatSync(temporary);previous=temporary+".previous";await writeArtifactCaptureManifestV1(capture,owner);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const commit=await prepareArtifactCaptureCommitV1(capture,control?captureResourceLeaseWriterProofV1(lease,options.leaseDirectory,resource,control):undefined);const onWait=()=>options.onWait?.({resource,mode:"exclusive",elapsedMs:Date.now()-started});if(existsSync(staging)){previousIdentity=lstatSync(staging);await renameArtifactDirectory(staging,previous,signal,onWait,control);}try{await renameArtifactDirectory(temporary,staging,signal,onWait,control);commitArtifactCaptureV1(commit);published=true;}catch(error){failures.push(error);try{if(existsSync(previous)){const settledSignal=await cleanupSignal();if(cleanup)same(previous,previousIdentity);await renameArtifactDirectory(previous,staging,settledSignal,onWait);}}catch(rollback){failures.push(rollback);}}}
+  if(!identical){mkdirSync(dirname(staging),{recursive:true});parentIdentity=lstatSync(dirname(staging));temporary=artifactCaptureDirectoryV1(capture);temporaryIdentity=lstatSync(temporary);previous=temporary+".previous";await writeArtifactCaptureManifestV1(capture,owner);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const commit=await prepareArtifactCaptureCommitV1(capture,retainedWriter??(control?captureResourceLeaseWriterProofV1(lease!,options.leaseDirectory,resource,control):undefined));const onWait=()=>options.onWait?.({resource,mode:"exclusive",elapsedMs:Date.now()-started});if(existsSync(staging)){previousIdentity=lstatSync(staging);await renameArtifactDirectory(staging,previous,signal,onWait,control);}try{await renameArtifactDirectory(temporary,staging,signal,onWait,control);commitArtifactCaptureV1(commit);published=true;}catch(error){failures.push(error);try{if(existsSync(previous)){const settledSignal=await cleanupSignal();if(cleanup)same(previous,previousIdentity);await renameArtifactDirectory(previous,staging,settledSignal,onWait);}}catch(rollback){failures.push(rollback);}}}
  }catch(error){failures.push(error);}
- try{await cleanupSignal();if(published&&previous&&existsSync(previous)){if(cleanup)same(previous,previousIdentity);rmSync(previous,{recursive:true,force:true});}if(cleanup)checkAcceptedPhysicalCleanupV1(cleanup);}catch(error){failures.push(error);}finally{guardLive=false;try{lease.release();}catch(error){failures.push(error);}}
+ try{await cleanupSignal();if(published&&previous&&existsSync(previous)){if(cleanup)same(previous,previousIdentity);rmSync(previous,{recursive:true,force:true});}if(cleanup)checkAcceptedPhysicalCleanupV1(cleanup);}catch(error){failures.push(error);}finally{guardLive=false;try{lease?.release();}catch(error){failures.push(error);}}
  if(failures.length>1)throw new AggregateError(failures,"Artifact publication and retained cleanup failed");if(failures.length)throw failures[0];
 }
 

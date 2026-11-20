@@ -62,7 +62,7 @@ export function ProvenanceSection(props: { readonly asset: Asset }): ReactElemen
                 {reference.url === undefined ? null : (
                   <>
                     {" "}
-                    <a href={reference.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-single underline">{t("detail.provenance.open")}<Icon icon="external-link" size="tiny" /><span className="sr-only"> ({t("detail.newTab")})</span></a>
+                    <a href={reference.url} data-shared-border-frame="" data-shared-border-edges="" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-single underline">{t("detail.provenance.open")}<Icon icon="external-link" size="tiny" /><span className="sr-only"> ({t("detail.newTab")})</span></a>
                   </>
                 )}
               </span>,

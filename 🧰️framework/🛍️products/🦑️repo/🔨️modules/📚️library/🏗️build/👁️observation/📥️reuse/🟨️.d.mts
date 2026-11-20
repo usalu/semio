@@ -1,4 +1,5 @@
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
+import type{NativeStorageVerificationSnapshotV1,NativeStorageVerificationTimingV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/⏱️verification/🟦️.ts";
 /** 🧷️ Requires the defining loaded Source and policy epoch. */
 export function requireCurrentInferenceInventoryReuseV1():void;
 /** 📋️ Captures only inert finite inventory reference names. */
@@ -6,9 +7,9 @@ export function captureInferenceInventoryReferencesV1(value:unknown):readonly st
 /** 🧮️ Bounds the next cohort using only the defining private policies. */
 export function admitInferenceInventoryCohortV1(usedBytes:number,records:number,maximumBytes?:number):number;
 /** 📥️ Retains genuine image custody and rechecks physical ancestry/leaf identity before every memo hit. */
-export function inferenceInventoryReferencesHoldV1(root:string,value:unknown,control:ResourceLeaseControl):Promise<boolean>;
+export function inferenceInventoryReferencesHoldV1(root:string,value:unknown,control:ResourceLeaseControl,withdraw?:AbortSignal):Promise<boolean>;
 /** 📊️ How the inventory presence checks went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */
-export function inferenceInventoryPresenceStatsV1(root:string,control:ResourceLeaseControl):Readonly<{asked:number;remembered:number;batches:number;retried:number;names:number}>;
+export function inferenceInventoryPresenceStatsV1(root:string,control:ResourceLeaseControl):Readonly<{asked:number;remembered:number;batches:number;retried:number;names:number;timings:Readonly<Record<"reader"|"preVerify"|"body"|"postVerify",NativeStorageVerificationTimingV1>>;bodyOperations?:Readonly<Partial<Record<"storeRecheck"|"continuation"|"fileChecks"|"recordRead"|"implementationCheck",NativeStorageVerificationTimingV1>>>;nativeVerification?:Readonly<Record<"preVerify"|"postVerify",NativeStorageVerificationSnapshotV1>>}>;
 
 export function inferenceInventoryRecordHoldsV1(root:string,name:string,file:import("../../📥️inputs/🧮️digest/📥️read/🟨️.mjs").ExactSourceMetadataV1|null):boolean;
 

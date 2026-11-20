@@ -1,9 +1,4 @@
-/* 🧍️ The staffage archive's own layout rules on top of the semio design system: the card layer over the layered overview's glass, visible focus, and the in-app motion switch. */
-
-.staffage-app :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+/* 🧍️ The staffage archive's own layout rules on top of the semio design system: the card layer over the layered overview's glass, and the in-app motion switch. */
 
 /* 🏠️ The overview's cards stand on a grid above the glass: the card layer takes its track lists from the level (`--staffage-columns`, `--staffage-rows`) and each card fills its cell,
    with no spacing between cells: neighbouring cards share one border run. A card taller than its cell scrolls inside it and never lies over the card below.

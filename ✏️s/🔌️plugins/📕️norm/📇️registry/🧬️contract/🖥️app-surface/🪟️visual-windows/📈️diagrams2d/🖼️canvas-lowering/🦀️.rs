@@ -217,7 +217,8 @@ impl Json {
     }
 
     fn rgba(c: [u8; 3], a: f64) -> String {
-        format!("[{},{},{},{}]", c[0], c[1], c[2], (a.clamp(0.0, 1.0) * 255.0).round() as u8)
+        let [red, green, blue] = c.map(|channel| f64::from(channel) / 255.0);
+        format!("[{red:.4},{green:.4},{blue:.4},{:.4}]", a.clamp(0.0, 1.0))
     }
 
     fn point(p: [f64; 2]) -> String {
@@ -256,7 +257,7 @@ fn path_layer(id: &str, segs: &[Seg], paint: &Paint) -> String {
         Seg::Line(p) => format!("{{\"kind\":\"line\",\"to\":{}}}", Json::point(*p)),
         Seg::Close => "{\"kind\":\"close\"}".to_string(),
     };
-    let mut out = format!("{{\"id\":{},\"transform\":[1,0,0,1,0,0],\"node\":{{\"kind\":\"path\",\"segments\":[{}]}}", Json::text(id), segs.iter().map(seg).collect::<Vec<_>>().join(","));
+    let mut out = format!("{{\"id\":{},\"kind\":\"path\",\"segments\":[{}]", Json::text(id), segs.iter().map(seg).collect::<Vec<_>>().join(","));
     if let Some((c, a)) = paint.fill {
         out.push_str(&format!(",\"fill\":{{\"kind\":\"solid\",\"color\":{}}}", Json::rgba(c, a)));
     }
@@ -273,11 +274,17 @@ fn path_layer(id: &str, segs: &[Seg], paint: &Paint) -> String {
 }
 
 fn text_layer(id: &str, at: [f64; 2], content: &str, size: f64, anchor: &str, baseline: &str, color: [u8; 3]) -> String {
+    const GLYPH_ADVANCE_EM: f64 = 0.54;
+    const CAP_HEIGHT_EM: f64 = 0.7;
+    let advance = content.chars().count() as f64 * size * GLYPH_ADVANCE_EM;
+    let x = at[0] - match anchor { "middle" => advance / 2.0, "end" => advance, _ => 0.0 };
+    let cap_height = size * CAP_HEIGHT_EM;
+    let y = at[1] - size + match baseline { "top" => cap_height, "middle" => cap_height / 2.0, _ => 0.0 };
     format!(
-        "{{\"id\":{},\"transform\":[1,0,0,1,0,0],\"node\":{{\"kind\":\"text\",\"x\":{},\"y\":{},\"content\":{},\"size\":{},\"anchor\":\"{anchor}\",\"baseline\":\"{baseline}\"}},\"fill\":{{\"kind\":\"solid\",\"color\":{}}}}}",
+        "{{\"id\":{},\"kind\":\"text\",\"x\":{},\"y\":{},\"text\":{{\"content\":{},\"size\":{},\"fontFamily\":\"Share Tech Mono\"}},\"fill\":{{\"kind\":\"solid\",\"color\":{}}}}}",
         Json::text(id),
-        Json::num(at[0]),
-        Json::num(at[1]),
+        Json::num(x),
+        Json::num(y),
         Json::text(content),
         Json::num(size),
         Json::rgba(color, 1.0)

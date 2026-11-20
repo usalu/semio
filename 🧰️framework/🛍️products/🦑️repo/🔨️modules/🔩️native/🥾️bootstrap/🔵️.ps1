@@ -15,7 +15,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("setup", "rust", "node")]
+    [ValidateSet("setup", "rust", "node", "rust-toolchain")]
     [string]$Command = "setup",
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
@@ -31,6 +31,7 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 #region 🎯️Targets
 $script:PythonKind = "3.14"
+$script:VerifiedNodeDirectory = $null
 #endregion 🎯️Targets
 
 #region 🔧️Helpers
@@ -91,7 +92,7 @@ function Refresh-CurrentProcessPath {
         (Join-HomePath @(".local", "bin")),
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links")
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
-    $segments = @($machinePath, $userPath) + $extraPaths + @($env:Path)
+    $segments = @($script:VerifiedNodeDirectory, $machinePath, $userPath) + $extraPaths + @($env:Path)
     $env:Path = (($segments -join ";") -split ";" | Where-Object { $_ } | Select-Object -Unique) -join ";"
 }
 
@@ -291,23 +292,6 @@ function Remove-ScratchDirectory {
     Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-function Install-PinnedDirectory {
-    param($Asset, [string]$Destination, [string]$Child)
-
-    if (Test-Path -LiteralPath $Destination) { return }
-    $scratch = New-ScratchDirectory
-    try {
-        $archive = Join-Path $scratch "archive.zip"
-        Save-VerifiedDownload -Url $Asset.url -Sha256 $Asset.sha256 -Destination $archive
-        $staging = Join-Path $scratch "staging"
-        Expand-Archive -LiteralPath $archive -DestinationPath $staging -Force
-        Ensure-Directory -Path (Split-Path $Destination -Parent)
-        Move-Item -LiteralPath (Join-Path $staging $Child) -Destination $Destination
-    } finally {
-        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
-    }
-}
-
 function Install-PinnedExecutables {
     param($Asset, [string]$Destination, [string[]]$FileNames)
 
@@ -360,16 +344,73 @@ function Install-PinnedDotnetSdk {
     return $dotnetRoot
 }
 
+function Invoke-WithRustupInstallLock {
+    param([string]$repoRoot, [scriptblock]$Action)
+    $policy = (Get-Content -LiteralPath $script:PinsFile -Raw -Encoding UTF8 | ConvertFrom-Json).definitions.RustupInstallation.const
+    $previousHome = $env:RUSTUP_HOME
+    $previousCargo = $env:CARGO_HOME
+    $rustHome = if ($previousHome) { $previousHome } else { Join-HomePath @(".rustup") }
+    $cargoHome = if ($previousCargo) { $previousCargo } else { Join-HomePath @(".cargo") }
+    if (-not [IO.Path]::IsPathRooted($rustHome)) { $rustHome = Join-Path $repoRoot $rustHome }
+    if (-not [IO.Path]::IsPathRooted($cargoHome)) { $cargoHome = Join-Path $repoRoot $cargoHome }
+    $rustHome = [IO.Path]::GetFullPath($rustHome)
+    $cargoHome = [IO.Path]::GetFullPath($cargoHome)
+    Ensure-Directory -Path $rustHome
+    $lock = Join-Path $rustHome $policy.lockFile
+    $clock = [Diagnostics.Stopwatch]::StartNew()
+    $stream = $null
+    while ($null -eq $stream) {
+        $entry = Get-Item -LiteralPath $lock -Force -ErrorAction SilentlyContinue
+        if ($entry -and ($entry.Attributes -band ([IO.FileAttributes]::ReparsePoint -bor [IO.FileAttributes]::Directory))) { throw "A regular Rustup installation lock is required: $lock" }
+        $mode = if ($entry) { [IO.FileMode]::Open } else { [IO.FileMode]::CreateNew }
+        $access = if ($entry) { [IO.FileAccess]::Read } else { [IO.FileAccess]::ReadWrite }
+        try {
+            $stream = [IO.File]::Open($lock, $mode, $access, [IO.FileShare]::None)
+        } catch {
+            $failure = $_.Exception
+            while ($failure.InnerException) { $failure = $failure.InnerException }
+            $transient = if ($entry) { @(2, 32, 33) } else { @(32, 33, 80, 183) }
+            if ($failure -isnot [IO.IOException] -or ($failure.HResult -band 65535) -notin $transient) { throw }
+            if ($clock.Elapsed.TotalSeconds -ge [int]$policy.lockWaitSeconds) { throw "Timed out waiting for the Rustup installation lock: $lock" }
+            Start-Sleep -Milliseconds 250
+        }
+    }
+    try {
+        $env:RUSTUP_HOME = $rustHome
+        $env:CARGO_HOME = $cargoHome
+        & $Action $stream
+    } finally {
+        $env:RUSTUP_HOME = $previousHome
+        $env:CARGO_HOME = $previousCargo
+        $stream.Dispose()
+    }
+}
+
+function Invoke-RustupCommandUnderLock {
+    param([IO.FileStream]$Lock, [string]$FilePath, [string]$repoRoot, [switch]$Bootstrap)
+    if (-not ("Semio.Bootstrap.RustupProcess" -as [type])) {
+        $policy = (Get-Content -LiteralPath $script:PinsFile -Raw -Encoding UTF8 | ConvertFrom-Json).definitions.RustupInstallation.const
+        Add-Type -Path (Join-Path $repoRoot $policy.windowsProcess)
+    }
+    $exit = [Semio.Bootstrap.RustupProcess]::Run($Lock.SafeFileHandle, $FilePath, $repoRoot, [bool]$Bootstrap)
+    if ($exit -ne 0) { throw "$FilePath failed with exit code $exit" }
+}
+
 function Ensure-Rustup {
-    if (Get-FirstCommandPath @((Join-HomePath @(".cargo", "bin", "rustup.exe")), "rustup.exe")) { return }
+    param([string]$repoRoot)
+    Invoke-WithRustupInstallLock -repoRoot $repoRoot -Action { param($held) Ensure-RustupUnderLock -Lock $held -repoRoot $repoRoot }
+}
+
+function Ensure-RustupUnderLock {
+    param([IO.FileStream]$Lock, [string]$repoRoot)
+    if (Get-FirstCommandPath @((Join-Path $env:CARGO_HOME "bin\rustup.exe"), "rustup.exe")) { return }
     $rustup = Get-PinnedAsset -Tool "rustup"
     $scratch = New-ScratchDirectory
     try {
         $installer = Join-Path $scratch "rustup-init.exe"
         Save-VerifiedDownload -Url $rustup.url -Sha256 $rustup.sha256 -Destination $installer
         Write-Step "Installing rustup $($rustup.version)..."
-        & $installer -y --no-modify-path --profile minimal --default-toolchain none | Out-Host
-        if ($LASTEXITCODE -ne 0) { throw "rustup-init failed with exit code $LASTEXITCODE" }
+        Invoke-RustupCommandUnderLock -Lock $Lock -FilePath $installer -repoRoot $repoRoot -Bootstrap
     } finally {
         Remove-ScratchDirectory -Path $scratch
     }
@@ -377,13 +418,17 @@ function Ensure-Rustup {
 
 function Ensure-RustToolchain {
     param([string]$repoRoot)
-    $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @((Join-HomePath @(".cargo", "bin", "rustup.exe")), "rustup.exe")
-    $previousRustupToolchain = $env:RUSTUP_TOOLCHAIN
-    Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue
-    try {
-        Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
-    } finally {
-        if ($null -ne $previousRustupToolchain) { $env:RUSTUP_TOOLCHAIN = $previousRustupToolchain }
+    Invoke-WithRustupInstallLock -repoRoot $repoRoot -Action {
+        param($held)
+        Ensure-RustupUnderLock -Lock $held -repoRoot $repoRoot
+        $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @((Join-Path $env:CARGO_HOME "bin\rustup.exe"), "rustup.exe")
+        $previousRustupToolchain = $env:RUSTUP_TOOLCHAIN
+        Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue
+        try {
+            Invoke-RustupCommandUnderLock -Lock $held -FilePath $rustupPath -repoRoot $repoRoot
+        } finally {
+            $env:RUSTUP_TOOLCHAIN = $previousRustupToolchain
+        }
     }
 }
 
@@ -440,37 +485,54 @@ function Ensure-CppBuildTools {
 function Install-RustProfile {
     param([string]$repoRoot)
     Ensure-CppBuildTools
-    Ensure-Rustup
     Ensure-RustToolchain -repoRoot $repoRoot
+}
+
+function Test-PinnedNodeDirectory {
+    param([string]$Directory, [string]$Version, $Policy)
+
+    $executable = Join-Path $Directory $Policy.executable
+    if (-not (Test-Path -LiteralPath $executable -PathType Leaf) -or
+        -not (Test-Path -LiteralPath (Join-Path $Directory $Policy.npm) -PathType Leaf)) { return $false }
+    $reported = (& $executable "--version" | Out-String).Trim()
+    return ($LASTEXITCODE -eq 0 -and $reported -ceq "v$Version")
 }
 
 function Install-PinnedNode {
     param([string]$RepoRoot)
 
     $manifest = Get-Content -LiteralPath (Join-Path $RepoRoot "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-    $toolsRoot = Join-Path $env:LOCALAPPDATA "semio"
-    $paths = @()
-
-    $node = Get-PinnedAsset -Tool "node"
-    if ($manifest.engines.node -ne $node.version) {
-        throw "The Node.js pin $($node.version) in $script:PinsFile differs from package.json engines.node $($manifest.engines.node); update the pin."
+    $policy = (Get-Content -LiteralPath $script:PinsFile -Raw -Encoding UTF8 | ConvertFrom-Json).definitions.WindowsNodeInstallation.const
+    $asset = Get-PinnedAsset -Tool "node"
+    if ($manifest.engines.node -cne $asset.version -or $asset.version -notmatch $policy.versionPattern) {
+        throw "The Node.js pin $($asset.version) in $script:PinsFile differs from package.json engines.node $($manifest.engines.node); update the pin."
     }
-    $nodeRoot = Join-Path $toolsRoot "node\v$($node.version)"
-    if ((Get-InstalledVersion "node.exe") -ne $node.version -or -not (Get-FirstCommandPath @("npm.cmd", "npm.exe"))) {
-        $npmInRoot = Join-Path $nodeRoot "npm.cmd"
-        if ((Test-Path -LiteralPath $nodeRoot) -and -not (Test-Path -LiteralPath $npmInRoot)) {
-            Remove-Item -LiteralPath $nodeRoot -Recurse -Force
+    $appData = [Environment]::GetEnvironmentVariable($policy.environment, "Process")
+    if ($appData -notmatch '^[A-Za-z]:[/\\]') { throw "An absolute Windows LocalAppData directory is required for the pinned Node.js installation." }
+    $parent = $appData
+    foreach ($name in $policy.directories) { $parent = Join-Path $parent $name }
+    $destination = Join-Path $parent "$($policy.versionPrefix)$($asset.version)"
+    if (-not (Test-Path -LiteralPath $destination)) {
+        Write-Step "Installing Node.js $($asset.version)..."
+        Ensure-Directory -Path $parent
+        $scratch = Join-Path $parent (".prepare-" + [Guid]::NewGuid().ToString("N"))
+        New-Item -ItemType Directory -Path $scratch | Out-Null
+        try {
+            $archive = Join-Path $scratch "archive.zip"
+            Save-VerifiedDownload -Url $asset.url -Sha256 $asset.sha256 -Destination $archive
+            Expand-Archive -LiteralPath $archive -DestinationPath $scratch -Force
+            $candidate = Join-Path $scratch "node-v$($asset.version)-win-$(Get-HostArchitecture)"
+            if (-not (Test-PinnedNodeDirectory $candidate $asset.version $policy)) { throw "The pinned Node.js archive must contain Node.js $($asset.version) and npm." }
+            try { [IO.Directory]::Move($candidate, $destination) }
+            catch { if (-not (Test-Path -LiteralPath $destination -PathType Container)) { throw } }
+        } finally {
+            Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
         }
-        Write-Step "Installing Node.js $($node.version)..."
-        Install-PinnedDirectory -Asset $node -Destination $nodeRoot -Child "node-v$($node.version)-win-$(Get-HostArchitecture)"
     }
-    if (Test-Path -LiteralPath $nodeRoot) { $paths += $nodeRoot }
-    else {
-        $nodeFound = Get-FirstCommandPath @("node.exe")
-        if ($nodeFound -and (Get-InstalledVersion "node.exe") -eq $node.version) { $paths += (Split-Path -Parent $nodeFound) }
-    }
-
-    return $paths
+    if (-not (Test-PinnedNodeDirectory $destination $asset.version $policy)) { throw "Pinned Node.js $($asset.version) and npm are required at $destination." }
+    $script:VerifiedNodeDirectory = $destination
+    Write-Step "Verified Node.js $($asset.version) at $(Join-Path $destination $policy.executable)."
+    return $destination
 }
 
 function Install-PinnedToolchain {
@@ -494,7 +556,7 @@ function Install-PinnedToolchain {
         }
     }
 
-    Ensure-Rustup
+    Ensure-Rustup -repoRoot $RepoRoot
     $paths += (Install-PinnedDotnetSdk -RepoRoot $RepoRoot)
     return $paths
 }
@@ -598,6 +660,10 @@ if ($Command -eq "node") {
     Set-UserPathPriority -PreferredEntries @(Install-PinnedNode -RepoRoot $repoRoot)
     Refresh-CurrentProcessPath
     Write-Step "Pinned Node.js is ready."
+    exit 0
+}
+if ($Command -eq "rust-toolchain") {
+    Ensure-RustToolchain -repoRoot $repoRoot
     exit 0
 }
 if ($Command -eq "rust") {

@@ -1,0 +1,27 @@
+semio layout.layout.dsl v1
+schema=layout.layout name="Linked Asset" grid=baseline-grid=12 baseline-offset=0 snap-to-baseline=false paragraph-styles=[ ] character-styles=[ ] stories=[ ] links=[
+  { id=chart-preview path=chart-preview.png hash="" width=16 height=16 dpi=72 state=ready proxy-data-url="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEG0lEQVR4AQEQBO/7APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f/aNkAVAtQijwAAAABJRU5ErkJggg==" artifact-kind=s.stdio.png artifact-ref="" }
+] parent-pages=[ ] spreads=[ { id=spread-1 name="Spread 1" page-ids=[ page-1 ] } ] pages=[
+  { id=page-1 name="Page 1" spread-id=spread-1 width=400 height=500
+    margins {
+      top=0 right=0 bottom=0 left=0
+    }
+    columns {
+      count=1 gutter=0
+    }
+    layer-ids=[ layer-1 ]
+    frames {
+      image id=frame-chart layer-id=layer-1 link-id=chart-preview
+      bounds {
+        x=48 y=48 width=144 height=144 rotation=0
+      }
+    }
+    guides [x:NUM y:NUM width:NUM height:NUM] {
+    }
+    layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+      layer-1 Content true false [ frame-chart ]
+    }
+    overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {
+    }
+  }
+]

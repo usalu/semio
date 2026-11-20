@@ -2,7 +2,7 @@ import type {NativeProtectedParentRequestV1,NativeImageMaintenanceRequestV1,Nati
 export type {NativeProtectedParentRequestV1,NativeImageMaintenanceRequestV1,NativeImageRetirementExpectationV1,NativeImageRetirementRequestV1,NativeImageMaintenanceResultV1,NativeImageMaintenanceWaitObservationV1,NativeImageMaintenanceWaitObserverV1,NativeImageMaintenanceCustodyV1,NativeImageStorageV1,NativeProtectedParentReadV1,NativeProtectedMaintenanceRequestV1,NativeProtectedMaintenanceAssociationV1,NativeProtectedMaintenanceDeclarationV1,NativeProtectedMaintenanceProviderV1,NativePhysicalIdentityV1} from "../../📋️contract/🟦️.ts";
 import {lstatSync,opendirSync,statfsSync} from "node:fs";
 import {dirname,join,resolve,relative,isAbsolute,sep} from "node:path";
-import {nativeStorageAttachedV1,nativeStorageBackingFilenameV1,nativeStorageFilesystemBytesV1,nativeStorageSpaceV1,nativeStorageUsedBytesV1} from "../../🔌️backends/📋️contract/🟦️.ts";
+import {nativeStorageAttachedV1,nativeStorageBackingFilenameV1,nativeStorageFilesystemBytesV1,nativeStorageSpaceV1,nativeStorageFreshSpaceV1,nativeStorageUsedBytesV1} from "../../🔌️backends/📋️contract/🟦️.ts";
 export {nativeDirectoryUsedBytesSyncV1,nativeFreeSpaceSyncV1,nativePartitionOfV1,nativeStatfsSyncV1,nativeStatfsV1,type NativeFreeSpaceV1,type NativePartitionV1} from "./📐️statfs/🟦️.ts";
 export {nativeWindowsAllocationUnitV1} from "../../📁️directory/🪟️host/📐️allocation/🟦️.ts";
 import {requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🎛️control/🟦️.ts";
@@ -38,6 +38,7 @@ export const nativeImageFilesystemBytesV1=nativeStorageFilesystemBytesV1;
 export const nativeImageUsedBytesV1=nativeStorageUsedBytesV1;
 /** 🪣️ Reports the allocation unit and the unused units of the enforcing volume, bounded by the declared envelope for directory partitions. */
 export const nativeImageSpaceV1=nativeStorageSpaceV1;
+export const nativeImageFreshSpaceV1=nativeStorageFreshSpaceV1;
 /** 🛎️ Classifies only provider-owned root service names from the enforcing platform contract. */
 export function nativeImageServiceEntryV1(name:unknown):boolean{return typeof name==="string"&&(protocol.reservedApplicationEntries as readonly string[]).includes(name.toLowerCase());}
 /** 📂️ Rejects symlinks and paths escaping the enforced filesystem before materialization. */
@@ -53,7 +54,7 @@ export function requireNativeImageEnvelopeV1(options:Readonly<{filesystemBytes:n
 
 
 /** 📁️ Captures only a finite direct inventory without materializing an unbounded directory. */
-export function nativeImageDirectoryNamesV1(path:string,maximum:number):readonly string[]{const before=lstatSync(path,{bigint:true});if(!Number.isSafeInteger(maximum)||maximum<0||maximum>4||!before.isDirectory()||before.isSymbolicLink())throw Error("Bounded physical Native directory required");const directory=opendirSync(path),names:string[]=[];let failed=false;try{for(;;){const row=directory.readSync();if(!row)break;if(names.length>=maximum)throw Error("Native directory inventory exceeds its owned bound");names.push(row.name);}const after=lstatSync(path,{bigint:true});if(after.isSymbolicLink()||after.dev!==before.dev||after.ino!==before.ino)throw Error("Native directory inventory changed");return names;}catch(error){failed=true;throw error;}finally{try{directory.closeSync();}catch(error){if(!failed)throw error;}}}
+export function nativeImageDirectoryNamesV1(path:string,maximum:number):readonly string[]{const before=lstatSync(path,{bigint:true});if(!Number.isSafeInteger(maximum)||maximum<0||maximum>protocol.maximumDirectoryInventoryEntries||!before.isDirectory()||before.isSymbolicLink())throw Error("Bounded physical Native directory required");const directory=opendirSync(path),names:string[]=[];let failed=false;try{for(;;){const row=directory.readSync();if(!row)break;if(names.length>=maximum)throw Error("Native directory inventory exceeds its owned bound");names.push(row.name);}const after=lstatSync(path,{bigint:true});if(after.isSymbolicLink()||after.dev!==before.dev||after.ino!==before.ino)throw Error("Native directory inventory changed");return names;}catch(error){failed=true;throw error;}finally{try{directory.closeSync();}catch(error){if(!failed)throw error;}}}
 
 /** 🚧️ Keeps every pending publication invisible to ordinary readers, including unsafe namespace shapes. */
 export function requireNativeImagePublicationSettledV1(directory:string):void{const path=requireMaterializedPathV1(join(directory,protocol.publicationDirectory));try{lstatSync(path);}catch(error){if(error&&typeof error==="object"&&"code"in error&&error.code==="ENOENT")return;throw error;}throw Error("Pending Native image publication must settle before ordinary admission");}
@@ -149,3 +150,13 @@ export type NativeProtectedArtifactInputGroupObservationV1=Readonly<{version:1;p
 
 /** 📹️ Captures an explicit existing-input observation request without issuing freshness or readiness. */
 export function readNativeProtectedArtifactExistingInputGroupV1(value:unknown):NativeProtectedArtifactInputGroupV1{const fields=protectedArtifactInputFieldsV1(value,["version","purpose","group"]),definition=protectedMaintenanceSchemaV1.definitions.ProtectedArtifactExistingInputGroup;if(fields.version!==definition.properties.version.const||fields.purpose!==definition.properties.purpose.const)throw Error("Closed distinct current artifact input observation required");return readNativeProtectedArtifactInputGroupV1(fields.group);}
+
+/** 🪴️ Captures the complete stage group plus any roots that the owner must verify in place. */
+export function readNativeProtectedArtifactInputStageV1(value:unknown):Readonly<{group:NativeProtectedArtifactInputGroupV1;retainedRoots:readonly string[]}>{
+ if(value===null||typeof value!=="object"||types.isProxy(value)||!Object.hasOwn(value,"group"))return Object.freeze({group:readNativeProtectedArtifactInputGroupV1(value),retainedRoots:Object.freeze([])});
+ const fields=protectedArtifactInputFieldsV1(value,["version","purpose","group","retainedRoots"]),definition=protectedMaintenanceSchemaV1.definitions.ProtectedArtifactSelectiveInputGroup.properties;
+ if(fields.version!==definition.version.const||fields.purpose!==definition.purpose.const)throw Error("Closed selective artifact input stage required");
+ const group=readNativeProtectedArtifactInputGroupV1(fields.group),retainedRoots=protectedArtifactInputRowsV1(fields.retainedRoots,definition.retainedRoots.maxItems).map(protectedArtifactInputPathV1),available=new Set(group.batches.map(batch=>batch.roots[0]!));
+ if(retainedRoots.length>=available.size||retainedRoots.some((root,index)=>!available.has(root)||index>0&&Buffer.compare(Buffer.from(retainedRoots[index-1]!),Buffer.from(root))>=0))throw Error("Exact ordered retained roots and an absent stage selection required");
+ return Object.freeze({group,retainedRoots:Object.freeze(retainedRoots)});
+}

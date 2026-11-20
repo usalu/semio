@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️AnnotationEdits
 pub(super) fn annotation_at(snapshot: &PdfSnapshot, page: usize, object_id: &str) -> Result<(usize, PdfAnnotation), Fault> {
-    let index = object_id.rsplit_once(":a").and_then(|(_, raw)| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
+    let index = object_id.strip_prefix(&format!("p{page}:a")).and_then(|raw| raw.parse::<usize>().ok()).ok_or_else(|| fault(format!("pdf annotation '{object_id}' is not addressable")))?;
     let annotation = snapshot.pages.get(page).and_then(|item| item.annotations.get(index)).cloned().ok_or_else(|| fault(format!("pdf annotation '{object_id}' is gone")))?;
     Ok((index, annotation))
 }

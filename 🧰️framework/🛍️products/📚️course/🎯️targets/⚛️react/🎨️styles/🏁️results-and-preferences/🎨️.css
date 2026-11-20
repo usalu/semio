@@ -32,10 +32,6 @@
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
-
-  .course-result[data-crowd] > * {
-    --shared-border-flow: 1;
-  }
 }
 
 /* 🎛️ The preferences: a column of cells, the name of each setting above its choice as wide as the card, so every
@@ -113,22 +109,6 @@
   flex: 1 1 auto;
   border: 0;
   padding: var(--spacing-single) var(--spacing-double);
-}
-
-.course-input:focus-visible,
-.course-app select:focus-visible,
-.course-field > input.course-input:focus-visible + .course-input {
-  border-color: var(--active-base);
-  outline: none;
-}
-
-.course-cell:focus-visible,
-.course-cell:focus-visible + .course-cell {
-  border-inline-start-color: var(--active-base);
-}
-
-.course-cell:focus-visible {
-  outline: none;
 }
 
 .course-backdrop {

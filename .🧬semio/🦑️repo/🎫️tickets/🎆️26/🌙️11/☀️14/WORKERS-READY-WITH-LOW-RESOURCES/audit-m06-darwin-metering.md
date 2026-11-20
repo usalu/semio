@@ -1,0 +1,19 @@
+# Darwin fixed-directory metering
+
+On 2026-11-19, I ran the existing Native directory meter on Darwin arm64 with Bun 1.4.2. The private fixture contained 25,226 directory entries across 192 package-like subdirectories. It included multiple independently linked file pairs, external and dangling symlinks, links to an ancestor, and sparse files. A separate Python `os.lstat` walk agreed with all six Native runs on 134,479,872 allocated bytes, 352,780,288 logical bytes, and 25,226 entries. These are warm local results after the tree was populated. They do not measure the size, mount characteristics, or page-cache pressure of g1-m06's active Native graph partition.
+
+| Run | Asynchronous wall | Asynchronous process CPU | Synchronous wall |
+| --- | ---: | ---: | ---: |
+| 1 | 72.0 ms | 336.5 ms | 267.1 ms |
+| 2 | 53.4 ms | 316.4 ms | 226.2 ms |
+| 3 | 45.4 ms | 310.7 ms | 261.8 ms |
+
+An 8 ms scheduled abort reached the original caller with its exact reason in 10.5 ms. The existing asynchronous port submits bounded groups of no-follow `lstat` observations, drains started promises before settlement, and upgrades to exact BigInt observations when a field exceeds safe integer precision.
+
+The current repository has two relevant platform ports. The Native meter's port exposes only one-path `stat` and directory-name list. The filesystem descriptor port's `scan()` holds a directory handle, lists names, and performs a separate `fstatat` with no-follow for each child. It issues type, size, device, inode, link count and timestamp facts and checks the names and original directory identity. Its scan shape has no allocated-block field. A tracked source search across TypeScript, JavaScript, C, C++, Go, Rust, Swift, Objective-C++, and Zig found no `getattrlistbulk`, `getdirentriesattr`, or equivalent exposed bulk stat port. The existing `readdir` and `fdopendir` ABI symbols enumerate names, and do not supply the allocation facts needed by the meter.
+
+An isolated C probe used the system's Darwin SDK and `getattrlistbulk` on two directories of the same private fixture. It compared each returned row with descriptor-relative no-follow `fstatat`. Across 130 regular files, 24 directories, and three symlinks, the returned type, identity, total allocation, and applicable file length and link count all matched. A file with an 8,192-byte data fork and a 32,768-byte resource fork returned 40,960 allocated bytes in the total field, exactly matching `st_blocks * 512`. Its data-fork allocation alone remained 8,192 bytes. The total and data lengths therefore cannot be interchanged. [Apple XNU bulk attribute contract](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/man/man2/getattrlistbulk.2) [Apple attribute semantics](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/getattrlist.2.html)
+
+That probe established exact observations on the tested APFS fixture. It did not establish Darwin behavior for partial attributes, per-entry errors, concurrent replacement, cross-volume mounts, or cancellation while a native call is blocked. Apple's interface explicitly permits omitted fields and its mount-point rows describe the underlying file system. A production implementation needs a new owned port and differential coverage of those boundaries before replacing any metering evidence. The existing descriptor port cannot supply those observations as issued. The private measurements also give no basis for substituting the slower synchronous walk or attributing g1-m06's multi-minute Native preverification to this one metadata loop. The production meter and storage selection were left as they were.
+
+The fixture inputs are [darwin-directory-usage.ts](./🧰️scripts/darwin-directory-usage.ts) and [darwin-bulk-stat.c](./🧰️scripts/darwin-bulk-stat.c). The generated tree and probe executable were removed after measurement.

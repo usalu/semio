@@ -35,6 +35,7 @@ semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 calamine = { version = "0.36.1", default-features = false }

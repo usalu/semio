@@ -144,8 +144,7 @@
                 domains: vec![PresenceDomain { domain: fixture["presence"]["domainId"].as_str().unwrap().into(), granularity: "item".into(), selected: vec![fixture["presence"]["nodeKey"].as_str().unwrap().into()], hovered: Vec::new() }],
             }),
         }).unwrap();
-        let previous=app.roster.peer_presence.replace(std::sync::Arc::new(peers)).expect("live fixture peer root");
-        app.roster.peer_presence_retirements.insert_admitted(0,semio_plugin_decl_views::PeerPresenceRootRetirement::new(previous));
+        semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::seed_presence_root(&mut app, peers);
         let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         for surface in fixture["surfaces"].as_array().unwrap() {

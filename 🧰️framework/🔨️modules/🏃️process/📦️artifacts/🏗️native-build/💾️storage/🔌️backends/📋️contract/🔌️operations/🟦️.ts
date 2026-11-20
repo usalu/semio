@@ -11,6 +11,7 @@ export interface NativeStorageGeometryV1{
  filesystemBytes(root:string,declared:number):number;
  usedBytes(root:string):number;
  space(root:string,declared:number):Readonly<{bsize:number;bavail:number}>;
+ freshSpace(root:string,declared:number,signal:AbortSignal):Promise<Readonly<{bsize:number;bavail:number}>>;
  invalidate():void;
  mapped(directories:readonly string[],control:ResourceLeaseControl):Promise<boolean>;
 }

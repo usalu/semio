@@ -6,6 +6,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 struct FixtureJob {
     mode: String,
     steps: usize,
+    turn_fuel: u64,
     closing: bool,
     empty: bool,
 }
@@ -13,6 +14,7 @@ struct FixtureJob {
 impl InteractiveJob for FixtureJob {
     fn step<'job>(&'job mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'job> {
         InteractiveJobStep::from_callback((|| {
+            assert_eq!(cx.fuel_remaining(), self.turn_fuel, "the original caller lends the entire requested job quantum");
             self.steps += 1;
             match self.mode.as_str() {
                 "pending" if self.steps == 1 => { cx.consume_fuel(1); Ok(None) }
@@ -52,7 +54,8 @@ fn portable_original_driver_returns_outcomes_continuations_and_every_source() {
     assert_eq!(TEST_SOURCE.maximum_release_bytes, stock["releaseBytes"].as_u64().unwrap() as usize);
     assert_eq!(TEST_SOURCE.maximum_depth, stock["depth"].as_u64().unwrap() as usize);
     for case in law["cases"].as_array().unwrap() {
-        let mut job = FixtureJob { mode: case["id"].as_str().unwrap().into(), steps: 0, closing: false, empty: false };
+        let fuel = case["stepFuel"].as_u64().unwrap();
+        let mut job = FixtureJob { mode: case["id"].as_str().unwrap().into(), steps: 0, turn_fuel: fuel, closing: false, empty: false };
         let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
         driver.turn(|cx| {
             assert_eq!(cx.now_us(), law["clockUs"].as_u64());
@@ -60,7 +63,6 @@ fn portable_original_driver_returns_outcomes_continuations_and_every_source() {
             Ok(())
         }).unwrap();
         let mut previous_fuel = driver.caller.as_ref().unwrap().fuel_remaining();
-        let fuel = case["stepFuel"].as_u64().unwrap();
         let observed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             for _ in 0..128 {
                 let observed = driver.step(&mut job, fuel, |outcome| match outcome {

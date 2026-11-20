@@ -20,7 +20,7 @@ impl<T:RetireOwned+Sync> ReadAuthority<T>{
  /// 👁️ Borrows the exact live typed registry without duplicating its authority.
  pub fn registry(&self)->Result<&ReadOwnershipRegistry<T>,ValueError>{self.source.as_ref().map(SharedOriginalStorage::get).ok_or_else(||invalid("read authority is closing"))}
  pub(crate) fn storage(&self)->Result<&SharedOriginalStorage<ReadOwnershipRegistry<T>>,ValueError>{self.source.as_ref().ok_or_else(||invalid("read authority is closing"))}
- pub(crate) fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("read authority changed original Work"))}Ok(())}
+ pub(crate) fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.admits_between_actions(effect,false)){return Err(invalid("read authority changed original Work"))}Ok(())}
  /// 📏️ Quotes the caller-resident authority header and the genuine issued alias.
  pub fn clone_demand(&self)->Result<RetirementDemand,ValueError>{self.storage()?;let child=SharedOriginalStorage::<ReadOwnershipRegistry<T>>::duplicate_demand();Ok(RetirementDemand{copy_bytes:child.copy_bytes.checked_add(size_of::<Option<Self>>()).ok_or_else(||invalid("read authority clone copy overflow"))?,..child})}
  /// ⛽️ Quotes the actual authority header and alias duplication work.

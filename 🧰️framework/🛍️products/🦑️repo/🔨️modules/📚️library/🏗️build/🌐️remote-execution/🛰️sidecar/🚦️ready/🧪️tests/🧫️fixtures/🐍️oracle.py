@@ -3,12 +3,16 @@ import hashlib, json, sys
 def sha(text):
     return hashlib.sha256(text.encode("utf8")).hexdigest()
 
-def digests(schema, platform, files):
+def digests(schema, platform, files, rustup_bridge):
     stages = schema["definitions"]["Stages"]["const"]
     boot = schema["definitions"]["Policy"]["const"]["bootstrap"]["windows" if platform == "windows" else "unix"]
     rows = []
     for stage in stages:
-        paths = list(stage["inputs"]) + (["/".join(boot)] if stage["bootstrapInput"] else [])
+        paths = list(stage["inputs"])
+        if stage["bootstrapInput"]:
+            paths.append("/".join(boot))
+            if platform == "windows":
+                paths.append(rustup_bridge)
         text = "%s\n%s\n%s\n" % (stage["name"], platform, "0" * 64)
         for path in paths:
             text += "%s\0%s\n" % (path, files.get(path, "absent"))
@@ -52,7 +56,7 @@ def decide(policy, i):
         return act("idle", -1, None, policy["idlePollMilliseconds"]) if i["marker"] else act("mark", -1, None, 0)
     index = 0 if stale < 0 or not i["repo"] else stale
     if i.get("restartPending"):
-        return act("wait", index, None, 1000)
+        return act("wait", index, "sidecar-restarting", 1000)
     if i["human"]:
         return act("observe", index, "human-running", policy["observePollMilliseconds"])
     if i["lease"] == "other":
@@ -75,8 +79,10 @@ def human(policy, i):
 fixture = json.load(open(sys.argv[1], encoding="utf8"))
 schema = json.load(open(sys.argv[2], encoding="utf8"))
 policy = schema["definitions"]["Policy"]["const"]
+native = json.load(open(sys.argv[3], encoding="utf8"))
+rustup_bridge = native["definitions"]["RustupInstallation"]["const"]["windowsProcess"]
 out = {
-    "digests": [digests(schema, c["platform"], c["files"]) for c in fixture["digests"]],
+    "digests": [digests(schema, c["platform"], c["files"], rustup_bridge) for c in fixture["digests"]],
     "backoff": [backoff(policy, c["attempts"], c["unit"]) for c in fixture["backoff"]],
     "jobs": [jobs(policy, c["cores"], c["availableMegabytes"]) for c in fixture["jobs"]],
     "tree": [tree(c["rows"], c["root"]) for c in fixture["tree"]],

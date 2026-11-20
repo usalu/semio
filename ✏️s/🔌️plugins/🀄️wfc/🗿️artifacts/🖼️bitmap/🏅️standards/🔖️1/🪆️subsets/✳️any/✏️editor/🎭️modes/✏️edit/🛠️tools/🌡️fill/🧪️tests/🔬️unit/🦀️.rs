@@ -3,6 +3,7 @@ use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 use crate::editor::bitmap::modes::edit::windows::output;
 use crate::schema::snapshot::BitmapSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
+use semio_framework_job::InteractiveJob as _;
 use semio_plugin::Fault;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind};
 use crate::editor::bitmap::modes::edit::tools::fill::*;
@@ -182,10 +183,7 @@ fn aborting_mid_run_does_not_publish_set_solve() {
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
-    job.begin_close();
-    let outcome = drive_once(&mut job, &mut driver, 1);
-    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
-    let _ = tick_payload(outcome);
+    driver.cancel(&mut job, 1);
     assert!(!port.has_effects(), "abort must not dispatch commit-fill-solve / SetSolve");
     driver.close(&mut job);
     assert!(!port.has_effects(), "close after abort still must not publish SetSolve");
@@ -222,7 +220,7 @@ fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
         for _ in 0..40 {
             let outcome = drive_once(&mut job, &mut driver, semio_framework_job::INTERACTIVE_LANE_FUEL);
             if let Some(payload) = tick_payload(outcome) {
-                if payload.trace.iter().any(|event| event.discarded) {
+                if !payload.done && payload.trace.iter().any(|event| event.discarded) {
                     found = Some((snapshot, payload));
                     break;
                 }

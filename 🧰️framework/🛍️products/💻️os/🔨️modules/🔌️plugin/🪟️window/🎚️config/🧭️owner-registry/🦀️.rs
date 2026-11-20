@@ -20,6 +20,8 @@ pub struct WindowConfigOwnerRegistry {
     pub actor: Option<protocol::ActorId>,
     #[doc(hidden)]
     pub actor_retirement: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    fixture: Option<fixture::FixtureLifetime>,
 }
 
 pub fn controlled_owner_demands<T: semio_framework_value::retirement::RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -46,17 +48,10 @@ pub fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mu
 }
 
 impl WindowConfigOwnerRegistry {
-    /// 🧪️ Opens a real declared fixture partition and returns its original issued authority.
-    #[cfg(any(test, feature = "artifact-app-testing"))]
-    pub async fn fixture_partition_authority(&mut self, kind: &str, id: &str) -> Result<WindowConfigAuthorityIdentity, Fault> {
-        let owner = self.owners.get_mut(kind).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.fixture-owner"), "fixture partition requires its declared original owner"))?;
-        let original = owner.capture(id).await?;
-        Ok(original.snapshot.authority)
-    }
 
     pub fn new(actor: protocol::ActorId) -> Self {
         static NEXT_LIFETIME: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-        Self { owners: WindowRegistry::new(), owner_close_cursor: 0,birth:Default::default(),preview_visible_epoch:0,preview_active_epoch:None, lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed), actor: Some(actor), actor_retirement: None }
+        Self { owners: WindowRegistry::new(), owner_close_cursor: 0,birth:Default::default(),preview_visible_epoch:0,preview_active_epoch:None, lifetime: NEXT_LIFETIME.fetch_add(1, std::sync::atomic::Ordering::Relaxed), actor: Some(actor), actor_retirement: None, #[cfg(any(test, feature = "artifact-app-testing"))] fixture: None }
     }
 
     pub fn local_actor_id(&self) -> &protocol::ActorId {
@@ -91,7 +86,7 @@ impl WindowConfigOwnerRegistry {
     /// 📏️ Quotes one original leaf without finishing or publishing its window prefix.
     pub fn preview_leaf_demands(&self,kind:&str,window:&str,epoch:u64,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.owners.get(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_demands(window,epoch,body,maximum_work_units)}
     /// 🪜️ Advances only the issued original leaf while the complete candidate remains private.
-    pub fn preview_leaf_step(&mut self,kind:&str,window:&str,epoch:u64,body:usize,grant:RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>)->Result<(bool,RetainedCloneProgress),ValueError>{self.owners.get_mut(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_step(window,epoch,body,grant,receiving)}
+    pub fn preview_leaf_step(&mut self,kind:&str,window:&str,epoch:u64,body:usize,grant:RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>,work:u64)->Result<(bool,RetainedCloneProgress),ValueError>{self.owners.get_mut(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_leaf_step(window,epoch,body,grant,receiving,work)}
     /// ✅️ The complete leaf has returned its original input and semantic source aliases.
     pub fn preview_leaf_ready(&self,kind:&str,window:&str,epoch:u64)->bool{self.owners.get(kind).is_some_and(|owner|owner.preview_leaf_ready(window,epoch))}
     /// 🔗️ Identifies an original leaf still held by its actual partition.
@@ -186,8 +181,8 @@ impl WindowConfigOwnerRegistry {
     }
 
     #[doc(hidden)]
-    pub fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
-        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, body,grant,receiving)
+    pub fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
+        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, body, grant, turn_ceiling, receiving)
     }
 
     #[doc(hidden)]
@@ -259,8 +254,12 @@ impl WindowConfigOwnerRegistry {
     #[doc(hidden)]
     /// ❌️ Preserves original domain failures while closing a partially born Window partition.
     pub fn close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        if !self.birth.terminal_is_empty() {
+            let before = cx.retained_progress();
+            self.birth.close(cx)?;
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?));
+        }
         if let Some(owner)=self.owners.get_index_mut(self.owner_close_cursor){if !owner.terminal_is_empty(){let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;if !registry::fits(grant,demand){return Ok(PluginLifecycleStep::Progress(Default::default()))}return owner.close_step_context(grant,cx).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other});}}
-        if !self.birth.terminal_is_empty(){self.birth.close(cx).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;return Ok(PluginLifecycleStep::Progress(Default::default()))}
         let d=self.retirement_demands(grant.maximum_copy_bytes)?;
         let mut fault=None;
         let step=semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=self.close_step(effect);let work=effect.performed_work();semio_framework_value::RetainedWorkPoll::<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>::Complete(semio_framework_value::RetainedWorkOutcome{result:match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default())),Err(error)=>{let progress=error.retained_progress();fault=Some(error);Err(ValueError::invariant("window close fault is retained by its caller").with_retained_progress(progress).into())}},work})});
@@ -325,6 +324,10 @@ impl WindowConfigOwnerRegistry {
         Ok(())
     }
 }
+
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[path="🧸️fixture/🦀️.rs"]
+mod fixture;
 
 #[path="🌱️registration/🦀️.rs"]
 mod original_registration;

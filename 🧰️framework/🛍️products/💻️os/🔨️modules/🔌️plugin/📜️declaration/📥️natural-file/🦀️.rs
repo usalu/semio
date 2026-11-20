@@ -30,6 +30,8 @@ use crate::EditorApp;
 use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll};
 use semio_framework_value::retirement::{RetireOwned,admit_owned_retirement,record_retirement_work};
 use semio_framework_value::close_factory_ticket;
+use semio_os_kernel::os_store::serialization::{ArtifactStoreSnapshot, OriginalSnapshotPackExport, OriginalSnapshotPackOutput};
+use semio_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
 use std::mem::{size_of,size_of_val};
 fn invariant(message:&'static str)->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message)}
 fn settled(result:Result<RetainedCloneStep,ValueError>,work:u128)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work})}
@@ -42,7 +44,9 @@ fn admit<T:RetireOwned>(slot:&mut Option<T>,ticket:&mut Option<Box<dyn ErasedSna
 enum NaturalFileImportStage {
     Account,
     Decode,
+    Encode,
     Publish,
+    AdoptGenesis,
 }
 
 /// 📂️ Reserved natural-file import owner. It accounts every source byte before the temporary
@@ -57,6 +61,11 @@ pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
     emit: Option<ArtifactMutationOutcome<E::Mutation, E::ConfigMutation, E::DraftMutation>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<E>>>,
     retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pending_snapshot: Option<E::Snapshot>,
+    pack_export: Option<Box<OriginalSnapshotPackExport>>,
+    verified_pack: Option<OriginalSnapshotPackOutput>,
+    pending_genesis: Option<AdmittedArtifactGenesis<E::Snapshot>>,
+    publication_work: u64,
     pending_bytes: Option<Vec<u8>>,
     pending_media_value: Option<(String, DslValue)>,
     pending_media_text: Option<(String, String)>,
@@ -99,6 +108,11 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
             retirement: None,
             pending_bytes: None,
             pending_media_value: None,
+            pending_snapshot: None,
+            pack_export: None,
+            verified_pack: None,
+            pending_genesis: None,
+            publication_work: 0,
             pending_media_text: None,
             pending_port: None,
             contract,
@@ -124,19 +138,97 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
         self.state[0] = self.stage as u8;
         self.state[1..9].copy_from_slice(&(self.byte_cursor as u64).to_le_bytes());
         self.state[9..17].copy_from_slice(&(self.byte_length as u64).to_le_bytes());
-        let applied_progress = if matches!(self.decoder, Some(NaturalFileDecodeOwner::Controlled(_))) { self.decode_progress.completed_work_units } else { self.byte_cursor as u64 };
+        let decode_work = if matches!(self.decoder, Some(NaturalFileDecodeOwner::Controlled(_))) {
+            self.decode_progress.completed_work_units
+        } else {
+            self.byte_cursor as u64
+        };
+        let applied_progress = decode_work.saturating_add(self.publication_work);
         self.pending = Some(semio_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress });
     }
 
-    fn decode_synchronous(&mut self) -> Result<ArtifactMutationOutcome<E::Mutation, E::ConfigMutation, E::DraftMutation>, Fault> {
-        let outcome = (|| {
-            let Some(NaturalFileDecodeOwner::Synchronous(bytes)) = self.decoder.as_ref() else {
-                return Err(MediaError::Payload(self.port.clone(), "natural-file synchronous decoder lost its byte owner".into()));
+
+    fn note_publication_work(&mut self, fuel_before: u64, cx: &semio_framework_job::StepContext<'_>) {
+        let spent = fuel_before.saturating_sub(cx.fuel_remaining());
+        self.publication_work = self.publication_work.saturating_add(spent);
+        if spent != 0 || self.stage != NaturalFileImportStage::Encode { self.checkpoint(); }
+    }
+
+    fn advance_pack_export(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let snapshot = self.pending_snapshot.as_ref().ok_or_else(|| invariant("natural-file Pack export lost its snapshot"))?;
+        let source = || snapshot.native_pack_source().ok_or_else(|| invariant("natural-file Pack source changed"));
+        let epoch = cx.generation().0;
+        if self.pack_export.is_none() {
+            OriginalSnapshotPackExport::admit(source()?, epoch, self.contract.max_output_bytes, cx, &mut self.pack_export)?;
+            return Ok(false);
+        }
+        let export = self.pack_export.as_mut().expect("native Pack exporter was admitted");
+        if export.ready() {
+            return export.take(cx, &mut self.verified_pack);
+        }
+        for _ in 0..64 {
+            let before = cx.retained_progress();
+            if export.advance(source()?, epoch, cx)? || cx.should_yield() || cx.retained_progress() == before { break; }
+        }
+        Ok(false)
+    }
+
+    fn adopt_genesis(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let demand = AdmittedArtifactGenesis::<E::Snapshot>::verified_pack_birth_demand()?;
+        let copy = 2 * (size_of_val(&self.pending_snapshot) + size_of_val(&self.verified_pack) + size_of_val(&self.pending_genesis));
+        let quote = RetirementDemand { copy_bytes: copy, capacity_bytes: demand.capacity_bytes, depth: demand.depth, ..Default::default() };
+        if cx.should_yield() || !cx.retained_work_can_enter(quote) { return Ok(false); }
+        let grant = cx.retained_grant();
+        let Some((result, work)) = cx.with_original_effect(grant, |_, effect| -> Result<_, ValueError> {
+            if !effect.performed(1)? { return Ok(None); }
+            let snapshot = self.pending_snapshot.take().ok_or_else(|| invariant("natural-file genesis lost its original snapshot"))?;
+            let Some(pack) = self.verified_pack.take() else {
+                self.pending_snapshot = Some(snapshot);
+                return Err(invariant("natural-file genesis lost its verified Pack"));
             };
-            let snapshot = E::decode_natural_file(bytes)?;
-            document_reference_load_emit(&snapshot, E::DOCUMENT_SCHEMA)
-        })();
-        Ok(outcome.map_err(|error: MediaError| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())))
+            match pack.admit_snapshot(snapshot, grant) {
+                Ok((genesis, mut progress)) => {
+                    self.pending_genesis = Some(genesis);
+                    progress.copied_bytes = copy;
+                    Ok(Some(progress))
+                }
+                Err((error, snapshot, pack)) => {
+                    self.pending_snapshot = Some(snapshot);
+                    self.verified_pack = Some(pack);
+                    Err(error)
+                }
+            }
+        })? else { return Ok(false); };
+        cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));
+        let Some(progress) = result? else { return Ok(false); };
+        cx.consume_retained(progress)?;
+        Ok(true)
+    }
+
+    fn close_pack_export(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+
+        let export = self.pack_export.as_mut().expect("native Pack exporter remains owned");
+        if !export.terminal_is_empty() {
+            let before = cx.retained_progress();
+            export.close(cx)?;
+            let progress = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?;
+            return Ok(Step::Pending { progress });
+        }
+        let demand = OriginalSnapshotPackExport::boxed_release_demands();
+        let step = semio_framework_job::close_original_retained_step(cx, demand, |_| {
+            self.pack_export = None;
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() };
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(progress)), work: 1 }
+        })?;
+        Ok(match step { Step::Complete { progress } => Step::Pending { progress }, step => step })
+    }
+
+    fn decode_synchronous(&self) -> Result<E::Snapshot, MediaError> {
+        let Some(NaturalFileDecodeOwner::Synchronous(bytes)) = self.decoder.as_ref() else {
+            return Err(MediaError::Payload(self.port.clone(), "natural-file synchronous decoder lost its byte owner".into()));
+        };
+        E::decode_natural_file(bytes)
     }
 
     fn admit_controlled_progress(&mut self, progress: NaturalFileDecodeProgress, complete: bool, context: &semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
@@ -184,7 +276,9 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
-        self.closing=true;let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
+        self.closing=true;
+        if self.pack_export.is_some() { return self.close_pack_export(cx); }
+        let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
         let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{self.pending=None;self.close_owned_turn(effect)})?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
@@ -192,7 +286,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(body)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.pending_bytes.is_none()&&self.pending_media_value.is_none()&&self.pending_media_text.is_none()&&self.pending_port.is_none()&&self.outcomes.terminal_is_empty()}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.pending_snapshot.is_none()&&self.pack_export.is_none()&&self.verified_pack.is_none()&&self.pending_genesis.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.pending_bytes.is_none()&&self.pending_media_value.is_none()&&self.pending_media_text.is_none()&&self.pending_port.is_none()&&self.outcomes.terminal_is_empty()}
 }
 
 impl<E: ArtifactEditor> NaturalFileImportJob<E> {
@@ -239,6 +333,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
                         cursor.advance(cx)
                     };
                     match step {
+                        Ok(NaturalFileDecodeStep::Yield) => return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                         Ok(NaturalFileDecodeStep::Progress(progress)) => {
                             match self.admit_controlled_progress(progress, false, cx) {
                                 Ok(()) => self.checkpoint(),
@@ -246,10 +341,10 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
                             }
                         }
                         Ok(NaturalFileDecodeStep::Complete { snapshot, progress }) => {
+                            self.pending_snapshot = Some(snapshot);
                             match self.admit_controlled_progress(progress, true, cx) {
                                 Ok(()) => {
-                                    self.emit = Some(document_reference_load_emit(&snapshot, E::DOCUMENT_SCHEMA).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())));
-                                    self.stage = NaturalFileImportStage::Publish;
+                                    self.stage = NaturalFileImportStage::Encode;
                                     self.checkpoint();
                                 }
                                 Err(error) => self.fail(&error.message),
@@ -268,18 +363,51 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
                     return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
                 match self.decode_synchronous() {
-                    Ok(emit) => self.emit = Some(emit),
+                    Ok(snapshot) => {
+                        self.pending_snapshot = Some(snapshot);
+                        self.stage = NaturalFileImportStage::Encode;
+                    }
                     Err(error) => {
-                        self.fail(&error.message);
-                        return Ok(None);
+                        self.emit = Some(Err(Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())));
+                        self.stage = NaturalFileImportStage::Publish;
                     }
                 }
                 cx.consume_fuel(units as u64);
+                self.checkpoint();
+            }
+            NaturalFileImportStage::Encode => {
+                cx.set_stage("natural-file-import-encode");
+                let snapshot = self.pending_snapshot.as_ref().ok_or_else(|| invariant("natural-file import lost its decoded snapshot"))?;
+                if snapshot.native_pack_source().is_some() {
+                    let before = cx.fuel_remaining();
+                    if self.advance_pack_export(cx)? { self.stage = NaturalFileImportStage::AdoptGenesis; }
+                    self.note_publication_work(before, cx);
+                    return Ok(None);
+                }
+                self.emit = Some(document_reference_load_emit(snapshot, E::DOCUMENT_SCHEMA)
+                    .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())));
+                cx.consume_fuel(1);
                 self.stage = NaturalFileImportStage::Publish;
                 self.checkpoint();
             }
+            NaturalFileImportStage::AdoptGenesis => {
+                cx.set_stage("natural-file-import-adopt-genesis");
+                let before = cx.fuel_remaining();
+                if self.adopt_genesis(cx)? { self.stage = NaturalFileImportStage::Publish; }
+                if self.stage == NaturalFileImportStage::Publish || cx.fuel_remaining() < before {
+                    self.note_publication_work(before, cx);
+                }
+            }
             NaturalFileImportStage::Publish => {
                 cx.set_stage("natural-file-import-publish");
+                if !self.completed && self.pending_genesis.is_some() {
+                    let completion = self.completion.as_ref().ok_or_else(|| invariant("natural-file import lost its genesis receiver"))?;
+                    if !completion.has_mounted_consumer() {
+                        self.fail("natural-file import completion consumer is absent");
+                        return Ok(None);
+                    }
+                    if !completion.complete_genesis_original(&mut self.pending_genesis, &mut self.completed, cx)? { return Ok(None); }
+                }
                 if !self.completed {
                     let Some(emit) = self.emit.take() else {
                         self.fail("natural-file import lost its decoded publication");
@@ -325,7 +453,7 @@ impl<E:ArtifactEditor> NaturalFileImportWork<E>{
  fn step_request<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
   use semio_framework_value::ValueRefusalKind;
   if self.job.is_none(){let bytes=size_of::<NaturalFileImportJob<E>>()+size_of::<ArtifactReservedToolInput>()+size_of::<ArtifactToolCompletion<EditorApp<E>>>();let g=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||g.maximum_items==0||g.maximum_depth==0||g.maximum_copy_bytes<bytes{return Ok(None)}let codec=E::natural_file_codec().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"natural-file work lost its declared codec"))?;let Some(ArtifactReservedToolInput::Media{port,media})=request.input.as_ref()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work requires its actual media source").into())};let MediaPayload::Intrinsic{schema,value:DslValue::Bytes(input)}=&media.payload else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work requires owned intrinsic bytes").into())};if port!=semio_plugin_decl_app::NATURAL_FILE_PORT||schema!=codec.format_kind||input.len()>request.contract.max_raw_wire_bytes{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"natural-file work source does not match its declared format or byte bound").into())}let byte_length=input.len();let Some(ArtifactReservedToolInput::Media{port,mut media})=request.input.take()else{unreachable!()};let MediaPayload::Intrinsic{value:DslValue::Bytes(source),..}=&mut media.payload else{unreachable!()};let source=std::mem::take(source);
-   self.job=Some(NaturalFileImportJob{port,media:Some(media),decoder:None,completion:Some(request.completion.clone()),emit:None,pending_completion_rejection:None,retirement:None,pending_bytes:Some(source),pending_media_value:None,pending_media_text:None,pending_port:None,contract:request.contract,byte_cursor:0,byte_length,decode_progress:Default::default(),stage:NaturalFileImportStage::Decode,completed:false,state:[0;17],fault:semio_plugin_decl_app::tool_contract::BoundedFaultText::new(),pending:None,outcomes:semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(None)
+   self.job=Some(NaturalFileImportJob{port,media:Some(media),decoder:None,completion:Some(request.completion.clone()),emit:None,pending_completion_rejection:None,retirement:None,pending_snapshot:None,pack_export:None,verified_pack:None,pending_genesis:None,publication_work:0,pending_bytes:Some(source),pending_media_value:None,pending_media_text:None,pending_port:None,contract:request.contract,byte_cursor:0,byte_length,decode_progress:Default::default(),stage:NaturalFileImportStage::Decode,completed:false,state:[0;17],fault:semio_plugin_decl_app::tool_contract::BoundedFaultText::new(),pending:None,outcomes:semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(None)
   }
    let job=self.job.as_mut().unwrap();if job.decoder.is_none(){if E::admit_natural_file_decode_owner(&mut job.pending_bytes,job.contract,&mut job.decoder,cx)?&&matches!(job.decoder,Some(NaturalFileDecodeOwner::Synchronous(_))){job.stage=NaturalFileImportStage::Account;}return Ok(None)}job.step_original(cx)
  }
@@ -334,8 +462,14 @@ impl<E:ArtifactEditor> NaturalFileImportWork<E>{
 impl<E:ArtifactEditor> NaturalFileImportJob<E>{
     fn close_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         use semio_framework_value::retirement::owned_retirement_birth_bytes;
+        if let Some(export) = self.pack_export.as_ref() {
+            return if export.terminal_is_empty() { Ok(OriginalSnapshotPackExport::boxed_release_demands()) } else { export.close_demands() };
+        }
         if !self.outcomes.terminal_is_empty(){return self.outcomes.close_demands();}
         if let Some(ticket)=self.retirement.as_ref(){return semio_framework_value::factory_ticket_demands(ticket,body);}
+        if self.pending_genesis.is_some() { return Ok(RetirementDemand { capacity_bytes: owned_retirement_birth_bytes::<AdmittedArtifactGenesis<E::Snapshot>>(), depth: 1, ..Default::default() }); }
+        if self.verified_pack.is_some() { return Ok(RetirementDemand { capacity_bytes: owned_retirement_birth_bytes::<OriginalSnapshotPackOutput>(), depth: 1, ..Default::default() }); }
+        if self.pending_snapshot.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<E::Snapshot>(),depth:1,..Default::default()});}
         if self.pending_bytes.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<Vec<u8>>(),depth:1,..Default::default()});}
         if self.pending_media_value.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<(String,DslValue)>(),depth:1,..Default::default()});}
         if self.pending_media_text.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<(String,String)>(),depth:1,..Default::default()});}
@@ -356,6 +490,9 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         let grant=effect.grant();let body=grant.maximum_copy_bytes;
         if !self.outcomes.terminal_is_empty(){let step=self.outcomes.close_step(effect);return settled(step,effect.performed_work())}
         if self.retirement.is_some(){return close_factory_ticket(&mut self.retirement,body,effect)}
+        if self.pending_genesis.is_some() { return admit(&mut self.pending_genesis, &mut self.retirement, effect); }
+        if self.verified_pack.is_some() { return admit(&mut self.verified_pack, &mut self.retirement, effect); }
+        if self.pending_snapshot.is_some(){return admit(&mut self.pending_snapshot,&mut self.retirement,effect)}
         if self.pending_bytes.is_some(){return admit(&mut self.pending_bytes,&mut self.retirement,effect)}
         if self.pending_media_value.is_some(){return admit(&mut self.pending_media_value,&mut self.retirement,effect)}
         if self.pending_media_text.is_some(){return admit(&mut self.pending_media_text,&mut self.retirement,effect)}

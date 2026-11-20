@@ -232,5 +232,36 @@ export function registerActivationLeaseTests(kit: ShardClientSettlementTestKit):
       await retireFixtureInstance(worker, close);
       client.dispose(actorId);
     });
+    it("cuts a batch at the first patch-producing event and crosses the rest, in order, on the next crossings", async () => {
+      const row = await fixture();
+      const { client, workers } = harness(1);
+      const worker = workers[0]!;
+      const lease = await activate(client, worker, row.actorId);
+      const event = (n: number) => ({ kind: "message", payload: { n } }) as never;
+      const answer = (patches: number) => ({ uiPatches: Array.from({ length: patches }, () => ({ surface: "s" })), uiPatchReceipt: null, effects: [], presence: [], status: "idle", nextWake: null, lifecycleReceipt: null, commandIngress: { tag: "idle" } });
+      const crossings = () => worker.sent.filter((message) => (message as { kind: string }).kind === "turn") as unknown as { requestId: string; events: { payload: { n: number } }[] }[];
+      const respond = async (value: unknown) => { await flushAdmission(); worker.deliver({ kind: "result", requestId: crossings().at(-1)!.requestId, ok: true, value }); };
+      const first = lease.turn([event(1), event(2), event(3), event(4)], BUDGET) as Promise<{ status: unknown; uiPatches: unknown[]; deferredEvents?: number }>;
+      await respond(answer(0));
+      await respond(answer(1));
+      const firstResult = await first;
+      expect(crossings().map((crossing) => crossing.events.map((e) => e.payload.n))).toEqual([[1], [2]]);
+      expect(firstResult.uiPatches).toHaveLength(1);
+      expect(firstResult.status).toBe("more-work");
+      expect(firstResult.deferredEvents).toBe(2);
+      const second = lease.turn([], BUDGET) as Promise<{ status: unknown; uiPatches: unknown[] }>;
+      await respond(answer(1));
+      const secondResult = await second;
+      expect(crossings().map((crossing) => crossing.events.map((e) => e.payload.n))).toEqual([[1], [2], [3]]);
+      expect(secondResult.status).toBe("more-work");
+      const third = lease.turn([event(5)], BUDGET) as Promise<{ status: unknown }>;
+      await respond(answer(0));
+      await respond(answer(0));
+      const thirdResult = await third;
+      expect(crossings().map((crossing) => crossing.events.map((e) => e.payload.n))).toEqual([[1], [2], [3], [4], [5]]);
+      expect(thirdResult.status).toBe("idle");
+      expect((thirdResult as { deferredEvents?: number }).deferredEvents).toBe(0);
+      client.dispose(row.actorId);
+    });
   });
 }

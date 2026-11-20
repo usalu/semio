@@ -8,11 +8,14 @@ import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{graphPlatformV1,type GraphStateV1}from"../🟦️.ts";
 import{recordPlatformV1}from"../🌍️platform-class/🟦️.ts";
 import{bundleKeysV1,closureDocumentHeadV1,consultedHoldV1,dependencyGenerationV1,hostOfRootV1,localBundleV1,localRecordV1,neutralRecordV1,packBundleV1,packRecordV1,portableRowsPolicyV1,unpackBundleV1,unpackRecordV1,type ClosureBundleV1,type ConsultedKeysV1,type ObservationRowV1,type PackedClosureV1,type PackedRecordV1,type PortableRecordV1}from"./🧳️portable/🟦️.ts";
-import{decideGraphEntryV1,fetchGraphEntryV1,graphEntryKeyV1,graphFleetClientV1,neutralizeRootV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,tryGraphEntryV1,type GraphDeferredV1,type GraphEntryNoteV1,type GraphFleetClientV1,type GraphHoldV1,type GraphRefusalV1}from"../🛰️exchange/🟦️.ts";
+import{decideGraphEntryV1,fetchGraphEntryV1,graphEntryKeyV1,graphFleetClientV1,neutralizeRootV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,tryGraphEntryV1,type GraphDeferredV1,type GraphEntryNoteV1,type GraphFleetClientV1,type GraphHoldV1,type GraphLookupFaultV1,type GraphRefusalV1}from"../🛰️exchange/🟦️.ts";
 import{FRESH_POLICY_V1,fileDigestV1,freshVerdictV1,refreshStateV1}from"./🌱️fresh/🟦️.ts";
 import{unsentDropV1,unsentListV1,unsentPruneV1,unsentPutV1,unsentReadV1}from"./📮️unsent/🟦️.ts";
 import{graphFleetSettingsV1}from"../🧶️nx/🟦️.ts";
 import{remoteCacheFetchV1}from"../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import{workspaceClosurePortV1,type ClosurePortV1}from"../../🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts";
+import schemaLeaves from"./🍃️leaves/🧬️schema/🔣️.json"with{type:"json"};
+import{adoptLeavesV1,leafPortWithDirectPutV1,leafSourcesV1,leafWidthV1}from"./🍃️leaves/🟦️.ts";
 
 type Environment=Readonly<Record<string,string|undefined>>;
 /** 📦️ What the inference seam hands over for one project: where its record lives, which project it is, the key text it was computed under, and how to read and write the record locally. */
@@ -51,13 +54,16 @@ async function rowHoldsOfV1():Promise<((row:ObservationRowV1)=>boolean)|undefine
 export type ProjectGateV1=Readonly<{seeded:boolean;deferred?:boolean;publish():void;abandon():Promise<void>}>;
 /** 🎯️ The answer of a pulled claim: the record is stored or held by another machine (leave it), or this machine holds it and `publish` stores the finished record (true when stored) or `abandon` gives the claim back. */
 export type ProjectClaimV1=Readonly<{state:"stored"|"fault"|"refused"}>|Readonly<{state:"held";by:string}>|Readonly<{state:"granted";publish():Promise<boolean>;abandon():Promise<void>;why():string;code():string;deterministic():boolean;digest:string}>;
-export type ProjectFleetPortV1=Readonly<{producers():Readonly<Record<string,number>>;claim(info:ProjectRecordInfoV1):Promise<ProjectClaimV1>;gate(info:ProjectRecordInfoV1):Promise<ProjectGateV1>;offer(info:ProjectRecordInfoV1):Promise<void>;resend(options?:Readonly<{force?:boolean}>):Promise<number>;flush():Promise<string>;stats():Readonly<Record<"seeded"|"published"|"offered"|"waited"|"computed"|"closures"|"refused"|"reinferred"|"diverged"|"resent"|"kept"|"shed"|"refreshed"|"retried",number>>}>;
+type GatePhaseV1=keyof typeof schema.definitions.GateTimings.properties;
+type GateTimingV1={started:number;active:number;milliseconds:number};
+type GateTimingsV1=Record<GatePhaseV1,GateTimingV1>;
+export type ProjectFleetPortV1=Readonly<{producers():Readonly<Record<string,number>>;claim(info:ProjectRecordInfoV1):Promise<ProjectClaimV1>;gate(info:ProjectRecordInfoV1):Promise<ProjectGateV1>;offer(info:ProjectRecordInfoV1):Promise<void>;resend(options?:Readonly<{force?:boolean}>):Promise<number>;flush():Promise<string>;stats():Readonly<Record<"seeded"|"published"|"offered"|"waited"|"computed"|"closures"|"refused"|"reinferred"|"diverged"|"resent"|"kept"|"shed"|"refreshed"|"retried"|"leaves"|"incomplete",number>&{gateTimings:GateTimingsV1}>}>;
 
 /** 🔍️ What a look of a reader found for one owner in the fleet cache: `fetched` (the record was taken into the local store, the reader checks it against its tree), `miss` (nothing is stored), `fault` (the cache did not answer). */
-export type TakeLookV1={outcome?:"fetched"|"miss"|"fault"};
+export type TakeLookV1={outcome?:"fetched"|"miss"|"fault"|"incomplete";fault?:GraphLookupFaultV1;readonly signal?:AbortSignal};
 const takeScopes=new AsyncLocalStorage<TakeLookV1>();
 /** 🔍️ Runs `work` as a look and nothing else: inside it the `gate` of the port only looks the record up in the fleet cache and takes it when it is there; it never claims the computation, never waits for another machine and never publishes. `look` tells what the gate found, so the reader can tell a taken record from a missing, a stale and an unanswered one. */
-export function runTakeLookV1<T>(work:(look:TakeLookV1)=>Promise<T>):Promise<T>{const look:TakeLookV1={};return takeScopes.run(look,()=>work(look));}
+export function runTakeLookV1<T>(work:(look:TakeLookV1)=>Promise<T>,signal?:AbortSignal):Promise<T>{const look:TakeLookV1={signal};return takeScopes.run(look,()=>work(look));}
 /** 🔍️ What the gate found in the look that is running now (undefined outside of a look or before the gate was asked). */
 export function takeLookOutcomeV1():TakeLookV1["outcome"]{return takeScopes.getStore()?.outcome;}
 
@@ -83,10 +89,33 @@ export function projectRecordStateV1(input:Readonly<{root:string;fleet:string;ke
 }
 
 /** 🌐️ The port of one process: it takes a missing project record from the fleet cache, claims the computation of a record nobody has (so eight machines split the projects), stores finished records and offers the records that were computed earlier. Every fault ends in "compute locally". `undefined` when no fleet cache is configured. */
-export function createProjectFleetPortV1(input:Readonly<{root:string;environment:Environment;busy?():boolean;strong?:boolean;client?:GraphFleetClientV1;owner?:string;platform?:string;providers?():Promise<readonly string[]>;generation?(root:string):string|undefined;say?(line:string):void;sleep?(milliseconds:number):Promise<void>;random?():number;now?():number;unsentDirectory?:string;policy?:typeof RETRY}>):ProjectFleetPortV1|undefined{
+export function createProjectFleetPortV1(input:Readonly<{root:string;environment:Environment;busy?():boolean;strong?:boolean;client?:GraphFleetClientV1;owner?:string;platform?:string;providers?():Promise<readonly string[]>;generation?(root:string):string|undefined;say?(line:string):void;sleep?(milliseconds:number):Promise<void>;random?():number;now?():number;unsentDirectory?:string;policy?:typeof RETRY;leaves?:ClosurePortV1|undefined}>):ProjectFleetPortV1|undefined{
  const settings=input.client===undefined?graphFleetSettingsV1(input.root,input.environment):undefined;
  if(input.client===undefined&&settings===undefined)return undefined;
- const client=input.client??graphFleetClientV1(settings!,{fetch:remoteCacheFetchV1(input.environment,{root:input.root})}),platform=input.platform??graphPlatformV1(),owner=input.owner??`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`,pending=new Set<Promise<unknown>>(),counts={seeded:0,published:0,offered:0,waited:0,computed:0,closures:0,refused:0,reinferred:0,diverged:0,resent:0,kept:0,shed:0,refreshed:0,retried:0},host=hostOfRootV1(input.root),retry=input.policy??RETRY,clock=input.now??Date.now,pause=input.sleep??((milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds))),draw=input.random??Math.random,unsentDirectory=input.unsentDirectory??machinePathV1(input.root,".cache","f",retry.unsent.directory);
+ const client=input.client??graphFleetClientV1(settings!,{fetch:remoteCacheFetchV1(input.environment,{root:input.root})}),platform=input.platform??graphPlatformV1(),owner=input.owner??`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`,pending=new Set<Promise<unknown>>(),counts={seeded:0,published:0,offered:0,waited:0,computed:0,closures:0,refused:0,reinferred:0,diverged:0,resent:0,kept:0,shed:0,refreshed:0,retried:0,leaves:0,incomplete:0},host=hostOfRootV1(input.root),retry=input.policy??RETRY,clock=input.now??Date.now,pause=input.sleep??((milliseconds:number)=>new Promise<void>(done=>setTimeout(done,milliseconds))),draw=input.random??Math.random,unsentDirectory=input.unsentDirectory??machinePathV1(input.root,".cache","f",retry.unsent.directory);
+ const gatePhases=Object.keys(schema.definitions.GateTimings.properties) as GatePhaseV1[];
+ const gateTiming=Object.fromEntries(gatePhases.map(phase=>[phase,{started:0,active:0,milliseconds:0}])) as GateTimingsV1;
+ const timedGate=async<T>(phase:GatePhaseV1,run:()=>Promise<T>):Promise<T>=>{
+  const row=gateTiming[phase],started=performance.now();
+  row.started++;row.active++;
+  try{return await run();}finally{row.active--;row.milliseconds+=performance.now()-started;}
+ };
+ const gateClient:GraphFleetClientV1={
+  get settings(){return client.settings;},
+  usable:()=>client.usable(),
+  claimsUsable:()=>client.claimsUsable(),
+  getResult:(...args)=>timedGate("metadata",()=>client.getResult(...args)),
+  getBlob:(...args)=>timedGate("blob",()=>client.getBlob(...args)),
+  hasBlob:(...args)=>client.hasBlob(...args),
+  putBlob:(...args)=>client.putBlob(...args),
+  putResult:(...args)=>client.putResult(...args),
+  claim:(...args)=>timedGate("claim",()=>client.claim(...args)),
+  renew:(...args)=>client.renew(...args),
+  release:(...args)=>client.release(...args),
+  await:(...args)=>timedGate("peerWait",()=>client.await(...args)),
+ };
+ const leafPort=input.leaves??((base:ClosurePortV1|undefined)=>base===undefined?undefined:leafPortWithDirectPutV1(base))(workspaceClosurePortV1(input.root)),incompleteDigests=new Set<string>(),leafWidth=leafWidthV1();
+ const leavesOf=(documents:readonly Readonly<{name:string;bytes:Uint8Array}>[])=>{const record=documents.find(row=>row.name==="record");return leafPort===undefined||record===undefined?{}:{leaves:leafSourcesV1(leafPort,Buffer.from(record.bytes).toString("utf8")),leafWidth};};
  const say=input.say??((line:string)=>{try{process.stderr.write(line+"\n");}catch{}}),language=(input.environment.SEMIO_LANGUAGE==="de"?"de":"en") as "en"|"de";
  const decided=()=>{if((counts.seeded+counts.computed)%50===0)say(schema.definitions.Texts.const[language].progress.replace(/\{(\w+)\}/gu,(_all,name:string)=>String((counts as Record<string,number>)[name]??0)));};
  const stateOf=(info:ProjectRecordInfoV1)=>projectRecordStateV1({root:input.root,fleet:info.fleet,keyText:info.keyText,platform});
@@ -123,18 +152,27 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
  const heldOf=(info:ProjectRecordInfoV1,held:Map<string,string>)=>async(entry:Readonly<{path:string;hash:string}>)=>{
   const named=/^closure-([0-9a-f]{64})\.br$/u.exec(entry.path);
   if(named===null||info.closures?.held===undefined)return false;
-  try{const local=await info.closures.held(input.root,entry.hash,named[1]!);if(local===undefined)return false;held.set(named[1]!,local);return true;}catch{return false;}
+   try{const local=await timedGate("held",()=>info.closures!.held!(input.root,entry.hash,named[1]!));if(local===undefined)return false;held.set(named[1]!,local);return true;}catch{return false;}
  };
- const recipeMemo=new Map<string,Readonly<{recipe:unknown;owned:boolean}>>(),importing=new Map<string,Promise<number>>(),waiting:(()=>void)[]=[];let free=CLOSURE_WINDOW;
- const within=async<T>(work:()=>Promise<T>):Promise<T>=>{if(free===0)await new Promise<void>(go=>waiting.push(go));else free--;try{return await work();}finally{const next=waiting.shift();if(next!==undefined)next();else free++;}};
+ const recipeMemo=new Map<string,Readonly<{recipe:unknown;owned:boolean}>>(),importing=new Map<string,Readonly<{work:Promise<number>;signal?:AbortSignal}>>(),waiting:(()=>void)[]=[];let free=CLOSURE_WINDOW;
+ const within=async<T>(work:()=>Promise<T>,signal?:AbortSignal):Promise<T>=>{
+  signal?.throwIfAborted();
+  if(free===0)await new Promise<void>((resolve,reject)=>{
+   const grant=()=>{signal?.removeEventListener("abort",cancel);resolve();};
+   const cancel=()=>{const index=waiting.indexOf(grant);if(index>=0)waiting.splice(index,1);reject(signal?.reason);};
+   waiting.push(grant);signal?.addEventListener("abort",cancel,{once:true});
+  });else free--;
+  try{signal?.throwIfAborted();return await work();}finally{const next=waiting.shift();if(next!==undefined)next();else free++;}
+ };
  const laneOf=(decision:Readonly<{documents:readonly Readonly<{name:string;bytes:Uint8Array}>[];deferred?:ReadonlyMap<string,GraphDeferredV1>}>,sources:ReadonlyMap<string,string>)=>{
   const lane=new Map<string,GraphDeferredV1>(decision.deferred??[]);
   for(const row of decision.documents)if(isClosureDocument(row.name))lane.set(row.name,{hash:sources.get(row.name),size:row.bytes.length,read:async()=>row});
   return new Map([...lane].sort((left,right)=>left[0]<right[0]?-1:1));
  };
- const recipesOf=async(lane:ReadonlyMap<string,GraphDeferredV1>)=>{
+ const recipesOf=async(lane:ReadonlyMap<string,GraphDeferredV1>,signal?:AbortSignal)=>{
   const recipes=new Map<string,unknown>();let owned=false;
   for(const [name,entry] of lane){
+   signal?.throwIfAborted();
    const known=entry.hash===undefined?undefined:recipeMemo.get(entry.hash);
    if(known!==undefined){recipes.set(name.slice(8),known.recipe);owned||=known.owned;continue;}
    await within(async()=>{
@@ -145,40 +183,60 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
      recipes.set(name.slice(8),head.recipe);owned||=head.owned;
      if(entry.hash!==undefined){recipeMemo.delete(entry.hash);recipeMemo.set(entry.hash,{recipe:head.recipe,owned:head.owned});while(recipeMemo.size>MAXIMUM_RECIPES)recipeMemo.delete(recipeMemo.keys().next().value!);}
     }catch{}
-   });
+   },signal);
   }
   return{recipes,owned};
  };
- const takeClosures=async(info:ProjectRecordInfoV1,lane:ReadonlyMap<string,GraphDeferredV1>,recipes:ReadonlyMap<string,unknown>,held:ReadonlyMap<string,string>,keys:ReadonlyMap<string,string>,context:Readonly<{providers:readonly string[];generation:string|undefined}>)=>{
+ const takeClosures=async(info:ProjectRecordInfoV1,lane:ReadonlyMap<string,GraphDeferredV1>,recipes:ReadonlyMap<string,unknown>,held:ReadonlyMap<string,string>,keys:ReadonlyMap<string,string>,context:Readonly<{providers:readonly string[];generation:string|undefined}>,signal?:AbortSignal)=>{
   if(info.closures===undefined)return;
   try{
    const all=new Map([...keys,...held,...bundleKeysV1([...recipes].map(([recipeKey,recipe])=>({recipeKey,bundle:{recipe} as unknown as ClosureBundleV1})),host,"local")]);
    for(const [name,entry] of lane){
+    signal?.throwIfAborted();
     const hash=entry.hash,flying=hash===undefined?undefined:importing.get(hash);
-    if(flying!==undefined){await flying.catch(()=>undefined);continue;}
+    if(flying!==undefined&&flying.signal===signal){await flying.work.catch(()=>undefined);continue;}
     const work=within(async()=>{
      const document=await entry.read();if(document===undefined)return 0;
+     signal?.throwIfAborted();
      let neutral:Readonly<{recipeKey:string;bundle:ClosureBundleV1}>;
      try{neutral={recipeKey:name.slice(8),bundle:unpackBundleV1(JSON.parse(view(document.bytes).toString("utf8")) as PackedClosureV1)};}catch{return 0;}
      const moved=localBundleV1(neutral,host,all,context);
      return moved===undefined?0:await info.closures!.import(input.root,[{...moved,...hash===undefined?{}:{source:hash},neutral:name.slice(8)}]);
-    });
-    if(hash!==undefined)importing.set(hash,work);
-    try{counts.closures+=await work;}catch{}finally{if(hash!==undefined)importing.delete(hash);}
+    },signal);
+    if(hash!==undefined)importing.set(hash,{work,signal});
+    try{counts.closures+=await work;}catch{}finally{if(hash!==undefined&&importing.get(hash)?.work===work)importing.delete(hash);}
    }
   }catch{}
  };
-const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readonly<{documents:readonly Readonly<{name:string;bytes:Uint8Array}>[];deferred?:ReadonlyMap<string,GraphDeferredV1>;note:GraphEntryNoteV1;via:string}>,held:Map<string,string>):Promise<boolean>=>{
-  const document=decision.documents.find(row=>row.name==="record");
+ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readonly<{documents:readonly Readonly<{name:string;bytes:Uint8Array}>[];deferred?:ReadonlyMap<string,GraphDeferredV1>;note:GraphEntryNoteV1;via:string}>,held:Map<string,string>,signal?:AbortSignal):Promise<boolean>=>{
+  const document=decision.documents.find(row=>row.name==="record"),look=takeScopes.getStore();
+  if(document===undefined&&look!==undefined)look.fault="record";
   try{
    if(document!==undefined){
-    const text=Buffer.from(document.bytes).toString("utf8"),neutral=unpackRecordV1(JSON.parse(text) as PackedRecordV1),sources=new Map(decision.note.documents.flatMap(row=>row.name.endsWith(".br")?[[row.name.slice(0,-3),row.hash] as const]:[])),lane=info.closures===undefined?new Map<string,GraphDeferredV1>():laneOf(decision,sources),found=await recipesOf(lane);
+    let neutral:ReturnType<typeof unpackRecordV1>;
+    try{neutral=unpackRecordV1(JSON.parse(Buffer.from(document.bytes).toString("utf8")) as PackedRecordV1);}catch(error){if(look!==undefined)look.fault="payload";throw error;}
+    const sources=new Map(decision.note.documents.flatMap(row=>row.name.endsWith(".br")?[[row.name.slice(0,-3),row.hash] as const]:[])),lane=info.closures===undefined?new Map<string,GraphDeferredV1>():laneOf(decision,sources),found=await recipesOf(lane,signal);
+    signal?.throwIfAborted();
     const owned=decision.documents.some(row=>view(row.bytes).includes(portableRowsPolicyV1.ownerToken))||found.owned,context={providers:owned?await providersOf():[],generation:(input.generation??dependencyGenerationV1)(input.root)},taken=localRecordV1(neutral,host,context);
-    await takeClosures(info,lane,found.recipes,held,taken.keys,context);
+    await takeClosures(info,lane,found.recipes,held,taken.keys,context,signal);
+    signal?.throwIfAborted();
+    const listed=decision.note.leaves??[];
+    if(listed.length>0&&leafPort!==undefined){
+      const adopted=await adoptLeavesV1({client:gateClient,port:leafPort,leaves:listed,width:leafWidth,signal});
+     signal?.throwIfAborted();
+     counts.leaves+=adopted.fetched;
+     if(adopted.missing.length>0){
+      counts.incomplete++;incompleteDigests.add(state.digest);
+      const store=takeScopes.getStore();if(store!==undefined)store.outcome="incomplete";
+      say((["en","de"] as const).map(tongue=>schemaLeaves.definitions.Texts.const[tongue].incomplete.replace("{name}",info.fleet).replace("{count}",String(adopted.missing.length)).replace("{leaves}",adopted.missing.slice(0,3).map(leaf=>leaf.hash.slice(0,12)).join(", "))).join(" | "));
+      return false;
+     }
+    }
     const ok=await info.import(taken.record);
+    signal?.throwIfAborted();
     if(ok){counts.seeded++;{const origin=decision.note.producer.split(":")[0]??"";if(origin!=="")producers[origin]=(producers[origin]??0)+1;}decided();if(decision.via==="wait")counts.waited++;mark(info,state);return true;}
    }
-  }catch{counts.refused++;}
+  }catch{signal?.throwIfAborted();counts.refused++;}
   return false;
  };
  const freshDirectory=machinePathV1(input.root,".cache","f",FRESH_POLICY_V1.directory),verdicts=new Map<string,Readonly<{fresh:boolean;atMs:number}>>();
@@ -228,7 +286,7 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
  const send=async(state:GraphStateV1,documents:readonly Readonly<{name:string;bytes:Uint8Array}>[],start:GraphHoldV1|undefined,attempts:number,head:boolean=false):Promise<Readonly<{stored:true;refusal?:GraphRefusalV1}>|Readonly<{stored:false;refusal:GraphRefusalV1}>>=>{
   let hold=start,last:GraphRefusalV1|undefined;
   for(let attempt=0;attempt<attempts;attempt++){
-   const outcome=await publishGraphEntryOutcomeV1({client,state,owner,documents,keepHold:true,...(head?{head:true}:{}),...(hold===undefined?{}:{hold})});
+   const outcome=await publishGraphEntryOutcomeV1({client,state,owner,documents,...leavesOf(documents),keepHold:true,...(head?{head:true}:{}),...(hold===undefined?{}:{hold})});
    if(outcome.stored){await hold?.release().catch(()=>undefined);return{stored:true};}
    last=outcome.refusal;
    if(last.stored){await hold?.release().catch(()=>undefined);counts.diverged++;return{stored:true,refusal:last};}
@@ -246,7 +304,7 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
   return{stored:false,refusal:last!};
  };
  const publisher=(info:ProjectRecordInfoV1,state:GraphStateV1,hold:GraphHoldV1|undefined,seeded:boolean=false)=>{let done=false;return{
-  publish(){if(done)return;done=true;if(seeded)counts.reinferred++;void track((async()=>{const documents=await documentsOf(info);if(documents===undefined){await hold?.release().catch(()=>undefined);return false;}const stored=await publishGraphEntryV1({client,state,owner,documents,...(seeded?{head:true}:{}),...(hold===undefined?{}:{hold})});if(stored){counts.published++;mark(info,state);}return stored;})());},
+  publish(){if(done)return;done=true;if(seeded)counts.reinferred++;void track((async()=>{const documents=await documentsOf(info);if(documents===undefined){await hold?.release().catch(()=>undefined);return false;}const stored=await publishGraphEntryV1({client,state,owner,documents,...leavesOf(documents),...(seeded?{head:true}:{}),...(hold===undefined?{}:{hold})});if(stored){counts.published++;mark(info,state);}return stored;})());},
   async abandon(){if(done)return;done=true;await hold?.release().catch(()=>undefined);}};};
  return Object.freeze({
   producers:()=>({...producers}),
@@ -272,7 +330,7 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
      const result=await send(state,documents,hold,retry.attempts,head);
      if(result.stored){if(result.refusal===undefined)counts.published++;else{code=result.refusal.code;why=explain(result.refusal,documents);}mark(info,state);return true;}
      const refusal=result.refusal;code=refusal.code;sure=refusal.deterministic;why=explain(refusal,documents);
-     if(!refusal.deterministic&&!refusal.stored&&refusal.code!=="no-upload"&&unsentPutV1(unsentDirectory,{state,owner,documents,cause:why,attempts:retry.attempts,now:clock()},retry.unsent)){counts.kept++;why+=" - kept on this machine for a later try / auf dieser Maschine für einen späteren Versuch behalten";}
+     if(!refusal.deterministic&&!refusal.stored&&refusal.code!=="no-upload"&&refusal.code!=="leaf-missing"&&unsentPutV1(unsentDirectory,{state,owner,documents,cause:why,attempts:retry.attempts,now:clock()},retry.unsent)){counts.kept++;why+=" - kept on this machine for a later try / auf dieser Maschine für einen späteren Versuch behalten";}
      return false;
     })());return stored;},
     async abandon(){if(done)return;done=true;await hold.release().catch(()=>undefined);}};
@@ -280,17 +338,17 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
   async gate(info){
    const held=new Map<string,string>(),state=stateOf(info),look=takeScopes.getStore(),nothing={publish(){},async abandon(){}};
    if(look!==undefined){
-    const found=await fetchGraphEntryV1(client,state,heldOf(info,held),info.closures===undefined?undefined:isClosureDocument);
+      const found=await fetchGraphEntryV1(gateClient,state,heldOf(info,held),info.closures===undefined?undefined:isClosureDocument,look.signal,reason=>{look.fault=reason;});
     if(found===undefined){look.outcome="miss";return{seeded:false,...nothing};}
     if(found==="fault"){look.outcome="fault";return{seeded:false,...nothing};}
     look.outcome="fetched";
-    return{seeded:await seedFrom(info,state,{documents:found.documents,deferred:found.deferred,note:found.note,via:"cache"},held),...nothing};
+     return{seeded:await timedGate("seed",()=>seedFrom(info,state,{documents:found.documents,deferred:found.deferred,note:found.note,via:"cache"},held,look.signal)),...nothing};
    }
-   const decide=():Promise<Awaited<ReturnType<typeof decideGraphEntryV1>>|Readonly<{outcome:"skip"}>>=>decideGraphEntryV1({client,state,owner,skip:heldOf(info,held),...input.busy===undefined?{}:{busy:input.busy},...input.strong===undefined?{}:{strong:input.strong},...info.closures===undefined?{}:{defer:isClosureDocument}});
+    const decide=():Promise<Awaited<ReturnType<typeof decideGraphEntryV1>>|Readonly<{outcome:"skip"}>>=>decideGraphEntryV1({client:gateClient,state,owner,skip:heldOf(info,held),...input.busy===undefined?{}:{busy:input.busy},...input.strong===undefined?{}:{strong:input.strong},...info.closures===undefined?{}:{defer:isClosureDocument}});
    let decision=await decide();
    if(decision.outcome==="skip")return{seeded:false,deferred:true,...nothing};
-   for(let attempt=0;attempt<2&&decision.outcome==="compute"&&decision.reason==="fault";attempt++){counts.retried++;await pause(projectPublishWaitV1(attempt,client.breakerRemainingMilliseconds?.()??0,draw(),retry));decision=await decide();}
-   if(decision.outcome==="hit"){const seeded=await seedFrom(info,state,decision,held);return{seeded,...publisher(info,state,undefined,seeded)};}
+    for(let attempt=0;attempt<2&&decision.outcome==="compute"&&decision.reason==="fault";attempt++){counts.retried++;await timedGate("retry",()=>pause(projectPublishWaitV1(attempt,client.breakerRemainingMilliseconds?.()??0,draw(),retry)));decision=await decide();}
+    if(decision.outcome==="hit"){const hit=decision,seeded=await timedGate("seed",()=>seedFrom(info,state,hit,held));return{seeded,...publisher(info,state,undefined,seeded||incompleteDigests.delete(state.digest))};}
    counts.computed++;decided();
    return{seeded:false,...publisher(info,state,decision.hold)};
   },
@@ -301,7 +359,7 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
    try{if(existsSync(marker(info))&&readFileSync(marker(info),"utf8")===versionOf(info,state))return;}catch{}
    void track((async()=>{
     const documents=await documentsOf(info);if(documents===undefined)return false;
-    const stored=await publishGraphEntryV1({client,state,owner,documents});if(stored){counts.offered++;mark(info,state);}return stored;
+    const stored=await publishGraphEntryV1({client,state,owner,documents,...leavesOf(documents)});if(stored){counts.offered++;mark(info,state);}return stored;
    })().catch(()=>false));
   },
   async resend(options){
@@ -324,6 +382,6 @@ const seedFrom=async(info:ProjectRecordInfoV1,state:GraphStateV1,decision:Readon
    return sent;
   },
   async flush(){await Promise.allSettled([...pending]);const texts=schema.definitions.Texts.const;return(["en","de"] as const).map(language=>texts[language].summary.replace(/\{(\w+)\}/gu,(_all,name:string)=>String((counts as Record<string,number>)[name]??0))).join(" | ");},
-  stats:()=>Object.freeze({...counts}),
+   stats:()=>Object.freeze({...counts,gateTimings:Object.fromEntries(gatePhases.map(phase=>[phase,{...gateTiming[phase],milliseconds:Math.round(gateTiming[phase].milliseconds)}])) as GateTimingsV1}),
  });
 }

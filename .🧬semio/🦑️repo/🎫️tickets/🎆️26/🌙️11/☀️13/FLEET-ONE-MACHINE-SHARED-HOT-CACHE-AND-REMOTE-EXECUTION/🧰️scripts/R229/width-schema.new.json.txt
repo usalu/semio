@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Restore width of a cargo build whose units come from a cache",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "environment": "SEMIO_CARGO_RESTORE_WIDTH",
+        "defaultFactor": 1,
+        "maximumFactor": 4,
+        "maximumJobs": 16
+      }
+    },
+    "Width": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jobs", "slots", "factor"],
+      "properties": {
+        "jobs": {"type": "integer", "minimum": 1},
+        "slots": {"type": "integer", "minimum": 1},
+        "factor": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

@@ -44,15 +44,13 @@ pub(super) fn plan_world3d_pointer_leave(session_state: &WorldSessionState, sele
     let mut plan = WorldInteractionPlan::new(session_state.interaction_revision, generation);
     let controller = plan.push_string(&session_state.controller_id)?;
     let surface = plan.push_string(&session_state.surface_id)?;
-    if component_mode_active(selection_state) {
-        let mode = selection_state.hovered_component_mode.as_deref()?;
+    if let Some(mode) = selection_state.hovered_component_mode.as_deref() {
         let mode = plan.push_string(mode)?;
         let domain = plan.push_string(resolved_domain_id(session_state))?;
         let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), Some(surface), None, Some(domain), Some(mode), None, None, None], numbers: [0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] };
         return plan.push_action(action).then_some(plan);
     }
-    if session_state.active_utility == "brush" || (session_state.active_utility == "select" && selection_state.granularity == "vertex") {
-        selection_state.hovered_vortex_id.as_ref()?;
+    if selection_state.hovered_vortex_id.is_some() {
         let action = WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
         return plan.push_action(action).then_some(plan);
     }

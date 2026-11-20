@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "selectedHead", "closure"],
+    "properties": {
+      "name": { "type": "string", "minLength": 1 },
+      "selectedHead": { "enum": ["complete", "partial", "other-code", "manifest-mismatch"] },
+      "closure": { "enum": ["available", "missing", "unknown", "cancelled"] }
+    }
+  }
+}

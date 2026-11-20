@@ -1,0 +1,9 @@
+[
+  {"mode":"live-past-age","starts":1},
+  {"mode":"live-empty","starts":1},
+  {"mode":"late-release","starts":2},
+  {"mode":"abandoned","starts":2},
+  {"mode":"waiter-cancel","starts":1},
+  {"mode":"owner-timeout","starts":2},
+  {"mode":"restart","starts":1}
+]

@@ -20,6 +20,7 @@ testkit = ["semio-s-artifact-layout-layout-mutations-decisions/testkit", "semio-
 
 [dependencies]
 semio-s-artifact-layout-layout-mutations-decisions = { workspace = true }
+semio-s-artifact-layout-layout-mutations-fields = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -41,6 +42,10 @@ semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-job-testing-caller = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust" }
+semio-framework-job-context = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
@@ -55,3 +60,7 @@ semio-s-artifact-layout-layout-mutations-frames = { workspace = true, features =
 [[test]]
 name = "structure"
 path = "../../🧪️tests/🏗️structure/🦀️.rs"
+
+[[test]]
+name = "layout-mutation-laws"
+path = "../../🧪️tests/🍰️laws/🦀️.rs"

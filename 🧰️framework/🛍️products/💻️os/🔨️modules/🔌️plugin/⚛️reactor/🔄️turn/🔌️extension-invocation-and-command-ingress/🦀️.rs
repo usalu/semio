@@ -84,7 +84,7 @@ pub(super) fn close_exchange_owner<T:semio_framework_value::RetireOwned>(owner:&
  if owner.is_none()&&closing.is_none(){return Ok(true)}let bytes=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(owner,closing,bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(owner,closing,effect)).map(|_|()))?;Ok(owner.is_none()&&closing.is_none())
 }
 
-pub(super) struct CommandIngressLoan{index:usize,entry:std::mem::ManuallyDrop<Option<RetainedCommandIngress>>,acquired:bool}
+pub(super) struct CommandIngressLoan{index:usize,entry:std::mem::ManuallyDrop<Option<Box<RetainedCommandIngress>>>,acquired:bool}
 impl CommandIngressLoan{
  pub(super) fn empty(index:usize)->Self{Self{index,entry:std::mem::ManuallyDrop::new(None),acquired:false}}
  pub(super) fn lend(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{COMMAND_INGRESS.with(|slots|slots.borrow_mut()[self.index].lend_step(&mut self.entry,&mut self.acquired,cx))}
@@ -95,8 +95,8 @@ impl CommandIngressLoan{
  pub(super) fn take_state(&mut self)->Option<CommandIngressOwner>{self.entry.as_mut().and_then(|entry|entry.state.take())}
  pub(super) fn put_state(&mut self,state:Option<CommandIngressOwner>){if let Some(entry)=self.entry.as_mut(){entry.state=state}else{assert!(state.is_none(),"command state retains its admitted entry")}}
  pub(super) fn key(&self)->Option<instance_lifetime::NativeCloseKey>{self.entry.as_ref().map(|entry|entry.key)}
- pub(super) fn admit_entry(&mut self,key:instance_lifetime::NativeCloseKey,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if let Some(entry)=self.entry.as_ref(){return Ok(entry.key==key)}let bytes=std::mem::size_of::<Option<RetainedCommandIngress>>();let grant=cx.retained_grant();if cx.should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}*self.entry=Some(RetainedCommandIngress{key,state:None});cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
- pub(super) fn clear_empty_entry(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.entry.as_ref().is_none_or(|entry|entry.state.is_some()){return Ok(())}let bytes=std::mem::size_of::<Option<RetainedCommandIngress>>();let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}self.entry.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(())}
+ pub(super) fn admit_entry(&mut self,key:instance_lifetime::NativeCloseKey,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if let Some(entry)=self.entry.as_ref(){return Ok(entry.key==key)}let bytes=std::mem::size_of::<Option<Box<RetainedCommandIngress>>>();let grant=cx.retained_grant();if cx.should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}*self.entry=Some(Box::new(RetainedCommandIngress{key,state:None}));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
+ pub(super) fn clear_empty_entry(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.entry.as_ref().is_none_or(|entry|entry.state.is_some()){return Ok(())}let bytes=std::mem::size_of::<Option<Box<RetainedCommandIngress>>>();let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}self.entry.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(())}
 }
 impl Drop for CommandIngressLoan{fn drop(&mut self){self.restore().expect("armed command return keeps its exact preissued Source target and pinned donor")}}
 
@@ -223,3 +223,7 @@ pub(super) async fn drive_extension_turn<PA: semio_plugin_reactor_app::PluginApp
     let (extension_retirement_work, _) = cx.with_retained_loan(extension_grant,|same|semio_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?;
     Ok(extension_retirement_work)
 }
+
+#[cfg(feature = "original-actor-context-testing")]
+#[path = "../🧪️tests/⚖️invocation-failure/fixture.rs"]
+pub mod invocation_failure_fixture;

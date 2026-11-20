@@ -30,3 +30,34 @@ test("the speed factor of the machine lengthens both timers: a job that waits is
  expect(idle.lost).toBe("job timeout");expect(Date.now()-started).toBeGreaterThanOrEqual(1750-50);
  await pool.close();
 },60000);
+
+test("one blocked CPU sample leaves the deadline live and withdraws when that exact child is retired",async()=>{
+ const started=Promise.withResolvers<void>(),reply=Promise.withResolvers<number>(),observations:{pid:number;signal?:AbortSignal}[]=[];
+ const pool=farm({footprintOf:()=>0,cpuOf:(pid:number,options?:{signal:AbortSignal})=>{observations.push({pid,signal:options?.signal});started.resolve();return reply.promise;}});
+ try{
+  const running=pool.run({kind:"idle",milliseconds:5000});
+  await started.promise;
+  await new Promise(resolve=>setTimeout(resolve,250));
+  expect(observations).toHaveLength(1);
+  expect(observations[0]!.pid).toBeGreaterThan(0);
+  expect(observations[0]!.signal?.aborted).toBe(false);
+  expect((await running).lost).toBe("job timeout");
+  expect(observations[0]!.signal?.aborted).toBe(true);
+  reply.resolve(1e6);
+ }finally{reply.resolve(1e6);await pool.close();}
+},60000);
+
+test("a successful job withdraws its sample before the same child accepts another job",async()=>{
+ const started=Promise.withResolvers<AbortSignal>(),reply=Promise.withResolvers<number>();let probes=0;
+ const pool=farm({footprintOf:()=>0,cpuOf:(_pid:number,{signal}:{signal:AbortSignal})=>{if(++probes!==1)return undefined;started.resolve(signal);return reply.promise;}});
+ try{
+  const first=pool.run({kind:"idle",milliseconds:350}),sampling=await started.promise;
+  expect((await first).reply).toEqual({idled:350});
+  expect(sampling.aborted).toBe(true);
+  const second=pool.run({kind:"idle",milliseconds:5000}),before=Date.now();
+  reply.resolve(1e6);
+  expect((await second).lost).toBe("job timeout");
+  expect(Date.now()-before).toBeLessThan(2500);
+  expect(probes).toBeGreaterThan(1);
+ }finally{reply.resolve(1e6);await pool.close();}
+},60000);

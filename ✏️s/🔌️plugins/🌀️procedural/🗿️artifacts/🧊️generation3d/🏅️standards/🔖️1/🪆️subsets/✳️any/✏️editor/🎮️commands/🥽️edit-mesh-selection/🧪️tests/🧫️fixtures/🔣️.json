@@ -454,6 +454,49 @@
       }
     },
     {
+      "name": "mergeVertices at the first picked vertex",
+      "payload": {
+        "operation": "mergeVertices",
+        "amount": 0.1,
+        "cuts": 1,
+        "dx": 0.1,
+        "dy": 0,
+        "dz": 0,
+        "width": 0.1,
+        "segments": 2,
+        "mergeMode": "first",
+        "tolerance": 0.001,
+        "radius": 2,
+        "grid": 0.25,
+        "center": [
+          0,
+          0,
+          0
+        ],
+        "angle": 0.1,
+        "pullDirection": [
+          0,
+          0,
+          1
+        ],
+        "neutralPoint": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ids": [
+        "extrude@meshOut#0.vertex.1",
+        "extrude@meshOut#0.vertex.0"
+      ],
+      "granularity": "vertex",
+      "inputs": {
+        "selection": "[1,0]",
+        "mode": "first",
+        "tolerance": 0.001
+      }
+    },
+    {
       "name": "moveProportional",
       "payload": {
         "operation": "moveProportional",

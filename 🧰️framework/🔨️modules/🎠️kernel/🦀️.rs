@@ -194,6 +194,9 @@ pub enum Effect {
         #[serde(default)]
         #[value(default)]
         multiple: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        max_file_bytes: Option<u32>,
     },
     /// 🎞️ Asks the shell to decode a video (via file picker, or `payload` bytes when the [Design notes](README.md#source-notes-224).
     RequestMediaFrames {

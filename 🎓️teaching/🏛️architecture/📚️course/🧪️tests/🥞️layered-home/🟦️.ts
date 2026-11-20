@@ -4,8 +4,8 @@ import { COURSE, QUIZZES, activeOverview, boxOf, card, enter, expect, handle, op
 
 const SCOPES = [{ id: undefined, pages: ["learner", "quizzes", "assignments", "clips", "board", "badges", "prefs"] }, { id: "quizzes", pages: ["energy", "parametric", "grasshopper", "excel", "bim", "optimization"] }, { id: "energy", pages: ["physics", "ventilation", "heating", "cooling", "demand"] }];
 
-/** 🗂️ The height of the tab that stands on the top edge of every card: it reaches into the cell above. */
-const TAB_PX = 24;
+/** 🗂️ How far a card reaches into the cell above: the tab on its top edge (24 px, one band) plus the two path insets (2 px) that lift it onto the bottom line of the card above, so both are one line. */
+const TAB_PX = 24 + 2;
 
 /** 🔬️ The immediate layer, excluding the nested preview grids. */
 function layer(device: Device, name: string) {
@@ -27,7 +27,7 @@ async function displacement(device: Device, id: string): Promise<number> {
 /** 🧭️ How far the strip is panned away from its home corner, in percent of its own size: the previous scope's last click leaves the pointer on the explore control in the far corner of the card, so the pan starts there. */
 function panned(strip: Locator): Promise<number> {
   return strip.evaluate((node) => {
-    const [, x, y] = /translate3d\((-?[\d.]+)%, (-?[\d.]+)%/u.exec(node.style.transform) ?? [];
+    const [, x, y] = /translate(?:3d)?\((-?[\d.]+)%, (-?[\d.]+)%/u.exec(node.style.transform) ?? [];
     return x === undefined || y === undefined ? Number.POSITIVE_INFINITY : Math.max(Math.abs(Number(x)), Math.abs(Number(y)));
   });
 }
@@ -84,8 +84,12 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     await expect.poll(() => sizeGap(learner, id)).toEqual([0, 0]);
     await expect(veil).toHaveAttribute("data-veil", "whole");
     await expect(veil).toBeVisible();
-    await learner.page.mouse.down();
-    await expect(veil).toHaveAttribute("data-veil", "clear");
+    await expect(async () => {
+      await learner.page.mouse.up();
+      await card(learner.page, id).locator("[data-layered-zoom]").hover();
+      await learner.page.mouse.down();
+      await expect(veil).toHaveAttribute("data-veil", "clear", { timeout: 3_000 });
+    }, "a press on the zoom control clears the glass (the footer may move the control from under the pointer between hovering and pressing)").toPass({ timeout: 30_000 });
     await expect(veil).toBeHidden();
     await expect(pane(learner.page, id)).toHaveAttribute("inert", "");
     await learner.page.mouse.move(frame.x + frame.width - 2, frame.y + frame.height - 2, { steps: 4 });

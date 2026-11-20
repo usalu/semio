@@ -77,28 +77,33 @@ export class ShardUiAcknowledgements {
    * put the N host round trips the guest had just stopped paying straight back on the inbound side —
    * the reactor's `poll` takes a LIST of events, so N `patch-ack`s ride one crossing and the guest
    * retires all N in the same turn. */
-  async submitInstanceUiAcknowledgements(owner: ShardInstanceOwner, entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly result: unknown }> {
+  async submitInstanceUiAcknowledgements(owner: ShardInstanceOwner, entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly results: readonly unknown[] }> {
     if (entries.length === 0) throw new Error("actor-lifecycle.ui-ack-mismatch");
     const states = entries.map((entry) => this.admitInstanceUiAcknowledgement(owner, entry.source, entry.token));
     if (states.every((state) => state.submission !== null)) {
       const settled = await Promise.all(states.map((state) => state.submission!));
-      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0]!.result });
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), results: settled.map((value) => value.result) });
     }
     if (states.some((state) => state.submission !== null)) throw new Error("actor-lifecycle.ui-ack-mismatch");
-    const crossing = (async () => {
-      const result = await this.hub.lifecycles.sendInstanceLifecycle(owner, states.map((state) => this.patchAckEvent(owner, state)), budget);
-      const status = result !== null && typeof result === "object" ? Reflect.get(result, "status") : undefined;
-      if (!status || typeof status !== "object" || !["idle", "more-work"].includes(Reflect.get(status, "tag"))) throw new Error("actor-lifecycle.ui-ack-not-admitted");
-      return result;
-    })();
+    // 🚦️ A reactor turn admits exactly ONE event, so every patch-ack is its own crossing, in order; each crossing's answer is returned to the caller, which must act on all of them (none is merged or dropped).
+    let previous: Promise<unknown> = Promise.resolve();
+    const crossings = states.map((state) => {
+      previous = previous.then(async () => {
+        const result = await this.hub.lifecycles.sendInstanceLifecycle(owner, [this.patchAckEvent(owner, state)], budget);
+        const status = result !== null && typeof result === "object" ? Reflect.get(result, "status") : undefined;
+        if (!status || typeof status !== "object" || !["idle", "more-work"].includes(Reflect.get(status, "tag"))) throw new Error("actor-lifecycle.ui-ack-not-admitted");
+        return result;
+      });
+      return previous;
+    });
     entries.forEach((entry, index) => {
       const state = states[index]!;
       state.token = entry.token;
-      state.submission = crossing.then((result) => Object.freeze({ receipt: mintNativeSubmission(entry.source, entry.token), result }));
+      state.submission = crossings[index]!.then((result) => Object.freeze({ receipt: mintNativeSubmission(entry.source, entry.token), result }));
     });
     try {
       const settled = await Promise.all(states.map((state) => state.submission!));
-      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0]!.result });
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), results: settled.map((value) => value.result) });
     } catch (error) {
       for (const state of states) state.submission = null;
       throw error;
@@ -109,6 +114,6 @@ export class ShardUiAcknowledgements {
    * admit, cross and memoize through exactly the same code. */
   async submitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }> {
     const batch = await this.submitInstanceUiAcknowledgements(owner, [{ source, token }], budget);
-    return Object.freeze({ receipt: batch.receipts[0]!, result: batch.result });
+    return Object.freeze({ receipt: batch.receipts[0]!, result: batch.results[0] });
   }
 }

@@ -11,7 +11,7 @@ use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle, viewer_reje
 use semio_plugin_operation::{ArtifactDocumentAuthority, CANCEL_TYPED_OPERATION_ACTION_ID, ToolOperationKey};
 use semio_plugin_decl_media::ArtifactOutputChunks;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobInputs, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
 use semio_plugin_decl_views::ArtifactView;
 use std::collections::BTreeMap;
@@ -436,7 +436,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let maximum_bytes=self.tools.agent_lane_preview.as_ref().unwrap().maximum_bytes;
         let Some((emit,(presence,transient,window_transient),job_steps))=self.tools.advance_agent_lane_preview(action_id, cx)?else{return Ok(None)};
         let carriage = agent_lane_carriage(&AgentLanePublication {
-            carried_ops: emit.artifact_mutations.len() + emit.config_mutations.len() + emit.draft_mutations.len() + emit.child_emits.len(),
+            carried_ops: emit.artifact_mutation_count() + emit.config_mutations.len() + emit.draft_mutations.len() + emit.child_emits.len(),
             effects: &emit.effects,
             window_config_ops: emit.window_config_mutations.len(),
             extension_calls: emit.extension_invocations.len(),
@@ -452,11 +452,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             AgentLaneCarriage::NoEffect => return Err((agent_lane_no_effect_fault(action_id, &emit.effects)).into()),
             AgentLaneCarriage::Uncarried(lanes) => return Err((agent_lane_uncarried_fault(action_id, &lanes.join(", "))).into()),
         }
-        if A::ROLE == AppRole::Viewer && (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) {
+        if A::ROLE == AppRole::Viewer && (emit.has_artifact_mutations() || !emit.child_emits.is_empty()) {
             return Err((viewer_read_only_fault(action_id)).into());
         }
-        let mut artifact_op_bytes = Vec::with_capacity(emit.artifact_mutations.len());
-        for op in emit.artifact_mutations.iter() {
+        let mut artifact_op_bytes = Vec::with_capacity(emit.artifact_mutation_count());
+        for op in emit.artifact_mutation_iter() {
             artifact_op_bytes.push(::protocol::OpBinary::encode_op(op).map_err(|error| error.into_fault())?);
         }
         for child in emit.child_emits.iter() {
@@ -563,7 +563,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let context = context.admitted().map_err(|error| error.into_fault())?;
         let key = admission.proof.key();
         let contract = admission.proof.contract();
-        let request = ArtifactOwnedToolJobRequest {
+        let request = ArtifactOwnedToolJobRequest::new(ArtifactOwnedToolJobInputs {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
             command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&admission.raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
@@ -590,8 +590,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             instance_operation_owner: self.tools.instance_operation_owner.clone(),
             output_chunks: ArtifactOutputChunks::new(contract.max_output_bytes),
             completion: completion.clone(),
-        construction: Default::default(),
-        };
+        });
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
         let state=self.tools.agent_lane_preview.as_mut().expect("original preview lease remains received");state.producer_request=Some(request);state.completion=Some(completion);state.config=config;state.maximum_bytes=contract.max_output_bytes;state.starting=false;
         Ok(())

@@ -2,8 +2,8 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};
 import {selectNativeStorageBackendV1} from "../../🔌️backends/🧭️selection/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../🌐️platform/📋️contract/🟦️.ts";
-import {mkdtempSync,mkdirSync,symlinkSync,lstatSync,rmSync} from "node:fs";
+import {nativeImageDirectoryNamesV1,requireNativeStoragePathV1} from "../../🌐️platform/📋️contract/🟦️.ts";
+import {mkdtempSync,mkdirSync,symlinkSync,lstatSync,rmSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 
 test("native fixed storage selects every declared desktop platform and refuses foreign hosts",()=>{
@@ -25,7 +25,7 @@ test("every reservation, commit and recheck charges the directory meter before t
  expect(funded.indexOf('measure?.(custody.backing,{mode:"reserve",requestBytes:allocation.bytes}')).toBeLessThan(funded.indexOf('append({type:"reserved",allocation})'));
  expect(index).toContain('port.measure?.(backing,{mode:"commit",requestBytes:0},actual);await transition(actual,{type:"committed"');
  expect(index).toContain('await port.measure?.(backing,{mode:"recheck",requestBytes:0},actual);');
- expect(fixed).toContain("await meter.admit(request,actual.signal)");expect(fixed).toContain("createNativeDirectoryMeterV1({root,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes})");
+ expect(fixed).toContain('await observeNativeStorageVerificationAwaitV1("allocatedUsage",()=>meter.admit(request,actual.signal))');expect(fixed).toContain("createNativeDirectoryMeterV1({root,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes})");
  expect(fixed).not.toContain("measureCommitBytes");expect(port).toContain('mode:"reserve"|"commit"|"recheck"');
 });
 
@@ -48,4 +48,20 @@ test("an opener waiting for the exclusive writer re-reads the image and retries 
  let calls=0;
  expect(await retryNativeFixedOpenAfterPeerActivationV1(async()=>{if(++calls<3)throw calls===1?new FixedPeerActivationV1():new AggregateError([new Error("close",{cause:new FixedPeerActivationV1()})],"wrapped");return "opened";})).toBe("opened");expect(calls).toBe(3);
  const failure=await(async()=>{try{await retryNativeFixedOpenAfterPeerActivationV1(async()=>{throw new Error("probe");});}catch(error){return error as Error;}})();expect(failure?.message).toBe("probe");
+});
+
+test("disposable fixed retirement includes only the directory backend usage records",async()=>{
+ const {nativeDirectoryProtocolV1}=await import("../../📁️directory/🟦️.ts"),directoryProtocol=nativeDirectoryProtocolV1(),source=await Bun.file(new URL("../🟦️.ts",import.meta.url)).text(),ts=(await import("typescript")).default;
+ const tree=ts.createSourceFile("fixed.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="requireDisposableFixedDirectoryV1");
+ if(!node)throw Error("Actual fixed retirement inventory required");
+ const code=ts.transpileModule(node.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,ports={directoryProtocol,nativeImageDirectoryNamesV1,join,lstatSync},requireInventory=new Function(...Object.keys(ports),code+";return requireDisposableFixedDirectoryV1")(...Object.values(ports)),database=new Database(":memory:");
+ const base=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!base)throw Error("Fixed retirement tests require an artifact root");
+ try{for(const row of fixture.disposableInventories){const root=mkdtempSync(join(resolve(base),"fixed-"));
+  try{for(const name of row.entries){const path=join(root,name);if(["m","v","usage"].includes(name))mkdirSync(path);else writeFileSync(path,"");}
+   for(const name of row.usage??[])writeFileSync(join(root,"usage",name),"{}");
+   const owner=row.directory?{filename:"fixed.dir",members:["fixed.dir","m","v"]}:{filename:"fixed.dmg",members:["fixed.dmg","m"]},oracle=database.query("select not exists(select 1 from json_each(?1) where value not in (select value from json_each(?2)) and value <> ?3 and not (value = ?4 and ?5)) and not exists(select 1 from json_each(?6) where value <> ?7 and not (value like ?8 and substr(value, 12, length(value)-15) not glob ?9)) accepted").get(JSON.stringify(row.entries),JSON.stringify(owner.members),"image.json","usage",Number(row.directory),JSON.stringify(row.usage??[]),"usage.json","usage.json.%.tmp","*[^0-9]*") as {accepted:number};
+   expect(Boolean(oracle.accepted)).toBe(row.accepted);
+   if(row.accepted)expect(()=>requireInventory(root,join(root,"m"),owner)).not.toThrow();else expect(()=>requireInventory(root,join(root,"m"),owner)).toThrow();
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }}finally{database.close();}
 });

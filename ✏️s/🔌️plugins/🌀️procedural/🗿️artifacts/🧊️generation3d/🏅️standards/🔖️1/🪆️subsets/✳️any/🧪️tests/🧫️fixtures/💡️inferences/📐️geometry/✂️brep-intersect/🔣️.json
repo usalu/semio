@@ -3,6 +3,18 @@
   "tolerance": 1e-06,
   "meshTolerance": 1e-06,
   "deflection": 0.05,
+  "retainedPlaneIntersection": [
+    {"name":"oblique transverse planes","a":{"origin":[12,-7,2],"normal":[0,0,8]},"b":{"origin":[3,2,-9],"normal":[2,2,0]},"samples":[[-1.4142135623730951,[3.5,1.5,2]],[0,[2.5,2.5,2]],[1.4142135623730951,[1.5,3.5,2]]]},
+    {"name":"distinct parallel planes","a":{"origin":[0,0,1],"normal":[0,0,1]},"b":{"origin":[0,0,2],"normal":[0,0,-1]},"fault":"no intersection wire"},
+    {"name":"coincident planes","a":{"origin":[0,0,3],"normal":[0,0,1]},"b":{"origin":[5,-7,3],"normal":[0,0,1]},"fault":"infinitely many intersections"}
+  ],
+  "retainedAxialIntersection": [
+    {"name":"offset sphere circle","plane":{"origin":[0,0,3],"normal":[0,0,1]},"axial":{"kind":"sphere","origin":[0,0,0],"axis":[0,0,1],"radius":5},"center":[0,0,3],"radius":4},
+    {"name":"sphere tangent plane","plane":{"origin":[0,0,5],"normal":[0,0,1]},"axial":{"kind":"sphere","origin":[0,0,0],"axis":[0,0,1],"radius":5},"fault":"tangent configuration"},
+    {"name":"plane misses sphere","plane":{"origin":[0,0,6],"normal":[0,0,1]},"axial":{"kind":"sphere","origin":[0,0,0],"axis":[0,0,1],"radius":5},"fault":"no intersection wire"},
+    {"name":"perpendicular tilted cylinder","plane":{"origin":[2,5,7],"normal":[0,3,4]},"axial":{"kind":"cylinder","origin":[1,2,3],"axis":[0,6,8],"radius":2},"center":[1,5,7],"radius":2,"swap":true},
+    {"name":"nonperpendicular cylinder","plane":{"origin":[0,0,0],"normal":[0,0,1]},"axial":{"kind":"cylinder","origin":[0,0,0],"axis":[0,1,0],"radius":2},"fault":"requires two planes"}
+  ],
   "cases": [
     {
       "name": "section through the middle of a box",

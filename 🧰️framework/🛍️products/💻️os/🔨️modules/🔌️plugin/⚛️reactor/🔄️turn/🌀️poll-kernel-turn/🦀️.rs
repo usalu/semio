@@ -20,7 +20,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<T, semio_framework_job::OriginalTurnFailure> {
     admit_turn_entry(budget, cx)?;
-    let original_progress=cx.retained_progress();let original_work=cx.original_work_units_spent();
+    let original_progress=cx.original_call_start_progress().unwrap_or_else(||cx.retained_progress());let original_work=if cx.original_call_start_progress().is_some(){0}else{cx.original_work_units_spent()};
     let reserved_progress=cx.reserved_return_progress();let reserved_work=cx.reserved_return_work();
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();

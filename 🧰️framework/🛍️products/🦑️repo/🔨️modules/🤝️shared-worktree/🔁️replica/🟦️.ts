@@ -1566,12 +1566,12 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
 
 const BUSY=Symbol("busy");
 
-async function retrying<T>(job:()=>Promise<T>):Promise<T|typeof BUSY>{
+async function retrying<T>(job:()=>Promise<T>,maximumRetries=5):Promise<T|typeof BUSY>{
  for(let attempt=0;;attempt++){
   try{return await job();}
   catch(error){
    if(!sharing(error))throw error;
-   if(attempt>=5)return BUSY;
+   if(attempt>=maximumRetries)return BUSY;
    await sleep(20*2**attempt);
   }
  }
@@ -1686,7 +1686,7 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
    const lose=await differs(target,here,known).catch(error=>{if(gone(error))return false;throw error;});
    if(lose&&conflictWinnerV1(here.mtimeMs,entry.hlc)==="local")return keepNewer(replica,path,entry,here);
    if(lose)await keepLost(replica,path,target,here,entry.hlc);
-   if(await retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}))===BUSY){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
+   if(await retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}),0)===BUSY){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
    await prune(replica,dirname(target));
   }
   setFile(replica,path,{hlc:entry.hlc,operation:"delete",mtimeMs:0});
@@ -1755,9 +1755,14 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
  }
  const temporary=join(replica.paths.tmp,token());
  await mkdir(replica.paths.tmp,{recursive:true});
- let verdict:"ok"|"corrupt";
+ let verdict:"ok"|"corrupt",observedBytes=0;
+ const report=entry.bytes!>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"apply-blob",path,done,total})):undefined;
  try{
-  verdict=await copyVerifiedV1(blobPathV1(storeRoot,entry.sha256!),temporary,entry.sha256!,{signal,mode:!replica.settings.modeless&&entry.executable?0o755:0o644,clone:true,progress:entry.bytes!>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"apply-blob",path,done,total})):undefined});
+  verdict=await copyVerifiedV1(blobPathV1(storeRoot,entry.sha256!),temporary,entry.sha256!,{signal,mode:!replica.settings.modeless&&entry.executable?0o755:0o644,clone:true,progress:(done,total)=>{
+   signal?.throwIfAborted();
+   if(done>observedBytes){observedBytes=done;replica.beat();}
+   report?.(done,total);
+  }});
  }catch(error){
   if(signal?.aborted)throw error;
   if(!gone(error))throw error;
@@ -1784,7 +1789,7 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
     throw error;
    }
    try{
-    if(await retrying(()=>rename(temporary,target))===BUSY){await rm(temporary,{force:true});noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
+    if(await retrying(()=>rename(temporary,target),0)===BUSY){await rm(temporary,{force:true});noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
     break;
    }catch(error){
     if((gone(error)||code(error)==="EINVAL")&&attempt<3){await sleep(5*2**attempt);continue;}
@@ -2360,7 +2365,8 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   let at=-Infinity,value:T;
   return {get:async(fresh:boolean=false):Promise<T>=>{if(fresh||settings.now()-at>=milliseconds){value=await read();at=settings.now();}return value;},expire:():void=>{at=-Infinity;}};
  };
- const guard=createStoreGuardV1({probe:()=>(options.storeProbe??storeReachableV1)(settings.storeRoot),deadlineMs:options.storeDeadlineMilliseconds??10_000,now:Date.now,changed:()=>{}});
+ const storeGuard=()=>createStoreGuardV1({probe:()=>(options.storeProbe??storeReachableV1)(settings.storeRoot),deadlineMs:options.storeDeadlineMilliseconds??10_000,now:Date.now,changed:()=>{}});
+ const guard=storeGuard(),attestStore=storeGuard();
  replica.beat=()=>{guard.beat();};
  const baseDrift=options.driftMilliseconds??120_000,drift={at:settings.now()+baseDrift,wait:baseDrift,attempts:0};
  const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),stageHeal:settings.now()+60_000,broken:null as GitBrokenV1|null};
@@ -2403,7 +2409,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  const switchOn=cached(slow,()=>syncEnabledV1(settings.worktree)),reachable=cached(slow,()=>guard.reachable()),retirement=cached(slow*2,()=>readRetirementV1(settings.storeRoot,settings.originId)),repairAsked=cached(slow,()=>repairRequestedV1(settings.worktree));
  let everUp=false;
  const down=()=>{if(!outage){outage=true;replica.say({event:"store-unreachable",path:settings.storeRoot,reason:everUp?guard.state():"waiting-for-mount"});}};
- let syncOn=true,restart=false,parked=false;
+ let syncOn=true,restart=false,parked=false,sidecarsAdmitted=false;
  const history={current:await readRunHistoryV1(settings.worktree)};
  const running=options.codeRoot??codeRootV1,watching=options.watchRoot??running;
  const checks=new Map<string,number>();
@@ -2425,12 +2431,13 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   finally{clearTimeout(timer);}
  };
  const admission=createAdmissionStateV1();
- const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.summary():[...replica.failures.summary(),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>guard.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>reachable.get(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
+ const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.diagnostics():[...replica.failures.diagnostics(7),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>attestStore.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>attestStore.reachable(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
  options.opened?.(replica);
  replica.say({event:"started",originId:settings.originId,groupId:settings.groupId});
  const booted=attester.start(signal).catch(()=>{});
- let disowned=false;
+ let disowned=false,attesterReady=false;
  void booted.then(async()=>{
+  attesterReady=true;
   const running=attester.running();
   if(running==="")return;
   try{
@@ -2495,11 +2502,24 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   });
   watcher?.on("error",watchFailed);
  }catch(error){watchFailed(error);}
+ const attestController=new AbortController(),attestSignal=AbortSignal.any([signal,attestController.signal]);
+ let attesting:Promise<void>|undefined;
+ const attest=():void=>{
+  if(!attesterReady||attestSignal.aborted||restart)return;
+  if(disowned){restart=true;wake?.();return;}
+  sidecars?.tick(sidecarsAdmitted&&!parked&&guard.state()==="ok"&&attester.running()!=="");
+  if(attesting!==undefined)return;
+  attesting=attester.tick({sync:syncOn&&!parked,files:replica.files.shared,manifest:replica.files.manifestHex(),buckets:replica.files.bucketsHex(),cursors:{...replica.cursors},incoming:replica.queue.size,busy:replica.applying>0,hlc:formatHlcV1(replica.clock,settings.originId),activity:replica.activity},attestSignal).then(result=>{
+   if(result==="restart"&&!attestSignal.aborted){restart=true;wake?.();}
+  }).catch(error=>{if(!attestSignal.aborted)noteOnce(replica,`attest:${messageOf(error)}`,{event:"error",message:messageOf(error)});}).finally(()=>{attesting=undefined;});
+ };
+ const heartbeat=setInterval(attest,options.attestMilliseconds??healthMilliseconds);
+ heartbeat.unref?.();
  try{
-  while(!signal.aborted){
+  while(!signal.aborted&&!restart){
    try{
     const enabled=await switchOn.get();syncOn=enabled;
-    if(!enabled){if(!suspended){suspended=true;replica.say({event:"sync",reason:"off"});}}
+    if(!enabled){sidecarsAdmitted=true;if(!suspended){suspended=true;replica.say({event:"sync",reason:"off"});}}
     else{
     if(suspended){suspended=false;full=true;replica.say({event:"sync",reason:"on"});}
     if(!await reachable.get(outage))down();
@@ -2509,6 +2529,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
      const turn=await guard.turn(async signal=>{
      await options.storeGate?.();
      const stopped=await retirement.get();
+     sidecarsAdmitted=true;
      if(stopped?.retired===true){if(!parked){parked=true;replica.say({event:"retired",originId:settings.originId,origin:stopped.by,reason:"retired",message:stopped.reason});}}
      else{
      if(parked){parked=false;full=true;replica.say({event:"sync",reason:"on"});}
@@ -2615,14 +2636,11 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
     else{failed++;noteOnce(replica,`round:${messageOf(error)}`,{event:"error",message:messageOf(error)});}
    }
    if(!signal.aborted){
-    activityV1("attest");
-    try{await booted;if(disowned||await attester.tick({sync:syncOn&&!parked,files:replica.files.shared,manifest:replica.files.manifestHex(),buckets:replica.files.bucketsHex(),cursors:replica.cursors,incoming:replica.queue.size,busy:replica.applying>0,hlc:formatHlcV1(replica.clock,settings.originId),activity:replica.activity},signal)==="restart"){restart=true;break;}}
-    catch(error){if(!signal.aborted)noteOnce(replica,`attest:${messageOf(error)}`,{event:"error",message:messageOf(error)});}
+    attest();
+    if(restart)break;
     const wall=Date.now();
-    activityV1("sidecars");
-    sidecars?.tick(guard.state()==="ok"&&attester.running()!==""&&!parked);
     activityV1("health");
-    if(wall-healthAt>=(options.attestMilliseconds??healthMilliseconds)){healthAt=wall;await writeHealthV1(settings.worktree,{version:1,wallMs:wall,pid:process.pid,code:attester.running()===""?"0".repeat(64):attester.running(),store:guard.state(),storeSinceMs:guard.since(),pending:attester.pending(),failures:[...replica.failures.summary()],trust:replica.trust.record(),...sidecars===undefined?{}:{sidecars:sidecars.report()}}).catch(()=>{});await flushRefusalsV1(replica);}
+    if(wall-healthAt>=(options.attestMilliseconds??healthMilliseconds)){healthAt=wall;await writeHealthV1(settings.worktree,{version:1,wallMs:wall,pid:process.pid,code:attester.running()===""?"0".repeat(64):attester.running(),store:guard.state(),storeSinceMs:guard.since(),pending:attester.pending(),failures:replica.failures.diagnostics(),trust:replica.trust.record(),...sidecars===undefined?{}:{sidecars:sidecars.report()}}).catch(()=>{});await flushRefusalsV1(replica);}
     activityV1("tend");
     if(wall-tendedAt>=tendMilliseconds&&syncOn&&!parked){tendedAt=wall;await tendBlobsV1(replica,signal).catch(()=>{});}
     activityV1("maintain");
@@ -2638,10 +2656,14 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
    }
    if(!configured&&!signal.aborted){configured=true;void normaliseGitConfigV1(settings.worktree,undefined,signal).catch(()=>[]);}
    if(++rounds%heapRounds===0&&replica.activity!==settledAt){settledAt=replica.activity;settleHeap();}
+   if(restart)break;
    activityV1("idle");
    await pause(Math.max(hot.active||sweep.active||file.active?sliceGapMilliseconds:touched.size>0?Math.min(settings.pollMilliseconds,settings.debounceMilliseconds):settings.pollMilliseconds,failed===0?0:Math.min(30_000,250*2**Math.min(failed,7))));
   }
  }finally{
+  clearInterval(heartbeat);
+  attestController.abort();
+  await attesting;
   if(restart)sidecars?.release();else await sidecars?.stop().catch(()=>{});
   clearInterval(ticker);
   watcher?.close();

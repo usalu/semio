@@ -123,6 +123,7 @@ export default defineOwnedBuildConfigFactory(({ mode }) => ({
   root: siteRoot,
   base: "/",
   publicDir: false,
+  worker: { format: "es" as const },
   cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
   plugins: [
     {

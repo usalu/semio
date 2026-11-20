@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useId, useState, type ReactElement } from "react";
-import { Icon, overviewCardChipClass, type IconName } from "@semio-tech/ui-react/chrome";
+import { Icon, overviewCardChipClass, type IconName, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import { LEADERBOARD_PERIODS, learnerTag, roomScope, type CourseView, type Leaderboard, type LeaderboardPeriod, type LeaderboardRow, type Slug } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatClock, formatInstant, formatPoints } from "../📏️quantity/🟦️.ts";
@@ -215,6 +215,7 @@ function SortHeading(props: { readonly column: LeaderboardColumn; readonly sort:
     <th {...TABLE.column} aria-sort={chosen ? sort.direction : undefined} className={props.className}>
       <button
         type="button"
+        {...sharedBorderlessBoxProps}
         className={cn("course-target inline-flex cursor-pointer items-center gap-single border-0 bg-transparent p-0 text-left", props.quiet ? "font-medium text-inherit" : "font-semibold text-foreground", props.end && "flex-row-reverse")}
         onClick={() => props.onSort(column.key)}
         title={props.text("course.leaderboard.sort", { column: column.label })}

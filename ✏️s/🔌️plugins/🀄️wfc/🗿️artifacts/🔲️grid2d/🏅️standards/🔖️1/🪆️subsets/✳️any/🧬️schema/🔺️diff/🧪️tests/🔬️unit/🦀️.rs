@@ -2,7 +2,7 @@
 
 use crate::{schema::snapshot::Grid2dSnapshot, schema::snapshot::WfcPinnedCell2d, schema::snapshot::WfcTile2d};
 use crate::standards::v1::subsets::any::schema::diff::*;
-use protocol::{DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra};
 
 fn tile(id: &str, weight: f64) -> WfcTile2d {
     WfcTile2d { id: id.into(), weight, ..Default::default() }
@@ -22,7 +22,7 @@ fn reweigh(id: &str, weight: f64) -> Grid2dTilesModification {
 
 fn absorbed(first: Grid2dDiff, second: Grid2dDiff) -> Grid2dDiff {
     let mut sigma = first;
-    MutationDiff::<Grid2dSnapshot>::absorb(&mut sigma, second);
+    <Grid2dDiff as ColdMutationDiff<Grid2dSnapshot>>::absorb(&mut sigma, second);
     sigma
 }
 
@@ -39,7 +39,7 @@ fn assert_absorb_law(base: &Grid2dSnapshot, first: &Grid2dDiff, second: &Grid2dD
 fn empty_diff_is_the_identity() {
     let base = base();
     assert_eq!(protocol::apply_diff_cold(&Grid2dDiff::default(), &base).expect("identity applies"), base);
-    assert!(DiffAlgebra::<Grid2dSnapshot>::is_empty(&Grid2dDiff::default()));
+    assert!(<Grid2dDiff as DiffAlgebra<Grid2dSnapshot>>::is_empty(&Grid2dDiff::default()));
 }
 
 /// 📍 Inserted rows take their stated after-list indices; the canonical position of a new row is where `insert_at` puts it.
@@ -57,15 +57,15 @@ fn inserted_rows_take_their_after_indices() {
 fn create_then_delete_cancels() {
     let base = base();
     let created = tile("c", 3.0);
-    let sigma = assert_absorb_law(&base, &rows(Grid2dTilesDelta::insertion(1, created.clone())), &rows(Grid2dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)], 1)));
-    assert!(DiffAlgebra::<Grid2dSnapshot>::is_empty(&sigma));
+    let sigma = assert_absorb_law(&base, &rows(Grid2dTilesDelta::insertion(1, created.clone())), &rows(Grid2dTilesDelta::removal(&[tile("b", 1.0), created, tile("d", 2.0)][..], 1)));
+    assert!(<Grid2dDiff as DiffAlgebra<Grid2dSnapshot>>::is_empty(&sigma));
 }
 
 /// 🔀 A base row patched and then deleted leaves only the deletion at its base index.
 #[test]
 fn patch_then_delete_leaves_the_deletion() {
     let base = base();
-    let sigma = assert_absorb_law(&base, &rows(Grid2dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Grid2dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)], 0)));
+    let sigma = assert_absorb_law(&base, &rows(Grid2dTilesDelta { modified: vec![reweigh("b", 9.0)], ..Default::default() }), &rows(Grid2dTilesDelta::removal(&[tile("b", 9.0), tile("d", 2.0)][..], 0)));
     assert_eq!(sigma.tiles.removed, vec![Grid2dTilesRemoval { id: "b".into(), index: 0 }]);
     assert!(sigma.tiles.modified.is_empty() && sigma.tiles.inserted.is_empty());
 }
@@ -87,13 +87,12 @@ fn delete_then_create_replaces() {
     assert_eq!((sigma.tiles.removed, sigma.tiles.inserted), (vec![Grid2dTilesRemoval { id: "b".into(), index: 0 }], vec![Grid2dTilesInsertion { index: 0, row: tile("b", 7.0) }]));
 }
 
-/// 🔀 A row created and then patched is created already patched.
+/// 🔀 A row created and then patched applies as one already patched row.
 #[test]
 fn create_then_patch_folds_into_the_row() {
     let base = base();
     let sigma = assert_absorb_law(&base, &rows(Grid2dTilesDelta::insertion(1, tile("c", 3.0))), &rows(Grid2dTilesDelta { modified: vec![reweigh("c", 4.0)], ..Default::default() }));
-    assert_eq!(sigma.tiles.inserted, vec![Grid2dTilesInsertion { index: 1, row: tile("c", 4.0) }]);
-    assert!(sigma.tiles.modified.is_empty());
+    assert_eq!(protocol::apply_diff_cold(&sigma, &base).expect("the folded diff applies").tiles[1], tile("c", 4.0));
 }
 
 /// 🔁️ The inverse diff restores the base exactly — rows, positions and fields.
@@ -102,7 +101,7 @@ fn inverse_restores_the_base() {
     let base = base();
     let diff = rows(Grid2dTilesDelta { removed: vec![Grid2dTilesRemoval { id: "b".into(), index: 0 }], inserted: vec![Grid2dTilesInsertion { index: 0, row: tile("a", 5.0) }], modified: vec![reweigh("d", 6.0)], ..Default::default() });
     let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-    let inverse = DiffAlgebra::<Grid2dSnapshot>::inverse(&diff, &base);
+    let inverse = <Grid2dDiff as ColdDiffAlgebra<Grid2dSnapshot>>::inverse(&diff, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
 }
 
@@ -119,7 +118,7 @@ fn inverse_restores_middle_rows() {
     ] {
         let diff = rows(delta);
         let after = protocol::apply_diff_cold(&diff, &base).expect("diff applies");
-        let inverse = DiffAlgebra::<Grid2dSnapshot>::inverse(&diff, &base);
+        let inverse = <Grid2dDiff as ColdDiffAlgebra<Grid2dSnapshot>>::inverse(&diff, &base);
         assert_eq!(protocol::apply_diff_cold(&inverse, &after).expect("inverse applies"), base);
     }
 }

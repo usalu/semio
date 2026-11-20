@@ -23,7 +23,7 @@ test("kill plans, lease verdicts, deadlines and progress keys equal the fixture"
  for(const row of fixture.cpu){const tree=readyTreeCpuV1(row.rows,row.root,row.extra),before=new Map(Object.entries(row.before).map(([pid,ms])=>[Number(pid),ms]));expect(Object.fromEntries(tree),row.name).toEqual(row.tree);expect(readyLivenessV1(before,tree),row.name).toBe(row.alive);}
  expect(["0:01.50","1:02:03","2-03:04:05.50","12:34","x"].map(readyCpuMillisecondsV1)).toEqual([1500,3723000,183845500,754000,null]);
  for(const row of fixture.lease)expect(readyLeaseVerdictV1({lease:(row as {lease?:{pid:number;startMs?:number;wallMs:number}|null}).lease,nowMs:row.nowMs,staleMs:row.staleMs,process:(row as {process:"alive"|"gone"|"unknown"}).process,processStartMs:(row as {processStartMs?:number}).processStartMs}),row.name).toEqual(row.expect);
- for(const row of fixture.deadline)expect(readyDeadlineV1({elapsedMs:row.elapsedMs,softMs:row.softMs,sinceProgressMs:row.sinceProgressMs}),row.name).toBe(row.verdict);
+ for(const row of fixture.deadline)expect(readyDeadlineV1(row),row.name).toBe(row.verdict);
  for(const row of fixture.progress)expect(readyProgressKeyV1(row.lines),row.name).toBe(row.key);
 });
 
@@ -46,7 +46,7 @@ test("the Python oracle derives the same verdicts",()=>{
  expect(oracle.tree).toEqual(fixture.tree.map(row=>[...readyKillPlanV1({table:row.table,root:row.root,known:row.known,self:row.self,spare:new Set((row as {spare?:number[]}).spare??[])})]));
  expect(oracle.cpu).toEqual(fixture.cpu.map(row=>{const tree=readyTreeCpuV1(row.rows,row.root,row.extra);return{tree:Object.fromEntries(tree),alive:readyLivenessV1(new Map(Object.entries(row.before).map(([pid,ms])=>[Number(pid),ms])),tree)};}));
  expect(oracle.lease).toEqual(fixture.lease.map(row=>readyLeaseVerdictV1({lease:(row as {lease?:{pid:number;startMs?:number;wallMs:number}|null}).lease,nowMs:row.nowMs,staleMs:row.staleMs,process:(row as {process:"alive"|"gone"|"unknown"}).process,processStartMs:(row as {processStartMs?:number}).processStartMs})));
- expect(oracle.deadline).toEqual(fixture.deadline.map(row=>readyDeadlineV1({elapsedMs:row.elapsedMs,softMs:row.softMs,sinceProgressMs:row.sinceProgressMs})));
+ expect(oracle.deadline).toEqual(fixture.deadline.map(row=>readyDeadlineV1(row)));
  expect(oracle.progress).toEqual(fixture.progress.map(row=>readyProgressKeyV1(row.lines)));
  expect(oracle.stall).toEqual(fixture.stall.map(row=>{const tracker=readyStallTrackerV1();return row.rounds.map(lines=>tracker.observe(lines));}));
  expect(oracle.holder).toEqual(fixture.holder.map(row=>{const tracker=readyHolderWaitTrackerV1();return row.rounds.map(round=>{const waitingMs=tracker.observe(round.lines,round.atMs);return{waitingMs,restart:readyHolderRestartV1(waitingMs,round.codeChanged)};});}));
@@ -99,7 +99,7 @@ test("identity: the same process, a gone one and a reused pid are told apart",()
 
 test("the two process table formats parse, the unix one from the real ps of this machine",async()=>{
  expect(readyParseUnixTableV1("  10     1    05:30\n 11 10 1-02:03:04\n  garbage\n 12 10 03:04:05\n",1_000_000_000_000)).toEqual([{pid:10,ppid:1,startMs:1_000_000_000_000-330_000},{pid:11,ppid:10,startMs:1_000_000_000_000-((24+2)*3600+3*60+4)*1000},{pid:12,ppid:10,startMs:1_000_000_000_000-(3*3600+4*60+5)*1000}]);
- expect(readyParseWindowsTableV1("4,0,1794000000000\r\n812,4,1794000001500\r\nnot a row\r\n")).toEqual([{pid:4,ppid:0,startMs:1794000000000},{pid:812,ppid:4,startMs:1794000001500}]);
+ expect(readyParseWindowsTableV1("4\t0\t1794000000000\t639000000000000000\r\n812\t4\t1794000001500\t639000000015000000\r\nnot a row\r\n")).toEqual([{pid:4,ppid:0,startMs:1794000000000,windows:{birth:"639000000000000000"}},{pid:812,ppid:4,startMs:1794000001500,windows:{birth:"639000000015000000"}}]);
  expect(readyTableCommandV1("win32").command).toBe("powershell.exe");expect(readyTableCommandV1("linux").command).toBe("ps");
  if(process.platform!=="win32"){
   const table=await readyReadTableV1(),me=table.find(row=>row.pid===process.pid);

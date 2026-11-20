@@ -88,6 +88,14 @@ pub async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAs
     //#endregion 🔖️EphemeralLaneTests
 
     //#region 🔖️AdoptPresenceTests
+    /// 🌱️ Seeds an interaction fixture and queues its initially empty peer root for retirement.
+    #[doc(hidden)]
+    pub fn seed_presence_root(app: &mut VcsArtifactApp<TestApp>, root: semio_plugin_decl_views::PeerPresenceRoot) {
+        let previous = app.roster.peer_presence.replace(std::sync::Arc::new(root)).expect("live fixture peer root");
+        assert!(previous.is_empty());
+        app.roster.peer_presence_retirements.insert_admitted(0, semio_plugin_peer::PeerPresenceRootRetirement::new(previous));
+    }
+
     #[doc(hidden)]
 pub fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> PresencePeer {
         PresencePeer {

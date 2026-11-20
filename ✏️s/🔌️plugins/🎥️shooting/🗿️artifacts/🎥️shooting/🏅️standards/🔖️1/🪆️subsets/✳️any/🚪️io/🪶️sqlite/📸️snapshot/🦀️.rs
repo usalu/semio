@@ -1,7 +1,7 @@
 //! 🎥️ Handwritten scene, geometry, ordered collections and optional literal emblem ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
-use crate::{ShootingAsset,ShootingCamera,ShootingSavedCamera,ShootingSceneLighting,ShootingSun,ShootingAmbient,ShootingShadow,ShootingMaterial,ShootingShot,ShootingEmblemChild};
+use crate::{ShootingAsset,ShootingCamera,ShootingSavedCamera,ShootingSceneLighting,ShootingSun,ShootingAmbient,ShootingShadow,ShootingMaterial,ShootingShot,ShootingDrawing,ShootingEmblemChild};
 use std::collections::BTreeSet;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,NativeEncodingBound,FloatColumn,read_binary64,ieee754_is_null}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -10,6 +10,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKi
 const SCENE:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(8),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(14),FloatColumn::Binary64(15),FloatColumn::Binary64(17)];
 const ASSET:&[FloatColumn]=&[FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14),FloatColumn::Binary64(15),FloatColumn::Binary64(16)];
 const CAMERA:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14),FloatColumn::Binary64(15)];
+const DRAWING:&[FloatColumn]=&[FloatColumn::Binary64(14),FloatColumn::Binary64(19),FloatColumn::Binary64(20),FloatColumn::Binary64(21)];
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||row.integer(1)?!=1{return Err(invalid("Shooting requires positive aliased entities and complete fields attached to its document"))}Ok(())}
 fn workload(snapshot:&ShootingSnapshot)->Result<usize,ValueError>{2usize.checked_add(snapshot.assets.len()).and_then(|n|n.checked_add(snapshot.saved_cameras.len())).and_then(|n|n.checked_add(snapshot.shots.len())).and_then(|n|n.checked_add(usize::from(snapshot.emblem.is_some()))).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Shooting row count overflow"))}
 fn ordered<'a>(rows:&'a[SqliteRow],columns:usize,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
@@ -29,6 +30,45 @@ fn restore_scene(row:&SqliteRow,native:&mut semio_framework_value_native_owned::
  shadow:ShootingShadow{enabled:flag(row,10)?,opacity:read_binary64(row,11,SCENE)?,softness:read_binary64(row,12,SCENE)?},
  material:ShootingMaterial{color:native.copy_text(row.text(13)?)?,metalness:read_binary64(row,14,SCENE)?,roughness:read_binary64(row,15,SCENE)?,emissive:native.copy_text(row.text(16)?)?,emissive_intensity:read_binary64(row,17,SCENE)?,stroke:native.copy_text(row.text(18)?)?}
 })}
+fn restore_drawing(row: &SqliteRow, native: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<ShootingDrawing>, ValueError> {
+    if row.values[11..23].iter().chain(&row.values[24..]).all(|value| *value == SqliteValue::Null) {
+        return Ok(None);
+    }
+    let drawing = ShootingDrawing {
+        background: flag(row, 11)?,
+        fill: flag(row, 12)?,
+        fill_color: optional_text(row, 13, native)?,
+        fill_opacity: read_binary64(row, 14, DRAWING)?,
+        visible_lines: flag(row, 15)?,
+        hidden_lines: flag(row, 16)?,
+        visible_color: native.copy_text(row.text(17)?)?,
+        hidden_color: native.copy_text(row.text(18)?)?,
+        visible_width: read_binary64(row, 19, DRAWING)?,
+        hidden_width: read_binary64(row, 20, DRAWING)?,
+        line_easing: read_binary64(row, 21, DRAWING)?,
+        merge_lines: flag(row, 22)?,
+    };
+    if !drawing.is_valid() {
+        return Err(invalid("Shooting requires valid drawing settings"));
+    }
+    Ok(Some(drawing))
+}
+fn drawing_cells(drawing: Option<&ShootingDrawing>) -> Result<[Cell<'_>; 12], ValueError> {
+    let Some(drawing) = drawing else {
+        return Ok([const { Cell::Null }; 12]);
+    };
+    if !drawing.is_valid() {
+        return Err(invalid("Shooting requires valid drawing settings"));
+    }
+    Ok([
+        Cell::Integer(i64::from(drawing.background)), Cell::Integer(i64::from(drawing.fill)),
+        drawing.fill_color.as_deref().map_or(Cell::Null, Cell::Text), Cell::Real(drawing.fill_opacity),
+        Cell::Integer(i64::from(drawing.visible_lines)), Cell::Integer(i64::from(drawing.hidden_lines)),
+        Cell::Text(&drawing.visible_color), Cell::Text(&drawing.hidden_color),
+        Cell::Real(drawing.visible_width), Cell::Real(drawing.hidden_width), Cell::Real(drawing.line_easing),
+        Cell::Integer(i64::from(drawing.merge_lines)),
+    ])
+}
 fn restore_emblem(row:&SqliteRow,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ShootingEmblemChild,ValueError>{native.scoped_stage(|native|{native.begin_stage(5)?;let child_id=native.copy_text(row.text(2)?)?;native.step()?;let artifact_id=native.copy_text(row.text(3)?)?;native.step()?;let artifact_kind=native.copy_text(row.text(4)?)?;native.step()?;let standard=native.copy_text(row.text(5)?)?;native.step()?;let subset=native.copy_text(row.text(6)?)?;native.step()?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))})}
 impl ArtifactSqliteSnapshotHost for ShootingSnapshot{
  
@@ -50,7 +90,7 @@ impl ArtifactSqliteSnapshotHost for ShootingSnapshot{
   control.check_rows(workload(self)?)?;let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;for text in[&self.schema,&self.active_shot_id,&self.active_asset_id,&self.scene.background,&self.scene.sun.color,&self.scene.ambient.color,&self.scene.material.color,&self.scene.material.emissive,&self.scene.material.stroke]{bound.repeated(text.len(),24)?}
   for asset in &self.assets{bound.add(2048)?;for text in[&asset.id,&asset.name,&asset.url,&asset.format]{bound.repeated(text.len(),24)?}}
   for camera in &self.saved_cameras{bound.add(2048)?;for text in[&camera.id,&camera.label]{bound.repeated(text.len(),24)?}if let Some(text)=&camera.camera.projection{bound.repeated(text.len(),24)?}}
-  for shot in &self.shots{bound.add(1024)?;for text in[&shot.id,&shot.label,&shot.format,&shot.shape]{bound.repeated(text.len(),24)?}for text in[shot.background.as_ref(),shot.camera_id.as_ref()].into_iter().flatten(){bound.repeated(text.len(),24)?}}
+  for shot in &self.shots{bound.add(1024)?;for text in[&shot.id,&shot.label,&shot.format,&shot.shape]{bound.repeated(text.len(),24)?}for text in[shot.background.as_ref(),shot.camera_id.as_ref()].into_iter().flatten(){bound.repeated(text.len(),24)?}if let Some(drawing)=&shot.drawing{bound.add(1024)?;for text in [&drawing.visible_color,&drawing.hidden_color].into_iter().chain(drawing.fill_color.iter()){bound.repeated(text.len(),24)?}}}
   if let Some(child)=&self.emblem{let target=&child.target;for text in[&child.child_id,&target.artifact_id,&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset]{bound.repeated(text.len(),24)?}}
   bound.finish()
  }
@@ -66,11 +106,11 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
   if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=4||documents[0].integer(0)?!=1||scenes.len()!=1||scenes[0].rowid!=1||children.len()>1{return Err(invalid("Shooting requires one document and scene and at most one emblem"))}identity(&scenes[0],37)?;for child in children{identity(child,7)?;}
   let count=asset_rows.len().checked_add(camera_rows.len()).and_then(|n|n.checked_add(shot_rows.len())).and_then(|n|n.checked_add(children.len())).and_then(|n|n.checked_add(2)).ok_or_else(||invalid("Shooting reconstruction workload overflow"))?;
   let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut progress);
-  let asset_rows=ordered(asset_rows,37,&mut native)?;let camera_rows=ordered(camera_rows,39,&mut native)?;let shot_rows=ordered(shot_rows,11,&mut native)?;native.begin_stage(count)?;native.charge(size_of::<Self>())?;
+  let asset_rows=ordered(asset_rows,37,&mut native)?;let camera_rows=ordered(camera_rows,39,&mut native)?;let shot_rows=ordered(shot_rows,32,&mut native)?;native.begin_stage(count)?;native.charge(size_of::<Self>())?;
   let document=&documents[0];let schema=native.copy_text(document.text(1)?)?;let active_shot_id=native.copy_text(document.text(2)?)?;let active_asset_id=native.copy_text(document.text(3)?)?;native.step()?;let scene=restore_scene(&scenes[0],&mut native)?;native.step()?;
   let mut assets=native.allocate_vec::<ShootingAsset>(asset_rows.len())?;for row in asset_rows{native.step()?;assets.push(ShootingAsset{id:native.copy_text(row.text(3)?)?,name:native.copy_text(row.text(4)?)?,url:native.copy_text(row.text(5)?)?,format:native.copy_text(row.text(6)?)?,origin:geometry(row,7,ASSET)?,orientation:optional_geometry(row,10,ASSET)?,scale:optional_geometry(row,14,ASSET)?});}
   let mut saved_cameras=native.allocate_vec::<ShootingSavedCamera>(camera_rows.len())?;for row in camera_rows{native.step()?;saved_cameras.push(ShootingSavedCamera{id:native.copy_text(row.text(3)?)?,label:native.copy_text(row.text(4)?)?,camera:ShootingCamera{position:geometry(row,5,CAMERA)?,target:geometry(row,8,CAMERA)?,zoom:read_binary64(row,11,CAMERA)?,fov:read_binary64(row,12,CAMERA)?,up:optional_geometry(row,13,CAMERA)?,projection:optional_text(row,16,&mut native)?}});}
-  let mut shots=native.allocate_vec::<ShootingShot>(shot_rows.len())?;for row in shot_rows{native.step()?;shots.push(ShootingShot{id:native.copy_text(row.text(3)?)?,label:native.copy_text(row.text(4)?)?,width:u32::try_from(row.integer(5)?).map_err(|e|invalid(e.to_string()))?,height:u32::try_from(row.integer(6)?).map_err(|e|invalid(e.to_string()))?,format:native.copy_text(row.text(7)?)?,shape:native.copy_text(row.text(8)?)?,background:optional_text(row,9,&mut native)?,camera_id:optional_text(row,10,&mut native)?});}
+  let mut shots=native.allocate_vec::<ShootingShot>(shot_rows.len())?;for row in shot_rows{native.step()?;shots.push(ShootingShot{id:native.copy_text(row.text(3)?)?,label:native.copy_text(row.text(4)?)?,width:u32::try_from(row.integer(5)?).map_err(|e|invalid(e.to_string()))?,height:u32::try_from(row.integer(6)?).map_err(|e|invalid(e.to_string()))?,format:native.copy_text(row.text(7)?)?,shape:native.copy_text(row.text(8)?)?,background:optional_text(row,9,&mut native)?,camera_id:optional_text(row,10,&mut native)?,drawing:restore_drawing(row,&mut native)?,auto_fit:if row.values[23]==SqliteValue::Null{None}else{Some(flag(row,23)?)}});}
   let emblem=children.first().map(|row|restore_emblem(row,&mut native)).transpose()?;if emblem.is_some(){native.step()?}native.checkpoint()?;Ok(Self{schema,assets,saved_cameras,scene,shots,active_shot_id,active_asset_id,emblem})
  }
 }
@@ -82,7 +122,7 @@ impl ShootingSnapshot{
   let s=&self.scene;out.insert_key_float("shooting_scene",1,&[Cell::Integer(1),Cell::Text(&s.background),Cell::Integer(i64::from(s.sun.enabled)),Cell::Real(s.sun.azimuth),Cell::Real(s.sun.elevation),Cell::Real(s.sun.intensity),Cell::Text(&s.sun.color),Cell::Real(s.ambient.intensity),Cell::Text(&s.ambient.color),Cell::Integer(i64::from(s.shadow.enabled)),Cell::Real(s.shadow.opacity),Cell::Real(s.shadow.softness),Cell::Text(&s.material.color),Cell::Real(s.material.metalness),Cell::Real(s.material.roughness),Cell::Text(&s.material.emissive),Cell::Real(s.material.emissive_intensity),Cell::Text(&s.material.stroke)],SCENE)?;
   for(ordinal,a)in self.assets.iter().enumerate(){out.insert_float("shooting_asset",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&a.id),Cell::Text(&a.name),Cell::Text(&a.url),Cell::Text(&a.format),Cell::Real(a.origin[0]),Cell::Real(a.origin[1]),Cell::Real(a.origin[2]),optional_real(&a.orientation,0),optional_real(&a.orientation,1),optional_real(&a.orientation,2),optional_real(&a.orientation,3),optional_real(&a.scale,0),optional_real(&a.scale,1),optional_real(&a.scale,2)],ASSET)?;}
   for(ordinal,camera)in self.saved_cameras.iter().enumerate(){let c=&camera.camera;out.insert_float("shooting_saved_camera",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&camera.id),Cell::Text(&camera.label),Cell::Real(c.position[0]),Cell::Real(c.position[1]),Cell::Real(c.position[2]),Cell::Real(c.target[0]),Cell::Real(c.target[1]),Cell::Real(c.target[2]),Cell::Real(c.zoom),Cell::Real(c.fov),optional_real(&c.up,0),optional_real(&c.up,1),optional_real(&c.up,2),c.projection.as_deref().map_or(Cell::Null,Cell::Text)],CAMERA)?;}
-  for(ordinal,s)in self.shots.iter().enumerate(){out.insert("shooting_shot",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&s.id),Cell::Text(&s.label),Cell::Integer(i64::from(s.width)),Cell::Integer(i64::from(s.height)),Cell::Text(&s.format),Cell::Text(&s.shape),s.background.as_deref().map_or(Cell::Null,Cell::Text),s.camera_id.as_deref().map_or(Cell::Null,Cell::Text)])?;}
+  for(ordinal,s)in self.shots.iter().enumerate(){let [background,fill,fill_color,fill_opacity,visible_lines,hidden_lines,visible_color,hidden_color,visible_width,hidden_width,line_easing,merge_lines]=drawing_cells(s.drawing.as_ref())?;out.insert_float("shooting_shot",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(&s.id),Cell::Text(&s.label),Cell::Integer(i64::from(s.width)),Cell::Integer(i64::from(s.height)),Cell::Text(&s.format),Cell::Text(&s.shape),s.background.as_deref().map_or(Cell::Null,Cell::Text),s.camera_id.as_deref().map_or(Cell::Null,Cell::Text),background,fill,fill_color,fill_opacity,visible_lines,hidden_lines,visible_color,hidden_color,visible_width,hidden_width,line_easing,merge_lines,s.auto_fit.map_or(Cell::Null,|value|Cell::Integer(i64::from(value)))],DRAWING)?;}
   if let Some(c)=&self.emblem{let t=&c.target;out.insert("shooting_emblem",&[Cell::Integer(1),Cell::Text(&c.child_id),Cell::Text(&t.artifact_id),Cell::Text(&t.dialect.artifact_kind),Cell::Text(&t.dialect.standard),Cell::Text(&t.dialect.subset)])?;}Ok(())
  }
  fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{let mut out=RowWriter::borrowed(control,phase)?;self.write_sqlite_rows(&mut out)?;out.finish_borrowed()}

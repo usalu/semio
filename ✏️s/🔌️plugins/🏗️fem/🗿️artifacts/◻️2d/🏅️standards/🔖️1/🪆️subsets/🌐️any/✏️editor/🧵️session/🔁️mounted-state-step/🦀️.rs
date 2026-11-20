@@ -95,8 +95,10 @@ impl MountedState {
                     ChildEnd::Fault(detail) => self.fail(detail.unwrap_or_else(|| b"fem2d.assembly-fault-capacity".to_vec())),
                 },
                 MountedStage::BuildLoads => {
-                    cx.consume_fuel(1);
-                    match self.load_build.as_mut().expect("load owner retained").step_one(self.snapshot.as_ref().expect("snapshot retained"), self.assembly.as_ref().expect("assembly retained")) {
+                    let before = cx.fuel_remaining();
+                    let built = self.load_build.as_mut().expect("load owner retained").step_one(self.snapshot.as_ref().expect("snapshot retained"), self.assembly.as_ref().expect("assembly retained"), cx);
+                    if before == cx.fuel_remaining() { cx.consume_fuel(1); }
+                    match built {
                         Ok(false) => self.progress(b"fem2d.load-building"),
                         Ok(true) => {
                             let assembly = self.assembly.take().expect("assembly owner retained");
@@ -111,27 +113,27 @@ impl MountedState {
                     }
                 }
                 MountedStage::BuildCsr => self.stage_build_csr(cx)?,
-                MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_one() {
-                    Ok(false) => {
-                        cx.consume_fuel(1);
+                MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_funded(cx)? {
+                    false => {
                         self.progress(b"fem2d.pcg-preparing")
                     }
-                    Ok(true) => {
+                    true => {
                         self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
                         if self.pcg.is_none() {
                             return Ok(self.fail(b"fem2d.pcg-false-terminal".to_vec()));
                         }
                         self.stage = MountedStage::Pcg;
-                        cx.consume_fuel(1);
                         self.progress(b"fem2d.pcg-admitted")
                     }
-                    Err(detail) => self.fail(detail.to_vec()),
                 },
                 MountedStage::Pcg => self.stage_pcg(cx)?,
                 MountedStage::RecoverReactions => {
-                    cx.consume_fuel(1);
                     let loads = self.load_build.as_mut().expect("physical RHS retained for equilibrium");
-                    if !loads.reactions.admit_one(loads.full.len()).unwrap_or(false) { return Ok(self.progress(b"fem2d.reaction-admitting")); }
+                    match loads.reactions.admit_in(loads.full.len(), cx) {
+                        Ok(true) => cx.consume_fuel(1),
+                        Ok(false) => return Ok(self.progress(b"fem2d.reaction-admitting")),
+                        Err(_) => return Ok(self.fail(b"fem2d.reaction-capacity".to_vec())),
+                    }
                     if loads.reactions.len() < loads.full.len() {
                         let value = -loads.full.get(loads.reactions.len()).expect("full RHS scalar retained");
                         if loads.reactions.push(value).is_err() { return Ok(self.fail(b"fem2d.reaction-capacity".to_vec())); }

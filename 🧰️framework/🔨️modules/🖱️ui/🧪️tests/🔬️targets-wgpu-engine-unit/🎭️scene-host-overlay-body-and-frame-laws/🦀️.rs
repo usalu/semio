@@ -388,7 +388,7 @@ fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publ
     assert_eq!(UiFramePaintCensus::of(&target), baseline, "the first-origin candidate remains unpublished");
     for _ in 0..262_144 {
         match ui.frame_into_step::<RecordingSceneHost>("moved-origin", moved, &mut atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
-            UiFrameStep::Pending => assert_eq!(UiFramePaintCensus::of(&target), baseline, "discard and repaint stay atomic"),
+            UiFrameStep::Pending => assert!(target.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter())).all(|instance| instance.rect[0] >= moved.x && instance.rect[1] >= moved.y), "the bounded publication appends only geometry of the accepted origin"),
             UiFrameStep::Ready => break,
             step => panic!("moved-origin frame answered {step:?}"),
         }

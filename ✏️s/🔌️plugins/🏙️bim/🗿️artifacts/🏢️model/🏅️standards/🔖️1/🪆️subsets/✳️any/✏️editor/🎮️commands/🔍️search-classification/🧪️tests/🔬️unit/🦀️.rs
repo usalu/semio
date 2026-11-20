@@ -35,7 +35,7 @@ async fn the_matches_are_the_entries_whose_code_or_title_contains_the_text_witho
 #[semio_framework_async_macros::async_test]
 async fn a_search_selects_the_matches_in_the_library_domain_and_an_empty_one_clears_them() {
     let mut snapshot = demo();
-    snapshot.classification_systems.insert("cs-uni".into(), system());
+    snapshot.classification_systems.cold_insert("cs-uni".into(), system());
     let mut context = ctx(&[]);
     let search = |query: &str, context: &mut BimDispatchCtx| run(&snapshot, |doc, cfg| handle(&SearchClassification { system: "cs-uni".into(), query: query.into() }, doc, cfg, context));
     let found = search("walls", &mut context).expect("selects");

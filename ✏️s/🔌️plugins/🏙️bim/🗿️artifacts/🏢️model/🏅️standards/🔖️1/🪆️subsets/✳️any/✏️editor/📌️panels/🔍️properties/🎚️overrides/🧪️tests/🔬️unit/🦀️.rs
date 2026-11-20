@@ -35,7 +35,7 @@ use semio_ui_locale::{Locale, Terminology};
 fn with(overrides: &[(&str, &str)]) -> ModelSnapshot {
     let mut snapshot = placed();
     for (name, value) in overrides {
-        snapshot.component_overrides.insert(format!("c-table.{name}"), ComponentOverride { component: "c-table".into(), name: (*name).into(), value: (*value).into() });
+        snapshot.component_overrides.cold_insert(format!("c-table.{name}"), ComponentOverride { component: "c-table".into(), name: (*name).into(), value: (*value).into() });
     }
     snapshot
 }

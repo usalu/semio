@@ -37,7 +37,7 @@ fn target(kind: &str, id: &str) -> (String, String) {
 
 fn room_with_window() -> ModelSnapshot {
     let mut snapshot = room();
-    snapshot.openings.insert("o-1".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 2.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 1".into() });
+    snapshot.openings.cold_insert("o-1".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 2.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 1".into() });
     snapshot
 }
 
@@ -138,7 +138,7 @@ async fn an_opening_slides_along_its_wall_and_onto_another_one() {
 #[semio_framework_async_macros::async_test]
 async fn an_opening_that_would_overlap_or_not_move_is_left_alone() {
     let mut snapshot = room_with_window();
-    snapshot.openings.insert("o-2".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 5.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 2".into() });
+    snapshot.openings.cold_insert("o-2".into(), Opening { host: "w-south".into(), kind: OpeningKind::Window { window_type: "win-12".into() }, offset: 5.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window 2".into() });
     let mut rig = Rig::plan("select", snapshot);
     rig.down(2.0, 0.0);
     assert!(rig.up(5.2, 0.0).mutations.is_empty(), "onto its neighbour: refused before it is written");
@@ -250,7 +250,7 @@ fn room_with_duct() -> ModelSnapshot {
     let mut snapshot = room();
     let storey = snapshot.walls["w-south"].storey.clone();
     let vertex = |x: f64, y: f64, z: f64| semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3 { x, y, z };
-    snapshot.mep_elements.insert("m-1".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement { storey, system: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepSystem::Supply, shape: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
+    snapshot.mep_elements.cold_insert("m-1".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement { storey, system: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepSystem::Supply, shape: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
     snapshot
 }
 

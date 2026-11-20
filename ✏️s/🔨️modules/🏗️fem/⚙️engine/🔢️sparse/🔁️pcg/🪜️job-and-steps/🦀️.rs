@@ -25,19 +25,61 @@ pub enum PcgStage {
     Complete,
 }
 
+/// 📚️ The displacement and working scalars are stored in bounded pages.
+#[derive(Default)]
+pub struct PcgVector(pub(super) PagedList<f64, MOUNTED_SCALAR_SLOTS>);
+
+impl PcgVector {
+    pub(super) fn from_values(values: impl ExactSizeIterator<Item = f64>) -> Self {
+        let target = values.len();
+        let mut owner = PagedList::default();
+        while owner.capacity() < target {
+            assert!(reserve_cold_page(&mut owner, target).expect("PCG vector page").progressed);
+        }
+        for value in values {
+            owner.push_reserved(value).expect("PCG vector reserved scalar");
+        }
+        Self(owner)
+    }
+
+    pub fn len(&self) -> usize { self.0.len() }
+
+    pub fn is_empty(&self) -> bool { self.0.is_empty() }
+
+    pub fn get(&self, index: usize) -> f64 {
+        *self.0.get(index).expect("PCG scalar index")
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &f64> {
+        self.0.iter()
+    }
+
+    fn set(&mut self, index: usize, value: f64) {
+        *self.0.get_mut(index).expect("PCG scalar index") = value;
+    }
+}
+pub(super) fn matrix_close_frontier(matrix: &Csr) -> Result<Option<RetirementDemand>, ValueError> {
+    if !matrix.vals.terminal_is_empty() {
+        return paged_owner_retirement_demand(&matrix.vals).map(Some);
+    }
+    [&matrix.indices, &matrix.indptr].into_iter()
+        .find(|owner| !owner.terminal_is_empty())
+        .map(|owner| paged_owner_retirement_demand(owner))
+        .transpose()
+}
 pub(super) struct PcgCheckpoint {
     pub(super) a: Csr,
-    pub(super) b: VecD,
-    pub(super) x: VecD,
+    pub(super) b: PcgVector,
+    pub(super) x: PcgVector,
     pub(super) tol_rel: f64,
     pub(super) max_iter: usize,
     pub(super) batch_units: usize,
     pub(super) stage: PcgStage,
-    pub(super) diag: VecD,
-    pub(super) r: VecD,
-    pub(super) z: VecD,
-    pub(super) p: VecD,
-    pub(super) ap: VecD,
+    pub(super) diag: PcgVector,
+    pub(super) r: PcgVector,
+    pub(super) z: PcgVector,
+    pub(super) p: PcgVector,
+    pub(super) ap: PcgVector,
     pub(super) b_norm: f64,
     pub(super) residual_norm: f64,
     pub(super) residual_sq: f64,
@@ -56,8 +98,6 @@ pub(super) struct PcgCheckpoint {
     pub(super) preview_due: bool,
     pub(super) checkpoint_due: bool,
 }
-
-pub(super) const PCG_SCALAR_BACKING_BYTES: usize = SPARSE_PAGE_BYTES;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum PcgPublicationKind {
@@ -97,13 +137,13 @@ impl PcgPublication {
                 1 => advance_paged_u32_owner(writer, &state.a.indptr, &mut self.cursor, context)?,
                 2 => advance_paged_u32_owner(writer, &state.a.indices, &mut self.cursor, context)?,
                 3 => advance_paged_f64_owner(writer, &state.a.vals, &mut self.cursor, context)?,
-                4 => advance_f64_owner(writer, &state.b.0, &mut self.cursor, context)?,
-                5 => advance_f64_owner(writer, &state.x.0, &mut self.cursor, context)?,
-                6 => advance_f64_owner(writer, &state.diag.0, &mut self.cursor, context)?,
-                7 => advance_f64_owner(writer, &state.r.0, &mut self.cursor, context)?,
-                8 => advance_f64_owner(writer, &state.z.0, &mut self.cursor, context)?,
-                9 => advance_f64_owner(writer, &state.p.0, &mut self.cursor, context)?,
-                10 => advance_f64_owner(writer, &state.ap.0, &mut self.cursor, context)?,
+                4 => advance_paged_f64_owner(writer, &state.b.0, &mut self.cursor, context)?,
+                5 => advance_paged_f64_owner(writer, &state.x.0, &mut self.cursor, context)?,
+                6 => advance_paged_f64_owner(writer, &state.diag.0, &mut self.cursor, context)?,
+                7 => advance_paged_f64_owner(writer, &state.r.0, &mut self.cursor, context)?,
+                8 => advance_paged_f64_owner(writer, &state.z.0, &mut self.cursor, context)?,
+                9 => advance_paged_f64_owner(writer, &state.p.0, &mut self.cursor, context)?,
+                10 => advance_paged_f64_owner(writer, &state.ap.0, &mut self.cursor, context)?,
                 _ => true,
             }
         } else if self.cursor.field == 0 {
@@ -130,6 +170,13 @@ impl PcgPublication {
 }
 
 impl PcgCheckpoint {
+    pub(super) fn vector_close_frontier(&self, lane: u8) -> Result<Option<RetirementDemand>, ValueError> {
+        [&self.b, &self.x, &self.diag, &self.r, &self.z, &self.p, &self.ap].into_iter()
+            .skip(usize::from(lane.saturating_sub(1)))
+            .find(|vector| !vector.0.terminal_is_empty())
+            .map(|vector| paged_owner_retirement_demand(&vector.0))
+            .transpose()
+    }
     pub(super) fn checkpoint_control(&self, operation: Operation) -> [u64; 26] {
         [
             operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed,
@@ -179,8 +226,9 @@ impl PcgJob {
 
     pub(super) fn step_publication(&mut self, context: &mut StepContext<'_>, kind: PcgPublicationKind) -> Result<NumericalRun, ValueError> {
         if context.should_yield() { return Ok(NumericalRun::Yield); }
+        let before = context.original_work_units_spent();
         let result = self.advance_publication(context, kind);
-        context.consume_fuel(1);
+        if context.original_work_units_spent() == before { context.consume_fuel(1); }
         result
     }
 
@@ -231,7 +279,7 @@ impl PcgJob {
         }
     }
 
-    pub fn solution(&self) -> (&VecD, PcgStats) {
+    pub fn solution(&self) -> (&PcgVector, PcgStats) {
         (&self.state.x, PcgStats { iterations: self.state.iteration, residual_norm: self.state.residual_norm, converged: self.state.converged })
     }
 
@@ -265,13 +313,13 @@ impl PcgJob {
                 continue;
             }
             let step = match self.close_lane {
-                1 => close_vec_owner_step(&mut self.state.b.0, maximum_bytes),
-                2 => close_vec_owner_step(&mut self.state.x.0, maximum_bytes),
-                3 => close_vec_owner_step(&mut self.state.diag.0, maximum_bytes),
-                4 => close_vec_owner_step(&mut self.state.r.0, maximum_bytes),
-                5 => close_vec_owner_step(&mut self.state.z.0, maximum_bytes),
-                6 => close_vec_owner_step(&mut self.state.p.0, maximum_bytes),
-                7 => close_vec_owner_step(&mut self.state.ap.0, maximum_bytes),
+                1 => close_paged_owner_step(&mut self.state.b.0, maximum_bytes),
+                2 => close_paged_owner_step(&mut self.state.x.0, maximum_bytes),
+                3 => close_paged_owner_step(&mut self.state.diag.0, maximum_bytes),
+                4 => close_paged_owner_step(&mut self.state.r.0, maximum_bytes),
+                5 => close_paged_owner_step(&mut self.state.z.0, maximum_bytes),
+                6 => close_paged_owner_step(&mut self.state.p.0, maximum_bytes),
+                7 => close_paged_owner_step(&mut self.state.ap.0, maximum_bytes),
                 _ => return (true, 0, 0),
             };
             match step {
@@ -308,17 +356,17 @@ impl PcgCheckpoint {
         let b_norm = b.norm2().max(1e-300);
         Self {
                 a,
-                b,
-                x,
+                b: PcgVector::from_values(b.0.into_iter()),
+                x: PcgVector::from_values(x.0.into_iter()),
                 tol_rel,
                 max_iter,
                 batch_units,
                 stage: PcgStage::InitializeDiagonal,
-                diag: VecD::zeros(n),
-                r: VecD::zeros(n),
-                z: VecD::zeros(n),
-                p: VecD::zeros(n),
-                ap: VecD::zeros(n),
+                diag: PcgVector::from_values(std::iter::repeat_n(0.0, n)),
+                r: PcgVector::from_values(std::iter::repeat_n(0.0, n)),
+                z: PcgVector::from_values(std::iter::repeat_n(0.0, n)),
+                p: PcgVector::from_values(std::iter::repeat_n(0.0, n)),
+                ap: PcgVector::from_values(std::iter::repeat_n(0.0, n)),
                 b_norm,
                 residual_norm: 0.0,
                 residual_sq: 0.0,

@@ -6,7 +6,7 @@ import { sha256 as nobleSha256 } from "@noble/hashes/sha2.js";
 import throttle from "lodash/throttle";
 import pMap from "p-map";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "@semio-tech/framework-filesystem/observation/current";
 import { churnProtocolV1, concurrentEditV1, ConcurrentEditErrorV1 } from "@semio-tech/framework-filesystem/observation/churn";
@@ -484,4 +484,34 @@ test("an edit that persists through every attempt fails the observation naming t
   expect(failure.attempts).toBe(churnProtocolV1().profiles.snapshot.maximumAttempts);
   expect(made).toBe(churnProtocolV1().profiles.snapshot.maximumAttempts);
   expect(readdirSync(join(root, "receipts"))).toEqual([]);
+});
+
+test("prefetch skips outputs and dep-info Cargo uplifts after announcing a unit, so the final recheck never refuses them as appeared", async () => {
+  const root = mkdtempSync(join(artifacts, "u-"));
+  const release = join(root, "release");
+  mkdirSync(release, { recursive: true });
+  const wasm = join(release, "component.wasm"), dep = join(release, "component.d");
+  writeFileSync(wasm, "\0asm");
+  const custody = sharedProvenanceCustodyV1(root, () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined })), session = new CargoProvenanceSessionV1(custody);
+  await session.prefetch({ filenames: [wasm, join(release, "late.wasm")] });
+  writeFileSync(dep, `${wasm}: ${join(root, "src", "lib.rs")}\n`);
+  writeFileSync(join(release, "late.wasm"), "\0asm");
+  await session.close();
+  expect(existsSync(dep)).toBe(true);
+});
+
+test("prefetch never pins a previous build's output or dep-info that Cargo then replaces in place, so a rebuilt component's final recheck passes", async () => {
+  const root = mkdtempSync(join(artifacts, "r-"));
+  const release = join(root, "release");
+  mkdirSync(release, { recursive: true });
+  const wasm = join(release, "component.wasm"), dep = join(release, "component.d"), past = new Date(Date.now() - 60_000);
+  writeFileSync(wasm, "\0asm-previous");
+  writeFileSync(dep, `${wasm}: ${join(root, "src", "previous.rs")}\n`);
+  for (const file of [wasm, dep]) utimesSync(file, past, past);
+  const custody = sharedProvenanceCustodyV1(root, () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined })), session = new CargoProvenanceSessionV1(custody);
+  await session.prefetch({ filenames: [wasm] });
+  writeFileSync(wasm, "\0asm-rebuilt");
+  writeFileSync(dep, `${wasm}: ${join(root, "src", "rebuilt.rs")}\n`);
+  await session.close();
+  expect(readFileSync(dep, "utf8")).toContain("rebuilt.rs");
 });

@@ -19,6 +19,7 @@ import type { CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatNumber, formatScore, withUnit } from "../📏️quantity/🟦️.ts";
 import { Missing, Records, TABLE } from "../🪟️chrome/🟦️.tsx";
 
+import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 //#region 📐️Geometry
 /** 📐️ The circle a diagram is drawn in, in SVG user units. */
 export interface RadarFrame {
@@ -487,7 +488,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
         </g>
       </svg>
       <details className="min-w-0 text-sm">
-        <summary className="course-target flex cursor-pointer items-center">{text("course.radar.table")}</summary>
+        <summary {...sharedBorderlessBoxProps} className="course-target flex cursor-pointer items-center">{text("course.radar.table")}</summary>
         <Records fold={28}>
           <table {...TABLE.table} className="course-fold w-full border-collapse text-sm">
             <caption className="sr-only">{text("course.radar.label", { name })}</caption>

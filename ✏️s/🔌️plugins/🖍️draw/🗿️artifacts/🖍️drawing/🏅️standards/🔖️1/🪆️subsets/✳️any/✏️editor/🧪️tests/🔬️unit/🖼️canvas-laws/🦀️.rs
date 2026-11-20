@@ -182,7 +182,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     let mut utility_meta = meta.clone();
     let view = meta.view_state.clone().expect("canvas window view");
     utility_meta.view_state = Some(ViewModel {
-        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([("drawing-canvas".to_string(), "shapeRect".to_string())]),
+        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([("drawing-canvas".to_string(), Some("shapeRect".to_string()))]),
         active_utility_id: None,
         ..view
     });

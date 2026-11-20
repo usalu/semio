@@ -234,15 +234,16 @@ fn original_mounted_turn_debits_actual_context_receipt_once_and_keeps_fuel_indep
 fn original_actor_capture_uses_full_grant_and_retains_cancellation_custody(){
  let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🎭️actor/🔣️.json")).unwrap();let profile:Value=serde_json::from_str(include_str!("../🎭️actor/🎟️work/case.json")).unwrap();let amounts=fixture["nativeGrant"].as_array().unwrap();let amount=|n:usize|amounts[n].as_u64().unwrap()as usize;let stock=RetainedCloneGrant{maximum_items:profile["stock"]["items"].as_u64().unwrap()as usize,maximum_copy_bytes:amount(1),maximum_capacity_bytes:amount(2),maximum_release_bytes:amount(3),maximum_depth:amount(4)};let mut observations=Vec::new();
  for vector in fixture["cases"].as_array().unwrap(){
-  let source=if let Some(text)=vector["text"].as_str(){text.to_owned()}else{vector["repeat"].as_str().unwrap().repeat(vector["bytes"].as_u64().unwrap()as usize)};let original_pointer=source.as_ptr();let mut capture=actor_capture::ActorCapture::new();let mut slot=None;let mut remaining=stock;let mut fuel=profile["stock"]["work"].as_u64().unwrap();let(mut births,mut releases,mut turns)=(0,0,0);let mut total=RetainedCloneProgress::default();
+  let source=if let Some(text)=vector["text"].as_str(){text.to_owned()}else{vector["repeat"].as_str().unwrap().repeat(vector["bytes"].as_u64().unwrap()as usize)};let original_pointer=source.as_ptr();let mut capture=actor_capture::ActorCapture::new();let mut slot=None;let mut remaining=stock;let mut fuel=u128::from(profile["stock"]["work"].as_u64().unwrap());let(mut births,mut releases,mut turns)=(0,0,0);let mut total=RetainedCloneProgress::default();
   while slot.is_none()||!capture.terminal_is_empty(){
    assert!(turns<1000);let grant=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(amount(0)),..remaining};let(demand,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.next_demand(&source).unwrap());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut denials=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];if demand.copy_bytes>0{denials.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}if demand.capacity_bytes>0{denials.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}
    for denied in denials{let before=capture.phase();let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.advance(&source,&mut slot,denied));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(capture.phase(),before);assert_eq!(source.as_ptr(),original_pointer);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
    let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.advance(&source,&mut slot,grant));fuel=fuel.checked_sub(turn.work).unwrap();let p=turn.result.unwrap().progress();assert!(p.fits(grant));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;total=total.checked_add(p).unwrap();remaining.maximum_items-=p.copied_items;remaining.maximum_copy_bytes-=p.copied_bytes;remaining.maximum_capacity_bytes-=p.retained_capacity_bytes;remaining.maximum_release_bytes-=p.released_bytes;turns+=1;
   }
   assert_eq!(slot.as_ref().unwrap().original().unwrap().as_str(),source);let capture_pointer=slot.as_ref().unwrap().original().unwrap().as_ptr();let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||capture.advance(&source,&mut slot,remaining));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(slot.as_ref().unwrap().original().unwrap().as_ptr(),capture_pointer);
-  while !slot.as_ref().unwrap().terminal_is_empty(){assert!(turns<1000);let owner=slot.as_mut().unwrap();let grant=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(amount(0)),..remaining};let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{owner.next_copy_byte_demand().unwrap();owner.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.next_release_byte_demand().unwrap();owner.next_depth_demand().unwrap();});assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(owner.last_turn_work(),0);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());fuel=fuel.checked_sub(owner.last_turn_work()).unwrap();let p=step.progress();assert!(p.fits(grant));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;remaining.maximum_items-=p.copied_items;remaining.maximum_copy_bytes-=p.copied_bytes;remaining.maximum_capacity_bytes-=p.retained_capacity_bytes;remaining.maximum_release_bytes-=p.released_bytes;turns+=1;}
-  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(slot.take());drop(capture)});assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(births,releases);assert_eq!(source.as_ptr(),original_pointer);assert!(fuel<profile["stock"]["work"].as_u64().unwrap());observations.push(serde_json::json!({"id":vector["id"],"textBytes":source.len(),"copyBytes":total.copied_bytes,"capacityBytes":total.retained_capacity_bytes,"releaseBytes":total.released_bytes,"turns":turns,"births":births,"releases":releases,"deniedHeapBytes":0,"dropHeapBytes":0}));
+  let mut bank=actor_close_bank(remaining,fuel);
+  while !slot.as_ref().unwrap().terminal_is_empty(){assert!(turns<1000);let owner=slot.as_mut().unwrap();let grant=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(amount(0)),..remaining};let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{owner.next_copy_byte_demand().unwrap();owner.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();owner.next_release_byte_demand().unwrap();owner.next_depth_demand().unwrap();});assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_actor(&mut bank,owner,RetainedCloneGrant{maximum_items:0,..grant}));assert_eq!(step.progress(),Default::default());assert_eq!(owner.last_turn_work(),0);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_actor(&mut bank,owner,grant));fuel=fuel.checked_sub(owner.last_turn_work()).unwrap();let p=step.progress();assert!(p.fits(grant));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;remaining.maximum_items-=p.copied_items;remaining.maximum_copy_bytes-=p.copied_bytes;remaining.maximum_capacity_bytes-=p.retained_capacity_bytes;remaining.maximum_release_bytes-=p.released_bytes;turns+=1;}
+  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(slot.take());drop(capture)});assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(births,releases);assert_eq!(source.as_ptr(),original_pointer);assert!(fuel<u128::from(profile["stock"]["work"].as_u64().unwrap()));observations.push(serde_json::json!({"id":vector["id"],"textBytes":source.len(),"copyBytes":total.copied_bytes,"capacityBytes":total.retained_capacity_bytes,"releaseBytes":total.released_bytes,"turns":turns,"births":births,"releases":releases,"deniedHeapBytes":0,"dropHeapBytes":0}));
  }
  let parent=std::path::PathBuf::from(std::env::var_os("SEMIO_MOUNTED_OWNER_RESULTS").expect("explicit original mounted output authority"));let path=parent.parent().unwrap().join("actor.json");assert!(path.is_absolute()&&path.to_string_lossy().encode_utf16().count()<=256);std::fs::create_dir_all(path.parent().unwrap()).unwrap();std::fs::write(path,serde_json::to_vec(&observations).unwrap()).unwrap();
 }
@@ -337,4 +338,55 @@ fn original_mounted_inline_gate_keeps_exclusion_poison_and_same_payload_without_
  let original=Arc::clone(&source);assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{let _guard=original.try_lock().unwrap();panic!("original gate producer panic")})).is_err());drop(original);assert!(matches!(source.try_lock(),Err(MountedOwnerCellErrorV1::Poisoned)));
  let mut cursor=MountedOwnerAliasRetirementV1::new(source);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:65536,maximum_depth:1};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(grant,Option::is_none).unwrap());assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,step.progress().released_bytes);assert_eq!(cursor.unique().unwrap().as_ref().unwrap().as_ptr(),pointer);let mut released=heap.released_bytes;
  let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor.unique_mut().unwrap().take()));assert_eq!(heap.released_bytes,64);released+=heap.released_bytes;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(grant,Option::is_none).unwrap());assert_eq!(heap.released_bytes,step.progress().released_bytes);released+=heap.released_bytes;assert_eq!(born.requested_bytes,released);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+}
+
+#[test]
+fn redeemed_returns_keep_their_original_funding_inside_mounted_lifecycle() {
+    let cases: Vec<Value> = serde_json::from_str(include_str!("🧫️fixtures/reserved-return.json")).unwrap();
+    for law in cases {
+        let grant = law["grant"].grant().unwrap();
+        let fresh = context_receipt(&law["fresh"]);
+        let reserved = context_receipt(&law["reserved"]);
+        let total = fresh.checked_add(reserved).unwrap();
+        let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(99), generation: Generation(1) };
+        CLOCK.with(|clock| clock.set(Some(1)));
+        let mut sequence = 0;
+        let mut posted = RetainedCloneProgress::default();
+        let mut cx = StepContext::new(identity.operation, identity.generation, StepBudget::new(10, 100, grant), CancelToken::root_now(), now_us, &mut sequence, &mut posted);
+        let policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+        let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Maintenance, policy, &mut cx).unwrap().unwrap();
+        turn.advance_lifecycle(|cx, _| -> Result<_, ValueError> {
+            cx.consume_retained(fresh)?;
+            cx.consume_fuel(1);
+            cx.receive_original_reserved_return(reserved, 1)?;
+            Ok(semio_framework_value::RetainedCloneStep::Progress(total))
+        }).unwrap();
+        assert_eq!(turn.progress(), total);
+        assert_eq!(turn.grant(), law["remaining"].grant().unwrap());
+    }
+}
+
+
+pub(crate) fn actor_close_bank(grant: RetainedCloneGrant, fuel: u128) -> semio_framework_value_testing_effect_bank::EffectBank {
+    use semio_framework_value_testing_effect_bank::{EffectBank, Wallet};
+    EffectBank::new(Wallet::new(grant, fuel.try_into().unwrap()))
+}
+
+pub(crate) fn close_actor(
+    bank: &mut semio_framework_value_testing_effect_bank::EffectBank,
+    owner: &mut semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>,
+    grant: RetainedCloneGrant,
+) -> semio_framework_value::RetainedCloneStep {
+    let body = grant.maximum_copy_bytes;
+    let work = owner.next_computational_work(body).unwrap();
+    let (poll, _) = bank.run(grant, work, |effect| {
+        let mut result = None;
+        semio_framework_value_testing_effect_bank::with_original_invocation(effect.work_source_turn(), effect, &mut |invocation| {
+            result = Some(owner.step(body, invocation));
+        }).unwrap();
+        result.unwrap()
+    });
+    let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("synchronous actor retirement remained pending") };
+    match bank.take_admitted() { Some(admitted) => assert!(admitted), None => assert_eq!(turn.work, 0) }
+    turn.result.unwrap()
 }

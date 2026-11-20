@@ -1,0 +1,120 @@
+{
+ "summary": {
+  "en": "A 12 kW air-source monobloc heat pump outdoor unit, 1.10 m wide, 0.45 m deep and 1.45 m high, in side elevation: the louvred guard over the L-shaped coil on the right side and the back, the domed grille of the single front fan beside the closed compressor column, the base pan on two rubber feet and the top cover hinged at the rear for service. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
+  "de": "Ein Luft-Wasser-Monoblock-Wärmepumpen-Außengerät von 12 kW, 1,10 m breit, 0,45 m tief und 1,45 m hoch, in der Seitenansicht: der Lamellenschutz über dem L-förmigen Wärmetauscher an der rechten Seite und der Rückseite, das gewölbte Gitter des einzelnen Frontlüfters neben der geschlossenen Verdichtersäule, die Bodenwanne auf zwei Gummifüßen und die hinten angeschlagene Abdeckhaube für die Wartung. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
+ },
+ "vaillant": "Vaillant aroTHERM plus VWL 105/6 A and VWL 125/6 A, technical data (installer product pages and technical sheet, read 2026-11-19): casing width 1,100 mm and depth 450 mm, 194 kg ready for operation, fan air flow up to about 5,100 m3/h. Used for the casing width and depth of the 10 to 12 kW class.",
+ "provenanceNotes": {
+  "en": "Class data of 10 to 12 kW air-to-water monobloc outdoor units with one front fan (1.10 m wide and 0.45 m deep as the Vaillant aroTHERM plus 10 and 12 kW casing, 1.45 m high, 150 kg, 5500 m3/h). Construction as built in this class: an L-shaped two-row finned coil on the back and the right side behind a louvred side guard and a wire rear guard, one axial fan of 0.56 m with three sickle blades in a bell mouth behind a domed front grille, a closed compressor and hydraulics column on the left behind a sheet partition, a galvanised base pan on two rubber feet and a weather cover over the top panel. Air flow and temperature change follow the EN 14511 test points A7/W35 heating (12 kW, COP 4.5, electric input 2.7 kW) and A35/W7 cooling (10 kW, EER 3.3, 3.0 kW input); all numbers are authored estimates of that class. Fan blade rotation is not visible in the side elevation.",
+  "de": "Klassendaten von 10- bis 12-kW-Luft-Wasser-Monoblock-Außengeräten mit einem Frontlüfter (1,10 m breit und 0,45 m tief wie das Gehäuse der Vaillant aroTHERM plus 10 und 12 kW, 1,45 m hoch, 150 kg, 5500 m3/h). Aufbau wie in dieser Klasse üblich: ein L-förmiger zweireihiger Lamellenwärmetauscher an Rückseite und rechter Seite hinter einem seitlichen Lamellenschutz und einem hinteren Drahtgitter, ein Axiallüfter von 0,56 m mit drei Sichelflügeln in einer Einlaufdüse hinter einem gewölbten Frontgitter, eine geschlossene Verdichter- und Hydrauliksäule links hinter einer Blechtrennwand, eine verzinkte Bodenwanne auf zwei Gummifüßen und eine Wetterhaube über dem Deckblech. Luftstrom und Temperaturänderung folgen den Prüfpunkten nach EN 14511 A7/W35 Heizen (12 kW, COP 4,5, elektrische Aufnahme 2,7 kW) und A35/W7 Kühlen (10 kW, EER 3,3, Aufnahme 3,0 kW); alle Zahlen sind Schätzungen dieser Klasse. Die Lüfterdrehung ist in der Seitenansicht nicht sichtbar."
+ },
+ "unitTitle": {
+  "en": "Casing with coil, fan, compressor column, base pan and feet",
+  "de": "Gehäuse mit Wärmetauscher, Lüfter, Verdichtersäule, Bodenwanne und Füßen"
+ },
+ "lidTitle": {
+  "en": "Top cover hinged at the rear top edge",
+  "de": "Abdeckhaube, hinten oben angeschlagen"
+ },
+ "poses": {
+  "heating": {
+   "en": "Part-load heating at an outdoor air of 7 C: the fan draws air through the coil and blows it out of the front grille, cooled by about 5 K.",
+   "de": "Teillast-Heizbetrieb bei 7 C Außenluft: Der Lüfter saugt Luft durch den Wärmetauscher und bläst sie, um etwa 5 K abgekühlt, aus dem Frontgitter."
+  },
+  "cooling": {
+   "en": "Part-load cooling at 35 C: the coil rejects heat and the fan blows air warmed by about 7 K out of the front grille.",
+   "de": "Teillast-Kühlbetrieb bei 35 C: Der Tauscher gibt Wärme ab und der Lüfter bläst um etwa 7 K erwärmte Luft aus dem Frontgitter."
+  }
+ },
+ "clip": {
+  "id": "heating-modulation",
+  "title": {
+   "en": "Heating with modulating load",
+   "de": "Heizbetrieb mit modulierender Last"
+  },
+  "description": {
+   "en": "A 20 s loop of heating operation: compressor and fan modulate together between 60 and 80 percent; the cooled air keeps leaving the front grille.",
+   "de": "Eine Schleife von 20 s im Heizbetrieb: Verdichter und Lüfter modulieren gemeinsam zwischen 60 und 80 Prozent; die abgekühlte Luft strömt weiter aus dem Frontgitter."
+  },
+  "phases": [
+   {"id": "load-rise", "fromS": 0, "toS": 10, "title": {"en": "Load rises", "de": "Last steigt"}},
+   {"id": "load-fall", "fromS": 10, "toS": 20, "title": {"en": "Load falls", "de": "Last sinkt"}}
+  ]
+ },
+ "symbolDescription": {
+  "en": "True-extent symbol of the 0.47 x 1.10 m outdoor unit in side, front and top view: casing with cover, the coil guard on the right side, the fan opening on the front (on the unit's right, the viewer's left) and the compressor column beside it.",
+  "de": "Zeichen des 0,47 x 1,10 m großen Außengeräts in wahrer Ausdehnung in Seiten-, Vorder- und Draufsicht: Gehäuse mit Haube, der Tauscherschutz an der rechten Seite, die Lüfteröffnung auf der Front (rechts am Gerät, vom Betrachter aus links) und die Verdichtersäule daneben."
+ },
+ "symbolNote": {
+  "en": "Model metres: casing 0.43 m deep x 1.10 m wide x 1.425 m high under a 0.47 m deep cover reaching 1.45 m; side, front and top view.",
+  "de": "Modellmeter: Gehäuse 0,43 m tief x 1,10 m breit x 1,425 m hoch unter einer 0,47 m tiefen Haube bis 1,45 m; Seiten-, Vorder- und Draufsicht."
+ },
+ "representation": {
+  "50": {
+   "silhouette": {"en": "The true views of the 1:50 model: casing 0.43 m deep under the 0.47 m cover, the grille dome 20 mm proud of the front, the water connections and hinge brackets behind.", "de": "Die wahren Ansichten des 1:50-Modells: Gehäuse 0,43 m tief unter der 0,47 m tiefen Haube, die Gitterwölbung 20 mm vor der Front, Wasseranschlüsse und Scharnierlaschen hinten."},
+   "retained": {"en": "Side: rubber foot, base pan, casing, rear corner post, the louvred coil guard with one hatch line per louvre (50 mm), the grille dome, the cover with its side skirt, connections and hinge bracket. Front: both feet with their chamfers, base pan, fan section and compressor column panels, the grille with five rings, eight spokes, cap and hub over three sickle blades, the cover. Plan: casing under the cover.", "de": "Seite: Gummifuß, Bodenwanne, Gehäuse, hinterer Eckpfosten, der Lamellenschutz des Tauschers mit einer Schraffurlinie je Lamelle (50 mm), die Gitterwölbung, die Haube mit Seitenschürze, Anschlüsse und Scharnierlasche. Front: beide Füße mit Fasen, Bodenwanne, Blech der Lüfterkammer und der Verdichtersäule, das Gitter mit fünf Ringen, acht Speichen, Kappe und Nabe über drei Sichelflügeln, die Haube. Draufsicht: Gehäuse unter der Haube."},
+   "merged": {"en": "The two water connections are one shape in the side view; the side skirt and the cover plate are one profile.", "de": "Die zwei Wasseranschlüsse sind in der Seitenansicht eine Form; Seitenschürze und Deckplatte sind ein Profil."},
+   "omitted": {"en": "Screws, nameplate, rear wire guard (behind the side view), service grip on the left side (not seen from the right), inner parts of the compressor column.", "de": "Schrauben, Typenschild, hinteres Drahtgitter (hinter der Seitenansicht), Wartungsgriff an der linken Seite (von rechts nicht sichtbar), Innenteile der Verdichtersäule."},
+   "thinElements": {"en": "Cover skirt 7.5 mm (0.15 mm), grille wires drawn as 0.13 mm strokes.", "de": "Haubenschürze 7,5 mm (0,15 mm), Gitterdrähte als 0,13-mm-Striche."},
+   "hatching": {"en": "Louvre hatch, one line per 50 mm louvre (1.0 mm on paper).", "de": "Lamellenschraffur, eine Linie je 50-mm-Lamelle (1,0 mm auf dem Papier)."},
+   "styles": {"en": "Pens 0.35 / 0.25 / 0.13 mm.", "de": "Stifte 0,35 / 0,25 / 0,13 mm."},
+   "overlays": {"en": "The cover swings about its rear hinge in the serviced pose; the fan does not turn in the drawing.", "de": "Die Haube schwenkt in der Wartungspose um ihr hinteres Scharnier; der Lüfter dreht sich in der Zeichnung nicht."}
+  },
+  "100": {
+   "silhouette": {"en": "The true views of the 1:100 model.", "de": "Die wahren Ansichten des 1:100-Modells."},
+   "retained": {"en": "Side: foot, base pan, casing, rear corner post, louvred coil guard (one hatch line per 100 mm louvre), grille dome, cover with skirt, water connections. Front: feet, base pan, fan section and column panels, grille disc with two rings, four spokes and hub over three blades, the cover. Plan: casing under the cover.", "de": "Seite: Fuß, Bodenwanne, Gehäuse, hinterer Eckpfosten, Lamellenschutz (eine Schraffurlinie je 100-mm-Lamelle), Gitterwölbung, Haube mit Schürze, Wasseranschlüsse. Front: Füße, Bodenwanne, Blech der Lüfterkammer und der Säule, Gitterscheibe mit zwei Ringen, vier Speichen und Nabe über drei Flügeln, die Haube. Draufsicht: Gehäuse unter der Haube."},
+   "merged": {"en": "Five grille rings become two, eight spokes four, cap and hub one disc; 25 louvres become 12.", "de": "Fünf Gitterringe werden zwei, acht Speichen vier, Kappe und Nabe eine Scheibe; 25 Lamellen werden 12."},
+   "omitted": {"en": "Hinge brackets, rear wire guard, service grip, blade edges finer than 15 mm.", "de": "Scharnierlaschen, hinteres Drahtgitter, Wartungsgriff, Flügelkanten feiner als 15 mm."},
+   "thinElements": {"en": "Cover skirt 15 mm (0.15 mm).", "de": "Haubenschürze 15 mm (0,15 mm)."},
+   "hatching": {"en": "Louvre hatch at 1.0 mm (100 mm louvres).", "de": "Lamellenschraffur mit 1,0 mm (100-mm-Lamellen)."},
+   "styles": {"en": "Pens 0.25 / 0.18 mm.", "de": "Stifte 0,25 / 0,18 mm."},
+   "overlays": {"en": "As 1:50.", "de": "Wie 1:50."}
+  },
+  "200": {
+   "silhouette": {"en": "Casing block with base pan, feet and cover slab; the grille dome is inside the 60 mm limit and not drawn in the side view.", "de": "Gehäuseblock mit Bodenwanne, Füßen und Haubenplatte; die Gitterwölbung liegt unter der 60-mm-Grenze und ist in der Seitenansicht nicht gezeichnet."},
+   "retained": {"en": "Side: feet, base pan, casing, the dark coil face of the right side, cover. Front: feet, base pan, casing, compressor column panel, the dark fan disc with its hub, cover. Plan: casing under the cover.", "de": "Seite: Füße, Bodenwanne, Gehäuse, die dunkle Tauscherfläche der rechten Seite, Haube. Front: Füße, Bodenwanne, Gehäuse, Blech der Verdichtersäule, die dunkle Lüfterscheibe mit Nabe, Haube. Draufsicht: Gehäuse unter der Haube."},
+   "merged": {"en": "Grille, blades and bell mouth are one disc; the louvres are the coil face; cover plate and skirt one slab; corner post into the coil face.", "de": "Gitter, Flügel und Düse sind eine Scheibe; die Lamellen sind die Tauscherfläche; Deckplatte und Schürze eine Platte; Eckpfosten in die Tauscherfläche."},
+   "omitted": {"en": "Rings, spokes, blades, water connections, hinge details, chamfers of the feet.", "de": "Ringe, Speichen, Flügel, Wasseranschlüsse, Scharnierdetails, Fasen der Füße."},
+   "thinElements": {"en": "Cover 45 mm (0.23 mm).", "de": "Haube 45 mm (0,23 mm)."},
+   "hatching": {"en": "None.", "de": "Keine."},
+   "styles": {"en": "Pens 0.18 / 0.13 mm.", "de": "Stifte 0,18 / 0,13 mm."},
+   "overlays": {"en": "The cover still swings open in the serviced pose.", "de": "Die Haube schwenkt in der Wartungspose weiterhin auf."}
+  },
+  "500": {
+   "silhouette": {"en": "Casing block from the base pan up, two feet and the cover; in front the dark fan disc.", "de": "Gehäuseblock ab der Bodenwanne, zwei Füße und die Haube; vorn die dunkle Lüfterscheibe."},
+   "retained": {"en": "Side: feet, casing, cover. Front: feet, casing, fan disc, cover. Plan: casing under the cover.", "de": "Seite: Füße, Gehäuse, Haube. Front: Füße, Gehäuse, Lüfterscheibe, Haube. Draufsicht: Gehäuse unter der Haube."},
+   "merged": {"en": "Base pan into the casing; coil face, compressor column and fan section into one outline whose shape binds all their thermal regions.", "de": "Bodenwanne ins Gehäuse; Tauscherfläche, Verdichtersäule und Lüfterkammer in einen Umriss, dessen Form alle ihre thermischen Regionen bindet."},
+   "omitted": {"en": "Hub, coil face in the side view, every detail under 75 mm.", "de": "Nabe, Tauscherfläche in der Seitenansicht, jedes Detail unter 75 mm."},
+   "thinElements": {"en": "Cover 45 mm (0.09 mm), kept as the moving part.", "de": "Haube 45 mm (0,09 mm), als bewegtes Teil beibehalten."},
+   "hatching": {"en": "None.", "de": "Keine."},
+   "styles": {"en": "Body pen 0.15 mm.", "de": "Körperstift 0,15 mm."},
+   "overlays": {"en": "As 1:200.", "de": "Wie 1:200."}
+  }
+ },
+ "volumes": {
+  "50": [
+   {"en": "Built as the real unit: a galvanised base pan on two chamfered rubber feet; a casing of powder-coated sheet (front panel of the fan chamber with the 0.60 m fan opening, separate front panel of the compressor column, right front strip, rear right corner post as a folded angle, top panel, left service panel with grip, column back panel with two 42 mm water connections, galvanised partition between fan chamber and column); every sheet is 7.5 mm, the smallest feature of the scale, the folded post keeps its 60 mm legs.", "de": "Gebaut wie das echte Gerät: eine verzinkte Bodenwanne auf zwei gefasten Gummifüßen; ein Gehäuse aus pulverbeschichtetem Blech (Frontblech der Lüfterkammer mit der 0,60-m-Lüfteröffnung, eigenes Frontblech der Verdichtersäule, rechter Frontstreifen, hinterer rechter Eckpfosten als Kantwinkel, Deckblech, linkes Wartungsblech mit Griff, Rückblech der Säule mit zwei 42-mm-Wasseranschlüssen, verzinkte Trennwand zwischen Lüfterkammer und Säule); jedes Blech ist 7,5 mm, das kleinste Merkmal des Maßstabs, der Kantpfosten behält seine 60-mm-Schenkel."},
+   {"en": "The coil is the real L-shaped fin pack, 40 mm deep and 1.24 m high, across the back of the fan chamber and round a 70 mm bend along the right side; on the right it sits behind 25 louvres of 50 mm pitch inclined 40 degrees, on the back behind a welded wire guard of 15 vertical and 13 horizontal 4 mm wires (slender, true size).", "de": "Der Wärmetauscher ist das echte L-förmige Lamellenpaket, 40 mm tief und 1,24 m hoch, quer über die Rückseite der Lüfterkammer und mit 70 mm Biegeradius entlang der rechten Seite; rechts liegt er hinter 25 um 40 Grad geneigten Lamellen mit 50 mm Teilung, hinten hinter einem geschweißten Drahtgitter aus 15 senkrechten und 13 waagrechten 4-mm-Drähten (schlank, in wahrer Größe)."},
+   {"en": "The fan is the real set: a flared bell mouth of 0.58 m throat, three sickle blades of 0.55 m diameter swept forward with pitch falling from 36 to 21 degrees (one loft repeated three times), the spinner hub on an external-rotor motor bolted to a plate between two vertical bracket bars, and a domed grille 13 mm proud: rolled rim, five rings, eight spokes and a cap.", "de": "Der Lüfter ist der echte Satz: eine ausgestellte Einlaufdüse mit 0,58 m Hals, drei nach vorn gepfeilte Sichelflügel von 0,55 m Durchmesser mit von 36 auf 21 Grad fallendem Anstellwinkel (ein Loft, dreimal wiederholt), die Nabenhaube am Außenläufermotor auf einer Platte zwischen zwei senkrechten Halterstäben, und ein 13 mm gewölbtes Gitter: gerollter Rand, fünf Ringe, acht Speichen und eine Kappe."},
+   {"en": "The top cover is a plate with side and front skirts, hinged on two knuckle pairs at the rear top edge whose casing brackets sit behind the back panels, so it swings open without leaving the unit.", "de": "Die Abdeckhaube ist eine Platte mit Seiten- und Frontschürzen, an zwei Scharnierpaaren an der hinteren Oberkante angeschlagen, deren Gehäuselaschen hinter den Rückblechen sitzen, sodass sie aufschwenkt, ohne das Gerät zu verlassen."},
+   {"en": "Thermal: every region is one sheet skin, so its solids reference the body (casing sheets, connections, hinge and motor bracket; column panels and grip; coil, louvres and wires; bell mouth, motor, hub, blades and grille; base pan; feet; cover); the heating and cooling discharges are 7.5 mm outlet patches of 0.56 m in the grille dome, the defrost vapour a patch on the upper rear coil face, each tagged with its emitter.", "de": "Thermik: Jede Region ist eine Blechhaut, daher verweisen ihre Körper auf den Körper (Gehäusebleche, Anschlüsse, Scharnier- und Motorhalter; Säulenbleche und Griff; Tauscher, Lamellen und Drähte; Düse, Motor, Nabe, Flügel und Gitter; Bodenwanne; Füße; Haube); Heiz- und Kühlausblasung sind 7,5-mm-Austrittsflächen von 0,56 m in der Gitterwölbung, der Abtaudampf eine Fläche oben an der hinteren Tauscherseite, jeweils mit ihrem Emitter markiert."},
+   {"en": "Structure: the real frame, not the casing: four corner posts (folded angles, the rear right one is the body post), four top rails under the top panel, the base pan and the feet, the partition as shear plate, the motor bracket; the cover plate and skirt as the lid member; the knuckles as the hinge joint on both sides; the compressor as its own mass on the pan, the bone masses at their centres, two 7.5 mm pads at the foot contacts.", "de": "Tragwerk: der echte Rahmen, nicht die Verkleidung: vier Eckpfosten (Kantwinkel, der hintere rechte ist der Körperpfosten), vier Kopfriegel unter dem Deckblech, Bodenwanne und Füße, die Trennwand als Schubblech, der Motorhalter; Deckplatte und Schürze als Haubenglied; die Scharnierknoten auf beiden Seiten als Gelenk; der Verdichter als eigene Masse auf der Wanne, die Knochenmassen in ihren Schwerpunkten, zwei 7,5-mm-Auflager an den Fußkontakten."}
+  ],
+  "100": [
+   {"en": "Authored for 15 mm: the same construction with 15 mm sheets; the rear wire guard, the service grip, the motor plate and the hinge knuckles of the casing are below what the scale shows and are left out, the motor and hub are one turned body, the bell mouth a plain flared ring.", "de": "Für 15 mm erstellt: derselbe Aufbau mit 15-mm-Blechen; hinteres Drahtgitter, Wartungsgriff, Motorplatte und Gehäusescharnierknoten liegen unter dem, was der Maßstab zeigt, und entfallen, Motor und Nabe sind ein Drehkörper, die Düse ein einfacher ausgestellter Ring."},
+   {"en": "Coil as at 1:50 behind 12 louvres of 100 mm pitch; fan of three blades lofted through every second section, 15 mm thick; grille of rim, two rings, four spokes and a cap as at the 1:100 drawing; cover plate and skirt 15 mm.", "de": "Tauscher wie bei 1:50 hinter 12 Lamellen mit 100 mm Teilung; Lüfter mit drei Flügeln durch jeden zweiten Schnitt, 15 mm dick; Gitter aus Rand, zwei Ringen, vier Speichen und Kappe wie in der 1:100-Zeichnung; Deckplatte und Schürze 15 mm."},
+   {"en": "Thermal: references to the body per region; discharge and defrost patches 15 mm thick, tagged with their emitters.", "de": "Thermik: Verweise auf den Körper je Region; Ausblas- und Abtauflächen 15 mm dick, mit ihren Emittern markiert."},
+   {"en": "Structure: three 30 mm corner posts and the body post, one top frame ring, base pan, feet, the partition as a 22.5 mm shear plate, the bracket bars, cover plate and skirt as lid members, the cover knuckles as hinge joint, the compressor and bone masses, 15 mm pads.", "de": "Tragwerk: drei 30-mm-Eckpfosten und der Körperpfosten, ein Kopfrahmen, Bodenwanne, Füße, die Trennwand als 22,5-mm-Schubblech, die Halterstäbe, Deckplatte und Schürze als Haubenglieder, die Haubenknoten als Gelenk, Verdichter- und Knochenmassen, 15-mm-Auflager."}
+  ],
+  "200": [
+   {"en": "Authored for 30 mm: the casing becomes the fan chamber block and the compressor column block over the base pan on two rounded feet; the L coil is a 30 mm dark slab on the back and the right side with the front strip of the side panel; grille, blades and bell mouth are one dark disc 10 mm proud with the hub on it; the cover is one 45 mm slab.", "de": "Für 30 mm erstellt: das Gehäuse wird zum Block der Lüfterkammer und zum Block der Verdichtersäule über der Bodenwanne auf zwei gerundeten Füßen; der L-Tauscher ist eine dunkle 30-mm-Platte an Rückseite und rechter Seite mit dem Frontstreifen des Seitenblechs; Gitter, Flügel und Düse sind eine dunkle Scheibe 10 mm vor der Front mit der Nabe darauf; die Haube ist eine 45-mm-Platte."},
+   {"en": "Thermal: references per region and 30 mm outlet patches tagged with their emitters.", "de": "Thermik: Verweise je Region und 30-mm-Austrittsflächen mit ihren Emittern."},
+   {"en": "Structure: four 30 mm corner posts, the top frame ring, base pan and feet, the partition as shear plate, the cover as lid member with a 30 mm hinge pin as its joint, compressor and bone masses, 30 mm pads.", "de": "Tragwerk: vier 30-mm-Eckpfosten, der Kopfrahmen, Bodenwanne und Füße, die Trennwand als Schubblech, die Haube als Haubenglied mit einem 30-mm-Scharnierbolzen als Gelenk, Verdichter- und Knochenmassen, 30-mm-Auflager."}
+  ],
+  "500": [
+   {"en": "Authored for 75 mm: two feet, the fan chamber and compressor column as blocks from the base pan up (the pan is merged), the coil as one 75 mm L slab on the back and right side with the front strip, a dark fan disc 20 mm proud, the cover slab.", "de": "Für 75 mm erstellt: zwei Füße, Lüfterkammer und Verdichtersäule als Blöcke ab der Bodenwanne (die Wanne ist eingeschmolzen), der Tauscher als eine 75-mm-L-Platte an Rückseite und rechter Seite mit dem Frontstreifen, eine dunkle Lüfterscheibe 20 mm vor der Front, die Haubenplatte."},
+   {"en": "Thermal: references per region; the merged base pan keeps a 75 mm thermal slab of its own inside the casing; outlet patches 75 mm thick.", "de": "Thermik: Verweise je Region; die eingeschmolzene Bodenwanne behält eine eigene 75-mm-Thermikplatte im Gehäuse; Austrittsflächen 75 mm dick."},
+   {"en": "Structure: four 75 mm corner posts between a base frame and a top frame, the feet, the cover as lid member with a 75 mm hinge pin, two masses, 75 mm pads.", "de": "Tragwerk: vier 75-mm-Eckpfosten zwischen Grund- und Kopfrahmen, die Füße, die Haube als Haubenglied mit einem 75-mm-Scharnierbolzen, zwei Massen, 75-mm-Auflager."}
+  ]
+ }
+}

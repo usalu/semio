@@ -2,9 +2,9 @@
 import { getRoles } from "@testing-library/react";
 import { roles } from "aria-query";
 import { expect, it } from "vitest";
-import { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_KEEPOUTS, PET_PROPS, PET_SURFACES, SURFACE_WIDTH, fixtureId, stageBox, surfaceId, survey, wallId } from "@semio-tech/pets-react";
+import { FIXTURE_ELEMENTS, FLOOR, FOCUS_MARGIN, KEEPOUT_MARGIN, PET_CONTROLS, PET_PROPS, PET_SURFACES, SURFACE_WIDTH, fixtureId, stageBox, surfaceId, survey, wallId } from "@semio-tech/pets-react";
 import vectors from "../../🧫️fixtures/📡️surface-survey/🔣️.json";
-import { build, card, place, scenes, viewport } from "../🟣️harness/🟦️.tsx";
+import { build, card, optionsOf, place, scenes, viewport } from "../🟣️harness/🟦️.tsx";
 
 /** 🔷 Registers the ships vectors rule survey tests of the 📡️ surface survey suite. */
 export function registerShipsVectorsRuleSurveyTests(): void {
@@ -27,14 +27,7 @@ export function registerShipsVectorsRuleSurveyTests(): void {
         expect(document.activeElement).toBe(built.get(scene.focus));
       }
       const before = document.body.outerHTML;
-      const surveyed = survey(document, {
-        ...(scene.options?.surfaces === undefined ? {} : { surfaces: scene.options.surfaces }),
-        ...(scene.options?.keepoutsBesidesDefaults === undefined ? {} : { keepouts: `${PET_KEEPOUTS}, ${scene.options.keepoutsBesidesDefaults}` }),
-        ...(scene.options?.walls === undefined ? {} : { walls: scene.options.walls }),
-        ...(scene.options?.props === undefined ? {} : { props: scene.options.props }),
-        ...(scene.pointer === undefined ? {} : { pointer: scene.pointer }),
-        frame,
-      });
+      const surveyed = survey(document, optionsOf(scene, frame));
       expect(surveyed).toEqual({
         ...scene.expected,
         fixtures: (scene.expected.fixtures ?? []).map(({ element, ...fixture }) => ({ id: fixtureId(built.get(element)!), ...fixture })),

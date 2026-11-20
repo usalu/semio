@@ -150,7 +150,7 @@ pub(super) async fn settled(app: &mut DrawingAppFixture, command: DrawingCommand
 
 /// 📸️ Loads test geometry through the same retained envelope owner as the host.
 pub(super) fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &DrawingSnapshot) {
-    use pack::snapshot::ArtifactPack;
+    use semio_os_kernel::os_pack::snapshot::ArtifactPack;
     let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA, "id": snapshot.id,
@@ -240,7 +240,7 @@ pub(super) fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOp
 fn drawing_composite_shape_meta() -> semio_plugin::ActionMeta {
     use semio_plugin::{ViewSessionIdentity, ViewWindowInstance};
     let view = ViewModel {
-        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), "shapeRect".to_string())]),
+        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), Some("shapeRect".to_string()))]),
         focused_window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
         window_instances: vec![ViewWindowInstance { id: DRAWING_PLAY_WINDOW_CANVAS.into(), window_kind_id: DRAWING_PLAY_WINDOW_CANVAS.into() }],
         session_identity: Some(ViewSessionIdentity { user_id: "draw-repeat-owner".into(), display_name: "Draw Repeat Owner".into() }),

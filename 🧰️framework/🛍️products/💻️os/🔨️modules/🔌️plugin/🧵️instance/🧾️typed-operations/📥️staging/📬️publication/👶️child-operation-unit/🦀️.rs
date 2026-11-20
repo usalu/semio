@@ -64,7 +64,7 @@ impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static,X:InstanceE
         if pending.native_child_index==pending.child_emits.len(){
             let d=original_header::<(Vec<A::Mutation>,Vec<OwnedChildEmit>,Option<protocol::TransactionRef>)>();if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(d,grant){return Ok(())}
             let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut()else{return Err(original_failure("original child conversion lost its same emission recipient").into())};
-            if !emit.artifact_mutations.is_empty()||emit.artifact_mutations.capacity()!=0||!emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||emit.transaction.is_some(){return Err(original_failure("original child conversion recipient is occupied").into())}
+            if emit.has_artifact_mutations()||emit.artifact_mutation_pages.is_some()||emit.artifact_mutations.capacity()!=0||!emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||emit.transaction.is_some(){return Err(original_failure("original child conversion recipient is occupied").into())}
             emit.artifact_mutations=std::mem::take(&mut*pending.artifact_mutations);emit.owned_child_emits=std::mem::take(&mut pending.native_children);emit.transaction=pending.transaction.take();pending.begin_close();
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
         }

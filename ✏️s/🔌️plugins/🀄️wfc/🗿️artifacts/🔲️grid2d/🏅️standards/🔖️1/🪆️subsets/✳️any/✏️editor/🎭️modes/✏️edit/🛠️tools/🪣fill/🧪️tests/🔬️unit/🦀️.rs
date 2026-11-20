@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::editor::grid2d::modes::edit::tools::fill::*;
 use crate::host::inferences::solve_with_clock;
 use crate::examples::grid2d::pipes;
-use semio_framework_job::Generation;
+use semio_framework_job::{Generation, InteractiveJob};
 use semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
@@ -137,9 +137,7 @@ fn aborting_mid_run_cancels_and_never_dispatches_commit_fill() {
         }
     }
     assert!(saw_partial, "need a live partial before aborting");
-    job.begin_close();
-    let outcome = drive_once(&mut job, &mut driver, 1);
-    assert!(matches!(outcome, Stepped::Cancelled), "closing mid-run must cancel: {outcome:?}");
+    driver.cancel(&mut job, 1);
     assert!(!port.has_effects(), "abort must not dispatch commit-fill");
     close(&mut job, &mut driver);
 }
@@ -200,9 +198,9 @@ fn only_an_admitted_completion_tick_can_publish_a_cached_solve() {
         let port = ToolRunJobPort::default();
         let mut job = Grid2dFillRunJob::new(identity(), Arc::new(pipes::document()), port.clone());
         let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
-        let _ = job.finish_success(false, Some(payload));
-        assert_eq!(matches!(job.settled, Some(FillSettled::Complete)), expected);
-        assert_eq!(job.committed, expected);
+        let (settled, committed) = job.settle_for_laws(false, Some(payload));
+        assert_eq!(settled, expected);
+        assert_eq!(committed, expected);
         assert_eq!(port.has_effects(), expected, "a failed tick must not enqueue a completed cache");
         close(&mut job, &mut driver);
     }
@@ -229,7 +227,7 @@ fn completed_source_identity_survives_the_effect_bridge_and_current_revision_fen
         let port = ToolRunJobPort::default();
         let mut job = Grid2dFillRunJob::new(original, document.clone(), port.clone());
         let mut driver = TestJobDriver::new(semio_framework_job::allocate_operation_id(), Generation(1));
-        let _ = job.finish_success(false, Some(payload.clone()));
+        job.settle_for_laws(false, Some(payload.clone()));
         let Some(semio_framework::kernel::Effect::DispatchAction { action, mut args, .. }) = port.pop_effect() else { panic!("completion dispatches its cache") };
         assert!(!port.has_effects(), "one completion publishes one effect");
         let command = <Grid2dEditor as ArtifactEditor>::command_from_action(&action, &mut args, &mut None).expect("owned effect bridges");

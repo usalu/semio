@@ -354,28 +354,52 @@ impl<S: UnitSource> Progress for SharedTick<'_, S> {
     }
 }
 
-/// 🧵️ Handle of a background evaluation: the slow (T2) units run on a worker thread, the editor never waits for them; `cancel` supersedes the run, `join` waits for its outcome.
-pub struct Worker(std::thread::JoinHandle<RunOutcome>);
+/// 🧵️ Handle of a background evaluation: the slow (T2) units run on a worker thread where the target has threads, the editor never waits for them; on a thread-less target (wasm32) the same run settles inline and the handle is already finished. `cancel` supersedes the run, `join` waits for its outcome.
+pub enum Worker {
+    Thread(std::thread::JoinHandle<RunOutcome>),
+    Settled(RunOutcome),
+}
 
 impl Worker {
     pub fn join(self) -> RunOutcome {
-        self.0.join().unwrap_or(RunOutcome::Cancelled)
+        match self {
+            Self::Thread(handle) => handle.join().unwrap_or(RunOutcome::Cancelled),
+            Self::Settled(outcome) => outcome,
+        }
     }
 
     pub fn is_finished(&self) -> bool {
-        self.0.is_finished()
+        match self {
+            Self::Thread(handle) => handle.is_finished(),
+            Self::Settled(_) => true,
+        }
+    }
+
+    fn spawn(run: impl FnOnce() -> RunOutcome + Send + 'static) -> Self {
+        if cfg!(target_arch = "wasm32") {
+            Self::Settled(run())
+        } else {
+            Self::Thread(std::thread::spawn(run))
+        }
     }
 }
 
 /// 🪢️ Single evaluation path shared by editor and viewer: every read of a document goes through `report_for`, which re-evaluates incrementally when the retained session is behind, so no manual evaluate step exists.
-pub struct SharedEvaluation<S: UnitSource>(std::sync::Mutex<EvaluationSession<S>>);
+pub struct SharedEvaluation<S: UnitSource>(std::sync::Mutex<EvaluationSession<S>>, std::sync::Mutex<Option<Stepping>>);
+
+/// 🪜️ The retained plan and cursor of a cooperative background run on a thread-less target.
+struct Stepping {
+    plan: Plan,
+    cursor: usize,
+    serial: u64,
+}
 
 impl<S: UnitSource> SharedEvaluation<S>
 where
     S::Document: PartialEq,
 {
     pub fn new(document: S::Document) -> Self {
-        Self(std::sync::Mutex::new(EvaluationSession::open(document)))
+        Self(std::sync::Mutex::new(EvaluationSession::open(document)), std::sync::Mutex::new(None))
     }
 
     fn settle(session: &mut EvaluationSession<S>, plan: &Plan) -> Arc<CheckReport> {
@@ -420,7 +444,7 @@ where
             (plan, session.serial)
         };
         let shared = self.clone();
-        Worker(std::thread::spawn(move || {
+        Worker::spawn(move || {
             let mut cursor = 0;
             let early = {
                 let mut session = shared.lock();
@@ -444,7 +468,7 @@ where
             } else {
                 RunOutcome::Cancelled
             }
-        }))
+        })
     }
 
     /// 🧵️ Background catch-up for exactly `document`: `None` when the session is already settled on it or a worker is already settling it (repeated paints never restart a running worker).
@@ -458,6 +482,61 @@ where
             session.document() == document && (session.is_settled() || session.in_flight)
         };
         (!current).then(|| self.commit_background(document.clone(), &ChangedSet::all(), &[]))
+    }
+
+    /// 🪜️ Cooperative background catch-up for a target without threads: advances the retained plan unit by unit until `budget` has elapsed and keeps the rest for the next call, so one call never runs the whole slow evaluation; returns whether the session is settled on `document`. A unit is the granule: one slow unit still runs to its end.
+    pub fn step_background(&self, document: &S::Document, budget: std::time::Duration) -> bool
+    where
+        S::Document: PartialEq,
+    {
+        let deadline = std::time::Instant::now() + budget;
+        let mut stepping = self.1.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        {
+            let mut session = self.lock();
+            if stepping.is_some() && session.document() != document {
+                *stepping = None;
+                session.in_flight = false;
+            }
+            if stepping.is_none() {
+                if session.document() == document && (session.is_settled() || session.in_flight) {
+                    return session.is_settled();
+                }
+                let plan = session.update(document.clone(), &ChangedSet::all(), &[]);
+                session.in_flight = true;
+                let serial = session.serial;
+                let mut cursor = 0;
+                if let Some(outcome) = session.begin_cheap(&plan, &mut cursor, &mut |_| {}) {
+                    session.in_flight = false;
+                    session.finish(outcome, &mut |_| {});
+                    return session.is_settled();
+                }
+                *stepping = Some(Stepping { plan, cursor, serial });
+            }
+        }
+        while let Some(run) = stepping.as_mut() {
+            let fetched = self.lock().fetch(&run.plan, &mut run.cursor);
+            match fetched {
+                Fetched::Done(outcome) => {
+                    let mut session = self.lock();
+                    session.in_flight = false;
+                    if session.serial == run.serial {
+                        session.finish(outcome, &mut |_| {});
+                    }
+                    *stepping = None;
+                }
+                Fetched::Job(job) => {
+                    let results = (job.unit.run)(&job.document, &mut SharedTick(&self.0), &job.token);
+                    if !self.lock().complete(&job, results, &mut run.cursor) {
+                        self.lock().in_flight = false;
+                        *stepping = None;
+                    }
+                }
+            }
+            if std::time::Instant::now() >= deadline {
+                break;
+            }
+        }
+        self.lock().is_settled()
     }
 
     /// 👀️ The merged report as it stands, without running anything (units still pending keep their previous results).

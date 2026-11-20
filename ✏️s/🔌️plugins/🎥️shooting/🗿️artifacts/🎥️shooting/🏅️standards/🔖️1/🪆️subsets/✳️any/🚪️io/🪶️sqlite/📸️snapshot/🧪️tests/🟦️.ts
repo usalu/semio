@@ -35,6 +35,44 @@ test("Shooting public artifact parser retains every native camera field",()=>{ex
 test("Shooting public artifact parser requires native unsigned dimensions and refuses removed scene bytes",()=>{for(const key of["width","height"]as const){const invalid=structuredClone(fixture.snapshot);invalid.shots[0]![key]=4294967296;expect(()=>artifact.parseShootingArtifact(invalid)).toThrow()}expect(()=>artifact.parseShootingSceneLighting({...fixture.snapshot.scene,emblemBase64:"opaque"})).toThrow()});
 test("Shooting persisted shot domain agrees across mutation and diff JSON facets",async()=>{const cases=[{path:"../../../../🧬️schema/🧬️mutations/📸️create-shot/🧬️schema/🔣️.json",make:(n:number)=>({mutation:"createShot",shot:{...fixture.snapshot.shots[0],width:n,height:n}})},{path:"../../../../🧬️schema/🧬️mutations/📏️change-shot-width/🧬️schema/🔣️.json",make:(n:number)=>({mutation:"changeShotWidth",id:"",newWidth:n})},{path:"../../../../🧬️schema/🧬️mutations/📐️change-shot-height/🧬️schema/🔣️.json",make:(n:number)=>({mutation:"changeShotHeight",id:"",newHeight:n})}];for(const{path,make}of cases){const schema=await Bun.file(new URL(path,import.meta.url)).json();const validate=ajv().compile(schema);expect(validate(make(4294967295))).toBe(true);expect(validate(make(4294967296))).toBe(false)}const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🔣️.json",import.meta.url)).json();const validator=ajv().addSchema(diff);const validate=validator.compile({$ref:diff.$id+"#/$defs/ShootingShotPatch"});expect(validate({width:4294967295,height:0})).toBe(true);expect(validate({width:4294967296})).toBe(false);expect(validate({height:4294967296})).toBe(false)});
 test("Shooting GraphQL and protobuf facets expose native shot width and literal emblem ownership",async()=>{for(const facet of["../../../../🧬️schema","../../../../🧬️schema/📸️snapshot","../../../../🧬️schema/🔺️diff","../../../../🧬️schema/🧬️mutations"]){const document=parse(await Bun.file(new URL(facet+"/🔗️.graphql",import.meta.url)).text());const shot=document.definitions.find(d=>d.kind===Kind.OBJECT_TYPE_DEFINITION&&d.name.value==="ShootingShot");expect(shot?.kind).toBe(Kind.OBJECT_TYPE_DEFINITION);if(shot?.kind===Kind.OBJECT_TYPE_DEFINITION)for(const key of["width","height"]){const field=shot.fields?.find(f=>f.name.value===key);expect(field?.type.kind).toBe(Kind.NON_NULL_TYPE);if(field?.type.kind===Kind.NON_NULL_TYPE)expect(field.type.type.kind===Kind.NAMED_TYPE&&field.type.type.name.value).toBe("UInt32")}const scene=document.definitions.find(d=>d.kind===Kind.OBJECT_TYPE_DEFINITION&&d.name.value==="ShootingSceneLighting");if(scene?.kind===Kind.OBJECT_TYPE_DEFINITION)expect(scene.fields?.some(f=>f.name.value==="emblemBase64")).toBe(false);const proto=await Bun.file(new URL(facet+"/🛰️.proto",import.meta.url)).text();expect(proto).not.toContain("emblem_base64");expect(proto).toContain("uint32 width");expect(proto).toContain("uint32 height")}});
+test("Shooting drawing controls agree across the native snapshot, mutation, and diff schemas", async () => {
+  const patch = { fillColor: { value: "#A5F" }, hiddenLines: true };
+  const mutation = await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/✒️set-shot-drawing/🧬️schema/🔣️.json", import.meta.url)).json();
+  const diff = await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🔣️.json", import.meta.url)).json();
+  const validator = ajv().addSchema(diff);
+  const validateMutation = validator.compile(mutation);
+  const validatePatch = validator.compile({ $ref: diff.$id + "#/$defs/ShootingShotPatch" });
+  expect(validator.validate(nativeSchema, fixture.snapshot)).toBe(true);
+  expect(validateMutation({ mutation: "setShotDrawing", id: "", patch })).toBe(true);
+  expect(validateMutation({ mutation: "setShotDrawing", id: "", patch: { fillColor: { value: null } } })).toBe(true);
+  expect(validatePatch({ drawing: patch })).toBe(true);
+  expect(validatePatch({ drawing: { fillColor: { value: null } } })).toBe(true);
+  for (const bad of [{ visibleWidth: 0 }, { hiddenWidth: 65 }, { lineEasing: 11 }, { fillOpacity: -0.1 }, { fillColor: { value: "#GGG" } }]) {
+    const invalid = { ...patch, ...bad };
+    expect(() => artifact.parseShootingDrawingPatch(invalid)).toThrow();
+    expect(validateMutation({ mutation: "setShotDrawing", id: "", patch: invalid })).toBe(false);
+    expect(validatePatch({ drawing: invalid })).toBe(false);
+  }
+});
+
+test("Shooting optional auto-fit distinguishes false, true, and inheritance", async () => {
+  const expected = snapshot();
+  const data = await bytes(expected);
+  const db = Database.deserialize(data, { safeIntegers: true });
+  try {
+    expect(db.query("SELECT auto_fit, drawing_background FROM shooting_shot ORDER BY ordinal").all()).toEqual([
+      { auto_fit: 0n, drawing_background: 0n },
+      { auto_fit: 1n, drawing_background: null },
+    ]);
+    expect(await restore(data)).toEqual(expected);
+    db.run("UPDATE shooting_shot SET auto_fit=NULL WHERE ordinal=1");
+    delete expected.shots[1]!.autoFit;
+    expect(await restore(new Uint8Array(db.serialize()))).toEqual(expected);
+  } finally {
+    db.close();
+  }
+});
+
 test("Shooting public snapshot facade exposes both handwritten relational directions",()=>{expect(Object.hasOwn(sqliteOwner,"shootingSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"shootingSnapshotFromSqliteDatabase")).toBe(true)});
 test("Shooting independent SQLite schema exposes six domain tables and no payload carrier",async()=>{const db=new Database(":memory:");try{db.run(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());expect(db.query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()).toEqual(["shooting_asset","shooting_document","shooting_emblem","shooting_saved_camera","shooting_scene","shooting_shot"].map(name=>({name})));expect(db.query("PRAGMA table_info(shooting_asset)").all().length).toBe(37);expect(db.query("PRAGMA table_info(shooting_saved_camera)").all().length).toBe(39)}finally{db.close()}});
 test("Shooting queryable files preserve all fields duplicates unresolved IDs and optionals",async()=>{const expected=snapshot(),data=await bytes(expected),db=Database.deserialize(data,{safeIntegers:true});try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT width,height,camera_id FROM shooting_shot ORDER BY ordinal").all()).toEqual([{width:0n,height:4294967295n,camera_id:"unresolved!@/"},{width:4294967295n,height:0n,camera_id:null}]);expect(await restore(data)).toEqual(expected)}finally{db.close()}});

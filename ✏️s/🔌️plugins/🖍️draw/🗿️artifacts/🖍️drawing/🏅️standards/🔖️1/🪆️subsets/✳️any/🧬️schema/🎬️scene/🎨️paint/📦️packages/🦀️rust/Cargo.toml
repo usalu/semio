@@ -29,6 +29,7 @@ semio-s-artifact-draw-drawing-scene = { workspace = true }
 serde = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
@@ -37,3 +38,4 @@ semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"]
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+tiny-skia = { workspace = true }

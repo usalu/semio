@@ -1,0 +1,9 @@
+{
+  "slots": 64,
+  "payloadBytes": 131072,
+  "maximumReleaseBytes": 153600,
+  "pageReleases": 64,
+  "descriptorReleases": 1,
+  "pageBoundaryEntries": [0, 15, 16, 31, 32, 47, 48, 63],
+  "partitionSource": 32
+}

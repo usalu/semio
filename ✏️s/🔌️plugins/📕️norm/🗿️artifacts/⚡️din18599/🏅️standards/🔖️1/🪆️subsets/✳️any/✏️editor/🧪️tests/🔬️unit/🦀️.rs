@@ -13,10 +13,10 @@ pub(crate) mod context {
     
     /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
-    pub struct NormApp(pub VcsArtifactApp<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
+    pub struct NormApp(pub VcsArtifactApp<EditorApp<Din18599PlayApp>, <Din18599PlayApp as semio_plugin::ArtifactEditor>::Members>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for NormApp {
-        type Target = VcsArtifactApp<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+        type Target = VcsArtifactApp<EditorApp<Din18599PlayApp>, <Din18599PlayApp as semio_plugin::ArtifactEditor>::Members>;
         fn deref(&self) -> &Self::Target {
             &self.0
         }
@@ -32,7 +32,7 @@ pub(crate) mod context {
     /// member roster that opens the derived `climateTable` child.
     pub async fn app_with_registry() -> NormApp {
         let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(din18599_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<Din18599PlayApp>, <Din18599PlayApp as semio_plugin::ArtifactEditor>::Members>(din18599_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         NormApp(app, scope)
     }

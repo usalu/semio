@@ -26,10 +26,11 @@ import type { Category, ClassificationAnswer, Hint, SheetClassificationTask, She
 import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { RadarChart, type RadarAxis } from "../🕸️radar/🟦️.tsx";
-import { CELL, GROUP, IconLabel, LiveRegion, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, GROUP, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DROP_ZONE_CLASS, DragGrip, HintNote, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, describedBy, elementId, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
+import { useGradualCount } from "../🧱️gradual-items/🟦️.ts";
 import { formatNumber, withMinusSign, withUnit } from "../📏️quantity/🟦️.ts";
 
 const POOL_ZONE = "pool";
@@ -76,6 +77,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
   const { task, answer, onAnswer, text, locale, hints = [], locked = false } = props;
   const scope = useId();
   const topic = usePetTopic();
+  const shownCount = useGradualCount(task.items.length, task.id);
   const { announcement, announce } = useAnnouncement(SELECT_ANNOUNCEMENT_DELAY_MS);
   const focusAfterRender = useFocusAfterRender();
   const assignments = answer?.assignments ?? {};
@@ -109,7 +111,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
     const hint = asked.get(item.id);
     const hintId = hint === undefined ? undefined : elementId(scope, item.id, "hint");
     return (
-      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} {...CELL} className="course-chip bg-background">
+      <li key={item.id} data-icon-host="" data-course-drag="" data-course-item={item.id} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)} data-pet-prop={petProp(topic, item.id)} {...ROW} className="course-chip bg-background">
         <DragGrip title={text("course.classification.drag", { item: itemLabel(item) })} locked={locked} onDrop={drop(item)} />
         <span className="course-row-label min-w-0 text-sm font-semibold">
           <IconLabel icon={item.icon}>
@@ -128,6 +130,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
           aria-disabled={locked || undefined}
           value={assignments[item.id] ?? ""}
           onChange={(event) => assign(item, event.target.value === "" ? undefined : event.target.value, true)}
+          {...CELL}
           className={SELECT_CLASS}
         >
           <option value="">{text("course.classification.unassigned")}</option>
@@ -142,6 +145,8 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
     );
   };
 
+  const busy = shownCount < task.items.length ? true : undefined;
+  const shown = new Set(task.items.slice(0, shownCount).map((item) => item.id));
   const pool = task.items.filter((item) => assignments[item.id] === undefined);
   const chips = "course-rows";
   return (
@@ -155,7 +160,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
             {text("course.classification.poolEmpty")}
           </p>
         ) : (
-          <RowList className={chips}>{pool.map(chip)}</RowList>
+          <RowList className={chips} aria-busy={busy}>{pool.filter((item) => shown.has(item.id)).map(chip)}</RowList>
         )}
       </section>
       <section aria-labelledby={elementId(scope, "categories")} {...GROUP} {...CELL} className="course-categories flex min-w-0 flex-col">
@@ -188,7 +193,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
                     {text("course.classification.binEmpty")}
                   </p>
                 ) : (
-                  <RowList className={chips}>{members.map(chip)}</RowList>
+                  <RowList className={chips} aria-busy={busy}>{members.filter((item) => shown.has(item.id)).map(chip)}</RowList>
                 )}
               </section>
             );

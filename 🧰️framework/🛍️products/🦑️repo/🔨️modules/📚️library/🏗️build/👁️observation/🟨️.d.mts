@@ -53,7 +53,7 @@ export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
 export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string;verdict?:(asked:{readonly headerDigest:string})=>PromiseLike<{readonly verdict?:string;readonly headerDigest?:string}|undefined>;verdictFinal?:boolean;prepareAttempts?:number}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🤝️ The verdict of one process on one stored project record: `holds`, `stale`, `other` (a record of another key) or `missing`, with the digest of the header line it judged. */
-export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly staleRow?:Readonly<{kind:string;path:string;fact:string}>;readonly verifier:number}>;
+export function verifyStoredProjectRecordV1(options:Readonly<{cachePath:string;key:unknown}>):Promise<{readonly verdict:"holds"|"stale"|"other"|"missing";readonly headerDigest?:string;readonly rows?:number;readonly staleRow?:Readonly<{kind:string;path:string;fact:string;why?:string}>;readonly verifier:number}>;
 /** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
 export function registerInferenceStampsV1(entries:Iterable<readonly [string,string]>,fragments?:readonly string[]):void;
 /** 📌️ Records the stamp of each named inferrer in the active inference scope. */
@@ -70,10 +70,12 @@ export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:stri
 export function observedRequireResolve(from:string|URL,request:string):string;
 /** 🧭️ The spelling in which a module resolution is recorded: the dependency generation id is a placeholder. */
 export function canonicalResolutionV1(path:string):string;
+type ProjectObservationRowV1={kind:string;path:string;fact:unknown};
+type ClosureVerificationFailureV1=(row:ProjectObservationRowV1|undefined,why?:string)=>void;
 /** 🔗️ The seam of the shared command closure entries: how the answer of a `closure` fact is read now and how the entries named by facts are brought up to date. */
-export function registerClosureProviderV1(provider:{answer(path:string):string;settle(paths:readonly string[],value?:unknown):Promise<void>;verify?(rows:readonly {kind:string;path:string;fact:unknown}[],value?:unknown):Promise<boolean>}):void;
+export function registerClosureProviderV1(provider:{answer(path:string):string;settle(paths:readonly string[],value?:unknown):Promise<void>;verify?(rows:readonly ProjectObservationRowV1[],value?:unknown,failed?:ClosureVerificationFailureV1):Promise<boolean>}):void;
 /** 🏁️ Whether the rows one inference observed still hold when it ends (closure rows are verified by the provider). */
-export function projectRowsHoldV1(rows:readonly {kind:string;path:string;fact:unknown}[],value:unknown,holdsRest:(rest:readonly {kind:string;path:string;fact:unknown}[])=>boolean):Promise<boolean>;
+export function projectRowsHoldV1(rows:readonly ProjectObservationRowV1[],value:unknown,holdsRest:(rest:readonly ProjectObservationRowV1[])=>boolean,closureFailed?:(row:ProjectObservationRowV1|undefined,why:string|undefined,count:number)=>void):Promise<boolean>;
 export function projectRowsHoldAtEndV1(rows:readonly {kind:string;path:string;fact:unknown}[],value:unknown,nested:boolean,parent:unknown):Promise<boolean>;
 /** 🚚️ Brings the closure entries named by the `closure` facts among `rows` up to date. */
 export function settleClosureRowsV1(rows:readonly {kind:string;path:string}[],value?:unknown):Promise<void>;
@@ -133,7 +135,7 @@ export function inferenceHeaderLine(path:string):string|null;
 /** 🖋️ A persisted record header with its fact blocks expanded. */
 export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
-export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined):Promise<boolean>;
+export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;
 /** 🌐️ The facts one project record consumed, whether it was computed or reused in this process. */
@@ -197,7 +199,7 @@ export function projectClosureTravelV1():ProjectClosureTravelV1|undefined;
 /** 📤️ The record at `cachePath` in portable form or undefined. */
 export function exportProjectRecordV1(cachePath:string):undefined|Readonly<{digest:string;authority:readonly unknown[];observations:readonly unknown[];image:string}>;
 /** 📥️ Writes a portable record as the local record at `cachePath`. */
-export function importProjectRecordV1(cachePath:string,portable:unknown):Promise<void>;
+export function importProjectRecordV1(cachePath:string,portable:unknown):Promise<boolean>;
 /** 🧾️ The JSON text of one observation row, serialised once per row object. */
 export function observationRowJsonV1(row:unknown):string;
 /** 🧹️ Drops what the inference record at `cachePath` still retains in memory. */
@@ -207,4 +209,4 @@ export function readInferenceRecordOrMissV1(cachePath:string,options?:{read?:(pa
 /** 🔦️ The directory fact of `path` for one of the kinds that read a directory (`readdir`, `readdirNames`, `directories`), as a record row would hold it. */
 export function directoryFactOfV1(kind:"readdir"|"readdirNames"|"directories",path:string):string;
 /** 🔎️ The first row of a stale record that does not hold now. */
-export function firstFailingRowV1(rows:readonly unknown[],value:unknown):Promise<Readonly<{kind:string;path:string;fact:string}>|undefined>;
+export function firstFailingRowV1(rows:readonly unknown[],value:unknown):Promise<Readonly<{kind:string;path:string;fact:string;why?:string}>|undefined>;

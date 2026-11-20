@@ -3,19 +3,19 @@ annex=de site=s-ap-r=1.5m/s2 a-gr=0.6m/s2 de-ground-combo=B-R en-ground-type=a e
 buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE storeys:TABLE members:TABLE plan-regular:BOOL elevation-regular:BOOL t1-method:ENUM t1-given-s:NUM ct:NUM drift-limit-class:ENUM nu:NUM multiple-resisting-systems:BOOL claims-simple-masonry:BOOL masonry-wall-area-ratio:NUM accidental-eccentricity-ratio:NUM setback-ratio:NUM plan-envelope-gap-ratio:NUM joint-gap-m:NUM nonstructural-weight-n:NUM nonstructural-height-m:NUM nonstructural-period-s:NUM nonstructural-q:NUM nonstructural-resistance-n:NUM column-moment-sum-nm:NUM beam-moment-sum-nm:NUM overturning-base-x-m:NUM overturning-base-y-m:NUM tie-down-moment-nm:NUM storey-stiffness-basis:ENUM storey-stiffness-ratio:NUM] {
   bldg-weak "Weak RC frame" 24m 16m [ {id=sys-x direction=x system-type=frame material=rc ductility-class=dcm q0=3 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=80000N} {id=sys-y direction=y system-type=frame material=rc ductility-class=dcm q0=3 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=80000N} ] [ {id=s1 height-m=3.5m permanent-gk-n=2334780N correlated-occupancy=true stiffness-x=45000000 stiffness-y=45000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.045m drift-y-m=0.045m shear-resistance-n=50000N
   variables [id:TEXT category:TEXT qk-n:QTY] {
-    s1-q B 1716750N
+    s1-q b 1716750N
   }
   } {id=s2 height-m=3.5m permanent-gk-n=2251395N correlated-occupancy=true stiffness-x=42500000 stiffness-y=42500000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.045m drift-y-m=0.045m shear-resistance-n=50000N
   variables [id:TEXT category:TEXT qk-n:QTY] {
-    s2-q B 1655437.5N
+    s2-q b 1655437.5N
   }
   } {id=s3 height-m=3.5m permanent-gk-n=2168010N correlated-occupancy=true stiffness-x=40000000 stiffness-y=40000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.045m drift-y-m=0.045m shear-resistance-n=50000N
   variables [id:TEXT category:TEXT qk-n:QTY] {
-    s3-q B 1594125N
+    s3-q b 1594125N
   }
   } {id=s4 height-m=3.5m permanent-gk-n=2001240N correlated-occupancy=true stiffness-x=37500000 stiffness-y=37500000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.045m drift-y-m=0.045m shear-resistance-n=50000N
   variables [id:TEXT category:TEXT qk-n:QTY] {
-    s4-q B 1177200N
+    s4-q b 1177200N
   }
   } ] [ {id=col-c1 material=rc role=column detailing-compatible-with-q=false min-dimension-m=0.2m rho=0.002 rho-prime=0 omega-wd=0.02 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} {id=beam-b1 material=rc role=beam detailing-compatible-with-q=false min-dimension-m=0.2m rho=0.002 rho-prime=0 omega-wd=0.02 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} ] false false ct 0 0.075 ductile 0.5 false false 0 0.05 0 0 0 0 0 0 2 0 0 0 0 0 0 declared 1
 }
@@ -60,4 +60,10 @@ placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
 tie-beams [id:TEXT foundation-a-id:TEXT foundation-b-id:TEXT span:QTY width:QTY depth:QTY steel-area:QTY steel-design-strength:QTY relative-displacement:QTY displacement-limit:QTY] {
 }
 slopes [id:TEXT governing-layer-id:TEXT height:QTY angle:QTY friction-angle:QTY cohesion:QTY topographic-amplification:NUM circle-centre-x:QTY circle-centre-z:QTY circle-radius:QTY] {
+}
+isolation-systems [id:TEXT bridge-id:TEXT building-id:TEXT strength-n:NUM stiffness-n-per-m:NUM yield-displacement-m:NUM capacity-m:NUM] {
+}
+pier-bases [id:TEXT bridge-id:TEXT pier-id:TEXT radius-m:NUM soil-vs-m-s:NUM soil-unit-weight-n-m3:NUM poisson-ratio:NUM] {
+}
+critical-regions [id:TEXT building-id:TEXT member-id:TEXT section-width-m:NUM section-depth-m:NUM clear-length-m:NUM hooped-length-m:NUM core-width-m:NUM core-depth-m:NUM axial-force-n:NUM concrete-design-strength-mpa:NUM steel-design-yield-mpa:NUM hoop-design-yield-mpa:NUM longitudinal-steel-area-m2:NUM longitudinal-bar-diameter-m:NUM longitudinal-bar-max-diameter-m:NUM hoop-diameter-m:NUM hoop-spacing-m:NUM hoop-legs-x:NUM hoop-legs-y:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM] {
 }

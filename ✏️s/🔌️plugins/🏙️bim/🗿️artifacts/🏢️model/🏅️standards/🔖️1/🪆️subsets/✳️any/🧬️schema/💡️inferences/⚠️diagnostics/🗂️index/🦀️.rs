@@ -3,6 +3,7 @@
 
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Values
@@ -56,10 +57,10 @@ pub struct ElementFindings {
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 pub struct DiagnosticIndex {
     pub total: SeverityCounts,
-    pub elements: BTreeMap<String, ElementFindings>,
-    pub categories: BTreeMap<String, SeverityCounts>,
-    pub codes: BTreeMap<String, u32>,
-    pub storeys: BTreeMap<String, SeverityCounts>,
+    pub elements: RetainedOrderedMap<String, ElementFindings>,
+    pub categories: RetainedOrderedMap<String, SeverityCounts>,
+    pub codes: RetainedOrderedMap<String, u32>,
+    pub storeys: RetainedOrderedMap<String, SeverityCounts>,
 }
 //#endregion 🔖️Values
 
@@ -80,28 +81,32 @@ pub fn categories() -> Vec<&'static str> {
 impl DiagnosticIndex {
     /// 🗂️ The index of `found`.
     pub fn of(found: &[Diagnostic]) -> Self {
-        let mut index = Self::default();
+        let mut total = SeverityCounts::default();
+        let mut categories = BTreeMap::<_, SeverityCounts>::new();
+        let mut code_counts = BTreeMap::<_, u32>::new();
+        let mut storeys = BTreeMap::<_, SeverityCounts>::new();
+        let mut elements = BTreeMap::new();
         let mut codes: BTreeMap<&str, BTreeSet<DiagnosticCode>> = BTreeMap::new();
         for finding in found {
-            index.total.add(finding.severity);
-            index.categories.entry(category_of(finding.code).to_string()).or_default().add(finding.severity);
-            *index.codes.entry(finding.code.slug().to_string()).or_default() += 1;
+            total.add(finding.severity);
+            categories.entry(category_of(finding.code).to_string()).or_default().add(finding.severity);
+            *code_counts.entry(finding.code.slug().to_string()).or_default() += 1;
             if let Some(storey) = &finding.storey {
-                index.storeys.entry(storey.clone()).or_default().add(finding.severity);
+                storeys.entry(storey.clone()).or_default().add(finding.severity);
             }
             for id in finding.elements.iter().collect::<BTreeSet<_>>() {
-                let entry = index.elements.entry(id.clone()).or_insert(ElementFindings { severity: finding.severity, count: 0, codes: Vec::new() });
+                let entry = elements.entry(id.clone()).or_insert(ElementFindings { severity: finding.severity, count: 0, codes: Vec::new() });
                 entry.severity = entry.severity.max(finding.severity);
                 entry.count += 1;
                 codes.entry(id).or_default().insert(finding.code);
             }
         }
         for (id, set) in codes {
-            if let Some(entry) = index.elements.get_mut(id) {
+            if let Some(entry) = elements.get_mut(id) {
                 entry.codes = set.into_iter().collect();
             }
         }
-        index
+        Self { total, elements: elements.into_iter().collect(), categories: categories.into_iter().collect(), codes: code_counts.into_iter().collect(), storeys: storeys.into_iter().collect() }
     }
 
     /// 🚦️ The worst severity of the element; `None` when no finding names it.

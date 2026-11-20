@@ -130,3 +130,15 @@ test("source refusals name file, line and column in both languages and agree wit
     }
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+test("a module file that vanishes while its parent is rewritten is a concurrent edit, while a parent that still names it stays a missing input", async () => {
+  const root = resolve("virtual-churn");
+  const fixture = new Map<string, string>([[join(root, "package/lib.rs"), "#[path=\"moved.rs\"] mod moved; include_str!(\"gone.json\");"]]);
+  const read = async (path: string) => fixture.has(path) ? new TextEncoder().encode(fixture.get(path)!) : null;
+  const missing = await readRustSourceClosureV1(["package/lib.rs"], root, [], read).then(() => null, (error: unknown) => error);
+  expect(isRepoErrorV1(missing) && missing.key).toMatch(/source.missing-input$/u);
+  let reads = 0;
+  const rewriting = async (path: string) => { if (path === join(root, "package/lib.rs") && reads++ > 0) return new TextEncoder().encode("mod renamed;"); return read(path); };
+  const churn = await readRustSourceClosureV1(["package/lib.rs"], root, [], rewriting).then(() => null, (error: unknown) => error as Error);
+  expect(churn?.name).toBe("ConcurrentEditErrorV1");
+});

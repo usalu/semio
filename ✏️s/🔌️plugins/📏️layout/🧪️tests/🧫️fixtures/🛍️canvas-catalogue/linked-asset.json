@@ -1,0 +1,101 @@
+{
+  "source": {
+    "kind": "png",
+    "artifactRef": "source:edition-7/asset.png",
+    "proxyDataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEG0lEQVR4AQEQBO/7APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f/aNkAVAtQijwAAAABJRU5ErkJggg=="
+  },
+  "drop": {
+    "surfaceId": "layout.play.blueprint",
+    "x": 250.0,
+    "y": 200.0,
+    "width": 400.0,
+    "height": 300.0
+  },
+  "camera": {
+    "x": 10.0,
+    "y": 20.0,
+    "zoom": 2.0
+  },
+  "expected": {
+    "kind": "image",
+    "artifactKind": "s.stdio.png",
+    "bounds": {
+      "x": 35.0,
+      "y": 45.0,
+      "w": 200.0,
+      "h": 120.0,
+      "rotation": 0.0
+    },
+    "preview": {
+      "width": 16,
+      "height": 16,
+      "rgbaAt": [
+        {
+          "x": 2,
+          "y": 8,
+          "rgba": [
+            26,
+            93,
+            151,
+            255
+          ]
+        },
+        {
+          "x": 10,
+          "y": 4,
+          "rgba": [
+            231,
+            138,
+            72,
+            255
+          ]
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "rgba": [
+            246,
+            245,
+            241,
+            255
+          ]
+        }
+      ]
+    },
+    "drag": {
+      "kind": "image",
+      "sourceDocumentId": "layout-edition-3",
+      "sourceLinkId": "chart-preview"
+    }
+  },
+  "catalogueBoundary": {
+    "maximumTextBytes": 512,
+    "links": [
+      { "character": "á", "count": 230, "path": "wide-transfer.png", "rowKeyFits": true },
+      { "character": "猫", "count": 175, "path": "long-link-id.png", "rowKeyFits": false }
+    ],
+    "selection": [{ "granularity": "element", "id": "frame-chart" }]
+  },
+  "refusals": [
+    {
+      "kind": "image",
+      "sourceLinkId": "chart-preview"
+    },
+    {
+      "kind": "png",
+      "sourceDocumentId": "layout-edition-3",
+      "sourceLinkId": "chart-preview"
+    },
+    {
+      "kind": "image",
+      "sourceDocumentId": "",
+      "sourceLinkId": "chart-preview"
+    },
+    {
+      "kind": "image",
+      "sourceDocumentId": "layout-edition-3",
+      "sourceLinkId": "chart-preview",
+      "artifactRef": "different-asset"
+    }
+  ]
+}

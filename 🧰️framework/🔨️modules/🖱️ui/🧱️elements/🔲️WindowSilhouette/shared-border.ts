@@ -140,8 +140,8 @@ export function createSharedBorderSnap(xs: readonly number[], ys: readonly numbe
   };
 }
 
-/** 🧩️ Registers every original rectilinear silhouette edge in snapped viewport coordinates. */
-export function sharedOutlineSegments(owner: string, logical: readonly BorderPoint[], paint: readonly BorderPoint[], state: BorderState, transform: SharedBorderTransform, snap?: SharedBorderSnap): SharedOutlineSegment[] {
+/** 🧩️ Registers every original rectilinear silhouette edge in snapped viewport coordinates; `source` names the box whose edges these are when it differs from the painting `owner` (a cell painted in its owner's overlay). */
+export function sharedOutlineSegments(owner: string, logical: readonly BorderPoint[], paint: readonly BorderPoint[], state: BorderState, transform: SharedBorderTransform, snap?: SharedBorderSnap, source = owner): SharedOutlineSegment[] {
   if (logical.length !== paint.length) return [];
   const screen = (point: BorderPoint): BorderPoint => {
     const x = Math.round((transform.left + point.x * transform.scaleX) * 64) / 64, y = Math.round((transform.top + point.y * transform.scaleY) * 64) / 64;
@@ -153,6 +153,6 @@ export function sharedOutlineSegments(owner: string, logical: readonly BorderPoi
     const to = { x: Math.abs(point.x - next.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON ? from.x : end.x,
       y: Math.abs(point.y - next.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON ? from.y : end.y };
     if (from.x === to.x && from.y === to.y) return [];
-    return [{ id: `${owner}:${index}`, owner, from, to, state, logicalFrom: from, logicalTo: to, paintFrom: paint[index]!, paintTo: paint[(index + 1) % paint.length]!, transform }];
+    return [{ id: `${source}:${index}`, owner, from, to, state, logicalFrom: from, logicalTo: to, paintFrom: paint[index]!, paintTo: paint[(index + 1) % paint.length]!, transform }];
   });
 }

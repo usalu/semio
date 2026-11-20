@@ -3,7 +3,7 @@
 //! picking to selection events, accessible descriptions and device profiles. The toolbar and lane overlays live in the panels crate. See the facade crate `semio-s-plugin-norm-app-surface`.
 //!
 //! 🔬️ Mesh format (day-one spike against `fem3d_solid_mesh_entries`): custom meshes are `{ id, data: { positions, normals, colors, indices } }`
-//! with flat `f64` triples (colours linear 0..1 RGB per vertex) and `u32` indices; instances are
+//! with flat `f64` (positions and normals as triples, colours as linear 0..1 RGBA quadruples per vertex, one per vertex as the host `World3dHost` requires) and `u32` indices; instances are
 //! `{ id, interactionGranularityId, meshId, position, rotation [x,y,z,w], scale, label }` whose `id` is the scoped identity
 //! `encode_scoped_identity([granularity, entityId])`; extra parts of one entity add `interactionId`.
 

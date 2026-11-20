@@ -82,32 +82,32 @@ fn big_model(rows: usize, columns: usize, windows: usize) -> ModelSnapshot {
     let mut snapshot: ModelSnapshot = from_json_str((*FULL), JsonMemberPolicy::Reject).expect("the snapshot decodes");
     let template: Wall = snapshot.walls["w-south"].clone();
     let window = snapshot.openings["o-win-1"].clone();
-    snapshot.walls.clear();
-    snapshot.openings.clear();
-    snapshot.curtain_walls.clear();
-    snapshot.spaces.clear();
-    snapshot.columns.clear();
-    snapshot.beams.clear();
-    snapshot.slabs.clear();
-    snapshot.stairs.clear();
-    snapshot.railings.clear();
-    snapshot.roofs.clear();
+    snapshot.walls.cold_clear();
+    snapshot.openings.cold_clear();
+    snapshot.curtain_walls.cold_clear();
+    snapshot.spaces.cold_clear();
+    snapshot.columns.cold_clear();
+    snapshot.beams.cold_clear();
+    snapshot.slabs.cold_clear();
+    snapshot.stairs.cold_clear();
+    snapshot.railings.cold_clear();
+    snapshot.roofs.cold_clear();
     let side = 4.0;
     for row in 0..=rows {
         for column in 0..columns {
             let (x, y) = (column as f64 * side, row as f64 * side);
-            snapshot.walls.insert(format!("h-{row:03}-{column:03}"), Wall { axis: line((x, y), (x + side, y)), ..template.clone() });
+            snapshot.walls.cold_insert(format!("h-{row:03}-{column:03}"), Wall { axis: line((x, y), (x + side, y)), ..template.clone() });
         }
     }
     for column in 0..=columns {
         for row in 0..rows {
             let (x, y) = (column as f64 * side, row as f64 * side);
-            snapshot.walls.insert(format!("v-{column:03}-{row:03}"), Wall { axis: line((x, y), (x, y + side)), ..template.clone() });
+            snapshot.walls.cold_insert(format!("v-{column:03}-{row:03}"), Wall { axis: line((x, y), (x, y + side)), ..template.clone() });
         }
     }
     let hosts: Vec<String> = snapshot.walls.keys().filter(|id| id.starts_with("h-")).step_by(3).take(windows).cloned().collect();
     for (at, host) in hosts.into_iter().enumerate() {
-        snapshot.openings.insert(format!("o-{at:03}"), Opening { host, offset: 1.5, ..window.clone() });
+        snapshot.openings.cold_insert(format!("o-{at:03}"), Opening { host, offset: 1.5, ..window.clone() });
     }
     snapshot
 }
@@ -252,10 +252,10 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut snapshot = room();
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
-        snapshot.dimensions.clear();
-        snapshot.tags.clear();
-        snapshot.text_notes.clear();
-        snapshot.leaders.clear();
+        snapshot.dimensions.cold_clear();
+        snapshot.tags.cold_clear();
+        snapshot.text_notes.cold_clear();
+        snapshot.leaders.cold_clear();
         let after = session.refresh(&snapshot).clone();
         assert!(after.annotations.is_empty(), "no annotation, no node, no entry");
         assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));
@@ -290,8 +290,8 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
     fn hung_house() -> ModelSnapshot {
         let mut snapshot: ModelSnapshot = from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("the house decodes");
         let material = snapshot.materials.keys().next().cloned().expect("a material");
-        snapshot.ceiling_types.insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![layer(&material, 0.0625)] });
-        snapshot.ceilings.insert("ce-hall".into(), Ceiling { storey: "st-ground".into(), ceiling_type: "ct-board".into(), boundary: vec![corner(-50.0, -50.0), corner(50.0, -50.0), corner(50.0, 50.0), corner(-50.0, 50.0)], holes: Vec::new(), offset: 0.6, slope: None, name: "Hall".into() });
+        snapshot.ceiling_types.cold_insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![layer(&material, 0.0625)] });
+        snapshot.ceilings.cold_insert("ce-hall".into(), Ceiling { storey: "st-ground".into(), ceiling_type: "ct-board".into(), boundary: vec![corner(-50.0, -50.0), corner(50.0, -50.0), corner(50.0, 50.0), corner(-50.0, 50.0)], holes: Vec::new(), offset: 0.6, slope: None, name: "Hall".into() });
         snapshot
     }
 
@@ -361,7 +361,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let after = protocol::apply_diff_cold(&renamed, &snapshot).expect("applies");
         session.update(&after, &renamed);
         assert!(session.report().gated && session.report().computed == 0, "{:?}", session.report());
-        snapshot.ceilings.clear();
+        snapshot.ceilings.cold_clear();
         let removed = session.refresh(&snapshot).clone();
         assert!(!removed.element_solids.contains_key("ce-hall") && !removed.quantities.elements.contains_key("ce-hall") && removed.spaces["s-1"].ceiling.is_empty());
         assert_eq!(removed, ModelInference::infer(&snapshot).expect("infers"));
@@ -473,9 +473,9 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
         for id in ["w-east", "w-north", "w-west", "w-south", "w-hip", "w-base"] {
-            snapshot.walls.remove(id);
+            snapshot.walls.cold_remove(id);
         }
-        snapshot.wall_sweeps.remove("ws-slope");
+        snapshot.wall_sweeps.cold_remove("ws-slope");
         let after = session.refresh(&snapshot).clone();
         assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));
         assert_eq!(session.report().computed_by_kind.get("surface"), None, "no wall attaches any more, so no surface node is planned");
@@ -500,10 +500,10 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 
     fn placed() -> ModelSnapshot {
         let mut snapshot: ModelSnapshot = from_json_str((*FULL), JsonMemberPolicy::Reject).expect("the house decodes");
-        snapshot.sheets.insert("sh-plans".into(), Sheet::standard("A-101", "Plans"));
-        snapshot.sheets.insert("sh-elevations".into(), Sheet::standard("A-301", "Elevations"));
-        snapshot.viewports.insert("vp-ground".into(), Viewport::standard("sh-plans", "v-plan-st-ground", Point2 { x: 30.0, y: 30.0 }));
-        snapshot.viewports.insert("vp-south".into(), Viewport::standard("sh-elevations", "v-elevation-south", Point2 { x: 30.0, y: 30.0 }));
+        snapshot.sheets.cold_insert("sh-plans".into(), Sheet::standard("A-101", "Plans"));
+        snapshot.sheets.cold_insert("sh-elevations".into(), Sheet::standard("A-301", "Elevations"));
+        snapshot.viewports.cold_insert("vp-ground".into(), Viewport::standard("sh-plans", "v-plan-st-ground", Point2 { x: 30.0, y: 30.0 }));
+        snapshot.viewports.cold_insert("vp-south".into(), Viewport::standard("sh-elevations", "v-elevation-south", Point2 { x: 30.0, y: 30.0 }));
         snapshot
     }
 
@@ -594,8 +594,8 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut snapshot = placed();
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
-        snapshot.viewports.clear();
-        snapshot.sheets.clear();
+        snapshot.viewports.cold_clear();
+        snapshot.sheets.cold_clear();
         let after = session.refresh(&snapshot).clone();
         assert!(after.sheet_layouts.is_empty(), "no sheet, no node, no entry");
         assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));
@@ -620,7 +620,7 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
 
     fn frame() -> ModelSnapshot {
         let mut snapshot: ModelSnapshot = from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the frame decodes");
-        snapshot.rules.insert("rl-door".into(), Rule { name: "Door".into(), kind: RuleKind::MinDoorWidth, limit: 0.9, severity: RuleSeverity::Warning, scope: RuleScope::all() });
+        snapshot.rules.cold_insert("rl-door".into(), Rule { name: "Door".into(), kind: RuleKind::MinDoorWidth, limit: 0.9, severity: RuleSeverity::Warning, scope: RuleScope::all() });
         snapshot
     }
 
@@ -706,8 +706,8 @@ use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::
         let mut snapshot = frame();
         let mut session = ModelInferenceSession::new();
         settle(&mut session, &snapshot);
-        snapshot.clash_sets.clear();
-        snapshot.rules.clear();
+        snapshot.clash_sets.cold_clear();
+        snapshot.rules.cold_clear();
         let after = session.refresh(&snapshot).clone();
         assert!(after.clash_sets.is_empty() && after.rule_results.is_empty());
         assert_eq!(after, ModelInference::infer(&snapshot).expect("infers"));

@@ -88,6 +88,11 @@ impl Dispatcher {
                     outcome.invalidation.insert(InvalidationReason::PAINT);
                 }
             }
+            DispatchEvent::PointerLeave { pointer } => {
+                if !self.capture.contains_key(&pointer.id) && self.update_hover(tree, None) {
+                    outcome.invalidation.insert(InvalidationReason::PAINT);
+                }
+            }
             DispatchEvent::PointerMove { pointer, x, y, .. } => {
                 self.maybe_promote_to_drag(pointer.id, *x, *y);
                 match self.capture.get(&pointer.id).copied() {

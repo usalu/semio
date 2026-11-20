@@ -1,11 +1,13 @@
 import {randomBytes} from "node:crypto";
-import {mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
-import {join} from "node:path";
+import {existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {dirname,join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {processAliveV1,sleepV1} from "../../🔒️lock/🟦️.ts";
 import {collectGarbageSingleFlightV1,measureVolumeV1} from "../🟦️.ts";
 import {ensureBallastV1,releaseBallastV1,tryClaimWithBallastV1} from "../🛟️ballast/🟦️.ts";
-import {enterScriptProcessWaitV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {beginAdmissionWaitV1,enterScriptProcessWaitV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {nativeImageAvailabilityCorrectionMillisecondsV1,nativeImageContainerFreeBytesSyncV1,nativeImageEffectiveAvailableBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import {nativeFreeSpaceSyncV1,nativeImageBackingFilenameV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const,layout=UNIT_CACHE_POLICY_V1.layout,GIB=1024**3;
@@ -31,6 +33,9 @@ const clamp=(value:number,low:number,high:number):number=>Math.min(high,Math.max
 
 /** 🛟️ The free bytes that are never promised away: the floor share of the image, at least the minimum. */
 export function headroomFloorBytesV1(volumeBytes:number,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes">=policy):number{return Math.max(rules.floorMinimumBytes,Math.floor(volumeBytes*rules.floorBasisPoints/10000));}
+
+/** 🏗️ The room an image must keep for admission to ever succeed: the floor that is never promised away plus the largest reservation one command may ask for (the maximum share of the image), so a command always fits once the content stays below the image minus this. */
+export function headroomReserveBytesV1(volumeBytes:number,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes"|"maximumShareBasisPoints">=policy):number{return headroomFloorBytesV1(volumeBytes,rules)+Math.floor(volumeBytes*rules.maximumShareBasisPoints/10000);}
 
 /** 📊️ The nearest-rank quantile of integers (the smallest value that at least `basisPoints` of ten thousand of the values do not exceed). */
 export function headroomQuantileV1(values:readonly number[],basisPoints:number):number{
@@ -118,6 +123,30 @@ export function readHeadroomLedgerV1(root:string,realMs:number=Date.now()):Headr
 /** 🎟️ An admitted command's hold on the image: `release` ends the reservation and records what the command wrote (`grown`, measured after it ended) under its classes. */
 export type HeadroomLeaseV1=Readonly<{id:string;reservedBytes:number;waitedMs:number;release(grown?:()=>number,temperature?:"warm"|"cold"):Promise<void>}>;
 type SleepV1=(milliseconds:number,signal?:AbortSignal)=>Promise<void>;
+/** 🩺️ How the stale free space of a mounted image is corrected: the free bytes of the APFS container behind the mount and of the host volume that holds the image file, both `undefined` when unknown (not an image, not macOS). */
+export type HeadroomAvailabilityPortsV1=Readonly<{container?:(mount:string)=>number|undefined;host?:(directory:string)=>number|undefined;now?:()=>number}>;
+
+/** 🧲️ The mount point of the image a cache root lives in and the directory that holds its backing file, `undefined` when the root is not inside a mounted image. */
+export function headroomImageMountV1(root:string):Readonly<{mount:string;directory:string}>|undefined{
+ for(let at=root,parent=dirname(at);parent!==at;at=parent,parent=dirname(at))try{if(existsSync(join(parent,nativeImageBackingFilenameV1()))&&nativeImageRootV1(parent)===at)return Object.freeze({mount:at,directory:parent});}catch{}
+ return undefined;
+}
+
+/** 🪞️ Wraps a volume measurement so that it sees the space a mounted image can really take: an APFS volume samples the available space of the host when it mounts and never refreshes it, so the free bytes it reports can lag far behind. The correction of `nativeImageEffectiveAvailableBytesV1` (container free capped by host free) is probed at most once per correction window and root and added to every measurement inside the window; the free bytes never exceed the volume. @see https://ss64.com/mac/diskutil.html */
+export function createEffectiveMeasureV1(base:typeof measureVolumeV1=measureVolumeV1,ports:HeadroomAvailabilityPortsV1={}):typeof measureVolumeV1{
+ const now=ports.now??Date.now,container=ports.container??nativeImageContainerFreeBytesSyncV1,host=ports.host??((directory:string)=>nativeFreeSpaceSyncV1(directory)?.availableBytes),corrections=new Map<string,{bytes:number;until:number}>();
+ return(root,capacityBytes)=>{
+  const facts=base(root,capacityBytes);if(facts.unmeasured)return facts;
+  const at=now();let row=corrections.get(root);
+  if(row===undefined||at>=row.until){
+   const image=headroomImageMountV1(root),containerFree=image===undefined?undefined:container(image.mount),effective=nativeImageEffectiveAvailableBytesV1(facts.freeBytes,containerFree,containerFree===undefined||image===undefined?undefined:host(image.directory));
+   row={bytes:Math.max(0,effective-facts.freeBytes),until:at+nativeImageAvailabilityCorrectionMillisecondsV1};corrections.set(root,row);
+  }
+  return row.bytes===0?facts:Object.freeze({volumeBytes:facts.volumeBytes,freeBytes:Math.min(facts.volumeBytes,facts.freeBytes+row.bytes)});
+ };
+}
+const effectiveMeasureV1=createEffectiveMeasureV1();
+
 /** 🔌️ What admission touches, replaceable by tests. `reclaim` frees the bytes it is given on demand and answers whether a collection ran. */
 export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string}>;
 
@@ -137,21 +166,23 @@ export function headroomPriorV1(classes:readonly string[],temperature:"warm"|"co
  return row?row[temperature]:rules.prior[temperature];
 }
 
-/** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order, frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
+/** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order (the whole wait, claim polls and cleanups included, is a declared queue wait: the process watchdog never reaps a queued command and its deadline does not run while it waits), frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
 export async function admitImageHeadroomV1(options:Readonly<{root:string;capacityBytes:number;classes:readonly string[];temperature:"warm"|"cold";label:string;language:"en"|"de";report:(line:string)=>void;signal?:AbortSignal}&HeadroomPortsV1>):Promise<HeadroomLeaseV1>{
- const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??measureVolumeV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
+ const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??effectiveMeasureV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
  const unlimited:HeadroomLeaseV1=Object.freeze({id:"-",reservedBytes:0,waitedMs:0,release:async()=>{}});
  if(start.unmeasured)return unlimited;
  const names=options.classes.map(name=>className(name,options.temperature)),estimate=headroomEstimateV1(readHeadroomHistoryV1(directory),names,headroomPriorV1(options.classes,options.temperature),start.volumeBytes);
- const reclaim=options.reclaim??(async(demandBytes:number)=>!(await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{demandBytes,signal:options.signal})).running);
+ const reclaim=options.reclaim??(async(demandBytes:number)=>!(await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{demandBytes,signal:options.signal,volume:measure})).running);
  const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),pid=options.pid??process.pid;
  ensureBallastV1(options.root);
  const write=(state:"waiting"|"running",admittedMs:number|null)=>roomy(options.root,()=>writeAtomic(file,JSON.stringify({version:1,pid,label:options.label.slice(0,200),id,state,reservedBytes:estimate.reservedBytes,rampMilliseconds:estimate.rampMilliseconds,arrivedMs,admittedMs})));
  try{mkdirSync(directory,{recursive:true});write("waiting",null);}catch{return unlimited;}
  const beat=setInterval(()=>{try{const date=new Date();utimesSync(file,date,date);}catch{}},policy.heartbeatMilliseconds);beat.unref?.();
  let poll=policy.pollMilliseconds,reclaimed=false,lastReclaim=-Infinity,lastProgress=-Infinity,monitor:ReturnType<typeof setInterval>|undefined,admittedMs=0;
+ const endAdmissionWait=beginAdmissionWaitV1();let leaveWait=()=>{};
  try{
   for(;;){
+   {const next=enterScriptProcessWaitV1();leaveWait();leaveWait=next;}
    options.signal?.throwIfAborted();
    const decided=await withClaim(options.root,()=>{
     const volume=measure(options.root,options.capacityBytes),at=now(),decision=decideHeadroomV1({freeBytes:volume.freeBytes,volumeBytes:volume.volumeBytes,nowMs:at,request:{id,reservedBytes:estimate.reservedBytes,arrivedMs},rows:readRows(directory,Date.now()),reclaimed});
@@ -169,9 +200,9 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
     lastReclaim=at;try{if(await reclaim(decision.shortfallBytes))reclaimed=true;}catch(error){if(options.signal?.aborted)throw error;}
     continue;
    }
-   {const leave=enterScriptProcessWaitV1();try{await sleep(poll,options.signal);}finally{leave();}}poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*policy.pollBackoffBasisPoints/10000));
+   await sleep(poll,options.signal);poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*policy.pollBackoffBasisPoints/10000));
   }
- }catch(error){clearInterval(beat);rmSync(file,{force:true});throw error;}
+ }catch(error){clearInterval(beat);rmSync(file,{force:true});throw error;}finally{leaveWait();endAdmissionWait();}
  let inFlight=false;
  monitor=setInterval(()=>{
   if(inFlight)return;

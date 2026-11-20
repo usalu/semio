@@ -192,18 +192,21 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }).map(|step|RetainedCloneStep::Progress(step.progress()));
             }
             let before=cx.retained_progress();
+            let reserved_before=cx.reserved_return_progress();
             cx.with_retained_loan(grant,|same|if closing{owner.close_step(&self.stores.store,&self.stores.config_store,&mut self.stores.window_config_store,&mut self.tool_machines,same)}else{owner.advance(&self.stores.store,&self.stores.config_store,&mut self.stores.window_config_store,&mut self.tool_machines,same)})?;
-            return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+            let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());
+            return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?))
         }
         if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if self.shared().tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending(){return self.tool_overlay_alias_retirement_step(cx,grant).map_err(Into::into)}
         if self.tool_machines.refold_owed{
-            if closing||cx.is_cancelled(){
+            if (closing||cx.is_cancelled())&&!self.tools.original_tool_follow.is_some(){
                 let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};
                 return semio_framework_job::close_original_retained_turn(cx,d,|_|{self.tool_machines.refold_owed=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}).map(|step|RetainedCloneStep::Progress(step.progress()))
             }
             let before=cx.retained_progress();
-            cx.with_retained_loan(grant,|same|OriginalToolMachineFollow::<A>::admit(&mut self.tool_machines,&self.stores.store,&self.stores.config_store,same,&mut self.tools.original_tool_follow))?;
+            let close_birth=closing||cx.is_cancelled();
+            cx.with_retained_loan(grant,|same|self.tools.original_tool_follow.birth_step(&self.tool_machines,&self.stores.store,&self.stores.config_store,same,close_birth))?;
             return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
@@ -268,13 +271,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if *stage==Stage::Complete{return Ok(true)}
         if *stage==Stage::Capture{
             let bytes=std::mem::size_of::<GestureOperation<A::Mutation>>()+std::mem::size_of::<Stage>()+2*std::mem::size_of::<bool>()+std::mem::size_of::<u64>();let p=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};
-            if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);let driven=self.settle_gesture_slot(operation,matches!(publication,ArtifactToolCompletionValue::Emit(Ok(_),_)));if let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication{if driven&&emit.transaction.is_none()&&emit.artifact_mutations.is_empty(){*command_logged=true}}if !self.tool_machines.gesture_operations.iter().flatten().any(|owner|owner.operation==operation&&!owner.settled){*stage=match self.tool_machines.operation_tag(operation){Some(ToolTag::Scrub(_))=>Stage::Scrub,Some(ToolTag::Typing(_))=>Stage::Typing,None=>Stage::Plain}}}return Ok(false)
+            if !cx.is_cancelled()&&!cx.should_yield()&&cx.fuel_remaining()>=1&&p.fits(cx.retained_grant()){cx.consume_retained(p)?;cx.consume_fuel(1);let driven=self.settle_gesture_slot(operation,matches!(publication,ArtifactToolCompletionValue::Emit(Ok(_),_)));if let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication{if driven&&emit.transaction.is_none()&&!emit.has_artifact_mutations(){*command_logged=true}}if !self.tool_machines.gesture_operations.iter().flatten().any(|owner|owner.operation==operation&&!owner.settled){*stage=match self.tool_machines.operation_tag(operation){Some(ToolTag::Scrub(_))=>Stage::Scrub,Some(ToolTag::Typing(_))=>Stage::Typing,None=>Stage::Plain}}}return Ok(false)
         }
         if *stage==Stage::Plain{return Ok(true)}
         let ArtifactToolCompletionValue::Emit(Ok(emit),_)=publication else{
             if let Some(owner)=self.tools.original_tool_tag_retirement.as_mut(){if owner.operation()!=operation{return Ok(false)}if !owner.matches_context(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"refused operation changed its tag return receiver").into())}if !owner.terminal_is_empty(){owner.close_step(cx)?;return Ok(false)}let d=owner.shell_close_demands();semio_framework_job::close_original_retained_turn(cx,d,|_|{self.tools.original_tool_tag_retirement.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;return Ok(false)}
             if self.tool_machines.operation_tag(operation).is_some(){semio_plugin_scrub_host::OriginalToolTagRetirement::admit(&mut self.tool_machines,operation,cx,&mut self.tools.original_tool_tag_retirement)?;return Ok(false)}return Ok(true)
         };
+        if emit.artifact_mutation_pages.is_some() {
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "paged document edits require an independent mounted publication").into());
+        }
         if *stage==Stage::Scrub{
             if result.is_some(){return Ok(true)}
             if self.tools.original_press_settlement.is_some(){let mut absent=None;return self.settle_press(&mut absent,base,actor,emit,cx,result)}
@@ -348,7 +354,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if let Some(owner)=self.tool_machines.config_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Config>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Config,A::ConfigMutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_config_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Config>::constructor_demand());}
         if self.stores.window_config_store.preview_retirement_pending(){return self.stores.window_config_store.preview_retirement_demand(body)}
-        Ok(if self.tool_machines.refold_owed{if closing{RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()}}else{OriginalToolMachineFollow::<A>::admission_demands()}}else{Default::default()})
+        if self.tool_machines.refold_owed{if closing&&!self.tools.original_tool_follow.is_some(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()})}else{self.tools.original_tool_follow.birth_demand(closing)}}else{Ok(Default::default())}
     }
 }
 //#endregion 🔖️Driver

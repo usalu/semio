@@ -73,3 +73,36 @@ fn an_error_inside_the_effect_exchange_cancels_its_action_instead_of_leaving_it_
  caller.retire(bank());
 }
 fn observe_heap<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
+
+#[test]
+fn an_explicit_zero_work_receipt_settles_and_leaves_fuel_untouched() {
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(76), Generation(3), bank(), clock, 12345, 1000);
+    caller.turn(bank(), |cx| {
+        let fuel = cx.fuel_remaining();
+        let grant = cx.retained_grant();
+        let explicit_zero = cx.with_original_effect(grant, |_, effect| effect.performed(0))?;
+        let Some((result, performed)) = explicit_zero else { panic!("the original effect was not admitted") };
+        assert!(result?);
+        assert_eq!(performed, 0);
+        assert_eq!(cx.fuel_remaining(), fuel);
+        assert_eq!(cx.with_original_effect(grant, |_, _| ())?, Some(((), 0)));
+        Ok(())
+    }).unwrap();
+    let mut host = semio_framework_job::OriginalRetirementPump::new().turn(1000, 12345, clock, bank()).unwrap();
+    let Some((result, performed)) = host.with_effect(|effect| effect.performed(0)).unwrap() else {
+        panic!("the host's original effect was not admitted")
+    };
+    assert!(result.unwrap());
+    assert_eq!(performed, 0);
+    assert_eq!(host.with_effect(|_| ()).unwrap(), Some(((), 0)));
+
+    let grant = bank();
+    let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1000);
+    let receipt = wallet.run(grant, 1000, |effect| effect.performed(0)).unwrap().unwrap();
+    assert!(receipt.output.unwrap());
+    assert_eq!(receipt.performed, 0);
+    assert_eq!(wallet.remaining_work(), 1000);
+    assert_eq!(wallet.run(grant, 1000, |_| ()).unwrap().unwrap().performed, 0);
+
+    caller.retire(bank());
+}

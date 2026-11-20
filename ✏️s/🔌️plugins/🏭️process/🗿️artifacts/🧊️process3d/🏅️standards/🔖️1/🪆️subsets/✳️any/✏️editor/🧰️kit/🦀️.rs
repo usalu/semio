@@ -25,7 +25,7 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
-pub const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
+pub const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "s.process.process3d@1/*#editor";
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the app's sole interaction domain — the
 /// stock, every process step, and every installed workshop machine share the "object" granularity
 /// (as their raw ids / `"machine:{id}"`), the processed mesh's picked faces use "face" (u32 ids
@@ -321,27 +321,15 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
     }
     catalogs
 }
-pub fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
-    vec![semio_s_artifact_process_process3d_model::GenericCatalog.into(), semio_s_artifact_process_process3d_model::wood_catalog().into(), semio_s_artifact_process_process3d_model::concrete_catalog().into(), semio_s_artifact_process_process3d_model::metal_catalog().into(), semio_s_artifact_process_process3d_model::robotic_catalog().into()]
-}
-/// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
-/// catalog first (so it renders as the default-open section), then every `process.machines` contribution
-/// parsed from the invoking configuration's runtime-installable extensions under
-/// `🏭️process/🧩️extensions/`.
-///
-/// ⚖️ A `catalog_id` names exactly one catalog here. The four shipped `process-extension-*` packs
-/// contribute the SAME ids this crate already compiles in (`🧩️extensions/🪵️wood/🦀️.rs` sends
-/// `moduleId = catalog.catalog_id() = "wood"`), so a bare concatenation renders Wood/Metal/Concrete/
-/// Robotic twice. The installed build wins and the contribution is dropped; only a genuinely new id
-/// appends, in host order — the same app-boundary law `sourcing`'s `schema::installable_contributions`
-/// applies to `sourcing.module`.
+/// 🧩️ Returns the generic catalog followed by the runtime's active machine catalogs in host order.
 pub fn installed_catalogs(contributions_json: &str) -> Vec<MachineCatalogs> {
-    let mut catalogs = builtin_installed_catalogs();
+    let mut catalogs: Vec<MachineCatalogs> = vec![semio_s_artifact_process_process3d_model::GenericCatalog.into()];
     for contributed in contributed_machine_catalogs(contributions_json) {
-        if catalogs.iter().any(|catalog| catalog.catalog_id() == contributed.catalog_id()) {
-            continue;
+        if let Some(index) = catalogs.iter().position(|catalog| catalog.catalog_id() == contributed.catalog_id()) {
+            catalogs[index] = MachineCatalogs::from(contributed);
+        } else {
+            catalogs.push(MachineCatalogs::from(contributed));
         }
-        catalogs.push(MachineCatalogs::from(contributed));
     }
     catalogs
 }

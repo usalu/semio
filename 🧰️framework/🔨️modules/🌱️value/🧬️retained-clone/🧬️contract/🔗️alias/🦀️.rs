@@ -31,6 +31,7 @@ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->
  fn close_started(&self)->bool{self.state.closing}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.state.closing{return Ok(0)}self.state.close.next_owner_work::<T>(self.state.output.is_some(),&self.state.source,body)}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.state.closing{return Err(alias_invalid())}self.state.close.next_owner_demands::<T>(self.state.output.is_some(),&self.state.source,body)}
+ fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{Some(unsafe{RetainedCursorRelease::native(|cursor:&Self|cursor.terminal_is_empty())})}
  fn terminal_is_empty(&self)->bool{self.state.advance_action.is_none()&&self.state.close_route.is_none()&&self.state.output.is_none()&&self.state.source.is_none()&&self.state.close.is_empty()}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.state.close.next_copy_with_binding(&self.state.source)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.state.close.next_owner_capacity_with_binding::<T>(self.state.output.is_some(),body,&self.state.source)}

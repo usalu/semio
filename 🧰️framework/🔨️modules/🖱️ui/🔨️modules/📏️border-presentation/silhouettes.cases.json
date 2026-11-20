@@ -1,0 +1,572 @@
+[
+ {
+  "name": "a hovered cell closes its outline across the owner's edges and its neighbours' dividers",
+  "boxes": [
+   {
+    "id": "g",
+    "parent": null,
+    "owner": "g",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 30,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "a",
+    "parent": "g",
+    "owner": "g",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 10,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "hover"
+   },
+   {
+    "id": "b",
+    "parent": "g",
+    "owner": "g",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "c",
+    "parent": "g",
+    "owner": "g",
+    "rect": {
+     "left": 20,
+     "top": 0,
+     "right": 30,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   }
+  ],
+  "expected": [
+   {
+    "id": "a:top",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 0
+    },
+    "state": "hover",
+    "contributors": [
+     "a:top",
+     "g:top"
+    ]
+   },
+   {
+    "id": "b:top",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 20,
+     "y": 0
+    },
+    "state": "normal",
+    "contributors": [
+     "b:top",
+     "g:top"
+    ]
+   },
+   {
+    "id": "c:top",
+    "owner": "g",
+    "from": {
+     "x": 20,
+     "y": 0
+    },
+    "to": {
+     "x": 30,
+     "y": 0
+    },
+    "state": "normal",
+    "contributors": [
+     "c:top",
+     "g:top"
+    ]
+   },
+   {
+    "id": "a:bottom",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 10
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "a:bottom",
+     "g:bottom"
+    ]
+   },
+   {
+    "id": "b:bottom",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 10
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "b:bottom",
+     "g:bottom"
+    ]
+   },
+   {
+    "id": "c:bottom",
+    "owner": "g",
+    "from": {
+     "x": 20,
+     "y": 10
+    },
+    "to": {
+     "x": 30,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "c:bottom",
+     "g:bottom"
+    ]
+   },
+   {
+    "id": "a:left",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 0,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "a:left",
+     "g:left"
+    ]
+   },
+   {
+    "id": "a:right",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "a:right",
+     "b:left"
+    ]
+   },
+   {
+    "id": "b:right",
+    "owner": "g",
+    "from": {
+     "x": 20,
+     "y": 0
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "b:right",
+     "c:left"
+    ]
+   },
+   {
+    "id": "c:right",
+    "owner": "g",
+    "from": {
+     "x": 30,
+     "y": 0
+    },
+    "to": {
+     "x": 30,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "c:right",
+     "g:right"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "a stated box draws the sides that lie on its parent's undrawn edges while a normal sibling suppresses them",
+  "boxes": [
+   {
+    "id": "f",
+    "parent": null,
+    "owner": "f",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "bottom"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "k",
+    "parent": "f",
+    "owner": "k",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 10,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "hover"
+   },
+   {
+    "id": "m",
+    "parent": "f",
+    "owner": "m",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   }
+  ],
+  "expected": [
+   {
+    "id": "k:top",
+    "owner": "k",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 0
+    },
+    "state": "hover",
+    "contributors": [
+     "k:top"
+    ]
+   },
+   {
+    "id": "k:bottom",
+    "owner": "k",
+    "from": {
+     "x": 0,
+     "y": 10
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "f:bottom",
+     "k:bottom"
+    ]
+   },
+   {
+    "id": "f:bottom",
+    "owner": "f",
+    "from": {
+     "x": 10,
+     "y": 10
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "f:bottom",
+     "m:bottom"
+    ]
+   },
+   {
+    "id": "k:left",
+    "owner": "k",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 0,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "k:left"
+    ]
+   },
+   {
+    "id": "k:right",
+    "owner": "k",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "k:right",
+     "m:left"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "the stronger state of two stated neighbours owns their shared divider",
+  "boxes": [
+   {
+    "id": "g",
+    "parent": null,
+    "owner": "g",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "a",
+    "parent": "g",
+    "owner": "g",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 10,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "active"
+   },
+   {
+    "id": "b",
+    "parent": "g",
+    "owner": "g",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "hover"
+   }
+  ],
+  "expected": [
+   {
+    "id": "a:top",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 0
+    },
+    "state": "active",
+    "contributors": [
+     "a:top",
+     "g:top"
+    ]
+   },
+   {
+    "id": "b:top",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 20,
+     "y": 0
+    },
+    "state": "hover",
+    "contributors": [
+     "b:top",
+     "g:top"
+    ]
+   },
+   {
+    "id": "a:bottom",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 10
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "active",
+    "contributors": [
+     "a:bottom",
+     "g:bottom"
+    ]
+   },
+   {
+    "id": "b:bottom",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 10
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "b:bottom",
+     "g:bottom"
+    ]
+   },
+   {
+    "id": "a:left",
+    "owner": "g",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 0,
+     "y": 10
+    },
+    "state": "active",
+    "contributors": [
+     "a:left",
+     "g:left"
+    ]
+   },
+   {
+    "id": "b:left",
+    "owner": "g",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "a:right",
+     "b:left"
+    ]
+   },
+   {
+    "id": "b:right",
+    "owner": "g",
+    "from": {
+     "x": 20,
+     "y": 0
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "b:right",
+     "g:right"
+    ]
+   }
+  ]
+ }
+]

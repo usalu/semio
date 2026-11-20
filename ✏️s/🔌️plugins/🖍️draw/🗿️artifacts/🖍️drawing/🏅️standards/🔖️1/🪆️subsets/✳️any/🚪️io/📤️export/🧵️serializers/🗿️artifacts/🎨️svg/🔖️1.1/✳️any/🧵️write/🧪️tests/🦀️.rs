@@ -4,7 +4,7 @@ use super::*;
 mod original_vector;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneLimits, DocumentAlgorithmLimits, DocumentSceneNode};
-use semio_s_artifact_draw_drawing_scene::raster::RasterSceneAsset;
+use semio_s_artifact_draw_drawing_scene::{booleans::DocumentBooleanLimits, raster::RasterSceneAsset, trace::DocumentTraceLimits};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
 use serde_json::Value;
 use semio_s_artifact_draw_drawing_io::byte_writer::physical_close as close;

@@ -1,0 +1,118 @@
+{
+  "workshop": {
+    "machines": [
+      {
+        "id": "saw",
+        "label": "Saw",
+        "iconId": "scissors",
+        "capabilities": []
+      }
+    ]
+  },
+  "stockId": "stock",
+  "stockLabel": "Stock",
+  "stockPose": {
+    "position": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "axis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "angle": 0.0
+  },
+  "stockPayload": {
+    "id": "stock",
+    "label": "Stock",
+    "solid": {
+      "kind": "box",
+      "width": 1.0,
+      "depth": 1.0,
+      "height": 1.0
+    },
+    "pose": {
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "angle": 0.0
+    }
+  },
+  "stockSolid": {
+    "childId": "stock-brep-dc359cd3c4472a4c",
+    "target": {
+      "artifactId": "stock-brep-dc359cd3c4472a4c",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "brep"
+      }
+    }
+  },
+  "steps": {
+    "childId": "steps-flow-1356790bd31dfe28",
+    "target": {
+      "artifactId": "steps-flow-1356790bd31dfe28",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "flow"
+      }
+    }
+  },
+  "stepPayloads": [
+    {
+      "id": "step-1",
+      "label": "Rip Cut",
+      "enabled": true,
+      "origin": {
+        "machineId": "saw",
+        "capabilityId": "cut"
+      },
+      "measure": {
+        "measure": "cut",
+        "tool": {
+          "kind": "box",
+          "width": 0.5,
+          "depth": 0.006,
+          "height": 0.1
+        },
+        "pose": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "angle": 0.0
+        }
+      }
+    }
+  ],
+  "toolSolids": [
+    {
+      "childId": "tool-step-1-brep-6195cae6ebec0800",
+      "target": {
+        "artifactId": "tool-step-1-brep-6195cae6ebec0800",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "brep"
+        }
+      }
+    }
+  ]
+}

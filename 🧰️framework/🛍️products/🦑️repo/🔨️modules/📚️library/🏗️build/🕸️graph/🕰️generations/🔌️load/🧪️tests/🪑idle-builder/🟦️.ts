@@ -7,6 +7,8 @@ import {fileURLToPath} from "node:url";
 import {canonicalJsonV1} from "../../../🟨️.mjs";
 import {loadGenerationGraphV1} from "../../🟨️.mjs";
 import {readGenerationPointerV1} from "../../../🟨️.mjs";
+import {createNodeFilePortV1} from "../../../🗃️file-ports/🟨️.mjs";
+import {BUILD_JOURNAL_V1,readBuildJournalV1} from "../../../🔖️journal/🟨️.mjs";
 import {CUSTODY_POLICY_V1,attachToBuilderV1,renderCustodyMessageV1} from "../../../🔐️custody/🟨️.mjs";
 const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
 import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
@@ -100,22 +102,22 @@ async function twoReaders(dir:string,reader:{recheckMilliseconds:number;expandDe
  return{a,b,order,lines,peak:()=>peak,first:(await building).graph,second:serving.graph};
 }
 
-test("two readers on one state root: the second attaches to the builder, infers nothing itself, builds after it only to find the work done, and both graphs equal the Python model",async()=>{
+test("two readers on one state root: the attached reader observes the sealed publication, infers nothing, and both graphs equal the Python model",async()=>{
  const dir=scratch(),previous=process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;process.env.SEMIO_SLICE_WAVE_BASIS_POINTS="200";
  try{
-  const world=await twoReaders(dir,{recheckMilliseconds:3_600_000,expandDelayMs:0});
+  const world=await twoReaders(dir,{recheckMilliseconds:3_600_000,expandDelayMs:1500});
   expect(world.peak(),"never two builders at once").toBe(1);
   expect(world.order).toEqual(["A:held","A:done","B:held","B:done"]);
   expect(world.a.log.flatMap(row=>row.full).sort()).toEqual(["p1","p2","p3","p4"]);
   expect(world.b.log.flatMap(row=>row.full),"the attached reader infers nothing").toEqual([]);
   expect(world.b.events).not.toContain("prefetch");
   const keys=world.lines.map(line=>line.split(":")[0]);expect(keys[0]).toBe("attached");expect(keys).toContain("attachedWave");expect(keys).not.toContain("attachedServed");
-  expect(world.lines.filter(line=>line.startsWith("attachedWave")).length).toBeGreaterThanOrEqual(2);
+  expect(world.lines.filter(line=>line.startsWith("attachedWave"))).toHaveLength(1);
   expect(shape(world.first)).toEqual(pythonGraph(dir));expect(shape(world.second)).toEqual(pythonGraph(dir));
  }finally{if(previous===undefined)delete process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;else process.env.SEMIO_SLICE_WAVE_BASIS_POINTS=previous;clean(dir);}
 },120000);
 
-test("an attached reader takes the records as the waves publish: once the wave that covers it is published it is served from it before the builder has let go, and never builds",async()=>{
+test("an attached reader is served from the sealed graph while the first reader still holds custody",async()=>{
  const dir=scratch(),previous=process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;process.env.SEMIO_SLICE_WAVE_BASIS_POINTS="200";
  try{
   const world=await twoReaders(dir,{recheckMilliseconds:40,expandDelayMs:1500});
@@ -126,23 +128,38 @@ test("an attached reader takes the records as the waves publish: once the wave t
  }finally{if(previous===undefined)delete process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;else process.env.SEMIO_SLICE_WAVE_BASIS_POINTS=previous;clean(dir);}
 },120000);
 
-test("a refresh that is cut off keeps every published wave: the next read starts from the newest generation and infers only what no published wave holds",async()=>{
+test("a cancelled refresh retains journalled waves and the next read infers only the remaining owners",async()=>{
  const dir=scratch(),previous=process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;process.env.SEMIO_SLICE_WAVE_BASIS_POINTS="200";
  try{
   await seed(dir,ringFiles(6));
   (await loadGenerationGraphV1(createMockHost(dir).host)).graph;
   const files=ringFiles(6);
   await applyOps(dir,[1,2,3,4].map(index=>({op:"write" as const,path:`pkg/p${index}/src/index.ts`,content:files[`pkg/p${index}/src/index.ts`]!.replace(/=\d+;\n$/u,"=78;\n")})));
-  const controller=new AbortController(),cut=createMockHost(dir,{ownerDelayMs:120,signal:controller.signal}),pointer=()=>readGenerationPointerV1(readFileSync(join(dir,".gen","current.json"))).generation;
-  const base=pointer(),running=loadGenerationGraphV1(cut.host).catch(error=>error);
-  for(let waited=0;pointer()<base+2&&waited<600;waited++)await new Promise(resolve=>setTimeout(resolve,10));
-  controller.abort(new Error("killed by the server"));
-  expect(String(await running)).toContain("killed by the server");
-  const kept=pointer();expect(kept,"two waves were published before the kill").toBeGreaterThanOrEqual(base+2);
+  const controller=new AbortController(),cut=createMockHost(dir,{signal:controller.signal});
+  const store=join(dir,".gen"),head=join(store,"current.json"),journal=join(store,BUILD_JOURNAL_V1.directory);
+  const pointer=()=>readGenerationPointerV1(readFileSync(head)).generation;
+  const base=pointer(),filesPort=createNodeFilePortV1(),storeOptions=cut.host.storeOptions;
+  let completed:readonly string[]=[];
+  cut.host.storeOptions=input=>({...storeOptions(input),fs:{
+   ...filesPort,
+   async write(path:string,bytes:Uint8Array,options?:Parameters<typeof filesPort.write>[2]){
+    await filesPort.write(path,bytes,options);
+    if(dirname(path)!==journal||!path.endsWith(".json"))return;
+    const header=readBuildJournalV1(readFileSync(path));
+    if(header.state==="waves"&&header.done===2){
+     completed=header.names.slice(0,header.done);
+     expect(header.rows).toHaveLength(2);
+     controller.abort(new Error("killed by the server"));
+    }
+   },
+  }});
+  await expect(loadGenerationGraphV1(cut.host)).rejects.toThrow("killed by the server");
+  expect(completed).toHaveLength(2);
+  expect(pointer(),"the last sealed generation remains current").toBe(base);
   const again=createMockHost(dir),graph=(await loadGenerationGraphV1(again.host)).graph;
-  const published=cut.log.flatMap(row=>row.full).slice(0,kept-base);
-  expect(again.log.flatMap(row=>row.full).sort(),"only the owners no published wave holds are inferred again").toEqual(["p1","p2","p3","p4"].filter(name=>!published.includes(name)));
-  expect(again.log.flatMap(row=>row.full).length).toBeLessThanOrEqual(4-(kept-base));
+  expect(again.said.map(row=>row.key)).toContain("resumedWaves");
+  expect(again.log.flatMap(row=>row.full).sort()).toEqual(["p1","p2","p3","p4"].filter(name=>!completed.includes(name)));
+  expect(pointer()).toBe(base+1);
   expect(shape(graph)).toEqual(pythonGraph(dir));
  }finally{if(previous===undefined)delete process.env.SEMIO_SLICE_WAVE_BASIS_POINTS;else process.env.SEMIO_SLICE_WAVE_BASIS_POINTS=previous;clean(dir);}
 },120000);

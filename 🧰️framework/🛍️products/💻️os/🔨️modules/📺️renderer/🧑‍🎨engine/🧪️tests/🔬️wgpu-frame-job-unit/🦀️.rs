@@ -461,7 +461,7 @@ fn original_frame_directive_inline_retirement_preserves_the_full_independent_gra
     };
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(fixture_frame_grant(),OperationId(99),Generation(99));
     let mut job=FrameBuildJob::new(inputs(1_000.0));
-    caller.turn(|cx|{assert!(job.step(cx).unwrap().is_none());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});});
+    caller.turn(|cx|{assert!(job.step_turn(cx).unwrap().is_none());assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<FrameDirectives>>(),..Default::default()});});
     job.begin_close();let original=job.complete.as_ref().unwrap()as*const FrameDirectives;
     assert_eq!(job.next_close_copy_byte_demand().unwrap(),size_of::<FrameDirectives>());assert_eq!(job.next_close_capacity_byte_demand(0).unwrap(),0);assert_eq!(job.next_close_release_byte_demand().unwrap(),0);assert_eq!(job.next_close_depth_demand().unwrap(),1);
     for short in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{

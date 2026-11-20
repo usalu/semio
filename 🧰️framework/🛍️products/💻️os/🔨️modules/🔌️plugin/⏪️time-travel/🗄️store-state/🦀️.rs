@@ -1,13 +1,83 @@
 //! 🗄️ Store state of the time-travel session: the store-free owners trait, the per-store history-edit state, the replay, preview and commit steps and the typed store commands, outputs and queries. See [`super`].
 
 use super::*;
+
+macro_rules! time_travel_store_fields {
+    ($label_of:ident; $($index:literal => $name:ident: $kind:ident($($rule:tt)*);)+) => {
+        /// 🧾️ Every field retains one place in the original initialization cursor.
+        pub const INITIAL_FIELDS: usize = {
+            let fields: &[usize] = &[$($index),+];
+            let mut index = 0;
+            while index < fields.len() {
+                assert!(fields[index] == index);
+                index += 1;
+            }
+            fields.len()
+        };
+
+        /// 📐️ Quotes only the next bounded destination slice or complete small metadata field.
+        pub fn initial_field_demands(field: usize, byte: usize, body: usize) -> Result<RetirementDemand, ValueError> {
+            let _: fn(&Self) = |Self { $($name: _,)+ }| {};
+            let copy_bytes = match field {
+                $($index => time_travel_store_fields!(@quote byte, body, $kind($($rule)*)),)+
+                _ => return Err(ValueError::invariant("initial store field cursor exceeds its inventory")),
+            };
+            Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+        }
+
+        /// 🧱️ Initializes the selected original store field without an aggregate absent-value temporary.
+        ///
+        /// # Safety
+        /// The destination must remain private and uninitialized until every field and byte range has completed exactly once.
+        pub unsafe fn initialize_field_at(target: *mut Self, $label_of: fn(&Mu) -> LocalizedLabel, field: usize, byte: usize, count: usize) -> Result<bool, ValueError> {
+            unsafe { match field {
+                $($index => time_travel_store_fields!(@write std::ptr::addr_of_mut!((*target).$name), byte, count, $kind($($rule)*)),)+
+                _ => Err(ValueError::invariant("initial store field cursor exceeds its inventory")),
+            } }
+        }
+    };
+    (@quote $byte:ident, $body:ident, fixed($ty:ty = $value:expr)) => { 2 * size_of::<$ty>() };
+    (@quote $byte:ident, $body:ident, absent($ty:ty)) => {
+        semio_framework_value::initialization::absent_chunk_bytes(
+            semio_framework_value::initialization::absent_field_bytes::<$ty>(), $byte, $body.max(1))?
+    };
+    (@quote $byte:ident, $body:ident, wrapped($ty:ty)) => { time_travel_store_fields!(@quote $byte, $body, absent($ty)) };
+    (@quote $byte:ident, $body:ident, array($ty:ty, $len:literal)) => {
+        semio_framework_value::initialization::absent_chunk_bytes(
+            semio_framework_value::initialization::absent_array_bytes::<$ty, $len>(), $byte, $body.max(1))?
+    };
+    (@quote $byte:ident, $body:ident, wrapped_array($ty:ty, $len:literal)) => { time_travel_store_fields!(@quote $byte, $body, array($ty, $len)) };
+    (@write $slot:expr, $byte:ident, $count:ident, fixed($ty:ty = $value:expr)) => {{
+        if $byte != 0 || $count < 2 * size_of::<$ty>() {
+            return Err(ValueError::invariant("initial field requires its complete admitted extent"));
+        }
+        let slot: *mut $ty = $slot;
+        slot.write($value);
+        Ok(true)
+    }};
+    (@write $slot:expr, $byte:ident, $count:ident, absent($ty:ty)) => {
+        semio_framework_value::initialization::initialize_absent_field_at::<$ty>($slot, $byte, $count)
+    };
+    (@write $slot:expr, $byte:ident, $count:ident, wrapped($ty:ty)) => {{
+        let slot: *mut ManuallyDrop<Option<$ty>> = $slot;
+        time_travel_store_fields!(@write slot.cast(), $byte, $count, absent($ty))
+    }};
+    (@write $slot:expr, $byte:ident, $count:ident, array($ty:ty, $len:literal)) => {
+        semio_framework_value::initialization::initialize_absent_array_at::<$ty, $len>($slot, $byte, $count)
+    };
+    (@write $slot:expr, $byte:ident, $count:ident, wrapped_array($ty:ty, $len:literal)) => {{
+        let slot: *mut ManuallyDrop<[Option<$ty>; $len]> = $slot;
+        time_travel_store_fields!(@write slot.cast(), $byte, $count, array($ty, $len))
+    }};
+}
+
 enum TimeTravelReceivingFailure{Native(ValueError),Semantic(Fault)}
 impl From<ValueError> for TimeTravelReceivingFailure{fn from(original:ValueError)->Self{Self::Native(original)}}
 impl TimeTravelReceivingFailure{fn progress(&self)->RetainedCloneProgress{match self{Self::Native(original)=>original.retained_progress(),Self::Semantic(original)=>original.retained_progress}}fn into_fault(self)->Fault{match self{Self::Native(original)=>original.into_fault(),Self::Semantic(original)=>original}}fn turn_fault(failure:semio_framework_job::OriginalTurnFailure)->Fault{ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,failure.primary.message().to_owned()).with_retained_progress(failure.retained_progress()).into_fault()}fn settle<T>(ran:bool,stepped:Option<Result<T,Self>>,scope:Option<semio_framework_job::OriginalNativeReceivingOutcome>)->Option<Result<T,Self>>{match scope.filter(|outcome|outcome.call.is_err()||outcome.source_refusal.is_some()){Some(outcome)=>Some(Err(Self::Native(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,outcome.message().to_owned()).with_retained_progress(outcome.retained_progress())))),None=>stepped.filter(|_|ran)}}}fn refused(failure:semio_framework_job::OriginalTurnFailure)->Fault{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original history receiving turn refused").with_retained_progress(failure.retained_progress()).into_fault()}
 /// 🫴️ Runs one receiving step in a local scope and posts its actual progress; `None` means the turn could not fund it and nothing ran.
-pub fn receive_step<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->T,progress:impl FnOnce(&T)->RetainedCloneProgress)->Result<Option<T>,Fault>{
+pub fn receive_step<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,u64)->T,progress:impl FnOnce(&T)->RetainedCloneProgress)->Result<Option<T>,Fault>{
     let mut scope=None;let mut stepped=None;
-    if !cx.with_native_receiving(&mut scope,|native,_|{stepped=Some(run(native));Ok(())}).map_err(refused)?{return Ok(None)}
+    if !cx.with_native_receiving_work(&mut scope,|native,_,work|{stepped=Some(run(native,work));Ok(())}).map_err(refused)?{return Ok(None)}
     let stepped=stepped.ok_or_else(||ValueError::invariant("original history receiving step vanished").into_fault())?;
     let progress=progress(&stepped);match cx.receiving_issued_grant(){Some(issued)=>cx.consume_receiving_retained(issued,progress),None=>cx.consume_retained(progress)}.map_err(ValueError::into_fault)?;
     let scope=scope.ok_or_else(||ValueError::invariant("original history receiving scope vanished").into_fault())?;
@@ -191,110 +261,51 @@ where
 
 
 
-    /// 🧾️ Every field retains one place in the original initialization cursor.
-    pub const INITIAL_FIELDS: usize = 41;
-
-    /// 📐️ Quotes only the next bounded destination slice or complete small metadata field.
-    pub fn initial_field_demands(field: usize, byte: usize, body: usize) -> Result<RetirementDemand, ValueError> {
-        let copy_bytes = match field {
-            0 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
-            1 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
-            2 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::ArtifactMutationSource<Mu>>(), byte, body.max(1))?,
-            3 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>(), byte, body.max(1))?,
-            4 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::ArtifactDerivedOperation<P,Mu>>(), byte, body.max(1))?,
-            5 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
-            6 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
-            7 => 2 * size_of::<bool>(),
-            8 => 2 * size_of::<bool>(),
-            9 => 2 * size_of::<bool>(),
-            10 => 2 * size_of::<bool>(),
-            11 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>(), byte, body.max(1))?,
-            12 => 2 * size_of::<fn(&Mu) -> LocalizedLabel>(),
-            13 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
-            14 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
-            15 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<&'static str>(), byte, body.max(1))?,
-            16 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<&'static str>(), byte, body.max(1))?,
-            17 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
-            18 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>>(), byte, body.max(1))?,
-            19 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<protocol::InputReplacement>(), byte, body.max(1))?,
-            20 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>(), byte, body.max(1))?,
-            21 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::replay::EditReplayResult<P, Mu>>(), byte, body.max(1))?,
-            22 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::HistoryFinalization>(), byte, body.max(1))?,
-            23 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>(), byte, body.max(1))?,
-            24 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_os_store_engine_replay::OriginalReplayPublicationReceipt>(), byte, body.max(1))?,
-            25 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<TimeTravelCommit>(), byte, body.max(1))?,
-            26 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_job::OriginalTurnFailure>(), byte, body.max(1))?,
-            27 => 2 * size_of::<semio_framework_value::retained_clone::RetainedCloneClose>(),
-            28 => 2 * size_of::<u8>(),
-            29 => 2 * size_of::<bool>(),
-            30 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(), byte, body.max(1))?,
-            31 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_array_bytes::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>, 8>(), byte, body.max(1))?,
-            32 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>(), byte, body.max(1))?,
-            33 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
-            34 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_array_bytes::<semio_framework_value::FactoryAuthority, 2>(), byte, body.max(1))?,
-            35 => 2 * size_of::<VecDeque<Box<dyn store::ErasedSnapshotRetirement>>>(),
-            36 => 2 * size_of::<Vec<Mu>>(),
-            37 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Mu>(), byte, body.max(1))?,
-            38 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Box<dyn store::ErasedSnapshotRetirement>>(), byte, body.max(1))?,
-            39 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>(), byte, body.max(1))?,
-            40 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<semio_framework_value::FactoryAuthority>(), byte, body.max(1))?,
-            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial store field cursor exceeds its inventory")),
-        };
-        Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+    time_travel_store_fields! {
+        label_of;
+        0 => preview_base: absent(store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>);
+        1 => preview_original: absent(Mu);
+        2 => preview_source: absent(store::os_store::ArtifactMutationSource<Mu>);
+        3 => preview_native_input: absent(semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>);
+        4 => preview_derived: absent(store::os_store::ArtifactDerivedOperation<P,Mu>);
+        5 => preview_input_close: absent(Box<dyn store::ErasedSnapshotRetirement>);
+        6 => preview_original_close: absent(Box<dyn store::ErasedSnapshotRetirement>);
+        7 => preview_cancelled: fixed(bool = false);
+        8 => preview_job_closing: fixed(bool = false);
+        9 => replay_cancelled: fixed(bool = false);
+        10 => finished_cancelled: fixed(bool = false);
+        11 => discard_effects: absent(Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>);
+        12 => label_of: fixed(fn(&Mu) -> LocalizedLabel = label_of);
+        13 => staged: absent(Mu);
+        14 => kind: absent(Mu);
+        15 => kind_fallback: absent(&'static str);
+        16 => staged_fallback: absent(&'static str);
+        17 => preview: absent(store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>);
+        18 => preview_job: absent(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>);
+        19 => preview_input: absent(protocol::InputReplacement);
+        20 => replay: absent(store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>);
+        21 => finished: absent(store::os_store::replay::EditReplayResult<P, Mu>);
+        22 => commit_request: absent(store::HistoryFinalization);
+        23 => commit_publisher: absent(Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>);
+        24 => commit_receipt: absent(semio_os_store_engine_replay::OriginalReplayPublicationReceipt);
+        25 => commit_outcome: absent(TimeTravelCommit);
+        26 => commit_failure: absent(semio_framework_job::OriginalTurnFailure);
+        27 => commit_request_close: fixed(semio_framework_value::retained_clone::RetainedCloneClose = Default::default());
+        28 => commit_stage: fixed(u8 = 0);
+        29 => commit_closing: fixed(bool = false);
+        30 => head: absent(store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>);
+        31 => snapshot_aliases: wrapped_array(store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>, 8);
+        32 => snapshot_issuers: wrapped((Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>));
+        33 => snapshot_close: wrapped(Box<dyn store::ErasedSnapshotRetirement>);
+        34 => snapshot_issuer_close: array(semio_framework_value::FactoryAuthority, 2);
+        35 => retirements: fixed(VecDeque<Box<dyn store::ErasedSnapshotRetirement>> = VecDeque::new());
+        36 => discarded: fixed(Vec<Mu> = Vec::new());
+        37 => discarded_pending: absent(Mu);
+        38 => discarded_active: absent(Box<dyn store::ErasedSnapshotRetirement>);
+        39 => discarded_factory: absent(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>);
+        40 => discarded_factory_close: absent(semio_framework_value::FactoryAuthority);
+        41 => commit_resident: fixed(semio_os_store_engine_replay::OriginalReplayResident = Default::default());
     }
-
-    /// 🧱️ Initializes the selected original store field without an aggregate absent-value temporary.
-    ///
-    /// # Safety
-    /// The destination must remain private and uninitialized until every field and byte range has completed exactly once.
-    pub unsafe fn initialize_field_at(target: *mut Self, label_of: fn(&Mu) -> LocalizedLabel, field: usize, byte: usize, count: usize) -> Result<bool, ValueError> {
-        unsafe { match field {
-            0 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).preview_base), byte, count),
-            1 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).preview_original), byte, count),
-            2 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::ArtifactMutationSource<Mu>>(std::ptr::addr_of_mut!((*target).preview_source), byte, count),
-            3 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>(std::ptr::addr_of_mut!((*target).preview_native_input), byte, count),
-            4 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::ArtifactDerivedOperation<P,Mu>>(std::ptr::addr_of_mut!((*target).preview_derived), byte, count),
-            5 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).preview_input_close), byte, count),
-            6 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).preview_original_close), byte, count),
-            7 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).preview_cancelled).write(false); Ok(true) },
-            8 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).preview_job_closing).write(false); Ok(true) },
-            9 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).replay_cancelled).write(false); Ok(true) },
-            10 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).finished_cancelled).write(false); Ok(true) },
-            11 => semio_framework_value::initialization::initialize_absent_field_at::<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>(std::ptr::addr_of_mut!((*target).discard_effects), byte, count),
-            12 => { if byte != 0 || count < 2 * size_of::<fn(&Mu) -> LocalizedLabel>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).label_of).write(label_of); Ok(true) },
-            13 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).staged), byte, count),
-            14 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).kind), byte, count),
-            15 => semio_framework_value::initialization::initialize_absent_field_at::<&'static str>(std::ptr::addr_of_mut!((*target).kind_fallback), byte, count),
-            16 => semio_framework_value::initialization::initialize_absent_field_at::<&'static str>(std::ptr::addr_of_mut!((*target).staged_fallback), byte, count),
-            17 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).preview), byte, count),
-            18 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>>(std::ptr::addr_of_mut!((*target).preview_job), byte, count),
-            19 => semio_framework_value::initialization::initialize_absent_field_at::<protocol::InputReplacement>(std::ptr::addr_of_mut!((*target).preview_input), byte, count),
-            20 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>(std::ptr::addr_of_mut!((*target).replay), byte, count),
-            21 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::replay::EditReplayResult<P, Mu>>(std::ptr::addr_of_mut!((*target).finished), byte, count),
-            22 => semio_framework_value::initialization::initialize_absent_field_at::<store::HistoryFinalization>(std::ptr::addr_of_mut!((*target).commit_request), byte, count),
-            23 => semio_framework_value::initialization::initialize_absent_field_at::<Box<semio_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>(std::ptr::addr_of_mut!((*target).commit_publisher), byte, count),
-            24 => semio_framework_value::initialization::initialize_absent_field_at::<semio_os_store_engine_replay::OriginalReplayPublicationReceipt>(std::ptr::addr_of_mut!((*target).commit_receipt), byte, count),
-            25 => semio_framework_value::initialization::initialize_absent_field_at::<TimeTravelCommit>(std::ptr::addr_of_mut!((*target).commit_outcome), byte, count),
-            26 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_job::OriginalTurnFailure>(std::ptr::addr_of_mut!((*target).commit_failure), byte, count),
-            27 => { if byte != 0 || count < 2 * size_of::<semio_framework_value::retained_clone::RetainedCloneClose>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_request_close).write(Default::default()); Ok(true) },
-            28 => { if byte != 0 || count < 2 * size_of::<u8>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_stage).write(0); Ok(true) },
-            29 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).commit_closing).write(false); Ok(true) },
-            30 => semio_framework_value::initialization::initialize_absent_field_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>(std::ptr::addr_of_mut!((*target).head), byte, count),
-            31 => semio_framework_value::initialization::initialize_absent_array_at::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>, 8>(std::ptr::addr_of_mut!((*target).snapshot_aliases).cast::<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>(), byte, count),
-            32 => semio_framework_value::initialization::initialize_absent_field_at::<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>(std::ptr::addr_of_mut!((*target).snapshot_issuers).cast::<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>(), byte, count),
-            33 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).snapshot_close).cast::<Option<Box<dyn store::ErasedSnapshotRetirement>>>(), byte, count),
-            34 => semio_framework_value::initialization::initialize_absent_array_at::<semio_framework_value::FactoryAuthority, 2>(std::ptr::addr_of_mut!((*target).snapshot_issuer_close), byte, count),
-            35 => { if byte != 0 || count < 2 * size_of::<VecDeque<Box<dyn store::ErasedSnapshotRetirement>>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).retirements).write(VecDeque::new()); Ok(true) },
-            36 => { if byte != 0 || count < 2 * size_of::<Vec<Mu>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).discarded).write(Vec::new()); Ok(true) },
-            37 => semio_framework_value::initialization::initialize_absent_field_at::<Mu>(std::ptr::addr_of_mut!((*target).discarded_pending), byte, count),
-            38 => semio_framework_value::initialization::initialize_absent_field_at::<Box<dyn store::ErasedSnapshotRetirement>>(std::ptr::addr_of_mut!((*target).discarded_active), byte, count),
-            39 => semio_framework_value::initialization::initialize_absent_field_at::<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>>(std::ptr::addr_of_mut!((*target).discarded_factory), byte, count),
-            40 => semio_framework_value::initialization::initialize_absent_field_at::<semio_framework_value::FactoryAuthority>(std::ptr::addr_of_mut!((*target).discarded_factory_close), byte, count),
-            _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial store field cursor exceeds its inventory")),
-        } }
-    }
-
-
 
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
@@ -418,10 +429,10 @@ where
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history preview requires its original Job receiving issuer").into_fault())?;
                 if self.preview_source_advancing(){
                     self.snapshot_custody_available(2)?;
-                    let stepped=receive_step(cx,|native|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map_err(ValueError::into_fault),|result|match result{Ok(step)=>step.progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                    let stepped=receive_step(cx,|native,_|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map_err(ValueError::into_fault),|result|match result{Ok(step)=>step.progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     TimeTravelStoreOutput::Previewed(match stepped{Some(result)=>TimeTravelPreviewStep::Progress(result?.progress()),None=>TimeTravelPreviewStep::Pending})
                 }else{
-                    let stepped=receive_step(cx,|native|self.step_preview(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                    let stepped=receive_step(cx,|native,_|self.step_preview(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     match stepped{Some(result)=>{if let Some(work)=self.preview_job.as_mut().and_then(|job|job.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Previewed(result?)},None=>TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)}
                 }
             },            TimeTravelStoreCommand::StartReplay { drafts, from } => {
@@ -449,7 +460,7 @@ where
             }
             TimeTravelStoreCommand::StepReplay { deadline_us, clock,grant } => {
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history replay requires its original Job receiving issuer").into_fault())?;
-                let stepped=receive_step(cx,|native|self.step_replay(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                let stepped=receive_step(cx,|native,work|self.step_replay(store,deadline_us,clock,grant,native,work),|result|match result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                 match stepped{Some(result)=>{if let Some(work)=self.replay.as_mut().and_then(|replay|replay.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Stepped(result?)},None=>TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Unfunded)}
             },            TimeTravelStoreCommand::StepCommit=>match receiving{Some(cx)=>match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay publication requires its original Job continuation").into())},
             TimeTravelStoreCommand::Read(stage) => TimeTravelStoreOutput::Read(match self.shown(stage) {
@@ -571,11 +582,11 @@ where
     fn preview_source_advancing(&self)->bool{!self.preview_cancelled&&self.preview_base.is_some()&&self.preview_derived.is_none()&&self.preview_native_input.is_none()&&self.preview_source.as_ref().is_some_and(|source|!source.ready())}
 
     /// ⏭️ Steps the replay until `deadline_us` on `clock`; completion swaps the replayed head in and keeps the finished result.
-    fn step_replay(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<TimeTravelReplayStep, Fault> {
+    fn step_replay(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,work:u64) -> Result<TimeTravelReplayStep, Fault> {
         self.snapshot_custody_available(1)?;
         let Some(replay) = self.replay.as_mut() else { return Ok(TimeTravelReplayStep::Faulted) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-        Ok(match store.step_derived_report_replay(replay, grant, receiving,&mut deadline) {
+        Ok(match store.step_derived_report_replay(replay, grant, receiving,work,&mut deadline) {
             Ok(store::os_store::replay::ReplayStep::Pending(progress)) => TimeTravelReplayStep::Pending { done: progress.done, total: progress.total,ownership:replay.take_preparation_receipt() },
             Ok(store::os_store::replay::ReplayStep::Finished(_)) => {
                 let ownership=replay.take_preparation_receipt();

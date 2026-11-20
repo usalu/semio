@@ -327,8 +327,8 @@
       "de": "Die Ressourcenleihe von {label} lief ohne beobachtbaren Fortschritt ab: {message}"
     },
     "error.internal": {
-      "en": "Internal error: {message}",
-      "de": "Interner Fehler: {message}"
+      "en": "Internal error: {message} (reference {reference})",
+      "de": "Interner Fehler: {message} (Referenz {reference})"
     },
     "disk.full": {
       "en": "The disk is full: partition {partition} has {free} free. Nothing was lost, but the write could not finish. Free space with `{command}` (it works on a full disk), then run the command again.",

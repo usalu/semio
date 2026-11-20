@@ -38,6 +38,7 @@ mod tests {
     use super::*;
     #[test]
     fn utf8_text_chunk_transport_matches_shared_vectors() {
+        let _arena = crate::testkit::UiArenaFixture::new();
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let source = row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap() as usize);

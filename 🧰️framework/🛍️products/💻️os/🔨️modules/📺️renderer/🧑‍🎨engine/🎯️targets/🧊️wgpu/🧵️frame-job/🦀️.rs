@@ -10,7 +10,7 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
-use semio_framework_job::{CancelToken,InteractiveJob,StepContext};
+use semio_framework_job::{CancelToken, InteractiveJob, InteractiveJobStep, OriginalJobReturnClaim, StepContext};
 use semio_framework_job_worker::BatchJobSession;use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::mem::size_of;
@@ -43,11 +43,7 @@ impl FrameBuildJob {
         self.complete.take()
     }
 
-
-}
-
-impl InteractiveJob for FrameBuildJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+    fn step_turn<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if cx.is_cancelled() || self.closing {
             return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from);
         }
@@ -61,6 +57,12 @@ impl InteractiveJob for FrameBuildJob {
             return Ok(None);
         }
         JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from)
+    }
+}
+
+impl InteractiveJob for FrameBuildJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_turn(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -468,13 +470,11 @@ impl ActiveFrameBuild {
             ActiveFramePhase::Terminal => ActiveFrameStep::Complete(self.completed.take()),
         }
     }
-}
 
-impl InteractiveJob for ActiveFrameBuild {
     /// ⏱️ One retained Worker turn advances exactly one frame phase and charges that attempt after it
     /// runs, including a terminal attempt. Native resubmits the retained owner through the process
     /// pool; browser wasm reschedules it inside the dedicated frame Worker.
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+    fn step_turn<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if matches!(self.phase, ActiveFramePhase::Terminal) && self.retiring_phase.is_none() {
             return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from);
         }
@@ -488,6 +488,12 @@ impl InteractiveJob for ActiveFrameBuild {
                 Ok(None)
             }
         }
+    }
+}
+
+impl InteractiveJob for ActiveFrameBuild {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_turn(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -588,7 +594,7 @@ impl FrameBuildHandle {
 
     fn retire_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-        if let Some(owner)=self.original_outcome.as_mut(){if owner.acknowledge_outcome(cx)?{self.original_outcome.take().ok_or_else(||ValueError::invariant("original_outcome absent"))?.begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
+        if let Some(owner)=self.original_outcome.as_mut(){if owner.acknowledge_outcome(cx)?{self.original_outcome.take().ok_or_else(||semio_framework_value::ValueError::invariant("original_outcome absent"))?.begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
         if !self.original_admission.terminal_is_empty(){self.original_admission.close_step(cx)?;return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}

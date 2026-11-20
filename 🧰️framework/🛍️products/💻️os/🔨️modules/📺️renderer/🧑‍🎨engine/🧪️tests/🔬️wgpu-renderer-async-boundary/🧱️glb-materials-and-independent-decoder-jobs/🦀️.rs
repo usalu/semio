@@ -271,13 +271,27 @@ fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     let token = probe.owner().owner().token();
     let mut job = RendererAssetDecodeJob::new(probe);
     let mut caller = OriginalRendererFixture::new();
-    let before = caller.receipt();
+    let mut origin = OriginalJobReturnOrigin::empty();
+    caller.admit_job_origin(&mut origin);
     let denied = semio_framework_job::RetainedCloneGrant { maximum_items: 0, ..renderer_law_stock() };
-    let (pending, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.limited(denied, |cx| Ok(job.step(cx)?.is_none())).unwrap());
-    assert!(pending);
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!(caller.receipt(), before);
-    assert_eq!(serde_json::to_value(semio_framework_job::RetainedCloneProgress::default()).unwrap(), law["workerInvocation"]["expectedDeniedReceipt"]);
+    caller.turn(|cx| cx.with_retained_loan(denied, |cx| {
+        assert_eq!(cx.retained_grant().maximum_items, 0);
+        let before = cx.retained_progress();
+        let fuel = cx.fuel_remaining();
+        let mut verdict = None;
+        let (returned, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+            drive_step(&mut job, cx, origin.receiver()?, "renderer.decoder-denied", InteractiveStage::InteractiveStep, &mut verdict)
+        });
+        assert!(matches!(returned?, OriginalJobReturn::Preparing));
+        assert!(verdict.is_none());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(cx.retained_progress(), before);
+        assert_eq!(cx.fuel_remaining(), fuel);
+        assert_eq!(serde_json::to_value(semio_framework_job::RetainedCloneProgress::default()).unwrap(), law["workerInvocation"]["expectedDeniedReceipt"]);
+        Ok(())
+    })).unwrap();
+    assert!(origin.body_ready());
+    assert!(origin.outcome().is_none() && origin.continuation().is_none());
     assert_eq!(job.probe.borrow().as_ref().unwrap().owner().owner().token(), token);
     assert_eq!(job.probe.borrow().as_ref().unwrap().observed_bytes, 0);
     assert_eq!(job.steps, 0);
@@ -286,14 +300,15 @@ fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     job.begin_close();
     assert!(matches!(caller.turn(|cx|job.close_step(cx)).unwrap(), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
     assert!(job.terminal_is_empty());
+    caller.close_job_origin(&mut origin);
     close_owned_decoder_fixture(authority, recovered, &mut caller);
 }
 
-/// 🛑️ One worker grant decodes one page, and cancellation returns that exact owner before disposal.
+/// 🛑️ One worker grant decodes one page, and the cancelled caller recovers that exact owner before disposal.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation() {
-    use semio_framework_job::{InteractiveJob, JobOutcomeBorrow};
+    use semio_framework_job::InteractiveJob;
     fn assert_send<T: Send>() {}
     assert_send::<RendererAssetDecodeJob>();
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
@@ -301,14 +316,36 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     let token = probe.owner().owner().token();
     let mut job = RendererAssetDecodeJob::new(probe);
     let mut caller = OriginalRendererFixture::new();
-    caller.turn(|cx| { let deadline=cx.deadline_us();cx.with_original_work_loan(1,deadline,|same| { assert!(job.step(same)?.is_none());assert_eq!(same.fuel_remaining(),0);Ok(()) }) }).unwrap();
+    let mut origin = OriginalJobReturnOrigin::empty();
+    caller.admit_job_origin(&mut origin);
+    caller.turn(|cx| cx.with_original_work_loan(1, cx.deadline_us(), |cx| {
+        let mut verdict = None;
+        let returned = drive_step(&mut job, cx, origin.receiver()?, "renderer.decoder-one-page", InteractiveStage::InteractiveStep, &mut verdict)?;
+        assert!(matches!(returned, OriginalJobReturn::Pending));
+        assert!(verdict.is_some());
+        assert_eq!(cx.fuel_remaining(), 0);
+        Ok(())
+    })).unwrap();
     let observed = job.probe.borrow().as_ref().unwrap().observed_bytes;
     assert_eq!(observed,16*1024);
     caller.cancel();
-    caller.turn(|cx| { assert!(matches!(job.step(cx)?,Some(JobOutcomeBorrow::Complete { .. })));Ok(()) }).unwrap();
-    assert_eq!(job.result,Some(RendererAssetDecodeResult::Cancelled));
-    assert_eq!(law["cancelledDecode"]["afterClose"],"cancelled");assert_eq!(job.steps,1);
+    caller.turn(|cx| {
+        assert!(cx.is_cancelled());
+        let before = cx.retained_progress();
+        let mut verdict = None;
+        let returned = drive_step(&mut job, cx, origin.receiver()?, "renderer.decoder-cancelled", InteractiveStage::InteractiveStep, &mut verdict)?;
+        assert!(matches!(returned, OriginalJobReturn::Preparing));
+        assert!(verdict.is_none());
+        assert_eq!(cx.retained_progress(), before);
+        Ok(())
+    }).unwrap();
+    assert!(origin.body_ready());
+    assert!(origin.outcome().is_none() && origin.continuation().is_none());
+    assert_eq!(law["cancelledDecode"]["beforeClose"], "pending");
+    assert!(job.result.is_none());
+    assert_eq!(job.steps, 1);
     let recovered=job.take_probe().expect("host receives the exact terminal response");assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.observed_bytes,observed);
     job.begin_close();assert!(matches!(caller.turn(|cx|job.close_step(cx)).unwrap(),semio_framework_job::InteractiveJobCloseStep::Complete { .. }));assert!(job.terminal_is_empty());
+    caller.close_job_origin(&mut origin);
     close_owned_decoder_fixture(authority,recovered,&mut caller);
 }

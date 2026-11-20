@@ -36,11 +36,18 @@ impl DagGraphState {
     }
 
     /// 🖱️ Sets hover to a snapshot widget id, or clears hover.
-    pub fn set_hover(&mut self, widget_id: Option<&str>) {
-        let next = widget_id.and_then(|id| self.node_id_for_widget_id(id));
-        if self.engine.hover != next {
-            self.engine.hover = next;
-        }
+    pub fn set_hover(&mut self,widget_id:Option<&str>) {
+        self.engine.hover=widget_id.and_then(|id|self.node_id_for_widget_id(id).or_else(||self.hover_edge_engine_id(id)));
+    }
+
+    /// 🪢️ Applies a wire hover independently of the widget id namespace.
+    pub fn set_hover_edge(&mut self,edge_id:Option<&str>) {
+        self.engine.hover=edge_id.and_then(|id|self.hover_edge_engine_id(id));
+    }
+
+    fn hover_edge_engine_id(&self,id:&str) -> Option<EdgeId> {
+        let index=self.host_snapshot.edges.iter().position(|edge|edge.id==id)?;
+        self.edge_engine_ids.get(index).copied().flatten()
     }
 
     /// 🎯️ Hit-tests variadic `+` controls; returns side, node id, and insert index.
@@ -110,7 +117,7 @@ impl DagGraphState {
             let mut progress=|_|true;let mut control=LayoutControl::new(100_000_000,&mut progress);
             let _=apply_dag_layout(&mut self.host_snapshot,&DagLayoutOptions::default(),&mut control);
         }
-        let mut next_handle: u64 = 10;
+        let mut next_handle = (self.host_snapshot.nodes.len() as u64 + 1).max(10);
         let mut handle_map: HashMap<String, u64> = HashMap::new();
         for (idx, node) in self.host_snapshot.nodes.iter().enumerate() {
             let nid = idx as u64 + 1;
@@ -161,7 +168,7 @@ impl DagGraphState {
                 Some((src, tgt))
             })
             .collect();
-        let mut eid: u64 = 100;
+        let mut eid = next_handle.max(100);
         for (edge_index, edge) in self.host_snapshot.edges.iter().enumerate() {
             if would_create_cycle(&existing, edge.source.split('@').next().unwrap_or(""), edge.target.split('@').next().unwrap_or("")) {
                 continue;
@@ -171,8 +178,8 @@ impl DagGraphState {
             let src = handle_map.get(&dag_port_handle_key(&source_node, &source_port, false)).copied();
             let tgt = handle_map.get(&dag_port_handle_key(&target_node, &target_port, true)).copied();
             if let (Some(s), Some(t)) = (src, tgt) {
-                let id = parse_snapshot_edge_numeric_id(&edge.id).unwrap_or(eid);
-                eid = eid.max(id).saturating_add(1);
+                let id = eid;
+                eid += 1;
                 self.engine.create_edge(id, s, t);
                 self.edge_id_map.insert(id, edge.id.clone());
                 self.edge_engine_ids[edge_index] = Some(id);
@@ -199,6 +206,7 @@ impl DagGraphState {
     }
 
     pub fn sync_edges_from_engine(&mut self) {
+        let existing_ids = std::cell::LazyCell::new(|| self.host_snapshot.edges.iter().map(|edge| edge.id.as_str()).collect::<std::collections::HashSet<_>>());
         let mut edges = Vec::with_capacity(self.engine.edges.len());
         let mut edge_engine_ids = Vec::with_capacity(self.engine.edges.len());
         for (eid, edge) in &self.engine.edges {
@@ -208,11 +216,16 @@ impl DagGraphState {
             let Some(target) = self.handle_key_map.get(&edge.target).cloned() else {
                 continue;
             };
-            let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| format!("e{eid}"));
+            let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| {
+                let mut id = format!("e{eid}");
+                while existing_ids.contains(id.as_str()) { id.push('-'); }
+                id
+            });
             self.edge_id_map.insert(*eid, id.clone());
             edges.push(DagHostSnapshotEdge { id, source, target, ..Default::default() });
             edge_engine_ids.push(Some(*eid));
         }
+        drop(existing_ids);
         self.host_snapshot.edges = edges;
         self.edge_engine_ids = edge_engine_ids;
     }

@@ -50,7 +50,7 @@ fn complete_snapshot() -> Process3dSnapshot {
         },
         ProcessStep { id: "cylinder".into(), label: "Cylinder".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: 1.0, height: 2.0 }, pose: Pose::default() } },
         ProcessStep { id: "sphere".into(), label: "Sphere".into(), enabled: true, origin: None, measure: ProcessMeasure::Attach { component: WorkingSolid::Sphere { radius: 1.0 }, pose: Pose::default() } },
-        ProcessStep { id: "solid".into(), label: "Solid".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: WorkingSolid::ImportedSolid { solid_handle: "solid-1".into() }, pose: Pose::default() } },
+        ProcessStep { id: "solid".into(), label: "Solid".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: semio_s_artifact_process_process3d_model::snapshot::pack_imported_brep(&semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Sphere { radius: 0.5 })).expect("exact sphere fixture"), pose: Pose::default() } },
         ProcessStep { id: "reference".into(), label: "Reference".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Reference { reference_id: "ref-1".into() }, pose: Pose::default() } },
         ProcessStep { id: "drill".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 0.4, pose: Pose::default() } },
     ];

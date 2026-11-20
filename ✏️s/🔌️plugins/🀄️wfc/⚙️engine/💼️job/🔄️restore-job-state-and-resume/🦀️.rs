@@ -377,6 +377,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             preview_units: 0,
             last_preview_ms: None,
             publication: None,
+            publish_intermediate: true,
             closing: false,
             visible: Vec::new(),
         });

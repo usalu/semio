@@ -389,20 +389,21 @@ describe("Shell components", () => {
       expect(item?.textContent).toContain("CConfirmSelection");
       expect(item?.className).toContain("aspect-auto");
       expect(item?.className).not.toContain("aspect-square");
-      expect(item?.className.split(/\s+/)).toContain("min-h-0");
+      expect(item?.className.split(/\s+/)).toContain("self-stretch");
       expect(item?.className.split(/\s+/)).not.toContain("min-h-medium");
     });
 
-    it("ToggleGroup items drop the min height in horizontal groups and keep it in vertical ones", () => {
+    it("ToggleGroup items never impose a height; vertical groups give their own cells the minimum", () => {
       const items = [{ value: "a", id: "a", icon: "circle-dot", text: "A" }, { value: "b", id: "b", icon: "circle-dot", text: "B" }];
       const horizontal = render(<ui.ToggleGroup kind="single" value="a" items={items} />);
       const horizontalItem = horizontal.container.querySelector('[data-slot="toggle-group-item"]') as HTMLElement;
-      expect(horizontalItem.className.split(/\s+/)).toContain("min-h-0");
+      expect(horizontalItem.className.split(/\s+/)).toContain("self-stretch");
       expect(horizontalItem.className.split(/\s+/)).not.toContain("min-h-medium");
       horizontal.unmount();
       const vertical = render(<ui.ToggleGroup kind="single" value="a" orientation="vertical" items={items} />);
       const verticalItem = vertical.container.querySelector('[data-slot="toggle-group-item"]') as HTMLElement;
-      expect(verticalItem.className.split(/\s+/)).not.toContain("min-h-0");
+      expect(verticalItem.className.split(/\s+/)).not.toContain("min-h-medium");
+      expect((vertical.container.querySelector('[data-slot="toggle-group"]') as HTMLElement).className).toContain("[&>*]:min-h-medium");
     });
 
     it("tree value cells justify through a generated utility and scroll areas hide the native scrollbar", async () => {

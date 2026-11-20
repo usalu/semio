@@ -543,6 +543,7 @@ fn tree_window_law_reconcile(current: &SurfaceReconciler, component_tree: crate:
 ///    one of them measured, the way scrolling actually requests them.
 #[test]
 fn four_section_full_window_tree_reconciles_under_the_surface_byte_ceiling() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let flat = size_of::<FlatPresentedNode>();
     let limits = SurfaceReconcileLimits::default();
@@ -665,6 +666,7 @@ fn census_law_table_document(rows: usize, row: fn(usize) -> crate::TreeNode) -> 
 /// four-entry argument map, light table rows and Home-shaped table rows, and their containers alone.
 #[test]
 fn subtree_item_census_bounds_the_items_a_fresh_reconciliation_consumes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = crate::surface_reconcile_registry_test_guard();
     let trees = [0, 1, 8, 16].into_iter().map(|rows| (format!("tree {rows}"), tree_window_law_document(0, rows)));
     let heavy = [0, 1, 8, 28].into_iter().map(|rows| (format!("heavy table {rows}"), census_law_table_document(rows, census_law_table_row)));

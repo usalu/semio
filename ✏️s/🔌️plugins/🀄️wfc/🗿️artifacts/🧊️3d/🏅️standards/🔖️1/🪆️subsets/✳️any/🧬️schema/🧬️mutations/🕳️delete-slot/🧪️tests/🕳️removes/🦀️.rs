@@ -43,7 +43,7 @@ fn inverse_restores_before() {
     let base = before();
     let mut snapshot = base.clone();
     vcs::apply_mutation(&snapshot, &mutation()).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the committed mutation applies");
-    for back in <Wfc3dMutation as protocol::ColdMutation<Wfc3dSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture") {
+    for back in <Wfc3dMutation as protocol::ColdMutation<Wfc3dSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
         vcs::apply_mutation(&snapshot, &back).map(|(applied_state, _)| { snapshot = applied_state; }).expect("the inverse applies");
     }
     assert_eq!(snapshot, base, "🕳️removes: inverse() must restore the pre-mutation document");

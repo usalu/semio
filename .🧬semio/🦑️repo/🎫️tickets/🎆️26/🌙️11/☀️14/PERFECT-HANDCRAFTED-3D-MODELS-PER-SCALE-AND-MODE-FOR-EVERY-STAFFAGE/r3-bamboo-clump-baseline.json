@@ -1,0 +1,7342 @@
+{
+ "rig": {
+  "kind": "botanical",
+  "root": "root-plate",
+  "bones": [
+   {
+    "id": "root-plate",
+    "parent": null,
+    "title": {
+     "en": "Rhizome plate in the root barrier",
+     "de": "Rhizomplatte in der Wurzelsperre"
+    },
+    "x": 0,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 1.6,
+    "joint": {
+     "type": "fixed"
+    },
+    "mass": {
+     "kg": 8,
+     "comX": 0.8,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-koehl-2015"
+    }
+   },
+   {
+    "id": "culm-1-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 1, lower part",
+     "de": "Halm 1, unterer Teil"
+    },
+    "x": -0.6,
+    "y": 0,
+    "angleDeg": 93.4894,
+    "lengthM": 1.0379,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.228,
+     "comX": 0.519,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-1-b",
+    "parent": "culm-1-a",
+    "title": {
+     "en": "Culm 1, middle part",
+     "de": "Halm 1, mittlerer Teil"
+    },
+    "x": 1.0379,
+    "y": 0,
+    "angleDeg": 4.2564,
+    "lengthM": 1.0082,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.202,
+     "comX": 0.5041,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-1-c",
+    "parent": "culm-1-b",
+    "title": {
+     "en": "Culm 1, upper arching part",
+     "de": "Halm 1, oberer bogiger Teil"
+    },
+    "x": 1.0082,
+    "y": 0,
+    "angleDeg": 4.1565,
+    "lengthM": 1.7016,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.272,
+     "comX": 0.8508,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-1",
+    "parent": "culm-1-c",
+    "title": {
+     "en": "Foliage and branches of culm 1",
+     "de": "Laub und Äste von Halm 1"
+    },
+    "x": 0.8508,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.8848,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.554,
+     "comX": 0.4424,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "culm-2-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 2, lower part",
+     "de": "Halm 2, unterer Teil"
+    },
+    "x": -0.28,
+    "y": 0,
+    "angleDeg": 90.4178,
+    "lengthM": 1.26,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.277,
+     "comX": 0.63,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-2-b",
+    "parent": "culm-2-a",
+    "title": {
+     "en": "Culm 2, middle part",
+     "de": "Halm 2, mittlerer Teil"
+    },
+    "x": 1.26,
+    "y": 0,
+    "angleDeg": 0.5141,
+    "lengthM": 1.2152,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.243,
+     "comX": 0.6076,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-2-c",
+    "parent": "culm-2-b",
+    "title": {
+     "en": "Culm 2, upper arching part",
+     "de": "Halm 2, oberer bogiger Teil"
+    },
+    "x": 1.2152,
+    "y": 0,
+    "angleDeg": 0.512,
+    "lengthM": 2.0256,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.324,
+     "comX": 1.0128,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-2",
+    "parent": "culm-2-c",
+    "title": {
+     "en": "Foliage and branches of culm 2",
+     "de": "Laub und Äste von Halm 2"
+    },
+    "x": 1.0128,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 1.0533,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.89,
+     "comX": 0.5267,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "culm-3-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 3, lower part",
+     "de": "Halm 3, unterer Teil"
+    },
+    "x": 0.02,
+    "y": 0,
+    "angleDeg": 88.2807,
+    "lengthM": 1.1485,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.253,
+     "comX": 0.5743,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-3-b",
+    "parent": "culm-3-a",
+    "title": {
+     "en": "Culm 3, middle part",
+     "de": "Halm 3, mittlerer Teil"
+    },
+    "x": 1.1485,
+    "y": 0,
+    "angleDeg": -2.1113,
+    "lengthM": 1.1095,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.222,
+     "comX": 0.5547,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-3-c",
+    "parent": "culm-3-b",
+    "title": {
+     "en": "Culm 3, upper arching part",
+     "de": "Halm 3, oberer bogiger Teil"
+    },
+    "x": 1.1095,
+    "y": 0,
+    "angleDeg": -2.0929,
+    "lengthM": 1.8549,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.297,
+     "comX": 0.9275,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-3",
+    "parent": "culm-3-c",
+    "title": {
+     "en": "Foliage and branches of culm 3",
+     "de": "Laub und Äste von Halm 3"
+    },
+    "x": 0.9275,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.9645,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.722,
+     "comX": 0.4823,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "culm-4-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 4, lower part",
+     "de": "Halm 4, unterer Teil"
+    },
+    "x": 0.32,
+    "y": 0,
+    "angleDeg": 85.3098,
+    "lengthM": 0.9833,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.216,
+     "comX": 0.4916,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-4-b",
+    "parent": "culm-4-a",
+    "title": {
+     "en": "Culm 4, middle part",
+     "de": "Halm 4, mittlerer Teil"
+    },
+    "x": 0.9833,
+    "y": 0,
+    "angleDeg": -5.6807,
+    "lengthM": 0.9607,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.192,
+     "comX": 0.4803,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-4-c",
+    "parent": "culm-4-b",
+    "title": {
+     "en": "Culm 4, upper arching part",
+     "de": "Halm 4, oberer bogiger Teil"
+    },
+    "x": 0.9607,
+    "y": 0,
+    "angleDeg": -5.4619,
+    "lengthM": 1.6371,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.262,
+     "comX": 0.8186,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-4",
+    "parent": "culm-4-c",
+    "title": {
+     "en": "Foliage and branches of culm 4",
+     "de": "Laub und Äste von Halm 4"
+    },
+    "x": 0.8186,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.8513,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.47,
+     "comX": 0.4256,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "culm-5-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 5, lower part",
+     "de": "Halm 5, unterer Teil"
+    },
+    "x": 0.62,
+    "y": 0,
+    "angleDeg": 84.9879,
+    "lengthM": 0.8151,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.179,
+     "comX": 0.4076,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-5-b",
+    "parent": "culm-5-a",
+    "title": {
+     "en": "Culm 5, middle part",
+     "de": "Halm 5, mittlerer Teil"
+    },
+    "x": 0.8151,
+    "y": 0,
+    "angleDeg": -6.057,
+    "lengthM": 0.7978,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.16,
+     "comX": 0.3989,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-5-c",
+    "parent": "culm-5-b",
+    "title": {
+     "en": "Culm 5, upper arching part",
+     "de": "Halm 5, oberer bogiger Teil"
+    },
+    "x": 0.7978,
+    "y": 0,
+    "angleDeg": -5.7955,
+    "lengthM": 1.3636,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.218,
+     "comX": 0.6818,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-5",
+    "parent": "culm-5-c",
+    "title": {
+     "en": "Foliage and branches of culm 5",
+     "de": "Laub und Äste von Halm 5"
+    },
+    "x": 0.6818,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.7091,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.218,
+     "comX": 0.3545,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   },
+   {
+    "id": "culm-6-a",
+    "parent": "root-plate",
+    "title": {
+     "en": "Culm 6, lower part",
+     "de": "Halm 6, unterer Teil"
+    },
+    "x": -0.82,
+    "y": 0,
+    "angleDeg": 93.7162,
+    "lengthM": 0.6734,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -8,
+     "maxDeg": 8
+    },
+    "mass": {
+     "kg": 0.148,
+     "comX": 0.3367,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0003142,
+     "secondMomentM4": 2.517e-08,
+     "extremeFibreM": 0.0145,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 29 mm",
+      "de": "Hohler Halm, Außendurchmesser 29 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-6-b",
+    "parent": "culm-6-a",
+    "title": {
+     "en": "Culm 6, middle part",
+     "de": "Halm 6, mittlerer Teil"
+    },
+    "x": 0.6734,
+    "y": 0,
+    "angleDeg": 4.5276,
+    "lengthM": 0.6548,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 0.131,
+     "comX": 0.3274,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.000289,
+     "secondMomentM4": 1.969e-08,
+     "extremeFibreM": 0.0135,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 27 mm",
+      "de": "Hohler Halm, Außendurchmesser 27 mm"
+     }
+    }
+   },
+   {
+    "id": "culm-6-c",
+    "parent": "culm-6-b",
+    "title": {
+     "en": "Culm 6, upper arching part",
+     "de": "Halm 6, oberer bogiger Teil"
+    },
+    "x": 0.6548,
+    "y": 0,
+    "angleDeg": 4.4098,
+    "lengthM": 1.1069,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -24,
+     "maxDeg": 24
+    },
+    "mass": {
+     "kg": 0.177,
+     "comX": 0.5534,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "liese-1985"
+    },
+    "section": {
+     "areaM2": 0.0002144,
+     "secondMomentM4": 1.052e-08,
+     "extremeFibreM": 0.0115,
+     "material": "bamboo-culm",
+     "title": {
+      "en": "Hollow culm, outer diameter 23 mm",
+      "de": "Hohler Halm, Außendurchmesser 23 mm"
+     }
+    }
+   },
+   {
+    "id": "fol-6",
+    "parent": "culm-6-c",
+    "title": {
+     "en": "Foliage and branches of culm 6",
+     "de": "Laub und Äste von Halm 6"
+    },
+    "x": 0.5534,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.5756,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -14,
+     "maxDeg": 14
+    },
+    "mass": {
+     "kg": 1.008,
+     "comX": 0.2878,
+     "comY": 0,
+     "distribution": "uniform",
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   }
+  ]
+ },
+ "anchors": [
+  {
+   "id": "base-support",
+   "bone": "root-plate",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "title": {
+    "en": "Rhizome plate inside the root barrier",
+    "de": "Rhizomplatte in der Wurzelsperre"
+   },
+   "support": "fixed",
+   "normalDeg": 90,
+   "footprintLengthM": 1.6,
+   "footprintWidthM": 1,
+   "frictionCoefficient": 0.6
+  },
+  {
+   "id": "tp-sun-1",
+   "bone": "fol-1",
+   "x": 0.5586,
+   "y": 0.0489,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 1",
+    "de": "Transpiration des besonnten Laubs von Halm 1"
+   },
+   "z": 0.551
+  },
+  {
+   "id": "tp-shade-1",
+   "bone": "fol-1",
+   "x": -0.4142,
+   "y": 0.0979,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 1",
+    "de": "Transpiration des beschatteten Laubs von Halm 1"
+   },
+   "z": 0.551
+  },
+  {
+   "id": "tp-sun-2",
+   "bone": "fol-2",
+   "x": 0.654,
+   "y": 0.05,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 2",
+    "de": "Transpiration des besonnten Laubs von Halm 2"
+   },
+   "z": -0.291
+  },
+  {
+   "id": "tp-shade-2",
+   "bone": "fol-2",
+   "x": -0.5151,
+   "y": 0.1,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 2",
+    "de": "Transpiration des beschatteten Laubs von Halm 2"
+   },
+   "z": -0.291
+  },
+  {
+   "id": "tp-sun-3",
+   "bone": "fol-3",
+   "x": 0.6029,
+   "y": -0.0497,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 3",
+    "de": "Transpiration des besonnten Laubs von Halm 3"
+   },
+   "z": 0.096
+  },
+  {
+   "id": "tp-shade-3",
+   "bone": "fol-3",
+   "x": -0.4637,
+   "y": -0.0995,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 3",
+    "de": "Transpiration des beschatteten Laubs von Halm 3"
+   },
+   "z": 0.096
+  },
+  {
+   "id": "tp-sun-4",
+   "bone": "fol-4",
+   "x": 0.5412,
+   "y": -0.0481,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 4",
+    "de": "Transpiration des besonnten Laubs von Halm 4"
+   },
+   "z": -0.352
+  },
+  {
+   "id": "tp-shade-4",
+   "bone": "fol-4",
+   "x": -0.3911,
+   "y": -0.0962,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 4",
+    "de": "Transpiration des beschatteten Laubs von Halm 4"
+   },
+   "z": -0.352
+  },
+  {
+   "id": "tp-sun-5",
+   "bone": "fol-5",
+   "x": 0.4539,
+   "y": -0.0478,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 5",
+    "de": "Transpiration des besonnten Laubs von Halm 5"
+   },
+   "z": 0.449
+  },
+  {
+   "id": "tp-shade-5",
+   "bone": "fol-5",
+   "x": -0.3195,
+   "y": -0.0957,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 5",
+    "de": "Transpiration des beschatteten Laubs von Halm 5"
+   },
+   "z": 0.449
+  },
+  {
+   "id": "tp-sun-6",
+   "bone": "fol-6",
+   "x": 0.3676,
+   "y": 0.0488,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the sunlit foliage of culm 6",
+    "de": "Transpiration des besonnten Laubs von Halm 6"
+   },
+   "z": -0.446
+  },
+  {
+   "id": "tp-shade-6",
+   "bone": "fol-6",
+   "x": -0.261,
+   "y": 0.0976,
+   "kind": "emitter",
+   "title": {
+    "en": "Transpiration of the shaded foliage of culm 6",
+    "de": "Transpiration des beschatteten Laubs von Halm 6"
+   },
+   "z": -0.446
+  }
+ ],
+ "poses": [
+  {
+   "id": "summer-calm",
+   "title": {
+    "en": "Summer, calm",
+    "de": "Sommer, windstill"
+   },
+   "description": {
+    "en": "Light air of 1.5 m/s: the six culms stand in their rest curves, the foliage hangs open and the whole clump transpires at the full midday rate.",
+    "de": "Leiser Zug von 1,5 m/s: Die sechs Halme stehen in ihrer Ruhekrümmung, das Laub hängt offen und der ganze Horst transpiriert mit der vollen Mittagsrate."
+   },
+   "bones": {},
+   "ground": "authored",
+   "contacts": [],
+   "thermal": {
+    "regions": {
+     "culms": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.35
+     },
+     "leaves-sun": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.85
+     },
+     "leaves-shade": {
+      "exposedFraction": 0.8,
+      "sunlitFraction": 0.12
+     }
+    },
+    "emitters": {
+     "transpiration-sun": 0.8,
+     "transpiration-shade": 0.7
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fol-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 1, calm",
+      "de": "Winddruck auf das Laub von Halm 1, calm"
+     },
+     "bone": "fol-1",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.578,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-2",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 2, calm",
+      "de": "Winddruck auf das Laub von Halm 2, calm"
+     },
+     "bone": "fol-2",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.854,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-3",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 3, calm",
+      "de": "Winddruck auf das Laub von Halm 3, calm"
+     },
+     "bone": "fol-3",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.709,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-4",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 4, calm",
+      "de": "Winddruck auf das Laub von Halm 4, calm"
+     },
+     "bone": "fol-4",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.517,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-5",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 5, calm",
+      "de": "Winddruck auf das Laub von Halm 5, calm"
+     },
+     "bone": "fol-5",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.355,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-6",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 6, calm",
+      "de": "Winddruck auf das Laub von Halm 6, calm"
+     },
+     "bone": "fol-6",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.243,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  },
+  {
+   "id": "fresh-breeze",
+   "title": {
+    "en": "Fresh breeze",
+    "de": "Frische Brise"
+   },
+   "description": {
+    "en": "A fresh breeze of 8 m/s from the left bends all culms downwind; the foliage streams and exposes its inner leaves to the air.",
+    "de": "Eine frische Brise von 8 m/s von links biegt alle Halme in Windrichtung; das Laub weht und setzt die inneren Blätter der Luft aus."
+   },
+   "bones": {
+    "culm-1-a": {
+     "angleDeg": -2
+    },
+    "culm-1-b": {
+     "angleDeg": -3.5
+    },
+    "culm-1-c": {
+     "angleDeg": -5
+    },
+    "culm-2-a": {
+     "angleDeg": -2
+    },
+    "culm-2-b": {
+     "angleDeg": -3.5
+    },
+    "culm-2-c": {
+     "angleDeg": -5
+    },
+    "culm-3-a": {
+     "angleDeg": -2
+    },
+    "culm-3-b": {
+     "angleDeg": -3.5
+    },
+    "culm-3-c": {
+     "angleDeg": -5
+    },
+    "culm-4-a": {
+     "angleDeg": -2
+    },
+    "culm-4-b": {
+     "angleDeg": -3.5
+    },
+    "culm-4-c": {
+     "angleDeg": -5
+    },
+    "culm-5-a": {
+     "angleDeg": -2
+    },
+    "culm-5-b": {
+     "angleDeg": -3.5
+    },
+    "culm-5-c": {
+     "angleDeg": -5
+    },
+    "culm-6-a": {
+     "angleDeg": -2
+    },
+    "culm-6-b": {
+     "angleDeg": -3.5
+    },
+    "culm-6-c": {
+     "angleDeg": -5
+    }
+   },
+   "ground": "authored",
+   "contacts": [],
+   "thermal": {
+    "regions": {
+     "culms": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.35
+     },
+     "leaves-sun": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.85
+     },
+     "leaves-shade": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.2
+     }
+    },
+    "emitters": {
+     "transpiration-sun": 1,
+     "transpiration-shade": 1
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fol-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 1, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 1, fresh breeze"
+     },
+     "bone": "fol-1",
+     "x": 0,
+     "y": 0,
+     "fxN": 8.214,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-2",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 2, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 2, fresh breeze"
+     },
+     "bone": "fol-2",
+     "x": 0,
+     "y": 0,
+     "fxN": 12.15,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-3",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 3, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 3, fresh breeze"
+     },
+     "bone": "fol-3",
+     "x": 0,
+     "y": 0,
+     "fxN": 10.086,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-4",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 4, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 4, fresh breeze"
+     },
+     "bone": "fol-4",
+     "x": 0,
+     "y": 0,
+     "fxN": 7.35,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-5",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 5, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 5, fresh breeze"
+     },
+     "bone": "fol-5",
+     "x": 0,
+     "y": 0,
+     "fxN": 5.046,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-6",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 6, fresh breeze",
+      "de": "Winddruck auf das Laub von Halm 6, fresh breeze"
+     },
+     "bone": "fol-6",
+     "x": 0,
+     "y": 0,
+     "fxN": 3.456,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  },
+  {
+   "id": "storm-bent",
+   "title": {
+    "en": "Storm, culms bent",
+    "de": "Sturm, Halme gebogen"
+   },
+   "description": {
+    "en": "A gale of 22 m/s: the culms bend to about a quarter of their height downwind and the foliage reconfigures into streamlined bundles that cut the drag coefficient.",
+    "de": "Ein Sturm von 22 m/s: Die Halme biegen sich bis etwa ein Viertel der Höhe in Windrichtung und das Laub ordnet sich zu strömungsgünstigen Bündeln, die den Widerstandsbeiwert senken."
+   },
+   "bones": {
+    "culm-1-a": {
+     "angleDeg": -4
+    },
+    "culm-1-b": {
+     "angleDeg": -7
+    },
+    "culm-1-c": {
+     "angleDeg": -11
+    },
+    "fol-1": {
+     "angleDeg": -5
+    },
+    "culm-2-a": {
+     "angleDeg": -4
+    },
+    "culm-2-b": {
+     "angleDeg": -7
+    },
+    "culm-2-c": {
+     "angleDeg": -11
+    },
+    "fol-2": {
+     "angleDeg": -5
+    },
+    "culm-3-a": {
+     "angleDeg": -4
+    },
+    "culm-3-b": {
+     "angleDeg": -7
+    },
+    "culm-3-c": {
+     "angleDeg": -11
+    },
+    "fol-3": {
+     "angleDeg": -5
+    },
+    "culm-4-a": {
+     "angleDeg": -4
+    },
+    "culm-4-b": {
+     "angleDeg": -7
+    },
+    "culm-4-c": {
+     "angleDeg": -11
+    },
+    "fol-4": {
+     "angleDeg": -5
+    },
+    "culm-5-a": {
+     "angleDeg": -4
+    },
+    "culm-5-b": {
+     "angleDeg": -7
+    },
+    "culm-5-c": {
+     "angleDeg": -11
+    },
+    "fol-5": {
+     "angleDeg": -5
+    },
+    "culm-6-a": {
+     "angleDeg": -4
+    },
+    "culm-6-b": {
+     "angleDeg": -7
+    },
+    "culm-6-c": {
+     "angleDeg": -11
+    },
+    "fol-6": {
+     "angleDeg": -5
+    }
+   },
+   "ground": "authored",
+   "contacts": [],
+   "thermal": {
+    "regions": {
+     "culms": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.2
+     },
+     "leaves-sun": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.5
+     },
+     "leaves-shade": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.05
+     }
+    },
+    "emitters": {
+     "transpiration-sun": 0.5,
+     "transpiration-shade": 0.3
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fol-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 1, storm",
+      "de": "Winddruck auf das Laub von Halm 1, storm"
+     },
+     "bone": "fol-1",
+     "x": 0,
+     "y": 0,
+     "fxN": 24.847,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-2",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 2, storm",
+      "de": "Winddruck auf das Laub von Halm 2, storm"
+     },
+     "bone": "fol-2",
+     "x": 0,
+     "y": 0,
+     "fxN": 36.754,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-3",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 3, storm",
+      "de": "Winddruck auf das Laub von Halm 3, storm"
+     },
+     "bone": "fol-3",
+     "x": 0,
+     "y": 0,
+     "fxN": 30.51,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-4",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 4, storm",
+      "de": "Winddruck auf das Laub von Halm 4, storm"
+     },
+     "bone": "fol-4",
+     "x": 0,
+     "y": 0,
+     "fxN": 22.234,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-5",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 5, storm",
+      "de": "Winddruck auf das Laub von Halm 5, storm"
+     },
+     "bone": "fol-5",
+     "x": 0,
+     "y": 0,
+     "fxN": 15.264,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-6",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 6, storm",
+      "de": "Winddruck auf das Laub von Halm 6, storm"
+     },
+     "bone": "fol-6",
+     "x": 0,
+     "y": 0,
+     "fxN": 10.454,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  },
+  {
+   "id": "wet-snow",
+   "title": {
+    "en": "Winter, wet snow",
+    "de": "Winter, Nassschnee"
+   },
+   "description": {
+    "en": "Wet snow on the evergreen foliage bows the culm tops outward and down; the leaves curl, stomata are shut and the clump hardly transpires.",
+    "de": "Nassschnee auf dem immergrünen Laub drückt die Halmspitzen nach außen und unten; die Blätter rollen sich, die Spaltöffnungen sind geschlossen und der Horst transpiriert kaum."
+   },
+   "bones": {
+    "culm-1-a": {
+     "angleDeg": 1.5
+    },
+    "culm-1-b": {
+     "angleDeg": 3
+    },
+    "culm-1-c": {
+     "angleDeg": 8
+    },
+    "fol-1": {
+     "angleDeg": 6
+    },
+    "culm-2-a": {
+     "angleDeg": 1.5
+    },
+    "culm-2-b": {
+     "angleDeg": 3
+    },
+    "culm-2-c": {
+     "angleDeg": 8
+    },
+    "fol-2": {
+     "angleDeg": 6
+    },
+    "culm-3-a": {
+     "angleDeg": -1.5
+    },
+    "culm-3-b": {
+     "angleDeg": -3
+    },
+    "culm-3-c": {
+     "angleDeg": -8
+    },
+    "fol-3": {
+     "angleDeg": -6
+    },
+    "culm-4-a": {
+     "angleDeg": -1.5
+    },
+    "culm-4-b": {
+     "angleDeg": -3
+    },
+    "culm-4-c": {
+     "angleDeg": -8
+    },
+    "fol-4": {
+     "angleDeg": -6
+    },
+    "culm-5-a": {
+     "angleDeg": -1.5
+    },
+    "culm-5-b": {
+     "angleDeg": -3
+    },
+    "culm-5-c": {
+     "angleDeg": -8
+    },
+    "fol-5": {
+     "angleDeg": -6
+    },
+    "culm-6-a": {
+     "angleDeg": 1.5
+    },
+    "culm-6-b": {
+     "angleDeg": 3
+    },
+    "culm-6-c": {
+     "angleDeg": 8
+    },
+    "fol-6": {
+     "angleDeg": 6
+    }
+   },
+   "ground": "authored",
+   "contacts": [],
+   "thermal": {
+    "regions": {
+     "culms": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.2,
+      "wettedness": 0.5
+     },
+     "leaves-sun": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0.2,
+      "wettedness": 0.5
+     },
+     "leaves-shade": {
+      "exposedFraction": 0.6,
+      "sunlitFraction": 0.05,
+      "wettedness": 0.5
+     }
+    },
+    "emitters": {
+     "transpiration-sun": 0.03,
+     "transpiration-shade": 0.02
+    }
+   },
+   "loads": [
+    {
+     "id": "snow-fol-1",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 1",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 1"
+     },
+     "bone": "fol-1",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -13.067,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    },
+    {
+     "id": "snow-fol-2",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 2",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 2"
+     },
+     "bone": "fol-2",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -15.892,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    },
+    {
+     "id": "snow-fol-3",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 3",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 3"
+     },
+     "bone": "fol-3",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -14.48,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    },
+    {
+     "id": "snow-fol-4",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 4",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 4"
+     },
+     "bone": "fol-4",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -12.361,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    },
+    {
+     "id": "snow-fol-5",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 5",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 5"
+     },
+     "bone": "fol-5",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -10.242,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    },
+    {
+     "id": "snow-fol-6",
+     "kind": "snow",
+     "title": {
+      "en": "Retained wet snow on the foliage of culm 6",
+      "de": "Haftender Nassschnee auf dem Laub von Halm 6"
+     },
+     "bone": "fol-6",
+     "x": 0,
+     "y": 0,
+     "fxN": 0,
+     "fyN": -8.476,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-3"
+    }
+   ]
+  },
+  {
+   "id": "winter-overcast",
+   "title": {
+    "en": "Winter, overcast and still",
+    "de": "Winter, bedeckt und windstill"
+   },
+   "description": {
+    "en": "A still, overcast winter day: no direct sun, leaves slightly rolled, a few percent of the summer transpiration.",
+    "de": "Ein windstiller, bedeckter Wintertag: keine direkte Sonne, leicht eingerollte Blätter, wenige Prozent der sommerlichen Transpiration."
+   },
+   "bones": {},
+   "ground": "authored",
+   "contacts": [],
+   "thermal": {
+    "regions": {
+     "culms": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0
+     },
+     "leaves-sun": {
+      "exposedFraction": 1,
+      "sunlitFraction": 0
+     },
+     "leaves-shade": {
+      "exposedFraction": 0.7,
+      "sunlitFraction": 0
+     }
+    },
+    "emitters": {
+     "transpiration-sun": 0.1,
+     "transpiration-shade": 0.06
+    }
+   },
+   "loads": [
+    {
+     "id": "wind-fol-1",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 1, winter calm",
+      "de": "Winddruck auf das Laub von Halm 1, winter calm"
+     },
+     "bone": "fol-1",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.257,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-2",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 2, winter calm",
+      "de": "Winddruck auf das Laub von Halm 2, winter calm"
+     },
+     "bone": "fol-2",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.38,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-3",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 3, winter calm",
+      "de": "Winddruck auf das Laub von Halm 3, winter calm"
+     },
+     "bone": "fol-3",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.315,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-4",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 4, winter calm",
+      "de": "Winddruck auf das Laub von Halm 4, winter calm"
+     },
+     "bone": "fol-4",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.23,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-5",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 5, winter calm",
+      "de": "Winddruck auf das Laub von Halm 5, winter calm"
+     },
+     "bone": "fol-5",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.158,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    },
+    {
+     "id": "wind-fol-6",
+     "kind": "wind",
+     "title": {
+      "en": "Wind drag on the foliage of culm 6, winter calm",
+      "de": "Winddruck auf das Laub von Halm 6, winter calm"
+     },
+     "bone": "fol-6",
+     "x": 0,
+     "y": 0,
+     "fxN": 0.108,
+     "fyN": 0,
+     "source": "authored-estimate",
+     "reference": "en-1991-1-4"
+    }
+   ]
+  }
+ ],
+ "clips": [
+  {
+   "id": "wind-sway",
+   "title": {
+    "en": "Wind sway",
+    "de": "Windschwingung"
+   },
+   "description": {
+    "en": "A deterministic 2.9 s cycle (0.34 Hz, the first bending mode of a 4.5 m culm with its foliage, estimated from E I = 300 N m2 and 2 kg tip mass): the culms swing about the fresh-breeze lean with a phase that travels through the clump; the foliage flutters at twice the frequency.",
+    "de": "Ein deterministischer Zyklus von 2,9 s (0,34 Hz, die erste Biegeeigenform eines 4,5 m hohen Halms mit Laub, geschätzt aus E I = 300 N m2 und 2 kg Spitzenmasse): Die Halme schwingen um die Neigung der frischen Brise mit einer durch den Horst wandernden Phase; das Laub flattert mit doppelter Frequenz."
+   },
+   "durationS": 2.9,
+   "fps": 30,
+   "loop": true,
+   "rootMotion": "none",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.4459
+      },
+      "culm-1-b": {
+       "angleDeg": -2.1211
+      },
+      "culm-1-c": {
+       "angleDeg": -2.1488
+      },
+      "fol-1": {
+       "angleDeg": 4.9513
+      },
+      "culm-2-a": {
+       "angleDeg": -1.1267
+      },
+      "culm-2-b": {
+       "angleDeg": -1.7011
+      },
+      "culm-2-c": {
+       "angleDeg": -1.8588
+      },
+      "fol-2": {
+       "angleDeg": 3.4733
+      },
+      "culm-3-a": {
+       "angleDeg": -1.1778
+      },
+      "culm-3-b": {
+       "angleDeg": -2.0438
+      },
+      "culm-3-c": {
+       "angleDeg": -2.9006
+      },
+      "fol-3": {
+       "angleDeg": 0.5226
+      },
+      "culm-4-a": {
+       "angleDeg": -1.5775
+      },
+      "culm-4-b": {
+       "angleDeg": -3.0039
+      },
+      "culm-4-c": {
+       "angleDeg": -4.8325
+      },
+      "fol-4": {
+       "angleDeg": -2.6496
+      },
+      "culm-5-a": {
+       "angleDeg": -2.1563
+      },
+      "culm-5-b": {
+       "angleDeg": -4.1743
+      },
+      "culm-5-c": {
+       "angleDeg": -6.8354
+      },
+      "fol-5": {
+       "angleDeg": -4.6985
+      },
+      "culm-6-a": {
+       "angleDeg": -2.6688
+      },
+      "culm-6-b": {
+       "angleDeg": -5.0588
+      },
+      "culm-6-c": {
+       "angleDeg": -8.0602
+      },
+      "fol-6": {
+       "angleDeg": -4.7553
+      }
+     }
+    },
+    {
+     "t": 0.2417,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.1655
+      },
+      "culm-1-b": {
+       "angleDeg": -1.7273
+      },
+      "culm-1-c": {
+       "angleDeg": -1.8044
+      },
+      "fol-1": {
+       "angleDeg": 1.873
+      },
+      "culm-2-a": {
+       "angleDeg": -1.1349
+      },
+      "culm-2-b": {
+       "angleDeg": -1.9107
+      },
+      "culm-2-c": {
+       "angleDeg": -2.5849
+      },
+      "fol-2": {
+       "angleDeg": -1.3782
+      },
+      "culm-3-a": {
+       "angleDeg": -1.471
+      },
+      "culm-3-b": {
+       "angleDeg": -2.7679
+      },
+      "culm-3-c": {
+       "angleDeg": -4.3894
+      },
+      "fol-3": {
+       "angleDeg": -4.0451
+      },
+      "culm-4-a": {
+       "angleDeg": -2.0314
+      },
+      "culm-4-b": {
+       "angleDeg": -3.9355
+      },
+      "culm-4-c": {
+       "angleDeg": -6.4528
+      },
+      "fol-4": {
+       "angleDeg": -4.997
+      },
+      "culm-5-a": {
+       "angleDeg": -2.5785
+      },
+      "culm-5-b": {
+       "angleDeg": -4.9184
+      },
+      "culm-5-c": {
+       "angleDeg": -7.9002
+      },
+      "fol-5": {
+       "angleDeg": -3.8302
+      },
+      "culm-6-a": {
+       "angleDeg": -2.8803
+      },
+      "culm-6-b": {
+       "angleDeg": -5.3
+      },
+      "culm-6-c": {
+       "angleDeg": -8.118
+      },
+      "fol-6": {
+       "angleDeg": -1.0396
+      }
+     }
+    },
+    {
+     "t": 0.4833,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.1088
+      },
+      "culm-1-b": {
+       "angleDeg": -1.8086
+      },
+      "culm-1-c": {
+       "angleDeg": -2.3163
+      },
+      "fol-1": {
+       "angleDeg": -3.0783
+      },
+      "culm-2-a": {
+       "angleDeg": -1.3748
+      },
+      "culm-2-b": {
+       "angleDeg": -2.5461
+      },
+      "culm-2-c": {
+       "angleDeg": -3.9582
+      },
+      "fol-2": {
+       "angleDeg": -4.8515
+      },
+      "culm-3-a": {
+       "angleDeg": -1.9059
+      },
+      "culm-3-b": {
+       "angleDeg": -3.6882
+      },
+      "culm-3-c": {
+       "angleDeg": -6.0418
+      },
+      "fol-3": {
+       "angleDeg": -4.5677
+      },
+      "culm-4-a": {
+       "angleDeg": -2.4769
+      },
+      "culm-4-b": {
+       "angleDeg": -4.7504
+      },
+      "culm-4-c": {
+       "angleDeg": -7.6837
+      },
+      "fol-4": {
+       "angleDeg": -2.3474
+      },
+      "culm-5-a": {
+       "angleDeg": -2.8457
+      },
+      "culm-5-b": {
+       "angleDeg": -5.2825
+      },
+      "culm-5-c": {
+       "angleDeg": -8.1878
+      },
+      "fol-5": {
+       "angleDeg": 0.8682
+      },
+      "culm-6-a": {
+       "angleDeg": -2.856
+      },
+      "culm-6-b": {
+       "angleDeg": -5.0588
+      },
+      "culm-6-c": {
+       "angleDeg": -7.3403
+      },
+      "fol-6": {
+       "angleDeg": 3.7157
+      }
+     }
+    },
+    {
+     "t": 0.725,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.2908
+      },
+      "culm-1-b": {
+       "angleDeg": -2.343
+      },
+      "culm-1-c": {
+       "angleDeg": -3.5472
+      },
+      "fol-1": {
+       "angleDeg": -4.9513
+      },
+      "culm-2-a": {
+       "angleDeg": -1.7823
+      },
+      "culm-2-b": {
+       "angleDeg": -3.4372
+      },
+      "culm-2-c": {
+       "angleDeg": -5.6106
+      },
+      "fol-2": {
+       "angleDeg": -3.4733
+      },
+      "culm-3-a": {
+       "angleDeg": -2.3661
+      },
+      "culm-3-b": {
+       "angleDeg": -4.558
+      },
+      "culm-3-c": {
+       "angleDeg": -7.4151
+      },
+      "fol-3": {
+       "angleDeg": -0.5226
+      },
+      "culm-4-a": {
+       "angleDeg": -2.7947
+      },
+      "culm-4-b": {
+       "angleDeg": -5.2303
+      },
+      "culm-4-c": {
+       "angleDeg": -8.1956
+      },
+      "fol-4": {
+       "angleDeg": 2.6496
+      },
+      "culm-5-a": {
+       "angleDeg": -2.8863
+      },
+      "culm-5-b": {
+       "angleDeg": -5.1689
+      },
+      "culm-5-c": {
+       "angleDeg": -7.6213
+      },
+      "fol-5": {
+       "angleDeg": 4.6985
+      },
+      "culm-6-a": {
+       "angleDeg": -2.6022
+      },
+      "culm-6-b": {
+       "angleDeg": -4.4
+      },
+      "culm-6-c": {
+       "angleDeg": -5.9356
+      },
+      "fol-6": {
+       "angleDeg": 4.7553
+      }
+     }
+    },
+    {
+     "t": 0.9667,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.6629
+      },
+      "culm-1-b": {
+       "angleDeg": -3.1874
+      },
+      "culm-1-c": {
+       "angleDeg": -5.1675
+      },
+      "fol-1": {
+       "angleDeg": -1.873
+      },
+      "culm-2-a": {
+       "angleDeg": -2.2481
+      },
+      "culm-2-b": {
+       "angleDeg": -4.345
+      },
+      "culm-2-c": {
+       "angleDeg": -7.0994
+      },
+      "fol-2": {
+       "angleDeg": 1.3782
+      },
+      "culm-3-a": {
+       "angleDeg": -2.7281
+      },
+      "culm-3-b": {
+       "angleDeg": -5.1444
+      },
+      "culm-3-c": {
+       "angleDeg": -8.1412
+      },
+      "fol-3": {
+       "angleDeg": 4.0451
+      },
+      "culm-4-a": {
+       "angleDeg": -2.8995
+      },
+      "culm-4-b": {
+       "angleDeg": -5.2465
+      },
+      "culm-4-c": {
+       "angleDeg": -7.8512
+      },
+      "fol-4": {
+       "angleDeg": 4.997
+      },
+      "culm-5-a": {
+       "angleDeg": -2.6894
+      },
+      "culm-5-b": {
+       "angleDeg": -4.6082
+      },
+      "culm-5-c": {
+       "angleDeg": -6.3524
+      },
+      "fol-5": {
+       "angleDeg": 3.8302
+      },
+      "culm-6-a": {
+       "angleDeg": -2.1871
+      },
+      "culm-6-b": {
+       "angleDeg": -3.5
+      },
+      "culm-6-c": {
+       "angleDeg": -4.2802
+      },
+      "fol-6": {
+       "angleDeg": 1.0396
+      }
+     }
+    },
+    {
+     "t": 1.2083,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.1253
+      },
+      "culm-1-b": {
+       "angleDeg": -4.1156
+      },
+      "culm-1-c": {
+       "angleDeg": -6.7428
+      },
+      "fol-1": {
+       "angleDeg": 3.0783
+      },
+      "culm-2-a": {
+       "angleDeg": -2.6474
+      },
+      "culm-2-b": {
+       "angleDeg": -5.0265
+      },
+      "culm-2-c": {
+       "angleDeg": -8.0257
+      },
+      "fol-2": {
+       "angleDeg": 4.8515
+      },
+      "culm-3-a": {
+       "angleDeg": -2.8951
+      },
+      "culm-3-b": {
+       "angleDeg": -5.2901
+      },
+      "culm-3-c": {
+       "angleDeg": -8.0257
+      },
+      "fol-3": {
+       "angleDeg": 4.5677
+      },
+      "culm-4-a": {
+       "angleDeg": -2.7632
+      },
+      "culm-4-b": {
+       "angleDeg": -4.7948
+      },
+      "culm-4-c": {
+       "angleDeg": -6.7428
+      },
+      "fol-4": {
+       "angleDeg": 2.3474
+      },
+      "culm-5-a": {
+       "angleDeg": -2.3078
+      },
+      "culm-5-b": {
+       "angleDeg": -3.7505
+      },
+      "culm-5-c": {
+       "angleDeg": -4.7211
+      },
+      "fol-5": {
+       "angleDeg": -0.8682
+      },
+      "culm-6-a": {
+       "angleDeg": -1.7219
+      },
+      "culm-6-b": {
+       "angleDeg": -2.6
+      },
+      "culm-6-c": {
+       "angleDeg": -2.8176
+      },
+      "fol-6": {
+       "angleDeg": -3.7157
+      }
+     }
+    },
+    {
+     "t": 1.45,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.5541
+      },
+      "culm-1-b": {
+       "angleDeg": -4.8789
+      },
+      "culm-1-c": {
+       "angleDeg": -7.8512
+      },
+      "fol-1": {
+       "angleDeg": 4.9513
+      },
+      "culm-2-a": {
+       "angleDeg": -2.8733
+      },
+      "culm-2-b": {
+       "angleDeg": -5.2989
+      },
+      "culm-2-c": {
+       "angleDeg": -8.1412
+      },
+      "fol-2": {
+       "angleDeg": 3.4733
+      },
+      "culm-3-a": {
+       "angleDeg": -2.8222
+      },
+      "culm-3-b": {
+       "angleDeg": -4.9562
+      },
+      "culm-3-c": {
+       "angleDeg": -7.0994
+      },
+      "fol-3": {
+       "angleDeg": 0.5226
+      },
+      "culm-4-a": {
+       "angleDeg": -2.4225
+      },
+      "culm-4-b": {
+       "angleDeg": -3.9961
+      },
+      "culm-4-c": {
+       "angleDeg": -5.1675
+      },
+      "fol-4": {
+       "angleDeg": -2.6496
+      },
+      "culm-5-a": {
+       "angleDeg": -1.8437
+      },
+      "culm-5-b": {
+       "angleDeg": -2.8257
+      },
+      "culm-5-c": {
+       "angleDeg": -3.1646
+      },
+      "fol-5": {
+       "angleDeg": -4.6985
+      },
+      "culm-6-a": {
+       "angleDeg": -1.3312
+      },
+      "culm-6-b": {
+       "angleDeg": -1.9412
+      },
+      "culm-6-c": {
+       "angleDeg": -1.9398
+      },
+      "fol-6": {
+       "angleDeg": -4.7553
+      }
+     }
+    },
+    {
+     "t": 1.6917,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.8345
+      },
+      "culm-1-b": {
+       "angleDeg": -5.2727
+      },
+      "culm-1-c": {
+       "angleDeg": -8.1956
+      },
+      "fol-1": {
+       "angleDeg": 1.873
+      },
+      "culm-2-a": {
+       "angleDeg": -2.8651
+      },
+      "culm-2-b": {
+       "angleDeg": -5.0893
+      },
+      "culm-2-c": {
+       "angleDeg": -7.4151
+      },
+      "fol-2": {
+       "angleDeg": -1.3782
+      },
+      "culm-3-a": {
+       "angleDeg": -2.529
+      },
+      "culm-3-b": {
+       "angleDeg": -4.2321
+      },
+      "culm-3-c": {
+       "angleDeg": -5.6106
+      },
+      "fol-3": {
+       "angleDeg": -4.0451
+      },
+      "culm-4-a": {
+       "angleDeg": -1.9686
+      },
+      "culm-4-b": {
+       "angleDeg": -3.0645
+      },
+      "culm-4-c": {
+       "angleDeg": -3.5472
+      },
+      "fol-4": {
+       "angleDeg": -4.997
+      },
+      "culm-5-a": {
+       "angleDeg": -1.4215
+      },
+      "culm-5-b": {
+       "angleDeg": -2.0816
+      },
+      "culm-5-c": {
+       "angleDeg": -2.0998
+      },
+      "fol-5": {
+       "angleDeg": -3.8302
+      },
+      "culm-6-a": {
+       "angleDeg": -1.1197
+      },
+      "culm-6-b": {
+       "angleDeg": -1.7
+      },
+      "culm-6-c": {
+       "angleDeg": -1.882
+      },
+      "fol-6": {
+       "angleDeg": -1.0396
+      }
+     }
+    },
+    {
+     "t": 1.9333,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.8912
+      },
+      "culm-1-b": {
+       "angleDeg": -5.1914
+      },
+      "culm-1-c": {
+       "angleDeg": -7.6837
+      },
+      "fol-1": {
+       "angleDeg": -3.0783
+      },
+      "culm-2-a": {
+       "angleDeg": -2.6252
+      },
+      "culm-2-b": {
+       "angleDeg": -4.4539
+      },
+      "culm-2-c": {
+       "angleDeg": -6.0418
+      },
+      "fol-2": {
+       "angleDeg": -4.8515
+      },
+      "culm-3-a": {
+       "angleDeg": -2.0941
+      },
+      "culm-3-b": {
+       "angleDeg": -3.3118
+      },
+      "culm-3-c": {
+       "angleDeg": -3.9582
+      },
+      "fol-3": {
+       "angleDeg": -4.5677
+      },
+      "culm-4-a": {
+       "angleDeg": -1.5231
+      },
+      "culm-4-b": {
+       "angleDeg": -2.2496
+      },
+      "culm-4-c": {
+       "angleDeg": -2.3163
+      },
+      "fol-4": {
+       "angleDeg": -2.3474
+      },
+      "culm-5-a": {
+       "angleDeg": -1.1543
+      },
+      "culm-5-b": {
+       "angleDeg": -1.7175
+      },
+      "culm-5-c": {
+       "angleDeg": -1.8122
+      },
+      "fol-5": {
+       "angleDeg": 0.8682
+      },
+      "culm-6-a": {
+       "angleDeg": -1.144
+      },
+      "culm-6-b": {
+       "angleDeg": -1.9412
+      },
+      "culm-6-c": {
+       "angleDeg": -2.6597
+      },
+      "fol-6": {
+       "angleDeg": 3.7157
+      }
+     }
+    },
+    {
+     "t": 2.175,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.7092
+      },
+      "culm-1-b": {
+       "angleDeg": -4.657
+      },
+      "culm-1-c": {
+       "angleDeg": -6.4528
+      },
+      "fol-1": {
+       "angleDeg": -4.9513
+      },
+      "culm-2-a": {
+       "angleDeg": -2.2177
+      },
+      "culm-2-b": {
+       "angleDeg": -3.5628
+      },
+      "culm-2-c": {
+       "angleDeg": -4.3894
+      },
+      "fol-2": {
+       "angleDeg": -3.4733
+      },
+      "culm-3-a": {
+       "angleDeg": -1.6339
+      },
+      "culm-3-b": {
+       "angleDeg": -2.442
+      },
+      "culm-3-c": {
+       "angleDeg": -2.5849
+      },
+      "fol-3": {
+       "angleDeg": -0.5226
+      },
+      "culm-4-a": {
+       "angleDeg": -1.2053
+      },
+      "culm-4-b": {
+       "angleDeg": -1.7697
+      },
+      "culm-4-c": {
+       "angleDeg": -1.8044
+      },
+      "fol-4": {
+       "angleDeg": 2.6496
+      },
+      "culm-5-a": {
+       "angleDeg": -1.1137
+      },
+      "culm-5-b": {
+       "angleDeg": -1.8311
+      },
+      "culm-5-c": {
+       "angleDeg": -2.3787
+      },
+      "fol-5": {
+       "angleDeg": 4.6985
+      },
+      "culm-6-a": {
+       "angleDeg": -1.3978
+      },
+      "culm-6-b": {
+       "angleDeg": -2.6
+      },
+      "culm-6-c": {
+       "angleDeg": -4.0644
+      },
+      "fol-6": {
+       "angleDeg": 4.7553
+      }
+     }
+    },
+    {
+     "t": 2.4167,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -2.3371
+      },
+      "culm-1-b": {
+       "angleDeg": -3.8126
+      },
+      "culm-1-c": {
+       "angleDeg": -4.8325
+      },
+      "fol-1": {
+       "angleDeg": -1.873
+      },
+      "culm-2-a": {
+       "angleDeg": -1.7519
+      },
+      "culm-2-b": {
+       "angleDeg": -2.655
+      },
+      "culm-2-c": {
+       "angleDeg": -2.9006
+      },
+      "fol-2": {
+       "angleDeg": 1.3782
+      },
+      "culm-3-a": {
+       "angleDeg": -1.2719
+      },
+      "culm-3-b": {
+       "angleDeg": -1.8556
+      },
+      "culm-3-c": {
+       "angleDeg": -1.8588
+      },
+      "fol-3": {
+       "angleDeg": 4.0451
+      },
+      "culm-4-a": {
+       "angleDeg": -1.1005
+      },
+      "culm-4-b": {
+       "angleDeg": -1.7535
+      },
+      "culm-4-c": {
+       "angleDeg": -2.1488
+      },
+      "fol-4": {
+       "angleDeg": 4.997
+      },
+      "culm-5-a": {
+       "angleDeg": -1.3106
+      },
+      "culm-5-b": {
+       "angleDeg": -2.3918
+      },
+      "culm-5-c": {
+       "angleDeg": -3.6476
+      },
+      "fol-5": {
+       "angleDeg": 3.8302
+      },
+      "culm-6-a": {
+       "angleDeg": -1.8129
+      },
+      "culm-6-b": {
+       "angleDeg": -3.5
+      },
+      "culm-6-c": {
+       "angleDeg": -5.7198
+      },
+      "fol-6": {
+       "angleDeg": 1.0396
+      }
+     }
+    },
+    {
+     "t": 2.6583,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.8747
+      },
+      "culm-1-b": {
+       "angleDeg": -2.8844
+      },
+      "culm-1-c": {
+       "angleDeg": -3.2572
+      },
+      "fol-1": {
+       "angleDeg": 3.0783
+      },
+      "culm-2-a": {
+       "angleDeg": -1.3526
+      },
+      "culm-2-b": {
+       "angleDeg": -1.9735
+      },
+      "culm-2-c": {
+       "angleDeg": -1.9743
+      },
+      "fol-2": {
+       "angleDeg": 4.8515
+      },
+      "culm-3-a": {
+       "angleDeg": -1.1049
+      },
+      "culm-3-b": {
+       "angleDeg": -1.7099
+      },
+      "culm-3-c": {
+       "angleDeg": -1.9743
+      },
+      "fol-3": {
+       "angleDeg": 4.5677
+      },
+      "culm-4-a": {
+       "angleDeg": -1.2368
+      },
+      "culm-4-b": {
+       "angleDeg": -2.2052
+      },
+      "culm-4-c": {
+       "angleDeg": -3.2572
+      },
+      "fol-4": {
+       "angleDeg": 2.3474
+      },
+      "culm-5-a": {
+       "angleDeg": -1.6922
+      },
+      "culm-5-b": {
+       "angleDeg": -3.2495
+      },
+      "culm-5-c": {
+       "angleDeg": -5.2789
+      },
+      "fol-5": {
+       "angleDeg": -0.8682
+      },
+      "culm-6-a": {
+       "angleDeg": -2.2781
+      },
+      "culm-6-b": {
+       "angleDeg": -4.4
+      },
+      "culm-6-c": {
+       "angleDeg": -7.1824
+      },
+      "fol-6": {
+       "angleDeg": -3.7157
+      }
+     }
+    },
+    {
+     "t": 2.9,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "culm-1-a": {
+       "angleDeg": -1.4459
+      },
+      "culm-1-b": {
+       "angleDeg": -2.1211
+      },
+      "culm-1-c": {
+       "angleDeg": -2.1488
+      },
+      "fol-1": {
+       "angleDeg": 4.9513
+      },
+      "culm-2-a": {
+       "angleDeg": -1.1267
+      },
+      "culm-2-b": {
+       "angleDeg": -1.7011
+      },
+      "culm-2-c": {
+       "angleDeg": -1.8588
+      },
+      "fol-2": {
+       "angleDeg": 3.4733
+      },
+      "culm-3-a": {
+       "angleDeg": -1.1778
+      },
+      "culm-3-b": {
+       "angleDeg": -2.0438
+      },
+      "culm-3-c": {
+       "angleDeg": -2.9006
+      },
+      "fol-3": {
+       "angleDeg": 0.5226
+      },
+      "culm-4-a": {
+       "angleDeg": -1.5775
+      },
+      "culm-4-b": {
+       "angleDeg": -3.0039
+      },
+      "culm-4-c": {
+       "angleDeg": -4.8325
+      },
+      "fol-4": {
+       "angleDeg": -2.6496
+      },
+      "culm-5-a": {
+       "angleDeg": -2.1563
+      },
+      "culm-5-b": {
+       "angleDeg": -4.1743
+      },
+      "culm-5-c": {
+       "angleDeg": -6.8354
+      },
+      "fol-5": {
+       "angleDeg": -4.6985
+      },
+      "culm-6-a": {
+       "angleDeg": -2.6688
+      },
+      "culm-6-b": {
+       "angleDeg": -5.0588
+      },
+      "culm-6-c": {
+       "angleDeg": -8.0602
+      },
+      "fol-6": {
+       "angleDeg": -4.7553
+      }
+     }
+    }
+   ],
+   "contacts": [],
+   "phases": [],
+   "events": [],
+   "tracks": [
+    {
+     "target": "emitter:transpiration-sun",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 1
+      },
+      {
+       "t": 1.45,
+       "v": 0.9
+      },
+      {
+       "t": 2.9,
+       "v": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gust",
+   "title": {
+    "en": "Gust of wind",
+    "de": "Windböe"
+   },
+   "description": {
+    "en": "A 6.5 s gust: calm air, a fresh breeze, a storm peak at 2.4 s with streamlined foliage and flutter growing with the speed, then the decay back to calm. Transpiration rises with the breeze and the stomata close at the peak.",
+    "de": "Eine Böe von 6,5 s: Windstille, frische Brise, ein Sturmspitzenwert bei 2,4 s mit strömungsgünstigem Laub und mit der Geschwindigkeit wachsendem Flattern, dann das Abklingen zur Stille. Die Transpiration steigt mit der Brise, am Höhepunkt schließen sich die Spaltöffnungen."
+   },
+   "durationS": 6.5,
+   "fps": 30,
+   "loop": false,
+   "rootMotion": "none",
+   "keys": [
+    {
+     "t": 0,
+     "pose": "summer-calm",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": 0.433
+      },
+      "fol-2": {
+       "angleDeg": 0.433
+      },
+      "fol-3": {
+       "angleDeg": 0
+      },
+      "fol-4": {
+       "angleDeg": -0.433
+      },
+      "fol-5": {
+       "angleDeg": -0.433
+      },
+      "fol-6": {
+       "angleDeg": 0
+      }
+     }
+    },
+    {
+     "t": 1.2,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": 0.6237
+      },
+      "fol-2": {
+       "angleDeg": -2.2294
+      },
+      "fol-3": {
+       "angleDeg": -2.8532
+      },
+      "fol-4": {
+       "angleDeg": -0.6237
+      },
+      "fol-5": {
+       "angleDeg": 2.2294
+      },
+      "fol-6": {
+       "angleDeg": 2.8532
+      }
+     }
+    },
+    {
+     "t": 2.4,
+     "pose": "storm-bent",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": -10.9671
+      },
+      "fol-2": {
+       "angleDeg": -7.4404
+      },
+      "fol-3": {
+       "angleDeg": -1.4733
+      },
+      "fol-4": {
+       "angleDeg": 0.9671
+      },
+      "fol-5": {
+       "angleDeg": -2.5596
+      },
+      "fol-6": {
+       "angleDeg": -8.5267
+      }
+     }
+    },
+    {
+     "t": 3.4,
+     "pose": "fresh-breeze",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": 0.4181
+      },
+      "fol-2": {
+       "angleDeg": 3.6542
+      },
+      "fol-3": {
+       "angleDeg": 3.2361
+      },
+      "fol-4": {
+       "angleDeg": -0.4181
+      },
+      "fol-5": {
+       "angleDeg": -3.6542
+      },
+      "fol-6": {
+       "angleDeg": -3.2361
+      }
+     }
+    },
+    {
+     "t": 5,
+     "pose": "summer-calm",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": 0.75
+      },
+      "fol-2": {
+       "angleDeg": -0.75
+      },
+      "fol-3": {
+       "angleDeg": -1.5
+      },
+      "fol-4": {
+       "angleDeg": -0.75
+      },
+      "fol-5": {
+       "angleDeg": 0.75
+      },
+      "fol-6": {
+       "angleDeg": 1.5
+      }
+     }
+    },
+    {
+     "t": 6.5,
+     "pose": "summer-calm",
+     "ease": "smooth",
+     "bones": {
+      "fol-1": {
+       "angleDeg": -0.483
+      },
+      "fol-2": {
+       "angleDeg": -0.1294
+      },
+      "fol-3": {
+       "angleDeg": 0.3536
+      },
+      "fol-4": {
+       "angleDeg": 0.483
+      },
+      "fol-5": {
+       "angleDeg": 0.1294
+      },
+      "fol-6": {
+       "angleDeg": -0.3536
+      }
+     }
+    }
+   ],
+   "contacts": [],
+   "phases": [
+    {
+     "id": "rise",
+     "fromS": 0,
+     "toS": 2.4,
+     "title": {
+      "en": "Gust builds up",
+      "de": "Böe baut sich auf"
+     }
+    },
+    {
+     "id": "decay",
+     "fromS": 2.4,
+     "toS": 6.5,
+     "title": {
+      "en": "Gust decays",
+      "de": "Böe klingt ab"
+     }
+    }
+   ],
+   "events": [
+    {
+     "t": 2.4,
+     "kind": "motion",
+     "title": {
+      "en": "Gust peak, culms bent furthest",
+      "de": "Böenspitze, Halme am stärksten gebogen"
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "target": "emitter:transpiration-sun",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.8
+      },
+      {
+       "t": 1.2,
+       "v": 1
+      },
+      {
+       "t": 2.4,
+       "v": 0.5
+      },
+      {
+       "t": 5,
+       "v": 0.8
+      },
+      {
+       "t": 6.5,
+       "v": 0.8
+      }
+     ]
+    },
+    {
+     "target": "emitter:transpiration-shade",
+     "ease": "smooth",
+     "keys": [
+      {
+       "t": 0,
+       "v": 0.7
+      },
+      {
+       "t": 1.2,
+       "v": 1
+      },
+      {
+       "t": 2.4,
+       "v": 0.3
+      },
+      {
+       "t": 5,
+       "v": 0.7
+      },
+      {
+       "t": 6.5,
+       "v": 0.7
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "dimensions": {
+  "heightM": 4.552,
+  "widthM": 2.977,
+  "depthM": 1.714,
+  "massKg": 20.9
+ },
+ "materials": [
+  {
+   "id": "bamboo-culm",
+   "title": {
+    "en": "Bamboo culm (hollow, wall 3.5 to 4 mm)",
+    "de": "Bambushalm (hohl, Wand 3,5 bis 4 mm)"
+   },
+   "emissivity": 0.9,
+   "solarAbsorptivity": 0.5,
+   "densityKgM3": 700,
+   "conductivityWmK": 0.17,
+   "specificHeatJKgK": 2000,
+   "elasticModulusPa": 12000000000,
+   "strengthPa": 80000000,
+   "source": "authored-estimate",
+   "reference": "liese-1985"
+  },
+  {
+   "id": "bamboo-leaf",
+   "title": {
+    "en": "Bamboo leaf blade",
+    "de": "Bambusblatt"
+   },
+   "emissivity": 0.97,
+   "solarAbsorptivity": 0.5,
+   "source": "literature",
+   "reference": "jones-2014"
+  }
+ ],
+ "summary": {
+  "en": "A clump of six running-type bamboo culms (Phyllostachys aureosulcata, 29 mm culms, grown in a rhizome barrier) from 2.4 to 4.6 m tall: nodes, a groove along the culm and leaf-bearing branches in the upper half that stream in the wind.",
+  "de": "Ein Horst aus sechs Bambushalmen (Phyllostachys aureosulcata, Halme von 29 mm, in einer Rhizomsperre gezogen) von 2,4 bis 4,6 m Höhe: Knoten, eine Rille entlang des Halms und beblätterte Äste in der oberen Hälfte, die im Wind wehen."
+ },
+ "provenance": {
+  "author": "Semio staffage vegetation content worker NW-V2",
+  "method": "handcrafted",
+  "created": "2026-10-29",
+  "references": [
+   {
+    "id": "liese-1985",
+    "citation": "Liese, W. (1985). Bamboos - Biology, Silvics, Properties, Utilization. GTZ Schriftenreihe 180, Eschborn. Culm anatomy, density 600-800 kg/m3, nodes and internodes."
+   },
+   {
+    "id": "liese-koehl-2015",
+    "citation": "Liese, W. and Koehl, M. (eds.) (2015). Bamboo - The Plant and its Uses. Springer, Tropical Forestry 10."
+   },
+   {
+    "id": "jones-2014",
+    "citation": "Jones, H. G. (2014). Plants and Microclimate, 3rd ed., Cambridge University Press. Leaf energy balance, leaf area index, boundary-layer and stomatal conductance."
+   },
+   {
+    "id": "monteith-unsworth-2013",
+    "citation": "Monteith, J. L. and Unsworth, M. H. (2013). Principles of Environmental Physics, 4th ed., Academic Press. Penman-Monteith leaf transpiration."
+   },
+   {
+    "id": "en-1991-1-4",
+    "citation": "EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Dynamic pressure q = 0.5 rho v^2 with air density 1.25 kg/m3, force F = cf q A."
+   },
+   {
+    "id": "en-1991-1-3",
+    "citation": "EN 1991-1-3:2003 Eurocode 1, Actions on structures, Part 1-3: Snow loads (order of magnitude of snow and ice accretion on plan area)."
+   },
+   {
+    "id": "vogel-1989",
+    "citation": "Vogel, S. (1989). Drag and reconfiguration of broad leaves in high winds. Journal of Experimental Botany 40(8), 941-948."
+   }
+  ],
+  "notes": {
+   "en": "Six culms, each with a lower, middle and arching upper bone and a foliage bone, are authored by hand; geometry per scale is composed separately. Culm dimensions, leaf area and conductance are authored estimates guided by the cited literature; no number is claimed as measured.",
+   "de": "Sechs Halme mit je einem unteren, mittleren und bogigen oberen Knochen und einem Laubknochen sind von Hand entworfen; die Geometrie jedes Maßstabs ist eigens komponiert. Halmmaße, Blattfläche und Leitfähigkeit sind Autorenschätzungen angelehnt an die genannte Literatur; keine Zahl wird als gemessen ausgegeben."
+  }
+ },
+ "thermal": {
+  "environment": {
+   "airTempC": 22,
+   "meanRadiantTempC": 25,
+   "relativeHumidity": 0.55,
+   "windMS": 2,
+   "windDirectionDeg": 0,
+   "solarWM2": 700,
+   "diffuseFraction": 0.15,
+   "pressurePa": 101325
+  },
+  "passengers": [],
+  "operating": [],
+  "regions": [
+   {
+    "id": "culms",
+    "title": {
+     "en": "Culms",
+     "de": "Halme"
+    },
+    "kind": "stem",
+    "model": "passive",
+    "material": "bamboo-culm",
+    "areaM2": 1.6,
+    "characteristicLengthM": 0.024,
+    "geometry": "cylinder",
+    "skyViewFactor": 0.45,
+    "layers": [],
+    "heatCapacityJM2K": 7000,
+    "source": "authored-estimate",
+    "reference": "liese-1985"
+   },
+   {
+    "id": "leaves-sun",
+    "title": {
+     "en": "Sunlit foliage",
+     "de": "Besonntes Laub"
+    },
+    "kind": "foliage",
+    "model": "leaf",
+    "material": "bamboo-leaf",
+    "areaM2": 5.4,
+    "areaBasis": "exchange",
+    "characteristicLengthM": 0.02,
+    "geometry": "vertical-plate",
+    "skyViewFactor": 0.7,
+    "layers": [],
+    "heatCapacityJM2K": 600,
+    "leaf": {
+     "stomatalConductanceMaxMS": 0.0075,
+     "leafAreaIndex": 1.6,
+     "photosynthesis": "c3"
+    },
+    "source": "authored-estimate",
+    "reference": "jones-2014"
+   },
+   {
+    "id": "leaves-shade",
+    "title": {
+     "en": "Shaded inner foliage",
+     "de": "Beschattete Innenlaubmasse"
+    },
+    "kind": "foliage",
+    "model": "leaf",
+    "material": "bamboo-leaf",
+    "areaM2": 8.2,
+    "areaBasis": "exchange",
+    "characteristicLengthM": 0.02,
+    "geometry": "vertical-plate",
+    "skyViewFactor": 0.35,
+    "layers": [],
+    "heatCapacityJM2K": 650,
+    "leaf": {
+     "stomatalConductanceMaxMS": 0.0055,
+     "leafAreaIndex": 2.4,
+     "photosynthesis": "c3"
+    },
+    "source": "authored-estimate",
+    "reference": "jones-2014"
+   }
+  ],
+  "emitters": [
+   {
+    "id": "transpiration-sun",
+    "kind": "transpiration",
+    "title": {
+     "en": "Transpiration of the sunlit foliage (distributed over the six culms)",
+     "de": "Transpiration des besonnten Laubs (über die sechs Halme verteilt)"
+    },
+    "anchor": "tp-sun-1",
+    "anchors": [
+     "tp-sun-1",
+     "tp-sun-2",
+     "tp-sun-3",
+     "tp-sun-4",
+     "tp-sun-5",
+     "tp-sun-6"
+    ],
+    "directionDeg": -11.9024,
+    "diameterM": 1.2,
+    "region": "leaves-sun",
+    "source": "authored-estimate",
+    "reference": "monteith-unsworth-2013"
+   },
+   {
+    "id": "transpiration-shade",
+    "kind": "transpiration",
+    "title": {
+     "en": "Transpiration of the shaded foliage (distributed over the six culms)",
+     "de": "Transpiration des beschatteten Laubs (über die sechs Halme verteilt)"
+    },
+    "anchor": "tp-shade-1",
+    "anchors": [
+     "tp-shade-1",
+     "tp-shade-2",
+     "tp-shade-3",
+     "tp-shade-4",
+     "tp-shade-5",
+     "tp-shade-6"
+    ],
+    "directionDeg": -11.9024,
+    "diameterM": 1.4,
+    "region": "leaves-shade",
+    "source": "authored-estimate",
+    "reference": "monteith-unsworth-2013"
+   }
+  ],
+  "assumptions": [
+   {
+    "en": "Leaf regions use one-sided leaf area; total leaf area index 4.0 over the 3.4 m2 crown projection, split into sunlit outer (1.6) and shaded inner foliage (2.4). Maximum stomatal conductances (0.0075 and 0.0055 m/s, about 0.3 and 0.22 mol/(m2 s)) are authored estimates for an evergreen C3 species guided by Jones (2014). Aperture and night closure are the engine's business.",
+    "de": "Blattregionen verwenden die einseitige Blattfläche; der gesamte Blattflächenindex 4,0 über der Kronenprojektion von 3,4 m2 teilt sich in besonntes Außenlaub (1,6) und beschattetes Innenlaub (2,4). Maximale Spaltöffnungsleitfähigkeiten (0,0075 und 0,0055 m/s, etwa 0,3 und 0,22 mol/(m2 s)) sind Autorenschätzungen für eine immergrüne C3-Art, angelehnt an Jones (2014). Öffnung und nächtliches Schließen sind Sache der Engine."
+   },
+   {
+    "en": "Culms are passive; their areal heat capacity of 7 kJ/(m2 K) is a hollow wall of 4 mm at 700 kg/m3 and 2 kJ/(kg K), an authored estimate. Transpiration emitters release the latent flux of their foliage region over six anchors, one per culm; the direction is the vertical in the frame of the first anchor's bone.",
+    "de": "Halme sind passiv; ihre flächenbezogene Wärmekapazität von 7 kJ/(m2 K) ist eine hohle Wand von 4 mm bei 700 kg/m3 und 2 kJ/(kg K), eine Autorenschätzung. Transpirationsemitter geben den latenten Strom ihrer Laubregion über sechs Anker ab, einen je Halm; die Richtung ist die Senkrechte im Bezugssystem des Knochens des ersten Ankers."
+   }
+  ]
+ },
+ "structure": {
+  "gravityMS2": 9.80665,
+  "dynamics": "quasi-static",
+  "supports": [
+   "base-support"
+  ],
+  "assumptions": [
+   {
+    "en": "One rigid body per evaluated pose, fixed at the rhizome plate; wind drag acts on each foliage bone with frontal area 0.03 H2 and cf 0.5 (breeze), 0.3 (storm, reconfiguration after Vogel 1989). Hollow culm sections have the stiffness of green bamboo (authored estimate). Dynamic amplification and rhizome pull-out are not modelled.",
+    "de": "Ein starrer Körper je ausgewerteter Pose, an der Rhizomplatte eingespannt; Winddruck wirkt auf jeden Laubknochen mit Stirnfläche 0,03 H2 und cf 0,5 (Brise), 0,3 (Sturm, Umordnung nach Vogel 1989). Hohle Halmquerschnitte haben die Steifigkeit von grünem Bambus (Schätzung). Dynamische Überhöhung und Ausreißen des Rhizoms werden nicht modelliert."
+   }
+  ],
+  "clinical": false
+ },
+ "symbols": [
+  {
+   "id": "bamboo-clump-symbol",
+   "title": {
+    "en": "Plan symbol with true clump extent",
+    "de": "Grundrisssymbol mit wahrer Horstausdehnung"
+   },
+   "description": {
+    "en": "Plan sign for landscape plans: the true foliage extent (3.1 m by 1.7 m) with the six culm sections; a separate symbol, never used silently for a pictorial scale.",
+    "de": "Grundrisszeichen für Freiraumpläne: die wahre Laubausdehnung (3,1 m mal 1,7 m) mit den sechs Halmquerschnitten; ein eigenes Symbol, nie stillschweigend für einen Bildmaßstab verwendet."
+   },
+   "semantics": "true-extent",
+   "units": "model-m",
+   "denominators": [
+    500,
+    200,
+    100
+   ],
+   "pens": {
+    "body": 0.18,
+    "detail": 0.13,
+    "texture": null,
+    "glazing": null,
+    "ground": 0.25
+   },
+   "hatches": [],
+   "geometry": {
+    "elevation": [
+     {
+      "id": "crown",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 2,
+      "filled": false,
+      "tone": 0.5,
+      "kind": "poly",
+      "points": [
+       [
+        1.4289,
+        2.9937
+       ],
+       [
+        1.45,
+        3.0362
+       ],
+       [
+        1.4671,
+        3.0798
+       ],
+       [
+        1.4802,
+        3.1241
+       ],
+       [
+        1.4894,
+        3.169
+       ],
+       [
+        1.4947,
+        3.214
+       ],
+       [
+        1.496,
+        3.259
+       ],
+       [
+        1.4934,
+        3.3036
+       ],
+       [
+        1.4869,
+        3.3476
+       ],
+       [
+        1.4766,
+        3.3907
+       ],
+       [
+        1.4624,
+        3.4327
+       ],
+       [
+        1.4445,
+        3.4732
+       ],
+       [
+        1.4229,
+        3.512
+       ],
+       [
+        1.3977,
+        3.5488
+       ],
+       [
+        1.369,
+        3.5834
+       ],
+       [
+        1.3367,
+        3.6154
+       ],
+       [
+        1.3006,
+        3.6443
+       ],
+       [
+        1.2599,
+        3.6695
+       ],
+       [
+        1.211,
+        3.6884
+       ],
+       [
+        1.2038,
+        3.7297
+       ],
+       [
+        1.2116,
+        3.7812
+       ],
+       [
+        1.2121,
+        3.8299
+       ],
+       [
+        1.2076,
+        3.8767
+       ],
+       [
+        1.199,
+        3.9217
+       ],
+       [
+        1.1867,
+        3.9649
+       ],
+       [
+        1.1708,
+        4.0061
+       ],
+       [
+        1.1516,
+        4.0451
+       ],
+       [
+        1.1293,
+        4.0818
+       ],
+       [
+        1.1039,
+        4.1158
+       ],
+       [
+        1.0757,
+        4.1471
+       ],
+       [
+        1.0449,
+        4.1754
+       ],
+       [
+        1.0116,
+        4.2006
+       ],
+       [
+        0.9761,
+        4.2225
+       ],
+       [
+        0.9385,
+        4.2409
+       ],
+       [
+        0.899,
+        4.2559
+       ],
+       [
+        0.8579,
+        4.2671
+       ],
+       [
+        0.8153,
+        4.2745
+       ],
+       [
+        0.7714,
+        4.2777
+       ],
+       [
+        0.7261,
+        4.2762
+       ],
+       [
+        0.679,
+        4.2688
+       ],
+       [
+        0.6273,
+        4.2491
+       ],
+       [
+        0.6089,
+        4.2917
+       ],
+       [
+        0.5899,
+        4.3359
+       ],
+       [
+        0.5668,
+        4.3745
+       ],
+       [
+        0.5408,
+        4.4092
+       ],
+       [
+        0.5126,
+        4.4406
+       ],
+       [
+        0.4823,
+        4.4686
+       ],
+       [
+        0.4502,
+        4.4934
+       ],
+       [
+        0.4165,
+        4.5148
+       ],
+       [
+        0.3815,
+        4.5329
+       ],
+       [
+        0.3453,
+        4.5475
+       ],
+       [
+        0.3081,
+        4.5585
+       ],
+       [
+        0.2702,
+        4.566
+       ],
+       [
+        0.2317,
+        4.5698
+       ],
+       [
+        0.1929,
+        4.5699
+       ],
+       [
+        0.154,
+        4.5664
+       ],
+       [
+        0.1151,
+        4.5592
+       ],
+       [
+        0.0766,
+        4.5482
+       ],
+       [
+        0.0385,
+        4.5334
+       ],
+       [
+        0.0011,
+        4.5145
+       ],
+       [
+        -0.0353,
+        4.491
+       ],
+       [
+        -0.0704,
+        4.461
+       ],
+       [
+        -0.1033,
+        4.4144
+       ],
+       [
+        -0.141,
+        4.463
+       ],
+       [
+        -0.1793,
+        4.4932
+       ],
+       [
+        -0.2186,
+        4.5169
+       ],
+       [
+        -0.2585,
+        4.5358
+       ],
+       [
+        -0.299,
+        4.5504
+       ],
+       [
+        -0.3398,
+        4.5609
+       ],
+       [
+        -0.3806,
+        4.5674
+       ],
+       [
+        -0.4214,
+        4.57
+       ],
+       [
+        -0.4617,
+        4.5686
+       ],
+       [
+        -0.5015,
+        4.5634
+       ],
+       [
+        -0.5404,
+        4.5542
+       ],
+       [
+        -0.5783,
+        4.5412
+       ],
+       [
+        -0.6149,
+        4.5245
+       ],
+       [
+        -0.6499,
+        4.504
+       ],
+       [
+        -0.6833,
+        4.4799
+       ],
+       [
+        -0.7146,
+        4.4524
+       ],
+       [
+        -0.7438,
+        4.4214
+       ],
+       [
+        -0.7706,
+        4.3869
+       ],
+       [
+        -0.7945,
+        4.349
+       ],
+       [
+        -0.815,
+        4.3071
+       ],
+       [
+        -0.8306,
+        4.2597
+       ],
+       [
+        -0.8475,
+        4.2167
+       ],
+       [
+        -0.901,
+        4.2279
+       ],
+       [
+        -0.9488,
+        4.2278
+       ],
+       [
+        -0.994,
+        4.2217
+       ],
+       [
+        -1.0371,
+        4.2109
+       ],
+       [
+        -1.0782,
+        4.196
+       ],
+       [
+        -1.1171,
+        4.1772
+       ],
+       [
+        -1.1537,
+        4.1548
+       ],
+       [
+        -1.1879,
+        4.129
+       ],
+       [
+        -1.2193,
+        4.1
+       ],
+       [
+        -1.2479,
+        4.0679
+       ],
+       [
+        -1.2734,
+        4.033
+       ],
+       [
+        -1.2957,
+        3.9955
+       ],
+       [
+        -1.3147,
+        3.9557
+       ],
+       [
+        -1.3303,
+        3.9137
+       ],
+       [
+        -1.3422,
+        3.8698
+       ],
+       [
+        -1.3504,
+        3.8243
+       ],
+       [
+        -1.3548,
+        3.7774
+       ],
+       [
+        -1.3551,
+        3.7294
+       ],
+       [
+        -1.351,
+        3.6802
+       ],
+       [
+        -1.3417,
+        3.63
+       ],
+       [
+        -1.3247,
+        3.5779
+       ],
+       [
+        -1.3266,
+        3.5359
+       ],
+       [
+        -1.3689,
+        3.5103
+       ],
+       [
+        -1.4028,
+        3.4798
+       ],
+       [
+        -1.432,
+        3.4463
+       ],
+       [
+        -1.4573,
+        3.4105
+       ],
+       [
+        -1.4789,
+        3.3728
+       ],
+       [
+        -1.497,
+        3.3336
+       ],
+       [
+        -1.5115,
+        3.293
+       ],
+       [
+        -1.5225,
+        3.2514
+       ],
+       [
+        -1.53,
+        3.2089
+       ],
+       [
+        -1.5338,
+        3.166
+       ],
+       [
+        -1.534,
+        3.1227
+       ],
+       [
+        -1.5306,
+        3.0794
+       ],
+       [
+        -1.5236,
+        3.0363
+       ],
+       [
+        -1.5131,
+        2.9937
+       ],
+       [
+        -1.4991,
+        2.9517
+       ],
+       [
+        -1.4816,
+        2.9107
+       ],
+       [
+        -1.4607,
+        2.8709
+       ],
+       [
+        -1.4362,
+        2.8326
+       ],
+       [
+        -1.4078,
+        2.796
+       ],
+       [
+        -1.3748,
+        2.7616
+       ],
+       [
+        -1.3336,
+        2.7304
+       ],
+       [
+        -1.3302,
+        2.6925
+       ],
+       [
+        -1.3527,
+        2.6477
+       ],
+       [
+        -1.3674,
+        2.6032
+       ],
+       [
+        -1.3773,
+        2.5588
+       ],
+       [
+        -1.3833,
+        2.5145
+       ],
+       [
+        -1.3856,
+        2.4705
+       ],
+       [
+        -1.3845,
+        2.4271
+       ],
+       [
+        -1.3801,
+        2.3843
+       ],
+       [
+        -1.3723,
+        2.3424
+       ],
+       [
+        -1.3614,
+        2.3017
+       ],
+       [
+        -1.3473,
+        2.2623
+       ],
+       [
+        -1.3302,
+        2.2245
+       ],
+       [
+        -1.3101,
+        2.1885
+       ],
+       [
+        -1.2871,
+        2.1544
+       ],
+       [
+        -1.2614,
+        2.1226
+       ],
+       [
+        -1.233,
+        2.0931
+       ],
+       [
+        -1.2021,
+        2.0663
+       ],
+       [
+        -1.1687,
+        2.0422
+       ],
+       [
+        -1.1328,
+        2.0213
+       ],
+       [
+        -1.0943,
+        2.0041
+       ],
+       [
+        -1.0526,
+        1.9916
+       ],
+       [
+        -1.004,
+        1.988
+       ],
+       [
+        -0.9962,
+        1.9424
+       ],
+       [
+        -0.9941,
+        1.8882
+       ],
+       [
+        -0.9862,
+        1.8383
+       ],
+       [
+        -0.974,
+        1.7912
+       ],
+       [
+        -0.9583,
+        1.7466
+       ],
+       [
+        -0.9395,
+        1.7045
+       ],
+       [
+        -0.9176,
+        1.6651
+       ],
+       [
+        -0.8929,
+        1.6284
+       ],
+       [
+        -0.8657,
+        1.5948
+       ],
+       [
+        -0.8359,
+        1.5643
+       ],
+       [
+        -0.8039,
+        1.5372
+       ],
+       [
+        -0.7698,
+        1.5136
+       ],
+       [
+        -0.7339,
+        1.4936
+       ],
+       [
+        -0.6963,
+        1.4775
+       ],
+       [
+        -0.6573,
+        1.4653
+       ],
+       [
+        -0.617,
+        1.4572
+       ],
+       [
+        -0.5758,
+        1.4533
+       ],
+       [
+        -0.5337,
+        1.4537
+       ],
+       [
+        -0.4911,
+        1.4588
+       ],
+       [
+        -0.448,
+        1.4692
+       ],
+       [
+        -0.4044,
+        1.4864
+       ],
+       [
+        -0.3587,
+        1.5196
+       ],
+       [
+        -0.3311,
+        1.4708
+       ],
+       [
+        -0.3,
+        1.4312
+       ],
+       [
+        -0.2662,
+        1.3984
+       ],
+       [
+        -0.2306,
+        1.3706
+       ],
+       [
+        -0.1934,
+        1.3474
+       ],
+       [
+        -0.1551,
+        1.3286
+       ],
+       [
+        -0.1157,
+        1.314
+       ],
+       [
+        -0.0757,
+        1.3037
+       ],
+       [
+        -0.0353,
+        1.2977
+       ],
+       [
+        0.0054,
+        1.296
+       ],
+       [
+        0.0459,
+        1.2986
+       ],
+       [
+        0.0862,
+        1.3055
+       ],
+       [
+        0.1259,
+        1.3166
+       ],
+       [
+        0.1647,
+        1.3319
+       ],
+       [
+        0.2025,
+        1.3513
+       ],
+       [
+        0.239,
+        1.3747
+       ],
+       [
+        0.274,
+        1.4021
+       ],
+       [
+        0.3071,
+        1.4334
+       ],
+       [
+        0.3382,
+        1.4688
+       ],
+       [
+        0.3668,
+        1.5088
+       ],
+       [
+        0.392,
+        1.5551
+       ],
+       [
+        0.414,
+        1.6058
+       ],
+       [
+        0.4602,
+        1.5816
+       ],
+       [
+        0.5031,
+        1.5717
+       ],
+       [
+        0.5449,
+        1.568
+       ],
+       [
+        0.5858,
+        1.5692
+       ],
+       [
+        0.6257,
+        1.5745
+       ],
+       [
+        0.6645,
+        1.5836
+       ],
+       [
+        0.7021,
+        1.5965
+       ],
+       [
+        0.7382,
+        1.6128
+       ],
+       [
+        0.7727,
+        1.6326
+       ],
+       [
+        0.8054,
+        1.6555
+       ],
+       [
+        0.8361,
+        1.6816
+       ],
+       [
+        0.8646,
+        1.7107
+       ],
+       [
+        0.8909,
+        1.7425
+       ],
+       [
+        0.9146,
+        1.7769
+       ],
+       [
+        0.9358,
+        1.8138
+       ],
+       [
+        0.9542,
+        1.853
+       ],
+       [
+        0.9697,
+        1.8942
+       ],
+       [
+        0.9821,
+        1.9375
+       ],
+       [
+        0.991,
+        1.9827
+       ],
+       [
+        0.9958,
+        2.0303
+       ],
+       [
+        0.9945,
+        2.0814
+       ],
+       [
+        1.0026,
+        2.1224
+       ],
+       [
+        1.0527,
+        2.1289
+       ],
+       [
+        1.0958,
+        2.1433
+       ],
+       [
+        1.1354,
+        2.162
+       ],
+       [
+        1.1723,
+        2.1841
+       ],
+       [
+        1.2067,
+        2.2092
+       ],
+       [
+        1.2385,
+        2.2371
+       ],
+       [
+        1.2676,
+        2.2674
+       ],
+       [
+        1.2941,
+        2.3
+       ],
+       [
+        1.3176,
+        2.3347
+       ],
+       [
+        1.3381,
+        2.3713
+       ],
+       [
+        1.3555,
+        2.4096
+       ],
+       [
+        1.3696,
+        2.4494
+       ],
+       [
+        1.3805,
+        2.4904
+       ],
+       [
+        1.3879,
+        2.5325
+       ],
+       [
+        1.3918,
+        2.5753
+       ],
+       [
+        1.3922,
+        2.6187
+       ],
+       [
+        1.389,
+        2.6625
+       ],
+       [
+        1.3818,
+        2.7063
+       ],
+       [
+        1.3704,
+        2.7501
+       ],
+       [
+        1.3539,
+        2.7936
+       ],
+       [
+        1.3292,
+        2.8368
+       ],
+       [
+        1.3338,
+        2.8758
+       ],
+       [
+        1.3728,
+        2.9129
+       ],
+       [
+        1.4035,
+        2.9524
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-1",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.82,
+        0
+       ],
+       [
+        -0.943,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-2",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.6,
+        0
+       ],
+       [
+        -0.69,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-3",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.28,
+        0
+       ],
+       [
+        -0.322,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-4",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.02,
+        0
+       ],
+       [
+        0.023,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-5",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.32,
+        0
+       ],
+       [
+        0.368,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-6",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.62,
+        0
+       ],
+       [
+        0.713,
+        1.596
+       ]
+      ],
+      "closed": false
+     }
+    ],
+    "front": [
+     {
+      "id": "crown",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 2,
+      "filled": false,
+      "tone": 0.5,
+      "kind": "poly",
+      "points": [
+       [
+        0.8504,
+        2.9322
+       ],
+       [
+        0.8503,
+        2.9771
+       ],
+       [
+        0.8484,
+        3.0219
+       ],
+       [
+        0.8447,
+        3.0664
+       ],
+       [
+        0.8393,
+        3.1103
+       ],
+       [
+        0.8321,
+        3.1535
+       ],
+       [
+        0.8233,
+        3.1957
+       ],
+       [
+        0.8128,
+        3.2368
+       ],
+       [
+        0.8006,
+        3.2766
+       ],
+       [
+        0.7868,
+        3.3147
+       ],
+       [
+        0.7713,
+        3.3511
+       ],
+       [
+        0.7541,
+        3.3854
+       ],
+       [
+        0.7348,
+        3.4173
+       ],
+       [
+        0.7129,
+        3.4458
+       ],
+       [
+        0.6867,
+        3.4695
+       ],
+       [
+        0.6967,
+        3.52
+       ],
+       [
+        0.6996,
+        3.5666
+       ],
+       [
+        0.6997,
+        3.6118
+       ],
+       [
+        0.6976,
+        3.6561
+       ],
+       [
+        0.6936,
+        3.6995
+       ],
+       [
+        0.688,
+        3.7419
+       ],
+       [
+        0.6809,
+        3.7831
+       ],
+       [
+        0.6723,
+        3.8231
+       ],
+       [
+        0.6623,
+        3.8618
+       ],
+       [
+        0.6509,
+        3.8989
+       ],
+       [
+        0.6383,
+        3.9344
+       ],
+       [
+        0.6244,
+        3.9681
+       ],
+       [
+        0.6093,
+        3.9999
+       ],
+       [
+        0.5932,
+        4.0296
+       ],
+       [
+        0.576,
+        4.0573
+       ],
+       [
+        0.5579,
+        4.0827
+       ],
+       [
+        0.5389,
+        4.1058
+       ],
+       [
+        0.519,
+        4.1265
+       ],
+       [
+        0.4985,
+        4.1447
+       ],
+       [
+        0.4773,
+        4.1603
+       ],
+       [
+        0.4554,
+        4.1732
+       ],
+       [
+        0.4331,
+        4.1834
+       ],
+       [
+        0.4102,
+        4.1905
+       ],
+       [
+        0.3868,
+        4.1942
+       ],
+       [
+        0.3628,
+        4.1937
+       ],
+       [
+        0.3376,
+        4.1866
+       ],
+       [
+        0.3185,
+        4.1982
+       ],
+       [
+        0.3091,
+        4.2452
+       ],
+       [
+        0.2969,
+        4.2856
+       ],
+       [
+        0.2832,
+        4.3226
+       ],
+       [
+        0.2683,
+        4.3567
+       ],
+       [
+        0.2522,
+        4.3885
+       ],
+       [
+        0.2352,
+        4.4179
+       ],
+       [
+        0.2173,
+        4.4448
+       ],
+       [
+        0.1986,
+        4.4694
+       ],
+       [
+        0.1792,
+        4.4915
+       ],
+       [
+        0.1592,
+        4.511
+       ],
+       [
+        0.1386,
+        4.5278
+       ],
+       [
+        0.1175,
+        4.5419
+       ],
+       [
+        0.096,
+        4.5533
+       ],
+       [
+        0.0742,
+        4.5618
+       ],
+       [
+        0.0522,
+        4.5673
+       ],
+       [
+        0.03,
+        4.57
+       ],
+       [
+        0.0077,
+        4.5697
+       ],
+       [
+        -0.0145,
+        4.5664
+       ],
+       [
+        -0.0366,
+        4.5601
+       ],
+       [
+        -0.0585,
+        4.5507
+       ],
+       [
+        -0.0801,
+        4.5382
+       ],
+       [
+        -0.1013,
+        4.5225
+       ],
+       [
+        -0.122,
+        4.5034
+       ],
+       [
+        -0.142,
+        4.4804
+       ],
+       [
+        -0.1611,
+        4.4525
+       ],
+       [
+        -0.1786,
+        4.4148
+       ],
+       [
+        -0.201,
+        4.4282
+       ],
+       [
+        -0.2251,
+        4.4512
+       ],
+       [
+        -0.2492,
+        4.4672
+       ],
+       [
+        -0.2733,
+        4.4785
+       ],
+       [
+        -0.2975,
+        4.4857
+       ],
+       [
+        -0.3216,
+        4.4892
+       ],
+       [
+        -0.3455,
+        4.4891
+       ],
+       [
+        -0.3691,
+        4.4856
+       ],
+       [
+        -0.3925,
+        4.4787
+       ],
+       [
+        -0.4153,
+        4.4686
+       ],
+       [
+        -0.4376,
+        4.4551
+       ],
+       [
+        -0.4593,
+        4.4385
+       ],
+       [
+        -0.4802,
+        4.4188
+       ],
+       [
+        -0.5002,
+        4.3961
+       ],
+       [
+        -0.5193,
+        4.3705
+       ],
+       [
+        -0.5374,
+        4.3421
+       ],
+       [
+        -0.5543,
+        4.3111
+       ],
+       [
+        -0.5701,
+        4.2775
+       ],
+       [
+        -0.5846,
+        4.2416
+       ],
+       [
+        -0.5977,
+        4.2034
+       ],
+       [
+        -0.6094,
+        4.1631
+       ],
+       [
+        -0.6196,
+        4.1209
+       ],
+       [
+        -0.6281,
+        4.0768
+       ],
+       [
+        -0.6348,
+        4.0307
+       ],
+       [
+        -0.6395,
+        3.9826
+       ],
+       [
+        -0.6413,
+        3.9315
+       ],
+       [
+        -0.6388,
+        3.8758
+       ],
+       [
+        -0.6664,
+        3.8673
+       ],
+       [
+        -0.6887,
+        3.8489
+       ],
+       [
+        -0.709,
+        3.8264
+       ],
+       [
+        -0.7277,
+        3.8007
+       ],
+       [
+        -0.7452,
+        3.7724
+       ],
+       [
+        -0.7613,
+        3.7419
+       ],
+       [
+        -0.7762,
+        3.7093
+       ],
+       [
+        -0.7898,
+        3.6748
+       ],
+       [
+        -0.8021,
+        3.6387
+       ],
+       [
+        -0.813,
+        3.6011
+       ],
+       [
+        -0.8226,
+        3.5622
+       ],
+       [
+        -0.8307,
+        3.5221
+       ],
+       [
+        -0.8374,
+        3.4809
+       ],
+       [
+        -0.8427,
+        3.439
+       ],
+       [
+        -0.8465,
+        3.3964
+       ],
+       [
+        -0.8488,
+        3.3533
+       ],
+       [
+        -0.8496,
+        3.3099
+       ],
+       [
+        -0.8489,
+        3.2663
+       ],
+       [
+        -0.8468,
+        3.2228
+       ],
+       [
+        -0.8432,
+        3.1794
+       ],
+       [
+        -0.8381,
+        3.1364
+       ],
+       [
+        -0.8314,
+        3.0938
+       ],
+       [
+        -0.8232,
+        3.052
+       ],
+       [
+        -0.8132,
+        3.0109
+       ],
+       [
+        -0.8009,
+        2.9709
+       ],
+       [
+        -0.7851,
+        2.9322
+       ],
+       [
+        -0.7808,
+        2.8945
+       ],
+       [
+        -0.7971,
+        2.855
+       ],
+       [
+        -0.8091,
+        2.8145
+       ],
+       [
+        -0.8188,
+        2.7731
+       ],
+       [
+        -0.8266,
+        2.7309
+       ],
+       [
+        -0.8328,
+        2.6881
+       ],
+       [
+        -0.8374,
+        2.6449
+       ],
+       [
+        -0.8406,
+        2.6015
+       ],
+       [
+        -0.8422,
+        2.5579
+       ],
+       [
+        -0.8424,
+        2.5144
+       ],
+       [
+        -0.8411,
+        2.471
+       ],
+       [
+        -0.8383,
+        2.4281
+       ],
+       [
+        -0.8341,
+        2.3857
+       ],
+       [
+        -0.8284,
+        2.344
+       ],
+       [
+        -0.8213,
+        2.3032
+       ],
+       [
+        -0.8128,
+        2.2634
+       ],
+       [
+        -0.8029,
+        2.2249
+       ],
+       [
+        -0.7916,
+        2.1877
+       ],
+       [
+        -0.779,
+        2.1521
+       ],
+       [
+        -0.7651,
+        2.1182
+       ],
+       [
+        -0.75,
+        2.0862
+       ],
+       [
+        -0.7336,
+        2.0563
+       ],
+       [
+        -0.716,
+        2.0286
+       ],
+       [
+        -0.6971,
+        2.0035
+       ],
+       [
+        -0.6768,
+        1.9815
+       ],
+       [
+        -0.6548,
+        1.9635
+       ],
+       [
+        -0.6291,
+        1.9529
+       ],
+       [
+        -0.624,
+        1.9087
+       ],
+       [
+        -0.6222,
+        1.8568
+       ],
+       [
+        -0.6173,
+        1.8084
+       ],
+       [
+        -0.6103,
+        1.7623
+       ],
+       [
+        -0.6014,
+        1.7183
+       ],
+       [
+        -0.591,
+        1.6762
+       ],
+       [
+        -0.579,
+        1.6361
+       ],
+       [
+        -0.5656,
+        1.5982
+       ],
+       [
+        -0.5508,
+        1.5626
+       ],
+       [
+        -0.5349,
+        1.5293
+       ],
+       [
+        -0.5177,
+        1.4987
+       ],
+       [
+        -0.4994,
+        1.4707
+       ],
+       [
+        -0.4802,
+        1.4455
+       ],
+       [
+        -0.46,
+        1.4233
+       ],
+       [
+        -0.439,
+        1.4041
+       ],
+       [
+        -0.4172,
+        1.388
+       ],
+       [
+        -0.3949,
+        1.3751
+       ],
+       [
+        -0.372,
+        1.3655
+       ],
+       [
+        -0.3487,
+        1.3592
+       ],
+       [
+        -0.325,
+        1.3563
+       ],
+       [
+        -0.3011,
+        1.3568
+       ],
+       [
+        -0.2772,
+        1.3609
+       ],
+       [
+        -0.2531,
+        1.3686
+       ],
+       [
+        -0.2292,
+        1.3803
+       ],
+       [
+        -0.2053,
+        1.3966
+       ],
+       [
+        -0.1816,
+        1.4192
+       ],
+       [
+        -0.1579,
+        1.4511
+       ],
+       [
+        -0.1403,
+        1.4092
+       ],
+       [
+        -0.1209,
+        1.381
+       ],
+       [
+        -0.1007,
+        1.3583
+       ],
+       [
+        -0.0798,
+        1.3397
+       ],
+       [
+        -0.0584,
+        1.3246
+       ],
+       [
+        -0.0366,
+        1.3128
+       ],
+       [
+        -0.0146,
+        1.3041
+       ],
+       [
+        0.0076,
+        1.2985
+       ],
+       [
+        0.0299,
+        1.296
+       ],
+       [
+        0.0522,
+        1.2965
+       ],
+       [
+        0.0744,
+        1.3
+       ],
+       [
+        0.0964,
+        1.3064
+       ],
+       [
+        0.1182,
+        1.3157
+       ],
+       [
+        0.1396,
+        1.3279
+       ],
+       [
+        0.1605,
+        1.3428
+       ],
+       [
+        0.181,
+        1.3605
+       ],
+       [
+        0.2008,
+        1.3808
+       ],
+       [
+        0.22,
+        1.4037
+       ],
+       [
+        0.2384,
+        1.4291
+       ],
+       [
+        0.256,
+        1.4568
+       ],
+       [
+        0.2727,
+        1.4869
+       ],
+       [
+        0.2884,
+        1.5193
+       ],
+       [
+        0.303,
+        1.5541
+       ],
+       [
+        0.3164,
+        1.5914
+       ],
+       [
+        0.3282,
+        1.6319
+       ],
+       [
+        0.3376,
+        1.6777
+       ],
+       [
+        0.3523,
+        1.7039
+       ],
+       [
+        0.3781,
+        1.6962
+       ],
+       [
+        0.4022,
+        1.6963
+       ],
+       [
+        0.4256,
+        1.7009
+       ],
+       [
+        0.4484,
+        1.7088
+       ],
+       [
+        0.4706,
+        1.7199
+       ],
+       [
+        0.4923,
+        1.7337
+       ],
+       [
+        0.5133,
+        1.7502
+       ],
+       [
+        0.5336,
+        1.7692
+       ],
+       [
+        0.5532,
+        1.7907
+       ],
+       [
+        0.5719,
+        1.8145
+       ],
+       [
+        0.5898,
+        1.8406
+       ],
+       [
+        0.6066,
+        1.8689
+       ],
+       [
+        0.6225,
+        1.8993
+       ],
+       [
+        0.6372,
+        1.9316
+       ],
+       [
+        0.6507,
+        1.9657
+       ],
+       [
+        0.663,
+        2.0016
+       ],
+       [
+        0.674,
+        2.0391
+       ],
+       [
+        0.6836,
+        2.078
+       ],
+       [
+        0.6918,
+        2.1182
+       ],
+       [
+        0.6986,
+        2.1596
+       ],
+       [
+        0.7038,
+        2.202
+       ],
+       [
+        0.7074,
+        2.2454
+       ],
+       [
+        0.7092,
+        2.2896
+       ],
+       [
+        0.7089,
+        2.3346
+       ],
+       [
+        0.7059,
+        2.3805
+       ],
+       [
+        0.6978,
+        2.4288
+       ],
+       [
+        0.715,
+        2.4595
+       ],
+       [
+        0.7374,
+        2.4885
+       ],
+       [
+        0.7566,
+        2.5208
+       ],
+       [
+        0.7737,
+        2.5557
+       ],
+       [
+        0.789,
+        2.5926
+       ],
+       [
+        0.8026,
+        2.6312
+       ],
+       [
+        0.8145,
+        2.6713
+       ],
+       [
+        0.8248,
+        2.7127
+       ],
+       [
+        0.8334,
+        2.7552
+       ],
+       [
+        0.8402,
+        2.7986
+       ],
+       [
+        0.8454,
+        2.8427
+       ],
+       [
+        0.8488,
+        2.8873
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-1",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.35,
+        0
+       ],
+       [
+        -0.42,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-2",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.3,
+        0
+       ],
+       [
+        0.36,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-3",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.1,
+        0
+       ],
+       [
+        -0.12,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-4",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.25,
+        0
+       ],
+       [
+        0.3,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-5",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        -0.3,
+        0
+       ],
+       [
+        -0.36,
+        1.596
+       ]
+      ],
+      "closed": false
+     },
+     {
+      "id": "culm-6",
+      "bone": "root-plate",
+      "role": "detail",
+      "z": 3,
+      "filled": false,
+      "tone": 0.3,
+      "kind": "poly",
+      "points": [
+       [
+        0.1,
+        0
+       ],
+       [
+        0.12,
+        1.596
+       ]
+      ],
+      "closed": false
+     }
+    ],
+    "plan": [
+     {
+      "id": "crown",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 2,
+      "filled": false,
+      "tone": 0.5,
+      "kind": "poly",
+      "points": [
+       [
+        1.4672,
+        -0.003
+       ],
+       [
+        1.4524,
+        0.0194
+       ],
+       [
+        1.4345,
+        0.0413
+       ],
+       [
+        1.4135,
+        0.0625
+       ],
+       [
+        1.3893,
+        0.0831
+       ],
+       [
+        1.3614,
+        0.1028
+       ],
+       [
+        1.3288,
+        0.1213
+       ],
+       [
+        1.2857,
+        0.1379
+       ],
+       [
+        1.3008,
+        0.1604
+       ],
+       [
+        1.3147,
+        0.1835
+       ],
+       [
+        1.3228,
+        0.2064
+       ],
+       [
+        1.327,
+        0.2292
+       ],
+       [
+        1.3279,
+        0.2519
+       ],
+       [
+        1.3257,
+        0.2743
+       ],
+       [
+        1.3208,
+        0.2965
+       ],
+       [
+        1.3131,
+        0.3184
+       ],
+       [
+        1.3028,
+        0.3399
+       ],
+       [
+        1.29,
+        0.3609
+       ],
+       [
+        1.2747,
+        0.3813
+       ],
+       [
+        1.2571,
+        0.401
+       ],
+       [
+        1.2372,
+        0.4201
+       ],
+       [
+        1.215,
+        0.4384
+       ],
+       [
+        1.1908,
+        0.4558
+       ],
+       [
+        1.1645,
+        0.4723
+       ],
+       [
+        1.1363,
+        0.4878
+       ],
+       [
+        1.1064,
+        0.5022
+       ],
+       [
+        1.0747,
+        0.5156
+       ],
+       [
+        1.0415,
+        0.5279
+       ],
+       [
+        1.0068,
+        0.5389
+       ],
+       [
+        0.9706,
+        0.5486
+       ],
+       [
+        0.9331,
+        0.5569
+       ],
+       [
+        0.8941,
+        0.5637
+       ],
+       [
+        0.8535,
+        0.5686
+       ],
+       [
+        0.8101,
+        0.5707
+       ],
+       [
+        0.7698,
+        0.5738
+       ],
+       [
+        0.7638,
+        0.6012
+       ],
+       [
+        0.7506,
+        0.6249
+       ],
+       [
+        0.7338,
+        0.6468
+       ],
+       [
+        0.7143,
+        0.6676
+       ],
+       [
+        0.6923,
+        0.6873
+       ],
+       [
+        0.6682,
+        0.706
+       ],
+       [
+        0.6422,
+        0.7235
+       ],
+       [
+        0.6142,
+        0.74
+       ],
+       [
+        0.5845,
+        0.7554
+       ],
+       [
+        0.5533,
+        0.7695
+       ],
+       [
+        0.5205,
+        0.7823
+       ],
+       [
+        0.4864,
+        0.7939
+       ],
+       [
+        0.451,
+        0.804
+       ],
+       [
+        0.4146,
+        0.8128
+       ],
+       [
+        0.3772,
+        0.82
+       ],
+       [
+        0.339,
+        0.8258
+       ],
+       [
+        0.3002,
+        0.83
+       ],
+       [
+        0.2608,
+        0.8327
+       ],
+       [
+        0.2212,
+        0.8337
+       ],
+       [
+        0.1814,
+        0.8332
+       ],
+       [
+        0.1415,
+        0.8309
+       ],
+       [
+        0.1019,
+        0.8269
+       ],
+       [
+        0.0625,
+        0.8211
+       ],
+       [
+        0.0237,
+        0.8132
+       ],
+       [
+        -0.0144,
+        0.8027
+       ],
+       [
+        -0.0515,
+        0.788
+       ],
+       [
+        -0.088,
+        0.7901
+       ],
+       [
+        -0.1262,
+        0.8069
+       ],
+       [
+        -0.1654,
+        0.8196
+       ],
+       [
+        -0.2054,
+        0.8296
+       ],
+       [
+        -0.2461,
+        0.8376
+       ],
+       [
+        -0.2873,
+        0.8435
+       ],
+       [
+        -0.3288,
+        0.8476
+       ],
+       [
+        -0.3703,
+        0.8499
+       ],
+       [
+        -0.4118,
+        0.8504
+       ],
+       [
+        -0.453,
+        0.8491
+       ],
+       [
+        -0.4938,
+        0.8461
+       ],
+       [
+        -0.5339,
+        0.8413
+       ],
+       [
+        -0.5732,
+        0.8348
+       ],
+       [
+        -0.6115,
+        0.8266
+       ],
+       [
+        -0.6486,
+        0.8168
+       ],
+       [
+        -0.6844,
+        0.8054
+       ],
+       [
+        -0.7187,
+        0.7924
+       ],
+       [
+        -0.7513,
+        0.778
+       ],
+       [
+        -0.7821,
+        0.7622
+       ],
+       [
+        -0.8109,
+        0.745
+       ],
+       [
+        -0.8376,
+        0.7265
+       ],
+       [
+        -0.862,
+        0.7067
+       ],
+       [
+        -0.8839,
+        0.6857
+       ],
+       [
+        -0.9031,
+        0.6635
+       ],
+       [
+        -0.9191,
+        0.64
+       ],
+       [
+        -0.931,
+        0.6146
+       ],
+       [
+        -0.9347,
+        0.5851
+       ],
+       [
+        -0.9766,
+        0.5813
+       ],
+       [
+        -1.0187,
+        0.5766
+       ],
+       [
+        -1.0576,
+        0.5691
+       ],
+       [
+        -1.0944,
+        0.5598
+       ],
+       [
+        -1.1294,
+        0.5489
+       ],
+       [
+        -1.1625,
+        0.5366
+       ],
+       [
+        -1.1939,
+        0.523
+       ],
+       [
+        -1.2234,
+        0.5083
+       ],
+       [
+        -1.2509,
+        0.4925
+       ],
+       [
+        -1.2764,
+        0.4757
+       ],
+       [
+        -1.2999,
+        0.458
+       ],
+       [
+        -1.3212,
+        0.4394
+       ],
+       [
+        -1.3402,
+        0.4201
+       ],
+       [
+        -1.3569,
+        0.4001
+       ],
+       [
+        -1.3713,
+        0.3794
+       ],
+       [
+        -1.3833,
+        0.3582
+       ],
+       [
+        -1.3928,
+        0.3366
+       ],
+       [
+        -1.3999,
+        0.3146
+       ],
+       [
+        -1.4045,
+        0.2923
+       ],
+       [
+        -1.4065,
+        0.2698
+       ],
+       [
+        -1.4059,
+        0.2472
+       ],
+       [
+        -1.4026,
+        0.2246
+       ],
+       [
+        -1.3965,
+        0.2019
+       ],
+       [
+        -1.3874,
+        0.1794
+       ],
+       [
+        -1.3745,
+        0.1569
+       ],
+       [
+        -1.356,
+        0.1345
+       ],
+       [
+        -1.3405,
+        0.1131
+       ],
+       [
+        -1.3794,
+        0.0964
+       ],
+       [
+        -1.4088,
+        0.0781
+       ],
+       [
+        -1.4338,
+        0.0588
+       ],
+       [
+        -1.4557,
+        0.0388
+       ],
+       [
+        -1.4747,
+        0.0182
+       ],
+       [
+        -1.4911,
+        -0.003
+       ],
+       [
+        -1.5048,
+        -0.0247
+       ],
+       [
+        -1.5159,
+        -0.0467
+       ],
+       [
+        -1.5244,
+        -0.069
+       ],
+       [
+        -1.5303,
+        -0.0914
+       ],
+       [
+        -1.5335,
+        -0.114
+       ],
+       [
+        -1.534,
+        -0.1366
+       ],
+       [
+        -1.5318,
+        -0.1591
+       ],
+       [
+        -1.5269,
+        -0.1814
+       ],
+       [
+        -1.5193,
+        -0.2034
+       ],
+       [
+        -1.5089,
+        -0.2251
+       ],
+       [
+        -1.496,
+        -0.2464
+       ],
+       [
+        -1.4803,
+        -0.2671
+       ],
+       [
+        -1.4621,
+        -0.2871
+       ],
+       [
+        -1.4413,
+        -0.3064
+       ],
+       [
+        -1.418,
+        -0.3249
+       ],
+       [
+        -1.3921,
+        -0.3425
+       ],
+       [
+        -1.3635,
+        -0.3589
+       ],
+       [
+        -1.3321,
+        -0.3741
+       ],
+       [
+        -1.2971,
+        -0.3877
+       ],
+       [
+        -1.2562,
+        -0.3986
+       ],
+       [
+        -1.2411,
+        -0.4176
+       ],
+       [
+        -1.2476,
+        -0.4448
+       ],
+       [
+        -1.2473,
+        -0.4704
+       ],
+       [
+        -1.2426,
+        -0.4952
+       ],
+       [
+        -1.2343,
+        -0.5192
+       ],
+       [
+        -1.2228,
+        -0.5424
+       ],
+       [
+        -1.2083,
+        -0.5649
+       ],
+       [
+        -1.191,
+        -0.5865
+       ],
+       [
+        -1.171,
+        -0.6072
+       ],
+       [
+        -1.1484,
+        -0.6269
+       ],
+       [
+        -1.1234,
+        -0.6454
+       ],
+       [
+        -1.0961,
+        -0.6628
+       ],
+       [
+        -1.0665,
+        -0.6789
+       ],
+       [
+        -1.0349,
+        -0.6937
+       ],
+       [
+        -1.0014,
+        -0.7071
+       ],
+       [
+        -0.9661,
+        -0.719
+       ],
+       [
+        -0.9293,
+        -0.7294
+       ],
+       [
+        -0.891,
+        -0.7382
+       ],
+       [
+        -0.8515,
+        -0.7455
+       ],
+       [
+        -0.8109,
+        -0.751
+       ],
+       [
+        -0.7694,
+        -0.7549
+       ],
+       [
+        -0.7271,
+        -0.7571
+       ],
+       [
+        -0.6842,
+        -0.7574
+       ],
+       [
+        -0.6408,
+        -0.7557
+       ],
+       [
+        -0.5969,
+        -0.7518
+       ],
+       [
+        -0.5524,
+        -0.7451
+       ],
+       [
+        -0.5055,
+        -0.7321
+       ],
+       [
+        -0.4788,
+        -0.7508
+       ],
+       [
+        -0.4506,
+        -0.7692
+       ],
+       [
+        -0.4198,
+        -0.7846
+       ],
+       [
+        -0.3872,
+        -0.7981
+       ],
+       [
+        -0.3531,
+        -0.8099
+       ],
+       [
+        -0.3178,
+        -0.82
+       ],
+       [
+        -0.2815,
+        -0.8287
+       ],
+       [
+        -0.2443,
+        -0.8359
+       ],
+       [
+        -0.2065,
+        -0.8415
+       ],
+       [
+        -0.1681,
+        -0.8457
+       ],
+       [
+        -0.1294,
+        -0.8484
+       ],
+       [
+        -0.0905,
+        -0.8496
+       ],
+       [
+        -0.0515,
+        -0.8493
+       ],
+       [
+        -0.0126,
+        -0.8475
+       ],
+       [
+        0.026,
+        -0.8443
+       ],
+       [
+        0.0642,
+        -0.8396
+       ],
+       [
+        0.1019,
+        -0.8335
+       ],
+       [
+        0.139,
+        -0.826
+       ],
+       [
+        0.1752,
+        -0.8171
+       ],
+       [
+        0.2104,
+        -0.8068
+       ],
+       [
+        0.2446,
+        -0.7952
+       ],
+       [
+        0.2774,
+        -0.7823
+       ],
+       [
+        0.3089,
+        -0.768
+       ],
+       [
+        0.3387,
+        -0.7522
+       ],
+       [
+        0.3664,
+        -0.7346
+       ],
+       [
+        0.3913,
+        -0.7143
+       ],
+       [
+        0.4162,
+        -0.6959
+       ],
+       [
+        0.461,
+        -0.7067
+       ],
+       [
+        0.5036,
+        -0.7121
+       ],
+       [
+        0.5454,
+        -0.7148
+       ],
+       [
+        0.5868,
+        -0.7155
+       ],
+       [
+        0.6278,
+        -0.7146
+       ],
+       [
+        0.6682,
+        -0.712
+       ],
+       [
+        0.7081,
+        -0.708
+       ],
+       [
+        0.7471,
+        -0.7025
+       ],
+       [
+        0.7853,
+        -0.6955
+       ],
+       [
+        0.8225,
+        -0.6872
+       ],
+       [
+        0.8584,
+        -0.6775
+       ],
+       [
+        0.8931,
+        -0.6664
+       ],
+       [
+        0.9262,
+        -0.6541
+       ],
+       [
+        0.9577,
+        -0.6405
+       ],
+       [
+        0.9875,
+        -0.6257
+       ],
+       [
+        1.0154,
+        -0.6098
+       ],
+       [
+        1.0412,
+        -0.5928
+       ],
+       [
+        1.0649,
+        -0.5747
+       ],
+       [
+        1.0864,
+        -0.5557
+       ],
+       [
+        1.1054,
+        -0.5358
+       ],
+       [
+        1.1219,
+        -0.5151
+       ],
+       [
+        1.1357,
+        -0.4936
+       ],
+       [
+        1.1464,
+        -0.4713
+       ],
+       [
+        1.1538,
+        -0.4482
+       ],
+       [
+        1.157,
+        -0.4242
+       ],
+       [
+        1.1531,
+        -0.3986
+       ],
+       [
+        1.1746,
+        -0.3816
+       ],
+       [
+        1.2192,
+        -0.3713
+       ],
+       [
+        1.2581,
+        -0.3583
+       ],
+       [
+        1.2934,
+        -0.3436
+       ],
+       [
+        1.3258,
+        -0.3275
+       ],
+       [
+        1.3555,
+        -0.3102
+       ],
+       [
+        1.3825,
+        -0.2918
+       ],
+       [
+        1.4067,
+        -0.2725
+       ],
+       [
+        1.4282,
+        -0.2523
+       ],
+       [
+        1.4469,
+        -0.2314
+       ],
+       [
+        1.4626,
+        -0.2098
+       ],
+       [
+        1.4754,
+        -0.1876
+       ],
+       [
+        1.4852,
+        -0.165
+       ],
+       [
+        1.4919,
+        -0.1421
+       ],
+       [
+        1.4955,
+        -0.1189
+       ],
+       [
+        1.496,
+        -0.0955
+       ],
+       [
+        1.4934,
+        -0.0722
+       ],
+       [
+        1.4878,
+        -0.0489
+       ],
+       [
+        1.479,
+        -0.0258
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-1",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        -0.8055,
+        -0.35
+       ],
+       [
+        -0.806,
+        -0.3462
+       ],
+       [
+        -0.8074,
+        -0.3427
+       ],
+       [
+        -0.8097,
+        -0.3397
+       ],
+       [
+        -0.8127,
+        -0.3374
+       ],
+       [
+        -0.8162,
+        -0.336
+       ],
+       [
+        -0.82,
+        -0.3355
+       ],
+       [
+        -0.8238,
+        -0.336
+       ],
+       [
+        -0.8272,
+        -0.3374
+       ],
+       [
+        -0.8303,
+        -0.3397
+       ],
+       [
+        -0.8326,
+        -0.3427
+       ],
+       [
+        -0.834,
+        -0.3462
+       ],
+       [
+        -0.8345,
+        -0.35
+       ],
+       [
+        -0.834,
+        -0.3538
+       ],
+       [
+        -0.8326,
+        -0.3572
+       ],
+       [
+        -0.8303,
+        -0.3603
+       ],
+       [
+        -0.8272,
+        -0.3626
+       ],
+       [
+        -0.8238,
+        -0.364
+       ],
+       [
+        -0.82,
+        -0.3645
+       ],
+       [
+        -0.8162,
+        -0.364
+       ],
+       [
+        -0.8127,
+        -0.3626
+       ],
+       [
+        -0.8097,
+        -0.3603
+       ],
+       [
+        -0.8074,
+        -0.3572
+       ],
+       [
+        -0.806,
+        -0.3538
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-2",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        -0.5855,
+        0.3
+       ],
+       [
+        -0.586,
+        0.3038
+       ],
+       [
+        -0.5874,
+        0.3072
+       ],
+       [
+        -0.5897,
+        0.3103
+       ],
+       [
+        -0.5927,
+        0.3126
+       ],
+       [
+        -0.5962,
+        0.314
+       ],
+       [
+        -0.6,
+        0.3145
+       ],
+       [
+        -0.6038,
+        0.314
+       ],
+       [
+        -0.6072,
+        0.3126
+       ],
+       [
+        -0.6103,
+        0.3103
+       ],
+       [
+        -0.6126,
+        0.3072
+       ],
+       [
+        -0.614,
+        0.3038
+       ],
+       [
+        -0.6145,
+        0.3
+       ],
+       [
+        -0.614,
+        0.2962
+       ],
+       [
+        -0.6126,
+        0.2928
+       ],
+       [
+        -0.6103,
+        0.2897
+       ],
+       [
+        -0.6072,
+        0.2874
+       ],
+       [
+        -0.6038,
+        0.286
+       ],
+       [
+        -0.6,
+        0.2855
+       ],
+       [
+        -0.5962,
+        0.286
+       ],
+       [
+        -0.5927,
+        0.2874
+       ],
+       [
+        -0.5897,
+        0.2897
+       ],
+       [
+        -0.5874,
+        0.2927
+       ],
+       [
+        -0.586,
+        0.2962
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-3",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        -0.2655,
+        -0.1
+       ],
+       [
+        -0.266,
+        -0.0962
+       ],
+       [
+        -0.2674,
+        -0.0927
+       ],
+       [
+        -0.2697,
+        -0.0897
+       ],
+       [
+        -0.2728,
+        -0.0874
+       ],
+       [
+        -0.2762,
+        -0.086
+       ],
+       [
+        -0.28,
+        -0.0855
+       ],
+       [
+        -0.2838,
+        -0.086
+       ],
+       [
+        -0.2872,
+        -0.0874
+       ],
+       [
+        -0.2903,
+        -0.0897
+       ],
+       [
+        -0.2926,
+        -0.0927
+       ],
+       [
+        -0.294,
+        -0.0962
+       ],
+       [
+        -0.2945,
+        -0.1
+       ],
+       [
+        -0.294,
+        -0.1038
+       ],
+       [
+        -0.2926,
+        -0.1073
+       ],
+       [
+        -0.2903,
+        -0.1103
+       ],
+       [
+        -0.2872,
+        -0.1126
+       ],
+       [
+        -0.2838,
+        -0.114
+       ],
+       [
+        -0.28,
+        -0.1145
+       ],
+       [
+        -0.2762,
+        -0.114
+       ],
+       [
+        -0.2728,
+        -0.1126
+       ],
+       [
+        -0.2697,
+        -0.1103
+       ],
+       [
+        -0.2674,
+        -0.1073
+       ],
+       [
+        -0.266,
+        -0.1038
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-4",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        0.0345,
+        0.25
+       ],
+       [
+        0.034,
+        0.2538
+       ],
+       [
+        0.0326,
+        0.2573
+       ],
+       [
+        0.0303,
+        0.2603
+       ],
+       [
+        0.0273,
+        0.2626
+       ],
+       [
+        0.0238,
+        0.264
+       ],
+       [
+        0.02,
+        0.2645
+       ],
+       [
+        0.0162,
+        0.264
+       ],
+       [
+        0.0128,
+        0.2626
+       ],
+       [
+        0.0097,
+        0.2603
+       ],
+       [
+        0.0074,
+        0.2573
+       ],
+       [
+        0.006,
+        0.2538
+       ],
+       [
+        0.0055,
+        0.25
+       ],
+       [
+        0.006,
+        0.2462
+       ],
+       [
+        0.0074,
+        0.2428
+       ],
+       [
+        0.0097,
+        0.2397
+       ],
+       [
+        0.0127,
+        0.2374
+       ],
+       [
+        0.0162,
+        0.236
+       ],
+       [
+        0.02,
+        0.2355
+       ],
+       [
+        0.0238,
+        0.236
+       ],
+       [
+        0.0273,
+        0.2374
+       ],
+       [
+        0.0303,
+        0.2397
+       ],
+       [
+        0.0326,
+        0.2428
+       ],
+       [
+        0.034,
+        0.2462
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-5",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        0.3345,
+        -0.3
+       ],
+       [
+        0.334,
+        -0.2962
+       ],
+       [
+        0.3326,
+        -0.2927
+       ],
+       [
+        0.3303,
+        -0.2897
+       ],
+       [
+        0.3273,
+        -0.2874
+       ],
+       [
+        0.3238,
+        -0.286
+       ],
+       [
+        0.32,
+        -0.2855
+       ],
+       [
+        0.3162,
+        -0.286
+       ],
+       [
+        0.3128,
+        -0.2874
+       ],
+       [
+        0.3097,
+        -0.2897
+       ],
+       [
+        0.3074,
+        -0.2927
+       ],
+       [
+        0.306,
+        -0.2962
+       ],
+       [
+        0.3055,
+        -0.3
+       ],
+       [
+        0.306,
+        -0.3038
+       ],
+       [
+        0.3074,
+        -0.3072
+       ],
+       [
+        0.3097,
+        -0.3103
+       ],
+       [
+        0.3127,
+        -0.3126
+       ],
+       [
+        0.3162,
+        -0.314
+       ],
+       [
+        0.32,
+        -0.3145
+       ],
+       [
+        0.3238,
+        -0.314
+       ],
+       [
+        0.3273,
+        -0.3126
+       ],
+       [
+        0.3303,
+        -0.3103
+       ],
+       [
+        0.3326,
+        -0.3073
+       ],
+       [
+        0.334,
+        -0.3038
+       ]
+      ],
+      "closed": true
+     },
+     {
+      "id": "culm-6",
+      "bone": "root-plate",
+      "role": "body",
+      "z": 4,
+      "filled": true,
+      "tone": 0.25,
+      "kind": "poly",
+      "points": [
+       [
+        0.6345,
+        0.1
+       ],
+       [
+        0.634,
+        0.1038
+       ],
+       [
+        0.6326,
+        0.1073
+       ],
+       [
+        0.6303,
+        0.1103
+       ],
+       [
+        0.6273,
+        0.1126
+       ],
+       [
+        0.6238,
+        0.114
+       ],
+       [
+        0.62,
+        0.1145
+       ],
+       [
+        0.6162,
+        0.114
+       ],
+       [
+        0.6128,
+        0.1126
+       ],
+       [
+        0.6097,
+        0.1103
+       ],
+       [
+        0.6074,
+        0.1073
+       ],
+       [
+        0.606,
+        0.1038
+       ],
+       [
+        0.6055,
+        0.1
+       ],
+       [
+        0.606,
+        0.0962
+       ],
+       [
+        0.6074,
+        0.0928
+       ],
+       [
+        0.6097,
+        0.0897
+       ],
+       [
+        0.6128,
+        0.0874
+       ],
+       [
+        0.6162,
+        0.086
+       ],
+       [
+        0.62,
+        0.0855
+       ],
+       [
+        0.6238,
+        0.086
+       ],
+       [
+        0.6273,
+        0.0874
+       ],
+       [
+        0.6303,
+        0.0897
+       ],
+       [
+        0.6326,
+        0.0928
+       ],
+       [
+        0.634,
+        0.0962
+       ]
+      ],
+      "closed": true
+     }
+    ]
+   },
+   "dimensionalNote": {
+    "en": "A conventional simplification of the plant drawn at its true extent in model metres in all three views (3.03 m wide, 1.7 m deep and 4.57 m high): the outline is the crown or body, the stem or stems are drawn at their real position and thickness. It is a symbol, never used silently for a pictorial scale.",
+    "de": "Eine konventionelle Vereinfachung der Pflanze in ihrer wahren Ausdehnung in Modellmetern in allen drei Ansichten (3,03 m breit, 1,7 m tief und 4,57 m hoch): Der Umriss ist Krone oder Körper, Stamm oder Stämme sind in wirklicher Lage und Stärke gezeichnet. Es ist ein Symbol und wird nie stillschweigend für einen Bildmaßstab verwendet."
+   }
+  }
+ ],
+ "representations_decisions": {
+  "50": {
+   "silhouette": {
+    "en": "At 1:50 (1 m is 20 mm) every culm is drawn with its taper, nodes and groove, carrying leaf-bearing branches in the upper half; each branch ends in drooping fans of lanceolate leaves, three fans per branch. Front and plan: Front and plan as at 1:100 with six node ticks per culm, four leaf strokes per spray and in plan the six culm bases as small circles.",
+    "de": "Bei 1:50 (1 m sind 20 mm) wird jeder Halm mit Verjüngung, Knoten und Rille gezeichnet und trägt in der oberen Hälfte beblätterte Äste; jeder Ast endet in hängenden Fächern lanzettlicher Blätter, drei Fächer pro Ast. Vorder- und Draufsicht: Vorder- und Draufsicht wie bei 1:100 mit sechs Knotenstrichen je Halm, vier Blattstrichen je Büschel und in der Draufsicht den sechs Halmfüßen als kleinen Kreisen."
+   },
+   "retained": {
+    "en": "Retained: culm tapers and node rings, the groove of Phyllostachys aureosulcata, two to three alternating branches per node zone, fans of four to six leaves.",
+    "de": "Beibehalten: Halmverjüngungen und Knotenringe, die Rille von Phyllostachys aureosulcata, zwei bis drei wechselständige Äste je Knotenzone, Fächer aus vier bis sechs Blättern."
+   },
+   "merged": {
+    "en": "Merged: leaves of one fan are one outline with notches between the leaf tips.",
+    "de": "Zusammengefasst: die Blätter eines Fächers bilden eine Kontur mit Einkerbungen zwischen den Blattspitzen."
+   },
+   "omitted": {
+    "en": "Omitted: sheath scars, twigs below 5 mm and the leaf midribs.",
+    "de": "Weggelassen: Scheidennarben, Zweige unter 5 mm und die Blattmittelrippen."
+   },
+   "thinElements": {
+    "en": "Branches (about 5 mm) are open lines in the 0.18 mm pen; leaves 14 to 17 mm wide are filled and stay above 0.3 mm width.",
+    "de": "Äste (etwa 5 mm) sind offene Linien im Stift 0,18 mm; Blätter von 14 bis 17 mm Breite sind gefüllt und bleiben über 0,3 mm Breite."
+   },
+   "hatching": {
+    "en": "None; the groove and node lines are texture and detail strokes.",
+    "de": "Keine; Rille und Knotenlinien sind Textur- und Detailstriche."
+   },
+   "styles": {
+    "en": "Culm outlines light, sunlit fans mid grey, shaded fans dark grey.",
+    "de": "Halmkonturen hell, besonnte Fächer mittelgrau, beschattete Fächer dunkelgrau."
+   },
+   "overlays": {
+    "en": "Every fan carries its foliage region; branches and node lines stay neutral.",
+    "de": "Jeder Fächer trägt seine Laubregion; Äste und Knotenlinien bleiben neutral."
+   }
+  },
+  "100": {
+   "silhouette": {
+    "en": "At 1:100 (1 m is 10 mm) the culms are tapered filled outlines with nodes and every culm carries four to five serrated leaf bunches hanging from its upper branches, sunlit above and shaded below. Front and plan: Front: six filled culms in three segments with node ticks and a leaf spray on each culm. Plan: six sprays and the six culm tops as rings in the foliage.",
+    "de": "Bei 1:100 (1 m sind 10 mm) sind die Halme verjüngte gefüllte Konturen mit Knoten und jeder Halm trägt vier bis fünf gezackte Blattbüschel an den oberen Ästen, oben besonnt und unten beschattet. Vorder- und Draufsicht: Vorderansicht: sechs gefüllte Halme in drei Segmenten mit Knotenstrichen und je ein Blattbüschel pro Halm. Draufsicht: sechs Büschel und die sechs Halmspitzen als Ringe im Laub."
+   },
+   "retained": {
+    "en": "Retained: culm taper and joints, the lowest four nodes, the hanging leaf bunches and the open crown between them.",
+    "de": "Beibehalten: Halmverjüngung und Gelenke, die untersten vier Knoten, die hängenden Blattbüschel und die offene Krone dazwischen."
+   },
+   "merged": {
+    "en": "Merged: all leaves of a branch form one serrated bunch; the twigs are not drawn.",
+    "de": "Zusammengefasst: alle Blätter eines Astes bilden ein gezacktes Büschel; die Zweige werden nicht gezeichnet."
+   },
+   "omitted": {
+    "en": "Omitted: groove, sheath scars, branches and single leaves.",
+    "de": "Weggelassen: Rille, Scheidennarben, Äste und Einzelblätter."
+   },
+   "thinElements": {
+    "en": "The upper culm (12 to 15 mm) would be 0.12 to 0.15 mm wide; it is thickened to 22 mm (0.22 mm) so that it keeps the minimum feature, a thickening of at most 10 mm.",
+    "de": "Der obere Halm (12 bis 15 mm) wäre 0,12 bis 0,15 mm breit; er wird auf 22 mm (0,22 mm) verdickt, damit er das Mindestmerkmal einhält, eine Verdickung von höchstens 10 mm."
+   },
+   "hatching": {
+    "en": "None; nodes are single texture lines.",
+    "de": "Keine; Knoten sind einzelne Texturlinien."
+   },
+   "styles": {
+    "en": "Culms light grey, shaded bunches dark, sunlit bunches mid grey, nodes in the 0.1 mm texture pen.",
+    "de": "Halme hellgrau, beschattete Büschel dunkel, besonnte Büschel mittelgrau, Knoten im Texturstift 0,1 mm."
+   },
+   "overlays": {
+    "en": "Every bunch is one thermal region; the culm outlines map to the culm region.",
+    "de": "Jedes Büschel entspricht einer thermischen Region; die Halmkonturen entsprechen der Halmregion."
+   }
+  },
+  "200": {
+   "silhouette": {
+    "en": "At 1:200 (1 m is 5 mm) each culm is a single line from the rhizome plate to the tip, carrying two serrated foliage masses: a lower, wider shaded mass leaning outward and an upper, narrower sunlit mass around the tip. Front and plan: Front: six culms as lines with their lateral lean and six leaf masses in shade and sun at the culm tops. Plan: six leaf masses around the clump centre, culms hidden.",
+    "de": "Bei 1:200 (1 m sind 5 mm) ist jeder Halm eine einzelne Linie von der Rhizomplatte zur Spitze mit zwei gezackten Laubmassen: eine untere, breitere beschattete Masse nach außen geneigt und eine obere, schmalere besonnte Masse um die Spitze. Vorder- und Draufsicht: Vorderansicht: sechs Halme als Linien mit ihrer seitlichen Neigung und sechs Blattmassen in Schatten und Sonne an den Halmspitzen. Draufsicht: sechs Blattmassen um die Horstmitte, Halme verdeckt."
+   },
+   "retained": {
+    "en": "Retained: six culms with their real lean and joints, two foliage masses per culm separating sun and shade foliage.",
+    "de": "Beibehalten: sechs Halme mit wahrer Neigung und Gelenken, je zwei Laubmassen pro Halm, die Sonnen- und Schattenlaub trennen."
+   },
+   "merged": {
+    "en": "Merged: all branches and leaves of a zone are one serrated mass.",
+    "de": "Zusammengefasst: alle Äste und Blätter einer Zone bilden eine gezackte Masse."
+   },
+   "omitted": {
+    "en": "Omitted: nodes, groove, branches, single leaves.",
+    "de": "Weggelassen: Knoten, Rille, Äste, Einzelblätter."
+   },
+   "thinElements": {
+    "en": "The 29 mm culm is 0.15 mm wide at this scale: it is drawn as an open line with the 0.18 mm pen, a thickening of 7 mm in real size, within the outline tolerance; it is not a filled shape.",
+    "de": "Der Halm von 29 mm ist bei diesem Maßstab 0,15 mm breit: Er wird als offene Linie mit dem Stift 0,18 mm gezeichnet, eine Verdickung von 7 mm in Wirklichkeit, innerhalb der Konturtoleranz; er ist keine gefüllte Form."
+   },
+   "hatching": {
+    "en": "None.",
+    "de": "Keine."
+   },
+   "styles": {
+    "en": "Culm lines in the body pen, masses filled dark (shade) and mid (sun); light foliage prints lighter.",
+    "de": "Halmlinien im Körperstift, Massen dunkel (Schatten) und mittel (Sonne) gefüllt; helles Laub druckt heller."
+   },
+   "overlays": {
+    "en": "Each foliage mass maps to exactly one thermal region; the culm lines carry the culm value as stroke colour.",
+    "de": "Jede Laubmasse entspricht genau einer thermischen Region; die Halmlinien tragen den Halmwert als Strichfarbe."
+   }
+  },
+  "500": {
+   "silhouette": {
+    "en": "At 1:500 (1 m is 2 mm) the clump is composed of six spindle-shaped crowns, each tapering up into its culm tip and leaning with its culm, standing on three narrow cane wedges; the tallest crown reaches the real 4.6 m. Front and plan: Front: one bundle of culms and two crown masses seen from the side, leaning left and right. Plan: two crown masses from above, six culms hidden.",
+    "de": "Bei 1:500 (1 m sind 2 mm) ist der Horst aus sechs spindelförmigen Kronen komponiert, die sich je zur Halmspitze verjüngen und mit ihrem Halm neigen, und die auf drei schmalen Halmkeilen stehen; die höchste Krone erreicht die wahren 4,6 m. Vorder- und Draufsicht: Vorderansicht: ein Halmbündel und zwei Kronenmassen von der Seite, nach links und rechts geneigt. Draufsicht: zwei Kronenmassen von oben, die sechs Halme verdeckt."
+   },
+   "retained": {
+    "en": "Retained: the staggered crown heights (2.4 to 4.6 m), the lean of the outer culms, the open base with cane wedges and the overall width of 3.0 m.",
+    "de": "Beibehalten: die gestaffelten Kronenhöhen (2,4 bis 4,6 m), die Neigung der äußeren Halme, der offene Fuß mit Halmkeilen und die Gesamtbreite von 3,0 m."
+   },
+   "merged": {
+    "en": "Merged: sunlit and shaded foliage of each culm form one crown (both regions listed); the six culms are merged into three wedges whose gaps are narrower than the profile gap.",
+    "de": "Zusammengefasst: besonntes und beschattetes Laub jedes Halms bilden eine Krone (beide Regionen aufgeführt); die sechs Halme sind zu drei Keilen zusammengefasst, deren Lücken schmaler als der Profilabstand sind."
+   },
+   "omitted": {
+    "en": "Omitted: nodes, branches, single leaves, sheaths and the groove of the culm.",
+    "de": "Weggelassen: Knoten, Äste, Einzelblätter, Scheiden und die Rille des Halms."
+   },
+   "thinElements": {
+    "en": "A culm of 29 mm would be 0.06 mm wide, below the pen: culms are not drawn individually but merged into wedges of 0.3 to 0.4 m width, which is wider than the real cane spacing and says so as a mass, not as a cane.",
+    "de": "Ein Halm von 29 mm wäre 0,06 mm breit, unter der Stiftbreite: Halme werden nicht einzeln gezeichnet, sondern zu Keilen von 0,3 bis 0,4 m Breite zusammengefasst, die breiter sind als der wahre Halmabstand und als Masse, nicht als Halm lesen."
+   },
+   "hatching": {
+    "en": "None: surface tone only.",
+    "de": "Keine: nur Flächentönung."
+   },
+   "styles": {
+    "en": "Crowns mid grey, cane wedges light grey, one outline pen of 0.15 mm; overlaps are intentional and read as depth.",
+    "de": "Kronen mittelgrau, Halmkeile hellgrau, ein Konturstift von 0,15 mm; Überlagerungen sind beabsichtigt und lesen als Tiefe."
+   },
+   "overlays": {
+    "en": "The thermal view paints each crown with the area-weighted value of sunlit and shaded foliage and the wedges with the culm value.",
+    "de": "Die Thermalansicht färbt jede Krone mit dem flächengewichteten Wert von besonntem und beschattetem Laub und die Keile mit dem Halmwert."
+   }
+  }
+ }
+}

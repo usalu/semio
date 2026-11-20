@@ -3,7 +3,6 @@ use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snap
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate};
 use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_ui_locale::Locale;
-use std::collections::BTreeMap;
 
 fn definition(name: &str, kind: PropertyKind, required: bool, default_value: Option<PropertyValue>) -> PropertyDef {
     PropertyDef { name: name.into(), kind, unit: Some("W/(m2.K)".into()).filter(|_| name == "ThermalTransmittance"), description: None, required, default_value, allowed: Vec::new(), minimum: None, maximum: None }
@@ -15,10 +14,10 @@ fn model() -> (ModelSnapshot, ModelInference) {
         definition("ThermalTransmittance", PropertyKind::Real, false, Some(PropertyValue::Real { value: 0.35 })),
         definition("FireRating", PropertyKind::Text, true, None),
     ];
-    snapshot.property_templates.insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties });
-    snapshot.properties.insert("wt-300".into(), BTreeMap::from([("Pset_WallCommon".to_string(), BTreeMap::from([("FireRating".to_string(), PropertyValue::Text { value: "EI60".into() })]))]));
-    snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
-    snapshot.classifications.insert("w-south".into(), BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
+    snapshot.property_templates.cold_insert("pt-wall".into(), PropertyTemplate { name: "Pset_WallCommon".into(), applies_to: vec![TemplateTarget::Wall, TemplateTarget::WallType], properties });
+    snapshot.properties.cold_insert("wt-300".into(), [("Pset_WallCommon".to_string(), [("FireRating".to_string(), PropertyValue::Text { value: "EI60".into() })].into())].into());
+    snapshot.classification_systems.cold_insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
+    snapshot.classifications.cold_insert("w-south".into(), [("cs-uni".to_string(), "EF_25_10".to_string())].into());
     let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }

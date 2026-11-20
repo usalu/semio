@@ -1,6 +1,8 @@
 /** ⏳️ Contract: a reader waits for another machine's claim on an owner only while the holder's lease is live, only while it has nothing else to infer, never longer than the lease time since it first saw the owner held, and a large machine never waits for a smaller one.
  * @see ../../🛰️exchange/🟦️.ts */
 import{expect,test}from"bun:test";
+import{getEventListeners}from"node:events";
+import waits from "./⏳️waits.json" with {type:"json"};
 import{decideGraphEntryV1,graphFleetWaitingV1,graphHeldVerdictV1,type GraphFleetClientV1}from"../../🛰️exchange/🟦️.ts";
 import{GRAPH_STATE_POLICY_V1 as policy,type GraphStateV1}from"../../🟦️.ts";
 
@@ -85,9 +87,33 @@ test("the owners a reader waits for are listed with the machine that holds them 
 });
 
 test("an owner skipped as held keeps its first sight, so the oldest-held owner is the first one taken over",async()=>{
- const client=fake([held(Date.now()+30000)]);
- const first=await decideGraphEntryV1({client,state:stateOf("6"),owner:"me",busy:()=>true});
+ const started=1000,later=started+policy.leaseTakeOverMilliseconds+1,client=fake([held(later+30000)]);
+ const first=await decideGraphEntryV1({client,state:stateOf("6"),owner:"me",busy:()=>true,now:()=>started});
  expect(first.outcome).toBe("skip");
- const second=await decideGraphEntryV1({client,state:stateOf("6"),owner:"me",busy:()=>true,now:()=>Date.now()+policy.leaseTakeOverMilliseconds+1});
+ const second=await decideGraphEntryV1({client,state:stateOf("6"),owner:"me",busy:()=>true,now:()=>later});
  expect(second.outcome).toBe("compute");
+});
+
+
+for(const [caseIndex,row] of waits.cases.entries())test(row.name,async()=>{
+ const controller=new AbortController(),signal=controller.signal,initial=()=>{};
+ signal.addEventListener("abort",initial);
+ expect(getEventListeners(signal,"abort")).toHaveLength(waits.baselineListeners);
+ for(let repeat=0;repeat<row.repetitions;repeat++){
+  const client=fake([held(row.lease==="busy"?2000:999),{state:"granted",untilMilliseconds:2000}]);
+  let listenersDuring:number|undefined;
+  const decision=decideGraphEntryV1({client,state:stateOf((7+caseIndex*3+repeat).toString(16).padStart(2,"0")),owner:"me",now:()=>1000,signal,busy:()=>{
+   if(row.abort==="before")controller.abort();
+   queueMicrotask(()=>{listenersDuring=getEventListeners(signal,"abort").length;if(row.abort==="during")controller.abort();});
+   return row.lease==="busy";
+  }});
+  if(row.abort==="before"){
+   const nextTurn=new Promise(resolve=>setImmediate(()=>resolve("pending")));
+   expect(await Promise.race([decision,nextTurn])).not.toBe("pending");
+  }
+  const result=await decision;
+  if(result.outcome==="compute")result.hold?.stop();
+  expect({outcome:result.outcome,reason:result.outcome==="hit"?null:result.reason,claims:client.claims,listenersDuring,listenersAfter:getEventListeners(signal,"abort").length}).toEqual(row.expected);
+  expect(getEventListeners(signal,"abort")).toEqual([initial]);
+ }
 });

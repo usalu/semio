@@ -1,0 +1,83 @@
+{
+  "baselineListeners": 1,
+  "cases": [
+    {
+      "name": "live peer finishes its pause",
+      "lease": "busy",
+      "abort": "normal",
+      "repetitions": 3,
+      "expected": {
+        "outcome": "skip",
+        "reason": "busy",
+        "claims": 1,
+        "listenersDuring": 2,
+        "listenersAfter": 1
+      }
+    },
+    {
+      "name": "lapsed claim finishes its pause",
+      "lease": "lapsed",
+      "abort": "normal",
+      "repetitions": 3,
+      "expected": {
+        "outcome": "compute",
+        "reason": "granted",
+        "claims": 2,
+        "listenersDuring": 2,
+        "listenersAfter": 1
+      }
+    },
+    {
+      "name": "live peer is cancelled during its pause",
+      "lease": "busy",
+      "abort": "during",
+      "repetitions": 1,
+      "expected": {
+        "outcome": "skip",
+        "reason": "busy",
+        "claims": 1,
+        "listenersDuring": 2,
+        "listenersAfter": 1
+      }
+    },
+    {
+      "name": "lapsed claim is cancelled during its pause",
+      "lease": "lapsed",
+      "abort": "during",
+      "repetitions": 1,
+      "expected": {
+        "outcome": "compute",
+        "reason": "error",
+        "claims": 1,
+        "listenersDuring": 2,
+        "listenersAfter": 1
+      }
+    },
+    {
+      "name": "live peer has already been cancelled when its pause starts",
+      "lease": "busy",
+      "abort": "before",
+      "repetitions": 1,
+      "expected": {
+        "outcome": "skip",
+        "reason": "busy",
+        "claims": 1,
+        "listenersDuring": 1,
+        "listenersAfter": 1
+      }
+    },
+    {
+      "name": "lapsed claim has already been cancelled when its pause starts",
+      "lease": "lapsed",
+      "abort": "before",
+      "repetitions": 1,
+      "expected": {
+        "outcome": "compute",
+        "reason": "error",
+        "claims": 1,
+        "listenersDuring": 1,
+        "listenersAfter": 1
+      }
+    }
+  ]
+}

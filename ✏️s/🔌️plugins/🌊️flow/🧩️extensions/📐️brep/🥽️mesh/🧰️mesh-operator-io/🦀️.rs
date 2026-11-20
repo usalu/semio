@@ -134,31 +134,7 @@ pub trait PolygonMeshSourceGeometry {
     fn mesh(self)->Result<HalfedgeMesh,EvalError>;
 }
 impl PolygonMeshSourceGeometry for PolygonMeshSource {
-    fn from_mesh(mesh:&HalfedgeMesh) -> Result<Self,EvalError> {
-        let vertices = (0..mesh.vertex_count()).map(|id| mesh.vertex_position(VertexId(id as u32)).map(|point| point.0)).collect::<Result<Vec<_>,_>>().map_err(mesh_error)?;
-        let faces = (0..mesh.face_count()).map(|id| mesh.face_vertex_ids(FaceId(id as u32)).map(|vertices| vertices.into_iter().map(|vertex| vertex.0).collect())).collect::<Result<Vec<_>,_>>().map_err(mesh_error)?;
-        let mut corner_ids=Vec::new();let mut edge_ids=Vec::new();
-        for face in 0..mesh.face_count() {
-            let (start,flipped)=mesh.face_boundary(FaceId(face as u32)).map_err(mesh_error)?;
-            let mut next=start;let mut halfedges=Vec::new();
-            loop {halfedges.push(next.0);next=mesh.boundary_corner(next).map_err(mesh_error)?.1;if next==start {break;}}
-            for cursor in 0..halfedges.len() {
-                let index=if flipped {halfedges.len()-1-cursor}else{cursor};
-                corner_ids.push(halfedges[index]);edge_ids.push(halfedges[if flipped {(index+halfedges.len()-1)%halfedges.len()}else{index}]);
-            }
-        }
-        let mut attributes=mesh.attributes().clone();
-        for slot in 0..attributes.slot_count() {
-            let Some((_,attribute))=attributes.slot_entry_mut(slot) else {continue};
-            let ids=match attribute.domain {semio_framework_mesh_engine::MeshAttributeDomain::Corner=>Some(&corner_ids),semio_framework_mesh_engine::MeshAttributeDomain::Edge=>Some(&edge_ids),_=>None};
-            if let Some(ids)=ids {
-                if attribute.indices.is_some() || ids.iter().enumerate().any(|(index,id)|index!=*id as usize) {
-                    attribute.indices=Some(ids.iter().map(|id|attribute.indices.as_ref().map_or(*id,|indices|indices[*id as usize])).collect());
-                }
-            }
-        }
-        Ok(Self { vertices,faces,attributes,materials:mesh.materials().clone(),textures:mesh.textures().clone() })
-    }
+    fn from_mesh(mesh:&HalfedgeMesh) -> Result<Self,EvalError> { mesh.polygon_source().map_err(mesh_error) }
     fn mesh(self)->Result<HalfedgeMesh,EvalError> {let mut job=HalfedgeMesh::polygon_source_job(self).map_err(mesh_error)?;loop {match modeling_cold(&mut job,4096).map_err(mesh_error)? {MeshModelingStep::Done(mesh)=>return Ok(mesh),MeshModelingStep::Working(_)=>{},_=>return Err(invalid("mesh construction cancelled"))}}}
 }
 pub fn encode_mesh(mesh: &HalfedgeMesh) -> Result<String, EvalError> { Ok(semio_framework_mesh_engine::io::text::encode_polygon_mesh_source(&PolygonMeshSource::from_mesh(mesh)?)) }

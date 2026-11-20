@@ -1,0 +1,8 @@
+[
+  {"mode":"hit","calls":["memo-read","memo-check","membership-hash"],"settlement":"qualified"},
+  {"mode":"write-refused","calls":["memo-read","memo-check","scoped-discovery","memo-publish","membership-hash"],"settlement":"qualified"},
+  {"mode":"memo-over-size","calls":["memo-read","memo-check","scoped-discovery","memo-publish","membership-hash"],"settlement":"qualified"},
+  {"mode":"write-completed","calls":["memo-read","memo-check","scoped-discovery","memo-publish","membership-hash"],"settlement":"qualified"},
+  {"mode":"cancel","calls":["memo-read","memo-check","scoped-discovery","memo-publish"],"settlement":"cancelled"},
+  {"mode":"whole","calls":["catalog","membership-hash"],"settlement":"qualified"}
+]

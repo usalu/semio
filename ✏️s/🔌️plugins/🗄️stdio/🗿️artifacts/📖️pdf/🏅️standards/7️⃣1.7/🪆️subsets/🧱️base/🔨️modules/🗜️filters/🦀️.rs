@@ -8,6 +8,39 @@ use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, is_ws, hex
 use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCcittParameters, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter};
 
+use semio_s_artifact_stdio_pdf_filters as bounded_flate;
+pub use bounded_flate::{
+    FlateCloseStep, FlateGrant, FlateStatus, FlateStep, PdfFlateCursor, PdfLzwCursor, PdfPredictorCursor,
+    PdfStreamDataCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus,
+};
+
+#[path = "🎚️decoded-stream/🦀️.rs"]
+mod decoded_stream;
+pub use decoded_stream::{decode_stream_admitted, DecodedStreamData, PdfDecodedStreamCursor};
+
+/// 🎛️ Selects the controlled decoder for an already-resolved stream pipeline.
+pub fn retained_stream_data(filters: &[PdfStreamFilter], maximum_inflated: usize, maximum_output: usize) -> PResult<PdfStreamDataCursor> {
+    match filters {
+        [] => Ok(PdfStreamDataCursor::identity(maximum_output)),
+        [PdfStreamFilter::AsciiHex] => Ok(PdfStreamDataCursor::ascii_hex(maximum_output)),
+        [PdfStreamFilter::Ascii85] => Ok(PdfStreamDataCursor::ascii85(maximum_output)),
+        [PdfStreamFilter::RunLength] => Ok(PdfStreamDataCursor::run_length(maximum_output)),
+        [PdfStreamFilter::Flate { predictor: None }] => Ok(PdfStreamDataCursor::flate(maximum_inflated.min(maximum_output))),
+        [PdfStreamFilter::Flate { predictor: Some(p) }] => PdfStreamDataCursor::flate_predicted(
+            maximum_inflated, maximum_output, p.predictor, p.columns, p.colors, p.bits_per_component,
+        ).map_err(|error| PdfEngineError::Malformed(error.into_message())),
+        [PdfStreamFilter::Lzw { predictor: None, early_change }] => Ok(PdfStreamDataCursor::lzw(maximum_inflated.min(maximum_output), *early_change)),
+        [PdfStreamFilter::Lzw { predictor: Some(p), early_change }] => PdfStreamDataCursor::lzw_predicted(
+            maximum_inflated, maximum_output, *early_change, p.predictor, p.columns, p.colors, p.bits_per_component,
+        ).map_err(|error| PdfEngineError::Malformed(error.into_message())),
+        _ => Err(PdfEngineError::Unsupported("stream filter chain has no controlled decoder".into())),
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔁️flate-pipeline/🦀️.rs"]
+mod flate_pipeline_tests;
+
 //#region 🔖️Ascii
 /// 🔤️ `/ASCIIHexDecode`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -185,54 +218,27 @@ pub fn run_length_encode(data: &[u8]) -> Vec<u8> {
 /// `/EarlyChange` (default 1).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn lzw_decode(data: &[u8], early_change: bool) -> PResult<Vec<u8>> {
-    let mut out = Vec::new();
-    let mut table: Vec<Vec<u8>> = (0..256).map(|b| vec![b as u8]).collect();
-    table.push(Vec::new());
-    table.push(Vec::new());
-    let mut code_width = 9usize;
-    let mut previous: Option<Vec<u8>> = None;
-    let mut bit_pos = 0usize;
-    let total_bits = data.len() * 8;
-    let early = if early_change { 1 } else { 0 };
-    while bit_pos + code_width <= total_bits {
-        let mut code = 0usize;
-        for _ in 0..code_width {
-            let byte = data[bit_pos / 8];
-            let bit = (byte >> (7 - (bit_pos % 8))) & 1;
-            code = (code << 1) | bit as usize;
-            bit_pos += 1;
+    lzw_decode_with_predictor(data, early_change, None)
+}
+
+fn lzw_decode_with_predictor(data: &[u8], early_change: bool, predictor: Option<&PdfPredictor>) -> PResult<Vec<u8>> {
+    let mut cursor = match predictor {
+        None => PdfStreamDataCursor::lzw(usize::MAX, early_change),
+        Some(p) => PdfStreamDataCursor::lzw_predicted(usize::MAX, usize::MAX, early_change, p.predictor, p.columns, p.colors, p.bits_per_component)
+            .map_err(|error| PdfEngineError::Malformed(error.into_message()))?,
+    };
+    let grant = StreamDataGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
+    let result = loop {
+        match cursor.advance(data, grant, false).status {
+            Ok(StreamDataStatus::More) => {}
+            Ok(StreamDataStatus::Complete) => break cursor.take_output().ok_or_else(|| PdfEngineError::Malformed("PDF LZW output is unavailable".into())),
+            Err(error) => break Err(PdfEngineError::Malformed(error.into_message())),
+            Ok(_) => break malformed("unexpected PDF LZW decoder status"),
         }
-        match code {
-            256 => {
-                table.truncate(258);
-                code_width = 9;
-                previous = None;
-            }
-            257 => break,
-            _ => {
-                let entry = if code < table.len() {
-                    table[code].clone()
-                } else if let Some(prev) = &previous {
-                    let mut entry = prev.clone();
-                    entry.push(prev[0]);
-                    entry
-                } else {
-                    return malformed("LZW code before any entry");
-                };
-                out.extend_from_slice(&entry);
-                if let Some(prev) = previous {
-                    let mut new_entry = prev;
-                    new_entry.push(entry[0]);
-                    table.push(new_entry);
-                }
-                previous = Some(entry);
-                if table.len() + early >= (1 << code_width) && code_width < 12 {
-                    code_width += 1;
-                }
-            }
-        }
-    }
-    Ok(out)
+    };
+    cursor.begin_close();
+    while matches!(cursor.close_step(grant).status, Ok(StreamDataStatus::More)) {}
+    result
 }
 
 /// 🧬 LZW encode, the exact inverse of [`lzw_decode`] for the same `early_change`.
@@ -294,20 +300,7 @@ pub fn lzw_encode(data: &[u8], early_change: bool) -> Vec<u8> {
 
 //#region 🔖️Predictors
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn paeth(a: u8, b: u8, c: u8) -> u8 {
-    let (a, b, c) = (a as i32, b as i32, c as i32);
-    let p = a + b - c;
-    let pa = (p - a).abs();
-    let pb = (p - b).abs();
-    let pc = (p - c).abs();
-    if pa <= pb && pa <= pc {
-        a as u8
-    } else if pb <= pc {
-        b as u8
-    } else {
-        c as u8
-    }
-}
+use bounded_flate::paeth;
 
 /// 🧮 PNG predictor decode (Predictor >= 10, §7.4.4.4 / PNG §6): each row is prefixed by a
 /// filter-type byte.
@@ -371,8 +364,11 @@ pub fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<
 /// filter (type 2); TIFF predictor 2 differences horizontally.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn predictor_encode(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
-    let row_bytes = (predictor.columns as usize * predictor.colors as usize * predictor.bits_per_component as usize).div_ceil(8).max(1);
     if predictor.predictor >= 10 {
+        let Some(row_bits) = (predictor.columns as usize).checked_mul(predictor.colors as usize).and_then(|samples| samples.checked_mul(predictor.bits_per_component as usize)) else {
+            return data.to_vec();
+        };
+        let row_bytes = row_bits.div_ceil(8).max(1);
         let mut out = Vec::with_capacity(data.len() + data.len().div_ceil(row_bytes));
         let mut prev = vec![0u8; row_bytes];
         for row in data.chunks(row_bytes) {
@@ -385,15 +381,8 @@ pub fn predictor_encode(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
         }
         return out;
     }
-    if predictor.predictor == 2 && predictor.bits_per_component == 8 {
-        let colors = predictor.colors.max(1) as usize;
-        let mut out = data.to_vec();
-        for row in out.chunks_mut(row_bytes) {
-            for index in (colors..row.len()).rev() {
-                row[index] = row[index].wrapping_sub(row[index - colors]);
-            }
-        }
-        return out;
+    if predictor.predictor == 2 {
+        return bounded_flate::encode_tiff(data, predictor.columns, predictor.colors, predictor.bits_per_component).unwrap_or_else(|_| data.to_vec());
     }
     data.to_vec()
 }
@@ -404,19 +393,19 @@ pub fn predictor_encode(data: &[u8], predictor: &PdfPredictor) -> Vec<u8> {
 /// are: the raw DEFLATE body is decoded on its own when the strict path refuses.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn flate_decode(data: &[u8]) -> PResult<Vec<u8>> {
-    use semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::{inflate_raw, zlib_decompress};
+    flate_decode_with_predictor(data, None)
+}
+
+fn flate_decode_with_predictor(data: &[u8], predictor: Option<&PdfPredictor>) -> PResult<Vec<u8>> {
     let start = data.iter().position(|byte| !is_ws(*byte)).unwrap_or(0);
-    let data = &data[start..];
-    if data.is_empty() {
-        return Ok(Vec::new());
-    }
-    match zlib_decompress(data) {
-        Ok(out) => Ok(out),
-        Err(strict) => {
-            let body = if data.len() > 2 && (data[0] & 0x0F) == 8 && ((data[0] as u16) * 256 + data[1] as u16).is_multiple_of(31) { &data[2..] } else { data };
-            inflate_raw(body).or_else(|_| inflate_raw(&body[..body.len().saturating_sub(4)])).map_err(|_| PdfEngineError::Malformed(format!("FlateDecode: {strict}")))
+    let source = &data[start..];
+    let result = match predictor {
+        Some(predictor) if predictor.predictor == 2 || predictor.predictor >= 10 => {
+            bounded_flate::decode_predicted_compatible(source, predictor.predictor, predictor.columns, predictor.colors, predictor.bits_per_component)
         }
-    }
+        _ => bounded_flate::decode_compatible(source),
+    };
+    result.map_err(|error| PdfEngineError::Malformed(format!("FlateDecode: {error}")))
 }
 
 /// 🗜️ Deterministic zlib deflate (the sibling artifact's level-nine encoder).
@@ -435,14 +424,6 @@ fn predictor_of(parms: Option<&PdfObject>) -> Option<PdfPredictor> {
     (predictor != 1).then(|| PdfPredictor { predictor: predictor as u32, colors: get("Colors", 1).max(1) as u32, bits_per_component: get("BitsPerComponent", 8).max(1) as u32, columns: get("Columns", 1).max(1) as u32 })
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_predictor(data: Vec<u8>, predictor: &Option<PdfPredictor>) -> PResult<Vec<u8>> {
-    match predictor {
-        Some(p) if p.predictor >= 10 => png_predictor_decode(&data, p.columns as usize, p.colors as usize, p.bits_per_component as usize),
-        Some(p) if p.predictor == 2 => Ok(tiff_predictor2_decode(&data, p.columns as usize, p.colors as usize)),
-        _ => Ok(data),
-    }
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn ccitt_parameters(parms: Option<&PdfObject>) -> PdfCcittParameters {
@@ -472,31 +453,31 @@ pub fn declared_filters(dict: &[PdfDictEntry]) -> Vec<(String, Option<PdfObject>
 /// Image codecs stop the chain: their payload is retained encoded.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
-    let mut data = raw.to_vec();
+    let mut data = std::borrow::Cow::Borrowed(raw);
     let mut pipeline = Vec::new();
     for (name, parms) in declared_filters(dict) {
         let filter = match name.as_str() {
             "FlateDecode" | "Fl" => {
                 let predictor = predictor_of(parms.as_ref());
-                data = apply_predictor(flate_decode(&data)?, &predictor)?;
+                data = flate_decode_with_predictor(&data, predictor.as_ref())?.into();
                 PdfStreamFilter::Flate { predictor }
             }
             "LZWDecode" | "LZW" => {
                 let predictor = predictor_of(parms.as_ref());
                 let early_change = parms.as_ref().and_then(|p| p.dict_get("EarlyChange")).and_then(|v| v.as_i64()).unwrap_or(1) != 0;
-                data = apply_predictor(lzw_decode(&data, early_change)?, &predictor)?;
+                data = lzw_decode_with_predictor(&data, early_change, predictor.as_ref())?.into();
                 PdfStreamFilter::Lzw { predictor, early_change }
             }
             "ASCIIHexDecode" | "AHx" => {
-                data = ascii_hex_decode(&data);
+                data = ascii_hex_decode(&data).into();
                 PdfStreamFilter::AsciiHex
             }
             "ASCII85Decode" | "A85" => {
-                data = ascii85_decode(&data)?;
+                data = ascii85_decode(&data)?.into();
                 PdfStreamFilter::Ascii85
             }
             "RunLengthDecode" | "RL" => {
-                data = run_length_decode(&data);
+                data = run_length_decode(&data).into();
                 PdfStreamFilter::RunLength
             }
             "DCTDecode" | "DCT" => PdfStreamFilter::Dct { color_transform: parms.as_ref().and_then(|p| p.dict_get("ColorTransform")).and_then(|v| v.as_i64()).map(|v| v as u32) },
@@ -515,7 +496,7 @@ pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec
             break;
         }
     }
-    Ok((data, pipeline))
+    Ok((data.into_owned(), pipeline))
 }
 
 /// 📤️ Applies a typed pipeline to logical data, innermost filter first, and returns the bytes to

@@ -30,7 +30,7 @@ pub fn read(i: &mut Import<'_>) {
         if let Some(material) = i.doc.index.materials.get(&instance.id).and_then(|material| i.material_ids.get(material)) {
             ramp.material = material.clone();
         }
-        i.model.ramps.insert(id.clone(), ramp);
+        i.model.ramps.cold_insert(id.clone(), ramp);
         i.ids.insert(instance.id, id);
     }
 }

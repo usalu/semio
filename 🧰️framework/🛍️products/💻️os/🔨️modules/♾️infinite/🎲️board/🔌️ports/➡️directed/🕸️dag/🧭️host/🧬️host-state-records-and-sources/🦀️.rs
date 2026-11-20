@@ -81,6 +81,7 @@ impl DagOutputCandidates for DagHost{
     fn channel_candidate_count(&self)->usize{self.graph.engine.selection.handle_ids.len()}
     fn channel_candidate(&self,index:usize)->Option<DagChannelView<'_>>{self.graph.channel_view(*self.graph.engine.selection.handle_ids.key_at_rank(index)?)}
     fn handle_candidate_identity(&self,index:usize)->Option<&str>{let id=self.graph.engine.selection.handle_ids.key_at_rank(index)?;self.graph.channel_view(*id)?;self.graph.handle_key_map.get(id).map(String::as_str)}
+    fn hovered_edge_view(&self)->Option<&str>{self.graph.hovered_edge_id()}
     fn hovered_channel_view(&self)->Option<DagChannelView<'_>>{self.graph.engine.hover.and_then(|id|self.graph.channel_view(id))}
     fn wire_refusal_view(&self)->Option<DagRefusalView<'_>>{
         let(source,target)=self.graph.engine.wire_drag_type_refusal()?;

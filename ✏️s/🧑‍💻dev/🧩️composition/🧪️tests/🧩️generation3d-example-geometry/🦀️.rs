@@ -12,6 +12,9 @@
 //! @see ../../../../../../📓️kernel-and-preview-audit-2026-09-09.md — the op chain per example.
 //! @see ../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs — `FlowHost::evaluate`.
 
+#[path = "../🧰️preview-reply/🦀️.rs"]
+pub(crate) mod preview_reply;
+
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
@@ -28,6 +31,12 @@ include!("🧰️harness/🦀️.rs");
 include!("🔬️examples/🦀️.rs");
 include!("🌉️scene-bridge/🦀️.rs");
 include!("🚚️mesh-delivery/🦀️.rs");
+
+fn geometry_owner() -> &'static semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext {
+    use semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext;
+    static OWNER: OnceLock<GeometryInferenceContext> = OnceLock::new();
+    OWNER.get_or_init(|| GeometryInferenceContext::new(geometry_session().capture()))
+}
 
 pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_session::Session {
     static SESSION: std::sync::OnceLock<semio_s_spatial_kernel_semio_session::Session> = std::sync::OnceLock::new();

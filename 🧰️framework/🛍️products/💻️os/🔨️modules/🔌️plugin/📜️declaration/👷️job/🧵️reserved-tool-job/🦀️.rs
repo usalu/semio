@@ -5,8 +5,16 @@ use crate::ArtifactInstanceOperationOwnerHandle;
 
 pub use semio_plugin_original_job_ownership::ArtifactOriginalToolCommand;
 
-/// 🎒️ Fully owned input handed to an app-defined factory builder after exact raw admission.
+/// 🎒️ Holds the owned request before construction and its resident candidate after input transfer.
 pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
+    inputs: Option<ArtifactOwnedToolJobInputs<A>>,
+    construction: semio_framework::action_bus::ResidentConstruction<semio_framework::ErasedToolJob>,
+    construction_failure: Option<semio_framework_job::OriginalConstructionFailure>,
+    failure_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_job::OriginalConstructionFailure>>,
+}
+
+/// 🏷️ Fully owned input handed to an app-defined factory after exact raw admission.
+pub struct ArtifactOwnedToolJobInputs<A: ArtifactApp> {
     pub source_binding: semio_framework::action_bus::OriginalToolSourceBinding,
     pub retained:RetainedCloneGrant,
     pub command: ArtifactOriginalToolCommand<A::Command>,
@@ -34,9 +42,24 @@ pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
     pub instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
     pub output_chunks: ArtifactOutputChunks,
     pub completion: ArtifactToolCompletion<A>,
-    /// 🏛️ Resident original construction admission: a turn that cannot commit yet resumes over the same bind and scope.
-    pub construction: semio_framework::action_bus::ResidentConstruction<semio_framework::ErasedToolJob>,
 }
+
+impl<A: ArtifactApp> std::ops::Deref for ArtifactOwnedToolJobRequest<A> {
+    type Target = ArtifactOwnedToolJobInputs<A>;
+
+    fn deref(&self) -> &Self::Target {
+        self.inputs.as_ref().expect("tool factory receives its inputs before the job is built")
+    }
+}
+
+impl<A: ArtifactApp> std::ops::DerefMut for ArtifactOwnedToolJobRequest<A> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.inputs.as_mut().expect("tool factory receives its inputs before the job is built")
+    }
+}
+
+#[path="../🎟️request/🏗️construction/🦀️.rs"]
+mod original_request_construction;
 #[path="../🎟️request/♻️retirement/🦀️.rs"]
 mod original_request_retirement;
 

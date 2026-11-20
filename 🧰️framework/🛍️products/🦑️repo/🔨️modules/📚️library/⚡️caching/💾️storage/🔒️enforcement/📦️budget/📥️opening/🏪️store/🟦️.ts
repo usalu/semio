@@ -1,3 +1,4 @@
+import {startNativeStorageVerificationPhaseV1,withNativeStorageVerificationObservationV1,type NativeStorageVerificationObserverV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/⏱️verification/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {profilePhaseV1} from "../../../../../../🏗️build/⏱️profile/🟨️.mjs";
 import{staleImplementationV1}from"../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
@@ -8,14 +9,14 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {randomBytes} from "node:crypto";
 import { lstatSync, realpathSync, mkdirSync } from "node:fs";
 import {join,resolve,relative,isAbsolute,dirname,basename,sep} from "node:path";
-import { repositoryCachePartitionRootV1 as imageRoot, withRepositoryCachePartitionDisposableChildStorageV1, withRepositoryCachePartitionChildStorageV1, withRepositoryCachePartitionFundedChildStorageV1, retireRepositoryCachePartitionFundedChildStorageV1, withRepositoryCachePartitionMaintenanceChildStorageV1 } from "../🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../♻️reset/🟦️.ts";
+import { repositoryCachePartitionRootV1 as imageRoot, repositoryCachePartitionNativeImageV1, withRepositoryCachePartitionDisposableChildStorageV1, withRepositoryCachePartitionChildStorageV1, withRepositoryCachePartitionFundedChildStorageV1, retireRepositoryCachePartitionFundedChildStorageV1, withRepositoryCachePartitionMaintenanceChildStorageV1 } from "../🟦️.ts"; import { openRepositoryCachePartitionV1 } from "../♻️reset/🟦️.ts";
 import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
 import { requireNativeStorageReservationV1, acquireNativeStorageV1, recoverNativeStorageReservationV1, type NativeStorageReservationV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1,nativeImageRootV1,nativeImageBackingFilenameV1,type NativeImageStorageV1,type NativeImageMaintenanceCustodyV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { scriptInvocationEnvironment, requireIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, withRequestedIssuedResourceControlV1, requireIssuedResourceControlRefinementV1, type ScriptInvocation } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {openNativePlatformStorageV1,withNativePlatformChildStorageV1,withNativePlatformDisposableChildStorageV1,bindNativePlatformDisposableAllocationV1,withNativePlatformImageOperationV1,type NativeDisposableImageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {nativePlatformImageBackendV1,openNativePlatformStorageV1,withNativePlatformChildStorageV1,withNativePlatformDisposableChildStorageV1,bindNativePlatformDisposableAllocationV1,withNativePlatformImageOperationV1,type NativeDisposableImageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import type {NativeStorageChildFundingV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts";
 import { schema, repositoryCacheStoreReservationV1, requireCurrentRepositoryCacheStoreSchemaV1 } from "./🎟️reservation/🟦️.ts";
 
@@ -93,11 +94,34 @@ export function retireRepositoryCacheStoreFundedChildStorageV1(store:RepositoryC
   return enrollConsumer(frame,control,actualControl=>{requireOwner(owner);return retireRepositoryCachePartitionFundedChildStorageV1(store.image,reservation,reservationControl,actualControl,store.invocation);},owner);
 }
 
+type RepositoryCacheConsumerPhaseV1="preVerify"|"body"|"postVerify";
+export type RepositoryCacheNativeVerificationObserversV1=Readonly<Record<"preVerify"|"postVerify",NativeStorageVerificationObserverV1>>;
+
 /** 💾️ Enrolls only an existing private partition reader and retains its real image through accepted descendants. */
-export function withRequiredRepositoryCacheStoreConsumerV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+export function withRequiredRepositoryCacheStoreConsumerV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
+export function withRequiredRepositoryCacheStoreConsumerV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,withdraw:AbortSignal|undefined,observe?:(phase?:RepositoryCacheConsumerPhaseV1)=>void,native?:RepositoryCacheNativeVerificationObserversV1):Promise<T|undefined>;
+export function withRequiredRepositoryCacheStoreConsumerV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,withdraw?:AbortSignal,observe?:(phase?:RepositoryCacheConsumerPhaseV1)=>void,native?:RepositoryCacheNativeVerificationObserversV1):Promise<T|undefined>{
  requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);const held=originalCacheStores.getStore(),frame=consumerFrames.getStore();if(!held||!frame||typeof body!=="function")throw Error("Required original cache consumer unavailable");let owner:StoreOwner|undefined;
  for(const row of held.values()){const candidate=issuedStores.get(row.store);if(candidate?.workspace===workspace&&candidate.id===id){if(owner&&owner!==candidate)throw Error("Ambiguous original cache consumer");owner=candidate;}}
- if(!owner||owner.kind!=="reader")throw Error("Required original cache reader unavailable");requireOwner(owner);requireIssuedResourceControlInvocationV1(control,owner.store.invocation);if(!retainedFrame(owner,frame))throw Error("Required retained cache consumer frame unavailable");const store=owner.store;return enrollConsumer(frame,control,async actual=>{await store.verify();checkResourceLeaseControl(actual);const value=await body(store,actual);await store.verify();checkResourceLeaseControl(actual);return value;},owner);
+ if(!owner||owner.kind!=="reader")throw Error("Required original cache reader unavailable");requireOwner(owner);requireIssuedResourceControlInvocationV1(control,owner.store.invocation);if(!retainedFrame(owner,frame))throw Error("Required retained cache consumer frame unavailable");const store=owner.store;
+ if(withdraw?.aborted)return Promise.resolve(undefined);
+ const note=(phase?:RepositoryCacheConsumerPhaseV1)=>{try{observe?.(phase);}catch{}};
+ const verify=(phase:"preVerify"|"postVerify")=>{
+  note(phase);let report:NativeStorageVerificationObserverV1|undefined,backend:string|undefined;
+  try{report=native?.[phase];if(report)backend=nativePlatformImageBackendV1(repositoryCachePartitionNativeImageV1(store.image));}catch{}
+  return report&&backend!==undefined?withNativeStorageVerificationObservationV1(backend,report,()=>store.verify()):store.verify();
+ };
+ return enrollConsumer(frame,control,async actual=>{
+  if(withdraw?.aborted)return undefined;
+  try{
+   await verify("preVerify");checkResourceLeaseControl(actual);
+   if(withdraw?.aborted)return undefined;
+   note("body");const value=await body(store,actual);
+   if(withdraw?.aborted)return undefined;
+   await verify("postVerify");checkResourceLeaseControl(actual);
+   return withdraw?.aborted?undefined:value;
+  }finally{note();}
+ },owner);
 }
 
 /** 🗄️ Enrolls a known live cache consumer before effects; authentic non-store reservations remain distinct. */
@@ -106,7 +130,7 @@ export function withRepositoryCacheStoreConsumerV1<T>(custody:Readonly<{storage:
 }
 
 async function repositoryCacheStoreBodyV1<T>(workspace:string,id:RepositoryCachePartitionIdV1,key:string,invocation:ScriptInvocation,image:NativeImageStorageV1,storage:NativeStorageReservationV1,control:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,owners:StoreOwner[],partition:boolean):Promise<T>{
- const temporary=requireNativeStoragePathV1(image.root,join(image.root,"tmp"));await profilePhaseV1("nx.store.body-recheck",()=>storage.recheck());mkdirSync(temporary,{recursive:true});checkResourceLeaseControl(control);const identity=repositoryCacheStoreIdentityV1(image),scope={}as StoreOwner,store:RepositoryCacheStoreV1=Object.freeze({root:image.root,storage,control,invocation,image,recheck:async()=>{requireOwner(scope);requireRepositoryCacheStoreIdentityV1(image,identity);},verify:async()=>{requireOwner(scope);requireRepositoryCacheStoreIdentityV1(image,identity);await storage.recheck();},environment:Object.freeze({...scriptInvocationEnvironment(invocation,process.env),...(id==="diagnostics"?{SEMIO_DIAGNOSTIC_DIRECTORY:temporary}:{}),TMPDIR:temporary,TMP:temporary,TEMP:temporary})}),active=new Map(originalCacheStores.getStore());Object.assign(scope,{workspace,id,live:true,store,kind:"reader",partition,active:0});issuedStores.set(store,scope);reservationStores.set(storage,scope);owners.push(scope);rememberObservationRootV1(image.root,id);active.set(image.root,scope);active.set(key,scope);const frame=consumerFrame(scope,control);return originalCacheStores.run(active,()=>consumerFrames.run(frame,async()=>{const value=await settleConsumers(frame,()=>body(store,control));await store.verify();return value;}));
+ const temporary=requireNativeStoragePathV1(image.root,join(image.root,"tmp"));await profilePhaseV1("nx.store.body-recheck",()=>storage.recheck());mkdirSync(temporary,{recursive:true});checkResourceLeaseControl(control);const identity=repositoryCacheStoreIdentityV1(image),scope={}as StoreOwner,store:RepositoryCacheStoreV1=Object.freeze({root:image.root,storage,control,invocation,image,recheck:async()=>{requireOwner(scope);requireRepositoryCacheStoreIdentityV1(image,identity);},verify:async()=>{const end=startNativeStorageVerificationPhaseV1("storeIdentity");try{requireOwner(scope);requireRepositoryCacheStoreIdentityV1(image,identity);}finally{end?.();}await storage.recheck();},environment:Object.freeze({...scriptInvocationEnvironment(invocation,process.env),...(id==="diagnostics"?{SEMIO_DIAGNOSTIC_DIRECTORY:temporary}:{}),TMPDIR:temporary,TMP:temporary,TEMP:temporary})}),active=new Map(originalCacheStores.getStore());Object.assign(scope,{workspace,id,live:true,store,kind:"reader",partition,active:0});issuedStores.set(store,scope);reservationStores.set(storage,scope);owners.push(scope);rememberObservationRootV1(image.root,id);active.set(image.root,scope);active.set(key,scope);const frame=consumerFrame(scope,control);return originalCacheStores.run(active,()=>consumerFrames.run(frame,async()=>{const value=await settleConsumers(frame,()=>body(store,control));await store.verify();return value;}));
 }
 
 /** 🏪️ Retains the exact image until canonical accepted work and private consumer descendants settle. */

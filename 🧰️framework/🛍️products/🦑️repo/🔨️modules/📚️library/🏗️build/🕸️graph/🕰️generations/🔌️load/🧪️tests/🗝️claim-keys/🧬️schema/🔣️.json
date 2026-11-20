@@ -6,6 +6,6 @@
  "properties": {
   "version": {"const": 1},
   "equality": {"type": "object", "additionalProperties": false, "required": ["seeds"], "properties": {"seeds": {"type": "integer", "minimum": 1}}},
-  "memory": {"type": "object", "additionalProperties": false, "required": ["owners", "sharedRows", "foundRows", "maximumInsertionsPerRow"], "properties": {"owners": {"type": "integer", "minimum": 10}, "sharedRows": {"type": "integer", "minimum": 100}, "foundRows": {"type": "integer", "minimum": 1}, "maximumInsertionsPerRow": {"type": "integer", "minimum": 1}}}
+  "memory": {"type": "object", "additionalProperties": false, "required": ["owners", "sharedRows", "foundRows", "maximumInsertionsPerRow", "maximumListPasses"], "properties": {"owners": {"type": "integer", "minimum": 10}, "sharedRows": {"type": "integer", "minimum": 100}, "foundRows": {"type": "integer", "minimum": 1}, "maximumInsertionsPerRow": {"type": "integer", "minimum": 1}, "maximumListPasses": {"type": "integer", "minimum": 1}}}
  }
 }

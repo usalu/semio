@@ -66,7 +66,7 @@ async fn the_window_shows_the_configured_view_else_the_first_vertical_one() {
 #[semio_framework_async_macros::async_test]
 async fn a_plane_beside_the_model_cuts_nothing() {
     let (mut snapshot, _) = demo();
-    snapshot.views.insert("v-beside".into(), View::through("bldg-1", "Beside", ViewKind::Section, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane { start: Point2 { x: -1.0, y: 20.0 }, end: Point2 { x: 9.0, y: 20.0 } }));
+    snapshot.views.cold_insert("v-beside".into(), View::through("bldg-1", "Beside", ViewKind::Section, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane { start: Point2 { x: -1.0, y: 20.0 }, end: Point2 { x: 9.0, y: 20.0 } }));
     let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     assert_eq!(inference.view_linework["v-beside"].lines.area_of(PlanKind::SectionCut), 0.0);
 }

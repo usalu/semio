@@ -172,7 +172,8 @@
         "pendingBuild": false,
         "complete": true
       },
-      "outcome": "complete",
+      "outcome": "yield",
+      "deferredOutcome": "complete",
       "fuelRemaining": 0
     },
     {

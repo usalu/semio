@@ -1,0 +1,9 @@
+{
+  "variant": "note",
+  "app": "s.note.note@1/*#editor",
+  "ports": {
+    "react": 6080,
+    "wgpu": 6180
+  },
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🗒️note"
+}

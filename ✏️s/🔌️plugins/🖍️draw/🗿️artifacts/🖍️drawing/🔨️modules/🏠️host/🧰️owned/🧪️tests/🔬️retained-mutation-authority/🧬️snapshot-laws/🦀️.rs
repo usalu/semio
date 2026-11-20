@@ -89,12 +89,12 @@ fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_gr
                 refused.push(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(1), maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(1), maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(1), ..grant });
             }
             for denied in refused {
-                let (step, heap) = observe(|| owner.step(denied).unwrap());
+                let (step, heap) = observe(|| close_decoded(&mut owner, denied).unwrap());
                 assert_eq!(step.progress(), RetainedCloneProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(owner.next_grant().unwrap(), grant);
             }
-            let (step, heap) = observe(|| owner.step(grant).unwrap());
+            let (step, heap) = observe(|| close_decoded(&mut owner, grant).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -125,19 +125,19 @@ fn paged_native_drawing_snapshot_decoded_field_close_admits_payload_and_physical
             let (copy, capacity, release) = (demand.copy_bytes, demand.capacity_bytes, demand.release_bytes);
             assert!(copy + capacity + release <= 4096);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: demand.depth.max(1) };
-            let (zero, heap) = observe(|| owner.step(RetainedCloneGrant::default()).unwrap());
+            let (zero, heap) = observe(|| close_decoded(&mut owner, RetainedCloneGrant::default()).unwrap());
             assert_eq!(zero.progress(), Default::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             if copy > 0 {
                 observed = true;
                 assert_eq!(copy, row["minimumCopyBytes"].as_u64().unwrap() as usize);
                 assert_eq!((capacity, release), (0, 0));
-                let (denied, heap) = observe(|| owner.step(RetainedCloneGrant { maximum_copy_bytes: copy - 1, maximum_capacity_bytes: 0, ..grant }).unwrap());
+                let (denied, heap) = observe(|| close_decoded(&mut owner, RetainedCloneGrant { maximum_copy_bytes: copy - 1, maximum_capacity_bytes: 0, ..grant }).unwrap());
                 assert_eq!(denied.progress(), Default::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(owner.demands().unwrap().copy_bytes, copy);
             }
-            let (step, heap) = observe(|| owner.step(grant).unwrap());
+            let (step, heap) = observe(|| close_decoded(&mut owner, grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if copy > 0 { assert_eq!(step.progress().released_bytes, 0); }
@@ -194,7 +194,31 @@ fn paged_native_drawing_snapshot_asset_cursor_preserves_actual_ordinal_and_zero_
 #[test]
 fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    use semio_framework_value::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
+    use semio_framework_value::{
+        RetainedAllocationEffect, RetirementDemand,
+        retained_clone::{OriginalEffectReply, RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep},
+    };
+    use semio_framework_value_clone_source_testing::{FixtureSource, admit_owned};
+    use semio_framework_value_testing_effect_bank::{EffectBank, Wallet};
+    use store::os_store::snapshot_read::settle_close_poll;
+
+    fn quote(demand: RetirementDemand) -> RetainedCloneGrant {
+        RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+    }
+
+    fn advance(source: &mut FixtureSource<DrawingSnapshot>, cursor: &mut <DrawingSnapshot as RetainedClone>::Cursor, body: usize, deny: bool) -> RetainedCloneStep {
+        source.with_bank(|original, bank| {
+            let selection = cursor.advance_selection(original, body, 4096).unwrap();
+            let mut grant = quote(selection.demand());
+            if deny { grant.maximum_items = 0; }
+            effect_from_bank(bank, grant, selection.work(), |effect: &mut RetainedAllocationEffect<'_>| {
+                let mut reply = None;
+                drop(cursor.advance_into(original, body, 4096, effect, OriginalEffectReply::borrow(&mut reply).unwrap()).unwrap());
+                reply.unwrap().unwrap()
+            })
+        }).unwrap()
+    }
+
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧰️owned/🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let mut input: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
@@ -203,70 +227,79 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     input["layers"][1]["children"][0]["id"] = serde_json::Value::String(format!("{text}\0"));
     input["layers"][1]["children"][0]["name"] = serde_json::Value::String(format!("{text}\0"));
     input["layers"][1]["children"][0]["content"] = serde_json::Value::String(format!("{text}\0"));
-    input["assets"] = serde_json::json!({text.clone(): {"mime":"image/png","data":text}});
+    input["assets"] = serde_json::json!({text.clone(): {"width":1, "height":1, "samples":[[0,0,0,255]]}});
     let gradients: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🔣️.json")).unwrap();
     let mut gradient = gradients[0]["after"].clone();
     let stops = gradient["stops"].as_array().unwrap();
     let repeated: Vec<serde_json::Value> = (0..law["repeat"].as_u64().unwrap() as usize).map(|index| stops[index % stops.len()].clone()).collect();
     gradient["stops"] = serde_json::Value::Array(repeated);
     input["layers"][0]["attributes"]["fill"] = gradient;
-    let source = RetainedCloneSource::from_authority(std::sync::Arc::new(serde_json::from_value::<DrawingSnapshot>(input.clone()).unwrap()), ());
+    let stock = RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 1<<24, maximum_capacity_bytes: 1<<24, maximum_release_bytes: 1<<24, maximum_depth: 128 };
+    let mut bank = EffectBank::new(Wallet::new(stock, 1<<26));
+    let value = serde_json::from_value::<DrawingSnapshot>(input).unwrap();
+    let (source, _) = admit_owned(&mut bank, value, (), stock).result.unwrap_or_else(|_| panic!("admit original Drawing fixture"));
+    let mut source = FixtureSource::from_admitted(source, bank).unwrap_or_else(|_| panic!("retain original Drawing fixture"));
     let before = serde_json::to_value(source.borrow().get()).unwrap();
-    let budget = law["bodyBytes"].as_u64().unwrap() as usize;
+    let body = law["bodyBytes"].as_u64().unwrap() as usize;
     let zero_bytes = law["constructorAllocationBytes"].as_u64().unwrap() as usize;
-    assert!(std::mem::size_of::<<DrawingSnapshot as RetainedClone>::Cursor>() <= budget);
+    assert!(std::mem::size_of::<<DrawingSnapshot as RetainedClone>::Cursor>() <= body);
     for pause in law["cancelAt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).chain([usize::MAX]) {
         let (mut cursor, allocation) = observe(DrawingSnapshot::retained_clone_cursor);
         assert!(!allocation.overflowed);
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (zero_bytes, zero_bytes));
-        let (zero, allocation) = observe(|| cursor.advance(source.borrow(), RetainedCloneGrant::default()).unwrap());
+
+        let (zero, allocation) = observe(|| advance(&mut source, &mut cursor, body, true));
         assert_eq!(zero.progress(), Default::default());
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
+
         let mut complete = false;
-        for turn in 0..100000 {
-            if turn == pause { break; }
-            let grant = drawing_snapshot_heap_grant(turn, budget);
-            let (result, allocation) = observe(|| cursor.advance(source.borrow(), grant));
-            let step = result.unwrap();
+        for _ in 0..pause.min(100_000) {
+            let grant = quote(cursor.advance_selection(source.borrow(), body, 4096).unwrap().demand());
+            let (step, allocation) = observe(|| advance(&mut source, &mut cursor, body, false));
             drawing_snapshot_heap_admission(step.progress(), grant, allocation);
             if matches!(step, RetainedCloneStep::Complete(_)) { complete = true; break; }
         }
         if pause == usize::MAX {
             assert!(complete);
-            let output = cursor.take().unwrap();
-            assert!(cursor.take().is_none());
+            let mut output = None;
+            let grant = quote(cursor.take_demand().unwrap());
+            let work = cursor.take_work_demand().unwrap();
+            source.with_bank(|_, bank| effect_from_bank(bank, grant, work, |effect| {
+                let mut reply = None;
+                drop(cursor.take(&mut output, effect, OriginalEffectReply::borrow(&mut reply).unwrap()).unwrap());
+                assert!(matches!(reply.unwrap().unwrap(), RetainedCloneStep::Complete(_)));
+            })).unwrap();
+            let output = output.expect("clone transfers its original candidate");
             assert_eq!(serde_json::to_value(&output).unwrap(), before);
-            let (retirement, allocation) = observe(|| ControlledRetirement::new(output));
-            let mut owner = retirement.unwrap();
-            assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-            for turn in 0..100000 {
-                let grant = drawing_snapshot_heap_grant(turn, budget);
-                let (result, allocation) = observe(|| owner.step(grant));
-                let step = result.unwrap();
-                drawing_snapshot_heap_admission(step.progress(), grant, allocation);
-                if matches!(step, RetainedCloneStep::Complete(_)) { break; }
-            }
-            assert!(owner.terminal_is_empty());
-            let (_, allocation) = observe(|| drop(owner));
-            assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
+            drain_snapshot(output);
         }
-        let (_, allocation) = observe(|| cursor.begin_close());
+        if !cursor.close_started() {
+            let grant = quote(cursor.begin_close_demand().unwrap());
+            let work = cursor.begin_close_work_demand().unwrap();
+            let (turn, allocation) = observe(|| effect_turn(grant, work, |effect| cursor.begin_close_paid(effect)));
+            drawing_snapshot_heap_admission(turn.result.unwrap(), grant, allocation);
+        }
+        let (zero, allocation) = observe(|| effect_turn(RetainedCloneGrant::default(), 0, |effect| settle_close_poll(cursor.close_selected(body, effect))));
+        assert_eq!(zero.unwrap().progress(), Default::default());
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        let (zero, allocation) = observe(|| cursor.close_granted(RetainedCloneGrant::default()).unwrap());
-        assert_eq!(zero.progress(), Default::default());
-        assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
-        for turn in 0..100000 {
-            let grant = drawing_snapshot_heap_grant(turn, budget);
-            let (result, allocation) = observe(|| cursor.close_granted(grant));
-            let step = result.unwrap();
-            drawing_snapshot_heap_admission(step.progress(), grant, allocation);
-            if matches!(step, RetainedCloneStep::Complete(_)) { break; }
+
+        for _ in 0..100000 {
+            if cursor.terminal_is_empty() { break; }
+            let grant = quote(cursor.close_demands(body).unwrap());
+            let work = cursor.close_work_demand(body).unwrap();
+            let (step, allocation) = observe(|| effect_turn(grant, work, |effect| settle_close_poll(cursor.close_selected(body, effect))));
+            drawing_snapshot_heap_admission(step.unwrap().progress(), grant, allocation);
         }
         assert!(cursor.terminal_is_empty());
         let (_, allocation) = observe(|| drop(cursor));
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(), before);
     }
+    for _ in 0..100_000 {
+        if source.terminal_is_empty() { break; }
+        source.close_once().unwrap();
+    }
+    assert!(source.terminal_is_empty());
 }
 
 use semio_framework_value_testing_allocator as _;

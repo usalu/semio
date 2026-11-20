@@ -175,8 +175,8 @@ fn solid(out: &mut Projection<'_, '_>, value: &WorkingSolid) -> Result<i64, Valu
         WorkingSolid::ImportedMesh { mesh_url } => {
             put(out, 8, &[Cell::Integer(id), Cell::Text(mesh_url)])?;
         }
-        WorkingSolid::ImportedSolid { solid_handle } => {
-            put(out, 9, &[Cell::Integer(id), Cell::Text(solid_handle)])?;
+        WorkingSolid::ImportedSolid { brep_pack } => {
+            put(out, 9, &[Cell::Integer(id), Cell::Text(brep_pack)])?;
         }
         WorkingSolid::Reference { reference_id } => {
             put(out, 10, &[Cell::Integer(id), Cell::Text(reference_id)])?;
@@ -295,7 +295,7 @@ fn read_solid(id: i64, rows: &mut Rows<'_>, c: &mut SqliteSnapshotControl<'_>) -
             WorkingSolid::Sphere { radius: scalar(row, 2, &ONE, c)? }
         }
         "importedMesh" => WorkingSolid::ImportedMesh { mesh_url: text(rows.one(8, id, c)?, 2, c)? },
-        "importedSolid" => WorkingSolid::ImportedSolid { solid_handle: text(rows.one(9, id, c)?, 2, c)? },
+        "importedSolid" => WorkingSolid::ImportedSolid { brep_pack: text(rows.one(9, id, c)?, 2, c)? },
         "reference" => WorkingSolid::Reference { reference_id: text(rows.one(10, id, c)?, 2, c)? },
         _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d unknown working solid")),
     })

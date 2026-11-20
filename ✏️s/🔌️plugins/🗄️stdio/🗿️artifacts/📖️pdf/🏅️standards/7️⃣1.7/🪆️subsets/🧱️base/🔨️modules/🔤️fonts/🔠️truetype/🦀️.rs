@@ -5,6 +5,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "🧵️outline/🦀️.rs"]
+mod outline;
+pub use outline::TrueTypeOutlineSegment;
+
 //#region 🔖️Reader
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn u16_at(data: &[u8], at: usize) -> Option<u16> {

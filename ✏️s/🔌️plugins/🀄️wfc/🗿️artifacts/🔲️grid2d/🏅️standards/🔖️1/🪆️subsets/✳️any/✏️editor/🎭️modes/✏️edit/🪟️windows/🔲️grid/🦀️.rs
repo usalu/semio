@@ -12,6 +12,8 @@
 
 use crate::editor::grid2d::window::{effective_camera, Grid2dWindowConfig};
 use crate::schema::snapshot::Grid2dSnapshot;
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionArgOption;
 use semio_plugin::ActionDefinition;
 use semio_plugin::ActionKind;
 use semio_plugin::BuiltNode;
@@ -90,6 +92,7 @@ pub fn definition() -> WindowKindDefinition {
     actions.extend(canvas_actions());
     for action in &mut actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+        action.args = action_args(&action.id);
     }
     WindowKindDefinition {
         initial_utility_id: None,
@@ -107,6 +110,69 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
+    }
+}
+/// 📝️ The staged form one verb declares, shared by every window kind that declares the verb. It is attached on the
+/// window kind's own action because the app builder's `action_args` searches only app-scope actions and silently
+/// drops what it cannot find.
+pub fn action_args(action_id: &str) -> Vec<ActionArgDef> {
+    let cell = || vec![
+        ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0),
+        ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0),
+    ];
+    let tile = |id: &'static str| ActionArgDef::text(id, LocalizedLabel::native("Tile", "Kachel")).required();
+    let weight = || ActionArgDef::number("weight", LocalizedLabel::native("Weight", "Gewicht")).default_value(&1.0);
+    match action_id {
+        "unpin-cell" | "mask-cell" | "unmask-cell" | "pick-cell" => cell(),
+        "create-tile" => vec![ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required(), weight()],
+        "delete-tile" => vec![tile("id")],
+        "change-tile-weight" => vec![tile("id"), weight()],
+        "change-tile-media" => vec![tile("id"), ActionArgDef::text("mediaJson", LocalizedLabel::native("Media JSON", "Medien-JSON")).required()],
+        "create-rule" => vec![
+            ActionArgDef::text("id", LocalizedLabel::native("Rule", "Regel")).required(),
+            ActionArgDef::text("tileAId", LocalizedLabel::native("Tile A", "Kachel A")).required(),
+            ActionArgDef::text("tileBId", LocalizedLabel::native("Tile B", "Kachel B")).required(),
+            ActionArgDef::select("direction", LocalizedLabel::native("Direction", "Richtung"), vec![
+                ActionArgOption::new("RIGHT", LocalizedLabel::native("East", "Osten")),
+                ActionArgOption::new("LEFT", LocalizedLabel::native("West", "Westen")),
+                ActionArgOption::new("BOTTOM", LocalizedLabel::native("South", "Süden")),
+                ActionArgOption::new("TOP", LocalizedLabel::native("North", "Norden")),
+            ]).required().default_value(&"RIGHT"),
+            ActionArgDef::toggle("allowed", LocalizedLabel::native("Allowed", "Erlaubt")).default_value(&true),
+        ],
+        "delete-rule" => vec![ActionArgDef::text("id", LocalizedLabel::native("Rule", "Regel")).required()],
+        "resize-grid" => vec![
+            ActionArgDef::number("width", LocalizedLabel::native("Columns", "Spalten")).required().default_value(&16),
+            ActionArgDef::number("height", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&16),
+        ],
+        "change-cell-size" => vec![
+            ActionArgDef::number("cellWidth", LocalizedLabel::native("Cell Width", "Zellbreite")).required().default_value(&1.0),
+            ActionArgDef::number("cellHeight", LocalizedLabel::native("Cell Height", "Zellhöhe")).required().default_value(&1.0),
+        ],
+        "change-periodicity" => vec![
+            ActionArgDef::toggle("periodicX", LocalizedLabel::native("Wrap Horizontally", "Horizontal umlaufen")).default_value(&false),
+            ActionArgDef::toggle("periodicY", LocalizedLabel::native("Wrap Vertically", "Vertikal umlaufen")).default_value(&false),
+        ],
+        "change-seed" => vec![ActionArgDef::number("seed", LocalizedLabel::native("Seed", "Startwert")).required().default_value(&0)],
+        "pin-cell" => vec![
+            ActionArgDef::number("x", LocalizedLabel::native("Column", "Spalte")).required().default_value(&0),
+            ActionArgDef::number("y", LocalizedLabel::native("Row", "Zeile")).required().default_value(&0),
+            tile("tileId"),
+        ],
+        "set-active-tile" => vec![tile("tileId")],
+        "setActiveExample" => vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+            ActionArgOption::new(crate::examples::grid2d::pipes::ID, crate::examples::grid2d::pipes::label()),
+            ActionArgOption::new(crate::examples::grid2d::terrain::ID, crate::examples::grid2d::terrain::label()),
+        ]).default_value(&crate::examples::grid2d::pipes::ID)],
+        "set-camera" => vec![
+            ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(&0.0),
+            ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(&0.0),
+            ActionArgDef::number("zoom", LocalizedLabel::native("Zoom", "Zoom")).default_value(&1.0),
+        ],
+        "set-grid-visible" => vec![ActionArgDef::toggle("visible", LocalizedLabel::native("Visible", "Sichtbar")).default_value(&true)],
+        "set-grid-snap-enabled" => vec![ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(&true)],
+        "set-grid-factor" => vec![ActionArgDef::number("factor", LocalizedLabel::native("Grid Factor", "Rasterfaktor")).required().default_value(&1.0)],
+        _ => Vec::new(),
     }
 }
 //#endregion 🔖️Definition

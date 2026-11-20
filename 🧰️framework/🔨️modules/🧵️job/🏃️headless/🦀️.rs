@@ -196,7 +196,7 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
             let poll=self.turn(|cx,_,_,_,session|session.as_mut().expect("admitted headless worker").step_on_original_caller(cx))?;
             let caller=self.caller.as_ref().expect("original headless caller");
             if caller.receipt()==before&&caller.fuel_remaining()==fuel_before {stagnant+=1;} else {stagnant=0;}
-            if stagnant>=16 {return Err(format!("{}-original-work-blocked",self.site.label));}
+            if stagnant>=16 {return Err(format!("{}-{}",self.site.label,if caller.business_stock_binds() {"retained-stock-exhausted"} else {"original-work-blocked"}));}
             if !matches!(poll,WorkerJobPoll::Outcome|WorkerJobPoll::Terminal) {continue;}
             let session=self.session.as_mut().expect("admitted headless worker");
             if !session.checkout_outcome() {continue;}

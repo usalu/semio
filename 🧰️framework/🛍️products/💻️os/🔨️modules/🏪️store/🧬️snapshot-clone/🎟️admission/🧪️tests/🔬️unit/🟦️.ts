@@ -37,6 +37,7 @@ test("snapshot clone source admission retains every owner until its exact grante
   } finally { db.close(); }
   const source = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
   expect(source.includes("fn begin_demand(")).toBe(true);
-  expect(source.includes("RetainedCloneSource::admit_owned")).toBe(true);
+  expect(source.includes("RetainedCloneSource::<M>::admission_owned(mutation,authority)")).toBe(true);
+  expect(source.includes("admission.take_output(&mut self.mutation,")).toBe(true);
   expect(source.includes("RetainedCloneSource::from_authority")).toBe(false);
 });

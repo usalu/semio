@@ -118,6 +118,28 @@ test("reversing quadratic retains the ideal segment area despite renderer cusp v
  expect(max).toBeLessThanOrEqual(8);
 });
 
+test("painted paths close their actual stroke before producing coverage or pixels",()=>{
+ for(const row of strokeCases){
+  const source=cases.find(candidate=>candidate.name===row.source)!;
+  for(const grant of [1,7,4096]){
+   const job=new PathRasterJob(rasterInput(source.input));
+   let sawStrokeRetirement=false,done=false;
+   for(let turn=0;turn<2000000;turn++){
+    const progress=job.advance(1,stock(1));
+    if(progress.phase==="strokeCleanup"){
+     sawStrokeRetirement=true;
+     expect(()=>job.result()).toThrow();
+    }
+    if(progress.done){done=true;break;}
+   }
+   expect(done).toBe(true);
+   expect(sawStrokeRetirement).toBe(row.retiresStroke);
+   expect([...job.result().pixels]).toEqual(source.expected);
+   drain(job.intoRetirement().job,grant);
+  }
+ }
+});
+
 test("painted stroke cleanup refuses invalid grants and interrupted output",()=>{
  const job=new PathRasterJob(rasterInput(cases[15]!.input));for(let at=0;at<40;at++)job.advance(1,stock(1));const moved=job.intoRetirement();for(const grant of [0,-1,.5,NaN,Infinity])expect(()=>moved.job.advance(grant,stock(1))).toThrow(/grant/);drain(moved.job);expect(moved.output).toBeNull();
 });

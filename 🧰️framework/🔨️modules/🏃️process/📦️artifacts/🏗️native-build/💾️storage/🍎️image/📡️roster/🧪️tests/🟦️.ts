@@ -62,7 +62,7 @@ def gate(case):
         fulls+=1;verified=at
     return {"fulls":fulls}
 fixture=json.load(open(sys.argv[1]))
-print(json.dumps({"cases":[simulate(c) for c in fixture["cases"]],"gate":[gate(c) for c in fixture["gate"]]}))
+print(json.dumps({"cases":[simulate(c) for c in fixture["cases"]],"gate":[gate(c) for c in fixture["gate"]],"refusals":[2+int(c["failure"]=="full") for c in fixture["gateRefusals"]]}))
 `;
 const oracle=python?JSON.parse(spawnSync(python,["-I","-c",oracleSource,fileURLToPath(new URL("./🔣️.json",import.meta.url))],{encoding:"utf8"}).stdout||"null"):null;
 
@@ -78,6 +78,22 @@ for(const[index,row]of fixture.gate.entries())test("native physical gate: "+row.
  expect(gate.fulls()).toBe(row.fulls);
  expect(cheap).toBe(row.runs.length);
  if(oracle)expect({fulls:gate.fulls()}).toEqual(oracle.gate[index]);
+});
+
+for(const row of fixture.gateRefusals)test("native physical gate rechecks after "+row.failure+" refusal with earlier work "+row.startBeforeRefusal,async()=>{
+ let clock=0,release!:()=>void;
+ const gate=createNativePhysicalGateV1(()=>clock),barrier=new Promise<void>(done=>{release=done;});
+ const first=gate.run(500,()=>{},()=>row.startBeforeRefusal?barrier:Promise.resolve());
+ if(!row.startBeforeRefusal)await first;
+ clock=1;
+ const fail=()=>{throw Error("mapping changed");};
+ await expect(gate.run(0,row.failure==="identity"?fail:()=>{},async()=>fail())).rejects.toThrow("mapping changed");
+ release();await first;
+ clock=2;
+ const final=gate.run(500,()=>{},async()=>{});
+ await final;
+ expect(gate.fulls()).toBe(row.expectedFulls);
+ if(oracle)expect(gate.fulls()).toBe(oracle.refusals[fixture.gateRefusals.indexOf(row)]);
 });
 
 test("native physical gate: concurrent runs inside the window join one full verification",async()=>{

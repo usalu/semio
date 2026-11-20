@@ -9,8 +9,8 @@ use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema:
 
 fn framed() -> ModelSnapshot {
     let mut snapshot = room();
-    snapshot.columns.insert("c-1".into(), Column { storey: "st-ground".into(), column_type: "col-30".into(), position: Point2 { x: 2.0, y: 2.0 }, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: "Column".into() });
-    snapshot.curtain_walls.insert(
+    snapshot.columns.cold_insert("c-1".into(), Column { storey: "st-ground".into(), column_type: "col-30".into(), position: Point2 { x: 2.0, y: 2.0 }, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: "Column".into() });
+    snapshot.curtain_walls.cold_insert(
         "cw-1".into(),
         CurtainWall {
             storey: "st-ground".into(),

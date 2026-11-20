@@ -177,7 +177,7 @@ async fn a_column_row_is_the_array_of_its_first_column_and_a_beam_the_copy_of_it
     let row = ["B", "C", "D", "E", "F"].map(|label| format!("c-0-{label}1"));
     let mut bare = model.clone();
     for id in &row {
-        bare.columns.remove(id);
+        bare.columns.cold_remove(id);
     }
     let array = ModelMutation::ArrayElements(ArrayElements { ids: vec!["c-0-A1".into()], prefix: "row".into(), pattern: ArrayPattern::Linear { count: 5, spacing: Point2 { x: 6.0, y: 0.0 } } });
     let arrayed = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&bare, &array).expect("the row is arrayed");

@@ -6,7 +6,7 @@ import { meshAssetTransportUrl } from "@semio-tech/assets/mesh";
 import { MESH_DELIVERY_CATALOG } from "@semio-tech/assets/mesh/catalog";
 import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows } from "../../🖼️reference-image-decode/🟦️.ts";
 import { requestPageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
-import { browserAssetFailureDisposition } from "../🧩️asset-failure/🟦️.ts";
+import { BrowserAssetTransportFailure, browserAssetFailureDisposition, browserAssetHttpStatusRetryable, browserAssetNetworkStep, retryBrowserAssetResponse, waitForBrowserAssetRetry } from "../🧩️asset-failure/🟦️.ts";
 import { fault } from "../🧯️close-and-fault/🟦️.ts";
 import type { BrowserFrameUiMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 
@@ -14,6 +14,7 @@ type AssetRequest = {
   readonly available: boolean;
   readonly url?: string;
   readonly referenceImage?: boolean;
+  readonly world?: boolean;
   readonly responseByteCapacity?: number;
   readonly pageByteCapacity?: number;
 };
@@ -22,6 +23,53 @@ export function scheduleAssetPump(): void {
   if (!assetCancellation.pollAdmitted() || assetPumping || !runtime || closed || closing || failed || quarantined) return;
   setAssetPumping(true);
   setTimeout(() => void pumpAsset(), 0);
+}
+
+async function streamAssetResponse(url: string, referenceImage: boolean, signal: AbortSignal, responseCurrent: () => void): Promise<Uint8Array<ArrayBuffer>[]> {
+  const response = await monitoredSuspension("asset-fetch", () => browserAssetNetworkStep(() => fetch(url, { signal })));
+  responseCurrent();
+  if (!response.ok || !response.body) {
+    await response.body?.cancel().catch(() => {});
+    throw new BrowserAssetTransportFailure(`asset-fetch-status: ${response.status}`, browserAssetHttpStatusRetryable(response.status));
+  }
+  const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));
+  const declared = declaredHeader === null ? undefined : Number(declaredHeader);
+  if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-length: Content-Length exceeded fixed aggregate credits");
+  let reserved = false;
+  for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !reserved; attempt++) {
+    responseCurrent();
+    reserved = ownedStep("asset-response-reserve", () => runtime!.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
+    if (!reserved) {
+      await macrotask();
+      responseCurrent();
+    }
+  }
+  if (!reserved) throw new Error("asset-reserve-busy: the renderer never freed its interaction state for the response credits");
+  const reader = ownedStep("asset-stream-reader", () => response.body!.getReader({ mode: "byob" }) as ReadableStreamBYOBReader);
+  let received = 0;
+  const referenceChunks: Uint8Array<ArrayBuffer>[] = [];
+  try {
+    for (;;) {
+      responseCurrent();
+      const pageOwner = ownedStep("asset-page-owner", () => new Uint8Array(ASSET_RESPONSE_PAGE_BYTES));
+      const chunk = await monitoredSuspension("asset-stream-read", () => browserAssetNetworkStep(() => reader.read(pageOwner)));
+      responseCurrent();
+      if (chunk.done) break;
+      const bytes = chunk.value;
+      if (bytes.byteLength === 0 || bytes.byteLength > ASSET_RESPONSE_PAGE_BYTES) throw new Error("asset-response-page: stream violated fixed BYOB page credits");
+      received += bytes.byteLength;
+      if (received > (declared ?? ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-overflow: stream exceeded admitted bytes");
+      responseCurrent();
+      ownedStep("asset-page", () => runtime!.pushAssetResponsePage(bytes));
+      if (referenceImage) referenceChunks.push(Uint8Array.from(bytes));
+      await macrotask();
+      responseCurrent();
+    }
+  } finally {
+    ownedStep("asset-stream-release", () => reader.releaseLock());
+  }
+  if (declared !== undefined && received !== declared) throw new BrowserAssetTransportFailure("asset-response-short-read: stream ended before declared bytes", true);
+  return referenceChunks;
 }
 
 async function pumpAsset(): Promise<void> {
@@ -38,43 +86,24 @@ async function pumpAsset(): Promise<void> {
     responseController = new AbortController();
     setAssetAbort(responseController);
     const responseCurrent = (): void => assertBrowserAssetResponseContinuation(responseController!, () => ownedStep("asset-response-current", () => runtime!.assetResponseCurrent()));
-    const response = await monitoredSuspension("asset-fetch", () => fetch(publishedPageUrl(meshAssetTransportUrl(request.url!, MESH_DELIVERY_CATALOG)), { signal: responseController!.signal }));
-    responseCurrent();
-    if (!response.ok || !response.body) throw new Error(`asset-fetch-status: ${response.status}`);
-    const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));
-    const declared = declaredHeader === null ? undefined : Number(declaredHeader);
-    if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-length: Content-Length exceeded fixed aggregate credits");
-    let reserved = false;
-    for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !reserved; attempt++) {
-      responseCurrent();
-      reserved = ownedStep("asset-response-reserve", () => runtime!.reserveAssetResponse(declared ?? ASSET_RESPONSE_BYTE_CAPACITY));
-      if (!reserved) {
-        await macrotask();
-        responseCurrent();
-      }
-    }
-    if (!reserved) throw new Error("asset-reserve-busy: the renderer never freed its interaction state for the response credits");
-    const reader = ownedStep("asset-stream-reader", () => response.body!.getReader({ mode: "byob" }) as ReadableStreamBYOBReader);
-    let received = 0;
-    const referenceChunks: Uint8Array<ArrayBuffer>[] = [];
-    for (;;) {
-      responseCurrent();
-      const pageOwner = ownedStep("asset-page-owner", () => new Uint8Array(ASSET_RESPONSE_PAGE_BYTES));
-      const chunk = await monitoredSuspension("asset-stream-read", () => reader.read(pageOwner));
-      responseCurrent();
-      if (chunk.done) break;
-      const bytes = chunk.value;
-      if (bytes.byteLength === 0 || bytes.byteLength > ASSET_RESPONSE_PAGE_BYTES) throw new Error("asset-response-page: stream violated fixed BYOB page credits");
-      received += bytes.byteLength;
-      if (received > (declared ?? ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-overflow: stream exceeded admitted bytes");
-      responseCurrent();
-      ownedStep("asset-page", () => runtime!.pushAssetResponsePage(bytes));
-      if (request.referenceImage) referenceChunks.push(Uint8Array.from(bytes));
-      await macrotask();
-      responseCurrent();
-    }
-    ownedStep("asset-stream-release", () => reader.releaseLock());
-    if (declared !== undefined && received !== declared) throw new Error("asset-response-short-read: stream ended before declared bytes");
+    const url = publishedPageUrl(meshAssetTransportUrl(request.url, MESH_DELIVERY_CATALOG));
+    const signal = responseController.signal;
+    const referenceChunks = await retryBrowserAssetResponse(
+      () => streamAssetResponse(url, request.referenceImage === true, signal, responseCurrent),
+      request.world ? async delayMs => {
+        const attempts = ASSET_RESPONSE_BYTE_CAPACITY / ASSET_RESPONSE_PAGE_BYTES + ASSET_SEAL_ATTEMPTS;
+        for (let attempt = 0; attempt < attempts; attempt++) {
+          responseCurrent();
+          if (ownedStep("asset-response-retry", () => runtime!.resetWorldAssetResponseStep())) {
+            await monitoredSuspension("asset-transport-retry", () => waitForBrowserAssetRetry(delayMs, signal));
+            responseCurrent();
+            return;
+          }
+          await macrotask();
+        }
+        throw new Error("asset-response-retry: partial response handback did not complete");
+      } : undefined,
+    );
     if (request.referenceImage) {
       responseCurrent();
       const source = ownedStep("reference-image-source", () => concatenateReferenceImageSource(referenceChunks));
@@ -146,7 +175,7 @@ async function pumpAsset(): Promise<void> {
         if (activeRequest && disposition === "missing") {
           let rejected = false;
           for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !rejected; attempt++) {
-            rejected = ownedStep("asset-reject", () => runtime!.rejectAssetResponse());
+            rejected = ownedStep("asset-reject", () => runtime!.rejectAssetResponse(error instanceof BrowserAssetTransportFailure && error.retryable));
             if (!rejected) await macrotask();
           }
           if (!rejected) ownedStep("asset-abort", () => runtime!.abortAssetResponse());

@@ -591,7 +591,8 @@
       "name": "@semio-tech/s-fem-composition-tests",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/framework-ui-viewport-ts": "workspace:*"
+        "@semio-tech/framework-ui-viewport-ts": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*"
       },
       "devDependencies": {
         "@semio-tech/fem-2d": "workspace:*",
@@ -707,7 +708,8 @@
     "../✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript": {
       "name": "@semio-tech/s-dev-catalog-ts",
       "dependencies": {
-        "@semio-tech/plugin-registry-publication": "workspace:*"
+        "@semio-tech/plugin-registry-publication": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*"
       },
       "devDependencies": {
         "@semio-tech/framework-manifest": "workspace:*"

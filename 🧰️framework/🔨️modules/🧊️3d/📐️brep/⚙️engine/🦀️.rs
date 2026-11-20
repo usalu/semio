@@ -5,19 +5,27 @@
 //! `BrepKernel` trait, the mesh exchange and the standalone shape value live in `semio-framework-3d-brep-kernel-contract`,
 //! `-mesh-io` and `-shape-value`; this crate re-exports exactly the items its clients name.
 
-use std::collections::{HashMap};
-#[cfg(test)] use std::collections::{BTreeMap};
+use std::collections::HashMap;
+#[cfg(test)] use std::collections::BTreeMap;
 
-pub use semio_framework_3d_brep_mesh_io::{mesh_data_from_mesh_transfer, MeshImportCursor, MeshImportStep, PendingMutations};
+pub use semio_framework_3d_brep_mesh_io::{export_glb_via_tessellation, import_glb_via_obj, mesh_data_from_mesh_transfer, GlbBridgeError, MeshImportCursor, MeshImportStep, PendingMutations};
+pub use semio_framework_3d_brep_mesh_io::{MeshDecode, ObjDecode, StlDecode};
+pub use semio_framework_3d_brep_mesh_io::{MeshTextExport, MeshTextFormat};
+#[path = "📥️mesh-publication/🦀️.rs"]
+mod mesh_publication;
+pub use mesh_publication::MeshPublication;
 
 use semio_framework_3d_brep_representation::contract::*;
 
 #[path = "🚚️shape-exchange/🦀️.rs"]
 mod shape_exchange;
 pub use semio_framework_3d_brep_shape_value::{ImportedShape, ShapeComponent, ShapeRoot, ShapeTessellationJob, ShapeValue, ShapeWire};
-pub use semio_framework_3d_brep_kernel_contract::{BrepError, BrepKernel, BrepTopology, ClosestPoint, GeometryHandle, GeometryKind, SolidFaceLoops};
+pub use semio_framework_3d_brep_kernel_contract::{BrepError, BrepKernel, BrepOperation, BrepTopology, ClosestPoint, GeometryHandle, GeometryKind, SolidFaceLoops};
 use semio_framework_3d_brep_kernel_contract::map_err;
 
+pub use semio_framework_3d_brep_construction::primitives::{BoxSectionDraft, BoxSectionPolygon};
+pub use semio_framework_3d_brep_native_registry::{BoxShellDraft, HullDraft, LoftDraft, LoftPlan, PlanarExtrusion};
+pub use semio_framework_3d_brep_boolean::BooleanOp as BooleanOperation;
 use semio_framework_3d_brep_boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
 use semio_framework_3d_brep_construction::euler::make_vertex;
 use semio_framework_3d_brep_intersect::intersect_curve_curve;
@@ -31,7 +39,7 @@ use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_face, cl
 use semio_framework_3d_brep_tessellation::TessellationJob;
 #[cfg(test)] use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_validation::{issue_reaches, validate_body};
-use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId, SolidId};
 use {semio_framework_3d_brep_curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, interpolate_curve, ParamMethod}, semio_framework_3d_brep_surface::surface_ops::{coons_patch_nurbs, interpolate_surface_grid}};
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::{KernelError, ValidationIssue};
@@ -50,27 +58,41 @@ pub mod retirement;
 
 // #region 🔖️Types
 
-use semio_framework_3d_brep_representation::arena::ShellId;
 use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
 use semio_framework_3d_brep_representation::topology::EntityRef;
 
 #[path = "🧠️brep-session-state/🦀️.rs"]
 mod brep_session_state;
-use brep_session_state::Entity;
 pub use brep_session_state::{Brep, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep};
 
-#[path = "🧾️conversions-and-registry/🦀️.rs"]
-mod conversions_and_registry;
-use conversions_and_registry::{entity_roots, entity_tag, evec, label_of_entity, pnt, require_direction, require_finite_scalar, require_finite_vector, require_positive_size, require_scale_factor, vec3};
+use semio_framework_3d_brep_native_registry::{analytic_arc_recipe, BrepRegistry, Entity, SolidProvenance, entity_roots, entity_tag, evec, label_of_entity, pnt, require_direction, require_finite_scalar, require_finite_vector, require_positive_size, require_scale_factor, vec3};
+pub use semio_framework_3d_brep_native_registry::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanPreparation, BorePreviewSource, BoxFinish, HelixWireRecipe, PolygonWirePublication, PolygonWireRecipe, PolygonFacePublication, ConicFacePublication, CuboidSew, PrismDraft, SolidPublication, VertexPublication};
+
+#[path = "📮️native-publication/🦀️.rs"]
+mod native_publication;
 
 #[path = "🧱️primitive-and-curve-constructors/🦀️.rs"]
 mod primitive_and_curve_constructors;
+
+#[path = "🖼️primitive-preview/🦀️.rs"]
+mod primitive_preview;
+pub use primitive_preview::PrimitivePreviewJob;
+
+#[path = "📦️planar-volume/🦀️.rs"]
+mod planar_volume;
+pub use planar_volume::{PlanarMeasureJob, WireLengthJob};
+pub use semio_framework_3d_brep_construction::primitives::SolidPrimitive;
 
 #[path = "🔀️boolean-transform-and-copy/🦀️.rs"]
 mod boolean_transform_and_copy;
 
 #[path = "🔍️intersection-evaluation-and-measure/🦀️.rs"]
 mod intersection_evaluation_and_measure;
+pub use intersection_evaluation_and_measure::PlanarClosestJob;
+
+#[path = "📐️solid-pattern/🦀️.rs"]
+mod solid_pattern;
+pub use solid_pattern::{SolidPatternPublication, SolidPatternRecipe};
 
 #[path = "🩺️healing-exchange-and-tessellation/🦀️.rs"]
 mod healing_exchange_and_tessellation;
@@ -104,7 +126,7 @@ mod retention_tests;
 // #region 🔖️OperationJobs
 #[path = "⏱️operation-jobs/🦀️.rs"]
 mod operation_jobs;
-pub use operation_jobs::{BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationProgress, BrepOperationStep};
+pub use operation_jobs::{BrepOperationAdmission, BrepOperationJob, BrepOperationProgress, BrepOperationStep};
 // #endregion 🔖️OperationJobs
 
 // #region 🔖️AnalysisSession
@@ -120,3 +142,13 @@ mod tests;
 #[cfg(test)]
 pub(crate) use semio_framework_3d_testing_support as test_support;
 //#endregion 🧪️TestSupport
+
+pub use semio_framework_3d_brep_native_registry::{CompoundPublication, TopologyAlias, TopologyList, TopologySelection};
+
+#[path = "🧭️topology-reach/🦀️.rs"]
+mod topology_reach;
+pub use topology_reach::{NativeTopologyReach, PreviewReach, ReachedTopology};
+
+#[path = "🩺️validation-report/🦀️.rs"]
+mod validation_report;
+pub use validation_report::NativeValidationReport;

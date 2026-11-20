@@ -31,6 +31,39 @@
     }
   },
   "$defs": {
+    "BootstrapRetirementSourceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "retired"],
+      "properties": {
+        "mode": {"enum": ["retarget", "replace-ancestor", "replace-native-target", "parent-sibling"]},
+        "retired": {"type": "boolean"}
+      }
+    },
+    "BootstrapPressureRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "purpose", "pointerNames", "capsules", "publishedOriginals", "retainedReferences", "ageEligible", "firstRejection"],
+      "properties": {
+        "version": {"const": 1},
+        "purpose": {"const": "current-dependency-bootstrap-pressure-refusal"},
+        "pointerNames": {"type": "integer", "minimum": 0, "maximum": 24},
+        "capsules": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "publishedOriginals": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "retainedReferences": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "ageEligible": {"type": "integer", "minimum": 0, "maximum": 16},
+        "firstRejection": {"enum": ["unqualified-pointer-roster", "no-payload-capsules", "published-original", "canonical-or-referenced", "pressure-age", "capsule-roster", "capsule-records", "original-payload-anchor", "receipt-settlement-age", "published-or-ready", "payload-identity", "payload-roster", "member-slots"]}
+      }
+    },
+    "BootstrapCapsulePressureCase": {
+      "type": "object",
+      "required": ["mode", "admit"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["owned", "published-generation", "wrong-intent", "replaced-payload", "incomplete", "ready", "late-settlement", "partially-removed", "payload-removed"]},
+        "admit": {"type": "boolean"}
+      }
+    },
     "SourceFenceMismatch": {
       "type": "object",
       "additionalProperties": false,
@@ -1158,6 +1191,13 @@
         "mode": {
           "enum": [
             "valid",
+            "canonical-mixed",
+            "preserving-canonical-mixed",
+            "preserving-canonical-source-drift",
+            "preserving-canonical-target-drift",
+            "preserving-canonical-leading-drift",
+            "preserving-canonical-leading-cancel",
+            "borrowed-provider",
             "reversed-plans",
             "binding-unknown-after-effect",
             "installer-second",
@@ -3654,6 +3694,7 @@
         "effect": {
           "enum": [
             "valid",
+            "mixed-chunks",
             "unknown-role",
             "cancelled",
             "cancel-at-progress",
@@ -3666,6 +3707,21 @@
         },
         "accepted": {
           "type": "boolean"
+        },
+        "extents": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bytes", "fill", "sha256"],
+            "properties": {
+              "bytes": {"type": "integer", "minimum": 0, "maximum": 131073},
+              "fill": {"type": "integer", "minimum": 0, "maximum": 255},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            }
+          }
         }
       }
     },
@@ -4913,6 +4969,25 @@
         "authority": false,
         "readiness": false,
         "contentObserved": false
+      }
+    },
+    "SourceOwnerReferenceReceipt": {
+      "description": "The understood retained reference fields. Physical binding and generation custody are separate, and this record grants no readiness.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "purpose", "scope", "generation", "ownerRelationSha256", "groupSha256", "recipeSha256", "members", "bindings", "ownerReferences"],
+      "properties": {
+        "version": {"type": "integer", "minimum": 1, "maximum": 4},
+        "purpose": {"$ref": "#/$defs/SourceOwnerReady/properties/purpose"},
+        "scope": {"$ref": "#/$defs/SourceOwnerReady/properties/scope"},
+        "generation": {"$ref": "#/$defs/SourceOwnerReady/properties/generation"},
+        "ownerRelationSha256": {"$ref": "#/$defs/SourceOwnerReady/properties/ownerRelationSha256"},
+        "groupSha256": {"$ref": "#/$defs/SourceOwnerReady/properties/groupSha256"},
+        "recipeSha256": {"$ref": "#/$defs/SourceOwnerReady/properties/recipeSha256"},
+        "members": {"$ref": "#/$defs/SourceOwnerReady/properties/members"},
+        "bindings": {"$ref": "#/$defs/SourceOwnerReady/properties/bindings"},
+        "ownerReferences": {"$ref": "#/$defs/SourceOwnerReady/properties/ownerReferences"},
+        "singletons": {"$ref": "#/$defs/SourceOwnerReady/properties/singletons"}
       }
     },
     "SourceOwnerReady": {

@@ -130,8 +130,15 @@ impl FlowEvalSession {
         std::mem::replace(&mut state.painted_eval_json, painted).retire_cold();
         if converged {
             let converged_text = state.eval_json.as_ref().map_or_else(String::new, |text| text.as_str().to_owned());
-            std::mem::replace(&mut state.converged_eval_json, converged_text).retire_cold();
+            self.install_converged_eval(converged_text).retire_cold();
         }
+    }
+
+    /// 🔁️ Transfers one displaced converged backing to history and returns the former history to the caller's retirement owner.
+    pub(crate) fn install_converged_eval(&mut self, text: String) -> String {
+        let state = &mut *self.state;
+        let previous = std::mem::replace(&mut state.converged_eval_json, text);
+        std::mem::replace(&mut state.previous_converged_eval_json, previous)
     }
 
     pub fn eval_json(&self) -> &str {
@@ -158,6 +165,11 @@ impl FlowEvalSession {
     /// new brep handle is still crossing and its tessellation has not landed yet.
     pub fn converged_eval_json(&self) -> &str {
         &self.converged_eval_json
+    }
+
+    /// 🪟️ Borrows the preceding convergence so a channel can retain its own geometry during tessellation.
+    pub fn previous_converged_eval_json(&self) -> &str {
+        &self.previous_converged_eval_json
     }
 
     /// 📤️ What this session owes ONE surface whose retained preview publication currently holds

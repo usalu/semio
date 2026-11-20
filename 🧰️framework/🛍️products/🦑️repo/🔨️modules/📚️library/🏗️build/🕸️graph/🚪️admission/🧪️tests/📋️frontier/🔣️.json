@@ -1,0 +1,66 @@
+{
+  "depth": 1024,
+  "cases": [
+    {
+      "name": "cycle keeps the next-pass boundary",
+      "selection": {"kind":"tasks","tasks":[{"project":"z","target":"build"}]},
+      "rows": {"a":{"targets":{"build":["z:extra"]}},"z":{"targets":{"build":["a:build"],"extra":[]}}}
+    },
+    {
+      "name": "dependencies update later members before newly admitted members",
+      "selection": {"kind":"owners","projects":["z","m","a"],"exclude":[],"targets":["build"]},
+      "rows": {
+        "a":{"targets":{"build":["m:extra","b:build"],"verify":[]}},
+        "b":{"targets":{"build":[]},"observedFiles":["m/observed.ts"]},
+        "m":{"targets":{"build":[],"extra":[]},"files":["b/member.ts"],"generated":{"extra":["z:extra"]}},
+        "z":{"targets":{"build":["a:verify"],"extra":[]},"inputs":{"m":["api"]}}
+      }
+    },
+    {
+      "name": "a pruned optional target can become required on the next pass",
+      "selection": {"kind":"owners","projects":["a","m"],"exclude":[],"targets":["build"]},
+      "rows": {
+        "a":{"targets":{},"taskTargets":{"build":[]}},
+        "m":{"targets":{"build":["^build","a:build"]},"dependencies":["a"]}
+      }
+    },
+    {
+      "name": "already queued optional target becomes required before its first visit",
+      "selection": {"kind":"owners","projects":["a","m"],"exclude":[],"targets":["build"]},
+      "rows": {"a":{"targets":{"build":["m:build"]}},"m":{"targets":{},"taskTargets":{"build":[]}}}
+    },
+    {
+      "name": "provider input is awarded only at the end of the owner pass",
+      "selection": {"kind":"owners","projects":["a","p","z"],"exclude":[],"targets":["build"]},
+      "rows": {"a":{"targets":{"build":[]}},"p":{"targets":{}},"z":{"targets":{"build":[]},"inputs":{"q":["{workspaceRoot}/q/publication.ts"]}},"q":{"targets":{}}},
+      "providers": [
+        {"ownerRoot":"p","sourcePath":"p/publication.ts","consumerRoots":["a"]},
+        {"ownerRoot":"q","sourcePath":"q/publication.ts","consumerRoots":["missing"]}
+      ]
+    },
+    {
+      "name": "required missing target fails before a later observation",
+      "selection": {"kind":"owners","projects":["z","m","a"],"exclude":[],"targets":["build"]},
+      "rows": {"a":{"targets":{"build":["m:absent"]}},"m":{"targets":{"build":[]}},"z":{"targets":{"build":[]}}}
+    },
+    {
+      "name": "a cancellation raised by custody stops later observations",
+      "selection": {"kind":"owners","projects":["z","m","a"],"exclude":[],"targets":["build"]},
+      "rows": {"a":{"targets":{"build":[]}},"m":{"targets":{"build":[]}},"z":{"targets":{"build":[]}}},
+      "abortAfter": 2
+    },
+    {
+      "name": "required task and input-only dependency each get one observation",
+      "selection": {"kind":"tasks","tasks":[{"project":"a","target":"build"}]},
+      "rows": {
+        "a":{"targets":{"build":[]},"inputs":{"b":["api"]}},
+        "b":{"targets":{},"files":["b/api.ts"]}
+      }
+    },
+    {
+      "name": "direct task admission suppresses every dependency path",
+      "selection": {"kind":"tasks","tasks":[{"project":"a","target":"build"}],"excludeDependencies":true},
+      "rows": {"a":{"targets":{"build":["b:build"]},"files":["b/file.ts"],"dependencies":["b"],"inputs":{"b":["api"]},"generated":{"build":["b:build"]}},"b":{"targets":{"build":[]}}}
+    }
+  ]
+}

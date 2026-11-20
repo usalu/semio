@@ -2,14 +2,16 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { validateAsset, type Issue } from "../../../🔨️modules/🗂️catalog/🟦️.ts";
+import type { Asset } from "../../../🧬️schema/🟦️.ts";
 import type { OwnedBuildPlugin } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 // #endregion 🔌️Adapters
 
 /** 🔖️ The import query under which a catalog asset file is served as its shipped payload; `import.meta.glob` needs it as a literal, so the loader spells it out. */
 export const STAFFAGE_ASSET_QUERY = "?staffage-asset";
 
-/** 📦️ What a catalog asset file ships as: its revision, precomputed from the authored text, and the asset as compact JSON text. */
-export type StaffageAssetPayload = { readonly revision: string; readonly json: string };
+/** 📦️ One authored asset, its revision and the semantic findings computed when Vite serves or builds its module. */
+export type StaffageAssetPayload = { readonly revision: string; readonly json: string; readonly issues: readonly Issue[] };
 
 /** 👀️ The part of a Vite or Rollup plugin context that registers a file whose change invalidates the module. */
 export type WatchContext = { readonly addWatchFile: (file: string) => void };
@@ -23,10 +25,17 @@ const SUFFIX = ".mjs";
 export function staffageAssetPayload(file: string): StaffageAssetPayload {
   const text = readFileSync(file, "utf8");
   const revision = `sha256:${createHash("sha256").update(text.replace(/\r\n/gu, "\n"), "utf8").digest("hex")}`;
-  return { revision, json: JSON.stringify((JSON.parse(text) as { asset: unknown }).asset) };
+  const asset = (JSON.parse(text) as { asset: Asset }).asset;
+  const negativeZero = (JSON as JSON & { rawJSON(value: string): unknown }).rawJSON("-0");
+  const json = JSON.stringify(asset, (_key, value) => Object.is(value, -0) ? negativeZero : value);
+  try {
+    return { revision, json, issues: validateAsset(asset) };
+  } catch {
+    return { revision, json, issues: [{ path: "$", code: "validation-threw", message: { en: "The check of this asset stopped before it finished.", de: "Die Prüfung dieses Assets brach vorzeitig ab." } }] };
+  }
 }
 
-/** 🧍️ Vite: serves `<asset file>?staffage-asset` as `export default { revision, json }` so a chunk carries compact JSON and a precomputed revision instead of the pretty-printed file. Works for the dev server, the build and Vitest; the file is watched, so an edited asset reloads in the dev server.
+/** 🧍️ Serves a revisioned, validated asset module in development, releases and Vitest. Editing the source invalidates the module.
  * @see {@link staffageAssetPayload} */
 export function staffageAssetVitePlugin(): OwnedBuildPlugin {
   let root = process.cwd();
@@ -47,8 +56,7 @@ export function staffageAssetVitePlugin(): OwnedBuildPlugin {
       if (!id.startsWith(PREFIX)) return null;
       const file = id.slice(PREFIX.length, -SUFFIX.length);
       this?.addWatchFile(file);
-      const { revision, json } = staffageAssetPayload(file);
-      return `export default { revision: ${JSON.stringify(revision)}, json: ${JSON.stringify(json)} };`;
+      return `export default ${JSON.stringify(staffageAssetPayload(file))};`;
     },
   };
 }

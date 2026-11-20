@@ -12,8 +12,8 @@ use semio_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet of the Norm Energy editor/viewer pairs.
     pub enum NormEnergyApps: PluginApp {
-        Din18599Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>>),
-        Din18599Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din18599_viewer::Din18599Viewer>>),
+        Din18599Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>, <semio_s_artifact_norm_din18599_editor::Din18599PlayApp as semio_plugin::ArtifactEditor>::Members>),
+        Din18599Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din18599_viewer::Din18599Viewer>, <semio_s_artifact_norm_din18599_viewer::Din18599Viewer as semio_plugin::ArtifactViewer>::Members>),
     }
 }
 //#endregion 🗃️Apps

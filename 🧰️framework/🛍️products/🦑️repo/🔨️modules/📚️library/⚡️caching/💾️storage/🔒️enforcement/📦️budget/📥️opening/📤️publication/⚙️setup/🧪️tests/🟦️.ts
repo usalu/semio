@@ -3,6 +3,7 @@ const metadataStageNonceUnits=Math.min("dependencies.json".length,metadataDescri
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{readRepositoryDependencyBootstrapPreparationV1}from"../📋️contract/🟦️.ts";
+import{dependencyStoreVerdictV1,withDependencyStoreWaitBoundV1,DEPENDENCY_STORE_WAIT_V1}from"../💰️funding/🟦️.ts";
 import schema from"../🧬️schema.json";
 import nativeSchema from"@semio-tech/process/artifacts/native-build/storage/schema.json";
 import corpus from"./🔣️.json";
@@ -15,7 +16,116 @@ import{Database}from"bun:sqlite";
 import ts from"typescript";
 import{readFileSync}from"node:fs";
 import{basename}from"node:path";
-test("actual bootstrap mode separates fresh staging unready retention and current ready requalification",async()=>{const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("producer.ts",text,ts.ScriptTarget.Latest,true),node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="repositoryDependencyBootstrapResumeModeV1");expect(node).toBeDefined();const db=new Database(":memory:"),admit=new Ajv({strict:true}).compile(schema.definitions.ResumeModeCase);try{for(const row of corpus.resume){expect(admit(row),row.id).toBe(true);const entries=row.roots.map((exists,index)=>({exists,ready:row.ready[index]})),control=Object.freeze({sourcePort:true}),ports={basename,withArtifactRelativeDirectoryV1:async(_root:string,_check:Function,body:Function)=>body({stat:()=>({dev:1n}),entry:async()=>({kind:"directory",dev:1n}),withDirectory:async(_name:string,body:Function)=>body({stat:()=>({dev:1n}),entry:async(name:string)=>entries[Number(name)]!.exists?{kind:"directory",dev:1n}:null,withDirectory:async(name:string,body:Function)=>body({entry:async()=>entries[Number(name)]!.ready?{kind:"file",nlink:1n}:null})})})},run=new Function(...Object.keys(ports),ts.transpileModule(node!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return repositoryDependencyBootstrapResumeModeV1;")(...Object.values(ports)),actual=await run("/root",{plans:entries.map((_,index)=>({plan:{directory:"/root/j/"+index}}))},control,async(body:Function)=>body({check:(phase:unknown)=>expect(phase).toBe(control)}));expect(actual,row.id).toBe(row.mode);const independent=db.query("select case when exists(select 1 from json_each(?1) where value=1) then 'ready' when exists(select 1 from json_each(?2) where value=1) then 'unready' else 'fresh' end mode").get(JSON.stringify(row.ready),JSON.stringify(row.roots))as{mode:string};expect(actual,row.id).toBe(independent.mode);}}finally{db.close();}});
+
+test("current retained funding reaches the published envelope before the producer takes custody",async()=>{
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("setup.ts",source,ts.ScriptTarget.Latest,true);
+ const node=tree.statements.find((step):step is ts.FunctionDeclaration=>ts.isFunctionDeclaration(step)&&step.name?.text==="setupRepositoryDependencyPublicationV1");
+ expect(node).toBeDefined();
+ const admit=new Ajv({strict:true}).compile(schema.definitions.RetainedPreparationFundingCase),db=new Database(":memory:");
+ const compiled=ts.transpileModule(node!.getText(tree).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ try{
+  for(const row of corpus.retainedPreparationFunding){
+   expect(admit(row),row.id).toBe(true);
+   const invocation=Symbol("setup-invocation"),control=Symbol("setup-control"),events:string[]=[];
+   let bytes=row.priorBytes,allocation="1".repeat(32);
+   const owner="repository:dependencies-store",parent=Object.freeze({current:true});
+   const ports={
+    join:(...parts:string[])=>parts.join("/"),metadataSchema:{definitions:{Slot:{const:{directory:".publication"}}}},
+    checkResourceLeaseControl:(phase:unknown)=>expect(phase).toBe(control),
+    repositoryCacheImagePublicationOptionsV1:()=>({directory:"/image",filesystemBytes:36,maximumPhysicalBytes:40}),
+    readNativeImageRetirementFileV1:()=>({bytes:Buffer.from('{"filesystemBytes":36,"maximumPhysicalBytes":40}')}),
+    lstatSync:()=>{throw Object.assign(Error("No pending namespace"),{code:"ENOENT"});},
+    observeRepositoryDependencyBootstrapFundingV1:async()=>({
+     presence:"present",marker:{owner,allocation,bytes},
+     state:{allocations:[{id:allocation,owner,kind:"artifact-publication",phase:"committed",bytes}]},
+    }),
+    observeRepositoryDependencyMaintenanceParentV1:async()=>{events.push("observe-parent");return{parent};},
+    dependencyStoreShelteredByAncestorV1:()=>undefined,observeDependencyStoreHoldersV1:()=>({live:[],gone:[]}),
+    readRepositoryDependencyFundingCurrentV1:()=>false,dependencyStoreVerdictV1,
+    retryWhileDependencyFundingMovesV1:(_phase:unknown,body:()=>Promise<unknown>)=>body(),
+    retryWhileDependencyStoreBusyV1:(_phase:unknown,body:()=>Promise<unknown>)=>body(),
+    dependencyStoreWaitPortsForV1:()=>undefined,sayCachingV1:()=>{},
+    prepareRepositoryDependencyBootstrapV1:async(original:unknown,phase:unknown,request:Record<string,unknown>)=>{
+     expect(original).toBe(invocation);expect(phase).toBe(control);expect(request.parent).toBe(parent);
+     expect(bytes).toBe(36);events.push("prepare");return{acquired:true};
+    },
+    retireObsoleteRepositoryDependencyGenerationsV1:async()=>{events.push("retire");},
+    reconcileRepositoryDependencyBootstrapFundingV1:async()=>{
+     events.push("reconcile");bytes=row.replacedBytes;allocation="2".repeat(32);
+    },
+   };
+   const run=new Function(...Object.keys(ports),compiled+";return setupRepositoryDependencyPublicationV1;")(...Object.values(ports));
+   let failure:unknown;
+   try{await run(invocation,control);}catch(error){failure=error;}
+   const decision=db.query("select ?1<36 as replaceFirst, max(?1,?2)=36 as mayPrepare").get(row.priorBytes,row.replacedBytes)as{replaceFirst:number;mayPrepare:number};
+   const expected=[...(decision.replaceFirst?["reconcile"]:[]),...(decision.mayPrepare?["observe-parent","prepare","retire","reconcile"]:[])];
+   expect(events,row.id).toEqual(expected);
+   if(decision.mayPrepare)expect(failure,row.id).toBeUndefined();
+   else expect(failure,row.id).toEqual(Error("Current Dependencies reservation did not reach its published envelope"));
+  }
+ }finally{db.close();}
+});
+
+test("the producer opens and syncs the fixed generation parent before immutable staging",async()=>{
+ const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("producer.ts",source,ts.ScriptTarget.Latest,true);
+ const node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="prepareRepositoryDependencyGenerationParentV1");
+ expect(node).toBeDefined();
+ const admit=new Ajv({strict:true}).compile(schema.definitions.GenerationParentCase),db=new Database(":memory:");
+ try{
+  for(const row of corpus.generationParent){
+   expect(admit(row),row.id).toBe(true);
+   const events:string[]=[],identity={kind:"directory",dev:1n},check=()=>{};
+   let entry=row.kind==="absent"?null:{kind:row.kind,dev:BigInt(row.device)};
+   const sync=async()=>{events.push("child-sync");};
+   const ports={
+    dependencyInstallSchema:{$defs:{ProducerStageProtocol:{const:{rootRole:"j"}}}},
+    withArtifactRelativeDirectoryV1:async(root:string,checkpoint:()=>void,body:Function)=>{
+     expect(root).toBe("/partition");expect(checkpoint).toBe(check);
+     return body({
+      stat:()=>({dev:1n}),
+      entry:async(name:string)=>{expect(name).toBe("j");return entry;},
+      withNewDirectory:async(name:string,work:Function)=>{expect(name).toBe("j");expect(entry).toBeNull();events.push("create");entry=identity;return work({stat:()=>entry,sync});},
+      withDirectoryPath:async(steps:unknown,work:Function)=>{expect(steps).toEqual([{name:"j",identity:entry}]);return work({stat:()=>entry,sync});},
+      sync:async()=>{events.push("parent-sync");},
+     });
+    },
+   };
+   const run=new Function(...Object.keys(ports),ts.transpileModule(node!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return prepareRepositoryDependencyGenerationParentV1;")(...Object.values(ports));
+   let failure:unknown;
+   try{await run("/partition",check);}catch(error){failure=error;}
+   const expected=db.query("select ?1 = 'absent' or (?1 = 'directory' and ?2 = 1) as accepted, ?1 = 'absent' as created").get(row.kind,row.device)as{accepted:number;created:number};
+   expect(failure===undefined,row.id).toBe(row.accept);
+   expect(failure===undefined,row.id).toBe(Boolean(expected.accepted));
+   expect(events,row.id).toEqual(!expected.accepted?[]:expected.created?["create","child-sync","parent-sync"]:["child-sync","parent-sync"]);
+  }
+ }finally{db.close();}
+});
+test("bootstrap classifies every current generation from the physical ready cut",async()=>{
+ const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("producer.ts",text,ts.ScriptTarget.Latest,true);
+ const node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="repositoryDependencyBootstrapResumeModeV1");
+ expect(node).toBeDefined();
+ const db=new Database(":memory:"),admit=new Ajv({strict:true}).compile(schema.definitions.ResumeModeCase);
+ try{
+  for(const row of corpus.resume){
+   expect(admit(row),row.id).toBe(true);
+   const directory={kind:"directory",dev:1n},entries=row.roots.map((exists,index)=>({exists,ready:row.ready[index]})),control=Object.freeze({sourcePort:true});
+   const ports={basename,withArtifactRelativeDirectoryV1:async(_root:string,_check:Function,body:Function)=>body({
+    stat:()=>directory,entry:async()=>row.container?directory:null,
+    withDirectoryPath:async(_steps:unknown,body:Function)=>body({
+     stat:()=>directory,entry:async(name:string)=>entries[Number(name)]!.exists?directory:null,
+     withDirectoryPath:async([{name}]:[{name:string}],body:Function)=>body({entry:async()=>entries[Number(name)]!.ready?{kind:"file",nlink:1n,dev:1n}:null}),
+    }),
+   })};
+   const run=new Function(...Object.keys(ports),ts.transpileModule(node!.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return repositoryDependencyBootstrapResumeModeV1;")(...Object.values(ports));
+   const actual=await run("/root",{plans:entries.map((_,index)=>({scope:String(index),plan:{directory:"/root/j/"+index}}))},control,async(body:Function)=>body({check:(phase:unknown)=>expect(phase).toBe(control)}));
+   const expected=db.query("select json_group_array(roots.key) filter (where roots.value=1 and ready.value=1) as retained, max(roots.value=1 and ready.value=0) as repair from json_each(?1) roots join json_each(?2) ready on ready.key=roots.key").get(JSON.stringify(row.roots),JSON.stringify(row.ready))as{retained:string;repair:number};
+   expect([...actual.readyScopes].map(Number),row.id).toEqual(row.retained);
+   expect(actual.needsRepair,row.id).toBe(row.repair);
+   expect([...actual.readyScopes].map(Number),row.id).toEqual(JSON.parse(expected.retained));
+   expect(actual.needsRepair,row.id).toBe(Boolean(expected.repair));
+  }
+ }finally{db.close();}
+});
 
 import{createHash}from"node:crypto";
 import{readRepositoryDependencyMarkerPublicationIntentV1,repositoryDependencyMarkerPublicationIntentTextV1,repositoryDependencyFundingMarkerBytesV1}from"../💰️funding/📋️intent/🟦️.ts";
@@ -29,4 +139,4 @@ test("ordinary receiver refuses present or unreadable funding metadata while onl
 import{readRepositoryDependencyMarkerJournalV1}from"../💰️funding/📋️intent/📜️journal/🟦️.ts";
 test("funding marker journal reserves exact descriptor names before a prepared publication event",()=>{const db=new Database(":memory:"),rowSchema=new Ajv({strict:true}).compile(schema.definitions.MarkerJournalCase);try{for(const row of corpus.markerJournal){expect(rowSchema(row)).toBe(true);const contextSha256="a".repeat(64),allocation:any={id:"2".repeat(32),owner:"repository:dependencies-store",kind:"artifact-publication",phase:"committed",bytes:38653657088,funding:{version:1,phase:"settled",predecessor:{id:"1".repeat(32),owner:"repository:dependencies-store",kind:"artifact-publication",phase:"committed",bytes:8588886016},targetBytes:38653657088,contextSha256}},parent={dev:"1",ino:"2",mode:"16877",size:"0",nlink:"1",mtimeNs:"1",ctimeNs:"1"},prior={identity:{...parent,ino:"4",mode:"33152",size:"100"},sha256:contextSha256},baseline:any={version:1,purpose:"plan-funded-system-metadata",roleSha256:"d".repeat(64),allocation,contextSha256,backingStamp:"actual-backing",expectedSequence:12,parent,prior,names:["dependencies.json"],plan:{name:"dependencies.json",stageName:"."+"b".repeat(metadataStageNonceUnits),retainedName:"."+"b".repeat(metadataStageNonceUnits),windows:null}},prepared:any={version:1,platform:"posix",windows:null,parent,names:baseline.names,name:baseline.plan.name,stage:{name:baseline.plan.stageName,identity:{...parent,ino:"3",mode:"33152",size:String(repositoryDependencyFundingMarkerBytesV1(allocation).length)},sha256:createHash("sha256").update(repositoryDependencyFundingMarkerBytesV1(allocation)).digest("hex")},prior,retainedName:baseline.plan.retainedName,authority:false},event:any={version:1,purpose:"publish-current-dependency-funding-marker",allocation,contextSha256,backingStamp:baseline.backingStamp,expectedSequence:12,prepared};if(row.change==="foreign-plan")prepared.stage.name="."+"c".repeat(metadataStageNonceUnits);if(row.change==="foreign-allocation")event.allocation={...allocation,id:"3".repeat(32)};if(row.change==="foreign-prior")prepared.prior={...prior,identity:{...prior.identity,ino:"5"}};let text=JSON.stringify(baseline)+"\n";if(!["baseline","unprepared-stage"].includes(row.change))text+=JSON.stringify(event)+"\n";if(row.change==="extra-record")text+="{}\n";if(row.change==="partial-record")text=text.slice(0,-1);let accepted=true,failure:string|undefined;try{const value=readRepositoryDependencyMarkerJournalV1(text);expect(value.baseline.plan.stageName).toBe(baseline.plan.stageName);expect(!!value.intent).toBe(row.change==="prepared");}catch(error){failure=String(error);accepted=false;}expect(accepted,row.id+":"+(failure??"")).toBe(row.accept);const oracle=db.query("select ? in ('baseline','prepared','unprepared-stage') accepted").get(row.change)as{accepted:number};expect(accepted,row.id).toBe(Boolean(oracle.accepted));}}finally{db.close();}});
 
-test("actual setup frontdoor returns a proved current empty image to the existing initializer without effects",async()=>{const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("setup.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="setupRepositoryDependencyPublicationV1");expect(node).toBeDefined();const db=new Database(":memory:"),admit=new Ajv({strict:true}).compile(schema.definitions.InitializationDispatchCase);try{for(const row of corpus.initializationDispatch){expect(admit(row)).toBe(true);const invocation=Symbol("unit-source-invocation"),control=Symbol("unit-source-control"),events:string[]=[],effect=()=>{events.push("unexpected-effect");throw Error("Empty initial branch must not publish prepare retire or replace funding");},ports={join:(...parts:string[])=>parts.join("/"),metadataSchema:{definitions:{Slot:{const:{directory:".publication"}}}},checkResourceLeaseControl:(actual:unknown)=>expect(actual).toBe(control),repositoryCacheImagePublicationOptionsV1:(original:unknown,phase:unknown)=>{expect(original).toBe(invocation);expect(phase).toBe(control);return{directory:"/image",filesystemBytes:36,maximumPhysicalBytes:40};},readNativeImageRetirementFileV1:()=>({bytes:Buffer.from(JSON.stringify({filesystemBytes:row.current?36:8,maximumPhysicalBytes:40}))}),lstatSync:()=>{if(!row.pending)throw Object.assign(Error("No pending namespace"),{code:"ENOENT"});return{};},observeRepositoryDependencyBootstrapFundingV1:async(original:unknown,phase:unknown)=>{expect(original).toBe(invocation);expect(phase).toBe(control);events.push("actual-empty-observation");return{presence:"initial-empty",authority:false};},observeRepositoryDependencyMaintenanceParentV1:effect,dependencyStoreShelteredByAncestorV1:()=>undefined,observeDependencyStoreHoldersV1:()=>({live:[],gone:[]}),readRepositoryDependencyFundingCurrentV1:effect,sayCachingV1:effect,prepareRepositoryDependencyBootstrapV1:effect,retireObsoleteRepositoryDependencyGenerationsV1:effect,publishObservedNativePlatformImageV1:effect,reconcileRepositoryDependencyBootstrapFundingV1:effect},run=new Function(...Object.keys(ports),ts.transpileModule(node!.getText(tree).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return setupRepositoryDependencyPublicationV1;")(...Object.values(ports));let accepted=true;try{await run(invocation,control);}catch{accepted=false;}expect(accepted,row.id).toBe(row.accept);expect(events,row.id).toEqual(["actual-empty-observation"]);expect(accepted,row.id).toBe(Boolean((db.query("select ?1=1 and ?2=0 accepted").get(Number(row.current),Number(row.pending))as{accepted:number}).accepted));}}finally{db.close();}});
+test("actual setup frontdoor returns a proved current empty image to the existing initializer without effects",async()=>{const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("setup.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text==="setupRepositoryDependencyPublicationV1");expect(node).toBeDefined();const db=new Database(":memory:"),admit=new Ajv({strict:true}).compile(schema.definitions.InitializationDispatchCase);try{for(const row of corpus.initializationDispatch){expect(admit(row)).toBe(true);const invocation=Symbol("unit-source-invocation"),control=Symbol("unit-source-control"),events:string[]=[],effect=()=>{events.push("unexpected-effect");throw Error("Empty initial branch must not publish prepare retire or replace funding");},ports={join:(...parts:string[])=>parts.join("/"),metadataSchema:{definitions:{Slot:{const:{directory:".publication"}}}},checkResourceLeaseControl:(actual:unknown)=>expect(actual).toBe(control),repositoryCacheImagePublicationOptionsV1:(original:unknown,phase:unknown)=>{expect(original).toBe(invocation);expect(phase).toBe(control);return{directory:"/image",filesystemBytes:36,maximumPhysicalBytes:40};},readNativeImageRetirementFileV1:()=>({bytes:Buffer.from(JSON.stringify({filesystemBytes:row.current?36:8,maximumPhysicalBytes:40}))}),lstatSync:()=>{if(!row.pending)throw Object.assign(Error("No pending namespace"),{code:"ENOENT"});return{};},observeRepositoryDependencyBootstrapFundingV1:async(original:unknown,phase:unknown)=>{expect(original).toBe(invocation);expect(phase).toBe(control);events.push("actual-empty-observation");return{presence:"initial-empty",authority:false};},observeRepositoryDependencyMaintenanceParentV1:effect,dependencyStoreShelteredByAncestorV1:()=>undefined,observeDependencyStoreHoldersV1:()=>({live:[],gone:[]}),readRepositoryDependencyFundingCurrentV1:()=>false,dependencyStoreVerdictV1,withDependencyStoreWaitBoundV1:(_milliseconds:number,body:()=>Promise<void>)=>body(),DEPENDENCY_STORE_WAIT_V1,isRepoErrorV1:()=>false,sayCachingV1:effect,prepareRepositoryDependencyBootstrapV1:effect,retireObsoleteRepositoryDependencyGenerationsV1:effect,publishObservedNativePlatformImageV1:effect,reconcileRepositoryDependencyBootstrapFundingV1:effect},run=new Function(...Object.keys(ports),ts.transpileModule(node!.getText(tree).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText+";return setupRepositoryDependencyPublicationV1;")(...Object.values(ports));let accepted=true;try{await run(invocation,control);}catch{accepted=false;}expect(accepted,row.id).toBe(row.accept);expect(events,row.id).toEqual(["actual-empty-observation"]);expect(accepted,row.id).toBe(Boolean((db.query("select ?1=1 and ?2=0 accepted").get(Number(row.current),Number(row.pending))as{accepted:number}).accepted));}}finally{db.close();}});

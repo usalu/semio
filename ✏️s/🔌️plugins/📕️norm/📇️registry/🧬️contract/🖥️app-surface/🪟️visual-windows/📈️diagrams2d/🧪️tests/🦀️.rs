@@ -124,6 +124,47 @@ fn lowering_emits_axes_series_marker_legend_in_both_languages() {
 }
 
 #[test]
+fn diagram_scene_matches_the_canvas_path_and_text_contract() {
+    let options = options(Locale::En);
+    let (scene, _) = diagram_scene(&diagram(), &options);
+    assert_eq!([scene.camera_x, scene.camera_y], [options.width / 2.0, options.height / 2.0]);
+    let layers: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).expect("canvas layers");
+    let grid = layers.iter().find(|layer| layer["id"] == "grid").expect("diagram grid");
+    assert_eq!(grid["segments"][0]["kind"], "move");
+    let channels = grid["stroke"]["color"].as_array().expect("normalized stroke");
+    assert_eq!(channels.len(), 4);
+    assert!(channels.iter().all(|channel| channel.as_f64().is_some_and(|value| (0.0..=1.0).contains(&value))));
+    let title = layers.iter().find(|layer| layer["id"] == "title").expect("diagram title");
+    assert_eq!(title["text"]["content"], "Interaction");
+    assert_eq!(title["text"]["fontFamily"], "Share Tech Mono");
+}
+
+#[test]
+fn large_marker_table_renders_the_requested_rows() {
+    use semio_plugin::{BuiltNode, TreeWindows, ViewModel};
+    use semio_ui_contract::Component;
+    fn find<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
+        if node.key.as_str() == key { return Some(node); }
+        node.children.iter().find_map(|child| find(child, key))
+    }
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let mut diagram = diagram();
+    let marker = diagram.markers[0].clone();
+    diagram.markers = (0..40).map(|index| Marker { id: format!("marker-{index}"), ..marker.clone() }).collect();
+    let view = ViewModel {
+        tree_windows: vec![semio_framework::TreeWindowRequest { body_key: "diagram".into(), node_key: "diagram.mn.markers".into(), open: Some(true), offset: 39, rows: 1 }],
+        ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native)
+    };
+    let root = render_diagrams("diagram", &[diagram], &DiagramsWindowSpec::default(), &TreeWindows::for_body(&view, "diagram"), Locale::En).expect("diagram window");
+    let markers = find(&root, "diagram.mn.markers").expect("marker section");
+    let Component::TreeSection(section) = &markers.component else { panic!("marker section") };
+    let window = section.window.as_ref().expect("marker window");
+    assert_eq!((window.total, window.offset), (40, 39));
+    assert_eq!(markers.children.len(), 1);
+    assert_eq!(markers.children[0].key.as_str(), "diagram.mn.marker.m39");
+}
+
+#[test]
 fn lowering_is_deterministic_and_clips_to_the_plot() {
     let d = diagram();
     let a = lower_diagram(&d, &options(Locale::En));

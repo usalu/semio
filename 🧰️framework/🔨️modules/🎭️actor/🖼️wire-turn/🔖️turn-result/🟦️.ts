@@ -57,6 +57,8 @@ export type WireTurnResult = {
   readonly presence?: readonly { readonly update?: unknown }[];
   readonly nextWake: number | null;
   readonly status?: unknown;
+  /** ✂️ Events of a host batch this answer did not cross (the batch was cut at a patch-carrying answer); `0` once a later answer crossed them. Absent on answers that never deferred anything. */
+  readonly deferredEvents?: number;
   readonly commandIngress?: WireVariant;
   readonly coldPairIngress: ColdPairIngressStatus;
 };
@@ -85,6 +87,7 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
     presence,
     nextWake,
     status: record.status,
+    ...(typeof record.deferredEvents === "number" ? { deferredEvents: record.deferredEvents } : {}),
     commandIngress,
     coldPairIngress,
   };
@@ -235,7 +238,7 @@ export type TypedOperationToken = {
  * injected" discipline. */
 export type TypedOperationAckEvent = {
   readonly kind: "message";
-  readonly payload: { readonly source: { readonly tag: "shell"; readonly val: string }; readonly payload: readonly number[] };
+  readonly payload: { readonly source: { readonly tag: "shell"; readonly val: number }; readonly payload: readonly number[] };
 };
 
 /** 📃️ One decoded typed-operation result page and the acknowledgement the guest blocks on. */
@@ -289,7 +292,7 @@ export function typedOperationResult(effect: WireVariant): TypedOperationPage | 
     token: { receiver, operation: view.getBigUint64(4, true), generation: view.getBigUint64(12, true), sequence: view.getUint32(20, true), attempt: body[24]! },
     lane,
     payload: body.subarray(TYPED_OPERATION_PAGE_HEADER_BYTES),
-    acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: String(receiver) }, payload: Array.from(ack) } },
+    acknowledgement: { kind: "message", payload: { source: { tag: "shell", val: receiver }, payload: Array.from(ack) } },
   };
 }
 

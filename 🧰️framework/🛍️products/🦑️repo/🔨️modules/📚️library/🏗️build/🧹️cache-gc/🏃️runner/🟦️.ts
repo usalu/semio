@@ -297,7 +297,7 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
  const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(output.language,key,variables),selected=(id:string)=>request.only===undefined||request.only.has(id),resolved:Resolved[]=[],delegated:{owner:string;text:string}[]=[],deferred:{slot:number;owner:string;id:string}[]=[],notes:string[]=[],now=ports.now();
  try{
   for(const area of ledger.areas){
-   if(!selected(area.id))continue;
+   if(!selected(area.id)&&!(area.partition!==undefined&&selected(area.partition)))continue;
    if(area.managed&&area.kind!=="partition"&&area.kind!=="control"){
     deferred.push({slot:notes.length,owner:area.managed.owner,id:area.id});notes.push("");
     continue;

@@ -68,7 +68,7 @@ pub(crate) fn print_xlsx_mutation(m: &XlsxMutation) -> String {
         XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => format!("rename-sheet name={} new-name={}", enc_str(name), enc_str(new_name)),
         XlsxMutation::SetCell(set_cell::SetCell { address, value, node }) => format!("set-cell address={} value={}{}", enc_cell_address(address), enc_cell_value(value), enc_optional_json("node", node)),
         XlsxMutation::InsertCell(insert_cell::InsertCell { address, value, node }) => format!("insert-cell address={} value={}{}", enc_cell_vacancy_address(address), enc_cell_value(value), enc_optional_json("node", node)),
-        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => format!("remove-cell address={}", enc_cell_address(address)),
+        XlsxMutation::RemoveCell(remove_cell::RemoveCell { address, keep_row }) => format!("remove-cell address={}{}", enc_cell_address(address), if *keep_row { " keep-row=1" } else { "" }),
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index, node }) => format!("insert-shared-string value={}{}{}", enc_str(value), index.map_or_else(String::new, |index| format!(" index={index}")), enc_optional_json("node", node)),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }) => format!("remove-shared-string index={index}"),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value, node }) => format!("set-shared-string index={index} value={}{}", enc_str(value), enc_optional_json("node", node)),
@@ -92,7 +92,14 @@ pub(crate) fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
         "rename-sheet" => Ok(XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name: dec_str(arg("name")?)?, new_name: dec_str(arg("new-name")?)? })),
         "set-cell" => Ok(XlsxMutation::SetCell(set_cell::SetCell { address: dec_cell_address(arg("address")?)?, value: dec_cell_value(arg("value")?)?, node: dec_optional_json(&args, "node")? })),
         "insert-cell" => Ok(XlsxMutation::InsertCell(insert_cell::InsertCell { address: dec_cell_vacancy_address(arg("address")?)?, value: dec_cell_value(arg("value")?)?, node: dec_optional_json(&args, "node")? })),
-        "remove-cell" => Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: dec_cell_address(arg("address")?)? })),
+        "remove-cell" => {
+            let keep_row = match args.get("keep-row").copied() {
+                None => false,
+                Some("1") => true,
+                Some(other) => return Err(format!("xlsx mutation: bad keep-row flag {other:?}")),
+            };
+            Ok(XlsxMutation::RemoveCell(remove_cell::RemoveCell { address: dec_cell_address(arg("address")?)?, keep_row }))
+        }
         "insert-shared-string" => Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: dec_str(arg("value")?)?, index: optional_index()?, node: dec_optional_json(&args, "node")? })),
         "remove-shared-string" => Ok(XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: usize_arg("index")? })),
         "set-shared-string" => Ok(XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: usize_arg("index")?, value: dec_str(arg("value")?)?, node: dec_optional_json(&args, "node")? })),

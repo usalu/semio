@@ -46,7 +46,9 @@
         "logLimitBytes": 134217728,
         "failureLinesPerUnit": 200,
         "failureLinesTotal": 2000,
-        "featureUnification": "package",
+        "stderrTailLines": 120,
+        "stderrLineChars": 400,
+        "featureUnification": "selected",
         "generationEnvironment": "SEMIO_NATIVE_BUILD_GENERATION",
         "generations": [
           "warm",

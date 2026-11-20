@@ -136,3 +136,11 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
     When the workbook is decoded to the typed snapshot and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
     And the re-encoded bytes are not bit-identical to the input
+
+  @id-native-document
+  @level-long
+  @mode-differential
+  Scenario: Analyze a real workbook and export its snapshot as XLSX
+    Given the real input workbook shared://📕️reuse-marketplaces.xlsx
+    When the physical workbook is analyzed and the resulting snapshot is exported
+    Then the oracle and the subject agree on the spreadsheets, cell coordinates and values

@@ -72,7 +72,7 @@ impl<T:OriginalDomainFailure> RetirementCursor for DomainFrame<T>{
 
 /// 🫴️ The erased header moves without cloning the admitted typed source or its nested payloads.
 pub struct OriginalDomainPrimary{owner:Box<dyn DomainOwner>}
-impl std::fmt::Debug for OriginalDomainPrimary{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("OriginalDomainPrimary").field("code",&self.code()).finish_non_exhaustive()}}
+impl std::fmt::Debug for OriginalDomainPrimary{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("OriginalDomainPrimary").field("code",&self.code()).field("message",&self.message()).finish_non_exhaustive()}}
 impl OriginalDomainPrimary{
  pub fn projection(&self)->&dyn OriginalDomainProjection{self.owner.original()}
  pub fn code(&self)->&str{self.owner.code()}

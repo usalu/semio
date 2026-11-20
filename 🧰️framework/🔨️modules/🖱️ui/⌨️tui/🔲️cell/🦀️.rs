@@ -220,6 +220,15 @@ impl CellBuffer {
         self.write(x, y, cell, 0);
     }
 
+    /// 🧻️ Copies the cells and cluster tails of `rect` from `from`, keeping wide clusters whole.
+    pub fn copy_rect(&mut self, from: &CellBuffer, rect: Rect) {
+        for y in rect.y..rect.y.saturating_add(rect.height) {
+            for x in rect.x..rect.x.saturating_add(rect.width) {
+                if let Some(i) = from.index(x, y) { self.write(x, y, from.cells[i], from.tails[i]); }
+            }
+        }
+    }
+
     /// 🧾️ Starts capturing explicitly marked border cells for one painter.
     pub fn begin_borders(&mut self, rect: Rect) { self.borders = Some(HashMap::new()); self.border_writes.clear(); self.border_rect = rect; }
 

@@ -1,0 +1,23 @@
+{
+  "mediaBox": [-30, 20, 170, 140],
+  "cropBox": [-30, 35, 130, 115],
+  "overrunCropBox": [-45, 35, 130, 115],
+  "userUnit": 2,
+  "rectangles": [
+    { "rgb": [1, 0, 0], "bounds": [-45, 45, 55, 25] },
+    { "rgb": [0, 0, 1], "bounds": [140, 45, 20, 20] }
+  ],
+  "cases": [
+    { "rotate": 0, "size": [320, 160], "firstPoint": [-30, 140], "ink": [30, 120], "blank": [90, 120] },
+    { "rotate": 90, "size": [160, 320], "firstPoint": [20, -30], "ink": [30, 30], "blank": [30, 90] },
+    { "rotate": 180, "size": [320, 160], "firstPoint": [350, 20], "ink": [290, 30], "blank": [230, 30] },
+    { "rotate": 270, "size": [160, 320], "firstPoint": [140, 350], "ink": [120, 290], "blank": [120, 230] }
+  ],
+  "red": [255, 0, 0],
+  "white": [255, 255, 255],
+  "outsideFirstPage": [30, -10],
+  "onSecondPage": [30, 350],
+  "secondPageTop": 336,
+  "secondPageInk": [25, 82, 10, 9],
+  "pageGap": [30, 328]
+}

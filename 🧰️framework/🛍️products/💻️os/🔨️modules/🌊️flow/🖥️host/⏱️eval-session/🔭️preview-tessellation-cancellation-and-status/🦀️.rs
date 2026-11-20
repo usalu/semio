@@ -4,17 +4,49 @@ use super::*;
 
 impl FlowEvalSession {
     /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
-    pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String) -> bool {
-        if self.preview_mesh_by_handle.contains_key(&handle){return false;}
-        if self.preview_diagnostics_by_handle.contains_key(&handle) {
-            return false;
-        }
-        if self.pending_tessellate_by_hash.values().any(|pending| pending == &handle) {
+    pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String, tolerance: f64) -> bool {
+        if self.preview_mesh_for_tolerance(&handle,tolerance).is_some()
+            || self.preview_diagnostics_by_handle.contains_key(&handle)
+            || self.preview_tessellate_failed(node_hash)
+        { return false; }
+        if self.in_flight_preview_handles().any(|pending| pending == handle) {
             return false;
         }
         self.tessellate_handle_by_hash.insert(node_hash, handle.clone());
         self.pending_tessellate_by_hash.insert(node_hash, handle);
         true
+    }
+
+    /// 📮️ Whether a reply still owns a matching request in this session.
+    pub fn preview_tessellate_is_pending(&self,node_hash:u64)->bool {
+        self.pending_tessellate_by_hash.contains_key(&node_hash)
+    }
+
+    /// 🎚️ The detail level used to report current geometry progress.
+    pub fn note_preview_tessellate_tolerance(&mut self,tolerance:f64) {
+        self.state.preview_tessellate_tolerance=Some(tolerance);
+    }
+
+    /// 🚧️ The exact request ended with a tessellation failure.
+    pub fn preview_tessellate_failed(&self,node_hash:u64)->bool {
+        self.tessellate_progress_by_hash.get(&node_hash).is_some_and(|row|row.phase.is_failure())
+    }
+
+    /// 🩺️ Whether the current detail for a handle has a terminal fault.
+    pub fn preview_tessellate_current_failed(&self,handle:&str)->bool {
+        self.preview_tessellate_tolerance.is_some_and(|tolerance|
+            self.preview_tessellate_failed(preview_tessellate_node_hash(handle,tolerance.to_bits())))
+    }
+
+    /// 📐️ Whether the mesh for the requested detail is resident.
+    pub fn preview_tessellate_current_ready(&self,handle:&str)->bool {
+        self.preview_tessellate_tolerance.map_or_else(||self.preview_mesh(handle).is_some(),
+            |tolerance|self.preview_mesh_for_tolerance(handle,tolerance).is_some())
+    }
+
+    /// 🪢️ Handles pinned until their original requests settle or cancel.
+    pub fn in_flight_preview_handles(&self)->impl Iterator<Item=&str> {
+        self.pending_tessellate_by_hash.values().map(String::as_str)
     }
 
     /// 📈 Aggregate progress of every tessellation this session has admitted and not yet finished —
@@ -23,7 +55,14 @@ impl FlowEvalSession {
         let mut status = PreviewTessellateStatus::default();
         status.in_flight = self.pending_tessellate_by_hash.len() as u32;
         status.diagnostics = self.preview_diagnostics_by_handle.len() as u32;
-        for progress in self.tessellate_progress_by_hash.values() {
+        for (hash,progress) in self.tessellate_progress_by_hash.iter() {
+            if progress.phase.is_failure() {
+                if self.preview_tessellate_tolerance.is_some_and(|tolerance|
+                    self.tessellate_handle_by_hash.get(hash).is_none_or(|handle|
+                        preview_tessellate_node_hash(handle,tolerance.to_bits())!=*hash))
+                { continue; }
+                status.diagnostics=status.diagnostics.saturating_add(1);
+            }
             status.units_done = status.units_done.saturating_add(progress.units_done);
             status.units_total = status.units_total.saturating_add(progress.units_total);
             status.faces_done = status.faces_done.saturating_add(progress.faces_done);

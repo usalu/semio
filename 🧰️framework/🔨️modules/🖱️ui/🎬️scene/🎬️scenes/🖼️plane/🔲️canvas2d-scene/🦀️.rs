@@ -106,30 +106,30 @@ impl FromValue for Canvas2dScene {
 
 /// 🎒️ The canvas-2d payload fields that ride OUTSIDE the fixed-capacity surface doc — the 2d twin of
 /// [`World3dSceneLane`], pinned against `🧪️tests/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json` on both sides.
-/// `layers_json` stays in the spine: it is a bounded per-frame descriptor, while a trace delta scales
-/// with the run.
+/// Diagram layers scale with the document, and trace deltas scale with the run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Canvas2dSceneLane {
     ToolRunTrace,
+    Layers,
 }
 
 /// 🔑️ Reserved carrier-key namespace of the canvas-2d lanes.
 pub const CANVAS2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.canvas2d.";
 
 /// 📛️ Wire name of each [`Canvas2dSceneLane`], in `Canvas2dSceneLane::ALL` order.
-pub const CANVAS2D_SCENE_LANE_NAMES: [&str; 1] = ["toolRunTrace"];
+pub const CANVAS2D_SCENE_LANE_NAMES: [&str; 2] = ["toolRunTrace", "layers"];
 
 /// 📋️ [`Canvas2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const CANVAS2D_SCENE_LANE_FIELDS: [&str; 1] = ["toolRunTrace"];
+pub const CANVAS2D_SCENE_LANE_FIELDS: [&str; 2] = ["toolRunTrace", "layersJson"];
 
 /// 🗝️ Reserved carrier key of each lane.
-pub const CANVAS2D_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.canvas2d.toolRunTrace"];
+pub const CANVAS2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.canvas2d.toolRunTrace", "framework.scene.canvas2d.layers"];
 
 /// ❓️ Whether each lane's [`Canvas2dScene`] field is an `Option<String>`.
-pub const CANVAS2D_SCENE_LANE_OPTIONAL: [bool; 1] = [true];
+pub const CANVAS2D_SCENE_LANE_OPTIONAL: [bool; 2] = [true, false];
 
 impl Canvas2dSceneLane {
-    pub const ALL: [Self; 1] = [Self::ToolRunTrace];
+    pub const ALL: [Self; 2] = [Self::ToolRunTrace, Self::Layers];
 
     /// 🏷️ See [`CANVAS2D_SCENE_LANE_NAMES`].
     pub fn name(self) -> &'static str {
@@ -161,10 +161,12 @@ impl Canvas2dSceneLane {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
 
-    /// 📤️ Removes this lane's payload from `scene`; `None` when the optional lane is unset.
+    /// 📤️ Removes this lane's payload from `scene` when it has content to publish.
     pub fn take(self, scene: &mut Canvas2dScene) -> Option<String> {
         match self {
             Self::ToolRunTrace => scene.tool_run_trace.take(),
+            Self::Layers if scene.layers_json.is_empty() || scene.layers_json == "[]" => None,
+            Self::Layers => Some(std::mem::replace(&mut scene.layers_json, "[]".into())),
         }
     }
 
@@ -172,6 +174,7 @@ impl Canvas2dSceneLane {
     pub fn put(self, scene: &mut Canvas2dScene, payload: String) {
         match self {
             Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
+            Self::Layers => scene.layers_json = payload,
         }
     }
 }

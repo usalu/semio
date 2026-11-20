@@ -180,10 +180,7 @@ attestation is at most 60 seconds old unless `--force`; `--undo` is never refuse
   `retire --undo` it resumes with a full scan.
 
 **Self-restart.** The daemon records its code digest at start and compares it with the sources on disk every 5 seconds.
-When the digest differs and has stayed the same for 5 seconds, the daemon persists its state, reports `restarting` and
-`run` returns with exit code 0. The service manager must start the process again after exit 0: systemd `Restart=always`,
-launchd `KeepAlive`, and on Windows the logon trigger plus a repeating time trigger every minute (the task ignores a new
-instance while one runs). The Windows task keeps the interactive logon of the worker account because the Client for NFS
+When the digest differs and has stayed the same for 5 seconds, the daemon persists its state, releases its sidecar leases for adoption, reports `restarting` and returns with exit code 0. The installed boot program verifies the receipt from that exact worker and starts the next worker inside the same service lifetime. The Linux systemd unit retains its normal stop policy for the service and every process in its cgroup. The service managers continue to own recovery when the boot program itself exits. The Windows task keeps the interactive logon of the worker account because the Client for NFS
 and SMB drives exist only inside that session; a task without the session (`S4U`, `SYSTEM`) would not see the store.
 Only a daemon that already contains this code restarts itself: an older daemon is stopped once by hand
 (`kill <pid in .cache/f/daemon.lock>`) and the service manager starts the new code.
@@ -844,9 +841,9 @@ silently ignored and never fails the walk.
 **Windows and files held open.** A file that another process holds open (an editor, an indexer, antivirus) makes the
 replica's rename, delete or write fail with `EBUSY`, `EPERM` or `EACCES`. Nothing is lost then: the incoming event is
 already in the persisted queue when the cursor moves past it, the path is reported once as `blocked` (reason `EBUSY`,
-`EPERM`, `EACCES` or `sharing-violation`), retried in place a few times, then at growing intervals (0.5 s to 30 s) on
-every follow round, and applied after the release, also after a restart. A local file that cannot be read for publishing is
-returned for retry (`blocked`) and published later; a journal write that stays blocked after all retries (`head.json`
+`EPERM`, `EACCES` or `sharing-violation`) and retried on follow rounds at intervals from 0.5 s to 30 s. An incoming
+rename or deletion blocked by sharing yields immediately to the other queued paths and can apply after release or a restart.
+A local file that cannot be read for publishing is returned for retry (`blocked`) and published later; a journal write that stays blocked after all retries (`head.json`
 held by the virus scanner of the store host) publishes nothing, keeps the events for the next round and never crashes
 the daemon. **Symlinks without privilege:** where the account may not create symbolic links (Windows without Developer Mode
 or the privilege), the entry is reported as `skipped` with the reason `symlink-unsupported`, removed from the queue

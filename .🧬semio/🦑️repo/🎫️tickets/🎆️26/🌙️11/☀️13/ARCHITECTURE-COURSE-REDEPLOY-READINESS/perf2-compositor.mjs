@@ -1,0 +1,60 @@
+/** 🧊️ Compositor cost of the home screen and the leaderboard: compositor layers and their megapixels (LayerTree), the allocator breakdown of the renderer (memory-infra: cc, shared memory, malloc, Blink GC), the resident size of the renderer, and the frame times of a pointer pan across the overview (rAF intervals). Prints one JSON line. Env: SITE. */
+import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
+const require = createRequire("/Users/ueli/Documents/semio/.cache/b/d/m/j/b87aa6c238609ac86876/node_modules/@playwright/test/");
+const { chromium } = require("@playwright/test");
+const site = process.env.SITE ?? "http://127.0.0.1:6069";
+const browser = await chromium.launch();
+const root = await browser.newBrowserCDPSession();
+const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en" });
+const page = await context.newPage();
+page.setDefaultTimeout(120_000);
+const cdp = await context.newCDPSession(page);
+const result = {};
+const memory = async (label) => {
+  await page.waitForTimeout(2500);
+  for (let i = 0; i < 2; i++) await cdp.send("HeapProfiler.collectGarbage");
+  const events = [];
+  const on = (e) => events.push(...e.value); root.on("Tracing.dataCollected", on);
+  const done = new Promise((r) => root.once("Tracing.tracingComplete", r));
+  await root.send("Tracing.start", { traceConfig: { recordMode: "recordUntilFull", includedCategories: ["-*", "disabled-by-default-memory-infra"], memoryDumpConfig: { triggers: [] } } });
+  await root.send("Tracing.requestMemoryDump", { deterministic: true, levelOfDetail: "light" });
+  await root.send("Tracing.end"); await done; root.off("Tracing.dataCollected", on);
+  const mb = (a, k) => Math.round(Number(BigInt("0x" + (a[k]?.attrs?.size?.value ?? "0"))) / 1048576);
+  for (const d of events.filter((e) => e.ph === "v" && e.args?.dumps?.allocators?.blink_gc)) { const a = d.args.dumps.allocators; result[label] = { cc: mb(a, "cc"), shared: mb(a, "shared_memory"), malloc: mb(a, "malloc"), gc: mb(a, "blink_gc") }; }
+  const { processInfo } = await root.send("SystemInfo.getProcessInfo");
+  const renderers = processInfo.filter((p) => p.type === "renderer").map((p) => Number(execFileSync("ps", ["-o", "rss=", "-p", String(p.id)], { encoding: "utf8" }).trim() || 0) / 1024 | 0);
+  result[label].rendererMB = Math.max(...renderers);
+};
+await page.goto(site + "/", { waitUntil: "commit" });
+await page.locator('[data-slot="introduction-close"]').click();
+await page.locator('[data-slot="introduction-info-box"]').waitFor({ state: "detached" });
+await page.waitForTimeout(3000);
+await cdp.send("DOM.enable"); await cdp.send("LayerTree.enable");
+let layers = [];
+cdp.on("LayerTree.layerTreeDidChange", (e) => { if (e.layers) layers = e.layers; });
+await page.setViewportSize({ width: 1281, height: 800 }); await page.waitForTimeout(1500); await page.setViewportSize({ width: 1280, height: 800 }); await page.waitForTimeout(1500);
+result.layers = layers.length;
+result.layerMP = Math.round(layers.reduce((n, l) => n + l.width * l.height, 0) / 1e5) / 10;
+result.biggestMP = Math.round(Math.max(0, ...layers.map((l) => l.width * l.height)) / 1e5) / 10;
+await cdp.send("LayerTree.disable");
+await memory("home");
+const frames = await page.evaluate(async () => {
+  const out = []; let last = performance.now(); let stop = false;
+  const tick = (t) => { out.push(t - last); last = t; if (!stop) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  window.__stopFrames = () => { stop = true; return out; };
+  return null;
+});
+const box = await page.locator("[data-layered-overview]").first().boundingBox();
+for (let lap = 0; lap < 3; lap++) for (let step = 0; step <= 40; step++) { await page.mouse.move(box.x + box.width * (0.1 + 0.8 * (step / 40)), box.y + box.height * (lap % 2 ? 0.8 : 0.2) + 5 * Math.sin(step)); await page.waitForTimeout(16); }
+const deltas = (await page.evaluate(() => window.__stopFrames())).slice(2).sort((a, b) => a - b);
+const q = (p) => Math.round(deltas[Math.floor(p * (deltas.length - 1))] * 10) / 10;
+result.pan = { frames: deltas.length, p50: q(0.5), p95: q(0.95), max: q(1), over32: deltas.filter((d) => d > 32).length };
+await page.waitForTimeout(1500);
+await page.mouse.move(2, 2);
+await page.evaluate(() => (window.location.hash = "board"));
+await page.waitForTimeout(1500);
+await memory("leaderboard");
+console.log(JSON.stringify(result));
+await browser.close();

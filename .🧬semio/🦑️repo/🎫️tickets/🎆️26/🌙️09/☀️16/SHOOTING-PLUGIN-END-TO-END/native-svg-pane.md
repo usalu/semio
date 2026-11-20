@@ -1,0 +1,13 @@
+# WGPU Shooting SVG Preview
+
+The native winit and browser-hosted wgpu IconRender panes frame a texture made from the same SVG bytes as Save Download. Camera, fit, transform, material, shape, and drawing layers come from the complete render request. The rasterizer shares the prepared uploader’s byte budget and preserves the shot aspect ratio. Straight-alpha RGBA preserves transparent backgrounds and the SVG ellipse clip.
+
+The pane owns one current request per mounted host. Edits replace the request and retire the previous asset fetch, vector export or raster task through its exact owner. A request’s texture key is unique, so a superseded upload cannot appear in the replacement pane. The decoded upload queue keeps a bitmap under transient backpressure and classifies invalid dimensions or capacity as permanent refusal. The native presenter checks GPU residency after a frame that requested the raster so an interrupted candidate can retry. Standard raster ownership retires unreferenced textures.
+
+The pane’s paint and original-caller pump share the same native callback thread. The frame job invokes the callback synchronously through `try_step_on_original_caller`, despite older worker comments in the renderer. Asset I/O and SVG raster work run separately and wake the renderer when a result is ready. Vector construction advances in bounded turns and displays a percentage in the existing localized status.
+
+The browser-hosted pane runs the same SVG request and bounded vector construction on its frame worker. The browser’s existing paged GLB fetch and decode bridge delivers the matching mesh. The browser frame loop parks while that bridge or the asynchronous SVG rasterizer owns work and continues when the runtime receives a wake. React already uses the SVG pipeline.
+
+## Verification
+
+The pane lifecycle regression passed against the actual pane module in a lightweight Rust harness with test doubles for external asset and raster services. It verifies backpressure retains pixels, replacing drawing controls suppresses the earlier raster, the new request uses a different key, and closing removes the preview owner. The source boundary audit kept the affected native and browser owners under their 4,000 active-line caps. The icon host test closure measured 3,941 active lines on the native host and 3,730 for wasm32-unknown-unknown. The browser worker test closure measured 992 active lines. The full native crate, browser build, and live preview checks are tracked by the parent ticket’s integration run. Use the ticket’s source audit helper without a target option for the native host, or with `--target=wasm32-unknown-unknown` for the browser worker.
